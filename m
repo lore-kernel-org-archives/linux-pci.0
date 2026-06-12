@@ -1,178 +1,165 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862DF2D238A;
-	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE892F83A2;
+	Fri, 12 Jun 2026 15:22:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781277472; cv=none; b=WCpWW/RBUCUgsav267q73Naub0Ly48YhF5TEZlNv0Cf/34yY8RGmd77+cX6vooVXPy6BiPu+Ml7dBsBq/JSaawW0TLrDRETmgVqsFOtegmFcko3WSVKu/hSFdy1VpRLAAWkxo4EFzynwi0glKaNYo50g/v5HDmizygIHz5trs84=
+	t=1781277746; cv=none; b=TKOO80ux4rrSLNplknUnPX/Sy74DyDyFlF1tnWApISuh3+436wWova4rdq7nIZ4q5SGiUcRQMK18RRQMOUs4xvEaaXKwPRxqSjLkrpjal10Z7NLORutlH1UnBTZGsKLcm3H9BGvL6nDigITxqwkxbjPUpK3565PpTRHu6xLaYVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781277472; c=relaxed/simple;
-	bh=U4O+P7MXQot0uopxFWZ0QHzHbnym462DP/joRZT0bv8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=kGr0MqoB4PtwVczDeMYH3g/feZNJbCP/JLERq9kkGQR7CqPxeImbwVXqvXtvKwP4FBBrE4pj22yCPqcPo0NWH5AM8kOfzmG69pw0vrPjZ/MDC6UdSHkQj59c3gAb0v03TcZel4wqTV8IZlJI5jDyXmN3bZgJXXNjFYXLY7QL448=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRS8UoxT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781277746; c=relaxed/simple;
+	bh=OLGGW/mO4NyqpOFwo5FddLlmOWWrbusRslyiE80EXi0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=e9Vn1P77AW/trqaV1cXGbvOTRyM+xaj64oMJ7WCZ+9A2CNRdqqe5WEVNLS6fZuJt009hwWqOBQCNaRPWEIGXZzAXVhQJraPTA4iQtmxQ+wU1cb4tdjknN9HhDX7Mt09qdgDstvyGaSigqitXJiahc90w0gT1/oLs6LqLywGLWmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=S9vZR5sU; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRS8UoxT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36F791F000E9;
-	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781277471;
-	bh=6XpxeIXcm0bcntaNBOITL3pX8sOGQ/dSwg/AQ/P7ms4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=fRS8UoxTBVb4rjGnYIwpI1u8mm+LKqLs/UKIe2+xv44fYHk8PoTevfj9MV/O1HD+H
-	 OLVwNhdiVr/PDit8ZkqapCQ4Kd3HwfDtPOq7ldw4enMG9cH25buCz/2Fff5FHTdQQw
-	 MeJRzZv4oKxo6RKAyS7nMh1vxIBPA8Ucxwv+Flv3qYlOYDd+Q1/fGxcovQKFqArt2T
-	 WeuEJUALKmD7dJzVnz5ifVEnIIfmbTwxiCZyPwlt8v1CVvGgVy4tZL4k/7bd3sKNWD
-	 tmwDmp62wqcZ6VKiLv4HGRhnGesNFX5jt5lm6HYOs60imYuOy3mRBvAKjmsuWzN+xU
-	 tOR09zOWG5emw==
-Date: Fri, 12 Jun 2026 10:17:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
-	Alex Williamson <alex@shazbot.org>
-Cc: bhelgaas@google.com, jjohnson@kernel.org, mani@kernel.org,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-	mhi@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260612151749.GA603817@bhelgaas>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="S9vZR5sU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1781277742;
+	bh=Od++dpGQk45pUkopK+ZR30rQE6eOhAjb1TsY2NEMy5g=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=S9vZR5sUkuLB9FEC8KRRIoqeN59IfE/XLJ4wsiGT0ob84ltCuLVL/5VCR4GkxjsA9
+	 AZ7Qm3ed8W07n6LTQnUawPb2WBDh9qruLj1R9yvNjUnyHicBso/Eg6sOgX8jLjcDoF
+	 WaJ/2LSRwLtX9QEr7TCt/MWGNql4/2d9kzUZ4gjqxnN4SeV7O5sxCjYEXosWCSzM/J
+	 YvAXTaQxZwv7nGq9F+aHO9KeJDtNG+jAGdVUpkSWkW0bZFa7REtQaWrKTUyOEukesu
+	 UesARyHOzLEiT7mbIYtKp4Cga+XLMzOPNpBmprhVOqR4SPs/DGci1Qup6z3iA9i6Qs
+	 Su+eg8UsvZAPA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gcNY35cPWz4xGp;
+	Sat, 13 Jun 2026 01:22:14 +1000 (AEST)
+Message-ID: <42cf4ad9-f094-4f94-88e6-6d2cb6eb6437@ozlabs.org>
+Date: Fri, 12 Jun 2026 16:22:12 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 4/9] vfio/pci: Convert BAR mmap() to use a DMABUF
+Content-Language: en-GB
+To: Pranjal Shrivastava <praan@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Kevin Tian <kevin.tian@intel.com>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-5-matt@ozlabs.org> <aiviYEi17tewEQg0@google.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <aiviYEi17tewEQg0@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-[+to: Alex, VFIO resets]
+Hi Pranjal,
 
-On Fri, Jun 12, 2026 at 04:26:38PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-> lack working reset methods for VFIO passthrough scenarios. These devices
-> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-> broken bus reset.
-
-I guess "bus reset" here refers to Secondary Bus Reset being asserted
-by the bridge upstream from these devices?  Seems a bit surprising if
-that doesn't work.  Or is it just that we can't use SBR because there
-are multiple devices below that bridge?
-
-> The problem manifests in VFIO passthrough scenarios:
+On 12/06/2026 11:41, Pranjal Shrivastava wrote:
+> On Wed, Jun 10, 2026 at 04:43:18PM +0100, Matt Evans wrote:
+>> Convert the VFIO device fd fops->mmap to create a DMABUF representing
+>> the BAR mapping, and make the VMA fault handler look up PFNs from the
+>> corresponding DMABUF.  This supports future code mmap()ing BAR
+>> DMABUFs, and iommufd work to support Type1 P2P.
+>>
+>> First, vfio_pci_core_mmap() uses the new
+>> vfio_pci_core_mmap_prep_dmabuf() helper to export a DMABUF
+>> representing a single BAR range.  Then, the vfio_pci_mmap_huge_fault()
+>> callback is updated to understand revoked buffers, and uses the new
+>> vfio_pci_dma_buf_find_pfn() helper to determine the PFN for a given
+>> fault address.
+>>
+>> Now that the VFIO DMABUFs can be mmap()ed, vfio_pci_dma_buf_move()
+>> zaps PTEs (used on the revocation and cleanup paths).
+>>
+>> CONFIG_VFIO_PCI_CORE now unconditionally depends on
+>> CONFIG_DMA_SHARED_BUFFER and CONFIG_PCI_P2PDMA_CORE.  The
+>> CONFIG_VFIO_PCI_DMABUF feature conditionally includes support for
+>> VFIO_DEVICE_FEATURE_DMA_BUF, depending on the availability of
+>> CONFIG_PCI_P2PDMA.
+>>
+>> Signed-off-by: Matt Evans <matt@ozlabs.org>
+>> ---
+>>  drivers/vfio/pci/Kconfig           |  5 +-
+>>  drivers/vfio/pci/Makefile          |  3 +-
+>>  drivers/vfio/pci/vfio_pci_core.c   | 75 +++++++++++++++++++-----------
+>>  drivers/vfio/pci/vfio_pci_dmabuf.c | 12 +++++
+>>  drivers/vfio/pci/vfio_pci_priv.h   | 11 +----
+>>  5 files changed, 67 insertions(+), 39 deletions(-)
+>>
+>> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+>> index 296bf01e185e..67a2ae1fbc04 100644
+>> --- a/drivers/vfio/pci/Kconfig
+>> +++ b/drivers/vfio/pci/Kconfig
+>> @@ -6,6 +6,8 @@ config VFIO_PCI_CORE
+>>  	tristate
+>>  	select VFIO_VIRQFD
+>>  	select IRQ_BYPASS_MANAGER
+>> +	select PCI_P2PDMA_CORE
+>> +	select DMA_SHARED_BUFFER
+>>  
+>>  config VFIO_PCI_INTX
+>>  	def_bool y if !S390
+>> @@ -56,7 +58,8 @@ config VFIO_PCI_ZDEV_KVM
+>>  	  To enable s390x KVM vfio-pci extensions, say Y.
+>>  
+>>  config VFIO_PCI_DMABUF
+>> -	def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
+>> +	def_bool y if PCI_P2PDMA
+>> +	depends on VFIO_PCI_CORE
+>>  
+>>  source "drivers/vfio/pci/mlx5/Kconfig"
+>>  
+> [...]  
+>>  int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>>  				   struct vm_area_struct *vma,
+>> @@ -532,6 +538,10 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
+>>  	struct vfio_pci_dma_buf *tmp;
+>>  
+>>  	lockdep_assert_held_write(&vdev->memory_lock);
+>> +	/*
+>> +	 * Holding memory_lock ensures a racing VMA fault observes
+>> +	 * priv->revoked properly.
+>> +	 */
 > 
-> - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
->   clean shutdown/reboot. However, when the VM terminates uncleanly
->   (crash, force-off), VFIO attempts to reset the device before it can
->   be assigned to another VM. Without a working reset method, the device
->   remains in an undefined state, preventing reuse.
+> Nit: This comment should appear before the lockdep_assert_held_write()
+> Also, it is slightly verbose.. (not against it though).
 
-I don't know enough about VFIO, but I sort of expected that VFIO would
-reset devices between reassignment regardless of how a VM terminates.
-I guess that's not true?
+Right, I'll move it.  Agree it's wordy but if anyone changes that I want
+them to "think faulthandler".
 
-> - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
+>>  	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
+>>  		if (!get_file_active(&priv->dmabuf->file))
+>> @@ -549,6 +559,8 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
+>>  			if (revoked) {
+>>  				kref_put(&priv->kref, vfio_pci_dma_buf_done);
+>>  				wait_for_completion(&priv->comp);
+>> +				unmap_mapping_range(priv->dmabuf->file->f_mapping,
+>> +						    0, priv->size, 1);
 > 
-> - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
->   on first VM assignment without proper reset capability.
-> 
-> Add device-specific reset entries for these Qualcomm devices using D3hot
-> power cycling. Testing shows that despite advertising NoSoftRst+, D3hot
-> transition provides sufficient reset for VFIO reuse, particularly after
-> unexpected VM termination. While not a complete reset (BARs preserved),
-> it provides the only viable reset mechanism for these devices.
+> Have we run this series with lockdep enabled?
+> I guess it'd be nice to check with lockdep once..
 
-Since the device claims to preserve internal state across D3hot->D0
-(and it sounds like at least BARs *are* preserved), is this a
-potential leak of state between VMs?  To play devil's advocate, how do
-we convince a customer that none of their data is ever leaked to a
-subsequent tenant using this device?
+I've (generally) always run testing of this series with lockdep.  (No
+issues (anymore).)
 
-> Testing was performed on desktop platforms with M.2 WiFi and modem cards
-> using M.2-to-PCIe adapters, including extensive force-reset cycling to
-> verify stability.
+> Apart from these, 
 > 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
-> v9:
->   - Complete redesign based on maintainer feedback (Alex Williamson, Bjorn
->     Helgaas, Rafael Wysocki): dropped general d3cold infrastructure entirely
->     and now just a single patch: the proven D3hot reset for specific
->     Qualcomm devices (device-specific reset)
->   - Previous v8 patch 1/3 (general d3cold) dropped: concerns about ACPI
->     portability, bridge issues, runtime PM, and lack of _PR3 hardware for
->     testing.
->   - Previous v8 patch 3/3 (quirk_no_bus_reset) already merged for v7.2
-> v8: https://lore.kernel.org/all/20260609163649.319755-1-jtornosm@redhat.com/
-> 
->  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 431c021d7414..bac1edb6c2dc 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4240,6 +4240,41 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->  	return 0;
->  }
->  
-> +/*
-> + * Device-specific reset method for certain Qualcomm devices via D3hot power
-> + * cycle.
-> + *
-> + * These specific Qualcomm devices lack FLR capability, advertise NoSoftRst+
-> + * (blocking PM reset), and have broken bus reset. Despite advertising
-> + * NoSoftRst+, testing shows that D3hot transition provides sufficient reset
-> + * for VFIO reuse, particularly after unexpected VM termination where the
-> + * device would otherwise remain in an undefined state. While not a complete
-> + * reset (BARs are preserved), it provides the only viable reset mechanism for
-> + * these devices in the commented situations.
-> + */
-> +static int reset_qualcomm_d3hot(struct pci_dev *dev, bool probe)
-> +{
-> +	int ret;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (dev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret = pci_set_power_state(dev, PCI_D3hot);
-> +	if (ret)
-> +		return ret;
-> +	msleep(200);
-> +
-> +	ret = pci_set_power_state(dev, PCI_D0);
-> +	if (ret)
-> +		return ret;
-> +	msleep(200);
-> +
-> +	return 0;
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
 
-If we think this is a viable method, it seems like we should use
-pci_pm_reset(), which takes care of IOMMU and device readiness issues.
 
-We would have to change pci_pm_reset() to deal with the fact that
-PCI_PM_CTRL_NO_SOFT_RESET seems wrong on these devices.  Maybe we
-could cache PCI_PM_CTRL_NO_SOFT_RESET in pci_pm_init(), then override
-it with quirks for these devices?
+Thanks!
 
-> +}
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -4255,6 +4290,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  		reset_chelsio_generic_dev },
->  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->  		reset_hinic_vf_dev },
-> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_d3hot },  /* WCN6855 */
-> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_d3hot },  /* WCN7850 */
-> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_d3hot },  /* SDX62/SDX65 */
->  	{ 0 }
->  };
->  
-> -- 
-> 2.54.0
-> 
+
+Matt
+
