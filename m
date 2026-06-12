@@ -1,145 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A8212B143
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 08:48:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91430382F0F
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 09:20:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781254106; cv=none; b=tLzsTQpcj7/3O8LQQAzhNReaNWjOE8H81EawRsXp8NgP7/Rpuxgbm4gDFhXY0gU8aWwQP9/H5aE2iTAuQDNIsMBxF+go8JS6KGGWqtP7jrPphipnktklAshAwQ6CHmKw7CVI5wmLIP144VclDN2uDt4Fy6e190ATEt305ZZUB0I=
+	t=1781256014; cv=none; b=HKrhbLkosGmCOnfiGdSy5Ay9qs3tEugPEdb+ZiJ0EfD7+JiVTB40CPbgU78JvzdUy73pt9se3qA+BSalduaUYioTnhd3U6+g/sqQHG/6FdYQIZo2RxuJYgKic0TslhzKFcmonsV7ckCdHcNEnfpHmcVjbo6NgmxaLt3xp9jci9s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781254106; c=relaxed/simple;
-	bh=0Ak1/fRjH8fxjMPZWCZileUPKweprqfzDifXqZ6GUQg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=r5hR6BLe2NhE4ZyU3rqKYwKsuM2vpXbrxKuyyNruSWonrhTI8PMhccMw3zCvwpcg/W3qO4Qyn21KUhpSNOkZpF7/+jw1AAmJAAHw127+A79doAvo7yFkN6AqRnWvk7R89wSuLjUm+m/waewYjo7cpK/ia5ODV7tSN6ieS3lzsHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HSu/kgl3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781256014; c=relaxed/simple;
+	bh=nK8oSt5EIh86hjy16VZ5ws+ZIcIDCfDkVWMJvoB+yNI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=No524UtH/+bx6VflfkY25+KQ+lSqhcWyDxuLTn10hqj0k5pbkAX7d3r/oaYJt1GG5/Bs09IGpLMrRmJpzWHK/dq5Lta3ptrU+C5sgPdyfJiYRofoRi3Jz65AmNHVJgf04HiYA24Pb7HvlJ3SQNTDskQea3Hmlwn8vhjaEw6t8cQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fRzzMYYL; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HSu/kgl3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3DE91F00A3A;
-	Fri, 12 Jun 2026 08:48:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781254104;
-	bh=1FMEOm2MaI3cCtppgRk+r3+7Lugs4QOF6Pt5RyldXwM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HSu/kgl3Fx4GNTinHh70p012MC+K4Cyg9aHznFpbRDu8Ld33QRx6goNT3HItH7Vv8
-	 W3sHtj9hk1swGI746zk6q4Ap/+DG31AI3SZ+IHKHay4na8G/pR2lDmgpQCoy5zxj33
-	 G7SqDKKSRWWiYzOIO9qP/gP1Cg2aGmPLzCjFkjxfgE4Slkn/REpTtJb5myog/LYnMC
-	 4i1aPLbyYFNCP/haqUM2QzWuExpgQJoG4o6Z2FADg/mvFqhmgSdcgKRGbixtyYu+07
-	 jM7UVNVJ3OSJkTI3WClwVnBHHsaYMwkLDqhNsN3PoECZk2Mp06b4/W9GzI+Gp4epKX
-	 HQKTjahAUpuSw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/P2PDMA: Use RCU_INIT_POINTER() to clear
- pdev->p2pdma
-Reply-To: sashiko-reviews@lists.linux.dev
-To: lirongqing <lirongqing@baidu.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260612083452.1639-1-lirongqing@baidu.com>
-References: <20260612083452.1639-1-lirongqing@baidu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 08:48:24 +0000
-Message-Id: <20260612084824.A3DE91F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fRzzMYYL"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c0b1a48855so85405ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 02:20:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781256010; x=1781860810; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=zvPmlCR2+M8z2It1PyWjRPyBRhJXBH/RxmRhWYVyMeM=;
+        b=fRzzMYYLXoLbwa6O4DDeOA1Dd721HBWwlMWYDllZUFJ/PTywZdsB5Nwlzv5k7x2d0R
+         WvHhTKPMyLGoqFR3dXk4MZlKcgQ+ayEvfB5xvC5obxLWlwNHu2z7b0SjDke0/huZR6Dy
+         rACpzpT2wiXVJNFA67ImFhSZr9+neZziK6J2yoh4qRgMtwPT/ZfW3hNtyxHfc/fsRD3g
+         GFcOs2i1hCawvKj3RLmbnBeGgbQr7dOlEft+MKhsSkeo4F880mzkcKN8W80Ip0Lby3e9
+         4s7LNmv9oz+vhxUaKaLOH7e/ZpmkbxeE0XuEbJaU1jhwkOtaSukQ+7t//wS7/4pyvAFv
+         1Y6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781256010; x=1781860810;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=zvPmlCR2+M8z2It1PyWjRPyBRhJXBH/RxmRhWYVyMeM=;
+        b=qfMzVbd/JgTd8vbe2C8olM0y0KRtGPj75RbMUxWzu5CeP7Ol3+sNl5C+DAgkNZ1vTq
+         qxdXpNvtIsjlIg0TU17JWgj2hn8d6CgcdqDuQvzM7r/Sba10RG6o2kKnoHrjmC+XmSYp
+         XXJb9HZmILvVRUQYxt45E1hbB6AM2BYFe7eynuf/Afd5ADo/0whoOuz2bgerx0HNCXPK
+         9DRhMqgn2N8hJ2G6rhi6PhPm54u4rfTg2F3HVrIUSw4gIuRI23nsB9gCQvqTk+iDhtsr
+         0KSsCXTNnAADQwhbzfwifCLJ74gf4nMQGesZND++FQagfjHb7orLamipY14bGDUAE+Ae
+         gpHQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9XW5x0rCEOs3wELv/vMMfZ6X3ONeCOID4aVuMpr0oq4FIf3a9O8RUKuZYxtH6j8l0km1+HG8vOlLM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1XuhON1XHXwBvBft/KiMjvBIWvH8/vJAkSxGBbyi+7LEBsWEz
+	njNbjtmgYq/SJv3FTP7oZJkk2JWlaDGv/FJgUdaf0gkVv9k4KXY3G97oKoW/A4xwUw==
+X-Gm-Gg: Acq92OHsN+AGiP74CO/lQyGUYqgnxHDBGF+vJ/2AUNoyPWtqtAV83PMxpMLZY7lYfkY
+	J5+qaiclQYOPPX2LArOfEKiU2D4QKVEicCsFPWYxujQNcIGOgySdmsWQWJdhD8fy50HBm2b12ig
+	TYJvz2FEBDkIX3VgcNaMtKQbIkamYClpjYY1df3gjJ9G/rsAwsy2nBKzoKsqmCblEc4qi5uZY1G
+	VZ/IxeWhoqHcX3nDgNpGeEsPslU6JkIrELoHthE44ChXglqE1k3dgjVE4j9CiIYLswDHbUA07We
+	9OmeMF1MJI2Vzbyafrr6iQpZGRts7qkEwsFimpjWl78bCsgrz0LehX6GAq38oWGxmx8lgb61krH
+	Kwpy+Ig+76y+tEeq5njacme0kflAaYt+xZ1hcVDLQVK0HzO0gs/sQF8NRLKtLt1l1jwbKVjMNqm
+	NjFBWtt08Ce2miWg45+MbzVtUecCMN4MUft/N84fFpBNeOHNzZWQvgOPvO61jdx+YSKEhBJdg=
+X-Received: by 2002:a17:902:e811:b0:2bf:139c:dcf3 with SMTP id d9443c01a7336-2c405c8817fmr1345405ad.19.1781256009183;
+        Fri, 12 Jun 2026 02:20:09 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434afd17f5sm1476657b3a.39.2026.06.12.02.20.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jun 2026 02:20:08 -0700 (PDT)
+Date: Fri, 12 Jun 2026 09:20:01 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Matt Evans <matt@ozlabs.org>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 3/9] vfio/pci: Add a helper to create a DMABUF for a
+ BAR-map VMA
+Message-ID: <aivPQcSlolwptnB6@google.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-4-matt@ozlabs.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260610154327.37758-4-matt@ozlabs.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Wed, Jun 10, 2026 at 04:43:17PM +0100, Matt Evans wrote:
+> This helper, vfio_pci_core_mmap_prep_dmabuf(), creates a single-range
+> DMABUF for the purpose of mapping a PCI BAR.  This is used in a future
+> commit by VFIO's ordinary mmap() path.
+> 
+> This function transfers ownership of the VFIO device fd to the
+> DMABUF, which fput()s when it's released.
+> 
+> Refactor the existing vfio_pci_core_feature_dma_buf() to split out
+> export code common to the two paths, VFIO_DEVICE_FEATURE_DMA_BUF and
+> this new VFIO_BAR mmap().
+> 
+> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> ---
+>  drivers/vfio/pci/vfio_pci_dmabuf.c | 142 +++++++++++++++++++++++------
+>  drivers/vfio/pci/vfio_pci_priv.h   |   5 +
+>  2 files changed, 117 insertions(+), 30 deletions(-)
+>
 
-Pre-existing issues:
-- [High] pci_p2pdma_release() skips synchronize_rcu() when p2pdma->pool is =
-NULL, causing a use-after-free of the devm-allocated p2pdma structure and c=
-orruption of its map_types xarray for concurrent RCU readers.
-- [High] Missing devres action removal in pci_p2pdma_add_resource() error p=
-aths causes Use-After-Free of p2p_pgmap during devres teardown.
---
+[...]
 
-commit eb4ec2c32d602512abbeccbe720637cf83f85cb6
-Author: Li RongQing <lirongqing@baidu.com>
+> +
+> +	/*
+> +	 * Ownership of the DMABUF file transfers to the VMA so that
+> +	 * other users can locate the DMABUF via a VA.  Ownership of
+> +	 * the original VFIO device file being mmap()ed transfers to
+> +	 * priv, and is put when the DMABUF is released.  This
+> +	 * intentionally does not use get_file()/vma_set_file()
+> +	 * because the references are already held, and ownership
+> +	 * moves.
+> +	 */
+> +	priv->vfile = vma->vm_file;
+> +	vma->vm_file = priv->dmabuf->file;
+> +	vma->vm_private_data = priv;
 
-PCI/P2PDMA: Use RCU_INIT_POINTER() to clear pdev->p2pdma
+I appreciate this comment. Thanks for being clear!
 
-Since pdev->p2pdma is an RCU-protected pointer, directly assigning
-NULL to it violates RCU semantics and triggers sparse static analysis
-warnings.
+Reviewed-by: Pranjal Shrivastava <praan@google.com>
 
-Fix this by using RCU_INIT_POINTER() instead of a raw assignment,
-ensuring proper RCU annotations and consistency with the subsequent
-synchronize_rcu() call.
-
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 7c898542af8d5..fd98624208c50 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -236,7 +236,7 @@ static void pci_p2pdma_release(void *data)
->  		return;
-> =20
->  	/* Flush and disable pci_alloc_p2p_mem() */
-> -	pdev->p2pdma =3D NULL;
-> +	RCU_INIT_POINTER(pdev->p2pdma, NULL);
->  	if (p2pdma->pool)
->  		synchronize_rcu();
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could skipping
-synchronize_rcu() here result in a use-after-free for concurrent RCU reader=
-s?
-
-If p2pdma->pool is NULL, synchronize_rcu() is bypassed before destroying the
-map_types xarray and returning. Since the p2pdma structure is managed by
-devres, it will be freed shortly after this callback returns.
-
-If concurrent RCU readers (like those executing pci_p2pdma_map_type()) obta=
-in
-the pointer just before it is cleared, will they continue to access the fre=
-ed
-map_types xarray and p2pdma structure?
-
->  	xa_destroy(&p2pdma->map_types);
-
-
-While reviewing this file, I noticed another pre-existing issue in
-pci_p2pdma_add_resource():
-
-drivers/pci/p2pdma.c:pci_p2pdma_add_resource()
-{
-[ ... ]
-	error =3D devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
-					 p2p_pgmap);
-	if (error)
-		goto pages_free;
-
-	p2pdma =3D rcu_dereference_protected(pdev->p2pdma, 1);
-	error =3D gen_pool_add_owner(p2pdma->pool, (unsigned long)addr,
-			pci_bus_address(pdev, bar) + offset,
-			range_len(&pgmap->range), dev_to_node(&pdev->dev),
-			&pgmap->ref);
-	if (error)
-		goto pages_free;
-[ ... ]
-pages_free:
-	devm_memunmap_pages(&pdev->dev, pgmap);
-pgmap_free:
-	devm_kfree(&pdev->dev, p2p_pgmap);
-
-[Severity: High]
-This is also a pre-existing issue, but are we leaving a dangling pointer in
-the devres list here?
-
-If gen_pool_add_owner() fails, the code jumps to the pages_free label and
-explicitly frees p2p_pgmap via devm_kfree(). However, the devres action
-pci_p2pdma_unmap_mappings is not removed.
-
-During devres teardown, the registered action will execute and call
-pci_p2pdma_unmap_mappings() with the freed p2p_pgmap pointer. This
-dereferences p2p_pgmap->mem->owner->kobj, resulting in a use-after-free.
-
-Would it be safer to use devm_remove_action() here to prevent this?
-
-	return error;
-}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612083452.1639=
--1-lirongqing@baidu.com?part=3D1
+Thanks,
+Praan
