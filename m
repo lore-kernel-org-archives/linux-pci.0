@@ -1,165 +1,115 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE892F83A2;
-	Fri, 12 Jun 2026 15:22:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0745F29B8D0;
+	Fri, 12 Jun 2026 15:36:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781277746; cv=none; b=TKOO80ux4rrSLNplknUnPX/Sy74DyDyFlF1tnWApISuh3+436wWova4rdq7nIZ4q5SGiUcRQMK18RRQMOUs4xvEaaXKwPRxqSjLkrpjal10Z7NLORutlH1UnBTZGsKLcm3H9BGvL6nDigITxqwkxbjPUpK3565PpTRHu6xLaYVw=
+	t=1781278562; cv=none; b=iGDfwuyqYFwXsysHWK4icYAPZSrNVZTKPcxxunUeS69yKrqffJLcJgQw0hdQ+FXDbEhpIeUaT4y/0xXo3vRCEVQlRCRTXoKZQJnY6uzc716nrkZHPY/0AnB6dMnuKBdRXf5hkhntZJpUqz7jM1PLq3/+5+DgaTeJ0QpEWB/03Mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781277746; c=relaxed/simple;
-	bh=OLGGW/mO4NyqpOFwo5FddLlmOWWrbusRslyiE80EXi0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=e9Vn1P77AW/trqaV1cXGbvOTRyM+xaj64oMJ7WCZ+9A2CNRdqqe5WEVNLS6fZuJt009hwWqOBQCNaRPWEIGXZzAXVhQJraPTA4iQtmxQ+wU1cb4tdjknN9HhDX7Mt09qdgDstvyGaSigqitXJiahc90w0gT1/oLs6LqLywGLWmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=S9vZR5sU; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1781278562; c=relaxed/simple;
+	bh=0HkHpGqNdEltJeYzBM5zmlxVbVdX6X6lFM+zac4lju4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=btqXzis7PH35VVnDvxjvCYDD+C1TtDmEHxOrwzrp5v050bRf8ruRTPIEeUI7mAKTqiBfiXZxu9l1BV9I0IQxN1MjD1G9ku1f5cW10ZJTTJ8BL2SIxJVT2joFbyRoovIwUA3j8EyffU3HuUJXRfmP30J1urepmefs4R7roYpOxDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TZ0erxgk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="S9vZR5sU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1781277742;
-	bh=Od++dpGQk45pUkopK+ZR30rQE6eOhAjb1TsY2NEMy5g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=S9vZR5sUkuLB9FEC8KRRIoqeN59IfE/XLJ4wsiGT0ob84ltCuLVL/5VCR4GkxjsA9
-	 AZ7Qm3ed8W07n6LTQnUawPb2WBDh9qruLj1R9yvNjUnyHicBso/Eg6sOgX8jLjcDoF
-	 WaJ/2LSRwLtX9QEr7TCt/MWGNql4/2d9kzUZ4gjqxnN4SeV7O5sxCjYEXosWCSzM/J
-	 YvAXTaQxZwv7nGq9F+aHO9KeJDtNG+jAGdVUpkSWkW0bZFa7REtQaWrKTUyOEukesu
-	 UesARyHOzLEiT7mbIYtKp4Cga+XLMzOPNpBmprhVOqR4SPs/DGci1Qup6z3iA9i6Qs
-	 Su+eg8UsvZAPA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gcNY35cPWz4xGp;
-	Sat, 13 Jun 2026 01:22:14 +1000 (AEST)
-Message-ID: <42cf4ad9-f094-4f94-88e6-6d2cb6eb6437@ozlabs.org>
-Date: Fri, 12 Jun 2026 16:22:12 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TZ0erxgk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 729861F000E9;
+	Fri, 12 Jun 2026 15:36:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781278560;
+	bh=hQCZKxKvkDpnPl+zzZRxKvokiXAFmUYWGGAQketIbJQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TZ0erxgk7x4rAjnfq6hP+rDy7OGNmrJTKBEDD4niSSuXTpcHq9FD8wi8jjmMWuinZ
+	 Bs3G2WSUSpiomGX/o+lLWGD3jRIoIHF3zv8Rosa72QZQIAt9Rtqy8xha7XbgLLzTBd
+	 khzRwzRhKKL8MxzmjqO4xASQvbX88n7xiXRkqhSY5CluvQMrDKQRbX5CsP9pJHzFAm
+	 zoYiGWRig1AISdLfasWRpK+TH1aHxqRqGgYjynGNFQyf5rikGdcFBP73wT/sl3tt+t
+	 Uudz0Hhgcm9XMlG5x3PajSx0NjvYFx3yFXW2DO+NjC6iE3kDc/Tm93q6O7aDtRlWTq
+	 FDGQEthieY+hQ==
+Date: Fri, 12 Jun 2026 10:35:59 -0500
+From: Rob Herring <robh@kernel.org>
+To: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+Cc: Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	imx@lists.linux.dev, xen-devel@lists.xenproject.org,
+	Charan Teja Kalla <charan.kalla@oss.qualcomm.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Subject: Re: [PATCH v16 0/3] of: parsing of multi #{iommu,msi}-cells in maps
+Message-ID: <20260612153559.GA1082302-robh@kernel.org>
+References: <20260603-parse_iommu_cells-v16-0-dc509dacb19a@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/9] vfio/pci: Convert BAR mmap() to use a DMABUF
-Content-Language: en-GB
-To: Pranjal Shrivastava <praan@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Kevin Tian <kevin.tian@intel.com>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-5-matt@ozlabs.org> <aiviYEi17tewEQg0@google.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <aiviYEi17tewEQg0@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260603-parse_iommu_cells-v16-0-dc509dacb19a@oss.qualcomm.com>
 
-Hi Pranjal,
-
-On 12/06/2026 11:41, Pranjal Shrivastava wrote:
-> On Wed, Jun 10, 2026 at 04:43:18PM +0100, Matt Evans wrote:
->> Convert the VFIO device fd fops->mmap to create a DMABUF representing
->> the BAR mapping, and make the VMA fault handler look up PFNs from the
->> corresponding DMABUF.  This supports future code mmap()ing BAR
->> DMABUFs, and iommufd work to support Type1 P2P.
->>
->> First, vfio_pci_core_mmap() uses the new
->> vfio_pci_core_mmap_prep_dmabuf() helper to export a DMABUF
->> representing a single BAR range.  Then, the vfio_pci_mmap_huge_fault()
->> callback is updated to understand revoked buffers, and uses the new
->> vfio_pci_dma_buf_find_pfn() helper to determine the PFN for a given
->> fault address.
->>
->> Now that the VFIO DMABUFs can be mmap()ed, vfio_pci_dma_buf_move()
->> zaps PTEs (used on the revocation and cleanup paths).
->>
->> CONFIG_VFIO_PCI_CORE now unconditionally depends on
->> CONFIG_DMA_SHARED_BUFFER and CONFIG_PCI_P2PDMA_CORE.  The
->> CONFIG_VFIO_PCI_DMABUF feature conditionally includes support for
->> VFIO_DEVICE_FEATURE_DMA_BUF, depending on the availability of
->> CONFIG_PCI_P2PDMA.
->>
->> Signed-off-by: Matt Evans <matt@ozlabs.org>
->> ---
->>  drivers/vfio/pci/Kconfig           |  5 +-
->>  drivers/vfio/pci/Makefile          |  3 +-
->>  drivers/vfio/pci/vfio_pci_core.c   | 75 +++++++++++++++++++-----------
->>  drivers/vfio/pci/vfio_pci_dmabuf.c | 12 +++++
->>  drivers/vfio/pci/vfio_pci_priv.h   | 11 +----
->>  5 files changed, 67 insertions(+), 39 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
->> index 296bf01e185e..67a2ae1fbc04 100644
->> --- a/drivers/vfio/pci/Kconfig
->> +++ b/drivers/vfio/pci/Kconfig
->> @@ -6,6 +6,8 @@ config VFIO_PCI_CORE
->>  	tristate
->>  	select VFIO_VIRQFD
->>  	select IRQ_BYPASS_MANAGER
->> +	select PCI_P2PDMA_CORE
->> +	select DMA_SHARED_BUFFER
->>  
->>  config VFIO_PCI_INTX
->>  	def_bool y if !S390
->> @@ -56,7 +58,8 @@ config VFIO_PCI_ZDEV_KVM
->>  	  To enable s390x KVM vfio-pci extensions, say Y.
->>  
->>  config VFIO_PCI_DMABUF
->> -	def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
->> +	def_bool y if PCI_P2PDMA
->> +	depends on VFIO_PCI_CORE
->>  
->>  source "drivers/vfio/pci/mlx5/Kconfig"
->>  
-> [...]  
->>  int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
->>  				   struct vm_area_struct *vma,
->> @@ -532,6 +538,10 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
->>  	struct vfio_pci_dma_buf *tmp;
->>  
->>  	lockdep_assert_held_write(&vdev->memory_lock);
->> +	/*
->> +	 * Holding memory_lock ensures a racing VMA fault observes
->> +	 * priv->revoked properly.
->> +	 */
+On Wed, Jun 03, 2026 at 12:43:11PM +0530, Vijayanand Jitta wrote:
+> So far our parsing of {iommu,msi}-map properties has always blindly
+> assumed that the output specifiers will always have exactly 1 cell.
+> This typically does happen to be the case, but is not actually enforced
+> (and the PCI msi-map binding even explicitly states support for 0 or 1
+> cells) - as a result we've now ended up with dodgy DTs out in the field
+> which depend on this behaviour to map a 1-cell specifier for a 2-cell
+> provider, despite that being bogus per the bindings themselves.
 > 
-> Nit: This comment should appear before the lockdep_assert_held_write()
-> Also, it is slightly verbose.. (not against it though).
-
-Right, I'll move it.  Agree it's wordy but if anyone changes that I want
-them to "think faulthandler".
-
->>  	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
->>  		if (!get_file_active(&priv->dmabuf->file))
->> @@ -549,6 +559,8 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
->>  			if (revoked) {
->>  				kref_put(&priv->kref, vfio_pci_dma_buf_done);
->>  				wait_for_completion(&priv->comp);
->> +				unmap_mapping_range(priv->dmabuf->file->f_mapping,
->> +						    0, priv->size, 1);
+> Since there is some potential use[1] in being able to map at least
+> single input IDs to multi-cell output specifiers (and properly support
+> 0-cell outputs as well), add support for properly parsing and using the
+> target nodes' #cells values, albeit with the unfortunate complication of
+> still having to work around expectations of the old behaviour too.
+> 							-- Robin.
 > 
-> Have we run this series with lockdep enabled?
-> I guess it'd be nice to check with lockdep once..
-
-I've (generally) always run testing of this series with lockdep.  (No
-issues (anymore).)
-
-> Apart from these, 
+> Unlike single #{}-cell, it is complex to establish a linear relation
+> between input 'id' and output specifier for multi-cell properties, thus
+> it is always expected that len never going to be > 1.
 > 
-> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> These changes have been tested on QEMU for the arm64 architecture and
+> on the glymur platform [3].
+> 
+> Since, this would also need update in dt-schema, raised PR[2] for the
+> same.
+> 
+> [1] https://lore.kernel.org/all/20250627-video_cb-v3-0-51e18c0ffbce@quicinc.com/
+> [2] PR for iommu-map dtschema: https://github.com/devicetree-org/dt-schema/pull/184
+> [3] https://lore.kernel.org/all/20260515-glymur-v6-5-f6a99cb43a24@oss.qualcomm.com/
+> 
+> V16:
+>   - Patch 2: Fix potential NULL pointer dereference in of_msi_xlate()
+>     when msi_np is NULL. Guard the of_check_msi_parent() call with
+>     "if (msi_np && ...)" to handle the case where the caller passes
+>     NULL for msi_np, as documented. Reported by Sashiko [1].
+>   - Patch 2: Fix OF node refcount leak in of_msi_map_get_device_domain():
+>     np was never released after of_msi_xlate() transferred ownership.
+>   - Patch 3: Default to 1-cell output specifier when the target node
+>     lacks the #iommu-cells/#msi-cells property, for backward
+>     compatibility with controllers that predate the property
+>     (e.g. arm,gic-v2m-frame). Reported by Sashiko [1].
+>   - Patch 3: Add !cells_name to the initial parameter guard in
+>     of_map_id() to prevent a crash if cells_name is NULL.
+>     Reported by Sashiko [1].
 
+I've applied the series, thanks.
 
-Thanks!
-
-
-Matt
-
+Rob
