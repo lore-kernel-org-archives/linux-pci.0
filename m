@@ -1,236 +1,266 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EB33563F0
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 08:41:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.161.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C1526ED45;
+	Fri, 12 Jun 2026 08:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781253666; cv=pass; b=kvxpJX0toVxGi/imbbh2OEGLYLtSSUkuBq3RVrrLjPAYPCTSHR9ntnSV+q/Rqz8FoFIxmpYJRUfb+SWD/TK3OfQKeMqHZTz2OGmYzedvDEOYsDyG9R99F53JvKeBxX5EdNiwFurkn/ZGF6/PPbSQJIDnWZHiM+kIzKsQdiGRmRg=
+	t=1781253757; cv=fail; b=cGMXtr2xdWmMeeanxWf4Pl5idXtJDZKjER8DVOeXk8QtNBYv+cyXujv9/kG4insSQToraEd0pFeIQ8ZztL2H/O5v6gtilwaquonSEpHzCH8NO1lWP7IknhxuUQZHbqWDk6HTnbe0Yjy94Gt7+xTJl5XkztqZ0A8tTGuDCkwlMf4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781253666; c=relaxed/simple;
-	bh=+m7I0CkjADMVYbMlq9bhnum1ScczX6vFg3jUPezTHpo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Vc5XZL8o+sQnddRIQGYFbHhOYy23FH1ZfY+8xJzqIC5kO4qji2qkWUsb2J7oYsT4YQN4JE0B+9g8pbnyjJhRyhnE4CaG03ImAdVkv/Raid9BRTJmVIrDD0YmKT2xNMCKCvE/imwa6/tj3Bjoxpkg17aR+P0uUt/O34E368YTK5M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DCsjwFoc; arc=pass smtp.client-ip=209.85.161.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781253757; c=relaxed/simple;
+	bh=F4zAuCELzQJWpYWoWNaJjkybFRAJfi745bCzKoaa3zc=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=r1QkHQqqf8Co3Ga+cc9R6a2XrSFuEXSfMLcxiMyMaa4Z+QXa71Gy1rPCcsYl6IDggBAtU+2rMEVINJlsBRFcdq53WARDHwR5+D1Gbu4HjtODxUtKQdDijBpNaUWABNAc7r6ZOxbQ05cSjpJ2kEHMyFBCklXCdV0HaSpiRGIp3NQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WLCePuva; arc=fail smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DCsjwFoc"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-69e43b02308so325379eaf.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 01:41:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781253664; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Qyd9hoknu7n5CEz5qfcdH1x0HM9L9ghP6/s1ep7hsW8eeH+GSTmxrCF/xodrRWBLB8
-         67kOrLm16ljnY8rf0fG19KLsQ62q0FO/s0VVFfsa/VRNI+XtHyMT2/AIA8xyVcaouK1N
-         kPOJKbmsMMy5VSfGKq0nSLsrlQAlG+/NT9yEkCsspqt2uplUbmZwLv9D3pWAApk5X9lH
-         1r2ZwhEfdVkvfZxdf1F9bnbe8zso22U25lWEpMgVlUWNwj5sc5EHXmqmKAaHqlsTxnxj
-         cOX+ApV3DOolAYQBGyqYuXKCuDyg+9UnEnA4QupBkr21OjncUg7VeZAO2RU0bAxpISKJ
-         mSuw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=qDXT+VpnUZOvTmZ9QfMSI9maJrx+MRQBI+WJcmPy6JU=;
-        fh=GVA+DAybPvRt2kEvksRUFsO7X2/+vVEz7Pu4Q6DJDSc=;
-        b=I4f4mdxd+iZA6TtAT/g5uG2rCANSYp6lpZLbV8XXXWRKdx9tmE178QrahHs95rDapz
-         fHPgSGfAF2Erx1EBhiSpJnnwRgGIPVDUcOVdNmKotEW4vQsJ09WRCk9SjAVTLE1ijwk0
-         e+11EtxeyZyAJVF+a38SGlZ4hAOgaruMIJZrkQ1IYQnwwYt8qHdZfOfKbRDMku4uUEC0
-         D2FmVIH6nes+Vni8PZ9qr3acjIFF1aImFrdY++auE7f4APLVs/+joWWF5vt95UpRuSqq
-         Qgyb6MesP9tYO1XGUhSIMuTZRS3P7CMmrRFQlKJ2iTvAW7lIOPI6ttPDNGf4L3S1d/6o
-         bHSQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781253664; x=1781858464; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qDXT+VpnUZOvTmZ9QfMSI9maJrx+MRQBI+WJcmPy6JU=;
-        b=DCsjwFocz+ITiFdDD/RMvZ+ldHOXvBMG/CxDXCTJWtxv2SxHeG1pKHAjxn7fPw9cA5
-         uNrdtXA9GTErlQ6B0A9LLhkP6drcZBpcsz5uIgsOe0ZGLCh45o/Bc2HUMhBPAW8N/edt
-         MO4ohkCA78bmWhPXpvXaophxZYljOT5twQXzz+b0RIyhx+1BtqOAQ51y5W7WtpqInE6P
-         LZuNfqz+f75tQiJPnPPyB6JKoAen26jN8mTywU8usxw7UjtWF6r/vmQ3onaY7vbhNrpT
-         WVJeZugIoqVUcWD9d9jfS1AkRuCwPODETKKEwSQn+NiBBp+josS7R16S5Kk0YmUCqe0g
-         iH5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781253664; x=1781858464;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=qDXT+VpnUZOvTmZ9QfMSI9maJrx+MRQBI+WJcmPy6JU=;
-        b=DX++M2W8cjci7LNqG/1VdRE2g0/U0y4WZhQLNg0OP+LOoDjOc3cO54lVNluM1ZMPLT
-         u/Yrtf+2ov+/1gMtLR4tLI4qOeM8EopWd+oaX/aO4mQMWPFzIVddhH2IOngJFtxkAxuZ
-         A+TrYqMTt1+PEMVw7ZK2m28T0Fnnl8XLw3vHe6Uot7ckw06gkUbhOgFDse3gl5Op/+EL
-         RLWcraYuz7NTWDQegbiEvCll0cp6MkOhuJga9sTx8IMqThhay2kiCmBy7P0Mq7NeAfk7
-         5uauPOVUP3UOakuc5QbO+sGJWHWzsvP6a7bezv7rnGAdmk/uwjTscXELIkoFZAE8Gjow
-         5t7A==
-X-Forwarded-Encrypted: i=1; AFNElJ/M7ucB0qYDrdu+2RTeN9of78WkV4940NX88CFaLZZgjJZpbIQgrCnWq1K8d/Id7VRL1wbQSVPet80=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzskvorivnUV7GAndbzUK9NKAPHWiDWtJz96wOKk6rlp91Z4tGu
-	T+GO9tosBJp1XA7vTf5Ck71aChAxZ74V8zlumI2UDGvMsPeu73NxxBHFYfKvLcnMmJ92DTbYyXZ
-	BjMOzGVisOQzeOP7KqkS4vJcOID4Cwl0=
-X-Gm-Gg: Acq92OHDJD6kO3KilyJ8e7oRzYs22SOjCwCW0wlcIdDx5BTtN2/OnrHvMQNw3rNwzri
-	FtpBrPDD4hE7FSczXyr24kozLiFbpyhwWEHakS2rR6xD20ck8aAKgwVqwd9RtPylGbf3IWJUg4f
-	GJX75wckj+dbqw2iHpyvqSvSfILXQPeddo6B9FylXAC1oWAfbzpBIdtplTSa3eMdhmetN+EEVSN
-	pUffQN+Mr2dumW7piHYbCmX7eqtJYnFfmHWpR6s1s+8rk4m01SlK9br96ZwVMev0/Y36tONNjM5
-	Vxg1aBbr
-X-Received: by 2002:a05:6820:1694:b0:69e:2f7c:693c with SMTP id
- 006d021491bc7-69edc6f3f5emr1141562eaf.35.1781253663726; Fri, 12 Jun 2026
- 01:41:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WLCePuva"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781253754; x=1812789754;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=F4zAuCELzQJWpYWoWNaJjkybFRAJfi745bCzKoaa3zc=;
+  b=WLCePuva/BI0oo1Bt13NmH7BKhOPlSR9dRmbiaA5J7YTXBnBRqWSvsRQ
+   z9UFg2UEqTNbXMnMqhzBhEv08An78euWtyLfP/YOegGKIh0xQ0YfgUij0
+   JYLCFb//ruPMyIfnTNl3FVLRTS3WkMpyQHvhQH1eTGUVj6TvZhuAlGThY
+   OhW5hRg3kmWLPJAaGxNEgUqKNQcVPSfIpePulpM2WeqVlRb7AZFVsTPNq
+   PMrNLwL6wNONY1EEo6uJqIP3Pu6A2vGa2mynQPifhwXKDMuvRfkZu+9q9
+   0amabxTeM0GrvMcshnqNyOD9QND1UEBvlhGuKmfRifTgAzH+Gm+vqUCL8
+   Q==;
+X-CSE-ConnectionGUID: H3sz6PEuRPO2lOM7bitymA==
+X-CSE-MsgGUID: QtW3dQfGTFO5gro2wK81qA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11813"; a="69627942"
+X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
+   d="scan'208";a="69627942"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:42:33 -0700
+X-CSE-ConnectionGUID: U5+H3HO6QkiRqquCFfvd9Q==
+X-CSE-MsgGUID: hNaadtnLQaqNM3gaJGK4IA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
+   d="scan'208";a="251713762"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by orviesa005.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:42:32 -0700
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 12 Jun 2026 01:42:31 -0700
+Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Fri, 12 Jun 2026 01:42:31 -0700
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (40.93.195.4) by
+ edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 12 Jun 2026 01:42:30 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=IL+/fLXXccUSJT/Rq/6k9oJ6Ct26n/DPEDMA3xafWTZx2ErHM9Dx2NgtW7eJnVjBZKn7OwO0OrJ6eWncE3wmBZVwuKqsK3r7zIpwgsKTkt8TndXCSvYhqFQ3fKJ2Fb9dzsYuxMIiPaBWlYHXBCjVfT1K+eehv9J2AVRv3lRKBO3Txe/6Q+YPtk+0JGnrPtyGHyONKDaswAEe/Cz00elZ4onz38PkZ1xttZH7+NaIxO2uROOpIJyeQWr9DAYENGtrYLpi10vznFKVyaukxZuBpcqdd5iEVOZSdMj0EJ3iDiCB/WwGRCo2RYH1pb4JCTg9Jh2urZi6ofXRtiIHLRaMkw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EpsgLquBzo8qGGD6gZ9Cz9RKOawcuxu6GD3oFLMtq7k=;
+ b=UnN9NpmVrKiPAuPWdFxDiqOp/oYlgDbM4ccG9IWtxr9mQM8xU3F6n1NRiMnRrstCk9aI6wZHiRR3a5hr/GeKmDVWjvDuIh9oIWqGyGu4UTrqpq/1Mp7aTQArOuHB1AaYwYOIrDOcXiPSVTTJxI3jk5rpCgqNtS2oLwRMl2jhGocnhkv2HjlQGaQmRx44rkuMBLaarH7p9LvzP0pVDrZof5skBf6eTZqHYp/Lynnp/wtEDfrhXiDQ4SiAuCl1jWs/RoYe25sjaBudzFO5iwLvgY7Sqa2pT95i2Jjvi27ffcnpxF88AyO3/9uBK29FWfIqSJAj0NWDDIbufVHT8DPtGw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from DM6PR11MB3690.namprd11.prod.outlook.com (2603:10b6:5:13d::32)
+ by BL1PR11MB5238.namprd11.prod.outlook.com (2603:10b6:208:313::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.14; Fri, 12 Jun
+ 2026 08:42:23 +0000
+Received: from DM6PR11MB3690.namprd11.prod.outlook.com
+ ([fe80::7db8:f6b3:30f8:ee4b]) by DM6PR11MB3690.namprd11.prod.outlook.com
+ ([fe80::7db8:f6b3:30f8:ee4b%4]) with mapi id 15.21.0113.013; Fri, 12 Jun 2026
+ 08:42:23 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>, "Leon
+ Romanovsky" <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro
+	<amastro@fb.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
+	<christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, "Logan
+ Gunthorpe" <logang@deltatee.com>
+CC: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>, Sumit Semwal
+	<sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, "Pranjal
+ Shrivastava" <praan@google.com>, Alistair Popple <apopple@nvidia.com>,
+	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 2/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
+Thread-Topic: [PATCH v3 2/9] vfio/pci: Add a helper to look up PFNs for
+ DMABUFs
+Thread-Index: AQHc+PAQRqml0ikcREqACcjq+Arri7Y6mQ/w
+Date: Fri, 12 Jun 2026 08:42:23 +0000
+Message-ID: <DM6PR11MB369091A6F1E32054A95AB6788C182@DM6PR11MB3690.namprd11.prod.outlook.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-3-matt@ozlabs.org>
+In-Reply-To: <20260610154327.37758-3-matt@ozlabs.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR11MB3690:EE_|BL1PR11MB5238:EE_
+x-ms-office365-filtering-correlation-id: 3ff11f89-ab02-4fd5-2535-08dec85e85ec
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|23010399003|38070700021|22082099003|18002099003|4143699003|11063799006|56012099006;
+x-microsoft-antispam-message-info: Ov5LhRk57yBT/6yo9yNep4x+5mRNB9Qn/IhTq+AITak3qAVxKWf8Qsxpwxs28S30i27t90qKWIk4/P4k3ZrCDX4wH6eYi6Qflitr6SiV2d+QtABlY7/9zA4t5hsucpaxjGzLAzEkrOaVvkBv/TQvf1FuLyMfsEr3QC6GAtom0l4pRjBJnrZmDt4p04yEAwrmO3T2t+faGkYEJHJlTtj7qB1kheSB+xfYb/2rJkkMRNFPROtnBsYmcNAmfMaFjfF5DSLjTqAV2omnVuTh8+LtmMZ3Cc89spcIjTilgre82cmmjC4soRqK/HSpFRe97eWepKLOYpUiv9ykRiK7i15WVwAMErVBSVFrSZK2qjrukaeR2XzwIxmi/PidTTsDHRe71gd1zEfj9WST71GY33FfsNTNGXnB63m0VHWAXI0EAd7FsPETq5KVZQ41dUk9tsGV5mGdsnu3vMXbvRQAbINDkXBOiLtj80PZZDn/pc4ZvMXShP1PVU3zwLHXAxF1PTuz2GW0xd2peEw/Q68aqP1E5Q+x3jNLbA4pazTIHqyHE9XQ/eKLPsrCy3voEyylz1WEyQfYnywJG2H2lGHJXmc9dTWXolHQmP/MjIPfEsqtVO7hx+sXw4QzGfofXtVW6YGq06Y5GZI5VeIzQVuSRGYcHH3QOm1QkiQVMQxo/iFlBApZXBm/EGe/uiHL9ruVJk076sc6cW1mO8alVdeQXn1BSjlOBH7aFl3p7V/+4uQPkDnITeBU8+socv6SM7HzDmtr
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB3690.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(23010399003)(38070700021)(22082099003)(18002099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?C2J+rz3kj6s2iUbNjHVC+wioYkR04i1FmrlmJH4qAxYakRBidwhHjG7dcb?=
+ =?iso-8859-1?Q?Ejynw1+znfAvXdvTirm6Yu8Lk6ghiLU02KPBcYvrzopohUk6ptWcwjDvrf?=
+ =?iso-8859-1?Q?fq4mqjX89hjFfkMjcTALYsRP9qKzxTDT+b7oR4LMQRb9a1/Tfb4E+SM6fA?=
+ =?iso-8859-1?Q?n+BW+WImCJRhtGVpJJVNGUbHNFVgfn+uNKPxp6zKH++SFVEi3tKOnC14vB?=
+ =?iso-8859-1?Q?PWf5G8grm8nzjc3qYh/diOSLGkMcZKziofmBQLIPlMwahvdmJskf68Mh55?=
+ =?iso-8859-1?Q?MHVhUJtO22IkUXLw/cTJ1cCwENjUJe8OdUDPwayv7SytWEQPTPD7XHpHd7?=
+ =?iso-8859-1?Q?SWbSIP83+PE3HTM4P+SdrDe0KgLLqZCI8Xcu/GDbG8bpUytaXFBaTdFoAz?=
+ =?iso-8859-1?Q?DJ/CxCAurrI8AC2JRmeHT6S/Y/j/tLKx5heS+oUGT+KE2ojcmiGWaplf6F?=
+ =?iso-8859-1?Q?utnrpzFTDPhlEynCJ05ADE83SNUN/Xa/pGe96YrEnL/FQmzbJJspeowRHW?=
+ =?iso-8859-1?Q?sBAF7UNLj8kSoC8SX3GgiRvUd7ZVsVqkxxj46vJfwEd+q/2dwkiP2hKKLF?=
+ =?iso-8859-1?Q?z16XIBYVBCsyPXS5ShFv7TZ7uMboxMD0wJTuj4H/u7GSeHSprDhivJXxK+?=
+ =?iso-8859-1?Q?oxokQSrVVE1ddcmFpZl70q+1fjjrb2pTDpjPiAEn0J7jUW7ggfngQ2Kq+M?=
+ =?iso-8859-1?Q?h6UcYB1XHKmJz+4oevgPLBz4CK9hB8qNPCwTlZ8SRXKtvgyrftyoqc1pq5?=
+ =?iso-8859-1?Q?91U0cQK/ZD5n6U3wLaPnkBejo233GElEOsC3zkF8SvUs2oNZ5u3QZUD+oE?=
+ =?iso-8859-1?Q?ninON55madFJsYjqggVOJU+v459mx1Eg7XPHA0qglocIIhLbQE94gR8SxG?=
+ =?iso-8859-1?Q?ItDwJFkQ46ecdceIv1VZS/5D8A59u+u65bsoyZTWaX/qfN/CflpqFg4USR?=
+ =?iso-8859-1?Q?vdAGTGLEbvnMJhXwHGa3YmQlSFiUt+C9ESECGgUg/Cwvd7UsCO+9AtsN+k?=
+ =?iso-8859-1?Q?Q+LyuhZ0rJa0t4JlxAB7vQj6/uNhesY2HQdbZAC0LGZeA9PZIZgIu67PWo?=
+ =?iso-8859-1?Q?v6gPFj1K5ovdJ7vi0OUnY7EaiNdwL7tfQ+TjT0WJmwd4SisyiVugK9OcqV?=
+ =?iso-8859-1?Q?rPzNHlm09x//n0TI4aKiUY/BkNshcUeaKLGJShCbPZobE4XgsgyJPwFtSt?=
+ =?iso-8859-1?Q?MbHH82jb0SGwxx+nviAZkn/sPkr02Aw8TMvLPU9e2Xet7eZn3L1Up50ise?=
+ =?iso-8859-1?Q?IltWepQaFD8gTHuEhTX/ZPGnm+8+k+xiiWpVfYB7y455lnqpO/2sHBqk11?=
+ =?iso-8859-1?Q?3JwQhbVZfkGaSGBeiPxbNWRqOgD354EkPH/2CnBW69QBOhD3y6QzkCDXSJ?=
+ =?iso-8859-1?Q?nNG/zUlRwgjFsQG0FeyiZfJzXesn9Gx8xZtysyeRLTHtK5CPbCclYI7Etc?=
+ =?iso-8859-1?Q?vnXgp2PgmcRaSzjvuQhPJ0qophFa5b52TLixRsVRJnLwPaQfdgfEn3zfyA?=
+ =?iso-8859-1?Q?1J+7pOcsnFmdDoMeozHWx9CkRcHBsdk4tDGuxY99S57hKecJmBs814FZ9l?=
+ =?iso-8859-1?Q?56nBXfUV2l/SI99nkRNC3MmWwyxzR+FY23BT/hhUcD1esQoG3TQArGTknk?=
+ =?iso-8859-1?Q?HHcOWeEofBXY17uG8pfBE5KFIS9bd2ppxWftm/+MPnihh0D+mYnnhpf+iQ?=
+ =?iso-8859-1?Q?YQ1g4Miw8TXQbSiyg4CG82IXAdI6Jzpg8ivF8Oqq3+aeNgKtMNiRPmc2px?=
+ =?iso-8859-1?Q?I4u1aVRyPwOIvfa02SzBbTJXS8hByKnArkY1qbtAiYmmeI?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260610135709.1630627-1-hugoolli@tencent.com>
- <20260610135709.1630627-3-hugoolli@tencent.com> <ef439f87-46dc-8c29-ecb4-10813eff98d0@linux.intel.com>
-In-Reply-To: <ef439f87-46dc-8c29-ecb4-10813eff98d0@linux.intel.com>
-From: hugo lee <cs.hugolee@gmail.com>
-Date: Fri, 12 Jun 2026 16:40:53 +0800
-X-Gm-Features: AVVi8CdNtyMw7w8UlkGHZBipiaGlNtDUiwU1zh3ygd3NhrTzseYf6vt_-NORCEY
-Message-ID: <CAAdeq_+ekeLnFqbET12bVVDqOHyKDs07h5evD3BQQ=7LH4Kfmg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: setup-res: Guard against bus->self == NULL in _pci_assign_resource()
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, 
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, 
-	Yinghai Lu <yinghai@kernel.org>, Yuguo Li <hugoolli@tencent.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Exchange-RoutingPolicyChecked: UwHSsWm4NtaL7Mblcio3RQRSuVYMd/gy6EmiaCdlYXC5qUDRJdVPZcNeDIxtHHr+ce0kE4DjFGNgYK5B5V8sQa/ptORqL+iZO0LmieTQ563VUMjmZEbnsGMpB974fVGtud4OieycnI3WwAvJSU+AO5ltIp0gdF35JZKfbNAVbGFhD/DGo6Rr/HDeCigQpBGPh99K+7BpjNJU9ldPla5P8UJsmNHIYQkQDZLpIW+zP9hKKj26qgl5qWYmxiWBb8ICYZULmpUydjd0TDcvsSC6lAJ+bbASIv72pr8UFuWlU0uibQMUvaKCgJaOViPIvgIzAldFwDtVfBNTnludEZ9e/w==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB3690.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ff11f89-ab02-4fd5-2535-08dec85e85ec
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jun 2026 08:42:23.2123
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vzPFVdmtjnxKzPIr1L0ApYCdrYV8XYBzeAMvFCS7Fe98Nsfqm8iuUAzhL9QPYjX+5NbBtQAv+rvMwaJBI5DTsw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR11MB5238
+X-OriginatorOrg: intel.com
 
-On Thu, Jun 11, 2026 at 5:57=E2=80=AFPM Ilpo J=C3=A4rvinen
-<ilpo.jarvinen@linux.intel.com> wrote:
->
-> On Wed, 10 Jun 2026, Yuguo Li wrote:
->
-> > _pci_assign_resource() walks up the parent buses looking for a
-> > transparent bridge to retry resource allocation against.  The
-> > termination check dereferences bus->self->transparent without first
-> > testing bus->self.
-> >
-> > For SR-IOV virtual buses created by virtfn_add_bus() via
-> > pci_add_new_bus(parent, NULL, busnr) -- which happens when a VF lands
-> > on a bus number different from its PF -- bus->self is NULL.  When
-> > __pci_assign_resource() is invoked on such a VF (e.g. via
-> > pci_assign_resource() from userspace-triggered LTP coverage) and the
-> > allocation fails on the first iteration, the !bus->parent test passes
-> > because the virtual bus does have a parent, and the next term then
-> > NULL-derefs bus->self.
-> >
-> > Add an explicit !bus->self check, mirroring the established pattern
-> > elsewhere in drivers/pci/ (e.g. pci.c, probe.c, pciehp_hpc.c).
-> >
-> > Reproduced on mainline 7.1.0-rc7+ on x86_64 with an SR-IOV PF whose
-> > VFs span multiple bus numbers, by triggering pci_assign_resource() on
-> > a VF that lives on a virtual bus:
-> >
-> >     BUG: kernel NULL pointer dereference, address: 0000000000000860
-> >     RIP: 0010:_pci_assign_resource+0x63/0x130
-> >     Call Trace:
-> >      pci_assign_resource+0xe9/0x370
-> >      ... (LTP tpci test-case 12 driving pci_assign_resource via sysfs)
->
-> Hi,
->
-> And who called _*pci_assign_resource(), etc.? I actually wanted to check
-> the code... :-( Please don't strip PCI core related parts of the
-> callchain.
->
+> From: Matt Evans <matt@ozlabs.org>
+> Sent: Wednesday, June 10, 2026 11:43 PM
+>=20
+> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *priv,
+> +			      struct vm_area_struct *vma,
+> +			      unsigned long address,
+> +			      unsigned int order,
+> +			      unsigned long *out_pfn)
+> +{
+> +	/*
+> +	 * Given a VMA (start, end, pgoffs) and a fault address,
+> +	 * search the corresponding DMABUF's phys_vec[] to find the
+> +	 * range representing the address's offset into the VMA, and
+> +	 * its PFN.
+> +	 *
+> +	 * The phys_vec[] ranges represent contiguous spans of VAs
+> +	 * upwards from the buffer offset 0; the actual PFNs might be
+> +	 * in any order, overlap/alias, etc.  Calculate an offset of
+> +	 * the desired page given VMA start/pgoff and address, then
+> +	 * search upwards from 0 to find which span contains it.
+> +	 *
+> +	 * On success, a valid PFN for a page sized by 'order' is
+> +	 * returned into out_pfn.
+> +	 *
+> +	 * Failure occurs if:
+> +	 * - The page would cross the edge of the VMA
+> +	 * - The page isn't entirely contained within a range
+> +	 * - We find a range, but the final PFN isn't aligned to the
+> +	 *   requested order.
+> +	 *
+> +	 * (Upon failure, the caller is expected to try again with a
+> +	 * smaller order; the tests above will always succeed for
+> +	 * order=3D0 as the limit case.)
+> +	 *
+> +	 * It's suboptimal if DMABUFs are created with neigbouring
 
-Hi Ilpo,
-Thanks for the review.  A clarification on the call chain, results
-of running your suggested form, and a question on the right shape.
+s/neigbouring/neighboring/
 
-1. Call chain
-The "..." in last mail was LTP module frames and the syscall layer,
-not PCI core frames -- the chain hits _pci_assign_resource() in one
-core hop :
-    pci_assign_resource+0xe9/0x370
-    test_case+0x202/0x6e0       [ltp_tpci]
-    sys_tcase+0x51/0x80         [ltp_tpci]
-    kernfs_fop_write_iter+0x117/0x1f0
-    vfs_write+0x28d/0x450
-    ksys_write+0x69/0xe0
-    do_syscall_64+0xab/0x500
+> +	 * ranges that are physically contiguous, since hugepages
+> +	 * can't straddle range boundaries.  (The construction of the
+> +	 * ranges vector should merge such ranges.)
 
-The trigger is upstream LTP test_pci. Patch 1 is reached via
-sub-case BUS_SCAN (case 6, pci_rescan_bus()). Patch 2
-is reached via sub-case PCI_RESOURCES(case 12), which on
-every prefetchable MMIO BAR runs:
+though the field is called 'phys_vec', removing 'vector' in description
+is clearer here.
 
-    pci_release_resource(dev, i);
-    ret =3D pci_assign_resource(dev, i);
+> +	 *
+> +	 * Finally, vma_pgoff_adjust is used for a DMABUF representing
+> +	 * a VFIO BAR mmap, which is created from the start of the
+> +	 * offset region.
 
-https://github.com/linux-test-project/ltp/blob/d631e9c/testcases/kernel/dev=
-ice-drivers/pci/tpci_kernel/ltp_tpci.c#L428
+Elaborate it a little bit that the vm_pgoff is already counted in paddr
+of phys_vec so it should be skipped when finding the pfn.
 
-> >      do_syscall_64+0xab/0x500
-> >
-> > This is the same SR-IOV-virtual-bus / self =3D=3D NULL pattern fixed fo=
-r
-> > pci_read_bridge_bases() in commit ("PCI: Bail out of
-> > pci_read_bridge_bases() for SR-IOV virtual buses").
-> >
-> > Fixes: d09ee9687e02 ("PCI: improve resource allocation under transparen=
-t bridges")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Yuguo Li <hugoolli@tencent.com>
-> > ---
-> >  drivers/pci/setup-res.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> > index 991d3ed543f5..e8bd3d4ff923 100644
-> > --- a/drivers/pci/setup-res.c
-> > +++ b/drivers/pci/setup-res.c
-> > @@ -353,7 +353,7 @@ static int _pci_assign_resource(struct pci_dev *dev=
-, int resno,
-> >
-> >       bus =3D dev->bus;
-> >       while ((ret =3D __pci_assign_resource(bus, dev, resno, size, min_=
-align))) {
-> > -             if (!bus->parent || !bus->self->transparent)
-> > +             if (!bus->parent || !bus->self || !bus->self->transparent=
-)
->
-> I'd like to know if this should not break in case of !bus->self because
-> I couldn't immediately find the code which would add window resources to
-> the VF virtual bus so I'm not convinced this check is right.
->
-> __pci_assign_resource() obviously must have failed to assign the resource
-> if you can trigger NULL deref here so that hints VF bus does not have the
-> resource that could parent dev's resource present (another explanation
-> could be that it just doesn't fit there but I cannot say it based on the
-> limited information).
->
-> Did the resource fail to assign? What is the resulting resource tree with
-> this change?
->
-> The more approriate check might be this one:
->
->                 if (!bus->parent || (bus->self && !bus->self->transparent=
-))
->
-> --
->  i.
->
 
-2.SRIOV VF and pci resource management
+> +	 */
+> +
+> +	const unsigned long pagesize =3D PAGE_SIZE << order;
+> +	unsigned long vma_off =3D ((vma->vm_pgoff - priv->vma_pgoff_adjust)
+> <<
+> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
+> +	unsigned long rounded_page_addr =3D ALIGN_DOWN(address,
+> pagesize);
+> +	unsigned long rounded_page_end =3D rounded_page_addr + pagesize;
+> +	unsigned long page_buf_offset;
+> +	unsigned long page_buf_offset_end;
 
-Yes, resource failed to assign. Confirmed on a system carrying
-these two patches: cross-bus VFs end up with resource[0] either
-0/0/0 or "start=3D0, end=3Dsize-1, flags preserved" (the residue
-pci_release_resource() leaves), while same-bus VFs on the same
-PF remain assigned, but the result comes from the generic allocator
-on the PF bus, not from the SR-IOV slice that virtfn_add_bus()
-set up. Either way, dev->resource[] no longer reflects what the
-hardware decodes.
+what about "fault_offset[_end]"? page_buf is a bit confusing.
 
-VF resources don't normally come from _pci_assign_resource(). At
-probe time, pci_iov_add_virtfn() programs them as a deterministic
-slice of the PF VF BAR window. So it is inappropriate to call
-pci_release_resource()/pci_assign_resource() for a VF.
+> +	unsigned long range_buf_offset =3D 0;
 
-Maybe we should add an early bail-out on dev->is_virtfn at
-the top of both -- with -EBUSY from _pci_assign_resource(), which
-ltp_tpci already treats as TPASS, and keep dev->resource[] consistent
-with the probe-time slice.
+could this be called 'range_start' then the 'range_start' in latter loop
+is renamed to 'phys_start'?
+
+Not strong... just feel such naming helps me understand the logic easier
+
+> +	unsigned int i;
+> +
+> +	if (rounded_page_addr < vma->vm_start || rounded_page_end >
+> vma->vm_end) {
+> +		if (order > 0)
+> +			return -EAGAIN;
+> +
+> +		/* A fault address outside of the VMA is absurd. */
+> +		WARN(1, "Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
+> +		     address, vma->vm_start, vma->vm_end);
+> +		return -EFAULT;
+> +	}
+> +
+> +	/*
+> +	 * page_buff_offset[_end] is the span of DMABUF offsets
+> +	 * corresponding to the faulting page:
+> +	 */
+
+if the naming is kept then s/page_buff_offset/page_buf_offset/
+
+otherwise,
+
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
