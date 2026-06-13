@@ -1,193 +1,203 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB121EE7C6;
-	Sat, 13 Jun 2026 17:58:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83A6A2F1FD7;
+	Sat, 13 Jun 2026 18:01:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781373535; cv=none; b=pxlHOoMCtTY6OYSXy9PP5h6cGY6T+33dtTIae1Yu3hHfu/0mn4cQTTeppXZ+j2+SB+vyC0kGq16SKuaW8I1Fdyj3frIN2TesGBRSQTEPUXyWcxeXmLZalVtaZSVx8x6TGkOXWnKy+OCCMhucpHZmNZs8PPzn9GIBfkbEFSCpJ6I=
+	t=1781373694; cv=none; b=Vx+KwdAW1e3b6+LEORdcSRPXeUzaDtUqFbUa2zGHdrw2F/+SxVYgI3BUonOuQ/xzKsfBUIGeI2OvkgXNPUl0q7QPfCRUxbv192o7bpXjOG4y+8VPbpiml15NaSJZ914ZehGbQLQKbdYTS2YpWPG3gZF9aI0ZxSVsacJjWyuANVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781373535; c=relaxed/simple;
-	bh=ruOXF/n4c94stJyv2jdMOlOcQL525y5kXrKMfBYjX20=;
+	s=arc-20240116; t=1781373694; c=relaxed/simple;
+	bh=PtxzYY8LrF51wGYWbg12hSB68sznV5H6PBIDplr1lcY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=l2ohviQURlYsVzGU5y6vhorVPmCzRD0RCB6eglLFarkkjLshmccHC3an3/5t77m16DFi8uKdbpAu4zaBGDYXrq/rCcNQPI+L4WfNdZMHwwkKtsSNDfCn72tZ0mOeGDLczlbs5mAIXl3D27gStH2HuAJ4p0/KAzuv5RtvaidJIHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ihClCT7f; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Enf9jhiIsXk9LjuK8lV9Fcf0APFIvNR/Q3GOu3BgLwK/dCge2GPA8hayDI2nSBVAsfM+njZMNyql+ureipdhcTlZpcXx1IVnTpvfqqYdlOBfgqu0Q1dUqZlRe8WdF/BuKUOirQD4HiygLZRum9U1/xCz5CtuU4iVfU3Jq6n1b1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fygx1etq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ihClCT7f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59E7D1F000E9;
-	Sat, 13 Jun 2026 17:58:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fygx1etq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CD591F000E9;
+	Sat, 13 Jun 2026 18:01:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781373533;
-	bh=fzAbWFIlKsVBTYkcBZIPTwZkjHWT1u18E8bKHRYs4oI=;
+	s=k20260515; t=1781373691;
+	bh=6+0ZbHPmUpCUyUDByoFZ21YmlX8qYAJ3ZoVHiooDhgs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ihClCT7fIPE5pfTq8RGhxjzPn1ib8/8RtPpkCfce4wfHBDCOcuiemd9MguOzQF80D
-	 /uy/F3jpFxWE6eyDP5hGioliH/kfOn4ICnssfjtgholHtM2wt6ek30Yihd5GRJoywl
-	 hZTA+natjIGF6eUKuQT7kLUGswLa04F3gwZE7rRzPKfslOe0hTTl+aPIzMcO7w0Eq7
-	 bgGV19sxzQ/PoOJLwdwqnO7PSZbG0GyqHgrHIUExOm3BKYohTRWZAkTWq2f9/Z69KK
-	 3LepNC+2nIpscRvmcT5efG9tXDnmlHWmRM7nY7CFlMy79n8KwNrBn39vlvPmmoxm6f
-	 g/ZozNNh9z2ng==
+	b=Fygx1etqeG6Mr97Cjhp0OBm4bwGGKFbTsvh2jKXuqMU5NwCKVf9RXz70pEV9a9cnS
+	 RLVNVFQwM//9BglYjmDKimiYvLOKQtTJH81HXESWiSZ8KHbY5ZjB158oP8KZDwvTmc
+	 hy8qjMti85KMsoD7Zqg8XJsoBQvYXGCaGCi8YIP0c9IRg9rPdOXUyyOHlq7rLKVfaM
+	 spD9yBgZzjpAV9V4Q88OJaaxr2LQFnCyVRWhL1l1vX+fAfzuli+4Aibfv6ZCTOYQTl
+	 mG49tv7NB+O7qjik0qYT18v6h2v3Y81WDiMJppoC3g0F0EN+EsuoRh4u8Iw7PxGY+4
+	 maWAAuzANu5EQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 2/3] vfio/pci: Allow userspace to set a virtual
- Device Serial Number
+Subject: Re: [PATCH RFC 3/3] selftests/vfio: Add PCIe Device Serial Number
+ test
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Arya" <pranjal.arya@oss.qualcomm.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260613-pcie_vfio-v1-2-09168188f3f2@oss.qualcomm.com>
-References: <20260613-pcie_vfio-v1-2-09168188f3f2@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260613-pcie_vfio-v1-3-09168188f3f2@oss.qualcomm.com>
+References: <20260613-pcie_vfio-v1-3-09168188f3f2@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 13 Jun 2026 17:58:52 +0000
-Message-Id: <20260613175853.59E7D1F000E9@smtp.kernel.org>
+Date: Sat, 13 Jun 2026 18:01:30 +0000
+Message-Id: <20260613180131.0CD591F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] The VFIO_DEVICE_FEATURE_PCI_DSN ioctl can cause an out-of-bounds h=
-eap read or write on the `vdev->vconfig` buffer if a device exposes a DSN c=
-apability near the end of its PCIe configuration space.
-- [Medium] UAPI documentation states `serial_number` is in little-endian wi=
-re order, but the implementation processes it as a host-endian `u64`.
-- [Medium] The use of `WRITE_ONCE()` on the writer side does not prevent te=
-aring because the concurrent reader side uses `memcpy()`, leading to a data=
- race.
+
+New issues:
+- [Medium] Endianness mismatch in PCI configuration space reads leading to =
+test failures on big-endian architectures.
+- [Medium] Type punning from a byte array to structs with stricter alignmen=
+t requirements violates strict aliasing and alignment rules.
+- [Low] Capability walker fails to break on unpopulated extended configurat=
+ion space (`0xffffffff`).
+
+Pre-existing issues:
+- [Critical] Missing bounds checking when parsing PCI extended capabilities=
+ causes heap buffer overflows.
 --
 
-commit 519ac218356009252a82c7aa68a221467812de3f
+commit 83546a8f398b5cb4fdb341d52a4a665cb8639619
 Author: Pranjal Arya <pranjal.arya@oss.qualcomm.com>
 
-vfio/pci: Allow userspace to set a virtual Device Serial Number
+selftests/vfio: Add PCIe Device Serial Number test
 
-This patch adds a VFIO_DEVICE_FEATURE_PCI_DSN device feature that lets the
-trusted userspace VMM GET or SET the 64-bit serial number presented in the
-device's virtualized config space.
+This patch adds a selftest to verify the vfio-pci DSN handling, ensuring th=
+at
+the serial number is scrubbed by default and that the VFIO_DEVICE_FEATURE_P=
+CI_DSN
+feature correctly probes, sets, and gets the presented serial.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
-ci_config.c
-> index 24dfeb43cb714..60c19129c8145 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -2078,3 +2078,62 @@ bool vfio_pci_core_range_intersect_range(loff_t bu=
-f_start, size_t buf_cnt,
+> diff --git a/tools/testing/selftests/vfio/vfio_pci_dsn_test.c b/tools/tes=
+ting/selftests/vfio/vfio_pci_dsn_test.c
+> new file mode 100644
+> index 0000000000000..d7652ad725f4e
+> --- /dev/null
+> +++ b/tools/testing/selftests/vfio/vfio_pci_dsn_test.c
+> @@ -0,0 +1,206 @@
 [ ... ]
-> +int vfio_pci_core_feature_dsn(struct vfio_pci_core_device *vdev, u32 fla=
-gs,
-> +			      void __user *arg, size_t argsz)
+> +/* Walk the extended capability chain and return the DSN cap offset, or =
+0. */
+> +static u16 find_dsn_cap(struct vfio_pci_device *device)
 > +{
-[ ... ]
-> +	pos =3D pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
-> +	if (!pos)
-> +		return -ENOTTY;
+> +	u16 pos =3D PCI_CFG_SPACE_SIZE;
+> +	int loops =3D (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) /
+> +		    PCI_CAP_SIZEOF;
 > +
-> +	ret =3D vfio_check_feature(flags, argsz,
-> +				 VFIO_DEVICE_FEATURE_GET |
-> +				 VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(dsn));
-> +	if (ret !=3D 1)
-> +		return ret;
-> +
-> +	vserial =3D (__le32 *)&vdev->vconfig[pos + PCI_DSN_LOW_DW];
-
-[Severity: High]
-Does this code risk an out-of-bounds heap read or write on vdev->vconfig?
-
-pci_find_ext_capability() only guarantees that the 4-byte capability header
-fits within pdev->cfg_size. If a device exposes a DSN capability near the
-end of its PCIe configuration space (for example, at offset 4092), pos will
-be 4092.
-
-Since vdev->vconfig is allocated with exactly pdev->cfg_size bytes, accessi=
-ng
-pos + PCI_DSN_LOW_DW (offset 4) will calculate a pointer completely out of
-bounds, causing the subsequent operations to access adjacent kernel heap me=
-mory.
-
-> +
-> +	if (flags & VFIO_DEVICE_FEATURE_SET) {
-> +		if (copy_from_user(&dsn, arg, sizeof(dsn)))
-> +			return -EFAULT;
-> +
-> +		/*
-> +		 * The config-space read path (vfio_default_config_read())
-> +		 * does not hold a lock, and a guest reads the DSN as two
-> +		 * 32-bit dwords.  Store each dword with WRITE_ONCE() so a
-> +		 * concurrent guest read observes a consistent dword; a guest
-> +		 * reading the two halves around this update may see an
-> +		 * old/new mix, exactly as hardware may tear a 64-bit read of
-> +		 * a register pair.  This matches the DSN's read-only,
-> +		 * advisory nature.  Serializing concurrent SET callers is the
-> +		 * userspace VMM's responsibility.
-> +		 */
-> +		WRITE_ONCE(vserial[0], cpu_to_le32(lower_32_bits(dsn.serial_number)));
-> +		WRITE_ONCE(vserial[1], cpu_to_le32(upper_32_bits(dsn.serial_number)));
+> +	while (pos >=3D PCI_CFG_SPACE_SIZE && loops--) {
+> +		u32 header =3D vfio_pci_config_readl(device, pos);
 
 [Severity: Medium]
-Does using WRITE_ONCE() here actually prevent torn reads by the guest?
+Since vfio_pci_config_readl() reads raw little-endian bytes directly from t=
+he
+device, will reading them into a host-endian u32 without a conversion like
+le32toh() break capability header parsing on big-endian architectures?
 
-The comments state this is to ensure a concurrent guest read observes a
-consistent dword. However, the guest config-space read path in
-vfio_default_config_read() uses memcpy(), which performs plain, non-atomic
-memory accesses.
+> +
+> +		if (!header)
 
-Because the compiler and processor are free to split the memcpy() load into
-byte-sized operations, WRITE_ONCE() on the writer side does not guarantee
-that the reader will observe an atomic 32-bit read.
+[Severity: Low]
+When a device implements no further PCIe extended capabilities, the config
+header typically reads as 0xffffffff.
 
-> +		return 0;
+Does checking only for 0 miss the standard 0xffffffff value, causing the lo=
+op
+to continuously re-read offset 0xffc and wastefully execute ioctls until the
+safety counter expires?
+
+> +			break;
+> +
+> +		if (PCI_EXT_CAP_ID(header) =3D=3D PCI_EXT_CAP_ID_DSN)
+> +			return pos;
+> +
+> +		pos =3D PCI_EXT_CAP_NEXT(header);
 > +	}
+> +
+> +	return 0;
+> +}
 [ ... ]
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5eee..e5b8dfd3833f6 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1511,6 +1511,24 @@ struct vfio_device_feature_bus_master {
-[ ... ]
-> +/**
-> + * Upon VFIO_DEVICE_FEATURE_SET, set the PCIe Device Serial Number (DSN)
-> + * presented to the user (guest) in the device's virtualized config spac=
-e.
-> + * By default vfio-pci scrubs the physical DSN to zero so the host devic=
-e's
-> + * unique identifier is not leaked; this feature lets the hypervisor pre=
-sent
-> + * a chosen, per-VM synthetic serial instead (for example a stable but
-> + * non-host-identifying value for migration).
-> + *
-> + * Upon VFIO_DEVICE_FEATURE_GET, read back the currently presented seria=
-l.
-> + *
-> + * The feature is only available for devices that expose a DSN capabilit=
-y.
-> + * serial_number is the 64-bit serial in little-endian wire order.
-> + */
-> +struct vfio_device_feature_pci_dsn {
-> +	__aligned_u64 serial_number;
-> +};
+> +static int dsn_feature(struct vfio_pci_device *device, u32 op, u64 *seri=
+al)
+> +{
+> +	u8 buf[sizeof(struct vfio_device_feature) +
+> +	       sizeof(struct vfio_device_feature_pci_dsn)] =3D {};
 
 [Severity: Medium]
-Is there an endianness mismatch between this documentation and the
-implementation?
+Does this byte array guarantee only 1-byte alignment?
 
-The documentation states serial_number is the 64-bit serial in little-endian
-wire order. However, vfio_pci_core_feature_dsn() treats it as a host-endian
-value when extracting halves:
+Because tools/ is compiled with standard -fstrict-aliasing, casting this by=
+te
+array to structs with stricter alignment requirements could violate strict
+aliasing and alignment rules.
+
+> +	struct vfio_device_feature *feature =3D (void *)buf;
+> +	struct vfio_device_feature_pci_dsn *dsn =3D (void *)feature->data;
+> +
+> +	feature->argsz =3D sizeof(buf);
+> +	feature->flags =3D op | VFIO_DEVICE_FEATURE_PCI_DSN;
+> +
+> +	if ((op & VFIO_DEVICE_FEATURE_SET) && serial)
+> +		dsn->serial_number =3D *serial;
+
+[Severity: Medium]
+Will dereferencing the pointer to this 8-byte aligned struct member from the
+1-byte aligned buf[] cause unaligned memory access faults on strict
+architectures?
+
+> +
+> +	if (ioctl(device->fd, VFIO_DEVICE_FEATURE, feature))
+[ ... ]
+> +/* SET then GET must round-trip, and the guest-visible bytes must match.=
+ */
+> +TEST_F(vfio_pci_dsn_test, set_get_roundtrip)
+> +{
+> +	u64 want =3D 0x0123456789abcdefULL;
+> +	u64 got =3D 0;
+> +
+> +	if (!self->dsn_pos)
+> +		SKIP(return, "Device has no DSN capability\n");
+> +
+> +	ASSERT_EQ(0, dsn_feature(self->device, VFIO_DEVICE_FEATURE_SET, &want));
+> +	ASSERT_EQ(0, dsn_feature(self->device, VFIO_DEVICE_FEATURE_GET, &got));
+> +	ASSERT_EQ(want, got);
+> +
+> +	ASSERT_EQ((u32)want,
+> +		  vfio_pci_config_readl(self->device, self->dsn_pos + PCI_DSN_LOW_DW));
+
+[Severity: Medium]
+Will comparing a host-endian expected value against raw little-endian bytes
+read by vfio_pci_config_readl() cause false test failures on big-endian
+architectures?
+
+
+[Severity: Critical]
+This is a pre-existing issue, but I noticed missing bounds checking when
+parsing PCI extended capabilities that could cause heap buffer overflows.
+
+Looking at vfio_ecap_init() in drivers/vfio/pci/vfio_pci_config.c:
+
+    memset(map + epos, ecap, len);
+
+This writes ecap bytes into map based on an unverified capability length, w=
+hich
+could lead to an out-of-bounds write onto the kernel heap if a malicious
+emulated or physical device places a capability near the end of the extended
+config space (so that epos + len exceeds pdev->cfg_size).
+
+Additionally, looking at vfio_pci_core_feature_dsn() in
+drivers/vfio/pci/vfio_pci_config.c:
 
     WRITE_ONCE(vserial[0], cpu_to_le32(lower_32_bits(dsn.serial_number)));
 
-If a userspace program on a big-endian system follows the documentation and
-provides a pre-formatted little-endian value, the kernel will interpret it =
-as
-a big-endian integer, incorrectly extract the halves, and store garbled byt=
-es
-into the virtual config space.
-
-Should the documentation be updated to indicate a host-endian 64-bit intege=
-r,
-or should the code be changed to expect an __le64 type?
+Could this directly write 8 bytes to vdev->vconfig at pos + 4 without verif=
+ying
+that pos + 12 <=3D pdev->cfg_size, similarly writing user-controlled bytes =
+out of
+bounds?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260613-pcie_vfio-=
-v1-0-09168188f3f2@oss.qualcomm.com?part=3D2
+v1-0-09168188f3f2@oss.qualcomm.com?part=3D3
