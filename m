@@ -1,113 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC8F262A6
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 23:34:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D3B33E347
+	for <linux-pci@vger.kernel.org>; Sat, 13 Jun 2026 03:16:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781307268; cv=none; b=GQRz9rdveLcNjkSMK/9HM5zAHFG8pvWWMSQP3otZwpz0gOGlS/KVjliaRFSV6PcHA1Ji8aPFH48hPeMhHLzkBjn7cD712QNt+TMXR6hq0teeUDL1GK4KFMVEpgUMkVzF7GfpitgdZC6fZIbVW1SeWuZ5Qo0saLbpw2jikWQdhPc=
+	t=1781320579; cv=none; b=VEcd6erSWTJlaql4DQ02ZPRAH0anAY1uREZfPXdeaYy4Xj7JBApH1ylAghManuj9h8pYddo9jmR9FPR0OYfI7zk7k7zwfFJhyZHF4C7JZgh82X9nDmEK3ri6FbXPw929XS+xTi0IHLv3Az7mjAOnGgJdpaShO+psnRZK0K8zvyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781307268; c=relaxed/simple;
-	bh=KdGVlWGc1xt7EcKmaxnCgt6R0VqmZCq87hsakbjTEFw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YJJ6cZDEwjDUL4quNfglOwSxeSifeaMLQWimLZX3VsGyOqhHScRz/DPT/OVoO8HA6jGl/qA9U/B/o/qSW8eJXbJP1rij/Sivphbn77hOthTMd8RIqRr2k4KcYahppr+aZmGHnGkKjBCpD2OVthhnqTx9JSbCEpBK8kFwD4w+RjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kGBGrh5M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781320579; c=relaxed/simple;
+	bh=syruvy2lB53+ugOWC8rCeD7OnEXPp7AdpSqCfvRarMA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Qm2npjnLvRPl68/E+PHgtYudCuxpSoQTNobOXXrUqBcyAMFtMbBiisII3SASyHt0Nrjjbf/sUrVSgGv5JnTZPXsoaEMVSTxP04IMJPnlvA0pt/bfLolr0P+YIexAkjrup4Et2qQXKkxSwWlueqU/MrdZ2YvHDdq8ad5y42OGAFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CEKDJLZE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kGBGrh5M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7EFD1F000E9;
-	Fri, 12 Jun 2026 23:34:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CEKDJLZE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D7161F01558
+	for <linux-pci@vger.kernel.org>; Sat, 13 Jun 2026 03:16:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781307267;
-	bh=WV7zgm/nDozuoBgytn7wESR9Xg3RA8Njd6u1WGhADF4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kGBGrh5ME4Myx0QGyQpnL23P22pnATEnatkoZX0QkDn26lnsBaXSmhXjaas4zuqm9
-	 JTCMCDBUjx+uZy4pRwwqZixg/nUpSbNbakSmkOeZfsj0nsw14xeQOvNyFrE2MJbYKJ
-	 gyU3LQX37VDoHQV5njIZOpqwMjmV0Oo7Tvq0jD/3glHDbASTivLGs7MqWz4sP9oY+S
-	 TRijHAP7bmJQpwU2p7NiMrtiISeUVCewq5Tjh7fmdMqY/COHMN5UMTWBA9IaXt/2Q/
-	 iaQlniOBKJ4he+cl02aD+nodFIA/AqgcDXn+3Zlrg+ImnCewc8n5NMjyo315bwrQTx
-	 TroLcMvVb6cBg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] alpha/PCI: Fix I/O port accessor argument order in
- pci_legacy_write()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260612232400.585195-1-kwilczynski@kernel.org>
-References: <20260612232400.585195-1-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 23:34:26 +0000
-Message-Id: <20260612233426.B7EFD1F000E9@smtp.kernel.org>
+	s=k20260515; t=1781320577;
+	bh=Xr+xa6dWClQ5L5h9bpGtzQpT5gTteanoBiiOx0idzX4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=CEKDJLZEGHBfS9JH6iHEsuxcoyNnjiALwp9E9P7bBEBMg77xR+wQaE2QzUVC//4kJ
+	 bhHpbbr/50yNdcjnYah++BsGnm55aOhgft+dB1zLkQCNBBf5p98Ul8coSo5ZVUYqbU
+	 t6ZBO4lGOl3nb4UIsU41qC3rws/3Qu2TxaIfBGSL/As9IRoW+t2GsOEXPuYlLI05bY
+	 u99lIyyrEZBepwsbcmvHFrn8OfAY4+TJK5Qfu7n/IlfV/4PCy6U66LXnN0JoDnm8CH
+	 y9h8mzUViE3ujD9Uipzdd4S4+CrVaOI9Whz2T0VFeWE7xNDS4Yv8FX+CT4EybhuyLm
+	 +3xk6eVdJfYQA==
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-befd83e0521so517124666b.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 20:16:17 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ+TBavbPVwEdMGg0Y0nGPAM6jKcYP6j0Cs6SdE6gsSJSlE8c0cY+rJRR6TtF/yhxr5yOvtxcD+TyR8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxsIXicywkqt1dP18/XJGn4DSztDBwzVk2+jpX6P8Y6CGZRYlSQ
+	mq2DYThLyOcjZhhE+VO/fBkBOUbdhPT+a7Mtgwg+cwUz/EV8NLhPfP8OMt3ffMlafV5aGPnizy4
+	zabYFh3KOQA8x+JaX7XuTRZh9HrwAc4g=
+X-Received: by 2002:a17:907:7fa0:b0:bf9:b543:bb86 with SMTP id
+ a640c23a62f3a-bfde22b16c8mr260486366b.6.1781320575875; Fri, 12 Jun 2026
+ 20:16:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260609152511.753760-1-xry111@xry111.site> <CAAhV-H4QV=gYQH8+RRL3S8OTR3xq7c0iAUWgJAh0pETVikO-qw@mail.gmail.com>
+ <2dbb12fcdebf6c7f375cce56cceb113746a92c4b.camel@xry111.site>
+In-Reply-To: <2dbb12fcdebf6c7f375cce56cceb113746a92c4b.camel@xry111.site>
+From: Huacai Chen <chenhuacai@kernel.org>
+Date: Sat, 13 Jun 2026 11:16:08 +0800
+X-Gmail-Original-Message-ID: <CAAhV-H7_JnqWoCySA+xf++1uxAuGC=xmreKROd=b2x34EQvz3A@mail.gmail.com>
+X-Gm-Features: AVVi8CeMYvg7ls187hyOjTigWrts3D2Lw16AESGjQld3Ig0voaxpKT1coZl1POU
+Message-ID: <CAAhV-H7_JnqWoCySA+xf++1uxAuGC=xmreKROd=b2x34EQvz3A@mail.gmail.com>
+Subject: Re: [PATCH] pci: loongson: Avoid L0s on LS7A1000 PCIe x8 [0014:7a29]
+ Root Ports rev2
+To: Xi Ruoyao <xry111@xry111.site>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Mingcong Bai <jeffbai@aosc.io>, Henry Chen <chenx97@aosc.io>, Han Gao <gaohan@iscas.ac.cn>, 
+	Jiaxun Yang <jiaxun.yang@flygoat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Thu, Jun 11, 2026 at 7:40=E2=80=AFAM Xi Ruoyao <xry111@xry111.site> wrot=
+e:
+>
+> On Wed, 2026-06-10 at 16:21 +0800, Huacai Chen wrote:
+> > Hi, Ruoyao,
+> >
+> > On Tue, Jun 9, 2026 at 11:26=E2=80=AFPM Xi Ruoyao <xry111@xry111.site> =
+wrote:
+> > >
+> > > Commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states fo=
+r
+> > > devicetree platforms") has broke booting of a Loongson 3B4000 + 7A100=
+0
+> > > server with an Intel 750 Series SSD.  We also found a Loongson 3A5000
+> > > board using the same 7A1000 bridge chip exhibiting the same issue wit=
+h
+> > > pcie_aspm=3Dforce and pcie_aspm.policy=3Dpowersave (ASPM is not enabl=
+ed by
+> > > default on the 3A5000 board because it's based on ACPI and the _OSC
+> > > method has not been implemented in its DSDT/SSDT yet).
+> > >
+> > > This seems only affecting the 7A1000 chips shipping the revision 2 of
+> > > the PCIe x8 Root Port: on other two boards with a (persumably older)
+> > > LS7A1000 bridge chip utilizing the revision 1 of the root port, the
+> > > issue does not reproduce.
+> > Is that confirmed by chip designers?
+>
+> I don't have their contact.  This is based on our experiments on 5
+> boards (two 3B4000 x 2 with rev2, one with rev1, one 3A4000 with rev1,
+> one 3A5000 with rev2).
+>
+> > > Cc: Mingcong Bai <jeffbai@aosc.io>
+> > > Cc: Henry Chen <chenx97@aosc.io>
+> > > Cc: Han Gao <gaohan@iscas.ac.cn>
+> > > Cc: Jiaxun Yang <jiaxun.yang@flygoat.com>
+> > > Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states fo=
+r devicetree platforms")
+> > > Signed-off-by: Xi Ruoyao <xry111@xry111.site>
+> > > ---
+> > >  drivers/pci/controller/pci-loongson.c | 13 +++++++++++++
+> > >  1 file changed, 13 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/cont=
+roller/pci-loongson.c
+> > > index a4250d7af1bf..dc7cee10643e 100644
+> > > --- a/drivers/pci/controller/pci-loongson.c
+> > > +++ b/drivers/pci/controller/pci-loongson.c
+> > > @@ -212,6 +212,19 @@ static void loongson_pci_bridge_speed_quirk(stru=
+ct pci_dev *pdev)
+> > >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c19, loongson_pc=
+i_bridge_speed_quirk);
+> > >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c29, loongson_pc=
+i_bridge_speed_quirk);
+> > >
+> > > +/*
+> > > + * Some devices, for example Intel 750 Series SSD, experiences data =
+loss
+> > > + * (read timeout) on LS7A1000 PCIe x8 Root Port when ASPM L0s is ena=
+bled.
+> > > + * This seems only affecting the revision 2.
+> > > + */
+> > > +static void ls7a_pcie_port2_aspm_quirk(struct pci_dev *pdev)
+> > It is better to follow the namings in this file, i.e.
+> > loongson_pcie_port2_aspm_quirk, or loongson_pcie_aspm_quirk for short.
+>
+> I'd keep "7a" in the name so in case another ASPM quirk is needed for
+No need from my point of view, unless there is already another known issue.
 
-Pre-existing issues:
-- [High] Unconditional 4-byte dereference of a dynamically sized buffer in =
-`pci_write_legacy_io()` causes KASAN slab-out-of-bounds reads and potential=
- uninitialized memory leakage to PCI legacy I/O ports.
---
+Indeed, some other existing quirks are also for LS7A only but have no
+7a in their names.
 
-commit d23423541386d95f58a7717629ce697088a7288f
-Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+Huacai
 
-alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
-
-This commit fixes the argument order for outb(), outw(), and outl() in the
-Alpha architecture's pci_legacy_write() function. Previously, the port and
-value arguments were swapped, resulting in incorrect writes.
-
-> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-> index 94dbc470cd6c0..7050f0f7fe3d7 100644
-> --- a/arch/alpha/kernel/pci-sysfs.c
-> +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -224,17 +224,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t po=
-rt, u32 val, size_t size)
-
-[Severity: High]
-This isn't a bug introduced by this patch, but I noticed a problem with how
-the val parameter is populated by the caller.
-
-In drivers/pci/pci-sysfs.c:pci_write_legacy_io(), there is an unconditional
-4-byte dereference of the dynamically sized buffer when calling
-pci_legacy_write():
-
-    return pci_legacy_write(bus, off, *(u32 *)buf, count);
-
-When a user writes 1 or 2 bytes to the legacy_io sysfs file,
-kernfs_fop_write_iter() allocates a buffer sized to the requested length
-plus a null terminator. The unconditional 32-bit dereference causes a
-KASAN slab-out-of-bounds read and populates the upper bytes of val with
-uninitialized heap garbage.
-
-While it appears the Alpha outb() implementation safely truncates this to
-the lowest byte, other architectures like little-endian PowerPC can
-extract the uninitialized memory instead of the user's intended value:
-
-arch/powerpc/kernel/pci-common.c:pci_legacy_write() {
-    ...
-    out_8(addr, val >> 24);
-    ...
-}
-
-Could this lead to leaking uninitialized memory to the hardware port and
-bypassing the intended device write? Does the PCI subsystem need a fix in
-pci_write_legacy_io() to safely read from buf based on count before passing
-it to pci_legacy_write()?
-
-> =20
->  	switch(size) {
->  	case 1:
-> -		outb(port, val);
-> +		outb(val, port);
->  		return 1;
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612232400.5851=
-95-1-kwilczynski@kernel.org?part=3D1
+> future products we'll not get a name clash.  Maybe
+> loongson_7a_port2_aspm_quirk (I don't think _pcie_ is so useful here as
+> the entire source file is for PCIe anyway).
+>
+>
+> --
+> Xi Ruoyao <xry111@xry111.site>
