@@ -1,132 +1,141 @@
-Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29288296BBA;
-	Sun, 14 Jun 2026 21:54:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.34.181.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D4B30E828
+	for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 22:16:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781474066; cv=none; b=fnWkDLE2epJ5Q7/FPLhfFmeqjxW7X2SGkbf7vgEpgVEhrqpfwSgDtu8kFbM1pYnj7NZQ60F9e8/Pjxsq45xSPu6oTiEmTrDrYhRu2zhKKVmuXSuho/tHZtQxb0oo/G/KQF391vQYiZL3BBbyUXR4/gUhzGRB5N9WDUkSQXBkuJs=
+	t=1781475404; cv=none; b=PJWLoTVgYyTrm7YFXWAw2pmSzVI+BAeOO3AZKUIdR8am/Nfv2+d/DdeYUgn9Xvu3HxSc/5xJlBEYeQ2UJB3F61pXG6qvCyMNTmMuBIEF8YdzSLI3/d/wweynN0qW3I2Ors9xShI0OtqVInUo6u+OpWBRbRj4BUifJ4AoSVutV9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781474066; c=relaxed/simple;
-	bh=mKTJ+8AJ5ByMWtNGLv+xqUVyrfdC8rTqEij3FBbT5DI=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OUINwA2Ci9CilNk0wRIu79N2VHWxTwZ/GYmw0EDl0UHzFZLxK9hj/87GcK6NW9TM5NGINtaM893vgHGMQnDcnW5eNceaErxQa40Bl45hOCXH3gCECcT31vXRxuMleTPMO2ODAzkROr1GhOCHu+TGc9pT+/k85SiEsxFt5UT0NAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=TkuD0q/q; arc=none smtp.client-ip=52.34.181.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	s=arc-20240116; t=1781475404; c=relaxed/simple;
+	bh=iUnBLVR4167TjxIQ50Hi3WNlAor24JpXMNRmLIMRdDQ=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qLrc6PsLnXIdPDkQ6YDRSDuD1LWf2NqFMQIE8hQPkyZHfe8VHUu9iQl4Ye5YUKk4+S4MLO6bPt6bWrIQ7OfGaEpwwz6gPtrqhH9zACwS9k/h9rVCkB+ELTIUIQoxOqaSjxOFwG6c6lNGo+qeMlhq9Fd8d+U+okG51qitF8a3caQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kkjRDCDG; arc=none smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="TkuD0q/q"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kkjRDCDG"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-5174a3d9598so24212691cf.3
+        for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 15:16:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1781474065; x=1813010065;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to:content-transfer-encoding;
-  bh=mKTJ+8AJ5ByMWtNGLv+xqUVyrfdC8rTqEij3FBbT5DI=;
-  b=TkuD0q/qTZZOmUcJz560JZWK9AFc3k/VnoWhfkalU8zYRzRJkO29VbCM
-   wA2DyJT42M3W3EXJr0JfAYP3PpREb3ipC6UxrhG0tYFS3BWJdKhAwQJda
-   IOjAV9CThuklQ7+e2sCK9cnOMylwx+cUX1L1Vp2fTVrzSYEVKABNG2bi1
-   OIguXhZnM1wQI3exh0rhRidSrnoeIJ1hyglOTilWKg8N66ccVEYtJKB+0
-   nN6EMvn9t23slQ4vOXTH3oP751nojF3YaNn2ac35r6oT5HFCpr1571vn2
-   7DZXTDAx2QFZ1lOADi/oUlXI4K+VdNe4J3KwNgLmEsbivUqzWL6CAJAYb
-   w==;
-X-CSE-ConnectionGUID: k0SH81YxQXCDk7urj5/VHA==
-X-CSE-MsgGUID: kMC9v/1/Sda/MZudh15+sQ==
-X-IronPort-AV: E=Sophos;i="6.24,205,1774310400"; 
-   d="scan'208";a="21721126"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2026 21:54:22 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:9083]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.13.145:2525] with esmtp (Farcaster)
- id 908bb588-1971-4bbc-a4df-1a762e314a0e; Sun, 14 Jun 2026 21:54:21 +0000 (UTC)
-X-Farcaster-Flow-ID: 908bb588-1971-4bbc-a4df-1a762e314a0e
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sun, 14 Jun 2026 21:54:21 +0000
-Received: from dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com (172.19.90.4)
- by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sun, 14 Jun 2026 21:54:19 +0000
-Date: Sun, 14 Jun 2026 21:54:17 +0000
-From: Darshit Shah <darnshah@amazon.de>
-To: <bhelgaas@google.com>
-CC: <Jonthan.Cameron@huawei.com>, <darnir@gnu.org>, <lukas@wunner.de>,
-	<feng.tang@linux.alibaba.com>, <kbusch@kernel.org>, <kwilczynski@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<olof@lixom.net>, <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: Re: [PATCH v3 RESEND] drivers/pci: Decouple DPC from AER service
-Message-ID: <ai8h-wyXz8l30X-V@dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com>
-References: <aTfTiBy1GoJIFqtJ@wunner.de>
- <20251211164257.81655-1-darnshah@amazon.de>
+        d=gmail.com; s=20251104; t=1781475401; x=1782080201; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=n/USMUW5QmQOQ0Gq++9KFLj8ScG1j+mHDHbhv/uvoF4=;
+        b=kkjRDCDGYhRN90Zj+iTZPt/7d0CujmWAo7I1zVedEf1Js7mxK5cvInstQRaVBbZgrf
+         0OkIGFU1TYznntJhOstxdoYp4sNFvDTPUGAJGr0O2D18nJaiw28lVa9YnYXTI+U47oPB
+         xzlBxEzsMpEl6XHOX/j5w90oBj74NEtnbqBLMxPnPs5rrvm/lHr9wSjOOo7jJk3jLinH
+         HzZR4xkfiqHUiombTd0VPto52IX2Kyf2tWxApcMB4ze3aYbx2r2CblVhdzOr47qqDxSG
+         qlXuAB/tjTysN0sZm9CPQ06NDpesSC8WFPUr09tlh5dR8HA5sbF4DaBgtzzqm1FokkB0
+         0MdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781475401; x=1782080201;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=n/USMUW5QmQOQ0Gq++9KFLj8ScG1j+mHDHbhv/uvoF4=;
+        b=XXTCRZ3GR+lbN5TVU/Gh0eB6tJpPOxeuvBNoYCiVaJP4glWGhQIZRxwn5UL8GeZN4f
+         8JC8oo/vh1OPaNwijAOcFSwSViOu1bYho8o8CCE9JbFLBOj7okrA6Gb0qNEl4ux7LwKm
+         DTQbDKHA9XKTTTqw3rCvkysLZURoAAjamXzXX49ElVg15OgYgnfnBaukkDiIaFWgl/2R
+         cBoPp6qDlG4qu0YHJ3PaozJHiQQpMaY6vF9nc4ga2VC4md3Pv+t7N6PQZZMMVwQEZqRX
+         S1sE7n6eqZYIRGVBP3MkjOEymsPaYxfTiOuX5LfbULnyeLmzLnIlOqKs9DTsK4WvKYkp
+         0LRg==
+X-Forwarded-Encrypted: i=1; AFNElJ9pBcOFZlk05IehMIpKsT0gtw25RuckSWCQnBP2vHkUTizIyUbYqdy/hY1xnTlRyWDrivTCb+yLvCo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywh0eA/RJyH6/cNyUxVhtHADUHcpiEiGz4vyN9/Z4GAZzFggl3M
+	7KIxe6T81C0VV4lJ/BxwxjP4WgDgu9B8XhH2fMgDrg/RhnYC46+aB3fb
+X-Gm-Gg: Acq92OFr9fdQ3/YJqu8WVduC0HD4CAN2nMABMsoLsYbPqowvb9QhZrVIyM2Vo3A4qfw
+	Uap/Drnnn+rBlC++k+Vxc7mG37snQenkTt6cUeyEM+pJaiARIMB5zqCbrqR4dAGlkKNu604hPov
+	pKECTPqRyXGJvmRZDhdPP3ElUikYgA9sB4CZlZ6SD587fUaTTgn6MPSm+Ffi7TBwiNBub+oB7CB
+	otMt45ceiuAOWvXjPQP7EiASRRny/VHA5T3qUxV0v54IjRN9RcUc9zwQWPbHFel/H4+W2UCDQP3
+	+wUDYPj5CRuLfHI9eCSv3VI8HSKhJWot8ZFXB2oA6tpZxKT9oFHlDnFFc3ncZttNHtPfQHErcqi
+	zs2uvu0//HF3D+Tjt6BcnDD8TXj7VX9Cky2Jf9WXXwILRTGJ3WA47eMe9Ip5QvgCkTt50KaNmyb
+	C7qeZ85v7uCZup/q+xUOpxwsp+/f4pUMFCjz3jrA76XpcWHJ0KRVfG80sK9tqpEqdeWyhbdJCo9
+	w==
+X-Received: by 2002:ac8:598e:0:b0:50e:a1ab:114c with SMTP id d75a77b69052e-517fe4bc66amr171437631cf.32.1781475401111;
+        Sun, 14 Jun 2026 15:16:41 -0700 (PDT)
+Received: from localhost.localdomain ([2607:fb91:14e1:4204:4d87:aacf:f5f1:c2dd])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb61fb15sm86583921cf.5.2026.06.14.15.16.40
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 14 Jun 2026 15:16:40 -0700 (PDT)
+From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+To: mani@kernel.org,
+	kwilczynski@kernel.org,
+	kishon@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUG] KASAN: slab-use-after-free in pci_endpoint_test_ioctl
+Date: Sun, 14 Jun 2026 18:16:39 -0400
+Message-ID: <178144969601.60470.7358419009914000395@gmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20251211164257.81655-1-darnshah@amazon.de>
-X-ClientProxiedBy: EX19D040UWB001.ant.amazon.com (10.13.138.82) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-SGkgQmpvcm4sCkNhbiB5b3UgcGxlYXNlIHBpY2sgdGhpcyBwYXRjaCB1cCBpbiB0aGUgUENJIHRy
-ZWUgZm9yIHRoZSBuZXh0IHZlcnNpb24/CkFueXRoaW5nIEkgY2FuIGRvIHRvIGhlbHAgZXhwZWRp
-dGUgdGhlIHByb2Nlc3M/CgoqIERhcnNoaXQgU2hhaCA8ZGFybnNoYWhAYW1hem9uLmRlPiBbMjUx
-MjExIDE2OjQzXToKPiBBY2NvcmRpbmcgdG8gUENJZSByNy4wLCBzZWMuIDYuMi4xMSwgIkltcGxl
-bWVudGF0aW9uIE5vdGU6IERldGVybWluYXRpb24KPiBvZiBEUEMgQ29udHJvbCIsIGl0IGlzIHJl
-Y29tbWVuZGVkIHRoYXQgdGhlIE9wZXJhdGluZyBTeXN0ZW0gbGluayB0aGUKPiBlbmFibGVtZW50
-IG9mIERvd25zdHJlYW0gUG9ydCBDb250YWlubWVudCAoRFBDKSB0byB0aGUgZW5hYmxlbWVudCBv
-Zgo+IEFkdmFuY2VkIEVycm9yIFJlcG9ydGluZyAoQUVSKS4KPiAKPiBIb3dldmVyLCBBRVIgaXMg
-YWR2ZXJ0aXNlZCBvbmx5IG9uIFJvb3QgUG9ydCAoUlApIG9yIFJvb3QgQ29tcGxleCBFdmVudAo+
-IENvbGxlY3RvciAoUkNFQykgZGV2aWNlcy4gT24gdGhlIG90aGVyIGhhbmQsIERQQyBtYXkgYmUg
-YWR2ZXJ0aXNlZCBvbgo+IGFueSBQQ0llIGRldmljZSBpbiB0aGUgaGllcmFyY2h5LiBJbiBmYWN0
-LCBzaW5jZSB0aGUgbWFpbiB1c2VjYXNlIG9mIERQQwo+IGlzIGZvciB0aGUgc3dpdGNoIHVwc3Ry
-ZWFtIG9mIGFuIGVuZHBvaW50IGRldmljZSB0byB0cmlnZ2VyIGEgc2lnbmFsIHRvCj4gdGhlIGhv
-c3QtYnJpZGdlLCBpdCBpcyBpbXBlcmF0aXZlIHRoYXQgaXQgYmUgc3VwcG9ydGVkIG9uIG5vbi1S
-UCwKPiBub24tUkNFQyBkZXZpY2VzLgo+IAo+IFByZXZpb3VzbHkgcG9ydGRydiBoYXMgaW50ZXJw
-cmV0ZWQgdGhlIHNwZWMgdG8gbWVhbiB0aGF0IHRoZSBBRVIgc2VydmljZQo+IG11c3QgYmUgYXZh
-aWxhYmxlIG9uIHRoZSBzYW1lIGRldmljZSBpbiBvcmRlciBmb3IgRFBDIHRvIGJlIGF2YWlsYWJs
-ZS4KPiBUaGlzIGlzIG5vdCB3aGF0IHRoZSBpbXBsZW1lbnRhdGlvbiBub3RlIG1lYW50IHRvIGlt
-cGx5LiBJZiB0aGUgZmlybXdhcmUKPiBoYW5kcyBMaW51eCBjb250cm9sIG9mIEFFUiB2aWEgX09T
-QyBvbiB0aGUgaG9zdCBicmlkZ2UgdXBzdHJlYW0gb2YgdGhlCj4gZGV2aWNlLCB0aGVuIExpbnV4
-IHNob3VsZCBiZSBhbGxvd2VkIHRvIGFzc3VtZSBjb250cm9sIG9mIERQQyBvbiB0aGUgZGV2aWNl
-Lgo+IAo+IFRoZSBjb21tZW50IGFib3ZlIHRoaXMgY2hlY2sgYWxsdWRlcyB0byB0aGlzLCBieSBz
-YXlpbmc6Cj4gICA+IFdpdGggZHBjLW5hdGl2ZSwgYWxsb3cgTGludXggdG8gdXNlIERQQyBldmVu
-IGlmIGl0IGRvZXNuJ3QgaGF2ZQo+ICAgPiBwZXJtaXNzaW9uIHRvIHVzZSBBRVIuCj4gCj4gSG93
-ZXZlciwgcGVybWlzc2lvbiB0byB1c2UgQUVSIGlzIG5lZ290aWF0ZWQgYXQgdGhlIGhvc3QgYnJp
-ZGdlLCBub3QKPiBwZXItZGV2aWNlLiBTbyB3ZSBzaG91bGQgbm90IGxpbmsgRFBDIHRvIGVuYWJs
-aW5nIEFFUiBhdCB0aGUgZGV2aWNlLgo+IEluc3RlYWQsIERQQyBzaG91bGQgYmUgZW5hYmxlZCBp
-ZiB0aGUgT1MgaGFzIGNvbnRyb2wgb2YgQUVSIGZvciB0aGUKPiBob3N0IGJyaWRnZSB0aGF0IGlz
-IHVwc3RyZWFtIG9mIHRoZSBkZXZpY2UgaW4gcXVlc3Rpb24sIG9yIGlmIGRwYy1uYXRpdmUKPiB3
-YXMgc2V0IG9uIHRoZSBjb21tYW5kIGxpbmUuCj4gCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5v
-cmcKPiBTaWduZWQtb2ZmLWJ5OiBEYXJzaGl0IFNoYWggPGRhcm5zaGFoQGFtYXpvbi5kZT4KPiBS
-ZXZpZXdlZC1ieTogTHVrYXMgV3VubmVyIDxsdWthc0B3dW5uZXIuZGU+Cj4gUmV2aWV3ZWQtYnk6
-IEt1cHB1c3dhbXkgU2F0aHlhbmFyYXlhbmFuIDxzYXRoeWFuYXJheWFuYW4ua3VwcHVzd2FteUBs
-aW51eC5pbnRlbC5jb20+Cj4gLS0tCj4gQ2hhbmdlcyBmcm9tIHYyOgo+ICAgKiArIHN0YWJsZUB2
-Z2VyLmtlcm5lbC5vcmcgc2luY2UgbW92aW5nIHRvIHY2LjIrIGJyZWFrcyBEUEMgb24gb3VyIHN5
-c3RlbXMKPiAgICogTWlub3Igc3R5bGlzdGljIGNoYW5nZXMgdG8gY29tbWl0IG1lc3NhZ2UKPiAg
-ICogTk8gZnVuY3Rpb25hbCBjaGFuZ2VzCj4gCj4gIGRyaXZlcnMvcGNpL3BjaWUvcG9ydGRydi5j
-IHwgMiArLQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkK
-PiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2LmMgYi9kcml2ZXJzL3Bj
-aS9wY2llL3BvcnRkcnYuYwo+IGluZGV4IDM4YTQxY2NmNzliOS4uOGRiMmZhMTQwYWUyIDEwMDY0
-NAo+IC0tLSBhL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydi5jCj4gKysrIGIvZHJpdmVycy9wY2kv
-cGNpZS9wb3J0ZHJ2LmMKPiBAQCAtMjY0LDcgKzI2NCw3IEBAIHN0YXRpYyBpbnQgZ2V0X3BvcnRf
-ZGV2aWNlX2NhcGFiaWxpdHkoc3RydWN0IHBjaV9kZXYgKmRldikKPiAgCSAqLwo+ICAJaWYgKHBj
-aV9maW5kX2V4dF9jYXBhYmlsaXR5KGRldiwgUENJX0VYVF9DQVBfSURfRFBDKSAmJgo+ICAJICAg
-IHBjaV9hZXJfYXZhaWxhYmxlKCkgJiYKPiAtCSAgICAocGNpZV9wb3J0c19kcGNfbmF0aXZlIHx8
-IChzZXJ2aWNlcyAmIFBDSUVfUE9SVF9TRVJWSUNFX0FFUikpKQo+ICsJICAgIChob3N0LT5uYXRp
-dmVfYWVyIHx8IHBjaWVfcG9ydHNfZHBjX25hdGl2ZSkpCj4gIAkJc2VydmljZXMgfD0gUENJRV9Q
-T1JUX1NFUlZJQ0VfRFBDOwo+ICAKPiAgCS8qIEVuYWJsZSBiYW5kd2lkdGggY29udHJvbCBpZiBt
-b3JlIHRoYW4gb25lIHNwZWVkIGlzIHN1cHBvcnRlZC4gKi8KPiAtLSAKPiAyLjQ3LjMKPiAKPiAK
-PiAKPiAKPiBBbWF6b24gV2ViIFNlcnZpY2VzIERldmVsb3BtZW50IENlbnRlciBHZXJtYW55IEdt
-YkgKPiBUYW1hcmEtRGFuei1TdHIuIDEzCj4gMTAyNDMgQmVybGluCj4gR2VzY2hhZWZ0c2Z1ZWhy
-dW5nOiBDaHJpc3RvZiBIZWxsbWlzLCBBbmRyZWFzIFN0aWVnZXIKPiBFaW5nZXRyYWdlbiBhbSBB
-bXRzZ2VyaWNodCBDaGFybG90dGVuYnVyZyB1bnRlciBIUkIgMjU3NzY0IEIKPiBTaXR6OiBCZXJs
-aW4KPiBVc3QtSUQ6IERFIDM2NSA1MzggNTk3CgoKCkFtYXpvbiBXZWIgU2VydmljZXMgRGV2ZWxv
-cG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApUYW1hcmEtRGFuei1TdHIuIDEzCjEwMjQzIEJlcmxp
-bgpHZXNjaGFlZnRzZnVlaHJ1bmc6IENocmlzdG9mIEhlbGxtaXMsIEFuZHJlYXMgU3RpZWdlcgpF
-aW5nZXRyYWdlbiBhbSBBbXRzZ2VyaWNodCBDaGFybG90dGVuYnVyZyB1bnRlciBIUkIgMjU3NzY0
-IEIKU2l0ejogQmVybGluClVzdC1JRDogREUgMzY1IDUzOCA1OTcK
+Hi Kernel Maintainers,
 
+I hit the following report while testing current upstream kernel:
+
+KASAN: slab-use-after-free in pci_endpoint_test_ioctl
+
+I reproduced this on commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7 (May 25 2026)
+
+The reproducer and .config files are here.
+https://gist.github.com/shuangpengbai/1e03464adfefbb75fb5d8112691e38b3
+
+I'm happy to test debug patches or provide additional information.
+
+Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+
+[  222.367023][ T8376] BUG: KASAN: slab-use-after-free in pci_endpoint_test_ioctl (drivers/misc/pci_endpoint_test.c:1145)
+[  222.369439][ T8376] Read of size 8 at addr ffff88811be68438 by task pci_endpoint_te/8376
+[  222.371748][ T8376]
+[  222.372441][ T8376] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  222.372449][ T8376] Call Trace:
+[  222.372455][ T8376]  <TASK>
+[  222.372460][ T8376]  dump_stack_lvl (lib/dump_stack.c:94 lib/dump_stack.c:120)
+[  222.372476][ T8376]  print_report (mm/kasan/report.c:378 mm/kasan/report.c:482)
+[  222.372531][ T8376]  kasan_report (mm/kasan/report.c:595)
+[  222.372558][ T8376]  pci_endpoint_test_ioctl (drivers/misc/pci_endpoint_test.c:1145)
+[  222.372604][ T8376]  __se_sys_ioctl (fs/ioctl.c:51 fs/ioctl.c:597 fs/ioctl.c:583)
+[  222.372615][ T8376]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
+[  222.372647][ T8376]  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
+[  222.372658][ T8376] RIP: 0033:0x7fd68c893237
+[  222.372668][ T8376] Code: 00 00 00 48 8b 05 59 cc 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 29 cc 0d 00 f7 d8 64 89 01 48
+[  222.372678][ T8376] RSP: 002b:00007ffc1aa73f18 EFLAGS: 00000206 ORIG_RAX: 0000000000000010
+[  222.372693][ T8376] RAX: ffffffffffffffda RBX: 00007fd68c9774c0 RCX: 00007fd68c893237
+[  222.372701][ T8376] RDX: 0000000000000000 RSI: 0000000000005009 RDI: 0000000000000003
+[  222.372707][ T8376] RBP: 0000560e1af360c3 R08: 0000000000000000 R09: 00007ffc1aa73e27
+[  222.372714][ T8376] R10: fffffffffffff64d R11: 0000000000000206 R12: 0000000000000003
+[  222.372719][ T8376] R13: 0000000000005009 R14: 0000000000000000 R15: 00007ffc1aa73f80
+[  222.372731][ T8376]  </TASK>
+[  222.372735][ T8376]
+[  222.392098][ T8376] Freed by task 8376 on cpu 0 at 222.263660s:
+[  222.392729][ T8376]  kasan_save_track (mm/kasan/common.c:57 mm/kasan/common.c:78)
+[  222.393215][ T8376]  kasan_save_free_info (mm/kasan/generic.c:584)
+[  222.393743][ T8376]  __kasan_slab_free (mm/kasan/common.c:253 mm/kasan/common.c:285)
+[  222.394242][ T8376]  kfree (include/linux/kasan.h:235 mm/slub.c:2689 mm/slub.c:6251 mm/slub.c:6566)
+[  222.394657][ T8376]  devres_release_all (drivers/base/devres.c:50 drivers/base/devres.c:547 drivers/base/devres.c:576)
+[  222.395176][ T8376]  device_release_driver_internal (drivers/base/dd.c:598 drivers/base/dd.c:1357 drivers/base/dd.c:1375)
+[  222.395807][ T8376]  unbind_store (drivers/base/bus.c:244)
+[  222.396280][ T8376]  kernfs_fop_write_iter (fs/kernfs/file.c:352)
+[  222.396832][ T8376]  vfs_write (fs/read_write.c:595 fs/read_write.c:688)
+[  222.397273][ T8376]  ksys_write (fs/read_write.c:740)
+[  222.397725][ T8376]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
+[  222.398207][ T8376]  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
+[  222.398823][ T8376]
+[  222.399073][ T8376] The buggy address belongs to the object at ffff88811be68400
+[  222.399073][ T8376]  which belongs to the cache kmalloc-512 of size 512
+[  222.400509][ T8376] The buggy address is located 56 bytes inside of
+[  222.400509][ T8376]  freed 512-byte region [ffff88811be68400, ffff88811be68600)
+[  222.401905][ T8376]
+
+
+Best,
+Shuangpeng
