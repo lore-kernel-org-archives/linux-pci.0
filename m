@@ -1,128 +1,132 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0184117BEBF;
-	Sun, 14 Jun 2026 19:07:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29288296BBA;
+	Sun, 14 Jun 2026 21:54:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.34.181.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781464055; cv=none; b=kV2oQzrUjF0gFubzYlISJPvIbMJz2FluohV6WOpzjete6Dc9hArakGkMbp+gKJqIQVcOUl2Z9bZRW6sRFX+lh84xfnqVVtkiSWFo4KmDyN6brRYNsaRq9sVaYpjAZmpU+h+Sl+El7c2QA992RvU6+1OiREzCtYFnod/ZdqjQwOw=
+	t=1781474066; cv=none; b=fnWkDLE2epJ5Q7/FPLhfFmeqjxW7X2SGkbf7vgEpgVEhrqpfwSgDtu8kFbM1pYnj7NZQ60F9e8/Pjxsq45xSPu6oTiEmTrDrYhRu2zhKKVmuXSuho/tHZtQxb0oo/G/KQF391vQYiZL3BBbyUXR4/gUhzGRB5N9WDUkSQXBkuJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781464055; c=relaxed/simple;
-	bh=lCV8HzuK8/KlZJ6SPMlQucwxLMsBzs0aYL5lSpDoBxY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=VUzMonCKAtOivcEbKpacVQONq8aTGG7GaubRjxdnwjqC0APKL5FYvca3qXSYkCrfWRzYabgeSfafUKLwLXobzOee2WkAOFw8x/s92iXTbmCDvQGh71UbUEOwkscYI6WC/j3lC3vlX+xbQrRkUewLcKEspVNVoSdZjyQGJtbI+1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=AOpfPWPw; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1781474066; c=relaxed/simple;
+	bh=mKTJ+8AJ5ByMWtNGLv+xqUVyrfdC8rTqEij3FBbT5DI=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OUINwA2Ci9CilNk0wRIu79N2VHWxTwZ/GYmw0EDl0UHzFZLxK9hj/87GcK6NW9TM5NGINtaM893vgHGMQnDcnW5eNceaErxQa40Bl45hOCXH3gCECcT31vXRxuMleTPMO2ODAzkROr1GhOCHu+TGc9pT+/k85SiEsxFt5UT0NAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=TkuD0q/q; arc=none smtp.client-ip=52.34.181.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="AOpfPWPw"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gdjS12nGyz9t8r;
-	Sun, 14 Jun 2026 21:07:29 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781464049;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lCV8HzuK8/KlZJ6SPMlQucwxLMsBzs0aYL5lSpDoBxY=;
-	b=AOpfPWPw+u11l/YLfolHzpcwEbnChWEvHi8tywE6sit0nBCdU4sRU0D/c61CQBqHG4mdHZ
-	U/Qlk0hYmSL7E1oaua5SS3M+13uNP6aXTe8bIhGtL6o2a1bcF+fa9HCbJHwUOlT3ThLb1S
-	9HCLluc9jR5RyiCO7mwmAYreMv/3xbfRU/mnw5NoExid9tsaqtkfuiNV5py/StvYKkkqFM
-	fL6ZjEtj+3A1iOoZsItjSuvxaKCUiZsrHTiVk1lWfW5USORsctGPROYd9pfcD7o/4s8FEp
-	Z+rwp2xwTqMcAsYrFFWePLa1vbwtng0pJzMm6ZzRPHZkQNxI3Xvrk3+MJenAcw==
-Message-ID: <e29df53cef773ba2137596641f5173dc9e50a5c2.camel@mailbox.org>
-Subject: Re: [PATCH 3/4] rust: completion: add complete()
-From: Maurice Hieronymus <mhi@mailbox.org>
-To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-  Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Miguel
- Ojeda <ojeda@kernel.org>, Boqun Feng	 <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
- Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross	 <tmgross@umich.edu>, Daniel Almeida
- <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>,
- Alexandre Courbot <acourbot@nvidia.com>, Onur =?ISO-8859-1?Q?=D6zkan?=	
- <work@onurozkan.dev>
-Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Sun, 14 Jun 2026 21:07:24 +0200
-In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-3-e3f2471b595c@mailbox.org>
-References: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
-	 <20260614-b4-rust-pci-edu-driver-v1-3-e3f2471b595c@mailbox.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="TkuD0q/q"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1781474065; x=1813010065;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to:content-transfer-encoding;
+  bh=mKTJ+8AJ5ByMWtNGLv+xqUVyrfdC8rTqEij3FBbT5DI=;
+  b=TkuD0q/qTZZOmUcJz560JZWK9AFc3k/VnoWhfkalU8zYRzRJkO29VbCM
+   wA2DyJT42M3W3EXJr0JfAYP3PpREb3ipC6UxrhG0tYFS3BWJdKhAwQJda
+   IOjAV9CThuklQ7+e2sCK9cnOMylwx+cUX1L1Vp2fTVrzSYEVKABNG2bi1
+   OIguXhZnM1wQI3exh0rhRidSrnoeIJ1hyglOTilWKg8N66ccVEYtJKB+0
+   nN6EMvn9t23slQ4vOXTH3oP751nojF3YaNn2ac35r6oT5HFCpr1571vn2
+   7DZXTDAx2QFZ1lOADi/oUlXI4K+VdNe4J3KwNgLmEsbivUqzWL6CAJAYb
+   w==;
+X-CSE-ConnectionGUID: k0SH81YxQXCDk7urj5/VHA==
+X-CSE-MsgGUID: kMC9v/1/Sda/MZudh15+sQ==
+X-IronPort-AV: E=Sophos;i="6.24,205,1774310400"; 
+   d="scan'208";a="21721126"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2026 21:54:22 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:9083]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.13.145:2525] with esmtp (Farcaster)
+ id 908bb588-1971-4bbc-a4df-1a762e314a0e; Sun, 14 Jun 2026 21:54:21 +0000 (UTC)
+X-Farcaster-Flow-ID: 908bb588-1971-4bbc-a4df-1a762e314a0e
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sun, 14 Jun 2026 21:54:21 +0000
+Received: from dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com (172.19.90.4)
+ by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sun, 14 Jun 2026 21:54:19 +0000
+Date: Sun, 14 Jun 2026 21:54:17 +0000
+From: Darshit Shah <darnshah@amazon.de>
+To: <bhelgaas@google.com>
+CC: <Jonthan.Cameron@huawei.com>, <darnir@gnu.org>, <lukas@wunner.de>,
+	<feng.tang@linux.alibaba.com>, <kbusch@kernel.org>, <kwilczynski@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<olof@lixom.net>, <sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: Re: [PATCH v3 RESEND] drivers/pci: Decouple DPC from AER service
+Message-ID: <ai8h-wyXz8l30X-V@dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com>
+References: <aTfTiBy1GoJIFqtJ@wunner.de>
+ <20251211164257.81655-1-darnshah@amazon.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MBO-RS-ID: 4774d6c576f1eb95129
-X-MBO-RS-META: nzs834ijrh66oh6w4xqja9ggmecbrauo
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20251211164257.81655-1-darnshah@amazon.de>
+X-ClientProxiedBy: EX19D040UWB001.ant.amazon.com (10.13.138.82) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Transfer-Encoding: base64
 
-On Sun, 2026-06-14 at 17:59 +0200, Maurice Hieronymus wrote:
-> The initial completion abstraction only added complete_all() and
-> wait_for_completion(). complete_all() marks the completion
-> permanently
-> done, which makes a single Completion unsuitable for signalling the
-> same
-> event repeatedly: once complete_all() has run, every subsequent
-> wait_for_completion() returns immediately without waiting.
->=20
-> Add complete(), which wakes a single waiter and increments the
-> internal
-> counter by one. Paired one-to-one with wait_for_completion(), it
-> allows
-> the same completion to be reused across multiple cycles, e.g. to wait
-> for
-> consecutive DMA transfers to finish.
->=20
-> Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
-> ---
-> =C2=A0rust/kernel/sync/completion.rs | 14 ++++++++++++++
-> =C2=A01 file changed, 14 insertions(+)
->=20
-> diff --git a/rust/kernel/sync/completion.rs
-> b/rust/kernel/sync/completion.rs
-> index c50012a940a3..b386b84222f9 100644
-> --- a/rust/kernel/sync/completion.rs
-> +++ b/rust/kernel/sync/completion.rs
-> @@ -90,6 +90,20 @@ fn as_raw(&self) -> *mut bindings::completion {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 self.inner.get()
-> =C2=A0=C2=A0=C2=A0=C2=A0 }
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0 /// Signal one task waiting on this completion.
-> +=C2=A0=C2=A0=C2=A0 ///
-> +=C2=A0=C2=A0=C2=A0 /// This method wakes up a single task waiting on thi=
-s
-> completion and increments the
-> +=C2=A0=C2=A0=C2=A0 /// internal counter by one. If no task is currently =
-waiting,
-> the next
-> +=C2=A0=C2=A0=C2=A0 /// [`Completion::wait_for_completion`] returns immed=
-iately.
-> +=C2=A0=C2=A0=C2=A0 ///
-> +=C2=A0=C2=A0=C2=A0 /// Unlike [`Completion::complete_all`], the completi=
-on is not
-> marked permanently done, so a
-> +=C2=A0=C2=A0=C2=A0 /// single [`Completion`] paired one-to-one with
-> [`Completion::wait_for_completion`] can be
-> +=C2=A0=C2=A0=C2=A0 /// reused to signal the same event repeatedly.
-Will add #[inline] in V2.
-> +=C2=A0=C2=A0=C2=A0 pub fn complete(&self) {
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 // SAFETY: `self.as_raw()` is=
- a pointer to a valid `struct
-> completion`.
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsafe { bindings::complete(s=
-elf.as_raw()) };
-> +=C2=A0=C2=A0=C2=A0 }
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0 /// Signal all tasks waiting on this completion.
-> =C2=A0=C2=A0=C2=A0=C2=A0 ///
-> =C2=A0=C2=A0=C2=A0=C2=A0 /// This method wakes up all tasks waiting on th=
-is completion;
-> after this operation the
+SGkgQmpvcm4sCkNhbiB5b3UgcGxlYXNlIHBpY2sgdGhpcyBwYXRjaCB1cCBpbiB0aGUgUENJIHRy
+ZWUgZm9yIHRoZSBuZXh0IHZlcnNpb24/CkFueXRoaW5nIEkgY2FuIGRvIHRvIGhlbHAgZXhwZWRp
+dGUgdGhlIHByb2Nlc3M/CgoqIERhcnNoaXQgU2hhaCA8ZGFybnNoYWhAYW1hem9uLmRlPiBbMjUx
+MjExIDE2OjQzXToKPiBBY2NvcmRpbmcgdG8gUENJZSByNy4wLCBzZWMuIDYuMi4xMSwgIkltcGxl
+bWVudGF0aW9uIE5vdGU6IERldGVybWluYXRpb24KPiBvZiBEUEMgQ29udHJvbCIsIGl0IGlzIHJl
+Y29tbWVuZGVkIHRoYXQgdGhlIE9wZXJhdGluZyBTeXN0ZW0gbGluayB0aGUKPiBlbmFibGVtZW50
+IG9mIERvd25zdHJlYW0gUG9ydCBDb250YWlubWVudCAoRFBDKSB0byB0aGUgZW5hYmxlbWVudCBv
+Zgo+IEFkdmFuY2VkIEVycm9yIFJlcG9ydGluZyAoQUVSKS4KPiAKPiBIb3dldmVyLCBBRVIgaXMg
+YWR2ZXJ0aXNlZCBvbmx5IG9uIFJvb3QgUG9ydCAoUlApIG9yIFJvb3QgQ29tcGxleCBFdmVudAo+
+IENvbGxlY3RvciAoUkNFQykgZGV2aWNlcy4gT24gdGhlIG90aGVyIGhhbmQsIERQQyBtYXkgYmUg
+YWR2ZXJ0aXNlZCBvbgo+IGFueSBQQ0llIGRldmljZSBpbiB0aGUgaGllcmFyY2h5LiBJbiBmYWN0
+LCBzaW5jZSB0aGUgbWFpbiB1c2VjYXNlIG9mIERQQwo+IGlzIGZvciB0aGUgc3dpdGNoIHVwc3Ry
+ZWFtIG9mIGFuIGVuZHBvaW50IGRldmljZSB0byB0cmlnZ2VyIGEgc2lnbmFsIHRvCj4gdGhlIGhv
+c3QtYnJpZGdlLCBpdCBpcyBpbXBlcmF0aXZlIHRoYXQgaXQgYmUgc3VwcG9ydGVkIG9uIG5vbi1S
+UCwKPiBub24tUkNFQyBkZXZpY2VzLgo+IAo+IFByZXZpb3VzbHkgcG9ydGRydiBoYXMgaW50ZXJw
+cmV0ZWQgdGhlIHNwZWMgdG8gbWVhbiB0aGF0IHRoZSBBRVIgc2VydmljZQo+IG11c3QgYmUgYXZh
+aWxhYmxlIG9uIHRoZSBzYW1lIGRldmljZSBpbiBvcmRlciBmb3IgRFBDIHRvIGJlIGF2YWlsYWJs
+ZS4KPiBUaGlzIGlzIG5vdCB3aGF0IHRoZSBpbXBsZW1lbnRhdGlvbiBub3RlIG1lYW50IHRvIGlt
+cGx5LiBJZiB0aGUgZmlybXdhcmUKPiBoYW5kcyBMaW51eCBjb250cm9sIG9mIEFFUiB2aWEgX09T
+QyBvbiB0aGUgaG9zdCBicmlkZ2UgdXBzdHJlYW0gb2YgdGhlCj4gZGV2aWNlLCB0aGVuIExpbnV4
+IHNob3VsZCBiZSBhbGxvd2VkIHRvIGFzc3VtZSBjb250cm9sIG9mIERQQyBvbiB0aGUgZGV2aWNl
+Lgo+IAo+IFRoZSBjb21tZW50IGFib3ZlIHRoaXMgY2hlY2sgYWxsdWRlcyB0byB0aGlzLCBieSBz
+YXlpbmc6Cj4gICA+IFdpdGggZHBjLW5hdGl2ZSwgYWxsb3cgTGludXggdG8gdXNlIERQQyBldmVu
+IGlmIGl0IGRvZXNuJ3QgaGF2ZQo+ICAgPiBwZXJtaXNzaW9uIHRvIHVzZSBBRVIuCj4gCj4gSG93
+ZXZlciwgcGVybWlzc2lvbiB0byB1c2UgQUVSIGlzIG5lZ290aWF0ZWQgYXQgdGhlIGhvc3QgYnJp
+ZGdlLCBub3QKPiBwZXItZGV2aWNlLiBTbyB3ZSBzaG91bGQgbm90IGxpbmsgRFBDIHRvIGVuYWJs
+aW5nIEFFUiBhdCB0aGUgZGV2aWNlLgo+IEluc3RlYWQsIERQQyBzaG91bGQgYmUgZW5hYmxlZCBp
+ZiB0aGUgT1MgaGFzIGNvbnRyb2wgb2YgQUVSIGZvciB0aGUKPiBob3N0IGJyaWRnZSB0aGF0IGlz
+IHVwc3RyZWFtIG9mIHRoZSBkZXZpY2UgaW4gcXVlc3Rpb24sIG9yIGlmIGRwYy1uYXRpdmUKPiB3
+YXMgc2V0IG9uIHRoZSBjb21tYW5kIGxpbmUuCj4gCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5v
+cmcKPiBTaWduZWQtb2ZmLWJ5OiBEYXJzaGl0IFNoYWggPGRhcm5zaGFoQGFtYXpvbi5kZT4KPiBS
+ZXZpZXdlZC1ieTogTHVrYXMgV3VubmVyIDxsdWthc0B3dW5uZXIuZGU+Cj4gUmV2aWV3ZWQtYnk6
+IEt1cHB1c3dhbXkgU2F0aHlhbmFyYXlhbmFuIDxzYXRoeWFuYXJheWFuYW4ua3VwcHVzd2FteUBs
+aW51eC5pbnRlbC5jb20+Cj4gLS0tCj4gQ2hhbmdlcyBmcm9tIHYyOgo+ICAgKiArIHN0YWJsZUB2
+Z2VyLmtlcm5lbC5vcmcgc2luY2UgbW92aW5nIHRvIHY2LjIrIGJyZWFrcyBEUEMgb24gb3VyIHN5
+c3RlbXMKPiAgICogTWlub3Igc3R5bGlzdGljIGNoYW5nZXMgdG8gY29tbWl0IG1lc3NhZ2UKPiAg
+ICogTk8gZnVuY3Rpb25hbCBjaGFuZ2VzCj4gCj4gIGRyaXZlcnMvcGNpL3BjaWUvcG9ydGRydi5j
+IHwgMiArLQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkK
+PiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2LmMgYi9kcml2ZXJzL3Bj
+aS9wY2llL3BvcnRkcnYuYwo+IGluZGV4IDM4YTQxY2NmNzliOS4uOGRiMmZhMTQwYWUyIDEwMDY0
+NAo+IC0tLSBhL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydi5jCj4gKysrIGIvZHJpdmVycy9wY2kv
+cGNpZS9wb3J0ZHJ2LmMKPiBAQCAtMjY0LDcgKzI2NCw3IEBAIHN0YXRpYyBpbnQgZ2V0X3BvcnRf
+ZGV2aWNlX2NhcGFiaWxpdHkoc3RydWN0IHBjaV9kZXYgKmRldikKPiAgCSAqLwo+ICAJaWYgKHBj
+aV9maW5kX2V4dF9jYXBhYmlsaXR5KGRldiwgUENJX0VYVF9DQVBfSURfRFBDKSAmJgo+ICAJICAg
+IHBjaV9hZXJfYXZhaWxhYmxlKCkgJiYKPiAtCSAgICAocGNpZV9wb3J0c19kcGNfbmF0aXZlIHx8
+IChzZXJ2aWNlcyAmIFBDSUVfUE9SVF9TRVJWSUNFX0FFUikpKQo+ICsJICAgIChob3N0LT5uYXRp
+dmVfYWVyIHx8IHBjaWVfcG9ydHNfZHBjX25hdGl2ZSkpCj4gIAkJc2VydmljZXMgfD0gUENJRV9Q
+T1JUX1NFUlZJQ0VfRFBDOwo+ICAKPiAgCS8qIEVuYWJsZSBiYW5kd2lkdGggY29udHJvbCBpZiBt
+b3JlIHRoYW4gb25lIHNwZWVkIGlzIHN1cHBvcnRlZC4gKi8KPiAtLSAKPiAyLjQ3LjMKPiAKPiAK
+PiAKPiAKPiBBbWF6b24gV2ViIFNlcnZpY2VzIERldmVsb3BtZW50IENlbnRlciBHZXJtYW55IEdt
+YkgKPiBUYW1hcmEtRGFuei1TdHIuIDEzCj4gMTAyNDMgQmVybGluCj4gR2VzY2hhZWZ0c2Z1ZWhy
+dW5nOiBDaHJpc3RvZiBIZWxsbWlzLCBBbmRyZWFzIFN0aWVnZXIKPiBFaW5nZXRyYWdlbiBhbSBB
+bXRzZ2VyaWNodCBDaGFybG90dGVuYnVyZyB1bnRlciBIUkIgMjU3NzY0IEIKPiBTaXR6OiBCZXJs
+aW4KPiBVc3QtSUQ6IERFIDM2NSA1MzggNTk3CgoKCkFtYXpvbiBXZWIgU2VydmljZXMgRGV2ZWxv
+cG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApUYW1hcmEtRGFuei1TdHIuIDEzCjEwMjQzIEJlcmxp
+bgpHZXNjaGFlZnRzZnVlaHJ1bmc6IENocmlzdG9mIEhlbGxtaXMsIEFuZHJlYXMgU3RpZWdlcgpF
+aW5nZXRyYWdlbiBhbSBBbXRzZ2VyaWNodCBDaGFybG90dGVuYnVyZyB1bnRlciBIUkIgMjU3NzY0
+IEIKU2l0ejogQmVybGluClVzdC1JRDogREUgMzY1IDUzOCA1OTcK
+
