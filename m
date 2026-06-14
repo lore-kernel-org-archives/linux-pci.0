@@ -1,209 +1,138 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021115.outbound.protection.outlook.com [52.101.100.115])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FAA826C39E;
-	Sun, 14 Jun 2026 17:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.115
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781458700; cv=fail; b=ILCsjB3Mf1rW/FHNN2IypyIuQyDOBrFExytNiKReRwUNEoCigu4BiCak4piUk6ejGUYdDPFjNhNC+rUmoFSSDjUMz+QxeiskrLl3YhTqxSse2VZDMS8176hAKp29JuiEvbWynmUzPsNsCqYrEsVQIbA8qa3zbNveepjkbzOoWWI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781458700; c=relaxed/simple;
-	bh=jzMrIuBSjHSodzEcLnKREp/eioRTn+Nbld3A8ehHJ9M=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=NslTVv9JfC+etEALRG1kYhCyT67b4RMTePLDHxymc7T4xTthGx1iObI53DWY88aTuc2hiBQ4ZumwTx7YZt9hKpTKrST0mDjvqOo9ZzFk1c/aVo5FK3Gl0QSt9Qf4NeH2wUXqf7SvjAQi/gGhpr4ZaYj9B/V7quXVGXeV0RqKCgs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Mhb/vRKT; arc=fail smtp.client-ip=52.101.100.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DB0323AE62;
+	Sun, 14 Jun 2026 19:06:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781464010; cv=none; b=c+CtOosuZH9whXiVcVC9QptjSNren6yT1J7yA+jtfAe2rAtDwhX0UVZfjC7spiyLpNs7tJ30nlFRJdvcEZrFt583KcAl1IOu8wn9h35pmqGkjuShZovKOXQt8NVdMMFhIB9uQZxRhpN8rpPGo8Fjml8BfJkQqWEbKIIdGeTkKJk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781464010; c=relaxed/simple;
+	bh=k3QCqmw1T6l7mUtgKb3hT+9TRaPBaNJwqi0SKsqgOrk=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=kOwq44y0bKyKALjZpeAoR9wrbdBjake5AB4yHW4ZBNQE6BhP8dkrHcU97DvJWoVSF4TAanC9LMPjQYED1SlDuTQzpuZqnjO8qVoIpb33CBLfBFXDJYfHPK13NQ+0UUXiWSEojlRn5NSdXI4dYXGm62W6fNjCygz56W1MF23eSgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=xoYJSMrW; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Mhb/vRKT"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tJOMSrkoHAebdVe8ukCLXKoeFcxVZMimRCXILQYFtVIW1qDAgTQa6Kita2yRTvfSLTfm0R1r5ULTv5gcs7Mb0hK+GFVY2yGTgstZjFVcQcdz953MTcQpGnkbraidia9EVSFK8k9Hii7qz1wtWf1qU9ai16nlrFBdUUMdbLa4V1tcIUlyEXu5tl2NThTy/3xDOu83DFJhi2PVNGmHqIqVxnrM+tALvPleXvfp1159C2bSCR2Ry56xpEQ+QTHNPkkdAoZSX91UsXKf8YzAKHryqENq6A9I0ldX/QMcHERKNdJg2CqFeqA2VKamNP1G5DsEE0Vn86vIiy8osvvyjdGiaA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dpCabv23NmvcGTfM67LdOeWm523ksEXXwdT8v5p5ZF8=;
- b=gE49uo71Ctu755mEyMEuWyCpD/YH0fHTiD35SCp9C/auYsNc9fRcMH4H6V7MTOb6Y6exPgSoK518+Mk8PzNNUxiX2r0uIb+rFSFYox93tWrUPLLVZOiSuH0Acb643i+Mkvp0jjt6fLa85Ahn9ZmhopPVWWAw3nQdOpQo5olVPBiZSPXrxBHLdm2mPgOv6ANhpFzNzoTXz9r114unB41KBaD9uvhK9DRNrl8FTTn+RXOfwkbOgtMk4WZ2NHM8mO/sWQc2RsdEI9bBAfINs/qREKGACj6OKestS6JCfMSAOTEZdBem2W5KlGi1sCupMB69UkpsjGJ+47CKe67cmXSxow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dpCabv23NmvcGTfM67LdOeWm523ksEXXwdT8v5p5ZF8=;
- b=Mhb/vRKTk214c4xPUS23ZrAY1gCFw1flmA7trzhM1lezkJsI6epG8pJGwpphQ7OcXZ1oeUGQAp2mxSBDta1zhi1x+LX3IEZI9MGKNj94iCwo9CFeqVdv4wDGJNOhBVeMP9+FBAZlf/OHxm2tf67yOmzwM6JIohXVKfevEKzc+6w=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LNXP265MB2554.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:132::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Sun, 14 Jun
- 2026 17:38:15 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0113.015; Sun, 14 Jun 2026
- 17:38:15 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 14 Jun 2026 18:38:14 +0100
-Message-Id: <DJ8YEIFVMQKR.SPHHI3ADO974@garyguo.net>
-Subject: Re: [PATCH 3/4] rust: completion: add complete()
-From: "Gary Guo" <gary@garyguo.net>
-To: "Maurice Hieronymus" <mhi@mailbox.org>, "Danilo Krummrich"
- <dakr@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- "Alexandre Courbot" <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?=
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="xoYJSMrW"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gdjR840Zqz9tWv;
+	Sun, 14 Jun 2026 21:06:44 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1781464004;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k3QCqmw1T6l7mUtgKb3hT+9TRaPBaNJwqi0SKsqgOrk=;
+	b=xoYJSMrW8WgPW1v+tD/rJE5UuB8uDttHf833RHajcy6A7Nkk0JfooYqYoorNuRBEv45Rdj
+	SZqoQCNOQc8QUSqufLVroz3LJGYhunRLg20T/EKlef5ZP9ij0blIaX83Duen2iMKVOLt5N
+	6tfEEsnmI5dhMbwQHJNNjF7yklFxJ+dvI6imW76Ho6Gr3eNyu4LOQMWH4qaePqFomhclF7
+	C3ELr56j2/YWrYvvEtD+WweJ/LlmLK6PUNDPwpj7E16tgCvrD8YO8aJzoszLbBukHvb/x7
+	LzP4ApFyCiW4op3Ptur3yIxov5khpb/y+C9q11eK3VclLqidCMTId77wFjj0xA==
+Message-ID: <a9f96dfd400dccbbdfcd191e448a962cab8c1dab.camel@mailbox.org>
+Subject: Re: [PATCH 2/4] rust: pci: add managed Device::enable_device()
+From: Maurice Hieronymus <mhi@mailbox.org>
+To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+  Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Miguel
+ Ojeda <ojeda@kernel.org>, Boqun Feng	 <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
+ Hindborg	 <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+ Trevor Gross	 <tmgross@umich.edu>, Daniel Almeida
+ <daniel.almeida@collabora.com>, Tamir Duberstein <tamird@kernel.org>,
+ Alexandre Courbot <acourbot@nvidia.com>, Onur =?ISO-8859-1?Q?=D6zkan?=	
  <work@onurozkan.dev>
-Cc: <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-X-Mailer: aerc 0.21.0
+Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Sun, 14 Jun 2026 21:06:38 +0200
+In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-2-e3f2471b595c@mailbox.org>
 References: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
- <20260614-b4-rust-pci-edu-driver-v1-3-e3f2471b595c@mailbox.org>
-In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-3-e3f2471b595c@mailbox.org>
-X-ClientProxiedBy: LO4P123CA0458.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1aa::13) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	 <20260614-b4-rust-pci-edu-driver-v1-2-e3f2471b595c@mailbox.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LNXP265MB2554:EE_
-X-MS-Office365-Filtering-Correlation-Id: 12aeb187-522a-48e1-2a6d-08deca3bb6ea
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|1800799024|366016|23010399003|7416014|376014|22082099003|18002099003|921020|4143699003|6133799003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	NMCqnh/7yZnKFFaV8bG8TNHQ48MkXofE4StNxNk67ZK6s8/eJdg00eklH1Pipl6ZVEw39wXXnLlVszDw4AaekT1JcalNsV4bgpuogqx/XwRdr4139CZ1Ju6YiQx0Ff3NbKJ0ueYbWbeoocMdAhRWcAaDXmDPOEWKca6lQiYUH/8EUgrag27lZ09IlXt9CyfBupCan0/IcIJFYAKw8tfotaZcWMfmEcwZeovl4rYOfvo/fhg+Tpf1yUyWFLvcH6LpNp24reBoplednAyUg/X+/8DOgtiLFYpWCqf6k2iUNtQQfSBE1CLUnUD6Swu3hOn/9JJYYFeBt9237Y5jSmlEhECjvrKM+zgstfIsfKAx33fB1gaWAcAwy6e6b9BUgKzb5pr4Kc2DcT0wkAqD/C2O0C7JPegpdXDLU6RQplmWEpiJuIZ0JEcM4I6fDttlILVM4vAQLPzeMO6rxKCvaZvBLYjqjXnVPP3GF/ZZKog6mbIpAgq2oARBUOEbX8tIUu73QiRJLvOJaWPIYoCPPK/ZQDlh/RLQdFwa3ePI2EWV0gVa9EAHM9CpOgNV40Bv6A/fxYlfPllAV7QkxSNaTH+1r2FyidvcWOIWNx8KKcvjD13XoN/pN6pTCyOG+7j4HZ4Di7MrD9hx1tPTSVHrFFqTWmA6r8Y5EFuk+BWeLNcUEmYrA0jGJCqdwcGFYItevopno/Wfjz+A+mWIATiWhn+PQP4vO7G8gKnqlIhEgaJAEh0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(366016)(23010399003)(7416014)(376014)(22082099003)(18002099003)(921020)(4143699003)(6133799003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QTl3bStwQ0cva3MvVkhQMG5EK2tLRS9ER2NFUzhydVpKVUI3YWlUODNkVHRo?=
- =?utf-8?B?SUprS2FZU1RzREQzVmM5TkloY2FtdFl1cGpTT2VTMzFMZC9OQlBaci9ESmVu?=
- =?utf-8?B?aTR5UFhzZkY3Tnc5VDVQQ3VtSXFrbFd2MmZ5SFFlOEdQR0NxU2JRK1pWUVBK?=
- =?utf-8?B?TTVJQ3FVdjg0T1hycW4vTmxZczhOdFFSSFNIaDBJN3pYK1RuNFpQa01lbDZD?=
- =?utf-8?B?cWFGdEJZSHdiaFhPVkFBclNhT3Jla0htZkw5M0xSd2VadktQWHh5aSt5QmVo?=
- =?utf-8?B?MTZLVmI2RG5nSWdqbkMyVE1LTUpxQXVEUDFMSGFZUUZBWTNnUVhwbFF0cXpQ?=
- =?utf-8?B?ZW5BUUtPMURWbjRITVk1clJrWWoxUXNLeHNhM1pZSEVIWXlUa0xYVi90TVo4?=
- =?utf-8?B?TW94QWRkY1hkV1lhdzI4M1hsNWswbVM3VzFnQUpxM2JFOFBhSGIrVFdmYVl6?=
- =?utf-8?B?d0JqWU95bWtYaVJsRGpwOGVTY0xwK3NRL281MWdlZm11YlNWaFg5YXFhSk16?=
- =?utf-8?B?OUJuNHBjcEk5SFhtRXRaK0UzVW5XS0Z2Z0RxcEJJZms0MXlRSCtQYlc3UXBO?=
- =?utf-8?B?eFZndk9QTTV6MENRbVpDV1F0amorUVlRVTgxeDJ2bERhTzF6SFErYmJ2cHhz?=
- =?utf-8?B?ME55M3lnZDJ6MVJPTGtWZTdRall2MWwxUVFmVCt4NEVadTk3RkIyTlkrZHBk?=
- =?utf-8?B?d0tkZHZPelZwdEdQNlhCWC9rK21UMG5CMjc1UWw3MTFIN0NqRWVHR3ZVckRt?=
- =?utf-8?B?dGVtS2xxRDVaTHIwTVpLWTBpUm5ieWFQdi9YUlp4eUJ1NmhJUWFHUU9BcDdz?=
- =?utf-8?B?K0hlWUNvbmdTbTJLNVc2aGlIMXcyeTdxR0FhZGkwdk8yUVg3SVFmUkFZRkg4?=
- =?utf-8?B?bjdEK0tTcGNDRndVcDJsdE54NDYxOUpCQmFEclJEYlNCOGNzNXlPYTByUDd6?=
- =?utf-8?B?NnFQaEZHM0VrTjhMQkQ2ZVJWaUJiK3pWTVNMQWVIS3ZPNUlBNWtEYVo2bE9s?=
- =?utf-8?B?RUhtSGZWdGE3Wmh5Z1J2dHFuN3U0alNnTnlOYVZCZWVzRTFOalByT2xBd3hN?=
- =?utf-8?B?VmdibEowMk5pQ0xLaWVoTmdVTFBoSFRKS0NEZHcvdlIzaUxuVHpuT1BQdGRu?=
- =?utf-8?B?TW9BS05jMzRlWnVCZGsyQmVoMnowZkZNRHcyYTh1MWZpbkxiOHp6M0RseThj?=
- =?utf-8?B?ZkcyNWhoR0J6bWZqRFEwOXZlVnF3Y0dPL2thcE9sSmlaY0grRm5ucmI0NzVS?=
- =?utf-8?B?MjNjSjhQQkZxOGcyVXY5S2ozay9lTjVPYlNJZ05WS3NsVkNuKzE2UlNJQnFy?=
- =?utf-8?B?RXFiRkdxK1JqRDVyUUxyTHNIdDdvMHdwREREclRsL1BTNTBmZzZWUUdZZG11?=
- =?utf-8?B?TGxlcTBJSzdBdkh6U2dVN3BoclVrQ2M2ZTQvK21aTUpicVdNSGdhQnZmdU5N?=
- =?utf-8?B?UzRDZldXYlpQbW5RbTRRRU9QdVFvMVowV3dqZHdRNWdTVUZ3S3NGdDJsR2tq?=
- =?utf-8?B?cW9McXphQ3FqZUVXWnJZZlRaN1ZjTnNscDlodTV1dWVtT0l2cmhuTCtoWVl5?=
- =?utf-8?B?QThBMEI0bTIyYzZkaDBZYkxYWmVWeFBDUWo2eDhRalR5T0FhRUtBaUJnc053?=
- =?utf-8?B?YkE3MlFiU3haWXhGbytVSGU1c0t2MGd3UkVGN0NtcENqSGY2VU5STnlhT21v?=
- =?utf-8?B?N1VoTFpkeTBLekRLRmJTbHFLYXJPS21qeUlCNkY0c0hnZXBHcHJqWVNUZEJ1?=
- =?utf-8?B?a1U2R1pTMkpXeUlTeTk3MkxGQWV1WVE2QVJOQUY5Zm82ZHYwSXJYWTlBR2dJ?=
- =?utf-8?B?Z0EzeGQzOGZWSzhaMjQ5bWU4ZlBEbnBwRFh4ZkVlT0VEZ1JVMGllNGlrcjBu?=
- =?utf-8?B?dWVzQjV4cHlGbnpTWTZ3NFdxMDFXTTF4N3VjbzZmU0FPS2NjTWlOY1hoL1lQ?=
- =?utf-8?B?bXBpUS9QVFNrUnVqbmRIY3hhdnVRUmpkV2thOGx6bnJBTHM3aVhrZkYrM3ZH?=
- =?utf-8?B?L1ViMjdtcExhL2RlSG5CUUt1MVJyaUQ3R3krM3JpVUpoTmlOWGRNZGVtYm1Q?=
- =?utf-8?B?Y1BqWkFpVHBlcU4wYzFmT1VhcnlGZ01KYTRPOHcvMEI0TXdkQUh2S3lEMmJk?=
- =?utf-8?B?bm05djMxWDNzMkZweDFJRzE5dU4rRWJkZFU4aURXaEdlcG1xYlNuWnducjV3?=
- =?utf-8?B?NTd5OWc0eDAyNlVoalRQbFV4eHNYYm1lUmZQQUlIcFJLK0dsUW4zMU9pbTJn?=
- =?utf-8?B?bkhvdXRnUWFEdTdIeXN1OE9tK2p0SFRseWR1Wnlvd0xnS3puU1U5amZMN2Fh?=
- =?utf-8?B?aU8vbjZ0NFJNNWppcUZEdCtkUWhJcjF5Q0hVdUpVdlYrSkdVSkREUT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 12aeb187-522a-48e1-2a6d-08deca3bb6ea
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jun 2026 17:38:15.5020
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: yfPkd9r1TuzO9FJTqHj4phNdM5biWOUOEpZwZk50acoDoOe/Vb2ZnkGJRa+KTntjXmDQmnyoxaHVtsGEbBWXdg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LNXP265MB2554
+X-MBO-RS-META: jgzqm4jqnyb1iahiwcy6t5ge8iepn7b4
+X-MBO-RS-ID: b88d3be925106cc4d9a
 
-On Sun Jun 14, 2026 at 4:59 PM BST, Maurice Hieronymus wrote:
-> The initial completion abstraction only added complete_all() and
-> wait_for_completion(). complete_all() marks the completion permanently
-> done, which makes a single Completion unsuitable for signalling the same
-> event repeatedly: once complete_all() has run, every subsequent
-> wait_for_completion() returns immediately without waiting.
->
-> Add complete(), which wakes a single waiter and increments the internal
-> counter by one. Paired one-to-one with wait_for_completion(), it allows
-> the same completion to be reused across multiple cycles, e.g. to wait for
-> consecutive DMA transfers to finish.
->
+On Sun, 2026-06-14 at 17:59 +0200, Maurice Hieronymus wrote:
+> Add a managed counterpart to Device::enable_device_mem() that wraps
+> pcim_enable_device(). In addition to enabling the device, it
+> registers a
+> pci_disable_device() cleanup that runs automatically when the device
+> is
+> unbound from its driver, keeping the device's enable count balanced
+> across unbind/rebind cycles.
+>=20
+> The existing enable_device_mem() wraps the unmanaged
+> pci_enable_device_mem() and has no disable counterpart, so the enable
+> count is leaked on unbind. On the next probe
+> pci_enable_device_flags()
+> sees a non-zero enable count and returns early, skipping the power-
+> state
+> transition back to D0. For a device without a PCI power management
+> capability the power state cannot be re-read from hardware and stays
+> PCI_UNKNOWN, which makes __pci_enable_msi_range() reject the
+> subsequent
+> MSI allocation with -EINVAL.
+>=20
 > Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 > ---
->  rust/kernel/sync/completion.rs | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->
-> diff --git a/rust/kernel/sync/completion.rs b/rust/kernel/sync/completion=
-.rs
-> index c50012a940a3..b386b84222f9 100644
-> --- a/rust/kernel/sync/completion.rs
-> +++ b/rust/kernel/sync/completion.rs
-> @@ -90,6 +90,20 @@ fn as_raw(&self) -> *mut bindings::completion {
->          self.inner.get()
->      }
-> =20
-> +    /// Signal one task waiting on this completion.
-
-"Signal a single task" to put some emphasis on "single".
-
-> +    ///
-> +    /// This method wakes up a single task waiting on this completion an=
-d increments the
-> +    /// internal counter by one. If no task is currently waiting, the ne=
-xt
-
-Why does this need to mention about its implementation detail? The user of =
-the
-API doesn't need to care.
-
-> +    /// [`Completion::wait_for_completion`] returns immediately.
-> +    ///
-> +    /// Unlike [`Completion::complete_all`], the completion is not marke=
-d permanently done, so a
-> +    /// single [`Completion`] paired one-to-one with [`Completion::wait_=
-for_completion`] can be
-> +    /// reused to signal the same event repeatedly.
-
-Hmm, I don't think the behaviour of `complete_all` needs to be in the
-documentation of `complete`.
-
-On the other note, you probably should update documentation of
-`wait_for_completion` to also mention `complete`.
-
-Best,
-Gary
-
-> +    pub fn complete(&self) {
-> +        // SAFETY: `self.as_raw()` is a pointer to a valid `struct compl=
-etion`.
-> +        unsafe { bindings::complete(self.as_raw()) };
-> +    }
+> =C2=A0rust/kernel/pci.rs | 16 ++++++++++++++++
+> =C2=A01 file changed, 16 insertions(+)
+>=20
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index af74ddff6114..ca04548c82c3 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -452,6 +452,22 @@ pub fn enable_device_mem(&self) -> Result {
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 to_result(unsafe {
+> bindings::pci_enable_device_mem(self.as_raw()) })
+> =C2=A0=C2=A0=C2=A0=C2=A0 }
+> =C2=A0
+> +=C2=A0=C2=A0=C2=A0 /// Enable I/O and memory resources for this device, =
+with
+> automatic cleanup.
+> +=C2=A0=C2=A0=C2=A0 ///
+> +=C2=A0=C2=A0=C2=A0 /// This is the managed version of `pci_enable_device=
+()`: it
+> enables the device's I/O and
+> +=C2=A0=C2=A0=C2=A0 /// memory resources and registers a `pci_disable_dev=
+ice()` call
+> that runs automatically
+> +=C2=A0=C2=A0=C2=A0 /// when the device is unbound from its driver. In co=
+ntrast,
+> [`Device::enable_device_mem`]
+> +=C2=A0=C2=A0=C2=A0 /// is unmanaged and only enables memory resources.
+> +=C2=A0=C2=A0=C2=A0 ///
+> +=C2=A0=C2=A0=C2=A0 /// The automatic cleanup keeps the device's enable c=
+ount
+> balanced across driver
+> +=C2=A0=C2=A0=C2=A0 /// unbind/rebind cycles. With an unbalanced (leaked)=
+ enable
+> count, a re-probe skips the
+> +=C2=A0=C2=A0=C2=A0 /// power-state transition back to `D0`, which makes =
+subsequent
+> MSI allocation fail with
+> +=C2=A0=C2=A0=C2=A0 /// `EINVAL`.
+Will add #[inline] in V2.
+> +=C2=A0=C2=A0=C2=A0 pub fn enable_device(&self) -> Result {
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 // SAFETY: `self.as_raw` is g=
+uaranteed to be a pointer to a
+> valid `struct pci_dev`.
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 to_result(unsafe {
+> bindings::pcim_enable_device(self.as_raw()) })
+> +=C2=A0=C2=A0=C2=A0 }
 > +
->      /// Signal all tasks waiting on this completion.
->      ///
->      /// This method wakes up all tasks waiting on this completion; after=
- this operation the
-
-
+> =C2=A0=C2=A0=C2=A0=C2=A0 /// Enable bus-mastering for this device.
+> =C2=A0=C2=A0=C2=A0=C2=A0 #[inline]
+> =C2=A0=C2=A0=C2=A0=C2=A0 pub fn set_master(&self) {
