@@ -1,55 +1,57 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 925FF2DE709;
-	Sun, 14 Jun 2026 16:00:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D026139C645;
+	Sun, 14 Jun 2026 16:00:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781452804; cv=none; b=Mfok2GYsMdEjKsoDfRpnKlKuN7CN2So7B+/Aoa1domekmy1EiKabVwFU090WePCN2cCk4GLCIZfQRfIFLmOq0jZ8yw8SL6enicaSDbjxagm1kBN+364FSFgnMdFjroxUZoN77Os+WP+xERSCfKiI+1LyWeqnCN46iFwkV2KiwXE=
+	t=1781452806; cv=none; b=udlkKyJahTPks3pcCaqPcYHzgSUxBZyfL0mvKP340qE30QMMqrTGzcFjDUvIkIbKmQ+tlxPuNzqdd+wb4OQbn7QFNl1s6m0dvGI/CLAYW61KU8iOVhTWPuU8Ux6jh39/rhw/5mO4R3dYopKOBnR7bPDnlZG296DCva8eRGnS0+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781452804; c=relaxed/simple;
-	bh=tGCLsqt5ok3HZPG8PlNhuF2WCNGWutHwrwXu1hIjsnk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eqQ6kVl/V2IuMGO1TnX76w3JGuHwHPoUoqqYl/mIaxseJSy1o8BplkDMHIQTrfN0gVI6fzobisjn6VUd9wYWKXuhMkQQxjJb9ErKAak88Nlp49zzJRyw5HUnLAh44t/kNsjW3ejXbqm5v7HACDL0mHy+R+IiXyxdtFGJMcEphos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=tB90jiUk; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=r/2/+gyq; arc=none smtp.client-ip=80.241.56.152
+	s=arc-20240116; t=1781452806; c=relaxed/simple;
+	bh=h0XchsrNntgeeOKFQsJYEfkDx2B8XkHXEdO9BYyg5o4=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=WQY66/yei/ldQHkj1WZufeZgTFVw3biqkFFugDl4LoJk8OiwZA3ymLT8BRNCdbFwu56vEfu6/SUOQofcIIm0YRxGg7pRuhC6RKgFUDls6aTZyr6XPWo/QUTbhcmAIumHfg9BSyTRW7z1MYv2nUXYbR3WSkIvulNfe70FK4sOSwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=I2NvN7Dx; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=kllb2TPx; arc=none smtp.client-ip=80.241.56.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="tB90jiUk";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="r/2/+gyq"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="I2NvN7Dx";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="kllb2TPx"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gddHh3VC4z9vGY;
-	Sun, 14 Jun 2026 18:00:00 +0200 (CEST)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gddHb4WyGz9tdq;
+	Sun, 14 Jun 2026 17:59:55 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781452800;
+	t=1781452795;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EZFwPhL76Qqpk9oAMaFnJIH0KC6sjbUVZOFc8eY36/g=;
-	b=tB90jiUkjYH94JWtkDuQmWomJWu0/1V+BcJyU1/Mif1WPaBQzGL342F2hdqdYjfLicdkQL
-	oN0PfIEludKCD8Fd+wX3AwFF4EMDfTAA/6eiSW3Nfevmx6Kko1+G1newmh8XlEkS5ABXdF
-	0WR9P3P9kriyGMgn3u9sEIX9gRJRSsYtvyyxkqzxNQFJq23SV3SHuJyhA8YZkkEkVTYekd
-	WKGyvoKHNLcUWrZCaShkGhDuTu8m7efywXBgGGi67aQwVdvqJRkBtVbMaF3+opWFT6w3Uj
-	BTOFXJr5g90LlDY+ZozWnmzACFe/zjTZpHC345N//Ou83ZVdkx5jwKA7mn3/ig==
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=yYbTPQ7Bbcr9EI3+l9tprIrCcyJs2hx7YOxqS8pGLWs=;
+	b=I2NvN7DxyrJoddCOb6ll5ubxLVpQ/trEwhJ5FAUwbpbJIPcJUOvuBDyw0f8sccmnHbwh0q
+	BhKDfVT7JJRNQrCuzFv1r57PZkPUmgu8gelk/2gkEztAGL4OqLl3KbTFs6yArlV41MvBCE
+	OH4TpZAZys9wrdvPJHJ/VK9YpOKmVoTkgpDvwVici/ddzVccLIpFQyOYXENgjfBeSghHf8
+	LnwMdKlTd02IDDfxTPqXuM20rhl8F3o25AfqZO6k9vEVc0K/Zb6nFcqROQa5A/b+Ez7TER
+	aXx93efr7SQ7ZBTHi3XXZ+argzgcrQDP9AgQc7ilFMx/DdN3ocxpbx/vjF5Llw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=kllb2TPx;
+	spf=pass (outgoing_mbo_mout: domain of mhi@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=mhi@mailbox.org
 From: Maurice Hieronymus <mhi@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781452799;
+	t=1781452794;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EZFwPhL76Qqpk9oAMaFnJIH0KC6sjbUVZOFc8eY36/g=;
-	b=r/2/+gyq+FWIiLQDIUUtFfDXshLI45/1S5B2YbTS2bao4rRJ0mENSVGVS8RN4i/LLAYi3T
-	YW0TJaltZnNMNr2m5KaGupbaeoGVtln3LSEqNaVCknxjpx9/5b2mfGN0zPVkvEV92RaPFJ
-	Q20eXqMGTTV24hKfZ586rTV5lYMaXciUmHy6gq8xeJ3TyWgu0OezjtBffSA/R/RB13bS0N
-	e/+I2GoGrTmkuoSlp2MqaHPXxxJ07hOMWVFVrQLrY3t06/QPazTRqgctlvWxp+PEyll0qG
-	/suKIJffbV/PTS569Y0rftgdQxLvXs5flWthSdBbsVZEeB2PcaTzsrqJq33VJg==
-Date: Sun, 14 Jun 2026 17:59:45 +0200
-Subject: [PATCH 1/4] rust: pci: make Vendor::from_raw() public
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=yYbTPQ7Bbcr9EI3+l9tprIrCcyJs2hx7YOxqS8pGLWs=;
+	b=kllb2TPxqe8O5dNwx60q0uyzN/QKtHFrktRO9NTylAF685W79G/YTTnYau6hR/Q47eiNIX
+	HXxbU0dzi7XTmZlMcZvTt02hCX7Q/yjn5ow0ZP+gDco5U5LzWzUgSzbfZ6LYHEqmrXDWSp
+	p19LQc7B8RJE6Xk6C3kVam/yyp1k9eCuwmGJQh9W2Vbqv9g9F+oneklS8IspFYQGySDqCI
+	gr1LgXEW58kpWdUcdcrK85i/HCharjZ6O4ndGUbWvT8tRvIUfcbszbdH7adpZFqHLF3jAL
+	D6GaKAHl7vFVSWelfEXuU/gxeEzyHONOJOwfor0lT+sIRTNm9QMJOR25vu2RNg==
+Subject: [PATCH 0/4] rust: samples: add an EDU PCI driver sample (MMIO +
+ IRQ + DMA)
+Date: Sun, 14 Jun 2026 17:59:44 +0200
+Message-Id: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -58,9 +60,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260614-b4-rust-pci-edu-driver-v1-1-e3f2471b595c@mailbox.org>
-References: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
-In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MMQqAMAxA0auUzAZq1Q5eRRysSTWLSmpFEO9uc
+ XzD/w8kVuEEvXlA+ZIk+1ZQVwbmddoWRqFicNZ56+sWQ4ua04nHLMiUkVQuVmy4sxQc0WQjlPh
+ QjnL/42F83w/7DJQyaAAAAA==
+X-Change-ID: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
 To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
  Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
@@ -74,54 +77,64 @@ To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
  =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>
 Cc: linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org, 
  linux-kernel@vger.kernel.org, Maurice Hieronymus <mhi@mailbox.org>
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1781452788; l=1663;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1781452788; l=2066;
  i=mhi@mailbox.org; s=20260525; h=from:subject:message-id;
- bh=tGCLsqt5ok3HZPG8PlNhuF2WCNGWutHwrwXu1hIjsnk=;
- b=wv01xKbHMiLe/ZNNl2R0R5M3htQAUhv/VnkeXDGEEROi6QvJvU6D4JjCuzqay6XyB47YkN3kZ
- u0hUAKB5ZCKB5ftt07nk1ufzli+tunm5UNPivn2BH20caav8aepmktE
+ bh=h0XchsrNntgeeOKFQsJYEfkDx2B8XkHXEdO9BYyg5o4=;
+ b=Pv01hfvOFrzwhCjah/sTOHJi8zx1wZc+Q94Am6U79tyP8DKnbVdQukpbiGKu7vdCsrw3L7WB9
+ rLqAe39dxWpC0yzWXcwKXA/35ig6KuDPcPzIS4DRu6dNs7TONPrPLi0
 X-Developer-Key: i=mhi@mailbox.org; a=ed25519;
  pk=AHlEkGG3hpXZHntlEzF42Ip/LFyXWOgsNUvaHqAnV80=
-X-MBO-RS-ID: 3dc17c78845b7b2faa1
-X-MBO-RS-META: 6pgfsb4riy4hrp6bze4q3rqxj5ejcafn
+X-MBO-RS-META: 9opu7kztk91ktxnrgjr4q7by67j6e6wy
+X-MBO-RS-ID: fb5a892fe783984d2d2
+X-Rspamd-Queue-Id: 4gddHb4WyGz9tdq
 
-Vendor::from_raw() is currently pub(super), so a Vendor can only be
-obtained through the named constants generated from the PCI_VENDOR_ID_*
-defines in <linux/pci_ids.h>. A driver therefore cannot match a device
-whose vendor ID has no symbolic name.
+The Rust sample drivers currently exercise PCI facilities in isolation:
+rust_driver_pci covers MMIO and rust_dma covers DMA, but there is no
+single in-tree example that combines memory-mapped I/O, interrupts and
+DMA in one driver.
 
-Such devices exist. QEMU's "edu" educational device and the legacy
-qemu/Bochs stdvga both use vendor ID 0x1234, which is not registered in
-pci_ids.h. Per the policy stated at the top of that header, IDs are only
-added there when shared between multiple drivers; a single-driver ID is
-expected to be open-coded in the driver instead. C drivers already do
-this -- see drivers/gpu/drm/tiny/bochs.c, which matches with a bare
-".vendor = 0x1234".
+This series adds one. It targets QEMU's `edu` device -- a small,
+well-documented educational PCI device that supports exactly these three
+facilities and ships with any recent QEMU (`-device edu`), so the sample
+runs without special hardware.
 
-The Rust abstraction has no equivalent escape hatch: there is no public
-way to express an unregistered vendor. Make Vendor::from_raw() public (and
-const, so it can be used in the const device-ID tables built by
-pci_device_table!) so that drivers can construct a Vendor from a raw ID,
-matching what C drivers can already do.
+The sample maps BAR0 and runs a set of MMIO self-tests (identification,
+liveness, factorial), allocates an MSI vector and registers an IRQ
+handler, and performs a DMA round-trip -- each stage waiting on a
+Completion that the IRQ handler signals.
+
+Prerequisites, that had to be implemented:
+
+- pci: make Vendor::from_raw() public, so a driver can match a device
+  whose vendor ID has no symbolic name in pci_ids.h (QEMU's 0x1234),
+  matching what C drivers already do.
+- pci: add a managed enable_device() wrapping pcim_enable_device(), so
+  the enable count stays balanced across unbind/rebind.
+- completion: add complete(), so a single Completion can be reused to
+  wait for consecutive events (e.g. back-to-back DMA transfers).
+
+Tested with QEMU `-device edu`;
 
 Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 ---
- rust/kernel/pci/id.rs | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Maurice Hieronymus (4):
+      rust: pci: make Vendor::from_raw() public
+      rust: pci: add managed Device::enable_device()
+      rust: completion: add complete()
+      rust: samples: add EDU PCI driver sample
 
-diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
-index 50005d176561..bd3cf17fd8de 100644
---- a/rust/kernel/pci/id.rs
-+++ b/rust/kernel/pci/id.rs
-@@ -156,7 +156,7 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
- impl Vendor {
-     /// Create a Vendor from a raw 16-bit vendor ID.
-     #[inline]
--    pub(super) fn from_raw(vendor_id: u16) -> Self {
-+    pub const fn from_raw(vendor_id: u16) -> Self {
-         Self(vendor_id)
-     }
- 
+ rust/kernel/pci.rs              |  16 ++
+ rust/kernel/pci/id.rs           |   2 +-
+ rust/kernel/sync/completion.rs  |  14 ++
+ samples/rust/Kconfig            |  11 ++
+ samples/rust/Makefile           |   1 +
+ samples/rust/rust_driver_edu.rs | 379 ++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 422 insertions(+), 1 deletion(-)
+---
+base-commit: 48b375e482027ba6566107cec40c1b21b453fa4e
+change-id: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
 
+Best regards,
 -- 
-2.51.2
+Maurice Hieronymus <mhi@mailbox.org>
 
