@@ -1,63 +1,64 @@
-Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4281C5F27
-	for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 13:41:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE3BB3BBFBC
+	for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 13:57:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781444483; cv=none; b=PzQiGTdhNCe6KaAJoAWYR84KdShKBwg2NN44BjmHavl9Z/XSzv9vwUvsLLStJo8v5poZDU1Q65QFdPmz3iJq5W51nuZeaEN4259bsHJIbp/RY0N1RzGgO+nqdPJk09ertAtpRpvh0hFI84Q202vsYh0vJm73IutFXHPlPpq5HMA=
+	t=1781445467; cv=none; b=ejyPwVKXaIWKpIMqdlPg85ap2x0TcjeQxAIB7IuwXZX/yNQXJDZJdSIOd2PZhQwyEUoebgZ5NqNI4RlTp1E6pxPrLDjTL0iTLbMyZmFmABWHSmWgpt7xAV2MZ4aKBY7lU4/HbE4adtRmxX7l1APw4S8XSs25wTt/U+xPtDBo6iI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781444483; c=relaxed/simple;
-	bh=9qCCo5jqZNYTFQYhvn1w10HthvCojM5bi7HQ3wIdz0Q=;
+	s=arc-20240116; t=1781445467; c=relaxed/simple;
+	bh=irEWipl5ns1PQEI0PQ7c6jRmzsY6W3c0XtAe+hBan18=;
 	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=CYFcxAF+fYfxfX2ZZA4pE6foJfD/sry6ZeE4T9StVzO7XOO+cSpwnyT5VgJUNDyA588eG/N7jZf3dJKWQCqUFAZ23p6TCLRxlXbvpFi9EP/lqBRZ6MgNO0QLwCIu8PetHuinNG7TqU34F4hIavpDUZlV2zm6HQ2AezKOYgV87v8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=f2ypQdPo; arc=none smtp.client-ip=209.85.222.170
+	 References:Date:Message-Id; b=cTwwxqCmCBNVL7mZYA54YuDOlExz3X0bdlII9hxfcwB2ZaSVQ22SFGHv+apJ+OFZgo6FhLeeMbQrfgk9GJqWU15rchh/hh4sNizszhSpfroVd5Jj/D8Iu2723RdMG+W5SNNBV8VLXRCdSxBzOrwY3e2GyYDJuUftwpoX3vG3GKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=YLzWLlR7; arc=none smtp.client-ip=209.85.222.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="f2ypQdPo"
-Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-915d64fead9so365332485a.0
-        for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 06:41:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="YLzWLlR7"
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-91587626a3eso289900985a.2
+        for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 06:57:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1781444480; x=1782049280; darn=vger.kernel.org;
+        d=soleen.com; s=google; t=1781445465; x=1782050265; darn=vger.kernel.org;
         h=message-id:date:references:in-reply-to:cc:to:from:subject
          :content-transfer-encoding:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZeAw+vIhY6bA9mSRruzAQBCEt99MDj9JV/iQLow7qBM=;
-        b=f2ypQdPo/X5ObV2Fsc6y79srx8rOlV7wyjh2fVB2zaGZ+0+bQVIyO9k+Hj10a3QqPn
-         VTFxXR5w3qk++OBbxuVTazwMZoVyg20LerCaxKVLaAHvi45qsd1YTjmGeZ+KLiawU3kD
-         WspKvEgy+QtdNKDhXNqGXCFoCRDbjtIRkSFDZDIn35RZvyVgrDOHSVpvck28uxn9MOsZ
-         WLc1aElcqBNLDEWNvgXqJBrZPiGGCMPJZTAotc6xyvmTs1QCMzgm+TMnUZKRuEA+HYZD
-         SuYsptYgIRn9I7ij3V/DPsD6bOw0u+Nk3dgVy/CbxeEzRGj2DfyRACo7MUlT2CIYIEv6
-         f8Cg==
+        bh=oLWNaUJaCrsl1zSP87x78jJvGSQywThTy/hKOOZov1I=;
+        b=YLzWLlR7uyAROZKIYR1IdIlmR37bn6/jKIS4qEhzOGAy1KhDFZwXhaZzhxgFhmXvrL
+         6Ch0QIu6C5f5l3Afjz/E7qKA+9g4sCGgQ9W5Y0YNAbtloh7fkl46RyFjPBlL4ZVKC/kO
+         xGmTxyHys9Xa1FaS5JYNPoGvtCpni4GgXSopguHTlmAAQVx8d16R+MLfpMe/mRsMzlLy
+         iKgMfOb+5Ktms0NoszdyHGe4CUWWAaSGsE6xJxo9A3l9U6Trlwhow5VACM7gKTtG6HTW
+         QirIoYFKMPVJkoUwCrz377LgmVE/GR/m6imm1a1f0r9zP7KRnh1b/T3RN7svsTFjwRHh
+         pQPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781444480; x=1782049280;
+        d=1e100.net; s=20251104; t=1781445465; x=1782050265;
         h=message-id:date:references:in-reply-to:cc:to:from:subject
          :content-transfer-encoding:mime-version:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZeAw+vIhY6bA9mSRruzAQBCEt99MDj9JV/iQLow7qBM=;
-        b=aLo0KDLxWeWwzW6MYQM8GkRtDWlYY2HmnZEPH4oqYT4m5PoTX5Izz4ehF6zY+AhjWw
-         4pEGYAzA7tSfo0Z55a7qqIDMZXjtTcLW+S+uiX5GzhuPvH4nwWV8yYA2MthTrPeH9sPU
-         s4M/6b0qYcb/7+iGas/Gxz+MS3xafjDXE5PZR2z9RsxBLymOxBZVjHaBe6pVQKLgmy3X
-         FeQcgR+u/SiLOGLtSFQusNSG89hN/Qp9iuXknmIgWxb4M6/3qMKxxGlJN6CJonuH3eFJ
-         p83BF2zMgQoO8jSAP7d6hDlBiyIftpiXjrk4qiS3dMXykUxP+xS5TIW4SJpcnZjEO2wb
-         FyJg==
-X-Forwarded-Encrypted: i=1; AFNElJ/dbD30pVEUxqYsuCCxrwvfFe/DgEPot6th8TF7L4TmfGssljbi9uWArdMvJR9TpYhqGHiQ1Jlcwvk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyjndwEJW3Xv6tcBeqZRJwjREaxNCusuLjjhndm/gI6WEZ5q57P
-	SwUyv2H+01BuTAsrePn6P0ADRw07vBc3+0QytYZCUgbC715WqWjmZwTduuh//K7pU9o=
-X-Gm-Gg: Acq92OFjmZ2xbUB8Ugl9NffHlNIbocIzwEB1L87ye94UBPT/+ap0JMUQYuWD0GuyQM7
-	CKrhKG4lw51MUX2pd8beIvREaInbGwPf+RCy4+qJzaftSavsxvcejveqFAMEI1jEc/dF2VuuDfP
-	eG0o2dj2FAFYInrbtrt/Ju9ei7RUWDa8PEEmyXrhgbeuzd1VHMkuSh5fZxYBWQPKFwd6a4TrkIn
-	757EOOXQ5GZmO6l7FiSt1wFINZXVBFFgND8xmtngeRuD46Ci3VVy/+Eyd8P6rtHzUZV29oxzSle
-	YGgpBY3htlZQTge4gsLuMbztuOSLLGrV5vy0pT29id5HB3WTHmjnDVam1uU/AKsijeLufk9a7wF
-	lhTbtSpnKnLN+aYHicwNyzU/zu5YcfUF/JzvxFmKW8PZTgB7U4YwaifwnA1/E/ZK2jaPG9YNIw2
-	GijqaaqZyq6mej1DFdoxfmcyq93ubw27HIJ/xYIoe0gwhYmgw37SCb2Dr7AXc/3FhJvsW7/CA=
-X-Received: by 2002:a05:620a:284a:b0:915:80ed:8327 with SMTP id af79cd13be357-91619f73cd3mr1359281985a.41.1781444480052;
-        Sun, 14 Jun 2026 06:41:20 -0700 (PDT)
+        bh=oLWNaUJaCrsl1zSP87x78jJvGSQywThTy/hKOOZov1I=;
+        b=LD9PNtWkalcaOdvx8MkFNUcQu6K7yMmYgpgA6sy+1wJSnr8bVDPxrMta9PwNdR5rXi
+         rV3+Y6+VsoIrYjuB7XHSP5PHW3CxZmGncVXR9f9nvVknKWN6L+JMFtdFzVdiPAgHbhgQ
+         q6sRZ1/yib9XozQIrX81bMshFQ0ns6txs2fLuiMVdQFZsankHVhOjBhQ2hgM9DcafEbF
+         2sQ+w49M3xQUA+9kRO/fUti/7F5geGWRPsIIK2bdZnMGJ/UjD48GaQ9QDIELMAT9oK/s
+         DlWuAhjpaLiv4jXkWPAq7v2rAB7rhM92x60N9aOCEsCKYx38yMX01p4jdBYkjnz0i9jX
+         NCig==
+X-Forwarded-Encrypted: i=1; AFNElJ/6p+74XD4FFbToVsXXKZi+aq3pjW6DrmJjZDoroQlYQQwgXkveeLnRgyemwM/dt40N0v6zYxXOUK8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwB1OZOiEYVr+TNIXzVnoXnyDD+F0qRbNL2gTH4zde0I5IbdQWg
+	sHNJ6rQ1b8bOSZsgZenAlkP1cbIslEo/Ruopjar7GfV3lW7YRvEynT9qOzOzfXlZMHWKSlqvbGy
+	cwwY3
+X-Gm-Gg: Acq92OEbs82Xbs65EvEh0jnRzBTR6bZc8kGK0zIvODhwhXZayr62rh/mqzzvPXP1wiq
+	vnuSqoN4V6kjAcKR/syM0tydKYZkamrfoJsll4RP31YvmKLy9ysUidwoltHq9K9TC8CG1QlTQXM
+	ZlnAKLw5Rw3giyMa7nzeDzEnyP87Ks69wP1ofhSjvpPlwu9lmcw5/kfMoWF6FPWHl/SPYTHL6Mf
+	3K65i2K4b2sdX7wmILcIV6D0nZbYBOQ/hOxWOBYg4XeOXRUMYPMgLHQ0bJv8JqO1J/hubPxeC51
+	AZOazcxjBqh2ASd1Rq5YmovXMuytTAVGj7WLotZVLkhzyiq5yT3wjkvb8qoeIwXl2CvXEGh7Jaz
+	DzkXdHwVbmtmGhfO9BHnHqg89CjQHJRZBFznFKAKahRbcypp/ii/GCU7wo+KhYHwe16yGJXLudc
+	vk+lSj4c+Qmd5G7cZGla2MtKMddb0jWRU2+nIc0ep7pbUqXDcjdKKJX2U9wizA
+X-Received: by 2002:a05:620a:2894:b0:915:cf88:1e3e with SMTP id af79cd13be357-9161bd3bcccmr1479704685a.41.1781445464857;
+        Sun, 14 Jun 2026 06:57:44 -0700 (PDT)
 Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9161a00af50sm804255185a.30.2026.06.14.06.41.18
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-91619ed7f16sm753609385a.1.2026.06.14.06.57.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 14 Jun 2026 06:41:19 -0700 (PDT)
+        Sun, 14 Jun 2026 06:57:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,8 +67,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v6 04/12] PCI: liveupdate: Document driver binding
- responsibilities
+Subject: Re: [PATCH v6 05/12] PCI: liveupdate: Keep bus numbers constant
+ during Live Update
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
@@ -86,37 +87,52 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
  Samiullah Khawaja <skhawaja@google.com>, 
  Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
  William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <20260522202410.3104264-5-dmatlack@google.com>
+In-Reply-To: <20260522202410.3104264-6-dmatlack@google.com>
 References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-5-dmatlack@google.com>
-Date: Sun, 14 Jun 2026 13:41:12 +0000
-Message-Id: <178144447224.1257322.6028717050680465656.b4-review@b4>
+ <20260522202410.3104264-6-dmatlack@google.com>
+Date: Sun, 14 Jun 2026 13:57:40 +0000
+Message-Id: <178144546090.1266136.8524338598480624580.b4-review@b4>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=436;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1009;
  i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=9qCCo5jqZNYTFQYhvn1w10HthvCojM5bi7HQ3wIdz0Q=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqLq9+V5ehmqYdW7aqY5UC46rzyaBztHZtTXaEV
- wNq3cD8aFeJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCai6vfgAKCRC7dyhM23N6
- 3n8VEACd7+ln+qHdtrY009zcX3HQrr1PUWTlugPorIeOn8XmTJbgYuCm1D7mH91o1Qk0SZe2+wI
- 2S0wRpAHlKaOVEtO68gKBmhZPDreEUWbyJPh2baoB7PEM0rHohe6beLyk9a0EDGyMoizfUQVlBE
- elPL2YdcMN8btmVGap5fkjrisPb/6OsmU2lUYZ+KNnAx38aUZVcUvKDewIbq25zdwlZBUKGecSh
- As9pDuvz/CVYl/3F2pe1wWh3q+WvNwNasidlW+NrS3zSIJVb0xbHv2NXEnOUJcJ127swxUuqvNJ
- Q3siNX2gD5B3zi5rElvySm4JdLzs16A2WhlbSrwn1B93becCXOtZ1Opap0noIZ3rbnK57eIq2nD
- pYRAwOqOK5KN423EhDkvTAWZGYyxMC9vWQBfaAa49JbYobhWtvnGWr1ezCJ8k8bEcf4RRLYXcoN
- 8xYz7NI1pblzXU2nq5qcyacPiWBzU90F28R3+LuI6wz45GMTbHQZJynLNwaWubYDsQjEZHym77Z
- X+89BTifV4853SOCW3d5PdFyp+NqcbzEkiRaNg8G2v+FxPzIY5B2QAbioj9U4pY8gLM/BoLASVh
- xtPEpIr93n5If5K9gYKxSJDWp2YDmXIBrR1LD3sDnJ+q/TjpSVubUA9Pu3yUcMq3lQZSfZeqnKo
- h5XFZvHeHeKTbBA==
+ bh=irEWipl5ns1PQEI0PQ7c6jRmzsY6W3c0XtAe+hBan18=;
+ b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqLrNWjYliGNG1cbbcQyjqFHpsESyctol2Ow44V
+ DNNc7IHDFWJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCai6zVgAKCRC7dyhM23N6
+ 3kjiD/sG69As1zhiS1Jh7oTEbv0MuNGQBkOQh5lHVUPS0gj+oBdU0SL1qDkUsD/9tAvcLQXxhY4
+ /QEBcSzMRn2+VM2nH5sCYgMn00iu1wLRgHbnApGT8gEYefLC6tqiTimjXxxYEZXpQz9ApF3QtQ7
+ uQ7fuxVwij6aGg2dzzTM5o+j0r7I05Zok88+cCVU2rlO6EuoInjgmjv65Xe6oq+Ds1zxZqhOecx
+ ot6V9j27xklbNWnMVwGIEJdBHXJhF7LIartFve0H3o0TexujPaYa6bopI9KtSCGp9zJTyA0pQpK
+ gNj34151bnveyddJ8hiUhPtMTv79KN5ncUVS5aJfGxPn/aFWbtqxiiOp0eU2mnJqh/6wNrM8cQ/
+ NUoxJmWLdWzpvK3xaAUQMjvhqW56TPer7DfuxcsKhmOK0edcg9c8QgScp5vl6gu85NR4OeFHf1B
+ kKZPXsYx8Wp75O5nb7T0vLt0ObMjKLsM03C/GOUWMQVcDp44U7NhXWs++LiuSgyzxtbuoRturS1
+ ao58aoq9qHw1Gk4BTfu8Cxz4xPVAEIaydrmMgiamFRw3PAZUYr1WUIZUIQbwfaGlWx4ERcVXuLY
+ aXr04c4Tx1rxrNZMN32g400K0heMVZ+AZvJQ7vrmDVSnc3QEXEoOT45iZ03sYksa0HWdCPAbLBt
+ te2BUIp8i7sqexA==
 X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
  fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
 
-On Fri, 22 May 2026 20:24:02 +0000, David Matlack <dmatlack@google.com> wrote:
-> Document how driver binding works during a Live Update and what the PCI
-> core expects of drivers and users. Note that this is only a description
-> of the current division of responsibilities. These can change in the
-> future if we decide.
+On Fri, 22 May 2026 20:24:03 +0000, David Matlack <dmatlack@google.com> wrote:
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index 4f2ec6ffdd16..2421bc218916 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -103,7 +118,7 @@
+>  /**
+>   * struct pci_liveupdate_global - Global state for PCI Live Update support
+>   * @rwsem: Reader/writer semaphore used to protect the incoming and outgoing
+> - *         FLBs, and the references to them in struct pci_dev.
+> + *         FLBs and references to them in struct pci_dev.
 
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+This change does not belong to this patch.
+
+> @@ -396,6 +411,72 @@ static void pci_liveupdate_flb_put_incoming(void)
+>  	liveupdate_flb_put_incoming(&pci_liveupdate_flb);
+>  }
+>  
+> +bool pci_liveupdate_scan_bridge_begin(struct pci_bus *bus, struct pci_dev *dev,
+> +				      int pass)
+
+This function requires a header comment; it is public and not self-descriptive.
 
 -- 
 Pasha Tatashin <pasha.tatashin@soleen.com>
