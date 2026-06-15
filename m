@@ -1,248 +1,299 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011071.outbound.protection.outlook.com [40.107.208.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84693FD971;
-	Mon, 15 Jun 2026 14:52:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.71
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781535173; cv=fail; b=df7yg/sRqt7GOYvC/lbNmgKvOa7EH6rtVKvABaLCP6c8CWTFedjxZUDY6oaRJK0Gjy/dpGJJbQjBhQ3lLF43fV7jrCoCalc5l5g+WoX1m/U7yYzBuAK59/QIN6Zh4MbJKm2dzg+vYz+n9MYlM+NzOWaCEppAoMriRRYC8li12ts=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781535173; c=relaxed/simple;
-	bh=lt5MBcUGM/wqLeCyLHTxBdUUvyWFkA4rB0YPPGWOgpg=;
-	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
-	 In-Reply-To:MIME-Version; b=BLE8eHE1oASFhH+600AVSxO9BdfttT9ylT9ASMN9Mgdpi25fwDXPPhRG7xEOR1tf5VVddh/ASIQxSrHRSm+T30crBJPIQhty6Bd5+uKPAhjnd3bfHWw3hxJ5rMEmiNplFSgVLgrY73/iFa8S4+9uPN63xzyD/wmc7Jtm9FNBSX8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H5SDMQwn; arc=fail smtp.client-ip=40.107.208.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E0FD400DEB
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 15:08:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781536087; cv=none; b=bTOzm880Hx7Ie45QPXTU35TunvqZPsu4DQSRy+kaBNFIz5eso5ZK9R56gIV8DUY0PovHyxbymdA82iGObnh63Jh5kr34Jwvt3R4gAYLlZ+CthwDhcRFGIWmWQQ32uGRJNniF+9gFNmTmQ3W+g2pUzxLvNnN/OTrs66iYxC85gVA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781536087; c=relaxed/simple;
+	bh=iR2hSSDkL1kRTIBYK/+5XFgbHaciT/TvyEr2mqoFFwc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qt7zTxdFksyfhNH+z4uEGsA2ZwRcCTTDvuDqHoKSsOVQ/DWhVq1TCLoKs4ZkMJXHz5Ulkr4M7KTEr8ngbrxHtITcxHpxyc7moF7EIGM6SdYc57ZpGxazOVcFRr8NMwSFGXKvsEb2RVJEM0KWO28AyD6BY5wEgXXLPKsqlXveubw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=lpIHM/Uo; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H5SDMQwn"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aHC8GOwvdwDPqN/uafBsokCJKuNjOycrevT5xuI1Oba1DfapzPZTarUIaSk39PfKlmpy1eEPLzR3F9EHIHVCrdFpXecp97AGV+/nOCvUMTAFrJb5j95qFBOaHkYFMHMMXAy6Werq/MR4k+zf1Uhsp41Ie0oQ1NPPFHQfUKGXvuiNdwdX5PEwCHexiqLvULRd91AqXQpzFPCKYLt5ZkAyyOcen4+fjKRnGHqj2yINFvmC7DVz80XW3Um74nQCeJASmjA8h6UOrgNeKVke4aXAE6ikt71rleV2Qj0PVRTw9Gq6P4N3YjcYtBxQ1zhr0FAiA/RnGj/8t4dMznIH0Y4s+g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cqx1ZYJhNKxZUJAPoOEUguP/ra0i9g3vjeXxcYpXefE=;
- b=XEvwx2yQmz50vaEhZ/nBBuf6t9gtiOCK4rhb23ymComwwjiM2ziCYdmMIGwUjLXuvzIERzzcQAXfJ4v4hwAIn2UVPPFXQTDHFU9FFM4bDHloONx+Et1Szz/Lhw+7ZK8tb0Sp2JrryuDc778FeEGuCY+A3SAAXjjngtPGcd9MVnXJ3RFfHlT7yrcGrLtD43ogGxPvgWpvC0d0nweW2dcAQiieYrC5gYjViODu2pDwQbn50zMcD73AoPDtxCmr/3ausKBsI2LZiiZjDZeejG6+r6Asi+zCWXy7PfSJHrZ4mB8PgtIT5F7vPcsqbDBBElm6pLR8OC0H1RuRhgjNgI80Jg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cqx1ZYJhNKxZUJAPoOEUguP/ra0i9g3vjeXxcYpXefE=;
- b=H5SDMQwnj+7MkDumU5uegfn0Dcp/JSR9e68zpTjJNXxBEPO2HgSRQvWnhvbDk+q72PWKprXGCdfHe1+ND1tAp8x5UvMDkYcdMJb2PjZvmctdru6O2mQDtZOIsx/u7vAeuiGfsjpfVxur+devBc/s8XEkm3XYAkEc28qzn4h+lIDsh31VrK9AMmP3AiUd1QVij06INLIOxIk3t71e1/tBBJmrKNg2H7YFxbdGBiZhvfspMhgzDA7YUapCp500xECazu4cxnH1fM6FBidl5z3KiwDr3OWkZP6AEGlM7ezpAM/jUMHzhotHDF9rf6Wll1xSRwX9Z4Pl/3aCnUxC2kZzNQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by BN7PPF2E18BD747.namprd12.prod.outlook.com (2603:10b6:40f:fc02::6ca) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
- 2026 14:52:44 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
- 14:52:42 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 15 Jun 2026 23:52:39 +0900
-Message-Id: <DJ9PI9NEJ92T.3D0E90RPSCXA2@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
- Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
- <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v4 07/20] rust: io: implement `Mmio` as view type
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-Content-Transfer-Encoding: quoted-printable
-References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
- <20260611-io_projection-v4-7-1f7224b02dcb@garyguo.net>
-In-Reply-To: <20260611-io_projection-v4-7-1f7224b02dcb@garyguo.net>
-X-ClientProxiedBy: TY4P301CA0114.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:37e::12) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="lpIHM/Uo"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2bf2d865383so155075ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 08:08:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781536085; x=1782140885; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=EeLNOUGcyQ4NWkfW/DAB6S96aMOzAOJTH9w4j6T6BeY=;
+        b=lpIHM/UoPWhGGre6xBoqJOnXuAYe2NumKKsbVHJo9tbHk/Qkxc66vU82Z86UzTGpSQ
+         0TA21fb26QKQkmxva7RTFoJOq7oMP0hwcPXMnIMxWCRTq1kt7PUE9CCyIinikPkgddQ9
+         z5od++B4s6DkRsrWGKsyoAf0j1veM0C0yy2AvNBhJf2c3Jlr6Pl/tv58Z2KRkr5BNwHE
+         5T9EddCE+8Eb00f0L6uykk7hGjS14McCnvUSDwqDBfuLmgdEN1YSKY4ugCH3EZL5dhq1
+         9o7tIAN/j+FuX7UHYXZ1wscdJffSL10qumawN6xmRM89tBIFMCTFzij4xXBmsK3Rdkg/
+         dx+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781536085; x=1782140885;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EeLNOUGcyQ4NWkfW/DAB6S96aMOzAOJTH9w4j6T6BeY=;
+        b=VlulHD3rle8L++if3t+vXxzYWWS+8nxIc9dQDc2QSwxScyR29xHwg+ZljxdaMhJ95U
+         DpwNiDdN8ntcOOSU0rdaPx+t5LWJGZejzfQH8loN4piScLJE9ZWYNUDam0GaibRF7qjh
+         elm/Os0cVrd7kphAHPCfy5KZ1y9ObGdNf5QjqTY4NOIejnwEwyVw/6mWNOFLwyLb7Z00
+         ppTkHPsNVQZTia00RXwM0H7x6qbdnj6bbOFxTfHcNQOfyhesqNd0NU7Z1I/Ljx0xySs3
+         kNE/m0RGrZ1kTw9mvAUVNa8LbVT3x9DOIim28JeeDdoip9KQKD8ZWElieHtIOHDWkH+E
+         O0vg==
+X-Forwarded-Encrypted: i=1; AFNElJ/izHwewdxcVzh6aQQdFE2404PXvzGqDhYOtHtG7EE9EIg6mNQ0MhOkw08CE+dFi2g2wihTtcPq6xw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVGJLaABZCXr14SbzvJtwwIu4ghRdr1s2MdQSZcxQw8afpDq3c
+	/sy6YWb8XQirM0JMe1zUwBW/7IGkQF7KV2ec83awgBmLVD/6+Nw/VwhKwyJzJgTNoA==
+X-Gm-Gg: Acq92OHgEGBGC71J8WyDIbeEZdeZmLgHyCIFK1xzdrSNTnn4rPOYhimYzdQH3RbAgGl
+	VXHgrgiJwTllPo7MC0FWdTzYsbApBHPeCnmy8fFfvAVFrSj2i5hlBqW0ayG1pYa5LkufY8UWxFo
+	1eFPS3TcxuFNEEscwD/7WrkQwS9RX5XDuSufwxp6RIqF7Z9Y52TbFuj7DnsmVEtm6HMTKI6U6WG
+	l6tOmBkfKQDPu+O1e5aV8p39adSepbf0TzLtr4q1Ces9lftYIEQl147se/IfFpzgbn+DKkEhHVF
+	2f/l1S2gSQ+Oy11yxGtGVLqPvWc3recpbrDHShkuRUjf92+AG9d+oE/oOCqR/qiRsEp/faF7s6C
+	wCi7GNf4Y9rFWaHBIhbzff+2NR3SDknLm/R5nJ89pvs3R2HQ7r9dON99/u+zkUcJCJMInqqeGxs
+	UllPEYcEcSv8Cus6NC3BloWtQzSH27dX2ujz2W8DFJ1G+XW4TDqm5Z1yAp/vXg
+X-Received: by 2002:a17:903:320b:b0:2c0:c3ac:fdf9 with SMTP id d9443c01a7336-2c69689a4aamr525115ad.14.1781536084472;
+        Mon, 15 Jun 2026 08:08:04 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c42f7c6c5dsm102831385ad.21.2026.06.15.08.07.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Jun 2026 08:08:03 -0700 (PDT)
+Date: Mon, 15 Jun 2026 15:07:55 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Matt Evans <matt@ozlabs.org>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 2/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
+Message-ID: <ajAVSx9gPz1KkIbF@google.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-3-matt@ozlabs.org>
+ <aisa6H-a-176MXhC@google.com>
+ <effb66ee-764b-4823-b6e4-c932a1f60f8d@ozlabs.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|BN7PPF2E18BD747:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5e9d45f0-1210-4d75-2359-08decaedc103
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|23010399003|10070799003|1800799024|56012099006|11063799006|4143699003|6133799003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	RdrGqB/lkc5I5nsNNeO2La0kxjIpktUk1jYroiW2KWASyfc8WK9y2kSryC5r8cKI8vnlEiNZ2M6uPB+oVRXVM2QdKf9hd8olO77hHINqLpEnN/aDvYbg6EWauF5CsvZxKZFMCyZC+A3Vj1pWwhtsvHrhCDeq5buQcranRba6fhXVpuTkhQo+m9D7groKKqmLDPau1cc3t5nAFYbfBq0MgLzJhhVNyA3mQ72JE5wquMdsXHG9gfo8twfzGjtQggDWxu4hFshfe9qdZXVJSLiJDlC1tG66arhfTWDR+lLPAlcZh0MSKati+iL9PkzopxTuoEYqnPx6TnHfHa4yXcskfi4lvQ7pfFcgIyfZKcJJb00H5Msm0wPEkp0Yy1Hwmdua52YqWqHWUhfA9mca0RT24lCmCoKo5IYqky0Q8V7cuLrLNFTtK5KeIOYB7mXLpUVBvN1oiXJanM426qU1V83GOKxEsdUx4H0DTlsASIFmB10gAascLLu0LLda3MhNclSuVN9Ki0Y68BGiJ+AxyGbjKEP1U7L173BA3GsfQJ7Q+VGeCGJEwNpsaAz41eGtUhyg+mDSZ+s2m/TGpU0k2LLhaV5z6lp8Rs/MnuyHBTxtzFLp+nr/47z7UpkpIdxtNfttDE/DmsN7qrrfXxmdBPDBxYKvDaZ3xJ8BApPz72G1+nQqDQbSXUq+2PMlVAkgFZfa
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(23010399003)(10070799003)(1800799024)(56012099006)(11063799006)(4143699003)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WmUrcjlrb3RQREd2TGpWM1Y4K0pXSi9FYWczV0F6c1NEc0kxSWRGNWdLVGR0?=
- =?utf-8?B?QnlwWG9vUS9JZWNZMHVxelJaYzZKMjlLYVVTSm5JeWZmVThDS1FnMGJzaHN5?=
- =?utf-8?B?RlJXdmhsZUY0aVRiU1Q2YjBXYTJzd2hySXNiWDZNdjkybjZOaERlNzRQeFMv?=
- =?utf-8?B?RzlWZkRGMHJFUTF5V3FBSEx1YTlGS1AyTVY2MmMzamRvRElJclJUV1ZaVUVQ?=
- =?utf-8?B?dVQxYVQzbkZQd1BkWnhKNjJnY214cXhIUTUyUGNWa0ZHZmNuVC80UDd4VE9C?=
- =?utf-8?B?L2dnNGNiRkEwQjFFbGtrZWZENG9iNjJydWJpMEVvWGRrZGlCWmh6M1ExYm1j?=
- =?utf-8?B?MnhtTkRMZ1IyYkdjbFprNE9JZHhXT0JFdGtISFFKblJwSnBLRk5LelQyRTds?=
- =?utf-8?B?Tk50eXhWdXhadVNBdk4rYlRHSis2UnlaazVXd0FyekdXTnp0U1FLbXZZbWpP?=
- =?utf-8?B?dVpRSVgwUHpOSzFiTmgzV1dQUVJsTXcyQ3RWZ05GTFdvTW00UW9RVDFLUU85?=
- =?utf-8?B?VEZOWDlsSXJZbVpEVkg5eFdiMzZoejVDeU9pYmFNTjNFbGIyeThOeTErcWpt?=
- =?utf-8?B?VEFobVAwRTd2TGlyRHdXcWs1N2FXdGFjVWx2bHJPbzdwNENQR3hhMVhKeHJY?=
- =?utf-8?B?LzBOV2IvQVpnQmRZNnpQeU42SmlYdVNxN2JtWVBvYjdaV0J5ODZWT29uS2dZ?=
- =?utf-8?B?N3NnSisyYXFnZ2VkUkNDQm5zVmxjdFUxN3BBdVU4bTl0dDNDQjN5TmZlNUY5?=
- =?utf-8?B?aENBMjlEYit0TVNDV3hNV3hlUFhUQzdvOGYzUHdPZ21EWVd0eVVWY1FrbVhF?=
- =?utf-8?B?QytVQjZaalhsMjFqNG03V3lZbHE0RXJRZ0dDM01QbDVGZjJra0YxU2pTdER4?=
- =?utf-8?B?Y05sY3NSYUdiNlZhdmtLbUVlRWlhQlFBcE9sM2ZCaHpKMmtiZEdNODhuaU5P?=
- =?utf-8?B?ZmIvdXQwdmUwWWp6Q1g2OCtvS0VGWkowQ3RlTnBRYmJpeDlrRmpqRm9oZ1N6?=
- =?utf-8?B?Mzc2OTVxT2J4Y1R4RkxjVUtqYm5sclYrMlc0MHhHS1ZmREtTc2FxNWFsdEdS?=
- =?utf-8?B?Q3Q1YWFnUVNiS3FSbU40Y1NHQ0xIWHhiV2RPajlTRXY3REJsQ2ZzVk5yYlI1?=
- =?utf-8?B?eUhha1FwdUZFYXdVZmJ4aHYxUVEycFV2dHpMZVppT2hwakhmc1hVU2lZRmMy?=
- =?utf-8?B?ejNoK3RBUmNMRzltLzI3dnJFc2x2aVZ3YkgxeVhnTE0rVTUrWkNNOCtWSVNG?=
- =?utf-8?B?QmR1a2w3TUNuclZ3dUNsTWFZQlhCQWxNbEd1MGVaTEVpZUNyKzlqWEF1QUhk?=
- =?utf-8?B?RXpzeGQxNFAwMTV6Q3lOdGRscVBlWTZLVHFOdzM4aEMvUjcydk5iY1B6R2x4?=
- =?utf-8?B?Ni9FaklpS1h5RDRHK0JvYUpvTzNMYVpMY2NnR1U5bjZzSWw3QkpSRHlnZFFG?=
- =?utf-8?B?WlpFRTJUTmlRUEVoTnNLL3UxL1FTbDdvS21aVm1IMEJicUM1bTBCOXFodm44?=
- =?utf-8?B?NlVWK0dib0dlUkUwUlBUbi9GcVJVanF3QzFmdFQxNFhPajRqMVBLVnlSUUlT?=
- =?utf-8?B?Snc2S3hURGNSWlBOdEZ4ME90SlJUWVQyMnAxTVN5MytQM085UjQvblV5RTV1?=
- =?utf-8?B?UkJ4OFZBNm1DVVg4djBmVXhZN1VIUUQzdnRYSXFOR0IrcE1waEc1cUREUTR0?=
- =?utf-8?B?UFlMZmpRU2d3aWZIa0IwZU82VU82blVHaWlMMjJid0pQYWJ5SlBqZENmQ082?=
- =?utf-8?B?c2x2OEt1NU1FRi8wWjVwdTJRY0tZVDl4K21IeXJ3TnJPWEhSWjQzUjVmWDRH?=
- =?utf-8?B?SXAyeFpYeG05eVl5YituMGVUaWp5cmNabC9qRUpVdEZuWVV3WUZuZnZqYTJO?=
- =?utf-8?B?czZrbUhIaVlWK3RkM3AveFRFU016c200RmNnS2NTaTBBYldxZlB4U1NQaW5o?=
- =?utf-8?B?WHVhbFNmbmZXaDNneG1qZHZlUjl4SUtRaG1qOWRQTXU5dWgxZVE4cVlYWGtr?=
- =?utf-8?B?Q1lpUEs2THRaRTlrTWhvUGxHK2hXT2N3OTlYcmkyUWRIcmRyNTVDTnErc0NF?=
- =?utf-8?B?MzhKdjROemFrS01kQVpBcmxSMVgwZWtTd3JpdjhTUDFmdHc1TVBwWkdwQi90?=
- =?utf-8?B?SFhPb3FxbDduWTVrL0U4SmRlTTRHOGFjSXdJbHE1R29WTTJDZEVkSGtyRTli?=
- =?utf-8?B?QlRnKytJMFAwR2hzUU10SlZtcjZseXJmZEpZOXVpeThuUGV2UktreGhuVnVS?=
- =?utf-8?B?RE5IRlBFTVZnOEJLNHRkamE3V0lPOHlZTk0zR2MyRzVJLzlTSTBqVDZ6RStI?=
- =?utf-8?B?RWhad01EYk9yVnlLZ0ZnVFJvY2YvRUhsUEt3YTZNbWtWRDZYL1RsUzlyNnZS?=
- =?utf-8?Q?r/hXYJCVEuQ9V0S2c2jgXdNDoxDLydzQYPV+uTrKt1Ayp?=
-X-MS-Exchange-AntiSpam-MessageData-1: ryNLLtXNOYPPbA==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5e9d45f0-1210-4d75-2359-08decaedc103
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 14:52:42.9163
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CMRuvajamxe3mwVK8p7Ed4WTRssKWLZG+pAlUjFGxl5m6XScqit1W7VzF6mHEzkEW5VdHUssseowtMqhzoUkpA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PPF2E18BD747
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <effb66ee-764b-4823-b6e4-c932a1f60f8d@ozlabs.org>
 
-On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
-<...>
-> +/// A view of memory-mapped I/O region.
-> +///
-> +/// # Invariant
-> +///
-> +/// `ptr` points to a valid and aligned memory-mapped I/O region for the=
- duration lifetime `'a`.
-> +pub struct Mmio<'a, T: ?Sized> {
-> +    ptr: *mut T,
-> +    phantom: PhantomData<&'a ()>,
-> +}
-> +
-> +impl<T: ?Sized> Copy for Mmio<'_, T> {}
-> +impl<T: ?Sized> Clone for Mmio<'_, T> {
-> +    #[inline]
-> +    fn clone(&self) -> Self {
-> +        *self
-> +    }
-> +}
-> +
-> +impl<'a, T: ?Sized> Mmio<'a, T> {
-> +    /// Create a `Mmio`, providing the accessors to the MMIO mapping.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// `raw` represents an valid and aligned memory-mapped I/O region w=
-hile `'a` is alive.
+On Mon, Jun 15, 2026 at 03:27:01PM +0100, Matt Evans wrote:
 
-typo: "a valid".
+Hi Matt,
+> 
+> On 11/06/2026 21:30, Pranjal Shrivastava wrote:
+> > On Wed, Jun 10, 2026 at 04:43:16PM +0100, Matt Evans wrote:
+> >> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
+> >> find a PFN.
+> >>
+> >> This supports multi-range DMABUFs, which typically would be used to
+> >> represent scattered spans but might even represent overlapping or
+> >> aliasing spans of PFNs.
+> >>
+> >> Because this is intended to be used in vfio_pci_core.c, we also need
+> >> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
+> >>
+> >> Signed-off-by: Matt Evans <matt@ozlabs.org>
 
-<...>
-> -/// [`MmioOwned`] wrapper using relaxed accessors.
-> +/// [`Mmio`] but using relaxed accessors.
->  ///
->  /// This type provides an implementation of [`Io`] that uses relaxed I/O=
- MMIO operands instead of
->  /// the regular ones.
->  ///
-> -/// See [`MmioOwned::relaxed`] for a usage example.
-> -#[repr(transparent)]
-> -pub struct RelaxedMmio<const SIZE: usize =3D 0>(MmioOwned<SIZE>);
-> +/// See [`Mmio::relaxed`] for a usage example.
-> +///
-> +/// # Invariant
-> +///
-> +/// `ptr` points to a valid and aligned memory-mapped I/O region for the=
- duration lifetime `'a`.
-> +pub struct RelaxedMmio<'a, T: ?Sized> {
-> +    ptr: *mut T,
-> +    phantom: PhantomData<&'a ()>,
-> +}
+[...]
 
-Is there a reason for not just declaring `RelaxedMmio` as
+> >> +
+> >> +	const unsigned long pagesize = PAGE_SIZE << order;
+> >> +	unsigned long vma_off = ((vma->vm_pgoff - priv->vma_pgoff_adjust) <<
+> >> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
+> >> +	unsigned long rounded_page_addr = ALIGN_DOWN(address, pagesize);
+> >> +	unsigned long rounded_page_end = rounded_page_addr + pagesize;
+> >> +	unsigned long page_buf_offset;
+> >> +	unsigned long page_buf_offset_end;
+> >> +	unsigned long range_buf_offset = 0;
+> >> +	unsigned int i;
+> >> +
+> >> +	if (rounded_page_addr < vma->vm_start || rounded_page_end > vma->vm_end) {
+> >> +		if (order > 0)
+> >> +			return -EAGAIN;
+> >> +
+> >> +		/* A fault address outside of the VMA is absurd. */
+> >> +		WARN(1, "Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
+> >> +		     address, vma->vm_start, vma->vm_end);
+> > 
+> > This could flood dmesg if triggered repeatedly by userspace :( 
+> > Since a fault outside the VMA is an invalid access that already results
+> > in a SIGBUS, we could probably avoid the WARN here?
+> > Perhaps pr_warn_ratelimited() should suffice?
+> 
+> I'm OK moving to a pr_warn_ratelimited().  Note though that this case is
+> "genuinely impossible" currently and the check exists in case something
+> changes elsewhere.  (Re your flood comment, am I missing a way for
+> userspace to trigger this?  The scenario is a faulthandler for a VMA
+> getting a VA outside the bounds of that VMA; such a fault address
+> wouldn't match that VMA.)
 
-    #[repr(transparent)]
-    pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
+I should've been explicit, I guess I worded it wrong, my bad.
+I didn't mean that a user-space could hit this on it's own. However,
+I meant to say if there's a bug in core mm during some future work,
+dmesg being flooded by stackdumps gets messy (especially during dev) as
+the underlying reason might get missed in the flood. Hence, I prefer
+moving to pr_warn_ratelimited.
 
-similarly to what the original code did with `MmioOwned`?
+> 
+> >> +		return -EFAULT;
+> >> +	}
+> >> +
+> >> +	/*
+> >> +	 * page_buff_offset[_end] is the span of DMABUF offsets
+> >> +	 * corresponding to the faulting page:
+> >> +	 */
+> >> +	if (unlikely(check_add_overflow(rounded_page_addr - vma->vm_start,
+> >> +					vma_off, &page_buf_offset) ||
+> >> +		     check_add_overflow(page_buf_offset, pagesize,
+> >> +					&page_buf_offset_end)))
+> >> +		return -EFAULT;
+> >> +
+> >> +	for (i = 0; i < priv->nr_ranges; i++) {
+> >> +		size_t range_len = priv->phys_vec[i].len;
+> >> +		phys_addr_t range_start = priv->phys_vec[i].paddr;
+> >> +
+> >> +		/*
+> >> +		 * If the current range starts after the page's span,
+> >> +		 * this and any future range won't match.  Bail early.
+> >> +		 */
+> >> +		if (page_buf_offset_end <= range_buf_offset)
+> >> +			break;
+> >> +
+> >> +		if (page_buf_offset >= range_buf_offset &&
+> >> +		    page_buf_offset_end <= range_buf_offset + range_len) {
+> >> +			/*
+> >> +			 * The faulting page is wholly contained
+> >> +			 * within the span represented by the range.
+> >> +			 * Validate PFN alignment for the order:
+> >> +			 */
+> >> +			unsigned long pfn = (range_start + page_buf_offset -
+> >> +					     range_buf_offset) / PAGE_SIZE;
+> > 
+> > Minor nit: I'm aware that decent compilers convert pow(2) divides to >> 
+> > However, we seem to be using `>> PAGE_SHIFT` across vfio-pci. E.g.:
+> > 
+> > return (pci_resource_start(vdev->pdev, index) >> PAGE_SHIFT) + pgoff;
+> > unsigned long pgoff = (addr - vma->vm_start) >> PAGE_SHIFT;
+> > 
+> > Let's consider using the same pattern?
+> 
+> (Do you know of a compiler that both builds the kernel and does NOT
+> perform this transformation?  I am confident that resulting object code
+> will be OK here.)
+> 
 
-I tried locally and could build. This avoids declaring `Mmio` and
-`RelaxedMmio` as basically identical types, and lets us remove the
-explicit `Send` and `Sync` implementations. IIUC you can also reduce or
-even remove the invariant section as it is enforced by `Mmio`.
+I guess most of the modern compiler do, I was just referring to the
+style across the file. I don't have any strong opinion.
 
-> =20
-> -impl<'a, const SIZE: usize> Io for &'a RelaxedMmio<SIZE> {
-> -    type Target =3D Region<SIZE>;
-> +impl<T: ?Sized> Copy for RelaxedMmio<'_, T> {}
-> +impl<T: ?Sized> Clone for RelaxedMmio<'_, T> {
-> +    #[inline]
-> +    fn clone(&self) -> Self {
-> +        *self
-> +    }
-> +}
-> +
-> +// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
-> +unsafe impl<T: ?Sized + Sync> Send for RelaxedMmio<'_, T> {}
-> +
-> +// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
-> +unsafe impl<T: ?Sized + Sync> Sync for RelaxedMmio<'_, T> {}
-> +
-> +impl<T: ?Sized + KnownSize> Io for RelaxedMmio<'_, T> {
-> +    type Target =3D T;
-> =20
->      #[inline]
->      fn addr(self) -> usize {
-> -        self.0.addr()
-> +        self.ptr.addr()
->      }
-> =20
->      #[inline]
->      fn maxsize(self) -> usize {
-> -        self.0.maxsize()
-> +        KnownSize::size(self.ptr)
->      }
->  }
-> =20
-> -impl<const SIZE: usize> MmioOwned<SIZE> {
-> +impl<'a, T: ?Sized> Mmio<'a, T> {
->      /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O op=
-erations.
+> In an earlier revision I was using shifts but they were fairly messy
+> compared to this expression, which arises from a request by Jason.
+> 
 
-The `RelaxedMmio` is now returned by value, so this comment should
-probably be updated.
+Yea, looking back at Jason's comment [1], I think he was mainly pointing out
+that the common factor (PAGE_SIZE) could be grouped together. But again,
+no strong feeling about this, just picked up a pattern across the file. 
+If it breaks on some compiler we can fix it later..
+
+> >> +
+> >> +			if (IS_ALIGNED(pfn, 1 << order)) {
+> >> +				*out_pfn = pfn;
+> >> +				return 0;
+> >> +			}
+> >> +			/* Retry with smaller order */
+> >> +			return -EAGAIN;
+> >> +		}
+> >> +		range_buf_offset += range_len;
+> >> +	}
+> >> +
+> >> +	/*
+> >> +	 * A hugepage straddling a range boundary will fail to match a
+> >> +	 * range, but the address will (eventually) match when retried
+> >> +	 * with a smaller page.
+> >> +	 */
+> >> +	if (order > 0)
+> >> +		return -EAGAIN;
+> >> +
+> >> +	/*
+> >> +	 * If we get here, the address fell outside of the span
+> >> +	 * represented by the (concatenated) ranges.  Setup of a
+> > 
+> > Nit: double space before "Setup" and "But" below.
+> 
+> I liked Alex's response :-)  This is common practice for monospaced text
+> since increasing inter-sentence spacing helps readability in paragraph
+> blocks (see Documentation/ for many examples ...).
+> 
+
+Ack. :)
+
+> >> +	 * mapping must ensure that the VMA is <= the total size of
+> >> +	 * the ranges, so this should never happen.  But, if it does,
+> >> +	 * force SIGBUS for the access and warn.
+> >> +	 */
+> >> +	WARN_ONCE(1, "No range for addr 0x%lx, order %d: VMA 0x%lx-0x%lx pgoff 0x%lx, %u ranges, size 0x%zx\n",
+> >> +		  address, order, vma->vm_start, vma->vm_end, vma->vm_pgoff,
+> >> +		  priv->nr_ranges, priv->size);
+> >> +
+> >> +	return -EFAULT;
+> > 
+> > The fall-through logic at the end feels a bit redundant.
+> > 
+> > If we've exhausted the phys_vec list without finding a match, returning
+> > -EAGAIN for order > 0 seems like the correct fallback behavior.
+> 
+> This path can happen (for order > 0) e.g. mis-alignment of VA versus the
+> PFN, i.e. is likely...
+> 
+> > However, the subsequent WARN_ONCE for the order == 0 seems unnecessary?
+> > An out-of-bounds access is an error that should simply return -EFAULT 
+> > (converting to SIGBUS) without polluting the kernel log with stackdumps?
+> 
+> ...but the only way this can happen, for order == 0, is if the VMA
+> extends beyond the underlying resource.  For example, if the VMA is
+> larger than the DMABUF size (the total length of phys ranges set up
+> inside the DMABUF).  Both VFIO BAR mmap() and a DMABUF mmap() disallow
+> mapping off the end of the underlying resource.  That is, this also
+> "cannot happen" but if logic changes elsewhere then we will really want
+> to know about hitting this case -- the check is not redundant.
+
+I didn't mean to imply that the path itself is impossible or won't 
+happen.. I just meant that the logic / structure felt a bit redundant at
+the end of the function..
+
+Instead of having the separate `if (order > 0)` block falling through to
+the base case, I suggest it could be cleaner as:
+
+	ret = order ? -EAGAIN : -EFAULT;
+
+	if (ret == -EFAULT)
+		pr_warn_ratelimited(...);
+
+	return ret;
+
+But again, that's a preference. I'd leave that to your judgement.
+
+> 
+> Still, it doesn't need a regdump/backtrace (at least while this is only
+> called from one spot), so a pr_warn_* is better.
+> 
+
+Ack.
+
+Thanks,
+Praan
