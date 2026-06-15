@@ -1,151 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010051.outbound.protection.outlook.com [52.101.201.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A3D3382F9
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:42:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781530974; cv=none; b=EnTsr+XGP/dP6b/m7ddYDE931pNXfu6U5AffCxV8hZEcHl/KJdleP6SV+yMjm13GsOOqW4k04w+an6desHguO4b6wb8b/DjXovAMN1fR6jc7xtmwv2Xh/28VQBpwWilAAuaRVwCcFPqVnZcMNHWBUYimF/QY8GR0YF0oj7qmwtM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781530974; c=relaxed/simple;
-	bh=f5f7Z6u1SV5B6OzuF6QYHl/O3M/Vxmop4f9iEucRW3o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WEn3yWy398MnZV3R6WWUW5gqbkc8UMiXNjl/IMIk+A/uPzDHM1MWrU2q7bRl1bB1zyQD+B1CCaT1yFazUADLujB3IuxZsgtMcz75CqznZ0pcRw+GB56DVlHYie6Tu8CchufxBNysi2/2UHAocvPs0zjV0RtvZncIZDD4Nldg6TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QlyVimpG; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A5B21C16A;
+	Mon, 15 Jun 2026 14:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781532612; cv=fail; b=plIpxUwN1zH4Xu5Z7cW7EN4FIHSNOmJJZ3hagBPlmbFBt+1/VFrYb+fbVHEGyLebpazfwZFId6VZUdOjB2xLT8Y7zF4hUE6aOOx5vDSV9IlIa6ja6e2yRrAM+px3BjYZ8tPuSvvXW6HVBN0plzOGFlKSD9oRRyHpuqkFQ6sRyro=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781532612; c=relaxed/simple;
+	bh=RpJbOywnlIESZcUHRYc5BnKQDfCuTnANGtEVdeTkdUc=;
+	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
+	 In-Reply-To:MIME-Version; b=MrUNfk/dpI9bOmRGhPECn1FsOF0Aj2Dnz3lofOauIieAn+jczSp7U+0132XGsJE4oLJjAUXgCyYLWeu8sKABs7vQo8RhJZaj3E1nDvNNzE8D0PCMF6fEYQKp541Uq6GyaKF98GUiHFFn99+WbVAv60trxBtVZEvgIj87Fv7MY9g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=CyuR+bu4; arc=fail smtp.client-ip=52.101.201.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QlyVimpG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B34A21F000E9;
-	Mon, 15 Jun 2026 13:42:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781530972;
-	bh=x/MthiyHVXkyqC1RRkQaO/5GpytpZEssf6u3r6EbzwQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QlyVimpGz/ZUA1om2WbMJbh2vPc6+sa1zqaTeErWYFIDFLxpHlF6lFYVV2A4s/o+V
-	 gINV6pUEAYwuYr1uqa+Abipm6w/V82ISbEs2ByyoTx7jmXyT42XJ+g0R4Qu4xv6Tf8
-	 uso89Fp77/Dv4y9vkAIc1pAHNBD08wsIjdC7g+bxQJllJLqnBkucCt8aTis8JqP3OY
-	 eFiyPpXZLfUBet/8DU0wp+bWsG/zsRtXuG2vkydfgPgx/ypK+xxrkOPdA65xpGq66Q
-	 hWXMCpI5v1wVKBX+p0fiHekDZ4WuGhIUN8zfYLANxah46F4UUdTk4lvWGxQUUQkPGg
-	 Av80QKArIkqDQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lukas Wunner" <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
-References: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="CyuR+bu4"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=k1r965TjAbyDOZ+Ns2HRNhiEud1K5gEAyNbuFv7fFS7EUFl7h/5KXMglt0jtydQcvhE+7+UF3FqMnSWXBP5CfQE8GqoYc2NHLvtPJTtmp1dTbX2NLt5ZNNLSOD/yfUv5DzfVkBf63maikOEDqueqIWuMcVrGPYGOSf7OqVnaXVX+JxfgE3rfr1QbOfrEBX07wbtJemn24gez4n5JrSkCM8aE7UBaDOcY47hmjtsZlkY4MkS43NDk2evcxpzYAXKyoHjx57HSuM0nEkzg19o1b3GoS1+ha3SZt/veaVRZZdWHm2IU4IqjkT5JyFH+KUBXA4vAqvtECBEt2oN41h0apw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4/Ol2KLAiay0nyX+oL8b4J/xw3vrjLtj7jBSDL9CADE=;
+ b=Y8zKeTh3g7HCR4qyLU/RNFCY894fT3/RJrbGBO7rHdWwIjefmDcSVU3DCFQqJhQSfP6Owon2LsKNQ1HOciYOrm8Qrn2vMcppXjWmuAyGvUyHYgPocnwm1BgJ7rSvtx4Kwh0LmEHvC9OM85DUJEuR6JbGxoeBiJsXXjrYLsUWn8/zMQUUYUcOCikU7Dys2IFymQOkxgIgBFUsUYuOQNJ3pyBwQnam6kJncHCRHGl/JMgGDn0tWdW+2UuEgZi9DF6tBAWI4tCizOA+9YzJhu/jiEr7Bc7/soHUXFYqFrL82Jlfm3HUh6H9qehcJW2dA3305eijC2DewfA8XTx2X4YPFA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4/Ol2KLAiay0nyX+oL8b4J/xw3vrjLtj7jBSDL9CADE=;
+ b=CyuR+bu4toB9HwPnXEUS+o0vyYwLnyzmbaQ2qzJGwvJNutDN7/BQWZUxuRdxcOQcU17eF6rV3IDLplz9Uyf/udi3Xp6ZvTPK2Eft/JUU/UHAFyUWjO39dUGrKaJFSqx5jHY5pYtn8g7eWitF+5HgU4Jnl0kTdayhIk6k89qlRxizl4sS/fbJuW7s+gN0BYLRdwEY/FgsHK4lo/KwUdf1PmybeXe2ikJA8WFNPdY7+IaefgVxeJREGnnfM72ODRnfB+tgv6Pz9j3GRLWuwZRWP6W5wdxjVoCmrhYiZutM9AADKe8Hm3qWLgBnL7a8KWQzac2sKEn7O3BOfGJJRwlckQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by PH8PR12MB7301.namprd12.prod.outlook.com (2603:10b6:510:222::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
+ 2026 14:10:05 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
+ 14:10:03 +0000
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 15 Jun 2026 13:42:52 +0000
-Message-Id: <20260615134252.B34A21F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 15 Jun 2026 23:10:00 +0900
+Message-Id: <DJ9OLM73JBSJ.2U0QFFSX43Q6S@nvidia.com>
+Subject: Re: [PATCH v4 02/20] rust: io: add missing safety requirement in
+ `IoCapable` methods
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
+ Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
+ <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
+References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
+ <20260611-io_projection-v4-2-1f7224b02dcb@garyguo.net>
+ <DJ9C815EGU4Q.3L04WWDJAUK1H@nvidia.com>
+ <DJ9JKUVU0G1P.5W8EYOTQBOT3@garyguo.net>
+In-Reply-To: <DJ9JKUVU0G1P.5W8EYOTQBOT3@garyguo.net>
+X-ClientProxiedBy: TYCP286CA0239.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3c7::17) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|PH8PR12MB7301:EE_
+X-MS-Office365-Filtering-Correlation-Id: 43f818fb-dca7-4dca-eec8-08decae7cb99
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|23010399003|10070799003|56012099006|5023799004|11063799006|4143699003|6133799003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	GsjvwvkhdBhgegPEmCVG8X63BOXHiIidv23QFcHnWeTfuKNa3PiyNkXNmWH9qvEfVEr9x4oE9Ej5kvWB4Tj8/+mxyueHhyXTDv8YSt8+7bmQ+6xNTqea1reIYKsDz6/NQ7Xkw6L1VjSJsj9aBARbonXg2CmsK6oKmNZYmpfIEyftXyR3c6cxGijKy8b6G1DN9VxcP2/Qyv7aruv4O0DnvKfsFHg9sDEy0Ih55N0fA1xsrdAorEuOvzqu6+pxpmLcDa6QUIJR9Jv1xlPgbheczxQ0eYX8/XDuV/rPgTT8HN21Ji0ZTuXK77iMdjX+yWqwh2snI9FHKtgiOmztjMMRrQuZj2ptoo95UdlQrPViiAGLmScpGH960LNt+g2Vbfv15FIiJJDvZvfMdZFMtA8XvCUAxz8cokr+HmjjgwrN9cFxtHk2+qt3JVLuLmxpWURLmnFCsHxuQV1nztEApgEUb3ll837DwNEWT8fWDntvSdG1K/0q0uOD1qhAxLMWh8jA5T5c6FOeAOtCtEw/z0i0n0Wv/L3Wmr3GjrdQnwrbpngU5BH1gsvOeuNQxb675hDLTG9pSi1bGt7j6LJlAM+3dr+ROfAFCpMNYftcuCtonkllrZL9WSy19ipIR3nvxsqPhCcYJQd13H+hruAO121Zfm4lh3rfrRqXoRCR1e/kfMvl5LOcmmyaqyo3A/FvSF67
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(23010399003)(10070799003)(56012099006)(5023799004)(11063799006)(4143699003)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?MEs3UFRNSThILzBLdURUK1BRMVcvaXZOT2N6K2hUS3V0Z216TUhDM2t6SWc3?=
+ =?utf-8?B?VXVEZTYwcXRVVFgzVVhFNEVGZis4K2I0TWI3S3RDY2RMVXNYNHE1b1RqU2xY?=
+ =?utf-8?B?MlhaWWlJTTg1WEtmb1RPZEMwRHIzTG1OcGN3MVVvTmE4M2grTWxpRmx1SmV6?=
+ =?utf-8?B?eXZhdkpnRDA5VEZOREpJS3hyWGFWakhNR1Y3ei8yYklhc05jVE9TRk9qd2wr?=
+ =?utf-8?B?MnRMdk5QeWFtck9zdEVnSjlyRUgwc1FnYkJLUDkwb1hTMUpIS1p2QWpyYjRZ?=
+ =?utf-8?B?d1lLdlN2bWhpNWxUSWdsaVp5UHVNeGV2UjVqcnNHanU2bkszZlhmbjNjMDZB?=
+ =?utf-8?B?aHgyVlVUTEFPRHlZQ05YMUNNRk0xVzFEeFFFQXJDNmQ0UGRCNkRKNW94L1ZO?=
+ =?utf-8?B?UFJvNHRxWXBDNTB6cGh2Q1hXZXdmbjFUeVpZUkIxY0xjODhDMmxBWVFIVTNE?=
+ =?utf-8?B?NFhJYU0rNHJ0R0VITGxyb2RVTCtsR3V0ck5Wa0VhVDluY3dnVUxUVUpYbWxB?=
+ =?utf-8?B?REpxUE1VaXJBdHJGTmRUTDk1ZU55eElCQ2JTQ2J2REJPR1lSeWkvUmNLR0xh?=
+ =?utf-8?B?RkVHVVhNYWUyemdHMzIwNG8vVDJpMmNXYjhDK0ZJdkQ1eXlvbTlGQjNEQTlB?=
+ =?utf-8?B?QWF0YUgzRVFHcHBJTVdMUGJ1dHVnMDRHLzcxYW9YRS9NOFpVWXlGYytKcGVG?=
+ =?utf-8?B?MHRHY1JNWWFpSENEUmhBWU9jUmFrTWRJc3RuaGIwYWNNQUVDbmZhTitNWEho?=
+ =?utf-8?B?MllyT2FzVVRrdnlzRnpBU2RPTmQ4QWlpSE5LUHVic0JoRTBUVGtmWEdWZUpD?=
+ =?utf-8?B?YWYvQitCdjg5ODhxRjJiNnBWSHVFNWt1SGhMMVRiYU9YZDJEdXYzL09SZjE5?=
+ =?utf-8?B?OThicVNrL2JCNGJpZW1hNG1FcStPQmZIRm5vQWtoMkxkanNXNVZRMTVqYnUr?=
+ =?utf-8?B?OXFkQ0xscmtiWHZ5dDliQnF6Mm96ZGgvRkppWFhyVS9vemlWL2FRaUs4dytB?=
+ =?utf-8?B?UUEwNEdFZ3FhSCs1ZnJiS2lEa0Q0ODVwUDZpVXgzdEhzZW1KVzRNL2ZUcGdx?=
+ =?utf-8?B?eWl1ek14Qk5FanN5OTR1NVFHMVlQWnNvWk9oeEhBK0p0VmNqOWtzTlJ3Z0Fa?=
+ =?utf-8?B?R1d2K3gxaUFwdTArU0pvR2dPclpzbWVNb1VuRFhLdURYcmtRQldjMGNTL2VB?=
+ =?utf-8?B?TGxBdXBCVjVaNGFWQ2U2cE91bDFsWkRud0MyQ2xTeHRjTDJnUGZqN0p6bkY5?=
+ =?utf-8?B?U1dyMDhQcS94NjcyOGgveWZTQXZQWlBSdFFFYkxaU0hEOXN3R0JOMjc0Z0d5?=
+ =?utf-8?B?WWg3bG9QM0VOSGxSYlZ1RmI0bzJmRGQ2VGxMRUtJVlRaMk5UOFRReUw5RDF4?=
+ =?utf-8?B?cGlqelhmdU5zWkVoRWJIM2YwUThDdXJMMDh1RndyeW55aEVNa3dRNkhGT0h3?=
+ =?utf-8?B?UGtlQlB4a3ZKL3cxa3B0c1BlK0lmdTVVbGdLTU5GRGxuSWFESUpBTDl6TXM4?=
+ =?utf-8?B?NkhCK1VoVEtZTjc1d3hkMUR6bGYweWtGQmpHVks5SzhydkdlRnMwMGpncE9t?=
+ =?utf-8?B?MmNEWDZLMEVxVU1jL2JSelJpbVlMNTVpZTJabWpSWmFxY2swYzYxWUtyRDBv?=
+ =?utf-8?B?Qy9RazNuMVVVYWlKVE4zblBkYzlLbTRrY3IybGVXZDg3QVhPcGhSdW5xQjFj?=
+ =?utf-8?B?M3Y2aEpIaWJlMnlPQ1gyYnZIL0ZFVXJZdHZOMkE3cTgrVVhZNDliV21MQXo4?=
+ =?utf-8?B?WkpEem1rejRGeEg0OEoyY0FDMEx4aEdoVUNXNjhpMWNqd2UvUjJqcUhuZURx?=
+ =?utf-8?B?akZoOHNobE14WGpDT3plbitKZXc1TDhsK0l3UUNjSDVISzJEQUF4Y3RoRXM3?=
+ =?utf-8?B?Z3R4RjN6dXkvN0lveHV3NDAzRnVIYXptNi9Ea1RHVHB3T2FXN1NZaSswcC9D?=
+ =?utf-8?B?UnNsSHNTc253Sy9DNk1GSmZiSjlRMWd3N2lpc0JZRldCVEdsOXF5YjVJUERp?=
+ =?utf-8?B?M2ppNzRiR05NckpZdWtzWjE4MWkycmdpVllwTERqNXQyU0crTHlobEJpQ3BL?=
+ =?utf-8?B?dms3OXdqUTFucXlLbFJkWkVDcnFpMXB2QTJESG40VkFCd3kweFJiSFFLWlJL?=
+ =?utf-8?B?YUoxbkNzb1VrRlVEZlFKTW1sdUxXbllrWE1WZjBUVUV2WDJyOWNvN1dubVNK?=
+ =?utf-8?B?d2NVWEhucEJwYS8zN1FQa2c2bDU2ZWNqdkFONkYxMlJHQmE2Rmo4dGpWWVVW?=
+ =?utf-8?B?MDE5SjZQQTJJUCtuTjJSZHFTWUFzV1B2eTFEOGRnZTYwbWMwd3pHcjROVVk4?=
+ =?utf-8?B?d3BKajFacXNHRktZRkV4dVlNUm4zeGhpNXRWT1VocDFHaE52V05Pd0QvSDkx?=
+ =?utf-8?Q?1ZtcD/Cn2OM9QnkANj59NxIQ36k+wdfiMGGbpdfJ1b3/X?=
+X-MS-Exchange-AntiSpam-MessageData-1: C3yE018LWuCaDg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 43f818fb-dca7-4dca-eec8-08decae7cb99
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 14:10:03.7184
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YbhNR1I1KKJVmBD682F8+O4xaHXewJs9S6Ev5AuMxL2UOKvNYPJwoNmWfN4RMoXuzjPgvOqaeJ4J3kcxBE3WAA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7301
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Asynchronous PM runtime put during device removal path leaves hard=
-ware stuck in D0.
-- [Medium] The patch unconditionally resumes the device to D0 for any DOE t=
-ransfer type, contradicting the commit message's stated power management re=
-quirement.
---
+On Mon Jun 15, 2026 at 7:13 PM JST, Gary Guo wrote:
+> On Mon Jun 15, 2026 at 5:28 AM BST, Alexandre Courbot wrote:
+>> On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
+>>> The current safety comment on `io_read`/`io_write` does not cover the t=
+opic
+>>> about alignment. Add it so it can be relied on by implementor of
+>>> `IoCapable`.
+>>>
+>>> Expand the check `Io` by taking `self.addr()` into consideration when
+>>
+>> "the check performed by `Io`" maybe?
+>>
+>>> checking if `offset` is aligned. For the compile-time `io_addr_assert`
+>>> check, check using the known minimum alignment of `IO::Target` and the
+>>
+>> typo: s/IO/Io.
+>>
+>>> accessed type.
+>>>
+>>> While at it, fix the alignment check to use `align_of` instead of
+>>> `size_of`. The values match for all primitives (including u64, given th=
+at
+>>> we do not provide u64 accessor on 32-bit platforms), but are not
+>>> necessarily true for custom types.
+>>>
+>>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>>> ---
+>>>  rust/kernel/io.rs | 25 ++++++++++++++++---------
+>>>  1 file changed, 16 insertions(+), 9 deletions(-)
+>>>
+>>> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+>>> index bef571dad6eb..fa9ae39ad9d2 100644
+>>> --- a/rust/kernel/io.rs
+>>> +++ b/rust/kernel/io.rs
+>>> @@ -196,13 +196,14 @@ pub fn maxsize(&self) -> usize {
+>>>  #[repr(transparent)]
+>>>  pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<SIZE>);
+>>> =20
+>>> -/// Checks whether an access of type `U` at the given `offset`
+>>> +/// Checks whether an access of type `U` at the given `base` and the g=
+iven `offset`
+>>>  /// is valid within this region.
+>>> +///
+>>> +/// The `base` is used for alignment checking only. This can be set to=
+ 0 to skip the check.
+>>>  #[inline]
+>>> -const fn offset_valid<U>(offset: usize, size: usize) -> bool {
+>>> -    let type_size =3D core::mem::size_of::<U>();
+>>> -    if let Some(end) =3D offset.checked_add(type_size) {
+>>> -        end <=3D size && offset % type_size =3D=3D 0
+>>> +const fn offset_valid<U>(base: usize, offset: usize, size: usize) -> b=
+ool {
+>>> +    if let Some(end) =3D offset.checked_add(size_of::<U>()) {
+>>> +        end <=3D size && (base.wrapping_add(offset) % align_of::<U>() =
+=3D=3D 0)
+>>>      } else {
+>>>          false
+>>>      }
+>>> @@ -221,14 +222,16 @@ pub trait IoCapable<T> {
+>>>      ///
+>>>      /// # Safety
+>>>      ///
+>>> -    /// The range `[address..address + size_of::<T>()]` must be within=
+ the bounds of `Self`.
+>>> +    /// - The range `[address..address + size_of::<T>()]` must be with=
+in the bounds of `Self`.
+>>> +    /// - `address` must be aligned.
+>>>      unsafe fn io_read(&self, address: usize) -> T;
+>>> =20
+>>>      /// Performs an I/O write of `value` at `address`.
+>>>      ///
+>>>      /// # Safety
+>>>      ///
+>>> -    /// The range `[address..address + size_of::<T>()]` must be within=
+ the bounds of `Self`.
+>>> +    /// - The range `[address..address + size_of::<T>()]` must be with=
+in the bounds of `Self`.
+>>> +    /// - `address` must be aligned.
+>>>      unsafe fn io_write(&self, value: T, address: usize);
+>>>  }
+>>> =20
+>>> @@ -310,7 +313,11 @@ pub trait Io {
+>>>      // Always inline to optimize out error path of `build_assert`.
+>>>      #[inline(always)]
+>>>      fn io_addr_assert<U>(&self, offset: usize) -> usize {
+>>> -        build_assert!(offset_valid::<U>(offset, Self::Target::MIN_SIZE=
+));
+>>> +        // We cannot check alignment with `offset_valid` using `self.a=
+ddr()`. So set 0 for it and
+>>> +        // ensure alignment by checking that the alignment of `U` is s=
+maller or equal to the
+>>> +        // alignment of `Self::Target`.
+>>> +        const_assert!(Alignment::of::<U>().as_usize() <=3D Self::Targe=
+t::MIN_ALIGN.as_usize());
+>>> +        build_assert!(offset_valid::<U>(0, offset, Self::Target::MIN_S=
+IZE));
+>>
+>> IIUC this can allow unaligned accesses if `self.addr()` itself is not
+>> properly aligned. Do we need a new `Io` invariant for that or is it
+>> already enforced somewhere?
+>
+> Adding a trait invariant would require marking the trait as `unsafe`, whi=
+ch I
+> don't want to do because the `addr()` method is removed later anyway.
+>
+> One argument is that it's `Io` implementation causing issue for its own i=
+f its
+> `addr()` is not aligned. This is later redefined using projection and vie=
+ws,
+> which further shifts responsiblity of upholding invariants to the `Io` ty=
+pe
+> implementator itself.
 
-commit ef77945b44ebbc6f448bd2fb94eac66fe80392e2
-Author: Lukas Wunner <lukas@wunner.de>
-
-PCI/TSM: Resume device to D0 for CMA-SPDM operation
-
-Per PCIe r7.0 sec 6.31.3, CMA-SPDM operation in non-D0 states is optional.
-The spec does not define a way to determine if it's supported, so resume
-to D0 unconditionally for the duration of a CMA-SPDM exchange. Vivaik has
-talked to Windows engineers and they said that Windows does the same.
-
-> diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-de=
-v-tsm.c
-> index 46f2539d2d5ab..d99b835d2b7c6 100644
-> --- a/drivers/crypto/ccp/sev-dev-tsm.c
-> +++ b/drivers/crypto/ccp/sev-dev-tsm.c
-
-[ ... ]
-
-> @@ -38,6 +40,10 @@ static int sev_tio_spdm_cmd(struct tio_dsm *dsm, int r=
-et)
->  	if (ret <=3D 0)
->  		return ret;
-> =20
-> +	PM_RUNTIME_ACQUIRE(&dsm->tsm.base_tsm.pdev->dev, pm);
-> +	if ((pm_ret =3D PM_RUNTIME_ACQUIRE_ERR(&pm)))
-> +		return pm_ret;
-> +
-
-[Severity: Medium]
-The commit message mentions that "resuming to D0 needs to (only) be done in
-code paths which use DOE specifically for CMA-SPDM", but does this code
-unconditionally resume the device to D0 regardless of the operation?
-
-Looking at sev_tio_spdm_cmd(), the resume happens before the loop checks if
-the operation is actually PCI_DOE_FEATURE_CMA or PCI_DOE_FEATURE_SSESSION.
-Could this cause unnecessary power transitions for generic operations where
-accessing the config space in D3hot would be sufficient?
-
-[Severity: High]
-Does using PM_RUNTIME_ACQUIRE() here risk leaving the hardware permanently
-stuck in D0 during the device removal path?
-
-The PM_RUNTIME_ACQUIRE() macro queues an asynchronous pm_runtime_put() when
-dropping the reference. If sev_tio_spdm_cmd() is called during teardown
-sequences, the pending asynchronous suspend can be cancelled by a subsequent
-device_del() call, which disables runtime PM.=20
-
-Should a synchronous runtime put be used here to ensure the device actually
-suspends before the removal completes?
-
->  	/* ret > 0 means "SPDM requested" */
->  	while (ret =3D=3D PCI_DOE_FEATURE_CMA || ret =3D=3D PCI_DOE_FEATURE_SSE=
-SSION) {
-
-[ ... ]
-
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> index 5fdcd7f2e8207..af1817e86b30d 100644
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
-
-[ ... ]
-
-> @@ -894,6 +896,10 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 ty=
-pe, const void *req,
->  	if (!tsm->doe_mb)
->  		return -ENXIO;
-> =20
-> +	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
-> +	if ((rc =3D PM_RUNTIME_ACQUIRE_ERR(&pm)))
-> +		return rc;
-> +
-
-[Severity: Medium]
-Similarly to sev_tio_spdm_cmd(), does this code unconditionally resume the
-device to D0, ignoring the type parameter?
-
-If a generic DOE transfer is requested that does not strictly require D0, it
-appears this will still force a transition to D0, contradicting the commit
-message's stated power management requirements.
-
-[Severity: High]
-Is this exported API also susceptible to the same asynchronous put regressi=
-on
-mentioned above?
-
-If pci_tsm_doe_transfer() is invoked during a teardown sequence, the async
-idle and suspend queued by the macro might get canceled by device_del(),
-leaving the device in D0.
-
->  	return pci_doe(tsm->doe_mb, PCI_VENDOR_ID_PCI_SIG, type, req, req_sz,
->  		       resp, resp_sz);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/7bdfaf14d7e5a466f3f=
-650150c688a60e947a7a9.1781527060.git.lukas@wunner.de?part=3D1
+If we end up removing `addr` anyway it is less critical to solve this.
+Especially since this is not a new issue.
