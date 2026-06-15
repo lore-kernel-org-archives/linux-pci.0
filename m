@@ -1,141 +1,174 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D4B30E828
-	for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 22:16:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91FC91EB19B;
+	Mon, 15 Jun 2026 01:26:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781475404; cv=none; b=PJWLoTVgYyTrm7YFXWAw2pmSzVI+BAeOO3AZKUIdR8am/Nfv2+d/DdeYUgn9Xvu3HxSc/5xJlBEYeQ2UJB3F61pXG6qvCyMNTmMuBIEF8YdzSLI3/d/wweynN0qW3I2Ors9xShI0OtqVInUo6u+OpWBRbRj4BUifJ4AoSVutV9w=
+	t=1781486801; cv=none; b=Yng8QecCjwKDhApq2JsFfKtweL/75dh0/zli1pHvCcx1eYrFxVjUaMkdGXr/rkg6WSm2UDBLkUL1koJmARqS0mJ9XyBIZ4OxeV2FmZY7nIkL8BIJk9+rvcHmRNETaoLFpQko+f5s0Zj6wGmghuuBMA4PsFdeZdrZce09rXRtbmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781475404; c=relaxed/simple;
-	bh=iUnBLVR4167TjxIQ50Hi3WNlAor24JpXMNRmLIMRdDQ=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qLrc6PsLnXIdPDkQ6YDRSDuD1LWf2NqFMQIE8hQPkyZHfe8VHUu9iQl4Ye5YUKk4+S4MLO6bPt6bWrIQ7OfGaEpwwz6gPtrqhH9zACwS9k/h9rVCkB+ELTIUIQoxOqaSjxOFwG6c6lNGo+qeMlhq9Fd8d+U+okG51qitF8a3caQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kkjRDCDG; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781486801; c=relaxed/simple;
+	bh=MynTN/j/Elu7Isl5o1OmE54sQkEEZuFIOdk5QNWTtok=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=jU6HIaAxkLAgbnryi8xmB65IwrDrf7uMG/+0BNgF/wMzrQzrlG4S4cTh4lPdEsK3TTnq206egKkqg/gFEUEsE7kVepQ/eLOLAX/a4x0lFOQ1xr1GMpQIip8+VE2P/E4GDQt4qUn3agXb4UUKhOw/e7TjGOEDyctUo68W3NVH99Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=HZJYxjak; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=HZJYxjak; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kkjRDCDG"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-5174a3d9598so24212691cf.3
-        for <linux-pci@vger.kernel.org>; Sun, 14 Jun 2026 15:16:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781475401; x=1782080201; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=n/USMUW5QmQOQ0Gq++9KFLj8ScG1j+mHDHbhv/uvoF4=;
-        b=kkjRDCDGYhRN90Zj+iTZPt/7d0CujmWAo7I1zVedEf1Js7mxK5cvInstQRaVBbZgrf
-         0OkIGFU1TYznntJhOstxdoYp4sNFvDTPUGAJGr0O2D18nJaiw28lVa9YnYXTI+U47oPB
-         xzlBxEzsMpEl6XHOX/j5w90oBj74NEtnbqBLMxPnPs5rrvm/lHr9wSjOOo7jJk3jLinH
-         HzZR4xkfiqHUiombTd0VPto52IX2Kyf2tWxApcMB4ze3aYbx2r2CblVhdzOr47qqDxSG
-         qlXuAB/tjTysN0sZm9CPQ06NDpesSC8WFPUr09tlh5dR8HA5sbF4DaBgtzzqm1FokkB0
-         0MdA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781475401; x=1782080201;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=n/USMUW5QmQOQ0Gq++9KFLj8ScG1j+mHDHbhv/uvoF4=;
-        b=XXTCRZ3GR+lbN5TVU/Gh0eB6tJpPOxeuvBNoYCiVaJP4glWGhQIZRxwn5UL8GeZN4f
-         8JC8oo/vh1OPaNwijAOcFSwSViOu1bYho8o8CCE9JbFLBOj7okrA6Gb0qNEl4ux7LwKm
-         DTQbDKHA9XKTTTqw3rCvkysLZURoAAjamXzXX49ElVg15OgYgnfnBaukkDiIaFWgl/2R
-         cBoPp6qDlG4qu0YHJ3PaozJHiQQpMaY6vF9nc4ga2VC4md3Pv+t7N6PQZZMMVwQEZqRX
-         S1sE7n6eqZYIRGVBP3MkjOEymsPaYxfTiOuX5LfbULnyeLmzLnIlOqKs9DTsK4WvKYkp
-         0LRg==
-X-Forwarded-Encrypted: i=1; AFNElJ9pBcOFZlk05IehMIpKsT0gtw25RuckSWCQnBP2vHkUTizIyUbYqdy/hY1xnTlRyWDrivTCb+yLvCo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywh0eA/RJyH6/cNyUxVhtHADUHcpiEiGz4vyN9/Z4GAZzFggl3M
-	7KIxe6T81C0VV4lJ/BxwxjP4WgDgu9B8XhH2fMgDrg/RhnYC46+aB3fb
-X-Gm-Gg: Acq92OFr9fdQ3/YJqu8WVduC0HD4CAN2nMABMsoLsYbPqowvb9QhZrVIyM2Vo3A4qfw
-	Uap/Drnnn+rBlC++k+Vxc7mG37snQenkTt6cUeyEM+pJaiARIMB5zqCbrqR4dAGlkKNu604hPov
-	pKECTPqRyXGJvmRZDhdPP3ElUikYgA9sB4CZlZ6SD587fUaTTgn6MPSm+Ffi7TBwiNBub+oB7CB
-	otMt45ceiuAOWvXjPQP7EiASRRny/VHA5T3qUxV0v54IjRN9RcUc9zwQWPbHFel/H4+W2UCDQP3
-	+wUDYPj5CRuLfHI9eCSv3VI8HSKhJWot8ZFXB2oA6tpZxKT9oFHlDnFFc3ncZttNHtPfQHErcqi
-	zs2uvu0//HF3D+Tjt6BcnDD8TXj7VX9Cky2Jf9WXXwILRTGJ3WA47eMe9Ip5QvgCkTt50KaNmyb
-	C7qeZ85v7uCZup/q+xUOpxwsp+/f4pUMFCjz3jrA76XpcWHJ0KRVfG80sK9tqpEqdeWyhbdJCo9
-	w==
-X-Received: by 2002:ac8:598e:0:b0:50e:a1ab:114c with SMTP id d75a77b69052e-517fe4bc66amr171437631cf.32.1781475401111;
-        Sun, 14 Jun 2026 15:16:41 -0700 (PDT)
-Received: from localhost.localdomain ([2607:fb91:14e1:4204:4d87:aacf:f5f1:c2dd])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb61fb15sm86583921cf.5.2026.06.14.15.16.40
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 14 Jun 2026 15:16:40 -0700 (PDT)
-From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-To: mani@kernel.org,
-	kwilczynski@kernel.org,
-	kishon@kernel.org,
-	arnd@arndb.de,
-	gregkh@linuxfoundation.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUG] KASAN: slab-use-after-free in pci_endpoint_test_ioctl
-Date: Sun, 14 Jun 2026 18:16:39 -0400
-Message-ID: <178144969601.60470.7358419009914000395@gmail.com>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="HZJYxjak";
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="HZJYxjak"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=wHjq3Q9Ijh0RF30tM2eiUI7AhlsnKbUAGXPI8uhsb68=;
+	b=HZJYxjak66cgxCAyEZGIAYq5HxeMdU6qUQcx0AR13MujXq0WoLBWlO5XcBA7MfD1/euzD3C5o
+	I2olO/+0Ss3JAkEFjeVIstbu16EjIZnzR117SmFVFvvfOyKxZ9TsJHO2dp+wwEjDWlHpvBJ0nj6
+	hiefLD1MmoOpebZKNl0tW78=
+Received: from canpmsgout03.his.huawei.com (unknown [172.19.92.159])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTPS id 4gdsrz36BFz1BFMY;
+	Mon, 15 Jun 2026 09:26:11 +0800 (CST)
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=wHjq3Q9Ijh0RF30tM2eiUI7AhlsnKbUAGXPI8uhsb68=;
+	b=HZJYxjak66cgxCAyEZGIAYq5HxeMdU6qUQcx0AR13MujXq0WoLBWlO5XcBA7MfD1/euzD3C5o
+	I2olO/+0Ss3JAkEFjeVIstbu16EjIZnzR117SmFVFvvfOyKxZ9TsJHO2dp+wwEjDWlHpvBJ0nj6
+	hiefLD1MmoOpebZKNl0tW78=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4gdsh30nWXzpTKG;
+	Mon, 15 Jun 2026 09:18:27 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1551540672;
+	Mon, 15 Jun 2026 09:26:26 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 15 Jun 2026 09:26:25 +0800
+Message-ID: <42b0a9ac-f384-4129-b718-636fd392a703@huawei.com>
+Date: Mon, 15 Jun 2026 09:26:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 09/12] vfio/pci: Add TPH_ENABLE feature skeleton and
+ unsafe module parameter
+To: <sashiko-reviews@lists.linux.dev>
+CC: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20260604132804.28678-10-fengchengwen@huawei.com>
+ <20260604135424.750F21F0089A@smtp.kernel.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260604135424.750F21F0089A@smtp.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-Hi Kernel Maintainers,
+On 6/4/2026 9:54 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [High] Lockless modification of the `tph_permit` bitfield causes a C11 data race with adjacent bitfields, potentially corrupting device state.
+> - [Medium] The `tph_permit` flag is not cleared when the device is closed, leaking the enabled state to subsequent users of the device.
 
-I hit the following report while testing current upstream kernel:
+Thanks for the feedback.
 
-KASAN: slab-use-after-free in pci_endpoint_test_ioctl
+I'll address these two points in v17:
+- Change tph_permit to a standalone bool to fix the bitfield data race, no lock needed.
+- Reset tph_permit on device close to prevent state leakage across sessions.
 
-I reproduced this on commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7 (May 25 2026)
+Thanks
 
-The reproducer and .config files are here.
-https://gist.github.com/shuangpengbai/1e03464adfefbb75fb5d8112691e38b3
+> --
+> 
+> commit d0a7c28453cdbf1699133633ce00cd13507a2648
+> Author: Chengwen Feng <fengchengwen@huawei.com>
+> 
+> vfio/pci: Add TPH_ENABLE feature skeleton and unsafe module parameter
+> 
+> This commit introduces the framework for PCIe TPH (Transaction Processing
+> Hints) support in VFIO. It adds a global enable_unsafe_tph module parameter
+> and a new VFIO_DEVICE_FEATURE_TPH_ENABLE uapi to allow userspace to set a
+> per-device tph_permit flag.
+> 
+>> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+>> index 3f8d093aacf8a..ae05343701f76 100644
+>> --- a/drivers/vfio/pci/vfio_pci_core.c
+>> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> 
+> [ ... ]
+> 
+>> @@ -1516,6 +1517,24 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
+>>  	return 0;
+>>  }
+>>  
+>> +static int vfio_pci_core_feature_tph_enable(struct vfio_pci_core_device *vdev,
+>> +					    u32 flags, size_t argsz)
+>> +{
+>> +	int ret;
+>> +
+>> +	if (!enable_unsafe_tph)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET, 0);
+>> +	if (ret <= 0)
+>> +		return ret;
+>> +
+>> +	if (!vdev->tph_permit)
+>> +		vdev->tph_permit = 1;
+> 
+> [Severity: High]
+> Does setting this bitfield without a lock cause a read-modify-write data
+> race with adjacent bitfields?
+> 
+> Looking at struct vfio_pci_core_device, tph_permit shares the same memory
+> word as pm_intx_masked and pm_runtime_engaged. Since C compilers implement
+> bitfield assignments via read-modify-write operations, could a concurrent
+> lockless update here overwrite a state change made elsewhere?
+> 
+> For example, vfio_pci_core_runtime_suspend() updates vdev->pm_intx_masked
+> without holding any locks. If the ioctl and runtime PM suspend execute
+> concurrently, it seems one could overwrite the other's state change, which
+> could cause the kernel to fail to unmask INTx interrupts during resume.
+> 
+> [Severity: Medium]
+> Is there a mechanism to clear this flag when the device is closed?
+> 
+> Because struct vfio_pci_core_device is tied to the PCI device lifetime and
+> is not reallocated between sessions, it appears a subsequent user opening
+> the device will inherit tph_permit = 1.
+> 
+> While hardware state might be cleaned up on close in functions like
+> vfio_pci_core_disable() or vfio_pci_tph_deinit(), could failing to clear
+> vdev->tph_permit bypass the userspace opt-in requirement for future sessions,
+> allowing a VMM that never called VFIO_DEVICE_FEATURE_TPH_ENABLE to configure
+> ST tables?
+> 
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>>  				void __user *arg, size_t argsz)
+>>  {
+> 
+> [ ... ]
+> 
+>> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+>> index 2ebba746c18f7..5f32830766a0f 100644
+>> --- a/include/linux/vfio_pci_core.h
+>> +++ b/include/linux/vfio_pci_core.h
+> 
+> [ ... ]
+> 
+>> @@ -127,6 +127,7 @@ struct vfio_pci_core_device {
+>>  	bool			needs_pm_restore:1;
+>>  	bool			pm_intx_masked:1;
+>>  	bool			pm_runtime_engaged:1;
+>> +	bool			tph_permit:1;
+>>  	struct pci_saved_state	*pci_saved_state;
+>>  	struct pci_saved_state	*pm_save;
+>>  	int			ioeventfds_nr;
+> 
 
-I'm happy to test debug patches or provide additional information.
-
-Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-
-[  222.367023][ T8376] BUG: KASAN: slab-use-after-free in pci_endpoint_test_ioctl (drivers/misc/pci_endpoint_test.c:1145)
-[  222.369439][ T8376] Read of size 8 at addr ffff88811be68438 by task pci_endpoint_te/8376
-[  222.371748][ T8376]
-[  222.372441][ T8376] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-[  222.372449][ T8376] Call Trace:
-[  222.372455][ T8376]  <TASK>
-[  222.372460][ T8376]  dump_stack_lvl (lib/dump_stack.c:94 lib/dump_stack.c:120)
-[  222.372476][ T8376]  print_report (mm/kasan/report.c:378 mm/kasan/report.c:482)
-[  222.372531][ T8376]  kasan_report (mm/kasan/report.c:595)
-[  222.372558][ T8376]  pci_endpoint_test_ioctl (drivers/misc/pci_endpoint_test.c:1145)
-[  222.372604][ T8376]  __se_sys_ioctl (fs/ioctl.c:51 fs/ioctl.c:597 fs/ioctl.c:583)
-[  222.372615][ T8376]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
-[  222.372647][ T8376]  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-[  222.372658][ T8376] RIP: 0033:0x7fd68c893237
-[  222.372668][ T8376] Code: 00 00 00 48 8b 05 59 cc 0d 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 29 cc 0d 00 f7 d8 64 89 01 48
-[  222.372678][ T8376] RSP: 002b:00007ffc1aa73f18 EFLAGS: 00000206 ORIG_RAX: 0000000000000010
-[  222.372693][ T8376] RAX: ffffffffffffffda RBX: 00007fd68c9774c0 RCX: 00007fd68c893237
-[  222.372701][ T8376] RDX: 0000000000000000 RSI: 0000000000005009 RDI: 0000000000000003
-[  222.372707][ T8376] RBP: 0000560e1af360c3 R08: 0000000000000000 R09: 00007ffc1aa73e27
-[  222.372714][ T8376] R10: fffffffffffff64d R11: 0000000000000206 R12: 0000000000000003
-[  222.372719][ T8376] R13: 0000000000005009 R14: 0000000000000000 R15: 00007ffc1aa73f80
-[  222.372731][ T8376]  </TASK>
-[  222.372735][ T8376]
-[  222.392098][ T8376] Freed by task 8376 on cpu 0 at 222.263660s:
-[  222.392729][ T8376]  kasan_save_track (mm/kasan/common.c:57 mm/kasan/common.c:78)
-[  222.393215][ T8376]  kasan_save_free_info (mm/kasan/generic.c:584)
-[  222.393743][ T8376]  __kasan_slab_free (mm/kasan/common.c:253 mm/kasan/common.c:285)
-[  222.394242][ T8376]  kfree (include/linux/kasan.h:235 mm/slub.c:2689 mm/slub.c:6251 mm/slub.c:6566)
-[  222.394657][ T8376]  devres_release_all (drivers/base/devres.c:50 drivers/base/devres.c:547 drivers/base/devres.c:576)
-[  222.395176][ T8376]  device_release_driver_internal (drivers/base/dd.c:598 drivers/base/dd.c:1357 drivers/base/dd.c:1375)
-[  222.395807][ T8376]  unbind_store (drivers/base/bus.c:244)
-[  222.396280][ T8376]  kernfs_fop_write_iter (fs/kernfs/file.c:352)
-[  222.396832][ T8376]  vfs_write (fs/read_write.c:595 fs/read_write.c:688)
-[  222.397273][ T8376]  ksys_write (fs/read_write.c:740)
-[  222.397725][ T8376]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
-[  222.398207][ T8376]  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-[  222.398823][ T8376]
-[  222.399073][ T8376] The buggy address belongs to the object at ffff88811be68400
-[  222.399073][ T8376]  which belongs to the cache kmalloc-512 of size 512
-[  222.400509][ T8376] The buggy address is located 56 bytes inside of
-[  222.400509][ T8376]  freed 512-byte region [ffff88811be68400, ffff88811be68600)
-[  222.401905][ T8376]
-
-
-Best,
-Shuangpeng
