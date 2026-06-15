@@ -1,54 +1,54 @@
-Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FEA934889F
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 23:50:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E57C335F161
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 23:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781567449; cv=none; b=N2Z6N4rGiQAjZBEAy2d8NG6DZ5HGqM8NMoLPPxH9rVPRB6h+hx+H5IasTjLirBkb6NvC6kN411vyJUakKlhrqz9yWY2QuDhJeP0dSpYn37uumcz38/Rmh2O3hO8dNSOtb+ypSHZMtZhFlyxa3CeqR8AD0/+4GL5Gx3fv9r3uMCs=
+	t=1781567452; cv=none; b=D5HXiY7+07NhtsKB3TVZ01du8ZHFH0JAFlp097aC6JLtawbHMs4FrhA6c6HgSQCBNXLH8acZxlHMlGoLL+F92sGUl1KNFDGUXNT7LZE2GZ/t2zGtmuQmzYbTyj5sbNvc4ZKXwCu6GOhIWHSnfm9grgH1/xutuOj4AHMxTQFH6Ys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781567449; c=relaxed/simple;
-	bh=ZRWdb3UYrDa8ESWvtuWoYvy7WkD9/edpMBm0rxXZBM4=;
+	s=arc-20240116; t=1781567452; c=relaxed/simple;
+	bh=v4l5BP6mSyjUVIp0jSkZQ5FNJamGyYJzyXE/hmgYprs=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=OCAUhlLa6XZ0eMBNTQbDnhvonjUabqYwCNlmkRMJQlFz3PvDx4dYEgkbYP5A3CM4wvjNJyKfirXi0xnIq8svc63RgoqC8a8wha6pg5uCmVmBnI82d7RvIJX2DdxpLGCidMfmJp6RRFKfeDLeaBFvLh5r1xMzt8xOXhRmfznp84Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cmFwYv2N; arc=none smtp.client-ip=209.85.215.202
+	 To:Cc:Content-Type; b=TvmPhiVT/c7BTKSMXRhf+Yit7FUHqoMQfJ4CfOQLMvxszKVSmxrQTdH8f8RL/SY+6kWUydPknwkW5BzbUNM9N+ggg7/u+8iJ0iicLqvRT0h0i8FDfdk3uTb7l6nn3NIr8PnjYG8qQvdUSIiZhhHR/2MswsHGRgyqSJLRnAsDv7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=CQc/eWkR; arc=none smtp.client-ip=209.85.210.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cmFwYv2N"
-Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c8514f8ed5dso1991447a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 16:50:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CQc/eWkR"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-8422b544a4bso2685843b3a.3
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 16:50:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781567446; x=1782172246; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1781567448; x=1782172248; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Bsyi4xBeP3u6liStyWuzFOXTICTm8//1Wtemk4ZJB9U=;
-        b=cmFwYv2N/45c5SvC8sf+FRvAioaSIR23UxjWLXDLEM0uteZMbvfS4GmuuYB86X+YdO
-         +Kj73SpCOPEfW4s0JuEf6Pu7OsfeU08gpC5gv1BBrD2ExcTmq4ALu7/fvOKosJYLgWGf
-         cAPSY4fNGPBjc2yPAbfBmqow3oGhrIpIKcjze9le/vJ3s4o5xOda5gCKHwmDyVjYj2q/
-         62kpAULz7beZHz2P+GsH32KZsGUas/4+rEXTMOoinsvIjQ8hkwL9ArNvBh3pSBzWHWmW
-         5DVHi9cxjJC0Z9vceGz6p1W5O/Tz8TyCOWoCkXU07UuYMjVP+mQH6/RtXWOb0k2wyT1e
-         F3/Q==
+        bh=ghCN2ryt2ezJV5YU5b84fUdE6lXkqtPvhPQAH6Ew2wA=;
+        b=CQc/eWkRcQR1rJimY91pkqwtPef74itQn7Li8qr4Ugde66Y5xClW6QB+z4RnAXjO7G
+         ygMLykKTHHCPuzPgF/5KOTqNgd8LxQqlUTfig5TzM2Kjw1eXKisp0tGhX+KT5p/H6J71
+         UFUV6347lRdek76mFSBXKvvcqfQdhjCJWcFaMlDWRFHkvTVcbu6KfGVkIBBBKQXIPYF6
+         Ybm2oEz7wKupSTAKzm13CAm08Zoyq9C4l9GrZ2ugkqIQTedIxvoZhg0CM6yt0ovG2i5p
+         1HmOIMZ05yVr/sgzoP7DMbY0OXf6PvfvrRthTMeW3Df+Jp73driUQZsGhG4xErk/IxDh
+         5IMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781567446; x=1782172246;
+        d=1e100.net; s=20251104; t=1781567448; x=1782172248;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Bsyi4xBeP3u6liStyWuzFOXTICTm8//1Wtemk4ZJB9U=;
-        b=L7ftn+l1dGVuJrS8CiNRyZoDYd+086sSKy5tVbmgsdfseUyI32/2cjofSEWtT1pMyH
-         Gx8UeLKX0Zko95ChaorEhW2rLjwLkCuqhKoWCU3Kpcip/XKDYIFND9VCcBavpkXJ21a7
-         +UQ6VVe8ZGytXsTzHorB/1No7hlFmvrtg9YfIPSWE9k85BmFwz4auc/w6ZU2dmM0gYrw
-         Zgcw5sYeDfktchCroR6podSYWzvZAaypM0CYw6Y5S8ECnbpzFgKDsKu2dObP2nD+TWGH
-         T8GCJ8aVVEJ6GFqMFF12zuzjaYp49YcbjoVAiZyZqSnFPyd3NSvnpS/3QY1+cfV95Yc5
-         OpPQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/tJxcr/tofoRcaq+XCh2zIstwGByDjBnTxnQyRdSWubCMRIfF7tvlxBrtr+8leXTwRFvnA963kzgs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLGPle1UHyAl5LYaaGGc2ljLPghcsEKkTOaZilUz3HwoNF0PC7
-	Stb5PUoy/FrLOtzkIG0ULBODa74FSAgm8/Xqo/vpr+Euifh1jP7kvjRImMsIleVKWh9TWxPoo9x
-	cfg==
-X-Received: from pga4.prod.google.com ([2002:a05:6a02:4f84:b0:c7c:4b52:febd])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6300:6708:b0:3a2:d316:de53
- with SMTP id adf61e73a8af0-3b795fd5b0cmr14510565637.0.1781567445706; Mon, 15
- Jun 2026 16:50:45 -0700 (PDT)
-Date: Mon, 15 Jun 2026 23:50:35 +0000
+        bh=ghCN2ryt2ezJV5YU5b84fUdE6lXkqtPvhPQAH6Ew2wA=;
+        b=cF+YHRAUUb5Ykk8gchSuwveH0Cxgav1Q8GozCEDOzg01A7Qj74IGTKISDcXNEwBgiM
+         tob/cMqXfOMC0i+dkeWRfMvsR2Nh7Sx56zkyz/R/ViJXGQZimwPR/1Iv/pc+1FutnVLk
+         57alaAtbxVEHNCm4vVYxKMYoDmEo7uSwi7S4aa7R4E08TRUoTob5Z4oP22h/IGBLuViB
+         xHZizOyVP6EpK+QWOsIgdSFnghKJA9K3AgZhOnzkh6b25n2fNyfujjuhRFxMBlKu3ZYt
+         S8MkMO12vHYgIl6RtpdSNspKjO4yVhXVkimuATJ8941Fth7T+Egy3ehYJ0p7dPIU7N9C
+         QhZw==
+X-Forwarded-Encrypted: i=1; AFNElJ8gb9P1zYvMCrVVwCHjpHQd2sMAmdogV61Lmlp9SOrvemyaTjJOTKHU308i1kK0PmiDXmJwpXg7/k8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0NGJOoW+ZZ8Xh/HZAe3UmHU/DNKC/0fHDciTEu8hPd4fQd976
+	0qqaXGqj5RYeoDYcML9qkA//59c32S84jJN9mSXRw/6qJc9rywgwJui9lTaHZ9m0b/oxjR116QU
+	6Wg==
+X-Received: from pfbha13.prod.google.com ([2002:a05:6a00:850d:b0:83f:682:48d5])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:2d01:b0:842:708f:39be
+ with SMTP id d2e1a72fcca58-8451530d5bamr987400b3a.5.1781567447898; Mon, 15
+ Jun 2026 16:50:47 -0700 (PDT)
+Date: Mon, 15 Jun 2026 23:50:36 +0000
 In-Reply-To: <20260615235037.259909-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -58,8 +58,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260615235037.259909-1-praan@google.com>
 X-Mailer: git-send-email 2.54.0.1136.gdb2ca164c4-goog
-Message-ID: <20260615235037.259909-3-praan@google.com>
-Subject: [PATCH v9 2/4] PCI/ATS: Validate STU for VFs in pci_prepare_ats()
+Message-ID: <20260615235037.259909-4-praan@google.com>
+Subject: [PATCH v9 3/4] iommu/arm-smmu-v3: Standardize ATS enablement failure reporting
 From: Pranjal Shrivastava <praan@google.com>
 To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
@@ -70,51 +70,39 @@ Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
 	Pranjal Shrivastava <praan@google.com>, Nicolin Chen <nicolinc@nvidia.com>
 Content-Type: text/plain; charset="UTF-8"
 
-While every PCI Function that implements ATS has an independent ATS
-Extended Capability structure with a Read/Write Smallest Translation
-Unit (STU) field, the kernel manages SR-IOV ATS by requiring the IOMMU
-driver to configure the STU on the Physical Function (PF) before any
-any Virtual Functions (VFs) are created.
+Update arm_smmu_enable_ats() to wrap the pci_enable_ats() call in a
+WARN(). Since probe-time checks now preclude configuration errors
+any failure during hardware enablement is considered a kernel bug.
 
-Currently, pci_prepare_ats() bails out early for VFs, assuming that the
-PF has already been correctly prepared. However, this creates a potential
-mismatch if a VF is subsequently prepared with a different page shift.
-
-Update pci_prepare_ats() to validate that the requested page shift (ps)
-matches the STU already configured in the associated PF. This ensures
-early detection of incompatible configurations and maintains the kernel's
-policy of consistent STU sizing across all functions associated with a
-given SMMU.
-
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
 Reviewed-by: Kevin Tian <kevin.tian@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
+Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/pci/ats.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 679a3c3c1d54..9cb23780093d 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -73,8 +73,12 @@ int pci_prepare_ats(struct pci_dev *dev, int ps)
- 	if (ps < PCI_ATS_MIN_STU)
- 		return -EINVAL;
- 
--	if (dev->is_virtfn)
-+	if (dev->is_virtfn) {
-+		if (pci_physfn(dev)->ats_stu != ps)
-+			return -EINVAL;
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index a10affb483a4..57b750ebcd3d 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -2956,8 +2956,13 @@ static void arm_smmu_enable_ats(struct arm_smmu_master *master)
+ 	 * ATC invalidation of PASID 0 causes the entire ATC to be flushed.
+ 	 */
+ 	arm_smmu_atc_inv_master(master, IOMMU_NO_PASID);
+-	if (pci_enable_ats(pdev, stu))
+-		dev_err(master->dev, "Failed to enable ATS (STU %zu)\n", stu);
 +
- 		return 0;
-+	}
++	 /*
++	  * Since pci_prepare_ats() has already verified the HW capability
++	  * and programmed the STE, pci_enable_ats() should not fail here.
++	  */
++	WARN(pci_enable_ats(pdev, stu),
++	     "%s: Failed to enable ATS (STU %zu)\n", dev_name(master->dev), stu);
+ }
  
- 	dev->ats_stu = ps;
- 	ctrl = PCI_ATS_CTRL_STU(dev->ats_stu - PCI_ATS_MIN_STU);
+ static int arm_smmu_enable_pasid(struct arm_smmu_master *master)
 -- 
 2.54.0.1136.gdb2ca164c4-goog
 
