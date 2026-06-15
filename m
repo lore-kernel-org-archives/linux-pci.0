@@ -1,124 +1,130 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D903AFAEA
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 20:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EADA33AE1A5
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 20:20:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781554019; cv=none; b=NqGNPfE3OTGgrDPoeJ3PpfNjmOrUF+bZQAWuW4JlV1Ejp0tRQqHjtkXT6pDDrF4PF9pH9RhHwvYaeeOkxHfZ78VR85F17ZYi8d9PrYEmHTcdifPhFedG6rEAAHgdoFURamS2wYB2CUlTgGwc5tWxvdo4xhQQ7C/jS/Kj4YU8XLM=
+	t=1781554841; cv=none; b=JHxzidIQ18KEBoGhwfkbwNAC8E/wZ10rVQeEJJREi7Gw8ZrktX+ybBHUzEfBJEWKNkecWnFWkiTy0bIyYVUQEV+X+FpNBtA2kiaO+qAV4u0rJfK33JQkK9w5m5vWsVoN+M4dj3YJREqgNMlnQ+/HDC9ifIXKe7Z8FbeCkRLF5U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781554019; c=relaxed/simple;
-	bh=sCnrLLtndgkDFwEuy5w0t6Tj9ai13fipC2HTsKV56lk=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=TplLdyBf9w6en+sCjGu6lpqz1YBmy1/eoX6Zgd1aomVLr2phsXYC9XICcRVMBFhK4hOmeBDGxDoxNex5beUUvvIgTOELoeKOSOEiYtmKe7YxHFweqvwUmGrDPA59Rf5tm2WJc2LCltZ7QunNFcnLY0WjrNdQR18hVjtUHTUnqLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cg75r9E1; arc=none smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781554841; c=relaxed/simple;
+	bh=TB32LhnDXfTJUQ0KhV0DDq8feI4v0a+HUW9AsVhyJdY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hA5h6oJAV6kvdQ+KGdW707+hfY2CMjipckO1DLlAfZ7WRvxK46NmPObE+8hVEnAlqJBezj+aaXhCJPM/f6vESEUuS+U83lf2s7GLJ3tM+SPTuSqXQTdoAdUkBM9CDZryGlP6kn9trgiU3K7b2317tWmT7bSTC+gRxUuxa3zJyxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=vNTveM76; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cg75r9E1"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-5177945a279so43282481cf.0
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:06:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vNTveM76"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-36bd175fdbaso2289250a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:20:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781554017; x=1782158817; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kbIDrXLbjAe2J5wNsQv3S9HqiJA8DN79qlIMR4Zc6gA=;
-        b=cg75r9E1bE4r5GxygLILr32gWquuO0oNVeNDDst96qY1kRD8BIey0TN+ExBrWwbWko
-         U9Tc2bUAk+pm8f7KzzAobWvIYKDTdgNgKA6gjArUoDpkDzUX++baVyjzr2GDKOOOWaIE
-         H81RY0E2LcTiZxMdI4ye/4IhRNj7Nd4UlKl5cjmMaHO+5O2fdYvLSBpGupIW6gagcGRM
-         2inpG9Wy8JRCX3flkNh8Jfun1xKQELYJCJQ9V0x+Uuwo0BSNpA31QiiSrgEEX7nWOOki
-         swLcBNu+cTO9a3yRls3mIzx2r7QWcC1bBy5SsLmmMAjwnH61acxoF6J2iLbbEmMhXQWi
-         dwNg==
+        d=google.com; s=20251104; t=1781554839; x=1782159639; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=8ynJ3evPKTv+CHJxYf+R9sPicm7rQMH20Hi7EX5GWIM=;
+        b=vNTveM76TEMCSRUshuxZaW48EjNLGh6Ln6suviRcRPJzFhgEiE6DDrImXx6rhXWqZq
+         lKvF2dtcX0RKpWaeiz9imfVLoXkQGrTKi9prUWq/BA5LKtXQ6qbTStp1pzQSUO7j1fBa
+         KJxMKYuFDY4HjLXt2CIiNFEDq+2uFiEWnmo02HGo/tpoAdXLdh6iSkSZ4AItvGKSb8Mu
+         kVBCrLsyuip0I+yj5E2Bfz2Iqz0bSYXreDG48D09IJ3iSWT1MARgtsRBdGPgqb3O7Jfn
+         ags4vSnZ+4bY+Mty/ELtGHTYWPYx/096SbHXH22qItXvmqQq7g/2IDcip+x8k9zciPXi
+         suOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781554017; x=1782158817;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kbIDrXLbjAe2J5wNsQv3S9HqiJA8DN79qlIMR4Zc6gA=;
-        b=O6nBPbNXRzGTsK85MbY0JHxftnmYbdr68fsmsEwKmymwIBg5DmJDGgzZ60+xIdjpqx
-         Iq71XSp7w5yqjsrOZsOv8XB9BIJ3YlKufVakG2I3oL/5rAl9X46TLKOZAEncV0CQdys8
-         RiX+U6LCKUfD4nb4VKDyPh1pRu655SGkjHhIQU/dQ080mE+N8PZXZAD5WwyLVIhN6cpe
-         25UnaKdyiWY5DMgQm1428NIkdE/j6EWe0v0oumGXPsvPTpYd9PsvTBDb+FmbY628NcUH
-         hHPKbtvNyHY0j1W5V1a+wVRrafBLkTcw93m98509dAgnjDf4ffxFLJJ+SqvDG96HFi09
-         xs2A==
-X-Forwarded-Encrypted: i=1; AFNElJ/9ovNfjk38hggmm+geseuUTJPTUMlskRzCqA7yuraw7jCbdQSva4hcpv7PoDjG0M91SaA83UHmxFY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNRci1wLEbOqpIcrxE7iHDjzRPgOEaM70WjC6HnAST483Htsfn
-	biuDQ8qZO0zq/Ep93vww013nrPSbXxpm14yUGeSS1kupyV+3si2dsF25
-X-Gm-Gg: Acq92OHllsZ0KaCM87Ch2/957R6zw6aDxHJHq95Pc0DRtPRlJofYMmsZXztwQpUnBTY
-	fy9gMo5eQtIhCnxrPAwgjxLCFNE5Zio21DtCWkunhODQYtqx708YsacCMGWxn9U0dvseJdfRIeg
-	noDihSpgaO5c8BwERifTLN+6O0lY46Pt5KZsk/HYLL389zKpMGM6IJXfdBhcxwSSw1rOqhAoylc
-	t5oxVNEgBu27KpS01lVXaY2MAytbLWv9nKeZ7Ycg/IwjwpviJ8Q3Hfogf75QLu6wPWj60dUFOBa
-	tGJP4qBO6o+K9NSS3M5lE6vWIc+wFB1dDg708gPrjNXr1GuCh40atkRdt65AnuJPhzIP1HoMfK5
-	BL5TPogCnTGt3QPqUw9wCuuxg8qOsGG9mB9igV5vwnslZR89y5vbiSZ8s8fy8F3I1SvUF+ELdD7
-	UXFVk5AUsKZO/KF12CiFN1SUDM337ZBHzh2Egc/8Oir7vVrY1fVsfk0g==
-X-Received: by 2002:ac8:7f83:0:b0:519:8ae9:4cd4 with SMTP id d75a77b69052e-519919450b0mr7934781cf.34.1781554017299;
-        Mon, 15 Jun 2026 13:06:57 -0700 (PDT)
-Received: from smtpclient.apple ([104.39.165.68])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8d9f5b8d9a7sm8704636d6.48.2026.06.15.13.06.56
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 15 Jun 2026 13:06:57 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+        d=1e100.net; s=20251104; t=1781554839; x=1782159639;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8ynJ3evPKTv+CHJxYf+R9sPicm7rQMH20Hi7EX5GWIM=;
+        b=WwxhueqMcP1koSSW1vkC/0weklhtH/wrnIivygVHqcxJdU4nAvx51ixmXhJEyjyfhz
+         o0jCO3ScILg8VknbrF85RedCMyz+j9JpX72osFNplZv5A3ahnt6maxAKB6t+WkMHKd0/
+         6pAhleEKQ1RLH4LwhtTyjIzZbDlkvuznIyuKMXwv4Ht9EPA+VhltC46MqLZOb7wuQaZv
+         SoWx3BRFRsEcgIOZP4/g4reCrfq7LNRmIDAEiZy4+Vlm7oBi1/w1iQmDyxQ1OS7+61wv
+         ZX15g+2ZtwXr+re3IhEKtyOsK1S0dQhaWchzooHfX8JYE71uLWc7QmI1oab9ck4+U8vT
+         Qmmw==
+X-Forwarded-Encrypted: i=1; AFNElJ8U83zmzZpRfz4+vEVET/XDt1Rd7X3MtxL2B7FHHFOP3y4m6kDV3DtynZgmGTn5tF6gR3ChaogGOuI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz30nEOiP8xPKrqP9SrFDCSzOUkfKBLDc0IKGKZ4hZZN4dWKts/
+	KXZPGDQaprZjxiLrucnP5a4Z8jcGr2tiPMUTGXblkVCDqIuOC1Oo9Nl3dSKZK9/oQg==
+X-Gm-Gg: Acq92OGQjz8Zcaw6iy2kYhfT9vQNpSEQGkQ/6yWuVl8PnIgQl1UMrOG3bSQXcze6sBG
+	4vGaBKKqRJ0itD+7Lv9UZVZDpvG0EnsqfYaN4vJ0X05cLDiATEQwLM/AdCMwKU61Vu3wYnwxJpc
+	Yk84N5iIgIAB5dEl3x2Phi+U+Ksnfx14jl/rGumXurbjxcuiRaFRvBLgPSiAOA9CEhL0mpSgob3
+	Hlv716yB9tdzrlsk9JKk6KMZ/IKcjwjwXplO3KHWn6sRo/HWz3zH3J2MctTCHvh5M4Iu5XkxpjC
+	9HwtSpwjXKsjZ3jmSgrghkaFhe1O7WOjlOFmFe404GEuTD4sIHlV9BYly9gX7MteuRXQpa4eZ9e
+	hFeYAmKYfSBsfuY36psA6WgkUFnxucd4FSlrYvodm2DgXmsXO0CfIvqVTKcywCEIBiN2jBYp7bj
+	UYvMnOYz6+5OHXxf2/gb3esUAne2eij0c2iYDz7FWxsVCev0t7Y9fVR+DlypGfHQ==
+X-Received: by 2002:a17:90b:2f05:b0:368:6998:b4a9 with SMTP id 98e67ed59e1d1-37c2bc7c378mr12049662a91.11.1781554838812;
+        Mon, 15 Jun 2026 13:20:38 -0700 (PDT)
+Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-37c521d96ddsm470060a91.6.2026.06.15.13.20.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Jun 2026 13:20:38 -0700 (PDT)
+Date: Mon, 15 Jun 2026 20:20:34 +0000
+From: David Matlack <dmatlack@google.com>
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v6 05/12] PCI: liveupdate: Keep bus numbers constant
+ during Live Update
+Message-ID: <ajBektwaDID-NqQk@google.com>
+References: <20260522202410.3104264-1-dmatlack@google.com>
+ <20260522202410.3104264-6-dmatlack@google.com>
+ <178144546090.1266136.8524338598480624580.b4-review@b4>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [BUG] KASAN: slab-use-after-free in pci_endpoint_test_ioctl
-From: Shuangpeng <shuangpeng.kernel@gmail.com>
-In-Reply-To: <2026061553-fifty-qualified-2e04@gregkh>
-Date: Mon, 15 Jun 2026 16:06:26 -0400
-Cc: mani@kernel.org,
- kwilczynski@kernel.org,
- kishon@kernel.org,
- arnd@arndb.de,
- linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <7255A69B-2D3C-40D4-878D-9C32B52A86F3@gmail.com>
-References: <178144969601.60470.7358419009914000395@gmail.com>
- <2026061553-fifty-qualified-2e04@gregkh>
-To: Greg KH <gregkh@linuxfoundation.org>
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <178144546090.1266136.8524338598480624580.b4-review@b4>
 
+On 2026-06-14 01:57 PM, Pasha Tatashin wrote:
+> On Fri, 22 May 2026 20:24:03 +0000, David Matlack <dmatlack@google.com> wrote:
+> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> > index 4f2ec6ffdd16..2421bc218916 100644
+> > --- a/drivers/pci/liveupdate.c
+> > +++ b/drivers/pci/liveupdate.c
+> > @@ -103,7 +118,7 @@
+> >  /**
+> >   * struct pci_liveupdate_global - Global state for PCI Live Update support
+> >   * @rwsem: Reader/writer semaphore used to protect the incoming and outgoing
+> > - *         FLBs, and the references to them in struct pci_dev.
+> > + *         FLBs and references to them in struct pci_dev.
+> 
+> This change does not belong to this patch.
 
+Yes, will fix.
 
-> On Jun 14, 2026, at 22:39, Greg KH <gregkh@linuxfoundation.org> wrote:
->=20
-> On Sun, Jun 14, 2026 at 06:16:39PM -0400, Shuangpeng Bai wrote:
->> Hi Kernel Maintainers,
->>=20
->> I hit the following report while testing current upstream kernel:
->>=20
->> KASAN: slab-use-after-free in pci_endpoint_test_ioctl
->>=20
->> I reproduced this on commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7 =
-(May 25 2026)
->>=20
->> The reproducer and .config files are here.
->> =
-https://gist.github.com/shuangpengbai/1e03464adfefbb75fb5d8112691e38b3
->>=20
->> I'm happy to test debug patches or provide additional information.
->=20
-> As we are drowning in real/fake/unknown bug reports, why not take the
-> time to work on a patch to fix these issues as you have a reproducer =
-for
-> them?  That way you get full credit for the fix.
->=20
+> 
+> > @@ -396,6 +411,72 @@ static void pci_liveupdate_flb_put_incoming(void)
+> >  	liveupdate_flb_put_incoming(&pci_liveupdate_flb);
+> >  }
+> >  
+> > +bool pci_liveupdate_scan_bridge_begin(struct pci_bus *bus, struct pci_dev *dev,
+> > +				      int pass)
+> 
+> This function requires a header comment; it is public and not self-descriptive.
 
-Thanks for your suggestion.
+It is private to the PCI core, but I can still add a comment in v7.
 
-I will try to look into this and understand the root cause.
-If I can identify a proper fix, I will send a patch for review.
-
-Thanks,
-Shuangpeng
-
-
-> thanks,
->=20
-> greg k-h
-
+> 
+> -- 
+> Pasha Tatashin <pasha.tatashin@soleen.com>
