@@ -1,320 +1,248 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011071.outbound.protection.outlook.com [40.107.208.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E303F8233;
-	Mon, 15 Jun 2026 14:27:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781533646; cv=none; b=o0lRg7DV+HEhUVPqAae8x6HM1W7kTZQys12t1G+LJa6w6Zu/MO68exdVfWGDxVBfqglk7HToRP4TgumibLky+/EzRjHMGsmHDxtQJzfEcauayrisRc6T75eL6DuyPPBDKmH1WMgbf+ZZ4NdAyG5M4eRDndIEf2DDoLHpER9PL8s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781533646; c=relaxed/simple;
-	bh=gcp7XAnbFXskpUDCCb4mXWihCPCwa0zHCLLciyV1SV8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pRPCxPFLMR5lqmiuVdWWIlyYMolLXRu4CANDfbNncVZ0RWZtJ3quMp0BYSkw1Ni63GmcWDsVc/KP0Ay68IgmPMCcYCgOKeggNApSqO5XU4yxVLwII7XDj8oMtUQxPQSAZ2j2MaszV7C7kwGHjDWnqcMimS0+QXN7/beXbIrqr3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=vLTCBs1A; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84693FD971;
+	Mon, 15 Jun 2026 14:52:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.71
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781535173; cv=fail; b=df7yg/sRqt7GOYvC/lbNmgKvOa7EH6rtVKvABaLCP6c8CWTFedjxZUDY6oaRJK0Gjy/dpGJJbQjBhQ3lLF43fV7jrCoCalc5l5g+WoX1m/U7yYzBuAK59/QIN6Zh4MbJKm2dzg+vYz+n9MYlM+NzOWaCEppAoMriRRYC8li12ts=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781535173; c=relaxed/simple;
+	bh=lt5MBcUGM/wqLeCyLHTxBdUUvyWFkA4rB0YPPGWOgpg=;
+	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
+	 In-Reply-To:MIME-Version; b=BLE8eHE1oASFhH+600AVSxO9BdfttT9ylT9ASMN9Mgdpi25fwDXPPhRG7xEOR1tf5VVddh/ASIQxSrHRSm+T30crBJPIQhty6Bd5+uKPAhjnd3bfHWw3hxJ5rMEmiNplFSgVLgrY73/iFa8S4+9uPN63xzyD/wmc7Jtm9FNBSX8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H5SDMQwn; arc=fail smtp.client-ip=40.107.208.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="vLTCBs1A"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1781533634;
-	bh=6jSl3qMQC5F8uJQ2tc3Ri1DM6ZH1vRToZvC6bK+3uyE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=vLTCBs1AA27S7AGaN2EZ6+R5z8czyhkJAuMVeYXLTgy5s+e4n0JX5GXN1i2hb4BfY
-	 v8AVmx03QZvwdWHXqIm4QEX+UrLcc3T9RYM20GphO2maTxqwNiBRQ9/j69nVAyLzp0
-	 cbozK72UMHakDLmek1PbTVJS8BqDWUe95RVD424ox5QsEu+7IQteug2rt6IsqFz3DC
-	 gF9CZN9YMkN3LMtwRBAKsmokbHEJLeDEuSboTtj6g4dD6BXIYNUTMTpdmPXvy+fCle
-	 wLLoH/1RHGcZKWpbvsoTJYe+z7bZSCLm9eDVm/tHo2Zb5C2iJk2TKh7ASmMg4ihgSf
-	 8RQst37ruXluA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gfCB25n8Wz4w02;
-	Tue, 16 Jun 2026 00:27:06 +1000 (AEST)
-Message-ID: <effb66ee-764b-4823-b6e4-c932a1f60f8d@ozlabs.org>
-Date: Mon, 15 Jun 2026 15:27:01 +0100
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H5SDMQwn"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=aHC8GOwvdwDPqN/uafBsokCJKuNjOycrevT5xuI1Oba1DfapzPZTarUIaSk39PfKlmpy1eEPLzR3F9EHIHVCrdFpXecp97AGV+/nOCvUMTAFrJb5j95qFBOaHkYFMHMMXAy6Werq/MR4k+zf1Uhsp41Ie0oQ1NPPFHQfUKGXvuiNdwdX5PEwCHexiqLvULRd91AqXQpzFPCKYLt5ZkAyyOcen4+fjKRnGHqj2yINFvmC7DVz80XW3Um74nQCeJASmjA8h6UOrgNeKVke4aXAE6ikt71rleV2Qj0PVRTw9Gq6P4N3YjcYtBxQ1zhr0FAiA/RnGj/8t4dMznIH0Y4s+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cqx1ZYJhNKxZUJAPoOEUguP/ra0i9g3vjeXxcYpXefE=;
+ b=XEvwx2yQmz50vaEhZ/nBBuf6t9gtiOCK4rhb23ymComwwjiM2ziCYdmMIGwUjLXuvzIERzzcQAXfJ4v4hwAIn2UVPPFXQTDHFU9FFM4bDHloONx+Et1Szz/Lhw+7ZK8tb0Sp2JrryuDc778FeEGuCY+A3SAAXjjngtPGcd9MVnXJ3RFfHlT7yrcGrLtD43ogGxPvgWpvC0d0nweW2dcAQiieYrC5gYjViODu2pDwQbn50zMcD73AoPDtxCmr/3ausKBsI2LZiiZjDZeejG6+r6Asi+zCWXy7PfSJHrZ4mB8PgtIT5F7vPcsqbDBBElm6pLR8OC0H1RuRhgjNgI80Jg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cqx1ZYJhNKxZUJAPoOEUguP/ra0i9g3vjeXxcYpXefE=;
+ b=H5SDMQwnj+7MkDumU5uegfn0Dcp/JSR9e68zpTjJNXxBEPO2HgSRQvWnhvbDk+q72PWKprXGCdfHe1+ND1tAp8x5UvMDkYcdMJb2PjZvmctdru6O2mQDtZOIsx/u7vAeuiGfsjpfVxur+devBc/s8XEkm3XYAkEc28qzn4h+lIDsh31VrK9AMmP3AiUd1QVij06INLIOxIk3t71e1/tBBJmrKNg2H7YFxbdGBiZhvfspMhgzDA7YUapCp500xECazu4cxnH1fM6FBidl5z3KiwDr3OWkZP6AEGlM7ezpAM/jUMHzhotHDF9rf6Wll1xSRwX9Z4Pl/3aCnUxC2kZzNQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by BN7PPF2E18BD747.namprd12.prod.outlook.com (2603:10b6:40f:fc02::6ca) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
+ 2026 14:52:44 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
+ 14:52:42 +0000
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 15 Jun 2026 23:52:39 +0900
+Message-Id: <DJ9PI9NEJ92T.3D0E90RPSCXA2@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
+ Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
+ <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
+Subject: Re: [PATCH v4 07/20] rust: io: implement `Mmio` as view type
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+Content-Transfer-Encoding: quoted-printable
+References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
+ <20260611-io_projection-v4-7-1f7224b02dcb@garyguo.net>
+In-Reply-To: <20260611-io_projection-v4-7-1f7224b02dcb@garyguo.net>
+X-ClientProxiedBy: TY4P301CA0114.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:37e::12) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
-Content-Language: en-GB
-To: Pranjal Shrivastava <praan@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Kevin Tian <kevin.tian@intel.com>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-3-matt@ozlabs.org> <aisa6H-a-176MXhC@google.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <aisa6H-a-176MXhC@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|BN7PPF2E18BD747:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5e9d45f0-1210-4d75-2359-08decaedc103
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|366016|23010399003|10070799003|1800799024|56012099006|11063799006|4143699003|6133799003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	RdrGqB/lkc5I5nsNNeO2La0kxjIpktUk1jYroiW2KWASyfc8WK9y2kSryC5r8cKI8vnlEiNZ2M6uPB+oVRXVM2QdKf9hd8olO77hHINqLpEnN/aDvYbg6EWauF5CsvZxKZFMCyZC+A3Vj1pWwhtsvHrhCDeq5buQcranRba6fhXVpuTkhQo+m9D7groKKqmLDPau1cc3t5nAFYbfBq0MgLzJhhVNyA3mQ72JE5wquMdsXHG9gfo8twfzGjtQggDWxu4hFshfe9qdZXVJSLiJDlC1tG66arhfTWDR+lLPAlcZh0MSKati+iL9PkzopxTuoEYqnPx6TnHfHa4yXcskfi4lvQ7pfFcgIyfZKcJJb00H5Msm0wPEkp0Yy1Hwmdua52YqWqHWUhfA9mca0RT24lCmCoKo5IYqky0Q8V7cuLrLNFTtK5KeIOYB7mXLpUVBvN1oiXJanM426qU1V83GOKxEsdUx4H0DTlsASIFmB10gAascLLu0LLda3MhNclSuVN9Ki0Y68BGiJ+AxyGbjKEP1U7L173BA3GsfQJ7Q+VGeCGJEwNpsaAz41eGtUhyg+mDSZ+s2m/TGpU0k2LLhaV5z6lp8Rs/MnuyHBTxtzFLp+nr/47z7UpkpIdxtNfttDE/DmsN7qrrfXxmdBPDBxYKvDaZ3xJ8BApPz72G1+nQqDQbSXUq+2PMlVAkgFZfa
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(23010399003)(10070799003)(1800799024)(56012099006)(11063799006)(4143699003)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WmUrcjlrb3RQREd2TGpWM1Y4K0pXSi9FYWczV0F6c1NEc0kxSWRGNWdLVGR0?=
+ =?utf-8?B?QnlwWG9vUS9JZWNZMHVxelJaYzZKMjlLYVVTSm5JeWZmVThDS1FnMGJzaHN5?=
+ =?utf-8?B?RlJXdmhsZUY0aVRiU1Q2YjBXYTJzd2hySXNiWDZNdjkybjZOaERlNzRQeFMv?=
+ =?utf-8?B?RzlWZkRGMHJFUTF5V3FBSEx1YTlGS1AyTVY2MmMzamRvRElJclJUV1ZaVUVQ?=
+ =?utf-8?B?dVQxYVQzbkZQd1BkWnhKNjJnY214cXhIUTUyUGNWa0ZHZmNuVC80UDd4VE9C?=
+ =?utf-8?B?L2dnNGNiRkEwQjFFbGtrZWZENG9iNjJydWJpMEVvWGRrZGlCWmh6M1ExYm1j?=
+ =?utf-8?B?MnhtTkRMZ1IyYkdjbFprNE9JZHhXT0JFdGtISFFKblJwSnBLRk5LelQyRTds?=
+ =?utf-8?B?Tk50eXhWdXhadVNBdk4rYlRHSis2UnlaazVXd0FyekdXTnp0U1FLbXZZbWpP?=
+ =?utf-8?B?dVpRSVgwUHpOSzFiTmgzV1dQUVJsTXcyQ3RWZ05GTFdvTW00UW9RVDFLUU85?=
+ =?utf-8?B?VEZOWDlsSXJZbVpEVkg5eFdiMzZoejVDeU9pYmFNTjNFbGIyeThOeTErcWpt?=
+ =?utf-8?B?VEFobVAwRTd2TGlyRHdXcWs1N2FXdGFjVWx2bHJPbzdwNENQR3hhMVhKeHJY?=
+ =?utf-8?B?LzBOV2IvQVpnQmRZNnpQeU42SmlYdVNxN2JtWVBvYjdaV0J5ODZWT29uS2dZ?=
+ =?utf-8?B?N3NnSisyYXFnZ2VkUkNDQm5zVmxjdFUxN3BBdVU4bTl0dDNDQjN5TmZlNUY5?=
+ =?utf-8?B?aENBMjlEYit0TVNDV3hNV3hlUFhUQzdvOGYzUHdPZ21EWVd0eVVWY1FrbVhF?=
+ =?utf-8?B?QytVQjZaalhsMjFqNG03V3lZbHE0RXJRZ0dDM01QbDVGZjJra0YxU2pTdER4?=
+ =?utf-8?B?Y05sY3NSYUdiNlZhdmtLbUVlRWlhQlFBcE9sM2ZCaHpKMmtiZEdNODhuaU5P?=
+ =?utf-8?B?ZmIvdXQwdmUwWWp6Q1g2OCtvS0VGWkowQ3RlTnBRYmJpeDlrRmpqRm9oZ1N6?=
+ =?utf-8?B?Mzc2OTVxT2J4Y1R4RkxjVUtqYm5sclYrMlc0MHhHS1ZmREtTc2FxNWFsdEdS?=
+ =?utf-8?B?Q3Q1YWFnUVNiS3FSbU40Y1NHQ0xIWHhiV2RPajlTRXY3REJsQ2ZzVk5yYlI1?=
+ =?utf-8?B?eUhha1FwdUZFYXdVZmJ4aHYxUVEycFV2dHpMZVppT2hwakhmc1hVU2lZRmMy?=
+ =?utf-8?B?ejNoK3RBUmNMRzltLzI3dnJFc2x2aVZ3YkgxeVhnTE0rVTUrWkNNOCtWSVNG?=
+ =?utf-8?B?QmR1a2w3TUNuclZ3dUNsTWFZQlhCQWxNbEd1MGVaTEVpZUNyKzlqWEF1QUhk?=
+ =?utf-8?B?RXpzeGQxNFAwMTV6Q3lOdGRscVBlWTZLVHFOdzM4aEMvUjcydk5iY1B6R2x4?=
+ =?utf-8?B?Ni9FaklpS1h5RDRHK0JvYUpvTzNMYVpMY2NnR1U5bjZzSWw3QkpSRHlnZFFG?=
+ =?utf-8?B?WlpFRTJUTmlRUEVoTnNLL3UxL1FTbDdvS21aVm1IMEJicUM1bTBCOXFodm44?=
+ =?utf-8?B?NlVWK0dib0dlUkUwUlBUbi9GcVJVanF3QzFmdFQxNFhPajRqMVBLVnlSUUlT?=
+ =?utf-8?B?Snc2S3hURGNSWlBOdEZ4ME90SlJUWVQyMnAxTVN5MytQM085UjQvblV5RTV1?=
+ =?utf-8?B?UkJ4OFZBNm1DVVg4djBmVXhZN1VIUUQzdnRYSXFOR0IrcE1waEc1cUREUTR0?=
+ =?utf-8?B?UFlMZmpRU2d3aWZIa0IwZU82VU82blVHaWlMMjJid0pQYWJ5SlBqZENmQ082?=
+ =?utf-8?B?c2x2OEt1NU1FRi8wWjVwdTJRY0tZVDl4K21IeXJ3TnJPWEhSWjQzUjVmWDRH?=
+ =?utf-8?B?SXAyeFpYeG05eVl5YituMGVUaWp5cmNabC9qRUpVdEZuWVV3WUZuZnZqYTJO?=
+ =?utf-8?B?czZrbUhIaVlWK3RkM3AveFRFU016c200RmNnS2NTaTBBYldxZlB4U1NQaW5o?=
+ =?utf-8?B?WHVhbFNmbmZXaDNneG1qZHZlUjl4SUtRaG1qOWRQTXU5dWgxZVE4cVlYWGtr?=
+ =?utf-8?B?Q1lpUEs2THRaRTlrTWhvUGxHK2hXT2N3OTlYcmkyUWRIcmRyNTVDTnErc0NF?=
+ =?utf-8?B?MzhKdjROemFrS01kQVpBcmxSMVgwZWtTd3JpdjhTUDFmdHc1TVBwWkdwQi90?=
+ =?utf-8?B?SFhPb3FxbDduWTVrL0U4SmRlTTRHOGFjSXdJbHE1R29WTTJDZEVkSGtyRTli?=
+ =?utf-8?B?QlRnKytJMFAwR2hzUU10SlZtcjZseXJmZEpZOXVpeThuUGV2UktreGhuVnVS?=
+ =?utf-8?B?RE5IRlBFTVZnOEJLNHRkamE3V0lPOHlZTk0zR2MyRzVJLzlTSTBqVDZ6RStI?=
+ =?utf-8?B?RWhad01EYk9yVnlLZ0ZnVFJvY2YvRUhsUEt3YTZNbWtWRDZYL1RsUzlyNnZS?=
+ =?utf-8?Q?r/hXYJCVEuQ9V0S2c2jgXdNDoxDLydzQYPV+uTrKt1Ayp?=
+X-MS-Exchange-AntiSpam-MessageData-1: ryNLLtXNOYPPbA==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5e9d45f0-1210-4d75-2359-08decaedc103
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 14:52:42.9163
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CMRuvajamxe3mwVK8p7Ed4WTRssKWLZG+pAlUjFGxl5m6XScqit1W7VzF6mHEzkEW5VdHUssseowtMqhzoUkpA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PPF2E18BD747
 
-Hi Praan,
+On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
+<...>
+> +/// A view of memory-mapped I/O region.
+> +///
+> +/// # Invariant
+> +///
+> +/// `ptr` points to a valid and aligned memory-mapped I/O region for the=
+ duration lifetime `'a`.
+> +pub struct Mmio<'a, T: ?Sized> {
+> +    ptr: *mut T,
+> +    phantom: PhantomData<&'a ()>,
+> +}
+> +
+> +impl<T: ?Sized> Copy for Mmio<'_, T> {}
+> +impl<T: ?Sized> Clone for Mmio<'_, T> {
+> +    #[inline]
+> +    fn clone(&self) -> Self {
+> +        *self
+> +    }
+> +}
+> +
+> +impl<'a, T: ?Sized> Mmio<'a, T> {
+> +    /// Create a `Mmio`, providing the accessors to the MMIO mapping.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// `raw` represents an valid and aligned memory-mapped I/O region w=
+hile `'a` is alive.
 
-On 11/06/2026 21:30, Pranjal Shrivastava wrote:
-> On Wed, Jun 10, 2026 at 04:43:16PM +0100, Matt Evans wrote:
->> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
->> find a PFN.
->>
->> This supports multi-range DMABUFs, which typically would be used to
->> represent scattered spans but might even represent overlapping or
->> aliasing spans of PFNs.
->>
->> Because this is intended to be used in vfio_pci_core.c, we also need
->> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
->>
->> Signed-off-by: Matt Evans <matt@ozlabs.org>
->> ---
->>  drivers/vfio/pci/vfio_pci_dmabuf.c | 137 ++++++++++++++++++++++++++---
->>  drivers/vfio/pci/vfio_pci_priv.h   |  20 +++++
->>  2 files changed, 144 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
->> index c16f460c01d6..9e5e865f6fb6 100644
->> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
->> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
->> @@ -9,19 +9,6 @@
->>  
->>  MODULE_IMPORT_NS("DMA_BUF");
->>  
->> -struct vfio_pci_dma_buf {
->> -	struct dma_buf *dmabuf;
->> -	struct vfio_pci_core_device *vdev;
->> -	struct list_head dmabufs_elm;
->> -	size_t size;
->> -	struct phys_vec *phys_vec;
->> -	struct p2pdma_provider *provider;
->> -	u32 nr_ranges;
->> -	struct kref kref;
->> -	struct completion comp;
->> -	u8 revoked : 1;
->> -};
->> -
->>  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
->>  				   struct dma_buf_attachment *attachment)
->>  {
->> @@ -106,6 +93,130 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->>  	.release = vfio_pci_dma_buf_release,
->>  };
->>  
->> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *priv,
->> +			      struct vm_area_struct *vma,
->> +			      unsigned long address,
-> 
-> Nit: s/address/fault_addr ?
+typo: "a valid".
 
-Sure.
+<...>
+> -/// [`MmioOwned`] wrapper using relaxed accessors.
+> +/// [`Mmio`] but using relaxed accessors.
+>  ///
+>  /// This type provides an implementation of [`Io`] that uses relaxed I/O=
+ MMIO operands instead of
+>  /// the regular ones.
+>  ///
+> -/// See [`MmioOwned::relaxed`] for a usage example.
+> -#[repr(transparent)]
+> -pub struct RelaxedMmio<const SIZE: usize =3D 0>(MmioOwned<SIZE>);
+> +/// See [`Mmio::relaxed`] for a usage example.
+> +///
+> +/// # Invariant
+> +///
+> +/// `ptr` points to a valid and aligned memory-mapped I/O region for the=
+ duration lifetime `'a`.
+> +pub struct RelaxedMmio<'a, T: ?Sized> {
+> +    ptr: *mut T,
+> +    phantom: PhantomData<&'a ()>,
+> +}
 
->> +			      unsigned int order,
->> +			      unsigned long *out_pfn)
->> +{
->> +	/*
->> +	 * Given a VMA (start, end, pgoffs) and a fault address,
->> +	 * search the corresponding DMABUF's phys_vec[] to find the
->> +	 * range representing the address's offset into the VMA, and
->> +	 * its PFN.
->> +	 *
->> +	 * The phys_vec[] ranges represent contiguous spans of VAs
->> +	 * upwards from the buffer offset 0; the actual PFNs might be
->> +	 * in any order, overlap/alias, etc.  Calculate an offset of
->> +	 * the desired page given VMA start/pgoff and address, then
->> +	 * search upwards from 0 to find which span contains it.
->> +	 *
->> +	 * On success, a valid PFN for a page sized by 'order' is
->> +	 * returned into out_pfn.
->> +	 *
->> +	 * Failure occurs if:
->> +	 * - The page would cross the edge of the VMA
->> +	 * - The page isn't entirely contained within a range
->> +	 * - We find a range, but the final PFN isn't aligned to the
->> +	 *   requested order.
->> +	 *
->> +	 * (Upon failure, the caller is expected to try again with a
->> +	 * smaller order; the tests above will always succeed for
->> +	 * order=0 as the limit case.)
->> +	 *
->> +	 * It's suboptimal if DMABUFs are created with neigbouring
->> +	 * ranges that are physically contiguous, since hugepages
->> +	 * can't straddle range boundaries.  (The construction of the
->> +	 * ranges vector should merge such ranges.)
->> +	 *
->> +	 * Finally, vma_pgoff_adjust is used for a DMABUF representing
->> +	 * a VFIO BAR mmap, which is created from the start of the
->> +	 * offset region.
->> +	 */
->> +
->> +	const unsigned long pagesize = PAGE_SIZE << order;
->> +	unsigned long vma_off = ((vma->vm_pgoff - priv->vma_pgoff_adjust) <<
->> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
->> +	unsigned long rounded_page_addr = ALIGN_DOWN(address, pagesize);
->> +	unsigned long rounded_page_end = rounded_page_addr + pagesize;
->> +	unsigned long page_buf_offset;
->> +	unsigned long page_buf_offset_end;
->> +	unsigned long range_buf_offset = 0;
->> +	unsigned int i;
->> +
->> +	if (rounded_page_addr < vma->vm_start || rounded_page_end > vma->vm_end) {
->> +		if (order > 0)
->> +			return -EAGAIN;
->> +
->> +		/* A fault address outside of the VMA is absurd. */
->> +		WARN(1, "Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
->> +		     address, vma->vm_start, vma->vm_end);
-> 
-> This could flood dmesg if triggered repeatedly by userspace :( 
-> Since a fault outside the VMA is an invalid access that already results
-> in a SIGBUS, we could probably avoid the WARN here?
-> Perhaps pr_warn_ratelimited() should suffice?
+Is there a reason for not just declaring `RelaxedMmio` as
 
-I'm OK moving to a pr_warn_ratelimited().  Note though that this case is
-"genuinely impossible" currently and the check exists in case something
-changes elsewhere.  (Re your flood comment, am I missing a way for
-userspace to trigger this?  The scenario is a faulthandler for a VMA
-getting a VA outside the bounds of that VMA; such a fault address
-wouldn't match that VMA.)
+    #[repr(transparent)]
+    pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
 
->> +		return -EFAULT;
->> +	}
->> +
->> +	/*
->> +	 * page_buff_offset[_end] is the span of DMABUF offsets
->> +	 * corresponding to the faulting page:
->> +	 */
->> +	if (unlikely(check_add_overflow(rounded_page_addr - vma->vm_start,
->> +					vma_off, &page_buf_offset) ||
->> +		     check_add_overflow(page_buf_offset, pagesize,
->> +					&page_buf_offset_end)))
->> +		return -EFAULT;
->> +
->> +	for (i = 0; i < priv->nr_ranges; i++) {
->> +		size_t range_len = priv->phys_vec[i].len;
->> +		phys_addr_t range_start = priv->phys_vec[i].paddr;
->> +
->> +		/*
->> +		 * If the current range starts after the page's span,
->> +		 * this and any future range won't match.  Bail early.
->> +		 */
->> +		if (page_buf_offset_end <= range_buf_offset)
->> +			break;
->> +
->> +		if (page_buf_offset >= range_buf_offset &&
->> +		    page_buf_offset_end <= range_buf_offset + range_len) {
->> +			/*
->> +			 * The faulting page is wholly contained
->> +			 * within the span represented by the range.
->> +			 * Validate PFN alignment for the order:
->> +			 */
->> +			unsigned long pfn = (range_start + page_buf_offset -
->> +					     range_buf_offset) / PAGE_SIZE;
-> 
-> Minor nit: I'm aware that decent compilers convert pow(2) divides to >> 
-> However, we seem to be using `>> PAGE_SHIFT` across vfio-pci. E.g.:
-> 
-> return (pci_resource_start(vdev->pdev, index) >> PAGE_SHIFT) + pgoff;
-> unsigned long pgoff = (addr - vma->vm_start) >> PAGE_SHIFT;
-> 
-> Let's consider using the same pattern?
+similarly to what the original code did with `MmioOwned`?
 
-(Do you know of a compiler that both builds the kernel and does NOT
-perform this transformation?  I am confident that resulting object code
-will be OK here.)
+I tried locally and could build. This avoids declaring `Mmio` and
+`RelaxedMmio` as basically identical types, and lets us remove the
+explicit `Send` and `Sync` implementations. IIUC you can also reduce or
+even remove the invariant section as it is enforced by `Mmio`.
 
-In an earlier revision I was using shifts but they were fairly messy
-compared to this expression, which arises from a request by Jason.
+> =20
+> -impl<'a, const SIZE: usize> Io for &'a RelaxedMmio<SIZE> {
+> -    type Target =3D Region<SIZE>;
+> +impl<T: ?Sized> Copy for RelaxedMmio<'_, T> {}
+> +impl<T: ?Sized> Clone for RelaxedMmio<'_, T> {
+> +    #[inline]
+> +    fn clone(&self) -> Self {
+> +        *self
+> +    }
+> +}
+> +
+> +// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
+> +unsafe impl<T: ?Sized + Sync> Send for RelaxedMmio<'_, T> {}
+> +
+> +// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
+> +unsafe impl<T: ?Sized + Sync> Sync for RelaxedMmio<'_, T> {}
+> +
+> +impl<T: ?Sized + KnownSize> Io for RelaxedMmio<'_, T> {
+> +    type Target =3D T;
+> =20
+>      #[inline]
+>      fn addr(self) -> usize {
+> -        self.0.addr()
+> +        self.ptr.addr()
+>      }
+> =20
+>      #[inline]
+>      fn maxsize(self) -> usize {
+> -        self.0.maxsize()
+> +        KnownSize::size(self.ptr)
+>      }
+>  }
+> =20
+> -impl<const SIZE: usize> MmioOwned<SIZE> {
+> +impl<'a, T: ?Sized> Mmio<'a, T> {
+>      /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O op=
+erations.
 
->> +
->> +			if (IS_ALIGNED(pfn, 1 << order)) {
->> +				*out_pfn = pfn;
->> +				return 0;
->> +			}
->> +			/* Retry with smaller order */
->> +			return -EAGAIN;
->> +		}
->> +		range_buf_offset += range_len;
->> +	}
->> +
->> +	/*
->> +	 * A hugepage straddling a range boundary will fail to match a
->> +	 * range, but the address will (eventually) match when retried
->> +	 * with a smaller page.
->> +	 */
->> +	if (order > 0)
->> +		return -EAGAIN;
->> +
->> +	/*
->> +	 * If we get here, the address fell outside of the span
->> +	 * represented by the (concatenated) ranges.  Setup of a
-> 
-> Nit: double space before "Setup" and "But" below.
-
-I liked Alex's response :-)  This is common practice for monospaced text
-since increasing inter-sentence spacing helps readability in paragraph
-blocks (see Documentation/ for many examples ...).
-
->> +	 * mapping must ensure that the VMA is <= the total size of
->> +	 * the ranges, so this should never happen.  But, if it does,
->> +	 * force SIGBUS for the access and warn.
->> +	 */
->> +	WARN_ONCE(1, "No range for addr 0x%lx, order %d: VMA 0x%lx-0x%lx pgoff 0x%lx, %u ranges, size 0x%zx\n",
->> +		  address, order, vma->vm_start, vma->vm_end, vma->vm_pgoff,
->> +		  priv->nr_ranges, priv->size);
->> +
->> +	return -EFAULT;
-> 
-> The fall-through logic at the end feels a bit redundant.
-> 
-> If we've exhausted the phys_vec list without finding a match, returning
-> -EAGAIN for order > 0 seems like the correct fallback behavior.
-
-This path can happen (for order > 0) e.g. mis-alignment of VA versus the
-PFN, i.e. is likely...
-
-> However, the subsequent WARN_ONCE for the order == 0 seems unnecessary?
-> An out-of-bounds access is an error that should simply return -EFAULT 
-> (converting to SIGBUS) without polluting the kernel log with stackdumps?
-
-...but the only way this can happen, for order == 0, is if the VMA
-extends beyond the underlying resource.  For example, if the VMA is
-larger than the DMABUF size (the total length of phys ranges set up
-inside the DMABUF).  Both VFIO BAR mmap() and a DMABUF mmap() disallow
-mapping off the end of the underlying resource.  That is, this also
-"cannot happen" but if logic changes elsewhere then we will really want
-to know about hitting this case -- the check is not redundant.
-
-Still, it doesn't need a regdump/backtrace (at least while this is only
-called from one spot), so a pr_warn_* is better.
-
-Thanks,
-
-
-Matt
-
-
-> Can we instead convert this to a pr_warn or something? Something like:
-> 
-> 	ret = order ? -EAGAIN : -EFAULT;
-> 
-> 	if (ret == -EFAULT)
-> 		pr_warn_ratelimited("No range for addr 0x%lx...\n", address);
-> 
-> 	return ret;
-> 
-> (with appropriate comments)
-> 
-> Thanks,
-> Praan
-
+The `RelaxedMmio` is now returned by value, so this comment should
+probably be updated.
