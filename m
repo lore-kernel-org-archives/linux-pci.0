@@ -1,51 +1,51 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020133.outbound.protection.outlook.com [52.101.196.133])
+Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022087.outbound.protection.outlook.com [52.101.96.87])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00013DA5AC;
-	Mon, 15 Jun 2026 10:13:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9828C30C17B;
+	Mon, 15 Jun 2026 10:22:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.87
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781518441; cv=fail; b=csbIB7QVPxJPu5Tui8Uf6ngDNZ63WeLB14k5R38ec84dxxe8CqjiTUiZ9ZJQVB8u8Z0xu3VoF8ii60fNfFvG6myjlcDNlIgnwHwUUb14eaQ9Cm6qt/79zABfOYe1v5EhfRXGHnaivofqfxn9lL70nFMC7Q4agB1M7MyxaYMJpg8=
+	t=1781518941; cv=fail; b=FNIFTog9lNP2iDMank75lz1dZPzITJcx4FWx1JYAuEGfq6B1dR5IFdAuPIbAAcPReoMsqGc1r3LMxYpg0zCV8x4eAoReDdNWplycn2AAEAL+FLbuvIPAKgyr9cPoT74rUSxLOVwWxz3Lb7GHCS6+Wq2t1aJy7wJ5F1WHpNW9aUI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781518441; c=relaxed/simple;
-	bh=DT9tKEQqI3Ku0spWZCFLWY8YYWGvyqTWkwDZl3lSYXs=;
+	s=arc-20240116; t=1781518941; c=relaxed/simple;
+	bh=imthxRUw/gTiVld48rsP+BoNetCrqjAADqUtMzMpByg=;
 	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=ud3HgdaR9V+eVv2A0mov5Tp9nyixbN6sLg/WM+yDs4yglYvEOgi0ZFDSj1toOr0yD2uJsREM2VsBiczyq7wcwduJ/Tsc9Pc+482dWpb8DpWhjhHTlKe+r1HQcgzZlAB6eTYFykrPY9BGZk87Z3zy4NR+3IRrEH96fotDGF0nBkw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=D6bKODG6; arc=fail smtp.client-ip=52.101.196.133
+	 In-Reply-To:MIME-Version; b=NT3XVEkzezzDchJomWI7Ogp2SM+UBcRN24TPyAbQg/57TTCGNri99rl5dRFkluf2DByGaXUE0j4Td4aL+BKFQV+YCckfmMX+AalugqlkPjcO6WQfX1eSRRbwgMMA0KBj2cw0Gm2c5j3aqlj+unWy/WOVf3kKj4idqe3J5++psA8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=E40ZYt9e; arc=fail smtp.client-ip=52.101.96.87
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="D6bKODG6"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="E40ZYt9e"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RJ4kkuyyNJzOqy2tCp5HVorxz/DZFE351WkTI9aMNzxY/tstFI1Yyx5eXBhoCus3Q9zN/WWnhaV3onPYo3TIweVNVK5DiT2J0S3isxyBcqtiu4Ma/+fYO9kfig3oyrE0y2bHPUjlK1gDXx6V5zyfOg8SKw81qgqncq3tl4tONeQIbM702eL7hyzGbZpqw3VsLR1b9b/RoVjdarbSdaEBYQjKpMXGVqPJMej/SKAhESQoClKBOk4A0m4LgPVDC9FVAb3DyZMs7SL73jaacpiSeReyYjsOlWr5UQJE36R3ZbHpcYPH/4B5skv6w7TGpAyA14Dl4iqNq7bNUy3Cr1dxJg==
+ b=PeqbCttmqigouQYKL7xAqMMjdDjrMF6ir01Oe9FjLFHoy4WjdmSYEyYPHQwpZzDYs1rnx3RaTwp+Hc5nAbycTA/eVRdqZ7URVZQ3KJMZs+zftoWtsbk5AZE6txI2njW1dX+T9fRz594/plLK1bAuTWFZAg0DwLkM+bQH8yddV4753kH6C8itdN/9+Yik48BTkXe0IBwjdn6qXhgfEaZl3+frBJYWKfyhrDbCuynBjA/6tOSUm98+DTzakmCuEh3DkfFWH1nGUmFgwqDZSGHT3wDLxgXpTbD3QsBFXv6V7tJo+sTgFldir+qsQSIg9yoG8cyQBbFQkbbk3DHTC+HirA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=J3EQDRK+s4N92CFeUVp05Sg5E0h5UWtCp4LkZdkpf5o=;
- b=CExXsQN3sZm0yDrKxMWxCWFWVdAVa3zcqCIj/MhDJGKVLuLu3O2mPJ5IIHRuzTmzKMB2piuaPJTBrFE29CbrQghdOhXUBnJVmidgvo68ZQpS0yDC0TXv4oAFVJxp+vCbhmiOFtZOHhb/Z7URvkGQeHBn+aGYqkzRlypZk02Nj7fTyaGfQqguHjj65U5j+kz0U87vztJN3Yp9JRLptLyzwvwEdn6YTP760AlQ6ryNL9YWeu2zboznF+CnBAGR9pShFwkMUMoT9RBNfepP0SBGEy6jJ42pyWC68uvY3Lfdmz7XmggfL694lHJth7ZDHdwHMNaVbpoqnjiNCdYRUlW/fA==
+ bh=3H/SKRl+RGTYsUoYCo7qgtx+V9axqER00dGCcynM73s=;
+ b=MZup5GrjqOdJ5F27uwUS+k0URJE6xqLJW06WCTEvvf8leZo1vztP60eKcjgynCNJeuf2xmJ6Y8xw8HH7ntoWrgqQSbUaClngkZ3rYMZLMHDLjftEY95owXM3xkLFWxUb0K8NHAXkHfP13R92t91Kfkvy2FaLoGjM2/AMlGl2qkaw7jrvCG3fXNsgK1afhmaM3mbMDSiBdHBje/WoEYB0N9VLp1gys8HgOd1TCHEDJNlo8JOeuUe2Ldfbo2ESfIJZESpmiHtidulG3MVJemp5RjktyR4f+dm0oFJVSyts+3ZCOxF57CUtcRsLASe1LTcExD7hTCBB/iH2RnOFL+yqFQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J3EQDRK+s4N92CFeUVp05Sg5E0h5UWtCp4LkZdkpf5o=;
- b=D6bKODG6hlEnjuibiTYUNWKBCvOS+51xLfJejfDwLVvJrgE5D0DPrVMO4JYEZmCJIhELW31fxwNAfJXt4NJ+PdqxtkQhU9+3kTjC1T/nMfiylbv7rG42JqfQ/NURGb8uH8KsCLEuk35G6DZMEbkmwpJlfIJpA9kOnso0QKZ+1Qo=
+ bh=3H/SKRl+RGTYsUoYCo7qgtx+V9axqER00dGCcynM73s=;
+ b=E40ZYt9eFkBZ5dYE7PjFua1GU/3L5dhsOGt4JpJH2rSty89Z0Qzw3iZN66aYi14nYw4Lcjwxrx/315JjmI79AzFhHBkxL9UPZM9YyAaTvS4iyNhG1BFuHRJisMFvIedVumOU/P2iOgufgxeFIw0oyFjmzijosi9vwiyqIR0xv5c=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB5142.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:282::9) with
+ by LO7P265MB8469.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:463::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
- 2026 10:13:56 +0000
+ 2026 10:22:16 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
- 10:13:56 +0000
+ 10:22:16 +0000
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Mon, 15 Jun 2026 11:13:55 +0100
-Message-Id: <DJ9JKUVU0G1P.5W8EYOTQBOT3@garyguo.net>
+Date: Mon, 15 Jun 2026 11:22:16 +0100
+Message-Id: <DJ9JR8VSQKQ0.3MV3AKK5YQW90@garyguo.net>
 Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
  <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
  <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -60,17 +60,17 @@ Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
  <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
  <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
  <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v4 02/20] rust: io: add missing safety requirement in
- `IoCapable` methods
+Subject: Re: [PATCH v4 03/20] rust: io: restrict untyped IO access and
+ `register!` to `Region`
 From: "Gary Guo" <gary@garyguo.net>
 To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
 X-Mailer: aerc 0.21.0
 References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
- <20260611-io_projection-v4-2-1f7224b02dcb@garyguo.net>
- <DJ9C815EGU4Q.3L04WWDJAUK1H@nvidia.com>
-In-Reply-To: <DJ9C815EGU4Q.3L04WWDJAUK1H@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0656.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:316::12) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ <20260611-io_projection-v4-3-1f7224b02dcb@garyguo.net>
+ <DJ9DA9MXXIC3.2RHNX47QLXZDH@nvidia.com>
+In-Reply-To: <DJ9DA9MXXIC3.2RHNX47QLXZDH@nvidia.com>
+X-ClientProxiedBy: LO4P265CA0008.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2ad::16) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -79,179 +79,101 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB5142:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2f393a63-39e3-417b-a570-08decac6cf14
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO7P265MB8469:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3226bfe5-8f76-4697-3880-08decac7f97f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|10070799003|1800799024|56012099006|4143699003|5023799004|18002099003|22082099003|6133799003;
+	BCL:0;ARA:13230040|366016|376014|23010399003|7416014|10070799003|1800799024|56012099006|4143699003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	shB3DmAuObqrhY0PwfFpOgbTkubS7XZbNBeL6Cp10W822knsnUyfHn80yeDE+zzDx+nkzDtmfec78RHxAn2FjoymkZavi+UNFZGD7UNa8Zid4khgh2CmH197vdo1xe1qNtZnavgJYeAWdKWVfKzO9lnDvWDQy779u4c21jIQ/n9TTke4bPEKr140kbMHU6gEPb60Xt302PMrNPgrI+FAO5bocTcnFy+JxYDHvDiJ8wLdr19vSHvh7uFZLjcyTai5WhC4tstXHND5V/EXkimVssOiHQvpsCU1fTYBMaH7aH0P0FFdyoAn/oW514hCj0ZHdfAaWnwSSV400wSoNjq2h2MPgfuFgGbkn7IKmsjTCgOoaTwVwsVKK8Ti8TH14qrF5oMvreo0i6vIhy4ueTz3UEmnaSh+i+F5VyncV0Pwqgj+nMqqmft9Qbmqt2a8km/QjHveYwuYR9WUHD4k1nMcIQFfDgRd76PeR/kN8crjsFfEc6ZWuUSD2zZBcsFEMiYhk0KUMfMpyFcKLC4NS5UJnQ+cirHHvvybhsl6+s0o+UcDUD06Rgf7lBdLv8CK2JOt5c6eeN3KaZXyjx3ftawpgixKW6SX/6KO3CfAfQxhSadVupgree9BrfZCreKmeOlI0xcFl+zabJ+JYpkIrSCuFnJdcFRE2OP2K/TnJ136/eOvhYSONmqtdFNtXXu55Ob8
+	HdBn/Y3hljy3kMZFrC1AmxFQ0Xaq7V486KDlO2Fgy2/Hw3GUwtETMi3CKGnz2Av5b4tDzchlvFdejzk5FCej6xcZTrF8j4Oc8PwrcB21oUPWJ8Ioc7nHxkbOnvTC2xkeFlQIo4TU/X9pHuqsZfPdQ7IotPTI67PsLkJROqfZmfh82kgFU9j9Vm4CNMyfvxcE+hARhRbvY2MeW/8LUZoKkx1CrATi408mWy2PgWlv1pS/Ifd+ehwvyWEvLhT2nj9vw6PJa6bry7DH4sPLC42M9YjJPHISu0romDEL3Zisk9a468eodvEqdoqWbUco/J00TVTZ4HTs4D9H7uguUx7kJ9C43WzxZCo1L1Vu8k/dxQBCLZmyUn0Lt5g5lXgNERQn9ppiIWfOek4nOJe+BnAxxrZ5EN2W9av1fXex5GiwLCS3sXktW0FKMr2sxeM6HgCiPDKA8vqO26K37nmp6H2DWRW5y04wLx3OrH6NYt6mPVmdwzzkI6fbfBhbWge381WiGlkLti0JOGrR9ggXIqPoA54LyHh+Ir12EQoJxmJazU8G48EGxpt/bbvmxEXLxKXaZw5N9V9ZejknhyByTAYQKva7GQO3pSXYSKRtcjGwMhwa5PZfxP73YLAr45k/smNLWtyEbkLD653g2E7LCpJ7Q3t4bOYHU++7Mld4Lc3AU9i65KTaJ4uBvw7+rRVJza/W
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(10070799003)(1800799024)(56012099006)(4143699003)(5023799004)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(23010399003)(7416014)(10070799003)(1800799024)(56012099006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?d0I1RHA5SXNTU1pnZHk2NE8xRmp0U0JQMXBvbmlvc2JOcVdQeU9CNjdXNHlp?=
- =?utf-8?B?eDR0NHNMWjdxWmlYd3Y2STY1bGtXbVByTDVrTnVvZnhCakhteDJRYUl0ekRX?=
- =?utf-8?B?SklmRjFaeUQvRExjb1p2SE5CU3JIVmx0T2pPSjhhT2RpTlFQdGc3bnZDVVRB?=
- =?utf-8?B?TjNzZ3pRZ3F2d3ZkTFFjZVZ2azdWMG01QjlnanRuVDZPTk11N3orUDhkaWtL?=
- =?utf-8?B?b2N6cERxNnUvd21BR3RoZjJVSDkzY0M5WGoyQnphN1BXWjRsUU9DQXBaN1RY?=
- =?utf-8?B?azk4ZWE4ZnhHekt3N05vaHZqdWxNZXppcEdWbEo5dkp3OXI3dkhnYi9OYkZM?=
- =?utf-8?B?ZG80c2tTcTVZM3ZJekd3OVY2aTdRZXY2aVc2S214b3RPTGhDR1FaSXZKT0g4?=
- =?utf-8?B?cldBR0g2YWR3OU4xbENnc2s0ci9uZkkrRHJkeXRsenVpQWxmSXBsSHZrMzgy?=
- =?utf-8?B?SHpXOTYwQURERW1lbVpXV3ZSSjl5MXVRY2R2aXFTcmpoTlBob3I2Qjcwelp3?=
- =?utf-8?B?ZGhrQTNZbHUrVGZzOGdtWmlJNUQyV1M5NDNhUmNmRG9jQXhrTFV0aXR6TjRU?=
- =?utf-8?B?RFNmem9oZGZ4VnlZU2lWc0NlbXJ5L2E0Q0xLN3hpZ2VzcWZPRU92bWRoVkox?=
- =?utf-8?B?WUh6bnY2Q28xVGk4Y0FmK2F0RWJvdWQ3ZVM1RFhIQnJIZE51L2ZrUzR5V2k5?=
- =?utf-8?B?WmRpT1VndjRNRkVvZHQ2L0tFdGFtY3pnNStiSFFLQzZPdGdZZDd1RkU1Umln?=
- =?utf-8?B?MnNacHlabVRkb0J3Z29aMlNwYlhlTm9rN3NXRklRTkRqclZWMllZMGNuRERM?=
- =?utf-8?B?di8yc1pYUVpaWTlYc0I3YTlBcmVRZ1dpdnhtSUl1bnNjc014NWY1MVdLaTl5?=
- =?utf-8?B?YjNIM2VvQmdRSnBPMldqRExVUktLZ0lUZUtaOTYvOGYyaXpWYW5hWGNNWGp6?=
- =?utf-8?B?ajdhaGxTejVSeVQrRnNhVVFyaUIyd2RjNERVVVg0Myt0aWdwdUo4SFIwZy91?=
- =?utf-8?B?UUsyOERpWS82NkErYXdqWEFhRW9EOXNJZTVPOW5jMkI0SVJsTGs4Y1haL0dJ?=
- =?utf-8?B?VzlEY1k3VGI3b0d2TWJjSWJXSEVjVlFBbWNrWXhFMnNVOXQ1R25YV0k0NDF5?=
- =?utf-8?B?WW00eTk0TWxoM21LY1VzekFTYWlYYW42YVcvWVNQMk8vVzRhZUlQMWk3bFI5?=
- =?utf-8?B?SFd1UnFrRE9UdGllakRFVEpZOXNOK0FubEpmSWVYRmVHaE9zeW9ZZFpkNXJM?=
- =?utf-8?B?dStVeGNtbE9MNU1iRWJxL0dxZnpVUGlWLzdIVzR2K1NISWVnQnpSZHFyZmNl?=
- =?utf-8?B?aGRDcWYwejVlL1RKeW5va1VzeGxveS9ucXYxK0Y0MnE4eWtJcW5FS1I0ZU12?=
- =?utf-8?B?N1lBNDhmMUZEZlJma3lDbDRxUFRHcmhQRmRQTTlSWExWSDJtUU1GdEFwdHVO?=
- =?utf-8?B?aStVbkxZOVFmTmhVYXllQUpseFZVY2RoVTJDeVJHV3JXalZ3ZmlsM0FJS1pX?=
- =?utf-8?B?U3B3SUxmYXNYYUx6a1lYMnlKTUVxRVpmQ3E3eklNTUt1STllS3lWVU1ET0pk?=
- =?utf-8?B?VWlyVzFib2U3WUZ2YjE1clM1TkwrQWkrZjBaSjFwaEd5b3dzNFdidWNvbmNs?=
- =?utf-8?B?S3lKRG9INmJuZ0trYzYxVGNERmhwbm5JNm9XOWxmZzBTNGhxT1ErNG5WV3Nt?=
- =?utf-8?B?RlFMSlZTSktzTm1YS1NKZlZ5elZxT1grTThEQ0wySUJNcUJaSWhkcktlc2dL?=
- =?utf-8?B?dHhxalpXN0JMVkUraWdpcEFlb2thdllDWFJjdnNZT0lWb3U1aVNyMDQ4UmpK?=
- =?utf-8?B?ajA1YS85ZDFwcVNNQjZldGN6MFRpMlFYNVFpWHhreXloV1p1aDgzOUNXMFBU?=
- =?utf-8?B?SVVjckNBbis0VzFpRFhFdzlycHVGSUFJWUs4cElPWE1iOVBMUTVjQzZxQlhp?=
- =?utf-8?B?eEFKUDNaZ0FBRm5xZFlNSUNTZEI4cmRsZkpLck05UFM5YkdJZVl0VzFWenlC?=
- =?utf-8?B?Q205MVI3KzEvd3hQYUcvb3dhVyt2aldhMXpTbXdNODh1R2RoSEFjbDMyb3FF?=
- =?utf-8?B?dG4wSzRwSThXMUVzSVQyYnRzRFRWdlBLcTRRbDdpb2szZkcwdlVvaHM3VkJK?=
- =?utf-8?B?dUo0YThsZFRDZmZLQW5YM1BEREFjeGwwbktvNFcvU0VlL1JjQXowVUt3aHhU?=
- =?utf-8?B?UzNjSTRydFJMYXVIMmJ2NnVjenVZL1NJSVFiOFpiYVRUc0tZa1ZmMmpjVjhr?=
- =?utf-8?B?ZnBTTWFwcUMveWd2aHJIMVBVUE1RdjRJU216NTR4RytTZWVYdFh2NERURC9r?=
- =?utf-8?B?T0xYZmEwZlhPMExYNFlWSDR2K0lqSHVQdlZ6TmEvc3lONENCM0FRUT09?=
+	=?utf-8?B?NTJCbTVFT1lsbXZacklWRmpQSHNDeGU5VE1QQjI1ejNIdFBTU1pUbU9wNXdT?=
+ =?utf-8?B?Q0VOcGZpR2xqMW1EaEp4TEM3TjBTZENLQWtNYjZwa3kzTXhsbmJqS3oxYlQw?=
+ =?utf-8?B?Smk0VXF4dFFOM0RYQlpPR2NlZ2U4Z0VyVlcxTGdTNlF3M2lBWnlvTkxSRGcy?=
+ =?utf-8?B?cnpYOEVQTlpINFRGVWg4ZEpvOHYwWXJyTEQxaUR4YVJPREI3YmVUc3JjY0h0?=
+ =?utf-8?B?a1ppUWdRLzVXK1g3eHg4eUhkVHJEa0FEQU5HWkFZU0RSKzVoRkV5b0lMaFF5?=
+ =?utf-8?B?OEQxQnFhQTQyOTQ4akxkVzh1Tk4yZTlIN1JIYXF4MTRyMWJjME9udkduTWhP?=
+ =?utf-8?B?Y3RiZDdOKzZxdjM3K3ZQdm4yejkzZVdWRVZOWHE3ZEN5enVvRHA0ZDZHQVFV?=
+ =?utf-8?B?ZnpYSklKM2w2MHFna3ZwOTNoRDIva2JIWXZseFhFbU5oa05DMERFaUVwQjA3?=
+ =?utf-8?B?SlZpbkx2bUc2bGN5WHZ4eW1vUlBqb3JoSUd2cERVem5jekloRk1EeDhrbWJJ?=
+ =?utf-8?B?Y0RENjVWRUdIWjY5WWVZVWZTdUt6TWxWc0RQMWdZT1Z6ZUlpRWNQUGpVRXdG?=
+ =?utf-8?B?WGFIZzBVVENacWxRQiswOTl5bVFsazVtUXJJNm02Rjl1dzhYQ1haQ1dZSmdv?=
+ =?utf-8?B?Wkh4QkpsM0xQNTRiUThhb1YxV0NnNjRhZm4zMEU1azY2M0U4dTdhaGU5Q3VE?=
+ =?utf-8?B?bFlKblhEa0t4QjJ6Vmo3eVZXUW9QV3Q1UC9uNmpUMjlvdHZzWTFScUpvWmVY?=
+ =?utf-8?B?VlVudDFnWFV0M0pKWUlxaVN2MEJsUnE4bUsxWlMyT2FOc21jWFIyM2dxcFpD?=
+ =?utf-8?B?Ym42SkppK25vTm1BRXlnUFVMSWJWZS8rQy9vNEN1NEtqWlNRVFAwbnVVNzJ1?=
+ =?utf-8?B?VHlyN1orWG1WQW5kMVpyT20waUxwN2JKTW9TV2dOY2V5N3AxR29IL3psaTJu?=
+ =?utf-8?B?REJVdkFFdGxTSnFQNldKT3ZjYk9meld2UUlPZ1VPYlJGNmFRL3lyaGlEN3Qr?=
+ =?utf-8?B?MDg3S2dSQzZaU3RiNHBOaTcrZENRVW1UUDNVaEdQVEdlbUhXWldQU1RJWEdT?=
+ =?utf-8?B?ZDExS2VnL3V4b05JaGNielJVQzh1Um5xWEEwaFJjYWo3UmhJZGNiazJWU2w4?=
+ =?utf-8?B?OUxvM2FjVXJwNlN4dDFmaHFwdXZ5RHhJcHRwQUFsd0NWN2VpMDcwWThoeWpC?=
+ =?utf-8?B?SmowaUduNzN0MVFqZEg1Wjl5SVQvRXJxb0tKV1NiRy9EUUMrL1JvOEwxM0Vv?=
+ =?utf-8?B?M1VXbnh6MHdSc2JkTkt6M2QvZE1DY3lwMnZNcVlYSWdzVG9oNEkxVk5paHpY?=
+ =?utf-8?B?aXhTaG84T1piUG1wQk02enpCRjlwdVVnZXVqdndEbkczZ0dhSDA2YW82YWRr?=
+ =?utf-8?B?clFvNmRtQ2doUTNrRmFOSXRzOHplV09qYjNKdE1FVDhiQ0VNbnk1MDFQWWZt?=
+ =?utf-8?B?QzNGT0xkOE1Va3hDWUpTY01YVHFkc1FWcWE2YlhvNWNyclJ4UitnemNON045?=
+ =?utf-8?B?WXE4UisyTElRTFE0N1JiZGhlZlhEeGN4bGJ1aUt3dEhSUUJPbytQRWJub3RK?=
+ =?utf-8?B?TndDOHpEOVpqdVZqSXg4cGRicjdYc0lqRzYrTGVLRmY0S05CRStNaEVMUGI4?=
+ =?utf-8?B?NHlGdDFmS3Z6Um1NbWlKNGFoZmFLamlCTTRCekk4L2kvWXZQVXlHREk0eE1G?=
+ =?utf-8?B?dWh2elI0a1ZYRFoxeU5OaUhtQ2tweGU0dzdNSzArQ3hoQ2VKSy9SODFHZjZs?=
+ =?utf-8?B?VVVVSmZnaXRHaElwNUJrMkRncjAvTnBsOGlTa0ZycWdqZEtoQlRnUUNtL3Zm?=
+ =?utf-8?B?U2hhL09OeC84eUU1MmRuZW9scGVpUi9YbXpRZnBrL3hScWtqeGtmS2JiaUJG?=
+ =?utf-8?B?a1VWem9YSmNxZlZjNmtsMjVsd3RSQ3dwQzRoQkY2d1ZSM1hTNVNneE1uN2FW?=
+ =?utf-8?B?WlI2eVpNWEVUbk91QWxNbmtMTkNWc0VKVVBqVnFKWjNRVDRoYkcrWWRCbVZU?=
+ =?utf-8?B?OXcrNGZMZU5UV2J0dGYvdHZ4enQ0cDZ2Q3B5OUc3TWNDVW1RNVlMcjFUclpa?=
+ =?utf-8?B?bUxvck1iODl5QUg3V0Zzb2JCVXlyT3VMZ3cwNHNlNFNyR2J6YmgrWEJDcDhW?=
+ =?utf-8?B?T3R4enVUaDRzZXZ5UjlCbktkMHorY3dVVlVTeFJCSkpubW44YTZrMFhTNjh1?=
+ =?utf-8?B?YUJQczZ2TUgvbEdRa2NOWXVLMkJUN0oxT0FQU1htVitZb2hLTlFuU2hrMXo3?=
+ =?utf-8?B?VFZCZ2NEaUlYbkswRUY3cWtGVFlJSEp3SkxYOTFYaHZzUndGSGF3UEZzaTJv?=
+ =?utf-8?B?bmNQbTNXcmMremZkaEV4UFExc2M3MTRKTENRcE5CODkrSGw5SUtFdz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f393a63-39e3-417b-a570-08decac6cf14
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3226bfe5-8f76-4697-3880-08decac7f97f
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 10:13:56.0721
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 10:22:16.7269
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iILnHc1yMHMUxYh2epmYIECIIYAD88sUsvxBZXH6bb2a+0DpmCjOJMsftm6+t4Cx2PJyoKqJnyU/9t22ZrK/Ug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB5142
+X-MS-Exchange-CrossTenant-UserPrincipalName: H2RRGEHSq4NwKLPG2UZOqZU1jP7FuTfmlzPBTW5/TfN6kXH+hkSmSvKfKkBSAatm7ll2OvE5lTPntljESlg4AA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO7P265MB8469
 
-On Mon Jun 15, 2026 at 5:28 AM BST, Alexandre Courbot wrote:
+On Mon Jun 15, 2026 at 6:17 AM BST, Alexandre Courbot wrote:
 > On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
->> The current safety comment on `io_read`/`io_write` does not cover the to=
-pic
->> about alignment. Add it so it can be relied on by implementor of
->> `IoCapable`.
->>
->> Expand the check `Io` by taking `self.addr()` into consideration when
+>> -impl<T, B> IoLoc<T> for RelativeRegisterLoc<T, B>
+>> +// FIXME: Make use of `Base` type parameter of `Region` directly.
 >
-> "the check performed by `Io`" maybe?
->
->> checking if `offset` is aligned. For the compile-time `io_addr_assert`
->> check, check using the known minimum alignment of `IO::Target` and the
->
-> typo: s/IO/Io.
->
->> accessed type.
->>
->> While at it, fix the alignment check to use `align_of` instead of
->> `size_of`. The values match for all primitives (including u64, given tha=
-t
->> we do not provide u64 accessor on 32-bit platforms), but are not
->> necessarily true for custom types.
->>
->> Signed-off-by: Gary Guo <gary@garyguo.net>
->> ---
->>  rust/kernel/io.rs | 25 ++++++++++++++++---------
->>  1 file changed, 16 insertions(+), 9 deletions(-)
->>
->> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
->> index bef571dad6eb..fa9ae39ad9d2 100644
->> --- a/rust/kernel/io.rs
->> +++ b/rust/kernel/io.rs
->> @@ -196,13 +196,14 @@ pub fn maxsize(&self) -> usize {
->>  #[repr(transparent)]
->>  pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<SIZE>);
->> =20
->> -/// Checks whether an access of type `U` at the given `offset`
->> +/// Checks whether an access of type `U` at the given `base` and the gi=
-ven `offset`
->>  /// is valid within this region.
->> +///
->> +/// The `base` is used for alignment checking only. This can be set to =
-0 to skip the check.
->>  #[inline]
->> -const fn offset_valid<U>(offset: usize, size: usize) -> bool {
->> -    let type_size =3D core::mem::size_of::<U>();
->> -    if let Some(end) =3D offset.checked_add(type_size) {
->> -        end <=3D size && offset % type_size =3D=3D 0
->> +const fn offset_valid<U>(base: usize, offset: usize, size: usize) -> bo=
-ol {
->> +    if let Some(end) =3D offset.checked_add(size_of::<U>()) {
->> +        end <=3D size && (base.wrapping_add(offset) % align_of::<U>() =
-=3D=3D 0)
->>      } else {
->>          false
->>      }
->> @@ -221,14 +222,16 @@ pub trait IoCapable<T> {
->>      ///
->>      /// # Safety
->>      ///
->> -    /// The range `[address..address + size_of::<T>()]` must be within =
-the bounds of `Self`.
->> +    /// - The range `[address..address + size_of::<T>()]` must be withi=
-n the bounds of `Self`.
->> +    /// - `address` must be aligned.
->>      unsafe fn io_read(&self, address: usize) -> T;
->> =20
->>      /// Performs an I/O write of `value` at `address`.
->>      ///
->>      /// # Safety
->>      ///
->> -    /// The range `[address..address + size_of::<T>()]` must be within =
-the bounds of `Self`.
->> +    /// - The range `[address..address + size_of::<T>()]` must be withi=
-n the bounds of `Self`.
->> +    /// - `address` must be aligned.
->>      unsafe fn io_write(&self, value: T, address: usize);
->>  }
->> =20
->> @@ -310,7 +313,11 @@ pub trait Io {
->>      // Always inline to optimize out error path of `build_assert`.
->>      #[inline(always)]
->>      fn io_addr_assert<U>(&self, offset: usize) -> usize {
->> -        build_assert!(offset_valid::<U>(offset, Self::Target::MIN_SIZE)=
-);
->> +        // We cannot check alignment with `offset_valid` using `self.ad=
-dr()`. So set 0 for it and
->> +        // ensure alignment by checking that the alignment of `U` is sm=
-aller or equal to the
->> +        // alignment of `Self::Target`.
->> +        const_assert!(Alignment::of::<U>().as_usize() <=3D Self::Target=
-::MIN_ALIGN.as_usize());
->> +        build_assert!(offset_valid::<U>(0, offset, Self::Target::MIN_SI=
-ZE));
->
-> IIUC this can allow unaligned accesses if `self.addr()` itself is not
-> properly aligned. Do we need a new `Io` invariant for that or is it
-> already enforced somewhere?
+> `Region` does not have any `Base` type parameter, so I am not sure what
+> this refers to.
 
-Adding a trait invariant would require marking the trait as `unsafe`, which=
- I
-don't want to do because the `addr()` method is removed later anyway.
+Hmm, this is indeed awkwardly worded. I think I want to say
 
-One argument is that it's `Io` implementation causing issue for its own if =
-its
-`addr()` is not aligned. This is later redefined using projection and views=
-,
-which further shifts responsiblity of upholding invariants to the `Io` type
-implementator itself.
+    Make use of `Base` type parameter instead of using `Region` directly.
+
+The idea is that with `IoLoc<Base, T>`, we can have
+
+    #[repr(transparent)]
+    struct Subregion(Region<SUBREGION_SIZE>);
+
+and have `RelativeRegisterLoc` just become `impl IoLoc<Subregion, T>`.
+`Subregion` then itself can be a `impl IoLoc<Region, Subregion>` and we can=
+ use
+projection to get the view of the subregion.
+
+Anyhow, that is all further possibilities, and I'll just remove this line i=
+n the
+next version.
 
 Best,
 Gary
+
+>
+> Is this to make relative registers tied to a specific register block
+> type? If so, it would help to expand this FIXME a bit as it might be
+> difficult to understand without context.
+
+
