@@ -1,226 +1,196 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16DAF3B6378
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 20:29:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93916298CAB;
+	Mon, 15 Jun 2026 22:17:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781555349; cv=none; b=GC3uSGgBFaRRxbhev7ZndXHek1xf2C0I7e/9HdfpDI8Glsso846mg6M3lI3hVZVbcYh8mrWLPtVMdqtBN6tok6g4bQPnqFr/GUWJlhVYNtwBmCSBoEcjeo3u1XHSTSuh83pJlCclKzTUtwzIY1PrK8ue7izn5FNVxMgoCc8yMlQ=
+	t=1781561848; cv=none; b=fT/CVNTTDjvAPe7hHxxX8C3RYZME7lbGQRvFJ7utwqdQa4Fg1CrvF/3YwC9lVpKm9xE/PcyaIQuomupMyJJnwitEWAYUDV3OikEmRj6v7JM4DpcTEix/Fh8FXMJNTzSLuxqa7VTRyXU2J7oeiK7QDiskNFrPLBJYordKlg8X2ho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781555349; c=relaxed/simple;
-	bh=MZP5jsTbH3zCF15JCNmbPOVPmIbEoMMWjjli0bis5Uo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pz3CN4fjMC14wLSCQsnDdw0vOcbQLkBSXipUIeH5hND7YVFYFJFddc2dZZotEGYN7n8uF+A3e1WeH1nJwokeXQhXO1YgT7oTqzCuC9MLLJ5J+lnLQZ1J9hxXrchgNhnGf6N5c1YT80GXvfDb7/F9eAufK6rtzAETPIv8dgAuDEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mGEtl5oV; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781561848; c=relaxed/simple;
+	bh=OKJpSRpDMRFT+F65dqPO/mANqW7Z+mZ0u7fwuUZNLKo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ivYv3x2mPJXptxlIls/EX8c8Ny10uj8WYtg+SZvXGpa9JeyRBTl+g0AK/iSG74HUn2ir2jVf4c/bN06AFz0+qje9tvLHSFrg8OhnISZlL8R3tx9pdZTBilX3uunwIxXTxQ3dZnxzuzPc5Mq0FDNMyosR0sIgYldioa03eDqt4CE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=g9AmdsLz; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mGEtl5oV"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-8423f236418so2072759b3a.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:29:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781555347; x=1782160147; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=6tMpN87VW6G86K/AtehrHKHoQYLtgbv5+V4AdiXXmO0=;
-        b=mGEtl5oVj7s0B+gAHjFDHSSTBMUBtEimCD4gFk5ceH6MTScffwq8MlcjPkAr7HwpCn
-         lToUmP6Vg1zI65O2hxA3lq8Bq5qZ71zMRPTWL4lJUem/tLLez2wqd6R+E0eirW36yVvp
-         RINY2l59nCD2fy26f0RX9p4nQ7R+YLU0ACjVRQg5jdJR0yrA1DXzVHA5EV0iLSwkU1cS
-         KlMOxjpfueE1CdyjsvEDsy+kQVgh2+vVISrDjs3wFkjHUYnkiWYfcxnRirf38u5Js2on
-         XRAjQ6B245Y7V76DoRvtW7DecD4aZiHJIFBfvBrw7qVS4kTDw1foKstHnjOXZgtajE+O
-         K/eg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781555347; x=1782160147;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6tMpN87VW6G86K/AtehrHKHoQYLtgbv5+V4AdiXXmO0=;
-        b=N/AcNH4QvY9I4j8y7rl/+bh3GRMie4tlJeQfQfo4fVc3SHWVnh3vqOnFZtsTWFfiTO
-         cPlP/ynN+BQTf6sgWIigfUnGGcqnB1uykCZPAiHnoa4DJsj/+dEKF3BIEoZX0wrTIKFy
-         jWzww4Kk61sR7C+Muczdqp1YKrasA8sY4M0sI8K3x7itgiJPx28cJFnZ4tf+C+EXr3Zg
-         iG2qMcjhCzEpQuh8B66CAuMxd9RXtwuTaILBKu9Tg/yZvZT6OZJK0MYbx5Wk2neR/TyC
-         +v0kEZtSq4aQg+C8V4fgtD0ZJ88ISOM4aaHKZw8VXYDiNdJTLXZRYIS633wLRpu0WPOf
-         nyMQ==
-X-Forwarded-Encrypted: i=1; AFNElJ84CmNjOgPrl6YgCumS6XytNoMwJ8lWxbx4sMPzfyTKpVq7BTxcwvUzhsvfQldeyOSmQDGPz1JqSAE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEI6ZeSphAiw0pTJkd7d0Xt4nsoy/CJ+BJqUam/JmDgPvshyvf
-	O480twm1IshzYH6Q6szoxyBw4ASS6/qOH4Kpb3sVbbm1+xwyuQcwl98E0HNJwBj2yw==
-X-Gm-Gg: Acq92OFNsNwOgVaNvD7xwR/cAerUs9DNnEP3Q/zq477OZhDH3P7jhqwnEtbeZs2FKGL
-	N1oStu2FBwzvLdFwe6B9L/EHnydRDaFGaIhCtZKVSERuuUSM4UIifb14zTodkdkntq7WLeU8yFi
-	A4J5maAM+PankDkg0u7N/ZMiOAGCg4NjdBgZgJ2PhFLC/VnpG+M5B+74wRhOTFa32iVscCEfUiv
-	2QRkjmPDPrnhz9huYsM9ETM3oQtV0T1wN5yVoCeeVQC4LAks8NY8P8J0w5zKpFCNLvwFfYmBmKQ
-	rWqbW97Ky2X9h+woISzSI7o8d8ssE0ogOcvuuSEWT2HcBukmmivc92BKIh6NX06x34l++u10ihK
-	+G7ELzqXgQPsAvlQ7fwPNUh+11t6Wet+oNrjPMeRyWrWlb1dGDY2b+8G17lBmB/tXqMDVHJsj8g
-	nk/tH4VleOKktjlWpQf6+O7v61r7z+Nme49GDOhyqYM24r37piGiqXjOimwFuzaQ==
-X-Received: by 2002:a05:6a00:2d01:b0:842:380a:1ee8 with SMTP id d2e1a72fcca58-8451530e10amr465722b3a.17.1781555346795;
-        Mon, 15 Jun 2026 13:29:06 -0700 (PDT)
-Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434afc8a84sm12817496b3a.38.2026.06.15.13.29.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2026 13:29:06 -0700 (PDT)
-Date: Mon, 15 Jun 2026 20:29:03 +0000
-From: David Matlack <dmatlack@google.com>
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <ajBgj_aSuzMZG47e@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-4-dmatlack@google.com>
- <178144432039.1257322.9644414453415904478.b4-review@b4>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="g9AmdsLz"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65FJIME83334774;
+	Mon, 15 Jun 2026 22:17:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=k1RO11
+	5wL3sLz85jGVH/FrX/i1Fhc+OFjhbck8YKZN8=; b=g9AmdsLznwwGYPVIVf5TFm
+	SE2rBCpW9ORD+y8h6JzskwHjdCAKwg6NFvNSojgtO0YzilGWwK4geLzGATzRLV/X
+	LqiQCuAlZaur69aTX9aUZ9yPWpWslXb2zdUNGG+WW1I+GUcJ1jOVETPagaLusK6F
+	YTJYDC1JrYl4zPUySp2l2FJR8YqNw2TBCESEMiwe9BPsNp/z/J0nGJseOMpORZbA
+	b4aw9n71RSTY72dzfo62+Z/6y+akKzvM8ZOnyFehJAAmKXL32WKZc61ci3aNYWbc
+	2GZbqe4hR3X4i+KKcE8wBGVpdwgNzMFeooT1t/Z6Pg0e/vcppa68ZPlw1MlkPoCA
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4es1u0jc43-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Jun 2026 22:17:22 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65FM4f6q028665;
+	Mon, 15 Jun 2026 22:17:21 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4eshww0q1s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Jun 2026 22:17:21 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65FMHKCN58523980
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 15 Jun 2026 22:17:20 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 74FF85803F;
+	Mon, 15 Jun 2026 22:17:20 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8891C58054;
+	Mon, 15 Jun 2026 22:17:19 +0000 (GMT)
+Received: from [9.61.248.131] (unknown [9.61.248.131])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 15 Jun 2026 22:17:19 +0000 (GMT)
+Message-ID: <19fe09a8-4b56-4e47-9b03-ba51679f25ff@linux.ibm.com>
+Date: Mon, 15 Jun 2026 15:17:19 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <178144432039.1257322.9644414453415904478.b4-review@b4>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v19 4/4] PCI/MSI: Enable memory decoding before restoring
+ MSI-X messages
+To: Niklas Schnelle <schnelle@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, mjrosato@linux.ibm.com
+References: <20260615183524.2880-1-alifm@linux.ibm.com>
+ <20260615183524.2880-5-alifm@linux.ibm.com>
+ <02c66b72de27b3360536dfdd0747261dc487059d.camel@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <02c66b72de27b3360536dfdd0747261dc487059d.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: UyuV7VQRkACD65P0BcEhjKBGwm-lYv28
+X-Authority-Analysis: v=2.4 cv=XdK5Co55 c=1 sm=1 tr=0 ts=6a3079f2 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
+ a=Av32cbDGmuaKImwTXbgA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE1MDIzMSBTYWx0ZWRfX4NCUsjKzAr5k
+ xKM8ky1VAccNzbDFFtxiGhQB5VdGequucC1KU0dA8TrpHCeXnpJkhYPSLdLqusO5gimh+mXlTfE
+ K0Q2/uFsqJkwT+mTcLgZRa9HMj7EJHQUb3FbCAwmEyv25BYM9thPMzLtSpCEdLN9VZGx94VuaLa
+ W9WzAMXPryx1JkqAxce0n/FkMbIZJ0L8DqidUu7BhvlXXaWeiU9mC+l8aSNyuoa66XXYV40udqa
+ F137IA2ZoLKMDYIny3/Hw4Q2h3Nbaqao+F7ZUr5W4rwS3t/Oxocd/llAmG4q6HXa0AQviGIaPFs
+ iLUUAN77Uy/h2MI7rJ3pI5nrBLmkzfnf67u02IlRYIbCyzVT65/J8XCoeHjzHSXPmHxIa0A33Gd
+ 0rurrCI8+/uRESy2s1kZGjm0163E6UCoL32EUh9u8QANFNqHiP8MqFEsCDg9nbD1kZz5YiSFFTw
+ ijqAC+OErq3V3CGOEEQ==
+X-Proofpoint-ORIG-GUID: UyuV7VQRkACD65P0BcEhjKBGwm-lYv28
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE1MDIzMSBTYWx0ZWRfX4UCeNhT8D8+6
+ +hwoOBhrgyR/JtOEGld5VDAQYC9ornCWVg9+TEJsfo7B3eCPRpB4bDI5R7QPtvRbZOGL2Xjr69i
+ eSoA58+sbq9EWNYmDfNhNHQZmLtBhdw=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-15_05,2026-06-15_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1015 bulkscore=0 malwarescore=0
+ spamscore=0 phishscore=0 priorityscore=1501 impostorscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606150231
 
-On 2026-06-14 01:38 PM, Pasha Tatashin wrote:
-> On Fri, 22 May 2026 20:24:01 +0000, David Matlack <dmatlack@google.com> wrote:
-> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> > index 10c9b65aa242..e68ae5c172d4 100644
-> > --- a/drivers/pci/Kconfig
-> > +++ b/drivers/pci/Kconfig
-> > @@ -330,7 +330,7 @@ config VGA_ARB_MAX_GPUS
-> >  
-> >  config PCI_LIVEUPDATE
-> >  	bool "PCI Live Update Support"
-> > -	depends on PCI && LIVEUPDATE
-> > +	depends on PCI && LIVEUPDATE && 64BIT
-> 
-> Please move this to the first patch, fewer changes between patches, and 
-> also KHO does not support anything but 64-bit mode.
 
-I think it is preferred to introduce changes when they are needed. This
-is the exact patch that requires 64BIT so it makes sense to add the
-dependency within this patch no?
+On 6/15/2026 11:59 AM, Niklas Schnelle wrote:
+> On Mon, 2026-06-15 at 11:35 -0700, Farhan Ali wrote:
+>> The current MSI-X restoration path assumes the Command register Memory bit
+>> is enabled when writing MSI-X messages. But its possible the last saved and
+>                                                ^ it's
+>
+>> restored state of device may not have the Memory bit enabled, even if a
+>                     ^a
+>
+>> device driver later enables Memory bit and MSI-X. Attempting to access
+>> Memory space without Memory bit enabled can lead to Unsupported Request
+>> (UR) from the device. Fix this by enabling Memory bit if we write MSI-X
+>> messages, and restore it afterwards.
+> Don't we have the same issue in __pci_restore_msi_state()?
 
-> 
-> >
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index 065d5af822f7..96c43b84532c 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
-> > @@ -128,13 +157,49 @@ static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
-> > [ ... skip 31 lines ... ]
-> > +
-> > +err_xa_destroy:
-> > +	xa_destroy(&incoming->xa);
-> > +	kfree(incoming);
-> > +err_restore_free:
-> > +	kho_restore_free(ser);
-> 
-> This is the pattern we have been enforcing in other places in LUO. If 
-> the first retrieval fails, return the same error thereafter.
-> 
-> > @@ -270,6 +335,91 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
-> >  
-> > +static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
-> > +{
-> > +	struct pci_flb_incoming *incoming = NULL;
-> > +	int ret;
-> 
-> Maybe make the error return static, and avoid another search through compatible 
-> FLBs if it failed before?
+I think for MSI it's done through config space registers and so it 
+doesn't need to access MMIO.
 
-Good idea, will do.
 
-> 
-> 1. Add "saved_err;"; if it is set, return it right away.
-> 2. Change all errors to use goto save_err;, and at the end of the 
-> function, assign ret to saved_err;
-> 
-> > [ ... skip 15 lines ... ]
-> > +	 * This could mean that no PCI FLB data was passed by the previous
-> > +	 * kernel, but it could also mean the previous kernel used a different
-> > +	 * compatibility string (i.e. a different ABI).
-> > +	 */
-> > +	if (ret == -ENOENT) {
-> > +		pr_info_once("No incoming FLB matched %s\n", pci_liveupdate_flb.compatible);
-> 
-> I would assume this is very normal, e.g., no devices were preserved but 
-> memfd+hugetlb was preserved. Maybe use pr_debug_once().
+>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   drivers/pci/msi/msi.c | 9 +++++++++
+>>   1 file changed, 9 insertions(+)
+>>
+>> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+>> index 81d24a270a79..d8d3c8a911ac 100644
+>> --- a/drivers/pci/msi/msi.c
+>> +++ b/drivers/pci/msi/msi.c
+>> @@ -874,6 +874,7 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>>   {
+>>   	struct msi_desc *entry;
+>>   	bool write_msg;
+>> +	u16 cmd;
+>>   
+>>   	if (!dev->msix_enabled)
+>>   		return;
+>> @@ -884,6 +885,11 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>>   				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+>>   
+>>   	write_msg = arch_restore_msi_irqs(dev);
+>> +	if (write_msg) {
+>> +		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> Sashiko complains that the read cmd may be all 0xFF…F in case of
+> transient errors. Though I don't see how we'd handle that here without
+> a larger refactor.
+>
+>> +		pci_write_config_word(dev, PCI_COMMAND,
+>> +				      cmd | PCI_COMMAND_MEMORY);
+>> +	}
+>>   
+>>   	scoped_guard (msi_descs_lock, &dev->dev) {
+>>   		msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+>> @@ -893,6 +899,9 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>>   		}
+>>   	}
+>>   
+>> +	if (write_msg)
+>> +		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> I wonder if it may be safer to have the Command register reads/writes
+> within the msic_descs_lock critical section in case this gets executed
+> concurrently and so the restore above from one thread could slip
+> between the Memory bit enable and the beginning of the critical
+> section.
 
-The problem is described in the comment above. The PCI core cannot
-distinguish between:
+Hmm I am not sure if its necessary, AFAIU the msi_desc_lock is used to 
+protect the descriptor list. Other config space changes in this function 
+is also done outside of this critical section.
 
- 1. There was not PCI FLB preserved. and
- 2. There was PCI FLB preserved, but it was not compatible.
+OTOH Sashiko does mention correctly pci_msix_write_vector_ctrl() can 
+happen even when write_msg is false and which I missed. But this got me 
+curious, as to why would we write the vector control for an MSI-X entry 
+if we are not writing the message (Address and Data). AFAICT the change 
+to write message based on arch_restore_msi_irq() was originally 
+introduced with 76ccc297018d ("x86/PCI: Expand the x86_msi_ops to have a 
+restore MSIs."). Prior to that we always restored the message and vector 
+control mask for an entry. So I am not sure if write_msg is false and we 
+don't write a message, why would we want to write the vector control 
+mask? If we have a valid reason to write the vector control, even though 
+we don't write the message then we should we enable the Memory bit 
+unconditionally? Thanks
 
-I agree we should not log anything for (1) but (2) definitely requires
-at least some kind of logging so that's why I went with info-level here
-and not debug.
+Farhan
 
-> 
-> > +		return NULL;
-> > +	}
-> > +
-> > +	/*
-> > +	 * There is incoming FLB data that matches pci_liveupdate_flb.compatible
-> > +	 * but it cannot be retrieved.
-> > +	 */
-> > +	if (ret) {
-> > +		WARN_ONCE(ret, "Failed to retrieve incoming FLB data\n");
-> 
-> No need to print backtrace, please just print a warning:
-> pr_warn_once("Failed to retrieve incoming FLB data: %pe\n", ERR_PTR(ret));
-
-SGTM
-
-> 
-> > [ ... skip 34 lines ... ]
-> > +	 * through pci_liveupdate_finish(). This can happen if PCI core probes
-> > +	 * the same device multiple times, e.g. due to hotplug.
-> > +	 */
-> > +	if (!dev_ser->refcount) {
-> > +		pci_liveupdate_flb_put_incoming();
-> > +		return;
-> 
-> Pleaes use 'goto put_incoming'
-
-SGTM.
-
-> 
-> > +	}
-> > +
-> > +	pci_info(dev, "Device was preserved by previous kernel across Live Update\n");
-> > +	dev->liveupdate.incoming = dev_ser;
-> > +
-> > +	/*
-> > +	 * Hold the ref on the incoming FLB until pci_liveupdate_finish() so
-> > +	 * that dev->liveupdate.incoming does not get freed while it is in use.
-> > +	 */
-> 
-> How would that work? If finish is not called FLB stays around until the 
-> next reboot.
-
-True... I think if the PCI core trusts drivers to call
-pci_liveupdate_finish() then we don't need to hold onto the incoming
-reference here.
-
-> 
-> -- 
-> Pasha Tatashin <pasha.tatashin@soleen.com>
+>
+>> +
+>>   	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+>>   }
+>>
+>>
