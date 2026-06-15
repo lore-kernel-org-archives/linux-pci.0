@@ -1,290 +1,535 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020083.outbound.protection.outlook.com [52.101.195.83])
+Received: from smtp-42ae.mail.infomaniak.ch (smtp-42ae.mail.infomaniak.ch [84.16.66.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D29363DA7F4;
-	Mon, 15 Jun 2026 10:05:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.83
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781517911; cv=fail; b=gC+gj6oNx9t/2xjlPvlBHJhuvMJRtWOL89m93GvsYBi7isxz11it7CknrPD8cdDodgSPTptKdwh1wFrZIW1xnG5du50+e4WVamiVm/JX7yUfdkYY7uzCvoWqPB4O5AiGgj5w/7Tn7ixpwsKYPKbZjYGEco/f3l9TeZ4tL754DSg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781517911; c=relaxed/simple;
-	bh=6VF9iJjKGjIpvV1V4m6R+9HCEfHcCZa2Ifq9kyqlCxY=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=J3U5dMlg7xLETW/zQxgema7OGdxK3G7T8q+X1yZT35iTcZYowHLwhOu4Dq2kGhp009hM73ytpxmPYloSzpV7T1DqGZQufwFqjV7VQmM6ZfawHKfmgnst1PD/9FyVQGgd2KI5U+JsLwbYaKmqP7mtJOjIK88VmEgzP70Y137bfpo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=dUwl1SEB; arc=fail smtp.client-ip=52.101.195.83
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68F43DC4A3
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 10:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=84.16.66.174
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781518365; cv=none; b=szSPooFkttZ9F0qG127VkkGgra6+0ZDl1nbXkq0RZ2iapRaaMBHn6v0s3Ay8vlu/eGeUknSY7e4uRR1JD/tRiahW3n31IhsuN8m4djvzA1tkpgDMwBoihVabnS5GjMM0H7y9tR05OkUCa4qfVSAaXfnLX/5YMwg/2jupe33lvMM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781518365; c=relaxed/simple;
+	bh=N81QtR1cWsMrq2f4BueSffN6tt9zfJSjrfND7KI3evo=;
+	h=Subject:Message-ID:Date:From:To:Cc:References:In-Reply-To:
+	 MIME-Version:Content-Type; b=ebo3v0g0k5DUY1/3vyA911AawdWE6NP84w5kgRAkpG/bvaUDmL+dnuYXeUTTVHhIfrT3NYC5vpiUbQWEOZ/OF684ExFTrEDdGRLNY49Bq3zieNDEwYef/Q79SMX76Zp/EVzk/2sUkzMSSJcvExlgl9UKxe3NZ+P5p90cNokddsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ik.me; spf=pass smtp.mailfrom=ik.me; dkim=pass (1024-bit key) header.d=ik.me header.i=@ik.me header.b=16a+bLUi; arc=none smtp.client-ip=84.16.66.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ik.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ik.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="dUwl1SEB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rXgcQy/NHZfs47zyOaws8vcMMrRtWUYLr0TPN3F7YF6vLqtXM3XCi415OCckYzwhC80pE7RAW+VhAdac+1ZCzW62HAFuKSKtnmFGikX/nNowRFdUMAroxvqcgp1VGV+9sPBEpnxH5DWrViz2310p2i9W7so/Ssz7vebzdCBlSGhFPrK12E6nrlaeyxnPAsWroEi9e+0lqVP1ZLYYW0vfxATaBz44uQ1Yzc48R1A5scpflD1WUUSpObP9DYML4Wy1l5J3q8/QEgU89iGhRY/ZDqk67uW5dMAKyPY0AH/Fg4pxPFe1g8V2l5sy8K34FTX970Sr8HiZ8vsGZHhrhj2z7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7+BPTyh+t6jHP749f/MCfkCPvaOKHfbtFfG14iSYzVk=;
- b=o0fAIGctgTJ617oE+MXloAGbR4bK298qrmyuvRgeHjOckxkTVH27IQWdIUCeN04lFMtT2gYwromBqV95zKfLNW6RlC5aZAC/2DTh+58YRJmRdopyzMGJyeuHEkcLDNe8Atb3aztUxZnm2z6h5S1dS2B6KwHfDvNYvhI97claIpJlTOnrpsUn+gFUoTc6y3HU72BKNfaCKqi+WpIZ71JjVvK4GvLhhF6BNlSuNpjmsXHE9wTx9v585Txg3RlCZlzoZTGmAq+hFfBgR+uFjGjhhbrgFdAiWuujNLEvcQ7YbR4KxFc9Kb67CwRWlesUGiXgY9fY2CfLVhgg6D13J2UlPg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7+BPTyh+t6jHP749f/MCfkCPvaOKHfbtFfG14iSYzVk=;
- b=dUwl1SEBUPFxgsDFVoZ9uq9anv8bZ7fyGyQeEwnY6ZG88hZ5kbBQv8tELXdYKkdbcizS6tcKFscQlcdZKsJjsZvM+6mfMBrbkyYMyYVpwEto4U2ZSUr1fy1Rbx5i8fvYRB/TPrPaWNNnXP1xxe2P2WVRbYV3GSBfbyAtHc+C6Dw=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO7P265MB7828.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:419::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
- 2026 10:05:06 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
- 10:05:06 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 15 Jun 2026 11:05:05 +0100
-Message-Id: <DJ9JE3I9MCG2.2G88FWQPWRBH3@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
- Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
- <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v4 01/20] rust: io: add dynamically-sized `Region` type
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
-X-Mailer: aerc 0.21.0
-References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
- <20260611-io_projection-v4-1-1f7224b02dcb@garyguo.net>
- <DJ9BPBO51J9U.FQYCSB4SSC8Z@nvidia.com>
-In-Reply-To: <DJ9BPBO51J9U.FQYCSB4SSC8Z@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0370.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18e::15) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (1024-bit key) header.d=ik.me header.i=@ik.me header.b="16a+bLUi"
+Received: from smtp-4-0000.mail.infomaniak.ch (smtp-4-0000.mail.infomaniak.ch [10.7.10.107])
+	by smtp-3-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4gf5XJ5HwXzwxv;
+	Mon, 15 Jun 2026 12:12:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ik.me; s=20200325;
+	t=1781518352; bh=yPgAxKyTKK4gusJAaDk6SJgPrrt7wHffFNY2K6nQ5B0=;
+	h=Subject:Date:From:To:Cc:Reply-To:References:In-Reply-To:From;
+	b=16a+bLUielZ3GK04E7c5fx77j2C1Rmjno5Dccti242U9FldW+/JYgGqN5702Vyehc
+	 oM0hSjFCO9s4wI8BkinMJgU9PIp7HyqyYMZGDae0BRO1z/m+PzO31zfAxifb7tv2bd
+	 vXuFEMwioA77P4XjrXUsWC8WwmebI/Y22A96uF9A=
+Received: from unknown by smtp-4-0000.mail.infomaniak.ch (Postfix) with ESMTPA id 4gf5XH3wCtzPdy;
+	Mon, 15 Jun 2026 12:12:31 +0200 (CEST)
+Subject: Re: [PATCH 4/4] rust: samples: add EDU PCI driver sample
+Message-ID: <af210580-4c41-404d-ab27-f8af634bec19@mail.infomaniak.com>
+Date: Mon, 15 Jun 2026 12:12:31 +0200
+From: Ewan Chorynski <ewan.chorynski@ik.me>
+To: Maurice Hieronymus <mhi@mailbox.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Miguel
+ Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Andreas
+ Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>, Trevor
+ Gross <tmgross@umich.edu>, Daniel Almeida <daniel.almeida@collabora.com>,
+ Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
+ <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
+ linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Reply-To: Ewan Chorynski <ewan.chorynski@ik.me>
+X-WS-Location: eJxzKUpMKykGAAfpAmU-
+References: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
+ <20260614-b4-rust-pci-edu-driver-v1-4-e3f2471b595c@mailbox.org>
+In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-4-e3f2471b595c@mailbox.org>
+X-Mailer: Infomaniak Workspace (1.3.1281)
+X-WS-User-Origin: eyJpdiI6ImVodUxDdkpZY3FnUXdLZGIxTjNxTlE9PSIsInZhbHVlIjoiQWJwVGdqYXoyeGZNbHJiZ2hvYUI5Zz09IiwibWFjIjoiYWY2ZmZhYmRiNzNmYTcwOWNhMGQ2NDRjYjBjMzdjMzRjMDUxM2FjNDU5ZTExY2UwYWRkYTMxNjRhZTkyZjQzNCIsInRhZyI6IiJ9
+X-WS-User-Mbox: eyJpdiI6IjB6OWl3L2hYUWVoQUd1M0lpYlVoRmc9PSIsInZhbHVlIjoiQmV4VGFCMFgxdzIzZWswZEhjWk1MZz09IiwibWFjIjoiNWE5NDhkNzQzN2I2NDkyNGFiYzcyZWIyOTVhMzdhMWMxNGI3Mjc0NmNiYmEyMDlkNmMwZTMwNWZmNDNkNTQzNiIsInRhZyI6IiJ9
+X-WS-LOCALE: fr_FR
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO7P265MB7828:EE_
-X-MS-Office365-Filtering-Correlation-Id: a7ecbabc-6d16-46c0-8746-08decac5934f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|7416014|376014|23010399003|366016|56012099006|22082099003|18002099003|4143699003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	W1d0NzMsKuXF+Tyn4brYyZyANd75eZGwNgOHo1I+U8yhQJP2fgElbQ4hBAP7JGLDulXsPWkGQr05hlk0ADsuLuG7gC/QSwT/ajl+fBADF/29xKWWmM0JhfpznO4/O3QqmyJG8TRpWeBR2rhGeWJnkn4GSi5ZHzAM1gnOAxK+veKZFZLzQK9mKaWo8x8SR8yNMt4S47B2n0W9z+CE/4iDrtVeY5sfV3scGyfaMUJzqZ9EUWxui+RfbXYopowHzRS9dJ0zWRxIaelSfVcuEuRb4lT38KWWJGYsfWsEA5uQxkR+7BZEZpqggs9ayQJ3vjmQqKZh50d1DOjAaPXi+09Fl+XLPDMv390uzpL/nqdNnSwBjeJxQhBGqzuppAUvEqPsn6Usu/j6F3qIyWWnhEFptESpt67ItfDGe53YG1XULtP7Y6Ih++w4TICEixqVCZHSEXDKLCVCGBlwmx3j+cJd+Hzfa5OWgpSM4fo3aAwPXkuN6jTmm9J0gNX8J5Q2IDRSNgIDctZnQ8fJ1VXterj0aEob2AlRjD5LNEwivu/40iQhIJ5z6eYUCx5XlAE7cNxg8rs2BCrLplhRx5KimJ0FGsTinm9+C/5qVslMiPoEp2g1IQ5B8NmM+D+f+dR5A6v8W0lGNFNborNbpjU6+Qt6yPTTIhLYftV/wxNXi1e5ycj4XBa4lQ0gb0gDnXp0gdm4
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(7416014)(376014)(23010399003)(366016)(56012099006)(22082099003)(18002099003)(4143699003)(6133799003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VE13V2lFSzFMeFpTUjNYdDRmNWJoYkZvZzgzRzVyYkloL0g2SzVUWVlWQ1p6?=
- =?utf-8?B?V3N5aWNyWEgvYXV3ZG9kV1EzZ2lTTnNvdS92MVB5WmJEV0NOY2V6TGwzQlBN?=
- =?utf-8?B?L2kwS2NuL3lRWjgwUk1NNk1ZbkdCQUZMMUFMcjZ1T1p6UDZ5ajJXaDZEMTlX?=
- =?utf-8?B?K2p3dzB4bDMzcEY5R3dvRUxSZGlhNDhuNVhyY0xBM2VzazhYcE0vL0FCZlNh?=
- =?utf-8?B?T3hGdDBOdk5pSWFlcGJqendVby9naThESWRESGF4TlJ4U2JjQkRqMnFXNHBQ?=
- =?utf-8?B?LzIvamVObzhwSDhRWXFPNFRWKy9xaFZvV2ZEdTlxWGtHK1lRL254UW5Lb2Nu?=
- =?utf-8?B?TDJOSmZOano0ckswUDUyK3NuZFBFMWVyUXIwSzJFQkhCRVFnTmp6NHRucFNk?=
- =?utf-8?B?ZXl3WUlNbi90QlFmQWs1T2tGMThudUpld0RtcG5reVJ2d0RNT0hPR2x5OHBD?=
- =?utf-8?B?V2ZxSEUzMFNTSGxGWEdXVCtuaE1JUTNPZHppVUJoYThLdnkxYjAyZmg5RDQr?=
- =?utf-8?B?QmFLS21oVU9QTC9RZUVnVE9NbFdlR0Rwb2JCS3A2RFc0TFErS3NwYjZZbTNM?=
- =?utf-8?B?ekRFRCtZQ200bUg1Yk84UXZOY2Z3VUNKbEJDYXh2YzhJYjh2VkZ4YmNqVG1N?=
- =?utf-8?B?TUlvWC9mRmtRa3ZGM0tNVzFhaGdETzY1bDI1Wm1LYzFxUThFK05CNWxJN2Zj?=
- =?utf-8?B?U1VnUFdkQ0gyM2lZdWo2MmROQmV6aWgxRlNsanljclRYWUFYUkxsNEJsNnhI?=
- =?utf-8?B?cU1WVDRRUmcrbUhxWXhNZ3JzMzg2U3BYVHR3SU1GTlNQUFRtT3pRbmNuSXA0?=
- =?utf-8?B?VE5CSzQwMU9rQmdCM1JrNVVkNHJDdElqRi8xTW1lWDZObFJGQU5tL1N1L2Ev?=
- =?utf-8?B?dUdOTTNJbi9ZU1VPenM1OUNwMHFVMHZ4WUVJelNxWGpPc240cHJpTXUrbWtK?=
- =?utf-8?B?a3J1ODNNQ3RqL1N5bW1EYWxHWHhBRXk2VGRGNDdLMDhST0trRVBtQThaUHFF?=
- =?utf-8?B?bXovdDZKSllkSWthMDBKdUtMbm5NM2tHdmFjOVZKUE9ERllRaW81TTNNWnNr?=
- =?utf-8?B?ODJDTEdnenU1QnFiMGNYSVFGOFN6eWRMSnNNYnl5TnQrWUhxanFQV2dkRGNY?=
- =?utf-8?B?RGpqaWw5NVZ0SWtqajQrNXZDZTdtM3VGWGxHbFVlNUxSRnE4V2FkRUdKMWYy?=
- =?utf-8?B?dlhwd0p6N2pHaWxOVUdEc09sREpMY0pTbGtJT0NVM2htVml6VVc0OWRaaG5E?=
- =?utf-8?B?RXBKbTNGL1A5NnFueHJSNkQwN3BJc3dHdmo5aVN2c3lVNlNBb1BiaHVrUm85?=
- =?utf-8?B?M0NwSmRZUm4xeEpTZ3dudWs0Qyt5cGZ6dHl4TmdoOXFVUVEyYUI2NllBdUp5?=
- =?utf-8?B?SzRmbjFTQ0ZDTkNBV2dxQTQ3SXBqZS8zYTJJb1BsU0pZR3BOcXBmYUxNcUVl?=
- =?utf-8?B?QTJtZjhwejNZdk1jUjBSL3doRXQyUDRjWlpwemh6bmRTSng5ejUxbXpUMEgz?=
- =?utf-8?B?bHZ0Rm5JdHlMcTNyTDNWNkc4WmM2SldkUnorVFEwM1NFdldaNUxDaGl6UVNk?=
- =?utf-8?B?bXp5bGFheU1QODNMcTA3VEJiNnZYYUs0NnBic0EraWRPbXhTd2tuVVR1cW1q?=
- =?utf-8?B?bEY1VWExUzl5WVZaM0dOQ1hWWjZndFc3dG5TZUxscWwrck02dWhHRUxLUmg5?=
- =?utf-8?B?S2lRY0dkZG92NDhDZS9pU3B5eHN2bkhPRjR1blQwRFAyK1F2V3MxbEJjMXhx?=
- =?utf-8?B?NXVWWUJDTkNxOTFRWTZRQzVSaHovS0huNnFyUUpQbHdrVURnOTNXYjM5cnN6?=
- =?utf-8?B?d0d6ZEpHT1FSN1hHU2haNlBNVzQ5bFM2RFNOMXhKRXdFVzhzbW1JWGFuYVA4?=
- =?utf-8?B?T1BCaENYc3FJVHkydUNlcnNsazlZUFQ3WjQwOXVLMENzTCtPYmdKUXFjMmFn?=
- =?utf-8?B?Sitmc2lIODlhbDNudmdWanhsTWRQVXV3UVJQeEw3RFluTFZFWThXcWNuU1pK?=
- =?utf-8?B?RmJnYlhSNXNsZDRsblFNT2JNaklLNDRkWHpmQm95a1U3cUVZZ2FPSmJHUTAv?=
- =?utf-8?B?eG5ER1B0L3BhRWp0NkZ5eDhqcFpkcWpMeVQ5N0pkdDRrL1hHUlNuTTBxc2Q0?=
- =?utf-8?B?WnMvcTd3VWpJYWhEZk9qbG9sODBwLzFqMGpwRUFyaENLd21Pd2NzK2cxMG1E?=
- =?utf-8?B?Tk52Y01NZUV3dEVNZXBXajYzZ3BxK1RGYTAvTDJ4YU94WUowRlV0dzQxU1Vk?=
- =?utf-8?B?TUoyS1dtQTFTWW41cHgzcWMrRnFoVUdOMGl6R2FoYjZQRkhuU2Z3ZHlPN0VS?=
- =?utf-8?B?c2RsWThwSEVPWmJyUk52ZUlFcStUVGhQQkRCQzZtaHlOa0JZaVpXZz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: a7ecbabc-6d16-46c0-8746-08decac5934f
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 10:05:06.2903
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xvuM3rJ2/gm9xnWOzilm0OtU5O7ng3ipO0Sis/B8aDVCa7X5Fazrhzr+DD/c9PPbl/vsJHr56xa7hmOgSAwo2w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO7P265MB7828
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Feedback-ID: :4c7cc581d092470:ham:e74197f626dda86
+X-Infomaniak-Routing: alpha
 
-On Mon Jun 15, 2026 at 5:03 AM BST, Alexandre Courbot wrote:
-> On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
->> Currently many I/O related structs carry a `SIZE` parameter to denote th=
-e
->> minimum size of the I/O region, while they also carry a field indicating
->> the actual size. Proliferation of the pattern creates a lot of duplicate=
-d
->> code, and makes it hard to create typed views of I/O.
->>
->> Introduce a `Region` type that carries the `SIZE` parameter. It is a
->> wrapper of `[u8]`, which makes it dynamically sized with a metadata of
->> `usize`. This way, pointers to `Region` naturally carry size information=
+Le 2026-06-14T17:59:48.000+02:00, Maurice Hieronymus <mhi@mailbox.org> a =
+=C3=A9crit :
+>  Add a Rust sample driver for the QEMU EDU device, wired up via a new
+> SAMPLE_RUST_DRIVER_EDU Kconfig option and the samples Makefile.
+>=20
+> Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
+> ---
+>  samples/rust/Kconfig            |  11 ++
+>  samples/rust/Makefile           |   1 +
+>  samples/rust/rust_driver_edu.rs | 379 ++++++++++++++++++++++++++++++++++=
+++++++
+>  3 files changed, 391 insertions(+)
+>=20
+> diff --git a/samples/rust/Kconfig b/samples/rust/Kconfig
+> index c49ab9106345..742c42262e9b 100644
+> --- a/samples/rust/Kconfig
+> +++ b/samples/rust/Kconfig
+> @@ -118,6 +118,17 @@ config SAMPLE_RUST_DRIVER_PCI
+> =20
+>  =09  If unsure, say N.
+> =20
+> +config SAMPLE_RUST_DRIVER_EDU
+> +=09tristate "EDU Driver"
+> +=09depends on PCI
+> +=09help
+> +=09  This option builds the Rust EDU driver sample.
+> +
+> +=09  To compile this as a module, choose M here:
+> +=09  the module will be called rust_driver_edu.
+> +
+> +=09  If unsure, say N.
+> +
+>  config SAMPLE_RUST_DRIVER_PLATFORM
+>  =09tristate "Platform Driver"
+>  =09help
+> diff --git a/samples/rust/Makefile b/samples/rust/Makefile
+> index 6c0aaa58cccc..c24a328243b1 100644
+> --- a/samples/rust/Makefile
+> +++ b/samples/rust/Makefile
+> @@ -10,6 +10,7 @@ obj-$(CONFIG_SAMPLE_RUST_DMA)=09=09=09+=3D rust_dma.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_I2C)=09=09+=3D rust_driver_i2c.o
+>  obj-$(CONFIG_SAMPLE_RUST_I2C_CLIENT)=09=09+=3D rust_i2c_client.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_PCI)=09=09+=3D rust_driver_pci.o
+> +obj-$(CONFIG_SAMPLE_RUST_DRIVER_EDU)=09=09+=3D rust_driver_edu.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_PLATFORM)=09+=3D rust_driver_platform.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_USB)=09=09+=3D rust_driver_usb.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_FAUX)=09=09+=3D rust_driver_faux.o
+> diff --git a/samples/rust/rust_driver_edu.rs b/samples/rust/rust_driver_e=
+du.rs
+> new file mode 100644
+> index 000000000000..c092117473d3
+> --- /dev/null
+> +++ b/samples/rust/rust_driver_edu.rs
+> @@ -0,0 +1,379 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +//! Rust EDU driver sample (based on QEMU's `edu`).
+> +//!
+> +//! To make this driver probe, QEMU must be run with `-device edu`.
+> +
+> +use kernel::{
+> +    device::Bound,
+> +    devres::Devres,
+> +    dma::{Coherent, Device, DmaMask},
+> +    io::{
+> +        poll::read_poll_timeout,
+> +        register,
+> +        Io, //
+> +    },
+> +    irq::{self, Flags},
+> +    pci::{self, IrqTypes},
+> +    prelude::*,
+> +    sync::{aref::ARef, Arc, Completion},
+> +    time::Delta, //
+> +};
+> +
+> +const QEMU_VENDOR_ID: u16 =3D 0x1234;
+> +const QEMU_EDU_DEVICE_ID: u32 =3D 0x11e8;
+> +const QEMU_EDU_DEVICE_MAGIC: u8 =3D 0xed;
+> +const QEMU_DMA_BASE: u64 =3D 0x40000;
+> +
+> +const IRQ_MAGIC_VALUE: u32 =3D 42;
+> +
+> +/// Bit set in `IRQ_STATUS` when a DMA transfer has completed.
+> +const DMA_IRQ: u32 =3D 0x100;
+> +
+> +mod regs {
+> +    use super::*;
+> +
+> +    register! {
+> +        pub(super) IDENTIFICATION(u32) @ 0x0 {
+> +            31:24 major;
+> +            23:16 minor;
+> +            7:0 magic;
+> +        }
+> +
+> +        pub(super) LIVENESS_CHECK(u32) @ 0x04 {}
+> +
+> +        pub(super) FACTORIAL(u32) @ 0x08 {}
+> +
+> +        pub(super) STATUS(u32) @ 0x20 {
+> +            0:0 computing;
+> +            7:7 raise_interrupt;
+> +        }
+> +
+> +        pub(super) IRQ_STATUS(u32) @ 0x24 {}
+> +        pub(super) IRQ_RAISE(u32) @ 0x60 {}
+> +        pub(super) IRQ_ACK(u32) @ 0x64 {}
+> +
+> +        pub(super) DMA_SRC(u64) @ 0x80 {}
+> +        pub(super) DMA_DST(u64) @ 0x88 {}
+> +        pub(super) DMA_COUNT(u64) @ 0x90 {}
+> +        pub(super) DMA_COMMAND(u64) @ 0x98 {
+> +            0:0 start_transfer;
+> +            1:1 direction;
+> +            2:2 raise_irq;
+> +        }
+> +    }
+> +
+> +    pub(super) const END: usize =3D 0xA0;
+> +}
+> +
+> +type Bar0 =3D pci::Bar<{ regs::END }>;
+> +
+> +#[pin_data(PinnedDrop)]
+> +struct EduDriver {
+> +    pdev: ARef<pci::Device>,
+> +    data: Arc<EduDriverData>,
+> +    #[pin]
+> +    irq_handler: irq::Registration<Arc<EduDriverData>>,
+> +}
+> +
+> +#[pin_data]
+> +struct EduDriverData {
+> +    #[pin]
+> +    bar: Devres<Bar0>,
+> +    #[pin]
+> +    irq_test_completion: Completion,
+> +    #[pin]
+> +    irq_dma_completion: Completion,
+> +    dma: Coherent<u64>,
+> +}
+> +
+> +impl EduDriver {
+> +    fn init(pdev: &pci::Device<Bound>, bar: &Bar0, data: &Arc<EduDriverD=
+ata>) -> Result {
+You can pass &EduDriverData instead
+
+> +        Self::magic(pdev, bar)?;
+> +        Self::liveness_check(pdev, bar)?;
+> +        Self::factorial(pdev, bar)?;
+> +        Self::test_irq(pdev, bar, data)?;
+> +        Self::test_dma(pdev, bar, data)?;
+> +        Ok(())
+> +    }
+> +
+> +    fn magic(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
+> +        let identification =3D bar.read(regs::IDENTIFICATION);
+> +
+> +        let magic: u8 =3D identification.magic().into();
+> +
+> +        if magic !=3D QEMU_EDU_DEVICE_MAGIC {
+> +            dev_err!(
+> +                pdev,
+> +                "magic mismatch: expected {:#x} got {:#x}\n",
+> +                QEMU_EDU_DEVICE_MAGIC,
+> +                magic
+> +            );
+> +            return Err(ENODEV);
+> +        }
+> +
+> +        dev_info!(
+> +            pdev,
+> +            "major: {:#x} minor: {:#x}\n",
+> +            identification.major(),
+> +            identification.minor()
+> +        );
+> +        Ok(())
+> +    }
+> +
+> +    fn liveness_check(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
+> +        let test_value =3D 0xabcd;
+> +
+> +        bar.write(regs::LIVENESS_CHECK, test_value.into());
+> +
+> +        let inverse_value =3D bar.read(regs::LIVENESS_CHECK).into_raw();
+> +
+> +        if inverse_value !=3D !test_value {
+> +            dev_err!(
+> +                pdev,
+> +                "inverse mismatch: expected {:#x} got {:#x}\n",
+> +                !test_value,
+> +                inverse_value
+> +            );
+> +            return Err(ENODEV);
+> +        }
+> +
+> +        dev_info!(pdev, "inverse test successful\n");
+> +        Ok(())
+> +    }
+> +
+> +    fn factorial(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
+> +        Self::wait_until_compute_has_finished(pdev, bar)?;
+> +
+> +        bar.write(regs::FACTORIAL, 4.into());
+> +
+> +        Self::wait_until_compute_has_finished(pdev, bar)?;
+> +
+> +        let result: u32 =3D bar.read(regs::FACTORIAL).into();
+> +
+> +        let expected =3D 24;
+> +
+> +        if result !=3D expected {
+> +            dev_err!(
+> +                pdev,
+> +                "factorial result wrong: expected {} got {}\n",
+> +                expected,
+> +                result
+> +            );
+> +            return Err(ENODEV);
+> +        }
+> +
+> +        dev_info!(pdev, "factorial test successful\n");
+> +        Ok(())
+> +    }
+> +
+> +    fn test_irq(pdev: &pci::Device<Bound>, bar: &Bar0, data: &Arc<EduDri=
+verData>) -> Result {
+Same here
+
+> +        dev_dbg!(pdev, "raising irq\n");
+> +
+> +        bar.write(regs::IRQ_RAISE, IRQ_MAGIC_VALUE.into());
+> +
+> +        data.irq_test_completion.wait_for_completion();
+> +        Ok(())
+> +    }
+> +
+> +    fn test_dma(pdev: &pci::Device<Bound>, bar: &Bar0, data: &Arc<EduDri=
+verData>) -> Result {
+And here
+
+> +        dev_dbg!(pdev, "testing dma\n");
+> +
+> +        let dma =3D &data.dma;
+> +
+> +        const DMA_VALUE: u64 =3D 42;
+> +
+> +        kernel::dma_write!(dma, , DMA_VALUE);
+> +
+> +        bar.write(regs::DMA_SRC, dma.dma_handle().into());
+> +        bar.write(regs::DMA_DST, QEMU_DMA_BASE.into());
+> +        bar.write(regs::DMA_COUNT, (dma.size() as u64).into());
+> +        bar.write(
+> +            regs::DMA_COMMAND,
+> +            regs::DMA_COMMAND::zeroed()
+> +                .with_start_transfer(true)
+> +                .with_direction(false)
+> +                .with_raise_irq(true),
+> +        );
+> +
+> +        data.irq_dma_completion.wait_for_completion();
+> +
+> +        // Destroy previous value to test roundtrip
+> +        kernel::dma_write!(dma, , 0);
+> +
+> +        bar.write(regs::DMA_SRC, QEMU_DMA_BASE.into());
+> +        bar.write(regs::DMA_DST, dma.dma_handle().into());
+> +        bar.write(regs::DMA_COUNT, (dma.size() as u64).into());
+> +        bar.write(
+> +            regs::DMA_COMMAND,
+> +            regs::DMA_COMMAND::zeroed()
+> +                .with_start_transfer(true)
+> +                .with_direction(true)
+> +                .with_raise_irq(true),
+> +        );
+> +
+> +        data.irq_dma_completion.wait_for_completion();
+> +
+> +        let result =3D kernel::dma_read!(dma,);
+> +
+> +        if result !=3D DMA_VALUE {
+> +            dev_err!(
+> +                pdev,
+> +                "dma result wrong: expected {} got {}\n",
+> +                DMA_VALUE,
+> +                result
+> +            );
+> +            return Err(ENODEV);
+> +        }
+> +
+> +        dev_info!(pdev, "dma test successful\n");
+> +        Ok(())
+> +    }
+> +
+> +    fn wait_until_compute_has_finished(pdev: &pci::Device<Bound>, bar: &=
+Bar0) -> Result {
+> +        if read_poll_timeout(
+> +            || Ok(bar.read(regs::STATUS)),
+> +            |status| status.computing() =3D=3D 0,
+> +            Delta::from_millis(10),
+> +            Delta::from_millis(100),
+> +        )
+> +        .is_err()
+> +        {
+> +            dev_err!(pdev, "computation bit did not clear before timeout=
+\n");
+> +            return Err(ETIMEDOUT);
+> +        }
+You can replace the if block with read_poll_timeout(...).inspect_err(|_| de=
+v_err!(pdev, ...))?;
+
+> +        Ok(())
+> +    }
+> +}
+> +
+> +impl pci::Driver for EduDriver {
+> +    type IdInfo =3D ();
+> +
+> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
+> +
+> +    fn probe(
+> +        pdev: &pci::Device<kernel::device::Core>,
+> +        _id_info: &Self::IdInfo,
+> +    ) -> impl PinInit<Self, Error> {
+> +        pin_init::pin_init_scope(move || {
+> +            let vendor =3D pdev.vendor_id();
+> +            dev_dbg!(
+> +                pdev,
+> +                "Probe Rust EDU driver sample (PCI ID: {}, 0x{:x}).\n",
+> +                vendor,
+> +                pdev.device_id()
+> +            );
+> +
+> +            pdev.enable_device()?;
+> +            pdev.set_master();
+> +
+> +            let mask =3D DmaMask::new::<28>();
+> +
+> +            // SAFETY: There are no concurrent calls to DMA allocation a=
+nd mapping primitives.
+> +            unsafe { pdev.dma_set_mask_and_coherent(mask)? };
+> +
+> +            let ca: Coherent<u64> =3D Coherent::zeroed(pdev.as_ref(), GF=
+P_KERNEL)?;
+> +
+> +            let irq =3D pdev
+> +                .alloc_irq_vectors(1, 1, IrqTypes::default().with(pci::I=
+rqType::Msi))
+> +                .inspect_err(|e| dev_err!(pdev, "alloc_irq_vectors faile=
+d: {:?}\n", e))?;
+> +
+> +            // State shared with the IRQ handler (the BAR and the comple=
+tion the
+> +            // handler signals) lives in an `Arc<EduDriverData>`. `EduDr=
+iverData`
+> +            // itself implements `irq::Handler`, and the registration ta=
+kes an
+> +            // `Arc<T>` via the `impl Handler for Arc<T>` blanket impl. =
+This keeps
+> +            // the handler's state out of `EduDriver` and avoids a self-=
+reference.
+> +            let data =3D Arc::pin_init(
+> +                try_pin_init!(EduDriverData {
+> +                    bar <- pdev.iomap_region_sized(0, c"rust_driver_edu"=
+),
+> +                    irq_test_completion <- Completion::new(),
+> +                    irq_dma_completion <- Completion::new(),
+> +                    dma: ca,
+> +                }),
+> +                GFP_KERNEL,
+> +            )?;
+> +
+> +            let req =3D irq::Registration::new(
+> +                (*irq.start()).try_into()?,
+> +                Flags::TRIGGER_NONE,
+> +                c"rust_edu_irq",
+> +                Ok(data.clone()),
+> +            );
+> +
+> +            // Ordering matters: the handler is registered (`irq_handler=
+ <- req`)
+> +            // *before* the `_:` block runs the self-tests, one of which=
+ raises an
+> +            // interrupt and waits for the handler. Raising before the h=
+andler is
+> +            // registered would hang (the completion is never signalled)=
 .
->> This type is required to be 4-byte aligned.
->>
->> Expose the minimum size information via `MIN_SIZE` constant of the
->> `KnownSize` trait. Similarly, expose the minimum alignment information v=
-ia
->> `KnownSize::MIN_ALIGN`.
->>
->> With these changes, it is possible to add an associated type to `Io` tra=
-it
->> to represent the type of I/O region. For untyped regions, this is the ne=
-wly
->> added `Region` type. Remove `IoKnownSize` as it is no longer necessary. =
-Use
->> the same mechanism to indicate minimum size of PCI config spaces.
->>
->> Signed-off-by: Gary Guo <gary@garyguo.net>
->> ---
->>  rust/kernel/devres.rs |   6 +--
->>  rust/kernel/io.rs     | 130 +++++++++++++++++++++++++++++++++----------=
--------
->>  rust/kernel/lib.rs    |   3 ++
->>  rust/kernel/pci.rs    |   1 -
->>  rust/kernel/pci/io.rs |  40 +++++++---------
->>  rust/kernel/ptr.rs    |  12 +++++
->>  6 files changed, 118 insertions(+), 74 deletions(-)
->>
->> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
->> index 11ce500e9b76..ed30ccc6e68e 100644
->> --- a/rust/kernel/devres.rs
->> +++ b/rust/kernel/devres.rs
->> @@ -68,7 +68,6 @@ struct Inner<T> {
->>  ///     devres::Devres,
->>  ///     io::{
->>  ///         Io,
->> -///         IoKnownSize,
->>  ///         Mmio,
->>  ///         MmioRaw,
->>  ///         PhysAddr, //
->> @@ -297,10 +296,7 @@ pub fn device(&self) -> &Device {
->>      /// use kernel::{
->>      ///     device::Core,
->>      ///     devres::Devres,
->> -    ///     io::{
->> -    ///         Io,
->> -    ///         IoKnownSize, //
->> -    ///     },
->> +    ///     io::Io,
->>      ///     pci, //
->>      /// };
->>      ///
->> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
->> index fcc7678fd9e3..bef571dad6eb 100644
->> --- a/rust/kernel/io.rs
->> +++ b/rust/kernel/io.rs
->> @@ -6,7 +6,11 @@
->> =20
->>  use crate::{
->>      bindings,
->> -    prelude::*, //
->> +    prelude::*,
->> +    ptr::{
->> +        Alignment,
->> +        KnownSize, //
->> +    }, //
->>  };
->> =20
->>  pub mod mem;
->> @@ -31,6 +35,58 @@
->>  /// `CONFIG_PHYS_ADDR_T_64BIT`, and it can be a u64 even on 32-bit arch=
-itectures.
->>  pub type ResourceSize =3D bindings::resource_size_t;
->> =20
->> +/// Untyped I/O region.
->> +///
->> +/// This type can be used when an I/O region without known type informa=
-tion has a compile-time known
->> +/// minimum size (and a runtime known actual size).
->> +///
->> +/// This must be 4-byte aligned.
->> +///
->> +/// # Invariants
->> +///
->> +/// Size of the region is at least as large as the `SIZE` generic param=
-eter.
->
-> I noticed that patch 13 adds the "size must be multiple of 4" invariant.
-> The doccomment for `ptr_from_raw_parts_mut` says that "size should be
-> 4-bytes aligned" though, which sounds like the same to me. So should
-> that second invariant be introduced in this patch instead of patch 13?
+> +            Ok(try_pin_init!(Self {
+> +                irq_handler <- req,
+> +                // Side-effect block: run the staged self-tests against =
+the mapped
+> +                // BAR now that the handler is live. A failure here abor=
+ts probe.
+> +                _: {
+> +                    let bar =3D data.bar.access(pdev.as_ref())?;
+> +                    EduDriver::init(pdev, bar, &data)?;
+> +                    dev_info!(
+> +                        pdev,
+> +                        "rust_driver_edu successfully initialized\n",
+> +                    );
+> +                },
+> +                data,
+> +                pdev: pdev.into()
+> +            }))
+> +        })
+> +    }
+> +}
+> +
+> +impl irq::Handler for EduDriverData {
+> +    fn handle(&self, pdev: &kernel::device::Device<Bound>) -> irq::IrqRe=
+turn {
+> +        dev_dbg!(pdev, "irq handler called\n");
+> +        // `access()` only fails on device mismatch, so this branch is
+> +        // structurally unreachable here, but it must be handled.
+> +        let Ok(bar) =3D self.bar.access(pdev.as_ref()) else {
+> +            dev_err!(pdev, "cannot access bar register inside irq handle=
+r\n");
+> +            return irq::IrqReturn::None;
+> +        };
+> +        let status: u32 =3D bar.read(regs::IRQ_STATUS).into();
+> +
+> +        // DMA_IRQ
+> +        if status & DMA_IRQ !=3D 0 {
+> +            dev_dbg!(pdev, "handling dma completion in irq\n");
+> +            bar.write(regs::IRQ_ACK, DMA_IRQ.into());
+> +            self.irq_dma_completion.complete();
+> +        }
+> +
+> +        // TEST_IRQ
+> +        let magic =3D status & !DMA_IRQ;
+> +        if magic =3D=3D IRQ_MAGIC_VALUE {
+> +            dev_dbg!(pdev, "handling test completion in irq\n");
+> +            bar.write(regs::IRQ_ACK, magic.into());
+> +            self.irq_test_completion.complete();
+> +        }
+> +
+> +        irq::IrqReturn::Handled
+> +    }
+> +}
+> +
+> +#[pinned_drop]
+> +impl PinnedDrop for EduDriver {
+> +    fn drop(self: Pin<&mut Self>) {
+> +        dev_dbg!(self.pdev, "Remove Rust EDU driver sample.\n");
+> +    }
+> +}
+> +
+> +kernel::pci_device_table!(
+> +    PCI_TABLE,
+> +    MODULE_PCI_TABLE,
+> +    <EduDriver as pci::Driver>::IdInfo,
+> +    [(
+> +        pci::DeviceId::from_id(pci::Vendor::from_raw(QEMU_VENDOR_ID), QE=
+MU_EDU_DEVICE_ID),
+> +        ()
+> +    )]
+> +);
+> +
+> +kernel::module_pci_driver! {
+> +    type: EduDriver,
+> +    name: "rust_driver_edu",
+> +    authors: ["Maurice Hieronymus"],
+> +    description: "Rust EDU driver",
+> +    license: "GPL v2",
+> +}
+>=20
+> --=20
 
-Oops, I think this is a bad `git absorb` operation that I didn't checked
-carefully.
-
->
->> +#[repr(C, align(4))]
->> +pub struct Region<const SIZE: usize =3D 0> {
->> +    inner: [u8],
->> +}
->> +
->> +impl<const SIZE: usize> Region<SIZE> {
->> +    /// Create a raw mutable pointer from given base address and size.
->> +    ///
->> +    /// `size` should be at least as large as the minimum size `SIZE`, =
-and `base` and `size` should
->> +    /// be 4-byte aligned to uphold the type invariant.
->
-> s/should/must? I guess we are running into all sort of issues if we
-> create regions which runtime size is smaller than the compile-time one,
-> and this is an invariant of `Region` itself.
->
-> Maybe this method should even be made `unsafe` for this reason? The
-> caller will need to write a `SAFETY` comment before dereferencing the
-> pointer, but IIUC this comment is bound to cover the pointer invariants,
-> not necessarily those of `Region`. Making the method `unsafe` would
-> force the user to cover them here.
-
-Note that the function implementation is completely safe, and it can be don=
-e
-outside the module, too.
-
-Thus, the real constraint is that user doing raw pointer needs to be carefu=
-l.
-This is true for all pointers. You can safely cast between any raw pointers=
-, and
-dereference requires you to uphold the invariant of target type. This is tr=
-ue
-for all types with invariants, you can do
-
-    *core::ptr::from_ref(&0).cast::<NonZero<u8>>()
-
-And the unsafe part is the dereference, not the cast.
-
-Best,
-Gary
+Regards
