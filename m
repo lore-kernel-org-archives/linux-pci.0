@@ -1,154 +1,163 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012025.outbound.protection.outlook.com [52.101.53.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F14E3BED32
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 07:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781508617; cv=none; b=nmSHBdnSdOKeZOI7mPwMZ33NLdeYU1kmClU0Ir/usxwLuZ4Cjw7Ci7o0Q83JvUfMMiH5MxkEQ+B6TbusxLHvUhsPUTA3Iu7F35W28fse7hPVVgD/OVOEutzvgms4TMrGPgfWf1kYd5cXshS90dq/o+EuTHgpG1RrpslY3ngAGaw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781508617; c=relaxed/simple;
-	bh=fR0oi9v184iQOyv1BvHhYMt5snuytRuwX2/aefL9mLs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y7s34wlEy9QQ/s7kbZTfjUD4j+rfCRnpDi0ubT2Aw3MsVDCLXPXeIsNUPacPXmHotAirNdV/sGdr0HGyYv0CuKiyy6DCX2I5qW48ayZb5l6GJBrSBs/lj3ZwpDQLunD4HU6k1kPlJqf+J1HKAHJKKfi8/YnVz+98Cra5EPRTcz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Tq1vqXc2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 574DF3C0A11;
+	Mon, 15 Jun 2026 08:04:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.25
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781510668; cv=fail; b=FPlRfx1T5oiZoohHK+0n8D9aefzDYHGGVxO3b/Tw6lBH8DBGXEDcTWxOXr2z1QbRoxnzUcRzLZsYJweHlaPdIOuyMADq7FN1x0lzHEb99Z8dVxct3BGs15zV3gwQbb78c2vP6z4Kq5kQRkZo6SwprIJhxiuXBpW0soZZ8IJhOkM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781510668; c=relaxed/simple;
+	bh=LdrUzyCRdCXSlXWO52Gd61y+RzmnJPx4kvNE8nFN768=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=tCPBF6u9QiPfrRXwiHI3D0xfRnVgcafb+Vc3eeZ4eX0qEDxko2wGt4TQ4/wq147KDUjDbMHXGj1z1pRxEOxYrczP/B7MFUn4q9DQam08xGN69S0E7QCFWNwql9dnkAbee9B7dGiEQQx8Pqm7wj+Y0MXJvmzKPr0ZkKkcAonCwPI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=LgEu5eic; arc=fail smtp.client-ip=52.101.53.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Tq1vqXc2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781508615;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4VlL+ld2zIBTp0Uov30L/svoU5nNy1BEIdafxq1tBX4=;
-	b=Tq1vqXc2IcFfo4l5id6SpLDh7oDR/p1UEY2xrRc6Nw0J0ortN/b8msC2yICaH7K1ZFeu1J
-	LquZDk2bcaU4GOaBxjFnm4clV3BpH494shXvLrcfNNTdK3vzdZS7s+bcJgpkQ82tPpycXC
-	PNv/nnxxBhwK5dbvA8gmI/5dMBVs1Co=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-433-uW9eYI_rOsCmZdj76mUXtw-1; Mon,
- 15 Jun 2026 03:30:12 -0400
-X-MC-Unique: uW9eYI_rOsCmZdj76mUXtw-1
-X-Mimecast-MFC-AGG-ID: uW9eYI_rOsCmZdj76mUXtw_1781508610
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5529B19560BB;
-	Mon, 15 Jun 2026 07:30:09 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.61])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CF602180056E;
-	Mon, 15 Jun 2026 07:30:03 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: helgaas@kernel.org,
-	alex@shazbot.org
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Date: Mon, 15 Jun 2026 09:30:01 +0200
-Message-ID: <20260615073001.401330-1-jtornosm@redhat.com>
-In-Reply-To: <20260612151749.GA603817@bhelgaas>
-References: <20260612151749.GA603817@bhelgaas>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="LgEu5eic"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GTw7bwCTrXWwDsC2qUypDEbzmMzeOWDYV87jBvywc7ttPWB434DHdCgIOFyWcaBV1fLeguZtP8PkS+fAL5WVCUtDCWKK7h1nKrCuDTSbX9C3JmVpLtFtsXhqIXOIdAayp4dgyBfBDgAHoSdYMQHXe9gk85GPyt93mly/NTFu+siwa/PScwVhuVhW4CPMMeKf+yuAqjaolpJSxDeEQMD1xkAx5We1pSsM5kcR5W7EUAVwD9BHTuoeOGTTyyKu5a4v8JXes+AcEuJR3Gpvbov0dz8GI5Xe15bBLP1ZMphEochDEEa2NifPqylhJEhAJ2d1fMMGKXAwUloK9s00s7ZKzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LdrUzyCRdCXSlXWO52Gd61y+RzmnJPx4kvNE8nFN768=;
+ b=DJxXzgKGcBr2KuP7XviysZkdY0ba3Xqiwhq6O8jt+5m/gMxWFjdUMV+ZWC9sqiv1N01bZ1BCYnKfcGEEWIsNHYdbCt/93ZMGEXg1HUEBsHAIZH8B5uA1GrOW4YJvr/h1/bEExKNMhDQtAIRX3At/WUUc7dDMtc6J0Y/zacpbenbSeUE9LP9Pr3hPk2q0SJ1CcDD3a8SY+XL36ZVQsrY43JClGK7oyVlhb9pMumM1VaGPJBzE4T8sj5xZMx1wIljoqSOMMf0llh3c41BhxApw4hanhHHLZY5yXRQubtNwZtqioHL3JMdSTuQwrAufmoKtWHoBbtNINYrVBLlnFsRsGA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LdrUzyCRdCXSlXWO52Gd61y+RzmnJPx4kvNE8nFN768=;
+ b=LgEu5eic4PjsYOxiznyyZRpM1PHgN7OPeMGLCTIpNxBCGXqNVEmF+R7rRSNiAdNUgK5cAEHOMot0wtJQR2m4M7fALkLOW43Iluo2agvAx36CiNdeRDBY27P6NyEeKZ6viZ88ACctXgWfjg6a2K3TGrAsMYKuH9R6S06YYdbs7OttEd1mnMTP91XtcOZcuLRaDBi0xiA/cStl64+9263gLryHrwzkoiOxVZySrRZRd5V47SYVqBlcUxEb/RPJ/Iv01pIbLlPPZFHsopwqqhJh1NZmx0hIYCm6gs5gv3QipNT4u+fZk/uMUMj/0aT36tifX8uCk3PqVFph2MLjaijO6Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by IA0PPFFEC453979.namprd12.prod.outlook.com (2603:10b6:20f:fc04::beb) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
+ 2026 08:04:23 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
+ 08:04:22 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 15 Jun 2026 17:04:19 +0900
+Message-Id: <DJ9GTMO2NKMD.1SAVC9OBXNXI9@nvidia.com>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
+ Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
+ <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
+Subject: Re: [PATCH v4 05/20] rust: io: generalize `MmioRaw` to pointer to
+ arbitrary type
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
+ <20260611-io_projection-v4-5-1f7224b02dcb@garyguo.net>
+In-Reply-To: <20260611-io_projection-v4-5-1f7224b02dcb@garyguo.net>
+X-ClientProxiedBy: TYCPR01CA0173.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b2::11) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|IA0PPFFEC453979:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2b26bd4e-095b-4591-f1ad-08decab4b5ad
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|23010399003|10070799003|56012099006|11063799006|4143699003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	oighCIf+QAL6WFSF12f4cP6zI2NU+/NyP5ixAnMXRacv0HvXd2DuVjMtirYXDHH0T9xQnyOa1pcLwREcOYwEIT1EpzmZOrwXmlN/rwGfuq+rb9zrfa5Qd2q7N9pzz52G0uAQNiQyFG2LsBLDhgsjSwVrNvaRiFSR3VGxKh8x6MZgTXRURiD70XgHxiZcUkV2zGVYDVjZS99nMkzrI2CWZ+7gXO5CWNuKHFdjV/2Jvy0npYBRaMO+rnfLK8kZF2pGLPv79gdQrak6/Xy5SlRDVz2KnODF94KfoCiuHhcjgA/0PeK7bNWra0SxhqLexEBhWAl4xJ0Nq9ksZRMrnWjt1YK3ME2QuiC0tDX6a36Wpx2l38B74BQ6ivPeoNZqwN907NSmYhfKn1RGEkY4n9Ye03e4qc5rDmtopD41FHcsNXpUPRPOmiiaM5RhcpTanbgWtyswWE5MKkKLM4TrzAiYMh9fyH9NC2t/IS1/z8ae8F/z8buNKVt2zvUpFM0+oEUY4ZlOe81q4/YlmvHxsAREksBbJCQA01SPtZsYthhNovI/i4O1KY0A/vK8Oz399ffLkVN6V6BI1gKCIisZ7eHKYmKfqs2xTnGmMNZNyTWItI0t/0Tuf3eyuw00ZbrSFT2+h6rnzedaFMWyO7XMSS+WZnm8fV/Yvaehuen77dIyAvtuJiljDeCrc/6N9iiPDr6B
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(23010399003)(10070799003)(56012099006)(11063799006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WElYZU5RTHVDTDY4WFNPQ2tSYkZRSWRDcVcvYVpWbDVQWEZIblZqc2d5Z05H?=
+ =?utf-8?B?c0VpS2tDeFFGbmlwOHcrbWZvUTZQblNPRXJEL2tXK3ExK2l3STJNR0xhY1Bv?=
+ =?utf-8?B?S3J1RURMdllpaDh3clJXZUpoRVVEczlOWUtvbnJhV2E1QVhQOStsTWJMVDVl?=
+ =?utf-8?B?WnVRd3hKbDlZK0NCeXFMRkgwZ0puaElyUjJnMFRkQnZURzJuUnVnMXd0R0hL?=
+ =?utf-8?B?bHJvVU8vQ2FKaUI4dS9JNHQxN3FabEliNW9JQ3RRNzBZZlVxYVhuKzJNM1px?=
+ =?utf-8?B?Qy8yaUQxdlplOExvNTFwWTZ3dTRtOFNraVovVW1nZGx5MTB0Vkg0N041Q2lE?=
+ =?utf-8?B?cC9NL0wyUWh1N2ZNUDZFOWdWQlBEc1Z1Q21NQ3IzL0NUcjBSRk9SVTlyT3pW?=
+ =?utf-8?B?TnFxbWpLTXdJZncyUkxrME9NNzYyU0lIT21wVEFzZXYwTkFMTmRvSDVvS3Ax?=
+ =?utf-8?B?TUJVK3JaSVZFWE1ZWGpVUk1HUXFXTytmNEw0V1dGTDJ5Rnc1clZhRHM5UU5I?=
+ =?utf-8?B?RmhWcVpKSWt6MFJXNkJ3ZUNneXRuVjlRYUJDTnBnaFNzNzdFeUJxdFF3S01h?=
+ =?utf-8?B?Y2EyNHpjeFR1M1ZSdmV6TjRCWWVMZWtZUTRraUowV3BMWkxHUlB3YjZmbHA1?=
+ =?utf-8?B?dlVtTWdsZ3FSMTYrbXRGb3AzMDUrYk4xdTZsa3dlTEJpZ1Y3ME05WG1XQmJr?=
+ =?utf-8?B?MmtKLzQyOGVVVjNXZThVcDlRcm9XUXZYejlLdzRZNFZqdk9wdXpqdlJMR1kw?=
+ =?utf-8?B?UTdaQXA1U0ZGNWJ6K1kzZ2VXV2RPWlE2V1ppYnJxazFZWGNIYTBZWm5UdjB6?=
+ =?utf-8?B?MHpEYjN6NTFTajNHMDlVOGdOQWNIeE14amI3U0JDdXY0eWh6cDlMK3g1bjZH?=
+ =?utf-8?B?SWREc2dPSnlSMWx4NG9iak4xRk95a2FOMEZFNnZyb3lUWFdWSHNlYU1vRnJP?=
+ =?utf-8?B?Sm1JY0hNU0JOOC80OThmL08xVmN0R0krMlJUZUtMTlFrL2U3L2JqVDV5WTNa?=
+ =?utf-8?B?NjNjRjlBb2kvVjlkeGttTHQyYmFpdUhuc1RvRlpaOGw1R3ZZZS8yeFRrd05q?=
+ =?utf-8?B?bkVSYlZJZE9EU3d6K3AxS01CeE9uUHNRdkFtUWU4SUU5VVF6NTlUWjV6bjlQ?=
+ =?utf-8?B?bTVJYkdRVkhnU1JuUEdobFJGSVhCRzhKUURvSENRaitIRXc1SWNXZzNDYmNT?=
+ =?utf-8?B?ZHJBZWp6Z1Q3alptVkxIeHhsci9GT1NpaERaY081THAxWG1qTG52OWZaVk91?=
+ =?utf-8?B?dmpBcFM1TmVPcW44NjdOYmRja1E1MitkZWZsUTc1WS84SHNESmp2WlRzRmRE?=
+ =?utf-8?B?WlBxZ0dJdGJ1ZmVSOXhXN0RoTnlFVFd0Nm9DaTdVaW1LV2gxTkpDejArZGNj?=
+ =?utf-8?B?dndablNFaW5HZ2gwVGluMUMxdjZZYVI0STVzV1dBb3N4UWRaUnc0Tmo4VXh6?=
+ =?utf-8?B?ZDF0K3hYY3ZjZFpLUWpZYlI4SlVGMXppZDEySWtGRk11a05OczNBVXJMeGlP?=
+ =?utf-8?B?Z2lZVTlmQUVWajFoNmJuK3ArRTQzaDJNR0NmZEJqZmJIcUZkbDhrR3Q5dkt5?=
+ =?utf-8?B?dVdyTVp4TFRobzh4c2NuUXBQeEppY3J5VmdZbWxRUW9VQ2I1dEdxNkZHZTIr?=
+ =?utf-8?B?M2NBNGpFSkxiY3J2RnVHVlhlZDRrREkyNTF3U0prUDJUWEIzYzkvRmE1YkFz?=
+ =?utf-8?B?T0xPS2xpeTlsc0FLK2ZhaGNJYThoSm5UaFlZdStOTmhZUHFheFdzYkZWN2g5?=
+ =?utf-8?B?RkdwbFJVSUd2TXVVdzFXKzZjODBmNnpaZTJ2OEwyaGo5OWt3alFYUjlHZGE2?=
+ =?utf-8?B?K0hTU2p6eGdzYjVsQUdUdXZXSkFZcVkrdG5MQk1Ld0JqdXNUdE5aMEdnMEw3?=
+ =?utf-8?B?TGlTTittZEhyMmUzM0p5cWNkc085U014c1RsVTVnTFRsajFzL1NVUU1LbjRy?=
+ =?utf-8?B?Z1pJeElwcnp2SjE5eG4xWVVYZFNpYTdKdnN5NDVqTGNobllKMmhaTWRIMTdX?=
+ =?utf-8?B?cUF2eGd4elg4Zit0TkpaMCtNcWlCSVFJc1FDT21Xc2RIZkFueURHcjZvYXh3?=
+ =?utf-8?B?Z1NacXM0UUxwck10ejNtNHE1cFJlclVQNEFLQW5GNkpSbEZKRHhWQjhVbnlU?=
+ =?utf-8?B?dUtoMlV6V1U1VDJkNmFyMS96Um5xRzZvdkNjWHM0RXp1bXhha1BHRjVmdVNy?=
+ =?utf-8?B?bm9INEVoOWNoOGxta2lxb3dKN3FzZE1tTW5nbTFndzE1U2luenVmNEpab2w0?=
+ =?utf-8?B?WDYrUmM5M0ZUS20rUVNwRlFUVHBWeVMvL3lxSXFvTlUwekxyOVQ1eHd0RUtS?=
+ =?utf-8?B?YVNzY2ZpSVJLVGQzMDRTMjFtR2dBL2c2R3RxZGppTVAxM3pIVzBpMGdkaVVR?=
+ =?utf-8?Q?8EOur2cz3dE1lIwzrsw0TrGsf0f8sMeMqVBPk+sAVbAVA?=
+X-MS-Exchange-AntiSpam-MessageData-1: TLuedq/QAkVOvA==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b26bd4e-095b-4591-f1ad-08decab4b5ad
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 08:04:22.7772
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /3gWSzTGwWE9vz2y83uxDpfmqsSJOo3GzGFvot6AlBynuyUzElNGrqw2xpxL8srWhwofR5EEYoSxzQJz/I/v/w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PPFFEC453979
 
-Hi Bjorn and Alex,
-
-Bjorn's questions:
-
-> I guess "bus reset" here refers to Secondary Bus Reset being asserted
-> by the bridge upstream from these devices?  Seems a bit surprising if
-> that doesn't work.  Or is it just that we can't use SBR because there
-> are multiple devices below that bridge?
-
-Yes, SBR. The devices I tested are alone on their bus (single device under
-bridge), so it's a device-specific issue, not a topology problem. The
-quirk_no_bus_reset patch addresses this for v7.2.
-
-> I don't know enough about VFIO, but I sort of expected that VFIO would
-> reset devices between reassignment regardless of how a VM terminates.
-> I guess that's not true?
-
-VFIO does attempt reset on every reassignment. Without a working reset method,
-the attempt fails and the device remains in undefined state. With this quirk,
-D3hot successfully resets the device allowing reassignment.
-
-> Since the device claims to preserve internal state across D3hot->D0
-> (and it sounds like at least BARs *are* preserved), is this a
-> potential leak of state between VMs?  To play devil's advocate, how do
-> we convince a customer that none of their data is ever leaked to a
-> subsequent tenant using this device?
-
-This is a valid concern. Testing shows device internals are reset despite
-NoSoftRst+ (command register cleared, requires driver reinitialization),
-though BARs are preserved. Given these devices have no other reset method,
-this provides the only viable mechanism for VFIO reuse. We cannot improve
-beyond what D3hot provides - the quirk works because despite advertising
-NoSoftRst+, D3hot does clear sufficient internal state for clean
-reinitialization.
-
-> If we think this is a viable method, it seems like we should use
-> pci_pm_reset(), which takes care of IOMMU and device readiness issues.
+On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
+> Conceptually, `MmioRaw` is just `__iomem *`, so it should work for any
+> types. Update the existing use case where it represents a region of
+> compile-time known minimum size and run-time known actual size to use the
+> dynamic-sized type `Region<SIZE>` instead. Rename `maxsize` method to
+> reflect that it is the actual size (not a bound) of the region.
 >
-> We would have to change pci_pm_reset() to deal with the fact that
-> PCI_PM_CTRL_NO_SOFT_RESET seems wrong on these devices.  Maybe we
-> could cache PCI_PM_CTRL_NO_SOFT_RESET in pci_pm_init(), then override
-> it with quirks for these devices?
+> Implement `Clone` and `Copy` manually, which cannot be derived due to the
+> generic parameter. The use of raw pointers also cause the `Send` and `Syn=
+c`
+> auto trait implementation to be lost, so add them back by manual
+> implementation.
+>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-I explored a similar idea in v2 (PCI_DEV_FLAGS_FORCE_PM_RESET to bypass
-NoSoftRst+):
-https://lore.kernel.org/linux-pci/20260508145153.717641-2-jtornosm@redhat.com/
-(Note: v2 used driver names ath11k/ath12k instead of device-specific names
-WCN6855/WCN7850, which Jeff Johnson later commented on in v7 feedback.)
+Sashiko's potential leak on ioremap's error path seems worthy of
+investigation, but it is not introduced by this patch so:
 
-Alex provided guidance on both approaches and indicated device-specific reset
-seemed more appropriate here:
-
-"Device specific resets are made for this scenario. Look at
-pci_dev_specific_reset() and pci_dev_reset_methods[]. The supporting
-evidence that this performs a worthwhile reset is still a bit weak, but
-heuristically it seems better than nothing, which is what we're left
-with otherwise. Reset via D3hot for a device that does not expose
-NoSoftRst- is not something we should enable or endorse for any common
-use case."
-
-The device-specific approach keeps this quirk isolated to proven device IDs.
-But I can revisit the pm quirk approach if you both prefer it.
-
-Alex's suggestion:
-
-> It would be better to extract the core of pci_pm_reset() to a
-> pci_do_pm_reset() function that's used both here and by the
-> pci_pm_reset() function.
-
-Good point about the code duplication. In v9 I kept it as a self-contained
-quirk to avoid modifying pci_pm_reset() and touching core pci.c code, trying
-to minimize the change footprint. But I agree extracting a helper function
-would be cleaner.
-
-Once we confirm the preferred approach (device-specific vs pm quirk per
-Bjorn's question above), I'll send v10 with the appropriate implementation
-including the helper function if we proceed with the device-specific approach.
-
-Thanks
-
-Best regards
-Jose Ignacio
-
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
