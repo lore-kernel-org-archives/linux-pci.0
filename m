@@ -1,132 +1,151 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1DF13F410A
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:28:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A3D3382F9
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 13:42:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781530111; cv=none; b=mk0EmEa/O/YXUlHI+vXZyoaDzTjN4KWGooXXVG8SvMpm9mqJkNP8Q9v3DOOGiYFFqSP4bOCycwfKXB3ohGpOFScPELymZIU5PT5yzcyZJmC1stV1GTvZb0o0ht+Y6GZNEXQc+fwL12945bMfiuvMDNV8J8/tM2pt5F/dC2vk+cU=
+	t=1781530974; cv=none; b=EnTsr+XGP/dP6b/m7ddYDE931pNXfu6U5AffCxV8hZEcHl/KJdleP6SV+yMjm13GsOOqW4k04w+an6desHguO4b6wb8b/DjXovAMN1fR6jc7xtmwv2Xh/28VQBpwWilAAuaRVwCcFPqVnZcMNHWBUYimF/QY8GR0YF0oj7qmwtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781530111; c=relaxed/simple;
-	bh=C08qkmQPoPQU/ScYvUW+JTSposABCSApDCgHvXzmWHg=;
-	h=Message-Id:From:Date:Subject:To:Cc; b=kM9NJ4PRU+stUT7nqhcjWL7++t/B4V1NqheeB10U8T+hh+mkiI+K1HkhICxRjiZA71DtIC/eq8IlyzDsxaVkxYpryBsLSbBNGyFJRn/WHU41K2Nl6I6HpHnqSQYyuj6pWRj/kXeqahNivvzeTRv40BPIHIU81ol0wpfTd3COqlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 32D1610E07;
-	Mon, 15 Jun 2026 15:19:24 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 2D8846018168; Mon, 15 Jun 2026 15:19:24 +0200 (CEST)
-Message-Id: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Mon, 15 Jun 2026 15:19:30 +0200
-Subject: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
-To: Dan Williams <djbw@kernel.org>, Ashish Kalra <ashish.kalra@amd.com>, Tom Lendacky <thomas.lendacky@amd.com>
-Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>, John Allen <john.allen@amd.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-coco@lists.linux.dev, linux-pci@vger.kernel.org, Jonathan Cameron <jic23@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Yilun Xu <yilun.xu@linux.intel.com>, Zhenzhong Duan <zhenzhong.duan@intel.com>, Alexey Kardashevskiy <aik@amd.com>
+	s=arc-20240116; t=1781530974; c=relaxed/simple;
+	bh=f5f7Z6u1SV5B6OzuF6QYHl/O3M/Vxmop4f9iEucRW3o=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=WEn3yWy398MnZV3R6WWUW5gqbkc8UMiXNjl/IMIk+A/uPzDHM1MWrU2q7bRl1bB1zyQD+B1CCaT1yFazUADLujB3IuxZsgtMcz75CqznZ0pcRw+GB56DVlHYie6Tu8CchufxBNysi2/2UHAocvPs0zjV0RtvZncIZDD4Nldg6TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QlyVimpG; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QlyVimpG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B34A21F000E9;
+	Mon, 15 Jun 2026 13:42:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781530972;
+	bh=x/MthiyHVXkyqC1RRkQaO/5GpytpZEssf6u3r6EbzwQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=QlyVimpGz/ZUA1om2WbMJbh2vPc6+sa1zqaTeErWYFIDFLxpHlF6lFYVV2A4s/o+V
+	 gINV6pUEAYwuYr1uqa+Abipm6w/V82ISbEs2ByyoTx7jmXyT42XJ+g0R4Qu4xv6Tf8
+	 uso89Fp77/Dv4y9vkAIc1pAHNBD08wsIjdC7g+bxQJllJLqnBkucCt8aTis8JqP3OY
+	 eFiyPpXZLfUBet/8DU0wp+bWsG/zsRtXuG2vkydfgPgx/ypK+xxrkOPdA65xpGq66Q
+	 hWXMCpI5v1wVKBX+p0fiHekDZ4WuGhIUN8zfYLANxah46F4UUdTk4lvWGxQUUQkPGg
+	 Av80QKArIkqDQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Lukas Wunner" <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
+References: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 15 Jun 2026 13:42:52 +0000
+Message-Id: <20260615134252.B34A21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Asynchronous PM runtime put during device removal path leaves hard=
+ware stuck in D0.
+- [Medium] The patch unconditionally resumes the device to D0 for any DOE t=
+ransfer type, contradicting the commit message's stated power management re=
+quirement.
+--
+
+commit ef77945b44ebbc6f448bd2fb94eac66fe80392e2
+Author: Lukas Wunner <lukas@wunner.de>
+
+PCI/TSM: Resume device to D0 for CMA-SPDM operation
+
 Per PCIe r7.0 sec 6.31.3, CMA-SPDM operation in non-D0 states is optional.
 The spec does not define a way to determine if it's supported, so resume
-to D0 unconditionally for the duration of a CMA-SPDM exchange.  Vivaik has
+to D0 unconditionally for the duration of a CMA-SPDM exchange. Vivaik has
 talked to Windows engineers and they said that Windows does the same.
 
-Note that for plain DOE operation, it is sufficient for the device to be
-in D3hot and its parents in D0 because config space remains accessible in
-D3hot.  So CMA-SPDM goes beyond the requirements of plain DOE and hence
-resuming to D0 needs to (only) be done in code paths which use DOE
-specifically for CMA-SPDM.
+> diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-de=
+v-tsm.c
+> index 46f2539d2d5ab..d99b835d2b7c6 100644
+> --- a/drivers/crypto/ccp/sev-dev-tsm.c
+> +++ b/drivers/crypto/ccp/sev-dev-tsm.c
 
-The pattern used herein for runtime resume is the best practice introduced
-by commit ef8057b07c72 ("PM: runtime: Wrapper macros for ACQUIRE()/
-ACQUIRE_ERR()").
+[ ... ]
 
-Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: stable@vger.kernel.org # v6.19+
-Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>
----
-We're in the merge window for v7.2 and this isn't super urgent,
-so it's targeting v7.3 via tsm.git/next.
+> @@ -38,6 +40,10 @@ static int sev_tio_spdm_cmd(struct tio_dsm *dsm, int r=
+et)
+>  	if (ret <=3D 0)
+>  		return ret;
+> =20
+> +	PM_RUNTIME_ACQUIRE(&dsm->tsm.base_tsm.pdev->dev, pm);
+> +	if ((pm_ret =3D PM_RUNTIME_ACQUIRE_ERR(&pm)))
+> +		return pm_ret;
+> +
 
-Technically I'd have permission to apply myself,
-but I wouldn't want to without acks from Dan and AMD!
-Thanks for taking a look!
+[Severity: Medium]
+The commit message mentions that "resuming to D0 needs to (only) be done in
+code paths which use DOE specifically for CMA-SPDM", but does this code
+unconditionally resume the device to D0 regardless of the operation?
 
- drivers/crypto/ccp/sev-dev-tsm.c | 6 ++++++
- drivers/pci/tsm.c                | 6 ++++++
- 2 files changed, 12 insertions(+)
+Looking at sev_tio_spdm_cmd(), the resume happens before the loop checks if
+the operation is actually PCI_DOE_FEATURE_CMA or PCI_DOE_FEATURE_SSESSION.
+Could this cause unnecessary power transitions for generic operations where
+accessing the config space in D3hot would be sufficient?
 
-diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-dev-tsm.c
-index b07ae52..108204f7 100644
---- a/drivers/crypto/ccp/sev-dev-tsm.c
-+++ b/drivers/crypto/ccp/sev-dev-tsm.c
-@@ -7,6 +7,7 @@
- #include <linux/tsm.h>
- #include <linux/iommu.h>
- #include <linux/pci-doe.h>
-+#include <linux/pm_runtime.h>
- #include <linux/bitfield.h>
- #include <linux/module.h>
- 
-@@ -30,6 +31,7 @@ static int sev_tio_spdm_cmd(struct tio_dsm *dsm, int ret)
- {
- 	struct tsm_dsm_tio *dev_data = &dsm->data;
- 	struct tsm_spdm *spdm = &dev_data->spdm;
-+	int pm_ret;
- 
- 	/* Check the main command handler response before entering the loop */
- 	if (ret == 0 && dev_data->psp_ret != SEV_RET_SUCCESS)
-@@ -38,6 +40,10 @@ static int sev_tio_spdm_cmd(struct tio_dsm *dsm, int ret)
- 	if (ret <= 0)
- 		return ret;
- 
-+	PM_RUNTIME_ACQUIRE(&dsm->tsm.base_tsm.pdev->dev, pm);
-+	if ((pm_ret = PM_RUNTIME_ACQUIRE_ERR(&pm)))
-+		return pm_ret;
-+
- 	/* ret > 0 means "SPDM requested" */
- 	while (ret == PCI_DOE_FEATURE_CMA || ret == PCI_DOE_FEATURE_SSESSION) {
- 		ret = pci_doe(dsm->tsm.doe_mb, PCI_VENDOR_ID_PCI_SIG, ret,
-diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-index 5fdcd7f..af1817e 100644
---- a/drivers/pci/tsm.c
-+++ b/drivers/pci/tsm.c
-@@ -12,6 +12,7 @@
- #include <linux/pci.h>
- #include <linux/pci-doe.h>
- #include <linux/pci-tsm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/sysfs.h>
- #include <linux/tsm.h>
- #include <linux/xarray.h>
-@@ -886,6 +887,7 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
- 			 size_t req_sz, void *resp, size_t resp_sz)
- {
- 	struct pci_tsm_pf0 *tsm;
-+	int rc;
- 
- 	if (!pdev->tsm || !is_pci_tsm_pf0(pdev))
- 		return -ENXIO;
-@@ -894,6 +896,10 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
- 	if (!tsm->doe_mb)
- 		return -ENXIO;
- 
-+	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
-+	if ((rc = PM_RUNTIME_ACQUIRE_ERR(&pm)))
-+		return rc;
-+
- 	return pci_doe(tsm->doe_mb, PCI_VENDOR_ID_PCI_SIG, type, req, req_sz,
- 		       resp, resp_sz);
- }
--- 
-2.53.0
+[Severity: High]
+Does using PM_RUNTIME_ACQUIRE() here risk leaving the hardware permanently
+stuck in D0 during the device removal path?
 
+The PM_RUNTIME_ACQUIRE() macro queues an asynchronous pm_runtime_put() when
+dropping the reference. If sev_tio_spdm_cmd() is called during teardown
+sequences, the pending asynchronous suspend can be cancelled by a subsequent
+device_del() call, which disables runtime PM.=20
+
+Should a synchronous runtime put be used here to ensure the device actually
+suspends before the removal completes?
+
+>  	/* ret > 0 means "SPDM requested" */
+>  	while (ret =3D=3D PCI_DOE_FEATURE_CMA || ret =3D=3D PCI_DOE_FEATURE_SSE=
+SSION) {
+
+[ ... ]
+
+> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+> index 5fdcd7f2e8207..af1817e86b30d 100644
+> --- a/drivers/pci/tsm.c
+> +++ b/drivers/pci/tsm.c
+
+[ ... ]
+
+> @@ -894,6 +896,10 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 ty=
+pe, const void *req,
+>  	if (!tsm->doe_mb)
+>  		return -ENXIO;
+> =20
+> +	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
+> +	if ((rc =3D PM_RUNTIME_ACQUIRE_ERR(&pm)))
+> +		return rc;
+> +
+
+[Severity: Medium]
+Similarly to sev_tio_spdm_cmd(), does this code unconditionally resume the
+device to D0, ignoring the type parameter?
+
+If a generic DOE transfer is requested that does not strictly require D0, it
+appears this will still force a transition to D0, contradicting the commit
+message's stated power management requirements.
+
+[Severity: High]
+Is this exported API also susceptible to the same asynchronous put regressi=
+on
+mentioned above?
+
+If pci_tsm_doe_transfer() is invoked during a teardown sequence, the async
+idle and suspend queued by the macro might get canceled by device_del(),
+leaving the device in D0.
+
+>  	return pci_doe(tsm->doe_mb, PCI_VENDOR_ID_PCI_SIG, type, req, req_sz,
+>  		       resp, resp_sz);
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/7bdfaf14d7e5a466f3f=
+650150c688a60e947a7a9.1781527060.git.lukas@wunner.de?part=3D1
