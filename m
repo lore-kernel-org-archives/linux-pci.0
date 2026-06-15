@@ -1,190 +1,154 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D2942727E2
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 07:12:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F14E3BED32
+	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 07:30:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781507554; cv=none; b=PgnFq4E8xkDuBG9GjvvLZmFwef+zyUvYNA+VTR+yVHOsNDkrhPTKumGuGJPWy88+1iHL8EyvvUcFv/HkJPQsTjJUEZ1C+GMJDt+deEOwJPN4h/l6fJe0kXgxmWEglMJBYzMJLBGjq9ypMbuqXEegcRILv0swFwv13asnjNzNlsE=
+	t=1781508617; cv=none; b=nmSHBdnSdOKeZOI7mPwMZ33NLdeYU1kmClU0Ir/usxwLuZ4Cjw7Ci7o0Q83JvUfMMiH5MxkEQ+B6TbusxLHvUhsPUTA3Iu7F35W28fse7hPVVgD/OVOEutzvgms4TMrGPgfWf1kYd5cXshS90dq/o+EuTHgpG1RrpslY3ngAGaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781507554; c=relaxed/simple;
-	bh=/ZV1XfauS4LwiqORmcTj2XfBpriRoU/jQk+z1EoIFno=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=P/vTVD5q4eqGesm2SvQ4a5XbQBnPkZB0Y0xZEIPUOzI2RJaulXVPTUq0eAMfbUdb1jnkiB4+CLNtpJV4OwFzd6rVSjSy50ZgrsARvUNvNFpKimiLfNEYMp6m4wkAS1joBbj4hzRy9gFM20GfEn2UNCV5SV1Z5FkCBZ90eZEiAdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=M/2nyfue; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1781508617; c=relaxed/simple;
+	bh=fR0oi9v184iQOyv1BvHhYMt5snuytRuwX2/aefL9mLs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Y7s34wlEy9QQ/s7kbZTfjUD4j+rfCRnpDi0ubT2Aw3MsVDCLXPXeIsNUPacPXmHotAirNdV/sGdr0HGyYv0CuKiyy6DCX2I5qW48ayZb5l6GJBrSBs/lj3ZwpDQLunD4HU6k1kPlJqf+J1HKAHJKKfi8/YnVz+98Cra5EPRTcz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Tq1vqXc2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="M/2nyfue"
-Received: from pps.filterd (m0528005.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65F6I9Pj1209664
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 00:12:31 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=Ayneepun5JdCwbIVUT
-	ZacIqVWJayBLsojD7m7T4gaX0=; b=M/2nyfueyeMQs1gyBCaoAbGAit3AYiLovt
-	YHYCU0Be7sLyGyo7KhKPQcn0mI0wbex0YsDHGv6OWYRee4SL7zKDU5WhQcEUitxS
-	YW71OFHqZlc/t5JV0Ytrq15MOWCdTnrUnye8wvfQcXRT8HIYbep6atHtmgbfxElh
-	Cse0rBtBo/tYaFacUB6x7H/yC0VjiUqZWmWOvqoZgvKh+fe8qye7h+g8mPcXUtyR
-	dNYdjrcyrqKs7z+5EuvVWdUY1oHNIEaRMlnCBdmXPioHatXvJQwIPe3/pgqp8IlR
-	fzMPDsJBH6Xjx5JGTDGosMAyjD7MJbtkpaB8LYaluwb1k5q+tW3A==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4esrsh3md2-8
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 00:12:31 -0700 (PDT)
-Received: from twshared59693.31.frc3.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.41; Mon, 15 Jun 2026 07:12:26 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id CC56C3EE344B9; Sun, 14 Jun 2026 23:59:12 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Michael
- Guralnik <michaelgur@nvidia.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Christian Konig <christian.koenig@amd.com>,
-        Alex Williamson
-	<alex@shazbot.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        Zhiping Zhang
-	<zhipingz@meta.com>
-Subject: [PATCH v8 0/4] vfio/dma-buf: add TPH support for peer-to-peer access
-Date: Sun, 14 Jun 2026 23:58:57 -0700
-Message-ID: <20260615065912.2177918-1-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Tq1vqXc2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781508615;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4VlL+ld2zIBTp0Uov30L/svoU5nNy1BEIdafxq1tBX4=;
+	b=Tq1vqXc2IcFfo4l5id6SpLDh7oDR/p1UEY2xrRc6Nw0J0ortN/b8msC2yICaH7K1ZFeu1J
+	LquZDk2bcaU4GOaBxjFnm4clV3BpH494shXvLrcfNNTdK3vzdZS7s+bcJgpkQ82tPpycXC
+	PNv/nnxxBhwK5dbvA8gmI/5dMBVs1Co=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-433-uW9eYI_rOsCmZdj76mUXtw-1; Mon,
+ 15 Jun 2026 03:30:12 -0400
+X-MC-Unique: uW9eYI_rOsCmZdj76mUXtw-1
+X-Mimecast-MFC-AGG-ID: uW9eYI_rOsCmZdj76mUXtw_1781508610
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5529B19560BB;
+	Mon, 15 Jun 2026 07:30:09 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.61])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CF602180056E;
+	Mon, 15 Jun 2026 07:30:03 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: helgaas@kernel.org,
+	alex@shazbot.org
+Cc: ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	bhelgaas@google.com,
+	jjohnson@kernel.org,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	mani@kernel.org,
+	mhi@lists.linux.dev
+Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
+Date: Mon, 15 Jun 2026 09:30:01 +0200
+Message-ID: <20260615073001.401330-1-jtornosm@redhat.com>
+In-Reply-To: <20260612151749.GA603817@bhelgaas>
+References: <20260612151749.GA603817@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: bCGYdnrGUmNBl3-EBrxOYhM1u2M16dnL
-X-Authority-Analysis: v=2.4 cv=DOO/JSNb c=1 sm=1 tr=0 ts=6a2fa5df cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=jCddH8ec0KUNCymVuxII:22 a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=Ikd4Dj_1AAAA:8
- a=IrN9ioZU3SVRGu70jE0A:9 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE1MDA3MyBTYWx0ZWRfX0h+SjdMsUIg7
- rmIW9RwuY/Ch9PHLhkKeHuHFMvYa32O1nW8bAExBIduQNe6subZ7WLVUIz41NIS7uwtYU7VMPW8
- 5TSb/p5w8x/CV0OQkDp8/GRQm6CEQh8=
-X-Proofpoint-GUID: bCGYdnrGUmNBl3-EBrxOYhM1u2M16dnL
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE1MDA3MyBTYWx0ZWRfX7GnyyD5UAndg
- n3oLhSOOXGXFVpjMUVUALv9pO0SZYVjSdwb6F864ed7oiGtpwjlEwSYRWD0otGGACwqHxfONeKj
- uTMg6PBF+9vNhiY7e0ZMagIdk1cl66GO6t4mCQkMbzHoVyfixdxsE3ha/g7MAImrAQtd5mob8RQ
- if2i+7Ie71NsOcSG6ZkkfsHvkKltpCK1z5x1Bgegxd5IcffBGKwtUBDIWLlP3PvAoaWMpTV62Sk
- QORfc1hAK2Q3nRfDM3/B+z2hbU1xNH3dCe1Vt9nVHKEEd++jK7hGX/h4o4Q7bvlLr3z1Z9+GASb
- o7Warjhbk8cKc5xl2xQJGeNl3tHxF/nVXo2jJq5c4rG7yVI0jJNwFaVO7si0Pyqlr3AuTymoPIi
- H/P9OEBefxN1qK9zFNQOdpNQ/JftjvvybOjxVCHCwrbrN0QkAXwTAXt5zyuOoauncPMPolrVNSZ
- iemRgv6qzD+bvBdyymw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-15_02,2026-06-12_03,2025-10-01_01
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
-export path, allowing importing drivers (e.g. mlx5) to use the
-exporter's steering tag when performing peer-to-peer DMA into a
-VFIO-owned device.
+Hi Bjorn and Alex,
 
-There is no separate in-tree vendor kernel driver for the target device:
-vfio-pci is the in-tree driver and the targeted device is managed
-from userspace via VFIO passthrough. That is why the ST has to flow
-through a uAPI: userspace owns the device and its ST table, so it is the
-entity that can publish a meaningful value for a given dma-buf. The
-kernel-visible participants are still in-tree: vfio-pci exports the
-dma-buf and mlx5 imports it.
+Bjorn's questions:
 
-On the effect: the endpoint's PCIe ingress block uses the ST as
-an in-band instruction for the incoming P2P TLP -- selecting a target
-cache partition and, on writes, an in-flight operation on the data
-before it lands. The dma-buf callback keeps this opaque to the
-framework -- only the producer (userspace owner of the VFIO device)
-and the consumer (endpoint block) need to interpret the value. The
-dma-buf get_pci_tph callback itself is optional for workloads that depend
-on the endpoint's in-flight operation that fallback does not produce
-the same result.
+> I guess "bus reset" here refers to Secondary Bus Reset being asserted
+> by the bridge upstream from these devices?  Seems a bit surprising if
+> that doesn't work.  Or is it just that we can't use SBR because there
+> are multiple devices below that bridge?
 
-The dma-buf hook is intentionally generic and discoverable rather than
-a private side channel. The exporter owns the completing address
-space for the dma-buf and decides whether it can provide a meaningful
-ST/PH tuple for that completer; the dma-buf core keeps the tuple opaque,
-and importers merely request the namespace they support and place the
-returned value on generated TLPs. Exporters that cannot derive a
-meaningful tuple simply return -EOPNOTSUPP.
+Yes, SBR. The devices I tested are alone on their bus (single device under
+bridge), so it's a device-specific issue, not a topology problem. The
+quirk_no_bus_reset patch addresses this for v7.2.
 
-Patch 1 adds small PCI/TPH type helpers so drivers can query the enabled
-TPH requester mode and the device's TPH Completer Supported field
-without reaching into pci_dev internals (and so callers in
-CONFIG_PCIE_TPH=3Dn builds get a clean fallback).
-Patch 2 adds the optional dma_buf_ops::get_pci_tph callback plus the
-dma_buf_get_pci_tph() importer wrapper so importers can fetch TPH
-metadata from an exporter under dmabuf->resv.
-Patch 3 implements get_pci_tph in vfio-pci and adds the new uAPI
-(VFIO_DEVICE_FEATURE_DMA_BUF_TPH) for userspace to attach the metadata.
-Patch 4 wires up the mlx5 RDMA driver as a consumer.
+> I don't know enough about VFIO, but I sort of expected that VFIO would
+> reset devices between reassignment regardless of how a VM terminates.
+> I guess that's not true?
 
-Build-tested with both CONFIG_PCIE_TPH=3Dy and CONFIG_PCIE_TPH=3Dn.
-Functional validation on the target topology: PCIe analyzer captures
-on the P2P TLPs confirm the ST emitted by mlx5 matches the value
-published through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, and the end-to-end
-P2P workload only produces results consistent with the endpoint's
-ST-selected in-flight operation. For example, with userspace
-publishing 8-bit ST=3D0xf0 and PH=3D2, an analyzer capture of a peer-to-
-peer MWr64 shows "STP MWr64 TC=3D0 OHC=3D2 ..." followed by "OHC-B
-ST=3DF0h PH=3D2 HV=3D1":
-(TLP Captures)
-08000260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D0 Attr=3D0 L=3D8
-F0000004 -> RID=3D4h:0h.0h EP- Tag=3DF0h
-E0200000 -> AddrH=3D000020E0h
-00080006 -> AddrL=3D06000800h
-90F00000 -> OHC-B ST=3DF0h PH=3D2 HV=3D1 AMA=3D0 AV-
+VFIO does attempt reset on every reassignment. Without a working reset method,
+the attempt fails and the device remains in undefined state. With this quirk,
+D3hot successfully resets the device allowing reassignment.
 
-Depends on (submitted separately):
-  net/mlx5: free mlx5_st_idx_data on final dealloc
-    https://lore.kernel.org/linux-rdma/20260612170406.3339093-1-zhipingz@=
-meta.com
-  RDMA/mlx5: Fix TPH extraction in FRMR pool key (Michael Guralnik)
-    https://lore.kernel.org/linux-rdma/20260610000145.820592-3-michaelgur=
-@nvidia.com/
+> Since the device claims to preserve internal state across D3hot->D0
+> (and it sounds like at least BARs *are* preserved), is this a
+> potential leak of state between VMs?  To play devil's advocate, how do
+> we convince a customer that none of their data is ever leaked to a
+> subsequent tenant using this device?
 
-Previous link:
-v7: https://lore.kernel.org/dri-devel/20260611161546.4075580-1-zhipingz@m=
-eta.com/
-v6: https://lore.kernel.org/dri-devel/20260608185646.4085127-1-zhipingz@m=
-eta.com/
-v5: https://lore.kernel.org/dri-devel/20260526144401.1485788-1-zhipingz@m=
-eta.com/
-v4: https://lore.kernel.org/linux-pci/20260519201401.1558410-1-zhipingz@m=
-eta.com/
-v3: https://lore.kernel.org/linux-pci/20260512184755.4137227-1-zhipingz@m=
-eta.com/
-v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipingz@me=
-ta.com/
+This is a valid concern. Testing shows device internals are reset despite
+NoSoftRst+ (command register cleared, requires driver reinitialization),
+though BARs are preserved. Given these devices have no other reset method,
+this provides the only viable mechanism for VFIO reuse. We cannot improve
+beyond what D3hot provides - the quirk works because despite advertising
+NoSoftRst+, D3hot does clear sufficient internal state for clean
+reinitialization.
 
-Zhiping Zhang (4):
-  PCI/TPH: Add requester/completer type helpers
-  dma-buf: add optional get_pci_tph() callback
-  vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-  RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+> If we think this is a viable method, it seems like we should use
+> pci_pm_reset(), which takes care of IOMMU and device readiness issues.
+>
+> We would have to change pci_pm_reset() to deal with the fact that
+> PCI_PM_CTRL_NO_SOFT_RESET seems wrong on these devices.  Maybe we
+> could cache PCI_PM_CTRL_NO_SOFT_RESET in pci_pm_init(), then override
+> it with quirks for these devices?
 
- drivers/dma-buf/dma-buf.c                     |  25 ++++
- drivers/infiniband/hw/mlx5/main.c             |   1 +
- drivers/infiniband/hw/mlx5/mr.c               | 105 ++++++++++++++++++-
- .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  49 ++++++--
- drivers/pci/tph.c                             |  45 ++++++++
- drivers/vfio/pci/vfio_pci_core.c              |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c            |  97 +++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h              |  12 ++
- include/linux/dma-buf.h                       |  16 +++
- include/linux/mlx5/driver.h                   |  12 ++
- include/linux/pci-tph.h                       |   8 ++
- include/uapi/linux/vfio.h                     |  37 ++++++
- 12 files changed, 399 insertions(+), 11 deletions(-)
+I explored a similar idea in v2 (PCI_DEV_FLAGS_FORCE_PM_RESET to bypass
+NoSoftRst+):
+https://lore.kernel.org/linux-pci/20260508145153.717641-2-jtornosm@redhat.com/
+(Note: v2 used driver names ath11k/ath12k instead of device-specific names
+WCN6855/WCN7850, which Jeff Johnson later commented on in v7 feedback.)
 
---
-2.53.0-Meta
+Alex provided guidance on both approaches and indicated device-specific reset
+seemed more appropriate here:
+
+"Device specific resets are made for this scenario. Look at
+pci_dev_specific_reset() and pci_dev_reset_methods[]. The supporting
+evidence that this performs a worthwhile reset is still a bit weak, but
+heuristically it seems better than nothing, which is what we're left
+with otherwise. Reset via D3hot for a device that does not expose
+NoSoftRst- is not something we should enable or endorse for any common
+use case."
+
+The device-specific approach keeps this quirk isolated to proven device IDs.
+But I can revisit the pm quirk approach if you both prefer it.
+
+Alex's suggestion:
+
+> It would be better to extract the core of pci_pm_reset() to a
+> pci_do_pm_reset() function that's used both here and by the
+> pci_pm_reset() function.
+
+Good point about the code duplication. In v9 I kept it as a self-contained
+quirk to avoid modifying pci_pm_reset() and touching core pci.c code, trying
+to minimize the change footprint. But I agree extracting a helper function
+would be cleaner.
+
+Once we confirm the preferred approach (device-specific vs pm quirk per
+Bjorn's question above), I'll send v10 with the appropriate implementation
+including the helper function if we proceed with the device-specific approach.
+
+Thanks
+
+Best regards
+Jose Ignacio
 
