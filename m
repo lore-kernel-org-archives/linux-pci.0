@@ -1,63 +1,63 @@
 Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B4D43DA3C
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:25:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA8C43E4B4
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:26:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781623553; cv=none; b=OivG+OXxZZ4DuWiI87zEy2BNTNJLvgnX6YJtmW98oRThZAYq1nvJkC2ArwJRwmnGNjmdgdFBiLhXlZ3dTWRWv9gSxDZdcc1FexJzf+bILpQta5nj2thf5SbXoihhAjpgLfgKCACSHXrjr7ui8dg864Q2cxjzvo+6GBsDX8PyIs8=
+	t=1781623581; cv=none; b=JD2ljLPN+vc1KJf09eCUmn47xRRcGqekjJcyfOn6y0gtgYz4RnyvGZenJNWdpYSE0RKQzhQ9ONE/uAz3Cw5JZFvB3i7heARBGrmPR3HyAYWypxSY5fW51K+oxkIie1KAFVM5Tg4g1lc0lCY5TRWoFPCe/qju8Ng+FE7d3u9/3XU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781623553; c=relaxed/simple;
-	bh=TFTAot1IKWMOYgZRmrw+FhVwE6dd6IS9bop8XrNJ0Bw=;
+	s=arc-20240116; t=1781623581; c=relaxed/simple;
+	bh=c70ejIA1HHPGti0LlpJc+AUieY8UjrbXfOG5k/75a0U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q+ASUIfRC3yZjqyVN1aTaewN1oZXXOhg3gYmx1ktbxn5O0ureB3nIaYIafhRTTHKUpAERnnGmUTGOr0eNga6HwjGF6uPQfeYG1C5lBGrptJbvC1l62p1Fw2ildumjvMhhv6jnCjCHjVKslg8yVbnEkj9JKFUgPyThjv0GznLlys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DVDnVA1V; arc=none smtp.client-ip=74.125.82.179
+	 Content-Type:Content-Disposition:In-Reply-To; b=HS2MoU94yeJ1lskK8SWEc+5TuJrldnyznLAOZpKxIzu5E6mge6tuC6MyhyNgEYRNpiiYe0P5L5yNS9AsBLje7yxkQTbdVEMSbZsMaJ7/38KhAmL+MjnAlyop1ySUqW61qZ01Y/jtu2EW63UbpvXgS+wZEU/44iBenllV/w9cC1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I3YzBpy4; arc=none smtp.client-ip=74.125.82.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DVDnVA1V"
-Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-30bc871ecdfso3571eec.1
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 08:25:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I3YzBpy4"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-30bc871ecdfso4670eec.1
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 08:26:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781623552; x=1782228352; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1781623579; x=1782228379; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2OIfDLIkJhbaUkdh0HltZEozEAObCZ7mgl0RsbHOTNY=;
-        b=DVDnVA1V8Sdfcp+uKqYwF8FLRCpE0Xw3POyJjsHrs+zP/TaCC/EWaN5bZP+b3abIt3
-         L9Y7Btezi6cYYFwjwJxDbgDh0+WnkHNmUYgq+IXNd1ZWmzprKOJEsctfSAE9W8hiSTTY
-         4LCSL0A3W1dBHqP4H416zhJvcFD5lbKJs6k1qPdnoCOY5xpZNjyQTyV2Ir0qRAGjuIkd
-         Z+no2GqyiLh6B/plEXYvqY3Ck/9Iz2Axnha2RJlrYZqEwLtDRgeJX1kV2G8KKfGgujq1
-         fe/FxxoMjs7hves9qGn85tu4IrOXHHnnqqZNf3+5+Z2A2bgBgIbDDqcrlBU/5VV4TQ21
-         R8Gw==
+        bh=f7vROs9UN075gs/8U/5ZvrOcUcap23dqy0WHrqzNyCg=;
+        b=I3YzBpy48d+HYg6vJjd8ZuRQG7xCwP1LDIp+1hVpLCKoks2h1JkouCUFCc8HYzWlPn
+         ljfSdQqPpXbeOL0t/qxgFkOQxFsRQgCXhXs0c1yt5UH+1c/3utBogIv/MOT/RBG//gIg
+         s3BcN/c8zcVEzf70jLocFlPWs9laboRdMr8ViFH2NYVwwowNXrua4OpBDSlzKZy+2vB0
+         C5C/fcv2Kflc2+KuDWTgVIjdOYpSJqlsD9+OYxG5GBw7nmFeZ/3oGmnPseeep08o83IQ
+         de0tSLhncIHmRNsm6EFiSwPM0pt4e4hzjJkG/VLl1FXI1xKHd8rPcJDxkobN0pHqzB/i
+         lQsA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781623552; x=1782228352;
+        d=1e100.net; s=20251104; t=1781623579; x=1782228379;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2OIfDLIkJhbaUkdh0HltZEozEAObCZ7mgl0RsbHOTNY=;
-        b=pdYrVk0AyCqnEyTwvdFjd8V6kHuet/8nVpqUTBEmx+NVTYCdZOGHpYXhEdMpjJTok3
-         dUxUYcQ3qJ8hqCrwN12yXFK15u+oD2SiGyGzDKGi45Oy+u4/ASrqkJ3HaxZ7j3jWYCPZ
-         OhYcBuUx2Wj47GG/KqL+MO3utaEozBEhY01PQQZfEFMC6px8Mq5+7cQJ3RRLU4232auF
-         LMtnfyP0CRiEjMioYqs8PfZZ2bMTE1l4jJQ89dEnTL2b3qnwAJFHC9C5bLpFrMBSO+4g
-         gwzyH28SvkCq/A6r42syTN8ONzbSZrQEq97iLBb1CjHyO7OnP9a/L1z47cR+v2BsRyyR
-         OD1A==
-X-Forwarded-Encrypted: i=1; AFNElJ+DF4ntpetYTnjRlKGQ7ctlgFM2JZPuQOs81hX+GUKbZPJfQfIFs3EMPkFPRVRF42Ad5D0OOEmFQAY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxev7k3SXwGLcC+wlObBgNg9n70UTp9650uSn2CSoOntVBljycV
-	Z4lAvS9BonhutAn5SraJZ7GK2hg+UlevxAh0ggf2r6u1qwZKCUSyIih8
-X-Gm-Gg: Acq92OE1trBAgRoInivAC40qPX4y5tkSzTQ4JaYTaW3PQCS2T1WeAstdGe5ytvHoeYM
-	3AYPOTzUKCJ2sdx2YzFg1jPxj6b8hWenxczGzHqJBj0fK5fP8HJQBVBf/MIOGFt5Z+AZtNNyfSi
-	ifnVBD9WUurtl7aM4dSRXfclh+5fEZT2AACe2rYevjwaJPLblP2zgZTeYvx16NF9R6r47kq592e
-	dfoCHzoDLfajut7Ij887GK9ynnGS64qMQDThLg51pNfHm5C3ak5gRARiO6WCTFgB5RTj43ge8Ui
-	+moMb8d58XGkczHS4U5x0g3WBqq14Drqk1F3O3KAVoJoWaUrvkkdxmvCCPN5w6aNontiuvf8vDl
-	y9v6MZk9DikhdyXU3mYom9BX2ySYUY5TAoZP2s+yA/7zJ2D22WC3vOJgK1Jxs3K/hi+N0sW2cRV
-	iPqDeZ0NnnABpp81YgG55C
-X-Received: by 2002:a05:7300:6c15:b0:2ed:e14:e954 with SMTP id 5a478bee46e88-30ba5fcc635mr2325529eec.30.1781623551532;
-        Tue, 16 Jun 2026 08:25:51 -0700 (PDT)
+        bh=f7vROs9UN075gs/8U/5ZvrOcUcap23dqy0WHrqzNyCg=;
+        b=HJaTwIatHgbcM29Md5qxbnTvGrq0OL9MzeRT32YT234X7USIfe/BXj/+qom6NnU/iJ
+         5TofZMCmcL9lB+dauk8fulcd8t9Vr/KEwjHewkJ4xX/qfu4Rb/s8er2iQy2qIwiLBah3
+         qifhtaOILPgXjuo0wT0i9oCAQFRkpsOUdUFg0FrvZVCQl/Z1+YidPe/tex2CCeDWZ1aL
+         bsN4x3pkbtokUuUEDrgFwssl8Nnf2ZN7MIba1UXE089HZ5BP+pQoXpIduvn6NeJ9/XYN
+         ow4z3uzrEmtJAIX34Df2wwRv2hjPgS32UdSIlWpSmFboHcSFQzxzyCvY/lb3wc1xfoEy
+         CFNw==
+X-Forwarded-Encrypted: i=1; AFNElJ/uOk5YCOrjWqxeegIm23gkwuau0ENWKybX14jV7cEStn6s0ETs31dKqayD5uJPhUk4Irhl5jf6FEM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyaIUP2pJ1N85/9CujiomK0xaM5D5jxW+3RYZZkrbetGb1gJ68F
+	GvB8BFDo+9HIEoGb4mh1lE87oVHhZr8q2Bo86YsAb6inRaA8xPKium5b
+X-Gm-Gg: Acq92OGPLYq6JkR0IwpBCTVx7o8cHBGiLU8ZJiitvIGN16QFNh3MzL+UnhQO9rI+SIy
+	MNrMa2TpJ4oNDiRVoAIe02e7anoDBszfldwrCw6k6nSCy8iWH0eFSl+NkzCIWbfv0xNYjlQOYfT
+	wNuMw0l6faScxfC3nK/Dz10wEEoCi/GI/TE9mPN7bek8gAoMm1Eqtu8qyzgZFuiQV3NCD4cqrJg
+	+YuGS2omV1uYyKkQj9xPY0zDc6WWFK0J4/EArmuugEVNgatxykMloql7/yKeQ7Yg6eQmznDHeEt
+	mN6MJPdUiGE0UuNXFGnv48RCaHSkSVegf786AB59TZ/qLjcKO7YueQXD8u6+yypdR2Pxw8rnG46
+	EjCjORI6JaoD0+1kCsBkGDnYwyNxfijFACGNWFJ7vHALKgUWwQGU7niQcu/Tq9MaZ20xal5GIxT
+	9AgEUp9HdX52bOQi4W38gdvZrFObLr/7w=
+X-Received: by 2002:a05:7300:7b95:b0:2d9:6373:ad24 with SMTP id 5a478bee46e88-30ba5f7020emr2626182eec.26.1781623576725;
+        Tue, 16 Jun 2026 08:26:16 -0700 (PDT)
 Received: from geday ([189.115.92.220])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30bbbd636fasm1525643eec.22.2026.06.16.08.25.48
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3081e5d0357sm18116553eec.11.2026.06.16.08.26.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 08:25:51 -0700 (PDT)
-Date: Tue, 16 Jun 2026 12:25:45 -0300
+        Tue, 16 Jun 2026 08:26:16 -0700 (PDT)
+Date: Tue, 16 Jun 2026 12:26:10 -0300
 From: Geraldo Nascimento <geraldogabriel@gmail.com>
 To: Shawn Lin <shawn.lin@rock-chips.com>, Dragan Simic <dsimic@manjaro.org>
 Cc: linux-rockchip@lists.infradead.org,
@@ -68,8 +68,8 @@ Cc: linux-rockchip@lists.infradead.org,
 	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Geraldo Nascimento <geraldogabriel@gmail.com>
-Subject: [PATCH v7 2/3] PCI: rockchip-host: do not attempt 5.0 GT/s retraining
-Message-ID: <68f6353e3a2ea4914de36c42b6906e41282adad3.1781622998.git.geraldogabriel@gmail.com>
+Subject: [PATCH v7 3/3] PCI: rockchip: drive at 2.5 GT/s, error other speeds
+Message-ID: <7421df7a7b7778ee99363cccfdfabbfa8aa6ab5e.1781622998.git.geraldogabriel@gmail.com>
 References: <cover.1781622998.git.geraldogabriel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -81,12 +81,13 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1781622998.git.geraldogabriel@gmail.com>
 
-Drop the 5.0 GT/s Link Speed retraining from Rockchip PCIe Root
-Complex Mode Operation, so called host driver.
+Configure the core to be driven at 2.5 GT/s Link Speed and ignore
+any other speed with a warning. Also drop the 5.0 GT/s Link Speed
+defines from Rockchip PCIe header.
 
 The reason is that Shawn Lin from Rockchip has reiterated that there
 may be danger of "catastrophic failure" in using their PCIe with
-5.0GT/s speeds.
+5.0 GT/s speeds.
 
 While Rockchip has done so informally without issuing a proper errata,
 and the particulars are thus unknown, this may cause data loss or
@@ -97,46 +98,70 @@ states maximum link speed for this platform is 2.5 GT/s.
 
 [1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
 
+Fixes: 956cd99b35a8 ("PCI: rockchip: Separate common code from RC driver")
 Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21b@rock-chips.com/
 Cc: stable@vger.kernel.org
 Reported-by: Dragan Simic <dsimic@manjaro.org>
 Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
 Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
 ---
- drivers/pci/controller/pcie-rockchip-host.c | 20 --------------------
- 1 file changed, 20 deletions(-)
+ drivers/pci/controller/pcie-rockchip.c | 14 ++++++--------
+ drivers/pci/controller/pcie-rockchip.h |  3 ---
+ 2 files changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index ee1822ca01db3..1374a2c92b563 100644
---- a/drivers/pci/controller/pcie-rockchip-host.c
-+++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -328,26 +328,6 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
- 		goto err_power_off_phy;
+diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+index 0f88da3788054..456dcfd676ed7 100644
+--- a/drivers/pci/controller/pcie-rockchip.c
++++ b/drivers/pci/controller/pcie-rockchip.c
+@@ -66,8 +66,10 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
  	}
  
--	if (rockchip->link_gen == 2) {
--		/*
--		 * Enable retrain for gen2. This should be configured only after
--		 * gen1 finished.
--		 */
--		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_CR + PCI_EXP_LNKCTL2);
--		status &= ~PCI_EXP_LNKCTL2_TLS;
--		status |= PCI_EXP_LNKCTL2_TLS_5_0GT;
--		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_CR + PCI_EXP_LNKCTL2);
--		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_CR + PCI_EXP_LNKCTL);
--		status |= PCI_EXP_LNKCTL_RL;
--		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_CR + PCI_EXP_LNKCTL);
--
--		err = readl_poll_timeout(rockchip->apb_base + PCIE_CORE_CTRL,
--					 status, PCIE_LINK_IS_GEN2(status), 20,
--					 500 * USEC_PER_MSEC);
--		if (err)
--			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
--	}
--
- 	/* Check the final link width from negotiated lane counter from MGMT */
- 	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
- 	status = 0x1 << ((status & PCIE_CORE_PL_CONF_LANE_MASK) >>
+ 	rockchip->link_gen = of_pci_get_max_link_speed(node);
+-	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+-		rockchip->link_gen = 2;
++	if (rockchip->link_gen < 0 || rockchip->link_gen >= 2) {
++		rockchip->link_gen = 1;
++		dev_warn(dev, "invalid max-link-speed, limited to 2.5 GT/s\n");
++	}
+ 
+ 	for (i = 0; i < ROCKCHIP_NUM_PM_RSTS; i++)
+ 		rockchip->pm_rsts[i].id = rockchip_pci_pm_rsts[i];
+@@ -147,12 +149,8 @@ int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	if (rockchip->link_gen == 2)
+-		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
+-				    PCIE_CLIENT_CONFIG);
+-	else
+-		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
+-				    PCIE_CLIENT_CONFIG);
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
++			    PCIE_CLIENT_CONFIG);
+ 
+ 	regs = PCIE_CLIENT_ARI_ENABLE |
+ 	       PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes);
+diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+index 3e82a69b9c006..b5da15601b585 100644
+--- a/drivers/pci/controller/pcie-rockchip.h
++++ b/drivers/pci/controller/pcie-rockchip.h
+@@ -42,7 +42,6 @@
+ #define   PCIE_CLIENT_MODE_RC			HWORD_SET_BIT(0x0040)
+ #define   PCIE_CLIENT_MODE_EP			HWORD_CLR_BIT(0x0040)
+ #define   PCIE_CLIENT_GEN_SEL_1			HWORD_CLR_BIT(0x0080)
+-#define   PCIE_CLIENT_GEN_SEL_2			HWORD_SET_BIT(0x0080)
+ #define PCIE_CLIENT_LEGACY_INT_CTRL	(PCIE_CLIENT_BASE + 0x0c)
+ #define   PCIE_CLIENT_INT_IN_ASSERT		HWORD_SET_BIT(0x0002)
+ #define   PCIE_CLIENT_INT_IN_DEASSERT		HWORD_CLR_BIT(0x0002)
+@@ -197,8 +196,6 @@
+ 	(((x) & PCIE_CORE_PL_CONF_LS_MASK) == PCIE_CORE_PL_CONF_LS_READY)
+ #define PCIE_LINK_UP(x) \
+ 	(((x) & PCIE_CLIENT_LINK_STATUS_MASK) == PCIE_CLIENT_LINK_STATUS_UP)
+-#define PCIE_LINK_IS_GEN2(x) \
+-	(((x) & PCIE_CORE_PL_CONF_SPEED_MASK) == PCIE_CORE_PL_CONF_SPEED_5G)
+ 
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
 -- 
 2.54.0
 
