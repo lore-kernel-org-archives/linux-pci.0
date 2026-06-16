@@ -1,90 +1,39 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F6747A0B2
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 18:51:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 213083CEBBD;
+	Tue, 16 Jun 2026 18:57:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781635919; cv=none; b=SCenh9XpQ02tzoS6qGibnPXSYTJvY/5gdNkSl934SoUoBJfQLPsBRYTUSPzozWSec/SbL87fvh0lfoWdawVUWq24Nushp9x0Mi9CrRmxOph+gx1UuJlfYg7g93FK4ZQqtQMI2udrdbcxaFP38ZF8PzNgJu8ZM/zLQcBfWxmD4wE=
+	t=1781636268; cv=none; b=MylnXYpkZpALAuPIjQ+dCHQB4gexuOdtKfxCMXQBbv0JP+Vm7dzkfEEi4u6UYsKHrD/zYRO2vAlKp5DHxtWr9extCn24b5x4jcgdUBY6z5elC+g1yDwqhOOaHOYTU+yvQsKTASUMUR7YQWEsv7dtWw3bmFXwa1n9aKlnPnSLkLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781635919; c=relaxed/simple;
-	bh=sZ7UNLwehwopPc6t3eGTeaf90dQl3G+H2ei/ClIX/X8=;
+	s=arc-20240116; t=1781636268; c=relaxed/simple;
+	bh=VSLNvE4kRbOqrt1OJ/KhontEzREN1pu1ATQom+s29Rs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=opbcU+88tySAIHpLBbHW6iNXCKoVpJvvevSSYCAsYypORNrmJJvqmnGKDGZUx+wbyOHziXC7VKm7VarDx2Q/GzU0Cm+NQ23A9TIzs5HGklcotl1LmN3K14PSXubWp9h51fUQbzgzCLZoDy/2Ku+KX0pVET5MdQ6ds7cEc4v7Ejk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=boKy3whj; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=blHxZ05JUEFhEgeEIT2xtwv/oZl6K43qirtuleaP3fQOBX5Q70FERrbnhQCXro7zthwxUtRTuxjbUZAClh+7ZQp3d6I1IpeRgYfOor8AIoIMGwEVJHDtov7F6UgBxpyxO5CoGStZJyxQLKlnqJIxVfBXQ3dfOaK7vYv1aDEf0JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oJ8K9jw+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="boKy3whj"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c6a4eccab1so8715ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 11:51:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781635918; x=1782240718; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wvE0aCg+gv1l26GtSCjQQyNi/5Rf7OW5qgPEji4d+Bg=;
-        b=boKy3whjYEJJm0rGPxoZsPFUXrYLfkE0KmCJKkJGtvZJWHAYiy9k3W7FxK9E35C+vv
-         hnHOopHaPVWpMvT3JvtiIAaz97js7EBwzLbLdZJnxdhhTDubshQ/A0yd28nc7FViBqno
-         W4ARWojYwqvib6My3+4Qon6aiOLWJd1HvcT87W6wgDn2An5yPZLt/7v10PAvQda79Fpc
-         ySQy9XhVcZ+4HLhF2pka7k834a2GQUTRVpW7DiGQx2dUFNzVBtIOcFFua96S3nh0V+BJ
-         +Ec/Zzgk1Gjm2C8VE+Ftn6lircTYtMvlkxqHzH1NHIHLI/kzqmWGJMNw9k9ZZu3OHU+Y
-         5/Hg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781635918; x=1782240718;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wvE0aCg+gv1l26GtSCjQQyNi/5Rf7OW5qgPEji4d+Bg=;
-        b=NlxG/sIgPXnJ94EtbINOKjSXgkns6BzCCGZFgTjI7DMjDipybqwoYWHHVcHCUhCUQg
-         ZGGSqJtPED8D/gm5BsOM+Rm6zkfMtu0w+spsPksUbbvg/gioVbRnGLAfToFeWMWKY/S+
-         TSWOGVrE4TNdPNxr8STSQHDvAz/FPHRZNf/XVpy+v86TuIP7iNWUD2qh+PyNvFBFFRXU
-         UP0+8uVLsKexZECLT7nkGd6RahJrnWcRyRr9vJGtGqm7RrVWC4YMQSE6VHpHX9jjsIK7
-         WLz92JWaJBTcnFV5ZoZ4vz7+r5/SfD6gBE3QcQGjZwF6oRkkAzNvCJRTXCA7+I3iQrIc
-         GWMg==
-X-Forwarded-Encrypted: i=1; AFNElJ/NNPM8CkWj6Ve2soBn2EgyAK6DYgXCtF43xNJiptguD0sdmbKoVgoQevpQ2Odm9pI8TZ+6Rn+ysDA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzD9JrehiGvInNm3Xrx0CYICbgAB6iCGLV0P/xW/Efei0D4AgZf
-	fYchKyOwDdmSBj/t0FOuiCVqm17wQAFnC3rdMYkipO1Dtv5yH2nHx1BYx7zeHx3Y2A==
-X-Gm-Gg: AfdE7cn6jWhOJVvurlYyoJfqwbCeE+1P7CzrWqLhIiivprmIsTqA3Do3nRRqMW17qiw
-	WOBmEI0Nfm4szsjZCoxn3UZJaTwIcrbAhuR190HeE7qMp0Q771dxjPqVb9wEeT3IVo8VKu5X8pE
-	AKp4vEHgqmS/gc3segHK4kZESuJIYmdzUCNU6qwcU3tS6QKq3DwcUGwQny1ul74+OcAOulyfbwy
-	shywclSxq9HBX7jY1EDJHtoOVPr1AzbxZDlbeCU0uHkf3ndjaQ3VAGXKq7JYxSbfFZZlApdMD2O
-	UnZOvloyAwRghk8swID5KUEXOxWYHo861GomqkkWQYGipW6rmWvIq+vlRPKVwote/VfY2hRsiLa
-	DaUbp8zJRDCy3kPlU5SaM0NYGqIZXLqrnajpvXhzAuuqAojtdwUEHdjRgJLeOHc6OJsL//781va
-	prww0bl5L2FrSoY/XGpWAPjMBZOBXwlj/Zo351RDWVFrdCZ4GJ9Gp2iOWMKAMH
-X-Received: by 2002:a17:903:2f84:b0:2b0:b925:da98 with SMTP id d9443c01a7336-2c6bbc5d4eemr256505ad.19.1781635917134;
-        Tue, 16 Jun 2026 11:51:57 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434ad03fdcsm13472996b3a.24.2026.06.16.11.51.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 11:51:56 -0700 (PDT)
-Date: Tue, 16 Jun 2026 18:51:48 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>,
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
-Message-ID: <ajGbRE3WWJxNxcrg@google.com>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-7-matt@ozlabs.org>
- <aixgZQiBQKgS7yIM@google.com>
- <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oJ8K9jw+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E1C81F000E9;
+	Tue, 16 Jun 2026 18:57:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781636266;
+	bh=+u2CQ3JCxLqq4KVytfesXpoMNP5xMMmxB4qs1tyq7Sg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=oJ8K9jw+0G6GbVqrtV7Wp5uDPVNDzJyVznwciNyfi7CJpVfe6u78q+d31LT4+SW9F
+	 /GFNBDB/P7xFdXRPOcCodSIl4c/GEigaP4d1/vld6U2mLaIKbUqgbPU7zqxYBpXWZQ
+	 JrEl0Jo1jceZ38frwuF9Ra8CtL1mF4BnF7zyOzXB1ZaeudpnD8Pzr0rlaNXVi4/Kus
+	 Pc865ZpbGikFzeXhhErp/7h+RNegrOn2hmk1oS+6+Sd8dVZewJvs6KhZD/PKaVB4EM
+	 g4BpiEgPKiJpexTI7DbNM88gHiDtuN60yDCtXt7IUN0Vy1Rlji22z1v8rmQ9dBrTOz
+	 vtWECPIntbizg==
+Date: Tue, 16 Jun 2026 21:57:42 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: lirongqing <lirongqing@baidu.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/P2PDMA: Use RCU_INIT_POINTER() to clear pdev->p2pdma
+Message-ID: <20260616185742.GS327369@unreal>
+References: <20260612083452.1639-1-lirongqing@baidu.com>
+ <20260612084824.A3DE91F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -93,99 +42,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+In-Reply-To: <20260612084824.A3DE91F00A3A@smtp.kernel.org>
 
-On Tue, Jun 16, 2026 at 09:48:14AM +0000, Tian, Kevin wrote:
-> > From: Pranjal Shrivastava <praan@google.com>
-> > Sent: Saturday, June 13, 2026 3:39 AM
-> > 
-> > On Wed, Jun 10, 2026 at 04:43:20PM +0100, Matt Evans wrote:
-> > > @@ -1264,7 +1265,7 @@ static int vfio_pci_ioctl_reset(struct
-> > vfio_pci_core_device *vdev,
-> > >  	if (!vdev->reset_works)
-> > >  		return -EINVAL;
-> > >
-> > > -	vfio_pci_zap_and_down_write_memory_lock(vdev);
-> > > +	down_write(&vdev->memory_lock);
-> > >
-> > >  	/*
-> > >  	 * This function can be invoked while the power state is non-D0. If
-> > > @@ -1277,10 +1278,11 @@ static int vfio_pci_ioctl_reset(struct
-> > vfio_pci_core_device *vdev,
-> > >  	 */
-> > >  	vfio_pci_set_power_state(vdev, PCI_D0);
-> > >
-> > > -	vfio_pci_dma_buf_move(vdev, true);
-> > > +	vfio_pci_zap_revoke_bars(vdev);
-> > 
-> > I'm wondering if this change in behavior is correct?
-> > BEFORE this patch the sequence was:
-> > 
-> > 1. zap vma mappings
-> > 2. Enter D0
-> > 
-> > After this patch the sequence becomes
-> > 
-> > 1. Take the lock
-> > 2. Enter D0
-> > 3. zap vma mappings
-> > 
-> > My worry is if user-space accesses a BAR *during* the transition to D0,
-> > it could crash since the mappings still exist during the transition?
+On Fri, Jun 12, 2026 at 08:48:24AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
 > 
-> not 'crash' as you also noted later with all Fs on read and dropped writes.
-
-Ack, "crash" is definitely a strong word, I just meant that the
-user-space program isn't expecting to see all Fs today. Since today any
-access during reset is faulted, however with this all apps may have to
-lookout for all Fs during a read. Could this change cause existing apps
-to crash?
-
+> Pre-existing issues:
+> - [High] pci_p2pdma_release() skips synchronize_rcu() when p2pdma->pool is NULL, causing a use-after-free of the devm-allocated p2pdma structure and corruption of its map_types xarray for concurrent RCU readers.
+> - [High] Missing devres action removal in pci_p2pdma_add_resource() error paths causes Use-After-Free of p2p_pgmap during devres teardown.
+> --
 > 
-> > 
-> > The old code is immune to it because it removed user-mappings first.
-> > 
-> > Following the discussion from v1 regarding the ordering of
-> > vfio_pci_dma_buf_move() and the D0 transition.. while it makes sense to
-> > perform the DMABUF revocation/move after the hardware is in D0.. I'm not
-> > too confident about moving zap after D0 :/
+> commit eb4ec2c32d602512abbeccbe720637cf83f85cb6
+> Author: Li RongQing <lirongqing@baidu.com>
 > 
-> probably add a comment to remind that ordering requirement for dma
+> PCI/P2PDMA: Use RCU_INIT_POINTER() to clear pdev->p2pdma
 > 
-
-+1. That'd be helpful.
-
-> > 
-> > I mean, sure, the user would just see all Fs on a read and writes will
-> > be dropped silently until we are in D0.. but the behaviour before this
-> > change was that the user access will fault and hang on the memory_lock
-> > instead which ensures that the user observes a consistent dev state..
-> > 
+> Since pdev->p2pdma is an RCU-protected pointer, directly assigning
+> NULL to it violates RCU semantics and triggers sparse static analysis
+> warnings.
 > 
-> I see this more consistent from another angle.
+> Fix this by using RCU_INIT_POINTER() instead of a raw assignment,
+> ensuring proper RCU annotations and consistency with the subsequent
+> synchronize_rcu() call.
 > 
-> Old code only removes/blocks cpu access but not for device. DMAs
-> are allowed to this device while it's transitioning between D0/D3.
+> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> > index 7c898542af8d5..fd98624208c50 100644
+> > --- a/drivers/pci/p2pdma.c
+> > +++ b/drivers/pci/p2pdma.c
+> > @@ -236,7 +236,7 @@ static void pci_p2pdma_release(void *data)
+> >  		return;
+> >  
+> >  	/* Flush and disable pci_alloc_p2p_mem() */
+> > -	pdev->p2pdma = NULL;
+> > +	RCU_INIT_POINTER(pdev->p2pdma, NULL);
+> >  	if (p2pdma->pool)
+> >  		synchronize_rcu();
 > 
-> New code at least make this part consistent - both cpu/p2p are allowed
-> in the transition window.
+> [Severity: High]
+> This isn't a bug introduced by this patch, but could skipping
+> synchronize_rcu() here result in a use-after-free for concurrent RCU readers?
 > 
-> Ideally a sane userspace shouldn't rely on the content read back when
-> it has initiated a reset in parallel. So this behavior change sounds ok?
+> If p2pdma->pool is NULL, synchronize_rcu() is bypassed before destroying the
+> map_types xarray and returning. Since the p2pdma structure is managed by
+> devres, it will be freed shortly after this callback returns.
+> 
+> If concurrent RCU readers (like those executing pci_p2pdma_map_type()) obtain
+> the pointer just before it is cleared, will they continue to access the freed
+> map_types xarray and p2pdma structure?
+> 
+> >  	xa_destroy(&p2pdma->map_types);
 
-I agree on the CPU / P2P consistency part. However, my concern is for a
-shared reset scenario where a reset triggered by one process (I guess it
-was vfio_assign_device_set?) can affect multiple devices in a dev_set
-that are owned by different, unrelated processes. 
+I do not believe this is a bug. The p2pdma->pool field is NULL only for
+in-kernel users that fully control the lifecycle of their drivers.
+In that mode, there should not be any concurrent RCU readers when the
+device is released.
 
-In the old code, these peer processes are protected because their BAR
-mappings are zapped immediately. Their MMIO threads simply stall in
-a page fault until the reset is complete.
-
-I agree for a single-reset scenario, sane user-space should never access
-regions during a self-triggered reset.
-
-Am I missing something?
-
-Thanks,
-Praan
+Thanks
