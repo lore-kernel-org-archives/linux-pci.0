@@ -1,296 +1,191 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F41E331A44;
-	Tue, 16 Jun 2026 18:46:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F6747A0B2
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 18:51:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781635585; cv=none; b=JitWkfGCVnopnGIPS2IXMCDIJjD8pPwcDHavMdZkbYBkEYbSIp9r8QzLPO7rVdRAk/owR0L6RGKTidLhFPi0X+ybgZZJsPLxhTJIeMckr/D7iKBUDAML7J4qTKnIWG3EXmhReF2fjxGypjeni4HVg1/R5fU11JZqVBHAeBWf8tM=
+	t=1781635919; cv=none; b=SCenh9XpQ02tzoS6qGibnPXSYTJvY/5gdNkSl934SoUoBJfQLPsBRYTUSPzozWSec/SbL87fvh0lfoWdawVUWq24Nushp9x0Mi9CrRmxOph+gx1UuJlfYg7g93FK4ZQqtQMI2udrdbcxaFP38ZF8PzNgJu8ZM/zLQcBfWxmD4wE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781635585; c=relaxed/simple;
-	bh=xGiSfNGIC4F9yD9EbvtUsu6M+u31wy81LYM5pmjDM+c=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W4injV0xRww86sb0EQW/K2UhDYJs88lOCTubntEgjDtESuwFe0RF15MM+MtScqkTrj+xtZZ3Uu4tEDfzIEwGuH29I02demRUBINN6e9x9FaRu6MLF2aygNa9aZ9JD+fKJoNSE+mePjXiFl9c0EORI20Bhg0MQ6kmWnw13NBt32A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JO+xc/wY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781635919; c=relaxed/simple;
+	bh=sZ7UNLwehwopPc6t3eGTeaf90dQl3G+H2ei/ClIX/X8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=opbcU+88tySAIHpLBbHW6iNXCKoVpJvvevSSYCAsYypORNrmJJvqmnGKDGZUx+wbyOHziXC7VKm7VarDx2Q/GzU0Cm+NQ23A9TIzs5HGklcotl1LmN3K14PSXubWp9h51fUQbzgzCLZoDy/2Ku+KX0pVET5MdQ6ds7cEc4v7Ejk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=boKy3whj; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JO+xc/wY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07FDA1F000E9;
-	Tue, 16 Jun 2026 18:46:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781635584;
-	bh=bxkRjBuLQ0Zqo2JG7wtIZXNuW/9rXa7UeVCDeoroQGg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=JO+xc/wYmK/g2IQDtLOnTV6z5c8+xuaB5uGwg8D8mH1so1/HZkXCm7cNaUjl+1Mkl
-	 NX2SSOf6n/GUSnub7H6eK+Jj6kh4dofqvc3WD4+HBGXx8KoRlmiUoQjwv3zZ4cwPPy
-	 zM1P5KVkW+zENyngxB8q1Ki1EuwiylU6tRHDirrOFYEvHo7qEi+APzkF3KiMKvnG1j
-	 KfD9BYbOdZxFd1hMGeqHmkF7aK6dJGXHaI3JZcDWXR/JgPoiF6ooGFnvHRR4zLIQFL
-	 9hW6UdTyJ4fht1Cb/GzdjjBeeEzjbd/DTx26+PJiIWG33D9U1Ci/E/4n60ngGlEemK
-	 5SUP8Xhthm7gg==
-Date: Tue, 16 Jun 2026 19:46:19 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Shrihari E S <shrihari.s@samsung.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
- qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
- vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
- dave@stgolabs.net, gost.dev@samsung.com
-Subject: Re: [RFC 6/8] hw/pci: Add PCIe Streamlined Virtual Channel (SVC)
- capability.
-Message-ID: <20260616194619.47336bac@jic23-huawei>
-In-Reply-To: <20260609105836.3702787-7-shrihari.s@samsung.com>
-References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<CGME20260609104528epcas5p4b7379fbb5bcc8ee74461a039e88b1637@epcas5p4.samsung.com>
-	<20260609105836.3702787-7-shrihari.s@samsung.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="boKy3whj"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c6a4eccab1so8715ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 11:51:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781635918; x=1782240718; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wvE0aCg+gv1l26GtSCjQQyNi/5Rf7OW5qgPEji4d+Bg=;
+        b=boKy3whjYEJJm0rGPxoZsPFUXrYLfkE0KmCJKkJGtvZJWHAYiy9k3W7FxK9E35C+vv
+         hnHOopHaPVWpMvT3JvtiIAaz97js7EBwzLbLdZJnxdhhTDubshQ/A0yd28nc7FViBqno
+         W4ARWojYwqvib6My3+4Qon6aiOLWJd1HvcT87W6wgDn2An5yPZLt/7v10PAvQda79Fpc
+         ySQy9XhVcZ+4HLhF2pka7k834a2GQUTRVpW7DiGQx2dUFNzVBtIOcFFua96S3nh0V+BJ
+         +Ec/Zzgk1Gjm2C8VE+Ftn6lircTYtMvlkxqHzH1NHIHLI/kzqmWGJMNw9k9ZZu3OHU+Y
+         5/Hg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781635918; x=1782240718;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wvE0aCg+gv1l26GtSCjQQyNi/5Rf7OW5qgPEji4d+Bg=;
+        b=NlxG/sIgPXnJ94EtbINOKjSXgkns6BzCCGZFgTjI7DMjDipybqwoYWHHVcHCUhCUQg
+         ZGGSqJtPED8D/gm5BsOM+Rm6zkfMtu0w+spsPksUbbvg/gioVbRnGLAfToFeWMWKY/S+
+         TSWOGVrE4TNdPNxr8STSQHDvAz/FPHRZNf/XVpy+v86TuIP7iNWUD2qh+PyNvFBFFRXU
+         UP0+8uVLsKexZECLT7nkGd6RahJrnWcRyRr9vJGtGqm7RrVWC4YMQSE6VHpHX9jjsIK7
+         WLz92JWaJBTcnFV5ZoZ4vz7+r5/SfD6gBE3QcQGjZwF6oRkkAzNvCJRTXCA7+I3iQrIc
+         GWMg==
+X-Forwarded-Encrypted: i=1; AFNElJ/NNPM8CkWj6Ve2soBn2EgyAK6DYgXCtF43xNJiptguD0sdmbKoVgoQevpQ2Odm9pI8TZ+6Rn+ysDA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzD9JrehiGvInNm3Xrx0CYICbgAB6iCGLV0P/xW/Efei0D4AgZf
+	fYchKyOwDdmSBj/t0FOuiCVqm17wQAFnC3rdMYkipO1Dtv5yH2nHx1BYx7zeHx3Y2A==
+X-Gm-Gg: AfdE7cn6jWhOJVvurlYyoJfqwbCeE+1P7CzrWqLhIiivprmIsTqA3Do3nRRqMW17qiw
+	WOBmEI0Nfm4szsjZCoxn3UZJaTwIcrbAhuR190HeE7qMp0Q771dxjPqVb9wEeT3IVo8VKu5X8pE
+	AKp4vEHgqmS/gc3segHK4kZESuJIYmdzUCNU6qwcU3tS6QKq3DwcUGwQny1ul74+OcAOulyfbwy
+	shywclSxq9HBX7jY1EDJHtoOVPr1AzbxZDlbeCU0uHkf3ndjaQ3VAGXKq7JYxSbfFZZlApdMD2O
+	UnZOvloyAwRghk8swID5KUEXOxWYHo861GomqkkWQYGipW6rmWvIq+vlRPKVwote/VfY2hRsiLa
+	DaUbp8zJRDCy3kPlU5SaM0NYGqIZXLqrnajpvXhzAuuqAojtdwUEHdjRgJLeOHc6OJsL//781va
+	prww0bl5L2FrSoY/XGpWAPjMBZOBXwlj/Zo351RDWVFrdCZ4GJ9Gp2iOWMKAMH
+X-Received: by 2002:a17:903:2f84:b0:2b0:b925:da98 with SMTP id d9443c01a7336-2c6bbc5d4eemr256505ad.19.1781635917134;
+        Tue, 16 Jun 2026 11:51:57 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434ad03fdcsm13472996b3a.24.2026.06.16.11.51.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jun 2026 11:51:56 -0700 (PDT)
+Date: Tue, 16 Jun 2026 18:51:48 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+	Alex Mastro <amastro@fb.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
+Message-ID: <ajGbRE3WWJxNxcrg@google.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-7-matt@ozlabs.org>
+ <aixgZQiBQKgS7yIM@google.com>
+ <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
 
-On Tue,  9 Jun 2026 16:28:34 +0530
-Shrihari E S <shrihari.s@samsung.com> wrote:
-
-> From: Dongjoo Seo <dongjoo.seo1@samsung.com>
+On Tue, Jun 16, 2026 at 09:48:14AM +0000, Tian, Kevin wrote:
+> > From: Pranjal Shrivastava <praan@google.com>
+> > Sent: Saturday, June 13, 2026 3:39 AM
+> > 
+> > On Wed, Jun 10, 2026 at 04:43:20PM +0100, Matt Evans wrote:
+> > > @@ -1264,7 +1265,7 @@ static int vfio_pci_ioctl_reset(struct
+> > vfio_pci_core_device *vdev,
+> > >  	if (!vdev->reset_works)
+> > >  		return -EINVAL;
+> > >
+> > > -	vfio_pci_zap_and_down_write_memory_lock(vdev);
+> > > +	down_write(&vdev->memory_lock);
+> > >
+> > >  	/*
+> > >  	 * This function can be invoked while the power state is non-D0. If
+> > > @@ -1277,10 +1278,11 @@ static int vfio_pci_ioctl_reset(struct
+> > vfio_pci_core_device *vdev,
+> > >  	 */
+> > >  	vfio_pci_set_power_state(vdev, PCI_D0);
+> > >
+> > > -	vfio_pci_dma_buf_move(vdev, true);
+> > > +	vfio_pci_zap_revoke_bars(vdev);
+> > 
+> > I'm wondering if this change in behavior is correct?
+> > BEFORE this patch the sequence was:
+> > 
+> > 1. zap vma mappings
+> > 2. Enter D0
+> > 
+> > After this patch the sequence becomes
+> > 
+> > 1. Take the lock
+> > 2. Enter D0
+> > 3. zap vma mappings
+> > 
+> > My worry is if user-space accesses a BAR *during* the transition to D0,
+> > it could crash since the mappings still exist during the transition?
 > 
-> Implement the PCIe Streamlined Virtual Channel (SVC) Extended
-> Capability by adding support of capability, control and status
-> registers per PCIe 6.4 section 7.9.29. This capability is one
-> of the main requisites for UIO support in both PCIe and CXL ports.
+> not 'crash' as you also noted later with all Fs on read and dropped writes.
+
+Ack, "crash" is definitely a strong word, I just meant that the
+user-space program isn't expecting to see all Fs today. Since today any
+access during reset is faulted, however with this all apps may have to
+lookout for all Fs during a read. Could this change cause existing apps
+to crash?
+
 > 
-> Key changes include:
->     - New pcie_svc.c file for SVC capability management.
->     - Updated pcie_cap_fill_lnk() to handle flitmode signaling.
->     - Implement Lifecycle hooks (reset and config_write) to manage
->       SVC state.
+> > 
+> > The old code is immune to it because it removed user-mappings first.
+> > 
+> > Following the discussion from v1 regarding the ordering of
+> > vfio_pci_dma_buf_move() and the D0 transition.. while it makes sense to
+> > perform the DMABUF revocation/move after the hardware is in D0.. I'm not
+> > too confident about moving zap after D0 :/
 > 
-> Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
-> Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
-A very quick review on this one as I'm more or less out of time for today
-(and not listening to a call ;)
+> probably add a comment to remind that ordering requirement for dma
+> 
 
-> diff --git a/hw/pci/pci.c b/hw/pci/pci.c
-> index 5996229c81..0469250f42 100644
-> --- a/hw/pci/pci.c
-> +++ b/hw/pci/pci.c
++1. That'd be helpful.
 
->  /***********************************************************/
-> diff --git a/hw/pci/pcie.c b/hw/pci/pcie.c
-> index d452199d85..7c7d948e00 100644
-> --- a/hw/pci/pcie.c
-> +++ b/hw/pci/pcie.c
-> @@ -112,8 +112,9 @@ pcie_cap_v1_fill(PCIDevice *dev, uint8_t port, uint8_t type, uint8_t version)
->  }
->  
->  /* Includes setting the target speed default */
-> -static void pcie_cap_fill_lnk(uint8_t *exp_cap, PCIExpLinkWidth width,
-> -                              PCIExpLinkSpeed speed, bool flitmode)
-> +static void pcie_cap_fill_lnk(PCIDevice *dev, uint8_t *exp_cap,
-> +                              PCIExpLinkWidth width, PCIExpLinkSpeed speed,
-> +                              bool flitmode)
->  {
->      /* Clear and fill LNKCAP from what was configured above */
->      pci_long_test_and_clear_mask(exp_cap + PCI_EXP_LNKCAP,
-> @@ -160,8 +161,14 @@ static void pcie_cap_fill_lnk(uint8_t *exp_cap, PCIExpLinkWidth width,
->      }
->  
->      if (flitmode) {
-> -        pci_long_test_and_set_mask(exp_cap + PCI_EXP_LNKSTA2,
-> +        uint32_t pos = dev->exp.exp_cap;
-> +
-> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
->                                     PCI_EXP_LNKSTA2_FLIT);
+> > 
+> > I mean, sure, the user would just see all Fs on a read and writes will
+> > be dropped silently until we are in D0.. but the behaviour before this
+> > change was that the user access will fault and hang on the memory_lock
+> > instead which ensures that the user observes a consistent dev state..
+> > 
+> 
+> I see this more consistent from another angle.
+> 
+> Old code only removes/blocks cpu access but not for device. DMAs
+> are allowed to this device while it's transitioning between D0/D3.
+> 
+> New code at least make this part consistent - both cpu/p2p are allowed
+> in the transition window.
+> 
+> Ideally a sane userspace shouldn't rely on the content read back when
+> it has initiated a reset in parallel. So this behavior change sounds ok?
 
-Why is this writing a field from LNKSTA2 into FLAGS?
+I agree on the CPU / P2P consistency part. However, my concern is for a
+shared reset scenario where a reset triggered by one process (I guess it
+was vfio_assign_device_set?) can affect multiple devices in a dev_set
+that are owned by different, unrelated processes. 
 
-> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
-> +                                   PCI_EXP_FLAGS_FLIT);
-> +        pci_word_test_and_set_mask(dev->wmask + pos + PCI_EXP_LNKCTL,
-> +                                   PCI_EXP_LNKCTL_FLIT_DIS);
->      }
->  }
->  
+In the old code, these peer processes are protected because their BAR
+mappings are zapped immediately. Their MMIO threads simply stall in
+a page fault until the reset is complete.
 
->  static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
->  {
->      PCIESlot *s = (PCIESlot *)object_dynamic_cast(OBJECT(dev), TYPE_PCIE_SLOT);
-> @@ -217,7 +259,8 @@ static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
->          /* the PCI_EXP_LNKSTA_DLLLA will be set in the hotplug function */
->      }
->  
-> -    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->parent_obj.flitmode);
-> +    pcie_cap_fill_lnk(dev, exp_cap, s->width, s->speed,
-> +                      s->parent_obj.flitmode);
+I agree for a single-reset scenario, sane user-space should never access
+regions during a self-triggered reset.
 
-As previously I think that should be a PCIE_PORT(s)->flitmode
+Am I missing something?
 
->  }
->  
->  int pcie_cap_init(PCIDevice *dev, uint8_t offset,
-> diff --git a/hw/pci/pcie_svc.c b/hw/pci/pcie_svc.c
-> new file mode 100644
-> index 0000000000..84db73de58
-> --- /dev/null
-> +++ b/hw/pci/pcie_svc.c
-> @@ -0,0 +1,164 @@
-> +/*
-> + * SPDX-License-Identifier: GPL-2.0-or-later
-> + *
-> + * PCIe Streamlined Virtual Channel (SVC) Extended Capability
-> + *
-> + * Copyright (c) 2026 Samsung Electronics Co., Ltd.
-> + */
-> +
-> +#include "qemu/osdep.h"
-> +#include "qemu/bitops.h"
-> +#include "hw/pci/pci_device.h"
-> +#include "hw/pci/pcie.h"
-> +#include "hw/pci/pcie_svc.h"
-> +#include "hw/pci/pcie_port.h"
-> +
-> +static void pcie_svc_update_map(PCIDevice *dev)
-> +{
-> +    uint32_t non_uio_ctrl = SVC_VC0_PROTOCOL | SVC_VC_ENABLE;
-> +    uint32_t uio_ctrl = SVC_UIO_PROTOCOL_SELECTED | SVC_VC_ENABLE;
-> +    int offset;
-> +
-> +    if (!pci_is_express(dev) || !dev->exp.svc_cap) {
-> +        return;
-> +    }
-> +
-> +    offset = pcie_find_capability(dev, PCI_EXT_CAP_ID_SVC);
-> +
-> +    /* SVC VC0 & VC3 initialization */
-> +    pci_set_long(dev->config + offset + SVC_RES_CTRL(0), BIT(0) | non_uio_ctrl);
-> +    pci_set_long(dev->config + offset + SVC_RES_CTRL(3), BIT(3) | uio_ctrl);
-> +
-> +    /* SVC VC4 initialization - optional */
-> +    if (dev->exp.svc.uio_opt_svc) {
-> +        pci_set_long(dev->config + offset + SVC_RES_CTRL(4), BIT(4) | uio_ctrl);
-> +    }
-> +}
-> +
-> +int pcie_config_uio_svc(PCIDevice *d, Error **errp)
-> +{
-> +    PCIEPort *p = PCIE_PORT(d);
-> +
-> +    if (!get_uio_mandatory_svc(p)
-> +        || pcie_svc_cap_init(d, PCI_EXT_CAP_BASE_OFFSET, errp) < 0) {
-
-|| on the line above
-
-> +        return -1;
-> +    }
-> +
-> +    if (get_uio_optional_svc(p)) {
-> +        pcie_svc_set_vc4(d, true);
-> +    }
-> +
-> +    return 0;
-> +}
-> +
-> +int pcie_svc_cap_init(PCIDevice *dev, uint16_t offset, Error **errp)
-> +{
-> +    uint32_t hdr;
-> +
-> +    if (!pci_is_express(dev)) {
-> +        error_setg(errp, "SVC ECAP requires PCIe");
-> +        return -EINVAL;
-> +    }
-> +
-> +    /*
-> +     * If no other ECAPs are present, make SVC the first at 0x100.
-> +     * This avoids pcie_add_capability() asserting on a non-0x100 offset.
-> +     */
-> +    hdr = pci_get_long(dev->config + PCI_CONFIG_SPACE_SIZE);
-
-Is there precedence for this?  Seems like most cases hand code
-an offset. I think letting this run has the risk that an ordering
-change might end up with this where something else wants to go.
-
-> +    if (hdr == 0) {
-> +        offset = PCI_CONFIG_SPACE_SIZE;
-> +    }
-
-
->  void pcie_cap_slot_pre_plug_cb(HotplugHandler *hotplug_dev, DeviceState *dev,
->                                 Error **errp);
-> diff --git a/include/hw/pci/pcie_regs.h b/include/hw/pci/pcie_regs.h
-> index 33a22229fe..644da744b2 100644
-> --- a/include/hw/pci/pcie_regs.h
-> +++ b/include/hw/pci/pcie_regs.h
-> @@ -81,6 +81,7 @@ typedef enum PCIExpLinkWidth {
->  #define PCI_EXP_DEVCAP2_EETLPP          0x200000
->  
->  #define PCI_EXP_DEVCTL2_EETLPPB         0x8000
-> +#define  PCI_EXP_LNKCTL_FLIT_DIS        0x2000
-
-This extra indent is supposed to associate the field with the register
-but the register isn't defined here so it makes little sense.
-
-
->  
-I see there is some precedence in here for registers that are also defined
-in the linux header that is included via hw/pci/pci_regs.h
-
-Maybe we should clean that up a t somepoint.
-
->  /* ARI */
->  #define PCI_ARI_VER                     1
-> diff --git a/include/hw/pci/pcie_svc.h b/include/hw/pci/pcie_svc.h
-> new file mode 100644
-> index 0000000000..4872905501
-> --- /dev/null
-> +++ b/include/hw/pci/pcie_svc.h
-> @@ -0,0 +1,91 @@
-> +/*
-> + * SPDX-License-Identifier: GPL-2.0-or-later
-> + *
-> + * PCIe Streamlined Virtual Channel (SVC) Extended Capability
-> + *
-> + * Copyright (c) 2026 Samsung Electronics Co., Ltd.
-> + */
-> +
-> +#ifndef HW_PCIE_SVC_H
-> +#define HW_PCIE_SVC_H
-
-Much of this feels like it will end up in pci_regs.h
-so maybe just do that from the start.
-
-For this series you'd have to have a patch adding them with
-a note on when you expect them to be in the linux header.
-
-> +
-> +#include "hw/pci/pci.h"
-> +#include "qemu/bitops.h"
-> +
-> +/*
-> + * The PCIe config space starts from 0x00 till 0xFF. In that
-> + * extended capability starts from 0x100 and each extended capability
-> + * is of dword size (32 bit). So we have to give a proper base offset
-> + * value which should be >= 0x100 and <= 0xFF and in between other
-> + * capability will also be registerd. We might not know where exactly
-> + * SVC extended capability will sit, so to avoid the overlapping we have
-> + * to give a very high offset.
-> + */
-> +#define PCI_EXT_CAP_BASE_OFFSET                0x200
-> +#define PCI_EXT_CAP_ID_SVC                     0x35
-> +#define PCI_EXT_CAP_SVC_SIZE                   0x74
-> +
-> +/* PCIe 6.4 section 7.9.29 */
-> +#define PCIE_SVC_CAP_HEAD_OFFSET               0x00
-> +#define PCIE_SVC_CAP_OFFSET                    0x04
-
-> +#define SVC_TC_VC_MAP(n)                       ((n & 0xff) << 0)
-> +
-> +/* 7.9.27.8 SVC Resource Status Register */
-> +#define SVC_RES_STATUS_BASE                    0x1c
-> +#define SVC_RES_STATUS(n)                      (SVC_RES_STATUS_BASE + \
-> +                                                (n) * 0x0c)
-
-That's not a nice line break for readabilty. If you have two, move the whole thing to next line.
-
-> +#define SVC_VC_NEGO                            BIT(1)
-
+Thanks,
+Praan
