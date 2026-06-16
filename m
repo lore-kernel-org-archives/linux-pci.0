@@ -1,35 +1,35 @@
 Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E35036A356;
-	Tue, 16 Jun 2026 14:10:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C37D1946DA;
+	Tue, 16 Jun 2026 14:17:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781619004; cv=none; b=sKpX35BRod7j9rm8a7llGWsDOjXIp94+lml/4PVbapCQT3obRmehVVRJjGh2rafAgNFiJJhioTA0w4LQ+6OnxEhODcMnDRX9iBygo/TnHxNTm1orsx+IhHfnyWHzCTBdvdUG+28SfREr6phlcmdgrpkLuZqi52kp8tdv6vgPjDo=
+	t=1781619467; cv=none; b=oFyMVoze+7y0FuHBViwQS+8VpFA9zaodRhPF3M6rj9pV+jDQMwes5HWkx++YrwGUKNmd2YAJuBC/PhBbIDws3neYv5B18gGOyWRc2Yj1ucds9Hso4Rxvs81DmdAkk6BiGRisuzmp+qx71YFaglA1BEjJytjwpBshb7Ho7AKeiAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781619004; c=relaxed/simple;
-	bh=/OodjjavcRaZsEcvBHKrJCaDAxEMhV+ZP3saeAM2fMA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FhX5lSs38WwSocVJJ+QPX1twyZBzaRm2/0vRmYJjAWciSsFbTnbRKI6IFWndQUX23fRTG3iuwNrhZbj10no4fdJX3IptTbD3PBYip/7oCKiH3rA+w18vwEWB+j35ytbpYaxnRKIjNHuc6fX4nNRUPqLHxSfuW439MqX1xWJUqXU=
+	s=arc-20240116; t=1781619467; c=relaxed/simple;
+	bh=QA/WhY7Cd5P/kxGZhBI5BaM1zbsD9PdkNFMfQw//quE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ioE4MuQTANs/6neov8iGb6SlPr/bNh8dOpASaKwaPbnetRm3pa2DCgFeSrBsRyardchNWJDpLx9wVhwFhFwfSf3VER6VoXRJ8bzSzSVPiLpO9F17lgWewUFifUg1s9h238oFxesmYXvAJx9TEzS33gt3SrNlNeRHjnOhC/rMges=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowAA32NAxWTFq70_vAQ--.22518S2;
-	Tue, 16 Jun 2026 22:09:53 +0800 (CST)
+	by APP-01 (Coremail) with SMTP id qwCowADnjdYBWzFqEYLvAQ--.15057S2;
+	Tue, 16 Jun 2026 22:17:37 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: mani@kernel.org,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com
-Cc: robh@kernel.org,
-	linux-arm-msm@vger.kernel.org,
+To: bhelgaas@google.com
+Cc: mika.westerberg@linux.intel.com,
+	mani@kernel.org,
+	andriy.shevchenko@intel.com,
+	kees@kernel.org,
+	adiyenga@cisco.com,
+	vulab@iscas.ac.cn,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH] PCI: xilinx-xdma-pl: fix refcount leak in xilinx_pl_dma_pcie_init_irq_domain()
-Date: Tue, 16 Jun 2026 14:09:49 +0000
-Message-Id: <20260616140949.1686840-1-vulab@iscas.ac.cn>
+Subject: [PATCH] PCI/PTM: fix refcount leak in pci_enable_ptm()
+Date: Tue, 16 Jun 2026 14:17:33 +0000
+Message-Id: <20260616141733.1688264-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -38,97 +38,56 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAA32NAxWTFq70_vAQ--.22518S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxWw45Cr48KF4UJw1DCF4UArb_yoW5Xr1DpF
-	W8G3ya9rWUtr4IgrsFk3ZY9Fya9Fnakr92y3y2k3ZrZr13Jw4UWFy5WF909ry3GFW8XFy3
-	AF47tF15uF17AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWxJr0_GcWlOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1x
-	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
-	VFxhVjvjDU0xZFpf9x0Jjb4SrUUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAUAA2oxFt-2pwAAsJ
+X-CM-TRANSID:qwCowADnjdYBWzFqEYLvAQ--.15057S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Xw1UKw18JrWxZF1fZr4DCFg_yoWkZwb_ZF
+	4UXrsrCw4jqFsxKa1ayw4DAryjk3ZrWr1kWw4I9FWfKFyxZr4aqa48Zrn8Arn5W3yjvF98
+	GFyqvry8Cry7ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Cr1j6rxdMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfU7TmhDUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCQ4AA2oxWswAvwAAs2
 
-of_get_child_by_name() acquires a reference on the returned device node,
-which must be released with of_node_put() after use. In
-xilinx_pl_dma_pcie_init_irq_domain(), the reference is properly released
-on the success path, but error paths that return directly fail to do so,
-leading to a reference count leak.
+When pci_enable_ptm() enables PTM for a device, it first
+recursively calls itself on the parent. This increments the
+parent's ptm_enable_cnt. If the subsequent __pci_enable_ptm()
+call on the child fails, the error path only decrements the
+child's ptm_enable_cnt but leaves the parent's counter
+elevated. That refcount is never balanced, leading to a leak.
 
-Additionally, when the INTx domain creation or MSI initialization fails,
-the already created PL DMA IRQ domain is not removed, causing another
-memory leak.
-
-Fix this by using goto-based error handling:
-- Add a common 'out_put_node' label to release the node reference.
-- Add 'out_remove_pldma' to delete the PL DMA domain before releasing
-  the node.
-- Ensure all error paths jump to the appropriate cleanup labels.
+Fix this by calling pci_disable_ptm() for the parent on the
+error path, reverting the parent's enable state. Add the call
+right after the child's counter is decremented.
 
 Cc: stable@vger.kernel.org
-Fixes: 8d786149d78c ("PCI: xilinx-xdma: Add Xilinx XDMA Root Port driver")
+Fixes: e8bdc5ea4816 ("PCI/PTM: Add pci_suspend_ptm() and pci_resume_ptm()")
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/pci/controller/pcie-xilinx-dma-pl.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/ptm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-xilinx-dma-pl.c b/drivers/pci/controller/pcie-xilinx-dma-pl.c
-index b037c8f315e4..e7a83a758874 100644
---- a/drivers/pci/controller/pcie-xilinx-dma-pl.c
-+++ b/drivers/pci/controller/pcie-xilinx-dma-pl.c
-@@ -580,8 +580,10 @@ static int xilinx_pl_dma_pcie_init_irq_domain(struct pl_dma_pcie *port)
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index a41ffd1914de..01f6c7da7ca9 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -201,6 +201,8 @@ int pci_enable_ptm(struct pci_dev *dev)
  
- 	port->pldma_domain = irq_domain_create_linear(of_fwnode_handle(pcie_intc_node), 32,
- 						      &event_domain_ops, port);
--	if (!port->pldma_domain)
--		return -ENOMEM;
-+	if (!port->pldma_domain) {
-+		ret = -ENOMEM;
-+		goto out_put_node;
-+	}
- 
- 	irq_domain_update_bus_token(port->pldma_domain, DOMAIN_BUS_NEXUS);
- 
-@@ -589,7 +591,8 @@ static int xilinx_pl_dma_pcie_init_irq_domain(struct pl_dma_pcie *port)
- 						     &intx_domain_ops, port);
- 	if (!port->intx_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto out_remove_pldma;
+ 	rc = __pci_enable_ptm(dev);
+ 	if (rc) {
++		if (!dev->ptm_root)
++			pci_disable_ptm(parent);
+ 		atomic_dec(&dev->ptm_enable_cnt);
+ 		return rc;
  	}
- 
- 	irq_domain_update_bus_token(port->intx_domain, DOMAIN_BUS_WIRED);
-@@ -597,13 +600,20 @@ static int xilinx_pl_dma_pcie_init_irq_domain(struct pl_dma_pcie *port)
- 	ret = xilinx_pl_dma_pcie_init_msi_irq_domain(port);
- 	if (ret != 0) {
- 		irq_domain_remove(port->intx_domain);
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto out_remove_pldma;
- 	}
- 
- 	of_node_put(pcie_intc_node);
- 	raw_spin_lock_init(&port->lock);
- 
- 	return 0;
-+
-+out_remove_pldma:
-+	irq_domain_remove(port->pldma_domain);
-+out_put_node:
-+	of_node_put(pcie_intc_node);
-+	return ret;
- }
- 
- static int xilinx_pl_dma_pcie_setup_irq(struct pl_dma_pcie *port)
 -- 
 2.34.1
 
