@@ -1,81 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AF33A7586
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 16:36:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D328644E045;
+	Tue, 16 Jun 2026 16:40:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781627802; cv=none; b=c6nJwIxFel1C6buOUWAgV20rHjAtANgkpeMjyz+XjS7RZQd2jnI7f3U8tIxQE4Kic3avThMmBNJtk/9F350DcqzEjwNuEX/7ui5Ma+nnfBKzg1kG5bENzisJjRV2s/tuBPpIr2QaTiWrD4a9iXf5RYBwgZdQZ5njqB2UMvzK4hk=
+	t=1781628057; cv=none; b=Eov08f7e7ojGpUNyJJ9yC7X9xq47Z6HjoOgwNoDy8ifK6egNL2Y6bDcwqJcKrn8AVFwZ6wa/y+0M8HI/y8jCRGU7HDjIYxd1O19dbvjDGOS6noxZMvzjUUZ3nd42SA9DgJuC2j3RHkuCQ0Y0/TdNMH3gUlzK19zFsajLUwxfMcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781627802; c=relaxed/simple;
-	bh=taGhMy55aTuxQuHiSlMvKhvKxHtl3MWoDW0R7uZbnzk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D7cGDsKF/odsgHn00U9P94Z/LYcUG5uVwLDGPG+xjAEAnhM+AGf1DCwpe4v800JWKHKp7TMsxT5gURJdyJWYuCVepTIMN2fL5X5oXbp+/OZM7Am3BBNLtitsEpQQAPXlGOGY5+noTnCFOJ3OsB1a143u/siE3kglRmnLCx/+TzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NQqwohYU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781628057; c=relaxed/simple;
+	bh=RcK3Px5qUbh8XXlAI6w2igXvbWfy+QWc9ZVLhgeJ98g=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qsMGXT4MTJ8ukbJAOvciiIeWRGJp30x4Vqlc0Q26sXctNsJVRKIDVxHh5ns/PE5riL2djjvkwPMgQm9JrnJZymfYLT7lURmxEQ1ZGyIDRGQDtwLR2+DhxiJ6hFjJ+lehSaR96zyIuH+biT2W94aEcpWDvzAEH/dgT2pzIDY6Vrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ieeWCPEL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NQqwohYU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B87D1F000E9;
-	Tue, 16 Jun 2026 16:36:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ieeWCPEL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27D521F000E9;
+	Tue, 16 Jun 2026 16:40:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781627801;
-	bh=C93TKaaKNGEgajri7sZF4w14iXJZalqd6mUoGufj+kI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NQqwohYUvDom4+C9Li2Y0pCI9DjqaDRE9q1mu5aQqvPkKYAN7mpcZ+V9l5DII95hr
-	 vyKbd3M4aps5v+af8fDWzxZFIngkL+d1xzDzFTLYMiRURiYNotiX8B0WZy20Mk9HUw
-	 UTiuTuRVOgSJUJoWJb44h6eGv97/0GDHkp+yxWoy7hNKwtvSYr1kRiaK1XBloTtqgu
-	 6D/XwM+D6aUjUBi7WMRZcsd23TE25cZn7CcwzBMthbWwDfOzA0gepNI9O9iqdb30KG
-	 etX2IAWoivfajSbeqaLxfLb+irSj0FAVUAL+WB8MxcZgNox2O1SSdEaGpzS1dLBytN
-	 Q99QqnLZaL/2A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] PCI/sysfs: Fix read byte order in
- pci_read_legacy_io()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260616163131.2763281-2-kwilczynski@kernel.org>
-References: <20260616163131.2763281-2-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 16 Jun 2026 16:36:41 +0000
-Message-Id: <20260616163641.8B87D1F000E9@smtp.kernel.org>
+	s=k20260515; t=1781628056;
+	bh=divQ5Yjk3XS3QVueUIZJigdnss2iRrOOpBuotDvoNEM=;
+	h=From:To:Cc:Subject:Date;
+	b=ieeWCPELtZ5QiwUazDhBrQUiYIomgu1kZFDAkQfaaUMUhElb98WHSpXh5QF+vA2+4
+	 0ZIYesWfczx3b97JPCCrDy7JHvOJTi0Qh7AsXIfo2pjSRQy10L4DwtJb5nQ44YICxk
+	 mjJ8CuB8MoGUwJa/SWwTkUwwze4Cd1n2uyU/G0JeP5EAwVheVSoTT82GAZzoiEc1zL
+	 dQ9o0wbQdBQr6DMDbbyA7n7+oUjO68HW14anrDWbaL26H4TPuDVCXhR9O7P54dXpOf
+	 etnJt2yp51m39UIsrhMRuAwd+HBlPeiYvo6DCTObN6NL6xNHofnzTambmmdCc1PP9B
+	 9+eWsUdrm3YHg==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sherry Sun <sherry.sun@nxp.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh@kernel.org>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: imx6: fix building against host-common
+Date: Tue, 16 Jun 2026 18:39:59 +0200
+Message-Id: <20260616164049.3656435-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-> pci_read_legacy_io() passes the sysfs buffer directly to pci_legacy_read(=
-):
->=20
->   return pci_legacy_read(bus, off, (u32 *)buf, count);
->=20
-> The PowerPC implementation stores the result as a native-endian integer:
->=20
->   *((u16 *)val) =3D in_le16(addr);
->=20
-> On big-endian PowerPC this stores the bytes in the wrong order, so
-> a 2-byte read of a device register returns different bytes than two
-> 1-byte reads at the same addresses.  The same applies to 4-byte
-> reads.  On little-endian the native byte order already matches PCI
-> I/O port byte order, so the conversion is a no-op.
->=20
-> Thus, let pci_legacy_read() store into a local u32 variable, then
-> copy the I/O port value to the sysfs buffer using put_unaligned_le16()
-> and put_unaligned_le32() for the 2 and 4 byte cases, converting from
-> the native integer to little-endian byte order matching PCI I/O port
-> space.
->=20
-> No changes are needed for the Alpha platform.
->=20
-> The legacy_io file is root-only and exists only on Alpha and PowerPC,
-> the two architectures that define HAVE_PCI_LEGACY.
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+When CONFIG_PCI_HOST_COMMON is set to =m, the i.MX6 PCIe driver
+fails to link. This can happen when only i.MX endpoint mode is
+enabled but not host mode, which would indirectly enable the
+host-common driver itself.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260616163131.2763=
-281-1-kwilczynski@kernel.org?part=3D2
+ld.lld: error: undefined symbol: pci_host_common_parse_ports
+>>> referenced by pci-imx6.c
+>>>               drivers/pci/controller/dwc/pci-imx6.o:(imx_pcie_host_init) in archive vmlinux.a
+
+ld.lld: error: undefined symbol: pci_host_common_delete_ports
+>>> referenced by pci-imx6.c
+>>>               drivers/pci/controller/dwc/pci-imx6.o:(imx_pcie_host_init) in archive vmlinux.a
+>>> referenced by pci-imx6.c
+>>>               drivers/pci/controller/dwc/pci-imx6.o:(imx_pcie_host_init) in archive vmlinux.a
+
+Select the common module from the endpoint support directly.
+
+Fixes: 250eea5c06f5 ("PCI: imx6: Parse 'reset-gpios' in Root Port nodes")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/controller/dwc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index aa0b784c85b4..7d49027c6736 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -126,6 +126,7 @@ config PCI_IMX6_EP
+ 	depends on ARCH_MXC || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_DW_EP
++	select PCI_HOST_COMMON
+ 	select PCI_IMX6
+ 	help
+ 	  Enables support for the PCIe controller in the i.MX SoCs to
+-- 
+2.39.5
 
