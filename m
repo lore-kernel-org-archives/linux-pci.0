@@ -1,116 +1,237 @@
-Received: from mail1.manjaro.org (mail1.manjaro.org [142.132.176.110])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F067435292A;
-	Tue, 16 Jun 2026 19:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=142.132.176.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E7523D890D;
+	Tue, 16 Jun 2026 19:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781637165; cv=none; b=OdRbMRWeAvTjrpj/+0xoCXKe34PHwbWOoCifmMwNrtz40P5QUetC424lmKdB1E7hbl2Gy/b+AxUH3alrfXlw0GQQXDzDWmVJqUEfE2mysw2NObLO1yvynIpXGWkhUOFL6moqomntSxeZBaNgeJC2ZTK+Q5u2VAFi14dLOgPKlrE=
+	t=1781637745; cv=none; b=cDjwiRBTTk9BOdGp8Gt3CpBVpxJoqEN9YLB4rwFGXxoirP+qWpb/p2O+DuOeRyh3WZrvetjjarENfcaD3tDud9QAc4vuyq8APO7ho4Devnbq4bN953BV0UoNAYiaTVCa14BwlHQqocW4tM+iu3bj2HU61x58GbGfOurzytjjtWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781637165; c=relaxed/simple;
-	bh=M6w5Yl58jg9dH7KHfJj1FBLvGV77xvI1OpZWU+uVcaE=;
-	h=From:In-Reply-To:Content-Type:References:Date:Cc:To:MIME-Version:
-	 Message-ID:Subject; b=Ad1ugFjUArO8mSx1X5zZDCP0TOD5oZ8u0+N0RTYTrBULUEBkaBR4FklPnqylvBHM+NPKE0PnIpwevyOKnaGMuCWbzQnSARG6Pwuv7ttKelrpcQbafVB1NqfTGNW0iGil+I3GlHL+0cf8ulloD8uccjUaN3t7515Jld+r8TcLd1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org; spf=pass smtp.mailfrom=manjaro.org; dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b=H0W94XPl; arc=none smtp.client-ip=142.132.176.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=manjaro.org
+	s=arc-20240116; t=1781637745; c=relaxed/simple;
+	bh=LBWjJkWxgOTS7GFKeyRpsyqFSw2cMteViY1IEQ7OAR0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=m806S0pd17m2c9de/1XL/oEHm7B5GqFFf7/gHIvMwDggl5XBzr+FUBDMLwitbjILGbB2dUo9P6U3lvGB5t/EbqGFko6MskEmKTTFithGxs32UR3WaDTRPXUxCtH7lxw63TyM1pJSQfvoZ/YjMffFqMBf3I/5cuMlgkNrKs2ZuYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6qMgX2a; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b="H0W94XPl"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPA id 14A5440F83;
-	Tue, 16 Jun 2026 21:06:53 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=manjaro.org; s=dkim;
-	t=1781636817; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=rWbzq0uUdK4mFc78V/pvFY8rAJ0udBH3buweyPX5lrI=;
-	b=H0W94XPl48hsbbXQ2SyO03bHTFLcwPP9aM8P635mYQvR3IyOnoypWLdfbsVfBP4qCKYEjs
-	da8VEHALEE5FH4gCG8QlB3eUUd+bRYXY/wL8OfJFWFcp3xF1SQejESbkasoPR66waonOYo
-	W7rA8txp6zhNe5wTG6mpzEHxGt5XRRkUe+EmFCP1XWPopHJaMxrYUBCtAmJyHDTPCF5BJm
-	MXvcuYAFOJhBwHB4p0npZ+BN+pcEItu4UDfKfUFPOu1nnRZqxDxuSpEKcgcyY2/YbZz7jE
-	nfssXJgS2Gefr+T5upBSyUdC6nnzrHecmNBXIHgRhj+vr8yIIbui1Q9xFAEZ7A==
-From: "Dragan Simic" <dsimic@manjaro.org>
-In-Reply-To: <d994f8fb3481bbb8f3972f117334a6e8aea383fb.1781622998.git.geraldogabriel@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-References: <cover.1781622998.git.geraldogabriel@gmail.com> <d994f8fb3481bbb8f3972f117334a6e8aea383fb.1781622998.git.geraldogabriel@gmail.com>
-Date: Tue, 16 Jun 2026 21:06:53 +0200
-Cc: "Shawn Lin" <shawn.lin@rock-chips.com>, linux-rockchip@lists.infradead.org, "Lorenzo Pieralisi" <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-To: "Geraldo Nascimento" <geraldogabriel@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6qMgX2a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74A2E1F000E9;
+	Tue, 16 Jun 2026 19:22:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781637744;
+	bh=vlCIInpka7FIjsx/AbmM1/Zseulxf9DwTuUmI6KKg7o=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=X6qMgX2amBjvifKWxbmeUCk17XrMjtb1plfACc93T5qq7HZgbFPQfg65nWljEcPxe
+	 0GbVAIgX1P4TYGW4qVDueThJcnTizQ6ShB1S5XxAgrEHMkieb8PQrTc5qagJXLklIf
+	 TuZSiVffDcDIKXucKTI8QDPMzDYFJfNXXzqKzEmhDW6ipwfwc38dYLoW55jp/It2cK
+	 lKzHnoqQPNGfRTtnuhSr175E0bGjXcbJL9+lcJpn4a92tQPW33ANGullPtOwbGZzO/
+	 LdFvrSXMgvbKLG5Jwp8YvWrE8XMJhHmGhjK+Ki9FWqPwoiVrX0YfLaQOUUF3+e4lJO
+	 gYm4z8HZAcxjA==
+From: sashiko-bot@kernel.org
+Subject: Re: [RFC PATCH v1] PCI: Remove pcie_flr() and convert all callers
+ to use pcie_reset_flr()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Farhan Ali" <alifm@linux.ibm.com>
+Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260615192200.3489-1-alifm@linux.ibm.com>
+References: <20260615192200.3489-1-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 16 Jun 2026 19:22:23 +0000
+Message-Id: <20260616192223.74A2E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Message-ID: <ee80e2c7-8327-0000-5986-e909f0a41df1@manjaro.org>
-Subject: =?utf-8?q?Re=3A?= [PATCH v7 1/3] =?utf-8?q?PCI=3A?=
- =?utf-8?q?_rockchip-ep=3A?= do not attempt =?utf-8?q?5=2E0?= GT/s 
- retraining
-User-Agent: SOGoMail 5.12.3
-Content-Transfer-Encoding: quoted-printable
-X-Last-TLS-Session-Version: None
 
-Hello Geraldo,
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
 
-Thanks for the v6 and v7 of this series.
+New issues:
+- [Critical] Unchecked VF FLR failure introduces a reliable DMA Use-After-F=
+ree (UAF) in the MANA driver during queue teardown.
+- [High] Replacing `pcie_flr()` with `pcie_reset_flr()` silently breaks Fun=
+ction Level Reset (FLR) for all SR-IOV Virtual Functions (VFs) across multi=
+ple drivers.
+- [High] Silent FLR failure in PCI reset quirks causes the kernel to block =
+for 20 seconds during device teardown or initialization.
+- [Low] The patch breaks the kernel build because it missed converting a ca=
+ller of `pcie_flr()` in the `ixgbe` driver.
 
-On Tuesday, June 16, 2026 17:25 CEST, Geraldo Nascimento <geraldogabrie=
-l@gmail.com> wrote:
-> Drop the 5.0 GT/s Link Speed retraining code block from Rockchip PCIe
-> EP driver. The reason is that Shawn Lin from Rockchip has reiterated
-> that there may be danger of "catastrophic failure" in using their PCI=
-e
-> with 5.0 GT/s speeds.
->=20
-> While Rockchip has done so informally without issuing a proper errata=
-,
-> and the particulars are thus unknown, this may cause data loss or
-> worse.
->=20
-> This change is corroborated by RK3399 official datasheet [1], which
-> states maximum link speed for this platform is 2.5 GT/s.
->=20
-> [1] https://opensource.rock-chips.com/images/d/d7/Rockchip=5FRK3399=5F=
-Datasheet=5FV2.1-20200323.pdf
->=20
-> Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21=
-b@rock-chips.com/
-> Cc: stable@vger.kernel.org
-> Reported-by: Dragan Simic <dsimic@manjaro.org>
-> Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
-> ---
->  drivers/pci/controller/pcie-rockchip-ep.c | 13 -------------
->  1 file changed, 13 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/=
-controller/pcie-rockchip-ep.c
-> index 799461335762e..9ebc227a1ef84 100644
-> --- a/drivers/pci/controller/pcie-rockchip-ep.c
-> +++ b/drivers/pci/controller/pcie-rockchip-ep.c
-> @@ -553,19 +553,6 @@ static void rockchip=5Fpcie=5Fep=5Flink=5Ftraini=
-ng(struct work=5Fstruct *work)
->  	if (ret)
->  		goto again;
+Pre-existing issues:
+- [Critical] An unbounded MMIO read loop causes an infinite loop and hard l=
+ockup if the PCIe device is hot-unplugged or encounters a fatal hardware er=
+ror.
+--
+
+commit e494ba565a5af359d72294da06691da5e6507322
+Author: Farhan Ali <alifm@linux.ibm.com>
+Subject: PCI: Remove pcie_flr() and convert all callers to use pcie_reset_f=
+lr()
+
+This patch removes the unconditional pcie_flr() function and converts its
+remaining callers to use pcie_reset_flr(). This ensures validation checks,
+such as verifying FLR support in the device capabilities, are applied
+consistently across the kernel.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+[ ... ]
+>  int pcie_reset_flr(struct pci_dev *dev, bool probe)
+>  {
+>  	int ret;
 > =20
-> -	/*
-> -	 * Check the current speed: if gen2 speed was requested and we are =
-not
-> -	 * at gen2 speed yet, retrain again for gen2.
-> -	 */
-> -	val =3D rockchip=5Fpcie=5Fread(rockchip, PCIE=5FCORE=5FCTRL);
-> -	if (!PCIE=5FLINK=5FIS=5FGEN2(val) && rockchip->link=5Fgen =3D=3D 2)=
- {
-> -		/* Enable retrain for gen2 */
-> -		rockchip=5Fpcie=5Fep=5Fretrain=5Flink(rockchip);
-> -		readl=5Fpoll=5Ftimeout(rockchip->apb=5Fbase + PCIE=5FCORE=5FCTRL,
-> -				   val, PCIE=5FLINK=5FIS=5FGEN2(val), 50,
-> -				   LINK=5FTRAIN=5FTIMEOUT);
-> -	}
-> -
->  	/* Check again that the link is up */
->  	if (!rockchip=5Fpcie=5Fep=5Flink=5Fup(rockchip))
->  		goto again;
+>  	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+>  		return -ENOTTY;
+> =20
+>  	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
+>  		return -ENOTTY;
 
-Looking good to me, so please feel free to include
+[Severity: High]
+According to the PCIe Base Specification, SR-IOV Virtual Functions do not
+report FLR capability in their Device Capabilities register, so this check
+will fail for VFs.=20
 
-Reviewed-by: Dragan Simic <dsimic@manjaro.org>
+Is this a regression that inadvertently breaks FLR for VFs that previously
+relied on pcie_flr() bypassing this check? Callers that ignore the return
+value will silently skip resetting the hardware.
 
+
+> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/=
+ethernet/intel/ixgbe/ixgbe_main.c
+> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+[ ... ]
+> @@ -8319,7 +8319,7 @@ static void ixgbe_check_for_bad_vf(struct ixgbe_ada=
+pter *adapter)
+>  		if (status_reg !=3D IXGBE_FAILED_READ_CFG_WORD &&
+>  		    status_reg & PCI_STATUS_REC_MASTER_ABORT) {
+>  			ixgbe_bad_vf_abort(adapter, vf);
+> -			pcie_flr(vfdev);
+> +			pcie_reset_flr(vfdev, PCI_RESET_DO_RESET);
+>  		}
+
+[Severity: Low]
+Does this patch introduce a build regression by missing another caller in
+ixgbe_main.c?=20
+
+Searching the tree might reveal that ixgbe_io_error_detected() still calls
+the now-removed pcie_flr(), which would cause a build failure when compiling
+with CONFIG_IXGBE.
+
+
+> diff --git a/drivers/net/ethernet/microsoft/mana/mana_en.c b/drivers/net/=
+ethernet/microsoft/mana/mana_en.c
+> --- a/drivers/net/ethernet/microsoft/mana/mana_en.c
+> +++ b/drivers/net/ethernet/microsoft/mana/mana_en.c
+[ ... ]
+> @@ -3306,7 +3306,8 @@ static int mana_dealloc_queues(struct net_device *n=
+dev)
+>  			}
+>  			if (atomic_read(&txq->pending_sends)) {
+>  				err =3D
+> -				    pcie_flr(to_pci_dev(gd->gdma_context->dev));
+> +				    pcie_reset_flr(to_pci_dev(gd->gdma_context->dev),
+> +						   PCI_RESET_DO_RESET);
+>  				if (err) {
+>  					netdev_err(ndev, "flr failed %d with %d pkts pending in txq %u\n",
+>  						   err,
+
+[Severity: Critical]
+If pcie_reset_flr() returns -ENOTTY for VFs, the FLR fails and this loop
+breaks early.=20
+
+Will the driver then proceed to unmap and free active SKB buffers in the
+subsequent loop:
+
+mana_dealloc_queues() {
+        ...
+        for (i =3D 0; i < apc->num_queues; i++) {
+                txq =3D &apc->tx_qp[i].txq;
+                while ((skb =3D skb_dequeue(&txq->pending_skbs))) {
+                        mana_unmap_skb(skb, apc);
+                        dev_kfree_skb_any(skb);
+                }
+        ...
+}
+
+Since the hardware wasn't reset and remains active, can this lead to a DMA
+use-after-free regression as the hardware continues to process the freed
+memory?
+
+
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+[ ... ]
+> @@ -4207,7 +4209,7 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev,=
+ bool probe)
+>  	val =3D val | HINIC_VF_FLR_PROC_BIT;
+>  	iowrite32be(val, bar + HINIC_VF_OP);
+> =20
+> -	pcie_flr(pdev);
+> +	pcie_reset_flr(pdev, PCI_RESET_DO_RESET);
+> =20
+>  	/*
+>  	 * The device must recapture its Bus and Device Numbers after FLR
+
+[Severity: High]
+If pcie_reset_flr() returns -ENOTTY without actually issuing a reset to the
+hardware, will the firmware ever clear the HINIC_VF_FLR_PROC_BIT?=20
+
+Looking at the rest of reset_hinic_vf_dev(), it appears the code will
+subsequently spin in a busy-wait loop for the full 20-second timeout
+waiting for that bit to clear:
+
+reset_hinic_vf_dev() {
+        ...
+        do {
+                val =3D ioread32be(bar + HINIC_VF_OP);
+                if (!(val & HINIC_VF_FLR_PROC_BIT))
+                        goto reset_complete;
+                msleep(20);
+        } while (time_before(jiffies, timeout));
+        ...
+}
+
+Could this regression silently block the thread for 20 seconds during
+device teardown?
+
+
+> diff --git a/drivers/ptp/ptp_netc.c b/drivers/ptp/ptp_netc.c
+> --- a/drivers/ptp/ptp_netc.c
+> +++ b/drivers/ptp/ptp_netc.c
+[ ... ]
+> @@ -802,7 +802,7 @@ static int netc_timer_pci_probe(struct pci_dev *pdev)
+>  	if (!priv)
+>  		return -ENOMEM;
+> =20
+> -	pcie_flr(pdev);
+> +	pcie_reset_flr(pdev, PCI_RESET_DO_RESET);
+>  	err =3D pci_enable_device_mem(pdev);
+
+[Severity: Critical]
+This is a pre-existing issue, but while reviewing this driver's PCIe
+handling, does the interrupt handler have an unbounded loop on PCIe
+disconnect?
+
+In netc_timer_handle_etts_event(), the code continuously reads a
+memory-mapped register:
+
+netc_timer_handle_etts_event() {
+        ...
+        while (netc_timer_rd(priv, NETC_TMR_STAT) & TMR_STAT_ETS_VLD(index)=
+) {
+                ...
+        }
+        ...
+}
+
+If the device is removed or experiences a fatal error, the MMIO read will
+return all 1s (0xFFFFFFFF). Because 0xFFFFFFFF masked with the bit is
+always true, would this loop spin infinitely and cause a hard lockup?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260615192200.3489=
+-1-alifm@linux.ibm.com?part=3D1
