@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F1EB44D00D
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:23:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2348A44BCAF
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781623395; cv=none; b=R0RpeJdwV10RpDHLL1gWon8u94mq7qr3a14f9hmeuJ5F/RfRRdSm2INY1aK6jJfucULEOWXOYTQIVe/EPShVJNau6itoamMayjEZzAfpX/fzCSN2A3HAVoD+SZYayA0eBpOFbby7sQNJ9GSHTcLsh2HmF4/siV/Z80PWG4x/Dmw=
+	t=1781623397; cv=none; b=mPQ9pfETFLH6dmU5wnhtdkMWy6d7DPZSzudiCFF8Q4JoZZYQ2RHytvSE6fRswFZOFITaAZjzNlFdBpVKp5HzBV1bIqx08NzvT+rd5GRjgxLJun8gyl4WyeXroh9i8mqmXpQoaLB0lmAW4XCbREy4qc+iCaHaiAAhdRoXFpqkOdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781623395; c=relaxed/simple;
-	bh=dakKIXtC7e1kNXFuo6b/JS23iumUbsyw2suGtC0TODc=;
+	s=arc-20240116; t=1781623397; c=relaxed/simple;
+	bh=csykStPKL2vxh5U9zFjBn7rXw/Awp9+Rlx3O/TPqDCw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ixXcGSun8GDKZI62AXEiuSnhoIJ6zjsuET9o7ks9ajxQmGb99vOj+5ffV8MCilYRi4lVTQUKew3VPcIeu6kzI+a3/cbhoUpoqK3yCM+BFVvTDvp3pwcudu0v2oNlfTgQeYS16SQGRWd3eRrIEZniV8+69e7pQUHrWi3v3malr8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N/oEjYZM; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=RXRDPIy9rbef4+FnA3ANvD9M1Ao7s7jM+SsVc6PIGbusbzH0xC8tuYL1B2q1y6WRLQ/6QtRh2tMMLid7X9VocrwTLeun+oGctqhdkjZ2dzMVYLihzty1z+HDDv/OqU9ZHHt2gd+v+3hsiMGd0+jIm/fR1iyHcwaG5org4jyGBuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gXAplkmf; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N/oEjYZM"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gXAplkmf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781623393;
+	s=mimecast20190719; t=1781623395;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=f4StedMv6W0NNcpbdFnJ73YCv2u3etwmHcP6mSakeug=;
-	b=N/oEjYZM0eole7kmGooxBseSfQxKZxzYMGdFWzXoosSGX7m3zEe/s+jCIZNIA4rmeN6Wrg
-	tHUFEOO/01I1dmyS/nVncVzl8HdE5llo4e+fY38mVc+uT6Ehwfb2IZamhu1uq8ffIO6Qua
-	RbsFRr9rv8o04e6i5g+FbkWvCtvcl4o=
+	bh=qMS+SWEyDEjE+jxgzivY9c5ZtMduep7fGow2UpH8XlU=;
+	b=gXAplkmfNKRYL+4UBlfotOSPs+xWEMkc2pPGSrlH2/fHvEOMXERJ+mydPdJfhFAu3BRiwG
+	RvVmFbqmpqvcHkGoKcgk56XBrDGkcsgWcV5akCmMY0iyPR2syJf8GsVg8mz9hM3irmpuhY
+	cLjXiDZ80ya0lgUeJyYJ1fgw/0HC0+Y=
 Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-207-bF-NAUeFMGyYkPrph5B81Q-1; Tue,
- 16 Jun 2026 11:23:08 -0400
-X-MC-Unique: bF-NAUeFMGyYkPrph5B81Q-1
-X-Mimecast-MFC-AGG-ID: bF-NAUeFMGyYkPrph5B81Q_1781623386
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-108-4km-Gb8fOv-X_BbJWgTaGQ-1; Tue,
+ 16 Jun 2026 11:23:14 -0400
+X-MC-Unique: 4km-Gb8fOv-X_BbJWgTaGQ-1
+X-Mimecast-MFC-AGG-ID: 4km-Gb8fOv-X_BbJWgTaGQ_1781623391
 Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 66E0319560BF;
-	Tue, 16 Jun 2026 15:23:06 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 910FC19560B9;
+	Tue, 16 Jun 2026 15:23:11 +0000 (UTC)
 Received: from fedora-work.redhat.com (unknown [10.22.80.179])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 29FA9180034F;
-	Tue, 16 Jun 2026 15:23:00 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7A08180034F;
+	Tue, 16 Jun 2026 15:23:06 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: driver-core@lists.linux.dev,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -65,11 +65,10 @@ Cc: linux-kernel@vger.kernel.org,
 	John Garry <john.g.garry@oracle.com>,
 	kexec@lists.infradead.org,
 	David Jeffery <djeffery@redhat.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 4/5] PCI: Enable async shutdown support
-Date: Tue, 16 Jun 2026 11:22:18 -0400
-Message-ID: <20260616152219.6268-5-djeffery@redhat.com>
+	Pasha Tatashin <pasha.tatashin@soleen.com>
+Subject: [PATCH 5/5] scsi: Enable async shutdown support
+Date: Tue, 16 Jun 2026 11:22:19 -0400
+Message-ID: <20260616152219.6268-6-djeffery@redhat.com>
 In-Reply-To: <20260616152219.6268-1-djeffery@redhat.com>
 References: <20260616152219.6268-1-djeffery@redhat.com>
 Precedence: bulk
@@ -81,39 +80,68 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Like its async suspend support, allow PCI device shutdown to be performed
-asynchronously to reduce shutdown time.
+Like scsi's async suspend support, allow scsi devices to be shut down
+asynchronously to reduce system shutdown time.
 
 Signed-off-by: David Jeffery <djeffery@redhat.com>
 Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/pci/probe.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/hosts.c      | 2 ++
+ drivers/scsi/scsi_sysfs.c | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b63cd0c310bc..7cf3dabc885e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1045,6 +1045,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index e047747d4ecf..bf691acc7a67 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	pm_runtime_set_active(&shost->shost_gendev);
+ 	pm_runtime_enable(&shost->shost_gendev);
+ 	device_enable_async_suspend(&shost->shost_gendev);
++	dev_set_async_shutdown(&shost->shost_gendev);
  
- 	bus->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(bus->bridge);
-+	dev_set_async_shutdown(bus->bridge);
- 	pci_set_bus_of_node(bus);
- 	pci_set_bus_msi_domain(bus);
- 	if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
-@@ -2753,6 +2754,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	pci_reassigndev_resource_alignment(dev);
+ 	error = device_add(&shost->shost_gendev);
+ 	if (error)
+@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	get_device(shost->shost_gendev.parent);
  
- 	pci_init_capabilities(dev);
-+	dev_set_async_shutdown(&dev->dev);
+ 	device_enable_async_suspend(&shost->shost_dev);
++	dev_set_async_shutdown(&shost->shost_dev);
  
- 	/*
- 	 * Add the device to our list of discovered devices
+ 	get_device(&shost->shost_gendev);
+ 	error = device_add(&shost->shost_dev);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dfc3559e7e04..8fd317aef37b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1386,6 +1386,7 @@ static int scsi_target_add(struct scsi_target *starget)
+ 	pm_runtime_set_active(&starget->dev);
+ 	pm_runtime_enable(&starget->dev);
+ 	device_enable_async_suspend(&starget->dev);
++	dev_set_async_shutdown(&starget->dev);
+ 
+ 	return 0;
+ }
+@@ -1412,6 +1413,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	transport_configure_device(&starget->dev);
+ 
+ 	device_enable_async_suspend(&sdev->sdev_gendev);
++	dev_set_async_shutdown(&sdev->sdev_gendev);
+ 	scsi_autopm_get_target(starget);
+ 	pm_runtime_set_active(&sdev->sdev_gendev);
+ 	if (!sdev->rpm_autosuspend)
+@@ -1431,6 +1433,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	}
+ 
+ 	device_enable_async_suspend(&sdev->sdev_dev);
++	dev_set_async_shutdown(&sdev->sdev_dev);
+ 	error = device_add(&sdev->sdev_dev);
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
 -- 
 2.54.0
 
