@@ -1,103 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86CB13C13FC
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 03:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 735C83C277C;
+	Tue, 16 Jun 2026 03:16:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781579471; cv=none; b=JRxObRehyapUgEXLtnhJ+8qSRnMC8uqm2JF2H9z9mHKzSIxGOlBcHKaeTp+r1CG8+WRqOgo4girwV6NmfZdAGJGJzIVLQVL38TG8tDa4fU+TXxr7wr2GkQVHGLXGggQOMcRS9c+hkFTjHKYhZ2zv0SyLBOZmEoGDTJwouLUaHH8=
+	t=1781579779; cv=none; b=qcXpkn4VuM8ZSSi8O5dXgVhUFUMIK7YWKQHU7XJSliFrb9ZR7o1bPdTGCeCIZu4qVnU2RfsK2Vj25kn0kdPemjkKikK8UyMn2S/agTLLYAzwSpOu8f1aRNm6luLWIoyit+ZyWow+PUR/kSTV2D+Fjkf8QfTYEGgKH1zzR8PQyH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781579471; c=relaxed/simple;
-	bh=M1tWtbsfYEAhOrR7I/WyaZQl7JpY/21cvclbLa95cEE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dHX8Y200TOnqvQEyl1IGDhOGQ8GG4C1Iuz6ud6WHa0UIM0Be8epH/y3pISj1+xPlV3Xb3vaAUWYC4waCpcKAnWFibCkXqRkx8xam/bonkUP+Z0i58LIc4HQkk6eXXhu6glEZO+1CUcCEJodQLqycBy2rDC4np7L/h6hnOEALVGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZhWoKTPC; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZhWoKTPC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 501921F000E9;
-	Tue, 16 Jun 2026 03:11:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781579469;
-	bh=b1W4dLQ8DUwqVPqmIygfZb2gKu4i51eoLC6xmsznzWE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZhWoKTPC+T7pqeXq4QbHvtf+3PAGwTkFZBs12q0fDBYhQnyuNlejVPBPULXVk4wXJ
-	 fzp72uWiBQiraiMK0qaI75BrWsVKobiPdbW1QTE7Eq+jnziTQ+p02ALhixtZ1GoLzk
-	 XYdanoRhWhKD6QxAluiAxiXGnEW1pieXaZa1E+uZETeGnu+OxyBNIRkwjA2VMGbKlH
-	 J2/aq7PfyINEF1Z4dYgoAZnfIENuvmWNQTAqJT7pIeCtfvZ8e21d4G3hIUUNC0qsjY
-	 31eWdx5yy3vGgdLQKMwExyV3NAoc8WuQEU17byNfMH7tpFVjQqoFqWeWVMICreGkhG
-	 5QW9hFz60sDFQ==
-From: sashiko-bot@kernel.org
+	s=arc-20240116; t=1781579779; c=relaxed/simple;
+	bh=qtqTjDdI6m+T4XN/N6CcVLUF+QBmCRwe8Yyo4kAe7/4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cru0DenjTszwCoQkAnxB/Ik7GTkHsjMVahJQLcUFJ8zkq0iwgAmj/58mL3aTaHqqjkMAGsLYGiv+pvHouxow1QPkaUL3ocLH1dOU4mO47IkSa3ciqZBhDdlGRlChwrVzTkkYRyajQBV6JzIt7nqbPyKHMYCvpLdAM37Hpxu58U8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 6A5EB10DD4;
+	Tue, 16 Jun 2026 05:16:13 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 44434600DC48; Tue, 16 Jun 2026 05:16:13 +0200 (CEST)
+Date: Tue, 16 Jun 2026 05:16:13 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Wentao Liang <vulab@iscas.ac.cn>
+Cc: djbw@kernel.org, bhelgaas@google.com, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
 Subject: Re: [PATCH] PCI/TSM: fix use-after-free in find_dsm_dev()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260616030243.1661791-1-vulab@iscas.ac.cn>
+Message-ID: <ajC__b2Z3W_8746Z@wunner.de>
 References: <20260616030243.1661791-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 16 Jun 2026 03:11:08 +0000
-Message-Id: <20260616031109.501921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260616030243.1661791-1-vulab@iscas.ac.cn>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The patch introduces a `struct pci_dev` reference count leak and c=
-reates inconsistent return semantics by using `no_free_ptr(pf0)` to suppres=
-s reference cleanup.
---
+On Tue, Jun 16, 2026 at 03:02:43AM +0000, Wentao Liang wrote:
+> In find_dsm_dev(), pf0 is obtained via pf0_dev_get() which returns a
+> reference-counted pointer.  It is declared with __free(pci_dev_put),
+> so pci_dev_put() will be called when the variable goes out of scope.
+> Returning 'pf0' directly while it still has __free cleanup causes the
+> reference to be dropped before the caller can use the pointer, leading
+> to a use-after-free.
 
-commit b3a70e32ce3263a0eaca05ff9a117ad34fac7def
-Author: Wentao Liang <vulab@iscas.ac.cn>
+No, the code comment preceding find_dsm_dev() explicitly states:
 
-PCI/TSM: fix use-after-free in find_dsm_dev()
+   "Note that no additional reference is held for the resulting device
+    because that resulting object always has a registered lifetime
+    greater-than-or-equal to that of the @pdev argument."
 
-This patch modifies find_dsm_dev() to return no_free_ptr(pf0) when returning
-the pf0 pointer. This suppresses the automatic cleanup of the reference=20
-acquired by pf0_dev_get() and transfers ownership of the reference count
-to the caller.
+Your patch looks like it may be an LLM-generated hallucination.
+Did you use an LLM to come up with the patch?  If so, please use
+an Assisted-by tag per Documentation/process/coding-assistants.rst
+so that we know to expect hallucinations.
 
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> index 5fdcd7f2e8207..dd4e0cb0c6aae 100644
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
-> @@ -670,7 +670,7 @@ static struct pci_dev *find_dsm_dev(struct pci_dev *p=
-dev)
->  		return NULL;
-> =20
->  	if (is_dsm(pf0))
-> -		return pf0;
-> +		return no_free_ptr(pf0);
+Thanks,
 
-[Severity: High]
-Does this change introduce a reference count leak for the struct pci_dev?
-
-The original code returned a borrowed reference to the device, but using
-no_free_ptr() suppresses the cleanup and transfers the reference count
-ownership to the callers.
-
-Looking at the callers of find_dsm_dev(), such as pci_tsm_init() and
-pci_tsm_link_constructor(), they expect an un-refcounted pointer and do
-not call pci_dev_put() on the returned device:
-
-drivers/pci/tsm.c:pci_tsm_link_constructor() {
-	...
-	tsm->dsm_dev =3D find_dsm_dev(pdev);
-	...
-}
-
-Since these callers do not appear to manage or release the reference, the
-device reference could be permanently leaked, which would prevent the
-device from being properly unloaded or hot-unplugged.
-
-Additionally, other return paths in find_dsm_dev() (such as returning pdev
-or uport) continue to return borrowed pointers. Does this create
-inconsistent return semantics where the caller cannot know if a reference
-was taken or not?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260616030243.1661=
-791-1-vulab@iscas.ac.cn?part=3D1
+Lukas
