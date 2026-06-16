@@ -1,116 +1,227 @@
-Received: from gimli.kloenk.de (gimli.kloenk.de [49.12.72.200])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB1D43C05C;
-	Tue, 16 Jun 2026 15:17:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.12.72.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C23A43E9FD
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:22:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781623082; cv=none; b=Ud2r5d2bpiqlyNSpmFpIHVwvEi8BckKh9SAdRZwCUcGZX9JOLy7HUK43xaMB+3/cC3xurvXWxdxnKrL/yQaoY1GWoebIpoVGIT/dJXF8oPEb76u5JbwcIr2Pjf6IRbowA0mjmQebJGE2bCsHYz7AgSQu3aZ9DbYIiw6jaLLQywI=
+	t=1781623374; cv=none; b=HmPD3cVoA3Z1OKxCENDLR77N+AvaBfSdEZIMl/1hTLIhqGx2G5yfZbBhqA8bcS9SH+1amt86wPOVU7ukJJDEU5bsq/g3EFhHC0YRIZbvHV9Ux03BIBowoG7nw7Wfa8vkipYj4MEYMWZoUYkqUm5epz/DruGYgROI6GsTCcE2SY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781623082; c=relaxed/simple;
-	bh=DisUz3XIyZTl2EMC1uJewOLYWwucQvgVGjQ7xBm47os=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=LCQd/uyjMeVgi9wm2VrLwBoOBrM4gurFi3nviEzRhN4190XVZgcjWHLCLUUqQtGQIXhv2T6tRBqKmV1sDfGyKWUVF9EtOzYOCAvlxa2mEoP95Mw5HVq5EYJ8tTSOEBP6HOvHGjAdmPMyTTwfrSGv6OiBVEC3gYiHesColhxLLDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kloenk.dev; spf=pass smtp.mailfrom=kloenk.dev; dkim=pass (1024-bit key) header.d=kloenk.dev header.i=@kloenk.dev header.b=XcMKfEMd; arc=none smtp.client-ip=49.12.72.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kloenk.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kloenk.dev
+	s=arc-20240116; t=1781623374; c=relaxed/simple;
+	bh=r2bPjaF+3nM4GNJt44dnr4hjNplN+rhkhZ49EgwrWrQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WqlZhLGiHn8IUT4qNISdm/Sag8+a8ignI2OUay+hgRlcCCxXdeTPK1iq9fDgP5C944Qk/gJyBEVqQyAQgAj7CcTzFo43LrNnj3d2Tx2MTwsF6Abi/bOHcMwY12kVkRVRSybuWC3zlaKjYIyrINq7W3SA8c9JCroBhAkEmS2elKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Bz7U2uOd; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kloenk.dev header.i=@kloenk.dev header.b="XcMKfEMd"
-From: Fiona Behrens <me@kloenk.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kloenk.dev; s=mail;
-	t=1781622500;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bz7U2uOd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781623372;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gXXdM10231/qy+pBqCYwYBV52urE6a8n8HWmeoocXg0=;
-	b=XcMKfEMdLOhIqWuX7EYubU3YPR1V+eYjZac7FihyTe7klHoulhwatFWHzkH8Va/7O5EKHA
-	H1SlTjLu+7de32/CRCFIeuoyPiBfi5RAS19y0c+pHsXQ+LfosPvzvVbn05FOB/Zo6zaZzd
-	Jg9vyVHuGTj3bmXcJ/kqJVqvzSODCDU=
-To: Maurice Hieronymus <mhi@mailbox.org>
-Cc: Danilo Krummrich <dakr@kernel.org>,  Bjorn Helgaas
- <bhelgaas@google.com>,  Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>,
-  Miguel Ojeda <ojeda@kernel.org>,  Boqun Feng <boqun@kernel.org>,  Gary
- Guo <gary@garyguo.net>,  =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>,
-  Benno Lossin <lossin@kernel.org>,  Andreas Hindborg
- <a.hindborg@kernel.org>,  Alice Ryhl <aliceryhl@google.com>,  Trevor Gross
- <tmgross@umich.edu>,  Daniel Almeida <daniel.almeida@collabora.com>,
-  Tamir Duberstein <tamird@kernel.org>,  Alexandre Courbot
- <acourbot@nvidia.com>,  Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
-  linux-pci@vger.kernel.org,  rust-for-linux@vger.kernel.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/4] rust: pci: add managed Device::enable_device()
-In-Reply-To: <20260614-b4-rust-pci-edu-driver-v1-2-e3f2471b595c@mailbox.org>
-	(Maurice Hieronymus's message of "Sun, 14 Jun 2026 17:59:46 +0200")
-References: <20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org>
-	<20260614-b4-rust-pci-edu-driver-v1-2-e3f2471b595c@mailbox.org>
-Date: Tue, 16 Jun 2026 15:08:18 +0000
-Message-ID: <8733ymbk0t.fsf@kloenk.dev>
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=RjBP9R1S5MxdGQYXMh2db+E4ZHkiyeiPNhqM9DClkYY=;
+	b=Bz7U2uOd92DDzktcYRVeHnYCE/Oo+ZcJkcsa3cVmNdv5Mzgd82IbWOoukNI/r3vIr0pQzi
+	8A2fuyYWLR6qkXlM103JchbQ6kuJrcVxtnRQ/P72+m7F8fsy/0JAdcTyJ+YRuOPThz2Vxe
+	T4isHo9lHHNLf3YKppt8OOAg9kc8Z7c=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-158-0oQWpsMLNSePo8FNB0w9jA-1; Tue,
+ 16 Jun 2026 11:22:46 -0400
+X-MC-Unique: 0oQWpsMLNSePo8FNB0w9jA-1
+X-Mimecast-MFC-AGG-ID: 0oQWpsMLNSePo8FNB0w9jA_1781623364
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 79A931800D86;
+	Tue, 16 Jun 2026 15:22:43 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.80.179])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 90B42180034F;
+	Tue, 16 Jun 2026 15:22:37 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: driver-core@lists.linux.dev,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	kexec@lists.infradead.org,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v17 0/5] shut down devices asynchronously
+Date: Tue, 16 Jun 2026 11:22:14 -0400
+Message-ID: <20260616152219.6268-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Maurice Hieronymus <mhi@mailbox.org> writes:
+These patches are rebased against the driver-core tree's driver-core-next
+branch and should also apply against recent linux-next. Changes for v17 are
+contained in patches 2 and 3 which are most in need of reviewing.
 
-> Add a managed counterpart to Device::enable_device_mem() that wraps
-> pcim_enable_device(). In addition to enabling the device, it registers a
-> pci_disable_device() cleanup that runs automatically when the device is
-> unbound from its driver, keeping the device's enable count balanced
-> across unbind/rebind cycles.
->
-> The existing enable_device_mem() wraps the unmanaged
-> pci_enable_device_mem() and has no disable counterpart, so the enable
-> count is leaked on unbind. On the next probe pci_enable_device_flags()
-> sees a non-zero enable count and returns early, skipping the power-state
-> transition back to D0. For a device without a PCI power management
-> capability the power state cannot be re-read from hardware and stays
-> PCI_UNKNOWN, which makes __pci_enable_msi_range() reject the subsequent
-> MSI allocation with -EINVAL.
 
-I wonder if this is then also a good commit to further document this
-behaviour in `enable_device_mem`, so that consumers are not only finding
-the other variant and overlook this refcounting.
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
 
->
-> Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
 
-Do favour the `#[inline]`, but for both version
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
 
-Reviewed-by: Fiona Behrens <me@kloenk.dev>
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
 
-> ---
->  rust/kernel/pci.rs | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index af74ddff6114..ca04548c82c3 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -452,6 +452,22 @@ pub fn enable_device_mem(&self) -> Result {
->          to_result(unsafe { bindings::pci_enable_device_mem(self.as_raw()) })
->      }
->  
-> +    /// Enable I/O and memory resources for this device, with automatic cleanup.
-> +    ///
-> +    /// This is the managed version of `pci_enable_device()`: it enables the device's I/O and
-> +    /// memory resources and registers a `pci_disable_device()` call that runs automatically
-> +    /// when the device is unbound from its driver. In contrast, [`Device::enable_device_mem`]
-> +    /// is unmanaged and only enables memory resources.
-> +    ///
-> +    /// The automatic cleanup keeps the device's enable count balanced across driver
-> +    /// unbind/rebind cycles. With an unbalanced (leaked) enable count, a re-probe skips the
-> +    /// power-state transition back to `D0`, which makes subsequent MSI allocation fail with
-> +    /// `EINVAL`.
-> +    pub fn enable_device(&self) -> Result {
-> +        // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
-> +        to_result(unsafe { bindings::pcim_enable_device(self.as_raw()) })
-> +    }
-> +
->      /// Enable bus-mastering for this device.
->      #[inline]
->      pub fn set_master(&self) {
+Changes from V16:
+
+Drop spinlock before async subsystem call which uses GFP_KERNEL
+Handle that async shutdown can widen races between device shutdown and deletion
+  * __shutdown_one_device will immediately return if a device is dead
+  * Set shutdown device completion to complete when marking a device dead to
+      prevent waiting on a dead device
+  * Only late-access a parent pointer if device is in a non-dead state to
+      ensure the pointer is still valid
+
+Changes from V15:
+
+The async_shutdown bit field is converted to a device flags bit
+Convert all patches to use the flag bit accessor macros to set or check if
+  async shutdown should be used
+Added documentation on the kernel parameter to control use of async shutdown
+
+Changes from V14:
+
+Remove unneeded use of '!!' with boolean type
+
+Changes from V13:
+
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
+
+Changes from V12:
+
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
+
+Changes from V11:
+
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+ 
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+
+Stuart Hayes (2):
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+
+David Jeffery (3):
+  driver core: async device shutdown infrastructure
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+ .../admin-guide/kernel-parameters.txt         |  10 +
+ drivers/base/base.h                           |   2 +
+ drivers/base/core.c                           | 214 +++++++++++++++---
+ drivers/pci/probe.c                           |   2 +
+ drivers/scsi/hosts.c                          |   2 +
+ drivers/scsi/scsi_sysfs.c                     |   3 +
+ include/linux/device.h                        |   2 +
+ 7 files changed, 199 insertions(+), 36 deletions(-)
+
+-- 
+2.53.0
+
