@@ -1,129 +1,180 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA983542D4;
-	Tue, 16 Jun 2026 11:00:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2F931985D;
+	Tue, 16 Jun 2026 11:00:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781607626; cv=none; b=XaNwxzs3IzVw/KhBNUF78PCzqet8qN28lflM8w0evpA+58+enOMF6JYqXZKyHIZe/Gb1mianozJ6s4dIKgL5YB5ezc5qWgpFHXnz1Guh7a/5kEaVcgHPgTaaS4tASWsL3c81fKa9hP1TwPuBEP+FIA3/b5frxWnKRWd9nxYxDDM=
+	t=1781607647; cv=none; b=uPVxaS7+KOfiBRlX5S6P3kUPDqifS22rPmHPNYgL45Zp/y3guVK9dEHb9RLeFVP577fbEZeYoDa8YTnIczbHIhqskPukQX4S+hx0YbkVP9JM49pIonjE6SKQHi9X7NL1TBQ2OvFuJDcR2L5CRoe9HFx0o1g9hnP5zw8OM9jLcyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781607626; c=relaxed/simple;
-	bh=RqQDXZvXQ7Oo+6YhssoeFrUSKovX8++B0/kuM+YBjPo=;
+	s=arc-20240116; t=1781607647; c=relaxed/simple;
+	bh=mnlHqM/1ZVpvuwqLPVKTJPO7kIdK7gXuuPaNW0Bz+w0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dwElX3kSqcFnZ1HzRS2ecH4KzpL4kIuQbrR0Jsj4IiAcjxa0gVsV7j3QckJVup44DdHwaZyVxvZKfu4ZyzfKqCfsmer6rbnFRPNrELdC2wns7lCvL8PRNPNlvBUdEqsC+4F5ernQPuM7lqfeN98YbXaY5oSt17R8shB3dkpKiBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HkUq66aA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ktM1ddAcNxd/NJ/Ddlc9RLTzz1FQczUmCW8sF3TrbjUtF+6ZZjxLMM8dKnIsnBjW1yvLvOzTGgPaabAaT3KBgP6jT34S4BQ862AaR2Bsnqep4cjVAsny8jjtBxPIY+LDvb/G65qTjeyzaOZxn13iA6hcRavS0pEzhyNhI8P20j4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VpDc9N4O; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HkUq66aA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 415611F000E9;
-	Tue, 16 Jun 2026 11:00:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VpDc9N4O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 169C01F000E9;
+	Tue, 16 Jun 2026 11:00:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781607625;
-	bh=aAi/YXeWgtPanNCFI6mXYtp0ocuFwAE7fLv3QOs3Um0=;
+	s=k20260515; t=1781607646;
+	bh=D4BeaXIRSS9lNLuPvORgNWdICPvoeFKZ7c6ECdJOYps=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HkUq66aAyQN4sIloH2x7Dj/KUJr4I7N/dJLju74afof9reMhbEQd5PR47m7r/EysX
-	 An4QYnoOmKGKC7hp4oxFir8GlYXXH2UFOOEwWSPL7nWRIxAGnirhOuMYXiXFuR7Ekv
-	 dCMQR7gEvDpVS0vfgRTUlb/1hAAZAA46/RbE96LSGgxPrqleQTp5iwx7W0fVH2V1YX
-	 O3lK45MlK0oGyOqdjLPAABgqtmQh6tl6ZLbq7bkPTbnsSC5mkqcMI8YI33OO/T6J68
-	 QxPrNywZunmqrRAE9FemdrqplZ8vjM4uektwmvP5s08Wk4HwdXYWEXn1dmGnNsj0Zy
-	 k1Bdfgc4gEQRQ==
+	b=VpDc9N4OWSbkcbI7ei6yVKajcd10HrhpmbS0VGmhggmpctu0COWzeR+BKEAY/Mfr/
+	 EU6/17prJZaXe0vYAvnfFmqm05GGuCkyN3UsxxZW1wiT9hbUnF5Quo9HyW5ncj30w0
+	 aF79udUwgCAOCfeaK6CF72j9lwYsd2Kplnxe9DECVwqqQyrGyHV8yj4jrdUUXiBmLR
+	 Y73dMwB+YhlrvkzL8+w0vktzBXvUA0+1ymdX6ZAIEyJY+gh93xybnhWf/qlSlBowz9
+	 UVS6gtqe59D8jQdShCekXXRZie6gkfuIe+lLcD8AcmBIa9HuCXcoY/Z/SzjmSr6/eG
+	 /viwlmcsqJWGQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 01/12] PCI/TPH: Fix pcie_tph_get_st_table_loc()
- field extraction
+Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU
+ to steering-tag mapping
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260616104621.41915-2-fengchengwen@huawei.com>
-References: <20260616104621.41915-2-fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260616104621.41915-9-fengchengwen@huawei.com>
+References: <20260616104621.41915-9-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 16 Jun 2026 11:00:24 +0000
-Message-Id: <20260616110025.415611F000E9@smtp.kernel.org>
+Date: Tue, 16 Jun 2026 11:00:45 +0000
+Message-Id: <20260616110046.169C01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [Medium] sysfs binary read callback incorrectly returns 0 (EOF) for unali=
+gned offsets, breaking partial reads.
+- [Medium] Returning -ENODEV for impossible CPUs aborts sequential file rea=
+ds on sparse CPU topologies.
+
 Pre-existing issues:
-- [High] Surprise removal (PCI disconnect) or a malicious PCI endpoint can =
-trigger a heap buffer overflow in `pci_save_tph_state()` and an OOB read in=
- `pci_restore_tph_state()` due to a TOCTOU evaluation of the ST table size.
+- [High] Missing length validation when parsing ACPI _DSM output buffer lea=
+ds to an out-of-bounds read.
+- [High] ACPI _DSM buffer parsing uses an unaligned 64-bit cast and C bitfi=
+elds, breaking on strict-alignment and big-endian architectures.
 --
 
-commit fe1abb4bbf50a2222b456026a8b0caa06ea99438
+commit 3d85ff02b28aea880afdba0d09e73076f825fdb4
 Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
-
-pcie_tph_get_st_table_loc() incorrectly uses FIELD_GET(), which shifts the
-field value to bit 0. But the function is designed to return raw
-PCI_TPH_LOC_* values as defined in the function comment.
+PCI/TPH: Add sysfs binary file to export CPU to steering-tag mapping
+   =20
+Add per-device sysfs binary attribute tph_cpu_st to expose ACPI DSM CPU
+to steering-tag data to userspace, resolving the concern that VFIO should
+not host CPU-to-ST translation interfaces.
 
 > diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 91145e8d9d951..bef3a55539c46 100644
+> index 95280aab4fb51..aca5093e81525 100644
 > --- a/drivers/pci/tph.c
 > +++ b/drivers/pci/tph.c
-[ ... ]
-> @@ -185,9 +188,6 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+> @@ -130,6 +130,29 @@ static acpi_status tph_invoke_dsm(acpi_handle handle=
+, u32 cpu_uid,
 > =20
->  	/* Check ST table location first */
->  	loc =3D pcie_tph_get_st_table_loc(pdev);
-> -
-> -	/* Convert loc to match with PCI_TPH_LOC_* defined in pci_regs.h */
-> -	loc =3D FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
->  	if (loc !=3D PCI_TPH_LOC_CAP)
->  		return 0;
+>  	return AE_OK;
+>  }
+> +
+> +static int tph_get_cpu_st_info(struct pci_dev *pdev, unsigned int cpu,
+> +			       union st_info *info)
+> +{
+> +	acpi_handle rp_acpi_handle;
+> +	struct pci_dev *rp;
+> +	u32 cpu_uid;
+> +	int ret;
+> +
+> +	ret =3D acpi_get_cpu_uid(cpu, &cpu_uid);
+> +	if (ret !=3D 0)
+> +		return ret;
+> +
+> +	rp =3D pcie_find_root_port(pdev);
+> +	if (!rp || !rp->bus || !rp->bus->bridge)
+> +		return -ENODEV;
+> +
+> +	rp_acpi_handle =3D ACPI_HANDLE(rp->bus->bridge);
+> +	if (tph_invoke_dsm(rp_acpi_handle, cpu_uid, info) !=3D AE_OK)
 
 [Severity: High]
-This is a pre-existing issue, but does this function have a TOCTOU race
-that could cause a buffer overflow during a device disconnect?
+This isn't a bug introduced by this patch, but tph_invoke_dsm() appears to
+have an out-of-bounds read.  When parsing the ACPI _DSM output, it
+unconditionally dereferences the buffer pointer without validating the
+length:
 
-pcie_tph_get_st_table_loc() indirectly reads the PCI_TPH_CAP register.
-Shortly after, pcie_tph_get_st_table_size() reads it again:
+tph_invoke_dsm() {
+	...
+	if (out_obj->type !=3D ACPI_TYPE_BUFFER) {
+		ACPI_FREE(out_obj);
+		return AE_ERROR;
+	}
 
-drivers/pci/tph.c:pcie_tph_get_st_table_size() {
-    ...
-	loc =3D pcie_tph_get_st_table_loc(pdev);
-	if (loc !=3D PCI_TPH_LOC_CAP)
-		return 0;
-
-	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
-
-	return FIELD_GET(PCI_TPH_CAP_ST_MASK, reg) + 1;
+	st_out->value =3D *((u64 *)(out_obj->buffer.pointer));
+	...
 }
 
-If a device disconnects exactly between these two reads, or if a malicious
-endpoint provides PCI_TPH_LOC_CAP for the first read but ~0 for the second
-read, the FIELD_GET() calculation evaluates to 2048.
+If a buggy or malicious ACPI firmware returns a buffer smaller than 8 bytes,
+could this lead to an out-of-bounds memory read?
 
-Since pci_save_tph_state() iterates based on this dynamically queried size,
-could it write up to 4096 bytes of disconnect error data into the
-save_state->cap.data buffer, overflowing it?
+This is also a pre-existing issue, but does casting the byte buffer to a u6=
+4*
+and dereferencing it break on strict-alignment architectures?
 
-drivers/pci/tph.c:pci_save_tph_state() {
-    ...
-	num_entries =3D pcie_tph_get_st_table_size(pdev);
-	for (i =3D 0; i < num_entries; i++) {
-		pci_read_config_word(pdev, pdev->tph_cap + offset,
-				     st_entry++);
-    ...
-}
+Additionally, union st_info uses architecture-dependent C bitfields to
+extract data from this 64-bit value.  Could this extract incorrect bits on
+big-endian architectures, resulting in corruption of the hardware steering
+tags?
 
-Similarly, could pci_restore_tph_state() be vulnerable to an out-of-bounds
-heap read if the table size evaluates to 2048 on disconnect?
+[ ... ]
 
-drivers/pci/tph.c:pci_restore_tph_state() {
-    ...
-	num_entries =3D pcie_tph_get_st_table_size(pdev);
-	for (i =3D 0; i < num_entries; i++) {
-		pci_write_config_word(pdev, pdev->tph_cap + offset,
-				      *st_entry++);
-    ...
-}
+> @@ -619,3 +647,58 @@ bool pcie_tph_supported(struct pci_dev *pdev, bool w=
+ant_ext)
+>  	return pdev->tph_ext_support;
+>  }
+>  EXPORT_SYMBOL(pcie_tph_supported);
+> +
+> +static ssize_t tph_cpu_st_read(struct file *filp, struct kobject *kobj,
+> +			       const struct bin_attribute *bin_attr, char *buf,
+> +			       loff_t off, size_t count)
+> +{
+> +	struct pci_dev *pdev =3D to_pci_dev(kobj_to_dev(kobj));
+> +	size_t entry_sz =3D PCI_TPH_CPU_ST_ENTRY_SZ;
+> +	struct pci_tph_cpu_st st;
+> +	unsigned int target_cpu;
+> +	size_t copy_len;
+> +
+> +	if (off >=3D nr_cpu_ids * entry_sz || off % entry_sz !=3D 0)
+> +		return 0;
+
+[Severity: Medium]
+Does returning 0 here prematurely signal an End-Of-File (EOF) for unaligned
+reads?  If a userspace application attempts a short read or reads at an
+unaligned offset, should this reject the request with -EINVAL or properly
+serve the unaligned data instead of truncating the stream?
+
+> +
+> +	target_cpu =3D off / entry_sz;
+> +	if (!cpu_possible(target_cpu))
+> +		return -ENODEV;
+
+[Severity: Medium]
+Could returning -ENODEV here abort sequential file reads on systems with
+sparse CPU topologies?  If sequential readers (e.g., using cat or hexdump)
+hit this error at the first missing CPU, they might fail to retrieve valid
+steering tags for any CPUs located after the topology gap.  Would it be
+better to skip the missing CPU by returning a zeroed entry instead?
+
+> +
+> +	get_cpu_all_st(pdev, target_cpu, &st);
+> +
+> +	copy_len =3D min_t(size_t, entry_sz, count);
+> +	memcpy(buf, &st, copy_len);
+> +
+> +	return copy_len;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260616104621.4191=
-5-1-fengchengwen@huawei.com?part=3D1
+5-1-fengchengwen@huawei.com?part=3D8
