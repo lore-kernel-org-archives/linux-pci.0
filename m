@@ -1,106 +1,128 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28EE47AF5D
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 17:27:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1625C4502F
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 17:34:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781630853; cv=none; b=JbslaVvff0z3nhPtdBWtAOM0INCM6pcxZWt1du3cboqgVPm11DPMHZGyolyF5N9RNIsRoX6BTd7QNgOz2anGFcy90OGe9AbRGCQ4hzcPuScAi9qbg7psePFEL76i3yq/HKtjkx14fvcZhKis9tFrQh5XOG9orx/WNWPJe/VQiJo=
+	t=1781631275; cv=none; b=raHIhJOpKMG3VqT+dXaECFriHsxTJ4EMoSjNVDynIS4LK+k1/axpLjizESwj6Z9D628rs38wCZtmYCqz13nFH6HimAeMaDiEHjjmqmd+YZIFa37ukp1cGDET5lMsOZ7xlF8KjgJZToplyCUG8ANu2j+ExmliznSneQJReTPkNd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781630853; c=relaxed/simple;
-	bh=VtjaadP+F0YUxb65uRur5r6Bmp3C/5715zYvrg4FlHw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DRSQUCrekX49mO+jrCp0R2OpDWTB1j7PsWHvNkOne59rtrX0X5RqqQgQ20rMgNvUML8nkKKqwwBXqI4fZxF0bkm3VB9kct0jYhyB3NiMx0F20TCXbpSIilUQsDO/C1+c1kmWIymlsNQGJjLuJ72uo856avxveOCuBefuK6BooyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jIsKFfN1; arc=none smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1781631275; c=relaxed/simple;
+	bh=hYMsCM6MsLNsadLZJMLyNz8OZ6JWnCIkL6qZbfi8A5g=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=dELy25Y1bdx5DPPR5kKNOFbydwWRLLZfbTSBC6FvLKS8lzFSV01FH5wnFb8MTk+7ECwClazLwY77MyGRZcke1gukOjNNM3DHUKvFhfNiPncN/je2VmGWQKZdQO9WmbRHuJKqwcQwP0ZKSZ8WQ4i0W9nECuOhZ0DYASn82C8F9IE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dlG7xKHM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jIsKFfN1"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-517a5cafc3dso52491811cf.3
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 10:27:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1781630849; x=1782235649; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gbojEdCp9OpH0p8tfFcuNMVV5jC/64+CSjIGMdMdWB8=;
-        b=jIsKFfN1K7t40T3Z1eYuR97Qnfs+SCeTuq9lnwCs1kzqD+2fNfVQJVjLC88sJ1Oidn
-         RelY8h4rWxu3ipVELAkLDuTsF/hG3+ErzMLv9Je83yjVLgaiMrCfJ4OrqOsXSF97Y9d2
-         lIDOSvroeYilx9POcj3elQqm6EIKWxAe7JpQWiHc8SKBZfQanyiUqw21vBrq2urXmG+Q
-         uomDd0M1HSIjiA1yZgf+NbmZFb15Cz+wDHdm+y/YuML4iIWKpI/ZTMMJ7VacS2gw+7io
-         5REGh0zAn75XqJybPBka6ZcUdZ9jzaQLNIx+Eu2Z1q7LYMK+aXjP7QmVwp1CT7seIOEY
-         EvXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781630849; x=1782235649;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gbojEdCp9OpH0p8tfFcuNMVV5jC/64+CSjIGMdMdWB8=;
-        b=NMiH7kcIaNtAItT19nijQgNwSVDOWnEQ0ZCxMjiWyQvYJMYzDul10AG9EBsfsBrAT4
-         50xYOhWYS4XLzYCjdoGIwgpoL2nSsUNV0sG1K6NmSAipqCSr4YvayXtngGPYmfMz7iRO
-         AdXEeJq/Nha4ImyBmbuyMtzlgJLcprVnmr5y3oad7wy7QeHJiaLeaMP5ZQBp4dxA+FQM
-         L8KnATaHNoIG+P3XIkJUY5ja0P2yC3jgx1Ee23Cs50wVxSxeDZL5sVHfxAfXheQLSSSd
-         48MB4WyDnGrUtuMnaxxnSjYC+AxSHuAdciLxbEicuMuWfhpbuFirEa7lcpqL5DC2GJQj
-         errA==
-X-Forwarded-Encrypted: i=1; AFNElJ/Kr0ZyMrqcHuXOdtR6tQJDCPeSWYy3SNq3HVAET4A3Z6woQLpQUlMbXvZP+GgGtMLfItkmTAbulu4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw72n+CXoCrOeyM23oTKajvhq+5FNVLwS6BbXErBoz6j2SkXqpu
-	sU4GnomYAjDut6/PiLD5l3sjWiu2n2TPGTy769IPQxxv7W2Obq+LlfoM8rm6xkjGY50=
-X-Gm-Gg: Acq92OEvLsD9Ql/EhNsLe1WCJRKs25UuReVxLran46oE5drml5c+C8JtFMED+49sPn6
-	VuAvvfME+ksrxgBUeE/pNHCDtk0w3aAWTHUZjV7A/CA/LlhCSlUs7QKtvbF2DNklw6w1grrRquy
-	9SHG5IwK8S2d7ZPqeyVEsjpKnhZsNqBqd7QdcOXGfttCeVJ1w49mDu1VXDmpCgxV4kXYhPMx22j
-	OlN4RvF5f8snis8kklVJCxs923i4n7PO15LT08N7ItbVWDvSVL8a37XmhRaQbTL2gnczOrnVW/B
-	BpHpqwE82CFmb4S6eTes+0KtnTnUriALoNFRm7yNHCpCGjktfVjm63md63p7VwMSrHuw1m/MPjZ
-	J2JodG7z5DTIG0zxf+TUwUbB2kWbTOFpYHLaA0AAVXwq88hgvwLmghsVqd3cOVMeoBeCsxmhd34
-	oHtllXuxVdaI54HpJI2R9COScrdVCt3km9mxd+EhAZaVDCyI8dFuNuumyI0fxLvjwq/H96k3ddk
-	Z8uCA==
-X-Received: by 2002:a05:622a:4897:b0:517:7d99:f32c with SMTP id d75a77b69052e-519a8e5e259mr6448551cf.32.1781630849518;
-        Tue, 16 Jun 2026 10:27:29 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb83e8e6sm156638201cf.28.2026.06.16.10.27.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 10:27:29 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wZXZQ-0000000GYyO-259c;
-	Tue, 16 Jun 2026 14:27:28 -0300
-Date: Tue, 16 Jun 2026 14:27:28 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Alex Williamson <alex@shazbot.org>
-Cc: Chengwen Feng <fengchengwen@huawei.com>, helgaas@kernel.org,
-	wathsala.vithanage@arm.com, wei.huang2@amd.com, zhipingz@meta.com,
-	wangzhou1@hisilicon.com, wangyushan12@huawei.com,
-	liuyonglong@huawei.com, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU
- to steering-tag mapping
-Message-ID: <20260616172728.GC3577091@ziepe.ca>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
- <20260616104621.41915-9-fengchengwen@huawei.com>
- <20260616144224.GB3577091@ziepe.ca>
- <20260616105754.784be22d@shazbot.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dlG7xKHM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A49E01F00A3A;
+	Tue, 16 Jun 2026 17:34:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781631273;
+	bh=LCWDQZIZGap6nQfAuNOlbgQoRHiTvNOD0M6LQaSMPRQ=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=dlG7xKHMfYbnWHkRs/vt5gdxRUbdU5rhm46cHCGuP32f/Wg2ued5OzTFrEEyW6oUF
+	 8Q6+hW9s4XLlIGJ8x1Tl4XrWca4CPBcCUyFMXBl8GO1WFY/X2cQNJdL2XEVwbCi5/R
+	 LgYSfrK55q8nJcLNcxH0dq02WdHP1JSBaJoTC9Et/i40N0ambM7voQY5CaPSSLxhzi
+	 ww8EI/KpEJUvedT+wFV2qBkFMYCIHVYAM3rj/w8rDQMNPR3ODbHbqwbgqpwielUF5i
+	 865mdWDtivalAITEOa+rwUCcl/xH4OwC5ivNBWTuUWfGsnN/17Z8S5fYPM7EadaEr1
+	 pdmZ4/ILdr1zg==
+Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
+	by mailfauth.phl.internal (Postfix) with ESMTP id D744AF40082;
+	Tue, 16 Jun 2026 13:34:32 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-09.internal (MEProxy); Tue, 16 Jun 2026 13:34:32 -0400
+X-ME-Sender: <xms:KIkxargcq1-eOz0iu7VK-yQ1MkhGwiZMM7Ko9qC1wamLJLC9SNP43w>
+    <xme:KIkxaskdxGMngd-hasE64VoS3WDP29v1oGd-lTTkL_acMo4KmL2HMx6_-2FII7hBf
+    ezS8YnKh182gIdl6xv4tLL5MdozK3V3E41N9ViUBj4YnayaVUEvNQ>
+X-ME-Received: <xmr:KIkxaoPEb7FYdfzoQ0do0tJC8PhL_KXjOuc11EqLm7W0YQJGWjTjNPyhoKH1gIs6BTP3QGYU1IbU9_eIT6wTHdOQt-nvwwzSlqc>
+X-ME-Proxy-Cause: dmFkZTEZjNKkieDC5FUSjm8JTujve4vXzyj5XF9lUPCu95PoeIO7Z3QF61U57lMx4k7gk3
+    r8n4HzqfjWRTZxAzycXejqSIkw8J09WeBk6YUVYVCVzkW0EuUQwVh8UZ+uqdwm7OKWbFx4
+    Gzw/llBoZM6RmeJ1yg7YKh3ut6CTpDAm3u+ZrDq3itLchsT+gEQhJJDc2X8iFgUpFT4LiT
+    rqvE5keh6M3mGdpBrtXISp8gRtp69lhubyDzYx3E9sG+o659tQNt+oig2xL7Dl/X6VUrD8
+    tYlJGGBTMCCJluSXh+de6/vRLMXf6JAOE7iu98kud2i+/fijeA1S7vbvP83Z3A4VieCCHf
+    sOHT5VsxhqY858tJta3Kfyu2Tpdam0BRTFYy38u/KTEfIgE65sB98EwSu7vQqO01z3MzoS
+    Qd8EkW7Ll9yllaK2hk/odU0MhaiQgbyIIidR70pd5ztf1P0vFUP+Gvm7OHdD5Rb8+xreLj
+    9Y4+Epnh7m9vczsPUvHV3Rn5escMp0RUndhFENRS2+waAvR5A0DM/KLpjqJbyVX7xN4Bt4
+    VL6dsNqcn9be0t7WUFNOfj/Rr/96Tdh4qUuv2VxYrByXd3iU7BxKHCZhv8X18JlJCBnsEa
+    CcjJAj9jkz6clJEgD0IXs0gnEJLIRKbWVYRWOykW8nI+N50Qx2ZuMrfkQ2aQ
+X-ME-Proxy: <xmx:KIkxavHuo_wpxAmKsYbAAGuJ7rdEfDpHxOEFckgw4HLHjXMzD-0Hrg>
+    <xmx:KIkxamtX2qXOgUoNOzfGwIYn-XEJoxfyabBYYKe7cguD81v6wp3sGw>
+    <xmx:KIkxanT669UmRZvdDYKz_Nt88tlj5hvPgjXcM5cPHLb7VsT0rEggvw>
+    <xmx:KIkxaoP_1K6NoMIvPoYai2gzURwctLa6ZCRoYYgBCvU9CFxFaYW-fg>
+    <xmx:KIkxat6BL4kMTSA7gV3NxaxbG87Q90eBR9QCPvO-3jkBa7q2ZtnEh7rE>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 16 Jun 2026 13:34:32 -0400 (EDT)
+Date: Tue, 16 Jun 2026 10:34:31 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>, 
+ Dan Williams <djbw@kernel.org>, 
+ Ashish Kalra <ashish.kalra@amd.com>, 
+ Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>, 
+ John Allen <john.allen@amd.com>, 
+ Bjorn Helgaas <helgaas@kernel.org>, 
+ linux-coco@lists.linux.dev, 
+ linux-pci@vger.kernel.org, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
+ Yilun Xu <yilun.xu@linux.intel.com>, 
+ Zhenzhong Duan <zhenzhong.duan@intel.com>, 
+ Alexey Kardashevskiy <aik@amd.com>
+Message-ID: <6a3189272d3ce_9b8551008b@djbw-dev.notmuch>
+In-Reply-To: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
+References: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
+Subject: Re: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260616105754.784be22d@shazbot.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 16, 2026 at 10:57:54AM -0600, Alex Williamson wrote:
+Lukas Wunner wrote:
+> Per PCIe r7.0 sec 6.31.3, CMA-SPDM operation in non-D0 states is optional.
+> The spec does not define a way to determine if it's supported, so resume
+> to D0 unconditionally for the duration of a CMA-SPDM exchange.  Vivaik has
+> talked to Windows engineers and they said that Windows does the same.
+> 
+> Note that for plain DOE operation, it is sufficient for the device to be
+> in D3hot and its parents in D0 because config space remains accessible in
+> D3hot.  So CMA-SPDM goes beyond the requirements of plain DOE and hence
+> resuming to D0 needs to (only) be done in code paths which use DOE
+> specifically for CMA-SPDM.
+> 
+> The pattern used herein for runtime resume is the best practice introduced
+> by commit ef8057b07c72 ("PM: runtime: Wrapper macros for ACQUIRE()/
+> ACQUIRE_ERR()").
+> 
+> Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org # v6.19+
+> Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>
+> ---
+> We're in the merge window for v7.2 and this isn't super urgent,
+> so it's targeting v7.3 via tsm.git/next.
+> 
+> Technically I'd have permission to apply myself,
+> but I wouldn't want to without acks from Dan and AMD!
+> Thanks for taking a look!
 
-> IMO, this implementation in sysfs more so proves that vfio is the wrong
-> place for the interface.  vfio has a use case to consume STs, but it
-> doesn't produce them or own any of the mechanism by which they're
-> generated.  
+Thanks, Lukas. A few questions:
 
-I would argue only a VFIO user can consume this information so putting
-it in general sysfs is overkill.
+This says Fixes, but I assume it is based on inspection and not a
+report?
 
-> The weak point is whether this bin attribute, exposing an array of
-> structures, fits within the socially acceptable norms of sysfs.  
+There are no upstream usages of pci_tsm_doe_transfer() yet, but the ones
+in flight would suffer from the "D0 -> D3hot -> D0 -> D3hot" bounce that
+you described to sashiko. I.e. the runtime acquire should be done at a
+higher level.
 
-I'm pretty sure this style of sysfs is not accepted and
-counter-examples are things that are ancient or slipped through.
+I think the natural place to add PM_RUNTIME_ACQUIRE() that covers all
+cases is withing pci_tsm_connect() and pci_tsm_disconnect().
 
-Jason
+I also think failure to power manage the device in the disconnect path
+should not be fatal to performing the rest of the cleanup.
