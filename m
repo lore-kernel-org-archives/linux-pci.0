@@ -1,149 +1,127 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B483EEAE3
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 06:38:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A1E34B661;
+	Tue, 16 Jun 2026 07:08:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781591907; cv=none; b=mHZ3q/bso1jom8CRO4rCYk/qv/ZIZ6cdNrXaXQmvkYF0kadv7ihB8RUi1kSmqfTj49Oqt6z5IicBCPZNuhAzXffTUpZapflESsvRcV9wz32aLAYKF7nzzV6MR+SZSYhrleo5BlugJ1ADeqry0o8BmQuIKnM0nE7/sdfXDlOfS+Y=
+	t=1781593693; cv=none; b=KIVPU9fWtrMkvHk08swCtefWCxDQm/TABJpnuY4WuMnz0KKYkLHIvOi3jrhgma8gLfAr9MMXgWhCDWPYvZgI1m4aYY9wAqzOFm2cF75C5N3F73DsyqE4VV7XOLN39yeJFNejeZK4nZP+9zwv5bGfuRV3UIq06yV9DTuLdyM0tOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781591907; c=relaxed/simple;
-	bh=EnxOCa15sZX3oEek17FpEAqKawL7WEZTyWucBlcjikg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JPz8GBnB9XnBV+KCd0xXATmvIHOFOXiKw+lOAcDZuUtQNLyS2O8KiBO2RLRr9B2EaZLmeA7bgtjJBV47N8ADNauqYWQ+L0zv8SJXnseYkSVFrQ0Ylsf8CGF4p0XBptB0p/g1BxrYFWBy7JajhNVGbQA9OXGdt5VLG7dA13Vmfz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Q9YNOphC; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781593693; c=relaxed/simple;
+	bh=jPrNLutw4Ysc+N2RMnAo1AgpSoU9ps2Y5tib4WbdHRY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=F4u0KWadXdWBSXcaDR6dztczaifD+9CFRdrUO26+4NGBbBBIEBpUOYmLRKLGUn7x7dSGpGNnpXXJyN2BYJaOFFTYjp9So7Vc53TSVXUGUGoCv3e6whgG41UA2Cj5AJZJvJE+m39TSAs7kUTvMdQBSCMBC4J9vHPHhZenBUuoKLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QnXwOBuC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Q9YNOphC"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2bf22c18ad3so35755ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2026 23:38:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781591903; x=1782196703; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EFz9lxRroKDDcTb/8ZfQJSCQqH8dCC3UQeivoDCOLsY=;
-        b=Q9YNOphCFZZzWi37RFXsyfJkuN6xPhsL2EHamixCuR8nYfQxSirjTFq6YCytklhyAM
-         eMyu3s0iw2LpUrrjXGvSArTOBoUrx+vjnEuy8PIGIHDzchmBIcEQn96X9tEXgCrJNUVR
-         Vw1pbkn2smntXzDV9l7hzJniIyANjNt9b/548gyVPnYnHcfvo5bYoiQcoMELAUQAxgvw
-         /O88/RAwb5CZ/EuVj6HRoM3PiOHKo4oYhviUHfhAnW/Lfk3qP3nVB5ibdJEZwdM1zt2c
-         Bhl/4Rhxp6DM5zFPnQBNnB+BiiHDjiCAu5dFhuttkkkblwm+fM8XYmB4kVv8GJ4dVNHr
-         c7kA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781591903; x=1782196703;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EFz9lxRroKDDcTb/8ZfQJSCQqH8dCC3UQeivoDCOLsY=;
-        b=U6WfchnBjXL11dkGF6IlzNLJRHa/8puAMMhi8q4L6Wp39bBl3hux3f7wxvlc9cdRo/
-         UTz3nZD+7jZFOtGiXy0CGfjUUjR+OulO67eXBSv6gMYje4ZKJv6ZOXd/aaBZpvpDJDP7
-         kCXT+Fl8iLKszMqQOCUaddsXYtVtw/IdIKjowRswrNoTE+KQ1GrfLw6pea9ikOzb4uQz
-         hHRzeaCwacT0k07PZjg05ZJxGwd6SRwqgaMHaUImF37BWxp4Kl/5ICoxHQIZ1q1CgIyX
-         v8nQPi3cOvMdyMrXaf83P39fQ/upe8IFye1tjSGdwpiMkZTt1nfZMpRhiZE1xnP1psli
-         Vu/w==
-X-Forwarded-Encrypted: i=1; AFNElJ/stJD/QNBk+kcpGECyMaI98DLOBwgiRq213dGqrGmP+PYNkboUywZcMoQnGUf9ZhzPd57ZkJpESJc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKIqLIEgj3x+zk2qQvtmZ8f4e0nu3A5QvOuSJfZ+JZAsbbPA5z
-	3EWiZhuvKytflFV9cP1RIjqbMXQpkMti8ORiWIkzl5AywowZAItfDIT37yk7ATpxEA==
-X-Gm-Gg: Acq92OFlB8fOtzAQ9zUeFYyV73/zURA3TGRcanIJACZ2TGV3rJKXxW+10AOFptmm5Mv
-	aB3CValcPrJt89hKctPbI954+NfV0T8zFi0iL9h6g1g9tdafX/SWJfp5ljjM1AHIYN8YGKaDYH0
-	y4Q0zbt5jTaY2Q/bPIaYf9LdPAChxnHkKgWMeJ1wTISl0OOgHkBXWnqI9Q3yG5bkes4JWLPowfS
-	1hG3qCoRNvz2OADhMmwxCbsKhkrA7L155ONnx4rlrt1DzA5VlJwEDRDwaPVP+wtoWTzen7yivLJ
-	uWjPW95XjiyD7COVrAJAvJ3wBz7Bbomc1aBQMAuHyKRL3TT5KIG+ESyg2pkHoI1rsfrsGDadm5Q
-	uDtMT2xuYSMNfvI3LgzAvoryespmAo61gBZDYP3SXLbzQA4J1WDp6nGvjloNI/nC35eGfIit/0w
-	wYwLV7YFAYudmY96C2q9GHutiqOAz/DFwh7TEXWUpgxtWpxE78dLVy1xPPgSqAksRNW6LvEtI=
-X-Received: by 2002:a17:903:2a84:b0:2bd:3bfd:74f1 with SMTP id d9443c01a7336-2c69a26dea7mr49405ad.2.1781591903036;
-        Mon, 15 Jun 2026 23:38:23 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c866519f0a6sm10345718a12.22.2026.06.15.23.38.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2026 23:38:22 -0700 (PDT)
-Date: Tue, 16 Jun 2026 06:38:15 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Shivaji Kant <shivajikant@google.com>
-Subject: Re: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P
- Registration
-Message-ID: <ajDvV4mOkaL9NMII@google.com>
-References: <20260610151853.3608948-1-praan@google.com>
- <20260610162848.GO2764304@ziepe.ca>
- <airI0VIb563jHTcy@google.com>
- <20260611221447.GH1066031@ziepe.ca>
- <aiwcquSgAonkh_6L@google.com>
- <ajCaTmrYQvKDoP_I@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QnXwOBuC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A0BBBC2BCB8;
+	Tue, 16 Jun 2026 07:08:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1781593692;
+	bh=jPrNLutw4Ysc+N2RMnAo1AgpSoU9ps2Y5tib4WbdHRY=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=QnXwOBuCGKmdZXhweBzMY7vhhaXDm+FpFBa7EZYh8uuHd4A+6EcOyZNBn3teoAsy1
+	 6N6dq5fJLrU7qV4DwVX1A0clz5O5UtT5F+vRZJ3esye/mY91DNiAP2zoC+XMKoJqcx
+	 l2X+j2csBZjZa6dbsjR8oR7d8dOnAENFr8+0qwTUzc1+twOIla2m1+ok/zgkTBoKGe
+	 I0U1cqQd7X7TYXY9ppl4km43Pe9J+XXDqy58MMiG0XD3tfcmbwdZJ0hg8WG5VGbNjV
+	 MHH2o26NaHgQsWXvwUwX/yvoQG+BNrjwAY8WgUpM1yWwsmef818bRZDx6VeIKX25Rw
+	 f3nXyHNISQBxg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95199CD98D2;
+	Tue, 16 Jun 2026 07:08:12 +0000 (UTC)
+From: Ronald Claveau via B4 Relay <devnull+linux-kernel-dev.aliel.fr@kernel.org>
+Date: Tue, 16 Jun 2026 09:07:25 +0200
+Subject: [PATCH] PCI: dwc: meson: Fix reset GPIO initial state
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ajCaTmrYQvKDoP_I@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260616-fix-meson-pcie-reset-gpio-v1-1-fca404b4c8be@aliel.fr>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MwQqDMBAFf0X27IIJdEn7K+JB49PuoUnIliKI/
+ 97gcWBmTjJUhdGrO6nip6Y5NXB9R/E9px2sa2Pyg5dBnPCmB39gOXGJCq4wfHkvmtkvT7gQREJ
+ 8UOtLRZPv9zhd1x/wr4sXawAAAA==
+X-Change-ID: 20260616-fix-meson-pcie-reset-gpio-2b9e188668c5
+To: Yue Wang <yue.wang@Amlogic.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
+ Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
+ Remi Pommarel <repk@triplefau.lt>
+Cc: linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Ronald Claveau <linux-kernel-dev@aliel.fr>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1981;
+ i=linux-kernel-dev@aliel.fr; h=from:subject:message-id;
+ bh=7kvkuPDfnNo3RE26T6/4WDZzxv1opTuPQg33oMuoPoI=;
+ b=owGbwMvMwCWm1SvKXP3cUInxtFoSQ5bBt8iN7xYkGjz9k3/Q4LBC+svHf2ZG82SwRvv8+qxrP
+ uHg7J0CHaUsDGJcDLJiiiz9cy1PvLt89MzXPeopMHNYmUCGMHBxCsBEzp5kZFgsZmWhufqRu+TS
+ f+fmXmrY9OFF+xKJmwd6J02ZtCHQyMmA4b+f1oLDa9vKjvUVXWPQFejIeei0+jJ3dve9Ob5VVYG
+ qFVwA
+X-Developer-Key: i=linux-kernel-dev@aliel.fr; a=openpgp;
+ fpr=DFD863F61375BF917F0012173953305EF1D0EC3E
+X-Endpoint-Received: by B4 Relay for linux-kernel-dev@aliel.fr/default with
+ auth_id=744
+X-Original-From: Ronald Claveau <linux-kernel-dev@aliel.fr>
+Reply-To: linux-kernel-dev@aliel.fr
 
-On Tue, Jun 16, 2026 at 12:42:19AM +0000, Samiullah Khawaja wrote:
-> On Fri, Jun 12, 2026 at 02:50:18PM +0000, Pranjal Shrivastava wrote:
-> > On Thu, Jun 11, 2026 at 07:14:47PM -0300, Jason Gunthorpe wrote:
-> > > On Thu, Jun 11, 2026 at 02:40:17PM +0000, Pranjal Shrivastava wrote:
-> > > > On Wed, Jun 10, 2026 at 01:28:48PM -0300, Jason Gunthorpe wrote:
-> > > > > On Wed, Jun 10, 2026 at 03:18:48PM +0000, Pranjal Shrivastava wrote:
-> > > > >
-> 
-> [snip]
-> > 
-> > Yea, that's going to be tricky.. I'm thinking if we can have a zap model
-> > there somehow? If the device is gone / going through a reset, we can
-> > handle the refcounts accordingly?
-> 
-> IIUC zapping will only work if userspace is using these, but if you feed
-> this memory into another device through NFS and the pages are pinned by
-> gup (or that device) then the dmabuf move_notify/revoke logic on device
-> reset will be tricky as now the pages for that device BAR are pinned.
+From: Ronald Claveau <linux-kernel-dev@aliel.fr>
 
-Yes, it would be tricky. However the zap is still needed since userspace
-is the entity creating the file I/O leading to those pins. The user would
-mmap the BAR and pass the buff into a POSIX read() / write() where the 
-filesystem (like NFS) would extract the iovs and call GUP to pin them.
+Commit 4d3186a525b3 ("PCI: amlogic: Fix reset assertion via gpio
+descriptor") inverted the reset assertion logic to use proper gpio
+descriptor semantics, and moved the polarity configuration to the
+device tree as GPIO_ACTIVE_LOW. However, the initial GPIO state
+"GPIOD_OUT_LOW" was not updated accordingly.
 
-By zapping the userspace mappings first, we prevent the any new 
-read/write() calls and halts the creation of additional GUP pins.
-(Note that if GUP doesn't see a PTE for the page, it manually invokes
-the page fault handler and waits for the page fault to be serviced, where
-it would then block on the vdev->memory_lock held by the reset thread).
+Change GPIOD_OUT_LOW to GPIOD_OUT_HIGH to get the right behaviour.
 
-I agree it will be tricky but we just need a multi-stage sequence. The 
-standard workflow is: userspace mmaps the BAR and passes the buffer to
-filesystem via the POSIX file API. Filesystem then pins the pages via GUP
-for the duration of the synchronous DMA.
+With GPIOD_OUT_LOW:
 
-My plan for RFC v2 is as follows:
+    ahci 0000:01:00.0: enabling device (0000 -> 0002)
+    ahci 0000:01:00.0: SSS flag set, parallel bus scan disabled
+    ahci 0000:01:00.0: Controller reset failed (0xffffffff)
+    ahci 0000:01:00.0: probe with driver ahci failed with error -5
 
-a) Zap the userspace mappings first to prevent new requests
-b) Wait for In-flight DMA: Just as we currently use dma_resv_wait_timeout
-   to wait for HW fences, we'll first wait for the page refcounts to drop.
+With this fix:
 
-   An important thing to note is that filesystems can't pin these pages
-   for long term, i.e. FOLL_PCI_P2PDMA and FOLL_LONGTERM can't be
-   requested together for a single pin as mandated by gup [1]. Thus,
-   filesystems using ZONE_DEVICE memory (via ITER_ALLOW_P2PDMA) simply
-   hold the pins for the DMA duration.
+    ahci 0000:01:00.0: enabling device (0000 -> 0002)
+    ahci 0000:01:00.0: AHCI vers 0001.0300, 32 command slots, 6 Gbps,
+                       SATA mode
+    ahci 0000:01:00.0: 1/1 ports implemented (port mask 0x1)
+    ahci 0000:01:00.0: flags: 64bit ncq led clo only pio ccc
 
-c) Once the refcounts hit zero do we proceed with move_notify and the
-   hardware reset.
+Fixes: 4d3186a525b3 ("PCI: amlogic: Fix reset assertion via gpio descriptor")
+Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
+---
+ drivers/pci/controller/dwc/pci-meson.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This is going to be the first stab, I guess it'll definitely evolve
-further. I'll try to implement this in RFC v2 and attempt to address 
-these concerns 
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index 0694084f612b7..15ed59b8764fb 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -400,7 +400,7 @@ static int meson_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(mp->phy);
+ 	}
+ 
+-	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
++	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+ 	if (IS_ERR(mp->reset_gpio)) {
+ 		dev_err(dev, "get reset gpio failed\n");
+ 		return PTR_ERR(mp->reset_gpio);
 
-Thanks,
-Praan
+---
+base-commit: abe651837cb394f76d738a7a747322fca3bf17ba
+change-id: 20260616-fix-meson-pcie-reset-gpio-2b9e188668c5
 
-[1] https://elixir.bootlin.com/linux/v7.1-rc6/source/mm/gup.c#L2538
+Best regards,
+-- 
+Ronald Claveau <linux-kernel-dev@aliel.fr>
+
+
