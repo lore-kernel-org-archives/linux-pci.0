@@ -1,216 +1,137 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ferryfair.com (ferryfair.com [103.227.96.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7D4B3E5A05
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 22:38:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728DA3AE6EB;
+	Tue, 16 Jun 2026 23:36:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.227.96.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781649492; cv=none; b=DsjZTc7pwFnh3hBF91X2qUt0GgHsw1yfjZmjNKgQ17SnpYZkGyf3bO3Z2H55usbGOIoXGsjgfl0tNDYi6IBsb8mgyv/8idR6gBgZW1Pi4Lt3dGdpLKDHJNrc2eYyNWPgL5J4NcLu7x1DMV+KhTsMFjnzqmiBOyKiAXzc5BqqgU4=
+	t=1781653020; cv=none; b=NM3xAKoWLnFJ1ESUPmPNy8Qc7XyHOk46/X4ef+cW6yQE9sXtIvcKuJMPXNSNhZQySgBIkHEEOx3fJgUEhC5Orl2hkRsHN7dchSmICPH6tXd87jTTxZaIYtCh0gvWdNgR7OioXMm8ZqGB/apJKKk5n5jOMlYIGBkjaaxjgd5e1FI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781649492; c=relaxed/simple;
-	bh=SzOIf7pvTrhn5azy2CCHd4TxIzP64uBs5kiqdkjXq5o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nqk6RcC9+dLtzFlGIbDOU5s3gnI3w6xyF0XGIl7si01eyNh8PSPjPiSkAnURbSFi0tz2r5+wvXzg7IYTR4SOc8s/JA7JSeez8ZfpudGml8dpK+h/qxXejjSjlKSf+g3zFSCfwfKklQCzcfKhWqMBOHqToIbW+05IFXfUz+HXujk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QK88VdTy; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781653020; c=relaxed/simple;
+	bh=FWtMqc18srngf2TO1q/aX+5t8e7xBK5iOYw72CNDoXY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=d24LLXSHKnuVqZ3Mr3kPvRPQ82gwiL0ODt2VMnO04Hg+aO6Ff3xnW1JcAcF0ytbCaH4LpEbkw1Tj50njxIdc18qHTWhE9CjcTBOfvwTnAmSvhAgMg/+b/GdJVCMtLqUKpBeu5RAQRs+9bLE2Ra8SbQAD5J0/Yv5ZVTt0w/Ohjfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ferryfair.com; spf=pass smtp.mailfrom=ferryfair.com; dkim=pass (2048-bit key) header.d=ferryfair.com header.i=@ferryfair.com header.b=UnEgpZoC; arc=none smtp.client-ip=103.227.96.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ferryfair.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ferryfair.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QK88VdTy"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c6a4eccab1so8525ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 15:38:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781649489; x=1782254289; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0bi42mNvv8zEfpJesfq39j8DzoTdUbmNl2yt46Rb57o=;
-        b=QK88VdTyfjvr7670wdm65rCnPdX0HHkloz6bJLV/Vyw61jlA95IZ7cyBBT/8Oiklm9
-         gruRKLm128sd+MnvUQMvgyTtY9bNzimKv8ydKqs6DcsXz7uG2f6kYYrx0gSna+MiJmB5
-         OCUMe2QbWzNtdCj6aNLquZiM5BI+pwERtPXoz3TwcsSS3uMObjFa+nf9g9LKuKubSfTY
-         wyto/xnkV/ivLb9xdgEJukuwSFT9ZnLAdhc/pnOHdbDLUUG70/capwRXAxo8K9pXTt8g
-         jZjGYVi4Lnzgo25meQyTDwbVD9pmz1oGBl3BEDlEmtDe9rk3caPzwhHsN8n63plERuwi
-         yUTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781649489; x=1782254289;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0bi42mNvv8zEfpJesfq39j8DzoTdUbmNl2yt46Rb57o=;
-        b=WGx6S7ufqU8xfA2Es8yey/nj+rY/w+OmW7NweRJ8KFYcN1qYJ1OmMOKtxZfy0l+pfx
-         90zYBgsz3yEv8qUDwmk0jXKLELLvEcR486U3P6cvMLNv1PLsbdVxBTge6x8jQEaZChuH
-         nlbWjX/njB8yCLcR3cEyHOF3+vZXQoS3ozMAouzH0lcIgyp9xurcUJWnog7ATDMhJEIL
-         34wyUzg22SLSLZLcAkStSOLnVUXHNZbnnMwILJuqGA4jHqtmtWq9v0cLdtNTY9MBi4/4
-         tdCy+67Ur4+1kopMrAihyDj2pJBbyzuDY22bTJuCWhVVYspYYVfomJ1BcUj3cl77l4Zo
-         ggVQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9+qYAL3w4dRloDYESq9vzOTxAdXj47ElMMRVxAbKJyyXfOilOR37KiOE514TAz5JIAQVi309Ex7mo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyH+qZL2ZvWsFbvqd9FLFBIUp3cdCX0cEnh1w09znx7rnz/+ZZb
-	IIZxuToOW9QLelM55qakYLi0bm9aYVoCnhdq7qBiT3jlnHNkK53x58tIZd+NP+jv1A==
-X-Gm-Gg: AfdE7ckAkW8JpUc96FgPz6zYCfe5L5lPp3ASuyY8LH9OC1hEmY5ym6ponAR9gbA71F+
-	273Dto7fql6b8izVqHLgsZgne15IB5VW20V2QTz8Lnm4goZJL+S9xztL7dUKdyk4v2KY7Ugli2F
-	RrH66xsyoL1XUy12HM9YSUnkeE+byB+I4IU9G/xv7ksIEcef0M1kHtbJdsKpNq76T+XdevSjplI
-	S7eRtAFudtjWmhDps1Ba2EFqj5H9DLZuYsYczBxFu7D/atRKDGOUA9tD89t9Nf09KkOGIgN1tVp
-	mvNX1gJLOCuY3vy5ZSLxZvCVdn7RYxFJYa0zs5jrjw3f79SD8wwSkhiTrWOsKPF1Nj5czn1rhp0
-	i2ePX9LDCSPLoJCj4bnJfJAX2+8ra1H2O+5l1zW5BSWDCFdC8PESjyL6uLjDtUQQESg+hiDL8dz
-	Smygk8WGL56lCgG1qYDZC8zkOIcNw/ZxtL8kW8qbyB0JhHmtLeHoiusw/u+tItq6mfDrOvepQFO
-	KNomMx5MP9dCzqEwFw=
-X-Received: by 2002:a17:903:289:b0:2bf:2e8c:db96 with SMTP id d9443c01a7336-2c6bd35b47fmr636505ad.5.1781649488392;
-        Tue, 16 Jun 2026 15:38:08 -0700 (PDT)
-Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c42f2e5590sm159640205ad.14.2026.06.16.15.38.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 15:38:07 -0700 (PDT)
-Date: Tue, 16 Jun 2026 22:38:04 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <ajHOd1lkBJTySVif@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-4-dmatlack@google.com>
- <ajGpxMXk9iyXLzC4@google.com>
- <CALzav=eo=UwoTNTYM8Z7uKoihxfB7NtVP701qidVgoqyBKhUig@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=ferryfair.com header.i=@ferryfair.com header.b="UnEgpZoC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ferryfair.com; s=s1; h=Content-Transfer-Encoding:Content-Type:MIME-Version:
+	References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Resent-From:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=CTB6pD/Rh+YCgLCuyfdBhlLO7UlS80+QRuqfydwqgQU=; b=UnEgpZoC5dz9U1YgwmBnPxd1UB
+	yFkVwKvyyuyBzlWw+0jdGnadCjgr5hAUOztDxYZXed60pOtz2eVf/VgzGd0qvHtnUzMNueGU6DVea
+	m+gmEk0MYeCCrFjnDHqItOJ07Et66OgRMnYruNfCfkpCtlg2InT5nRB6vivY4yGMmRzaNILHCiFF7
+	lOulZ6KA6nLittyLjx86DwTUraZq4uf9fOBRZ985TV75AxNIRXu5jXfvapUUP2hWcR587KT9B4tj8
+	TCCLJYZuCIsDZ2PFDYtqYHeWcfdfKY1K2NTIrv0AdjKo+CM8yCpDrewTslVm5ycwEu8W+etRVXMbx
+	Le2BSXYA==;
+Received: from console.gl-inet.com ([192.168.0.1] helo=slick.ferryfair.com)
+	by ferryfair.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.99.4)
+	(envelope-from <gowtham@ferryfair.com>)
+	id 1wZdKW-000000001ZV-08Pg;
+	Wed, 17 Jun 2026 05:06:28 +0530
+Date: Wed, 17 Jun 2026 05:06:27 +0530
+From: gowtham <gowtham@ferryfair.com>
+To: neil.armstrong@linaro.org
+Cc: Ronald Claveau <linux-kernel-dev@aliel.fr>, robh@kernel.org,
+ bhelgaas@google.com, khilman@baylibre.com, jbrunet@baylibre.com,
+ martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
+ linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, yue.wang@Amlogic.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org
+Subject: Re: [PATCH] PCI: meson: Fix PERST# timing by asserting reset before
+ LTSSM enable
+Message-ID: <20260617050627.4d01ed54@slick.ferryfair.com>
+In-Reply-To: <b2d8cb85-5529-4a4c-a233-64ca7a436f0b@linaro.org>
+References: <20260614015620.20432-1-gowtham@ferryfair.com>
+	<84cc8b0c-da06-4d01-a076-9743c29c91f6@aliel.fr>
+	<b2d8cb85-5529-4a4c-a233-64ca7a436f0b@linaro.org>
+Organization: FerryFair
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=eo=UwoTNTYM8Z7uKoihxfB7NtVP701qidVgoqyBKhUig@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 16, 2026 at 03:20:33PM -0700, David Matlack wrote:
->On Tue, Jun 16, 2026 at 1:09 PM Samiullah Khawaja <skhawaja@google.com> wrote:
->>
+Hi,
 
-[snip]
+As Neil suggested I moved the PCIe reset to init; I've updated the tag
+at
+https://github.com/GowthamKudupudi/linux/tree/meson-pcie-warm-reset-linux-7.0.y
 
->>
->> Hmm.. This is interesting, so the KHO state is freed and it cannot be
->> reused. I see you already pointed out that we are putting an LUO policy
->> to say that the retry is not allowed.
->>
->> But what should be the behaviour of liveupdate in this regard? Let the
->> system boot in a normal way? This might break other subsystems as they
->> might depend on PCIe restoring state properly. Also I think some of the
->> PCIe state, like device-id, BAR addresses, ACLs etc, might be used as
->> source of truth by other components.
->>
->> For example, lets say FLB retrieve() of PCIe fails, but succeeds for
->> VFIO/IOMMU, now VFIO/IOMMU are restoring state of a device that is not
->> restored/preserved?
->>
->> Should this be considered fatal?
->
->If PCI FLB retrieve fails then there are certain things that cannot be
->guaranteed, such as BDF (B specifically) remaining constant. This
->could lead to memory corruption as the IOMMU may have live
->translations in place for those specific RequesterIDs. And, in the
->future, preserved devices may be doing P2P which depends on BARs not
->moving. If the PCI core cannot retrieve the FLB saved by the previous
->kernel, it cannot make these guarantees.
+Ronald, yes, I do think its proper to initialize PCIe with RESET Active.
+Anyway we need the reset *cycle*. Please submit your patch as well.
 
-Yes, this is what I was worried about.
->
->So yeah I think you're right that PCI core should treat FLB retrieve
->as fatal and just panic.
+Thank you!
 
-This sounds great.
->
->> > }
->> >
->> > static void pci_flb_finish(struct liveupdate_flb_op_args *args)
->> > {
->> >-      kho_restore_free(args->obj);
->> >+      struct pci_flb_incoming *incoming = args->obj;
->> >+
->> >+      xa_destroy(&incoming->xa);
->> >+      kho_restore_free(incoming->ser);
->> >+      kfree(incoming);
->> > }
->> >
->> > static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
->> >@@ -270,6 +335,91 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
->> > }
->> > EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
->> >
->> >+static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
->> >+{
->> >+      struct pci_flb_incoming *incoming = NULL;
->> >+      int ret;
->> >+
->> >+      ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&incoming);
->> >+
->> >+      /* Live Update is not enabled. */
->> >+      if (ret == -EOPNOTSUPP)
->> >+              return NULL;
->> >+
->> >+      /* Live Update is enabled, but there is no incoming FLB data. */
->> >+      if (ret == -ENODATA)
->> >+              return NULL;
->> >+
->> >+      /*
->> >+       * Live Update is enabled and there is incoming FLB data, but none of it
->> >+       * matches pci_liveupdate_flb.compatible.
->> >+       *
->> >+       * This could mean that no PCI FLB data was passed by the previous
->> >+       * kernel, but it could also mean the previous kernel used a different
->> >+       * compatibility string (i.e. a different ABI).
->> >+       */
->> >+      if (ret == -ENOENT) {
->> >+              pr_info_once("No incoming FLB matched %s\n", pci_liveupdate_flb.compatible);
->> >+              return NULL;
->> >+      }
->> >+
->> >+      /*
->> >+       * There is incoming FLB data that matches pci_liveupdate_flb.compatible
->> >+       * but it cannot be retrieved.
->> >+       */
->> >+      if (ret) {
->> >+              WARN_ONCE(ret, "Failed to retrieve incoming FLB data\n");
->>
->> I think this should probably be considered fatal as mentioned above or
->> the caller of this function should get an error so it can fail. I think
->> retrievel of preserved state should generally not fail unless there is
->> memory corruption or ABI is incompatible.
->
->Yeah. I think I will just call panic() here to cover all cases.
+...Gowtham
 
-We have an luo specific panic macro/function that you can use.
+On Tue, 16 Jun 2026 08:06:02 +0200
+neil.armstrong@linaro.org wrote:
 
-luo_restore_fail()
->
->> >+              return NULL;
->> >+      }
->> >+
->> >+      return incoming;
->> >+}
->> >+
->>
->> [snip]
->> >+
->> >+static inline bool pci_liveupdate_is_incoming(struct pci_dev *dev)
->> >+{
->> >+      return false;
->> >+}
->> > #endif
->> >
->> > #endif /* LINUX_PCI_LIVEUPDATE_H */
->> >--
->> >2.54.0.746.g67dd491aae-goog
->> >
->>
->> Sami
+> On 6/15/26 12:34, Ronald Claveau wrote:
+> > On 6/14/26 3:56 AM, Gowtham Kudupudi wrote:  
+> >> On warm reboot, the PCIe controller's LTSSM starts link training
+> >> immediately if PERST# is already deasserted from the previous boot.
+> >> The driver then pulses PERST# for only 500us, which is too short to
+> >> properly reset the endpoint device that has already started
+> >> training.
+> >>
+> >> Fix by moving the PERST# assert/deassert pulse BEFORE enabling
+> >> LTSSM, so the endpoint gets a clean reset cycle before link
+> >> training begins.
+> >>
+> >> This was found on Amlogic G12B (A311D) with NVMe on an M.2 slot.
+> >> Cold boot worked because POR held PERST# low; warm reboot did not.
+> >> The fix was confirmed on a Banana Pi CM4 with Waveshare IO base
+> >> board.
+> >>
+> >> Signed-off-by: Gowtham Kudupudi <gowtham@ferryfair.com>
+> >> ---
+> >>   drivers/pci/controller/dwc/pci-meson.c | 2 +-
+> >>   1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/controller/dwc/pci-meson.c
+> >> b/drivers/pci/controller/dwc/pci-meson.c index
+> >> 5f8e2f4b3c12..3a7e9f1d5b8c 100644 ---
+> >> a/drivers/pci/controller/dwc/pci-meson.c +++
+> >> b/drivers/pci/controller/dwc/pci-meson.c @@ -310,8 +310,8 @@
+> >> static int meson_pcie_start_link(struct dw_pcie *pci) {
+> >>   	struct meson_pcie *mp = to_meson_pcie(pci);
+> >>   
+> >> +	meson_pcie_assert_reset(mp);
+> >>   	meson_pcie_ltssm_enable(mp);
+> >> -	meson_pcie_assert_reset(mp);  
+> 
+> I think this change is valid, other controllers resets PERST
+> in the host init callback, so either this or move to the
+> init callback.
+> 
+> Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+> 
+> >>   
+> >>   	return 0;
+> >>   }  
+> > 
+> > Hi Gowtham,
+> > 
+> > I have a patch [1] that I haven't submitted yet.
+> > This might be related to your issue, what do you think ?  
+> 
+> Ronald, This fix is valid, it's definitely better to probe the
+> driver with PERST asserted, please send it.
+> 
+> Neil
+> 
+> > 
+> > [1]
+> > https://github.com/rclaveau-tech/linux-khadas/commit/bee0a02d9756 
+> 
+
