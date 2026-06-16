@@ -1,104 +1,91 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f73.google.com (mail-ej1-f73.google.com [209.85.218.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B90D369211;
-	Tue, 16 Jun 2026 11:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12AB0436379
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 11:50:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781610498; cv=none; b=bZ3m3VcGI+0OEVEjycKZoxhho/K3NORw0ZlqK003wm89AiSxxngK7AcyY1RT0VZI2XuyqcawR7UgYJzWU3MrHSa8g2Vi3jBScO8AuHMimh/b34Ysae9HXSedSkTNoMp7uzHx4rEgSgUqpfKdc3s8gFVf+WDw+NogldMLRRWZig0=
+	t=1781610632; cv=none; b=ZubfFeWB+i552si6+HQ3MLWWE/Kv0SWNWthDD1DMrcRAUAeeR/SZ9tpVLZpFcHYQDEyoauJ676FNdit2GCN+3V3fHiSZzZ9aHeNB04rxY/vC14ZD9zzcx/zIwgSOIFz10Xq1HCGsvtxPKd8TwdTyLVpLY9ImQDTNvXwg++ATFTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781610498; c=relaxed/simple;
-	bh=mPuh6XTA5AG48/J010nDvu7vjHJ11jsGIAtOb9dpwKo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Jmy0e96YALMmT2uYZRpIjSrDba+bN0Fb7dTU9AlcmDleR1pkShQ9oJBbriNH6+OFcIahvJIdu/xAfya8VEWGbq/btrdKmpm6A15r711QB0c2nDIy+yb7Auf/8/JGlO7ehHFY4vSEr8qy1JdMCTweYIb+lJolG0Pa1L3OorRCagk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=by1gU48a; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1781610632; c=relaxed/simple;
+	bh=TObrEHhKuPNM42P0oLKIGdOx5sA4x16gAm9/x6UBmOw=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=gSzP4vtn0LXY670dlhaGW7+oUc3zc88JU76ANViT6N+F84amiw/cs4fboveMP8L/V2eW6CdEZibc4s8Rl1bxv2HkfYgv4KgDo+9dBZxkqbnyUZmwJ9/HihVqLm8uuZrJezIi2WEB1Au/ZFCGutf86Q3u1rWmE7SqjMFvUCy0Rmc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NuZOhfcZ; arc=none smtp.client-ip=209.85.218.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="by1gU48a"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1781610494;
-	bh=qE69fQEJl9oZRRpURxmwt3lhJuiBveqs8mE/8tXoWvc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=by1gU48aGo9nqyknUPasVL3O8zwdmOHSX+6iTukXhGM4QwwbgMcmcBwDlt9FVkriL
-	 pauByJnAOozbCvQg3RBtEUD8n8RMBhTAKH8+sVOTJCrrI9VqYq52pvetzI+uTWTa2L
-	 tBBCwIb4mNYaVXhyLp2YszevLUpBDgVVwkYjgK7FqckdGH7AYklacjsIcWZtN2b7ns
-	 flSw3OZpkqy7dYIdGgPtzz8pT2RDWXIOG5Eu69Q6kKayjzEURagu2YcQjFLvLho/6r
-	 G6QAty/jyShc/7rIKOrNlG5rh8h+XQw5aEdNk5CvO8zMdM2hCXoGoYJFLgUj9F41KM
-	 kLYr4Gy13vzyQ==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gflc75zjFz58bH;
-	Tue, 16 Jun 2026 21:48:07 +1000 (AEST)
-Message-ID: <20fb245b-2dc3-482a-8c2c-a3a6864a9005@ozlabs.org>
-Date: Tue, 16 Jun 2026 12:48:02 +0100
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NuZOhfcZ"
+Received: by mail-ej1-f73.google.com with SMTP id a640c23a62f3a-bfe735f3bc5so381906466b.1
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 04:50:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781610629; x=1782215429; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hcH8wbzZOm8yn4lLoAkAwb8V6hZltU+bJ+2UV9XpA9s=;
+        b=NuZOhfcZrHteFgg+qVuJKf/u2zYwxMNt7M/+3Kh2WGKDHOK0XbwQU4TtUudSmIqfHp
+         3d512sWF3YSKCtWQ4TZV5MeKudggeHCDoqM2kGKSS/6vct350HmOXUvKVfl2WpMkekLC
+         zToUW0w6iHcPVj0SumIP+N2aMhFr8Fc4DCVBRZeUMJce0W0vsLnNpyaNYZOpNvfxOGkR
+         n/gnavsNlF7llBohUYrKUQmn4UGZBkm4RxyM+ZAD8yOKsL03u8u2+w0jF76KFxxuDvGe
+         vfBu/tdAI/YA/CfT/0uP87PxyZVwq1No+5SIzDm1wxIn8DsB15iFz9+PGgfao4J+51Qz
+         gdnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781610629; x=1782215429;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hcH8wbzZOm8yn4lLoAkAwb8V6hZltU+bJ+2UV9XpA9s=;
+        b=Fm56dZx2qx8Dsk/QFdep4IIivc3lqWwU30oiKqH1xUdb6SW5YyDCYv3BpXpXdcA65x
+         8tOEP0xd5lF0TVeNob5y/XSz2FYq1N2jiBWVn0qXuk1rPdTH/Had2ZgcynHm1l1G2NwX
+         1dO/674QDVIDo4WYI5gzB731xMjWY93BRXmvzcKgMifpVQioNpmYzQfggwGofrdHV5Ah
+         MdPfaXcNzxPLuToW++hTHsrlriqDlAaBOqpOq2++PuMe3VIii2kTQOUI0pyn8BEF67NN
+         BYG19ia+63Fts6jTf6inI57METXSZFXH41DYdF/YhBoW7UnVborQbex1sfUE/p6wOo4/
+         ymOg==
+X-Forwarded-Encrypted: i=1; AFNElJ9Yt8OjElqkxHVbVpklzC9w9A4+gzzkChIJn3S0ganRs8ZbH1IJfhYwLt3sY2rgkMnJyVeKK9MX3MY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxwEPbvAPnbmFVo/HqdQLx3vS4PrXCDDiC2rfCwJuJBPir7AUQ5
+	xtrICCONW73hHbyOLs2p2l7KKX3/2Qdk/PJXYNqbewo+YfpnuPAycw6EpQG1LBol3I7ZVnSM+6r
+	K4jdYBzqWJzOSeDVq0A==
+X-Received: from ejfp18.prod.google.com ([2002:a17:906:e92:b0:beb:c99:aa2])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:907:1dd6:b0:bed:9a7:5ed1 with SMTP id a640c23a62f3a-c043a477df5mr130254166b.5.1781610629337;
+ Tue, 16 Jun 2026 04:50:29 -0700 (PDT)
+Date: Tue, 16 Jun 2026 11:50:27 +0000
+In-Reply-To: <20260604-unique-ref-v17-1-7b4c3d2930b9@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
-Content-Language: en-GB
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- Pranjal Shrivastava <praan@google.com>, Alistair Popple
- <apopple@nvidia.com>, "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
- "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
- "linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-3-matt@ozlabs.org>
- <DM6PR11MB369091A6F1E32054A95AB6788C182@DM6PR11MB3690.namprd11.prod.outlook.com>
- <4d75b948-3b74-4970-97f2-72e54f9c9694@ozlabs.org>
- <DM6PR11MB36903B0203CFFF97197676138CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <DM6PR11MB36903B0203CFFF97197676138CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+References: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org> <20260604-unique-ref-v17-1-7b4c3d2930b9@kernel.org>
+Message-ID: <ajE4g7JsM6bnpEOu@google.com>
+Subject: Re: [PATCH v17 01/10] rust: alloc: add `KBox::into_non_null`
+From: Alice Ryhl <aliceryhl@google.com>
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
+	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, 
+	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+	Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Viresh Kumar <vireshk@kernel.org>, 
+	Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+	Uladzislau Rezki <urezki@gmail.com>, Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Igor Korotin <igor.korotin@linux.dev>, 
+	Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev
+Content-Type: text/plain; charset="utf-8"
 
-Hi Kevin,
-
-On 16/06/2026 10:28, Tian, Kevin wrote:
->> From: Matt Evans <matt@ozlabs.org>
->> Sent: Tuesday, June 16, 2026 2:04 AM
->>
->> On 12/06/2026 09:42, Tian, Kevin wrote:
->>>> From: Matt Evans <matt@ozlabs.org>
->>>> Sent: Wednesday, June 10, 2026 11:43 PM
->>>>
->>>> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *priv,
->>>> +			      struct vm_area_struct *vma,
->>>> +			      unsigned long address,
->>>> +			      unsigned int order,
->>>> +			      unsigned long *out_pfn)
->>>> +{
->>>> [...]
->>>> +	 *
->>>> +	 * It's suboptimal if DMABUFs are created with neigbouring
->>> s/neigbouring/neighboring/
->> Ah, not a typo. 🙂  That is en_GB and AFAIK is permitted.
-> I guess you meant 'neighbouring' and 'neighboring' are both valid.
+On Thu, Jun 04, 2026 at 10:11:13PM +0200, Andreas Hindborg wrote:
+> Add a method to consume a `Box<T, A>` and return a `NonNull<T>`. This
+> is a convenience wrapper around `Self::into_raw` for callers that need
+> a `NonNull` pointer rather than a raw pointer.
 > 
-> but here lacking a 'h' should be a typo? 🙂
+> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-:D Doh!  Sure enough, you're right and that very much _is_ a typo after
-all. :)
-
-
-Thanks,
-
-Matt
-
+Reviewed-by: Alice Ryhl <aliceryhl@google.com>
