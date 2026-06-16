@@ -1,280 +1,281 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022110.outbound.protection.outlook.com [52.101.101.110])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B70D436369;
-	Tue, 16 Jun 2026 11:13:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.110
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781608384; cv=fail; b=s7iuxShEQuvgRAKj9ClLCuSLHoRjVZnuyFml2c2BshWvpURqMrOl52mOdmu77qP20CSJ3Y9SOnaAlUFtmIwldfo/+CtCw2FuSEl08CkN6YUVTEYn29RvEGHXQ+uFUBNzWxuGDrugqb4QVqYT2KeMMWwfJ5ezK5xLqPJnIW2R92I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781608384; c=relaxed/simple;
-	bh=lsnIRHdKTXXZ/uSrletTNPLAkbqv3AQNJqkVXzA8x8A=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=W3wWlblrsYR/x2KNmKESGssikluyhgAWl97MhWGRNR2UcYW01MlX6KMFBhiWV45PhePywL2srwbHY3zrQAzino8BunnzWfdBEGAtvTsp/Onwf0BuGFTl+Ctd65U7lYw4jKsIJU73R8YkH0OE7RH07jLGj2Cc2VN2fsw4HaVQ0+o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=feHoVzyX; arc=fail smtp.client-ip=52.101.101.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCE843C04D;
+	Tue, 16 Jun 2026 11:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781608433; cv=none; b=uAlRsTfN9jtE5abQ1GMnWe+nsORP4qzws9hKE+6AAWusz1AuiYQBFBPSchmIer4mwZvGL6ErLayZlwQkhi/1K8VT47UUnOjHmPbh4R/8cwTSSp7TNOdloyFZ0D9xKWtTeejMTQkEgirKnmTwwKJjRTzqElFZAXS3OumiX8fYVVc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781608433; c=relaxed/simple;
+	bh=tH5Y3CYksCKse/U790ncAiEl5+cqqG49txptrPvaX3E=;
+	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
+	 Date:MIME-Version; b=gp46adr8VS9LEOf9aiMkqksB/S1bTrXTasBYnYX2zusnjyUhF+5F1z61HR4NdzeVJqlPE3sgs0rRod9BQSj3+CAfopCjClMgU521jXkdu45NQkHTXeV7H8+rt610lSpAzHWP18UvZRcb08YF5MLFHi4Ru2g7RgyTyeuokEnmNTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=KRyom5Jb; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="feHoVzyX"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=k18WeP+fyi/Can4UgmubAtoV7oDFd96w3GT7VeuZsRTzlHKTVcAAJNb1U9n8vaSaz3B5nl/HW5PN6dV1CCSSD7BoxldWbwn6WCaXDWC19M5QtLamTJFFqNg5LmKwKmDVExNk6n5X1Riu7BsnUd625QOKz8w9tRa0NnfGYCmtDhrkuCxnCrJIggQ0cS4+TJPuzFXJyxSve8GF9Pu6GDRC4ya4EspBsAxT5o8FbhVua1G2wtQ8/NdrdIl608CADXqYLWSL7A7i7enBe8KgCWvTYac+XrdetBcrxKQWUAPXUXK2d2tSRY8eL8RZ/c8c/sEN9w0tCjpMHiKnOlXuNJAkoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=E7WFIft6NXMpF/MvPJjpDVvNiULb+piafNvfCxbyhlk=;
- b=CR0+RzN7iSJX4MXv9kvK2q9/182DtjPsEvUDc+GW2Jsrd+5pblrW+MQpWwzykMLtlmwVQTOmE3fdCNZqNdrMYYkf4Uj+66melXQUOTae67Pj6CFmGoe+6YJERHfKUptoEJ32QKYZJHEQNmcBSDaQKNlkkJkZoNhE+vdne5hLjiPJiXu9q8ohU+VQSj4A3MNiOxfXPVFB/jt8u6RLOlSiX5/hCfdDqpWBA4lcHrE9NZaDDjU7baOVzjzi0iZQBaulTchogp1uncfVCDuwBBW2J+B/2zcW8vzn9POl5lZ0N2I6TTKbRTHwScQ8RuRs3ASeDxDB/t8Gu4aRcd3FTFh1tA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E7WFIft6NXMpF/MvPJjpDVvNiULb+piafNvfCxbyhlk=;
- b=feHoVzyXOw1AMWe+lSaR0IbSZREveC/ablN0QUdzB3v/JzD5owl0liPHrMYZJ9zh1/Qtf3yJOWkZrHgRXlo3uVgYEvKjzsffq8nn3J2P/Lhwhtk60sBv2wgwqwiKRvsxhZQM06FSyuSFzQjN8P9SEhICNNqdXRlIhJ1b8uRGByg=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO2P265MB3280.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:198::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Tue, 16 Jun
- 2026 11:12:57 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0113.015; Tue, 16 Jun 2026
- 11:12:57 +0000
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="KRyom5Jb"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65GAIGFM1227484;
+	Tue, 16 Jun 2026 11:13:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=IbTJGg
+	d8Wm6mOQ0OAsKYO0y4fxqkDw4LTh2TsneiWCI=; b=KRyom5Jb4f9ITVCyopCt48
+	PIhlE86QDiTiKRJUa7eScEqKpCBUwqzqvnibdtRKqhZywjONk1CyvaateOPsGhdb
+	PdN+jWJOehlGPM/HIX0fCtDOC4aUg3gSp6N/MJVdgDkzQ43l8qBIsVV4vvCAfTvh
+	BDpETfrCewXrafeuoicPYPlVgmWCXwlgAUY98zgTUKgOrJtrRZyLMQs0+RbDkZYO
+	WoB6zzAu79fgylKGTufzInL4RcitXkwyJTm5sQVscsGwEZKM/FOHf1uP5Vc2GfQv
+	cBdppMsTKvhNM+o3qxfsVNJtYnRtidmlZ2fZUS8cEX/2BZS1fP4kYD38h5VZ3hOQ
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4es1wm58q4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jun 2026 11:13:47 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65GB4cFZ025126;
+	Tue, 16 Jun 2026 11:13:47 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4esm7y2se8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jun 2026 11:13:47 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65GBDk3C28705418
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 16 Jun 2026 11:13:46 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 36DEE58055;
+	Tue, 16 Jun 2026 11:13:46 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2A8F858043;
+	Tue, 16 Jun 2026 11:13:45 +0000 (GMT)
+Received: from [9.224.91.56] (unknown [9.224.91.56])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 16 Jun 2026 11:13:44 +0000 (GMT)
+Message-ID: <b03380c2b16f32880810804cd847d6006ea2ad1b.camel@linux.ibm.com>
+Subject: Re: [PATCH v19 4/4] PCI/MSI: Enable memory decoding before
+ restoring MSI-X messages
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, mjrosato@linux.ibm.com
+In-Reply-To: <19fe09a8-4b56-4e47-9b03-ba51679f25ff@linux.ibm.com>
+References: <20260615183524.2880-1-alifm@linux.ibm.com>
+	 <20260615183524.2880-5-alifm@linux.ibm.com>
+	 <02c66b72de27b3360536dfdd0747261dc487059d.camel@linux.ibm.com>
+	 <19fe09a8-4b56-4e47-9b03-ba51679f25ff@linux.ibm.com>
+Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 16 Jun 2026 12:12:56 +0100
-Message-Id: <DJAFGLBC8WQY.L3P1T92AFN45@garyguo.net>
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
- Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
- <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v4 07/20] rust: io: implement `Mmio` as view type
-X-Mailer: aerc 0.21.0
-References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
- <20260611-io_projection-v4-7-1f7224b02dcb@garyguo.net>
- <DJ9PI9NEJ92T.3D0E90RPSCXA2@nvidia.com>
- <DJ9PXYB91UDG.3BV4EJJ10RIC4@garyguo.net>
- <DJA1J6H6Z6CI.3LLUM4T35FXXK@nvidia.com>
-In-Reply-To: <DJA1J6H6Z6CI.3LLUM4T35FXXK@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0431.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18b::22) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+Date: Tue, 16 Jun 2026 13:12:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO2P265MB3280:EE_
-X-MS-Office365-Filtering-Correlation-Id: c443ae29-f02b-46c7-4417-08decb983841
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|376014|23010399003|10070799003|1800799024|56012099006|4143699003|5023799004|22082099003|18002099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	3LezqJ3tBdCOHmEKbUXsWDUM7f3hp9hY+HQmi1zGqZ5gDhV21TpQOHIzJji2v26w7qcA/2lnvFn407WUI57pr9oe+k9RE2CyCsbdvq1nWuV8CE1aTbmzTnPQb/VMc/btpMPY+gFkGg/b+p7XxpHl+it4Dy9CIzrCmbH+fAX9m2v7lQRIMNNU4haULE5XChUfeWiqjqQF9TOU4vlT3J3+Yg0s014bzzlxfdh3Jejn0nihLwMSFt8B+FcSlAH1usPYc3ujpxK0ZyhnJIAheQeRr0pG+kYLG6LPSXpHR+Ejpf3WvjlUjrGQoPudoz9QuXBL5mcQSX+kwqE+RrEtcWzcwL4XrlGoDfI1n6098Qxds1JbYwcn5MHeRrvk5AE43QL0mq+LNEeG2tu0sd1cfoOs8oM0Weo8iHrZoOQU+NGc6ty5JxjX94Hl8oxjz/I1YpKdvB4xhRhAtdJqMzU9Lgmo7KOabb3FFDbsedACkc7Xqpm5o+9b8Q8MdoSztTZ8edW77+l0h6hOqElHPRV3trhoEcSipSlllsAuaN5D6ktdw5UPZ16MQ2zzBxedEvYkT2f/CNQi+29A29l233gRlPwFPN1IVa3bPOnCk+kFNZUNIZO9aIq9xKVtbDglrjGZiGVVMlj3ucIAik4P2iyBstBWuT32WFF22cx6CCHVlXqBajrSlFJDvD8kaBTPVs6G+D6P
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(23010399003)(10070799003)(1800799024)(56012099006)(4143699003)(5023799004)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?K2RseE1PdnFXS2pldU5YMkJ2SFQ0T3E0T2pSRzUyWVNPREJGODE2SGd6MDdk?=
- =?utf-8?B?aFVSV3RvazJ2RlhaOGYrM0dvYlU2UVYwQ2RLa3RSRGVOMjc5U0lMODMwcWlo?=
- =?utf-8?B?WDFvbmRtY0NHbUpZM0ZoMUNDdlVZWnpiQ1ZwVXhycmpQYm5KdFJQS2ZXaWZW?=
- =?utf-8?B?UHpEcHlVbS9oalpzc0FvMTEwUlBXVGJqQi9sY0lGbjBEOThMakRqQ3p4Q0VQ?=
- =?utf-8?B?S0ZQYTNxYm1xYkNHYTZESDZBcW03QjRHeGlQNFordzRiTXFqUTdET0g1VlQy?=
- =?utf-8?B?TEF6aW5xZFp4TWVHSXh0dDZlWU0yTXFMZUlzTDhXSjV6bVdkVEc0TEp0QzVH?=
- =?utf-8?B?S0FwcUxLeS9RZUVnZzZPa3J2M2srSGpDRVMyTDdXWk5BeXVuRUdienN4WEZ4?=
- =?utf-8?B?UGNRaUNVa1NjenJhNkJySWhOb1lHYUxkdnV5MW5tN2pGTHNBYkZqU0dnUjR5?=
- =?utf-8?B?TVRpb3o3R0pVckxURkpKc0g5Vi9hMHdwOVduNDIyM01yY0RUU1N4UGNzd1l2?=
- =?utf-8?B?ZEpHTXAzRTFpb0F0dHNwSE9aSWxjTXNPU2JVcUt1cHpDL1V0dWRWM0lIeE4r?=
- =?utf-8?B?bmdmbHlRM29KdHlKM1ArdVU0cGZwdUhLVzhGM3J0Z1c3d2RIMUlhcEQ4Qngz?=
- =?utf-8?B?eVhtR3NCaGRuZ3VPRkNFYTVVL2o5YUhNaXBJVFk1UDhBdlZBc0M2aHlMQWx2?=
- =?utf-8?B?THdXWklsL0NOS2FOdkhyWVhVOVNoUmowZmE5UFF5Qm40MGMvTDkrWit0Rk1o?=
- =?utf-8?B?R1V0dS9HMFBWNVN3OFFiMGpFOGpHbjR6RnA4S3BmT3BwYUlISEhPRGs2cVdP?=
- =?utf-8?B?RmtpZlJIaHJoN2JEUktoRjhIMDBldzhNUHRDU2dHa2djSm1jZXY0dVNUbUox?=
- =?utf-8?B?ZStGMHc5bzdBRWFXM2dxOFQ3Y3F2MDdjMElUemdmT0htSTNMUCticG4zK3Q3?=
- =?utf-8?B?aGxsc2Q3V0crRFRhWUlQU0FlTEtmOXRQMXRVUkxqWGZndUZEN25aTEpFdkNN?=
- =?utf-8?B?KzdubkhLTXJWZEZoMG5QZUFteS9NbUhCZkQ5YkZhOUhlUGpqaktkbXN0UWFW?=
- =?utf-8?B?Q3psdGJSRHNKcHIvTUh0U3Q0QnpOSUowQjAxdWJGU29zRU5EREYzN0ZpY2xq?=
- =?utf-8?B?K0s3UlhTWXVFUk5oVVY4NStqT3dXRmlScjBQOTVCUFpETHRpQXkyVlk1MFBO?=
- =?utf-8?B?T1hXUmNpUE55WUtlZS9OeUxxa3NKSy9MT2YxYXF3RnFtTnF3LzJOb1BaRHJB?=
- =?utf-8?B?c3JWZEZGS1B3VXJiODdzVUY1NmJOZ1VvMTNCUjNDaGlUSEozWGxRK0hXWi9j?=
- =?utf-8?B?RDdRcnQxb210SGxkVXRkdUVyaUNiYUFkQUlnbXBoTDFlMERuak8xeXFoLzNn?=
- =?utf-8?B?NUd6Skp0Vks5Z0dwVlBkdkw4SCtBemp2Nmd6dndqdkFnRklQckxBdCtKWGhw?=
- =?utf-8?B?VkREaVVkMjBkWGtYOG1CWXU0eDNEaU1zNzRwaFRQY2VsVWlwMEh5aE9JR2dS?=
- =?utf-8?B?dEZ0U3R3S214Y3ZVZng2Z3Y5NjNDTGQ1QjNDMWcwM2hKZWl3UFhGT1NXN3VT?=
- =?utf-8?B?Zk96cmY4VE9aNDVFRC8xTUwvMnFMTkNaSVVtRGwxWkFxbitLQXl5TDZzT1pM?=
- =?utf-8?B?MTk3Qi9PNldYTndWYkFmQ2g2cFRmc3lYZ2c0SUNWb3dtdTFyS0RkU1JzK3Fv?=
- =?utf-8?B?M0lSM2dOUjNyNG9kTGVtUFpBUDA5Q2xsdmsvUjhYeWVRV0lua1UwN0lwZzRa?=
- =?utf-8?B?MGZycDA1eTUveDJweDRQUTlueUdFYUZmcTNqamFZbVZFZVZPYzM4N09rWVpZ?=
- =?utf-8?B?OEQ2eTVlUmM3M2hkRDFPMURTNHZBY0NZK0oxd1JwUnJyTEU0azNmUlprVjh4?=
- =?utf-8?B?cS9MRnRRS2ZRNWZoaVpDQW9kZmltMmpYUyt0QWh3RmQ1SG9CUitZeEJNZEJj?=
- =?utf-8?B?Q3ZBNG04cGZ1bHRpOWRHZTZjSGhuMVNXMEc5VGVBUVdiajR0SkJRNXZRZ1hJ?=
- =?utf-8?B?K2dDZHE2am9MeVN0d3ZpbCtrSnBhcExKZmFuazl1a21RamNlSGhtRnVwVm9M?=
- =?utf-8?B?V1dLSGlVRS9PVEZ4aC9pVWRMYzJ3ZnR4SUdvR2N4Y2psb1F2RDI2eG55OUhG?=
- =?utf-8?B?Rlk1eTZWME5wMjVrckdDQnN2SDkzSmJRTHZuL1NHSUJROW9HRDAxRmJzNE8z?=
- =?utf-8?B?VEJIMDFvWEw2TEFNcWZ6aWc0WTRMcmtwZEJsaG1jZElwS0xoblFDWUZqR25K?=
- =?utf-8?B?R0d0RlEySmJrUzBoMXZlSnU2VzVVLzZrZ2VweFQvNTZURTdwc1hkdnhDcmtD?=
- =?utf-8?B?VVh3UnZVNEliRmxsZEU3cEcybTNLMmlRdlFkeDM4QkxYaUU3NUx2UT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: c443ae29-f02b-46c7-4417-08decb983841
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jun 2026 11:12:57.3394
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rJRx9XqZRJz08cebERdMilGw0czS/nFJ9JJbckH5mkJYgYLMNu0QQLwc1nUTZvG+fNbYZH30C0QfKCtWE7UpTQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO2P265MB3280
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE2MDEwOSBTYWx0ZWRfX+4mVXueQGupW
+ D9JTKy6swCK2ERT5/L8uSdz87rUVAdsU1yJxVLKlpyzhTy2DOZr7hE8PDB1Oq59Yht0IAhNQ/JN
+ vay6dEZNWFaTpBmV8gqTfvo9ucLgE24=
+X-Proofpoint-GUID: SsAHinMGFJZgdTba7HttOlpZYJflbCU1
+X-Authority-Analysis: v=2.4 cv=SY/HsPRu c=1 sm=1 tr=0 ts=6a312fec cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=C1Hwd92nIuYfSArr40IA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE2MDEwOSBTYWx0ZWRfX7/Ar2aS4scg7
+ jqhsp7zBiE/FeOSQnD46uVY4IKl8x25msJYuQEBgMZryTUqomDKyCnDCpo8p0IcE29bwUTUCVac
+ b6RCNxol8W/9G8xG6QT5lFsjvXiRcfnuayYV+NW6Jsxy52TKXac1ij4G3Rxg8GL+wQjbPkqKoEA
+ C27Up6oqo9pBvFwiiA6ip+w4iGTs7+VviptSZDtGxH0iUCSE2NWW3e0AFbQTU1mmNI3tgeEDs/K
+ AQEoSsQ2jRku8B5O2eXp1drRTTY509zs2zmLWQR8IHNATohuP+2XXcX6wvrLsjrVsaWTXGFHAvM
+ hZKjITtjN9jsrZKmdoIVqjoV6XjsSmpzveiR5UPRRw+M8keQYwbl7HYimF60MJRcOvp0zo2toSi
+ wHHdyOpw5mf7R56R1lyTc3aiqvjf76c7IKx7DzP+79vBRz1rkkjBK0q2mct4K7PC14a57pxlC6l
+ OxtVVKS26Bvvy1PTqgA==
+X-Proofpoint-ORIG-GUID: SsAHinMGFJZgdTba7HttOlpZYJflbCU1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-16_03,2026-06-15_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 phishscore=0 suspectscore=0 spamscore=0 impostorscore=0
+ malwarescore=0 bulkscore=0 lowpriorityscore=0 clxscore=1015
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606040000
+ definitions=main-2606160109
 
-On Tue Jun 16, 2026 at 1:18 AM BST, Alexandre Courbot wrote:
-> On Tue Jun 16, 2026 at 12:13 AM JST, Gary Guo wrote:
->>> Is there a reason for not just declaring `RelaxedMmio` as
->>>
->>>     #[repr(transparent)]
->>>     pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
->>>
->>> similarly to what the original code did with `MmioOwned`?
->>>
->>> I tried locally and could build. This avoids declaring `Mmio` and
->>> `RelaxedMmio` as basically identical types, and lets us remove the
->>> explicit `Send` and `Sync` implementations. IIUC you can also reduce or
->>> even remove the invariant section as it is enforced by `Mmio`.
->>
->> This is what I did originally, but this would cause duplication for
->> RelaxedMmioBackend, as now you have to do
->>
->>      unsafe { bindings::$read_fn(view.0.ptr.cast_const().cast()) }
->>
->> and the `.0` causes the macro not being shared with MmioBackend.
->
-> Since `MmioBackend` and `RelaxedMmioBackend` both implement `IoBackend`,
-> I think using `IoBackend::as_ptr` in the macro should let you avoid the
-> duplication?
+On Mon, 2026-06-15 at 15:17 -0700, Farhan Ali wrote:
+> On 6/15/2026 11:59 AM, Niklas Schnelle wrote:
+> > On Mon, 2026-06-15 at 11:35 -0700, Farhan Ali wrote:
+> > > The current MSI-X restoration path assumes the Command register Memor=
+y bit
+> > > is enabled when writing MSI-X messages. But its possible the last sav=
+ed and
+> >                                                ^ it's
+> >=20
+> > > restored state of device may not have the Memory bit enabled, even if=
+ a
+> >                     ^a
+> >=20
+> > > device driver later enables Memory bit and MSI-X. Attempting to acces=
+s
+> > > Memory space without Memory bit enabled can lead to Unsupported Reque=
+st
+> > > (UR) from the device. Fix this by enabling Memory bit if we write MSI=
+-X
+> > > messages, and restore it afterwards.
+> > Don't we have the same issue in __pci_restore_msi_state()?
+>=20
+> I think for MSI it's done through config space registers and so it=20
+> doesn't need to access MMIO.
 
-Good point. Are you okay with the following diff?
+Ah you're right, I was confused by the call to
+__pci_restore_msi_state() in __pci_restore_msi_state() but looking at
+the code paths it does seem like for MSI's it won't do MMIO.
 
-Best,
-Gary
+>=20
+> >=20
+> > > Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> > > ---
+> > >   drivers/pci/msi/msi.c | 9 +++++++++
+> > >   1 file changed, 9 insertions(+)
+> > >=20
+> > > diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> > > index 81d24a270a79..d8d3c8a911ac 100644
+> > > --- a/drivers/pci/msi/msi.c
+> > > +++ b/drivers/pci/msi/msi.c
+> > > @@ -874,6 +874,7 @@ void __pci_restore_msix_state(struct pci_dev *dev=
+)
+> > >   {
+> > >   	struct msi_desc *entry;
+> > >   	bool write_msg;
+> > > +	u16 cmd;
+> > >  =20
+> > >   	if (!dev->msix_enabled)
+> > >   		return;
+> > > @@ -884,6 +885,11 @@ void __pci_restore_msix_state(struct pci_dev *de=
+v)
+> > >   				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+> > >  =20
+> > >   	write_msg =3D arch_restore_msi_irqs(dev);
+> > > +	if (write_msg) {
+> > > +		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> > Sashiko complains that the read cmd may be all 0xFF=E2=80=A6F in case o=
+f
+> > transient errors. Though I don't see how we'd handle that here without
+> > a larger refactor.
+> >=20
+> > > +		pci_write_config_word(dev, PCI_COMMAND,
+> > > +				      cmd | PCI_COMMAND_MEMORY);
+> > > +	}
+> > >  =20
+> > >   	scoped_guard (msi_descs_lock, &dev->dev) {
+> > >   		msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+> > > @@ -893,6 +899,9 @@ void __pci_restore_msix_state(struct pci_dev *dev=
+)
+> > >   		}
+> > >   	}
+> > >  =20
+> > > +	if (write_msg)
+> > > +		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> > I wonder if it may be safer to have the Command register reads/writes
+> > within the msic_descs_lock critical section in case this gets executed
+> > concurrently and so the restore above from one thread could slip
+> > between the Memory bit enable and the beginning of the critical
+> > section.
+>=20
+> Hmm I am not sure if its necessary, AFAIU the msi_desc_lock is used to=
+=20
+> protect the descriptor list. Other config space changes in this function=
+=20
+> is also done outside of this critical section.
+>=20
+> OTOH Sashiko does mention correctly pci_msix_write_vector_ctrl() can=20
+> happen even when write_msg is false and which I missed. But this got me=
+=20
+> curious, as to why would we write the vector control for an MSI-X entry=
+=20
+> if we are not writing the message (Address and Data). AFAICT the change=
+=20
+> to write message based on arch_restore_msi_irq() was originally=20
+> introduced with 76ccc297018d ("x86/PCI: Expand the x86_msi_ops to have a=
+=20
+> restore MSIs."). Prior to that we always restored the message and vector=
+=20
+> control mask for an entry. So I am not sure if write_msg is false and we=
+=20
+> don't write a message, why would we want to write the vector control=20
+> mask? If we have a valid reason to write the vector control, even though=
+=20
+> we don't write the message then we should we enable the Memory bit=20
+> unconditionally? Thanks
+>=20
+> Farhan
 
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index c6f3ab530b4f..a8da625560a0 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -1136,14 +1136,16 @@ macro_rules! impl_mmio_io_capable {
-         impl IoCapable<$ty> for $backend {
-             #[inline]
-             fn io_read(view: <$backend as IoBackend>::View<'_, $ty>) -> $t=
-y {
--                // SAFETY: By the type invariant, `view.ptr` is a valid ad=
-dress for MMIO operations.
--                unsafe { bindings::$read_fn(view.ptr.cast_const().cast()) =
-}
-+                // SAFETY: `$backend::as_ptr(view)` is a valid address for=
- MMIO operations for both
-+                // `MmioBackend` and `RelaxedMmioBackend`.
-+                unsafe { bindings::$read_fn($backend::as_ptr(view).cast_co=
-nst().cast()) }
-             }
-=20
-             #[inline]
-             fn io_write(view: <$backend as IoBackend>::View<'_, $ty>, valu=
-e: $ty) {
--                // SAFETY: By the type invariant, `view.ptr` is a valid ad=
-dress for MMIO operations.
--                unsafe { bindings::$write_fn(value, view.ptr.cast()) }
-+                // SAFETY: `$backend::as_ptr(view)` is a valid address for=
- MMIO operations for both
-+                // `MmioBackend` and `RelaxedMmioBackend`.
-+                unsafe { bindings::$write_fn(value, $backend::as_ptr(view)=
-.cast()) }
-             }
-         }
-     };
-@@ -1185,14 +1187,7 @@ unsafe fn copy_to_io(view: Self::View<'_, [u8]>, buf=
-fer: *const u8) {
- /// the regular ones.
- ///
- /// See [`Mmio::relaxed`] for a usage example.
--///
--/// # Invariant
--///
--/// `ptr` points to a valid and aligned memory-mapped I/O region for the d=
-uration lifetime `'a`.
--pub struct RelaxedMmio<'a, T: ?Sized> {
--    ptr: *mut T,
--    phantom: PhantomData<&'a ()>,
--}
-+pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
-=20
- impl<T: ?Sized> Copy for RelaxedMmio<'_, T> {}
- impl<T: ?Sized> Clone for RelaxedMmio<'_, T> {
-@@ -1202,12 +1197,6 @@ fn clone(&self) -> Self {
-     }
- }
-=20
--// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
--unsafe impl<T: ?Sized + Sync> Send for RelaxedMmio<'_, T> {}
--
--// SAFETY: `RelaxedMmio<'_, T>` is conceptually `&T` but in I/O memory.
--unsafe impl<T: ?Sized + Sync> Sync for RelaxedMmio<'_, T> {}
--
- /// I/O Backend for memory-mapped I/O, with relaxed access semantics.
- pub struct RelaxedMmioBackend;
-=20
-@@ -1216,20 +1205,16 @@ impl IoBackend for RelaxedMmioBackend {
-=20
-     #[inline]
-     fn as_ptr<'a, T: ?Sized + KnownSize>(view: Self::View<'a, T>) -> *mut =
-T {
--        view.ptr
-+        MmioBackend::as_ptr(view.0)
-     }
-=20
-     #[inline]
-     unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSiz=
-e>(
--        _view: Self::View<'a, T>,
-+        view: Self::View<'a, T>,
-         ptr: *mut U,
-     ) -> Self::View<'a, U> {
--        // INVARIANT: Per safety requirement, `ptr` is projection from `vi=
-ew`, so it is also a valid
--        // memory-mapped I/O region.
--        RelaxedMmio {
--            ptr,
--            phantom: PhantomData,
--        }
-+        // SAFETY: Per safety requirement.
-+        RelaxedMmio(unsafe { MmioBackend::project_view(view.0, ptr) })
-     }
- }
-=20
-@@ -1267,11 +1252,7 @@ impl<'a, T: ?Sized> Mmio<'a, T> {
-     /// ```
-     #[inline]
-     pub fn relaxed(self) -> RelaxedMmio<'a, T> {
--        // INVARIANT: `RelaxedMmio` has the same invariant as `Mmio`.
--        RelaxedMmio {
--            ptr: self.ptr,
--            phantom: PhantomData,
--        }
-+        RelaxedMmio(self)
-     }
- }
+It seems to me that the only place where arch_restore_msi_irqs() even
+returns false is in xen_initdom_restore_msi() and from what I can tell
+from the Xen code this then ends up doing the MSI write message in the
+Xen hypervisor so for MSI-X also does MMIO. And yes I'd think that if
+write_msg is false the pci_msix_write_vector_ctrl() would potentially
+also cause an UR if the Memory bit remains off. So from my basic
+understanding I'd think it should be enabled unconditionally. As a
+bonus it would make the code easier to read too.
+
+Thanks,
+Niklas
+
