@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A9435CBD7;
-	Tue, 16 Jun 2026 12:57:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3EA43195FC;
+	Tue, 16 Jun 2026 13:27:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781614631; cv=none; b=aU2oKmxXt51bOuksrXNVPlGxGfeQCMcqga8aUR6kk6NGvhjpvMJNtVQXlXjt8eVwFkFNvEM4KijcRpUtVfgTxcl5FrFxjB7/Uwpf3gGcRLOU8p+5/u6UjuRqTBAZcA3I8ZfexknbWsZ2nELgXVYN5qBCjYZjM1P7GUinGCt/520=
+	t=1781616460; cv=none; b=Zz/1j6BYYkzji9PVwdlI5Zc4uFISu9t7MoZj425NwJIdrKs6IVQY5dhNQuEv6MjlBSL6dJL0bfEFX5ues4XrhUFUiBEeKmXlflJJNZdHEblAc9yA/+Il622vg6O2Ji9BXto0S7vVr8r94t6yFg+6iuBgv8ChrMOWJwA3/4VYzAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781614631; c=relaxed/simple;
-	bh=yIWEZ6Mwe3B+5GKAj721Up1Y7xM5BlEWCxTchsqZOIU=;
+	s=arc-20240116; t=1781616460; c=relaxed/simple;
+	bh=ZCcHnqXHRh533SakRQ7A1Zu/e0yFLmUGOSCOmQ2l6Ts=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TInWugxSOICMNouTkwLQ42LK6TL+9bOL3+jtE2x+HglQ8l7mCpUGVW82YdUobnW6CB/2dS51D73onpAVeb5uhvz/N7O3uKlZQ7j5IIwpqKkrrqqkm9UBA2vFJ3+pamR9WvHdyucyF2+YcI0f8zvjxH9H8xLEvXo5HaTSu0QlCEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j7vkxDU4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=mjkCuZV3Ao3jOqxuw3NwzYdfkGsAAwUAyrWBAfeJmr/SioCpvjO1dM9jnNxAGvFVobyFU0oxS8XTWdgtx4vMWNxqdpKZOl3EmjFpS+s3VcTq0BSK/YG6XC73bf9Z3sfry2hwdxL+spJdPjZUAtCHucEeP352VTYiOlKtKPICCE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/xEKhr6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j7vkxDU4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B47F1F000E9;
-	Tue, 16 Jun 2026 12:57:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/xEKhr6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 738E21F00A3F;
+	Tue, 16 Jun 2026 13:27:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781614630;
-	bh=Amsf7byLU6TUTGoZquZNNTh0rzHsPl14KFh90IgFwH4=;
+	s=k20260515; t=1781616459;
+	bh=0rOX7oqrz4F1I9mioWQ4LncFjgANd9LJdCpcf1wQ7Cw=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=j7vkxDU4hGGSROpH1MXuuJT7/P3tgm6yyooLwsL9ewWx/awd9RgCk+eQP3GV3Wpj6
-	 Mr8T8nI6HHEL8M5fQINsCgKSfVIXp9M8vWVOAN/uJ0NSiON2+HVnRWspD0Ix2GOoyB
-	 UAXbj+XT0QYx5tzvwceWaZI64gV3UIG6XR5PzVe8TYr/YrfWzggWbgDAU4GbNuwfTN
-	 uEcLWku1E+tWSrIMxEk5GUToFzgN2DFHC05fLeolsa5ArA24L8+l1jMzUew2BGHKJw
-	 +0Bs4CD7OXlHLagesEfTuBnq26bietWKsnAcPdr0i3Hgug3wqjWK0jb8z5efon0b9G
-	 IqCx+8UtzAqEw==
-Date: Tue, 16 Jun 2026 13:57:00 +0100
+	b=C/xEKhr6oWET9seuL8P3ngot9UC7LJZUGuWDq0dOYRoM9Z5oJx0TQT1f9Z4XAWC+h
+	 mLFLn0K3AAttFwjv2ikkGfc4bK8xkHTevit9ISBT/OF4nc/ZC6f5y5LBGGnXzAwtq7
+	 hJjZk2GG2rqZtGPxkOM0tSpwwmdWuBhV8IzIZxQwH77B4ynLK4YFB06AFsmdBFA/tT
+	 6bQdgwN+1uL+Kb0iIkZ0fKvFK0GWL+kN+OhxZXZwvYosjOiei0ZilTNoLxSttV9J/a
+	 TZtPxrm87GtI67Ts7LDGVlRZm2Uk8RB3V+hc4QtPl+7w03KSPorKIkAKx8/5wKGWNP
+	 KfKQ2zdnKge8w==
+Date: Tue, 16 Jun 2026 14:27:30 +0100
 From: Jonathan Cameron <jic23@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Dan Williams <djbw@kernel.org>, Ashish Kalra <ashish.kalra@amd.com>, Tom
- Lendacky <thomas.lendacky@amd.com>, Vivaik Balasubrawmanian
- <vivaik.balasubrawmanian@intel.com>, John Allen <john.allen@amd.com>, Bjorn
- Helgaas <helgaas@kernel.org>, linux-coco@lists.linux.dev,
- linux-pci@vger.kernel.org, "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
- Yilun Xu <yilun.xu@linux.intel.com>, Zhenzhong Duan
- <zhenzhong.duan@intel.com>, Alexey Kardashevskiy <aik@amd.com>
-Subject: Re: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
-Message-ID: <20260616135700.2b2b9056@jic23-huawei>
-In-Reply-To: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
-References: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
+To: Shrihari E S <shrihari.s@samsung.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+ qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
+ vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
+ dave@stgolabs.net, gost.dev@samsung.com
+Subject: Re: [RFC 1/8] hw/pci: Refactor flitmode from PCIESlot to PCIEPort.
+Message-ID: <20260616142730.7fb0a465@jic23-huawei>
+In-Reply-To: <20260609105836.3702787-2-shrihari.s@samsung.com>
+References: <20260609105836.3702787-1-shrihari.s@samsung.com>
+	<CGME20260609104503epcas5p12628cd89d0ef9210c856d2518dc790cb@epcas5p1.samsung.com>
+	<20260609105836.3702787-2-shrihari.s@samsung.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -50,29 +49,45 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Mon, 15 Jun 2026 15:19:30 +0200
-Lukas Wunner <lukas@wunner.de> wrote:
+On Tue,  9 Jun 2026 16:28:29 +0530
+Shrihari E S <shrihari.s@samsung.com> wrote:
 
-> Per PCIe r7.0 sec 6.31.3, CMA-SPDM operation in non-D0 states is optional.
-> The spec does not define a way to determine if it's supported, so resume
-> to D0 unconditionally for the duration of a CMA-SPDM exchange.  Vivaik has
-> talked to Windows engineers and they said that Windows does the same.
+> Move the 'flitmode' property from PCIESlot to PCIEPort. This change
+> allows all the derived ports (PCIe ports or CXL ports) to use this
+> property.
 > 
-> Note that for plain DOE operation, it is sufficient for the device to be
-> in D3hot and its parents in D0 because config space remains accessible in
-> D3hot.  So CMA-SPDM goes beyond the requirements of plain DOE and hence
-> resuming to D0 needs to (only) be done in code paths which use DOE
-> specifically for CMA-SPDM.
+> This is a structural refactor only. There is no functional change in
+> existing behavior.
 > 
-> The pattern used herein for runtime resume is the best practice introduced
-> by commit ef8057b07c72 ("PM: runtime: Wrapper macros for ACQUIRE()/
-> ACQUIRE_ERR()").
+> Note: This property was added from Davidlohr's BI patch series[1].
 > 
-> Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: stable@vger.kernel.org # v6.19+
-> Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>
-Seems reasonable to me and your replies to sashiko stuff seem to have that well
-covered.  So FWIW
+> [1]: https://lore.kernel.org/all/20251103195209.1319917-2-dave@stgolabs.net/
+> 
+> Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
+This seems fine to me other than one small thing below.
 
-Reviewed-by: Jonathan Cameron <jic23@kernel.org>
+Given the main changes are in PCIe code though it'll need review from
+appropriate maintainers.
+
+> diff --git a/hw/pci-bridge/cxl_root_port.c b/hw/pci-bridge/cxl_root_port.c
+> index 0ee18ef5c3..df69c5200f 100644
+> --- a/hw/pci-bridge/cxl_root_port.c
+> +++ b/hw/pci-bridge/cxl_root_port.c
+
+>  static void cxl_rp_dvsec_write_config(PCIDevice *dev, uint32_t addr,
+> diff --git a/hw/pci/pcie.c b/hw/pci/pcie.c
+> index 1de0b1e4fd..d452199d85 100644
+> --- a/hw/pci/pcie.c
+> +++ b/hw/pci/pcie.c
+> @@ -217,7 +217,7 @@ static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
+>          /* the PCI_EXP_LNKSTA_DLLLA will be set in the hotplug function */
+>      }
+>  
+> -    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->flitmode);
+> +    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->parent_obj.flitmode);
+
+I think we should use a cast to the parent object type rather than going directly
+into s->parent_obj.  PCIE_PORT(s)->flitmode.
+
+>  }
+
