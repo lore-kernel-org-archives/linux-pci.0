@@ -1,205 +1,125 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBE39357CFC
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 08:05:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72D15349B19
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 08:24:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781597153; cv=none; b=ZgwXyanENiDIHLSaxoQ5tyCmflWH0KXl25og/sizNEC8So9Iq9iaO0ZDRhRSKUP9Ubv/j/U84LlUBy7pfTgs6umpyyyAtloCogkn1pPZDwXj4nJcegTso9EBvAZwEMQ9oHQtDKndhONV3SfXTPPg0pX1qRVZt71oVA+478QFhZc=
+	t=1781598250; cv=none; b=e7wKI9ipqzfDLYkMt8U8jZ7M5ksup2VGkYYGcZe5YruIkw0ewKZK23VbMFvCLUs/tJ4qRGLCMXRUDzj/hpSiw0jVWJrts+JyvJpTDMEU2twUVkEHkKQk/WSI9b3B3QsAUGXqtVzPCV21oRaRxgq+IjE9/Au/55uuFKe6lyUuzGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781597153; c=relaxed/simple;
-	bh=82cTAyW+sZXW13gP4ib75YclIp3CSrYl7g+tdMUCv3k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jBSSreWKZa5sXOVXWzBGYrSiOntYt2hgJ890zvH1WyhEbI/JAkkHbonz31ggRto+o0bh6zxgIszMjugijlL32Dk8nklMN6assOv3NCLuE3L8g3V0TZlm1Lf/3DWcjz5ExbcEWW9DMYx6RTXXYFYnuTloSuIzb1SgdPJ9uIQ5h/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jMFV0eqh; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781598250; c=relaxed/simple;
+	bh=YyHmtSyL2lsgT0es0Eetl/XKw4nAr3/w77RlgtbYc7I=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=jVJ3/ikUYOQbDoMiwScTXh8Tcw5guQZ/WWSWXaM6wrknqZw0dFl6ww9jNCZjoCfYfpfOSei1TchLKPHF4b29ZJnwE7uzlpi3OJ6dc9a1zVUJIAoln63T9MB/YGwRG+CAPDCtJl1x3IbuQqVvPKMWpoY/UQC7e6DFX3NF79BmBZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=EUH3Fxd1; arc=none smtp.client-ip=188.68.63.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jMFV0eqh"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2c69fa0b1f8so12045ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 01:05:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781597151; x=1782201951; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dOsiBDHauJNUL/mHLBlXDW8Xe2gvOcwU/fMCh1N6uL8=;
-        b=jMFV0eqh6/zz9XTZeBSPAGCpdF2pouVCsfKBKgAUmQ5ODxYi6nC9pkFUQJEUc/xDNm
-         0aPtGTlHR6NFlBLKUF5ZRpax/F6sjPVCgc3xkCJZOdAWx1tROAJQRjC2S/+5qZV2Krq4
-         iz3fVngb9KU6ybAqWt/KhPnK1WpomcEspJofFBbQNLjlc2be+eh3xtLzPLmitoS4qqVP
-         b5g6/WKw5t3xuQDsWmZiNq7cNILfmKVtintn7c695vvWdpVw18NWOy2Yzrf0LY61bDoR
-         VQ1LpgNio6okg62mJkFO48PMQ5cwWKgRyFnJ6MA1jpOq3yzjsZEMt1Q9RhQQsh6LK0tO
-         TeIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781597151; x=1782201951;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dOsiBDHauJNUL/mHLBlXDW8Xe2gvOcwU/fMCh1N6uL8=;
-        b=Hz11TRvit1WU3dHtXRQ9S+u18/BFY7OdZ+ujeof10zk+Z1tNSoXiRfCfOV7AlZyqw4
-         cUOOqqKbIbeEowhxJBmI6AC4pPA/q8Utd4XcNj4eo4dFecUJKmJhD/UHDFKWSxc29Hbj
-         AIwBC7w64I80ErUDoBS40HJYEJ4wtjmdBRCMy6lIJBs3HtUGPDN/MRurwbewt7jhy9tH
-         zdxMwhfYkcDCqIc5fTfLpZOkMT5t2Fo5BvGjAEHNWIRNtW6fIAnwodQnxOFnOerBfpJ9
-         B/u0RCNlQT1KyK9ddP1uRWtnLrmZGNbwXotO3VQvly1PnwbvgP7Ut6d40I7VCDm3Vwfg
-         sZ0Q==
-X-Forwarded-Encrypted: i=1; AFNElJ81m28R6jY9hT5GwoB6ps3pE27wHdvM9wKVLrrfkEf6rwICyTfykQRbq+MxlqTaX06uvANWfON7leI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+xKaO0u7jcg6lCNsxuFQ2AjqNUzASwkEHfPz3ychOOFiBClvd
-	74cNKT9QRSiGNlV2ZUBH5zSMtxXKIkwHHO3/7yS75F6oTMURjam6r6EZdc4MOiNGwg==
-X-Gm-Gg: Acq92OHrNh3UyWzW4QsR8DTHzAn3mqR1yaXLuuQyULfZdv51luVWFgJvNQ+9AN2t3HV
-	wI1m3L9iq4lzWQojGxaCz5BEr6KwT/HMdWuYX35Y1n9ICxIR5cNaHIiTe873SS+wneQwV2tQ/j2
-	0DMu7BLX9Ch8gQ/sv5sJ8ZvbTsL8T1Re8EGvDRE+PXZJIqVk4K8Yxwlz6PzQp/g2NBlBxwbhlOg
-	t2MrxQKTNglBPdXxk6fpZ4VZ4Y3NL4OH8XXEFGI6t4F9sOCY3l5W2AscVgYpDQMofL6t1m6mZFN
-	SMu4BWDX6HgLXdAspY8BO5a5cTfSq9OnOUe3x0v4QIWlg3nYQ7BKjqtwBn1ahWp2kWd+0Qr4cWT
-	/cVhygy67gPAQv8oQaISnzeLXZSvTDW4LbxqG2fj5bMAo0U6zmo5RG8+6EcbFIqKabin7x56/T3
-	UQfpnfs+SFWVVo+ys1AvFUA480KO7H/mKEaxnX4EC5yFRzYU0Shnx6UVac6xkB
-X-Received: by 2002:a17:903:1b0e:b0:2bd:6dad:7cca with SMTP id d9443c01a7336-2c69a357a8cmr1809945ad.22.1781597150664;
-        Tue, 16 Jun 2026 01:05:50 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434ac9c016sm12271540b3a.8.2026.06.16.01.05.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 01:05:50 -0700 (PDT)
-Date: Tue, 16 Jun 2026 08:05:42 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 8/9] vfio/pci: Permanently revoke a DMABUF on request
-Message-ID: <ajED1v846hZkyq9z@google.com>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-9-matt@ozlabs.org>
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="EUH3Fxd1"
+Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gffsQ3Pk6z6717;
+	Tue, 16 Jun 2026 10:14:18 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1781597658;
+	bh=YyHmtSyL2lsgT0es0Eetl/XKw4nAr3/w77RlgtbYc7I=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+	b=EUH3Fxd1QMdV3l7mSGAn/da6tuaV6CvxCyQZk0624HBfcV109U/HwFVjwwY8rnFfZ
+	 /7OLb3qxuUUxu0oIPL2fVqxtIQkPgwK3IL5QS4AVcARwomvMpWXp8MjrFdfq+4vZ5G
+	 of4bYahh/SsNewi+VvzbXCyjSbdgEujezRnBmQxgX3YcCFN6IzSAQfePrQR21dFgkQ
+	 5hAxKj4toZGwGmIPVAIXMAKwoAT4ohierbqxJA7gTxCk/cKmi0Qcuc+tkS+ZC2tn5k
+	 tAf7Msu4PtX2Iq83fVdk6thOhoojwGjWgxxXB6m59Fb1EgArLe5b0ugfLFGJAufmiG
+	 pLJdlwEjT0s0w==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gffqr5HFzz4yXG;
+	Tue, 16 Jun 2026 10:12:56 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4gffqq6nVvz8sZP;
+	Tue, 16 Jun 2026 10:12:55 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 084036034E;
+	Tue, 16 Jun 2026 10:12:54 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <ba4a8fa6-1786-4fca-a6e1-c203d6b6bc0c@leemhuis.info>
+Date: Tue, 16 Jun 2026 10:12:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260610154327.37758-9-matt@ozlabs.org>
+User-Agent: Mozilla Thunderbird
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [REGRESSION][BISECTED] HDA controller MMIO unreadable on Intel
+ 5-series PCH (Ibex Peak) since v6.16
+To: Lukas Wunner <lukas@wunner.de>, "superm1@kernel.org" <superm1@kernel.org>
+Cc: Filippe Duke <fduke@greennet.ua>,
+ "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
+ "tiwai@suse.com" <tiwai@suse.com>
+References: <5e54aea4a97f1cbbe866d9d8f3f25f9f2958e1c9.camel@greennet.ua>
+ <cf379972-6b2d-42e5-9660-32d031516862@kernel.org>
+ <e05ab19cf41224661325a8acb5f10d31a1d8fbf0.camel@greennet.ua>
+ <ahyerEqlBdIbQN9u@wunner.de>
+ <60c710e22fc987a3b444e5b687a9a64bb454f0f8.camel@greennet.ua>
+ <ah016_TukXkcqnyQ@wunner.de>
+Content-Language: de-DE, en-US
+In-Reply-To: <ah016_TukXkcqnyQ@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <178159757535.1706911.6070558377354035513@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 084036034E
+X-NC-CID: ZlEHvU8dYJiledOsQPvvksck1cHFs/89lKalpQIxxw90SeOQ2Dw=
 
-On Wed, Jun 10, 2026 at 04:43:22PM +0100, Matt Evans wrote:
-> Expand the VFIO DMABUF revocation state to three states:
-> Not revoked, temporarily revoked, and permanently revoked.
+On 6/1/26 09:34, Lukas Wunner wrote:
+> On Sun, May 31, 2026 at 09:22:52PM +0000, Filippe Duke wrote:
+>> A working LTS kernel version tells completely different story.
 > 
-> The first two are for existing transient revocation, e.g. across a
-> function reset, and the DMABUF is put into the last in response to a
-> new VFIO feature VFIO_DEVICE_FEATURE_DMA_BUF.
+> Right:
 > 
-> VFIO_DEVICE_FEATURE_DMA_BUF passes a DMABUF by fd and requests that
-> the DMABUF is permanently revoked.  On success, it's guaranteed that
-> the buffer can never be imported/attached/mmap()ed in future, that
-> dynamic imports have been cleanly detached, and that all mappings have
-> been made inaccessible/PTEs zapped.
+>  00:1b.0 Audio device: Intel Corporation 5 Series/3400 Series Chipset
+> [...]
+> -       Interrupts: pin B disabled, MSI(X) routed to IRQ 34
+> +       Interrupts: pin B disabled, MSI(X) routed to IRQ 28
+> [...]
+> -               Address: 0000000000000000  Data: 0000
+> +               Address: 00000000fee00000  Data: 0022
 > 
-> This is useful for lifecycle management, to reclaim VFIO PCI BAR
-> ranges previously delegated to a subordinate client process: The
-> driver process can ensure that the loaned resources are revoked when
-> the client is deemed "done", and exported ranges can be safely re-used
-> elsewhere.
+> That's the only difference.  Seems plausible that it causes
+> communication failure with the HDA controller.
 > 
-> Refactor the revocation code out of vfio_pci_dma_buf_move() to a
-> function common to move and the new feature request path.
+> The offending commit
+
+Reminder, that was 4d4c10f763d780 ("PCI: Explicitly put devices into D0
+when initializing") [v6.16-rc1] from Mario.
+
+This thread stalled and Isee no patch submissions referring to that
+change, which makes me wonder:
+
+Is anybody still looking into this, or did this fell through the cracks?
+
+Side note, for completeness: Josh Perry recently reported problems with
+a  RTL8168h/8111h NICs due to the same change:
+https://lore.kernel.org/netdev/d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com/
+
+Ciao, Thorsten
+
+> causes current_state to be PCI_D0 instead of
+> PCI_UNKNOWN at boot time enumeration and this results in different
+> code paths being taken.
 > 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
-> ---
->  drivers/vfio/pci/vfio_pci_core.c   |   6 +-
->  drivers/vfio/pci/vfio_pci_dmabuf.c | 169 ++++++++++++++++++++++-------
->  drivers/vfio/pci/vfio_pci_priv.h   |  19 +++-
->  include/uapi/linux/vfio.h          |  20 ++++
->  4 files changed, 173 insertions(+), 41 deletions(-)
+> I note that current_state is queried in three places in
+> drivers/pci/msi/msi.c, so I'd start by instrumenting them with
+> printk()'s to see why the behavior is different.
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 508a5eca910a..064906b25467 100644
+> E.g. __pci_write_msi_msg() bails out if current_state is not PCI_D0.
+> Perhaps it used to do that on a working kernel and now it doesn't.
 
-[...]
 
->  
-> +/* Set the DMABUF's revocation status (OK or temporarily/permanently revoked) */
-> +static void vfio_pci_dma_buf_set_status(struct vfio_pci_dma_buf *priv,
-> +					enum vfio_pci_dma_buf_status new_status)
-> +{
-> +	bool was_revoked;
-> +
-> +	lockdep_assert_held_write(&priv->vdev->memory_lock);
-> +
-> +	if (priv->status == VFIO_PCI_DMABUF_PERM_REVOKED ||
-> +	    priv->status == new_status) {
-> +		return;
-> +	}
-> +
-> +	dma_resv_lock(priv->dmabuf->resv, NULL);
-> +	was_revoked = (priv->status == VFIO_PCI_DMABUF_TEMP_REVOKED);
-> +
-> +	if (new_status != VFIO_PCI_DMABUF_OK) {
-> +		priv->status = new_status; /* Temp or permanently revoked */
-> +
-> +		if (was_revoked) {
-> +			/*
-> +			 * TEMP_REVOKED is being upgraded to
-> +			 * PERM_REVOKED.  The buffer is already gone,
-> +			 * don't wait on it again.
-> +			 */
-> +			dma_resv_unlock(priv->dmabuf->resv);
-> +			return;
-> +		}
-> +	}
-> +
-> +	dma_buf_invalidate_mappings(priv->dmabuf);
-
-Nit: We seem to be calling this even if new_status == OK, while it works
-as importers (like IOMMUFD and RDMA core) are immune to a double 
-invalidate / revoke. I'm wondering if we could move this within the 
-if (new_status != VFIO_PCI_DMABUF_OK) block? 
-
-Since this is only needed to be called when we TEMP/PERM _REVOKE?
-
-I'm just worried that this may overload the dma_buf_invalidate_mappings 
-to be a state-change notification instead of a revoke / invalidate
-notification.
-
-> +	dma_resv_wait_timeout(priv->dmabuf->resv,
-> +			      DMA_RESV_USAGE_BOOKKEEP, false,
-> +			      MAX_SCHEDULE_TIMEOUT);
-> +	dma_resv_unlock(priv->dmabuf->resv);
-> +	if (new_status != VFIO_PCI_DMABUF_OK) {
-> +		kref_put(&priv->kref, vfio_pci_dma_buf_done);
-> +		wait_for_completion(&priv->comp);
-> +		unmap_mapping_range(priv->dmabuf->file->f_mapping,
-> +				    0, priv->size, 1);
-> +		/*
-> +		 * Re-arm the registered kref reference and the
-> +		 * completion so the post-revoke state matches the
-> +		 * post-creation state.	 An un-revoke followed by a
-> +		 * new mapping needs the kref to be non-zero before
-> +		 * kref_get(), and vfio_pci_dma_buf_cleanup()
-> +		 * delegates its drain back through this revoke
-> +		 * path on a possibly-already-revoked dma-buf.
-> +		 */
-> +		kref_init(&priv->kref);
-> +		reinit_completion(&priv->comp);
-> +	} else {
-> +		dma_resv_lock(priv->dmabuf->resv, NULL);
-> +		priv->status = VFIO_PCI_DMABUF_OK;
-> +		dma_resv_unlock(priv->dmabuf->resv);
-> +	}
-> +}
-> +
-
-Otherwise, 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
-
-Thanks,
-Praan
