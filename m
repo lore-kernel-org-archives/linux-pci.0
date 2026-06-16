@@ -1,237 +1,260 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E7523D890D;
-	Tue, 16 Jun 2026 19:22:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F02B384238
+	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 20:09:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781637745; cv=none; b=cDjwiRBTTk9BOdGp8Gt3CpBVpxJoqEN9YLB4rwFGXxoirP+qWpb/p2O+DuOeRyh3WZrvetjjarENfcaD3tDud9QAc4vuyq8APO7ho4Devnbq4bN953BV0UoNAYiaTVCa14BwlHQqocW4tM+iu3bj2HU61x58GbGfOurzytjjtWE=
+	t=1781640596; cv=none; b=B9OQNmAWTsEhVidhCz0CoOlQic3i2ARFo/jaCTirEu4yt1p5qRIppHuXQZjdBHP/+ASPrwjl785mkJLoxmF26Z5o7RoRgpr8pPCkrY8EHdb1JypW2oYzzAW3iYFiG8OoY3CTtA0hMukJHXYvLsflL+g7Di5d90sivRy2VVZjI1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781637745; c=relaxed/simple;
-	bh=LBWjJkWxgOTS7GFKeyRpsyqFSw2cMteViY1IEQ7OAR0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=m806S0pd17m2c9de/1XL/oEHm7B5GqFFf7/gHIvMwDggl5XBzr+FUBDMLwitbjILGbB2dUo9P6U3lvGB5t/EbqGFko6MskEmKTTFithGxs32UR3WaDTRPXUxCtH7lxw63TyM1pJSQfvoZ/YjMffFqMBf3I/5cuMlgkNrKs2ZuYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6qMgX2a; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781640596; c=relaxed/simple;
+	bh=Pi/EN82vqMuVLAd9KenSHzDk6OqMVCIPbDAtZFjy9Rg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b27Dfrn61FzVMNWRqrUSXuIW7zZlSCNA8F+RTXnT6NOcLkLN4y78FacAzIKquWQhqlj300CmjIUKQqbAJ61mOsauiX4APgexSd6X1nTZRCC6BsQ6pjUHf1DuuELMUTXE7M67IZ1ZtkICZ+PHIHd9BB/Ia6M5DDQC3Jo/ryJSjug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Eg9TNlFu; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6qMgX2a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74A2E1F000E9;
-	Tue, 16 Jun 2026 19:22:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781637744;
-	bh=vlCIInpka7FIjsx/AbmM1/Zseulxf9DwTuUmI6KKg7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=X6qMgX2amBjvifKWxbmeUCk17XrMjtb1plfACc93T5qq7HZgbFPQfg65nWljEcPxe
-	 0GbVAIgX1P4TYGW4qVDueThJcnTizQ6ShB1S5XxAgrEHMkieb8PQrTc5qagJXLklIf
-	 TuZSiVffDcDIKXucKTI8QDPMzDYFJfNXXzqKzEmhDW6ipwfwc38dYLoW55jp/It2cK
-	 lKzHnoqQPNGfRTtnuhSr175E0bGjXcbJL9+lcJpn4a92tQPW33ANGullPtOwbGZzO/
-	 LdFvrSXMgvbKLG5Jwp8YvWrE8XMJhHmGhjK+Ki9FWqPwoiVrX0YfLaQOUUF3+e4lJO
-	 gYm4z8HZAcxjA==
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v1] PCI: Remove pcie_flr() and convert all callers
- to use pcie_reset_flr()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260615192200.3489-1-alifm@linux.ibm.com>
-References: <20260615192200.3489-1-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 16 Jun 2026 19:22:23 +0000
-Message-Id: <20260616192223.74A2E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Eg9TNlFu"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2c69fa0b1f8so16775ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2026 13:09:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781640595; x=1782245395; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=9ZboXXhSPW6+dD4pxDQDq+/2Nr1RExG44843PmiSexM=;
+        b=Eg9TNlFuOXW2dihvx6h8jhwMUxeKZqJDcY2yXMXCH+FmR8UPp+9aMj4syrBGDvzc21
+         oVbI5c8hHEh/wGhWUcdtfs+sJOgrNUMvH35XMZ8OiqFEk4vQxrnbVUJHobMqO/nKcobF
+         tilNbylePqD0kJY83PHKdsw38b+6CODmaIyjnMPiXuB/MD4gDNOdL6oSaoAXPLa80UpZ
+         eTqkSwfaSkdmS5lJscvW0IpIJ2QuJA4SxUC6Lol5m6zRd7LJoI0kWyu32UEsQVkYhzV7
+         qF2gQPUYU5p0AMFO/ryMUg7Y8SFQlizACe+cGAB9FcENwMXmVazW4/1aoSMKJPyY/5Fw
+         R9Gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781640595; x=1782245395;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9ZboXXhSPW6+dD4pxDQDq+/2Nr1RExG44843PmiSexM=;
+        b=OHqlFaXTOc1upS4kq/ZvTeVkdM3VHf5c96QU1j2AeI93lo0GQPKJ8oVZHrlNZP8gKa
+         7FhQrbkb8ozv5Vo+VUX389EPfYjD3pjNJzc5QPzJ/Ied8EQcOXOqNCMwdK0t5cEbsdEC
+         i+mVaWG7BdB0koZxmypNdr0vs4EkuXBNdqBt5zRW2aZ2O5C20BQ/mMnPJ5Q7t0seqOMw
+         Tarub43lqLffZ4vdUeyjfWuVX20WE6Y6CMg54H0Eya+wmMI1dOZ786HcI4SJXisxNfEI
+         +PwsXlwiTiMhxaSc18tPM2QytETp/MSho7+CRnzd8mp996fnnhrxI6SvXEUGSnA9pWil
+         hP+w==
+X-Forwarded-Encrypted: i=1; AFNElJ+BUK3by6FmIyQvazajq0LvCSqRK89gErc544dF/bWklgqYdgAaO7b80KRMwjdraFpYReKSMFY/MqU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQO7Ee2fSkdsA7lvwf5BmCHkqA152dNBQXK7LjNurYqelGCj55
+	gQvq+78oBiKq3w2PMyd+EqxfPe9/HoLVP9iDZiWaM8x6/m908BSezIXpDEd32eQtDA==
+X-Gm-Gg: AfdE7cmgDJFX9gYq+bHLDJ+kVCMxEb6q6tx8UYstEr9sBD6NqrjipoD6vBHS86Nawcm
+	w0+w6kTvauOV1jOqUnG8BdLO7JewDVCBW2ss/P+FRHBTITvL01aoLM7WgS3PkQYRa0DO9Z7YhrI
+	mwMpe89OopkSrRLpgI0LuhV33gohTfFR60lztcIK8TZbQNqMpIF9jDnr/bHkjEjXqOVdvV+mSMq
+	NPpIB8wYcJzUKSuVTOSoOMzImoR731hjsPHZyNuuOfR7eGZRQ2s9Ujs4YgOv/wBywDsWNj5w65P
+	R0fsfVZz5NlXHNeC11OF+H42QbSmxg9Wk+AsJ+T6C11ILzAVbsKqB5bG94Vb0LXXbzlJoUVCsYN
+	JVpK2C0cZ/Ymq5B1Ttgp43/nXi1S07HsI5UKeNNrkxWRnZbGv6KVRbbPACLw4hKXhLMTQ6af8Fe
+	TZ6IJY25PS+ZdTr2CQ2XNmaslWwjR3WoZPAp5LnC84mjypMAlkT7kto4eMLgDK6gfUHEg+jo3zQ
+	ALC9GfjZjPaLnVMP8E=
+X-Received: by 2002:a17:903:2307:b0:2c1:ee6e:be1c with SMTP id d9443c01a7336-2c6bbb0fd15mr461975ad.26.1781640594220;
+        Tue, 16 Jun 2026 13:09:54 -0700 (PDT)
+Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434ac9c016sm13938380b3a.8.2026.06.16.13.09.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jun 2026 13:09:53 -0700 (PDT)
+Date: Tue, 16 Jun 2026 20:09:49 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
+	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v6 03/12] PCI: liveupdate: Track incoming preserved PCI
+ devices
+Message-ID: <ajGpxMXk9iyXLzC4@google.com>
+References: <20260522202410.3104264-1-dmatlack@google.com>
+ <20260522202410.3104264-4-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20260522202410.3104264-4-dmatlack@google.com>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+On Fri, May 22, 2026 at 08:24:01PM +0000, David Matlack wrote:
+>During PCI enumeration, the previous kernel might have passed state about
+>devices that were preserved across kexec. The PCI core needs to fetch
+>this state to identify which devices are "incoming" and require special
+>handling.
+>
+>Add pci_liveupdate_setup_device() which is called during device setup
+>to fetch the serialized state (struct pci_ser) from the Live Update
+>Orchestrator. The first time this happens, pci_flb_retrieve() will run
+>and convert the array of pci_dev_ser structs into an xarray so that it
+>can be looked up efficiently.
+>
+>If a device is found in the xarray, the PCI core stores a pointer to its
+>state in dev->liveupdate_incoming and holds a reference to the incoming
+>FLB until pci_liveupdate_finish() is called by the driver.
+>
+>This ensures proper lifecycle management for incoming preserved devices
+>and allows the PCI core and drivers to apply specific Live Update
+>logic to them in subsequent commits.
+>
+>Drivers can check if a device is an incoming preserved device (e.g.
+>during probe) by calling pci_liveupdate_is_incoming().
+>
+>CONFIG_64BIT is now required to enable CONFIG_PCI_LIVEUPDATE so that the
+>domain and bdf can be guaranteed to fit in an unsigned long and be used
+>as the xarray key.
+>
+>Signed-off-by: David Matlack <dmatlack@google.com>
+>---
+> MAINTAINERS                    |   1 +
+> drivers/pci/Kconfig            |   2 +-
+> drivers/pci/liveupdate.c       | 230 ++++++++++++++++++++++++++++++++-
+> drivers/pci/liveupdate.h       |   5 +
+> drivers/pci/probe.c            |   3 +
+> include/linux/pci_liveupdate.h |  13 ++
+> 6 files changed, 251 insertions(+), 3 deletions(-)
+>
 
-New issues:
-- [Critical] Unchecked VF FLR failure introduces a reliable DMA Use-After-F=
-ree (UAF) in the MANA driver during queue teardown.
-- [High] Replacing `pcie_flr()` with `pcie_reset_flr()` silently breaks Fun=
-ction Level Reset (FLR) for all SR-IOV Virtual Functions (VFs) across multi=
-ple drivers.
-- [High] Silent FLR failure in PCI reset quirks causes the kernel to block =
-for 20 seconds during device teardown or initialization.
-- [Low] The patch breaks the kernel build because it missed converting a ca=
-ller of `pcie_flr()` in the `ixgbe` driver.
+[snip]
+>
+> static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
+> {
+>-	args->obj = phys_to_virt(args->data);
+>+	struct pci_ser *ser = phys_to_virt(args->data);
+>+	struct pci_flb_incoming *incoming;
+>+	int ret = -ENOMEM;
+>+	u32 i;
+>+
+>+	incoming = kmalloc_obj(*incoming);
+>+	if (!incoming)
+>+		goto err_restore_free;
+>+
+>+	incoming->ser = ser;
+>+	xa_init(&incoming->xa);
+>+
+>+	for (i = 0; i < incoming->ser->max_nr_devices; i++) {
+>+		struct pci_dev_ser *dev_ser = &incoming->ser->devices[i];
+>+		unsigned long key;
+>+
+>+		if (!dev_ser->refcount)
+>+			continue;
+>+
+>+		key = pci_ser_xa_key(dev_ser->domain, dev_ser->bdf);
+>+		ret = xa_insert(&incoming->xa, key, dev_ser, GFP_KERNEL);
+>+		if (ret)
+>+			goto err_xa_destroy;
+>+	}
+>+
+>+	args->obj = incoming;
+> 	return 0;
+>+
+>+err_xa_destroy:
+>+	xa_destroy(&incoming->xa);
+>+	kfree(incoming);
+>+err_restore_free:
+>+	kho_restore_free(ser);
+>+	return ret;
 
-Pre-existing issues:
-- [Critical] An unbounded MMIO read loop causes an infinite loop and hard l=
-ockup if the PCIe device is hot-unplugged or encounters a fatal hardware er=
-ror.
---
+Hmm.. This is interesting, so the KHO state is freed and it cannot be
+reused. I see you already pointed out that we are putting an LUO policy
+to say that the retry is not allowed.
 
-commit e494ba565a5af359d72294da06691da5e6507322
-Author: Farhan Ali <alifm@linux.ibm.com>
-Subject: PCI: Remove pcie_flr() and convert all callers to use pcie_reset_f=
-lr()
+But what should be the behaviour of liveupdate in this regard? Let the
+system boot in a normal way? This might break other subsystems as they
+might depend on PCIe restoring state properly. Also I think some of the
+PCIe state, like device-id, BAR addresses, ACLs etc, might be used as
+source of truth by other components.
 
-This patch removes the unconditional pcie_flr() function and converts its
-remaining callers to use pcie_reset_flr(). This ensures validation checks,
-such as verifying FLR support in the device capabilities, are applied
-consistently across the kernel.
+For example, lets say FLB retrieve() of PCIe fails, but succeeds for
+VFIO/IOMMU, now VFIO/IOMMU are restoring state of a device that is not
+restored/preserved?
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-[ ... ]
->  int pcie_reset_flr(struct pci_dev *dev, bool probe)
->  {
->  	int ret;
-> =20
->  	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
->  		return -ENOTTY;
-> =20
->  	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
->  		return -ENOTTY;
+Should this be considered fatal?
+> }
+>
+> static void pci_flb_finish(struct liveupdate_flb_op_args *args)
+> {
+>-	kho_restore_free(args->obj);
+>+	struct pci_flb_incoming *incoming = args->obj;
+>+
+>+	xa_destroy(&incoming->xa);
+>+	kho_restore_free(incoming->ser);
+>+	kfree(incoming);
+> }
+>
+> static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
+>@@ -270,6 +335,91 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> }
+> EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
+>
+>+static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
+>+{
+>+	struct pci_flb_incoming *incoming = NULL;
+>+	int ret;
+>+
+>+	ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&incoming);
+>+
+>+	/* Live Update is not enabled. */
+>+	if (ret == -EOPNOTSUPP)
+>+		return NULL;
+>+
+>+	/* Live Update is enabled, but there is no incoming FLB data. */
+>+	if (ret == -ENODATA)
+>+		return NULL;
+>+
+>+	/*
+>+	 * Live Update is enabled and there is incoming FLB data, but none of it
+>+	 * matches pci_liveupdate_flb.compatible.
+>+	 *
+>+	 * This could mean that no PCI FLB data was passed by the previous
+>+	 * kernel, but it could also mean the previous kernel used a different
+>+	 * compatibility string (i.e. a different ABI).
+>+	 */
+>+	if (ret == -ENOENT) {
+>+		pr_info_once("No incoming FLB matched %s\n", pci_liveupdate_flb.compatible);
+>+		return NULL;
+>+	}
+>+
+>+	/*
+>+	 * There is incoming FLB data that matches pci_liveupdate_flb.compatible
+>+	 * but it cannot be retrieved.
+>+	 */
+>+	if (ret) {
+>+		WARN_ONCE(ret, "Failed to retrieve incoming FLB data\n");
 
-[Severity: High]
-According to the PCIe Base Specification, SR-IOV Virtual Functions do not
-report FLR capability in their Device Capabilities register, so this check
-will fail for VFs.=20
+I think this should probably be considered fatal as mentioned above or
+the caller of this function should get an error so it can fail. I think
+retrievel of preserved state should generally not fail unless there is
+memory corruption or ABI is incompatible.
+>+		return NULL;
+>+	}
+>+
+>+	return incoming;
+>+}
+>+
 
-Is this a regression that inadvertently breaks FLR for VFs that previously
-relied on pcie_flr() bypassing this check? Callers that ignore the return
-value will silently skip resetting the hardware.
+[snip]
+>+
+>+static inline bool pci_liveupdate_is_incoming(struct pci_dev *dev)
+>+{
+>+	return false;
+>+}
+> #endif
+>
+> #endif /* LINUX_PCI_LIVEUPDATE_H */
+>-- 
+>2.54.0.746.g67dd491aae-goog
+>
 
-
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/=
-ethernet/intel/ixgbe/ixgbe_main.c
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-[ ... ]
-> @@ -8319,7 +8319,7 @@ static void ixgbe_check_for_bad_vf(struct ixgbe_ada=
-pter *adapter)
->  		if (status_reg !=3D IXGBE_FAILED_READ_CFG_WORD &&
->  		    status_reg & PCI_STATUS_REC_MASTER_ABORT) {
->  			ixgbe_bad_vf_abort(adapter, vf);
-> -			pcie_flr(vfdev);
-> +			pcie_reset_flr(vfdev, PCI_RESET_DO_RESET);
->  		}
-
-[Severity: Low]
-Does this patch introduce a build regression by missing another caller in
-ixgbe_main.c?=20
-
-Searching the tree might reveal that ixgbe_io_error_detected() still calls
-the now-removed pcie_flr(), which would cause a build failure when compiling
-with CONFIG_IXGBE.
-
-
-> diff --git a/drivers/net/ethernet/microsoft/mana/mana_en.c b/drivers/net/=
-ethernet/microsoft/mana/mana_en.c
-> --- a/drivers/net/ethernet/microsoft/mana/mana_en.c
-> +++ b/drivers/net/ethernet/microsoft/mana/mana_en.c
-[ ... ]
-> @@ -3306,7 +3306,8 @@ static int mana_dealloc_queues(struct net_device *n=
-dev)
->  			}
->  			if (atomic_read(&txq->pending_sends)) {
->  				err =3D
-> -				    pcie_flr(to_pci_dev(gd->gdma_context->dev));
-> +				    pcie_reset_flr(to_pci_dev(gd->gdma_context->dev),
-> +						   PCI_RESET_DO_RESET);
->  				if (err) {
->  					netdev_err(ndev, "flr failed %d with %d pkts pending in txq %u\n",
->  						   err,
-
-[Severity: Critical]
-If pcie_reset_flr() returns -ENOTTY for VFs, the FLR fails and this loop
-breaks early.=20
-
-Will the driver then proceed to unmap and free active SKB buffers in the
-subsequent loop:
-
-mana_dealloc_queues() {
-        ...
-        for (i =3D 0; i < apc->num_queues; i++) {
-                txq =3D &apc->tx_qp[i].txq;
-                while ((skb =3D skb_dequeue(&txq->pending_skbs))) {
-                        mana_unmap_skb(skb, apc);
-                        dev_kfree_skb_any(skb);
-                }
-        ...
-}
-
-Since the hardware wasn't reset and remains active, can this lead to a DMA
-use-after-free regression as the hardware continues to process the freed
-memory?
-
-
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-[ ... ]
-> @@ -4207,7 +4209,7 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev,=
- bool probe)
->  	val =3D val | HINIC_VF_FLR_PROC_BIT;
->  	iowrite32be(val, bar + HINIC_VF_OP);
-> =20
-> -	pcie_flr(pdev);
-> +	pcie_reset_flr(pdev, PCI_RESET_DO_RESET);
-> =20
->  	/*
->  	 * The device must recapture its Bus and Device Numbers after FLR
-
-[Severity: High]
-If pcie_reset_flr() returns -ENOTTY without actually issuing a reset to the
-hardware, will the firmware ever clear the HINIC_VF_FLR_PROC_BIT?=20
-
-Looking at the rest of reset_hinic_vf_dev(), it appears the code will
-subsequently spin in a busy-wait loop for the full 20-second timeout
-waiting for that bit to clear:
-
-reset_hinic_vf_dev() {
-        ...
-        do {
-                val =3D ioread32be(bar + HINIC_VF_OP);
-                if (!(val & HINIC_VF_FLR_PROC_BIT))
-                        goto reset_complete;
-                msleep(20);
-        } while (time_before(jiffies, timeout));
-        ...
-}
-
-Could this regression silently block the thread for 20 seconds during
-device teardown?
-
-
-> diff --git a/drivers/ptp/ptp_netc.c b/drivers/ptp/ptp_netc.c
-> --- a/drivers/ptp/ptp_netc.c
-> +++ b/drivers/ptp/ptp_netc.c
-[ ... ]
-> @@ -802,7 +802,7 @@ static int netc_timer_pci_probe(struct pci_dev *pdev)
->  	if (!priv)
->  		return -ENOMEM;
-> =20
-> -	pcie_flr(pdev);
-> +	pcie_reset_flr(pdev, PCI_RESET_DO_RESET);
->  	err =3D pci_enable_device_mem(pdev);
-
-[Severity: Critical]
-This is a pre-existing issue, but while reviewing this driver's PCIe
-handling, does the interrupt handler have an unbounded loop on PCIe
-disconnect?
-
-In netc_timer_handle_etts_event(), the code continuously reads a
-memory-mapped register:
-
-netc_timer_handle_etts_event() {
-        ...
-        while (netc_timer_rd(priv, NETC_TMR_STAT) & TMR_STAT_ETS_VLD(index)=
-) {
-                ...
-        }
-        ...
-}
-
-If the device is removed or experiences a fatal error, the MMIO read will
-return all 1s (0xFFFFFFFF). Because 0xFFFFFFFF masked with the bit is
-always true, would this loop spin infinitely and cause a hard lockup?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260615192200.3489=
--1-alifm@linux.ibm.com?part=3D1
+Sami
