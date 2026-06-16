@@ -1,226 +1,221 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D109438FE0;
-	Tue, 16 Jun 2026 10:46:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC3A3A48DF;
+	Tue, 16 Jun 2026 10:51:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781606802; cv=none; b=rdAaAoPL+DE1q4Y3GVhRHUsXWGzb4hDEnMgiMe1topuP8fgPHKCEnSReBeeXRwoSXokzpTXVgETHieBN/Gghp4Z70KxF1FACkZJ5N0caIgzEhCAG5zlrZ9qAeGb8yZ+qmaEqU2q6y3FHBW8dQng27PNq/fvpx88bP4PP0Qa7oNA=
+	t=1781607101; cv=none; b=n1h5BXJIMkpyTVmFUNflIda0HSEMjEzrJx2tii9uzBIwDKqtNMIaaDM00Sw61McKgBJ+0E+q4RgIIvbHn26nMVqTEOqxCZ7G12gLKamRLZtkR+J1PIJ0PLutGC6aSDnxxh+BMrQU+NrEkqFbq6N8SiZATvNW3g/5JAMOZ+qflhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781606802; c=relaxed/simple;
-	bh=tS2ryz3jQzf2sJE0PUz4PQAnTbgfV2JQVDEVrLDQmpw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ctRu/aNTQMpJvmUGLrCdeZSoJkp2B7DLiDrj+fqlvS8hy66Hf9z9xgyLJzgn+kr7v5IkfSNEK7fV3ilmQSnFvh8OYG1kmb2swraYUPFQ/QUSROxDyuJOw3SHSZkW1+0vIuODj4+Gc2ywGbEC6C7DMNSBCNCW9E8DTEZTZ+dMtRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2AeSpXHN; arc=none smtp.client-ip=113.46.200.219
+	s=arc-20240116; t=1781607101; c=relaxed/simple;
+	bh=7T5uthlAAF+wvCjvc1CUwF8CYASKxrRaIxGssdJhsJ4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=rptHHwtmEgOBdLDgXkQV60/F7/W90MUpTJzmaUki5XdA697BrT+uX/gMwPiL4S9ocrPWl/jWStR4H1IZywFYvUOf27Xo1AU8qwZ0SbhcSiw6HVUlJ+ofnPPVN84c7tVXN0tHae/li6v1rAeBprm43h1rD8JYss4ivQwUZfWpTvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=QlzeFDmQ; arc=none smtp.client-ip=113.46.200.217
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2AeSpXHN"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="QlzeFDmQ"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=522kPA6wvRl3nE/cgYUajJ0uvKY5tTUI4sso+E6swP8=;
-	b=2AeSpXHNDDY1TRL51ekA5SmZOR/pqiQcV+3OiwD51ZRsw5wC691HBzlQf3fAt2NuqLZGzqPpR
-	vHTBeHTb+PzVAulgrcJQX1/TCzvLdxDybD9TY2pCWp+NeTsHH2jJslw8Zyg6VKgUzFvH+5tiIt+
-	u+/8hpZnajGtxklF3MeFDoQ=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4gfk3q4ZWvz1prLM;
-	Tue, 16 Jun 2026 18:38:31 +0800 (CST)
+	bh=iZBPvTvk3Xoh36ZYPKO7hEnr7zuFR6nWXGDidrG7fws=;
+	b=QlzeFDmQJvJvRyGMw5fOKRPLadypTlW5yWcSC1uJPXy2l3z7XMnGyY4Ib//sIIW00ks3UG9i9
+	lxfLCPJfLygRkvL1isAt5ZMITra4lKfoGp7Gkls8ekJgTtB9S/kE5qW8b0Nyrl71ADwHzLNyYfI
+	A8+u02YULoyhnu2fz2jyNSM=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gfk9F4qcZzcb3b;
+	Tue, 16 Jun 2026 18:43:13 +0800 (CST)
 Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3B80C4056E;
-	Tue, 16 Jun 2026 18:46:32 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
+	by mail.maildlp.com (Postfix) with ESMTPS id ADDB040537;
+	Tue, 16 Jun 2026 18:51:36 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
  kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 16 Jun 2026 18:46:31 +0800
-From: Chengwen Feng <fengchengwen@huawei.com>
-To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
-CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
-	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v17 10/12] vfio/pci: Add TPH_ENABLE feature skeleton and unsafe module parameter
-Date: Tue, 16 Jun 2026 18:46:19 +0800
-Message-ID: <20260616104621.41915-11-fengchengwen@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260616104621.41915-1-fengchengwen@huawei.com>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
+ 15.2.1544.11; Tue, 16 Jun 2026 18:51:36 +0800
+Message-ID: <ffd88c18-3be2-44bf-9f8c-3ea4c5731124@huawei.com>
+Date: Tue, 16 Jun 2026 18:51:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 00/12] vfio/pci: Add PCIe TPH support
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+References: <20260604132804.28678-1-fengchengwen@huawei.com>
+ <812b6875-5c46-4e03-af81-161b7e2d0e12@huawei.com>
+ <20260615081954.35026fed@shazbot.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260615081954.35026fed@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemk500009.china.huawei.com (7.202.194.94)
 
-Introduce module param enable_unsafe_tph to gate all TPH related features,
-and add VFIO_DEVICE_FEATURE_TPH_ENABLE uapi together with per-device
-tph_permit flag.
+On 6/15/2026 10:19 PM, Alex Williamson wrote:
+> On Mon, 15 Jun 2026 20:19:48 +0800
+> fengchengwen <fengchengwen@huawei.com> wrote:
+> 
+>> Gentle ping for v16 TPH series.
+>>
+>> Would appreciate reviews from Alex and Jason. Let me know if major
+>> changes are needed.
+> 
+> The same changes that were still being discussed while v15 and v16 were
+> posted, I don't think vfio-pci is the right place to host a CPU to ST
+> translation interface.  Thanks,
 
-This is a preparatory implementation: only feature framework is added
-for now, actual TPH_CTRL register permission control and steering tag
-features (TPH_CPU_ST / TPH_ST_CONFIG) will be attached in subsequent
-TPH capability virtualization commits.
+Hi Alex,
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
----
- drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
- drivers/vfio/pci/vfio_pci_config.c |  1 +
- drivers/vfio/pci/vfio_pci_core.c   | 25 ++++++++++++++++++++++++-
- include/linux/vfio_pci_core.h      |  4 +++-
- include/uapi/linux/vfio.h          |  7 +++++++
- 5 files changed, 47 insertions(+), 3 deletions(-)
+I moved CPU to ST translation interface to PCI subsystem in v17, and also
+fix most of Sashiko review comments in v17.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 0c771064c0b8..6d73668459cf 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -60,6 +60,12 @@ static bool disable_denylist;
- module_param(disable_denylist, bool, 0444);
- MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
- 
-+#ifdef CONFIG_PCIE_TPH
-+static bool enable_unsafe_tph;
-+module_param(enable_unsafe_tph, bool, 0444);
-+MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
-+#endif
-+
- static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
- {
- 	switch (pdev->vendor) {
-@@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
- {
- 	int ret;
- 	bool is_disable_vga = true;
-+	bool is_enable_unsafe_tph = false;
- 
- #ifdef CONFIG_VFIO_PCI_VGA
- 	is_disable_vga = disable_vga;
- #endif
-+#ifdef CONFIG_PCIE_TPH
-+	is_enable_unsafe_tph = enable_unsafe_tph;
-+#endif
- 
--	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
-+	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
-+				 is_enable_unsafe_tph);
- 
- 	/* Register and scan for devices */
- 	ret = pci_register_driver(&vfio_pci_driver);
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 5c6ab172df6c..251d3ec7fdd4 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -1783,6 +1783,7 @@ int vfio_config_init(struct vfio_pci_core_device *vdev)
- 		goto out;
- 
- 	vdev->bardirty = true;
-+	vdev->tph_permit = false;
- 
- 	/*
- 	 * XXX can we just pci_load_saved_state/pci_restore_state?
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 050e7542952e..d5e534dd5829 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -41,6 +41,7 @@
- static bool nointxmask;
- static bool disable_vga;
- static bool disable_idle_d3;
-+static bool enable_unsafe_tph;
- 
- static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
- {
-@@ -1551,6 +1552,24 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_core_feature_tph_enable(struct vfio_pci_core_device *vdev,
-+					    u32 flags, size_t argsz)
-+{
-+	int ret;
-+
-+	if (!enable_unsafe_tph)
-+		return -EOPNOTSUPP;
-+
-+	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET, 0);
-+	if (ret <= 0)
-+		return ret;
-+
-+	if (!vdev->tph_permit)
-+		vdev->tph_permit = 1;
-+
-+	return 0;
-+}
-+
- int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 				void __user *arg, size_t argsz)
- {
-@@ -1569,6 +1588,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_TPH_ENABLE:
-+		return vfio_pci_core_feature_tph_enable(vdev, flags, argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-@@ -2605,11 +2626,13 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
- }
- 
- void vfio_pci_core_set_params(bool is_nointxmask, bool is_disable_vga,
--			      bool is_disable_idle_d3)
-+			      bool is_disable_idle_d3,
-+			      bool is_enable_unsafe_tph)
- {
- 	nointxmask = is_nointxmask;
- 	disable_vga = is_disable_vga;
- 	disable_idle_d3 = is_disable_idle_d3;
-+	enable_unsafe_tph = is_enable_unsafe_tph;
- }
- EXPORT_SYMBOL_GPL(vfio_pci_core_set_params);
- 
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 89165b769e5c..a946b35e6b85 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -127,6 +127,7 @@ struct vfio_pci_core_device {
- 	bool			needs_pm_restore:1;
- 	bool			pm_intx_masked:1;
- 	bool			pm_runtime_engaged:1;
-+	bool			tph_permit;
- 	struct pci_saved_state	*pci_saved_state;
- 	struct pci_saved_state	*pm_save;
- 	int			ioeventfds_nr;
-@@ -157,7 +158,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
- 				      const struct vfio_pci_regops *ops,
- 				      size_t size, u32 flags, void *data);
- void vfio_pci_core_set_params(bool nointxmask, bool is_disable_vga,
--			      bool is_disable_idle_d3);
-+			      bool is_disable_idle_d3,
-+			      bool is_enable_unsafe_tph);
- void vfio_pci_core_close_device(struct vfio_device *core_vdev);
- int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
- void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..e5a4d1d7091b 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,13 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
- 
-+/*
-+ * Device-level opt-in for TPH (Transaction Processing Hints) support.
-+ * When set, allows access to TPH_CPU_ST and TPH_ST_CONFIG features.
-+ * Requires global enable_unsafe_tph module parameter to be enabled.
-+ */
-+#define VFIO_DEVICE_FEATURE_TPH_ENABLE	13
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
--- 
-2.17.1
+Would you mind taking another look at this updated version when you have
+a chance?
+
+Thanks
+
+> 
+> Alex
+> 
+> 
+>> On 6/4/2026 9:27 PM, Chengwen Feng wrote:
+>>> This patchset enables full userspace configurable PCIe TPH support
+>>> for VFIO, which brings performance benefits for userspace workloads
+>>> such as DPDK and SPDK.
+>>>
+>>> Currently VFIO only exposes read-only TPH capability registers to 
+>>> userspace, while all write operations are silently discarded. This 
+>>> prevents userspace from enabling and configuring TPH, limiting
+>>> performance optimization opportunities.
+>>>
+>>> Per PCIe spec 7.5.3.15: TPH Completer support is applicable to Root
+>>> Ports and Endpoints, allowing Steering Tags to target host CPUs or
+>>> peer devices for P2P transactions.
+>>>
+>>> TPH usage model can be divided into three fundamental parts:
+>>> 1. Retrieve Steering Tag:
+>>>    - Tags targeting host CPUs are obtained via platform methods
+>>> (ACPI _DSM) wrapped in pcie_tph_get_cpu_st(). Userspace requires a
+>>> generic interface to query these CPU-associated ST values.
+>>>    - Tags targeting peer devices are managed by userspace drivers.
+>>> 2. Program Steering Tag table:
+>>>    - For devices with standard ST table structures (in capability
+>>> space or MSI-X table), userspace needs a unified interface to
+>>> configure ST entries.
+>>>    - Devices without standard ST tables are handled by userspace
+>>> itself. 3. Toggle device TPH Requester enable/disable state.
+>>>
+>>> To support the above scenarios, this series extends VFIO with
+>>> complete TPH virtualization features:
+>>> - New device feature TPH_CPU_ST: Batch query interface to resolve 
+>>>   CPU-specific ST tags.
+>>> - New device feature TPH_ST_CONFIG: Batch configure interface for
+>>> device ST table entries, with shadow cache and atomic rollback
+>>> support.
+>>> - Full TPH capability register virtualization: allow userspace to
+>>> toggle TPH Requester state via TPH_CTRL register writes.
+>>>
+>>> To guarantee isolation and security, this patchset adopts a
+>>> two-level safety gate design with careful ABI considerations:
+>>> 1. Global unsafe gate:
+>>>    TPH caching behavior may cross isolation domains and impact
+>>> shared platform resources. A new module parameter
+>>> `enable_unsafe_tph` is introduced (default off) to globally gate
+>>> all TPH functionalities. 2. Per-device opt-in gate:
+>>>    To preserve strict ABI compatibility and avoid unexpected
+>>> hardware state changes for existing users, a new VFIO device
+>>> feature TPH_ENABLE is added. TPH capabilities are only available
+>>> after userspace explicitly enables it per-device.
+>>>
+>>> Because Kernel PCI TPH implementation requires TPH Requester to be
+>>> enabled before programming ST entries. To support userspace
+>>> configuring ST table in arbitrary order, a shadow ST table is
+>>> introduced to buffer ST writes before TPH is enabled. All cached
+>>> entries are flushed to hardware when TPH Requester turns on. This
+>>> also provides atomic batch rollback capability for reliable
+>>> configuration.
+>>>
+>>> The patchset is split into two logical parts: the first seven
+>>> patches fix and refactor core PCI/TPH kernel code to export
+>>> required helper interfaces, and the remaining five patches
+>>> implement corresponding VFIO TPH virtualization layer step by step.
+>>>
+>>> Patch breakdown:
+>>>  1/12 PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+>>>  2/12 PCI/TPH: Fix tph_enabled concurrent update race by bitfield
+>>> packing 3/12 PCI/TPH: Cache TPH requester capability at probe time
+>>>  4/12 PCI/TPH: Refactor pcie_enable_tph & add explicit requester
+>>> variant 5/12 PCI/TPH: Refactor pcie_tph_get_cpu_st & add explicit
+>>> variant 6/12 PCI/TPH: expose the enabled TPH requester type
+>>>  7/12 PCI/TPH: Add pcie_tph_supported() helper to check TPH
+>>> capability attrs 8/12 vfio/pci: Hide TPH capability when TPH is
+>>> unsupported 9/12 vfio/pci: Add TPH_ENABLE feature skeleton and
+>>> unsafe module parameter 10/12 vfio/pci: Add TPH_CPU_ST to query
+>>> CPU's TPH steering tag 11/12 vfio/pci: Add TPH_ST_CONFIG for PCIe
+>>> TPH ST configuration 12/12 vfio/pci: Virtualize PCIe TPH capability
+>>> registers
+>>>
+>>> Based on earlier RFC work by Wathsala Vithanage
+>>>
+>>> ---
+>>> v16: 
+>>> - Supports opt-in at the device level which address Alex's comment.
+>>> - Split sub-commit: add hide TPH capability when TPH is unsupported.
+>>> - Optimize the tph fields layout of the pci_dev structure.
+>>> - Optimize virtualize PCIe TPH capability commit: support rollback
+>>>   when set fail.
+>>> - Reorder PCI/TPH commits: make fix commit ahead.
+>>> - Reorganized the cover letter to serve as the starting point for
+>>>   discussion.
+>>> v15: Address Alex's comments:
+>>> - Drop TPH capability when tph_cap=0
+>>> - Use _explicit postfix other than add policy parameter for enable
+>>>   TPH and get tph st.
+>>> - Make sure set st entry under D0
+>>> - Reimpl virtualize TPH capability register
+>>> - Other fix
+>>> v14:
+>>> - Return PCI_TPH_LOC_NONE when !CONFIG_PCIE_TPH accord Alex's
+>>> comment
+>>> - Fix Sashiko comments:
+>>>   - Clear ST shadow state across user session
+>>>   - Fix out-of-bounds byte masking in vfio_pci_tph_config_read
+>>>
+>>> Chengwen Feng (11):
+>>>   PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+>>>   PCI/TPH: Fix tph_enabled concurrent update race by bitfield
+>>> packing PCI/TPH: Cache TPH requester capability at probe time
+>>>   PCI/TPH: Refactor pcie_enable_tph & add explicit requester variant
+>>>   PCI/TPH: Refactor pcie_tph_get_cpu_st & add explicit variant
+>>>   PCI/TPH: Add pcie_tph_supported() helper to check TPH capability
+>>>     attributes
+>>>   vfio/pci: Hide TPH capability when TPH is unsupported
+>>>   vfio/pci: Add TPH_ENABLE feature skeleton and unsafe module
+>>> parameter vfio/pci: Add TPH_CPU_ST to query CPU's TPH steering tag
+>>>   vfio/pci: Add TPH_ST_CONFIG for PCIe TPH ST configuration
+>>>   vfio/pci: Virtualize PCIe TPH capability registers
+>>>
+>>> Zhiping Zhang (1):
+>>>   PCI/TPH: expose the enabled TPH requester type
+>>>
+>>>  drivers/pci/tph.c                  | 220
+>>> ++++++++++++++++++++-------- drivers/vfio/pci/vfio_pci.c        |
+>>> 13 +- drivers/vfio/pci/vfio_pci_config.c | 111 ++++++++++++++
+>>>  drivers/vfio/pci/vfio_pci_core.c   | 228
+>>> ++++++++++++++++++++++++++++- include/linux/pci-tph.h            |
+>>> 22 +++ include/linux/pci.h                |   6 +-
+>>>  include/linux/vfio_pci_core.h      |   7 +-
+>>>  include/uapi/linux/vfio.h          |  60 ++++++++
+>>>  8 files changed, 600 insertions(+), 67 deletions(-)
+>>>   
+>>
+> 
 
