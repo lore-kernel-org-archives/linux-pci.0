@@ -1,201 +1,196 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from fout-b4-smtp.messagingengine.com (fout-b4-smtp.messagingengine.com [202.12.124.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43ECD285C91;
-	Wed, 17 Jun 2026 03:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5738B2E739E;
+	Wed, 17 Jun 2026 03:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781665246; cv=none; b=DpAiBt6icuaq7LCnFjPBX1TdtpwV0nTPopQFADSNGF16zN4g+IvXRjCAOlMvgMvwlObLqecxocRkVcNjg1BVcl9ZmZ8rr+hpEywALnN/uoBj3a1wPXzcbLf3xULqQMoovKGN2QE00fglxiIL8QfWtMzjkEw9J4h1jLiP3lWUWjg=
+	t=1781665309; cv=none; b=FAir+gaIkPCWrh+zDLunIyR5Q0uuO3gb4NaXUMKdgkkQnm/dr1MwhRIQEdkfY2UbJnynSL9G/hw+zHxJf+MXmO8I7EnzgOSA+ppPaePPRGS2S0vhBQQI9itP0tbHgQZGWTVN2eOm4kmfD3wGCtIEookIgLEhvqIRYLp4Ny4qqQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781665246; c=relaxed/simple;
-	bh=8+nNaMT70LBIvYV6vy5PdtziyM8pSCgZjkG2/yHbGKY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IkQvU75eTRggevAvUdLJXXRHNxxj9DPOQB+niaH9HCxeJWgKgPy4gNrNEByWDl7PalAvajQdYBJTjL5HaAjyxbr41dcHBvPaHAACtzIxmpPY6Xp2Y+SCa4wSO9ZLZupl0eUgtwFmvjo3gh0oRTSmzt/ayK2T+FVePu8smu0ZbR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=klJcQpJN; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=nmQbOUcB; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1781665309; c=relaxed/simple;
+	bh=HTJ8KYFPVJkyDW+R2yNJx8qe3AsWz7nJqED2wvPH2dw=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=OuY33h62ZPwZwV1uHaOlLEjcut3Rb0K5v6NOyZlapsQnARq+p42IXtPI2RYGfT+LzHRW1dho899bHUsbJ2pL41DNkdsFVzjVQwUoIC+1YmkdtGscx6+MQiejA00p4onl9LEa74AJIbdLEuu/AEdQM+RM461c6S72VWmLhMfkvHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=WpghXdiA; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fr2hl54R; arc=none smtp.client-ip=202.12.124.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="klJcQpJN";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="nmQbOUcB"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gg7s62ZFQz9ts2;
-	Wed, 17 Jun 2026 05:00:42 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781665242;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=A49POi8nN3oUd1qpWc6mG922Z/E7Nqb7ymDT6hWk3jg=;
-	b=klJcQpJNfBMEGKfRMFkwxDnRI1n6yL/PIoupEcDNODaGG6GDVdirECl/mxnrnRsJRGTT1k
-	4dhyNNiC3N6BjzV+qd/Iw3wvICnjdYufGX54fXxMYSu2DS7/QC4treo4wBbSAFTvQB7YGl
-	OWuBNk44Sklz+G9A+O04bzGTLYGAfjGQF2bTg6MRujBIq32mBL++6oAly9nkyYuRihLNkb
-	K3Bpm32jFwgO+zLgjf+ny69V9ab33f7LymcHDauZ8bTXSqV3Dt/JfEzhVjeVOG3WQJfLqw
-	phiskJDD/rfuExY2abQsFUVd5yJecBypgx5WJX6eRfLZOBcDGjUjtOC67rNhDA==
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781665239;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=A49POi8nN3oUd1qpWc6mG922Z/E7Nqb7ymDT6hWk3jg=;
-	b=nmQbOUcBEjjTcO4Iqp0im9tT48Uwjt9F3IyhprPrpajvKPrzepGsd2XdmGi3E1PSuCgivi
-	djleLbd7uro7a75NwLX22YsTFUgZMdzZRmXa5sG5rzOxoEc6+yVwR5i4aUorLU6zqGyWq6
-	rIBnylIN9+6v4DOqQeRIgQr6DBjgAyf2UWog09pt7/l1VYQ8fZAlm7UaHnSgNCkH+G7gU6
-	ZErPgCE1ZafoSg5e6Lnvxp9hmKqdZnpCrtWh1PMX/XddON404fT0gi4f5DYaTgrJh6l0W8
-	2en+FIR3BrncLSOzgX3NZc7Gjl3olwq6yuUq7hN5d4CGfw2liNnTmW0sO7g87A==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Zyngier <maz@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 3/3] arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
-Date: Wed, 17 Jun 2026 04:59:46 +0200
-Message-ID: <20260617030008.154449-3-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="WpghXdiA";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fr2hl54R"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfout.stl.internal (Postfix) with ESMTP id 25D2C1D000B5;
+	Tue, 16 Jun 2026 23:01:45 -0400 (EDT)
+Received: from phl-imap-18 ([10.202.2.89])
+  by phl-compute-02.internal (MEProxy); Tue, 16 Jun 2026 23:01:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781665304;
+	 x=1781751704; bh=njW2lIzSb6RaUWkk7HxgvpO5bJHsizFr4nvO4oEic8k=; b=
+	WpghXdiA4CDymprJ2FfvXfIPu2lceS4YJoquUSfs0PMLL3KSH31kNKMM3RbtK2NW
+	gQ6gz0wVFXmJkr+FLdUT48ejaZCCmRwQZGr4WynLRKFMzEZSKy9J/ktP1A6MfjHU
+	IYsh3odnMzq33eQZFQMQdCFM3rpHoIgf8go37WYH6pJk16jLPBUZBMCJ9H8toLHR
+	WSxwQuODsGfpgxs+eNfL+/BpUicdxcecKch57Hq5i7rKYUnC8LIIY6z+K8jFRjZA
+	BDTZjzSaaTQr5rRL5f5n16jJ8RJwkfmk/t4X+1WRGv68Po1kDPbcWcIXUq8gUymG
+	T4mE1838UORc8riERkOWLA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781665304; x=
+	1781751704; bh=njW2lIzSb6RaUWkk7HxgvpO5bJHsizFr4nvO4oEic8k=; b=f
+	r2hl54RByH7bIH9kb9dAaNBlB0kKs7OVVZV/9rbcnub6Rx9MRGXr8FGmLwEKkmZ4
+	zi8HelNNmtLZsOPvelkjGHEC9VWXR6cndiee9MpFH8H0ZDFT0CLFBdgYVkEsA4Xn
+	RQe/dDxFFzxYkfL44qR674RoLKnVGFdHGRz2hJ+0HXzoLirY83O9yRDzBTVTmcHu
+	oKqzYM8q7o4m4KmetLPIdqsV1o1Kqn3BJGuhGG3H24XRkve+ipGymPoBAJmo13qL
+	78eaTi2yXBH8d3iMXTY1MOuJJWiCCbKZFzN/CUqrn32H+vapjGe3ZXRBUrJy4tJZ
+	A4CUlaZcRUacM7uvAhF+Q==
+X-ME-Sender: <xms:GA4yapSCzQGsNlsIa4LlFZqWowy3cVdCU0yOXvb9VgyTdKrc6GlOwg>
+    <xme:GA4yatlk0PuoIFlZkYkungFNTKzJncrdfTlaaV4FNRKA17Hb_-VBnf8daP2umVRl3
+    vmkplbFKiVY1BqG55z0Syvr30f1qeI7kMMRs7Xzhti-VQ3ATizu>
+X-ME-Proxy-Cause: dmFkZTGzcgHyYJkipBHa/U8hKxZKJ+X3QTV0zh4pEaMQr+rJi/LaKfHctwIanM82+EHGjf
+    /G+TuFvJW94BaIXf2a7oW7UiBxAxCdI6JQ9ZPxUTzQp771O7ZapmUbvGGOZUlmZ5n8S7I8
+    3Fx9Va22ydTlboC0Rn6SSppwTlRk6L/q7wjDkjpBExI8LFog5QNk6xysxfijFbg47PvdEU
+    xJ4QpdKh5dFB2t5iOb38M4T6HpIk+bdzMZhhV15Oe7IZsKwddGvffaFH1VKhPmcLWwd+Vz
+    ApzUP+FCqlUIf/+aaw5YkQdSXnPS+D/pp2X+JDAmnR8SW/kFl/DWegu5BdBBIdbo0RoGsf
+    IeWC+bP+6QjRRZy5CiO3BYi4UtRfsQxjG/fF34+vY+lmf0USwpLJPDZ5oX4hVCfZpv6OdO
+    3wfOxENEfAtuVXBGSIpWSKRBF0im4AVunQVEtKrcB9enFgnGBxSxRhxV9JMeEnd+42FGtW
+    5DrdDIqx7RfN5zgX3ThEO8EjeDj16qr8hDIlJEieNifD6+SIRezzQOKg/r2AZ8x/9JGcnQ
+    GywI3b2vMBMsidapSJYEPd2slWw9u7nV91NIKEMGYsFBULWXlqPQbC2bpwpfuYVMj5Dsai
+    Cvz+zGXKFxaygw+8pnbgJpRbTky6Y07JtoL2ubSooSR6DadkaspfQthI8fqQ
+X-ME-Proxy: <xmx:GA4yau2xGiL-tJH5K3phjKYbpsMYzI8JBHR-TWoCnln734WSTPaFgw>
+    <xmx:GA4yas-CmQS1zjFDU8T68pvqUO20Zr5My-5whmIVIUq2axd5QxYGNQ>
+    <xmx:GA4yaj7Hgcl4xnXDZqSZsUGfTKxDmuT5iHrFHNV3AmwMaHMx7hborA>
+    <xmx:GA4yakv0nJNY7VQgPofW9OwaOA6dQRCbIlyCrXkJW0a40s0sfwJlTw>
+    <xmx:GA4yalYVNoWR8gkycteNF_3jL5l9q8T43Ei3WgwnrEDnRW9M71sFf3So>
+Feedback-ID: i03f14258:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 320F115C008C; Tue, 16 Jun 2026 23:01:44 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: ewq34yboiabci7oz8hnd9ue97xgjut7k
-X-MBO-RS-ID: 57a2861579fa265c5dc
+X-ThreadId: AnXwzOjrN2xN
+Date: Tue, 16 Jun 2026 21:01:23 -0600
+From: "Alex Williamson" <alex@shazbot.org>
+To: fengchengwen <fengchengwen@huawei.com>, "Jason Gunthorpe" <jgg@ziepe.ca>
+Cc: helgaas@kernel.org, wathsala.vithanage@arm.com, wei.huang2@amd.com,
+ zhipingz@meta.com, wangzhou1@hisilicon.com, wangyushan12@huawei.com,
+ liuyonglong@huawei.com, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Message-Id: <c3d7ce59-bf5e-40fc-8f0c-6232c58c7495@app.fastmail.com>
+In-Reply-To: <e2db72ab-6d51-4d19-8dba-0612207008a3@huawei.com>
+References: <20260616104621.41915-1-fengchengwen@huawei.com>
+ <20260616104621.41915-9-fengchengwen@huawei.com>
+ <20260616144224.GB3577091@ziepe.ca> <20260616105754.784be22d@shazbot.org>
+ <20260616172728.GC3577091@ziepe.ca>
+ <c913116a-35b4-4934-b78b-8fa0a08a00ae@huawei.com>
+ <a81c3479-1749-4b9b-b913-cfb20c621690@app.fastmail.com>
+ <e2db72ab-6d51-4d19-8dba-0612207008a3@huawei.com>
+Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU to
+ steering-tag mapping
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
-SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
-and add msi-map into PCIe controller node.
 
-The GIC ITS does have master interface to issue transactions to RAM.
-The interface does support cacheable transactions, however, it does
-not support shareable attribute, because the AXI port signals are tied
-to inactive in this implementation. Therefore, add "dma-noncoherent"
-DT property into the GIC ITS subnode.
 
-The GIC redistributor does not have cacheable/shareable, therefore
-add "dma-noncoherent" DT property into the GIC node.
+On Tue, Jun 16, 2026, at 8:33 PM, fengchengwen wrote:
+> On 6/17/2026 9:30 AM, Alex Williamson wrote:
+>> On Tue, Jun 16, 2026, at 7:18 PM, fengchengwen wrote:
+>>> Hi Jason, Alex,
+>>>
+>>> On 6/17/2026 1:27 AM, Jason Gunthorpe wrote:
+>>>> On Tue, Jun 16, 2026 at 10:57:54AM -0600, Alex Williamson wrote:
+>>>>
+>>>>> IMO, this implementation in sysfs more so proves that vfio is the =
+wrong
+>>>>> place for the interface.  vfio has a use case to consume STs, but =
+it
+>>>>> doesn't produce them or own any of the mechanism by which they're
+>>>>> generated. =20
+>>>>
+>>>> I would argue only a VFIO user can consume this information so putt=
+ing
+>>>> it in general sysfs is overkill.
+>>>>
+>>>>> The weak point is whether this bin attribute, exposing an array of
+>>>>> structures, fits within the socially acceptable norms of sysfs. =20
+>>>>
+>>>> I'm pretty sure this style of sysfs is not accepted and
+>>>> counter-examples are things that are ancient or slipped through.
+>>>
+>>> After weighing all feedback, I'd like to propose a lightweight singl=
+e=20
+>>> text sysfs node
+>>> design to resolve both your concerns, without introducing binary=20
+>>> binattr or masses
+>>> of per-CPU files:
+>>>
+>>> 1. Only create a single r/w text attribute =E2=80=9Ctph_cpu_st=E2=80=
+=9D on Root Ports, no
+>>>    hundreds of separate per-CPU sysfs files;
+>>> 2. Usage flow: echo target cpu_id into the file first, then cat it t=
+o fetch
+>>>    formatted human-readable ST/XST text line (cpu_id vm_st vm_xst pm=
+_st pm_xst)
+>>>    for that CPU, e.g.
+>>>       echo 10 > /sys/bus/pci/devices/<BDF>/tph_cpu_st
+>>>       cat /sys/bus/pci/devices/<BDF>/tph_cpu_st
+>>>       and the output will like: 10 2 20 100 120
+>>>    In the case of concurrent access, users can determine whether the=
+ first value
+>>>    (cpu_id) is the one they expect by making a judgment.
+>>=20
+>> That's a terrible workaround for an inherently racy design.  Thanks,
+>
+> This is because the DSM method is slow to invoke and involves many=20
+> cores. Therefore,
+> this trade-off is made.
+>
+> I propose another lazy-cached read-only text file design:
+>
+> 1. Only create one read-only sysfs attribute named tph_cpu_all on Root=20
+> Port
+>    devices, no write store hook, completely eliminate read-write race=20
+> risks;
+> 2. Lazy initialization: All CPU steering tag entries are fetched via=20
+> batch
+>    ACPI _DSM calls only on the first userspace read operation, cached=20
+> inside
+>    afterwards to avoid duplicate slow firmware interactions;
+> 3. Cache invalidation only happens on Root Port PCI reset events,=20
+> including
+>    system cold boot, AER fatal error recovery, userspace manual reset=20
+> via sysfs,
+>    downstream hotplug and root port driver re-probe.
+>    No CPU hotplug notification hooks are registered to avoid extra cod=
+e=20
+> complexity;
+> 4. On every sysfs read, iterate over the cached entry list and filter=20
+> out
+>    offline CPUs according to the current online CPU mask dynamically, =
+so
+>    only valid active CPU records are printed to userspace;
+> 5. A read-write semaphore protects cached table access to support=20
+> concurrent
+>    userspace readers safely;
+> 6. Plain human-readable text output complies with sysfs text-first nor=
+ms
+>    Jason prefers, no structured binary binattr is introduced;
+>
+> Usage example:
+>    cat /sys/bus/pci/devices/<root-port-bdf>/tph_cpu_all
+>    the output will be: cpu_id vm_st pm_st vm_xst pm_xst
+> 	0 0x00 0x00 0x0000 0x0000
+> 	1 0x02 0x00 0x0005 0x0000
+> 	2 0x01 0x00 0x0003 0x0000
+> 	...
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-NOTE: This would not be possible without prior work from Shimoda-san
-      https://lore.kernel.org/all/20240214052144.1966569-1-yoshihiro.shimoda.uh@renesas.com/
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
- arch/arm64/boot/dts/renesas/r8a779g0.dtsi | 31 ++++++++++++++++-------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+This is a more complicated, more bloated, less functional version of the=
+ same array of structures problem as the bin attribute, just in ascii.  =
+Thanks,
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-index 3a8af825bb253..82e864acf2601 100644
---- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-@@ -792,6 +792,7 @@ pciec0: pcie@e65d0000 {
- 			resets = <&cpg 624>;
- 			reset-names = "pwr";
- 			max-link-speed = <4>;
-+			msi-parent = <&its>;
- 			num-lanes = <2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -802,10 +803,10 @@ pciec0: pcie@e65d0000 {
- 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
--			interrupt-map = <0 0 0 1 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 2 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 3 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 4 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
- 			snps,enable-cdm-check;
- 			status = "disabled";
- 
-@@ -839,6 +840,7 @@ pciec1: pcie@e65d8000 {
- 			resets = <&cpg 625>;
- 			reset-names = "pwr";
- 			max-link-speed = <4>;
-+			msi-parent = <&its>;
- 			num-lanes = <2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -849,10 +851,10 @@ pciec1: pcie@e65d8000 {
- 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
--			interrupt-map = <0 0 0 1 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 2 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 3 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 4 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
- 			snps,enable-cdm-check;
- 			status = "disabled";
- 
-@@ -2131,11 +2133,22 @@ ipmmu_mm: iommu@eefc0000 {
- 		gic: interrupt-controller@f1000000 {
- 			compatible = "arm,gic-v3";
- 			#interrupt-cells = <3>;
--			#address-cells = <0>;
-+			#address-cells = <2>;
-+			#size-cells = <2>;
- 			interrupt-controller;
- 			reg = <0x0 0xf1000000 0 0x20000>,
- 			      <0x0 0xf1060000 0 0x110000>;
- 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
-+			dma-noncoherent;
-+
-+			ranges = <0x0 0x0 0x0 0xf1000000 0x0 0x200000>;
-+
-+			its: msi-controller@40000 {
-+				compatible = "arm,gic-v3-its";
-+				reg = <0x0 0x40000 0x0 0x20000>;
-+				dma-noncoherent;
-+				msi-controller;
-+			};
- 		};
- 
- 		gpu: gpu@fd000000 {
--- 
-2.53.0
-
+Alex
