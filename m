@@ -1,150 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1623A16AC;
-	Wed, 17 Jun 2026 07:28:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF61236F91C;
+	Wed, 17 Jun 2026 07:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781681301; cv=none; b=nzkuSEYjqrdtACNy3i2L/iz+9fqOJJmoFp624MiMK7qGJ+hmNiOQS34VHGTbvmkdXcaTAoR9RZDs++dDIthL0coXzvmI+ShxPqGt2ojHwg2hM8lb2tJq5gsWKnFYxphYkmljtLQ+X7EQ6eii4F42R5I8PR8nZztdYfwN0EF18ps=
+	t=1781681950; cv=none; b=tmjnPTX7GO3d6bMFI8QMAaZkERgEdMLsYE3ogKZi6KZ2+k19sJS9uoDjEErm7/QgavDgclFpoMFHvzHSsLEVwm942DrijT868sh1uAZgwkPS2ANdDHwbwH5MMCAnNW5Kt8NtoZ96srm1mfDobtXtAepEFKVZjjbDkEDHB6F/iFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781681301; c=relaxed/simple;
-	bh=nrNhqgLTejpEtWCy9hVGJcFQiX+RjSTNyJuVeRGAxpQ=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u3Od+KUCIPk2OnnQmQuBZIiIR5IufjGe7oTyC1qxAWHbX18keQFbzfcDLjp8qBBdKC4EFwYAct7VbiJFcwgPv94MiJ4TdFKFbbawa6I/h5BAJme68TvIorVA6lo7sXCOXh9FBOxMWSKr1vWruEtAqBdfFmn2Khs0m2qoK+bTr7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tk/MzqAR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781681950; c=relaxed/simple;
+	bh=CpEDmXb91/TWr4Fgpip+CAc92egKL1pPgELfKsjl1QI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XWoopfy3pbCO4sCjYJ7ThQUdKDqNTPzujzPFlvmiAVJ2mLWC0NVMgADvOoFXzQBMkj9AuxQNGcLR7Bd6q/77pQ2V2EoUjmzA8DKUS33uHJtml4lbpsp65TF82+DgbbIu9YkQHPvNKlARq9m9Wc9/JccOEzWg23LXkslpOzX/9fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rpbq/1Qo; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tk/MzqAR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE7E31F000E9;
-	Wed, 17 Jun 2026 07:28:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781681299;
-	bh=oitSDh2idwbTV4wEy6qC2suZE8c7ocMdTmo0GG8WGDo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Tk/MzqARhtO/HndX2786H385m3mP0z4djw5iFO90tSRLvwxL16ywK4URVqkV/4rQy
-	 ep0GYGp4MjJeKgyXQ85tmW6z100V5Bb3GIztO0Ap9raxgu0lZZMGWGpa5PcThHg8Dq
-	 nrkGwQ4pEbrneqbgy1rFm/T7IvWkHVOp/1haoK+NMxgaS0CpAxpluaPDOw2dA1Ok3R
-	 8piupywSCM3pWiKd5owkiMYtu+3mmRlk6kXYvmDhGOlCC7e9ovzkbkGDYTxvklwEZr
-	 rQFwg+XFxycW73LyxVvVtBWG7vMljSYnb9vWbJvIh5adUVvs34ahQ9Ya5jYMBQ6hqY
-	 nMIVkd7RmlVgA==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wZkh7-0000000DaBi-3EhI;
-	Wed, 17 Jun 2026 07:28:17 +0000
-Date: Wed, 17 Jun 2026 08:28:17 +0100
-Message-ID: <8633yltylq.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org,	Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>,	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?=
- <kwilczynski@kernel.org>,	Bjorn Helgaas <bhelgaas@google.com>,	Catalin
- Marinas <catalin.marinas@arm.com>,	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,	Krzysztof Kozlowski
- <krzk+dt@kernel.org>,	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Manivannan
- Sadhasivam <mani@kernel.org>,	Rob Herring <robh@kernel.org>,
-	devicetree@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
-In-Reply-To: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rpbq/1Qo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781681948; x=1813217948;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CpEDmXb91/TWr4Fgpip+CAc92egKL1pPgELfKsjl1QI=;
+  b=Rpbq/1QoNmxxxJqah3/RpyeCuGDf7FdL58hx3uEI4mn+oFkxU1HDZUFF
+   JMvTP7MVokOuuR4zIGWEdCcjwiHSoVR8hfTBgKYdSJQvPBrGACQlTD0mU
+   i6BZjlL0ewK9KxRTzdrNoxbtslRYyOOpaeSwda/x3XyeAp3stfbnB/5Dg
+   FzMw3nYci3RZ+CYElwDr8HfM07LNWhPyDpwfLDnzfIvqcw43Cwlm1LvDi
+   gE5TusBVIJaplak7auz97mwzuQeoC1WEt8ilqN4JKkwN0UW6B7PCGDRyz
+   4aD8pvSaHiiD4ZdrCcDDJmntHIRmoEFpheDh92gmCBlu/lC04NIQCEpfo
+   w==;
+X-CSE-ConnectionGUID: PYn87Q3DSHC7wUs5xcCFNA==
+X-CSE-MsgGUID: cKJR55rDS2mAjjrYIc9tbw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11819"; a="100031244"
+X-IronPort-AV: E=Sophos;i="6.24,209,1774335600"; 
+   d="scan'208";a="100031244"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 00:39:07 -0700
+X-CSE-ConnectionGUID: l0E97XhTTf2fm8AXVgu/fA==
+X-CSE-MsgGUID: YrCctxhzQWKGcZNHsJIm4A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,209,1774335600"; 
+   d="scan'208";a="243620213"
+Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
+  by fmviesa006.fm.intel.com with ESMTP; 17 Jun 2026 00:39:04 -0700
+Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wZkrW-00000000UF0-0LUj;
+	Wed, 17 Jun 2026 07:39:02 +0000
+Date: Wed, 17 Jun 2026 15:38:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: Wentao Liang <vulab@iscas.ac.cn>, bhelgaas@google.com
+Cc: oe-kbuild-all@lists.linux.dev, mika.westerberg@linux.intel.com,
+	mani@kernel.org, andriy.shevchenko@intel.com, kees@kernel.org,
+	adiyenga@cisco.com, vulab@iscas.ac.cn, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI/PTM: fix refcount leak in pci_enable_ptm()
+Message-ID: <202606171537.E42T5ZLo-lkp@intel.com>
+References: <20260616141733.1688264-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut+renesas@mailbox.org, linux-pci@vger.kernel.org, yoshihiro.shimoda.uh@renesas.com, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260616141733.1688264-1-vulab@iscas.ac.cn>
 
-On Wed, 17 Jun 2026 03:59:44 +0100,
-Marek Vasut <marek.vasut+renesas@mailbox.org> wrote:
->=20
-> In case MSI are enabled, but DWC built-in iMSI-RX is not in use, the
-> MSI are handled via GIC ITS. Configure all controller MSI registers
-> fully.
->=20
-> Set or clear MSI capability register MSICAP0 MSI enable MSIE bit and
-> PCIe Interrupt Status 0 Enable register PCIEINTSTS0EN MSI interrupt
-> enable MSI_CTRL_INT bit according to MSI enable state, set both bits
-> if MSI are enabled, clear both bits if MSI are disabled.
->=20
-> If MSI are disabled, or MSI are enabled and iMSI-RX is used, then
-> deconfigure AXIINTCADDR and AXIINTCCONT to 0, which disables any
-> pass through of MSI TLPs onto the AXI bus and then further into
-> GIC ITS translation registers.
->=20
-> If MSI are enabled and iMSI-RX is not used, the configure AXIINTCADDR
-> with target address of GIC ITS translation registers, and configure
-> AXIINTCCONT to enable MSI TLP pass through onto AXI bus and into the
-> GIC ITS. This specific configuration allows handling of MSI via the
-> GIC ITS instead of integrated iMSI-RX.
->=20
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> ---
-> NOTE: This would not be possible without prior work from Shimoda-san
-> ---
-> Cc: "Krzysztof Wilczy=C5=84ski" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Conor Dooley <conor+dt@kernel.org>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 53 +++++++++++++++++++--
->  1 file changed, 48 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> index 485cfa8bd9692..ba6e3bedd6d0a 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -31,6 +31,10 @@
->  #define DEVICE_TYPE_RC		BIT(4)
->  #define BIFUR_MOD_SET_ON	BIT(0)
-> =20
-> +/* MSI Capability */
-> +#define MSICAP0			0x0050
-> +#define MSICAP0_MSIE		BIT(16)
-> +
->  /* PCIe Interrupt Status 0 */
->  #define PCIEINTSTS0		0x0084
-> =20
-> @@ -55,6 +59,16 @@
->  #define APP_HOLD_PHY_RST	BIT(16)
->  #define APP_LTSSM_ENABLE	BIT(0)
-> =20
-> +/* INTC address */
-> +#define AXIINTCADDR		0x0a00
-> +/* GITS GIC ITS translation register */
-> +#define AXIINTCADDR_VAL		0xf1050000
+Hi Wentao,
 
-Wouldn't it be preferable to source the address from the device tree,
-rather than hardcoding this?
+kernel test robot noticed the following build errors:
 
-Thanks,
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus westeri-thunderbolt/next linus/master v7.1 next-20260616]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-	M.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wentao-Liang/PCI-PTM-fix-refcount-leak-in-pci_enable_ptm/20260617-043856
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260616141733.1688264-1-vulab%40iscas.ac.cn
+patch subject: [PATCH] PCI/PTM: fix refcount leak in pci_enable_ptm()
+config: s390-randconfig-r072-20260617 (https://download.01.org/0day-ci/archive/20260617/202606171537.E42T5ZLo-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 8.5.0
+smatch: v0.5.0-9185-gbcc58b9c
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260617/202606171537.E42T5ZLo-lkp@intel.com/reproduce)
 
---=20
-Without deviation from the norm, progress is not possible.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202606171537.E42T5ZLo-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/pci/pcie/ptm.c: In function 'pci_enable_ptm':
+>> drivers/pci/pcie/ptm.c:204:20: error: 'parent' undeclared (first use in this function); did you mean 'xa_parent'?
+       pci_disable_ptm(parent);
+                       ^~~~~~
+                       xa_parent
+   drivers/pci/pcie/ptm.c:204:20: note: each undeclared identifier is reported only once for each function it appears in
+
+
+vim +204 drivers/pci/pcie/ptm.c
+
+   162	
+   163	/**
+   164	 * pci_enable_ptm() - Enable Precision Time Measurement
+   165	 * @dev: PCI device
+   166	 *
+   167	 * Enable Precision Time Measurement for @dev.
+   168	 *
+   169	 * Return: zero if successful, or -EINVAL if @dev lacks a PTM Capability or
+   170	 * is not a PTM Root and lacks an upstream path of PTM-enabled devices.
+   171	 */
+   172	int pci_enable_ptm(struct pci_dev *dev)
+   173	{
+   174		int rc;
+   175		char clock_desc[8];
+   176	
+   177		/*
+   178		 * A device uses local PTM Messages to request time information
+   179		 * from a PTM Root that's farther upstream. Every device along
+   180		 * the path must support PTM and have it enabled so it can
+   181		 * handle the messages. Therefore, if this device is not a PTM
+   182		 * Root, the upstream link partner must have PTM enabled before
+   183		 * we can enable PTM.
+   184		 */
+   185		if (!dev->ptm_root) {
+   186			struct pci_dev *parent;
+   187	
+   188			parent = pci_upstream_ptm(dev);
+   189			if (!parent)
+   190				return -EINVAL;
+   191			/* Enable PTM for the parent */
+   192			rc = pci_enable_ptm(parent);
+   193			if (rc)
+   194				return rc;
+   195		}
+   196	
+   197		/* Already enabled? */
+   198		if (atomic_inc_return(&dev->ptm_enable_cnt) > 1)
+   199			return 0;
+   200	
+   201		rc = __pci_enable_ptm(dev);
+   202		if (rc) {
+   203			if (!dev->ptm_root)
+ > 204				pci_disable_ptm(parent);
+   205			atomic_dec(&dev->ptm_enable_cnt);
+   206			return rc;
+   207		}
+   208	
+   209		switch (dev->ptm_granularity) {
+   210		case 0:
+   211			snprintf(clock_desc, sizeof(clock_desc), "unknown");
+   212			break;
+   213		case 255:
+   214			snprintf(clock_desc, sizeof(clock_desc), ">254ns");
+   215			break;
+   216		default:
+   217			snprintf(clock_desc, sizeof(clock_desc), "%uns",
+   218				 dev->ptm_granularity);
+   219			break;
+   220		}
+   221		pci_info(dev, "PTM enabled%s, %s granularity\n",
+   222			 dev->ptm_root ? " (root)" : "", clock_desc);
+   223	
+   224		return 0;
+   225	}
+   226	EXPORT_SYMBOL(pci_enable_ptm);
+   227	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
