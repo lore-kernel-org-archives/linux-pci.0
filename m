@@ -1,300 +1,162 @@
-Received: from ferryfair.com (ferryfair.com [103.227.96.30])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195BB376497;
-	Wed, 17 Jun 2026 20:30:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.227.96.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A1123BB664;
+	Wed, 17 Jun 2026 20:40:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781728252; cv=none; b=YSQsULuLl+AfyJknWqpTjkYScCLYHdarsHArYuv1Iv5oc3FM8hJCRtYkhAup7LMkYEenVlA/CNFsQlLIICXRCtbb47CO1AFUCKekXtBsdt7uLSkgLlO9FJWylv0I5pbdw3w8tTPqvPYbjaCSng6z+bg3g+8l6tBD3IS0v3CdIeI=
+	t=1781728802; cv=none; b=dHavZNIrFBwtN4mOmqbjmVynkxsZ40XppV1AoqDWbxO1riHyNws55nwNODdIvrRmafqSVXHBTw2x9JHSLLn4ETcle/wrKs4QX/9dtRgqVMmRlES98kzYmU4LBzTqZI8rjhI0JMqMiuA1TzAc4e6w5FAYpwvsineN1NbgII2l3t8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781728252; c=relaxed/simple;
-	bh=2PnKeCVBAGy1f77hU4/JJ1xJu5uiwWsm74bFEqfC/iA=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B175Cp7qE4JppUnt4AdkSCBxE1kO9aTL9zIrjWd6ExM61qqewL37bqNy5sXWEjD73BgotEjI4WKc3sJvOtb1Na6HjnyzkxioMagzqZsAv9r9cMHhVOrSwwdxrvUjilhJzczrWNZg486uwg+vwAy3Jri06i6SKoIy/VYTVXBfydw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ferryfair.com; spf=pass smtp.mailfrom=ferryfair.com; dkim=pass (2048-bit key) header.d=ferryfair.com header.i=@ferryfair.com header.b=cCW+gpnR; arc=none smtp.client-ip=103.227.96.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ferryfair.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ferryfair.com
+	s=arc-20240116; t=1781728802; c=relaxed/simple;
+	bh=MvRWJdZBJDCMlsltvMQXYatKobmI0Mk0zpqaH8Mi9IY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bDCF3MMIoJD/hGgRzBZlt9tXlVyqvD0El0/s7FzoJssBMaJwP0UdWNozZBTb9KEPa4z3B5A0flIoB136bYP63JvQT0Mew5qeNYaMmeKb8P1xOBxAUDNx7lq2ToPV1hpPA2v8/RBqoht1ifkrA9LMBbMOBq154Z5I9JaFNYx6Xhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NKVBuR+y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ferryfair.com header.i=@ferryfair.com header.b="cCW+gpnR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ferryfair.com; s=s1; h=Content-Type:MIME-Version:References:In-Reply-To:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:Sender:Reply-To:
-	Resent-From:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=in6v/D5VjOzgXD0ii8FaFVUqT/tjHQnth/1Ddc5jt18=; b=cCW+gpnRN8wByqDmLtBwriTtmD
-	5ND0NQHms/y2miLe1wn01ntL7WHiTyqFI+50RGRMcC0nuZBXTdx+BG8OyjVggSlfwFTqfygtfd/IR
-	kaFba6jKpSDg7lXPJPFgAjHnSVhQ/vGwAIRqU98kah1ZhqTtukNAXpzqnIV6ddkUkY9qwgT4qzI6g
-	ONJztK/vpZWHy3Jr+dXlndDCcI6p7IQ+yKS4mYmQ9Z3ZPut02lXuhOM3+RK5jlCb6se5liMSy03Wq
-	fvgwY3fcJKBjribsp1xGKZyNFu+sOWC5KetLxVQN9TbLwqNlu4h28hMbn/eeYmLQYNTo4I3HVjlc/
-	7IJTKZ9g==;
-Received: from console.gl-inet.com ([192.168.0.1] helo=slick.ferryfair.com)
-	by ferryfair.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.4)
-	(envelope-from <gowtham@ferryfair.com>)
-	id 1wZwu2-000000007Jp-27RB;
-	Thu, 18 Jun 2026 02:00:26 +0530
-Date: Thu, 18 Jun 2026 02:00:25 +0530
-From: gowtham <gowtham@ferryfair.com>
-To: neil.armstrong@linaro.org
-Cc: Ronald Claveau <linux-kernel-dev@aliel.fr>, robh@kernel.org,
- bhelgaas@google.com, khilman@baylibre.com, jbrunet@baylibre.com,
- martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
- linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, yue.wang@Amlogic.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org
-Subject: Re: [PATCH] PCI: meson: Fix PERST# timing by asserting reset before
- LTSSM enable
-Message-ID: <20260618020025.2739cb96@slick.ferryfair.com>
-In-Reply-To: <20260617050627.4d01ed54@slick.ferryfair.com>
-References: <20260614015620.20432-1-gowtham@ferryfair.com>
-	<84cc8b0c-da06-4d01-a076-9743c29c91f6@aliel.fr>
-	<b2d8cb85-5529-4a4c-a233-64ca7a436f0b@linaro.org>
-	<20260617050627.4d01ed54@slick.ferryfair.com>
-Organization: FerryFair
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NKVBuR+y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC6F81F000E9;
+	Wed, 17 Jun 2026 20:40:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781728801;
+	bh=yMxmwowVoF8q8JSxd1es/1GoqGp9neqjMH+XqQmm/Dk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=NKVBuR+ygJD1clUdKIw83mBfLj/Zg3TaaW4jlL0kgdtCnCDsSXqZq1VlNp43Q8OkG
+	 brSKBHH6KzywF3gUOrTtwNs0b78Pd+qm06w8P8Fqbf4JEIEDqDpQUMc7EEr7z+bzVh
+	 7enKidVXIcXIObzM+pCh1PPzKf8psmkIKXtJZF7bPnRCRd+PcO5mDqOW5Bv15PzAJv
+	 nlTS5GjiSZDwfDiA0A/4qilkl0sR2Xbz6auzuWJ+GXUyCt5vZ32KdUgLA0Yk/cUu0h
+	 wDVA6iKLskzlj2+nMG5IjrYDd8sgmDUS2dAH+Kl2uMrYpvhSMUvaxpWqBakf/MD/rh
+	 i724z3OJhdnow==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 2/4] PCI: Use standard wait times for PCIe link
+ monitoring
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Thierry Reding" <thierry.reding@kernel.org>
+Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260617-tegra264-pcie-v7-2-eae7ae964629@nvidia.com>
+References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
+ <20260617-tegra264-pcie-v7-2-eae7ae964629@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 17 Jun 2026 20:40:00 +0000
+Message-Id: <20260617204000.DC6F81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/RqLM/5A=AsV1+l9kUQ52pza"
 
---MP_/RqLM/5A=AsV1+l9kUQ52pza
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Hi Ronald,
-I see you submitted the patch. Last couple of days I've been fixing the
-etherenet of my BPiCM4+Waveshare-io-base-b due to which I couldn't test
-your patch any sooner. Now I got my ethernet working but now I couldn't
-reproduce the issue *without* either of our patches!!!
+Pre-existing issues:
+- [High] Missing cleanup of chained IRQ handlers and IRQ domains on error p=
+aths in multiple PCIe drivers leads to Use-After-Free.
+- [High] advk_pcie_wait_for_link() fails to guarantee the mandatory 100ms p=
+ost-reset delay before configuration requests.
+--
 
-Anyway it's proper to initialize PCIe with RESET Active but I think
-meson_pcie_assert_reset(mp) will give sufficient time to PCIe devices
-to complete the reset cycle.
+commit 1edbe267835d4abccd02c4abc064267f402a8ce2
+Author: Thierry Reding <treding@nvidia.com>
 
----
- drivers/pci/controller/dwc/pci-meson.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+PCI: Use standard wait times for PCIe link monitoring
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c
-b/drivers/pci/controller/dwc/pci-meson.c index 0694084f612..c28ab40c9ff
-100644 --- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -308,8 +308,8 @@ static int meson_pcie_start_link(struct dw_pcie
-*pci) {
- 	struct meson_pcie *mp = to_meson_pcie(pci);
- 
--	meson_pcie_ltssm_enable(mp);
- 	meson_pcie_assert_reset(mp);
-+	meson_pcie_ltssm_enable(mp);
- 
- 	return 0;
- }
--- 
----
- drivers/pci/controller/dwc/pci-meson.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Instead of defining the wait values for each driver, use common values
+defined in the core pci.h header file. Convert all drivers to msleep()
+and use the existing definition.
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c
-b/drivers/pci/controller/dwc/pci-meson.c index c28ab40c9ff..2ef75157530
-100644 --- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -308,7 +308,6 @@ static int meson_pcie_start_link(struct dw_pcie
-*pci) {
- 	struct meson_pcie *mp = to_meson_pcie(pci);
- 
--	meson_pcie_assert_reset(mp);
- 	meson_pcie_ltssm_enable(mp);
- 
- 	return 0;
-@@ -362,6 +361,8 @@ static int meson_pcie_host_init(struct dw_pcie_rp
-*pp) 
- 	pp->bridge->ops = &meson_pci_ops;
- 
-+	meson_pcie_assert_reset(mp);
-+
- 	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
- 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
- 
--- 
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pc=
+i/controller/mobiveil/pcie-mobiveil.c
+> index 62ecbaeb0a604..e8346851c49b6 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+> @@ -218,11 +218,11 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pci=
+e)
+>  	int retries;
+> =20
+>  	/* check if the link is up or not */
+> -	for (retries =3D 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> +	for (retries =3D 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
+>  		if (mobiveil_pcie_link_up(pcie))
+>  			return 0;
+> =20
+> -		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
+> +		msleep(PCIE_LINK_WAIT_SLEEP_MS);
+>  	}
+> =20
+>  	dev_err(&pcie->pdev->dev, "link never came up\n");
 
-...Gowtham
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a potential
+Use-After-Free in the error paths handling these link bring-up failures?
 
+In the caller mobiveil_pcie_host_probe(), if mobiveil_bringup_link() fails,=
+ it
+returns directly:
 
-On Wed, 17 Jun 2026 05:06:27 +0530
-gowtham <gowtham@ferryfair.com> wrote:
+	ret =3D mobiveil_bringup_link(pcie);
+	if (ret) {
+		dev_info(dev, "link bring-up failed\n");
+		return ret;
+	}
 
-> Hi,
-> 
-> As Neil suggested I moved the PCIe reset to init; I've updated the tag
-> at
-> https://github.com/GowthamKudupudi/linux/tree/meson-pcie-warm-reset-linux-7.0.y
-> 
-> Ronald, yes, I do think its proper to initialize PCIe with RESET
-> Active. Anyway we need the reset *cycle*. Please submit your patch as
-> well.
-> 
-> Thank you!
-> 
-> ...Gowtham
-> 
-> On Tue, 16 Jun 2026 08:06:02 +0200
-> neil.armstrong@linaro.org wrote:
-> 
-> > On 6/15/26 12:34, Ronald Claveau wrote:  
-> > > On 6/14/26 3:56 AM, Gowtham Kudupudi wrote:    
-> > >> On warm reboot, the PCIe controller's LTSSM starts link training
-> > >> immediately if PERST# is already deasserted from the previous
-> > >> boot. The driver then pulses PERST# for only 500us, which is too
-> > >> short to properly reset the endpoint device that has already
-> > >> started training.
-> > >>
-> > >> Fix by moving the PERST# assert/deassert pulse BEFORE enabling
-> > >> LTSSM, so the endpoint gets a clean reset cycle before link
-> > >> training begins.
-> > >>
-> > >> This was found on Amlogic G12B (A311D) with NVMe on an M.2 slot.
-> > >> Cold boot worked because POR held PERST# low; warm reboot did
-> > >> not. The fix was confirmed on a Banana Pi CM4 with Waveshare IO
-> > >> base board.
-> > >>
-> > >> Signed-off-by: Gowtham Kudupudi <gowtham@ferryfair.com>
-> > >> ---
-> > >>   drivers/pci/controller/dwc/pci-meson.c | 2 +-
-> > >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> > >>
-> > >> diff --git a/drivers/pci/controller/dwc/pci-meson.c
-> > >> b/drivers/pci/controller/dwc/pci-meson.c index
-> > >> 5f8e2f4b3c12..3a7e9f1d5b8c 100644 ---
-> > >> a/drivers/pci/controller/dwc/pci-meson.c +++
-> > >> b/drivers/pci/controller/dwc/pci-meson.c @@ -310,8 +310,8 @@
-> > >> static int meson_pcie_start_link(struct dw_pcie *pci) {
-> > >>   	struct meson_pcie *mp = to_meson_pcie(pci);
-> > >>   
-> > >> +	meson_pcie_assert_reset(mp);
-> > >>   	meson_pcie_ltssm_enable(mp);
-> > >> -	meson_pcie_assert_reset(mp);    
-> > 
-> > I think this change is valid, other controllers resets PERST
-> > in the host init callback, so either this or move to the
-> > init callback.
-> > 
-> > Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
-> >   
-> > >>   
-> > >>   	return 0;
-> > >>   }    
-> > > 
-> > > Hi Gowtham,
-> > > 
-> > > I have a patch [1] that I haven't submitted yet.
-> > > This might be related to your issue, what do you think ?    
-> > 
-> > Ronald, This fix is valid, it's definitely better to probe the
-> > driver with PERST asserted, please send it.
-> > 
-> > Neil
-> >   
-> > > 
-> > > [1]
-> > > https://github.com/rclaveau-tech/linux-khadas/commit/bee0a02d9756
-> > >   
-> >   
-> 
+Since chained handlers are set up earlier using
+irq_set_chained_handler_and_data(..., pcie), returning an error causes the
+devres-managed pcie struct to be freed. If the interrupt fires after this, =
+won't
+the active handler dereference the freed pcie pointer?=20
 
+A similar issue appears in nwl_pcie_probe() if nwl_wait_for_link() fails. S=
+hould
+these error paths unregister the chained handlers and call irq_domain_remov=
+e()
+to prevent this UAF and resource leak?
 
---MP_/RqLM/5A=AsV1+l9kUQ52pza
-Content-Type: text/x-patch
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename=0001-PCI-meson-Fix-PERST-timing-by-asserting-reset-before.patch
+[ ... ]
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controll=
+er/pci-aardvark.c
+> index fd9c7d53e8a78..272c5c8fc1e5c 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+[ ... ]
+> @@ -350,13 +347,13 @@ static int advk_pcie_wait_for_link(struct advk_pcie=
+ *pcie)
+>  	int retries;
+> =20
+>  	/* check if the link is up or not */
+> -	for (retries =3D 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> +	for (retries =3D 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
+>  		if (advk_pcie_link_up(pcie)) {
+>  			pci_host_common_link_train_delay(pcie->link_gen);
+>  			return 0;
+>  		}
+> =20
+> -		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+> +		msleep(PCIE_LINK_WAIT_SLEEP_MS);
+>  	}
 
-From 852811b11795ee389ea6a953ed0db69b76722469 Mon Sep 17 00:00:00 2001
-From: Gowtham Kudupudi <gowtham@ferryfair.com>
-Date: Sun, 14 Jun 2026 09:41:01 +0530
-Subject: [PATCH 1/2] PCI: meson: Fix PERST# timing by asserting reset before
- LTSSM enable
+[Severity: High]
+This is a pre-existing issue, but does advk_pcie_wait_for_link() fail to
+guarantee the mandatory 100ms post-reset delay before configuration request=
+s?
 
-On warm reboot, the PCIe controller's LTSSM starts link training
-immediately if PERST# is already deasserted from the previous boot.
-The driver then pulses PERST# for only 500us, which is too short to
-properly reset the endpoint device that has already started training.
+The PCIe Base Specification mandates a minimum 100ms delay after a conventi=
+onal
+reset (e.g., PERST# deassertion) before the host can send Configuration
+Requests. The caller advk_pcie_setup_hw() asserts PERST# and delegates the
+post-reset delay to this function.
 
-Fix by moving the PERST# assert/deassert pulse BEFORE enabling LTSSM,
-so the endpoint gets a clean reset cycle before link training begins.
+If the link trains rapidly and reaches L0 early, this loop returns immediat=
+ely.
+For link speeds of Gen2 or lower, pci_host_common_link_train_delay() is a n=
+o-op,
+so no additional delay is added.=20
 
-This was found on Amlogic G12B (A311D) with NVMe on an M.2 slot.
-Cold boot worked because POR held PERST# low; warm reboot did not.
-The fix was confirmed on a Banana Pi CM4 with Waveshare IO base board.
+Does this allow the driver to issue Configuration Requests before the endpo=
+int's
+100ms initialization period has elapsed, potentially causing enumeration fa=
+ilures
+for compliant endpoints?
 
-Signed-off-by: Gowtham Kudupudi <gowtham@ferryfair.com>
----
- drivers/pci/controller/dwc/pci-meson.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 0694084f612..c28ab40c9ff 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -308,8 +308,8 @@ static int meson_pcie_start_link(struct dw_pcie *pci)
- {
- 	struct meson_pcie *mp = to_meson_pcie(pci);
- 
--	meson_pcie_ltssm_enable(mp);
- 	meson_pcie_assert_reset(mp);
-+	meson_pcie_ltssm_enable(mp);
- 
- 	return 0;
- }
--- 
-2.54.0
-
-
---MP_/RqLM/5A=AsV1+l9kUQ52pza
-Content-Type: text/x-patch
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename=0002-PCI-meson-pcie-reset-moved-to-meson_pcie_host_init.patch
-
-From 1bcf2c787d72b2c25852cc598b1201510b4132b0 Mon Sep 17 00:00:00 2001
-From: Gowtham Kudupudi <gowtham@ferryfair.com>
-Date: Wed, 17 Jun 2026 04:29:45 +0530
-Subject: [PATCH 2/2] PCI: meson: pcie reset moved to meson_pcie_host_init
-
-As per the Neil's suggestion, inititial PCIe reset is moved to init
-to make it proper.
-
-Signed-off-by: Gowtham Kudupudi <gowtham@ferryfair.com>
----
- drivers/pci/controller/dwc/pci-meson.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index c28ab40c9ff..2ef75157530 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -308,7 +308,6 @@ static int meson_pcie_start_link(struct dw_pcie *pci)
- {
- 	struct meson_pcie *mp = to_meson_pcie(pci);
- 
--	meson_pcie_assert_reset(mp);
- 	meson_pcie_ltssm_enable(mp);
- 
- 	return 0;
-@@ -362,6 +361,8 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
- 
- 	pp->bridge->ops = &meson_pci_ops;
- 
-+	meson_pcie_assert_reset(mp);
-+
- 	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
- 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
- 
--- 
-2.54.0
-
-
---MP_/RqLM/5A=AsV1+l9kUQ52pza--
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260617-tegra264-p=
+cie-v7-0-eae7ae964629@nvidia.com?part=3D2
