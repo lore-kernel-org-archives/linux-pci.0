@@ -1,118 +1,91 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5B34779BB
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 15:47:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F6F49252B
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 15:50:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781711254; cv=none; b=BNm1O1OR+KbaowECxgBKaZPIvW0yqnVohbsvdXC5mazrW8sXZjPWDRe6xpQSYSF6CiK6Zx3+AsE5NWHTZoCPkOWdm68iFBS7sAR/8hwjb/y4Agn1QpP3ewjlMlv2gSxKlDzLMM64pB9LG4O8FTWQkNYDhbvKg8JQeMKF98ySyag=
+	t=1781711434; cv=none; b=d3Nsa8Uo0ogMl/66aN7H2Vrk9TloLz8qcoSeO1U+ZRfTDakDOjQSVrUkwmMH37kLQ9uONDD4Dz0+kW0F4tRU4Kgn+EHrRy5pRHEspJ4d586YNpAnCICb2h2c4/QCA19NLd2RAxoeMng6saPzG52FpGaWUZvcOZ9B6LnmL5twsMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781711254; c=relaxed/simple;
-	bh=UOoz0VXuftkcz9panXwsJDnWgJs0yaCPDgn5Os6izNo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Vztolj/5vUXLam3EZgmTR+TqP0ZCu2nPazI0w5uPJk9rnNrB+k+5EdzkcKLtBT4eyJlhmVCvAvwjQahEMFh9s9a0jNdqqKB8Vj8X7awOkDNbCI3Kpz6at2YITRHo0/L5EdXnlxsASIdq6AvsNO/OIRgCnOiCWxuROoMUS5AemHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J+Q0Kr+F; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781711434; c=relaxed/simple;
+	bh=t/BILcB67xKXUmHaGI6hCcLUgqok0CX9vUSEzaSgvqg=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TSSwN4rE/Fsu5HSd9BrL1+AvNXkaug+1lNEtbMzWTU12N71k1WLS6f0Eu7/poLSlsJdiUahOycthTeFkfVP60Przo22kD06i7Vx5fPZa0gScVLxYVbEoEpR6Is4MnS7EmHoAkXotuqrGOUtBHuIn6FjFA3rAA+kLSFoRr5piDcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=gsl2xsx6; arc=none smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J+Q0Kr+F"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781711241;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kZkkt7pTAcwVisdd5LWiHecZhGxj27GXnwp7KJTgyC4=;
-	b=J+Q0Kr+FdNcBGwgye6JFbNVi10rq/24AVxHQZ5A2njrPzldFGzGA3IAHl3ApjTPxzkBo2b
-	pyZiaIEoYylnow1aosKS99BURqQ+NnOpfQ5qW6nnj9sTEtsXbnOudZfgr0gsU9fTz4qN1D
-	5BqA6yAGP4vxEU6yZhMXmRUd9CJAt+0=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-X1sZflmnMEizcLDBGUmEqw-1; Wed,
- 17 Jun 2026 11:47:17 -0400
-X-MC-Unique: X1sZflmnMEizcLDBGUmEqw-1
-X-Mimecast-MFC-AGG-ID: X1sZflmnMEizcLDBGUmEqw_1781711236
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C724519539BC;
-	Wed, 17 Jun 2026 15:47:15 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.32.13])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B77E11771;
-	Wed, 17 Jun 2026 15:47:10 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: mani@kernel.org
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Date: Wed, 17 Jun 2026 17:47:04 +0200
-Message-ID: <20260617154709.186286-1-jtornosm@redhat.com>
-In-Reply-To: <6nivb5fncfd5dwqkzlxwhtgbsiqvifazcbgpsgukp44iib45ke@65qpwgrvtkgn>
-References: <6nivb5fncfd5dwqkzlxwhtgbsiqvifazcbgpsgukp44iib45ke@65qpwgrvtkgn>
+	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="gsl2xsx6"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-5176ca6bab1so12373871cf.0
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 08:50:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=rowland.harvard.edu; s=google; t=1781711415; x=1782316215; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZrCHhmxOINO44tH4bViEDX7JiKeUT/u46hgEy9drkI0=;
+        b=gsl2xsx616O2MsHBdOVBqf/qiiQbEiPY5Y4YAUUZMzDbS9cAuJUDtp4JuoTWiyEee1
+         J3LfI+wKGv/voVsHyFz/+A7FM9MpCtE2/hQK95lL/w7vtZ0KZjhnWPdUr2HC9dxinvcL
+         OiFKfBKdXAuyBk1mYZJXj682TbzTx0Tu6BXfQS0J7sVDsfBob13zcZWZu2fguSzkdQ+J
+         KcoXRcAQ5Mqys8F5ALeUmkrdtSo7Z3uZEEmKVFeJIawH9Cv9YSJVaXvqFQgQi8ZQ7iOD
+         KdVUlLYHlaJYz8ow1jvI/jOz4KRiwvf3JB2l2mQFq45ynh8nTXzo8iZ4ZJkDP1Vy1dwQ
+         wtIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781711415; x=1782316215;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ZrCHhmxOINO44tH4bViEDX7JiKeUT/u46hgEy9drkI0=;
+        b=TZibF8bnyHYVn+NSPaI9bneZA1yzaPZ/Dn9KxO+xHkJlR63jGM1ADTDEM7LbKZDkz2
+         rFFWGbJM/fzHk5fqrDI8nLHtMvX1ftoNYxV0730D8FvrsN+HzpW/PbM8sWuJYCGtm3fP
+         zwxudwu1ozekNBrrw8deYsqrhGp5hAo8WM/syJ1tX+zBJVKokkpbQFOUW06mptLby2Lo
+         VsnXXWUt7M9HsWpC5l87AQl5aIw/vlDabt7VSJOdwvIkF2e+i1sgXbHkGlWdEfYJtrmN
+         8uqF4cG9LGr9DJPwTRZnQkVQmWXl9txv1rp49MeQBzFewG5ILRKauZ/Pj56AqIMSsfma
+         8d/w==
+X-Gm-Message-State: AOJu0YzOnbZ+dVlC//6AIs6ffT1fqT+Qhmuq5oPMiJheMIRF6yCYjACy
+	n5OV3HPp2nd7zEd+fkJUeCwF9GoZegQkbKggeBrcy6GG5Lt1dHF1ZZxlyqtblswpmNdyOOhz5x6
+	eJgA=
+X-Gm-Gg: Acq92OEUHbLE15BiI9En0iyUOrckdDWYcd5bIZo+00fypAHG+X33B/8uuh1H1fYyl79
+	TipnpJ8xVXg1BcWr0ERiI2tjKhAxSHwuhEeUzzvhBH0pxgJrS6OB8WRxEN8aYb/zMIme3DysX95
+	h0r31emiYzz/7UsYgm5QJ+ADqJQIfpBKhibg7+8PWhJayDEbuH7qvzBQrtuQaowH2wWXjFA2uK9
+	8KfuJGRkYtlTxECoD64vSoJnE8wZasuE8B9B+eevkt8XrLoWQIOdr+kIQiTikH2M5/diOVvFcSw
+	dkDoUbAb72hNA4xYfqFm0drwzK2rrljuxUnKiYfWVqT0iz87BwqtP6044syCfTgD4XQ4PUcy3kj
+	/aQ4s8PnaMCcX1yhLgUn0nRqmuN35ba3eWjMJwnmdzyvv/o94C0+ZDK9P7N2sH23ysFACHX8Zyy
+	xnoLEfwDaUJF+1QAgzTr3IgroUJGtcz75Jm8Mkj6kyMICgGP9S+dLopWLk
+X-Received: by 2002:a05:622a:130b:b0:517:9407:5c38 with SMTP id d75a77b69052e-519c4d9e360mr630241cf.24.1781711415080;
+        Wed, 17 Jun 2026 08:50:15 -0700 (PDT)
+Received: from rowland.harvard.edu ([2607:fb60:1011:2006:2008:aeb7:73d7:d8ff])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb7dacdfsm178862081cf.20.2026.06.17.08.50.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2026 08:50:14 -0700 (PDT)
+Date: Wed, 17 Jun 2026 11:50:12 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+To: linux-pci@vger.kernel.org, bugzilla-daemon@kernel.org
+Subject: Re: [Bug 221073] xHCI host controller dies on resume from s2idle on
+ AMD Strix Halo [1022:1587]
+Message-ID: <af0ae5d1-0eb6-49cd-8317-6e8c25d06c04@rowland.harvard.edu>
+References: <bug-221073-208809@https.bugzilla.kernel.org/>
+ <bug-221073-208809-WU5d6V9tJ8@https.bugzilla.kernel.org/>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-221073-208809-WU5d6V9tJ8@https.bugzilla.kernel.org/>
 
-Hi Mani,
+I'd like to invite people on the linux-pci mailing list to pay attention 
+to this bug report:
 
-Thank you for the internal clarification and sharing this information.
+	https://bugzilla.kernel.org/show_bug.cgi?id=221073
 
-I understand the behavior is firmware error recovery, not a proper reset.
-However, these devices are widely used, and the inability to use them in VMs
-is a significant problem. Could we explore options to achieve safe VFIO
-operation?
+Comments #14, #37, and #38 seem particularly relevant.
 
-  1. Are there ANY alternative reset mechanisms besides D3cold? For example:
-     - Device-specific registers or commands?
-     - MHI bus-level operations?
-     - Firmware commands that could trigger proper reset?
+In short, the problem seems to be that after resuming from s2idle, a PCI 
+xHCI host controller sometimes does not get MSI-X interrupts any more.  
+Setting a quirk flag that causes the driver to use PCI INTx interrupts 
+instead works around the problem, but it's still a bug.
 
-     If such mechanisms exist, I'm willing to implement whatever is needed.
-
-  2. If firmware error recovery is the only option available on platforms
-     without _PR3, could we add software steps to make it VFIO-safe?
-     For example, before/after the D3hot transition:
-     - Explicit MHI state teardown?
-     - Firmware commands to clear sensitive device state?
-     - Additional verification or cleanup steps?
-
-  3. The practical challenge is that _PR3 support is not available on most
-     platforms where these devices need to be deployed (desktops, servers).
-     Additionally, the general d3cold reset method has limitations and
-     remains unimplemented due to the concerns raised earlier (ACPI
-     portability, bridge issues, runtime PM complications).
-
-     If D3cold is the only proper reset but requires _PR3, and no alternative
-     mechanisms exist, could we consider accepting the firmware error recovery
-     behavior as a last resort - clearly documented as a platform-specific
-     workaround?
-
-     Currently these devices have no reset capability on most platforms,
-     making them completely unusable for VFIO. Even an imperfect reset is
-     significantly better than no reset at all.
-
-My goal is ensuring these devices can be safely reassigned between VMs.
-I'm open to implementing any of the above approaches - or others you might
-suggest.
-
-Thank you
-
-Best regards
-José Ignacio
-
+I have one of the affected systems but haven't tried to do any real 
+testing.
