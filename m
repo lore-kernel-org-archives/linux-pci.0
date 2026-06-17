@@ -1,271 +1,159 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012041.outbound.protection.outlook.com [52.101.66.41])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6D330F547;
-	Wed, 17 Jun 2026 13:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781704319; cv=fail; b=Kgw6OiZPdx0s3Jvhe0iLuBGD0UAjiNU4odzCQ4RBZT6NxtD63qfssTQNFQ5OcjcDUh5Ph/PjWXKEB9UJv3oRzWbzUztIvWSzJNudb8Ia4eWguv4ks7n9JkVuQgDy5UbS9SncntgGfz7FGUHJGOoqvF3iQkun30ZdpjD08epF/po=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781704319; c=relaxed/simple;
-	bh=R4ru3+EIpHSIVsgAhGdrzXl9y8RsDE1Hd9Oetbz4qeo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=fTKn46uzzeXvYnURUsFRlI3Hz1yD9L2hqm802WvuMBnZs7JU1vZzZb+W8taCACM4AX1o3upI+NEIqPl4kxNcLNh3I5Up455icrQuStKsmhevPcr3QsSuZp2U+wnKr3uym7ykrC9G48YH9ig8DrqFG9S19ux7nHM6Dd7eqGYu9bc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=Yb3wX7UQ; arc=fail smtp.client-ip=52.101.66.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F0F3F6C2F
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 14:31:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781706666; cv=none; b=FovOu+yjJ+KtalERI1fPjy+xaRcsn8LPORftH9xauPByeb4BN26gzBsxmXtsR5C9Rxl/aFnSoB/2Fjrz6jtgapovn17eBQ8FjJkzcfJcO5cS3QdF0Ry+DrUgQ2+L30d6L114w/oDI5OBo+qAu3E/+b0aWXksbcBww9x4CVYBv0g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781706666; c=relaxed/simple;
+	bh=A+lBLB1doShuM8W4lpJJK21Ex8TQp3+bUtgDerepGR4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qPOA8Xh2Iq4VfqTIdOXIbr00AKwYqMDBGH0O5ANKPU0HJHvEI8jxmDSNK2PXs3H2DNrdi9eScFZh0mNd9x2HAB45WwETF9fDgSF6KgeEw5THdg1VokSFKk12hRmn6Ul35JSE1Ntoidv21l1KhD27tPnJ9rP2o4hKJ4lA6Nye9dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=j8PE5aO6; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LVTJhFBB; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="Yb3wX7UQ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JPQl+n474b3+I+HJ+m5iYJsZ9j3LiJ+TMRHM5cbz8eA/MlRFWhbdcL2fzfMAXjrzxrd9N2Y5xTUh1Kguey2IUN6wSQc2NNoac6fo6B611pFNnqTpto5mk2MY65ah0rfhmlrtGKa751QN2bJLQuMyBM3RA/ausagQCyDPIY+g49oamwi6Ii2K2SP9DiICGU3r1p7Dz2Zxz5aQZ64OlL5ZuxSK8yTOpCnrKtzQ2PQerr+XOd6POCmeFMhk3d97S86t93Aw9Dxf8ybdbrp/mUaR0eLNcbJxEn7TIypXIQIfWKJh7dQtxgiImUC++4a3oAvYEboZtFrw74YP15lP6CeWtg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tfIs1apXXO28U47LjgOeXqDQX30fbpKj/ZBVVErL70E=;
- b=rudRBjJ4oaNsw8moeLewIZ3qyxVhatj8nexl9uct00NJbjIOoLRIhyUmcWNdxa3Etud9UvcSMS4uHgKyULPko3/FFrWQflNCgJUS14IlTLAOI3pyqf/+QjNqYnkWP8BNJLhPjUixvQfeI9GV55aJQpJ+bpnynhbKH36+zfpFxKLOyzOBJ0zOB4UaPtK93rYO8ovlbC1/GdAUT1yR/SS4NstmBI3x3FYE1eyaWD2xuVuptXKFiopbJ3SyeznnE6fYSxMlNjPCAIDvq+4tJnz/0qJwpUFMDBdS17JBzB/pWRA19ahL0D9/Fp29Y7TfVdTPsjBQH2tUqPx8YAeQTEd+7A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tfIs1apXXO28U47LjgOeXqDQX30fbpKj/ZBVVErL70E=;
- b=Yb3wX7UQvxkMekn3PpFc5CN6Q97Yrny8IpsauFKHodhhIWYfiNmgEG/qxS7Nvg7Dw1DO8Xzrb97PUD4itazIiAohY/w22tOO3AGUCjpEipcqSTCMAYoKSHC597/5YLx0HOMPY2JQs130JIon/fma4cuSfNZgmTuPsJNXt698WkLzzccMenPdI2N6XsEwcXnt8K/uim21Hc+/ldTaiqKaQtNq7YSjFgWPezMM6UXZI5xAYC+BdWq18JVZvo6YUgrxXEbqV5npQ/zNAI7PMjiJ4CxWd0dYQBJyJ2D9uioHdlTmwcKv5lZv6DFlAQJhO0sozKXSoxyHg5mrI0VunyOD5w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by PR3PR04MB7209.eurprd04.prod.outlook.com (2603:10a6:102:92::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Wed, 17 Jun
- 2026 13:51:52 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0113.015; Wed, 17 Jun 2026
- 13:51:52 +0000
-Date: Wed, 17 Jun 2026 08:51:43 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: "Verma, Devendra" <devverma@amd.com>
-Cc: Koichiro Den <den@valinux.co.jp>,
-	Devendra K Verma <devendra.verma@amd.com>, Frank.Li@kernel.org,
-	bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, michal.simek@amd.com
-Subject: Re: [PATCH v15 2/2] dmaengine: dw-edma: Add non-LL mode
-Message-ID: <ajKmbwr4vuN8cFuU@SMW015318>
-References: <20260318070403.1634706-1-devendra.verma@amd.com>
- <20260318070403.1634706-3-devendra.verma@amd.com>
- <zhpsuwq5agslelgebbtvrg4uks4xweov7ywhmkxdngq7lzajip@e4umiii6kzko>
- <4ffb23c5-de2e-44f6-8d15-0f9ac563b609@amd.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4ffb23c5-de2e-44f6-8d15-0f9ac563b609@amd.com>
-X-ClientProxiedBy: SN7PR04CA0050.namprd04.prod.outlook.com
- (2603:10b6:806:120::25) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="j8PE5aO6";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LVTJhFBB"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65HEEXb82428553
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 14:31:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=qasGdUfjcGOfe+d3UxUQ7ny7NNPrRxm6R7k
+	OWdfDKls=; b=j8PE5aO6wl2yqJiBQajuAnWtafX3thaW7FoowzBypEVaYRw240r
+	7tTR5j9paV1EkOs5eh5HCgOMkh/ZPMUwNiLPaNXMtlPDy1qmzaYekcl+09GvLDNt
+	dF1emosvVgsERw0tC4A8kQFbd9Df1vnThvNf7+FLT+8EX58hglHOh5nRYpV6TmNo
+	t+0w0s8cOaiSY5kXFcV4Kg7bsF61+os+hbvdOouRmIzXs7VUnV4JVa/s1dye7vZN
+	v13oc+iN4AkmxCXvpwezIO069QbNWNyaw4cZe2dkJTw5hE8tggAFRjs5XY2gP7SF
+	wJ/uR6T889n7JZJFgMcG9y6v8SXjyrdS+8w==
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eueer3j79-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 14:31:04 +0000 (GMT)
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-30bd9e93024so56442eec.1
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 07:31:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1781706663; x=1782311463; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qasGdUfjcGOfe+d3UxUQ7ny7NNPrRxm6R7kOWdfDKls=;
+        b=LVTJhFBBWHQimvAyppKNetJb6uGN3sV/t/V3ccoyTeDBc6W3MQdWZolGRTLqo9yVWJ
+         esCeDcZXcqhS3bGoxJyy2IwYOirOTJM0aSx4QWLEpH2wtllGsbxiEcz/3iX+akeoHVWa
+         eR8u+Ko0bBfpeXUtxsfR4vclimAPEAsYYUxAwvHEtOVxDNT6Oxmmu+gPxGFqnRqYR6Tn
+         A4bXOUHBvqsHd+nATBe24Bow/r8cJPR2lSLDf+kUjrjvLSgTJcJ+U/5tGndqbsGkuq1N
+         lOlyPbksDBLI7E0OLo4AahTP46sfZVcpx59lexIGW1T/edUsFTVP/P07Xv7hZtLrA/Vx
+         gWaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781706663; x=1782311463;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qasGdUfjcGOfe+d3UxUQ7ny7NNPrRxm6R7kOWdfDKls=;
+        b=WxfRQlXouPE9GlStTorirXJMq5pQ/ZtqWRuhyfmONJVXMGT5CowGWv+mVm7szTKVHY
+         khUzR8lMiXsIO3V2a3CYOSiXBc+3q548dw0pFsjfuU28TfR+eOnLt9GaZla+0AwnNS2Z
+         FP716Pr5wPlqFMCtEed0tGkCAtpDOUWv7bF4EcR99vAnC0x8eTtum9L5NR7mBOBrs24K
+         K5y0soLVGP6dtuxxpmDSslShYdUw5KLRwdGyfHUegZ54Htr/Ze3PgoJBA9t3/alDoDV3
+         vhpFUaHxKFhlj5pvOaVib5u2YqviL+1zQOzccJfaA42xCRoI1aaFdNZOggnXh11oJtK5
+         UwNQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9QMH/lMXGRUOZ4YlZYSMBSpRzqZlbYdGo2rk4WpGzsIv5+2CKsfGpaBC2kNhjdY336isi2ZHcPjYQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwbiE5ttncPIgdItUg0h+Oy2zOI55nXiYxyD+H+g4zrV6sFS3fs
+	8uPzJ3Krs/Uxubr7F/4SrlGajlAgM7VM8lW8ozGRGE0Rv7U8VLByi4il7W0W9LKxxadBypsQd8U
+	0OnIzAsM0gSe9QTrX1IDDTF23hPLL7VJagRkBoV9GhpdMsxPXW6Tbc0MHuUYTUpI=
+X-Gm-Gg: AfdE7cnREQixM67VNCMpE3hRfAj2JOgex7OvhxXIH4PKVqhTTQteaI3m/fhml/DfHgZ
+	Mb3sUkd76YUVexxe5ZWcrA5rcKR/8Dn+BGBshG5PwsB0pjSvksvc4RmfLgCRa65SQypamiRL0h0
+	zYSTjhT8M0nknebLOLWlBNmZoYxBMMQgWH2w5C1fNQLjWXkp0LODJOPwbZekFXHHW8wF2iwRr5A
+	B6g7g5A/Qtvm1DkPLJRbUSM6Q704ni175APL8RFWDcpq8zdWawJTJFymC++o4Zyut+58Ukq4GTi
+	YcpbdLGyIcJjfJ7SVa8bhaI5gWz/od0F2yPpEoIoKX74/Q5g/ByWHnAIAhuaBD4SLiuYsAuV6fF
+	OMKat0R2nL7b80oWzsm64dPKS4p21gVwGRf6kZiVIcqt70a00qRFp95JdstxbxQ==
+X-Received: by 2002:a05:7301:3c0a:b0:304:5074:83b1 with SMTP id 5a478bee46e88-30bca07c512mr1043507eec.6.1781706662252;
+        Wed, 17 Jun 2026 07:31:02 -0700 (PDT)
+X-Received: by 2002:a05:7301:3c0a:b0:304:5074:83b1 with SMTP id 5a478bee46e88-30bca07c512mr1043476eec.6.1781706661368;
+        Wed, 17 Jun 2026 07:31:01 -0700 (PDT)
+Received: from hu-weiden-sha.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3081e91f878sm22962978eec.17.2026.06.17.07.30.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2026 07:31:00 -0700 (PDT)
+From: Wei Deng <wei.deng@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>
+Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_chezhou@quicinc.com,
+        cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com,
+        jinwang.li@oss.qualcomm.com, xiuzhuo.shang@oss.qualcomm.com,
+        mengshi.wu@oss.qualcomm.com
+Subject: [PATCH v2] power: sequencing: pcie-m2: Sort PCI device IDs in ascending order
+Date: Wed, 17 Jun 2026 20:00:55 +0530
+Message-Id: <20260617143055.820096-1-wei.deng@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PR3PR04MB7209:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7b552858-77be-4ce2-8cbc-08decc7795bd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|19092799006|7416014|376014|23010399003|366016|56012099006|11063799006|22082099003|18002099003|3023799007|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	T51onPkECqTJ9jU+6qBgmbreqzPakf6juB406zo3tK2b/n+USVUPLruHzkkS7f6Eoj6inGyxvHSECtWsiM44olU7HH3XgbdtXsql4v2iwPoXQJPhg18jD5M5tH65arjObKciaVIZ3TR4bW/MBWs22+JG2hfXXtmEwZd3lpr5uYFttNrY9SpqxtRQKXd06RsmgSQb5VdoJ8vd7HQ5S25iexgxklhu7ZqIlfHOnQFnmCHWINnwkaSjmgHhrLbFZ+hZ+rikYY4vMk6dd/JRP2YKeXi8UiXNil0ExP9kUQ5k1IgrT+OkWAV509f4SDCI4jLtM6iiJikdKp3aITFN033Ptae9KLQtx8TTWDqUpFmKZ71cqs0/663hIsk8Rkl/B0RU62QVAbeoiZHKiom7yvw7XMGaeIgSsQ81FEUWxUym77gULTf0iXfobrEzKtQ0VffUas0P7miiiRIdiAoPOJzwb1fmsBLNCgHvlLQc5v9QNirEverFNtW31LBtz5cUf6JVeznK0EYEikylLWPdu7n+ewGzTBOn0yzkDKF8oACgDGaaHmvJvYqmFu2qtb8zwJfJUFGi8MrkdNlBba5tJmUNWr9N4b8iC+FHmSDb18vATjKBHjOGq+yXPWDuPrjf6qtp/uoF92XbeltgrDiyoa2LDIr4nZ6NJLc1cWmaawAvCb3WePPk6rjahsvVwn+MleW+AeiBcbeuwZFk8MXsCfayJA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(7416014)(376014)(23010399003)(366016)(56012099006)(11063799006)(22082099003)(18002099003)(3023799007)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?pR8m+et1Lu8elYPgIoEPFLDoDnuiaYHWslO3169A4eQT6iawhRFiNqe9HZ7A?=
- =?us-ascii?Q?GAf79zRLT7Nr3pSvWCFIXs00qoEIUsBVv6NtQzQXtUMD2jMKqjTNSkcW1KqJ?=
- =?us-ascii?Q?PoH/tH9sDyHjFXF9rZ8NC0Xn6QTpLGcTs9Lq80XM06BNB5PGA+PuVsQo7Y+A?=
- =?us-ascii?Q?MIvsQ4OPNoDPEx+jLmEhQu0k4k1DhJx6haM4qWbJjoDezagT1ljMZP73V/Qg?=
- =?us-ascii?Q?AKDDx3qJWVOWOMyQM5n4/OGC+ElaXeME9Hzkxs91wI/4HvwTIcOzxMYKDeZt?=
- =?us-ascii?Q?COEXZgrw84KEwIErqZCSajm2/8GFeTpJzBpo5UzJJEoRhcCA8d7MF+wDa4fc?=
- =?us-ascii?Q?HJRz6go4WLf561hdewJQTDd4FmlayCO6pwj7bBwnbawKzIdQ5q/fcTSno8vg?=
- =?us-ascii?Q?JGL3+qneGLphg4nOH0JE0mNFjSntswV1sILNR3Fb6IZJrl6V+GJezSzWtHbg?=
- =?us-ascii?Q?6pxpvg+2w/Ps1mgajawJKbbJ2yXHvDLLzBiokcBHbU7WAgaY2srxqJMSajsL?=
- =?us-ascii?Q?c6Ij05+1vdRLmzPNshCGaY0pJlVKaXtnDLGwWnEiieb6dA2sBq0YMZWKnqIt?=
- =?us-ascii?Q?sW3ahv7jE1b69f5ii59tJHMpOIh0PBXU5B27ZGZQQagg49MJ55dWiO/Q2h3i?=
- =?us-ascii?Q?BrKz7KjX/VCSk87kCBb/U87Gchx05rgMmaVA+QJx62AadpHGljc+rWyrZKUc?=
- =?us-ascii?Q?1kD9wJAl+GpF5QpqBtW8bRrjh4Mw6TdojdTrdPr9AeMy4pfOBKxM3CGlxRTc?=
- =?us-ascii?Q?t2m2WREjar6VAC1tMNkxyqhthjNWajS89P5d6gRHI6bl4mY9EIAjN9TPnJRU?=
- =?us-ascii?Q?+aMUuJlzZcwY3JKPeAmlbcya36wT8twShgXENuriW9Nx5CerIX1bYVMQiXms?=
- =?us-ascii?Q?3NZls/gjntJMrDdWWPscu3HtScgfDgQ49MFCuEtzZRrVAc2jSfHAWgUEzDLu?=
- =?us-ascii?Q?M49VzXFTIsWKKk5TyT86byon/NMzxnW/asAVv4o4Al2LBoq+cgO1nnpR3/Bv?=
- =?us-ascii?Q?gK1CBATeZcTKV9doZ2aYIFO8iQWn5zi6BoqJCyPPXeDI8UWTF9ZdofPlPKb7?=
- =?us-ascii?Q?8yvPPU0Qb4ucGVwLHJKFdgpl3cbc4jJNLuVg76ShFfXSzBMmT71tEXjrEJxK?=
- =?us-ascii?Q?SeXqHwCkXzdNQ7OK/L4aD3x+R8sJWBgZRTKlfeY1qCMBSevIg2YZj19h7KIj?=
- =?us-ascii?Q?Jx2cz4nJWSyRYBPAOW4Bzi2ocxhjrieC8nsdjWvQO5iGrHooq/YWz2PtoVEi?=
- =?us-ascii?Q?+aFCu5hRS7h17cDB3Xjm3V0hwajuqGDb3ksSNrg/BZde5k5938rGs1EzuLNg?=
- =?us-ascii?Q?Fx0DOlQuBBUA29jb1sjEvSE13Cp+5UYmH4yWbmgiajMpiGJqM4+QnLPXQT56?=
- =?us-ascii?Q?TtLIlHXDqMYu14tIiBFvnY7nlD6RmRDcvcbRBLRJ6nXROiyXEdWGNFQdn6Sb?=
- =?us-ascii?Q?YXxb2I1eeXoLTv9S3YZeXm6ZYKoZAVrpvvTqP8oKCiKfxKGE5VtckVFcPDdx?=
- =?us-ascii?Q?BMhiPPILRLkwG9/VDXfrlsutEgVD/d5hoJwcW71x9gpHg2shbM/XlxVPI6eZ?=
- =?us-ascii?Q?s2szZyagRYRpyHN/LuVGx7lN8BMGjpcdxnru/Lgc77OuBuxOhW0GYQqq/poV?=
- =?us-ascii?Q?0mNdi7/Yx5IZhw6hWFf60Ao+YxsF/e3UbItmQdcPok5m6B+iPudJu5pw0TGK?=
- =?us-ascii?Q?e5pqUtmrUCt8ftH+ZRHqPn/zji94Lb/5M0+ZHVIwTYulY/wblCZhCG9ATLMb?=
- =?us-ascii?Q?5E8436avFCEEXehq+G8+VcPT3rfM0K5ejW7vG8FA2jJYf90gLJJl?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7b552858-77be-4ce2-8cbc-08decc7795bd
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 13:51:52.2196
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 19AADiOaLB3tB/X+2bq/nBBS8z2RzGQp1sE2h5iE35guwkV9BxMQs5L28FjHWPo1BTgZQCmsgjgD1e5M1Gh/k1LACmRuHWAjtmMIWu4SBcisMsqbAzPkZdPtmMA97tz9
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR04MB7209
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: GZTF0U4Pv_YIRqjF80l--69im9dWA0dv
+X-Authority-Analysis: v=2.4 cv=Mr1iLWae c=1 sm=1 tr=0 ts=6a32afa8 cx=c_pps
+ a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
+ a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=VwQbUJbxAAAA:8
+ a=EUspDBNiAAAA:8 a=EF50nfIsKRdRTP-bws8A:9 a=6Ab_bkdmUrQuMsNx7PHu:22
+X-Proofpoint-GUID: GZTF0U4Pv_YIRqjF80l--69im9dWA0dv
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE3MDEzOSBTYWx0ZWRfX1GNHcIFsK19N
+ hsnSezjrdfWT9Ao8PmU3Ci7VgqrFUJQNS8qwd2vkaeeIKAcn9sHRJZOuxC8HNneyKz1mYZ/SoBP
+ s2xAdBWTdbuyHJPG2ZqPBnv3GgMoqEo=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE3MDEzOSBTYWx0ZWRfXxiQIWoEJ8LnM
+ Uao11FWVMae8jdBtvCC9JAa3jFylO+GUAfUvB7T/Aa3FaGhUJqQL9YR2icKolOZ21GuFQrtTDwB
+ 6mBbGpHpWq6fQ/qveUkIxUWHrWwkQqGx1pwhW2gdMxYzCOILr/rgNVn5F9+k5sNwzpomxRpPJ9x
+ Lk66wwAIBMEtvkxnrqYO9/AJAWejwigfC2dJi44FQim+hFKOAioSqMaz5z9ghWlpSTyzmimBHkM
+ IepK4ojMr0QGK3Ssd5r5DmDImIBRTMiy1AipScz1SCiTiJm3HbuCZQI0rQ90RYvUz5JT2oCunDO
+ 5AckT1roum3jEGGYnfB566o2LXuptw9B4zvuCRjHO9LUAjbpaFikahS3zds//hx89nLPTYXG0lN
+ lR3a11EmgCMpu+oZHZFijUQsp5SR5oX6/OizqPgy5a9KW++0l0RfLOeJELlRmCDyqwsEZaoky9+
+ 3Ljto68QmMjU3hJT7jg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-17_02,2026-06-16_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 spamscore=0 phishscore=0 bulkscore=0 priorityscore=1501
+ malwarescore=0 lowpriorityscore=0 adultscore=0 suspectscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606170139
 
-On Wed, Jun 17, 2026 at 05:13:32PM +0530, Verma, Devendra wrote:
-> [You don't often get email from devverma@amd.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
->
-> Hi Koichiro
->
-> My first reply was auto-formatted as per the column limit but got
-> expanded after I sent it.
-> Re-sending the reply with correct formatting.
->
-> Please excuse for the spamming!
-> regards,
-> Devendra
->
-> On 17-Jun-26 08:47, Koichiro Den wrote:
-> > On Wed, Mar 18, 2026 at 12:34:03PM +0530, Devendra K Verma wrote:
-> > > AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
-> > > The current code does not have the mechanisms to enable the
-> > > DMA transactions using the non-LL mode. The following two cases
-> > > are added with this patch:
-> > > - For the AMD (Xilinx) only, when a valid physical base address of
-> > >    the device side DDR is not configured, then the IP can still be
-> > >    used in non-LL mode. For all the channels DMA transactions will
-> > >    be using the non-LL mode only. This, the default non-LL mode,
-> > >    is not applicable for Synopsys IP with the current code addition.
-> > >
-> > > - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
-> > >    and if user wants to use non-LL mode then user can do so via
-> > >    configuring the peripheral_config param of dma_slave_config.
-> > >
-> > > Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-> > > Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> > > ---
-> > > Changes in v15
-> > >     Rebased the branch
-> > >
-> > [snip]
-> > > +
-> > > +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
-> > > +{
-> > > +    struct dw_edma_chan *chan = chunk->chan;
-> > > +
-> > > +    if (chan->non_ll)
-> >
-> > Hi Devendra (cc: Frank),
-> >
-> > Sorry for dropping a comment now that this has already landed.
-> >
-> > I'm wondering about the lifetime of chan->non_ll. This patch lets a client
-> > select non-LL mode through dma_slave_config.peripheral_config for a transfer,
-> > but the state is stored on the channel.
-> >
-> > We use chan->non_ll in prep to choose bursts_max, then read it again later in
-> > dw_hdma_v0_core_start() to choose the LL vs non-LL start path. If the channel is
-> > reconfigured between prep and start, or before a later chunk is started from the
-> > interrupt path, couldn't we start a descriptor in a different mode from the one
-> > it was prepared for?
-> >
->
-> The mode is implemented with the intention that after prep, the
-> submitted descriptor shall completed with the chosen mode. So, yes the
-> mode is decided in the prep call and all the subsequent descriptors are
-> completed with the chosen mode unless it is overridden by another prep
-> call.
->
-> > (Note: Frank's not-yet-merged dma_prep_config v7 series [1] also looks at
-> > potential races around config+prep on the same channel from multiple process
-> > contexts, as I understand it. But this seems like a separate issue, since the
-> > state is read again at transfer start time.)
-> >
-> > Should non_ll be snapshotted into the descriptor/chunk, maybe as
-> > dw_edma_desc.non_ll, or is the rule that clients must not reconfigure the
-> > channel while anything is pending/running?
-> >
->
-> I am not aware of any such rule which specifies that modes can not be
-> mixed but it would not be a good idea to mix both. Let me give an
-> example, in the non-LL mode the channels *can* utilize the LL-regions
-> for data transfers. If for such a non-LL data transfer where LL-region
-> is used and intended by the user then changing the mode after setting up
-> the mode to another one can cause data corruption.
->
-> Eg:
-> Channel LL-region = ADDR
-> Mode set to non-LL -> DDR destination to ADDR to (ADDR + size)
-> First non-LL burst -> writes data to ADDR till size bytes.
-> Second burst configured for LL -> overwrites the data at ADDR with
-> descriptor information.
+Sort the entries in pwrseq_m2_pci_ids[] by device ID in ascending order:
+0x1103 (WCN6855) before 0x1107 (WCN7850).
 
-I don't think we need mix LL and no-LL, previously config suppose only do
-once before prepare and never change again.
+Fixes: 2abcfdd91e6a ("power: sequencing: pcie-m2: Add PCI ID 0x1103 for WCN6855 Bluetooth")
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Wei Deng <wei.deng@oss.qualcomm.com>
+---
+Changes v2:
+- Resend as standalone patch, not as a reply to a review comment.
+- Link to v1
+  https://lore.kernel.org/r/20260616025632.3697863-1-wei.deng@oss.qualcomm.com
 
-But recently there are more user case to config for each prep. After [1]
-merge, we can consider more. There should be no risk now if DMA consumer
-don't change it during prepare.
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Frank
+diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+index 94c3f4b7ee36..b5ed80d03953 100644
+--- a/drivers/power/sequencing/pwrseq-pcie-m2.c
++++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+@@ -186,10 +186,10 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
+ }
+ 
+ static const struct pci_device_id pwrseq_m2_pci_ids[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1103),
+ 	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
++	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+ 	{ } /* Sentinel */
+ };
+ 
+-- 
+2.34.1
 
->
-> This one causes the data corruption for the first burst
->
->
-> > Or was this already discussed, and there is some implicit restriction that
-> > clients must not mix LL and temporary non-LL requests from multiple contexts on
-> > the same channel?
-> >
-> > [1] https://lore.kernel.org/dmaengine/20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com/
-> >
-> > Thanks,
-> > Koichiro
-> >
-> > > +            dw_hdma_v0_core_non_ll_start(chunk);
-> > > +    else
-> > > +            dw_hdma_v0_core_ll_start(chunk, first);
-> > > +}
-> > > +
-> > >   static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
-> > >   {
-> > >      struct dw_edma *dw = chan->dw;
-> > > diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > index eab5fd7177e5..7759ba9b4850 100644
-> > > --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > @@ -12,6 +12,7 @@
-> > >   #include <linux/dmaengine.h>
-> > >
-> > >   #define HDMA_V0_MAX_NR_CH                  8
-> > > +#define HDMA_V0_CH_EN                               BIT(0)
-> > >   #define HDMA_V0_LOCAL_ABORT_INT_EN         BIT(6)
-> > >   #define HDMA_V0_REMOTE_ABORT_INT_EN                BIT(5)
-> > >   #define HDMA_V0_LOCAL_STOP_INT_EN          BIT(4)
-> > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> > > index 270b5458aecf..61d6064fcfed 100644
-> > > --- a/include/linux/dma/edma.h
-> > > +++ b/include/linux/dma/edma.h
-> > > @@ -97,6 +97,7 @@ struct dw_edma_chip {
-> > >      enum dw_edma_map_format mf;
-> > >
-> > >      struct dw_edma          *dw;
-> > > +    bool                    cfg_non_ll;
-> > >   };
-> > >
-> > >   /* Export to the platform drivers */
-> > > --
-> > > 2.43.0
-> > >
->
