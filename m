@@ -1,67 +1,83 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012041.outbound.protection.outlook.com [52.101.48.41])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012019.outbound.protection.outlook.com [40.107.200.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C70139891E;
-	Wed, 17 Jun 2026 11:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B733EA955;
+	Wed, 17 Jun 2026 12:16:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.19
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781696625; cv=fail; b=ox7bgvs/Uc0ZFb/LSAoCox7FURQ/io1sfctPOthiTHlhGlZ1JRd0enBldUbuuSMRr1xcH83VPeRu22yASD7AlkfmBnN1iK7IvaAPJ2ozveuRBpp2zRd2isjWVTl8rVcYi58Szo+DNy/rYN8iBIf5EmKxh8/3f6BOcB8DIzrkqJA=
+	t=1781698584; cv=fail; b=IcxSYHKBZNYNxZtj9g8ye0K49Z0/rHMj3YJdRkBBrolFQcTW526U6HrqpVS94LIgRT9csyTpR9z4MOdnlG9hhUQeKAysOFzmXKiiF3L34nPOlvkex9Ga2VbD5scUMD+nHPgwLChQ6qcjRwBj4oufQxuy5/Zy1kUPaZPcq82igZg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781696625; c=relaxed/simple;
-	bh=HvEE2IgvWrHGAZbNOJD4+8eCqEx2XdmgNNmY6eNMbTc=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=jHBT/x2gBvGkRfgarxqQvu4nSxLbEV9N4dl0Uo1wT6DmB/SStwYKlbgm1HHo2tChLwF5jlOmnikxSmIH175xlM+nCIK8n7dcCyvRooksS13d7+EGqZGz9QEHWEkk04J0Cqa/EtELl9WbuhzccWL8H3sC1ZhQatKoU7VxSUnXkxI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Tun7JeIz; arc=fail smtp.client-ip=52.101.48.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1781698584; c=relaxed/simple;
+	bh=7r2DuXp0vIkjF/nkWE/fZAu0gYhYWA48rUaHGNR4XsA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=gb1GBDlq7/4OK8QnGvviTcgM2NsiKmZXYco/7VsBKEYYF4iQ/ey+GuponGxxj5YtyDz8lWK9KEwGrsDs+f/sS8gPgiXOhdd2SK3gqimy6obWjX+Un+3V/esNwN5eopyGVqubsSo/XnhBpAgSn549v7Lm8b44RvaKzgiEUfHw44E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Cccn41A/; arc=fail smtp.client-ip=40.107.200.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Tun7JeIz"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Cccn41A/"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fd4n05B/FFbM+0H+cNouARWhwe+4mGaRWd9KxAGyCQqeYs9xf8U3VHk+iPNpEdYi3RV5EVCak1mgB9s8BGQUE5EUg3cNMAzfmEXwZ+9wXnxYx5/e/kJdhsYUC1S7Vzggo11WSUj7hZmFG4l+oFTkHbNrwKd1aOj26MSBe/o6TavUwD+rT+k+fVKyr2nN9tCrcQltE3aAEtPkoBSFelroTjxeQM5/5fThiP0ZSJETjlqk+vW3EITIQMhbLtzguPffakKYJiCJwHI8Gjayd974YaPdJmXmSeTX1uYi+uVQ69YH55CAqyLQtRILZUu/zCQOXfECfwhKE0dA02rgxO5Mrg==
+ b=oBdN7Qz7G9G2MU2A+YuJV6qSAlTQI+estymGzSiY5caV/+U2fgtjhjXgfdVxLXy24mhBrsyd6PhL/gCrs8gQJu4fL//cNifxMywJ/rzpzDZKkTpiwmpxWhC4NROXipYKqk/vVpXiOv5HQf0uBbkGAFkJ7u1JzA78UMg6c1r+4arS7T/gnoaiNi8xIWv17mcdsTYzyrDJucMMOQbtOpLiJr5k4+XQJYITQzFmO71JQDqAu/b7nhtmtAynw1/EzcAKfQrVzdqnqkpBRCxdXMHiyh8HS90jhpKIFl6l9XsHgYdj2rH3mTIy6wksGyHHlocw4NfqdUSl5NSp51T7qD1a+g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yTWoRBkggG4lnIHT7Fs31N+4CiUhiE9U000PmEtCKiM=;
- b=Pr64pZ9vfgCEzHueLePqRX1+gHDS7Byxi9IUjXmWO4OSvqH+GQq1M4abNiMuU8PZHnDut4oOVTf46SvBqswUytDVBeVIbSDKowc7xPQzguinYMiAYsVmqCAIpnz276nJal+ahRuLN2gjbe7/mzbfY9BNbRcUXfclLw1+XDA5HrAnoa/ocPVZA/ws/ID3AQowqjUrQbkq3iUc0FGvqUQwR+sKVWlaR6qSNoCbHT9MJHv0txaVr79GBJQhRNysAR3HcvkJ9Vvw1Qh3RjqpytdzRxzLE3ZKuPJpS1esD8IF9OrxYK2Ocr8OSPSR/5Ng8XljlORfYdHYMFK67RJs51rGMA==
+ bh=2Irs2SQHZxWSQQrtSmYRJePJwmC1IGBLG1D8rkXpbKk=;
+ b=Y+693ghSKMK9FRzpGZ+2A6uHOgCJZWawTanjTcApKoFJhQLh5+Ozic6L6/a7UXPkAOpyr9KfAnfB/v6XRpg7RXQPTfyBUh/gN2TUpdmSMp27o9BEVXK9Ps2m5Vtkrin4V+kyLI9RYhd/hm3ViQ+JiM3L/R71zt/368uM97GmzKS1dAlJdFqyT3xIQlIjH2RNCvQ9jXHuPylFRVrWodzadpEOXa346Hk6312SqYyd2RoaTE3FQ0LB2H4Re6jqiHJBhMyG+1PdpnmgOk/wBRchNkBQCVaBap3vAwEBxKxbYGLijlRfQbmHE8UFWV3L5nGCICZlRTTbcwtflQPuTSTl6A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yTWoRBkggG4lnIHT7Fs31N+4CiUhiE9U000PmEtCKiM=;
- b=Tun7JeIzDn+8LzHJpMMlsEpf8XSl1OgNr1r3jP3DaGLWwpOpdGT37ehGgV49OFae2vqWBm6gF09oVpvl2xTyLRD5p8GFQM49Yh+PCUK/hRet8aZzXxhI1Qf4Xo3aBIy9j61n5rvvRHsjKL/Rn0hINxkzeaZ+FtNxQU7Em3KxPZI=
+ bh=2Irs2SQHZxWSQQrtSmYRJePJwmC1IGBLG1D8rkXpbKk=;
+ b=Cccn41A/wmP1LGnAwHtidvNQA3Qv0rSwbM8/+81vswYfIlBcDkj5VlwaY7aMY2z8/klDQ86fd1uvAiKxLnuqmm8afTQWfqctSbOQYyA2PNzEtGd1Kqm+tw0eSSso76oSq8m2oFL3EF3I245BLaooRun1NDauA1mptUqYGLYDbhT3pU9TyZMny9bbt63Wq96q/3mW6KOKVPZXkBB3/rmP1evPb2mj2piVCgjvGfJNvTcX3OMxMqxmgctFblK2PJh4uErMoomm+AERY3Fmgtbi1qKch02q8g8nlyMfvHAGKNTXqbkya+S5ZjJTkUfBN6sowHbgkbR3bnypNFdoEAsi6Q==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BL4PR12MB9482.namprd12.prod.outlook.com (2603:10b6:208:58d::19)
- by SA1PR12MB5660.namprd12.prod.outlook.com (2603:10b6:806:238::15) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by MW3PR12MB4476.namprd12.prod.outlook.com (2603:10b6:303:2d::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Wed, 17 Jun
- 2026 11:43:39 +0000
-Received: from BL4PR12MB9482.namprd12.prod.outlook.com
- ([fe80::e4cf:3801:9631:2965]) by BL4PR12MB9482.namprd12.prod.outlook.com
- ([fe80::e4cf:3801:9631:2965%4]) with mapi id 15.21.0139.009; Wed, 17 Jun 2026
- 11:43:39 +0000
-Message-ID: <4ffb23c5-de2e-44f6-8d15-0f9ac563b609@amd.com>
-Date: Wed, 17 Jun 2026 17:13:32 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 2/2] dmaengine: dw-edma: Add non-LL mode
-To: Koichiro Den <den@valinux.co.jp>,
- Devendra K Verma <devendra.verma@amd.com>
-Cc: Frank.Li@kernel.org, bhelgaas@google.com, mani@kernel.org,
- vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, michal.simek@amd.com,
- "Verma, Devendra" <Devendra.Verma@amd.com>
-References: <20260318070403.1634706-1-devendra.verma@amd.com>
- <20260318070403.1634706-3-devendra.verma@amd.com>
- <zhpsuwq5agslelgebbtvrg4uks4xweov7ywhmkxdngq7lzajip@e4umiii6kzko>
-Content-Language: en-US
-From: "Verma, Devendra" <devverma@amd.com>
-In-Reply-To: <zhpsuwq5agslelgebbtvrg4uks4xweov7ywhmkxdngq7lzajip@e4umiii6kzko>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5P287CA0286.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:221::9) To BL4PR12MB9482.namprd12.prod.outlook.com
- (2603:10b6:208:58d::19)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.14; Wed, 17 Jun
+ 2026 12:16:17 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0113.015; Wed, 17 Jun 2026
+ 12:16:17 +0000
+Date: Wed, 17 Jun 2026 09:16:15 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Pranjal Shrivastava <praan@google.com>, Matt Evans <matt@ozlabs.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>, Alex Mastro <amastro@fb.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
+Message-ID: <20260617121615.GC3577711@nvidia.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-7-matt@ozlabs.org>
+ <aixgZQiBQKgS7yIM@google.com>
+ <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+ <ajGbRE3WWJxNxcrg@google.com>
+ <BYAPR11MB3687AE280241C9E00B46FCF98CE42@BYAPR11MB3687.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BYAPR11MB3687AE280241C9E00B46FCF98CE42@BYAPR11MB3687.namprd11.prod.outlook.com>
+X-ClientProxiedBy: BLAPR05CA0025.namprd05.prod.outlook.com
+ (2603:10b6:208:335::6) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,199 +85,87 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL4PR12MB9482:EE_|SA1PR12MB5660:EE_
-X-MS-Office365-Filtering-Correlation-Id: 127b3588-f095-454e-2fc5-08decc65ac6f
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|MW3PR12MB4476:EE_
+X-MS-Office365-Filtering-Correlation-Id: 012ef4f2-9a82-4193-f7c3-08decc6a3b6b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|4143699003|56012099006|11063799006|18002099003|22082099003|3023799007;
+	BCL:0;ARA:13230040|23010399003|1800799024|7416014|376014|366016|22082099003|18002099003|4143699003|11063799006|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	jTmSjVKbqcDuiqJBps6neu7TEeiPth3kleYsDlX9M1nECZ//pYC4v2irkgcQqZ3qmK3vNaDI4UcYjPyuSKaqny3P5m30VxQbcNDlzHbpcCwC0tRt5oPOx33NQIfEt++IULOx1pQgS50S3dCai1vK661Mqxm1JArfMcbIbYt9A+my3Rs7mYjzJIueJ3llu7xwLjiqJ+pJ/+Y018qtRcsj/jghQ4eKQaxEry5cLI+yWMgr7AbOt8C4xwJiQTpco8Ofec59jvMWliFGEDdfIPAoqedHLYhirBNYKwSIG1DSBte0BT8LX7Q50MgHxj1rxvSk5o05i+DfY3Yh97b7riXeu5qoxQqVtCp7VP1pd1Aj3S2XyVJpGW3KAfFlOUyZstZl3mxw1Ng9Zuw528uWloKsr3CNThrvZrg/EnQg2xg4ODVEALb6BocADS10fo7ktjetN4929ptLRtosRgLp6RS7DwF5C9FjdIVpo3MkAJNfi1JK/L6ANbTZQAFzN+CtGPte19LQfZ4UYgC4Vn2hjft7RslmIPJ2Fdl3HUL/lETdNNYyt3GgJYJRv742lPrYQ/pTvs2br9SAbxYZUwVgOvXOBrsPlZveuGse7xtPST+j8mDQv4ZFqXfYkmwzeDbg/vY2hwJmXNi0DZh5lQueIBrip+IKytpwB1LWxkTboRG2mzlC0balMGcsOC3rWmAbV0XNxRQRxsyeu1GXSXA5naPVdw==
+	pFm45ExgDSSwDtt+IR3JRa0rR+CtYrGtejn/pR4Jvid6FPt49/Ndf6i6+s7KRRA29IoeRT7cmRsnu11lluyQZpWl3LjX6I9aFVFvyUOBPihaXVbW1xlRV7yUs54Rkwvf3Syi2bcfxyquTa791FKucxCbIZDAxqHuCyYV533B61i+lsST+LVgamVO8rwnXlHeV5xowwPs6hbUfeJx76oDl1nf9j2DZMyNiu4PZl/ckmEf5o6/V+NeGVFTMkHXjOZxk6G4Ic/I7WgwdvkdYlkYdXh4szYcjbD6AIZOZTn7q78Na6cBQ+DIb3lOHD7dSfo9w7GjHKKveAe0K2qYS8AA1k1ZTy7yE7qI7WhjMNynR+dpuprstTfF/Ras2KjRu96+hmORGay6gDqd1kKpE3/LSPY4x42uKEnnE2pqmB8C8UEv12wWKD4rn9PYubuw/xZy7Us48e9SRy0fRgB/48ws5DtdPJZeNv38+WrwnfiFqpl4L9Ir6cof1NxY/XLkP9e+NbFTcD9xvlng+wJ22lcAKYHSBWx/0v+M1/ArNBLUxUzpzG+W8MNHhb3r7MkW+f0ASJQXZaE2Gz3Nit11edEegg1MMm6wQbUjvUOGHD/Ui/RdoF9YcgpMcZ72hItVE2Ebso2ZZaD4UJZONo1bli735QJLS8W5JzN+hzr2OhvV2/YuKspZSUoH2TNj4LaWGgb0
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL4PR12MB9482.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(4143699003)(56012099006)(11063799006)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(376014)(366016)(22082099003)(18002099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZllxOWJRQ0pXS1ZyNEt0ZXpaaEpvTWVqOFk0M2ZDU0lwbHN2VnIveXpETHVZ?=
- =?utf-8?B?akNQOGhXdWw5MVdLZU0zM0QzTzJ4dUZrR1BFOUpPZlBhczVXbmVxdHNNRERQ?=
- =?utf-8?B?WEtXTHdGOHlib1g2ZTVPaDVGVndvMzJ1L050amNFY1gzMFFibmxVdzAvK1Br?=
- =?utf-8?B?bEhTYm05TkIxK1Nhcmp5bVlZOUNtOWRod2dCbm5GcTJFKzFweWJsVU9WRWlt?=
- =?utf-8?B?djRiTnFvUnRocURUcnFNZ3dDb3Jpc3hKejd5N3RtYlBxQS8yZjAzT0M3UDFP?=
- =?utf-8?B?cnE4UTJwd1N2Yk9LRi9LSEl0cEx5UVViNGxLQTU5RUNMcVpQZnZoODUwVjdC?=
- =?utf-8?B?bEhZVFF2VjhsQldvMjlySHIwN29GRi9MVVRRc0tFdGYvLzN0Vk5pdjNVbFp0?=
- =?utf-8?B?MThkWkRoR1pXSlUrc2ZVczhnSm9uZE5FbnZvRG0wd1NSbW9abWpON0szczJh?=
- =?utf-8?B?VTVFZDNvbTFHWGVobzI2emJIMnR6Y2JadTkwWkJXY2NhNkNqQmZhMXE5ZVZL?=
- =?utf-8?B?TUxETVpCVzc3TFJrYVFiQ0taTDlVVk5nQUtDTkhlalVPTFo2VXhqL0lnQWlx?=
- =?utf-8?B?bzlweExoSTNCRyszL0l5OWozNUVsVStBUDYrVVdmcityYnZKaWtlcTBoRnRC?=
- =?utf-8?B?NFEvUlJuRVdOYUhtQzhiQlNGei9GcmlEMWRiL2NTZXc2MERFYkdWRnZ5ZTh3?=
- =?utf-8?B?cDlOdlZRMWR6UjZIeUI3MzA0UHBXZVRYZTFFWXhJcHpxVkZyaEZ0T3IycVZu?=
- =?utf-8?B?bUZZM3ZrMjdYWEozRHZreDQ3QVhETXhFT2ZIZy9oK2JZN2hnczQ3S2RvK1o0?=
- =?utf-8?B?QUFOanRUOXQ2c0hPU3gvSzQwSDhCUk5KbVFCM0d4ZkVETGd6b0k2Z01aSCtD?=
- =?utf-8?B?N0FYNFpIQjY1SitocDdmQ3ZzNzg1SGxCSVIvNm9pQUJ2L0xMZWhDc1pkREFt?=
- =?utf-8?B?K0J3UWFYRnJhTVREUExPTnc3dEFIczdwdEJuekEzK0tsaXJxVHNWOXBYaFNO?=
- =?utf-8?B?K1Vzaks1N2M5c043NTcwMmNyRUNQYXlMUkdqbEZhQ3kwT1lxT3RHbVVnR1ox?=
- =?utf-8?B?VXBMNHlzaG9HbVQ2eWhVb29yQjJndUVmR0FYZFNWNUFxc21xY0M3TFlYYm10?=
- =?utf-8?B?a0E3eURFZmhHWlRFU3ZzR0xTVDJkc09GdmJ2SzRyZnM0SllEajVBL3F1Q3JM?=
- =?utf-8?B?UHZwZ1doSXhxc2hsOWR1K250MWVGdktQdm1zVHBRT01xeHcyaS9oNmhCU05a?=
- =?utf-8?B?ZEczZkZZamU0a2FPQnhHenNVMlZRajRXY25KZjF3MUdXVm5WTUlYMWJLMU9a?=
- =?utf-8?B?Z3dRZ2pJOHFyWnZXRFFKd0RSVGliWHo2bjE4K2VKdm5VdjBhNWVHait6NUZW?=
- =?utf-8?B?bzdnZVZjM1Y5NXY4VGREVkhURklPSHAxVkhTM2M4K0QxNGozQXhXV1ZrTVlE?=
- =?utf-8?B?dTBVeWJjUzN0WnoxTVpzREduY0syR3RPdTRZMzU1WDRNVG5ab1MycFgydCtZ?=
- =?utf-8?B?WmNuVnJVamhlUDQ0Z0RjSzJhK25tdW0xZlFMVXkxQ0NSVU5ZM0o0aDB2bFN0?=
- =?utf-8?B?SUVaRnExWUdGRTVFc0pWbitnSUFsb0FvNXlGTnVyVFRGcWlqNHNIc2VqeEJw?=
- =?utf-8?B?VFowOTM1WkNVc0lPTEZTN2dZSDFzd1VXYjc0ZmtSUG5HNFNpeTE2c1YrdkhX?=
- =?utf-8?B?VG1ucmhkWEFTNTRudEwyVncxYk1yVWI4YWtyY2xDQlpBdGZxa2lyOGdpNnhy?=
- =?utf-8?B?Q2pZK0ZpL1BzVE92YU5mc0ZMSXIzRm5DdXhTTW9LN3Qya20ycCtOLzZHcFN1?=
- =?utf-8?B?THRNaTJJL0lIdkNBdEhnVE5JdmJwQlI1YTAyeTNyd3dQd2RvT0ZxQmVSL0pK?=
- =?utf-8?B?NkR6THMyQWlDZ2JvTHZRY1U1YWZPd0c3Z21IbkwrSERnSlhmMFBBcHg5N2pR?=
- =?utf-8?B?UnBpYk5GVjB3RmpqSkpabS9xVnRRa2s5ZWxsSnFoU1A1bWpaUXpMbzZjRnds?=
- =?utf-8?B?NWR2S01YTWljeVNlKzJHbzZVTndBWitaZ2c5bk5hRlNYUW1HZEJLTnBXYjdY?=
- =?utf-8?B?REhFT2o2QWZPQmJhcjJaZkZmQXRxOWY4dHVSaXZDVEo0MksySHYrQ3loMC96?=
- =?utf-8?B?UE4vYWFXbmNWYjYySUVISjhKSE1QY1NaVWUwdno1bVpKNm9pMTNKeFVwdEpX?=
- =?utf-8?B?QmdmTmh6UmxXSVUxVVNZQ2JPZHMzUWE5cmJUQkxJbHEyY3VhRnJ6eHBiejdQ?=
- =?utf-8?B?ZHdpN0xLdStlUmJtdkRSajJWSEFZOGYwRmJXOThIMlNwWjhDZ0dTSWd6c1VT?=
- =?utf-8?B?U0V4TzFkZXU0ZnFhOXk3RUxCZGk2Q2NnaWhBczQxdTVYcG5LUFh1QT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 127b3588-f095-454e-2fc5-08decc65ac6f
-X-MS-Exchange-CrossTenant-AuthSource: BL4PR12MB9482.namprd12.prod.outlook.com
+	=?us-ascii?Q?r6TD6D84Fw03ZmNcgRwqmwmP5lMSiYS42bHLyJIGuT1Nr9kirFCCZG1V+Se7?=
+ =?us-ascii?Q?LAtqoIz1jI/gvKlQz+W49vw5WaIJdDWPxTma309Akz2dGZZwNcB/ZqLuCsHv?=
+ =?us-ascii?Q?2bHhwBBmlPISAziUws9TgUlluTz9NVkfQ+mThZL4PwEcFUzFrDXmbBP1jtcm?=
+ =?us-ascii?Q?km0xgWkxeWkzqFlh0Q6sBSp3r4VWn4E8GXnYQfsk/EtHb74I9qELrY7ePqa3?=
+ =?us-ascii?Q?KmlE/VTG/IQ6U7oIAD9KbTiuDF8vbWkhCxa9Pq8Bp65J6QXBPh5awpx3UUjI?=
+ =?us-ascii?Q?ai7/vIrVKGC49WNUbOvxP/Gq1up5wK8YmpFzNa6LO8mO/7dR1Y6uuJZhvWWs?=
+ =?us-ascii?Q?qW5RxuZgv+8kYeHHtySEKJwPnYz4KWODUP0w8pzBJiAp3vNbJJCOE5uuYLNG?=
+ =?us-ascii?Q?nk22lm/3URKqQmGYtejRka9drBV2m9yw7GJCYRKmVWcLmFdqH+FqkSsmr91x?=
+ =?us-ascii?Q?nPIUxShaXv4AMEDn1pEdpITZD/4E8AWtQFTVC9X0Hz5dGpg+kkWiDE3Gz9Nj?=
+ =?us-ascii?Q?BfrMTdFwR6H7VWF36NmgKZsYE9C4LXi+7zVoo9RX/UiWrleDHAQ2olbih8iQ?=
+ =?us-ascii?Q?fjkEs9ZezEvRy8SOB5ychc41zUZPuJ/4sPDQVbv8+16OWOAbVBTtZssUt3jm?=
+ =?us-ascii?Q?UtIrNOgUXBiTrSvPrCOZ/lkBfkWN4PplN8tw795JnqcWfRvvSldLOIkUphfb?=
+ =?us-ascii?Q?amhiVwPOz4GpnRHZUezo4/2SSRu0xopNKBXUgbBOeFw3XBMSPP7qXEkM4hq8?=
+ =?us-ascii?Q?8fyUC6xxgg47MhQlC1Qv57kxClipA0gSR0xk68kxOvU0S/gTSxiVWeTK4Xs7?=
+ =?us-ascii?Q?PwKbsLXC91H0CfclIlnCJs2nrwheAHxQtmOI2qVsvUJyVIuVabNtK4UlVPxg?=
+ =?us-ascii?Q?IptSOIWhOd6qzAJNT35d1wUQKdXCT3hchdkucel5Gg5wXEzflm153n8OLaMH?=
+ =?us-ascii?Q?Y1Mszk9D2PpuAE+qUaS8u4hkJ9hROpJnVH2u/wOB6Bg0BNziKHxqXImdcNP4?=
+ =?us-ascii?Q?ieYoBOcx5fq835SuEKOMa8NIhpSdB9yaW31aLTG1phQCRDdrWZ4oId0xNTx8?=
+ =?us-ascii?Q?k8334aQTr+itNq7PSvOftYS8v92MpnUKT0yRNxp6bJIQLWYfSsnZjeoa6EtW?=
+ =?us-ascii?Q?DppIxBIMSVbpJsFo4AAxKZvxMdnVI0fA/t2ygE84FSrQtnsgjqPvqSYXSBbK?=
+ =?us-ascii?Q?LMz7LSko6QHmivHsnhLYb5w/80I1vpiOWe9c8sTSeyBhIV8rdoa972Rkd2dZ?=
+ =?us-ascii?Q?+EANK8aBhQgHMF+iJ034+izfWxw8nvj+TNnnoJMXLEiyeGDteTQn5E8NwNL4?=
+ =?us-ascii?Q?91aK0DZz0DdBKHI7Ie7eG2zcmGf7pJ0+yjhrzToU1o/7a5wMnK1An1wb+Tzn?=
+ =?us-ascii?Q?yMjC0+pChhwzE2jiXgRSzMuLO7tD0ZapCc79JsT+k0uanxnzKxWSUgxwCnTd?=
+ =?us-ascii?Q?YXF1UOPOiFs4gYViG6iwBY8R8/TRz5zfTUx5wAAVX06RCfwxaUBi3LnnthzX?=
+ =?us-ascii?Q?FDOZHZ0UdjMuuDieFLllIpJDPdb3SvWTXkyWs/hwQi8qNoXTlNpXRKKftCBH?=
+ =?us-ascii?Q?7kzWlwr0RbXRloNgBU6DM84YLaovpFcyQnYubt5Z7s+mW9e7mihdsEjuGYFU?=
+ =?us-ascii?Q?TTJ4lBcRvbvS7O73XLmpN67HG3EAPMEM1AldyW12/gXnbiVQH0pukq1KbEPx?=
+ =?us-ascii?Q?+3NySW0Ee+YrlwppHK/ncPWVBGTKiV1L783EQUZkqlA9kE8Y?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 012ef4f2-9a82-4193-f7c3-08decc6a3b6b
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 11:43:39.1468
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 12:16:17.0473
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7m1wH+GPEPN+SD7qgAt9N7B5vQdzxJZsglmMLPA1G03jEn0T8IPgxtPj6RY7TCF9SPe1nPvH/TyRJArMV663gA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB5660
+X-MS-Exchange-CrossTenant-UserPrincipalName: Z9f8BZQk/aK8ABhOfE7tO8ZhLhcdYRIt+XsCuQybshxQ69jXLvg08e20r9+5O1nm
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4476
 
-Hi Koichiro
+On Wed, Jun 17, 2026 at 06:22:59AM +0000, Tian, Kevin wrote:
+> > > > I'm wondering if this change in behavior is correct?
+> > > > BEFORE this patch the sequence was:
+> > > >
+> > > > 1. zap vma mappings
+> > > > 2. Enter D0
+> > > >
+> > > > After this patch the sequence becomes
+> > > >
+> > > > 1. Take the lock
+> > > > 2. Enter D0
+> > > > 3. zap vma mappings
+> > > >
+> > > > My worry is if user-space accesses a BAR *during* the transition to D0,
+> > > > it could crash since the mappings still exist during the transition?
+> > >
+> > > not 'crash' as you also noted later with all Fs on read and dropped writes.
+> > 
+> > Ack, "crash" is definitely a strong word, I just meant that the
+> > user-space program isn't expecting to see all Fs today. Since today any
+> > access during reset is faulted, however with this all apps may have to
+> > lookout for all Fs during a read. Could this change cause existing apps
+> > to crash?
 
-My first reply was auto-formatted as per the column limit but got
-expanded after I sent it.
-Re-sending the reply with correct formatting.
+I don't think that order should be changed, you might get an AER on
+access in D0 too..
 
-Please excuse for the spamming!
-regards,
-Devendra
+The purpose of all this zappery is to only allow access while the
+device is fully operating normally.
 
-On 17-Jun-26 08:47, Koichiro Den wrote:
-> On Wed, Mar 18, 2026 at 12:34:03PM +0530, Devendra K Verma wrote:
->> AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
->> The current code does not have the mechanisms to enable the
->> DMA transactions using the non-LL mode. The following two cases
->> are added with this patch:
->> - For the AMD (Xilinx) only, when a valid physical base address of
->>    the device side DDR is not configured, then the IP can still be
->>    used in non-LL mode. For all the channels DMA transactions will
->>    be using the non-LL mode only. This, the default non-LL mode,
->>    is not applicable for Synopsys IP with the current code addition.
->>
->> - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
->>    and if user wants to use non-LL mode then user can do so via
->>    configuring the peripheral_config param of dma_slave_config.
->>
->> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
->> Reviewed-by: Frank Li <Frank.Li@nxp.com>
->> ---
->> Changes in v15
->>     Rebased the branch
->>
-> [snip]
->> +
->> +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
->> +{
->> +	struct dw_edma_chan *chan = chunk->chan;
->> +
->> +	if (chan->non_ll)
-> 
-> Hi Devendra (cc: Frank),
-> 
-> Sorry for dropping a comment now that this has already landed.
-> 
-> I'm wondering about the lifetime of chan->non_ll. This patch lets a client
-> select non-LL mode through dma_slave_config.peripheral_config for a transfer,
-> but the state is stored on the channel.
-> 
-> We use chan->non_ll in prep to choose bursts_max, then read it again later in
-> dw_hdma_v0_core_start() to choose the LL vs non-LL start path. If the channel is
-> reconfigured between prep and start, or before a later chunk is started from the
-> interrupt path, couldn't we start a descriptor in a different mode from the one
-> it was prepared for?
-> 
-
-The mode is implemented with the intention that after prep, the
-submitted descriptor shall completed with the chosen mode. So, yes the
-mode is decided in the prep call and all the subsequent descriptors are
-completed with the chosen mode unless it is overridden by another prep
-call.
-
-> (Note: Frank's not-yet-merged dma_prep_config v7 series [1] also looks at
-> potential races around config+prep on the same channel from multiple process
-> contexts, as I understand it. But this seems like a separate issue, since the
-> state is read again at transfer start time.)
-> 
-> Should non_ll be snapshotted into the descriptor/chunk, maybe as
-> dw_edma_desc.non_ll, or is the rule that clients must not reconfigure the
-> channel while anything is pending/running?
-> 
-
-I am not aware of any such rule which specifies that modes can not be
-mixed but it would not be a good idea to mix both. Let me give an
-example, in the non-LL mode the channels *can* utilize the LL-regions
-for data transfers. If for such a non-LL data transfer where LL-region
-is used and intended by the user then changing the mode after setting up
-the mode to another one can cause data corruption.
-
-Eg:
-Channel LL-region = ADDR
-Mode set to non-LL -> DDR destination to ADDR to (ADDR + size)
-First non-LL burst -> writes data to ADDR till size bytes.
-Second burst configured for LL -> overwrites the data at ADDR with
-descriptor information.
-
-This one causes the data corruption for the first burst
-
-
-> Or was this already discussed, and there is some implicit restriction that
-> clients must not mix LL and temporary non-LL requests from multiple contexts on
-> the same channel?
-> 
-> [1] https://lore.kernel.org/dmaengine/20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com/
-> 
-> Thanks,
-> Koichiro
-> 
->> +		dw_hdma_v0_core_non_ll_start(chunk);
->> +	else
->> +		dw_hdma_v0_core_ll_start(chunk, first);
->> +}
->> +
->>   static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
->>   {
->>   	struct dw_edma *dw = chan->dw;
->> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
->> index eab5fd7177e5..7759ba9b4850 100644
->> --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
->> +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
->> @@ -12,6 +12,7 @@
->>   #include <linux/dmaengine.h>
->>   
->>   #define HDMA_V0_MAX_NR_CH			8
->> +#define HDMA_V0_CH_EN				BIT(0)
->>   #define HDMA_V0_LOCAL_ABORT_INT_EN		BIT(6)
->>   #define HDMA_V0_REMOTE_ABORT_INT_EN		BIT(5)
->>   #define HDMA_V0_LOCAL_STOP_INT_EN		BIT(4)
->> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
->> index 270b5458aecf..61d6064fcfed 100644
->> --- a/include/linux/dma/edma.h
->> +++ b/include/linux/dma/edma.h
->> @@ -97,6 +97,7 @@ struct dw_edma_chip {
->>   	enum dw_edma_map_format	mf;
->>   
->>   	struct dw_edma		*dw;
->> +	bool			cfg_non_ll;
->>   };
->>   
->>   /* Export to the platform drivers */
->> -- 
->> 2.43.0
->>
-
+Jason
