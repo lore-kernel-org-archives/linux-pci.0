@@ -1,108 +1,138 @@
-Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com [209.85.221.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FC73B9617
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 07:01:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7C73B9D96
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 07:09:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781679706; cv=none; b=AhcWNO6JMALhyNPLe1LkYOos7FP3aQKYxtKQS2YFs1zPeR14Cx5oI7Y4s1QLHVwVvgA2LoPjsx5xV5Gsr55PwUI3jX08xzI6/Tg3bNeBOvZ2R6FQT2pBtNguJ86ZRKUyLPGM4+ufxjCWyMv8qv0L7GbIRpIbiyRFaqvcJzruTKM=
+	t=1781680189; cv=none; b=K1kXaa3qyRCJgtMAD9I3MYiKY4RSi1X5bsEE2TdtncuL9Ryn6mnwCiGj6059pKvjLXsSMqx5hyFjNqIcV5UyyDnPmvC+E2xiiT0jJsIP26PzcAi0PHqPda0NdXyS3gofHQhry9lXIgdsj8WSgzdrTMyuVSq3Ft9QwURwErxb12E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781679706; c=relaxed/simple;
-	bh=D0B7lU453KGNdOBA05jE5UshcqJXDqCsDRlhhCHBARk=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=ue+nLEyHm9R3m4BJ4WRULIpUJUj/qIUbcYOcClU11By0as2Qx3QTGK5tGrI8yTY8023p388Xt6azfZmjA79tzlIGSP7ptg4ZwlmO4vxrW61q1Ug0HhbuMCSvl9qpJ+/5A6cdbAd+L6tPRijm4ipfzcvh9UJdmiTzhqRMXelXgXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=mLSpCa85; arc=none smtp.client-ip=113.46.200.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="mLSpCa85"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=D0B7lU453KGNdOBA05jE5UshcqJXDqCsDRlhhCHBARk=;
-	b=mLSpCa85FneJYcSUg1RhiwtkrMUVXy6YPxvcO8g1oRmaC1AsGt19K6c/1V/EKjs5wAMAVu6Mp
-	eTDkuhD2KqkVkht+gRvcXWIGQ3T+HcaFKTcpA1nCTYm2WGBnzX2uA7RqTMBftzm75CS7hNFi4Ix
-	l5LI+S4Qyp8PBP4z7Xn6sdk=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ggF0s2WXvznTcD;
-	Wed, 17 Jun 2026 14:52:45 +0800 (CST)
-Received: from dggpemf200002.china.huawei.com (unknown [7.185.36.244])
-	by mail.maildlp.com (Postfix) with ESMTPS id 4991E4056C;
-	Wed, 17 Jun 2026 15:01:33 +0800 (CST)
-Received: from dggpemf100007.china.huawei.com (7.185.36.214) by
- dggpemf200002.china.huawei.com (7.185.36.244) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 17 Jun 2026 15:01:33 +0800
-Received: from dggpemf100007.china.huawei.com ([7.185.36.214]) by
- dggpemf100007.china.huawei.com ([7.185.36.214]) with mapi id 15.02.1544.011;
- Wed, 17 Jun 2026 15:01:32 +0800
-From: Kangfenglong <kangfenglong@huawei.com>
-To: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "Wangyu (Eric)" <seven.wangyu@huawei.com>, "Zengtao (B)"
-	<prime.zeng@hisilicon.com>, duziming <duziming2@huawei.com>
-Subject: [BUG] nvme/pci: nvme_map_cmb triggers WARN_ON in __add_pages when
- CMBSZ.SZ is zero
-Thread-Topic: [BUG] nvme/pci: nvme_map_cmb triggers WARN_ON in __add_pages
- when CMBSZ.SZ is zero
-Thread-Index: Adz+Jx+PBG0NxeFeQ/q30wUnKqhnQw==
-Date: Wed, 17 Jun 2026 07:01:32 +0000
-Message-ID: <ee28ccf4e3a6479e8851b7b196219244@huawei.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1781680189; c=relaxed/simple;
+	bh=iVrtPWbggK31kf+NMVcxt/bIB/zBj/D8Klfi+iYlymo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iTTp0cRP1KxZXcMBTpkFu4CogwtQvwJjFjqT0YQtYZA/eOXOsvGkNZMg6c030AvpVRjFcjaOkpIQXIkQLcrN8U5S7AYX5A5IcksfD7EeZYYw1BK+P6ThVyarKBrm/0UuavKrOx5u7aDBsESnl5kUxqxAZxYcpSTplpkNMb8DDzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f178.google.com with SMTP id 71dfb90a1353d-59d7db12342so1493521e0c.0
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 00:09:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781680188; x=1782284988;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LdX/1r/VC5gVdSWCvpldxzdbyoom7W8WRGEDFlCTq6c=;
+        b=tCegrbbJGsi4cNri3mnAWRb/2BEhTbFfY0J5VodMmbuCzZ8ugd2b2ES321B8h7qIZg
+         0p7705VPCLXYRDyiOclH7HURlMvBWWCTMat8sKd2ZVgI3NTlhkmjs/1pVo+62rLof0zh
+         4zCoxkonKxRXh3GYHof/Lj5wM+5bEMnmBnX9C3frKDh45QhqCGVO0o2jE9g4qbSSxm6m
+         ajWd1bJOy8PR2fhB23r27Mcp+7cNDfRQ60wjKhuG1Txvf1j3S40Ph1nLKD2PhrXjRdv1
+         VYyi1BL1c9Y8xp44enBTM29ncKbySunZmEB6+trAdEZuRS6n6KjjM0AI9ObkBi12XdL0
+         zeXg==
+X-Gm-Message-State: AOJu0YyMkE9oUbTbGTZUE762R2uSyCDcXjywrObALMP4oW021A6OJexi
+	BjiQanCFmvC+0iIEakaGz8MlS0WF86rpb04+OAuwH/VNPMOyv768lTA3qwQrdEe8
+X-Gm-Gg: Acq92OHOPPXVStd3rAWDa/8LGm8Jv4eeVkoGf4aAwcFviWG7nH3qPU8KsZKh6659V0R
+	KqKaDwIpoaKiUs18ZJRU/hX0j+iybrSKFQ/PU9WBZy/Pu4qFuMY8XOFLT3t/UK1ZVRxZf9k8K2C
+	oB5fnngdtepjt1KhqbWbUZCJOrqY73t/CZAFLBCg4NeEgGieLqXaCH1FjvA60MJ2njGn3d4QUzL
+	CNXH+xMuFIM53ForYuzNJxxcKqagWgM0xag+7Yo3dFPgyDaMk2U/2UbzlOta0hWv7ILpo1cbM6g
+	KoWFITzjS9LvUZabachxFDmX4sXeRUzBiV49Dzwr70O2+2Eao/0J9V4HTrfADe8kLfVgkuIUL7n
+	wIC8EMnrhJBim435cwlqf4/LxVNidIguYMDUhbDy8jM5NHJkrROHwBRWZ0krhUDCNu9xSrz2TQe
+	qD+OlbsQ+Sg8+l+CQ/lsq4kQxVohnHNwMbw4yq9ctaQOC2L6peKQ==
+X-Received: by 2002:a05:6123:14d:b0:577:51e4:ef1e with SMTP id 71dfb90a1353d-5bbbe6b350emr1364356e0c.9.1781680187626;
+        Wed, 17 Jun 2026 00:09:47 -0700 (PDT)
+Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com. [209.85.222.51])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5bb9017f04dsm8868230e0c.9.2026.06.17.00.09.46
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Jun 2026 00:09:47 -0700 (PDT)
+Received: by mail-ua1-f51.google.com with SMTP id a1e0cc1a2514c-966df39a092so26968241.1
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 00:09:46 -0700 (PDT)
+X-Received: by 2002:a05:6102:8386:20b0:631:e729:4575 with SMTP id
+ ada2fe7eead31-7245cec45e5mr949237137.5.1781680186567; Wed, 17 Jun 2026
+ 00:09:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org> <20260617030008.154449-2-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260617030008.154449-2-marek.vasut+renesas@mailbox.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 17 Jun 2026 09:09:35 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdX7XuHQDSsX4P7NZ46_OnCX2o25szuALwSs2z+PHq+JNg@mail.gmail.com>
+X-Gm-Features: AVVi8Cf4irFbaHbMK6oTTjowYmtlzx-ojJFWgXAHjFGSCYVJj8Ydp7M37Z78yvQ
+Message-ID: <CAMuHMdX7XuHQDSsX4P7NZ46_OnCX2o25szuALwSs2z+PHq+JNg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-SGkgYWxsLA0KV2UgZW5jb3VudGVyZWQgYSByZXByb2R1Y2libGUgV0FSTklORyBvbiBhbiBBUk02
-NCBwbGF0Zm9ybSAoa2VybmVsIDYuNikgZHVyaW5nIE5WTWUgQ01CIG1hcHBpbmc6DQpNaXNhbGln
-bmVkIF9fYWRkX3BhZ2VzIHN0YXJ0OiAweDQ5NGEwMDAwIGVuZDogMHg0OTRhMDAwZg0KV0FSTklO
-RzogQ1BVOiAwIFBJRDogMTAgYXQgbW0vbWVtb3J5X2hvdHBsdWcuYzozOTYgX19hZGRfcGFnZXMr
-MHgxM2MvMHgxNTANCkNhbGwgdHJhY2U6DQpfX2FkZF9wYWdlcysweDEzYy8weDE1MA0KYXJjaF9h
-ZGRfbWVtb3J5KzB4YmMvMHgxNTgNCnBhZ2VtYXBfcmFuZ2UrMHgxODQvMHg0MTANCm1lbXJlbWFw
-X3BhZ2VzKzB4MTQ0LzB4MzAwDQpkZXZtX21lbXJlbWFwX3BhZ2VzKzB4MzAvMHg4OA0KcGNpX3Ay
-cGRtYV9hZGRfcmVzb3VyY2UrMHgxMjAvMHgzMzANCm52bWVfbWFwX2NtYisweDE3OC8weDI2OCBb
-bnZtZV0NCm52bWVfcGNpX2VuYWJsZSsweDEyOC8weDIxOCBbbnZtZV0NCm52bWVfcHJvYmUrMHgx
-MjQvMHgzNTggW252bWVdDQoNClJvb3QgY2F1c2UgYW5hbHlzaXM6DQpUaGUgTlZNZSBjb250cm9s
-bGVyIChTaGVuemhlbiBVbmlvbm1lbW9yeSwgZGV2aWNlIElEIDFjYzQ6MDEyMykgcmVwb3J0cyBD
-TUJTWiByZWdpc3RlciA9IDB4MDAwMDAxMDAsIHdoaWNoIGRlY29kZXMgYXM6DQotIFNaVSAoYml0
-cyAxMTo4KSA9IDEgofogc2l6ZSB1bml0ID0gNjRLQg0KLSBTWiAoYml0cyAzMToxMikgPSAwIKH6
-IHNpemUgdmFsdWUgPSAwDQotIFNRUy9DUVMvUkRTL1dEUyAoYml0cyA0OjApID0gMCCh+iBubyBD
-TUIgY2FwYWJpbGl0aWVzIGFkdmVydGlzZWQNCg0KMS4JSW4gbnZtZV9tYXBfY21iKCksIG52bWVf
-Y21iX3NpemUoKSBleHRyYWN0cyBTWj0wLCBzbyBzaXplID0gbnZtZV9jbWJfc2l6ZV91bml0KCkg
-ocEgbnZtZV9jbWJfc2l6ZSgpID0gMC4gQWZ0ZXIgY2xhbXBpbmcgYWdhaW5zdCB0aGUgQkFSIHNp
-emUsIHNpemUgcmVtYWlucyAwLg0KMi4JVGhlIGFsaWdubWVudCBjaGVjayBJU19BTElHTkVEKHNp
-emUsIG1lbXJlbWFwX2NvbXBhdF9hbGlnbigpKSBwYXNzZXMgYmVjYXVzZSBJU19BTElHTkVEKDAs
-IFgpIGlzIGFsd2F5cyB0cnVlIKGqIHplcm8gaXMgYSBtdWx0aXBsZSBvZiBhbnkgYWxpZ25tZW50
-IHZhbHVlLg0KMy4JVGhlbiBwY2lfcDJwZG1hX2FkZF9yZXNvdXJjZSgpIGlzIGNhbGxlZCB3aXRo
-IHNpemU9MC4gSW5zaWRlIHRoYXQgZnVuY3Rpb24sIHdoZW4gc2l6ZSBpcyB6ZXJvLCBpdCByZXBs
-YWNlcyBpdCB3aXRoIHRoZSBmdWxsIEJBUiBsZW5ndGggKHBjaV9yZXNvdXJjZV9sZW4oKSAtIG9m
-ZnNldCkuIA0KRm9yIHRoaXMgZGV2aWNlIChCQVIwID0gNjRLQiksIHRoaXMgeWllbGRzIGEgNjRL
-QiByYW5nZS4gVGhpcyA2NEtCIHJhbmdlIGlzIHBhc3NlZCB0byBkZXZtX21lbXJlbWFwX3BhZ2Vz
-KCkgofogcGFnZW1hcF9yYW5nZSgpIKH6IGFyY2hfYWRkX21lbW9yeSgpIKH6IF9fYWRkX3BhZ2Vz
-KCkuDQo0LglJbiBfX2FkZF9wYWdlcygpLCBjaGVja19wZm5fc3BhbigpIHJlcXVpcmVzIHRoZSBy
-YW5nZSB0byBiZSBhdCBsZWFzdCBzdWJzZWN0aW9uLWFsaWduZWQgKDJNQiBvbiBBUk02NCB3aXRo
-IENPTkZJR19TUEFSU0VNRU1fVk1FTU1BUCkuIEEgNjRLQiByYW5nZSBkb2VzIG5vdCBtZWV0IHRo
-aXMgcmVxdWlyZW1lbnQsIHRyaWdnZXJpbmcgdGhlIFdBUk5JTkcuDQoNClRoZSBjb3JlIGlzc3Vl
-Og0KbnZtZV9tYXBfY21iKCkgbGFja3MgYSBjaGVjayBmb3IgbnZtZV9jbWJfc2l6ZSgpID09IDAu
-IFdoZW4gU1ogaXMgemVybywgdGhlIGNvbnRyb2xsZXIgZWZmZWN0aXZlbHkgaGFzIG5vIHVzYWJs
-ZSBDTUIsIHJlZ2FyZGxlc3Mgb2YgdGhlIFNaVSBmaWVsZC4gDQpQZXIgdGhlIE5WTWUgc3BlY2lm
-aWNhdGlvbiwgYSBjb250cm9sbGVyIHRoYXQgZG9lcyBub3Qgc3VwcG9ydCBDTUIgc2hvdWxkIHNl
-dCBDTUJTWiB0byAwLCBidXQgc29tZSBjb250cm9sbGVycyBzZXQgYSBub24temVybyBTWlUgd2hp
-bGUgbGVhdmluZyBTWiBhdCB6ZXJvLCB3aGljaCB0cmlnZ2VycyB0aGlzIHBhdGguDQpBZGRpdGlv
-bmFsbHksIElTX0FMSUdORUQoMCwgWCkgcmV0dXJuaW5nIHRydWUgaXMgYSBsYXRlbnQgaXNzdWUg
-dGhhdCBtYXNrcyB6ZXJvLXNpemUgaW5wdXRzLg0KUHJvcG9zZWQgZml4Og0KSW4gbnZtZV9tYXBf
-Y21iKCksIGFkZCBhbiBlYXJseSByZXR1cm4gYWZ0ZXIgdGhlIGV4aXN0aW5nIGRldi0+Y21ic3og
-Y2hlY2s6DQppZiAoIWRldi0+Y21ic3opDQogICAgcmV0dXJuOw0KKyBpZiAoIW52bWVfY21iX3Np
-emUoZGV2KSkNCisgICAgcmV0dXJuOw0KVGhpcyBlbnN1cmVzIHRoYXQgYSBDTUIgd2l0aCB6ZXJv
-IHNpemUgdmFsdWUgaXMgdHJlYXRlZCBhcyBubyBDTUIsIHByZXZlbnRpbmcgdGhlIGludmFsaWQg
-bWVtb3J5IHJhbmdlIGZyb20gcmVhY2hpbmcgdGhlIG1lbW9yeSBob3RwbHVnIHBhdGguDQpXZSBo
-YXZlIHZlcmlmaWVkIHRoYXQgdGhpcyBmaXggcmVzb2x2ZXMgdGhlIGlzc3VlIG9uIG91ciBwbGF0
-Zm9ybS4NCldvdWxkIGFwcHJlY2lhdGUgYW55IGZlZWRiYWNrIG9yIHN1Z2dlc3Rpb25zIGZvciBh
-IG1vcmUgY29tcHJlaGVuc2l2ZSBhcHByb2FjaC4NCg0KVGhhbmtzIQ0KDQoNCg==
+Hi Marek,
+
+On Wed, 17 Jun 2026 at 05:00, Marek Vasut
+<marek.vasut+renesas@mailbox.org> wrote:
+> Renesas R-Car S4/V4H/V4M GIC600 integration has address width for AXI
+> or APB interface configured to 32 bit, it can therefore access only
+> the first 4 GiB of physical address space. This information comes from
+> R-Car V4H Interface Specification sheet, there is currently no technical
+> update number assigned to this limitation. Further input from hardware
+> engineer indicates that this limitation also applies to R-Car S4 and V4M.
+> Name the limitation GEN4GICITS1, and add a driver quirk to mitigate this
+> limitation.
+>
+> Note that the 0x0201743b GIC600 ID is not Renesas-specific, it is
+> common for many ARM GICv3 implementations. Therefore, add an extra
+> of_machine_is_compatible() check.
+>
+> The GIC600 implementation in R-Car S4/V4H/V4M is r1p6.
+>
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+
+Thanks for your patch!
+
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -4901,6 +4901,18 @@ static bool __maybe_unused its_enable_rk3568002(void *data)
+>         return true;
+>  }
+>
+> +static bool __maybe_unused its_enable_renesas_gen4(void *data)
+> +{
+> +       if (!of_machine_is_compatible("renesas,r8a779f0") &&
+> +           !of_machine_is_compatible("renesas,r8a779g0") &&
+> +           !of_machine_is_compatible("renesas,r8a779h0"))
+
+of_machine_compatible_match() with an array of strings might generate
+smaller code (I didn't check if 3 entries is enough to trip the balance).
+
+> +               return false;
+> +
+> +       gfp_flags_quirk |= GFP_DMA32;
+> +
+> +       return true;
+> +}
+> +
+>  static const struct gic_quirk its_quirks[] = {
+>  #ifdef CONFIG_CAVIUM_ERRATUM_22375
+>         {
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
