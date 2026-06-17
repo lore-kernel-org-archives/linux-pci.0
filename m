@@ -1,136 +1,193 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.162])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99C83BED76;
-	Wed, 17 Jun 2026 08:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.162
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C67A391855
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 08:33:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781685165; cv=none; b=FZi+9vyRibs6lDW58m5iPiMcrvivbq9towXFSWZJILzKzIaiSLkhR58qOfDokjt/gwKjHYcRTSIsbriddc6kREhDx+ogxfdpOPmwS6ogRvKxo33rDn1Q1aIc6SiLCnNCTKxP2rn9Nh4V3/92dVQsIm8AL56gT+ldqMNbVWqTUGk=
+	t=1781685198; cv=none; b=FYVXFFR/vWfXNnz94hHhTckewcjw8jpe8UWeATHcyAq3+lKk93IePX697of6Ro8meHyM+eoSCSJtnQw9vGFabLDisIENaRrqLoHw6tLExhvsveEK5bfTcv+cIy2X+wZ7/IicZ6ICfxIA7zH6OWBeTTfLVbsoeEOotcwGuCUgNSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781685165; c=relaxed/simple;
-	bh=kf0PmLbyKQ/2blQwIF/Rjt3LWgLL2BsA0cxPmPPS0R8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=t4NT66iUdyiCulmz77pxdZvPVAhOyznnH+AYR9AasdoEs2aG3jHfz4xlzZoKv9wMQYF131Il+u/fmjyLCiR+I1kPXDnt4MXTKCXXjBoht8cv4wfNle5bYUnlPD8ls7KDVsm3DC0zDucZNw34gIeTaQ+gICXOwcixM0jDKm796sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=K95+fDAB; arc=none smtp.client-ip=188.68.63.162
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="K95+fDAB"
-Received: from mors-relay-8201.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4ggHCr24H6z43BL;
-	Wed, 17 Jun 2026 10:32:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1781685144;
-	bh=kf0PmLbyKQ/2blQwIF/Rjt3LWgLL2BsA0cxPmPPS0R8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=K95+fDABLkOFcRSwnw7IYzQO5KxOWdsSwnx/3+YDwJsB9LuYzIDBPWn1ufZVIwmUT
-	 +SDIhHI86cneq2fquMx/R96153VpKIDl35Hpvu8ubOM4LCaSq4UIXaL0b0JpxSkRAv
-	 7nB9VoaSPZLiN7zKKeAMTGKyWEab5hZHT9LS0xzya2pRw9Xx3ObCUE+64iJLzssA9F
-	 91NPhDMby6/e2+Q0S72gIgbvD21ajhzPSZxdFRW9dg9LkOXEx64V+i3FC7emFqjlgS
-	 EExFdEMgW1Dz2ssnoh6nNHda1R9awye0KLbEBlWAff2eJCizqRu6d/GomeM8t504ty
-	 QTI4M2i5VUJtg==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4ggHCr1J5rz3tLF;
-	Wed, 17 Jun 2026 10:32:24 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4ggHCq3pr2z8sZP;
-	Wed, 17 Jun 2026 10:32:23 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id AB7595FBFB;
-	Wed, 17 Jun 2026 10:32:22 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <e8acc151-19f3-4823-83a1-e0906dd9f0f0@leemhuis.info>
-Date: Wed, 17 Jun 2026 10:32:20 +0200
+	s=arc-20240116; t=1781685198; c=relaxed/simple;
+	bh=C0U+32GwJ4K0nGpIroKkA0XQuytFUnwuQ08KdAJjTbs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Me4wrM/E9YWTTkVrNs1pI63DxK/JPfghulB595qBghwEto7FnnLJ8+X3pa72mu6PIr7fRX/zZBMc/U35mxG2q2WlJTyTLY5McmwoM1esQwCMiaSK0FwUTLy/zyUiiaxIrIZVBg2RpKcvxhPcT7Bmm3R1uOf5uB9tkEFXGEpd40o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2bf1f074a12so54842605ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781685196; x=1782289996;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NH6hocZNylot+M4XVVVgASnxnSv/8JW5bdpWIVIZHYU=;
+        b=IPf1e8RxRSIEyhqT6BrgDMjqeZ/t+CxBGkxD7nDTk/iKIjk3Iev9nGBgsRgNwZlFg0
+         JLIbSt9MMU27nCKcuWDNIaVBCqSvy+PjRXJAiq26g0DRUuY+jHY3YaBz9q6K9nk5wvOc
+         i2W1yVbq0I0GaSWAuHnuTdfDzBvAjW2junbQ7ABxlohSv7yQTBKqRQEhAJyBrK/0PEfJ
+         PgULulPCwpYZl2Z1ghqmYV60SIF5cICedDr2d/uHJWoQk+bkbZtDIpojS/+c7ybYacr3
+         Ey1UIiGnqUXBJfPozqEI9cTsqbEYO8mv2QPgwDYWDl7xc+t4OR443JYGTJmugneDzAMJ
+         7FQA==
+X-Gm-Message-State: AOJu0YxYkZE9HSzZrm9h3veTdGnY4heWO17nGHs6aPlIL5mrjBZnWWWl
+	+WiS15plsd7iLXJ76S1mbSTzmtrKwvVi0UyH3Via7f92fGAJbZMWNsyT/qlriO99
+X-Gm-Gg: Acq92OHYUHU2rn/pCCdkoqY9GWoX1KdggfRIXU2iRMZZMriPqNKIIzwJhn0eNZub/oH
+	Q0VtocaOuqs2+VBprcTE2ea5W5VUvvrKBdLsu9IeG52INgXdRss5ZAFPCLnYHIQGkXIz31KjHrM
+	YytwpIXpKfSj9kAbmeYpgpoenWkCVhOQ6wal1OqbBiXAKnvgJLCZ5hPnM+ZSXWf4avUL+omJkeI
+	EDZp2bgxpliuNUGTJAJwpbIqEvgyOa03a1P2nl24cb3hXlRHZG4go1RlkkuoTJNKOUNMP0uXLhr
+	YjfK5sAlbkOe5GsXOI4tp0PbG7dQoYLsDyZE698FXQfNN5mg13lfGqKMehBuBd25Al26GKIR5wj
+	BUTCp/tNXEhqFS3gZ1iuMBIjDRsscPudMXKWwtXAf+YBjxhiFkdPdwxt+BSbs/jGouppfchAc+k
+	6LA80LB17FsCSetoOKsn9dCT5ysLGAhs/xDvJo2twFdw7eJ0bThUI7tw==
+X-Received: by 2002:a05:6a21:a85:b0:3b2:8685:1473 with SMTP id adf61e73a8af0-3b8b5b28256mr3335309637.7.1781685196265;
+        Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com. [209.85.214.172])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8665186b53sm13651855a12.20.2026.06.17.01.33.15
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2bf1f074a12so54842405ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 01:33:15 -0700 (PDT)
+X-Received: by 2002:a05:6102:4b03:b0:632:3bb5:95f1 with SMTP id
+ ada2fe7eead31-7246d528766mr1135210137.27.1781684803531; Wed, 17 Jun 2026
+ 01:26:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?Q?Re=3A_=5BREGRESSION_6=2E16=5D_r8169_RTL8168h/8111h_fails_?=
- =?UTF-8?Q?to_probe_=E2=80=94_=22Unable_to_change_power_state_from_D3cold_to?=
- =?UTF-8?Q?_D0=22_=E2=80=94_bisected_to_4d4c10f763d7?=
-To: Josh Perry <josh@6bit.com>, mario.limonciello@amd.com, bhelgaas@google.com
-Cc: hkallweit1@gmail.com, nic_swsd@realtek.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, netdev@vger.kernel.org,
- regressions@lists.linux.dev
-References: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: 
- <178168514307.1060164.16093719345392338025@mxe9fb.netcup.net>
-X-NC-CID: EU+0w11D1L2EjVOiB5djiD1sGtVkwq3AXnplGM6FJ6HIeoK/8fI=
+References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 17 Jun 2026 10:26:32 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdU0SJ0q2hcpu+qZCH3eZ5eFDyo8Z964h9DhuSaQ7QdHSg@mail.gmail.com>
+X-Gm-Features: AVVi8CfAqddoQorfQ6TrjH19DY2WU_w8lZ69fu1Z-CMFemynEW91v1W75EneBEs
+Message-ID: <CAMuHMdU0SJ0q2hcpu+qZCH3eZ5eFDyo8Z964h9DhuSaQ7QdHSg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 6/12/26 03:07, Josh Perry wrote:
-> #regzbot introduced: 4d4c10f763d7
-> 
-> Since v6.16 one of two onboard RTL8168h/8111h NICs on this board fails
-> to probe on boot; the device drops to D3cold and the driver can't bring
-> it back:
+Hi Marek,
 
-FWIW, that commit is 4d4c10f763d780 ("PCI: Explicitly put devices into
-D0 when initializing") [v6.16-rc1] from Mario, who is already CCed, but
-looks like might be on holiday or something due to inactivity on the
-lists in the recent days. So it might take a few days before this moves on.
+On Wed, 17 Jun 2026 at 05:00, Marek Vasut
+<marek.vasut+renesas@mailbox.org> wrote:
+> In case MSI are enabled, but DWC built-in iMSI-RX is not in use, the
+> MSI are handled via GIC ITS. Configure all controller MSI registers
+> fully.
+>
+> Set or clear MSI capability register MSICAP0 MSI enable MSIE bit and
+> PCIe Interrupt Status 0 Enable register PCIEINTSTS0EN MSI interrupt
+> enable MSI_CTRL_INT bit according to MSI enable state, set both bits
+> if MSI are enabled, clear both bits if MSI are disabled.
+>
+> If MSI are disabled, or MSI are enabled and iMSI-RX is used, then
+> deconfigure AXIINTCADDR and AXIINTCCONT to 0, which disables any
+> pass through of MSI TLPs onto the AXI bus and then further into
+> GIC ITS translation registers.
+>
+> If MSI are enabled and iMSI-RX is not used, the configure AXIINTCADDR
+> with target address of GIC ITS translation registers, and configure
+> AXIINTCCONT to enable MSI TLP pass through onto AXI bus and into the
+> GIC ITS. This specific configuration allows handling of MSI via the
+> GIC ITS instead of integrated iMSI-RX.
+>
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-Josh, this is not my area of expertise, but there are two things I guess
-might be helpful:
+Thanks for your patch!
 
-* retry with 7.1
-* upload "dmesg" and "sudo lspci -vvv" output from working and broken
-kernels somewhere (like bugzilla.kernel.org).
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -31,6 +31,10 @@
+>  #define DEVICE_TYPE_RC         BIT(4)
+>  #define BIFUR_MOD_SET_ON       BIT(0)
+>
+> +/* MSI Capability */
+> +#define MSICAP0                        0x0050
+> +#define MSICAP0_MSIE           BIT(16)
+> +
+>  /* PCIe Interrupt Status 0 */
+>  #define PCIEINTSTS0            0x0084
+>
+> @@ -55,6 +59,16 @@
+>  #define APP_HOLD_PHY_RST       BIT(16)
+>  #define APP_LTSSM_ENABLE       BIT(0)
+>
+> +/* INTC address */
+> +#define AXIINTCADDR            0x0a00
+> +/* GITS GIC ITS translation register */
+> +#define AXIINTCADDR_VAL                0xf1050000
+> +
+> +/* INTC control & mask */
+> +#define AXIINTCCONT            0x0a04
+> +#define INTC_EN                        BIT(31)
+> +#define INTC_MASK              GENMASK(11, 2)
+> +
+>  /* PCIe Power Management Control */
+>  #define PCIEPWRMNGCTRL         0x0070
+>  #define APP_CLK_REQ_N          BIT(11)
+> @@ -305,6 +319,39 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
+>         return rcar;
+>  }
+>
+> +static void rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
+> +{
+> +       struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
+> +       struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+> +       u32 val;
+> +
+> +       /* Make sure MSICAP0 MSIE is configured. */
+> +       val = dw_pcie_readl_dbi(dw, MSICAP0);
+> +       if (pci_msi_enabled())
+> +               val |= MSICAP0_MSIE;
+> +       else
+> +               val &= ~MSICAP0_MSIE;
+> +       dw_pcie_writel_dbi(dw, MSICAP0, val);
+> +
+> +       if (!pci_msi_enabled() || pp->use_imsi_rx) {
+> +               /* Clear AXIINTC mapping. */
+> +               writel(0, rcar->base + AXIINTCADDR);
+> +               writel(0, rcar->base + AXIINTCCONT);
+> +       } else {
+> +               /* Point AXIINTC to GIC ITS and enable. */
+> +               writel(AXIINTCADDR_VAL, rcar->base + AXIINTCADDR);
+> +               writel(INTC_EN | INTC_MASK, rcar->base + AXIINTCCONT);
+> +       }
+> +
+> +       /* Configure MSI interrupt signal */
+> +       val = readl(rcar->base + PCIEINTSTS0EN);
+> +       if (pci_msi_enabled())
+> +               val |= MSI_CTRL_INT;
+> +       else
+> +               val &= ~MSI_CTRL_INT;
+> +       writel(val, rcar->base + PCIEINTSTS0EN);
+> +}
+> +
+>  static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
 
-Ciao, Thorsten
+FTR, this has a contextual dependency on "[PATCH v2] PCI: rcar-gen4:
+Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes"
+(https://lore.kernel.org/all/20260519195219.189323-1-marek.vasut+renesas@mailbox.org).
 
->   r8169 0000:02:00.0 eth0: RTL8168h/8111h, 00:2b:67:48:40:01, XID 541,
-> IRQ 137
->   r8169 0000:04:00.0: Unable to change power state from D3cold to D0,
-> device inaccessible
->   r8169 0000:04:00.0: Mem-Wr-Inval unavailable
->   r8169 0000:04:00.0: error -EIO: PCI read failed
->   r8169 0000:04:00.0: probe with driver r8169 failed with error -5
-> 
-> The board has two identical RTL8168h NICs (both XID 541): 0000:02:00.0
-> and 0000:04:00.0. Only 04:00.0 fails — its sibling 02:00.0, on a
-> different root port, probes and works normally on the very same kernel
-> and boot. The failing NIC then does not appear (no enp4s0), taking the
-> machine's WAN offline. This strongly suggests the problem is port/
-> topology-specific rather than device- or driver-specific: the upstream
-> port behind 04:00.0 is placed in D3cold and the endpoint cannot be
-> resumed to D0.
-> 
-> Hardware: RTL8168h/8111h, XID 541, PCI 04:00.0 (onboard 1GbE).
-> Platform: Lenovo ThinkCentre M90n-1 (11AHS0B200), BIOS M2AKT49A
-> (2026-03-25, latest available). Firmware is current, so this is not a
-> platform-firmware issue.
-> 
-> Bisection: v6.15 good, v6.16 bad (verified by booting both). I then
-> reverted 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-> initializing") together with its follow-up 907a7a2e5bf4 ("PCI/PM: Set up
-> runtime PM even for devices without PCI PM") on top of 6.16.7: the NIC
-> probes and links at 1Gbps/Full normally, with no workaround:
-> 
->   r8169 0000:04:00.0 eth1: RTL8168h/8111h, 00:2b:67:48:40:02, XID 541,
-> IRQ 138
->   r8169 0000:04:00.0 enp4s0: Link is Up - 1Gbps/Full - flow control rx/tx
-> 
-> Workaround: booting an unmodified v6.16+ kernel with pcie_port_pm=off
-> also restores the NIC, which is consistent with the upstream port being
-> placed in D3cold and the device failing to resume to D0 after the
-> explicit-D0 init change.
-> 
-> The follow-up 907a7a2e5bf4 does not fix this resume case: v6.18.33 is
-> still affected (retested today on current firmware).
-> 
-> Happy to test patches or provide full dmesg / lspci.
-> 
+>                                         struct pci_dev *dev)
+>  {
 
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
