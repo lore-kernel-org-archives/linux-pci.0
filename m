@@ -1,193 +1,186 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C67A391855
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 08:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2AE23815FA;
+	Wed, 17 Jun 2026 09:03:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781685198; cv=none; b=FYVXFFR/vWfXNnz94hHhTckewcjw8jpe8UWeATHcyAq3+lKk93IePX697of6Ro8meHyM+eoSCSJtnQw9vGFabLDisIENaRrqLoHw6tLExhvsveEK5bfTcv+cIy2X+wZ7/IicZ6ICfxIA7zH6OWBeTTfLVbsoeEOotcwGuCUgNSU=
+	t=1781687034; cv=none; b=HuUTh7mpORWyzqBEgVirGPeapF85frPKu5nUIwiRGKGO0LgrQVOOqWZgr1Sye2JX+fhl/4B8n7G8oJGDOjzeuLmAsp4m6BCo9GUvpt4ZaLnHJdGRxzCqOcVM9/MaSl09s+u7z9uPQM1QGs3RWrKTCRlEBXNSUsLJzVK4HW8rIY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781685198; c=relaxed/simple;
-	bh=C0U+32GwJ4K0nGpIroKkA0XQuytFUnwuQ08KdAJjTbs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Me4wrM/E9YWTTkVrNs1pI63DxK/JPfghulB595qBghwEto7FnnLJ8+X3pa72mu6PIr7fRX/zZBMc/U35mxG2q2WlJTyTLY5McmwoM1esQwCMiaSK0FwUTLy/zyUiiaxIrIZVBg2RpKcvxhPcT7Bmm3R1uOf5uB9tkEFXGEpd40o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2bf1f074a12so54842605ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781685196; x=1782289996;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NH6hocZNylot+M4XVVVgASnxnSv/8JW5bdpWIVIZHYU=;
-        b=IPf1e8RxRSIEyhqT6BrgDMjqeZ/t+CxBGkxD7nDTk/iKIjk3Iev9nGBgsRgNwZlFg0
-         JLIbSt9MMU27nCKcuWDNIaVBCqSvy+PjRXJAiq26g0DRUuY+jHY3YaBz9q6K9nk5wvOc
-         i2W1yVbq0I0GaSWAuHnuTdfDzBvAjW2junbQ7ABxlohSv7yQTBKqRQEhAJyBrK/0PEfJ
-         PgULulPCwpYZl2Z1ghqmYV60SIF5cICedDr2d/uHJWoQk+bkbZtDIpojS/+c7ybYacr3
-         Ey1UIiGnqUXBJfPozqEI9cTsqbEYO8mv2QPgwDYWDl7xc+t4OR443JYGTJmugneDzAMJ
-         7FQA==
-X-Gm-Message-State: AOJu0YxYkZE9HSzZrm9h3veTdGnY4heWO17nGHs6aPlIL5mrjBZnWWWl
-	+WiS15plsd7iLXJ76S1mbSTzmtrKwvVi0UyH3Via7f92fGAJbZMWNsyT/qlriO99
-X-Gm-Gg: Acq92OHYUHU2rn/pCCdkoqY9GWoX1KdggfRIXU2iRMZZMriPqNKIIzwJhn0eNZub/oH
-	Q0VtocaOuqs2+VBprcTE2ea5W5VUvvrKBdLsu9IeG52INgXdRss5ZAFPCLnYHIQGkXIz31KjHrM
-	YytwpIXpKfSj9kAbmeYpgpoenWkCVhOQ6wal1OqbBiXAKnvgJLCZ5hPnM+ZSXWf4avUL+omJkeI
-	EDZp2bgxpliuNUGTJAJwpbIqEvgyOa03a1P2nl24cb3hXlRHZG4go1RlkkuoTJNKOUNMP0uXLhr
-	YjfK5sAlbkOe5GsXOI4tp0PbG7dQoYLsDyZE698FXQfNN5mg13lfGqKMehBuBd25Al26GKIR5wj
-	BUTCp/tNXEhqFS3gZ1iuMBIjDRsscPudMXKWwtXAf+YBjxhiFkdPdwxt+BSbs/jGouppfchAc+k
-	6LA80LB17FsCSetoOKsn9dCT5ysLGAhs/xDvJo2twFdw7eJ0bThUI7tw==
-X-Received: by 2002:a05:6a21:a85:b0:3b2:8685:1473 with SMTP id adf61e73a8af0-3b8b5b28256mr3335309637.7.1781685196265;
-        Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com. [209.85.214.172])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8665186b53sm13651855a12.20.2026.06.17.01.33.15
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Jun 2026 01:33:16 -0700 (PDT)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2bf1f074a12so54842405ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 01:33:15 -0700 (PDT)
-X-Received: by 2002:a05:6102:4b03:b0:632:3bb5:95f1 with SMTP id
- ada2fe7eead31-7246d528766mr1135210137.27.1781684803531; Wed, 17 Jun 2026
- 01:26:43 -0700 (PDT)
+	s=arc-20240116; t=1781687034; c=relaxed/simple;
+	bh=LqvCQ4E+c+XM1goJ1rMnLbImX6Ucb0K+bDzdn/DW1/U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ughpdTqotdHXpNYb9Fr/6EdPD5sX7zFdG14StCNdnD4+dVfDSV+QZVouG9NRNsla1CVXcKf+5IaAJOUEhgwDdGIDVwqT7bbjbm99j9l7l7Z19HyGKmThBt1OZoROkxy7GU8uWtFb1438vt9JunwnSN2KTvx/+mve2/IQMZuz27o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [141.14.220.42] (g42.guest.molgen.mpg.de [141.14.220.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id CB1D64C2C37F03;
+	Wed, 17 Jun 2026 11:03:26 +0200 (CEST)
+Message-ID: <bd5ab9e3-ab93-43ad-a2ce-03d56e2d2ecf@molgen.mpg.de>
+Date: Wed, 17 Jun 2026 11:03:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 17 Jun 2026 10:26:32 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdU0SJ0q2hcpu+qZCH3eZ5eFDyo8Z964h9DhuSaQ7QdHSg@mail.gmail.com>
-X-Gm-Features: AVVi8CfAqddoQorfQ6TrjH19DY2WU_w8lZ69fu1Z-CMFemynEW91v1W75EneBEs
-Message-ID: <CAMuHMdU0SJ0q2hcpu+qZCH3eZ5eFDyo8Z964h9DhuSaQ7QdHSg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Intel-wired-lan] [PATCH iwl-next v1] ixgbe: Implement PCI reset
+ handler
+To: Sergey Temerkhanov <sergey.temerkhanov@intel.com>
+Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+ Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20260617084329.199110-1-sergey.temerkhanov@intel.com>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20260617084329.199110-1-sergey.temerkhanov@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hi Marek,
+[Cc: +Aleksandr (as in Reviewed-by:), +PCI subsystem]
 
-On Wed, 17 Jun 2026 at 05:00, Marek Vasut
-<marek.vasut+renesas@mailbox.org> wrote:
-> In case MSI are enabled, but DWC built-in iMSI-RX is not in use, the
-> MSI are handled via GIC ITS. Configure all controller MSI registers
-> fully.
->
-> Set or clear MSI capability register MSICAP0 MSI enable MSIE bit and
-> PCIe Interrupt Status 0 Enable register PCIEINTSTS0EN MSI interrupt
-> enable MSI_CTRL_INT bit according to MSI enable state, set both bits
-> if MSI are enabled, clear both bits if MSI are disabled.
->
-> If MSI are disabled, or MSI are enabled and iMSI-RX is used, then
-> deconfigure AXIINTCADDR and AXIINTCCONT to 0, which disables any
-> pass through of MSI TLPs onto the AXI bus and then further into
-> GIC ITS translation registers.
->
-> If MSI are enabled and iMSI-RX is not used, the configure AXIINTCADDR
-> with target address of GIC ITS translation registers, and configure
-> AXIINTCCONT to enable MSI TLP pass through onto AXI bus and into the
-> GIC ITS. This specific configuration allows handling of MSI via the
-> GIC ITS instead of integrated iMSI-RX.
->
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Dear Sergey,
 
-Thanks for your patch!
 
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -31,6 +31,10 @@
->  #define DEVICE_TYPE_RC         BIT(4)
->  #define BIFUR_MOD_SET_ON       BIT(0)
->
-> +/* MSI Capability */
-> +#define MSICAP0                        0x0050
-> +#define MSICAP0_MSIE           BIT(16)
+Thank you for your patch.
+
+Am 17.06.26 um 10:43 schrieb Sergey Temerkhanov:
+> Implement PCI device reset handler to allow the network device to
+> get re-initialized and function after a PCI-level reset.
+
+Please describe the problem in more detail. When does PCI-level reset 
+occur, and what is the current problematic situation?
+
+Also, what is ixgbe specific compared to a general PCIe implementation?
+
+Please share details how to test it, and how you tested it.
+
+> Signed-off-by: Sergey Temerkhanov <sergey.temerkhanov@intel.com>
+> Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
+> ---
+>   drivers/net/ethernet/intel/ixgbe/ixgbe.h      |  1 +
+>   drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 72 +++++++++++++++++++
+>   2 files changed, 73 insertions(+)
+> 
+> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+> index 594ccb28da20..c4b0c5bb89c6 100644
+> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+> @@ -912,6 +912,7 @@ enum ixgbe_state_t {
+>   	__IXGBE_PTP_TX_IN_PROGRESS,
+>   	__IXGBE_RESET_REQUESTED,
+>   	__IXGBE_PHY_INIT_COMPLETE,
+> +	__IXGBE_PCIE_RESET_IN_PROGRESS,
+>   };
+>   
+>   struct ixgbe_cb {
+> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> index 2ac274c73d61..a61ee5fff7be 100644
+> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+> @@ -12352,6 +12352,76 @@ static pci_ers_result_t ixgbe_io_slot_reset(struct pci_dev *pdev)
+>   	return result;
+>   }
+>   
+> +#define IXGBE_PCIE_RESET_RETRIES 1000
+
+Why 1000? Isn’t there a generic PCIe macro? Please extend the commit 
+message.
+
 > +
->  /* PCIe Interrupt Status 0 */
->  #define PCIEINTSTS0            0x0084
->
-> @@ -55,6 +59,16 @@
->  #define APP_HOLD_PHY_RST       BIT(16)
->  #define APP_LTSSM_ENABLE       BIT(0)
->
-> +/* INTC address */
-> +#define AXIINTCADDR            0x0a00
-> +/* GITS GIC ITS translation register */
-> +#define AXIINTCADDR_VAL                0xf1050000
-> +
-> +/* INTC control & mask */
-> +#define AXIINTCCONT            0x0a04
-> +#define INTC_EN                        BIT(31)
-> +#define INTC_MASK              GENMASK(11, 2)
-> +
->  /* PCIe Power Management Control */
->  #define PCIEPWRMNGCTRL         0x0070
->  #define APP_CLK_REQ_N          BIT(11)
-> @@ -305,6 +319,39 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
->         return rcar;
->  }
->
-> +static void rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
+> +/**
+> + * ixgbe_reset_prep - called before the pci bus is reset.
+> + * @pdev: Pointer to PCI device
+> + *
+> + * Prepare the card for a reset, preventing the service task from running.
+> + */
+> +static void ixgbe_reset_prep(struct pci_dev *pdev)
 > +{
-> +       struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-> +       struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-> +       u32 val;
+> +	struct ixgbe_adapter *adapter = pci_get_drvdata(pdev);
+> +	unsigned int timeout = IXGBE_PCIE_RESET_RETRIES;
 > +
-> +       /* Make sure MSICAP0 MSIE is configured. */
-> +       val = dw_pcie_readl_dbi(dw, MSICAP0);
-> +       if (pci_msi_enabled())
-> +               val |= MSICAP0_MSIE;
-> +       else
-> +               val &= ~MSICAP0_MSIE;
-> +       dw_pcie_writel_dbi(dw, MSICAP0, val);
+> +	if (!adapter)
+> +		return;
 > +
-> +       if (!pci_msi_enabled() || pp->use_imsi_rx) {
-> +               /* Clear AXIINTC mapping. */
-> +               writel(0, rcar->base + AXIINTCADDR);
-> +               writel(0, rcar->base + AXIINTCCONT);
-> +       } else {
-> +               /* Point AXIINTC to GIC ITS and enable. */
-> +               writel(AXIINTCADDR_VAL, rcar->base + AXIINTCADDR);
-> +               writel(INTC_EN | INTC_MASK, rcar->base + AXIINTCCONT);
-> +       }
+> +	/* Prevent the service task from being requeued in the timer callback
+> +	 * while we're resetting.
+> +	 */
+> +	if (test_bit(__IXGBE_SERVICE_INITED, &adapter->state)) {
+> +		timer_delete_sync(&adapter->service_timer);
+> +		/* Prevent the service task from running while we're resetting. */
+
+One of the two comments seems redundant.
+
+> +		cancel_work_sync(&adapter->service_task);
+> +	}
 > +
-> +       /* Configure MSI interrupt signal */
-> +       val = readl(rcar->base + PCIEINTSTS0EN);
-> +       if (pci_msi_enabled())
-> +               val |= MSI_CTRL_INT;
-> +       else
-> +               val &= ~MSI_CTRL_INT;
-> +       writel(val, rcar->base + PCIEINTSTS0EN);
+> +	pci_clear_master(pdev);
+> +
+> +	while (test_and_set_bit(__IXGBE_RESETTING, &adapter->state) && --timeout)
+> +		usleep_range(1000, 2000);
+> +
+> +	if (!timeout) {
+> +		e_err(drv, "Timed out waiting for __IXGBE_RESETTING to be released. Reset is needed\n");
+> +		pci_set_master(pdev);
+> +		return;
+> +	}
+> +
+> +	set_bit(__IXGBE_PCIE_RESET_IN_PROGRESS, &adapter->state);
+> +	smp_mb__after_atomic();
 > +}
 > +
->  static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+> +/**
+> + * ixgbe_reset_done - called after the pci bus has been reset.
+> + * @pdev: Pointer to PCI device
+> + *
+> + * Allow the service task to run and schedule re-initialization.
+> + */
+> +static void ixgbe_reset_done(struct pci_dev *pdev)
+> +{
+> +	struct ixgbe_adapter *adapter = pci_get_drvdata(pdev);
+> +
+> +	smp_mb__before_atomic();
+> +	if (!test_and_clear_bit(__IXGBE_PCIE_RESET_IN_PROGRESS, &adapter->state)) {
+> +		e_err(drv, "Reset done called without PCIe reset in progress\n");
 
-FTR, this has a contextual dependency on "[PATCH v2] PCI: rcar-gen4:
-Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes"
-(https://lore.kernel.org/all/20260519195219.189323-1-marek.vasut+renesas@mailbox.org).
+How can this happen? What should the user reading this error do?
 
->                                         struct pci_dev *dev)
->  {
+> +		return;
+> +	}
+> +
+> +	/* Allow the service task to run */
+> +	if (!test_bit(__IXGBE_REMOVING, &adapter->state)) {
+> +		clear_bit(__IXGBE_RESETTING, &adapter->state);
+> +		smp_mb__after_atomic();
+> +	}
+> +
+> +	/* Schedule re-initialization */
+> +	if (!test_bit(__IXGBE_DOWN, &adapter->state)) {
+> +		set_bit(__IXGBE_RESET_REQUESTED, &adapter->state);
+> +		if (test_bit(__IXGBE_SERVICE_INITED, &adapter->state))
+> +			mod_timer(&adapter->service_timer, jiffies + 1);
+> +	}
+> +}
+> +
+>   /**
+>    * ixgbe_io_resume - called when traffic can start flowing again.
+>    * @pdev: Pointer to PCI device
+> @@ -12384,6 +12454,8 @@ static const struct pci_error_handlers ixgbe_err_handler = {
+>   	.error_detected = ixgbe_io_error_detected,
+>   	.slot_reset = ixgbe_io_slot_reset,
+>   	.resume = ixgbe_io_resume,
+> +	.reset_prepare = ixgbe_reset_prep,
+> +	.reset_done = ixgbe_reset_done,
+>   };
+>   
+>   static DEFINE_SIMPLE_DEV_PM_OPS(ixgbe_pm_ops, ixgbe_suspend, ixgbe_resume);
 
-Gr{oetje,eeting}s,
+Kind regards,
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Paul
