@@ -1,46 +1,46 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B78AA3BB13E;
-	Wed, 17 Jun 2026 07:43:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 190EC3BFAD1;
+	Wed, 17 Jun 2026 07:43:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781682233; cv=none; b=dAv0fngzpobGHVOIcSUv3SlvOj/4WZTReu/mfUhC3h8KhoS5V0NHVTRPuykLlfVAa2J1lFaUhi1qHe7YYCbkzh1u9PVxool7Fc35bk+OwKi9VujdK1YrXaNjAXdHfwodwxokvce3ao8974SmYmxz8GeQQszn11Rd9cG2O11Pck4=
+	t=1781682238; cv=none; b=Fp76llqkqKeqwmHoS8Zx0XP/Ikqmi5GuAtss7s4ZVwHorJflkNJ9mr6SjGq2ZooqOkEA70BykuHPZDKR77N2Q8L13jkIt3HUS4PWmwzFLbshdx0Pzgl3qrPPCid7tXO3bkHd3/qZF0SvhhRH/f2ZYqjkNFBp7BJSCJwUBtU+Q3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781682233; c=relaxed/simple;
-	bh=vX+SK5biF18HWMNs2gKYB/K/CyR/ty1NqvQZn4jwlro=;
+	s=arc-20240116; t=1781682238; c=relaxed/simple;
+	bh=JrQdhu8yn6tpuL6obR8nEfCZia2seXFUvByj6d+tDxg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=art14uwfSHL/v1I1gJQQ0J11MtgzUUV0nsCJ3qrqYrxHDmRuBhkGfolL66CYSFsxKGNE0jyuQ6rQYyipmRmFBd6lbWiMNdoKDeOZlKiiLNEkUGE1wMcnK+QJF0hc0QWBhslOy4YDYJWM+Rp1tlyvdWqAEupY/n2flG/YByU7hfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=en2Jeoy/; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=E14P6nTlrrR+oBlt36vgmCGFa/I+WIRfmbF4o7XbdcPL6YHIQ57pKqlKTGSXJp0mxUNSM6hao00dpQ4kwaxGam8AosI1ijHIiMJQA3quhA0xkmT9EYS8/OptzBoVTJMnaucep5C+mWMEk2IRdhc+/ZdgxrdyIqIzkhRnjUUplNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iKK6Bxb5; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="en2Jeoy/"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iKK6Bxb5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781682232; x=1813218232;
+  t=1781682237; x=1813218237;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=vX+SK5biF18HWMNs2gKYB/K/CyR/ty1NqvQZn4jwlro=;
-  b=en2Jeoy/5oLJUIERqyAoJ2fCyp7aML11lDr0/QseLqM1stil8LxzEWs6
-   0WWWq6lDlfv4yB3qaM5RhVUguGCIxakvIS9/EVodyTTU6wYxujZN05aNr
-   Sb1XmdHLCJxl3a0qAbPnCbl/0l7fdfOtCDeygvXQusuDJ1pXbjz7HxyvJ
-   TeyCTW0jKYfw+jfPPr7hwV6vg6Q1R7pxea8+MDRQxPa4S2rhBmbmc52ni
-   ybiXugeZuyYumlPvRvlJLBDlY/SLGf+jPFwWYp+gSSLaO7GmEqGFh8Y2A
-   8CHoFshG1436H6cIaC1c/FjoCRpBwKPnTKBX2MlOw3oxtH9iISKPap7vO
-   g==;
-X-CSE-ConnectionGUID: SW8FKW6+Q0+elStqg8czTA==
-X-CSE-MsgGUID: 4Kc/HjI4QRWpOkNVu91N1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11819"; a="93133610"
+  bh=JrQdhu8yn6tpuL6obR8nEfCZia2seXFUvByj6d+tDxg=;
+  b=iKK6Bxb5XmKBEI944QdX9nsdULC1zft72Nc5iMqhU8iZeDufTipyyzoX
+   MvC+ULCmna3S/I6ewxwEPh58oAZcZnC4V5PmfqBKyk0f5hMlu4QI3twSk
+   Ktp7FjtoRNKVWWoAkNMd0ceh6VumRqYvVA8UQVzTGS94kRCakXh7JHejR
+   oVwchiKFpXYZT0/Rb2gIm7HC/zbkbRwKlv6WCk0DTGnLtaI9xb32IydIM
+   3u5eT33PVjeDrQED+4Te//Qi9MVzFLbtT5sP56YB+CofJLS9fe/D3s5ME
+   rUN3WjTZ8p1JhbVtKVYFLVTzArJTZb3ye02kMIPruwakADHzGNQtBY4bg
+   A==;
+X-CSE-ConnectionGUID: zgQxUmh7QL+iolH/7GsMgQ==
+X-CSE-MsgGUID: g1oaVf79TM2sKHZ2uDLOTw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11819"; a="93133619"
 X-IronPort-AV: E=Sophos;i="6.24,209,1774335600"; 
-   d="scan'208";a="93133610"
+   d="scan'208";a="93133619"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 00:43:51 -0700
-X-CSE-ConnectionGUID: 4+C+s93ZTHiNEEKhh5bHAw==
-X-CSE-MsgGUID: xz7U0y1eTuOMAeeIH2qTyA==
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 00:43:57 -0700
+X-CSE-ConnectionGUID: r3fPfwH1SKCwalYELaq4LA==
+X-CSE-MsgGUID: Q2aD1LAcSAucpuWXhWqVEQ==
 X-ExtLoop1: 1
 Received: from junjie-optiplex-micro-plus-7010.bj.intel.com ([10.238.152.98])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 00:43:48 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 00:43:54 -0700
 From: Junjie Cao <junjie.cao@intel.com>
 To: Shrihari E S <shrihari.s@samsung.com>
 Cc: Junjie Cao <junjie.cao@intel.com>,
@@ -55,12 +55,12 @@ Cc: Junjie Cao <junjie.cao@intel.com>,
 	dongjoo.seo1@samsung.com,
 	dave@stgolabs.net,
 	gost.dev@samsung.com
-Subject: Re: [RFC 5/8] hw/cxl: Wire UIO capability into HDM decoder registers
-Date: Wed, 17 Jun 2026 23:45:17 +0800
-Message-ID: <20260617154521.520191-1-junjie.cao@intel.com>
+Subject: Re: [RFC 6/8] hw/pci: Add PCIe Streamlined Virtual Channel (SVC) capability.
+Date: Wed, 17 Jun 2026 23:45:18 +0800
+Message-ID: <20260617154521.520191-2-junjie.cao@intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260609105836.3702787-6-shrihari.s@samsung.com>
-References: <20260609105836.3702787-1-shrihari.s@samsung.com> <20260609105836.3702787-6-shrihari.s@samsung.com>
+In-Reply-To: <20260609105836.3702787-7-shrihari.s@samsung.com>
+References: <20260609105836.3702787-1-shrihari.s@samsung.com> <20260609105836.3702787-7-shrihari.s@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,26 +71,39 @@ Content-Transfer-Encoding: 8bit
 
 Hi Shrihari,
 
-On Tue,  9 Jun 2026 16:28:33 +0530, Shrihari E S wrote:
-> +    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO,
-> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio);
->      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
-> -                     UIO_DECODER_COUNT, 0);
-> +                     UIO_DECODER_COUNT,
-> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio ?
-> +                     decoder_count : 0);
+On Tue,  9 Jun 2026 16:28:34 +0530, Shrihari E S wrote:
+>      if (flitmode) {
+> -        pci_long_test_and_set_mask(exp_cap + PCI_EXP_LNKSTA2,
+> +        uint32_t pos = dev->exp.exp_cap;
+> +
+> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
+>                                     PCI_EXP_LNKSTA2_FLIT);
+> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
+> +                                   PCI_EXP_FLAGS_FLIT);
 
-CXL2_UPSTREAM_PORT is an enum constant with a non-zero value, so
-"|| CXL2_UPSTREAM_PORT" is always true and the type check collapses
-to just "uio" -- every type that reaches hdm_init_common() with
-uio=true gets the UIO bit set.  Presumably the intent was:
+Following up on Jonathan's observation here -- I'd also noticed a
+bogus Interrupt Message Number on a plain flit-mode root port, so I
+checked what the stray write actually does to the Flags register.
+The impact is wider than just UIO:
 
-    (type == CXL2_TYPE3_DEVICE || type == CXL2_UPSTREAM_PORT) && uio
+The first set_mask writes PCI_EXP_LNKSTA2_FLIT (0x0400) into
+PCI_EXP_FLAGS (cap offset 0x02) instead of PCI_EXP_LNKSTA2 (0x32).
+0x0400 falls in the Interrupt Message Number field (bits 13:9) of the
+Flags register, so a flit-mode port ends up reporting a nonzero
+Interrupt Message Number (it reads back as 2).
 
-I haven't proposed which types should be in that set -- patch 7 sets
-crp->uio_capable on the cxl-rp, so a root port may well be intended
-here too.  Either way the current expression isn't gating on type.
-The same applies to the UIO_DECODER_COUNT line just below.
+pcie_cap_fill_lnk() runs for every flit-mode port, and x-256b-flit
+defaults to on for pcie-root-port, so even a plain
+"-device pcie-root-port" comes up with the corrupted field.
+
+The second line (PCI_EXP_FLAGS_FLIT into Flags) looks correct and
+should stay.  The first one looks like a typo in the destination
+register -- it was PCI_EXP_LNKSTA2 before this series (visible in the
+hunk above), so I'd restore it there rather than drop it.
+pcie_cap_flit_write_config() does maintain the LNKSTA2 flit bit, but
+only on guest LNKCTL writes; it doesn't run at realize/reset, so
+dropping the line would leave LNKSTA2 flit status reading 0 at reset
+instead of its pre-series value.
 
 Many thanks,
 Junjie
