@@ -1,217 +1,183 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020101.outbound.protection.outlook.com [52.101.229.101])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EB12E6CC7;
-	Wed, 17 Jun 2026 03:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.101
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781666250; cv=fail; b=hHTrwafW8GDPfuFU2m+gGRvp/cBO/WA5Lb3uqGOvxfM2Rd1d3MC/T0S525OnEq02cJ2S1Ep+K/VyL7G1YQyfZgSd1SU3Iz9gcvYI8AA6uEUCEcQut4741xYI/QRiv4BwQY588GxyEr0DhX/ZIQf/iDOzauvEy/7HtiMhYH1VzsY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781666250; c=relaxed/simple;
-	bh=kwUwtDhGda+B1xocXWsPXTRCZt3vg8o6oXt5VA6vMvI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=f6TxpdhPcUnT7EksawAJPDH5HOYgBy3PfEkxrWZuya8kPQ0WLz8Dn3eBo/6Hm4COsgRwnrcY8/DSeMtvqxidzC31vlGxrTpoey4SXeT1hMShq5nqZO2pXt3rmgpfhq3Z2hw0DW5Xb0SSIqADalAf3SWMMao+kM8ltmm0i3Fv9nk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=rcY+UlwK; arc=fail smtp.client-ip=52.101.229.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD0330D40A;
+	Wed, 17 Jun 2026 03:35:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781667303; cv=none; b=BbBxvBpwyBICZJ56tmCWPhoeCjJ1HtTjeBXFooUoK0GQZS12+9ymb4bQm31P5apAvPSqnJ6BcmHlG2pvny4noKLhdHf+g0ZWiV6uTGQjZJZQYHmXOlZzQKDhy7BHdlf+KCLAjSP1TFemxRHTBKIPiWw0F7/MJlWYlCPPoqS1Zj0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781667303; c=relaxed/simple;
+	bh=tedbuzG845kYaIBdGycgN/T2GgXZ0xgUwhs0a50ZYQE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IlJ5lCiGh9/oJf6vxy80K0S/L1hR6ozN2MCwHFGEUEhGz9f6RA3TPzSlE0YNIZWPvY+1BakrTzDjB9ZSPBCvKdRQa4PbCHa5xL7rtoglrzJg+6T+01oiuo8FLz4THAcQz+gfbaUxqNg58NavHMNkaM5st7/GGRrGEnDsUdZGGrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ABR7Honk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="rcY+UlwK"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GbpdBzQSbvtvZQVmZhOuFfoohVxj78THLPebWfzCUmE7t8Jm8T+qk0SU8CV79oyR3cBKcW7z5AlvF8AYmA74ugMWf+l0HbV+ylPn3n0o2KXNc41DtM3U+kHloHvCaTlWxu2a0bwzkB+FLQdosVEy8zYIeTxMrjsClS5GamULi2zwBROQqUZl6Ld67kdCxm45qgsXW3MsqKmTUKJGIvxDBR6LLwRjvfWbrWpQHoLo29jaNZYjPEHc3RZ+QFsCL91be6ROfqrAOzXlZMsYrcvk/Hib0vgYdZZKX4UOtJgUuOIb/wimpliYoz9sP1dh3ocHbTRf8gSbVjKx0jGL8SUniQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Qd9BDnZ064aBcvMz/v8WfeBS8uXzZjyUMK9Tr3rFy5M=;
- b=ShHSqTb3m9a4yepL9Oc/efdcfuMzv1RtdRyAKGsbFToOXLgBi/vZdqbBtlcWkDEpOW008BbuBFIZ3DOGEgg6Etpanx05vsE8or8e3KD/GPix5kjV4iQzgMbRRH3LuAAja0pCTQEpee1SsvqIoZI+Ugwf197u1WFAv6RDFQffcnEeZ1QSlkoaA4D+6V+F23RkrKD9b1xVvZow/G65OjeITv7gQMfTSmaqusXv00kbk5TL2lRD0dG+tf7qZZOuzQBlKTW4spn0DeH3uhIsG5FPxAAqa3bxj5i7qMRwuoavx3I5HEREIc63hwggkykRjKV2D9aMHS6kGKGVO4GPHgMMgg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Qd9BDnZ064aBcvMz/v8WfeBS8uXzZjyUMK9Tr3rFy5M=;
- b=rcY+UlwKNM60hJWBnjjqkI/zJo7WNiNwyHPj4+c+UluJzKtbVJxi8SIvaU6ZopkJhgTsLx9SKIZYKv0vsb17MGWXj8/+hj3Kn8oLV16MxWboY9OMWrgXRxkUho9oASj0VxCKJUcrzcfHxwn9UAEk0ED2glkL0oX1YZB83I9rnL8=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TYCP286MB2518.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:20f::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Wed, 17 Jun
- 2026 03:17:25 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0113.015; Wed, 17 Jun 2026
- 03:17:25 +0000
-Date: Wed, 17 Jun 2026 12:17:23 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Devendra K Verma <devendra.verma@amd.com>
-Cc: Frank.Li@kernel.org, bhelgaas@google.com, mani@kernel.org, 
-	vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, michal.simek@amd.com
-Subject: Re: [PATCH v15 2/2] dmaengine: dw-edma: Add non-LL mode
-Message-ID: <zhpsuwq5agslelgebbtvrg4uks4xweov7ywhmkxdngq7lzajip@e4umiii6kzko>
-References: <20260318070403.1634706-1-devendra.verma@amd.com>
- <20260318070403.1634706-3-devendra.verma@amd.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260318070403.1634706-3-devendra.verma@amd.com>
-X-ClientProxiedBy: TYCPR01CA0185.jpnprd01.prod.outlook.com
- (2603:1096:400:2b0::11) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ABR7Honk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAA8F1F000E9;
+	Wed, 17 Jun 2026 03:35:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781667302;
+	bh=fZnYoWahI23oaIajfnJX969BZamd3bNID6nxhmEeG6I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ABR7Honkx/vmuC+QQHbuEsQyIlzzsIuKJZxlSX9n2cmm+I7eFwRwwZj7NZuUycI80
+	 p425qtFBa8eOftZDL9qm3LmgeyGxF6hjJoEPgikCc4MTbKjII//G3x8tn89wVYg3RM
+	 3PhZPJqX4slAM5CexUJunZx/iBLy5f1aGZYIdWQFMl/z2ZI+FB9NKBjse4SkGG0R0D
+	 K1uXOTO9rMq54CjP/iOclhOYSCeQb2zJAmBG3q/zt3LfepFqKjWRsy8kBDfcHCYrk+
+	 fX66MK8ZPb/CltCL8njW4+MAC/0I1w9M8lIbick3nHOFs6Hdmk1/EaC1zdpzwq70yD
+	 6FuMI9JWtJB9Q==
+Date: Wed, 17 Jun 2026 12:35:00 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: XIAO WU <xiaowu.417@qq.com>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] alpha/PCI: Fix I/O port accessor argument order in
+ pci_legacy_write()
+Message-ID: <20260617032302.GB977693@rocinante>
+References: <20260612232400.585195-1-kwilczynski@kernel.org>
+ <20260612233426.B7EFD1F000E9@smtp.kernel.org>
+ <20260613151251.GB3086320@rocinante>
+ <tencent_F4321A5EB5642AE407C42238ACC61714BB07@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2518:EE_
-X-MS-Office365-Filtering-Correlation-Id: bfc2a569-43f9-4d16-4300-08decc1ef3fa
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|376014|10070799003|1800799024|56012099006|4143699003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	mRNTeZ64sxkVjHBnfl4qMTiAdhk0qy1bGL3eTKUvYLKXnjSuWkG2RES+mV9yXWzDbM+C9wvpkTkCOZV+8Fi0c+b9alUHaAyMWDqzB3DbNynEzi0BgH0tzrupBMJ1gAwE5wY/2xcfH231mPchOq5VE40HIz8DzI7sDTt53m1R7Sn6xrUEHsf6A10pISYAl3dyQjji2hWCrn1rBbigQZUDkTfDAt63nL5AQ5cZrrrEvzQwJmIIZDuTsZX+ZDzG+t6se3PYbWrc+/wslSddVqlCXO2zJir+l4Wlnf96iwd525U9GDc7CsKLLFYEMyPt2t4PJH0dhpJ+64M5s5q14lDIECic1dZ2G5r1ShgLFqRK+gkpfS+6ouz9WuAooyITNF7+vvd9eVn1/H9KE+xS53ekVrNqJi49Nan5xliUB1jjwUQFb0N/Mt4nKNzbBcUIYRKAEsU/gDhsBsi/uHEWDpcDEVqPjoB9bj7P/rOstXImPJx+Bx2myhHikvIV+vzCdN6jqf3jlD1XDeblWJ/Lojty+UBBqvCEaqnbbNlcqL8ur+NKVUkdBxRbPtk41qJy072xfXfwH6u117SAlTrOi68CuHYiQ8AokkBDhkzZNx2EQcJgLd3AgUXFE4Px3WEbKvZFVd8peU5SWh9bRlvpkKPqU8zPSHF2xPP+i4hCKr6xCjm1fdEBLmKQqpUk9aHwhLpFnEUQaB+45h30eE78pV48fA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(10070799003)(1800799024)(56012099006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?pzh6Ybe4bzH6mBILuTJQgh5cb8ZC1OBTaHRDBup7QEe9vnZ4uoZUFNK5wYdu?=
- =?us-ascii?Q?S4Gjv0mvcPIbSbYsRcFktSMulV+GBy4lMBZn5NiOEdAxw5QIVSAgG6hplJHd?=
- =?us-ascii?Q?enki+2naCv8/LnpC2ffgtUruLrF3aiAjwfnn+KrCGVDqHfY8Aa0IVtZIVjFp?=
- =?us-ascii?Q?IQkxixRltoODFlttTukN0iepL0I8KkR+YRNK37NWR5ruazXgHbjsjByAvKdw?=
- =?us-ascii?Q?x9K/niVe5904Yb2mVo8umYPx5ZYqStJ/HSGpniD4ilw90L+kIfPf8WlET0+3?=
- =?us-ascii?Q?2mBRCB+7XvbYdmM8olmK66Evco750dG6Bj0e5bRomvgHwm0OAIrlN3jfUFih?=
- =?us-ascii?Q?yx7FU9HowyJabYOnAyH5ApM4ug1OBmsJDt4OwKzcAoG9DzsyHxzuU35JODCS?=
- =?us-ascii?Q?Vkq3SxVBqKCs1TD5DrFBVF27Gkmvahd/7wlbRPCaqT3jznLl86MMNEl+c3aL?=
- =?us-ascii?Q?DugT2IYD0OC06NZv5DnIESEe22P8ncWe9p6DukhYjJeozMaOUEfYcI/npugj?=
- =?us-ascii?Q?zLIh3epkJgo4KbIt8VbYuViSK42FSWlQBheyk6Kz19YUFAPwQ8I8lSBWfUpI?=
- =?us-ascii?Q?U5o6VifD/L+leKzfIZ2guwZy0Qq37vrTe/9EnGLndI8agIVmTGVyDmKwezz5?=
- =?us-ascii?Q?MpApHAuS5WHJgxDdlABi0UVBtenwkYAj1F6Ivf0WUMdzbku4+FzXsb3q0UW/?=
- =?us-ascii?Q?dHmNCJRPuIfTxwHiU7velBiSGciBdkFdKb2tIMIIvSuVwOqoVZLav37nnW79?=
- =?us-ascii?Q?FVd7HB0P2GqXHuK61COzbf7O96elbuxMZWoSujAC/OmxYaIvGH6/legpL39R?=
- =?us-ascii?Q?KDKQGglgMzFu8q00Sk/xUdQ37rdNu2pVt7oHrrhOYUoT6OLo9nDTv2eccqx2?=
- =?us-ascii?Q?IyidIoioK+r/X8kL1YIwozIVdZ9y79WJPvbhO7L2N6H39aC2MDNEQlfG0FYk?=
- =?us-ascii?Q?+qy4luwjSyRPQ0hOuPzhDXX1T+F51E3ysuTLmeMnn56Bb5JBakLk9kNUgN8R?=
- =?us-ascii?Q?XYrTYbFW6CdOpPq17twq0Zst1sgazkE12FedhvSuZk+FP6EPlsQQVLT7i0qa?=
- =?us-ascii?Q?sD72UVrBXHI6ol0hCqvuQosv5dMotbDVIsoqAcnJxb3GyGgGVyXjpcKwuMJC?=
- =?us-ascii?Q?A+Um39SHbm/JpjeppW0LpTj6vEgLqY+C+FE5y48atFpYW2ENVbhFd0/thBzP?=
- =?us-ascii?Q?22p1XEiZ5yejJSPtSSY61lqRDdTYYltw8oAQRqhtS//D8ebe/Suikd9zpvOH?=
- =?us-ascii?Q?IiX1JwFeDBY4NKvtQnuabjViEwIAO2r672iWI4HhYJfo0sl2kY8oyP5RF+Mw?=
- =?us-ascii?Q?4Td4Uad4SeuGEjSUfUOxHF8idpZ/aCOLNASVWWMxXQz4B3tdbezXOufK3v5b?=
- =?us-ascii?Q?BwM0P2SM7WbLrzIpC7zlCmln6yo7XC3PMlwwAgo8sFhEZXru9MzzGprCt7V+?=
- =?us-ascii?Q?QPadk+9LWJ74oM1OrZzaEpydVmeCbV44/2I4eOK59lK4uVBQXZ9rufwWTUjE?=
- =?us-ascii?Q?cPiwwj7s9bVShH5hofyGHC3Wal4eeWR4WPcVPG/9dY7hvmYahmfwn8ECb3qs?=
- =?us-ascii?Q?fmJXbfBMA0sEt6x/uVB7tO9f9qPwYtMCVGnCaeIE/sGicmSg93Xpc6LtHgEi?=
- =?us-ascii?Q?qBnGEMYbL6wfhab4ibXpm2b6Ux2GDEU+CDnfRHczeRs1IFQHHalEI3l076jc?=
- =?us-ascii?Q?9gpjX/nxOZkONX5Wdta+vlCmrfVCKj0C0Icg+AMIa+ChQtSY8UyuQqRIMAYE?=
- =?us-ascii?Q?1G61BsUDgMaOwC6VeDwUCk5SfAnuKJo5r0/mO2drKpqLMOZw37VZ?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: bfc2a569-43f9-4d16-4300-08decc1ef3fa
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 03:17:24.8967
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qS7JBJADGgvDW0zqLxKPi10mBzls9jbtWs6IJL2fYak8CPm/Ur66u6NSm3SSbZIioML7gMudZZ66tiV3RIrhcA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2518
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <tencent_F4321A5EB5642AE407C42238ACC61714BB07@qq.com>
 
-On Wed, Mar 18, 2026 at 12:34:03PM +0530, Devendra K Verma wrote:
-> AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
-> The current code does not have the mechanisms to enable the
-> DMA transactions using the non-LL mode. The following two cases
-> are added with this patch:
-> - For the AMD (Xilinx) only, when a valid physical base address of
->   the device side DDR is not configured, then the IP can still be
->   used in non-LL mode. For all the channels DMA transactions will
->   be using the non-LL mode only. This, the default non-LL mode,
->   is not applicable for Synopsys IP with the current code addition.
+Hello,
+
+> Following up on the Sashiko review that pointed out the `*(u32 *)buf`
+> issue in pci_write_legacy_io() — I wrote a small PoC to confirm it on
+> x86 with HAVE_PCI_LEGACY enabled for testing.
+
+Thank you for the proof-of-concept and the analysis.
+
+> As expected, writing 1 byte to `/sys/devices/pci*/legacy_io` reliably
+> triggers a KASAN slab-out-of-bounds read in pci_write_legacy_io():
 > 
-> - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
->   and if user wants to use non-LL mode then user can do so via
->   configuring the peripheral_config param of dma_slave_config.
+>   ==================================================================
+>   BUG: KASAN: slab-out-of-bounds in pci_write_legacy_io+0xb5/0xc0
+>   Read of size 4 at addr ffff888107c8ed88 by task bash/9528
 > 
-> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> ---
-> Changes in v15
->    Rebased the branch
+>   Call Trace:
+>    pci_write_legacy_io+0xb5/0xc0          <-- *(u32 *)buf
+>    sysfs_kf_bin_write+0x17c/0x1f0
+>    kernfs_fop_write_iter+0x3a4/0x580
+>    vfs_write+0x7e1/0x11b0
+>    ksys_write+0x12f/0x250
+>    ...
 > 
-[snip]
-> +
-> +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
-> +{
-> +	struct dw_edma_chan *chan = chunk->chan;
-> +
-> +	if (chan->non_ll)
-
-Hi Devendra (cc: Frank),
-
-Sorry for dropping a comment now that this has already landed.
-
-I'm wondering about the lifetime of chan->non_ll. This patch lets a client
-select non-LL mode through dma_slave_config.peripheral_config for a transfer,
-but the state is stored on the channel.
-
-We use chan->non_ll in prep to choose bursts_max, then read it again later in
-dw_hdma_v0_core_start() to choose the LL vs non-LL start path. If the channel is
-reconfigured between prep and start, or before a later chunk is started from the
-interrupt path, couldn't we start a descriptor in a different mode from the one
-it was prepared for?
-
-(Note: Frank's not-yet-merged dma_prep_config v7 series [1] also looks at
-potential races around config+prep on the same channel from multiple process
-contexts, as I understand it. But this seems like a separate issue, since the
-state is read again at transfer start time.)
-
-Should non_ll be snapshotted into the descriptor/chunk, maybe as
-dw_edma_desc.non_ll, or is the rule that clients must not reconfigure the
-channel while anything is pending/running?
-
-Or was this already discussed, and there is some implicit restriction that
-clients must not mix LL and temporary non-LL requests from multiple contexts on
-the same channel?
-
-[1] https://lore.kernel.org/dmaengine/20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com/
-
-Thanks,
-Koichiro
-
-> +		dw_hdma_v0_core_non_ll_start(chunk);
-> +	else
-> +		dw_hdma_v0_core_ll_start(chunk, first);
-> +}
-> +
->  static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
->  {
->  	struct dw_edma *dw = chan->dw;
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> index eab5fd7177e5..7759ba9b4850 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> @@ -12,6 +12,7 @@
->  #include <linux/dmaengine.h>
->  
->  #define HDMA_V0_MAX_NR_CH			8
-> +#define HDMA_V0_CH_EN				BIT(0)
->  #define HDMA_V0_LOCAL_ABORT_INT_EN		BIT(6)
->  #define HDMA_V0_REMOTE_ABORT_INT_EN		BIT(5)
->  #define HDMA_V0_LOCAL_STOP_INT_EN		BIT(4)
-> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> index 270b5458aecf..61d6064fcfed 100644
-> --- a/include/linux/dma/edma.h
-> +++ b/include/linux/dma/edma.h
-> @@ -97,6 +97,7 @@ struct dw_edma_chip {
->  	enum dw_edma_map_format	mf;
->  
->  	struct dw_edma		*dw;
-> +	bool			cfg_non_ll;
->  };
->  
->  /* Export to the platform drivers */
-> -- 
-> 2.43.0
+>   Allocated by task 9528:
+>    kernfs_fop_write_iter+0x22c/0x580       <-- kmalloc(2) for 1-byte write
+>    ...
 > 
+>   The buggy address is located 0 bytes inside of
+>    allocated 2-byte region [ffff888107c8ed88, ffff888107c8ed8a)
+> 
+> The kernel at line 921 in drivers/pci/pci-sysfs.c:
+> 
+> >    return pci_legacy_write(bus, off, *(u32 *)buf, count);
+> 
+> unconditionally reads 4 bytes, but kernfs only allocated count+1 bytes
+> (2 bytes for a 1-byte write).  The upper bytes of val get populated
+> with uninitialized heap data, as the Sashiko review noted.
+> 
+> On x86 this is "just" a KASAN splat since outb() truncates to the
+> lowest byte, but on PowerPC where pci_legacy_write() does
+> `out_8(addr, val >> 24)`, the garbage bytes would actually hit the I/O
+> port.
+
+This is a known issue:
+
+  https://lore.kernel.org/linux-pci/20260421200609.GE1684602@rocinante/
+
+The fix has been sent recently, too.
+
+> Hope the PoC helps.  Patch for pci_write_legacy_io() would be:
+> 
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -918,7 +918,19 @@ static ssize_t pci_write_legacy_io(struct file *filp,
+> struct kobject *kobj,
+>      if (count != 1 && count != 2 && count != 4)
+>          return -EINVAL;
+> 
+> -    return pci_legacy_write(bus, off, *(u32 *)buf, count);
+> +    u32 val = 0;
+> +    memcpy(&val, buf, count);
+> +    return pci_legacy_write(bus, off, val, count);
+>  }
+
+This would unfortunately not be the correct way to fix this.  You need to
+take into the account different platforms on which this code runs.
+
+[...]
+> static int try_write(const char *dirname, const char *buf, size_t count)
+> {
+>     char path[PATH_MAX];
+>     struct stat st;
+>     int fd;
+> 
+>     snprintf(path, sizeof(path), "/sys/devices/%s/legacy_io", dirname);
+>     if (stat(path, &st) < 0) return -1;
+>     fd = open(path, O_WRONLY);
+>     if (fd < 0) return -1;
+> 
+>     ssize_t ret = write(fd, buf, count);
+>     printf("  %s (%zu bytes): %s\n", path, count,
+>            ret < 0 ? strerror(errno) : "ok");
+>     close(fd);
+>     return ret >= 0 ? 0 : -1;
+> }
+> 
+> int main(void)
+> {
+>     DIR *dir = opendir("/sys/devices/");
+>     struct dirent *entry;
+>     int found = 0;
+> 
+>     if (!dir) { perror("opendir"); return 1; }
+> 
+>     printf("PoC: pci_write_legacy_io() slab-out-of-bounds\n\n");
+>     while ((entry = readdir(dir))) {
+>         if (strncmp(entry->d_name, "pci", 3)) continue;
+>         printf("Found: %s\n", entry->d_name);
+> 
+>         /* 1-byte write: kmalloc(2) → *(u32 *) reads 4 bytes */
+>         if (try_write(entry->d_name, "\x01", 1) == 0) found++;
+>         /* 2-byte write: kmalloc(3) → *(u32 *) reads 4 bytes */
+>         if (try_write(entry->d_name, "\x01\x02", 2) == 0) found++;
+>     }
+>     closedir(dir);
+> 
+>     if (!found) {
+>         printf("\nNo legacy_io files.  Kernel likely lacks HAVE_PCI_LEGACY.\n");
+>         return 1;
+>     }
+>     printf("\nDone.  Check dmesg for KASAN report.\n");
+>     return 0;
+> }
+
+The above code might need a small update:
+
+--- a/poc.c (original)
++++ b/poc.c (current)
+@@ -32,7 +32,7 @@
+-     snprintf(path, sizeof(path), "/sys/devices/%s/legacy_io", dirname);
++     snprintf(path, sizeof(path), "/sys/class/pci_bus/%s/legacy_io", dirname);
+@@ -48,7 +48,7 @@
+-     DIR *dir = opendir("/sys/devices/");
++     DIR *dir = opendir("/sys/class/pci_bus/");
+@@ -59,7 +59,7 @@
+-             if (strncmp(entry->d_name, "pci", 3))
++             if (entry->d_name[0] == '.')
+
+As the legacy PCI sysfs attributes path is different.
+
+Thank you!
+
+	Krzysztof
