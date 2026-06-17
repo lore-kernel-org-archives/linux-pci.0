@@ -1,139 +1,224 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8823D12CDA5;
-	Wed, 17 Jun 2026 02:33:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E5D197A7D;
+	Wed, 17 Jun 2026 03:00:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781663642; cv=none; b=qPRT0bXJMfqnU0CmQVEK4uVXzcTMJPxpQh/YncHJvlK2V2oYPdZeH92byrb3G1qTpM6FvlQYvKTJVXhwZO0iAulA4m9r5/zWV6COKYGH3UMWdxak3WSOmzhrDlUnZ26mPXShcDGdBxx2RHHN4t0QlYmSKPJj7i4WIyNZPnVk+o8=
+	t=1781665233; cv=none; b=ayvStMiB6yG+c4zuhAmok3XKELTc4UseN5WhHSHtTFyl+Y8QRyKi0AsnTmtty4RLZKlYzCVcyesu1FQiEwAWbDL2sbkOD9jnsIhrfnUDqAicFmiSYThWiTNXR6lrD/j0Hh2n7g+gdyDbuy9R+5RY3mCfZw+P+cbH0d54mZkB1wQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781663642; c=relaxed/simple;
-	bh=Ak9X7zSEfU+j/q4AqpyIuwAwKvY+FIig8V8wuRVclj8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=OhE9EpG5fcsgpAmjq4S/bk1lIqpqJvLZBR+puT2fCRDL/l2509oPexvlYrahxlQ6b4sIAsrsUJhKiZN/hZsE9sKCF84hDmxMhdJewiQgs+knA00teQYgWhvAJmwwYps6SKtwLONgKvlh9KrXsX8WcYJSS4V+WRCcDv8JFNWRqAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=HOcwI0ew; arc=none smtp.client-ip=113.46.200.225
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1781665233; c=relaxed/simple;
+	bh=7OYVKtv/F7oSFBVfrzuQ7bNWko2Rz6OLHweU0dppxeY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mVq45/X3LVaVOVDfDlp+KL2OWx3LZgLl0LeaDW1cxhvc+ImPVchW4F2YkXlDIQPyEahVZZ5kqmJN0EcJK7C1XO2GLNfMKHTVpOy7p/vmQmsAZxez7sa4QozTqmjdzyAprf83mlJyhafiKxcHPmsrP3D2fXRGS9iwK+Ejmn1RpTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=b61+jpky; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=f9po6CAw; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="HOcwI0ew"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=KA1mZuTqS2IqKIfdtfvtz1bVOfDlv3v1wkmz8B0CnqA=;
-	b=HOcwI0ewAjB7DB0HNINdCWnAYg8l1geH+1kLhZYzFL7esO0Vods4fQel2d6ic5B+cV/ctoips
-	HYhVSFkIlFu0dSWyo4iw+iwQ/8yPgJ8QqWndPEbO427m55jPDw6QPgsw74imWtdeHzV1t3DnAfX
-	A8LgnBf+HfceBlSffaKr9NM=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gg7525Drxz1K9dS;
-	Wed, 17 Jun 2026 10:25:58 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id C0A6F40563;
-	Wed, 17 Jun 2026 10:33:55 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Wed, 17 Jun 2026 10:33:55 +0800
-Message-ID: <e2db72ab-6d51-4d19-8dba-0612207008a3@huawei.com>
-Date: Wed, 17 Jun 2026 10:33:54 +0800
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="b61+jpky";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="f9po6CAw"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gg7rr5CFnz9tsW;
+	Wed, 17 Jun 2026 05:00:28 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1781665228;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=755kSzKoGCVo0Cb8/TSXpktU8jUi66NDNw4VHwou0DU=;
+	b=b61+jpkyS00DITJ6Dd6gzKSWsbglkfkz5NpkbnBFUhCAwe8xu+6KyQ0e+SYZEJ6KpudBhW
+	jfIfBVEGolzmHfUZeA3zRgu9E5lNuPMKz3wCLqJr5edmWs9odft67RA9+GNpmto1QzbBYP
+	ikUECIhoAgEo+VdVmWB97uupF2ldhIiIBrBuaqGUJ0NkxASWh7fC5+fDM3nVHhbAKPPYiB
+	9rfdzy4O4IZBwZFEBqfq4sToK89gUfAJvNPMosL4AqL4poZm94MjQ+Q9MShWVDs7uYV16h
+	Pcq+GHilHuJ6NUjDGyZvXZ0H8dUGMlQOk9D8CVZ6v323f0Bggb+PcruzBAyhnw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=f9po6CAw;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1781665226;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=755kSzKoGCVo0Cb8/TSXpktU8jUi66NDNw4VHwou0DU=;
+	b=f9po6CAw/6ZJzzx4IHKkIHCzG7S7g0dKoXo56Ocqw3FiTbPfCRv5gIF1xWSfwueZk+goRr
+	JesIQ9a+9SDuzfmAtoho0JZ/ssVjcOOidGectPq6Mt1iATb5BR2NW1Vw4Aac+5W2whMcyW
+	kU89brzDPXXTozRhCMFIWjqHr8A8/WC2K+UtpIg6eLzqXW2DG0epzdfUEFiykKeR//dp7G
+	NwDdEERMKc+J7oSpesSuw7XsSnPUsreqHzzkhEsElw+PLBasZxKJmzLrxuHiG9RhAdYXUA
+	J4L+c2wQJJeZ81NOJTzYbO6HZr2Kv042/wNA5Urry9VVyMlGhYi3svJQ4FnU1Q==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Zyngier <maz@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 1/3] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+Date: Wed, 17 Jun 2026 04:59:44 +0200
+Message-ID: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU to
- steering-tag mapping
-To: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>
-CC: <helgaas@kernel.org>, <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>,
-	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
- <20260616104621.41915-9-fengchengwen@huawei.com>
- <20260616144224.GB3577091@ziepe.ca> <20260616105754.784be22d@shazbot.org>
- <20260616172728.GC3577091@ziepe.ca>
- <c913116a-35b4-4934-b78b-8fa0a08a00ae@huawei.com>
- <a81c3479-1749-4b9b-b913-cfb20c621690@app.fastmail.com>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <a81c3479-1749-4b9b-b913-cfb20c621690@app.fastmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+X-MBO-RS-ID: 50660cbd64fe0ecdeeb
+X-MBO-RS-META: pfxbqyyscfkyoswjsnjgjm6195nm4mcb
+X-Rspamd-Queue-Id: 4gg7rr5CFnz9tsW
 
-On 6/17/2026 9:30 AM, Alex Williamson wrote:
-> On Tue, Jun 16, 2026, at 7:18 PM, fengchengwen wrote:
->> Hi Jason, Alex,
->>
->> On 6/17/2026 1:27 AM, Jason Gunthorpe wrote:
->>> On Tue, Jun 16, 2026 at 10:57:54AM -0600, Alex Williamson wrote:
->>>
->>>> IMO, this implementation in sysfs more so proves that vfio is the wrong
->>>> place for the interface.  vfio has a use case to consume STs, but it
->>>> doesn't produce them or own any of the mechanism by which they're
->>>> generated.  
->>>
->>> I would argue only a VFIO user can consume this information so putting
->>> it in general sysfs is overkill.
->>>
->>>> The weak point is whether this bin attribute, exposing an array of
->>>> structures, fits within the socially acceptable norms of sysfs.  
->>>
->>> I'm pretty sure this style of sysfs is not accepted and
->>> counter-examples are things that are ancient or slipped through.
->>
->> After weighing all feedback, I'd like to propose a lightweight single 
->> text sysfs node
->> design to resolve both your concerns, without introducing binary 
->> binattr or masses
->> of per-CPU files:
->>
->> 1. Only create a single r/w text attribute “tph_cpu_st” on Root Ports, no
->>    hundreds of separate per-CPU sysfs files;
->> 2. Usage flow: echo target cpu_id into the file first, then cat it to fetch
->>    formatted human-readable ST/XST text line (cpu_id vm_st vm_xst pm_st pm_xst)
->>    for that CPU, e.g.
->>       echo 10 > /sys/bus/pci/devices/<BDF>/tph_cpu_st
->>       cat /sys/bus/pci/devices/<BDF>/tph_cpu_st
->>       and the output will like: 10 2 20 100 120
->>    In the case of concurrent access, users can determine whether the first value
->>    (cpu_id) is the one they expect by making a judgment.
-> 
-> That's a terrible workaround for an inherently racy design.  Thanks,
+In case MSI are enabled, but DWC built-in iMSI-RX is not in use, the
+MSI are handled via GIC ITS. Configure all controller MSI registers
+fully.
 
-This is because the DSM method is slow to invoke and involves many cores. Therefore,
-this trade-off is made.
+Set or clear MSI capability register MSICAP0 MSI enable MSIE bit and
+PCIe Interrupt Status 0 Enable register PCIEINTSTS0EN MSI interrupt
+enable MSI_CTRL_INT bit according to MSI enable state, set both bits
+if MSI are enabled, clear both bits if MSI are disabled.
 
-I propose another lazy-cached read-only text file design:
+If MSI are disabled, or MSI are enabled and iMSI-RX is used, then
+deconfigure AXIINTCADDR and AXIINTCCONT to 0, which disables any
+pass through of MSI TLPs onto the AXI bus and then further into
+GIC ITS translation registers.
 
-1. Only create one read-only sysfs attribute named tph_cpu_all on Root Port
-   devices, no write store hook, completely eliminate read-write race risks;
-2. Lazy initialization: All CPU steering tag entries are fetched via batch
-   ACPI _DSM calls only on the first userspace read operation, cached inside
-   afterwards to avoid duplicate slow firmware interactions;
-3. Cache invalidation only happens on Root Port PCI reset events, including
-   system cold boot, AER fatal error recovery, userspace manual reset via sysfs,
-   downstream hotplug and root port driver re-probe.
-   No CPU hotplug notification hooks are registered to avoid extra code complexity;
-4. On every sysfs read, iterate over the cached entry list and filter out
-   offline CPUs according to the current online CPU mask dynamically, so
-   only valid active CPU records are printed to userspace;
-5. A read-write semaphore protects cached table access to support concurrent
-   userspace readers safely;
-6. Plain human-readable text output complies with sysfs text-first norms
-   Jason prefers, no structured binary binattr is introduced;
+If MSI are enabled and iMSI-RX is not used, the configure AXIINTCADDR
+with target address of GIC ITS translation registers, and configure
+AXIINTCCONT to enable MSI TLP pass through onto AXI bus and into the
+GIC ITS. This specific configuration allows handling of MSI via the
+GIC ITS instead of integrated iMSI-RX.
 
-Usage example:
-   cat /sys/bus/pci/devices/<root-port-bdf>/tph_cpu_all
-   the output will be: cpu_id vm_st pm_st vm_xst pm_xst
-	0 0x00 0x00 0x0000 0x0000
-	1 0x02 0x00 0x0005 0x0000
-	2 0x01 0x00 0x0003 0x0000
-	...
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+NOTE: This would not be possible without prior work from Shimoda-san
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 53 +++++++++++++++++++--
+ 1 file changed, 48 insertions(+), 5 deletions(-)
 
-Thanks
-
-> 
-> Alex
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 485cfa8bd9692..ba6e3bedd6d0a 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -31,6 +31,10 @@
+ #define DEVICE_TYPE_RC		BIT(4)
+ #define BIFUR_MOD_SET_ON	BIT(0)
+ 
++/* MSI Capability */
++#define MSICAP0			0x0050
++#define MSICAP0_MSIE		BIT(16)
++
+ /* PCIe Interrupt Status 0 */
+ #define PCIEINTSTS0		0x0084
+ 
+@@ -55,6 +59,16 @@
+ #define APP_HOLD_PHY_RST	BIT(16)
+ #define APP_LTSSM_ENABLE	BIT(0)
+ 
++/* INTC address */
++#define AXIINTCADDR		0x0a00
++/* GITS GIC ITS translation register */
++#define AXIINTCADDR_VAL		0xf1050000
++
++/* INTC control & mask */
++#define AXIINTCCONT		0x0a04
++#define INTC_EN			BIT(31)
++#define INTC_MASK		GENMASK(11, 2)
++
+ /* PCIe Power Management Control */
+ #define PCIEPWRMNGCTRL		0x0070
+ #define APP_CLK_REQ_N		BIT(11)
+@@ -305,6 +319,39 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
+ 	return rcar;
+ }
+ 
++static void rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
++{
++	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
++	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
++	u32 val;
++
++	/* Make sure MSICAP0 MSIE is configured. */
++	val = dw_pcie_readl_dbi(dw, MSICAP0);
++	if (pci_msi_enabled())
++		val |= MSICAP0_MSIE;
++	else
++		val &= ~MSICAP0_MSIE;
++	dw_pcie_writel_dbi(dw, MSICAP0, val);
++
++	if (!pci_msi_enabled() || pp->use_imsi_rx) {
++		/* Clear AXIINTC mapping. */
++		writel(0, rcar->base + AXIINTCADDR);
++		writel(0, rcar->base + AXIINTCCONT);
++	} else {
++		/* Point AXIINTC to GIC ITS and enable. */
++		writel(AXIINTCADDR_VAL, rcar->base + AXIINTCADDR);
++		writel(INTC_EN | INTC_MASK, rcar->base + AXIINTCCONT);
++	}
++
++	/* Configure MSI interrupt signal */
++	val = readl(rcar->base + PCIEINTSTS0EN);
++	if (pci_msi_enabled())
++		val |= MSI_CTRL_INT;
++	else
++		val &= ~MSI_CTRL_INT;
++	writel(val, rcar->base + PCIEINTSTS0EN);
++}
++
+ static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+ 					struct pci_dev *dev)
+ {
+@@ -359,7 +406,6 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+ 	int ret;
+-	u32 val;
+ 
+ 	if (pp->bridge)
+ 		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
+@@ -379,10 +425,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ 	dw_pcie_writel_dbi2(dw, PCI_BASE_ADDRESS_0, 0x0);
+ 	dw_pcie_writel_dbi2(dw, PCI_BASE_ADDRESS_1, 0x0);
+ 
+-	/* Enable MSI interrupt signal */
+-	val = readl(rcar->base + PCIEINTSTS0EN);
+-	val |= MSI_CTRL_INT;
+-	writel(val, rcar->base + PCIEINTSTS0EN);
++	rcar_gen4_pcie_host_msi_init(pp);
+ 
+ 	msleep(PCIE_T_PVPERL_MS);	/* pe_rst requires 100msec delay */
+ 
+-- 
+2.53.0
 
