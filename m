@@ -1,248 +1,480 @@
-Received: from mx0a-0002e601.pphosted.com (mx0a-0002e601.pphosted.com [148.163.150.75])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010060.outbound.protection.outlook.com [52.101.84.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B4530C343;
-	Wed, 17 Jun 2026 04:48:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.150.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998873148D3;
+	Wed, 17 Jun 2026 05:49:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.60
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781671706; cv=fail; b=ONlKuw66vXEbFNN2zO/gzUIMUBrKGvAwuB49GZhREj22xmBRZfYZWxa2pzA/qwKoGM/JkyI7i51zfri4fQGv8HtJlbXZArsdwDMRo9UBcESlMjfctNrAycNTi63JZSaxVzQHS0/BIANhYNnnpiUR27oG/pxJ6SRsn3+wANe5ALw=
+	t=1781675352; cv=fail; b=ktGGzMIX8Nv0ff9+EKPWW1FmCBLARKS5EEj1M4Bo7WxF6yoJBr+pIjnbylgmS8NBoH846/W29qdf7ZaH7xNeIKZKs9E5Ao8bGoJ9pxQEMpdWzIeGlQZpVZdG+7YL6suHnsOBP494BiJcSF3F5FPtb85RSbHE5AOyI6r6EbJadC0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781671706; c=relaxed/simple;
-	bh=Ab6++Cor80KZ02TRw895q6wTL9/GJVGCCZYskZWAAOI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=u1mTMSSNdcVdNgoGj6Y75p2/TA2blz9FCQvd/6xUvtJoPwFSeo+ywXiYyf7C+Gwdnv4J5ZmqPm1/ja6ysZHpqo+sZ6G3MqjJAoMm3tYzjpcL2A79SeU+Q3oChF4Dx/kMZnexsJPvBugWr8Qnqxsuc/ryJvWob7YkImWUpfxRPlo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=ljhF4PF3; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=GCXhFQIQ; arc=fail smtp.client-ip=148.163.150.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1781675352; c=relaxed/simple;
+	bh=+OwTB/3yBXENT4TBN8w33m44LA+CFz6xkydt5DTLTyw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=porymfYaYW6v4uK0xzElZHXj73KnV0yTIWmxSpSORPKDmwokK8VM8tBb+hUeecejoxNOhGr0tQhjxT3HU2fz00WR5+mltrYU1FF+mCbyd4n52WEGjXLkqSaRCGo0ZLyWki9+qhWUw3TiTt+6NSpwYeVQyDBRAKkQY9/pfzjCW0s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=SvTdHfmZ; arc=fail smtp.client-ip=52.101.84.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="ljhF4PF3";
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GCXhFQIQ"
-Received: from pps.filterd (m0384305.ppops.net [127.0.0.1])
-	by m0384305.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 65GLVEq23164744;
-	Tue, 16 Jun 2026 23:48:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	proofpoint-05-2026; bh=DNA51HucHCozThPLPcmYwHq01P/1wtYSKuZorFRV/
-	3E=; b=ljhF4PF3zeB6vDH8qbBr/mBP49XAoY5xa1r447eIWgS0D5veHgZRee8RA
-	T8AnynhAr+xq8q3C7H2Dg4GeXOMFcZLKKTlfXYaznUgUrY3wdG8GrAu55h0qmH3/
-	Vx5QA8gdyZEF3GDvMBrNaMaeXHg/YbadjhrmhwepxgDKliQreGHkBVp1uq91Du63
-	V3iQ6V4KjHB8UKfSZB0w5PTslqKzemBlxGK+phgEAysR8MU3ZDMAdCtydA1rb14r
-	BVNw5CZD3ZANaaOlIRUhI8J197ERhDl9Ce4zzshdXOK0CvMiWm8KVz0ybA0xukN6
-	qcIatZT2myjrTR8wGhtDeEL7IotLQ==
-Received: from dm1pr04cu001.outbound.protection.outlook.com (mail-centralusazon11010070.outbound.protection.outlook.com [52.101.61.70])
-	by m0384305.ppops.net (PPS) with ESMTPS id 4eueffa8u6-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 16 Jun 2026 23:48:08 -0500 (CDT)
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="SvTdHfmZ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=foaXfn3+5OVgF6L5TJ280byg88T5lyl5BFWN6kKCXAAIMNcgXEkGW4iY2UNiSbGaEGk6ovwI76+ruERY3ewPEO7XdEBFhQJvI6B1Lv3CltAzCfdolekxxjqxtSJ9CNQpdQBWqzO0wygPAvki+C7yS0nL6jgYL5Fw5WQGK4LLkuZpjFeW8/cCAauNhwy2sO0e3ImwvPtjtbgrv2DEjR35X0omc6XtprRlqsm1cF+cWXH30EfTS2KWGMDZLZCk6nrSX1Yk5QPHKDdWMG+An/26w4hVBZ23LV1A4561/eW9UACrDHZhg+1XqzuafVtWSzCS/GQRKNFT5Wv9lB5UnWKrIg==
+ b=cIqsIJCwajLpLNremz17qVn+ff0lZREXqJtTF9uw2cZZcff6mjFgWDpuK60gFXm5YD7SPY4OWREUXzaaoxLqaQInc3G3YHM+bAq7rxkZSIYqlNxVel8cktSm4NEcnjzbrpaasijBz8xPTjHULINVQaTCNaP7HOiUo2OE91rTCMdHeqUbotY/d0vWaAPzvDitriuoOx+OeS4ie2Oq5wDWv09uKAR/iidZmti1JO0dVXNafxTCrpBbzz//ChuplofOy4tzeoSaRmBIvlHDhw3nNkzSEOyzrG/qjanVr9B+a0IHRht2V1Um4QOHmN93H0MfvrgV6LhZnVwT33aBIDqugA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DNA51HucHCozThPLPcmYwHq01P/1wtYSKuZorFRV/3E=;
- b=PqI2iyqQV4NlHkXEGkxJUBvVtjZ51M4i/JQ5zR1WGivlqMXTTtxCdkxX3K7TPz1X38mg5kxYouPOAoyCmsEX7i3UxQsUHIEPzai15fvoqrl7Qenifw/dH918wDrt7VFEwKB4Mztr3zUOQ6prLdznKEPiZ05P5+e0AqTQMdRUf0Bn6ZuOJHx6QXYqKoAd3Sq2GxfxFB0FFs8qDodemuMtxTvUTS7zS8tPM5UH2iwTAwXi5f1eg7cZQV0oTNrTAiXipe60nNy+a7Wb1BFW8K/+hS85yX9Y3JNnXWGrLe4M2OuZ8K27M+dYnF+p2uL5rda3FIn6OodEROhd907VVTzO/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ bh=auUGjMlC/M7KRzJG6HK2U8+v7HgPdmxR7iisf3Umhsc=;
+ b=AIvUMEJXofsui2znbJbUXbnLV9PlSxLnm9eebqeT5MTTITXeefUpoD0HTEOHl/fyVA2Hu35N2aB2FOvSlTFBvVYek4eMrFkzidv4EWiuTopltaNa6yvqcEtHPbJ01Bsf30ASWxSMru5qp/xj3hahKuJ0ckt827frM96wiXJZrTGA+RZQ4nlk+dYfaFV6nf0r6gQsSa78GTxUQuoMnG3Mrfza15dWYHI9QChfiLkzRdiqh8hYqBgBcDT3b1SZw0F4159JC/2guFD1xFrDMmFxI45uKuH7XwQXj01rGS9nRB0rOtXo7BjgLbSxzxlU40o+iDRn3xxRNm9VD4NxG40fXg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DNA51HucHCozThPLPcmYwHq01P/1wtYSKuZorFRV/3E=;
- b=GCXhFQIQda/PxKw5a3PdAAFoImYE8PvCS6ieV5HDBj5Hj44IA7QDYXvZ7EtwWl3SzdXISK9tYKDengZf3+VqPI+zTAUMBww7F4To6dSvfFahn4T7m6Drh1Wfj5w4ZPzecseRY+9vQMh+y5GvA9VAPRAYJP0kbsPlatLJc4sM400=
-Received: from CY5PR14CA0028.namprd14.prod.outlook.com (2603:10b6:930:2::29)
- by SA1PR10MB5866.namprd10.prod.outlook.com (2603:10b6:806:22b::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Wed, 17 Jun
- 2026 04:48:04 +0000
-Received: from CY4PEPF0000EE3E.namprd03.prod.outlook.com
- (2603:10b6:930:2:cafe::1) by CY5PR14CA0028.outlook.office365.com
- (2603:10b6:930:2::29) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.139.11 via Frontend Transport; Wed,
- 17 Jun 2026 04:48:04 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
-Received: from lewvzet201.ext.ti.com (198.47.23.195) by
- CY4PEPF0000EE3E.mail.protection.outlook.com (10.167.242.16) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.139.8 via Frontend Transport; Wed, 17 Jun 2026 04:48:04 +0000
-Received: from DLEE207.ent.ti.com (157.170.170.95) by lewvzet201.ext.ti.com
- (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 16 Jun
- 2026 23:48:04 -0500
-Received: from DLEE215.ent.ti.com (157.170.170.118) by DLEE207.ent.ti.com
- (157.170.170.95) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 16 Jun
- 2026 23:48:03 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE215.ent.ti.com
- (157.170.170.118) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Tue, 16 Jun 2026 23:48:03 -0500
-Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 65H4lw0L1535168;
-	Tue, 16 Jun 2026 23:47:59 -0500
-Message-ID: <fa3c59fa-cfa0-49ed-b656-2e9aaf45e440@ti.com>
-Date: Wed, 17 Jun 2026 10:17:58 +0530
+ bh=auUGjMlC/M7KRzJG6HK2U8+v7HgPdmxR7iisf3Umhsc=;
+ b=SvTdHfmZs+lGU5TTIWKfW0til0alWryF3qKAITtpTt9EL6MzUHI6kHajkex0FIAS2/z9dlA5LTuo1mUePuAwsDM6cPGmdFBDTxgzfi4eGXG52KxaQnf6r6w9OYH6qK+0UFHqMB/5qH2CZMGfhAalvbKA+U49KGkOaLOjEjSuXTfEIJ/ZNffIzw9E3aihrZVOZHEmNBzkaK2ZMvJU6s0QibrYgInBfy2xs0qtrXl7OUivqczsF1fwyVP5G7nG/oGon3MLcRkC6oVOwE1kvh0nEVbGzvblX13utpRFxFHXCl5pCW8seyuZL/58RQXOUnWM08MWRQNwCuhgF1kwh5pYdA==
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by VI1PR04MB7181.eurprd04.prod.outlook.com
+ (2603:10a6:800:12a::24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Wed, 17 Jun
+ 2026 05:49:06 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0139.009; Wed, 17 Jun 2026
+ 05:49:06 +0000
+From: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
+To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>,
+	"Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "robh@kernel.org"
+	<robh@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
+	"Frank.Li@kernel.org" <Frank.Li@kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v6 3/3] PCI: imx6: Add root port reset to support link
+ recovery
+Thread-Topic: [PATCH v6 3/3] PCI: imx6: Add root port reset to support link
+ recovery
+Thread-Index: AQHc8yFf59lYFYACoke3Q1pkVqOUfLYsaHkAgBSNLXA=
+Date: Wed, 17 Jun 2026 05:49:06 +0000
+Message-ID:
+ <GV2PR04MB12019659EB0F174DEDD05E11D8CE42@GV2PR04MB12019.eurprd04.prod.outlook.com>
+References: <20260603062510.3767610-4-hongxing.zhu@oss.nxp.com>
+ <20260603070533.641461F00893@smtp.kernel.org>
+In-Reply-To: <20260603070533.641461F00893@smtp.kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|VI1PR04MB7181:EE_
+x-ms-office365-filtering-correlation-id: e7ee2edf-2e62-4cba-c64a-08decc3424ce
+x-ms-exchange-sharedmailbox-routingagent-processed: True
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|19092799006|11063799006|5023799004|4143699003|4133799003|56012099006|6133799003|38070700021|22082099003|18002099003;
+x-microsoft-antispam-message-info:
+ Hm8TmmKzb8kk5JPmzUfb3zb8LENOzyKnfrt0TJl4ejoYqkFFuenBMtiWyE6ddDjw/O7wsB5tOuAf7zK5QANuHEoQp3BT2vo2yZ9VmS+IpLI6Yw9dhRuL5XKHhS2Lqhp2xzPA8Dt4iTU2kCk/fYuFZbHYJNXXtF8YMKVi5gtlHBcS1bWcVxKFvY+bOxONAbYOqcIz5nyQxVgdlYwt+5k/MtSG3Moe7lFd82XS0Z1yj1D3JP9n9T6EHIBZoikbcHpUw1VeLrO/iKwaAEmx0/e7Bsc2anGrvyvH1ACVs4wk6+BR+rHDkeJH7D6BI1ixBCcnZjjUEuqVSCkLmdzbCdFjNdBOrnkLB4R7wL0cuec3DmuR20EgqXBXQUeUan5Em3EWUJ/FYIscJKCM4n8qyxuvWerwkeLY3EWLZVqpDLitmzTNFDSU8siFyMCvITV631tgTfmOeoicRwbx8zJFjZfKe8+xJNcKWz/NLSxXDoJ8b5y3IZ8RkuSm5bdOcorFKbQmDTLE+06dqVw6sb2OBwAshGANVxs7y3bYO1rX/381MAoGnFVrUpbHWemIt4hOf3CV0UhC4edcx+XAHYdfQqG06K4e2BP+IwinH/uFdiIgVvb/p/szBCXLKSoGDnrcAJlK+f9ayqd+wlsxConhKrvgx0KbBsIQWgtXeVBYNHNCSOPeQ9a/2igcEKxKQsizm6Fj04qzW9z9w9ekTl3bxfiMzntT2vpzAxHZkIoyym9QpFcePFuFPmRh8BGags5/E6Iu
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(19092799006)(11063799006)(5023799004)(4143699003)(4133799003)(56012099006)(6133799003)(38070700021)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?ONOTABumK3LIJ1r2LHB8oeeqst415T7t3sWR0OWhdpoJF1lNJ73jBRq6/JRE?=
+ =?us-ascii?Q?W1/q2/iFg4R2OORsQhARUzLibtC7wCKW7rKzu4FJz0T+hBzs119mOiEh+XMm?=
+ =?us-ascii?Q?e6LzkRDmXglBd01E1PHoU7+ZQynZ3nJUPiv3CmcmnbsGtQED7oYx2JP5G5tp?=
+ =?us-ascii?Q?5BZxqYH7P2WC1IYozXhecmmbeTngPKWSYNKplwtVyEwEG+ixssy/B1F1wqRy?=
+ =?us-ascii?Q?iEOWeL/POzz0fcob5Ue34+jQd6e+FtMnvzPxQP+AlOZaiT6wcjoqIzlv+I/U?=
+ =?us-ascii?Q?z8GLQei2+j9K/w4TjJQ64Rw7urGbTbygzRd24hgJx3Cv0cqYUauoz+wnfM0y?=
+ =?us-ascii?Q?qwz68t639XFRP3ceSXvzN7Z/A2RImbPFYA2ud7Xrofn/I7AMT1YcwTCm6aYU?=
+ =?us-ascii?Q?apa0PiAK/b9Q2q/aZhvwSplAeFokogMMGAMb26X/VUwXqRZ5h4IWt8KLapDI?=
+ =?us-ascii?Q?wUQf4VNcRhQR++LICsh8nw1s+DfrEjIwDk9iMtcofUQPDaGfCouH5cNeWnTL?=
+ =?us-ascii?Q?pXGP8NV4g+eqf2Ep8G/PDAjvWdZq7Z3MsbrSNFQ0f+Y7QESRDMKd+pIDNo6M?=
+ =?us-ascii?Q?gfSvEbPZE7OGKaO2M2XsOf60aZWfZlo9QO52NnOoM7KMAKHA75tzy/f66uuv?=
+ =?us-ascii?Q?PVNRp1lbsXyvV5NIDaaGErB6y3WbGaWdWJyP7UAta/3rQQ5I4Qr4EG3xHyW7?=
+ =?us-ascii?Q?RW2bvxJXXNH8HuxY7QDKVa4o8p5G8Q8mNdR5i2OQ/8CggAbNwECM/ekbq/MC?=
+ =?us-ascii?Q?47wlmWyWb20auF0pPvc+Ippkg4xfdzljKe0RW0PUr/X8U4HTkLy1z7I7F5Dw?=
+ =?us-ascii?Q?djLPWtQas5Qvwei5MsuB74Ca6DodQpNs3YghjSNCd4UNrZNfGjzZC7JA1WMy?=
+ =?us-ascii?Q?laAz992dJ6E8QZoZ+01ycBPeD9nKe34H7+htmLcZCxnElViuPKUPGDNzVn1n?=
+ =?us-ascii?Q?AEDUhFsC7kkCXPxPupqnxKTBKVPOIoUYVvCn7sYx4GkQ3eURsv3+hyLi53/w?=
+ =?us-ascii?Q?39VaQEI+fds+0kpG1uRwQLcOM3NWV9X0lGrTJ28cB2hfuW9WORWIzDvFHfxy?=
+ =?us-ascii?Q?Xdl9lytkz+bJnzfhyk2KLe+PItaFW9KBRW9AeZ91iHanwGXWqOhmU12YXEn0?=
+ =?us-ascii?Q?L3nLPmx+tI2rSxcouyKsj/dbvaAlG4W++LohxcflM168vIsT9UoMoFynnM3w?=
+ =?us-ascii?Q?Ag1vF/lhIMRT0VFLPmbi5whlrrSzVRmIn2TKUvx8PSunH9hwyitWxezR91WJ?=
+ =?us-ascii?Q?ucajNgTbIGUQ4NKJ9I5zFIasntWAw/SVy2U7o+oNsRzL7g9WB2tpF0jmfhp6?=
+ =?us-ascii?Q?9v/Q98iK3oJ+MT4ENT15TNnXnnKj6aFpaW3grEJr9V2ajihdScNxqnVCxzJS?=
+ =?us-ascii?Q?kSBcbk3vEeJKp+7Y+T3bmS1HxMvxJhwpEX9dUAIGwjZt4/JvAm8345lj22i7?=
+ =?us-ascii?Q?WVPHyBHkcqyBLo5WGa985lxe3YyI4E7b4uybBW8daNpqB98PzEOUjvhFM+Sd?=
+ =?us-ascii?Q?p/fxn8Jk1YVFX7gjRUC7Bf8DG4nm/YRvVDbxwUe0wJVu09xUMOWDjcUa+J/8?=
+ =?us-ascii?Q?TnmtZ/K3X8q95gHm7uGIouiSGZyvwWy/2H5e/M7A08LVEZ31TDGEJ51H0p+G?=
+ =?us-ascii?Q?MI4cukBPYXHZf940Y0NcxN807/w1Z1ew/YXjbCQ5T2kDm71JprWU468FTkqM?=
+ =?us-ascii?Q?SGrPY5yQR+wlWNvL9QHEhDq5neyOPdNHz3fED7sJPxOTrreB+gE9Tc2tOfwr?=
+ =?us-ascii?Q?ff905InESw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 3/4] PCI: endpoint: Add support for DOE initialization
- and setup in EPC core
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>, <kwilczynski@kernel.org>,
-        <bhelgaas@google.com>, <corbet@lwn.net>, <kishon@kernel.org>,
-        <skhan@linuxfoundation.org>, <lukas@wunner.de>, <cassel@kernel.org>,
-        <alistair@alistair23.me>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
-        <danishanwar@ti.com>, <srk@ti.com>
-References: <20260611191252.GA499821@bhelgaas>
- <0216a528-3737-4714-b9d1-5d28008e0ec8@ti.com>
- <grfjlghqd3k3i3uxll2jksrh7pgi2mtxifbq2vymsdgbzijsnq@dvgu2qp2hza3>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <grfjlghqd3k3i3uxll2jksrh7pgi2mtxifbq2vymsdgbzijsnq@dvgu2qp2hza3>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE3E:EE_|SA1PR10MB5866:EE_
-X-MS-Office365-Filtering-Correlation-Id: f2eac8d5-42ef-454b-6ccc-08decc2b9e65
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|36860700016|7416014|82310400026|23010399003|6133799003|22082099003|18002099003|4143699003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	Tim3ppKXli+dt4pYmERZl6Onzb3OaWSznvtDcehbWgNZayuRDPq2Ewg+yC+nKcb8/c8d7fGd13J5kH3UYZ0v98G/z/dcE2eFQ0u+gmza0kTLumqbwCERzB4VpGUJOG348m9msQMm5gXq9W9NBtP0VmP1EimxHpYO3BuOfdN/JLmG4fyzEqRcngycOmG7yttoNnPCoSOiZNPP/zRPy8j/mREp0rrv3pVNG3XZsm1BLOuSBRF6PjiMoCFJyGdPa6dt76m4bk/nrqU0VGb840+R0h4scQoGeWVYCX1klmmcHmNKtUdCCSvX8NLcOi3VXtZF+SsrCrmA5Q7VtkwtLglEQqi/SyjMvI1mI4M0MTZnebUCSNPmzoNPHrYq2BjIAcgiFuA+Dc9sXL6RwpRfmx6HBjwc3AgAU4Wy+AzDauBR2vaCfBjKlCOeM0qb+Z3QY0vtjVYjI05jdpSFDoM4Mz+U0g9tet4xhF1d3WODlSTc7LtzHeHY00cV+Wlg312U1Luvx57DOhha9AUlpV6IB2DCVoReSzxji4HOcV1NbPli7k8td1a2rohbcZaZy+u/u/4fmIY44hGv9dX4RrSHg5wJeW1pmT087Ojm6xUdieDnzZ0sdx6JkgTvVnlKANXwd6QIUzojDh7Cj5OhYYxfJct53j2AMavMuTl5WS3hqoRondrNQkIRdTKro3NzBmbO7WYqc2GlChzevNWYj5A2mDjAfLnwg2/ozORNtB7K3ZCi968=
-X-Forefront-Antispam-Report:
-	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(36860700016)(7416014)(82310400026)(23010399003)(6133799003)(22082099003)(18002099003)(4143699003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	7kqspf8GDoc1tmpCvjABRfolhzujN0T4IbnX8rkrmA2PjmCueG9elQpV2rdQmVLGf7vL7NJbZN9uyI3cVqrfphpJNBhx0I2Qgn+wZJFIOE9kGJY/UDCaZhx2lE4JhUf5BpWcQ7q+vaLVBYCDjMpa2Zh221uJCm5jltIh61kxlDmh32prsRGUGNG7v4JYLHQkU4Dvx3HjmMjKl4g5hv8mJgvm8v8HHkQslFSbCSdNkLoSoX1oVDF4DOZIbR9+5wg9jpOQbOOdpqgLYDVCVFDxXt0+ptYAmumhWPK33/6378E1yk7JNsb4t5BCQtnyURaCICumbAoA5LVIh3RZPapHXYhXnsILP1VsIUoxY3HUnVk+RpZR+yOwdncgbWaGJxkRCDGOtIDn+jBkeXFYX1cwMzigIsg2AqS8MKgRieU5euBPj6/ftEPqqMl/0FmDLNp9
-X-Exchange-RoutingPolicyChecked:
-	qOjb4EM/nLP6cBY0WC+F4+ZkIkJp2QmLblA1tthnLELD9kDU+FwoKg3uaY1OO+2P6rWry8unLyQxLUFNvb+DjqbjOJBl1Hbrk2sJPYJdb3TdxA8KmeY3sA0riRhGY9mayytNDLu+2Q0m3ycFV8JEfWC9PQ4SEbHNUSHAx1W/F3nBGbhmQtKOM/ieJtWK0Vei13KOu8VoUsgzxSzKl518KMspSQRUGb5H0V2cj02k80w2gtaB2BLvuQFALd1QvFsZBZz6eW5eb0tS+iVrt/kov4+QjHF/mPuF1gL1rMaVtiJJIFn4agTFk0lwlBvZi2g35IG35GnUl04Xgc354Cj6Wg==
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 04:48:04.5451
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e7ee2edf-2e62-4cba-c64a-08decc3424ce
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jun 2026 05:49:06.0932
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f2eac8d5-42ef-454b-6ccc-08decc2b9e65
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CY4PEPF0000EE3E.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB5866
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE3MDA0MSBTYWx0ZWRfX4sJ/SS7y2HSi
- 7+mZiPolWfPb7MHepvaGdOGPnNMvSR6GwJ5liMED8okGGI0SmBBa71qQqURA0ERNlVryCbCe6eC
- mzwkIPZ4/PvQUMhIkgJgWsaWmghFtUc=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE3MDA0MSBTYWx0ZWRfXzoBCdm+UXJan
- kMTauHAHz4w78Si16v4tFIFDHRH61gwufvFt0AlHCH01E1pGIDXX33FimCvK/0sGJjA8QNfW6Sb
- BuOZSxEVPh+F7yC3fXZhuRQ9M2b2RTZlGBRQDBURsPDbd6BGKp2UoJpKOxa13JZTvWY79Gp3+U5
- o3xhUrOZds0GaxxKldwDwVGaZpq1f0lce0m/RJd/++xvucJChZsEhPxxi4SwrDZtawcIVPbUu0i
- zJCPcMFi7cZj1fFHWa3MLWjfKhryMkQNEYEu/f+g5O2mpa6Fi5EpkHGctuTjITLj7gXPQD+j43g
- 0ejK4wfS3JcC2J/IaDbuY7NfX/6CadyRurhlYYOo/1OMK2hmskR9xbhzCXbhSGVuRJe3iE+JFv1
- 6wenIa7nPmvbIOgCXBBPMxraXPEnJ2hZ1b/uF/Bz2lGzMt/djFNYxol0HqQGbdmBmyleGPiVze+
- e62TS8n5QqWGONulwIg==
-X-Proofpoint-ORIG-GUID: 6iLRwXEwE3OVb1QBvEqU9bh83zz-kkQp
-X-Proofpoint-GUID: 6iLRwXEwE3OVb1QBvEqU9bh83zz-kkQp
-X-Authority-Analysis: v=2.4 cv=KKdqylFo c=1 sm=1 tr=0 ts=6a322708 cx=c_pps
- a=xHwt0NLWInP9jDJIu2hPAg==:117 a=f+v6EHfkeJbVwR46tk4DMg==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
- a=s63m1ICgrNkA:10 a=V5UXEbMT0ywA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Z8NIEmU8O1QQgoT56wFK:22 a=taLDd7a_hP9WKsMzeGRc:22 a=sozttTNsAAAA:8
- a=5fRpags1hDoxmymHdesA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-16_05,2026-06-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 priorityscore=1501 bulkscore=0 impostorscore=0
- lowpriorityscore=0 suspectscore=0 spamscore=0 phishscore=0 malwarescore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2606170041
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7arSuP3fUksMkiQjf8Wh5Wd7xhLnQgvki/MJDUDbOA+OFgsPt1t+zDuR6ouZ3eFkA4+MHSBjyGgxqkWvGlS7lw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB7181
 
+> -----Original Message-----
+> From: sashiko-bot@kernel.org <sashiko-bot@kernel.org>
+> Sent: Wednesday, June 3, 2026 3:06 PM
+> To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
+> Cc: devicetree@vger.kernel.org; imx@lists.linux.dev; robh@kernel.org;
+> conor+dt@kernel.org; Frank.Li@kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v6 3/3] PCI: imx6: Add root port reset to support lin=
+k recovery
+>=20
+> Thank you for your contribution! Sashiko AI review found 9 potential issu=
+e(s) to
+> consider:
+> - [High] Read-modify-write operations on mixed RW/W1C register silently d=
+rop
+> interrupts.
+> - [High] Shared interrupt handler checks status but fails to verify if th=
+e interrupt is
+> enabled.
+> - [High] Ignored return value of `dw_pcie_wait_for_link()` hides downstre=
+am link
+> recovery failures.
+> - [High] Lockless traversal of PCI bus devices in an asynchronous IRQ thr=
+ead
+> exposes the kernel to Use-After-Free and list corruption.
+> - [High] Link down interrupt is not disabled during system shutdown, caus=
+ing an
+> AXI bus fault and system hang.
+> - [High] Failed root port reset leaves the controller unclocked while sti=
+ll active,
+> causing a crash on subsequent PM suspend.
+> - [High] Unprotected hardware indirect register access during root port r=
+eset.
+> - [Medium] Ignored negative error codes from
+> `platform_get_irq_byname_optional()` break probe deferral.
+> - [Low] Build failure due to undefined functions and struct members.
+> --
+>=20
+> commit 5bee25b25210b0bc28349bc8474d10204a25cd72
+> Author: Richard Zhu <hongxing.zhu@nxp.com>
+>=20
+> PCI: imx6: Add root port reset to support link recovery
+>=20
+> The PCIe link can go down due to various unexpected circumstances. Add ro=
+ot
+> port reset support to enable link recovery for the i.MX PCIe controller w=
+hen the
+> optional "intr" interrupt is present.
+>=20
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> > b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 773ab65b2afac..aa5c90be23df8 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>=20
+> [ ... ]
+>=20
+> > @@ -1394,6 +1401,13 @@ static int imx_pcie_host_init(struct dw_pcie_rp
+> > *pp)
+> >
+> >  	imx_setup_phy_mpll(imx_pcie);
+> >
+> > +	/*
+> > +	 * Callback invoked by PCI core when link down is detected and
+> > +	 * recovery is needed.
+> > +	 */
+> > +	if (pp->bridge)
+> > +		pp->bridge->reset_root_port =3D imx_pcie_reset_root_port;
+>=20
+> [Severity: Low]
+> Does the reset_root_port member actually exist in struct pci_host_bridge?
+> This appears to cause a build failure since the struct member is undefine=
+d.
+>=20
+[Richard] the `reset_root_port` member and `pci_host_handle_link_down()`
+function is introduced in a prerequisite patch that will be merged before
+ this one.=20
+> [ ... ]
+>=20
+> > @@ -1661,6 +1675,9 @@ static int imx_pcie_suspend_noirq(struct device
+> *dev)
+> >  	if (!(imx_pcie->drvdata->flags & IMX_PCIE_FLAG_SUPPORTS_SUSPEND))
+> >  		return 0;
+> >
+> > +	if (imx_pcie->lnk_intr > 0)
+> > +		regmap_clear_bits(imx_pcie->iomuxc_gpr,
+> IMX95_LINK_INT_CTRL_STS,
+> > +				  IMX95_LINK_DOWN_INT_EN);
+>=20
+> [Severity: High]
+> Since IMX95_LINK_INT_CTRL_STS mixes an RW enable bit and a write-1-to-cle=
+ar
+> status bit, will using regmap_clear_bits perform a read-modify-write cycl=
+e that
+> inadvertently clears pending status bits if they are latched during the r=
+ead?
+>=20
+[Richard] This is acceptable in the suspend path. Even if a pending interru=
+pt
+status bit is inadvertently cleared during the regmap_clear_bits() operatio=
+n,
+the link would be down at the end of suspend_noirq(), and retrained during
+ resume_noirq(). Same to the contents of link recovery.
 
+> [ ... ]
+>=20
+> > +static irqreturn_t imx_pcie_lnk_irq_isr(int irq, void *priv) {
+> > +	struct imx_pcie *imx_pcie =3D priv;
+> > +	struct dw_pcie *pci =3D imx_pcie->pci;
+> > +	struct device *dev =3D pci->dev;
+> > +	u32 val;
+> > +
+> > +	regmap_read(imx_pcie->iomuxc_gpr, IMX95_LINK_INT_CTRL_STS, &val);
+> > +	if (val & IMX95_LINK_DOWN_INT_STS) {
+>=20
+> [Severity: High]
+> Is it possible for this shared interrupt handler to be invoked while the =
+interrupt is
+> disabled, see the latched status bit, and erroneously return IRQ_WAKE_THR=
+EAD?
+>=20
+> If a PME interrupt fires while the link down interrupt is intentionally d=
+isabled, the
+> ISR will still claim it. Would it be safer to check if IMX95_LINK_DOWN_IN=
+T_EN is
+> also set before proceeding?
+[Richard]Good catch. I will add a check for IMX95_LINK_DOWN_INT_EN to ensur=
+e
+the handler only processes the interrupt when it is enabled. This makes
+the code more robust against spurious shared interrupt events.
 
-On 16/06/26 11:52, Manivannan Sadhasivam wrote:
-> On Fri, Jun 12, 2026 at 01:54:13PM +0530, Aksh Garg wrote:
->>
->>
->> On 12/06/26 00:42, Bjorn Helgaas wrote:
->>> On Wed, Jun 10, 2026 at 03:32:55PM +0530, Aksh Garg wrote:
->>>> Add pci_epc_init_capabilities() in EPC core driver to initialize and
->>>> setup the capabilities supported by the EPC driver. This calls
->>>> pci_epc_doe_setup() to setup the DOE framework for an endpoint controller,
->>>> which discovers the DOE capabilities (extended capability ID 0x2E), and
->>>> registers each discovered DOE mailbox for all the functions in the
->>>> endpoint controller.
->>>>
->>>> Add pci_epc_deinit_capabilities() in EPC core driver for cleanup of the
->>>> resources used by the capabilities of the EPC driver. This calls
->>>> pci_ep_doe_destroy() to destroy all DOE mailboxes and free associated
->>>> resources.
->>>>
->>>> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->>>> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->>>> Signed-off-by: Aksh Garg <a-garg7@ti.com>
->>>> ---
->>>> +/**
->>>> + * pci_epc_doe_setup() - Discover and setup DOE mailboxes for all functions
->>>> + * @epc: the EPC device on which DOE mailboxes has to be setup
->>>> + *
->>>> + * Discover DOE (Data Object Exchange) capabilities for all physical functions
->>>> + * in the endpoint controller and register DOE mailboxes.
->>>> + *
->>>> + * Returns: 0 on success, -errno on failure
->>>> + */
->>>> +static int pci_epc_doe_setup(struct pci_epc *epc)
->>>> +{
->>>> +	u8 func_no, vfunc_no = 0;
->>>> +	u16 cap_offset;
->>>> +	int ret;
->>>> +
->>>> +	if (!epc->ops || !epc->ops->find_ext_capability)
->>>> +		return -EINVAL;
->>>
->>
->> Hi Bjorn,
->>
->> Thank you for your feedback comments. I will work on them and post v6
->> series incorporating the changes.
->>
->>> I don't see anything that sets pci_epc_ops.find_ext_capability in this
->>> series, so this looks currently unused and untestable, so likely not
->>> mergeable as-is.  What's the plan for users of this?
->>>
->>
->> Currently there is no EPC driver upstream which supports DOE yet. However, I
->> am working on a platform which supports DOE (support for
->> which would be added soon). Mani pointed out that if EPC driver support
->> for the same is guaranteed to be added soon, the APIs can be merged
->> first.
->>
->> For the demonstration purpose, he asked to show how an EPC driver is
->> expected to use the API as a snippet in the cover letter itself.
->>
-> 
-> I retract my previous comment here. Let's not introduce dead code in the kernel.
-> We can review the series now, but cannot merge it until the EPC driver gets
-> submitted.
+>=20
+> > +		dev_dbg(dev, "PCIe link down detected, initiating recovery\n");
+> > +		/* Clear link down interrupt status by writing 1b'1 to it */
+> > +		regmap_set_bits(imx_pcie->iomuxc_gpr,
+> IMX95_LINK_INT_CTRL_STS,
+> > +				IMX95_LINK_DOWN_INT_STS);
+>=20
+> [Severity: High]
+> Similar to the regmap_clear_bits call above, could using regmap_set_bits =
+here
+> perform a read-modify-write cycle that inadvertently clears other pending=
+ write-
+> 1-to-clear bits in the same register?
+>=20
+[Richard] This is safe here. The status bit is cleared immediately after be=
+ing
+read in the ISR, so there are no other pending W1C bits in this register th=
+at
+could be inadvertently cleared by the read-modify-write operation.
 
-Hi Mani,
+> > +		regmap_clear_bits(imx_pcie->iomuxc_gpr,
+> IMX95_LINK_INT_CTRL_STS,
+> > +				  IMX95_LINK_DOWN_INT_EN);
+> > +
+> > +		return IRQ_WAKE_THREAD;
+> > +	}
+> > +
+> > +	return IRQ_NONE;
+> > +}
+> > +
+> > +static irqreturn_t imx_pcie_lnk_irq_thread(int irq, void *priv) {
+> > +	struct imx_pcie *imx_pcie =3D priv;
+> > +	struct dw_pcie *pci =3D imx_pcie->pci;
+> > +	struct dw_pcie_rp *pp =3D &pci->pp;
+> > +	struct pci_dev *port;
+> > +
+> > +	for_each_pci_bridge(port, pp->bridge->bus)
+>=20
+> [Severity: High]
+> Is it safe to iterate the bus list locklessly in this IRQ thread?
+> Could concurrent modifications to the PCI bus list cause a use-after-free=
+ since the
+> pci_bus_sem is not held?
+>=20
+[Richard] The PCI bus structure is stable at this point because devices are
+only added/removed during enumeration or hotplug events, both of which hold
+the appropriate locks. The threaded IRQ handler does not race with these
+operations, so lockless traversal is safe here.
 
-Sure, I would prefer the series to be reviewed and gather Reviewed-by
-tags by the time the EPC driver gets submitted, which would help
-expedite the merge of this series later.
+> > +		if (pci_pcie_type(port) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
+> > +			pci_host_handle_link_down(port);
+>=20
+> [Severity: Low]
+> Does the pci_host_handle_link_down function exist in the tree? This appea=
+rs to
+> be an undefined function call which will cause a build failure.
+>=20
+> > +
+> > +	regmap_set_bits(imx_pcie->iomuxc_gpr, IMX95_LINK_INT_CTRL_STS,
+> > +			IMX95_LINK_DOWN_INT_EN);
+> > +
+> > +	return IRQ_HANDLED;
+> > +}
+> > +
+> > +static int imx_pcie_reset_root_port(struct pci_host_bridge *bridge,
+> > +				    struct pci_dev *pdev)
+> > +{
+> > +	struct pci_bus *bus =3D bridge->bus;
+> > +	struct dw_pcie_rp *pp =3D bus->sysdata;
+> > +	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+> > +	struct imx_pcie *imx_pcie =3D to_imx_pcie(pci);
+> > +	int ret;
+> > +
+> > +	imx_pcie_msi_save_restore(imx_pcie, true);
+> > +	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_LUT))
+> > +		imx_pcie_lut_save(imx_pcie);
+>=20
+> [Severity: High]
+> The i.MX95 PCIe hardware uses an indirect access mechanism for LUTs. Sinc=
+e this
+> reset executes asynchronously in a threaded IRQ, should imx_pcie->lock be
+> acquired before calling imx_pcie_lut_save to prevent concurrent operation=
+s from
+> clobbering the shared indirect address indices?
+>=20
+[Richard] The threaded IRQ handler is serialized by the kernel's IRQ subsys=
+tem,
+so concurrent invocations of the same handler are not possible. Additionall=
+y,
+no other code path accesses the LUT registers during link recovery, so ther=
+e
+is no race condition here.
+> > +	imx_pcie_stop_link(pci);
+> > +	imx_pcie_host_exit(pp);
+> > +
+> > +	ret =3D imx_pcie_host_init(pp);
+> > +	if (ret) {
+> > +		dev_err(pci->dev, "Failed to re-init PCIe\n");
+> > +		return ret;
+> > +	}
+> > +	ret =3D dw_pcie_setup_rc(pp);
+> > +	if (ret)
+> > +		goto err_host_deinit;
+> > +
+> > +	imx_pcie_start_link(pci);
+> > +	dw_pcie_wait_for_link(pci);
+>=20
+> [Severity: High]
+> Should the return value of dw_pcie_wait_for_link be checked here?
+> By ignoring it, the function might falsely report success to the PCI core=
+ even if
+> downstream link recovery fails, which could lead to unsupported request a=
+borts
+> when accessing downstream devices.
+>=20
+[Richard] The return value of dw_pcie_wait_for_link() is intentionally not
+checked here. Link recovery is best-effort; even if the link does not come
+back up immediately, the MSI and LUT state has been restored, and the syste=
+m
+remains stable. Subsequent link training attempts may succeed.
+> > +
+> > +	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_LUT))
+> > +		imx_pcie_lut_restore(imx_pcie);
+> > +	imx_pcie_msi_save_restore(imx_pcie, false);
+> > +
+> > +	dev_dbg(pci->dev, "Root port reset completed\n");
+> > +	return 0;
+> > +
+> > +err_host_deinit:
+> > +	imx_pcie_host_exit(pp);
+>=20
+> [Severity: High]
+> If the re-initialization fails and imx_pcie_host_exit disables the clocks=
+, the device
+> still remains bound. If the system later initiates a suspend, will
+> imx_pcie_suspend_noirq execute unconditionally and trigger a fatal extern=
+al
+> abort by attempting to read from the unclocked DBI registers?
+[Richard] You're right that this is a potential issue. If re-initialization
+fails, the clocks are disabled but the device remains bound. Because that
+host_deinit and host_init are already symmetrical, the host_deinit shouldn'=
+t
+be in the error exit path again. Would leave the clocks enabled on failure
+ to maintain a safe state.
 
-> 
-> - Mani
-> 
+>=20
+> > +
+> > +	return ret;
+> > +}
+> > +
+>=20
+> [ ... ]
+>=20
+> > @@ -1919,9 +2018,33 @@ static int imx_pcie_probe(struct platform_device
+> *pdev)
+> >  			val |=3D PCI_MSI_FLAGS_ENABLE;
+> >  			dw_pcie_writew_dbi(pci, offset + PCI_MSI_FLAGS, val);
+> >  		}
+> > +
+> > +		/* Get link event irq if it is present */
+> > +		imx_pcie->lnk_intr =3D platform_get_irq_byname_optional(pdev,
+> "intr");
+> > +		if (imx_pcie->lnk_intr > 0) {
+>=20
+> [Severity: Medium]
+> If the interrupt controller is not yet ready, the platform irq function r=
+eturns -
+> EPROBE_DEFER. Does checking strictly for > 0 cause the driver to silently=
+ ignore
+> this error code and fail to defer the probe, permanently disabling the li=
+nk recovery
+> functionality?
+>=20
+> [ ... ]
+[Richard] Good point. I will update the code to explicitly handle -EPROBE_D=
+EFER:=20
+imx_pcie->lnk_intr =3D platform_get_irq_byname_optional(pdev, "intr");
+if (imx_pcie->lnk_intr =3D=3D -EPROBE_DEFER)
+    return -EPROBE_DEFER;
+if (imx_pcie->lnk_intr > 0) {
+    /* setup interrupt handler */
+}
+
+>=20
+> > +err_host_deinit:
+> > +	dw_pcie_host_deinit(&pci->pp);
+> > +
+> > +	return ret;
+> >  }
+> >
+> >  static void imx_pcie_shutdown(struct platform_device *pdev)
+>=20
+> [Severity: High]
+> The patch enables the link down interrupt during probe, but looking at
+> imx_pcie_shutdown(), it does not disable it before asserting core reset.
+> Does asserting the core reset drop the link and trigger the interrupt?
+> If so, this could wake the threaded handler to access DBI registers while=
+ the core
+> is in reset, causing a synchronous external abort.
+>=20
+[Richard] Agreed. I will add code to disable the link down interrupt in
+imx_pcie_shutdown() before asserting core reset
+
+Best Regards
+Richard Zhu
+
+> --
+> Sashiko AI
+> review * https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2=
+F%2Fsa
+> shiko.dev%2F%23%2Fpatchset%2F20260603062510.3767610-1-
+> hongxing.zhu%40oss.nxp.com%3Fpart%3D3&data=3D05%7C02%7Chongxing.zhu%4
+> 0nxp.com%7C134330e3333a44f1683508dec13f9e4a%7C686ea1d3bc2b4c6fa92c
+> d99c5c301635%7C0%7C0%7C639160676183298029%7CUnknown%7CTWFpbGZ
+> sb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkF
+> OIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=3DT12KsupOJBTSoTXb
+> rB0CAYhsJrCThSsXkEpdoqsB1GY%3D&reserved=3D0
 
