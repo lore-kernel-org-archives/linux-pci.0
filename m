@@ -1,208 +1,211 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazolkn19012016.outbound.protection.outlook.com [52.103.11.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147A84A2E05;
-	Wed, 17 Jun 2026 16:02:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781712168; cv=none; b=IkfG2LS2SZAWDfUolp18rz7FaaAn1Hw+o9AtrwKutEBLNJSsNxDXfMR55fk33XqW7KXJ7o5tXSqg2Q9j5C/7X/JvLlM4eo7gsM1aLrCa09TxdXjjwgdZVg6vYX/iaYjpty02XAwz9NY/TUw9fH5nir9vANNlNs7jYFBFr4Ya82E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781712168; c=relaxed/simple;
-	bh=SasTUxNVAze5xf1RP06NVhGi6O7cvxwHcBHn3D+KZSg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SAZCWCv0JKodGX76TwB2IEqMmUyO5/CCxlpmZji+FzA7sBA7UI9i2wlinkdWJOXK/yqcmjnd0rlj0vMiDnQebfNQRA/yCxcA+roFc7N3A6MAXXglU4xnkrh4D0Hb1icySNCpnD7dvLLToHDUH24dzA0vkPnAFlFzInhVvINh40E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E477XrUk; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91C94A2E34;
+	Wed, 17 Jun 2026 16:02:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.11.16
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781712176; cv=fail; b=nDGy7G/hqWz50nWElB4DRfpWg0POuDbGpP5aEX7e4kQUgpC9mmPqkma9tlvHA8TApQ/Kg5M9ByV391jq83Mi0KxmBd1WFSOO+UM4aTonPkb2dqavqTkWh7N0N+9GuwTGFXnI53Qg99pcch08XaA0uawOpvbPDFgoLowv9CPSMm4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781712176; c=relaxed/simple;
+	bh=H+d+enUzL8kXHgqO7gG0UHu7p+iul8X9l+vtge34KYY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=qXvPTCLD+g85Uk+CTiqmbmCYkTxuDV9+mcT/ebWcLg6trPPfLMUVu6fD8t3/9EatpmL52lZ2WTLicfe9LysRyph+S+OYho53cpPtI/Rch1tduL2H3N5IN+VowTIy/gyKZBcsRHNcr3ESemzI7zbsgEWyZAk6s83yM5jqazlbapo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=ttUqnLxc; arc=fail smtp.client-ip=52.103.11.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E477XrUk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D73F21F01558;
-	Wed, 17 Jun 2026 16:02:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781712154;
-	bh=cp5BkG390f/fn9ldPF3mpiSrgkIetFpKVYvXrJB7/WU=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=E477XrUk2dw6FrkEB01E35B5mc3yzvjUx19J/vYBDs7vI+DGIEtx8pOq6jzVZrz+Q
-	 Im9DgfD/qC+EzOxYLu0CN+sEV7T6yISgGOloz1tA9QEa5RDvy+5AYZQLCDyGplwa6v
-	 d++w+eZ4MSk4UMDQxOtE4iBFFV8opeaFeauSk/qcFQoOfpjR62lSFzApctcJVnEkPF
-	 qRH6QhablCNTPUrJkslC1DGv0A25OEdyNvk/ngRVNjk7xj5b0U2CVVGmCs7oHaPjjT
-	 JPBl4uGMApfEroA8g6cHRBwKsq930XKTqv90H+Dx67h6m8ijOGyhPPj7PrsP/e1i/K
-	 I6RcyPUccuP9Q==
-From: Thierry Reding <thierry.reding@kernel.org>
-Date: Wed, 17 Jun 2026 18:01:31 +0200
-Subject: [PATCH v7 4/4] arm64: tegra: Reorder reg and reg-names to match
- bindings
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="ttUqnLxc"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=q+O42aHEry90m0Bmb233ZZIXifGMWn15HCucdwqiGVR7xCPZeUf+aFAUvirITFDs8TemD201OrZtGcXctpfUyA0ie78kiu+Ww8V11NgoQPe5cGCXlz5R6XPS8aHUUyGozBxeg82txTxHCRfrgoj9T83pWttHBZxItuSC22mFovLZNWK0k71w/DJwKMnQsuOyLPlXBl+vZSlnOxTNr+WYPGGq0b4v1UoqZCCCVYAA8fQ7oM7PfjWtiCxfH3oeb9dPQGWsY/7eJOLKpZJN6C0Uizv1aq9KZZx9uGND2ElkE9766zZqTjGVHu48lR+9vmMdjDPn97eLDU6N1wvK/Phy9Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LX4Iw2ScPl49LKoUK2PfY4rNdCEeLgYtl1YcA+uYj9Y=;
+ b=adGKQwTmMssCMJwngej/m05JsbnWgv5w6fjTke8lxGa3qr5kR44YaLJiRH8rxQupf7x08D37H9JXMJRAXzlvXkfefrsmGA3vTX1b1CgC2g4ML2Mi+5DwZHUfdMtq3G/8DjsiCpXCz6H+u2Ra/0ftjhHbywQLRY+dHxC4sloHG9lnW3ET1kOdYzCJHVgslxGQ0Rpv33pqcOwMsqh6emuAF9C4EZaqaVnCg4nYxU+xdLfxkhPjLH57gSrMWnii1LQETxzkccvqbqEbXA24IjuMk8E6ZN+clSjxn8GfiFAsiatAXGJxp7Lym76qprh5flpzt/B9Z/PBHubHRgyvoTLQPg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LX4Iw2ScPl49LKoUK2PfY4rNdCEeLgYtl1YcA+uYj9Y=;
+ b=ttUqnLxceB33RordtirQ2xbArKF4VRiq2e4sbeZYhoL6y5wc+wbAeI3iJ8F+V/3aQH6JS2KLt0dQ01AnsAP3Sh6y21wLs9nA3zuNt+hZbCoRRuRIb8uruVz1f5MyhyGwKSNa3dELQ/ye0rwHDOAsFAehrLfAti/vjYkIIdj749GCsboVDx1N72QkG7i2aPSBLnENnIPsDKeVITeLFj8N4nOvfoje7wkb+5x/q9vdupkpaRjCGK5delkmMS27OAak1KbnTniesQRtoG9gvfNLxxCGMAzRyHoTsiQcxz6nqX75V6muWhr7QAp7OJst0yPCGBbfCapBosrcsrJEZpK1Zw==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by CH3PR02MB10280.namprd02.prod.outlook.com (2603:10b6:610:1ce::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Wed, 17 Jun
+ 2026 16:02:39 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%3]) with mapi id 15.21.0139.009; Wed, 17 Jun 2026
+ 16:02:39 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
+CC: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang
+	<haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
+	<decui@microsoft.com>, Long Li <longli@microsoft.com>, Lorenzo Pieralisi
+	<lpieralisi@kernel.org>, =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?=
+	<kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob
+ Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] PCI: hv: add hard timeout to wait_for_response()
+Thread-Topic: [PATCH] PCI: hv: add hard timeout to wait_for_response()
+Thread-Index: AQHc/nDsmF4XHn0uSkWoerJoFRnNC7ZC6Isw
+Date: Wed, 17 Jun 2026 16:02:38 +0000
+Message-ID:
+ <SN6PR02MB41575A367289AEE6293AD71BD4E42@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com>
+In-Reply-To: <20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|CH3PR02MB10280:EE_
+x-ms-office365-filtering-correlation-id: d5b54193-77f1-4b7a-e65f-08decc89daf4
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|8060799015|8062599012|13091999003|37011999003|31061999003|19110799012|19101099003|13031999006|41001999006|51005399006|15080799012|56899033|102099032|40105399003|3412199025|4302099013|440099028|1602099012|18061999006|10035399007;
+x-microsoft-antispam-message-info:
+ =?iso-8859-2?Q?HlaIeUPTbQYjQByfW8ZGu+5gECEgZ+gaPZg+K34Eme+kgsRe8412hyEZu7?=
+ =?iso-8859-2?Q?wZvxfal09WPKSG4boFlDexeZo87MOfmIc4gBEbz7jnltt5ad0mhxefJWz+?=
+ =?iso-8859-2?Q?goIfJ4sKB8+bgyZaLILgz00pqM21R/S60TAV05B8F0P7o44wFkRz8M3UeK?=
+ =?iso-8859-2?Q?adcxGZJ7sjZDw6VXWEszyDQXy0g6/rxFqzQlgwW/RAUuFj2hIkuesjMXvO?=
+ =?iso-8859-2?Q?u3lQoN/Um3zSUCUHroB05GC/VFitjllc70W4Png4h7nV0p0NOcISoPQDvJ?=
+ =?iso-8859-2?Q?r9Lc+V6s89WWf86fhY9JY2BWehQdUt2v87ioR2gG2tUs6XEdC4DtaW9i+B?=
+ =?iso-8859-2?Q?6wyJYk7JiDLeS/HXLy9YJIknFqUQDKvTUHLOVYnxJkkcrOg0WUY5woAYX+?=
+ =?iso-8859-2?Q?I29PSD4VcteW92cosx+yeh9nyX9UXUbCaHgBEWWnmh+9BbkUaH3UFx/pey?=
+ =?iso-8859-2?Q?U18jKxGuoa42DWluGjEi0G0Ned5QhYYQd5Jwijhp5eqNqfL+6lSm5WBy0L?=
+ =?iso-8859-2?Q?/mCOnBjqwm5b8h//jEQzsYr5lCv/oCmXwFFZm62HzFYN8krerrFXshVKie?=
+ =?iso-8859-2?Q?RHNpVVv/dZJP93Uqr6To0Fy1dl/qYokIltdMtwsoigk/fR0tDyjGborQbc?=
+ =?iso-8859-2?Q?ClD6KQrE0nichDDvtP0iaHch0IV/OQunYhlD90HWsjR3T2r3IZj6e7mHH5?=
+ =?iso-8859-2?Q?RANFjwo/3O2TLquQzE2SOd+Z+famMfO4RJNg8SUoAdeh8mTouGbs3zoftW?=
+ =?iso-8859-2?Q?4N/f/mrfPcpPjuroA2KC8X4x3FtjWO6nibDtjj1DsyDi3QD+K3RnEcQOpa?=
+ =?iso-8859-2?Q?iObJGufvJvCvYu3KdEKyJ0t4hva04Y3Byo7brRUBoqBvrn4tydjuYbmxgy?=
+ =?iso-8859-2?Q?diJ3mog3qj/Sw9xX2lLmMgN/4uL6UjiBcLdIBDn+EvSwo7fB/OPJvf3hiU?=
+ =?iso-8859-2?Q?NHmAy/XQ1gBA+EB5m7iqLBPggXJN+AX2ACt0kKL6k/KKqgNXrH1iJ5+30m?=
+ =?iso-8859-2?Q?M+8Q0yEBZTNo2ElZQxKme0eX3ZzaLmg1HWfVM/6rYQgho4h28nAYRlzch0?=
+ =?iso-8859-2?Q?rdFg1w7mqfY1Bpd3jEYJcv9Uc+U4Zl0pW/bDeu7JXJB/FUK1/Ue2wiaL8s?=
+ =?iso-8859-2?Q?uLvHbSukXnSJsA8+NvdI4/gG0sghwm4sZxQwQNiei7fBUejth7uGYU2Lms?=
+ =?iso-8859-2?Q?6l6Bt1DuJiRZnPnd24eEmgjl7/bHwolBaUSd4K4swwbnD6436BoTczji?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?CeafQyQce35vSY+i3DRR30a5FAfeqNZGqCrdU5gLEt7yfSynZrvVPeGSmO?=
+ =?iso-8859-2?Q?sJxkOc3XnTXOo/ZElNzMxGhAF0bpGgFTXeX0BtsRaiYzdorRh3Olze28Xe?=
+ =?iso-8859-2?Q?jY71SHVlvl1TFjvQ6/hfPOWAc7YrNb2zSFVkvsofavnqJke5kDfDa1iJ0j?=
+ =?iso-8859-2?Q?B3tlZg05GloDFevDuMjmwWwIBsqQWf7z8XKHXzicu8jlzzDzS2QEs3b1Fw?=
+ =?iso-8859-2?Q?B8gXWPlZlUlVBvBU0FWh/10sRq3IgLrQy3aNSqeIUEnZjDDbj0h5F3cuFL?=
+ =?iso-8859-2?Q?H2u9L6XD8QEGq7lmmhaMdV1hL7YTsg70aSGs8JvoJruXmkfedd0c6vy5nW?=
+ =?iso-8859-2?Q?OEpoigFsEd5isqcPQMlHK2sP5VIYTeDbLM3FxFixeo4T3DU6lD9au/P7tu?=
+ =?iso-8859-2?Q?YtLRDIGhc9DwmlSjU0PTMyealJSNfPwaJIh/e0dwkF6Vh0KoAfqFNLc/rE?=
+ =?iso-8859-2?Q?PAjMJ+VFUw4Bdex11YUjLP+QaT3LrWRf/kI4JUmfgLsBCr1sRFkQl8sAGA?=
+ =?iso-8859-2?Q?qmwtPzs5NEFGRpDs0l5zWQp6xiXViIdGTYSpdqXyAUt1uAgFvze7Uwb2y7?=
+ =?iso-8859-2?Q?3bUSb7FLt7yzEmkRuRv+li09CdsCO0FF7sOY08Y8sjD5Iw+hWzA/D1Owvj?=
+ =?iso-8859-2?Q?jE/6VPKzgL1VuOgGyQtqz86z0FKFn+9LI0yx6WXQEqrg3r1+y76ccdvdje?=
+ =?iso-8859-2?Q?dJieZWHvxcP7g0ajnsh7f8SW5tw9TqY/lDsHnY7a9LKWgnNAz89CY67tZp?=
+ =?iso-8859-2?Q?343vMAqWJ6kdm/6CNbpQcgW5dMW6RHrkmhmMsxTtYjw0zZAUh3rXRzxpX8?=
+ =?iso-8859-2?Q?oKg7XA/lg9cXNV8GOK9o16vOkgpW3BULF3f+fXDNMiNtUdGzwVtWm9nD8n?=
+ =?iso-8859-2?Q?90xGvLbd7ZFy6LBrF86X1H5xZPwlk0ziBOs0sDp6s78JgRmu09Xc87uN7z?=
+ =?iso-8859-2?Q?NWUmY4yZHtKdAMmszNvqnA00XEM2h7u3UEjYLULAL5c99BriySN/j2kWgZ?=
+ =?iso-8859-2?Q?VAZ7O7hxUABdYqmU+2IX/A3zWcfRAOCFbzIWbsxymyUbYcwqiYw4rOf1g9?=
+ =?iso-8859-2?Q?zph3ozLbPQ6GodaO1nCBWAbsHwyZ00oM7ylAubccnwjkYQ3p3JK3dk8d8r?=
+ =?iso-8859-2?Q?N0fL3guQmnBb1udX77GI9gElFNgxZdB4YCUn4qR6lqNQ9zCHkOnDe8nZmp?=
+ =?iso-8859-2?Q?1B44/lHHo1M/Iaz4Q4loIqTVAedPf2YXxIPKee5Bpz2aaniEb8CbQIGoiI?=
+ =?iso-8859-2?Q?npQ3+o2x2Y8WflYYrgjqXT99Ia+msV++UF5pXDRzqREqMtU5CvZNN8uGHx?=
+ =?iso-8859-2?Q?WLehX4hBHa1PqRhgJOPvXYDmFCYGuOAeXUCeSgwqLz17XFHRnS+5Sxmd3v?=
+ =?iso-8859-2?Q?2R7O0ZOVdLUHpW3oiu68e2eODs30fx+JZ2Xmm6sWAQFIm+QBxQPj0=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260617-tegra264-pcie-v7-4-eae7ae964629@nvidia.com>
-References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
-In-Reply-To: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
- Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
- Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
- Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4765; i=treding@nvidia.com;
- h=from:subject:message-id; bh=g4lQg9cZ99o24xfKWoKjSIFGaumk63ktv5zBQENtPlA=;
- b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqMsUNciDqZaew/sWNx3N02UnAfVlH6AQ0aW8b3
- C53LXX1XBuJAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCajLFDQAKCRDdI6zXfz6z
- oQ+AD/0YqfMEpfe+KyTdT2s+1mO2EZ5By76Fr+WrXUS3GypSQEx9jn9v/J1mFAQCQG5n1TX97oS
- qnmb28n466W96XUChkVXVIgHfqGra1B8wyOY8Si+gJW0vJFEwg6hVmOhpqJXMBY7Wnp1x0ufGOO
- JKCB3LYh6Rdwn3X1VVQxbG/LZ5gu7abPvotDxEWcDd5twtksEKwFcIddM6+cKKeVLD6umvgdXfV
- 8IGqwSNJoWIwBqrxat1wMKotBfpTVnlswnkHUlxGOdG2hrCm1dKhlugLOfb51UFw4c4hxZLFOM9
- uHCX00MS4R2kySyQFX0sSFd4Fw2LU+miJWJ/7nCcYdMA1UtFBxxgl8FbjIj1wvxSfWmLukYcKhL
- o783Si/+0pyRn4aPdyNmaw3aVz7jnpqo31LGmAu9hgZuIu2iKR93/7+jfg4kz5QUfWaxWD3RuIS
- Nfku6OfshvZHe+T1BsSbhK+sJh+eL6ZMDq25W/7LbhVgbE4T0YtXo4V9/pXyQs0ZsK4+Xhfwbqp
- NuZIJ0xIrAgVIxKpbj31EwreBx6d9Uo685/7jDgb0mIXpT+sVLgf6QQC0DEiiN7rgyLsw5yEUX0
- 86DmpdiXqy7O1LmJERJcSCN61aHuy6Tz9nMxqAsVrT60e7IqLEnMlryQsF7KFYudNrbHROtZFLD
- kAfVJwndTWsCOtA==
-X-Developer-Key: i=treding@nvidia.com; a=openpgp;
- fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: d5b54193-77f1-4b7a-e65f-08decc89daf4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jun 2026 16:02:38.8769
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR02MB10280
 
-From: Thierry Reding <treding@nvidia.com>
+From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com> Sent: Friday, June 1=
+2, 2026 10:40 AM
+>=20
 
-The ECAM region cannot be the first entry in the "reg" property, because
-in that case the unit-address wouldn't match the first entry. The order
-of the nodes can also not be changed to match the ECAM entry because the
-ECAM region is global and outside of any of the control busses.
+The addressees for this patch include the linux-hyperv and linux-pci
+mailing lists, but not the broad linux-kernel mailing list. Any reason not
+to include the latter? In Documentation/process/submitting-patches.rst,
+in the section "Select the recipients for your patch", it says
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- rebase onto v7.1-rc1
+    linux-kernel@vger.kernel.org should be used by default for all patches
 
-Changes in v4:
-- revert ECAM "reg" entry order
+I subscribe to the broad linux-kernel list and do my own filtering, instead
+of subscribing to individual subsystem lists. So I didn't see this patch
+until I glanced at https://lore.kernel.org/linux-hyperv/. Following the
+guidance to always include linux-kernel would help me, for one. :-)
 
-Changes in v2:
-- order ECAM "reg" entry before others
----
- arch/arm64/boot/dts/nvidia/tegra264.dtsi | 48 ++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+Thx,
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-index 8f4350c7793b..4c701abd25a8 100644
---- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-@@ -3513,11 +3513,11 @@ cmdqv4: cmdqv@b200000 {
- 
- 		pci@c000000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xd0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x0c000000 0x0 0x00004000>,
-+			reg = <0x00 0x0c000000 0x0 0x00004000>,
- 			      <0x00 0x0c004000 0x0 0x00001000>,
--			      <0x00 0x0c005000 0x0 0x00001000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri";
-+			      <0x00 0x0c005000 0x0 0x00001000>,
-+			      <0xd0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3893,12 +3893,12 @@ gpio_uphy: gpio@8300000 {
- 
- 		pci@8400000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xa8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08400000 0x0 0x00004000>,
-+			reg = <0x00 0x08400000 0x0 0x00004000>,
- 			      <0x00 0x08404000 0x0 0x00001000>,
- 			      <0x00 0x08405000 0x0 0x00001000>,
--			      <0x00 0x08410000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08410000 0x0 0x00010000>,
-+			      <0xa8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3925,12 +3925,12 @@ pci@8400000 {
- 
- 		pci@8420000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xb0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08420000 0x0 0x00004000>,
-+			reg = <0x00 0x08420000 0x0 0x00004000>,
- 			      <0x00 0x08424000 0x0 0x00001000>,
- 			      <0x00 0x08425000 0x0 0x00001000>,
--			      <0x00 0x08430000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08430000 0x0 0x00010000>,
-+			      <0xb0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3957,12 +3957,12 @@ pci@8420000 {
- 
- 		pci@8440000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xb8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08440000 0x0 0x00004000>,
-+			reg = <0x00 0x08440000 0x0 0x00004000>,
- 			      <0x00 0x08444000 0x0 0x00001000>,
- 			      <0x00 0x08445000 0x0 0x00001000>,
--			      <0x00 0x08450000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08450000 0x0 0x00010000>,
-+			      <0xb8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3989,12 +3989,12 @@ pci@8440000 {
- 
- 		pci@8460000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xc0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08460000 0x0 0x00004000>,
-+			reg = <0x00 0x08460000 0x0 0x00004000>,
- 			      <0x00 0x08464000 0x0 0x00001000>,
- 			      <0x00 0x08465000 0x0 0x00001000>,
--			      <0x00 0x08470000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08470000 0x0 0x00010000>,
-+			      <0xc0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -4021,12 +4021,12 @@ pci@8460000 {
- 
- 		pci@8480000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xc8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08480000 0x0 0x00004000>,
-+			reg = <0x00 0x08480000 0x0 0x00004000>,
- 			      <0x00 0x08484000 0x0 0x00001000>,
- 			      <0x00 0x08485000 0x0 0x00001000>,
--			      <0x00 0x08490000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08490000 0x0 0x00010000>,
-+			      <0xc8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
+Michael
 
--- 
-2.54.0
+> It is possible that we never receive a rescind event, in which case we
+> will wait indefinitely for a device that will never show up. So, assume
+> a device is gone if have been polling for more than 5 seconds.
+>=20
+> Cc: stable@vger.kernel.org
+> Fixes: c3635da2a336 ("PCI: hv: Do not wait forever on a device that has d=
+isappeared")
+> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
+/pci-hyperv.c
+> index cfc8fa403dad..bd63efc4a210 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -52,6 +52,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/sizes.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/jiffies.h>
+>  #include <asm/mshyperv.h>
+>=20
+>  /*
+> @@ -1038,6 +1039,8 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+>  		kfree(hpdev);
+>  }
+>=20
+> +#define TIMEOUT_MS 5000
+> +
+>  /*
+>   * There is no good way to get notified from vmbus_onoffer_rescind(),
+>   * so let's use polling here, since this is not a hot path.
+> @@ -1045,8 +1048,13 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+>  static int wait_for_response(struct hv_device *hdev,
+>  			     struct completion *comp)
+>  {
+> +	unsigned long timeout =3D get_jiffies_64() + msecs_to_jiffies(TIMEOUT_M=
+S);
+> +	unsigned long now;
+> +
+>  	while (true) {
+> -		if (hdev->channel->rescind) {
+> +		now =3D get_jiffies_64();
+> +		if (hdev->channel->rescind ||
+> +		    time_after(now, timeout)) {
+>  			dev_warn_once(&hdev->device, "The device is gone.\n");
+>  			return -ENODEV;
+>  		}
+> --
+> 2.54.0
+>=20
 
