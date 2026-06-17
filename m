@@ -1,91 +1,167 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F6F49252B
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 15:50:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 605C4481642;
+	Wed, 17 Jun 2026 16:02:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781711434; cv=none; b=d3Nsa8Uo0ogMl/66aN7H2Vrk9TloLz8qcoSeO1U+ZRfTDakDOjQSVrUkwmMH37kLQ9uONDD4Dz0+kW0F4tRU4Kgn+EHrRy5pRHEspJ4d586YNpAnCICb2h2c4/QCA19NLd2RAxoeMng6saPzG52FpGaWUZvcOZ9B6LnmL5twsMk=
+	t=1781712157; cv=none; b=hZgW9wbMox0Ui6W+hl+LGrbh94FARImvokGK218vtOv3ezftDjA8wYHXYtbPKlfefUphpcY75Wdy3TN3zJAfFmp3EpqYjRsgfvOjgtI61MC/Ii30pZHTvuOxquR2EJcS1YmgnySW/vqHSehIa2Q6Gv1V7M43t7ZoMM0aoRpWhCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781711434; c=relaxed/simple;
-	bh=t/BILcB67xKXUmHaGI6hCcLUgqok0CX9vUSEzaSgvqg=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TSSwN4rE/Fsu5HSd9BrL1+AvNXkaug+1lNEtbMzWTU12N71k1WLS6f0Eu7/poLSlsJdiUahOycthTeFkfVP60Przo22kD06i7Vx5fPZa0gScVLxYVbEoEpR6Is4MnS7EmHoAkXotuqrGOUtBHuIn6FjFA3rAA+kLSFoRr5piDcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=gsl2xsx6; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	s=arc-20240116; t=1781712157; c=relaxed/simple;
+	bh=v8HDwt+n7/b/jRVoPHxCigecNb5QSzrJ40vrmsyP7II=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=jBHzdouTmvancZzym7nHFbKo1uw53ye5R7L3cwRSyIY6YXh2ud/5tBeZ6+fP36FrGDY+ZB7Xe7642uGAaqgjPW8oGxmH/+z3r8FIlFaYA3IziMCXl8yfuVQ5lf1Onu7mU2gqk/NA8kcHtUBIeiGwlOd5mtHIJZUIJwaIDe9qrC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XXe/tlVL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="gsl2xsx6"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-5176ca6bab1so12373871cf.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 08:50:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1781711415; x=1782316215; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZrCHhmxOINO44tH4bViEDX7JiKeUT/u46hgEy9drkI0=;
-        b=gsl2xsx616O2MsHBdOVBqf/qiiQbEiPY5Y4YAUUZMzDbS9cAuJUDtp4JuoTWiyEee1
-         J3LfI+wKGv/voVsHyFz/+A7FM9MpCtE2/hQK95lL/w7vtZ0KZjhnWPdUr2HC9dxinvcL
-         OiFKfBKdXAuyBk1mYZJXj682TbzTx0Tu6BXfQS0J7sVDsfBob13zcZWZu2fguSzkdQ+J
-         KcoXRcAQ5Mqys8F5ALeUmkrdtSo7Z3uZEEmKVFeJIawH9Cv9YSJVaXvqFQgQi8ZQ7iOD
-         KdVUlLYHlaJYz8ow1jvI/jOz4KRiwvf3JB2l2mQFq45ynh8nTXzo8iZ4ZJkDP1Vy1dwQ
-         wtIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781711415; x=1782316215;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=ZrCHhmxOINO44tH4bViEDX7JiKeUT/u46hgEy9drkI0=;
-        b=TZibF8bnyHYVn+NSPaI9bneZA1yzaPZ/Dn9KxO+xHkJlR63jGM1ADTDEM7LbKZDkz2
-         rFFWGbJM/fzHk5fqrDI8nLHtMvX1ftoNYxV0730D8FvrsN+HzpW/PbM8sWuJYCGtm3fP
-         zwxudwu1ozekNBrrw8deYsqrhGp5hAo8WM/syJ1tX+zBJVKokkpbQFOUW06mptLby2Lo
-         VsnXXWUt7M9HsWpC5l87AQl5aIw/vlDabt7VSJOdwvIkF2e+i1sgXbHkGlWdEfYJtrmN
-         8uqF4cG9LGr9DJPwTRZnQkVQmWXl9txv1rp49MeQBzFewG5ILRKauZ/Pj56AqIMSsfma
-         8d/w==
-X-Gm-Message-State: AOJu0YzOnbZ+dVlC//6AIs6ffT1fqT+Qhmuq5oPMiJheMIRF6yCYjACy
-	n5OV3HPp2nd7zEd+fkJUeCwF9GoZegQkbKggeBrcy6GG5Lt1dHF1ZZxlyqtblswpmNdyOOhz5x6
-	eJgA=
-X-Gm-Gg: Acq92OEUHbLE15BiI9En0iyUOrckdDWYcd5bIZo+00fypAHG+X33B/8uuh1H1fYyl79
-	TipnpJ8xVXg1BcWr0ERiI2tjKhAxSHwuhEeUzzvhBH0pxgJrS6OB8WRxEN8aYb/zMIme3DysX95
-	h0r31emiYzz/7UsYgm5QJ+ADqJQIfpBKhibg7+8PWhJayDEbuH7qvzBQrtuQaowH2wWXjFA2uK9
-	8KfuJGRkYtlTxECoD64vSoJnE8wZasuE8B9B+eevkt8XrLoWQIOdr+kIQiTikH2M5/diOVvFcSw
-	dkDoUbAb72hNA4xYfqFm0drwzK2rrljuxUnKiYfWVqT0iz87BwqtP6044syCfTgD4XQ4PUcy3kj
-	/aQ4s8PnaMCcX1yhLgUn0nRqmuN35ba3eWjMJwnmdzyvv/o94C0+ZDK9P7N2sH23ysFACHX8Zyy
-	xnoLEfwDaUJF+1QAgzTr3IgroUJGtcz75Jm8Mkj6kyMICgGP9S+dLopWLk
-X-Received: by 2002:a05:622a:130b:b0:517:9407:5c38 with SMTP id d75a77b69052e-519c4d9e360mr630241cf.24.1781711415080;
-        Wed, 17 Jun 2026 08:50:15 -0700 (PDT)
-Received: from rowland.harvard.edu ([2607:fb60:1011:2006:2008:aeb7:73d7:d8ff])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb7dacdfsm178862081cf.20.2026.06.17.08.50.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 08:50:14 -0700 (PDT)
-Date: Wed, 17 Jun 2026 11:50:12 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: linux-pci@vger.kernel.org, bugzilla-daemon@kernel.org
-Subject: Re: [Bug 221073] xHCI host controller dies on resume from s2idle on
- AMD Strix Halo [1022:1587]
-Message-ID: <af0ae5d1-0eb6-49cd-8317-6e8c25d06c04@rowland.harvard.edu>
-References: <bug-221073-208809@https.bugzilla.kernel.org/>
- <bug-221073-208809-WU5d6V9tJ8@https.bugzilla.kernel.org/>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XXe/tlVL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 104221F00A3A;
+	Wed, 17 Jun 2026 16:02:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781712143;
+	bh=/LoVxtRj0R52dH4uIgoFPmFgovVaGxwYo6wbRTBUqMY=;
+	h=From:Subject:Date:To:Cc;
+	b=XXe/tlVLGN5R4COOiN6tKPFOC+eXChWcr5VVkPRyxH3H09bWnMWEld4fdaI9frQWO
+	 R+uGHwWlV5AOoxfDyXtjUGIkR/OPEwQb5PiWB08+4tnea6LpUxu5BvFd7zmW42iFAm
+	 eJ6Fy8KjlrOZIm5dJwoFJ84j2Bz3rBGCIdRQKMRpze9p1ns1/RLlQegC72dVlW4YRg
+	 M5GvQz/qE35vvdDSpQAuvWNoQ+ZO5ezkKtdtyxx4/nUqen6LPJt9u25zHgOL89uVD9
+	 D+ftTA/Q4XcoQdYfrAexepDjFySqTGm/YXTCGHKNpWrxdIDb5byRudMFC0lvcZTsL3
+	 qckSJrYo/XKBw==
+From: Thierry Reding <thierry.reding@kernel.org>
+Subject: [PATCH v7 0/4] PCI: tegra: Add Tegra264 support
+Date: Wed, 17 Jun 2026 18:01:27 +0200
+Message-Id: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-221073-208809-WU5d6V9tJ8@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4XQTW6DMBAF4KtEXtfIM/7DXeUeVRcGD8RtA5Ghq
+ FHE3WvCgrQssrH8pPneSHNjA6VIA3s93FiiKQ6x73KwLwdWn3zXEo8hZ4YCjVAC+Uht8mgUv9S
+ ROEnhK0IZvLAsm0uiJv7c+97e1zx8Vx9Uj0vJMnGKw9in633hBMvc2i3BgREAokDIf6048PEUK
+ aVrkSjErj1+Uuroq+hTy5buCR90flErJQvUFhyK51o+agNSl1oXaJ0G5Z5rten9VSbFBUcgJHC
+ utFQeuymG6Iu6P69cb1yj+c915qXyJcjKWRfsjpuNm/12kzmFqm689bZs6A+f5/kX+oSZRfUBA
+ AA=
+X-Change-ID: 20260402-tegra264-pcie-e30abe23da07
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+ Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+ Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
+ Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+ Manikanta Maddireddy <mmaddireddy@nvidia.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3378; i=treding@nvidia.com;
+ h=from:subject:message-id; bh=v8HDwt+n7/b/jRVoPHxCigecNb5QSzrJ40vrmsyP7II=;
+ b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqMsUHM/q1k2bU6WAMeyf09xac1kKbw4GNkUjZ9
+ vCax0zGR52JAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCajLFBwAKCRDdI6zXfz6z
+ obIVD/9ZgYXZfy+uYDPoZiuookvsphjG36+pVXEU3A4nlOcUkn2mHC2e9XtI44H/41WXOAhOGs2
+ NozQa97aQY+gGFoi4U4BraVhkKA/ezmsDK4vYSp0fXbBbGSaRyGqRfLrb8lw+Bqz6t3ekBuPVxS
+ DSQspt1rMz0jpsTJ3DFBV1ag5ZBhCNqb3Y1w1n6dQSbQa1TL/9aq53xW1txYxx7L8rlWxvkJYey
+ pvPyFMckNRKvIfFxR7grQwQQ1gdZjZ9t9/t+MpXwiuXRkRttrad+qgFP9DvCMxW8oW+3E1AkmtQ
+ YO8BIJmf9HpdmF6xNfUurQg5ZRCtmsLHiuh/smDkQdAoqIFtKoPbO+6wn4qTxFAkIYNjOMjfk2t
+ OhmhV2cz1HXw+JrcZpuD31XGPGn8gIdNhj1cYtkAVx8EO5VR+RoiTsVxsAMb4ip5SKAZcemKMC0
+ f6kN2bmKVzSNRPR47x1dLmUhXNYneVLsLJsUGvKsuBxsEUZ6Z7w2JKVIHX3JdY2dJHnk4X0o9Q1
+ 4QHoPVXsBXsWkLUV7Qm2A6db5JdYDpQ8fEFdUQ+x3pnEkwplrngKoYVFXuOU7eYaJqQUrFcXtaq
+ FDP4sSBK1mitCIIoDow38JLNbjYZttaerldSJ4QFLGtPfRLHEH1fN6i/8cb8xT9dH7Ebk7/Gyhy
+ jfUdxN8KSX1PdZQ==
+X-Developer-Key: i=treding@nvidia.com; a=openpgp;
+ fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
-I'd like to invite people on the linux-pci mailing list to pay attention 
-to this bug report:
+Hi,
 
-	https://bugzilla.kernel.org/show_bug.cgi?id=221073
+this series adds support for the PCIe controllers found on the Tegra264
+SoC. There are six instances, one of which is for internal purposes only
+and the other five are general purpose.
 
-Comments #14, #37, and #38 seem particularly relevant.
+The first patch tweaks the DT bindings slightly to avoid new DT compiler
+warnings that slipped through because they are now disabled by default
+(-Wno-unit_address_vs_reg).
 
-In short, the problem seems to be that after resuming from s2idle, a PCI 
-xHCI host controller sometimes does not get MSI-X interrupts any more.  
-Setting a quirk flag that causes the driver to use PCI INTx interrupts 
-instead works around the problem, but it's still a bug.
+Before adding the driver in patch 3, patch 2 introduces some new common
+wait times for PCIe and unifies the way that drivers use them. Finally,
+patch 4 reorders the reg and reg-names property entries to match the
+bindings changes from patch 1.
 
-I have one of the affected systems but haven't tried to do any real 
-testing.
+All of the prerequisites were merged in v7.1-rc1, so this can be applied
+to the PCI tree directly. Optionally I can also pick up patch 4 into the
+Tegra tree, but there should be no conflicts, so feel free to pick this
+up with the rest.
+
+Thanks,
+Thierry
+
+Changes in v7:
+- fix build dependency on PCI_ECAM
+- remove pre-silicon support code
+- Link to v6: https://patch.msgid.link/20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com
+
+Changes in v6:
+- address review comments from Sashiko
+- rebase onto v7.1-rc1, adjust DT bindings patch accordingly
+- Link to v5: https://patch.msgid.link/20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com
+
+Changes in v5:
+- address review comments for the PCI driver patch
+- Link to v4: https://patch.msgid.link/20260402-tegra264-pcie-v4-0-21e2e19987e8@nvidia.com
+
+Changes in v4:
+- strip out dependencies that are going in through the ARM SoC tree
+- revert bindings to oneOf construct so that we don't produce new DTC
+  warnings
+- Link to v3: https://patch.msgid.link/20260326135855.2795149-1-thierry.reding@kernel.org
+
+Changes in v3:
+- integrate PCI standard wait times patch into the series to maintain
+  bisectability
+- fix review comments from Mikko
+- Link to v2: https://patch.msgid.link/20260320225443.2571920-1-thierry.reding@kernel.org
+
+Changes in v2:
+- fix an issue with sanity-checking disabled BARs
+- address review comments
+- Link to v1: https://patch.msgid.link/20260319160110.2131954-1-thierry.reding@kernel.org
+
+Thanks,
+Thierry
+
+---
+Thierry Reding (4):
+      dt-bindings: pci: Strictly distinguish C0 from C1-C5
+      PCI: Use standard wait times for PCIe link monitoring
+      PCI: tegra: Add Tegra264 support
+      arm64: tegra: Reorder reg and reg-names to match bindings
+
+ .../bindings/pci/nvidia,tegra264-pcie.yaml         |  75 ++-
+ arch/arm64/boot/dts/nvidia/tegra264.dtsi           |  48 +-
+ drivers/pci/controller/Kconfig                     |  10 +-
+ drivers/pci/controller/Makefile                    |   1 +
+ .../controller/cadence/pcie-cadence-host-common.c  |   6 +-
+ .../pci/controller/cadence/pcie-cadence-lga-regs.h |   5 -
+ drivers/pci/controller/mobiveil/pcie-mobiveil.c    |   4 +-
+ drivers/pci/controller/mobiveil/pcie-mobiveil.h    |   5 -
+ drivers/pci/controller/pci-aardvark.c              |   7 +-
+ drivers/pci/controller/pcie-tegra264.c             | 538 +++++++++++++++++++++
+ drivers/pci/controller/pcie-xilinx-nwl.c           |   9 +-
+ drivers/pci/controller/plda/pcie-starfive.c        |   9 +-
+ 12 files changed, 634 insertions(+), 83 deletions(-)
+---
+base-commit: 8f5b04d01f6fbbb5537a0979182acf820766660d
+change-id: 20260402-tegra264-pcie-e30abe23da07
+
+Best regards,
+--  
+Thierry Reding <treding@nvidia.com>
+
