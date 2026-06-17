@@ -1,196 +1,217 @@
-Received: from fout-b4-smtp.messagingengine.com (fout-b4-smtp.messagingengine.com [202.12.124.147])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020101.outbound.protection.outlook.com [52.101.229.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5738B2E739E;
-	Wed, 17 Jun 2026 03:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.147
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781665309; cv=none; b=FAir+gaIkPCWrh+zDLunIyR5Q0uuO3gb4NaXUMKdgkkQnm/dr1MwhRIQEdkfY2UbJnynSL9G/hw+zHxJf+MXmO8I7EnzgOSA+ppPaePPRGS2S0vhBQQI9itP0tbHgQZGWTVN2eOm4kmfD3wGCtIEookIgLEhvqIRYLp4Ny4qqQI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781665309; c=relaxed/simple;
-	bh=HTJ8KYFPVJkyDW+R2yNJx8qe3AsWz7nJqED2wvPH2dw=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=OuY33h62ZPwZwV1uHaOlLEjcut3Rb0K5v6NOyZlapsQnARq+p42IXtPI2RYGfT+LzHRW1dho899bHUsbJ2pL41DNkdsFVzjVQwUoIC+1YmkdtGscx6+MQiejA00p4onl9LEa74AJIbdLEuu/AEdQM+RM461c6S72VWmLhMfkvHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=WpghXdiA; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fr2hl54R; arc=none smtp.client-ip=202.12.124.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EB12E6CC7;
+	Wed, 17 Jun 2026 03:17:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.101
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781666250; cv=fail; b=hHTrwafW8GDPfuFU2m+gGRvp/cBO/WA5Lb3uqGOvxfM2Rd1d3MC/T0S525OnEq02cJ2S1Ep+K/VyL7G1YQyfZgSd1SU3Iz9gcvYI8AA6uEUCEcQut4741xYI/QRiv4BwQY588GxyEr0DhX/ZIQf/iDOzauvEy/7HtiMhYH1VzsY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781666250; c=relaxed/simple;
+	bh=kwUwtDhGda+B1xocXWsPXTRCZt3vg8o6oXt5VA6vMvI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=f6TxpdhPcUnT7EksawAJPDH5HOYgBy3PfEkxrWZuya8kPQ0WLz8Dn3eBo/6Hm4COsgRwnrcY8/DSeMtvqxidzC31vlGxrTpoey4SXeT1hMShq5nqZO2pXt3rmgpfhq3Z2hw0DW5Xb0SSIqADalAf3SWMMao+kM8ltmm0i3Fv9nk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=rcY+UlwK; arc=fail smtp.client-ip=52.101.229.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="WpghXdiA";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fr2hl54R"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.stl.internal (Postfix) with ESMTP id 25D2C1D000B5;
-	Tue, 16 Jun 2026 23:01:45 -0400 (EDT)
-Received: from phl-imap-18 ([10.202.2.89])
-  by phl-compute-02.internal (MEProxy); Tue, 16 Jun 2026 23:01:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1781665304;
-	 x=1781751704; bh=njW2lIzSb6RaUWkk7HxgvpO5bJHsizFr4nvO4oEic8k=; b=
-	WpghXdiA4CDymprJ2FfvXfIPu2lceS4YJoquUSfs0PMLL3KSH31kNKMM3RbtK2NW
-	gQ6gz0wVFXmJkr+FLdUT48ejaZCCmRwQZGr4WynLRKFMzEZSKy9J/ktP1A6MfjHU
-	IYsh3odnMzq33eQZFQMQdCFM3rpHoIgf8go37WYH6pJk16jLPBUZBMCJ9H8toLHR
-	WSxwQuODsGfpgxs+eNfL+/BpUicdxcecKch57Hq5i7rKYUnC8LIIY6z+K8jFRjZA
-	BDTZjzSaaTQr5rRL5f5n16jJ8RJwkfmk/t4X+1WRGv68Po1kDPbcWcIXUq8gUymG
-	T4mE1838UORc8riERkOWLA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781665304; x=
-	1781751704; bh=njW2lIzSb6RaUWkk7HxgvpO5bJHsizFr4nvO4oEic8k=; b=f
-	r2hl54RByH7bIH9kb9dAaNBlB0kKs7OVVZV/9rbcnub6Rx9MRGXr8FGmLwEKkmZ4
-	zi8HelNNmtLZsOPvelkjGHEC9VWXR6cndiee9MpFH8H0ZDFT0CLFBdgYVkEsA4Xn
-	RQe/dDxFFzxYkfL44qR674RoLKnVGFdHGRz2hJ+0HXzoLirY83O9yRDzBTVTmcHu
-	oKqzYM8q7o4m4KmetLPIdqsV1o1Kqn3BJGuhGG3H24XRkve+ipGymPoBAJmo13qL
-	78eaTi2yXBH8d3iMXTY1MOuJJWiCCbKZFzN/CUqrn32H+vapjGe3ZXRBUrJy4tJZ
-	A4CUlaZcRUacM7uvAhF+Q==
-X-ME-Sender: <xms:GA4yapSCzQGsNlsIa4LlFZqWowy3cVdCU0yOXvb9VgyTdKrc6GlOwg>
-    <xme:GA4yatlk0PuoIFlZkYkungFNTKzJncrdfTlaaV4FNRKA17Hb_-VBnf8daP2umVRl3
-    vmkplbFKiVY1BqG55z0Syvr30f1qeI7kMMRs7Xzhti-VQ3ATizu>
-X-ME-Proxy-Cause: dmFkZTGzcgHyYJkipBHa/U8hKxZKJ+X3QTV0zh4pEaMQr+rJi/LaKfHctwIanM82+EHGjf
-    /G+TuFvJW94BaIXf2a7oW7UiBxAxCdI6JQ9ZPxUTzQp771O7ZapmUbvGGOZUlmZ5n8S7I8
-    3Fx9Va22ydTlboC0Rn6SSppwTlRk6L/q7wjDkjpBExI8LFog5QNk6xysxfijFbg47PvdEU
-    xJ4QpdKh5dFB2t5iOb38M4T6HpIk+bdzMZhhV15Oe7IZsKwddGvffaFH1VKhPmcLWwd+Vz
-    ApzUP+FCqlUIf/+aaw5YkQdSXnPS+D/pp2X+JDAmnR8SW/kFl/DWegu5BdBBIdbo0RoGsf
-    IeWC+bP+6QjRRZy5CiO3BYi4UtRfsQxjG/fF34+vY+lmf0USwpLJPDZ5oX4hVCfZpv6OdO
-    3wfOxENEfAtuVXBGSIpWSKRBF0im4AVunQVEtKrcB9enFgnGBxSxRhxV9JMeEnd+42FGtW
-    5DrdDIqx7RfN5zgX3ThEO8EjeDj16qr8hDIlJEieNifD6+SIRezzQOKg/r2AZ8x/9JGcnQ
-    GywI3b2vMBMsidapSJYEPd2slWw9u7nV91NIKEMGYsFBULWXlqPQbC2bpwpfuYVMj5Dsai
-    Cvz+zGXKFxaygw+8pnbgJpRbTky6Y07JtoL2ubSooSR6DadkaspfQthI8fqQ
-X-ME-Proxy: <xmx:GA4yau2xGiL-tJH5K3phjKYbpsMYzI8JBHR-TWoCnln734WSTPaFgw>
-    <xmx:GA4yas-CmQS1zjFDU8T68pvqUO20Zr5My-5whmIVIUq2axd5QxYGNQ>
-    <xmx:GA4yaj7Hgcl4xnXDZqSZsUGfTKxDmuT5iHrFHNV3AmwMaHMx7hborA>
-    <xmx:GA4yakv0nJNY7VQgPofW9OwaOA6dQRCbIlyCrXkJW0a40s0sfwJlTw>
-    <xmx:GA4yalYVNoWR8gkycteNF_3jL5l9q8T43Ei3WgwnrEDnRW9M71sFf3So>
-Feedback-ID: i03f14258:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 320F115C008C; Tue, 16 Jun 2026 23:01:44 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="rcY+UlwK"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GbpdBzQSbvtvZQVmZhOuFfoohVxj78THLPebWfzCUmE7t8Jm8T+qk0SU8CV79oyR3cBKcW7z5AlvF8AYmA74ugMWf+l0HbV+ylPn3n0o2KXNc41DtM3U+kHloHvCaTlWxu2a0bwzkB+FLQdosVEy8zYIeTxMrjsClS5GamULi2zwBROQqUZl6Ld67kdCxm45qgsXW3MsqKmTUKJGIvxDBR6LLwRjvfWbrWpQHoLo29jaNZYjPEHc3RZ+QFsCL91be6ROfqrAOzXlZMsYrcvk/Hib0vgYdZZKX4UOtJgUuOIb/wimpliYoz9sP1dh3ocHbTRf8gSbVjKx0jGL8SUniQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Qd9BDnZ064aBcvMz/v8WfeBS8uXzZjyUMK9Tr3rFy5M=;
+ b=ShHSqTb3m9a4yepL9Oc/efdcfuMzv1RtdRyAKGsbFToOXLgBi/vZdqbBtlcWkDEpOW008BbuBFIZ3DOGEgg6Etpanx05vsE8or8e3KD/GPix5kjV4iQzgMbRRH3LuAAja0pCTQEpee1SsvqIoZI+Ugwf197u1WFAv6RDFQffcnEeZ1QSlkoaA4D+6V+F23RkrKD9b1xVvZow/G65OjeITv7gQMfTSmaqusXv00kbk5TL2lRD0dG+tf7qZZOuzQBlKTW4spn0DeH3uhIsG5FPxAAqa3bxj5i7qMRwuoavx3I5HEREIc63hwggkykRjKV2D9aMHS6kGKGVO4GPHgMMgg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Qd9BDnZ064aBcvMz/v8WfeBS8uXzZjyUMK9Tr3rFy5M=;
+ b=rcY+UlwKNM60hJWBnjjqkI/zJo7WNiNwyHPj4+c+UluJzKtbVJxi8SIvaU6ZopkJhgTsLx9SKIZYKv0vsb17MGWXj8/+hj3Kn8oLV16MxWboY9OMWrgXRxkUho9oASj0VxCKJUcrzcfHxwn9UAEk0ED2glkL0oX1YZB83I9rnL8=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYCP286MB2518.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:20f::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Wed, 17 Jun
+ 2026 03:17:25 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0113.015; Wed, 17 Jun 2026
+ 03:17:25 +0000
+Date: Wed, 17 Jun 2026 12:17:23 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Devendra K Verma <devendra.verma@amd.com>
+Cc: Frank.Li@kernel.org, bhelgaas@google.com, mani@kernel.org, 
+	vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, michal.simek@amd.com
+Subject: Re: [PATCH v15 2/2] dmaengine: dw-edma: Add non-LL mode
+Message-ID: <zhpsuwq5agslelgebbtvrg4uks4xweov7ywhmkxdngq7lzajip@e4umiii6kzko>
+References: <20260318070403.1634706-1-devendra.verma@amd.com>
+ <20260318070403.1634706-3-devendra.verma@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260318070403.1634706-3-devendra.verma@amd.com>
+X-ClientProxiedBy: TYCPR01CA0185.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b0::11) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AnXwzOjrN2xN
-Date: Tue, 16 Jun 2026 21:01:23 -0600
-From: "Alex Williamson" <alex@shazbot.org>
-To: fengchengwen <fengchengwen@huawei.com>, "Jason Gunthorpe" <jgg@ziepe.ca>
-Cc: helgaas@kernel.org, wathsala.vithanage@arm.com, wei.huang2@amd.com,
- zhipingz@meta.com, wangzhou1@hisilicon.com, wangyushan12@huawei.com,
- liuyonglong@huawei.com, kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Message-Id: <c3d7ce59-bf5e-40fc-8f0c-6232c58c7495@app.fastmail.com>
-In-Reply-To: <e2db72ab-6d51-4d19-8dba-0612207008a3@huawei.com>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
- <20260616104621.41915-9-fengchengwen@huawei.com>
- <20260616144224.GB3577091@ziepe.ca> <20260616105754.784be22d@shazbot.org>
- <20260616172728.GC3577091@ziepe.ca>
- <c913116a-35b4-4934-b78b-8fa0a08a00ae@huawei.com>
- <a81c3479-1749-4b9b-b913-cfb20c621690@app.fastmail.com>
- <e2db72ab-6d51-4d19-8dba-0612207008a3@huawei.com>
-Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU to
- steering-tag mapping
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2518:EE_
+X-MS-Office365-Filtering-Correlation-Id: bfc2a569-43f9-4d16-4300-08decc1ef3fa
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|376014|10070799003|1800799024|56012099006|4143699003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	mRNTeZ64sxkVjHBnfl4qMTiAdhk0qy1bGL3eTKUvYLKXnjSuWkG2RES+mV9yXWzDbM+C9wvpkTkCOZV+8Fi0c+b9alUHaAyMWDqzB3DbNynEzi0BgH0tzrupBMJ1gAwE5wY/2xcfH231mPchOq5VE40HIz8DzI7sDTt53m1R7Sn6xrUEHsf6A10pISYAl3dyQjji2hWCrn1rBbigQZUDkTfDAt63nL5AQ5cZrrrEvzQwJmIIZDuTsZX+ZDzG+t6se3PYbWrc+/wslSddVqlCXO2zJir+l4Wlnf96iwd525U9GDc7CsKLLFYEMyPt2t4PJH0dhpJ+64M5s5q14lDIECic1dZ2G5r1ShgLFqRK+gkpfS+6ouz9WuAooyITNF7+vvd9eVn1/H9KE+xS53ekVrNqJi49Nan5xliUB1jjwUQFb0N/Mt4nKNzbBcUIYRKAEsU/gDhsBsi/uHEWDpcDEVqPjoB9bj7P/rOstXImPJx+Bx2myhHikvIV+vzCdN6jqf3jlD1XDeblWJ/Lojty+UBBqvCEaqnbbNlcqL8ur+NKVUkdBxRbPtk41qJy072xfXfwH6u117SAlTrOi68CuHYiQ8AokkBDhkzZNx2EQcJgLd3AgUXFE4Px3WEbKvZFVd8peU5SWh9bRlvpkKPqU8zPSHF2xPP+i4hCKr6xCjm1fdEBLmKQqpUk9aHwhLpFnEUQaB+45h30eE78pV48fA==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(10070799003)(1800799024)(56012099006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?pzh6Ybe4bzH6mBILuTJQgh5cb8ZC1OBTaHRDBup7QEe9vnZ4uoZUFNK5wYdu?=
+ =?us-ascii?Q?S4Gjv0mvcPIbSbYsRcFktSMulV+GBy4lMBZn5NiOEdAxw5QIVSAgG6hplJHd?=
+ =?us-ascii?Q?enki+2naCv8/LnpC2ffgtUruLrF3aiAjwfnn+KrCGVDqHfY8Aa0IVtZIVjFp?=
+ =?us-ascii?Q?IQkxixRltoODFlttTukN0iepL0I8KkR+YRNK37NWR5ruazXgHbjsjByAvKdw?=
+ =?us-ascii?Q?x9K/niVe5904Yb2mVo8umYPx5ZYqStJ/HSGpniD4ilw90L+kIfPf8WlET0+3?=
+ =?us-ascii?Q?2mBRCB+7XvbYdmM8olmK66Evco750dG6Bj0e5bRomvgHwm0OAIrlN3jfUFih?=
+ =?us-ascii?Q?yx7FU9HowyJabYOnAyH5ApM4ug1OBmsJDt4OwKzcAoG9DzsyHxzuU35JODCS?=
+ =?us-ascii?Q?Vkq3SxVBqKCs1TD5DrFBVF27Gkmvahd/7wlbRPCaqT3jznLl86MMNEl+c3aL?=
+ =?us-ascii?Q?DugT2IYD0OC06NZv5DnIESEe22P8ncWe9p6DukhYjJeozMaOUEfYcI/npugj?=
+ =?us-ascii?Q?zLIh3epkJgo4KbIt8VbYuViSK42FSWlQBheyk6Kz19YUFAPwQ8I8lSBWfUpI?=
+ =?us-ascii?Q?U5o6VifD/L+leKzfIZ2guwZy0Qq37vrTe/9EnGLndI8agIVmTGVyDmKwezz5?=
+ =?us-ascii?Q?MpApHAuS5WHJgxDdlABi0UVBtenwkYAj1F6Ivf0WUMdzbku4+FzXsb3q0UW/?=
+ =?us-ascii?Q?dHmNCJRPuIfTxwHiU7velBiSGciBdkFdKb2tIMIIvSuVwOqoVZLav37nnW79?=
+ =?us-ascii?Q?FVd7HB0P2GqXHuK61COzbf7O96elbuxMZWoSujAC/OmxYaIvGH6/legpL39R?=
+ =?us-ascii?Q?KDKQGglgMzFu8q00Sk/xUdQ37rdNu2pVt7oHrrhOYUoT6OLo9nDTv2eccqx2?=
+ =?us-ascii?Q?IyidIoioK+r/X8kL1YIwozIVdZ9y79WJPvbhO7L2N6H39aC2MDNEQlfG0FYk?=
+ =?us-ascii?Q?+qy4luwjSyRPQ0hOuPzhDXX1T+F51E3ysuTLmeMnn56Bb5JBakLk9kNUgN8R?=
+ =?us-ascii?Q?XYrTYbFW6CdOpPq17twq0Zst1sgazkE12FedhvSuZk+FP6EPlsQQVLT7i0qa?=
+ =?us-ascii?Q?sD72UVrBXHI6ol0hCqvuQosv5dMotbDVIsoqAcnJxb3GyGgGVyXjpcKwuMJC?=
+ =?us-ascii?Q?A+Um39SHbm/JpjeppW0LpTj6vEgLqY+C+FE5y48atFpYW2ENVbhFd0/thBzP?=
+ =?us-ascii?Q?22p1XEiZ5yejJSPtSSY61lqRDdTYYltw8oAQRqhtS//D8ebe/Suikd9zpvOH?=
+ =?us-ascii?Q?IiX1JwFeDBY4NKvtQnuabjViEwIAO2r672iWI4HhYJfo0sl2kY8oyP5RF+Mw?=
+ =?us-ascii?Q?4Td4Uad4SeuGEjSUfUOxHF8idpZ/aCOLNASVWWMxXQz4B3tdbezXOufK3v5b?=
+ =?us-ascii?Q?BwM0P2SM7WbLrzIpC7zlCmln6yo7XC3PMlwwAgo8sFhEZXru9MzzGprCt7V+?=
+ =?us-ascii?Q?QPadk+9LWJ74oM1OrZzaEpydVmeCbV44/2I4eOK59lK4uVBQXZ9rufwWTUjE?=
+ =?us-ascii?Q?cPiwwj7s9bVShH5hofyGHC3Wal4eeWR4WPcVPG/9dY7hvmYahmfwn8ECb3qs?=
+ =?us-ascii?Q?fmJXbfBMA0sEt6x/uVB7tO9f9qPwYtMCVGnCaeIE/sGicmSg93Xpc6LtHgEi?=
+ =?us-ascii?Q?qBnGEMYbL6wfhab4ibXpm2b6Ux2GDEU+CDnfRHczeRs1IFQHHalEI3l076jc?=
+ =?us-ascii?Q?9gpjX/nxOZkONX5Wdta+vlCmrfVCKj0C0Icg+AMIa+ChQtSY8UyuQqRIMAYE?=
+ =?us-ascii?Q?1G61BsUDgMaOwC6VeDwUCk5SfAnuKJo5r0/mO2drKpqLMOZw37VZ?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: bfc2a569-43f9-4d16-4300-08decc1ef3fa
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2026 03:17:24.8967
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qS7JBJADGgvDW0zqLxKPi10mBzls9jbtWs6IJL2fYak8CPm/Ur66u6NSm3SSbZIioML7gMudZZ66tiV3RIrhcA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2518
 
+On Wed, Mar 18, 2026 at 12:34:03PM +0530, Devendra K Verma wrote:
+> AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
+> The current code does not have the mechanisms to enable the
+> DMA transactions using the non-LL mode. The following two cases
+> are added with this patch:
+> - For the AMD (Xilinx) only, when a valid physical base address of
+>   the device side DDR is not configured, then the IP can still be
+>   used in non-LL mode. For all the channels DMA transactions will
+>   be using the non-LL mode only. This, the default non-LL mode,
+>   is not applicable for Synopsys IP with the current code addition.
+> 
+> - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
+>   and if user wants to use non-LL mode then user can do so via
+>   configuring the peripheral_config param of dma_slave_config.
+> 
+> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> ---
+> Changes in v15
+>    Rebased the branch
+> 
+[snip]
+> +
+> +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+> +{
+> +	struct dw_edma_chan *chan = chunk->chan;
+> +
+> +	if (chan->non_ll)
 
+Hi Devendra (cc: Frank),
 
-On Tue, Jun 16, 2026, at 8:33 PM, fengchengwen wrote:
-> On 6/17/2026 9:30 AM, Alex Williamson wrote:
->> On Tue, Jun 16, 2026, at 7:18 PM, fengchengwen wrote:
->>> Hi Jason, Alex,
->>>
->>> On 6/17/2026 1:27 AM, Jason Gunthorpe wrote:
->>>> On Tue, Jun 16, 2026 at 10:57:54AM -0600, Alex Williamson wrote:
->>>>
->>>>> IMO, this implementation in sysfs more so proves that vfio is the =
-wrong
->>>>> place for the interface.  vfio has a use case to consume STs, but =
-it
->>>>> doesn't produce them or own any of the mechanism by which they're
->>>>> generated. =20
->>>>
->>>> I would argue only a VFIO user can consume this information so putt=
-ing
->>>> it in general sysfs is overkill.
->>>>
->>>>> The weak point is whether this bin attribute, exposing an array of
->>>>> structures, fits within the socially acceptable norms of sysfs. =20
->>>>
->>>> I'm pretty sure this style of sysfs is not accepted and
->>>> counter-examples are things that are ancient or slipped through.
->>>
->>> After weighing all feedback, I'd like to propose a lightweight singl=
-e=20
->>> text sysfs node
->>> design to resolve both your concerns, without introducing binary=20
->>> binattr or masses
->>> of per-CPU files:
->>>
->>> 1. Only create a single r/w text attribute =E2=80=9Ctph_cpu_st=E2=80=
-=9D on Root Ports, no
->>>    hundreds of separate per-CPU sysfs files;
->>> 2. Usage flow: echo target cpu_id into the file first, then cat it t=
-o fetch
->>>    formatted human-readable ST/XST text line (cpu_id vm_st vm_xst pm=
-_st pm_xst)
->>>    for that CPU, e.g.
->>>       echo 10 > /sys/bus/pci/devices/<BDF>/tph_cpu_st
->>>       cat /sys/bus/pci/devices/<BDF>/tph_cpu_st
->>>       and the output will like: 10 2 20 100 120
->>>    In the case of concurrent access, users can determine whether the=
- first value
->>>    (cpu_id) is the one they expect by making a judgment.
->>=20
->> That's a terrible workaround for an inherently racy design.  Thanks,
->
-> This is because the DSM method is slow to invoke and involves many=20
-> cores. Therefore,
-> this trade-off is made.
->
-> I propose another lazy-cached read-only text file design:
->
-> 1. Only create one read-only sysfs attribute named tph_cpu_all on Root=20
-> Port
->    devices, no write store hook, completely eliminate read-write race=20
-> risks;
-> 2. Lazy initialization: All CPU steering tag entries are fetched via=20
-> batch
->    ACPI _DSM calls only on the first userspace read operation, cached=20
-> inside
->    afterwards to avoid duplicate slow firmware interactions;
-> 3. Cache invalidation only happens on Root Port PCI reset events,=20
-> including
->    system cold boot, AER fatal error recovery, userspace manual reset=20
-> via sysfs,
->    downstream hotplug and root port driver re-probe.
->    No CPU hotplug notification hooks are registered to avoid extra cod=
-e=20
-> complexity;
-> 4. On every sysfs read, iterate over the cached entry list and filter=20
-> out
->    offline CPUs according to the current online CPU mask dynamically, =
-so
->    only valid active CPU records are printed to userspace;
-> 5. A read-write semaphore protects cached table access to support=20
-> concurrent
->    userspace readers safely;
-> 6. Plain human-readable text output complies with sysfs text-first nor=
-ms
->    Jason prefers, no structured binary binattr is introduced;
->
-> Usage example:
->    cat /sys/bus/pci/devices/<root-port-bdf>/tph_cpu_all
->    the output will be: cpu_id vm_st pm_st vm_xst pm_xst
-> 	0 0x00 0x00 0x0000 0x0000
-> 	1 0x02 0x00 0x0005 0x0000
-> 	2 0x01 0x00 0x0003 0x0000
-> 	...
+Sorry for dropping a comment now that this has already landed.
 
-This is a more complicated, more bloated, less functional version of the=
- same array of structures problem as the bin attribute, just in ascii.  =
+I'm wondering about the lifetime of chan->non_ll. This patch lets a client
+select non-LL mode through dma_slave_config.peripheral_config for a transfer,
+but the state is stored on the channel.
+
+We use chan->non_ll in prep to choose bursts_max, then read it again later in
+dw_hdma_v0_core_start() to choose the LL vs non-LL start path. If the channel is
+reconfigured between prep and start, or before a later chunk is started from the
+interrupt path, couldn't we start a descriptor in a different mode from the one
+it was prepared for?
+
+(Note: Frank's not-yet-merged dma_prep_config v7 series [1] also looks at
+potential races around config+prep on the same channel from multiple process
+contexts, as I understand it. But this seems like a separate issue, since the
+state is read again at transfer start time.)
+
+Should non_ll be snapshotted into the descriptor/chunk, maybe as
+dw_edma_desc.non_ll, or is the rule that clients must not reconfigure the
+channel while anything is pending/running?
+
+Or was this already discussed, and there is some implicit restriction that
+clients must not mix LL and temporary non-LL requests from multiple contexts on
+the same channel?
+
+[1] https://lore.kernel.org/dmaengine/20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com/
+
 Thanks,
+Koichiro
 
-Alex
+> +		dw_hdma_v0_core_non_ll_start(chunk);
+> +	else
+> +		dw_hdma_v0_core_ll_start(chunk, first);
+> +}
+> +
+>  static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
+>  {
+>  	struct dw_edma *dw = chan->dw;
+> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
+> index eab5fd7177e5..7759ba9b4850 100644
+> --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
+> +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
+> @@ -12,6 +12,7 @@
+>  #include <linux/dmaengine.h>
+>  
+>  #define HDMA_V0_MAX_NR_CH			8
+> +#define HDMA_V0_CH_EN				BIT(0)
+>  #define HDMA_V0_LOCAL_ABORT_INT_EN		BIT(6)
+>  #define HDMA_V0_REMOTE_ABORT_INT_EN		BIT(5)
+>  #define HDMA_V0_LOCAL_STOP_INT_EN		BIT(4)
+> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> index 270b5458aecf..61d6064fcfed 100644
+> --- a/include/linux/dma/edma.h
+> +++ b/include/linux/dma/edma.h
+> @@ -97,6 +97,7 @@ struct dw_edma_chip {
+>  	enum dw_edma_map_format	mf;
+>  
+>  	struct dw_edma		*dw;
+> +	bool			cfg_non_ll;
+>  };
+>  
+>  /* Export to the platform drivers */
+> -- 
+> 2.43.0
+> 
