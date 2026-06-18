@@ -1,62 +1,63 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011027.outbound.protection.outlook.com [52.101.57.27])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011060.outbound.protection.outlook.com [40.93.194.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E73430CD95;
-	Thu, 18 Jun 2026 21:26:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA51348C6A;
+	Thu, 18 Jun 2026 21:26:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.60
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781817996; cv=fail; b=JCyq3zsMrsO4xeSD3kfQxrdTVXl1ITimZZWY48ZLNjqeflL/A0zyFX0DTTiwUnCL9EEkHpDH3EeG2XMGspMMEsD7xWQOWhcIBkPh+ZCH3ttvRHVXYmTLj7QqxcQ5OUj82tm8MptOI4+rNGpHEVrNro8GPsWSCdgMHsdoG3HFAkE=
+	t=1781818021; cv=fail; b=AdJ550iIt8D5IoAHFlC6BFjsEhlU9+cCa2/LA2v9nEsd3An/t3vCItdEpGg7kYB3ZRmTv8ki2awy1yt8Q7QqF+X/QItpyfyEu5EV5j9AvlmtSs9ymOKt+xp45Ke51JzKOruW2R7Tod0oM0NI8UiVOGUpqW3MNtWBhICy1pL4wDo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781817996; c=relaxed/simple;
-	bh=bzbag7fJzaUtINft6YTsrlwYLB8H0a//aqFQ6F8DXKI=;
+	s=arc-20240116; t=1781818021; c=relaxed/simple;
+	bh=/wSLFzIQQKQJZsyxY8gy7GDt5cpwaW3bpdshyaiYJyA=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=ALoLt1Li3cUwzwXNbOlsX54XkMVO1HhBC9qlGsBmgw4BkxtLkLt/EyLNQD/kLfNkxXjMIB6DEBuTgQs7M6Eo4zy0TDFnW5XNNIsTEdez4sxrSN5zgeTwrES6cNkOR8Nc4/Q9LOnWHlyKOsvyTG9gUaAexUZM5hROz/N2fmQL4lw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=pKeP6W9V; arc=fail smtp.client-ip=52.101.57.27
+	 Content-Type:MIME-Version; b=nz1F2DgIn3z2/IzshGuL0cze7uGnJHeI1oBk4EsqqLqGkequj0X+iWESiMsIGLE8Ns8YTbaTDtzfJVKzWkvC1YtkSN0UwraQWlSbUzEyrjQSFazR6iMH8cugBU0W/Aqf6YedJ68vOxQIl3r/VrQxCcMrBYOC3UkeP+f93bKJYSY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=jeihHvmE; arc=fail smtp.client-ip=40.93.194.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="pKeP6W9V"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="jeihHvmE"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RV3xZRzbXgGXzPvMOd2TXEsEhH0jmHml+GXXxGdDOLqK493WG8j0mfACaGtzu98UyeOpvABZbAz/R6O0Ut9hQEb6586YWQEbhyISlMXU4BijurOxfCOsjlc06IR+3l9dE9mrhUs0WhRcGqI7ZOVoxBnJk1Y4glocYL8SbLBlAa2Rj25XqNcbi5DDKXCGKQsSUMtcaATy01rB+3kUPuQE1WnlSsx/n2uGSbmgg1ZAOPlPl626lpdCuiQ6AM3hZzgoiHKiF8fwE0jVvIGmhBzgFvBuHUTD/X7kPi7raz1xzBowh9rwWMTdOTrDIqWVnHVmtECLfVSNG4MapnFcS7EuIw==
+ b=T/LqcIJKpIssoBTRki1HZB9joIgUH71CTR+tRuEpUbnNb66213r4lcXjfaPpdBsW1MRazwpopIr3wLNC34aqGeizNiOZyhBUNLp41aq2E2Xbk+3Rp6HZBpry/8PyBsEeM+qXqqHC0YPHJJ3zp7pDa3ljHRw9gTYBkzSvtEt9Ts+sBCOXq9Xuo9TNJ9SXyAH5G1hf8aHKeuwiLtpKpjfhDJg0xl3iJs8Ng70U8YoEdpnwFdfW9lYcI1psZiGHjyp9GRmDJdUgQgGYIiBWjQsn5sjaDeYquLpEe3cpR32ezVh0AjM5YJibCAvAx1/SI7sZr8tbqhQrQsL3hwQCoxZNRQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=sY4odMf1ucu5lvBbc9tZbK77tw288Wf9nvIUMpaEamo=;
- b=ucPjqrhprwEgBSsBFEqew9mJu5g5qwamymM25vKExvsSZHwBL6ZDhUaQCBhQFPlYrxevKkk1ywodAcG+NDaPWbJnr/M/7g7OAk8nsUGYvtMBuGKb3GudSGH3tzXgNQflmykNoPD3jdW1SZw/gVtfVxyWkik6iS2fMaXJmAUwCJAsxeMKPvAygHMWTYMLG38uMggsIysLYaXxCRFd3keZv9z+kMPGW7Er8EGCjOLnA66W9h/GKdvtXuQ44dRo65B22QTBSWrNQLz49BcT2P6EajCb+wuJx+42414zE/qq5XN5LrGr+d9HdfdK9Bp1ygruuXLtxOHiMtbVsYFZ2Hxweg==
+ bh=dzVi4eP/Ybz38+N3G9RM0s+S6hCrLhHshZfW5/X6c3I=;
+ b=na43bU6ZqHyZdERDEkT6hKNrm8R7mFjm6XKymeakaa8bJyGfbsj9n6LPB01UuPnfV20DMHmhZLAxsDthoUZD3jQ90RH+bPySw1hi1eA/b4JI4C0EIpvybdCB5BIjAfmTIBbrfm5OnF0xaC7lCL4NTxXzKNh6sP35AeDdSxvklJL2UU31PzjgD9EwojRwa7ai8tBOHJNsz+XdxPzO2P7Zd0TweBy+g8ylsDBQ0KkFrrjQ4o9/9nFsynn+OaLZBVcb7TM4QhLyWdP7SI0rGvzF8CtJp8RhejUN11l1rbY3KxJcBHmgQkFMSgCc69HUyBnRQEwAj6bf1z25g9p914yq8Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sY4odMf1ucu5lvBbc9tZbK77tw288Wf9nvIUMpaEamo=;
- b=pKeP6W9V4S5izwCUzfqXn1XFpqZgtudAXpY8naBgqwFGhU/ntml92bs4PdlmhNvhGRZMc0/4j3yBASCiUYXeEqyicNVE+FnwzCvTgKHZYrmvgRTPhdhPOI6Ig+eUspE54Q1Ai2RbCSk8zM3MuW1vfZJTXKKDFxE885hMqCfW0So=
+ bh=dzVi4eP/Ybz38+N3G9RM0s+S6hCrLhHshZfW5/X6c3I=;
+ b=jeihHvmEMtouOcVYOAeaxU26LBO5I3u4EQRiEg2oVMnUN13V8s9K0KiLmuWPg4VzyUFsGZ2619NNc2XYqZ3nRUnykxA3JofUEPPPLOcMx4kffXRM6ZD/S5PipaCzUqcvEe5td6NIeogxzJT1Y7J11I9HaIKu23n26Zul1c2r7bs=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
 Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
  by PH0PR12MB5645.namprd12.prod.outlook.com (2603:10b6:510:140::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Thu, 18 Jun
- 2026 21:26:31 +0000
+ 2026 21:26:53 +0000
 Received: from CH8PR12MB9766.namprd12.prod.outlook.com
  ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
  ([fe80::be0f:431f:5f27:96d9%3]) with mapi id 15.21.0139.009; Thu, 18 Jun 2026
- 21:26:31 +0000
-Message-ID: <c952069a-0cca-44ca-8cb3-d4305e0b844c@amd.com>
-Date: Thu, 18 Jun 2026 16:26:28 -0500
+ 21:26:53 +0000
+Message-ID: <e8ca6204-46a4-4c9f-a4d6-efb1d4f87c3c@amd.com>
+Date: Thu, 18 Jun 2026 16:26:51 -0500
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 1/2] PCI/CXL: Add RDPAS parsing support
+Subject: Re: [RFC PATCH v2 2/2] PCI/CXL: Enable usage of RDPAS to shortcut
+ error device discovery
 To: Dave Jiang <dave.jiang@intel.com>, linux-cxl@vger.kernel.org,
  linux-pci@vger.kernel.org
 Cc: bhelgaas@google.com, jic23@kernel.org, djbw@kernel.org
 References: <20260618170723.2010490-1-dave.jiang@intel.com>
- <20260618170723.2010490-2-dave.jiang@intel.com>
+ <20260618170723.2010490-3-dave.jiang@intel.com>
 Content-Language: en-US
 From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <20260618170723.2010490-2-dave.jiang@intel.com>
+In-Reply-To: <20260618170723.2010490-3-dave.jiang@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR04CA0033.namprd04.prod.outlook.com
- (2603:10b6:610:77::8) To CH8PR12MB9766.namprd12.prod.outlook.com
+X-ClientProxiedBy: CH0PR04CA0040.namprd04.prod.outlook.com
+ (2603:10b6:610:77::15) To CH8PR12MB9766.namprd12.prod.outlook.com
  (2603:10b6:610:2b6::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -66,306 +67,295 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|PH0PR12MB5645:EE_
-X-MS-Office365-Filtering-Correlation-Id: 862d33d3-0214-4791-613e-08decd8043f4
+X-MS-Office365-Filtering-Correlation-Id: c5d6a38e-7536-434e-db67-08decd805156
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|1800799024|23010399003|22082099003|3023799007|11063799006|56012099006|18002099003|4143699003;
+	BCL:0;ARA:13230040|366016|376014|1800799024|23010399003|22082099003|3023799007|11063799006|56012099006|18002099003|6133799003|4143699003;
 X-Microsoft-Antispam-Message-Info:
-	xwnC+bPyTGqQjtSYUWPN/5OvFAC2jGlrs4J3im3nvEtddHGIpg34TLtvtAalaWyi3K+N29j2KOBHx6ydkrwTLfdU22SWczvEVFGk+d0Exn5U9izzxUoAFNsO+NmDSpgjtFJs2PKkmOaWSy7z+9MtauOB8vmC41kWF9GCFvrbNsbKgIv+6ROXszWlaFxf78Gp9rGYA0x1AD2wskuifCweT333dmWVWrTrNPxBhzryQCFaArD4Hx4n1UdPj6T1m68khKIM9hUhpRCdkHU8Eb//H4HnyWWJKzay5rOOd6JtexBJgph6inru9+Tqbjv+WcO/AwUjU07ozms2QSld/d4bSuCUNzSueJJZrlG9mskKqaHjRcbObFSO/c7ZMGESIlThnSAPOOWkn6WxA42TgGvijrrMRejv2ybLDE4fMmFEBWzwK3fVStKGNIdFwTUs4nNChWm594dqRd2Qtd8MSn8xheKxznyLnpSWSDE69mY+0vQSCqaUYAWgn8S667DkHV+gwz90QAWqhWOAQeuEjccWT171sCsmTjygMZCrjTxT1aK9djFHoJFfkFFjWI0cS1rpoUkG4xq7gyO75rtARheuzX/0oTPfk3nPNnNE0HofdlA3mzAVK7EH+sRsMewtF/8fkKV13pQZaWIuFFYR/kNa9npP4/+zpQMMu8CSXyiPlXc=
+	WkyXyKi01kVBvo4+MBbdUQ/8SmMaR3EYVKc+rRnUK1hPhDl8V4dzfD+8L7bmhzBMSbR1Ses8uJeAqym1rm7kA9PnENBC6+g/rwPz5YprDOfkUPS2WDdynt9J1uUJDCz0NERCTTooaJ4OFzmUFoxKmgXtp1e34u5S+I5cIJ6zdEGAVmCvTIFCiMUmu4O7mAOqME51cI0wMEWZ09W5yIIvkYB7KZS/T6+lEkoldSMBdEpX9W3yovtvHGi44DmiaxDEUH8Rv5ANQIGF62EjlGZMDkZzrkm8L27sYqjcwbwE1WcHunE8n/cMBDPgYIWLiumL9rR6HdhH47W2uW8wHztSjHEcoJFC1u4/GUu8WvcVUrDj9EhKNd2aiS7/Ik/0i8uMBM4xo1jDlZpGsVfYnIaxp/I2EmykfXQ/PqUlPz5y+I+15pJ3sbk3xouqm92e6ZyhBEmopsgdzRJi4uXEO+f/ZzHc6pTzWqStFNAGttrVteHIiXFHoxMyO5QgWtrpHMyITilMHNh5cN6jxja/Z+tl7INa6nuc4raRlOwBabw3la7rJqGvbr5Co8/+Rwdn/aXZ5TpbBJ2d0NfzfTx0tJsjPHTEmFKM3gXkklPmgK4AHDOy1pabhmi5QI2holRayudXZyc8tctjK5O+64mjjblpMNxvw5MCXa5tt73ThRtAGzQ=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(23010399003)(22082099003)(3023799007)(11063799006)(56012099006)(18002099003)(4143699003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(23010399003)(22082099003)(3023799007)(11063799006)(56012099006)(18002099003)(6133799003)(4143699003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?b3BoRGNlNWtBQUNTYmlHUW1FMWlERFlaRGxvSzJrOVlIOTQ5RVNxNkFRbklF?=
- =?utf-8?B?SFc1YVVTbVRnTlcxRm1WQ2JTbE83SndjS3lpUHdUK3k2T2dsdGtMejFPbHk3?=
- =?utf-8?B?Q0Z4VUtoN0ZIL0tqREQreWRXdzlMSDZSaWRXUDJQS2VUU2lpWkp3cXdiampy?=
- =?utf-8?B?NmUwOHNUcHRIZGlydlljLzA2MkdGUERxZ2ozMEZpVE9mU3YvM0s0ZTc3NnBp?=
- =?utf-8?B?TFBYN09rL0dBM3BuMy9pRkR1OWRIZGxJRXl3dGxLRHZoVzZSeXdubDdIZnZq?=
- =?utf-8?B?MFFpQkhxbjFCS0E1d3dEVmxwUnZZa3hGSDRnUUxlemJMcUg5Z25MTm0zd01p?=
- =?utf-8?B?a3pSN3QvanVSVXBTVGtZRGNKbVZtUmppTnJuZDdZbkFRZGk4VWJFSjBUYVhU?=
- =?utf-8?B?TXNTaE93d0NvdEc5LzN2YnVpU1crMVhwdnRhbXRaaUlRS2lhOGRTQkFRVFdy?=
- =?utf-8?B?YWoxNGZ5NHBUKzZMc2dmNTladklDVHZnZUlkbnNWa01peU1HNUpXOE9hckU4?=
- =?utf-8?B?ZnRmN21UNUxOZGpKbW5Rbm5XbERqejJQRlN1VFFMeGF0WHRSOFp3Qlo0bFJD?=
- =?utf-8?B?ZC9rd3BwSUw3WERaZkVFWkdCMStEcFg2MzkvRGp5YjlDTURJSy9BTmQ2bXNS?=
- =?utf-8?B?Ni9ZNmNKVktCQmwrV0trOUZXK3hHdit1S3poaWNac3BFYTZub0xHOGNDRkdM?=
- =?utf-8?B?dDh1MVhoU2dXT3dBRUNqOExPTG10TUEvOEFuQzAyQWxOK0t4VFRuSFpvekx3?=
- =?utf-8?B?T1hWcElEOGNLRUtuNlRqVDg2SE8wd3hoU1k3cWNnVGtmTmRzeUNkK0VvV1JZ?=
- =?utf-8?B?OFdLNWx5T2padGZYdjRUeDFabnB2akpyc0puTERYQXZpY2h6S0ZFalZHWW44?=
- =?utf-8?B?QjhjVlM3R3FiUmpzRXA2eitSK1RMcUNlYVRiYklyWE1JblFyWHdYU1FlSlYz?=
- =?utf-8?B?NUN0UTdJd0w4bFB4cGs5eHJROXFmdUF4eHVGa21HUWw1YTJ2TXh5ck5kN1Mz?=
- =?utf-8?B?Y2R0elRnMlVvd2h3dTJ1OTdpVU9aN0lHeml1OGVHY1ZPVjZmYURpZVRGVXcz?=
- =?utf-8?B?d2t5SUxyU1oxWlo5dXh6ekUwM202TlN4MmE4SUFPM2dIeVQzOGhHNVBQK3dq?=
- =?utf-8?B?eVlJY1BJZDFPa2hWa0E4WnZxeUptb0ZrcmNtNi8rckdrMHRvQmEzYWsveUVR?=
- =?utf-8?B?di9vU0QyTWhaNDlBVll1dWVnRTR3QzBGTHY4ejZTVGN3Q2lOUnRIUzJZTGlL?=
- =?utf-8?B?THEydy8yTWZaZWtiM2RzdVRKbWdkcHRodDFRajVlY3RsMm1scnZxWllrRDB6?=
- =?utf-8?B?TFNhTnp0OGZJNFpNVXlWaXFxeWUrVkNEU0hWUGN0cjZWR2RsSGh3Snl5S3VJ?=
- =?utf-8?B?cWdNVmpuU1k3Q2V4U0lObTRpWUkxaFJwd1BCQ2tjTTg2UnQ0M0JjUGZWaWN1?=
- =?utf-8?B?aCtvWTF0NTFvUmdhbVFzamw0ZGJPQXhtazFqaXE5UXp1T2dhRndLeHlqaVVz?=
- =?utf-8?B?eDlIZStTYmgwcHJQMXIzVFRkN1daZzJKU1kzdlJEaU5LNG1ZeGE4U0d4ZU1Q?=
- =?utf-8?B?K0VaQU1oa2RzNDY0MnlWZUppZHJCOFZ0bzdubGdEaU4vYTRBaEs1MnBnNjla?=
- =?utf-8?B?YjNjSS9EN2lXNXZ5OXUrREp2SitzRmtyKzRQUUpqZHlnSkpJUWZFZkY0di9H?=
- =?utf-8?B?dkpGNmVHdkF2RzM1RmVoUHRyOHkvOUhEeHU0MkxYV3RETXZ5WlNwTWN5ZVNX?=
- =?utf-8?B?cDJyRHBxYzhJTmRIQmVrWkpvN0t4TDJNSXF4c3ZyLzN2MENuVm5hVEtXN2RE?=
- =?utf-8?B?MWYxeG03UFFXMTh1amh3RXh5L2MveVh5VVlBeTR3Z3hibmdVSmM5WmJRTWY3?=
- =?utf-8?B?WldLWVFpb3JiQ0E3VGJOUTk0bkJvUlkzdUtZZXhHdkQwRU1pZjZUVWF4TWpa?=
- =?utf-8?B?aElCbjJDT0lYcE1NS3ppNHE5UXFsVGszRHRxdDR6NmFyYkxPZE1nZHJwSlo5?=
- =?utf-8?B?Zll6cGhWREZFb0V6MVFMd29yZ3FUVmQ5dUJSMGkrbVlpOUJEQ1cvTC9XS1BW?=
- =?utf-8?B?RDZzb3NjN29BaTN3UVJlRWtSWHdUWG83S1I1U24xT3h3RnJ1U2Urek9Xbi9C?=
- =?utf-8?B?dk1tdEhYSGFaeGFLbGlqQmluZjNHeVFOVnU2ZnFrakx4aTdGellMSjVML2lH?=
- =?utf-8?B?WkVmVkJjTW5zOXBvcS9NaTNIaEpJUG1jM1pQeXFNMWFMNGQzYXpSWlUwZWg5?=
- =?utf-8?B?aElZbEhOOEtud1IwdVZjdXY0QkZMNUxxZ1BHNXRYcnhKR015S1BpalpmMk1K?=
- =?utf-8?B?Wlp6NzdJYXhWcmEyWU94NzErUm9VZlRySVFkcGZ3QzY4eXhmQ0Jjdz09?=
+	=?utf-8?B?QTRaSlVrQUFRellCQU10djNCdnpSc20rYnZlM3RSazhLaUdMelNnbVpwai91?=
+ =?utf-8?B?cFJJOE5SV2JDUktNanBvdDdhWkp3OW9taDZ3MFRGMTFFOVZPYjM2cFJUQjFa?=
+ =?utf-8?B?Y1VubzBrWEpmaUhja0c4ejZnZ3NoOXM2cytjbjh3WlpWZGlhN1dVLzRldkFw?=
+ =?utf-8?B?TFhQYzlvZEtSTS9yZ256bnZadGVSd1JmbHFudE44Uys0Q2NOa3Zub1NiSzBT?=
+ =?utf-8?B?MUFmYmNXVnBmck5ITkZZKzl2Wi9hNXkxZVhBZk1oOEJlSFZ2QjFLcms2c2tT?=
+ =?utf-8?B?TVhON0kyOURFVVh3OWNTY0ZCblBXaGZ3MmlpbkZ2bGNDcWNsWWd0UHZpZkJM?=
+ =?utf-8?B?SUVQcWNhYlRhVERGZ2NvYldWWXJFd2R6d3VZWlRVSkhrV29OSnMzR2hRSEx1?=
+ =?utf-8?B?YnNXQWtZUFJQZ0xSVjdFZnRLTGdTZW1RUHA2N2RRbU1DNGxvak8yVmc4R0I5?=
+ =?utf-8?B?TnpyaGJSR3FJY1NtV3hZUUtKRlFaaC81b1dIcXhOc081WWhhUFVqNGJacEFL?=
+ =?utf-8?B?ZnhVeGNjbTFOeXFzYk1MT1JEdkxHWExud1VWSVphcFVhSlVMUVI4QS9pc0JZ?=
+ =?utf-8?B?Rzc2SGNPRys0VVVPZVMzbWo1ajR5Q0VkZUtndmtLWVltMUdwWXRlL3BOa0ZG?=
+ =?utf-8?B?M1c5NmtkTFJuQzd3ekF6bkIyK21uZlNQVjk2ekJwOHp3M0Yzck9vRVdsQVZ6?=
+ =?utf-8?B?U3ZjNkFSbE4zQnAyTzFkSVZIRW1TL2p0aHlGMmNjR2FEa0V4M0JzWFlPckxH?=
+ =?utf-8?B?cnMwYzBQM010bjk2bmRyZEZwQzFMSnVyL01BY1VUTWptTHhURHBoSEx4aWpQ?=
+ =?utf-8?B?TlRHamk1RzE1R3JqQzU2MWI3N3dnUDl1YlowWGF3QTIwMUdiVEdxbEgxeXRJ?=
+ =?utf-8?B?bThqazVQU3I4L1BqWVpVYzRXK2NSZ3lOSzVYREVqLzlRbVJacmZmV1JDUDA0?=
+ =?utf-8?B?VXpNTmhYNW1TWnZyQmpEUUdKcTBxbXYwY294cHdtYkVWYjBhbkpLVzJ0ajkz?=
+ =?utf-8?B?ZUM0QzJiZ1BPRzM2eWY2WC84MmJBM3U3ellvakRIcTBSTEJ0K1VManV6bkw5?=
+ =?utf-8?B?STVmVGFBREdLVEdhdVRpejJQWlQrNUZGbE1kNmJ6T25jVFlST2x3RE5ISEVL?=
+ =?utf-8?B?Qm5aWCt0b2pkR3BBUmNPV1FTS2xxWjBKTkRoUzd4Y0ZVcjN2bEhlTWxpMGk3?=
+ =?utf-8?B?WGRyaGVvRXJJMDV2MG5NS280VEM5b0tvUHkvd0VDSkNqdFVZYXZucjY3R0VV?=
+ =?utf-8?B?a0cvTFpESFZkTzZvVHBhK0w0MGdoWkdCeHJ5amtxSGl4NUZaK0xwcHFtSStk?=
+ =?utf-8?B?b1ZkbUlxSkF6SHl3Q0Y3dE9uWldtQkxxaTJwRDNIMHBHM3llc1lVSVc0bHVa?=
+ =?utf-8?B?OVhFUXc5cFUzZWxLWStVUzBwNlIyWmFQSEYvR3QrVjV1QzZpOTgyRzdHeGtw?=
+ =?utf-8?B?a2F3WTZPWUxsTjhlYUUremZoZFJzTjY1dHg3T3puQ3hqYndPdmo3Z1d3bFFP?=
+ =?utf-8?B?MDhFNGxMamhldWc1Rm10Z3FxZm0rMk9RUmFhR0ZLeDcrMEFpekRMY29nWXdw?=
+ =?utf-8?B?K2xXYm44RWQyaFJFTTZPcFZ0MW81dTJNSEdZemJDdXpPTVR6Z0RrKzNuQmho?=
+ =?utf-8?B?ZkNaeHZ1dVJqd2RmNnVFRGdSUWxLVTlMTm9qNFdEZVhna29OaStoM1lDZGNI?=
+ =?utf-8?B?bXh3T1ZvRTRHSEhlc09RNXJXMHBveWo2Yk0xUWdBdFV3S0s5Wmhmb2NLVThD?=
+ =?utf-8?B?VFpoWXBKakFGV3JZdzR0Qk9IS1NQdWluQ1NrOUlTaU5tQTVyaGZJa2VIdElM?=
+ =?utf-8?B?TjB1THdad1gvWm5sS0s2eFB1YTNzY1kyVWlLUUZUbnNqWnpzSmV5TXpCVzdm?=
+ =?utf-8?B?R09reDJzK3JMNi9IWWhGTDA4SytaL0dtdlNqU3c1bnBOWldpM21vdGdWMTRz?=
+ =?utf-8?B?b2cvbkorbXQyMEttV21EWWVxZ2U0cnl3bStkYVNLUERUUVRzS0hzbU9HdHJC?=
+ =?utf-8?B?bVJzb1NQeGwxWllVc0RncW9wQXhEclB2R2grZU85b1U5UWNuTHVrWDQybFBC?=
+ =?utf-8?B?cXpCN3lmYjMrSWN6Q0pZcXcrUjV0Ti9ha0NSY3R1NWo3VDN4bW0zd3E3ZUlx?=
+ =?utf-8?B?SjNFcjZRTGxyZEJIbVdOU0VXSjNkRWNRU09OTE4wWTFNQ0MxdVFjUmEvV2FH?=
+ =?utf-8?B?M091WTdiTkpyQVBGa3BORnB6OXBwNHJtRis3ZmN2cUZFMHNYMTJVdlArYlRt?=
+ =?utf-8?B?M01XT1E3WjAvUm9YbXhHbEFibEc1S2ttTXZ6elVNaldwZDY2aW5mbnA3VE9m?=
+ =?utf-8?Q?CNs7ya0AvH5uAPZHRm?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 862d33d3-0214-4791-613e-08decd8043f4
+X-MS-Exchange-CrossTenant-Network-Message-Id: c5d6a38e-7536-434e-db67-08decd805156
 X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2026 21:26:31.3839
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2026 21:26:53.8223
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rA666u+kkLxnqsA4Ju5nWR7zYvQoFmedysRYuPMx0VUI05WHEl4Knwi+Rkd0TuEx5ziwukCQvG1gteEO/NQi+w==
+X-MS-Exchange-CrossTenant-UserPrincipalName: B0MshyiZISfYtEh0xKpL1savAdk048SM6Z37LjZy178uMP85BnlXyGEraB+Tb2JQFGxdTFfj2OJ5sXwxmlWmnw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5645
 
 On 6/18/2026 12:07 PM, Dave Jiang wrote:
-> Add parsing of the RCEC Downstream Port Association Structure (RDPAS),
-> which is a structure defined in the CXL spec r4.0 9.18.1.5. This
-> structure allows error handler to locate the downstream port(s)
-> that report errors to a given Root Complex Event Collector (RCEC).
-> The structure is part of CXL Early Discovery Table (CEDT) and can
-> be parsed like other CEDT tables.
+> The RDPAS allows the CXL RCH error handler to find the device directly
+> instead of iterating through a set number of RCiEP in order to discover
+> which device triggered an error. For the CXL.io protocol, the base
+> address provided from the cxl_rdpas xarray points to the RCRB of the
+> device. The RCRB mirrors the configuration space of the device via MMIO.
+> The error handler can walk the RCRB to find the AER capability block and
+> therefore read the root status as well as the error source in order
+> to determine the BDF of the error device.
+> 
+> The entries with cxl.cachemem protocol is ignored because the base address
+> provided by the RDPAS structure points to the Component Base Register Base
+> and does not provide a way for th ecode to identify the device that
+> triggered the error.
 > 
 
-Maybe mention this is used only in RCH mode.
+I see. The protocol explanation is here. And cachemem is ignored.
 
-> A base address is provided in the RDPAS structure where depending on
-> the protocol field, it is the RCRB base associated with the downstream
-> port for CXL.io or the Component Base Register base associated with the
-> downstream port for CXL.cachemem.
-> 
-> Per the spec, "For every RCEC, zero or more entries of this type are
-> permitted", so a single (segment, BDF) maps to multiple downstream
-> ports. Each RDPAS structure is stored as a per-port list node hung off
-> a per-RCEC container in an xarray indexed by the combination of the
-> RCEC segment plus the BDF in a 32bit field. Both the base address and
-> protocol type are recorded for every entry so the error handler can
-> walk all ports associated with an RCEC and dispatch per protocol.
-> It's stated here but I missed that a RCEC list must still be walked. May
-want to compare to the existing method using RCiEP.
-
-> The parsed table is meant to live the entire life of the kernel, so the
-> xarray is not cleaned up when cxl_acpi unloads.
-> 
-> A helper is also added to retrieve the per-RCEC container based on the
-> segment and BDF of the RCEC.
+> Change the current RCH error handler behavior so it will probe the
+> RCRB first to see if the error device can be discovered quickly
+> before falling back to the current method of iterating through RCiEPs.
 > 
 > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 > ---
-> RFC v2:
-> - verify table length (sashiko)
-> - store multiple downstream ports per RCEC in a list (sashiko)
-> - Add a gate to initialize the xarray only once per boot.
-> - Add support for multiple DSP per RCEC. (sashiko)
+> v2:
+> - Add boundary checks for MMIO reads (sashiko)
+> - Add checks for surprise removal of devices (sashiko)
+> - Use aer_info to also check severity. (Ming)
+> - Update to iterate list of RPs under a RCEC entry.
 > ---
->  drivers/cxl/acpi.c             |   5 ++
->  drivers/pci/pcie/aer_cxl_rch.c | 121 +++++++++++++++++++++++++++++++++
->  include/cxl/ras.h              |  18 +++++
->  3 files changed, 144 insertions(+)
->  create mode 100644 include/cxl/ras.h
+>  drivers/pci/pcie/aer_cxl_rch.c | 152 ++++++++++++++++++++++++++++++++-
+>  1 file changed, 148 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
-> index 127537628817..e09706275d85 100644
-> --- a/drivers/cxl/acpi.c
-> +++ b/drivers/cxl/acpi.c
-> @@ -7,6 +7,7 @@
->  #include <linux/acpi.h>
->  #include <linux/pci.h>
->  #include <linux/node.h>
-> +#include <cxl/ras.h>
->  #include <asm/div64.h>
->  #include "cxlpci.h"
->  #include "cxl.h"
-> @@ -933,6 +934,10 @@ static int cxl_acpi_probe(struct platform_device *pdev)
->  	if (rc < 0)
->  		return -ENXIO;
->  
-> +	rc = cxl_rdpas_init(host);
-> +	if (rc < 0)
-> +		dev_dbg(host, "No RDPAS entries found or failed to parse\n");
-> +
->  	rc = add_cxl_resources(cxl_res);
->  	if (rc)
->  		return rc;
 > diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
-> index 83142eac0cab..eaab7698217e 100644
+> index eaab7698217e..f295e4eefbba 100644
 > --- a/drivers/pci/pcie/aer_cxl_rch.c
 > +++ b/drivers/pci/pcie/aer_cxl_rch.c
-> @@ -4,9 +4,130 @@
->  #include <linux/pci.h>
->  #include <linux/aer.h>
->  #include <linux/bitfield.h>
-> +#include <linux/acpi.h>
-> +#include <linux/list.h>
-> +#include <cxl/ras.h>
->  #include "../pci.h"
->  #include "portdrv.h"
+> @@ -118,7 +118,7 @@ int cxl_rdpas_init(struct device *host)
+>  }
+>  EXPORT_SYMBOL_FOR_MODULES(cxl_rdpas_init, "cxl_acpi");
 >  
-> +/*
-> + * CXL r4.0 9.18.1.5: "For every RCEC, zero or more entries of this type are
-> + * permitted." A single (segment, bdf) therefore maps to multiple downstream
-> + * ports, each with its own base address and protocol. The xarray value is a
-> + * per-RCEC container holding the list of associated downstream ports.
-> + */
-> +struct cxl_rdpas_rcec {
-> +	struct list_head ports;
-> +};
-> +
-> +/* One per RDPAS structure, i.e. per associated downstream port */
-> +struct cxl_rdpas_entry {
-> +	struct list_head list;
-> +	u64 address;
-> +	u8 protocol;
-> +};
-> +
-> +static DEFINE_XARRAY(cxl_rdpas);
-> +static bool rdpas_parsed;
-> +
-> +/* CXL r4.0 9.18.1.5 Table 9-24. The segment and the BDF belongs to the RCEC */
-> +static unsigned long __rdpas_index(u16 segment, u16 bdf)
+> -static struct cxl_rdpas_rcec __maybe_unused *cxl_get_rdpas_by_rcec(struct pci_dev *rcec)
+> +static struct cxl_rdpas_rcec *cxl_get_rdpas_by_rcec(struct pci_dev *rcec)
+>  {
+>  	unsigned long index;
+>  
+> @@ -166,6 +166,143 @@ static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
+>  	return 0;
+>  }
+>  
+> +static u16 rcrb_to_aer(void __iomem *rcrb)
 > +{
-> +	return FIELD_PREP(GENMASK(31, 16), segment) |
-> +	       FIELD_PREP(GENMASK(15, 0), bdf);
-> +}
+> +	/*
+> +	 * The extended capability space is SZ_4K and each capability header
+> +	 * is dword aligned, so the chain can hold at most SZ_4K / 4 entries.
+> +	 * Bound the walk by that count to avoid spinning on a malformed,
+> +	 * looping capability list.
+> +	 */
+> +	int entries = SZ_4K / 4;
+> +	u16 offset;
+> +	u32 cap_hdr;
 > +
-> +static unsigned long rdpas_index(u16 segment, u8 bus, u8 device, u8 function)
-> +{
-> +	return __rdpas_index(segment,
-> +			     FIELD_PREP(GENMASK(15, 8), bus) |
-> +			     FIELD_PREP(GENMASK(7, 3), device) |
-> +			     FIELD_PREP(GENMASK(2, 0), function));
-> +}
+> +	/* Start from PCIe extended capabilities at offset 0x100 */
+> +	offset = PCI_CFG_SPACE_SIZE;
+> +	cap_hdr = readl(rcrb + offset);
+> +	if (cap_hdr == 0 || PCI_POSSIBLE_ERROR(cap_hdr))
+> +		return 0;
 > +
-> +static int __cxl_parse_rdpas(struct acpi_cedt_rdpas *rdpas, struct device *dev)
-> +{
-> +	struct cxl_rdpas_rcec *rdpas_rcec;
-> +	struct cxl_rdpas_entry *entry;
-> +	unsigned long index;
-> +	int rc;
+> +	while (PCI_EXT_CAP_ID(cap_hdr) != PCI_EXT_CAP_ID_ERR) {
+> +		if (--entries <= 0)
+> +			return 0;
 > +
-> +	if (rdpas->header.length < sizeof(struct acpi_cedt_rdpas))
-> +		return -EINVAL;
+> +		offset = PCI_EXT_CAP_NEXT(cap_hdr);
+> +		if (!offset)
+> +			return 0;
 > +
-> +	index = __rdpas_index(rdpas->segment, rdpas->bdf);
+> +		if (offset >= SZ_4K)
+> +			return 0;
 > +
-> +	rdpas_rcec = xa_load(&cxl_rdpas, index);
-> +	if (!rdpas_rcec) {
-> +		rdpas_rcec = kzalloc(sizeof(*rdpas_rcec), GFP_KERNEL);
-> +		if (!rdpas_rcec)
-> +			return -ENOMEM;
-> +
-> +		INIT_LIST_HEAD(&rdpas_rcec->ports);
-> +		rc = xa_insert(&cxl_rdpas, index, rdpas_rcec, GFP_KERNEL);
-> +		if (rc) {
-> +			kfree(rdpas_rcec);
-> +			return rc;
-> +		}
+> +		cap_hdr = readl(rcrb + offset);
+> +		if (cap_hdr == 0 || PCI_POSSIBLE_ERROR(cap_hdr))
+> +			return 0;
 > +	}
 > +
-> +	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-> +	if (!entry)
-> +		return -ENOMEM;
+> +	return offset;
+> +}
 > +
-> +	entry->address = rdpas->address;
-> +	entry->protocol = rdpas->protocol;
-> +	list_add_tail(&entry->list, &rdpas_rcec->ports);
+> +DEFINE_FREE(iounmap, void __iomem *, if (_T) iounmap(_T))
+> +static u16 cxl_rch_get_err_src_id(u64 rcrb_base, struct aer_err_info *info)
+> +{
+> +	u32 root_status, err_src;
+> +	void __iomem *aer_base;
+> +	u16 aer_offset;
 > +
-> +	dev_dbg(dev,
-> +		"RDPAS entry: PCI %04x:%02lx:%02lx.%ld %s CXL addr %016llx\n",
-> +		rdpas->segment, FIELD_GET(GENMASK(15, 8), rdpas->bdf),
-> +		FIELD_GET(GENMASK(7, 3), rdpas->bdf),
-> +		FIELD_GET(GENMASK(2, 0), rdpas->bdf),
-> +		rdpas->protocol == ACPI_CEDT_RDPAS_PROTOCOL_IO ?
-> +				   "CXL.io" : "CXL.cachemem",
-> +		rdpas->address);
+> +	void __iomem *rcrb __free(iounmap) = ioremap(rcrb_base, SZ_4K);
+> +	if (!rcrb)
+> +		return 0;
 > +
-
-This logging will be helpful.
-
+> +	aer_offset = rcrb_to_aer(rcrb);
+> +	if (!aer_offset)
+> +		return 0;
+> +
+> +	aer_base = rcrb + aer_offset;
+> +	if (aer_offset + PCI_ERR_ROOT_STATUS + sizeof(u32) > SZ_4K)
+> +		return 0;
+> +
+> +	root_status = readl(aer_base + PCI_ERR_ROOT_STATUS);
+> +	if (!(root_status & (PCI_ERR_ROOT_COR_RCV | PCI_ERR_ROOT_UNCOR_RCV)))
+> +		return 0;
+> +
+> +	if (aer_offset + PCI_ERR_ROOT_ERR_SRC + sizeof(u32) > SZ_4K)
+> +		return 0;
+> +
+> +	err_src = readl(aer_base + PCI_ERR_ROOT_ERR_SRC);
+> +
+> +	if (info->severity == AER_CORRECTABLE &&
+> +	    root_status & PCI_ERR_ROOT_COR_RCV)
+> +		return FIELD_GET(GENMASK(15, 0), err_src);
+> +
+> +	/* Assume at this point the info->severity points to UNCOR */
+> +	if (root_status & PCI_ERR_ROOT_UNCOR_RCV)
+> +		return FIELD_GET(GENMASK(31, 16), err_src);
+> +
 > +	return 0;
 > +}
 > +
-> +static int cxl_parse_rdpas(union acpi_subtable_headers *header, void *arg,
-> +			   const unsigned long end)
+> +static bool cxl_rch_forward_error_by_dsp(struct pci_dev *rcec, u64 rcrb_base,
+> +					 struct aer_err_info *info)
 > +{
-> +	struct acpi_cedt_rdpas *rdpas = (struct acpi_cedt_rdpas *)header;
-> +	struct device *dev = arg;
+> +	u8 bus, devfn;
+> +	u16 segment;
+> +	u16 src_id;
 > +
-> +	return __cxl_parse_rdpas(rdpas, dev);
+> +	src_id = cxl_rch_get_err_src_id(rcrb_base, info);
+> +	if (!src_id)
+> +		return false;
+> +
+
+!src_id (0000:00.0) is valid. May want to use ~0.
+
+
+> +	/* Try uncorrectable error source first, then correctable */
+> +	segment = pci_domain_nr(rcec->bus);
+> +	bus = FIELD_GET(GENMASK(15, 8), src_id);
+> +	devfn = FIELD_GET(GENMASK(7, 0), src_id);
+> +
+> +	struct pci_dev *pdev __free(pci_dev_put) =
+> +		pci_get_domain_bus_and_slot(segment, bus, devfn);
+> +	if (!pdev)
+> +		return false;
+> +
+> +	/*
+> +	 * The error source id resolves to whatever BDF the root port logged,
+> +	 * which is not guaranteed to be a natively handled CXL.mem device.
+> +	 * Apply the same gating as the RCiEP walk fallback before forwarding.
+> +	 */
+> +	if (!is_cxl_mem_dev(pdev) || !cxl_error_is_native(pdev))
+> +		return false;
+> +
+> +	cxl_forward_error(pdev, info);
+
+Ok, I see the tie to kfifo cxl_forward_error().
+
+> +	return true;
 > +}
 > +
-> +/*
-> + * The CEDT is a single static system-wide firmware table, so RDPAS is parsed
-> + * exactly once for the lifetime of the kernel. cxl_acpi may probe more than
-> + * once (re-bind or multiple ACPI0017), but the global xarray is populated only
-> + * on the first call; subsequent calls are no-ops. There is no teardown: the
-> + * data describes the platform and remains valid until the kernel exits.
-> + */
-
-You may want to change the ACPI0017 reference. There is only one ACPI0017 per system.
-
-
-> +int cxl_rdpas_init(struct device *host)
+> +static bool cxl_rch_handled_error_by_rdpas(struct pci_dev *rcec,
+> +					   struct aer_err_info *info)
 > +{
-> +	if (rdpas_parsed)
-> +		return 0;
+> +	struct cxl_rdpas_rcec *rdpas_rcec;
+> +	struct cxl_rdpas_entry *entry;
+> +	bool handled = false;
 > +
-> +	rdpas_parsed = true;
+> +	rdpas_rcec = cxl_get_rdpas_by_rcec(rcec);
+> +	if (!rdpas_rcec)
+> +		return false;
 > +
-> +	return acpi_table_parse_cedt(ACPI_CEDT_TYPE_RDPAS, cxl_parse_rdpas, host);> +}
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_rdpas_init, "cxl_acpi");
+> +	/*
+> +	 * The RCEC aggregates multiple downstream ports. Each CXL.io
+Maybe:
+'The RCEC aggregates multiple downstream ports' errors. Each CXL.io'
+
+> +	 * downstream port associated with this RCEC exposes the RCRB at its
+> +	 * base address; walk them all and forward the error from every port
+> +	 * that reports a valid error source.
+> +	 */
+> +	list_for_each_entry(entry, &rdpas_rcec->ports, list) {
+> +		if (entry->protocol != ACPI_CEDT_RDPAS_PROTOCOL_IO)
+> +			continue;
 > +
-> +static struct cxl_rdpas_rcec __maybe_unused *cxl_get_rdpas_by_rcec(struct pci_dev *rcec)
-> +{
-> +	unsigned long index;
+> +		if (cxl_rch_forward_error_by_dsp(rcec, entry->address, info))
+> +			handled = true;
+> +	}
 > +
-> +	index = rdpas_index(pci_domain_nr(rcec->bus), rcec->bus->number,
-> +			    PCI_SLOT(rcec->devfn), PCI_FUNC(rcec->devfn));
-> +
-> +	return xa_load(&cxl_rdpas, index);
+
+I was surprised we had to do another list traversal. For some reason I thought
+RDPAS would gift us an index for direct access to a RCH RCRB. The advantage to
+RDPAS looks to be the EP doesnt have to be accessed is all. Is that correct?
+
+> +	return handled;
 > +}
 > +
->  static bool is_cxl_mem_dev(struct pci_dev *dev)
+>  void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
 >  {
 >  	/*
-> diff --git a/include/cxl/ras.h b/include/cxl/ras.h
-> new file mode 100644
-> index 000000000000..661307b0230a
-> --- /dev/null
-> +++ b/include/cxl/ras.h
-> @@ -0,0 +1,18 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/* Copyright(c) 2026 Intel Corporation. */
+> @@ -173,9 +310,16 @@ void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+>  	 * RCH's downstream port. Check and handle them in the CXL.mem
+>  	 * device driver.
+>  	 */
+> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
+> -	    is_aer_internal_error(info))
+> -		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
+> +	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)
+> +		return;
 > +
-> +#ifndef __CXL_RAS_H__
-> +#define __CXL_RAS_H__
+> +	if (!is_aer_internal_error(info))
+> +		return;
 > +
-> +#include <linux/acpi.h>
+> +	if (cxl_rch_handled_error_by_rdpas(dev, info))
+> +		return;
 > +
-> +#ifdef CONFIG_CXL_RAS
-> +int cxl_rdpas_init(struct device *host);
-> +#else
-> +static inline int cxl_rdpas_init(struct device *host)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +#endif
-> +
-> +#endif
+> +	pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
+>  }
+>  
+>  static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
 
-The /include/cxl/ras.h addition will be helpful. I'll use this for 
-the CXL-AER definitions, instead of /include/linux/aer.h.
-
-LGTM
+Looks good.
 
 -Terry
+
