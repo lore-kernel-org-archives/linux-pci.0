@@ -1,234 +1,213 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0002e601.pphosted.com (mx0b-0002e601.pphosted.com [148.163.154.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24EC8218845
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 04:44:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781757871; cv=none; b=R3vIXzR0o7Yx4Wu8TMS6R0bUVB3OEvgaRCC9uPYJElPAE2DdRBIe9WO+6qddBlJOArUDhAUf+iF2iSQL8bip7i/HoDX0kCgglsdqUl9AFP7fXmY07wGaGrs6tDIPsivzEm7glyh/7q3WdWyR+OMnuUfdOfYMLmpmJ02ifupeN3I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781757871; c=relaxed/simple;
-	bh=e2X3uLyEyJwxM5HjZMv7HNmigKfP2gEwrUoXrdaESkk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H5xCoNFjHvO9GX0MRWr5rMPHGPlVTIaJxetuvUc/MJzQKn3ZnFj5/SwP4j3+JGs5RUbMr6B3REDC77UkO2NEF69ieAv+zkisESu3wdClVzvOU7NHhGXwCD2Va6/LSG1fiT9Vq9CUGU2nfhBm4wrVvmWmFZGV0HkxwEppnfxSIXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cbiO7uKu; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NW/VVPgT; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1761F30BB;
+	Thu, 18 Jun 2026 05:19:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.154.28
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781760000; cv=fail; b=sF8/TCbycF3fF76YbC5j7WLWXyhezYNmkY8pSu1t2f/HbKZ2d2LYZpcDwpCZcLlUOr6WwV/XLiK6eewolDbcqWaaxayGSLbHgfnwVgqWHZT/sULVTLy3QqCk+f5/wgcw6rDEZF1n9O96rjULOWq2uo8Y25CLCBMycfyAR86OR8o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781760000; c=relaxed/simple;
+	bh=81OP7boHvC7m5Io7vzk0ff07O95N4qBpYuAwPiKBYyk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=cEsYHbMahnuga+N8TeyVE2dEwhVXBOEVH4tEniqkvOI2OCzyWOLLYRbBRaGe/KpHjOGR4KCNQrVrsBy42JFeB1zNBrOmLvGsPuv6WXdVA9CLUny6oqr90MvUpIRnJgXry2iojdpuGb9of+3JZ1rEFB6j1YPr+eXcpqq9wcs0DvA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=GTeQjrg1; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=QOci5uQQ; arc=fail smtp.client-ip=148.163.154.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cbiO7uKu";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NW/VVPgT"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65I3wkVt2845619
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 04:44:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=TTyZtbn6rwu4RjX2VYmmyUvR
-	qm9Y3D608YZqL4TcQDg=; b=cbiO7uKuI7iG/4dvMRCT91ZpwfANL9HtWo5FsymJ
-	DUza1/WQRp58RU6yBxST6QoirvbOcYMJTrfE+FacjmOOVUxpFwwJ+eTX7ZxFeTwl
-	kp/p2hIyxglfjXQE3Ovg2r0y+KTvDOmlKLxrcOS61mzepZWMMfV0fQyv7AWJgF0p
-	BX6orKnRo+c9m2hp3mgVabTBGxm8oSJi08DJc/0jGK+eifPnCufXM5sUvfftKPIM
-	MbRibK1wSQrleVouV+/yPW41hKxRlSMVl2zkG/QngLtjet33ZrrQI0H245ctn3Uq
-	cm/tvqvP4nFQ8K+/UJ0yAQVldMs0185nQiHQzzR8RkC32w==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4euxt52mqa-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 04:44:29 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30ba395b047so2192685eec.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 21:44:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1781757868; x=1782362668; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TTyZtbn6rwu4RjX2VYmmyUvRqm9Y3D608YZqL4TcQDg=;
-        b=NW/VVPgTR+eL045c1omPCxGWh4PgadN/OyzVyULba+szg0Stpxn5l2qmZtyLLrF6/w
-         m2FkylvRYSRK42V7u7ux3GF8T33FyVcfT/Wp6fNGLTWadh4uMMJIQVrolpFFtc2lssX4
-         87cKqtUnYE3PVS0PWA+P+Wt5+JyrkG5lo2MoA/9aBBAvXfhjduh/p2ubGDa84WjJwGX1
-         Jh6VJn43Ob5ibr6LLGkSLhbdF1u73T4ZJSKFvgl4r2Y4qomWAcM7U6120ydmdm5kP3mz
-         RedjFQbvExGy3psHQPSNdmZ/FSY/zubdmfOdK/3wIwF/zSU82jqGcyGifqlN7Bb5KvsD
-         4i1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781757868; x=1782362668;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=TTyZtbn6rwu4RjX2VYmmyUvRqm9Y3D608YZqL4TcQDg=;
-        b=sAoto9Q6WceLLY6dlnXxOUTJD4VCGJo55hQd+8iiBUTtiDE+uNwpQ+L+fijhtsloaT
-         OOJyloOArChH6I/UXTm9hngdWokIEmOJ1f52Rv5zRWzR0+FO/H1GI7r7MW3XQKf+kkib
-         0Hx1/j24H0eTAyp9jRPFTikvnLgzCY0r5ZoH9eO7mN5quJMe1l0ZdbbsBASEjaSlAhnQ
-         5I41H3MPmlFnOMr9+mtc23crY2Vj9RBiBIVi6xDcZjsghfI+1sO+P8q4Iuz0LJxOwdb4
-         8gOSjSl8YvUhSm3TUw1ehVv64+aa+lkdl9Da92/89P4B3XKIZjmgSisBOpEabs2td/8E
-         jIwA==
-X-Forwarded-Encrypted: i=1; AFNElJ+IQnELhnfPnYNK+WMmHUE7inhkQ5j9ZUlL0cedn96WK4G8AWKaZfC8aOQ/H2ejt6GwyGONvsFg4bs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YylIWwkUzIcSQRlyHIXhNBWjcr/Cjd8DQrsAjiEzGmxS3vemYxq
-	pM96/m1gQOcS8D0oXcMk0I5a0PpMGCYQpULlMpA3RqlXfZLGvmxZIwRfBh48m5uzQz1dKAhx0oA
-	LOi0bRSJoHI1aAil/bSMMJbXMr4HpQyuMZ6Pf7LP4YGlXCFnBTNXjSSYFYXHqCRM=
-X-Gm-Gg: Acq92OGVxAVf7fJJtoWIeSrFrlY+GH4pwLi7+gXwkmIjGx33KhU/5dCORIZ4dTYkkz9
-	hDwFQho3N129Gbkp6AZsU/8cHdEJXejT6RLKMshOA4he97urdJMTZpGoqLPTstFflokdLQfqnF2
-	tIPIC1k4Y4Kvj/hVW3YVW8bfyqUrWnKw0eKsL5bcoM9SasLaiX1EYgC7rII3U86wmTjhBEWtPRl
-	XTITPp/flIF4UlB7BCBYe6fEQAnL2laduc817Fk5zNZI6tBP2x8j1WoxDBeWGrrTJFF5ZUT7ab1
-	VQHP6IKQBC+0xX6B4F5/93WSb7Hb/edWzWsar/js4GTpXoJFnXU5P43xah2uceKkrmGyb5Ue9XN
-	3MUnk97aL9nhjFInMNT/QBBEF3qZUOIkxxBBCXbR8lXYNJQ1M/Eqy2zd9tBW+Hz2cTdA=
-X-Received: by 2002:a05:7022:493:b0:138:2a54:f6d9 with SMTP id a92af1059eb24-13997c79011mr1185373c88.25.1781757868346;
-        Wed, 17 Jun 2026 21:44:28 -0700 (PDT)
-X-Received: by 2002:a05:7022:493:b0:138:2a54:f6d9 with SMTP id a92af1059eb24-13997c79011mr1185341c88.25.1781757867797;
-        Wed, 17 Jun 2026 21:44:27 -0700 (PDT)
-Received: from hu-mattleun-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30bd23401ecsm4461963eec.25.2026.06.17.21.44.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 21:44:27 -0700 (PDT)
-Date: Wed, 17 Jun 2026 21:44:25 -0700
-From: Matthew Leung <matthew.leung@oss.qualcomm.com>
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: qcom: Document the Hawi PCIe
- Controller
-Message-ID: <ajN3qfWV75SqNzgo@hu-mattleun-lv.qualcomm.com>
-References: <20260529-hawi-pcie-v2-0-de87c6cc230c@oss.qualcomm.com>
- <20260529-hawi-pcie-v2-1-de87c6cc230c@oss.qualcomm.com>
- <2tenqkmwcr2gshtjwh44pvban4gtlzcgrm3iibkfrs4zh6vphb@h5losfunylr6>
- <aiteRU8cWykuhlVO@hu-mattleun-lv.qualcomm.com>
- <m2kwzigrz4fbdedzr2bj2auqtvafj6qstbplghssato4d6tdnd@ftug3clgxmd6>
+	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="GTeQjrg1";
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="QOci5uQQ"
+Received: from pps.filterd (m0374955.ppops.net [127.0.0.1])
+	by mx0b-0002e601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65I0ORpm3435889;
+	Thu, 18 Jun 2026 00:19:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	proofpoint-05-2026; bh=7q8Ynj1ghsKsLxANonRIrTbLPNK3rttoQD1RNsPat
+	S4=; b=GTeQjrg1xBisOB5uPhi6wqdpenNFYa+koVjOYuPuZ8OGWpSle4FkF2TGe
+	zkSKWH9FH38JRM8CHQ4P+C33GFbenFFejIynchpdkr0i2uNu9dJjAEdkmboYO78v
+	fHmz0wtbcewYVhMnNf6ffTuCiGyJOoggL9EQVZAGFlwHGPePPZW2Wvp48wKZaWuS
+	ramafHm3DEGxmeqYEowRFrwAGCaHVHAoOT5w7t4NQBlDUxRZk1Ix23SLLVvf7SX5
+	o4NGZOnH58v4KSZWafQFlbERlYjkLtZJJb12A2bKTh+4USdx8P6PXFzeEOsn8g45
+	yAyu3GaeSIca62e8nlO/9/dSX+eng==
+Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012057.outbound.protection.outlook.com [52.101.43.57])
+	by mx0b-0002e601.pphosted.com (PPS) with ESMTPS id 4ev63rhcq0-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 18 Jun 2026 00:19:28 -0500 (CDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=O3CvpTXeELUZLZBXadL1KH20EOQO/yGQvT1rUmL5fsRtgcU7xkG9zN36DYG8nR0k2+TlbLePCajf8UMsSB+rxcNvWv1/4fTt52NotGKx3BrUKSU3I+KN7FxeXehbmfoAskl2K8/toWf5yVjkuVOeOpkEgOjOhOZhris6Wcua+f6tYjuZBHKcI2K1kXxYwK6BzBRZDZi7umFLRIzx2mv4F0PbpNQoXzbFLX5nZLDj1vnkpSEv+09CD42+oOyrWkdWaBUhKlZN5Rof8HJwQK4aVLim08RsV40Jkmf5/JNwVlFlTzi5sUSBnhuW28M5Ulh2C/ShWW/HRsnSFqci2hlJIw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7q8Ynj1ghsKsLxANonRIrTbLPNK3rttoQD1RNsPatS4=;
+ b=wlsp4dF8ujq0XWDyZQ+2bKElVUgjtjwtorQZfoBDfcl5nERkYMHZJ6XoFSJAe5rGtKi/azOZdCKCNl8DYfH68jfI0s8jIjQIzvDEsY1Dqjmk2rWFKLmsrDUNIy0iRxtUHImiNRlIUJ4TO5mMUpf6rO1J5ZfJN0cfKHQ5+89MarxQy8z/ZLQxbtRTA0g4pjzaqzOPTfW3IbV5gn/kddWmDNqtBslaAX48C3sC3XMi60qvIPAD1OBB4Hmz1M9fsDGsimmrKTLeSc/xW6+UwSl9jy8thxyBEN97pA4Rs8Gp7wj6/xUXsqtU6dAj0gF9ke2WOb3MWcnO9wXMMKl+viZWwA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.23.195) smtp.rcpttodomain=nvidia.com smtp.mailfrom=ti.com; dmarc=pass
+ (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
+ (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7q8Ynj1ghsKsLxANonRIrTbLPNK3rttoQD1RNsPatS4=;
+ b=QOci5uQQQ9VyGbpZxxHz6sd5HykhwKV/APPG5P+oYSyKBcxRGZsw/AWsUvxCKpwGDdAW2QstpR/Izn+Ks410txFCUaaUm2CJet67kxnUT0PCoo4PIsvYVz3wUF8/YAQhSxLkV+gG5V4vFpvwUXVWAK67Qs76mXXbn16OAOQFiWM=
+Received: from DS7P222CA0012.NAMP222.PROD.OUTLOOK.COM (2603:10b6:8:2e::15) by
+ DSVPR10MB244415.namprd10.prod.outlook.com (2603:10b6:8:37a::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Thu, 18 Jun
+ 2026 05:19:26 +0000
+Received: from CH3PEPF00000015.namprd21.prod.outlook.com
+ (2603:10b6:8:2e:cafe::1b) by DS7P222CA0012.outlook.office365.com
+ (2603:10b6:8:2e::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.139.12 via Frontend Transport; Thu,
+ 18 Jun 2026 05:19:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ CH3PEPF00000015.mail.protection.outlook.com (10.167.244.120) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.159.0 via Frontend Transport; Thu, 18 Jun 2026 05:19:26 +0000
+Received: from DLEE201.ent.ti.com (157.170.170.76) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 18 Jun
+ 2026 00:19:23 -0500
+Received: from DLEE213.ent.ti.com (157.170.170.116) by DLEE201.ent.ti.com
+ (157.170.170.76) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 18 Jun
+ 2026 00:19:23 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE213.ent.ti.com
+ (157.170.170.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Thu, 18 Jun 2026 00:19:23 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 65I5JHlV3292259;
+	Thu, 18 Jun 2026 00:19:17 -0500
+Message-ID: <667c890d-0bd1-49fc-a4d0-59e33980a0d1@ti.com>
+Date: Thu, 18 Jun 2026 10:49:16 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <m2kwzigrz4fbdedzr2bj2auqtvafj6qstbplghssato4d6tdnd@ftug3clgxmd6>
-X-Proofpoint-GUID: 9fBLAzEG1OZbBTLu9UvrgKiorp33OXnE
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE4MDA0MCBTYWx0ZWRfX+EU6Jqz6TIuy
- s+a0QmpwW9r0HCrtT+tDqyxuawNc6xt40vKLB+pUqaPz49EtJNyWaN/EooAuCelHu57MMOTmr9h
- 13UWemuxMCzKwXO/T0fIjCIJuntL2Cs=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE4MDA0MCBTYWx0ZWRfX6+ZimoqmwNyB
- 3GHrrPvyOgqZ+ZZyZYEJQ/9dH3wfqmlu+s5S9W4IpoA29DwhBRg/I2kx4QMw+L7WpUhWueoFuDZ
- 4UImOf5eOn9SjHFrEhjnblGn9aG7yjzhDPXc4DfuxSstVJ+dn33rr7io1eL/6KpV/f+9savmB/P
- 5fd7a8D9UA14VsW6XriD0fZMY+prM+sFX+hhAHe8sXvQ9xxboi6qMj9xI7wKbe+p7lQPyfBKyUZ
- jnf0DMt7s8Lh4eoSsqnhLSI7PBfJRh8K61pDJT8M1aIs8iV0yx8lDYFDw4z91K9r7N1USysSBY2
- VgfnW0U4GgOoob21RFVqqA5vum+Yjb5xMTjfekVYZuKftlbVU3xPEKdc77Tr4x4M+BJWixE9IVA
- LRDqBDOzwQAVDbTlaGestm4NHiVHS+pRo2xskNYP3YRvN1Zfi33pLtIastyNRIIlIe8FA9FOODs
- FxF2FWkbRYizBqNdsDA==
-X-Authority-Analysis: v=2.4 cv=PMw/P/qC c=1 sm=1 tr=0 ts=6a3377ad cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=kj9zAlcOel0A:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=8dstwiPKDIhgTtwZBQUA:9 a=CjuIK1q_8ugA:10
- a=bBxd6f-gb0O0v-kibOvt:22
-X-Proofpoint-ORIG-GUID: 9fBLAzEG1OZbBTLu9UvrgKiorp33OXnE
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 2/4] PCI: Use standard wait times for PCIe link
+ monitoring
+To: Thierry Reding <thierry.reding@kernel.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        "Manivannan
+ Sadhasivam" <mani@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Thierry
+ Reding" <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Hou Zhiqiang
+	<Zhiqiang.Hou@nxp.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
+        Michal Simek
+	<michal.simek@amd.com>,
+        Kevin Xie <kevin.xie@starfivetech.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Thierry Reding <treding@nvidia.com>
+References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
+ <20260617-tegra264-pcie-v7-2-eae7ae964629@nvidia.com>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <20260617-tegra264-pcie-v7-2-eae7ae964629@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PEPF00000015:EE_|DSVPR10MB244415:EE_
+X-MS-Office365-Filtering-Correlation-Id: fb6667e0-3bfe-4408-62b0-08deccf92a9c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|23010399003|376014|7416014|1800799024|36860700016|921020|56012099006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	dqCRycxV/JHXT8IEfOgYMAqHtjp4Tu92RNZzc1pQ8SJu6s3wPAK9Ve7f1TN0LC2gUpHjsWxB0S5BKx08SIn8r5brRY84m99bz/zEfIFkbVvls+ttSsUTwCUfNNHgs1hFqsQoZqRLM8bKgB7zm4Ngtlks0k9ttmMZvhN8U5hKyl+nTb2NfpbKsKss2WkCqlE5cdKnWYdh3jmHL+SZ1xQWBWniTAwhjsJmriJ9TzhKoJ75JBhxA+mYlblXsf+OBAokIu5Bb50SZcTpS6Cu3lShQBYQBeRltwxQaabT9578vZH736ei0rsQKJlyhPOeSq3xGimCKJUj3EXNwHA+Qa6U0KksSII0BbRa8SQqL5iD76kablSak1XMQevSusmS8KoirjX0Ka/2120PDzb1fzTEJs3q9Axd+OoG3PI9PHZe3v8BFnLm0Cr/zt+CStNSGmjcxT597eRXK2yo68Og+hshkIpnd7yof3JYlZP5x4lUdlqVh/0XaI+/qYEJBgBnh7jKUAp8trPT9LKX9pgFqwYkWI/ltOIfoe3nJ3UvNKOwLzlfqy01v7FACgUnldNb8g7DE4/Z76coWowDEHATlWesjvRIuha9zg9+a638zAOA369DbroxlU0cMm8aXrwfFwGQXPYKxT+cBLWXPOLaJ1Nt/g+mifLN6UObJGigAcuZ60fwvvvBrSUZg+/Q9mGxXaHrmMmhLaJUDm3zH2sx9XPd/ENHQYjqyKLQFyT7b/oaSO5zRFofsi+i+0mE46DrVpWqRPwQ/x6cTuQ104DmEZTUUQ==
+X-Forefront-Antispam-Report:
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(376014)(7416014)(1800799024)(36860700016)(921020)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	hl0ojE8vQ2fnOS3ilgcfoqeokuRtXbwk9yR7zf8+cVlSPM5qGLKwqrhGJO5VVS1OFva3pdIuvPQ4xT2q0UHnyVDTmCdh/mcKwgFkOxeZFcVCqeBTytLeTCQGXXS9KGFxixPhLIyeV2qkQP+0Q1Gw76QTxHjWG/RPAmaKQcUnIBlnub8BR+fWoBRpc3nETj0oe8mGW1RU1XRfkn3QDQNHAB5QYaQXfwBAgdlp2kWdxH+hnNlEnxQqGi2dbPuEVSpErdaHV+PpVlkrLG0J0tC2avzbXy2Txxl6dZpMBGQMUBfUH7B8W64S+wKQ4jFGm1qDBKFRimd1E+K8rnNjb5rLi0hvvS5wuY7kfH04bresmcvoUgLNMgN2gD9d5PZPzZFbpw4i5P7k6VV7mhmSlIdStLESfKDzR4Ol6XAwlBO1Nob5RwprdswRqqTyGJSgXDsV
+X-Exchange-RoutingPolicyChecked:
+	Gi9qVnQkeFvt7pKMAMcNWbMQBWZ94LP0PmWNMX7WxKac8WCgRaW8+xGp8fHL0XH4Td8mvpWsH4d3D+FgdVRqo60Ky3erY66qYuaHruzg3Fhut8lLyvyVrvU4VybDsIybUZnBjcUpiZuIvUcb/aOn18eluNlheSPbTwWEliCa+X0BHo+5ZOFQaJdcnEn+2LV+lF2nsCX4oDhssbI1aAuJCdyjxFQlmH7k92e44N8GCU8zYDceFLIuLf86/nx6F0Y3iSBx9YlAikRcSUxAsAgkZ76bU6B9Lgwu1uMrVkXaMO40dx2c98du5IShhqGefAmDckTC4e8lv8XtIJz1XUatzg==
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2026 05:19:26.6014
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: fb6667e0-3bfe-4408-62b0-08deccf92a9c
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CH3PEPF00000015.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR10MB244415
+X-Authority-Analysis: v=2.4 cv=LpqiDHdc c=1 sm=1 tr=0 ts=6a337fe0 cx=c_pps
+ a=Y/Y9x3HtMOqQL+YbCjVQEg==:117 a=f+v6EHfkeJbVwR46tk4DMg==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
+ a=s63m1ICgrNkA:10 a=V5UXEbMT0ywA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Z8NIEmU8O1QQgoT56wFK:22 a=fPAWb5peG099m5CrUpKH:22 a=Ikd4Dj_1AAAA:8
+ a=sozttTNsAAAA:8 a=9pYv5q21Ckep_k857DUA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE4MDA0NSBTYWx0ZWRfX7teoC0LZtLGW
+ gaDNsjjPXEv5qp9CvXlcalZz307caFIX2dJ6EyGrBffRfzOYfNLNQnu8e+/zAZ1PQ6IF57hKdJE
+ /UT+QJhI3sfwOSZJ+hJPb4wvw/SBNgkGFYKVRQQGb+Dke950BcM1US217t7hrBwOPFIGPuc3wrn
+ TvxAOxWp9hH5EySrGf1XYBfqi8Ew6AzFGEFJDS3nTukgo3gtjIbNZ6BnGaJ8ZQPtaSLUhyd59nc
+ /p0GPsYGPsvNQ+gU1CeUracFJsDxHbHQZzQ1ur9B/4YlUHGXcosNqL9SsEQoF1PBi+5ZnfFJHCC
+ Clx4PWISL0P/WDZwtSDHoTZ+P1REZlA2PEy9oqmTQx+hrMlySiY7baZPMImQ+LpUYd8eHUjrWQy
+ SZ+s7lPoaha9mDsafT1RwL+H/X3Ulsksmk0S6BOY7aP61EY4gNg6VsYoFZ6TGJGWB66gYLaQM0r
+ sdeWdN5UdUIRVogP2Kg==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE4MDA0NSBTYWx0ZWRfXxP8yNXbG8AMe
+ e/LyUJW0HEBPSVTVl2UBHAz5AXLj18TKofRUtoreN3LHBuesies96sCfuJT+KqGq41cNjIJpXjg
+ wiELW4SQF3vB8uVpIySR5SxIE9HnKd8=
+X-Proofpoint-GUID: Zj21siqmYkbrvvlcj3stp47wVA85BPtk
+X-Proofpoint-ORIG-GUID: Zj21siqmYkbrvvlcj3stp47wVA85BPtk
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-17_02,2026-06-17_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 clxscore=1015 suspectscore=0 priorityscore=1501 bulkscore=0
- malwarescore=0 impostorscore=0 spamscore=0 lowpriorityscore=0 adultscore=0
+ clxscore=1011 suspectscore=0 malwarescore=0 impostorscore=0 spamscore=0
+ lowpriorityscore=0 priorityscore=1501 phishscore=0 adultscore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606180040
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606180045
 
-On Fri, Jun 12, 2026 at 09:22:10AM +0300, Dmitry Baryshkov wrote:
-> On Thu, Jun 11, 2026 at 06:17:57PM -0700, Matthew Leung wrote:
-> > On Sun, Jun 07, 2026 at 11:01:10PM +0300, Dmitry Baryshkov wrote:
-> > > On Fri, May 29, 2026 at 01:10:08AM +0000, Matthew Leung wrote:
-> > > > Add a dedicated schema for the PCIe controllers found on the Hawi
-> > > > platform.
-> > > > 
-> > > > Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
-> > > > ---
-> > > >  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 204 +++++++++++++++++++++
-> > > >  1 file changed, 204 insertions(+)
-> > > > 
-> > > > +
-> > > > +examples:
-> > > > +  - |
-> > > > +    #include <dt-bindings/clock/qcom,hawi-gcc.h>
-> > > > +    #include <dt-bindings/gpio/gpio.h>
-> > > > +    #include <dt-bindings/interconnect/qcom,icc.h>
-> > > > +    #include <dt-bindings/interconnect/qcom,hawi-rpmh.h>
-> > > 
-> > > Stop referencing clocks and interconnect header files. Replace used nocs
-> > > with ephemeral values.
-> > > 
-> > > > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> > > > +
-> > > > +    soc {
-> > > > +        #address-cells = <2>;
-> > > > +        #size-cells = <2>;
-> > > 
-> > > Not looking around should be a sin. Take a look at other Qualcomm PCIe
-> > > bindings. Compare them to yours. Then fix yours to follow.
-> > > 
-> > > Hint: the extra soc node is useless. This is just an example, so use the
-> > > default, 1 cells for address and size.
-> > 
-> > Thank you for the feedback. This new binding follows the examples set in
-> > the qcom,pcie-sm8x50 bindings and retains the same formatting (extra soc
-> > node and header references).
-> 
-> Hmm, interesting. Then I'm a sinner :-)
-> 
-> I looked at msm8996, but I didn't notice that the rest of the files use
-> the soc node (and match what you've sent). Please excuse me.
 
-It's all good! :)
 
+On 17/06/26 21:31, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> > 
-> > I understand the example can be simplified with your suggestions but
-> > want additional confirmation that these will be the convention for new
-> > bindings going forward.
+> Instead of defining the wait values for each driver, use common values
+> defined in the core pci.h header file. Note that while most drivers use
+> the usleep_range(), it looks like these were mostly cargo culted and
+> msleep() is a better choice given the fixed delay that the specification
+> calls for. Convert all drivers to msleep() and use the existing
+> definition.
 > 
-> At least, let's keep it for now. The other comment stands. To remove
-> dependencies please use ephemeral nodes instead of depending on DT
-> bindings from other subsystems.
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
 
-Agree. Will update in next version.
+Reviewed-by: Aksh Garg <a-garg7@ti.com>
 
+> Changes in v7:
+> - rebase on top of next-20260615 (resolve pci-aardvark.c conflict)
 > 
-> > 
-> > > 
-> > > > +
-> > > > +        pcie@1c00000 {
-> > > > +            compatible = "qcom,hawi-pcie";
-> > > > +            reg = <0 0x01c00000 0 0x3000>,
-> > > > +                  <0 0x40000000 0 0xf1d>,
-> > > > +                  <0 0x40000f20 0 0xa8>,
-> > > > +                  <0 0x40001000 0 0x1000>,
-> > > > +                  <0 0x40100000 0 0x100000>;
-> > > > +            reg-names = "parf", "dbi", "elbi", "atu", "config";
-> > > > +            ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-> > > > +                     <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
-> > > > +
-> > > > +            bus-range = <0x00 0xff>;
-> > > > +            device_type = "pci";
-> > > > +            linux,pci-domain = <0>;
-> > > > +            num-lanes = <2>;
-> > > > +
-> > > > +            #address-cells = <3>;
-> > > > +            #size-cells = <2>;
-> > > > +
-> > > > +            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-> > > 
-> > > <&gcc_pcie_0_aux_clk>, etc.
-> > > 
-> > > > +                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-> > > > +                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-> > > > +                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-> > > > +                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
-> > > > +                     <&gcc GCC_AGGRE_NOC_PCIE_AXI_CLK>,
-> > > > +                     <&gcc GCC_CNOC_PCIE_SF_AXI_CLK>;
-> > > 
-> > > -- 
-> > > With best wishes
-> > > Dmitry
+> Changes in v6:
+> - convert all drivers to use msleep() (Lukas Wunner)
 > 
-> -- 
-> With best wishes
-> Dmitry
+> Changes in v2:
+> - fix build for Cadence
+> ---
