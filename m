@@ -1,102 +1,101 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DECC331EA5
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 06:10:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D48C32C316
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 06:10:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781763006; cv=fail; b=YtVVMrSdnOx/tvV1A1ho/w0UIoFlYY9bq8tMmAPlODpyvTip/jvxCq+IrJH2xPmNBuwm/jFfgwyeQexsw/tHStT9mg8PvKQoXWZxHYxwlgTH54S7bsh5Ym2V1e6fQ//xk90ofKEvvix+gRA1t6X4EL+H/a0gesw+QLzdg7+ueps=
+	t=1781763055; cv=fail; b=fykCijrs1oQN2tT2YVrlwO+qkTKkUgbl2+Q3YKxw+HEE6szMFJi/g9NSncFIm1iTruswcNaFra2/HAOCTjaLz4jh2KoR0XTl5up1MFYfo448wFroo3qyVvTw9+EZcuWX452P3rEpQz/zWzXWV2mjknJ15zqi6jurG/ewy+GZdag=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781763006; c=relaxed/simple;
-	bh=6/T0Dclshlhmnc1UxrEhCEHM4cymDyecbTC6Ux8+uFA=;
+	s=arc-20240116; t=1781763055; c=relaxed/simple;
+	bh=aoNXmADJPkDhnZOjZgCi5nKSSN+hSwva5gE5EhTFdSw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dPIyHUXHNfNdorHc/GRLPRIXB6d97OCRzJUvQdKqyIdDOMx1sNxN+SN1J3JuV71FFcI6wui/o2JatU3hoMd9b+iyDt+NDOyaGfEY/jZAwCPboRNIsqmjUu8AEwdu5xq5Nze1OuAHj046UV3z3UtEN8LH8U4CojD7zaOF3DvS6jE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=v/PNqA1x; arc=fail smtp.client-ip=67.231.153.30
+	 To:Cc:Content-Type; b=VHXSHstKJjmoVt3JRQYbdcTk2kLtkARVIYHRllppzy2Bbv7HPjlIDUzrzsyib9pVgMo1RzFEQBz8NXv8sceG5yASEijmff/T8EPhGIQQd3fOcOo3bJg1Ga3ySi+JFTscYPbPwurQ7ZViGeTlQXrmaRXU75bDB23E7jbLLCpNaRA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=hEbHoDIc; arc=fail smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="v/PNqA1x"
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65I386Fu1659601
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:04 -0700
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="hEbHoDIc"
+Received: from pps.filterd (m0528008.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65I37g7R1867535
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:53 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=6/T0Dclshlhmnc1UxrEhCEHM4cymDyecbTC6Ux8+uFA=; b=v/PNqA1xBXvG
-	hxasA0LzJ8yq94mP/vLG9ehEDNugAO22PhggvV4w6bqGrDNdz+I5GVtpeVimerEm
-	uQBbADRTqFkt4j39n2wuBQO0TJMx0k/Ngsr/XypO3PKVRwiKmvh4Fej+Aga7MC9b
-	SW5npdoy0mfJQ2gKUZm2NjxDs+U6T2IMmgYmFXjYTvdZIOpbnaLPBLLnoXNEvfc7
-	iabwsALTLrmBCaTpNjhGZBs9JP2hcI6hMQgOEm5TRf/VAIkH5wj2q3y76PUcwfDQ
-	7Jhe6K6dHnRe/0Myi50bJqPCe/2OBqPV5juk7YchPYXVwYkfOdTu4kMRyv7cWYYL
-	TS+Mvy0faQ==
+	 bh=g5sz6xIN2DOx/R49RD/V8A7DarhSxstt7fwwKkQBLVw=; b=hEbHoDIcNNBH
+	sZQV9mk7PiiboxdNzb2rNmI7KBN6NuhX/NwRqSVyxP5vjpQuiVqvYgDlAsy9Zdkh
+	Tgcyc7uRW8eAc3fozG8JcWlf9hfVD+uBtdLV8+caTR1qKSIE+88Ezoo/MJ3rmGyC
+	jcejquyAHng7TfyGE3Z4rqdgnkiroTqWLpuu8qmFQoHaV8tG9ZP9WEMDZVWQKBJm
+	bFqMqdhR2XWBGl2F6B6sIHCBRl+9WgPa7bchX/8lF9rfzbPAYunO2eH7BQStVytC
+	3EGL5UOGoab/Pt1Tfkhveb6OOhzXos1WVdxlfCazGkh3Yrd5JWZz6c9LG9zbg7pd
+	DI7ZUVO+Iw==
 Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4eueg79upt-1
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4euegb1xx5-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:03 -0700 (PDT)
-Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7e6cea6ada5so1365933a34.1
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781763003; cv=none;
+	for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:53 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7e6fed63fe5so894087a34.0
+        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2026 23:10:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781763053; cv=none;
         d=google.com; s=arc-20240605;
-        b=gqKYwFh/MXK1Sl0wwfNHjdc7I+AtQVp6Ed2U3TRjw/h7RG4mmpozwu99cqCA61DYZw
-         rbKBfOC1HcOjDszrBmkP2alCki9NKgSbjLYIhAjtQRw4596008bvfiJX3HYLM9p6HWc0
-         9D8A7sTDN/FUJ3TlSs3UMxZepzkSK1D9swWnGO4nE5Flr+anLVcAZRDF5i0ydzNuulTW
-         LghqqYXJBTft7ZfPBp8PvP98ejajlsthWUMXUV3XBl+1/cxN6FaRJS4t8rsHcDJzE+bh
-         TRNI+t90vQyGkmZgXfE4AKWhp2LbBYSVWJQqpKCHocxYnhWhvprY/fCblTvoWZf07SsG
-         zjqA==
+        b=eeSvtcX5oDtkvUYVUOE0FgINC0otwrYhrK1igXK3sXtCD+q7NBQmDALbD6egkcv7/B
+         dtYOQhD68iR7duoijOvFq9agoG1np+kuWw64K8QFj1Gyp5zq7St/2WlBKEgJPuD+CZRf
+         U60iU4pxAhYKHq08F6JM+/RlVOQPdwOCYBFL8i1csmIuBD1K0+HZl32hjzMrcxVJk+yN
+         UdIe0iDjElL/CHaGeP9vkOyCntGA1OEa8Ky6jJ0GBR5S7xN3eri9ctwTaJ45uxXzLF0h
+         9jEp/tlESy7L/LeyOdvDqwpuS4TqVllHoP7A7ymq6HG6HNK/fCEG8b8xf1OKznN3gri3
+         9Wgg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version;
-        bh=zpTmQ37GmXWdpWUeDrqTjiaqwbJfjoWYHVp4s39Z4p0=;
-        fh=LshX/iVJYh1hq6Wo1G9DSyUsmmQOV+jEUsCbbQDZiC8=;
-        b=jWUN/XpdrRAqm50cfL9W8po1ZlTLnymOnFNda2N9bLOZ6jEPQaxbJedT6Lf+XCFKJq
-         tNB9tvCqiM3AHMGCu/EME97e9pcs3UqxszKOESVRlv8x3rx+H+PBor+DBa/bvFAnpLVW
-         wL69WOgtvK8VWH2dX8hrMy9ntl6oAml7gO6QnH8MQ/DXDURgfaFwGzyca2FnDhKjZnQY
-         h7+x3pIN/27S7chiW3eXjVGSNh+Pg/ltUWNdRRYgyG/pQ5jSmQyK2Ospn8DqZfCB+lkK
-         dcFe62CL2+XOvmcm6IeVulHqE9Ni4oUdKlIM4B03oDDVqrCX/yya/b3v3OTouJpJH88y
-         NQIA==;
+        bh=9Eq8HAHlBMSmfq0hKVbVZbpTCPzs57KvCvKHerONY4Q=;
+        fh=dg2PuoL2K/goEfdFKfvLGSlOPS0sHZSzfXPNIikVtjM=;
+        b=Yd9GdRVypJu3AXoGSniZ2lBKcWw81gYXc2SACZGg4R+TzG8LK7zqLO8g1cMBldDCJd
+         YKH9Yqw0l8MUAhT1CICj9YQaU0VK4ohjPUEReTSCO12R31MPnrf/CR6aH9RNErkV0+Mw
+         QHfdNHwq8UoJ9VoD5PLegPcJvukfEoFVDbErtdUz607T6PEydAOZ5+wTgOpvAo0P18Zt
+         FW+ppNXsC8nRRGDBBZSZGcq57sC7DF6/YGSgLP0pY4yOPPzogyTKkcK27rypXOwBj8Y6
+         QGve7vpDgp3CbzY43Z7nPkLvHXOWiPpmf62rYlj/ItVkV5uNLxbbRSzj8rGq8oc4mPVG
+         x9/Q==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781763003; x=1782367803;
+        d=1e100.net; s=20251104; t=1781763053; x=1782367853;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=zpTmQ37GmXWdpWUeDrqTjiaqwbJfjoWYHVp4s39Z4p0=;
-        b=Bq06V1V4QXgURjBqNgfEu1uYiysvq3d652GrYsj1GW4/cW/IZ+jHE3H0iDS4Ua2B0d
-         hIDTiI/qxSD+xU5i14A95Esqa9OKfkkCNENe8WA2pqT5mWgcFRRPJR9YWI/f1Wk2quOk
-         +X0V1USmHuAkliy0Sbh1bhXvTxeqwnAEqmCDjpOgz6GFQQNUkKKih7S/JVW77ME9RIZn
-         xU983VRIvsGorDUPIy2rVtfgakKpm5Sayl0+IWBEj86qWAJKgXkip5P1dXRRPCVtZiii
-         u8JjoWBi41IvlbpbuDABAgkoStEPmKrhMeXmZvtEHpgz79Ji+3K3b/i9w4z2Ey8ncksi
-         79sQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8RpdVP+MIIBENedX45RTRjZaRodbyGvqIfaCFPXWNjEIPH1++Q5hw7wM21wehx7ZysHyfCCU6FdqA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSGYCFfJ872U8iynHU7et6MMZHdRhlF3o7jZKQGMZDzOadIwE/
-	PAt6zmR2NZhLmqAGJU1IXVZXHPTwkCThxaBcZz5r3YXGAtjk/8xBJmFgSE5cHNqMY461uei3ueL
-	bJMhg39P1mnYiFJSd4QL0hH4rAba6cAwz2/f/besLBPKfqCNTKc7goFPFLHPGgqDoi1CtJwL6ZG
-	UTKgwXJWnWrPXW5muK+h40HMIcACuBRaWBC/c=
-X-Gm-Gg: Acq92OGCQGbYchGxDZ+SjZ71HFNxZBt78iW9fjxOW/c9HJNfwSq0ZZfzxLYWpOHDais
-	AJOkC1MltKHlzPv3oegOaLuaKADhC0maLN6RKD55htqeF/MfRQrTaJlXWmheI5b6MGMbNN7Mqck
-	pAdEL5xr7CP6xeKy+xKgHrbuwJAZ3/3HH8mF3bJBE8mMzScgbIhVK8xTmKVUs9IM10Miwf5Zm21
-	hjMCghvr7Dzg46/RXgKVDLIafPD0A==
-X-Received: by 2002:a05:6830:67f5:b0:7e7:57d8:a8c2 with SMTP id 46e09a7af769-7e90b3b9930mr6882343a34.12.1781763003208;
-        Wed, 17 Jun 2026 23:10:03 -0700 (PDT)
-X-Received: by 2002:a05:6830:67f5:b0:7e7:57d8:a8c2 with SMTP id
- 46e09a7af769-7e90b3b9930mr6882279a34.12.1781763001909; Wed, 17 Jun 2026
- 23:10:01 -0700 (PDT)
+        bh=9Eq8HAHlBMSmfq0hKVbVZbpTCPzs57KvCvKHerONY4Q=;
+        b=p5X40jPpRwjO4rAub3ORLtL7RPPZkdB2ZBxWQ25gVG8UTJSyl1KWRfIYwgYsKqpmDO
+         zGipVVRcpRaduheqJAyu3ES78EHl29LKj5Z7ckEUFQll7bXngN+bq09ObPodKTnmcRq6
+         4jnfXGihbfq3Oeu5dqSYYecBReAOtKkh2U0J0Ph0bDFZ4co6XvAbXYAbvUrlAs0lMLST
+         p1FK9PBFimi6Pj6OIB0c501xpXVkPyl+bUAbYbFPsmgkfxxBlTTLlPNF2d0zU6IFo5Qc
+         1Otu6B+Ez/anFyHQe9N9AL9dDIbiAGspbVomwGUJI8so8sPlIOKLtd7J0LMzzwuL+j1G
+         lBqQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9rw6Ff+iO/s2iHnS1zMUzbNTlb/1bnI5PEOJP5P+Z0uOrIzBfdq7/vOQXl1ReCaotQett9QgY7I30=@vger.kernel.org
+X-Gm-Message-State: AOJu0YywgAO1Ay3CuKV3Ufecz2Dr9R3APsilg6pp3ytM+gHkc6xH4SIH
+	mC87KPKUjfaYcCCanwCynk2r3jz6MhLfFrbx5ywE6nhpcVXIO02XtjvOcxrczeUbJZEhW/8+ZxG
+	s2EVDoQEhPO56OXk4MPPklrryBf6seuSB4L488GnIUElTtv5EN6obkG4b7QfcZKHOIVWTUglp0f
+	yaQB2ME74ptqJQCzWYHNPhdllThwKBkiOz9hQ=
+X-Gm-Gg: Acq92OEandh+oH9/vzZMYSILAvAV+kc4LxdKAnS7Mw0haLBWN13iRIwC3zfRWf1tejV
+	NnodRBsqGtZuCuHhox0tZ47ekrtp0suYL0SdpbZZzfeSHzHsqUbw2FNu0JSFyLRKpaoiHI17c4m
+	loTnvmemADhG+Hx0UfQeJTQFIghGiIAbjXnCPwt7lMu7qxFRQa94UVe0d+5rkk7TtDmmclWJUeA
+	rDsrrMBPE4Li7niQMO/0YrLLFlFBw==
+X-Received: by 2002:a05:6830:4119:b0:7dc:d725:fdb with SMTP id 46e09a7af769-7e91ac6d2b6mr2060572a34.8.1781763052713;
+        Wed, 17 Jun 2026 23:10:52 -0700 (PDT)
+X-Received: by 2002:a05:6830:4119:b0:7dc:d725:fdb with SMTP id
+ 46e09a7af769-7e91ac6d2b6mr2060543a34.8.1781763051390; Wed, 17 Jun 2026
+ 23:10:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260615065912.2177918-1-zhipingz@meta.com> <20260615065912.2177918-5-zhipingz@meta.com>
- <20260617092550.GT327369@unreal>
-In-Reply-To: <20260617092550.GT327369@unreal>
+References: <20260615065912.2177918-1-zhipingz@meta.com> <20260615065912.2177918-3-zhipingz@meta.com>
+ <20260617094113.GU327369@unreal>
+In-Reply-To: <20260617094113.GU327369@unreal>
 From: Zhiping Zhang <zhipingz@meta.com>
-Date: Wed, 17 Jun 2026 23:09:49 -0700
-X-Gm-Features: AVVi8Cd9LqQxIAml-YNLrnCpxwyq6SYcSY7qEQ2JpeKmDJHK_hh3DSp6GvPOQmk
-Message-ID: <CAH3zFs3xfc5k0fhgedCpNAfgfoAvfk0V2pF-xqA1_Q2sGkLnig@mail.gmail.com>
-Subject: Re: [PATCH v8 4/4] RDMA/mlx5: get tph for p2p access when registering
- dma-buf mr
+Date: Wed, 17 Jun 2026 23:10:40 -0700
+X-Gm-Features: AVVi8CdOrBaOwYRxFRdDVRsJhHRei-ObhsXGhIoQfKNO7YbBBbYe7t0f7TbFl64
+Message-ID: <CAH3zFs3wBwbmvEMp498LTdbrSt4Y5w7PNpqtcN_L_vHdqsvnxw@mail.gmail.com>
+Subject: Re: [PATCH v8 2/4] dma-buf: add optional get_pci_tph() callback
 To: Leon Romanovsky <leon@kernel.org>
 Cc: Jason Gunthorpe <jgg@ziepe.ca>, Michael Guralnik <michaelgur@nvidia.com>,
         Sumit Semwal <sumit.semwal@linaro.org>,
@@ -107,60 +106,113 @@ Cc: Jason Gunthorpe <jgg@ziepe.ca>, Michael Guralnik <michaelgur@nvidia.com>,
         dri-devel@lists.freedesktop.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE4MDA1NCBTYWx0ZWRfX7z4T5crwiG+Q
- uZm1hI67WJYELgifjn0PL47Lf9+Y7yrBoLDy1vguGEr6xvaJPt+PCu+at60IzvQIdHcrWgmj/HD
- yyisrD/KpbPvQ/EF2K5BhGmFzhAuXcs=
-X-Authority-Analysis: v=2.4 cv=NZfWEWD4 c=1 sm=1 tr=0 ts=6a338bbb cx=c_pps
+X-Proofpoint-GUID: sITNF9eUzkdvlu1ox7uoy3F_uXDt8B4L
+X-Proofpoint-ORIG-GUID: sITNF9eUzkdvlu1ox7uoy3F_uXDt8B4L
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE4MDA1NCBTYWx0ZWRfX8OaSeK67S+MZ
+ lXfHiP9UCJwnnx6XSO7aKVCHC3ZDXxdiMy+aVn45Eno6/V9m5OlT7CTu4NkZf175UhUSwUJMOMw
+ 3pKPyiUmIhHDvlnGg9U2lVION29eereFYwnVXcPMm80oQBQ/w6p3w9R/b+KeKvexdiE93j6kOnB
+ Ex0GiH9fDNff9PewXLwcoigIIuxj+N89Quh5D9u42ed9KWVzUOJ/9cqiyKfz66dCFtOZ1Qiqp64
+ qNa3BIrLj3pThZ9dDWLuTj0hDnJA1w07/u9FbAXkr1Y6Dif3qxIMEfxppzgaPzaBkRuPYWiWjmG
+ 4M0ZDB2SXnF5I8O3mkfOT/LiaWwABf04zl4BDFkPW/m0ZPwBdwo4bB302ETyHA5Bf41omIOSzmy
+ tHINIrUy38hfA+EaXAw7F0qZT2dAMNdpLP5WXUcrrtfsSEO/A24jkkaOLEZHwNW0+TBtroQWvfF
+ PLx0JF4HeA1XF/wORow==
+X-Authority-Analysis: v=2.4 cv=Ca04Irrl c=1 sm=1 tr=0 ts=6a338bed cx=c_pps
  a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=wpfVPzegXHpEFt3DAXn9:22
- a=VwQbUJbxAAAA:8 a=wthcJ2XvByERRjf4MtwA:9 a=QEXdDO2ut3YA:10
- a=eYe2g0i6gJ5uXG_o6N4q:22
-X-Proofpoint-GUID: OswEGBWYMY7u5Dw7h2HpCvUyVxXvwVbw
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE4MDA1NCBTYWx0ZWRfXzyJIbWQnpW4O
- M5lmxa2xanzdF68z0hcNSGnRPLdH1EwIfU5KgSz8sOuaQDWcsNo83jmHEU15l0gpgjoxCfSP5kq
- K8BJeQvsRDGX0KT6N7XEnR+/ZGuBSDrZBHUgEghBiffvofV83GK0mzjeJmt8YCeyvpwf6J+680o
- rWgEtgAPoXBmni1c44r4nj0CRqePsLksewMhAYSWnxudgk6mWk9xCovxkPIMefcA+TeZherfYpW
- G5pB3YclhHprBhQTT+OtN7KyDFuZ986kXsB2OwFdJi9QfxhDhDw1AGBo8+tSMrkll0Tibp0w29h
- Mz5xrpNUUvxpIrU1fDSe9ecQu+Cnu/RzBq48G9Q4EHGewUhieHkwNw1ZyzarsJW9UKEzy1eJQkz
- OH+HxTP2D0P3+2AwZ8hT0yhWebpScXin1Ti1XMAYgyP7v078GWEDjNFEr+ltJdrsFIq5+7wUBvO
- 6lgLifOeHb8c+eTz5RA==
-X-Proofpoint-ORIG-GUID: OswEGBWYMY7u5Dw7h2HpCvUyVxXvwVbw
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=_1IyUuN4QrATX339ibzo:22
+ a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8 a=IaYQQxp-055UKQrtbooA:9 a=QEXdDO2ut3YA:10
+ a=eYe2g0i6gJ5uXG_o6N4q:22 a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE4MDA1NCBTYWx0ZWRfXwxtVsCnPkK/C
+ /8zLhjaJOMaCSj23E3air8UkKL6+lD/MEkehomt9ISrrkmlWlqgG59zUyPk/f7ejRyWbdSvTw6f
+ Fa4UtzK9TwnlZF27nHcfHsqyniSqGcI=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-17_02,2026-06-17_03,2025-10-01_01
 
-On Wed, Jun 17, 2026 at 2:25=E2=80=AFAM Leon Romanovsky <leon@kernel.org> w=
+On Wed, Jun 17, 2026 at 2:41=E2=80=AFAM Leon Romanovsky <leon@kernel.org> w=
 rote:
 >
 > >
-> On Sun, Jun 14, 2026 at 11:59:01PM -0700, Zhiping Zhang wrote:
-> > Query dma-buf PCI TPH metadata when registering a dma-buf MR for
-> > peer-to-peer access to a PCIe endpoint and use it to program
-> > requester-side TPH on the outbound mkey. If the exporter has no
-> > metadata, fall back to the existing no-TPH path.
+> On Sun, Jun 14, 2026 at 11:58:59PM -0700, Zhiping Zhang wrote:
+> > Add an optional dma_buf_ops.get_pci_tph callback and a
+> > DMA-buf importer wrapper, dma_buf_get_pci_tph().
 > >
-> > Use mlx5_st_alloc_index_by_tag() to translate exporter-provided
-> > steering tags into local ST entries when table mode is active, and add
-> > mlx5_st_get_index() for DMAH-backed flows that already carry an ST
-> > index.
+> > TPH is PCIe TLP Processing Hint. 8-bit ST and 16-bit Extended ST are
+> > distinct PCIe TPH namespaces, so the importer requests the namespace it
+> > can emit and the exporter returns the matching ST/PH tuple or
+> > -EOPNOTSUPP.
 > >
-> > For TPH-backed FRMRs, keep the extra ST-table reference tied to MR
-> > lifetime rather than pooled mkey lifetime. Acquire the ref before MR
-> > creation and release it again when the MR is returned to the pool or
-> > the backing mkey is destroyed, while leaving the generic FRMR pool core
-> > unchanged.
+> > dma_buf_get_pci_tph() is the importer entry point. It requires
+> > &dmabuf->resv to be held while the callback runs and returns
+> > -EOPNOTSUPP when the exporter does not provide PCI TPH metadata.
 > >
-> > Import the DMA_BUF namespace for the new dma_buf_get_pci_tph() call so
-> > modular mlx5_ib builds link cleanly.
+> > The first user is VFIO_DEVICE_FEATURE_DMA_BUF_TPH in vfio-pci, with
+> > mlx5 as the first importer.
+> >
+> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> > ---
+> >  drivers/dma-buf/dma-buf.c | 25 +++++++++++++++++++++++++
+> >  include/linux/dma-buf.h   | 16 ++++++++++++++++
+> >  2 files changed, 41 insertions(+)
+> >
+> > diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+> > index d504c636dc29..7a4c9b0d5dab 100644
+> > --- a/drivers/dma-buf/dma-buf.c
+> > +++ b/drivers/dma-buf/dma-buf.c
+> > @@ -1144,6 +1144,31 @@ void dma_buf_unpin(struct dma_buf_attachment *at=
+tach)
+> >  }
+> >  EXPORT_SYMBOL_NS_GPL(dma_buf_unpin, "DMA_BUF");
+> >
+> > +/**
+> > + * dma_buf_get_pci_tph - Retrieve PCIe TLP Processing Hint (TPH) metad=
+ata
+> > + * @dmabuf: DMA buffer to query
+> > + * @extended: false for 8-bit ST, true for 16-bit Extended ST
+> > + * @steering_tag: returns the raw steering tag for the requested names=
+pace
+> > + * @ph: returns the TPH processing hint
+> > + *
+> > + * Wrapper for the optional &dma_buf_ops.get_pci_tph callback.
+> > + *
+> > + * Must be called with &dma_buf.resv held. Returns -EOPNOTSUPP if the
+> > + * exporter does not implement the callback or has no metadata for the
+> > + * requested namespace.
+> > + */
+> > +int dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool extended,
+> > +                     u16 *steering_tag, u8 *ph)
+> > +{
+> > +     dma_resv_assert_held(dmabuf->resv);
+> > +
+> > +     if (!dmabuf->ops->get_pci_tph)
+> > +             return -EOPNOTSUPP;
+> > +
+> > +     return dmabuf->ops->get_pci_tph(dmabuf, extended, steering_tag, p=
+h);
+> > +}
+> > +EXPORT_SYMBOL_NS_GPL(dma_buf_get_pci_tph, "DMA_BUF");
+> > +
+> >  /**
+> >   * dma_buf_map_attachment - Returns the scatterlist table of the attac=
+hment;
+> >   * mapped into _device_ address space. Is a wrapper for map_dma_buf() =
+of the
+> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> > index d1203da56fc5..5e7b69a40f3d 100644
+> > --- a/include/linux/dma-buf.h
+> > +++ b/include/linux/dma-buf.h
+> > @@ -113,6 +113,20 @@ struct dma_buf_ops {
+> >        */
+> >       void (*unpin)(struct dma_buf_attachment *attach);
+> >
+> > +     /**
+> > +      * @get_pci_tph:
 >
-> The commit message explains *what* the patch does, but it lacks context on
-> *why* the change is needed. The 'what' is mostly clear from reading the c=
-ode;
-> the important part missing here is the rationale behind the change.
+> There should be a blank line after the line above, along with a clear and
+> concise description of what this callback does.
 >
 > Thanks
-
-Noted, will change the msg in the next version.
+>
+Sure, will change!
 
 Thanks,
 Zhiping
