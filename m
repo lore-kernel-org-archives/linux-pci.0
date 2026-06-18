@@ -1,146 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF71020E334;
-	Thu, 18 Jun 2026 08:38:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687443B1EFE
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 08:39:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781771920; cv=none; b=BS2JZ8DHyn1LSLnzFc4rctsu0zfQnJ/bBtAoXStkiqQYZqcfYo9oHmcUQMkz5SmwyJehMry3794D+kx5j+MLAsIrjy3rGzoQGyhjEC9T0e8/FjLddC/UHxI8wwBBalPZnTwmdY2xGMhbO5Jqb3G3h0q+mXle0R9z90Tt/kb8ESs=
+	t=1781771956; cv=none; b=ZE4BHwYNaCpNL076ApObN3BQyDlWnLHf1zyZr7XH+N5cwQzcdx6X2qSG4Wo98vF5i12grq5g5GRtpiaPpu1Iiyva8pPcIlN7ZIf4P/ezKgXLvjQsQJlQRnAgDqpllag9m0iMjkaykxtl8W4ZZLuZ5Agmx2nXQOiVgpHnkpNwlxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781771920; c=relaxed/simple;
-	bh=ummxyJt50kbd9aQHFBnf9BdFRrAXWdix7EapTIPLQFk=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NsGOByzRTKFxddBPI1DbK1CjwTtM28G5wyHGHIjg934sFo63uWRpEGmfsAcZUmZiovFojUckOy12oholVRKoC2zl1smkQsRsRAizeRPLc5oA6ifYrSSrJpIuTOVOMM/yPVk+fxwfUv6yh2336gnIDp+NvN7oAvrPT3fOQ2SlK7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nXhelwwd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781771956; c=relaxed/simple;
+	bh=kunZh0ILTa9MlbCsqHzXVbkJUiY7hAdskHRMnLkTUeU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Z2SuhVPez24HHoELRAlNwQm+Gu7ZCgifHV5nrBBhpbsbXbId4cgvZoI9FsbMxZ+VYuWyq3enHvnimCVkEF8qltzrU4F0AkxzepXgPh+0xLmJJlp0sBSwp1Kq6A+hLB4XlDSq4+ycYLy/vjaZTm1FMB/C/5NVA/gCKLr4jBl0Vxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Idt5B3Gy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nXhelwwd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63ADC1F000E9;
-	Thu, 18 Jun 2026 08:38:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Idt5B3Gy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3873C1F000E9;
+	Thu, 18 Jun 2026 08:39:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781771919;
-	bh=BghaV0XJnds55dF2dgFuuXXCRlRZxRm1R2JFiOWPEcY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=nXhelwwdHIkf/sbE8QwEOS03rLt8fBTdIbsCZe07coYKQs4UXoUTDq6Bje6m8uGcu
-	 Dr5MQ0TVj1Uq22/CL5bZi9uGamNGVyuBE4uwrVOqxcsPlGhLbA8QEBhkZmWInPyMJ0
-	 o21G3I2bxvKtL/8BbxKnwjcZpGWTdpx4Egxa9y2kJpMJ0Zargl930VFJWaalzVrn6s
-	 aasDnOM0EZTrvAPxjCdPlJaFr7RqjMSZU0dBX35bXjzedGX+hbz6n808Af92WmSRFu
-	 Jd70COqSStxnjEVjQp7iIs9O/8kmUyPZ1VotsyFi+i48LOEwR+SpqD84Aw2cnWxJU6
-	 RW+fUzBeRRDAQ==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wa8Gj-0000000DvgM-0yNK;
-	Thu, 18 Jun 2026 08:38:37 +0000
-Date: Thu, 18 Jun 2026 09:38:36 +0100
-Message-ID: <86ldccs0oj.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	linux-pci@vger.kernel.org,	Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>,	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?=
- <kwilczynski@kernel.org>,	Bjorn Helgaas <bhelgaas@google.com>,	Catalin
- Marinas <catalin.marinas@arm.com>,	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,	Krzysztof Kozlowski
- <krzk+dt@kernel.org>,	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Manivannan
- Sadhasivam <mani@kernel.org>,	Rob Herring <robh@kernel.org>,
-	devicetree@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 2/3] irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
-In-Reply-To: <0935eb67-83d2-49ea-89ab-0d0aa51ead8a@mailbox.org>
-References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
-	<20260617030008.154449-2-marek.vasut+renesas@mailbox.org>
-	<864ij1tyrj.wl-maz@kernel.org>
-	<0935eb67-83d2-49ea-89ab-0d0aa51ead8a@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	s=k20260515; t=1781771954;
+	bh=VpK9Fe6yy83k2RH15kiPKILr7KxQh1Bjd3S/cKBCqus=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Idt5B3GyLdM2l5X+EikGBT6GZbtTxeuu6bPlyaRa/GYEs31suh7LhOp6kTQn0CEM9
+	 OR9LIur0YyjR2wmRO0tF5FeotUruI7W7QJXcEJWIA9XWipwdBNQTmB/Olw/0sPkAhe
+	 OdRBrElZAe4WnKBf1usQZUrOTOIKqYENH42FVbrAmB15ToQqPCaacGyxcYhoiAvK/F
+	 9p3hVXKpg1Ykyw6ZBmv7SXtJ8bQ2/npZzLGheLY248pXkKhjWRF71Pl7ACp8F/CrlN
+	 BZKdnMzK0MmwKu5KS8dXwWtL2oQ7jDpdtvlA8vsBMWfcYiZKhPxxQnY0Y1FbSRXzMe
+	 B1YNKDRSPgRTQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] nvme-pci: fix CMB mapping when CMBSZ Size field is zero
+Reply-To: sashiko-reviews@lists.linux.dev
+To: kangfenglong <kangfenglong@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260618082616.20656-1-kangfenglong@huawei.com>
+References: <20260618082616.20656-1-kangfenglong@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 18 Jun 2026 08:39:13 +0000
+Message-Id: <20260618083914.3873C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut@mailbox.org, marek.vasut+renesas@mailbox.org, linux-pci@vger.kernel.org, yoshihiro.shimoda.uh@renesas.com, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-On Thu, 18 Jun 2026 03:50:29 +0100,
-Marek Vasut <marek.vasut@mailbox.org> wrote:
-> 
-> On 6/17/26 9:24 AM, Marc Zyngier wrote:
-> 
-> Hello Marc,
-> 
-> >> Renesas R-Car S4/V4H/V4M GIC600 integration has address width for AXI
-> >> or APB interface configured to 32 bit, it can therefore access only
-> >> the first 4 GiB of physical address space. This information comes from
-> >> R-Car V4H Interface Specification sheet, there is currently no technical
-> >> update number assigned to this limitation. Further input from hardware
-> >> engineer indicates that this limitation also applies to R-Car S4 and V4M.
-> >> Name the limitation GEN4GICITS1, and add a driver quirk to mitigate this
-> >> limitation.
-> 
-> My concern is this ^ , I do not have an erratum number, because there
-> isn't one. I am in touch with the hardware engineer and I did get a
-> glimpse at internal details of the three SoC, which confirm the
-> limitations. Is this sufficient ?
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-To be honest, this is between you and the SoC vendor. I'll take
-whatever symbol you come up with at face value, and will assume that
-the vendor agrees with it. After all, they are on Cc and have their
-SoB on the patch.
+Pre-existing issues:
+- [High] A 64-bit shift overflow in `nvme_cmb_size_unit()` causes undefined=
+ behavior and integer overflow, allowing a malicious device or surprise rem=
+oval to bypass the patch's zero-size check.
+--
 
-> 
-> >> Note that the 0x0201743b GIC600 ID is not Renesas-specific, it is
-> >> common for many ARM GICv3 implementations. Therefore, add an extra
-> > 
-> > Not quite. It designates GIC600 unambiguously.
-> 
-> What I am trying to communicate is, that the 0x0201743b ID is not ID
-> of the Renesas GIC implementation, but it is a generic ARM GIC600
-> ID. That is why we cannot match the quirk on the ID (it is generic ARM
-> GIC600 ID), and instead we have to match the quirk on the [ ID
-> combined with of_machine_is_compatible("renesas,...") ].
+commit cff061918a7d037b79313b9dd26c4235a518f58f
+Author: kangfenglong <kangfenglong@huawei.com>
 
-This is understood, and is no different from the other broken
-platforms in the tree.
+nvme-pci: fix CMB mapping when CMBSZ Size field is zero
 
-> 
-> > It is just that GIC600
-> > is integrated in zillions of SoCs, most of which don't have this
-> > problem (the machine I'm typing this from has a GIC600 *and* 96GB of
-> > RAM).
-> 
-> Right.
-> 
-> Shall I reword this paragraph somehow to make it clearer ?
+This commit restores a check for a zero SZ field to verify the controller
+actually has a CMB before proceeding with mapping. This prevents size
+from defaulting to the entire remaining BAR and triggering memory
+hotplug alignment warnings.
 
-I'd simply say that the workaround is keyed on the combination of the
-GIC implementation and the platform identification in the device tree.
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index e6267a6aa3801..14f0f141df5bb 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -1838,6 +1838,8 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+>  	dev->cmbsz =3D readl(dev->bar + NVME_REG_CMBSZ);
+>  	if (!dev->cmbsz)
+>  		return;
+> +	if (!nvme_cmb_size(dev))
+> +		return;
+>  	dev->cmbloc =3D readl(dev->bar + NVME_REG_CMBLOC);
+> =20
+>  	size =3D nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
 
->
-> >> of_machine_is_compatible() check.
-> >> 
-> >> The GIC600 implementation in R-Car S4/V4H/V4M is r1p6.
-> > 
-> > Is this relevant?
-> 
-> I included it for the sake of completeness and to provide all relevant
-> information, based on previous discussions about similar limitations
-> that I could find on lore.k.o
+[Severity: High]
+This is a pre-existing issue, but could this multiplication still silently
+overflow to zero and bypass the new zero-size check?
 
-This information is already contained in the ID you quote (bits
-[19:12]), and can be decoded using the public TRM [1].
+If a device advertises a Size Units (SZU) of 12 and a Size (SZ) of 16,
+nvme_cmb_size_unit() calculates 1ULL << 60. The multiplication here
+then becomes (1ULL << 60) * 16, which mathematically equals 1ULL << 64.
+This wraps around to exactly 0 in a 64-bit unsigned integer. Since SZ is 16,
+the new nvme_cmb_size(dev) check is passed, but size still becomes 0,
+potentially triggering the same pci_p2pdma_add_resource() issue this
+patch aims to fix.
 
-Thanks,
+Additionally, if the PCIe device is surprise-removed, readl() returns
+0xFFFFFFFF, resulting in SZU =3D 15. The shift calculation in
+nvme_cmb_size_unit():
 
-	M.
+    return 1ULL << (12 + 4 * szu);
 
-[1] https://documentation-service.arm.com/static/5e7ddddacbfe76649ba53034
+evaluates to 1ULL << 72. This is undefined behavior and can result in an
+unaligned size being passed down.
 
--- 
-Without deviation from the norm, progress is not possible.
+Does this calculation need further bounds checking or validation to handle
+integer overflows and surprise removals?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260618082616.2065=
+6-1-kangfenglong@huawei.com?part=3D1
