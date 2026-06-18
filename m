@@ -1,207 +1,94 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F1E3431E7;
-	Thu, 18 Jun 2026 22:05:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A06325491;
+	Thu, 18 Jun 2026 22:05:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781820303; cv=none; b=t9Lm3uIaL99DdMxEyudeMy+2JmEfSCdqYpHL1OWp48HoXkekOgplSceeGQyMaaoEsXTZ0zsNARXXdYkaIBEt8TEWKxsSMi7h0XGPaPZ/Jd0xp5AHxqJzcjSxM/mIQqAvaoOhUHILiVOaUuD310chNZiWoSrbv6jjwUTNDuh0PFE=
+	t=1781820330; cv=none; b=JvSnjivPffR3vnxHMRQk8YMSI4Tkw4f7C4H38MYKO4yeUCormgdKltFpueXxEZvkIgHEi4HqfbmpxcMexGvl4TT0r/V0Cra7zXSDcWH9kqfEVyJoz9YEu8CdM1gs9FqEKWek3oWeEWY0TyXrvFsjyu6V2DooyiZa9dPe45nZOSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781820303; c=relaxed/simple;
-	bh=PWnuZ4jFtsdSW9sKLxrIKcYLa0t1Oz+XdGSPutkyXko=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s+fMOSJp8QDoZN9vLEPCeKeKBo4HCb0vrcvo/WOd7BgmYnXz/ExDIF/0V9o5fYAi3PeXa5+63h3j9ZKYJEJpxPDHpdCvb+zP/9M4xHjO793qp/K2sCwoOjeI5nD7cCMTAnDW2B4jB1nKW/siDDHzJkNoO637TYT0d0achVwvFh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=YEu1MySB; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=iJkRsskG; arc=none smtp.client-ip=80.241.56.151
+	s=arc-20240116; t=1781820330; c=relaxed/simple;
+	bh=dMTTPiqpSCdDk0Nr5xUPnfTfhOEFl/85MFehssEP3tE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IaivUhFLtRcnuYmniISg2FJlBIJyN2ABN5EGd0xh0lgEYfNoEMdOGvvarcbud6INzmcCufymjagEkvY2M+69L6J0uygKIo4fixbF4ovB4ol0bYd8638Vw5nTeA/i4W+ddE0D7hhi8hSRHJ4ZyNL3ZC/+hQxtYssVSpXL+ZyggyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Vr7/kDwQ; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=XKITqWdx; arc=none smtp.client-ip=80.241.56.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="YEu1MySB";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="iJkRsskG"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Vr7/kDwQ";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="XKITqWdx"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4ghFBz6X9Nz9tsX;
-	Fri, 19 Jun 2026 00:04:59 +0200 (CEST)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4ghFCW2Z5Bz9v9m;
+	Fri, 19 Jun 2026 00:05:27 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781820300;
+	t=1781820327;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/gMsmz/YVE+vex624i9NCwCdWl2Dy91mu9dYa478yfA=;
-	b=YEu1MySBlTTkRPRDUXRH4jfDLqNMW5trPKTlqI8QJNIVNRw6eTVAoFVTMw8LpDX5CoblDM
-	CnYnniCS2LtA0Omfrc1Ch3a6SJssfcbVHPrCbejPgtOdDgmRajaI1fzf6NF6TAd+6OVWHA
-	a4FzZdSCR9uOZg2kl0cKuyHeGk9ShQu4CZ+XYcJuYXrQF8uNAeawPmclkrtyHpEQYwwpa6
-	yYZ3ofvSa7NCnUhKKxX2DFfLhfA5wFwm2t1XKPcJC16u0PzFQ8hH144njBj1JQLsa2+vIk
-	xasJQCchsKZkNfZzC5W4rBrlkHgnQbEBgcSr2oS7uc77/XRkCsMvRT5713e/LA==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=iJkRsskG;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+	bh=HsG+kwh/RE2Th17kyeIVSQQjjEmBmAST5wWlz7L+k/A=;
+	b=Vr7/kDwQQVyyn7Q9L3WMvbAOf0DmSjZsRwNWCVqbAQ3K0mvmVR5JS+ubzjuiSOY0fLOK4Z
+	9WzXQa4PQq/TcS5Cgr9WSLEW8fsC2f1O459t50DuJI/I5rXphumG2oHZqifo7/xCSxsG/4
+	Vu01PmHLcwFD8XBORfut00GHNKW7L7PBK3TGrZIXu5Wcw81fah1hwL8PMS2KICSg8rvjiA
+	Tn5smT+NBBaWlH2WP0VwTBO3LUDEmltgLki7OypGLYr5HkK/kJNkm7apAmSHk0D/ay7I9V
+	9C/UsgPEY0f0lXVnS7h9xtdd2NdZ2Hh2ZkNSZUMlPjGWkzBet6tc/mTMKK6a1A==
+Message-ID: <6ac0dd7d-e6f2-4af8-8a8c-0c04b80fe84c@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1781820297;
+	t=1781820325;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/gMsmz/YVE+vex624i9NCwCdWl2Dy91mu9dYa478yfA=;
-	b=iJkRsskGUq9n3yhN9deqfE9wDG1YvTU0vlkBfAiZxC5Y7G1SE/rVSLHwIdaKEvJAA4LhoT
-	8ZHx48YBeL8VdAshTOvVPzwqm1m+Gr9Udb28DFTJGovhzNAcRY4FgPkzhb9Xczmmg9UQBX
-	inKdSssn8rO73e8YP619obT6OZV3+AzlB1b7F96Ax5OE6mLfCdEg+YckqQtxoVc2fDww6Z
-	TSrFpX+WL8fQX7I/KZAHtE/7Tp5tclHZK2/3qt1uWCZC0MV3pZiXS2wzPJZuGw6AzpLQST
-	cJmgL7tFizqYHgNhLrKE4CMgOc6mr1Pn49+qlPRFhUjrsYcZz6gNxTE43x7t3A==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Zyngier <maz@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v2 4/4] arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
-Date: Fri, 19 Jun 2026 00:02:02 +0200
-Message-ID: <20260618220427.14325-5-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260618220427.14325-1-marek.vasut+renesas@mailbox.org>
-References: <20260618220427.14325-1-marek.vasut+renesas@mailbox.org>
+	bh=HsG+kwh/RE2Th17kyeIVSQQjjEmBmAST5wWlz7L+k/A=;
+	b=XKITqWdxP93mTM7BWv5LdSPVNU80VmN3Eo0nPVObPZnqcYoefywgvnU0qGrD930f190Kvk
+	bPGTQ6G0ROgP0jyLS57mN2Zga90ceidoNxWV8tfikrnOtVT3vqPGUaag2AEgrEIzWZuI+L
+	JYowfbuAOmVfK04HzsvDxAIVZ0NDBYbeWfHuWPJvSRdFgLyRh20BvpK+wbPINeOCVNDP44
+	/+n7REpcVwlhV7N4Es2gxRZQ5y4mLAkyRtupwfvQOd2Vj8AISY4JfAGlL7FYe0UlsOxtpe
+	+RO3z0NlsWn0Oj7QQylYMxTV2Oj3af46V9WNJeF2AFDQVH4V/XIwaq+6RSNtgw==
+Date: Thu, 18 Jun 2026 23:53:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 091e0d6cf64cfdacc1c
-X-MBO-RS-META: br8xtrt6op6jwhtum4eaywqiog95jbzs
-X-Rspamd-Queue-Id: 4ghFBz6X9Nz9tsX
+Subject: Re: [PATCH 1/3] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+To: Marc Zyngier <maz@kernel.org>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley
+ <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260617030008.154449-1-marek.vasut+renesas@mailbox.org>
+ <8633yltylq.wl-maz@kernel.org>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <8633yltylq.wl-maz@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: ucoytqqaddo4u58bqotznotj7opphcfn
+X-MBO-RS-ID: 4481829806dbe33cd5c
 
-This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
-SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
-and add msi-map into PCIe controller node.
+On 6/17/26 9:28 AM, Marc Zyngier wrote:
 
-The GIC ITS does have master interface to issue transactions to RAM.
-The interface does support cacheable transactions, however, it does
-not support shareable attribute, because the AXI port signals are tied
-to inactive in this implementation. Therefore, add "dma-noncoherent"
-DT property into the GIC ITS subnode.
+[...]
 
-The GIC redistributor does not have cacheable/shareable, therefore
-add "dma-noncoherent" DT property into the GIC node.
-
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-NOTE: This would not be possible without prior work from Shimoda-san
-      https://lore.kernel.org/all/20240214052144.1966569-1-yoshihiro.shimoda.uh@renesas.com/
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: No change
----
- arch/arm64/boot/dts/renesas/r8a779g0.dtsi | 31 ++++++++++++++++-------
- 1 file changed, 22 insertions(+), 9 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-index 3a8af825bb253..82e864acf2601 100644
---- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-@@ -792,6 +792,7 @@ pciec0: pcie@e65d0000 {
- 			resets = <&cpg 624>;
- 			reset-names = "pwr";
- 			max-link-speed = <4>;
-+			msi-parent = <&its>;
- 			num-lanes = <2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -802,10 +803,10 @@ pciec0: pcie@e65d0000 {
- 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
--			interrupt-map = <0 0 0 1 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 2 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 3 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 4 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
- 			snps,enable-cdm-check;
- 			status = "disabled";
- 
-@@ -839,6 +840,7 @@ pciec1: pcie@e65d8000 {
- 			resets = <&cpg 625>;
- 			reset-names = "pwr";
- 			max-link-speed = <4>;
-+			msi-parent = <&its>;
- 			num-lanes = <2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -849,10 +851,10 @@ pciec1: pcie@e65d8000 {
- 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
--			interrupt-map = <0 0 0 1 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 2 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 3 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
--					<0 0 0 4 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
- 			snps,enable-cdm-check;
- 			status = "disabled";
- 
-@@ -2131,11 +2133,22 @@ ipmmu_mm: iommu@eefc0000 {
- 		gic: interrupt-controller@f1000000 {
- 			compatible = "arm,gic-v3";
- 			#interrupt-cells = <3>;
--			#address-cells = <0>;
-+			#address-cells = <2>;
-+			#size-cells = <2>;
- 			interrupt-controller;
- 			reg = <0x0 0xf1000000 0 0x20000>,
- 			      <0x0 0xf1060000 0 0x110000>;
- 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
-+			dma-noncoherent;
-+
-+			ranges = <0x0 0x0 0x0 0xf1000000 0x0 0x200000>;
-+
-+			its: msi-controller@40000 {
-+				compatible = "arm,gic-v3-its";
-+				reg = <0x0 0x40000 0x0 0x20000>;
-+				dma-noncoherent;
-+				msi-controller;
-+			};
- 		};
- 
- 		gpu: gpu@fd000000 {
--- 
-2.53.0
-
+>> +/* INTC address */
+>> +#define AXIINTCADDR		0x0a00
+>> +/* GITS GIC ITS translation register */
+>> +#define AXIINTCADDR_VAL		0xf1050000
+> 
+> Wouldn't it be preferable to source the address from the device tree,
+> rather than hardcoding this?
+It would, I will do so in V2.
