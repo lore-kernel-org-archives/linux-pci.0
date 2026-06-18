@@ -1,112 +1,176 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC59E25B0A1;
-	Thu, 18 Jun 2026 08:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09CE7381AF1
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 09:05:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781772649; cv=none; b=M8LdRPANcC3bESJlg7Of2xGq1Ox4MNKHKYel38evii6DZnTyilD12YuSO8E21dPk03AChF1GUnC0ebSLoJnc7glY5aDm5rNZ+851umFl4s6hP7hZZ+lmgVKFonIt+39nXUsUmOrK39k8p0xABmc+/Kt77Cn1kbRWLauGBDwVyQI=
+	t=1781773511; cv=none; b=k5rE4lRQs2n+ZVXn1ynUVWB+FsTUmcc0tXdbRbTu3vmiI9lXxypc69FEUhOtV782tcWQK2YSwz86RhyTXma12ghSRvhjtnbsRsln62T/PX482J140/2R+gAegBrBp18l4W6UW1HArRqTCOv+/EwyWbZpYs7jqEPiiFLWLpqR8jo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781772649; c=relaxed/simple;
-	bh=UdNHVLNJhllPqDOhWnuEtKRqjFTmfTx1guRRdvrtmP8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LV766Zjg4IwGNOwktfgfnpbFjW133AvTWb0BDyXAxMYtCGeLmq2C4MzxDxQ6GDMTtkil2XTDm1kV0rbTrfVyRq/E/x9GPaBP9aAlbvWLSvm9Y99qCD3jnOEFUE3aklsPIhNQ/FHUHfR+7iGbG40ku5xc6vMXawm3UMLDoUI8syg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=R9bYYopu; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1781773511; c=relaxed/simple;
+	bh=4/PNZH+N8f+A3KbhXS0MPaDs2fRN2vS12JxtF2sh/jQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=JB+kpV7J2B/VUk+r2UgNTSStkYAv5Hfy4fkKEuIC2vP7Of7aC9c7UFVOSJPVKhmsfHIZxQ5wEdj0BCSGHp7VaLfI22TGH0lscwkkZ9IZju9tnxMUz9cLYI+mhZDSMjQ/WkGVaxto4eI9hQVHyERWR5jE71Sta3jISczXqsJbemE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iR2IBofM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="R9bYYopu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781772648; x=1813308648;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=UdNHVLNJhllPqDOhWnuEtKRqjFTmfTx1guRRdvrtmP8=;
-  b=R9bYYopuCfrrisutYT01fjQ7ZhOVtRLMaTdX/PYFVnt0Og0N7iGjaBgv
-   lQVGwpU7EQXENpWd233Hm4JdtlhKnz8Ofz8SfGhoScA0j9pvBGpb1h58p
-   lIFeJebqSuX+iP4sWUkAk7N8AwIankvIlErfZSi+QuWMHn9J12q3uj1dx
-   Udbr1sPdaM7l9Opz19IVQC/N80qy9u+qbnpeOl9fKmaUTgtUL4MptRzUN
-   OCP75afWPcSPJHOvNW7MlZ5H7JayI78IJpSvBknHhGfkFXQxjIFZehtoX
-   6vjjKe4uk2NejTMAAj68kEAMPaSKzHzFg6yUNwNMP4Bade/SxP8NOqjI8
-   Q==;
-X-CSE-ConnectionGUID: NW//jDTPRSec7BTdSspJ7w==
-X-CSE-MsgGUID: YfDyRyasQy+NEu4mbXGSJA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11820"; a="93974390"
-X-IronPort-AV: E=Sophos;i="6.24,211,1774335600"; 
-   d="scan'208";a="93974390"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2026 01:50:48 -0700
-X-CSE-ConnectionGUID: Lkkzqsf/T2qztE+O8NBMxg==
-X-CSE-MsgGUID: WkkiWFUtTmirzfmj7IvobA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,211,1774335600"; 
-   d="scan'208";a="278491185"
-Received: from weba0957.iind.intel.com (HELO WEBA0932.iind.intel.com) ([10.224.186.34])
-  by orviesa002.jf.intel.com with ESMTP; 18 Jun 2026 01:50:45 -0700
-From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	bhelgaas@google.com,
-	ravishankar.srivatsa@intel.com,
-	chethan.tumkur.narayan@intel.com,
-	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Subject: [PATCH v2 2/2] Bluetooth: btintel_pcie: Fix TOCTOU race in reset path
-Date: Thu, 18 Jun 2026 14:20:16 +0530
-Message-ID: <20260618085016.9173-2-chandrashekar.devegowda@intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iR2IBofM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 896AE1F000E9;
+	Thu, 18 Jun 2026 09:05:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781773509;
+	bh=MLoABPZvXTHt+nDtdMsBoY9FjLAGPHkx9IoXQgwiejc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=iR2IBofMSEeW0bUtC4/Cn78uazgLBVT+ghHEV+cU3QCKqSVmpzD8MS/t9mTVpQkpm
+	 Nva1RAwUlZulT3rmhUS3nrbfOGMvlIjn3NT0l0z+lfYpH2ZDxeVKTmenDXj0x2NTCk
+	 nMOp+qlu7UjHsqLkhk4zutQLOmlf2rsg+TVab3VskTSYbPXJAssuAmTRBS5VAYaGNs
+	 7vhO1BqGl9Lh/RXJC0NXP9gVg9ldiUs7iyjW2Ob9UmXU0kQtsAcennJMZ4oRdTnj8v
+	 xtu9XcV5Ac/crt2+d+OGZwIMiOj9QXMLroczElx5n4oeim49AeWeZyJBn1KRpBHqxO
+	 4S2xOREOLL7VA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 1/2] Bluetooth: hci_core: Add reset_type parameter to
+ hdev->reset() callback
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chandrashekar Devegowda" <chandrashekar.devegowda@intel.com>
+Cc: linux-pci@vger.kernel.org
 In-Reply-To: <20260618085016.9173-1-chandrashekar.devegowda@intel.com>
 References: <20260618085016.9173-1-chandrashekar.devegowda@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 18 Jun 2026 09:05:09 +0000
+Message-Id: <20260618090509.896AE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Move the test_and_set_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS) check
-before the SETUP_DONE check to fix a Time-Of-Check to Time-Of-Use
-race. Previously, multiple callers could pass the SETUP_DONE check
-concurrently and then race on the RECOVERY_IN_PROGRESS flag,
-potentially scheduling conflicting removal work.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-By reordering the existing atomic guard to execute first, concurrent
-reset requests are atomically rejected before any state is inspected.
-The RECOVERY_IN_PROGRESS flag is cleared on the early-exit path
-(setup not done) to allow future reset attempts.
+New issues:
+- [High] UAPI Breakage: Redefining '1' to mean 'deeper reset' breaks existi=
+ng userspace scripts.
 
-Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
----
-v2:
-  - No changes
-v1:
-  - Initial version
----
- drivers/bluetooth/btintel_pcie.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Pre-existing issues:
+- [High] Data Race: Unguarded write to `dev_data->reset_type` in `btintel_p=
+cie_hw_error()` clobbers concurrent sysfs resets.
+- [High] TOCTOU Race Condition: Concurrent driver unbind causes NULL pointe=
+r dereference in `reset_store()`.
+--
 
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index d3a03cf96421..f4f400421833 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -2686,11 +2686,15 @@ static void btintel_pcie_reset(struct hci_dev *hdev, u8 reset_type)
- 
- 	data = hci_get_drvdata(hdev);
- 
--	if (!test_bit(BTINTEL_PCIE_SETUP_DONE, &data->flags))
-+	if (test_and_set_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags)) {
-+		bt_dev_warn(hdev, "Reset rejected: recovery already in progress");
- 		return;
-+	}
- 
--	if (test_and_set_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags))
-+	if (!test_bit(BTINTEL_PCIE_SETUP_DONE, &data->flags)) {
-+		clear_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags);
- 		return;
-+	}
- 
- 	data->reset_type = (reset_type == 1) ?
- 			    BTINTEL_PCIE_IOSF_PRR_PLDR : BTINTEL_PCIE_IOSF_PRR_FLR;
--- 
-2.43.0
+commit 4b14894786f1236a0de480b4c65121356669aba4
+Author: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
 
+Bluetooth: hci_core: Add reset_type parameter to hdev->reset() callback
+
+Add a u8 reset_type parameter to the hdev->reset() callback to allow
+userspace to select the reset level via sysfs. Each driver interprets
+the level according to its own capabilities.
+
+> diff --git a/Documentation/ABI/stable/sysfs-class-bluetooth b/Documentati=
+on/ABI/stable/sysfs-class-bluetooth
+> index 36be024711747..fb445e20f9726 100644
+> --- a/Documentation/ABI/stable/sysfs-class-bluetooth
+> +++ b/Documentation/ABI/stable/sysfs-class-bluetooth
+> @@ -3,7 +3,14 @@ Date:		14-Jan-2025
+>  KernelVersion:	6.13
+>  Contact:	linux-bluetooth@vger.kernel.org
+>  Description: 	This write-only attribute allows users to trigger the vend=
+or reset
+> -		method on the Bluetooth device when arbitrary data is written.
+> +		method on the Bluetooth device. The value written selects the
+> +		reset level. Each driver interprets the level according to its
+> +		own capabilities:
+> +
+> +		  - 0: default reset
+> +		  - 1: deeper reset
+> +
+> +		Writing any value other than 1 defaults to level 0.
+
+[Severity: High]
+Will redefining 1 to mean a deeper reset break existing userspace scripts?=
+=20
+
+Historically, the reset sysfs attribute triggered the default reset when
+arbitrary data was written, and in the Linux ecosystem, userspace typically
+writes 1 to trigger boolean actions.
+
+If existing scripts use echo 1 > reset, wouldn't they unknowingly trigger a
+much more disruptive reset than before? Could we map 1 to the default reset
+and use a distinct value (e.g., 2) for the deeper reset to maintain backward
+compatibility?
+
+[ ... ]
+
+> diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel=
+_pcie.c
+> index 9e39327dc1fe2..d3a03cf964216 100644
+> --- a/drivers/bluetooth/btintel_pcie.c
+> +++ b/drivers/bluetooth/btintel_pcie.c
+[ ... ]
+> @@ -2729,7 +2735,7 @@ static void btintel_pcie_hw_error(struct hci_dev *h=
+dev, u8 code)
+>  		return;
+>  	}
+>  	btintel_pcie_inc_recovery_count(pdev, &hdev->dev);
+> -	btintel_pcie_reset(hdev);
+> +	btintel_pcie_reset(hdev, (code =3D=3D 0x13) ? 1 : 0);
+>  }
+
+[Severity: High]
+This is a pre-existing issue, but does the unguarded write to
+dev_data->reset_type earlier in btintel_pcie_hw_error() cause a data race?
+
+While this patch updates btintel_pcie_reset() to safely assign the reset
+type under the BTINTEL_PCIE_RECOVERY_IN_PROGRESS bitlock,
+btintel_pcie_hw_error() still directly modifies dev_data->reset_type
+without holding any structural locks or exclusion bits.
+
+If a sysfs reset (FLR) is concurrently triggered and acquires the bitlock,
+could this unguarded write in btintel_pcie_hw_error() silently overwrite the
+pending reset type to PLDR, causing the asynchronously scheduled reset work
+to read the corrupted type and perform the wrong level of reset?
+
+[ ... ]
+
+> diff --git a/net/bluetooth/hci_sysfs.c b/net/bluetooth/hci_sysfs.c
+> index 8957ce7c21b76..a4fe329158cf7 100644
+> --- a/net/bluetooth/hci_sysfs.c
+> +++ b/net/bluetooth/hci_sysfs.c
+> @@ -97,8 +97,14 @@ static ssize_t reset_store(struct device *dev, struct =
+device_attribute *attr,
+>  {
+>  	struct hci_dev *hdev =3D to_hci_dev(dev);
+> =20
+> -	if (hdev->reset)
+> -		hdev->reset(hdev);
+> +	if (hdev->reset) {
+> +		int val;
+> +
+> +		if (kstrtoint(buf, 10, &val) || val !=3D 1)
+> +			hdev->reset(hdev, 0);
+> +		else
+> +			hdev->reset(hdev, 1);
+> +	}
+> =20
+>  	return count;
+>  }
+
+[Severity: High]
+This is a pre-existing issue, but does checking hdev->reset and then calling
+it after kstrtoint() introduce a TOCTOU race condition?
+
+Because kstrtoint() is an external function call, it acts as a compiler
+barrier, forcing the compiler to reload hdev->reset from memory before
+invoking it as a function pointer.
+
+If a concurrent teardown path sets hdev->reset =3D NULL between the check a=
+nd
+the execution, could reset_store() dereference a NULL pointer and crash the
+kernel? While a smaller race window existed before, this patch significantly
+widens it by inserting the kstrtoint() call. Should the function pointer be
+cached in a local variable before the NULL check?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260618085016.9173=
+-1-chandrashekar.devegowda@intel.com?part=3D1
