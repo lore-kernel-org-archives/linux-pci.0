@@ -1,153 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DC83EBF02
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 11:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5971325F7A5
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 13:31:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781780940; cv=none; b=NjD/kS0m7g3is8ArqroY58i0f3w3BtOq35XrR32NT5OUNSRmMWwMEbG8Lf2S6L4sh2nUxHW679LRuTAk7bk3dI5wS6PTalZuPMFpe5t2ZDjpWJlpzuFfjsqY4HnMdJh4L6YLr/vSj5gSZOJhCWgTWBJv0tnrnsJ0GhquzinIFE0=
+	t=1781789464; cv=none; b=b8iZ/vuBOJYdAK4aqpu/EeaPYIR3CvBtMWOVnQQprkr5le5PiSXWVBh8lnzUD6QdX6pQclhJgTBWlFz5JNUNQeUjCWKkzX3BlKG8+Mxp3d9BU+UZrnpJz59oT3X+2/nuuiLpbIxbjX+tMUd1bjmscHvJYFoWfd4nan2ZbTKXgOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781780940; c=relaxed/simple;
-	bh=RJys3dS9AKZJF4zhHUzS0txa1hXmI9v4dxk5HgEjwMI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=G+nYwJ9cTSY+yJWdeAEGp+2693vkt2FFoaFYe8damxsfBn0pDLJYkQsSVyInyP7nzI/v+8sjK2rVcx14i5LdKZShOgUGpppL19lypdmWpGemPRKjIazCUO5W0CLPT5wCcM6gFoN7UhvCAvPaggpz5oizstnS2gmPbD11xf2LcCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mp3rcg/0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781789464; c=relaxed/simple;
+	bh=mINgEl1nfdkXDN35kp4+T/0Nzijj7NUFhNLLfQaVv58=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z80wNA3dIQSGAWP1TXQbPosZgCfLab3Zh3z6oDfvLAgWOIibk7Z7guPso522w5Wm3BbM7qAtPp+DstF3Bwnsogd31fLpwST3Xlh1zEUbY9B/4B/kGEOhTqRd3xGy+wayvZDesIT4sIq1vEx7JJ6sEVevzPTOtQQ++/9B4VhJuHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QiIlpuTs; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mp3rcg/0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 503BF1F000E9;
-	Thu, 18 Jun 2026 11:08:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781780938;
-	bh=vHfQK7xWbHXSF2aqE1dFwBuSW2CBJBaIr3t3KPW37s4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mp3rcg/0FB0xIOhun7GpoMeA7GL1PNVBGT/efQBYNbwA0E9Px1YrVZ3HwPFXDp/56
-	 rG1I0HS/uWzZEciJbz7xB1nXk7qWqfl467Y6PEUdE8IsFR5QX+wR5FGizJxuSfNQJ6
-	 ga3P1LUNq02rxJcUj6ioZ/xJsy1EFoax3DmhRVd7t8WVU9MjX/V2MRgNtedc1ohbgA
-	 YBzxunov9vLh3NZwzn+JubmyT4y7yl/TrHKfhvNG5mrrHV6ji6lNBa+7gLXOKLLKCS
-	 a9YY3O56H22ln0XkbQgEzjTZVvRzSp2qTnyzpbEd7KetxkaZULgbMCdATgcFQ8k6N2
-	 Dx//bbGIYd2PA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] Bluetooth: btintel_pcie: Fix TOCTOU race in
- reset path
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chandrashekar Devegowda" <chandrashekar.devegowda@intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260618085016.9173-2-chandrashekar.devegowda@intel.com>
-References: <20260618085016.9173-1-chandrashekar.devegowda@intel.com>
- <20260618085016.9173-2-chandrashekar.devegowda@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 18 Jun 2026 11:08:57 +0000
-Message-Id: <20260618110858.503BF1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QiIlpuTs"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c6a4eccab1so50135ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 06:31:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781789463; x=1782394263; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=97YgfxmG6Chl0Ir+S9QMmQ5bxu5X/S2hJhh/DZ4TYTw=;
+        b=QiIlpuTsxe+D9eEYFvvH9Nj/F3axxlISxlLa7dhU5tnG4KHNwaM6QSfs9NATxjbz8S
+         8Y3btxPSiT5KT/HJ+YcWyxgTxyyH9QwS/sqmkYJdd2cn0w0ljlUHUUxVOwu2TbWAJCob
+         0qh4cfHgvQ93OGytGAJ/L5rCNYLIidBIjzJlqWQjsOeaQnYPuDKxrFRx98mGhfAUpmHm
+         5RPLl7GL7MyzBWhxR6AS6+QZoDWY9B5rJu/kaBpt9mJsMdjGl6CG0pW00aHPCJRcZLTQ
+         h7L/rcfWUBCr3brbwMljrKIW5v/A2w0MkYOdYgYw+NKrR/flV3xCpc80llc/KsU0XUFw
+         um5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781789463; x=1782394263;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=97YgfxmG6Chl0Ir+S9QMmQ5bxu5X/S2hJhh/DZ4TYTw=;
+        b=NXS8UzLeqLrnmV0nv2CHKiy4CSm3I3cOnybDqPwPUhpKAQvWkDkBppDxWiPvUyBGSE
+         Wth23u5CznglRJ57T205FjeogMmYLZ29BoLNVEpR5wUwrev75J8iyZws20R3lnYhlfvy
+         buF79j9QWcM8Gtgiy5jG9XAo+xoFKZg8BA4k7bbdTn55w0wcJudIf7mZqTtFMUY3Hyte
+         AiJmMIVbV2xYVJS9p1fxhiTu3pLv4aoag31gy/u5TrCmYaK8SdjEI5IggW04Ap8kmiSx
+         1OwP0ixZuTvN03wJc9r14tXpSPWSPnz5CSWpImw0BukGa2R4oLMSuEVdqQ+y9i2Ni7gg
+         0aVw==
+X-Forwarded-Encrypted: i=1; AFNElJ+E5G6Jbb21bK/LiUspR+Rul8lmYqpRJonOASMMvRDs0OVhIaGvHoh6qsqcwF4BLPuaVxwf4gZKa+c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrGkTA/ky+e7owtFIPVKbS5zkQXF3w4e5OjUjwEEQ4lHM9v67E
+	VbmFsHPrb54fc/NQ0rFEu7SGicqC7L52lJw+I1PQ1CAiYHpYdmCq4GjIJWCw37GlvA==
+X-Gm-Gg: AfdE7clsI6056nbs3nVBe4n6PjLhaW7cUecWzRno6934Up3J4ZnKAC2G7sxGFmbq+37
+	ezNdsR/3FuwsUGUhfrAjvHJ4V9GEyBo3F/fTtIs0llBL9A32ubr++LYlVtFyIpDsLEL/YRXKLmc
+	uDbs1XEv3LPiprkT4bBSqppIvPZbLvflsaRo3zVLpHzLnk9/nR1twhuYccfMEzhaSpM6uUye2d4
+	S6aL/XAfmjbfLj1RvopmZPRedzMhzHPDTwBCImNu+n9TusCPD2eC6+h8VGZa7TuOnscSnGeR17Q
+	7AwLmsAyjjJMUVRVikV3xFACjm1jNjokODxVagNJPcuEiTQmMf3G5GJvEcxZOjOXkmB5A+jdjUa
+	RdiP3glw0cZuRkIvZYgKq43JvT8Yhm0m8qmYGqW9sKt8iGfeqw2lvk/by7E0nKBcuOKSCoDL8SV
+	cPovdLgB9UVbMtlc0GqfeV9XOJphGTQ1Iaf4oRp840MZWI5M+hDw==
+X-Received: by 2002:a17:902:d587:b0:2b4:58ad:e987 with SMTP id d9443c01a7336-2c6e8692cdamr1747625ad.17.1781789461980;
+        Thu, 18 Jun 2026 06:31:01 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-37c521aa16fsm9477952a91.4.2026.06.18.06.30.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Jun 2026 06:31:00 -0700 (PDT)
+Date: Thu, 18 Jun 2026 13:30:51 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Mike Rapoport <rppt@kernel.org>, kexec@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Parav Pandit <parav@nvidia.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v6 01/12] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <ajPzC2Xh1NMbfokP@google.com>
+References: <20260522202410.3104264-1-dmatlack@google.com>
+ <20260522202410.3104264-2-dmatlack@google.com>
+ <178124130274.908199.14827357870284807134.b4-review@b4>
+ <aiutNINqxhtlm2Dt@kernel.org>
+ <178126123047.908199.12042730612990730743.b4-reply@b4>
+ <ajB6V6yBHOjgK5ew@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ajB6V6yBHOjgK5ew@google.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Mon, Jun 15, 2026 at 10:19:03PM +0000, David Matlack wrote:
+> On 2026-06-12 10:47 AM, Pasha Tatashin wrote:
+> > On 2026-06-12 09:54:44+03:00, Mike Rapoport wrote:
+> > > On Fri, Jun 12, 2026 at 05:15:02AM +0000, Pasha Tatashin wrote:
+> > > 
+> > > > On Fri, 22 May 2026 20:23:59 +0000, David Matlack <dmatlack@google.com> wrote:
+> > > > 
+> > > > Please add Pratyush, Mike, and myself so we are notified directly of 
+> > > > incoming patches, the same as with other areas where the liveupdate/ 
+> > > > tree is specified.
+> > > 
+> > > Or we can add PCI liveupdate files to LIVEUPDATE entry.
+> > 
+> > That will not work, as we cannot serve as maintainers for 
+> > PCI/VFIO/IOMMU/KVM, etc. David Matlack will be the maintainer for the 
+> > PCI components, and we will accept patches once they have been approved 
+> > by him.
+> > 
+> > The simplification we could do is to create an email alias 
+> > for the live-update tree maintainers. This would allow us to use a 
+> > single entry instead of listing all three of us individually.
+> 
+> We could create a Live Update mailing list for all code that can be CCed
+> on all patches that must be merged through the Live Update tree. I would
+> also be interested in subscribing to that list.
 
-Pre-existing issues:
-- [Critical] Kernel panic due to unconditionally dereferencing a NULL `hdev=
-` pointer during PM resume if a prior reset failed.
-- [High] Non-atomic modification of data->flags causes data race with atomi=
-c bit operations, risking lost coredumps and permanent lockouts.
-- [High] Unprotected assignment to dev_data->reset_type in btintel_pcie_hw_=
-error can corrupt an ongoing reset.
---
++1. I'd like if there's a specific Live Update mailing list for
+submissions & discussion about the Live Update tree.
 
-commit c9025f5524eb70c6235927f87e97777af4f0b9ab
-Author: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-
-Bluetooth: btintel_pcie: Fix TOCTOU race in reset path
-
-This commit fixes a Time-Of-Check to Time-Of-Use race condition in the
-reset path of the btintel_pcie driver. It reorders the RECOVERY_IN_PROGRESS
-atomic guard to execute before checking the SETUP_DONE flag, preventing
-concurrent reset requests from racing.
-
-> diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel=
-_pcie.c
-> index d3a03cf964216..f4f400421833b 100644
-> --- a/drivers/bluetooth/btintel_pcie.c
-> +++ b/drivers/bluetooth/btintel_pcie.c
-> @@ -2686,11 +2686,15 @@ static void btintel_pcie_reset(struct hci_dev *hd=
-ev, u8 reset_type)
-> =20
->  	data =3D hci_get_drvdata(hdev);
-
-[Severity: Critical]
-This is a pre-existing issue, but can this dereference cause a kernel panic
-during PM resume if a prior reset failed?
-
-If a reset fails (e.g., in btintel_pcie_setup_hdev()), the device is
-unregistered and data->hdev is left permanently set to NULL. If the system
-goes into a suspend/hibernate cycle, the resume handler unconditionally
-calls this reset function:
-
-btintel_pcie_resume()
-    set_bit(BTINTEL_PCIE_CORE_HALTED, &data->flags);
-    btintel_pcie_reset(data->hdev, 0);
-
-When btintel_pcie_reset() runs, it calls hci_get_drvdata(hdev), which blind=
-ly
-dereferences hdev. Should there be a NULL pointer check for hdev here?
-
-> -	if (!test_bit(BTINTEL_PCIE_SETUP_DONE, &data->flags))
-> +	if (test_and_set_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags)) {
-> +		bt_dev_warn(hdev, "Reset rejected: recovery already in progress");
->  		return;
-> +	}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since we are modifying atomic
-flags operations, I noticed a potential data race with data->flags in the
-worker thread:
-
-btintel_pcie_reset_work()
-    btintel_pcie_start_rx(data);
-    data->flags =3D 0;
-    err =3D btintel_pcie_setup_hdev(data);
-
-Because data->flags is cleared non-atomically immediately after interrupts =
-are
-re-enabled, could this erase an atomic modification from an incoming MSI-X
-interrupt, such as test_and_set_bit(BTINTEL_PCIE_HWEXP_INPROGRESS, &data->f=
-lags)?
-
-Would it be safer to clear the specific bits using atomic operations instea=
-d?
-
-> -	if (test_and_set_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags))
-> +	if (!test_bit(BTINTEL_PCIE_SETUP_DONE, &data->flags)) {
-> +		clear_bit(BTINTEL_PCIE_RECOVERY_IN_PROGRESS, &data->flags);
->  		return;
-> +	}
-> =20
->  	data->reset_type =3D (reset_type =3D=3D 1) ?
->  			    BTINTEL_PCIE_IOSF_PRR_PLDR : BTINTEL_PCIE_IOSF_PRR_FLR;
-
-[Severity: High]
-This is a pre-existing issue, but I have a question about how the shared
-reset_type state is handled concurrently.
-
-In the hardware error handler, dev_data->reset_type is overwritten outside
-of any lock before the atomic guard in btintel_pcie_reset() is reached:
-
-btintel_pcie_hw_error()
-    if (code =3D=3D 0x13)
-        dev_data->reset_type =3D BTINTEL_PCIE_IOSF_PRR_PLDR;
-    else
-        dev_data->reset_type =3D BTINTEL_PCIE_IOSF_PRR_FLR;
-       =20
-    btintel_pcie_reset(hdev, ...);
-
-If btintel_pcie_reset_work() is actively executing a recovery and reads
-data->reset_type locklessly, could this unprotected assignment cause the
-worker thread to observe an inconsistent state and corrupt the recovery
-sequence?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260618085016.9173=
--1-chandrashekar.devegowda@intel.com?part=3D2
+Thanks,
+Praan
