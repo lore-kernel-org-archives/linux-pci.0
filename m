@@ -1,62 +1,69 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011048.outbound.protection.outlook.com [40.107.208.48])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010051.outbound.protection.outlook.com [52.101.228.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 290FB33D6DD;
-	Thu, 18 Jun 2026 19:05:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B1A2AE8D;
+	Thu, 18 Jun 2026 19:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781809544; cv=fail; b=bsKWTfQMnyIkq9a3rlotXat0+AWl+NlXhwK7vNTmQTobv9nq9AdAvYiSICO/uI9fgyMl2TCUq2d55lp055EGxqAW1GwP0UtAzNrPkQhjCJBUX6qP4jC7Lc4iT4oQiwcPLscBCBUMy3oVQQ5RDo6fuIalY2CGjrsi6IsWK9quCrw=
+	t=1781809807; cv=fail; b=eziTWskFbQwROKJixhPYYTF/7rCJwniIbjoStnqwbMdOZsgwvZ0xaDXWJzfmE7LlW89rcjmKWpMZa/2UxfCoKRPPIJv8VyRMclx35EelVHDVGz1CSsPRAKXuhIkGCQJ+KRSG+3oaryywQXiYhb9PqpXhR/OEeGDrbotTKWTYYwQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781809544; c=relaxed/simple;
-	bh=C+9uVlNvnn5IW9PQiKXreFOK1IhA6fT36Ljx2AV3lFY=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=K5EA7VvOeMgUZvR2WqSvsapnwbPuu0qPb9/7/2Eo7aKjoS5cfGfX52p3X4hRL/7fsPZW6y9OUgQilrF3y3o6Xd56QlZc/eN9tEO1B84zOebCA7/VEy9zZOs5CURzx5ZbAbsX20t76KQSweY0ORqf1ilvrwGi8HWFNLjxXWk8pBA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=vRarZRZu; arc=fail smtp.client-ip=40.107.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1781809807; c=relaxed/simple;
+	bh=GCH6Xlvq0gOas/m+SnjBti9ZH5I2jC/jjWM3HEN4H4Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=FW957NusCnUZlCzyq+iXdQ5vBMfA4shYZIPunmlE7AIdANbrT9z4sVB1iAkDLAAImwMlxGyDjeMrSqSJn4p8IB4bPMK5iGQTd/Pv648iZPLBrTfdRn0Kc2gfyZNUdNNb9jYgussE6RYtQV1VtbD4x1WhDTJ1lJGIAkC4yohuesM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=rGcoexLm; arc=fail smtp.client-ip=52.101.228.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="vRarZRZu"
+	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="rGcoexLm"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VIiNtZq7NvYUQn2DupJhATOiGzmOihMG8OLlHKb1EkUymKK6XgWzCjYtAhes0yCVJlh/YtcC13KC0/KqlbvZ+sa9uRF4/f/H0hEOD/oI60x3Bu6Nsq+cg1R/bFiRiwrjoIsEN2458CfEerY6/gZn9wC1PxYCS1Rdqs7fcoPvR/OrbFIf2IowX8hwnHE5HhondwwuyPcC7Bnp8EMTU5+tdUMbgeUdYWvLRu+tLIj6GutztcPXKK+VwXhpdfu9OhS9SS8P9awZkE150t3+y3DeoB5n1lFN8QcQmQwDTElbY6rvF/U7YGWW56QKP7HSswxQeWlZjh98XXaruEo1dykENw==
+ b=EdhmMu369JwKd0BLSXQpCRdxwSE3K+LwX6IPnE17MHkDqM12Oz3u11UG5dZLWZYuWk6doXLTDM+ECwF0dPtSWXHr2CXnpWPur/5/0DVLvGdF2eUUD2on/nWZkGtKmATo7HXHTdTxGLGGeItBUoYDbSjg1tq1ST7SuDQMfXKheXJIroqvPTdOx8NMh6eRsAdvmXLVbObGD8xu0bUG9EYURVMfCP3ULgAhlCedZSKtjD7y36pdfYZR9IqoWUCNAi0/886B/XV+1HTRge1X6qOFWmt+JGKEPFsjSoveVJ1cw1VwfLnVX2cXOa4DTwN5WLky93ONQFSziJZE6XOUZX6zxg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kyesOy7cMQpSqPbSHWRcZcy2a5lDIJjQlTTbmrNQsuo=;
- b=e9fCML+ZU4wBy3WFA3PCu7Ig2TsnJ3K1jnYRrxvxMk6Fg4JcPWLPpcEOszqZLxoIfSS1yX0NGdvQU9mGZxkbNmFbaxKL3RL0M0OI7Bym8sHweSCeAJaQGC9JCdJZ7fanqVuGZPu3v5fLg17X4QAPtv+qgE9obvIlVsWZCyLHYPqIPSMrsgV1KtWFkNFieSGEdzZQGx+yq1gWWFB1mG2PB3be0z7Z0odgAl8ntBJiToQEW4GSCCmsPNMdI9zqwLH6jNbKhPvI3lxtp4I36CZJ8BAh1oklxP+B4NbxgY4Klx4I9PrGL+OSe/NzFIEnr79ZAb/q/0MN+sTL/cKez1ObjA==
+ bh=yEjY3n2r5juM4yFbx9sm6R0q7N2NTiCNhkDyTJ8NLAI=;
+ b=cA43qVJ4+/cSvYkfBVdsMj3uGG2xhtkDs5iHN7L7wPnkA+Q3V0zK1IaAkSuFf94rO3RJnE5jj0SxwdjtRlqo7vs+PVR1sWhUdyb419lh8sLX5JipDM/k1IGynWRw0fvtwGi9f4pkoPbd0gSG7STx+iq/t9iQZkETrceA/Oi/xOEjTKLHj8bmZgXNvZq3YmvsLXlPiG8cV4PiG0dWbJCVUzCCT7TZX6iShrGKhxjPh2ex+TFm2vAAaEFRfwbBJ6SblfRkq5zPB47MEXyeQ8NIw8rUhUaU3G8yMUERfRIWjOme3zH8QGrC2qlGsLb9YQA1lxgdbwMvNuT91vFeTnoqRA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
+ header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kyesOy7cMQpSqPbSHWRcZcy2a5lDIJjQlTTbmrNQsuo=;
- b=vRarZRZuXAimuniLuxDMQGNbD1raeL+MDaTOdyBt68/4r2sE4LnGonwRZxlI8NhGD0q3QXaPngTIyX9x0EhslUBJFcchVMYaJdgPtx+tIUlW6X/9NLjPjaUDToG2Ui2YEoWHjUlQrrSxOF/OG3RToPJyp82RwZ9GVMrZ/MBM/Gc=
+ bh=yEjY3n2r5juM4yFbx9sm6R0q7N2NTiCNhkDyTJ8NLAI=;
+ b=rGcoexLm7kfqM2bV0HIWnynmiyZROFVBjFfWJZp0XrbKrXxSC8afs48e9WIxQ9x09vo2O887/ky/8OCCdOLvd1Sf7aqjdj5u/ojnVaLhyOo23M25vdk1X4sU4CiDUmaqNwvg7u9CFufqdt0C0Nse+gEv4Jso4m0bcEWz3Ao7C5Y=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
- by DS0PR12MB7584.namprd12.prod.outlook.com (2603:10b6:8:13b::13) with
+ header.d=none;dmarc=none action=none header.from=bp.renesas.com;
+Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
+ by OS9PR01MB17516.jpnprd01.prod.outlook.com (2603:1096:604:450::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Thu, 18 Jun
- 2026 19:05:38 +0000
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9%3]) with mapi id 15.21.0139.009; Thu, 18 Jun 2026
- 19:05:38 +0000
-Message-ID: <5c12d5db-15a3-4669-aa94-61583b1265e1@amd.com>
-Date: Thu, 18 Jun 2026 14:05:36 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 0/2] PCI/CXL: Add RDPAS support for CXL.io
-To: Dave Jiang <dave.jiang@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, jic23@kernel.org, djbw@kernel.org
-References: <20260618170723.2010490-1-dave.jiang@intel.com>
-Content-Language: en-US
-From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <20260618170723.2010490-1-dave.jiang@intel.com>
-Content-Type: text/plain; charset=UTF-8
+ 2026 19:10:02 +0000
+Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
+ ([fe80::f373:26d6:86c4:6aa3]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
+ ([fe80::f373:26d6:86c4:6aa3%6]) with mapi id 15.21.0139.009; Thu, 18 Jun 2026
+ 19:10:02 +0000
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	bhelgaas@google.com
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	john.madieu@gmail.com,
+	biju.das.jz@bp.renesas.com,
+	geert+renesas@glider.be,
+	John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: [PATCH] PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
+Date: Thu, 18 Jun 2026 19:09:35 +0000
+Message-Id: <20260618190935.3018531-1-john.madieu.xa@bp.renesas.com>
+X-Mailer: git-send-email 2.25.1
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CH0P220CA0030.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:610:ef::28) To CH8PR12MB9766.namprd12.prod.outlook.com
- (2603:10b6:610:2b6::10)
+Content-Type: text/plain
+X-ClientProxiedBy: PAZP264CA0135.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:102:1f8::10) To TY6PR01MB17377.jpnprd01.prod.outlook.com
+ (2603:1096:405:35b::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -64,119 +71,367 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|DS0PR12MB7584:EE_
-X-MS-Office365-Filtering-Correlation-Id: 81bb7502-c4c8-4724-7cfd-08decd6c95ac
+X-MS-TrafficTypeDiagnostic: TY6PR01MB17377:EE_|OS9PR01MB17516:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4a4265e6-934f-4512-06a0-08decd6d32b5
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|376014|366016|11063799006|3023799007|56012099006|6133799003|22082099003|18002099003;
+	BCL:0;ARA:13230040|366016|7416014|23010399003|52116014|376014|1800799024|56012099006|3023799007|11063799006|6133799003|38350700014|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	WpM/xEYYumao+wQoJe/lPets9WOK9Pz2X130VvzHmzWB4LSe8L4AluNZwO8pKDky32sYpCnx8dIXkH6GLAvHYp2PK0DZfNaALfoFxlZq001E0eJ+sBDWwFaiKiorBblUJ9RYupiD1PYbiDIFjh9s6dnkahXehU+DSjH9JPqDin3Wtzu+Qmcbvzw1zJbShVhNzHl2vppk/oquyGsXcBLuuAClOje2npf14p1TOMoqo0xL/RpIM+1lhHUF85VvgcqcCiG+m9yOVkgmhv9UujbK2fuN0GF+SMuCY1o4p8oUef94qV7R9NGKFEpF5xJrRMSl8hIaxQMDeFIADEUmd96n+Hn6ApqaEYwuKUniLWt238UIE8wve644ircVbez6ebXokQH0xExZDCoFlKY3wlZhQ71frqvoNeqIwx0gzbJiiCPFA8D08LRLb2MQrqJPelkDH/uBc1y4nX0KxNrdxD65/rF+kEp75rDvV8rYW3zC9NsFWssZDgBvvcZtOBR268Z4yuVMHl7EJoQEjDF6mCNQp67jj2HWcND0yttj+DtlNvkZ8lJGSCYUTw+voxfsvAprQmSqiKeoSFOSfrlBCrBE9NezuG4EX1XKHvi6hULj70aomuyJTASMyT1aU5cObw7FPbE8MBvVMTYEK40Ec4h2L/d0eXH1pOBHf36Iz/7TNwtityJYpKyGWMc+rYoOoi82kX7hfWoQHfGsO5opGkDj3A==
+	7mOzp2ysw6qniaw1RJPGRKptUaTyssNL/Ph3dDxXlXWiwgDAnkt2vrz6+Nj/LyqygdKFgm42s+jIK4+NglbSnSv6wPCIwNaQ5UG58AEzOMyiiZJ1FeBe//pIEAuEpuJHM7OTtS9xn2kP3xBxVwqhzufoXnhZUbHX87eWqcfgY5G7fsuNpXfDgEl3I8R0tGtRjXYgkpFzU7cPGcfHgG6EqlF0eNIdzzZpI+QuW4d0hYf6ynUVJTHtwk+RnxfK3F0dw2z/rdkdQCPDKaUsZU2mJoJBkrauN7BcLQxJkLl1r6NbwN0mFlOfxDgE0j85VX0MiWzWuXUhUy0QHFPQY/UOJTLSIqb4fCrBnDJvdoAteC3zOJzaQeAkciIEojtli3JOX8UvZ6vpGSa8whcbgB33hvBoZ3uYemLt4vv5Q/sTUdBXX6Yx4+Fy38sa9wzN322gh1K2335oS+l7i/UOLEuCOMw7cDB84peO/iQVPBXuZ1KIsz3Jovgqs7icMKGJNp8sfCvFeZQYLntCuWd1s45+7vNKKtHwqV7JBEWddACyfKwgBpomDcYm+UciKyNZYGp9+RApSb2S7aoRr2U2Y2hnbjtPOXURx8WQdgJBBDCEh6FbFNtsHnDbzn6h9+zD7jsGuLD32oS3/r9TLGO2YTobF4/rqgMtiXCCzzAyQo17JC9dyeDqtOLibL7CLo5UGz75Eli7iW18RM8taY4yx9vjIfxQWTgQ1LMb/US6MHtA1ZuUyCUvuSJrFUq01WPxzC1J
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(366016)(11063799006)(3023799007)(56012099006)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(23010399003)(52116014)(376014)(1800799024)(56012099006)(3023799007)(11063799006)(6133799003)(38350700014)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QmFMS0JOK3BNOW0zWHIvSnV4UXZadjZ3VFM2NDlEQ25nS2pxYXI0VnJjekQy?=
- =?utf-8?B?OFFuR01zMlJjb3FwVjU2QzVQM1VYejRUc1d6TUFRenRvWXA3V1Z4dVpnTjAw?=
- =?utf-8?B?bG1Qam1hamI2Q1V5d3pyU3QrL1dvY05TWmhoUitRNU5ITS84UWxrQ2pXUS85?=
- =?utf-8?B?VkkvUHRIUndneVpocFdzN1RqbEU4V2ZsUkxqdjlMZU5heXV6eGNZc1lUM1Rh?=
- =?utf-8?B?c3FJVG5MRGVBYlgyTTIzUlV6ZzhZOTVNTHhMQmIvRXdQOXdMOXVvTkwwZlZD?=
- =?utf-8?B?MEhudVFXWlJjYlZFbVJ0Y2Q4Z1NOTFpyRFhFdHlCT0NkSHo1QW95a2VDY0NU?=
- =?utf-8?B?SnlnQmJ3VkhFeGkyK3JYRFl5OU9RZ0lkNGNka3pzaEtndWN3SjZMQnZPbGI1?=
- =?utf-8?B?SmVZTnY4aFlVV3ZOSnNRRnI1dlk0cDdrSklUaFpGQTdQV1RHRUZOU1RBN0FY?=
- =?utf-8?B?TTRIbUlzc2ozWTRLazk0UUZGOEZ2OHE4ZW9OWXBWbGJVZ1NPR1ZIZGhtMnoz?=
- =?utf-8?B?bWNxNmtlRTVPZmpUWDFScjRjSzRZbHpNYmNQZXhvTXJhZmFoQnhnRkVlSTg3?=
- =?utf-8?B?bFEvd0hidUFtQk0yb2NOZ3Y3Vmk5VEJWWWhJRkc4bkNqUHNPejVpWFByNkJa?=
- =?utf-8?B?Sm5nNVVmNVZlSzlyVzdtZUM3dkthZGJHaFZrNDQxMmZiUG5FTzRSUnpkRkJ1?=
- =?utf-8?B?U0VEcEdzd0U4ZFc3NEs0VTJlK3c2YUw1WGdZNDVjeFBqTEZseHNLSlFVMlNT?=
- =?utf-8?B?SjYyMVM4YlpxNDNEdXVaRWRReUlGR0o3NTcxMTF3bkxnZ0ZLcUNqTTJnNDFu?=
- =?utf-8?B?Q2ZaeFVaK3p4Y0lOa1ZpS3JnV3FXVVJWT1hOMzhIVlQwSkFqZEVxOTM1R21s?=
- =?utf-8?B?TUVRWTRST0FtY1dtM0xxbWpsY25tQVl4WHdzUTEwTmNDbUVad2MyWHZRaE4x?=
- =?utf-8?B?bDZINHBIZGRuUnFlYjcwY2NPMC95NFZUWVBNQnAxSGlRajhhUHVQZU1GbHQ3?=
- =?utf-8?B?bHUra00wR0w1RkhqM3lkbU0ydGhadnFXWko0dG9FaEZ4d0hRaERvcFVKUWNH?=
- =?utf-8?B?NzBmd2R1Q0wxdWdmaERZNVB4YkZQNWhjMW9DTVIrNW1hWWlFVWNZeWVHK1pS?=
- =?utf-8?B?c1NmcHJWdFpobmtWOVhSWERwY3UrK2pPZHF0Y1ZLMUdxTFRMc3kzTSt6RFU2?=
- =?utf-8?B?MlZ6citLZTZhTUJDRFBXUkNZRThXcjVCcmpUb2VwY3ZUcFZzK21lL3lBMWpm?=
- =?utf-8?B?ek5rSzc3Sk1lRWQwalVpY1R6bjdWVktObzNla1dBRXdzbERBQ25Xc3NYbDRV?=
- =?utf-8?B?dW1scHB4c2JzUElYdU8yZW9ZOTAyTkdXMUtFTXBhUFlEWXZkNnQ5dk5ORXdt?=
- =?utf-8?B?R1NkeG1WVHdsZithdHVvU3BiZmpVTjdsWjhVYVlQb1h2YkhxT0lVU3pkTkJm?=
- =?utf-8?B?cDJPRmRnNXY5VTUzYTVhRVpXejlTNVdPaURIbDJ1TGhWSDFQaEpYQzloNDRU?=
- =?utf-8?B?WS9ZZVAwZmlFM1BSWHN6ZDFCMmdYazIxZWNFMXNLQnozQUdUenBZMFQwZkRh?=
- =?utf-8?B?SHlXbnRvM04zZ0IrRVdnSlBkM3loZUJDSGJuTktSTFh6c29HNllkeGZUK3Vz?=
- =?utf-8?B?SXk3SmpJcG1TQnk0M3VDczduUTcwU1RTRVRidXlSQ25SaTJjbU9FbFZGdHhW?=
- =?utf-8?B?TXJQak9OUHdrNWRGVzZxMy9yU0hyU1MxanJpYjVDQ2hMU0ZxRWVRNHh6RnRP?=
- =?utf-8?B?LzdvZ05lVmlrc2EydFJDT3FYbTEvbVpaeUdPY3FpN2tOb1hCcDFPVktlU1Zp?=
- =?utf-8?B?UHE2K2dpbTNsS296UlJrT2loSkhmWTNIbTFnU3RKR1FBajQ5cVF4SE1tbVB2?=
- =?utf-8?B?c2dWUjFwUmxBSnltR2RjVWwyQ3ZGRGNjMHFqd2FPb05CNkI1WHJlY0NtREVK?=
- =?utf-8?B?VHFsZFhmc3grcDZOWnYxYklrYTg2SDE4RU1pS0Jya252OHNOMXlOTlZhMVVp?=
- =?utf-8?B?b1RKNnlVblZiVmsvWUZZNS82ZXhSV2hQVzV3RjFQbnFlLzJ3cDVFQ2poQm5D?=
- =?utf-8?B?bjJaVHBJblhXTW1JWklta1lkcitoaXFod1QrclZPc1BpYjV4NEh2TXZnbEhT?=
- =?utf-8?B?Q2gvZmw0dUVOZndZNVllTzBMK0R4Z0tWK1JyL1g5dGM0cEFmTEhFMWVmOWpB?=
- =?utf-8?B?VVBwRGthcVFHZ3JZaGhVU3A0RDI0Q0kvNXNSMXhCK1ZOeDhKTjBqWkZtazJM?=
- =?utf-8?B?UUozeUpQOS9tRUVFcXoxUkovbEQ2dlhhWEc1R0ZaTWwwWHQva3g2UUpSdkhB?=
- =?utf-8?Q?IxmmqwNy0NRCcijY7f?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 81bb7502-c4c8-4724-7cfd-08decd6c95ac
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
+	=?us-ascii?Q?NcrQUZog8xo/tLhMfNX3SG5JbIDJfiS6k/LmL8dPSt8DF9E7XYNSWvHvRege?=
+ =?us-ascii?Q?dNu4agWWODeLjOdJA8alqg2XdYWbLI2jaE2Hcn8ItqyoHmSOoQTDToCxusH5?=
+ =?us-ascii?Q?ghYUs4bPq/QSCVOSkbfyGgI1+aJTwElXqqGqHlxz81bPH5bQWQvZ4x3uNjkL?=
+ =?us-ascii?Q?3auuEndSL4uEUmgdiSKJTGN7ZUR8dOIxti8EnYvjZpSXU4yYMoL23Bgj3OVC?=
+ =?us-ascii?Q?iVpeOCCFBIxPhYAXzpLMaBC8Z2BHLS+2xKHLksf6c1jJOejXmUKGkuK9QO+f?=
+ =?us-ascii?Q?sfzv64/6lKGS3AONmypr0YBkehJZNEN9NCCXsS6E1ZtvvN0rZ3RqptAtArER?=
+ =?us-ascii?Q?NF7kJvxcd1KAKGbi4/t1w1y8GS5f0Rxmm0Q9doWmXK4C7Cl5031lR5ZFuWwP?=
+ =?us-ascii?Q?61vzAfCKdXdjLlQ2G7LXdj5nvWSPLDzDyOLy6D9ntaWFqtJ5pWOluPJN5/Je?=
+ =?us-ascii?Q?T9ORE7FSZPyvFWQ7EiBsVGbwewZlxZFEFjde7W+xhpb+gCoi+glyTUmAZ6OX?=
+ =?us-ascii?Q?daHR4ifdhwUYBinigkLYRrCKL+x6EsPAjQh0+7QzOFvEJaXwgUbfS/PtClf/?=
+ =?us-ascii?Q?yNTMOEGDcsCTf0kbH5j0EzRHdNhwPDHR8kMJ8yUZNPmnMLpPNrYjysTwIxvg?=
+ =?us-ascii?Q?ZmhtJtucBuwCemG8tnkcZvkSsz2eQ+K8XagJEL459U38cNqgRW1jC4OdOHzq?=
+ =?us-ascii?Q?V6EreW4bO4Sp4qv4gPzokVq7xklA8psd54isyPTGpusCrpuVvW8LJmauWIfn?=
+ =?us-ascii?Q?erKUydsbN/fXGz6fcgPccrEjw7acPsVmFCKSLGQk/uvVzdwelxCZbDKRKsH1?=
+ =?us-ascii?Q?KXkvTXgKANe+qr8xXbkMAdjppttO4LtuCvLLFGGME5+NcnxSjpS72lbeNLbm?=
+ =?us-ascii?Q?QWv8kPy7fJsMmiYWticpOHLP5cpUy+C/3i9CZE/Yj19rNGakNOXDIGR3BdoO?=
+ =?us-ascii?Q?oHT9gtN85x2OpDUp5mtRK1VZliPV13zj5P/EHCha6NjlLJ9VttBjUlUSypTn?=
+ =?us-ascii?Q?Qi/y8rvtQLvTQCigsHTGd1/FhDujmgd7JOkUaN6xDAXGIZHEqVPcU0vJFnKZ?=
+ =?us-ascii?Q?MmOAypRPIpPvhKgvXtMbLfWnEjkahgRrWq5D8lj+RwOgXXSCYABzITzba0o8?=
+ =?us-ascii?Q?csqPVr+IvdQRpiiP8IsoW374YJmo9RWKiTz2GSqB10bzAN6iUVQjaKaeIv7L?=
+ =?us-ascii?Q?TE3lmiyEO7ZgBIdNyhMr7Ov90HmGWo0IdYXoiQqoH1NH3hHDf/mdR4m9+rxI?=
+ =?us-ascii?Q?E7433WgEgiRb2jsQtfOoRt4YpN350VloXbIOLde9knlTpbGKqGM/QztT5ese?=
+ =?us-ascii?Q?9hexFHLkGcqxtwPLC1TqHhkzwXMyX2Dp7IOVmcwbiw0IzMqXoEjDrrLOMyIm?=
+ =?us-ascii?Q?QXlcdD8q5p6hnQzhH0H8nnEvBa4Dl8jIul6B1rcVlkdZ4BSvpW9lqOCBIsmf?=
+ =?us-ascii?Q?y4n1Qmq7p+w4l7GQCTZSnCeb7oOPOuRBtkSAh4O55NNdc1u5g7SiCyMA5E1e?=
+ =?us-ascii?Q?syhhmQeNBpiuaQcWX5cUKxICEfS22cm3F+LnB5Vx3+pVdZAVwvGzfrmF8KNe?=
+ =?us-ascii?Q?D2IWamgXp70oolDppCvP6wt4CqWCS3kEyZaaZflJ2QXRuZKaVtMokEVsFZOD?=
+ =?us-ascii?Q?fO/kC0Vavsd+KTkuJmMDGGZCbSMSyFt2M0VBbax+yOGp91PXW4By6SEKwopz?=
+ =?us-ascii?Q?yPRot/hlEmELneawr3MwtcFPikJv1xrW3mqQ5b301rSZJYveWuLh+lN0gGEB?=
+ =?us-ascii?Q?Qr0RhOesIN3gCTkpZNUp5f4ZJFHi1ic=3D?=
+X-OriginatorOrg: bp.renesas.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4a4265e6-934f-4512-06a0-08decd6d32b5
+X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2026 19:05:38.5879
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jun 2026 19:10:02.0809
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 53d82571-da19-47e4-9cb4-625a166a4a2a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /HNJxssmuH5/ZtZC3Gnytgmu6FiUpX2i/t9azmpYWK5Pke92M52nwdEDAZZZLcqnMUG++YXfhjyTmtA812XLtg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7584
+X-MS-Exchange-CrossTenant-UserPrincipalName: jMnwKZsdkD6ReU8M5egl9LRp3HoSIyi13ziGKlvqakrgdam/vev8jbwWXO9/s94qFgIZC4b5BU/wr1lAH27lxmNfygEl3oIJ8OhtVDgAOw4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9PR01MB17516
 
-On 6/18/2026 12:07 PM, Dave Jiang wrote:
-> v2:
-> - Added multiple DSP per RCEC support.
-> - Added boundary checks for reading MMIO
-> - Addressed issues raised by shashiko
-> - See individual patches for detailed changes
-> 
-> The series add RCEC Downstream Port Assocation Structure (RDPAS) parsing
-> support to CXL.io. RDPAS is an ACPI table that is part of the CXL Early
-> Discovery Table (CEDT) defined in CXL specification r4.0 9.18.1.5. It
-> provides the mapping between RCEC and downstream ports. With RDPAS, the
-> error device can be directly found when an error is reported on RCEC,
-> without walking a number of RCiEP in order to determine which one reported
-> the error. While CXL.cachemem is supported by RDPAS, there is no easy way
-> to discover the source id of the error and therefore finding the Linux PCI
-> object for the RCiEP. The intention here is to accelerate the discovery
-> of the error by directly locating the error device with the given
-> information.
-> 
-> This series is based on top of Terry's CXL error protocol series [1].
-> Looking for comments on the series WRT if it makes sense to add on top
-> of Terry's error handling for RCH/RCD devices.
-> 
-> [1]: https://lore.kernel.org/linux-cxl/20260505173029.2718246-1-terry.bowman@amd.com/T/#t
-> 
+The RZ/G3E PCIe controller does not expose the standard PCIe Slot
+Capability registers, so the generic pciehp driver cannot be used. The
+only link-state signal the hardware provides is the DL_UpDown bit in the
+PEIS0 event status register, which is raised on every Data Link layer
+up/down transition.
 
-I was considering whether this could possibly be reused for other RCEC–RCRB use 
-cases and lifted into the AER core as a generalized solution. However, as far as I 
-know, only CXL aggregates RCiEP reporting using the RCEC SBDF and leveraging RDPAS.
+Enable DL_UpDown in PEIE0 and hook up an interrupt handler so the driver
+can react to link-state changes: a device that trains after boot gets
+enumerated, and a device that disappears on link loss is removed. This
+provides hotplug-like behaviour without the PCI hotplug core, which is
+unavailable for the reason above.
 
-I think this will provide a useful alternative to walking the RCEC’s associated RCiEPs and
-should improve performance with scale.
+On a DL_UpDown event the handler acks the W1C status bit and schedules a
+worker that inspects PCSTAT1.DL_DOWN_STS:
 
-It may be worth clarifying whether this supports both RCH and VH modes. Also
-consider updating the problem statement to note that the current RCEC RCiEP
-walk processes the RCH downstream ports of *all* RCiEPs associated with the RCEC.
+  - link up: re-run max link speed negotiation, wait for the link to
+    settle and pci_rescan_bus() the root bus;
+  - link down: walk the bus in reverse and
+    pci_stop_and_remove_bus_device() each child.
 
--Terry
+Both paths take pci_lock_rescan_remove() to serialise against the PCI
+core.
 
-> 
-> Dave Jiang (2):
->   PCI/CXL: Add RDPAS parsing support
->   PCI/CXL: Enable usage of RDPAS to shortcut error device discovery
-> 
->  drivers/cxl/acpi.c             |   5 +
->  drivers/pci/pcie/aer_cxl_rch.c | 271 ++++++++++++++++++++++++++++++++-
->  include/cxl/ras.h              |  18 +++
->  3 files changed, 291 insertions(+), 3 deletions(-)
->  create mode 100644 include/cxl/ras.h
-> 
-> 
-> base-commit: a558d1571c0b3bb6b4a830cb2cd8f128cc5ef3e1
+Link events are only acted upon once the controller is fully
+initialised. A DL_UpDown latched while the registers are not configured,
+for example when the event IRQ is used as a system wakeup source during
+resume, is acknowledged but does not schedule a rescan. The
+hw_initialized flag, set at the end of controller setup and cleared on
+suspend, gates this.
+
+While at it, make probe tolerant of an absent device. Previously, if the
+link failed to come up during rzg3s_pcie_host_init(), probe tore the
+controller back down and failed. Distinguish this case with -ENODEV,
+leave the controller and refclk running, and let the link-up path
+enumerate the device once it appears.
+
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 153 +++++++++++++++++++++--
+ 1 file changed, 143 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index d86e7516dcc2..5a10422ced2e 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -34,6 +34,7 @@
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ #include <linux/units.h>
++#include <linux/workqueue.h>
+ 
+ #include "../pci.h"
+ 
+@@ -294,7 +295,12 @@ struct rzg3s_pcie_port {
+  * @msi: MSI data structure
+  * @port: PCIe Root Port
+  * @hw_lock: lock for access to the HW resources
++ * @link_work: work for DL_UpDown link-state change handling
++ * @event_irq: PCIe event interrupt for DL_UpDown detection
+  * @intx_irqs: INTx interrupts
++ * @hw_initialized: set once the controller HW is fully initialised; gates
++ *                  DL_UpDown event handling against events latched while
++ *                  the registers are not configured
+  * @max_link_speed: maximum supported link speed
+  */
+ struct rzg3s_pcie_host {
+@@ -309,7 +315,10 @@ struct rzg3s_pcie_host {
+ 	struct rzg3s_pcie_msi msi;
+ 	struct rzg3s_pcie_port port;
+ 	raw_spinlock_t hw_lock;
++	struct work_struct link_work;
++	int event_irq;
+ 	int intx_irqs[PCI_NUM_INTX];
++	bool hw_initialized;
+ 	int max_link_speed;
+ };
+ 
+@@ -575,6 +584,30 @@ static irqreturn_t rzg3s_pcie_msi_irq(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
++static irqreturn_t rzg3s_pcie_event_irq(int irq, void *data)
++{
++	struct rzg3s_pcie_host *host = data;
++	u32 status;
++
++	status = readl_relaxed(host->axi + RZG3S_PCI_PEIS0);
++
++	if (!(status & RZG3S_PCI_PEIS0_DL_UPDOWN))
++		return IRQ_NONE;
++
++	/* Clear the DL_UpDown status (W1C) */
++	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIS0);
++
++	/*
++	 * Drop the event until the controller is fully initialised. The
++	 * event IRQ may act as a system wakeup source and fire during
++	 * resume before the HW registers have been reconfigured.
++	 */
++	if (READ_ONCE(host->hw_initialized))
++		schedule_work(&host->link_work);
++
++	return IRQ_HANDLED;
++}
++
+ static void rzg3s_pcie_msi_irq_ack(struct irq_data *d)
+ {
+ 	struct rzg3s_pcie_msi *msi = irq_data_get_irq_chip_data(d);
+@@ -1107,6 +1140,47 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	return ret;
+ }
+ 
++static void rzg3s_pcie_link_work(struct work_struct *work)
++{
++	struct rzg3s_pcie_host *host =
++		container_of(work, struct rzg3s_pcie_host, link_work);
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	struct pci_bus *bus = bridge->bus;
++	u32 val;
++
++	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
++	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
++		struct pci_dev *dev, *tmp;
++
++		dev_info(host->dev, "PCIe link down, removing devices\n");
++
++		pci_lock_rescan_remove();
++		list_for_each_entry_safe_reverse(dev, tmp,
++						 &bus->devices, bus_list)
++			pci_stop_and_remove_bus_device(dev);
++		pci_unlock_rescan_remove();
++	} else {
++		int ret;
++
++		dev_info(host->dev, "PCIe link up, rescanning bus\n");
++
++		/*
++		 * Attempt link speed negotiation now that the link is up.
++		 * Failure is non-fatal: the device works at the negotiated
++		 * speed.
++		 */
++		ret = rzg3s_pcie_set_max_link_speed(host);
++		if (ret)
++			dev_info(host->dev, "Failed to set max link speed\n");
++
++		msleep(PCIE_RESET_CONFIG_WAIT_MS);
++
++		pci_lock_rescan_remove();
++		pci_rescan_bus(bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
+ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
+@@ -1217,8 +1291,8 @@ static void rzg3s_pcie_irq_init(struct rzg3s_pcie_host *host)
+ 		       RZG3S_PCI_PEIS0_RX_DLLP_PM_ENTER,
+ 		       host->axi + RZG3S_PCI_PEIS0);
+ 
+-	/* Disable all interrupts */
+-	writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
++	/* Enable DL_UpDown interrupt for link state change detection */
++	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
+ 
+ 	/* Clear all parity and ecc error interrupts */
+ 	writel_relaxed(~0U, host->axi + RZG3S_PCI_PEIS1);
+@@ -1384,16 +1458,21 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+ 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI,
+ 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
+ 				 PCIE_LINK_WAIT_MAX_RETRIES);
+-	if (ret)
+-		goto config_deinit_post;
++	if (ret) {
++		/*
++		 * Link is down. Leave the controller running so the
++		 * DL_UpDown handler can enumerate a device that appears
++		 * later.
++		 */
++		dev_info(host->dev, "PCIe link down, waiting for DL_UpDown\n");
++		ret = -ENODEV;
++	}
+ 
+ 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
+ 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
+ 
+-	return 0;
++	return ret;
+ 
+-config_deinit_post:
+-	host->data->config_deinit(host);
+ config_deinit_and_refclk:
+ 	clk_disable_unprepare(host->port.refclk);
+ config_deinit:
+@@ -1655,8 +1734,15 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+ 
+ 	ret = rzg3s_pcie_host_init(host);
+ 	if (ret) {
+-		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
+-		goto teardown_irqdomain;
++		if (ret != -ENODEV) {
++			dev_err_probe(dev, ret,
++				      "Failed to initialize the HW!\n");
++			goto teardown_irqdomain;
++		}
++
++		/* Link is down: hotplug via DL_UpDown will recover. */
++		WRITE_ONCE(host->hw_initialized, true);
++		return 0;
+ 	}
+ 
+ 	ret = rzg3s_pcie_set_max_link_speed(host);
+@@ -1665,6 +1751,8 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+ 
+ 	msleep(PCIE_RESET_CONFIG_WAIT_MS);
+ 
++	WRITE_ONCE(host->hw_initialized, true);
++
+ 	return 0;
+ 
+ teardown_irqdomain:
+@@ -1682,6 +1770,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 		of_parse_phandle(np, "renesas,sysc", 0);
+ 	struct rzg3s_pcie_host *host;
+ 	struct rzg3s_sysc *sysc;
++	const char *evt_name;
+ 	int ret;
+ 
+ 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*host));
+@@ -1745,6 +1834,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 		goto rpm_disable;
+ 
+ 	raw_spin_lock_init(&host->hw_lock);
++	INIT_WORK(&host->link_work, rzg3s_pcie_link_work);
+ 
+ 	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_init_irqdomain,
+ 				    rzg3s_pcie_teardown_irqdomain);
+@@ -1758,8 +1848,39 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto host_probe_teardown;
+ 
++	/*
++	 * Request the PCIe event IRQ at the end of probe to avoid
++	 * spurious link-state events during controller setup and bus
++	 * enumeration. From here on, DL_UpDown events trigger the link
++	 * worker to (re)scan the bus.
++	 */
++	host->event_irq = platform_get_irq_byname(pdev, "pcie_evt");
++	if (host->event_irq < 0) {
++		ret = host->event_irq;
++		goto pci_host_remove;
++	}
++
++	evt_name = devm_kasprintf(dev, GFP_KERNEL, "%s-pcie-evt",
++				  dev_name(dev));
++	if (!evt_name) {
++		ret = -ENOMEM;
++		goto pci_host_remove;
++	}
++
++	ret = request_irq(host->event_irq, rzg3s_pcie_event_irq, 0,
++			  evt_name, host);
++	if (ret) {
++		dev_err_probe(dev, ret, "Failed to request pcie_evt IRQ\n");
++		goto pci_host_remove;
++	}
++
+ 	return 0;
+ 
++pci_host_remove:
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(bridge->bus);
++	pci_remove_root_bus(bridge->bus);
++	pci_unlock_rescan_remove();
+ host_probe_teardown:
+ 	rzg3s_pcie_teardown_irqdomain(host);
+ 	host->data->config_deinit(host);
+@@ -1789,9 +1910,19 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
++	/*
++	 * Stop accepting DL_UpDown events, then drain any worker that may
++	 * already be running, before tearing the controller down.
++	 */
++	WRITE_ONCE(host->hw_initialized, false);
++	cancel_work_sync(&host->link_work);
++
+ 	ret = pm_runtime_put_sync(dev);
+-	if (ret)
++	if (ret) {
++		/* Suspend aborted; keep handling DL_UpDown events. */
++		WRITE_ONCE(host->hw_initialized, true);
+ 		return ret;
++	}
+ 
+ 	clk_disable_unprepare(port->refclk);
+ 
+@@ -1822,6 +1953,8 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ refclk_restore:
+ 	clk_prepare_enable(port->refclk);
+ 	pm_runtime_resume_and_get(dev);
++	/* Controller is alive again; resume DL_UpDown handling. */
++	WRITE_ONCE(host->hw_initialized, true);
+ 	return ret;
+ }
+ 
+-- 
+2.25.1
 
