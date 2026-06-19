@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 972C218FDBD;
-	Fri, 19 Jun 2026 08:52:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E93A218FDBD;
+	Fri, 19 Jun 2026 08:52:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781859173; cv=none; b=eXNjTJ1Enp9zavg8NNEVs9Gc0o+wr4mnT3ujaYL/IQ0Y+lY7qnwL+aQsGec3q/Rvasz3k6Mv2C64JernDBAyoXqvBaC6aYTQcvLwnXa0zrPiPdEhJJN3NGyyn8PpsxuzHoEjvU2i4nzMFXT+0VglVjZHgH0BP+oEu7DeFvaTe5I=
+	t=1781859176; cv=none; b=ZLr78aDbcC9co/G7793jM4kREJzkFivQIvx4+x8wXVghvE/AUlP/dEijGuGkLqHGHF+fsYCOtCW03N4wAAE2FTvIJRl25Ir9B5kpOc2nx1oxhEMEQzuHNXSHorB5V6OhdPKDy9H3YBf4j1qlkVHwO2HBZT6Nlw/tBeQFcQaqRmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781859173; c=relaxed/simple;
-	bh=SMbLqHpQBSHeWnaUElgUylOvX9Lrle48atcc8IMqjDc=;
+	s=arc-20240116; t=1781859176; c=relaxed/simple;
+	bh=4JWGb0h1kPyv8PmHZcxIucA20RtT8+EdLkS2uS/1Kn4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fB6mn0pjZH18P3gGnIVeIslorUAfFfr/LQrntE3NOdl5TDSO9etp8DOjed7p9EYOQu3KlyblZrs92NGFCyRTjmL14MxQi5GD5+Wpo3g1AdlGnkM8D724Ewlj1tvdmr3YHwrtebvSRFn2F0IDaaASHkg0lRXcNh+HVtrOJIU3qJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DKTFVmsq; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=gZoaNUA57ei9cOIsUuGypdI5Icptd4tnJSrYNkzC8PDVpts/+dUfi7kAbcpVPTNNaIRMPtm7f8amQqU+MgZSE6FLRJVoD8/O3HkfctwXa41PLFYcEEjW6ZSGvFs6YRYSvfOIr63RrycPvhNUwthIdKBXu2MdnrKg31z5FA6AQQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hwc1jwvY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DKTFVmsq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F27031F00A3E;
-	Fri, 19 Jun 2026 08:52:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hwc1jwvY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 927341F000E9;
+	Fri, 19 Jun 2026 08:52:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781859172;
-	bh=tdD9Lbn8DnP9ORvNg6BF8yTpuzPfY3PhHqazzEpZ/U4=;
+	s=k20260515; t=1781859175;
+	bh=P3BNww0MIQWHgiDqm6I3OydM0AXlT2dwxg9N+aqoSvM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DKTFVmsqqpUQeVsDcQRI2+mHxc40tQQX31wsazJdU7mPSkp4nIZwPsMEvb5yOb3Yd
-	 XLJvPT68y0mhSLLXXlH18zB/bPFJIs8hzvB2RcblqPwEPjLeYXwdqNtSxTAGCHcJnG
-	 5h1k9CxVtWTvdnRUVHT6oYIw5vq1FK+sirjpLsRzc++UBEaAFgCjplg7dvmyh38FiW
-	 s3YV5prWQ1Gelbbg3WOdht+385+3+m5ju74EiQkxCp9HHi+IbRlOowLdp4q2wpRFI9
-	 7LV0EQmGrEs0hNxTlkQuVFZK2ucrL62By7Lall3tEnIneRMgX1yc6nB8rN0NOfyMco
-	 +KtRsYjSckj0Q==
+	b=Hwc1jwvYHPp6vWYxt56G+85Za1i8S+y17Eh7vdimb4eH2mD0rMV7veUCOqDw4l1sa
+	 8orRl2QsApQt9pnuhNCN9G/sjkP1A1YUYCYJLf2NrTKq2yRRcEbDfCXsm+dLq4EIXY
+	 bIJ4ui8Aq4GZxxD8dBhHCxJ3ATkjNgwiQHO48YOJVsA3xmYb0RUmRr39/1SpXPgCXO
+	 vBXt/JHQ5FE83R3MVp7LTEazID3kiR9omAi2AhN3y5UGmIiNtVEs7WfYX687KfPrP1
+	 1gJ2QQ+D6gtYIvm3UAG28kVv0Km6Pk0pJBSyVOsmqSWyw1Up18mnGxioBHiNCFWX2E
+	 +IwTUGqUgMtRQ==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -50,9 +50,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v8 13/25] alpha/PCI: Use PCI resource accessor macros
-Date: Fri, 19 Jun 2026 08:51:48 +0000
-Message-ID: <20260619085200.3729431-14-kwilczynski@kernel.org>
+Subject: [PATCH v8 14/25] alpha/PCI: Fix __pci_mmap_fits() overflow for zero-length BARs
+Date: Fri, 19 Jun 2026 08:51:49 +0000
+Message-ID: <20260619085200.3729431-15-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260619085200.3729431-1-kwilczynski@kernel.org>
 References: <20260619085200.3729431-1-kwilczynski@kernel.org>
@@ -65,75 +65,45 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Replace direct pdev->resource[] accesses with pci_resource_n(),
-and open-coded res->flags type checks with pci_resource_is_mem()
-and pci_resource_start() helpers.
+Currently, __pci_mmap_fits() computes the BAR size using
+pci_resource_len() - 1, which wraps to a large value when the
+BAR length is zero, causing the bounds check to incorrectly
+succeed.
 
-While at it, move the pci_resource_n() call directly into
-pcibios_resource_to_bus() and drop the local struct
-resource pointer.
+Thus, add an early return for empty resources.
 
-No functional changes intended.
-
+Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
 Tested-by: Magnus Lindholm <linmag7@gmail.com>
 Tested-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
 Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- arch/alpha/kernel/pci-sysfs.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ arch/alpha/kernel/pci-sysfs.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 2330ab84d59c..5c29f1d2821c 100644
+index 5c29f1d2821c..8802f955256e 100644
 --- a/arch/alpha/kernel/pci-sysfs.c
 +++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -70,7 +70,6 @@ static int pci_mmap_resource(struct kobject *kobj,
+@@ -37,12 +37,16 @@ static int hose_mmap_page_range(struct pci_controller *hose,
+ static int __pci_mmap_fits(struct pci_dev *pdev, int num,
+ 			   struct vm_area_struct *vma, int sparse)
  {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
- 	int barno = (unsigned long)attr->private;
--	struct resource *res = pci_resource_n(pdev, barno);
- 	enum pci_mmap_state mmap_type;
- 	struct pci_bus_region bar;
- 	int ret;
-@@ -79,15 +78,16 @@ static int pci_mmap_resource(struct kobject *kobj,
- 	if (ret)
- 		return ret;
++	resource_size_t len = pci_resource_len(pdev, num);
+ 	unsigned long nr, start, size;
+ 	int shift = sparse ? 5 : 0;
  
--	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
-+	if (pci_resource_is_mem(pdev, barno) &&
-+	    iomem_is_exclusive(pci_resource_start(pdev, barno)))
- 		return -EINVAL;
++	if (!len)
++		return 0;
++
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+-	size = ((pci_resource_len(pdev, num) - 1) >> (PAGE_SHIFT - shift)) + 1;
++	size = ((len - 1) >> (PAGE_SHIFT - shift)) + 1;
  
- 	if (!__pci_mmap_fits(pdev, barno, vma, sparse))
- 		return -EINVAL;
- 
--	pcibios_resource_to_bus(pdev->bus, &bar, res);
-+	pcibios_resource_to_bus(pdev->bus, &bar, pci_resource_n(pdev, barno));
- 	vma->vm_pgoff += bar.start >> (PAGE_SHIFT - (sparse ? 5 : 0));
--	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
-+	mmap_type = pci_resource_is_mem(pdev, barno) ? pci_mmap_mem : pci_mmap_io;
- 
- 	return hose_mmap_page_range(pdev->sysdata, vma, mmap_type, sparse);
- }
-@@ -141,7 +141,7 @@ static int sparse_mem_mmap_fits(struct pci_dev *pdev, int num)
- 	long dense_offset;
- 	unsigned long sparse_size;
- 
--	pcibios_resource_to_bus(pdev->bus, &bar, &pdev->resource[num]);
-+	pcibios_resource_to_bus(pdev->bus, &bar, pci_resource_n(pdev, num));
- 
- 	/* All core logic chips have 4G sparse address space, except
- 	   CIA which has 16G (see xxx_SPARSE_MEM and xxx_DENSE_MEM
-@@ -181,7 +181,7 @@ static int pci_create_attr(struct pci_dev *pdev, int num)
- 	suffix = "";	/* Assume bwx machine, normal resourceN files. */
- 	nlen1 = 10;
- 
--	if (pdev->resource[num].flags & IORESOURCE_MEM) {
-+	if (pci_resource_is_mem(pdev, num)) {
- 		sparse_base = hose->sparse_mem_base;
- 		dense_base = hose->dense_mem_base;
- 		if (sparse_base && !sparse_mem_mmap_fits(pdev, num)) {
+ 	if (start < size && size - start >= nr)
+ 		return 1;
 -- 
 2.54.0
 
