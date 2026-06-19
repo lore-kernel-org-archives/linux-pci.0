@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5977131B80D;
-	Fri, 19 Jun 2026 08:53:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C2231B80D;
+	Fri, 19 Jun 2026 08:53:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781859195; cv=none; b=BEuqAXKo+IXi4NsMx/SB+D9TF3NbaZGOWjccCGiiR3m8yZcwlHgic+DBzih2P8e2Ty0A9Uq5I+HCm5Albq1ixEuIdALvDhm8CO3pX+q9f0aDeuUlyIf85dYB+8k5F6OiCNvLVYNqewxNMgBEsHD1y+Q0kzYb/9IJ2CWUa0X5kNw=
+	t=1781859198; cv=none; b=eIFMVOh7LiyLpEmw0bwq7zp+GKW0iukxyC2uEtVSDmwm57hRyo0YypHH0A+O4CsA87J/7vaPTJq8wM5vJNugs0stBbUDS8YhxnnEnzG4p0dtOeJPTgzy0CE3TrxAWP5IM+6nOXPpgbFAP305Fr0quv1+xnZmOqTW75UPa6uciow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781859195; c=relaxed/simple;
-	bh=liUo6UFeNd3e4lQPV4f1+4c+J0RRF2ZSA+DHUFe4Bn8=;
+	s=arc-20240116; t=1781859198; c=relaxed/simple;
+	bh=9nsneCVwEGuN6oQPt/2KSesL4c+Du9HSg08gFDKOmxs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BQe/agOT7FibIU9aWSnosrCXYWGja1wHUpmYPHUVrz16ZAKlRHhoaTxDDipI13SaCSMh5meOAV/1YhzbB6u6UG6Pdxb5um3z/xCZHXkP3u9SAO1hB7lYyzok7muRsEOf6qU3qwxQGUgESwfaDYKQ5V0q8pkRtx1j5uFZH6Dd8pM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nR9gEhQz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=u66J+8HzgqQBIqr+MkYISUjpu4u1tzgV14htSTD4QM6/z8reitP2A0H1rZ8ooGi7FskYFJMJcvRRO5AgDdn/GhZTcHyCF9QgrxBbq5F1adcZpMY1oT+0oYovnN6oYj1oLh2p7RuqNDWHS5+0JGM4P6cndW9NXfnzlk94e7hOB4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WPnZvpxY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nR9gEhQz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA2551F000E9;
-	Fri, 19 Jun 2026 08:53:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WPnZvpxY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AD481F00A3A;
+	Fri, 19 Jun 2026 08:53:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781859194;
-	bh=sskwaIOGPPfHiPAa1LaAJ6GSlFNS8/PzCMP/8IQx/ww=;
+	s=k20260515; t=1781859197;
+	bh=OD/K6TYwB6VdvSorvIdmiNjHyV31bpjL+a9MaOCS49I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=nR9gEhQzp2n4Yl8O4T7jOS4nEYX9Ls/GLG1h/NNfPGQ3Wb/nIoPOmFEhE7BO+u4GQ
-	 VHTAVC+AISgQC5lf7CrjHy12rLtHLBBKl3xkkHPwWiAkhjNwNgt9MkJ1i4GhpDJkSg
-	 fr9cRJ3IdR5WNJXJ2oHfNXlbeDggRMCvlDgidbJKNg657WDFHOLk2VnllTRRiRuyqM
-	 Q7Tcd5Sz1kkwRLZAdgcSS4MGvhmDwPQy8XHeswRSK7SOeqeFBHUDeIhq+zzFDI0WKD
-	 GCrlkoY/KEasAL3Qpt6zTN0Df+PLFBrPLvZzPbC9/9vrRQ1myMKVyYNmy0srSmHV1n
-	 TULMO9rJNXnkA==
+	b=WPnZvpxYsWFr3rnk5L32yO8HYtKAsK9nDXcmtPbu+MdHKCtypFslNgrP4uRW778Y6
+	 lCj4T1rGsej83Mvin/yJOkpjbiVh+c8rZ9sZ4Z9+e5rxJwLfh1YGmjUiXW4EkhH3UU
+	 JFyD0yN8rsWHl/fvRCaay5HFYo+yil6tW/i3BoSHdp4LmeskaizOl753pBp5wb5Wk0
+	 7qt/3uTvUbItEolF4wlZvVcEmKOuVEB425pLJPYh+dRdaH5uxnL+UElvrX1Yz8lMbl
+	 +L1vEDQCjNmMYzRrGxd9HGhoxIM2bf79ZICu4ZNbV85IdQV0ZJ9ZnBbyQUUDAtcXJ+
+	 GCGmYY+W84Vgg==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -50,9 +50,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v8 19/25] PCI: Add macros for legacy I/O and memory address space sizes
-Date: Fri, 19 Jun 2026 08:51:54 +0000
-Message-ID: <20260619085200.3729431-20-kwilczynski@kernel.org>
+Subject: [PATCH v8 20/25] alpha/PCI: Compute legacy size in pci_mmap_legacy_page_range()
+Date: Fri, 19 Jun 2026 08:51:55 +0000
+Message-ID: <20260619085200.3729431-21-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260619085200.3729431-1-kwilczynski@kernel.org>
 References: <20260619085200.3729431-1-kwilczynski@kernel.org>
@@ -65,66 +65,42 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Add defines for the standard PCI legacy address space sizes,
-replacing the raw literals used by the legacy sysfs attributes.
+Currently, pci_mmap_legacy_page_range() reads the legacy resource
+size from bus->legacy_mem->size or bus->legacy_io->size.  This
+couples the mmap bounds check to the struct pci_bus fields that
+will be removed when legacy attributes are converted to static
+definitions.
 
-Then, replace open-coded values with the newly added macros.
+Compute the size directly using PCI_LEGACY_MEM_SIZE (0x100000) and
+PCI_LEGACY_IO_SIZE (0xffff) macros, and shift by 5 bits for sparse
+systems.
 
-No functional changes intended.
-
-Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Tested-by: Magnus Lindholm <linmag7@gmail.com>
 Tested-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 4 ++--
- include/linux/pci.h     | 5 +++++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ arch/alpha/kernel/pci-sysfs.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9d1378700c3a..b8986a735a46 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1019,7 +1019,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
+index ae448a2e40c5..74c9145e0253 100644
+--- a/arch/alpha/kernel/pci-sysfs.c
++++ b/arch/alpha/kernel/pci-sysfs.c
+@@ -173,8 +173,11 @@ int pci_mmap_legacy_page_range(struct pci_bus *bus, struct vm_area_struct *vma,
+ 	int sparse = has_sparse(hose, mmap_type);
+ 	unsigned long res_size;
  
- 	sysfs_bin_attr_init(b->legacy_io);
- 	b->legacy_io->attr.name = "legacy_io";
--	b->legacy_io->size = 0xffff;
-+	b->legacy_io->size = PCI_LEGACY_IO_SIZE;
- 	b->legacy_io->attr.mode = 0600;
- 	b->legacy_io->read = pci_read_legacy_io;
- 	b->legacy_io->write = pci_write_legacy_io;
-@@ -1036,7 +1036,7 @@ void pci_create_legacy_files(struct pci_bus *b)
- 	b->legacy_mem = b->legacy_io + 1;
- 	sysfs_bin_attr_init(b->legacy_mem);
- 	b->legacy_mem->attr.name = "legacy_mem";
--	b->legacy_mem->size = 1024*1024;
-+	b->legacy_mem->size = PCI_LEGACY_MEM_SIZE;
- 	b->legacy_mem->attr.mode = 0600;
- 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
- 	/* See pci_create_attr() for motivation */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c56f2cf0d2ab..e37677a8dd3c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -27,6 +27,7 @@
- #include <linux/mod_devicetable.h>
- 
- #include <linux/types.h>
-+#include <linux/sizes.h>
- #include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/list.h>
-@@ -1169,6 +1170,10 @@ enum {
- /* These external functions are only available when PCI support is enabled */
- #ifdef CONFIG_PCI
- 
-+/* PCI legacy I/O port and memory address space sizes. */
-+#define PCI_LEGACY_IO_SIZE	(SZ_64K - 1)
-+#define PCI_LEGACY_MEM_SIZE	SZ_1M
+-	res_size = (mmap_type == pci_mmap_mem) ? bus->legacy_mem->size :
+-						 bus->legacy_io->size;
++	res_size = (mmap_type == pci_mmap_mem) ? PCI_LEGACY_MEM_SIZE :
++						 PCI_LEGACY_IO_SIZE;
++	if (sparse)
++		res_size <<= 5;
 +
- extern unsigned int pci_flags;
+ 	if (!__legacy_mmap_fits(vma, res_size))
+ 		return -EINVAL;
  
- static inline void pci_set_flags(int flags) { pci_flags = flags; }
 -- 
 2.54.0
 
