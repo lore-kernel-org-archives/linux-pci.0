@@ -1,196 +1,247 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011024.outbound.protection.outlook.com [52.101.62.24])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C16846F
-	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 04:02:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.24
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781841766; cv=fail; b=nyKvouya5ZXg+85DAwpTKdb7QfOz3/QezREZnuyZ2cWvYpBo1IP3fUVhFbIrXYSKnesLi1G9yJFxObY9/Id6MpwKwikkmT3lkCfbVngvZTAn0oSaHsr3vwegEdeN1HCFTkOIav+uZN1QUlNbrKdCOSBcHjgkdJ9/MJRMYv+NeCI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781841766; c=relaxed/simple;
-	bh=JkRBDB/GW6zfx3EBev2umFzOSI1rzg1V339/Gp1MDVE=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=snKtRRdDndw+rVGhAGertBdEKOx7LpZRtPlpz/LeJsMsdFy8yXgqSt7nQqfh1lGilwR72+5zdZftmdlmJURthdpduQB7gZe6VJ2slSqFTKp1u5WXkA5FdZS8puckzhHiNSuzvxBMiT6DXU+D+RTOCu4hVF5UhLeJJqKB5BtZjlA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=CzZcUJMI; arc=fail smtp.client-ip=52.101.62.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BCF1F4181
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 05:00:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781845221; cv=none; b=bsJthn8GEEbBQLu4ekE/AvI6U7vQefPLkCA5sC6kaqnjIDbLeEGHP7f7W1HNFqCGXLY/5mKYEc0LUo6nbj7uYq0LOEtjAqODTzuO/7u3CNpyW6cVHBuUBHx8TQOgV4NSSkwkJjScEyNPLWkP+umKpt7dwezmDTQ0l5ktVIv6agY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781845221; c=relaxed/simple;
+	bh=JrEE1G0VUJr48rydrwc5cx26KVF485AtW5fQEIMh6yQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UQDuFHUbjJw7oqShEED3GewyPmEhGdmuUpbMKBXmIeigFuMMR6n1ouJgTGW3kcMW0ipcAPbEZ/491GJKbokOXLre1icoJdQVfXTJWK3klGKeJ5OHdvboPykQUUXa3jV2Z3nJlOTUpvQQCQpxDR1LU79zR1dcpnxTbA0tLXaV8DQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XdZVve4x; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YpCpDXrb; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="CzZcUJMI"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UcPzpM+as+fI7nZE0BoCjw9dhvgrYc6tyiEzgsrukRLsCSPRlNu7o/4t4dHpNkyJIDG/nnrRfhPbyxDeMkjsRMs2KignuU7qZrcmiiAq4NjuI4XNgls7YzLKfwT4l9o1i07/JlkhSCkjxItAEtGaN5GO/QnjZUxVXZ8NuiDX3vj0IdcLOJCUUteClXlDT4ZbfWbtzovSezBtThtgtSxTPCCkKsu175gQOpkWbeYPgLH8gEdDzvkjW20t4eS8ZokrI8soqrYWiBp4bgP9IjLTN5DIzAYshZzTBptZvZrYuj174fzkQs0Rxcq8JOqn/NVCqhUOAemIdzP6hnIaiENprA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IDxNJc9adI0VDWwlghpAMWLwZBWQz/yvIjrpuKR5iTk=;
- b=AbExGMC4JwseVqIuDPh5LeTdPTJqIRmfwewe1fFUsYYRRFdWmh9sWWP1ZYFDtt6NqUXk97IHJR/qbttMNoV75zBKz9NAynXFP880JVQPHql0mxWatzaf72ircXOarJztUugN03arrHC1PanXyCPz/yqvyDH2iYwQKNIN8+IaoFc87teZg7dRIgfXFBS+AoVjjEOq1vbGIrdNftCSggRubW0mBnkvP0KlIVsx7whLwH6mHtSYF2wI1GAwF+JU8YwF7f1hKd5DzTmaeDApxrFz53Oclbfw+CkHXcONMMbhpF6+1k1HIZN6v/aYU5iv/7iPTxriBr2LbaLa3bG22Q4jRQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IDxNJc9adI0VDWwlghpAMWLwZBWQz/yvIjrpuKR5iTk=;
- b=CzZcUJMI5NjWnEhiBG29MzJRbozC4WijYWNBq0/0H6SZ3q50+Kc0hIg7ohADIGi5lPWViLAd1FBYMMlArSLNcH+4nSfwoyqltQgtf9O+ltK2vE+3Netomfl5xwXC3aSWQXPTuVVETcccuxN8sOKOnmDQC3OUb/ylPzrSNxsByak=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by DM6PR12MB4403.namprd12.prod.outlook.com
- (2603:10b6:5:2ab::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Fri, 19 Jun
- 2026 04:02:40 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%4]) with mapi id 15.21.0113.015; Fri, 19 Jun 2026
- 04:02:39 +0000
-Message-ID: <5f151d04-7364-4355-8fe2-122ee4e27227@amd.com>
-Date: Fri, 19 Jun 2026 14:02:31 +1000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/TSM: Resume device to D0 for CMA-SPDM operation
-To: "Dan Williams (nvidia)" <djbw@kernel.org>, Lukas Wunner
- <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
- Tom Lendacky <thomas.lendacky@amd.com>
-Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>,
- John Allen <john.allen@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
- Jonathan Cameron <jic23@kernel.org>,
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
- Yilun Xu <yilun.xu@linux.intel.com>,
- Zhenzhong Duan <zhenzhong.duan@intel.com>
-References: <7bdfaf14d7e5a466f3f650150c688a60e947a7a9.1781527060.git.lukas@wunner.de>
- <6a3189272d3ce_9b8551008b@djbw-dev.notmuch>
-Content-Language: en-US
-From: Alexey Kardashevskiy <aik@amd.com>
-In-Reply-To: <6a3189272d3ce_9b8551008b@djbw-dev.notmuch>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5PR01CA0046.ausprd01.prod.outlook.com
- (2603:10c6:10:1fc::6) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XdZVve4x";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YpCpDXrb"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65J2tkt3527737
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 05:00:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	pbWfbP8zOvWzwTkX5u+oI/cT928jr6o9nUUfDkalaCU=; b=XdZVve4x0Txwr9ho
+	eo6eABVK0Rvu13cNOZsk5Urgv6GoKsROYpTby+bJsaRhQduM/WJw0+1h1z2FlzQA
+	SFy6aDEIxSSDsH7bZOOUCdsAuCS/H4C+U0MvNcAlbZ32eUZYGGkaO5fp/vTHTuJf
+	gGgKUSMI1NLcmuyEM4nZHNUU+zui3me0ZIqCCbolZYkTAp0AW/uRtWsOi7yWZj1g
+	NwYXXpvanQbTaC58xxnB4d9nP9VRrLoR6QrCWCUvWq09UGAGnQ0r75G5qmZealgn
+	CbFswDbFQHzpH/m11jNhFfG0euxCvBmsd0UMNJQoCsL+mLLU1TwQsffkHkqSWKiK
+	h8LNFg==
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4evgtmkf1n-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 05:00:19 +0000 (GMT)
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-8423f544944so1192086b3a.3
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2026 22:00:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1781845219; x=1782450019; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pbWfbP8zOvWzwTkX5u+oI/cT928jr6o9nUUfDkalaCU=;
+        b=YpCpDXrbTH2t5rYfn+x4nfe8/s6hB+JIRQu80f+jllZ0S87upnCNHJBVyMdRmTUXPP
+         gNnPlpxCFvkgkRi6VRtP1Q3EgvqEJ70b0WXlKsTYzfhsDHBkZmneDPzCwcrOAUHH0E6L
+         5La9YregxYYLeCZcMJx0aYzghjw5KI+jTWqJTdldBKH+pfG9bLG5E05zvmIjVtnTZ6St
+         ptASZ+X451C/mHhDwibfnqMGd5oLi8vQD65y6oJOsBXlpz1mY4Pqarfzpjr7QgUdAxLq
+         bJUS/y7tXjwnd6SPJNqoI1G8jwiQcJ3P1r2LXEV+b9b2UnCN7nVzvuLz9B9PtcKbyML/
+         HMLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781845219; x=1782450019;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=pbWfbP8zOvWzwTkX5u+oI/cT928jr6o9nUUfDkalaCU=;
+        b=D9lpXLZ+ir7d7d3unfbGZYWez5KaAN4yqAn9iBzmZUktmhhE5tiGHjXRwx0/IcZDNf
+         y9fsHgJiAThI0MminY9//0YJyCbaf8fytY+5LtDFF4ijdgL+91kf42UipxTLYFRSOORl
+         bHJZon1YMLzb9/jSoTFkxkqdK6eOrg6D6SRySArUjrtUiIziePyFmiBtgnnnyt3qIhFy
+         dnsd25NlLLKhv3zz8ZACtxnYOv3OT9IeQZfKnL/S+kOF1M5lm1KwuRFg+r+BXShhP+MU
+         BaMb7IHhN2gwReS4T9NPI8mhxd6uNo/4t8cbsBqBmVvacQrbIiikfyDwwG0mJqPDmoWP
+         aRKA==
+X-Forwarded-Encrypted: i=1; AFNElJ+eNhcld3wxGG2FlkHVK+pU/1VCGSlzNiM9zXmbGQ54W6tTztUfYS5sM9D1EwlixDCJ2BlD8u58A1c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwyN8C/ndqIMqXdmXWk0XiIdKGIp5NzQlZRJZpe2WBObVJYN5zu
+	aog3h9/cXc4IDRJjcIe4Gr4ABe2qARnOeuyoiph4TrYodoY1PXDZd1qHNLnZNIWJbFFdmJR1cAw
+	jWuhINDLPZjvHiBwwc966xoaLctC495vS4DfEdjAjYpV300q4DV3fFZanXxCdq5g=
+X-Gm-Gg: AfdE7cnA0UQWdizMS9VXddGSuEB6Hi3OExbjkuDAThbbSXrY//pzIpRpVdIUZKshjeD
+	GKntedh2Sx6gmLoUBYkTx2TERoxFkqW83nMKg5CStqrOfwPL39RePxRhwC4ALpJiOvEs1ZvEcvE
+	+oOhhhvRrPmDeiH3iYPHiTdwqB4sqk3QjGOs62htJTmLwKnQ9tNcJzPXJoUIT22Pmewf71C2RuF
+	C8M1HpwcCwmxwLlH8kv15DiK+jsbCpfYqUGgpEULRU29Ql1JFHX5UL0IUg2rGnzOV2Ka4PkvKjs
+	cxcXHD/qUYUMBmh7OIkBcwd2AHZ7FaDsT0ojzs9UYURQIqv1R4CGD8o6mMHt0swty/nQbjrYF4O
+	4hCtbZVKIqtGDmmLlCRVufTdh9ZbCcVDR4HyhvRhiiyO4
+X-Received: by 2002:a05:6a00:b42:b0:845:313c:d6c2 with SMTP id d2e1a72fcca58-8455089ecc1mr2002765b3a.31.1781845218714;
+        Thu, 18 Jun 2026 22:00:18 -0700 (PDT)
+X-Received: by 2002:a05:6a00:b42:b0:845:313c:d6c2 with SMTP id d2e1a72fcca58-8455089ecc1mr2002673b3a.31.1781845218036;
+        Thu, 18 Jun 2026 22:00:18 -0700 (PDT)
+Received: from [10.92.198.124] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-845537ff8fasm872324b3a.31.2026.06.18.22.00.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 18 Jun 2026 22:00:17 -0700 (PDT)
+Message-ID: <6fc15f93-9ad1-4009-954b-37a96c021536@oss.qualcomm.com>
+Date: Fri, 19 Jun 2026 10:30:11 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|DM6PR12MB4403:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9485f25f-5c4a-43dd-d4cd-08decdb79ae1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|376014|1800799024|23010399003|18002099003|22082099003|4143699003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	eT8T9CorZyK3fvaMtICYRRHkfP+sLzqfW5Tz5sNMlQLx/f8bhv+GhQoDk1EzIe4IBtWarivmdSkdPhq8rPx2LZK1/l62rNuamCz1L0EHkrVVZuBEeG12nrzlpgto9O3U1jMIY6VvYGeXKomi30X04xen6PFGA/6Ol4AgZed0vOTOa5L2VziQBflskGLO+kuFhwtVeNj3WwJ2QmD0qYLWQ86sGCW4f2wzzNkz3Nq8Fa5h63DIUMHRXb9q0sT44Au/0wif3XX/81Cy3WX7MFsL5I3ZlcAzDGgWo8VEJP4A6RBOzPO+Z7uKcQeH9Z14UASMYwZEDgtKCs27DoWiYeH7wcvFsNihXa3WWOq1+Jz0hmGHDVljdmGxa3F0n44p6LXOanycxCklc7M2oJPzZsPK3g/FNBC3BbrNj3Or8HpfS4yqHz3WrxMDyg9KoZqSETO8fy7/uoGIez9YzZp34eOgKwy8yQ5xYIz+kccMFfqxElr+v+ALGU5ssDLVhvxJ0r0fIN3nrJDyJXgftDRsNxV0cd+Am2huUqbA4YxlGxGa4MSj4200gxxBblDCHjfutcIBgCVCojZakqCVy6SduVpKkGFAzslr5WSA/iDodiyBjCqspSwk78KfaqvewC1wmwpB
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(1800799024)(23010399003)(18002099003)(22082099003)(4143699003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZnJ5ZnNCV0RVVmE0d01LWElPc3VQQ3hYeUlLbVhXZ2k5U3FXSkhUbWFWQ1Fm?=
- =?utf-8?B?V3ExOENpeWdqb3prSVVVWi9TajVXcjhYT3luc1VxLy81QzU0c1dWaEN1Rnp1?=
- =?utf-8?B?OGhBYm8xOHRZbFpuMFZEcUdyTitjQWRNS0gyaTFlaGF6QlRYcVRWdjJmbFZu?=
- =?utf-8?B?Yzkva1o2TnJJMVpxUi9UWkhsVGJUZkVRRGpYMkljT1hNWm5xOTNoRHFBdzNa?=
- =?utf-8?B?b3RIQW9NeWE3b2t2dHVaRHExeW5VUUV1NG1GVDJna2NWMURJbG5Xc3RoYXJZ?=
- =?utf-8?B?bnN2RFlQYVNzTThOSXRQZmFDU3J6eTRqTGVFY2lMaVhOT1lDMXB5TFN4OWt5?=
- =?utf-8?B?MzV0WjgxbGxyVmF3bEdWSEc5QXRnYVRIQjNVTWE3U1BrUG9qSWM4QUdjQTdZ?=
- =?utf-8?B?aW4yeExNaDRuR1Jzb0MzMVBmNFZIR1RPbzZMOXp2NFVsd1VvUmdSYXU5VW1F?=
- =?utf-8?B?NUZqSkJGdjRON01pWm9QWGtPWDY2UW1lbUlDbm5zVmNNaW1lMVB5a25oaXYv?=
- =?utf-8?B?eVdRaktVMWZVZzJqRFhZd3l6aFRxRkdwQm05OVhYV25XOUxMM3hoOVorQVBO?=
- =?utf-8?B?SkdIemlubmtmaWVVQmcwMG55RlpKZUNTQVRVT29ncXhiRVZhRUJqRTJwVmIz?=
- =?utf-8?B?L1NNWjZxRHRuRVNBUjQ4RXNWcFNMMWptSStqdkNQZWxsTEpqaVdqOGJyZEtJ?=
- =?utf-8?B?WXZiMzdWRE5MWVVKVG5OWWZQNU9ocjNKMGFJMFRwV0VNd1lSa0VVaFdieGk0?=
- =?utf-8?B?SGRadlFBdnpMcjlRZkRWVUd0VnY4cHVhSzZMNk8ydmppRTM2OWdPWEI0djNQ?=
- =?utf-8?B?bm1TOG01OHhYU2Y1YUNMNTRmQUl4dkZITXRCemN1RjNIQ05jdnA4VXV0Qi9K?=
- =?utf-8?B?UGEyazR2WEVYRzVva1JoaUVmZE4vZzZpVGhEdFgrZmt3ZGljWTJuK01NVTdn?=
- =?utf-8?B?bythUFplc2p4VEVrMG9vL2xFbk9uMTRVN1FuenhKL2FiN0ZvWTE5VmlpYyta?=
- =?utf-8?B?MVROUlU1UVQ2L2YvNThtK25RaFVmd2NZbjhtMENPT1NtbnNlUzZBR01oZThH?=
- =?utf-8?B?aG5UYzQyZGFFdXNnVysvVGcrNy9EV0xGNDNKcms5Y1d4NFdrRytXT2FzWGUv?=
- =?utf-8?B?ZDVSc0VoRWtLaXA1dXNmSENFck1walVvbXdYMkpleE9lSWFQRHlESk0xajRq?=
- =?utf-8?B?RXBWa2poaHlRUzYvM1hoV21mVDZHend1UDZiMnJsRGtVRFpYYWZlSUlxUUNL?=
- =?utf-8?B?Qkk2ajgraEFEY3IvWmNoaTYxNmw5R1lKWDFMWWRUZkhTVEZsZE9BMWhPQ2tk?=
- =?utf-8?B?WFVzblpHMHRYZk9aNHowNlEzbVA5WlVNUVMyU2NqcVhUTGFwM0lDclF5UEVP?=
- =?utf-8?B?SjVOMy85R2daWXFzS0gvcCsyb0ROTXU0eTA1WVhwa0l6WU1JRURta201Z3FM?=
- =?utf-8?B?QkUrWm5OWUo2V0J6NkQzM3RmYXZYTDYrWmJTTkVSUXdpOVJtdUhOYytReUZ1?=
- =?utf-8?B?NGFSQTNHMCtZSzVyV3l1MjhMNHRVY1l0RGFSdnRwNXg4S1ppOGdsc0NJaCtK?=
- =?utf-8?B?VXdjb2ZqMXZaMktRc1VRNmFRZ1hNVFQ4WFY1aUR1RVpVSnRramM0QnBRaCto?=
- =?utf-8?B?d1E1K2tKcGVlRlpXVzdaYmU2V2ZrMlo0bDl1ZzlrTEgxbnU0TndjV2l4K3ZQ?=
- =?utf-8?B?clNoMmNTakd4bDB6UytrOVZPWWVZS3NmbHNuaVJzM05uVVNyVHpDMllOZGNF?=
- =?utf-8?B?RVl3MUVlNnNUaVNLY3F0N3o2SDhGaEFlTGdnclYxSEVWeEZJdndtOWpETDZv?=
- =?utf-8?B?alFBT3llTFNJdEcyLzBMUE8xWW1vcmFsOW9UZUpyUEUraGVLbkVoL2VkM2VU?=
- =?utf-8?B?R2NULzNVakJ0ZGtqaFhuZ2tUMmhrVVhkMHg5a1NuN3BSV3BQajVicEdBdy9l?=
- =?utf-8?B?QVJUbEtmS25kWjRkdnRoMHlObFY4K2RESFZlZVNLclhzSW5xMC9yRXJUcmRB?=
- =?utf-8?B?SUF1RUZtQVJySmxaaldnbDJnL2dseTdNOTFjYmZjSWJHKy81OXhZbXI5NXlk?=
- =?utf-8?B?Ky9rb2IvVmh5eVluMjY3Q2Q5YUNnYXB6RUswOGRCUXB5NmlyY1FOWStaUzVC?=
- =?utf-8?B?bkk0VXByMjBwNWhzdFU4VGtpMjFIT2FhcW52TFhPdjBrK1kyaXM5M2hKMlJ5?=
- =?utf-8?B?VUQ1Q2xoSFhoMjB1K3FmcGVCc0hDcWFMMi9FM2QrVVR0Ykg0VHA0VzNXRTRp?=
- =?utf-8?B?NytkcXVjV0F2QVArSFRZamNpZVgwMU55SGlsWHdMVmNYZEhZSEkvam8wZVVq?=
- =?utf-8?B?YzR2ZHI1L3U4RnFkNEFEMTZra3BjWGR0V0JvNldTVXM3RjBVMWR4dz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9485f25f-5c4a-43dd-d4cd-08decdb79ae1
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jun 2026 04:02:39.5031
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JgKsDp5OJymHJ+7Nq+UXJN1kBawjVVZr4iMcRhTPUBLrH4e+od+ljrzu3H4NXjwW1ajZqXJGTMXH/4p/i2Gc2w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4403
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/4] PCI: qcom: Add link retention support
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Qiang Yu <qiang.yu@oss.qualcomm.com>
+References: <20260521-link_retain-v2-0-08ed448b081c@oss.qualcomm.com>
+ <20260521-link_retain-v2-3-08ed448b081c@oss.qualcomm.com>
+ <8bb365dc-25b4-4fe3-8ad9-1f110bad2417@oss.qualcomm.com>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <8bb365dc-25b4-4fe3-8ad9-1f110bad2417@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: RJwROIaeRHvq3GA8sGwekcSda5b95_Vm
+X-Proofpoint-ORIG-GUID: RJwROIaeRHvq3GA8sGwekcSda5b95_Vm
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE5MDA0MiBTYWx0ZWRfXz6H/rXxWNFYM
+ Wf67HnzoCWd9rPuPH0XweD/ELUFjd9nglZFEuL8HrvLxsoF8TX/nDkCzLuhVcGgirHIv7qpwBna
+ oyknlaOkZRKrvkmw2JSw1P4wlGRZAyhtBK9q5jiLYmE6ZppGNX0WR3bUwDZi/8+jOdupdS6Xfy4
+ Z1WIsbyXnEl/hVemp5P4Tfquw/Ol8Cn8nSXhWbRNEHtdVtPpzo896xUoHZETkNYtCvRiXDy1nna
+ sdhh4cGK8zogZdWgh0PxnexAySL1xQ847GimO1V6mKRc/e+n42zPaWjJ/zJL7epxvaCGTXb5YoR
+ Fef25fbRFpdQAY5Ruplo6QH1IBhVFMUnQgB2TDNTpw3UJkLRfRws7BKT+NYPArb7FB+C//+rhO2
+ diSo+zE25hmZgy7rtT/UU5CAhxjuw0XIkepurZ9ExQbl8nagXcoh60EeQ/qGRWyD2Cbx1lN496/
+ mpkCAObqdRt7BCS0ciA==
+X-Authority-Analysis: v=2.4 cv=Qb9WeMbv c=1 sm=1 tr=0 ts=6a34cce3 cx=c_pps
+ a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=EUspDBNiAAAA:8 a=Zlw8WEmqWycuYniGgb4A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=2VI0MkxyNR6bbpdq8BZq:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE5MDA0MiBTYWx0ZWRfXyidgiGodqmmc
+ H2bWZdhmOwIhRqR/3q2K8v+wUwT3PDbWGJYmiJNIwYCmFf68E/LrzgjKHvOHY4kIsHenRzdGxLV
+ aHr78OgmfPNO9grXeoVCiH0kPUkm2ww=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-19_01,2026-06-18_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 suspectscore=0 impostorscore=0 adultscore=0 phishscore=0
+ spamscore=0 bulkscore=0 priorityscore=1501 clxscore=1015 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606190042
 
 
 
-On 17/6/26 03:34, Dan Williams (nvidia) wrote:
-> Lukas Wunner wrote:
->> Per PCIe r7.0 sec 6.31.3, CMA-SPDM operation in non-D0 states is optional.
->> The spec does not define a way to determine if it's supported, so resume
->> to D0 unconditionally for the duration of a CMA-SPDM exchange.  Vivaik has
->> talked to Windows engineers and they said that Windows does the same.
+On 6/16/2026 5:38 PM, Konrad Dybcio wrote:
+> On 5/21/26 2:56 PM, Krishna Chaitanya Chundru wrote:
+>> Some platforms keep the PCIe link active across bootloader and kernel
+>> handoff. Reinitializing the controller and toggling PERST# in such cases is
+>> unnecessary when the driver does not need to retrain the link.
 >>
->> Note that for plain DOE operation, it is sufficient for the device to be
->> in D3hot and its parents in D0 because config space remains accessible in
->> D3hot.  So CMA-SPDM goes beyond the requirements of plain DOE and hence
->> resuming to D0 needs to (only) be done in code paths which use DOE
->> specifically for CMA-SPDM.
+>> Introduce link_retain in both qcom_pcie_cfg and qcom_pcie to indicate when
+>> link retention is supported. During initialization, check the LTSSM state;
+>> if the link is already in L0 or L1 idle and LTSSM is enabled, set
+>> link_retain and skip controller reset, PERST# toggling, and other post-
+>> init steps.
 >>
->> The pattern used herein for runtime resume is the best practice introduced
->> by commit ef8057b07c72 ("PM: runtime: Wrapper macros for ACQUIRE()/
->> ACQUIRE_ERR()").
+>> If the current link speed or lane width does not satisfy the constraints
+>> specified by max-link-speed or num-lanes in the device tree, fall back to
+>> normal initialization and retrain the link instead of retaining it.
 >>
->> Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
->> Signed-off-by: Lukas Wunner <lukas@wunner.de>
->> Cc: stable@vger.kernel.org # v6.19+
->> Cc: Vivaik Balasubrawmanian <vivaik.balasubrawmanian@intel.com>
+>> Configure the DBI and ATU base addresses in the retention path, since the
+>> bootloader may use different base addresses than those provided by the
+>> device tree.
+>>
+>> Also fix the -EPROBE_DEFER error handling path to return 0 instead of
+>> propagating the error, avoiding unnecessary cleanup when probe deferral is
+>> requested.
+>>
+>> Tested-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 >> ---
->> We're in the merge window for v7.2 and this isn't super urgent,
->> so it's targeting v7.3 via tsm.git/next.
+>>  drivers/pci/controller/dwc/pcie-designware.h |  1 +
+>>  drivers/pci/controller/dwc/pcie-qcom.c       | 62 +++++++++++++++++++++++++---
+>>  2 files changed, 58 insertions(+), 5 deletions(-)
 >>
->> Technically I'd have permission to apply myself,
->> but I wouldn't want to without acks from Dan and AMD!
->> Thanks for taking a look!
-> 
-> Thanks, Lukas. A few questions:
-> 
-> This says Fixes, but I assume it is based on inspection and not a
-> report?
-> 
-> There are no upstream usages of pci_tsm_doe_transfer() yet, but the ones
-
-I am not convinced this is a very useful helper but I'll post a patch to use that instead of calling pci_doe() directly :)
-
-> in flight would suffer from the "D0 -> D3hot -> D0 -> D3hot" bounce that
-> you described to sashiko. I.e. the runtime acquire should be done at a
-> higher level.
-> 
-> I think the natural place to add PM_RUNTIME_ACQUIRE() that covers all
-> cases is withing pci_tsm_connect() and pci_tsm_disconnect().
-
-Agree, although the AMD chunk of the patch would work too.
-
-
-> I also think failure to power manage the device in the disconnect path
-> should not be fatal to performing the rest of the cleanup.
-
-+1.
-
-
--- 
-Alexey
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+>> index 3e69ef60165b..be6c4abf31e8 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>> @@ -450,6 +450,7 @@ struct dw_pcie_rp {
+>>  	bool			ecam_enabled;
+>>  	bool			native_ecam;
+>>  	bool                    skip_l23_ready;
+>> +	bool			link_retain;
+>>  };
+>>  
+>>  struct dw_pcie_ep_ops {
+>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>> index bfe873cbf44f..b061eaa227b3 100644
+>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>> @@ -253,12 +253,14 @@ struct qcom_pcie_ops {
+>>    * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache
+>>    * snooping
+>>    * @firmware_managed: Set if the Root Complex is firmware managed
+>> +  * @link_retain: Set if controller supports retaining link from bootloader
+>>    */
+>>  struct qcom_pcie_cfg {
+>>  	const struct qcom_pcie_ops *ops;
+>>  	bool override_no_snoop;
+>>  	bool firmware_managed;
+>>  	bool no_l0s;
+>> +	bool link_retain;
+>>  };
+>>  
+>>  struct qcom_pcie_perst {
+>> @@ -960,6 +962,42 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
+>>  	return 0;
+>>  }
+>>  
+>> +/*
+>> + * Determine whether the link established by the bootloader can be reused.
+>> + *
+>> + * Reuse the existing link only if its current speed and lane count match
+>> + * the max-link-speed and num-lanes specified in Device Tree; otherwise,
+>> + * retrain the link.
+>> + */
+>> +static bool qcom_pcie_check_link_retain(struct qcom_pcie *pcie)
+>> +{
+>> +	u32 cap, speed, val, ltssm, width;
+>> +	struct dw_pcie *pci = pcie->pci;
+>> +	u8 offset;
+>> +
+>> +	val = readl(pcie->parf + PARF_LTSSM);
+>> +	ltssm = val & 0x1f;
+>> +	if ((val & LTSSM_EN) &&
+>> +	    (ltssm == DW_PCIE_LTSSM_L0 || ltssm == DW_PCIE_LTSSM_L1_IDLE)) {
+>> +		qcom_pcie_configure_dbi_atu_base(pcie);
+>> +
+>> +		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>> +		cap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+>> +		speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
+>> +		width = dw_pcie_link_get_max_link_width(pci);
+>> +
+>> +		if (pci->max_link_speed > 0 && speed > pci->max_link_speed)
+> I think I raised this concern already, but this goes against what
+> max-link-speed is supposed to do, i.e. this will not retrain the link if
+> the bootloader had initialized the link to a speed faster than what the
+> DT requested
+sorry for the miss, it should be speed < pci->max_link_speed same for width
+check also it should be width < pci->num_lanes I will correct it next version.
+- Krishna Chaitanya.
+>> +			return false;
+>> +
+>> +		if (pci->num_lanes > 0 && width > pci->num_lanes)
+>> +			return false;
+> Similarly, this should be ==
+>
+> Konrad
 
