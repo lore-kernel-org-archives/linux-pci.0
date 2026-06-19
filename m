@@ -1,80 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-07.mail-europe.com (mail-07.mail-europe.com [188.165.51.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507BD311940
-	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 09:29:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9758A24B28
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2026 09:34:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.165.51.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781861356; cv=none; b=o/YhKOEO63y+G8HVBsJ3cmuqRjlEGuXZQ2r0dLq4NegkKzJIiwWdDpBngSv0ySqv15e1VcGWGP4ZU3r34zjqezVWTE0MsbvVVJCUBsQpDEV+UcQnSRElRMWXkiT/YD9aZYOmu7oTC9+lEdDMHFoOdqrUhPqTU1yrFKc5J/8LLFA=
+	t=1781861647; cv=none; b=myR4Bg1DqumjJUQiZejMMaTj9DNECSZ2V1aF1/aPDafL2QxlLuW21SrxwhVIfBmbr8hPDpb/u9SlyWvVEMPI3XYoNtmQ0feSdXoyAEWSOz1+hgmXlL8kiFP+TOlMLVGw6OadNq8w0ulPAlGVeVe4g8nn2JDpvV+xRnSM533xYSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781861356; c=relaxed/simple;
-	bh=B6LvXjbT7FKuwBKIaTYCglWoDAbKG4xY+ypId53r3eU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IkfqmN5SzqXYbYTfy+b/kPjO0rPG4VGIVttLfh5OCjcxQYDv0poZvcb11C4Lu9M9UJI5VcV1s37a04fozJteE1do2o/ixtd245qUl3CMPWCyVgjEVarJ04G1YCZiLd/ttN949kwtiRNhhqHsE2vR12xUpSukZRhBRmLjx1QPObs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKpqsERo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781861647; c=relaxed/simple;
+	bh=cyvSvhiaqTaMNYzue2fNLFFrGZcTCJ32AKSlK8y287o=;
+	h=Date:To:From:Subject:Message-ID:MIME-Version:Content-Type; b=tgKBQkR/7oOxIj1A7xIHOrD5k0b4bXS19RHmdE+G5Wf0UfKsD4A3GhBLf5OqLQt+5RoRkvqoJYrBmp+UfAWTy+euBwWj7jNTQk8kGJcg5lLzURHPVrhp1TxW+g2UsMshVPf/HSVqU7FN0ipWdh3YxgToAy2A4KfHRsfiiD/CtHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=makuru.org; spf=pass smtp.mailfrom=makuru.org; dkim=pass (2048-bit key) header.d=makuru.org header.i=@makuru.org header.b=hEYObVY+; arc=none smtp.client-ip=188.165.51.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=makuru.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makuru.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKpqsERo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC43C1F000E9;
-	Fri, 19 Jun 2026 09:29:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781861355;
-	bh=EsAx2Zg4GeWGvTNcV55yfevhfK8y7cZKFL4Voz022WE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eKpqsERo9If9Fk4r1mJY2ZQ3N9962lc6W1zgRGdkLjLDXWClS5DlAekbfXV779W+N
-	 NuTCPQlWEpVwg+nOwydkH2HL9maAUar2uGZwX72PEjQdsrq7Jm/NPj+Y6h3xn5yHff
-	 Ym1J8L/awcvhLjTF6XHeZ7SYF2Rwo+k6wa8G9NLbX+/aVJa/0UKB8ywgORM7JhWtb6
-	 xSorgQ+B2UjanL1oC0G+6RrMLXCZ+KmLzFSRVpbj3HpdG6a7qPYKpXl+aLITp15RIU
-	 LEbrGj6M+LvEPCEHFZNFiH1/Pbw07Vw6hrSpSZHH4rGEFCfEvGj1atCNyI8zxnXKhH
-	 FrqDQUl4iTO1A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 25/25] PCI/sysfs: Limit BAR resize attribute scope to
- platforms with PCI mmap
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260619085200.3729431-26-kwilczynski@kernel.org>
-References: <20260619085200.3729431-1-kwilczynski@kernel.org>
- <20260619085200.3729431-26-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 19 Jun 2026 09:29:14 +0000
-Message-Id: <20260619092914.CC43C1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=makuru.org header.i=@makuru.org header.b="hEYObVY+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=makuru.org;
+	s=protonmail2; t=1781861633; x=1782120833;
+	bh=PuRKsREjeaFtFSF4V81B80R0zSoks2qeUOco5cBMa7A=;
+	h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=hEYObVY+nSoHoYNnWuyPXbOHtj0t0Qqs0AE42tk41rTvLSTsSlxkWPkeYAv3HfQ26
+	 51SEHBnThqQVoESvMsWNK+240bTMoLz6Ao8jHvgHZNKZXGztbvLGt6/W9ibzfeR7bP
+	 f5QYvc2KMz+yGyMlaHXYDSjRsduMLLKUVjw0ktbyEsA6mUpW4QBqrUCj+VAM/uL4Kk
+	 /rq+2tGprhd757jtN6UX6PfgWz0Ix0uHpbERCtkcVwf6Ax8dzH6Gezu6ojALP8Awbz
+	 5IZqyHBe6us4bem3xDUoWqBgpimG6RTgvCEizlMoCl5LYM8KHRzg2w+/MFGSo9Xs34
+	 FY+G9tKTZfoIQ==
+Date: Fri, 19 Jun 2026 09:33:50 +0000
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Makuru <makuru@makuru.org>
+Subject: Faulty hardware, where PCIe SMBUS SDA and SCL is switched.
+Message-ID: <U9GMZSNHpMAh-uiCxTqZk4-BgUTjtFoiSUUtu3e2v3TwWl0r4BoXsMvGJMISQ6Jqf-n10m95at5FCzGrIa9NzUYP6HzGJU3w7bt3zV_BmIw=@makuru.org>
+Feedback-ID: 111662550:user:proton
+X-Pm-Message-ID: d84e891bdf3c2dfb965918f493d20059cd4c84c9
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha512; boundary="------499cd641e4bc532b7384712057c189c16ae2d45ed65e89018ada328d7e52e671"; charset=utf-8
 
-> Currently, __resource_resize_store() uses sysfs_remove_groups()
-> and sysfs_create_groups() on pci_dev_resource_attr_groups to
-> tear down and recreate the resourceN files after a BAR resize,
-> so the updated BAR sizes are visible in sysfs.
->=20
-> The resourceN files only exist on platforms that define
-> HAVE_PCI_MMAP or ARCH_GENERIC_PCI_MMAP_RESOURCE.  On platforms
-> that define neither, pci_dev_resource_attr_groups is NULL and
-> the sysfs_remove_groups() and sysfs_create_groups() calls in
-> __resource_resize_store() become no-ops.
->=20
-> Resizable BAR (ReBAR) is a PCI Express extended capability
-> (PCI_EXT_CAP_ID_REBAR) that requires PCIe extended config
-> space.  Every PCIe-capable architecture defines HAVE_PCI_MMAP
-> or ARCH_GENERIC_PCI_MMAP_RESOURCE (via arch headers or the
-> asm-generic/pci.h fallback).  Architectures without either
-> only support conventional PCI and cannot have any ReBAR-capable
-> devices.
->=20
-> Thus, move the resize show and store helpers, the per-BAR attribute
-> definitions, and the attribute group behind the existing #ifdef
-> HAVE_PCI_MMAP || ARCH_GENERIC_PCI_MMAP_RESOURCE guard, and fold the
-> group reference in pci_dev_groups[] into the existing #if block.
->=20
-> Tested-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------499cd641e4bc532b7384712057c189c16ae2d45ed65e89018ada328d7e52e671
+Content-Type: multipart/mixed;boundary=---------------------5c326699d1c5df9522f7f2d2f8e1ddd8
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+-----------------------5c326699d1c5df9522f7f2d2f8e1ddd8
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260619085200.3729=
-431-1-kwilczynski@kernel.org?part=3D25
+Hello, I am new to the LKML.
+
+I have made a bit of an oops, I am developing a board and somehow screwed =
+up the wiring of the I2C of the PCI Bus.
+I tried fixing it with soldering, but that is extremely hard as there is o=
+nly 4 mil or 0.1016 mm space and width between traces.
+
+Here is the project of the "ad in card": https://github.com/makuru-org/FW1=
+6-MCIO
+
+TLDR: I see maybe two ways of fixing it with software and want to know if =
+the LKML sees them as possible.
+- 1.) Switch the I2C pins in software somehow (Don't know if possible).
+- 2.) Initialize the hardware without a valid side channel and purely PCIe=
+, RST and CLK connection.
+
+Hardware:
+  Laptop: Framework 16
+  GPU: RX 9070 XT
+
+Thanks,
+Makuru.
+-----------------------5c326699d1c5df9522f7f2d2f8e1ddd8--
+
+--------499cd641e4bc532b7384712057c189c16ae2d45ed65e89018ada328d7e52e671
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wrsEARYKAG0Fgmo1DOYJED/5yBcL/6qnRRQAAAAAABwAIHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmfep9b+C+JixV5u1c8pfzaeqGU8hlGWI43kLQrc
+pOj7+hYhBHJs3yVDBUxfBwxa6z/5yBcL/6qnAACL9gEAgnQO4b4UZDRCyrI7
+nFPOZ/AM5dzl+teSJ6u30vxoabgBANoowY3hxwEbnxec8cMta692uHKQg5Rl
+T9uPogA6izgF
+=cLEZ
+-----END PGP SIGNATURE-----
+
+
+--------499cd641e4bc532b7384712057c189c16ae2d45ed65e89018ada328d7e52e671--
 
