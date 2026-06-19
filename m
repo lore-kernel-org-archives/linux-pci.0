@@ -1,103 +1,163 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010067.outbound.protection.outlook.com [52.101.61.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 510DD367F25;
-	Fri, 19 Jun 2026 11:36:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781868986; cv=none; b=WAK3yYxiFrhfaQsk6sBpWGTwrCtRc46r3f3IpDxV5UtWPYpA7Vnzu80Umz23tr1QLbPjdray2gOiPtSKS8lfHf+XjR1mNLLCNMXRascqwWpmtWDZn+3OhiDOed0p5z67cx0cPho1TVbGZsl+qVvk8UhZl6hIANHTZc+x9BWQKWk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781868986; c=relaxed/simple;
-	bh=Jwxt259GSkjPIskw9lcSfUqwPw+bJcMtdQnVnpzGFM0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BTxk4AWikTNNEbtmk9BUWaaSGnz5POjixQBUom+LbBPp8EMdxOIgNbo/iMU/uPRjmk5s/x7WCIYZK/VSBnomOin3MjAh/65MNxlfupE8iN4JozuOTravQKQOskOP5yBqsbUt/1eRX4OkOZh1lX33n+2zVI0Y0e5gqJR8O6/2EZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTqM8Wsr; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAAEF2B9BA;
+	Fri, 19 Jun 2026 13:31:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.67
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781875886; cv=fail; b=KpI224/Au4qVrTLFiTag2zNDMxfjDnDIxdMTim6KZjipiNngQ1H2dCJeRO5lezli3mdujFZMaN/xyDViijpIxrYrjRMcf4UQKXPmxviZpC/eeHyerxgeex6dCCI8K7p5v/nQB1doae6/40GuCYf0P2g4t/glJc0g5TXXKRt/NB8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781875886; c=relaxed/simple;
+	bh=1YXv3GYyR3m2WKKHliQtctbpUkEvQh5liJM9b2KIXog=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=eiP1YlW2Y4qRcZdQ4kdzF0PMQrVya34Gft4G15EV4U5M2uSC+2XEFLUUShREMaj0ShURDV3ZMpnJQ1oZ9A3Nfr1Iu4ZfZ5PTIZIK+OVVis1fYFLaaeJ/1L2fwKBsCwM1ijcoZif/aXMo8kAzP2LlmA8WZfw4xvB7XlX/3H73boM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Tw0JJrJ0; arc=fail smtp.client-ip=52.101.61.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTqM8Wsr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A90AE1F000E9;
-	Fri, 19 Jun 2026 11:36:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781868984;
-	bh=IL/l/y6RXApnZ7FgA6sm9hEt1AkXKSYE1xKnRdUOaYE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cTqM8WsrUzyX0rcGkovbzKh9vfSWQFl+wk8yCeHdU9hacvHFcoMvAxwCaNnz9WZs5
-	 MAsqubtN6Jz9vfuTbWGCAx9TKqSeM3KhjdwTZPKUO6fYLRnw1Fr9zl1mDD7y/CWGZ9
-	 EUqDw99EISlXjucsXxic3m8CfcBIXv8EEkNXRnbOP+5xy03+Vuid4yxEadrr4m113B
-	 jtYdYHLDvGZKNDOdrBM50fRZ+rZ5B5Ty4g1RqFCZE7jy9+QGbydCqtwO2vMrm3tYcD
-	 EJfvYt4FfwhLyFuBcwk8mdJndbX6p6A45vc8e0mzjtIJckQjMnOlEEm77yS3jEIXpK
-	 XNJBFAfkg3P3w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/1] PCI: imx6: Use dev_err_probe
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alexander Stein" <alexander.stein@ew.tq-group.com>
-Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260619112535.1127850-1-alexander.stein@ew.tq-group.com>
-References: <20260619112535.1127850-1-alexander.stein@ew.tq-group.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 19 Jun 2026 11:36:24 +0000
-Message-Id: <20260619113624.A90AE1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Tw0JJrJ0"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=izZ+ONLeTTy6nzBa3N/iiejcgwvjRhIGyBL6RXq4BoH9BQz05t6mfGJyzMcxNICUVwhcUpDwAf0rCkpU21VyxoGxwnAND1Y2Vi+dirw5hT/HTVMIzTXp9rPGMiROCO+I5D5I9qw8YyGWCVvoFGyxU+2EM1xcYWg5W+5/zUeH2zumvob5uvrvhA3HQBzrDxKA9xO4QH0CrVxvBekNurDS3gEK2d0SL7F7iZ95gV8xoFdFzgoh854yOLtK6+6StEm3pBAypWPQaX5Rodp8umR6iDd3GHEgWHrIevGSrRkjOi5J6whu99ZK7+dD0p10kdwEf0rmxbkJPN4ZBnG6a/i70g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bit6wyQN9GFksEzHOS2c01W0bMQghP8mgbup5mzOjWM=;
+ b=KxqLkHDbLtU2qCiCU+LGZyNRpVTqIcqIzsDBGbMaIC/FNH2U5JiYVG5bQWPYFqMK+xBcaiXooO+WI2DBtbrizbkE/vxaLyUN9Ws8tx4Q5Np+9nzLxxyZfwq2xp70IItnfbb6UCABxw4hzUuG16219vLnZn5o1qi+hxWfirt64Gg0M7S+JFCGZRVV5ziEF4xNb+CsyKe0myLjUX4V8uC0UOu8H/1wX4dijcwLFqcJQVmnYiG4JTbkeTmwUEBDfLiI8IewDE1Te0n2znxBw7FDVlldVRS0lxqAve7viCF4Hoajf+ktcWUHCo45KCYDJu9i86J3vt8dYz5JFH/psHFHgQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bit6wyQN9GFksEzHOS2c01W0bMQghP8mgbup5mzOjWM=;
+ b=Tw0JJrJ0qKpISWwnaKGk2sXn8FvFCPtjzkHJ6S47vz3tGUO5KyNdHxYuuOqgdzGLAj29/FlDZPMXVBztjbl5qOkHo3LPpwVmlLgSxLXdHOAgtIcLrH41Tmn3wJ4yUpM1XIKYBDrnsw3jTHQSOmyE7crpAlZD143sbXAHvFqimQ2Q3qG+M1+sW8qj4v+DGnk7LA/A1PP1LK2+gje+IaI1AyWhCUnhRfA3pbRpXlIYLcraTAAtZJXjFdOBG3sf4t6cAGvo9ufAAYLPpnlFYTiCAch2uWAYq5mJIiF3Iv7rKLWqabWFaI2ne4S+gHSc4i/T6HlFy+lUSVZZ4GhstZFsBg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by CY8PR12MB7658.namprd12.prod.outlook.com (2603:10b6:930:9e::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Fri, 19 Jun
+ 2026 13:31:17 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0113.015; Fri, 19 Jun 2026
+ 13:31:17 +0000
+Date: Fri, 19 Jun 2026 10:31:16 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Matt Evans <matt@ozlabs.org>
+Cc: "Tian, Kevin" <kevin.tian@intel.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>, Alex Mastro <amastro@fb.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
+Message-ID: <20260619133116.GB278945@nvidia.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-7-matt@ozlabs.org>
+ <aixgZQiBQKgS7yIM@google.com>
+ <DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+ <ajGbRE3WWJxNxcrg@google.com>
+ <BYAPR11MB3687AE280241C9E00B46FCF98CE42@BYAPR11MB3687.namprd11.prod.outlook.com>
+ <24f34e59-7c3b-4b56-83bf-cb07e3f369a6@ozlabs.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <24f34e59-7c3b-4b56-83bf-cb07e3f369a6@ozlabs.org>
+X-ClientProxiedBy: YT1PR01CA0058.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:2e::27) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CY8PR12MB7658:EE_
+X-MS-Office365-Filtering-Correlation-Id: e27b9ee5-7f77-49ed-40eb-08dece070aa9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|23010399003|18002099003|22082099003|4143699003|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	UhysgkwY+Raw8lGwAVtYHZxeH32FU7CP71xLQ3a7zVdYE9dsmDITpS8PEkTz1fCksU+MdGL1z+cjeVxCFkDu1rXxLk9mS+vxbWT84P1ZAZbqVq8kmBwK7QCxTmTF/Citf60qtUiiES5zrdAs7+/0pXvQEo5spqtbpM5M3LJ63LLR7rJVgXLVVkqWsbhk8pmbEFUlvHqQ4QWaCMEuli0783/O+Z6DzBJDsgx15b7Udy8lUqHDEfJImHY0AIqrYRDkZ8YT0ZnYtisS3gS5DqOSSY7U1EBg5D/wooSD1LvACWJyEMic1FioilLDsJQEdEO1Zp74Vz9MOLWd73jgxN5UX+1KNoSdgCpyb0mE6BNTWELX1LR51OC55FnZW/wncXvFnJtYFBahWPv1PuG3N1lIxfUpgqlZueRYCEm0uXAuPdBj9CSgbfmJsChNdhPMhH5ZGDeSnrqbaandwP7cEa2z57vI1cGHhPtr9lekOpxETKMvMAH8TpvGUMoAX0KgwCMh93xWn3mvNAhsBcpDEdQzPqSQrSZUbuEMx+dYe8ev4i2N5ANKvyyVf0O6oO/9Eo7fA/+8WCdlfrLTWD85SEOB00lSnJ0/aOzGRke8x47q4xvoFSUfGvvogkvDyUX3ZpttP087DcEiYLyYhW7cXPjHOkBBr+6Jv6IQbsCrImXDlnc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(23010399003)(18002099003)(22082099003)(4143699003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?fI/IgihgULFrE+awT7CC4TFcsXdQ7o+wsFnC/FIS5uReIYZdnIkzFHP8+zX6?=
+ =?us-ascii?Q?cz3jeT4MjprlGxKNLDM836ITpVgS2lM0bVwDCptfCWrYqN4yd7f5UtAyaO7S?=
+ =?us-ascii?Q?WmyaAXL9K4Oe//STGRmHFV+b+GMkpYJ0N/JStiLJiPxM/AkIzKMcXK5wZGGy?=
+ =?us-ascii?Q?/V57yFv4PjOn9aEz31rFtO4S/pdZqiQeN9JWXrh40vXGUy34YcdWUmFw6fIr?=
+ =?us-ascii?Q?58k30eNoM0dwQOxU5K92YyKbRcDVLaYzRjmIcvPrSwSIURrNPOznSThkye5b?=
+ =?us-ascii?Q?HdHyZfqIT8YEUIwMUpAXpIUyFXLk4BabdO7GO0VHJwDRaO3qWuhgI5Ltc/5N?=
+ =?us-ascii?Q?kj2AryI4qReYMacbAEGMaFUzK/o/UZw0fCXlfRtTpYe6bNlkZNZezkfJyuHd?=
+ =?us-ascii?Q?lvDRfjBdmPPPWT2yoCSzu+g+hVZswzs+/1UqupL4Sz1AbEd0HxHdMvnoeHaF?=
+ =?us-ascii?Q?fmP7NxaEf1z/XvJIcrEPXXk8nYK5zuMOHxfbNY+quOk1ZepTXM70OZaUva9R?=
+ =?us-ascii?Q?noBVL8hDxLXsUWa0XouolEiJ0EYq3J6fightCgDOfgeERa6ePunkSDPUyss0?=
+ =?us-ascii?Q?GHrPOlIaWxZBa3vxTGQivSLkhIet9P0x+F8Bytvn1Ayf+3E4Rs9N9ttjP9+T?=
+ =?us-ascii?Q?wLGF96P9Jtc2J1EDYKgoCA24mOIDJrny9MXoNjMq39sk9fGIWz6QD03rK8LD?=
+ =?us-ascii?Q?fydzTUzrJa5UA40+d0RCm2PmZ4PXjSTa3wwl0e7K92RFhbhbIUqO/wXzeESi?=
+ =?us-ascii?Q?zoTuhRNB2SPJZaHiDm8b62A1fMXUcjbAajwXSdlXnvjBiTUvrtjxqUiCmuaJ?=
+ =?us-ascii?Q?kA6lQO2ahZgV8cLbwZbzO9tRk6c4Q3d40VGzbzitOisxjngXpMtpVTRZYt5X?=
+ =?us-ascii?Q?Q2Ltq6bR26EjUUiuMSrCkzBrU7xTf+Qb0U/h8uWJVT7iJs16Ub1xBNEHa0Yo?=
+ =?us-ascii?Q?NaDLy/lThR2GAmi7NvMeN1W331DpWD1VEayz/X5QyTODhm+hn7PvjPTvGpj9?=
+ =?us-ascii?Q?sYssWvM8W1HPKV1wblahgJtATlVofT9o2TmfZTzlU4g44pN6Bv1X1Slnvyvr?=
+ =?us-ascii?Q?BuBaVwFbW9/FkQMMlSxTj0HGAS+Kk1bMCZSjKSK1tnWRi3IIuxfbNcR0Fpnu?=
+ =?us-ascii?Q?sjs015oizXMPPyKxnanGjBVC6q8OISeHHTGM2QYZDiviB1Gwcc90m5XVTD3n?=
+ =?us-ascii?Q?+9OUZ9FEaPWUSp/hxoss3UnKlT3NdBqNeug7X/mouNuxLrfo5HzSFti7NmAY?=
+ =?us-ascii?Q?GltTSgvszVUH/nWDPVRy0edandlBtGLMiKVT5o3Fh1fYUbXYRQkLrlSQsejv?=
+ =?us-ascii?Q?H8U5JRtYl7TTjcEjR4vNiSzCoX0Hc+3HxV8OLs9vpibuaNSFti6cU8BudQxy?=
+ =?us-ascii?Q?w5Etu19Xm5h1DhADn9CX6dhIdLbevZ6G8j3pY5xsv8Qc8L7qfbj3uLaKUpgi?=
+ =?us-ascii?Q?ibOLUjTpJpz65lEdU+gsuhrXazk8EcsgItVVLfUW3X2r2mwR8CqeunWkZVrc?=
+ =?us-ascii?Q?MpYyFyaARlL6/XjTcgiwQ/fpi7A43aPcWHteDOnXh5oqV22r2xr98wvro+PE?=
+ =?us-ascii?Q?1HSg3V3ogb60tsJlne0eOT4G0XufexdsKDgBevablUbIMCFN/f2y1Ys08p8W?=
+ =?us-ascii?Q?dAn+ZtJulvp8b4KNJTpCvWmYHNMO+YGrFBUXL5NZGed5+G+AebGN6S5E9sGs?=
+ =?us-ascii?Q?/OKL0j2oMYwdkXMX4HaKpSVjk7iiRysn3lk9r+edOHycNcu1?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e27b9ee5-7f77-49ed-40eb-08dece070aa9
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jun 2026 13:31:17.4159
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5evTwDO7fgLvd/S8Jmp2VW1g0Gov5FzdksZKLf3OgNKreXPm9pjGo4i9Hbtry1e4
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7658
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Thu, Jun 18, 2026 at 05:02:58PM +0100, Matt Evans wrote:
 
-Pre-existing issues:
-- [High] The return value of imx_pcie_host_init() is ignored in imx_add_pci=
-e_ep(), leading to a system crash when pwrctrl devices trigger a probe defe=
-rral.
---
+> My understanding is that the sequences above wake a device that happens
+> to have previously been put into D3, and AFAICT it could only have got
+> there because of a previous vfio_pci_set_power_state().  Seems its only
+> caller is from the emulation of PCI_PM_CTRL using
+> vfio_lock_and_set_power_state(), and this zaps/revokes BAR access before
+> a transition to D3.  Similarly, an attempt to access a BAR via an
+> ioctl/through vfio_pci_core_do_io_rw() fails the D3 check in
+> __vfio_pci_memory_enabled(), and besides will try to take the memory_lock.
 
-commit 177305e0f76751d4a9bafb983aa8f962639d5a3b
-Author: Alexander Stein <alexander.stein@ew.tq-group.com>
+I thought the general design was the bars were made inaccessible
+before going to a low power state, and remain inaccessible while it is
+in low power?
 
-PCI: imx6: Use dev_err_probe
+So the order of D0 doesn't matter. If it is not in D0 then there is no
+mappings and zap/revoke is a NOP.
 
-pci_pwrctrl_power_on_devices() might return -EPROBE_DEFER resulting in
-an error message. Use dev_err_probe to silence this non-error message.
+If is it in D0 then it doesn't matter because D0 is a nop.
 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
-er/dwc/pci-imx6.c
-> index 98e1db751132a..b7a502e9a1c59 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1381,7 +1381,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
-> =20
->  	ret =3D pci_pwrctrl_power_on_devices(dev);
->  	if (ret) {
-> -		dev_err(dev, "failed to power on pwrctrl devices\n");
-> +		dev_err_probe(dev, ret, "failed to power on pwrctrl devices\n");
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since=20
-pci_pwrctrl_power_on_devices() might return -EPROBE_DEFER (as anticipated by
-this change), does this lead to a system crash during endpoint initializati=
-on?
-
-In drivers/pci/controller/dwc/pci-imx6.c:imx_add_pcie_ep(),
-imx_pcie_host_init() is called but its return value is ignored:
-
-	imx_pcie_host_init(pp);
-	ep =3D &pci->ep;
-
-If imx_pcie_host_init() fails and returns -EPROBE_DEFER, imx_add_pcie_ep()
-blindly proceeds to execute dw_pcie_ep_init_registers() and
-imx_pcie_host_post_init() on unpowered hardware.
-
-This causes the kernel to attempt MMIO reads and writes on unclocked and
-unpowered PCIe Endpoint DBI registers, which triggers a synchronous external
-abort and panics the system on ARM/i.MX platforms.
-
-Could we add a check for the return value of imx_pcie_host_init() in
-imx_add_pcie_ep()?
-
->  		goto err_pwrctrl_destroy;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260619112535.1127=
-850-1-alexander.stein@ew.tq-group.com?part=3D1
+Jason
