@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD8718FDBD;
-	Fri, 19 Jun 2026 08:53:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5977131B80D;
+	Fri, 19 Jun 2026 08:53:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781859191; cv=none; b=IYnlSC1ADgfiy3Nr4yaWae4pROU3qD1uO9kb6mUr531sGBlLDj6Psls9H/OcFJe8c4eJqh3vnan9Sx8zOE9MpPmNDw6ZtxQKzbO+IVN5I4CVCaQN0M1tofcxG9s1NLpBqsuA5HS5PbqTlI4y56lDCNrZ4H0Gfym0fc3+Vggyzbg=
+	t=1781859195; cv=none; b=BEuqAXKo+IXi4NsMx/SB+D9TF3NbaZGOWjccCGiiR3m8yZcwlHgic+DBzih2P8e2Ty0A9Uq5I+HCm5Albq1ixEuIdALvDhm8CO3pX+q9f0aDeuUlyIf85dYB+8k5F6OiCNvLVYNqewxNMgBEsHD1y+Q0kzYb/9IJ2CWUa0X5kNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781859191; c=relaxed/simple;
-	bh=cF1I2MO5yO81A4qLgGSjkUOcu5gWon+NA7/nKf/FVKw=;
+	s=arc-20240116; t=1781859195; c=relaxed/simple;
+	bh=liUo6UFeNd3e4lQPV4f1+4c+J0RRF2ZSA+DHUFe4Bn8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=I2lBpDn8gbPxbwcvgdO0+Su/iQ5yq+aUdttwv9kcdM62Sv2QuMfiX7Tz+pZr4BSiirTmUlHSDWgnS4I9WZc/OgNilplo8LxSDZK8F8emCEG2GLuGZ5s9C57S6Kc/fcLVbGlkE+iXrBYGgVx3vNcfgy1JCH1UKhsysHu7tO6nCQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q6UoqeyV; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=BQe/agOT7FibIU9aWSnosrCXYWGja1wHUpmYPHUVrz16ZAKlRHhoaTxDDipI13SaCSMh5meOAV/1YhzbB6u6UG6Pdxb5um3z/xCZHXkP3u9SAO1hB7lYyzok7muRsEOf6qU3qwxQGUgESwfaDYKQ5V0q8pkRtx1j5uFZH6Dd8pM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nR9gEhQz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q6UoqeyV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35A771F00A3F;
-	Fri, 19 Jun 2026 08:53:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nR9gEhQz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA2551F000E9;
+	Fri, 19 Jun 2026 08:53:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781859190;
-	bh=yP5AvMrWUaAfOycZjn47yXS20+QnKpZVHrpg2IZpLHk=;
+	s=k20260515; t=1781859194;
+	bh=sskwaIOGPPfHiPAa1LaAJ6GSlFNS8/PzCMP/8IQx/ww=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Q6UoqeyVSHvNbLQITG/HPNFQDcXVctFMo2PMTD8vE6rNjmkotBEnB6S8vBzwbncOw
-	 O0eSnEV/+Am81AmxYvMm28u2TrJFGTBcvOC9z5UayDpeMT2SrUi8N1iCzerxKzukBu
-	 pETQdgBaJxqLBW/tirSoyNbVxUD/KYY+179rS32i8kxuxro/1ooZsZ1ZTYpYDqvinE
-	 u0dSkwSwTrysmf9fBpM7oi7ZckqiZTtc4uPmuf4MufD4hvLQKnwUBTSXkNROrdpor5
-	 yrRaoKneciyKclW98DS0MY/eyMqURxeVZiqqPvIfrbRuqqFcjCMKWgGbBbtb6bwRBj
-	 YrlozxSTz/kKg==
+	b=nR9gEhQzp2n4Yl8O4T7jOS4nEYX9Ls/GLG1h/NNfPGQ3Wb/nIoPOmFEhE7BO+u4GQ
+	 VHTAVC+AISgQC5lf7CrjHy12rLtHLBBKl3xkkHPwWiAkhjNwNgt9MkJ1i4GhpDJkSg
+	 fr9cRJ3IdR5WNJXJ2oHfNXlbeDggRMCvlDgidbJKNg657WDFHOLk2VnllTRRiRuyqM
+	 Q7Tcd5Sz1kkwRLZAdgcSS4MGvhmDwPQy8XHeswRSK7SOeqeFBHUDeIhq+zzFDI0WKD
+	 GCrlkoY/KEasAL3Qpt6zTN0Df+PLFBrPLvZzPbC9/9vrRQ1myMKVyYNmy0srSmHV1n
+	 TULMO9rJNXnkA==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -50,9 +50,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v8 18/25] PCI/sysfs: Remove pci_{create,remove}_sysfs_dev_files()
-Date: Fri, 19 Jun 2026 08:51:53 +0000
-Message-ID: <20260619085200.3729431-19-kwilczynski@kernel.org>
+Subject: [PATCH v8 19/25] PCI: Add macros for legacy I/O and memory address space sizes
+Date: Fri, 19 Jun 2026 08:51:54 +0000
+Message-ID: <20260619085200.3729431-20-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260619085200.3729431-1-kwilczynski@kernel.org>
 References: <20260619085200.3729431-1-kwilczynski@kernel.org>
@@ -65,190 +65,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, pci_create_sysfs_dev_files() and pci_remove_sysfs_dev_files()
-are no-op stubs.  With both the generic and Alpha resource files now
-handled by static attribute groups, no platform needs dynamic per-device
-sysfs file creation.
+Add defines for the standard PCI legacy address space sizes,
+replacing the raw literals used by the legacy sysfs attributes.
 
-Thus, remove both functions, their declarations, and the call sites in
-pci_bus_add_device() and pci_stop_dev().
+Then, replace open-coded values with the newly added macros.
 
-Remove __weak pci_create_resource_files() and pci_remove_resource_files()
-stubs and their declarations in pci.h, as no architecture overrides them
-anymore.
+No functional changes intended.
 
-Remove the res_attr[] and res_attr_wc[] fields from struct pci_dev
-which were used to track dynamically allocated resource attributes.
-
-Finally, simplify pci_sysfs_init() to only handle legacy file creation
-under HAVE_PCI_LEGACY, removing the per-device loop and the
-HAVE_PCI_SYSFS_INIT helper added earlier.
-
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Tested-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- drivers/pci/bus.c       |  1 -
- drivers/pci/pci-sysfs.c | 52 ++---------------------------------------
- drivers/pci/pci.h       |  4 ----
- drivers/pci/remove.c    |  1 -
- include/linux/pci.h     |  9 -------
- 5 files changed, 2 insertions(+), 65 deletions(-)
+ drivers/pci/pci-sysfs.c | 4 ++--
+ include/linux/pci.h     | 5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c1ad1f542d9..655ed53436d3 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -354,7 +354,6 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_fixup_device(pci_fixup_final, dev);
- 	if (pci_is_bridge(dev))
- 		of_pci_make_dev_node(dev);
--	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
- 	pci_bridge_d3_update(dev);
- 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 57d89e12bfec..9d1378700c3a 100644
+index 9d1378700c3a..b8986a735a46 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -37,12 +37,7 @@
- #define ARCH_PCI_DEV_GROUPS
- #endif
+@@ -1019,7 +1019,7 @@ void pci_create_legacy_files(struct pci_bus *b)
  
--#if defined(HAVE_PCI_LEGACY) || \
--	!defined(HAVE_PCI_MMAP) && !defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
--#define HAVE_PCI_SYSFS_INIT
--#endif
--
--#ifdef HAVE_PCI_SYSFS_INIT
-+#ifdef HAVE_PCI_LEGACY
- static int sysfs_initialized;	/* = 0 */
- #endif
- 
-@@ -1377,8 +1372,6 @@ static const struct attribute_group *pci_dev_resource_attr_groups[] = {
- };
- #else
- #define pci_dev_resource_attr_groups NULL
--int __weak pci_create_resource_files(struct pci_dev *dev) { return 0; }
--void __weak pci_remove_resource_files(struct pci_dev *dev) { }
- #endif
- 
- /**
-@@ -1748,54 +1741,13 @@ static const struct attribute_group pci_dev_resource_resize_attr_group = {
- 	.is_visible = resource_resize_attr_is_visible,
- };
- 
--#if defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
--int pci_create_sysfs_dev_files(struct pci_dev *pdev) { return 0; }
--void pci_remove_sysfs_dev_files(struct pci_dev *pdev) { }
--#else
--int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
--{
--	if (!sysfs_initialized)
--		return -EACCES;
--
--	return pci_create_resource_files(pdev);
--}
--
--/**
-- * pci_remove_sysfs_dev_files - cleanup PCI specific sysfs files
-- * @pdev: device whose entries we should free
-- *
-- * Cleanup when @pdev is removed from sysfs.
-- */
--void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
--{
--	if (!sysfs_initialized)
--		return;
--
--	pci_remove_resource_files(pdev);
--}
--#endif
--
--#ifdef HAVE_PCI_SYSFS_INIT
-+#ifdef HAVE_PCI_LEGACY
- static int __init pci_sysfs_init(void)
- {
--#if defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
- 	struct pci_bus *pbus = NULL;
- 
- 	sysfs_initialized = 1;
--#else
--	struct pci_dev *pdev = NULL;
--	struct pci_bus *pbus = NULL;
--	int retval;
- 
--	sysfs_initialized = 1;
--	for_each_pci_dev(pdev) {
--		retval = pci_create_sysfs_dev_files(pdev);
--		if (retval) {
--			pci_dev_put(pdev);
--			return retval;
--		}
--	}
--#endif
- 	while ((pbus = pci_find_next_bus(pbus)))
- 		pci_create_legacy_files(pbus);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4a14f88e543a..71a1fde1e505 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -393,16 +393,12 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
- }
- 
- #ifdef CONFIG_SYSFS
--int pci_create_sysfs_dev_files(struct pci_dev *pdev);
--void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
- extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pci_dev_attr_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern const struct attribute_group *pci_bus_groups[];
- extern const struct attribute_group pci_doe_sysfs_group;
- #else
--static inline int pci_create_sysfs_dev_files(struct pci_dev *pdev) { return 0; }
--static inline void pci_remove_sysfs_dev_files(struct pci_dev *pdev) { }
- #define pci_dev_groups NULL
- #define pci_dev_attr_groups NULL
- #define pcibus_groups NULL
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index e9d519993853..6e796dbc5b29 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -26,7 +26,6 @@ static void pci_stop_dev(struct pci_dev *dev)
- 
- 	device_release_driver(&dev->dev);
- 	pci_proc_detach_device(dev);
--	pci_remove_sysfs_dev_files(dev);
- 	of_pci_remove_node(dev);
- }
- 
+ 	sysfs_bin_attr_init(b->legacy_io);
+ 	b->legacy_io->attr.name = "legacy_io";
+-	b->legacy_io->size = 0xffff;
++	b->legacy_io->size = PCI_LEGACY_IO_SIZE;
+ 	b->legacy_io->attr.mode = 0600;
+ 	b->legacy_io->read = pci_read_legacy_io;
+ 	b->legacy_io->write = pci_write_legacy_io;
+@@ -1036,7 +1036,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_mem = b->legacy_io + 1;
+ 	sysfs_bin_attr_init(b->legacy_mem);
+ 	b->legacy_mem->attr.name = "legacy_mem";
+-	b->legacy_mem->size = 1024*1024;
++	b->legacy_mem->size = PCI_LEGACY_MEM_SIZE;
+ 	b->legacy_mem->attr.mode = 0600;
+ 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
+ 	/* See pci_create_attr() for motivation */
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b998a56f6010..c56f2cf0d2ab 100644
+index c56f2cf0d2ab..e37677a8dd3c 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -515,10 +515,6 @@ struct pci_dev {
- 	spinlock_t	pcie_cap_lock;		/* Protects RMW ops in capability accessors */
- 	u32		saved_config_space[16]; /* Config space saved at suspend time */
- 	struct hlist_head saved_cap_space;
--#if !defined(HAVE_PCI_MMAP) && !defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
--	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
--	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
--#endif
+@@ -27,6 +27,7 @@
+ #include <linux/mod_devicetable.h>
  
- #ifdef CONFIG_HOTPLUG_PCI_PCIE
- 	unsigned int	broken_cmd_compl:1;	/* No compl for some cmds */
-@@ -2533,11 +2529,6 @@ int pcibios_alloc_irq(struct pci_dev *dev);
- void pcibios_free_irq(struct pci_dev *dev);
- resource_size_t pcibios_default_alignment(void);
+ #include <linux/types.h>
++#include <linux/sizes.h>
+ #include <linux/init.h>
+ #include <linux/ioport.h>
+ #include <linux/list.h>
+@@ -1169,6 +1170,10 @@ enum {
+ /* These external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
  
--#if !defined(HAVE_PCI_MMAP) && !defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
--extern int pci_create_resource_files(struct pci_dev *dev);
--extern void pci_remove_resource_files(struct pci_dev *dev);
--#endif
--
- #if defined(CONFIG_PCI_MMCONFIG) || defined(CONFIG_ACPI_MCFG)
- void __init pci_mmcfg_early_init(void);
- void __init pci_mmcfg_late_init(void);
++/* PCI legacy I/O port and memory address space sizes. */
++#define PCI_LEGACY_IO_SIZE	(SZ_64K - 1)
++#define PCI_LEGACY_MEM_SIZE	SZ_1M
++
+ extern unsigned int pci_flags;
+ 
+ static inline void pci_set_flags(int flags) { pci_flags = flags; }
 -- 
 2.54.0
 
