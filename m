@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D59A733BBAF;
-	Fri, 19 Jun 2026 15:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8123B27F0;
+	Fri, 19 Jun 2026 15:30:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781882470; cv=none; b=VM6UhQ2Jby1o/mLQZ7xHaUM1+2GY4WRs+qzlchSKf+Mg/yP7XbvIDnK4MbaBatrgSY6dvD1wm+GcnJwniGCXvojAKwuw4z/G8eFIb38UuT0f6cNpjeNw5nOjnsxD1VzkP8bBZcRFV2GCv4M8UQz6M+34hbpjhW4jQ06Tl+/fnPs=
+	t=1781883049; cv=none; b=WyJjr7sJ/bZFkMpML0mFq7rmsBuZxsXtstvZu0iRREQ0dmfXuONQ4upVCOjolTOcdlRyUTfVZmADFsm0WltU8lcHTY+H2anhkNlsQsBdKT4OG3ywpGIuRMF7sTjUBH+FgZQxTTwAYl3t6ys35ngBAEBXR/Xv7/QuUSxPKzqTpRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781882470; c=relaxed/simple;
-	bh=D5EYChBLMOJ7WsQ858hZGJy5pb8WLM8kyf/D65oqdXs=;
+	s=arc-20240116; t=1781883049; c=relaxed/simple;
+	bh=HE19B47R4LHxRe8ZR9xX2DrSzNkGjl23kxSN/sWpeq4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AGHLm/ElrZ4Rz56G0/3h0/0Idl/gTRDf5Fm+guI2EpYPkW+1bUzM1QfpjcaZ/JX1mwKHBNxbbBxllFRnLHuQ8JXefr+hHPVe8mnMSOb1EvE4gvjaxsjKGEeIbnxCyGiFeElKhgz0YqXrxyoNV2XRQHYHOVM8jbKlh/0NjmvD9tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=LbJm8EVc; arc=none smtp.client-ip=220.197.31.4
+	 In-Reply-To:Content-Type; b=eMVm7NJzC08uvgP1UkbLQfWItuXoTP8IOXUsPosP/O/YvOyHiUaA9yl33k99JhMT8+LY178tZWzeGTbpYtjJ+vogXmk+ccAvMIw0BKk+xKwHmIR5IVYFJ7DXp+JIkQ9I8Qbfzts1PrRmLtEG2OGICTodVYAmp9pkYh8zcX+cgtI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WWZwTY0t; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="LbJm8EVc"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WWZwTY0t"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=d57g989chT6menWbADLc7r3x8ntkXVSkAIe3o/9ATfc=;
-	b=LbJm8EVcsG02m/XFaSIRw35iAC/AdWraLcii8VSaf/uSYq/5wuNJ6pM5KqfULj
-	8YDxb6EymqEQj+X4TrNwIK1msGOh65RLisj0k49PhXFBjGgeYLcljmLuvvZk5P7i
-	P2cG3L/I4uspsq8pS3aPGn0peL98wXJWqoDPD2K/xLu1c=
+	Content-Type; bh=mLjNq3xGexi6hHuje2pZSSEVpO87sjjlxI3YsPJaXJs=;
+	b=WWZwTY0t6sGMtDRzCftyLiJoSnbU3TkUe4NHi7ZG3KIrX8KolrdkPh0UAL3K1W
+	lW6AQf0LMkjP0peGCZyAjFljpOTBkWy1sIO8MNWwQM7fezWKNvRZu7Dk2lDOUa2i
+	nFwBqidIOU2kkgDrAYeEUIh4YY6siwKDDGEwz2iBMqgA0=
 Received: from [IPV6:240e:b8f:91b3:d000:a264:4237:512f:7b1] (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDHn4g_XjVqm+LYEQ--.60791S2;
-	Fri, 19 Jun 2026 23:20:32 +0800 (CST)
-Message-ID: <f6a9a0f9-b331-48d8-be86-64471b9ea4fb@163.com>
-Date: Fri, 19 Jun 2026 23:20:33 +0800
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD317VjYDVqjyOoEA--.54216S2;
+	Fri, 19 Jun 2026 23:29:40 +0800 (CST)
+Message-ID: <dae17d36-c7d2-467b-a621-3c55e08a67a8@163.com>
+Date: Fri, 19 Jun 2026 23:29:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,136 +34,131 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/9] PCI: controller: Add missing rescan lock around root
- bus removal
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, robh@kernel.org, a-garg7@ti.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260618165914.GA394420@bhelgaas>
+Subject: Re: [PATCH v7 0/2] PCI: Configure Root Port MPS during host probing
+To: bhelgaas@google.com, Manivannan Sadhasivam <mani@kernel.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, heiko@sntech.de,
+ yue.wang@amlogic.com, pali@kernel.org, neil.armstrong@linaro.org,
+ robh@kernel.org, jingoohan1@gmail.com, khilman@baylibre.com,
+ jbrunet@baylibre.com, martin.blumenstingl@googlemail.com, cassel@kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org,
+ linux-rockchip@lists.infradead.org
+References: <20251127170908.14850-1-18255117159@163.com>
+ <vpuzlzry7uulctur7kwtlogniuhogd5ybmrwjtos2v7yryf47v@yj2ocobbog6s>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260618165914.GA394420@bhelgaas>
+In-Reply-To: <vpuzlzry7uulctur7kwtlogniuhogd5ybmrwjtos2v7yryf47v@yj2ocobbog6s>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDHn4g_XjVqm+LYEQ--.60791S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZr15urWDXr4xtrWDZr45Awb_yoWrZw1rpF
-	ZIga1SkF4kJr4Y9a92va18Aw1YgwnxJ3y5J3s7Ww13uFnxuFy7XFya9FyrWas8CFZFyF4U
-	ZF4Dt3W3J3Z8AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uoa0dUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wGPM2o1XkEaaAAA3k
+X-CM-TRANSID:_____wD317VjYDVqjyOoEA--.54216S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZFWxurWrZw1xCrWrXF4DXFb_yoWrGw4rpF
+	WFganakF4xGr1fCa9Fgw1jkFyYqas7GF47JrW5GwnxZanxZF15XFZ29w1rZr9rXrWfC3WS
+	vFy2qa4xW3Wqva7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UIjgsUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwUZvGo1YGWHawAA3V
 
 
 
-On 6/19/26 00:59, Bjorn Helgaas wrote:
-> On Fri, May 22, 2026 at 12:18:13AM +0800, Hans Zhang wrote:
->> Several PCIe host controller drivers call pci_stop_root_bus() and
->> pci_remove_root_bus() without holding the global PCI rescan lock
->> (pci_rescan_remove_global_lock). This can cause race conditions with
->> concurrent PCI rescan or hotplug operations triggered via sysfs,
->> potentially leading to use-after-free or system crashes.
+On 5/6/26 22:00, Manivannan Sadhasivam wrote:
+> On Fri, Nov 28, 2025 at 01:09:06AM +0800, Hans Zhang wrote:
+>> Current PCIe initialization exhibits a key optimization gap: Root Ports
+>> may operate with non-optimal Maximum Payload Size (MPS) settings. While
+>> downstream device configuration is handled during bus enumeration, Root
+>> Port MPS values inherited from firmware or hardware defaults often fail
+>> to utilize the full capabilities supported by controller hardware. This
+>> results in suboptimal data transfer efficiency throughout the PCIe
+>> hierarchy.
 >>
->> This series adds the missing lock pairs to all drivers currently
->> exhibiting this pattern. No functional change other than proper
->> synchronization.
+>> This patch series addresses this by:
 >>
->> Each patch is independent and targets a specific controller driver.
->> Please review and apply.
+>> 1. Core PCI enhancement (Patch 1):
+>> - Proactively configures Root Port MPS during host controller probing
+>> - Sets initial MPS to hardware maximum (128 << dev->pcie_mpss)
+>> - Conditional on PCIe bus tuning being enabled (PCIE_BUS_TUNE_OFF unset)
+>>    and not in PCIE_BUS_PEER2PEER mode (which requires default 128 bytes)
+>> - Maintains backward compatibility via PCIE_BUS_TUNE_OFF check
+>> - Preserves standard MPS negotiation during downstream enumeration
+>>
+>> 2. Driver cleanup (Patch 2):
+>> - Removes redundant MPS configuration from Meson PCIe controller driver
+>> - Functionality is now centralized in PCI core
+>> - Simplifies driver maintenance long-term
+>>
 > 
-> Thanks for this work.  I amended the commit logs of the eight applied
-> patches so they're all the same (since all the patches do exactly the
-> same thing) and so they all mention the reason for the change.
+> For the series,
 > 
-> There are only four callers of pci_stop_root_bus() and
-> pci_remove_root_bus() that would not be able to use a trivial helper
-> function that does the lock/stop/remove/unlock internally:
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 > 
->    zpci_bus_release
->    acpi_pci_root_remove
->    hv_pci_remove
->    vmd_remove
-> 
-> It would be nice to analyze those to see if they could use the same
-> pattern, which could be done inside a helper function that would avoid
-> the possibility of adding the same bug elsewhere.
-> 
+> Bjorn: Could you please take a look? This series has been floating for a
+> while...
 
-Hi Bjorn,
+Hello Bjorn,
 
-Thank you for reviewing the series and for the constructive suggestion
-regarding the common helper function.
-
-I fully agree that introducing a helper (e.g., pci_remove_root_bus_safe())
-to encapsulate the lock/unlock logic is a cleaner and more maintainable
-approach, and it would help prevent similar issues in the future.
-
-Since we are now in the merge window, I would prefer to hold off on this
-further refactoring until the next cycle to avoid introducing any
-unnecessary risks or conflicts at this late stage.
+Any chance for this series to be applied?
 
 Best regards,
 Hans
 
+
+> 
+> - Mani
+> 
 >> ---
->> The following are the comments from the sashiko-bot@kernel.org review.
+>> Changes in v7:
+>> - Exclude PCIE_BUS_PEER2PEER mode from Root Port MPS configuration
+>> - Remove redundant check for upstream bridge (Root Ports don't have one)
+>> - Improve commit message and code comments as per Bjorn.
 >>
->> https://lore.kernel.org/linux-pci/20260519132017.63E1BC2BCB3@smtp.kernel.org/
->> """
->>> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
->>> +{
->>> +	struct pci_host_bridge *bridge;
->>> +
->>> +	cdns_pcie_debugfs_deinit(&rc->pcie);
->>> +	bridge = pci_host_bridge_from_priv(rc);
->>> +	pci_stop_root_bus(bridge->bus);
->>> +	pci_remove_root_bus(bridge->bus);
->>> +}
+>> Changes for v6:
+>> https://patchwork.kernel.org/project/linux-pci/patch/20251104165125.174168-1-18255117159@163.com/
 >>
->> Could this lead to a race condition during root bus teardown?
+>> - Modify the commit message and comments. (Bjorn)
+>> - Patch 1/2 code logic: Add !bridge check to configure MPS only for Root Ports
+>>    without an upstream bridge (root bridges), avoiding incorrect handling of
+>>    non-root-bridge Root Ports (Niklas).
 >>
->> Calling pci_stop_root_bus() and pci_remove_root_bus() without holding the
->> PCI rescan lock allows race conditions with concurrent PCI rescan or hotplug
->> operations triggered via sysfs.
+>> Changes for v5:
+>> https://patchwork.kernel.org/project/linux-pci/patch/20250620155507.1022099-1-18255117159@163.com/
 >>
->> While this pattern might have been copied from a pre-existing function like
->> cdns_pcie_host_disable(), does it need to be fixed here to prevent
->> use-after-free or system crashes?
+>> - Use pcie_set_mps directly instead of pcie_write_mps.
+>> - The patch 1 commit message were modified.
 >>
->> Should these operations be protected by acquiring the lock using
->> pci_lock_rescan_remove() and pci_unlock_rescan_remove()?
->> """
+>> Changes for v4:
+>> https://patchwork.kernel.org/project/linux-pci/patch/20250510155607.390687-1-18255117159@163.com/
 >>
+>> - The patch [v4 1/2] add a comment to explain why it was done this way.
+>> - The patch [v4 2/2] have not been modified.
+>> - Drop patch [v3 3/3]. The Maintainer of the pci-aardvark.c file suggests
+>>    that this patch cannot be submitted. In addition, Mani also suggests
+>>    dropping this patch until this series of issues is resolved.
 >>
->> The function cdns_pcie_hpa_host_disable() mentioned in the bot's comment is from
->> a separate patch series and will be fixed independently. This series focuses only
->> on existing controller drivers in the mainline kernel.
+>> Changes for v3:
+>> https://patchwork.kernel.org/project/linux-pci/patch/20250506173439.292460-1-18255117159@163.com/
+>>
+>> - The new split is patch 2/3 and 3/3.
+>> - Modify the patch 1/3 according to Niklas' suggestion.
+>>
+>> Changes for v2:
+>> https://patchwork.kernel.org/project/linux-pci/patch/20250425095708.32662-1-18255117159@163.com/
+>>
+>> - According to the Maintainer's suggestion, limit the setting of MPS
+>>    changes to platforms with controller drivers.
+>> - Delete the MPS code set by the SOC manufacturer.
 >> ---
 >>
->> Hans Zhang (9):
->>    PCI: cadence: Protect root bus removal with rescan lock
->>    PCI: dwc: Protect root bus removal with rescan lock
->>    PCI: altera: Protect root bus removal with rescan lock
->>    PCI: brcmstb: Protect root bus removal with rescan lock
->>    PCI: iproc: Protect root bus removal with rescan lock
->>    PCI: mediatek: Protect root bus removal with rescan lock
->>    PCI: rockchip: Protect root bus removal with rescan lock
->>    PCI: vmd: Protect root bus removal with rescan lock
->>    PCI: plda: Protect root bus removal with rescan lock
+>> Hans Zhang (2):
+>>    PCI: Configure Root Port MPS during host probing
+>>    PCI: dwc: Remove redundant MPS configuration
 >>
->>   drivers/pci/controller/cadence/pcie-cadence-host.c | 2 ++
->>   drivers/pci/controller/dwc/pcie-designware-host.c  | 2 ++
->>   drivers/pci/controller/pcie-altera.c               | 2 ++
->>   drivers/pci/controller/pcie-brcmstb.c              | 2 ++
->>   drivers/pci/controller/pcie-iproc.c                | 2 ++
->>   drivers/pci/controller/pcie-mediatek.c             | 2 ++
->>   drivers/pci/controller/pcie-rockchip-host.c        | 2 ++
->>   drivers/pci/controller/plda/pcie-plda-host.c       | 2 ++
->>   drivers/pci/controller/vmd.c                       | 2 ++
->>   9 files changed, 18 insertions(+)
+>>   drivers/pci/controller/dwc/pci-meson.c | 17 -----------------
+>>   drivers/pci/probe.c                    | 12 ++++++++++++
+>>   2 files changed, 12 insertions(+), 17 deletions(-)
 >>
 >>
->> base-commit: 6916d5703ddf9a38f1f6c2cc793381a24ee914c6
+>> base-commit: 765e56e41a5af2d456ddda6cbd617b9d3295ab4e
 >> -- 
 >> 2.34.1
 >>
+> 
 
