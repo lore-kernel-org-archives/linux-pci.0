@@ -1,71 +1,75 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021087.outbound.protection.outlook.com [52.101.125.87])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020102.outbound.protection.outlook.com [52.101.229.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEEC22777FC;
-	Sat, 20 Jun 2026 17:05:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 838DD2C3757;
+	Sat, 20 Jun 2026 17:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.102
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781975110; cv=fail; b=uUOC6RU8oiM5wIPIrLl4FDyL0jvwtk/VBUqNqHy0v0wrx4Vr7E7DeQ9eg/zwN9lYw86Fa6K/rgahUZAGLOWpU/3apMl66JbmemKXGF0n0+oR39SAhcR+Rtr8PsJnWFBBzV293j9IQqnlqG5QT/EkNkuY4JAr+AKKnxyAT98Fbys=
+	t=1781975336; cv=fail; b=oBl+a5wO1Edg2owUVce0b9tnhQaBEJfhKnek988wyu7TH+g47rGd5opiX11PQeSk6h1wECyGWgzyMfMoHa2QSQh+KMQemcb6vf/XexZtZTol9hKoH4OMgA25QTwjBYHoa+qnCFa8r2gfpCdWWFZ5LiTysQy5sSUsJF+cSBEpmHI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781975110; c=relaxed/simple;
-	bh=RwAqHZzUK8bqMLQhAyR8fngGzaSlgyg588UfeNYKRO4=;
+	s=arc-20240116; t=1781975336; c=relaxed/simple;
+	bh=onSpwG7jl28EOq+Fck1E2wnpCizmaqU5KcOITvmVW28=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oehJ3eakM2BSOLlDOxoba7dLNl6Vvaus+yzj4h0gVMcIoG9bXrsHLd+Y0vype1zYAQGZw6V5SdRmktgFL6hH2MRvf6CeEE7ee6OXD3yXdpDvZjeJP8KC3RLm0ECuBytnsoMn5p00yXfGREtrnjwM7zit4n09t/wJvPKgDt/+Q+0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=EfRgmvSn; arc=fail smtp.client-ip=52.101.125.87
+	 Content-Type:MIME-Version; b=QjkROIUwq2qTg/S5p/VsPIT6P2hKC86SqSRURcgLQY3KNDyDcr+/YSW4+QrbReJUaBJobIO7YXoDeQsRtVP7T7/kGp5IOLG2rZRr91Jr4opO6jkj42rIwpe5eY/OX2lPXHig7T1+tQ/wrV3fwWY7JT36mWChlrOUI5rRh12p2E4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=dhM+uqQ9; arc=fail smtp.client-ip=52.101.229.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="EfRgmvSn"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="dhM+uqQ9"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aL2OjhVJslhthLmuLuMgodFsF/2rBXmHO5VqIhk0hCsGGc61FYRjAWuuj669/J661RGon3I5dAYd7o28WLWRCdHb2XId4feUJQZAChtkCOojbSyd8FPZk6ntatJ5xW3Bpq1RTR/DxQdlomFgb/4rBFXz10ngjrF/fDL9WkHPKx2aMtA83QRqBY5c69eL7Rvg65Fb1w+fAg7PXL+Hum/YW4O3bAxBRiINmR3S8mm9FBolT/49kwMF6r0PnSd5KzXXdv8dxviLyaI+r0ygxgGReqC9wBPhveUTrVe1L07X1wu9z+ZL58i07uNJtE9eU5sBiMGrYj5bdDFBtO2Wa1u2xw==
+ b=Eghs1FebLF4YFqrcHm0MI95nBHxGKECsCBhy4XFqFGUAS0lDWm2VlZV1JehaRiKeMpBTJUK0XTdX06RHfWVnO3PG3qythoFJXF2yoq0jOtcFfQku81NG9urqJjMOKYGT/RVIA5O1TIFv6tI1gm0dCgHn/ON26SWtUNFA1H0Z8mRCHkeVJDHeEzO2xYFdpWs2N1IHUUxbDf9tbqkZvFYwN6aYts6wYhYQx7lCV/wLuHmVxck4qjMnIG4K4teJAHWc+fxrl3qQOAJhU4nVBYlQ+YIucQxVkWhTwKpVIa+LLLK3qMzJlncRhMMnJo47q+3thfQzlgj5MGf3aWjl3jPamg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DVJhlLwRgk+sRAcxmo+ThWXjZpw84B/eeZbKujHBMTc=;
- b=NtI/TbT3HJ4lTqzaGxNGikcn58RBfmS+f5Ocbp+sRXFgR1LYZaGZmInJKUkZNfCWoGgUTlTihitIRqTJ/wc9JAMU0IO13K7/6ZNhDhBpvyYrpXQRQ5shXQSR8WsGs0bJX15abRLyYWA6Xfyg0CVsklQ+BAo7cYWFX59VP0s5qND/vBOc76pqHHgDpIS+H5BTyxrdKiKG/0bz2r+GCoe1odoU6HBMYXfTx5Rl8ogN35X7jE0GbdAvVsUbnK8fS5E44bxWOnwfuTEXEyUIYCDp7EAZ7IBVMUkRLTFVoK4S82sNl/MHGwVEsYnhPvvcDrsRYwobNRxWZ6Au3WD+T29AhQ==
+ bh=hFdwKOTYjlouwC/Pwo7cWbcNcbZ0UIZCf9Ff8tms8Dk=;
+ b=W8LTvZcEgG7JPkoJevrwaCGFd5Fv2DSAoE0oHT5m1wdOir5FLxeb5wNNJMN9DiJvtI/0W2aNhPRrzQUbGz6ylGM2ptWLfszeUcY4qsHW4gb2um64bM1Z2pqi2qYmfLOKkQZinyPzpNpX/QqKuL0/6cSI0COfPM7dw3By1pw2nSRudcsVCp8LVzouLW4Z23JH+G3E+A9qQ2HRIID55W20EsrSdSftg38YMptq4Mr+KQjFIGNyGAC0+JvN1paxpw4aB0dn2zv8l2OWuzvpJ7MVEiqwYOQnSo1CHXzd40Uk+FbgR7JTcDofqnAsoVaYSqN7Jk9xaCCkU0MLh+KbIVol5A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DVJhlLwRgk+sRAcxmo+ThWXjZpw84B/eeZbKujHBMTc=;
- b=EfRgmvSnCZgyPzeY6s36sDQGHSt0pvIKEiy/YW94yzoz0al1k3zGT2g4M4L/zPU82pBabldlY5AU+3qBoP+S2RkSmkbt+wzIFTrTiXzhM5DGOY+7bEtVLOoHtav6ZvOFZLKsxMp06FCJAQSMwgCVL6IlGCpOKxbXow0e2w3yRYo=
+ bh=hFdwKOTYjlouwC/Pwo7cWbcNcbZ0UIZCf9Ff8tms8Dk=;
+ b=dhM+uqQ9YXqJAzChSwI2HiZ82/P4OkVu2wjkK6UHoIx4/5LiLJCXXly18/4I8bvfZhsEKUdSlKKOey1oi9p0adGx3fMa6RzBh9jes2rf8gJI+gwKwucEzobnoXALm1WHAJMXs3ixqRMuFSdQmJ4SNqDwEWD/6oNFSDsB+NRWJoE=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY3P286MB2673.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:254::13) with
+ by OS9P286MB4352.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:2c6::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.13; Sat, 20 Jun
- 2026 17:04:59 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.18; Sat, 20 Jun
+ 2026 17:08:52 +0000
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0139.009; Sat, 20 Jun 2026
- 17:04:59 +0000
+ 17:08:52 +0000
 From: Koichiro Den <den@valinux.co.jp>
-To: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+To: Manivannan Sadhasivam <mani@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vinod Koul <vkoul@kernel.org>,
 	Frank Li <Frank.Li@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 5/5] PCI: dwc: Implement endpoint DMA channel delegation
-Date: Sun, 21 Jun 2026 02:04:38 +0900
-Message-ID: <20260620170438.3756593-6-den@valinux.co.jp>
+	dmaengine@vger.kernel.org
+Subject: [PATCH v3 1/3] dmaengine: dw-edma-pcie: Discover endpoint DMA metadata
+Date: Sun, 21 Jun 2026 02:08:42 +0900
+Message-ID: <20260620170844.3757241-2-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260620170438.3756593-1-den@valinux.co.jp>
-References: <20260620170438.3756593-1-den@valinux.co.jp>
+In-Reply-To: <20260620170844.3757241-1-den@valinux.co.jp>
+References: <20260620170844.3757241-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0275.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c9::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY4PR01CA0009.jpnprd01.prod.outlook.com
+ (2603:1096:405:26e::12) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -74,207 +78,534 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY3P286MB2673:EE_
-X-MS-Office365-Filtering-Correlation-Id: 99e23f3e-e214-4daf-a06a-08deceee0fb2
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS9P286MB4352:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9e99d9a9-ebd7-4a2f-726c-08deceee9a84
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|23010399003|366016|10070799003|56012099006|6133799003|18002099003|22082099003;
+	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|10070799003|23010399003|22082099003|18002099003|56012099006|921020|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	3QAg/1jb+alBc+fdcQlBbleB7/V6KuXsBfuKrelDvgyJYr2L4AFJoF5gsxSgZ8rVAROlohrvr7DpcqLpm9OdGFLR8XCA5EywYjkOXYP+Q97SW4dxJVGNDlvJmxtHqOQODvE3+OtNev/kCLUpPUBAHvI6Lvddu2mOcUtPBt2KkgVZkl9MhDd8/UjttyuPbqqsp+tbOqEefi/gt86SRBB/SEaSwLjTfhD+f55NtqUiWrq0/QkI4fCiLfLkmIjNZyfiZCJIYXoq3LuevXOttBT7cjkYh5LZx4bY9sCkM0nbI6+Vv1kqOv2YTZhpYtWvsHx6TGSPb+qmpCuGv2vn7h+qTnbLkFi4USa5iO6PrOAAzYBwHcohYwlvesS8DVJlWLp3jRkRS9bzOHMTw1sJfd8OsM4synWpkW3sDjklY/99oM0xFIH/IyfR0sukBvLLHyrOJ3B4an5WemtaBeEegwU6xv7fH1YFZIdx5pPCGzhGqiS2vFkfBkelCagQ/7+Lfpf3t3OfIE8cjRrcOr64qqPVl3GCEuDD8dAM5eTeomjP0FzpSdBE9FhA3zu4XXeQtL8uVX169zPwpTaVw7WeBqSlRKDh9PDUvDSIhqsNIOfg1LMd12OMh1oQVYE0sJrdeBN3Uzmkc2PXrPHsuU48tty+rNopRPriLHVzVz5o2o5VSls=
+	AGhLtE2d9DrYb50VNKngo8GZgPBGnK7/p8Gvvx0kLCMYv+L/49rSpAqgkfpHPrWog2zcQ/T4qaXyQkzZVDvv8FIRKQZSiungBlqGRygvfT+akMfy6B/H5ETfUluKgfADqljn323PtQCDynaXN5TNMcxcyi/IpG01H3pWjNUMMpZ0x+3zf7Tucd5M8f658DnD3y0AUj9hwXSnxuXrqknNBfxHMqu0zyfPLfPjjOIp9uQRUB8YL9S+1oE4rfm7dSyVPjwYe6A/zFfGFogW0p8b8trTM/nswiuEtAiESPwGY+70f9rvcKYG5eN1JmwFDcRYzYOZgyuNYg7RGqFWY+TEM97ToGzrRETd0ZJYH6t3nRzQh3jLg+muTAKt+Vq8gJQW+ogMPqwIXVR1tqdROzLuZCPLYxvwXsIlh6jvxql0A1HH4D6j8QK71iJXA2ttcIe4TfcPQt/ZGj7BOYR6CPYssE2Ddh+w7+QmNjJZYqRh5PAHMj/tJEqUS6fZS6rrc9Y2IjEWciCrryqNKUqtXhfTbwN+Z86gxRq57x5w0Z3xOd85pjmm+GBFNfdG/cWPewP/6bkmHrsVp4HIRpKK6t2CtXsvwDJeyizUvQK80ysNbfuQwRaHdC4PAk8rAXSHwYwBqdESDHLCLfi19BrjhSzPmGlT0xiDJPzd4EV63c6Eg+iemAlCJhNHf7KcS/IRRY6LE9vD9IuICak34PBHDPh8oA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(23010399003)(366016)(10070799003)(56012099006)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(10070799003)(23010399003)(22082099003)(18002099003)(56012099006)(921020)(3023799007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?2EosV77GkIlJMaGoKg846esj/An1M1Uhg8CavjzOxpa3IkKs42hKWg5fV9bI?=
- =?us-ascii?Q?CuJcEYSRT2YxFqJdRgYktrAFaALhqfYJEWPUPP19+nDOgz5TNdtTZvgta9F9?=
- =?us-ascii?Q?wkUjAyWxrH449j5k06y5KDlIW2V9FoWHopOOHmk7ui84CpTJ2uTeS0G/vGP7?=
- =?us-ascii?Q?qROYSjwxr4Ze4vYOICi3e6zHXBsa9SaNdpZDIiRTN9JkVE28stWP6sefNuNH?=
- =?us-ascii?Q?BNVoQczCTHM6xen1wsOPPCEQbpxo6tLWaf3ueIZwVH46bc2oSdOfmhMRoQ2j?=
- =?us-ascii?Q?VBvVReBRrvjnJP3KAnfhff+t6uLNg0DGICEbHrzf73RBhCjFu4CAUZ1oJuUA?=
- =?us-ascii?Q?i1gPx32lBL/DCi+ireipiKimA020C1xA4MBlhIKDkvSxJf8DNeFE8GUWs3pU?=
- =?us-ascii?Q?RPXxyUTm9PmOu+1fzoCcjnF/EkbYDk2Ho3r/68KblKPAiU0BSplpEfjcLnPm?=
- =?us-ascii?Q?5P8XWPxNyIhw3aQcBp0eVAR2c42ugh2ei3fJklY1vr1zJGwnZUNFnrIux4Iw?=
- =?us-ascii?Q?H8MZ1s3aAwv0jiE3ySBDvvDFkRoaPewFY1q+1dPx9qIwYIWqesBVX1GZATh7?=
- =?us-ascii?Q?ol9tvrsNAt5jMPwHOzwZx45f8X+/4Evbxpwv5UjbT5TOzu5LWeNisqzGJVKX?=
- =?us-ascii?Q?TuH2Nuu2v4o3J97bPETK4fFxOPqgXoohl0WMtkxsk0eXZA959V1m1oCkqXMN?=
- =?us-ascii?Q?6SMgmD6tiyYEOC3izLT/s6ct/R2Kuf8Z73d/xdUE9VzPmpmLVfCi6dCnJWCw?=
- =?us-ascii?Q?WK8aFpWiCBijCN0o/9TLLZup/wzy/rWe1naxfyaLyEo+9wFqSXyp+ZAlDhIQ?=
- =?us-ascii?Q?7BTKx4rajIDtihCAaCKnQeqCjXFIR/e0q9yb2vBLWQ0J/LpZ6gPkoMY3eqNF?=
- =?us-ascii?Q?IYPNqWEFcaNLSrKDi72ERq1jwA4R4rMtM1mvkq2CTcR0crcWW5aR2SzTCNe7?=
- =?us-ascii?Q?bGJICrdUKuAKtUUHfBz2WBY5zEs2c6cTJEAH7qqL43+aDN05Z3Ps6BGGWTPv?=
- =?us-ascii?Q?kmVXja+pBidNkBGJjOzEOvT0lRkqsUGv7dDF3JN7lJ1UP8k4Frgn/gIRffRF?=
- =?us-ascii?Q?HCNytPdTIeSDLDYzommjxawZHE1qotnd+PlVYn3s3UiD1rUY2QTwM6B6R+9x?=
- =?us-ascii?Q?UpjtwRk7BlRTNCqcHf9kae4WCSX1ubxOTHZzjMvutvpTOX5eX49wulWC4fAR?=
- =?us-ascii?Q?29WOKoAy1HbauhbAa6baSMbe/PjelW5aWy2McJ7kGeX1LoYDsg8A+42hvJJQ?=
- =?us-ascii?Q?E5CtJ2E3+qolDIYJpk42E9UZSSDrGPvweMSEYQ/SijbVWLcwg2SyaeBn16rM?=
- =?us-ascii?Q?KY002xNIrguIYvKYRT1kLygR5ydYfB0rZWK3n1fbdsZN4/Ts2f1M3G3Tc58m?=
- =?us-ascii?Q?1QREtu3RTj7CkylGD2cncBD+BGPeOdYkS2nQaLZiYROaM6LjnpWzSm/EaztS?=
- =?us-ascii?Q?gv3OevTeotCOeTWEVZcYDKgBLK0NoiUBupeX1KdAce4NPVFFAXD5me1oH2kt?=
- =?us-ascii?Q?8bkbSSTquuREt0ipyYQ0pIarmU9u78y0/ioZIxM8/K/xCGFBheATJwy9wyZ/?=
- =?us-ascii?Q?bmjJ0CdRWf8ca+K0v6x+dDimG5QLJE8Do8aeWeSHrNS8R/1WsXzlaMddbiM0?=
- =?us-ascii?Q?MJzYhp9O95kqSKV9gRQJajarUdsXyEF6l/Z2ouysftGEqtBXH/Yrn3L+RpNs?=
- =?us-ascii?Q?KeMV/iJDyTC5LBqWllL0Ld7NQvyKDlqOZlIme2UC/50DpHUIAtzXTNE62bZt?=
- =?us-ascii?Q?gAHA3t4DYN1PdgucIRpC+6XQ8DDbQk59cKhA87peich/NN7P6lJ1?=
+	=?us-ascii?Q?p5z6EW5y8N43cbMZkHGb6b5W9/q91oFCvZRxBRD7vA7gYNTWxO7dZiFhij3b?=
+ =?us-ascii?Q?nLhcegarkeoSi1RI8gqNO28eNiJ7CQOVMsG8Y8J+xVPWt6Ntf1GWuKyIqO2u?=
+ =?us-ascii?Q?Ov+6jgxMQpYPfNSewl1eCEO5L6a7fqOsQtZJzCgg1DAsW/USdQ9DWvKG3vDr?=
+ =?us-ascii?Q?lN9Kzc6/4wUqXzmBnBJxvzCykW8/fM+0HBmaOHzCf1Tt/0XRIXsTGPVxCnL2?=
+ =?us-ascii?Q?6FR0nQKYOnqeA2NNodYdT8CP1SSX8u/D6bgkMQO06g6hmkSYoXtafoZnS3b8?=
+ =?us-ascii?Q?0AlAfkM2okq3tOpf+Gz9xUcLRDHETOMOoCTLCeEGiIh68yUip0bEkW5dXweN?=
+ =?us-ascii?Q?/MfhiiMzf8Eq9oHX6oROoaoKh+dBVu9DU2HTO5S7+DgPrJyinWtLYznHBG7z?=
+ =?us-ascii?Q?e6MUTExGJ+Y0Ltk9HInPYPx53gKvPfmM/m40yS6kg6yrR4E8zJVxJE7HcfAn?=
+ =?us-ascii?Q?YRK7vVcrDT9AXSFAeMj655rwTq0nczcMdfOOPVeS3XRKhf3OWiCh5LC9O0Bb?=
+ =?us-ascii?Q?EuXEAXBZO5gFp5lMyW9CeUtEq3X8wweVLUkAgzR7XV3QndEQZr85/3/wKTda?=
+ =?us-ascii?Q?t0j0JSpdZiLPG1mwtkojw4Vfc3nGZWz38onMSSbwgKTxk8OlBP+Clm3ztf6Z?=
+ =?us-ascii?Q?7tZJ2Qkh0yZpMm2d6F6t5DzVe7DfhenvBFRsv3JhdLC+ZVquiMotXyEqaD5z?=
+ =?us-ascii?Q?b0HhAf2M7ClRKJDAK/f7NoWgxvGYlxVN6rrYGoXLKt+M8g5Q4omMSI5F2t3v?=
+ =?us-ascii?Q?DvFAHBc/gXLP8nON+GwRXqX2eqOoIPPswp12M164NcvhEs2NBG/tDYR21k9o?=
+ =?us-ascii?Q?YbsOZFnrZqwCHUB9+KxtNioQd/JwR9ZF7sd7kud9S6DPYJJc2cEfge1Zy00Q?=
+ =?us-ascii?Q?n/Q5Rg1h4ZwxdXYJgoq7RTY+sKjIAsIaueHrhpvEST3KKFU7u7WlsTckO4Zl?=
+ =?us-ascii?Q?9rXGf66FQYT6gwphy0v7kzUl5fl8+Uvi3+/b1u3+a2HJ0v+W7UsfeA4l78VU?=
+ =?us-ascii?Q?vQcGcMVYz2ptAxqU8sIOyZXFldIgVZ1OpXv5n59BHj/d3CpwyKGFid4aP5re?=
+ =?us-ascii?Q?InYaQJ24aB5D/dJNVFE0hlX4S/GB9tL0kglTTBKvK6xcBWVCo+AjFAt1OkA6?=
+ =?us-ascii?Q?jAXyMu6dcvFovLGwFyOfeFOCsKyuUSNU2emxzGtj3t+gFOTxAlACFz5iFV1L?=
+ =?us-ascii?Q?P3RGL1MgTl9Eor8Fzf0Ec2Oj/u/O5hIQV1A/jK5fOtOB6XZsN/7kSAbeZVza?=
+ =?us-ascii?Q?XtufXmlDz7c3o3owi3oYdhPK8BwTLceEXXSFtoy8IMujlb/X37bhnYDbSAMf?=
+ =?us-ascii?Q?dt1361i+bipNHFCrMHTiAoo58Jt886sFR8Kj87+5IzPnPupLazNTMRtBJgSo?=
+ =?us-ascii?Q?TwiJ+Qy+AK7fp4yqKQjPAcYuMH3qC8Jl2iC3waR3ogu/s/OzVT/UYD2DF1wE?=
+ =?us-ascii?Q?euWD8g+FOozbHKDRw7EFHqc++lRKAo4KwcnNds2/F1YymxDAjA02JCHxlzN2?=
+ =?us-ascii?Q?7Arah/OsiSJmF5h1t6Iun3bP7eMZriq+ekvczG5VYY68WqpJWSNIRp/8EQ+G?=
+ =?us-ascii?Q?nUgpYWdBQ+q3Fe9SSRNeEIAEYLwMrC3M+2XMzsV05WPtrFcdaO3qTsBKbpkk?=
+ =?us-ascii?Q?8tuk/nFG1gn8lVo4hWAQVJJsOtezEbR024rjMzZy6U7Vwj0fnLMnVrLkROCz?=
+ =?us-ascii?Q?g7jp8kwPyaLIOsk4oDDWjKBqDrk4tNxWebawIZhFdUKUytSRlcllOz+3dJgZ?=
+ =?us-ascii?Q?7TV7fU8gbhShx6oMgIlc9+atK+i+TPfzL5pL1p5CNyKG0ccxfunv?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 99e23f3e-e214-4daf-a06a-08deceee0fb2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e99d9a9-ebd7-4a2f-726c-08deceee9a84
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2026 17:04:59.4566
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2026 17:08:52.3533
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4WjyGZV4i3t3tPrkbVdnyYC2tBKvd0cRAS4fTJ3XVfo+e0tf1tjcIQ5T09XvVnUJjGUw1myeEHz+D1nkHMBMjQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY3P286MB2673
+X-MS-Exchange-CrossTenant-UserPrincipalName: VOC/E7tZgwQpfVnR3vRAVm1CRCmp6+aNUGhWARniAYRd8I+DJHV36fl41mqNvmgl9DGhV+Ddx7pnJoKvGJ4bFg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB4352
 
-Implement the EPC DMA channel delegation operations for DesignWare
-endpoint controllers. The DWC backend uses the local DesignWare eDMA
-provider to reserve the requested hardware channel and returns it as an
-opaque EPC DMA channel handle to generic endpoint functions.
+Teach dw-edma-pcie to discover a PCI endpoint DMA function from
+BAR-resident metadata. The metadata supplies the DMA register window,
+channel counts, descriptor windows, optional auxiliary windows, and
+endpoint-local descriptor and auxiliary addresses. Accept DesignWare
+eDMA unroll, HDMA compatible, and HDMA native linked-list layouts.
 
-Validate the requested direction and hardware channel against the
-linked-list channel counts before delegation.
+Endpoint-provided DMA channels use raw slave addresses because the host
+programs transfers against endpoint physical addresses, not PCI BAR
+addresses. The host-side dw-edma-pcie instance is remote-routed by
+default, so delegated channels report completions through IMWr/MSI.
 
-Limit endpoint DMA resource exposure and channel delegation to PF0.
-DWC eDMA/HDMA can generate DMA requests with a programmable function
-number, but dw-edma does not program it yet. Reject PF1+ requests so
-delegated DMA channels do not issue TLPs with the default requester
-function number when the endpoint function is PF1+.
+Endpoint DMA metadata currently has no static PCI ID. Let an explicit
+driver_override bind use the generic endpoint DMA metadata parser, but
+do not treat arbitrary dynamic IDs without driver data as endpoint DMA
+devices.
 
-Reject VF requests because the RC-programmable DWC eDMA/HDMA register
-window is assigned to a PF BAR only.
-
-Reclaim releases the delegated local channel through the DesignWare eDMA
-provider, which returns it to endpoint ownership. Propagate the EPC
-quiesce request so bind failure paths can release unexposed reservations
-without touching DMA engine state.
+The endpoint polls HOST_REQ at a low idle rate before programming DMA
+window submaps and setting READY. Let the host wait for several endpoint
+poll periods before treating the READY handshake as timed out.
 
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
 Changes in v3:
-  - New patch. Implement the DWC backend for EPC DMA channel delegation,
-    replacing the v2 DMAengine filter-callback metadata path.
+  - Select endpoint DMA match data before copying DMA data (Sashiko).
+  - Require driver_override for the generic endpoint DMA fallback
+    (Sashiko).
+  - Accept HDMA native linked-list endpoint DMA metadata.
 
- .../pci/controller/dwc/pcie-designware-ep.c   | 84 +++++++++++++++++--
- 1 file changed, 78 insertions(+), 6 deletions(-)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 380 ++++++++++++++++++++++++++++-
+ 1 file changed, 378 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 770cd7efe699..ebf3db4386b4 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -878,6 +878,26 @@ static int dw_pcie_ep_check_edma_ll_regions(struct dw_edma_region *region,
- 	return 0;
- }
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index 1e75fefae9b8..2a56ee19d4cb 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -11,9 +11,13 @@
+ #include <linux/pci.h>
+ #include <linux/device.h>
+ #include <linux/dma/edma.h>
++#include <linux/iopoll.h>
+ #include <linux/pci-epf.h>
+ #include <linux/msi.h>
+ #include <linux/bitfield.h>
++#include <linux/io.h>
++#include <linux/overflow.h>
++#include <linux/pci-ep-dma.h>
+ #include <linux/sizes.h>
  
-+static int dw_pcie_ep_check_edma_func(u8 func_no, u8 vfunc_no)
-+{
-+	/*
-+	 * The DWC endpoint databook says it is not possible to assign the
-+	 * DMA/HDMA registers to any Virtual Function.
-+	 */
-+	if (vfunc_no)
-+		return -EOPNOTSUPP;
+ #include "dw-edma-core.h"
+@@ -45,6 +49,9 @@
+ #define DW_PCIE_XILINX_MDB_DT_OFF_GAP		0x100000
+ #define DW_PCIE_XILINX_MDB_DT_SIZE		0x800
+ 
++#define DW_PCIE_EP_DMA_READY_POLL_US		1000
++#define DW_PCIE_EP_DMA_READY_TIMEOUT_US		2000000
 +
-+	/*
-+	 * To-Do: Supporting PF1+ needs dw-edma core support to carry the
-+	 * endpoint function number into channel setup and program the eDMA/HDMA
-+	 * requester-ID registers.
-+	 */
-+	if (func_no)
-+		return -EOPNOTSUPP;
+ #define DW_BLOCK(a, b, c) \
+ 	{ \
+ 		.bar = a, \
+@@ -94,6 +101,12 @@ struct dw_edma_pcie_match_data {
+ #define DW_EDMA_PCIE_F_DEVMEM_PHYS_OFF	BIT(0)
+ #define DW_EDMA_PCIE_F_REG_OFFSET	BIT(1)
+ 
++struct dw_edma_pcie_ep_dma_view {
++	struct pci_dev *pdev;
++	void __iomem *base;
++	resource_size_t limit;
++};
++
+ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	/* eDMA registers location */
+ 	.rg.bar				= BAR_0,
+@@ -158,6 +171,13 @@ static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
+ 	.rd_ch_cnt			= 8,
+ };
+ 
++static const struct dw_edma_pcie_data ep_dma_data = {
++	.mf				= EDMA_MF_EDMA_UNROLL,
++	.irqs				= EDMA_MAX_WR_CH + EDMA_MAX_RD_CH,
++	.wr_ch_cnt			= EDMA_MAX_WR_CH,
++	.rd_ch_cnt			= EDMA_MAX_RD_CH,
++};
++
+ static void dw_edma_set_chan_region_offset(struct dw_edma_pcie_data *pdata,
+ 					   enum pci_barno bar, off_t start_off,
+ 					   off_t ll_off_gap, size_t ll_size,
+@@ -227,6 +247,86 @@ static const struct dw_edma_plat_ops dw_edma_pcie_plat_ops = {
+ 	.pci_address = dw_edma_pcie_address,
+ };
+ 
++static const struct dw_edma_plat_ops dw_edma_pcie_raw_addr_plat_ops = {
++	.irq_vector = dw_edma_pcie_irq_vector,
++};
++
++static bool dw_edma_pcie_valid_bar(enum pci_barno bar)
++{
++	return bar >= BAR_0 && bar <= BAR_5;
++}
++
++static bool dw_edma_pcie_valid_bar_range(struct pci_dev *pdev,
++					 enum pci_barno bar, u64 off,
++					 size_t sz)
++{
++	resource_size_t bar_len;
++
++	if (!dw_edma_pcie_valid_bar(bar) || !sz)
++		return false;
++
++	bar_len = pci_resource_len(pdev, bar);
++
++	return off <= bar_len && sz <= bar_len - off;
++}
++
++static bool dw_edma_pcie_valid_block(struct pci_dev *pdev,
++				     const struct dw_edma_block *block)
++{
++	return dw_edma_pcie_valid_bar_range(pdev, block->bar, block->off,
++					    block->sz);
++}
++
++static bool dw_edma_pcie_ep_dma_bar_scannable(struct pci_dev *pdev,
++					      enum pci_barno bar)
++{
++	unsigned long flags = pci_resource_flags(pdev, bar);
++
++	if (!(flags & IORESOURCE_MEM))
++		return false;
++
++	if (flags & (IORESOURCE_UNSET | IORESOURCE_DISABLED))
++		return false;
++
++	return pci_resource_len(pdev, bar) >= PCI_EP_DMA_METADATA_HDR_LEN;
++}
++
++static u32 dw_edma_pcie_ep_dma_readl(struct dw_edma_pcie_ep_dma_view *view,
++				     u16 off)
++{
++	return readl(view->base + off);
++}
++
++static void dw_edma_pcie_ep_dma_writel(struct dw_edma_pcie_ep_dma_view *view,
++				       u16 off, u32 val)
++{
++	writel(val, view->base + off);
++}
++
++static u64 dw_edma_pcie_ep_dma_read64(struct dw_edma_pcie_ep_dma_view *view,
++				      u16 lo, u16 hi)
++{
++	u64 val;
++
++	val = dw_edma_pcie_ep_dma_readl(view, hi);
++
++	return (val << 32) | dw_edma_pcie_ep_dma_readl(view, lo);
++}
++
++static int dw_edma_pcie_ep_dma_read_off(struct dw_edma_pcie_ep_dma_view *view,
++					u16 lo, u16 hi, off_t *off)
++{
++	u64 val;
++
++	val = dw_edma_pcie_ep_dma_read64(view, lo, hi);
++	if (val > type_max(*off))
++		return -EINVAL;
++
++	*off = val;
 +
 +	return 0;
++}
++
+ static void dw_edma_pcie_get_synopsys_dma_data(struct pci_dev *pdev,
+ 					       struct dw_edma_pcie_data *pdata)
+ {
+@@ -328,6 +428,265 @@ static void dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
+ 	pdata->devmem_phys_off = off;
+ }
+ 
++static int
++dw_edma_pcie_parse_ep_dma_ch_table(struct dw_edma_pcie_ep_dma_view *view,
++				   struct dw_edma_pcie_data *pdata,
++				   u16 table_off, u16 entry_size, u16 ch_cnt,
++				   bool write)
++{
++	struct dw_edma_block *desc_blocks = write ? pdata->ll_wr : pdata->ll_rd;
++	struct dw_edma_block *data_blocks = write ? pdata->dt_wr : pdata->dt_rd;
++	u32 ctrl;
++	u16 i;
++	int ret;
++
++	for (i = 0; i < ch_cnt; i++) {
++		struct dw_edma_block *desc_block = &desc_blocks[i];
++		struct dw_edma_block *data_block = &data_blocks[i];
++		u16 off = table_off + i * entry_size;
++		u16 field, lo, hi;
++
++		field = off + PCI_EP_DMA_METADATA_CH_CTRL;
++		ctrl = dw_edma_pcie_ep_dma_readl(view, field);
++		if (FIELD_GET(PCI_EP_DMA_METADATA_CH_CTRL_HW_CH, ctrl) != i)
++			return -EOPNOTSUPP;
++
++		desc_block->bar =
++			FIELD_GET(PCI_EP_DMA_METADATA_CH_CTRL_DESC_BAR, ctrl);
++		lo = off + PCI_EP_DMA_METADATA_CH_DESC_OFF_LO;
++		hi = off + PCI_EP_DMA_METADATA_CH_DESC_OFF_HI;
++		ret = dw_edma_pcie_ep_dma_read_off(view, lo, hi,
++						   &desc_block->off);
++		if (ret)
++			return ret;
++		field = off + PCI_EP_DMA_METADATA_CH_DESC_SIZE;
++		desc_block->sz = dw_edma_pcie_ep_dma_readl(view, field);
++		lo = off + PCI_EP_DMA_METADATA_CH_DESC_ADDR_LO;
++		hi = off + PCI_EP_DMA_METADATA_CH_DESC_ADDR_HI;
++		desc_block->paddr =
++			dw_edma_pcie_ep_dma_read64(view, lo, hi);
++		desc_block->paddr_valid = true;
++		if (!dw_edma_pcie_valid_block(view->pdev, desc_block))
++			return -EINVAL;
++
++		*data_block = (struct dw_edma_block) { .bar = NO_BAR };
++		if (!(ctrl & PCI_EP_DMA_METADATA_CH_CTRL_AUX_VALID))
++			continue;
++
++		data_block->bar =
++			FIELD_GET(PCI_EP_DMA_METADATA_CH_CTRL_AUX_BAR, ctrl);
++		lo = off + PCI_EP_DMA_METADATA_CH_AUX_OFF_LO;
++		hi = off + PCI_EP_DMA_METADATA_CH_AUX_OFF_HI;
++		ret = dw_edma_pcie_ep_dma_read_off(view, lo, hi,
++						   &data_block->off);
++		if (ret)
++			return ret;
++		field = off + PCI_EP_DMA_METADATA_CH_AUX_SIZE;
++		data_block->sz = dw_edma_pcie_ep_dma_readl(view, field);
++		lo = off + PCI_EP_DMA_METADATA_CH_AUX_ADDR_LO;
++		hi = off + PCI_EP_DMA_METADATA_CH_AUX_ADDR_HI;
++		data_block->paddr =
++			dw_edma_pcie_ep_dma_read64(view, lo, hi);
++		data_block->paddr_valid = true;
++		if (!dw_edma_pcie_valid_block(view->pdev, data_block))
++			return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int
++dw_edma_pcie_ep_dma_wait_ready(struct dw_edma_pcie_ep_dma_view *view)
++{
++	u32 val;
++
++	return read_poll_timeout(dw_edma_pcie_ep_dma_readl, val,
++				 val & PCI_EP_DMA_METADATA_CTRL_READY,
++				 DW_PCIE_EP_DMA_READY_POLL_US,
++				 DW_PCIE_EP_DMA_READY_TIMEOUT_US, false,
++				 view, PCI_EP_DMA_METADATA_CTRL);
++}
++
++static int
++dw_edma_pcie_validate_ep_dma_metadata(struct dw_edma_pcie_ep_dma_view *view,
++				      u32 *metadata_ctrl, u8 *reg_layout_data)
++{
++	size_t table_size, table_end;
++	enum pci_barno reg_bar;
++	u16 len, entry_size;
++	u16 wr_ch_cnt, rd_ch_cnt;
++	u8 layout, layout_data;
++	u32 val;
++
++	val = dw_edma_pcie_ep_dma_readl(view, 0);
++	if (val != PCI_EP_DMA_METADATA_MAGIC)
++		return -ENODEV;
++
++	val = dw_edma_pcie_ep_dma_readl(view, PCI_EP_DMA_METADATA_HDR);
++	if (FIELD_GET(PCI_EP_DMA_METADATA_HDR_REV, val) !=
++	    PCI_EP_DMA_METADATA_REV)
++		return -EINVAL;
++
++	len = FIELD_GET(PCI_EP_DMA_METADATA_HDR_LEN_FIELD, val);
++	if (len < PCI_EP_DMA_METADATA_HDR_LEN)
++		return -EINVAL;
++	if (len > view->limit)
++		return -EINVAL;
++
++	val = dw_edma_pcie_ep_dma_readl(view, PCI_EP_DMA_METADATA_REG_LAYOUT);
++	layout = FIELD_GET(PCI_EP_DMA_METADATA_REG_LAYOUT_ID, val);
++	if (layout != PCI_EP_DMA_METADATA_REG_LAYOUT_DW_EDMA)
++		return -EOPNOTSUPP;
++
++	layout_data = FIELD_GET(PCI_EP_DMA_METADATA_REG_LAYOUT_DATA, val);
++	if (layout_data == EDMA_MF_EDMA_LEGACY)
++		return -EOPNOTSUPP;
++	if (layout_data != EDMA_MF_EDMA_UNROLL &&
++	    layout_data != EDMA_MF_HDMA_COMPAT &&
++	    layout_data != EDMA_MF_HDMA_NATIVE)
++		return -EINVAL;
++
++	val = dw_edma_pcie_ep_dma_readl(view, PCI_EP_DMA_METADATA_CTRL);
++	reg_bar = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_REG_BAR, val);
++	if (!dw_edma_pcie_valid_bar(reg_bar))
++		return -EINVAL;
++
++	wr_ch_cnt = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_WR_CH_COUNT, val);
++	rd_ch_cnt = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_RD_CH_COUNT, val);
++	if (!wr_ch_cnt && !rd_ch_cnt)
++		return -EINVAL;
++	if (wr_ch_cnt > EDMA_MAX_WR_CH || rd_ch_cnt > EDMA_MAX_RD_CH)
++		return -EINVAL;
++
++	entry_size = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_CH_ENTRY_SIZE, val);
++	if (entry_size < PCI_EP_DMA_METADATA_CH_ENTRY_SIZE ||
++	    entry_size % sizeof(u32))
++		return -EINVAL;
++
++	if (check_mul_overflow((size_t)(wr_ch_cnt + rd_ch_cnt),
++			       (size_t)entry_size, &table_size) ||
++	    check_add_overflow((size_t)PCI_EP_DMA_METADATA_HDR_LEN,
++			       table_size, &table_end) ||
++	    table_end > len)
++		return -EINVAL;
++
++	if (metadata_ctrl)
++		*metadata_ctrl = val;
++	if (reg_layout_data)
++		*reg_layout_data = layout_data;
++
++	return 0;
++}
++
++static int
++dw_edma_pcie_parse_ep_dma_data(struct dw_edma_pcie_ep_dma_view *view,
++			       struct dw_edma_pcie_data *pdata)
++{
++	u32 ctrl, reg_sz;
++	u8 reg_layout_data;
++	u64 reg_off;
++	u16 wr_table, rd_table, entry_size;
++	u16 wr_ch_cnt, rd_ch_cnt;
++	int ret;
++
++	ret = dw_edma_pcie_validate_ep_dma_metadata(view, &ctrl,
++						    &reg_layout_data);
++	if (ret)
++		return ret;
++
++	pci_dbg(view->pdev, "Detected PCI endpoint DMA BAR metadata\n");
++
++	pdata->mf = reg_layout_data;
++	pdata->rg.bar = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_REG_BAR, ctrl);
++
++	wr_ch_cnt = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_WR_CH_COUNT, ctrl);
++	rd_ch_cnt = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_RD_CH_COUNT, ctrl);
++	pdata->wr_ch_cnt = min_t(u16, pdata->wr_ch_cnt, wr_ch_cnt);
++	pdata->rd_ch_cnt = min_t(u16, pdata->rd_ch_cnt, rd_ch_cnt);
++	pdata->irqs = pdata->wr_ch_cnt + pdata->rd_ch_cnt;
++	reg_off = dw_edma_pcie_ep_dma_read64(view,
++					     PCI_EP_DMA_METADATA_REG_OFF_LO,
++					     PCI_EP_DMA_METADATA_REG_OFF_HI);
++	reg_sz = dw_edma_pcie_ep_dma_readl(view, PCI_EP_DMA_METADATA_REG_SIZE);
++	if (reg_off > type_max(pdata->rg.off) ||
++	    !dw_edma_pcie_valid_bar_range(view->pdev, pdata->rg.bar,
++					  reg_off, reg_sz))
++		return -EINVAL;
++	pdata->rg.off = reg_off;
++	pdata->rg.sz = reg_sz;
++
++	entry_size = FIELD_GET(PCI_EP_DMA_METADATA_CTRL_CH_ENTRY_SIZE, ctrl);
++	wr_table = PCI_EP_DMA_METADATA_HDR_LEN;
++	rd_table = PCI_EP_DMA_METADATA_HDR_LEN + wr_ch_cnt * entry_size;
++
++	ret = dw_edma_pcie_parse_ep_dma_ch_table(view, pdata, wr_table,
++						 entry_size, pdata->wr_ch_cnt,
++						 true);
++	if (ret)
++		return ret;
++
++	return dw_edma_pcie_parse_ep_dma_ch_table(view, pdata, rd_table,
++						  entry_size,
++						  pdata->rd_ch_cnt, false);
++}
++
++static int
++dw_edma_pcie_parse_ep_dma_caps(struct pci_dev *pdev,
++			       struct dw_edma_pcie_data *pdata)
++{
++	struct dw_edma_pcie_ep_dma_view metadata_view;
++	void __iomem *base;
++	resource_size_t bar_len;
++	enum pci_barno bar;
++	u32 ctrl;
++	int ret;
++
++	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++) {
++		if (!dw_edma_pcie_ep_dma_bar_scannable(pdev, bar))
++			continue;
++
++		bar_len = pci_resource_len(pdev, bar);
++		base = pci_iomap_range(pdev, bar, 0, 0);
++		if (!base)
++			continue;
++
++		metadata_view = (struct dw_edma_pcie_ep_dma_view) {
++			.pdev = pdev,
++			.base = base,
++			.limit = bar_len,
++		};
++		ret = dw_edma_pcie_validate_ep_dma_metadata(&metadata_view,
++							    NULL, NULL);
++		if (ret == -ENODEV) {
++			pci_iounmap(metadata_view.pdev, base);
++			continue;
++		}
++		if (ret) {
++			pci_iounmap(metadata_view.pdev, base);
++			return ret;
++		}
++
++		ctrl = dw_edma_pcie_ep_dma_readl(&metadata_view,
++						 PCI_EP_DMA_METADATA_CTRL);
++		ctrl |= PCI_EP_DMA_METADATA_CTRL_HOST_REQ;
++		dw_edma_pcie_ep_dma_writel(&metadata_view,
++					   PCI_EP_DMA_METADATA_CTRL, ctrl);
++
++		ret = dw_edma_pcie_ep_dma_wait_ready(&metadata_view);
++		if (ret) {
++			pci_iounmap(metadata_view.pdev, base);
++			return ret;
++		}
++
++		ret = dw_edma_pcie_parse_ep_dma_data(&metadata_view, pdata);
++		pci_iounmap(metadata_view.pdev, base);
++
++		return ret;
++	}
++
++	return -ENODEV;
 +}
 +
  static int
- dw_pcie_ep_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
- 				   u8 vfunc_no)
-@@ -891,12 +911,9 @@ dw_pcie_ep_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
- 	if (!pci->edma_reg_size || !edma->dw)
- 		return 0;
- 
--	/*
--	 * DWC eDMA/HDMA register windows exposed to the Root Complex are
--	 * assigned to a PF BAR and cannot be assigned to a VF BAR.
--	 */
--	if (vfunc_no)
--		return -EOPNOTSUPP;
-+	ret = dw_pcie_ep_check_edma_func(func_no, vfunc_no);
-+	if (ret)
-+		return ret;
- 
- 	ret = dw_pcie_ep_check_edma_ll_regions(edma->ll_region_wr,
- 					       edma->ll_wr_cnt);
-@@ -1043,6 +1060,59 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+ dw_edma_pcie_parse_synopsys_caps(struct pci_dev *pdev,
+ 				 struct dw_edma_pcie_data *pdata)
+@@ -367,6 +726,14 @@ dw_edma_pcie_parse_xilinx_caps(struct pci_dev *pdev,
  	return 0;
  }
  
-+static int dw_pcie_ep_delegate_dma_chan(struct pci_epc *epc, u8 func_no,
-+					u8 vfunc_no,
-+					enum pci_epc_aux_dma_dir dir, u16 hw_ch,
-+					void **data)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct dw_edma_chip *edma = &pci->edma;
-+	struct dma_chan *chan;
-+	int ret;
-+	bool write;
++static const struct dw_edma_pcie_match_data ep_dma_match_data = {
++	.data = &ep_dma_data,
++	.plat_ops = &dw_edma_pcie_raw_addr_plat_ops,
++	.parse_caps = dw_edma_pcie_parse_ep_dma_caps,
++	.flags = DW_EDMA_PCIE_F_REG_OFFSET,
++	.chip_flags = DW_EDMA_CHIP_PARTIAL,
++};
 +
-+	if (!data)
-+		return -EINVAL;
-+	*data = NULL;
-+
-+	ret = dw_pcie_ep_check_edma_func(func_no, vfunc_no);
-+	if (ret)
-+		return ret;
-+
-+	if (!edma->dw)
-+		return -ENODEV;
-+
-+	switch (dir) {
-+	case PCI_EPC_AUX_DMA_EP_TO_RC:
-+		if (hw_ch >= edma->ll_wr_cnt)
-+			return -EINVAL;
-+		write = true;
-+		break;
-+	case PCI_EPC_AUX_DMA_RC_TO_EP:
-+		if (hw_ch >= edma->ll_rd_cnt)
-+			return -EINVAL;
-+		write = false;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	chan = dw_edma_request_delegated_chan(edma->dev, write, hw_ch);
-+	if (!chan)
-+		return -EBUSY;
-+
-+	*data = chan;
-+
-+	return 0;
-+}
-+
-+static void dw_pcie_ep_reclaim_dma_chan(struct pci_epc *epc, u8 func_no,
-+					u8 vfunc_no, void *data, bool quiesce)
-+{
-+	dw_edma_release_delegated_chan(data, quiesce);
-+}
-+
- static const struct pci_epc_ops epc_ops = {
- 	.write_header		= dw_pcie_ep_write_header,
- 	.set_bar		= dw_pcie_ep_set_bar,
-@@ -1060,6 +1130,8 @@ static const struct pci_epc_ops epc_ops = {
- 	.get_features		= dw_pcie_ep_get_features,
- 	.get_aux_resources_count	= dw_pcie_ep_get_aux_resources_count,
- 	.get_aux_resources	= dw_pcie_ep_get_aux_resources,
-+	.delegate_dma_chan	= dw_pcie_ep_delegate_dma_chan,
-+	.reclaim_dma_chan	= dw_pcie_ep_reclaim_dma_chan,
- };
+ static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
+ 				 const struct dw_edma_pcie_match_data *match,
+ 				 struct dw_edma_pcie_data *pdata,
+@@ -400,8 +767,17 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	int err, nr_irqs;
+ 	int i, mask;
  
- /**
+-	if (!match)
+-		return -ENODEV;
++	if (!match) {
++		/*
++		 * The endpoint DMA metadata path has no static PCI ID yet.
++		 * Accept it only for an explicit driver_override bind, not for
++		 * arbitrary dynamic IDs without driver data.
++		 */
++		if (!device_has_driver_override(&pdev->dev))
++			return -ENODEV;
++
++		match = &ep_dma_match_data;
++	}
+ 	pdata = match->data;
+ 
+ 	if (!pdata)
 -- 
 2.51.0
 
