@@ -1,93 +1,101 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893541C68F;
-	Sun, 21 Jun 2026 06:55:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 324701FA859
+	for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 07:12:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782024906; cv=none; b=h9lX8pMZ2UemwY3AoKBKlOlpNo8yZAiFrIUdrBa0ek5PWJGfgKZr/t5sGlFDxREhCtM1rxk0UdqXohohAB6CxFBZR/KqX/uMOh+GT50T5NXZt4YQPtBG5RbuCiP2eK7K3QADbLhPe7au1Yo5dvQyc3y/+TU6xpx21DInur4l7M8=
+	t=1782025964; cv=none; b=mL6/Xlkhq2jJSm/zDvTk+414sMNEljUD4VtBXBPdKf0I7OvdcNwXRQdVUtPprzuEA3VPl5ojYnM2jyDEDiirH+/GPCN8t1nV4TgBwVNXs7q211/WiG9HrR9+vFt5BnKB44SVj44YzMZLA7sxDVA9BrqwHgc7d+z/2bDcBhxonKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782024906; c=relaxed/simple;
-	bh=Wx01uP3faFngXSSrd1jm6na8igotzoZExmtNPTQ84ss=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ex3TdRvcEPSXt1bHAXY13tPcP5lWL3KScWx+wSBbgPFwjby8No3V+7TDdQH7+Blfxo/D+TZ0ldD9tUFLT2DBzagOcYTsReTgkn5+FmfXg5XgQr/ZYyUTDWltyqSSAq/afqKf3VG12uT4gNRFX7DlljPzEhc/tGAUuYWm9R6als0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c5jhijwH; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1782025964; c=relaxed/simple;
+	bh=dLmZ+yJD2JOWdxUSCVeWOoemfMGt0nE77tcp9suOYK0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VZc1mMoPbpm4RQTLENSrb6WGVDt3BDAoZSFxTyBEV5OaswYtQECBVqhD+v3HoOWSS2TZvkOdP52MHmXYGi7GJX5cM2JBPLLaeNQgUbHf72z+I8JatwKHYlLlLQy98rpWXiXoMW5tC3uSd6ZA4iLII3ignMi7NXbVwCk+vgLuD5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=onY0BL3N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c5jhijwH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782024904; x=1813560904;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Wx01uP3faFngXSSrd1jm6na8igotzoZExmtNPTQ84ss=;
-  b=c5jhijwH4PG3lsj0wJ8wt7mT8i4Ye1OOkC2hoN1QZ8olMk7obPbm7hvM
-   I3d+pMmUH/5Sjscus779lCa5bDwotIIOOyA/WVVlRCnAiTXSOi0QUT0LM
-   U7NwerslBt8uSkESLK3FbCm2aRLfYG59oNutRH2CpwkXOYuyX7/pNTUyy
-   8vmJ/jKmyOatz6gXHg5VHvUz7BQ9o5FJUgWt3YUrSrseuP6Wms56+UFcp
-   36JMdbhlgdDWPv/gY2LpCVWfmTSwbjN1OfVZtwST1IW2aTpuXdU2s2eo6
-   TX+DMjcJ/qv7RevHXbHUGfFfIw4Q8AH30AmFHt/z6YjjSVifVZLvXVsBN
-   g==;
-X-CSE-ConnectionGUID: TGuTOx/uQMWmNvj4UX6Hdg==
-X-CSE-MsgGUID: wBsp2JiZT2aHN0q/fgFUQg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11823"; a="93444611"
-X-IronPort-AV: E=Sophos;i="6.24,216,1774335600"; 
-   d="scan'208";a="93444611"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2026 23:55:03 -0700
-X-CSE-ConnectionGUID: KbyF/pl+Svet30DepINh+A==
-X-CSE-MsgGUID: maxN6Em8RdK8YKWY1jUL3w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,216,1774335600"; 
-   d="scan'208";a="247809376"
-Received: from egrumbac-mobl6.jer.intel.com ([10.13.65.199])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2026 23:55:02 -0700
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-pci@vger.kernel.org,
-	helgaas@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel wireless BE200
-Date: Sun, 21 Jun 2026 09:54:51 +0300
-Message-ID: <20260621065451.21650-1-emmanuel.grumbach@intel.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="onY0BL3N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B20F31F000E9;
+	Sun, 21 Jun 2026 07:12:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782025962;
+	bh=P2smeCEOe7IcPc8e4xWXAXlf8PAlnbTC/yvLkHRll1Q=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=onY0BL3NWNo0RFfE17Cae1xulvybxTXyItP+Xa4pOeL//59sMJYdL/aibtK9cO2FQ
+	 BGuUaO+8Rpos9sQeMxvzIDBiEAD7rosrgnOEV88SkWN704wL3rWMgtXClR1mKOqhzS
+	 6QoYBtWvLP3vix4Re02pW5Zc8NIeMr5/xPA+JgXdws1C5GBU/6v85gvlrciLdiGqCS
+	 D9qk3Wmt14uRqDH/S2vW5Y7K08DoLPL0Zj7X36kwtXTuihybuybagdZEvZ3gl1/lb0
+	 SKrDYxlWdgna+JNZ7HBGS7+eajF5gFq9WurzG08delodJCWshmOVHeKpTnGBgnxiEP
+	 UyC1YFF5Nv/TA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260621065451.21650-1-emmanuel.grumbach@intel.com>
+References: <20260621065451.21650-1-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 21 Jun 2026 07:12:42 +0000
+Message-Id: <20260621071242.B20F31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The Intel wireless BE200 device fails to copy the TLP Attributes from a
-Request to the Completion.
-Since there is no caching involved the device anyway, disable the
-NoSnoop and Relaxed ordering on the root port.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Missing suspend/resume fixup hook for Intel BE200 PCIe erratum wor=
+karound
+--
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/pci/quirks.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+commit ebcdab6d68a92d23aa6cf1713e8e72d87f0e6279
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c0242f3e9f06..e9f070d07b2c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4674,6 +4674,13 @@ static void quirk_chelsio_T5_disable_root_port_attributes(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 			 quirk_chelsio_T5_disable_root_port_attributes);
- 
-+/*
-+ * The Intel wireless BE200 fails to copy TLP Attributes from a Request to the
-+ * Completion it generates.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x272b,
-+			 quirk_disable_root_port_attributes);
-+
- /*
-  * pci_acs_ctrl_enabled - compare desired ACS controls with those provided
-  *			  by a device
--- 
-2.54.0
+PCI: Disable NoSnoop and Relaxed ordering for Intel wireless BE200
 
+This commit disables NoSnoop and Relaxed ordering on the root port for the
+Intel wireless BE200 device because it fails to copy TLP Attributes from a
+Request to the Completion.=20
+
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4674,6 +4674,13 @@ static void quirk_chelsio_T5_disable_root_port_att=
+ributes(struct pci_dev *pdev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  			 quirk_chelsio_T5_disable_root_port_attributes);
+> =20
+> +/*
+> + * The Intel wireless BE200 fails to copy TLP Attributes from a Request =
+to the
+> + * Completion it generates.
+> + */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x272b,
+> +			 quirk_disable_root_port_attributes);
+
+[Severity: High]
+Will this workaround survive a system suspend and resume cycle?
+
+When the Intel BE200 device is hotplugged, the upstream Root Port's
+configuration state is saved at boot time by pcie_portdrv_probe(), which ca=
+lls
+pci_save_state(). The workaround modifies the Root Port's current
+configuration to disable Relaxed Ordering and No Snoop, but it does not upd=
+ate
+the Root Port's saved state array.
+
+Upon system suspend, the PCI core skips saving the Root Port's state because
+its state_saved flag is already true. During resume, pci_restore_state()
+restores the Root Port to its original boot-time state, which would re-enab=
+le
+the problematic attributes.
+
+Should there also be a DECLARE_PCI_FIXUP_RESUME_EARLY hook registered here =
+to
+ensure the workaround is re-applied when the device resumes?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260621065451.2165=
+0-1-emmanuel.grumbach@intel.com?part=3D1
