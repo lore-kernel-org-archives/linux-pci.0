@@ -1,216 +1,271 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA9BC2FF
-	for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 05:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782019821; cv=pass; b=vBiyQRVHyjz/PHavjpcyX+XSbVDnOyJjJXGuzz3jH1RbgKmoJa07pL76bpK2t2Ntr0MMLjzn422qgs0gyC/rNFl+p+VzkrHUHZrnQUcDQcgD1EeOHjkUlflU0dWizr6pw9wW+Zffxw68CwJ5OREvsnanig9/1sk2TdkSXGMf4pA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782019821; c=relaxed/simple;
-	bh=YAtxztktHol+NWkRQ3GQNrVaqDgxEl5tO/OrMZmUCcM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ki6dnsH4ruqYUj+qXI0MP86E/fi8/K+fHjjbWsMRANr3vGpIbVORhC/VOyN6BLi9U2er1yFs+WG8uy2K6IRQAA3yaLqOZi9dZSLdh7n6tweNV7mtwKAFi2DSG7FJQoAIQI5Yeg8DeUG6Ba9qd0232VnOAsz5SdWDii7g09BbX1k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rVpLluPP; arc=pass smtp.client-ip=209.85.208.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26E3C4964F
+	for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 05:50:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782021033; cv=none; b=t8qekif2xkgB2y5D4W5FBLHdAKlCeCYrNYwwcoZo6PFPswOzzsSSaLhjUDGlL6SkdD8VPCrVoVHMDaBg6PSbQts2Z9vPo6lDisAA/MyTnVkXpfMeIvoc+OIghGStaXkOvjqqtJiux1WW7JC0lFDcRJS1Gs6XlozYik9l+IevGmA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782021033; c=relaxed/simple;
+	bh=Fovflc0B6PKhfGgMlDjeF2zarUq2bNe618l4HX19CiM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CqOFVP7eh52nKRhJ+v/7NlBImmA84q4+K7ll59trCcvdgt2FVw0c+XOJYFt9qi9r1Vwp/bhIV+ibJjgy5MmnQjJmG6e+1omyaDNO+Opm2Qgw4cT5xsoCpXjSoc4jj/sg7cr3F/Gut1F0JeyVcF+PHrc5CruGQqr2lgiFhbmV/bA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KzxeNF5B; arc=none smtp.client-ip=209.85.160.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rVpLluPP"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6977dc206afso1517182a12.1
-        for <linux-pci@vger.kernel.org>; Sat, 20 Jun 2026 22:30:20 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782019819; cv=none;
-        d=google.com; s=arc-20240605;
-        b=T2fWTjlvYbKhiMc12hv94zWkDERB/R6uXGyumuYo0U+oOzMNmGiz+gMovXwbNU8hrr
-         0cl9l8uAGzJvVFzsZnytt2elC9ebmPbUicGtXaP87jyrgmdU63P22sa8PN4UdlLBVnDg
-         otg3RUiouxD5TgREORVnRA9M4lc+5Qq0Yl8C9FrEK+OaoNWvigIVXQdWfbqDEW88xZW3
-         zEkAHbigo6zn8CGPfBNdv6G1iKNa14GzLo6H0kkE9Xix8vV/i7QVXR8Cu7oIMvYbz2oe
-         ccpaPtf05DOXr8U6N4gSbMjhou5tscPaejEDjIyqtCqKU6s52FpHTxixDy/isvKyX1F0
-         djBA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=kmPSXJguXWQ/tlLldwXhVLCtaD8MB9GAT4fB3JYPsUA=;
-        fh=EuTCWd/h7j6tmaSWkQYHhqkBwLXz5T5PUhE/Z5NZo0Y=;
-        b=iMzhfRiQFhHR2Sns+deNdORrQnVGFteCFLoKtgvAH1f5QwxI2uI7rX8C0jMPGrFfeL
-         xmPwGOfCKgzzYdBomBfGQvcNRmFXIFZ2PWcW1eH/IMzB+pDZPJmbMOKzAbvO+HISZF7w
-         sR/BNp2y0VOzfPDEaJozopE9+X+5PHW8aEgzvn1m3VGSfxoqvmpGq2coySKkY9j/CaXJ
-         l1DuaDagzgitgUJ4KPQa6r1vt5fx52qYyt4L8FEoAnYFqtVCR1MbFJ/FbX+Lobpv4f3a
-         v0/NOkAnHyUdgfwUX2slnrEQ/SpBRwntZaFVCxYklJccUg26R3v3QWkzWKlROaIWkMld
-         qH+A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KzxeNF5B"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-519fa6d7a78so20543221cf.1
+        for <linux-pci@vger.kernel.org>; Sat, 20 Jun 2026 22:50:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782019819; x=1782624619; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1782021030; x=1782625830; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kmPSXJguXWQ/tlLldwXhVLCtaD8MB9GAT4fB3JYPsUA=;
-        b=rVpLluPPd+8ELoKP3BJJAQx2CL3HxhjsDASl61j6k5qe28D24tMNS+W3QEM66+hnGa
-         JOLhANYjO7UmQwYu5AjMsEDC7+kZI52fZBV80b30b3IbhEXAEP5WAtXdek9+RtdpjrY0
-         sPFC2089Q7CCflgQROkO2z0fKK5TUs73SM2e2/+705YCLzGNqyqZ4KGGx5ZJYTlBZMOS
-         UkLcrETCwLkVtGKfuUKznZKsQgIzULH96lmjiWpzhiw6JJnToBe1ZlVXGEfP6HsOPFVi
-         DvJsuXWj0di4ksagmRHfuHpEuOJ3CQUy5dI6TqBLQRi3WiHWJ6j5t+KvscsuiivhiWvm
-         iboQ==
+        bh=QiwKCU4SFJw5tmeTpkfyFxHEO3HBV3wZDQlSc0QsaLE=;
+        b=KzxeNF5BNH7RD1ib7FEWM9BiQr25Yd8bvvt8OmKKmkpoBx7sw1uT1bmh8IwIb7xc+W
+         vbSiDkYpdoG/OcMMLc09FMaJ2ShxwrFScRQdHsrr2ymNVUm6fJOFLTSFnxfudWIurPEI
+         tAKlQwWy3fimDImNEF9jXnyDJomxGikc7lrsSjUmQ2wTxgssGc8MudX4flJze0vB+F6t
+         DWBSsyzM/go270dbjGDVOUtrr1rz8bBgMUv+fbPw0tit1T/NJyTnU1FKB7vbbdYX+6+b
+         jH1iYG5jL+GOg3sTehIZFiV/vOtI0hqvTCrVoecqPb1YmA2BcJ6w5yXTV0Soa54ANUX6
+         MnWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782019819; x=1782624619;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1782021030; x=1782625830;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=kmPSXJguXWQ/tlLldwXhVLCtaD8MB9GAT4fB3JYPsUA=;
-        b=C/U07NSACgH41q3TO0pDiff6f9dVMP4HOTX2JsSv2BshoKJvxH9Ipq8y4wTLczQqLv
-         /E6vIKdnASa07tP4P47Pgdw1JYnqq8IlDe0hLDGI0pMvM6/yWpZkUNXZgI2svzuOfqH2
-         cpI9ijGktMDrb7tPxFbtpD4gb2iokTy/rs1e5B9QhW+S9cI1V/+bVci/U400tvAhzj2J
-         nHV50XKd8hL5JkB01ham8PTElRRrJyWLuSYpDJ6IU15WxrXPmPR+X3/8JeEfWaggu9TJ
-         nnHKBo1KkWc9+K++rNnXV94+GlTtYU8wQP+4vwK3gFbBgd1ODvMlyO82oI02NENbLfpL
-         NF4w==
-X-Gm-Message-State: AOJu0Yz0RjC74ZMaJnE3MnqwvRWLx/Y5If43lJm7Hw1WpOlrRRRo8xTP
-	+pp1zAwALIrJtzQM6/WyLAjPkMcsr5z1org8/K0lzEOqu1P9lN+KoMa38oW8xmLxS30kAsXfSsl
-	xWiYGsWNWUnvCA17kP8NU+IyztsPajXv/XEIc
-X-Gm-Gg: AfdE7cnHZMm2my3Wgj8YFCT+P55wAzVjzjUyNb5AQsWKqDz0opNc31/0hdfBuvpy4hv
-	BIrFrAlLKXv6yQ/+JTwzISb7fJyzB7H+/uCh7BWObVXtLOudmHZj4H4bcQ+VTAectnh1rIF1FKC
-	BZg3+0wEnDgS0FgZTc98UtSlXanTXJ9Uv8fEtXbrT29B9XEn211DOm4RzS37aVzYbu+o/eVPFpS
-	CnKs+qCCguUgdGdOC4RQ2S4hOlmwvm8M9A3aBY27TUTxNIw5SWLwRZgpRQpgaft2Bk5wE+JaydQ
-	WRGAP+AjlHiV5SFPOU/evOOpStDtEFsWYimaAmnXDQwBijsZDEaIGEGjvDC+bPFa4BbMnH4JKB1
-	pVnQYub1fsIYkLO4rOZcJj9DeI2yROkohTiqInMFVl4Yj3qPmUJrtE+SDNQ==
-X-Received: by 2002:a05:6402:3883:b0:695:bea9:7e31 with SMTP id
- 4fb4d7f45d1cf-696d788231dmr4588794a12.0.1782019818544; Sat, 20 Jun 2026
- 22:30:18 -0700 (PDT)
+        bh=QiwKCU4SFJw5tmeTpkfyFxHEO3HBV3wZDQlSc0QsaLE=;
+        b=UPs5r/BvLzpNRPoPoBgkgoVarqvVIvafPP7hZsJCVpU1H85S2YnTBTovoBKCsiqvr1
+         kNNvH/DSTh+GQN8Nwb16r0aqEhJffir9WxIOSRN1hVpsqzAGnKOLKf0H2klNRuMQE9CC
+         8CABa3RsqDykHo8W/twK5Dvap1b8r/ZGhvdYdKorwnsNbPj4jQnByJtK+oBBgaQmkBVy
+         Z7BCpSO6RL+deG33EmAZF2jqNxpR9FkkXfR/QO3A6Z8OBQyWAJSlR57kBwdkTYpyRBcF
+         SS4CwtMX0LWLfA3fsw05viirdzJuHY8iyXmWXQH1Rykht+PmempAWf6GQkPW3PJ6PSoe
+         rGQg==
+X-Forwarded-Encrypted: i=1; AFNElJ81Lgt5VqOKf7/k9uRHpZp7ozGpYx1CrgamKEmFQIBNN9yV6CR7ajXvsUiNECuBt+wTvWmHELCI9Ng=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjBT3F3ZDaY/Vuboh2isL2w0fqnidpaJtAhcU5Gx1cgsAffHJy
+	TIWHK0q+tdzMlheUrR0Oc8nU0PJIhxjgqg0x1r3kyFxIcibEUErQiRi8
+X-Gm-Gg: AfdE7cmtrl8B9mTTQBH2We8VL2OEdfVCWgFPa3k16dTSaGLr/cXgEDCUUdER41s2gql
+	1Pcufm4LNr33iSQN3R+QfuJ0iFdKacu4ngbxOOUxX5+om4YBZeMmauMdVMU6GP1drE3Y1OpNei8
+	r2m1wme6jupf7RAmuKj4yh3SLKb5RZopg4oYF7hvazdhRc8+d11Ufmk5HYJObmqj5UZEgJoyJ9u
+	zVrLIkrvVLrzc+GXArYqKBdLHBEYA6b87+1BsZGVif65DBrv0qE21uaF3gWwZ2xftNxjz6TmY4a
+	Vjo1QHExS9n5HPZkd0hgqYWe9XAcW0tYonpnBuPKkosi6UccnxMRUWOZsfSVmRG3L5Vq+kUePmL
+	rS988qmPTPWyKApMpcmz6nTSTThSC1f+KSTOPDjIYmhJyQrvnkrmrX6aI7lzmzpz2DwI2mpwElS
+	XSmcNbX0g23k9eEyP5gFm0MoyWG9wjrXhPwETCJgdklg==
+X-Received: by 2002:a05:622a:2c9:b0:517:8da1:4d4 with SMTP id d75a77b69052e-519f04dab2amr125142381cf.46.1782021030158;
+        Sat, 20 Jun 2026 22:50:30 -0700 (PDT)
+Received: from i4-l-hqh5357-03.ad.psu.edu ([130.203.139.71])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51a0c7ef4f3sm31795531cf.18.2026.06.20.22.50.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 20 Jun 2026 22:50:29 -0700 (PDT)
+From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+To: mani@kernel.org,
+	kwilczynski@kernel.org
+Cc: kishon@kernel.org,
+	Frank.Li@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+Subject: [PATCH] misc: pci_endpoint_test: fix use-after-free after device unbind
+Date: Sun, 21 Jun 2026 01:46:09 -0400
+Message-Id: <20260621054609.186877-1-shuangpeng.kernel@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <178144969601.60470.7358419009914000395@gmail.com>
+References: <178144969601.60470.7358419009914000395@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260411043051.174309-1-rosenp@gmail.com> <7sibn6mlvuozzjuggu773w2eqjyb7dz34gkdrx7tzxyjbygfpx@hiqzen36nknm>
- <CAKxU2N_WpHOLPyN6AfnK0CyoU1dkBsGivRvVZt1fnKMSpc3aVA@mail.gmail.com> <qb6nxxkowjgrsscddbmorh2z27uwwtceohokjtathytzdvqe75@apahvpqwrht2>
-In-Reply-To: <qb6nxxkowjgrsscddbmorh2z27uwwtceohokjtathytzdvqe75@apahvpqwrht2>
-From: Rosen Penev <rosenp@gmail.com>
-Date: Sat, 20 Jun 2026 22:30:06 -0700
-X-Gm-Features: AVVi8CcVh1hO0ymp98FfmFfRv1xuTMEmwfaoq_klD0UHstTeyN1NoA3D-OCSbkM
-Message-ID: <CAKxU2N8ZNhCSsCuDDuef=XSUq5qShpa4WqAEE82Ugj5FFt6ung@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mvebu: allocate ports with pcie struct
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 13, 2026 at 10:27=E2=80=AFAM Manivannan Sadhasivam <mani@kernel=
-.org> wrote:
->
-> On Tue, May 12, 2026 at 01:38:52PM -0700, Rosen Penev wrote:
-> > On Tue, May 12, 2026 at 4:29=E2=80=AFAM Manivannan Sadhasivam <mani@ker=
-nel.org> wrote:
-> > >
-> > > On Fri, Apr 10, 2026 at 09:30:51PM -0700, Rosen Penev wrote:
-> > > > Use a flexible array member to combine allocations and simplify
-> > > > slightly.
-> > > >
-> > > > Add __counted_by for extra runtime analysis.
-> > > >
-> > > > Needed to move mvebu_pcie struct below others as flexible array mem=
-bers
-> > > > require full definitions.
-> > > >
-> > > > Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> > > > ---
-> > > >  drivers/pci/controller/pci-mvebu.c | 33 ++++++++++++--------------=
-----
-> > > >  1 file changed, 13 insertions(+), 20 deletions(-)
-> > > >
-> > > > diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/contr=
-oller/pci-mvebu.c
-> > > > index a72aa57591c0..dea50f6e88be 100644
-> > > > --- a/drivers/pci/controller/pci-mvebu.c
-> > > > +++ b/drivers/pci/controller/pci-mvebu.c
-> > > > @@ -78,18 +78,6 @@
-> > > >  #define PCIE_DEBUG_CTRL         0x1a60
-> > > >  #define  PCIE_DEBUG_SOFT_RESET               BIT(20)
-> > > >
-> > > > -struct mvebu_pcie_port;
-> > > > -
-> > > > -/* Structure representing all PCIe interfaces */
-> > > > -struct mvebu_pcie {
-> > > > -     struct platform_device *pdev;
-> > > > -     struct mvebu_pcie_port *ports;
-> > > > -     struct resource io;
-> > > > -     struct resource realio;
-> > > > -     struct resource mem;
-> > > > -     int nports;
-> > > > -};
-> > > > -
-> > > >  struct mvebu_pcie_window {
-> > > >       phys_addr_t base;
-> > > >       phys_addr_t remap;
-> > > > @@ -125,6 +113,16 @@ struct mvebu_pcie_port {
-> > > >       int intx_irq;
-> > > >  };
-> > > >
-> > > > +/* Structure representing all PCIe interfaces */
-> > > > +struct mvebu_pcie {
-> > > > +     struct platform_device *pdev;
-> > > > +     struct resource io;
-> > > > +     struct resource realio;
-> > > > +     struct resource mem;
-> > > > +     int nports;
-> > > > +     struct mvebu_pcie_port ports[] __counted_by(nports);
-> > > > +};
-> > > > +
-> > > >  static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 =
-val, u32 reg)
-> > > >  {
-> > > >       writel(val, port->base + reg);
-> > > > @@ -1455,11 +1453,13 @@ static int mvebu_pcie_probe(struct platform=
-_device *pdev)
-> > > >       struct device_node *child;
-> > > >       int num, i, ret;
-> > > >
-> > > > -     bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(struct mveb=
-u_pcie));
-> > > > +     num =3D of_get_available_child_count(np);
-> > > > +     bridge =3D devm_pci_alloc_host_bridge(dev, struct_size(pcie, =
-ports, num));
-> > > >       if (!bridge)
-> > > >               return -ENOMEM;
-> > > >
-> > > >       pcie =3D pci_host_bridge_priv(bridge);
-> > > > +     pcie->nports =3D num;
-> > > >       pcie->pdev =3D pdev;
-> > > >       platform_set_drvdata(pdev, pcie);
-> > > >
-> > > > @@ -1467,12 +1467,6 @@ static int mvebu_pcie_probe(struct platform_=
-device *pdev)
-> > > >       if (ret)
-> > > >               return ret;
-> > > >
-> > > > -     num =3D of_get_available_child_count(np);
-> > > > -
-> > > > -     pcie->ports =3D devm_kcalloc(dev, num, sizeof(*pcie->ports), =
-GFP_KERNEL);
-> > > > -     if (!pcie->ports)
-> > > > -             return -ENOMEM;
-> > > > -
-> > > >       i =3D 0;
-> > > >       for_each_available_child_of_node(np, child) {
-> > > >               struct mvebu_pcie_port *port =3D &pcie->ports[i];
-> > > > @@ -1488,7 +1482,6 @@ static int mvebu_pcie_probe(struct platform_d=
-evice *pdev)
-> > > >               port->dn =3D child;
-> > > >               i++;
-> > > >       }
-> > > > -     pcie->nports =3D i;
-> > >
-> > > So now, nports stays with of_get_available_child_count()?
-> > yes.
->
-> But do you really want to configure disabled ports as well? I wouldn't wa=
-nt to
-> do that.
-Wait this calls of_get_available_child_count and
-for_each_available_child_of_node. disabled nodes are not handled.
->
-> - Mani
->
-> --
-> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
-=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
-=E0=AF=8D
+An open miscdevice file descriptor can outlive the PCI driver binding.
+misc_deregister() removes the device node and prevents new opens, but it
+does not revoke file descriptors that are already open.
+
+Before this change, pci_endpoint_test stored the miscdevice inside struct
+pci_endpoint_test, and ioctl() recovered the test object from
+file->private_data with container_of(). Since the test object was allocated
+with devm_kzalloc(), it was freed when the PCI device was unbound. A
+process could therefore open /dev/pci-endpoint-test.N, unbind the PCI
+device through sysfs, and then issue an ioctl on the stale file descriptor,
+causing a use-after-free of struct pci_endpoint_test.
+
+Manage the test object lifetime explicitly. Allocate it with kzalloc_obj(),
+add a kref, take a reference from .open(), and drop it from .release().
+The remove path deregisters the miscdevice to stop new opens, serializes
+with ioctl using the existing mutex, releases the PCI resources, clears
+test->pdev, and drops the initial reference. Already-open file descriptors
+then keep the test object alive; subsequent ioctls fail with -ENODEV
+instead of touching released device resources.
+
+Fixes: 2c156ac71c6b ("misc: Add host side PCI driver for PCI test function device")
+Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+Closes: https://lore.kernel.org/all/178144969601.60470.7358419009914000395@gmail.com/
+Suggested-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Signed-off-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+---
+ drivers/misc/pci_endpoint_test.c | 61 ++++++++++++++++++++++++++++----
+ 1 file changed, 55 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index dbd017cabbb9..981a834ce41b 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -13,6 +13,7 @@
+ #include <linux/io.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
++#include <linux/kref.h>
+ #include <linux/miscdevice.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+@@ -136,6 +137,7 @@ enum pci_barno {
+ };
+ 
+ struct pci_endpoint_test {
++	struct kref	kref;
+ 	struct pci_dev	*pdev;
+ 	void __iomem	*base;
+ 	void __iomem	*bar[PCI_STD_NUM_BARS];
+@@ -143,7 +145,7 @@ struct pci_endpoint_test {
+ 	int		last_irq;
+ 	int		num_irqs;
+ 	int		irq_type;
+-	/* mutex to protect the ioctls */
++	/* mutex to serialize ioctls and removal */
+ 	struct mutex	mutex;
+ 	struct miscdevice miscdev;
+ 	enum pci_barno test_reg_bar;
+@@ -157,6 +159,15 @@ struct pci_endpoint_test_data {
+ 	size_t alignment;
+ };
+ 
++static void pci_endpoint_test_free(struct kref *kref)
++{
++	struct pci_endpoint_test *test = container_of(kref,
++						     struct pci_endpoint_test,
++						     kref);
++
++	kfree(test);
++}
++
+ static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+ 					  u32 offset)
+ {
+@@ -1141,10 +1152,15 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ {
+ 	int ret = -EINVAL;
+ 	enum pci_barno bar;
+-	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
+-	struct pci_dev *pdev = test->pdev;
++	struct pci_endpoint_test *test = file->private_data;
++	struct pci_dev *pdev;
+ 
+ 	mutex_lock(&test->mutex);
++	pdev = test->pdev;
++	if (!pdev) {
++		ret = -ENODEV;
++		goto ret;
++	}
+ 
+ 	reinit_completion(&test->irq_raised);
+ 	test->last_irq = -ENODATA;
+@@ -1206,9 +1222,30 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 	return ret;
+ }
+ 
++static int pci_endpoint_test_open(struct inode *inode, struct file *file)
++{
++	struct miscdevice *miscdev = file->private_data;
++	struct pci_endpoint_test *test = to_endpoint_test(miscdev);
++
++	kref_get(&test->kref);
++	file->private_data = test;
++
++	return 0;
++}
++
++static int pci_endpoint_test_release(struct inode *inode, struct file *file)
++{
++	struct pci_endpoint_test *test = file->private_data;
++
++	kref_put(&test->kref, pci_endpoint_test_free);
++	return 0;
++}
++
+ static const struct file_operations pci_endpoint_test_fops = {
+ 	.owner = THIS_MODULE,
++	.open = pci_endpoint_test_open,
+ 	.unlocked_ioctl = pci_endpoint_test_ioctl,
++	.release = pci_endpoint_test_release,
+ };
+ 
+ static void pci_endpoint_test_get_capabilities(struct pci_endpoint_test *test)
+@@ -1241,10 +1278,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	if (pci_is_bridge(pdev))
+ 		return -ENODEV;
+ 
+-	test = devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
++	test = kzalloc_obj(*test);
+ 	if (!test)
+ 		return -ENOMEM;
+ 
++	kref_init(&test->kref);
+ 	test->pdev = pdev;
+ 	test->irq_type = PCITEST_IRQ_TYPE_UNDEFINED;
+ 
+@@ -1263,7 +1301,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	ret = pci_enable_device(pdev);
+ 	if (ret) {
+ 		dev_err(dev, "Cannot enable PCI device\n");
+-		return ret;
++		goto err_kfree_test;
+ 	}
+ 
+ 	ret = pci_request_regions(pdev, DRV_MODULE_NAME);
+@@ -1349,6 +1387,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ err_disable_pdev:
+ 	pci_disable_device(pdev);
+ 
++err_kfree_test:
++	kfree(test);
++
+ 	return ret;
+ }
+ 
+@@ -1364,10 +1405,13 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	if (id < 0)
+ 		return;
+ 
++	misc_deregister(&test->miscdev);
++
++	mutex_lock(&test->mutex);
++
+ 	pci_endpoint_test_release_irq(test);
+ 	pci_endpoint_test_free_irq_vectors(test);
+ 
+-	misc_deregister(&test->miscdev);
+ 	kfree(misc_device->name);
+ 	kfree(test->name);
+ 	ida_free(&pci_endpoint_test_ida, id);
+@@ -1378,6 +1422,11 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
++	pci_set_drvdata(pdev, NULL);
++	test->pdev = NULL;
++	mutex_unlock(&test->mutex);
++
++	kref_put(&test->kref, pci_endpoint_test_free);
+ }
+ 
+ static const struct pci_endpoint_test_data default_data = {
+-- 
+2.34.1
+
