@@ -1,301 +1,184 @@
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FC561A6836
-	for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 08:22:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68C801A6836;
+	Sun, 21 Jun 2026 08:28:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782030152; cv=pass; b=VUGeNg2z/eiqI3ExebHAN8YYV/zfVxOAiFVlydseKbegBbJ/VJJM0PT/ZQcpxR12B2ivfoyWc/UNCukKgDPNRkBpNQlZYPyaxumZqpXOeS0gPzXtbg8a8hu9SM3GfFnW1eVMLMdsioeX3T233x2BcqRdg66wYOhTQQOQ7ahCask=
+	t=1782030517; cv=fail; b=aFnOU8/yY8HqMMsmx5IROPzc0FOBLJQg/Opr1m7oDM46MzFBMrCRAHy0iWI2UH1j5StxuU8tlp+qv4N7eblOivtKHGRdh70cCEKUMZB2Xztl+HCpUMqIKmVQVbUpsJPPpktdnxL5k4dqDSqxkeQMTVFbf9jKCZvlFV65GUTH5xk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782030152; c=relaxed/simple;
-	bh=gKIWmx5zWV5LsCWOjY1X7ahn/14a30AzR+mW7BXPR8w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=q3DL4k7ZxGecX66ILmLsA8n01UoeMnC1yvZiQuJH8YopQjS3fzCBqOFkjYca2gI2J8VwFXjLapi6v5pXACuGXaNYfXLIoPQohQvSQIYoesmBJJdytA3QSyP0RZNAEwdy+I394jZ1gy4BGqy4Kft7Y/7PP4MCLDjvHBhUPsa1gBM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G21MJJPX; arc=pass smtp.client-ip=74.125.224.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782030517; c=relaxed/simple;
+	bh=64w3pEGbEqiZmxoNZGbSJKA8Io/Go+EAyRQfdrE53Wk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=fR1CkQqcDYp+mL4SfK4Twj56Xcd1JaWVyIwiVAoYzw4rJ+13UtQpl/eXkr05CqTZpEjHJOHu7fEi0gHCztox2AcQ5lQ0FxTNEnWH3sCNI0iXL7Avk4Z7lMNm9quCDcxPq/yp4iPVfNJiWGSdaSeWG5o+EUdgWUtpYqUdVl9wydc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NgqDyZMI; arc=fail smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G21MJJPX"
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-66043ecf6b3so3071719d50.0
-        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 01:22:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782030149; cv=none;
-        d=google.com; s=arc-20240605;
-        b=LVxktWEjeuTROkqYuurseUkf4a9PSwDAmNhfF3OX/CoqIexq8uu0CVH0WFmlX2xw1E
-         v+44K/xbzShaSDG7KFZ3hH4RNebQxF96SUKv/IYkFe6DcRYSMrB3O4VluHAkoUCdpcbP
-         jgn/DAxkTFz7IFVyhTlVFtX/kO64CYV5QX8egBWq6i5xtozhBv0julZMZICa1RSzZxWA
-         JptZeeh9qCKWRP/XMWkU1IfViHfwdXc8KuM1zSvNjn5yZLTDXXNlv4ZI00AUzWncxXWc
-         1jJz9si0VRe6vfboBPmMPFqs76brg2dHonXi3crcQ5ldMx3CS8RG/iX2V99mgMTT9fUg
-         JTZg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=n/EmXSHaoeoh2XOA2NeyT+wN02eAbXCj4e0t7spo2Es=;
-        fh=Jr2XzqYh+D/54zt4e9q2AoWQ7MG81obCfYhvN2C5/GA=;
-        b=SLlDF6W17fL7iGIKh0fvEVT7VS/VGxvBM5no399SEwmAFDkR/eF72lv9DrdxjbDM3N
-         h3BgDlQFR2ChSR3sGEE/s1bF5RVwD1Mhtm88F/xrn2jA8WzMQrCD/PirX5Mc8OTbp1qm
-         VCq9Jma3LfByVTyH7JhnfCGSMDLmyHjuFfun5lYGiUezYt9nIUAZ6XjNxuMTLEHdhEi4
-         QOV5cfFcYtwvHj6AehTlxgekwopGkGzBUb9h16frO/HEUviXBSMu4YqBQeMGA6uy60J1
-         UTKDHZdvl3DHnbjriZRteg1bcqGzmoDTcL11aVBECX/YKQRgH9SJ/SounCEcX7Dp6GSE
-         TsMQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782030149; x=1782634949; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=n/EmXSHaoeoh2XOA2NeyT+wN02eAbXCj4e0t7spo2Es=;
-        b=G21MJJPXnWNQ9RwSAZqC/sCJQj4A/GmhUsrsUB3LnW8ar3+USKlZ52N7FQZIV78nJd
-         1FtDZknwSXjNTjxxbMnIuDis8tVUk9KiIc1bKAFbnLWHavOkmcQsVJbCMeoyqYEv+fsy
-         lDzUcxB5zauDYpATkNAOfEDB6ITl2COcLcOmDjbKv67xBst9hO4TrV5+BcDBXqVZJ23a
-         8SGShMeLjX/6eiaJ9RV3illfXJ4/JTJRcMa+uir/ql0hUepnbzFM5Sg2YJ3ki7ySh8ly
-         3wKYD6PXmBWXx4csWXKPC3dNQnSBqL4R3Yw/qAbVada4HuqoGhTqvtnDdIRGzmnWDlQC
-         uCog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782030149; x=1782634949;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=n/EmXSHaoeoh2XOA2NeyT+wN02eAbXCj4e0t7spo2Es=;
-        b=RpbzUmThTj7unbJj3b1uPZf206T994lMlkMhfhCspM/bFeaMjCe9tX//FcVF9WbO4s
-         ekSeeQAthYoPyz/fJO3OJ8mWEQU39puGg3L7Uu5zsm6YxrzWLu2Tuh1huncCKMrI21g4
-         878W7QyA720cSoqEMej6+x7GuDQe/VENJtAw7wpzp8gjyxcSTSJwOWNjCWe/nl7e+6oW
-         VihdLMbacnpFMmY44feRhC/QH2dvnONRgnBUzAfCFEfhwNcEwCgll2c1PpQp4ZKRL1zH
-         a6gu8/S23tA/2YogGTZcnOEgfk8Sl/GhO/EtCKJuj90Dz+x5bItOfGqg7N6fCUanpTVd
-         4ImQ==
-X-Gm-Message-State: AOJu0YxO38SviFFLqRwnORrgTp+PIJ0tDDNTAoInHn6gnz0sI8EqNnRD
-	qOia6Dy0Hlgr09jdSVMEUPlekW2xke1DW/Hg7WxbrwgbOsHTFJcFf1zDHgn9KHoWDg6KVabETUf
-	BP3LCqWJvNBhz+WFc6FENmwXcmFpZ+Ao=
-X-Gm-Gg: AfdE7cmqnc1RF4yGPKSF5tL6y2Nwya096l6IwuLdFgOBup+gJLoDZfcOZPIgR3h4HPd
-	6zK2/1jjIddCF3W2psQOwLp/NxpwIeH3Xg0s6Yjc8lBznE1tbwDp26iFjTM8d/cp4oqNKjVnTzu
-	RyInw8PHdee5SBQV+zaEGbjA6Sd0F/3qJwswpJfjMw49wNxorZ/qK9SxssxQ33O0MfBBJXdEqR4
-	GWE0T83WZNy9/6CG29RUsG9nSEY7m33JZXddp9Yk/n+YEn7HCDZvTaegQHAjUgQRebme5GE6sXq
-	D7ezRrOPFUZhbc8+h7NkEqpKZ4U8cPIvmBBnDCkmcPKVcQK1GyiNHSpw8J5E/w==
-X-Received: by 2002:a05:690e:11c2:b0:65e:4bcb:2a7d with SMTP id
- 956f58d0204a3-663033e1518mr7446064d50.57.1782030148982; Sun, 21 Jun 2026
- 01:22:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NgqDyZMI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782030516; x=1813566516;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=64w3pEGbEqiZmxoNZGbSJKA8Io/Go+EAyRQfdrE53Wk=;
+  b=NgqDyZMIwsZeW1qZYJFj7z9KD8YWHwlAbriD+j1iRDu7izSBB4yopS2n
+   OfgeJGoeQvClIlWAdVEiS8Qf1B/NDxohmAyPhUuuFI993s2TYlQbDoCUO
+   0nuz55sQBR9oTlTiKgs2pnes2EhPI2ykJTwaRHrhsD76ZQgSwyUcAt0zC
+   /tp2W+Hg0A3N3/Chmj/KOK1A3A+F2xY40038hzLsXmQtIorzvQVybOtmE
+   uh3B33I6ty5dAzLnShOUR2bVtEcFPdcaLsimPQpscenm9vJGo2+BxjqJw
+   majWY6hd4blwnRWG50sthtHIBHFZcvNRTLfvUigMrjbDAkrrVo/7yo081
+   A==;
+X-CSE-ConnectionGUID: FcZ+ObfiReqbzkN55fW91w==
+X-CSE-MsgGUID: S71YYwCyRf+jocAxicpPWg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11823"; a="108338154"
+X-IronPort-AV: E=Sophos;i="6.24,216,1774335600"; 
+   d="scan'208";a="108338154"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2026 01:28:35 -0700
+X-CSE-ConnectionGUID: A2a/9AceT2eQWH1FdLj9TA==
+X-CSE-MsgGUID: 9I3YG0pnQw2RHt86b8D17Q==
+X-ExtLoop1: 1
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by fmviesa003.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2026 01:28:34 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Sun, 21 Jun 2026 01:28:34 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Sun, 21 Jun 2026 01:28:34 -0700
+Received: from BYAPR05CU005.outbound.protection.outlook.com (52.101.85.0) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Sun, 21 Jun 2026 01:28:33 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cVAq4v8ydC4CsLSU3O95Slxv+/TW2nYSpQYMvC0IJCFGIPAXuGap6yKgRW7m4Zy8eEvl5/hb5vnTQc+kCfRWfWMq6TRQNbTApeE6S5/p7qyZmhzY6SZ7UMFo+PgNNvjk4tfS6ElFCpPAWhs40tpVUECIfAfdiP+TeZzxBxR/UwPhrfypF+6SM4FXJ77UE2MWH89g5OdxXoiHHobkKmJzCXxK5UhNQFNzzkO/psb+obCfsc6tHk7s+77WZJXrNzY1taKICmtTcsGWNJPZnWW81/E3HbwJ1paJTQzaB2CZz9YMmH6xZnIeUsemR3DSTiTJSgCh0Y5NakarLqPGfp0kYg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=64w3pEGbEqiZmxoNZGbSJKA8Io/Go+EAyRQfdrE53Wk=;
+ b=fNdw+Ci2VBhnBfTMriPKNnzR5A2ymxGE8Ok9CtZBc68H5FYE7mPyowXd7QaRB4es77OMDxPx3kcp0HxlAKueu9xLHPaLPPuUqkoMpOu4ABKhE6xorAIFN22bLKxerHJ83Ok1YyOD6eoVtMdmhJVJ0y6DvmAvqcy+Sr8sxWUumsGHoE81RFjaWNdkIrJ2uV3PjM+c45QI/7gY1hW3/Uqu9dpnll8TGWiaPWqx7pYus2Ww2mo5EY3XHflyOds96FQY+HqMGEBfrQtos4OAmVfF2aEW1FF2+tgn4fA5zmJXE3LvMznleaZkFGeOCmbJzjnmGh5ViC5TtlNPHHlnnfWA9Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from PH0PR11MB7494.namprd11.prod.outlook.com (2603:10b6:510:283::18)
+ by SJ0PR11MB5181.namprd11.prod.outlook.com (2603:10b6:a03:2de::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.18; Sun, 21 Jun
+ 2026 08:28:26 +0000
+Received: from PH0PR11MB7494.namprd11.prod.outlook.com
+ ([fe80::e642:c73c:6d80:5083]) by PH0PR11MB7494.namprd11.prod.outlook.com
+ ([fe80::e642:c73c:6d80:5083%5]) with mapi id 15.21.0139.009; Sun, 21 Jun 2026
+ 08:28:26 +0000
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "lukas@wunner.de" <lukas@wunner.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Korenblit, Miriam
+ Rachel" <miriam.rachel.korenblit@intel.com>, "helgaas@kernel.org"
+	<helgaas@kernel.org>
+Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Thread-Topic: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Thread-Index: AQHdAUruh/HWEZwEC0iMA6tK8iUSn7ZIqESAgAAE+AA=
+Date: Sun, 21 Jun 2026 08:28:26 +0000
+Message-ID: <3a421216a83574232f9311849590fb7c4a358325.camel@intel.com>
+References: <20260621065451.21650-1-emmanuel.grumbach@intel.com>
+	 <ajecdx3HYj5rqJBZ@wunner.de>
+In-Reply-To: <ajecdx3HYj5rqJBZ@wunner.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH0PR11MB7494:EE_|SJ0PR11MB5181:EE_
+x-ms-office365-filtering-correlation-id: 66a2287a-ab21-4866-4981-08decf6f10e6
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|22082099003|18002099003|56012099006|11063799006|4143699003|38070700021;
+x-microsoft-antispam-message-info: C9npviLgLq8fULj9Ng+D6DLoZPCO+OMM8zbtDFpjghzm3IlaXutXnDnXLWALEqc3FPJIb94eXqugx9iSOfiMgT0Il8ONpeCxsfOBLLiee5tN51uHmrBZkCcQQStQAaPxobIN43LUi3OrLfvSSeNe0IrJpzc6G5Xf0Yv0/lWj27XFCgDeqq5FVBhRglCVcapYqVR0sDHoTxSYpumziov+VQdMUQT8HhQFM1pl9kdIrzTfdZlhnud4kL9J4qofsU7IgmFMCHr6ciH8yNphBk5+SM2BaAY6rrNw4QGnPunwOtReU7QGZk0jjyqyI64Ataz0wrYwaM+X/t/FmX+oi8qEXmF7LQPGVR28vW60C0vbOa9XGkHbe7JWa60LPu6RS+CkE5WBR3FNoSprm4TE80u2ri64X6VoXwGNFDoTfngU3qlvMc0mIOIxSNzpFhRTcjShGe4xpcZcYBnfikJdtDdJjBXnogC15kCs6NlM7jG61Njsaj1yfMkVfEDC75wXueHl+WhmeIUfabKvfG8iP6C3mmtWo5LVVCq7iWwTLvvhd8sQtWc1Z2oyY6CdGO+ok3e9l0MgPK626rUfV+mcZ782H9svKuBR/RGc494/pTTeHv3BCivfLSASEOlxwwuxBfSQNmfWvvIuWIdU+rGZ2eCb7w1TsS+85RVhNa9yyynsbB01QXQGXZAij6lVQemGG+x5qfADngL0xOAjowTMn/is5FXDBYMJA4N5zsX3/tnugWg=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB7494.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(22082099003)(18002099003)(56012099006)(11063799006)(4143699003)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?bmFTY1BpZE52T1dDbE0rZTlCMkY0Wjl6cXRKSkNlVXFaN0I2RHlaWDJ0ZDNC?=
+ =?utf-8?B?RmFwczFkQXUwTGdHYTJrMDFNajhzMEpqSERIa3ZJZ2hERTFHN0FlWTl0dG5v?=
+ =?utf-8?B?ZzgvU3QwWmV6ZWx1TzNFc2RUT0xwTllENmJuRzF0b2xyWWtKb3h2L1NJczd1?=
+ =?utf-8?B?ekkwZ0xDdHJGUHZLZ1lrS2JWa0sxUVgwV0wwRTNlekdBZ1grYytsaEtvdTND?=
+ =?utf-8?B?VGNNZG1uQmF5N08rbWJlWWJxYU4zU21IMlVUVXFDOU1ocjhJaHErTkhHelN5?=
+ =?utf-8?B?VzNaK1o5bnVrT2I3blplRHhzRjZzQUlzVC9Zc3p5RG1WM3UybDlUS3UrSm5o?=
+ =?utf-8?B?MFJrVTFsV0YwY0QyRnA0cVBncXd6UHdFTDNMUWNscktCbnNmNXFJQnJ4cnJF?=
+ =?utf-8?B?TTkrRXJ0RGFXVm1IalZmV3oycTk0NjZJd2JLUWVMTTNiVnd1bkVsdHI3OEtD?=
+ =?utf-8?B?Y3FqZmFCeUI5ZGl1VEVhVk1HRW1Qbk5EMERqY3JBQzdUU1BCOGo3L0hRY2Nn?=
+ =?utf-8?B?dHhyUFE2aEw4UjNMK2VBdHE4NzEzL0RKbDlraDU5ZVIxVS93MjVSTWF0Z0x5?=
+ =?utf-8?B?QUlpSU9TY1cxSE1ONmd4U3RlSytjRG9WVzZLb0ZMdzhzRjZjUk0xYkp1ZUlO?=
+ =?utf-8?B?WVA0eDFmZHdRNFEyVFRXL3dGWDBheXZLcjVwQXZsemdMcDQvNVZ3a3E0SS8r?=
+ =?utf-8?B?c3pnYWNSMTBJL0xmNDM3ZEE5SkdIbENIa3NxdEFGTkZsOVRaTFZMMG80NEdl?=
+ =?utf-8?B?U1hEaTdlK0hGVTFOZzEwQ0FSUk1zZFZSeFFMTmk0ZzdEaU1RQU5uckNNMCtn?=
+ =?utf-8?B?SDh5N1RCbGFDVnc1bXhTWklhaVRKWk4wZWZxYWJ6emtlMzJGcjNnQlhqUmJX?=
+ =?utf-8?B?LzJxTkwrS0hQbitCZ0lCdDdmeHdWb3FnWHpVZVk2dFNTUEk5WkFHbDQrZU5U?=
+ =?utf-8?B?S0k0ZmdFNnpib3JFaE1jQUkyU0VINllXa3A2aG5kVEZmQ1o0R1N3N2xUTlhp?=
+ =?utf-8?B?OXl6enVka2szeG1QYjNoc3RLOUlweS9kSjJSeEFqazlLUHByalBpOUhoN0Zv?=
+ =?utf-8?B?MENiSUhaUnVDd3JQN2VNRXlNRkxPYlNEOUwwM0NpTC9PRkpEVEo4NFo0aFZy?=
+ =?utf-8?B?WW1paytKYmZxUktZS0Zydkg5cnJaR1JUSFM5WXpMSkpiU0ZJNXJveVl2cmFt?=
+ =?utf-8?B?K0F2UldQWldQVnBNRHEweGlEbndwbTk2cldPdnh5aE9sRWhhS0p2MnlDUzJz?=
+ =?utf-8?B?aThRQ0NqMlNJSGN2TlVFd2d3Qmp5VUtVTyt0VmVYT3dBQkpnRjVRN0Mwckkx?=
+ =?utf-8?B?aU41ZGI2T2JTajRWWlJvTHI5MEdaN3VIKzNFV1J4aWpDU3djbGFHSURyUlNh?=
+ =?utf-8?B?TytZSy9mQVpsVDlacTRxd1B0VHVUalloVWc0VVNPS0NoNkx3NXcvYU4rc3JQ?=
+ =?utf-8?B?RWxjUHVTMlJZVHZ3SXRkZjQ2LzhQY3lvcEltbjR0L21uRS9HVE4yUlVZT0pP?=
+ =?utf-8?B?cytLZkJMNFV1TDVrTjhZMDdEeDN5WlhyMHY1QnVub0dWZ2s2bjRzV05mNHFP?=
+ =?utf-8?B?QS90eHJXdXI2alg1V0tGV0tsSWtXbTNFdEJZRkpwZmovUys3MUh5ZDdoSVBa?=
+ =?utf-8?B?V1MrNUhlRHNCK25nNWtXSzFoRy9tK0l0bDZ5V2VNTVRPczVWbENvWk5aY3hU?=
+ =?utf-8?B?dS9XOGFFUytaUU1vL0p0dklKeS9Zemp1Z2FUelJlaHdOU1dTc2lpZUFSeldx?=
+ =?utf-8?B?ZitUaWw0SVlySThZeW5CTVNHVGwvdlhJcFlZY1dUSm05QVhabFVXak4yUFky?=
+ =?utf-8?B?WTRtcnU1S2ZBY3p3WGt6MU41RFJ1S20yVWlucGNDNitVR3dqZTNESGsvNjc4?=
+ =?utf-8?B?YXJ2d25yYXZhaGxpdjNUQVQyZnNaaGJXTkhlcitFZ1Z2UllxN1I2aThGcTdv?=
+ =?utf-8?B?ZUU2LzkwbDc5ZEQ1Nit5ZnpIcjdwWmVNb1Z3VmlpTUlMTmxkQjNza2UrV0xU?=
+ =?utf-8?B?STNjcVl2WmVsQ1B5clZlT1pscDVJN2pyWU9Ta21GdGwwNHJhbU5wZ0ZJRWtK?=
+ =?utf-8?B?UjVkQXFzSkJJRk15RkNuRVdqRDAvZzZpZy96M1pYV3JCMWpJZVZUb25aa3lo?=
+ =?utf-8?B?N3ZtM3FIZWhJVE1Pb1g5WXU3UGJ5WVgwMWcvY3hYei9Zdng5cDNmd2hKQSt6?=
+ =?utf-8?B?YXBVTjNpNlNiNGVmV2hENkUzNE5kLzM5amNERmZEa0lZTnVGNWw5eTdXSHFG?=
+ =?utf-8?B?emFWZVJNVU12TCtjaDJkRDZ5ZEMwUWlrZnJER0I5MGhPYkNlTTVxdnF3U2Nl?=
+ =?utf-8?B?YkdNWjAwbDNyTk1QZEY0WDV6V1pHbUk3OUkyeFBQdlRWM21vRGMzQVpUdjJW?=
+ =?utf-8?Q?WUZK7CjPjMVFmV6I=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <211F1EF455A9474883275170D020FDDC@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260504022231.15501-1-kartikey406@gmail.com>
-In-Reply-To: <20260504022231.15501-1-kartikey406@gmail.com>
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-Date: Sun, 21 Jun 2026 13:52:17 +0530
-X-Gm-Features: AVVi8Cfrh5vcb8HIszaI5eodCyWZ0B5MmcdY-OjNWtJkmJQyR9CDm5MgkTsOQCw
-Message-ID: <CADhLXY6F5G-prnD=c+oKYPvOhXTukjs3_1TksEvjPU6u+u+6og@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/proc: check user access return values in proc_bus_pci_{read,write}()
-To: bhelgaas@google.com, kw@linux.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Exchange-RoutingPolicyChecked: kpgWnXT9arjsoB31w1onDqET15073PPrJ9/ANzBC9QCjoqm7h0AXYLFlJCwEg+4alGeNeDEar7anVWakkwL73VUDoftklM+ZPd+zJcGCAoLEHSoBE16DKkaFUNUiJPlkKHz8lGNYVBoWO3VrvLV2cAxw6Hp/EUajnpGnx/xjrbRanJNeXgQwVYLmhPP9tx2NyUkCyRLe/kUntlSc1h3zsSZCE6SVWdeRojmqV64l8qTURy4YGdLSO9wciEx/RjJKEnMwwZkLrXEn9vge2XUf3pBP6Y+dsvxswsAJ8JiL+SKtLD08beOXi/dMjPt2M4RdaDOH39fs4U8TS4OCNLiU6Q==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB7494.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 66a2287a-ab21-4866-4981-08decf6f10e6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jun 2026 08:28:26.4787
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: JrZ86NLWidh3Pboxh6gI37zA8367EKd7SCD5zLC4QyoFQkM6P3yd6NES18s13hkIvRL4ZwjKPKLoe+0qatdYHXAcraUrYz+VjNti/d8jLcQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5181
+X-OriginatorOrg: intel.com
 
-On Mon, May 4, 2026 at 7:52=E2=80=AFAM Deepanshu Kartikey <kartikey406@gmai=
-l.com> wrote:
->
-> proc_bus_pci_write() ignores the return value of __get_user(). On a
-> faulting user pointer the extable fixup zeros the destination, and the
-> function writes those zeros to PCI configuration space.
->
-> syzbot triggers this with writev()-ing a NULL iov_base to
-> /proc/bus/pci/00/03.0 (the virtio-blk controller in the syzkaller VM):
-> zero is written to the Command register, clearing Bus Master Enable,
-> and the disk stops responding. In-flight journal writes never complete
-> and jbd2 hangs in wait_on_buffer() indefinitely:
->
->   INFO: task jbd2/sda1-8 blocked in I/O wait for more than 143 seconds.
->    __wait_on_buffer fs/buffer.c:123
->    jbd2_journal_commit_transaction+0x388a/0x6870 fs/jbd2/commit.c:837
->    kjournald2 fs/jbd2/journal.c:201
->
-> proc_bus_pci_read() has the symmetric problem with __put_user(): a
-> faulting user pointer silently drops config-space data and returns
-> success.
->
-> Switch both functions to get_user()/put_user(), which combine the
-> access_ok() check with the load/store and return -EFAULT on failure.
-> The up-front access_ok() can be removed accordingly. On error, jump to
-> a common label that releases the runtime-PM reference and returns
-> -EFAULT.
->
-> Reported-by: syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3Dc7604c9fdd7580cca4e0
-> Tested-by: syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> ---
-> Changes in v2:
->  - Use get_user()/put_user() and drop access_ok() (Krzysztof)
->  - Rename label to err: per kernel convention (Krzysztof)
->  - Simplify error path to release runtime-PM and return -EFAULT (Krzyszto=
-f)
->  - Apply the same fix to proc_bus_pci_read() (Krzysztof)
-> ---
->  drivers/pci/proc.c | 44 ++++++++++++++++++++++++++++----------------
->  1 file changed, 28 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index ce36e35681e8..8e624d829840 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -53,15 +53,13 @@ static ssize_t proc_bus_pci_read(struct file *file, c=
-har __user *buf,
->                 nbytes =3D size - pos;
->         cnt =3D nbytes;
->
-> -       if (!access_ok(buf, cnt))
-> -               return -EINVAL;
-> -
->         pci_config_pm_runtime_get(dev);
->
->         if ((pos & 1) && cnt) {
->                 unsigned char val;
->                 pci_user_read_config_byte(dev, pos, &val);
-> -               __put_user(val, buf);
-> +               if (put_user(val, buf))
-> +                       goto err;
->                 buf++;
->                 pos++;
->                 cnt--;
-> @@ -70,7 +68,8 @@ static ssize_t proc_bus_pci_read(struct file *file, cha=
-r __user *buf,
->         if ((pos & 3) && cnt > 2) {
->                 unsigned short val;
->                 pci_user_read_config_word(dev, pos, &val);
-> -               __put_user(cpu_to_le16(val), (__le16 __user *) buf);
-> +               if (put_user(cpu_to_le16(val), (__le16 __user *) buf))
-> +                       goto err;
->                 buf +=3D 2;
->                 pos +=3D 2;
->                 cnt -=3D 2;
-> @@ -79,7 +78,8 @@ static ssize_t proc_bus_pci_read(struct file *file, cha=
-r __user *buf,
->         while (cnt >=3D 4) {
->                 unsigned int val;
->                 pci_user_read_config_dword(dev, pos, &val);
-> -               __put_user(cpu_to_le32(val), (__le32 __user *) buf);
-> +               if (put_user(cpu_to_le32(val), (__le32 __user *) buf))
-> +                       goto err;
->                 buf +=3D 4;
->                 pos +=3D 4;
->                 cnt -=3D 4;
-> @@ -89,7 +89,8 @@ static ssize_t proc_bus_pci_read(struct file *file, cha=
-r __user *buf,
->         if (cnt >=3D 2) {
->                 unsigned short val;
->                 pci_user_read_config_word(dev, pos, &val);
-> -               __put_user(cpu_to_le16(val), (__le16 __user *) buf);
-> +               if (put_user(cpu_to_le16(val), (__le16 __user *) buf))
-> +                       goto err;
->                 buf +=3D 2;
->                 pos +=3D 2;
->                 cnt -=3D 2;
-> @@ -98,7 +99,8 @@ static ssize_t proc_bus_pci_read(struct file *file, cha=
-r __user *buf,
->         if (cnt) {
->                 unsigned char val;
->                 pci_user_read_config_byte(dev, pos, &val);
-> -               __put_user(val, buf);
-> +               if (put_user(val, buf))
-> +                       goto err;
->                 pos++;
->         }
->
-> @@ -106,6 +108,10 @@ static ssize_t proc_bus_pci_read(struct file *file, =
-char __user *buf,
->
->         *ppos =3D pos;
->         return nbytes;
-> +
-> +err:
-> +       pci_config_pm_runtime_put(dev);
-> +       return -EFAULT;
->  }
->
->  static ssize_t proc_bus_pci_write(struct file *file, const char __user *=
-buf,
-> @@ -129,14 +135,12 @@ static ssize_t proc_bus_pci_write(struct file *file=
-, const char __user *buf,
->                 nbytes =3D size - pos;
->         cnt =3D nbytes;
->
-> -       if (!access_ok(buf, cnt))
-> -               return -EINVAL;
-> -
->         pci_config_pm_runtime_get(dev);
->
->         if ((pos & 1) && cnt) {
->                 unsigned char val;
-> -               __get_user(val, buf);
-> +               if (get_user(val, buf))
-> +                       goto err;
->                 pci_user_write_config_byte(dev, pos, val);
->                 buf++;
->                 pos++;
-> @@ -145,7 +149,8 @@ static ssize_t proc_bus_pci_write(struct file *file, =
-const char __user *buf,
->
->         if ((pos & 3) && cnt > 2) {
->                 __le16 val;
-> -               __get_user(val, (__le16 __user *) buf);
-> +               if (get_user(val, (__le16 __user *) buf))
-> +                       goto err;
->                 pci_user_write_config_word(dev, pos, le16_to_cpu(val));
->                 buf +=3D 2;
->                 pos +=3D 2;
-> @@ -154,7 +159,8 @@ static ssize_t proc_bus_pci_write(struct file *file, =
-const char __user *buf,
->
->         while (cnt >=3D 4) {
->                 __le32 val;
-> -               __get_user(val, (__le32 __user *) buf);
-> +               if (get_user(val, (__le32 __user *) buf))
-> +                       goto err;
->                 pci_user_write_config_dword(dev, pos, le32_to_cpu(val));
->                 buf +=3D 4;
->                 pos +=3D 4;
-> @@ -163,7 +169,8 @@ static ssize_t proc_bus_pci_write(struct file *file, =
-const char __user *buf,
->
->         if (cnt >=3D 2) {
->                 __le16 val;
-> -               __get_user(val, (__le16 __user *) buf);
-> +               if (get_user(val, (__le16 __user *) buf))
-> +                       goto err;
->                 pci_user_write_config_word(dev, pos, le16_to_cpu(val));
->                 buf +=3D 2;
->                 pos +=3D 2;
-> @@ -172,7 +179,8 @@ static ssize_t proc_bus_pci_write(struct file *file, =
-const char __user *buf,
->
->         if (cnt) {
->                 unsigned char val;
-> -               __get_user(val, buf);
-> +               if (get_user(val, buf))
-> +                       goto err;
->                 pci_user_write_config_byte(dev, pos, val);
->                 pos++;
->         }
-> @@ -182,6 +190,10 @@ static ssize_t proc_bus_pci_write(struct file *file,=
- const char __user *buf,
->         *ppos =3D pos;
->         i_size_write(ino, dev->cfg_size);
->         return nbytes;
-> +
-> +err:
-> +       pci_config_pm_runtime_put(dev);
-> +       return -EFAULT;
->  }
->
->  #ifdef HAVE_PCI_MMAP
-> --
-> 2.43.0
->
-
-Gentle Reminder on this patch. Please let me know the status of this patch.
-
-Thanks
-
-Deepanshu Kartikey
+T24gU3VuLCAyMDI2LTA2LTIxIGF0IDEwOjEwICswMjAwLCBMdWthcyBXdW5uZXIgd3JvdGU6DQo+
+IE9uIFN1biwgSnVuIDIxLCAyMDI2IGF0IDA5OjU0OjUxQU0gKzAzMDAsIEVtbWFudWVsIEdydW1i
+YWNoIHdyb3RlOg0KPiA+IFRoZSBJbnRlbCB3aXJlbGVzcyBCRTIwMCBkZXZpY2UgZmFpbHMgdG8g
+Y29weSB0aGUgVExQIEF0dHJpYnV0ZXMNCj4gPiBmcm9tIGENCj4gPiBSZXF1ZXN0IHRvIHRoZSBD
+b21wbGV0aW9uLg0KPiA+IFNpbmNlIHRoZXJlIGlzIG5vIGNhY2hpbmcgaW52b2x2ZWQgdGhlIGRl
+dmljZSBhbnl3YXksIGRpc2FibGUgdGhlDQo+ID4gTm9Tbm9vcCBhbmQgUmVsYXhlZCBvcmRlcmlu
+ZyBvbiB0aGUgcm9vdCBwb3J0Lg0KPiANCj4gSXMgdGhlcmUgYSBwdWJsaWMgU3BlY2lmaWNhdGlv
+biBVcGRhdGUgd2hpY2ggY291bGQgYmUgbGlua2VkIGluIHRoZQ0KPiBjb21taXQgbWVzc2FnZSBh
+bmQvb3IgY29kZSBjb21tZW50Pw0KPiANCj4gDQoNCk5vdCByZWFsbHkuDQpXZSBqdXN0IGhhdmUg
+dGVzdGVkIG91ciBkZXZpY2Ugd2l0aCBKZXRzb24gVGhvciBhbmQgc2F3IHRoYXQgaXQgZG9lc24n
+dA0Kd29yay4gSGFwcGVucyB0aGF0IHRoZSBQQ0kgY29udHJvbGxlciBvbiBKZXRzb24gVGhvciBp
+cyBkb2luZyB0aGluZ3MNCnRoYXQgdmVyeSBmZXcgUENJIGNvbnRyb2xsZXJzIGRvIGFuZCB0aGlz
+IHVuZGVyY292ZXJlZCB0aGlzIGJhZA0KYmVoYXZpb3Igb24gdGhlIEJFMjAwIHNpZGUuDQoNCldl
+IGRvbid0IGhhdmUgYSBtb3JlIGZvcm1hbCBwdWJsaWNhdGlvbiBhYm91dCB0aGlzIGlzc3VlLg0K
+DQoNCj4gVGhhbmtzLA0KPiANCj4gTHVrYXMNCg==
