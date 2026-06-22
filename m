@@ -1,121 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B5032FE0F;
-	Mon, 22 Jun 2026 06:55:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8428023EA84;
+	Mon, 22 Jun 2026 07:45:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782111307; cv=none; b=st1Q6yQcPW8SDQNsliTxoTBMKmJwJVasMwZUHQ0X+bbqE/CcnoOUW2X6Ck+1rXCLR5z7aF1/EjpMSU06E64IevFViBpjDLk0yeaQQ0sUAiOxrGgLL5JrRIkpDG6b4tTocuo7LeZfsqOiFcoW6E1Tm0xumsroWXSYRv7C+xWrQlE=
+	t=1782114335; cv=none; b=OW/42NCLCWbHvf7lQhdymKtJqfJVuOE0wZOqpsRI1dDRB11esnMxy/E9Yf8tmU9pk9FEpeMSBdrFMBfQbjQbnSsmExp99b7WQBdRuhHUK/rX1GhBnxGZaCts8MqzDMrd57g4x9rTq01AC0Otp/3WMOw1j47lSZrlWcJpgR9tXqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782111307; c=relaxed/simple;
-	bh=D5x1kSmJK5SGdStf4cGnyBRqbu7Z2PCwTSTXsDBTtfs=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DygqwIkGD0wBoLYGshExBCfs/Q/C1O9lMY4odeVV74eVUrBw3bxIq9mestCO8k80afFc4ybghi0+nV74AVbtvx9NjGsJL6E+qSCUbSW1z3vF5QK6OMjMHuJXgy6HvIbrAgNqNamYPolrIDwnxwhPUHhM+u0+cFrTMJrMSYcMnUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ikvFlJzf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782114335; c=relaxed/simple;
+	bh=BcMM7o7rHGvvQrMzqzdny1kg2PCOXB5MeNOma+0kOTU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WKeJZZlVL8fO/10AI6ulpKseVcRljW2HiF59WNy2N/J0lNj4aCK+1yt1iHS9YukoM4bl1CWoVig5t2DVwx4590o20mh+QT9uvLBGL6yHjK3zBNzM9ZyB43/Rk24Sk67JMARJrubYoHwrnZNefHRQg/uqGU5p4Kwg0wkz8OH96ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=OHWn9OLh; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ikvFlJzf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F15EE1F000E9;
-	Mon, 22 Jun 2026 06:55:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782111306;
-	bh=ZG+FlhsVlEBxS0bsxSZ646KiQA9erOt9LJfgN0fiaPY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ikvFlJzfxPPr76gMlDohagJy/DrSM6dLOR9BUHjD9G0RlR3hEa/g/2fUQcQEwt2PL
-	 jnWQ/jY+QzuqD2tq3Bp5W8di53S5nymamNb6+hFxKbqFMW7zKKwBtRwE/EUmtvk8U/
-	 U0Kyl7gvnK7IxqRugBzijQKJ+Y2fHY4TFHp5aMk2+I8e+hDRz41pHzCHtnLzOsY9Y0
-	 9SkXxa5PR4ui/1mpyc9X7OsOqe/5k5J1i7uD6Ku/+UjW1pAxjQCeGl/Y97F6xtAXbK
-	 L1Ey1C0rtMmfFaAuoRvyhkO3ttBhk3UvLuOj4kimTYHrUK6zVLFxFvyBe1uGdjcOG3
-	 tRbxbrmxL4N/A==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wbYYh-0000000EoYq-2tzO;
-	Mon, 22 Jun 2026 06:55:03 +0000
-Date: Mon, 22 Jun 2026 07:55:03 +0100
-Message-ID: <8633yfrrnc.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Thomas Gleixner <tglx@kernel.org>,	linux-pci@vger.kernel.org,	Yoshihiro
- Shimoda <yoshihiro.shimoda.uh@renesas.com>,	Krzysztof =?UTF-8?B?V2lsY3p5?=
- =?UTF-8?B?xYRza2k=?= <kwilczynski@kernel.org>,	Bjorn Helgaas
- <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,	Conor
- Dooley <conor+dt@kernel.org>,	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,	Lorenzo Pieralisi
- <lpieralisi@kernel.org>,	Manivannan Sadhasivam <mani@kernel.org>,	Rob
- Herring <robh@kernel.org>,	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
-In-Reply-To: <d6fce333-4353-4e49-873f-eb3187a631e4@mailbox.org>
-References: <20260618220427.14325-1-marek.vasut+renesas@mailbox.org>
-	<20260618220427.14325-4-marek.vasut+renesas@mailbox.org>
-	<87cxxkma5p.ffs@fw13>
-	<d6fce333-4353-4e49-873f-eb3187a631e4@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="OHWn9OLh"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=ByFC8vH4TSLCw4caLiYJj9r+6ZHL/T7RLgXIvzyRg+Q=;
+	b=OHWn9OLhqilh/F4dSA+ppf+wfhkNiwn7W/WxSvkSMcdV76WhtipZkk3HfV4zOATde9PRxk7op
+	r/uhrsg5EwiZTD2IXkHgw+lyhdjXc7V8IGyuR0W0K4oPynQ80UnInzXoAWEV8bqdgG6QIngN4Ot
+	DwuVi3VO9sPqrnpXqFoVTRk=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gkKlX2sgdzcZyD;
+	Mon, 22 Jun 2026 15:36:56 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 253AB40561;
+	Mon, 22 Jun 2026 15:45:30 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Mon, 22 Jun 2026 15:45:29 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
+CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
+	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v18 02/12] PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
+Date: Mon, 22 Jun 2026 15:45:13 +0800
+Message-ID: <20260622074523.38473-3-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260622074523.38473-1-fengchengwen@huawei.com>
+References: <20260622074523.38473-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut@mailbox.org, tglx@kernel.org, linux-pci@vger.kernel.org, yoshihiro.shimoda.uh@renesas.com, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On Sun, 21 Jun 2026 23:46:25 +0100,
-Marek Vasut <marek.vasut@mailbox.org> wrote:
-> 
-> On 6/21/26 12:59 PM, Thomas Gleixner wrote:
-> > On Fri, Jun 19 2026 at 00:02, Marek Vasut wrote:
-> >> Renesas R-Car S4/V4H/V4M GIC600 integration has address width for AXI
-> >> or APB interface configured to 32 bit, it can therefore access only
-> >> the first 4 GiB of physical address space. This information comes from
-> >> R-Car V4H Interface Specification sheet, there is currently no technical
-> >> update number assigned to this limitation. Further input from hardware
-> >> engineer indicates that this limitation also applies to R-Car S4 and V4M.
-> >> Name the limitation GEN4GICITS1, and add a driver quirk to mitigate this
-> >> limitation.
-> >> 
-> >> The quirk is keyed on the combination of the GIC implementation
-> >> and the platform identification in the device tree.
-> >> 
-> >> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> > 
-> > This SOB chain is broken.
-> 
-> Broken ? I don't understand , could you please elaborate ?
+Split tph_enabled from shared pci_dev bitfield into spare bit of tph_cap's
+u16: tph_cap is immutable post-enumeration (15 bits for offset), remaining
+1 bit stores tph_enabled. Removes cross-bitfield concurrent write hazards
+highlighted by Sashiko after VFIO TPH exposure. No functional changes.
 
-Either Shimoda-san is the sole author of the change and you are
-posting their work, then the first line of the patch should say:
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ include/linux/pci.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-
-with your own SoB immediately following their SoB (see [1]).
-
-Or this has been co-developed, and both of you should be credited as
-authors. then Shimoda-san's SoB should be preceded by their
-Co-developed-by: tag (see [2]).
-
- Co-developed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
- Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
- Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-
-This shows exactly who did what, who forwarded whose patch, and forms
-the base of the DCO which is documented at [3].
-
-Thanks,
-
-	M.
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n449
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n503
-[3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n396
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..109182658f76 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -471,7 +471,6 @@ struct pci_dev {
+ 	unsigned int	ats_enabled:1;		/* Address Translation Svc */
+ 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
+ 	unsigned int	pri_enabled:1;		/* Page Request Interface */
+-	unsigned int	tph_enabled:1;		/* TLP Processing Hints */
+ 	unsigned int	fm_enabled:1;		/* Flit Mode (segment captured) */
+ 	unsigned int	is_managed:1;		/* Managed via devres */
+ 	unsigned int	is_msi_managed:1;	/* MSI release via devres installed */
+@@ -589,7 +588,8 @@ struct pci_dev {
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
+ 
+ #ifdef CONFIG_PCIE_TPH
+-	u16		tph_cap;	/* TPH capability offset */
++	u16		tph_cap:15;	/* TPH capability offset */
++	u16		tph_enabled:1;	/* Whether TPH is enabled */
+ 	u8		tph_mode;	/* TPH mode */
+ 	u8		tph_req_type;	/* TPH requester type */
+ #endif
 -- 
-Without deviation from the norm, progress is not possible.
+2.17.1
+
