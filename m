@@ -1,87 +1,106 @@
 Received: from fout-b8-smtp.messagingengine.com (fout-b8-smtp.messagingengine.com [202.12.124.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A57348C7B;
-	Mon, 22 Jun 2026 22:08:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3C9430C177;
+	Mon, 22 Jun 2026 23:13:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782166109; cv=none; b=gOgE/aIjB2LbIZP62kfoe+x/uhgw2DvUP1rpYMUkDf/7qWbOtvo3T6afHl0K0uv6w7TU5o3og9nIUjSO2Eukm2FP2k6mbw7KsAkKsVWMP9NOP2MZv3Tyhn0/LYNb9OKNPImIRpO/vZNVQUv0DL0I4BtrJpVdTlF9nm7F6FC56Q4=
+	t=1782170024; cv=none; b=mrk0MAUfz/SMf58oWvQb+IlUuThMsNN2yob4qO0CKlvhXuZa/blkIDMevAMHdi/0/A81wePSS9EGfr7Utom9Gtq1pIOBvMgSuEkqMcuIhChj0d6sJ9l2XlQAuvh+WpUvSaHmS3zVbVo6g5bMHwZitp1MTi+uSD6Pise1/OGnBTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782166109; c=relaxed/simple;
-	bh=cAMszgx5Fex6SF1BAzROg2EuI/9SrWSdciR3fR97dv0=;
+	s=arc-20240116; t=1782170024; c=relaxed/simple;
+	bh=oh7A0RAI7tER7bqo8zvulV+7B3H4XJvkEeb7ZI9wWNE=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HgAWoIIViF/+TBGuM1pigkFcHiOzSfyKt/MLVPfvpL9cEBUHgsnrTiYWl+xVTQ15UXuK8XYMGv9KQPU0JQ3ibv2vSpO6GzlroA3wI5Er2+4PzUazb8jC6TtSa5UWUjBSLoz+4WvqLLYjTKgXQfneUUZx+WxM7b5kJJgObjDgyrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=h2wOfdWR; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=djVgDwe8; arc=none smtp.client-ip=202.12.124.151
+	 MIME-Version:Content-Type; b=AQLKQpRxOwqd1ubtC915XBUeZUz3jWFzdr1t+i+t9N3jBJ+PGcsFJ12cOuXyTvL7P9KTk20PzKseBkE2eS8LqBAgOqlwGG9BYEuaOFDnxnxdgFDLjn4HTO280okSOWZFp+wHDyGPauS6CL3d+NCg40qpQEzl23TKy/segVBDIhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=WUziQHNE; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=OV4/ZkVe; arc=none smtp.client-ip=202.12.124.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="h2wOfdWR";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="djVgDwe8"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id BBBA01D000F8;
-	Mon, 22 Jun 2026 18:08:25 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Mon, 22 Jun 2026 18:08:26 -0400
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="WUziQHNE";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="OV4/ZkVe"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfout.stl.internal (Postfix) with ESMTP id 8D0601D0007E;
+	Mon, 22 Jun 2026 19:13:39 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Mon, 22 Jun 2026 19:13:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1782166105;
-	 x=1782252505; bh=aePkQjGQu+YPsOWr++gYmU3NbJPlCwiidf9kOEVP8qs=; b=
-	h2wOfdWRXfMtqHdeLxElxXOB6tc5rRB9y5vXbeUpmHWU3XDgJ3uxkT65o0+xCZqx
-	0LIxD8/ligPoxSgFis+Rph38xK5jdEGiUl3NHM0xtic82lU30UdG6ZuWB2IoO/8u
-	9NqURy8KgMedxfObUaNnSn3syk4aW8wkO9YtFN+MS16/UEEBN+d90kQg7fSQh95R
-	90t6fh0zF9gVcAkXw3E9tzZSejVo9icgTHzsejbR4EyZrqsBUr4VIF6ojLsEaNLT
-	Kxn7M5HnOrDJqhE3iAt3JdGgfID07DXFFc40ZSburY/dkepxLM1/aOJSz2bB7Ks8
-	BpQooVSXQw5doXDibpcxdw==
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1782170019;
+	 x=1782256419; bh=uucNtPV0I4MmovhtQhP25ytZEAiupQRi/0ihEK8Rhgo=; b=
+	WUziQHNE7zVmdQgAmci+JZYcwo5KkO7QkV18LNAwi7KpDkmZNhnzcYFcpJ3s0i/M
+	vNREOL3IJz7PpYtITSnURTXJ57NoKKtI3p8VdnvvqSByGNgqwb1K7ZYv4LWzS4RA
+	eGv77QMZNsNPOKWuMvM1u/Y/vGWVhPMaP4pDOjOppZPTk4Lo8pCwb1U285lX0mlr
+	LU5wlhsrTvA9a/4vuG0IS2vA4/tzWFQ4hyAGJv1Ote0P448ilKVTwjoqLvmTgETJ
+	OwMJ5DwEQcB9yyC8YwngLajZNQPzFpYXW2VCjtXQQhw2J+Nfuchc5nhLAyh1pFhZ
+	DlkzfMuA+M+8++cskbekUg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782166105; x=
-	1782252505; bh=aePkQjGQu+YPsOWr++gYmU3NbJPlCwiidf9kOEVP8qs=; b=d
-	jVgDwe8fhKZx50Si7f5mJLdL0E0rm76bUH/9P2DNeeC4HqW797DHLOSOE776EKeU
-	2pXYxuqSoeO8Te6aoFjnIxEoPamjiT/6sBsRTOYX/6mDVD4MxHlIBynho5VCuWTB
-	+1wckEXDjNXj17SGhAW7d3x2VHH9yqvX4FdvLKue3jaenXFwgwuuM+zZBwEjv+Jc
-	uGczv4Zq5GTYALO3qYwV2yKMWvoGWD1M6rgAershGiBz71PrEbAngULTHB1IZmaj
-	2sXWQ1ft3b+2Rla3fb19bgHfPTov0tfzrL7qgxG2fhvgOMexR9nqMDPTg2qFCa11
-	q2ULwQ5JYDJmpa4JJ7EsQ==
-X-ME-Sender: <xms:WLI5as388WQSxAdWCWpKWmXmTsHrjJBq9BJLEXt9Ih1P4TE3dYaN2w>
-    <xme:WLI5avOiI2ILKScsvd1OJqo4ivO5rdBxwW8y-spr1Q_9nFqAi8U5mLREHSxOIdQ30
-    h5h8y3rlaH1hRsrrYVnYm24UOfrdfYHQKvzO5Avwf8_pGVBdpD8_Q>
-X-ME-Received: <xmr:WLI5akbBL4lLDC5gMOrGgb0tVEroWUcPPB5XMUN3y-LMn9aAxqUFYYf1cr4>
-X-ME-Proxy-Cause: dmFkZTF0ec7bWNTJ4dpCl7l9+0ECFQ3bgfPAi09+/jLI+RM2LOSskW7kp3FOx7LYEF+nWE
-    EuQloCpn3ysspX8LYulsIBXIlZnA26gO957f2eq+Ac0bNVQRC0R1RrxqF2FEvrfnz1MWnH
-    G71l7qvQVXUZxdOiUrnRMPxpagI1YORu7T/bf7QcoFlGm6CkIOi9gKNFyQpr7rLwltIAzu
-    QLBHcz6DSeCYPxfCsptOFWZolwBo9GmEAwRMiM499w64pC5k3ePPyD1/i1brvy63P5PmVw
-    axpA85TA/YVWB4zfcW//ryNKRMCp532KQvvwDh6PyIh6PJDCsE0AUxCp9d2lZkens55Nrf
-    oUGz2R1ETI5E3F4lYLWTwEw77ftcIXvmCV3ZMd8XX2xw79xtJBiuyoUVDpdxa4LR7BRsl2
-    abBaooQFYcRPWaISNvoylZ3ux927qHkTBkjr5yQPBa6ndbjk91mXihjxpiiauwZNgs1PCw
-    3QOVD3BszNyNSSUZHTR0ZpeQLQv/LEx6CQH+J/EvSR1sjMuXB+udl1qX1Zsf7awnc9QFNv
-    /lr9dVTL82O74eomKcf/0bU3iNYKUdPeSWjqbZOTQPutsnaKLrclRrEcVwd79fmiWNtlKq
-    bRcodXrr0XBO6rI6lI9ycqfC6F3a7TMvK6oBk9rshCxy6Ies8xkgUQDu/V4Q
-X-ME-Proxy: <xmx:WLI5alyt7IP6sRAyRpvvUcj9Mc8IJmsAP6AetS94c-obX-2QzHoLKg>
-    <xmx:WLI5arOZRuXLS6JEXPBDI4Sk7XcnHATO2wk5JrIVq4WrY9TpPgnvSw>
-    <xmx:WLI5asfil11ha1DueledzbFmW5Xg2opIWnhezxh6_F-_oFE42x8CgQ>
-    <xmx:WLI5aoRjyImPz_b0H7GMmX2MR8syyYc8mvrYnxFu1yc0TXarC-cR6w>
-    <xmx:WbI5amjt19OXgvB606HT8Rgl-OTy44CL78JWx9jS310UkI7BeVCg41HQ>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782170019; x=
+	1782256419; bh=uucNtPV0I4MmovhtQhP25ytZEAiupQRi/0ihEK8Rhgo=; b=O
+	V4/ZkVegwfYWhFi0CV7x3abQDcI+EMvP45aV65xUXGtBskn14RQSorce+nkWRjYT
+	0vUGzsysby5GrQmfBqRPvk3q5Sw0hugavUFZKFpoMMgcv9AU1yvyy3W+nImUH7kS
+	SjZ9hUrIx21b1w8iKUk4ZoSZZ/hyni3dzn4Y4rW/Tn+KmJFahhUaGlLCJ1HEtbsZ
+	liIrrHtxpgMUXWhG1yE0zc/1ID7ryZkyO6/L5edSt0ZPnpaOSBMp3f1FUifbx8QE
+	yLCSp9BFxoc1A92qOC7tdkgtmNtqVDR+ZbZx8lN2afLKCauJBD5nDne8uBZD5W1f
+	9+CUmnJk4mdEJL7Aasgxw==
+X-ME-Sender: <xms:osE5amVAIHeztFw-x6Jk2cu55pC7pZjRmwM1b6KSRuWDVIR_KTwJvg>
+    <xme:osE5auT4VLIfXIAUlUSHsDevdDOku6mOhxO5YVA14ZP6wQU4fUtEtfDHpEMcONgLa
+    IyEYJJ6uwCk3lY4ms7SZGpQuP2VZ8TxsKa5tcvL7lJN_k22wfgP4A>
+X-ME-Received: <xmr:osE5alEqQwwWFiCYO4WZS1y5iWQi4KDBwYCSMyaTEHpytxplrQpDKe4ePGE>
+X-ME-Proxy-Cause: dmFkZTGuB1iEvMd+xObr0XHRyjLZ564bpkukI0Iv4VBGAc8kgQK8balQPxjO1J5KLzYhKR
+    605IkjMxDcJA3PQXGOzAsP/a2qqkAveVav1mQz9sz74ejDOcAB1nKTxQ7Az8dn9NDB7h8n
+    +L2GIz2S0KD7QFR9SCO4MwHg5bwilIvRQO7bD+P5oYMomqi4MEOeSdsCHP7Rf6V1uHGLX2
+    l7K4NU176pHC8FwN4H4t7mIC+q15Zr24Jg9CULQ0OPMN5s1BgXLPViD1WwvdGiaSncZTkr
+    vUvs/iZX+9xQgrK4KW+Mao1JDSNl0pLKn1jUH20f08qmwfuaHj/qztG6zl30Uq93PjoxQZ
+    wS77CvLYhcgPkDVyh4OTwLfcbYCQBsP49N/qo4B5pGr3VrP4wC3EX/HMbpI0o7tnDHb8Vr
+    dUC4KsTR3XohX349NH0qkcYTAnuTvQmU/XTH8vCSFrDenwTlit8BbuyrmZseJPmljYQw3o
+    PWcMojRyNylo1GmUE6eVDYC9by8NKCN+P0P1PQ5Ihrtv1L5gGdXsmSAS4/IA5pgOjuwoIi
+    NSBRh+8VABI8itiZZG5BczewX+sa5k66o9ZINFwJJwvHN0vYAKq36XZ/yTRhj3byJ0e9qU
+    HKnIZbA0Hu543idA6+zPiDc8rMNS/K44j7bYaQUhGnsbNgzDb/OZthtS+zpQ
+X-ME-Proxy: <xmx:osE5auQRdJ-u5l69g5wM4Vu2WcHAuhdDct942-89KQW2FN0yytXFAA>
+    <xmx:osE5avq1a6u06jjKTm1185wY59wOCaNiXYckcLCmpR46D3RNQpZi4w>
+    <xmx:osE5akoor8Je3GunK-NO3i0DgcNRVxJ6W3IxDvfEK4Pb1RMhly4orw>
+    <xmx:osE5ai32xmGiXLj6RW-XweJ-e7SwioBikp0RZ0FO4IbKQbCKHT5hNQ>
+    <xmx:o8E5al5-Lz15wn6QttNoyZquTps-g1qYfxAJNhiR6Nk3RW_7DR1N8Mu8>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 22 Jun 2026 18:08:23 -0400 (EDT)
-Date: Mon, 22 Jun 2026 16:08:22 -0600
+ 22 Jun 2026 19:13:37 -0400 (EDT)
+Date: Mon, 22 Jun 2026 17:13:36 -0600
 From: Alex Williamson <alex@shazbot.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
- ath11k@lists.infradead.org, ath12k@lists.infradead.org,
- bhelgaas@google.com, jjohnson@kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
- mhi@lists.linux.dev, alex@shazbot.org
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260622160822.09350246@shazbot.org>
-In-Reply-To: <4wmbans3ae5ayxqvs3wwn4hg3r3dcjuugmw2akoihvry35bq6k@k5lm6zjrp44l>
-References: <n3maiuu5cctivlal4fozysz37ir6ecdfws5u2xxw2neclsfdfj@nsvwvlh7b4j5>
-	<20260618063309.9536-1-jtornosm@redhat.com>
-	<4wmbans3ae5ayxqvs3wwn4hg3r3dcjuugmw2akoihvry35bq6k@k5lm6zjrp44l>
+To: Matt Evans <matt@ozlabs.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, "Tian, Kevin" <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>,
+ Leon Romanovsky <leon@kernel.org>, Alex Mastro <amastro@fb.com>,
+ Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+ "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+ "linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ alex@shazbot.org
+Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
+Message-ID: <20260622171336.7d13f548@shazbot.org>
+In-Reply-To: <55ea7422-08d8-4c92-aa59-8ff6f9e9d781@ozlabs.org>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+	<20260610154327.37758-7-matt@ozlabs.org>
+	<aixgZQiBQKgS7yIM@google.com>
+	<DM6PR11MB3690489DB5FA611413BF60558CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+	<ajGbRE3WWJxNxcrg@google.com>
+	<BYAPR11MB3687AE280241C9E00B46FCF98CE42@BYAPR11MB3687.namprd11.prod.outlook.com>
+	<24f34e59-7c3b-4b56-83bf-cb07e3f369a6@ozlabs.org>
+	<20260619133116.GB278945@nvidia.com>
+	<55ea7422-08d8-4c92-aa59-8ff6f9e9d781@ozlabs.org>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -89,102 +108,48 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, 22 Jun 2026 18:22:39 +0200
-Manivannan Sadhasivam <mani@kernel.org> wrote:
+On Fri, 19 Jun 2026 16:13:17 +0100
+Matt Evans <matt@ozlabs.org> wrote:
 
-> On Thu, Jun 18, 2026 at 08:33:08AM +0200, Jose Ignacio Tornos Martinez wr=
-ote:
-> > Hi Mani,
-> >=20
-> > Let me clarify the exact scenario and where the reset is necessary:
-> >=20
-> > * For the commented WiFi devices (WCN6855/WCN7850):
-> >=20
-> > Standard VFIO passthrough flow (this works fine):
-> >   1. Unbind native driver (ath11k/ath12k/MHI)
-> >   2. Bind vfio-pci driver
-> >   3. Assign device to VM
-> >   4. VM boots, loads its own driver =E2=86=92 device works perfectly
-> >   5. VM shuts down cleanly =E2=86=92 device can be reassigned =E2=86=92=
- works fine
-> >=20
-> > The problem occurs with unclean VM termination:
-> >   1. VM crashes or is force-terminated
-> >   2. VFIO tries to reset the device before reassignment
-> >   3. Without a working PCI reset method, reset fails
-> >   4. Device stuck in undefined state =E2=86=92 cannot be reassigned to =
-another VM
-> >  =20
-> >      Unbinding the driver again doesn't help because the device hardware
-> >      itself is in a bad state. From hypervisor:
-> >      $ lspci -vvv -s 0000:03:00.0
-> >         03:00.0 Network controller: Qualcomm Technologies, Inc (rev ff)=
- (prog-if ff)
-> >             !!! Unknown header type 7f
-> >      And a full host power-cycle is necessary to recover.
-> >       =20
->=20
-> Can you try the global reset available in the WLAN device BAR space?
->=20
-> WCN6855: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree=
-/drivers/net/wireless/ath/ath11k/pci.c#n193
-> WCN7850: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree=
-/drivers/net/wireless/ath/ath12k/pci.c#n182
->=20
-> > * For the commented modem devices (SDX62/SDX65):=20
-> >=20
-> > Even worse because it fails during the first VM boot without proper res=
-et
-> > capability, standard VFIO passthrough flow:
-> >   1. Unbind native driver (MHI)
-> >   2. Bind vfio-pci driver
-> >   3. Assign device to VM
-> >   4. VM boots, loads its own driver and crashes:
-> >      [   24.024165] mhi mhi0: Device failed to enter MHI Ready
-> >      [   24.024168] mhi mhi0: MHI did not enter READY state
-> >     =20
-> >      Unbind/rebind attempts fail:
-> >      [  352.643601] mhi mhi0: Requested to power ON
-> >      [  352.643611] mhi mhi0: Power on setup success
-> >      [  373.442954] mhi mhi0: Device failed to clear MHI Reset
-> >      [  373.442970] mhi mhi0: MHI did not enter READY state
-> >      And requires a full host power cycle to recover,
-> >      even outside of VFIO scenarios.
-> >=20
-> > * MHI Host driver's remove callback may handle clean software state
-> > teardown, but it doesn't provide a PCI reset capability that VFIO can
-> > invoke. VFIO needs a reset method registered in the PCI reset hierarchy
-> > (device_specific, pm, flr, bus, etc.). VFIO invokes this reset both dur=
-ing
-> > initial device binding (before the VM starts) and when reassigning the
-> > device between VMs - without a working reset method, the device cannot
-> > reach a clean state for initialization.
-> >  =20
->=20
-> Likewise, there is a SoC reset available in the modem BAR space. You can =
-try it:
-> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree/drivers/=
-bus/mhi/host/main.c#n178
->=20
-> If these works, then you can hook these in the device_specific reset call=
-back.
+> Hi Jason,
+> 
+> On 19/06/2026 14:31, Jason Gunthorpe wrote:
+> > On Thu, Jun 18, 2026 at 05:02:58PM +0100, Matt Evans wrote:
+> >   
+> >> My understanding is that the sequences above wake a device that happens
+> >> to have previously been put into D3, and AFAICT it could only have got
+> >> there because of a previous vfio_pci_set_power_state().  Seems its only
+> >> caller is from the emulation of PCI_PM_CTRL using
+> >> vfio_lock_and_set_power_state(), and this zaps/revokes BAR access before
+> >> a transition to D3.  Similarly, an attempt to access a BAR via an
+> >> ioctl/through vfio_pci_core_do_io_rw() fails the D3 check in
+> >> __vfio_pci_memory_enabled(), and besides will try to take the memory_lock.  
+> > 
+> > I thought the general design was the bars were made inaccessible
+> > before going to a low power state, and remain inaccessible while it is
+> > in low power?
+> > 
+> > So the order of D0 doesn't matter. If it is not in D0 then there is no
+> > mappings and zap/revoke is a NOP.
+> > 
+> > If is it in D0 then it doesn't matter because D0 is a nop.  
+> Yes, that's what I'm getting at. :)  If it's in D3 then BARs are
+> inaccessible, so as long as we go into D0 before the DMABUF move, the
+> order of the zap relative to the "go to D0" doesn't matter.
 
+I believe this is correct as well, but importantly we cannot assume
+that a stray read or write just returns -1 or gets dropped.  This is
+exactly why we have such hard protections against the user accessing
+the device while it's disabled.  Not all platforms, even within
+architectures that might otherwise be considered lenient of such
+accesses, consider this benign and might escalate to system level
+faults.
 
-These look promising as simple flows to implement in a device specific
-reset: save command register, set memory enable, ioremap BAR space,
-match read/write/delay sequences of reset function and caller, iounmap,
-restore command.
-
-Note the delay in this latter reset is in the caller.  It's also
-surprising that none of these implement a read to flush the posted
-write that initiates the reset.  I wonder if that contributes to the 2s
-delay in the latter example.
-
-Also it appears these reset the internal state, but not the PCI state,
-which is fine for our purposes, and certainly more confidence inspiring
-than the D3hot heuristics.  Thanks,
+Let's be careful not to frame this as "the access doesn't matter
+anyway", the answer is instead that non-D0 devices already lack any
+mappings to access the device.  Thanks,
 
 Alex
