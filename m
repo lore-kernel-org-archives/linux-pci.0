@@ -1,33 +1,33 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8428023EA84;
-	Mon, 22 Jun 2026 07:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41DC236EAAE;
+	Mon, 22 Jun 2026 07:45:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782114335; cv=none; b=OW/42NCLCWbHvf7lQhdymKtJqfJVuOE0wZOqpsRI1dDRB11esnMxy/E9Yf8tmU9pk9FEpeMSBdrFMBfQbjQbnSsmExp99b7WQBdRuhHUK/rX1GhBnxGZaCts8MqzDMrd57g4x9rTq01AC0Otp/3WMOw1j47lSZrlWcJpgR9tXqQ=
+	t=1782114335; cv=none; b=o0Hti7fmJ5Yo/W4MlkGXRn/CBS9g+EofNH+0NGkET3OSsf8WwtlxAPBPANcfsKwLvjFC1yGe8pFzNdelTafikL2311EP/1Bjo1O+9bRTcfgRUAeBHX+cY/9rO3t+wMK6IMmUAoPWuTzU5EYcI+TNVoJMSNtutiXQxzQ4+FTaGAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782114335; c=relaxed/simple;
-	bh=BcMM7o7rHGvvQrMzqzdny1kg2PCOXB5MeNOma+0kOTU=;
+	bh=mDZ/OJ17h+wYRwEaXSeihbsTVRhunmVv3DqwFhUC8RI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WKeJZZlVL8fO/10AI6ulpKseVcRljW2HiF59WNy2N/J0lNj4aCK+1yt1iHS9YukoM4bl1CWoVig5t2DVwx4590o20mh+QT9uvLBGL6yHjK3zBNzM9ZyB43/Rk24Sk67JMARJrubYoHwrnZNefHRQg/uqGU5p4Kwg0wkz8OH96ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=OHWn9OLh; arc=none smtp.client-ip=113.46.200.217
+	 MIME-Version:Content-Type; b=eDF0dI2mH1avGS9AAwF4l4q+QvNnMSCrgF9A+XC6n3Ktb5MNAMoMWirN4ABGUzqD7CcWbnnRYzIIUImW8roZyXGVexWxpF3XZZSe88M44SaJVAY+1KUb1bbouCAvRioA/+/rSWDjzrvKempd5R8AsXdgnJM1Ok+y7CsF5PnD5qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=54iC0F+W; arc=none smtp.client-ip=113.46.200.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="OHWn9OLh"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="54iC0F+W"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=ByFC8vH4TSLCw4caLiYJj9r+6ZHL/T7RLgXIvzyRg+Q=;
-	b=OHWn9OLhqilh/F4dSA+ppf+wfhkNiwn7W/WxSvkSMcdV76WhtipZkk3HfV4zOATde9PRxk7op
-	r/uhrsg5EwiZTD2IXkHgw+lyhdjXc7V8IGyuR0W0K4oPynQ80UnInzXoAWEV8bqdgG6QIngN4Ot
-	DwuVi3VO9sPqrnpXqFoVTRk=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gkKlX2sgdzcZyD;
-	Mon, 22 Jun 2026 15:36:56 +0800 (CST)
+	bh=AV7vdMQpBpqoO346KaGqEgfAmOGFj8+N4jnJN5WpOeo=;
+	b=54iC0F+WGUITCdJHqS+u+A+SquLCgq5WVBWxiKg1CWZIhITOEoUWfxTquogAZ0wGojieb6HtR
+	TerI6GhPahLK4OB6wDy4Yyjs2SuhUlQCpwYrfwDPBKRlvNB2pUy/tCKcQCama2S4ktt0C5TMSFI
+	Z635PqTMHXPk4kH4Cxt1k2g=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gkKkz58d1z1K98M;
+	Mon, 22 Jun 2026 15:36:27 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 253AB40561;
+	by mail.maildlp.com (Postfix) with ESMTPS id 8789D4055B;
 	Mon, 22 Jun 2026 15:45:30 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
@@ -38,9 +38,9 @@ To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v18 02/12] PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
-Date: Mon, 22 Jun 2026 15:45:13 +0800
-Message-ID: <20260622074523.38473-3-fengchengwen@huawei.com>
+Subject: [PATCH v18 03/12] PCI/TPH: Cache TPH requester capability at probe time
+Date: Mon, 22 Jun 2026 15:45:14 +0800
+Message-ID: <20260622074523.38473-4-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260622074523.38473-1-fengchengwen@huawei.com>
 References: <20260622074523.38473-1-fengchengwen@huawei.com>
@@ -54,38 +54,112 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-Split tph_enabled from shared pci_dev bitfield into spare bit of tph_cap's
-u16: tph_cap is immutable post-enumeration (15 bits for offset), remaining
-1 bit stores tph_enabled. Removes cross-bitfield concurrent write hazards
-highlighted by Sashiko after VFIO TPH exposure. No functional changes.
+Calculate the negotiated TPH requester type from device and root port
+capabilities once in pci_tph_init().
+
+Add tph_ext_support flag to cache whether the device is allowed to
+issue Extended TPH requests after topology negotiation. If the final
+requester type is disabled, clear TPH capability to prevent usage.
+
+Simplify pcie_enable_tph() by using the cached requester capability
+instead of recalculating every time.
 
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
- include/linux/pci.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/tph.c   | 43 +++++++++++++++++++++++++------------------
+ include/linux/pci.h |  4 +++-
+ 2 files changed, 28 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index bef3a55539c4..951f0a33ff66 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -384,7 +384,6 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ {
+ 	u32 reg;
+ 	u8 dev_modes;
+-	u8 rp_req_type;
+ 
+ 	/* Honor "notph" kernel parameter */
+ 	if (pci_tph_disabled)
+@@ -404,23 +403,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ 
+ 	pdev->tph_mode = mode;
+ 
+-	/* Get req_type supported by device and its Root Port */
+-	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+-	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
+-		pdev->tph_req_type = PCI_TPH_REQ_EXT_TPH;
+-	else
+-		pdev->tph_req_type = PCI_TPH_REQ_TPH_ONLY;
+-
+-	/* Check if the device is behind a Root Port */
+-	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
+-		rp_req_type = get_rp_completer_type(pdev);
+-
+-		/* Final req_type is the smallest value of two */
+-		pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
+-	}
+-
+-	if (pdev->tph_req_type == PCI_TPH_REQ_DISABLE)
+-		return -EINVAL;
++	pdev->tph_req_type = pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
++						     PCI_TPH_REQ_TPH_ONLY;
+ 
+ 	/* Write them into TPH control register */
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+@@ -510,13 +494,36 @@ void pci_no_tph(void)
+ 
+ void pci_tph_init(struct pci_dev *pdev)
+ {
++	u8 tph_req_type, rp_req_type;
+ 	int num_entries;
+ 	u32 save_size;
++	u32 reg = 0;
+ 
+ 	pdev->tph_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_TPH);
+ 	if (!pdev->tph_cap)
+ 		return;
+ 
++	/* Get req_type supported by device and its Root Port */
++	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
++	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
++		tph_req_type = PCI_TPH_REQ_EXT_TPH;
++	else
++		tph_req_type = PCI_TPH_REQ_TPH_ONLY;
++
++	/* Check if the device is behind a Root Port */
++	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
++		rp_req_type = get_rp_completer_type(pdev);
++		/* Final req_type is the smallest value of two */
++		tph_req_type = min(tph_req_type, rp_req_type);
++	}
++
++	if (tph_req_type == PCI_TPH_REQ_DISABLE) {
++		pdev->tph_cap = 0;
++		return;
++	}
++
++	pdev->tph_ext_support = !!(tph_req_type == PCI_TPH_REQ_EXT_TPH);
++
+ 	num_entries = pcie_tph_get_st_table_size(pdev);
+ 	save_size = sizeof(u32) + num_entries * sizeof(u16);
+ 	pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_TPH, save_size);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c4454583c11..109182658f76 100644
+index 109182658f76..285c0f00882e 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -471,7 +471,6 @@ struct pci_dev {
- 	unsigned int	ats_enabled:1;		/* Address Translation Svc */
- 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
- 	unsigned int	pri_enabled:1;		/* Page Request Interface */
--	unsigned int	tph_enabled:1;		/* TLP Processing Hints */
- 	unsigned int	fm_enabled:1;		/* Flit Mode (segment captured) */
- 	unsigned int	is_managed:1;		/* Managed via devres */
- 	unsigned int	is_msi_managed:1;	/* MSI release via devres installed */
-@@ -589,7 +588,8 @@ struct pci_dev {
+@@ -588,7 +588,9 @@ struct pci_dev {
  	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
  
  #ifdef CONFIG_PCIE_TPH
--	u16		tph_cap;	/* TPH capability offset */
-+	u16		tph_cap:15;	/* TPH capability offset */
-+	u16		tph_enabled:1;	/* Whether TPH is enabled */
+-	u16		tph_cap:15;	/* TPH capability offset */
++	u16		tph_cap:14;	/* TPH capability offset */
++	u16		tph_ext_support:1; /* Indicate whether Extended TPH
++					    * requester is supported */
+ 	u16		tph_enabled:1;	/* Whether TPH is enabled */
  	u8		tph_mode;	/* TPH mode */
  	u8		tph_req_type;	/* TPH requester type */
- #endif
 -- 
 2.17.1
 
