@@ -1,148 +1,181 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E7934EF0F;
-	Mon, 22 Jun 2026 15:50:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B906B3D2FE1
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 15:56:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782143434; cv=none; b=ixOvwi6Yo9wQvWQFb5JwccnnkHkZseEfdYAZy0YmcUGnXYVVUrFQvPlNvvxMVjFsdyJLl0NHYalcvYZFrFxR1XO9SBbhVwOEHoRuNXKdCgYH2m43qM1CqEmcyluWvNYDcNTreIkZ56k5lsXJcy/DYHxMayTG1xC0Yz0F/jfaS9A=
+	t=1782143793; cv=none; b=FzHkzrYsmr3j4kQK0z+f19Y4afS1FWuK9sGJXvD22IEpSCBDaV0qSOctAJPVEgybVT0oZtJDA6IEgwKxQFcHvUNzggxELL3FA/JpgCVQK9xfwiU9r9jncTjXRXV3Bn4E4Gy/1yP6bkn5lwExeLo6HSSbn9hxuglZAAhyn4rLjK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782143434; c=relaxed/simple;
-	bh=QATy3wWZAgeQlkKPoBXy/75b57BmhnwccBCP5LZxeyo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YQVvg+0HGvQY8hVvENHQwSCpuUdmNO3xNfJBSGPOq1tXZv0Pjh6oVLkW4JCnombVfS68ctPASLOUAizO72nDX94F2QOIb7pa0EumLmdemPGIdjwyezQm8zhryXSFEnEs8xkIwNha5ZnfYra+S6+VZ7ZE90wGtyIZ5i6x4iXVksM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EuvARrXT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782143793; c=relaxed/simple;
+	bh=LfIivbfV3mYvLmdHFWtUIDRcWwkMdTYmJFRILwiLDf0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=fwzVDPCRTWRM9C57PcAFO6InenrPJTP1KkAQw7pWtJ7+y85+WnUo0PeBxo63LVcWJ8WCQ48MxyH3HJvR8roulAAmhsAnyc1DsTFbTzrWI9L/0X29Vy4Rc/Blh+dcyLIHk0utkZcu6w104gZ8+eCYngUOSqW00VKl49QfMz18wCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nd9ffDr7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EuvARrXT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A82F1F000E9;
-	Mon, 22 Jun 2026 15:50:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nd9ffDr7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 462341F00A3A;
+	Mon, 22 Jun 2026 15:56:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782143433;
-	bh=HKMXIB/q1rC45uurP0dyb6nvOhoZiIepNCfGubawWOU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EuvARrXTy1veUwn8k5vNeuaCwvEZygZhUvDa6udCl9fT9gUBnfrhoW5e27cQjq+ZC
-	 ZhcYyw5of7yNyXkWhmq3Clcl3+H7bU/fvzCR2HUx5ZePFokayKokPJyPvhlw5mQzUk
-	 v8ndoGcdKf51wNNQZ9Krfs+rShBU3u47NuJCvSxeAmGG+vOc6G1vJOcd5aVX4ylMM2
-	 5cGAJ2x7hkcucv5x+ISOZv2G9b0e3f6OugNcIGbDlhj5eiGD+/4CBoMSjrRrvep7L/
-	 +kuDXS5liUqRKfkCldVA9WoZDsJXE/gJCOwwYO/ikVXuUNgCiOO2c479stu6Yd/81k
-	 EcBBdVl5xVzSw==
-Date: Mon, 22 Jun 2026 17:50:27 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Wentao Liang <vulab@iscas.ac.cn>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom-ep: fix refcount leak in qcom_pcie_ep_probe()
-Message-ID: <beejsw4p3wkf3zvarqxnaknzoyreddhcp7sgt32pb23xlhhvtg@2dghsaqvitqa>
-References: <20260609100747.230521-1-vulab@iscas.ac.cn>
- <20260609101554.36D4B1F00893@smtp.kernel.org>
+	s=k20260515; t=1782143792;
+	bh=dEbuY52JC/R1Yo0sYyrOyqykn5G7vmkZnJ9Wj5VbuCE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Nd9ffDr70urh8EvcgCHBhO8GeRotG1NPBWe0HuHxI3ZKbxJ9KSC4dRH7ovePTljVj
+	 b2ZtlL55KUe1YZz6DJQEF8GbJDZiMSz7DCNQORqjgx2ippQznr3rShWV3hqMBw1AZ/
+	 OUFPKj6LHJyBOeBvQ1n8gxzBZwEvR58700KminmL30bEY9Cw77K39m/7h2aCDAgw1X
+	 J17z+sngSI3X3C+D15dZnC+TKbBD8x9ozdobjtlJLcV6zni7YNMuIEO5e+RxLpHV2k
+	 988bWxlTXy8FN8OlAyM24d/YqGw5WzJSJy77i9G9nLx5bGAR3d1F9YcPwrkqAu7U/4
+	 2SEk2qosutWAA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260622154325.119809-1-nirmal.patel@linux.intel.com>
+References: <20260622154325.119809-1-nirmal.patel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 22 Jun 2026 15:56:31 +0000
+Message-Id: <20260622155632.462341F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260609101554.36D4B1F00893@smtp.kernel.org>
 
-On Tue, Jun 09, 2026 at 10:15:53AM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> 
-> New issues:
-> - [High] Calling `pm_runtime_disable()` manually in the error path after using `devm_pm_runtime_enable()` causes a double-disable, permanently breaking runtime PM.
-> - [High] The error path for a failed `pm_runtime_put_sync()` falls through to `err_rpm_put`, leading to a double decrement of the runtime PM usage_count.
-> 
-> Pre-existing issues:
-> - [High] Failing the entire probe function if `pm_runtime_put_sync()` returns an error is incorrect and brittle.
-> --
-> 
-> commit 2adeb10c2dada5b5e65aed93fd2d269f6cd5a790
-> Author: Wentao Liang <vulab@iscas.ac.cn>
-> 
-> PCI: qcom-ep: fix refcount leak in qcom_pcie_ep_probe()
-> 
-> This commit attempts to fix a runtime PM reference leak in the error paths
-> of qcom_pcie_ep_probe() by introducing a new error label. The new label
-> calls pm_runtime_put_noidle() and pm_runtime_disable() to properly release
-> the reference before returning the error.
-> 
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> > index 257c2bcb5f76f..c01d4d3b49520 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> [ ... ]
-> > @@ -932,6 +932,10 @@ static int qcom_pcie_ep_probe(struct platform_device *pdev)
-> >  err_ep_deinit:
-> >  	dw_pcie_ep_deinit(&pcie_ep->pci.ep);
-> >  
-> > +err_rpm_put:
-> > +	pm_runtime_put_noidle(dev);
-> > +	pm_runtime_disable(dev);
-> 
-> [Severity: High]
-> Does calling pm_runtime_disable() here in qcom_pcie_ep_probe() cause a
-> double-disable of runtime PM?
-> 
-> Earlier in the probe function, the code uses devm_pm_runtime_enable(dev).
-> This registers a devres cleanup action that will automatically call
-> pm_runtime_disable() upon probe failure or device removal.
-> 
-> If we explicitly call pm_runtime_disable() here in the error path, it
-> appears it will be executed twice (once explicitly, and once via the devres
-> unwind). Because __pm_runtime_disable() unconditionally increments the
-> device's disable_depth counter, could this leave the counter permanently
-> elevated to 2 and break runtime PM for any subsequent probe attempts?
-> 
-> [Severity: High]
-> Will this new error label result in a double decrement of the usage_count
-> if the probe fails during pm_runtime_put_sync()?
-> 
-> Later in qcom_pcie_ep_probe(), if pm_runtime_put_sync() fails, the
-> function jumps to err_disable_irqs:
-> 
->     ret = pm_runtime_put_sync(dev);
->     if (ret < 0) {
->         dev_err(dev, "Failed to suspend device: %d\n", ret);
->         goto err_disable_irqs;
->     }
-> 
-> The err_disable_irqs path then falls through to this new err_rpm_put label.
-> Because pm_runtime_put_sync() maps to __pm_runtime_idle() with the
-> RPM_GET_PUT flag, the usage_count is decremented first before the idle
-> check even begins.
-> 
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Critical] vmd_remove_irq_domain() returns early for devices with VMD_FEA=
+T_USE_BIOS_INFO, permanently leaking the IRQ domain and its fwnode, and cau=
+sing an exploitable Use-After-Free.
+- [High] vmd_domain_reset() accesses incorrect ECAM offsets when VMD_FEAT_U=
+SE_BIOS_INFO is set, failing to reset actual VMD bridges and corrupting unr=
+elated MMIO configuration space.
+- [Medium] The new `vmd_get_bus_info_from_bar4()` function accesses MMIO re=
+gions in BAR4 at hardcoded offsets without validating that the mapped BAR i=
+s sufficiently large.
+--
 
-Both of these issues are perfectly valid and is an indicator that the error path
-change proposed by this patch is not correct.
+commit 371d26de7e81b3dcfea77481a03dd53acb14c51c
+Author: Nirmal Patel <nirmal.patel@linux.intel.com>
 
-- Mani
+PCI: vmd: Add feature to scan BIOS enumerated devices.
 
-> If it returns an error like -EAGAIN, the usage_count has already been
-> successfully dropped. Falling through to call pm_runtime_put_noidle()
-> again will attempt to drop the usage_count a second time. Could this
-> wrongfully steal a concurrent thread's reference and lead to an eventual
-> counter underflow?
-> 
-> [Severity: High]
-> This isn't a bug introduced by this patch, but is it correct to treat a
-> negative return from pm_runtime_put_sync() as a fatal probe failure?
-> 
-> Looking at the same code block referenced above in qcom_pcie_ep_probe(),
-> a return value like -EAGAIN simply means the device cannot be synchronously
-> suspended at this exact moment (for example, if another thread concurrently
-> incremented the usage counter).
-> 
-> Since this is a valid runtime PM state and not a hardware or initialization
-> failure, does tearing down the fully working device and failing the probe
-> cause spurious device initialization failures?
-> 
-> > +
-> >  	return ret;
-> >  }
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260609100747.230521-1-vulab@iscas.ac.cn?part=1
-> 
+Newer VMD devices with ID 0x28c1 use BIOS enumeration for the device tree.
+This commit updates the VMD driver to read bus hide ranges and shadow
+registers from VMD BAR4 to perform bus scans for these devices.
 
--- 
-மணிவண்ணன் சதாசிவம்
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index d4ae250d4bc6d..a4e03f10a54d6 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+
+[ ... ]
+
+> @@ -374,6 +393,9 @@ static void vmd_set_msi_remapping(struct vmd_dev *vmd=
+, bool enable)
+> =20
+>  static void vmd_remove_irq_domain(struct vmd_dev *vmd)
+>  {
+> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> +		return;
+> +
+
+[Severity: Critical]
+Does this early return bypass irq_domain_remove() and irq_domain_free_fwnod=
+e(),
+permanently leaking the IRQ domain?
+
+In vmd_enable_domain(), vmd_create_irq_domain() is successfully called
+for these devices because VMD_FEAT_CAN_BYPASS_MSI_REMAP is not set.
+
+If the IRQ domain remains globally registered, could it cause a use-after-f=
+ree
+when its struct vmd_dev host_data pointer is automatically freed by devres
+during device removal?
+
+>  	/*
+>  	 * Some production BIOS won't enable remapping between soft reboots.
+>  	 * Ensure remapping is restored before unloading the driver.
+
+[ ... ]
+
+> @@ -393,7 +415,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev *vm=
+d, struct pci_bus *bus,
+>  				  unsigned int devfn, int reg, int len)
+>  {
+>  	unsigned int busnr_ecam =3D bus->number - vmd->busn_start;
+> -	u32 offset =3D PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
+> +	u32 offset;
+> +
+> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> +		busnr_ecam =3D bus->number;
+> +
+> +	offset =3D PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
+
+[Severity: High]
+Since the ECAM offset calculation now uses the absolute bus number for
+VMD_FEAT_USE_BIOS_INFO devices, does vmd_domain_reset() also need to be
+updated?
+
+Looking at vmd_domain_reset(), it iterates bus from 0 to max_buses and
+calculates the MMIO address like this:
+
+drivers/pci/controller/vmd.c:vmd_domain_reset() {
+    ...
+    for (bus =3D 0; bus < max_buses; bus++) {
+        for (dev =3D 0; dev < 32; dev++) {
+            base =3D vmd->cfgbar + PCIE_ECAM_OFFSET(bus,
+                                    PCI_DEVFN(dev, 0), 0);
+    ...
+}
+
+If the VMD buses start at a higher number (e.g., 128), could this hardcoded
+loop cause vmd_domain_reset() to miss the actual VMD bridges and perform
+MMIO reads/writes to incorrect offsets in the lower half of the BAR?
+
+>  	if (offset + len >=3D resource_size(&vmd->dev->resource[VMD_CFGBAR]))
+>  		return NULL;
+
+[ ... ]
+
+> @@ -661,6 +688,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *=
+vmd)
+>  	return 0;
+>  }
+> =20
+> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
+> +				       resource_size_t *offset1,
+> +				       resource_size_t *offset2)
+> +{
+> +	u64 phys1, phys2, bar4_2840;
+> +	void __iomem *bar4;
+> +	u32 base_id;
+> +	u8 base_bus;
+> +
+> +	bar4 =3D pci_ioremap_bar(vmd->dev, 4);
+> +	if (!bar4)
+> +		return -ENOMEM;
+> +
+> +	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
+> +	phys1 =3D readq(bar4 + SHADOW_MEMBAR1_28C1);
+> +	phys2 =3D readq(bar4 + SHADOW_MEMBAR2_28C1);
+
+[Severity: Medium]
+Could these reads access unmapped kernel memory if the device's BAR4 is
+smaller than expected?
+
+Since SHADOW_MEMBAR1_28C1 and BASE_ID_REG_28C1 access offsets like 0x2818
+and 0x2840, should we verify that pci_resource_len(vmd->dev, 4) is large
+enough to cover these offsets before performing the readq() calls?
+
+> +	/*
+> +	 * Read and set bus start number from Base ID register. 24-bit Base ID
+> +	 * register is part of 64-bit shadowed reqid hide range register and
+> +	 * holds segment, bus, device and function.
+> +	 */
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622154325.1198=
+09-1-nirmal.patel@linux.intel.com?part=3D1
