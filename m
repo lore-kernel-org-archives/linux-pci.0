@@ -1,291 +1,173 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914C719D092
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 19:05:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77F231C2324;
+	Mon, 22 Jun 2026 19:06:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782155118; cv=none; b=MMOWgEJeGZsseI23s9i6wTbDnuU65hElZCtfzb2Y3rRDKceAJufBmoEgOouV4fj5Ydi2xnn5dGUTspiH/MUY4+WfPJS20G4E7UdCgTeJXVsEpkj4YNca9Ri8b+utGoOdlRT2AQWCqYTBckxppuqxJgvbHnc+foavDH5Ko9vELRk=
+	t=1782155181; cv=none; b=alZc/81sbUjQvuirQnyotMbwRNwYhYZCMjjnSQbH7rtGMYS0IHx9bxuhCif6hs8ZUD7o+gDfiLqP1CQ+v9KYGqZ6KJ374rav687SSKtf5hJoRCj/hTUmY7DjrwCR0Ud/aGTjonQg7K7mbNpIim0Qnhe3u7DLLx88qezejPLaAKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782155118; c=relaxed/simple;
-	bh=2A0xD+MhJMWT+FqW3zKKVE22W+Os1YDpIsycrblVW2I=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=ObpwjGmoOEOgJS8gzwrGSaPwBs1ThObHboG4Nz6al68J+KJmjdmqxgohFDupJVxKH4WTGIkHO3OKFc3Fl34TWBIRHV+vksdg9ArbpP1B+GVVVhmn6C/bNS7EayZiUUJM3apcgYnzo4PexIiQikA1EroaWZJmUQAi6dtAbBp7PaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Td8bSIme; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1782155181; c=relaxed/simple;
+	bh=4Ty717Rvr2KtBrquXS30C/jZ3WGh5CqsrVDpumZy/3o=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=qUm/Bcb+HezStK7Q6egn9WQTWguz/wN0BuTaReH19sGdX2vIA7ocFEeaQx1WZiSTULIvRMTkFzLu6rzIrIjG//kI9bmxyw9fEpU/EwntQkq8A7iR9Nn7WcFYFy214v7ohyYu9jpTYrAUxfRQZt23QEm2twMkchQJcLmAmNFQOqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOS1cY6T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Td8bSIme"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782155117; x=1813691117;
-  h=date:from:to:cc:subject:message-id;
-  bh=2A0xD+MhJMWT+FqW3zKKVE22W+Os1YDpIsycrblVW2I=;
-  b=Td8bSImeaag8AlL1LGJL3nETvFMx0F0fBK+dHW68Jv0SJZQtP9asuPda
-   6b0q5lqK4FtZ7o7/u9DrCiKQt1RcAiczVsYdMiMQXJ22j1/fqe/blVKmm
-   jEGq71tqJf+aFOsr3Mu3v+s4L0KGlgO4IWBET7+V3c3J01l0eroPDLxFJ
-   0gX4ER0Y8LXJl0aoL/mZwnwdcustFQoVh6rR9Nyb0Q5V6JkAvB3blyHtL
-   ztGJ4jGNI5Rv2ja9Hfq1rwIaGH8z8SEbMuuYkq1k0A+TlMLGRVvWl0Rih
-   IZ+xZ2eGnY/NvmnG2uLcxNrsKQtUKZPaiXsCqDw1korypye17gml0vGJh
-   g==;
-X-CSE-ConnectionGUID: rpkkT1TKSV2D0+dicM9bcw==
-X-CSE-MsgGUID: 3O4AkuS3SNKAh2ir+9csVQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11825"; a="82985711"
-X-IronPort-AV: E=Sophos;i="6.24,219,1774335600"; 
-   d="scan'208";a="82985711"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jun 2026 12:05:17 -0700
-X-CSE-ConnectionGUID: 7eBJr1neQgWL61mrI1ADhA==
-X-CSE-MsgGUID: qsdt82N2QtGMWQX/GtMDDA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,219,1774335600"; 
-   d="scan'208";a="249346336"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa007.jf.intel.com with ESMTP; 22 Jun 2026 12:05:12 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wbjx1-000000001kv-241c;
-	Mon, 22 Jun 2026 19:04:58 +0000
-Date: Tue, 23 Jun 2026 03:04:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 40e92a5476e7aa3af966d37a58b5d40a929e55c6
-Message-ID: <202606230322.Yi3eoErF-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOS1cY6T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04DA01F000E9;
+	Mon, 22 Jun 2026 19:06:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782155180;
+	bh=9oxSszJzvOcRTa/rj5gx5Lq8ASBBobjy7YnCgU2vPdo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MOS1cY6T1vRZIGCz6OiQTq/oaArGrOSeh4G3IROYm2Hz2APlgepSFV40UoTSCw7hi
+	 qy5aAMg6Ds6CzbGaxPX03LG5P09H+3z4+jJruyLC36BwwqXcdxms7V9uunfj6UwmPc
+	 2Q2tsHRUWyNhVFjnaKlm4mxyHwTu9Re4liMbSSvkZcdiZ4N1BQJVUk7cHZBg5RTWFG
+	 c4mYcCbA22XXYdH7GNO24aUFk/7Kw96tTFx234raARcy9nxsqku7skvN3BG42UtHau
+	 oE6godkPHGwN4H4lK4nzze2JryIPFlFL4Q5IkyqELrJaOMrzxAVV+joTITifJ6g501
+	 PPTyLCEYK3XnA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 3/4] vfio/pci: implement get_pci_tph and DMA_BUF_TPH
+ feature
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhiping Zhang" <zhipingz@meta.com>
+Cc: dri-devel@lists.freedesktop.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260622184211.2229399-4-zhipingz@meta.com>
+References: <20260622184211.2229399-1-zhipingz@meta.com>
+ <20260622184211.2229399-4-zhipingz@meta.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 22 Jun 2026 19:06:19 +0000
+Message-Id: <20260622190620.04DA01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 40e92a5476e7aa3af966d37a58b5d40a929e55c6  Merge branch 'pci/misc'
-
-elapsed time: 971m
-
-configs tested: 214
-configs skipped: 7
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig    gcc-16.1.0
-alpha                            allyesconfig    gcc-16.1.0
-alpha                               defconfig    gcc-16.1.0
-arc                              allmodconfig    clang-23
-arc                               allnoconfig    gcc-16.1.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-16.1.0
-arc                                 defconfig    gcc-16.1.0
-arc                   randconfig-001-20260622    gcc-8.5.0
-arc                   randconfig-002-20260622    gcc-8.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-16.1.0
-arm                              allyesconfig    clang-23
-arm                                 defconfig    gcc-16.1.0
-arm                   randconfig-001-20260622    gcc-8.5.0
-arm                   randconfig-002-20260622    gcc-8.5.0
-arm                   randconfig-003-20260622    gcc-8.5.0
-arm                   randconfig-004-20260622    gcc-8.5.0
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-16.1.0
-arm64                               defconfig    gcc-16.1.0
-arm64                 randconfig-001-20260622    gcc-8.5.0
-arm64                 randconfig-002-20260622    gcc-8.5.0
-arm64                 randconfig-003-20260622    gcc-8.5.0
-arm64                 randconfig-004-20260622    gcc-8.5.0
-csky                             allmodconfig    gcc-16.1.0
-csky                              allnoconfig    gcc-16.1.0
-csky                                defconfig    gcc-16.1.0
-csky                  randconfig-001-20260622    gcc-8.5.0
-csky                  randconfig-002-20260622    gcc-8.5.0
-hexagon                          allmodconfig    gcc-16.1.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-16.1.0
-hexagon                             defconfig    gcc-16.1.0
-hexagon                        randconfig-001    gcc-11.5.0
-hexagon               randconfig-001-20260622    gcc-11.5.0
-hexagon               randconfig-001-20260622    gcc-8.5.0
-hexagon                        randconfig-002    gcc-11.5.0
-hexagon               randconfig-002-20260622    gcc-11.5.0
-hexagon               randconfig-002-20260622    gcc-8.5.0
-i386                             allmodconfig    clang-22
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-16.1.0
-i386                             allyesconfig    clang-22
-i386        buildonly-randconfig-001-20260622    gcc-14
-i386        buildonly-randconfig-002-20260622    gcc-14
-i386        buildonly-randconfig-003-20260622    gcc-14
-i386        buildonly-randconfig-004-20260622    gcc-14
-i386        buildonly-randconfig-005-20260622    gcc-14
-i386        buildonly-randconfig-006-20260622    gcc-14
-i386                                defconfig    gcc-16.1.0
-i386                  randconfig-001-20260622    clang-22
-i386                  randconfig-002-20260622    clang-22
-i386                  randconfig-003-20260622    clang-22
-i386                  randconfig-004-20260622    clang-22
-i386                  randconfig-005-20260622    clang-22
-i386                  randconfig-006-20260622    clang-22
-i386                  randconfig-007-20260622    clang-22
-i386                  randconfig-011-20260622    gcc-14
-i386                  randconfig-012-20260622    gcc-14
-i386                  randconfig-013-20260622    gcc-14
-i386                  randconfig-014-20260622    gcc-14
-i386                  randconfig-015-20260622    gcc-14
-i386                  randconfig-016-20260622    gcc-14
-i386                  randconfig-017-20260622    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-20
-loongarch                         allnoconfig    gcc-16.1.0
-loongarch                           defconfig    clang-23
-loongarch                      randconfig-001    gcc-11.5.0
-loongarch             randconfig-001-20260622    gcc-11.5.0
-loongarch             randconfig-001-20260622    gcc-8.5.0
-loongarch                      randconfig-002    gcc-11.5.0
-loongarch             randconfig-002-20260622    gcc-11.5.0
-loongarch             randconfig-002-20260622    gcc-8.5.0
-m68k                             allmodconfig    gcc-16.1.0
-m68k                              allnoconfig    gcc-16.1.0
-m68k                             allyesconfig    clang-23
-m68k                                defconfig    clang-23
-microblaze                        allnoconfig    gcc-16.1.0
-microblaze                       allyesconfig    gcc-16.1.0
-microblaze                          defconfig    clang-23
-mips                             allmodconfig    gcc-16.1.0
-mips                              allnoconfig    gcc-16.1.0
-mips                             allyesconfig    gcc-16.1.0
-mips                        qi_lb60_defconfig    clang-17
-nios2                            allmodconfig    clang-20
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-23
-nios2                          randconfig-001    gcc-11.5.0
-nios2                 randconfig-001-20260622    gcc-11.5.0
-nios2                 randconfig-001-20260622    gcc-8.5.0
-nios2                          randconfig-002    gcc-11.5.0
-nios2                 randconfig-002-20260622    gcc-11.5.0
-nios2                 randconfig-002-20260622    gcc-8.5.0
-openrisc                         allmodconfig    clang-20
-openrisc                         allmodconfig    gcc-16.1.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-16.1.0
-openrisc                            defconfig    gcc-16.1.0
-parisc                           allmodconfig    gcc-16.1.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-16.1.0
-parisc                           allyesconfig    clang-17
-parisc                              defconfig    gcc-16.1.0
-parisc                         randconfig-001    gcc-14.3.0
-parisc                randconfig-001-20260622    gcc-14.3.0
-parisc                         randconfig-002    gcc-14.3.0
-parisc                randconfig-002-20260622    gcc-14.3.0
-parisc64                            defconfig    clang-23
-powerpc                          allmodconfig    gcc-16.1.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-16.1.0
-powerpc                        randconfig-001    gcc-14.3.0
-powerpc               randconfig-001-20260622    gcc-14.3.0
-powerpc                        randconfig-002    gcc-14.3.0
-powerpc               randconfig-002-20260622    gcc-14.3.0
-powerpc64                      randconfig-001    gcc-14.3.0
-powerpc64             randconfig-001-20260622    gcc-14.3.0
-powerpc64                      randconfig-002    gcc-14.3.0
-powerpc64             randconfig-002-20260622    gcc-14.3.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-16.1.0
-riscv                            allyesconfig    clang-23
-riscv                               defconfig    gcc-16.1.0
-s390                             allmodconfig    clang-17
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-16.1.0
-s390                                defconfig    gcc-16.1.0
-sh                               allmodconfig    gcc-16.1.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-16.1.0
-sh                               allyesconfig    clang-17
-sh                                  defconfig    gcc-14
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-16.1.0
-sparc                               defconfig    gcc-16.1.0
-sparc                          randconfig-001    gcc-16.1.0
-sparc                 randconfig-001-20260622    gcc-16.1.0
-sparc                          randconfig-002    gcc-16.1.0
-sparc                 randconfig-002-20260622    gcc-16.1.0
-sparc                       sparc32_defconfig    gcc-16.1.0
-sparc64                          allmodconfig    clang-20
-sparc64                             defconfig    gcc-14
-sparc64                        randconfig-001    gcc-16.1.0
-sparc64               randconfig-001-20260622    gcc-16.1.0
-sparc64                        randconfig-002    gcc-16.1.0
-sparc64               randconfig-002-20260622    gcc-16.1.0
-um                               allmodconfig    clang-17
-um                                allnoconfig    clang-16
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-16.1.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                             randconfig-001    gcc-16.1.0
-um                    randconfig-001-20260622    gcc-16.1.0
-um                             randconfig-002    gcc-16.1.0
-um                    randconfig-002-20260622    gcc-16.1.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-22
-x86_64                            allnoconfig    clang-22
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-22
-x86_64               buildonly-randconfig-001    clang-22
-x86_64      buildonly-randconfig-001-20260622    clang-22
-x86_64               buildonly-randconfig-002    clang-22
-x86_64      buildonly-randconfig-002-20260622    clang-22
-x86_64               buildonly-randconfig-003    clang-22
-x86_64      buildonly-randconfig-003-20260622    clang-22
-x86_64               buildonly-randconfig-004    clang-22
-x86_64      buildonly-randconfig-004-20260622    clang-22
-x86_64               buildonly-randconfig-005    clang-22
-x86_64      buildonly-randconfig-005-20260622    clang-22
-x86_64               buildonly-randconfig-006    clang-22
-x86_64      buildonly-randconfig-006-20260622    clang-22
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-22
-x86_64                randconfig-001-20260622    clang-22
-x86_64                randconfig-002-20260622    clang-22
-x86_64                randconfig-003-20260622    clang-22
-x86_64                randconfig-004-20260622    clang-22
-x86_64                randconfig-005-20260622    clang-22
-x86_64                randconfig-006-20260622    clang-22
-x86_64                randconfig-011-20260622    clang-22
-x86_64                randconfig-012-20260622    clang-22
-x86_64                randconfig-013-20260622    clang-22
-x86_64                randconfig-014-20260622    clang-22
-x86_64                randconfig-015-20260622    clang-22
-x86_64                randconfig-016-20260622    clang-22
-x86_64                randconfig-071-20260622    gcc-14
-x86_64                randconfig-072-20260622    gcc-14
-x86_64                randconfig-073-20260622    gcc-14
-x86_64                randconfig-074-20260622    gcc-14
-x86_64                randconfig-075-20260622    gcc-14
-x86_64                randconfig-076-20260622    gcc-14
-x86_64                               rhel-9.4    clang-22
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-22
-x86_64                    rhel-9.4-kselftests    clang-22
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-22
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-16.1.0
-xtensa                           allyesconfig    clang-20
-xtensa                generic_kc705_defconfig    gcc-16.1.0
-xtensa                         randconfig-001    gcc-16.1.0
-xtensa                randconfig-001-20260622    gcc-16.1.0
-xtensa                         randconfig-002    gcc-16.1.0
-xtensa                randconfig-002-20260622    gcc-16.1.0
-
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] Unconditional validation of the flag-gated `ph` syscall parameter =
+can falsely reject valid requests to clear TPH metadata.
+- [Medium] Packing new `tph_*` bitfields into the same byte as the existing=
+ `revoked` bitfield introduces a data race.
+- [Medium] Lockless plain read of `priv->vdev` can race with a concurrent w=
+rite of `NULL` during device cleanup.
 --
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+commit d529be6632b034e32bc07cc3b900f28862d27327
+Author: Zhiping Zhang <zhipingz@meta.com>
+
+vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
+
+This commit implements dma-buf get_pci_tph for vfio-pci exported dma-bufs.
+It adds VFIO_DEVICE_FEATURE_DMA_BUF_TPH to allow userspace to publish TPH
+metadata for a VFIO-owned device.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
+ci_dmabuf.c
+> index c16f460c01d68..d6f5dd3210009 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -19,7 +20,14 @@ struct vfio_pci_dma_buf {
+>  	u32 nr_ranges;
+>  	struct kref kref;
+>  	struct completion comp;
+> -	u8 revoked : 1;
+> +
+> +	/* Protected by dmabuf->resv. */
+> +	u16 tph_st_ext;
+> +	u8 tph_st;
+> +	u8 revoked:1;
+> +	u8 tph_st_valid:1;
+> +	u8 tph_st_ext_valid:1;
+> +	u8 tph_ph:2;
+>  };
+
+[Severity: Medium]
+Does this bitfield packing introduce a data race?
+
+While the new tph_* fields are safely updated under the dmabuf->resv lock
+in vfio_pci_core_feature_dma_buf_tph(), existing code in
+vfio_pci_dma_buf_move() reads the revoked bit without holding the
+dmabuf->resv lock:
+
+vfio_pci_dma_buf_move()
+    if (priv->revoked !=3D revoked) {
+        dma_resv_lock(priv->dmabuf->resv, NULL);
+        ...
+
+Because they share the same underlying byte, the locked read-modify-write of
+the tph_* fields will concurrently access the byte while the lockless read =
+of
+the revoked flag occurs. This can violate the C memory model and trigger
+KCSAN warnings. Could the revoked flag be declared as a standalone bool to
+avoid sharing the byte with the dynamic tph_* bitfields?
+
+> [ ... ]
+> @@ -333,6 +362,72 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
+re_device *vdev, u32 flags,
+> [ ... ]
+> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
+> +				      u32 flags,
+> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				      size_t argsz)
+> +{
+> [ ... ]
+> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
+> +		return -EFAULT;
+> +
+> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
+> +		return -EINVAL;
+> +
+> +	if (set_tph.ph & ~0x3)
+> +		return -EINVAL;
+
+[Severity: High]
+Can this unconditional check falsely reject valid requests to clear TPH
+metadata?
+
+When userspace sets the flags to 0 to clear or invalidate published TPH
+metadata, the ph parameter is unused and might contain uninitialized stack
+garbage. Since syscall parameters that are only meaningful when certain fla=
+gs
+are set should not be validated when those flags are absent, could this
+cause legitimate clearing requests to fail with -EINVAL?
+
+> [ ... ]
+> +	dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
+> +		ret =3D -EINVAL;
+> +		goto out_put;
+> +	}
+> +
+> +	priv =3D dmabuf->priv;
+> +	if (priv->vdev !=3D vdev) {
+> +		ret =3D -EINVAL;
+> +		goto out_put;
+> +	}
+
+[Severity: Medium]
+Could this plain read of priv->vdev race with a concurrent device cleanup?
+
+Here, priv->vdev is accessed to check ownership without holding any locks
+that would protect against cleanup. Concurrently, if the original exporting
+device is being closed, vfio_pci_dma_buf_cleanup() sets priv->vdev =3D NULL
+locklessly relative to this ioctl execution context:
+
+vfio_pci_dma_buf_cleanup()
+    list_del_init(&priv->dmabufs_elm);
+    priv->vdev =3D NULL;
+    vfio_device_put_registration(&vdev->vdev);
+
+This plain read racing with a plain write could cause undefined behavior
+under the kernel memory model and trigger KCSAN warnings. Should this be
+annotated with READ_ONCE() and WRITE_ONCE() to prevent compiler reordering
+or load tearing?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622184211.2229=
+399-1-zhipingz@meta.com?part=3D3
