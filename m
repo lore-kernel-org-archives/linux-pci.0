@@ -1,132 +1,120 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D99230264
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 01:21:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61FFD244675
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 01:28:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782091323; cv=none; b=U+i6AFI2XYJo9MchfugHKWWmdqdn/+f9i+t35qJiI0PIHXvTM0z58WUUSUCojNW/OcSJvbM3vDUWW6fUne9H7m9urBxMol55hjALUNW66KxPIDuycASxwPlXmGfv8aIlVqCzLKHkyIqdUz0c4vMmVmMh3G1tNyJ+/jaKQGziB00=
+	t=1782091723; cv=none; b=NFStSFBrAKqM7TwBhc53Ltrk1bduMQA5Hjghs/Fy3X6IETTaA8RMT25iA/daXAr5XWpNXjoiXLIgXNa4Bsi7FJnTR3qh3+JxGForrMAybgmPjtW9QxcW3WyJ9YISVET6lM4Fha56fplMwxb0S64QMSaT6viKiVdfVpeago5KPVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782091323; c=relaxed/simple;
-	bh=koCiqGXc8hKzAMas+mvVVZlfS+b/ro3HNXOZ19MkRxQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=g0hYlSXQxi2P/+Oygd25s5unbADpXwAahyvDR80ZpUbP26n0LpEi4uGZcIDKrWpV+LHp9gUPwE/j9OLoYmtWmhTtDYrvbGdzjJ4FxrBfeskJ+c6fp+/28jFMK7KYO1Jg9X9Fo9+RAfAiqS5Ah/2N0wViUKxFC1UHbPq9BDRg8G0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=eWFQcjj7; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=eWFQcjj7; arc=none smtp.client-ip=113.46.200.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1782091723; c=relaxed/simple;
+	bh=kensKWCx1079dK6q4s2cQiqL/xVqNqLSGweqziBg2Iw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=q0gt9MxuRx9ApWvIT2cWzuj7jS+pq8Lo84rwp1cjH3ccWCts/Nqg79Fq+F04ZG5wZ664Rjm1nZwt8MRn8tIjdXu0xXDsAOi0wHNgPha9fSIgdQQnZwp/VfNqVpey3WLz8jixO4qHLbbTyMjHZr6AGuqnru0719CF/dS/R9e4DE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RO0IMOBX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="eWFQcjj7";
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="eWFQcjj7"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=VQDLcNX7H0RfY+nHyvxQRES1bhoVcOlkEWngyUigYTk=;
-	b=eWFQcjj7EpevrocgXqU/46jI2z2e61Tr99vDk7CqI5CRIkEpqM9I7MHwS/CTB+Z0Q/Y4Nib4x
-	czjkrFR7flkAc0cvV+wnh5fdKqfoPll+GuCHI0/gBhZC0LVYQJV8Sn9AyaPQy6Z1N6O65sdnZwq
-	77RwO4qJgg98cx+8Rh4AjBc=
-Received: from canpmsgout01.his.huawei.com (unknown [172.19.92.178])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gk9Ds0xdtzcbTs;
-	Mon, 22 Jun 2026 09:13:17 +0800 (CST)
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=VQDLcNX7H0RfY+nHyvxQRES1bhoVcOlkEWngyUigYTk=;
-	b=eWFQcjj7EpevrocgXqU/46jI2z2e61Tr99vDk7CqI5CRIkEpqM9I7MHwS/CTB+Z0Q/Y4Nib4x
-	czjkrFR7flkAc0cvV+wnh5fdKqfoPll+GuCHI0/gBhZC0LVYQJV8Sn9AyaPQy6Z1N6O65sdnZwq
-	77RwO4qJgg98cx+8Rh4AjBc=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gk9Dm50ZPz1T4HL;
-	Mon, 22 Jun 2026 09:13:12 +0800 (CST)
-Received: from dggpemf100007.china.huawei.com (unknown [7.185.36.214])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3AA0940561;
-	Mon, 22 Jun 2026 09:21:50 +0800 (CST)
-Received: from huawei.com (10.67.121.11) by dggpemf100007.china.huawei.com
- (7.185.36.214) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 22 Jun
- 2026 09:21:49 +0800
-From: kangfenglong <kangfenglong@huawei.com>
-To: <kbusch@kernel.org>
-CC: <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	<liuyonglong@huawei.com>, <seven.wangyu@huawei.com>,
-	<kangfenglong@huawei.com>
-Subject: [PATCH v2] nvme-pci: fix CMB mapping when CMBSZ Size field is zero
-Date: Mon, 22 Jun 2026 09:21:47 +0800
-Message-ID: <20260622012147.40600-1-kangfenglong@huawei.com>
-X-Mailer: git-send-email 2.12.0.windows.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RO0IMOBX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BD061F000E9;
+	Mon, 22 Jun 2026 01:28:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782091721;
+	bh=zVbZQiSvSIXJhG6cyGbrsXGD0YywIynq5PmWrLWY2Mg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RO0IMOBXM0QVwAVJVLjMqkdAURoZKkNV7V3m+vR7SGmCTXpPz1WV/PivrzxX6QZQN
+	 /JLa/sKlKcvRV+OEZGckwR5QxQMEVlsB3iC1eUQhK2usrMJ8zcrxAH6v89N287eVsH
+	 b7PA2jzNM1VHfb4zrk5bVohnyvbSxFrBZ4Z8b293bwMFh6YPtDqVpBXnoQAa3GAErh
+	 jxFk9HOMXQBlY+EBAtSZUa/MdjYkrDVCn+F/q7h/J3iMJnJphnNUPzRhrN7liECDE+
+	 3x2fjtFaSKGDQGJ3U6RQIoZAu4Ia3Iu4TQlBY2IaSanMTJU6vS6+t01HQYqwQ+k8uZ
+	 433GFfGgs+q5Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] nvme-pci: fix CMB mapping when CMBSZ Size field is
+ zero
+Reply-To: sashiko-reviews@lists.linux.dev
+To: kangfenglong <kangfenglong@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260622012147.40600-1-kangfenglong@huawei.com>
+References: <20260622012147.40600-1-kangfenglong@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 22 Jun 2026 01:28:40 +0000
+Message-Id: <20260622012841.3BD061F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- dggpemf100007.china.huawei.com (7.185.36.214)
 
-The controller memory buffer size is defined by the SZ field in the
-CMBSZ register (bits 31:12). According to the NVMe specification, a
-value of zero in the SZ field indicates that no CMB is present.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Returning 0 from `nvme_cmb_size_unit()` to reject invalid SZU valu=
+es evaluates to a size of 0, bypassing the rejection and triggering the exa=
+ct bug the patch attempts to fix.
+--
 
-Commit f65efd6dfe4e ("nvme-pci: clean up CMB initialization") replaced
-the check for a zero SZ field with a check for a zero CMBSZ register
-value, under the assumption that a zero register implies no CMB.
-However, a CMBSZ register can be non-zero while the SZ field is zero,
-for example when Size Units (SZU) is set to a non-zero value but the
-actual size is zero (e.g. CMBSZ = 0x100: SZU = 1, SZ = 0).
+commit efcd71708003c14038a1fdc79b6233cc4b6a8192
+Author: kangfenglong <kangfenglong@huawei.com>
 
-When this happens, nvme_map_cmb() proceeds to compute a size of zero,
-passes the alignment checks (zero is always aligned), and calls
-pci_p2pdma_add_resource() with size=0. The P2PDMA subsystem then
-defaults size to the entire remaining BAR, which may not be properly
-aligned for memory hotplug, triggering:
+nvme-pci: fix CMB mapping when CMBSZ Size field is zero
 
-  WARNING: CPU: 0 PID: 10 at mm/memory_hotplug.c:396 __add_pages
-  Misaligned __add_pages start: 0x494a0000 end: 0x494a000f
+This commit restores the check for a zero SZ field in the CMBSZ register,
+limits the Size Units (SZU) to valid values, and adds an overflow check
+when calculating the CMB size to avoid mapping errors.
 
-Fix this by:
-1. Restoring the check for a zero SZ field, which explicitly verifies
-   that the controller actually has a CMB before proceeding.
-2. Adding a boundary check in nvme_cmb_size_unit() to reject SZU values
-   greater than 6. The SZU field is 4 bits, but values 7-15 are reserved
-   by the NVMe specification and produce a shift count >= 40 in the
-   left-shift operation (1ULL << (12 + 4 * szu) when szu >= 7), which
-   exceeds the maximum 64 GB unit size defined by the spec.
-3. Using check_mul_overflow() for the size calculation to detect integer
-   overflow that could wrap to a non-zero value and bypass the SZ check.
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index e6267a6aa3801..2794298aa9e66 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -1814,6 +1814,9 @@ static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
+>  {
+>  	u8 szu =3D (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
+> =20
+> +	if (szu > 6)
+> +		return 0;
+> +
 
-Fixes: f65efd6dfe4e ("nvme-pci: clean up CMB initialization")
-Signed-off-by: kangfenglong <kangfenglong@huawei.com>
----
- drivers/nvme/host/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+[Severity: High]
+If this boundary check returns 0 to reject an invalid SZU value, will this
+0 value be used in subsequent calculations rather than triggering an abort?
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 8438c904ec49..5c7b1e757e4d 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2448,6 +2448,9 @@ static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
- {
- 	u8 szu = (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
- 
-+	if (szu > 6)
-+		return 0;
-+
- 	return 1ULL << (12 + 4 * szu);
- }
- 
-@@ -2472,9 +2475,12 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
- 	if (!dev->cmbsz)
- 		return;
-+	if (!nvme_cmb_size(dev))
-+		return;
- 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
- 
--	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
-+	if (check_mul_overflow(nvme_cmb_size_unit(dev), nvme_cmb_size(dev), &size))
-+		return;
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
- 	bar = NVME_CMB_BIR(dev->cmbloc);
- 	bar_size = pci_resource_len(pdev, bar);
--- 
-2.12.0.windows.1
+>  	return 1ULL << (12 + 4 * szu);
+>  }
+> =20
+> @@ -1838,9 +1841,12 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+>  	dev->cmbsz =3D readl(dev->bar + NVME_REG_CMBSZ);
+>  	if (!dev->cmbsz)
+>  		return;
+> +	if (!nvme_cmb_size(dev))
+> +		return;
+>  	dev->cmbloc =3D readl(dev->bar + NVME_REG_CMBLOC);
+> =20
+> -	size =3D nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
+> +	if (check_mul_overflow(nvme_cmb_size_unit(dev), nvme_cmb_size(dev), &si=
+ze))
+> +		return;
+>  	offset =3D nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
+>  	bar =3D NVME_CMB_BIR(dev->cmbloc);
+>  	bar_size =3D pci_resource_len(pdev, bar);
 
+[Severity: High]
+If nvme_cmb_size_unit() returned 0, won't check_mul_overflow() compute
+0 * sz =3D 0, return false (no overflow), and set size =3D 0 without return=
+ing
+early?
+
+Because size evaluates to 0, execution continues, and later in the function
+pci_p2pdma_add_resource() will be called with size=3D0 and offset=3D0.
+
+As noted in the commit message, calling pci_p2pdma_add_resource() with size=
+=3D0
+causes the P2PDMA subsystem to default to mapping the entire remaining BAR.
+Does this defeat the SZU boundary check above and re-trigger the exact memo=
+ry
+mapping warning this patch is attempting to fix?
+
+Should nvme_map_cmb() explicitly check if nvme_cmb_size_unit() =3D=3D 0 or =
+if the
+resulting size =3D=3D 0 before continuing?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622012147.4060=
+0-1-kangfenglong@huawei.com?part=3D1
