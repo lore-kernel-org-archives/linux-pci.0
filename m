@@ -1,65 +1,62 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012010.outbound.protection.outlook.com [40.107.209.10])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011001.outbound.protection.outlook.com [40.107.208.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58AD23B813E;
-	Mon, 22 Jun 2026 15:58:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A75653CCFD4;
+	Mon, 22 Jun 2026 16:09:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.1
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782143932; cv=fail; b=mClP5fh/Iu/p+WJTYAkr6yHuIaLAHXJ8JH4yi9Lfg9SI8WMyU4nwJYx4bNJLsmnx1GlU0UA8p3tuBPnuVuiQgUvPFH9tgrJo1Y6Ef4Pn4uP/O04qdax3JSFaqtQcmvODMrWwI8F4fWBaoJAGKVjQayq4LV9Gr9E2ansDX349R2Q=
+	t=1782144569; cv=fail; b=c2VbvpE5xN7sEyIUU87lkMH3e1A2Z0FnTtW9czccWEUx2sBQhA2QoFOO/TZBjgf2PSZKgPw8xL5BA94wpLAznCMU3r4DridWeleTuT1xYr6vQARYo2CIjbSXH5T0iYd9N9cD8iDSKVGlXwwb5Tw4LO1HPZz+qu5GpMJXtK+Z028=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782143932; c=relaxed/simple;
-	bh=JX8riP5BZP4Feix8U5uROpeGg2LVYBGV+ajWhTmzv70=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=uUFnA93574qwHyX0GP13oaHqk+WbIiZRlPfH4yc6lDGt9Ze9/8Fz3NPCAYxwg7HqqOgvqbpGNj5GmxWVHMO2WBVKvEW+a6RvvE7Uffb/PUctR2O1mgbj4qq0HomeClDQlWEZO/1SUAGl8TkcbrF2ht79mcZJLjOPWaorYwl5Lu8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=V95q+XY/; arc=fail smtp.client-ip=40.107.209.10
+	s=arc-20240116; t=1782144569; c=relaxed/simple;
+	bh=jhiuNXJPOZSkMdriZfqmd6FRygAVuAixfaHi5gY+cVk=;
+	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=RXeAsaY5AGbVfx7ANz/bFxvF+jlzkrH0hDGe6bcW7cmCx7H5Hc7K8wgqNT61nhMnXdFqF5ESafkHbVD+TJpGH6mUNXgcGlXvROWy31qBp9/6UiCvn+IfpkLEVzrlZ3EtyiNM5tTGgbeVrzxOdKfq8lbKb4elu7EeCmUnZXKE9fA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=UhHkXdFb; arc=fail smtp.client-ip=40.107.208.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="V95q+XY/"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="UhHkXdFb"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=svndtuZE8XHfnlRxz0PqIb66UThCbypdTp1oaCk/lq5JYX4KCx4RF/udBU9i37XDjkeZnN2KN8UGeSOFzGfgeM7U/BL3KbTKPDDNoHwsGqQMDL+QAfzF4isupIXDcpkARXLRQkiZ73ghLC+0A9ccDOUXaJvg5QYcGcFL8jjyrmKwSrlrXxUVSKWlt784IuU0y81wPHRPYSEdUBiDq5DGv26oyx1aikCdfqnO4VNrLOjJh8iXcBl3llBADQqU3+lUb6m6SdsQpk85UjVwQnT1cRKNQ8b3Swwsmuu71vsrq4hVb87zcq/YpJMYREP4TZT9u1iWDqPEMagQfQXNasERZQ==
+ b=JhfKfnIuIw/3Wb78DfZWlUo+5nJj2UYYZlI7YxIjTy2x3pgI6lqT3kCIsvRsiovIiY5IPdLOC8vGXw+BX9NyM8n/TsAQ570azI+pmXsDe3T1VS5BQ93ymjcuUMRdHie38OyljvGoL8qvxSABhTfaSJLrXJdxOLEQeJI4uD9h3DvohTSHWLEDK7R0rVN/I3GXU8deCzlo5FQqsEXiOoY8JnchY2hSQVQGwWi2ovHCBX5b0SJ+3AMFmVVl+GIIdPM+ZN1ItmRw2pN4MBYxgF+RXBna+kU4j+JK6ZbIUqoD9Uutg3bm6wpyUk5apYm6C3e26nkBMgqp2xnVXeTcUKFwvQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xmJnCfb3s1XlutAM0dibM2apguLs8V486bLSP/vGoSY=;
- b=ImyPxCq+MhhvtgTCIjHqLAtlOKZzvzOSQwgew47nCYYm9vRIXx1CZZaakFltuJSWSyqtSPlK1i7Jmj/LXTOtisMKWBzStcPZkmWw81a2L/+mEO7AlHTqWc0X8VnmAtqGgNvnjfqRAIVuX18T0v7S64c/nC6vqjed8HRsCpnu5TI10xcK08LA0tetiApCI8+kFXfDLP6F+x7hlgW94A53wbzqtqUltRNb5gHyyx7SbdtOjTqoTdUEVDevh+QSe0c2MagiRlVZvPsMku8ShGhzwB/FSBZX3433jba/UgvLMMw9WQccZu9xVWqrkXs7EfojeC5woafTAyRsbxgghiFuzg==
+ bh=utSrvD9CZjb9N5vj2GcDjxkTnwtY0MGJkvk/mn27HOY=;
+ b=dYKYX1/Zj4NUTAqX//5ZIn5sITP/co/18WrKbRv7ABp+xgaeqaV4HHIHXrtJ58J2gZVSBy13xGl4gI1NDGmNWWyZkKeAzlvAfDPSn5b248AC7PYtNyDzW4Yq6cYpQGOUThGtuRF5qYDWKxn1GXOI59J109OC+/+0b9asQrbuU5QGSc85xOR9Dbo2QBlvQvUtbxQBRSZygAJlA20WHl60yiIGJYl63xQHf/3ON2TTb97yTGviH919zeeez2PErKT2PZ5RBvy+nCWGopivAsyMysCUaaPN2nBvROt5K4N1GyBNvWU+W7ybGpXqzzwmy5GspWLZYR/0VyaVVQhiAQGxfQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xmJnCfb3s1XlutAM0dibM2apguLs8V486bLSP/vGoSY=;
- b=V95q+XY/cehebpHxsrcc6PaisqB+usE6sKflZmzpLt8c7tOYoCPjYl7PLYxQ9bgu3B0eo+lzVUG0sSOnrn3krdZGBy/AKFl8tj/tmnrU9+3Q39oiQ6+r3ESPqR/9dfLugpesv/sNoI5E7n7m/nqcU4FES9wZTL/kumRbUVcrXTE=
+ bh=utSrvD9CZjb9N5vj2GcDjxkTnwtY0MGJkvk/mn27HOY=;
+ b=UhHkXdFbid/ERs2BsMSE2HB/3UJGL31mXOHkAt7r8nNSWJ4fz9ckjvmHyYVy/HJy92W2iD28JXO7OgQ+EWYJnEEvSWBbGwKplpPADJ+NW/XXp6IqNV/bUh+huYA4d3OLlpgSMoSvuF+WomY8HZqz5tNFhSrXlO517abJesTl6yM=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
 Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by PH7PR12MB7988.namprd12.prod.outlook.com (2603:10b6:510:26a::22) with
+ by SA1PR12MB7128.namprd12.prod.outlook.com (2603:10b6:806:29c::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.20; Mon, 22 Jun
- 2026 15:58:47 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Mon, 22 Jun
+ 2026 16:09:23 +0000
 Received: from PH8PR12MB6914.namprd12.prod.outlook.com
  ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
  ([fe80::2893:177a:72b0:6000%6]) with mapi id 15.21.0139.009; Mon, 22 Jun 2026
- 15:58:47 +0000
-Message-ID: <a01af40b-6c1f-4937-8aa2-edf170a1c389@amd.com>
-Date: Mon, 22 Jun 2026 08:58:38 -0700
+ 16:09:23 +0000
+Message-ID: <686c79f1-f4d5-4c76-a57d-fd124c0c1af6@amd.com>
+Date: Mon, 22 Jun 2026 09:09:19 -0700
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: vgaarb: Include 0x0380 devices in default selection
+Subject: Re: [PATCH v2] PCI: vgaarb: Include 0x0380 devices in boot VGA
+ selection
 Content-Language: en-US
-To: Aaron Ma <aaron.ma@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260618081803.2790848-1-aaron.ma@canonical.com>
- <c3c9df7b-20ae-41fe-8cae-ad7f9cabe823@amd.com>
- <CAJ6xRxXhNmehDjP4Gdx8VM5zh4cXQK8NKWVddL3kEGoroHL6WA@mail.gmail.com>
- <4280751a-87b6-4634-99c2-ed51f74ac29b@amd.com>
- <CAJ6xRxVMQTxV9E5jrbZAjjVv-qUhE6za5e_MjTbjnj9UduLm1Q@mail.gmail.com>
+To: Aaron Ma <aaron.ma@canonical.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Thomas Zimmermann <tzimmermann@suse.de>
+References: <20260622061339.3306046-1-aaron.ma@canonical.com>
 From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <CAJ6xRxVMQTxV9E5jrbZAjjVv-qUhE6za5e_MjTbjnj9UduLm1Q@mail.gmail.com>
+In-Reply-To: <20260622061339.3306046-1-aaron.ma@canonical.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SJ0PR13CA0053.namprd13.prod.outlook.com
- (2603:10b6:a03:2c2::28) To PH8PR12MB6914.namprd12.prod.outlook.com
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0179.namprd05.prod.outlook.com
+ (2603:10b6:a03:339::34) To PH8PR12MB6914.namprd12.prod.outlook.com
  (2603:10b6:510:1cb::21)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -68,258 +65,241 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|PH7PR12MB7988:EE_
-X-MS-Office365-Filtering-Correlation-Id: 921dec18-508d-4e27-78e2-08ded07724fe
+X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|SA1PR12MB7128:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3ab0012f-4d10-4b01-12f4-08ded0789f91
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|18002099003|22082099003|6133799003|56012099006|4143699003|5023799004|11063799006;
+	BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|18002099003|22082099003|5023799004|11063799006|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	X5Qe4//iqMtvXv6vUjCCGy+sDJuyH6OIIQbzg/4QkT5SVVP2RRjKR45PuAXD7nsKEM+Ertz2aBAY7HYdrFz39qP+HbETFgSdg8iDkWDRpFI4iP+JWiNXCMvvuAadYbuMan8vEUK/aOvUdWzJTK0TJZKX1BH11rdjTC3+B58iCErZ15EmriOEkKh7PLVMKQJeFIhvM5eGER83w+FztKNKhNv3sIpSFTiJZf3mLVKb0vXhUY3u6lCRwOYgP9js3X6zKIyLgu13LGRL5a3rLB9Wa0ST76TZ17pnNgj7zXDjniUR+8BR9s9s+w+D2ykZ8P9odevBwTBXakXxFsjA19TqdfAWp8ER1+ZQvOh4n0xkyi2NP4+J+5x8wjUxK2RQkCFOz3Ee3rOTUyZP65Uac4ZM47Qx1xj0Hyp3KdJ/Ch7Rk6OnHVgvCjMi8eUG1bsZ4FQaZbOQKzzIDckDmO+KZb9vqduJmIxflvUoCO1TZMqqxOPlKMS6n7uIrbR89qSqyFuN20dqEmAuColbU6Vm7mYGCJNtsN7/yfgeAiJSZEWkT73SL60K7ixn790GKz3gcXLOoWqT7UeoPgZZR2Roaaby1RLcLjQ46N/SAk+ZQatEb9+NDGq4GWVWuXjVO5CB0AKlMZtd1v7RXJB5QF0FLoaFpxNsOTmCvmEKSVXNAEu7jH4=
+	Co+hxS0cof1Fc7nK+8G577x13Emjt4H7vyyPudXCl/T1ikBZ0u0qa9Dl2DTsarW5plw7QPAReJg3ZAhN32YivK2Y2Bs3UzFC61OWL863VOHbgg5SWhZ8MSnedg8pYHWuCDs6i2hpu/2bZx9wSYQU9sWD2rx6UkflulHfp9aoW1rfLqaFppch4FTobDrfkcVCZHEQC+5AgYTmVlSPWmNZLx/DFvu/2EhS4vSa4amWmBi/pV5yROc9WFsWZzeK5nUDMH79XFTPrYt6JsowJgCCyxHzrl86KQ2VqgDQ8qy1BDxtBS2mQRzpZ28qRS+ZMqMPQdfSbfqv5HJ5y7/G4jOve/C4zeIt3yLnBFP8qj4MXqldo7xSCqSb5QOhD2OepoovLwbpHPr+y56aosoREg3QsBRGv2rhYj8JekirnYL+xtqo4w+0EqkIGqUOc+WzWR0+ahUA1ZGY8hxk512v4SuaEsZojfnBcXvWaf5ZWWIIRsXGidI5volFgLcu92MjARM6wIZ3Xjd3ttMQsHhmlFzxucveWAfcAenVR6rq+lP6S36pAq1jdT1aJDMxaS5eW2cbD/V2eRMbDtV9Qd+QseGxcxbhunUEknPXODCOWJq4n1jG+SRNyIDfAi7Re7pcib9c5zJ0H6RafzePJ7eOZzuwsAEUDQLUaGKCPnVGkQwsvic=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(18002099003)(22082099003)(6133799003)(56012099006)(4143699003)(5023799004)(11063799006);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(18002099003)(22082099003)(5023799004)(11063799006)(56012099006)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?eXZsQWVyTGhCVWdCcEN1d3hZRnNtY3JzMGtkK2ZiTkViVmdZakNvUmJzT21h?=
- =?utf-8?B?KzhnU21tUG1RSWpXMmhNV29ncXNudzhFU0UvRmpuRktUVjArb3dMSWV6dDFu?=
- =?utf-8?B?YTg0WjBVSkJqUXJHN3lpeDhHWVRzQ2F2UnQ3WldJT0FpQkpybXNWUTZWY016?=
- =?utf-8?B?MTRVbmtWSi9qdHJwRGtmOUJuYnIzQ2tSdmxDR0I3Z3Jtd3k4d0NYTm85bUpt?=
- =?utf-8?B?OHNLQk1BdXVEYTFvdUg3aFVMTkQyd1ZiM1Vialh2ejlLSXFobFh3RG1JU0ZW?=
- =?utf-8?B?cUxGR0FlUTJVcDNRYmlkK243eTdPenJYbUZmbXl4dkhjRGM4N09SWUd1cS9K?=
- =?utf-8?B?RnJuU3ViV3YwVHdsZnJSb014cStzNUhjeUJCMFZrZmZheTlOci93ZVZESHpj?=
- =?utf-8?B?TDZPbWZnelZOS0NjZ3c0eEhFMnhyV1gwTDRZa2hPTUVmU2JiemtoWFY3cFpJ?=
- =?utf-8?B?N2FhVUpCUVk0YWtid0czS3VucEJVaXJUK0EvcXlUanE0d1dPTnBpemcvU3Vw?=
- =?utf-8?B?UU5nMkV5MERNK1NsdnNpMFBrV0VHTHQ5bUhJaXJaUXpDZWxGYy8yYllhVnQ3?=
- =?utf-8?B?Q0psWU5pa2xCYXdiUFBsQTMycURNMHMwcGhLQlRzcnJxUmlkczNWbFQvcVhp?=
- =?utf-8?B?b0s3OG9rOTJoK1RBamt1c1JGbFVVVVhyWk50U0FQU3NuN3QzaFVjeWZDYUNt?=
- =?utf-8?B?L0RjWVNHV3lsOW9iOVlwQm5xMWxaNHA1YUtPMU5uZjdDYkdmbW5SVzhGS1Fx?=
- =?utf-8?B?RHprNnMyUnRQMnViV3lGRUJZWVBHbEt0dEFGTWNOSWJxcGFHZ0ZwcHVNY1Z1?=
- =?utf-8?B?eWlZSzNPVmVMWlFMbEVPb1I1bGJYZG4rMU5Hc2lOODZFbWZJUVhJdGpwRTNz?=
- =?utf-8?B?bTdvTGJwM3dRSTJUVUE0eUdndDVxa3NuSjZLVDN5ZWVhclNZQnNRUUZ6NTFv?=
- =?utf-8?B?dEpqbi84R1BnRHFkL0VEU3l1bE9ZLzJ4L0lvZ0o3Zk5PalJZUWdjaTNmZnM1?=
- =?utf-8?B?NVBvNmJMeDBGSHY2ZUFXRjdLTFdkQ0NGN2JVTjdraFltRS9LZUFzZ2hjbUZU?=
- =?utf-8?B?SGl2SDFNdWRMUEhJeW1IMzEzZDRLZG5RZlk1amhLa2hYZUpOZ0ZIYXlVWGg1?=
- =?utf-8?B?VWx1K0toUmE1eUFaWjQ5aytMSC9ZQWlnc3EwL1AvVVo2bGhNdnFkZHp1SEti?=
- =?utf-8?B?MFJWOGhhNmVwN2ZnVk5QRkRtTFZTOThnVGdCZEdsbGorTWJzUzVjc0RtQStp?=
- =?utf-8?B?eEY3dUNTUGlJa0haMlcvNFRMdldneDNmNzZHMmFiMFNXOXJuRVFzYnAzREJ3?=
- =?utf-8?B?SmF2a3dtUStESTIrVVNiZzgzM3JaZ21TNEFIanV2cC9vb1dETFM2YUJraUNB?=
- =?utf-8?B?V2hpM1Y2V24xQ0Z2TGx1OFVpTGJkNmZSd1d0WmJhYjNvVEk1RTNjclcyN1RM?=
- =?utf-8?B?ZEcvL3hEaGpsL2RmczFzKzlYVEFvbTV5U0dlVkdCYnkrUDVQVkNrYk91MGVu?=
- =?utf-8?B?ZEZxa1FzaXNBSjJXTGhRSU1jWk1oZC9sWDh6cmV5YmNPTWdBUmNRUHViYUVN?=
- =?utf-8?B?TDN4SUN4OW9mSzFXM2x0eDE5c1VKZTZFSVpiazBwLzhRellPd2grVkNCckJ2?=
- =?utf-8?B?b2VqdXJVODl2Z1BvQW5XQjY1ZEFZMWM0UlhLdXpvZ0wwalBDbWRkOE1oWE9M?=
- =?utf-8?B?SkJHNXl6TXJzbi9ueEpwNUJJV2RWMzFTR0lHb21XMVVkaEt0MURvYUhYSVcz?=
- =?utf-8?B?d3hGeXVqMFg2WXVNa3BEY1YwSlJ5ak9hem1oamdHUkJXTHBPdUlJMVkvWGJB?=
- =?utf-8?B?eUl5djcraGNRRUFBbUkyT2wvSUhNY1pVYzFvOGZKa09wa2Y1QjB4S1dQY1RG?=
- =?utf-8?B?b1RVOTYvWVlhRjBMcWJBVEc0MVpiVFBZdVAxRDZiZkVpUk5yeG1KS2ptTnE1?=
- =?utf-8?B?MVZ4TkVtbkJiZFExNElTcHVCNHRreDk2Y2FNU053TTkxTFZid05QMnp0bktO?=
- =?utf-8?B?cnZrcitFZ0k4MFdPQWZMOE1WUmozUUR0OEZTMTJCcjF3QXZWYStmTU5OR1hC?=
- =?utf-8?B?cWlrT1FvN09Ya2MyM1VoWndrWS9NY3ZnQmpmNXNqem40VjBTcnZtT0o3eG9H?=
- =?utf-8?B?cjQzUnp0ZVpmZmU0eXBON3h0cHZHT3MwRlFCclNSZFRjSklCeUFpY3VGcms2?=
- =?utf-8?B?Tk5rVlIyYXRqa2FjalhtcVI5MHNIc3ZCemNyQWxrOStxbURJWjhXVXJVa0Y4?=
- =?utf-8?B?amF0elltZlA1V1ZKbUc5SG1FQXFGZjdnQ1JlUHEvUlpFUE5yTDlhT1l6OXQv?=
- =?utf-8?Q?G2XyINhtaPA0S/9/qr?=
+	=?utf-8?B?YStyak1ZcElqZ0NpNURtOGNBSkhOOGRvYU1Ua1RJTndPRDk5clNrZFQ4OE05?=
+ =?utf-8?B?TktvcEVVaktIMlZpT2hFQThsTnhvYmpzekM4MFgzN0t0ZUMyL2x1VFNoRU84?=
+ =?utf-8?B?WldJVkFGTUcvVElTenZrRXhNVWRsVml1QVNpZXJUdWN1MS9qOXhkLy9SMTh2?=
+ =?utf-8?B?SGF1eGxsQzJjZVhwVUNwZFBiMW1rMGc5K0hwaUVVSDVoUzFkUTdPL0pFYkk4?=
+ =?utf-8?B?dmtWSld1MHp0R0JxSUh6NFpkVHRuTlo5NHdtOTRwUmwxTGtqOCtZcERzVTg1?=
+ =?utf-8?B?aDlPVXBzK0JGTmtPL0E0cmdLdGJMQUdSZHl2WmJ2TE04K0JpdXR3d2xockND?=
+ =?utf-8?B?T2o2L0tUc2RTS3pJeGU2ZXNJQUdERXdNM2JTT2lyUDgyWXBtdGIwZm53ZERN?=
+ =?utf-8?B?dnpVZERKTCt1UUNSdnhWVDF2SjV4WVlDaXZVWFpjcXltVnUzRktkcWhHanpZ?=
+ =?utf-8?B?YmxrUXNkUmJzSi9Mei9abUE1Y1VJc1ZVYlAvaVVXQldvc1ZDNERDa2cxVHFn?=
+ =?utf-8?B?VDRXdTRBUkdvTE1UbldpajlGR2lmZS9LRFQ3cm1WQUhDakZQenRGVnFJZkJu?=
+ =?utf-8?B?R3lEWFlRNkNGd1VaVUtOdS9nY2xrc0lxTzMxeWxWTExNaW4xZFEvN3NldGFs?=
+ =?utf-8?B?Z0VJbm11amxGOEFOSWtMQVdxUEZqQStBNGZuV1FxenNpVTc2dHF2YkVscHRV?=
+ =?utf-8?B?eXBDMFloNXNoOTVlYnFNNTFJYnc1clljSGxjNWZsbTNiWEpsMEVBcHhsR2Fx?=
+ =?utf-8?B?c1JlSXdjc1BGeS9Ua243K1hUTjhMcXdsMmxKMzNTOHBIbmtPV1REeURUOG9J?=
+ =?utf-8?B?dlgzYTdHcjdvQndITlVINDk1TC9MeE1OOUlIS3ZsdTY4aSsxMExaRnZXVzJ5?=
+ =?utf-8?B?MCtDd2d6SmsxZjIreXE1TGxDblJDdXBUQzViVGQrZHJmNVlwenhSNFQ4Y3VC?=
+ =?utf-8?B?c0lvZDR6OElsVkNvLzh2MEcvZGlmWGNKYVpKZU9SejVIZWNwMTFJdFhscHls?=
+ =?utf-8?B?VC9CTlhrbGt1L3hWRitDMmU1emlqQ0syK3RqNittc1czUkEvTGRQWWFCdUhs?=
+ =?utf-8?B?ZnRHekZkMDQrL1B0aGg2cFgxT05ISkxEVEJqcnJsTndLYk9adVVPeXZxSVB0?=
+ =?utf-8?B?Ym1SbHNTVnRWODB0V2U5Q2JUcmxTNjM1N3AzZmdMNmtFNno4eDNlVkN0RHhl?=
+ =?utf-8?B?WHRVNlZYQkxDYkFyK083MWNOMWpBUGJqYzJLTWsxUHkxSlhZdlZ2L3Fvc3lQ?=
+ =?utf-8?B?dmVsV3RpZzRUUG4xUEIwdTJHOExud0J2WEh2bjlmdlAyME53MTFYWlExYnp6?=
+ =?utf-8?B?NXVoWFlWbG1JKzJvMStRdnE5eHpycVlDRVd0ZFVWWlJZUDNMV3lFNllHV3B0?=
+ =?utf-8?B?bWZzeDU1OFBVU2U3ZWRHRXZiRXYyREZFZnNFb0RUZXBaSmhZTTR3TDZKRWFS?=
+ =?utf-8?B?VGxRUWMvc21OanVzWlNxSEdxc3pmR0hBd0N6NVFOR0EzMytSaW5LVFVDOVNM?=
+ =?utf-8?B?YVUzRTlVZ0tiblNwVnZ0YjVEVlVMbnlCYVB2MytwUzRTZU10Z011UU9Za01k?=
+ =?utf-8?B?cWgvSCtrR1pLeDE1cEcvZVROZzVnQTdqUS9KaGk0U3YzL0UrWDJpZmpFOE55?=
+ =?utf-8?B?MUdpSmxyVU5Cbkt3TlkyYXkxTnJrWWExMzB6VXp2clVHVnFXeDVsc2lVVmh0?=
+ =?utf-8?B?RkcySU1JdGNydklROEZINm9hQ2hUU004QVpNQVNpSElXNnBBUE9XSXNjY2tW?=
+ =?utf-8?B?clpKLzVIRnBrL3c2RUs1bnRBN1UzeERlanAwa2IzZXhiWVVvUkc2RFN6di81?=
+ =?utf-8?B?UmJmMUQ1VFNQalRnZzRWakY2dGNwUHdXRzJlTUdSbG10WXRWdUM0enpoLytl?=
+ =?utf-8?B?d2VCUzBBQjBORXNWNnNFaGF0N1grZVczRnpXdkJHNEsvTmlMNDJCQTEzcDdx?=
+ =?utf-8?B?cHFncnFjbW01WkxnRisxcXBoNC9WbGxVbW8rdXRsaGFWS3laMVJDakljNnpo?=
+ =?utf-8?B?VENRc3ZDb0tZZ01TL3hUMi9ic2EvTk9HRUg0WUc1YlVvQ3pLV2lkSUNMOEQ5?=
+ =?utf-8?B?YTVKVFFmZnYrQ21GaXhPS3E1MUtZdHIzU2FJMndCbWh4Y0syY3lBVkR2RG53?=
+ =?utf-8?B?L3F5c1Mxa0NBRXJvZTlTaEU2QlhGS3VWRUptaUtGNmNpYWNnWHRxa0t1dEdi?=
+ =?utf-8?B?NExzdWRNcTRSa2RhbzhGQWJlVnF5OTNYMmZ1aG4wL3lvT2taRUwrUnNmRkRE?=
+ =?utf-8?B?aUhNbGN4eHZoNHNtMVB0Y2s4MHlWQXVkMDhhV2RzRUd5K1J1ZXl6Z1BsOVJz?=
+ =?utf-8?Q?rsxtx8902F60SVVoSS?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 921dec18-508d-4e27-78e2-08ded07724fe
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ab0012f-4d10-4b01-12f4-08ded0789f91
 X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2026 15:58:47.4943
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2026 16:09:22.9956
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: O3uN+g3P4Lp2Y85BPADpyn7zdG6uTymNrAPD4hvom3TFT+C/TGbwwHYD6K2suMFhpmZsuw7ncvjx2X5s8MjNug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7988
+X-MS-Exchange-CrossTenant-UserPrincipalName: JhnK/ArqkyI2q41Uqi/NJNXJxHnYsacdF9EfhGClNwNJpnHE937pijaCLvvsdN8IKp9a0j7cMLfUyLSiOHvvow==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7128
 
++Thomas Zimmermann
 
+Here is the lore link for you for full context.
 
-On 6/21/26 23:12, Aaron Ma wrote:
-> On Mon, Jun 22, 2026 at 12:00 PM Mario Limonciello
-> <mario.limonciello@amd.com> wrote:
->>
->>
->>
->> On 6/21/26 20:50, Aaron Ma wrote:
->>> On Mon, Jun 22, 2026 at 1:15 AM Mario Limonciello
->>> <mario.limonciello@amd.com> wrote:
->>>>
->>>>
->>>>
->>>> On 6/18/26 01:18, Aaron Ma wrote:
->>>>> Some firmware boot GPUs report class 0x0380 (PCI_CLASS_DISPLAY_OTHER)
->>>>> instead of PCI_CLASS_DISPLAY_VGA. vgaarb only registers pci_is_vga()
->>>>> devices, so those GPUs are not considered by vga_is_firmware_default().
->>>>>
->>>>> On these systems the AMD GPU matches the EFI framebuffer but is
->>>>> excluded from vgaarb because it is class 0x0380, while the NVIDIA GPU
->>>>> does not match the EFI framebuffer but becomes vga_default_device()
->>>>> through the vgaarb's enabled-device fallback.
->>>>>
->>>>> Register legacy VGA and 0x0380 devices in vgaarb, and expose boot_vga
->>>>> for the same set of devices, so the firmware default device can be
->>>>> selected correctly.
->>>>>
->>>>> Signed-off-by: Aaron Ma <aaron.ma@canonical.com>
->>>>> ---
->>>>>     drivers/pci/pci-sysfs.c |  3 ++-
->>>>>     drivers/pci/vgaarb.c    | 10 +++++-----
->>>>>     include/linux/pci.h     | 14 ++++++++++++++
->>>>>     3 files changed, 21 insertions(+), 6 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>>>> index d37860841260c..843d83ec9550a 100644
->>>>> --- a/drivers/pci/pci-sysfs.c
->>>>> +++ b/drivers/pci/pci-sysfs.c
->>>>> @@ -1717,7 +1717,8 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->>>>>         struct device *dev = kobj_to_dev(kobj);
->>>>>         struct pci_dev *pdev = to_pci_dev(dev);
->>>>>
->>>>> -     if (a == &dev_attr_boot_vga.attr && pci_is_vga(pdev))
->>>>> +     if (a == &dev_attr_boot_vga.attr &&
->>>>> +         pci_is_vga_or_other_display(pdev))
->>>>>                 return a->mode;
->>>>    >   >          if (a == &dev_attr_serial_number.attr && pci_get_dsn(pdev))
->>>>> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
->>>>> index c360eee11dd9e..0e0878189e3d8 100644
->>>>> --- a/drivers/pci/vgaarb.c
->>>>> +++ b/drivers/pci/vgaarb.c
->>>>> @@ -796,7 +796,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
->>>>>         }
->>>>>
->>>>>         if (vga_is_boot_device(vgadev)) {
->>>>> -             vgaarb_info(&pdev->dev, "setting as boot VGA device%s\n",
->>>>> +             vgaarb_info(&pdev->dev, "setting as boot display device%s\n",
->>>>>                             vga_default_device() ?
->>>>>                             " (overriding previous)" : "");
->>>>>                 vga_set_default_device(pdev);
->>>>> @@ -1483,8 +1483,8 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
->>>>>
->>>>>         vgaarb_dbg(dev, "%s\n", __func__);
->>>>>
->>>>> -     /* Only deal with VGA class devices */
->>>>> -     if (!pci_is_vga(pdev))
->>>>> +     /* Only deal with legacy VGA and other display controller devices */
->>>>> +     if (!pci_is_vga_or_other_display(pdev)) >               return 0;
->>>>>
->>>>>         /*
->>>>> @@ -1530,12 +1530,12 @@ static int __init vga_arb_device_init(void)
->>>>>
->>>>>         bus_register_notifier(&pci_bus_type, &pci_notifier);
->>>>>
->>>>> -     /* Add all VGA class PCI devices by default */
->>>>> +     /* Add legacy VGA and other display controller PCI devices by default */
->>>>>         pdev = NULL;
->>>>>         while ((pdev =
->>>>>                 pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->>>>>                                PCI_ANY_ID, pdev)) != NULL) {
->>>>> -             if (pci_is_vga(pdev))
->>>>> +             if (pci_is_vga_or_other_display(pdev))
->>>>>                         vga_arbiter_add_pci_device(pdev);
->>>>>         }
->>>>>
->>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>>> index 2c4454583c115..195ec1bdac863 100644
->>>>> --- a/include/linux/pci.h
->>>>> +++ b/include/linux/pci.h
->>>>> @@ -792,6 +792,20 @@ static inline bool pci_is_vga(struct pci_dev *pdev)
->>>>>         return false;
->>>>>     }
->>>>>
->>>>> +/**
->>>>> + * pci_is_vga_or_other_display - check if the PCI device is VGA or 0x0380
->>>>> + * @pdev: PCI device
->>>>> + *
->>>>> + * Return true for legacy VGA-compatible devices and for "other display
->>>>> + * controller" devices.  Some firmware-selected boot display devices expose
->>>>> + * class 0x0380 instead of PCI_CLASS_DISPLAY_VGA.
->>>>> + */
->>>>> +static inline bool pci_is_vga_or_other_display(struct pci_dev *pdev)
->>>>> +{
->>>>> +     return pci_is_vga(pdev) ||
->>>>> +             (pdev->class >> 8) == PCI_CLASS_DISPLAY_OTHER;
->>>>> +}
->>>>> +
->>>>>     /**
->>>>>      * pci_is_display - check if the PCI device is a display controller
->>>>>      * @pdev: PCI device
->>>>
->>>>
->>>> This patch doesn't seem correct to me.  It's overloading the purpose of
->>>> boot_vga to cover non VGA devices.  We should be using boot_display.
->>>>
->>>> Trying to hypothesize what's going on here - I guess you're seeing
->>>> boot_display set for more than one device due to enumeration order.
->>>>
->>>> Can you see if this helps instead?
->>>>
->>>> ╰─❯ git diff
->>>> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video-common.c
->>>> index 152789f00fcda..9440eb3a7b15d 100644
->>>> --- a/arch/x86/video/video-common.c
->>>> +++ b/arch/x86/video/video-common.c
->>>> @@ -43,9 +43,6 @@ bool video_is_primary_device(struct device *dev)
->>>>            if (!pci_is_display(pdev))
->>>>                    return false;
->>>>
->>>> -       if (pdev == vga_default_device())
->>>> -               return true;
->>>> -
->>>>     #ifdef CONFIG_SCREEN_INFO
->>>>            numres = screen_info_resources(si, res, ARRAY_SIZE(res));
->>>>            for (i = 0; i < numres; ++i) {
->>>
->>> Hi Mario,
->>>
->>> I tested your change. boot_display becomes correct, but the issue is not fixed.
->>>
->>> The kernel state becomes:
->>>
->>>     AMD:    boot_display=1, boot_vga absent
->>>     NVIDIA: boot_display absent, boot_vga=1
->>>
->>> Current Xorg checks boot_display || boot_vga, so both GPUs still match.
->>> The selected primary GPU still depends on Xorg's DRM device enumeration order.
->>>
->>> So boot_vga is still wrong, and that still matters. The kernel should not
->>> expose boot_vga=1 for NVIDIA when the firmware framebuffer is on AMD.
->>>
->>> My patch makes boot_vga and boot_display agree on the AMD boot display.
->>>
->>> Thanks,
->>> Aaron
->>
->> Got it.  I still don't think it's correct to overload boot_vga.  It
->> would be better for us to not show boot_vga at all - because it's not
->> correct.
->>
->> Maybe we should drop the fallback code in VGA arbiter that is setting
->> NVIDIA as boot_vga at all.
->>
->> Could you look at doing that?
->>
+Aaron's v1: 
+https://lore.kernel.org/linux-pci/20260618081803.2790848-1-aaron.ma@canonical.com/
+My proposal: 
+https://lore.kernel.org/linux-pci/20260621175230.1453114-1-mario.limonciello@amd.com/
+Aaron's v2: 
+https://lore.kernel.org/linux-pci/20260622061339.3306046-1-aaron.ma@canonical.com/
+
+On 6/21/26 23:13, Aaron Ma wrote:
+> Some firmware boot displays use PCI class 0x0380
+> (PCI_CLASS_DISPLAY_OTHER). vgaarb only registers pci_is_vga()
+> devices, so those devices are skipped by vga_is_firmware_default()
+> and cannot become vga_default_device().
 > 
-> Hi Mario,
+> On hybrid systems this can leave a discrete VGA GPU as
+> vga_default_device() even when the firmware framebuffer is on the
+> 0x0380 device. That makes boot_vga point at the wrong GPU and can
+> make boot_display report multiple devices through different paths.
 > 
-> I looked at dropping the fallback. I don't think we should remove it globally;
-> old systems may still need vga_default_device() when no firmware framebuffer
-> owner can be identified.
+> Register legacy VGA and 0x0380 display devices for default selection
+> and boot_vga visibility. Keep legacy VGA decode ownership limited to
+> pci_is_vga() devices so 0x0380 devices are not treated as legacy VGA
+> decoders.
 > 
+> Signed-off-by: Aaron Ma <aaron.ma@canonical.com>
+> ---
+> Changes in v2:
+> - Keep legacy VGA decodes and owns limited to pci_is_vga() devices.
+> - Keep 0x0380 devices eligible for firmware/default selection and
+>    boot_vga visibility without treating them as legacy VGA decoders.
+> - Update the commit message to describe the boot_vga compatibility goal.
 
-What exactly happens on such old systems?  Any chance you have anything 
-in your cert lab that's really old you could try?
+I really think dropping the fallback path (we found nothing, so this VGA 
+thing must be it) is the right direction.
 
-I have to wonder if the boot_display code will work on them at least and 
-we can just rely upon that.
+I'd like Thomas' comments about that though.
 
-I don't want to keep this fallback path around as tech debt if we don't 
-need it and it's actively causing problems.
+If we must keep that path, how about instead modify how 
+vga_is_firmware_default() works.  We could instead have 
+vga_has_firmware_default() and vga_is_firmware_default() both.
 
-> For v2 I will keep the fallback, but avoid the wrong result on this system. The
-> 0x0380 firmware display can become the default/boot_vga device, while legacy
-> VGA decoding and ownership stay limited to pci_is_vga() devices.
+If the system vga_has_firmware_default() then no longer activate the 
+fallback path.
+
 > 
-> So this keeps compatibility, but avoids reporting NVIDIA as boot_vga when the
-> firmware framebuffer is on AMD.
+>   drivers/pci/pci-sysfs.c |  3 ++-
+>   drivers/pci/vgaarb.c    | 27 +++++++++++++++------------
+>   include/linux/pci.h     | 14 ++++++++++++++
+>   3 files changed, 31 insertions(+), 13 deletions(-)
 > 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index d37860841260c..843d83ec9550a 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1717,7 +1717,8 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct pci_dev *pdev = to_pci_dev(dev);
+>   
+> -	if (a == &dev_attr_boot_vga.attr && pci_is_vga(pdev))
+> +	if (a == &dev_attr_boot_vga.attr &&
+> +	    pci_is_vga_or_other_display(pdev))
+>   		return a->mode;
+>   
 
-I'll look over the patch.
+I really don't think we want boot_vga exported on a non-VGA device.
+Even if the rest of the PR hangs around, this hunk I think should go.
+
+>   	if (a == &dev_attr_serial_number.attr && pci_get_dsn(pdev))
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index c360eee11dd9e..56a86779e6d28 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -741,6 +741,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>   	unsigned long flags;
+>   	struct pci_bus *bus;
+>   	struct pci_dev *bridge;
+> +	bool legacy_vga = pci_is_vga(pdev);
+>   	u16 cmd;
+>   
+>   	/* Allocate structure */
+> @@ -762,21 +763,23 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>   	}
+>   	vgadev->pdev = pdev;
+>   
+> -	/* By default, assume we decode everything */
+> -	vgadev->decodes = VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM |
+> -			  VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+> +	/* By default, assume VGA devices decode everything */
+> +	vgadev->decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+> +	if (legacy_vga)
+> +		vgadev->decodes |= VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
+>   
+> -	/* By default, mark it as decoding */
+> -	vga_decode_count++;
+> +	/* By default, mark legacy VGA devices as decoding */
+> +	if (vgadev->decodes & VGA_RSRC_LEGACY_MASK)
+> +		vga_decode_count++;
+>   
+>   	/*
+>   	 * Mark that we "own" resources based on our enables, we will
+>   	 * clear that below if the bridge isn't forwarding.
+>   	 */
+>   	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> -	if (cmd & PCI_COMMAND_IO)
+> +	if (legacy_vga && (cmd & PCI_COMMAND_IO))
+>   		vgadev->owns |= VGA_RSRC_LEGACY_IO;
+> -	if (cmd & PCI_COMMAND_MEMORY)
+> +	if (legacy_vga && (cmd & PCI_COMMAND_MEMORY))
+>   		vgadev->owns |= VGA_RSRC_LEGACY_MEM;
+>   
+>   	/* Check if VGA cycles can get down to us */
+> @@ -796,7 +799,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>   	}
+>   
+>   	if (vga_is_boot_device(vgadev)) {
+> -		vgaarb_info(&pdev->dev, "setting as boot VGA device%s\n",
+> +		vgaarb_info(&pdev->dev, "setting as boot display device%s\n",
+>   			    vga_default_device() ?
+>   			    " (overriding previous)" : "");
+>   		vga_set_default_device(pdev);
+> @@ -1483,8 +1486,8 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
+>   
+>   	vgaarb_dbg(dev, "%s\n", __func__);
+>   
+> -	/* Only deal with VGA class devices */
+> -	if (!pci_is_vga(pdev))
+> +	/* Only deal with legacy VGA and other display controller devices */
+> +	if (!pci_is_vga_or_other_display(pdev))
+>   		return 0;
+>   
+>   	/*
+> @@ -1530,12 +1533,12 @@ static int __init vga_arb_device_init(void)
+>   
+>   	bus_register_notifier(&pci_bus_type, &pci_notifier);
+>   
+> -	/* Add all VGA class PCI devices by default */
+> +	/* Add legacy VGA and other display controller PCI devices by default */
+>   	pdev = NULL;
+>   	while ((pdev =
+>   		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>   			       PCI_ANY_ID, pdev)) != NULL) {
+> -		if (pci_is_vga(pdev))
+> +		if (pci_is_vga_or_other_display(pdev))
+>   			vga_arbiter_add_pci_device(pdev);
+>   	}
+>   
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c115..195ec1bdac863 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -792,6 +792,20 @@ static inline bool pci_is_vga(struct pci_dev *pdev)
+>   	return false;
+>   }
+>   
+> +/**
+> + * pci_is_vga_or_other_display - check if the PCI device is VGA or 0x0380
+> + * @pdev: PCI device
+> + *
+> + * Return true for legacy VGA-compatible devices and for "other display
+> + * controller" devices.  Some firmware-selected boot display devices expose
+> + * class 0x0380 instead of PCI_CLASS_DISPLAY_VGA.
+> + */
+> +static inline bool pci_is_vga_or_other_display(struct pci_dev *pdev)
+> +{
+> +	return pci_is_vga(pdev) ||
+> +		(pdev->class >> 8) == PCI_CLASS_DISPLAY_OTHER;
+> +}
+> +
+>   /**
+>    * pci_is_display - check if the PCI device is a display controller
+>    * @pdev: PCI device
+
