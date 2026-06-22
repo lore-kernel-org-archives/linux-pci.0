@@ -1,399 +1,168 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010043.outbound.protection.outlook.com [52.101.69.43])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5101D282F24;
-	Mon, 22 Jun 2026 20:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782160860; cv=fail; b=LqpEr546hJUyjYeKJUXmX32HbvPUzIijN9gC14sWzlmljA6ES+0pDKtUGtr/LSi7fwvJ2z6iM/pDdYbPM2sZ/1vsc6K9huBCJNXWQNLIx1PTYV7aBREeopJIpJGLQsK3OmY3aRVkeYyXZgaGIeYBF9Zg0nFqO/dnr+g9/xtAHsY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782160860; c=relaxed/simple;
-	bh=WwYrWKYXaqBFs5+ntXAlT9m/WuvFICKd3jB4Id55Vhc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=Ev0FnpiQJ7G7DXxBUz7CoszIiKap4gODkpVaXVUAyg+I/Nthqjj2CL5rXlcYQj+CZNMgTQSE1RguOT+0WCT6xcpwUDjIx3Bl8zdc7TnhHziDt3BBs9rI5jOFHVq38mYABCZHzh64eHSOaXm+jiLRi4U7wDl5VNWlXPkxLQmVLNk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=p2tmOeAA; arc=fail smtp.client-ip=52.101.69.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DA1B33F584;
+	Mon, 22 Jun 2026 20:49:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782161355; cv=none; b=r8cDis9Ry7NT1SFAk5K0GXRTXkDvkVjiPao/xb096g/XaB5nnstlHnqwBppaItOg0hs9AecEc3dfiezE/LTs4d5E/4mx+k5s1Ljk+37JZE9oS4vQ0VTgACM9xJ2Cf/iu8E2oc9CyUB6h/cQUQsNz+eSa05Fy+tOTsA9gb3uqR20=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782161355; c=relaxed/simple;
+	bh=5nb06zIUKKX3YKOKNYOEW5KgpouhXO/luK3rI+Eidqk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ifydvBSGU7+0Z6MKglEydlh6ddoAMJrrDU3BL14fFpOPlCrRZTCBkNoF87tJNyVsZR9Di8E7wflxRbp5sWPsbCZwj/A6YRQSSn7luclFTZpVmMKvGW//jTKxw386x4ic/MZ+j/YJT8pqaC7NLc9yL2bYjk7DockMw3/RmnR8C1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ALKQ0FnC; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="p2tmOeAA"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ww+nG5EYmXK8ZfEcUa2eoQdrrwJ+B7p8DoEdk2xO3uhjPUAcGfyHDBOgLPfaz73MRtiYhT+QMB2MHosbTT3jg9/rRovBiqFgFmPBJv8j0gxa4i1DpAWGN6anaYHCgMOplspJvlDy+bHR0NaS2nn0NDVFeS0TtUMn4T+0XWd3fJSBvu97T9gV9/JrFs59RgBOn+Z3Peq8oujil8fjsj6L5/EL3e6hFb3WcNKmpSWszxDS4uAS93qsp1r26RON7f3dRZZXbvZJGFWE9+QgNwAE9AJeL5d/QC5cFjJAJQSIeNOtxqA6qYCzkAd2ayMluhAwfiFW7nP0VFLFB3hx8qkGUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yAajf/zAkMvU4peg6PSDUNPelu6P0iT0rgxt3ODr18I=;
- b=w6JDSwEoUNn+Fvnfi3FhDWXe/mIsu1uE1jRyLOxwKkqNldPNFaZ0WQeAR6XtPYindZ/IgWJiRCScQBBoDUijf6LZzt8p0KfdaoW1S8yqsANRcTO65GudaaZcV/a3JGA7d9/j6BUqDwU/LB5HKXON93hiWMCr/ixg4CpooxAwa5OUBi0R688dnA7kLkq79FBrCj5ntUeB6KjSAsO+HG4YkbjYmOjG8V2AP8gsBKNaRTIZVQ3AQL3kQJ/kZak1SXvU3gI1N22t46PrWNKVe2PjXC/EMtTjwQMxFNH5QBDMjfm+zq3HrJwjHKKYdJsIGP9ZX57Y4baN3RboxpHcXVnzOg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yAajf/zAkMvU4peg6PSDUNPelu6P0iT0rgxt3ODr18I=;
- b=p2tmOeAAOaGqrTdvwp5frdUID7viOiBaszK/brhz+MOMsY+OedJA5t7wbR7EOrQpADVgUKuAgdNs/wm4IQaOOwfnr2doB4//c9wfmZH574kyBHk/CCDfcbrvk7uquCL4sToQHrbYYRiIFAqhL5WlNQvO6RvIQ+d/2elndiKcE9Q32KQfyaQO45lOGPRQRmDc24Mr7UEqPR4C2uKoV0XoIrg6f9sBhav13FAvwb0eCybWCS4Ju7CvgwzJkZ7OOEA/gJe4HOqeohszUzhiXRuZ1BFdjHSEYAHV3csU0CvlrOhHl947GqhZLuln0dFRGoADB5xVipO8GrWTw2v89t7C+A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by GV2PR04MB11190.eurprd04.prod.outlook.com (2603:10a6:150:278::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.19; Mon, 22 Jun
- 2026 20:40:54 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0139.018; Mon, 22 Jun 2026
- 20:40:53 +0000
-Date: Mon, 22 Jun 2026 15:40:43 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
-	Frank.Li@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] misc: pci_endpoint_test: fix use-after-free after
- device unbind
-Message-ID: <ajmdy4yoYh7S2kS6@SMW015318>
-References: <20260621054609.186877-1-shuangpeng.kernel@gmail.com>
- <20260622165249.374155-1-shuangpeng.kernel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260622165249.374155-1-shuangpeng.kernel@gmail.com>
-X-ClientProxiedBy: SA9PR10CA0003.namprd10.prod.outlook.com
- (2603:10b6:806:a7::8) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ALKQ0FnC"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65MJmo9o3992124;
+	Mon, 22 Jun 2026 20:49:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=pTPXeD
+	5GdkSQA6l0cG4/0tPeXyAPzjSNT5AD5b8actw=; b=ALKQ0FnC1kIM/qCIorGKkw
+	I5bBf7kqL6OqdW9ubl+JxKkRJUmF3DkgtG/I2eXupq3zX2PrOspE+8NEcOQZDB2P
+	4QdY/r6fvhrCEex8l3od3U9rr/Yuu6NDglcm3slXE2D84zDLXwAaA9pSaNi8iyP4
+	ZBWYrDhQOpPiDWODFz2LsSilqdkuof30Q0rCphuop5ztlVZRYhpxjFDMxr3LPbi0
+	7pk4U5lVBKbS6gjhzZ5ai2K6Hzq45QdQWxLZZ5JOPXw2hpMf+XgZCAwX4ctx24+h
+	VDvkXWhwVdP0s7OVd7mIpdT+t7JWLxTjvlvkjaXrOx1gCqkeEEnHQ6/njt22ArxA
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ewjc3bbkd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jun 2026 20:49:09 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65MKYgu7031190;
+	Mon, 22 Jun 2026 20:49:09 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ex56q8984-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jun 2026 20:49:09 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65MKn7nG19268216
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 22 Jun 2026 20:49:07 GMT
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 39F985805D;
+	Mon, 22 Jun 2026 20:49:07 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 903A058056;
+	Mon, 22 Jun 2026 20:49:06 +0000 (GMT)
+Received: from [9.61.251.231] (unknown [9.61.251.231])
+	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 22 Jun 2026 20:49:06 +0000 (GMT)
+Message-ID: <c8abc1c8-71e0-443f-820f-182c0ff931e9@linux.ibm.com>
+Date: Mon, 22 Jun 2026 13:49:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV2PR04MB11190:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0da36bd5-cb40-431c-0e95-08ded09e8db9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|19092799006|7416014|376014|23010399003|366016|18002099003|22082099003|6133799003|4143699003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	y2AHz1Yih3FQXEIG14iZeh8PX9IbQijEKScMtMC+oMvcXcCAaus1U3Y3zgSU4W22rkFOIAV9npO1B047YrcDsNmsCJ2HJKWp0hxRfV19trved7QdMm65KeMiOVlnb+j+EZfgSE1IhGUkJaYLT+LYOubwvdIzkqe/GY6MY63NX7MNb0VGx8Qi2A4qMUxGEFoMDOjzinOywtwISsiwZaOMG9HHBrjiTCYRUQj9qb8v7Jug99PeaaZCkQYUpU96813LocYi5ixAuwzCk/wUrMIv2pZQn89yNWwoSbq+2kv3WJboX7YtZ9YvoO27oMEyK2oX9Bwz3Rn6CkxpOpkseDrW9+rCnrmUytTH0VlxYtsD2FCT+5akDzIwYhAA26Ekm1MaQ4xwZehWiX537X9LnqVtm4c5+sArMjquyJ5z64h9vOABpFrbxBUwz2vmaGvDya8CjTkdqRbrisyxczjTTmgZU5E1fwYIJHmp8ZlxZBtIxEBpDfTcg1Hhb3udD7ZXFGdSFGfWaggB4pznuv+P/uQQ+farK/RWa+Ih0FjHHsp4J/zJgVwMaklTq/k++EGn3+ZUXOKNB0ecHHkDv4glpyG5oELrvm2qvDhrZQYhh4k8u3/agBRfKb9aHkJ00OmlWlpP58MHtbHyDajzIW/BRpgnn6L4SQpbcfMjYBrZNxnbb2g=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(7416014)(376014)(23010399003)(366016)(18002099003)(22082099003)(6133799003)(4143699003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?T01kMVlZK3pPbmFieWlwYTg0dW05Q1RoY1JIdXZnY3dOeHpTbHVtOFhvcTlD?=
- =?utf-8?B?aE1OZFRuN2l0blJPQTNWdGE0bUlsMWk5cGo5L3QrU3Y0N2NMa3VnQWN3NkI2?=
- =?utf-8?B?SkFveHlTakNFeFloNHVnQlBxRFFvbTJ6STV0Z2M0SkRrbkNKalRJOW1ERVAx?=
- =?utf-8?B?RG1kWVhDdDFpTTZUSzdWd2hqUHk1Uk84WWRIZ01jS1RzVFRadUNPdDNZeG5K?=
- =?utf-8?B?MW1PWHE1clpoVmJjL3lpU05kNGVlWmNQck45TDI5cVdMbWtMT1VMVzlZNzNp?=
- =?utf-8?B?dkpXcEFSc2hHRUZGN2I5ZlJUSk1MVGZraUZBMnVvOStDWGRpakF5YTVzc2lD?=
- =?utf-8?B?L3ZUdjIrWHIyY0R4M3BQNWhGNER1YkJHR3pFM1Z6Uk1GWEFnR1dSYjZxYldN?=
- =?utf-8?B?M0VSOWd3VzRCZElWdFdoS2VTN2FpUFNtbzg4cE5YV0E5TVpkaGIxa1h5QUhY?=
- =?utf-8?B?V3J1SlZPZGl2a21FdVdmenM0Vm8ySE03RWgxM3l1aFJPL1RiMzVPbXJtSy9l?=
- =?utf-8?B?TXRja1NiWHJFTmJTMkhxYWU1RklmQzZVTUlCVTJZRkxaeVVwbWw1TThsTmt6?=
- =?utf-8?B?K081UXZYdk1OL0RtOGJZMHg3b0F6VGFFZUJCMmxKakIvYmNkRkdtcU9iWE1V?=
- =?utf-8?B?aXhTSkNQcU9yTkNvbkZpYXVjdExkTEtka2Y0MTlhak0reDFSYWxLK0pRWjQ4?=
- =?utf-8?B?OHdmNnNhUnl2dDZsL2V4d1lyYm5BV1krbDhmYVhzK2tXb1U0WWd6T0FjYmhM?=
- =?utf-8?B?REwrNlg1Q2dSQk8reE9DMWZDVFZFSThQSlZOSXFpTkJxU3lLeHJkWWZ4dC9Z?=
- =?utf-8?B?RElGLzhzbUh1YThHVi94czVrK1h4SzFXdjFERGNFaU5XR1F1SGRsOHhISzU0?=
- =?utf-8?B?TDgrMTFDOHgzWm5BNzEvbEFvMnh3c3NFTEdTcjFneG9FV2pwVHRvVnl0UmN3?=
- =?utf-8?B?WENsMEJZM2ZLOXkyb3BES1lhRGZRbUUyVnhGVFJGNzdJWUVoRjI3YUtOK04y?=
- =?utf-8?B?UTlFWXduSFdIdk9WQ2lKVUk5aHJlQTBadmU0UXJIaEFmWXFMd2I3ZmYxbDRx?=
- =?utf-8?B?Q0lmUkVqdTV2eVNLTWxoc1dhR2hJUXUveDFSd2VOU2xQVTF2NTR6MHJjWWlv?=
- =?utf-8?B?cDZWbThia25KUXd3ZHdBQXNtRHB3K010bVBhRFFjbjhJbkxQLytDVVM1R1Bq?=
- =?utf-8?B?MWs4R1JGakh6NWlQaFJlRU9kZ1E2TjJGT0hKamxNMnFySzdqbEVpNklqczhq?=
- =?utf-8?B?Y1FJN2U1WitwTWZJaCtXK29uTHp2V0VrVDYyL3BTL3lSc3F0S0dHUUtPRmE5?=
- =?utf-8?B?UkJ3Z3EzM0dSanNUTkRhOWRNUXRTcEVCbzYyazdtR3doY0w4Z2srRzVxeTlt?=
- =?utf-8?B?Zm5wQ1EySUZVWlBRNE9zTnVtUmVieXM1eEswaE1DaVNmMkxKYVZacnFna1pW?=
- =?utf-8?B?dFpVWEdJTGZLMzB6bFlJeUVjS1RoZ2w1UThrWTRiWDlKZytUYXJyMFIrMEVs?=
- =?utf-8?B?cUV3OUNiUUxwQU5EZFVXbVhTOFYxUHhscC95b0NyaU5MeGIwK3JRUEpXdjBY?=
- =?utf-8?B?bE0zckI5V2Qrc3MvR3hRamZvL3J3OXl6SHRjbkhyRXFZSkVlWWZpR2dHM04y?=
- =?utf-8?B?Vlp0NTV0VXRaK055MDl5ZTE1QkwyRjg4ejZaQjFuVE1WNElyYWRHSWlwK29T?=
- =?utf-8?B?YlcvMTRWM2RGajlwZUdZMTNYWmVqQWRiUHExU3FsTHZyd2pWb0NEa1cwd1M3?=
- =?utf-8?B?aUY5eTBwcTJITm9CM1VLeGRodFZxMXJzZWRXeXRLYXllN0pzNittSTZjL1Na?=
- =?utf-8?B?VThqN0JvSVdZNzBHSUxMaS85Sm5reEI0MXJaUFNPVm51NWZTVjg3U2hkWDZ0?=
- =?utf-8?B?bVdJWlRkcC9nUytRUjZGb0Zia2h4enBXMGc3RVRCQVFVVkU5SU1sbjZrZE1K?=
- =?utf-8?B?bXJvWDFieWJReEZWaCtZVmlvcEQwelkxVjR6MXFPcnMrajFrWEZyVXY0OXk1?=
- =?utf-8?B?aTFPK2c2RlhubzNiT3hzeGR5RHZ3VldYd2hUM1dTTlpNY2Q0WFZXSHJpSXdU?=
- =?utf-8?B?b2UrdFJrTEUzOWVvMjN5UlRaYXh3RWs3c1dlRVpaQXRzY0pDUVQwYzNlWkp5?=
- =?utf-8?B?SnB3aml3Z2k3VElEeCtuVVRVRHlwbm9CNzhSZXpyZGlwZVJFSW1UTE9QZ1lr?=
- =?utf-8?B?U0dVcUt5M09DNEFDNkVTajh6OXF5cTBESWtwVmFaNGJkS0MvSVRaTGY5aW8v?=
- =?utf-8?B?b0hMZ2dMZE9MSk0wQXNHWDk5WUdYdC80S2hCczVJRkt1ZGlTcjI5U3pYYnZ2?=
- =?utf-8?B?ZWsva0hTQ1lya0N3cmlSckJ5M2taUE5xc3NJTXZmR1V3UGI1YVd4TUVHTVE5?=
- =?utf-8?Q?8549O8Nl2I1QS5cRwUFdGjud/5GUgIELA5dhL?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0da36bd5-cb40-431c-0e95-08ded09e8db9
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2026 20:40:53.7167
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: NMypeU6iHdZNM4Al/E6dGTVpV6kmz3p7i6tXZ3DXaRqHwOJQZOjEkEavzkuUuQzK5VDFvFv/crzkfwJteieO+lhKGYrqv1RK6+JcU7bLW2K7xjUYlm3R59BYLOPqGDyF
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11190
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v20 4/4] PCI/MSI: Enable memory decoding before restoring
+ MSI-X messages
+To: Thomas Gleixner <tglx@kernel.org>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+        mjrosato@linux.ibm.com
+References: <20260622171840.1618-1-alifm@linux.ibm.com>
+ <20260622171840.1618-5-alifm@linux.ibm.com> <87ik7al3of.ffs@fw13>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <87ik7al3of.ffs@fw13>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=X4Ni7mTe c=1 sm=1 tr=0 ts=6a399fc6 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
+ a=VwQbUJbxAAAA:8 a=I6BqXQysMxH1PwLeqfwA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIyMDIwMSBTYWx0ZWRfX9/OaY6gjeOmW
+ 3sfThE46CAUmVmfc6bZHvi2PvEsIxagk/IP77obw/nE/QiF79xoTprIBBBcoU3g2UJYhWj0EJ8/
+ MNr3u85b2SzQCsSQRYhNjI4j+rIaE2k=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIyMDIwMSBTYWx0ZWRfX9bbhC4mjbZ8D
+ NfOBiXDa6/l5+ibRlhY7r3Ci75bAW5DMyVNPpAaBrDGfprEGHgrqYo+uyyfoxgyuw3RYBrT9/yE
+ 1Egr1iQFaImXE0EhVPJI0Rfkh4fPzpqjdgTtTBL3ND0VRG39XjctnrH8ww6vbko74N+HIvYBpiq
+ GxOw2/IM2VG+RJ5p+YNRRstSq/gG0MQYHgxIZvUX5BfBqdiupWOuzl0TDsNuOrsE+1Nx4Dj7Lbg
+ fXTVdYOZKdB3PMEXcSd8E8/zwQCJCUyivZvTpB/S3sdDICLU2A7Qse1gk8WLVziFEFWLDYBjm3T
+ bA8sIyp3W9qdOYOHm+UP+5utQh9ab3pn87M5iz9ul1zu6Z9oH/XVBcC3s0OCtp3aVigrwGofZea
+ 5OdSGQ9yzq5jp1QZRuOdrwhNr2E1YOd3d1oH1l2tta5qdR9fR/ocEFP/cHQRJDYBOnCnYT0242P
+ I8WN48tPUiwPVqIc12w==
+X-Proofpoint-ORIG-GUID: Kd6CNkq9T2U5Ngh9O9AbzR5MSEOjooDL
+X-Proofpoint-GUID: Kd6CNkq9T2U5Ngh9O9AbzR5MSEOjooDL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-22_04,2026-06-22_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 suspectscore=0 spamscore=0 priorityscore=1501
+ impostorscore=0 malwarescore=0 clxscore=1011 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606220201
 
-On Mon, Jun 22, 2026 at 12:52:49PM -0400, Shuangpeng Bai wrote:
-> [You don't often get email from shuangpeng.kernel@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
->
-> An open miscdevice file descriptor can outlive the PCI driver binding.
-> misc_deregister() removes the device node and prevents new opens, but it
-> does not revoke file descriptors that are already open.
->
-> Before this change, pci_endpoint_test stored the miscdevice inside struct
-> pci_endpoint_test, and ioctl() recovered the test object from
-> file->private_data with container_of(). Since the test object was allocated
-> with devm_kzalloc(), it was freed when the PCI device was unbound. A
-> process could therefore open /dev/pci-endpoint-test.N, unbind the PCI
-> device through sysfs, and then issue an ioctl on the stale file descriptor,
-> causing a use-after-free of struct pci_endpoint_test.
 
-Anyways to provent unbound when still open? This driver is only for test
-ednpoint funciton, it is not worth to make complex for this unusual case.
+On 6/22/2026 1:29 PM, Thomas Gleixner wrote:
+> On Mon, Jun 22 2026 at 10:18, Farhan Ali wrote:
+>> The current MSI-X restoration path assumes the Command register Memory bit
+>> is enabled when writing MSI-X messages. But its possible the last saved and
+>> restored state of device may not have the Memory bit enabled, even if a
+>> device driver later enables Memory bit and MSI-X. Attempting to access
+>> Memory space without Memory bit enabled can lead to Unsupported Request
+>> (UR) from the device. Fix this by enabling Memory bit and restore
+>> it afterwards.
+>>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   drivers/pci/msi/msi.c | 4 ++++
+>>   1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+>> index 81d24a270a79..46a0d9f68a57 100644
+>> --- a/drivers/pci/msi/msi.c
+>> +++ b/drivers/pci/msi/msi.c
+>> @@ -874,6 +874,7 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>>   {
+>>   	struct msi_desc *entry;
+>>   	bool write_msg;
+>> +	u16 cmd;
+>>   
+>>   	if (!dev->msix_enabled)
+>>   		return;
+>> @@ -882,6 +883,8 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>>   	pci_intx_for_msi(dev, 0);
+>>   	pci_msix_clear_and_set_ctrl(dev, 0,
+>>   				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+>> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>> +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> Can we please have a comment there which explains this? Three month down
+> the road this will results in head scratching otherwise.
+>
+> I agree with Niklas that this wants a Fixes and a Cc:stable tag.
+>
+> Other than that:
+>
+> Reviewed-by: Thomas Gleixner <tglx@kernel.org>
+>
+> Thanks,
+>
+>          tglx
+>
+I can add a comment, how about something like below?
 
-Frank
+"The restored device state may not have Memory decoding enabled in 
+Command register. Since the MSI-X was enabled for the device, enable 
+Memory decoding before restoring MSI-X"
 
->
-> Manage the test object lifetime explicitly. Allocate it with kzalloc_obj(),
-> add a kref, take a reference from .open(), and drop it from .release().
-> The remove path deregisters the miscdevice to stop new opens, serializes
-> with ioctl using the existing mutex, releases the PCI resources, clears
-> test->pdev, and drops the probe reference.
->
-> Use the same 1s timeout already used by the other endpoint interrupt tests
-> for the READ, WRITE and COPY completion waits. This prevents device unbind
-> from blocking indefinitely behind an ioctl waiting for a missing endpoint
-> interrupt. Already-open file descriptors then keep the test object alive;
-> subsequent ioctls fail with -ENODEV instead of touching released device
-> resources.
->
-> Fixes: 2c156ac71c6b ("misc: Add host side PCI driver for PCI test function device")
-> Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-> Closes: https://lore.kernel.org/all/178144969601.60470.7358419009914000395@gmail.com/
-> Suggested-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-> Signed-off-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-> ---
-> Changes in v2:
-> - Bound READ, WRITE and COPY completion waits with the same 1s timeout used
->   by the other endpoint interrupt tests so device unbind cannot block
->   indefinitely behind an ioctl waiting for a missing endpoint interrupt.
->
-> Please let me know if there are any concerns with this approach or if there
-> is a simpler preferred way to handle this lifetime.
->
-> ---
->  drivers/misc/pci_endpoint_test.c | 86 ++++++++++++++++++++++++++++----
->  1 file changed, 77 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index dbd017cabbb9..65d768dab450 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -13,6 +13,7 @@
->  #include <linux/io.h>
->  #include <linux/interrupt.h>
->  #include <linux/irq.h>
-> +#include <linux/kref.h>
->  #include <linux/miscdevice.h>
->  #include <linux/module.h>
->  #include <linux/mutex.h>
-> @@ -136,6 +137,7 @@ enum pci_barno {
->  };
->
->  struct pci_endpoint_test {
-> +       struct kref     kref;
->         struct pci_dev  *pdev;
->         void __iomem    *base;
->         void __iomem    *bar[PCI_STD_NUM_BARS];
-> @@ -143,7 +145,7 @@ struct pci_endpoint_test {
->         int             last_irq;
->         int             num_irqs;
->         int             irq_type;
-> -       /* mutex to protect the ioctls */
-> +       /* mutex to serialize ioctls and removal */
->         struct mutex    mutex;
->         struct miscdevice miscdev;
->         enum pci_barno test_reg_bar;
-> @@ -157,6 +159,15 @@ struct pci_endpoint_test_data {
->         size_t alignment;
->  };
->
-> +static void pci_endpoint_test_free(struct kref *kref)
-> +{
-> +       struct pci_endpoint_test *test = container_of(kref,
-> +                                                    struct pci_endpoint_test,
-> +                                                    kref);
-> +
-> +       kfree(test);
-> +}
-> +
->  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
->                                           u32 offset)
->  {
-> @@ -804,10 +815,17 @@ static int pci_endpoint_test_copy(struct pci_endpoint_test *test,
->         pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->                                  COMMAND_COPY);
->
-> -       wait_for_completion(&test->irq_raised);
-> +       if (!wait_for_completion_timeout(&test->irq_raised,
-> +                                        msecs_to_jiffies(1000))) {
-> +               ret = -ETIMEDOUT;
-> +               goto err_dst_unmap;
-> +       }
->
-> +err_dst_unmap:
->         dma_unmap_single(dev, orig_dst_phys_addr, size + alignment,
->                          DMA_FROM_DEVICE);
-> +       if (ret)
-> +               goto err_dst_phys_addr;
->
->         dst_crc32 = crc32_le(~0, dst_addr, size);
->         if (dst_crc32 != src_crc32)
-> @@ -909,12 +927,17 @@ static int pci_endpoint_test_write(struct pci_endpoint_test *test,
->         pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->                                  COMMAND_READ);
->
-> -       wait_for_completion(&test->irq_raised);
-> +       if (!wait_for_completion_timeout(&test->irq_raised,
-> +                                        msecs_to_jiffies(1000))) {
-> +               ret = -ETIMEDOUT;
-> +               goto err_unmap_addr;
-> +       }
->
->         reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
->         if (!(reg & STATUS_READ_SUCCESS))
->                 ret = -EIO;
->
-> +err_unmap_addr:
->         dma_unmap_single(dev, orig_phys_addr, size + alignment,
->                          DMA_TO_DEVICE);
->
-> @@ -1000,10 +1023,17 @@ static int pci_endpoint_test_read(struct pci_endpoint_test *test,
->         pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->                                  COMMAND_WRITE);
->
-> -       wait_for_completion(&test->irq_raised);
-> +       if (!wait_for_completion_timeout(&test->irq_raised,
-> +                                        msecs_to_jiffies(1000))) {
-> +               ret = -ETIMEDOUT;
-> +               goto err_unmap_addr;
-> +       }
->
-> +err_unmap_addr:
->         dma_unmap_single(dev, orig_phys_addr, size + alignment,
->                          DMA_FROM_DEVICE);
-> +       if (ret)
-> +               goto err_phys_addr;
->
->         crc32 = crc32_le(~0, addr, size);
->         if (crc32 != pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
-> @@ -1141,10 +1171,15 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
->  {
->         int ret = -EINVAL;
->         enum pci_barno bar;
-> -       struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
-> -       struct pci_dev *pdev = test->pdev;
-> +       struct pci_endpoint_test *test = file->private_data;
-> +       struct pci_dev *pdev;
->
->         mutex_lock(&test->mutex);
-> +       pdev = test->pdev;
-> +       if (!pdev) {
-> +               ret = -ENODEV;
-> +               goto ret;
-> +       }
->
->         reinit_completion(&test->irq_raised);
->         test->last_irq = -ENODATA;
-> @@ -1206,9 +1241,30 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
->         return ret;
->  }
->
-> +static int pci_endpoint_test_open(struct inode *inode, struct file *file)
-> +{
-> +       struct miscdevice *miscdev = file->private_data;
-> +       struct pci_endpoint_test *test = to_endpoint_test(miscdev);
-> +
-> +       kref_get(&test->kref);
-> +       file->private_data = test;
-> +
-> +       return 0;
-> +}
-> +
-> +static int pci_endpoint_test_release(struct inode *inode, struct file *file)
-> +{
-> +       struct pci_endpoint_test *test = file->private_data;
-> +
-> +       kref_put(&test->kref, pci_endpoint_test_free);
-> +       return 0;
-> +}
-> +
->  static const struct file_operations pci_endpoint_test_fops = {
->         .owner = THIS_MODULE,
-> +       .open = pci_endpoint_test_open,
->         .unlocked_ioctl = pci_endpoint_test_ioctl,
-> +       .release = pci_endpoint_test_release,
->  };
->
->  static void pci_endpoint_test_get_capabilities(struct pci_endpoint_test *test)
-> @@ -1241,10 +1297,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->         if (pci_is_bridge(pdev))
->                 return -ENODEV;
->
-> -       test = devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
-> +       test = kzalloc_obj(*test);
->         if (!test)
->                 return -ENOMEM;
->
-> +       kref_init(&test->kref);
->         test->pdev = pdev;
->         test->irq_type = PCITEST_IRQ_TYPE_UNDEFINED;
->
-> @@ -1263,7 +1320,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->         ret = pci_enable_device(pdev);
->         if (ret) {
->                 dev_err(dev, "Cannot enable PCI device\n");
-> -               return ret;
-> +               goto err_kfree_test;
->         }
->
->         ret = pci_request_regions(pdev, DRV_MODULE_NAME);
-> @@ -1349,6 +1406,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  err_disable_pdev:
->         pci_disable_device(pdev);
->
-> +err_kfree_test:
-> +       kfree(test);
-> +
->         return ret;
->  }
->
-> @@ -1364,10 +1424,13 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
->         if (id < 0)
->                 return;
->
-> +       misc_deregister(&test->miscdev);
-> +
-> +       mutex_lock(&test->mutex);
-> +
->         pci_endpoint_test_release_irq(test);
->         pci_endpoint_test_free_irq_vectors(test);
->
-> -       misc_deregister(&test->miscdev);
->         kfree(misc_device->name);
->         kfree(test->name);
->         ida_free(&pci_endpoint_test_ida, id);
-> @@ -1378,6 +1441,11 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
->
->         pci_release_regions(pdev);
->         pci_disable_device(pdev);
-> +       pci_set_drvdata(pdev, NULL);
-> +       test->pdev = NULL;
-> +       mutex_unlock(&test->mutex);
-> +
-> +       kref_put(&test->kref, pci_endpoint_test_free);
->  }
->
->  static const struct pci_endpoint_test_data default_data = {
-> --
-> 2.34.1
->
+For the Fixes tag, do you have a suggestion for a commit? This behavior 
+has been present since 41017f0cac92 ("[PATCH] PCI: MSI(X) save/restore 
+for suspend/resume" which introduced these restore functions. So should 
+be Fixes against 41017f0cac92?
+
+Thanks
+
+Farhan
+
+
