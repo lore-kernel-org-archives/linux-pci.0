@@ -1,226 +1,147 @@
-Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCB436EAB2;
-	Mon, 22 Jun 2026 07:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3887390609
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 08:06:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782114343; cv=none; b=qDvYDVf35vLdKT/UszTuzfmYJ8gGi2YivMsaiwH+EMAsYGDKru8B82Wb5YHrT2cdkVmXCOCjmfSj9gLoVAIovpCd7UV2OslLNCozCVvxDy+ly5odENv0hzt+cGnNJxj5L2ll22NmZ4VP49vmJX50lQtNLZWcChR+CPB74z3hKwM=
+	t=1782115563; cv=none; b=eXXjbTKeyFrOjk93RWaAXb4UO4rNN/RfQ+PsR0/0nG2o9QHe9g7VILbdLx85GqNwOIiVNCxoXO+cu69f59D6NwwZYo0EetWzKTjkLRuLcb6unpFjj1da+CSLxgrgl7fPTPvaEySOXQcJItoBjC5Xo5Rc2fU7KjZBUL08O0TiBfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782114343; c=relaxed/simple;
-	bh=gGQtPLQNgyw1QnJc0KcmR+nX5FnipvxpQ0RMhD+xKro=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qtlupE1U7ZdBFgQas5FDRFgo81Pig+hpFfLG707Fb9Ms2riBoPPsn4IgrZALcs8pcPm82yVIzR+c7tcl3dzbH4qEu0jglhIqqby12dlUgCa3mLfFyfQcpsaJcdB4BryC31o0qT0Mm1MN+A6gCvwyiPdAjZapld0kBJaJSB/sd2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=DWIZPgs5; arc=none smtp.client-ip=113.46.200.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1782115563; c=relaxed/simple;
+	bh=3WyWG7mlJmk4dTS9WKu8lTcjWQLyuU1B4DkfUKS3UPE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VO9xe+k7wmvwBh5zVpVaECmYOBFw/OnxfV90iVG/9KzFvqErb5pKg/g+j8AbrtFKl9+JgznjcT5aPTZXl2BcN4SuPWCy8DrKq0iOVwe9RKLqGaGTz8a0U+hZPqVjjomfjTH9V4LaHiXXFo/Z4AyTDs8td4Pmk8d7wOfKPhi0wxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cUJZMN8b; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LdLFDeDo; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="DWIZPgs5"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=+gNp84iL2JLpVuAjQy/FRZDmEA9yVf4gqt3WOg0gOWs=;
-	b=DWIZPgs5G24PIZW3aRe8SlqoX57l/E8np2Ld/tmAWgXs1R0fVmRUBmwwUb5N6izXaDXM1uAAs
-	9wwgtMiZdgw7Aw0uiYcB4UaJ6S+mp+oENWuNrz2KbQPkyJIysear8EbaHR6yVMmTeyGkVd8LDuI
-	JEVRdOUuXTJm0B1OMIhanOQ=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gkKlN0Dh8znTXr;
-	Mon, 22 Jun 2026 15:36:48 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 185514056C;
-	Mon, 22 Jun 2026 15:45:33 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Mon, 22 Jun 2026 15:45:32 +0800
-From: Chengwen Feng <fengchengwen@huawei.com>
-To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
-CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
-	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v18 10/12] vfio/pci: Add TPH_ENABLE feature skeleton and unsafe module parameter
-Date: Mon, 22 Jun 2026 15:45:21 +0800
-Message-ID: <20260622074523.38473-11-fengchengwen@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260622074523.38473-1-fengchengwen@huawei.com>
-References: <20260622074523.38473-1-fengchengwen@huawei.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cUJZMN8b";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LdLFDeDo"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65M59CVV3786638
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 08:06:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	63b8/Eyb31YE8fxcYSbZ/UmhGcOjsVSMSWNSmeAo0+o=; b=cUJZMN8bweLcdOP/
+	mkdL1tUu8YH+jdj9Xg6gCtK4K5UG/DI6suSBe7dBGlBUdyUgMrgJeML4aD2WrGCK
+	gx7Fp8w6la4QLXrKnXjHJRbl/Fqf8M1UVJnLeCG4+Kv65xZBD8LsSt2MsSFgE22s
+	H4f+MA+yFXhPS7mUcjrxiDghbp5Zj5qG5zjnBpl1+6cA/ElFsne/C4Ft78uMf1ip
+	PpA3vReL2d/x6hkWVKxZ48chi3ckCjgJAUhn9ADLEEfTEIIe9cdQw17EBPksMRwf
+	Z/v1aCRSbZmpu1yq7UQ6gWgsPr0Jfh5jgS/igTpPmy9WPWuZ1eKkWXhu8Yer7mGt
+	rO1RmA==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ewkmed9w8-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 08:06:01 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-9157f453a27so656958285a.1
+        for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 01:06:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1782115560; x=1782720360; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=63b8/Eyb31YE8fxcYSbZ/UmhGcOjsVSMSWNSmeAo0+o=;
+        b=LdLFDeDosv8WEUolSNmk4sXC4J008urb/meBhPCyFArpaWmnKJQkXl3QdstMZQYfhI
+         kT7nLjDYExcuUdwc5A5hnJYCrvlQnyG8xD9vlFydmHO6tH+qTimB/G3+s+SHnljewwAw
+         W93v9j+5fCfC4CkEb2SVZX8tRJCrWjySVW3nzd6D4VyxlomoXCo7c6oFqIwOpuBR8lKr
+         0wDgPmIGH77dsLE1dyecOUBsqSFhWvl3tssXMOqAzvxwXN4nr46PzuCgx2lMrr+wsRXt
+         cxQjL4Knnu7qquEgilxyI1aVx6MsJ2vCUvfVF97EB6TVViRr+80gBnSZ3vN8+UxFqU9J
+         wM6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782115560; x=1782720360;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=63b8/Eyb31YE8fxcYSbZ/UmhGcOjsVSMSWNSmeAo0+o=;
+        b=BvIzAFlsTGDvXq2PlrqPG2Iiv5J14QB8+VgjdkHS99+d39pnpWd28268Sojhk5/xiV
+         5Y2iDSGwViLUWmV4OuhqpPIlGuXogPHgmwTM5hFA35WrMebKxCLlr3VrEC3mR9mZMzte
+         wGKKroc1mGRbN4e7CDoVz5hWxtQrgbvpOSgKqXrD2KMCBeibz1PxoP576E1jH/aL7ZC5
+         XVez4cGj+nlC7aCmG207Pdf0pSZ5sFn9rTFyzRaY4hjxBLWIhAm+LxQkb5NS8SvIWBvu
+         vcdoICL7ZZODLAXaGW3lO6lxhDJw4QAE9uo0ORU7770neYFqjl2HewgYa1dfA3CIYHBW
+         1Ehg==
+X-Forwarded-Encrypted: i=1; AFNElJ8733t5gDPC/5KNUqC74dBM3jA1FtCGgtrg9n8bPfscHzB1iJ4noHZlYY76CWt3CDObPgAasc3mEk8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzfl/ffHTvAlfPdWISORhc6XNB3lk/n0BLLu0pwY7wSAcqhlaQ4
+	cHVxpgKqSgH11XLdCixVPQTmC2dEzpLR2izMZJIpLJ4FwqHeeUiJhv0kGp7WFW6i6+Qk/SXUpMr
+	XRTR76hBNT59hFW1uJOTcwvCYVxs1B0PeXQ0TYNogHWjovy0swrNlS4vM4pQoTfk=
+X-Gm-Gg: AfdE7clJYLYnq1N4b9W6uzqtD9IC77nM2vyY8yE4/fwB65kB9EU7raEZNCi6KUYHzMc
+	QZ1uLWeS8xMum43iogj9eoDgsZgCB3OWHRLiPk3Hr4WwZ0Y6nCnL+hYfHVL+Fbl0Y5y4RftcM1q
+	+Th3FxZigP2ywHxgU4irEbJIRCFmNbV8pCq5tiSAhA4H46NtFr5cqKVic8pz/sKg8Ipk9VWGHv6
+	IzPUXzW9ZST+pWMIx7msio2ViZOK4s98un1vBkdkRlb0y3yM1wdjlPr69WdMfdBIFAtZQYp/h8r
+	jK+vp6I81D6RB9xyZZyrv/ut9JziH3+u2EZIfzZxpFb3oNZwLgvg4PT59JEzcoqawRCDstVrbEN
+	f6rFcJUCvl/+Wga6rXgbRTrwoNoSDrZKqRQ0QjTM=
+X-Received: by 2002:a05:620a:4483:b0:915:d322:c47b with SMTP id af79cd13be357-920d1611869mr1865544985a.13.1782115559924;
+        Mon, 22 Jun 2026 01:05:59 -0700 (PDT)
+X-Received: by 2002:a05:620a:4483:b0:915:d322:c47b with SMTP id af79cd13be357-920d1611869mr1865542085a.13.1782115559267;
+        Mon, 22 Jun 2026 01:05:59 -0700 (PDT)
+Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:dea2:c31b:2872:1bd1])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46666788226sm24040371f8f.23.2026.06.22.01.05.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Jun 2026 01:05:58 -0700 (PDT)
+From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Wei Deng <wei.deng@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_chezhou@quicinc.com,
+        cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com,
+        jinwang.li@oss.qualcomm.com, xiuzhuo.shang@oss.qualcomm.com,
+        mengshi.wu@oss.qualcomm.com
+Subject: Re: [PATCH v2] power: sequencing: pcie-m2: Sort PCI device IDs in ascending order
+Date: Mon, 22 Jun 2026 10:05:51 +0200
+Message-ID: <178211554552.11059.10528035877623470920.b4-ty@oss.qualcomm.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260617143055.820096-1-wei.deng@oss.qualcomm.com>
+References: <20260617143055.820096-1-wei.deng@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIyMDA3OCBTYWx0ZWRfX22D4NxMX1JRz
+ v9/jPnqbwgXk7tnwGRW3Pjf8CdWclEDedJJR0urfbmcxKMKWgLGT1Ssm5h60ASPvuaynis5PBD/
+ J+Qt0lgczIVVx17xTA8ie+aVAXS6YolUWrVAU9NsAdvId6A2y5X1ybc9BHy/3VE+9nIXk/5SDoZ
+ yVM6ztvdYmZ9cWZ45kBECYWudx8o/4H97dgwRvkJL8QMahcL2UabFywfjtV8fdDiIBYOPhZtgLr
+ 95B30yV3Uj3vKNmMSqDzSnO+s4pbueEeb8KyZFS3wuvo1NaI1CCmTQJS3F3Kh5rusJWQzj72Ob5
+ iWzMK0yAjjEitYK/uF9mhKkkbH2Thi0RNsBZPZE2OOc/Xr6djGX1UOVMbRUY4i8LaTacnHamjDN
+ xNIDJywEiA6JVU8w9OVhkZxBrQXbN0wdBdgmM+sW2Qwk7njMGVy1eLwdfuuiVK/8T30LJ19LzVF
+ 7jipxFLrLcR8ZNSngGw==
+X-Authority-Analysis: v=2.4 cv=MtFiLWae c=1 sm=1 tr=0 ts=6a38ece9 cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22 a=VwQbUJbxAAAA:8
+ a=EUspDBNiAAAA:8 a=KhnnDi8VfUj6Ww44RVgA:9 a=QEXdDO2ut3YA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-GUID: 6um8o942e4RogYpKWXmTEsDoJiLyJEGF
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIyMDA3OCBTYWx0ZWRfX1dG34h+xsf2V
+ O+cdVq9RDzrhhJT8pqKhQ6KlM6k2UmUScF0gTqcl+1BkX0bVBs+WDXIverOdILiAbcYwvLiU4ha
+ YWgUt0TiApYclPvr+a3EnmZS6wqgMt4=
+X-Proofpoint-ORIG-GUID: 6um8o942e4RogYpKWXmTEsDoJiLyJEGF
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-22_01,2026-06-18_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 clxscore=1015 phishscore=0
+ adultscore=0 spamscore=0 priorityscore=1501 suspectscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606220078
 
-Introduce module param enable_unsafe_tph to gate all TPH related features,
-and add VFIO_DEVICE_FEATURE_TPH_ENABLE uapi together with per-device
-tph_permit flag.
 
-This is a preparatory implementation: only feature framework is added
-for now, actual TPH_CTRL register permission control and steering tag
-features (TPH_CPU_ST / TPH_ST_CONFIG) will be attached in subsequent
-TPH capability virtualization commits.
+On Wed, 17 Jun 2026 20:00:55 +0530, Wei Deng wrote:
+> Sort the entries in pwrseq_m2_pci_ids[] by device ID in ascending order:
+> 0x1103 (WCN6855) before 0x1107 (WCN7850).
+> 
+> 
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
----
- drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
- drivers/vfio/pci/vfio_pci_config.c |  1 +
- drivers/vfio/pci/vfio_pci_core.c   | 25 ++++++++++++++++++++++++-
- include/linux/vfio_pci_core.h      |  4 +++-
- include/uapi/linux/vfio.h          |  7 +++++++
- 5 files changed, 47 insertions(+), 3 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 0c771064c0b8..6d73668459cf 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -60,6 +60,12 @@ static bool disable_denylist;
- module_param(disable_denylist, bool, 0444);
- MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
- 
-+#ifdef CONFIG_PCIE_TPH
-+static bool enable_unsafe_tph;
-+module_param(enable_unsafe_tph, bool, 0444);
-+MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
-+#endif
-+
- static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
- {
- 	switch (pdev->vendor) {
-@@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
- {
- 	int ret;
- 	bool is_disable_vga = true;
-+	bool is_enable_unsafe_tph = false;
- 
- #ifdef CONFIG_VFIO_PCI_VGA
- 	is_disable_vga = disable_vga;
- #endif
-+#ifdef CONFIG_PCIE_TPH
-+	is_enable_unsafe_tph = enable_unsafe_tph;
-+#endif
- 
--	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
-+	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
-+				 is_enable_unsafe_tph);
- 
- 	/* Register and scan for devices */
- 	ret = pci_register_driver(&vfio_pci_driver);
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 5c6ab172df6c..251d3ec7fdd4 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -1783,6 +1783,7 @@ int vfio_config_init(struct vfio_pci_core_device *vdev)
- 		goto out;
- 
- 	vdev->bardirty = true;
-+	vdev->tph_permit = false;
- 
- 	/*
- 	 * XXX can we just pci_load_saved_state/pci_restore_state?
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index a28f1e99362c..b0193afca875 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -41,6 +41,7 @@
- static bool nointxmask;
- static bool disable_vga;
- static bool disable_idle_d3;
-+static bool enable_unsafe_tph;
- 
- static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
- {
-@@ -1554,6 +1555,24 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_core_feature_tph_enable(struct vfio_pci_core_device *vdev,
-+					    u32 flags, size_t argsz)
-+{
-+	int ret;
-+
-+	if (!enable_unsafe_tph)
-+		return -EOPNOTSUPP;
-+
-+	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET, 0);
-+	if (ret <= 0)
-+		return ret;
-+
-+	if (!vdev->tph_permit)
-+		vdev->tph_permit = 1;
-+
-+	return 0;
-+}
-+
- int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 				void __user *arg, size_t argsz)
- {
-@@ -1572,6 +1591,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_TPH_ENABLE:
-+		return vfio_pci_core_feature_tph_enable(vdev, flags, argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-@@ -2615,11 +2636,13 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
- }
- 
- void vfio_pci_core_set_params(bool is_nointxmask, bool is_disable_vga,
--			      bool is_disable_idle_d3)
-+			      bool is_disable_idle_d3,
-+			      bool is_enable_unsafe_tph)
- {
- 	nointxmask = is_nointxmask;
- 	disable_vga = is_disable_vga;
- 	disable_idle_d3 = is_disable_idle_d3;
-+	enable_unsafe_tph = is_enable_unsafe_tph;
- }
- EXPORT_SYMBOL_GPL(vfio_pci_core_set_params);
- 
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 5fc6ce4dd786..d551e530dd86 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -128,6 +128,7 @@ struct vfio_pci_core_device {
- 	bool			pm_intx_masked:1;
- 	bool			pm_runtime_engaged:1;
- 	bool			sriov_active;
-+	bool			tph_permit;
- 	struct pci_saved_state	*pci_saved_state;
- 	struct pci_saved_state	*pm_save;
- 	int			ioeventfds_nr;
-@@ -158,7 +159,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
- 				      const struct vfio_pci_regops *ops,
- 				      size_t size, u32 flags, void *data);
- void vfio_pci_core_set_params(bool nointxmask, bool is_disable_vga,
--			      bool is_disable_idle_d3);
-+			      bool is_disable_idle_d3,
-+			      bool is_enable_unsafe_tph);
- void vfio_pci_core_close_device(struct vfio_device *core_vdev);
- int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
- void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..e5a4d1d7091b 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,13 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
- 
-+/*
-+ * Device-level opt-in for TPH (Transaction Processing Hints) support.
-+ * When set, allows access to TPH_CPU_ST and TPH_ST_CONFIG features.
-+ * Requires global enable_unsafe_tph module parameter to be enabled.
-+ */
-+#define VFIO_DEVICE_FEATURE_TPH_ENABLE	13
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
+[1/1] power: sequencing: pcie-m2: Sort PCI device IDs in ascending order
+      https://git.kernel.org/brgl/c/251c8e86539aefa88980b3dccee7d8ae4974af06
+
+Best regards,
 -- 
-2.17.1
-
+Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
