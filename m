@@ -1,157 +1,314 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B36358373
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 06:02:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782108165; cv=none; b=DuzQRmPpfDiGDavNN2acsS7O2GhD4uVTklkgAFYFhZOzXhuV0fMKPgVE4R0AaA0epEGbqsx71soPmFZ7/Whj7nvydrGJ7a4K5OblK/E8EH3Y5TN2KDY9kGevvw701/aJpetVYu8DRo+WRBH6hpEAzFLGgqaeaIFHBNMlShDFzaE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782108165; c=relaxed/simple;
-	bh=fhF1jkIK148QJRPMwgMFNLtsyUT0Tq6j6rDts/hWXk8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=p2QXm2wgjVhfqD4uoItzN+pJ2EboJne1wmoCqFepMRxjqIDefj00484kK7vUu33RKyIV+xSiUoLEyCJ1bYU+oNCs+e4kRe+skpZ4mG8XZgIpQjZ0LdX6oMhrwv+4UYBSKWjmxofgcMpYQBoktRnAeMe6Gw3pEfqEhZmrSDee6IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=I2zZHh19; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ktIt14/h; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ADDD35C1A1
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 06:13:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.125.188.123
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782108790; cv=pass; b=qqVT5ntPOrg5oYudvcRS4USJGbccBS0l5YdKfK+Wn9DRR5FVCgosZbxriMq3obZKRHToT5P+BL5JmsQDEukFjVFt/VHSCR7MWjjSJtYJ+zP0qI9rv8YG2uNqWRTDzCY/m7Qj47yAeqQ5R1tqxas9476sNhWnJs01x78KNyg72ns=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782108790; c=relaxed/simple;
+	bh=bilqSCMSAEecmWyKiMBK+HeurhiGTy9C2LXGPgGQUB4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rFrMTlkisYsl7rvDo+hk+cYt/HM0VZoxY2XxDrlsjUBo4LrEqAfKyUCZRlNDim+OkTBPtRSyNZk6pECdpRQvNgRCZoxKJwho+VrdlcppDHZTULnwMuekyRivoOJx8QOXCMMhaOdIitsoZwwTQkMGetZb+Mu2UaGRpketQR9RW4s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=ik22kvdA; arc=pass smtp.client-ip=185.125.188.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="I2zZHh19";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ktIt14/h"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65M5C3oR173096
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 06:02:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=fhF1jkIK148
-	QJRPMwgMFNLtsyUT0Tq6j6rDts/hWXk8=; b=I2zZHh19VpeyrTBrzHyPcXUJCoJ
-	OxAwhLJSCD48w/Uiz+2nYqkMuDLIy8928uFQawDl/7ZIfOQSQXoPNzhp2GXCHmPY
-	szMyEtOPdUJ8VFGIq9L1oMlwe+aCkuWS/CE4FosGmI+jiZfL+Mzyoy2z7hFWumfo
-	1chvL9sOx0f/hBj2rTiS7WpVsU67Qk0bHdxFwaRpRKwO6xaPRbY3/DABOCFtMzng
-	TCNqfJlWmIbkAl1KZnmYvpn8ooaw0tee9+pkQWuKTUB1iNi9QRDKGbB2yAtH3n4C
-	uWWRSyrWboTz5yzPO6umYoPeckI7JWbuZxh5FK8TvTqm0mQfo/QOkKz7cRA==
-Received: from mail-dl1-f71.google.com (mail-dl1-f71.google.com [74.125.82.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ewjexw1th-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 06:02:43 +0000 (GMT)
-Received: by mail-dl1-f71.google.com with SMTP id a92af1059eb24-1399e7a6d05so445633c88.2
-        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 23:02:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1782108162; x=1782712962; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fhF1jkIK148QJRPMwgMFNLtsyUT0Tq6j6rDts/hWXk8=;
-        b=ktIt14/hhlZNmWYZ2mAw7hzbmRJPV4eYb2/ObDPHJwZKxJ/gE+HhQ7EtyKELhN9mu5
-         0/qSibrAfcy0HtJTSmDwCkaQG5dd3mdqb6SegcF12hrrzPAto7q69ORWV+byIUQyNozj
-         UT/qSEp226D5AAKHk9i6gQEYjHOcBUtCrPd1RpXt4MTL65cOBPCEMyZadGbgxUEQ3xk0
-         EfVeXJ7krlNE5NUOH2lWwJZJru4tpqUyeyflrnFMhYb/J3CoDSwe+DkdihEttBYp+h04
-         3Ln1PmIapeZBoWic0mAfrMbyjjwsr1DrWFrRxgV4dzzr9pmkMC4shhFWFXFI2c0OeZqU
-         figA==
+	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="ik22kvdA"
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 96B5A3F212
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 06:13:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20251003; t=1782108785;
+	bh=X1nAGON1P5lZjw1PBUom5wAkoyDhSk/p+Z5qkS6Ec0Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=ik22kvdA0DUywT/pYdW/t9r5DecoAkJePQCfgWZRwAznbpoXa/gaf5Q3aMG3AqWyv
+	 3MfnjaKezKVTh14ap/+yixNNAnIF6s7qtVEEZEMkJU6A2cHlNOyfnbyrkjMVSYtNTG
+	 xW1riBCV4vi3yzBnh3blZl9LHsXbyHEX7ErqWo775sDqkgGYTePoI4GTzhtfX7sYZr
+	 sjmRbdGm8AgToIPUqrodak5WBtBRPeAjHIcsl6sfgS3kkbExrxHlcXL4g7e4zh/PLH
+	 ToWG/+4RKRYK9c8GyhyX6HwxLNyHN2y7twsdiKkH18nDzAeN1xOJmPtKvUV+TCwkgd
+	 aTQOBtH1kvB+x3gQVN2rk5G4ppJzOotE5Zsc/tiEKi78rlAgzrlTU7KKmzj5cBOlF5
+	 8NTeFHqG0WXPhTabBhE04r0WrLqkJEOpLepNiFzDDC3YUg2PakZwNuJ9DB4UDM1nnl
+	 6E33Q1XuF9kMm0kF0yJCgjT5GLeWnw9IvEf7O/gNRZpnyPUyhpvdGhhWgbQ6+/lHRn
+	 W494aUzdaCT3fb+w0vyHaQRY5AZKVc7vQbtv87XtGtELYyNDaVWv/ixiIgmaNsH825
+	 NO9Wo2OdVLhHwhevIZeaEIWwMkPcIKqQanLFD6cUOd0dBpnhre/PhJbl/UiUefAA+T
+	 67FSx78V/Apbm1FiY/xLpoKA=
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-138acbc0e69so14755693c88.0
+        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 23:13:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782108784; cv=none;
+        d=google.com; s=arc-20240605;
+        b=JIft2icWa38m2u8XYCM6s9dVuQ2sPYehlJPkKSPJYKPyPyC1SndJ1o7SrLFFR90Sc+
+         u9Q2bbaz3TaxTLGk6rzH53SwYYrBSI5x2SPU04w5vXFGTTG6W1WtLRzFQpxc3iz+ULbc
+         B3+wpG+aP6LRCXwONLkOtHtU38sEk0+kWCH5zZF4S05jp0I4lpm59TnCLh3v8wwQSnut
+         zSRDaqAWlMXqxyG3Ipxez5ksibp3si67TIykh8WRMBFDcah4nu71Lv/juRnAVk/1uVNT
+         QkMpOtxJuEO3HpXA6nYCM3RgVBpJxwHqfgXNcIRnx8hg9YP1aLBd6Rp3JWrkR0ijkIwp
+         MPUA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=X1nAGON1P5lZjw1PBUom5wAkoyDhSk/p+Z5qkS6Ec0Q=;
+        fh=us+4Rl5j0F1s5osSAcgNK69plyzZlJmlQmy3kQVe3CQ=;
+        b=D9Cj66oGkwpZr+oQMPMfE3/d5FpnC5os31AhhLzBq+zThIHACdN5UiTY1vu5XVUXgy
+         X455bTGiVL9dWjr7GXVf2i7FERohSpz3/LHlURheS2IbLhoOo/UFTfCXCwvxYpzUZR+i
+         dcklCz53k3DbZj7JhUCr6J2dpjpKIVGfzn+Jz+kYzmWHcleSqVBvc60desrYW5pztLO/
+         luGMk7avViRhOHAKB+xZhZPfTCbnuqemyGIRxcBeGdfw5rp1prUtuqaZAqrHFtm4Gqxg
+         CJPl3CEBPRch8jQn+HX1B9cEG4hUxyfDkvLK3OpLCnlNzzh3KGSaByz+rqRabfJW/wp4
+         5qIw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782108162; x=1782712962;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1782108784; x=1782713584;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=fhF1jkIK148QJRPMwgMFNLtsyUT0Tq6j6rDts/hWXk8=;
-        b=lZZUBUCiTYXZGJMfAsMaVPciBBLhFpVd0kMJtfnEFysJLogCpEVjeAh7jP+L5pL4Nw
-         6OTBx+YHa5k17mrrNvIAktMtytMVLz25cGuzH3WlM7UNHItjgmHwG+xHdrFeLz44muoD
-         7hJUTC5114tIeZCJh4f1c34bWg94K5+2Ahstbhv1f2ae5cX7M1bgX2Jx2JnQ8notV/ki
-         2T4XbkHsM0KPJBd2F9tSbcqS8z2slWpymmqvmby4D1Lcl2B7ICeV8P2WaOt1ICHDgQFP
-         J8fj+xPwzJYT0NRho5mJNsbx5Mkk2LrxE//C58VFPMGE+alv02ITOf4RGrphnaervaXK
-         ygpA==
-X-Forwarded-Encrypted: i=1; AFNElJ+iBQG3wOX5sD0uhYNVWp4KJ4JWZknRAW6ozcvQfPllwGenl1creKgG0yWIMDrbSuibEnK399Lb03M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzlLk+/KtbSdqDiwV3hCYiocFjdZilHxB2I/n7P++wZisCC02j3
-	cQC83KKVIF9PcZG4kPZl8mq5rzpwfl3dC3mmwJWgwPeTA0ndoWUDo3+gaqr2YIEuYAxhSdbdMMX
-	WLwd2d0xRetBY5R9aV5zB4tBrGixDMAT2grE3NOzM/3SNAyItLO0SSZLiNR+9cEY=
-X-Gm-Gg: AfdE7cna+LnBW41OL6OGJ7IfaqVqnmQObkRbtX+eHqPV5eQFI6x24eqi7G2HkwXlfY8
-	bH/1p6IGZzxBPBU9Gn33GSiZ4iU23+tiSS/iRjKCuL7ZPJKdYQRSU1u1Iyosd04P1octq0d5uMV
-	c1kApUArK1E9GGPWtSbLxKHTcxqaNZGrLmA86GynkTkTVdDRsUXFKMRTPCbSLB8lKKM2U+qNpKO
-	CxiCrPagvzGBJViAxSlbxhbthc57dV+2Panvnu4wKutiyMlGyDWVnYng+umsXYOuqP6WWuhAssK
-	k5u14JHVMvKaBsEmBm5xZoCsr2tw0/Hg+Isho8gnEJWxvCHEAIpaZad7sV7GQqCNBNmUhsjN7vr
-	sKggrQ5OQzHZZu7WT+kNIYjMGm8+cohpRn2mcGDPwmWxqalS8/XH04legr4ZyPQ==
-X-Received: by 2002:a05:7022:6981:b0:137:fea7:9297 with SMTP id a92af1059eb24-139a2035a3cmr3794611c88.1.1782108162055;
-        Sun, 21 Jun 2026 23:02:42 -0700 (PDT)
-X-Received: by 2002:a05:7022:6981:b0:137:fea7:9297 with SMTP id a92af1059eb24-139a2035a3cmr3794589c88.1.1782108161301;
-        Sun, 21 Jun 2026 23:02:41 -0700 (PDT)
-Received: from hu-weiden-sha.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-139add5bd68sm7558262c88.11.2026.06.21.23.02.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Jun 2026 23:02:40 -0700 (PDT)
-From: Wei Deng <wei.deng@oss.qualcomm.com>
-To: konrad.dybcio@oss.qualcomm.com
-Cc: andersson@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, mani@kernel.org, brgl@kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, quic_chezhou@quicinc.com,
-        cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com,
-        jinwang.li@oss.qualcomm.com, xiuzhuo.shang@oss.qualcomm.com,
-        mengshi.wu@oss.qualcomm.com
-Subject: Re: [PATCH 2/2] arm64: dts: qcom: lemans-evk: Describe the PCIe M.2 Key E connector
-Date: Mon, 22 Jun 2026 11:32:35 +0530
-Message-Id: <20260622060235.746205-1-wei.deng@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <580db7de-321d-4f4e-99f9-3c9a1cc5a3f9@oss.qualcomm.com>
-References: <20260608091702.3797437-1-wei.deng@oss.qualcomm.com> <20260608091702.3797437-3-wei.deng@oss.qualcomm.com> <580db7de-321d-4f4e-99f9-3c9a1cc5a3f9@oss.qualcomm.com>
+        bh=X1nAGON1P5lZjw1PBUom5wAkoyDhSk/p+Z5qkS6Ec0Q=;
+        b=S+UBhH+X0Pf+wZuzuol8WyLobFAFcS016e/OJXW37Ywl0fi3QVZyN/3ayre6m12vzb
+         CfD5UgWbAUtRe2Yhs6vemGsznflcT31Vjs9c2FsToMfCcSCxV/IweoJln2swJ3ifAcxR
+         qRwLWc68X/xqYWl94SbyDaV8J0hd1JAlB7oyEl456F84o0IeI2Uo9P+893c2UIx6dGT9
+         rQB/yq1wt6mHkO2v/jbj9BMKiV6V3o9kHEk/Rnkx7zf1SkYZcocYD1FS+fZ5/gJVxpY5
+         ND3fL4wBoUaNuAJTKtbNOaXsgO5Yp8KkFNIZF7cosfqWqQzwXQs1zmlVAYvTgNBBn58m
+         c8+g==
+X-Forwarded-Encrypted: i=1; AFNElJ+Ss0xvSxMrHaQaS2WjEJCsnhMX3jAFMYdof7F9vb0NuXtdNYuLf76JBhO3ErjDCimigs4ExKSYXLU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxgOqJQKTVa7lPRn/4XrXlLujTHfwNC1Nc4ffPev16yiuQQtRjU
+	DH4r4BlRx70sgQS9TIaIYoRDCD/h0IvxwV42G+vFNljpCIxG0pLt4e8j6A337K9lIkauupjRokt
+	wL7U+PP/7F3K5tdRo9lMm1iZVrQZpqRRQ6VNJvx8iKPX1JZvXD9DlTfWrIJ848zYpg8YNy1c1rV
+	ZfaDmIzLbF5exnq2toOfoqJ8TBn2DF/4ybxgsYYFKzTT7r1fwmu4RmkABCCGryU8nIHw==
+X-Gm-Gg: AfdE7ckzYZLrxuBTiQ582aqH9wRnhd0rf862M5E+wsGjx4mGlPae3+tc8TPbeXkMw6+
+	sDXRlXVGtTatp84xWBlbte2kjJ2kW9fP8Yaj/KEdaW0Bh12kvKnsJXgCiG4W7q7zMS4Zz9AnsBM
+	SFKHC6oHbBss2AvRU7OrKXfpb4xD2EkouGnSi4pLkpKggNRPqGLgu2SS21FUJaXPAKX38pB1E+4
+	bW+iyZvLKJxrmamqXGAA3ZYRThtc2SY1ooFlN15AEe1VCA2CaQ=
+X-Received: by 2002:a05:701b:4546:10b0:139:b575:d42f with SMTP id a92af1059eb24-139b575d811mr1982575c88.17.1782108783669;
+        Sun, 21 Jun 2026 23:13:03 -0700 (PDT)
+X-Received: by 2002:a05:701b:4546:10b0:139:b575:d42f with SMTP id
+ a92af1059eb24-139b575d811mr1982562c88.17.1782108783187; Sun, 21 Jun 2026
+ 23:13:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIyMDA1NiBTYWx0ZWRfX8yyn/o2OvtwK
- wSimFNCd8E5HZN8yytMyUaQ+Y4aKk8d8GDHPy9MEJy1O9XuAVBdtODI0nUJ/6L7JkWBVJxInWu5
- yDEN7gf+gtHLrMmXzDtw4SCl1Ik7sMKaxMMxyBrFbjytnybbUTWL5KNUH3PiX8Gzz5YpgEvifsP
- eIAS5I9TXTG+MnV3vtQMaz0GOPx2mX3sDvzDGUIwKe2/v5PO6grskorkRfT/M6D8zFBC5M6waWq
- FN5Ujw5NDq6RDkOWUspegLA3Kn9VUnWaCXwPDFQh1VQ4NTuCuwIxRaWs2qVim4OVNDJ23Uflhe8
- fnqmvi2BvBxDMMD31z3REpj0y5XXtS7N2BGfD9tm7+cjWwM+Pqi++Qexzv+HOwg3olcDIb9e+lS
- 0jZhFIHBakXbcZn3/mBh1UG3gvXvw4B/gttkWFCdm/tMZxdTXsbRui6b5huy3HT/83TpAuV98GO
- CT7KvKMVjLXhpWX+Xkw==
-X-Proofpoint-ORIG-GUID: 7PL2Ly2Qf8IMKCs4zGvaQrmPy_PL2LFc
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIyMDA1NiBTYWx0ZWRfX8UspBm69s3Ec
- u9yre6yl1zFC7PeSyBIuCye9kL+SCxsCzdbfXnjIcno/BCVedEMQWuB3TeDpSIAG6CJBzuf5x0i
- EuzB23AFtfQoU8htD4/s8qnkCWO4L6A=
-X-Authority-Analysis: v=2.4 cv=YtA/gYYX c=1 sm=1 tr=0 ts=6a38d003 cx=c_pps
- a=JYo30EpNSr/tUYqK9jHPoA==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
- a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=VwQbUJbxAAAA:8
- a=wHO1jfwDuY-934FNkv4A:9 a=zZCYzV9kfG8A:10 a=Fk4IpSoW4aLDllm1B1p-:22
-X-Proofpoint-GUID: 7PL2Ly2Qf8IMKCs4zGvaQrmPy_PL2LFc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-22_01,2026-06-18_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 phishscore=0 malwarescore=0 priorityscore=1501 lowpriorityscore=0
- impostorscore=0 adultscore=0 suspectscore=0 clxscore=1015 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606220056
+References: <20260618081803.2790848-1-aaron.ma@canonical.com>
+ <c3c9df7b-20ae-41fe-8cae-ad7f9cabe823@amd.com> <CAJ6xRxXhNmehDjP4Gdx8VM5zh4cXQK8NKWVddL3kEGoroHL6WA@mail.gmail.com>
+ <4280751a-87b6-4634-99c2-ed51f74ac29b@amd.com>
+In-Reply-To: <4280751a-87b6-4634-99c2-ed51f74ac29b@amd.com>
+From: Aaron Ma <aaron.ma@canonical.com>
+Date: Mon, 22 Jun 2026 14:12:51 +0800
+X-Gm-Features: AVVi8CczRx-0fwgAXhZEmygXXuqdWIcOW09YvpGv-7Ss0C9imGsn1mI6GGsZIaY
+Message-ID: <CAJ6xRxVMQTxV9E5jrbZAjjVv-qUhE6za5e_MjTbjnj9UduLm1Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: vgaarb: Include 0x0380 devices in default selection
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Konrad,
-
-On Thu, Jun 18, 2026 at 11:49:05AM +0200, Konrad Dybcio wrote:
-> On 6/8/26 11:17 AM, Wei Deng wrote:
-> > The lemans EVK has the PCIe M.2 Mechanical Key E connector to connect
-> > wireless connectivity cards over PCIe and UART interfaces. Hence,
-> > describe the connector node and link it with the PCIe 0 Root Port and
-> > UART17 nodes through graph port/endpoint.
+On Mon, Jun 22, 2026 at 12:00=E2=80=AFPM Mario Limonciello
+<mario.limonciello@amd.com> wrote:
+>
+>
+>
+> On 6/21/26 20:50, Aaron Ma wrote:
+> > On Mon, Jun 22, 2026 at 1:15=E2=80=AFAM Mario Limonciello
+> > <mario.limonciello@amd.com> wrote:
+> >>
+> >>
+> >>
+> >> On 6/18/26 01:18, Aaron Ma wrote:
+> >>> Some firmware boot GPUs report class 0x0380 (PCI_CLASS_DISPLAY_OTHER)
+> >>> instead of PCI_CLASS_DISPLAY_VGA. vgaarb only registers pci_is_vga()
+> >>> devices, so those GPUs are not considered by vga_is_firmware_default(=
+).
+> >>>
+> >>> On these systems the AMD GPU matches the EFI framebuffer but is
+> >>> excluded from vgaarb because it is class 0x0380, while the NVIDIA GPU
+> >>> does not match the EFI framebuffer but becomes vga_default_device()
+> >>> through the vgaarb's enabled-device fallback.
+> >>>
+> >>> Register legacy VGA and 0x0380 devices in vgaarb, and expose boot_vga
+> >>> for the same set of devices, so the firmware default device can be
+> >>> selected correctly.
+> >>>
+> >>> Signed-off-by: Aaron Ma <aaron.ma@canonical.com>
+> >>> ---
+> >>>    drivers/pci/pci-sysfs.c |  3 ++-
+> >>>    drivers/pci/vgaarb.c    | 10 +++++-----
+> >>>    include/linux/pci.h     | 14 ++++++++++++++
+> >>>    3 files changed, 21 insertions(+), 6 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >>> index d37860841260c..843d83ec9550a 100644
+> >>> --- a/drivers/pci/pci-sysfs.c
+> >>> +++ b/drivers/pci/pci-sysfs.c
+> >>> @@ -1717,7 +1717,8 @@ static umode_t pci_dev_attrs_are_visible(struct=
+ kobject *kobj,
+> >>>        struct device *dev =3D kobj_to_dev(kobj);
+> >>>        struct pci_dev *pdev =3D to_pci_dev(dev);
+> >>>
+> >>> -     if (a =3D=3D &dev_attr_boot_vga.attr && pci_is_vga(pdev))
+> >>> +     if (a =3D=3D &dev_attr_boot_vga.attr &&
+> >>> +         pci_is_vga_or_other_display(pdev))
+> >>>                return a->mode;
+> >>   >   >          if (a =3D=3D &dev_attr_serial_number.attr && pci_get_=
+dsn(pdev))
+> >>> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> >>> index c360eee11dd9e..0e0878189e3d8 100644
+> >>> --- a/drivers/pci/vgaarb.c
+> >>> +++ b/drivers/pci/vgaarb.c
+> >>> @@ -796,7 +796,7 @@ static bool vga_arbiter_add_pci_device(struct pci=
+_dev *pdev)
+> >>>        }
+> >>>
+> >>>        if (vga_is_boot_device(vgadev)) {
+> >>> -             vgaarb_info(&pdev->dev, "setting as boot VGA device%s\n=
+",
+> >>> +             vgaarb_info(&pdev->dev, "setting as boot display device=
+%s\n",
+> >>>                            vga_default_device() ?
+> >>>                            " (overriding previous)" : "");
+> >>>                vga_set_default_device(pdev);
+> >>> @@ -1483,8 +1483,8 @@ static int pci_notify(struct notifier_block *nb=
+, unsigned long action,
+> >>>
+> >>>        vgaarb_dbg(dev, "%s\n", __func__);
+> >>>
+> >>> -     /* Only deal with VGA class devices */
+> >>> -     if (!pci_is_vga(pdev))
+> >>> +     /* Only deal with legacy VGA and other display controller devic=
+es */
+> >>> +     if (!pci_is_vga_or_other_display(pdev)) >               return =
+0;
+> >>>
+> >>>        /*
+> >>> @@ -1530,12 +1530,12 @@ static int __init vga_arb_device_init(void)
+> >>>
+> >>>        bus_register_notifier(&pci_bus_type, &pci_notifier);
+> >>>
+> >>> -     /* Add all VGA class PCI devices by default */
+> >>> +     /* Add legacy VGA and other display controller PCI devices by d=
+efault */
+> >>>        pdev =3D NULL;
+> >>>        while ((pdev =3D
+> >>>                pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> >>>                               PCI_ANY_ID, pdev)) !=3D NULL) {
+> >>> -             if (pci_is_vga(pdev))
+> >>> +             if (pci_is_vga_or_other_display(pdev))
+> >>>                        vga_arbiter_add_pci_device(pdev);
+> >>>        }
+> >>>
+> >>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >>> index 2c4454583c115..195ec1bdac863 100644
+> >>> --- a/include/linux/pci.h
+> >>> +++ b/include/linux/pci.h
+> >>> @@ -792,6 +792,20 @@ static inline bool pci_is_vga(struct pci_dev *pd=
+ev)
+> >>>        return false;
+> >>>    }
+> >>>
+> >>> +/**
+> >>> + * pci_is_vga_or_other_display - check if the PCI device is VGA or 0=
+x0380
+> >>> + * @pdev: PCI device
+> >>> + *
+> >>> + * Return true for legacy VGA-compatible devices and for "other disp=
+lay
+> >>> + * controller" devices.  Some firmware-selected boot display devices=
+ expose
+> >>> + * class 0x0380 instead of PCI_CLASS_DISPLAY_VGA.
+> >>> + */
+> >>> +static inline bool pci_is_vga_or_other_display(struct pci_dev *pdev)
+> >>> +{
+> >>> +     return pci_is_vga(pdev) ||
+> >>> +             (pdev->class >> 8) =3D=3D PCI_CLASS_DISPLAY_OTHER;
+> >>> +}
+> >>> +
+> >>>    /**
+> >>>     * pci_is_display - check if the PCI device is a display controlle=
+r
+> >>>     * @pdev: PCI device
+> >>
+> >>
+> >> This patch doesn't seem correct to me.  It's overloading the purpose o=
+f
+> >> boot_vga to cover non VGA devices.  We should be using boot_display.
+> >>
+> >> Trying to hypothesize what's going on here - I guess you're seeing
+> >> boot_display set for more than one device due to enumeration order.
+> >>
+> >> Can you see if this helps instead?
+> >>
+> >> =E2=95=B0=E2=94=80=E2=9D=AF git diff
+> >> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video-comm=
+on.c
+> >> index 152789f00fcda..9440eb3a7b15d 100644
+> >> --- a/arch/x86/video/video-common.c
+> >> +++ b/arch/x86/video/video-common.c
+> >> @@ -43,9 +43,6 @@ bool video_is_primary_device(struct device *dev)
+> >>           if (!pci_is_display(pdev))
+> >>                   return false;
+> >>
+> >> -       if (pdev =3D=3D vga_default_device())
+> >> -               return true;
+> >> -
+> >>    #ifdef CONFIG_SCREEN_INFO
+> >>           numres =3D screen_info_resources(si, res, ARRAY_SIZE(res));
+> >>           for (i =3D 0; i < numres; ++i) {
 > >
-> > Also add 'compatible = "pciclass,0604"' to the pcieport0 node in
-> > lemans.dtsi to allow the PCI subsystem to associate the DT node with
-> > the PCI-to-PCI bridge device.
+> > Hi Mario,
+> >
+> > I tested your change. boot_display becomes correct, but the issue is no=
+t fixed.
+> >
+> > The kernel state becomes:
+> >
+> >    AMD:    boot_display=3D1, boot_vga absent
+> >    NVIDIA: boot_display absent, boot_vga=3D1
+> >
+> > Current Xorg checks boot_display || boot_vga, so both GPUs still match.
+> > The selected primary GPU still depends on Xorg's DRM device enumeration=
+ order.
+> >
+> > So boot_vga is still wrong, and that still matters. The kernel should n=
+ot
+> > expose boot_vga=3D1 for NVIDIA when the firmware framebuffer is on AMD.
+> >
+> > My patch makes boot_vga and boot_display agree on the AMD boot display.
+> >
+> > Thanks,
+> > Aaron
 >
-> Ideally this would be a separate change
+> Got it.  I still don't think it's correct to overload boot_vga.  It
+> would be better for us to not show boot_vga at all - because it's not
+> correct.
 >
-> Also, b4 can't grab this patch since there's something wrong with the
-> threading (multiple series in a single thread) - please switch to using
-> b4 for submissions yourself to avoid such mistakes.
+> Maybe we should drop the fallback code in VGA arbiter that is setting
+> NVIDIA as boot_vga at all.
 >
-> https://b4.docs.kernel.org/en/latest/
+> Could you look at doing that?
 >
-> Konrad
 
-Thanks for the review. Agreed. Posting shortly.
+Hi Mario,
 
---
-Best Regards,
-Wei Deng
+I looked at dropping the fallback. I don't think we should remove it global=
+ly;
+old systems may still need vga_default_device() when no firmware framebuffe=
+r
+owner can be identified.
+
+For v2 I will keep the fallback, but avoid the wrong result on this system.=
+ The
+0x0380 firmware display can become the default/boot_vga device, while legac=
+y
+VGA decoding and ownership stay limited to pci_is_vga() devices.
+
+So this keeps compatibility, but avoids reporting NVIDIA as boot_vga when t=
+he
+firmware framebuffer is on AMD.
+
+Thanks,
+Aaron
