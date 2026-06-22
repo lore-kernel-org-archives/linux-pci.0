@@ -1,130 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E31C729D291;
-	Mon, 22 Jun 2026 14:30:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7153390CBA;
+	Mon, 22 Jun 2026 14:33:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782138650; cv=none; b=UXdCihG30vD4PSkGEoHvUeYcU/1rZWQ9p4WKXz9EuWb1jETgsMNRqwmkmzTZeqbjuNqVmJVaIy3axQeeOI4JrFn5arSTS3BmWKGnfjny3oYFdiRDF6Or7TqhadsE0zrzH+DDGORTTntzAQLDZxlsSK7s1LovHhd5+w3Y/Hhl3L0=
+	t=1782138808; cv=none; b=OD1Jsg1/Y32VgmLzrDyzF1RnQXB88O6inKTmzTAV4DJNXgCGpJ1fu4T90Rh2VIgGXi4FXGJahaEvVOzWthiRta6WipifrIN1Kv2mFDUcqx8rdSfretwOGQhanETZvrGSG2SWe0a2VOmdN50BMqWzVAS1QhFgWXYc8O453TE5n00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782138650; c=relaxed/simple;
-	bh=2/KCs5cXviVR0AWXnT72lyR1D13dxtQZZGsCKYjBlvc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NWzScgN60XsbGidT05yKh8q7itPTFO5G7RAK2NKxhuenzIZeZXM4PbGuCzXQa/cDPwPzs05+qrlShsasGlHA9ySkckVJzSbP7/ociYBl5d+QkttkfShGxR1rXFJB7JE6qSX0868xl9zzr1IEM75M/pk6JHTGddaJK25aZamYie8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GGDzqL9U; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782138808; c=relaxed/simple;
+	bh=BBRO4BaVZPNZInZLfWHLLV56eOKNHVltJgJCKNoCM2g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t9MBjNPiyHTuUh6T1Z5LGKxNshrjjr2fcwxDPob7QlI9wBUZ88ZnJ9sI/1CZnvXnpZy/tV1gW4gEuETlcfeJ19nlqbaoKPY1viZSCakxNDb+ppja7YuP1NpKbT95JV3kLG7Qrwjx4Ulc28kfpyUYXGLEYEwl5RURdW0cRVS9FX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=h1dZNLrq; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=FdCx3pp8; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GGDzqL9U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53441F00A3A;
-	Mon, 22 Jun 2026 14:30:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782138648;
-	bh=Sh2R1sfAQBWk4IEUspavNMGRBRkiMYOuCiBxaMrOB88=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GGDzqL9U0o/ME1ub4lBGJ1/VIUgsPexkDLuWdcp8Q5X11zzcMopYU6WKdnrp8Cda3
-	 SeMDKHzRP3ZFPahd6l69xdjGJmKQiRGoaQerBTXcdQ01V/TSTqTJQzv3i+Gr40CogW
-	 JsdxdiHj42K2E6DdxErMTecfA/Z5Gwut61beCciwc7D58j7F/Dcv25XTDbBKaXL31V
-	 hfw07sBZrYsDOC4zTHyQ/VIp/v6caLw5CkH8KOeHf3Rg6/twquH+2KtvN9aLhbEjvW
-	 uBgNPxaGco750ZF+fZ90EciDbcTsH2aZ0o62NMFgG1Q9dseMsD5d1eNIK9Xk0lAEZZ
-	 7GO5yAe9MCoyw==
-Date: Mon, 22 Jun 2026 16:30:37 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Biju Das <biju.das.jz@bp.renesas.com>, Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: Re: [PATCH v4 2/4] PCI: rzg3s-host: Use shared reset controls for
- power domain resets
-Message-ID: <fuefvecgjdqbnbvpvam4gmewmpmhofllyq2ootwi6cjqhnyoys@edjzqlh6fjw4>
-References: <20260602195019.1798126-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260602195019.1798126-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <50a908557bb3ce5f14b67396d1e73e70289a583a.camel@pengutronix.de>
- <CA+V-a8uGho2RMhreDgieOOZTggUALoF0bGyjdEEDvyL_75sAyw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="h1dZNLrq";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="FdCx3pp8"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gkVqF3tyGz9vGs;
+	Mon, 22 Jun 2026 16:25:45 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1782138345;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIgTdG49SDgzzqZu1X0DrxQsOeL+D74IHpuZMcKgJbQ=;
+	b=h1dZNLrqpWihL5Z8j1HgL/7ltb6LGPc5pnvJ7XfUHI6k6ZxssabXl7UbT4ktm6cUT1muJS
+	E5e4FWh5MfNKVPP1Bza4lSvQyfoTM8Qm+u4nblJZSn1yim96Bt3+dog+UwkUeY9p1ZIEzW
+	8w6Sh74i/8K3fpU0eiUEiPxwlHuzz4taRDanKOkYTbq49Gg/PzrYB4QcsLi2vWgzYuMSFJ
+	qWylKWtFCh8S8YVKg1t0U9E+8stoyXoULsY97EdAaxobxbSw7IvTMmIz3ObGj9uTn22JCQ
+	hrT9VW2aESvwsZa0Ywkbzn8ht3y+Ztqi2AHMRwxe7VmD6BIgJ+fBCMnK/X4hDg==
+Message-ID: <f980c840-bdf7-4c00-bbdc-ced7b1b9f63f@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1782138343;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OIgTdG49SDgzzqZu1X0DrxQsOeL+D74IHpuZMcKgJbQ=;
+	b=FdCx3pp8lU9ekFGj1xizyWveLlHlfBotiaxbTE7vDgY4F1qMp1UkTG0ENBC8av8OG2LltY
+	88VltbsPZan62gDpBmDWIbQH5hSyTccgvoLwUDoYFlcEN3bfmaHj6p3l9MJ8mUakdpy+Na
+	apB2EBBt522Z8ZMAZp+5rMK1uI3jdWYTqdsbcvoJ66N4/CAC+8dPzNjRvO66DbzW876cnq
+	2Q2ZBbU5Z7bYt7dIA2cChr3jV/3dXzRPODl54Vz2cLEvbHvpShOCPuSno0U3QGNfbR1kil
+	bMHdz4L5GRFX+eG0VUtF64/VlstCduExqUrMhARHXYUeTeImQNyp+7pSSwrmVA==
+Date: Mon, 22 Jun 2026 16:22:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+V-a8uGho2RMhreDgieOOZTggUALoF0bGyjdEEDvyL_75sAyw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] irqchip/gic-v3: Refactor GIC600 limited to 32bit
+ PA erratum handling
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley
+ <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260618220427.14325-1-marek.vasut+renesas@mailbox.org>
+ <20260618220427.14325-3-marek.vasut+renesas@mailbox.org>
+ <CAMuHMdUxT87M1oQvPP_h4YX4vXFaVbbG+LCG8EdmuLTuHNtybQ@mail.gmail.com>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <CAMuHMdUxT87M1oQvPP_h4YX4vXFaVbbG+LCG8EdmuLTuHNtybQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: h9ynyzsu8mzdxzd9637onuq1ybxfbah7
+X-MBO-RS-ID: 86ebaccfe5fcbdd292f
 
-On Fri, Jun 05, 2026 at 12:54:46PM +0100, Lad, Prabhakar wrote:
-> Hi Philipp,
+On 6/22/26 11:52 AM, Geert Uytterhoeven wrote:
+
+Hello Geert,
+
+>> +++ b/drivers/irqchip/irq-gic-v3-its.c
+>> @@ -4890,10 +4890,17 @@ static bool __maybe_unused its_enable_quirk_hip09_162100801(void *data)
+>>          return true;
+>>   }
+>>
+>> -static bool __maybe_unused its_enable_rk3568002(void *data)
+>> +static const char * const dma_32bit_impaired_platforms[] = {
+>> +#ifdef CONFIG_ROCKCHIP_ERRATUM_3568002
+>> +       "rockchip,rk3566",
+>> +       "rockchip,rk3568",
+>> +#endif
+>> +       NULL,
+>> +};
+>> +
+>> +static bool __maybe_unused its_enable_dma32(void *data)
 > 
-> Thank you for the review.
-> 
-> On Wed, Jun 3, 2026 at 9:16 AM Philipp Zabel <p.zabel@pengutronix.de> wrote:
-> >
-> > On Di, 2026-06-02 at 20:50 +0100, Prabhakar wrote:
-> > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > >
-> > > Switch to shared reset controls for PCIe power resets to prepare for
-> > > RZ/V2H(P) support. On this platform, multiple PCIe controllers share
-> > > the same reset line, requiring shared ownership of the reset control.
-> > >
-> > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > > Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> > > Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> > > ---
-> > > v3->v4:
-> > > - Added RB/TB tags.
-> > >
-> > > v2->v3:
-> > > - No change.
-> > >
-> > > v1->v2:
-> > > - Updated commit message.
-> > > ---
-> > >  drivers/pci/controller/pcie-rzg3s-host.c | 6 +++---
-> > >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > index d86e7516dcc2..a5192e4b58df 100644
-> > > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > @@ -1276,9 +1276,9 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
-> > >       for (i = 0; i < data->num_cfg_resets; i++)
-> > >               host->cfg_resets[i].id = data->cfg_resets[i];
-> > >
-> > > -     ret = devm_reset_control_bulk_get_exclusive(host->dev,
-> > > -                                                 data->num_power_resets,
-> > > -                                                 host->power_resets);
-> > > +     ret = devm_reset_control_bulk_get_shared(host->dev,
-> > > +                                              data->num_power_resets,
-> > > +                                              host->power_resets);
-> > >       if (ret)
-> > >               return ret;
-> > >
-> >
-> > I have a few questions about this.
-> >
-> > Can you move rzg3s_pcie_resets_prepare_and_get() and
-> > rzg3s_pcie_power_resets_deassert() up before setting
-> > RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B in
-> > rzg3s_pcie_probe() without ill effect?
-> >
-> > Can you move rzg3s_pcie_power_resets_deassert() up before setting
-> > RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B
-> > rzg3s_pcie_resume_noirq()?
-> >
-> > Those would have the same effect as the reset already being deasserted
-> > by the other controller.
-> >
-> Yes to both. I have reordered the sequences as suggested, and it works
-> perfectly without any ill effects.
-> 
-
-Are you going to respin the patches incorporating the review comments?
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+> __maybe_unused can be dropped...
+I will fix that in V3. Thank you !
