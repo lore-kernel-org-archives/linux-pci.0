@@ -1,291 +1,177 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012016.outbound.protection.outlook.com [52.101.48.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 967A02C032C;
-	Mon, 22 Jun 2026 04:00:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.16
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782100813; cv=fail; b=P7lQc0KWjKlFt0dFQHnsQxrG/al80rEN2Nq1y2xV+ChJrRiFik0auiBkgzfLgzggEUTWvjquy4xr/YrEiPTMRntQQbjQ9oSFJhK5MUG74e1jN5oCygyNioU1OEOMOlQGaCDB7suTHf7/Vf1dXLEwebkdcZIwTjP1w05taE9dIdM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782100813; c=relaxed/simple;
-	bh=+iQF4sQOv9qa6Ow7TB0na6pB8fqrZplmnNXWuxFVTlg=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=JWbvZ+mq8qmaSBZLVHTZie5C39Sq2H5Qv6mxtkVonu9Isl2yqW3EEva0iRen1uj4iNPYGCdq5r5Pzu4C5vDX22ORA1niyern8pkZBiuuJ5wtF/km4W7N3p0MKgjMLMnnZmO7TYIK7vJOpEk8VoJkkBYKgszaquYspxp1Yofr80Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=aY/aEZW/; arc=fail smtp.client-ip=52.101.48.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA13135203A
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 04:01:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782100912; cv=none; b=bE+qeiSykqoXUvVE4rQovOpb0A/4O0wt7g2WwauUtYvXHaQk61dOnT0s5lTAI5jS9wWivUxlUpCpYGjWYCloVg1fICRUAQGzsqKRnhX7ypAqVdRIsSjsT9yQDvb/KFMssx8Rx2vqrInv/P0mhYJIknPaojhiiKBXJ62KAtEXQqQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782100912; c=relaxed/simple;
+	bh=19sCJyPWCM00fWxbvSdBYcy4yH3JWfYtpDfFnrFmaTo=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=TgFTaVAzSk+WVZ8ie8ovBE6mntsIkKWCo7pNlch1wXZYJ/a5kDLEQ6DWN6vZfASVFwNxF9Ye03oUL1gHkMfrEwetvMlkm+cP0kPjBiSKMYDsQyTHhMgSK1Af9jpSd+Ljgt958rsAarElxdLAjm6QI1hnAwjp/neX0aasCnXOCsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UZrhTIoz; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="aY/aEZW/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xxxRYgyt+mjogJW0MglLbK7X1Snn28nMS57q+WejuEvb3XaOFQqMM8WGw74f0BXK/ZVwzST9ZsbSfTt58HFOd4+7P4A/VJR9AdL2zjSSVvgkp2kdumGLnjeDZQVIX2lSDcYlXrXn7KnP5KvLMSjueJWP8jOmTKK5TLdI5+08OD7RZG8PfB5kYd5LdqkLlC/Nf+K15tB5VPMD76oQzAp4VYCk+Bdq4Vs5b43qtrYQ20W51pmUVEUOMNIOaaKGvBp3aJejSbp5IJ1EXzrKBeNISPkRb5avRrb68/fkP4Wcgl35diDUHSZeYVyWWyZVGEG2O+ivSDiUBAvgKqf6/AOzDA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3vxFF0iVgVUrjeTV8JX/nJG6tjBDVONOm3hdJ3mXc0Q=;
- b=HTrLvS0Iv0g4M7YuzaB+GNpaaEm7hjZ2oS5amRKBzI51db8YdjG3fSE0aeyHqYT5wk6jnY8058+Z5m69OQ5/UYgd4dvxLPvV1T+3zQs00ErecZ8LGS4wRHLGRj4/96acCsZqtK/ADjlpzXTfDXPmQW/77LMYuOipgum+xCWV2lrldOcGDqU4cekjPzLSahDgCuz6vUAzixvX7MwebiK+AiGWj0ygyLHxiL5hCDhQ6Xn6M6xHIc07gVmH8bzo240IM+GaOiDc+qO1+up5kKiNfosMT/zXWLjlADDV0xREWaGkyw3EH7qv+Gx6Fe8cQlvMBSZAwF1v1loUuU+x/Xh54A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3vxFF0iVgVUrjeTV8JX/nJG6tjBDVONOm3hdJ3mXc0Q=;
- b=aY/aEZW/AuQwtjEYnMfG3YD3BnO4VymVCAd3yk5xJ00Pjw0eXwGFOkP92FyIYOsEv7v0IjqKRT+KdfQVtR4hBB9iKVUHRMiiflDeqXoZ8hY05cJ+qvqE7JlzKkmwVHzQiG/v5IZTMUE+DqTjXx63HV2ZrsQtojKEfQuLQ3a5BMc=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by SJ2PR12MB9137.namprd12.prod.outlook.com (2603:10b6:a03:562::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.11; Mon, 22 Jun
- 2026 04:00:06 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%6]) with mapi id 15.21.0139.009; Mon, 22 Jun 2026
- 04:00:06 +0000
-Message-ID: <4280751a-87b6-4634-99c2-ed51f74ac29b@amd.com>
-Date: Sun, 21 Jun 2026 21:00:04 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: vgaarb: Include 0x0380 devices in default selection
-To: Aaron Ma <aaron.ma@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260618081803.2790848-1-aaron.ma@canonical.com>
- <c3c9df7b-20ae-41fe-8cae-ad7f9cabe823@amd.com>
- <CAJ6xRxXhNmehDjP4Gdx8VM5zh4cXQK8NKWVddL3kEGoroHL6WA@mail.gmail.com>
-Content-Language: en-US
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <CAJ6xRxXhNmehDjP4Gdx8VM5zh4cXQK8NKWVddL3kEGoroHL6WA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: BY1P220CA0047.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:a03:59e::9) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UZrhTIoz"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8dd586317ccso36944856d6.2
+        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 21:01:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782100910; x=1782705710; darn=vger.kernel.org;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kzCKCvEKcIAbbLzhVk7tgcr56H+29gkKFj7JV8ys4ro=;
+        b=UZrhTIozo8EDkYeldd0eEDegHBihbDXr+8PDKepplDdFbXqVn8rWNu/wIAWCDIG5Ze
+         PRwAEHvC41ldtdI8kThzt0p9x0IhUua/EsNsT7Xy1tSwfD6SVAX2bwXqq6FeYXBjCe89
+         XHmpP+74tAJLL71pZVNcgi85rkARY8EDtUo68he41H8Tnyuj5VUdoxAZrpuo2Q48VxFj
+         Vx/3JU2ZE46lrq8ukRSi0+aA1pvXwEQAsuniOSGlI5VOyD3yJ0b7KrpN3/QqAN2RxpYK
+         5LAaGAFyHGx1oSc/6UpiTdtNXiBmqxsvOqnu4lh47Ltpj/MzQzXH/pFV5aiLzEVvXfIG
+         XIpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782100910; x=1782705710;
+        h=to:cc:date:message-id:subject:mime-version
+         :content-transfer-encoding:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=kzCKCvEKcIAbbLzhVk7tgcr56H+29gkKFj7JV8ys4ro=;
+        b=aJbdBbmoFLpvheMKvv39gFfc21i9VtSM9naW3Yvzbi8Wd5b7BKXWbseot5EoV99g8h
+         VtvzQvBI1stGOpkyLw7IlhrV0Av6yxZ7LBUtRqmLHVOXkQEJ0ygzE/zAWYuwMuTGzokz
+         kkrPkzqFti/K8Oh2mq1pHDpmkFEryvY4fGqe7HpnreZdJf6FjhbyuTJ/Taof18Jm7AG8
+         YDsWUQo1ucgmyUctf1rEk4xKJWVu3sGYX0NoUu3ggUrxQUdCO9SeI60sKe12zts6/yDQ
+         fUS8InoAY3e6OL58Q85g/2786RUqw9Cht1EvzUDNwH+iYP+1kX+D2byOQwOjrSQJedba
+         mYdw==
+X-Gm-Message-State: AOJu0Yw3JhqAlli5LpsUJ3tCK4m+Z+rdh+kZTyOvzcLAhkVMOQwSiGkm
+	5eTqUTiIvGVRt5ZceoJMxKPgcAORXIzMppE0hItje3Kv+/J8ZEI3ROkJnl3OZI+Y+l4yIw==
+X-Gm-Gg: AfdE7cnBr7KJo4v7Nv68yd7CKujxkqfKCvsE16g32v3uQ1hKe2iiBts7PlRR1xX4ugh
+	EuxekmoPyQLjrXzRQLD+NB5Lm61U+UF7WkvjkooTnIiK/vjV5egU9/KFCUpzGSXO3nh/AvVW1o6
+	Z6ZGOhTT5HiW8r9PBGUT2BDxR6+K6fCYfetjlzEoRmsb6dRfj4omlQwwh0TJYVTsT8pRu6b3ywh
+	VFc5FrKbDZMeqOOc+aMxzKiW127GkHSSPKv44JCLHNPVK7viAFiXTWVMk8WIZSwYHJ9/H1etgJw
+	3ZlmcnBJAYSN3sELZtazudwPo6H6+hmEMocxvQN43uRl82IZi1Q04HESRohWEJejRBLkzsadEEk
+	wsWQ76SjoL8QJwg9tYtS94M5sGdhV+jI6EDXrAUNsdDUEHjB5LfDh9+jdE2lVD7hygI3oWJtXAX
+	rIAIb+iG43j+UaExhAgFnhv1E52rI5GH/2WL0J6ld5fICJ3ihIyii0HEqw4sRqmLo=
+X-Received: by 2002:a0c:cd87:0:b0:8dc:30ac:e011 with SMTP id 6a1803df08f44-8de42744f62mr169552606d6.42.1782100909696;
+        Sun, 21 Jun 2026 21:01:49 -0700 (PDT)
+Received: from smtpclient.apple ([2601:985:4601:5df0:c86d:bd73:bd2:2455])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8df81cdeebbsm86787196d6.29.2026.06.21.21.01.48
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 21 Jun 2026 21:01:49 -0700 (PDT)
+From: Shuangpeng <shuangpeng.kernel@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|SJ2PR12MB9137:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8f30e85c-f371-477a-8287-08ded012beae
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|23010399003|1800799024|18002099003|22082099003|11063799006|56012099006|6133799003|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	cbwQ5Wh2B/GE6OGPizugfmn9NC4c8dUtGw9VMajeFuO7ByJriy7/RltjGlP3yjPnpjJ3BaJLS98+OGN6/BLwAWX0clPh4oH3F4FDecJr4lCxaa3V626Y1k9gQDisy7dVOAxo+O+np0YnrvmYOee0yjCfH+3gzHIQ+a5gAwpPSWbDirWYdbqFglwlTI7irI2D7vaPmfkA7eRJOq/lX1BlC7DBwbkBMrzgjADX1uJh21mInSggc/5v0R+wts/7A6MVMOUuoDHdROd2NucMg1MIfI3TufQX1QW1PIK9GrqnO5txrkwW13hSgVhYokzT9nuc+qCQWVKoIKto3xV2PsSwFrTPR/UOoWcC6dIa07/7fmqFc5hvfg74fviJ6HK7gY5M57fXtIsVvY4NmaeUh3++M9c1jAGDvCeK/axtqiSY409ghseeNLwgHk09GIKCQogc+1Hl7e2x65dQvPRBm9HCMZRvyc9XQzZIR+cbndszZ3LxOvpbwh7sEHGtG1p2sSoMS5YBoDepFl0ZdIvLTNfZunDE8P5y3eQxXQnyOntkLU7J+4r6xurkcRmgqqycDbEH4b+rh9SsDnZI6VlOPiU1biWWe2BLL5UJ0uF9vz16jIbA+eoBW0Jb34qTzc1S2gl+s+lFzYboh7OUqc/mGZsQqhV5GanHQ1BDGR8ZgNabAjA=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(23010399003)(1800799024)(18002099003)(22082099003)(11063799006)(56012099006)(6133799003)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cVRSODB0U0hPbUhJVlh4UG93dTMwTUhEUDFYRzBHY2tjcytqOGFRZml1TDhl?=
- =?utf-8?B?SUd3dU5sRGszSVJKc1VrLzVjRjBZRnRBZExZVUlVU0VENURKUDB6NUNqV2l1?=
- =?utf-8?B?djQ0S2NnUXVCU0pnVVZwV0VaOGwwak1Gd1pFaE9qY1Job3p3SGZQSkJDOWRO?=
- =?utf-8?B?MUUwSFBWZmFuL2NHZDhpVWNrOXpseE9YeEh2b25ablloQWw5RDhjVFFESnFC?=
- =?utf-8?B?NmV6ZWI1SHRFUm9xbjNQbzYvKzZJWUdmZkNsazlVWm1lSGE1WVZ0RzBubFUv?=
- =?utf-8?B?d20zVUJNZm5KTG5yZkZTd2J3L3YrbVl1L0dxNkdwTFBUeXpOMXA5U3FMMFZ1?=
- =?utf-8?B?bC9yeFBXVzlPcTVBZTlrbENjOGt2RVZ5MW1uc2xHSWJ0VE9RQVJDTDV6dFBQ?=
- =?utf-8?B?ZHM0YlhvcHhXUFVCYWxHRk55NWIwMHRiK0ZlamJGM3JCV1Zva3dLbWJlM2o4?=
- =?utf-8?B?cXhqSWpRaStnOHozbmZBTVJKN0kvOWJURUc4SjJ6YkV1LzVFZmo4QTFHVEgr?=
- =?utf-8?B?d0FUQzdVSDdUT2xVZ0FUQ2lhTHZpUHRLUzdTMU9OV0szbCsrbXNST2RpaFcr?=
- =?utf-8?B?dW9ubmZveWJoZFQyMXlEdlNCdmJCR3lYdHVnUkM2NUUzMk8vLzNrZnIvVWZu?=
- =?utf-8?B?UzdiR25WOEQ3aEt5RTdXQmhza1JUZW1XNTlvR0xPZ3hZTzg0SE5wOTdXMFB6?=
- =?utf-8?B?S3FPSEZDVmxIbVROa2NobDFMamUxeTNjZXpKWlNLa1VYWmM5R01hYUNEckNC?=
- =?utf-8?B?YUlETi9pTUR3M2U3NEQvbWVnc01QWXBMOVg3NjJnMyt6TFlBWEVaNTFveVpS?=
- =?utf-8?B?L1V5bk5OOWRZcXJNdnJvY3paVmNZMWc4bzVDOVR4SW9rd3N2Rmo3ZjRzWTFI?=
- =?utf-8?B?NFAyRVlpeWZjWWx5UnJWNG8veUNZa2dCdldXcGI3a1UzcUYzYXdtTHJWMFZ2?=
- =?utf-8?B?WldRNHMwdkxSUXprOWxiU0lvdVgrTE5QTCtpUTZXNFpCR1dEbUpNbytjaDFz?=
- =?utf-8?B?ek5tcFZKTXdCN3dwVXFwckVQMWdzbFZKYTV2MWovd3BWVVYwelhzNUtJd1Iv?=
- =?utf-8?B?UTZCTXpDWnhCN1diS1lCRUQ0bjZ1ajk3QXJXaW80SEdiVGNQYmJoWHRtM05G?=
- =?utf-8?B?YjZMSTVHRGRna2ZsTTh4VS82Z2ZIdHBaV2p6U0IyM1REUFpLVndTYVAzNC9i?=
- =?utf-8?B?cnEwV1ROeWRPRkhLeE1EVTJmcE0wVWE4QmNXa0xqNTFsUGFLTXJETUNyMmI4?=
- =?utf-8?B?MlRTZDlVd2I0UGVVcnNMbVNxb0JycUVZK0pjNFA3U21RemhjaC9VcXVZS0Nu?=
- =?utf-8?B?UDVUcUdLb2ZVTzQxaGVmU2dMMFR6WDZQLzNTZmhnakxlTGExZWxpWENLUWpE?=
- =?utf-8?B?WVQyRzlrN1FjVTdyR0U4MEZTZlNxVHRIN0FQaXV2Zk10K1k1Ly9ndEJJd2Q4?=
- =?utf-8?B?cWFrSk5EUEl3WjJValArSVRIdW56TG9ya1Q1dlVqRWtKUG9MWlBReEEwTitk?=
- =?utf-8?B?K00zVGYxS3I0OTFCQ3o4Tytjd3MrY2MwbTZCMi9FSlFEdnF4V3ZHL3lnNXZo?=
- =?utf-8?B?Ti9EY1RPSHpHbllnSlVsdVBUY241bHhxOGIrL1NHL204VzJITFovbFZFei9L?=
- =?utf-8?B?OGJ1TklibjVXQXZBMHE1UkJyNzh4dUVJSHpiRXNrV3luc01SOTlVaDBrU3gv?=
- =?utf-8?B?TG5KWVlpR2xoOW5ickF0U0UrdVphQXI2c2ZuWDJoQUpDeXhMclBycCs4akFs?=
- =?utf-8?B?N3pkZTRuNURXK3pTUFFPbSsvOEc2U3o5SThjNjBVOTUwaVA3T2VXdmhHd0hn?=
- =?utf-8?B?RnFvVWtWSjZ4Sm1RUTNqSzc0Uk94Q3VoNnA4NDBoYzBoRVR4ZXZEbkdwMG9L?=
- =?utf-8?B?anNyUG50Q2RqOXBwSDJNTGY4L3YyandtSHA2eUR4YnlKaEhqeG5MdERDdFpv?=
- =?utf-8?B?MjZBM0dvRVhZUDlidUprbVZ2MW1kd1NmUTZjRUNDM2hRcnN2UWVMOUZ3Zi9O?=
- =?utf-8?B?Z2t4eGlBMXpFMURUYTBDWEFjZnlzelhJZFVKbzJyQzM5bks0bDVkemJSZFpi?=
- =?utf-8?B?NzdQc1hUdXFUQVFpMStVL3kxY21MV1FTbjRQc3RVTWc4R3Q1WS9aR0VXYnNl?=
- =?utf-8?B?UE5hRnZRZ2QvQ3VJU3RaZ2plRGRoVFVnMi92aCtISWZJRDlmR1FOdnFhcTY4?=
- =?utf-8?B?YXdNOGJKemhld0tjVUFiNjNCWTk1ZFBPdEFVYSttNUpqL29YYmxSTU9oSUlE?=
- =?utf-8?B?ZGs5MFV4eTZ3MDRIMUdzMGJOaFNsb25Gdkk1OHhKYSt4RnZBdkFWUnl2SGMv?=
- =?utf-8?Q?OcdoFHB5R1BV6/zS4U?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8f30e85c-f371-477a-8287-08ded012beae
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2026 04:00:06.2713
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JxVP18KFJyunNDFhC3amytcXx3yIDxqBGdJXIA0UpGBIi77Urjgj5rbEu8bRxNQMmfW84mHxAe9rXczAgq249Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB9137
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: [BUG] PCI/VGA: KASAN slab-use-after-free in dev_driver_string from
+ vga_arb_release
+Message-Id: <330FD8DD-ECBF-4531-900E-5B976FA9DF90@gmail.com>
+Date: Mon, 22 Jun 2026 00:01:18 -0400
+Cc: linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+To: bhelgaas@google.com
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
+Hi Kernel Maintainers,
 
+I hit the following report while testing current upstream kernel:
 
-On 6/21/26 20:50, Aaron Ma wrote:
-> On Mon, Jun 22, 2026 at 1:15 AM Mario Limonciello
-> <mario.limonciello@amd.com> wrote:
->>
->>
->>
->> On 6/18/26 01:18, Aaron Ma wrote:
->>> Some firmware boot GPUs report class 0x0380 (PCI_CLASS_DISPLAY_OTHER)
->>> instead of PCI_CLASS_DISPLAY_VGA. vgaarb only registers pci_is_vga()
->>> devices, so those GPUs are not considered by vga_is_firmware_default().
->>>
->>> On these systems the AMD GPU matches the EFI framebuffer but is
->>> excluded from vgaarb because it is class 0x0380, while the NVIDIA GPU
->>> does not match the EFI framebuffer but becomes vga_default_device()
->>> through the vgaarb's enabled-device fallback.
->>>
->>> Register legacy VGA and 0x0380 devices in vgaarb, and expose boot_vga
->>> for the same set of devices, so the firmware default device can be
->>> selected correctly.
->>>
->>> Signed-off-by: Aaron Ma <aaron.ma@canonical.com>
->>> ---
->>>    drivers/pci/pci-sysfs.c |  3 ++-
->>>    drivers/pci/vgaarb.c    | 10 +++++-----
->>>    include/linux/pci.h     | 14 ++++++++++++++
->>>    3 files changed, 21 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>> index d37860841260c..843d83ec9550a 100644
->>> --- a/drivers/pci/pci-sysfs.c
->>> +++ b/drivers/pci/pci-sysfs.c
->>> @@ -1717,7 +1717,8 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->>>        struct device *dev = kobj_to_dev(kobj);
->>>        struct pci_dev *pdev = to_pci_dev(dev);
->>>
->>> -     if (a == &dev_attr_boot_vga.attr && pci_is_vga(pdev))
->>> +     if (a == &dev_attr_boot_vga.attr &&
->>> +         pci_is_vga_or_other_display(pdev))
->>>                return a->mode;
->>   >   >          if (a == &dev_attr_serial_number.attr && pci_get_dsn(pdev))
->>> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
->>> index c360eee11dd9e..0e0878189e3d8 100644
->>> --- a/drivers/pci/vgaarb.c
->>> +++ b/drivers/pci/vgaarb.c
->>> @@ -796,7 +796,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
->>>        }
->>>
->>>        if (vga_is_boot_device(vgadev)) {
->>> -             vgaarb_info(&pdev->dev, "setting as boot VGA device%s\n",
->>> +             vgaarb_info(&pdev->dev, "setting as boot display device%s\n",
->>>                            vga_default_device() ?
->>>                            " (overriding previous)" : "");
->>>                vga_set_default_device(pdev);
->>> @@ -1483,8 +1483,8 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
->>>
->>>        vgaarb_dbg(dev, "%s\n", __func__);
->>>
->>> -     /* Only deal with VGA class devices */
->>> -     if (!pci_is_vga(pdev))
->>> +     /* Only deal with legacy VGA and other display controller devices */
->>> +     if (!pci_is_vga_or_other_display(pdev)) >               return 0;
->>>
->>>        /*
->>> @@ -1530,12 +1530,12 @@ static int __init vga_arb_device_init(void)
->>>
->>>        bus_register_notifier(&pci_bus_type, &pci_notifier);
->>>
->>> -     /* Add all VGA class PCI devices by default */
->>> +     /* Add legacy VGA and other display controller PCI devices by default */
->>>        pdev = NULL;
->>>        while ((pdev =
->>>                pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->>>                               PCI_ANY_ID, pdev)) != NULL) {
->>> -             if (pci_is_vga(pdev))
->>> +             if (pci_is_vga_or_other_display(pdev))
->>>                        vga_arbiter_add_pci_device(pdev);
->>>        }
->>>
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index 2c4454583c115..195ec1bdac863 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -792,6 +792,20 @@ static inline bool pci_is_vga(struct pci_dev *pdev)
->>>        return false;
->>>    }
->>>
->>> +/**
->>> + * pci_is_vga_or_other_display - check if the PCI device is VGA or 0x0380
->>> + * @pdev: PCI device
->>> + *
->>> + * Return true for legacy VGA-compatible devices and for "other display
->>> + * controller" devices.  Some firmware-selected boot display devices expose
->>> + * class 0x0380 instead of PCI_CLASS_DISPLAY_VGA.
->>> + */
->>> +static inline bool pci_is_vga_or_other_display(struct pci_dev *pdev)
->>> +{
->>> +     return pci_is_vga(pdev) ||
->>> +             (pdev->class >> 8) == PCI_CLASS_DISPLAY_OTHER;
->>> +}
->>> +
->>>    /**
->>>     * pci_is_display - check if the PCI device is a display controller
->>>     * @pdev: PCI device
->>
->>
->> This patch doesn't seem correct to me.  It's overloading the purpose of
->> boot_vga to cover non VGA devices.  We should be using boot_display.
->>
->> Trying to hypothesize what's going on here - I guess you're seeing
->> boot_display set for more than one device due to enumeration order.
->>
->> Can you see if this helps instead?
->>
->> ╰─❯ git diff
->> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video-common.c
->> index 152789f00fcda..9440eb3a7b15d 100644
->> --- a/arch/x86/video/video-common.c
->> +++ b/arch/x86/video/video-common.c
->> @@ -43,9 +43,6 @@ bool video_is_primary_device(struct device *dev)
->>           if (!pci_is_display(pdev))
->>                   return false;
->>
->> -       if (pdev == vga_default_device())
->> -               return true;
->> -
->>    #ifdef CONFIG_SCREEN_INFO
->>           numres = screen_info_resources(si, res, ARRAY_SIZE(res));
->>           for (i = 0; i < numres; ++i) {
-> 
-> Hi Mario,
-> 
-> I tested your change. boot_display becomes correct, but the issue is not fixed.
-> 
-> The kernel state becomes:
-> 
->    AMD:    boot_display=1, boot_vga absent
->    NVIDIA: boot_display absent, boot_vga=1
-> 
-> Current Xorg checks boot_display || boot_vga, so both GPUs still match.
-> The selected primary GPU still depends on Xorg's DRM device enumeration order.
-> 
-> So boot_vga is still wrong, and that still matters. The kernel should not
-> expose boot_vga=1 for NVIDIA when the firmware framebuffer is on AMD.
-> 
-> My patch makes boot_vga and boot_display agree on the AMD boot display.
-> 
-> Thanks,
-> Aaron
+KASAN: slab-use-after-free in dev_driver_string from vga_arb_release
 
-Got it.  I still don't think it's correct to overload boot_vga.  It 
-would be better for us to not show boot_vga at all - because it's not 
-correct.
+on commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7 (May 25 2026)
 
-Maybe we should drop the fallback code in VGA arbiter that is setting 
-NVIDIA as boot_vga at all.
+The reproducer and .config files are here.
+https://gist.github.com/shuangpengbai/47ec0715a0120beaacf5009460b90687
 
-Could you look at doing that?
+I'm happy to test debug patches or provide additional information.
+
+Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+
+[  250.268327][ T8342] =
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+[  250.271034][ T8342] BUG: KASAN: slab-use-after-free in =
+dev_driver_string (drivers/base/core.c:2406)
+[  250.273371][ T8342] Read of size 8 at addr ffff88810aebc138 by task =
+bash/8342
+[  250.274604][ T8342]
+[  250.275019][ T8342] CPU: 0 UID: 0 PID: 8342 Comm: bash Not tainted =
+7.1.0-rc5+ #106 PREEMPT(full)
+[  250.275027][ T8342] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + =
+PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  250.275031][ T8342] Call Trace:
+[  250.275044][ T8342]  <TASK>
+[  250.275049][ T8342]  dump_stack_lvl (lib/dump_stack.c:94 =
+lib/dump_stack.c:120)
+[  250.275108][ T8342]  print_report (mm/kasan/report.c:378 =
+mm/kasan/report.c:482)
+[  250.275177][ T8342]  kasan_report (mm/kasan/report.c:595)
+[  250.275190][ T8342]  dev_driver_string (drivers/base/core.c:2406)
+[  250.275196][ T8342]  __dynamic_dev_dbg (lib/dynamic_debug.c:906)
+[  250.275228][ T8342]  vga_arb_release (drivers/pci/vgaarb.c:1436)
+[  250.275245][ T8342]  __fput (fs/file_table.c:510)
+[  250.275260][ T8342]  fput_close_sync (fs/file_table.c:615)
+[  250.275265][ T8342]  __x64_sys_close (fs/open.c:1507 fs/open.c:1492 =
+fs/open.c:1492)
+[  250.275271][ T8342]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 =
+arch/x86/entry/syscall_64.c:94)
+[  250.275327][ T8342]  entry_SYSCALL_64_after_hwframe =
+(arch/x86/entry/entry_64.S:121)
+[  250.275333][ T8342] RIP: 0033:0x7f65140dbc03
+[  250.275341][ T8342] Code: e9 37 ff ff ff e8 2d f9 01 00 66 2e 0f 1f =
+84 00 00 00 00 00 0f 1f 00 64 8b 04 25 18 00 00 00 85 c0 75 14 b8 03 00 =
+00 00 0f 05 <48> 3d 00 f0 ff ff 77 45 c3 0f 1f 40 00 48 83 ec 18 89 7c =
+24 0c e8
+[  250.275346][ T8342] RSP: 002b:00007ffce08e3808 EFLAGS: 00000246 =
+ORIG_RAX: 0000000000000003
+[  250.275363][ T8342] RAX: ffffffffffffffda RBX: 0000564bd1808ba0 RCX: =
+00007f65140dbc03
+[  250.275367][ T8342] RDX: 00000000ffffffff RSI: 0000000000000001 RDI: =
+000000000000000a
+[  250.275371][ T8342] RBP: 00007ffce08e3890 R08: 0000000000000000 R09: =
+0000000000000000
+[  250.275374][ T8342] R10: 00007f651417efc0 R11: 0000000000000246 R12: =
+0000000000000009
+[  250.275377][ T8342] R13: 0000000000000009 R14: 000000000000000a R15: =
+0000000000000000
+[  250.275393][ T8342]  </TASK>
+[  250.275395][ T8342]
+[  250.295059][ T8342] Freed by task 8342 on cpu 1 at 249.233016s:
+[  250.295689][ T8342]  kasan_save_track (mm/kasan/common.c:57 =
+mm/kasan/common.c:78)
+[  250.296168][ T8342]  kasan_save_free_info (mm/kasan/generic.c:584)
+[  250.296682][ T8342]  __kasan_slab_free (mm/kasan/common.c:253 =
+mm/kasan/common.c:285)
+[  250.297176][ T8342]  kfree (include/linux/kasan.h:235 mm/slub.c:2689 =
+mm/slub.c:6251 mm/slub.c:6566)
+[  250.297593][ T8342]  device_release (drivers/base/core.c:2570)
+[  250.298062][ T8342]  kobject_put (lib/kobject.c:689 lib/kobject.c:720 =
+include/linux/kref.h:65 lib/kobject.c:737)
+[  250.298528][ T8342]  pci_stop_and_remove_bus_device_locked =
+(drivers/pci/remove.c:132 drivers/pci/remove.c:139)
+[  250.299187][ T8342]  remove_store (drivers/pci/pci-sysfs.c:525)
+[  250.299631][ T8342]  kernfs_fop_write_iter (fs/kernfs/file.c:352)
+[  250.300179][ T8342]  vfs_write (fs/read_write.c:595 =
+fs/read_write.c:688)
+[  250.300622][ T8342]  ksys_write (fs/read_write.c:740)
+[  250.301054][ T8342]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 =
+arch/x86/entry/syscall_64.c:94)
+[  250.301525][ T8342]  entry_SYSCALL_64_after_hwframe =
+(arch/x86/entry/entry_64.S:121)
+[  250.302121][ T8342]
+[  250.302372][ T8342] The buggy address belongs to the object at =
+ffff88810aebc000
+[  250.302372][ T8342]  which belongs to the cache kmalloc-4k of size =
+4096
+[  250.303772][ T8342] The buggy address is located 312 bytes inside of
+[  250.303772][ T8342]  freed 4096-byte region [ffff88810aebc000, =
+ffff88810aebd000)
+[  250.305161][ T8342]
+
+Best,
+Shuangpeng
 
