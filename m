@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77F231C2324;
-	Mon, 22 Jun 2026 19:06:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D092C346A01;
+	Mon, 22 Jun 2026 19:09:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782155181; cv=none; b=alZc/81sbUjQvuirQnyotMbwRNwYhYZCMjjnSQbH7rtGMYS0IHx9bxuhCif6hs8ZUD7o+gDfiLqP1CQ+v9KYGqZ6KJ374rav687SSKtf5hJoRCj/hTUmY7DjrwCR0Ud/aGTjonQg7K7mbNpIim0Qnhe3u7DLLx88qezejPLaAKk=
+	t=1782155363; cv=none; b=ufJAiuxgUmCsJVZw3BKx4P1F3J9mSBU+lnUwCt7UefaXMgEdMfy3ka5Gtdi+ETRrk+W599OgiaS5nZ/am84drEVF0iNcJlbBqqxU6hu7naBkoJdgkcmhdWhCcdmRLGLgjopcONhNITRT917RYrfdtCLlp9u+dSUvbFbT71YdJhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782155181; c=relaxed/simple;
-	bh=4Ty717Rvr2KtBrquXS30C/jZ3WGh5CqsrVDpumZy/3o=;
+	s=arc-20240116; t=1782155363; c=relaxed/simple;
+	bh=ignz6eQq6wkV0sI2ABcjpx+KMVQtCPG1BECMG49RH/I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qUm/Bcb+HezStK7Q6egn9WQTWguz/wN0BuTaReH19sGdX2vIA7ocFEeaQx1WZiSTULIvRMTkFzLu6rzIrIjG//kI9bmxyw9fEpU/EwntQkq8A7iR9Nn7WcFYFy214v7ohyYu9jpTYrAUxfRQZt23QEm2twMkchQJcLmAmNFQOqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOS1cY6T; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fYEejkmSdQhRb4uSa2cWF7yy6sFCom6MZq+xS9L1RKrEAGL73qYRTyvEJsEi4rOe5+QwGCgyR2P1q/U5Gdby24hh1WQvC7Gpca6/PC2k7hBKLfWsVT46I8MmAAsSvrYDdJ7lJMISPoxMzkneIjqZv5NOJ+xQ2cFXikqNIl7I3Q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ezjO4EsJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOS1cY6T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04DA01F000E9;
-	Mon, 22 Jun 2026 19:06:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ezjO4EsJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AE6B1F000E9;
+	Mon, 22 Jun 2026 19:09:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782155180;
-	bh=9oxSszJzvOcRTa/rj5gx5Lq8ASBBobjy7YnCgU2vPdo=;
+	s=k20260515; t=1782155362;
+	bh=KIT/ERZTCyq8yFnbihT7w6olaM/rBcuMBNT11CWeBDA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MOS1cY6T1vRZIGCz6OiQTq/oaArGrOSeh4G3IROYm2Hz2APlgepSFV40UoTSCw7hi
-	 qy5aAMg6Ds6CzbGaxPX03LG5P09H+3z4+jJruyLC36BwwqXcdxms7V9uunfj6UwmPc
-	 2Q2tsHRUWyNhVFjnaKlm4mxyHwTu9Re4liMbSSvkZcdiZ4N1BQJVUk7cHZBg5RTWFG
-	 c4mYcCbA22XXYdH7GNO24aUFk/7Kw96tTFx234raARcy9nxsqku7skvN3BG42UtHau
-	 oE6godkPHGwN4H4lK4nzze2JryIPFlFL4Q5IkyqELrJaOMrzxAVV+joTITifJ6g501
-	 PPTyLCEYK3XnA==
+	b=ezjO4EsJus6vLBAEm4LeOtsk+vpozt2kWLg+5ENOwP+ATFwmwMZf18MWp5H1ecEql
+	 mwJOYuHdaCqRLXFJZQWfoAafbeFHPx8OJQAYEnXMaUIAzT+0zMkx53+62OmDULxlXG
+	 PinbQa8mgUTJHlihsvYONc6sWpxvq3si29jsMnQ58N7VvHWPjknwr1QMdPNmWJQ+9n
+	 ng1cu2w2CIMVtS2lrleJMJRyg4vhK8uaMAYUXxxGlTko5bmg9QVIz/PY3RxzQpZq99
+	 2qFTApJhaRP5V7lH1y7yWoi5ewa+MGL0EHq7mQrhBc8BWej8DY/aGZfnsEbuBpcxw/
+	 mkpK0sD7u0SEw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 3/4] vfio/pci: implement get_pci_tph and DMA_BUF_TPH
- feature
+Subject: Re: [PATCH v9 4/4] RDMA/mlx5: get tph for p2p access when
+ registering dma-buf mr
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Zhiping Zhang" <zhipingz@meta.com>
-Cc: dri-devel@lists.freedesktop.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260622184211.2229399-4-zhipingz@meta.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260622184211.2229399-5-zhipingz@meta.com>
 References: <20260622184211.2229399-1-zhipingz@meta.com>
- <20260622184211.2229399-4-zhipingz@meta.com>
+ <20260622184211.2229399-5-zhipingz@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 22 Jun 2026 19:06:19 +0000
-Message-Id: <20260622190620.04DA01F000E9@smtp.kernel.org>
+Date: Mon, 22 Jun 2026 19:09:21 +0000
+Message-Id: <20260622190922.4AE6B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,127 +47,137 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Unconditional validation of the flag-gated `ph` syscall parameter =
-can falsely reject valid requests to clear TPH metadata.
-- [Medium] Packing new `tph_*` bitfields into the same byte as the existing=
- `revoked` bitfield introduces a data race.
-- [Medium] Lockless plain read of `priv->vdev` can race with a concurrent w=
-rite of `NULL` during device cleanup.
+
+New issues:
+- [High] Missing ST index reference acquisition in `create_real_mr` fallbac=
+k path causes a refcount underflow upon MR destruction.
+- [Medium] TPH hints for pooled MRs (FRMRs) are stored in metadata but neve=
+r programmed into the hardware Memory Key Context.
+
+Pre-existing issues:
+- [High] Deallocating an ST index leaks the `mlx5_st_idx_data` structure in=
+ `mlx5_st_dealloc_index`.
 --
 
-commit d529be6632b034e32bc07cc3b900f28862d27327
+commit 0757112498e4ebc4a6ffc6fad46c40d302a22056
 Author: Zhiping Zhang <zhipingz@meta.com>
 
-vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
+RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+   =20
+This patch wires up mlx5_ib to query the exporter's chosen PCIe TLP Process=
+ing
+Hint (TPH) Steering Tag at MR registration time for p2p access. It uses this
+metadata to program requester-side TPH on the outbound mkey and translates
+exporter-provided steering tags into local ST entries.
 
-This commit implements dma-buf get_pci_tph for vfio-pci exported dma-bufs.
-It adds VFIO_DEVICE_FEATURE_DMA_BUF_TPH to allow userspace to publish TPH
-metadata for a VFIO-owned device.
+> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
+/mr.c
+> index e6b74955d95dc..7aced3f554561 100644
+> --- a/drivers/infiniband/hw/mlx5/mr.c
+> +++ b/drivers/infiniband/hw/mlx5/mr.c
 
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
-ci_dmabuf.c
-> index c16f460c01d68..d6f5dd3210009 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> @@ -19,7 +20,14 @@ struct vfio_pci_dma_buf {
->  	u32 nr_ranges;
->  	struct kref kref;
->  	struct completion comp;
-> -	u8 revoked : 1;
-> +
-> +	/* Protected by dmabuf->resv. */
-> +	u16 tph_st_ext;
-> +	u8 tph_st;
-> +	u8 revoked:1;
-> +	u8 tph_st_valid:1;
-> +	u8 tph_st_ext_valid:1;
-> +	u8 tph_ph:2;
->  };
+[ ... ]
+
+> @@ -335,6 +364,7 @@ static int mlx5r_build_frmr_key(struct ib_device *dev=
+ice,
+>  		get_unchangeable_access_flags(dev, in->access_flags);
+>  	out->vendor_key =3D in->vendor_key;
+>  	out->num_dma_blocks =3D in->num_dma_blocks;
+> +	out->kernel_vendor_key =3D in->kernel_vendor_key;
+> =20
+>  	return 0;
+>  }
 
 [Severity: Medium]
-Does this bitfield packing introduce a data race?
+While the steering tag and processing hint are stored inside the pool key h=
+ere,
+is there any code that actually extracts these values to program the pcie_t=
+ph_en
+bit or steering tag into the hardware Memory Key Context during FRMR creati=
+on or
+UMR WQE posting?
 
-While the new tph_* fields are safely updated under the dmabuf->resv lock
-in vfio_pci_core_feature_dma_buf_tph(), existing code in
-vfio_pci_dma_buf_move() reads the revoked bit without holding the
-dmabuf->resv lock:
+It appears that pooled MRs silently fall back to default non-TPH routing.
 
-vfio_pci_dma_buf_move()
-    if (priv->revoked !=3D revoked) {
-        dma_resv_lock(priv->dmabuf->resv, NULL);
-        ...
+[ ... ]
 
-Because they share the same underlying byte, the locked read-modify-write of
-the tph_* fields will concurrently access the byte while the lockless read =
-of
-the revoked flag occurs. This can violate the C memory model and trigger
-KCSAN warnings. Could the revoked flag be declared as a standalone bool to
-avoid sharing the byte with the dynamic tph_* bitfields?
-
-> [ ... ]
-> @@ -333,6 +362,72 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
-re_device *vdev, u32 flags,
-> [ ... ]
-> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-> +				      u32 flags,
-> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				      size_t argsz)
-> +{
-> [ ... ]
-> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-> +		return -EFAULT;
+> @@ -755,6 +788,12 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd=
+, struct ib_umem *umem,
+> =20
+>  	xlt_with_umr =3D mlx5r_umr_can_load_pas(dev, umem->length);
+>  	if (xlt_with_umr) {
+> +		err =3D mlx5_ib_get_frmr_st_handle_ref(dev, st_index);
+> +		if (err) {
+> +			ib_umem_release(umem);
+> +			return ERR_PTR(err);
+> +		}
 > +
-> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
-> +		return -EINVAL;
-> +
-> +	if (set_tph.ph & ~0x3)
-> +		return -EINVAL;
+>  		mr =3D alloc_cacheable_mr(pd, umem, iova, access_flags,
+>  					MLX5_MKC_ACCESS_MODE_MTT,
+>  					st_index, ph);
+> @@ -769,6 +808,8 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd,=
+ struct ib_umem *umem,
+>  		mutex_unlock(&dev->slow_path_mutex);
+>  	}
 
 [Severity: High]
-Can this unconditional check falsely reject valid requests to clear TPH
-metadata?
+Does this create a refcount underflow for the ST index?
 
-When userspace sets the flags to 0 to clear or invalidate published TPH
-metadata, the ph parameter is unused and might contain uninitialized stack
-garbage. Since syscall parameters that are only meaningful when certain fla=
-gs
-are set should not be validated when those flags are absent, could this
-cause legitimate clearing requests to fail with -EINVAL?
+In the else branch (when xlt_with_umr is false), reg_create() is called
+and embeds st_index into the MR's kernel_vendor_key, but it misses calling
+mlx5_ib_get_frmr_st_handle_ref() to acquire a reference for the steering tag
+index.=20
 
-> [ ... ]
-> +	dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
-> +	if (IS_ERR(dmabuf))
-> +		return PTR_ERR(dmabuf);
-> +
-> +	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
-> +		ret =3D -EINVAL;
-> +		goto out_put;
-> +	}
-> +
-> +	priv =3D dmabuf->priv;
-> +	if (priv->vdev !=3D vdev) {
-> +		ret =3D -EINVAL;
-> +		goto out_put;
-> +	}
+Later, mlx5r_handle_mkey_cleanup() unconditionally extracts st_index and
+decrements its reference count via mlx5_ib_put_frmr_st_handle_ref(). Droppi=
+ng
+a reference that was never acquired can lead to a refcount underflow and
+premature deallocation.
 
-[Severity: Medium]
-Could this plain read of priv->vdev race with a concurrent device cleanup?
+[ ... ]
 
-Here, priv->vdev is accessed to check ownership without holding any locks
-that would protect against cleanup. Concurrently, if the original exporting
-device is being closed, vfio_pci_dma_buf_cleanup() sets priv->vdev =3D NULL
-locklessly relative to this ioctl execution context:
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
+et/ethernet/mellanox/mlx5/core/lib/st.c
+> index 997be91f0a135..bf14a7a6df15e 100644
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> @@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
+>  	kfree(st);
+>  }
+> =20
+> -int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+> -			unsigned int cpu_uid, u16 *st_index)
+> +int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
+> +			       u16 *st_index)
+>  {
+>  	struct mlx5_st_idx_data *idx_data;
 
-vfio_pci_dma_buf_cleanup()
-    list_del_init(&priv->dmabufs_elm);
-    priv->vdev =3D NULL;
-    vfio_device_put_registration(&vdev->vdev);
+[Severity: High]
+This is a pre-existing issue, but does this lead to a memory leak when
+deallocating an ST index?
 
-This plain read racing with a plain write could cause undefined behavior
-under the kernel memory model and trigger KCSAN warnings. Should this be
-annotated with READ_ONCE() and WRITE_ONCE() to prevent compiler reordering
-or load tearing?
+In mlx5_st_alloc_index_by_tag() (or previously mlx5_st_alloc_index()), a new
+struct mlx5_st_idx_data object is dynamically allocated with kzalloc_obj() =
+and
+inserted into the st->idx_xa XArray.=20
+
+However, in mlx5_st_dealloc_index(), when the reference count drops to zero=
+, the
+entry is removed from the XArray using xa_erase():
+
+    if (refcount_dec_and_test(&idx_data->usecount)) {
+        xa_erase(&st->idx_xa, st_index);
+        /* We leave PCI config space as was before, no mkey will refer to i=
+t */
+    }
+
+The dynamically allocated idx_data pointer is never freed with kfree(). Bec=
+ause
+userspace can repeatedly trigger this leak by creating and destroying DMA h=
+ints,
+can this serve as a DoS memory exhaustion vector?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622184211.2229=
-399-1-zhipingz@meta.com?part=3D3
+399-1-zhipingz@meta.com?part=3D4
