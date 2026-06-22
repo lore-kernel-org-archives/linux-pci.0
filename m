@@ -1,177 +1,255 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011024.outbound.protection.outlook.com [52.101.70.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA13135203A
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 04:01:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782100912; cv=none; b=bE+qeiSykqoXUvVE4rQovOpb0A/4O0wt7g2WwauUtYvXHaQk61dOnT0s5lTAI5jS9wWivUxlUpCpYGjWYCloVg1fICRUAQGzsqKRnhX7ypAqVdRIsSjsT9yQDvb/KFMssx8Rx2vqrInv/P0mhYJIknPaojhiiKBXJ62KAtEXQqQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782100912; c=relaxed/simple;
-	bh=19sCJyPWCM00fWxbvSdBYcy4yH3JWfYtpDfFnrFmaTo=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=TgFTaVAzSk+WVZ8ie8ovBE6mntsIkKWCo7pNlch1wXZYJ/a5kDLEQ6DWN6vZfASVFwNxF9Ye03oUL1gHkMfrEwetvMlkm+cP0kPjBiSKMYDsQyTHhMgSK1Af9jpSd+Ljgt958rsAarElxdLAjm6QI1hnAwjp/neX0aasCnXOCsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UZrhTIoz; arc=none smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF263126D6;
+	Mon, 22 Jun 2026 05:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782107541; cv=fail; b=umqd7YOHV5cjaBIOffMt+5ta1bIWAGym2WcTFFKye+G9rp/zlkd2LKdIsfYaW8feUDNTYvK2std834c+SI6haVuPUbM7Vz3+NlYQmnEaBY1IphZ2LJAHRipAlHc0yhy/8C/u4FBVGT0PHPgS/W+IeEAN2ju1tgdhYOSF+dve1dY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782107541; c=relaxed/simple;
+	bh=KSL3pwUiA+QCoBB28BR4YtdvSsquJ7nLvpSSWu3FHaI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=AT+tJwqmx6HL/ujYucY9l8HxTo2LTcx/4rfA+eTB8mimTXe/i5lR+ncdYWQV3/C28WcoRYNG2sncGwdogVbMu3KZzIa7Xqi/8wJYR6b82HGGK9EQVz9KLWVQbfF1VFg/KUCS7v27EfHpbPAkON0gjBoD/TcjA7RmvjCZUAydMEI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=hnY995Y/; arc=fail smtp.client-ip=52.101.70.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UZrhTIoz"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8dd586317ccso36944856d6.2
-        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2026 21:01:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782100910; x=1782705710; darn=vger.kernel.org;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kzCKCvEKcIAbbLzhVk7tgcr56H+29gkKFj7JV8ys4ro=;
-        b=UZrhTIozo8EDkYeldd0eEDegHBihbDXr+8PDKepplDdFbXqVn8rWNu/wIAWCDIG5Ze
-         PRwAEHvC41ldtdI8kThzt0p9x0IhUua/EsNsT7Xy1tSwfD6SVAX2bwXqq6FeYXBjCe89
-         XHmpP+74tAJLL71pZVNcgi85rkARY8EDtUo68he41H8Tnyuj5VUdoxAZrpuo2Q48VxFj
-         Vx/3JU2ZE46lrq8ukRSi0+aA1pvXwEQAsuniOSGlI5VOyD3yJ0b7KrpN3/QqAN2RxpYK
-         5LAaGAFyHGx1oSc/6UpiTdtNXiBmqxsvOqnu4lh47Ltpj/MzQzXH/pFV5aiLzEVvXfIG
-         XIpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782100910; x=1782705710;
-        h=to:cc:date:message-id:subject:mime-version
-         :content-transfer-encoding:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=kzCKCvEKcIAbbLzhVk7tgcr56H+29gkKFj7JV8ys4ro=;
-        b=aJbdBbmoFLpvheMKvv39gFfc21i9VtSM9naW3Yvzbi8Wd5b7BKXWbseot5EoV99g8h
-         VtvzQvBI1stGOpkyLw7IlhrV0Av6yxZ7LBUtRqmLHVOXkQEJ0ygzE/zAWYuwMuTGzokz
-         kkrPkzqFti/K8Oh2mq1pHDpmkFEryvY4fGqe7HpnreZdJf6FjhbyuTJ/Taof18Jm7AG8
-         YDsWUQo1ucgmyUctf1rEk4xKJWVu3sGYX0NoUu3ggUrxQUdCO9SeI60sKe12zts6/yDQ
-         fUS8InoAY3e6OL58Q85g/2786RUqw9Cht1EvzUDNwH+iYP+1kX+D2byOQwOjrSQJedba
-         mYdw==
-X-Gm-Message-State: AOJu0Yw3JhqAlli5LpsUJ3tCK4m+Z+rdh+kZTyOvzcLAhkVMOQwSiGkm
-	5eTqUTiIvGVRt5ZceoJMxKPgcAORXIzMppE0hItje3Kv+/J8ZEI3ROkJnl3OZI+Y+l4yIw==
-X-Gm-Gg: AfdE7cnBr7KJo4v7Nv68yd7CKujxkqfKCvsE16g32v3uQ1hKe2iiBts7PlRR1xX4ugh
-	EuxekmoPyQLjrXzRQLD+NB5Lm61U+UF7WkvjkooTnIiK/vjV5egU9/KFCUpzGSXO3nh/AvVW1o6
-	Z6ZGOhTT5HiW8r9PBGUT2BDxR6+K6fCYfetjlzEoRmsb6dRfj4omlQwwh0TJYVTsT8pRu6b3ywh
-	VFc5FrKbDZMeqOOc+aMxzKiW127GkHSSPKv44JCLHNPVK7viAFiXTWVMk8WIZSwYHJ9/H1etgJw
-	3ZlmcnBJAYSN3sELZtazudwPo6H6+hmEMocxvQN43uRl82IZi1Q04HESRohWEJejRBLkzsadEEk
-	wsWQ76SjoL8QJwg9tYtS94M5sGdhV+jI6EDXrAUNsdDUEHjB5LfDh9+jdE2lVD7hygI3oWJtXAX
-	rIAIb+iG43j+UaExhAgFnhv1E52rI5GH/2WL0J6ld5fICJ3ihIyii0HEqw4sRqmLo=
-X-Received: by 2002:a0c:cd87:0:b0:8dc:30ac:e011 with SMTP id 6a1803df08f44-8de42744f62mr169552606d6.42.1782100909696;
-        Sun, 21 Jun 2026 21:01:49 -0700 (PDT)
-Received: from smtpclient.apple ([2601:985:4601:5df0:c86d:bd73:bd2:2455])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8df81cdeebbsm86787196d6.29.2026.06.21.21.01.48
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 21 Jun 2026 21:01:49 -0700 (PDT)
-From: Shuangpeng <shuangpeng.kernel@gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="hnY995Y/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Wn773tCE4kgxFxjy0YHBwkAiPObrw0wKUwcjNy8yHAW5aXrbAFnjPDzgMjdgsI5cGrhRAqrXa3gC1VWWnkj3omU5BQ+8pGOUm/YhJLbIsTNFNH7lxf4m/y7dq2M1FWdOoTLaOTTQHV0BwK57Zygg49R5jKQDbv4P98YGBzuUx+R+0Uxz0Cu70CuADbR1jfDAPN1p9ACw2DoCbp2jBET2B+6mVGeneolOYesroHfWGzBOPbK400Co2M21U7j85BN27Crw+lBZxzjcw9HwaY7rdGfPqAWmBLcX3m4v0BiKHxtfhSxP1vd9gOzzArXyvhjW/kvgSvuSCSfb6mDYVJRbjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PDM3fvTKzjZ9oc9rw4GcXDI3iSesQf7qCX53jsL2qXM=;
+ b=ygBhcvwAame4AycIu05WJPm3JuqKJjqFtUGeHXL2kJOZNKukrhTKszru8L510VeTsnZn8dGuRkCCOmc6tDNUw/aETiMI6SEdwTEXgn3ZTfFaxnAkbUEnYOjdmBb5/wHo8CEgnM/zm7oBw50N2aSRw0Jxi2I7gxsko/UVSm5kVAizbKpzvXnXe4wUw4FCFa84ku+es5kCRqHP7qNym98rNkJkKv80ll+eJX8+P6lL6RoYKQG00ZLmVUPvKwxqtsv1OWKPAWg89ABE6ih3lRfBEuahYIcn8A0tLXaZ2XLmMofTYo6rGmc5dKIFPn5V4bgAIQdDc+NSopdp3JMoAhMTCg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PDM3fvTKzjZ9oc9rw4GcXDI3iSesQf7qCX53jsL2qXM=;
+ b=hnY995Y/OPPcrkIzYY2jJCQ9HiJ4LopAdwZxeTtWE9mjxqVjjyGxY7zlRjLWXhUDdTBm72/OBYGLt21ihz6McosV65l0lnlhgzEi3JlMGfbo4pfgbeXx2amOownphWOC+ADe41cr5XODCB39BVwmwUbXe90b9oA4uCArTCA2fWpAuPHwzjtucIsKFqu0UUM3IEGYjLDwN5WVLL/iMMj3/2yxzs8YQurQI9R8ar5Ug/f2CLBu6JcLGdzJeSc5UO09wMlwrm1SqaXfZUrw4kbCOm6VWVLrnPFZOS0/H0nzp4o3TLYPgfbrYTo4i6OcL0KMrRkryry4kDLFS9N7AgOGwA==
+Received: from GV2PR04MB12102.eurprd04.prod.outlook.com (2603:10a6:150:30c::7)
+ by VI0PR04MB10736.eurprd04.prod.outlook.com (2603:10a6:800:25c::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.19; Mon, 22 Jun
+ 2026 05:52:15 +0000
+Received: from GV2PR04MB12102.eurprd04.prod.outlook.com
+ ([fe80::ba38:9cef:8457:c944]) by GV2PR04MB12102.eurprd04.prod.outlook.com
+ ([fe80::ba38:9cef:8457:c944%5]) with mapi id 15.21.0139.018; Mon, 22 Jun 2026
+ 05:52:15 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: "Frank Li (OSS)" <frank.li@oss.nxp.com>, "Sherry Sun (OSS)"
+	<sherry.sun@oss.nxp.com>
+CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li
+	<frank.li@nxp.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>, Amitkumar Karwar <amitkumar.karwar@nxp.com>, Neeraj
+ Sanjay Kale <neeraj.sanjaykale@nxp.com>, "marcel@holtmann.org"
+	<marcel@holtmann.org>, "luiz.dentz@gmail.com" <luiz.dentz@gmail.com>,
+	Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"brgl@kernel.org" <brgl@kernel.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-bluetooth@vger.kernel.org"
+	<linux-bluetooth@vger.kernel.org>, "linux-pm@vger.kernel.org"
+	<linux-pm@vger.kernel.org>
+Subject: RE: [PATCH 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Topic: [PATCH 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Index: AQHc/wp8x9g+aPXO20GYXbwWY4Cp3bZEpOmAgAVSGHA=
+Date: Mon, 22 Jun 2026 05:52:14 +0000
+Message-ID:
+ <GV2PR04MB121027AF682B10DC55E9A503892EF2@GV2PR04MB12102.eurprd04.prod.outlook.com>
+References: <20260618101047.4185497-1-sherry.sun@oss.nxp.com>
+ <20260618101047.4185497-2-sherry.sun@oss.nxp.com>
+ <ajQ64ZswbmTceIGO@SMW015318>
+In-Reply-To: <ajQ64ZswbmTceIGO@SMW015318>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12102:EE_|VI0PR04MB10736:EE_
+x-ms-office365-filtering-correlation-id: a3ae6233-81b0-4481-212b-08ded022697e
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|19092799006|376014|7416014|23010399003|1800799024|22082099003|18002099003|38070700021|56012099006|11063799006|4143699003;
+x-microsoft-antispam-message-info:
+ 4Gb8lXsGYIAjhUym8Jgxrhf9y+kzzn63AlDZJB7Q8FZUSYD7n92Wp+rfijYwR6lrBRC1+8SAnRiNI1L9RYYD3aCGBRnOSQUWBczDJ1IcqZdmc3wJRpFoILs0cdM4kuKt9VRZqaEBPE+3+3UU5Y9UU36MdVLD0VkzbaLUjGpnR1KqlZqD54pvcOX6RmejBtyrA+2Pq/tRsDNW3C/YGI5+PDiPxvKX8mTXRFG1ObB/scvBHY70lJgZul0nr4p8ykpKA7wsJIbwGg/7tqHVmiCfpXpXjtp8+KmoaF+FivS2Nw3y8weoBjnevIc2XPiPNrTHdHKB9XAlP0WGvbjXFDxn7VDP6OW4jYRe0ey8nD6Vcl21VFZwHJySK+zmGyZG1voXp8+j67q6i1UEcZ7XopDsSD4Xy5WWKC0cnm1s6s4NxjI6WMAJ0D0LI3leysmXnDQihtj0JApsDiuxDGfQtAl7U1D87aGFXchkR8eSLZG9Y/j7Qesx/oWw8URLbTdWRBvTfD1FgmG9v8F7UELePRrL6iZDqiBPmYA8d3Bz60ucTwOysQfFetmh8EHokCCb7AElOEMEvPCZYuzHnVa8wYTLvVmvR+ufD9sIt3TSc0vXiuwluV4ioPadcY54/4aRXVc3iaClDyTRciplIf1cIMlv+Yerw+yPGNoB2Xt0mk2FV0jYslpCvI5iggaAOdxLgdZotbhdTJsy3+YUfMb08OaD+Ue2rIOIPKfAlAY8vKo+40w=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12102.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(376014)(7416014)(23010399003)(1800799024)(22082099003)(18002099003)(38070700021)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?2YFOzR/UuI6krq+sUNiEp+kdQp0bocS2UB6hH5u+uoX8PZBK35ITO1vJK3Az?=
+ =?us-ascii?Q?AoIJDGFiF83XFnAmX1SB2xI3DUSpbV3Q7m9NachGV4ILBLXkwToE2NmFMC1M?=
+ =?us-ascii?Q?WE8MGUUIy8HMh2kiI07xU1QXS81AnDWv5X/3NKseFGW+Knz5JiJiWCblkIQx?=
+ =?us-ascii?Q?K5+U1aiPWvkw/eQ6KEgmbne9RdIZi3MyHWy+lUIsjPfN4IiwQ9B8q3ACbzV5?=
+ =?us-ascii?Q?ABJJhnF4i2zLIntsKOsKje0GdV+YQik+J2y5wMNmMzdB/TZIWUAS/y8SsLLx?=
+ =?us-ascii?Q?IQWI0g5D4hMUTMzQkWiFz1frvBvVLeulw9iwPG686FPHlVjiWcc8oSjOPGk4?=
+ =?us-ascii?Q?0OZM1ijMVGLLWNSBqsF5PVCNAcnqt3PYRuA6YiTg4r7NGspuyYnt/69jCwBQ?=
+ =?us-ascii?Q?X3IV5HYHcwYf5Dh3EDw7pH+0KviXW7D/nEZenk4Vb6gWXmJDL13euQM7Vh3R?=
+ =?us-ascii?Q?bPlV5ga4yImht9PxbfJBEU0PrLCp/Z6ULU3cRxq36PQD+CHaA6sPKru8z9+z?=
+ =?us-ascii?Q?D9+LFOapxduQup5bi/5NAItr9LzZgDht7nEQgMG3QpDLv7uB6xC666T9hdFF?=
+ =?us-ascii?Q?PWDy6oV31pvAm0hcVdF2FBIegaMaJnB6fJ6sVrq8N6rCMwVm+tsw4rnJrBWU?=
+ =?us-ascii?Q?l6JXmPpirIkQovjBXRFAOMTXM7WRwpLFeZ5HN/OZ432Tl54LRBnLwVped/v+?=
+ =?us-ascii?Q?p71axpKWDyaTJKDqLe8HxQHnJwdrQ+YL30+/4lcNlWx8hK6Qu2YJ4beRLhI4?=
+ =?us-ascii?Q?KdrXR0xr1R45dBLQmBZOo1ZDm6jpci5UJXKfZASRVQsqapdK8X0hV/ZfDssl?=
+ =?us-ascii?Q?Tp6yvEzSMtLmo3r/rB449LGWYeUfjeFxHgoGl4Jjw2b5yCCt21N3GPKF6EJe?=
+ =?us-ascii?Q?2yAIVZFw+v7L1Qr4Qy6EAEBETjXWO5N4vrvj5F4RdHZMqG8F2rLpqCCD79lp?=
+ =?us-ascii?Q?T8FFfz3Lcv1pzFfxeFE/JZ6havTQ4mQcPU8RgV1uqIe4wFg7hy2TmR8od5qM?=
+ =?us-ascii?Q?Ske7b9zXnZKefgHDNO88YbDZW7ZzjpWjKSx5yADxpMbdF4MMiAfERtFq5pOR?=
+ =?us-ascii?Q?dKPUmRnUc1gu5EWEh0CbGn9Siu5kbo/Od3w3YDH2a89hq098xOGKck7/UIk3?=
+ =?us-ascii?Q?ccmzxFkKnMnb9SzS5WrnsXBKtP6fnByD/U9ZFmw9j4HjUKXKk8afNmzNMfge?=
+ =?us-ascii?Q?h0u7mMIay6SmiC3/7gWAjguGP/4bxs/kM9SAzFMO8yU4NUioeaGycgSDhDD5?=
+ =?us-ascii?Q?NtW0asS7QfFh4EDbgDWG+TgycU8/LzqmhKjAsXwq4vZUoVsVS15RD52KpWoo?=
+ =?us-ascii?Q?Ttz6eBXIF7te0l20jEOnlLueCEUVgXiHXzLLmCo+T0GKGtOEcGgImLzu6YuG?=
+ =?us-ascii?Q?7nmRu41AA2geDG/JCDEkC97Vah4t8g5/apifROYOz51UH/ecy/dyvOS8A+c7?=
+ =?us-ascii?Q?uzwffb+8CwyuUE9Mi7UcvAvBKnpMUW/cXMa37ymu2tXaEmB5oZzys8axvi1k?=
+ =?us-ascii?Q?arkFJH+8pgX+147Vnvqyl+TXdlQEXFnyN955S0CcyrCr6RMwGCmrwxxKd1iZ?=
+ =?us-ascii?Q?R1dSNMS7eLWfWgsDd54J/OB/IsnMYQ/brfTz4l8Fx7GxPOi6zDq0SZRa0/de?=
+ =?us-ascii?Q?0xANFcuDcQUdtcI8+fLA5b4Fo0T2sa47x9U9BVDsmRAMO5vsa64n0HvPdWy+?=
+ =?us-ascii?Q?n1oxlqCRwYUMxx5aHpwIP0djiGUmG/V7Be2CvEPCkGqlxcJG?=
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: [BUG] PCI/VGA: KASAN slab-use-after-free in dev_driver_string from
- vga_arb_release
-Message-Id: <330FD8DD-ECBF-4531-900E-5B976FA9DF90@gmail.com>
-Date: Mon, 22 Jun 2026 00:01:18 -0400
-Cc: linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-To: bhelgaas@google.com
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12102.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a3ae6233-81b0-4481-212b-08ded022697e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jun 2026 05:52:15.0258
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: +ODPNNbPBQ3nzEUz3ZvY/2lxkhke4OQwIu45bFh3qSM4k30I3DhgoocyJZNNTSI8uUSITHGZoRkskURB9yWW0w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB10736
 
-Hi Kernel Maintainers,
+> On Thu, Jun 18, 2026 at 06:10:40PM +0800, Sherry Sun (OSS) wrote:
+> > From: Sherry Sun <sherry.sun@nxp.com>
+> >
+> > Use dw_pcie::skip_pwrctrl_off to avoid powering off devices during
+> > suspend to preserve wakeup capability of the devices and also not to
+> > power on the devices in the init path.
+> > This allows controller power-off to be skipped when some devices(e.g.
+> > M.2 cards key E without auxiliary power) required to support PCIe L2
+> > link state and wake-up mechanisms.
+> >
+> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 36
+> > +++++++++++++++++----------
+> >  1 file changed, 23 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> > b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 0fa716d1ed75..ff5a9565dbbf 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -1382,16 +1382,20 @@ static int imx_pcie_host_init(struct dw_pcie_rp
+> *pp)
+> >  		}
+> >  	}
+> >
+> > -	ret =3D pci_pwrctrl_create_devices(dev);
+> > -	if (ret) {
+> > -		dev_err(dev, "failed to create pwrctrl devices\n");
+> > -		goto err_reg_disable;
+> > +	if (!pci->suspended) {
+> > +		ret =3D pci_pwrctrl_create_devices(dev);
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to create pwrctrl devices\n");
+> > +			goto err_reg_disable;
+> > +		}
+>=20
+> supposed create_devices only do once.
+>=20
+> pci_pwrctrl_power_on_devices() controller on and off for difference case.
+>=20
 
-I hit the following report while testing current upstream kernel:
+Hi  Frank,
+Yes, pci_pwrctrl_create_devices() is currently only called once
+during imx_pcie_probe.
+pci_pwrctrl_power_on_devices() is called during imx_pcie_probe
+and during suspend/resume (depending on skip_pwrctrl_off flag).
 
-KASAN: slab-use-after-free in dev_driver_string from vga_arb_release
-
-on commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7 (May 25 2026)
-
-The reproducer and .config files are here.
-https://gist.github.com/shuangpengbai/47ec0715a0120beaacf5009460b90687
-
-I'm happy to test debug patches or provide additional information.
-
-Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-
-[  250.268327][ T8342] =
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-[  250.271034][ T8342] BUG: KASAN: slab-use-after-free in =
-dev_driver_string (drivers/base/core.c:2406)
-[  250.273371][ T8342] Read of size 8 at addr ffff88810aebc138 by task =
-bash/8342
-[  250.274604][ T8342]
-[  250.275019][ T8342] CPU: 0 UID: 0 PID: 8342 Comm: bash Not tainted =
-7.1.0-rc5+ #106 PREEMPT(full)
-[  250.275027][ T8342] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + =
-PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-[  250.275031][ T8342] Call Trace:
-[  250.275044][ T8342]  <TASK>
-[  250.275049][ T8342]  dump_stack_lvl (lib/dump_stack.c:94 =
-lib/dump_stack.c:120)
-[  250.275108][ T8342]  print_report (mm/kasan/report.c:378 =
-mm/kasan/report.c:482)
-[  250.275177][ T8342]  kasan_report (mm/kasan/report.c:595)
-[  250.275190][ T8342]  dev_driver_string (drivers/base/core.c:2406)
-[  250.275196][ T8342]  __dynamic_dev_dbg (lib/dynamic_debug.c:906)
-[  250.275228][ T8342]  vga_arb_release (drivers/pci/vgaarb.c:1436)
-[  250.275245][ T8342]  __fput (fs/file_table.c:510)
-[  250.275260][ T8342]  fput_close_sync (fs/file_table.c:615)
-[  250.275265][ T8342]  __x64_sys_close (fs/open.c:1507 fs/open.c:1492 =
-fs/open.c:1492)
-[  250.275271][ T8342]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 =
-arch/x86/entry/syscall_64.c:94)
-[  250.275327][ T8342]  entry_SYSCALL_64_after_hwframe =
-(arch/x86/entry/entry_64.S:121)
-[  250.275333][ T8342] RIP: 0033:0x7f65140dbc03
-[  250.275341][ T8342] Code: e9 37 ff ff ff e8 2d f9 01 00 66 2e 0f 1f =
-84 00 00 00 00 00 0f 1f 00 64 8b 04 25 18 00 00 00 85 c0 75 14 b8 03 00 =
-00 00 0f 05 <48> 3d 00 f0 ff ff 77 45 c3 0f 1f 40 00 48 83 ec 18 89 7c =
-24 0c e8
-[  250.275346][ T8342] RSP: 002b:00007ffce08e3808 EFLAGS: 00000246 =
-ORIG_RAX: 0000000000000003
-[  250.275363][ T8342] RAX: ffffffffffffffda RBX: 0000564bd1808ba0 RCX: =
-00007f65140dbc03
-[  250.275367][ T8342] RDX: 00000000ffffffff RSI: 0000000000000001 RDI: =
-000000000000000a
-[  250.275371][ T8342] RBP: 00007ffce08e3890 R08: 0000000000000000 R09: =
-0000000000000000
-[  250.275374][ T8342] R10: 00007f651417efc0 R11: 0000000000000246 R12: =
-0000000000000009
-[  250.275377][ T8342] R13: 0000000000000009 R14: 000000000000000a R15: =
-0000000000000000
-[  250.275393][ T8342]  </TASK>
-[  250.275395][ T8342]
-[  250.295059][ T8342] Freed by task 8342 on cpu 1 at 249.233016s:
-[  250.295689][ T8342]  kasan_save_track (mm/kasan/common.c:57 =
-mm/kasan/common.c:78)
-[  250.296168][ T8342]  kasan_save_free_info (mm/kasan/generic.c:584)
-[  250.296682][ T8342]  __kasan_slab_free (mm/kasan/common.c:253 =
-mm/kasan/common.c:285)
-[  250.297176][ T8342]  kfree (include/linux/kasan.h:235 mm/slub.c:2689 =
-mm/slub.c:6251 mm/slub.c:6566)
-[  250.297593][ T8342]  device_release (drivers/base/core.c:2570)
-[  250.298062][ T8342]  kobject_put (lib/kobject.c:689 lib/kobject.c:720 =
-include/linux/kref.h:65 lib/kobject.c:737)
-[  250.298528][ T8342]  pci_stop_and_remove_bus_device_locked =
-(drivers/pci/remove.c:132 drivers/pci/remove.c:139)
-[  250.299187][ T8342]  remove_store (drivers/pci/pci-sysfs.c:525)
-[  250.299631][ T8342]  kernfs_fop_write_iter (fs/kernfs/file.c:352)
-[  250.300179][ T8342]  vfs_write (fs/read_write.c:595 =
-fs/read_write.c:688)
-[  250.300622][ T8342]  ksys_write (fs/read_write.c:740)
-[  250.301054][ T8342]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 =
-arch/x86/entry/syscall_64.c:94)
-[  250.301525][ T8342]  entry_SYSCALL_64_after_hwframe =
-(arch/x86/entry/entry_64.S:121)
-[  250.302121][ T8342]
-[  250.302372][ T8342] The buggy address belongs to the object at =
-ffff88810aebc000
-[  250.302372][ T8342]  which belongs to the cache kmalloc-4k of size =
-4096
-[  250.303772][ T8342] The buggy address is located 312 bytes inside of
-[  250.303772][ T8342]  freed 4096-byte region [ffff88810aebc000, =
-ffff88810aebd000)
-[  250.305161][ T8342]
-
-Best,
-Shuangpeng
-
+Best Regards
+Sherry
+> >  	}
+> >
+> > -	ret =3D pci_pwrctrl_power_on_devices(dev);
+> > -	if (ret) {
+> > -		dev_err(dev, "failed to power on pwrctrl devices\n");
+> > -		goto err_pwrctrl_destroy;
+> > +	if (!pp->skip_pwrctrl_off) {
+> > +		ret =3D pci_pwrctrl_power_on_devices(dev);
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to power on pwrctrl devices\n");
+> > +			goto err_pwrctrl_destroy;
+> > +		}
+> >  	}
+> >
+> >  	ret =3D imx_pcie_clk_enable(imx_pcie); @@ -1460,9 +1464,10 @@
+> static
+> > int imx_pcie_host_init(struct dw_pcie_rp *pp)
+> >  err_clk_disable:
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >  err_pwrctrl_power_off:
+> > -	pci_pwrctrl_power_off_devices(dev);
+> > +	if (!pp->skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(dev);
+> >  err_pwrctrl_destroy:
+> > -	if (ret !=3D -EPROBE_DEFER)
+> > +	if (ret !=3D -EPROBE_DEFER && !pci->suspended)
+> >  		pci_pwrctrl_destroy_devices(dev);
+> >  err_reg_disable:
+> >  	if (imx_pcie->vpcie)
+> > @@ -1482,7 +1487,8 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
+> *pp)
+> >  	}
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >
+> > -	pci_pwrctrl_power_off_devices(pci->dev);
+> > +	if (!pci->pp.skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(pci->dev);
+> >  	if (imx_pcie->vpcie)
+> >  		regulator_disable(imx_pcie->vpcie);
+> >  }
+> > @@ -1990,12 +1996,16 @@ static int imx_pcie_probe(struct
+> > platform_device *pdev)  static void imx_pcie_shutdown(struct
+> > platform_device *pdev)  {
+> >  	struct imx_pcie *imx_pcie =3D platform_get_drvdata(pdev);
+> > +	struct dw_pcie *pci =3D imx_pcie->pci;
+> > +	struct dw_pcie_rp *pp =3D &pci->pp;
+> >
+> >  	/* bring down link, so bootloader gets clean state in case of reboot =
+*/
+> >  	imx_pcie_assert_core_reset(imx_pcie);
+> >  	imx_pcie_assert_perst(imx_pcie, true);
+> > -	pci_pwrctrl_power_off_devices(&pdev->dev);
+> > -	pci_pwrctrl_destroy_devices(&pdev->dev);
+> > +	if (!pp->skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(&pdev->dev);
+> > +	if (!pci->suspended)
+> > +		pci_pwrctrl_destroy_devices(&pdev->dev);
+> >  }
+> >
+> >  static const struct imx_pcie_drvdata drvdata[] =3D {
+> > --
+> > 2.50.1
+> >
+> >
