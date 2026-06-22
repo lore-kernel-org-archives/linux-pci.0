@@ -1,120 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61FFD244675
-	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 01:28:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E0B30F7E8
+	for <linux-pci@vger.kernel.org>; Mon, 22 Jun 2026 02:39:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782091723; cv=none; b=NFStSFBrAKqM7TwBhc53Ltrk1bduMQA5Hjghs/Fy3X6IETTaA8RMT25iA/daXAr5XWpNXjoiXLIgXNa4Bsi7FJnTR3qh3+JxGForrMAybgmPjtW9QxcW3WyJ9YISVET6lM4Fha56fplMwxb0S64QMSaT6viKiVdfVpeago5KPVA=
+	t=1782095957; cv=none; b=RWcV2S2EEvT2QZ7gcvx/Xb10h2ncujMbWj1ca3UYaGR4vwz8rO4YniMcvVPOwrAy86Dl8IWKcqo886iQYBqkkIha1dxDLPGcF2mWpmGr2ly0xiFGbqZmD83c957P7vlE1om8N6Rku7vCTEa1e4fZEs9Y6/Eh4limDLaHEt/XEEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782091723; c=relaxed/simple;
-	bh=kensKWCx1079dK6q4s2cQiqL/xVqNqLSGweqziBg2Iw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=q0gt9MxuRx9ApWvIT2cWzuj7jS+pq8Lo84rwp1cjH3ccWCts/Nqg79Fq+F04ZG5wZ664Rjm1nZwt8MRn8tIjdXu0xXDsAOi0wHNgPha9fSIgdQQnZwp/VfNqVpey3WLz8jixO4qHLbbTyMjHZr6AGuqnru0719CF/dS/R9e4DE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RO0IMOBX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782095957; c=relaxed/simple;
+	bh=kST6cNQY/Z4RZsGmpcL/Cg/PoIO/OZIt7dsgmi8gQH4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=f+Mh+7oiDZQ6SsrY9JCUQlHxN8YYhJ/vbvn1eOkb0+MJfCy3Q8jEii81XsjmWynAFlTxOmyKo68XzSliWgtIZyyM3UXcoEOcJ6JcatwRfhFEUrIsDwZ+swwAJe3BUWUKkI80EDu5fon4vYBHfdQ0Q7nleyoVXf7gQHglOrG7uqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=VN2Aw4qo; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RO0IMOBX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BD061F000E9;
-	Mon, 22 Jun 2026 01:28:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782091721;
-	bh=zVbZQiSvSIXJhG6cyGbrsXGD0YywIynq5PmWrLWY2Mg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RO0IMOBXM0QVwAVJVLjMqkdAURoZKkNV7V3m+vR7SGmCTXpPz1WV/PivrzxX6QZQN
-	 /JLa/sKlKcvRV+OEZGckwR5QxQMEVlsB3iC1eUQhK2usrMJ8zcrxAH6v89N287eVsH
-	 b7PA2jzNM1VHfb4zrk5bVohnyvbSxFrBZ4Z8b293bwMFh6YPtDqVpBXnoQAa3GAErh
-	 jxFk9HOMXQBlY+EBAtSZUa/MdjYkrDVCn+F/q7h/J3iMJnJphnNUPzRhrN7liECDE+
-	 3x2fjtFaSKGDQGJ3U6RQIoZAu4Ia3Iu4TQlBY2IaSanMTJU6vS6+t01HQYqwQ+k8uZ
-	 433GFfGgs+q5Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] nvme-pci: fix CMB mapping when CMBSZ Size field is
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="VN2Aw4qo"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=kST6cNQY/Z4RZsGmpcL/Cg/PoIO/OZIt7dsgmi8gQH4=;
+	b=VN2Aw4qo5EOZ+TMR1pcKYZIGqjge06nUmkyxg+qKN/gGMO3tFIM7l9vG0nbolpU6nQxuFYH9s
+	WxfJcAdSzK+5dCWPdz0rZBQuHftGQJyhfsDROfz1jroMNUBFFjhQN4m0BD0kL4De6CE/H4wYQYv
+	RvVPzYTo94cbhgDd0E7cRis=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gkBxM2kqQz1K9CG;
+	Mon, 22 Jun 2026 10:29:59 +0800 (CST)
+Received: from dggpemf500001.china.huawei.com (unknown [7.185.36.173])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1A16E40563;
+	Mon, 22 Jun 2026 10:39:02 +0800 (CST)
+Received: from dggpemf100007.china.huawei.com (7.185.36.214) by
+ dggpemf500001.china.huawei.com (7.185.36.173) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 22 Jun 2026 10:39:01 +0800
+Received: from dggpemf100007.china.huawei.com ([7.185.36.214]) by
+ dggpemf100007.china.huawei.com ([7.185.36.214]) with mapi id 15.02.1544.011;
+ Mon, 22 Jun 2026 10:39:01 +0800
+From: Kangfenglong <kangfenglong@huawei.com>
+To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Wangyu (Eric)"
+	<seven.wangyu@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjJdIG52bWUtcGNpOiBmaXggQ01CIG1hcHBpbmcg?=
+ =?utf-8?Q?when_CMBSZ_Size_field_is_zero?=
+Thread-Topic: [PATCH v2] nvme-pci: fix CMB mapping when CMBSZ Size field is
  zero
-Reply-To: sashiko-reviews@lists.linux.dev
-To: kangfenglong <kangfenglong@huawei.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260622012147.40600-1-kangfenglong@huawei.com>
+Thread-Index: AQHdAeWAg0D0HhcTmUewKS2+ZgRXtrZJQwEAgACZoUA=
+Date: Mon, 22 Jun 2026 02:39:01 +0000
+Message-ID: <9dd1e67db35e463fa473203c743f5597@huawei.com>
 References: <20260622012147.40600-1-kangfenglong@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 22 Jun 2026 01:28:40 +0000
-Message-Id: <20260622012841.3BD061F000E9@smtp.kernel.org>
+ <20260622012841.3BD061F000E9@smtp.kernel.org>
+In-Reply-To: <20260622012841.3BD061F000E9@smtp.kernel.org>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Returning 0 from `nvme_cmb_size_unit()` to reject invalid SZU valu=
-es evaluates to a size of 0, bypassing the rejection and triggering the exa=
-ct bug the patch attempts to fix.
---
-
-commit efcd71708003c14038a1fdc79b6233cc4b6a8192
-Author: kangfenglong <kangfenglong@huawei.com>
-
-nvme-pci: fix CMB mapping when CMBSZ Size field is zero
-
-This commit restores the check for a zero SZ field in the CMBSZ register,
-limits the Size Units (SZU) to valid values, and adds an overflow check
-when calculating the CMB size to avoid mapping errors.
-
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index e6267a6aa3801..2794298aa9e66 100644
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -1814,6 +1814,9 @@ static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
->  {
->  	u8 szu =3D (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
-> =20
-> +	if (szu > 6)
-> +		return 0;
-> +
-
-[Severity: High]
-If this boundary check returns 0 to reject an invalid SZU value, will this
-0 value be used in subsequent calculations rather than triggering an abort?
-
->  	return 1ULL << (12 + 4 * szu);
->  }
-> =20
-> @@ -1838,9 +1841,12 @@ static void nvme_map_cmb(struct nvme_dev *dev)
->  	dev->cmbsz =3D readl(dev->bar + NVME_REG_CMBSZ);
->  	if (!dev->cmbsz)
->  		return;
-> +	if (!nvme_cmb_size(dev))
-> +		return;
->  	dev->cmbloc =3D readl(dev->bar + NVME_REG_CMBLOC);
-> =20
-> -	size =3D nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
-> +	if (check_mul_overflow(nvme_cmb_size_unit(dev), nvme_cmb_size(dev), &si=
-ze))
-> +		return;
->  	offset =3D nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
->  	bar =3D NVME_CMB_BIR(dev->cmbloc);
->  	bar_size =3D pci_resource_len(pdev, bar);
-
-[Severity: High]
-If nvme_cmb_size_unit() returned 0, won't check_mul_overflow() compute
-0 * sz =3D 0, return false (no overflow), and set size =3D 0 without return=
-ing
-early?
-
-Because size evaluates to 0, execution continues, and later in the function
-pci_p2pdma_add_resource() will be called with size=3D0 and offset=3D0.
-
-As noted in the commit message, calling pci_p2pdma_add_resource() with size=
-=3D0
-causes the P2PDMA subsystem to default to mapping the entire remaining BAR.
-Does this defeat the SZU boundary check above and re-trigger the exact memo=
-ry
-mapping warning this patch is attempting to fix?
-
-Should nvme_map_cmb() explicitly check if nvme_cmb_size_unit() =3D=3D 0 or =
-if the
-resulting size =3D=3D 0 before continuing?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622012147.4060=
-0-1-kangfenglong@huawei.com?part=3D1
+VGhhbmtzIGZvciByZXZpZXchDQoNCllvdXIgZmVlZGJhY2sgaXMgcmVhc29uYWJsZSwgYW5kIEkg
+d2lsbCBmaXggaXQgaW4gdGhlIG5leHQgcGF0Y2jvvIEgDQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0t
+LS0NCuWPkeS7tuS6ujogc2FzaGlrby1ib3RAa2VybmVsLm9yZyBbbWFpbHRvOnNhc2hpa28tYm90
+QGtlcm5lbC5vcmddIA0K5Y+R6YCB5pe26Ze0OiAyMDI25bm0NuaciDIy5pelIDk6MjkNCuaUtuS7
+tuS6ujogS2FuZ2Zlbmdsb25nIDxrYW5nZmVuZ2xvbmdAaHVhd2VpLmNvbT4NCuaKhOmAgTogbGlu
+dXgtcGNpQHZnZXIua2VybmVsLm9yZw0K5Li76aKYOiBSZTogW1BBVENIIHYyXSBudm1lLXBjaTog
+Zml4IENNQiBtYXBwaW5nIHdoZW4gQ01CU1ogU2l6ZSBmaWVsZCBpcyB6ZXJvDQoNClRoYW5rIHlv
+dSBmb3IgeW91ciBjb250cmlidXRpb24hIFNhc2hpa28gQUkgcmV2aWV3IGZvdW5kIDEgcG90ZW50
+aWFsIGlzc3VlKHMpIHRvIGNvbnNpZGVyOg0KLSBbSGlnaF0gUmV0dXJuaW5nIDAgZnJvbSBgbnZt
+ZV9jbWJfc2l6ZV91bml0KClgIHRvIHJlamVjdCBpbnZhbGlkIFNaVSB2YWx1ZXMgZXZhbHVhdGVz
+IHRvIGEgc2l6ZSBvZiAwLCBieXBhc3NpbmcgdGhlIHJlamVjdGlvbiBhbmQgdHJpZ2dlcmluZyB0
+aGUgZXhhY3QgYnVnIHRoZSBwYXRjaCBhdHRlbXB0cyB0byBmaXguDQotLQ0KDQpjb21taXQgZWZj
+ZDcxNzA4MDAzYzE0MDM4YTFmZGM3OWI2MjMzY2M0YjZhODE5Mg0KQXV0aG9yOiBrYW5nZmVuZ2xv
+bmcgPGthbmdmZW5nbG9uZ0BodWF3ZWkuY29tPg0KDQpudm1lLXBjaTogZml4IENNQiBtYXBwaW5n
+IHdoZW4gQ01CU1ogU2l6ZSBmaWVsZCBpcyB6ZXJvDQoNClRoaXMgY29tbWl0IHJlc3RvcmVzIHRo
+ZSBjaGVjayBmb3IgYSB6ZXJvIFNaIGZpZWxkIGluIHRoZSBDTUJTWiByZWdpc3RlciwgbGltaXRz
+IHRoZSBTaXplIFVuaXRzIChTWlUpIHRvIHZhbGlkIHZhbHVlcywgYW5kIGFkZHMgYW4gb3ZlcmZs
+b3cgY2hlY2sgd2hlbiBjYWxjdWxhdGluZyB0aGUgQ01CIHNpemUgdG8gYXZvaWQgbWFwcGluZyBl
+cnJvcnMuDQoNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbnZtZS9ob3N0L3BjaS5jIGIvZHJpdmVy
+cy9udm1lL2hvc3QvcGNpLmMgaW5kZXggDQo+IGU2MjY3YTZhYTM4MDEuLjI3OTQyOThhYTllNjYg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbnZtZS9ob3N0L3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMv
+bnZtZS9ob3N0L3BjaS5jDQo+IEBAIC0xODE0LDYgKzE4MTQsOSBAQCBzdGF0aWMgdTY0IG52bWVf
+Y21iX3NpemVfdW5pdChzdHJ1Y3QgbnZtZV9kZXYgDQo+ICpkZXYpICB7DQo+ICAJdTggc3p1ID0g
+KGRldi0+Y21ic3ogPj4gTlZNRV9DTUJTWl9TWlVfU0hJRlQpICYgTlZNRV9DTUJTWl9TWlVfTUFT
+SzsNCj4gIA0KPiArCWlmIChzenUgPiA2KQ0KPiArCQlyZXR1cm4gMDsNCj4gKw0KDQpbU2V2ZXJp
+dHk6IEhpZ2hdDQpJZiB0aGlzIGJvdW5kYXJ5IGNoZWNrIHJldHVybnMgMCB0byByZWplY3QgYW4g
+aW52YWxpZCBTWlUgdmFsdWUsIHdpbGwgdGhpcw0KMCB2YWx1ZSBiZSB1c2VkIGluIHN1YnNlcXVl
+bnQgY2FsY3VsYXRpb25zIHJhdGhlciB0aGFuIHRyaWdnZXJpbmcgYW4gYWJvcnQ/DQoNCj4gIAly
+ZXR1cm4gMVVMTCA8PCAoMTIgKyA0ICogc3p1KTsNCj4gIH0NCj4gIA0KPiBAQCAtMTgzOCw5ICsx
+ODQxLDEyIEBAIHN0YXRpYyB2b2lkIG52bWVfbWFwX2NtYihzdHJ1Y3QgbnZtZV9kZXYgKmRldikN
+Cj4gIAlkZXYtPmNtYnN6ID0gcmVhZGwoZGV2LT5iYXIgKyBOVk1FX1JFR19DTUJTWik7DQo+ICAJ
+aWYgKCFkZXYtPmNtYnN6KQ0KPiAgCQlyZXR1cm47DQo+ICsJaWYgKCFudm1lX2NtYl9zaXplKGRl
+dikpDQo+ICsJCXJldHVybjsNCj4gIAlkZXYtPmNtYmxvYyA9IHJlYWRsKGRldi0+YmFyICsgTlZN
+RV9SRUdfQ01CTE9DKTsNCj4gIA0KPiAtCXNpemUgPSBudm1lX2NtYl9zaXplX3VuaXQoZGV2KSAq
+IG52bWVfY21iX3NpemUoZGV2KTsNCj4gKwlpZiAoY2hlY2tfbXVsX292ZXJmbG93KG52bWVfY21i
+X3NpemVfdW5pdChkZXYpLCBudm1lX2NtYl9zaXplKGRldiksICZzaXplKSkNCj4gKwkJcmV0dXJu
+Ow0KPiAgCW9mZnNldCA9IG52bWVfY21iX3NpemVfdW5pdChkZXYpICogTlZNRV9DTUJfT0ZTVChk
+ZXYtPmNtYmxvYyk7DQo+ICAJYmFyID0gTlZNRV9DTUJfQklSKGRldi0+Y21ibG9jKTsNCj4gIAli
+YXJfc2l6ZSA9IHBjaV9yZXNvdXJjZV9sZW4ocGRldiwgYmFyKTsNCg0KW1NldmVyaXR5OiBIaWdo
+XQ0KSWYgbnZtZV9jbWJfc2l6ZV91bml0KCkgcmV0dXJuZWQgMCwgd29uJ3QgY2hlY2tfbXVsX292
+ZXJmbG93KCkgY29tcHV0ZQ0KMCAqIHN6ID0gMCwgcmV0dXJuIGZhbHNlIChubyBvdmVyZmxvdyks
+IGFuZCBzZXQgc2l6ZSA9IDAgd2l0aG91dCByZXR1cm5pbmcgZWFybHk/DQoNCkJlY2F1c2Ugc2l6
+ZSBldmFsdWF0ZXMgdG8gMCwgZXhlY3V0aW9uIGNvbnRpbnVlcywgYW5kIGxhdGVyIGluIHRoZSBm
+dW5jdGlvbg0KcGNpX3AycGRtYV9hZGRfcmVzb3VyY2UoKSB3aWxsIGJlIGNhbGxlZCB3aXRoIHNp
+emU9MCBhbmQgb2Zmc2V0PTAuDQoNCkFzIG5vdGVkIGluIHRoZSBjb21taXQgbWVzc2FnZSwgY2Fs
+bGluZyBwY2lfcDJwZG1hX2FkZF9yZXNvdXJjZSgpIHdpdGggc2l6ZT0wIGNhdXNlcyB0aGUgUDJQ
+RE1BIHN1YnN5c3RlbSB0byBkZWZhdWx0IHRvIG1hcHBpbmcgdGhlIGVudGlyZSByZW1haW5pbmcg
+QkFSLg0KRG9lcyB0aGlzIGRlZmVhdCB0aGUgU1pVIGJvdW5kYXJ5IGNoZWNrIGFib3ZlIGFuZCBy
+ZS10cmlnZ2VyIHRoZSBleGFjdCBtZW1vcnkgbWFwcGluZyB3YXJuaW5nIHRoaXMgcGF0Y2ggaXMg
+YXR0ZW1wdGluZyB0byBmaXg/DQoNClNob3VsZCBudm1lX21hcF9jbWIoKSBleHBsaWNpdGx5IGNo
+ZWNrIGlmIG52bWVfY21iX3NpemVfdW5pdCgpID09IDAgb3IgaWYgdGhlIHJlc3VsdGluZyBzaXpl
+ID09IDAgYmVmb3JlIGNvbnRpbnVpbmc/DQoNCi0tDQpTYXNoaWtvIEFJIHJldmlldyDCtyBodHRw
+czovL3Nhc2hpa28uZGV2LyMvcGF0Y2hzZXQvMjAyNjA2MjIwMTIxNDcuNDA2MDAtMS1rYW5nZmVu
+Z2xvbmdAaHVhd2VpLmNvbT9wYXJ0PTENCg0K
