@@ -1,47 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D43332FE56F;
-	Tue, 23 Jun 2026 16:31:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232522DCC1C;
+	Tue, 23 Jun 2026 16:33:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782232297; cv=none; b=k1LrgLONJGU1YwAIVVSjrKZ880w7kK8wq1B/ZHF1Ws8poO+jVMYhrK7yvfBuH7JH22RoVuLEBZT60oKQF49gHEwLVWKS+FjgOVZEj8RwTBEJxHAL0jvs4kVi7OKyrRhm7JWY+AJbvEmKtIUCEyzx1gqR2wsWyyrBYLRm4JUpMME=
+	t=1782232391; cv=none; b=X8lyyYY7rRa7u5rDbN3buiUmtKWbzVOpKXbZeNlvE7IMQIwRCng9JFt4dmPK9yqKoReb1W77hhs+a5GpQ8Wx8x0bgp+usiUowARAqaqtb/uwPfk9SbuqsswxqrNFM1203hX+1CtoVIhWwp0nJHelVjCe00uMk4jBFzia7OmKRjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782232297; c=relaxed/simple;
-	bh=VlgUc80un1XQ/6YKqaqYosKOUN5356Fe04gal/+WyEE=;
+	s=arc-20240116; t=1782232391; c=relaxed/simple;
+	bh=yeo7JSfde5yHDo56u955/eNNI3G2a26sViMwEaODPoY=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=gJSAVMfkt9s4nLp0nDyrgtZfOCntuo/pOwkthLmIfFUmV1yn3Pf29gYabn7rRZJbCX9OF3HT4s4wqFUFSCHk/+5p7V/xmvq6vodOrAK3oqBJ2GKTquOykicETCqjTgAqEL9l1hWPw2SktVYu3ze2eBmJFsjTyRAsrFD85a4QaX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZvp6gca; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=LZLJs9u9yT/DVTF3bpqhIEY99OO4kx8S86odgXhP8j8dMtrcIkeJMBd7spmRcfbZxiWHgho8AXEHh4+rj3UT1c8Uo4JJu+QUxF5pbwW/mdoWtu6uFMRGqg8Ndd4AQad66c3iKfngRNbqRufNKxX/hnAmAqB9WDvsaXtcSVJN9OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJVqFcVY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZvp6gca"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A7621F000E9;
-	Tue, 23 Jun 2026 16:31:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJVqFcVY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8981A1F000E9;
+	Tue, 23 Jun 2026 16:33:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782232295;
-	bh=+gl2YP9DMrs4ERLIfu+0S4LkjE4WZh85GltKXGn3Lwk=;
+	s=k20260515; t=1782232389;
+	bh=yHcJgKgcNpooi6kS03tC02GgQ7jUj1QYimB910EmFiM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=XZvp6gcaEqh3iFSYf3xfCJI0OVDAFQo1Dy6e18VCI8aIa6B3Tm28nT9nlPGUbnrSp
-	 rFP7oUr1pgNjrx9/6BVUeXEH4ugXU0teBbuKcJRMQN6940iTr+rxXoYcee5/NWB0Br
-	 XJZde5vKvFkBjZ/CgbZSnquCNiVEURThPcCHpB2gpP/kMXrzysMt5Vire+bKu6HpCs
-	 M1TsOBd5nzFpSUbwoOA9i3wUTWGYnfGNn178nVeAHG2tYi8nP01tach0Xx3khnSc8h
-	 Sjta60t1i8z/Sn1z/EF3jODrUORyoGRCRB6vg1gqswyxhsjcRjWK3QaOmdO2TlQjXe
-	 H8PiSbzs8Kh8w==
-Date: Tue, 23 Jun 2026 11:31:34 -0500
+	b=FJVqFcVYll99sWq1gPUp5BOKZmfxubSNmzR0j0L7GXWuJxRpspA8qDbTPQ/KiqLc/
+	 6r4eeX5t3+7oRzb8j1dXrA6LqiXSNY2+qn2P5U/gIm1pJgFqtSUMlyH5AqoPuJerCS
+	 u+owEjxINuwQIRwjfbim3JKOlhYDBmVayb34kSyMTOn41B64Pdvt9DSLa603oRu1D6
+	 yI1p+oBTvXxDC9CurOO005JewAzVCYkoNU4KAnHUkx9V0YvrFHK5WTu4ZMb7Fdo4iv
+	 Mm7jJCdJgA4Ep1OJpPwzlLolgy+TGb+Oh4CUgoUcNdJ+wBLUH+9RkushzDLHWT0CJs
+	 gToj0mFtCtCrw==
+Date: Tue, 23 Jun 2026 11:33:08 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, ntb@lists.linux.dev
-Subject: Re: [PATCH v4 12/12] NTB: epf: Implement db_vector_count/mask for
- doorbells
-Message-ID: <20260623163134.GA813775@bhelgaas>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+	mjrosato@linux.ibm.com
+Subject: Re: [PATCH v19 0/3] [VFIO] Error recovery for vfio-pci devices on
+ s390x
+Message-ID: <20260623163308.GA817537@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,100 +43,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260513024923.451765-13-den@valinux.co.jp>
+In-Reply-To: <a2dcd383-e93b-4771-916d-d836df5f48c2@linux.ibm.com>
 
-On Wed, May 13, 2026 at 11:49:23AM +0900, Koichiro Den wrote:
-> Implement .db_vector_count and .db_vector_mask so ntb core/clients can
-> map doorbell events to per-vector work.
-> 
-> Report vectors as 0..(db_count - 2) (skipping the unused slot) and return
-> BIT_ULL(db_vector) for the corresponding doorbell bit. Use
-> ntb_epf_db_vector_count() for bounds checks in ntb_epf_db_vector_mask(), so
-> the same lower-bound guard is applied before building the bitmask.
-> 
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
-> Changes since v3:
->   - Reuse ntb_epf_db_vector_count() from ntb_epf_db_vector_mask() for bounds.
->   - Return 0 when db_count is below NTB_EPF_MIN_DB_COUNT.
->   - Drop Reviewed-by tags due to the changes.
-> 
->  drivers/ntb/hw/epf/ntb_hw_epf.c | 32 ++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
-> 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> index 10618e462229..af5755472842 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> @@ -434,6 +434,36 @@ static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
->  	return ntb_ndev(ntb)->db_valid_mask;
->  }
->  
-> +static int ntb_epf_db_vector_count(struct ntb_dev *ntb)
-> +{
-> +	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
-> +	unsigned int db_count = ndev->db_count;
-> +
-> +	/*
-> +	 * db_count includes an extra skipped slot due to the legacy
-> +	 * doorbell layout. Expose only the real doorbell vectors.
-> +	 */
-> +	if (db_count < NTB_EPF_MIN_DB_COUNT)
-> +		return 0;
-> +
-> +	return db_count - 1;
-> +}
-> +
-> +static u64 ntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-> +{
-> +	int nr_vec;
-> +
-> +	/*
-> +	 * db_count includes one skipped slot in the legacy layout. Valid
-> +	 * doorbell vectors are therefore [0 .. (db_count - 2)].
-> +	 */
-> +	nr_vec = ntb_epf_db_vector_count(ntb);
-> +	if (db_vector < 0 || db_vector >= nr_vec)
-> +		return 0;
-> +
-> +	return BIT_ULL(db_vector);
+On Tue, Jun 23, 2026 at 09:19:03AM -0700, Farhan Ali wrote:
+> Polite ping for this series :)
 
-This all ends up looking slightly different from pci-epf-vntb.c, and
-it's not obvious whether the differences are essential or superfluous.
+We're more than halfway through the v7.2 merge window, so it's too
+late to add things for v7.2.  We'll get back to this after v7.2-rc1,
+i.e., next week.
 
-pci-epf-vntb.c:
-
-  enum EPF_IRQ_DB_START                           # value 2
-  #define MIN_DB_COUNT  (EPF_IRQ_DB_START + 1)    # value 3
-
-  vntb_epf_db_vector_count() comment says "db_count is total number of
-  doorbell slots exposed to peer, including reserved ones".  But it
-  returns "db_count - EPF_IRQ_DB_START", which suggests that the
-  reserves slots are not exposed?
-
-  vntb_epf_db_vector_count() comment lists two reserved slots
-
-  vntb_epf_db_vector_count() returns "db_count - EPF_IRQ_DB_START"
-
-  vntb_epf_db_vector_mask() comment mentions "two reserved slots"
-
-ntb_hw_epf.c:
-
-  enum EPF_IRQ_DB_START                # value 2
-  #define NTB_EPF_MIN_DB_COUNT  3      # value 3, not based on EPF_IRQ_DB_START
-
-  ntb_epf_db_vector_count() comment says "expose only real doorbell
-  vectors".  I guess this *excludes* the reserved ones?
-
-  ntb_epf_db_vector_count() comment mentions "an extra skipped slot"
-  but apparently actually accounts for *two* slots
-  (NTB_EPF_MIN_DB_COUNT==3)
-
-  ntb_epf_db_vector_count() returns "db_count - 1"   # should it be -2?
-
-  ntb_epf_db_vector_mask() comment mentions "one skipped slot"
-
-I don't want to change anything during the v7.2 merge window, but if
-there are any actual bugs here, they could be fixed after v7.2-rc1.
-If there are no bugs but this could be clarified to reduce confusion,
-we could do that for v7.3.
+> On 6/15/2026 11:36 AM, Farhan Ali wrote:
+> > Hi Alex,
+> > 
+> > This patch set includes only the VFIO patches of the original series for
+> > error recovery for vfio-pci devices on s390x [1]. Breaking up the patch
+> > series into PCI and VFIO only patches to make merging easier based on our
+> > discussion [2].
+> > 
+> > Thanks
+> > Farhan
+> > 
+> > [1] https://lore.kernel.org/all/20260520171113.1111-1-alifm@linux.ibm.com/
+> > [2] https://lore.kernel.org/all/20260602163344.1eda12d2@shazbot.org/
+> > 
+> > ChangeLog
+> > ---------
+> > v18 https://lore.kernel.org/all/20260603182415.2324-1-alifm@linux.ibm.com/
+> > v18 -> v19
+> >   - Fix hole in struct vfio_device_feature_zpci_err.
+> >   - Remove reset_done() callback for vfio-pci driver.
+> >   - Rebase on 7.1-rc7
+> > 
+> > v17 -> v18
+> >   - Print a warn with dev_warn_ratelimited() for copy_to_user failure.
+> >   - Rebase on 7.1-rc6.
+> >   - Break patch series into VFIO patch set.
+> > 
+> > Farhan Ali (3):
+> >    s390/pci: Store PCI error information for passthrough devices
+> >    vfio-pci/zdev: Add a device feature for error information
+> >    vfio/pci: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
+> > 
+> >   arch/s390/include/asm/pci.h       |  32 +++++++
+> >   arch/s390/pci/pci.c               |   1 +
+> >   arch/s390/pci/pci_event.c         | 137 +++++++++++++++++++-----------
+> >   drivers/vfio/pci/vfio_pci_core.c  |  10 +--
+> >   drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
+> >   drivers/vfio/pci/vfio_pci_priv.h  |   9 ++
+> >   drivers/vfio/pci/vfio_pci_zdev.c  |  61 ++++++++++++-
+> >   include/uapi/linux/vfio.h         |  30 +++++++
+> >   8 files changed, 221 insertions(+), 62 deletions(-)
+> > 
