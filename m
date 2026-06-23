@@ -1,84 +1,226 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51EB29D26E
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 08:34:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8502580F2;
+	Tue, 23 Jun 2026 08:51:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782203675; cv=none; b=jsidbUQRqPBvThYkvtSh2vLkvcxKBCZ3Yjq13JnF6q9R5n1PHbJUm83OJAjo94qc9+5NpFzJkI5R/ZgmJIYBoMu9VvUtcqdCzEEQ34LkUC2Eohucbyo3IbbrRl5kyGSOQ9BSUHxpT3Xe7qgoJAxCJdTGuarsHN3NtXNRN7LUwXc=
+	t=1782204666; cv=none; b=WxjTRw3VlCLa+UM6V9eUEMr6TPd8ISvp8Q26klzTdQ5SsU7mNZ7NvW6hX6RhNe9NdAc80U/WJZTmaBwUM2EaKw0/HY/+zXNWdEGoAIGXWhxixM2rNPTwua5j48QnGw+HhngSk5zTBmt0M5DTRHXza5hZoFL5K/VDCCR/OUSI8+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782203675; c=relaxed/simple;
-	bh=Y0a7WddgUQ/5f5obr2F/RzKsHSRjgorUSTkuUO5qnKs=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IgiLU1KYCcjXO09otFBIRznZLLWKwaa/AYJduvv1Dfph05osGMEzMvfQl0f37qmoh2JYe0+4hURXsIrgXq5/kdkgtruGVlMBsMs7Vy6ZLMVrZB2UHzDMT6UJxWFz35xRay4uYp0/665wZoZhJoKGBE75S9Y4u2sO8t4SSTpMPR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kt2HkJH4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782204666; c=relaxed/simple;
+	bh=gGQtPLQNgyw1QnJc0KcmR+nX5FnipvxpQ0RMhD+xKro=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=IZHEO7324qHO7Ura+91rXkyBSTeuyNhDPH6dviSem+6Nz3Ae7gaaLX0DXpYNiWYPwTKiblI5gHXJ9Krn5y0IV9Y30W/ywMwxzXNDH+eu6VSR5dpq7+hK12e45P144F6aaIm7DgTHiUpfQB+HF8XNLwsej44NQFYr1jAsq/pBzw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=DWIZPgs5; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kt2HkJH4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 778241F00ADE
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 08:34:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782203673;
-	bh=Y0a7WddgUQ/5f5obr2F/RzKsHSRjgorUSTkuUO5qnKs=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=Kt2HkJH49eUMpNp44hmnOsa/cj6zhemVuoKImAOY34KH6f9vjiJzR4lc64xOMI395
-	 pROr+wwCuXnTUxcAUy96A3/+dC8P5yx/s1evQTV0qPDP47yl1XE+oTBdKF4+v6kJdD
-	 x91TxytHaTJPncL654CBHV/3vxCbzT0KwOic99hwZ2ys+w++j9Zg+H2rwzYT8Torku
-	 1dNDaZoDAMYqiCvp0U2xdynE0G4rqJnfeUBtJBBoFbQx5CTs2VhtWrK0hx/DUz6hDI
-	 j6+KqqA7WF4tuITdQAiyAMzgZu2/0RAzFvojQakjwCzfGglcDjEqb+ULCi9n5SbeZg
-	 5TdZbr0BUDOrQ==
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-139aff562e1so3084246c88.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 01:34:33 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+zRrl3gZA7okHLCgfXYqwa+2rGO8rX4fwZn8/5f46cNiyhrcczCF/huZGFduY6yVgHOVY1lbKqGkA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyMZvi7kF+Hg+saNCg50RjyqU5fzgC45JrD0oLad+ICZ0w/IIxR
-	SGL5PzlIlI5P5L0vjBijVkWtjrslSXz5YjCZ+9cedqJIG9g3NGS3nMLv1mtWELLCCzu+92OTwho
-	+ds5fcVwFS14OCQCq9wzDjqaoV30jDsKhpuk9KxCOtg==
-X-Received: by 2002:a05:7022:439d:b0:139:90ab:36c8 with SMTP id
- a92af1059eb24-139c6ebeb63mr1076352c88.1.1782203672876; Tue, 23 Jun 2026
- 01:34:32 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 23 Jun 2026 01:34:28 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 23 Jun 2026 01:34:28 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260623030736.1421537-4-sherry.sun@oss.nxp.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="DWIZPgs5"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=+gNp84iL2JLpVuAjQy/FRZDmEA9yVf4gqt3WOg0gOWs=;
+	b=DWIZPgs5G24PIZW3aRe8SlqoX57l/E8np2Ld/tmAWgXs1R0fVmRUBmwwUb5N6izXaDXM1uAAs
+	9wwgtMiZdgw7Aw0uiYcB4UaJ6S+mp+oENWuNrz2KbQPkyJIysear8EbaHR6yVMmTeyGkVd8LDuI
+	JEVRdOUuXTJm0B1OMIhanOQ=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gkz8318HjzmVC8;
+	Tue, 23 Jun 2026 16:41:55 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0DE614055B;
+	Tue, 23 Jun 2026 16:51:00 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Tue, 23 Jun 2026 16:50:59 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
+CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
+	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH RESEND v18 10/12] vfio/pci: Add TPH_ENABLE feature skeleton and unsafe module parameter
+Date: Tue, 23 Jun 2026 16:50:46 +0800
+Message-ID: <20260623085048.51139-11-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260623085048.51139-1-fengchengwen@huawei.com>
+References: <20260623085048.51139-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260623030736.1421537-1-sherry.sun@oss.nxp.com> <20260623030736.1421537-4-sherry.sun@oss.nxp.com>
-Date: Tue, 23 Jun 2026 01:34:28 -0700
-X-Gmail-Original-Message-ID: <CAMRc=McH-x5Td=60pMNUOmT-rZ3Xz4PvvKFK=8CMwESMOm4iag@mail.gmail.com>
-X-Gm-Features: AVVi8CdbY5Iy4YQ3Oz-eyh9mfYSh4JWVxu6-pYJlwg1EFWjmAS3iyrKv35O8gr4
-Message-ID: <CAMRc=McH-x5Td=60pMNUOmT-rZ3Xz4PvvKFK=8CMwESMOm4iag@mail.gmail.com>
-Subject: Re: [PATCH V2 3/8] Bluetooth: btnxpuart: Add M.2 Bluetooth device
- support using pwrseq
-To: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
-Cc: imx@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, sherry.sun@nxp.com, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, Frank.Li@nxp.com, 
-	s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com, 
-	amitkumar.karwar@nxp.com, neeraj.sanjaykale@nxp.com, marcel@holtmann.org, 
-	luiz.dentz@gmail.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
-	bhelgaas@google.com, brgl@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On Tue, 23 Jun 2026 05:07:30 +0200, "Sherry Sun (OSS)"
-<sherry.sun@oss.nxp.com> said:
-> From: Sherry Sun <sherry.sun@nxp.com>
->
-> Power supply to the M.2 Bluetooth device attached to the host using M.2
-> connector is controlled using the 'uart' pwrseq device. So add support for
-> getting the pwrseq device if the OF graph link is present. Once obtained,
-> pwrseq_power_on() is called to power up the M.2 Bluetooth card. The power
-> sequencer descriptor is obtained via devm_pwrseq_get(), so the power-off
-> and cleanup are handled automatically when the device is unbound.
->
-> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> ---
+Introduce module param enable_unsafe_tph to gate all TPH related features,
+and add VFIO_DEVICE_FEATURE_TPH_ENABLE uapi together with per-device
+tph_permit flag.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+This is a preparatory implementation: only feature framework is added
+for now, actual TPH_CTRL register permission control and steering tag
+features (TPH_CPU_ST / TPH_ST_CONFIG) will be attached in subsequent
+TPH capability virtualization commits.
+
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
+ drivers/vfio/pci/vfio_pci_config.c |  1 +
+ drivers/vfio/pci/vfio_pci_core.c   | 25 ++++++++++++++++++++++++-
+ include/linux/vfio_pci_core.h      |  4 +++-
+ include/uapi/linux/vfio.h          |  7 +++++++
+ 5 files changed, 47 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 0c771064c0b8..6d73668459cf 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -60,6 +60,12 @@ static bool disable_denylist;
+ module_param(disable_denylist, bool, 0444);
+ MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
+ 
++#ifdef CONFIG_PCIE_TPH
++static bool enable_unsafe_tph;
++module_param(enable_unsafe_tph, bool, 0444);
++MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
++#endif
++
+ static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
+ {
+ 	switch (pdev->vendor) {
+@@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
+ {
+ 	int ret;
+ 	bool is_disable_vga = true;
++	bool is_enable_unsafe_tph = false;
+ 
+ #ifdef CONFIG_VFIO_PCI_VGA
+ 	is_disable_vga = disable_vga;
+ #endif
++#ifdef CONFIG_PCIE_TPH
++	is_enable_unsafe_tph = enable_unsafe_tph;
++#endif
+ 
+-	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
++	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
++				 is_enable_unsafe_tph);
+ 
+ 	/* Register and scan for devices */
+ 	ret = pci_register_driver(&vfio_pci_driver);
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index 5c6ab172df6c..251d3ec7fdd4 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1783,6 +1783,7 @@ int vfio_config_init(struct vfio_pci_core_device *vdev)
+ 		goto out;
+ 
+ 	vdev->bardirty = true;
++	vdev->tph_permit = false;
+ 
+ 	/*
+ 	 * XXX can we just pci_load_saved_state/pci_restore_state?
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index a28f1e99362c..b0193afca875 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -41,6 +41,7 @@
+ static bool nointxmask;
+ static bool disable_vga;
+ static bool disable_idle_d3;
++static bool enable_unsafe_tph;
+ 
+ static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
+ {
+@@ -1554,6 +1555,24 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
+ 	return 0;
+ }
+ 
++static int vfio_pci_core_feature_tph_enable(struct vfio_pci_core_device *vdev,
++					    u32 flags, size_t argsz)
++{
++	int ret;
++
++	if (!enable_unsafe_tph)
++		return -EOPNOTSUPP;
++
++	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET, 0);
++	if (ret <= 0)
++		return ret;
++
++	if (!vdev->tph_permit)
++		vdev->tph_permit = 1;
++
++	return 0;
++}
++
+ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+ 				void __user *arg, size_t argsz)
+ {
+@@ -1572,6 +1591,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+ 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+ 	case VFIO_DEVICE_FEATURE_DMA_BUF:
+ 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
++	case VFIO_DEVICE_FEATURE_TPH_ENABLE:
++		return vfio_pci_core_feature_tph_enable(vdev, flags, argsz);
+ 	default:
+ 		return -ENOTTY;
+ 	}
+@@ -2615,11 +2636,13 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
+ }
+ 
+ void vfio_pci_core_set_params(bool is_nointxmask, bool is_disable_vga,
+-			      bool is_disable_idle_d3)
++			      bool is_disable_idle_d3,
++			      bool is_enable_unsafe_tph)
+ {
+ 	nointxmask = is_nointxmask;
+ 	disable_vga = is_disable_vga;
+ 	disable_idle_d3 = is_disable_idle_d3;
++	enable_unsafe_tph = is_enable_unsafe_tph;
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_set_params);
+ 
+diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+index 5fc6ce4dd786..d551e530dd86 100644
+--- a/include/linux/vfio_pci_core.h
++++ b/include/linux/vfio_pci_core.h
+@@ -128,6 +128,7 @@ struct vfio_pci_core_device {
+ 	bool			pm_intx_masked:1;
+ 	bool			pm_runtime_engaged:1;
+ 	bool			sriov_active;
++	bool			tph_permit;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	struct pci_saved_state	*pm_save;
+ 	int			ioeventfds_nr;
+@@ -158,7 +159,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
+ 				      const struct vfio_pci_regops *ops,
+ 				      size_t size, u32 flags, void *data);
+ void vfio_pci_core_set_params(bool nointxmask, bool is_disable_vga,
+-			      bool is_disable_idle_d3);
++			      bool is_disable_idle_d3,
++			      bool is_enable_unsafe_tph);
+ void vfio_pci_core_close_device(struct vfio_device *core_vdev);
+ int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
+ void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 5de618a3a5ee..e5a4d1d7091b 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -1534,6 +1534,13 @@ struct vfio_device_feature_dma_buf {
+  */
+ #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+ 
++/*
++ * Device-level opt-in for TPH (Transaction Processing Hints) support.
++ * When set, allows access to TPH_CPU_ST and TPH_ST_CONFIG features.
++ * Requires global enable_unsafe_tph module parameter to be enabled.
++ */
++#define VFIO_DEVICE_FEATURE_TPH_ENABLE	13
++
+ /* -------- API for Type1 VFIO IOMMU -------- */
+ 
+ /**
+-- 
+2.17.1
+
