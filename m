@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C64754774;
-	Tue, 23 Jun 2026 05:13:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02CBD30D3E7;
+	Tue, 23 Jun 2026 05:16:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782191634; cv=none; b=FnaRhOCIwXgW8m9ySx2CZ3uIGYaCIVP3rq1SrNh+U91m7E9TOLiLDY4SCM5Rf5TIK027aNKCU0Qx0oYDWaBeQeJJ83ZoQFCSulBhZBN66Li16K/pB4JwHcCsWY3svZGf2um7AWHjfrd5FP2uG+LMEoFnTnxbTjkafTrqWI2DnTs=
+	t=1782191782; cv=none; b=FhD319rtj7DXtH3lA91dZh1OnnVDSZPgBA42lkhWcGvfEz0XRAcp/G/al+XsjY6xCnVMb//v/rZAFXibvnSujr7wkEK68qY57N/BmSFMMBY7xbsgvgbc3zKTWrMGo+deL+9dAU3dP9FQ+ZIRmF6wcmiXB4B0HSHB14ropGpSq8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782191634; c=relaxed/simple;
-	bh=8NfuWiA6L9i2iUUzuYSFb6zvI8FHDFVhrNrfKlIQT8E=;
+	s=arc-20240116; t=1782191782; c=relaxed/simple;
+	bh=19h73++45BIrgajM6KDs1ITNwy3lqIbe5Yz2+UVpPYw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BhJxkNj/tzn8pOaVrIlHJlhRs6GnKzgzfMdTKm6n7eoUbCzLxVVQAPOYm3NGvD+m8aldoO6uH8Hg/+28AXK2Zo/mdPWk48iTZ6375EXD9gk4vYu2/ikgqJKRfrKRH8nIu2QTXSKVQN7KVSvE5Qwl/mhK72z2kmANGqRl2vS12uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AFZCF4M2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Vn50iockVPNRIeAkFu/y9doBJUXejAlG3mh/MmLQmTAkuNrx2T6643k0IsDJKxkpMXAH79cC20f8atDtSaAwN3UxoXgBJvGj0aY1JMtiwf3SJJeyPdS96PpTRXrtvcDeCZEcXbwdr7rH5RO5uQOCvJfOlzvFv0xU2js8omRCKFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WYJN8ECZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AFZCF4M2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E33051F000E9;
-	Tue, 23 Jun 2026 05:13:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WYJN8ECZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95CD11F000E9;
+	Tue, 23 Jun 2026 05:16:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782191633;
-	bh=q1ZjqTq47xg/OND37Aoj/m5PbgNtKKQ7wZsgwUrwYNg=;
+	s=k20260515; t=1782191780;
+	bh=ZgAaqJvUL1O6OMjMcMOymeEzNcjAajkuQikSI7dp4jo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AFZCF4M2GEjSQfnCsU2HbpUGIN5jYzcSGqY/wktVhyVDcTje55RnPtwL5bf75YGWB
-	 5csa3d9+oS7Wvny9UuWqU2hewiULeBoPdOiwAtRMC2PB3k3BFH4dJ2ADX+oSar/r79
-	 oZQxsflZt0jLEtLOdFZDK2JlQOmpjTilzY7yZekQ5/ZTjoIBwEd1XtWiiaoNFA/tTW
-	 +JoyH9tBAxMO1GCpV98zl4ly9DNtAmzgHQj811zA+Ir/u+2AmYHI1lsmlgPcYuNVP7
-	 F30NCfDK6SZppti0dvDqEqNWamJmHuykUQ2uE/VtrlCvFzdDt+Aux2USEJZD+ORdkg
-	 4iSWCuPg8yUBg==
+	b=WYJN8ECZRP1PetJUsRCmL2to4orhn5gRDpRzAG9WaSww9HIIy1aJT3ILiwHVv/Wj6
+	 CXaY7l5MiKcgt9Is1YeuCpEFs/M3SC7rgr51jgAPw7nXwNh9jFtx2vo76uC0Q84IYY
+	 z6eJjbHEiGnFS+Gsxqk9Q0rpPEPDNFW9/QcoV3o6ksGFuoMG2xOZU+0Z/OffyI6Efj
+	 nylnDUpUNgmfZLm0NJ/QDapJtDglHPPMlJ9Eolx6dQVNuXaDyhMlkgvHgf2zfjsjAg
+	 acYPbqAosioo30nCPlgCTYoj420OFZYZWxk3nCrRBIBPASqaOz9suHHQcZRefkhT4B
+	 cLUGVma9LdSOQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 20/21] rust: allow extracting the buffer from a
- CString
+Subject: Re: [PATCH v2 11/21] PCI/TSM: Support connecting to PCIe CMA
+ devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260623045406.2589547-21-alistair.francis@wdc.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260623045406.2589547-12-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-21-alistair.francis@wdc.com>
+ <20260623045406.2589547-12-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:13:52 +0000
-Message-Id: <20260623051352.E33051F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:16:20 +0000
+Message-Id: <20260623051620.95CD11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,58 +47,107 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] The `into_vec` method diverges from Rust's standard library `CSt=
-ring` naming conventions, obscuring the presence of the NUL terminator and =
-creating a dangerous API trap.
-- [Low] Typo in the commit message: 'aroud' instead of 'around'.
+- [High] Bypassing the function 0 check for CMA-capable devices breaks the =
+subsystem's architectural assumptions and physical function iteration logic=
+, leading to UAF when unlocking a freed mutex on disconnect.
+- [High] Calling `pci_find_doe_mailbox()` inside `is_pci_tsm_host()` introd=
+uces a Use-After-Free vulnerability when iterating over PCI devices, as DOE=
+ mailboxes can be concurrently freed by device removal.
 --
 
-commit a1ef2ecd44b6df9c9b3d012bdcb8952ab17a0f53
-Author: Alistair Francis <alistair@alistair23.me>
+commit 4f85c4326e0a051322285638e0233e1946a251be
+Author: Alistair Francis <alistair.francis@wdc.com>
 
-rust: allow extracting the buffer from a CString
+PCI/TSM: Support connecting to PCIe CMA devices
 
-This patch introduces a method to consume a CString and return its
-underlying KVec buffer. It allows users to create a CString and then
-extract the internal byte vector for further use.
+In the next patch we are going to add a PCIe CMA TSM driver, as such we
+need to ensure that is_pci_tsm_host() will allow us to connect to CMA
+capable devices. These devices don't necessarily has DEVCAP_TEE or IDE
+support.
 
-> The kernel CString is a wrapper aroud a KVec. This patch allows
+> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+> --- a/include/linux/pci-tsm.h
+> +++ b/include/linux/pci-tsm.h
+[ ... ]
+> @@ -142,6 +143,14 @@ static inline bool is_pci_tsm_host(struct pci_dev *p=
+dev)
+>  	if (pdev->is_virtfn)
+>  		return false;
+> =20
+> +	/*
+> +	 * Report capable if CMA is supported, which can be supported on any PC=
+Ie
+> +	 * device.
+> +	 */
+> +	if (pci_find_doe_mailbox(pdev, PCI_VENDOR_ID_PCI_SIG,
+> +				 PCI_DOE_FEATURE_CMA))
+> +		return true;
 
-[Severity: Low]
-This isn't a bug, but there is a typo in the commit message: "aroud"
-should be "around".
+[Severity: High]
+Does returning true for devices where the function is not 0 cause a use
+after free during device disconnect?
 
-> diff --git a/rust/kernel/str.rs b/rust/kernel/str.rs
-> --- a/rust/kernel/str.rs
-> +++ b/rust/kernel/str.rs
-> @@ -870,6 +870,12 @@ pub fn try_from_fmt(args: fmt::Arguments<'_>) -> Res=
-ult<Self, Error> {
->          // exist in the buffer.
->          Ok(Self { buf })
->      }
+If a CMA-capable device connects where its function number is greater
+than 0, when the device is disconnected, __pci_tsm_disconnect() invokes
+pci_tsm_walk_fns_reverse().
+
+The reverse walk hardcodes the assumption that the host is function 0:
+
+drivers/pci/tsm.c:pci_tsm_walk_fns_reverse() {
+    ...
+		/* on exit, caller will run @cb on function 0 */
+		if (i > 0)
+			cb(pf, data);
+    ...
+}
+
+Because the host is a non-zero function, the walk mistakenly runs remove_fn
+on the host itself, freeing the memory containing tsm_host.
+
+drivers/pci/tsm.c:__pci_tsm_disconnect() {
+	guard(mutex)(&tsm_host->lock);
+	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
+	ops->disconnect(pdev);
+}
+
+When __pci_tsm_disconnect() returns, does dropping the guard unlock a mutex
+in the already freed memory?
+
+
+[Severity: High]
+Is it safe to call pci_find_doe_mailbox() here while iterating over PCI
+devices without holding the device lock?
+
+The TSM subsystem iterates over all PCI devices using for_each_pci_dev(),
+repeatedly invoking is_pci_tsm_host(). While this holds a kref on the
+device, pci_find_doe_mailbox() performs a lockless iteration over the xarray
+without an RCU read lock:
+
+drivers/pci/doe.c:pci_find_doe_mailbox() {
+    ...
+	xa_for_each(&pdev->doe_mbs, index, doe_mb)
+		if (pci_doe_supports_feat(doe_mb, vendor, type))
+			return doe_mb;
+    ...
+}
+
+During concurrent device hot-removal, pci_destroy_dev() unconditionally
+destroys mailboxes directly, without waiting for an RCU grace period:
+
+drivers/pci/doe.c:pci_doe_destroy_mb() {
+    ...
+	kfree(doe_mb);
+    ...
+}
+
+Can this lead to a use after free where pci_find_doe_mailbox() dereferences
+mailboxes that have already been freed by a concurrent removal thread?
+
 > +
-> +    /// Return the internal buffer while consuming the original [`CStrin=
-g`]
-> +    #[inline]
-> +    pub fn into_vec(self) -> KVec<u8> {
-> +        self.buf
-> +    }
-
-[Severity: Medium]
-Does this naming diverge from standard Rust library conventions and obscure
-the presence of the NUL terminator?
-
-In the standard library, extracting the underlying buffer from a CString
-typically strips the NUL byte with a method like into_bytes(), while the
-method that keeps it is explicitly named into_bytes_with_nul().=20
-
-Calling this into_vec() might mislead callers into assuming the NUL byte is
-already stripped, which could cause developers to unintentionally include a
-NUL byte in buffers or calculate incorrect offsets.
-
-Could this be renamed to into_bytes_with_nul() to match standard
-conventions and clarify the buffer's contents?
+>  	/*
+>  	 * Allow for a Device Security Manager (DSM) associated with function0
+>  	 * of an Endpoint to coordinate TDISP requests for other functions
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D20
+547-1-alistair.francis@wdc.com?part=3D11
