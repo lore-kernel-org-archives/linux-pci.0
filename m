@@ -1,117 +1,308 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C9DC359A91
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 18:58:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646D3318EF4;
+	Tue, 23 Jun 2026 21:07:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782241099; cv=none; b=uMAK2HIWWmtF7bPvO9lyRmOt+e6UeigS8ermCdA9Ch+wlLZGNGVb+HI89A0HEOPmoxWnluCqdqc5a2UglqWpK9l711dLZsOMbxclRCGwO3WwVYoBZU4/qMHJKxLv77VSAz1L9zzJm5JznEip+5z77bk5KQfVM8Ci1ByBt54FqgY=
+	t=1782248871; cv=none; b=WjnNFIHZaEQmcfaBhzyaGFvxGbtkGJztSsLkpyo83lOjuVYAxw+Zu5PXqoJIcB0XOLQ7E9kXkEt50tdaC7644KBbZIjAQBxqQa8TiHgkZElNXLgtrIpqHQCIg3iMzvB8Bcxj4ikLy3rFRf100Og38d6YIYGM3ebbDs/lzWy1/yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782241099; c=relaxed/simple;
-	bh=6sizoAgwRLvjCh7zqg/EnqZzQNrUHjNmth2MBnONupo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kb4ygNUdsSFwMuqpe5pQp8n47xqxG/M+Gk0TYNYSL34wpX9D/wgwcQFg0wR1lT4uRB53kECrKt6ehOrncdllLd2YUvhg4FKg30hDUYCEZAI/wKuGlWUTse+mQEvhX9P8d8/ixnvdSE9lkYx2v7kUErK6x2741RWpBpMm7a71jo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OBFa+vr7; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782248871; c=relaxed/simple;
+	bh=ZCJjbND+dvUmLYpAsQCf6dCnLt3RXg/Mb9eZMJ1NaOE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LfO1Z/rCEAHA/lq/341Ei23+Hw9K6LDSUoudLuMFjnQRcTEYGrjKdwkV6NYiyFIPav4quXHtCo/wF0dujbcmdFpW4jZFoyOzO06jh3q5gdrOZE+CaiSM3EUxIW18HkeboDatMvTs6ctOHZIFRIiMZrIWXSlXVNbCNPVix/ZC2TE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=TQWvkV3G; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YdHyxiOC; arc=none smtp.client-ip=103.168.172.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OBFa+vr7"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-462bb734793so155839f8f.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 11:58:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782241097; x=1782845897; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=2fiFg69bZvG7eLHGu12BMJgm2iLA1vS/lgB2cc2WLrE=;
-        b=OBFa+vr7LV6XYWQs/BbCkXg61dyzgwY+FE7mroZoDqF9yRQ/XL27w7KC1MfwLmwr4p
-         Ea9zjNSSrVTbiC4BL72Chf/hrlMUcFYZ33j0+aaDmHkymxJiCZm/529O2rnuB/4/WRAh
-         JapYutkIavZBvhIARtAvlr4rWPltl1dAdMEEJ7ClA6U9/iP2fLxf6GnUXpUxO8+VoeDt
-         o4IyThWskguQKptwuwQKDRsK4e4l23oEv826UyCykbq4Vu0/nOQRpwPfXVYyJNNEWinU
-         1kqelNVu2gVPWUBRjHpvEF37rCi7wQ9UB8dy4c9KllrZGo8XbmLq7zcIW5WAbt5zfGcV
-         4bjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782241097; x=1782845897;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2fiFg69bZvG7eLHGu12BMJgm2iLA1vS/lgB2cc2WLrE=;
-        b=U1BrVTir0pXLPWZ1tVrWDdEO0wkH2gs1gKd6y2uNRKzj26mQIpp3PXgND747NcuSh/
-         9l1jGxgswsDgMA0DkvQ0+ZIEoE1eR/ue5QYgb/leYeE8wd8y6rEKdnKyAX+KBLXfiBqD
-         /sYmorAhWziDYa/6MybdfBi3Yf0h82hbQBLlcatMtMKXNY3U3gvc3uEljHqgdIgrRCru
-         rMEzIE41Dw/JUEPMyZILxZVrEJgR7alX2aQ4Yzm42ZPa1G1Fp8l59j4yBfrl9iw4GSAv
-         5aBzbwPuFNxW0euLeFwiTgqHqSFfVhZ0SZJFQ38yZmfaVGdFDoluJmlcWwl5UD+JqT2B
-         mOVg==
-X-Forwarded-Encrypted: i=1; AHgh+RrBedbtx/6Sc2Wv3AcOadDOez3w0L4PaAA12K4r4+kzyb4s/D8JckLyOj+WEQWl+vH9sdz8b+CjNjw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxchw9zQEVhIXGpX+FaneL+ycttkNMTmTe6g9m0M3mEd9dKed2C
-	vAjisRudqXXp+yyUUMX87PGg/ZFX1yuKeEmpHhRCfhndga/FzQHHx91O
-X-Gm-Gg: AfdE7ckSzpIqfz1a3zO+cFtKWx4YfQL+n1RR9AwB6etVqvFXRpOhzScjTnXraxQyigv
-	FkWcFWjOTLf1wnBIT2pYN2haLFIZCCnkcybV8Jf1ECMpUDAVW3xaZZhmPNo4LordPmz3Xrd2Oj8
-	SGWdxHhqMDI1mWWowSisIBK9W3iMFZrCGRhOCtS71y3qcfqOMjGzb5N7VhMkPYU1ckbomvsNY3q
-	MNj+M+OuEkmBHhP3ve9mSjShjZrOdsK/FiybfUXmZsGwgsccNAOQkLCckaL75DcyMQGYppffKPE
-	E2SgWCtUBrrzgDgC85iaoAb1zk+jg7hpsfFaRCgMFymN8TAFRJFN5r2hyBufKgbIpzTbs6ZsO5W
-	YFufQODobNoY3pjwjBFWu+i03oAYdatF0wxu422q5byWjMmIia+LTLeiwk7v2/iCApqLkXphqZz
-	prqgDoGvyLSO2kyUKFhdKviZQbM1PI3o0Wie0R5GgXLJfGofkgCRZ6xk3SmI7Y6eu/f608mo46C
-	YjfOgrm
-X-Received: by 2002:a5d:5f91:0:b0:462:1a7a:9846 with SMTP id ffacd0b85a97d-4666074429emr23730834f8f.8.1782241096893;
-        Tue, 23 Jun 2026 11:58:16 -0700 (PDT)
-Received: from [10.128.11.131] (195-23-151-163.net.novis.pt. [195.23.151.163])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46666c57ba0sm38525006f8f.32.2026.06.23.11.58.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Jun 2026 11:58:15 -0700 (PDT)
-Sender: Julian Braha <julian.braha@gmail.com>
-Message-ID: <e48a5c7f-2d9d-4202-be59-2e84120dfe11@gmail.com>
-Date: Tue, 23 Jun 2026 19:58:14 +0100
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="TQWvkV3G";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YdHyxiOC"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfout.phl.internal (Postfix) with ESMTP id 3CFD7EC01F0;
+	Tue, 23 Jun 2026 17:07:47 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-10.internal (MEProxy); Tue, 23 Jun 2026 17:07:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1782248867;
+	 x=1782335267; bh=i9k4FWXWjlm74Pk++H3eS7qVTwnxuUxoRDpdwNetvfE=; b=
+	TQWvkV3Gb1Q5xGZLgU5+I/A74Ylbb0g6sYs1Fb0KOvxJfsDsRdJgcNVOqtZkvSCI
+	aUlk3FlVV9VmKdqVE0Y2PLewfnkqlhQ/wa0mxnez6Wk0b1ioSiHB7EfLWU2FBVRQ
+	LDESdUFBxVgeK9oclFS0lD1YGyoDeabvzDeYCE2HScW4CSUqak4KbN5xP9xUdVNF
+	PeHt+qeJQ30yRZl+8wqc/QdoXrv+fyLjwma6ffEAGTwlUdh1EWYoFBLR+9kbeemC
+	UOUYC5qncWCuOWFMT537kSmV+jC9jQkmRLbxV+5tKZd99KFaHQhfmfGmIWEFgBlx
+	i5D2hXPLobEUXgWhURl6fA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782248867; x=
+	1782335267; bh=i9k4FWXWjlm74Pk++H3eS7qVTwnxuUxoRDpdwNetvfE=; b=Y
+	dHyxiOCyv4plMXUEXAB98fCUnIeq1SU+AR2M5jhPGO/XVzlu8Iihc+s+/ggHqC58
+	P8hrxDZB6LUkzJsizErY/70K1yQ0khcpaoY0zjIfQH2ttJsaOUVEZfkej3tDdFbJ
+	eNAotRaUOmDBYvqdcYvjH6nV0gvLcvRP36BNHLf+Dt2NYKHKxZUcMnreYlPbgMgf
+	ZwvrwOJw+nl9dO3yNWYrj4rWNaWgfcMfcAr0zx0p6j+llTmyv5kgIlfF3hnivsVc
+	Q7QtuYgQMZ1QbihLlY+u+S2rs3fac0f4iwUGlNhpf/h2iCZeG8/7NIz5eLQ6dc6b
+	dt8i7RBTo4fVeRhu6DPiQ==
+X-ME-Sender: <xms:ovU6as_N4Zx84PcIOIHU0H_HBduaed9KBeOuReNmdo559EGjPMxhJQ>
+    <xme:ovU6alJRgvkPwLYZISxmsa5BOPJqHezbU9UmEYfyG9riCkKMCQARFhNaAnNDOiYXB
+    K2jP1y573KvfaifZVfu9wvRjLR5bpfEjfafuRS-gzPnJy7DTlfvQA>
+X-ME-Received: <xmr:ovU6aitIKy5NYBM1hyYPhQIYHq9A4pkvO_NCM4wIJRDqsV48_aXfLv3Xslc>
+X-ME-Proxy-Cause: dmFkZTE2Ji8K3Uq/U6mVv0pnHsogV0ANNJB9Qkj3z3aNP2l75MUuxlv3Q6TPJsfBcHHXfL
+    0lzXAFqDxZsEgk2klQwpsuhevo9JaIU2EZbEUzfLaxx8NbW+ANfbx7db1kH+lofVY1ESl5
+    UOjmKnfDfEb2QrKVtE2br+IvP9nRF5yKnvoyBS08/Nw7EmzsLsRiYi3icyKhKTzxTuxILz
+    DQ2xsFYmy8FHRROZt0zBN+yUyZdVu0kXUyaGUdfzZgkHjX+d7lnURJY55rvhQDl+j9Ir2u
+    R3tOlTqMSsQipCpD77qNF0o0DGJnKHaZiyVGPvff+woM8WknFxZh9Jq+PBkqkMVWPTTGtc
+    hASojoFOfwLazj4NCRIPFJEx1rP0Ewx8F4Y4oiKtjwcRGSxFshqpBmyEZdyJphV8G8NQql
+    dT2ZADLi3dFX9mXGAlzpv4kvGRK4XCFeswDFizxUuHjKRs6tvXNifLdR7jW3/BVCRVBFTO
+    GZg0aW29+iGy9m449LdX9UEEJOeMKy8rRzqpRD3hPkX/kzEKcbMFn1ptzQrLyjUR6kLZbw
+    vHLB4Z7bty1LEbtDXaJXhZTUYTrXlRX9a/KGp070AztZ05fpDKfgx6g5sAFvKk7pZujr7r
+    tKzD20b+DkvCMugFRcLFiW735nx023NpQrf++fuXM9bglef30sx3wKrDvexw
+X-ME-Proxy: <xmx:ovU6akBDtNSFvMX7RH7gecE0vDPEKAPwrnXsjp7mjW1SXF9KAuvw9A>
+    <xmx:ovU6aiNb0ndPTvJrxLMI4p0FIcthKasvsPvX1z5eMSb4d6RCzybJgA>
+    <xmx:ovU6akBBK5E0FYlAV-CT1x1LZW00McI5cFFW6yL_pWIkjhKg2BKSZA>
+    <xmx:ovU6aj4gKK-AARVmNDgPCvZr8OjARM5HOxj2-wEt7_rMya5_ye5kmA>
+    <xmx:o_U6aq0h_oafBmO7ta2xg-_whaYEV734yClxaVPgs1190CK60dkwpjBV>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 23 Jun 2026 17:07:46 -0400 (EDT)
+Date: Tue, 23 Jun 2026 15:07:44 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
+ mjrosato@linux.ibm.com, alex@shazbot.org
+Subject: Re: [PATCH v19 2/3] vfio-pci/zdev: Add a device feature for error
+ information
+Message-ID: <20260623150744.08177808@shazbot.org>
+In-Reply-To: <20260615183616.2902-3-alifm@linux.ibm.com>
+References: <20260615183616.2902-1-alifm@linux.ibm.com>
+	<20260615183616.2902-3-alifm@linux.ibm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 09/21] lib: rspdm: Initial commit of Rust SPDM
-To: alistair23@gmail.com, akpm@linux-foundation.org,
- rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org, jic23@kernel.org,
- bhelgaas@google.com, lukas@wunner.de, alistair@alistair23.me,
- linux-cxl@vger.kernel.org, djbw@kernel.org, linux-kernel@vger.kernel.org,
- Jonathan.Cameron@huawei.com
-Cc: boqun.feng@gmail.com, benno.lossin@proton.me, a.hindborg@kernel.org,
- bjorn3_gh@protonmail.com, gary@garyguo.net, wilfred.mallawa@wdc.com,
- aliceryhl@google.com, ojeda@kernel.org, alex.gaynor@gmail.com,
- tmgross@umich.edu
-References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-10-alistair.francis@wdc.com>
-Content-Language: en-US
-From: Julian Braha <julianbraha@gmail.com>
-In-Reply-To: <20260623045406.2589547-10-alistair.francis@wdc.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-Hi Alistair,
+On Mon, 15 Jun 2026 11:36:15 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
 
-On 6/23/26 05:53, alistair23@gmail.com wrote:
-
-> +config RSPDM
-> +	bool "Rust SPDM"
-> +	depends on RUST
-> +	select CRYPTO
-> +	select X509_CERTIFICATE_PARSER
-> +	help
-> +	  The Rust implementation of the Security Protocol and Data Model (SPDM)
-> +	  allows for device authentication, measurement, key exchange and
-> +	  encrypted sessions.
+> For zPCI devices, we have platform specific error information. The platform
+> firmware provides this error information to the operating system in an
+> architecture specific mechanism. To enable recovery from userspace for
+> these devices, we want to expose this error information to userspace. Add a
+> new device feature to expose this information.
+> 
+> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> ---
+>  arch/s390/include/asm/pci.h      |  2 ++
+>  arch/s390/pci/pci_event.c        | 19 ++++++++++++++
+>  drivers/vfio/pci/vfio_pci_core.c |  2 ++
+>  drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++
+>  drivers/vfio/pci/vfio_pci_zdev.c | 43 ++++++++++++++++++++++++++++++++
+>  include/uapi/linux/vfio.h        | 30 ++++++++++++++++++++++
+>  6 files changed, 105 insertions(+)
+> 
+> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+> index 016386f7ef4a..88a125b92bdd 100644
+> --- a/arch/s390/include/asm/pci.h
+> +++ b/arch/s390/include/asm/pci.h
+> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
+>  int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
+>  void zpci_start_mediated_recovery(struct zpci_dev *zdev);
+>  void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
+> +int zpci_get_pending_error(struct zpci_dev *zdev,
+> +			   struct zpci_ccdf_err *ccdf);
+>  
+>  #ifdef CONFIG_NUMA
+>  
+> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+> index 8934b640a095..3ad16038e005 100644
+> --- a/arch/s390/pci/pci_event.c
+> +++ b/arch/s390/pci/pci_event.c
+> @@ -77,6 +77,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
+>  	return 0;
+>  }
+>  
+> +int zpci_get_pending_error(struct zpci_dev *zdev,
+> +			   struct zpci_ccdf_err *ccdf)
+> +{
+> +	int head = 0;
 > +
-> +	  Crypto algorithms negotiated with SPDM are limited to those enabled
-> +	  in .config.  Users of SPDM therefore need to also select
-> +	  any algorithms they deem mandatory.
-This patch introduces an unmet dependency bug when the user enables
-RSPDM without enabling ASYMMETRIC_PUBLIC_KEY_SUBTYPE:
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +
+> +	if (!zdev->pending_errs.count)
+> +		return -ENOMSG;
+> +
+> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
+> +	memcpy(ccdf, &zdev->pending_errs.err[head],
+> +	       sizeof(struct zpci_ccdf_err));
+> +	zdev->pending_errs.head++;
+> +	zdev->pending_errs.count--;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
+> +
+>  void zpci_start_mediated_recovery(struct zpci_dev *zdev)
+>  {
+>  	guard(mutex)(&zdev->pending_errs_lock);
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 050e7542952e..27642f10fe97 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1569,6 +1569,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+>  	case VFIO_DEVICE_FEATURE_DMA_BUF:
+>  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
+> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> index fca9d0dfac90..4e7162234a2e 100644
+> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>  				struct vfio_info_cap *caps);
+>  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
+>  void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
+> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+> +			      void __user *arg, size_t argsz);
+>  #else
+>  static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>  					      struct vfio_info_cap *caps)
+> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>  
+>  static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
+>  {}
+> +
+> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
+> +					    u32 flags, void __user *arg,
+> +					    size_t argsz)
+> +{
+> +	return -ENOTTY;
+> +}
+>  #endif
+>  
+>  static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
+> index 78a28db00c6d..c0d6362cc4eb 100644
+> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+> @@ -141,6 +141,49 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>  	return ret;
+>  }
+>  
+> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+> +			      void __user *arg, size_t argsz)
+> +{
+> +	struct vfio_device_feature_zpci_err err = {};
+> +	struct vfio_pci_core_device *vdev;
+> +	struct zpci_ccdf_err ccdf = {};
+> +	struct zpci_dev *zdev;
+> +	int ret;
+> +
+> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+> +	zdev = to_zpci(vdev->pdev);
+> +	if (!zdev)
+> +		return -ENODEV;
+> +
+> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
+> +				 sizeof(err));
+> +	if (ret != 1)
+> +		return ret;
+> +
+> +	ret = zpci_get_pending_error(zdev, &ccdf);
+> +	if (ret)
+> +		return ret;
+> +
+> +	err.fh = ccdf.fh;
+> +	err.fid = ccdf.fid;
+> +	err.ett = ccdf.ett;
+> +	err.mvn = ccdf.mvn;
+> +	err.dmaas = ccdf.dmaas;
+> +	err.q = ccdf.q;
+> +	err.rw = ccdf.rw;
+> +	err.faddr = ccdf.faddr;
+> +	err.pec = ccdf.pec;
+> +
+> +	if (copy_to_user(arg, &err, sizeof(err))) {
+> +		dev_warn_ratelimited(device->dev,
+> +				     "Failed to handle PCI error event for PCI function 0x%x",
+> +				     zdev->fid);
+> +		return -EFAULT;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct zpci_dev *zdev = to_zpci(vdev->pdev);
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5ee..83c93193b22d 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
+>   */
+>  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  
+> +/**
+> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
+> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
+> + * involves platform firmware and notification to operating systems is done
+> + * by architecture specific mechanism. Exposing this information to
+> + * userspace allows it to take appropriate actions to handle an
+> + * error on the device. The ioctl returns -ENOMSG if there are no pending
+> + * PCI errors.
+> + */
+> +
+> +struct vfio_device_feature_zpci_err {
+> +	__u32 feature_flags;		/* Indicate future features */
+> +	__u32 reserved1;
+> +	__u32 fh;			/* function handle */
+> +	__u32 fid;			/* function id */
+> +	__u64 faddr;                    /* failing address */
+> +	__u32 ett		:  4;	/* expected table type */
+> +	__u32 mvn		: 12;	/* MSI vector number */
+> +	__u32 dmaas		:  8;	/* DMA address space */
+> +	__u32 reserved2		:  6;
+> +	__u32 q			:  1;	/* event qualifier */
+> +	__u32 rw		:  1;	/* read/write */
+> +	__u32 reserved3;
+> +	__u16 reserved4;
+> +	__u16 pec;			/* PCI event code */
+> +	__u8 reserved5[28];		/* Allow for future expansion */
+> +};
 
-WARNING: unmet direct dependencies detected for X509_CERTIFICATE_PARSER
-  Depends on [n]: CRYPTO [=y] && ASYMMETRIC_KEY_TYPE [=n] &&
-ASYMMETRIC_PUBLIC_KEY_SUBTYPE [=n]
-  Selected by [y]:
-  - RSPDM [=y] && RUST [=y]
+In v18 I probed whether this should be passed as opaque data as we're
+doing for FMB, which was declined because the user doesn't know the
+size.  However, the fmb_length is provided through a device info cap,
+where we could extend the existing zpci info cap with a v3 that does
+report this fixed size.  That doesn't seem like an insurmountable
+barrier.
 
-- Julian Braha
+In the implementation here, we have the worst combination of
+trade-offs, reserved fields for some vague notion of future expansion
+and bitfields that mimic the architecture specification but don't fit
+well into a uAPI as their position is compiler dependent.
+
+This should either fully abandon the architecture layout and create a
+well defined, naturally aligned uAPI structure, or extend the zpci info
+cap to report the size and pass the error data as opaque.
+
+As Bjorn notes, we're already into the merge window, so this is at best
+v7.3 material, and as we've designed the split, merging the vfio
+changes will be dependent on a branch provided with the PCI changes.
+Thanks,
+
+Alex
