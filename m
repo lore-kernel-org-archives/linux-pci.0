@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 023B01E7C12;
-	Tue, 23 Jun 2026 05:10:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C5854774;
+	Tue, 23 Jun 2026 05:12:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782191461; cv=none; b=URqZIRFXGbnDI+fRxdMTqrwSTskM7o8T+958W796JB+fpJklfuDnD7RkmPRf38cOE6u4LAza6KuDxI1Sy+xPtYcQ6toNFX7jRFGo/yhouYkjbg+tQ4GZ3lWhDhPUG8hybJBhhTcmCTZMdQSU54V0zl/cLmxGpkGZ7wWRbc+h9DM=
+	t=1782191541; cv=none; b=XX2AiXP1iSZgkZIHMwSHvtKTNQ1m9ZU4WdXphZoZZeXPbZWUywhenoy49D6nRgWfIw+xapGuVJ+EVsG5zDTs2wEjZXB0PlOHAoIceXg5X8gAZd/Y/R2ONipWF3LKiL2gr119/irjT8X5zhsBvLAgAI5zXhTiQerB61LxYJ6/rCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782191461; c=relaxed/simple;
-	bh=jgiMYQ8+519UOoEMYJB1TcwLtALxiS6+HnYg+QIeRLA=;
+	s=arc-20240116; t=1782191541; c=relaxed/simple;
+	bh=XceX93PmUwKcYbDgQZQF7dhvJ4sHlu7Fgh4Nii0uaHU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CVCIX4pVqFTPAuW1xPvOiTLsEAHGoswgojo19jyTWrHdvOjCVc8iV2T+T5Szyk0qRYD/NjXMQ/+T96+pQsIpH8BHF39gTXawosKW3ezicHwO0gI8TuwE/tC4vkebsJOz66jNtMAy49J2D+uGgkFj9WP+8lx2Wdw2budJEaazGl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b4sPiw3c; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ef3UZr0M5Zxm1QaHz6L4ZSNCCCw8SfYrpeCPVeAlG3+XzrQDxii5Lzzs9gbfVu3rES4/Lhs4HcuQld8myeVZrUqSFa8zekLx+4iATUIC+ctq/kubwvO4JOEf9woYr0GrQXSnYfWVALG34EHKqI7IUHoQCV9KnZ+LOELb7R8wQVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XwK5lNXe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b4sPiw3c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 852F81F000E9;
-	Tue, 23 Jun 2026 05:10:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XwK5lNXe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66C921F000E9;
+	Tue, 23 Jun 2026 05:12:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782191459;
-	bh=cxErgt6QGJOaXelw63rtR/PkDm8gkVP/xZCez1xaylU=;
+	s=k20260515; t=1782191540;
+	bh=QkKKkt3aKtGx7fvOWdvdbD68eQnN4RWR5RPwAZljTDQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b4sPiw3cYCw/bslbAuPaWPcgIE+Op2u1I+T/1rsfVtLcXTGlFpdeHqVVGkbSm7WYg
-	 i6WNjPc4Jcaif7DNlDAts5bsTTOZZwG9/rKPl6e6zHqJMQuHN/6yKpHmvPZLKFL9sJ
-	 SVVLPDJ1jkn/rnk2hg1YJEXYn69r7ukG/+br1xehXLSZNgdSOWPgrzZjKFlHGBH1Lr
-	 LZvZxnn0da+ndPkCoJYROoUmHy0i7cRu0I3jABf059sQmd3uaPdUczVNcITrE2GXk1
-	 /ez7edV4cW0mAMM1zNiJFin/uVvWDYr1s2kpOx9ifmn9sRMCgcizsH0bw3gHbbsSBD
-	 JofZ1TrNsRHuQ==
+	b=XwK5lNXe+UilfB3ir0LpLQ8G0ym6VPXPWT9tScnVoWORZ7g0uMvMErjxAyAxs87Qh
+	 EoxSAZPkZ2PCcmgphiOzAVW8P3JJgWHcbTaFOFF1Q/1XFDghtn+zZGLwz+Khvp5MuD
+	 sleqGWEGIoR9irVCQQTCRGWGK2kF/bgYObbTMugJseMnNXnyHOmQADJOKBmqVtf5g1
+	 0IC45mGAJSbgvTs5wMDbMc7/PGfbc8WiKRtFk9t1RpQE8t4UJyGA+tORA6LVY+4DNi
+	 IkZuXEgmv0vVm9oySedixuruz9e5L+uV/zUbhQUDicRokkqJc9SudIOfScZNSPK8mM
+	 kULhhjnj6xF5A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/21] rust: validate: add `Validate` trait
+Subject: Re: [PATCH v2 10/21] PCI/TSM: Rename pf0 to host
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: ojeda@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623045406.2589547-4-alistair.francis@wdc.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260623045406.2589547-11-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-4-alistair.francis@wdc.com>
+ <20260623045406.2589547-11-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:10:59 +0000
-Message-Id: <20260623051059.852F81F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:12:20 +0000
+Message-Id: <20260623051220.66C921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,112 +46,83 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] The `Validate` trait's design makes it impossible to validate st=
-ack-allocated array buffers as a single contiguous chunk.
-- [Low] Small forwarding functions in a core abstraction are missing the re=
-quired `#[inline]` annotation.
+- [High] Use-After-Free and freed mutex unlock in `__pci_tsm_disconnect()` =
+for hosts on PF > 0.
+- [High] Disconnecting any TSM host blindly destroys independent TSM contex=
+ts of sibling functions in the same PCI slot.
 --
 
-commit ffc4f142fcfe45cce3f6459e2aef3c631240714d
-Author: Benno Lossin <lossin@kernel.org>
+commit 8bf82a17d0ecf2259067413b6fb0b2c2e2bef4d9
+Author: Alistair Francis <alistair.francis@wdc.com>
 
-rust: validate: add Validate trait
+PCI/TSM: Rename pf0 to host
 
-This commit introduces the Validate trait and functions to validate
-Untrusted data. It allows users to access the inner value of untrusted
-data via validation functions which delegate to a user-implemented
-trait. It also uses a sealed trait to restrict valid inputs.
+Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and function
+names from pf0 to host) as part of converting pci_tsm_host
+to be any device that knows how to speak any of CMA, IDE, or
+TDISP.
 
-Message-ID: <20250814124424.516191-4-lossin@kernel.org>
-
-> diff --git a/rust/kernel/validate.rs b/rust/kernel/validate.rs
-> index 2b28625c25efe..663681b633c86 100644
-> --- a/rust/kernel/validate.rs
-> +++ b/rust/kernel/validate.rs
-[ ... ]
-> @@ -107,6 +110,30 @@ pub fn new(value: T) -> Self
->      {
->          Self(value)
->      }
-> +
-> +    /// Validate the underlying untrusted data.
-> +    ///
-> +    /// See the [`Validate`] trait for more information.
-> +    pub fn validate<V: Validate<Self>>(self) -> Result<V, V::Err>
-> +    where
-> +        T: Sized,
-> +    {
-> +        V::validate(self.0)
-> +    }
-
-[Severity: Low]
-This isn't a bug, but should this small forwarding function in a core
-abstraction be annotated with #[inline] per the Rust subsystem coding
-guidelines?
-
-> +
-> +    /// Validate the underlying untrusted data.
-> +    ///
-> +    /// See the [`Validate`] trait for more information.
-> +    pub fn validate_ref<'a, V: Validate<&'a Self>>(&'a self) -> Result<V=
-, V::Err> {
-> +        V::validate(&self.0)
-> +    }
-
-[Severity: Low]
-This isn't a bug, but should this small forwarding function be annotated
-with #[inline] as well?
-
-> +
-> +    /// Validate the underlying untrusted data.
-> +    ///
-> +    /// See the [`Validate`] trait for more information.
-> +    pub fn validate_mut<'a, V: Validate<&'a mut Self>>(&'a mut self) -> =
-Result<V, V::Err> {
-> +        V::validate(&mut self.0)
-> +    }
-
-[Severity: Low]
-This isn't a bug, but should this small forwarding function also be annotat=
-ed
-with #[inline]?
+> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+> --- a/drivers/pci/tsm.c
+> +++ b/drivers/pci/tsm.c
 
 [ ... ]
 
-> +/// Marks valid input for the [`Validate`] trait.
-> +pub trait ValidateInput: private::Sealed {
-> +    /// Type of the inner data.
-> +    type Inner: ?Sized;
-> +}
-> +
-> +impl<T: ?Sized> ValidateInput for Untrusted<T> {
-> +    type Inner =3D T;
-> +}
-> +
-> +impl<'a, T: ?Sized> ValidateInput for &'a Untrusted<T> {
-> +    type Inner =3D &'a T;
-> +}
-> +
-> +impl<'a, T: ?Sized> ValidateInput for &'a mut Untrusted<T> {
-> +    type Inner =3D &'a mut T;
-> +}
+> @@ -441,19 +441,19 @@ static void __pci_tsm_disconnect(struct pci_dev *pd=
+ev)
+>  	/*
+>  	 * disconnect() is uninterruptible as it may be called for device
+>  	 * teardown
+>  	 */
+> -	guard(mutex)(&tsm_pf0->lock);
+> +	guard(mutex)(&tsm_host->lock);
+>  	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
 
-[Severity: Medium]
-Does the current ValidateInput implementation prevent validating
-stack-allocated array buffers as a single contiguous chunk?
+[Severity: High]
+Can this lead to a use-after-free and memory corruption when a TSM host
+is on a Physical Function > 0?
 
-If a user populates a stack-allocated buffer like [Untrusted<u8>; N], they
-can use it as a slice &mut [Untrusted<u8>]. However, since ValidateInput
-is sealed and only implements Untrusted<T> wrappers (and not slices or
-arrays of wrappers), they cannot pass this slice to Validate::validate().
+When disconnecting a host on PF > 0 (such as a CMA host on PF 1),
+pci_tsm_walk_fns_reverse() iterates over the slot. The walker skips
+the callback only for i =3D=3D 0. When i > 0, it applies the teardown to the
+function itself:
 
-Since converting &mut [Untrusted<u8>] back to &mut Untrusted<[u8]> isn't
-possible outside the module, this seems to force users to either validate
-byte-by-byte or dynamically allocate.=20
+drivers/pci/tsm.c:pci_tsm_walk_fns_reverse() {
+    ...
+    /* on exit, caller will run @cb on function 0 */
+    if (i > 0)
+        cb(pf, data);
+}
 
-Could ValidateInput be implemented for slices of Untrusted<T> to support
-validating stack-allocated buffers?
+This causes remove_fn() to be called on PF 1 itself, which frees the
+tsm_host object via pci_tsm_host_destructor() and kfree(). When
+__pci_tsm_disconnect() returns, the guard attempts to unlock the destroyed
+and freed mutex.
+
+[Severity: High]
+Does this unintentionally destroy the TSM contexts of independent
+sibling functions?
+
+The call to pci_tsm_walk_fns_reverse() unconditionally applies remove_fn()
+to all functions in the slot. If multiple independent TSM hosts exist
+within the same PCI slot (for example, PF 0 as a TDISP host and PF 1 as a
+CMA host), disconnecting one host will cause the walker to execute
+remove_fn() on the other siblings.
+
+drivers/pci/tsm.c:remove_fn() {
+    tsm_remove(pdev->tsm);
+    link_sysfs_disable(pdev);
+    return 0;
+}
+
+Since remove_fn() does not verify if the function's TSM context actually
+belongs to the specific host being disconnected (the data argument is NULL),
+could disconnecting PF 1 silently wipe out the entirely separate host
+context of PF 0?
+
+>  	ops->disconnect(pdev);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D3
+547-1-alistair.francis@wdc.com?part=3D10
