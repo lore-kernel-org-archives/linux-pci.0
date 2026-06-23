@@ -1,95 +1,157 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013055.outbound.protection.outlook.com [40.93.196.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8E9D2367D3
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 12:57:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782219475; cv=none; b=cOvOKu86QleCuVHAKBEFPbqUiHAGSFOCHnqV07P/ICECyb+V2JVmj38Xq8klYL5LkUs3V3R0FZPrenO0EoCv62/HDdjO9MSFqyFAyAGsI/8OPcHXR76awC9/y0zgeveQnMcpDodyA9JAhisNpIVz53ndgN0o9uGlXKtHSjUPmwE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782219475; c=relaxed/simple;
-	bh=m0c4tLuBDb8dVN7iShZ9BiQoIw7SYRkSb2UZsD6lR2k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dhgpsq156IB02izkFXqC8YG3hg6FWSZf3MD7gsSJw2Bjo1greOswstHmlDv/q5zfApOJbcN3JZkBBvuDekZENzYZQOFr3bbMvgO++XLSQTfcw0wr0iO+B15nJS6j/ICCqc6c/3aG51QXC9PunG1pm5+2cBZvoJ1VUtRB4TDmFIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HYoiztPA; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA61218592;
+	Tue, 23 Jun 2026 13:10:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782220210; cv=fail; b=UdU5JOjcOgXamQ7ZIp6LKJkIUf90qwIP7QZNuKjrVab6eLLc+c3dkIXEawg3OuQ4SzMETifxrvBbHU4ouLbDLkVUnv0cNYbZyxf7kKdHdmSaH6MECgDOV05yQs6YPRZp+f6LkcRHhPoxaXjGC+If9DWC5PFYBqAeBzEr5Oi6RSE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782220210; c=relaxed/simple;
+	bh=MZChQNxeuspVWtGnzaZEyqjAzDcJ84g3NDm/gfsL/6U=;
+	h=From:To:CC:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=I5Bf/YmHasbfbVqnJ4n79MXn/UqHDk8aKqlaC3rRhH6u+U89Wc7M9WzDGX99lkiB2uSNex/Dwi4XQiCCT3bb6dljKyRsY7yOC872ol0euSzBTC+425RCa5E/wMci5gdhhMFjXkYjekwFZz7+VjhVq8ABt4V4Qw3i2DRhQ1Onqj4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=q0o5UKJo; arc=fail smtp.client-ip=40.93.196.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HYoiztPA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782219473;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m0c4tLuBDb8dVN7iShZ9BiQoIw7SYRkSb2UZsD6lR2k=;
-	b=HYoiztPAc4C/+yWNrp6N527lyH6+jTDt17XuJ9uwWmgqXLRI6h/Or8M/CbNCSvIZmPgtaq
-	kPG5HPskIksPuJRKiym+A9Beyakp504BpOiV3FyMefnWeDls2w7tBh/vAz+KcSj7DdQHDA
-	d0zS3/LBXJcRYVN0jaWT8gsQBTvX8co=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-202-vj2Kf3YuNxC8J4DH6BZXUA-1; Tue,
- 23 Jun 2026 08:57:50 -0400
-X-MC-Unique: vj2Kf3YuNxC8J4DH6BZXUA-1
-X-Mimecast-MFC-AGG-ID: vj2Kf3YuNxC8J4DH6BZXUA_1782219468
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EAAB11955E8E;
-	Tue, 23 Jun 2026 12:57:47 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.11])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2F06618005A2;
-	Tue, 23 Jun 2026 12:57:43 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: baochen.qiang@oss.qualcomm.com
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Date: Tue, 23 Jun 2026 14:57:41 +0200
-Message-ID: <20260623125742.1188945-1-jtornosm@redhat.com>
-In-Reply-To: <5abb5812-cdd8-47d4-b5a0-33f7351589ea@oss.qualcomm.com>
-References: <5abb5812-cdd8-47d4-b5a0-33f7351589ea@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="q0o5UKJo"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=boMkIJGC2ywO1TSru6ooQx1wh6uctfw4FqKiDf045TIhocninq5B29+10fhd71g80+JYFKgI4nugbosXRpUJf5hhAl+EOvSgMreIgMOvqU9jbSJRgjC2qu/t5EbRu3iOxrvWAClleqVF/V4Yt68VIwUiYaNyxqOF5A5Vbz0+rOco/Wa5/NOAW6gxKnaPRfTO8i6WC4Cv5GcNhbPYael/fjUyFnbrUS82oOg+YYs4XczuswgzgUFCI+OKnZr3MlPjoCmSf3Iz82cJYzFwyMBn9Pll8j/9DBE4yoUuPt4HOwgJyIpPDIQtpWTh86Anr92cDqUHGS2ak1cHLKmYDs/QkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8VGMJJafq34r7uGrXyMXp/K+eCrbieiZOz1ZTYRcEN8=;
+ b=G59zaEDJHkJf4tZQ4MPFED7lgOit3kRSZreMTKuL7ObqhdH6mF+7UGg90bPBgtdgZNECEaN/zlHm2ThyeJhCrP7d3oho70TynjEsiT8Ti5hPRoY/vVIUJrXgUK9hYqeMb12WQcMuy1vhQK5XyjKax+AG3ZlPTWLf4Ed/IfFllkwHj6PkuzhxaST1c9v/VCWsyV8LlAVYeC+Y0sm5z76pah5PKIUaJsHyXtcQYuZHz/rz/3DC9HYmW4BmklTKtN0CUX7rwD1rVhAC6X9Lxv29yYDFE55AOxDlM4IVUG02dTU9wtrLlVB1H9+D2p+K2M5qlmt2Wj1Vl7nlkiI5vvOxvg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=gmail.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8VGMJJafq34r7uGrXyMXp/K+eCrbieiZOz1ZTYRcEN8=;
+ b=q0o5UKJonEvcVxfOUXkKr+nxrvCR6Mb+o4jtzq/5npKyzamrT+tch/1CREGDykJ5q7qbOk0a87IVP4zt/qmN7oMOXyhY5klKxPX4GmU6suruyhc5ChuL2pkMX+oOSfLfaBcaUlWrpUAruguVzTaGERGD4zPbbd7e1hs94qa6U6w=
+Received: from SJ0PR05CA0203.namprd05.prod.outlook.com (2603:10b6:a03:330::28)
+ by DM4PR12MB6591.namprd12.prod.outlook.com (2603:10b6:8:8e::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.13; Tue, 23 Jun
+ 2026 13:10:06 +0000
+Received: from SJ5PEPF000001CF.namprd05.prod.outlook.com
+ (2603:10b6:a03:330:cafe::61) by SJ0PR05CA0203.outlook.office365.com
+ (2603:10b6:a03:330::28) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.139.7 via Frontend Transport; Tue, 23
+ Jun 2026 13:10:06 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ SJ5PEPF000001CF.mail.protection.outlook.com (10.167.242.43) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.159.10 via Frontend Transport; Tue, 23 Jun 2026 13:10:05 +0000
+Received: from localhost (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 23 Jun
+ 2026 08:10:05 -0500
+From: Nathan Lynch <nathan.lynch@amd.com>
+To: Karim Manaouil <kmanaouil.dev@gmail.com>
+CC: <shivankg@amd.com>, <Stephen.Bates@amd.com>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <dmaengine@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: SDXI on AMD EPYC (in relation to =?utf-8?Q?Nathan=E2=80=99s?=
+ SDXI dmaengine patchset)
+In-Reply-To: <20260623103204.qvmd5luse4vmhwl3@wrangler>
+References: <20260623103204.qvmd5luse4vmhwl3@wrangler>
+Date: Tue, 23 Jun 2026 08:10:04 -0500
+Message-ID: <875x39ies3.fsf@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Type: text/plain
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001CF:EE_|DM4PR12MB6591:EE_
+X-MS-Office365-Filtering-Correlation-Id: 920114a0-3870-4718-4ce1-08ded128be9f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|23010399003|376014|36860700016|1800799024|11063799006|56012099006|6133799003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	5WTOZnhjDxRQGMgEmq4xS03UusxtV4TcW4qf4IcKH4cgfIuYF+K3ydYkz7FGPxzf6A8s0VVperoMyj9RP0hmQVfMzaJ+oREAyNJi2OT9NMvY24/VVQEID1wxf/M0kvnhHIOWNA9jhS2wNZS9ErVHPKVxk9y1Ju5jy2iK2ndDc4CUwGIcdY5zYTzkJ5T5zh2QnI/CWsVjf0IqSfhSHYP1tDSoKVFzwqclc+wn/hTzTlzqCoYOurK1ETVa17JYeUye1iuNV3WdUX5u+JrK8/M26OYhgLL95tWmfmvvIij8bjypASdg0j3EVMDTw+hLDhwdF8hnf48ex64WU00pIa5dTM3fuxCbrb5GDxYkW1VsoOWHyO91WlNlUo9EHc/XQWxDY/RfTQ0dLu7i8X/KLSG8cdsl3in+eytxEafvJ6Nk4mZrKD1ItNxOp6J5w3EdigQ2GrbsgjyVQpM5ZQUrTxZvmeFZpMy16+ShdSxBwQRValMfwCNnbQNYb6xe3hHbOF1DRv0ZuqpNuARurR6aOjNSDRdyeh01bXYhNWnHLWCARXsdvwTO0dh90paiIsslAdZpPZCMwUeAPJZPH/uJe97ZTneR4rp1VFOsQ9IxU7gbC7C1RLhzAAY+gdLgJa9kx6fg5cTWPKv+HKzixuO72WzqfXeJmNdP3itgVgaeQi5TpoU5iGZbElZQYWF9vDseWyJIFr+vEvD82piWkMWP2qwdUQ==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(376014)(36860700016)(1800799024)(11063799006)(56012099006)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	jzh9EJ4D2x2J4k1MVSLHWgOSldolUj1Rh0BbBlynRjFbE7ai6n6QAVHM4fra8I3bNLZDGWpUxA14LqXdH/5+9t/m87SD5fauybkBYjTRI0T/KkiXbZ53ceKrh4hjl+wm+Wt9r62Ctxqaha94IxtocfLtCsbHzP2O2/nidfUCWOs5obcAJy1yYnPKQggOFZYFDMUBUx/qPFDqh7wFTsidPLeX+SDCgnyl5zN/Y40IVG4vBr6t632MUOvhaZQV+unPLb0OwJksRXj4GNU7bJ49unBUveF0GumssI5SLqEtqVJ467NTR/c5qceail2rEiOKJwLYIzahRwfTJrekz8mg82k4568AzuqEDsQjPzegkzs0lTaVKwwU1DaSkUFaemrnGGpEYJEwt84QeViKqTzw5VMHqLw42TbDCBoK7qRc8qskdGfY4wH2AWerZHAlxaK4
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jun 2026 13:10:05.9091
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 920114a0-3870-4718-4ce1-08ded128be9f
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ5PEPF000001CF.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6591
 
-Hello Baochen,
+Karim Manaouil <kmanaouil.dev@gmail.com> writes:
+>
+> I have a dual-socket AMD EPYC 9004 in the lab (I pasted /proc/cpuinfo at
+> the end) and I wanted to see if I can get the SDXI series from Nathan [2]
+> to work on them, as this will open the door for me to experiment more on
+> AMD hardware.
+>
+> I don't know if these CPUs are equipped with these accelerators or not.
+> lspci is showing these devices (four on each NUMA node):
+>
+> # lspci | grep SDXI
+> 06:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> 21:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> 41:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> 64:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> 81:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> a3:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> c1:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+> e1:00.1 System peripheral: Advanced Micro Devices, Inc. [AMD] SDXI
+>
+> All of them have these PCI specs
+>
+> vendor=0x1022
+> device=0x14dc
+> class=0x088000
+> subsystem_vendor=0x1458
+> subsystem_device=0x1000
+> BARs= 	BAR0/1 512 KiB prefetchable
+> 	BAR2/3 512 KiB prefetchable
+>
+> Class 0x088000 is:
+> base class    0x08  System peripheral
+> subclass      0x80  Other system peripheral
+>
+> However, the PCI device class does not actually match the class from
+> Nathan's patchset [2]:
+>
+> +#define PCI_CLASS_ACCELERATOR_SDXI		0x120100
+>
+> +static const struct pci_device_id sdxi_id_table[] = {
+> +	{ PCI_DEVICE_CLASS(PCI_CLASS_ACCELERATOR_SDXI, 0xffffff) },
+> +	{ }
+> +};
+>
+> So these functions appear to be exposed as generic system peripherals
+> (base class 0x08, subclass 0x80) rather than as SDXI processing
+> accelerators (base class 0x12, subclass 0x01).
+>
+> Do you know whether these AMD 1022:14dc on this platform are actually
+> SDXI accelerators?
 
-> what is the difference between a clean VM shutdown and an unclean termination?
-> specifically, will pci driver's .shutdown callback be triggered during the clean VM
-> shutdown, and not be triggered during a unclean termination?
-
-Clean VM shutdown: The guest OS shuts down normally, so the guest kernel
-calls the driver's .shutdown/.remove callbacks. The driver can properly
-deinitialize the device, leaving it in a clean state.
-
-Unclean VM termination (crash, force-off): The guest kernel never runs, so
-driver callbacks are not triggered. The device remains in whatever state it
-was in (DMA active, interrupts enabled, etc.). At this point, only VFIO on
-the host can interact with the device to reset it before reassigning it to
-the next assignment. Without a working reset method, the device stays in this
-undefined state and can't be reused.
-
-That's why VFIO calls pci_try_reset_function() - it's the only way to clean
-up the device when the guest driver couldn't.
-
-Best regards
-José Ignacio
-
+Afraid I don't have any information about these devices. The driver
+isn't intended to support them.
