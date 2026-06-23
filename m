@@ -1,155 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64FED3A7F4E;
-	Tue, 23 Jun 2026 23:13:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AECD13A7F4E;
+	Tue, 23 Jun 2026 23:14:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782256419; cv=none; b=bMT93llfBsH2LnZgg7xYNKC7MekzccCwCrsqLfhjh5mFfx8wbi3EO+n1WdC22Bmc2iyNqj+MBL1Q3vy/b/Yit+Jc93t7/UmMR3CBkPzBaDH5/4XvK8SIA4VY4jsOQC5qF/hWNZEFrsITn+r04IGLavyDFXA8ylc8mYAkhSXBebM=
+	t=1782256488; cv=none; b=J0yQ9OmKr+8KL6/g4r/1YALUmClDS7X8lk608PxSrn773IkLiXU35AxWWndSNcY38C1IwG4UB57k/EQAtpPCTW5lBXmdT50ApSeDH7ZiuFdP0cIJZWUgTQgobRQosohPFuIixQBAlS9dVEdZL11pZZIYzIRRAyepluceN8FV/yM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782256419; c=relaxed/simple;
-	bh=/pWFEqrUtO7R407UmkeLxHzK1S4uJ3myT1Rlgai5SgY=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=eoRQ/hEDnj3jc93E1XSdOZ4Gd1fz++cGauqudO4eUdIu1bwxcMdtYS0Y9LCkxIDArmUbmAWjLOh6XHR6I/+N6j5l+OKmzG9596wCNxVcWai+UNCczo3a0eBd/r4oOC3hCO6mA9ffue9ggeXVzwTTnuxokiLZf0fjLy0v43YXNNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yvxnc4bA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782256488; c=relaxed/simple;
+	bh=uEHntS13QbhORygu2usgqJbN+Jmc8SA+56gTKRvi/1g=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AoXp/6WZMUzDZRnaZ052F4xn0urF84i0nbf3FQU3qP4n3lH05f9kBclCHw02VCr7/4kyC0Z0XW3rwpc8zAbBLbCyrLr1b4Wtpsc7lAqxXttQyfY7pZNVRr+kEaXeaRVhqlp7e8o+rvabvS5PCPPIg2pXuqwOjKasRe9bW577tfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=MF4PU0q+; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Nh4B8HBd; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yvxnc4bA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EC051F000E9;
-	Tue, 23 Jun 2026 23:13:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782256418;
-	bh=dt8PsIzjXkg9JpHYae7llHpePxe0uk+0DRL1H1m+Tks=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=Yvxnc4bAp3AicwFFJEHgnbT1XEytmRyOnwzJUMdVmpX4tDGR7jBdZADAiwuFNdqEB
-	 xrefIUUyxzTRPBqkqRUI50xU1EyNM2R28qyhH3+l5DlW0PzhZaGIDPYpCXx5+Iba/g
-	 B70E/0LLMq++8v/FJILH8TPqRTZ0iZ1cEbwCuOXlegW1AZUqGZAy/MzoqLCnrkl2RD
-	 4ID7of9r93F2pM73xqGV+Z2k5xvOWLeBC9YVQ4R++yzSfKfSTVuBIoVBcBdNOSVwHP
-	 NATlVhqUdAjqaw7FqRejB5aFz1OTxaXLtlUcPDVdLWTtPi/nd4eXjtbCWPXgpz0v0+
-	 EajqujB76fUdA==
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfauth.phl.internal (Postfix) with ESMTP id D64E1F40070;
-	Tue, 23 Jun 2026 19:13:36 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="MF4PU0q+";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Nh4B8HBd"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfout.phl.internal (Postfix) with ESMTP id CBB36EC032B;
+	Tue, 23 Jun 2026 19:14:44 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Tue, 23 Jun 2026 19:13:36 -0400
-X-ME-Sender: <xms:IBM7ape2WkIRLjqttncwbA7ZhwoH36sKta4UqPmmsRs9Gq13wvQh3Q>
-    <xme:IBM7anovTCEWe0CKMaXalQSh6EUSIjocmeaYkdEt1m40zipDkIEVxYZwrlo1K9X6N
-    so1wvgZ8oNdu0UhEotu4iaYb3QBASXzIapDnKRY6EQFHFc3AKgDaw>
-X-ME-Received: <xmr:IBM7an8WTgVSYb5crjlTQPhtf3wXWPyAxhf2m_mJ7P-Z-o-2W-qzC_yfHDjrM0Hyi-oQ7x0Y5-Rqs8_X0icX2zWDwaNniTZP2DQ>
-X-ME-Proxy-Cause: dmFkZTEKo9U7Kgu4Zj9ax0E4ioiVjTSiontLI/u8uopg7sAWTbwCVtOiSRUSyiM/HqOZ88
-    wXkptFTPj1xfFcLsTdtR3diwcfJzx1KIAU9zK43Ys2UH0hmYALgMFrOB6fyGnI6xa2ExyW
-    JUbUmou6ZMZ3lBeUp8q2BP29CCs5u3LNv97BTm+zKrABHA8Bv/g1k/mVG9kFOH1R8Hng/t
-    8kBuEAspEU4BVJZVjyejxGfVO1S4HNC7iPoX5bCmSFqyzCA3bKjzZ2RJdmbT+stoqCwUEK
-    280Z+IJ62ZvI7fclsmHqBehXEghCxFemdxfFnQiuQVG5WuWLa699dr6p2BbwUnkoWrMCB5
-    EJ5ffycnUgilRJZeQg90w2rbWxW1v8o2pthONmZO1KLm9aHlbYlnZCLuQe+qKkdKTe3Zwd
-    QkQAnFPS3hxctnuk3wvekO7Eozsvr7KqsnZWH1Abcmbwyv5Zo34BCr/8n6meu5npiOEBvH
-    9xLBXLyReeZpV/hkDtdDuA6WPOFMqFFW6n7JQupnWZrNm2K7iNTh3Qi+zt1DyL4qQhb2DM
-    4JxJMQCF96H6Z/xOEviiy8dMJxYAErthkJi0KlSKzaFzK/2dex9Ry8axrjcZSDsSACa0qe
-    Iju7vreCRJW2z3znIPkfFFpCfnjia6RRf45dgHVtj6HZ9SstU9lg1A1cgI4Q
-X-ME-Proxy: <xmx:IBM7ag4Fwl_Is2XOIjxMOHvcAvtTVj4r1Zopl2wC1LzSMAh_yu2k0w>
-    <xmx:IBM7apgzxtpHAq3aNp0wwrNI3pari41k07VD2vjT-tQCQOZdrnIq8w>
-    <xmx:IBM7avqOp64vA5vjVVgKgbuesb9hG-MOq5vKA5yPgawiDI2nTmvp7w>
-    <xmx:IBM7atJhBunYZjKlhlB40Qfn9AA6xg4EYMZN6rwqKGh1zkG23a-V1g>
-    <xmx:IBM7akv5QwOVsRR1xD6H8iglDK3BIJ5YHw9kg-MZhdirN4CSsqgmw93X>
-Feedback-ID: i67ae4b3e:Fastmail
+  by phl-compute-02.internal (MEProxy); Tue, 23 Jun 2026 19:14:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1782256484;
+	 x=1782342884; bh=/ZZ2Je6Wf74Jd9uu0Ad+g7IenG2afcZ0VBi92IuobMo=; b=
+	MF4PU0q+TlcSYid2HxaoZvmllhwHt2Xzv8FR+tKO3M2VrKFK9LleBja5vjI7fGVL
+	xwdhlxBfIcdgPh3yWbMqBqAXZWojmcURYD0aL5OyCCzoQm8gPq0yiMZSgUZmNr5X
+	71NN8OPv/kdap3q02Aj52iL4S3smUZLwyjT0LUt5JWQhhjzsU1CMdwfAT196dPbL
+	Eyex3iDFVM5YmGhC810eW+T/zhoEpeQ+Cm0wIRXlBRtIBhLc7hs2ZB/Wxr5milYU
+	p3b8LPWFx9JuqEoqIYpWGNKH4RXCFKiy/cBMP9Vv0VmJ/EtpjxmDCySrxbGfOAM1
+	8W+bjN8hdJ/xeYreGjQIFA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782256484; x=
+	1782342884; bh=/ZZ2Je6Wf74Jd9uu0Ad+g7IenG2afcZ0VBi92IuobMo=; b=N
+	h4B8HBdl4deMns2uVcdTGQBpDntydbK6Raa0sTNJquyUIF4wCf2pjQczH43Au/6/
+	kycVtMyZ8NR6UUr1QxmHFAD6KjCkvBwXfgqoMHezAcnbe2vp/w6FqOzwsNl3Q1PF
+	0dqG96R7Ad9FyrrYsFfJaaqxdUu6xasNg2PAMIws5Uhfz4QovrEDO2ctDWJEe6B4
+	yaxYX1Abs2nPqPizTQAZV3nvwylc/VcB89Wy4cLEGarSNQ/JKMYglBFVOsGnNS70
+	j5jIYMekgmtni0tYwPmE1o3A1pKNVdCGr0KwExAzh0K+TnCaenvci+yl7SYhShSB
+	WGCE2Aa38aUNE8w4XNcXg==
+X-ME-Sender: <xms:ZBM7arC3NxEyMc4yuQBg82LCq4mmYk6jIduvPPBzC988qfuXeIgDBw>
+    <xme:ZBM7anjNAzMYDQ_rkEp70J573ySdUYGXS8wizdow_L-b2-i4nn4ToYEUHaz2lPS1u
+    _Dso_6IvwSF3650gWrGDjZmAd7-QUBclCMqocWXuCZ-cBEEL9kQ>
+X-ME-Received: <xmr:ZBM7aha1mDHPtlparH1cYhRGIif0m5xn9nGPBpvWkje-Dz0xjkbGak3-QgU>
+X-ME-Proxy-Cause: dmFkZTEJaNibHEAGILh7AHf2UTUOuG0R/5orFFI8emSi6gb4ys6YZRB4fyFFVQU+0eKMjV
+    Tk6OVLNQlTFKEuzPGs5EAXRYXtDeYi9ZBNoP0H7IkSZ+YdhR+aR/9rRc6kkzxku+0MDWmx
+    0wzzShNDNPk1tyb9336HcpV85//gfIPFFjqIPuHnaNga9Wl1LH6/oxNPpbZ9ufBiEzksQn
+    TzQpshn1HBdv1ZDEBU1j8e64t8+MY7ojc7WIDBmZqudzBan9p3jCGaK7XI3b4bN4ebJSYt
+    4n5dkbMoEh2Gyj9tGII2NgO013uqtpAsvWBgpiu5GLsblg3UnG9qAgg/yIzNgZsm9T87gU
+    XsIvjgRhKDFIb7qdzdopE6JGDizkv5PgQX60pP31JZwb23/3GJtfeyMJDWI0KoYUsThGLv
+    v/fvrzIKv/WkKyJaZervgHeiwhI3+IpI77eaMddDTPnW798/yN477tmNIUwqgAz1Tt13gT
+    i7fH3RMZE3yA4myKUuaY5htbtuKvt8OSamh+QwJbiU6/M8JkjdGAfRpR9wYnqpS1VFTd9Z
+    xXf2QMlXp8mkZGZPUpPDLr8EVe+SYHGhN4PW38HlJp1e9bHIbt0w91dLcDD2cDKEl+t3rU
+    z861OXxash7iI6yBxmRuYqgQuoK9rshGaHTu21YSJEKAUB63xFhN/g5lY5+Q
+X-ME-Proxy: <xmx:ZBM7agnvcBcK2rMNkAQ6NAuNlRVfEX8w6M9Mojge8ufUKATQxpg83A>
+    <xmx:ZBM7avieniUwpLOFFAfgF6q5IwM8vfr1k6UKATLgFnfPY6Fk_tQQbw>
+    <xmx:ZBM7aqQFdYZT_b7CwQYGwe3cQ_D3YnTlmR_QQjPPuWCAcBZyCoVjVA>
+    <xmx:ZBM7aoYCY8XQsTGbew_Sa-0WrQQi3WcN3fPzyOnIG2N0XujXatZaYQ>
+    <xmx:ZBM7atZIxGxk3o6yP_pUhdWiCZbZZ5fPv7QzcQBhflRbqqRGf5w0jpWk>
+Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 23 Jun 2026 19:13:36 -0400 (EDT)
-Date: Tue, 23 Jun 2026 16:13:35 -0700
-From: "Dan Williams (nvidia)" <djbw@kernel.org>
-To: Srirangan Madhavan <smadhavan@nvidia.com>, 
- Alison Schofield <alison.schofield@intel.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Dan Williams <djbw@kernel.org>, 
- Dave Jiang <dave.jiang@intel.com>, 
- Davidlohr Bueso <dave@stgolabs.net>, 
- Ira Weiny <ira.weiny@intel.com>, 
- Jonathan Cameron <jic23@kernel.org>, 
- Vishal Verma <vishal.l.verma@intel.com>, 
- linux-cxl@vger.kernel.org, 
- linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-Cc: vsethi@nvidia.com, 
- alwilliamson@nvidia.com, 
- Dan Williams <danwilliams@nvidia.com>, 
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
- Vishal Aslot <vaslot@nvidia.com>, 
- Manish Honap <mhonap@nvidia.com>, 
- Jiandi An <jan@nvidia.com>, 
- Richard Cheng <icheng@nvidia.com>, 
- linux-tegra@vger.kernel.org, 
- Srirangan Madhavan <smadhavan@nvidia.com>
-Message-ID: <6a3b131f453df_3c9f100db@djbw-dev.notmuch>
-In-Reply-To: <20260623032453.3404772-3-smadhavan@nvidia.com>
-References: <20260623032453.3404772-1-smadhavan@nvidia.com>
- <20260623032453.3404772-3-smadhavan@nvidia.com>
-Subject: Re: [PATCH v7 02/11] cxl: Cache decoder settings on PCI devices
+ 23 Jun 2026 19:14:43 -0400 (EDT)
+Date: Tue, 23 Jun 2026 17:14:41 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: Niklas Schnelle <schnelle@linux.ibm.com>, Thomas Gleixner
+ <tglx@kernel.org>, linux-s390@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ helgaas@kernel.org, mjrosato@linux.ibm.com, alex@shazbot.org
+Subject: Re: [PATCH v20 4/4] PCI/MSI: Enable memory decoding before
+ restoring MSI-X messages
+Message-ID: <20260623171441.6a3f4a30@shazbot.org>
+In-Reply-To: <730608ca-4a3f-4dd2-ab3e-4b83716a97d1@linux.ibm.com>
+References: <20260622171840.1618-1-alifm@linux.ibm.com>
+	<20260622171840.1618-5-alifm@linux.ibm.com>
+	<87ik7al3of.ffs@fw13>
+	<c8abc1c8-71e0-443f-820f-182c0ff931e9@linux.ibm.com>
+	<087b5cafd04d2fee89f3a4a941d425e967d1ee72.camel@linux.ibm.com>
+	<730608ca-4a3f-4dd2-ab3e-4b83716a97d1@linux.ibm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Srirangan Madhavan wrote:
-> Cache CXL core's HDM decoder settings in pci_dev->hdm as decoders are
-> enumerated, committed, or reset. PCI reset paths can use this snapshot to
-> restore HDM programming without walking CXL topology during reset recovery.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/hdm.c | 81 +++++++++++++++++++++++++++++++++++++++++-
->  include/cxl/cxl.h      | 12 +++++++
->  include/linux/pci.h    |  6 ++++
->  3 files changed, 98 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index fa978c297546..83cda63f76a5 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -84,6 +84,76 @@ static void parse_hdm_decoder_caps(struct cxl_hdm *cxlhdm)
->  		cxlhdm->iw_cap_mask |= BIT(16);
->  }
->  
-> +static void clear_hdm_info(void *data)
-> +{
-> +	struct pci_dev *pdev = data;
-> +
-> +	WRITE_ONCE(pdev->hdm, NULL);
-> +}
-> +
-> +static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
-> +{
-> +	struct cxl_port *port = cxlhdm->port;
-> +	struct cxl_hdm_info *info;
-> +	struct pci_dev *pdev;
-> +	struct device *uport;
-> +
-> +	if (is_cxl_endpoint(port)) {
-> +		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
-> +
-> +		uport = cxlmd->dev.parent;
-> +	} else {
-> +		uport = port->uport_dev;
-> +	}
-> +
-> +	if (!dev_is_pci(uport))
-> +		return 0;
-> +
-> +	pdev = to_pci_dev(uport);
-> +	info = devm_kzalloc(&pdev->dev,
-> +			    struct_size(info, settings, cxlhdm->decoder_count),
-> +			    GFP_KERNEL);
-> +	if (!info)
-> +		return -ENOMEM;
-> +
-> +	info->decoder_count = cxlhdm->decoder_count;
-> +	WRITE_ONCE(pdev->hdm, info);
-> +
-> +	return devm_add_action_or_reset(&pdev->dev, clear_hdm_info, pdev);
+On Tue, 23 Jun 2026 09:36:39 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
 
-The CXL core can update the PCI cached HDM settings under the device
-lock, but it should not be doing its own allocation. It also should not
-clear the cached settings on shutdown. That would defeat the purpose of
-having the HDM settings available while the device is disabled.
+> On 6/23/2026 4:28 AM, Niklas Schnelle wrote:
+> > On Mon, 2026-06-22 at 13:49 -0700, Farhan Ali wrote: =20
+> >> On 6/22/2026 1:29 PM, Thomas Gleixner wrote: =20
+> >>> On Mon, Jun 22 2026 at 10:18, Farhan Ali wrote: =20
+> >>>> The current MSI-X restoration path assumes the Command register Memo=
+ry bit
+> >>>> is enabled when writing MSI-X messages. But its possible the last sa=
+ved and
+> >>>> restored state of device may not have the Memory bit enabled, even i=
+f a
+> >>>> device driver later enables Memory bit and MSI-X. Attempting to acce=
+ss
+> >>>> Memory space without Memory bit enabled can lead to Unsupported Requ=
+est
+> >>>> (UR) from the device. Fix this by enabling Memory bit and restore
+> >>>> it afterwards.
+> >>>>
+> >>>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> >>>> ---
+> >>>> =20
+> > --- 8< --- =20
+> >>>> @@ -882,6 +883,8 @@ void __pci_restore_msix_state(struct pci_dev *de=
+v)
+> >>>>    	pci_intx_for_msi(dev, 0);
+> >>>>    	pci_msix_clear_and_set_ctrl(dev, 0,
+> >>>>    				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+> >>>> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> >>>> +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);=
+ =20
+> >>> Can we please have a comment there which explains this? Three month d=
+own
+> >>> the road this will results in head scratching otherwise.
+> >>>
+> >>> I agree with Niklas that this wants a Fixes and a Cc:stable tag.
+> >>>
+> >>> Other than that:
+> >>>
+> >>> Reviewed-by: Thomas Gleixner <tglx@kernel.org>
+> >>>
+> >>> Thanks,
+> >>>
+> >>>           tglx
+> >>> =20
+> >> I can add a comment, how about something like below?
+> >>
+> >> "The restored device state may not have Memory decoding enabled in
+> >> Command register. Since the MSI-X was enabled for the device, enable
+> >> Memory decoding before restoring MSI-X" =20
+> > Missing "the" before "Command register" other than that this sounds
+> > good to me and I agree with Thomas that a comment makes sense here.
+> > =20
+> >> For the Fixes tag, do you have a suggestion for a commit? This behavior
+> >> has been present since=C2=A041017f0cac92 ("[PATCH] PCI: MSI(X) save/re=
+store
+> >> for suspend/resume" which introduced these restore functions. So should
+> >> be Fixes against 41017f0cac92? =20
+> > I'm not sure but my guess would be that for suspend/resume this isn't
+> > an issue since the suspend part would save the state with Memory Space
+> > enabled. So it wouldn't be broken in this original use-case. I think
+> > the problem only occurs in case restore is done for error recovery.
+> > Might it make sense to have the Fixes tag point to a2f1e22390ac
+> > ("PCI/ERR: Ensure error recoverability at all times") even though that
+> > only helps to expose the issue?
+> >
+> > Thanks,
+> > Niklas =20
+>=20
+> Yeah, commit a2f1e22390ac ("PCI/ERR: Ensure error recoverability at all=20
+> times") exposes this issue. I am okay if we want Fixes tag to point to=20
+> this change, unless someone objects. I will also add a note in the=20
+> commit message to specify a2f1e22390ac exposes this issue.
+
+I'm not following how we come to that limited conclusion.  vfio-pci has
+long relied on the save/restore in PCI core and it doesn't seem
+unreasonable that if a guest triggers a pci_reset_function() using a
+method that vfio-pci traps and implements through another
+pci_reset_function() in the host, that it's done with memory disabled.
+
+It would be atypical for a guest to trigger a reset with MSI-X enabled,
+but I don't see what prevents it.  I'd attribute the fix to the
+introduction for better stable coverage.  This might also be pulled out
+of the series as an independent fix.  Thanks,
+
+Alex
