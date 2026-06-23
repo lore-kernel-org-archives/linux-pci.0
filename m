@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019FD21A92F;
-	Tue, 23 Jun 2026 09:04:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F6A1E832A;
+	Tue, 23 Jun 2026 09:07:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782205491; cv=none; b=OxAx0mE0rRxGm76st5DKB+IEkByyjKRlCEn1hGYQjA0fE2U5Hd065eSCwnZ/8IVEjc0RgVqeSf/I+A8jZxC1KMPcjFlSuDwjfgDWex4H3Nskz0GvK6Z4lE/4W1jFJ3Usv9jXs4lnyhbATZv0O1+CmzkvcDvb3aJv5GY0aA6hRkY=
+	t=1782205632; cv=none; b=TiAl1qSv55mV6s4SbXoDzcl6UgsrMmAyhVj0V4JMO22yo8AE7FhbqacGaBcRXxX/e29HJnsT6fH4xSmK5zfMJ3HfPorGw+k+55+PTd71kUdEq33Roen9JTBtj2C4bnv74p5FMBpYKEU+YwsUO2kX3mTrgsGfWHyIgrWIRtYMWf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782205491; c=relaxed/simple;
-	bh=f+sUawWSZHxvpDtFno1uRhAphsDB4CJI1BydYp5OI4E=;
+	s=arc-20240116; t=1782205632; c=relaxed/simple;
+	bh=bg3yIwxsW44+oOqUl39avmo3UgH9hPgXWcHMpa7mAj4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kxnI95vDc7b+i9Hi7f1VxIlgi54Jbp3T34viJ8D7ksHc/3uHya18HbMAkwLf+jN/kJcitgOlPaXtueaac+YCX9X+CT/gBgbIUezT1nx7s9UqyRjScjpIz4y/IsHBnC6q9h70+O+gEv/vQaTa19OasOx7Y36HmdzjRs8xCYOWQxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jyEDQQh5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HvsktHwxDxepyFz4unEnzLblBH+luQi+3UUP+dndbcov4aHRoXYf+PplaXKQEIjEeUBZArQORkIcGljN1KuGvBhjlQWbRv5nrQOG5u7CJ8aWe53XtJYiJcUv3Wj533Cq+5PcyOjLEeOLD+qrBrvbclGbzyeHQXDSMTVD5TGzhhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G4VKjRNd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jyEDQQh5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAA661F000E9;
-	Tue, 23 Jun 2026 09:04:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4VKjRNd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D0F51F000E9;
+	Tue, 23 Jun 2026 09:07:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782205489;
-	bh=Uo1GzNmt2x+u852q5EwlhRt/WH2pdT22kjLljSpMiNs=;
+	s=k20260515; t=1782205630;
+	bh=XOe9uE1kSJZYwFxi++xBcZPKUTv0cnRzx3Sr8Vkop+Y=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jyEDQQh5rkWVEwsIhcm6KgQDAnSuBVjyOLJoh9tB8FzQjmKqmEyZ+UVi8GwJ3uUVX
-	 hz2OoKSdCvTJzuc/+6ShAwVV7PdufE0UfY5KbdKT5dN6UvIDkX9KOoUoaVGYdTKzdq
-	 y4B83ArrcsJgCW0W6zhdmLaXxBTskxZDk4v6cjLKXUqsWXyIhDp0ZhreHXHz0sd7ZF
-	 BE7w6kfeiIeOTR0WqdXVkRL5c9Q5hZPi7YIPysM+gCEqQGxPIrwsGZNkEDBol7PlL0
-	 nwxd6iTST2w6EWLjEGno1KQ9VMCLLou8zOSYZxiFIHTswnFUWXGcRL5/bWU7y9bqv4
-	 i/iMibgTdV1Qg==
+	b=G4VKjRNdFgsT/kC4DhpIKgUiPNGB06R/4AA7DheFs7SjIJ+/KSf9QmRQy2j8Umzmv
+	 lV2z5XMLyDVGO6gYjBStG5qoRJSWIZrZbPmKX68vfXfdR/3/2MLVcf0iUyLiMoysIg
+	 i8NmtG/w01JUMBKG2I6aywtDURGh6JfhvyR9sF7HHCLHoJOhHaACG1onCbGSQ9Q9JS
+	 vnGKN0McnzfK6BXGF2967lzpzuMMTnHYO+MlpIoJIGIjmB277GZqkRujn3Fmtl9Vr8
+	 pTk8KyosqFQON6utm7werPKfIjb/KYQehY/iv7fywjvV/92/fTCWfD+7KVSQNOzeQT
+	 eCXS1LNzq6qtQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v18 04/12] PCI/TPH: Refactor pcie_enable_tph &
- add explicit requester variant
+Subject: Re: [PATCH RESEND v18 09/12] vfio/pci: Hide TPH capability when TPH
+ is unsupported
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623085048.51139-5-fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260623085048.51139-10-fengchengwen@huawei.com>
 References: <20260623085048.51139-1-fengchengwen@huawei.com>
- <20260623085048.51139-5-fengchengwen@huawei.com>
+ <20260623085048.51139-10-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 09:04:48 +0000
-Message-Id: <20260623090449.AAA661F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 09:07:09 +0000
+Message-Id: <20260623090710.2D0F51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,81 +49,76 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Concurrent execution of `pcie_tph_set_st_entry` can violate the PC=
-Ie spec and corrupt hardware state by modifying the ST table while TPH is g=
-lobally enabled.
+- [High] Pre-existing kernel heap buffer overflow in `vfio_ecap_init()` due=
+ to unvalidated extended capability lengths.
 --
 
-commit e3b30f139c34eadf8039e394826ffa947655fe86
+commit 04070fd3c8083d2b670da1000c99d6fc517e4114
 Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI/TPH: Refactor pcie_enable_tph & add explicit requester variant
+    vfio/pci: Hide TPH capability when TPH is unsupported
+   =20
+    Check the device negotiated TPH support status before parsing the TPH
+    extended capability. Return zero length to hide the capability from
+    userspace if TPH is disabled during topology negotiation.
 
-This commit refactors the pcie_enable_tph implementation by extracting the
-core logic into a static internal enable_tph helper that accepts an explicit
-requester type. It preserves the original pcie_enable_tph behavior as an
-auto-detecting wrapper and adds a new pcie_enable_tph_explicit function
-for explicit standard or extended TPH selection.
-
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 4097787ea98a1..c22eb7f4b0bd7 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
+ci_config.c
+> index a10ed733f0e3a..5c6ab172df6c0 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -22,6 +22,7 @@
+> =20
+>  #include <linux/fs.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-tph.h>
+>  #include <linux/uaccess.h>
+>  #include <linux/vfio.h>
+>  #include <linux/slab.h>
 
 [ ... ]
 
-> @@ -400,10 +384,11 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
->  	if (!((1 << mode) & dev_modes))
->  		return -EINVAL;
-> =20
-> -	pdev->tph_mode =3D mode;
-> +	if (req_type =3D=3D PCI_TPH_REQ_EXT_TPH && !pdev->tph_ext_support)
-> +		return -EINVAL;
-> =20
-> -	pdev->tph_req_type =3D pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
-> -						     PCI_TPH_REQ_TPH_ONLY;
-> +	pdev->tph_mode =3D mode;
-> +	pdev->tph_req_type =3D req_type;
-> =20
->  	/* Write them into TPH control register */
->  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+> @@ -1450,6 +1451,8 @@ static int vfio_ext_cap_len(struct vfio_pci_core_de=
+vice *vdev, u16 ecap, u16 epo
+>  		byte &=3D PCI_DPA_CAP_SUBSTATE_MASK;
+>  		return PCI_DPA_BASE_SIZEOF + byte + 1;
+>  	case PCI_EXT_CAP_ID_TPH:
+> +		if (!pcie_tph_supported(pdev, false))
+> +			return 0;
+>  		ret =3D pci_read_config_dword(pdev, epos + PCI_TPH_CAP, &dword);
 
 [Severity: High]
-This is a pre-existing issue, but does the TPH subsystem lack necessary
-locking around the TPH Control Register and ST table updates?
+This isn't a bug introduced by this patch, but I noticed a pre-existing
+issue in how the returned capability length is handled.
 
-If multiple MSI-X vectors' SMP affinities are updated simultaneously by a
-user or irqbalance, concurrent calls to pcie_tph_set_st_entry could happen.
-Since pcie_tph_set_st_entry temporarily disables TPH system-wide:
+Does the returned length from vfio_ext_cap_len() need to be validated
+against pdev->cfg_size?
 
-pcie_tph_set_st_entry()
-    set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
-    ...=20
-    loc =3D pcie_tph_get_st_table_loc(pdev);
-    ... write to ST table ...
+In vfio_ecap_init(), the length returned here is used directly:
+
+drivers/vfio/pci/vfio_pci_config.c:vfio_ecap_init() {
     ...
-    set_ctrl_reg_req_en(pdev, pdev->tph_req_type);
+		len =3D vfio_ext_cap_len(vdev, ecap, epos);
+		if (!len) {
+			...
+			continue;
+		}
+		...
+		memset(map + epos, ecap, len);
+		ret =3D vfio_fill_vconfig_bytes(vdev, epos, len);
+    ...
+}
 
-Would CPU2 re-enable TPH while CPU1 is still writing to the ST table,
-violating the PCIe r6.2 sec 6.17.3 specification which cautions against
-updating the ST table while TPH is enabled?
+If a malicious or buggy PCIe device advertises an extended capability like
+TPH with a large ST table length (e.g., up to 4108 bytes), could epos + len
+exceed pdev->cfg_size?
 
-Additionally, set_ctrl_reg_req_en performs an unprotected read-modify-write:
+If so, it appears the subsequent memset() and vfio_fill_vconfig_bytes()
+operations could write out of bounds into the map and vconfig allocations.
 
-set_ctrl_reg_req_en()
-    pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
-    FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, req_type);
-    pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
-
-Could concurrent IRQ notifiers cause a data race here, corrupting the TPH
-control register state?
-
->  	FIELD_MODIFY(PCI_TPH_CTRL_MODE_SEL_MASK, &reg, pdev->tph_mode);
->  	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, pdev->tph_req_type);
-> =20
->  	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
->
+>  		if (ret)
+>  			return pcibios_err_to_errno(ret);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623085048.5113=
-9-1-fengchengwen@huawei.com?part=3D4
+9-1-fengchengwen@huawei.com?part=3D9
