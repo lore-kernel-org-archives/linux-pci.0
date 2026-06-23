@@ -1,46 +1,46 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3CFC3CF1E0;
-	Tue, 23 Jun 2026 08:51:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 252F73CF662;
+	Tue, 23 Jun 2026 08:51:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782204667; cv=none; b=Cy/q+n7KhE/ja+8c2mVWSfceiIHkLJoWLL8/xEh9cys6ZtZz87PV3bdMmCh6wq55PzHAyOIvTvx6XfNRHFiOMQpyUBGsSzDrP9l9rcwEinkh1WHDXjCZGod9jXjlhQcFByTyWRptAn1be6UlqD1xa0GujkZ1sb1PYpqMYquu30I=
+	t=1782204667; cv=none; b=qAAhk4a1KOx54Dxd6xca0T+GpbjuNScksvUMGkYjQR/ZeEOA2PVSnf5Te6Vmj944EYpWe9v+zOZnKFim6Rqq7iIqkjbMk7NuCcxqfeumNDvfjHoDs2jLeEWPwWNMu9KcF0vxeLTf+/K0PCMHLdm8Vmp6X4Fm1bhU5YCeCiX/L+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782204667; c=relaxed/simple;
-	bh=YmMsdiv5RUh14hkxxrV7/gZrHwJcENRVWJMIjms000Q=;
+	bh=1nTcCUCnh/F3b/GKJRqN5qwPWQ77w7liCqpliXnxASE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=c23GQstPoorIxQhsZi7mOAaqDDhDx79QsGYGrBYEY/354JtPzqZOYyF1TdbOmOaP5MdqNuGHY+VaLdIxtN525n44H7p1NHdJJN60MwKHort4cFNYToLnuSF7iNzeJTPfjYHVOSM4MrLZrDOHE0o64/2GqndYdqrFZjMz8OXNmL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=FA/9e+ZQ; arc=none smtp.client-ip=113.46.200.221
+	 MIME-Version:Content-Type; b=gFvQTJWSa1XT8QcW8e7ARYLQXy85GW4b8ELD/dWUOTvXq4oMYEUz4/Ea0qHvj12wXUYEp78MoEQcWFpOzl5VTXfUJ7AU6411+tqiD2+cj78VK6+FHJ7BHoocGP4zPQACtOmIqb5mpCLH/ABhB33o206Liyu4iOE+SGdobmCcsB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=cSvG/vss; arc=none smtp.client-ip=113.46.200.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="FA/9e+ZQ"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="cSvG/vss"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=9Q0tGZ8qgWagkw1cfrf2YAt7W20Ztqqk/ZbZEjZjBoM=;
-	b=FA/9e+ZQ+H4LHPhEwJ83mUYUQEzCS5n7DW/Y0VY89F1qdnhnyQqb2XrWos0QPhbRjkN4iSmKJ
-	Avg2yuNGXZ2MzlGfAUtC2xuAVEdEH+W9Sm/Am1aBaxNDEpT8DIVmfRxIGUEChvt/xC53VcSAiub
-	r0fukyKEYfWhoFzygfln+CA=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4gkz802pG6zRhT1;
-	Tue, 23 Jun 2026 16:41:52 +0800 (CST)
+	bh=v5IFub4t4wY9v0jXEzRFSfBnWIwU6tUGk97dyP2+z6Q=;
+	b=cSvG/vssNJ56S/FqaaQgAVONLDCCQzbAtgtXzE2poRgiPIirlI2OXNB0WSVlchGLZgOtrjprv
+	OYpYBi3fFb42UcX2YrV/peU+OX/wTQu930yv4N3gZttecdXyTn9Y35TJ+xZmDwvJisWMBOw/bM4
+	MdsRGTwTAeKAcG+oKQ5z3hY=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gkz980QSkzKm4r;
+	Tue, 23 Jun 2026 16:42:52 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id BF7EB40561;
-	Tue, 23 Jun 2026 16:50:55 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id B694540562;
+	Tue, 23 Jun 2026 16:50:56 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 23 Jun 2026 16:50:55 +0800
+ 15.2.1544.36; Tue, 23 Jun 2026 16:50:56 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH RESEND v18 01/12] PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
-Date: Tue, 23 Jun 2026 16:50:37 +0800
-Message-ID: <20260623085048.51139-2-fengchengwen@huawei.com>
+Subject: [PATCH RESEND v18 03/12] PCI/TPH: Cache TPH requester capability at probe time
+Date: Tue, 23 Jun 2026 16:50:39 +0800
+Message-ID: <20260623085048.51139-4-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260623085048.51139-1-fengchengwen@huawei.com>
 References: <20260623085048.51139-1-fengchengwen@huawei.com>
@@ -54,96 +54,112 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-pcie_tph_get_st_table_loc() incorrectly uses FIELD_GET(), which shifts the
-field value to bit 0. But the function is designed to return raw
-PCI_TPH_LOC_* values as defined in the function comment.
+Calculate the negotiated TPH requester type from device and root port
+capabilities once in pci_tph_init().
 
-This causes incorrect ST table location detection. Fix it by using bitwise
-AND with PCI_TPH_CAP_LOC_MASK to return the unshifted field value matching
-the function specification.
+Add tph_ext_support flag to cache whether the device is allowed to
+issue Extended TPH requests after topology negotiation. If the final
+requester type is disabled, clear TPH capability to prevent usage.
 
-This doesn't make a difference to mlx5_st_create(), the lone external
-caller, because it only checks for PCI_TPH_LOC_NONE (0), but will be needed
-for callers that check for PCI_TPH_LOC_CAP or PCI_TPH_LOC_MSIX.
+Simplify pcie_enable_tph() by using the cached requester capability
+instead of recalculating every time.
 
-Also add tph_cap validation for pcie_tph_get_st_table_loc() to prevent
-invalid PCI configuration space access when TPH is not supported. Add stub
-functions for pcie_tph_get_st_table_size() and pcie_tph_get_st_table_loc()
-when !CONFIG_PCIE_TPH.
-
-Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
-Cc: stable@vger.kernel.org
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-Reviewed-by: Alex Williamson <alex.williamson@nvidia.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/tph.c       | 12 +++++-------
- include/linux/pci-tph.h |  5 +++++
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/pci/tph.c   | 43 +++++++++++++++++++++++++------------------
+ include/linux/pci.h |  4 +++-
+ 2 files changed, 28 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 655ffd60e62f..489487158b99 100644
+index 489487158b99..4097787ea98a 100644
 --- a/drivers/pci/tph.c
 +++ b/drivers/pci/tph.c
-@@ -165,11 +165,14 @@ static u8 get_st_modes(struct pci_dev *pdev)
-  */
- u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+@@ -383,7 +383,6 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
  {
--	u32 reg;
-+	u32 reg = 0;
-+
-+	if (!pdev->tph_cap)
-+		return PCI_TPH_LOC_NONE;
+ 	u32 reg;
+ 	u8 dev_modes;
+-	u8 rp_req_type;
  
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+ 	/* Honor "notph" kernel parameter */
+ 	if (pci_tph_disabled)
+@@ -403,23 +402,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
  
--	return FIELD_GET(PCI_TPH_CAP_LOC_MASK, reg);
-+	return reg & PCI_TPH_CAP_LOC_MASK;
- }
- EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+ 	pdev->tph_mode = mode;
  
-@@ -184,9 +187,6 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
- 
- 	/* Check ST table location first */
- 	loc = pcie_tph_get_st_table_loc(pdev);
+-	/* Get req_type supported by device and its Root Port */
+-	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+-	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
+-		pdev->tph_req_type = PCI_TPH_REQ_EXT_TPH;
+-	else
+-		pdev->tph_req_type = PCI_TPH_REQ_TPH_ONLY;
 -
--	/* Convert loc to match with PCI_TPH_LOC_* defined in pci_regs.h */
--	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
- 	if (loc != PCI_TPH_LOC_CAP)
- 		return 0;
+-	/* Check if the device is behind a Root Port */
+-	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
+-		rp_req_type = get_rp_completer_type(pdev);
+-
+-		/* Final req_type is the smallest value of two */
+-		pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
+-	}
+-
+-	if (pdev->tph_req_type == PCI_TPH_REQ_DISABLE)
+-		return -EINVAL;
++	pdev->tph_req_type = pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
++						     PCI_TPH_REQ_TPH_ONLY;
  
-@@ -315,8 +315,6 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
- 	set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
+ 	/* Write them into TPH control register */
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+@@ -506,13 +490,36 @@ void pci_no_tph(void)
  
- 	loc = pcie_tph_get_st_table_loc(pdev);
--	/* Convert loc to match with PCI_TPH_LOC_* */
--	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+ void pci_tph_init(struct pci_dev *pdev)
+ {
++	u8 tph_req_type, rp_req_type;
+ 	int num_entries;
+ 	u32 save_size;
++	u32 reg = 0;
  
- 	switch (loc) {
- 	case PCI_TPH_LOC_MSIX:
-diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-index be68cd17f2f8..6f02b020d7d7 100644
---- a/include/linux/pci-tph.h
-+++ b/include/linux/pci-tph.h
-@@ -8,6 +8,7 @@
-  */
- #ifndef LINUX_PCI_TPH_H
- #define LINUX_PCI_TPH_H
-+#include <linux/pci.h>
+ 	pdev->tph_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_TPH);
+ 	if (!pdev->tph_cap)
+ 		return;
  
- /*
-  * According to the ECN for PCI Firmware Spec, Steering Tag can be different
-@@ -41,6 +42,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
- static inline void pcie_disable_tph(struct pci_dev *pdev) { }
- static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
- { return -EINVAL; }
-+static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
-+{ return 0; }
-+static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
-+{ return PCI_TPH_LOC_NONE; }
- #endif
++	/* Get req_type supported by device and its Root Port */
++	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
++	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
++		tph_req_type = PCI_TPH_REQ_EXT_TPH;
++	else
++		tph_req_type = PCI_TPH_REQ_TPH_ONLY;
++
++	/* Check if the device is behind a Root Port */
++	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
++		rp_req_type = get_rp_completer_type(pdev);
++		/* Final req_type is the smallest value of two */
++		tph_req_type = min(tph_req_type, rp_req_type);
++	}
++
++	if (tph_req_type == PCI_TPH_REQ_DISABLE) {
++		pdev->tph_cap = 0;
++		return;
++	}
++
++	pdev->tph_ext_support = !!(tph_req_type == PCI_TPH_REQ_EXT_TPH);
++
+ 	num_entries = pcie_tph_get_st_table_size(pdev);
+ 	save_size = sizeof(u32) + num_entries * sizeof(u16);
+ 	pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_TPH, save_size);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fac439ce53b0..7ec0726050fe 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -587,7 +587,9 @@ struct pci_dev {
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
  
- #endif /* LINUX_PCI_TPH_H */
+ #ifdef CONFIG_PCIE_TPH
+-	u16		tph_cap:15;	/* TPH capability offset */
++	u16		tph_cap:14;	/* TPH capability offset */
++	u16		tph_ext_support:1; /* Indicate whether Extended TPH
++					    * requester is supported */
+ 	u16		tph_enabled:1;	/* Whether TPH is enabled */
+ 	u8		tph_mode;	/* TPH mode */
+ 	u8		tph_req_type;	/* TPH requester type */
 -- 
 2.17.1
 
