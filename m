@@ -1,308 +1,280 @@
-Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646D3318EF4;
-	Tue, 23 Jun 2026 21:07:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A94636F426
+	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 22:47:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782248871; cv=none; b=WjnNFIHZaEQmcfaBhzyaGFvxGbtkGJztSsLkpyo83lOjuVYAxw+Zu5PXqoJIcB0XOLQ7E9kXkEt50tdaC7644KBbZIjAQBxqQa8TiHgkZElNXLgtrIpqHQCIg3iMzvB8Bcxj4ikLy3rFRf100Og38d6YIYGM3ebbDs/lzWy1/yg=
+	t=1782254873; cv=none; b=MrTDImSf1RWzXRhKhyX4si1XLlsXnRcvRm+P3djc++L0MgeSrOooF9gi3CQHlq0S7HElKSkhN7MKJXPc1nXfiTcZwl8Hise6pq+jSzPJrBo180A3jOOW+YTxlAqHnWM4At8tb1N1O1fxYtqvu1JaIvVksewFAA00QddnaIUEPVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782248871; c=relaxed/simple;
-	bh=ZCJjbND+dvUmLYpAsQCf6dCnLt3RXg/Mb9eZMJ1NaOE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LfO1Z/rCEAHA/lq/341Ei23+Hw9K6LDSUoudLuMFjnQRcTEYGrjKdwkV6NYiyFIPav4quXHtCo/wF0dujbcmdFpW4jZFoyOzO06jh3q5gdrOZE+CaiSM3EUxIW18HkeboDatMvTs6ctOHZIFRIiMZrIWXSlXVNbCNPVix/ZC2TE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=TQWvkV3G; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YdHyxiOC; arc=none smtp.client-ip=103.168.172.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1782254873; c=relaxed/simple;
+	bh=K8DthgNvpP8H3W1v9rUrPVBz/IFhRniVZrCwsEvBQJ4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EQi8REorrACQlVhgrA/TqbDQrG5rvxTjEmn8ADxFm9MmbMYWLcxXVmY4RXgRFobLnP7ddQh2HrPHhR8CsycW9OHbCj1K+D0ua7jCrwbqz8t0gJqe5CjbGZj9Rtu4d7ueYm8Zj79GYNpdI3bGjrN4sp2yXprMlmS9/6bZUIGvxGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=F525Msj2; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WPqsOVFl; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="TQWvkV3G";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YdHyxiOC"
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfout.phl.internal (Postfix) with ESMTP id 3CFD7EC01F0;
-	Tue, 23 Jun 2026 17:07:47 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-10.internal (MEProxy); Tue, 23 Jun 2026 17:07:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1782248867;
-	 x=1782335267; bh=i9k4FWXWjlm74Pk++H3eS7qVTwnxuUxoRDpdwNetvfE=; b=
-	TQWvkV3Gb1Q5xGZLgU5+I/A74Ylbb0g6sYs1Fb0KOvxJfsDsRdJgcNVOqtZkvSCI
-	aUlk3FlVV9VmKdqVE0Y2PLewfnkqlhQ/wa0mxnez6Wk0b1ioSiHB7EfLWU2FBVRQ
-	LDESdUFBxVgeK9oclFS0lD1YGyoDeabvzDeYCE2HScW4CSUqak4KbN5xP9xUdVNF
-	PeHt+qeJQ30yRZl+8wqc/QdoXrv+fyLjwma6ffEAGTwlUdh1EWYoFBLR+9kbeemC
-	UOUYC5qncWCuOWFMT537kSmV+jC9jQkmRLbxV+5tKZd99KFaHQhfmfGmIWEFgBlx
-	i5D2hXPLobEUXgWhURl6fA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782248867; x=
-	1782335267; bh=i9k4FWXWjlm74Pk++H3eS7qVTwnxuUxoRDpdwNetvfE=; b=Y
-	dHyxiOCyv4plMXUEXAB98fCUnIeq1SU+AR2M5jhPGO/XVzlu8Iihc+s+/ggHqC58
-	P8hrxDZB6LUkzJsizErY/70K1yQ0khcpaoY0zjIfQH2ttJsaOUVEZfkej3tDdFbJ
-	eNAotRaUOmDBYvqdcYvjH6nV0gvLcvRP36BNHLf+Dt2NYKHKxZUcMnreYlPbgMgf
-	ZwvrwOJw+nl9dO3yNWYrj4rWNaWgfcMfcAr0zx0p6j+llTmyv5kgIlfF3hnivsVc
-	Q7QtuYgQMZ1QbihLlY+u+S2rs3fac0f4iwUGlNhpf/h2iCZeG8/7NIz5eLQ6dc6b
-	dt8i7RBTo4fVeRhu6DPiQ==
-X-ME-Sender: <xms:ovU6as_N4Zx84PcIOIHU0H_HBduaed9KBeOuReNmdo559EGjPMxhJQ>
-    <xme:ovU6alJRgvkPwLYZISxmsa5BOPJqHezbU9UmEYfyG9riCkKMCQARFhNaAnNDOiYXB
-    K2jP1y573KvfaifZVfu9wvRjLR5bpfEjfafuRS-gzPnJy7DTlfvQA>
-X-ME-Received: <xmr:ovU6aitIKy5NYBM1hyYPhQIYHq9A4pkvO_NCM4wIJRDqsV48_aXfLv3Xslc>
-X-ME-Proxy-Cause: dmFkZTE2Ji8K3Uq/U6mVv0pnHsogV0ANNJB9Qkj3z3aNP2l75MUuxlv3Q6TPJsfBcHHXfL
-    0lzXAFqDxZsEgk2klQwpsuhevo9JaIU2EZbEUzfLaxx8NbW+ANfbx7db1kH+lofVY1ESl5
-    UOjmKnfDfEb2QrKVtE2br+IvP9nRF5yKnvoyBS08/Nw7EmzsLsRiYi3icyKhKTzxTuxILz
-    DQ2xsFYmy8FHRROZt0zBN+yUyZdVu0kXUyaGUdfzZgkHjX+d7lnURJY55rvhQDl+j9Ir2u
-    R3tOlTqMSsQipCpD77qNF0o0DGJnKHaZiyVGPvff+woM8WknFxZh9Jq+PBkqkMVWPTTGtc
-    hASojoFOfwLazj4NCRIPFJEx1rP0Ewx8F4Y4oiKtjwcRGSxFshqpBmyEZdyJphV8G8NQql
-    dT2ZADLi3dFX9mXGAlzpv4kvGRK4XCFeswDFizxUuHjKRs6tvXNifLdR7jW3/BVCRVBFTO
-    GZg0aW29+iGy9m449LdX9UEEJOeMKy8rRzqpRD3hPkX/kzEKcbMFn1ptzQrLyjUR6kLZbw
-    vHLB4Z7bty1LEbtDXaJXhZTUYTrXlRX9a/KGp070AztZ05fpDKfgx6g5sAFvKk7pZujr7r
-    tKzD20b+DkvCMugFRcLFiW735nx023NpQrf++fuXM9bglef30sx3wKrDvexw
-X-ME-Proxy: <xmx:ovU6akBDtNSFvMX7RH7gecE0vDPEKAPwrnXsjp7mjW1SXF9KAuvw9A>
-    <xmx:ovU6aiNb0ndPTvJrxLMI4p0FIcthKasvsPvX1z5eMSb4d6RCzybJgA>
-    <xmx:ovU6akBBK5E0FYlAV-CT1x1LZW00McI5cFFW6yL_pWIkjhKg2BKSZA>
-    <xmx:ovU6aj4gKK-AARVmNDgPCvZr8OjARM5HOxj2-wEt7_rMya5_ye5kmA>
-    <xmx:o_U6aq0h_oafBmO7ta2xg-_whaYEV734yClxaVPgs1190CK60dkwpjBV>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 23 Jun 2026 17:07:46 -0400 (EDT)
-Date: Tue, 23 Jun 2026 15:07:44 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v19 2/3] vfio-pci/zdev: Add a device feature for error
- information
-Message-ID: <20260623150744.08177808@shazbot.org>
-In-Reply-To: <20260615183616.2902-3-alifm@linux.ibm.com>
-References: <20260615183616.2902-1-alifm@linux.ibm.com>
-	<20260615183616.2902-3-alifm@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="F525Msj2";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WPqsOVFl"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65NK0VLN999837
+	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 22:47:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=asq7qdr/KrrmzhR4T24h1GJS
+	Iepx/Nw0a3Z1XgC25/M=; b=F525Msj2pgDAEAbRB3jeiUrK4GOoji/yIEmbUf20
+	r4n0faO/Uw10FEsoDdztMyGSxNgHdbOU4Icv/kieCbgfIz4x2uvEBBIa+Eql9RkE
+	ytlzR0IfWeT5Cuav8JC1L+eOOYqIsjCxDhRTTDTCh9BnfFwS3tVp4ErH90HKROZk
+	aUw+ntmeG5w2flb1YayqjEkYLj5hD5cb256gmOQ4aG8GDmJrH/OTHzePl8+Rx/eW
+	XxSBxUN987xUotAcWvpAel6NpgcHKyp+7BLwmEyOONIVOyEN+Iny78J0XXhjnWzS
+	9E+83/SPJGTq4G+T3qFPdy65xQrQWNkC+cyZvnSxzY5grg==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eyr9yty22-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 22:47:49 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-30ba395b047so1031708eec.0
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 15:47:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1782254869; x=1782859669; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=asq7qdr/KrrmzhR4T24h1GJSIepx/Nw0a3Z1XgC25/M=;
+        b=WPqsOVFlxdzS4keSGvO3oF9EwZpMoV8tYe7Gp/6x7vZ0rt6/u7hnn39MSownLtSlv1
+         rTnIXQUMtI2SyVl6AhzNSt7NOonRS2CF+8/BVu70encn6sB42IDn4EAiMadCvotnrSNy
+         ++RRWusJmBeNapA7H3FAY2q+vdGvOQ7k4zaypWGDLRJ5Onj/e+XwmWoau3c/kuYuCm67
+         y013MudWrCdPbBTx0nmsgo12AsW4O0ZOr4+RK7mKYt/Ww7yDG0I6iXYKeUVMuALSCVXl
+         UhVw/BzJebX9hkNvG+svSfe4u0Re6mguROY1tTDa8ogsOxkKoT1jx3XPX+v73NaMTkZ3
+         /g/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782254869; x=1782859669;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=asq7qdr/KrrmzhR4T24h1GJSIepx/Nw0a3Z1XgC25/M=;
+        b=U+kUhOENllQowQA2+WfQ0NGkqYiU/5X7JT1zgVqETiTiBHbbTAV0g2NqR4MehzZuXx
+         xlY9RBC8pWSfqq+LgqBxjsUH3g82X2m3pZblFZLIbMWR3GKHv0+kZF3qzOPiMtKU2wir
+         I/BqkjbolWVHHYnzj6WLJn3tTzmSmhmO+diMcVjD2K8hnVP0pud/k3h1z3g3eWnnd5Bo
+         cQ4DpFSxaDjYpkRHO0Q8pNaRC8Gc6Shxd099Esv7b1Zk1TcNAJRw2Iu7lajvput+HDr+
+         v21pa+x2WeySFEauhXKfx/h1rTTU5/6ycmj1nfa68+gUf1Ng3SOeApDpwDpJ71TuZSOk
+         I32A==
+X-Forwarded-Encrypted: i=1; AHgh+Rpff19eYoDLFZV35WOcWxFBWU5m084QTf+aKSCJP9uLy197N37SmcLrd/X+h0+r/RXzBbJLTrUf5c0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzcQ6WWt2CAc0rWxCVHtzksb4ySPd+gSnZxzgGXk4Ymo9mbEOg2
+	CSXcogQjwHpYRAEybQSK4gD+23H6PWNGHRG4qvTEaGfJTyn3aV4gkRTouKrUbtHNI9trRlcILJb
+	2QGKXRe5FOB3svOgvynjpIRJp8ODZaEPT34UjEJol50gcEMiWIn0yQHeWhM9KGw0=
+X-Gm-Gg: AfdE7cmp8X1pfvfxKhGwzyUba3RykkuSzLx0pejzLIXmWUVGQp6rPZ+Qal4yZvUkMgK
+	iOxl4EekX3pEPkHjvFQ/+V0CPdm76PToAE0qwgXD/B0LeTOeLQGDYCEHCm7eGvnjYabH22QXHMH
+	z2uizTG0dHEGqqN8ZODg2VoDtRgL7vsr3RAu2UL3VIifzDQUCJS0O6ayKgeVXuNL/nOPoQxD/zV
+	xwewmRP/5kvfYwLr5zwygWK5DlqLECzXP3R2iTJYQhznYSm6tyBRhmqRAfCK0eVT2H/eg21HDhR
+	ETOryUc6nVnOORRxwF6QsT2cxORprI0vIztLorERl3446SrfaboJUvpZ3jslYpCfuAoBlePxWav
+	M5i/Y33etNkIak4i89elATMNr1MZPwNH3ZGFH0Y96N11mTWPNXlDYDmgY5wdSyUWWuX8=
+X-Received: by 2002:a05:7300:5bac:b0:30c:25c4:70fb with SMTP id 5a478bee46e88-30c68e33484mr1215360eec.34.1782254868602;
+        Tue, 23 Jun 2026 15:47:48 -0700 (PDT)
+X-Received: by 2002:a05:7300:5bac:b0:30c:25c4:70fb with SMTP id 5a478bee46e88-30c68e33484mr1215333eec.34.1782254867956;
+        Tue, 23 Jun 2026 15:47:47 -0700 (PDT)
+Received: from hu-mattleun-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c1be4b24esm18691660eec.27.2026.06.23.15.47.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Jun 2026 15:47:47 -0700 (PDT)
+Date: Tue, 23 Jun 2026 15:47:45 -0700
+From: Matthew Leung <matthew.leung@oss.qualcomm.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: qcom: Document the Hawi PCIe
+ Controller
+Message-ID: <ajsNEftGh/dC5JhK@hu-mattleun-lv.qualcomm.com>
+References: <20260618-hawi-pcie-v3-0-f31880bfb3ec@oss.qualcomm.com>
+ <20260618-hawi-pcie-v3-1-f31880bfb3ec@oss.qualcomm.com>
+ <20260622-brainy-observant-crocodile-d57bef@quoll>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260622-brainy-observant-crocodile-d57bef@quoll>
+X-Authority-Analysis: v=2.4 cv=JYSMa0KV c=1 sm=1 tr=0 ts=6a3b0d15 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=kj9zAlcOel0A:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=gEfo2CItAAAA:8 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=BYOc-fOMsGyrnX6sEagA:9
+ a=CjuIK1q_8ugA:10 a=scEy_gLbYbu1JhEsrz4S:22 a=sptkURWiP4Gy88Gu7hUp:22
+X-Proofpoint-GUID: M6swgzsv94poGuw9ptaVmmsmjkjQsA22
+X-Proofpoint-ORIG-GUID: M6swgzsv94poGuw9ptaVmmsmjkjQsA22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIzMDE4NyBTYWx0ZWRfXyJQiXA1aBj15
+ NpK8iGH0qsXoBMKO4DxeQG+nVBatO4lRUbp/oMU10CB7qcDXKCJHZUcw9d1P1cdB1gY798rjsBS
+ hiTWyEIVcZV/zn4PeBykMyg9YTguH9hjoCkd/kOhd5ltQXs8JQjry/AieY/YT+TRoN2mMtoehZ0
+ LsvNJ8O5BbW7REu/OkvBlwhwrwMBJ4izUA7tdbZN7TELu4y9mRvL74LUq1RNQdxpLAd+JMK4Gsv
+ f7wXzdZ8BU4L3YSvQHFeTaumw/8g9DCdfKw4LpFfyvYrOp5GmNgHiS2ucv8UY7CJ1gELgxClGPj
+ dVVhznkn+gCW8pQKoPctZ70qblqGo1HY80MVEPSiYMxUbn4cb0YUFcKflEqtywr3e95z6kwjmb8
+ 7h6sKURF5Wu9vTCRZLfopQwi9K+XnZdB2XmcLdJQPQIeqNoyBhX5Pu6sly8Xhjm0zFUkLq61buK
+ 7AFmp+QdzDHV31rxjRg==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIzMDE4NyBTYWx0ZWRfX5wdCxF/qiVgO
+ vfPyKJtN4Qe1IOvOoM7Bq3k9AuTvkHKgMfz2XG4OZUDVeuF2+ap4IqMKC+qpTMZ4i/S5AVM+qg8
+ dIuYplmBqIQN33PSi+wGGCjB4c4zIT0=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-23_04,2026-06-23_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 priorityscore=1501 spamscore=0 adultscore=0
+ bulkscore=0 impostorscore=0 malwarescore=0 clxscore=1015 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606230187
 
-On Mon, 15 Jun 2026 11:36:15 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
-
-> For zPCI devices, we have platform specific error information. The platform
-> firmware provides this error information to the operating system in an
-> architecture specific mechanism. To enable recovery from userspace for
-> these devices, we want to expose this error information to userspace. Add a
-> new device feature to expose this information.
+On Mon, Jun 22, 2026 at 12:12:04PM +0200, Krzysztof Kozlowski wrote:
+> On Thu, Jun 18, 2026 at 10:00:32PM +0000, Matthew Leung wrote:
+> > Add a dedicated schema for the PCIe controllers found on the Hawi
+> > platform.
+> > 
+> > Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
+> > ---
+> >  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 202 +++++++++++++++++++++
+> >  1 file changed, 202 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/qcom,hawi-pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,hawi-pcie.yaml
+> > new file mode 100644
+> > index 000000000000..fb3145f89f7f
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/qcom,hawi-pcie.yaml
+> > @@ -0,0 +1,202 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/pci/qcom,hawi-pcie.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: Qualcomm Hawi PCI Express Root Complex
+> > +
+> > +maintainers:
+> > +  - Bjorn Andersson <andersson@kernel.org>
+> > +  - Manivannan Sadhasivam <mani@kernel.org>
+> > +
+> > +description:
+> > +  Qualcomm Hawi SoC (and compatible) PCIe root complex controller is based on
+> > +  the Synopsys DesignWare PCIe IP.
+> > +
+> > +properties:
+> > +  compatible:
+> > +    const: qcom,hawi-pcie
+> > +
+> > +  reg:
+> > +    minItems: 5
+> > +    items:
+> > +      - description: Qualcomm specific registers
+> > +      - description: DesignWare PCIe registers
+> > +      - description: External local bus interface registers
+> > +      - description: ATU address space
+> > +      - description: PCIe configuration space
+> > +      - description: MHI registers
 > 
-> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> ---
->  arch/s390/include/asm/pci.h      |  2 ++
->  arch/s390/pci/pci_event.c        | 19 ++++++++++++++
->  drivers/vfio/pci/vfio_pci_core.c |  2 ++
->  drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++
->  drivers/vfio/pci/vfio_pci_zdev.c | 43 ++++++++++++++++++++++++++++++++
->  include/uapi/linux/vfio.h        | 30 ++++++++++++++++++++++
->  6 files changed, 105 insertions(+)
+> Why is MHI optional?
+
+The optional properties were carried over from the previous binding
+which this binding was derived from, but I see those need not be the
+case here. Each of the properties are used in both instances.
+
+I will update with making the optional properties required.
+
 > 
-> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-> index 016386f7ef4a..88a125b92bdd 100644
-> --- a/arch/s390/include/asm/pci.h
-> +++ b/arch/s390/include/asm/pci.h
-> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
->  int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev);
->  void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf);
->  
->  #ifdef CONFIG_NUMA
->  
-> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> index 8934b640a095..3ad16038e005 100644
-> --- a/arch/s390/pci/pci_event.c
-> +++ b/arch/s390/pci/pci_event.c
-> @@ -77,6 +77,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
->  	return 0;
->  }
->  
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf)
-> +{
-> +	int head = 0;
-> +
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +
-> +	if (!zdev->pending_errs.count)
-> +		return -ENOMSG;
-> +
-> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> +	memcpy(ccdf, &zdev->pending_errs.err[head],
-> +	       sizeof(struct zpci_ccdf_err));
-> +	zdev->pending_errs.head++;
-> +	zdev->pending_errs.count--;
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
-> +
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev)
->  {
->  	guard(mutex)(&zdev->pending_errs_lock);
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 050e7542952e..27642f10fe97 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1569,6 +1569,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
->  	case VFIO_DEVICE_FEATURE_DMA_BUF:
->  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
-> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
->  	default:
->  		return -ENOTTY;
->  	}
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> index fca9d0dfac90..4e7162234a2e 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  				struct vfio_info_cap *caps);
->  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
->  void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
-> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> +			      void __user *arg, size_t argsz);
->  #else
->  static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  					      struct vfio_info_cap *caps)
-> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->  
->  static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
->  {}
-> +
-> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
-> +					    u32 flags, void __user *arg,
-> +					    size_t argsz)
-> +{
-> +	return -ENOTTY;
-> +}
->  #endif
->  
->  static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
-> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
-> index 78a28db00c6d..c0d6362cc4eb 100644
-> --- a/drivers/vfio/pci/vfio_pci_zdev.c
-> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
-> @@ -141,6 +141,49 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  	return ret;
->  }
->  
-> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> +			      void __user *arg, size_t argsz)
-> +{
-> +	struct vfio_device_feature_zpci_err err = {};
-> +	struct vfio_pci_core_device *vdev;
-> +	struct zpci_ccdf_err ccdf = {};
-> +	struct zpci_dev *zdev;
-> +	int ret;
-> +
-> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
-> +	zdev = to_zpci(vdev->pdev);
-> +	if (!zdev)
-> +		return -ENODEV;
-> +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
-> +				 sizeof(err));
-> +	if (ret != 1)
-> +		return ret;
-> +
-> +	ret = zpci_get_pending_error(zdev, &ccdf);
-> +	if (ret)
-> +		return ret;
-> +
-> +	err.fh = ccdf.fh;
-> +	err.fid = ccdf.fid;
-> +	err.ett = ccdf.ett;
-> +	err.mvn = ccdf.mvn;
-> +	err.dmaas = ccdf.dmaas;
-> +	err.q = ccdf.q;
-> +	err.rw = ccdf.rw;
-> +	err.faddr = ccdf.faddr;
-> +	err.pec = ccdf.pec;
-> +
-> +	if (copy_to_user(arg, &err, sizeof(err))) {
-> +		dev_warn_ratelimited(device->dev,
-> +				     "Failed to handle PCI error event for PCI function 0x%x",
-> +				     zdev->fid);
-> +		return -EFAULT;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->  {
->  	struct zpci_dev *zdev = to_zpci(vdev->pdev);
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5ee..83c93193b22d 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
->   */
->  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
->  
-> +/**
-> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
-> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
-> + * involves platform firmware and notification to operating systems is done
-> + * by architecture specific mechanism. Exposing this information to
-> + * userspace allows it to take appropriate actions to handle an
-> + * error on the device. The ioctl returns -ENOMSG if there are no pending
-> + * PCI errors.
-> + */
-> +
-> +struct vfio_device_feature_zpci_err {
-> +	__u32 feature_flags;		/* Indicate future features */
-> +	__u32 reserved1;
-> +	__u32 fh;			/* function handle */
-> +	__u32 fid;			/* function id */
-> +	__u64 faddr;                    /* failing address */
-> +	__u32 ett		:  4;	/* expected table type */
-> +	__u32 mvn		: 12;	/* MSI vector number */
-> +	__u32 dmaas		:  8;	/* DMA address space */
-> +	__u32 reserved2		:  6;
-> +	__u32 q			:  1;	/* event qualifier */
-> +	__u32 rw		:  1;	/* read/write */
-> +	__u32 reserved3;
-> +	__u16 reserved4;
-> +	__u16 pec;			/* PCI event code */
-> +	__u8 reserved5[28];		/* Allow for future expansion */
-> +};
+> > +
+> > +  reg-names:
+> > +    minItems: 5
+> > +    items:
+> > +      - const: parf
+> > +      - const: dbi
+> > +      - const: elbi
+> > +      - const: atu
+> > +      - const: config
+> > +      - const: mhi
+> > +
+> > +  clocks:
+> > +    minItems: 6
+> > +    items:
+> > +      - description: PCIe Auxiliary clock
+> > +      - description: PCIe Configuration clock
+> > +      - description: PCIe Master AXI clock
+> > +      - description: PCIe Slave AXI clock
+> > +      - description: PCIe Slave Q2A AXI clock
+> > +      - description: PCIe Aggre NoC AXI clock
+> > +      - description: PCIe Config NoC AXI clock
+> 
+> Same here - does that mean that once instance does not have this clock?
+> If so, mention this in commit msg.
 
-In v18 I probed whether this should be passed as opaque data as we're
-doing for FMB, which was declined because the user doesn't know the
-size.  However, the fmb_length is provided through a device info cap,
-where we could extend the existing zpci info cap with a v3 that does
-report this fixed size.  That doesn't seem like an insurmountable
-barrier.
+Same; will make required.
 
-In the implementation here, we have the worst combination of
-trade-offs, reserved fields for some vague notion of future expansion
-and bitfields that mimic the architecture specification but don't fit
-well into a uAPI as their position is compiler dependent.
+> 
+> > +
+> > +  clock-names:
+> > +    minItems: 6
+> > +    items:
+> > +      - const: aux
+> > +      - const: cfg
+> > +      - const: bus_master
+> > +      - const: bus_slave
+> > +      - const: slave_q2a
+> > +      - const: noc_aggr
+> > +      - const: cnoc_sf_axi
+> > +
+> > +  interrupts:
+> > +    minItems: 8
+> > +    maxItems: 9
+> > +
+> > +  interrupt-names:
+> > +    minItems: 8
+> > +    items:
+> > +      - const: msi0
+> > +      - const: msi1
+> > +      - const: msi2
+> > +      - const: msi3
+> > +      - const: msi4
+> > +      - const: msi5
+> > +      - const: msi6
+> > +      - const: msi7
+> > +      - const: global
+> 
+> Here as well - why is global optional?
 
-This should either fully abandon the architecture layout and create a
-well defined, naturally aligned uAPI structure, or extend the zpci info
-cap to report the size and pass the error data as opaque.
+Same; will make required.
 
-As Bjorn notes, we're already into the merge window, so this is at best
-v7.3 material, and as we've designed the split, merging the vfio
-changes will be dependent on a branch provided with the PCI changes.
-Thanks,
+> 
+> > +
+> > +  resets:
+> > +    minItems: 1
+> 
+> Same here?
 
-Alex
+Same; will make required.
+
+> 
+> > +    items:
+> > +      - description: PCIe core reset
+> > +      - description: PCIe link down reset
+> > +
+> > +  reset-names:
+> > +    minItems: 1
+> > +    items:
+> > +      - const: pci
+> > +      - const: link_down
+> > +
+> > +required:
+> > +  - power-domains
+> > +  - resets
+> > +  - reset-names
+> > +
+> > +allOf:
+> > +  - $ref: qcom,pcie-common.yaml#
+> 
+> Best regards,
+> Krzysztof
+> 
