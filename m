@@ -1,146 +1,125 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D42EF36A000;
-	Tue, 23 Jun 2026 09:56:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D675A2288D5
+	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 10:05:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782208622; cv=none; b=OJtL/Kb57i8G4XrgLDGe5Xa8+xYf/bFxsMcyZCJdAEkRiDKprJ3LcjC44QSFan9Shw5fDO28n44L69fuxtVhj5L+zPD+6Sym100I4Yo/lNsJUPJkVXU1hDDwX02fjYAlfNcppSYG02I5dpz47NQVOPMa1d0/jcm+6K/Z/3vQnM4=
+	t=1782209112; cv=none; b=bLUAF9TZMr3fWw4/HT+jkAXRDxYXhb5W0bNb+NDitGzW07aMo3HVRD+4VNQL2oNHEzb05H5GzwBUOmjtrJXsqSdtUWvIv60NQ65F1oHn3/ZgqZ8liyFHoS4tEToXXquvP90OItAS4G5eEQDgh/QTNoOQkXxZfcP7NNmtHBtQwIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782208622; c=relaxed/simple;
-	bh=rz7yCimLi3oDcqrshHhsavPU+AkVytAhfXjk0166W30=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=bv0PeMoMZVRdeJ1e11MQHKqGOn3XRfr+vgOr23YA74WlHBY7t0sGOyljZ+0FrVfB+el9JTd2xsn4FsPbxTZZnMup2cV1u6GmknevxzY7Qx35wZ6nmaRt2bOABjphvL3KQXNxNkX9r4LwBlMsiI/zJr1e8NbWJMDSB4Uv7UvetqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=5PuR2tf7; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=5PuR2tf7; arc=none smtp.client-ip=113.46.200.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1782209112; c=relaxed/simple;
+	bh=T7H014iFapyaDLrEXh7DmyqA9Az3DFmYdiTc5mDgXYs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=QtqJbGEqbvxnJRzn1wGdTrL+y8o3W+9imf/VfhpDxubBKnNlRbBTLdnr0Pcb4El6rXPTV+zAd4aFKAmB3s2hr5HME/J7mZ2GbNhe5a34UYgkB0L9TogQOAh8ploFxOKziPR+3CMtRj06u0Zh4BJo2KcrmP2bOyInSz9QCF93lkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XQdjgnNf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="5PuR2tf7";
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="5PuR2tf7"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=+AsrU+Femqt2z3oCnSTzOkrEomRSDjBoV+ILGZyMq28=;
-	b=5PuR2tf75yCnE0sk6QmuNonRAXqCuFhSc2+3CHmvQ55bn65p+K2GpwmF9aIh6IhSmPQhSqjtC
-	JlV664K/zCnjkPVi/+Np+E8q0EcPr+uPaNRTib+Ukrli7LAdUtjkMTYZhU182CHoJbkfe+BeQvG
-	mu2JUooOoJcoFK0luXxcrEQ=
-Received: from canpmsgout01.his.huawei.com (unknown [172.19.92.178])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gl0ch13zfzcbNC;
-	Tue, 23 Jun 2026 17:48:20 +0800 (CST)
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=+AsrU+Femqt2z3oCnSTzOkrEomRSDjBoV+ILGZyMq28=;
-	b=5PuR2tf75yCnE0sk6QmuNonRAXqCuFhSc2+3CHmvQ55bn65p+K2GpwmF9aIh6IhSmPQhSqjtC
-	JlV664K/zCnjkPVi/+Np+E8q0EcPr+uPaNRTib+Ukrli7LAdUtjkMTYZhU182CHoJbkfe+BeQvG
-	mu2JUooOoJcoFK0luXxcrEQ=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gl0cY12rkz1T4GM;
-	Tue, 23 Jun 2026 17:48:13 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8EB9E40569;
-	Tue, 23 Jun 2026 17:56:52 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 23 Jun 2026 17:56:51 +0800
-Message-ID: <9105ceef-5e27-4e3c-8903-d46aef52a2bd@huawei.com>
-Date: Tue, 23 Jun 2026 17:56:51 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQdjgnNf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50ADA1F000E9;
+	Tue, 23 Jun 2026 10:05:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782209111;
+	bh=YMSLW1ikNNMB2hevvGWVDe/Kix41+Y+aLfpuTBxLlNg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XQdjgnNfdJpwowNW3zQGF93R9mhJ+BXAoUD30famOugJHnyNfU8m5Pmj/6TYAZAA6
+	 Ffb44doAA9FvyTg5no0YqRms8nDHv8fW0kPsTRLsyZHWCLcapobfKunhLm+jLqTMCS
+	 9xb5eLoFYGlffchhcCHQyGz8gYAg9nW4fuS4tNX2NCsloXLbPU6juJlwBoFFwtEsWq
+	 iuII2a43orkYUIrKCEKa8H9XGEgZs2ExypIjq2ee5l4YWFGV8/WdQj5hRl+Ul6M4ax
+	 qbSRJmQLgrKlbObUKGQ9ax22Kjtf/GOSl4/H73hK/3kdp8n8/Z0uIbWMUh2uFAUNwO
+	 lQoKgpJgrOKTg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: cadence: skip the link polling when endpoint
+ not connected
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aksh Garg" <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260623095148.721206-1-a-garg7@ti.com>
+References: <20260623095148.721206-1-a-garg7@ti.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 23 Jun 2026 10:05:10 +0000
+Message-Id: <20260623100511.50ADA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU to
- steering-tag mapping
-To: Alex Williamson <alex@shazbot.org>
-CC: <helgaas@kernel.org>, <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>,
-	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
- <20260616104621.41915-9-fengchengwen@huawei.com>
- <20260616144224.GB3577091@ziepe.ca> <20260616105754.784be22d@shazbot.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260616105754.784be22d@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemo500009.china.huawei.com (7.202.194.199)
 
-Hi Alex,
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Checking PCIe link state during the host controller's `suspend_noi=
+rq` incorrectly infers a disconnected link because downstream devices have =
+already been suspended, breaking system resume for all connected endpoints.
+--
 
-On 6/17/2026 12:57 AM, Alex Williamson wrote:
-> On Tue, 16 Jun 2026 11:42:24 -0300
-> Jason Gunthorpe <jgg@ziepe.ca> wrote:
-> 
->> On Tue, Jun 16, 2026 at 06:46:17PM +0800, Chengwen Feng wrote:
->>> Add per-device sysfs binary attribute tph_cpu_st to expose ACPI DSM CPU
->>> to steering-tag data to userspace, resolving the concern that VFIO should
->>> not host CPU-to-ST translation interfaces.
->>>
->>> Follow PCI standard binattr framework: dynamic visible group, fixed-size
->>> 8-byte packed uapi entry, aligned offset read, root-only 0400 permission.
->>> Refactor duplicate ACPI DSM logic into shared tph_get_cpu_st_info helper.
->>>
->>> ABI: /sys/bus/pci/devices/<BDF>/tph_cpu_st  
->>
->> I'm sorry, I really dislike this :(
->>
->> Structured binary sysfs attributes are pretty much against the rules,
->> I think using sysfs at all for this interface is a bad idea.
->>
->> IMHO the VFIO version was much better.
-> 
-> There are some deficiencies in this implementation:
-> 
->  - The ABI needs to be documented in
->    Documentation/ABI/testing/sysfs-bus-pci
-> 
->  - The attribute is at the wrong place, all endpoints would just
->    replicate the root port values.  Place it at the root port.
-> 
->  - Corollary, is_visible should key on whether we have CPU to ST
->    mappings (_DSM) and the root port is a TPH completer (DevCap2), not
->    the TPH capabilities of an endpoint - a userspace driver can already
->    discover the endpoint TPH requester support.
-> 
->  - The 8-byte aligned read requirement should be removed, perform a
->    sub-8-byte read from the slot offset.  !cpu_possible() should be
->    filled with zeros.  This allows userspace to dump the entire bin
->    file or read only a set of fields.
-> 
->  - Probably cleaner to zero-initialize the buffer rather than memset()
->    and (redundant) reserved = 0.
+commit 3a9bc5bfaa54c1ff36dc42ca33244027b719cd03
+Author: Aksh Garg <a-garg7@ti.com>
 
-I’ve sent v18-resend of the PCI TPH sysfs patchset with all prior review
-comments fully addressed.
+PCI: cadence: skip the link polling when endpoint not connected
 
-I remain open to both discussed implementation options. This v18-resend
-implements the sysfs binary blob approach on Root Ports as you previously
-suggested.
+This commit introduces a flag to skip PCIe link polling during system resume
+on platforms without hotplug support if the link was down before suspend.
+By avoiding the polling delay when no endpoint is connected, it speeds up
+the resume operation.
 
-Please kindly review v18-resend and share your thoughts.
+> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/con=
+troller/cadence/pci-j721e.c
+> --- a/drivers/pci/controller/cadence/pci-j721e.c
+> +++ b/drivers/pci/controller/cadence/pci-j721e.c
+> @@ -686,6 +686,11 @@ static int j721e_pcie_suspend_noirq(struct device *d=
+ev)
+>  	struct j721e_pcie *pcie =3D dev_get_drvdata(dev);
+> =20
+>  	if (pcie->mode =3D=3D PCI_MODE_RC) {
+> +		struct cdns_pcie_rc *rc =3D cdns_pcie_to_rc(pcie->cdns_pcie);
+> +
+> +		/* If link is down before suspend, skip polling in resume */
+> +		rc->link_down_no_hotplug =3D !j721e_pcie_link_up(pcie->cdns_pcie);
 
-Thanks
+[Severity: High]
+Will this correctly identify connected devices during suspend?=20
 
-> 
-> IMO, this implementation in sysfs more so proves that vfio is the wrong
-> place for the interface.  vfio has a use case to consume STs, but it
-> doesn't produce them or own any of the mechanism by which they're
-> generated.  This proposal, with the above improvements, provides
-> effectively an ioctl-like interface when using a properly offset and
-> sized pread().
-> 
-> The weak point is whether this bin attribute, exposing an array of
-> structures, fits within the socially acceptable norms of sysfs.  There
-> is some precedent for this, for example cc_settings_bin in infiniband,
-> but these might also be considered legacy.  So I don't know if this
-> sort of usage is a grey area that fits social norms or if it's promoting
-> legacy use cases that we don't want to repeat.  Thanks,
-> 
-> Alex
+Because the PM core suspends devices in reverse-probe order, child endpoints
+will have already been suspended and placed in a low-power state (like D3co=
+ld)
+before j721e_pcie_suspend_noirq() runs.=20
 
+Does this mean the link will likely drop, causing this code to capture a
+"down" state even for properly connected, valid endpoints?
+
+> +
+>  		gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+>  		clk_disable_unprepare(pcie->refclk);
+>  	}
+
+[ ... ]
+
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers=
+/pci/controller/cadence/pcie-cadence-host.c
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+> @@ -352,6 +352,9 @@ int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
+>  		return ret;
+>  	}
+> =20
+> +	if (rc->link_down_no_hotplug)
+> +		return 0;
+> +
+
+[Severity: High]
+Could skipping cdns_pcie_host_start_link() here cause subsequent endpoint
+resume operations to fail?
+
+If the flag was incorrectly set to true during suspend, the Root Complex wi=
+ll
+skip waiting for the link to train. When the PM core later attempts to resu=
+me
+the endpoints, couldn't accesses to configuration space over the untrained
+link time out or trigger an asynchronous external abort?
+
+>  	ret =3D cdns_pcie_host_start_link(rc, cdns_pcie_link_up);
+>  	if (ret)
+>  		dev_dbg(dev, "PCIe link never came up\n");
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623095148.7212=
+06-1-a-garg7@ti.com?part=3D1
