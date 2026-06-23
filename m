@@ -1,46 +1,57 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 252F73CF662;
-	Tue, 23 Jun 2026 08:51:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983B63CEBB9;
+	Tue, 23 Jun 2026 08:51:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782204667; cv=none; b=qAAhk4a1KOx54Dxd6xca0T+GpbjuNScksvUMGkYjQR/ZeEOA2PVSnf5Te6Vmj944EYpWe9v+zOZnKFim6Rqq7iIqkjbMk7NuCcxqfeumNDvfjHoDs2jLeEWPwWNMu9KcF0vxeLTf+/K0PCMHLdm8Vmp6X4Fm1bhU5YCeCiX/L+M=
+	t=1782204668; cv=none; b=UoB7avP/NMmg/5W/+RiBVRxV1wm/NGuxj2N04Stcs5RDNPX/plDiPF2AONWuIgYOCtLHQSkFgXVMEtnxwzRyN9l4mzW9ohNawrUsMv3e7Qmpk6OlA2Mcfei3lrPTBPsxyfyt1UJRyKXymoqsDQhZBCaXHKtja5WmPEH79IPiREc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782204667; c=relaxed/simple;
-	bh=1nTcCUCnh/F3b/GKJRqN5qwPWQ77w7liCqpliXnxASE=;
+	s=arc-20240116; t=1782204668; c=relaxed/simple;
+	bh=7iI5Ufd3C+4JpSXw4Hc81YlQFzbqLaUy1kNybb8sJO0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gFvQTJWSa1XT8QcW8e7ARYLQXy85GW4b8ELD/dWUOTvXq4oMYEUz4/Ea0qHvj12wXUYEp78MoEQcWFpOzl5VTXfUJ7AU6411+tqiD2+cj78VK6+FHJ7BHoocGP4zPQACtOmIqb5mpCLH/ABhB33o206Liyu4iOE+SGdobmCcsB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=cSvG/vss; arc=none smtp.client-ip=113.46.200.226
+	 MIME-Version:Content-Type; b=t4bWLJDo9k8di86WelNlFj28/ajTxthIWqM02Qj6qJkaXFBXzqwVzfIUyeDLyhRIVEkmHwb0WyHEFOMyH22ljMf1lzRNqHPdFCNG8gJDmMtARDhdbKhr8wwwpPwtgGESTYaYdCPjvoasJpJh7Bu9cgSw0sJYtVY5u1Nqg56BKE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=UMVA0xS9; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=UMVA0xS9; arc=none smtp.client-ip=113.46.200.217
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="cSvG/vss"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="UMVA0xS9";
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="UMVA0xS9"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=v5IFub4t4wY9v0jXEzRFSfBnWIwU6tUGk97dyP2+z6Q=;
-	b=cSvG/vssNJ56S/FqaaQgAVONLDCCQzbAtgtXzE2poRgiPIirlI2OXNB0WSVlchGLZgOtrjprv
-	OYpYBi3fFb42UcX2YrV/peU+OX/wTQu930yv4N3gZttecdXyTn9Y35TJ+xZmDwvJisWMBOw/bM4
-	MdsRGTwTAeKAcG+oKQ5z3hY=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gkz980QSkzKm4r;
-	Tue, 23 Jun 2026 16:42:52 +0800 (CST)
+	bh=Zof/QjAj7jbFIDLdcYfiM/mgiyyA3uXFLm2uvojpBE0=;
+	b=UMVA0xS9edYyDooWxljTtEvS6S7LNVVtISATHQvz6vFGCRqKi8JPx75V1rGrodsOGlbXrvuaf
+	oa7F/DFwrO9EXikm2SdhJyVtQZFoe7UaF1yrhROuvDCgaDwaZUqisFQsUtnHFICWY7sDIiGwFma
+	tBdhW4nBt5bvsJC2ekFJe+s=
+Received: from canpmsgout01.his.huawei.com (unknown [172.19.92.178])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gkz8d4M3SzcbSc;
+	Tue, 23 Jun 2026 16:42:25 +0800 (CST)
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Zof/QjAj7jbFIDLdcYfiM/mgiyyA3uXFLm2uvojpBE0=;
+	b=UMVA0xS9edYyDooWxljTtEvS6S7LNVVtISATHQvz6vFGCRqKi8JPx75V1rGrodsOGlbXrvuaf
+	oa7F/DFwrO9EXikm2SdhJyVtQZFoe7UaF1yrhROuvDCgaDwaZUqisFQsUtnHFICWY7sDIiGwFma
+	tBdhW4nBt5bvsJC2ekFJe+s=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gkz8Y4S9Bz1T4HZ;
+	Tue, 23 Jun 2026 16:42:21 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id B694540562;
-	Tue, 23 Jun 2026 16:50:56 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 048ED4056A;
+	Tue, 23 Jun 2026 16:51:01 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 23 Jun 2026 16:50:56 +0800
+ 15.2.1544.36; Tue, 23 Jun 2026 16:51:00 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH RESEND v18 03/12] PCI/TPH: Cache TPH requester capability at probe time
-Date: Tue, 23 Jun 2026 16:50:39 +0800
-Message-ID: <20260623085048.51139-4-fengchengwen@huawei.com>
+Subject: [PATCH RESEND v18 12/12] vfio/pci: Virtualize PCIe TPH capability registers
+Date: Tue, 23 Jun 2026 16:50:48 +0800
+Message-ID: <20260623085048.51139-13-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260623085048.51139-1-fengchengwen@huawei.com>
 References: <20260623085048.51139-1-fengchengwen@huawei.com>
@@ -54,112 +65,201 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-Calculate the negotiated TPH requester type from device and root port
-capabilities once in pci_tph_init().
+Virtualize TPH extended capability config space registers:
+- Original TPH capability was fully read-only; now split permission:
+  TPH_CAP header remains read-only, TPH_CTRL register supports write to
+  toggle TPH requester enable mode.
+- Block direct ST-table programming via config space write access: all ST
+  entry configuration is restricted to VFIO_DEVICE_FEATURE_TPH_ST_CONFIG
+  feature exclusively after userspace SET TPH_ENABLE opt-in.
+- Backup original virtual config value and revert vconfig if hardware TPH
+  enable operation fails or invalid requester mode is configured.
+- After TPH requester gets enabled via CTRL write, sync cached shadow ST
+  table down to physical hardware with memory_lock protection and PCI D0
+  power check.
 
-Add tph_ext_support flag to cache whether the device is allowed to
-issue Extended TPH requests after topology negotiation. If the final
-requester type is disabled, clear TPH capability to prevent usage.
-
-Simplify pcie_enable_tph() by using the cached requester capability
-instead of recalculating every time.
+Add vconfig masking to hide EXT_TPH capability bit if underlying hardware
+does not support extended TPH via new vfio_tph_mask_ext_tph_bit helper.
+Reset hardware TPH state on device open/close to eliminate cross-session
+TPH configuration leakage between different VM lifecycles.
 
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
- drivers/pci/tph.c   | 43 +++++++++++++++++++++++++------------------
- include/linux/pci.h |  4 +++-
- 2 files changed, 28 insertions(+), 19 deletions(-)
+ drivers/vfio/pci/vfio_pci_config.c | 117 +++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c   |   4 +
+ 2 files changed, 121 insertions(+)
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 489487158b99..4097787ea98a 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -383,7 +383,6 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- {
- 	u32 reg;
- 	u8 dev_modes;
--	u8 rp_req_type;
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index 5c6ab172df6c..10f4e9fabea7 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1086,6 +1086,118 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
+ 	return 0;
+ }
  
- 	/* Honor "notph" kernel parameter */
- 	if (pci_tph_disabled)
-@@ -403,23 +402,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 
- 	pdev->tph_mode = mode;
- 
--	/* Get req_type supported by device and its Root Port */
--	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
--	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
--		pdev->tph_req_type = PCI_TPH_REQ_EXT_TPH;
--	else
--		pdev->tph_req_type = PCI_TPH_REQ_TPH_ONLY;
--
--	/* Check if the device is behind a Root Port */
--	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
--		rp_req_type = get_rp_completer_type(pdev);
--
--		/* Final req_type is the smallest value of two */
--		pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
--	}
--
--	if (pdev->tph_req_type == PCI_TPH_REQ_DISABLE)
--		return -EINVAL;
-+	pdev->tph_req_type = pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
-+						     PCI_TPH_REQ_TPH_ONLY;
- 
- 	/* Write them into TPH control register */
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
-@@ -506,13 +490,36 @@ void pci_no_tph(void)
- 
- void pci_tph_init(struct pci_dev *pdev)
- {
-+	u8 tph_req_type, rp_req_type;
- 	int num_entries;
- 	u32 save_size;
-+	u32 reg = 0;
- 
- 	pdev->tph_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_TPH);
- 	if (!pdev->tph_cap)
- 		return;
- 
-+	/* Get req_type supported by device and its Root Port */
-+	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
-+	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
-+		tph_req_type = PCI_TPH_REQ_EXT_TPH;
-+	else
-+		tph_req_type = PCI_TPH_REQ_TPH_ONLY;
++/* Permissions for TPH extended capability */
++static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
++{
++	int i;
 +
-+	/* Check if the device is behind a Root Port */
-+	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
-+		rp_req_type = get_rp_completer_type(pdev);
-+		/* Final req_type is the smallest value of two */
-+		tph_req_type = min(tph_req_type, rp_req_type);
++	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_TPH]))
++		return -ENOMEM;
++
++	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
++	p_setd(perm, PCI_TPH_CAP, ALL_VIRT, NO_WRITE);
++
++	p_setd(perm, PCI_TPH_CTRL, ALL_VIRT, ALL_WRITE);
++
++	/* Per PCI specification: There is an upper limit of 64 entries
++	 * when the ST table is located in the TPH Requester Extended
++	 * Capability structure.
++	 * And the pci_ext_cap_length[PCI_EXT_CAP_ID_TPH] is 0xFF, so the
++	 * following operation is fine.
++	 */
++	for (i = 0; i < 64; i++)
++		p_setw(perm, PCI_TPH_BASE_SIZEOF + i * sizeof(u16),
++		       (u16)ALL_VIRT, (u16)ALL_WRITE);
++
++	return 0;
++}
++
++static void vfio_tph_mask_ext_tph_bit(struct vfio_pci_core_device *vdev,
++				      int pos)
++{
++	__le32 *vptr = (__le32 *)&vdev->vconfig[pos + PCI_TPH_CAP];
++	struct pci_dev *pdev = vdev->pdev;
++	u32 val;
++
++	if (!pcie_tph_supported(pdev, true)) {
++		val = le32_to_cpu(*vptr);
++		val &= ~PCI_TPH_CAP_EXT_TPH;
++		*vptr = cpu_to_le32(val);
++	}
++}
++
++static int vfio_find_cap_start(struct vfio_pci_core_device *vdev, int pos);
++static int vfio_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
++				 int count, struct perm_bits *perm,
++				 int offset, __le32 val)
++{
++	int req_en_byte = PCI_TPH_CTRL + 1;
++	struct pci_dev *pdev = vdev->pdev;
++	__le32 org_val = 0;
++	bool extended;
++	u8 mode, req;
++	int i, ret;
++	u16 start;
++	u32 data;
++
++	if (!vdev->tph_permit)
++		return count;
++
++	down_write(&vdev->memory_lock);
++
++	/* Back up the original values in order rollback when fail */
++	if (offset <= req_en_byte && offset + count > req_en_byte)
++		vfio_default_config_read(vdev, pos, count, perm, offset,
++					 &org_val);
++
++	ret = vfio_default_config_write(vdev, pos, count, perm, offset, val);
++	if (ret != count) {
++		up_write(&vdev->memory_lock);
++		return ret;
 +	}
 +
-+	if (tph_req_type == PCI_TPH_REQ_DISABLE) {
-+		pdev->tph_cap = 0;
-+		return;
++	/* Skip if write range does not cover Requester Enable byte */
++	if (offset > req_en_byte || offset + count <= req_en_byte) {
++		up_write(&vdev->memory_lock);
++		return count;
 +	}
 +
-+	pdev->tph_ext_support = !!(tph_req_type == PCI_TPH_REQ_EXT_TPH);
++	ret = vfio_pci_set_power_state(vdev, PCI_D0);
++	if (ret) {
++		vfio_default_config_write(vdev, pos, count, perm, offset,
++					  org_val);
++		up_write(&vdev->memory_lock);
++		return count;
++	}
 +
- 	num_entries = pcie_tph_get_st_table_size(pdev);
- 	save_size = sizeof(u32) + num_entries * sizeof(u16);
- 	pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_TPH, save_size);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fac439ce53b0..7ec0726050fe 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -587,7 +587,9 @@ struct pci_dev {
- 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
++	start = vfio_find_cap_start(vdev, pos);
++	data = le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CTRL]);
++	mode = FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, data);
++	req = FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, data);
++
++	if (req == PCI_TPH_REQ_TPH_ONLY || req == PCI_TPH_REQ_EXT_TPH) {
++		extended = !!(req == PCI_TPH_REQ_EXT_TPH);
++		ret = pcie_enable_tph_explicit(pdev, mode, extended);
++		if (!ret && vdev->tph_st_shadow) {
++			for (i = 0; i < vdev->tph_st_entries; i++)
++				pcie_tph_set_st_entry(pdev, i,
++						      vdev->tph_st_shadow[i]);
++		}
++		if (ret)
++			vfio_default_config_write(vdev, pos, count, perm,
++						  offset, org_val);
++	} else if (req == PCI_TPH_REQ_DISABLE) {
++		pcie_disable_tph(vdev->pdev);
++	} else {
++		vfio_default_config_write(vdev, pos, count, perm, offset,
++					  org_val);
++	}
++
++	up_write(&vdev->memory_lock);
++
++	return count;
++}
++
+ /*
+  * Initialize the shared permission tables
+  */
+@@ -1101,6 +1213,7 @@ void vfio_pci_uninit_perm_bits(void)
  
- #ifdef CONFIG_PCIE_TPH
--	u16		tph_cap:15;	/* TPH capability offset */
-+	u16		tph_cap:14;	/* TPH capability offset */
-+	u16		tph_ext_support:1; /* Indicate whether Extended TPH
-+					    * requester is supported */
- 	u16		tph_enabled:1;	/* Whether TPH is enabled */
- 	u8		tph_mode;	/* TPH mode */
- 	u8		tph_req_type;	/* TPH requester type */
+ 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+ 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
++	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
+ }
+ 
+ int __init vfio_pci_init_perm_bits(void)
+@@ -1121,6 +1234,8 @@ int __init vfio_pci_init_perm_bits(void)
+ 	/* Extended capabilities */
+ 	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+ 	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
++	ret |= init_pci_ext_cap_tph_perm(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
++	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_tph_config_write;
+ 	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
+ 	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
+ 
+@@ -1704,6 +1819,8 @@ static int vfio_ecap_init(struct vfio_pci_core_device *vdev)
+ 		ret = vfio_fill_vconfig_bytes(vdev, epos, len);
+ 		if (ret)
+ 			return ret;
++		if (ecap == PCI_EXT_CAP_ID_TPH && !hidden)
++			vfio_tph_mask_ext_tph_bit(vdev, epos);
+ 
+ 		/*
+ 		 * If we're just using this capability to anchor the list,
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index c327eff8e9cc..1e706a690dbd 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -606,6 +606,8 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+ 
+ 	vdev->reset_works = !ret;
+ 
++	/* Reset TPH status on new user session */
++	pcie_disable_tph(vdev->pdev);
+ 	ret = vfio_pci_tph_init(vdev);
+ 	if (ret)
+ 		goto out_disable_device;
+@@ -736,6 +738,8 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+ 	kfree(vdev->region);
+ 	vdev->region = NULL; /* don't krealloc a freed pointer */
+ 
++	/* Reset TPH status on session exit */
++	pcie_disable_tph(vdev->pdev);
+ 	vfio_pci_tph_deinit(vdev);
+ 	vfio_config_free(vdev);
+ 
 -- 
 2.17.1
 
