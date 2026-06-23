@@ -1,106 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B084630595C;
-	Tue, 23 Jun 2026 03:42:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4663446BC;
+	Tue, 23 Jun 2026 03:42:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782186143; cv=none; b=tTyPa0570NuLP4aJYkzoDybH2ijcMxupUKIuVHPkflC8cCsMeBfBTpMlbOlVq3VvZpVabGPMIcDuW7AcY11V39EdAQpxHst5Mo5iipE9b+TC4A99RBYa4OgKS6OGuvLLygo4l8a12HYRMgInF1UqP2Q7OfoeZZ8UaIoqtEaMqIg=
+	t=1782186159; cv=none; b=C2Ts3u53zTONjHYvBsHFrkyXTu9Xa4AZ7xBK/A1WLO9iL3eKb8Njviu4jktGIl3A46mzG+igZuJthFIOlkM0zpv43YSbWB00v/c5qfnrs8XdALsOoh0OE/mq/5I5esAqe49rYqtpkEe6Mo6lCCv5h2pytVdUeCEiXcvJonf7j3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782186143; c=relaxed/simple;
-	bh=ts8BupGE3Hnu3P7u/FOi8JYPWqzCWe3gjxU8MBGqwO8=;
+	s=arc-20240116; t=1782186159; c=relaxed/simple;
+	bh=ajV8VDXako+UsOq39sd17mFx07L5o2xu1qI8aIzxpvQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eDeP6HO3iXBfH8C6AZHy6IKivg5wUwhsEJjeI+XK2KHd1pkFvrs8yUyEnuFoyHyg6RKZY7DoVzicU58BbQWs4pzjMQv8r4NV+dVvk8VsEBKKWqk/+u8mwYjeCVlBruD7xUPdvv1Y2cEAj4Y9x1sb24ZcYybRPO3GiwyXeurdK1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IGON+u7F; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=spJsW2Nysx0tvb++Na6eh//HvVdOP/0k9YnaRmaUcbprcmGeB289v089Z+/tUz52O9D+1OWIvUbphIl3vXzeW9z/HOiwLM0Q/5d/Y+RSEHroom+0KisaUNgJaG7w2qxQeiS4YMcOB0K36NxI7zKGtlP6JfjdJL7snEjNeBABjqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOEL6PXA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IGON+u7F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AAF51F000E9;
-	Tue, 23 Jun 2026 03:42:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOEL6PXA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F3F1F000E9;
+	Tue, 23 Jun 2026 03:42:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782186142;
-	bh=RekW0KClx3QXKbw74Gr7X1BmTL8LNMeNbWvtfvwo0E8=;
+	s=k20260515; t=1782186158;
+	bh=oHIUGnVFgp4XsFKXo015ISCkOJA9/IWsiJfoAElKtwk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IGON+u7F919KcN5D74wFRbXZq4kJAwsYqwWSTfC3USim8zop+4/Pc5MQfDsLdPJIV
-	 tpyRX8hIN66eWuvIWTUehn+z3uBknwC+ak9jje9Kt6YRj2oURFC1qE3UlDwl07YR7v
-	 6y7CE1Pg8PadINhSxzuQ/aFpwG54vQcc9FBS63hCRbBhrs7WqdjDHTYifrRCI68dXD
-	 J+LZFWrigfyPV53fvACaZuAW1H3Efs2xP4D0ewpEqxPpZ3H3BPaZjhebVIedi0+kZE
-	 /9zVoEuDSnJ2weO64nV3H3F6HG4BrqdDcIsANwgvlFPe7/o0RFQY7FXdLPznjrwdcz
-	 nDrOOkI91L9kg==
+	b=TOEL6PXAKo9Ri9VMT3wg4xxmvjXTi9xr1wt2vJ3Sv5frEioLEmUfaRsHN7CezFg53
+	 TvutNnbYadBnMv368hE/Hpmv8c2lTHLjbLm953+xPaLG87ARUkZU8RzP5k64al9Zjl
+	 L2iYlR5QbqM7EtFd9kkSHJdX0YhvUjqCBFGCOKZEGCj3JacUluzUBNm3WApTm6N3b6
+	 TH7tyDKFgl3S8Q1RwuWihNcG4iV0TZmTcAnm5gN18wZLqqUCUoM9GMdNQfs8WQFgZW
+	 t/B+Zf/CA4I1EfXHuUoes6RhwxiGuQJoRFGtXuHRd7vwycU4AIErI3wLzsyW6bhkiG
+	 x1YocE2ALXxAw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 02/11] cxl: Cache decoder settings on PCI devices
+Subject: Re: [PATCH v7 08/11] cxl: Coordinate sibling functions for CXL
+ reset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623032453.3404772-3-smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260623032453.3404772-9-smadhavan@nvidia.com>
 References: <20260623032453.3404772-1-smadhavan@nvidia.com>
- <20260623032453.3404772-3-smadhavan@nvidia.com>
+ <20260623032453.3404772-9-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 03:42:21 +0000
-Message-Id: <20260623034222.3AAF51F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 03:42:37 +0000
+Message-Id: <20260623034237.C8F3F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Cached target list is truncated to 8 targets, breaking reset recov=
-ery for 16-way interleaving.
-
-Pre-existing issues:
-- [High] HDM target list parsing uses an endian-unsafe union, reversing tar=
-get IDs on big-endian architectures.
-- [High] Stack out-of-bounds read occurs when processing decoders with more=
- than 8 interleave ways.
+- [High] AB-BA deadlock between `device_lock` and `pci_bus_sem` during CXL =
+reset
+- [Low] Mixed usage of goto-based error handling and scope-based cleanup he=
+lpers (`scoped_guard`)
 --
 
-commit 1a9ec0491bde62ac73e5c79d561f966396fbb2b8
+commit e204e091df9c0890781be70b3733c1aeae326d91
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Cache decoder settings on PCI devices
+cxl: Coordinate sibling functions for CXL reset
 
-Cache CXL core's HDM decoder settings in pci_dev->hdm as decoders are
-enumerated, committed, or reset. PCI reset paths can use this snapshot to
-restore HDM programming without walking CXL topology during reset recovery.
+CXL Device Reset affects all CXL.cache and CXL.mem functions in the reset
+scope. Lock same-scope siblings with pci_dev_trylock(), save/disable them,
+drain pending transactions, and hold IOMMU reset blocks until recovery.
 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index fa978c297546f..83cda63f76a5a 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
+> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
+> index 1ae714a3595cb..69bcfab898589 100644
+> --- a/drivers/cxl/core/reset.c
+> +++ b/drivers/cxl/core/reset.c
+
 [ ... ]
-> @@ -989,6 +1061,7 @@ static int init_hdm_decoder(struct cxl_port *port, s=
-truct cxl_decoder *cxld,
->  		lo =3D readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
->  		hi =3D readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
->  		target_list.value =3D (hi << 32) + lo;
-> +		cxld->targets =3D target_list.value;
+
+> @@ -944,11 +1045,24 @@ int cxl_reset_function(struct pci_dev *pdev, bool =
+probe)
 
 [Severity: High]
-Does this truncate the target list to 8 targets?
+Could this lead to an AB-BA deadlock between the device lock and pci_bus_se=
+m?
 
-Since target_list.value is a u64, if a decoder is configured for 16-way
-interleaving, it looks like the extended target list registers are ignored
-and the upper 8 targets will be permanently lost during reset recovery.
+When the PCI core invokes a device-specific reset method, it holds the
+target device's lock (device_lock(&pdev->dev)). If cxl_reset_function()
+subsequently calls cxl_reset_collect_siblings() which uses pci_walk_bus(),
+that will attempt to acquire a read lock on pci_bus_sem.
 
->  		for (i =3D 0; i < cxld->interleave_ways; i++)
->  			cxld->target_map[i] =3D target_list.target_id[i];
+The standard PCI lock acquisition order is pci_bus_sem followed by
+device_lock (for example, in pcie_do_recovery()). This inversion could
+create a deadlock if another thread (like hotplug) requests a write lock
+on pci_bus_sem, queuing the read lock request and blocking all involved
+threads.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but doesn't the target_list
-union overlay reverse the target list on big-endian architectures?
+>  	if (rc)
+>  		goto out;
+> =20
+> +	rc =3D cxl_pci_functions_lock(&ctx);
+> +	if (rc)
+> +		goto out_unlock;
+> +
+> +	rc =3D cxl_pci_functions_reset_prepare(&ctx);
+> +	if (rc)
+> +		goto out_functions_done;
+> +
+>  	scoped_guard(rwsem_write, &cxl_rwsem.region) {
+> -		rc =3D cxl_hdm_ranges_prepare(&range_ctx, pdev);
+> +		rc =3D cxl_hdm_ranges_prepare(&range_ctx, &ctx);
+>  		if (!rc)
+>  			rc =3D cxl_reset_execute(pdev, dvsec);
+>  	}
+> +
+> +out_functions_done:
 
-The target_list union maps an 8-byte array over a u64, which accesses
-the value in memory order.
+[Severity: Low]
+Does this mix goto-based error handling with scope-based cleanup helpers?
 
-[Severity: High]
-This is also a pre-existing issue, but since target_id is strictly bounded
-to 8 bytes in the union, does this loop perform a stack out-of-bounds read
-into cxld->target_map if cxld->interleave_ways is greater than 8?
+According to the cleanup guidelines, functions should not mix goto-based
+cleanup labels (like out_functions_done) with scope-based helpers like
+scoped_guard(). All resources needing a cleanup should either be converted
+to scope-based cleanup, or none of them should use it.
+
+> +	cxl_pci_functions_reset_done(&ctx);
+> +out_unlock:
+> +	cxl_pci_functions_unlock(&ctx);
+>  out:
+>  	cxl_hdm_range_context_destroy(&range_ctx);
+>  	cxl_reset_context_destroy(&ctx);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623032453.3404=
-772-1-smadhavan@nvidia.com?part=3D2
+772-1-smadhavan@nvidia.com?part=3D8
