@@ -1,153 +1,149 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5343F30DD2A;
-	Tue, 23 Jun 2026 16:19:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D43332FE56F;
+	Tue, 23 Jun 2026 16:31:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782231553; cv=none; b=roYYHSAFl8bnY1GcX4KW5FFyVZXOcECOZbs+PvZvC2fupgOKR6pqMgYOsu6fRyg9Vyu6bC+BzJTjdMA5pXZltJKcj3nkYuBHPNkQ3w4SJkpGeCn2C20G+BuHcPMvpjKYL/CQDhWbW3Dw6SY/b0BgUNZgLdHelT9rt9O4d5+8s0w=
+	t=1782232297; cv=none; b=k1LrgLONJGU1YwAIVVSjrKZ880w7kK8wq1B/ZHF1Ws8poO+jVMYhrK7yvfBuH7JH22RoVuLEBZT60oKQF49gHEwLVWKS+FjgOVZEj8RwTBEJxHAL0jvs4kVi7OKyrRhm7JWY+AJbvEmKtIUCEyzx1gqR2wsWyyrBYLRm4JUpMME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782231553; c=relaxed/simple;
-	bh=PPO6wIb+Bt+dMT/UWZ/ynlIKN1ol1dou/GKcpH59m5s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nLVyDUf/+v/NElj0sdcD6KoZ2kvbbu0MbI+CHvadxE6AOw+S0jDzsSXuxMEweTU8pVqMKQH7EE4zSgJKAI766aSVgtXnfOeeKKnpJq0IyVNhMSozC7S2CGuKdHUHq4vdFizQ5Z0YSHfUm6VoXERtx7XZX7nxViSZNJb3SENGCrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=b0bEQ7Zs; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1782232297; c=relaxed/simple;
+	bh=VlgUc80un1XQ/6YKqaqYosKOUN5356Fe04gal/+WyEE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=gJSAVMfkt9s4nLp0nDyrgtZfOCntuo/pOwkthLmIfFUmV1yn3Pf29gYabn7rRZJbCX9OF3HT4s4wqFUFSCHk/+5p7V/xmvq6vodOrAK3oqBJ2GKTquOykicETCqjTgAqEL9l1hWPw2SktVYu3ze2eBmJFsjTyRAsrFD85a4QaX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZvp6gca; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="b0bEQ7Zs"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65NBn4Fg1827221;
-	Tue, 23 Jun 2026 16:19:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=TzOh1u
-	ScHS0tnNDnBZfWjsEO7KWP/WnnDVWPjiDTAhU=; b=b0bEQ7Zs9tSdf+IFyeSGcE
-	CchZ75pHw1TOUGtm8I8iKa0MWTAwK8g1GIcoHt/9tYP1qRTm57EE4SqsPHr/ozpV
-	7Pm1dmuG1PZcqVsXpUAkY5+WdqqdHwXSylAlSlFn4mMckMM3PeCnZCYGpDn9zFVq
-	6AbKiueqOBbU/pmDJD16PYlpH/iyM4tCtGT9zYBoPGBC0wbmqYSzqvnCgJc0HHHW
-	agNCxt8ZA2DrEc4hNt0Z4KNPMwC3EJ8d0uYgcldfjHbo+yXhlbvfWvqh/jMw2LHS
-	c1Csfu+SsABnOrTKaxHyWkRsVbw6eRhMBnPY3ULpRDIHXdoy/jQO8lG1dACDmyWw
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ewjgsqf1n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Jun 2026 16:19:08 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65NG4ded000546;
-	Tue, 23 Jun 2026 16:19:07 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ex7vykw6c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Jun 2026 16:19:07 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65NGJ6ud29229652
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 23 Jun 2026 16:19:06 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 180D658055;
-	Tue, 23 Jun 2026 16:19:06 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4EBFB5804B;
-	Tue, 23 Jun 2026 16:19:05 +0000 (GMT)
-Received: from [9.61.246.142] (unknown [9.61.246.142])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 23 Jun 2026 16:19:05 +0000 (GMT)
-Message-ID: <a2dcd383-e93b-4771-916d-d836df5f48c2@linux.ibm.com>
-Date: Tue, 23 Jun 2026 09:19:03 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZvp6gca"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A7621F000E9;
+	Tue, 23 Jun 2026 16:31:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782232295;
+	bh=+gl2YP9DMrs4ERLIfu+0S4LkjE4WZh85GltKXGn3Lwk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=XZvp6gcaEqh3iFSYf3xfCJI0OVDAFQo1Dy6e18VCI8aIa6B3Tm28nT9nlPGUbnrSp
+	 rFP7oUr1pgNjrx9/6BVUeXEH4ugXU0teBbuKcJRMQN6940iTr+rxXoYcee5/NWB0Br
+	 XJZde5vKvFkBjZ/CgbZSnquCNiVEURThPcCHpB2gpP/kMXrzysMt5Vire+bKu6HpCs
+	 M1TsOBd5nzFpSUbwoOA9i3wUTWGYnfGNn178nVeAHG2tYi8nP01tach0Xx3khnSc8h
+	 Sjta60t1i8z/Sn1z/EF3jODrUORyoGRCRB6vg1gqswyxhsjcRjWK3QaOmdO2TlQjXe
+	 H8PiSbzs8Kh8w==
+Date: Tue, 23 Jun 2026 11:31:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v4 12/12] NTB: epf: Implement db_vector_count/mask for
+ doorbells
+Message-ID: <20260623163134.GA813775@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 0/3] [VFIO] Error recovery for vfio-pci devices on
- s390x
-To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-References: <20260615183616.2902-1-alifm@linux.ibm.com>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260615183616.2902-1-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIzMDEzNCBTYWx0ZWRfX64mAl/hglsfK
- RfiSX70vdsWdNw33AVd3H5lIl2HlSa6R1ae0HXCpLkCKKbbxFrr2XsZJ6cTCNxJ3hE4Sul22sXF
- 1JpG9yFTUJocwmxZsaMBsfncgU0IpQmqwTWUg2jI7nq6ci/zjf1BmNF/SigzIreYubU3I5PtOJp
- nHNC3EuvC7KbzHtB3cjohtPGvQi8QMOXlxa/l4IuUAbDwS52wFmJoZol4J9j8y4kXjEmFLev1Wl
- jjq9bw5P3jKSPbPStbX6c9KYRbsvMaJSFuh35TqUd0wQMgkmiCFeR7PgP5P14GyBwZC6L02qrVv
- nHRnUaNv3XgYq8RKhWEbVPPiZdNORnOTwBuJWxRuXArsdixWv5+yEESg2sjrOeB3DmDyQmTtU8s
- yHNjFai8zomHVBoXU4vM47ZwouzRuXVwVH1YsUOdaPldkgvikQZhgIIz5lwPv/TpTTzJ9GjKlvt
- emWJu4kWWLXeC099dnQ==
-X-Proofpoint-GUID: eD8aR15YGrWQ69KnL83WWl6BDQVSFotQ
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIzMDEzNCBTYWx0ZWRfX0tFG60/NzE5R
- pvNEVKAyIDx2Ln6rAdvYsDY44oHgmkJTItAOvii/mAS7h0X3Z/ajk7CIWW89/bxBHzR1eh4wPox
- OG21mxFUw/t5iNx4fIuuDWoKhr0q4eU=
-X-Authority-Analysis: v=2.4 cv=I/lVgtgg c=1 sm=1 tr=0 ts=6a3ab1fc cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=r1p2_3pzAAAA:8 a=29iEHxvmWTY-H69hz_cA:9 a=QEXdDO2ut3YA:10
- a=r_pkcD-q9-ctt7trBg_g:22
-X-Proofpoint-ORIG-GUID: eD8aR15YGrWQ69KnL83WWl6BDQVSFotQ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-23_03,2026-06-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 spamscore=0 phishscore=0 clxscore=1015 priorityscore=1501
- adultscore=0 impostorscore=0 bulkscore=0 suspectscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606230134
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260513024923.451765-13-den@valinux.co.jp>
 
-Polite ping for this series :)
+On Wed, May 13, 2026 at 11:49:23AM +0900, Koichiro Den wrote:
+> Implement .db_vector_count and .db_vector_mask so ntb core/clients can
+> map doorbell events to per-vector work.
+> 
+> Report vectors as 0..(db_count - 2) (skipping the unused slot) and return
+> BIT_ULL(db_vector) for the corresponding doorbell bit. Use
+> ntb_epf_db_vector_count() for bounds checks in ntb_epf_db_vector_mask(), so
+> the same lower-bound guard is applied before building the bitmask.
+> 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+> Changes since v3:
+>   - Reuse ntb_epf_db_vector_count() from ntb_epf_db_vector_mask() for bounds.
+>   - Return 0 when db_count is below NTB_EPF_MIN_DB_COUNT.
+>   - Drop Reviewed-by tags due to the changes.
+> 
+>  drivers/ntb/hw/epf/ntb_hw_epf.c | 32 ++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
+> 
+> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> index 10618e462229..af5755472842 100644
+> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
+> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> @@ -434,6 +434,36 @@ static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
+>  	return ntb_ndev(ntb)->db_valid_mask;
+>  }
+>  
+> +static int ntb_epf_db_vector_count(struct ntb_dev *ntb)
+> +{
+> +	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
+> +	unsigned int db_count = ndev->db_count;
+> +
+> +	/*
+> +	 * db_count includes an extra skipped slot due to the legacy
+> +	 * doorbell layout. Expose only the real doorbell vectors.
+> +	 */
+> +	if (db_count < NTB_EPF_MIN_DB_COUNT)
+> +		return 0;
+> +
+> +	return db_count - 1;
+> +}
+> +
+> +static u64 ntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+> +{
+> +	int nr_vec;
+> +
+> +	/*
+> +	 * db_count includes one skipped slot in the legacy layout. Valid
+> +	 * doorbell vectors are therefore [0 .. (db_count - 2)].
+> +	 */
+> +	nr_vec = ntb_epf_db_vector_count(ntb);
+> +	if (db_vector < 0 || db_vector >= nr_vec)
+> +		return 0;
+> +
+> +	return BIT_ULL(db_vector);
 
-Thanks
+This all ends up looking slightly different from pci-epf-vntb.c, and
+it's not obvious whether the differences are essential or superfluous.
 
-Farhan
+pci-epf-vntb.c:
 
-On 6/15/2026 11:36 AM, Farhan Ali wrote:
-> Hi Alex,
->
-> This patch set includes only the VFIO patches of the original series for
-> error recovery for vfio-pci devices on s390x [1]. Breaking up the patch
-> series into PCI and VFIO only patches to make merging easier based on our
-> discussion [2].
->
-> Thanks
-> Farhan
->
-> [1] https://lore.kernel.org/all/20260520171113.1111-1-alifm@linux.ibm.com/
-> [2] https://lore.kernel.org/all/20260602163344.1eda12d2@shazbot.org/
->
-> ChangeLog
-> ---------
-> v18 https://lore.kernel.org/all/20260603182415.2324-1-alifm@linux.ibm.com/
-> v18 -> v19
->   - Fix hole in struct vfio_device_feature_zpci_err.
->   - Remove reset_done() callback for vfio-pci driver.
->   - Rebase on 7.1-rc7
->
-> v17 -> v18
->   - Print a warn with dev_warn_ratelimited() for copy_to_user failure.
->   - Rebase on 7.1-rc6.
->   - Break patch series into VFIO patch set.
->
-> Farhan Ali (3):
->    s390/pci: Store PCI error information for passthrough devices
->    vfio-pci/zdev: Add a device feature for error information
->    vfio/pci: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
->
->   arch/s390/include/asm/pci.h       |  32 +++++++
->   arch/s390/pci/pci.c               |   1 +
->   arch/s390/pci/pci_event.c         | 137 +++++++++++++++++++-----------
->   drivers/vfio/pci/vfio_pci_core.c  |  10 +--
->   drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
->   drivers/vfio/pci/vfio_pci_priv.h  |   9 ++
->   drivers/vfio/pci/vfio_pci_zdev.c  |  61 ++++++++++++-
->   include/uapi/linux/vfio.h         |  30 +++++++
->   8 files changed, 221 insertions(+), 62 deletions(-)
->
+  enum EPF_IRQ_DB_START                           # value 2
+  #define MIN_DB_COUNT  (EPF_IRQ_DB_START + 1)    # value 3
+
+  vntb_epf_db_vector_count() comment says "db_count is total number of
+  doorbell slots exposed to peer, including reserved ones".  But it
+  returns "db_count - EPF_IRQ_DB_START", which suggests that the
+  reserves slots are not exposed?
+
+  vntb_epf_db_vector_count() comment lists two reserved slots
+
+  vntb_epf_db_vector_count() returns "db_count - EPF_IRQ_DB_START"
+
+  vntb_epf_db_vector_mask() comment mentions "two reserved slots"
+
+ntb_hw_epf.c:
+
+  enum EPF_IRQ_DB_START                # value 2
+  #define NTB_EPF_MIN_DB_COUNT  3      # value 3, not based on EPF_IRQ_DB_START
+
+  ntb_epf_db_vector_count() comment says "expose only real doorbell
+  vectors".  I guess this *excludes* the reserved ones?
+
+  ntb_epf_db_vector_count() comment mentions "an extra skipped slot"
+  but apparently actually accounts for *two* slots
+  (NTB_EPF_MIN_DB_COUNT==3)
+
+  ntb_epf_db_vector_count() returns "db_count - 1"   # should it be -2?
+
+  ntb_epf_db_vector_mask() comment mentions "one skipped slot"
+
+I don't want to change anything during the v7.2 merge window, but if
+there are any actual bugs here, they could be fixed after v7.2-rc1.
+If there are no bugs but this could be clarified to reduce confusion,
+we could do that for v7.3.
