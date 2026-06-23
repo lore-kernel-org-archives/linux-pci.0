@@ -1,59 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4399F32B13A;
-	Tue, 23 Jun 2026 23:00:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64FED3A7F4E;
+	Tue, 23 Jun 2026 23:13:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782255628; cv=none; b=Kg8QHwdAPgJ0aYc2xAZ1mT87VW3ZAk3NzVMIvdoLX6/wng7YPLPNBy+MTq5i351j5+6AqfA2RAJALfEzUXarHegiRH6/0eC6hHBGTctqLJ/b1dNH4eXEspqIr1BfgSUYqs62UZC+2s5qC6BAHMFAxb/YwConByXAZt/Nsvvf4aQ=
+	t=1782256419; cv=none; b=bMT93llfBsH2LnZgg7xYNKC7MekzccCwCrsqLfhjh5mFfx8wbi3EO+n1WdC22Bmc2iyNqj+MBL1Q3vy/b/Yit+Jc93t7/UmMR3CBkPzBaDH5/4XvK8SIA4VY4jsOQC5qF/hWNZEFrsITn+r04IGLavyDFXA8ylc8mYAkhSXBebM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782255628; c=relaxed/simple;
-	bh=EdiiKLjRD46vSb2CJ7dKQ9NTwgPB8vCd50Ii9AJM4dg=;
+	s=arc-20240116; t=1782256419; c=relaxed/simple;
+	bh=/pWFEqrUtO7R407UmkeLxHzK1S4uJ3myT1Rlgai5SgY=;
 	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=iMQgBZOkVXVNiz6oy0AHZ/9zzbVQ8YfXL7cKCGM3z/Rx8z732OHuKosMUpSr5a7FXbvsE1L0U0l7cm/cPlMAEUoRm8U8Xrq/rmWM6UcmE3plPyqAwyFk+/MIZMY7Ep1iTaETKmb/bA4+UaFC8V0FIgij3hr3zIIAcqTMQEnXv3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MABGRBkj; arc=none smtp.client-ip=100.103.45.18
+	 Mime-Version:Content-Type; b=eoRQ/hEDnj3jc93E1XSdOZ4Gd1fz++cGauqudO4eUdIu1bwxcMdtYS0Y9LCkxIDArmUbmAWjLOh6XHR6I/+N6j5l+OKmzG9596wCNxVcWai+UNCczo3a0eBd/r4oOC3hCO6mA9ffue9ggeXVzwTTnuxokiLZf0fjLy0v43YXNNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yvxnc4bA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MABGRBkj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EC9F1F000E9;
-	Tue, 23 Jun 2026 23:00:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yvxnc4bA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EC051F000E9;
+	Tue, 23 Jun 2026 23:13:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782255626;
-	bh=+ZprVd6hak79tT1yNBe6rbOrxYAvSnGiBcN53A2Yz+o=;
+	s=k20260515; t=1782256418;
+	bh=dt8PsIzjXkg9JpHYae7llHpePxe0uk+0DRL1H1m+Tks=;
 	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=MABGRBkjQS5itEmQ7r1TXaG/omXwaKlhwOSkTKkhvJ09MFRRlB8eJtTMyQZcPywbh
-	 GXcE3Ujf2q0pAfyeEaojtfJxHJdq0fL9Isue0Wp05VSy+gSJ9hWr2uOgICUkkmVOrH
-	 8h4x8DEesjW8g62z+Vx1TSnbbpqueFyxJl5q3hsWABrU4I+qRFfInZ5eWD7ga08RLl
-	 DPz26w0Rh5T/Nzql/RwEfoXAefnFsNng0h3Tx+CHq7is6L4JxLC+Eyqw3B/SOlDCCI
-	 GdeIAIVrUsgN6uTw8FQ2kNFR1XG7iyP90Z+8+G+x9n7h8lrf6nOjvICi96AhHimIv5
-	 N19pnroGDP/Xg==
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 9D18CF40080;
-	Tue, 23 Jun 2026 19:00:25 -0400 (EDT)
+	b=Yvxnc4bAp3AicwFFJEHgnbT1XEytmRyOnwzJUMdVmpX4tDGR7jBdZADAiwuFNdqEB
+	 xrefIUUyxzTRPBqkqRUI50xU1EyNM2R28qyhH3+l5DlW0PzhZaGIDPYpCXx5+Iba/g
+	 B70E/0LLMq++8v/FJILH8TPqRTZ0iZ1cEbwCuOXlegW1AZUqGZAy/MzoqLCnrkl2RD
+	 4ID7of9r93F2pM73xqGV+Z2k5xvOWLeBC9YVQ4R++yzSfKfSTVuBIoVBcBdNOSVwHP
+	 NATlVhqUdAjqaw7FqRejB5aFz1OTxaXLtlUcPDVdLWTtPi/nd4eXjtbCWPXgpz0v0+
+	 EajqujB76fUdA==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id D64E1F40070;
+	Tue, 23 Jun 2026 19:13:36 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Tue, 23 Jun 2026 19:00:25 -0400
-X-ME-Sender: <xms:CRA7aiLzDt9yCcUiSmPF28u6Bgt1AEQ1jQtIUCdW7QqIxQbR5dnMUQ>
-    <xme:CRA7aqnYkiKv6-4NWsm6N7Fe9s56eM-8xvDmTaLkOJLpRHl4_-1ShlbhHEef-WOt1
-    cRIYHzeNCj-sZyLWSWc64PFVBtYz5cpNQ61VB0uXDlEuqwLbgFfQA>
-X-ME-Received: <xmr:CRA7aoJZuMXS8XwRsrDbXNT0tp__BkKVHyvLWVOwCF4-IKdkKtEY-EZi7asZtOL0jsfWjJELlJCCXsLZpISuJFFmlS7QRpH6WIw>
-X-ME-Proxy-Cause: dmFkZTEIzL0uJ2LqqIa9N1YVNmTbmTEQuSKhoCo5srAWzdz2Qh9Lv6qqFerEtRxPjFj13d
-    xuSy+S+66BBCv3PUtYIhVMHXFcJlpk8zxz5K+MyiQw5KstOV8mFHj8zGspb/jrv2YI+kbi
-    mbzShUzqzqZXw0WVQwqDoG/qG/vtXqLn1WJyvJA+qSeJlP+vKiN1MBsK3MIFDu6X58eehk
-    kj2ekIRtSDmYe6z/aaaZO+JoCX/AZZ3JYWGOHX8IQAgF533MqwOpoHo0r4x/nUI32py8Sk
-    z9pJlc8AwNQJ5aRTg0mSgnVQym4fdDiDFCW9IDGcWuFlD5caNCEKjRclC6WnpldfMQvfNn
-    fU2ogdtr6wR5YnOtsMu6xzP+iQYYmx/TIqjtDFD0z4XLihZsjlvdNko6XVtoWZt91e7hbO
-    dL6BNpzTTp98Xovcb3Iz6SzhbqGD/ug9Kcp5ulMnU9hbpSs3XqNQj+R67bXG6gBtHrZGyO
-    Ui7DkuPb4pOx2kJtq8xEnVv13cK/oA2kDEwtgZg3VGYUbAu6oaXa9mpez3Yf8KJ1xx/81U
-    mGOb535fD/w1lmDjzuwGypEKeiHTRSrs2JYLs8wt8juFdTsWZehE2V5iaYoXjsBcoUuwlH
-    AiBVStdUpXXImkOnrj/hC8T2cFqqJbQ3dkXRibVCYj6fnCoupJ8EJSoMER8Q
-X-ME-Proxy: <xmx:CRA7alU_-SWSGNiDP6xp82F28XG6yOjv6FX6tK2KlluWGVi68cI-mQ>
-    <xmx:CRA7atPNGSo1MPxVYtgOdWnoVKapsXHtjun7l4AFs_1tXlgk6-FHAw>
-    <xmx:CRA7ahk8Ner8-vcIxeIlNIfczJPJCrSN8yNpO9V8s6eDSTkrAQHO9A>
-    <xmx:CRA7agXydgi0WKGoFEaohVBUhknmUHaVnXh2Qe0ZJ0cPz7NPcx-xLQ>
-    <xmx:CRA7agIxw7DNTpg5Fxv-5Fxgj5xnMytBpZNgBXHa16tZRs62qZZBTCu0>
+  by phl-compute-01.internal (MEProxy); Tue, 23 Jun 2026 19:13:36 -0400
+X-ME-Sender: <xms:IBM7ape2WkIRLjqttncwbA7ZhwoH36sKta4UqPmmsRs9Gq13wvQh3Q>
+    <xme:IBM7anovTCEWe0CKMaXalQSh6EUSIjocmeaYkdEt1m40zipDkIEVxYZwrlo1K9X6N
+    so1wvgZ8oNdu0UhEotu4iaYb3QBASXzIapDnKRY6EQFHFc3AKgDaw>
+X-ME-Received: <xmr:IBM7an8WTgVSYb5crjlTQPhtf3wXWPyAxhf2m_mJ7P-Z-o-2W-qzC_yfHDjrM0Hyi-oQ7x0Y5-Rqs8_X0icX2zWDwaNniTZP2DQ>
+X-ME-Proxy-Cause: dmFkZTEKo9U7Kgu4Zj9ax0E4ioiVjTSiontLI/u8uopg7sAWTbwCVtOiSRUSyiM/HqOZ88
+    wXkptFTPj1xfFcLsTdtR3diwcfJzx1KIAU9zK43Ys2UH0hmYALgMFrOB6fyGnI6xa2ExyW
+    JUbUmou6ZMZ3lBeUp8q2BP29CCs5u3LNv97BTm+zKrABHA8Bv/g1k/mVG9kFOH1R8Hng/t
+    8kBuEAspEU4BVJZVjyejxGfVO1S4HNC7iPoX5bCmSFqyzCA3bKjzZ2RJdmbT+stoqCwUEK
+    280Z+IJ62ZvI7fclsmHqBehXEghCxFemdxfFnQiuQVG5WuWLa699dr6p2BbwUnkoWrMCB5
+    EJ5ffycnUgilRJZeQg90w2rbWxW1v8o2pthONmZO1KLm9aHlbYlnZCLuQe+qKkdKTe3Zwd
+    QkQAnFPS3hxctnuk3wvekO7Eozsvr7KqsnZWH1Abcmbwyv5Zo34BCr/8n6meu5npiOEBvH
+    9xLBXLyReeZpV/hkDtdDuA6WPOFMqFFW6n7JQupnWZrNm2K7iNTh3Qi+zt1DyL4qQhb2DM
+    4JxJMQCF96H6Z/xOEviiy8dMJxYAErthkJi0KlSKzaFzK/2dex9Ry8axrjcZSDsSACa0qe
+    Iju7vreCRJW2z3znIPkfFFpCfnjia6RRf45dgHVtj6HZ9SstU9lg1A1cgI4Q
+X-ME-Proxy: <xmx:IBM7ag4Fwl_Is2XOIjxMOHvcAvtTVj4r1Zopl2wC1LzSMAh_yu2k0w>
+    <xmx:IBM7apgzxtpHAq3aNp0wwrNI3pari41k07VD2vjT-tQCQOZdrnIq8w>
+    <xmx:IBM7avqOp64vA5vjVVgKgbuesb9hG-MOq5vKA5yPgawiDI2nTmvp7w>
+    <xmx:IBM7atJhBunYZjKlhlB40Qfn9AA6xg4EYMZN6rwqKGh1zkG23a-V1g>
+    <xmx:IBM7akv5QwOVsRR1xD6H8iglDK3BIJ5YHw9kg-MZhdirN4CSsqgmw93X>
 Feedback-ID: i67ae4b3e:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 23 Jun 2026 19:00:24 -0400 (EDT)
-Date: Tue, 23 Jun 2026 16:00:23 -0700
+ 23 Jun 2026 19:13:36 -0400 (EDT)
+Date: Tue, 23 Jun 2026 16:13:35 -0700
 From: "Dan Williams (nvidia)" <djbw@kernel.org>
 To: Srirangan Madhavan <smadhavan@nvidia.com>, 
  Alison Schofield <alison.schofield@intel.com>, 
@@ -77,11 +77,11 @@ Cc: vsethi@nvidia.com,
  Richard Cheng <icheng@nvidia.com>, 
  linux-tegra@vger.kernel.org, 
  Srirangan Madhavan <smadhavan@nvidia.com>
-Message-ID: <6a3b100798704_3c9f100a9@djbw-dev.notmuch>
-In-Reply-To: <20260623032453.3404772-9-smadhavan@nvidia.com>
+Message-ID: <6a3b131f453df_3c9f100db@djbw-dev.notmuch>
+In-Reply-To: <20260623032453.3404772-3-smadhavan@nvidia.com>
 References: <20260623032453.3404772-1-smadhavan@nvidia.com>
- <20260623032453.3404772-9-smadhavan@nvidia.com>
-Subject: Re: [PATCH v7 08/11] cxl: Coordinate sibling functions for CXL reset
+ <20260623032453.3404772-3-smadhavan@nvidia.com>
+Subject: Re: [PATCH v7 02/11] cxl: Cache decoder settings on PCI devices
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -93,33 +93,63 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 7bit
 
 Srirangan Madhavan wrote:
-> CXL Device Reset affects all CXL.cache and CXL.mem functions in the reset
-> scope. Lock same-scope siblings with pci_dev_trylock(), save/disable them,
-> drain pending transactions, and hold IOMMU reset blocks until recovery.
+> Cache CXL core's HDM decoder settings in pci_dev->hdm as decoders are
+> enumerated, committed, or reset. PCI reset paths can use this snapshot to
+> restore HDM programming without walking CXL topology during reset recovery.
 > 
-> Also include mem-capable siblings in HDM range validation and CPU cache
-> invalidation. Cache-only siblings are quiesced, but skipped for HDM range
-> handling.
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/core/hdm.c | 81 +++++++++++++++++++++++++++++++++++++++++-
+>  include/cxl/cxl.h      | 12 +++++++
+>  include/linux/pci.h    |  6 ++++
+>  3 files changed, 98 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index fa978c297546..83cda63f76a5 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -84,6 +84,76 @@ static void parse_hdm_decoder_caps(struct cxl_hdm *cxlhdm)
+>  		cxlhdm->iw_cap_mask |= BIT(16);
+>  }
+>  
+> +static void clear_hdm_info(void *data)
+> +{
+> +	struct pci_dev *pdev = data;
+> +
+> +	WRITE_ONCE(pdev->hdm, NULL);
+> +}
+> +
+> +static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+> +{
+> +	struct cxl_port *port = cxlhdm->port;
+> +	struct cxl_hdm_info *info;
+> +	struct pci_dev *pdev;
+> +	struct device *uport;
+> +
+> +	if (is_cxl_endpoint(port)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
+> +
+> +		uport = cxlmd->dev.parent;
+> +	} else {
+> +		uport = port->uport_dev;
+> +	}
+> +
+> +	if (!dev_is_pci(uport))
+> +		return 0;
+> +
+> +	pdev = to_pci_dev(uport);
+> +	info = devm_kzalloc(&pdev->dev,
+> +			    struct_size(info, settings, cxlhdm->decoder_count),
+> +			    GFP_KERNEL);
+> +	if (!info)
+> +		return -ENOMEM;
+> +
+> +	info->decoder_count = cxlhdm->decoder_count;
+> +	WRITE_ONCE(pdev->hdm, info);
+> +
+> +	return devm_add_action_or_reset(&pdev->dev, clear_hdm_info, pdev);
 
-PCI reset locking and ordering is already a source of some burden
-without adding this new sibling model to consider.
-
-Is there evidence that multi-function CXL devices, where most of the
-functions are non-CXL, is going to be a common occurrence?
-
-In other words if CXL reset borrowed the bus reset locking model:
-
-    if (pci_bus_trylock(bus)) {
-        pci_bus_save_and_disable_locked(bus);
-        might_sleep();
-	rc = cxl_request_and_flush_hdm(bus);
-	if (rc == 0) {
-		rc = cxl_reset_execute(pdev);
-		cxl_release_and_flush_hdm(bus);
-	}
-        pci_bus_restore_locked(bus);
-        pci_bus_unlock(bus);
-    }
-
-The cost is disturbing some non-CXL functions, the benefit is reusing an
-existing reset order / locking model.
+The CXL core can update the PCI cached HDM settings under the device
+lock, but it should not be doing its own allocation. It also should not
+clear the cached settings on shutdown. That would defeat the purpose of
+having the HDM settings available while the device is disabled.
