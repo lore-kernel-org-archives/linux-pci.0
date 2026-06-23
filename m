@@ -1,128 +1,111 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from xry111.site (xry111.site [89.208.246.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DD0938887C
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 17:06:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6B338D3E6;
+	Tue, 23 Jun 2026 17:37:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.208.246.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782234393; cv=none; b=eOw8BorKIp508ykwzsChdLMYg6BFats1a9wOz7lvDTmsD2nBes5ecKgAlDMVDLzBgil7B37IVDEH7YNPxfwrbFNVeLnOKAmPA5jAhQmb/gqGzdoi+X9axiSEaF7Hm503A+Uvs6B32N1fcxuDiy3kZh6ybYzW8z3tmi7J064RE2I=
+	t=1782236238; cv=none; b=RG0VMbTuMRsE+1B6ewZTrRIpUAer+jkeykXr5dA9Ih12MVhk8TwsBFGrNOHZWQHKTLmJag0GH6O+Dqe6P9qWsMiUukVxCNe2YgexA6e4orsIe0DWuFeoSDSVyanLqtaEkdAJ6etDt6OS768z/Ugjw9sgSTs9RTzGqVaJ6bpsFc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782234393; c=relaxed/simple;
-	bh=+OWC+hm04vkx07o8SXbdOwqEuj7KIn2R19JW3xoiy38=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a4lwapl5vZ84U8+GtWippgjbQYkJYDBa4qkDr2WE1OY6iXLNScD72XLBF7XFuB6BUsKrwVTkpDZGvgfZbRTiyZDmR35a8eMnsKdRNoz8bkLV2hSdoq/qeTuHZJQhhl7AKXpFljv4FM0GzQ6RsP+28VHs4QsGSNhHmRwKrvcEHtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=L+DkanMj; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1782236238; c=relaxed/simple;
+	bh=ss1Q8sXYQoUYSrXeYW2PCowfMhu2CARpqrdNcUnmnyc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=W1j3D9Yz2fX8i9UFi9fAwHMHSFKYmEaQ5nj/9ESK09HdpAwq6HmnpTy/kTT7KMy9hEbdF4/PnO74wwGqFaY19H4GMhwhh9Gw+j3YwY3eKY0gx20wCVxCxuSVYT9/JQZH4GTJttkxGcODLLZq8k51z1/uJ47RJJ4GEzQyj4NZiME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xry111.site; spf=pass smtp.mailfrom=xry111.site; dkim=pass (1024-bit key) header.d=xry111.site header.i=@xry111.site header.b=OUkXGCpS; arc=none smtp.client-ip=89.208.246.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xry111.site
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xry111.site
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="L+DkanMj"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2c6b7bd4e8dso1355ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 10:06:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1782234391; x=1782839191; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Tu79wS1tW2o86htP+jh+vF6ThoZY7vyXOnOxpMqA3sM=;
-        b=L+DkanMj6u77QinnAxK6Me+oFF8nlz5zws5eq5nAheNpQ1bBkVbX26JFJHcEjGRSBh
-         dbkZFOxh/x6A+Tbw/GiSy6h0Ob4KPgZXxi/ih3aFgpchzQgv3/hmelvqE4VnChsWcQww
-         bxNHnof2vcau+gyp3y19+Sg4CwHU1r9cAEOdbfUYD5W9TRWHBS0SO2KI5iTjTxaOU+ub
-         WaEYFLSadXDvVoLSq9JKjJGeFmxk6ixLQacJ2VqOtynI3plfOFU/uH1VHYLyS9mwNoER
-         e19LfYU8tfxu4CdEg6vYXjCIdWZEgchJ+YuqmsgUJOoidPPFnAy8QKPA4hV2JlRKgY9H
-         il4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782234391; x=1782839191;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Tu79wS1tW2o86htP+jh+vF6ThoZY7vyXOnOxpMqA3sM=;
-        b=q89Rpbcj9hqdJiQUu4BqWABGmXsX+DrJbYgofA7STTMC4Ms3XFBiLJ7oKHrMn1+PRC
-         MVU3zsYH6EeY+R2gccmS1+JeOQBgbIYk1R0xVvHZE8AolHi6DDRA7On4uFWipbY/8ksn
-         hdrtKgee7+F63nKoT9Y1j/CMIfswM2+/RBE+gY/L/59UGl47z70rjzDukebPSsK7hFqw
-         +uKRQKffjr0YRVq4WmFGhzV8GYBwvn3+h9pktjaN2SVAQbL7xCDhoj0ReiiLdhDtmGJc
-         bnmFjwPooya54mCrOGxXiLJs0ZwRIBbcFTwhnTgyonStOsigMX+CCkwlANFV8WLpCicH
-         SAaQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rr2F9TFkVxOseG04KAwFDPjjVS8GyGjdpqwPcef58iTMs2azGWa6zxP84jiFV82QkLeymvoAe2krQE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxYIpHWZYy7ozV8Ok7XbPb+ZcHlAGGvvjwylUill4EnxqWseG1w
-	tAoShRERis5dOrF9gfvIwmqZ7wsoiIh7PwGOAnU2AxWg2dYpWW47H9txh6hdHA1rxZ+0LrIa7dt
-	eICfxqopc
-X-Gm-Gg: AfdE7cnW/QxxeQ7uxfmqUi0aQAhjy8KVesbjq3dNrb2lS+bQoQKJXs92LRs8dFrlpLF
-	ibprpfCvxzRhqassGdfCAqVZ4pYKknglLI3HwOcyaGhRrhF/yaLJLudv5hajRurrC5DMBmCm6A1
-	aD4YL2G2dWLWlY5z4CRimiZy6JK5b/ah1lGjPq8qgF5Cv/+L0OHIkDXNsmWCk8uI4/ccKnYTCZY
-	x8L7ME8Wewjx/HPcuejH9gSLa26j/wkQv1HC/YieYbnkOwJD3vVyJ22J12nBz8KV8J3+Y/Di1QM
-	rb5WSMQ3OpbukTBFDqptzrvgFMBIrErqffXxOq6w6JWqP2dNcTZLH74eQcN+M2fnOW6V6w07Y8z
-	MEecxWEr2eCxO0MCYNcbJYZ7PFS2vhYE6+4eStrVjXW1mWSZ3CQN5wLpfy/UbyGMY7I2bTVmUiZ
-	4CUu57/B/7/O126QUzi5N3p+Y+d3UVoQsLrCSLVZ/5dmbWJxLR3MFwB6/k9ENpWzJkRCP9lYRwH
-	ZIvZ809
-X-Received: by 2002:a17:902:c404:b0:2bf:749:55c with SMTP id d9443c01a7336-2c7c711c2f1mr2378745ad.21.1782234370647;
-        Tue, 23 Jun 2026 10:06:10 -0700 (PDT)
-Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c7436af54dsm113990285ad.11.2026.06.23.10.06.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2026 10:06:10 -0700 (PDT)
-Date: Tue, 23 Jun 2026 17:06:07 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 05/12] PCI: liveupdate: Keep bus numbers constant
- during Live Update
-Message-ID: <ajq852qLegjfkP4d@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-6-dmatlack@google.com>
+	dkim=pass (1024-bit key) header.d=xry111.site header.i=@xry111.site header.b="OUkXGCpS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xry111.site;
+	s=default; t=1782236233;
+	bh=AMUl968WpFSwixHb/PalWiEndr8v+yvVKIjWyIAfyj8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=OUkXGCpSxSNFUSHl7EsVigdJpSgDcA/f8CkbxDiXq9wmWuOSpMSWbDM5RaJ4wfPfq
+	 L3xFS2nZ9O7ixcBlM7NJuaSoJvcVnvsXf89I8QSO6UTzr78nb1u/3x1HlHEKSFARAu
+	 +QmCsfle9j0QX86zYIpnt5lX/F9zAtQ0jpkDakTE=
+Received: from stargazer (unknown [IPv6:2408:824e:303:c231:c427:8c70:2426:a])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384)
+	(Client did not present a certificate)
+	(Authenticated sender: xry111@xry111.site)
+	by xry111.site (Postfix) with ESMTPSA id D885265B57;
+	Tue, 23 Jun 2026 13:37:07 -0400 (EDT)
+From: Xi Ruoyao <xry111@xry111.site>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: Huacai Chen <chenhuacai@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Xi Ruoyao <xry111@xry111.site>,
+	Mingcong Bai <jeffbai@aosc.io>,
+	Henry Chen <chenx97@aosc.io>,
+	Han Gao <gaohan@iscas.ac.cn>,
+	Jiaxun Yang <jiaxun.yang@flygoat.com>
+Subject: [PATCH v2] pci: loongson: Avoid L0s on LS7A1000 PCIe x8 [0014:7a29] Root Ports rev2
+Date: Wed, 24 Jun 2026 01:36:48 +0800
+Message-ID: <20260623173648.222922-1-xry111@xry111.site>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20260522202410.3104264-6-dmatlack@google.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, May 22, 2026 at 08:24:03PM +0000, David Matlack wrote:
->During a Live Update, preserved devices must be allowed to continue
->performing memory transactions so the kernel cannot change the fabric
->topology, including bus numbers, since that would require disabling
->and flushing any memory transactions first.
->
->To keep bus numbers constant, always inherit the secondary and
->subordinate bus numbers assigned to bridges during scanning, instead of
->assigning new ones, if any PCI devices are being preserved. Note that
->the kernel inherits bus numbers even on bridges without any downstream
->endpoints that were preserved. This avoids accidentally assigning a
->bridge a new window that overlaps with a preserved device that is
->downstream of a different bridge.
->
->If a bridge is scanned with a broken topology or has no bus numbers
->set during a Live Update, refuse to assign it new bus numbers and refuse
->to enumerate devices below it until the Live Update is finished. This is
->a safety measure to prevent topology conflicts.
->
->Require that CONFIG_CARDBUS is not enabled to enable
->CONFIG_PCI_LIVEUPDATE since inheriting bus numbers on PCI-to-CardBus
->bridges requires additional work but is not a priority at the moment.
->
->Signed-off-by: David Matlack <dmatlack@google.com>
->---
-> .../admin-guide/kernel-parameters.txt         |  6 +-
-> drivers/pci/Kconfig                           |  2 +-
-> drivers/pci/liveupdate.c                      | 83 ++++++++++++++++++-
-> drivers/pci/liveupdate.h                      | 14 ++++
-> drivers/pci/probe.c                           | 17 +++-
-> include/linux/pci_liveupdate.h                |  4 +
-> 6 files changed, 119 insertions(+), 7 deletions(-)
->
+Commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for
+devicetree platforms") has broke booting of a Loongson 3B4000 + 7A1000
+server with an Intel 750 Series SSD.  We also found a Loongson 3A5000
+board using the same 7A1000 bridge chip exhibiting the same issue with
+pcie_aspm=force and pcie_aspm.policy=powersave (ASPM is not enabled by
+default on the 3A5000 board because it's based on ACPI and the _OSC
+method has not been implemented in its DSDT/SSDT yet).
 
-Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+This seems only affecting the 7A1000 chips shipping the revision 2 of
+the PCIe x8 Root Port: on other two boards with a (persumably older)
+LS7A1000 bridge chip utilizing the revision 1 of the root port, the
+issue does not reproduce.
+
+Cc: Mingcong Bai <jeffbai@aosc.io>
+Cc: Henry Chen <chenx97@aosc.io>
+Cc: Han Gao <gaohan@iscas.ac.cn>
+Cc: Jiaxun Yang <jiaxun.yang@flygoat.com>
+Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
+Signed-off-by: Xi Ruoyao <xry111@xry111.site>
+---
+
+Changes from v1: rename the quirk function into a style similar to other
+quirk functions in the same file.
+
+ drivers/pci/controller/pci-loongson.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+index a4250d7af1bf..235b44859b53 100644
+--- a/drivers/pci/controller/pci-loongson.c
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -212,6 +212,19 @@ static void loongson_pci_bridge_speed_quirk(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c19, loongson_pci_bridge_speed_quirk);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c29, loongson_pci_bridge_speed_quirk);
+ 
++/*
++ * Some devices, for example Intel 750 Series SSD, experiences data loss
++ * (read timeout) on LS7A1000 PCIe x8 Root Port when ASPM L0s is enabled.
++ * This seems only affecting the revision 2.
++ */
++static void loongson_port2_aspm_quirk(struct pci_dev *pdev)
++{
++	if (pdev->revision == 2)
++		pcie_aspm_remove_cap(pdev, PCI_EXP_LNKCAP_ASPM_L0S);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, DEV_LS7A_PCIE_PORT2,
++			 loongson_port2_aspm_quirk);
++
+ static struct loongson_pci *pci_bus_to_loongson_pci(struct pci_bus *bus)
+ {
+ 	struct pci_config_window *cfg;
+-- 
+2.54.0
+
