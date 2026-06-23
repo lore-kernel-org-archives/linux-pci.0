@@ -1,199 +1,171 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2CC930D3E7;
-	Tue, 23 Jun 2026 05:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9680C3502A5;
+	Tue, 23 Jun 2026 05:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782191822; cv=none; b=eG4uSgZjoOoXi2H1pIzW00L1t8Av0RRQIDKleTT2qFNkfM6ON/ikuGQA9Q91TGn4+R7c46UEZUVsjMxPMv+tDIGMcrx+7WG19txeK5gvgRCGNgUkFD0Pcye4oaJ8j31lJenvPRmkdkcB+/M97A7+t5JdSchn9QJ0ZU4DU0XUR8U=
+	t=1782191838; cv=none; b=NpZXZlu2jUpWK7zFtqgsySxtHUiHtQ2qjU6Oej7gu4HRVahrqnt5PCAnUEPjd9nAUvEy+7Cud9oleYPgjWBCkYlWiMJQa3H2qZndNx0IljjSLMgQ4zMoDg+5Yuln6YaoapOGhCbKztpHPgNIiFghJP6v1BYxM88h7LuiuZPubP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782191822; c=relaxed/simple;
-	bh=VSJHgz7AlV2O7MwHs7TAOYBe+vg7jFf2dXowGrzZSqE=;
+	s=arc-20240116; t=1782191838; c=relaxed/simple;
+	bh=Ro/LUK+6EbZYBBEylWfVTEvwyL/GDfKyJ3Y4m1CEYHQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=p8vvRWro1ld4DFrsfNR3dSPR6VRpLVTDQNRZKoV6ZwYaGAoogPwTpWiDAD91rry0tFQ2aph7PBPrt7buEqk/h6V99BF8LTqj68uWfkAhA7gY1yiyvHK70CwXgaEyo9XzaLd2LdoOVHdeU0zW2N/f7z5fjdmL9h59geodfkkHIo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZvG4mILn; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QZEebVoucj6Bjg5LGmV+5Q2+jqBy5E5Ye+JIQyyaTzueaJbejD0L7oEpNXl1AFZ/g49T1IUKRA/UVwEouGezOIhx2OMRVOqsq3XuOYU4BbWvvzN02OdyaJsweRgoEVJjw+efGsZCFAd5XKAmRs0y+GiFo6GYl1p0ZuxsYuW52cA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M6Lu/ald; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZvG4mILn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 758C81F000E9;
-	Tue, 23 Jun 2026 05:17:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M6Lu/ald"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F2AA1F000E9;
+	Tue, 23 Jun 2026 05:17:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782191821;
-	bh=bzpWUAfrSpc5ZX2rBv1o9ANEEnebg0r69BkwJUo0HKI=;
+	s=k20260515; t=1782191837;
+	bh=oqkiiNEUrxPS2FueZoMzDAI9wg4FpKTQ/SuQ1gTrA64=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZvG4mILnYuicuaw6IoS9lMKL9l/reVmoHUdWwnc1FvBiKb+/HsX80CGNFl+cqLJRZ
-	 0AGU6T+tf71LP3N0n7ET/xuLaB47IOdZ6ifgIvdF08ZZoJKRUQpF2F9WwrPu2oqeUM
-	 B81pGeYilms5VIaPjjvv7CID2QQzPytF/VVWxHXIXdhCowKW2k4E7TDCbbQz4Ogiu9
-	 eUK4mpLf71QVr1YM6+TTpzH7HIS1IMTdqsYzmiOirgt/GSbYEzE5lhlAGjc/imA339
-	 UM+06t7aDGKGJqUs0JLodBfVNr/vj4snB+yj1gEYjp1zAMmegtHXqpsi7+zPKw/Dmd
-	 obupcLJY4O4TA==
+	b=M6Lu/alds2R5PFPIMoh67EdL5NIzwJ5Cr/YMOBkfeYDTyki48AX8qT9JeP8ato6hw
+	 AZ6ETEFOgeyaNBN+UR1gzjRWrU8YSY7qkqTJL5g5k8rpe6ZGSmw4CT7frF4GdCyuui
+	 8Mkj+u5MmLx4tcSuW5MYz+Yv7/xkoLEIRflgSnhaGnoJVQkeIKGWUMZmJQkwbSE6iM
+	 qNqocjBeEwA6e8ifVivsEJOWEnbijyOS0M6GLpTb0jDetfZa7G8PEXKtmv23p7eclO
+	 Qm+DEydIvY69+YsOiKg0UXH+mERPTfCdc77yQN1JAQTLKgVR+eJShrRGxDBkcFRpg4
+	 DAHlwO5TDPzmw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 16/21] lib: rspdm: Support SPDM negotiate_algorithms
+Subject: Re: [PATCH v2 17/21] lib: rspdm: Support SPDM get_digests
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: linux-cxl@vger.kernel.org, ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623045406.2589547-17-alistair.francis@wdc.com>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260623045406.2589547-18-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-17-alistair.francis@wdc.com>
+ <20260623045406.2589547-18-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:17:00 +0000
-Message-Id: <20260623051701.758C81F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:17:16 +0000
+Message-Id: <20260623051717.1F2AA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Incorrect generic type inference in `KVec::from_raw_parts` and los=
-t capacity leads to Rust Undefined Behavior during descriptor destruction.
-- [High] The NEGOTIATE_ALGORITHMS handler rejects valid SPDM 1.0 responses =
-due to a hardcoded 36-byte size validation.
+
+New issues:
+- [High] Buffer allocation for `GetDigestsRsp` does not account for SPDM 1.=
+3 additional fields, causing legitimate responses to exceed the buffer size.
+- [High] The returned digest payload is ignored, failing to invalidate stal=
+e cached certificates if a device updates its certificate.
+
+Pre-existing issues:
+- [High] Rebuilding `KVec` from a raw pointer infers the wrong generic type=
+ parameter, causing the global allocator to deallocate a massively oversize=
+d layout.
 --
 
-commit 886ea37ebdf0a050ca99e3d1c7b0a5330292a00a
+commit 464cef22c054f846ef1b297c22ac00c94da2dd17
 Author: Alistair Francis <alistair@alistair23.me>
 
-lib: rspdm: Support SPDM negotiate_algorithms
+lib: rspdm: Support SPDM get_digests
 
-Support the NEGOTIATE_ALGORITHMS SPDM command.
+Support the GET_DIGESTS SPDM command.
 
 > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> index 5ef14c8ed2375..e4eb009a977c3 100644
+> index e4eb009a977c3..055f37289c8b5 100644
 > --- a/lib/rspdm/state.rs
 > +++ b/lib/rspdm/state.rs
-[ ... ]
-> @@ -72,9 +108,41 @@ pub(crate) struct SpdmState {
->      // Negotiated state
->      pub(crate) version: u8,
->      pub(crate) rsp_caps: u32,
-> +    pub(crate) base_asym_alg: u32,
-> +    pub(crate) base_hash_alg: u32,
-> +    pub(crate) meas_hash_alg: u32,
-> +
-> +    /* Signature algorithm */
-> +    base_asym_enc: &'a CStr,
-> +    sig_len: usize,
-> +
-> +    /* Hash algorithm */
-> +    base_hash_alg_name: &'a CStr,
-> +    pub(crate) shash: *mut bindings::crypto_shash,
-> +    pub(crate) desc: Option<&'a mut bindings::shash_desc>,
-> +    pub(crate) hash_len: usize,
->  }
+> @@ -608,4 +626,64 @@ pub(crate) fn negotiate_algs(&mut self) -> Result<()=
+, Error> {
 > =20
-> -impl SpdmState {
-> +impl Drop for SpdmState<'_> {
-> +    fn drop(&mut self) {
-> +        if let Some(desc) =3D self.desc.take() {
-> +            // SAFETY: `self.shash` is a valid handle
-> +            let desc_len =3D core::mem::size_of::<bindings::shash_desc>()
-> +                + unsafe { bindings::crypto_shash_descsize(self.shash) }=
- as usize;
+>          Ok(())
+>      }
 > +
-> +            // SAFETY: `desc` was allocated and converted to a raw point=
-er with
-> +            // into_raw_parts()
-> +            let desc_vec =3D unsafe { KVec::from_raw_parts(desc, desc_le=
-n, desc_len) };
+> +    pub(crate) fn get_digests(&mut self) -> Result<(), Error> {
+> +        let mut request =3D GetDigestsReq::default();
+> +        request.version =3D self.version;
+> +
+> +        let req_sz =3D core::mem::size_of::<GetDigestsReq>();
+> +        let rsp_sz =3D core::mem::size_of::<GetDigestsRsp>() + SPDM_SLOT=
+S * self.hash_len;
+> +
+> +        // SAFETY: `request` is repr(C) and packed, so we can convert it=
+ to a slice
+> +        let request_buf =3D unsafe { from_raw_parts_mut(&mut request as =
+*mut _ as *mut u8, req_sz) };
+> +
+> +        let mut response_vec: KVec<u8> =3D KVec::from_elem(0u8, rsp_sz, =
+GFP_KERNEL)?;
 
 [Severity: High]
-Does this code inadvertently cause Undefined Behavior by incorrectly inferr=
-ing
-the generic type of KVec?
+Does this correctly calculate the required buffer size for an SPDM 1.3
+responder?
 
-Since `desc` is of type `&mut bindings::shash_desc`, `KVec::from_raw_parts`
-infers the new vector as `KVec<bindings::shash_desc>`. Because `desc_len` is
-calculated in bytes, this tells the allocator to free `desc_len` elements
-of type `shash_desc` (which is 16 bytes) instead of `desc_len` bytes.
+If the responder negotiates SPDM 1.3+, the GET_DIGESTS response appends ext=
+ra
+fields (like KeyPairIDs, CertificateInfo, or KeyUsageMask) after the digest=
+s.
+Because rsp_sz strictly allocates only enough for the headers and the hash
+lengths, the transport may truncate the response or fail the bounds check
+when it returns a length larger than response_vec.len().
 
-Also, it looks like the original allocation capacity was discarded when
-`into_raw_parts()` was called in `update_response_algs()`, and here we are
-passing `desc_len` as the capacity, which violates `from_raw_parts` invaria=
-nts.
-
-> +            drop(desc_vec);
+> +
+> +        let len =3D self.spdm_exchange(request_buf, response_vec.as_mut_=
+slice())? as usize;
+> +
+> +        // The transport must report a length within the buffer we provi=
+ded.
+> +        if len > response_vec.len() {
+> +            pr_err!("Overflowed digests response\n");
+> +            return Err(EIO);
 > +        }
-> +
-> +        unsafe {
-> +            bindings::crypto_free_shash(self.shash);
-> +        }
-> +    }
-> +}
-> +
-[ ... ]
-> +    fn update_response_algs(&mut self) -> Result<(), Error> {
-[ ... ]
-> +        // This is freed in when `SpdmState` is dropped, but this call
-> +        // can happen multiple times.
-> +        if self.shash !=3D core::ptr::null_mut() {
-> +            if let Some(desc) =3D self.desc.take() {
-> +                // SAFETY: `self.shash` is a valid handle
-> +                let desc_len =3D core::mem::size_of::<bindings::shash_de=
-sc>()
-> +                    + unsafe { bindings::crypto_shash_descsize(self.shas=
-h) } as usize;
-> +
-> +                // SAFETY: `desc` was allocated and converted to a raw p=
-ointer with
-> +                // into_raw_parts()
-> +                let desc_vec =3D unsafe { KVec::from_raw_parts(desc, des=
-c_len, desc_len) };
 
-[Severity: High]
-Will the same Undefined Behavior happen here when replacing an existing hash
-algorithm context, since it also uses `desc` and `desc_len` to reconstruct =
-the
-`KVec`?
+[ ... ]
 
-> +                drop(desc_vec);
-> +            }
-> +
-> +            unsafe {
-> +                bindings::crypto_free_shash(self.shash);
-> +            }
-> +        }
-> +
-> +        self.shash =3D
-[ ... ]
-> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-> index 7b5aca5d50f89..c53828376fcaa 100644
-> --- a/lib/rspdm/validator.rs
-> +++ b/lib/rspdm/validator.rs
-[ ... ]
-> +impl Validate<Untrusted<&[u8]>> for &NegotiateAlgsRsp {
-> +    type Err =3D Error;
-> +
-> +    fn validate(unvalidated: &[u8]) -> Result<Self, Self::Err> {
-> +        if unvalidated.len() < mem::size_of::<NegotiateAlgsRsp>() {
-> +            return Err(EINVAL);
+> +        let mut deprovisioned_slots =3D self.provisioned_slots & !respon=
+se.param2;
+> +        while (deprovisioned_slots.trailing_zeros() as usize) < SPDM_SLO=
+TS {
+> +            let slot =3D deprovisioned_slots.trailing_zeros() as usize;
+> +            self.certs[slot].clear();
+> +            deprovisioned_slots &=3D !(1 << slot);
 > +        }
 
 [Severity: High]
-Could this hardcoded length check reject valid SPDM 1.0 responses?
+Does this logic correctly invalidate stale cached certificates if a device
+updates its certificate in an existing provisioned slot?
 
-`SpdmState` allows negotiating SPDM version 1.0, and the SPDM 1.0.0
-specification states that the NEGOTIATE_ALGORITHMS response base header is
-exactly 32 bytes long.
+While this clears completely deprovisioned slots, it appears to ignore the
+returned digest payload itself. If the responder rotated its certificate in
+an existing slot, the digest would change. By not comparing the returned
+digests against the cached certificates and clearing mismatches, later
+validation of CHALLENGE_AUTH could fail cryptographically because it
+verifies against the stale cached certificate.
 
-Because `mem::size_of::<NegotiateAlgsRsp>()` is 36 bytes (including fields
-introduced in SPDM 1.1), when communicating with an SPDM 1.0 responder
-that returns 32 bytes, this will fail with EINVAL and break negotiation.
+[ ... ]
 
-> +
-> +        let ptr =3D unvalidated.as_ptr();
-> +        // CAST: `NegotiateAlgsRsp` only contains integers and has `repr=
-(C)`.
-> +        let ptr =3D ptr.cast::<NegotiateAlgsRsp>();
-> +        // SAFETY: `ptr` came from a reference and the cast above is val=
-id.
-> +        let rsp: &NegotiateAlgsRsp =3D unsafe { &*ptr };
-> +
-> +        Ok(rsp)
-> +    }
-> +}
+>             let desc_len =3D core::mem::size_of::<bindings::shash_desc>()
+>                 + unsafe { bindings::crypto_shash_descsize(self.shash) } =
+as usize;
+>=20
+>             // SAFETY: `desc` was allocated and converted to a raw pointe=
+r with
+>             // into_raw_parts()
+>             let desc_vec =3D unsafe { KVec::from_raw_parts(desc, desc_len=
+, desc_len) };
+>             drop(desc_vec);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but can this type inference
+deallocate a massively oversized layout?
+
+When rebuilding KVec from the raw pointer desc in SpdmState::drop() and
+update_response_algs(), the generic type T is implicitly inferred as
+bindings::shash_desc instead of u8.
+
+Since desc_len represents the original allocation length in bytes, the
+reconstructed KVec<bindings::shash_desc> incorrectly assumes it owns desc_l=
+en
+elements of type bindings::shash_desc. When this vector is dropped, it
+passes a layout to the global allocator with an extremely large size of
+(desc_len * size_of::<bindings::shash_desc>()) bytes instead of desc_len
+bytes.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D16
+547-1-alistair.francis@wdc.com?part=3D17
