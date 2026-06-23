@@ -1,52 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F93F306746;
-	Tue, 23 Jun 2026 06:04:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193FB361DC0
+	for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 06:14:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782194695; cv=none; b=FBb0yvkEJQJvIDIYfY5h7Yi77IDs8C79cRskG9rHGGiRqn3rxfFqssDuh1pFN/YsLRC6GKvloUPj6ttpvrlrXhmuDlZ2m1ARv4m/XNlpTKhL/GMqB/JiwwLj/BZQ7uX3uzg1sPtTyhcn5czKpgJAy+1lNoAiGh/IJ0VncmuuXa4=
+	t=1782195264; cv=none; b=LF/ALh24SRTpWc+m767OgmDDhMW10QgZ+A9ChD95PmsSIG2E8x61a/qIpXRkACoGqG0/taFiBCinHRuZuxUe2h9pU5zr4OnOr66rY38JlpdFOLJ0Ner6MA9kWCtBMKYzBtGdJAUNXSRDhneVXmf154CpoBdE6TFSe52bJ3wkfz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782194695; c=relaxed/simple;
-	bh=fGs6zTIutUW0qECkrDbevTMOjjIx02kPZ3JtVZXIzBo=;
+	s=arc-20240116; t=1782195264; c=relaxed/simple;
+	bh=wlQPeQz6wCi+Pcms+/IqO2zVYPeISRidUTsTAyLHZLw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e6bGRkgzsj2yWSKDZh9regE0oZj/KqVbFJy+chfz+8TLn7M4WNqbfdD5xV+3YJNcM7evxf8FFqIuiA5E5nPTEYUzGvKMbLshHbkgkbuv8vNx3DE4KPp4jngrW8m0dL6Qg4ONueg6cimBze9VA0zywXHWNFNYQIlGzEOvSdud8KA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aUnsruAv; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=C8gq657dC5+oXD6n7Yx7fdM2IpBkUeN2jnWNpSo06teEE17TdlQ59v9HFIpoUQwlkFKS4ulMF1UQOg3S/RWbd6m0pzUbaoGswySA/xsGOdUOMfLl5bnUFiQPzXu6oEJ1+2N4sTgs/NrOJ1d9j/yIt7U7JbcMkdQ365NYq8pPPI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZMZaV2op; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aUnsruAv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CC5C1F000E9;
-	Tue, 23 Jun 2026 06:04:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZMZaV2op"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4501A1F00A3A;
+	Tue, 23 Jun 2026 06:14:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782194694;
-	bh=7P6aWzyQ8qict/dJu3CzxuJcqtMPA0MghThn8dibXEQ=;
+	s=k20260515; t=1782195262;
+	bh=mWRsgfWmLSjEB+2JBdfZY9yKnZOPTGD/oaFBsEQVkAo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=aUnsruAvyoLMArbh/g4mBxzC0FmEOROTkWum6xPDMW4bEqPiEargO13uDS9XyBMiE
-	 QyOFqwK0Xk5aqDvdXzYSFMY4NxMoWqqO+a9CIqwxyeRE0bwcT1zrY1r8UQHtYdg+nW
-	 NrbCMsDLtk1HqmXx8UDAlk7d+dA+hIu2cbNt2X7Rq63oRpO8oieDvg/qU9zlnGc/i3
-	 3wWug6E8m/aHNeef9+H+dWrv7bM1bMCYjF/U1DXFboEAVshR/nD+Mln+dt9/BC8ia3
-	 snAMZAOFStso0+W8K2y+F0LxdWZZROH7cjHw9hM2WaO9vHhXfZQy5FIkuOnXXTGYXE
-	 kqwWrIxMgVfXQ==
-Date: Tue, 23 Jun 2026 08:04:42 +0200
+	b=ZMZaV2opXyCNHV5ArWRlReoFY+C40EA/oRB0gu1ay2x2jKtkCpacceilMOmmp6qck
+	 dOgQzNojnMORPoL1m+5JGfnFgKpl+H7C23aIjfxmY1qfG2qk4PFcvr3gatxPvMbtj3
+	 PFHPSFyVmS5NThaRI+LNEbKrT2GBjcYR+X2OOrmwWW3eH/+GdK5q2NihNS8G361jht
+	 ylXGtYwVozOiR12o9o/o1NWWKQpVhe7MznurTaUR0LXluUrB5KjYvWir3rCUU0THqL
+	 Y0cWRLALZ2vEuCAKfN4XbaZeO9c6kGx9OF5mrSKiJ7YXKThvWXY1UEwyjvBHxUZLkS
+	 ke3Wq+mYCGJSw==
+Date: Tue, 23 Jun 2026 08:14:16 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Biju Das <biju.das.jz@bp.renesas.com>, Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: Re: [PATCH v4 2/4] PCI: rzg3s-host: Use shared reset controls for
- power domain resets
-Message-ID: <txpkke2xogecipyetascqajgaxamd3ualcuhsibxf75llzcym5@xgcn7efcbmp4>
-References: <20260602195019.1798126-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260602195019.1798126-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <50a908557bb3ce5f14b67396d1e73e70289a583a.camel@pengutronix.de>
- <CA+V-a8uGho2RMhreDgieOOZTggUALoF0bGyjdEEDvyL_75sAyw@mail.gmail.com>
- <fuefvecgjdqbnbvpvam4gmewmpmhofllyq2ootwi6cjqhnyoys@edjzqlh6fjw4>
- <CA+V-a8sRxoR96TRM2V3cFXS5NPiQUVrUJCWwkh7o10cGYPU9_w@mail.gmail.com>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: allocate ports with pcie struct
+Message-ID: <zsb4uvf2trzdfybopnyiyrblmtva3imdtgegchvbcs6hpryymk@555qd6k2xmjk>
+References: <20260411043051.174309-1-rosenp@gmail.com>
+ <7sibn6mlvuozzjuggu773w2eqjyb7dz34gkdrx7tzxyjbygfpx@hiqzen36nknm>
+ <CAKxU2N_WpHOLPyN6AfnK0CyoU1dkBsGivRvVZt1fnKMSpc3aVA@mail.gmail.com>
+ <qb6nxxkowjgrsscddbmorh2z27uwwtceohokjtathytzdvqe75@apahvpqwrht2>
+ <CAKxU2N8ZNhCSsCuDDuef=XSUq5qShpa4WqAEE82Ugj5FFt6ung@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,92 +46,114 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+V-a8sRxoR96TRM2V3cFXS5NPiQUVrUJCWwkh7o10cGYPU9_w@mail.gmail.com>
+In-Reply-To: <CAKxU2N8ZNhCSsCuDDuef=XSUq5qShpa4WqAEE82Ugj5FFt6ung@mail.gmail.com>
 
-On Mon, Jun 22, 2026 at 03:53:57PM +0100, Lad, Prabhakar wrote:
-> Hi Manivannan,
-> 
-> On Mon, Jun 22, 2026 at 3:30 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+On Sat, Jun 20, 2026 at 10:30:06PM -0700, Rosen Penev wrote:
+> On Wed, May 13, 2026 at 10:27 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
 > >
-> > On Fri, Jun 05, 2026 at 12:54:46PM +0100, Lad, Prabhakar wrote:
-> > > Hi Philipp,
-> > >
-> > > Thank you for the review.
-> > >
-> > > On Wed, Jun 3, 2026 at 9:16 AM Philipp Zabel <p.zabel@pengutronix.de> wrote:
+> > On Tue, May 12, 2026 at 01:38:52PM -0700, Rosen Penev wrote:
+> > > On Tue, May 12, 2026 at 4:29 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
 > > > >
-> > > > On Di, 2026-06-02 at 20:50 +0100, Prabhakar wrote:
-> > > > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > > > On Fri, Apr 10, 2026 at 09:30:51PM -0700, Rosen Penev wrote:
+> > > > > Use a flexible array member to combine allocations and simplify
+> > > > > slightly.
 > > > > >
-> > > > > Switch to shared reset controls for PCIe power resets to prepare for
-> > > > > RZ/V2H(P) support. On this platform, multiple PCIe controllers share
-> > > > > the same reset line, requiring shared ownership of the reset control.
+> > > > > Add __counted_by for extra runtime analysis.
 > > > > >
-> > > > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > > > > Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> > > > > Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> > > > > Needed to move mvebu_pcie struct below others as flexible array members
+> > > > > require full definitions.
+> > > > >
+> > > > > Signed-off-by: Rosen Penev <rosenp@gmail.com>
 > > > > > ---
-> > > > > v3->v4:
-> > > > > - Added RB/TB tags.
+> > > > >  drivers/pci/controller/pci-mvebu.c | 33 ++++++++++++------------------
+> > > > >  1 file changed, 13 insertions(+), 20 deletions(-)
 > > > > >
-> > > > > v2->v3:
-> > > > > - No change.
+> > > > > diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> > > > > index a72aa57591c0..dea50f6e88be 100644
+> > > > > --- a/drivers/pci/controller/pci-mvebu.c
+> > > > > +++ b/drivers/pci/controller/pci-mvebu.c
+> > > > > @@ -78,18 +78,6 @@
+> > > > >  #define PCIE_DEBUG_CTRL         0x1a60
+> > > > >  #define  PCIE_DEBUG_SOFT_RESET               BIT(20)
 > > > > >
-> > > > > v1->v2:
-> > > > > - Updated commit message.
-> > > > > ---
-> > > > >  drivers/pci/controller/pcie-rzg3s-host.c | 6 +++---
-> > > > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > > > > -struct mvebu_pcie_port;
+> > > > > -
+> > > > > -/* Structure representing all PCIe interfaces */
+> > > > > -struct mvebu_pcie {
+> > > > > -     struct platform_device *pdev;
+> > > > > -     struct mvebu_pcie_port *ports;
+> > > > > -     struct resource io;
+> > > > > -     struct resource realio;
+> > > > > -     struct resource mem;
+> > > > > -     int nports;
+> > > > > -};
+> > > > > -
+> > > > >  struct mvebu_pcie_window {
+> > > > >       phys_addr_t base;
+> > > > >       phys_addr_t remap;
+> > > > > @@ -125,6 +113,16 @@ struct mvebu_pcie_port {
+> > > > >       int intx_irq;
+> > > > >  };
 > > > > >
-> > > > > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > > index d86e7516dcc2..a5192e4b58df 100644
-> > > > > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > > > > @@ -1276,9 +1276,9 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
-> > > > >       for (i = 0; i < data->num_cfg_resets; i++)
-> > > > >               host->cfg_resets[i].id = data->cfg_resets[i];
+> > > > > +/* Structure representing all PCIe interfaces */
+> > > > > +struct mvebu_pcie {
+> > > > > +     struct platform_device *pdev;
+> > > > > +     struct resource io;
+> > > > > +     struct resource realio;
+> > > > > +     struct resource mem;
+> > > > > +     int nports;
+> > > > > +     struct mvebu_pcie_port ports[] __counted_by(nports);
+> > > > > +};
+> > > > > +
+> > > > >  static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
+> > > > >  {
+> > > > >       writel(val, port->base + reg);
+> > > > > @@ -1455,11 +1453,13 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > > > >       struct device_node *child;
+> > > > >       int num, i, ret;
 > > > > >
-> > > > > -     ret = devm_reset_control_bulk_get_exclusive(host->dev,
-> > > > > -                                                 data->num_power_resets,
-> > > > > -                                                 host->power_resets);
-> > > > > +     ret = devm_reset_control_bulk_get_shared(host->dev,
-> > > > > +                                              data->num_power_resets,
-> > > > > +                                              host->power_resets);
+> > > > > -     bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct mvebu_pcie));
+> > > > > +     num = of_get_available_child_count(np);
+> > > > > +     bridge = devm_pci_alloc_host_bridge(dev, struct_size(pcie, ports, num));
+> > > > >       if (!bridge)
+> > > > >               return -ENOMEM;
+> > > > >
+> > > > >       pcie = pci_host_bridge_priv(bridge);
+> > > > > +     pcie->nports = num;
+> > > > >       pcie->pdev = pdev;
+> > > > >       platform_set_drvdata(pdev, pcie);
+> > > > >
+> > > > > @@ -1467,12 +1467,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
 > > > > >       if (ret)
 > > > > >               return ret;
 > > > > >
+> > > > > -     num = of_get_available_child_count(np);
+> > > > > -
+> > > > > -     pcie->ports = devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_KERNEL);
+> > > > > -     if (!pcie->ports)
+> > > > > -             return -ENOMEM;
+> > > > > -
+> > > > >       i = 0;
+> > > > >       for_each_available_child_of_node(np, child) {
+> > > > >               struct mvebu_pcie_port *port = &pcie->ports[i];
+> > > > > @@ -1488,7 +1482,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > > > >               port->dn = child;
+> > > > >               i++;
+> > > > >       }
+> > > > > -     pcie->nports = i;
 > > > >
-> > > > I have a few questions about this.
-> > > >
-> > > > Can you move rzg3s_pcie_resets_prepare_and_get() and
-> > > > rzg3s_pcie_power_resets_deassert() up before setting
-> > > > RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B in
-> > > > rzg3s_pcie_probe() without ill effect?
-> > > >
-> > > > Can you move rzg3s_pcie_power_resets_deassert() up before setting
-> > > > RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B
-> > > > rzg3s_pcie_resume_noirq()?
-> > > >
-> > > > Those would have the same effect as the reset already being deasserted
-> > > > by the other controller.
-> > > >
-> > > Yes to both. I have reordered the sequences as suggested, and it works
-> > > perfectly without any ill effects.
-> > >
+> > > > So now, nports stays with of_get_available_child_count()?
+> > > yes.
 > >
-> > Are you going to respin the patches incorporating the review comments?
-> >
-> If I have not mistaken, no code changes were requested; it was just
-> that Philipp wanted to ensure the shared reset worked correctly after
-> shuffling the code around.
-> 
+> > But do you really want to configure disabled ports as well? I wouldn't want to
+> > do that.
+> Wait this calls of_get_available_child_count and
+> for_each_available_child_of_node. disabled nodes are not handled.
 
-Ah, I was mistaken.
-
-> I can respin the series if it fails to apply on top of pci/next.
-> 
-
-Sure. Please respin once v7.2-rc1 is released.
+What I meant was, previously when mvebu_pcie_parse_port() returned 0, that port
+was skipped from further configurations. But with this logic of reusing
+of_get_available_child_count(), that will no longer happen and the driver will
+attempt to configure any failed ports as well.
 
 - Mani
 
