@@ -1,114 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082F830D3E7;
-	Tue, 23 Jun 2026 05:05:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9D554774;
+	Tue, 23 Jun 2026 05:07:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782191110; cv=none; b=RoMpULFT2rKke2JwzcdhaNgFmh17lVw3JjJIj/xVTVSyB8SChZf9y5hv3y2s40lqvm1u4IpZOqjDjMkHxkeIbbfxfH4iYSK9k7N2vvYnV1Oqy2SNPhI+HnUzG6akLdZ2eDLy9859iVBJyM+BSwbBeIR9cytxDevL1Oy55TFjVnM=
+	t=1782191232; cv=none; b=uoajWpC2I6t/p77v0DccvhM16O8eKICUhSCpd+cFt1NlNJjUqHfqM2UtWVeU6qrfI9uZmciexcR8XClYAQtJ9WFvxPguRN/v+YzrAsENogfgOP7vG2QM2jyItH8laqvXUVlRNYElyEeZ4ReojJLevEQMp5g8MYMUc5giJsKJBDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782191110; c=relaxed/simple;
-	bh=OufA8jzHnOCPb9fO2I2S1GCsPhmCyYAnRmzDQl/uwXo=;
+	s=arc-20240116; t=1782191232; c=relaxed/simple;
+	bh=UwikfVfl5imMCyH4u2bEmSaLfA5ZBu4Qb475A0GHcHU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WQecrUa03cX5zu5mc5MW/qIXety3fm00LA3sCPM3ZU92LzuI1RG4eOcTCWwi2xxBsAvig38+aYPDtr5Dn+b3hbRlSxoX+nWCYjLvQTr4MOUSTiMUi6ZQS2wAhe1XgGm2YhIoqT2IKz/73ezZqWk9esCxyZK447jI1FIBWPuIkLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OpM97JN/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=V/syMimhQaT2guC6O+tcwRR1ySxK/plVOYhzpFovkg61FUuWwfV/bDNrBqjHkBeEEJEb6YCQJXSrlK8QrAK9bHPZBzY84R+qtyZ8r/seAyM5loWmADUz9hgDlsGAsqlTRuRc1/5jBUsI8R87tkd3/v9G6xW6HB8mO1761cCuQls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TQ/XfAi0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OpM97JN/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A4091F000E9;
-	Tue, 23 Jun 2026 05:05:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TQ/XfAi0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 388941F000E9;
+	Tue, 23 Jun 2026 05:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782191108;
-	bh=v3WYKj8FKJMT9A5x7/RRJ7XeD1TET3RCnqYv9+mhCYs=;
+	s=k20260515; t=1782191231;
+	bh=q1Rio9ArUGtf6G2Aqg9L5GbzOwYhUPGr7LSlhMoBktc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OpM97JN//xVFmzxolz6KtzMwxdIveQ4tYeQtYWvDwXGoHYbVqHrWKqsUAWv/puJ5a
-	 EFUrkmXAeVupboRKz6+er/V/cZItnCA3sl+YGc8ZAdLsRE6qMEDwBmLbrQyB6SuNgt
-	 LqmyUjF4IIJHlkKdb6K2d3CH5zlZCfKlWdMcudfHHVsXORqLpYEicvroqsQvjkA6rJ
-	 3Jwh4hv8G37vUvFzeQxjx8BclhDy27Kz/IiK7lUAwLIizPaSSOmYgK4YAks2DyNs5T
-	 1DshtKkEtEsJZr/QAjJGG0BMAod8V1tHYV2qyrcC4+WbSJ7o4gLtRtIskos54EorHe
-	 uCYp0702WUlCA==
+	b=TQ/XfAi0tiVNa8xfmM0e8CttpEjMlW7rskOXMrc/Lzzubf4MxG7LRYjnIa+GO2XTH
+	 pjXTw4JjTPnPaKSD3RihqNL5oPsxzrSE/c1+KftHDwiL92FbYsd1//aEn5n8rnZNB3
+	 DN1xp03tCNhqTmroYgY79B/eZWvc3X+Tuhnj4W/aIi76hJqVznEKJimJ67y5h55fpi
+	 YEE3SU4ppObX6zIWHXaaAyEfLn1QB0ldA2mhAxgnQFH3TZwqelwwDC3nWRFXhoUccp
+	 Lm4TZWQcbbBrvjb4oBtI0iZtOJajjyBKSRaYV6KSrBLGAKsDdrXArL+3eNa0Vg7RlI
+	 5StNd4I+slXBA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 01/21] rust: transmute: add `cast_slice[_mut]`
- functions
+Subject: Re: [PATCH v2 05/21] X.509: Parse Subject Alternative Name in
+ certificates
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260623045406.2589547-2-alistair.francis@wdc.com>
+In-Reply-To: <20260623045406.2589547-6-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-2-alistair.francis@wdc.com>
+ <20260623045406.2589547-6-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:05:07 +0000
-Message-Id: <20260623050508.5A4091F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:07:10 +0000
+Message-Id: <20260623050711.388941F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The `# Safety` sections for `cast_slice` and `cast_slice_mut` are =
-incomplete and unsound, omitting requirements for validity invariants, inte=
-rior mutability, and mutable write-back.
-- [Low] Missing `#[inline]` attribute on the `cast_slice` and `cast_slice_m=
-ut` abstraction functions.
+
+Pre-existing issues:
+- [High] The X.509 parser completely ignores the `critical` flag on certifi=
+cate extensions, allowing certificates with unrecognized critical constrain=
+ts to be successfully validated.
 --
 
-commit 81ab9367137984ee8a82555d066400739962f02f
-Author: Benno Lossin <lossin@kernel.org>
+commit b12732c2d7a7dc077f0c1d3f0be7c0a415bae376
+Author: Lukas Wunner <lukas@wunner.de>
 
-rust: transmute: add cast_slice[_mut] functions
+X.509: Parse Subject Alternative Name in certificates
 
-Add functions to make casting slices only one unsafe block.
+This commit adds support for parsing the Subject Alternative Name (SAN)
+extension in X.509 certificates. It stores a pointer to the SAN for later
+consumption by CMA-SPDM for PCI device authentication.
 
-Message-ID: <20250814124424.516191-2-lossin@kernel.org>
-
-> diff --git a/rust/kernel/transmute.rs b/rust/kernel/transmute.rs
-> --- a/rust/kernel/transmute.rs
-> +++ b/rust/kernel/transmute.rs
-[ ... ]
-> +/// # Safety
-> +///
-> +/// - `T` and `U` must have the same layout.
-> +pub unsafe fn cast_slice<T, U>(slice: &[T]) -> &[U] {
-
-[Severity: High]
-Are the safety requirements here complete? It seems we also need to ensure
-that any bit pattern valid for T is also valid for U, and that the cast
-doesn't introduce interior mutability.
-
-[Severity: Low]
-This isn't a bug, but should this have an #[inline] attribute since it is a
-small forwarding function in an abstraction crate?
-
-> +    // CAST: by the safety requirements, `T` and `U` have the same layou=
-t.
-> +    let ptr =3D slice.as_ptr().cast::<U>();
-> +    // SAFETY: `ptr` and `len` come from the same slice reference.
-> +    unsafe { slice::from_raw_parts(ptr, slice.len()) }
-> +}
-[ ... ]
-> +/// # Safety
-> +///
-> +/// - `T` and `U` must have the same layout.
-> +pub unsafe fn cast_slice_mut<T, U>(slice: &mut [T]) -> &mut [U] {
+> diff --git a/crypto/asymmetric_keys/x509_cert_parser.c b/crypto/asymmetri=
+c_keys/x509_cert_parser.c
+> index bfd10f0195e01..c3ec2846695a5 100644
+> --- a/crypto/asymmetric_keys/x509_cert_parser.c
+> +++ b/crypto/asymmetric_keys/x509_cert_parser.c
+> @@ -596,6 +596,15 @@ int x509_process_extension(void *context, size_t hdr=
+len,
+>  		return 0;
+>  	}
+> =20
+> +	if (ctx->last_oid =3D=3D OID_subjectAltName) {
+> +		if (ctx->cert->raw_san)
+> +			return -EBADMSG;
+> +
+> +		ctx->cert->raw_san =3D v;
+> +		ctx->cert->raw_san_size =3D vlen;
+> +		return 0;
+> +	}
+> +
+>  	if (ctx->last_oid =3D=3D OID_keyUsage) {
 
 [Severity: High]
-Are the safety preconditions here sufficient to prevent undefined behavior?
-In addition to layout equivalence, any value of U written to the slice must
-also be a valid T, and the cast shouldn't introduce interior mutability.
+This is a pre-existing issue, but while looking at how we process X.509
+extensions here, does the parser ignore the critical flag on extensions?
 
-[Severity: Low]
-This isn't a bug, but should this also be marked with #[inline] according to
-the Rust subsystem coding guidelines for abstraction functions?
+Looking at the ASN.1 definition in crypto/asymmetric_keys/x509.asn1:
 
-> +    // CAST: by the safety requirements, `T` and `U` have the same layou=
-t.
-> +    let ptr =3D slice.as_mut_ptr().cast::<U>();
-> +    // SAFETY: `ptr` and `len` come from the same slice reference.
-> +    unsafe { slice::from_raw_parts_mut(ptr, slice.len()) }
-> +}
+Extension ::=3D SEQUENCE {
+    extnId      OBJECT IDENTIFIER ({ x509_note_OID }),
+    critical    BOOLEAN DEFAULT,
+    extnValue   OCTET STRING ({ x509_process_extension })
+}
+
+Because there is no action attached to the critical BOOLEAN field, its
+value seems to be discarded during parsing.
+
+At the end of x509_process_extension(), unrecognized extensions are
+unconditionally ignored:
+
+crypto/asymmetric_keys/x509_cert_parser.c:x509_process_extension() {
+    ...
+    if (ctx->last_oid =3D=3D OID_basicConstraints) {
+        ...
+        return 0;
+    }
+   =20
+    return 0;
+}
+
+Since X.509 certificates are supplied by potentially untrusted sources
+(like during SPDM authentication), could an attacker bypass required
+certificate constraints by presenting unrecognized extensions marked with
+the critical flag that get silently ignored and treated as a success (0)?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D1
+547-1-alistair.francis@wdc.com?part=3D5
