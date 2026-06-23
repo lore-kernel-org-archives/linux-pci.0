@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C5854774;
-	Tue, 23 Jun 2026 05:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C64754774;
+	Tue, 23 Jun 2026 05:13:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782191541; cv=none; b=XX2AiXP1iSZgkZIHMwSHvtKTNQ1m9ZU4WdXphZoZZeXPbZWUywhenoy49D6nRgWfIw+xapGuVJ+EVsG5zDTs2wEjZXB0PlOHAoIceXg5X8gAZd/Y/R2ONipWF3LKiL2gr119/irjT8X5zhsBvLAgAI5zXhTiQerB61LxYJ6/rCw=
+	t=1782191634; cv=none; b=FnaRhOCIwXgW8m9ySx2CZ3uIGYaCIVP3rq1SrNh+U91m7E9TOLiLDY4SCM5Rf5TIK027aNKCU0Qx0oYDWaBeQeJJ83ZoQFCSulBhZBN66Li16K/pB4JwHcCsWY3svZGf2um7AWHjfrd5FP2uG+LMEoFnTnxbTjkafTrqWI2DnTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782191541; c=relaxed/simple;
-	bh=XceX93PmUwKcYbDgQZQF7dhvJ4sHlu7Fgh4Nii0uaHU=;
+	s=arc-20240116; t=1782191634; c=relaxed/simple;
+	bh=8NfuWiA6L9i2iUUzuYSFb6zvI8FHDFVhrNrfKlIQT8E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ef3UZr0M5Zxm1QaHz6L4ZSNCCCw8SfYrpeCPVeAlG3+XzrQDxii5Lzzs9gbfVu3rES4/Lhs4HcuQld8myeVZrUqSFa8zekLx+4iATUIC+ctq/kubwvO4JOEf9woYr0GrQXSnYfWVALG34EHKqI7IUHoQCV9KnZ+LOELb7R8wQVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XwK5lNXe; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BhJxkNj/tzn8pOaVrIlHJlhRs6GnKzgzfMdTKm6n7eoUbCzLxVVQAPOYm3NGvD+m8aldoO6uH8Hg/+28AXK2Zo/mdPWk48iTZ6375EXD9gk4vYu2/ikgqJKRfrKRH8nIu2QTXSKVQN7KVSvE5Qwl/mhK72z2kmANGqRl2vS12uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AFZCF4M2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XwK5lNXe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66C921F000E9;
-	Tue, 23 Jun 2026 05:12:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AFZCF4M2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E33051F000E9;
+	Tue, 23 Jun 2026 05:13:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782191540;
-	bh=QkKKkt3aKtGx7fvOWdvdbD68eQnN4RWR5RPwAZljTDQ=;
+	s=k20260515; t=1782191633;
+	bh=q1ZjqTq47xg/OND37Aoj/m5PbgNtKKQ7wZsgwUrwYNg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XwK5lNXe+UilfB3ir0LpLQ8G0ym6VPXPWT9tScnVoWORZ7g0uMvMErjxAyAxs87Qh
-	 EoxSAZPkZ2PCcmgphiOzAVW8P3JJgWHcbTaFOFF1Q/1XFDghtn+zZGLwz+Khvp5MuD
-	 sleqGWEGIoR9irVCQQTCRGWGK2kF/bgYObbTMugJseMnNXnyHOmQADJOKBmqVtf5g1
-	 0IC45mGAJSbgvTs5wMDbMc7/PGfbc8WiKRtFk9t1RpQE8t4UJyGA+tORA6LVY+4DNi
-	 IkZuXEgmv0vVm9oySedixuruz9e5L+uV/zUbhQUDicRokkqJc9SudIOfScZNSPK8mM
-	 kULhhjnj6xF5A==
+	b=AFZCF4M2GEjSQfnCsU2HbpUGIN5jYzcSGqY/wktVhyVDcTje55RnPtwL5bf75YGWB
+	 5csa3d9+oS7Wvny9UuWqU2hewiULeBoPdOiwAtRMC2PB3k3BFH4dJ2ADX+oSar/r79
+	 oZQxsflZt0jLEtLOdFZDK2JlQOmpjTilzY7yZekQ5/ZTjoIBwEd1XtWiiaoNFA/tTW
+	 +JoyH9tBAxMO1GCpV98zl4ly9DNtAmzgHQj811zA+Ir/u+2AmYHI1lsmlgPcYuNVP7
+	 F30NCfDK6SZppti0dvDqEqNWamJmHuykUQ2uE/VtrlCvFzdDt+Aux2USEJZD+ORdkg
+	 4iSWCuPg8yUBg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 10/21] PCI/TSM: Rename pf0 to host
+Subject: Re: [PATCH v2 20/21] rust: allow extracting the buffer from a
+ CString
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260623045406.2589547-11-alistair.francis@wdc.com>
+In-Reply-To: <20260623045406.2589547-21-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-11-alistair.francis@wdc.com>
+ <20260623045406.2589547-21-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:12:20 +0000
-Message-Id: <20260623051220.66C921F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:13:52 +0000
+Message-Id: <20260623051352.E33051F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,83 +47,58 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Use-After-Free and freed mutex unlock in `__pci_tsm_disconnect()` =
-for hosts on PF > 0.
-- [High] Disconnecting any TSM host blindly destroys independent TSM contex=
-ts of sibling functions in the same PCI slot.
+- [Medium] The `into_vec` method diverges from Rust's standard library `CSt=
+ring` naming conventions, obscuring the presence of the NUL terminator and =
+creating a dangerous API trap.
+- [Low] Typo in the commit message: 'aroud' instead of 'around'.
 --
 
-commit 8bf82a17d0ecf2259067413b6fb0b2c2e2bef4d9
-Author: Alistair Francis <alistair.francis@wdc.com>
+commit a1ef2ecd44b6df9c9b3d012bdcb8952ab17a0f53
+Author: Alistair Francis <alistair@alistair23.me>
 
-PCI/TSM: Rename pf0 to host
+rust: allow extracting the buffer from a CString
 
-Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and function
-names from pf0 to host) as part of converting pci_tsm_host
-to be any device that knows how to speak any of CMA, IDE, or
-TDISP.
+This patch introduces a method to consume a CString and return its
+underlying KVec buffer. It allows users to create a CString and then
+extract the internal byte vector for further use.
 
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
+> The kernel CString is a wrapper aroud a KVec. This patch allows
 
-[ ... ]
+[Severity: Low]
+This isn't a bug, but there is a typo in the commit message: "aroud"
+should be "around".
 
-> @@ -441,19 +441,19 @@ static void __pci_tsm_disconnect(struct pci_dev *pd=
-ev)
->  	/*
->  	 * disconnect() is uninterruptible as it may be called for device
->  	 * teardown
->  	 */
-> -	guard(mutex)(&tsm_pf0->lock);
-> +	guard(mutex)(&tsm_host->lock);
->  	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
+> diff --git a/rust/kernel/str.rs b/rust/kernel/str.rs
+> --- a/rust/kernel/str.rs
+> +++ b/rust/kernel/str.rs
+> @@ -870,6 +870,12 @@ pub fn try_from_fmt(args: fmt::Arguments<'_>) -> Res=
+ult<Self, Error> {
+>          // exist in the buffer.
+>          Ok(Self { buf })
+>      }
+> +
+> +    /// Return the internal buffer while consuming the original [`CStrin=
+g`]
+> +    #[inline]
+> +    pub fn into_vec(self) -> KVec<u8> {
+> +        self.buf
+> +    }
 
-[Severity: High]
-Can this lead to a use-after-free and memory corruption when a TSM host
-is on a Physical Function > 0?
+[Severity: Medium]
+Does this naming diverge from standard Rust library conventions and obscure
+the presence of the NUL terminator?
 
-When disconnecting a host on PF > 0 (such as a CMA host on PF 1),
-pci_tsm_walk_fns_reverse() iterates over the slot. The walker skips
-the callback only for i =3D=3D 0. When i > 0, it applies the teardown to the
-function itself:
+In the standard library, extracting the underlying buffer from a CString
+typically strips the NUL byte with a method like into_bytes(), while the
+method that keeps it is explicitly named into_bytes_with_nul().=20
 
-drivers/pci/tsm.c:pci_tsm_walk_fns_reverse() {
-    ...
-    /* on exit, caller will run @cb on function 0 */
-    if (i > 0)
-        cb(pf, data);
-}
+Calling this into_vec() might mislead callers into assuming the NUL byte is
+already stripped, which could cause developers to unintentionally include a
+NUL byte in buffers or calculate incorrect offsets.
 
-This causes remove_fn() to be called on PF 1 itself, which frees the
-tsm_host object via pci_tsm_host_destructor() and kfree(). When
-__pci_tsm_disconnect() returns, the guard attempts to unlock the destroyed
-and freed mutex.
-
-[Severity: High]
-Does this unintentionally destroy the TSM contexts of independent
-sibling functions?
-
-The call to pci_tsm_walk_fns_reverse() unconditionally applies remove_fn()
-to all functions in the slot. If multiple independent TSM hosts exist
-within the same PCI slot (for example, PF 0 as a TDISP host and PF 1 as a
-CMA host), disconnecting one host will cause the walker to execute
-remove_fn() on the other siblings.
-
-drivers/pci/tsm.c:remove_fn() {
-    tsm_remove(pdev->tsm);
-    link_sysfs_disable(pdev);
-    return 0;
-}
-
-Since remove_fn() does not verify if the function's TSM context actually
-belongs to the specific host being disconnected (the data argument is NULL),
-could disconnecting PF 1 silently wipe out the entirely separate host
-context of PF 0?
-
->  	ops->disconnect(pdev);
->  }
+Could this be renamed to into_bytes_with_nul() to match standard
+conventions and clarify the buffer's contents?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D10
+547-1-alistair.francis@wdc.com?part=3D20
