@@ -1,240 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAF873A3E67;
-	Tue, 23 Jun 2026 05:20:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9FF3A7F7A;
+	Tue, 23 Jun 2026 05:21:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782192026; cv=none; b=bNYzx/9C4Gw5o4AMlJ52NCCvjag/xl5utcwCyeg0dXisjdxfKLW/P71FRl36lOG6fUuMJPDFBfUxjMOGijjWDukWQkJZvxyAENy7GzJoy05IkSKER0JRnR3unuNOMoufd5cjEz/GJGcML49vTrDFqNGvHfbHStaMoJkA+lRcimI=
+	t=1782192112; cv=none; b=kxXSi6VlPCCyhtHn6SSNKf3r64Oj6zwlLH5jr+u7doPU7RR7CckxO5ajYiHmmHRJfMD7q+40Fwiu5a67+NNvZdvDh2pBb/hZ0mMZcts6eZiUCIGntU4UyYq8zUiPiDF5ZRBSkLK5bSAazEcbP5gf2r6pWtl7MK4/g9gkjnXbjQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782192026; c=relaxed/simple;
-	bh=M7LSbPlxmL8+24ruHtj645eU/CqkZ5fMuJypjNsGJXM=;
+	s=arc-20240116; t=1782192112; c=relaxed/simple;
+	bh=3C2y0QfB3qKB88m4XXTSgjNDLJX88WW/3hrE2IP6Wvc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pDEGxOzJMBP0zSSQ+81n56PrtvbSQ1FpbNGUL18BQ59tDFxzP1IlK52uUcnJQjqn3EKc+ckpmWS/mB6bJxAz2IAeoZbN7BUQ7oFk0zUMflyq3GJwVCyMui/7l7c4CUkmmnFX1FuSoCEoJ2MtDsQkma2jlYReErIq7sbVOzYi+RU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I8jkz95i; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RkKpBXf/prxEpfGTGHDAz5+0EBPGplYP+TzuYhtY3HwjLh3XyfEKktMm2Y0FuN7NZJ82fIpgtbqu2CSNiMuZQMkijDOGFi+C7Vok+HNzAFxvk3IhHBIDIl/8Ohl679y2s75ZMWVHHXH1WYBS8nvNSoP0fD03aTSiKbJkpvZSEE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gzvp26Co; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I8jkz95i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FD6B1F000E9;
-	Tue, 23 Jun 2026 05:20:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gzvp26Co"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80CD1F000E9;
+	Tue, 23 Jun 2026 05:21:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782192024;
-	bh=QtI7oz/DNvC1lvzyVcDhri0MW4iIu6MTAcpNwEgUfzI=;
+	s=k20260515; t=1782192111;
+	bh=0fupVfkN5bCOLxQJFpW+jMm3qtBbnao+Lt1JpiV5zfY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=I8jkz95iwyn4mBqvpI7ovJILpBbFe9xAp2hpsGZbtOs3ZSG+g87UIjuIsdq4DhCD9
-	 kzvW07h1BZG4YIcIxh7AUaahE9y1EJn35RC8OOHjmAQtOURAvRgmFpKmmosmObUM4x
-	 5G6Cg8NSU8Emnv3et7Qm3+RGTs2zJ9/Eft2B6SVXwsDOQDSCvWo8Tkd5klCTPdFy6P
-	 92XD37yTiMOnYUpAESM8lfroMMtL1+yhO9vxPCkGfhlAevkDvxptj/68cFqcwIKV3A
-	 0lPBrkQB6tzy2Dow49GRgdhf2wtoBOJ15HdxxeFq6T58ex40U51QynJyPzSwTFKF4E
-	 5WFmj78P9GMsw==
+	b=Gzvp26CoIjweg9KG1gpImvvLM41eZ140Xbpw1Jet0wS/4ur0JF3AgykNBmp6HGgG9
+	 fqunsUJa42zSJKM8pUyykCNbzPF3RNR4M0lJD+IWkbOBK11bLIniBGOwFwpECN/rNC
+	 T42gjlhrmjfAtr4OI2B79Nc4voAHRNSVfyKGi6UcfOyI8y3P8s7raBKSc4GP4PW9fe
+	 peeX9vj8pIfPj/qObZenv25eKNHSS2S4uQIG35Ym72DjfkBJRPx7zsELl3QUf/UoC4
+	 XkvenUjW1H8MV9AVAxASbHcR/jFgu+oKh8etA+1adCf8Lm73if/SbVttx6zHcFPDjp
+	 BmdDvomLd1t+g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 18/21] lib: rspdm: Support SPDM get_certificate
+Subject: Re: [PATCH v2 21/21] lib: rspdm: Support SPDM challenge
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: ojeda@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623045406.2589547-19-alistair.francis@wdc.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260623045406.2589547-22-alistair.francis@wdc.com>
 References: <20260623045406.2589547-1-alistair.francis@wdc.com>
- <20260623045406.2589547-19-alistair.francis@wdc.com>
+ <20260623045406.2589547-22-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 05:20:24 +0000
-Message-Id: <20260623052024.5FD6B1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 05:21:50 +0000
+Message-Id: <20260623052150.D80CD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Integer overflow on the `offset` accumulator allows a malicious SP=
-DM responder to force an infinite memory allocation loop or kernel panic.
-- [High] The `Validate` implementation for `&GetCertificateRsp` and `get_ce=
-rt_exchange` use elided lifetimes, creating a memory safety soundness hole.
-- [High] The `request.length` field is cast to `usize` for buffer resizing =
-after being converted to little-endian, severely truncating responses on bi=
-g-endian architectures.
-
-Pre-existing issues:
-- [High] Stack-allocated request buffers are passed to a generic transport =
-callback, violating kernel stack DMA rules.
+- [High] A truncated SPDM capability response causes a kernel panic due to =
+an out-of-bounds slice access.
+- [High] Incorrect zero-padding placement in the SPDM 1.2+ combined prefix =
+causes signature verification failure.
+- [High] Incorrect memory layout passed to allocator when dropping `KVec` c=
+onstructed via `from_raw_parts`.
 --
 
-commit d1fb5590c1a4a5cf4a63bb011d83ed5975824d75
+commit 60ad79ffc915550973efe94b73f27dbe90a466d5
 Author: Alistair Francis <alistair@alistair23.me>
 
-lib: rspdm: Support SPDM get_certificate
+lib: rspdm: Support SPDM challenge
 
-This commit adds support for the GET_CERTIFICATE SPDM command. The kernel
-sends requests to the responder and iterates over the returned certificates,
-with validation planned for a future patch.
+Support the CHALLENGE SPDM command.
 
 > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index e381cf3f75f9e..7341d9d8a9310 100644
 > --- a/lib/rspdm/state.rs
 > +++ b/lib/rspdm/state.rs
 [ ... ]
-> @@ -686,4 +699,136 @@ pub(crate) fn get_digests(&mut self) -> Result<(), =
-Error> {
-[ ... ]
-> +    fn get_cert_exchange(
-> +        &mut self,
-> +        request_buf: &mut [u8],
-> +        response_vec: &mut KVec<u8>,
-> +    ) -> Result<&GetCertificateRsp, Error> {
+> @@ -463,12 +498,15 @@ pub(crate) fn get_capabilities(&mut self) -> Result=
+<(), Error> {
+>          let rc =3D self.spdm_exchange(request_buf, response_vec.as_mut_s=
+lice())? as usize;
+> =20
+>          // The transport must report a length within the buffer we provi=
+ded.
+> -        if rc > response_vec.len() {
+> +        if rc > response_vec.len() || rc > rsp_sz {
+>              pr_err!("Overflowed capabilities response\n");
+>              return Err(EIO);
+>          }
+>          response_vec.truncate(rc);
+> =20
+> +        self.transcript
+> +            .extend_from_slice(&response_vec[..rsp_sz], GFP_KERNEL)?;
 
 [Severity: High]
-Does the elided lifetime here tie the returned reference to self rather than
-the response_vec buffer?
+If spdm_exchange() returns a smaller rc than rsp_sz, response_vec will be
+truncated to rc elements. Will the slice &response_vec[..rsp_sz] then panic
+due to being out of bounds?
 
-Standard Rust method lifetime elision binds this detached lifetime to the
-mutable self reference. This completely disables borrow checking for the
-underlying response_vec, allowing safe callers to resize, mutate, or drop
-the heap allocation while retaining a pointer to it, which could trigger a
-use-after-free.
-
-> +        let len =3D self.spdm_exchange(request_buf, response_vec.as_mut_=
-slice())? as usize;
 [ ... ]
-> +    pub(crate) fn get_certificate(&mut self, slot: u8) -> Result<(), Err=
-or> {
-> +        let mut request =3D GetCertificateReq::default();
-> +        request.version =3D self.version;
-> +        request.param1 =3D slot;
+> @@ -971,4 +1028,175 @@ pub(crate) fn validate_cert_chain(&mut self, slot:=
+ u8) -> Result<(), Error> {
+[ ... ]
+> +            let major =3D self.version >> 4;
+> +            let minor =3D self.version & 0xF;
 > +
-> +        let req_sz =3D core::mem::size_of::<GetCertificateReq>();
-> +        let rsp_sz =3D (core::mem::size_of::<GetCertificateRsp>() as u32=
- + u16::MAX as u32)
-> +            .min(self.transport_sz) as usize;
+> +            let output =3D CString::try_from_fmt(fmt!("dmtf-spdm-v{major=
+:x}.{minor:x}.*dmtf-spdm-v{major:x}.{minor:x}.*dmtf-spdm-v{major:x}.{minor:=
+x}.*dmtf-spdm-v{major:x}.{minor:x}.*"))?;
+> +            let mut buf =3D output.into_vec();
+> +            let zero_pad_len =3D SPDM_COMBINED_PREFIX_SZ - SPDM_PREFIX_S=
+Z - SPDM_CONTEXT.len() - 1;
 > +
-> +        request.offset =3D 0;
-> +        request.length =3D ((rsp_sz - core::mem::size_of::<GetCertificat=
-eRsp>()) as u16).to_le();
-> +
-> +        // SAFETY: `request` is repr(C) and packed, so we can convert it=
- to a slice
-> +        let request_buf =3D unsafe { from_raw_parts_mut(&mut request as =
-*mut _ as *mut u8, req_sz) };
+> +            buf.extend_with(zero_pad_len, 0, GFP_KERNEL)?;
+> +            buf.extend_from_slice(SPDM_CONTEXT.as_bytes(), GFP_KERNEL)?;
 
 [Severity: High]
-This is a pre-existing issue, but does passing stack memory to a generic
-transport callback violate kernel stack DMA rules?
+Does this code append the zero padding before the context string?
 
-The GetCertificateReq structure is allocated on the kernel stack and a
-mutable slice pointing to this memory is passed to spdm_exchange(). Using
-stack memory for hardware I/O is problematic because stacks may be virtually
-mapped and lack physical contiguity or proper cacheline alignment.
-Attempting to map this stack memory for DMA will cause mapping errors or
-memory corruption.
-
-> +
-> +        let mut response_vec: KVec<u8> =3D KVec::from_elem(0u8, rsp_sz, =
-GFP_KERNEL)?;
-> +
-> +        let response =3D self.get_cert_exchange(request_buf, &mut respon=
-se_vec)?;
-[ ... ]
-> +        let mut offset: u16 =3D u16::from_le(response.portion_length);
-> +        let mut remainder_length =3D u16::from_le(response.remainder_len=
-gth) as usize;
-> +
-> +        while remainder_length > 0 {
-> +            request.offset =3D offset.to_le();
-> +            request.length =3D
-> +                ((remainder_length.min(rsp_sz - core::mem::size_of::<Get=
-CertificateRsp>())) as u16)
-> +                    .to_le();
-> +
-> +            let request_buf =3D
-> +                unsafe { from_raw_parts_mut(&mut request as *mut _ as *m=
-ut u8, req_sz) };
-> +
-> +            response_vec.resize(
-> +                request.length as usize + core::mem::size_of::<GetCertif=
-icateRsp>(),
+According to the SPDM 1.2+ specification (DSP0274), the combined prefix
+format should be VersionPrefix || 0x00 || ContextString || ZeroPadding.
+Could placing the zero padding before SPDM_CONTEXT cause the transcript hash
+to mismatch the signature provided by the device?
 
 [Severity: High]
-Will this resize operation truncate the response buffer on big-endian
-architectures?
+Additionally, there appears to be a memory layout mismatch regression when
+dropping the shash_desc context in SpdmState::drop() and
+update_response_algs():
 
-The request.length field is converted to little-endian using .to_le(), but
-then immediately cast to usize to calculate the new size for resize().
-On big-endian architectures, casting this byte-swapped value back to a
-native usize yields a drastically incorrect size. This will truncate the
-incoming response to the undersized buffer and reliably fail certificate
-validation.
-
-> +                0,
-> +                GFP_KERNEL,
-> +            )?;
-> +
-> +            let response =3D self.get_cert_exchange(request_buf, &mut re=
-sponse_vec)?;
-[ ... ]
-> +            certs_buf.extend_from_slice(
-> +                &response_vec[8..(8 + u16::from_le(response.portion_leng=
-th) as usize)],
-> +                GFP_KERNEL,
-> +            )?;
-> +            offset +=3D u16::from_le(response.portion_length);
-
-[Severity: High]
-Could this offset calculation overflow if a responder provides crafted
-portion_length and remainder_length values?
-
-The offset variable is explicitly typed as a u16. If an untrusted SPDM
-responder manipulates the response lengths, offset +=3D portion_length can
-overflow. On systems with overflow checks enabled, this immediately triggers
-a panic. Without overflow checks, offset wraps around, allowing the loop:
-
-while remainder_length > 0 {
-    ...
+lib/rspdm/state.rs:SpdmState::drop() {
+    let desc_vec =3D unsafe { KVec::from_raw_parts(desc, desc_len, desc_len=
+) };
+    drop(desc_vec);
 }
 
-to run infinitely, continuously appending untrusted data to certs_buf until
-all kernel memory is exhausted.
-
-> +            remainder_length =3D u16::from_le(response.remainder_length)=
- as usize;
-> +        }
-
-> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-> --- a/lib/rspdm/validator.rs
-> +++ b/lib/rspdm/validator.rs
-[ ... ]
-> @@ -426,3 +427,58 @@ fn validate(unvalidated: &[u8]) -> Result<Self, Self=
-::Err> {
-[ ... ]
-> +impl Validate<Untrusted<&[u8]>> for &GetCertificateRsp {
-
-[Severity: High]
-Does this Validate implementation fail to link the input slice's lifetime
-to the output reference's lifetime?
-
-Because explicit lifetimes are missing, the output reference is detached
-from the input slice. Inside the validate() function, an unsafe block
-dereferences a pointer into this unconstrained reference, breaking Rust's
-safety guarantees.
-
-> +    type Err =3D Error;
-> +
-> +    fn validate(unvalidated: &[u8]) -> Result<Self, Self::Err> {
-> +        if unvalidated.len() < mem::size_of::<GetCertificateRsp>() {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        let ptr =3D unvalidated.as_ptr();
-> +        // CAST: `GetCertificateRsp` only contains integers and has `rep=
-r(C)`.
-> +        let ptr =3D ptr.cast::<GetCertificateRsp>();
-> +        // SAFETY: `ptr` came from a reference and the cast above is val=
-id.
-> +        let rsp: &GetCertificateRsp =3D unsafe { &*ptr };
-> +
-> +        Ok(rsp)
-> +    }
-> +}
+Is the generic parameter T incorrectly inferred as bindings::shash_desc
+instead of u8? Since desc_len is a byte count, would this pass the wrong
+layout to the allocator during drop, assuming desc_len elements of type
+shash_desc instead of desc_len bytes?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623045406.2589=
-547-1-alistair.francis@wdc.com?part=3D18
+547-1-alistair.francis@wdc.com?part=3D21
