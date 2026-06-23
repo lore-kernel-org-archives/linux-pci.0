@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009CC27B340;
-	Tue, 23 Jun 2026 03:36:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18A98322749;
+	Tue, 23 Jun 2026 03:39:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782185762; cv=none; b=AJYDr3MCtG5uB9xCukullv+e++S+vWxrmHsxdgZpeaeFqtN60yj0OGq0gepSoHc70q3lxRkTXtg/zrO7JahbHrXKfLVeHaWiWTMWPqMjBO+fC60k8x8ibiLVJEmTVBCSOAl4FvuWk5gR73ONIBQ2oklMt6UrofD32vDydOVPg+E=
+	t=1782185986; cv=none; b=YkVnRTmXvt4qxcOUP6CUkLQe9ryyDPrbAiNQqXwyAugdW96a/ScHRycd1pVmjTYHRemFizCetE9NZenepPWRi877A87e5shgtI/sSBmxg+nqrw8rVFgIzHcgIc9YbtLUo4SgJ0LTkvbiGz9LWS++wm6s3AmtgyXwWbTjAnXhqgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782185762; c=relaxed/simple;
-	bh=0VBpyl4/nNEiJaoRRFRWf2muCUNJPqFrNISeUwEQVSA=;
+	s=arc-20240116; t=1782185986; c=relaxed/simple;
+	bh=HEWEgQsp6g5VIQCg+3L9otCSOu9jCCadKKLF8IgPtAw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Fk7yMysiIrDbQjwy0L3Z88KznEPKNHX8b2HYLHlK+wE3UjtsrI0pA9zjWvzIP5hYTy9aFeOHBEm2Dq0JJciyw6zcYWbacE0IUNHN7fLWQG9TzNjyjpdXCPZ5wCyh+i9sSLY2CuFg0cCrJhlY4qtRUwkA8oP01QgBpceCqGBdrlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ifh4CyhS; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=shS+OW8Yw3zAVknyFZ4JV8r3l+HKhnQhhMVykoJSrt9QCuX3Z5HLljy+wo/rePuTACUC/iKgfh4CWhEbotRepyq9C3GfrH8fI1uATnEzgyTEYJrady8wE4fsPKzKAJ7F9crFYsNlN5ATBpr3K6uG084NO4/OU9t0nRKs05lCrmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jW8TTi53; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ifh4CyhS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D0C91F000E9;
-	Tue, 23 Jun 2026 03:36:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jW8TTi53"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C02A91F000E9;
+	Tue, 23 Jun 2026 03:39:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782185761;
-	bh=9zYJ14hPCT1FYsa6L+F6wnOsiArwo3KVpmw+FUdGOO4=;
+	s=k20260515; t=1782185984;
+	bh=YAN5jcC6yPCS9WYzvPgVJMmWxakcnWc53XVkvbFYj1w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ifh4CyhSGiSFzWOCLzHIBtk4cJmDiTqP06R1CPqCgbjZYJrr7rRhiaKs+uFO6IPdw
-	 b+KPWiekwsTH44Jjwdi359TLLcaDc5iUqw2YhOJ1eDnLg2bM4mwFqD35KV+N+KvRBy
-	 6FZq8Pf/M4oZFxVFWBjEgviJGByRJxJLtXAUI8XFD68yya40/JIbYXzcOSIxjZPq7g
-	 mSq9LsmYt+X/VFaa73R9BdvWiGcaQvORtd3qTuWfD1Ycq5STq2mv9L/kn0FFs5iNnS
-	 oUOKpvXIfhacENh3r/X0nXuIKLJoxSug564I5S8tlz6QThuEJpM2XwIw3itco3qCTD
-	 p4tJcoctRZEDw==
+	b=jW8TTi53phA3RPCt5AutrzEquP14mh+JaHRdGzE2cnF91QzavTCcSTguXdVPuZ0jW
+	 KZ9YbR3BgCsJg85j6oqsIc8pxNZKYA6pPvC6xG0c2lO4ARG+1pvWdAKtKi9jB1EI88
+	 dyNw6XIGQyarr2M993V85pW/50OHHSSI8CDrj/PWn8o4uHmnuVWldes6wsLFdZvt5T
+	 umpj1orByeCD3JEFtPSXM5IcZDL0xMyq5qpAGgILBQCGOmULVn2ZiKH8mX8T7XxYBR
+	 lzCyZmR/3kAskn264a40WmZd/lZpzvFSFnE4cCsOSO2JDVvQf0VWgiLLQ+751b74Ok
+	 pilW+G36b7AaA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 05/11] cxl: Add CXL Device Reset helper
+Subject: Re: [PATCH v7 09/11] cxl: Restore CXL HDM state after PCI reset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260623032453.3404772-6-smadhavan@nvidia.com>
+In-Reply-To: <20260623032453.3404772-10-smadhavan@nvidia.com>
 References: <20260623032453.3404772-1-smadhavan@nvidia.com>
- <20260623032453.3404772-6-smadhavan@nvidia.com>
+ <20260623032453.3404772-10-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 03:36:01 +0000
-Message-Id: <20260623033601.7D0C91F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 03:39:44 +0000
+Message-Id: <20260623033944.C02A91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,57 +46,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Read-modify-write of CXL_CTRL2 register accidentally re-triggers s=
-elf-clearing commands on error paths.
+- [Low] The function `cxl_reset_function` mixes `goto`-based error handling=
+ with scope-based cleanup (`scoped_guard`).
 --
 
-commit 2cd253f3fe48a32fcac990882cdcc0aac716f026
+commit 632a408ad919cb36ef2b58d6bfde50d19355ae4d
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Add CXL Device Reset helper
+cxl: Restore CXL HDM state after PCI reset
 
-This commit adds an internal helper for Type 2 CXL functions that support C=
-XL
-Reset. The helper disables caching, initiates writeback and reset, waits for
-completion, and re-enables caching.
+After CXL reset, restore PCI config state enough to reach HDM MMIO,
+restore cached global and per-decoder HDM state, and then run the normal
+PCI restore callbacks.
 
 > diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
-> index fc52d3abdb5b4..fdfcc9e825e03 100644
+> index 69bcfab898589..d801c91a5cbf8 100644
 > --- a/drivers/cxl/core/reset.c
 > +++ b/drivers/cxl/core/reset.c
-
 [ ... ]
-
-> +static int cxl_reset_update_ctrl2(struct pci_dev *pdev, int dvsec, u16 s=
-et,
-> +				  u16 clear)
-> +{
-> +	u16 ctrl2;
-> +	int rc;
-> +
-> +	rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &ctrl2);
+> @@ -1053,12 +1219,19 @@ int cxl_reset_function(struct pci_dev *pdev, bool=
+ probe)
+>  	if (rc)
+>  		goto out_functions_done;
+> =20
+> +	rc =3D cxl_pci_target_reset_prepare(&ctx);
 > +	if (rc)
-> +		return pcibios_err_to_errno(rc);
+> +		goto out_functions_done;
 > +
-> +	ctrl2 |=3D set;
-> +	ctrl2 &=3D ~clear;
-> +
-> +	rc =3D pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, ctrl2);
+>  	scoped_guard(rwsem_write, &cxl_rwsem.region) {
+>  		rc =3D cxl_hdm_ranges_prepare(&range_ctx, &ctx);
+>  		if (!rc)
+>  			rc =3D cxl_reset_execute(pdev, dvsec);
+> +		if (!rc)
+> +			rc =3D cxl_restore_hdm_decoders(&ctx);
+>  	}
+> =20
+> +	cxl_pci_target_reset_done(&ctx);
+>  out_functions_done:
+>  	cxl_pci_functions_reset_done(&ctx);
+>  out_unlock:
 
-[Severity: High]
-If a timeout occurs in cxl_reset_disable_cache() while the=20
-PCI_DVSEC_CXL_INIT_CACHE_WBI command is still in flight, the error path
-calls cxl_reset_enable_cache() which relies on this read-modify-write
-operation.
+[Severity: Low]
+Does this code violate the guideline against mixing goto-based error handli=
+ng
+with scope-based cleanups in the same function?
 
-Since the hardware operation timed out, the self-clearing command bit might
-still be read as 1. Does writing 1 back to this bit here unintentionally
-re-trigger the hung hardware operation?
-
-Should self-clearing command bits like PCI_DVSEC_CXL_INIT_CACHE_WBI and
-PCI_DVSEC_CXL_INIT_CXL_RST be explicitly masked out from ctrl2 before the
-pci_write_config_word() call to prevent this?
+The cleanup documentation specifies that for a given routine, either all
+resources that need a goto cleanup should be converted to scope-based clean=
+up,
+or none of them. Could cxl_reset_function() in drivers/cxl/core/reset.c be
+refactored to use a consistent error handling approach rather than mixing g=
+oto
+labels with scoped_guard blocks?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623032453.3404=
-772-1-smadhavan@nvidia.com?part=3D5
+772-1-smadhavan@nvidia.com?part=3D9
