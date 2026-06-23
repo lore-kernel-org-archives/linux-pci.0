@@ -1,127 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4663446BC;
-	Tue, 23 Jun 2026 03:42:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E05767262E;
+	Tue, 23 Jun 2026 03:45:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782186159; cv=none; b=C2Ts3u53zTONjHYvBsHFrkyXTu9Xa4AZ7xBK/A1WLO9iL3eKb8Njviu4jktGIl3A46mzG+igZuJthFIOlkM0zpv43YSbWB00v/c5qfnrs8XdALsOoh0OE/mq/5I5esAqe49rYqtpkEe6Mo6lCCv5h2pytVdUeCEiXcvJonf7j3Y=
+	t=1782186331; cv=none; b=Gy8vh4Zmqs4SAaFsBOb9/ljH77gnqJqkJRH1CpckmyOWC5CJvBcmrsfNQcJdB9ICuPByOLUZ0glda3DChTxvg3UmYPdYgtNpg/OCwFeWaWtEbaqM0TZnQs7LcSUV5P/lspsO53lNVQC4W8gWvNva0KraoVfPlI1Jf3tdDnWoi0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782186159; c=relaxed/simple;
-	bh=ajV8VDXako+UsOq39sd17mFx07L5o2xu1qI8aIzxpvQ=;
+	s=arc-20240116; t=1782186331; c=relaxed/simple;
+	bh=/HN0nrxItKbC8nRxhOZyQYmYhusr/XAzW28isU2Rjy4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=spJsW2Nysx0tvb++Na6eh//HvVdOP/0k9YnaRmaUcbprcmGeB289v089Z+/tUz52O9D+1OWIvUbphIl3vXzeW9z/HOiwLM0Q/5d/Y+RSEHroom+0KisaUNgJaG7w2qxQeiS4YMcOB0K36NxI7zKGtlP6JfjdJL7snEjNeBABjqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOEL6PXA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=iO30oujRrjqeBzMxPVWNZAclsiTHdnNBaRwcrYAKui1eQAnN2/FhiAXY7Va1b6TnMiLtB5aJyaDYTXw1EFBpL7gwdAN0z2r6Syh0O7GgPZQe/0OqFd2ttPhC/dZIU3hGm2a5tjBRxvIt2OwVIoM3PrRkVLFHQtQbx8ttoHDhXxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJMtMF2U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOEL6PXA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F3F1F000E9;
-	Tue, 23 Jun 2026 03:42:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJMtMF2U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4875D1F000E9;
+	Tue, 23 Jun 2026 03:45:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782186158;
-	bh=oHIUGnVFgp4XsFKXo015ISCkOJA9/IWsiJfoAElKtwk=;
+	s=k20260515; t=1782186329;
+	bh=kI+qc4XZwh8A5SlVreLPAbFIplAi9j8zlui/S/fva0Q=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TOEL6PXAKo9Ri9VMT3wg4xxmvjXTi9xr1wt2vJ3Sv5frEioLEmUfaRsHN7CezFg53
-	 TvutNnbYadBnMv368hE/Hpmv8c2lTHLjbLm953+xPaLG87ARUkZU8RzP5k64al9Zjl
-	 L2iYlR5QbqM7EtFd9kkSHJdX0YhvUjqCBFGCOKZEGCj3JacUluzUBNm3WApTm6N3b6
-	 TH7tyDKFgl3S8Q1RwuWihNcG4iV0TZmTcAnm5gN18wZLqqUCUoM9GMdNQfs8WQFgZW
-	 t/B+Zf/CA4I1EfXHuUoes6RhwxiGuQJoRFGtXuHRd7vwycU4AIErI3wLzsyW6bhkiG
-	 x1YocE2ALXxAw==
+	b=WJMtMF2U/3WUu1Hvfrb4TGRQWZ5na7JukXCq+y3KBuSjFogBPjc75R90UBdRHK/w4
+	 kUe9jgwAsRO4gJ9ZRpMlLuJ3voiRgWPd5Cs3mNvMkuuoRd1EEYKc/nyTrGxUNwCF+I
+	 uPmg0HholODx79yi9iOFoiPiglJn6AafhDljcsSxZ2xL9SxVJFrpfKc/9L56/ckBNs
+	 aQcWxGtoroh5j2uNM5Xga1clXLqBis8CUcvM2N5AG5w4Idcd0Pl/RjouGfGki7Dbci
+	 G6K4qjosK2t7+aJTVgVtP2jaECpZrO8DwbFcstB/n/AqvCvHeltijHGLeoc/z+5tSo
+	 WwTpHDi9XDEvQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 08/11] cxl: Coordinate sibling functions for CXL
- reset
+Subject: Re: [PATCH v7 03/11] cxl: Cache endpoint decoder settings during
+ PCI enumeration
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260623032453.3404772-9-smadhavan@nvidia.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260623032453.3404772-4-smadhavan@nvidia.com>
 References: <20260623032453.3404772-1-smadhavan@nvidia.com>
- <20260623032453.3404772-9-smadhavan@nvidia.com>
+ <20260623032453.3404772-4-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 03:42:37 +0000
-Message-Id: <20260623034237.C8F3F1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 03:45:28 +0000
+Message-Id: <20260623034529.4875D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] AB-BA deadlock between `device_lock` and `pci_bus_sem` during CXL =
-reset
-- [Low] Mixed usage of goto-based error handling and scope-based cleanup he=
-lpers (`scoped_guard`)
+- [Critical] Allocating devres resources during PCI device enumeration caus=
+es driver probing to fail permanently with -EBUSY.
+- [High] devm_cxl_pci_setup_hdm_info() falsely rejects devices using DVSEC =
+emulation when their DVSEC range count differs from their HDM decoder count.
+- [Medium] Missing release/acquire memory barriers when publishing and cons=
+uming the `pdev->hdm` pointer allows concurrent readers to see uninitialize=
+d memory.
 --
 
-commit e204e091df9c0890781be70b3733c1aeae326d91
+commit e3058b1fc7aea013a57ebe41db76dc923a188403
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Coordinate sibling functions for CXL reset
+cxl: Cache endpoint decoder settings during PCI enumeration
 
-CXL Device Reset affects all CXL.cache and CXL.mem functions in the reset
-scope. Lock same-scope siblings with pci_dev_trylock(), save/disable them,
-drain pending transactions, and hold IOMMU reset blocks until recovery.
+Populate pci_dev->hdm from PCI capability initialization when a CXL.mem
+function already has memory decoding enabled. This gives driver-free reset
+paths an early HDM snapshot without enabling BAR decoding during
+enumeration.
 
-> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
-> index 1ae714a3595cb..69bcfab898589 100644
-> --- a/drivers/cxl/core/reset.c
-> +++ b/drivers/cxl/core/reset.c
-
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 83cda63f76a5a..0230ebfada42b 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
 [ ... ]
-
-> @@ -944,11 +1045,24 @@ int cxl_reset_function(struct pci_dev *pdev, bool =
-probe)
+> @@ -107,9 +105,27 @@ static int devm_cxl_pci_setup_hdm_info(struct cxl_hd=
+m *cxlhdm)
+>  	}
+> =20
+>  	if (!dev_is_pci(uport))
+> +		return NULL;
+> +
+> +	return to_pci_dev(uport);
+> +}
+> +
+> +static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+> +{
+> +	struct cxl_hdm_info *info;
+> +	struct pci_dev *pdev;
+> +
+> +	pdev =3D cxl_hdm_to_pci_dev(cxlhdm);
+> +	if (!pdev)
+> +		return 0;
+> +
+> +	info =3D READ_ONCE(pdev->hdm);
+> +	if (info) {
+> +		if (info->decoder_count !=3D cxlhdm->decoder_count)
+> +			return -ENXIO;
 
 [Severity: High]
-Could this lead to an AB-BA deadlock between the device lock and pci_bus_se=
-m?
+Will this strict equality check reject valid devices that fall back to DVSEC
+emulation?
 
-When the PCI core invokes a device-specific reset method, it holds the
-target device's lock (device_lock(&pdev->dev)). If cxl_reset_function()
-subsequently calls cxl_reset_collect_siblings() which uses pci_walk_bus(),
-that will attempt to acquire a read lock on pci_bus_sem.
+When the cxl_port driver probes, devm_cxl_setup_hdm() might fall back to
+DVSEC emulation, which overwrites the local cxlhdm->decoder_count with
+the number of DVSEC ranges. If that happens, this check against the raw
+hardware HDM count will fail and return -ENXIO, breaking the probe.
 
-The standard PCI lock acquisition order is pci_bus_sem followed by
-device_lock (for example, in pcie_do_recovery()). This inversion could
-create a deadlock if another thread (like hotplug) requests a write lock
-on pci_bus_sem, queuing the read lock request and blocking all involved
-threads.
-
->  	if (rc)
->  		goto out;
+>  		return 0;
+> +	}
 > =20
-> +	rc =3D cxl_pci_functions_lock(&ctx);
-> +	if (rc)
-> +		goto out_unlock;
-> +
-> +	rc =3D cxl_pci_functions_reset_prepare(&ctx);
-> +	if (rc)
-> +		goto out_functions_done;
-> +
->  	scoped_guard(rwsem_write, &cxl_rwsem.region) {
-> -		rc =3D cxl_hdm_ranges_prepare(&range_ctx, pdev);
-> +		rc =3D cxl_hdm_ranges_prepare(&range_ctx, &ctx);
->  		if (!rc)
->  			rc =3D cxl_reset_execute(pdev, dvsec);
->  	}
-> +
-> +out_functions_done:
+> -	pdev =3D to_pci_dev(uport);
+>  	info =3D devm_kzalloc(&pdev->dev,
+>  			    struct_size(info, settings, cxlhdm->decoder_count),
+>  			    GFP_KERNEL);
+[ ... ]
+> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
+> index 14f024098e826..fc52d3abdb5b4 100644
+> --- a/drivers/cxl/core/reset.c
+> +++ b/drivers/cxl/core/reset.c
+[ ... ]
+> +int pci_cxl_hdm_init(struct pci_dev *pdev)
+> +{
+[ ... ]
+> +	if (!info) {
+> +		info =3D devm_kzalloc(&pdev->dev,
+> +				    struct_size(info, settings,
+> +						CXL_HDM_DECODER_MAX_COUNT),
+> +				    GFP_KERNEL);
 
-[Severity: Low]
-Does this mix goto-based error handling with scope-based cleanup helpers?
+[Severity: Critical]
+Does allocating devres memory during PCI enumeration prevent the device
+from being probed later?
 
-According to the cleanup guidelines, functions should not mix goto-based
-cleanup labels (like out_functions_done) with scope-based helpers like
-scoped_guard(). All resources needing a cleanup should either be converted
-to scope-based cleanup, or none of them should use it.
+The driver core requires a device's devres_head to be empty before a
+driver can bind to it. Since pci_cxl_hdm_init() is called during the early
+pci_init_capabilities() enumeration phase, this devm_kzalloc() will attach
+resources before probing.=20
 
-> +	cxl_pci_functions_reset_done(&ctx);
-> +out_unlock:
-> +	cxl_pci_functions_unlock(&ctx);
->  out:
->  	cxl_hdm_range_context_destroy(&range_ctx);
->  	cxl_reset_context_destroy(&ctx);
+Will really_probe() then abort with a resources present before probing
+error and permanently prevent the cxl_pci driver from binding to the device?
+
+> +		if (!info)
+> +			return -ENOMEM;
+> +		allocated_info =3D true;
+> +	}
+[ ... ]
+> +	settings =3D info->settings;
+> +	for (int i =3D 0; i < info->decoder_count; i++) {
+> +		rc =3D cxl_pci_hdm_read_decoder(pdev, &settings[i],
+> +					      regs.hdm_decoder, i);
+> +		if (rc)
+> +			goto out_unmap;
+> +	}
+> +
+> +	WRITE_ONCE(pdev->hdm, info);
+
+[Severity: Medium]
+Are memory barriers needed here to ensure the initialized memory is visible
+before the pointer is published?
+
+Since WRITE_ONCE() and READ_ONCE() do not provide SMP memory barriers,
+can the CPU reorder the devm_kzalloc() memory zeroing after the pointer
+publication? If a concurrent sysfs reader accesses the pointer, it could
+potentially see a non-zero garbage value for info->regs.hdm_decoder.
+
+> +	if (allocated_info) {
+> +		rc =3D devm_add_action(&pdev->dev, cxl_pci_hdm_clear, pdev);
+> +		if (rc) {
+> +			WRITE_ONCE(pdev->hdm, NULL);
+> +			goto out_unmap;
+> +		}
+> +	}
+> +	return 0;
+[ ... ]
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index b63cd0c310bc0..9e214446fd42f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+[ ... ]
+> @@ -2679,6 +2680,7 @@ static void pci_init_capabilities(struct pci_dev *d=
+ev)
+>  	pci_rebar_init(dev);		/* Resizable BAR */
+>  	pci_dev3_init(dev);		/* Device 3 capabilities */
+>  	pci_ide_init(dev);		/* Link Integrity and Data Encryption */
+> +	pci_cxl_hdm_init(dev);		/* CXL HDM Decoder Capability */
+> =20
+>  	pcie_report_downtraining(dev);
+>  	pci_init_reset_methods(dev);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623032453.3404=
-772-1-smadhavan@nvidia.com?part=3D8
+772-1-smadhavan@nvidia.com?part=3D3
