@@ -1,209 +1,303 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013052.outbound.protection.outlook.com [40.107.162.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89BB38A714
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:58:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284309; cv=none; b=gjNy/PD/jzoCZbVtH/aoUy+Kzw9EU5LnMNI36ENYYJEn9qqgSCwo2FzjoMTnXX1s8zE4Oo1H5J8bAJ7y7a7PLhcb/Rm+23YFzFBHRMmT2eCcHVKLYRsYlPEb8zvC27+tuoKuE/I6F1Ck1cqc+ujr9oRTrzTUPKZxTTpEkOQzFpY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284309; c=relaxed/simple;
-	bh=dx6JkXDVH4bq96Dz/b13qA4EBzOolY1coHmvcV1pdDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=PfE2QVc0l917LqBmXtwkB6HxZ4MwGJOwChNSM2Ywjl/s90nKXGvAsPGcAhEXjKn3XTqO3/TOaX9ATCD2s9coGNAOcVIEeMOnc2PbTe4oUS7Fgi9G5LYk2obFWkRgzsu7qpyJWuSwRVETvqCkEa6LtNn6R3lnCbDhbjapchMwW6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=KA6W42KY; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF22038AC97;
+	Wed, 24 Jun 2026 07:09:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782284976; cv=fail; b=elR8zX/6ooN8adDWIMZNMqvWWmlPL0MtlmLpYX8oXURY6J3UcXXzwPiwvomEQ2GIWeqvN92+ovPW027/ZIo3cKxZs+oZbe13EfvmpUC+Xy2yJ77pVMM9Ld0G3cOkN/fISovZw3EHSaokfaoVxBn+iWTGn+brz15lhERh66zmVdU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782284976; c=relaxed/simple;
+	bh=YwimGlHh6VffAmut3CajQEEifCVV0Ix12bDpTQCAF8k=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=bwJ33g9ma8fAJ1oTLG4uvBTJ70a0NSUkP5a8b0TdgLjjaTQsPcylSBObcKVf2ERYSVkLCbZ7qmQEh1NFI/6OQXDyefiX+kX0NhWvCT6p5J48V7Z0uTVBKkDK0Mpyqe4g+gPB9cMLXki67KoqkN2tzkp+mVOQtHXYcgBBf6vqgjo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=ViA/Zsx5; arc=fail smtp.client-ip=40.107.162.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KA6W42KY"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260624065824epoutp0436a2c8155a5677c2c9698237ba06ccc6~78iHW-OkT0596805968epoutp04S
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:58:24 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260624065824epoutp0436a2c8155a5677c2c9698237ba06ccc6~78iHW-OkT0596805968epoutp04S
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1782284304;
-	bh=tfDD0MGn6DMs16KSSyQCL3ui7b7mwTBCvxz0d3V8ftk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=KA6W42KYLM3By1LVKjvGpBUC1N6jOZ07TwfcUTpme2pGWgBP95OjB2ImX/gBLW9CB
-	 1tTIggjAypCsD/ghULy7q9R+4KuzvXDnarlyhcw6Msw2yprmVSOhHjuPQkk195hppr
-	 jvuIoKuHO6cmntiUMmjz6weQFs/ZNlKSa/cfOb5M=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260624065823epcas5p2df61ac6f453bff4bb2c28dc1a4458855~78iGYz_5Y0668806688epcas5p2k;
-	Wed, 24 Jun 2026 06:58:23 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.91]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4glXp65cdCz6B9m7; Wed, 24 Jun
-	2026 06:58:22 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260624065822epcas5p4f37ca53858c532de93dc64c0ede33327~78iFFSTnu0450004500epcas5p4Q;
-	Wed, 24 Jun 2026 06:58:22 +0000 (GMT)
-Received: from arun-B560M-DS3H-V2 (unknown [107.99.41.170]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260624065819epsmtip23063846861ed704455fe354261ddc1d3~78iC1Wvgk0602506025epsmtip2G;
-	Wed, 24 Jun 2026 06:58:19 +0000 (GMT)
-Date: Wed, 24 Jun 2026 20:17:27 +0530
-From: Shrihari E S <shrihari.s@samsung.com>
-To: Jonathan Cameron <jic23@kernel.org>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
-	qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
-	vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
-	dave@stgolabs.net, gost.dev@samsung.com
-Subject: Re: [RFC 5/8] hw/cxl: Wire UIO capability into HDM decoder
- registers
-Message-ID: <20260624144727.xuqbo5dfy5ze5pku@arun-B560M-DS3H-V2>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="ViA/Zsx5"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=fiWyAgZYwLORlZop/teXA9rokhJ+pIDrp+pSz5vUmUl76kSxr9+CT1wodNmwYNZhltg48YGmd7Ai5oOo7CFwyaGlRKw4ioycyEDIlnr8uni+NO/mID3kO2RYG/hpj69KJ4esHP+HnOrpof3csXnNEaLd6YFWeDp0ys23jEt6kCFMvSIQFto5kqxQh91MEk8a6w6sfY8YaIewmwwfd3UoDiHu9BnCwBQVauQHDXR5S2dEhT1hjnzIh5cdqipWifr+J+VqPDIm5bCcUztSgzEnNitI41SvqNtUQXeuc6KuEbDO2vxl08HO3dkkaFVyP5ia6ikuOG0+OumAdj8OFe2Djg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=091zK+0NHxzE22BJxj614Psiy9MBhC29uU3DlRRzFy4=;
+ b=D7R5B4xO8kgj4OrpvnOdcaxdUpjnCRrUFwTljsy5th8/KKirRWLmknM6K7EDcQXKlUuyVmSKdKpCskbhTMX4xoBBpoueta3bsp02gni29reL0FiIKoW62KjNFEFmvu7LY1IugM2gvjAJDEmjpDHNmYLq+xGLIoPXHGrljLhH7yRZxu938wMVHeqR6YNezN4L38beUVWCCEiT1ODe+UgWx0l1Ifed3GmIGhghhQZ5bgZjJeorYNhvQVPBOGpJTWquRkXNWHi5J9r30YATHi4VZfiAUPlu2ZJ7nCS8yVS3Tt4+lEasz1No0H49xAWXlDX/oPU9mRm+CQeWxFMlURGOUA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=091zK+0NHxzE22BJxj614Psiy9MBhC29uU3DlRRzFy4=;
+ b=ViA/Zsx5L9OYKFy+sNMD6trcXKOEQEp2+/qQmqjwBomGafNZOZ+xy9Ot2UBNPcBRXo8Nz94QkoYxqkY22e3/dO5O57uO/4SHwYaYOtfITzUf6mBL3IuRzfMGmqe/N7IxycHlG8PURhtKSohJUoA3CjLySeKIBCe7XhWUcRDSYzytMU0LYr9A8VQzgLZ0+d+yRoFL/7V29g2knv+zV/VJNNtfIvGKtHMittIB14Ryq+D9v8dBYaRpDrMH3rOllV/WurUXMPq1Q71AE5OL9v79SrlJlgH8HdK8nsPsypJ6i8nXAIv2W3v5fgXYBcz3xu7xG1Dy6FQX+6Z3V6/jaUUdhw==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by DB9PR04MB11511.eurprd04.prod.outlook.com
+ (2603:10a6:10:5df::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.13; Wed, 24 Jun
+ 2026 07:09:27 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0139.018; Wed, 24 Jun 2026
+ 07:09:27 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: "Frank Li (OSS)" <frank.li@oss.nxp.com>, "Sherry Sun (OSS)"
+	<sherry.sun@oss.nxp.com>
+CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li
+	<frank.li@nxp.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>, Amitkumar Karwar <amitkumar.karwar@nxp.com>, Neeraj
+ Sanjay Kale <neeraj.sanjaykale@nxp.com>, "marcel@holtmann.org"
+	<marcel@holtmann.org>, "luiz.dentz@gmail.com" <luiz.dentz@gmail.com>,
+	Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"brgl@kernel.org" <brgl@kernel.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-bluetooth@vger.kernel.org"
+	<linux-bluetooth@vger.kernel.org>, "linux-pm@vger.kernel.org"
+	<linux-pm@vger.kernel.org>
+Subject: RE: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Topic: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Index: AQHdAr0iuX6nZVWy60m8TZTUEemMGrZMNMoAgAEUz+A=
+Date: Wed, 24 Jun 2026 07:09:26 +0000
+Message-ID:
+ <VI0PR04MB121147C305022511469FB603A92ED2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260623030736.1421537-1-sherry.sun@oss.nxp.com>
+ <20260623030736.1421537-2-sherry.sun@oss.nxp.com>
+ <ajqZBM6IkbDLiVu2@SMW015318>
+In-Reply-To: <ajqZBM6IkbDLiVu2@SMW015318>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|DB9PR04MB11511:EE_
+x-ms-office365-filtering-correlation-id: 37a7151e-716e-4a56-a6b4-08ded1bf8730
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|7416014|376014|19092799006|23010399003|4143699003|11063799006|56012099006|38070700021|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ XJjkLvu79zUcXIeV6v3k1neyPb/tgb08cLAhzeehzQzSi0YRhqIGZENy04mBjCvIIFMp6Yk7uYs4DyVhEDmg8gTLyeXKt5nWZdHcB23Ygl5Fm1ZdyvjluzSNTtC09LJme5XWjDegkKxw2NUZ7eVVanz3h6tfr6OIbWbHBTFt9yFbNG4qwU2zruhFIFY2a4kpdM6SRViaHaaUnmeLbDXW8qXcB+67qXDoXCoufdyzKJPnKasmQYalimEOIYUvESCprT9LDHEzYTQH5fEcptClwlQdphW+yCcq/L2LVeU/3o2edUCubQoBdzFBppJdGKPQtzUWxzznRAIfeIvc/7xFZiPA6FVLz1cgFcLgTzVZBUKrvSgQ8TsE4CZh6AmEjhk38Ue4jqR11hRYr+/nVNb2t0ggnNXn8fjXGaWPwH5L3oPDcwJkktKdSbw3cecc0bTiBqBOwQBkeuh2YsYUIKDIxF7EtzFLlURrC2k3WAPibU92Kl9vOaAJsbhItisGbjvywPPk7sm++jmRWcWpspqBOTKbGImfEFPVkwA1qt9z/rqAAdmGWWMFpPW18vTscehjC28Emzu6iEqsTBxu1sWQMg5vmh2dP0Eah5Ql2+WyIDYu7Snwtc6HxDPCDQy1AGQs7xoL2NtfIjyxeu1KiITevEu+/he+6S4ndaY+faHbSbYTjj+7gk5FP6HXMkcBor6Tc8Ef4ZSvE2mHgLNBMSv8DQy2h4SpFJmk0o6+qtlYjTg=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(19092799006)(23010399003)(4143699003)(11063799006)(56012099006)(38070700021)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?CZ4jDlK01NeFJRgGiguwRxHarrhZFwxt3Br9w/+HQy9nr2DPcP0ZDsu9HoZd?=
+ =?us-ascii?Q?zqe/L3mWow+G/RRfI8wmgP6QgVFCDxVeUCVZ8vGBc5jRT3ifOMNdgOLjMslo?=
+ =?us-ascii?Q?ADJzNCdYXJI8rnehCNlU/3PqP6tbJ6EpPxa1pZymz4ipXnjPPxtLDZhMDXxH?=
+ =?us-ascii?Q?bAgVLCKRZ4C3Vnd9vtAdAAY4HetejEh/RvrqL6NuLVsu+msvuqxtmUbk4a9T?=
+ =?us-ascii?Q?pAuy0ad7Gnf8IVK/LYEf4dRBLxnk4Ix6COdgzfz7zzpKYCku+8fK2845w6rF?=
+ =?us-ascii?Q?3ZjfjlokbJq0QQysDIEO4OpJRVIpDyA2HumLrbjzeU5HhcM3V1rqppSGbBdP?=
+ =?us-ascii?Q?GEsuyjdAOEBBf0SZEmhoWq1x6vBDyyN8g4dUk0fAtlrrB6ER67wvBiVQ0MAy?=
+ =?us-ascii?Q?0I9D/m3CBVmBHiY64hMEb2Sv6RzoRMvyPfMCBC+VvDYuRpl/CwM9pC3Nt2YU?=
+ =?us-ascii?Q?Xpc/oKuGeoVKXpUSu276NyVD3eSensSPazhbmvY2xqKJOo3IpGtmtY5m0BBW?=
+ =?us-ascii?Q?KXDRE3rNYHXIMODWS0B3KbIyBHlwLqp935z8r/Y9CqlpV5nMXe9j9+s7wpTF?=
+ =?us-ascii?Q?HGoPai+BJQPt8bSZpY091E2X9ZfQ/MPoCtiFHYSdzZ94fWftQSfbhjKJTV+g?=
+ =?us-ascii?Q?/tD4Fmek9dLIaALDrMXRZ7HF2kLSj+oTFhtfcrW+eI6RqsHhO311CedC0U63?=
+ =?us-ascii?Q?5d3jD/lx1IDgwQ7M6absTXIF9K0+IH5oSupuyiIaYqsmqIK0l3CzjRwZWMex?=
+ =?us-ascii?Q?Gq1rfEEsOXEprUqc+B4IXoiue8UzBByjkIVgIO/ts3GiVKLT4qoyasCJOauc?=
+ =?us-ascii?Q?vBHPkFl1vkBkDqMiCpN2zvyhJn/XpYHQotwlSszxRG7Y43uDIwW+2dnjT1kA?=
+ =?us-ascii?Q?GKnK0OGpZbpg62HWsnGORo6QiAEJAqKyqCj8EYGGFUQ3F0TiveMYGx7z3zRB?=
+ =?us-ascii?Q?iWaw6jxKnTx/jBqOxtzRZLXydcaTs5g62aSs9Wr3ZBJYayJ+jnpgk3u4XBXl?=
+ =?us-ascii?Q?1JqYeGPD9l+PfroTaZ0L8zGx2mbO6nOYMcilPZ6jT3v4VTgIOsvgw9ti4Mj+?=
+ =?us-ascii?Q?9UQzZSLBwUngYYBVDFbuxn7iRpQGGdloXNbiSqkGOnholZs0MMXW1JKxhwow?=
+ =?us-ascii?Q?4CdEyuM58QAAB5OnhePBlwTSwA4ZQxjlvXzX7BKEPXJx36Bd1cJHBFuXQ4/k?=
+ =?us-ascii?Q?EHSVBnHIqGqJUS4hvrBuxElp07s0efLp7PjoEQ2kyM05MFTcL3ZdX4ciZsSH?=
+ =?us-ascii?Q?fiVGOtPl2UADy5HtVT/JasAfBvjGfeqf17SP52cPByimZKfZy0bUJuRLoU0r?=
+ =?us-ascii?Q?s2HXpp6+XhSj6+zVXtF5dN3FV0XubUqwXN/OxG12gUURuOS6asfCk5DbQUUE?=
+ =?us-ascii?Q?UiIxaoTx4ipz2fFaBodZeEPVaFO2D+I+wqShWIUQ5bnxkJgC5Xvz+i/JmP/9?=
+ =?us-ascii?Q?2I7MuHWFkntlnsotNgk1L2SOfK13qTBV80H/LMCFuS3ihyxrwausbsvUPIcz?=
+ =?us-ascii?Q?C8Cy3C7zeT+PT6lVsps40LH7hQi1vywbu3M+EDP2ebvFUpVnFX3uHJrk9v/g?=
+ =?us-ascii?Q?OZQ63iSClFe6up8tuKzU2JYSvqhlaa2vyZwGucSAr4ifK8s1Q2vun+r+fdBa?=
+ =?us-ascii?Q?mcuv5zt7dfYdr57Kg+maDXFwVBp6biMZ7Jqpuo9mv1bCn1nOg4lr8ev8HLE7?=
+ =?us-ascii?Q?dPdyBb54jzTvFWGxgPjPucxLXxWAHJSyzP0yQGPGnzcxs2t/?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260616184049.42cdc02d@jic23-huawei>
-X-CMS-MailID: 20260624065822epcas5p4f37ca53858c532de93dc64c0ede33327
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_5369a_"
-CMS-TYPE: 105P
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7
-References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<CGME20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7@epcas5p1.samsung.com>
-	<20260609105836.3702787-6-shrihari.s@samsung.com>
-	<20260616184049.42cdc02d@jic23-huawei>
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37a7151e-716e-4a56-a6b4-08ded1bf8730
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Jun 2026 07:09:26.9710
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: n8J0opJOmu7D4862mD5HJG3a1OseRvAiGaubFCZpbPUJAo0w+Tt7ZPlTB33zMQaucsGiyKkXnS0/3ujN6UXJhg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB11511
 
-------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_5369a_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
+> Subject: Re: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
+>=20
+> On Tue, Jun 23, 2026 at 11:07:28AM +0800, Sherry Sun (OSS) wrote:
+> > From: Sherry Sun <sherry.sun@nxp.com>
+> >
+> > Use dw_pcie_rp::skip_pwrctrl_off to avoid powering off devices during
+> > suspend to preserve wakeup capability of the devices and also not to
+> > power on the devices in the init path.
+> > This allows controller power-off to be skipped when some devices(e.g.
+> > M.2 cards key E without auxiliary power) required to support PCIe L2
+> > link state and wake-up mechanisms.
+> >
+> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 36
+> > +++++++++++++++++----------
+> >  1 file changed, 23 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> > b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 0fa716d1ed75..ff5a9565dbbf 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -1382,16 +1382,20 @@ static int imx_pcie_host_init(struct dw_pcie_rp
+> *pp)
+> >  		}
+> >  	}
+> >
+> > -	ret =3D pci_pwrctrl_create_devices(dev);
+> > -	if (ret) {
+> > -		dev_err(dev, "failed to create pwrctrl devices\n");
+> > -		goto err_reg_disable;
+> > +	if (!pci->suspended) {
+> > +		ret =3D pci_pwrctrl_create_devices(dev);
+>=20
+> Is possible move pci_pwrctrl_create_devices() of pci_pwrctrl_create_devic=
+es
+>=20
+> and call it direct at probe() function, like other regulator_get function=
+.
+>=20
 
-On 16/06/26 06:40PM, Jonathan Cameron wrote:
->On Tue,  9 Jun 2026 16:28:33 +0530
->Shrihari E S <shrihari.s@samsung.com> wrote:
->
->> Plumb the 'uio_capable' flag to CXL HDM decoder capability and
->> control register interfaces. The UIO bit in the capability register
->> is now set for CXL Type3 devices and ports when UIO support is
->> advertised via 'x-uio-svc' property.
->>
->> Per CXL 4.0 specification Section 8.2.4.20.7, the decoder control
->> UIO bit is validated against the advertised capability during
->> HDM decoder commit operations.
->>
->> Additionally, replace hardcoded HDM decoder control write masks
->> with spec-aligned 'WRMASK' definitions.
->I think we should be modifying that depending on whether it is uio_capable
->rather than saying it is 'writeable' but 'not writetable' if not UIO capable.
->
->A few other comments inline.
->
+Hi Frank,
+That makes sense. However, if we move pci_pwrctrl_create_devices () to
+probe(), we may need to add the following goto err_pwrctrl_destroy path
+in imx_pcie_probe() to properly handle errors from
+pci_pwrctrl_power_on_devices(), is that acceptable?
 
-Hi Jonathan,
+@@ -1960,11 +1949,15 @@ static int imx_pcie_probe(struct platform_device *p=
+dev)
+        if (ret)
+                return ret;
 
-   Got your point, will change that in the next version of the patch.
++       ret =3D pci_pwrctrl_create_devices(dev);
++       if (ret)
++               return dev_err_probe(dev, ret, "failed to create pwrctrl de=
+vices\n");
++
+        pci->use_parent_dt_ranges =3D true;
+        if (imx_pcie->drvdata->mode =3D=3D DW_PCIE_EP_TYPE) {
+                ret =3D imx_add_pcie_ep(imx_pcie, pdev);
+                if (ret < 0)
+-                       return ret;
++                       goto err_pwrctrl_destroy;
 
-Thanks,
+                /*
+                 * FIXME: Only single Device (EPF) is supported due to the
+@@ -1979,7 +1972,7 @@ static int imx_pcie_probe(struct platform_device *pde=
+v)
+                pci->pp.use_atu_msg =3D true;
+                ret =3D dw_pcie_host_init(&pci->pp);
+                if (ret < 0)
+-                       return ret;
++                       goto err_pwrctrl_destroy;
 
->>
->> Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
->> Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
->> ---
->> +/* CXL 4.0 specification 8.4.2.20.7 */
->> +#define CXL_HDM_DECODER_CTRL_WRMASK (    \
->> +    (0xfu << 0)   | /* IG */             \
->> +    (0xfu << 4)   | /* IW */             \
->> +    BIT(8)        | /* LOCK_ON_COMMIT */ \
->> +    BIT(9)        | /* COMMIT */         \
->> +    BIT(12)       | /* TYPE */           \
->> +    BIT(13)       | /* BI */             \
->> +    BIT(14)       | /* UIO */            \
->> +    (0xfu << 16)  | /* UIG */            \
->> +    (0xfu << 20)  | /* UIW */            \
->> +    (0xfu << 24))   /* ISP */
->Given the FIELD() macro defines appropriate masks, can we build this as
->	R_CXL_HDM_DECODER_0_CTRL_IG_MASK |
->	R_CXL_HDM_DECODER_0_CTRL_IW_MASK |
->etc
->That will make it both self documenting and ensure it aligns with the field
->defines.  If we get a bug at least it will only be in one place :)
->
+                if (pci_msi_enabled()) {
+                        u8 offset =3D dw_pcie_find_capability(pci, PCI_CAP_=
+ID_MSI);
+@@ -1991,6 +1984,11 @@ static int imx_pcie_probe(struct platform_device *pd=
+ev)
+        }
 
-Sure, will add those Fields instead of hardcoding.
+        return 0;
++
++err_pwrctrl_destroy:
++       if (ret !=3D -EPROBE_DEFER)
++               pci_pwrctrl_destroy_devices(dev);
++       return ret;
+ }
 
->> +
->>  /* CXL r3.1 Section 8.2.4.20.1 CXL HDM Decoder Capability Register */
->>  int cxl_decoder_count_enc(int count)
->>  {
->> @@ -305,7 +318,7 @@ static void ras_init_common(uint32_t *reg_state, uint32_t *write_msk)
->>  }
->>
->>  static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
->> -                            enum reg_type type, bool bi)
->> +                            enum reg_type type, bool bi, bool uio)
->>  {
->>      int decoder_count = CXL_HDM_DECODER_COUNT;
->>      int hdm_inc = R_CXL_HDM_DECODER1_BASE_LO - R_CXL_HDM_DECODER0_BASE_LO;
->> @@ -325,9 +338,12 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
->>          ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 3_6_12_WAY, 0);
->>          ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 16_WAY, 0);
->>      }
->> -    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO, 0);
->> +    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO,
->> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio);
->>      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
->> -                     UIO_DECODER_COUNT, 0);
->> +                     UIO_DECODER_COUNT,
->> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio ?
->> +                     decoder_count : 0);
->>      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, MEMDATA_NXM_CAP, 0);
->>      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
->>                       SUPPORTED_COHERENCY_MODEL,
->> @@ -341,7 +357,8 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
->>          write_msk[R_CXL_HDM_DECODER0_BASE_HI + i * hdm_inc] = 0xffffffff;
->>          write_msk[R_CXL_HDM_DECODER0_SIZE_LO + i * hdm_inc] = 0xf0000000;
->>          write_msk[R_CXL_HDM_DECODER0_SIZE_HI + i * hdm_inc] = 0xffffffff;
->> -        write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] = 0x13ff;
->> +        write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] =
->> +                                             CXL_HDM_DECODER_CTRL_WRMASK;
->I think file at least mostly aligns these long line wraps as
->        write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] =
->            CXL_HDM_DECODER_CTRL_WRMASK;
->
+Best Regards
+Sherry
 
-Sure, will rectify it.
-
->Given i think this needs to be dependent on whether the device is uio_capable
->maybe just bring the mask defines suggested above down here, and modify the
->UIO bit to fit whether it should be writeable.
->
->
-
-Yeah, got it. Will check the UIO capability first and apply the mask. Thanks for
-pointing it out.
-
->> diff --git a/hw/mem/cxl_type3.c b/hw/mem/cxl_type3.c
->> index b7ad437cbc..4cdadc3e10 100644
->> --- a/hw/mem/cxl_type3.c
->> +++ b/hw/mem/cxl_type3.c
->> @@ -590,6 +590,11 @@ static void hdm_decoder_commit(CXLType3Dev *ct3d, int which)
->>      /* TODO: Sanity checks that the decoder is possible */
->>      ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, ERR, 0);
->>      ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, COMMITTED, 1);
->> +    if (ct3d->uio_capable) {
->> +        ct3d->uio_enabled = FIELD_EX32(ctrl, CXL_HDM_DECODER0_CTRL, UIO);
->> +    } else {
->> +        ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, UIO, 0);
->
->If it's not supported, shouldn't the write mask stop it being written?  I think
->that would be cleaner than overriding any write to 0 here.
->
->
-
-yes, understood. Will do that in the next version of the patch.
-
-
-------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_5369a_
-Content-Type: text/plain; charset="utf-8"
-
-
-------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_5369a_--
+>=20
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to create pwrctrl devices\n");
+> > +			goto err_reg_disable;
+> > +		}
+> >  	}
+> >
+> > -	ret =3D pci_pwrctrl_power_on_devices(dev);
+> > -	if (ret) {
+> > -		dev_err(dev, "failed to power on pwrctrl devices\n");
+> > -		goto err_pwrctrl_destroy;
+> > +	if (!pp->skip_pwrctrl_off) {
+> > +		ret =3D pci_pwrctrl_power_on_devices(dev);
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to power on pwrctrl devices\n");
+> > +			goto err_pwrctrl_destroy;
+> > +		}
+> >  	}
+> >
+> >  	ret =3D imx_pcie_clk_enable(imx_pcie); @@ -1460,9 +1464,10 @@
+> static
+> > int imx_pcie_host_init(struct dw_pcie_rp *pp)
+> >  err_clk_disable:
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >  err_pwrctrl_power_off:
+> > -	pci_pwrctrl_power_off_devices(dev);
+> > +	if (!pp->skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(dev);
+> >  err_pwrctrl_destroy:
+> > -	if (ret !=3D -EPROBE_DEFER)
+> > +	if (ret !=3D -EPROBE_DEFER && !pci->suspended)
+> >  		pci_pwrctrl_destroy_devices(dev);
+> >  err_reg_disable:
+> >  	if (imx_pcie->vpcie)
+> > @@ -1482,7 +1487,8 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
+> *pp)
+> >  	}
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >
+> > -	pci_pwrctrl_power_off_devices(pci->dev);
+> > +	if (!pci->pp.skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(pci->dev);
+> >  	if (imx_pcie->vpcie)
+> >  		regulator_disable(imx_pcie->vpcie);
+> >  }
+> > @@ -1990,12 +1996,16 @@ static int imx_pcie_probe(struct
+> > platform_device *pdev)  static void imx_pcie_shutdown(struct
+> > platform_device *pdev)  {
+> >  	struct imx_pcie *imx_pcie =3D platform_get_drvdata(pdev);
+> > +	struct dw_pcie *pci =3D imx_pcie->pci;
+> > +	struct dw_pcie_rp *pp =3D &pci->pp;
+> >
+> >  	/* bring down link, so bootloader gets clean state in case of reboot =
+*/
+> >  	imx_pcie_assert_core_reset(imx_pcie);
+> >  	imx_pcie_assert_perst(imx_pcie, true);
+> > -	pci_pwrctrl_power_off_devices(&pdev->dev);
+> > -	pci_pwrctrl_destroy_devices(&pdev->dev);
+> > +	if (!pp->skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(&pdev->dev);
+> > +	if (!pci->suspended)
+> > +		pci_pwrctrl_destroy_devices(&pdev->dev);
+> >  }
+> >
+> >  static const struct imx_pcie_drvdata drvdata[] =3D {
+> > --
+> > 2.50.1
+> >
+> >
