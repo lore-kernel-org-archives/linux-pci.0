@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95AE2EEE77
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 08:02:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C63D385D69
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 08:05:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782288133; cv=none; b=GBRfx1STx2LJcjBljRY7eA6k2dr5d5J+7z7LrBVae0+bqTvdTEH6rikUOK/BE4gO3vi2iRjtHFMWLWj78+Ft3YtE48ly1bTrVhlK5FHMfXEmHIptiMC9tZwLUMdoQ3eEUHIbe572Z43lGqtElfiwT4yWVoLoZ/nHmWk/+ZTRma8=
+	t=1782288314; cv=none; b=lpWSijsKQwVoXDpKK+bJyMpQkpdEuFYCT7gsIMgP2MCq0NO4IQjZa73sBirWHLimzIbe5T+JU9Urq5WMpn42/CjX9UcTR2EhcNaETblfQ16TQ7WiTNvEghpaNrPGAX4ALyZH8OzLTGdPWpK1g9/6V6767YmlZytE3VqLkMUb1ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782288133; c=relaxed/simple;
-	bh=tPNnPjiXMToKvCA+G1cTII5dYTV1clG6blgshbGkFMk=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=J14ovKt6nnqTT39yZfJaF/01LvXHdGIH057wo/HiRN5WwsF7OSbwKXZz35J2yH06EZr5/SBaUAs3HOtqKQtrmbN+H/d/e8PbtWk2bDYslTgGa5Q1tlNLDjsWqNWwGfokQwSb0MX4dhQI37GSq0ScqcSNgZMqsf4Z5tN4/8dYPT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YcLVn24d; arc=none smtp.client-ip=192.198.163.17
+	s=arc-20240116; t=1782288314; c=relaxed/simple;
+	bh=jiPHlE27CUpUtALi9jyB8VsYNMp1bCIknMvRHmhDrkU=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=WmtyMLlUwxlV2zVZQGU9gX/MxoIUfvb2iLY/V31NMKeTVdMBIUwN4rvW7rL69x6nxjBNy+bJ5vvXmNNjlI9iTwQTg4QI1GXJDcXczQFzZtjoWqQWEtEUnqWnWl8wH2rvexxvzA/FCohuakJp+27iODyFMNwMx+0SVdEZmuPxMZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aE7tjsPi; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YcLVn24d"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aE7tjsPi"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782288132; x=1813824132;
+  t=1782288313; x=1813824313;
   h=date:from:to:cc:subject:message-id;
-  bh=tPNnPjiXMToKvCA+G1cTII5dYTV1clG6blgshbGkFMk=;
-  b=YcLVn24dwbAQFyrARIhgUXLCspvLyPBYJVgYX7cIHzgiXgXDmlqJZ2+B
-   wzTYyGdwTtnz5VDCxCnADG+D3YOz3B+ius66LwWAr++FA5bYyqv9f7RCH
-   oDEYtNJsS1wyJdPE7FUXWp54V17iwCkJvvfbZmIwYi1sa737BUhJK41TF
-   K4G8fZatYOcamDZTujuA1lrS4Ngw6rKetqCCxTzUIWr2xLmNBZ1mK+F/c
-   pdpJ5qCWq2kO/z2tc/ZChibo0DZ5YamxiPnSk8gSp44hji9amufd4DtMi
-   ml+XHqb+9ZF84zLwlkpjzf6w+TDtjioZc7oYNHwJ218u78OC9LqvMAYFq
-   w==;
-X-CSE-ConnectionGUID: RU8nvRbcQyqLJeMEkVLEuw==
-X-CSE-MsgGUID: sCLTL95DSgOYAzBHNPAXhQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11826"; a="82915348"
+  bh=jiPHlE27CUpUtALi9jyB8VsYNMp1bCIknMvRHmhDrkU=;
+  b=aE7tjsPiDYoSdNA8i52snVijEsG1tnhH6XDdbbFICxpf15OQozqk2yS8
+   cbgCWdGwaDr/kn3bi3VXqd/5lxKpYAKrlhgMlihBLcHNHRtYPJsHYaHW9
+   uB6o5HnyxVUcQ+QMVh7WY6A1C3FfTaT0yb0oLa3tyhwgneBczkcnIGeKD
+   cYDqN9yiLL+lspJFyNPotDv9Pu+DrfpZwwfvlRbIU+cFX9lh1H2CMYvZW
+   rz7/ubB44Ns2375tG0sg7vzbqk7Ne1s+iI/kGqnz3wgSwuH5y0BWD4AtF
+   Gi4JMBxkzA57AC2122fX+WuvWIowFJW7AfBsTICDnrzPoGH5scbrJVDgL
+   g==;
+X-CSE-ConnectionGUID: dAQhJWftSveyZAl22vK/zQ==
+X-CSE-MsgGUID: iAElxKOZTqG2N/J/JzrqGg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11826"; a="100467135"
 X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
-   d="scan'208";a="82915348"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 01:02:11 -0700
-X-CSE-ConnectionGUID: UDq+CzsTT4iP3Rdsg5bgdw==
-X-CSE-MsgGUID: rMG5mMUcS0Wd8YV6hOz9Yw==
+   d="scan'208";a="100467135"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 01:05:12 -0700
+X-CSE-ConnectionGUID: cFj/Z2/gQYeLWvk9mwSBGw==
+X-CSE-MsgGUID: N2Kao2MlQ4Kxbp+VP4SDiQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
-   d="scan'208";a="245422448"
+   d="scan'208";a="279925860"
 Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa006.fm.intel.com with ESMTP; 24 Jun 2026 01:02:10 -0700
+  by orviesa002.jf.intel.com with ESMTP; 24 Jun 2026 01:05:10 -0700
 Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wcIYh-000000003DV-2m0O;
-	Wed, 24 Jun 2026 08:02:07 +0000
-Date: Wed, 24 Jun 2026 16:01:57 +0800
+	id 1wcIbb-000000003Dh-3UhF;
+	Wed, 24 Jun 2026 08:05:07 +0000
+Date: Wed, 24 Jun 2026 16:04:08 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/link_train_delay] BUILD SUCCESS
- 2b0d1a605ef22c063be9de475d7a66c311b710f4
-Message-ID: <202606241646.6YanRqBO-lkp@intel.com>
+Subject: [pci:procfs] BUILD SUCCESS
+ 8857f6578b001bcf5f53c8c6a3936647f05291a8
+Message-ID: <202606241657.DrTPxLzx-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,10 +59,10 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/link_train_delay
-branch HEAD: 2b0d1a605ef22c063be9de475d7a66c311b710f4  PCI: rzg3s-host: Use common pci_host_common_link_train_delay() helper
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git procfs
+branch HEAD: 8857f6578b001bcf5f53c8c6a3936647f05291a8  PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
 
-elapsed time: 728m
+elapsed time: 730m
 
 configs tested: 215
 configs skipped: 2
