@@ -1,112 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF42E3DB647;
-	Wed, 24 Jun 2026 15:00:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4642264A9;
+	Wed, 24 Jun 2026 15:48:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782313246; cv=none; b=JaoI0b7LFrMeQYBECM6jAJpAz/ucSVHNLwGzlE2xp/JRjAXDVXosjhGAqVpl4noLiqoJwtrITRHKi7c/XzkM9PZWdk9rYXMfXgG+CnKlE3QRf/JBi4cDWEYayfDYAD996kOTuAnyC6IMpAChXMu5tEn/L1CWcTCoaftBZdOygfA=
+	t=1782316135; cv=none; b=VAvPTZV2ozh5HzRwMTgN3oWedniOYEi7kDRAATjqNyd384np8PCUXcYAwidz4au3U0dBBU+61GA/x0Mx+d+Tgo/PmseFKjjPgledQe3P4FypU0E/0ukE4fdXx6Cm32DE1aI0/TagwqTP1IIvV44/Xkwf/Ex/MsdTjw5iuq9DnxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782313246; c=relaxed/simple;
-	bh=5rcnLftEgCOp4lCy02ddo3ou6gJMaO0JvPUiLpW7d+w=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ud6ahBXsAllrobtZQPpjtvfEPMZlyqCI9a+jfoMGHIuWszQJAAaQqDxxY3iGS9h+yVPj/FpqOOxKPhJe7Cm7V/iS0N7YvNDd4YGQmoQZvJm9zEHXkZ4uYtnqbLyREw70RlfYLXLcflkyg+3/YDQtKNA2ERW+ExvMw3kIiMagfcc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MkxskqGk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1782316135; c=relaxed/simple;
+	bh=RYwF0cU7ZzumNc56lNIIWvjCJUBZP8YDlpYopFdStqQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YVQVvVVkhYAbPG1KxFeA+qbdgaTiVKgjVtkqctpvFTtMNKOz5dRJJenduJBDlDnBD/8UM4t8lCDTM3APJ63gZmhRKTFCgH5U4WrtgxtecOZtRR3AapHiKO3jJXDU9pXd6q5HpW11+mFsri88x1z0qMmvLYo8SZePojbxMj7qNZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KaXIsTav; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MkxskqGk"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BB237C2BCFB;
-	Wed, 24 Jun 2026 15:00:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1782313245; bh=5rcnLftEgCOp4lCy02ddo3ou6gJMaO0JvPUiLpW7d+w=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=MkxskqGkDR7ziybrs4WVyyJtxyF/p5yta4Zi7sxJd0jTKW7oin2Je82H9unuIQ3v5
-	 DgjXQYKDjDA1/yxRRKcn5Sw+IXmYm4xztxdeit/7AfoJnN5UR+zEn+kYYc/KPSiu7m
-	 H7X0OpP3Qm072tlaDlsiudW6ZB5itrl7mM4P05JA=
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B13FBCDE002;
-	Wed, 24 Jun 2026 15:00:45 +0000 (UTC)
-From: Alvin Sun <alvin.sun@linux.dev>
-Date: Wed, 24 Jun 2026 23:00:09 +0800
-Subject: [PATCH v6 10/10] rust: module: update MAINTAINERS to cover
- module.rs
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KaXIsTav"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782316134; x=1813852134;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=RYwF0cU7ZzumNc56lNIIWvjCJUBZP8YDlpYopFdStqQ=;
+  b=KaXIsTavLbrakU5j3zjrXv9Y7QS/Ww64mK8RU+qLgqUliVjGvttZGayC
+   THz4TPHoUh+AS7l8n/wOBnZvTOqCfaz6x5QpaIohT/ua43EDrKN5HoY80
+   GWZlSytfq2OhJFoXfAL3NPxhJ4NiNxqSBCy0hUV2NlaWnHl0d33mVwI3G
+   g/kn6486NRa8KULY9O1qPZ+4sO7PDnTi32U4pIUnUFlvakCgJIIUclAYM
+   Q80WXPf9IpHo9TbFdnokMw6KCtZOu0GFvkUK7j/JBzTQz2aBZKUJQKzyA
+   6dW23DLLigkG3Mm5Owr4HmS5Z1M2I9AxB8HSqqhmvcRcigiEHKAyWk2Jx
+   w==;
+X-CSE-ConnectionGUID: CCniC7wlS66iQ7QtQZGXbw==
+X-CSE-MsgGUID: dlcO7pQJTIK4pHrhIpGgeg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11827"; a="93442790"
+X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
+   d="scan'208";a="93442790"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 08:48:53 -0700
+X-CSE-ConnectionGUID: 766+8Q7CQLu6ca2D8TkAzg==
+X-CSE-MsgGUID: 3ovOslP9T16JEshrv/preQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
+   d="scan'208";a="251878537"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa004.fm.intel.com with ESMTP; 24 Jun 2026 08:48:51 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wcPqK-000000003S9-3ilo;
+	Wed, 24 Jun 2026 15:48:48 +0000
+Date: Wed, 24 Jun 2026 23:48:02 +0800
+From: kernel test robot <lkp@intel.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mani@kernel.org,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: Re: [PATCH v2] PCI/ASPM: Mask ASPM states based on Devicetree
+ properties
+Message-ID: <202606242330.Ab9bKFmk-lkp@intel.com>
+References: <20260624-aspm-v2-1-800a4151ba3a@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260624-fix-fops-owner-v6-10-5295e333cb3e@linux.dev>
-References: <20260624-fix-fops-owner-v6-0-5295e333cb3e@linux.dev>
-In-Reply-To: <20260624-fix-fops-owner-v6-0-5295e333cb3e@linux.dev>
-To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
- Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>, 
- Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Arnd Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, 
- David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>, 
- Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
- Igor Korotin <igor.korotin@linux.dev>, 
- FUJITA Tomonori <fujita.tomonori@gmail.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, 
- Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
- Carlos Llamas <cmllamas@google.com>
-Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org, 
- driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org, 
- nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org, 
- kunit-dev@googlegroups.com, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
- linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782313241; l=868;
- i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=5rcnLftEgCOp4lCy02ddo3ou6gJMaO0JvPUiLpW7d+w=;
- b=cmstUrkbLuPuqCovz0itKEpXgZDBXA1/IayJUxZLZYmVoYtq98FdyfxRGEpcVd24CXF9kuRxb
- Q72y5Oy3kZcBCRmCDuJYlM3aqxGtITNQLqxXObuuHhfQbSegDS9NZq6
-X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
- pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
-X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
- auth_id=684
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260624-aspm-v2-1-800a4151ba3a@oss.qualcomm.com>
 
-Module types now live in `rust/kernel/module.rs` alongside
-`rust/kernel/module_param.rs`. Update the MODULE SUPPORT file pattern
-from `rust/kernel/module_param.rs` to `rust/kernel/module*.rs` so both
-files are covered.
+Hi Krishna,
 
-Assisted-by: opencode:glm-5.2
-Link: https://lore.kernel.org/rust-for-linux/8ea21b29-9baf-4926-a16f-7d21c5a1a1b8@suse.com
-Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+kernel test robot noticed the following build warnings:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e035a3be797c4..74733de3e41ee 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -17984,7 +17984,7 @@ F:	include/linux/module*.h
- F:	kernel/module/
- F:	lib/test_kmod.c
- F:	lib/tests/module/
--F:	rust/kernel/module_param.rs
-+F:	rust/kernel/module*.rs
- F:	rust/macros/module.rs
- F:	scripts/module*
- F:	tools/testing/selftests/kmod/
+[auto build test WARNING on 840ef6c78e6a2f694b578ecb9063241c992aaa9e]
 
--- 
-2.43.0
+url:    https://github.com/intel-lab-lkp/linux/commits/Krishna-Chaitanya-Chundru/PCI-ASPM-Mask-ASPM-states-based-on-Devicetree-properties/20260624-181628
+base:   840ef6c78e6a2f694b578ecb9063241c992aaa9e
+patch link:    https://lore.kernel.org/r/20260624-aspm-v2-1-800a4151ba3a%40oss.qualcomm.com
+patch subject: [PATCH v2] PCI/ASPM: Mask ASPM states based on Devicetree properties
+config: x86_64-buildonly-randconfig-006-20260624 (https://download.01.org/0day-ci/archive/20260624/202606242330.Ab9bKFmk-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260624/202606242330.Ab9bKFmk-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202606242330.Ab9bKFmk-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/pci/pcie/aspm.c:30:13: warning: 'pcie_config_aspm_l1ss' declared 'static' but never defined [-Wunused-function]
+      30 | static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state);
+         |             ^~~~~~~~~~~~~~~~~~~~~
 
 
+vim +30 drivers/pci/pcie/aspm.c
+
+    29	
+  > 30	static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state);
+    31	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
