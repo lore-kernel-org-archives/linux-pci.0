@@ -1,81 +1,81 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64FE53815CB
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:08:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C06E3845D3
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:09:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782281335; cv=none; b=qFGKfFUc8U+7o+wNewGLI22SHEHiWbzl5bFrJwgNjDwUUs3ri8WML4wGaXcQVXeNQmThhXIY7+CCCriYAj7HubQkSQMEp1TIetc3hmSnhsHqAiMqJ/+x3uIHsm6/XYGP9gOB+I9APK1AipVfSBnMdiKFuUZVsygVYpk+2eg66Bo=
+	t=1782281397; cv=none; b=drAMYhiQDyYOo+UauxnQ9JHjrszx7vHXzOzGjkEGPpLVit8PXKgF8lsONMUhyBmA3CxsBTSiYm4Dm4fRHgw5we9rtm3VJ1XDkZmQA0tCxbN07WVVHjE5iq6qleDrPrg6NgPhO5pQWpy5BGqTPHVGTTuYNnXPg8v+CJtql0mOyl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782281335; c=relaxed/simple;
-	bh=vNIxTT2dokgiFqInHnkhxTg8GSWXUULZ2W+p4tc7g5g=;
+	s=arc-20240116; t=1782281397; c=relaxed/simple;
+	bh=09UhpBZ+vijrWnGbbLkonJ4IjI6EyY7JgTlIvZiLgKs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RLrYXioMCxxbVEVTEZUYV+zdSdNRZktYz9p8vB55DnkRRuxsxneCpkJLxj44g8NtjlWHWHgkXI7hV3E6VCdhGICFHomC9UL0hA78LoNZbzZLimnDKKWPyVLoIJkBO4TlLaIzin0gt7yp0xFzRZao3W9v76/gxUt0IpdBbkgpzJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=N2IEmFPE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IbboR6HT; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=N2IEmFPE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IbboR6HT; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=C7pO1aFv6mlbNJyDM/3bMBKnDpLseh4vtCoqmyAkbaUcv7pfe20ZSXZc38cqMvTTLodkeq4VvIB17ub4gGgd+XOrkGhDVDCu+FXsmnELwa2YRv0Omgmf9qB/259aJYaKYSf2BK2jCSFK4srJ3VNAVamltXeIqQhzTrEHKTrQIro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=U0x9O8g/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=HBGB/giU; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=QgQcIioa; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AZ78oeSj; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="N2IEmFPE";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IbboR6HT";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="N2IEmFPE";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IbboR6HT"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="U0x9O8g/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="HBGB/giU";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="QgQcIioa";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AZ78oeSj"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 98B7076058;
-	Wed, 24 Jun 2026 06:08:52 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 4A5FF6D878;
+	Wed, 24 Jun 2026 06:09:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782281332; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1782281393; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=tHGwT/QNlB7zFDQrS8ACYcuXfc0IQFO36pBFG5f00kQ=;
-	b=N2IEmFPEaXpsNcbiusQcId1si9JU03vSUTKTQVz/9cd2Pgeg2/ygI8izcDsq74PTA/9d3m
-	JWfmg9yZoYl+l584PFh0kn6NedpuZVGdjUgGc9ZXBwKWxwxIdg4jRv8FHSuOuYIVGK6TGC
-	lkzjGDHq9uf/+94K3v/p9EPYFFT8wlU=
+	bh=b8CPZe6k3flAEwqBYslYxYI5mGXrBNfvUtzO/XqGxgU=;
+	b=U0x9O8g/qbJsFd6WCvQNQMSD0nJdYHWIhbEkn8fLDeoHYV5+WMcb6pIbv6id8SUXonPbbK
+	CUsxtrfU/y0OMtLbAi9R4m21jneaQw+xyWtrxEsv+XqJJdq0rt9BNfgONGzFfSyr3ZHjyg
+	+5EKoRbP32MfSTxO/Wj36Aj3baiS7ZA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782281332;
+	s=susede2_ed25519; t=1782281393;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=tHGwT/QNlB7zFDQrS8ACYcuXfc0IQFO36pBFG5f00kQ=;
-	b=IbboR6HTjMWvF62/6BBTgO9iwOqCbHdAhKyRdj965kR3dMgVDigbIgaLD0eWPmCntJJZHL
-	VDp/atvOy2VtUOCw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=N2IEmFPE;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=IbboR6HT
+	bh=b8CPZe6k3flAEwqBYslYxYI5mGXrBNfvUtzO/XqGxgU=;
+	b=HBGB/giUKAng0JIAIjLYLZoHGv3KylFt0I2q/6pLvyjAoKIzpiYwzizQn/Sf5JOV9jOKJh
+	McW0oOWGVuO1z+Bg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=QgQcIioa;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=AZ78oeSj
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782281332; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1782281391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=tHGwT/QNlB7zFDQrS8ACYcuXfc0IQFO36pBFG5f00kQ=;
-	b=N2IEmFPEaXpsNcbiusQcId1si9JU03vSUTKTQVz/9cd2Pgeg2/ygI8izcDsq74PTA/9d3m
-	JWfmg9yZoYl+l584PFh0kn6NedpuZVGdjUgGc9ZXBwKWxwxIdg4jRv8FHSuOuYIVGK6TGC
-	lkzjGDHq9uf/+94K3v/p9EPYFFT8wlU=
+	bh=b8CPZe6k3flAEwqBYslYxYI5mGXrBNfvUtzO/XqGxgU=;
+	b=QgQcIioaQAOKMZ3sKKnk2PXACvuvFtqLTR0JO3EJxuwuE+SBhGCGwXkmpjTbNikIPttJ7b
+	Z8wSOWAADi1fphqNvKmfAAYoPoz1lCtvV+vR0fR4DEVlep2HsdM0GiWmYApMBAQ+furQzH
+	0/RHzsXjrNgiBRBnQ5ZHaYvE1PeRicI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782281332;
+	s=susede2_ed25519; t=1782281391;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=tHGwT/QNlB7zFDQrS8ACYcuXfc0IQFO36pBFG5f00kQ=;
-	b=IbboR6HTjMWvF62/6BBTgO9iwOqCbHdAhKyRdj965kR3dMgVDigbIgaLD0eWPmCntJJZHL
-	VDp/atvOy2VtUOCw==
+	bh=b8CPZe6k3flAEwqBYslYxYI5mGXrBNfvUtzO/XqGxgU=;
+	b=AZ78oeSj+MLuUW5foCM2JSAjIk3NHPxTQd+iQ4RPDx0L6SyGx/Xak5tsK/rRiKzDFWctQ5
+	veEiPIUXLtXptbDA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 55684779A8;
-	Wed, 24 Jun 2026 06:08:52 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C8B2779A8;
+	Wed, 24 Jun 2026 06:09:51 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 1jBcE3R0O2qBRwAAD6G6ig
-	(envelope-from <tzimmermann@suse.de>); Wed, 24 Jun 2026 06:08:52 +0000
-Message-ID: <fe290312-90a9-4c5b-bbd9-5d385de0818a@suse.de>
-Date: Wed, 24 Jun 2026 08:08:51 +0200
+	id UrrmAa90O2quSAAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Wed, 24 Jun 2026 06:09:51 +0000
+Message-ID: <5947c675-efef-4095-8617-3ac30344078e@suse.de>
+Date: Wed, 24 Jun 2026 08:09:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -124,10 +124,8 @@ Autocrypt: addr=tzimmermann@suse.de; keydata=
 In-Reply-To: <20260623141505.1816786-1-mario.limonciello@amd.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Action: no action
-X-Rspamd-Queue-Id: 98B7076058
 X-Spam-Flag: NO
-X-Spam-Score: -4.51
+X-Rspamd-Action: no action
 X-Spam-Level: 
 X-Spamd-Result: default: False [-4.51 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
@@ -149,14 +147,17 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	MID_RHS_MATCH_FROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:url,canonical.com:email,suse.de:dkim,suse.de:email,suse.de:mid];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[gitlab.freedesktop.org:url,suse.com:url,amd.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid,canonical.com:email];
 	TO_DN_ALL(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 4A5FF6D878
+X-Spam-Score: -4.51
 
-Hi
+FYI a related change to Xorg is at 
+https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2242
 
 Am 23.06.26 um 16:15 schrieb Mario Limonciello:
 > Some multi GPU systems may have a VGA compatible device, but that might
@@ -175,14 +176,6 @@ Am 23.06.26 um 16:15 schrieb Mario Limonciello:
 > Reported-by: Aaron Ma <aaron.ma@canonical.com>
 > Closes: https://lore.kernel.org/linux-pci/20260618081803.2790848-1-aaron.ma@canonical.com/#t
 > Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-
-Reviewed-by: Thomas Zimmermann <tzimmermann@suse.de>
-
-This looks good. Thanks for fixing this issue.
-
-Best regards
-Thomas
-
 > ---
 > v1->v2:
 >    * Fix subject
