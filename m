@@ -1,413 +1,419 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31801301486;
-	Wed, 24 Jun 2026 02:52:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEB6B3112AB
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 04:07:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782269558; cv=none; b=VJ6s/CxM8z173sQxNbFbp39YpLWGqoAUAyEuyU9XqSyb0LvWGaKhCjW8xNYGzaZg1YxVTfcHOQAFe2fL3U9YgB/rsZq767j+ibwiVUXH+pa7UA+Rsp7IW1x5X9bZG+egx554bfUL5xA3sRw/D9J6BB+K9sNAzCAn3k9Z4YDYFow=
+	t=1782274058; cv=none; b=dXe0p3eAktt35TmSR0l9QNL5+wMuPd/HSF6/YtuQX6zmjv505qi/YMLTEiDha8ieH6vs5atKBqdVlY+3vnBg3eb3Kmus3eTX4ohzVZKRUky4rJna0YnHhal1JnfAG19CaqNB76lwmkPEfR/t8YHgj1aCavVo6ZNXqwXL29Bxtig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782269558; c=relaxed/simple;
-	bh=+pkhtZV7cHzdY4xfBVsajdjncVSStDB/8DfZ41vmzoE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
-	 In-Reply-To:Content-Type; b=JcYs2vUX2ySibWX+E4vbSEF79S8sjVOBt8GfgCbD6Bnf/GagogdqvH+XMCfjhtcFdiAuBuUUhrTBoMt1m71eDxB1k0RYWAA7L7B+ELAowHoFAevfBS080Y8H1e741Cr/VLrK2Q8lZhv3x45ShzLkhb0/h2ugUBAfepGvv3xWdJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=EwyDqY7h; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=EwyDqY7h; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1782274058; c=relaxed/simple;
+	bh=H/kOaU/X8Q6SE5dTQG0tfADH5z5v2w33tRi2m7wiLxI=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=GT0TPD8LA3m4MNZgTnurOkueDF8BLI+cy3MVGFGwKr8C0K8kWUR49jnbu2+ambP1OK694/H63D8Q8ntLfcbu3yX27vQzBqOxNVBy2bMDQDCeBZMDUH7HLtq8PaEFnySeIaLDH1a18TOXx6ur7TFZD4BNEnnjZJ6xrIKDIkZutuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M0QEFh+h; arc=none smtp.client-ip=209.85.222.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="EwyDqY7h";
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="EwyDqY7h"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=tuPEYKAXHwnOctxscMp832TkPnAowrsg0yfEBTwY/RU=;
-	b=EwyDqY7hnpVdF6ZE6PVG+oYnWKF+6uCV2mIalot3SLum9yVTsGl2E/lsCunCnDfecCUis+ze3
-	sGT555OaXBd3xXVQNGf/enN+VliEirbdV20YohTGPaNl3vENv1+dHNBpQA4q7BABUKKNulduOF/
-	TdtPHX6rAmf/AOquUs/8j2I=
-Received: from canpmsgout01.his.huawei.com (unknown [172.19.92.178])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTPS id 4glRKQ68Bsz1BFn9;
-	Wed, 24 Jun 2026 10:51:38 +0800 (CST)
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=tuPEYKAXHwnOctxscMp832TkPnAowrsg0yfEBTwY/RU=;
-	b=EwyDqY7hnpVdF6ZE6PVG+oYnWKF+6uCV2mIalot3SLum9yVTsGl2E/lsCunCnDfecCUis+ze3
-	sGT555OaXBd3xXVQNGf/enN+VliEirbdV20YohTGPaNl3vENv1+dHNBpQA4q7BABUKKNulduOF/
-	TdtPHX6rAmf/AOquUs/8j2I=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4glR7z0qqPz1T4LR;
-	Wed, 24 Jun 2026 10:43:27 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 89D0340569;
-	Wed, 24 Jun 2026 10:52:07 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Wed, 24 Jun 2026 10:52:06 +0800
-Message-ID: <3a8a248a-3b4e-48ce-843e-b5d5052ef72a@huawei.com>
-Date: Wed, 24 Jun 2026 10:52:06 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M0QEFh+h"
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-9157d3f2098so45258185a.3
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2026 21:07:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782274055; x=1782878855; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=s0U0HH35Ja+y+QNiJP5j6Io9a4TymbU2PoMxHvJIoxY=;
+        b=M0QEFh+hc4QPjdDvIGL/6GIB4eW5NTFZNuqb9gDFVvxpndBeUZHA0u+0cPcyVvx8Sj
+         i1H7D93Qoze6qNsuHwAeAfvdErI4advFPRNuSUbOz4X7yG85Hl6W049leG7imKoFxOiJ
+         t9w82zWwOGZO3Ps+MJ5MEpbQzyhWfLMQYAZ3m20jdepCEYeo1bwbRDPZdFeZVTufovKB
+         qs2gVreFruV8fig8Esd+VDGE96SUmr0uJndDQe1V2UIFp8J2OqS8z4BbAv8Fr+O9Yh7n
+         oozpxAnnm3LS1FKLHg7FGxu9lkKXfihssWulgNdF174tdVksGK9M+Nc/Js25L5eHmG5m
+         zhUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782274055; x=1782878855;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=s0U0HH35Ja+y+QNiJP5j6Io9a4TymbU2PoMxHvJIoxY=;
+        b=kG71TtIOV+7otE18USAwiK+40vJHTJtjHluhyhYu3QFj4yfevB6PfL0z+5odPUeiLi
+         bBc/hsXGE+4Olu9u5K1qCzHuq34ZhX9Wb4g2QAcvN63iAqPKCutkq7KmWlMpSw29fmWR
+         bQYiaW3IkWdZoKgN74hvpmM/ZO8+fgz6gbiEY82YCVS9v6RCX+Xwo71pvjDZEeLKXS6j
+         b76KvmC0Xm9i9PHcF/9DXXlNbUqSK64O5IO0v2enw0N4uZGRYaVCNxTLSvl09nCHs6KT
+         ei7nGo14liYOVVkcJBTdQbZ9H8zvHfBH+MENDVqxcGplv7VoED5qK/82HnMz9aEiPUL7
+         GfbA==
+X-Forwarded-Encrypted: i=1; AFNElJ8W4VvfAN1kKG1YXa5kVb0tc1Bm6JVoqgngg7rATdLMeNcjoWN8AeFfBF+6dNdNtM5a9WUovLZI5Qo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznpxIWrOcpUeCjZfhqB8BUSoFhsJTw4XfiQaVHROFU4CQzGhv+
+	u/pGIBPYnDBYl49T/c/7ZjkhYjcpGGPqZU6zpAtPQJRjsVouHANNcoDb
+X-Gm-Gg: AfdE7cmWGgrrfa1BJ2R7gjZr3IjIjkkogpPGUvFGppxSI6XMYhGF5STgHTHP58y51tu
+	PjkVT/p97HwXXjgR5TSEBrS+fEC3zaurnI6FNaKMsOt5e7B0bX1Yh0zfK1KZ85yPyoDkPdCN5Ot
+	1BrzaRdH2D1qq0R7jktwr+696vwbIcwlxh3jSS+4lFeu0HPXdCOx5+K53uXai+uKFnl2o4CWE4s
+	QqNzQL4gonwDgSoLKRfkSNfvI5KGGzCCJRZDhdZ+Sg86z5WkuMU6ZvmQBgna0cUR6pMw2fn/94V
+	F7N0b48fRAqnWl9f+8Y+X0n9nBJJ24De63q0lT5vujW+i2s1f9fSgWZva+Nb9+DebVIhRAdNtst
+	Jnge4QF8bJyccWQFPJDsYWpnK43qXSdTzjY0ZIJYQ172qjNXw3IFYBBJpDb1UNQK5r/LcXQ8voq
+	MTBPkHUiZ76Q8bw9fN6BTIcV3NG+q09BkiOFFyH3gK8P4XoiK+j8drGg==
+X-Received: by 2002:a05:620a:2a05:b0:915:c615:388 with SMTP id af79cd13be357-92648dc3771mr1040127385a.55.1782274054802;
+        Tue, 23 Jun 2026 21:07:34 -0700 (PDT)
+Received: from smtpclient.apple ([2601:985:4601:5df0:1d9f:8123:1ead:e34b])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-925fda62efesm442229585a.19.2026.06.23.21.07.33
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Jun 2026 21:07:34 -0700 (PDT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RESEND v18 08/12] PCI/TPH: Add sysfs binary file to export
- CPU to steering-tag mapping
-From: fengchengwen <fengchengwen@huawei.com>
-To: <helgaas@kernel.org>
-CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>,
-	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
-	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-References: <20260623085048.51139-1-fengchengwen@huawei.com>
- <20260623085048.51139-9-fengchengwen@huawei.com>
-Content-Language: en-US
-In-Reply-To: <20260623085048.51139-9-fengchengwen@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [PATCH v2] misc: pci_endpoint_test: fix use-after-free after
+ device unbind
+From: Shuangpeng <shuangpeng.kernel@gmail.com>
+In-Reply-To: <ajmdy4yoYh7S2kS6@SMW015318>
+Date: Wed, 24 Jun 2026 00:07:02 -0400
+Cc: mani@kernel.org,
+ kwilczynski@kernel.org,
+ kishon@kernel.org,
+ Frank.Li@kernel.org,
+ arnd@arndb.de,
+ gregkh@linuxfoundation.org,
+ bhelgaas@google.com,
+ linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <37E4513B-53DA-4C91-9A8B-D1AF8910FB2D@gmail.com>
+References: <20260621054609.186877-1-shuangpeng.kernel@gmail.com>
+ <20260622165249.374155-1-shuangpeng.kernel@gmail.com>
+ <ajmdy4yoYh7S2kS6@SMW015318>
+To: Frank Li <Frank.li@oss.nxp.com>
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
-Hi Bjorn,
 
-This v18 patch adds a read-only sysfs binary attribute tph_cpu_st on PCIe
-Root Ports to expose ACPI DSM CPU-to-TPH steering tag mappings to userspace.
 
-All prior review feedback from Alex has been fully addressed, including
-unaligned partial read support, zero-filled sparse CPU entries, cleaner
-struct initialization, soft lockup mitigation via cond_resched(), full
-ABI docs, and dynamic file visibility filtering.
+> On Jun 22, 2026, at 16:40, Frank Li <Frank.li@oss.nxp.com> wrote:
+>=20
+> On Mon, Jun 22, 2026 at 12:52:49PM -0400, Shuangpeng Bai wrote:
+>> [You don't often get email from shuangpeng.kernel@gmail.com. Learn =
+why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+>>=20
+>> An open miscdevice file descriptor can outlive the PCI driver =
+binding.
+>> misc_deregister() removes the device node and prevents new opens, but =
+it
+>> does not revoke file descriptors that are already open.
+>>=20
+>> Before this change, pci_endpoint_test stored the miscdevice inside =
+struct
+>> pci_endpoint_test, and ioctl() recovered the test object from
+>> file->private_data with container_of(). Since the test object was =
+allocated
+>> with devm_kzalloc(), it was freed when the PCI device was unbound. A
+>> process could therefore open /dev/pci-endpoint-test.N, unbind the PCI
+>> device through sysfs, and then issue an ioctl on the stale file =
+descriptor,
+>> causing a use-after-free of struct pci_endpoint_test.
+>=20
+> Anyways to provent unbound when still open? This driver is only for =
+test
+> ednpoint funciton, it is not worth to make complex for this unusual =
+case.
+>=20
 
-Two implementation options exist for this CPU-to-ST mapping interface:
-- The current patch: sysfs binattr entirely implemented inside the PCI
-  subsystem with dedicated uapi definitions.
-- Alternative: A VFIO_DEVICE_FEATURE for on-demand ST entry queries.
+Thanks, Frank.
 
-Jason previously commented that the community generally discourages new
-binary array sysfs attributes, which is the core concern around this ABI
-design. Full prior discussion can be found [1]
+Agreed. I looked at preventing unbind while the miscdevice is still =
+open,
+but I do not see a simple way to do that from this PCI driver. The other
+approaches make the fix more complicated than the issue warrants for =
+this
+test endpoint driver.
 
-Since this sysfs implementation is self-contained within PCI subsystem
-code, I'd like to ask your opinion Bjorn: do you accept this binary blob
-sysfs interface for the PCI tree?
+I'll drop this patch for now. If there is a simpler preferred approach,
+I would be happy to look at it.
 
-[1] https://lore.kernel.org/linux-pci/20260616144224.GB3577091@ziepe.ca/
+Thanks,
+Shuangpeng
 
-Thanks
-
-On 6/23/2026 4:50 PM, Chengwen Feng wrote:
-> Add per-Root-Port-only sysfs binary attribute tph_cpu_st to expose ACPI
-> DSM CPU-to-ST mapping to userspace, addressing concerns that VFIO should
-> not host CPU steering tag translation interfaces.
-> 
-> ABI: /sys/bus/pci/devices/<root-port-bdf>/tph_cpu_st
-> - Read-only root-only (0400) binary blob;
-> - Each entry is packed 8-byte struct pci_tph_cpu_st defined in uapi/pci.h;
-> - Support arbitrary offset partial read/sub-field extraction;
-> - Non-present/impossible CPUs return zero-filled entries to avoid
->   sequential read abort on sparse CPU topology;
-> - Insert cond_resched() in read loop to avoid soft lockup when dumping full
->   blob.
-> 
-> Dynamic visibility rules enforced via is_bin_visible:
-> 1. Only expose file on PCIe Root Port devices, hide on all endpoints;
-> 2. Root Port must implement TPH Completer capability in DevCap2;
-> 3. Platform must provide valid ACPI DSM for CPU-to-ST mapping.
-> 
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> ---
->  Documentation/ABI/testing/sysfs-bus-pci |  24 ++++
->  drivers/pci/pci-sysfs.c                 |   3 +
->  drivers/pci/pci.h                       |   4 +
->  drivers/pci/tph.c                       | 151 +++++++++++++++++++++---
->  include/uapi/linux/pci.h                |  16 +++
->  5 files changed, 183 insertions(+), 15 deletions(-)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-> index b767db2c52cb..edc64e4e5640 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -702,3 +702,27 @@ Description:
->  		When present and the tsm/ attribute directory is present, the
->  		authenticated attribute is an alias for the device 'connect'
->  		state. See the 'tsm/connect' attribute for more details.
-> +
-> +What:		/sys/bus/pci/devices/<root-port-bdf>/tph_cpu_st
-> +Contact:	linux-pci@vger.kernel.org
-> +Description:
-> +		Read-only binary attribute only exposed on PCIe Root Ports that
-> +		support TPH Completer capability and implement the ACPI DSM
-> +		method for CPU-to-ST mapping. File permission is root-only
-> +		(0400).
-> +
-> +		The blob is a sequence of fixed-size 8-byte entries defined by
-> +		struct pci_tph_cpu_st in uapi/linux/pci.h:
-> +		  __u8 vm_st;
-> +		  __u8 pm_st;
-> +		  __u16 vm_xst;
-> +		  __u16 pm_xst;
-> +		  __u16 reserved;
-> +
-> +		Each entry corresponds to a logical CPU index. Seek offset =
-> +		cpu_id * PCI_TPH_CPU_ST_ENTRY_SZ. Arbitrary unaligned partial
-> +		reads are supported; no alignment restriction enforced.
-> +
-> +		For CPUs outside cpu_possible_mask or offline CPUs, the entry
-> +		is filled with all zeros to avoid breaking sequential dump tools
-> +		like cat/hexdump on sparse CPU topologies.
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5ec0b245a69b..b28732bd1554 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1911,6 +1911,9 @@ const struct attribute_group *pci_dev_attr_groups[] = {
->  #ifdef CONFIG_PCI_TSM
->  	&pci_tsm_auth_attr_group,
->  	&pci_tsm_attr_group,
-> +#endif
-> +#ifdef CONFIG_PCIE_TPH
-> +	&pcie_tph_cpu_st_attr_group,
->  #endif
->  	NULL,
->  };
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4469e1a77f3c..5d28bec94add 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1366,6 +1366,10 @@ static inline pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
->  extern const struct attribute_group aspm_ctrl_attr_group;
->  #endif
->  
-> +#ifdef CONFIG_PCIE_TPH
-> +extern const struct attribute_group pcie_tph_cpu_st_attr_group;
-> +#endif
-> +
->  #ifdef CONFIG_X86_INTEL_MID
->  bool pci_use_mid_pm(void);
->  int mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index c080cf5401a3..bb6f24eccafc 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-> @@ -11,6 +11,7 @@
->  #include <linux/msi.h>
->  #include <linux/bitfield.h>
->  #include <linux/pci-tph.h>
-> +#include <linux/sched.h>
->  
->  #include "pci.h"
->  
-> @@ -130,8 +131,47 @@ static acpi_status tph_invoke_dsm(acpi_handle handle, u32 cpu_uid,
->  
->  	return AE_OK;
->  }
-> +
-> +static int tph_get_cpu_st_info(struct pci_dev *pdev, unsigned int cpu,
-> +			       union st_info *info)
-> +{
-> +	acpi_handle rp_acpi_handle;
-> +	struct pci_dev *rp;
-> +	u32 cpu_uid;
-> +	int ret;
-> +
-> +	ret = acpi_get_cpu_uid(cpu, &cpu_uid);
-> +	if (ret != 0)
-> +		return ret;
-> +
-> +	rp = pcie_find_root_port(pdev);
-> +	if (!rp || !rp->bus || !rp->bus->bridge)
-> +		return -ENODEV;
-> +
-> +	rp_acpi_handle = ACPI_HANDLE(rp->bus->bridge);
-> +	if (tph_invoke_dsm(rp_acpi_handle, cpu_uid, info) != AE_OK)
-> +		return -EINVAL;
-> +
-> +	return 0;
-> +}
->  #endif
->  
-> +static bool tph_dsm_supported(struct pci_dev *pdev)
-> +{
-> +#ifdef CONFIG_ACPI
-> +	struct pci_dev *rp = pcie_find_root_port(pdev);
-> +	acpi_handle rp_acpi_handle;
-> +
-> +	if (!rp || !rp->bus || !rp->bus->bridge)
-> +		return false;
-> +
-> +	rp_acpi_handle = ACPI_HANDLE(rp->bus->bridge);
-> +	return acpi_check_dsm(rp_acpi_handle, &pci_acpi_dsm_guid, 7,
-> +			      BIT(TPH_ST_DSM_FUNC_INDEX));
-> +#endif
-> +	return false;
-> +}
-> +
->  /* Update the TPH Requester Enable field of TPH Control Register */
->  static void set_ctrl_reg_req_en(struct pci_dev *pdev, u8 req_type)
->  {
-> @@ -230,31 +270,37 @@ static int write_tag_to_st_table(struct pci_dev *pdev, int index, u16 tag)
->  	return pci_write_config_word(pdev, offset, tag);
->  }
->  
-> +static int get_cpu_all_st(struct pci_dev *pdev, unsigned int cpu,
-> +			   struct pci_tph_cpu_st *st)
-> +{
-> +#ifdef CONFIG_ACPI
-> +	union st_info info;
-> +	int ret;
-> +
-> +	ret = tph_get_cpu_st_info(pdev, cpu, &info);
-> +	if (ret == 0) {
-> +		st->vm_st = info.vm_st_valid ? info.vm_st : 0;
-> +		st->pm_st = info.pm_st_valid ? info.pm_st : 0;
-> +		st->vm_xst = info.vm_xst_valid ? info.vm_xst : 0;
-> +		st->pm_xst = info.pm_xst_valid ? info.pm_xst : 0;
-> +	}
-> +
-> +	return ret;
-> +#endif
-> +	return -ENODEV;
-> +}
-> +
->  static int get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
->  		      u8 req_type, unsigned int cpu, u16 *tag)
->  {
->  #ifdef CONFIG_ACPI
-> -	struct pci_dev *rp;
-> -	acpi_handle rp_acpi_handle;
->  	union st_info info;
-> -	u32 cpu_uid;
->  	int ret;
->  
-> -	ret = acpi_get_cpu_uid(cpu, &cpu_uid);
-> +	ret = tph_get_cpu_st_info(pdev, cpu, &info);
->  	if (ret != 0)
->  		return ret;
->  
-> -	rp = pcie_find_root_port(pdev);
-> -	if (!rp || !rp->bus || !rp->bus->bridge)
-> -		return -ENODEV;
-> -
-> -	rp_acpi_handle = ACPI_HANDLE(rp->bus->bridge);
-> -
-> -	if (tph_invoke_dsm(rp_acpi_handle, cpu_uid, &info) != AE_OK) {
-> -		*tag = 0;
-> -		return -EINVAL;
-> -	}
-> -
->  	*tag = tph_extract_tag(mem_type, req_type, &info);
->  
->  	pci_dbg(pdev, "get steering tag: mem_type=%s, req_type=%u, cpu=%d, tag=%#04x\n",
-> @@ -615,3 +661,78 @@ bool pcie_tph_supported(struct pci_dev *pdev, bool want_ext)
->  	return pdev->tph_ext_support;
->  }
->  EXPORT_SYMBOL(pcie_tph_supported);
-> +
-> +static ssize_t tph_cpu_st_read(struct file *filp, struct kobject *kobj,
-> +			       const struct bin_attribute *bin_attr, char *buf,
-> +			       loff_t off, size_t count)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-> +	const size_t entry_sz = PCI_TPH_CPU_ST_ENTRY_SZ;
-> +	const size_t total_size = nr_cpu_ids * entry_sz;
-> +	size_t copied = 0;
-> +	loff_t pos = off;
-> +
-> +	if (pos >= total_size)
-> +		return 0;
-> +
-> +	count = min_t(size_t, count, total_size - pos);
-> +
-> +	while (copied < count) {
-> +		unsigned int cpu_idx = pos / entry_sz;
-> +		size_t entry_off = pos % entry_sz;
-> +		size_t remain = entry_sz - entry_off;
-> +		size_t chunk = min_t(size_t, remain, count - copied);
-> +		struct pci_tph_cpu_st st = {0};
-> +
-> +		if (cpu_possible(cpu_idx))
-> +			get_cpu_all_st(pdev, cpu_idx, &st);
-> +
-> +		memcpy(buf + copied, (char *)&st + entry_off, chunk);
-> +
-> +		copied += chunk;
-> +		pos += chunk;
-> +
-> +		cond_resched();
-> +	}
-> +
-> +	return copied;
-> +}
-> +static BIN_ATTR(tph_cpu_st, 0400, tph_cpu_st_read, NULL, 0);
-> +
-> +static const struct bin_attribute *const tph_cpu_st_bin_attrs[] = {
-> +	&bin_attr_tph_cpu_st,
-> +	NULL,
-> +};
-> +
-> +static size_t tph_cpu_st_bin_size(struct kobject *kobj,
-> +				  const struct bin_attribute *a, int n)
-> +{
-> +	return nr_cpu_ids * PCI_TPH_CPU_ST_ENTRY_SZ;
-> +}
-> +
-> +static umode_t tph_cpu_st_attr_is_visible(struct kobject *kobj,
-> +					  const struct bin_attribute *a, int n)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-> +	bool is_root_port = pci_is_pcie(pdev) &&
-> +				pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT;
-> +	u32 devcap2 = 0;
-> +
-> +	if (!is_root_port)
-> +		return 0;
-> +
-> +	pci_read_config_dword(pdev, PCI_EXP_DEVCAP2, &devcap2);
-> +	if (!(devcap2 & PCI_EXP_DEVCAP2_TPH_COMP_MASK))
-> +		return 0;
-> +
-> +	if (!tph_dsm_supported(pdev))
-> +		return 0;
-> +
-> +	return a->attr.mode;
-> +}
-> +
-> +const struct attribute_group pcie_tph_cpu_st_attr_group = {
-> +	.bin_attrs = tph_cpu_st_bin_attrs,
-> +	.bin_size = tph_cpu_st_bin_size,
-> +	.is_bin_visible = tph_cpu_st_attr_is_visible,
-> +};
-> diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-> index 4f150028965d..5c4ea44d66d2 100644
-> --- a/include/uapi/linux/pci.h
-> +++ b/include/uapi/linux/pci.h
-> @@ -19,6 +19,7 @@
->  #define _UAPILINUX_PCI_H
->  
->  #include <linux/pci_regs.h>	/* The pci register defines */
-> +#include <linux/types.h>
->  
->  /*
->   * The PCI interface treats multi-function devices as independent
-> @@ -46,4 +47,19 @@ enum pci_hotplug_event {
->  	PCI_HOTPLUG_CARD_NOT_PRESENT,
->  };
->  
-> +/*
-> + * PCIe TPH sysfs binary entry for CPU-to-ST mapping
-> + * Sysfs file: /sys/bus/pci/devices/<BDF>/tph_cpu_st
-> + * Each entry is 8 bytes aligned, seek offset = cpu_id * PCI_TPH_CPU_ST_ENTRY_SZ
-> + */
-> +struct pci_tph_cpu_st {
-> +	__u8  vm_st;        /* Volatile Memory Steering Tag (1 byte) */
-> +	__u8  pm_st;        /* Persistent Memory Steering Tag (1 byte) */
-> +	__u16 vm_xst;       /* Volatile Memory Extended Steering Tag (2 bytes) */
-> +	__u16 pm_xst;       /* Persistent Memory Extended Steering Tag (2 bytes) */
-> +	__u16 reserved;     /* Padding to 8 bytes for aligned offset lookup */
-> +} __packed;
-> +
-> +#define PCI_TPH_CPU_ST_ENTRY_SZ sizeof(struct pci_tph_cpu_st)
-> +
->  #endif /* _UAPILINUX_PCI_H */
+> Frank
+>=20
+>>=20
+>> Manage the test object lifetime explicitly. Allocate it with =
+kzalloc_obj(),
+>> add a kref, take a reference from .open(), and drop it from =
+.release().
+>> The remove path deregisters the miscdevice to stop new opens, =
+serializes
+>> with ioctl using the existing mutex, releases the PCI resources, =
+clears
+>> test->pdev, and drops the probe reference.
+>>=20
+>> Use the same 1s timeout already used by the other endpoint interrupt =
+tests
+>> for the READ, WRITE and COPY completion waits. This prevents device =
+unbind
+>> from blocking indefinitely behind an ioctl waiting for a missing =
+endpoint
+>> interrupt. Already-open file descriptors then keep the test object =
+alive;
+>> subsequent ioctls fail with -ENODEV instead of touching released =
+device
+>> resources.
+>>=20
+>> Fixes: 2c156ac71c6b ("misc: Add host side PCI driver for PCI test =
+function device")
+>> Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+>> Closes: =
+https://lore.kernel.org/all/178144969601.60470.7358419009914000395@gmail.c=
+om/
+>> Suggested-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+>> Signed-off-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+>> ---
+>> Changes in v2:
+>> - Bound READ, WRITE and COPY completion waits with the same 1s =
+timeout used
+>>  by the other endpoint interrupt tests so device unbind cannot block
+>>  indefinitely behind an ioctl waiting for a missing endpoint =
+interrupt.
+>>=20
+>> Please let me know if there are any concerns with this approach or if =
+there
+>> is a simpler preferred way to handle this lifetime.
+>>=20
+>> ---
+>> drivers/misc/pci_endpoint_test.c | 86 =
+++++++++++++++++++++++++++++----
+>> 1 file changed, 77 insertions(+), 9 deletions(-)
+>>=20
+>> diff --git a/drivers/misc/pci_endpoint_test.c =
+b/drivers/misc/pci_endpoint_test.c
+>> index dbd017cabbb9..65d768dab450 100644
+>> --- a/drivers/misc/pci_endpoint_test.c
+>> +++ b/drivers/misc/pci_endpoint_test.c
+>> @@ -13,6 +13,7 @@
+>> #include <linux/io.h>
+>> #include <linux/interrupt.h>
+>> #include <linux/irq.h>
+>> +#include <linux/kref.h>
+>> #include <linux/miscdevice.h>
+>> #include <linux/module.h>
+>> #include <linux/mutex.h>
+>> @@ -136,6 +137,7 @@ enum pci_barno {
+>> };
+>>=20
+>> struct pci_endpoint_test {
+>> +       struct kref     kref;
+>>        struct pci_dev  *pdev;
+>>        void __iomem    *base;
+>>        void __iomem    *bar[PCI_STD_NUM_BARS];
+>> @@ -143,7 +145,7 @@ struct pci_endpoint_test {
+>>        int             last_irq;
+>>        int             num_irqs;
+>>        int             irq_type;
+>> -       /* mutex to protect the ioctls */
+>> +       /* mutex to serialize ioctls and removal */
+>>        struct mutex    mutex;
+>>        struct miscdevice miscdev;
+>>        enum pci_barno test_reg_bar;
+>> @@ -157,6 +159,15 @@ struct pci_endpoint_test_data {
+>>        size_t alignment;
+>> };
+>>=20
+>> +static void pci_endpoint_test_free(struct kref *kref)
+>> +{
+>> +       struct pci_endpoint_test *test =3D container_of(kref,
+>> +                                                    struct =
+pci_endpoint_test,
+>> +                                                    kref);
+>> +
+>> +       kfree(test);
+>> +}
+>> +
+>> static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test =
+*test,
+>>                                          u32 offset)
+>> {
+>> @@ -804,10 +815,17 @@ static int pci_endpoint_test_copy(struct =
+pci_endpoint_test *test,
+>>        pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>>                                 COMMAND_COPY);
+>>=20
+>> -       wait_for_completion(&test->irq_raised);
+>> +       if (!wait_for_completion_timeout(&test->irq_raised,
+>> +                                        msecs_to_jiffies(1000))) {
+>> +               ret =3D -ETIMEDOUT;
+>> +               goto err_dst_unmap;
+>> +       }
+>>=20
+>> +err_dst_unmap:
+>>        dma_unmap_single(dev, orig_dst_phys_addr, size + alignment,
+>>                         DMA_FROM_DEVICE);
+>> +       if (ret)
+>> +               goto err_dst_phys_addr;
+>>=20
+>>        dst_crc32 =3D crc32_le(~0, dst_addr, size);
+>>        if (dst_crc32 !=3D src_crc32)
+>> @@ -909,12 +927,17 @@ static int pci_endpoint_test_write(struct =
+pci_endpoint_test *test,
+>>        pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>>                                 COMMAND_READ);
+>>=20
+>> -       wait_for_completion(&test->irq_raised);
+>> +       if (!wait_for_completion_timeout(&test->irq_raised,
+>> +                                        msecs_to_jiffies(1000))) {
+>> +               ret =3D -ETIMEDOUT;
+>> +               goto err_unmap_addr;
+>> +       }
+>>=20
+>>        reg =3D pci_endpoint_test_readl(test, =
+PCI_ENDPOINT_TEST_STATUS);
+>>        if (!(reg & STATUS_READ_SUCCESS))
+>>                ret =3D -EIO;
+>>=20
+>> +err_unmap_addr:
+>>        dma_unmap_single(dev, orig_phys_addr, size + alignment,
+>>                         DMA_TO_DEVICE);
+>>=20
+>> @@ -1000,10 +1023,17 @@ static int pci_endpoint_test_read(struct =
+pci_endpoint_test *test,
+>>        pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>>                                 COMMAND_WRITE);
+>>=20
+>> -       wait_for_completion(&test->irq_raised);
+>> +       if (!wait_for_completion_timeout(&test->irq_raised,
+>> +                                        msecs_to_jiffies(1000))) {
+>> +               ret =3D -ETIMEDOUT;
+>> +               goto err_unmap_addr;
+>> +       }
+>>=20
+>> +err_unmap_addr:
+>>        dma_unmap_single(dev, orig_phys_addr, size + alignment,
+>>                         DMA_FROM_DEVICE);
+>> +       if (ret)
+>> +               goto err_phys_addr;
+>>=20
+>>        crc32 =3D crc32_le(~0, addr, size);
+>>        if (crc32 !=3D pci_endpoint_test_readl(test, =
+PCI_ENDPOINT_TEST_CHECKSUM))
+>> @@ -1141,10 +1171,15 @@ static long pci_endpoint_test_ioctl(struct =
+file *file, unsigned int cmd,
+>> {
+>>        int ret =3D -EINVAL;
+>>        enum pci_barno bar;
+>> -       struct pci_endpoint_test *test =3D =
+to_endpoint_test(file->private_data);
+>> -       struct pci_dev *pdev =3D test->pdev;
+>> +       struct pci_endpoint_test *test =3D file->private_data;
+>> +       struct pci_dev *pdev;
+>>=20
+>>        mutex_lock(&test->mutex);
+>> +       pdev =3D test->pdev;
+>> +       if (!pdev) {
+>> +               ret =3D -ENODEV;
+>> +               goto ret;
+>> +       }
+>>=20
+>>        reinit_completion(&test->irq_raised);
+>>        test->last_irq =3D -ENODATA;
+>> @@ -1206,9 +1241,30 @@ static long pci_endpoint_test_ioctl(struct =
+file *file, unsigned int cmd,
+>>        return ret;
+>> }
+>>=20
+>> +static int pci_endpoint_test_open(struct inode *inode, struct file =
+*file)
+>> +{
+>> +       struct miscdevice *miscdev =3D file->private_data;
+>> +       struct pci_endpoint_test *test =3D to_endpoint_test(miscdev);
+>> +
+>> +       kref_get(&test->kref);
+>> +       file->private_data =3D test;
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static int pci_endpoint_test_release(struct inode *inode, struct =
+file *file)
+>> +{
+>> +       struct pci_endpoint_test *test =3D file->private_data;
+>> +
+>> +       kref_put(&test->kref, pci_endpoint_test_free);
+>> +       return 0;
+>> +}
+>> +
+>> static const struct file_operations pci_endpoint_test_fops =3D {
+>>        .owner =3D THIS_MODULE,
+>> +       .open =3D pci_endpoint_test_open,
+>>        .unlocked_ioctl =3D pci_endpoint_test_ioctl,
+>> +       .release =3D pci_endpoint_test_release,
+>> };
+>>=20
+>> static void pci_endpoint_test_get_capabilities(struct =
+pci_endpoint_test *test)
+>> @@ -1241,10 +1297,11 @@ static int pci_endpoint_test_probe(struct =
+pci_dev *pdev,
+>>        if (pci_is_bridge(pdev))
+>>                return -ENODEV;
+>>=20
+>> -       test =3D devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
+>> +       test =3D kzalloc_obj(*test);
+>>        if (!test)
+>>                return -ENOMEM;
+>>=20
+>> +       kref_init(&test->kref);
+>>        test->pdev =3D pdev;
+>>        test->irq_type =3D PCITEST_IRQ_TYPE_UNDEFINED;
+>>=20
+>> @@ -1263,7 +1320,7 @@ static int pci_endpoint_test_probe(struct =
+pci_dev *pdev,
+>>        ret =3D pci_enable_device(pdev);
+>>        if (ret) {
+>>                dev_err(dev, "Cannot enable PCI device\n");
+>> -               return ret;
+>> +               goto err_kfree_test;
+>>        }
+>>=20
+>>        ret =3D pci_request_regions(pdev, DRV_MODULE_NAME);
+>> @@ -1349,6 +1406,9 @@ static int pci_endpoint_test_probe(struct =
+pci_dev *pdev,
+>> err_disable_pdev:
+>>        pci_disable_device(pdev);
+>>=20
+>> +err_kfree_test:
+>> +       kfree(test);
+>> +
+>>        return ret;
+>> }
+>>=20
+>> @@ -1364,10 +1424,13 @@ static void pci_endpoint_test_remove(struct =
+pci_dev *pdev)
+>>        if (id < 0)
+>>                return;
+>>=20
+>> +       misc_deregister(&test->miscdev);
+>> +
+>> +       mutex_lock(&test->mutex);
+>> +
+>>        pci_endpoint_test_release_irq(test);
+>>        pci_endpoint_test_free_irq_vectors(test);
+>>=20
+>> -       misc_deregister(&test->miscdev);
+>>        kfree(misc_device->name);
+>>        kfree(test->name);
+>>        ida_free(&pci_endpoint_test_ida, id);
+>> @@ -1378,6 +1441,11 @@ static void pci_endpoint_test_remove(struct =
+pci_dev *pdev)
+>>=20
+>>        pci_release_regions(pdev);
+>>        pci_disable_device(pdev);
+>> +       pci_set_drvdata(pdev, NULL);
+>> +       test->pdev =3D NULL;
+>> +       mutex_unlock(&test->mutex);
+>> +
+>> +       kref_put(&test->kref, pci_endpoint_test_free);
+>> }
+>>=20
+>> static const struct pci_endpoint_test_data default_data =3D {
+>> --
+>> 2.34.1
+>>=20
 
