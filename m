@@ -1,303 +1,257 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013052.outbound.protection.outlook.com [40.107.162.52])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF22038AC97;
-	Wed, 24 Jun 2026 07:09:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284976; cv=fail; b=elR8zX/6ooN8adDWIMZNMqvWWmlPL0MtlmLpYX8oXURY6J3UcXXzwPiwvomEQ2GIWeqvN92+ovPW027/ZIo3cKxZs+oZbe13EfvmpUC+Xy2yJ77pVMM9Ld0G3cOkN/fISovZw3EHSaokfaoVxBn+iWTGn+brz15lhERh66zmVdU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284976; c=relaxed/simple;
-	bh=YwimGlHh6VffAmut3CajQEEifCVV0Ix12bDpTQCAF8k=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=bwJ33g9ma8fAJ1oTLG4uvBTJ70a0NSUkP5a8b0TdgLjjaTQsPcylSBObcKVf2ERYSVkLCbZ7qmQEh1NFI/6OQXDyefiX+kX0NhWvCT6p5J48V7Z0uTVBKkDK0Mpyqe4g+gPB9cMLXki67KoqkN2tzkp+mVOQtHXYcgBBf6vqgjo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=ViA/Zsx5; arc=fail smtp.client-ip=40.107.162.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15EFE31A572
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:11:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782285108; cv=none; b=YNEK45Nmn99jjBn9Nr+ju1CSyJRD2vFsRIr9aNrTaqtN0nDeTtFB8ywQ9uiqVLJWI/eCRgxFDVM1d/a8p5fz8uCwk3isNjvHpX4w0oxw6YqbtdrvdXmBk6eNghKcgSMnIBdeJ6Ilsl4Hx0V5l9Jl4/ICECeYt/P5tGcZGf5lwx8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782285108; c=relaxed/simple;
+	bh=txS/1kRdUhTwCyDqM/4B9T0RfiIpthi5qk31Yqdjp6g=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
+	 Content-Type:References; b=iXSSNGtEbHeMGt8gMeSk8Cbgpfbi02Ok1vwkNhjcdLkXmS88tNMgY/3EPDW39gxjkYn2xyhFe1kvDbGTaiOn+g9NkEAl79hxBii3HI4r9RLwRIzWPMbyLc2bp4yPAHcDxCFn6HwUIaLr8YkKX1kgna2Uit/fkA4+UBjvx/GBvoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=fRWRj2Sv; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="ViA/Zsx5"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fiWyAgZYwLORlZop/teXA9rokhJ+pIDrp+pSz5vUmUl76kSxr9+CT1wodNmwYNZhltg48YGmd7Ai5oOo7CFwyaGlRKw4ioycyEDIlnr8uni+NO/mID3kO2RYG/hpj69KJ4esHP+HnOrpof3csXnNEaLd6YFWeDp0ys23jEt6kCFMvSIQFto5kqxQh91MEk8a6w6sfY8YaIewmwwfd3UoDiHu9BnCwBQVauQHDXR5S2dEhT1hjnzIh5cdqipWifr+J+VqPDIm5bCcUztSgzEnNitI41SvqNtUQXeuc6KuEbDO2vxl08HO3dkkaFVyP5ia6ikuOG0+OumAdj8OFe2Djg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=091zK+0NHxzE22BJxj614Psiy9MBhC29uU3DlRRzFy4=;
- b=D7R5B4xO8kgj4OrpvnOdcaxdUpjnCRrUFwTljsy5th8/KKirRWLmknM6K7EDcQXKlUuyVmSKdKpCskbhTMX4xoBBpoueta3bsp02gni29reL0FiIKoW62KjNFEFmvu7LY1IugM2gvjAJDEmjpDHNmYLq+xGLIoPXHGrljLhH7yRZxu938wMVHeqR6YNezN4L38beUVWCCEiT1ODe+UgWx0l1Ifed3GmIGhghhQZ5bgZjJeorYNhvQVPBOGpJTWquRkXNWHi5J9r30YATHi4VZfiAUPlu2ZJ7nCS8yVS3Tt4+lEasz1No0H49xAWXlDX/oPU9mRm+CQeWxFMlURGOUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=091zK+0NHxzE22BJxj614Psiy9MBhC29uU3DlRRzFy4=;
- b=ViA/Zsx5L9OYKFy+sNMD6trcXKOEQEp2+/qQmqjwBomGafNZOZ+xy9Ot2UBNPcBRXo8Nz94QkoYxqkY22e3/dO5O57uO/4SHwYaYOtfITzUf6mBL3IuRzfMGmqe/N7IxycHlG8PURhtKSohJUoA3CjLySeKIBCe7XhWUcRDSYzytMU0LYr9A8VQzgLZ0+d+yRoFL/7V29g2knv+zV/VJNNtfIvGKtHMittIB14Ryq+D9v8dBYaRpDrMH3rOllV/WurUXMPq1Q71AE5OL9v79SrlJlgH8HdK8nsPsypJ6i8nXAIv2W3v5fgXYBcz3xu7xG1Dy6FQX+6Z3V6/jaUUdhw==
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- (2603:10a6:800:315::13) by DB9PR04MB11511.eurprd04.prod.outlook.com
- (2603:10a6:10:5df::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.13; Wed, 24 Jun
- 2026 07:09:27 +0000
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0139.018; Wed, 24 Jun 2026
- 07:09:27 +0000
-From: Sherry Sun <sherry.sun@nxp.com>
-To: "Frank Li (OSS)" <frank.li@oss.nxp.com>, "Sherry Sun (OSS)"
-	<sherry.sun@oss.nxp.com>
-CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
-	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li
-	<frank.li@nxp.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, Amitkumar Karwar <amitkumar.karwar@nxp.com>, Neeraj
- Sanjay Kale <neeraj.sanjaykale@nxp.com>, "marcel@holtmann.org"
-	<marcel@holtmann.org>, "luiz.dentz@gmail.com" <luiz.dentz@gmail.com>,
-	Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
-	<mani@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"brgl@kernel.org" <brgl@kernel.org>, "imx@lists.linux.dev"
-	<imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-bluetooth@vger.kernel.org"
-	<linux-bluetooth@vger.kernel.org>, "linux-pm@vger.kernel.org"
-	<linux-pm@vger.kernel.org>
-Subject: RE: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
-Thread-Topic: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
-Thread-Index: AQHdAr0iuX6nZVWy60m8TZTUEemMGrZMNMoAgAEUz+A=
-Date: Wed, 24 Jun 2026 07:09:26 +0000
-Message-ID:
- <VI0PR04MB121147C305022511469FB603A92ED2@VI0PR04MB12114.eurprd04.prod.outlook.com>
-References: <20260623030736.1421537-1-sherry.sun@oss.nxp.com>
- <20260623030736.1421537-2-sherry.sun@oss.nxp.com>
- <ajqZBM6IkbDLiVu2@SMW015318>
-In-Reply-To: <ajqZBM6IkbDLiVu2@SMW015318>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|DB9PR04MB11511:EE_
-x-ms-office365-filtering-correlation-id: 37a7151e-716e-4a56-a6b4-08ded1bf8730
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|376014|19092799006|23010399003|4143699003|11063799006|56012099006|38070700021|18002099003|22082099003;
-x-microsoft-antispam-message-info:
- XJjkLvu79zUcXIeV6v3k1neyPb/tgb08cLAhzeehzQzSi0YRhqIGZENy04mBjCvIIFMp6Yk7uYs4DyVhEDmg8gTLyeXKt5nWZdHcB23Ygl5Fm1ZdyvjluzSNTtC09LJme5XWjDegkKxw2NUZ7eVVanz3h6tfr6OIbWbHBTFt9yFbNG4qwU2zruhFIFY2a4kpdM6SRViaHaaUnmeLbDXW8qXcB+67qXDoXCoufdyzKJPnKasmQYalimEOIYUvESCprT9LDHEzYTQH5fEcptClwlQdphW+yCcq/L2LVeU/3o2edUCubQoBdzFBppJdGKPQtzUWxzznRAIfeIvc/7xFZiPA6FVLz1cgFcLgTzVZBUKrvSgQ8TsE4CZh6AmEjhk38Ue4jqR11hRYr+/nVNb2t0ggnNXn8fjXGaWPwH5L3oPDcwJkktKdSbw3cecc0bTiBqBOwQBkeuh2YsYUIKDIxF7EtzFLlURrC2k3WAPibU92Kl9vOaAJsbhItisGbjvywPPk7sm++jmRWcWpspqBOTKbGImfEFPVkwA1qt9z/rqAAdmGWWMFpPW18vTscehjC28Emzu6iEqsTBxu1sWQMg5vmh2dP0Eah5Ql2+WyIDYu7Snwtc6HxDPCDQy1AGQs7xoL2NtfIjyxeu1KiITevEu+/he+6S4ndaY+faHbSbYTjj+7gk5FP6HXMkcBor6Tc8Ef4ZSvE2mHgLNBMSv8DQy2h4SpFJmk0o6+qtlYjTg=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(19092799006)(23010399003)(4143699003)(11063799006)(56012099006)(38070700021)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?CZ4jDlK01NeFJRgGiguwRxHarrhZFwxt3Br9w/+HQy9nr2DPcP0ZDsu9HoZd?=
- =?us-ascii?Q?zqe/L3mWow+G/RRfI8wmgP6QgVFCDxVeUCVZ8vGBc5jRT3ifOMNdgOLjMslo?=
- =?us-ascii?Q?ADJzNCdYXJI8rnehCNlU/3PqP6tbJ6EpPxa1pZymz4ipXnjPPxtLDZhMDXxH?=
- =?us-ascii?Q?bAgVLCKRZ4C3Vnd9vtAdAAY4HetejEh/RvrqL6NuLVsu+msvuqxtmUbk4a9T?=
- =?us-ascii?Q?pAuy0ad7Gnf8IVK/LYEf4dRBLxnk4Ix6COdgzfz7zzpKYCku+8fK2845w6rF?=
- =?us-ascii?Q?3ZjfjlokbJq0QQysDIEO4OpJRVIpDyA2HumLrbjzeU5HhcM3V1rqppSGbBdP?=
- =?us-ascii?Q?GEsuyjdAOEBBf0SZEmhoWq1x6vBDyyN8g4dUk0fAtlrrB6ER67wvBiVQ0MAy?=
- =?us-ascii?Q?0I9D/m3CBVmBHiY64hMEb2Sv6RzoRMvyPfMCBC+VvDYuRpl/CwM9pC3Nt2YU?=
- =?us-ascii?Q?Xpc/oKuGeoVKXpUSu276NyVD3eSensSPazhbmvY2xqKJOo3IpGtmtY5m0BBW?=
- =?us-ascii?Q?KXDRE3rNYHXIMODWS0B3KbIyBHlwLqp935z8r/Y9CqlpV5nMXe9j9+s7wpTF?=
- =?us-ascii?Q?HGoPai+BJQPt8bSZpY091E2X9ZfQ/MPoCtiFHYSdzZ94fWftQSfbhjKJTV+g?=
- =?us-ascii?Q?/tD4Fmek9dLIaALDrMXRZ7HF2kLSj+oTFhtfcrW+eI6RqsHhO311CedC0U63?=
- =?us-ascii?Q?5d3jD/lx1IDgwQ7M6absTXIF9K0+IH5oSupuyiIaYqsmqIK0l3CzjRwZWMex?=
- =?us-ascii?Q?Gq1rfEEsOXEprUqc+B4IXoiue8UzBByjkIVgIO/ts3GiVKLT4qoyasCJOauc?=
- =?us-ascii?Q?vBHPkFl1vkBkDqMiCpN2zvyhJn/XpYHQotwlSszxRG7Y43uDIwW+2dnjT1kA?=
- =?us-ascii?Q?GKnK0OGpZbpg62HWsnGORo6QiAEJAqKyqCj8EYGGFUQ3F0TiveMYGx7z3zRB?=
- =?us-ascii?Q?iWaw6jxKnTx/jBqOxtzRZLXydcaTs5g62aSs9Wr3ZBJYayJ+jnpgk3u4XBXl?=
- =?us-ascii?Q?1JqYeGPD9l+PfroTaZ0L8zGx2mbO6nOYMcilPZ6jT3v4VTgIOsvgw9ti4Mj+?=
- =?us-ascii?Q?9UQzZSLBwUngYYBVDFbuxn7iRpQGGdloXNbiSqkGOnholZs0MMXW1JKxhwow?=
- =?us-ascii?Q?4CdEyuM58QAAB5OnhePBlwTSwA4ZQxjlvXzX7BKEPXJx36Bd1cJHBFuXQ4/k?=
- =?us-ascii?Q?EHSVBnHIqGqJUS4hvrBuxElp07s0efLp7PjoEQ2kyM05MFTcL3ZdX4ciZsSH?=
- =?us-ascii?Q?fiVGOtPl2UADy5HtVT/JasAfBvjGfeqf17SP52cPByimZKfZy0bUJuRLoU0r?=
- =?us-ascii?Q?s2HXpp6+XhSj6+zVXtF5dN3FV0XubUqwXN/OxG12gUURuOS6asfCk5DbQUUE?=
- =?us-ascii?Q?UiIxaoTx4ipz2fFaBodZeEPVaFO2D+I+wqShWIUQ5bnxkJgC5Xvz+i/JmP/9?=
- =?us-ascii?Q?2I7MuHWFkntlnsotNgk1L2SOfK13qTBV80H/LMCFuS3ihyxrwausbsvUPIcz?=
- =?us-ascii?Q?C8Cy3C7zeT+PT6lVsps40LH7hQi1vywbu3M+EDP2ebvFUpVnFX3uHJrk9v/g?=
- =?us-ascii?Q?OZQ63iSClFe6up8tuKzU2JYSvqhlaa2vyZwGucSAr4ifK8s1Q2vun+r+fdBa?=
- =?us-ascii?Q?mcuv5zt7dfYdr57Kg+maDXFwVBp6biMZ7Jqpuo9mv1bCn1nOg4lr8ev8HLE7?=
- =?us-ascii?Q?dPdyBb54jzTvFWGxgPjPucxLXxWAHJSyzP0yQGPGnzcxs2t/?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="fRWRj2Sv"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260624071143epoutp03bd0b0c5ed369ddbcac4c99642ba423f5~78tvcs4WD0428304283epoutp03D
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:11:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260624071143epoutp03bd0b0c5ed369ddbcac4c99642ba423f5~78tvcs4WD0428304283epoutp03D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1782285103;
+	bh=zrjvf4dDUlwszH63WbRQcR2nC9N+ccUgR2HWb+avM9I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=fRWRj2Sv4tDm4KdpF3m51UnnVrsWK1AGjj8vM+2yA6XpYgE0MM9iJmq4O1apZf/Dt
+	 2pKMJLqwnRZ5a70tsQMBlnzqjdYYOujelslB5tLhqamx5pryC61ojO2xENZ2jFpb02
+	 qGyCJZxG3bqe+9hPhDagi0pbGOjAltNPdlbahrTI=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260624071143epcas5p40bf546f51fba20148d613d609d36c878~78tu792PI0463804638epcas5p4q;
+	Wed, 24 Jun 2026 07:11:43 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.93]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4glY5V2WSgz6B9mB; Wed, 24 Jun
+	2026 07:11:42 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260624071141epcas5p3f2ad80ffa561bfd1b7ef0df34f47c80c~78ttPKFY21139511395epcas5p3S;
+	Wed, 24 Jun 2026 07:11:41 +0000 (GMT)
+Received: from arun-B560M-DS3H-V2 (unknown [107.99.41.170]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260624071139epsmtip268e077591447c3ac8086a716c4519640~78trmQhPP0292702927epsmtip2i;
+	Wed, 24 Jun 2026 07:11:39 +0000 (GMT)
+Date: Wed, 24 Jun 2026 20:30:46 +0530
+From: Shrihari E S <shrihari.s@samsung.com>
+To: Jonathan Cameron <jic23@kernel.org>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+	qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
+	vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
+	dave@stgolabs.net, gost.dev@samsung.com
+Subject: Re: [RFC 6/8] hw/pci: Add PCIe Streamlined Virtual Channel (SVC)
+ capability.
+Message-ID: <20260624150046.rsmxsji4utibab66@arun-B560M-DS3H-V2>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 37a7151e-716e-4a56-a6b4-08ded1bf8730
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Jun 2026 07:09:26.9710
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: n8J0opJOmu7D4862mD5HJG3a1OseRvAiGaubFCZpbPUJAo0w+Tt7ZPlTB33zMQaucsGiyKkXnS0/3ujN6UXJhg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB11511
+In-Reply-To: <20260616194619.47336bac@jic23-huawei>
+X-CMS-MailID: 20260624071141epcas5p3f2ad80ffa561bfd1b7ef0df34f47c80c
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+	boundary="----I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_53836_"
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260609104528epcas5p4b7379fbb5bcc8ee74461a039e88b1637
+References: <20260609105836.3702787-1-shrihari.s@samsung.com>
+	<CGME20260609104528epcas5p4b7379fbb5bcc8ee74461a039e88b1637@epcas5p4.samsung.com>
+	<20260609105836.3702787-7-shrihari.s@samsung.com>
+	<20260616194619.47336bac@jic23-huawei>
 
-> Subject: Re: [PATCH V2 1/8] PCI: imx6: Add skip_pwrctrl_off flag support
->=20
-> On Tue, Jun 23, 2026 at 11:07:28AM +0800, Sherry Sun (OSS) wrote:
-> > From: Sherry Sun <sherry.sun@nxp.com>
-> >
-> > Use dw_pcie_rp::skip_pwrctrl_off to avoid powering off devices during
-> > suspend to preserve wakeup capability of the devices and also not to
-> > power on the devices in the init path.
-> > This allows controller power-off to be skipped when some devices(e.g.
-> > M.2 cards key E without auxiliary power) required to support PCIe L2
-> > link state and wake-up mechanisms.
-> >
-> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > ---
-> >  drivers/pci/controller/dwc/pci-imx6.c | 36
-> > +++++++++++++++++----------
-> >  1 file changed, 23 insertions(+), 13 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
-> > b/drivers/pci/controller/dwc/pci-imx6.c
-> > index 0fa716d1ed75..ff5a9565dbbf 100644
-> > --- a/drivers/pci/controller/dwc/pci-imx6.c
-> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> > @@ -1382,16 +1382,20 @@ static int imx_pcie_host_init(struct dw_pcie_rp
-> *pp)
-> >  		}
-> >  	}
-> >
-> > -	ret =3D pci_pwrctrl_create_devices(dev);
-> > -	if (ret) {
-> > -		dev_err(dev, "failed to create pwrctrl devices\n");
-> > -		goto err_reg_disable;
-> > +	if (!pci->suspended) {
-> > +		ret =3D pci_pwrctrl_create_devices(dev);
->=20
-> Is possible move pci_pwrctrl_create_devices() of pci_pwrctrl_create_devic=
-es
->=20
-> and call it direct at probe() function, like other regulator_get function=
-.
->=20
+------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_53836_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Disposition: inline
 
-Hi Frank,
-That makes sense. However, if we move pci_pwrctrl_create_devices () to
-probe(), we may need to add the following goto err_pwrctrl_destroy path
-in imx_pcie_probe() to properly handle errors from
-pci_pwrctrl_power_on_devices(), is that acceptable?
+On 16/06/26 07:46PM, Jonathan Cameron wrote:
+>On Tue,  9 Jun 2026 16:28:34 +0530
+>Shrihari E S <shrihari.s@samsung.com> wrote:
+>
+>> From: Dongjoo Seo <dongjoo.seo1@samsung.com>
+>>
+>> Implement the PCIe Streamlined Virtual Channel (SVC) Extended
+>> Capability by adding support of capability, control and status
+>> registers per PCIe 6.4 section 7.9.29. This capability is one
+>> of the main requisites for UIO support in both PCIe and CXL ports.
+>>
+>> Key changes include:
+>>     - New pcie_svc.c file for SVC capability management.
+>>     - Updated pcie_cap_fill_lnk() to handle flitmode signaling.
+>>     - Implement Lifecycle hooks (reset and config_write) to manage
+>>       SVC state.
+>>
+>> Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
+>> Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
+>A very quick review on this one as I'm more or less out of time for today
+>(and not listening to a call ;)
+>
+>      pci_long_test_and_clear_mask(exp_cap + PCI_EXP_LNKCAP,
+>> @@ -160,8 +161,14 @@ static void pcie_cap_fill_lnk(uint8_t *exp_cap, PCIExpLinkWidth width,
+>>      }
+>>
+>>      if (flitmode) {
+>> -        pci_long_test_and_set_mask(exp_cap + PCI_EXP_LNKSTA2,
+>> +        uint32_t pos = dev->exp.exp_cap;
+>> +
+>> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
+>>                                     PCI_EXP_LNKSTA2_FLIT);
+>
+>Why is this writing a field from LNKSTA2 into FLAGS?
+>
 
-@@ -1960,11 +1949,15 @@ static int imx_pcie_probe(struct platform_device *p=
-dev)
-        if (ret)
-                return ret;
+Hi Jonathan,
 
-+       ret =3D pci_pwrctrl_create_devices(dev);
-+       if (ret)
-+               return dev_err_probe(dev, ret, "failed to create pwrctrl de=
-vices\n");
-+
-        pci->use_parent_dt_ranges =3D true;
-        if (imx_pcie->drvdata->mode =3D=3D DW_PCIE_EP_TYPE) {
-                ret =3D imx_add_pcie_ep(imx_pcie, pdev);
-                if (ret < 0)
--                       return ret;
-+                       goto err_pwrctrl_destroy;
+   Sorry, it's a typo. It should be PCI_EXP_LNKSTA2 instead of PCI_EXP_FLAGS.
+   will correct it in the next version of patch.
 
-                /*
-                 * FIXME: Only single Device (EPF) is supported due to the
-@@ -1979,7 +1972,7 @@ static int imx_pcie_probe(struct platform_device *pde=
-v)
-                pci->pp.use_atu_msg =3D true;
-                ret =3D dw_pcie_host_init(&pci->pp);
-                if (ret < 0)
--                       return ret;
-+                       goto err_pwrctrl_destroy;
+>>  static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
+>>  {
+>>      PCIESlot *s = (PCIESlot *)object_dynamic_cast(OBJECT(dev), TYPE_PCIE_SLOT);
+>> @@ -217,7 +259,8 @@ static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
+>>          /* the PCI_EXP_LNKSTA_DLLLA will be set in the hotplug function */
+>>      }
+>>
+>> -    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->parent_obj.flitmode);
+>> +    pcie_cap_fill_lnk(dev, exp_cap, s->width, s->speed,
+>> +                      s->parent_obj.flitmode);
+>
+>As previously I think that should be a PCIE_PORT(s)->flitmode
+>
+>>  }
 
-                if (pci_msi_enabled()) {
-                        u8 offset =3D dw_pcie_find_capability(pci, PCI_CAP_=
-ID_MSI);
-@@ -1991,6 +1984,11 @@ static int imx_pcie_probe(struct platform_device *pd=
-ev)
-        }
+Yeah, will correct it.
 
-        return 0;
-+
-+err_pwrctrl_destroy:
-+       if (ret !=3D -EPROBE_DEFER)
-+               pci_pwrctrl_destroy_devices(dev);
-+       return ret;
- }
+>> +int pcie_config_uio_svc(PCIDevice *d, Error **errp)
+>> +{
+>> +    PCIEPort *p = PCIE_PORT(d);
+>> +
+>> +    if (!get_uio_mandatory_svc(p)
+>> +        || pcie_svc_cap_init(d, PCI_EXT_CAP_BASE_OFFSET, errp) < 0) {
+>
+>|| on the line above
+>
 
-Best Regards
-Sherry
+Got it, thanks for pointing out. Will correct this.
 
->=20
-> > +		if (ret) {
-> > +			dev_err(dev, "failed to create pwrctrl devices\n");
-> > +			goto err_reg_disable;
-> > +		}
-> >  	}
-> >
-> > -	ret =3D pci_pwrctrl_power_on_devices(dev);
-> > -	if (ret) {
-> > -		dev_err(dev, "failed to power on pwrctrl devices\n");
-> > -		goto err_pwrctrl_destroy;
-> > +	if (!pp->skip_pwrctrl_off) {
-> > +		ret =3D pci_pwrctrl_power_on_devices(dev);
-> > +		if (ret) {
-> > +			dev_err(dev, "failed to power on pwrctrl devices\n");
-> > +			goto err_pwrctrl_destroy;
-> > +		}
-> >  	}
-> >
-> >  	ret =3D imx_pcie_clk_enable(imx_pcie); @@ -1460,9 +1464,10 @@
-> static
-> > int imx_pcie_host_init(struct dw_pcie_rp *pp)
-> >  err_clk_disable:
-> >  	imx_pcie_clk_disable(imx_pcie);
-> >  err_pwrctrl_power_off:
-> > -	pci_pwrctrl_power_off_devices(dev);
-> > +	if (!pp->skip_pwrctrl_off)
-> > +		pci_pwrctrl_power_off_devices(dev);
-> >  err_pwrctrl_destroy:
-> > -	if (ret !=3D -EPROBE_DEFER)
-> > +	if (ret !=3D -EPROBE_DEFER && !pci->suspended)
-> >  		pci_pwrctrl_destroy_devices(dev);
-> >  err_reg_disable:
-> >  	if (imx_pcie->vpcie)
-> > @@ -1482,7 +1487,8 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
-> *pp)
-> >  	}
-> >  	imx_pcie_clk_disable(imx_pcie);
-> >
-> > -	pci_pwrctrl_power_off_devices(pci->dev);
-> > +	if (!pci->pp.skip_pwrctrl_off)
-> > +		pci_pwrctrl_power_off_devices(pci->dev);
-> >  	if (imx_pcie->vpcie)
-> >  		regulator_disable(imx_pcie->vpcie);
-> >  }
-> > @@ -1990,12 +1996,16 @@ static int imx_pcie_probe(struct
-> > platform_device *pdev)  static void imx_pcie_shutdown(struct
-> > platform_device *pdev)  {
-> >  	struct imx_pcie *imx_pcie =3D platform_get_drvdata(pdev);
-> > +	struct dw_pcie *pci =3D imx_pcie->pci;
-> > +	struct dw_pcie_rp *pp =3D &pci->pp;
-> >
-> >  	/* bring down link, so bootloader gets clean state in case of reboot =
-*/
-> >  	imx_pcie_assert_core_reset(imx_pcie);
-> >  	imx_pcie_assert_perst(imx_pcie, true);
-> > -	pci_pwrctrl_power_off_devices(&pdev->dev);
-> > -	pci_pwrctrl_destroy_devices(&pdev->dev);
-> > +	if (!pp->skip_pwrctrl_off)
-> > +		pci_pwrctrl_power_off_devices(&pdev->dev);
-> > +	if (!pci->suspended)
-> > +		pci_pwrctrl_destroy_devices(&pdev->dev);
-> >  }
-> >
-> >  static const struct imx_pcie_drvdata drvdata[] =3D {
-> > --
-> > 2.50.1
-> >
-> >
+>> +int pcie_svc_cap_init(PCIDevice *dev, uint16_t offset, Error **errp)
+>> +{
+>> +    uint32_t hdr;
+>> +
+>> +    if (!pci_is_express(dev)) {
+>> +        error_setg(errp, "SVC ECAP requires PCIe");
+>> +        return -EINVAL;
+>> +    }
+>> +
+>> +    /*
+>> +     * If no other ECAPs are present, make SVC the first at 0x100.
+>> +     * This avoids pcie_add_capability() asserting on a non-0x100 offset.
+>> +     */
+>> +    hdr = pci_get_long(dev->config + PCI_CONFIG_SPACE_SIZE);
+>
+>Is there precedence for this?  Seems like most cases hand code
+>an offset. I think letting this run has the risk that an ordering
+>change might end up with this where something else wants to go.
+>
+
+Yeah, will check the precedence and change it accordingly.
+
+>> +    if (hdr == 0) {
+>> +        offset = PCI_CONFIG_SPACE_SIZE;
+>> +    }
+>
+>
+>>  void pcie_cap_slot_pre_plug_cb(HotplugHandler *hotplug_dev, DeviceState *dev,
+>>                                 Error **errp);
+>> diff --git a/include/hw/pci/pcie_regs.h b/include/hw/pci/pcie_regs.h
+>> index 33a22229fe..644da744b2 100644
+>> --- a/include/hw/pci/pcie_regs.h
+>> +++ b/include/hw/pci/pcie_regs.h
+>> @@ -81,6 +81,7 @@ typedef enum PCIExpLinkWidth {
+>>  #define PCI_EXP_DEVCAP2_EETLPP          0x200000
+>>
+>>  #define PCI_EXP_DEVCTL2_EETLPPB         0x8000
+>> +#define  PCI_EXP_LNKCTL_FLIT_DIS        0x2000
+>
+>This extra indent is supposed to associate the field with the register
+>but the register isn't defined here so it makes little sense.
+>
+>
+>>
+>I see there is some precedence in here for registers that are also defined
+>in the linux header that is included via hw/pci/pci_regs.h
+>
+>Maybe we should clean that up a t somepoint.
+>
+>>  /* ARI */
+>>  #define PCI_ARI_VER                     1
+>> diff --git a/include/hw/pci/pcie_svc.h b/include/hw/pci/pcie_svc.h
+>> new file mode 100644
+>> index 0000000000..4872905501
+>> --- /dev/null
+>> +++ b/include/hw/pci/pcie_svc.h
+>> @@ -0,0 +1,91 @@
+>> +/*
+>> + * SPDX-License-Identifier: GPL-2.0-or-later
+>> + *
+>> + * PCIe Streamlined Virtual Channel (SVC) Extended Capability
+>> + *
+>> + * Copyright (c) 2026 Samsung Electronics Co., Ltd.
+>> + */
+>> +
+>> +#ifndef HW_PCIE_SVC_H
+>> +#define HW_PCIE_SVC_H
+>
+>Much of this feels like it will end up in pci_regs.h
+>so maybe just do that from the start.
+>
+
+We thought that we should follow the same pattern that PCIe SRIOV did
+"pcie_sriov.h", so we added pcie_svc.h. I agree that all the register
+declaration and definition should go in pci_regs.h. Will do that.
+
+>For this series you'd have to have a patch adding them with
+>a note on when you expect them to be in the linux header.
+>
+
+Yeah sure.
+
+>> +#define PCI_EXT_CAP_BASE_OFFSET                0x200
+>> +#define PCI_EXT_CAP_ID_SVC                     0x35
+>> +#define PCI_EXT_CAP_SVC_SIZE                   0x74
+>> +
+>> +/* PCIe 6.4 section 7.9.29 */
+>> +#define PCIE_SVC_CAP_HEAD_OFFSET               0x00
+>> +#define PCIE_SVC_CAP_OFFSET                    0x04
+>
+>> +#define SVC_TC_VC_MAP(n)                       ((n & 0xff) << 0)
+>> +
+>> +/* 7.9.27.8 SVC Resource Status Register */
+>> +#define SVC_RES_STATUS_BASE                    0x1c
+>> +#define SVC_RES_STATUS(n)                      (SVC_RES_STATUS_BASE + \
+>> +                                                (n) * 0x0c)
+>
+>That's not a nice line break for readabilty. If you have two, move the whole thing to next line.
+>
+
+Sure, will rectify it.
+
+
+------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_53836_
+Content-Type: text/plain; charset="utf-8"
+
+
+------I1Ri8ePFE5syy3iOprV_xv8GO54F8jwSmmauBZ9e3BMCG3p4=_53836_--
