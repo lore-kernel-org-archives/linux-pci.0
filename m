@@ -1,111 +1,195 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27643386561
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:12:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6763876C7
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:29:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782281557; cv=none; b=TgrBkJhp5kHelVEyJicRZaUpzTA3u0uDn9RsEDEbztSx/vrcRneQm6yM9RLrCe4gH/kFfhqNQz0oXWfM1qJAONwrbomnqQFTDWLBo6saMB+xVnj/krg537W3WcCiRGwOYGSwt6cLPwWUgOg3apVtYSpE8hrnf1tDHW6SWfhKAGg=
+	t=1782282568; cv=none; b=lDgjTsi8zgu9M/OIzbiXGQOzcunLbjitv3jYXvRAcclRJPTTRnCmyvto6hdoon40U0cUNiOQZBeUagaIqf0dMHsa9C5a6tL3xt5NI4btCuN03mdyfZlyrBhPasIq923BilV4a8JlmY3fBqq28FCLWtj7Jswh4BTJjG2oYhkI1xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782281557; c=relaxed/simple;
-	bh=ZSVr9Egr6ypjajhcXCckv+4xsGhUqTrg9LYYkcwVdeg=;
+	s=arc-20240116; t=1782282568; c=relaxed/simple;
+	bh=JFlu3g8MSBvaztrq4JDaDpChgd+ByrRmcK3c0K0oYtI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=a7ZXUS4RZ/EqBqt1P91PU984KxxmHpBk8vl/xOk1/psHoyk7JM/y0RLZOu4lCs4aqbhGJhbiFp7Rb5tfWZtOMshTS6TJSbq/HqAzMZb59le2LEW3yqhLTdiFvVDRpf6XupXQLLv7mBntKOeyBBN5XwyTQZvaTwwY1iALiQkvriw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=oh3W1FeP; arc=none smtp.client-ip=203.254.224.33
+	 Content-Type:References; b=NwBtbI2LYBalJIYSu+e5q9DjmVwf2btoBHZ99bq0DQl+HmLGV131bBYZsco+y6l+lb0/WYQOAH+qYHx4CEirx7AdvraLfwEenbdSLo6n59TSXw6aql6ywb2mciSQOjVV/i6LT3/d6tSLf636WV+amRE49GACXzADXQ7oCORkHio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=STU/FO3m; arc=none smtp.client-ip=203.254.224.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="oh3W1FeP"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260624061232epoutp03a30bb885fb94f1f61265d38b5ab88f60~776EjlvPB0736507365epoutp03r
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:12:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260624061232epoutp03a30bb885fb94f1f61265d38b5ab88f60~776EjlvPB0736507365epoutp03r
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="STU/FO3m"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260624062917epoutp021a538f5f9c66e2dfbb30916690444eda~78IsjNTWM2824828248epoutp02t
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:29:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260624062917epoutp021a538f5f9c66e2dfbb30916690444eda~78IsjNTWM2824828248epoutp02t
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1782281552;
-	bh=kY/dxQYx/wRPEf2qC748CpGM1a3g+t0/zv46gOr+qAY=;
+	s=mail20170921; t=1782282557;
+	bh=bMS8K56VmMhlkYOs76iSLytYgBZfJhEXGAFPnTRB858=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=oh3W1FePv07XnqAelEFW8Q1pHVwG+ADlorSBlcPlORMD+FT9ETvo7JJEYRgXh7OZY
-	 /8KS9rzeonXIOS8vWBeBr7bHSXW+q18fNtzf6aBmnAbpJyAafwRAeeA714I6TT2nZh
-	 ENonRAj6ASBEBOBgjGdLNn0mfaUlhLPOjKRQm05I=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	b=STU/FO3mr8eaLYLhYWgDgpIWfZPNyBp9pmsk7cLKX6+to7cE04HXzXrapkkP8Lrdz
+	 3lz8EgR4SLoRpulX4nRDAjb3qzXpei6rD3ZzQ3VvCGViE1bHblLJJ/kaaar9ZbnHaH
+	 rXUWO8nK1DK8COyGGIsJQRNFKdWB9vmzFKRpkUOI=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
 	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260624061232epcas5p43790b4403384ebc55187f2fb90e34c6c~776DwZAjB0689606896epcas5p4N;
-	Wed, 24 Jun 2026 06:12:32 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.89]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4glWnC1CKLz3hhTD; Wed, 24 Jun
-	2026 06:12:31 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260624061230epcas5p419894dd4d2e612f7712f1ec7ae940ce0~776ChX7yz3046330463epcas5p4b;
-	Wed, 24 Jun 2026 06:12:30 +0000 (GMT)
+	20260624062917epcas5p4aa00448c504e08879ab7c408a69e99de~78Ir45e3N0934509345epcas5p4n;
+	Wed, 24 Jun 2026 06:29:17 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.87]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4glX8X3Dwvz6B9m8; Wed, 24 Jun
+	2026 06:29:16 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260624062915epcas5p39f8859af5665acb4dc7b8ba7beb3bd43~78IqvVnvm1577415774epcas5p3Y;
+	Wed, 24 Jun 2026 06:29:15 +0000 (GMT)
 Received: from arun-B560M-DS3H-V2 (unknown [107.99.41.170]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260624061228epsmtip1b208377c679fed6ea71d1c7e754271e5~776ACMl-O2928929289epsmtip1P;
-	Wed, 24 Jun 2026 06:12:27 +0000 (GMT)
-Date: Wed, 24 Jun 2026 19:31:03 +0530
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260624062914epsmtip24934ac2d15482865c5fcc6b3fcdc6c02~78IpPNfJT1926719267epsmtip2V;
+	Wed, 24 Jun 2026 06:29:14 +0000 (GMT)
+Date: Wed, 24 Jun 2026 19:48:06 +0530
 From: Shrihari E S <shrihari.s@samsung.com>
 To: Jonathan Cameron <jic23@kernel.org>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
 	vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
 	dave@stgolabs.net, gost.dev@samsung.com
-Subject: Re: [RFC 1/8] hw/pci: Refactor flitmode from PCIESlot to PCIEPort.
-Message-ID: <20260624140103.thavawn667tfs4tg@arun-B560M-DS3H-V2>
+Subject: Re: [RFC 3/8] hw/pci: Add SVC capability and UIO properties to PCIe
+ ports
+Message-ID: <20260624141806.5g4yub6kby6cnsh7@arun-B560M-DS3H-V2>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260616142730.7fb0a465@jic23-huawei>
-X-CMS-MailID: 20260624061230epcas5p419894dd4d2e612f7712f1ec7ae940ce0
+In-Reply-To: <20260616182029.3dc0af33@jic23-huawei>
+X-CMS-MailID: 20260624062915epcas5p39f8859af5665acb4dc7b8ba7beb3bd43
 X-Msg-Generator: CA
 Content-Type: multipart/mixed;
-	boundary="----LzjFyProJtBlqpjpUA7CxzsXX7e_8S7ToqyYf_kYrViRiBfb=_5314c_"
+	boundary="----uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53308_"
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260609104503epcas5p12628cd89d0ef9210c856d2518dc790cb
+X-CMS-RootMailID: 20260609104517epcas5p222b4fc4a5fd8671b47a68abc785a6422
 References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<CGME20260609104503epcas5p12628cd89d0ef9210c856d2518dc790cb@epcas5p1.samsung.com>
-	<20260609105836.3702787-2-shrihari.s@samsung.com>
-	<20260616142730.7fb0a465@jic23-huawei>
+	<CGME20260609104517epcas5p222b4fc4a5fd8671b47a68abc785a6422@epcas5p2.samsung.com>
+	<20260609105836.3702787-4-shrihari.s@samsung.com>
+	<20260616182029.3dc0af33@jic23-huawei>
 
-------LzjFyProJtBlqpjpUA7CxzsXX7e_8S7ToqyYf_kYrViRiBfb=_5314c_
+------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53308_
 Content-Type: text/plain; charset="utf-8"; format="flowed"
 Content-Disposition: inline
 
->> diff --git a/hw/pci-bridge/cxl_root_port.c b/hw/pci-bridge/cxl_root_port.c
->> index 0ee18ef5c3..df69c5200f 100644
->> --- a/hw/pci-bridge/cxl_root_port.c
->> +++ b/hw/pci-bridge/cxl_root_port.c
+On 16/06/26 06:20PM, Jonathan Cameron wrote:
+>On Tue,  9 Jun 2026 16:28:31 +0530
+>Shrihari E S <shrihari.s@samsung.com> wrote:
 >
->>  static void cxl_rp_dvsec_write_config(PCIDevice *dev, uint32_t addr,
->> diff --git a/hw/pci/pcie.c b/hw/pci/pcie.c
->> index 1de0b1e4fd..d452199d85 100644
->> --- a/hw/pci/pcie.c
->> +++ b/hw/pci/pcie.c
->> @@ -217,7 +217,7 @@ static void pcie_cap_fill_slot_lnk(PCIDevice *dev)
->>          /* the PCI_EXP_LNKSTA_DLLLA will be set in the hotplug function */
->>      }
+>> From: Dongjoo Seo <dongjoo.seo1@samsung.com>
 >>
->> -    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->flitmode);
->> +    pcie_cap_fill_lnk(exp_cap, s->width, s->speed, s->parent_obj.flitmode);
+>> Implement the Streamlined Virtual Channel (SVC) extended capability
+>> for PCIe ports (Root, Upstream, and Downstream). This capability is
+>> mandatory for enabling Unordered IO (UIO) traffic as per PCIe 6.4
+>> specification [1].
+>>
+>> UIO functionality depends on two key prerequisites:
+>>   1. SVC support (SVC3 mandatory, SVC4 optional)
+>>   2. 256-byte Flit mode support
+>>
+>> This patch adds the following experimental properties to PCIe ports:
+>>   - x-uio-svc: Enable UIO traffic via SVC3 (mandatory path)
+>>   - x-uio-svc-opt: Enable UIO traffic via SVC4 (optional path)
 >
->I think we should use a cast to the parent object type rather than going directly
->into s->parent_obj.  PCIE_PORT(s)->flitmode.
+>That doesn't feel like naming that will stand the test of time.
+>I think it needs to mention svc4 in the name.  Or I suppose we could
+>do something with a single x-uio-svc parameter taking values.
+>
+>
 
 Hi Jonathan,
 
-Got your point and it makes sense, will change that in the next version of this patch series. Thanks for the suggestion.
+We thought, 
+   - it would be more technical if we add svc3 and svc4 in the
+     emulation parameters and
+   - would be readable if we advertise the field as UIO mandatory
+     SVC (x-uio-svc) and UIO optional SVC (x-uio-svc-opt).
 
+cool will change those to "x-uio-svc3" and "x-uio-svc4" in the
+upcoming version.
+
+Thanks.
+
+>>   - x-256b-flit: Enable 256B flit mode required for UIO
+>>
+>> Helper functions are included to manage UIO traffic gating and SVC
+>> configuration. This change lays the groundwork for UIO emulation in
+>> QEMU.
+>>
+>> [1]: PCIe 6.4 Specification, Table 2-46 (Streamlined Virtual Channel)
 >
->>  }
+>I'm currently out of the loop for PCIe specs. So if someone else could
+>review against spec that would be great.
+>
+>>
+>> Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
+>> Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
+>> ---
+>>  static const TypeInfo xio3130_upstream_info = {
+>> diff --git a/include/hw/pci/pcie_port.h b/include/hw/pci/pcie_port.h
+>> index 1bcc734649..a6b1b8a6cf 100644
+>> --- a/include/hw/pci/pcie_port.h
+>> +++ b/include/hw/pci/pcie_port.h
+>> @@ -37,8 +37,29 @@ struct PCIEPort {
+>>
+>>      /* pci express switch port */
+>>      uint8_t     port;
+>> +
+>> +    /*
+>> +     * This field declares Streamlined Virtual Channel (SVC) capability.
+>> +     * Per PCIe 6.4 specification section 7.9.29, a pcie port supports
+>> +     * upto 8 SVCs, in that SVC0 is a default one, SVC3 is for UIO traffic
+>> +     * and SVC 4 is shared by both UIO and non-UIO traffic.
+>
+>What actually goes in there?  Is this literally the SVC capability content?
 >
 
-------LzjFyProJtBlqpjpUA7CxzsXX7e_8S7ToqyYf_kYrViRiBfb=_5314c_
+Yes, this is the SVC capability of the port and is a bitmap which will be
+populated based on the emulation parameters of the port.
+
+>> +     */
+>> +    uint32_t    svc;
+>>  };
+>>
+>> +#define UIO_MANDATORY_SVC 3
+>> +#define UIO_OPTIONAL_SVC 4
+>> +
+>> +static inline bool get_uio_mandatory_svc(PCIEPort *port)
+>> +{
+>> +    return (port->svc >> UIO_MANDATORY_SVC) & 1;
+>
+>Could just define the field mask given I don't think you ever care about them
+>being the numeric values themselves. If you need the value defines later, then
+>fair enough.
+>
+>If you do switch to defining fields.
+>	return port->svc & UIO_MANDATORY_SVC;
+>and rely on boolean cast from non 0 to be true.
+>
+>Also, do we want to route those two defines through the kernel uapi/linux/pci_regs.h
+>and then just make use of them in QEMU?
+>
+
+Actually these are not registers, just a macro definition used to denote SVC3
+and SVC4. These definitions are used to enable/verify the bitmap declared
+above (uint32_t svc) and I guess routing from linux/pci_regs.h is not
+required.
+
+>I kind of assume you have some kernel patches as well as this qemu support so
+>it would form part of that?
+>
+
+Yeah, we are peparing kernel patches and will be sent out shortly.
+
+
+
+------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53308_
 Content-Type: text/plain; charset="utf-8"
 
 
-------LzjFyProJtBlqpjpUA7CxzsXX7e_8S7ToqyYf_kYrViRiBfb=_5314c_--
+------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53308_--
