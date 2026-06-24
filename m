@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA57134676F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF445366074;
 	Wed, 24 Jun 2026 12:57:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782305854; cv=none; b=Rw0vclJTA9TYIhJqiD1mow5UnAIvW3hri8ePPoZojTvfCFsP9vOwK96wbrdhZ0CiTIlt67n3DhgTgsNdXcP82nixCO67LqFSmEYTvq1gc+3mpOfYT/x0+ERZon6Hr/tg03tRbY9RCjnqxOTPdUCnKyUw+D3oJfZeKtcZLl0jeoI=
+	t=1782305855; cv=none; b=aKDGgbjIsMM2CEVwXjxuILVPicsJSqWDIrkS/rAwg30/7eHoXF0mAi7CKjaUlbgTI6rDx8gkExymNX1XEXgYrEeDYuH2dmvCwG5kNZ+O4xM1UbQha9nf1aC8/v1/3V79IpuUbWCa/6sPKvmEJZj3WUzSmhPbvkPXueqCF+bx6ok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782305854; c=relaxed/simple;
-	bh=/Ez1yD+QBc3OyMPlvXhRRCxYyERmjWfx2EKbWZexp0o=;
+	s=arc-20240116; t=1782305855; c=relaxed/simple;
+	bh=zTmWjGB0t5fupPP0m4i09wGlyCd8f6AfWWWED1Dx2XU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=NsrJLY6M8Tp+BTQuGxdz8HKmz3MUvqUf4xlwumM/msj8tsWEeTFJD4aZKNaL+0GSQUZxpEhAqnMCZykCL8aqEKFXxDJQekZdwNhBWWAzZfyryxedgbFA62g9Ibw+/QjmJjOyWiDO3mIdXXb6fcZlM/s0XrM4VSu7/Oe6eCHRNrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bmt+sTC7; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=YjkLMK7UF6tlypjoverz7odtc/buWeZtYlqxHqqIyOb9ltCqCE6XAEVHY668C+773oJd+WZnVtvPp69Hd8nt/aV6W1OjzQ8Mi4PfvaeOE6rX0FQL1z63S1zLOz8xZOQp1uvA7AQTaIOVYmvebhqKRH9p6bryp7TNNRFTXVxkY7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AFENfw6B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bmt+sTC7"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 99B83C4AF0C;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AFENfw6B"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AB3B6C32786;
 	Wed, 24 Jun 2026 12:57:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1782305854; bh=/Ez1yD+QBc3OyMPlvXhRRCxYyERmjWfx2EKbWZexp0o=;
+	t=1782305854; bh=zTmWjGB0t5fupPP0m4i09wGlyCd8f6AfWWWED1Dx2XU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=bmt+sTC7M54lo2VDRzUcQvqKWlox3181Di2l5pFK+VsXilbB1o+0AFmHV9qM7wo3V
-	 GyFTcuz2r8OmOkc/kB8dQasFiMY8uWS25DC2ooqtGgd+39eXPbshWIDHArMkTY3Ln6
-	 qa6JLxlYQr7qTm/1zKPblpgnMBAGEXnu4ytVI0QU=
+	b=AFENfw6BLVBeRaAI+Y9O5Djq7kPmiUnax43ggJRflSDbGeBRySiTDdTA09Q3WheEu
+	 bogCOlGSy1g4OiJ3yLvN8ApcRMGWUm3fze6NoRBBBhHZKzJ8RNbjFFyD3/UrNlpH4g
+	 zXTTVL+6LjPzwNWUZ9R45NK9GPKn1/0RWGJus09Q=
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE9FCDB47F;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A284CDE002;
 	Wed, 24 Jun 2026 12:57:34 +0000 (UTC)
 From: Alvin Sun <alvin.sun@linux.dev>
-Date: Wed, 24 Jun 2026 20:57:25 +0800
-Subject: [PATCH v5 2/9] rust: module: add `THIS_MODULE` const to
- `ModuleMetadata` trait
+Date: Wed, 24 Jun 2026 20:57:26 +0800
+Subject: [PATCH v5 3/9] rust: doctest: add LocalModule fallback for
+ #[vtable] ThisModule
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260624-fix-fops-owner-v5-2-aa1cba242f05@linux.dev>
+Message-Id: <20260624-fix-fops-owner-v5-3-aa1cba242f05@linux.dev>
 References: <20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev>
 In-Reply-To: <20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev>
 To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
@@ -70,96 +70,55 @@ Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
  linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
  linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782305851; l=3548;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782305851; l=1283;
  i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=/Ez1yD+QBc3OyMPlvXhRRCxYyERmjWfx2EKbWZexp0o=;
- b=mVu3Aelu7qgY3lekWiSWVI2T3XR2eySrEe1dl6F13y1Owp8r8su6dZ3MZhpzlnLVhF9VWd40P
- 9QI27dWhEwqAw3cKOsewjX93bdEd8RA+VIGgbyL2jOt/D1Nvv28VPtI
+ bh=zTmWjGB0t5fupPP0m4i09wGlyCd8f6AfWWWED1Dx2XU=;
+ b=1kt7t3dJFPtE0Ypvrj99GHW1WrWYxOVc3dXRYHD1bzE+9qDqbgPImXUPQe2YJbGQQlaHSkffp
+ OJC6A+z3yKUDKSJk02LWna1FIBD9ulDIU5VCUjMK4HtDjHnzWz1CBNh
 X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
  pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
 X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
  auth_id=684
 
-Since `const_refs_to_static` has been stable as of the MSRV bump, a
-`ThisModule` pointer can now be used in const contexts.
-
-Add a `THIS_MODULE` const to the `ModuleMetadata` trait so that modules
-can provide their `ThisModule` pointer in const contexts such as static
-`file_operations`.
-
-Add a `this_module()` helper to retrieve the `THIS_MODULE` pointer of a
-given module type, and update `__init` to use it instead of the
-`THIS_MODULE` static generated by the `module!` macro.
-
-The `static THIS_MODULE` generated by the `module!` macro is retained
-for backwards compatibility with existing users and removed in a later
-patch once all references have been migrated.
+Add a `LocalModule` struct with a null-pointer `ModuleMetadata` impl
+in the doctest harness, so that `crate::LocalModule` (auto-inserted
+by `#[vtable]`) resolves correctly when there is no `module!` macro.
 
 Assisted-by: opencode:glm-5.2
 Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
 Reviewed-by: Gary Guo <gary@garyguo.net>
 Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 ---
- rust/kernel/module.rs |  9 +++++++++
- rust/macros/module.rs | 18 +++++++++++++++++-
- 2 files changed, 26 insertions(+), 1 deletion(-)
+ scripts/rustdoc_test_gen.rs | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/rust/kernel/module.rs b/rust/kernel/module.rs
-index be242a82e86d2..d713705984477 100644
---- a/rust/kernel/module.rs
-+++ b/rust/kernel/module.rs
-@@ -42,6 +42,15 @@ fn init(module: &'static ThisModule) -> impl pin_init::PinInit<Self, crate::erro
- pub trait ModuleMetadata {
-     /// The name of the module as specified in the `module!` macro.
-     const NAME: &'static crate::str::CStr;
-+
-+    /// The module's `THIS_MODULE` pointer.
-+    const THIS_MODULE: ThisModule;
-+}
-+
-+/// Returns a reference to the `THIS_MODULE` of the given module type.
-+#[inline]
-+pub const fn this_module<M: ModuleMetadata>() -> &'static ThisModule {
-+    &M::THIS_MODULE
- }
+diff --git a/scripts/rustdoc_test_gen.rs b/scripts/rustdoc_test_gen.rs
+index ee76e96b41eea..198af4e446c8c 100644
+--- a/scripts/rustdoc_test_gen.rs
++++ b/scripts/rustdoc_test_gen.rs
+@@ -239,6 +239,22 @@ macro_rules! assert_eq {{
  
- /// Equivalent to `THIS_MODULE` in the C API.
-diff --git a/rust/macros/module.rs b/rust/macros/module.rs
-index 06c18e2075083..aa9a618d5d19e 100644
---- a/rust/macros/module.rs
-+++ b/rust/macros/module.rs
-@@ -519,6 +519,22 @@ pub(crate) fn module(info: ModuleInfo) -> Result<TokenStream> {
+ const __LOG_PREFIX: &[u8] = b"rust_doctests_kernel\0";
  
-         impl ::kernel::ModuleMetadata for #type_ {
-             const NAME: &'static ::kernel::str::CStr = #name_cstr;
++/// Dummy module type for doctest context.
++struct LocalModule;
 +
-+            #[cfg(MODULE)]
-+            const THIS_MODULE: ::kernel::ThisModule = {
-+                extern "C" {
-+                    static __this_module: ::kernel::types::Opaque<::kernel::bindings::module>;
-+                }
++use kernel::{{
++    str::CStr,
++    ModuleMetadata,
++    ThisModule, //
++}};
++use core::ptr::null_mut;
 +
-+                // SAFETY: `__this_module` is constructed by the kernel at load time
-+                // and lives until the module is unloaded.
-+                unsafe { ::kernel::ThisModule::from_ptr(__this_module.get()) }
-+            };
++impl ModuleMetadata for LocalModule {{
++    const NAME: &'static CStr = c"rust_doctests_kernel";
++    // SAFETY: `try_module_get`/`module_put` handle null module pointers gracefully.
++    const THIS_MODULE: ThisModule = unsafe {{ ThisModule::from_ptr(null_mut()) }};
++}}
 +
-+            #[cfg(not(MODULE))]
-+            const THIS_MODULE: ::kernel::ThisModule = unsafe {
-+                ::kernel::ThisModule::from_ptr(::core::ptr::null_mut())
-+            };
-         }
- 
-         // Double nested modules, since then nobody can access the public items inside.
-@@ -616,7 +632,7 @@ pub extern "C" fn #ident_exit() {
-                 /// This function must only be called once.
-                 unsafe fn __init() -> ::kernel::ffi::c_int {
-                     let initer = <super::super::LocalModule as ::kernel::InPlaceModule>::init(
--                        &super::super::THIS_MODULE
-+                        ::kernel::module::this_module::<super::super::LocalModule>()
-                     );
-                     // SAFETY: No data race, since `__MOD` can only be accessed by this module
-                     // and there only `__init` and `__exit` access it. These functions are only
+ {rust_tests}
+ "#
+     )
 
 -- 
 2.43.0
