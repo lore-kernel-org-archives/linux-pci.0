@@ -1,176 +1,332 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4E538364953;
-	Wed, 24 Jun 2026 11:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA54C233959;
+	Wed, 24 Jun 2026 12:35:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782301345; cv=none; b=fmZ/HDHkZaooaK51DKDVwTmzjOnr566iygv9anZCo3GHdLcw3IlyM5WVHgNICdnQp6vcI5VLvtQzxAfRrTA6iN+QcF6nniCPsOc6JHVotB407r99X+CT1WqrcbOoSMmaf8bN3XsXufWcD5iWZzFk1sQhUJsbVFxu7LZwJMyUXC8=
+	t=1782304507; cv=none; b=eAIBQgX+XIhPDgq+91gdmkYsU/RAXD0HHz7yTcOD/gTqvPpHaR8MeAxrqgk5ntsbf5s5fS4qXvq2mvtwWP6QxjpcnuQoFVv7XOI6BxWjyEe6NZfBPi4IMKuiUbq/omQb1JIFwcvh1AOu5KmWj2Q0QCjLSptXNRCa2BsrpfiU4oI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782301345; c=relaxed/simple;
-	bh=riMPr912UFIPMnkd77dj4O/2qenW/y+bhggkPiDqP2Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uFu3olmiXFaChTHCJr3xmY5hgt1RyqrC0uyN8+Sq4XhHKKl3Ee4ya4hIdSMwPSmtHgl11e3ACAjVpYsjNND2lF2PwRo4yNfC+pRPAuobLnBZa9gT6/ZCqtG35fMJl6SpMCdZbfyCSH1FxuiWVwkn3w1hCsRw/cgNYBFUkp1mg+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=Vfw1P4/4; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	s=arc-20240116; t=1782304507; c=relaxed/simple;
+	bh=bmQHDy0xnKiTPit54joBRHL3VV8pG1ZaF6qNqBiBzwQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IHcPOZL8ZkKt0NIZWrtR12tvLP9zn0+IJOkUMmOG/7XhVwBhH6mkK8YGGANWAhP/BHG53085gtSo+v2hcGW8LKWrvdq6YMZ0emLV0YrMF//xWyNQFdoMq8jzYyYDp+b72zGkct6Zn/i3+uszs2kacljj35wxbhYhQc4c/OV6/yI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fGnN75eY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="Vfw1P4/4"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9855215A1;
-	Wed, 24 Jun 2026 04:42:17 -0700 (PDT)
-Received: from [10.2.212.23] (e121345-lin.cambridge.arm.com [10.2.212.23])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 263A93F632;
-	Wed, 24 Jun 2026 04:42:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1782301342; bh=riMPr912UFIPMnkd77dj4O/2qenW/y+bhggkPiDqP2Y=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Vfw1P4/4IoI5cqXw4yBJZNOTaVkYRmMS6+C6sbeyrmmGnGWWzzWff8oMzVCkvRHpG
-	 /WfA6cZgcjrIZBg4la2twn3GyGmuyUH3yH5HcauiNCm7UhB5ttO+fuGOsQ/50nUI2x
-	 XbN64JsbCSXXQ+WSm4c6Fyy4/VKP2cHszV2Zyuew=
-Message-ID: <b49a3107-68be-4f7f-8c66-0f78206c7359@arm.com>
-Date: Wed, 24 Jun 2026 12:42:17 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fGnN75eY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01A6D1F000E9;
+	Wed, 24 Jun 2026 12:35:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782304506;
+	bh=nSlHeZgCT1oHjvLSw+acVz7VxQaUvcpCz7IcbZqf/FY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fGnN75eYr5ZYS8PB60tTDlz6Um7sYGuRKfaMDzNmcXFBGrQB8djWZrFhFCuxXPMRo
+	 X5r/pb/u1XHBjKYr0GSBDvM12jERqrJb1mtHZX2Wz5pY3wSgnl0jfvHPwf/Oz7vlTC
+	 i0ouMkB9eExbHNFziYN4OpcunLEZv9PX8G0d3riVRGTMW5pZ3QXA7zoX6Ocz0lJx7S
+	 26LJ01PmqJG03rD9qaIz5WzqgIinUCbSsJ76kUHwXptE4g4LtN9U0xxXoOzFb4T4oU
+	 0a1eeHS4Zdn5QEITiRCwAMpQHmezlyZAwqebueChlNBATEMaB9c/jwPE4HkNPrU7ot
+	 pX9dCIZawRGMw==
+Date: Wed, 24 Jun 2026 14:35:04 +0200
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH v7 3/4] PCI: tegra: Add Tegra264 support
+Message-ID: <aju3jokcWR5DzPrv@orome>
+References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
+ <20260617-tegra264-pcie-v7-3-eae7ae964629@nvidia.com>
+ <slfaxyt6p5mwsqmxvmriy6npilpjhjxv5ruegj4hnivj6zufkl@o6adjy5jmzfy>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-To: Matt Evans <matt@ozlabs.org>, "Tian, Kevin" <kevin.tian@intel.com>,
- Pranjal Shrivastava <praan@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- Alistair Popple <apopple@nvidia.com>,
- "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
- "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
- "linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-2-matt@ozlabs.org> <aisAc1HRn2Wa4F9p@google.com>
- <DM6PR11MB36904ED2E1D2C646644F67668C182@DM6PR11MB3690.namprd11.prod.outlook.com>
- <0dfadf98-a904-4e6a-b078-5caf27bc7922@ozlabs.org>
- <81a9d212-996e-42e1-aabf-b120a13e94c3@arm.com>
- <88a9ebaa-8637-4290-b299-acae0e3065f8@ozlabs.org>
- <feaefa41-9f67-4d4f-a3e0-282dca41f3eb@ozlabs.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <feaefa41-9f67-4d4f-a3e0-282dca41f3eb@ozlabs.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="om3weh3neg6kh743"
+Content-Disposition: inline
+In-Reply-To: <slfaxyt6p5mwsqmxvmriy6npilpjhjxv5ruegj4hnivj6zufkl@o6adjy5jmzfy>
 
-On 23/06/2026 6:47 pm, Matt Evans wrote:
-> Hi Robin, me,
-> 
-> On 23/06/2026 16:59, Matt Evans wrote:
->> Heya Robin,
->>
->> On 23/06/2026 16:48, Robin Murphy wrote:
->>> On 12/06/2026 3:31 pm, Matt Evans wrote:
->>>> Hi Kevin, Pranjal, (+Robin, hi!)
->>>
->>> Oh hey there! :)
->>>
->>>> On 12/06/2026 04:39, Tian, Kevin wrote:
->>>>>> From: Pranjal Shrivastava <praan@google.com>
->>>>>> Sent: Friday, June 12, 2026 2:38 AM
->>>>>>
->>>>>> On Wed, Jun 10, 2026 at 04:43:15PM +0100, Matt Evans wrote:
->>>>>>> --- a/drivers/pci/Kconfig
->>>>>>> +++ b/drivers/pci/Kconfig
->>>>>>> @@ -206,11 +206,7 @@ config PCIE_TPH
->>>>>>>    config PCI_P2PDMA
->>>>>>>        bool "PCI peer-to-peer transfer support"
->>>>>>>        depends on ZONE_DEVICE
->>>>>>> -    #
->>>>>>> -    # The need for the scatterlist DMA bus address flag means PCI
->>>>>> P2PDMA
->>>>>>> -    # requires 64bit
->>>>>>> -    #
->>>>>>> -    depends on 64BIT
->>>>>>> +    select PCI_P2PDMA_CORE
->>>>>>>        select GENERIC_ALLOCATOR
->>>>>>>        select NEED_SG_DMA_FLAGS
->>>>>>>        help
->>>>>>
->>>>>> Nit: Did we drop depends on 64BIT intentionally here? I guess the full
->>>>>> PCI_P2PDMA stack still selects NEED_SG_DMA_FLAGS? IIRC,
->>>>>> NEED_SG_DMA_FLAGS doesn't select 64BIT?
->>>>>
->>>>> seems that comment is stale. According to the commit msg:
->>>>>
->>>>> " it would make vfio-pci only available if CONFIG_ZONE_DEVICE is
->>>>> present (e.g. 64-bit systems), "
->>>>>
->>>>> so it sounds a redundant dependency hence is removed.
->>>>
->>>> This was intentional.  In practice there is still a dependency on 64BIT
->>>> for PCI_P2PDMA, but it is because of ZONE_DEVICE (and mem hotplug).  The
->>>> key need is PCI_P2PDMA_CORE is available on !64BIT for VFIO, but I
->>>> didn't see a requirement from PCI_P2PDMA itself (as opposed to its
->>>> dependencies).  If I've missed one, I can put it back...
->>>>
->>>> But NEED_SG_DMA_FLAGS doesn't smell quite right; I see from comments in
->>>>
->>>>     af2880ec44021 ("scatterlist: add dedicated config for DMA flags")
->>>>
->>>> that it assumes 64BIT, but it seems to be missing a "depends on 64BIT".
->>>>
->>>> Robin -- should that depend on 64BIT?
->>>
->>> Indeed, looking at the history it seems like that was overlooked, but it
->>> worked out at the time since the only selector of NEED_SG_DMA_FLAGS was
->>> PCI_P2PDMA as you say. If we're now generalising then moving the
->>> explicit 64BIT dependency to NEED_SG_DMA_FLAGS itself sounds like the
->>> right thing to do.
->>
->> Cheers for confirming.  I'll send a patch separate to this series (since
->> the deps work out OK for PCI_P2PDMA for the reasons mentioned).
-> 
-> I think we were wrong, NEED_SG_DMA_FLAGS doesn't _need_ 64BIT.
-> 
-> Other than P2PDMA, the other consumer of NEED_SG_DMA_FLAGS is IOMMU_DMA,
-> and turns out if one builds an i386 kernel with INTEL_IOMMU (or some
-> other configs, like Xen) then NEED_SG_DMA_FLAGS is enabled on 32-bit
-> builds too.
-> 
-> The scatterlist.h comments af2880ec44021 touched are just saying that
-> _since_ P2PDMA depends on 64BIT, there _is_ circumstantial padding so
-> let's use it for flags.  It doesn't require 64BIT.
-> 
-> For example struct scatterlist isn't pushed over some special (e.g.
-> power-of-two) size when NEED_SG_DMA_FLAGS is enabled on 32-bit; I can't
-> find a reason it should be prevented on 32-bit builds (and found cases
-> above in which it is already enabled in them).
-> 
-> So I won't change the NEED_SG_DMA_FLAGS dependencies after all.  Sorry
-> for the noise -- as ever if I've missed something do please explain.
 
-Ah, I was also taking the comments at face value, plus conflating the 
-memory of the original series which did stash the P2P flag in bit 2 of 
-the page_link pointer - in my defence, it's far too hot for my brain to 
-work properly :)
+--om3weh3neg6kh743
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v7 3/4] PCI: tegra: Add Tegra264 support
+MIME-Version: 1.0
 
-Doing a bit more archaeology, the separate dma_flags field was a late 
-suggestion just before the series was merged, so I guess it's actually 
-just that the comments never got updated accordingly. Sorry for 
-perpetuating the confusion!
+On Thu, Jun 18, 2026 at 09:26:33AM +0200, Manivannan Sadhasivam wrote:
+> On Wed, Jun 17, 2026 at 06:01:30PM +0200, Thierry Reding wrote:
+[...]
+> > +static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
+> > +{
+> > +	struct device *dev =3D pcie->dev;
+> > +	int err;
+> > +
+> > +	pcie->wake_gpio =3D devm_gpiod_get_optional(dev, "wake", GPIOD_IN);
+> > +	if (IS_ERR(pcie->wake_gpio))
+> > +		return PTR_ERR(pcie->wake_gpio);
+> > +
+> > +	if (!pcie->wake_gpio)
+> > +		return 0;
+> > +
+> > +	err =3D gpiod_to_irq(pcie->wake_gpio);
+> > +	if (err < 0)
+> > +		return dev_err_probe(dev, err, "failed to get wake IRQ\n");
+> > +
+> > +	pcie->wake_irq =3D (unsigned int)err;
+> > +
+> > +	err =3D devm_device_init_wakeup(dev);
+> > +	if (err < 0)
+> > +		return dev_err_probe(dev, err, "failed to initialize wakeup\n");
+> > +
+> > +	err =3D devm_pm_set_wake_irq(dev, pcie->wake_irq);
+> > +	if (err < 0)
+> > +		return dev_err_probe(dev, err, "failed to set wakeup IRQ\n");
+> > +
+>=20
+> I'd really like to get rid of custom WAKE# handling in the controller dri=
+vers.
+> Krishna is trying to add generic WAKE# handling in the PCI core and I'd s=
+uggest
+> you to take a look at the patches:
+> https://lore.kernel.org/linux-pci/20260511-wakeirq_support-v10-2-c10af9c9=
+eb8c@oss.qualcomm.com/
+>=20
+> But this also means that you need to use switch to Root Port binding to m=
+ove the
+> Root Port properties out of the controller node. This is something we are
+> mandating for the new controllers. Not a big change though...
+>=20
+> Reference:
+>=20
+> Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml#n80
 
-Cheers,
-Robin.
+Okay, let me look into it.
 
-> (I'll continue with removing the P2PDMA dependency on 64BIT because it
-> seems P2PDMA's dependencies rely on 64BIT, though P2PDMA itself doesn't.)
-> 
-> Thanks,
-> 
-> 
-> Matt
+[...]
+> > +	err =3D devm_pm_runtime_set_active_enabled(dev);
+>=20
+> I belive this has to come after pm_runtime_get_sync() because at this poi=
+nt, the
+> controller is not enabled.
 
+Okay, I'll change that.
+
+> > +	if (err < 0) {
+> > +		dev_err_probe(dev, err, "failed to enable runtime PM\n");
+> > +		goto put_bpmp;
+> > +	}
+> > +
+> > +	err =3D pm_runtime_get_sync(dev);
+> > +	if (err < 0) {
+> > +		dev_err_probe(dev, err, "failed to power on device\n");
+> > +		goto put_bpmp;
+> > +	}
+> > +
+> > +	/* sanity check that programmed ranges match what's in DT */
+> > +	if (!tegra264_pcie_check_ranges(pdev)) {
+> > +		err =3D -EINVAL;
+> > +		goto put_pm;
+> > +	}
+> > +
+> > +	pcie->cfg =3D pci_ecam_create(dev, res, bus->res, &pci_generic_ecam_o=
+ps);
+> > +	if (IS_ERR(pcie->cfg)) {
+> > +		err =3D dev_err_probe(dev, PTR_ERR(pcie->cfg),
+> > +				    "failed to create ECAM\n");
+> > +		goto put_pm;
+> > +	}
+> > +
+> > +	bridge->ops =3D (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
+> > +	bridge->sysdata =3D pcie->cfg;
+> > +	pcie->ecam =3D pcie->cfg->win;
+> > +
+> > +	tegra264_pcie_init(pcie);
+> > +
+> > +	if (!pcie->link_up)
+> > +		return 0;
+>=20
+> So not hotplug support? Also, you do not want the driver to error out? I'm
+> wondering what's the use then?
+
+Hotplug is supported via pciehp. We skip probing the host bridge if no
+link was detected because there's simply nothing attached to the port,
+otherwise the link would've come up.
+
+pcie->link_up is slightly misleading because it actually means something
+along the lines of "link could be up at some point", either during probe
+or after some hotplug event later on. It is only ever false if there's
+no link during probe and hotplug isn't supported at all.
+
+> > +
+> > +	err =3D pci_host_probe(bridge);
+> > +	if (err < 0) {
+> > +		dev_err_probe(dev, err, "failed to register host\n");
+> > +		goto free_ecam;
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +free_ecam:
+>=20
+> Nit: Prefix 'err' for the labels.
+
+I don't see any benefit of adding a prefix. Seems pretty redundant, but
+I also don't feel too strongly about it, so I can add it.
+
+> > +	pci_ecam_free(pcie->cfg);
+> > +put_pm:
+> > +	pm_runtime_put_sync(dev);
+> > +put_bpmp:
+> > +	tegra_bpmp_put(pcie->bpmp);
+> > +
+> > +	return err;
+> > +}
+> > +
+> > +static void tegra264_pcie_remove(struct platform_device *pdev)
+> > +{
+> > +	struct tegra264_pcie *pcie =3D platform_get_drvdata(pdev);
+> > +
+> > +	/*
+> > +	 * If we undo tegra264_pcie_init() then link goes down and need
+> > +	 * controller reset to bring up the link again. Remove intention is
+> > +	 * to clean up the root bridge and re-enumerate during bind.
+>=20
+> But the controller will be consuming power even if PCIe is not used. Do y=
+ou
+> really want that? Can't tegra264_pcie_init() handle the initialization? I=
+'m
+> wondering how tegra264_pcie_deinit() in tegra264_pcie_suspend() works the=
+n.
+
+I had to clarify this with the PCI team and they indicated that
+tegra264_pcie_deinit() is actually useless and maybe even harmful. The
+reason is that there's a processor on these boards (BPMP) that takes
+care of power sequencing and it will automatically take the PCI links
+to L2 on suspend and assert PERST#.
+
+Another reason why we don't want to reset the entire controller is that
+it is already set up during early boot by UEFI and the kernel driver
+does not redo the entire initialization.
+
+So yes, I think a little bit of power consumption is the compromise that
+we will have to live with. In the bigger picture it's probably not going
+to be noticeable in most cases, and given that these are embedded
+platforms we'll likely see fixed configurations most of the time and the
+case where we remove the PCIe host controller will not be common.
+
+> > +	 */
+> > +	pci_lock_rescan_remove();
+> > +	pci_stop_root_bus(pcie->bridge->bus);
+> > +	pci_remove_root_bus(pcie->bridge->bus);
+> > +	pci_unlock_rescan_remove();
+> > +
+> > +	pm_runtime_put_sync(&pdev->dev);
+> > +	tegra_bpmp_put(pcie->bpmp);
+> > +	pci_ecam_free(pcie->cfg);
+> > +}
+> > +
+> > +static int tegra264_pcie_suspend(struct device *dev)
+> > +{
+> > +	struct tegra264_pcie *pcie =3D dev_get_drvdata(dev);
+> > +	int err;
+> > +
+> > +	tegra264_pcie_deinit(pcie);
+> > +
+> > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
+> > +		err =3D enable_irq_wake(pcie->wake_irq);
+> > +		if (err < 0)
+> > +			dev_err(dev, "failed to enable wake IRQ: %pe\n",
+> > +				ERR_PTR(err));
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int tegra264_pcie_resume(struct device *dev)
+> > +{
+> > +	struct tegra264_pcie *pcie =3D dev_get_drvdata(dev);
+> > +	int err;
+> > +
+> > +	err =3D pinctrl_pm_select_default_state(dev);
+> > +	if (err < 0)
+> > +		dev_err(dev, "failed to configure sideband pins: %pe\n",
+> > +			ERR_PTR(err));
+>=20
+> Please remind me if you justified this manual pinctrl handling before.
+
+This is just regular pinctrl PM boilerplate. There's plenty of other
+drivers where we do this, too. We want this because some of the pins
+get configured to non-default states on boot/resume, so doing this
+here ensures they are muxed correctly.
+
+> > +
+> > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
+> > +		err =3D disable_irq_wake(pcie->wake_irq);
+> > +		if (err < 0)
+> > +			dev_err(dev, "failed to disable wake IRQ: %pe\n",
+> > +				ERR_PTR(err));
+> > +	}
+> > +
+> > +	if (pcie->link_up =3D=3D false)
+> > +		return 0;
+>=20
+> How is this possible? If 'pcie->link_up' was 'false' during probe(), then=
+ it is
+> going to stay until tegra264_pcie_init() is called below.
+
+Yes, this keeps confusing me, too. The purpose of this is to skip
+initialization if we've already determined during probe that there is
+never going to be a link. link_up will be false if and only if there was
+no link during probe and we don't expect there ever will be a link
+because there is no hotplug support.
+
+Maybe a different name for link_up could help here? maybe_link_up
+perhaps? I don't know if that's any clearer, but I also couldn't come up
+with a better name.
+
+Or maybe we should split this into two booleans, since we're essentially
+trying to use one boolean to track a tristate. What we want to know is
+if a link is truly up and if the controller should be kept powered for
+the case where hotplug is supported.
+
+I suppose we could do:
+
+	bool link_up; /* track the link state */
+	bool supports_hotplug; /* track whether port is hotpluggable */
+
+That would make the code a bit cleaner and easier to follow.
+
+Thierry
+
+--om3weh3neg6kh743
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmo7zvMACgkQ3SOs138+
+s6Hh3Q//X7dmLR4HOiiaGe4uf5xC4DNoBrDoU5+YI1I+wZ92BINHB0j+I+flET5R
+SYLDoJu23EpeKKgxNHHQezxjrAT5lKme+6boVw0mYMIahEfiJ2I3jeGOgYPBM60s
+eNrvbIo3bsBNZ2LaWyz1FfhGB8b6jPqWXIkRmWro8408qz7niITqHHwNWSdG0H5v
+rj1/kvdqgGlsc73fgowsWTSUyBltpGBDIMFta668yViMsj+UqfuUVR/S+D60b2OK
+KyHk89OfrWqSPkB70TvgiCKkSxYoDFBk9553K3fUSfkGjHcIwFnSgNeQ4Gfjl/m5
+nRFgKQbFXpVVYxYL0/j0hRJsY+kmLW/KF2q/m99Wr2VhMyU7/szFU+4auyux0+K6
+RqyFLBLG2S1BbU30+ksgxBQTUMeLLdya4IH826rzuJmw4vSS2/H75EwfHMdMe1GY
+qxTfbkZnW6Cj8OfAKrKxY+IFGPTzh3wBZaEyZp9GBncJPx7OCcVJxTv5PaQSymJC
+g0ycSrZ7RMGPhAT+1BBCdeP5dOWTfNo34i1v+Xrp/DNlH3TWehEZ5wcwElw4I4N3
+Krc/K750Cs7t0FmfmIgdo7U+so6FcSyy68Vt5ytODLCmkagv2VVK9IpGhaJT9mCx
+B0c+L6Zkwb5FqFj0Ji3wF8SjlaGaXf3A7R8L36JgsthEEr2RzXE=
+=AVvO
+-----END PGP SIGNATURE-----
+
+--om3weh3neg6kh743--
