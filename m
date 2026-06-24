@@ -1,255 +1,496 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020096.outbound.protection.outlook.com [52.101.229.96])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63366228CB0;
-	Wed, 24 Jun 2026 01:35:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.96
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782264952; cv=fail; b=GwLkdF8E+2S8LV2v8EK8cULoE/TX4mkfkitLIgF8Puid7VlMiodLgW7vogodTt27tNIVflIrOky9y9LOSFWGH6NHkbkd3g2mBvsUqloXmLdnuLbCJ7MFC/ad0G6G6Fn/gHvk08KJVlk03vPyU96jj2bSgvpnDaJDLqiZcYZo0Rc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782264952; c=relaxed/simple;
-	bh=snTmq9xLEJ1dzYeOMcOpuwAiXIHxBFdfbNgknWwVT5g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=NrpPu1VBUn82IX46r9d0XDIMhOxru7a9OMtisyrYopiv69YWKslEOyuzChnweXuEmoUBgwR28lmBHJR8ltqX1X4cwVjSLU/ARlJ0aoBvGeQ0J9Y2M85YCrh5xiAx4l9iVABr7xpXGWT6fF4/60yHy5iC8+JA4lyedkRR2AKdQ+E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=S6sW32NO; arc=fail smtp.client-ip=52.101.229.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B0529ACC6;
+	Wed, 24 Jun 2026 02:15:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782267347; cv=none; b=XnBRLHCYLSj/jY16LNbtkyGpcCsyTwGIrWLOyQCLYf6l0w6H0gwCTD/dEEQduuejwppqf2BveliTFJVyUUlCMHZc1zWXVYgH1dNKAA5miY9AhGyk0YU8DpPEd87KfHtbagvmh5FlWoTBS104C6BZy6+zUoYT0R5457kiH9l3bKE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782267347; c=relaxed/simple;
+	bh=OOsiLi27i69r5KpAr08Kcxj3VLKGGjXEV+B9WnQGoYc=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=VS/I/TkH8v/Ogf/r8s7iJWoxR8WOJgzCOQYPdGUaOSZ8t2I8Xm1TIDZxNQiuZxVgFGw2M/hYnhRA+ZsnE049lfYlHlKd9IEY6afWYtfrLSUw/0OQcssTC8CJNdDQPj1qATJjAENEd95zr7PtvFSEZUiwsjR4UCZxDGOWj308MI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nY+wXWwg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="S6sW32NO"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=S4GknsNbUKSeRZvGbJhAwztVNwqMfyp9eIuPz60jrob0dJeNsyhxtMmHgDWbnyI1WphVgQNU4zywLfdfGLN9tXXlWETbzbzAC0/HS3PlWmVUlHUm7hM+6OUifLLDXX/ZBZvKP/ajSjMWuA3GpCu2zcGYz6yBjWMFCMscRLBDM/ILKKljW3BKgRvAVF730lu0qhu1H6YqOY5rQaxp5MyVDjnZIeBTY/C741QYPrZUptgs8ZO2xSIjhHv4ByYbaO1Bo8GRud+/Fh3DgAOnmWIN44FRfSsvuDiJ2HaH/JAgVy0gmU3dUb5L/LWkPREAWY7t1Ve+tTfq38nf52GLokobSw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gl8uQ0ey2qyYgOHBzHtEtsGELYqMCyVWHb7Q105Txlk=;
- b=D9ajWnHtAZa+txGOS517PugZNSdmwkGSd9zI9Y+HAByqEdZQIsyu7qGWf/UzB4ZJdKUIKUyRSRaQQj8UrQHJZanrY/OZ/vXk77O18LQzQ3wZyobz2iyFj3x/nVyc+yCli2DQ2Wt2wO7NMxgmU51SqxRTuL9PpvxXSmMuS1lG+lnDqT0ZEkhgMXCf0MR/BVdwifiQoDBqjTcVlanIEzaDRFGkhzLNdkdnznZyP5XGfrVy2Hu6bo0YnyKM93g0ubVfUwUd2tsSRpDwbH3e93p+948qybzI1DD+mXEGpYir3y1Ypx/Po/KHEz87On8b+t3akgCTIBdnbAdYKwq5gkVmsA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gl8uQ0ey2qyYgOHBzHtEtsGELYqMCyVWHb7Q105Txlk=;
- b=S6sW32NOpKbnhgNq/7RiSjkog80W2a0tlso7hrK6HniSOSj6daR9M5gFXqWxmLsMjwPqsGzn8JYo7aoBb0vm6Eraylf+nj9HSEq1uG7Row5bkor0d/WaRG97I8EwS0n10CT0gK3kShjLYAZHr4z3Pt0CnoVk3DLrDVi2I4naZfY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY3P286MB2920.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:317::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.13; Wed, 24 Jun
- 2026 01:35:45 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0139.018; Wed, 24 Jun 2026
- 01:35:45 +0000
-Date: Wed, 24 Jun 2026 10:35:43 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
-	Allen Hubbe <allenbh@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
-	Jerome Brunet <jbrunet@baylibre.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	ntb@lists.linux.dev
-Subject: Re: [PATCH v4 12/12] NTB: epf: Implement db_vector_count/mask for
- doorbells
-Message-ID: <zo4ujr5n2rdlkhnssq4b23bbeobz3yyuugchghkszyifw4dj2w@5qsvn5vhdedj>
-References: <20260513024923.451765-13-den@valinux.co.jp>
- <20260623163134.GA813775@bhelgaas>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260623163134.GA813775@bhelgaas>
-X-ClientProxiedBy: TY4PR01CA0046.jpnprd01.prod.outlook.com
- (2603:1096:405:372::18) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nY+wXWwg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A1291F00A3D;
+	Wed, 24 Jun 2026 02:15:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782267346;
+	bh=/K+8izIiHGXOJTYdgJwxQKC9x0jwf89johjfhHsIYgQ=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=nY+wXWwgo8mgcTM/qWHOZ3GM/7M/9KA1JqC4qV1uwK3CnLuWy0T5Djf0MUNyXIhHx
+	 b/LIg4wIw7eRLPdbs/dI5McSDr1CVd46yzWGU6+dLoC5EFVDx/xZmMqSxxiaBYik0N
+	 bSB2y1b3+Dtox50XmIBPb1niP/foe2m2zeZz0/whG3P2r2ut+ZqarF2PeEnnAq6b6y
+	 /L+jhHzvTZ+Hb25PjoNei1bP38puw4l1wqQMAK4NHFqDD45A5YoOLwD5UP/wLgDsic
+	 R3+f8wuoaA7xEbMuSAfAbOzCQxIKBQCeSj4m1nr7A18Qcyx5NjrQxkBFK1yoNYlGU5
+	 4VAYPE5S/F15Q==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 65F85F4007E;
+	Tue, 23 Jun 2026 22:15:44 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Tue, 23 Jun 2026 22:15:44 -0400
+X-ME-Sender: <xms:0D07ao1aa-qcnM3sp98cTrKq9cA3FVuzITDO2Ax_pn4VMYD12inhjQ>
+    <xme:0D07ajgDeR6JOoehKR8aLbRaS_XckrkPTyBsWNIPvObQNOup33JV5x6xokwbyzwa7
+    cb_h-QksQc9LmqomNDAEOcNSebAKMeZ35U2C148ehHy6ivvnoXnGw>
+X-ME-Received: <xmr:0D07amXyyA4JSGcTkecRc6JxoKyrZvp1PmkTll3ZhxuxBCmGHUY8gqlhpjZkBI6RD1M5wddbQhgm7yjQuuzZFfcrkZ_MGng7rw8>
+X-ME-Proxy-Cause: dmFkZTGs2ITfJFp9pYHtuvCGGW8yp1uDp77XvZtuiMUyfWBb+JOdR0DDzFXvYH29OwNH6j
+    ekse8CVm5rSZxus+XqC4IScSh7b+PdlBo2Jhmx3gjvg3eKOM7D5I478Bj1KAfLJFMazDUg
+    XdaN0ftWVNRzZMe2K/kiT44k7rGiJUyVt7s0xsmMRr3olphjjoRJKNwd7v3XHqSlbcIuBl
+    0e9pOapzsO4jxnPBoKEHyas84Sx3szKkJkJ1jGe4yqzUHxpU0MfQU8MYsfs15t92uCozVG
+    k2Oz/RMJTvPI8vI1AIPSXy8hquajl7fsSP08KQtQk13fHy8V/XV+GfU4QbQ+olS5T8oyFq
+    OabVv2magINDoOIy47Ox7iEgjzBuRQOpvDmjwKR50+KzLRZ3+WJGckaNk6Od0V6vV05joK
+    Tm9SUmitzPkIS1/j+Wid1f1R89wSxxJeh9wpxlC1xKpM7YgMVgHVFqIsjV+STBhP2Pjhuc
+    KQd/1K8htDnD2jFCKAsBweQnakSJAqR88b7GRMqmX0m/7SVXinTG50X1ktcWNZq7hRDbTX
+    pkYEGNsrWCZF8JV42RpyOmA5IY8m046Jx3kmllSbomXa6Azox2bc08OGTybIqIjlbKzlLx
+    5O4JxietuyUQovEVgPpuTk2Epv0j5H/VMnLP7tDddo02mtwBusV0Dy97rRwA
+X-ME-Proxy: <xmx:0D07avxJqvaFp56SN9Svax-1lx1G8RyTNLERemxHaM6-GfGpjY9Ybw>
+    <xmx:0D07au5gAbnbDw3WBK2watE1ZzXvkJpYT_C2yNRA-8CpFpBjkvY6QQ>
+    <xmx:0D07apgg3de35_1gKMQdeM9VxUgpTi9wDPExRhmX-0UZGpHhKv1nDw>
+    <xmx:0D07ahhWUddNPg4XlHt3RjB3JmlUxN5FrGhnlKhR4xBphbT5YBLjrw>
+    <xmx:0D07ahnfLLUaoEbmGJdMUVKQkhkykWpXPfv7-kR-x9hOPOpsQnFMnM4I>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 23 Jun 2026 22:15:43 -0400 (EDT)
+Date: Tue, 23 Jun 2026 19:15:42 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: Srirangan Madhavan <smadhavan@nvidia.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Dan Williams <djbw@kernel.org>, 
+ Dave Jiang <dave.jiang@intel.com>, 
+ Davidlohr Bueso <dave@stgolabs.net>, 
+ Ira Weiny <ira.weiny@intel.com>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Vishal Verma <vishal.l.verma@intel.com>, 
+ linux-cxl@vger.kernel.org, 
+ linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+Cc: vsethi@nvidia.com, 
+ alwilliamson@nvidia.com, 
+ Dan Williams <danwilliams@nvidia.com>, 
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
+ Vishal Aslot <vaslot@nvidia.com>, 
+ Manish Honap <mhonap@nvidia.com>, 
+ Jiandi An <jan@nvidia.com>, 
+ Richard Cheng <icheng@nvidia.com>, 
+ linux-tegra@vger.kernel.org, 
+ Srirangan Madhavan <smadhavan@nvidia.com>
+Message-ID: <6a3b3dce9f3e0_3c9f1005e@djbw-dev.notmuch>
+In-Reply-To: <20260623032453.3404772-4-smadhavan@nvidia.com>
+References: <20260623032453.3404772-1-smadhavan@nvidia.com>
+ <20260623032453.3404772-4-smadhavan@nvidia.com>
+Subject: Re: [PATCH v7 03/11] cxl: Cache endpoint decoder settings during PCI
+ enumeration
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY3P286MB2920:EE_
-X-MS-Office365-Filtering-Correlation-Id: 04a44996-7b01-4cfe-ec07-08ded190e904
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|10070799003|366016|23010399003|22082099003|18002099003|6133799003|4143699003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	QJ76RhhE1Qo+GxFEdOB+d7x8rAFVAMWBUuEzePX6EQUqrpzIPBKDMzpsYufRgzxGBBHj1wo8YkYmRwtd2HegOAdHsxGjNM4SeIdcQBgY9eq8pqF+znJRrl9DP5YrdeEYN4QdxJ5SdSGLoHCE0lHDjC5HXaTnTwP033Xy4pfYvMRicefjqVPExUdRTERLgapvIVTO9psdEEH9AAXmnjEQ4iJG89lt4xb7+RTi73zIimqoq6957w9K979c2F/XTD2cf72rXsqVifI9tz1ibemxGAxQMAgUvz2oD8ePTk6Fjvd8dLgIAXcxPQBymXHKlIkt4L8E0wyxtI21BD9Jw78iy9VWTBzGdrNKd+VjHL+ZOqXKxcHo6XfzjlOlHp9XdC5YxQo2hnVb5G+NQUvg/Xc9cnR8SmckKLNkd/doJFynH8m7qJ4D1zsun98d1BcWfvDijhWfAQ/ptlCnPW+43JNYwygdpFrXZbaOn01WCEBwBF9jGxpsji/Csj+r+1wHC7FjWO6jS6LiFImYwa0q33ytjopLyCW3jUl/ouyORRiUSpad2X4f1lF5giFFjsn+aUQva3Jo5758k9COZx+5R6byyuW94TljngO/uMYE6UceUgCENRPGSpl4KoEpaCJENav5pH5wsbBe27JM1Zq+Gk1ahJkJkKMbwRwKhz0qSaJToRU=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(10070799003)(366016)(23010399003)(22082099003)(18002099003)(6133799003)(4143699003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?CCzXCyA0d+kDRZpFiUsHhQsvvNgO+np/GeZzJXasX38qzLlGQ0pn3r1R0Rjy?=
- =?us-ascii?Q?kdJFBMUC7HpTHy6PyRf+i67poWDF/yObvN4ihSR+3fUcOiKhPj/jxx+/EdS1?=
- =?us-ascii?Q?CynzDJOIRP1dZVSAbSPDW6drJhGcTQcKgKsHI8/OVdDIR1G7IiDGTkfmah0i?=
- =?us-ascii?Q?IXx+UzAAjMJ13Fv7w++jb1y7C4CHiTEBdjowR/K91Yj1uzNOd6Uz3DEs0Cf0?=
- =?us-ascii?Q?3GxevB/e1ZGjB8Nlii5knUBwwX+hrn1R48ITFGYT2QTk2aiPPCHavz3kye8a?=
- =?us-ascii?Q?eCk5HhZxgUBd1MzqzySO+z/Go/xboO5tgyTzNB8Z0pQrBIabEkXxXjxo370D?=
- =?us-ascii?Q?PVF5XfKSuo+epczCS4IBa2KU7qKUWdZtvFTYb6neTu+Y/QR/l2ojNAVwiUE3?=
- =?us-ascii?Q?5J4nluS14xsa9R1tnNOQ+6GaT6fu7Tlj9pLYhQyF0kxEm6nqOn0BEhL9/zRC?=
- =?us-ascii?Q?eOpn8X0EiSC3BtCupTm+a1rmtt3UHa0JnPcEXrRrXJ8LhHe7FBlBq3z63ikq?=
- =?us-ascii?Q?Var3Yn7vITMJ+WI8u42i3tYnuf8oKgGY4WY3JAPVvNZC43Drea3kSvqMGWTf?=
- =?us-ascii?Q?QVqBA6p1g4un+EdHeX5Pl2eKvIKbB9/LJSGNMiODRWQnOmwhJOwfuK9kn6BL?=
- =?us-ascii?Q?xfJ7x0m0RGyLGE07LOShCedoEwEgnvws7KRS1YrDBg0Upc/zQfvMgV4xgsUK?=
- =?us-ascii?Q?71HgtSqfxqclDE09SwQU4FZj4f57ZxWlP8XbptrJyKNb8Q3zbSNkBTHelALL?=
- =?us-ascii?Q?vauVMcl4Y0o1AwPrZSJu3dTjlFi7JxZiPvtiKffvwVDzQe8pWfGleXwHrSca?=
- =?us-ascii?Q?gf5LkdCVMpstVxyDIqiWxRtNdQ4/J+SPKEDqYA5ADCEnnAauS7gT3bSLdZ/x?=
- =?us-ascii?Q?RuRoiMGxkCAsDEfR/P+7gMURYj2M/ncHaN/ByrGPKXmhamFPaRmAzsSBAsBe?=
- =?us-ascii?Q?MvGCSatgaKZQEpqUYYwfEwUpyaYaGgqRlYUqslNYGsnWxL9wR0XH6RGPLVGQ?=
- =?us-ascii?Q?eeOKdeowoajiI49UmFF05/Cl5ExeAcIkkNADkBEWfXAQLFyJC1OBxPi/iJrM?=
- =?us-ascii?Q?BOUi50rdDoVfUuWMWszINq+QHiHBFi5RRCidBUVyntE5oXAY/GZmEqlEk9pP?=
- =?us-ascii?Q?tYlXN0LFs0j9VIQ6PWdXkmjImlWn7kXMMHvLsO2pL9bVcYWStmsZCJkS62us?=
- =?us-ascii?Q?X5e4Ep+3dmWrsYngtJ/ADxKentoueuz8+a3MH00UMitG1KmLxGL/hWpfIlM9?=
- =?us-ascii?Q?81TPOl6ZZRZ96GG3mMnrZi9EUMZVK0vAn4vlq9VL2X75mx2UAEiKoOJU2WJQ?=
- =?us-ascii?Q?/BZvIk3ZGDk0KJGVNF6XO1IQnbbPLk279cFUb2QsO19DNeukDUeNWTpXV6Iy?=
- =?us-ascii?Q?75aK5dwFasWwgzf8fOkKEXaqFfnNX3lX9ubpPhCrexDi0DvCgU7G+Q0SfOZT?=
- =?us-ascii?Q?CRW/+ChrKe68Sr3g91S8AkfTq7RovaYdkAHUyYCDROeSSQK+1v5VKO0a06CV?=
- =?us-ascii?Q?kNs/HeAy7Nnyx0WqhcgUb99WlpTtw1sUmDvpMQ7257+2A4ota6aYJhvcCNfP?=
- =?us-ascii?Q?mlLka7VG3CNfTKBTClWTqs4+wPCOPi9eHeORSvH2rkx9dBi9Utr0u5RVSV3d?=
- =?us-ascii?Q?YF2HbNf7OWQaeRZPEEwy46G5yB5a2TNRhNP8H89x5Kb1GjajkX/+eK11kjlK?=
- =?us-ascii?Q?yJNjIT5A4V+hOO+R7XKGj3djAKT3Jbsh5YLuWP+5a7mPpLVjhQmqP2OC7VYf?=
- =?us-ascii?Q?V1TPnBiUy1PKqml1/uEehn0PIiQY0urW+lmU5zDEq+h+p+tXdypO?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 04a44996-7b01-4cfe-ec07-08ded190e904
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jun 2026 01:35:44.9607
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: I9ZXdRTf3sdtxmV/yZpye/DuY/8LjeG0SBXMjTylTJRDrwJFKLGMAhSCx8pynNFk963YnQILyUEOdkhGFDIiWg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY3P286MB2920
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 23, 2026 at 11:31:34AM -0500, Bjorn Helgaas wrote:
-> On Wed, May 13, 2026 at 11:49:23AM +0900, Koichiro Den wrote:
-> > Implement .db_vector_count and .db_vector_mask so ntb core/clients can
-> > map doorbell events to per-vector work.
-> > 
-> > Report vectors as 0..(db_count - 2) (skipping the unused slot) and return
-> > BIT_ULL(db_vector) for the corresponding doorbell bit. Use
-> > ntb_epf_db_vector_count() for bounds checks in ntb_epf_db_vector_mask(), so
-> > the same lower-bound guard is applied before building the bitmask.
-> > 
-> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > ---
-> > Changes since v3:
-> >   - Reuse ntb_epf_db_vector_count() from ntb_epf_db_vector_mask() for bounds.
-> >   - Return 0 when db_count is below NTB_EPF_MIN_DB_COUNT.
-> >   - Drop Reviewed-by tags due to the changes.
-> > 
-> >  drivers/ntb/hw/epf/ntb_hw_epf.c | 32 ++++++++++++++++++++++++++++++++
-> >  1 file changed, 32 insertions(+)
-> > 
-> > diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> > index 10618e462229..af5755472842 100644
-> > --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> > +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> > @@ -434,6 +434,36 @@ static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
-> >  	return ntb_ndev(ntb)->db_valid_mask;
-> >  }
-> >  
-> > +static int ntb_epf_db_vector_count(struct ntb_dev *ntb)
-> > +{
-> > +	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
-> > +	unsigned int db_count = ndev->db_count;
-> > +
-> > +	/*
-> > +	 * db_count includes an extra skipped slot due to the legacy
-> > +	 * doorbell layout. Expose only the real doorbell vectors.
-> > +	 */
-> > +	if (db_count < NTB_EPF_MIN_DB_COUNT)
-> > +		return 0;
-> > +
-> > +	return db_count - 1;
-> > +}
-> > +
-> > +static u64 ntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-> > +{
-> > +	int nr_vec;
-> > +
-> > +	/*
-> > +	 * db_count includes one skipped slot in the legacy layout. Valid
-> > +	 * doorbell vectors are therefore [0 .. (db_count - 2)].
-> > +	 */
-> > +	nr_vec = ntb_epf_db_vector_count(ntb);
-> > +	if (db_vector < 0 || db_vector >= nr_vec)
-> > +		return 0;
-> > +
-> > +	return BIT_ULL(db_vector);
+Srirangan Madhavan wrote:
+> Populate pci_dev->hdm from PCI capability initialization when a CXL.mem
+> function already has memory decoding enabled. This gives driver-free reset
+> paths an early HDM snapshot without enabling BAR decoding during
+> enumeration.
 > 
-
-Hi Bjorn,
-
-> This all ends up looking slightly different from pci-epf-vntb.c, and
-> it's not obvious whether the differences are essential or superfluous.
-
-I don't think there is an actual bug here.
-
-The thing is that "db_count" has meant slightly different things in
-pci-epf-vntb.c and ntb_hw_epf.c since their introduction.
-
-In pci-epf-vntb.c, db_count is the total number including the link slot and the
-historically unused/skipped slot. It is also exposed via configfs, so changing
-that meaning now would affect existing users' configfs settings.
-
-So vntb_epf_db_vector_count() subtracts EPF_IRQ_DB_START because the NTB core
-should only see the usable doorbell vectors via .db_vector_count().
-
+> CXL core later reuses and refreshes the same cache. Move the register
+> helpers into the built-in CONFIG_CXL_HDM set so the early cache path is
+> available without cxl_core.
 > 
-> pci-epf-vntb.c:
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/core/Makefile |   3 +-
+>  drivers/cxl/core/hdm.c    |  59 +++++++----
+>  drivers/cxl/core/reset.c  | 202 ++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c       |   2 +
+>  include/cxl/cxl.h         |   9 ++
+>  5 files changed, 252 insertions(+), 23 deletions(-)
 > 
->   enum EPF_IRQ_DB_START                           # value 2
->   #define MIN_DB_COUNT  (EPF_IRQ_DB_START + 1)    # value 3
-> 
->   vntb_epf_db_vector_count() comment says "db_count is total number of
->   doorbell slots exposed to peer, including reserved ones".  But it
->   returns "db_count - EPF_IRQ_DB_START", which suggests that the
->   reserves slots are not exposed?
-> 
->   vntb_epf_db_vector_count() comment lists two reserved slots
-> 
->   vntb_epf_db_vector_count() returns "db_count - EPF_IRQ_DB_START"
-> 
->   vntb_epf_db_vector_mask() comment mentions "two reserved slots"
-> 
-> ntb_hw_epf.c:
-> 
->   enum EPF_IRQ_DB_START                # value 2
->   #define NTB_EPF_MIN_DB_COUNT  3      # value 3, not based on EPF_IRQ_DB_START
-> 
->   ntb_epf_db_vector_count() comment says "expose only real doorbell
->   vectors".  I guess this *excludes* the reserved ones?
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index dc075cee0450..69cf2ea7ee74 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,6 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> -obj-$(CONFIG_CXL_HDM) += reset.o
+> +obj-$(CONFIG_CXL_HDM) += regs.o reset.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+>  
+>  ccflags-y += -I$(srctree)/drivers/cxl
+> @@ -8,7 +8,6 @@ CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
+>  
+>  cxl_core-y := port.o
+>  cxl_core-y += pmem.o
+> -cxl_core-y += regs.o
+>  cxl_core-y += memdev.o
+>  cxl_core-y += mbox.o
+>  cxl_core-y += pci.o
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 83cda63f76a5..0230ebfada42 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -91,11 +91,9 @@ static void clear_hdm_info(void *data)
+>  	WRITE_ONCE(pdev->hdm, NULL);
+>  }
+>  
+> -static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+> +static struct pci_dev *cxl_hdm_to_pci_dev(struct cxl_hdm *cxlhdm)
+>  {
+>  	struct cxl_port *port = cxlhdm->port;
+> -	struct cxl_hdm_info *info;
+> -	struct pci_dev *pdev;
+>  	struct device *uport;
+>  
+>  	if (is_cxl_endpoint(port)) {
+> @@ -107,9 +105,27 @@ static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+>  	}
+>  
+>  	if (!dev_is_pci(uport))
+> +		return NULL;
+> +
+> +	return to_pci_dev(uport);
+> +}
+> +
+> +static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+> +{
+> +	struct cxl_hdm_info *info;
+> +	struct pci_dev *pdev;
+> +
+> +	pdev = cxl_hdm_to_pci_dev(cxlhdm);
+> +	if (!pdev)
+> +		return 0;
+> +
+> +	info = READ_ONCE(pdev->hdm);
+> +	if (info) {
+> +		if (info->decoder_count != cxlhdm->decoder_count)
+> +			return -ENXIO;
+>  		return 0;
+> +	}
+>  
+> -	pdev = to_pci_dev(uport);
+>  	info = devm_kzalloc(&pdev->dev,
+>  			    struct_size(info, settings, cxlhdm->decoder_count),
+>  			    GFP_KERNEL);
+> @@ -125,23 +141,13 @@ static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
+>  static void cxl_hdm_info_set_decoder(struct cxl_hdm *cxlhdm,
+>  				     struct cxl_decoder *cxld)
+>  {
+> -	struct cxl_port *port = cxlhdm->port;
+>  	struct cxl_hdm_info *info;
+>  	struct pci_dev *pdev;
+> -	struct device *uport;
+> -
+> -	if (is_cxl_endpoint(port)) {
+> -		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
+> -
+> -		uport = cxlmd->dev.parent;
+> -	} else {
+> -		uport = port->uport_dev;
+> -	}
+>  
+> -	if (!dev_is_pci(uport))
+> +	pdev = cxl_hdm_to_pci_dev(cxlhdm);
+> +	if (!pdev)
+>  		return;
+>  
+> -	pdev = to_pci_dev(uport);
+>  	info = READ_ONCE(pdev->hdm);
+>  	if (!info || cxld->id >= info->decoder_count)
+>  		return;
+> @@ -202,6 +208,7 @@ static struct cxl_hdm *devm_cxl_setup_hdm(struct cxl_port *port,
+>  	struct cxl_register_map *reg_map = &port->reg_map;
+>  	struct device *dev = &port->dev;
+>  	struct cxl_hdm *cxlhdm;
+> +	struct pci_dev *pdev;
+>  	int rc;
+>  
+>  	cxlhdm = devm_kzalloc(dev, sizeof(*cxlhdm), GFP_KERNEL);
+> @@ -227,11 +234,21 @@ static struct cxl_hdm *devm_cxl_setup_hdm(struct cxl_port *port,
+>  		return ERR_PTR(-ENODEV);
+>  	}
+>  
+> -	rc = cxl_map_component_regs(reg_map, &cxlhdm->regs,
+> -				    BIT(CXL_CM_CAP_CAP_ID_HDM));
+> -	if (rc) {
+> -		dev_err(dev, "Failed to map HDM capability.\n");
+> -		return ERR_PTR(rc);
+> +	pdev = cxl_hdm_to_pci_dev(cxlhdm);
+> +	if (pdev) {
+> +		struct cxl_hdm_info *info = READ_ONCE(pdev->hdm);
+> +
+> +		if (info && info->regs.hdm_decoder)
+> +			cxlhdm->regs = info->regs;
 
-Yes.
+The driver probably should not reuse the core mapping. The driver's only
+role is to update the cached settings if it changes them.
 
-> 
->   ntb_epf_db_vector_count() comment mentions "an extra skipped slot"
->   but apparently actually accounts for *two* slots
->   (NTB_EPF_MIN_DB_COUNT==3)
-> 
->   ntb_epf_db_vector_count() returns "db_count - 1"   # should it be -2?
+> +	}
+> +
+> +	if (!cxlhdm->regs.hdm_decoder) {
+> +		rc = cxl_map_component_regs(reg_map, &cxlhdm->regs,
+> +					    BIT(CXL_CM_CAP_CAP_ID_HDM));
+> +		if (rc) {
+> +			dev_err(dev, "Failed to map HDM capability.\n");
+> +			return ERR_PTR(rc);
+> +		}
+>  	}
+>  
+>  	parse_hdm_decoder_caps(cxlhdm);
+> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
+> index 14f024098e82..fc52d3abdb5b 100644
+> --- a/drivers/cxl/core/reset.c
+> +++ b/drivers/cxl/core/reset.c
+> @@ -2,9 +2,16 @@
+>  /* Copyright(c) 2026 NVIDIA Corporation. All rights reserved. */
+>  #include <linux/delay.h>
+>  #include <linux/bug.h>
+> +#include <linux/bitfield.h>
+>  #include <linux/errno.h>
+>  #include <linux/export.h>
+> +#include <linux/io.h>
+> +#include <linux/ioport.h>
+>  #include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +#include <linux/slab.h>
+> +
+> +#include <cxlpci.h>
+>  
+>  #include "cxl.h"
+>  #include "core.h"
+> @@ -116,3 +123,198 @@ int cxl_commit(struct cxl_decoder_settings *settings, void __iomem *hdm)
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_FOR_MODULES(cxl_commit, "cxl_core");
+> +
+> +#define CXL_HDM_DECODER_MAX_COUNT 32
+> +
+> +static void cxl_pci_hdm_clear(void *data)
+> +{
+> +	struct pci_dev *pdev = data;
+> +
+> +	WRITE_ONCE(pdev->hdm, NULL);
+> +}
+> +
+> +static void cxl_pci_hdm_unmap(struct pci_dev *pdev,
+> +			      struct cxl_component_regs *regs,
+> +			      struct cxl_register_map *map)
+> +{
+> +	struct cxl_reg_map *hdm_map = &map->component_map.hdm_decoder;
+> +
+> +	if (!regs->hdm_decoder)
+> +		return;
+> +
+> +	devm_iounmap(&pdev->dev, regs->hdm_decoder);
+> +	devm_release_mem_region(&pdev->dev, map->resource + hdm_map->offset,
+> +				hdm_map->size);
+> +}
+> +
+> +static int cxl_pci_hdm_read_decoder(struct pci_dev *pdev,
+> +				    struct cxl_decoder_settings *settings,
+> +				    void __iomem *hdm, int id)
+> +{
+> +	u64 target_or_skip, base, size;
+> +	u32 ctrl, lo, hi;
+> +	int rc;
+> +
+> +	*settings = (struct cxl_decoder_settings) {
+> +		.id = id,
+> +	};
+> +
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (!(ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED))
+> +		return 0;
+> +
+> +	lo = readl(hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	hi = readl(hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	base = ((u64)hi << 32) | lo;
+> +
+> +	lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	size = ((u64)hi << 32) | lo;
+> +
+> +	if (!size || base == U64_MAX || size == U64_MAX ||
+> +	    base > U64_MAX - (size - 1)) {
+> +		pci_err(pdev, "CXL HDM decoder %d has invalid range\n", id);
+> +		return -ENXIO;
+> +	}
 
-This is intentionally -1.
+Zero size is ok now (see series from Richard), and the U64_MAX checks in
+the main driver are more about catching common MMIO read failure cases.
+In any event I think the core of this function and the validation should
+be shared with init_hdm_decoder() so these kinds of disconnects are
+prevented.
 
-ntb_hw_epf sets "ndev->db_count = irq - 1" where the "-1" accounts for the link
-slot. That goes back to the initial ntb_hw_epf support commit 812ce2f8d14ea. So
-the number of usable doorbell vectors is "db_count - 1", subtracting the
-remaining unused/skipped slot.
+> +
+> +	lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> +	hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	target_or_skip = ((u64)hi << 32) | lo;
+> +
+> +	settings->hpa_range = (struct range) {
+> +		.start = base,
+> +		.end = base + size - 1,
+> +	};
+> +	settings->targets = target_or_skip;
+> +	settings->target_type = FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl) ?
+> +				CXL_DECODER_HOSTONLYMEM : CXL_DECODER_DEVMEM;
+> +	settings->flags = CXL_DECODER_F_ENABLE;
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +		settings->flags |= CXL_DECODER_F_LOCK;
+> +
+> +	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
+> +			 &settings->interleave_ways);
+> +	if (rc)
+> +		return rc;
+> +
+> +	return eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK,
+> +					    ctrl),
+> +				  &settings->interleave_granularity);
+> +}
+> +
+> +static int cxl_pci_hdm_capable(struct pci_dev *pdev)
+> +{
+> +	u16 cap;
+> +	int dvsec;
+> +	int rc;
+> +
+> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> +					  PCI_DVSEC_CXL_DEVICE);
+> +	if (!dvsec)
+> +		return -ENOTTY;
+> +
+> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap);
+> +	if (rc)
+> +		return pcibios_err_to_errno(rc);
+> +
+> +	if (!(cap & PCI_DVSEC_CXL_MEM_CAPABLE))
+> +		return -ENOTTY;
+> +
+> +	return 0;
+> +}
+> +
+> +int pci_cxl_hdm_init(struct pci_dev *pdev)
 
-> 
->   ntb_epf_db_vector_mask() comment mentions "one skipped slot"
-> 
-> I don't want to change anything during the v7.2 merge window, but if
-> there are any actual bugs here, they could be fixed after v7.2-rc1.
-> If there are no bugs but this could be clarified to reduce confusion,
-> we could do that for v7.3.
+Capability init does not fail, so this can be void.
 
-If preferred, I can send a follow-up patch that adds comments to make the
-distinction clearer.
+If you want you can make an inner function to report the init failure
+via an info message, but otherwise PCI core is not looking for failures.
 
-Best regards,
-Koichiro
+> +{
+> +	struct cxl_decoder_settings *settings;
+> +	struct cxl_component_regs regs = { 0 };
+> +	struct cxl_register_map map = { 0 };
+> +	struct cxl_hdm_info *info;
+> +	bool allocated_info = false;
+> +	int decoder_count;
+> +	u16 command;
+> +	int rc;
+> +
+> +	info = READ_ONCE(pdev->hdm);
+> +	if (info && info->regs.hdm_decoder)
+> +		return 0;
+> +
+> +	rc = cxl_pci_hdm_capable(pdev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_read_config_word(pdev, PCI_COMMAND, &command);
+> +	if (rc)
+> +		return pcibios_err_to_errno(rc);
+> +
+> +	if (!(command & PCI_COMMAND_MEMORY))
+> +		return -ENOTTY;
+
+This needs some commentary about expectations and likely some formal
+recommendation to, and agreement with firmware implementers.
+
+The problem is that CXL memory may be, and usually often is, handed off
+actively mapped to the OS. When that happens this needs to be able to
+assume that PCI_COMMAND_MEMORY is also enabled for access to the HDM
+decoders. It would be broken for firmware to say "here is a device
+actively mapping CXL.mem and by the way you can not find out what those
+settings are without enabling the device MMIO memory space."
+
+So the expectation is that if a device arrives without
+PCI_COMMAND_MEMORY then the OS is free to disable CXL reset when a
+driver is not loaded. Conversely, if a device arrives actively providing
+system resources, it needs to also arrange for active management.
+
+That said, is it safe to assume that in your testing the memory space is
+indeed arriving enabled?
+
+> +
+> +	if (!info) {
+> +		info = devm_kzalloc(&pdev->dev,
+
+Devres is not suitable for use outside of a driver.
+
+> +				    struct_size(info, settings,
+> +						CXL_HDM_DECODER_MAX_COUNT),
+> +				    GFP_KERNEL);
+> +		if (!info)
+> +			return -ENOMEM;
+> +		allocated_info = true;
+> +	}
+> +
+> +	rc = cxl_find_regblock(pdev, CXL_REGLOC_RBI_COMPONENT, &map);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = cxl_setup_regs(&map);
+> +	if (rc)
+> +		return rc;
+> +
+> +	if (!map.component_map.hdm_decoder.valid) {
+> +		rc = -ENODEV;
+> +		return rc;
+> +	}
+> +
+> +	rc = cxl_map_component_regs(&map, &regs, BIT(CXL_CM_CAP_CAP_ID_HDM));
+
+This uses devres internally so needs a flavor that does typical
+allocation. One way to differentiate would be to set "map.host = NULL"
+for this case.
+
+> +	if (rc)
+> +		return rc;
+> +
+> +	decoder_count = cxl_hdm_decoder_count(readl(regs.hdm_decoder +
+> +						    CXL_HDM_DECODER_CAP_OFFSET));
+> +	if (decoder_count < 0) {
+> +		rc = decoder_count;
+> +		goto out_unmap;
+> +	}
+> +
+> +	if (decoder_count > CXL_HDM_DECODER_MAX_COUNT) {
+> +		rc = -ENXIO;
+> +		goto out_unmap;
+> +	}
+> +
+> +	if (info->decoder_count && info->decoder_count != decoder_count) {
+> +		rc = -ENXIO;
+> +		goto out_unmap;
+> +	}
+> +
+> +	info->decoder_count = decoder_count;
+> +	info->regs = regs;
+> +
+> +	settings = info->settings;
+> +	for (int i = 0; i < info->decoder_count; i++) {
+> +		rc = cxl_pci_hdm_read_decoder(pdev, &settings[i],
+> +					      regs.hdm_decoder, i);
+> +		if (rc)
+> +			goto out_unmap;
+> +	}
+> +
+> +	WRITE_ONCE(pdev->hdm, info);
+
+The HDM info is accessed either by the reset path or the driver and
+should be protected by cxl_rwsem.dpa. So WRITE_ONCE() becomes
+unnecessary if info update happens under that synchronization.
