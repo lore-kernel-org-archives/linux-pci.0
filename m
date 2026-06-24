@@ -1,131 +1,153 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 450D63BB671
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 14:03:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782309792; cv=pass; b=rEyQVANLFuh0dixlWH1Uw8qSAwnkytxwAvgdS4bPU9y31eqhOlrGno1HKzL+H8R8R+cXe5e5/S5eB9MeKrVSkQEEsz4wwMys/ymwQnNhhB+UzUmajSajEwlUtbiiAReglHhMrXQlOo3YSU8qos0oXgCNyPEYSTJegexuEY5ZiNI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782309792; c=relaxed/simple;
-	bh=ksijtf2IRLNHsT3AVS8XAMToSq3zWqz1VXfdch2/aYo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EK6Pvk21wsobIeTvNR8/Y94mj7Fyd/DfAJ6DVoUOR01Rxvm7sQAPMclmAzHcPiejZxfbg7EcrBRdD56Y7smL4ZVf9B/ntxAB/fCIxu3y1gqly6fyRGJr2BgZoEq91P7raeZ0oj7ngC9rnxcOPj17nBJ64hH0IKLzFGjhkREDtpM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hsecUjtc; arc=pass smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCEA30C179
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 14:04:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782309890; cv=none; b=au/AxHMVN1oWeOblRGyw3pTA+H0udl2sLP/i7w6/fqSQG7UIfXZsswuvUfTZjpLynx47jSziS2eqy+8x7DSFef6DZb8IS0v5ko1tqHC+tkJBntiN18r0qSXoMp/O2ddWE0HO8KKWGvgbLnUGCG3B2NkRomZWEiOmYPbtA4JJICs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782309890; c=relaxed/simple;
+	bh=coVOnLljfvJZH+2H7Q5x0OcJvYY2eK9FZ+22+iplQXE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bROZn+azzNzgL8edp/VXmac+qUMLK4ghI4rT88kmwGcVxMEKS/22RZTE3KGKgWtkT7VX4kfKjs4mHJr8pajEpXtcq4ngz6fCENmQTuNKwwdbqCMAG147yp6r5xtNUor66e0L/SSNghST0gZ9ZWVe8Vx2UExxA+BVtvapHXQVXKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BoHKJcfZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hsecUjtc"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-30bb87c90deso164490eec.3
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:03:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782309790; cv=none;
-        d=google.com; s=arc-20240605;
-        b=NlwCYdxfJhzH6RwXWvfIzL9EXAYoUREAcnWUU/XOojb4dIx91d7BmTjUF1bHNj7oAj
-         ZqhmqzlPZ/Tpw7uNrLy29pgSvOVT47WQf8HtjFDwA0P0G3iKampQv+nFVnpj4+nJgHdZ
-         I7eu6VZJmYuatV9tVgRaDqKflMA9SSRy3b6oRksv16htHj9XImH4Pl4nQ7CTQ3ZI7SN/
-         zM2RE5P1jvFdECbsIGyXevurNPkj1oE5kERshN3a8I5hRKSNKkTcZBpUXJjd9YIDb8jD
-         y+0QLq9M51IAh1q0035lMCfwVztJEbaflPsEkQS1C/dXK+QdKBHzDBwxMVaQWpOu+meZ
-         Edsg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ksijtf2IRLNHsT3AVS8XAMToSq3zWqz1VXfdch2/aYo=;
-        fh=KLbI7xhbsOGk6lGpvV76q6ev403WOXuBb7fxQqAT3bs=;
-        b=TKz3MfF6fWlGYdYni4LE2hykskFJvf4SEmtLk1Q/Hv1lNvcbmjyvzJYUb9ODT6YEyZ
-         /wn5RdmHesavvuIG14kl8LPPN07IwldzQBVldnw0Ep5NdNy+15GwbokDBAs/MuEO9kiG
-         a3PIORB3YeXsnbtn3Svrd9xDLt3ZleodEwD0qqUqEY6T/DL+diZE1Yie3UVFr1q9I9cR
-         MWmw9arhQgHs0T7vbSdmbQukQAnVC/rKUx1ZYNqVgXeIeRBN8Qf9a64uqPf2O32H1TCq
-         ug7EoHIm7x2O8DoIzd09Jg6DP5ZsYHXxDph4IT8I7wD4j6zZ7FDw4ZEU9pQ67hrvdrIC
-         66uQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782309790; x=1782914590; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ksijtf2IRLNHsT3AVS8XAMToSq3zWqz1VXfdch2/aYo=;
-        b=hsecUjtcX+2100VDiJTVQfiUzHkHNfosIUE1h1VgZ/aN73Nrll8dHIpfVxaPNGO3th
-         oOYuhmQtxznpu59gHGEhhbQo15BpIV9NQ7ImlhNajXvohWnXDFnpuDm1cuVRFVcfNJTz
-         k6CNvUOh4DZBOquwW3nuxkWRdr/+7q6JdjrF1dzUp6OzGj9cq0/tWnIR94yAw/mPyO3q
-         6/lKvpIoQSgjkltjJSjbxiKJGWJCinrf5FAQ9zF7i9/S/fRNLEvQT/qqxwU3yHCpOGXH
-         sRz/hIttFhf08bwI68pb0WiDIZm/lziXf5I8tsWdnEJ8IIxOgezA93WhXXVH7t6v5Ulc
-         2sKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782309790; x=1782914590;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=ksijtf2IRLNHsT3AVS8XAMToSq3zWqz1VXfdch2/aYo=;
-        b=Xe6OmCxLq/2jYcQizRzm01BO0QrNnpsR2rz2A9yA1Oep52hXFi80yv7uqVEQPqKgKR
-         B9IebvWukjbEj0dQQOMOEjzsZsbrdhRyDHlIii0TnyI4rBeTby7XCfMV7reh2gNS5uEH
-         27U9bYpVOVKSGYaBqFrpbsgMOz4vsQwpgRe7QB07q69BkM5HatlwITaNNCpoDzSlR63g
-         362mSpgI8HSa8iQ8zMxuXQ3Jpus+uM56bg3SPhEDuuspPCL5GCQo3SVl1uhRSCSsgPUx
-         bbuHutws1zbiBGML7pUFAC/gY8xhmDF+UXj1cEujU+0x6vZN+i/9U7O+bcWBWXTp2pdA
-         lnWw==
-X-Forwarded-Encrypted: i=1; AHgh+Ro9f1uxi61mIdCAv/yZmnvg45xm4QAbRnqKuhUX8DbbAJGnm8nHv0wazwLbA7tt/4pI3a60vvdonQQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNijLUA7iLYMoGoY5DgN9t/oDf+HDCOrRZJpJd6hiIatBT2Opo
-	94cZA5yLeqr9PvQU6i+y3SBkx+F5V7cAIWXW5omVqOQyKzw3T2Qnu4ohnKY3CFEGNPyFMHjSq3S
-	4rsOF4aB6n2Je1VTEw4MLSi+qzWvoRYQ=
-X-Gm-Gg: AfdE7clDGSYtvqQ+GL5238WsTdDzSuZ4sxSo4fUKvcMu18kbonYVysF8LN5kgs2qKFE
-	oWkmFTXvsH5Rbr5qb5bicnAZq+9jtEHv8cWXeQB5bMATkSeBtdSs0CgLVsC65bUK6OManZy8q3G
-	0wkHce0JvpOSlF/UpE/wNV/BU3iMBhnaZR9NEHuojsq9Zsp+yjiT5cFKinSdzKUrfYLJY8iKPLo
-	5bTmsqahuycRnxOsoc+8oPK7qq7IrIBVoZv0GN+MrPjq1C+umpzW+hCV2XC8ueAwoenObpomnLO
-	VDCd4u3wXMBEMBwmi1ojXs0zn+Eq4N0TsNqQzXF6uolVK4BAeFod6XDHHzwv40KKY2zJJmJtxkr
-	b8S7QizOAQwxx
-X-Received: by 2002:a05:7301:658a:b0:30b:c8bb:588f with SMTP id
- 5a478bee46e88-30c5240f7damr3538472eec.5.1782309787929; Wed, 24 Jun 2026
- 07:03:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BoHKJcfZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 588961F00A3A;
+	Wed, 24 Jun 2026 14:04:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782309888;
+	bh=6I2u4AXpZDRd8Fbz3Ig1e1EAXouMnPNd3HkQLmf0YaE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BoHKJcfZ03rsfkHKhxhg98svyZh/C9c8Tw96oZAPKYKIW1LMq72UYpE3EVmTskaft
+	 Eaw14Ad8SPpNrR7vb+vB4gAxmMKRJY6kFJtL9E6uzmnrcElJdPp5huhXm6MWNUWYx/
+	 itkYQdxzD7Zj6XG8LfpHH/Iv0JF056ecCYLIU2i8rVThOhQ6gGqOCh6TJK/AeaOROi
+	 2lmZFBRhFsAl5Nog2UcQzuPzKxCN9JBoGblg0TOF8s1tJsxEjmxbTkw4RcAmwzQj02
+	 9JoL2DAu7GiEW6Z+0GpGiOVHONZHFMF4AVadt7L53wMI1boagsYCbEelLGQspT+5Ok
+	 4i0BOPiAam9JQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4] PCI: qcom-ep: Fix runtime PM reference leak in probe
+ error paths
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wentao Liang" <vulab@iscas.ac.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260624134932.44357-1-vulab@iscas.ac.cn>
+References: <20260624134932.44357-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 24 Jun 2026 14:04:47 +0000
+Message-Id: <20260624140448.588961F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev> <8ea21b29-9baf-4926-a16f-7d21c5a1a1b8@suse.com>
-In-Reply-To: <8ea21b29-9baf-4926-a16f-7d21c5a1a1b8@suse.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Wed, 24 Jun 2026 16:02:53 +0200
-X-Gm-Features: AVVi8CdZJD474qdF4GDgFLlfJ_vD8WsFaomaTI3YSRH6pluhcoRUR51gh_iz4VE
-Message-ID: <CANiq72m_LakPxHt99+3eBn2rXokr3vZbdJf=Wk-Yi8_ufQ2mvA@mail.gmail.com>
-Subject: Re: [PATCH v5 0/9] Fix missing fops.owner in Rust DRM/misc abstractions
-To: Petr Pavlu <petr.pavlu@suse.com>
-Cc: Alvin Sun <alvin.sun@linux.dev>, Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
-	Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Daniel Gomez <da.gomez@kernel.org>, 
-	Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Brendan Higgins <brendan.higgins@linux.dev>, David Gow <david@davidgow.net>, 
-	Rae Moar <raemoar63@gmail.com>, Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
-	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
-	Igor Korotin <igor.korotin@linux.dev>, FUJITA Tomonori <fujita.tomonori@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, 
-	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
-	Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org, 
-	linux-modules@vger.kernel.org, driver-core@lists.linux.dev, 
-	dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev, 
-	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 24, 2026 at 3:23=E2=80=AFPM Petr Pavlu <petr.pavlu@suse.com> wr=
-ote:
->
-> I would only suggest adding the new file rust/kernel/module.rs in
-> patch #1 under the MODULE SUPPORT support entry in the MAINTAINERS file,
-> similarly to the other module-related Rust code, so that the module
-> maintainers are emailed when changes to this file are proposed. I think
-> you can change the existing 'F: rust/kernel/module_param.rs' to
-> 'F: rust/kernel/module*.rs'.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-That would be great, yes -- thanks!
+New issues:
+- [High] The patch introduces a manual `pm_runtime_disable()` call on the `=
+devm_pm_runtime_enable()` error path, which causes a double-disable and per=
+manently breaks runtime PM for the device.
 
-Cheers,
-Miguel
+Pre-existing issues:
+- [High] `qcom_pcie_ep_remove()` does not call `dw_pcie_ep_deinit()`, causi=
+ng permanent memory leaks of EPC memory structures and MSI address allocati=
+ons on driver unbind.
+- [High] `qcom_pcie_disable_resources()` uses the asynchronous `pm_runtime_=
+put()` instead of synchronous `pm_runtime_put_sync()`, causing the pending =
+suspend to be cancelled during device removal.
+- [High] The global IRQ handler accesses hardware registers without acquiri=
+ng a runtime PM reference, risking unclocked access and kernel panics if th=
+e IRQ fires while the device is suspended.
+--
+
+commit bfc2657160a90bca55dc8326794de5109d7591fc
+Author: Wentao Liang <vulab@iscas.ac.cn>
+Subject: PCI: qcom-ep: Fix runtime PM reference leak in probe error paths
+
+The commit modifies qcom_pcie_ep_probe() to properly release the runtime
+PM reference obtained via pm_runtime_get_noresume() on error paths. It
+introduces differentiated error handling to avoid double-puts or
+double-disables depending on whether devm_pm_runtime_enable() succeeded.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/cont=
+roller/dwc/pcie-qcom-ep.c
+> index 257c2bcb5f76f..aa3b7cdd513cd 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> @@ -892,16 +892,16 @@ static int qcom_pcie_ep_probe(struct platform_devic=
+e *pdev)
+>  	pm_runtime_set_active(dev);
+>  	ret =3D devm_pm_runtime_enable(dev);
+>  	if (ret)
+> -		return ret;
+> +		goto err_manual_cleanup;
+
+[Severity: High]
+If devm_pm_runtime_enable() fails, does this cause a double-disable of
+runtime PM?=20
+
+When devm_pm_runtime_enable() encounters an error (like devres memory
+allocation failure), it automatically calls pm_runtime_disable() to roll
+back. By jumping to err_manual_cleanup, we call pm_runtime_disable() a
+second time. This would increment the device's power.disable_depth to 2,
+permanently preventing runtime PM enablement on subsequent probe attempts.
+
+[ ... ]
+
+> +err_manual_cleanup:
+> +	pm_runtime_put_noidle(dev);
+> +	pm_runtime_disable(dev);
+>  	return ret;
+>  }
+
+[Severity: High]
+This is a pre-existing issue, but does qcom_pcie_ep_remove() fail to clean =
+up
+the EPC memory?
+
+Looking at qcom_pcie_ep_remove() in drivers/pci/controller/dwc/pcie-qcom-ep=
+.c,
+it appears to omit the dw_pcie_ep_deinit() call. During probe,
+dw_pcie_ep_init() allocates the EPC address space using kzalloc() and MSI
+memory via ioremap(), which are not devres-managed. Could omitting the dein=
+it
+function permanently leak these memory regions and eventually exhaust system
+memory on driver unbind?
+
+[Severity: High]
+This is a pre-existing issue, but should qcom_pcie_disable_resources() use
+pm_runtime_put_sync() instead of pm_runtime_put()?
+
+In drivers/pci/controller/dwc/pcie-qcom-ep.c:qcom_pcie_disable_resources(),
+pm_runtime_put(dev) queues an asynchronous suspend. Immediately after remov=
+al,
+the devres cleanup invokes pm_runtime_disable(), which calls
+__pm_runtime_barrier() to synchronously cancel any pending async requests.
+Does this leave the device permanently powered on and active?
+
+[Severity: High]
+This is a pre-existing issue, but is it possible for the global IRQ handler
+to access unpowered hardware registers?
+
+If the global_irq fires (e.g., a spurious interrupt) after the device is
+runtime suspended, qcom_pcie_ep_global_irq_thread() accesses the PARF
+registers without calling pm_runtime_get_if_active().=20
+
+drivers/pci/controller/dwc/pcie-qcom-ep.c:qcom_pcie_ep_global_irq_thread() {
+    ...
+    u32 status =3D readl_relaxed(pcie_ep->parf + PARF_INT_ALL_STATUS);
+    ...
+}
+
+Since pm_runtime_put_sync() at the end of probe drops the PM reference, Gen=
+PD
+may power down the domain. Would accessing unpowered registers here cause a
+synchronous external abort and crash the kernel?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624134932.4435=
+7-1-vulab@iscas.ac.cn?part=3D1
