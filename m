@@ -1,117 +1,132 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCA8D392814
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:23:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3025B392C2C
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:23:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782285790; cv=none; b=QqSzmfFHtdrgoaYL4SAALb5hjyNlOxlhWYWBWGzSHWkOL+Vdc+O+b6+Zvu1Al+AaEuOx4ccgXeP0TIynBurQStuZgX8qqc/KJ3d2CQLbqVMIvNymVv4mfH8fL4Zg+IXQZtTtj1HBwUN58jTlx/M/G01eiUIUpYfqYKbn68N30O4=
+	t=1782285790; cv=none; b=XzWphQYr1cAMjLK+64Fn5rN+vKPaU2CDdMnaz59c0ps8AHsVVTRDs3ShEPP5vbf0Uxn2kcu8P8u36nVi0YnxGSrtIieTCjcu8c5IKO6KpHKMB+d0OKSeB3wLP9u/E6KAUYw1Y0eP8GFh6PI91PsUErMKF0X8d2SApfRGnCHbNB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782285790; c=relaxed/simple;
-	bh=lA8XugXxIRBOfwWF4lTMDZXTDxQT7NQ6VY/WywWoxsE=;
+	bh=jbBFYU/lMtksEwVPBD/znMfo2cM3W43qsM5Qt1I+/aI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=JIdEEr4Kj8fG3ei87JM92Ha0/ePFgvzzfAsOPRk95Gfab+1ZuNvJr9vl2c3OkJkn9kWSMpb96T1k1EMBTps5WRpyHrxIgQD8IMYQAQC1pfBOJKz37/UH/o+/9usSJBKMmdM7/J7uaA7lvVEJ8Bs9VQLR5vsQLscGaP4oeWVvFZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=qmuTmiKs; arc=none smtp.client-ip=203.254.224.34
+	 Content-Type:References; b=oZeypZcb6zopT1atqKx2omP/OFslsPkk2hlQeeVGSj+ZAv+9jlDjeNwoaZWTFnW7GPsWO6OecwtlfRv5Q0a9xiFQhQqZo2maZMpMmcAZ/UfkAsX9MmaoUOckLsADRMxQWyx1dItuUXLPj9xUGXHSlK5wvfqYIqamAHLNgPvV30E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=msljClRi; arc=none smtp.client-ip=203.254.224.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qmuTmiKs"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260624072303epoutp04dea882dc22bcaefcfdbcc015180fd9d6~783o0zaFx0397603976epoutp04E
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:23:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260624072303epoutp04dea882dc22bcaefcfdbcc015180fd9d6~783o0zaFx0397603976epoutp04E
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="msljClRi"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260624072304epoutp0216d2d13698919073b0432f936a33e536~783p3lXGy1911519115epoutp02t
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:23:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260624072304epoutp0216d2d13698919073b0432f936a33e536~783p3lXGy1911519115epoutp02t
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1782285783;
-	bh=flLJaw24vmZ5PebTC58E7dtIGLM3IzPX1gG/gt3MsWs=;
+	s=mail20170921; t=1782285784;
+	bh=Zx+GK9SEZ82lWmgsSqYliXVinMXaugcnvdzvMvb0uuY=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=qmuTmiKsI/7UqkYmMIIRHeXZHhD7s5OglItSd/TpiqRps4Fs5ZQ7ZDVwIJ1Gu9d9u
-	 nRU2HgPQgDrAuIeHFaQDdViiboWt2g3H5MzSd39g66n1DP5hGGRrYJfE07CEVgAT1G
-	 3cJsfzw4sSRzKMWMxVVqCuCm6He/2KNumU885N2A=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260624072303epcas5p4986c5350b4fc8c415b99dea6d3edeaad~783oPoHT80772007720epcas5p4u;
-	Wed, 24 Jun 2026 07:23:03 +0000 (GMT)
+	b=msljClRianM1i7iLAkGDaotg4OBBIBRSFKa5jVPES0BBik2be5XfPo2MOKMGgeXES
+	 s/IHlVzzQCFu1jHWIHx80M7VrIayvz/1KoDGlHjGd1SJEWp17CK8xyGkQYRnEtGYiu
+	 M8HuiAcJZJoBy85JPZhQze7FSezfXqC6q736kugc=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260624072304epcas5p1c318f3f3b57b6a52cdbece56e6614b8e~783pLAPBQ2269122691epcas5p1F;
+	Wed, 24 Jun 2026 07:23:04 +0000 (GMT)
 Received: from epcpadp2new (unknown [182.195.40.142]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4glYLb0fVNz6B9m7; Wed, 24 Jun
-	2026 07:23:03 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260624071522epcas5p204780f40c1b17535fc2568f2d32ba500~78w7XEGjh3274332743epcas5p2b;
-	Wed, 24 Jun 2026 07:15:22 +0000 (GMT)
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4glYLc0dw2z3hhTD; Wed, 24 Jun
+	2026 07:23:04 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260624072046epcas5p10787cf7e14b0b8e72d4d11fb782b3ca1~781o3-WPM1059310593epcas5p1N;
+	Wed, 24 Jun 2026 07:20:46 +0000 (GMT)
 Received: from arun-B560M-DS3H-V2 (unknown [107.99.41.170]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260624071519epsmtip15f129b67667b670f0ad884ee1fbec427~78w4wroEL1366013660epsmtip1K;
-	Wed, 24 Jun 2026 07:15:19 +0000 (GMT)
-Date: Wed, 24 Jun 2026 20:34:27 +0530
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260624072044epsmtip2ef2cbfeba78fb7c84ddc1fd3ef3be652~781nA6DXa2004820048epsmtip2h;
+	Wed, 24 Jun 2026 07:20:44 +0000 (GMT)
+Date: Wed, 24 Jun 2026 20:39:52 +0530
 From: Shrihari E S <shrihari.s@samsung.com>
 To: Junjie Cao <junjie.cao@intel.com>
 Cc: jic23@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org, cpgs@samsung.com, arun.george@samsung.com,
 	vikash.k5@samsung.com, s.neeraj@samsung.com, dongjoo.seo1@samsung.com,
 	dave@stgolabs.net, gost.dev@samsung.com
-Subject: Re: [RFC 5/8] hw/cxl: Wire UIO capability into HDM decoder
- registers
-Message-ID: <81412691.21782285783075.JavaMail.epsvc@epcpadp2new>
+Subject: Re: [RFC 6/8] hw/pci: Add PCIe Streamlined Virtual Channel (SVC)
+ capability.
+Message-ID: <1987169128.61782285784075.JavaMail.epsvc@epcpadp2new>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260617154521.520191-1-junjie.cao@intel.com>
-X-CMS-MailID: 20260624071522epcas5p204780f40c1b17535fc2568f2d32ba500
+In-Reply-To: <20260617154521.520191-2-junjie.cao@intel.com>
+X-CMS-MailID: 20260624072046epcas5p10787cf7e14b0b8e72d4d11fb782b3ca1
 X-Msg-Generator: CA
 Content-Type: multipart/mixed;
-	boundary="----uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53746_"
+	boundary="----8xxTakeuJ66kI_IBZqWF_Qqy5yET_M96iI-s.dWLk22.0KCZ=_53c69_"
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20260624071522epcas5p204780f40c1b17535fc2568f2d32ba500
+X-CMS-RootMailID: 20260624072046epcas5p10787cf7e14b0b8e72d4d11fb782b3ca1
 References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<20260609105836.3702787-6-shrihari.s@samsung.com>
-	<20260617154521.520191-1-junjie.cao@intel.com>
-	<CGME20260624071522epcas5p204780f40c1b17535fc2568f2d32ba500@epcas5p2.samsung.com>
+	<20260609105836.3702787-7-shrihari.s@samsung.com>
+	<20260617154521.520191-2-junjie.cao@intel.com>
+	<CGME20260624072046epcas5p10787cf7e14b0b8e72d4d11fb782b3ca1@epcas5p1.samsung.com>
 
-------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53746_
+------8xxTakeuJ66kI_IBZqWF_Qqy5yET_M96iI-s.dWLk22.0KCZ=_53c69_
 Content-Type: text/plain; charset="utf-8"; format="flowed"
 Content-Disposition: inline
 
 On 17/06/26 11:45PM, Junjie Cao wrote:
 >Hi Shrihari,
 >
->On Tue,  9 Jun 2026 16:28:33 +0530, Shrihari E S wrote:
->> +    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO,
->> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio);
->>      ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
->> -                     UIO_DECODER_COUNT, 0);
->> +                     UIO_DECODER_COUNT,
->> +                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio ?
->> +                     decoder_count : 0);
+>On Tue,  9 Jun 2026 16:28:34 +0530, Shrihari E S wrote:
+>>      if (flitmode) {
+>> -        pci_long_test_and_set_mask(exp_cap + PCI_EXP_LNKSTA2,
+>> +        uint32_t pos = dev->exp.exp_cap;
+>> +
+>> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
+>>                                     PCI_EXP_LNKSTA2_FLIT);
+>> +        pci_word_test_and_set_mask(exp_cap + PCI_EXP_FLAGS,
+>> +                                   PCI_EXP_FLAGS_FLIT);
 >
->CXL2_UPSTREAM_PORT is an enum constant with a non-zero value, so
->"|| CXL2_UPSTREAM_PORT" is always true and the type check collapses
->to just "uio" -- every type that reaches hdm_init_common() with
->uio=true gets the UIO bit set.  Presumably the intent was:
+>Following up on Jonathan's observation here -- I'd also noticed a
+>bogus Interrupt Message Number on a plain flit-mode root port, so I
+>checked what the stray write actually does to the Flags register.
+>The impact is wider than just UIO:
 >
->    (type == CXL2_TYPE3_DEVICE || type == CXL2_UPSTREAM_PORT) && uio
+>The first set_mask writes PCI_EXP_LNKSTA2_FLIT (0x0400) into
+>PCI_EXP_FLAGS (cap offset 0x02) instead of PCI_EXP_LNKSTA2 (0x32).
+>0x0400 falls in the Interrupt Message Number field (bits 13:9) of the
+>Flags register, so a flit-mode port ends up reporting a nonzero
+>Interrupt Message Number (it reads back as 2).
 >
->I haven't proposed which types should be in that set -- patch 7 sets
->crp->uio_capable on the cxl-rp, so a root port may well be intended
->here too.  Either way the current expression isn't gating on type.
->The same applies to the UIO_DECODER_COUNT line just below.
+>pcie_cap_fill_lnk() runs for every flit-mode port, and x-256b-flit
+>defaults to on for pcie-root-port, so even a plain
+>"-device pcie-root-port" comes up with the corrupted field.
+>
+>The second line (PCI_EXP_FLAGS_FLIT into Flags) looks correct and
+>should stay.  The first one looks like a typo in the destination
+>register -- it was PCI_EXP_LNKSTA2 before this series (visible in the
+>hunk above), so I'd restore it there rather than drop it.
+>pcie_cap_flit_write_config() does maintain the LNKSTA2 flit bit, but
+>only on guest LNKCTL writes; it doesn't run at realize/reset, so
+>dropping the line would leave LNKSTA2 flit status reading 0 at reset
+>instead of its pre-series value.
 >
 >Many thanks,
 >Junjie
 
 Hi Junjie,
 
-   Thanks for pointing out. Will rectify it in the next version of the patch.
+   Yeah, it's a typo. The destination register should be "PCI_EXP_LNKSTA2".
+   Thank you for pointing this out. We will rectify it in the next version.
 
 Thanks,
 
-------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53746_
+
+------8xxTakeuJ66kI_IBZqWF_Qqy5yET_M96iI-s.dWLk22.0KCZ=_53c69_
 Content-Type: text/plain; charset="utf-8"
 
 
-------uxXJsHHh-Fg65yNB0vIi5XNifLwzhKyLgsuI88_8PeeXN_vP=_53746_--
+------8xxTakeuJ66kI_IBZqWF_Qqy5yET_M96iI-s.dWLk22.0KCZ=_53c69_--
 
