@@ -1,331 +1,292 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1EE346AF1
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:47:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95AE2EEE77
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 08:02:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782287241; cv=none; b=Bmux/0xIqXKN4k2qONszLs1UeXtTp8vBpqRVOnTXrHCf80tFM3XgUQ6XX7OWFG9CjdMdVRYNu/1omDVi3t4rlCycC5ZEkpcycbdGgyMhLmcu9e0YuauHd9e2QiF3OfrV5TpGOUphXjzuA9VbEyRSBB5+NhfFSbQwLsPLYFmpjRA=
+	t=1782288133; cv=none; b=GBRfx1STx2LJcjBljRY7eA6k2dr5d5J+7z7LrBVae0+bqTvdTEH6rikUOK/BE4gO3vi2iRjtHFMWLWj78+Ft3YtE48ly1bTrVhlK5FHMfXEmHIptiMC9tZwLUMdoQ3eEUHIbe572Z43lGqtElfiwT4yWVoLoZ/nHmWk/+ZTRma8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782287241; c=relaxed/simple;
-	bh=NGJ0rrweZjKkiD+Cmnu1kTCdyjyPjWp1z8L80XvPfko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DTkYwpuSDGtk+XEAA5UHYVCIl2GtSXESCn8ZULz3yGcoO43Ygrzp1IiXKRax3L6XW44TTCuEmhIf17WxgKODpr3yY5Zwim4Z5+b8K1rrXICPHrkJxJiZuX4dLWmqa1r5MXhR7er63u9rJ3o9kVWmVlMK+57hvH+FoSLiQefeoKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=EKNzaJAN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=J3Kg7t3l; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1782288133; c=relaxed/simple;
+	bh=tPNnPjiXMToKvCA+G1cTII5dYTV1clG6blgshbGkFMk=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=J14ovKt6nnqTT39yZfJaF/01LvXHdGIH057wo/HiRN5WwsF7OSbwKXZz35J2yH06EZr5/SBaUAs3HOtqKQtrmbN+H/d/e8PbtWk2bDYslTgGa5Q1tlNLDjsWqNWwGfokQwSb0MX4dhQI37GSq0ScqcSNgZMqsf4Z5tN4/8dYPT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YcLVn24d; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="EKNzaJAN";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="J3Kg7t3l"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65O5toLn533316
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:47:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	uyO/oxy6yOszauGRa3+ycH46BEmZ6m/DyI0yY1OAvNo=; b=EKNzaJANf1T/xYRC
-	xJ23FK4GIyni/i9EsLzVYv9VTaMwY9Pra/uHTHJrR4ebZeA34TYUsXTBLKiTzHgE
-	1QB5QnCQ5wLUlBa9n7Lxzocco9k2j6tKICXEqd6unBbUDA2WRzmwNUM4VRQYjL6G
-	IHwWQrQ8C+Tea8a0tcKoco7M5YPYec8VLPW2ks6nVNkFs0MAB2kP33hqEzOHt2jv
-	1pJAlpc0AJ2ItvsIXORTkOgq/9dzKlCfi0X19SHHXIL0djBFzIA1FRPHS50Ko4mc
-	cRbiDneV2y911jfJsoCwRL2tV/6f1AXOx6nD5OdEYDmcYT45gpAV3wcVC5Vx5z7o
-	EWBKxg==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f06r30xb5-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 07:47:18 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8422382178bso640884b3a.2
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 00:47:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1782287238; x=1782892038; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uyO/oxy6yOszauGRa3+ycH46BEmZ6m/DyI0yY1OAvNo=;
-        b=J3Kg7t3lkBwaNvnRXhD/awD1WoCl0uuhJWXnMeP73hEqn36qp5kMHK3yBVu1wnnI5G
-         YU+IREPHxwjtXq9oteAa1+FUjPnP5+f71VtWYxhUhRVdSshdhvG+k1at7ZxVfbSL5qWK
-         qGRTUyiAGrI3dO3d26I7OHeZfak3E0j2aVtpID+DYIWuT1KXTn5OXMAmJJg1A1/iS+my
-         Rfc7tI/us5OlxNdxaKRm10/ukcoO2dfYGFlL0gagpse9HuIbMHwCKBucDBe23o3fqeon
-         /9Ppa446wGJ8bYbHKNSHGCpIkjL89o+/RiTq7FNJEqKQYftVDM0CoFlqKiQvzUpAazEf
-         5+kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782287238; x=1782892038;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=uyO/oxy6yOszauGRa3+ycH46BEmZ6m/DyI0yY1OAvNo=;
-        b=P/U7izaxRZ4iJxaBSTFB+CUtck2tui26U2/tqWiJxSclDTIXvGeZIGltaqwgYgjHwj
-         EkjyhIO6uW76hNErKJ5wtEpIVphsP2sPuG4EPND7LVEJhrEZf6mt1crTXmnaNc2umtLa
-         L0Th1W0Dnl6qvkXtSy7AE5QYNVWzwuzWebPG/Avft1O8C9lx0vGfofKQMNFICvbr4ddp
-         1rCzHRF9P2R84YfeYLVyJ1DwxnjdfwoLVjisbH24QEaXV80LNU6ZajIazru7Y/FIjZSY
-         UbDZF9jlWwk2uMHbtuFccHhTiOwyJfe8zGRUvx/2jG7Fh+8GQCzru/bJ1nA+sHeti7lX
-         EfYw==
-X-Forwarded-Encrypted: i=1; AFNElJ/jjhDhh9rmE9JTVl1vPXUwlDggMsBIrNkY9zlRwwfKCN7BNzhlja+5UZdJUvmmattj+8VZv4+unoo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YygMjIOtXZs1BJYsdz/zbd3bHfZlequUTgrDncI7aZMB+8/tl0T
-	bWeoXjt2Vbxdc/gflII4owjcBu4wRg0gnfVlIVLQ8g86/qDABMlyZptkquPFRsOCImHMTVsMgBE
-	gg0oCOPvMtCiTxuVXI3p2wmuESFU6lFW9XHQR+hOjBjFhkd3xI7lR7/n2DlMxaBY=
-X-Gm-Gg: AfdE7clo4LrdNhGwv7667KeHEBfW/u2sR5sIp8TOhpQt76NdDZV3U+BXQF1CAI/JEcg
-	JWnpYB256gBLgzOEOpmW47Cnh/fFr1iOznHdH2MDpJHxFKf1DpGNQe4AE8MGowNVKLoLqrvwzlU
-	tb+5n7WvyDmyl7iI8FamqFb3tuf74lNbDqsqpGm9xBjOaTjlaQkXTjrxY0BQ/aXMPVULs8XLIe9
-	7NLuO0RXtPmBLUxBwpwLrJYV/BY5AVzOxQDSimJ9D6+NVLuOWVTGgqxeJ3SudfZIXyfeJ0mf709
-	PO3VEzRE49LHzc9Bx4HLkrcoz7RXZJ1QHQTfEJVX7UYPWK6DUf1P6JvLMtf5b7tymFnRBvJebGS
-	Z3XaDtRC7pUnyajmm1bKAtcm8hIt2Brwi+ZLJPPBLY5wvqCQyLmLRHIyocqMmKBw3hMSU5255Ee
-	KZYByObvN0
-X-Received: by 2002:a05:6a00:17a9:b0:841:edb9:4ea2 with SMTP id d2e1a72fcca58-845a2c58284mr3191055b3a.32.1782287238164;
-        Wed, 24 Jun 2026 00:47:18 -0700 (PDT)
-X-Received: by 2002:a05:6a00:17a9:b0:841:edb9:4ea2 with SMTP id d2e1a72fcca58-845a2c58284mr3191019b3a.32.1782287237687;
-        Wed, 24 Jun 2026 00:47:17 -0700 (PDT)
-Received: from [10.133.33.165] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-845a3feb775sm1345215b3a.20.2026.06.24.00.47.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Jun 2026 00:47:17 -0700 (PDT)
-Message-ID: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
-Date: Wed, 24 Jun 2026 15:47:12 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YcLVn24d"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782288132; x=1813824132;
+  h=date:from:to:cc:subject:message-id;
+  bh=tPNnPjiXMToKvCA+G1cTII5dYTV1clG6blgshbGkFMk=;
+  b=YcLVn24dwbAQFyrARIhgUXLCspvLyPBYJVgYX7cIHzgiXgXDmlqJZ2+B
+   wzTYyGdwTtnz5VDCxCnADG+D3YOz3B+ius66LwWAr++FA5bYyqv9f7RCH
+   oDEYtNJsS1wyJdPE7FUXWp54V17iwCkJvvfbZmIwYi1sa737BUhJK41TF
+   K4G8fZatYOcamDZTujuA1lrS4Ngw6rKetqCCxTzUIWr2xLmNBZ1mK+F/c
+   pdpJ5qCWq2kO/z2tc/ZChibo0DZ5YamxiPnSk8gSp44hji9amufd4DtMi
+   ml+XHqb+9ZF84zLwlkpjzf6w+TDtjioZc7oYNHwJ218u78OC9LqvMAYFq
+   w==;
+X-CSE-ConnectionGUID: RU8nvRbcQyqLJeMEkVLEuw==
+X-CSE-MsgGUID: sCLTL95DSgOYAzBHNPAXhQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11826"; a="82915348"
+X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
+   d="scan'208";a="82915348"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 01:02:11 -0700
+X-CSE-ConnectionGUID: UDq+CzsTT4iP3Rdsg5bgdw==
+X-CSE-MsgGUID: rMG5mMUcS0Wd8YV6hOz9Yw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,222,1774335600"; 
+   d="scan'208";a="245422448"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa006.fm.intel.com with ESMTP; 24 Jun 2026 01:02:10 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wcIYh-000000003DV-2m0O;
+	Wed, 24 Jun 2026 08:02:07 +0000
+Date: Wed, 24 Jun 2026 16:01:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/link_train_delay] BUILD SUCCESS
+ 2b0d1a605ef22c063be9de475d7a66c311b710f4
+Message-ID: <202606241646.6YanRqBO-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
-        alex@shazbot.org, mani@kernel.org
-Cc: jjohnson@kernel.org, linux-pci@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org, mhi@lists.linux.dev,
-        linux-kernel@vger.kernel.org
-References: <20260623183115.1585273-1-jtornosm@redhat.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260623183115.1585273-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjI0MDA2MyBTYWx0ZWRfX/2/ppdyeVtrR
- bthld/y5PeZ9CuFGdZh9Y4ebAlrNi3QnDAXgkxPwlQTNAs+y+XWegk5ZejG37zNIebVrf8VGDh8
- +3moDMSdQNFOYqm3Axm3syCXn58V03dnJNPPqKAFX3UbpSRyYrdwx/wLZcQ/6M9NeF/QaOhb78G
- aASioYLIJDQ135Q2hCsaX4740Vyx2EPoQfv/v3RxxlOsEdnmTjapLCiHO0l5PxprmbiYT/gxA76
- Qlj5mMC7rS0Qx1gioK4VADNJrOFXn2ACHOzp3dwupTlEMs2kHMLj7CFkz8cGbAEam43yX8OuRoX
- 37HAti2OichNLGv0iZfxco0mbXbdpXbE21/4Visym50MnHWT5GpD8Lew1SC8Ym3ru9/G5545HIs
- bjbVzn/wUtRmpXPK+QSCXH9uKgHVWg==
-X-Proofpoint-ORIG-GUID: XBYRFFpRSEKV1mP0WFkOEuZKUrCcHZfN
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjI0MDA2MyBTYWx0ZWRfXzR4DIvt186Ih
- J5HOJSYe57/0utD4cz+oSXuah1W1ubXSu63nfEGaNP5QF8+BcSNZNSbSG2Lic6OcseIUfnVKFx/
- qtPP8V9+G5pez9uuQ3uT6QVC5lUH1ho=
-X-Authority-Analysis: v=2.4 cv=ZM7nX37b c=1 sm=1 tr=0 ts=6a3b8b86 cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=rq6MREiLanR6HC4oPXQA:9 a=QEXdDO2ut3YA:10
- a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-GUID: XBYRFFpRSEKV1mP0WFkOEuZKUrCcHZfN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-24_02,2026-06-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 malwarescore=0 bulkscore=0 suspectscore=0 adultscore=0
- lowpriorityscore=0 spamscore=0 classifier=typeunknown authscore=0 authtc=
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.22.0-2606150000 definitions=main-2606240063
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/link_train_delay
+branch HEAD: 2b0d1a605ef22c063be9de475d7a66c311b710f4  PCI: rzg3s-host: Use common pci_host_common_link_train_delay() helper
 
+elapsed time: 728m
 
-On 6/24/2026 2:31 AM, Jose Ignacio Tornos Martinez wrote:
-> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-> lack working reset methods for VFIO passthrough scenarios. These devices
-> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-> broken bus reset.
-> 
-> The problem manifests in VFIO passthrough scenarios:
-> 
-> - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WiFi devices:
->   Normal VM operation works fine, including clean shutdown/reboot.
->   However, when the VM terminates uncleanly (crash, force-off), VFIO
->   attempts to reset the device before it can be assigned to another VM.
->   Without a working reset method, the device remains in an undefined state,
->   preventing reuse.
-> 
-> - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
->   on first VM assignment without proper reset capability.
-> 
-> Add device-specific reset methods using BAR-space hardware reset registers
-> that exist in these devices:
-> 
-> - WCN6855/WCN7850 WiFi devices use SoC global reset via BAR0 (sequence from
->   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
->   ath11k_mhi_set_mhictrl_reset()):
->   - Write/clear reset bit at offset 0x3008
->   - Wait for PCIe link recovery (up to 5 seconds)
->   - Clear MHI controller SYSERR status at offset 0x38
-> 
-> - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
->   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
->   - Write reset request to offset 0xb0
->   - Wait 2 seconds for reset completion
-> 
-> These are true hardware reset mechanisms (not power management or firmware
-> error recovery), providing proper device reset for VFIO scenarios.
-> 
-> Testing was performed on desktop platforms with M.2 WiFi and modem cards
-> using M.2-to-PCIe adapters, including extensive force-reset cycling to
-> verify stability.
-> 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
-> v10:
->   - Complete redesign based on maintainer feedback (Manivannan Sadhasivam,
->     Alex Williamson): use actual hardware reset registers from
->     device drivers instead of D3hot power cycling
-> v9: https://lore.kernel.org/all/20260612142638.1243895-1-jtornosm@redhat.com/
-> 
->  drivers/pci/quirks.c | 118 +++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 118 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 431c021d7414..8ad3f214e520 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4240,6 +4240,121 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->  	return 0;
->  }
->  
-> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET	0x3008
-> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
-> +#define QUALCOMM_WIFI_MHISTATUS			0x48
-> +#define QUALCOMM_WIFI_MHICTRL			0x38
-> +#define QUALCOMM_WIFI_MHICTRL_RESET_MASK	0x2
-> +
-> +/*
-> + * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
-> + * registers.
-> + */
-> +static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
-> +{
-> +	bool link_recovered = false;
-> +	unsigned long timeout;
-> +	void __iomem *bar;
-> +	u32 val;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar = pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+configs tested: 215
+configs skipped: 2
 
-QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET is beyond the first 4K bar area hence requires MHI
-wakeup before accessing, see [1]. the wakeup callback for WCN6855 is
-ath11k_pci_bus_wake_up() which calls mhi_device_get_sync(). Not sure how this can be done
-here. Maybe Mani can provide some hints?
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-[1]
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/ath/ath11k/pcic.c#n216
+tested configs:
+alpha                             allnoconfig    gcc-16.1.0
+alpha                            allyesconfig    gcc-16.1.0
+alpha                               defconfig    gcc-16.1.0
+arc                              allmodconfig    clang-23
+arc                               allnoconfig    gcc-16.1.0
+arc                              allyesconfig    clang-23
+arc                                 defconfig    gcc-16.1.0
+arc                   randconfig-001-20260624    gcc-15.2.0
+arc                   randconfig-002-20260624    gcc-15.2.0
+arm                               allnoconfig    gcc-16.1.0
+arm                              allyesconfig    clang-23
+arm                                 defconfig    gcc-16.1.0
+arm                   randconfig-001-20260624    gcc-15.2.0
+arm                   randconfig-002-20260624    gcc-15.2.0
+arm                   randconfig-003-20260624    gcc-15.2.0
+arm                   randconfig-004-20260624    gcc-15.2.0
+arm                        vexpress_defconfig    gcc-16.1.0
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-16.1.0
+arm64                               defconfig    gcc-16.1.0
+arm64                 randconfig-001-20260624    clang-21
+arm64                 randconfig-002-20260624    clang-21
+arm64                 randconfig-003-20260624    clang-21
+arm64                 randconfig-004-20260624    clang-21
+csky                             allmodconfig    gcc-16.1.0
+csky                              allnoconfig    gcc-16.1.0
+csky                                defconfig    gcc-16.1.0
+csky                  randconfig-001-20260624    clang-21
+csky                  randconfig-002-20260624    clang-21
+hexagon                          allmodconfig    gcc-16.1.0
+hexagon                           allnoconfig    gcc-16.1.0
+hexagon                             defconfig    gcc-16.1.0
+hexagon                        randconfig-001    gcc-11.5.0
+hexagon               randconfig-001-20260624    gcc-11.5.0
+hexagon               randconfig-001-20260624    gcc-9.5.0
+hexagon                        randconfig-002    gcc-11.5.0
+hexagon               randconfig-002-20260624    gcc-11.5.0
+hexagon               randconfig-002-20260624    gcc-9.5.0
+i386                             allmodconfig    clang-22
+i386                              allnoconfig    gcc-16.1.0
+i386                             allyesconfig    clang-22
+i386                 buildonly-randconfig-001    gcc-12
+i386        buildonly-randconfig-001-20260624    gcc-12
+i386                 buildonly-randconfig-002    gcc-12
+i386        buildonly-randconfig-002-20260624    gcc-12
+i386                 buildonly-randconfig-003    gcc-12
+i386        buildonly-randconfig-003-20260624    gcc-12
+i386                 buildonly-randconfig-004    gcc-12
+i386        buildonly-randconfig-004-20260624    gcc-12
+i386                 buildonly-randconfig-005    gcc-12
+i386        buildonly-randconfig-005-20260624    gcc-12
+i386                 buildonly-randconfig-006    gcc-12
+i386        buildonly-randconfig-006-20260624    gcc-12
+i386                                defconfig    gcc-16.1.0
+i386                           randconfig-001    clang-22
+i386                  randconfig-001-20260624    clang-22
+i386                           randconfig-002    clang-22
+i386                  randconfig-002-20260624    clang-22
+i386                           randconfig-003    clang-22
+i386                  randconfig-003-20260624    clang-22
+i386                           randconfig-004    clang-22
+i386                  randconfig-004-20260624    clang-22
+i386                           randconfig-005    clang-22
+i386                  randconfig-005-20260624    clang-22
+i386                           randconfig-006    clang-22
+i386                  randconfig-006-20260624    clang-22
+i386                           randconfig-007    clang-22
+i386                  randconfig-007-20260624    clang-22
+i386                  randconfig-011-20260624    clang-22
+i386                  randconfig-012-20260624    clang-22
+i386                  randconfig-013-20260624    clang-22
+i386                  randconfig-014-20260624    clang-22
+i386                  randconfig-015-20260624    clang-22
+i386                  randconfig-016-20260624    clang-22
+i386                  randconfig-017-20260624    clang-22
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    gcc-16.1.0
+loongarch                           defconfig    clang-23
+loongarch                      randconfig-001    gcc-11.5.0
+loongarch             randconfig-001-20260624    gcc-11.5.0
+loongarch             randconfig-001-20260624    gcc-9.5.0
+loongarch                      randconfig-002    gcc-11.5.0
+loongarch             randconfig-002-20260624    gcc-11.5.0
+loongarch             randconfig-002-20260624    gcc-9.5.0
+m68k                             allmodconfig    gcc-16.1.0
+m68k                              allnoconfig    gcc-16.1.0
+m68k                             allyesconfig    clang-23
+m68k                                defconfig    clang-23
+m68k                        stmark2_defconfig    gcc-16.1.0
+microblaze                        allnoconfig    gcc-16.1.0
+microblaze                       allyesconfig    gcc-16.1.0
+microblaze                          defconfig    clang-23
+mips                             allmodconfig    gcc-16.1.0
+mips                              allnoconfig    gcc-16.1.0
+mips                             allyesconfig    gcc-16.1.0
+nios2                            allmodconfig    clang-20
+nios2                             allnoconfig    clang-23
+nios2                               defconfig    clang-23
+nios2                          randconfig-001    gcc-11.5.0
+nios2                 randconfig-001-20260624    gcc-11.5.0
+nios2                 randconfig-001-20260624    gcc-9.5.0
+nios2                          randconfig-002    gcc-11.5.0
+nios2                 randconfig-002-20260624    gcc-11.5.0
+nios2                 randconfig-002-20260624    gcc-9.5.0
+openrisc                         allmodconfig    clang-20
+openrisc                          allnoconfig    clang-23
+openrisc                            defconfig    gcc-16.1.0
+parisc                           allmodconfig    gcc-16.1.0
+parisc                            allnoconfig    clang-23
+parisc                           allyesconfig    clang-17
+parisc                              defconfig    gcc-16.1.0
+parisc                randconfig-001-20260624    gcc-16.1.0
+parisc                randconfig-002-20260624    gcc-16.1.0
+parisc64                            defconfig    clang-23
+powerpc                          allmodconfig    gcc-16.1.0
+powerpc                           allnoconfig    clang-23
+powerpc                     asp8347_defconfig    clang-23
+powerpc                        fsp2_defconfig    gcc-16.1.0
+powerpc               randconfig-001-20260624    gcc-16.1.0
+powerpc               randconfig-002-20260624    gcc-16.1.0
+powerpc64             randconfig-001-20260624    gcc-16.1.0
+powerpc64             randconfig-002-20260624    gcc-16.1.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                            allyesconfig    clang-23
+riscv                               defconfig    gcc-16.1.0
+riscv                          randconfig-001    clang-18
+riscv                 randconfig-001-20260624    clang-18
+riscv                          randconfig-002    clang-18
+riscv                 randconfig-002-20260624    clang-18
+s390                             allmodconfig    clang-17
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-16.1.0
+s390                                defconfig    gcc-16.1.0
+s390                           randconfig-001    clang-18
+s390                  randconfig-001-20260624    clang-18
+s390                           randconfig-002    clang-18
+s390                  randconfig-002-20260624    clang-18
+sh                               allmodconfig    gcc-16.1.0
+sh                                allnoconfig    clang-23
+sh                               allyesconfig    clang-17
+sh                                  defconfig    gcc-14
+sh                             randconfig-001    clang-18
+sh                    randconfig-001-20260624    clang-18
+sh                             randconfig-002    clang-18
+sh                    randconfig-002-20260624    clang-18
+sparc                             allnoconfig    clang-23
+sparc                               defconfig    gcc-16.1.0
+sparc                 randconfig-001-20260624    gcc-14.3.0
+sparc                 randconfig-002-20260624    gcc-14.3.0
+sparc                       sparc32_defconfig    gcc-16.1.0
+sparc64                          allmodconfig    clang-20
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260624    gcc-14.3.0
+sparc64               randconfig-002-20260624    gcc-14.3.0
+um                               allmodconfig    clang-17
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-16.1.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260624    gcc-14.3.0
+um                    randconfig-002-20260624    gcc-14.3.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-22
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-22
+x86_64               buildonly-randconfig-001    clang-22
+x86_64      buildonly-randconfig-001-20260624    clang-22
+x86_64               buildonly-randconfig-002    clang-22
+x86_64      buildonly-randconfig-002-20260624    clang-22
+x86_64               buildonly-randconfig-003    clang-22
+x86_64      buildonly-randconfig-003-20260624    clang-22
+x86_64               buildonly-randconfig-004    clang-22
+x86_64      buildonly-randconfig-004-20260624    clang-22
+x86_64               buildonly-randconfig-005    clang-22
+x86_64      buildonly-randconfig-005-20260624    clang-22
+x86_64               buildonly-randconfig-006    clang-22
+x86_64      buildonly-randconfig-006-20260624    clang-22
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-22
+x86_64                         randconfig-001    clang-22
+x86_64                randconfig-001-20260624    clang-22
+x86_64                         randconfig-002    clang-22
+x86_64                randconfig-002-20260624    clang-22
+x86_64                         randconfig-003    clang-22
+x86_64                randconfig-003-20260624    clang-22
+x86_64                         randconfig-004    clang-22
+x86_64                randconfig-004-20260624    clang-22
+x86_64                         randconfig-005    clang-22
+x86_64                randconfig-005-20260624    clang-22
+x86_64                         randconfig-006    clang-22
+x86_64                randconfig-006-20260624    clang-22
+x86_64                randconfig-011-20260624    gcc-14
+x86_64                randconfig-012-20260624    gcc-14
+x86_64                randconfig-013-20260624    gcc-14
+x86_64                randconfig-014-20260624    gcc-14
+x86_64                randconfig-015-20260624    gcc-14
+x86_64                randconfig-016-20260624    gcc-14
+x86_64                randconfig-071-20260624    gcc-14
+x86_64                randconfig-072-20260624    gcc-14
+x86_64                randconfig-073-20260624    gcc-14
+x86_64                randconfig-074-20260624    gcc-14
+x86_64                randconfig-075-20260624    gcc-14
+x86_64                randconfig-076-20260624    gcc-14
+x86_64                               rhel-9.4    clang-22
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-22
+x86_64                    rhel-9.4-kselftests    clang-22
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-22
+xtensa                            allnoconfig    clang-23
+xtensa                           allyesconfig    clang-20
+xtensa                randconfig-001-20260624    gcc-14.3.0
+xtensa                randconfig-002-20260624    gcc-14.3.0
 
-
-> +	val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	timeout = jiffies + msecs_to_jiffies(5000);
-> +	while (time_before(jiffies, timeout)) {
-> +		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +		if (val != 0xffffffff) {
-> +			link_recovered = true;
-> +			break;
-> +		}
-> +		msleep(20);
-> +	}
-> +
-> +	if (!link_recovered) {
-> +		pci_err(pdev, "PCIe link failed to recover after reset\n");
-> +		goto out_restore;
-> +	}
-> +
-> +	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-> +	 * and thus need to set MHICTRL_RESET to clear SYSERR.
-> +	 */
-> +	iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
-> +	ioread32(bar + QUALCOMM_WIFI_MHICTRL);
-> +
-> +	msleep(10);
-> +
-> +out_restore:
-> +	pci_iounmap(pdev, bar);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +
-> +	return link_recovered ? 0 : -ETIMEDOUT;
-> +}
-> +
-> +#define MHI_SOC_RESET_REQ_OFFSET		0xb0
-> +#define MHI_SOC_RESET_REQ			BIT(0)
-> +
-> +/*
-> + * Qualcomm modem device-specific reset using MHI SoC reset via BAR0
-> + * register.
-> + */
-> +static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
-> +{
-> +	void __iomem *bar;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar = pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
-> +	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
-> +
-> +	/* Be sure device reset has been executed */
-> +	msleep(2000);
-> +
-> +	pci_iounmap(pdev, bar);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -4255,6 +4370,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  		reset_chelsio_generic_dev },
->  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->  		reset_hinic_vf_dev },
-> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_wifi },  /* WCN6855 WiFi */
-> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_wifi },  /* WCN7850 WiFi */
-> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_modem }, /* SDX62/SDX65 modems */
->  	{ 0 }
->  };
->  
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
