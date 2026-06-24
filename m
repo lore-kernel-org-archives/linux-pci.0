@@ -1,67 +1,85 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F8B61DF736
-	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 13:23:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 897486DCE1
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 13:25:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782307406; cv=none; b=Y3nzuiwNvrDKRNcJbf5zSM+qj91jgWSyTHNF77psLZDoKCRbyEmnEf8GXb/OG9NPPEbWP43GkZLAp5v6cXZsmWtYNgy4sSDzgRh1D/Rl0HDbNTWHvQmvlya1gIQ2Ye+TkcCAsys8bamSi9aZzfTt8x+/Br4P2sKtA68Mhxhbrqk=
+	t=1782307517; cv=none; b=XKnJ2LZLx52Xi1og1d7l8HFxsTf7fYVqd23wVr+H6KXZuaGjogwG9CZImeBErxU7D+Hurvx3mXoNWO54UHjKlwLg2C6tlI3NYwy3X5PG2oi4VaVpoqL9Je4v+VW+bHkG2DbE52p+jnjdPHUmE6mh56UF0jb/FSqZEO+iHpNml/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782307406; c=relaxed/simple;
-	bh=nOGI1wI+vpa0w8/Vtce1TwCsycM2v5+pG5SNHLWaxXs=;
+	s=arc-20240116; t=1782307517; c=relaxed/simple;
+	bh=teUkfW0N/A/YLuxj0IhHFRqmE3Tbt/Kzmewx9Z5I85k=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gmgDQbfKDA92AkAlrdMsQxfWi2i05zJvfnZQfJiJIwtOla8ZUfOJEr6U1yUJnSVg2Am+fG1Ql2izEOzYvvnFTtW012BIzWVLTGJW3gIa8j01peAAILNItFakYFpx1ixnECeWXOgKJRRC2WnMp8ovFxTlm5kiVK4Y/hMmvgwidsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=cgCrq7NG; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 In-Reply-To:Content-Type; b=r1uBIznEgrv2uez2yvlp5BcYWwEeytYgh9i0awXNFKNN7nRcWLpCSiC44G9seLbp/x+gYCJ/AciFlVg07TVw7ZMiZJE5O11KH+P6fQpv7oV/uazqcfC0OFmxMNBDtFzQWapABNnMsb2mLzZJrNuugz8W7GWqq6PbgoQAuXfUKLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=agmYXxbB; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gPVPH4hX; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="cgCrq7NG"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c0840dc2859so115916366b.1
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:23:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="agmYXxbB";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gPVPH4hX"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65OANefD3047217
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 13:25:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	rC2z0XqMxmHPRSg9nz1/nDi27TUq/b4lbHiGoXEwpjQ=; b=agmYXxbBwEgf6JD8
+	IVMHFNmxN7SkpPqKh1UcRepP8HHS+nwzQyCU56gxqV8S1xT6NvjEIm1nongoCOZw
+	V7SsgOcXTKDN1vfx5u9UkMEB005Xk0jHEAdMEwh1/11CaBsgpnmwSWvboZ44EOnu
+	d/ATKB2mqma3q1YWlK+KDHglsB0LSFecFMevOfb8gtQ+AWNKfFQ6ockXghdTwOln
+	1gZFb+wBVCwWwJCWP1nRnwyf/xPHl11OC39w+QemMek864OSNPwxDg95PAfA1nDW
+	CFLprEfj5uD8IEh9epkQPS2TrrehbVbqo7eq5Q4K7SJcGbdGaDlg13RCQph3u35M
+	nn8Nkg==
+Received: from mail-oa1-f72.google.com (mail-oa1-f72.google.com [209.85.160.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f05ar2d9t-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 13:25:14 +0000 (GMT)
+Received: by mail-oa1-f72.google.com with SMTP id 586e51a60fabf-43c597de0c0so1298960fac.2
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 06:25:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782307401; x=1782912201; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1782307513; x=1782912313; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=pcv3i8MxYGcE66nrV/kv3D5y9IOE8aUQHBcOTbfUFU4=;
-        b=cgCrq7NGG1p0s3yNJZX9a278VP+kx23StqMr2I8tXonWrDsYnISG5dIsC6qk7Uktc2
-         XLunBxsVzP1gxhwR2nQvA90HP2RjR2M9FgYY9DSuiLrzvk6fsfdn0LWScB2xSSnwfQDi
-         v8R0W+ObgUgIdywLlvB6Ksnki2hBo6ScvAQqgWh7u5IW8crEsW93sq9e8vpdKTYxbXO5
-         oSpBX3P45oikv1Y4B6xCJKqfYnxKeRsMOj4VhHh/AMDnMGroAUGKEw0dbbK674Jrillk
-         eeEbLOaqP9SZijhcjbaCyCEx0vYr+Np3sq/WmLVv9PAVJnuVhBf9mptydGoMPKthnC9M
-         aelg==
+        bh=rC2z0XqMxmHPRSg9nz1/nDi27TUq/b4lbHiGoXEwpjQ=;
+        b=gPVPH4hXtcU0r3eBHsruBeGwdxiNFYV+4G+DOw+iWfACLyiGv4bcNPkY+8qgPpabOb
+         WcU0lCbvgGtXg+FYQqwRl32qoEKBJc5QQD/Qba8HjPsHwERMW0NWg6nCh0q4zjeonpnN
+         RBPmxjSQ5+9nH0u7j+iUcyVjehggoE9XD6/5PUQj6Curr7Ynk2moQgWDo5MADzR2M4iI
+         EThzaQw0zUWQ0zn4iBMR6fkrORhb2ExgWuMAnTe+Gl8bu2vq2ta0QJLHY8gPbsIpeR6C
+         CPHRciWQ5ctvQnjilLyusiV4u/UMapeK7Gh80zeNjiT0YnxErxYXOO55LIiKJtUTZ0Kg
+         WLYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782307401; x=1782912201;
+        d=1e100.net; s=20251104; t=1782307513; x=1782912313;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=pcv3i8MxYGcE66nrV/kv3D5y9IOE8aUQHBcOTbfUFU4=;
-        b=LEHDwk2RkAYGdOAHM+oMvjAZ6L0pBWeja10v1eNEKUB6jX8s+9cdKlm1GPFj7J0Xw3
-         cjd9zYDAo8nbyF2iXM9v92g+3eSZKRm4Ym3Gwt2VyZVj8dB8oCcoxYkBoLxHbhU/nQXZ
-         8U2dwfngtEym07s8nWHWQX69K4jm9HS9xyIun3H+EOu8x+xX2G1oQ7xvd3CVr5hx3zb6
-         teXtkgDRtj+7DnprLYgOLYOk/GMC2zrTH6GoEmFVFLaMv2YRz5lU/y6xhjF19jQVd+5y
-         3WKulGFUglt8ZsyqXm2+R5Db2PxEGUqzxkXASz4sF6nJ9UYtmMtCcyufUk/rNa+DNlbl
-         uBUg==
-X-Forwarded-Encrypted: i=1; AFNElJ+xl7Eqh6s4fDKZF6HFnwTa+wvdRpA9hc9HeYK+OwYUoYfx37V9P/LxtfjYxM9U5uGRPsDsH2spXo8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyUzL5IHuCqrap8SJFqMJFlPy0wGhEm2LPoOC1eOZGbbk0qhBVW
-	3vTqh0dXqoHvdHLSEJp1xetyubsscpgG6Xkomnq0DASjArMig+LrVLY9dRzRn8JpEEY=
-X-Gm-Gg: AfdE7ckNTMCX6u3pNHx6OQV5aRlBiQX/akal596NJCNtaUgJRNanVwNviLIRcc4FcL9
-	XJp527XAtHVdjld4o5UxG+2WhrIZJkiE6h+2cdHlMHlX1VNTYfpuKYpypS+oLpJqynLL1r1m5xu
-	kEYwhSnlB6K/SZ9QjInmiToX5gMVTMc+IZGwx+3MvrkUyQG8IqnO/mVOx+VYe0CKSFhGueQQZQM
-	v7GDeVjQvAuHXbTYZtV0wmWY47rYDIEXCnztFiIu4I4x6AGKKyUoB2wlvCFwkOkTDlACg1IBQtX
-	fMlaRelglqNwJV6Gn/UjZgngT6Y3x/Sc+MJ35d4sIN+eU+e7V1aMYftzLzcx8tgfSfWc29GgS5U
-	3pS0MK4BwqGd7AhtTDukTED6HJj2yRQpiDTPF9HqqvlFOIOAUb+kHTAAE/JI743ivdYplRVhNAK
-	saSPpXhtEcjA8bdQSAJ0Odi2+fd2gJEEJAwqJSIKNJb/MHQzms2BY1Tjve3D/plDgT/cjh/anM+
-	oBgWLOk4qRZJduItn1wcZ1Ky73qMqc+Qo+6FoRiYpF45x5k5x6SkL4pSDo=
-X-Received: by 2002:a17:907:a807:b0:c10:d41c:e540 with SMTP id a640c23a62f3a-c119e179685mr185363566b.11.1782307400601;
-        Wed, 24 Jun 2026 06:23:20 -0700 (PDT)
-Received: from ?IPV6:2a00:1028:838d:271e:8e3b:4aff:fe4c:a100? (dynamic-2a00-1028-838d-271e-8e3b-4aff-fe4c-a100.ipv6.o2.cz. [2a00:1028:838d:271e:8e3b:4aff:fe4c:a100])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c0c5e99e1aasm644551166b.25.2026.06.24.06.23.18
+        bh=rC2z0XqMxmHPRSg9nz1/nDi27TUq/b4lbHiGoXEwpjQ=;
+        b=DskC0CskEB56dUeK2J7bj9r0a3+MxCdnB2PVRMNazlUjmAboDuK2erNxqfkYP4Gf4t
+         1XusfHStlqKsUsTgheLLV9tBQNo0eT2VLtYeYQeCYOHJlpfyPvOh3dwGm8J4hYW/t0kg
+         byIj4aa0C2d4+Rmdzv7ZgaKjj0MxkRvixWoidL2PkJnHYYvvmWuJREwvU+sxqkSkYCky
+         r04aHTDrYmF4gc26SelZ/oluCinO3VZiotqYutwbgwrsnke9H2FR8vdw9JS1D2rKJ7gt
+         OrYnsKTgmuZvRM/3rCAA0y8WBQBGNwxXJp7C8ijdDM4vi6V/MnXyRDnfL3lBdFHMwZuP
+         JXQg==
+X-Gm-Message-State: AOJu0Yw17r/qmvyXUfzmmfe/HfgbVwfrwks8F2T9E8Q04TrCS5QZXOcd
+	tMlNywGYGLKowPuacJFezkBgN2sdL8jkIcI9nyfM+t98G4F3zaL3EmN1H9wp6a1pL7XYyIAO6YQ
+	n6c0JNcTvquM7E5mYkEIlVsmkVfhyq6BkLL9uhLgwYsgf8wevv5cTlNN2I6MtmBc=
+X-Gm-Gg: AfdE7cmlGw28ZhDJFKyrn3KAyrZ+uMN52xq4SZtlSS2pU405K4zP5ApBBvYDyuR3XtT
+	WijC4YKqwBYpq6+V3yB+pA38hcdGYv47CBzZ9UJHY9n+vEquuaeFXaVqPsN4/uOLtY32pkhBZf8
+	t9e9CfzAjFur+EOxl/O77e8L5P7AsYSrEAaNw7IJxcsXQFiCoMH/ilw9U85gi5Dl2gtiSa9MbdW
+	Q2cHKg+OigJvC+Lt21fZ77sVzRCkRqvPq0QCYvDWsQodRRrD4QyRmGYYKslhh6sHVEyMVC0Xd1J
+	5mDzHlHVA40gG8ccGiKmn1SWMB6x5Cs4crbbcd2qHQ1cIqe6ARY9274edbCoZznVw4n9D0v24ay
+	/v+QB0g+GCg/rAQ9KjduTlyoEjH+zCVw4Djb7KufLIwY=
+X-Received: by 2002:a05:6871:8002:b0:43a:5cd0:db00 with SMTP id 586e51a60fabf-447dcb084abmr2335466fac.23.1782307513498;
+        Wed, 24 Jun 2026 06:25:13 -0700 (PDT)
+X-Received: by 2002:a05:6871:8002:b0:43a:5cd0:db00 with SMTP id 586e51a60fabf-447dcb084abmr2335450fac.23.1782307513039;
+        Wed, 24 Jun 2026 06:25:13 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-4472ec52815sm10828031fac.1.2026.06.24.06.25.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Jun 2026 06:23:20 -0700 (PDT)
-Message-ID: <8ea21b29-9baf-4926-a16f-7d21c5a1a1b8@suse.com>
-Date: Wed, 24 Jun 2026 15:23:18 +0200
+        Wed, 24 Jun 2026 06:25:12 -0700 (PDT)
+Message-ID: <56861a8a-2b3c-4f71-987c-13ec0e6a7fcc@oss.qualcomm.com>
+Date: Wed, 24 Jun 2026 18:55:08 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,126 +87,190 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/9] Fix missing fops.owner in Rust DRM/misc
- abstractions
-To: Alvin Sun <alvin.sun@linux.dev>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
- Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
- Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
- Luis Chamberlain <mcgrof@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
- Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>,
- Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann
- <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>,
- David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>,
- Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>,
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>,
- Igor Korotin <igor.korotin@linux.dev>,
- FUJITA Tomonori <fujita.tomonori@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- =?UTF-8?Q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>,
- Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>,
- Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org,
- linux-modules@vger.kernel.org, driver-core@lists.linux.dev,
- dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev,
- linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev>
+Subject: Re: [PATCH v11] PCI: Add support for PCIe WAKE# interrupt
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
+        conor+dt@kernel.org
+References: <20260624-wakeirq_support-v11-1-120fbfaebe59@oss.qualcomm.com>
+ <20260624114008.7F7A51F00A3A@smtp.kernel.org>
 Content-Language: en-US
-From: Petr Pavlu <petr.pavlu@suse.com>
-In-Reply-To: <20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev>
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20260624114008.7F7A51F00A3A@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: BxILUNnyrAtioDtulgwo8zGxHwAvZZCX
+X-Authority-Analysis: v=2.4 cv=EuLiaycA c=1 sm=1 tr=0 ts=6a3bdaba cx=c_pps
+ a=Z3eh007fzM5o9awBa1HkYQ==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=NEAV23lmAAAA:8 a=5omraCXNoM4NwuFcFr8A:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=eBU8X_Hb5SQ8N-bgNfv4:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjI0MDExMSBTYWx0ZWRfXyOAqw86jO8P9
+ sAgx3j3psNGOW8k+yhh70pTNCif9mQVtHIHGUnlWm3sE3KpoC7SsmfwtCoCN5MNCuyEMk8fGl9M
+ Hi+zbDsaEkdaYH/3OWP4/dL+RSDoTpo=
+X-Proofpoint-GUID: BxILUNnyrAtioDtulgwo8zGxHwAvZZCX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjI0MDExMSBTYWx0ZWRfX4GYIbnSOPsDL
+ IiW2+8gQRfiD5N1cJgxxg1TzqxLPr2+7lR32jXL7plj24zsKB+/Owi5xSQ3Z+sIg9+Bg6gCuM74
+ r2il7V9e8UeLY/6Z1V2gY1qc3Up1MlVKJY0jgM7nd7ZKdBY+2+j6jIFKZHNE67agLREa8SQWtei
+ Cxhcz50PVOy8zuL92gYtHUVREmiVBhC+etKIghCaEy0NoI0buEVbZSwYEW8QLsoDeUG8ZqY5rc+
+ /Zyl8Hv6Cy7FTOS5dfsb9mCPfQdOm8cFLCMV/ARrGwXvu5ssnf9FlyXTFrSBVWfeq62ThAIAIl3
+ G3XPatlXpBLh0RGwKJ8dvgw1tuZKt5jTXJqMy/2AAiPHv01DLzs2aO/tKykinWKhtyn0cFEMCxy
+ w0+/hjh4Ev+ByZNSZsEJ4CuZNphoO9aQ3ASQToRrTrX/GawPIchg7lF/f3TaYBflNeeB13qGRtk
+ qqj8xRLi3fbG/HWNUtA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-24_03,2026-06-23_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0
+ malwarescore=0 phishscore=0 clxscore=1015 priorityscore=1501 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606240111
 
-On 6/24/26 2:57 PM, Alvin Sun wrote:
-> During tyr debugfs development, a kernel NULL pointer dereference was
-> encountered after `rmmod tyr` while gnome-shell still held /dev/card1 open:
-> 
-> ```
->   [158827.868132] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
->   [158827.868918] Mem abort info:
->   [158827.869177]   ESR = 0x0000000086000004
->   [158827.869519]   EC = 0x21: IABT (current EL), IL = 32 bits
->   [158827.870000]   SET = 0, FnV = 0
->   [158827.870281]   EA = 0, S1PTW = 0
->   [158827.870571]   FSC = 0x04: level 0 translation fault
->   [158827.871043] user pgtable: 4k pages, 48-bit VAs, pgdp=0000000108dec000
->   [158827.871623] [0000000000000000] pgd=0000000000000000, p4d=0000000000000000
->   [158827.872242] Internal error: Oops: 0000000086000004 [#1]  SMP
->   [158827.872246] Modules linked in: tyr sunrpc snd_soc_simple_card rk805_pwrkey snd_soc_simple_card_utils rtw88_8822bu display_connector rtw88_usb rtw88_8822b snd_soc_rockchip_i2s_tdm snd_soc_hdmi_codec
->   rtw88_core]
->   [158827.872337] CPU: 4 UID: 1000 PID: 11276 Comm: gnome-s:disk$0 Tainted: G                 N  7.1.0-rc1+ #331 PREEMPT
->   [158827.880534] Tainted: [N]=TEST
->   [158827.880535] Hardware name: FriendlyElec NanoPi R6C/NanoPi R6C, BIOS v1.1 04/09/2025
->   [158827.880538] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
->   [158827.880542] pc : 0x0
->   [158827.880547] lr : _RNvNtCs257m05FHVbX_3tyr2vm8pt_unmap+0x8c/0x12c [tyr]
->   [158827.880578] sp : ffff800083c236b0
->   [158827.880579] x29: ffff800083c236d0 x28: ffff00013f8a0000 x27: 0000000000000000
->   [158827.880585] x26: 000000000000007c x25: ffff000108e6ed80 x24: 0000000000401000
->   [158827.880590] x23: 0000000000000000 x22: 0000000040000000 x21: 0000000000001000
->   [158827.880595] x20: ffff00010f778138 x19: 0000000000400000 x18: 00000000ffffffff
->   [158827.880600] x17: 000000040044ffff x16: 045000f2b5503510 x15: 0720072007200720
->   [158827.880606] x14: 0720072007200720 x13: 0000000000401000 x12: 0000000000400000
->   [158827.880611] x11: ffff800083c239d0 x10: ffff000141e4fd88 x9 : 0000000000000000
->   [158827.880615] x8 : 0000000000000000 x7 : 0000000000000000 x6 : 0000000000400000
->   [158827.880620] x5 : ffff00013f8a0000 x4 : 0000000000000000 x3 : 0000000000000001
->   [158827.880625] x2 : 0000000000001000 x1 : 0000000000400000 x0 : ffff00010f778138
->   [158827.880630] Call trace:
->   [158827.880632]  0x0 (P)
->   [158827.880635]  _RNvXs6_NtCs257m05FHVbX_3tyr2vmNtB5_9GpuVmDataNtNtNtCsgmSOfgXi5CZ_6kernel3drm5gpuvm11DriverGpuVm13sm_step_unmap+0x3c/0x120 [tyr]
->   [158827.891166]  _RNvMs4_NtNtNtCsgmSOfgXi5CZ_6kernel3drm5gpuvm6sm_opsINtB7_5GpuVmNtNtCs257m05FHVbX_3tyr2vm9GpuVmDataE13sm_step_unmapB13_+0x18/0x34 [tyr]
->   [158827.891187]  op_unmap_cb+0x78/0xb0
->   [158827.891196]  __drm_gpuvm_sm_unmap+0x18c/0x1b4
->   [158827.891204]  drm_gpuvm_sm_unmap+0x38/0x4c
->   [158827.891209]  _RNvMs5_NtCs257m05FHVbX_3tyr2vmNtB5_2Vm7exec_op+0x1cc/0x254 [tyr]
->   [158827.894085]  _RNvMs5_NtCs257m05FHVbX_3tyr2vmNtB5_2Vm11unmap_range+0x124/0x188 [tyr]
->   [158827.894105]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeNtNtCs257m05FHVbX_3tyr3gem8KernelBoEBK_+0x44/0xd8 [tyr]
->   [158827.894125]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeINtNtNtCsgmSOfgXi5CZ_6kernel5alloc4kvec3VecNtNtCs257m05FHVbX_3tyr2fw7SectionNtNtBL_9allocator7KmallocEEB1r_+0x3c/0x100 [tyr]
->   [158827.894147]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeINtNtNtCsgmSOfgXi5CZ_6kernel4sync3arc3ArcNtNtCs257m05FHVbX_3tyr2fw8FirmwareEEB1p_+0x94/0x190 [tyr]
->   [158827.894167]  _RNvMs4_NtNtCsgmSOfgXi5CZ_6kernel3drm6deviceINtB5_6DeviceNtNtCs257m05FHVbX_3tyr6driver12TyrDrmDriverE7releaseBW_+0x30/0x98 [tyr]
->   [158827.899550]  drm_dev_put.part.0+0x88/0xc0
->   [158827.899557]  drm_minor_release+0x18/0x28
->   [158827.899562]  drm_release+0x144/0x170
->   [158827.899567]  __fput+0xe4/0x30c
->   [158827.899573]  ____fput+0x14/0x20
->   [158827.899579]  task_work_run+0x7c/0xe8
->   [158827.899586]  do_exit+0x2a8/0xac4
->   [158827.899590]  do_group_exit+0x34/0x90
->   [158827.899594]  get_signal+0xaac/0xabc
->   [158827.899599]  arch_do_signal_or_restart+0x90/0x3e8
->   [158827.899606]  exit_to_user_mode_loop+0x140/0x1d0
->   [158827.899613]  el0_svc+0x2f4/0x2f8
->   [158827.899620]  el0t_64_sync_handler+0xa0/0xe4
->   [158827.899627]  el0t_64_sync+0x198/0x19c
->   [158827.899632] ---[ end trace 0000000000000000 ]---
-> ```
-> 
-> The root cause: `fops.owner` was `NULL` in Rust DRM drivers, so the kernel
-> never blocked module unloading while file descriptors were open. This leads to
-> use-after-free when drm_release (or other fops) is called on freed module code.
-> 
-> The series moves `THIS_MODULE` into the `ModuleMetadata` as a const, threads it
-> through `#[vtable]` to set `fops.owner` in DRM/miscdevice, and updates configfs
-> and rnull to use `this_module::<LocalModule>()`.
 
-I cannot comment that much on all the details of the Rust
-implementation, but the series looks reasonable to me from the modules
-perspective. I'm glad this issue will be finally addressed.
 
-I would only suggest adding the new file rust/kernel/module.rs in
-patch #1 under the MODULE SUPPORT support entry in the MAINTAINERS file,
-similarly to the other module-related Rust code, so that the module
-maintainers are emailed when changes to this file are proposed. I think
-you can change the existing 'F: rust/kernel/module_param.rs' to
-'F: rust/kernel/module*.rs'.
+On 6/24/2026 5:10 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
+> - [High] Hot-removing an endpoint sharing a WAKE# GPIO breaks wakeup for all remaining endpoints on that line.
+> - [High] pci_remove_of_wake_gpio() unconditionally clears the device's wakeup configuration and wake IRQ, even if it never acquired the WAKE# GPIO.
+> - [High] WAKE# GPIO configuration forces device wakeup to be enabled by default, violating PCI PM policy.
+> - [Medium] Calling platform_pci_configure_wake() after device_add() creates a race condition that overwrites driver or userspace wakeup configuration.
+> - [Medium] Hardcoded IRQ_TYPE_LEVEL_LOW ignores Device Tree GPIO polarity for the WAKE# interrupt.
+> - [Medium] WAKE# GPIO configuration permanently fails if the GPIO provider returns -EPROBE_DEFER.
+> --
+>
+> commit 9e1cd6307066585f1f51b9e7de95ae7950936ba0
+> Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> PCI: Add support for PCIe WAKE# interrupt
+>
+> According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
+> two link wakeup mechanisms are defined: Beacon and WAKE#. This change adds
+> support for the WAKE# mechanism in the PCI core.
+>
+> Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
+> Link: https://github.com/devicetree-org/dt-schema/pull/170
+>
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index 8b18c4ba845cf..0f5effe1d7026 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+> [ ... ]
+>
+>> +	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, wake_irq);
+>> +	if (ret < 0) {
+>> +		pci_err(pdev, "Failed to set WAKE# IRQ: %d\n", ret);
+>> +		return;
+>> +	}
+>> +
+>> +	ret = irq_set_irq_type(wake_irq, IRQ_TYPE_LEVEL_LOW);
+> [Severity: Medium]
+> Does hardcoding IRQ_TYPE_LEVEL_LOW here override the logical polarity
+> specified in the Device Tree?
+>
+> If the WAKE# GPIO is specified via the wake-gpios property with flags like
+> GPIO_ACTIVE_HIGH, this explicit type setting might ignore those flags and
+> fail to trigger on platforms with an inverted physical signal.
+As per PCIe spec WAKE# is active low signal.
+>
+>> +	if (ret < 0) {
+>> +		dev_pm_clear_wake_irq(&pdev->dev);
+>> +		pci_err(pdev, "Failed to set irq_type: %d\n", ret);
+>> +		return;
+>> +	}
+>> +
+>> +	device_init_wakeup(&pdev->dev, true);
+> [Severity: High]
+> Could this forcefully enable wakeup by default and violate standard PCI PM
+> policy?
+>
+> Calling device_init_wakeup() with true marks the device as wakeup capable
+> and also sets dev->power.should_wakeup = true. The standard PCI core
+> behavior usually marks devices as wakeup capable but leaves enablement to
+> userspace opt-in.
+if the client driver wants to enable wakeup IRQ, and if the WAKE# is described for
+root port only, then we can't ask client driver to enable root port device wake up
+capability and in suspend noirq we are not allowed to enable wakeirq, so we
+are enabling here.
+>> +}
+>> +
+>> +void pci_configure_of_wake_gpio(struct pci_dev *dev)
+>> +{
+>> +	struct device_node *dn = pci_device_to_OF_node(dev);
+>> +	struct gpio_desc *gpio;
+>> +
+>> +	if (!dn)
+>> +		return;
+>> +	/*
+>> +	 * fwnode_gpiod_get() may fail with -EBUSY (e.g. shared WAKE#), but the
+>> +	 * actual WAKE# trigger from the device would still work and the host
+>> +	 * controller driver will enable power to the topology.
+>> +	 *
+>> +	 * -EPROBE_DEFER cannot be propagated here since pci_device_add() has no
+>> +	 *  retry mechanism.
+>> +	 */
+>> +	gpio = fwnode_gpiod_get(of_fwnode_handle(dn), "wake", GPIOD_IN, NULL);
+>> +	if (!IS_ERR(gpio)) {
+> [Severity: Medium]
+> Since pci_device_add() has no retry mechanism, does swallowing -EPROBE_DEFER
+> here mean WAKE# functionality will permanently fail if the GPIO controller
+> providing the WAKE# line hasn't probed yet?
+In device tree model -EPROBE_DEFER for GPIO is highly unlikely. since PERST gpio's
+is already parsed in the controller driver before enumeration starts.
+> [Severity: High]
+> If multiple endpoints share a WAKE# GPIO, only the first device acquires
+> it while the rest fail with -EBUSY. Can this break wakeup capabilities
+> for all remaining endpoints if the first device is later hot-removed?
+>
+> When the first device is removed, it frees the shared GPIO via
+> pci_remove_of_wake_gpio(), leaving the remaining active endpoints without
+> an associated wake IRQ.
+in this scenarios,  ideally bridge also will share same WAKE# gpio, so if the
+bridge
+is removed below devices also removed. so it should not effect.
+>> +		dev->wake = gpio;
+>> +		pci_configure_wake_irq(dev, gpio);
+>> +	}
+>> +}
+>> +
+>> +void pci_remove_of_wake_gpio(struct pci_dev *dev)
+>> +{
+>> +	struct device_node *dn = pci_device_to_OF_node(dev);
+>> +
+>> +	if (!dn)
+>> +		return;
+>> +
+>> +	device_init_wakeup(&dev->dev, false);
+>> +	dev_pm_clear_wake_irq(&dev->dev);
+>> +	gpiod_put(dev->wake);
+>> +	dev->wake = NULL;
+>> +}
+> [Severity: High]
+> Should this cleanup block be guarded by a check for dev->wake?
+>
+> As it stands, if a PCI device with an OF node failed to acquire the GPIO
+> (e.g., it returned -EBUSY) or didn't have a wake property, this will still
+> unconditionally clear its PME wakeup capability and detach any dedicated
+> wake IRQ the driver might have configured itself.
+ack.
 
--- 
-Thanks,
-Petr
+- Krishna Chaitanya.
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index b63cd0c310bc0..143b0bd35b3c9 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+> [ ... ]
+>
+>> @@ -2775,6 +2775,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>  	/* Establish pdev->tsm for newly added (e.g. new SR-IOV VFs) */
+>>  	pci_tsm_init(dev);
+>>  
+>> +	platform_pci_configure_wake(dev);
+> [Severity: Medium]
+> Does calling platform_pci_configure_wake() after device_add() create a race
+> condition?
+>
+> By the time this is called, the device is already visible in sysfs and
+> uevents have fired. Local userspace tools configuring power/wakeup or
+> asynchronous driver probes could have their configurations silently
+> overwritten by the subsequent device_init_wakeup() call.
+>
+
