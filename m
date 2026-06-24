@@ -1,147 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BC1937268B;
-	Wed, 24 Jun 2026 19:17:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF856383981
+	for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 19:38:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782328646; cv=none; b=GvtlrK8TbpH2ZjwqTyYXypRsMdZbUbJpy4gRX4DcBPvC5ERLIXBrf2IjBYcohonlXwGM3iRgsmw9u2fVo3qelzfM6H6nry7Ak5Afkf/EivhTOX/xoWoIqRPoHeqhB9TZQcHMgE2FNSml6NKv4wFN12H3zF7r51cmhUPeuUeuAvk=
+	t=1782329937; cv=none; b=M1nneBitCLcJ41WijqeQpMbyzw33hYwsTL5xx2vJ7uvlsXbKhVWVplTMjGpz7H1ZvMnfbEmOi+Uf9qNNnMpp2l1QrKUazIDjT/Pf+vc3sqDeHMfz+FoxTVj/Bm7Zy9ZVRJAtFWssmXSCossjqlFpOuBbQNAmJjSWpqt4AmRMzfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782328646; c=relaxed/simple;
-	bh=NvF+pR0fYQdZKbUADyPaq42Q6BnQZUMM3H2eaBsL90Q=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=B4rOyT2hjRXHD7pVczn06ObnjEulVDZf7hd9aTlCi59MUZwXde1bE2q7eg0bm8MXWtewGJUMV9EkMOaOmuPTj+mldcCC3DLvOcEnAQF6beFyu+nj35E/XH3+Sqbstjw56FKuoLYA8Z6brgHrvJz7H503ksZiyz9SmEtCWLwXKzg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jipwVXQt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782329937; c=relaxed/simple;
+	bh=/i3F8aVlRB09Jw0j8WKE0aoMUU83ZBv8ZxgBmJ4bEUk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VIg7cm22RNZXR7cZYFx40oZbHiiePqUWj/URuk5Q0+k5h8LhP+JoGZ806UYIjDcYfyzjEKQaqHZnJZ1dx1O0PCUvXWK+L2AdXwqEUMA6ARV52mzaSzH3gqivbNBmIBJ/lIp9fZ8/UM+12FFLJuxBV7ZT0di/r/k8Ie2ByZWvk04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gsooBkNM; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jipwVXQt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DA3A1F000E9;
-	Wed, 24 Jun 2026 19:17:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782328643;
-	bh=BXTL1/pEN/FTyKPKMA8BVIZWBMRtKuw+rExm3vmkKx4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=jipwVXQtIhW9z8lFxljLcuY7oEB/LokW5tJFCYei9aG4AJZaD4IX+IkiuSVyW+9gX
-	 XkAsEiaMRxjWXGmEuXVkVh28pqAoVc/aDo37K2YiiFJUxAjm2ddCHFTl9+aM661GW3
-	 PE+Qcm1rb4neo7M1iuFsvHQGR9Z8jyp3VjjmJiFWU3LtteGM0CUG1TvIJmIFo9kAFC
-	 4R6ORXsd+HioryjRDjvG1YfuF4t1dKBfkbIc9bDf7FTKereQM/74Au9PjcixYNzNzD
-	 QYNlB8bH7PIOPQgoUBOOyXhslgfwjWS1ahCofuush0ejyBFSORKT3noH+//Lvsum9v
-	 qnflbrsxJvUcA==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>,
- =?utf-8?Q?Bj=C3=B6rn?= Roy
- Baron <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Alice
- Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo
- Krummrich <dakr@kernel.org>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, Ira
- Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>, Paul Moore
- <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, "Rafael J.
- Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona
- Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Daniel
- Almeida <daniel.almeida@collabora.com>, Viresh Kumar <vireshk@kernel.org>,
- Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>,
- Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
- Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Igor Korotin
- <igor.korotin@linux.dev>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>,
- linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-security-module@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
- driver-core@lists.linux.dev, Oliver Mangold <oliver.mangold@pm.me>, Viresh
- Kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH v17 06/10] rust: rename `AlwaysRefCounted` to `RefCounted`.
-In-Reply-To: <20260623175814.87191-1-work@onurozkan.dev>
-References: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org>
- <20260604-unique-ref-v17-6-7b4c3d2930b9@kernel.org>
- <20260623175814.87191-1-work@onurozkan.dev>
-Date: Wed, 24 Jun 2026 21:17:08 +0200
-Message-ID: <87cxxfiw97.fsf@t14s.mail-host-address-is-not-set>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gsooBkNM"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-490b211ee6aso9379065e9.3
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2026 12:38:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782329934; x=1782934734; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5JvYdpn4YzE4MVNRAOjv5r8auqSp+Gt6NQ8Tln1OeLY=;
+        b=gsooBkNMWS6LIhYN7RKhBboYGy16S0qKS18gkeqlAE3xlB2ANvgI9C9OCJ3cOsKSU5
+         ggUbYVm29e5HRjm42hrUu3jZHq7ZiHcBt7wJ2XvLhtnguqrDa6OL2UNCEZ8IJXqY/VHj
+         /0WJ5B+yPkKwehdWqrGdJenKAeOM1XhhuTGmgFre3JwTFjc4AP1A+nBh3e326DjjxePH
+         Z8LafAy8tym9LjL5R47xHj0D1T1muEsVmyW64o8BEttl9Aza3sLCJfnxNg4kLgKCkPAV
+         S49c6s1UWrIJsXvdN/GxFB9LvvnzKmaJE2UgaJVyOCqbSxKVOG75dfUa34o2HqDOmiX7
+         dZRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782329934; x=1782934734;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=5JvYdpn4YzE4MVNRAOjv5r8auqSp+Gt6NQ8Tln1OeLY=;
+        b=AgjbHeLbD7WsebRBr7VJQFL8YOnQW4KOuiec4X1yeTA5V3EyhV1/twbc5AEFTbDwJw
+         sl8DjnjxaoSHuX/fu1N1n38rNRpHa3zIEAB25LHvi+FGREJ2+ao14kb57XAuEzz7PjOe
+         qYqnOslrXw9I6YkOSl55BNzn03dEPZIP2madBHcYvvavTTdf/sY0UhkWGntDI5GrHmyh
+         xQjKp/lF7wpXDcOPIxuP/bBzjLmIWoytOhdrC2K0YrRkx+MnX3uBTKFND+IarcuEtVKZ
+         9gkSaOO+T0lUNOn1TE9G6bEm6tKoZDrgPnDcNrwR3eJ/SF0ANIUldnoQA5j1zUXeevZA
+         Sp+A==
+X-Forwarded-Encrypted: i=1; AFNElJ8c2fhxeeWboPuiR06Z+Y0/lGrdHmWRkxEaIJNpS/mPnMvrocEwFektUjzbbseIVhfZCligkUAWGWk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4Wwolo4K4T0rEgrNBnjmISSJ1skUav3KZxD9ZGEI9o2qBwhkl
+	UE/ldN83ZM3iEgifHZHN4dY3WDDI7BMkiO1UZIHWms1JwzsfJcc9FkBV
+X-Gm-Gg: AfdE7cljOozYaTFUS3nSqcFWPWkkaGOvQL8eihZwzumIwrUtwDtFIiBRWVSsXGCJ64D
+	gZ2jJgSEvtfprxP4gSbxbWmedHYG/Py8cbjQjBiW1R1i97FXqv4H91EFlOgKLwKH7eK6uq1zXpZ
+	bO03RXNOV22QIXV2xByTilO3Pj/A6TXPqdVZvas4z/OGUwFX89mG2N0UfwMTfVkoJv1i8CgmaFz
+	RmsWRjlAPMmO7FJJLg7cw8sskafkevVWEYiII3tBRBMCtguPJtdfh7+Rseq6F7I3JxomPwQmApj
+	p/Mburc5WnQxkNJ/7eIaWUvBp5Yz+CZG0w5t/mA7HRoP3SMTRo4+spJu+ZFFnPFAXsUtHLDAhM/
+	B1LPpw0GIc7RagFgh3SIC2MJlrCFOZbCVySTHyyQb+++bI50cs4OvUSfIO+x6NXjhDAkyZGG3YO
+	9qVZBu+TdBSnlq9vP5IvSBsl4SJ1E9i1eXZ0wmrZIdluJaHAAwfQ==
+X-Received: by 2002:a05:600c:4ecb:b0:492:433a:53af with SMTP id 5b1f17b1804b1-49260858030mr72253305e9.16.1782329934022;
+        Wed, 24 Jun 2026 12:38:54 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4926494f129sm5853685e9.0.2026.06.24.12.38.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Jun 2026 12:38:53 -0700 (PDT)
+Date: Wed, 24 Jun 2026 20:38:51 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: "Alexandre Courbot" <acourbot@nvidia.com>
+Cc: "Zhi Wang" <zhiw@nvidia.com>, <dakr@kernel.org>, <airlied@gmail.com>,
+ <simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+ <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
+ <tmgross@umich.edu>, <jhubbard@nvidia.com>, <ecourtney@nvidia.com>,
+ <joelagnelf@nvidia.com>, <apopple@nvidia.com>, <cjia@nvidia.com>,
+ <smitra@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <nova-gpu@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/7] PCI/IOV: Return u16 from
+ pci_sriov_get_totalvfs()
+Message-ID: <20260624203851.7f6c7be4@pumpkin>
+In-Reply-To: <DJHDAQZ1AASK.14ATT70HTI450@nvidia.com>
+References: <20260622194353.1308872-1-zhiw@nvidia.com>
+	<20260622194353.1308872-2-zhiw@nvidia.com>
+	<DJHAC9W05615.19MHKPF67OG2T@nvidia.com>
+	<20260624143937.50499c29@pumpkin>
+	<DJHDAQZ1AASK.14ATT70HTI450@nvidia.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Onur =C3=96zkan <work@onurozkan.dev> writes:
+On Wed, 24 Jun 2026 23:59:56 +0900
+"Alexandre Courbot" <acourbot@nvidia.com> wrote:
 
-> On Thu, 04 Jun 2026 22:11:18 +0200
-> Andreas Hindborg <a.hindborg@kernel.org> wrote:
->
->> From: Oliver Mangold <oliver.mangold@pm.me>
->>=20
->> There are types where it may both be reference counted in some cases and
->> owned in others. In such cases, obtaining `ARef<T>` from `&T` would be
->> unsound as it allows creation of `ARef<T>` copy from `&Owned<T>`.
->>=20
->> Therefore, we split `AlwaysRefCounted` into `RefCounted` (which `ARef<T>`
->> would require) and a marker trait to indicate that the type is always
->> reference counted (and not `Ownable`) so the `&T` -> `ARef<T>` conversion
->> is possible.
->>=20
->> - Rename `AlwaysRefCounted` to `RefCounted`.
->> - Add a new unsafe trait `AlwaysRefCounted`.
->> - Implement the new trait `AlwaysRefCounted` for the newly renamed
->>   `RefCounted` implementations. This leaves functionality of existing
->>   implementers of `AlwaysRefCounted` intact.
->>=20
->> Suggested-by: Alice Ryhl <aliceryhl@google.com>
->> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
->> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
->> [ Andreas: Updated commit message and rebase on rust-6.20-7.0 ]
->> Acked-by: Igor Korotin <igor.korotin.linux@gmail.com>
->> Acked-by: Danilo Krummrich <dakr@kernel.org>
->> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
->> Reviewed-by: Gary Guo <gary@garyguo.net>
->> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
->> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
->> ---
->>  rust/kernel/auxiliary.rs        |  7 +++++-
->>  rust/kernel/block/mq/request.rs | 15 ++++++++-----
->>  rust/kernel/cred.rs             | 13 +++++++++--
->>  rust/kernel/device.rs           | 12 ++++++++--
->>  rust/kernel/device/property.rs  | 11 +++++++--
->>  rust/kernel/drm/device.rs       |  9 ++++++--
->>  rust/kernel/drm/gem/mod.rs      | 16 ++++++++++----
->>  rust/kernel/fs/file.rs          | 16 ++++++++++----
->>  rust/kernel/i2c.rs              | 13 ++++++++---
->>  rust/kernel/mm.rs               | 15 +++++++++----
->>  rust/kernel/mm/mmput_async.rs   |  9 ++++++--
->>  rust/kernel/opp.rs              | 10 ++++++---
->>  rust/kernel/owned.rs            |  2 +-
->>  rust/kernel/pci.rs              | 10 ++++++++-
->>  rust/kernel/pid_namespace.rs    | 12 ++++++++--
->>  rust/kernel/platform.rs         |  7 +++++-
->>  rust/kernel/sync/aref.rs        | 49 ++++++++++++++++++++++++++--------=
--------
->>  rust/kernel/task.rs             | 13 +++++++++--
->>  rust/kernel/types.rs            |  3 ++-
->>  rust/kernel/usb.rs              | 17 +++++++++++---
->>  20 files changed, 195 insertions(+), 64 deletions(-)
->>=20
->> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
->> index 93c0db1f6655..49f07740f657 100644
->> --- a/rust/kernel/auxiliary.rs
->> +++ b/rust/kernel/auxiliary.rs
->> @@ -19,6 +19,7 @@
->>          to_result, //
->>      },
->>      prelude::*,
->> +    sync::aref::{AlwaysRefCounted, RefCounted},
->
-> This patch has multiple horizontal use statements around.
+> On Wed Jun 24, 2026 at 10:39 PM JST, David Laight wrote:
+> > On Wed, 24 Jun 2026 21:40:52 +0900
+> > "Alexandre Courbot" <acourbot@nvidia.com> wrote:
+> >  
+> >> On Tue Jun 23, 2026 at 4:43 AM JST, Zhi Wang wrote:  
+> >> > pci_sriov_get_totalvfs() reports a VF count, not an errno-style
+> >> > status. It returns 0 when SR-IOV is unavailable or the device is not a
+> >> > PF, and otherwise returns the PF's driver_max_VFs value.
+> >> >
+> >> > driver_max_VFs is stored as a u16 in struct pci_sriov. It is derived
+> >> > from the SR-IOV TotalVFs field or from a driver-provided limit, so the
+> >> > implementation cannot return a negative value.
+> >> >
+> >> > Change the declaration, CONFIG_PCI_IOV stub, and implementation to
+> >> > return u16. Update callers to store the result in u16 variables, remove
+> >> > obsolete negative-value checks, and use unsigned format specifiers where
+> >> > needed.
+> >> >
+> >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> > Cc: linux-pci@vger.kernel.org
+> >> > Signed-off-by: Zhi Wang <zhiw@nvidia.com>    
+> >> 
+> >> Suggested-by: Alexandre Courbot <acourbot@nvidia.com>
+> >> Link: https://lore.kernel.org/all/DETDILPA1GFY.27WND0TEC5352@nvidia.com/
+> >>   
+> >> > ---
+> >> >  drivers/crypto/hisilicon/qm.c                   | 8 +++++---
+> >> >  drivers/crypto/intel/qat/qat_common/adf_sriov.c | 6 +++---
+> >> >  drivers/gpu/drm/xe/xe_sriov_pf.c                | 6 ++----
+> >> >  drivers/misc/genwqe/card_base.c                 | 6 ++----
+> >> >  drivers/net/ethernet/cavium/thunder/nic_main.c  | 2 +-
+> >> >  drivers/net/ethernet/emulex/benet/be_main.c     | 3 ++-
+> >> >  drivers/net/ethernet/mellanox/mlx5/core/sriov.c | 3 ++-
+> >> >  drivers/net/ethernet/sfc/ef10_sriov.c           | 2 +-    
+> >> 
+> >> I believe that you can avoid converting all these drivers in this patch.
+> >> The implicit `u16 -> int` conversion done by C should result in the
+> >> expected behavior, and it will be fewer Acked-by to collect.  
+> >
+> > The generated code is also likely to be slightly better if the function
+> > return value is a 32bit value.
+> >
+> > Similarly you don't really want to do any kind of maths on local variables
+> > that aren't 32bit (or 64bit on 64bit builds).
+> >
+> > The fact that the domain of a value fits in 16 bits doesn't mean that
+> > it is better to use u16 - it is usually worse.
+> > Pretty much the only place u16 should be used is to reduce the size
+> > of structures.
+> >
+> > So it is probably correct to change the return type to unsigned int and
+> > remove the error return checks, but nothing else.  
+> 
+> For C, I agree that unsigned int is the safest type.
+> 
+> Rust otoh does not do implicit integer promotion, and making it return a
+> `u16` carries useful range information. I wonder if we could have a
+> private `__pci_sriov_get_totalvfs` that returns a `u16`, make
+> `pci_sriov_get_totalvfs` promote it to an `unsigned int` and return it,
+> while the Rust bindings would invoke `__pci_sriov_get_totalvfs` so they
+> can expose a `u16`?
 
-Thanks, I'll take another pass to fix that.
+That is getting silly, something will end up doing the masking to police
+the 16bit value - it isn't just the C rules, the ABI pass/return u16 in
+in 32bit registers (even on x86) so one side (or both) has to mask the
+value.
 
+Your rust code has the same problem. Add 1 to a u16 variable and code has
+to be added to mask the result to 16 bits.
+You won't see it on x86 because it has 16bit alu operations, about the
+only other cpu eoth them is m68k (I'm not sure about s390 - it is based
+on a very old instructions set).
 
-Best regards,
-Andreas Hindborg
-
-
-
+	David
