@@ -1,135 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E312135B8
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:28:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE6913CEBA7
+	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782383282; cv=none; b=oo3tAHsWFJBK4VXMTCIktPKlpJqCLh5jGfhrSH6FgC5qFdzhqugH10gb3u/dGl9z1XWKNxmIiZhCeKESGYfHYtEIfL81z+LWSZ6CLMMalAgV4Dmi8thgpCrrBf12Rof2g0MATpBUGHr6WK7fazMOOZ81UffUopCQcQHeEwmFOME=
+	t=1782383731; cv=none; b=BQLarCC98GaNIk2kp0TJ7t7QbYud0x+ZAONJnbL0sWDpCij3Fgl8VCSRbqmlhw4kpzcFRsH+DnK8OxkExzIY1yB1XgKcHUoIqnWir0H5QZAil7LtI9ltlTxRwOo5NkaoyOLsR6JD8xvGFt3m1JOS2ujvv5+geIxQdKh4JLx2jYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782383282; c=relaxed/simple;
-	bh=alcN8BrdhmH66z+yHrXfqUwideZzeigpoJJ2iuY0+A4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SGxLEoRKyu04lg3YX2fyptwQh2/c8n3GEi+itlX4TsSZOFoqevIksn0++MzCHDiiIFC88K2Pr8VrfewJS5EAl7Csu3OlgsCzBE4xiTGjXrYiBHY+oD+hY4Hfj4mKvuHq0VRoS6aQriCSXTL2/lsptlYmHbmm/SztjzGbxgERQtg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4EOUmhZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782383731; c=relaxed/simple;
+	bh=Y3Miu2YhT7SrtUsYIL8AYGPh3SjyCfmCKsBa9nRtp8Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=O8J9p4w2mehn/ri0os5Re2hkEwhzulwdRdV1AjZd+NKrPvJEbiymDW5QgpIQYajbWkzkK2fSV2lqnGzOfcURaA6RabFHjT4B9DKkD/S/If5I7jwgu7z77KnqO+shx8Aeek7SWpSUtAH7Pq2wnM5n1AibPWEg8QD457dRn+v2KZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MDojjVD+; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4EOUmhZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4C3B1F00A3A;
-	Thu, 25 Jun 2026 10:28:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782383281;
-	bh=Se1i/efxHDqMxUzl5H2oEaiBwA8yDR/7EEA+2RmhhYM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D4EOUmhZTb5RkQ7lpIa46aFFZxnk9656p0i2q1Y4Z8J+id6QjtQD1SI2LGflalnIK
-	 TMGmmO2LMopZmJ3TGx6YsDUw0zBH/oQ53gFW4gPHu08kG4G3UYQfWIPreV8f2vK1a2
-	 xe1eN1g2MeKHu+pPvx4/yD1mMY0GZzo+0546IJU6w/HX+Wyr67U2/cjA+EtCIhbI8n
-	 z29lF8MfinrciRbYVgfnjcg7a7tfNmdRSJC5GvfvnyE014eVVpKr9IOB2QhSryrQr7
-	 1fCN2jdzUypVsgo6sH9kIpWa+/2SnTigusvbyMm9od6Y/cLzs7wHeQxDYT9bcUoaCp
-	 sqnorWTYeUakw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 5/8] rust: rename `AlwaysRefCounted` to
- `RefCounted`.
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260625-unique-ref-v18-5-4e06b5896d47@kernel.org>
-References: <20260625-unique-ref-v18-0-4e06b5896d47@kernel.org>
- <20260625-unique-ref-v18-5-4e06b5896d47@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 25 Jun 2026 10:28:00 +0000
-Message-Id: <20260625102800.B4C3B1F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MDojjVD+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1782383729;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=r1RjNSxi6/DZ1slyVUbnnH4tQHsFe5xiJqc+dcxVOzE=;
+	b=MDojjVD+VZ7NPO0wJHJviPed/8HJXy8ClqF/JjmDvkGTTnKJTcZoPr9wrp/VUgCblPZvvj
+	LT4/cBpcJBe2T4eQKzeotih1dAwy5eH92HMrgmrX0zpRLFRKNr09ozbpD5X0ds8tNDuiMa
+	e7OfGf0+qrNuewqrcIN9JTU6/nH1Tx8=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-XJDlf0bfPs-KqjrzTaxxaQ-1; Thu,
+ 25 Jun 2026 06:35:22 -0400
+X-MC-Unique: XJDlf0bfPs-KqjrzTaxxaQ-1
+X-Mimecast-MFC-AGG-ID: XJDlf0bfPs-KqjrzTaxxaQ_1782383721
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9E0931955F75;
+	Thu, 25 Jun 2026 10:35:20 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.32.60])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A052630003B6;
+	Thu, 25 Jun 2026 10:35:15 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: baochen.qiang@oss.qualcomm.com
+Cc: alex@shazbot.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	bhelgaas@google.com,
+	jjohnson@kernel.org,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	mani@kernel.org,
+	mhi@lists.linux.dev
+Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
+Date: Thu, 25 Jun 2026 12:35:14 +0200
+Message-ID: <20260625103514.602783-1-jtornosm@redhat.com>
+In-Reply-To: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
+References: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] Incomplete Refactoring / Trait Bound Violation for workqueue ite=
-ms
-- [Medium] Stale and misleading documentation for `ARef` usage
---
+Hello Baochen and Mani,
 
-commit 46d36a47415ab0722d334e8010242374e8bba94c
-Author: Oliver Mangold <oliver.mangold@pm.me>
+> QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET is beyond the first 4K bar area hence requires MHI
+> wakeup before accessing, see [1]. the wakeup callback for WCN6855 is
+> ath11k_pci_bus_wake_up() which calls mhi_device_get_sync(). Not sure how this can be done
+> here. Maybe Mani can provide some hints?
 
-    rust: rename AlwaysRefCounted to RefCounted.
+I've analyzed the driver code and see that ath11k_pci_power_down() calls
+ath11k_pci_force_wake() before sw_reset(). 
+I can add the same force_wake sequence to the WiFi quirk before accessing
+the reset register:
 
-This commit splits the AlwaysRefCounted trait into RefCounted (for actual
-reference counting logic) and a new AlwaysRefCounted marker trait. This cha=
-nge
-allows types that can be both reference-counted and owned to safely use
-ARef<T> conversions without violating ownership constraints.
+/* Force wake before accessing registers beyond 4K boundary */
+iowrite32(1, bar + QUALCOMM_WIFI_PCIE_SOC_WAKE_PCIE_LOCAL_REG);  // 0x3004
+ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_WAKE_PCIE_LOCAL_REG);      // Flush
+msleep(5);
 
-> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
-> index 3bd5eb8a1a526..fb7466a362741 100644
-> --- a/rust/kernel/sync/aref.rs
-> +++ b/rust/kernel/sync/aref.rs
+With this addition, both WCN6855 (ath11k) and WCN7850 (ath12k) show successful
+reset and shutdown cycles in VFIO scenarios, same stability as without it.
 
-[Severity: Medium]
-In the module documentation which isn't included in this diff, it states:
+Do you consider this addition necessary, or is the current v10 implementation
+sufficient given that testing shows direct register access works without
+wakeup in VFIO scenarios (where no driver is loaded)?
+If you recommend including it, I can send v11 with the force_wake sequence
+added.
 
-//! To make use of [`ARef<MyType>`], `MyType` needs to implement
-//! [`AlwaysRefCounted`].
+Thanks
 
-Should this documentation be updated to reference RefCounted instead?
+Best regards
+Jose Ignacio
 
-Leaving this as AlwaysRefCounted might mislead developers into implementing=
- the
-marker trait for new types, which could violate the safety contract if their
-type is also Ownable.
-
-> @@ -24,11 +24,9 @@
->      ptr::NonNull, //
->  };
-> =20
-> -/// Types that are _always_ reference counted.
-> +/// Types that are internally reference counted.
->  ///
->  /// It allows such types to define their own custom ref increment and de=
-crement functions.
-> -/// Additionally, it allows users to convert from a shared reference `&T=
-` to an owned reference
-> -/// [`ARef<T>`].
-
-[ ... ]
-
-> @@ -45,9 +43,8 @@
->  /// at least until matching decrements are performed.
->  ///
->  /// Implementers must also ensure that all instances are reference-count=
-ed. (Otherwise they
-> -/// won't be able to honour the requirement that [`AlwaysRefCounted::inc=
-_ref`] keep the object
-> -/// alive.)
-> -pub unsafe trait AlwaysRefCounted {
-> +/// won't be able to honour the requirement that [`RefCounted::inc_ref`]=
- keep the object alive.)
-> +pub unsafe trait RefCounted {
->      /// Increments the reference count on the object.
->      fn inc_ref(&self);
-
-[Severity: Medium]
-Since this patch renames AlwaysRefCounted to RefCounted and re-adds
-AlwaysRefCounted as a marker trait, does rust/kernel/workqueue.rs need to be
-updated to use the new bound?
-
-Currently, rust/kernel/workqueue.rs enforces T: AlwaysRefCounted for work
-items using ARef<T>:
-
-rust/kernel/workqueue.rs:
-    unsafe impl<T, const ID: u64> WorkItemPointer<ID> for ARef<T>
-    where
-        T: AlwaysRefCounted,
-
-The same bound is used for RawWorkItem and RawDelayedWorkItem.
-
-Does keeping this bound unnecessarily prevent purely RefCounted types from
-being scheduled as work items via ARef<T>? It appears this might defeat the
-goal of the trait split for workqueue users.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260625-unique-ref=
--v18-0-4e06b5896d47@kernel.org?part=3D5
