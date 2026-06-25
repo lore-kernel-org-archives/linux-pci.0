@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C53C63D1715
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:26:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E312135B8
+	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:28:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782383204; cv=none; b=eoF2ihHei+tQAGGyNOC0JwP6venNfSk3LEwnGiTbF+xReM7ct/uPq3sVal9lJoqXqpD5DNAYu5CaiaY//twXHyjxWn007AlO5ZrZ2PTEVfbs081c0faji171uA35HvmBxHACvaTtgeXE8GkLGVsuZTwyM4HD4ZTHubs5m+kPgkU=
+	t=1782383282; cv=none; b=oo3tAHsWFJBK4VXMTCIktPKlpJqCLh5jGfhrSH6FgC5qFdzhqugH10gb3u/dGl9z1XWKNxmIiZhCeKESGYfHYtEIfL81z+LWSZ6CLMMalAgV4Dmi8thgpCrrBf12Rof2g0MATpBUGHr6WK7fazMOOZ81UffUopCQcQHeEwmFOME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782383204; c=relaxed/simple;
-	bh=bk9Qi7qEEMxzNiOCUDGO2tyKX6o4Tcj+XCkwgSsl1s0=;
+	s=arc-20240116; t=1782383282; c=relaxed/simple;
+	bh=alcN8BrdhmH66z+yHrXfqUwideZzeigpoJJ2iuY0+A4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=K5yYZaOKS0f3LVmmaOVfSgExTDjD9FYCUPpUQC6geRIMAMHY9RZSx0RXuVBCXpgSSCscsZzxld9pqMKMTB0WLgQHwh28wlvSH0oDP1sdplAeXBEJlcDfWDUf7g0u0yXI/WcW2ojGXWI0HxpQ1W21JGr4fp1l9hn98T8fyfTWVbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RVE0n8zz; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SGxLEoRKyu04lg3YX2fyptwQh2/c8n3GEi+itlX4TsSZOFoqevIksn0++MzCHDiiIFC88K2Pr8VrfewJS5EAl7Csu3OlgsCzBE4xiTGjXrYiBHY+oD+hY4Hfj4mKvuHq0VRoS6aQriCSXTL2/lsptlYmHbmm/SztjzGbxgERQtg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4EOUmhZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RVE0n8zz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDB9D1F000E9;
-	Thu, 25 Jun 2026 10:26:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4EOUmhZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4C3B1F00A3A;
+	Thu, 25 Jun 2026 10:28:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782383202;
-	bh=cVmAAd3PPJq+H5j2lwVJ5eWd7apr2rFjOH/tjr/magY=;
+	s=k20260515; t=1782383281;
+	bh=Se1i/efxHDqMxUzl5H2oEaiBwA8yDR/7EEA+2RmhhYM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RVE0n8zzQYvrnahGprbeXBj4vqVi7dGCx3/kREU6vmKA0lLKNaZJ6L8dI+Mlvynjh
-	 oA9LaoYWR4WSpBqPJLwum/2JyDStsfijANrPIzNxW2uUrO5rdpCL9mTK+dqVyZ4M6t
-	 VD9cKrt0IDJfuMnRfPNYKAFTIA3r1St2+xoU5tY4Ud7Bhd1JqatfOekp/NkRsFEfd5
-	 G2UtbKbJ1jjZ+gCBa1RukIz/797vn9tASwR8tqHAQidVwa4v3dsa7xZnbOI45A3Clc
-	 N7gk9pX4FdZ/Y6fyDJopTudxL67RHSXW6Z8EZLSOIjrJWpFFEI9SugjeYtFLiX9OU6
-	 JOaKVLY2GOU4g==
+	b=D4EOUmhZTb5RkQ7lpIa46aFFZxnk9656p0i2q1Y4Z8J+id6QjtQD1SI2LGflalnIK
+	 TMGmmO2LMopZmJ3TGx6YsDUw0zBH/oQ53gFW4gPHu08kG4G3UYQfWIPreV8f2vK1a2
+	 xe1eN1g2MeKHu+pPvx4/yD1mMY0GZzo+0546IJU6w/HX+Wyr67U2/cjA+EtCIhbI8n
+	 z29lF8MfinrciRbYVgfnjcg7a7tfNmdRSJC5GvfvnyE014eVVpKr9IOB2QhSryrQr7
+	 1fCN2jdzUypVsgo6sH9kIpWa+/2SnTigusvbyMm9od6Y/cLzs7wHeQxDYT9bcUoaCp
+	 sqnorWTYeUakw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 7/8] rust: Add `OwnableRefCounted`
+Subject: Re: [PATCH v18 5/8] rust: rename `AlwaysRefCounted` to
+ `RefCounted`.
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: ojeda@kernel.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260625-unique-ref-v18-7-4e06b5896d47@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260625-unique-ref-v18-5-4e06b5896d47@kernel.org>
 References: <20260625-unique-ref-v18-0-4e06b5896d47@kernel.org>
- <20260625-unique-ref-v18-7-4e06b5896d47@kernel.org>
+ <20260625-unique-ref-v18-5-4e06b5896d47@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 25 Jun 2026 10:26:41 +0000
-Message-Id: <20260625102641.EDB9D1F000E9@smtp.kernel.org>
+Date: Thu, 25 Jun 2026 10:28:00 +0000
+Message-Id: <20260625102800.B4C3B1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,90 +47,89 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `OwnableRefCounted` trait is a safe trait but its default `int=
-o_shared` method contains an `unsafe` block relying on unenforced invariant=
-s, violating Rust's soundness rules.
-- [Low] Incorrect documentation link for `ARef<Self>` in `aref.rs`.
+- [Medium] Incomplete Refactoring / Trait Bound Violation for workqueue ite=
+ms
+- [Medium] Stale and misleading documentation for `ARef` usage
 --
 
-commit b7dc8070575155be9312b255a20879f2e905b00f
+commit 46d36a47415ab0722d334e8010242374e8bba94c
 Author: Oliver Mangold <oliver.mangold@pm.me>
 
-rust: Add `OwnableRefCounted`
-   =20
-Types implementing one of these traits can safely convert between an
-`ARef<T>` and an `Owned<T>`.
+    rust: rename AlwaysRefCounted to RefCounted.
 
-> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
-> index e79936c00002c..bb4223c0f725a 100644
-> --- a/rust/kernel/owned.rs
-> +++ b/rust/kernel/owned.rs
-
-[ ... ]
-
-> +pub trait OwnableRefCounted: RefCounted + Ownable + Sized {
-> +    /// Checks if the [`ARef`] is unique and converts it to an [`Owned`]=
- if that is the case.
-> +    /// Otherwise it returns again an [`ARef`] to the same underlying ob=
-ject.
-> +    fn try_from_shared(this: ARef<Self>) -> Result<Owned<Self>, ARef<Sel=
-f>>;
-> +
-> +    /// Converts the [`Owned`] into an [`ARef`].
-> +    #[inline]
-> +    fn into_shared(this: Owned<Self>) -> ARef<Self> {
-> +        // SAFETY: `Owned::into_raw` returns a pointer to a valid `Self`=
-, and the `Owned` owned the
-> +        // reference count that we now transfer to the new `ARef`.
-> +        unsafe { ARef::from_raw(Owned::into_raw(this)) }
-> +    }
-> +}
-
-[Severity: High]
-Does this trait need to be marked unsafe?
-
-The OwnableRefCounted trait is currently safe to implement, but the default
-into_shared() method contains an unsafe block that assumes the Owned<Self>
-implicitly holds a reference count of 1.
-
-If a developer implements this safe trait for a type whose Owned<Self>
-does not account for one RefCounted increment, calling into_shared() will
-pass a pointer to ARef::from_raw() without a corresponding reference
-increment.
-
-When the resulting ARef is dropped, it will blindly call dec_ref(), which
-could lead to a reference count underflow, double-free, or use-after-free.
-
-Should OwnableRefCounted be an unsafe trait so that implementers are
-required to guarantee the reference count invariant?
+This commit splits the AlwaysRefCounted trait into RefCounted (for actual
+reference counting logic) and a new AlwaysRefCounted marker trait. This cha=
+nge
+allows types that can be both reference-counted and owned to safely use
+ARef<T> conversions without violating ownership constraints.
 
 > diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
-> index d0865aeb9371b..77eb390139079 100644
+> index 3bd5eb8a1a526..fb7466a362741 100644
 > --- a/rust/kernel/sync/aref.rs
 > +++ b/rust/kernel/sync/aref.rs
 
+[Severity: Medium]
+In the module documentation which isn't included in this diff, it states:
+
+//! To make use of [`ARef<MyType>`], `MyType` needs to implement
+//! [`AlwaysRefCounted`].
+
+Should this documentation be updated to reference RefCounted instead?
+
+Leaving this as AlwaysRefCounted might mislead developers into implementing=
+ the
+marker trait for new types, which could violate the safety contract if their
+type is also Ownable.
+
+> @@ -24,11 +24,9 @@
+>      ptr::NonNull, //
+>  };
+> =20
+> -/// Types that are _always_ reference counted.
+> +/// Types that are internally reference counted.
+>  ///
+>  /// It allows such types to define their own custom ref increment and de=
+crement functions.
+> -/// Additionally, it allows users to convert from a shared reference `&T=
+` to an owned reference
+> -/// [`ARef<T>`].
+
 [ ... ]
 
-> @@ -35,7 +39,10 @@
->  /// Note: Implementing this trait allows types to be wrapped in an [`ARe=
-f<Self>`]. It requires an
->  /// internal reference count and provides only shared references. If uni=
-que references are required
->  /// [`Ownable`](crate::types::Ownable) should be implemented which allow=
-s types to be wrapped in an
-> -/// [`Owned<Self>`](crate::types::Owned).
-> +/// [`Owned<Self>`](crate::types::Owned). Implementing the trait
-> +/// [`OwnableRefCounted`] allows to convert between unique and
-> +/// shared references (i.e. [`Owned<Self>`](crate::types::Owned) and
-> +/// [`ARef<Self>`](crate::types::Owned)).
+> @@ -45,9 +43,8 @@
+>  /// at least until matching decrements are performed.
+>  ///
+>  /// Implementers must also ensure that all instances are reference-count=
+ed. (Otherwise they
+> -/// won't be able to honour the requirement that [`AlwaysRefCounted::inc=
+_ref`] keep the object
+> -/// alive.)
+> -pub unsafe trait AlwaysRefCounted {
+> +/// won't be able to honour the requirement that [`RefCounted::inc_ref`]=
+ keep the object alive.)
+> +pub unsafe trait RefCounted {
+>      /// Increments the reference count on the object.
+>      fn inc_ref(&self);
 
-[Severity: Low]
-This isn't a bug, but there appears to be a copy-paste typo in the rustdoc
-link.
+[Severity: Medium]
+Since this patch renames AlwaysRefCounted to RefCounted and re-adds
+AlwaysRefCounted as a marker trait, does rust/kernel/workqueue.rs need to be
+updated to use the new bound?
 
-The documentation for ARef<Self> points to crate::types::Owned instead
-of ARef.
+Currently, rust/kernel/workqueue.rs enforces T: AlwaysRefCounted for work
+items using ARef<T>:
+
+rust/kernel/workqueue.rs:
+    unsafe impl<T, const ID: u64> WorkItemPointer<ID> for ARef<T>
+    where
+        T: AlwaysRefCounted,
+
+The same bound is used for RawWorkItem and RawDelayedWorkItem.
+
+Does keeping this bound unnecessarily prevent purely RefCounted types from
+being scheduled as work items via ARef<T>? It appears this might defeat the
+goal of the trait split for workqueue users.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260625-unique-ref=
--v18-0-4e06b5896d47@kernel.org?part=3D7
+-v18-0-4e06b5896d47@kernel.org?part=3D5
