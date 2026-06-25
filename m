@@ -1,63 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E224B3CE084
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:25:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246B63D0C07
+	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 10:25:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782383144; cv=none; b=Dqlj+SbO7loau08MH1S7zOKIYcVyPJ0nuOvkXD2aQiEN7j9zs0Gr9gabPhtcru/l+CVNmMjF2NBqPOytBkx2+wq/TP8RYcVNJ0ZNC/HbjOc/TYh1OYbpAsPPjIi4GKn4ve+9lWMSx8LWNUaY6w8FlXeNKSqB0ItGeF8T8LHiNGY=
+	t=1782383151; cv=none; b=DVIdf8nbfJS2Yb2oi87hoUsULXxZ9Z1HCKHDOYohglVeK21bkO1EYAqFQYW9eV1y5VLxqaeRMGz40UFNVOzeBqFmWBr6xmyJTkJr8+gmmaudl/6E5U9xTXzQTH3QYUa8IEA4WVV/YbS4X8qOkSwf7u7YtVXyr8sGfzOrAMCh/DM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782383144; c=relaxed/simple;
-	bh=nwfhREsaeoMCVs34ExxN5XdHNIUIvpDO0RGXdUbaHkY=;
+	s=arc-20240116; t=1782383151; c=relaxed/simple;
+	bh=JDiVCC1ZF+vqQdm+w+i1b79TsNtCHKhSDsy2HMme44s=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Qig2f9DC3PwZXRSA0K3cgnpy1UTzxMD0EM8LorOu95WNpYWxR3uc1SOihDB8Am2fS8SJaJA+GfvoAztjPDgognGeBwHzqokLBxq4vGxBo1XNJXwHnN/H/pAuVKaT8rsdiUcmxx855VOPjzIiMMWrKLCp0W86+piqe02XFLQQkxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJJMJrkT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Y6mL98TgevnaSYml93NzcR3hKKony2+z8MBkfcVs3tnFp1gg1ZvKosCmZWFYd4BBpZzIFsmjc8m07kPWKnKeFZ0cLkDx+/YwzrcbkKH6q7r1NYRLt7buUp628Idr36Dyo04Z7BNLggmgLtz7kRcEzZF8ujM7PdL29AfOIrbLpGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BZg/I8ka; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJJMJrkT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3686F1F000E9;
-	Thu, 25 Jun 2026 10:25:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BZg/I8ka"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B56171F00A3E;
+	Thu, 25 Jun 2026 10:25:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782383143;
-	bh=nwfhREsaeoMCVs34ExxN5XdHNIUIvpDO0RGXdUbaHkY=;
+	s=k20260515; t=1782383150;
+	bh=9h2j/XNhmhlcvuBt4WXuwaPw+4bYk+FEspXvfL6F6EI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iJJMJrkTrhpWMalOjNkqBX2u9zCNQJNQ0Sdm/4OUgmMU7GW/k5ZYbO+i/ZLWC6jK/
-	 fZAag2B9gh87mOtoaU8y0QJjA/7Vupizylj+dqqIcTH7tqHazeS+F66JaKugywN2QI
-	 +BD/k0kGxw1nKGgsqj82nAP2f5yahBvtr/jERfqVMdVw2v2TmaoOmPtGxBLzxuPT63
-	 SOyEvd8rYBDXGiK52CknMK6bHwGHi2+9WnVg+tFgZzP5SGhRwvbc3JEmu1Z0kXhvEz
-	 GUgu/LgzqHLScXRvg9nytO2f9lj2Mo+qODPC8wzKuhbVbUIUPylvnQygYIKhgwngfU
-	 4lh+7hVyFnHMg==
+	b=BZg/I8kaLdP6zxv/K8/a+hLHsBA8EVj9+zUTcCXtnSu5PYGGpjVXMpFds8LWvPgBL
+	 XJh3j3W3pr+LAwsCjL8dIpyDbCuLWOHjizeU0pIIImpcD+EPKyhJGYcud9KgMtmhjp
+	 ubUkntiYsxWW/6ydMWEPNZdWZeg8HobT+IXg1j3oNwkFT0EARNsAJXKiZzqdXntaCR
+	 dy5RixaSwELAsDr8LDdi4TijyO+X+B04ht+L/CS6knHY2f/880XPpaN7t5LnVjEZzD
+	 Yow8hsmiugk0/fwKpEk5sC43Wl6gNbTbBUG4mqBZwUXyqqk+nGplVEOW0l/5/oLW3Z
+	 O3U+hyUwlxFnA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 4/8] rust: page: convert to `Ownable`
+Subject: Re: [PATCH v18 8/8] rust: page: add `from_raw()`
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260625-unique-ref-v18-4-4e06b5896d47@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260625-unique-ref-v18-8-4e06b5896d47@kernel.org>
 References: <20260625-unique-ref-v18-0-4e06b5896d47@kernel.org>
- <20260625-unique-ref-v18-4-4e06b5896d47@kernel.org>
+ <20260625-unique-ref-v18-8-4e06b5896d47@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 25 Jun 2026 10:25:42 +0000
-Message-Id: <20260625102543.3686F1F000E9@smtp.kernel.org>
+Date: Thu, 25 Jun 2026 10:25:49 +0000
+Message-Id: <20260625102549.B56171F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Asahi Lina <lina@asahilina.net>
->=20
-> This allows Page references to be returned as borrowed references,
-> without necessarily owning the struct page.
->=20
-> Remove `BorrowedPage` and update users to use `Owned<Page>`.
->=20
-> Signed-off-by: Asahi Lina <lina@asahilina.net>
-> [ Andreas: Fix formatting and add a safety comment, update users. ]
-> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The `# Safety` documentation for `Page::from_raw` is missing the=
+ precondition that `ptr` must point to a valid `struct page`.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit f6aeebdd661d4004190de07e9d991442f793517a
+Author: Andreas Hindborg <a.hindborg@kernel.org>
+
+rust: page: add `from_raw()`
+
+This commit adds a from_raw() method to the Page abstraction. It allows
+the construction of a shared reference to a Page instance directly from a=20
+raw struct page pointer.
+
+> diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
+> index 6dc1c2395acaf..c88fda09ead5a 100644
+> --- a/rust/kernel/page.rs
+> +++ b/rust/kernel/page.rs
+
+[ ... ]
+
+> @@ -143,6 +143,20 @@ pub fn nid(&self) -> i32 {
+>          unsafe { bindings::page_to_nid(self.as_ptr()) }
+>      }
+> =20
+> +    /// Create a `&Page` from a raw `struct page` pointer.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// `ptr` must be convertible to a shared reference with a lifetime =
+of `'a`.
+> +    #[inline]
+> +    pub unsafe fn from_raw<'a>(ptr: *const bindings::page) -> &'a Self {
+
+[Severity: Medium]
+Is the safety documentation missing a requirement here?=20
+
+The # Safety section only requires that ptr is convertible to a shared=20
+reference. Under Rust's rules, an uninitialized or dummy pointer could=20
+technically be converted to a shared reference if properly aligned.
+
+> +        // INVARIANT: By the function safety requirements, `ptr` refers =
+to a valid `struct page`, so
+> +        // the returned reference upholds the type invariant of `Page`.
+
+The invariant justification inside the function explicitly relies on the=20
+caller guaranteeing that ptr refers to a valid struct page. Could the=20
+# Safety documentation be updated to explicitly require that ptr points=20
+to a valid, initialized struct page so that callers do not inadvertently=20
+violate the Page type invariant?
+
+> +        // SAFETY: By function safety requirements, `ptr` is not null an=
+d is convertible to a shared
+> +        // reference.
+> +        unsafe { &*ptr.cast() }
+> +    }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260625-unique-ref=
--v18-0-4e06b5896d47@kernel.org?part=3D4
-
+-v18-0-4e06b5896d47@kernel.org?part=3D8
