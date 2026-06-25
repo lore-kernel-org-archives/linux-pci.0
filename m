@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D57824E4B4;
-	Thu, 25 Jun 2026 13:02:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79BA24E4B4;
+	Thu, 25 Jun 2026 13:02:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782392560; cv=none; b=YkExLSxoYAIwVi1D+TANrCxUPDTaVGssrsBs57fikEl27dPvq3Kg3pOk4DOHXkvDralyl7ClaCoXF6qeYYs6HaMfQ2TmsgFWCV/ao5CDMNwf921M7Kymr/zch2G7LxA2h/kQxEMXUjcvhldd6keVX1OZsQHDGTcBHM4GIGF1F0Q=
+	t=1782392561; cv=none; b=XT1OEch90bUp+vSsKuAU3NRDgcijOJV0PGLlWcB/fOPv0IyKiaCljbPLIJA5um7pkic0o/U+wTAQN/C9JvBxmMyE9UxZYyGzMAXVAfN0WM2ae4Wh2Gf+6dSxI3tTq4dxWDmOyRCeKrfYNS4c4heJ9zgszppxANTW3X081St6BC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782392560; c=relaxed/simple;
-	bh=4uTKAhti6CuPJG9ucH7+aZ2MZS8etVeNrGS3Y8Z79MA=;
+	s=arc-20240116; t=1782392561; c=relaxed/simple;
+	bh=XfHXrS1ZEajkwaU5EP9lHXOw6tz2F5AWN3AtzjlBGjU=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=XjwPLrdRENui1Fgc2hWJMNKKv5UXNzT87pwmAfLyNYhDNeAVyL4elxmWDm5fIVKgHEgZYN0GtYH9b/3InZ0gj9AQXtf1dh0zytwJtecl98MUai6M6XEWkD9nmMZof4vnXvK8XnqxjsIwP3YwwC89TQTD/z2en+218RnbDLHewYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oDAOCnJJ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=aPSr5xiYESQ9wCvEEOHmhzPxiRH4Lk00yVqE30BeWf78nvOFDQayknwcQqOGpLIAMoA+s56YAxpOZnck3IdM7bTSoz/soO2XKpc+DM28uIk/Au6516/X6YrMq/LQtqc6u8X1C619GOZQDj0tdL6s0cjdz5clua3gfzThUizIA58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sveoc4cA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oDAOCnJJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC3071F00A3A;
-	Thu, 25 Jun 2026 13:02:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sveoc4cA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D5421F000E9;
+	Thu, 25 Jun 2026 13:02:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782392558;
-	bh=1H9YqsGITkikakZjicoBwyNffoOYnokalhrvBQ6sPwE=;
+	s=k20260515; t=1782392560;
+	bh=wWpfoYo0he+1/XkBK644Cd03AtNcgDe0rI1UeR8YX1Y=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=oDAOCnJJ4Ljul/BncpuQq6v2RXxJQ+n9BE1KQXfeXxeSuDpmNz9fs0sX8hEP5AsN9
-	 aPME/YN2wktTp58v4JhIsrpH9Wvmb0bwj4+3QNMSzIoumlSPxBrQAJQSRBlaw5ULid
-	 drbXu9ENVTGJJHh1jc0uBJNAbWetLRslW9YcpkgKiTEYTbDA8XH+F/CdZ/jYt1XBAT
-	 B5i5hA3dox/ppuYHPHUjfoNOeR+jlxzKkpjXLwLIx+8K44ikmvZ5CUNGMr8eTXTOHK
-	 Pqf4jeyQHwBZtWZnrvgDxOWOaCg47aA1mmeChPuNXiX0yf3+W8n18v8vbjm2aHdYcQ
-	 yddnpTJxTGFGw==
+	b=Sveoc4cAKUNYDUtQpv4K47fJt/hl7zZK8tsbX7Ne7/wCLB9uAGPnltdA6YWtTRmJU
+	 /7xHIU7y01csInUJPCg/9YhVEti1MXSSaQW6E6aOPRwZjo//DcXdHRau31CXto4Hji
+	 eEgUU7pqSa6ZEQDgQQzdCMSue43OPdISm4w3RcDKye391ngRppV/oBzlwI2rSP4Rsx
+	 Ut773Qzi7tSBz58yGrEDUuGtDK55hnMqIKhvfqGjBSWWCgCw0h69p/1kmQW+L5oKoW
+	 FP4dONHVHNdJwMd12HA7Zi7KhLHbHYvnRVoiISe1fU8lM2RPiyeRbyyDeEaqzP5quo
+	 PIzLXh3E/J1Tw==
 From: Andreas Hindborg <a.hindborg@kernel.org>
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-pci@vger.kernel.org, ojeda@kernel.org,
  dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v18 5/8] rust: rename `AlwaysRefCounted` to `RefCounted`.
-In-Reply-To: <20260625102800.B4C3B1F00A3A@smtp.kernel.org>
+Subject: Re: [PATCH v18 8/8] rust: page: add `from_raw()`
+In-Reply-To: <20260625102549.B56171F00A3E@smtp.kernel.org>
 References: <20260625-unique-ref-v18-0-4e06b5896d47@kernel.org>
- <20260625-unique-ref-v18-5-4e06b5896d47@kernel.org>
- <sC1PIDifb5R9SC4mqWkofW48Un8TOJzms8T2r2zfKwINaCyFbCgdIkAg7RhnBEXT9S32H3USLcHywBynA6ETxg==@protonmail.internalid>
- <20260625102800.B4C3B1F00A3A@smtp.kernel.org>
-Date: Thu, 25 Jun 2026 14:26:53 +0200
-Message-ID: <877bnmiz5e.fsf@t14s.mail-host-address-is-not-set>
+ <20260625-unique-ref-v18-8-4e06b5896d47@kernel.org>
+ <24fS7Cgk-Y_pR5s6G0gXJ3zpbj_q2vdQ6BamOE62CiY_dtN1xrG5oDJqTy0LCceddw2AsvATlzKDX0MwJIg7Cw==@protonmail.internalid>
+ <20260625102549.B56171F00A3E@smtp.kernel.org>
+Date: Thu, 25 Jun 2026 15:02:28 +0200
+Message-ID: <871pduixi3.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,85 +48,64 @@ Content-Type: text/plain
 
 <sashiko-bot@kernel.org> writes:
 
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [Medium] Incomplete Refactoring / Trait Bound Violation for workqueue items
-> - [Medium] Stale and misleading documentation for `ARef` usage
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] The `# Safety` documentation for `Page::from_raw` is missing the precondition that `ptr` must point to a valid `struct page`.
 > --
 >
-> commit 46d36a47415ab0722d334e8010242374e8bba94c
-> Author: Oliver Mangold <oliver.mangold@pm.me>
+> commit f6aeebdd661d4004190de07e9d991442f793517a
+> Author: Andreas Hindborg <a.hindborg@kernel.org>
 >
->     rust: rename AlwaysRefCounted to RefCounted.
+> rust: page: add `from_raw()`
 >
-> This commit splits the AlwaysRefCounted trait into RefCounted (for actual
-> reference counting logic) and a new AlwaysRefCounted marker trait. This change
-> allows types that can be both reference-counted and owned to safely use
-> ARef<T> conversions without violating ownership constraints.
+> This commit adds a from_raw() method to the Page abstraction. It allows
+> the construction of a shared reference to a Page instance directly from a
+> raw struct page pointer.
 >
->> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
->> index 3bd5eb8a1a526..fb7466a362741 100644
->> --- a/rust/kernel/sync/aref.rs
->> +++ b/rust/kernel/sync/aref.rs
->
-> [Severity: Medium]
-> In the module documentation which isn't included in this diff, it states:
->
-> //! To make use of [`ARef<MyType>`], `MyType` needs to implement
-> //! [`AlwaysRefCounted`].
->
-> Should this documentation be updated to reference RefCounted instead?
->
-> Leaving this as AlwaysRefCounted might mislead developers into implementing the
-> marker trait for new types, which could violate the safety contract if their
-> type is also Ownable.
-
-I will fix this.
-
->
->> @@ -24,11 +24,9 @@
->>      ptr::NonNull, //
->>  };
->>
->> -/// Types that are _always_ reference counted.
->> +/// Types that are internally reference counted.
->>  ///
->>  /// It allows such types to define their own custom ref increment and decrement functions.
->> -/// Additionally, it allows users to convert from a shared reference `&T` to an owned reference
->> -/// [`ARef<T>`].
+>> diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
+>> index 6dc1c2395acaf..c88fda09ead5a 100644
+>> --- a/rust/kernel/page.rs
+>> +++ b/rust/kernel/page.rs
 >
 > [ ... ]
 >
->> @@ -45,9 +43,8 @@
->>  /// at least until matching decrements are performed.
->>  ///
->>  /// Implementers must also ensure that all instances are reference-counted. (Otherwise they
->> -/// won't be able to honour the requirement that [`AlwaysRefCounted::inc_ref`] keep the object
->> -/// alive.)
->> -pub unsafe trait AlwaysRefCounted {
->> +/// won't be able to honour the requirement that [`RefCounted::inc_ref`] keep the object alive.)
->> +pub unsafe trait RefCounted {
->>      /// Increments the reference count on the object.
->>      fn inc_ref(&self);
+>> @@ -143,6 +143,20 @@ pub fn nid(&self) -> i32 {
+>>          unsafe { bindings::page_to_nid(self.as_ptr()) }
+>>      }
+>>
+>> +    /// Create a `&Page` from a raw `struct page` pointer.
+>> +    ///
+>> +    /// # Safety
+>> +    ///
+>> +    /// `ptr` must be convertible to a shared reference with a lifetime of `'a`.
+>> +    #[inline]
+>> +    pub unsafe fn from_raw<'a>(ptr: *const bindings::page) -> &'a Self {
 >
 > [Severity: Medium]
-> Since this patch renames AlwaysRefCounted to RefCounted and re-adds
-> AlwaysRefCounted as a marker trait, does rust/kernel/workqueue.rs need to be
-> updated to use the new bound?
+> Is the safety documentation missing a requirement here?
 >
-> Currently, rust/kernel/workqueue.rs enforces T: AlwaysRefCounted for work
-> items using ARef<T>:
->
-> rust/kernel/workqueue.rs:
->     unsafe impl<T, const ID: u64> WorkItemPointer<ID> for ARef<T>
->     where
->         T: AlwaysRefCounted,
->
-> The same bound is used for RawWorkItem and RawDelayedWorkItem.
+> The # Safety section only requires that ptr is convertible to a shared
+> reference. Under Rust's rules, an uninitialized or dummy pointer could
+> technically be converted to a shared reference if properly aligned.
 
-Yes, they should be changed to `RefCounted`. I will fix this.
+This is not correct. A pointer is only convertible to a shared reference
+if it is pointing to properly initialized data [1].
 
+>
+>> +        // INVARIANT: By the function safety requirements, `ptr` refers to a valid `struct page`, so
+>> +        // the returned reference upholds the type invariant of `Page`.
+>
+> The invariant justification inside the function explicitly relies on the
+> caller guaranteeing that ptr refers to a valid struct page. Could the
+> # Safety documentation be updated to explicitly require that ptr points
+> to a valid, initialized struct page so that callers do not inadvertently
+> violate the Page type invariant?
+
+For `ptr` to be convertible to a shared reference, it must point to
+valid and initialized data.
 
 Best regards,
 Andreas Hindborg
 
+
+[1] https://doc.rust-lang.org/stable/core/ptr/index.html#pointer-to-reference-conversion
 
