@@ -1,56 +1,58 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58507374E42
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 02:01:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7EF3BED42
+	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 06:07:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782352887; cv=none; b=N2bNfDAL92qvFvyrA8wwcjtbiwJOaIf/8Hv3KERIzy0rehlsOlbo80A1MDUR+aCX1yoDq2AMI4ZAx7X1I0058NarnUqCWs0YvZtyeK4AsZoiEuGygS7zhq+587e2NVKofK8gaqApz4E2sSFofNa3YwUgIlY2usn1JgYhx5m73Nk=
+	t=1782367674; cv=none; b=cTfNn1pJ1Lou7Gf6Sb2fthVSsdjSZm905JDjwDrUXGXRepZtaMdnz1/hSqvxVwcHq8WANGEe5uimupNeZGIZYMuJfGCfuESBhXAJsRA3SPi83rSLUER30IKsEFSOCZN6onIjT1JA5PxRXEAuT55cfnCdF7/YPaaSxD2DC0HwDGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782352887; c=relaxed/simple;
-	bh=/gM/wzE6xLTNyKPirLgLD21U1HI/NdRJfB1ViZocnAw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 References; b=ZG0SbejjsGVYMtvgc4R3j20zSvHnnBhlrU8MLiyTrU7ut6vt2QWbRIVJvAaoIm+BH0tVtGkxU5JHfJ45dq5Tv1U+Gd1h9JNFxnDpLykeQCPwEl3qpCvVsMOPJTPXNdf/elCyeTnO0YYZIJSFc9O4t+dIecOB9EkcUwj4P4B+yqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=BKI1Bix4; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1782367674; c=relaxed/simple;
+	bh=O5K0lhypuQ1vj3b5w1mbj+ePpbKrKQ8EOdDhNjgKeDY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UWwhP5H1feW+dH3mMwpyCWIHImaPHsXMSzk13e5Y/LXxUZc+j1jWElkd6bmWuT2+bXL+Ba0Cwc1rkvhMcObin4P+WDjCAPC06ol657rYnwwTcCD8DRNhexZyL+wBd+r0CSj4AwE/hZMGFZ+fsN18gMH4ro1v8phMSQTjRdE5Iew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BryzYDyl; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BKI1Bix4"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260625020116epoutp03804970209c5d82e18d68e03c1e5fceb3~8MH_OPSHN0128601286epoutp03k
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 02:01:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260625020116epoutp03804970209c5d82e18d68e03c1e5fceb3~8MH_OPSHN0128601286epoutp03k
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1782352876;
-	bh=rqciwAtiNjhmxE6qraKNhQ+B1MTRFF85VVu7t9VeR/Y=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=BKI1Bix411MlJX/P3pVhpK/c4N8xqR83Ey6oNz4fmS3j3sGvK7zynFNpoPfN6G85X
-	 UurwoLqyu3BYHnecUTrRzc3FjYJDDQ985NkDEqvSHWMVhBxfkqn5JRkTx0Fj+wegMh
-	 KSaJM4/M4uiIu75q66xMoqMExAd/moj912mDOgDo=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260625020116epcas5p38700649bc16267a411e909ea482fc18a~8MH99STCF0536605366epcas5p3z;
-	Thu, 25 Jun 2026 02:01:16 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.89]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4gm28q6YQxz6B9mG; Thu, 25 Jun
-	2026 02:01:15 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20260625015930epcas5p33fa9d4833d45b53597e2994fb9ec2577~8MGaqDO8k2255722557epcas5p3_;
-	Thu, 25 Jun 2026 01:59:30 +0000 (GMT)
-Received: from hexue-PowerEdge-R7625.. (unknown [109.105.118.129]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260625015929epsmtip2d4550d10c526f641965e1d2d4cc8e647~8MGZ0aT2G2157721577epsmtip2a;
-	Thu, 25 Jun 2026 01:59:29 +0000 (GMT)
-From: "xiaobing.li" <xiaobing.li@samsung.com>
-To: bhelgaas@google.com, logang@deltatee.com, m.szyprowski@samsung.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org
-Cc: kun.dou@samsung.com, peiwei.li@samsung.com
-Subject: [RFC PATCH 0/0]  PCI P2PDMA: Add observability support via
- tracepoints, debugfs, and sysfs.
-Date: Thu, 25 Jun 2026 09:59:27 +0800
-Message-ID: <20260625015927.5704-1-xiaobing.li@samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BryzYDyl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782367672; x=1813903672;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=O5K0lhypuQ1vj3b5w1mbj+ePpbKrKQ8EOdDhNjgKeDY=;
+  b=BryzYDylKnHCgQXJrVA081nC8RNH3rFjOZYYZ+mipP64v4V7JG1U3v8p
+   sgolNO/V00rr07qzDF12og5O/AHnJHixCEociPuUbilygDXXdwx+z/TlP
+   SwzRCIKjsGMc0xhvvNqo1qvB42tAmqakt8w09W/7Zx6EdeSu4hKDXZTZo
+   hwEuEm0rtNQ1UhmiQeSUZ51W8apF/bXG5duP8DojsAY/12Xf0DWC/bKFD
+   vp39xbOBB6/b2dKDAhfvCAjbxTZ7egV3JrLgZaBDDRquB19I/NpDrjvAT
+   ni8MXZTtz3a8Df80nCV2EpjbUS207rH57bYCJjiDm7efCL+faJfSO3DuL
+   g==;
+X-CSE-ConnectionGUID: xdz9Xxd+SO2BIHjY4F+JGg==
+X-CSE-MsgGUID: tKltuJcIQ/G0hXM9F3Gi4A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11827"; a="83021817"
+X-IronPort-AV: E=Sophos;i="6.24,223,1774335600"; 
+   d="scan'208";a="83021817"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:07:52 -0700
+X-CSE-ConnectionGUID: BCj9zx97QE6XTcgEZnzOUw==
+X-CSE-MsgGUID: XikxPFPpRL+uBvVdy3v32A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,223,1774335600"; 
+   d="scan'208";a="250725361"
+Received: from ubuntu.igk.intel.com ([10.102.114.174])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:07:49 -0700
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+To: helgaas@kernel.org,
+	nirmal.patel@linux.intel.com,
+	szymon.durawa@linux.intel.com,
+	djbw@kernel.org,
+	linux-pci@vger.kernel.org,
+	lukas@wunner.de
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 0/8] VMD add second root bus support
+Date: Thu, 25 Jun 2026 08:29:29 +0000
+Message-ID: <20260625082940.1290740-1-szymon.durawa@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,90 +61,62 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260625015930epcas5p33fa9d4833d45b53597e2994fb9ec2577
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-505,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260625015930epcas5p33fa9d4833d45b53597e2994fb9ec2577
-References: <CGME20260625015930epcas5p33fa9d4833d45b53597e2994fb9ec2577@epcas5p3.samsung.com>
 
-Hi all,
+This patch series implements second rootbus support inside Intel VMD
+module. Current implementation allows VMD to take ownership of devices
+only on first bus (Rootbus0). Starting from Intel Arrow Lake, VMD exposes
+second bus (Rootbus1) to allow VMD to own devices on this bus as well.
+VMD MMIO BARs (CFGBAR. MEMBAR1 and MEMBAR2) are now shared between
+Rootbus0 and Rootbus1. Reconfiguration of 3 MMIO BARs is required by
+resizing current MMIO BARs ranges. It allows to find/register VMD Rootbus1
+and discovers devices or root ports under it.
 
-The Linux kernel's P2P DMA infrastructure is already very mature, but currently it is not user-friendly in terms of metric observability. 
-For example, without manually adding logs, there is no intuitive data to see how many P2P transfers, which paths are taken, 
-    and how performance is. It is impossible to clearly observe P2PDMA activity from user space, making the following operations difficult:
+Patches 1 to 6 introduce code refactoring without functional changes.
+Patch 7 implements VMD Rootbus1 support and patch 8 provides workaround
+for rootbus number hardwired to fixed non-zero value. Patch 8 is necessary
+for correct enumeration attached devices under VMD Rootbus1. Without it
+user cannot access those devices as they are not visible in the system,
+only drives under VMD Rootbus0 are available to the user.
 
-- Diagnose the reasons why P2PDMA may not work (or perform poorly).
+Changes from v1:
+- splitting series into more commits, requested by Bjorn
+- adding helper functions, suggested by Bjorn
+- minor typos and unclear wording updated, suggested by Bjorn
 
-- Verify whether the P2PDMA mapping uses the expected type (BUS_ADDR or THRU_HOST_BRIDGE)
+Changes from v2:
+- wording update in commit logs, suggested by Bjorn
 
-- Monitor the use of P2PDMA in production environments
+Changes from v3:
+- using GENMASK() instead of manual bits shifting, suggested by Bjorn
+- converting decimal number to hex representation, suggested by Bjorn
+- wording update in commit logs, suggested by Bjorn
 
-- Detect potential memory leaks (unmapped allocations)
+Changes from v4:
+- Update Dan's email address
+- Resending the whole series to the correct mailing list
 
-P2PDMA is a subtle feature. When P2PDMA mapping cannot use BUS_ADDR (Direct PCIe Switch Path), it silently falls back to the THRU_HOST_BRIDGE, 
-       routing traffic to the host bridge. This significantly reduces performance (usually by 10 times or more), but it cannot be detected 
-       from user space.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dan Williams <djbw@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
 
-Therefore, I plan to export some metrics in the user space to better observe P2PDMA activity.
-This series of solutions adds three layers of observability:
+Szymon Durawa (8):
+  PCI: vmd: Add vmd_bus_enumeration() helper function
+  PCI: vmd: Add vmd_configure_cfgbar() helper function
+  PCI: vmd: Add vmd_configure_membar() and 
+    vmd_configure_membar1_membar2()
+  PCI: vmd: Add vmd_create_bus()
+  PCI: vmd: Replace hardcoded values with enum and defines
+  PCI: vmd: Convert bus and busn_start to an array
+  PCI: vmd: Add support for second rootbus under VMD
+  PCI: vmd: Add workaround for bus number hardwired to fixed non-zero
+    value
 
-1. Tracepoints (5 events, optional, no overhead when disabled)
+ drivers/pci/controller/vmd.c | 488 +++++++++++++++++++++++++++--------
+ 1 file changed, 376 insertions(+), 112 deletions(-)
 
-- p2p_dma_alloc: P2P memory allocation
+-- 
+2.43.0
 
-- p2p_dma_free: P2P memory release
-
-- p2p_dma_map: P2P DMA mapping (including client/provider, mapping type,
-
-PCIe distance and process information)
-
-- p2p_dma_unmap: P2P DMA removes mapping
-
-- p2p_map_type_change: New mapping type calculations (xarray missed)
-
-All tracking points include the calling process (comm pid), enabling P2PDMA activity tracking for each process.
-
-Example:
-
-$ cat /sys/kernel/debug/tracing/trace | grep p2p_dma_map
-
-nvme[1234] map nvme0 -> p2p_mem type=BUS_ADDR dist=4
-
-python[5678] map nvme1 -> p2p_mem type=THRU_HOST_BRIDGE dist=8
-
-2. Debugfs (global cumulative counter, always available)
-
-- /sys/kernel/debug/pci-p2pdma/
-
-- 11 counters: total_mappings, bus_addr_mappings, host_bridge_mappings,
-
-total_allocations, error_count, etc.
-
-- Enable the calculation of the "BUS_ADDR ratio" to quantify the effectiveness of P2PDMA.
-
-3. Sysfs (Statistical Information for Each Device, Production Environment Safety)
-
-- /sys/bus/pci/devices/*/p2pmem/stats/
-
-- 4 attributes: alloc_count, free_count, mapped_bytes, peak_mapped_bytes
-
-Performance impact
-
-- Tracking point: Static branch, zero overhead when disabled (by default).
-
-- Debugfs/sysfs: atomic64_t counter, no locking, negligible overhead
-
-- After disabling all observability, the P2PDMA thermal path remains unchanged
-
-
-I would appreciate feedback on:
-
-1. Is the overall solution worth implementing?
-2. Is the set of tracepoints appropriate? Any events I'm missing?
-3. Are the tracepoint fields sufficient for debugging?
-4. Is the debugfs/sysfs interface design acceptable?
-5. Any concerns about the implementation approach?
