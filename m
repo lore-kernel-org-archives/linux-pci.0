@@ -1,206 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010019.outbound.protection.outlook.com [52.101.201.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11BAB23BD06;
-	Thu, 25 Jun 2026 22:07:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782425266; cv=none; b=eCGaKWldX3304VL1DllPhb2l7PWVMhi5DhRPy7AEnnPADdga7VyhZJr8SqOdZMRT4xsc4SMbkSUsH/a9asDm+UteVTNgfNRrx/vqPe52E/JF/9Lj0Oq0j7pBXi32su7yxdViYRu0ltGRwtCIqbaEJyFMvHwjx1eHNutvA97Oi1E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782425266; c=relaxed/simple;
-	bh=qCDpMwLTDIeSPpuR3zMygPU6yvWTi8PcKJhcFHiLkOc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tLlKIrsGTsTBnHWD92bAxGUQaBjA77CI022Y99qctvFb48+kXXdoHjGhZVyTHdsi0qTQbMQpbjAonCyG5l6BJD3E3rlb/uvJPK0U6OGsBdsr8VlodhPi4n2zD1rj4THPb4rA4x5Via2c6p0n5Xokfzc6A8D+srQPIeBS8JMWa+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hjy1xYWq; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E06320E023;
+	Thu, 25 Jun 2026 22:58:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782428332; cv=fail; b=hnhWGe1/QmddZY05LnFRD7l5CHz12xdDdaiWxcTVsU9njZd3iQHmOpvaxkVI6xamDv0I/lfUxt5b0HsF+8BfuD35DhzuG04key4IxvS9nxaprqLy8DNi7exT/1C/bCUOmpaSE44uqEvz5OW4U85v2FgA39JzJIvrvsGgPgmeauA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782428332; c=relaxed/simple;
+	bh=s0hfclDZpQiPLLDqNgWI8Ffij+DJN9Ekj0MEklcJ6/4=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=WJoLxyPgA2OqkurTXgltnjlOnGkVEKmHvYqN5+hAaAAhN4lPmksqP6sLbrCNHlJfCSZxyry6fwam0GEShDGFs299bxEwdEm6ykvNjO/YafNVznI1mVtm0kMzPl1WlQG27PxkMVzCRm+B0h8WVdNDr3DOYMYy0y00AHjiM7/5RLY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Kz9e4c1V; arc=fail smtp.client-ip=52.101.201.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hjy1xYWq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B6F31F000E9;
-	Thu, 25 Jun 2026 22:07:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782425264;
-	bh=KxYoreQ5gBFj0fmljyLd+KEROjBUrWzYGafS1r3YZzY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hjy1xYWqeW7j7y/tTSJwGHVkRwyEZB06YqMY7cD62McLdcbSKpV4ye3Kr3NFwnbfH
-	 /fKrZ8UPsfmj2CTGZwmmZsr6oZBobPFb1Th/ddHyi0rbUmsdWk/hY4YlWisX0BH5dp
-	 VswZjJh1F1Q7w8wlvwASDLBcRooUEPz5G06ukARLF8FTNkYw6a7mb/OYPJTu5li3Rk
-	 bv+1ZtWg2Cu6LXPJ2t/TbmPiMCPZhBuCeWsmjef3yxnyDJm2jdsH3HHh90SceVjWPm
-	 wCKjehkP8mTN3hkvubbo4j0L1dt1f7zqzLfWIUAWGKre+EsXcgn7cf1tEmyCzmFb9e
-	 0c4EIzjw/L4yA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/4] PCI: mediatek-gen3: Add 2-lanes mode support for
- Airoha AN7581
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christian Marangi" <ansuelsmth@gmail.com>
-Cc: linux-pci@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260625215741.3253212-5-ansuelsmth@gmail.com>
-References: <20260625215741.3253212-1-ansuelsmth@gmail.com>
- <20260625215741.3253212-5-ansuelsmth@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 25 Jun 2026 22:07:43 +0000
-Message-Id: <20260625220744.5B6F31F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Kz9e4c1V"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZICNKm6XmVvtmZMtMkMg4/Qn0N3wEYL+1VLCIBBIHfekw3NQyRMg7lKA9Qy/crugCeFhbzKKurYXcM6ckk1aBN8DHDgFcvg32iPuteJAsbXinXJ3hICWN2oHzgxgqmFXxzdspvC/1aQtK99xki39pgQ6OzdXFf0mjy1ZO2SeYT3o/+WNT7GJVON7q5PctjtZVO5OMsc+SeywpErqpoh8RLRDOS2JePbAt3z+rp40vvuRRICmawusmg0/KB/GNuBdCO6FoKJHN3rqrh3eN2bAcrSWqWeL2C8hUEgpydshrbSdzuO9LC+tbMZxuEx9IHO7aUcog2cDaQQOPUJk95aziA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1EQrm1TbuOHyStU1RowByPLFsKvXnQ/gjpuwQjidnF4=;
+ b=AsPrfgHY3UAWYaCjcKhB5qSKA+EDPnM0zuXJsCuM7/HQx8O+s/doVsRj/zU07uXusJwTT76+56q+gMbGedf1bfm/z3pPXFiYUyhOPA18PaR8fPfNvCYemfnJuQBl65lobIjolDt0OWImsRVqo4qHC6GAVx8m/vGMd/g9RH8HavUbkDJJRy5hwgJeso/GIjBUD43vtSfsDVeLjv5ZLl8Qvmmj3jOfw+sE1IoEcC2AW3W2stpN6EyiQb1cpGRy6b020F0MTUcD4zy6cKu0piyPcCfhUiPGp14bHAluJYr+hV9/Cuu50XUzr4gYJRSnp8dFW+dIWGP/dMDQZjRof77+mQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1EQrm1TbuOHyStU1RowByPLFsKvXnQ/gjpuwQjidnF4=;
+ b=Kz9e4c1VcQTXYnDyZOo8FVq0LupZl7+Bpqj+//emdKqe7r/p81n2NsKJ3onXamwkTIPBRubHvKih/XovCJpFnL9L6fblfxKz1MJKwhKb6T7M+wUi3JK84Elkg0DJct7EZ7R+t7rOjIGJYXCH3U2UeD1QmBy/Cq4GqRLH2v1YnQ8=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
+ by CH3PR12MB8728.namprd12.prod.outlook.com (2603:10b6:610:171::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.13; Thu, 25 Jun
+ 2026 22:58:47 +0000
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000%6]) with mapi id 15.21.0159.015; Thu, 25 Jun 2026
+ 22:58:47 +0000
+Message-ID: <5ef1c84d-729e-4b9d-a3e4-dc20d8242982@amd.com>
+Date: Thu, 25 Jun 2026 15:58:41 -0700
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] x86/video: Only fall back to vga_default_device()
+ without screen info
+Content-Language: en-US
+To: Bjorn Helgaas <bhelgaas@google.com>, Borislav Petkov <bp@alien8.de>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner
+ <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Dave Hansen <dave.hansen@linux.intel.com>,
+ "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+ "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
+ <linux-kernel@vger.kernel.org>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ Aaron Ma <aaron.ma@canonical.com>
+References: <20260623141505.1816786-1-mario.limonciello@amd.com>
+ <CAJ6xRxWBtaPZZ=SVff2WVE+B2c+fMJ6vTTracHU4BqH16ROXeA@mail.gmail.com>
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <CAJ6xRxWBtaPZZ=SVff2WVE+B2c+fMJ6vTTracHU4BqH16ROXeA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PH8P220CA0029.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:510:348::13) To PH8PR12MB6914.namprd12.prod.outlook.com
+ (2603:10b6:510:1cb::21)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|CH3PR12MB8728:EE_
+X-MS-Office365-Filtering-Correlation-Id: 01cd3dbd-3517-4e65-741c-08ded30d508f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|23010399003|376014|56012099006|4143699003|22082099003|11063799006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	sK3TLBjXzquLRg0r6fdGiyGzbWgZTwZ4V/95DJHVgdj6rxOOdVvoYNe44ywi7XZqpEtoR6cjLasXkhJMnD05ZjlEJd56Gij9YxER0t8sADkRS5GxDk139qfDhQAaEPhCRPuvdgh+RLQBRVoOyv4V45iEKMrktKbyK30NtnNZlbpUym5Nx7EWEKy7LmmlJ4Ybhn3ciKXo6OPzKkBSyltJq5iAwFOYcje6zZBqKpWgQil6wF3qppuuWHk1BqKsIFmRJloKeqiY8yZQXif9QTTGA3mYRJh02m03h6cr/gfztRfR4XkXZu4cPPU3wuWL9J6u+yq33RUcMzqL4CrTz1OvNAAFLFjtCHq9bKgAO9Z4n+JJGKamMEK6x4bta+TvGk+8MRHS0F505lj0E6giFm/Qw/ABVVM/nChpDjnWDfln+UBmbTMM1zzRwohBFvOE5cC40H+8LnMOu9SDpeNAltGdSzH1z2YiHbg1Ws5hjZmTddWsbxREgHzUv74E4uQ7pz63Q56hPCGXEKyWxEgcow0Wa4g4t3SubkSDTAQD1B8vBMDXv0TY9vdGWEUDnrrW5mtehCrLX+J2Tta0U/hAvBHHujlRk5IsKd5CRZNFjZ5kSXcDMzJfXmR+jhUhsHEViOPYvkVkBCnOnBrDyH785/j/lS48z/zAYoGu4I28IMm7t8A=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(23010399003)(376014)(56012099006)(4143699003)(22082099003)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?V2l3eTBNemtTalcwQnZZa2JFMnNDZ3BFeW1vS2xUWjBvK0ZUS3FwL1BtY213?=
+ =?utf-8?B?aW9tSzM4THludlBBS2JtSWFRenViRVJQcTJsMm5xbVZoRytrSStGN0F6azl5?=
+ =?utf-8?B?NStXVGYxbkoxWTNvbnQwOUs5RE5CTVFjcUIzSHV5K3VvRVZsMTVGL1N2ZURl?=
+ =?utf-8?B?c0diUnpBMEsrYnhOZzNSWEcrM3g4K2d5TmxUazViZWVsM09HNW5CN3NVdHpC?=
+ =?utf-8?B?WDJhSm9HRzBXdFF1M3VKNWNjQzFwcmg5RjkrNTlSeTVDL1A3blVwMG9GL0Nh?=
+ =?utf-8?B?d3hOMkZGT0ZBMTZmNmtMNFY0bVg5SGtUVDF5VzArNWlGNVZkRlNzbGRUR1dy?=
+ =?utf-8?B?Rk5rSXl0a2RMZnVQWC9BN3JDT2F4cUtJWTdIci93VTFINnhKdS9nQitEeUxL?=
+ =?utf-8?B?bjRLVzNPMVdkbzJNSU50ZXFMT2lNd1h2V2gwdnh4dGRDaVkzTCtaY1dXYVhY?=
+ =?utf-8?B?WkVoVFdPTi9GaGFzeGcxTmZGMU5iZkJFUDhGK2tJUHcxR21KRnpZVSs2bDBT?=
+ =?utf-8?B?cDhmQ1A3bUg1OUE4RTd5S04xWERkT2tocWNGWEkwWk9PT0cralhseVV5QnFF?=
+ =?utf-8?B?MER3dTRTYThabkFsOU5aZXNTQVRDSVhqT3AycnRsR2xrYWIrWlIxYkd5MVU1?=
+ =?utf-8?B?cnhrL081ZTl6QWJTQVNRM3ZuZW00cUordjN5cVJ5eVV4cVpKaUJZcll1N2Z3?=
+ =?utf-8?B?YVdLT0IrY01FK0ptYlkvVllLcVlkc0tmOUF6NktVcFVLOWFOY0hQVVBOcWxV?=
+ =?utf-8?B?RXg0Q0RpS2RQOGZqOEdpbjllQ1g5d1JaQ0tWZkJzRzRFUmFmNWR2NndsdGFY?=
+ =?utf-8?B?ZVQ2bUFUTXRBS1R3R2R4cWRLT1l6OWd1U3VZazBGZ3VWclg0ditvakxRcHZq?=
+ =?utf-8?B?YlBEMjJPMk5CZVJFQXFNVTN0RmN3d3IybXNkNHIwN0NBMHVEdkk3QjIzV3dq?=
+ =?utf-8?B?b1dUQjlSOEhMR2tMckdMUDJ3cjdndG1BWTRQR1dURXlFeWY3ZEt6akxFaW1s?=
+ =?utf-8?B?cDd2V0puY1IydW5vZnNvNTdCeUswZjV1QlRHZVhVWWRjeWxieXNjN0Fud2xt?=
+ =?utf-8?B?MU5ONHhMa0ExQ20vejkrU0VGb1I3ZTR5MkVwbU12Q3p1L0k2MzVrbTIvaDBW?=
+ =?utf-8?B?bjFGelVDNDJFd3F5eHhFT1c1SUFROUhXV3UvY0ZnWXNENnIzdGE2UExLT1NV?=
+ =?utf-8?B?ZXlndStQTjR5RUVNNkZWa3lYZFZOako2bjI0c0w1T1BwRVVhZ1QrTGwwRVBX?=
+ =?utf-8?B?L1lhYnlxRW9MNElkUnc2azAycktFUGx1SU16SHJNcEU4Z3Y1ZlZBUVJqQ3lV?=
+ =?utf-8?B?M0Y3WVZ2MWZuRVZXNEVUSnJqaFlSRCt5bStMTnQ5ZXF4OXdvL01LSjY2SkZF?=
+ =?utf-8?B?em15VldINGdPZ1B0TENLWGx4M1dtYVNFb212Wk5Ucmh0Qy9LS0hodzRXYmx3?=
+ =?utf-8?B?SWQyVFA3QWtWcVZYQ0MxTXQ5SE1ZV2MydGNTbG1NUHNaeWFKa2grV2VuSHNF?=
+ =?utf-8?B?ZjNoSUpoSTNWbzQzcEg2bXVtbnFqdldMQkNqcUM1WlZSZVZSeVdVYU8rUi9L?=
+ =?utf-8?B?dENXUXVod0xTMkhYUmhyYzZWd0FwQ056UHFndnlyUGx2Rzk5eG0vV3R4dU90?=
+ =?utf-8?B?aWJzSlh6dU1ialhmdkROb3pTY2I2ZHhUQ2JnWU9SOFVYblZqdFdkRzNKaUZn?=
+ =?utf-8?B?SU1JU29BQnlLVFBnckRCaWZDYzFiK3hHQ1h6T2lhS3F0NzdXS2pyVXBqY2tt?=
+ =?utf-8?B?QTBySXpTQ0FDdjZuOGFpdVlFOFlnUytaNHEraityYklWL3RZVzk5QXZqM1lu?=
+ =?utf-8?B?dU5WYjFwUEVFRm91eUlCK3AvL044WTBiRGk2dHEvaGZmV1I4Q2VSSUNQODZt?=
+ =?utf-8?B?OVlQQTJLUWlOUkI1TExQR3ppQWtKL05mTWwvOE9CNTF3NHE5Wkc1TkxtNFpF?=
+ =?utf-8?B?SHhBSDZwUFdFM2tmVjhka2lBbEs2QkFaMlFlck5tdDBzbGdmS2tJTi9wdUR4?=
+ =?utf-8?B?OWR1SHhLbmlELzFKeFRwZ3RscTVjM1oxYVRLUVlOOHFGZXR1YVhuZU9JeWZT?=
+ =?utf-8?B?NGNQZ3VXQTJYYmJXb2xkYXhsUVVDanI5TDl2N2lpSW5vWEFJOWlXQ3UwUWhB?=
+ =?utf-8?B?ZmVIN2pWOXJZVk5zZlJjRHFLajErMHAxM0Zlb3l5cXRBRzRpY0pXMzhnSlBu?=
+ =?utf-8?B?bXdzSWxpQ2hXTkNLakJvTlZnYkxIUlM4eVRhQldDcXN3dUt1Vlk3WU5LOFVr?=
+ =?utf-8?B?UEsyN0Z5NTE0enhHSUt0R1BNU2JJWk9ENHFvcGtoTzFJUHBmSHlrZDd6RC94?=
+ =?utf-8?B?dERlVGV1a1JKc01Ld09lcHlXUU1IY3p6Z1FBaXU4dlI3SlhlQ20rZz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 01cd3dbd-3517-4e65-741c-08ded30d508f
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jun 2026 22:58:47.4132
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4BIswv7gjwpQ/vOTF3GwQfw15h2hHfYrUOaZUNZE+Fc3Zk5vUqkIQ33stDP4q7eNRlaVue4w/FbKRpCeXrcuZw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8728
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On 6/24/26 01:45, Aaron Ma wrote:
+> Hi Mario,
+> 
+> Tested your v2 patch + Xorg MR !2242 on the hybrid system
+> (AMD 0x0380 + NVIDIA 0x030000, EFI framebuffer on AMD).
+> 
+> Result:
+> 
+>    AMD:    boot_display=1, boot_vga absent
+>    NVIDIA: boot_display absent, boot_vga=1
+> 
+> Xorg now picks AMD correctly. boot_display is fixed.
+> 
+> Tested-by: Aaron Ma <aaron.ma@canonical.com>
+> 
 
-New issues:
-- [High] Calling devm_ioremap_resource() inside the .power_up() callback br=
-eaks system resume with -EBUSY.
-- [High] Unvalidated num_lanes > 2 causes a NULL pointer dereference in the=
- hardware configuration loop.
-- [High] Missing clock disable on error path in mtk_pcie_en7581_power_up().
+Great news, thanks for checking it.
 
-Pre-existing issues:
-- [High] The return value of pm_runtime_get_sync() is ignored, leading to h=
-ardware access on suspended devices.
---
-
-commit c4659641288856a22fb57ae4fe5c48d43375cff0
-Author: Christian Marangi <ansuelsmth@gmail.com>
-
-PCI: mediatek-gen3: Add 2-lanes mode support for Airoha AN7581
-
-This commit adds 2-lanes mode support for the Airoha AN7581 SoC by
-configuring the PCIe MUX in the SCU register. It introduces secondary PCIe
-MAC memory mapping, SCU regmap parsing, and additional PERSTOUT reset logic.
-
-> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/co=
-ntroller/pcie-mediatek-gen3.c
-> index b0accd8285892..f750759bbc1d8 100644
-> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
-> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-
-[ ... ]
-
-> @@ -955,12 +974,29 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie=
- *pcie)
->  static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
->  {
->  	struct pci_host_bridge *host =3D pci_host_bridge_from_priv(pcie);
-> +	unsigned int num_lanes =3D max(1, pcie->num_lanes);
->  	struct device *dev =3D pcie->dev;
->  	struct resource_entry *entry;
->  	struct regmap *pbus_regmap;
->  	u32 val, args[2], size;
->  	resource_size_t addr;
-> -	int err;
-> +	int i, err;
-> +
-> +	if (num_lanes =3D=3D 2) {
-> +		struct platform_device *pdev =3D to_platform_device(dev);
-> +		struct resource *regs;
-> +
-> +		regs =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "sec-pcie-=
-mac");
-> +		if (!regs)
-> +			return -EINVAL;
-> +		pcie->sec_base =3D devm_ioremap_resource(dev, regs);
-
-[Severity: High]
-Since mtk_pcie_en7581_power_up() is assigned as the .power_up callback and
-executes during both probe and resume_noirq(), won't calling
-devm_ioremap_resource() here cause a conflict on system resume?
-
-The devm-managed resources persist across suspend/resume cycles, so
-devm_request_mem_region() will detect a conflict and cause
-devm_ioremap_resource() to return -EBUSY. Could this mapping be moved
-to the probe path, such as mtk_pcie_parse_port(), to avoid resume failures?
-
-> +		if (IS_ERR(pcie->sec_base))
-> +			return dev_err_probe(dev, PTR_ERR(pcie->sec_base), "failed to map sec=
-ondary register base\n");
-
-[ ... ]
-
-> @@ -1024,34 +1060,60 @@ static int mtk_pcie_en7581_power_up(struct mtk_ge=
-n3_pcie *pcie)
->  	pm_runtime_enable(dev);
->  	pm_runtime_get_sync(dev);
-
-[Severity: High]
-This is a pre-existing issue, but should the return value
-of pm_runtime_get_sync() be checked?
-
-If the device power domain fails to transition to an active state,
-pm_runtime_get_sync() will return a negative error code. Proceeding to acce=
-ss
-registers on suspended hardware could trigger a synchronous external abort =
-or
-system crash.
-
-> -	val =3D FIELD_PREP(PCIE_VAL_LN0_DOWNSTREAM, 0x47) |
-> -	      FIELD_PREP(PCIE_VAL_LN1_DOWNSTREAM, 0x47) |
-> -	      FIELD_PREP(PCIE_VAL_LN0_UPSTREAM, 0x41) |
-> -	      FIELD_PREP(PCIE_VAL_LN1_UPSTREAM, 0x41);
-> -	writel_relaxed(val, pcie->base + PCIE_EQ_PRESET_01_REG);
-
-[ ... ]
-
-> +	/* Wait for refclk to stabilize */
->  	msleep(PCIE_T_PVPERL_MS);
-> =20
-> +	/* Configure all the lines to the same EQ config */
-> +	for (i =3D 0; i < num_lanes; i++) {
-> +		void __iomem *base =3D pcie->base;
-> +
-> +		if (i =3D=3D 1)
-> +			base =3D pcie->sec_base;
-> +
-> +		val =3D FIELD_PREP(PCIE_VAL_LN0_DOWNSTREAM, 0x47) |
-> +			FIELD_PREP(PCIE_VAL_LN1_DOWNSTREAM, 0x47) |
-> +			FIELD_PREP(PCIE_VAL_LN0_UPSTREAM, 0x41) |
-> +			FIELD_PREP(PCIE_VAL_LN1_UPSTREAM, 0x41);
-> +		writel_relaxed(val, base + PCIE_EQ_PRESET_01_REG);
-
-[Severity: High]
-If the Device Tree specifies a valid num-lanes value greater than 2 (e.g.,
-4 or 8), will this loop dereference a NULL pointer?
-
-Earlier in this function, pcie->sec_base is exclusively mapped when
-num_lanes =3D=3D 2. If num_lanes is greater than 2, pcie->sec_base remains =
-NULL.
-When i =3D=3D 1, base becomes NULL, and writel_relaxed() will panic. Should
-there be explicit bounds validation before writing to sec_base?
-
-> +		val =3D PCIE_K_PHYPARAM_QUERY | PCIE_K_QUERY_TIMEOUT |
-> +			FIELD_PREP(PCIE_K_PRESET_TO_USE_16G, 0x80) |
-> +			FIELD_PREP(PCIE_K_PRESET_TO_USE, 0x2) |
-> +			FIELD_PREP(PCIE_K_FINETUNE_MAX, 0xf);
-> +		writel_relaxed(val, base + PCIE_PIPE4_PIE8_REG);
-> +	}
-> +
-> +	/* Deassert PERSTOUT for all relevant lines */
-> +	err =3D reset_control_bulk_deassert(MAX_NUM_PERSTOUT_RESETS,
-> +					  pcie->perstout_resets);
-> +	if (err) {
-> +		dev_err(dev, "failed to deassert PERSTOUTs\n");
-> +		goto err_perstout_assert;
-> +	}
-> +
->  	return 0;
-> =20
-> -err_clk_prepare_enable:
-> +err_perstout_assert:
->  	pm_runtime_put_sync(dev);
->  	pm_runtime_disable(dev);
-
-[Severity: High]
-If reset_control_bulk_deassert() fails, won't jumping to this label leak
-the clock prepare/enable references?
-
-The function successfully enables clocks earlier with
-clk_bulk_prepare_enable(), but err_perstout_assert entirely omits calling
-clk_bulk_disable_unprepare(), which will leave the hardware clocks
-permanently running.
-
->  	reset_control_bulk_assert(pcie->soc->phy_resets.num_resets,
->  				  pcie->phy_resets);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260625215741.3253=
-212-1-ansuelsmth@gmail.com?part=3D4
+Bjorn, can you pick this up?  Or do you want this to go through tip?  I 
+can see arguments for both ways.
