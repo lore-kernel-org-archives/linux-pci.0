@@ -1,137 +1,162 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5383253F13;
-	Thu, 25 Jun 2026 13:02:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54CF5283FFB;
+	Thu, 25 Jun 2026 13:03:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782392563; cv=none; b=hKCrDl6VzMhS0L1BmrH0RFT4sa6cgBsVIRPyJ3hTACaeQl64t5xWZp09t5ujNYekzi66Qrb2qdjdzmhkQW3FnihAa4EMKbhjUGB/VAuyXb5AD3JJvwbS9as+WO7KDwSVnGO/6m6UU1wM9CIKA5eHblOxPvkq6nw88VLFNPwSCKE=
+	t=1782392608; cv=none; b=Bba9GxEiJK1pkiZMZu63JGCPGenjl29uv3c072Z0ZaEdPQGiS6R3GDho4YVItzj9kNv8a1OK7QQvdEyxhptHXYFxlxZuyeeRtw0TwuCI4s1NhOSU35vHzV6k5/lreaqwE1TbJdhTlLLD0e0BARgIIfU026VzOvT24oHVVv6WyzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782392563; c=relaxed/simple;
-	bh=TlCHQGzLnaqEy//THXv7bVKRUCyqEjubV9XNoksc1h8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=RJK2fapzgAq+o2GGDg9MJTN0xFEGWGRvvjCBX/A5Y2TBwkEfroZ3sX0uoWqmBo6cnxB8kZo/OXzPjexEzZdwnYnNpsO//x8Te9ovJf3Y4SoPdDqoCM9BYKqg0d693c94Q9G9HqNF2ZPPBbP/+mcX6gwGbourZ7kE6DwFMrfYic4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NzZmj9MH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782392608; c=relaxed/simple;
+	bh=Hetg/C11SaAz5YiY4sxHM3Mfj0r2rKP8fYNOe5jaR90=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E3NI9kMbC4SRjBNnNsKgvdVYWtwG5KsK5h78dV1B5dxg8bZW8xvKTfryigzWRiMOo/wSroV4BgkHEJNG1XyVGyHUg7ign1pE1BBomiw5jxM2DSYd/IW2qdUpeUp1c8eKpve5KtfdYCcPmdnukYSKyFIVZFELpULbeUZsZBZtnHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gqj3yzK4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NzZmj9MH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E0DB1F00A3A;
-	Thu, 25 Jun 2026 13:02:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gqj3yzK4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2484C1F00A3A;
+	Thu, 25 Jun 2026 13:03:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782392562;
-	bh=7A75pG//McGEEkPWekT0NpST0ciZdb4e6w5am5s/USQ=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=NzZmj9MHZHI3/C67yMVC6zN539mqwvKwQiIg9Ui29UJPkBD3PQKcu+dqyEju0Ztp1
-	 66plQ8s2Qyx2Brzu+8flMyM+VHAll1Akc/Y4rPgfF6C24CjxzUcwfD+aw9/uV4Wjov
-	 MUawII2YVxLw2RhHKVvI1yLUOp1t/1g8Feka7EyDpGynIDDyKwXcKnp8Us3B4cubZA
-	 Ty4Gbryj7H4eGTa/QAOc2l0Ug4n/pHeXGhPjqF5WJTxdXFgjLbWH939Uwde0qSrWPW
-	 ZPs8eOYx2HXPNdBRqMTBSQo3990CiNvl0u54Z+IYiWQpdU0tiWdK0Bynp0XCuzFOiu
-	 j/ffiVTlT2d3Q==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: ojeda@kernel.org, dri-devel@lists.freedesktop.org,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH v18 7/8] rust: Add `OwnableRefCounted`
-In-Reply-To: <20260625102641.EDB9D1F000E9@smtp.kernel.org>
-References: <20260625-unique-ref-v18-0-4e06b5896d47@kernel.org>
- <20260625-unique-ref-v18-7-4e06b5896d47@kernel.org>
- <Of9ZUi5r-ztexjdttYecU3YLkKWfOhQErjDtmhk9oZUJFmi2GJPPtjl1WNOMbmRtwYhaMjhQf74cX-lhzqCs3A==@protonmail.internalid>
- <20260625102641.EDB9D1F000E9@smtp.kernel.org>
-Date: Thu, 25 Jun 2026 14:37:56 +0200
-Message-ID: <874iiqiymz.fsf@t14s.mail-host-address-is-not-set>
+	s=k20260515; t=1782392607;
+	bh=SybMIkwobe3FEtfhKnM3aPAHyhkZL+tIP9Fxj1kdDsA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gqj3yzK4p4I20bQEslq4B9XPtyWmj/LBb8p9OCRJqluJlsVlvwV+GSFoRutXaT0tn
+	 v0gI4mb/+S/oFwnRNP9rWqAxJgxz3HPYKsl5oH1aXWYme74K8vFyeVKUja/46Su8nf
+	 LzYEGoAhrfntFe7RUvUlu5EQoCB968Mn6iJsP/5w/0cvsDruqSNjvSO1sexEqpK2AP
+	 LqIYyvbxMQqG/6671hgFh2kYb1Z6Wh7h9hKcf0A5vexTvXYJ3sp/+vRNBQWV39VBx/
+	 uV6HbPahnHGAVgqjgR9ovlbTpC4Sw4F/yVyQyZembfV3XbvAkbIFvx92XyjRVJ8oDO
+	 vvPYYPqlyx4aw==
+Date: Thu, 25 Jun 2026 15:03:11 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, 
+	bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org, linux-pci@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
+	mhi@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
+Message-ID: <l3pcelhxn46p4smkkg5yob5enf4d4garp2p6macopnq5h2gwyf@zbbn65k4tz2q>
+References: <20260623183115.1585273-1-jtornosm@redhat.com>
+ <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
 
-<sashiko-bot@kernel.org> writes:
+On Wed, Jun 24, 2026 at 03:47:12PM +0800, Baochen Qiang wrote:
+> 
+> 
+> On 6/24/2026 2:31 AM, Jose Ignacio Tornos Martinez wrote:
+> > Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
+> > lack working reset methods for VFIO passthrough scenarios. These devices
+> > have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> > broken bus reset.
+> > 
+> > The problem manifests in VFIO passthrough scenarios:
+> > 
+> > - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WiFi devices:
+> >   Normal VM operation works fine, including clean shutdown/reboot.
+> >   However, when the VM terminates uncleanly (crash, force-off), VFIO
+> >   attempts to reset the device before it can be assigned to another VM.
+> >   Without a working reset method, the device remains in an undefined state,
+> >   preventing reuse.
+> > 
+> > - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
+> >   on first VM assignment without proper reset capability.
+> > 
+> > Add device-specific reset methods using BAR-space hardware reset registers
+> > that exist in these devices:
+> > 
+> > - WCN6855/WCN7850 WiFi devices use SoC global reset via BAR0 (sequence from
+> >   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
+> >   ath11k_mhi_set_mhictrl_reset()):
+> >   - Write/clear reset bit at offset 0x3008
+> >   - Wait for PCIe link recovery (up to 5 seconds)
+> >   - Clear MHI controller SYSERR status at offset 0x38
+> > 
+> > - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
+> >   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
+> >   - Write reset request to offset 0xb0
+> >   - Wait 2 seconds for reset completion
+> > 
+> > These are true hardware reset mechanisms (not power management or firmware
+> > error recovery), providing proper device reset for VFIO scenarios.
+> > 
+> > Testing was performed on desktop platforms with M.2 WiFi and modem cards
+> > using M.2-to-PCIe adapters, including extensive force-reset cycling to
+> > verify stability.
+> > 
+> > Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> > ---
+> > v10:
+> >   - Complete redesign based on maintainer feedback (Manivannan Sadhasivam,
+> >     Alex Williamson): use actual hardware reset registers from
+> >     device drivers instead of D3hot power cycling
+> > v9: https://lore.kernel.org/all/20260612142638.1243895-1-jtornosm@redhat.com/
+> > 
+> >  drivers/pci/quirks.c | 118 +++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 118 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 431c021d7414..8ad3f214e520 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4240,6 +4240,121 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+> >  	return 0;
+> >  }
+> >  
+> > +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET	0x3008
+> > +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
+> > +#define QUALCOMM_WIFI_MHISTATUS			0x48
+> > +#define QUALCOMM_WIFI_MHICTRL			0x38
+> > +#define QUALCOMM_WIFI_MHICTRL_RESET_MASK	0x2
+> > +
+> > +/*
+> > + * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
+> > + * registers.
+> > + */
+> > +static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
+> > +{
+> > +	bool link_recovered = false;
+> > +	unsigned long timeout;
+> > +	void __iomem *bar;
+> > +	u32 val;
+> > +	u16 cmd;
+> > +
+> > +	if (probe)
+> > +		return 0;
+> > +
+> > +	if (pdev->current_state != PCI_D0)
+> > +		return -EINVAL;
+> > +
+> > +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> > +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> > +
+> > +	bar = pci_iomap(pdev, 0, 0);
+> > +	if (!bar) {
+> > +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> 
+> QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET is beyond the first 4K bar area hence requires MHI
+> wakeup before accessing, see [1]. the wakeup callback for WCN6855 is
+> ath11k_pci_bus_wake_up() which calls mhi_device_get_sync(). Not sure how this can be done
+> here. Maybe Mani can provide some hints?
+> 
 
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] The `OwnableRefCounted` trait is a safe trait but its default `into_shared` method contains an `unsafe` block relying on unenforced invariants, violating Rust's soundness rules.
-> - [Low] Incorrect documentation link for `ARef<Self>` in `aref.rs`.
-> --
->
-> commit b7dc8070575155be9312b255a20879f2e905b00f
-> Author: Oliver Mangold <oliver.mangold@pm.me>
->
-> rust: Add `OwnableRefCounted`
->
-> Types implementing one of these traits can safely convert between an
-> `ARef<T>` and an `Owned<T>`.
->
->> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
->> index e79936c00002c..bb4223c0f725a 100644
->> --- a/rust/kernel/owned.rs
->> +++ b/rust/kernel/owned.rs
->
-> [ ... ]
->
->> +pub trait OwnableRefCounted: RefCounted + Ownable + Sized {
->> +    /// Checks if the [`ARef`] is unique and converts it to an [`Owned`] if that is the case.
->> +    /// Otherwise it returns again an [`ARef`] to the same underlying object.
->> +    fn try_from_shared(this: ARef<Self>) -> Result<Owned<Self>, ARef<Self>>;
->> +
->> +    /// Converts the [`Owned`] into an [`ARef`].
->> +    #[inline]
->> +    fn into_shared(this: Owned<Self>) -> ARef<Self> {
->> +        // SAFETY: `Owned::into_raw` returns a pointer to a valid `Self`, and the `Owned` owned the
->> +        // reference count that we now transfer to the new `ARef`.
->> +        unsafe { ARef::from_raw(Owned::into_raw(this)) }
->> +    }
->> +}
->
-> [Severity: High]
-> Does this trait need to be marked unsafe?
->
-> The OwnableRefCounted trait is currently safe to implement, but the default
-> into_shared() method contains an unsafe block that assumes the Owned<Self>
-> implicitly holds a reference count of 1.
->
-> If a developer implements this safe trait for a type whose Owned<Self>
-> does not account for one RefCounted increment, calling into_shared() will
-> pass a pointer to ARef::from_raw() without a corresponding reference
-> increment.
->
-> When the resulting ARef is dropped, it will blindly call dec_ref(), which
-> could lead to a reference count underflow, double-free, or use-after-free.
->
-> Should OwnableRefCounted be an unsafe trait so that implementers are
-> required to guarantee the reference count invariant?
+I don't think the device needs to be waken up before
+QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET. ath11k driver wakes up the device for
+accessing the MHI interface I believe. Since this callback is not touching MHI,
+there is no need to wakeup the device, AFAIK.
 
-I will remove the default implementation to solve this issue.
+- Mani
 
->
->> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
->> index d0865aeb9371b..77eb390139079 100644
->> --- a/rust/kernel/sync/aref.rs
->> +++ b/rust/kernel/sync/aref.rs
->
-> [ ... ]
->
->> @@ -35,7 +39,10 @@
->>  /// Note: Implementing this trait allows types to be wrapped in an [`ARef<Self>`]. It requires an
->>  /// internal reference count and provides only shared references. If unique references are required
->>  /// [`Ownable`](crate::types::Ownable) should be implemented which allows types to be wrapped in an
->> -/// [`Owned<Self>`](crate::types::Owned).
->> +/// [`Owned<Self>`](crate::types::Owned). Implementing the trait
->> +/// [`OwnableRefCounted`] allows to convert between unique and
->> +/// shared references (i.e. [`Owned<Self>`](crate::types::Owned) and
->> +/// [`ARef<Self>`](crate::types::Owned)).
->
-> [Severity: Low]
-> This isn't a bug, but there appears to be a copy-paste typo in the rustdoc
-> link.
->
-> The documentation for ARef<Self> points to crate::types::Owned instead
-> of ARef.
-
-Will fix.
-
-
-Best regards,
-Andreas Hindborg
-
-
-
+-- 
+மணிவண்ணன் சதாசிவம்
