@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D409B30676A
-	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 06:08:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A91033BD225
+	for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2026 06:08:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782367687; cv=none; b=aF9MxTkVruNJJX6CPZiozaBYb575tfxkVmoUx3f3nIIq7lNDFci5D4tv3Ldo95D6LjPsIlE0yO8Sn0BPnTyNADgPg5Qqs8jpvadgeKYyZnEqNxYerK/K2ncR5pPHRgVrgllrlMD9EQNkjzCreTkdFy0UUOa+YZ8DCxgKNufJkYo=
+	t=1782367689; cv=none; b=Rxr2Zvh2BiV2pPYSn9PqZbxVmHqIBu23keiAv55fLnWFz2QdyeosK1kldTPZrOh0htp3OmNRoYeljn34+Qh3PBCErsW8E49yTZ1Q4iVqowNcTBsuH+/9IiIej7n6z5KdpqPQTxgOHibbV/hwsQS/UlbK+NEpfyqj8w28w6fjZM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782367687; c=relaxed/simple;
-	bh=IEbrisbP+pTuehTwYRzQiyx8fEFW0VBykh4loYiTIMM=;
+	s=arc-20240116; t=1782367689; c=relaxed/simple;
+	bh=1VOoiLR0j1YBE4wf/JYLuCrkUZ4+LDG6UkhY6WL8TSQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HQ4gCBXb/gM5eDFx6xjsNSvfQL+NcVdbqXUNVbEc98AnYwpeIOM6Bvso8hWy+kGsbiMv6OWBOiW80MyO+Gwsv7zc5jx9wo5375zxqtSTdNB3YrJ0JZPuOAiRB+FTXBEA8pxgmw0aXpvOwCk95+o+qhyPbzubjTtkGyDLUoDj0YU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CfsEYVlz; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=AJs6PvZmaiS3M/GeUBcW4G34cwx9vBRS1czuZy/5MwKs5g8oJdwj3zUBZAjf6LfIDwWcCa+3zekcf0LgUmstUzuefSB9FOj/H1NiwATgjVeCBD1oCt73MfptyaOc4oIqLzUKG8nswM5DiWe8xc6LUt6j/09GUJ0pSlNBPudbZP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mU8TkQMQ; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CfsEYVlz"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mU8TkQMQ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782367684; x=1813903684;
+  t=1782367686; x=1813903686;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=IEbrisbP+pTuehTwYRzQiyx8fEFW0VBykh4loYiTIMM=;
-  b=CfsEYVlzVhKbzZ6ql6y2sGSxgko9dOnJnK21+/2XTHrpNOoMJPn42yUa
-   rShoeJwwgk2vFGh0qEFo+06KB9YK1c9n3WXiDFizh0gVfR0k8lXqYL6+D
-   6eYwjcTJCqogQoa/EFvM1aO+9+SOuXS9OnGJuhOajU56NvskWwQHeivlm
-   OCkGWAcSsDkkyS0uHs9wD9BWzmCQq48bRB8DRNhHR9trvy9vSHF8/YAbl
-   4fRH5eDN3Oe4FxCH2HaYeyA+WX4TVIyW6BFukK1CAQ7tV0fcRLUkV6nHl
-   5udytSJBipTaWPVReGDqgCua7JV//EtNaV1qNGJyo4w9+355aGRCwTkc6
-   Q==;
-X-CSE-ConnectionGUID: RzyscNHLRveb5T+iZ7fPUg==
-X-CSE-MsgGUID: cGyEYI8WTgWCW8W2IOYZlg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11827"; a="83021844"
+  bh=1VOoiLR0j1YBE4wf/JYLuCrkUZ4+LDG6UkhY6WL8TSQ=;
+  b=mU8TkQMQSouNwI+dR0LH9AziRoF15Z45jjgtdXo4kHdWBG8+ThET+dFK
+   ZUNdwUXlSpc3n+QbiBQ8P6Qud8foLIAQyO5JbvM0+muxxKgimgIuvoQwS
+   QhMnCwsVWqjxogPrEUafuN8qWwZS29N/o9g4SulhUdfIfRDnaSyMCLTIm
+   bB+dcnv0MDWqmXzrg4i6vInLsbYifYs/OQZlstPX8xF/xYoK0tYKBkjOQ
+   P6+ltGtP1z1EZRMHlq97G4MPnHakpA6ti2ziCAz9LbWui+9wLFotkMIms
+   QwcvvrO4246ljh/TTmN8EnpshARe3iB6hcJhbxqc2pU1cHC4gLM+s9ku5
+   A==;
+X-CSE-ConnectionGUID: tt1TMMs4TLe1ybOPNpE6JA==
+X-CSE-MsgGUID: HUOjxo+jR7qvzoSS+8P6+Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11827"; a="83021851"
 X-IronPort-AV: E=Sophos;i="6.24,223,1774335600"; 
-   d="scan'208";a="83021844"
+   d="scan'208";a="83021851"
 Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:08:04 -0700
-X-CSE-ConnectionGUID: jqk8Mqc5SZigxJCnjuaUnA==
-X-CSE-MsgGUID: 5Nx1tKvzTA23HRKwaqpL8A==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:08:06 -0700
+X-CSE-ConnectionGUID: I821HI8HS8uUdXMANdT4+A==
+X-CSE-MsgGUID: zCjqLIkYRH+fGAP0ouBtyA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,223,1774335600"; 
-   d="scan'208";a="250725540"
+   d="scan'208";a="250725566"
 Received: from ubuntu.igk.intel.com ([10.102.114.174])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:08:02 -0700
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2026 23:08:04 -0700
 From: Szymon Durawa <szymon.durawa@linux.intel.com>
 To: helgaas@kernel.org,
 	nirmal.patel@linux.intel.com,
@@ -50,9 +50,9 @@ To: helgaas@kernel.org,
 	djbw@kernel.org,
 	linux-pci@vger.kernel.org,
 	lukas@wunner.de
-Subject: [PATCH v5 7/8] PCI: vmd: Add support for second rootbus under VMD
-Date: Thu, 25 Jun 2026 08:29:36 +0000
-Message-ID: <20260625082940.1290740-8-szymon.durawa@linux.intel.com>
+Subject: [PATCH v5 8/8] PCI: vmd: Add workaround for bus number hardwired to fixed non-zero value
+Date: Thu, 25 Jun 2026 08:29:37 +0000
+Message-ID: <20260625082940.1290740-9-szymon.durawa@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260625082940.1290740-1-szymon.durawa@linux.intel.com>
 References: <20260625082940.1290740-1-szymon.durawa@linux.intel.com>
@@ -64,419 +64,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Starting from Intel Arrow Lake VMD enhancement introduces second root bus
-support with fixed root bus number (0x80). It means that all 3 MMIO BARs
-exposed by VMD are shared now between both buses (current BUS0 and
-new BUS1).
+The VMD BUS1 root bus number is fixed in hardware to 0x80. It marks bridge
+invalid configuration when detecting a non-zero (0x80) the VMD BUS1 root
+bus number.
+Thus root bus number is deconfigured in the first pass of pci_scan_bridge()
+to be re-assigned to 0x0 in the second pass. As a result no subordinate bus
+number behind VMD BUS1 is found.
 
-Add new BUS1 enumeration and divide MMIO space to be shared between
-both root buses. Due to enumeration issues with root bus hardwired to a
-fixed non-zero value, this patch will work with a workaround proposed
-in next patch. Without workaround user won't see attached devices for BUS1
-root bus.
+To avoid bus number reconfiguration, BUS1 number has to be the same
+as BUS1 primary number.
+
+Log snippet without workaround:
+
+[    3.752507] vmd 0000:00:0e.0: PCI host bridge to bus 10000:e1
+[    3.752510] pci_bus 10000:e1: busn_res: can not insert [bus e1-ff] under domain [bus 00-ff] (conflicts with (null) [bus e0-f0])
+[    3.752515] pci_bus 10000:e1: root bus resource [bus f1-ff]
+[    3.752517] pci_bus 10000:e1: root bus resource [mem 0x8c800000-0x8cffffff]
+[    3.752519] pci_bus 10000:e1: root bus resource [mem 0x701b802000-0x701bffffff 64bit]
+[    3.752523] pci_bus 10000:e1: scanning bus
+[    3.752732] pci (null): Looking for ACPI companion (address 0x80e0ffff)
+[    3.752745] pci 10000:e1:1c.0: [8086:7f38] type 01 class 0x060400 PCIe Root Port
+[    3.752779] pci 10000:e1:1c.0: PCI bridge to [bus f1]
+[    3.752861] pci 10000:e1:1c.0: PME# supported from D0 D3hot D3cold
+[    3.752864] pci 10000:e1:1c.0: PME# disabled
+[    3.752909] pci 10000:e1:1c.0: PTM enabled (root), 4ns granularity
+[    3.752981] pci 10000:e1:1c.0: vgaarb: pci_notify
+[    3.752987] pci_bus 10000:e1: fixups for bus
+[    3.752992] pci 10000:e1:1c.0: scanning [bus f1-f1] behind bridge, pass 0
+[    3.752993] pci 10000:e1:1c.0: primary 80, bus->number e1.
+[    3.752994] pci 10000:e1:1c.0: bridge configuration invalid ([bus f1-f1]), reconfiguring
+[    3.753003] pci 10000:e1:1c.0: scanning [bus 00-00] behind bridge, pass 1
+[    3.753004] pci 10000:e1:1c.0: primary 00, bus->number e1.
 
 Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
 ---
- drivers/pci/controller/vmd.c | 225 ++++++++++++++++++++++++++++++-----
- 1 file changed, 195 insertions(+), 30 deletions(-)
+ drivers/pci/controller/vmd.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 2bfc16875d91..c68ea7837620 100644
+index c68ea7837620..d0527be78ebd 100644
 --- a/drivers/pci/controller/vmd.c
 +++ b/drivers/pci/controller/vmd.c
-@@ -4,6 +4,7 @@
-  * Copyright (c) 2015, Intel Corporation.
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -30,6 +31,7 @@
- #define VMD_RESTRICT_0_BUS_START 0x0
- #define VMD_RESTRICT_1_BUS_START 0x80
- #define VMD_RESTRICT_2_BUS_START 0xE0
-+#define VMD_RESTRICT_3_BUS_START 0xE1
- 
- #define PCI_REG_VMCAP		0x40
- #define BUS_RESTRICT_CAP(vmcap)	(vmcap & 0x1)
-@@ -42,15 +44,36 @@
- #define MB2_SHADOW_OFFSET	0x2000
- #define MB2_SHADOW_SIZE		16
- 
-+/* Primary Bus Number for VMD devices on root bus 0 */
-+#define VMD_PRIMARY_BUS0    0x00
-+/* Primary Bus Number for VMD devices on root bus 1 */
-+#define VMD_PRIMARY_BUS1    0x80
-+
-+#define VMD_BUSRANGE0       0xc8
-+#define VMD_BUSRANGE1       0xcc
-+#define VMD_MEMBAR1_OFFSET  0xd0
-+#define VMD_MEMBAR2_OFFSET1 0xd8
-+#define VMD_MEMBAR2_OFFSET2 0xdc
-+#define VMD_BUS_END(busr) FIELD_GET(GENMASK(15, 8), busr)
-+#define VMD_BUS_START(busr) FIELD_GET(GENMASK(7, 0), busr)
-+
-+/*
-+ * Add VMD resources for BUS1, it will share the same MMIO space with
-+ * previous VMD resources.
-+ */
- enum vmd_resource {
--	VMD_RES_CFGBAR = 0, /* VMD Bus0 Config BAR */
--	VMD_RES_MBAR_1, /* VMD Bus0 Resource MemBAR 1 */
--	VMD_RES_MBAR_2, /* VMD Bus0 Resource MemBAR 2 */
-+	VMD_RES_CFGBAR = 0,  /* VMD Bus0 Config BAR */
-+	VMD_RES_MBAR_1,      /* VMD Bus0 Resource MemBAR 1 */
-+	VMD_RES_MBAR_2,      /* VMD Bus0 Resource MemBAR 2 */
-+	VMD_RES_BUS1_CFGBAR, /* VMD Bus1 Config BAR */
-+	VMD_RES_BUS1_MBAR_1, /* VMD Bus1 Resource MemBAR 1 */
-+	VMD_RES_BUS1_MBAR_2, /* VMD Bus1 Resource MemBAR 2 */
- 	VMD_RES_COUNT
- };
- 
- enum vmd_rootbus {
- 	VMD_BUS_0 = 0,
-+	VMD_BUS_1,
- 	VMD_BUS_COUNT
- };
- 
-@@ -94,6 +117,12 @@ enum vmd_features {
- 	 * proper power management of the SoC.
- 	 */
- 	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
+@@ -440,8 +440,23 @@ static void vmd_remove_irq_domain(struct vmd_dev *vmd)
+ static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
+ 				  unsigned int devfn, int reg, int len)
+ {
+-	unsigned int busnr_ecam = bus->number - vmd->busn_start[VMD_BUS_0];
+-	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
++	unsigned char bus_number;
++	unsigned int busnr_ecam;
++	u32 offset;
 +
 +	/*
-+	 * Starting from Intel Arrow Lake, VMD devices have their VMD root ports
-+	 * on the additional BUS1 root bus.
++	 * VMD workaround: for VMD BUS1, bus->number is set to VMD_PRIMARY_BUS1
++	 * (see comment in vmd_enable_domain() under vmd_create_bus() for BUS1)
++	 * but original value is 0xE1 which is stored in
++	 * vmd->busn_start[VMD_BUS_1].
 +	 */
-+	VMD_FEAT_HAS_BUS1_ROOTBUS	= (1 << 6)
- };
- 
- #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
-@@ -101,7 +130,8 @@ enum vmd_features {
- #define VMD_FEATS_CLIENT	(VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |	\
- 				 VMD_FEAT_HAS_BUS_RESTRICTIONS |	\
- 				 VMD_FEAT_OFFSET_FIRST_VECTOR |		\
--				 VMD_FEAT_BIOS_PM_QUIRK)
-+				 VMD_FEAT_BIOS_PM_QUIRK |		\
-+				 VMD_FEAT_HAS_BUS1_ROOTBUS)
- 
- static DEFINE_IDA(vmd_instance_ida);
- 
-@@ -159,6 +189,7 @@ struct vmd_dev {
- 	u8			first_vec;
- 	char			*name;
- 	int			instance;
-+	bool			bus1_rootbus;
- };
- 
- static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
-@@ -537,11 +568,23 @@ static inline void vmd_acpi_end(void) { }
- 
- static void vmd_domain_reset(struct vmd_dev *vmd)
- {
--	u16 bus, max_buses = resource_size(&vmd->resources[VMD_RES_CFGBAR]);
-+	u16 bus, bus_cnt = resource_size(&vmd->resources[VMD_RES_CFGBAR]);
- 	u8 dev, functions, fn, hdr_type;
- 	char __iomem *base;
- 
--	for (bus = 0; bus < max_buses; bus++) {
-+	/*
-+	 * Total bus-number count (bus_cnt) when BUS1 root bus is present:
-+	 * initialized with BUS0 CFGBAR range, extended by BUS1 CFGBAR range plus
-+	 * one bus number per root bus' own config space (bus_cnt is increased by 2)
-+	 * as the CFGBAR ranges do not include the root bus config space.
-+	 */
++	if (vmd->bus1_rootbus && bus->number == VMD_PRIMARY_BUS1)
++		bus_number = vmd->busn_start[VMD_BUS_1];
++	else
++		bus_number = bus->number;
 +
-+	if (vmd->bus1_rootbus) {
-+		bus_cnt += resource_size(&vmd->resources[VMD_RES_BUS1_CFGBAR]);
-+		bus_cnt += 2;
-+	}
-+
-+	for (bus = 0; bus < bus_cnt; bus++) {
- 		for (dev = 0; dev < 32; dev++) {
- 			base = vmd->cfgbar + PCIE_ECAM_OFFSET(bus,
- 						PCI_DEVFN(dev, 0), 0);
-@@ -587,12 +630,24 @@ static void vmd_attach_resources(struct vmd_dev *vmd)
- {
- 	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[VMD_RES_MBAR_1];
- 	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[VMD_RES_MBAR_2];
-+
-+	if (vmd->bus1_rootbus) {
-+		vmd->resources[VMD_RES_MBAR_1].sibling =
-+			&vmd->resources[VMD_RES_BUS1_MBAR_1];
-+		vmd->resources[VMD_RES_MBAR_2].sibling =
-+			&vmd->resources[VMD_RES_BUS1_MBAR_2];
-+	}
- }
++	busnr_ecam = bus_number - vmd->busn_start[VMD_BUS_0];
++	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
  
- static void vmd_detach_resources(struct vmd_dev *vmd)
- {
- 	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
- 	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
-+
-+	if (vmd->bus1_rootbus) {
-+		vmd->resources[VMD_RES_MBAR_1].sibling = NULL;
-+		vmd->resources[VMD_RES_MBAR_2].sibling = NULL;
-+	}
- }
+ 	if (offset + len >= resource_size(&vmd->dev->resource[VMD_CFGBAR]))
+ 		return NULL;
+@@ -1177,6 +1192,19 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 		 */
+ 		vmd->bus[VMD_BUS_1]->primary = VMD_PRIMARY_BUS1;
  
- static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
-@@ -649,7 +704,7 @@ static int vmd_get_phys_offsets(struct vmd_dev *vmd, bool native_hint,
- 	return 0;
- }
- 
--static int vmd_get_bus_number_start(struct vmd_dev *vmd)
-+static int vmd_get_bus_number_start(struct vmd_dev *vmd, unsigned long features)
- {
- 	struct pci_dev *dev = vmd->dev;
- 	u16 reg;
-@@ -668,6 +723,19 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 		case 2:
- 			vmd->busn_start[VMD_BUS_0] = VMD_RESTRICT_2_BUS_START;
- 			break;
-+		case 3:
-+			if (!(features & VMD_FEAT_HAS_BUS1_ROOTBUS)) {
-+				pci_err(dev, "VMD Bus Restriction detected type %d, but BUS1 Rootbus is not supported, aborting.\n",
-+					BUS_RESTRICT_CFG(reg));
-+				return -ENODEV;
-+			}
-+
-+			/* VMD (on root bus 0) secondary bus start number */
-+			vmd->busn_start[VMD_BUS_0] = VMD_RESTRICT_2_BUS_START;
-+			/* VMD (on root bus 1) secondary bus start number */
-+			vmd->busn_start[VMD_BUS_1] = VMD_RESTRICT_3_BUS_START;
-+			vmd->bus1_rootbus = true;
-+			break;
- 		default:
- 			pci_err(dev, "Unknown Bus Offset Setting (%d)\n",
- 				BUS_RESTRICT_CFG(reg));
-@@ -799,6 +867,30 @@ static void vmd_configure_cfgbar(struct vmd_dev *vmd)
- 		       (resource_size(res) >> 20) - 1,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
-+
-+	if (vmd->bus1_rootbus) {
-+		u16 bus0_range = 0;
-+		u16 bus1_range = 0;
-+
-+		pci_read_config_word(vmd->dev, VMD_BUSRANGE0, &bus0_range);
-+		pci_read_config_word(vmd->dev, VMD_BUSRANGE1, &bus1_range);
-+
 +		/*
-+		 * Resize BUS0 CFGBAR range to make space for BUS1
-+		 * owned devices by adjusting range end with value stored in
-+		 * VMD_BUSRANGE0 register.
++		 * This is a workaround for pci_scan_bridge_extend() code.
++		 * It marks bridge invalid configuration when detecting a
++		 * non-zero (0x80) the VMD BUS1 root bus number. Thus Primary Bus Number
++		 * of Root Ports on BUS1 is deconfigured in the first pass of
++		 * pci_scan_bridge() to be re-assigned to 0x0 in the second pass.
++		 * As a result no subordinate bus number behind VMD BUS1 is found.
++		 * Workaround: update vmd->bus[VMD_BUS_1]->number and
++		 * vmd->bus[VMD_BUS_1]->primary to the same value, which
++		 * bypasses bus number reconfiguration.
 +		 */
-+		vmd->resources[VMD_RES_CFGBAR].start = VMD_BUS_START(bus0_range);
-+		vmd->resources[VMD_RES_CFGBAR].end = VMD_BUS_END(bus0_range);
++		vmd->bus[VMD_BUS_1]->number = VMD_PRIMARY_BUS1;
 +
-+		vmd->resources[VMD_RES_BUS1_CFGBAR] = (struct resource){
-+			.name = "VMD CFGBAR BUS1",
-+			.start = VMD_BUS_START(bus1_range),
-+			.end = VMD_BUS_END(bus1_range),
-+			.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
-+			.parent = res,
-+		};
-+	}
- }
- 
- /*
-@@ -828,8 +920,8 @@ static void vmd_configure_membar(struct vmd_dev *vmd,
- 		flags &= ~IORESOURCE_MEM_64;
- 
- 	vmd->resources[resource_number] = (struct resource){
--		.name = kasprintf(GFP_KERNEL, "VMD MEMBAR%d",
--				  membar_number / 2),
-+		.name = kasprintf(GFP_KERNEL, "VMD MEMBAR%d %s", membar_number / 2,
-+			resource_number > VMD_RES_MBAR_2 ? "BUS1" : ""),
- 		.start = res->start + start_offset,
- 		.end = res->end - end_offset,
- 		.flags = flags,
-@@ -840,41 +932,83 @@ static void vmd_configure_membar(struct vmd_dev *vmd,
- static void vmd_configure_membar1_membar2(struct vmd_dev *vmd,
- 					  resource_size_t mbar2_ofs)
- {
--	vmd_configure_membar(vmd, 1, VMD_MEMBAR1, 0, 0);
--	vmd_configure_membar(vmd, 2, VMD_MEMBAR2, mbar2_ofs, 0);
-+	if (vmd->bus1_rootbus) {
-+		u32 bus1_mbar1_ofs = 0;
-+		u64 bus1_mbar2_ofs = 0;
-+		u32 reg;
-+
-+		pci_read_config_dword(vmd->dev, VMD_MEMBAR1_OFFSET,
-+				      &bus1_mbar1_ofs);
-+
-+		pci_read_config_dword(vmd->dev, VMD_MEMBAR2_OFFSET1, &reg);
-+		bus1_mbar2_ofs = reg;
-+
-+		pci_read_config_dword(vmd->dev, VMD_MEMBAR2_OFFSET2, &reg);
-+		bus1_mbar2_ofs |= (u64)reg << 32;
-+
-+		/*
-+		 * Resize BUS MEMBAR1 and MEMBAR2 ranges to make space
-+		 * for BUS1 owned devices by adjusting range end with values
-+		 * stored in VMD_MEMBAR1_OFFSET and VMD_MEMBAR2_OFFSET registers
-+		 */
-+		vmd_configure_membar(vmd, VMD_RES_MBAR_1, VMD_MEMBAR1, 0,
-+				     bus1_mbar1_ofs);
-+		vmd_configure_membar(vmd, VMD_RES_MBAR_2, VMD_MEMBAR2,
-+				     mbar2_ofs, bus1_mbar2_ofs - mbar2_ofs);
-+
-+		vmd_configure_membar(vmd, VMD_RES_BUS1_MBAR_1, VMD_MEMBAR1,
-+				     bus1_mbar1_ofs, 0);
-+		vmd_configure_membar(vmd, VMD_RES_BUS1_MBAR_2, VMD_MEMBAR2,
-+				     mbar2_ofs + bus1_mbar2_ofs, 0);
-+	} else {
-+		vmd_configure_membar(vmd, VMD_RES_MBAR_1, VMD_MEMBAR1, 0, 0);
-+		vmd_configure_membar(vmd, VMD_RES_MBAR_2, VMD_MEMBAR2,
-+				     mbar2_ofs, 0);
-+	}
- }
- 
--static int vmd_create_bus(struct vmd_dev *vmd, struct pci_sysdata *sd,
--			  resource_size_t *offset)
-+static int vmd_create_bus(struct vmd_dev *vmd, enum vmd_rootbus bus_number,
-+			  struct pci_sysdata *sd, resource_size_t *offset)
- {
-+	u8 cfgbar = bus_number * 3;
-+	u8 membar1 = cfgbar + 1;
-+	u8 membar2 = cfgbar + 2;
-+	struct pci_bus *vmd_bus;
- 	LIST_HEAD(resources);
- 
--	pci_add_resource(&resources, &vmd->resources[VMD_RES_CFGBAR]);
--	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_1],
-+	pci_add_resource(&resources, &vmd->resources[cfgbar]);
-+	pci_add_resource_offset(&resources, &vmd->resources[membar1],
- 				offset[0]);
--	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_2],
-+	pci_add_resource_offset(&resources, &vmd->resources[membar2],
- 				offset[1]);
- 
--	vmd->bus[VMD_BUS_0] = pci_create_root_bus(&vmd->dev->dev,
--						  vmd->busn_start[VMD_BUS_0],
--						  &vmd_ops, sd, &resources);
--	if (!vmd->bus[VMD_BUS_0]) {
--		pci_bus_release_emul_domain_nr(sd->domain);
-+	vmd_bus = pci_create_root_bus(&vmd->dev->dev,
-+				      vmd->busn_start[bus_number], &vmd_ops, sd,
-+				      &resources);
-+
-+	if (!vmd_bus) {
- 		pci_free_resource_list(&resources);
--		vmd_remove_irq_domain(vmd);
-+
-+		/* Clean only when BUS0 root bus cannot be created */
-+		if (bus_number == VMD_PRIMARY_BUS0) {
-+			pci_bus_release_emul_domain_nr(sd->domain);
-+			vmd_remove_irq_domain(vmd);
-+		}
- 		return -ENODEV;
- 	}
- 
- 	vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
--		to_pci_host_bridge(vmd->bus[VMD_BUS_0]->bridge));
-+		to_pci_host_bridge(vmd_bus->bridge));
- 
- 	vmd_attach_resources(vmd);
- 	if (vmd->irq_domain)
--		dev_set_msi_domain(&vmd->bus[VMD_BUS_0]->dev, vmd->irq_domain);
-+		dev_set_msi_domain(&vmd_bus->dev, vmd->irq_domain);
- 	else
--		dev_set_msi_domain(&vmd->bus[VMD_BUS_0]->dev,
-+		dev_set_msi_domain(&vmd_bus->dev,
- 				   dev_get_msi_domain(&vmd->dev->dev));
- 
-+	vmd->bus[bus_number] = vmd_bus;
-+
- 	return 0;
- }
- 
-@@ -887,7 +1021,9 @@ static void vmd_bus_enumeration(struct pci_bus *bus, unsigned long features)
- 	vmd_acpi_begin();
- 
- 	pci_scan_child_bus(bus);
--	vmd_domain_reset(vmd_from_bus(bus));
-+
-+	if (bus->primary == VMD_PRIMARY_BUS0)
-+		vmd_domain_reset(vmd_from_bus(bus));
- 
- 	/*
- 	 * When Intel VMD is enabled, the OS does not discover the Root Ports
-@@ -955,7 +1091,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * limits the bus range to between 0-127, 128-255, or 224-255
- 	 */
- 	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
--		ret = vmd_get_bus_number_start(vmd);
-+		ret = vmd_get_bus_number_start(vmd, features);
- 		if (ret)
- 			return ret;
- 	}
-@@ -1016,7 +1152,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 
- 	sd->node = pcibus_to_node(vmd->dev->bus);
- 
--	ret = vmd_create_bus(vmd, sd, offset);
-+	ret = vmd_create_bus(vmd, VMD_BUS_0, sd, offset);
- 	if (ret) {
- 		pci_err(vmd->dev, "Can't create bus: %d\n", ret);
- 		return ret;
-@@ -1028,6 +1164,27 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 
- 	vmd_bus_enumeration(vmd->bus[VMD_BUS_0], features);
- 
-+	if (vmd->bus1_rootbus) {
-+		ret = vmd_create_bus(vmd, VMD_BUS_1, sd, offset);
-+		if (ret) {
-+			pci_err(vmd->dev, "Can't create BUS1: %d\n", ret);
-+			return ret;
-+		}
-+
-+		/*
-+		 * Primary bus is not set by pci_create_root_bus(), it is
-+		 * updated here
-+		 */
-+		vmd->bus[VMD_BUS_1]->primary = VMD_PRIMARY_BUS1;
-+
-+		WARN(sysfs_create_link(&vmd->dev->dev.kobj,
-+				       &vmd->bus[VMD_BUS_1]->dev.kobj,
-+				       "domain1"),
-+		     "Can't create symlink to domain1\n");
-+
-+		vmd_bus_enumeration(vmd->bus[VMD_BUS_1], features);
-+	}
-+
- 	return 0;
- }
- 
-@@ -1126,10 +1283,18 @@ static void vmd_remove(struct pci_dev *dev)
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_remove_root_bus(vmd->bus[VMD_BUS_0]);
- 
--	/* CFGBAR is static, does not require releasing memory */
-+	/* CFGBARs are static, do not require releasing memory */
- 	kfree(vmd->resources[VMD_RES_MBAR_1].name);
- 	kfree(vmd->resources[VMD_RES_MBAR_2].name);
- 
-+	if (vmd->bus1_rootbus) {
-+		pci_stop_root_bus(vmd->bus[VMD_BUS_1]);
-+		sysfs_remove_link(&vmd->dev->dev.kobj, "domain1");
-+		pci_remove_root_bus(vmd->bus[VMD_BUS_1]);
-+		kfree(vmd->resources[VMD_RES_BUS1_MBAR_1].name);
-+		kfree(vmd->resources[VMD_RES_BUS1_MBAR_2].name);
-+	}
-+
- 	vmd_cleanup_srcu(vmd);
- 	vmd_detach_resources(vmd);
- 	vmd_remove_irq_domain(vmd);
-@@ -1222,4 +1387,4 @@ module_pci_driver(vmd_drv);
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("Volume Management Device driver");
- MODULE_LICENSE("GPL v2");
--MODULE_VERSION("0.6");
-+MODULE_VERSION("0.7");
+ 		WARN(sysfs_create_link(&vmd->dev->dev.kobj,
+ 				       &vmd->bus[VMD_BUS_1]->dev.kobj,
+ 				       "domain1"),
 -- 
 2.43.0
 
