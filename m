@@ -1,64 +1,64 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79C63EA957
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 09:20:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 237693E9C06
+	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 09:20:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782465655; cv=none; b=et6ivjuPvhsc+3WXwuk+EkOCSfA1db4M6cx0A65wYVMSa4Gp2SGSqpkMY6lqgBpCSz3OhGW8HW368KLFlQoV/G1iJUKMMifndmHL9LC2ZQaY7hSolzRu72OUM6zfPKY4cyR9j0lZxkq0naTcjeq83CttpHqxRlWLttrU8fR9pEY=
+	t=1782465656; cv=none; b=dFRDj2IGRzZWb0VPlyhms82reFo+4vCqTEs5lFux4tWb+FBIbHFxzmRwKBaROEnc1ukEUg6chiZQfrW9lPt70Cgka+VhZUiek3n8oMcrljuZcLikaCrlIOlN8xyDaxhkzLVCK6t2qTSOHVlRod7wPgqfuvemyZ8EEsw4qydAzZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782465655; c=relaxed/simple;
-	bh=NAFHKv8hCxv8sgwJUS9ZKI1V9akBr1LdLvBFEZ+oV/0=;
+	s=arc-20240116; t=1782465656; c=relaxed/simple;
+	bh=dgvt/w8zrnFna7HVbfdxHjX7SUvNNqTUEI2NGloZhZU=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IYHvwg2o4wLYexjEPtCR1CCXqGWhKcz85OIZasiF4IXi3ZxK3nUFVmFFj3lcWlPg+pnU43V6Xyb4Bvjm0JI/jaO0G5chjhV6qILExphQz3fsqaajVy4DZNTw3DueNBMlcR0/eH5I9uljR7qaYm65HSDrdw+ztWNDGzhbinB7lr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VVO+0dtP; arc=none smtp.client-ip=209.85.221.49
+	 MIME-Version; b=jyGt4EbbIt7A0YmvSw/o+ZG4Yp6F31I+ZpD7FO9xesbzyFZNFl8FrUie3TmfYbdz5KW9n8Hwljwh698szGjf8IV1fbhIsgPZF8Ocy0cpEXAdOCzU2iFkC6Tv1meOxIqLf9oqh/7pey8KtYFh1hkdYLs6DN9BeHnwJJJkpkWOUj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a3x6HQ4V; arc=none smtp.client-ip=209.85.221.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VVO+0dtP"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-46dd46901dbso658136f8f.0
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 02:20:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a3x6HQ4V"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-45fd464d51fso358922f8f.3
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 02:20:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782465648; x=1783070448; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782465649; x=1783070449; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=BAIXjok/noDXT0EMJbelmqrpI+3GMWHmkOh7wf+FXrE=;
-        b=VVO+0dtP/d8kmWvdgXyIXqWpwXNr8P5v6UZPN/mppMMOyO8gm/4+KLuD1MAXseol2u
-         ok+YWfjqMgHb7h5zvnq5OWu3TeYL+OgSZk/ue2iOLC4d3PD3Uybzr/6Ng2a7S82r1jGL
-         hhajqoEzUCpIwX664oG6aabwwlp+JrldozetSsNjXq0yssjxWpFr7Rm+NF5i5tDRwj7a
-         M57zR/BlY6relb/Nr02kX6hVYTlRf3MjUrNare70/JTw30m9LgQHHMIIoWW1VHXc4wsT
-         Lkm4jSiSpBfEjqrnsjWL+ExhmGOu7g47UgrYkF0rDGFqKRG4zT0uz4O/zebH2s3IRHDZ
-         jx2w==
+        bh=d3/Tou2Y2bkgqurZkBs8ONUNyfbAU/Y1H2i6z9bjz4A=;
+        b=a3x6HQ4Vkn3i7/wPYw4XgjuDMhrfCcZeiLx45LHlmaVlrWaX0/EEDFUn644rKHD5y/
+         ekOxKG25MDlQwlZFAiG/xTaXeJ2yKZTP6wxHQJhGKau7Eo8ekMedMdRUZsKmDjhkYL3K
+         ghgjaM7iSglH+wu8VpoG9f1ufZziI4B9LcXZOHfc/s9+6l91cMl0fBXoqjAZbUW2e9R6
+         KmiJ77g0+gmolWa/L5mqgwm8+ZdlY9KZdQLwdtWvb/HyIAYGUeCUUfklFJXOyktv9RFE
+         D/g/I3N/3hBRSEb38ClvyxOzbZZV8AN/yGBh9M/srcE8z83mgppR6lLmCz37rnXBR2D0
+         kUlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782465648; x=1783070448;
+        d=1e100.net; s=20251104; t=1782465649; x=1783070449;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=BAIXjok/noDXT0EMJbelmqrpI+3GMWHmkOh7wf+FXrE=;
-        b=FTkIzbOGe8XpjZ8/bB5iG88CcQ16OlnBs/SEO2pkBFwGET3PK49ESBwrtMkl6VhAsZ
-         xSFnw+jNYAc47bz8kGKEvjRTy+CV19qhQGkrUt9OSW1ETTwH65QOaaIVogzsV3AqUsAT
-         vHnrQMv5an/qq66a8+zhsAKyl+fDOClPuBu0VCgUWKGLgkoquFx+QbP6IGfZO9pojlv5
-         kPQNfCApnwY/UvVU0GHJSDlwC7e9kKaIsh7DvLmpvlD5T1JAoxW5SBaDVPvhAgCrz9ik
-         voWz2nE6WGPXkqVSJsJrdl/HqII19P5DzZRmiCV6G3Ma4gNRV9K7h5PhpbmhWhHI15U+
-         WeUQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqdM8xVwegkWPYwGiR/mse+4PCgyCBpp1MfGpBdyqtMSmorhjxvgZ8ygbaM4rld+RWMmGHNJzZzXfw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxeC7o5KRm99V1xaiL4g5e5CvhlcWJeaydd+DUvMBYRwzI2dfTx
-	ObuvrSBCpq/V5O1/JmPf+EGRJlT3iUIUWqqoh2pIHT+O3Vlu5ta4ZLnX
-X-Gm-Gg: AfdE7cnXJjL9ufGTeeYZqaOvcIzKpfVGUQjMCPueWxQjZibKFt+yzvJJYZjmjOPYT02
-	YzoDYrCkTREBxdAZ8vcEwEBgFxrwp5qox5vmbgX3tmdFeV6c2Cf1dfrvfIU3qsiv27VZN8yXogO
-	k4sWW4Tvsr6DTcfKyFv42revj71V5AfkSfk28srXmiV3bGc6WCejs69eHn+oYJ/6q3ILGkPfQri
-	Em9TMm/IPrhyBVyOSY7x0Xpf3mcu21IG812MRHqQ36N3456A/UEaoEGw1eLn1T8kKwqZI0OFeBt
-	SQEO+xJa3AWD79dsAJStWp/cFlZBtoVQF0u5VOKpJqkf6Mh+UL1OOcaTEkICw+auV899dRw+zQ5
-	NiUqL6AmCNPSyWr5hTK0VEGVdI+bthk/gUbLbEq5bokxJjw9g0KR/OSGaxdg22bgr8FEykF0Hgr
-	oskLa9YmXOPQIQW7Bj64NWe8suYTXzXDrSX5EHEkm79s7OQpQw79gzmnd+yykGQYnQ1tigzcB4l
-	0S6+2rAXVeZ
-X-Received: by 2002:a05:6000:5c6:b0:46e:765d:78aa with SMTP id ffacd0b85a97d-46e765d7e1dmr5860777f8f.2.1782465647617;
-        Fri, 26 Jun 2026 02:20:47 -0700 (PDT)
+        bh=d3/Tou2Y2bkgqurZkBs8ONUNyfbAU/Y1H2i6z9bjz4A=;
+        b=leIlIKbAvu6u9dA0q1JypdmWdbBS7/e+SBCWcLCvAOmy96L7YaB5JYXxcRVdV+5BDR
+         GRODAq8Gl9vnrDtTSX9qw3eaVRbdSM4phvlcpVrVgfrLqTrH7NUBQeVaq/ZV8TrK06N4
+         6Q/mNjVjyfFDhBgPeSpfWHNmdWLAUa3hdFhrA09I2NOZZ/INLO1BD0BGYA09VHyHY6+L
+         AVouJHvIAdnEsYZ7P/t1UA2+dYRIlFnA8ilisf1BeLPaajns/SQ7gZvVfiimaNLDVOsr
+         afHcuhChqOlnD33wvvlMtaaSYEBwRO+VxcN62Jc0W1+eqz2gRT0/Su+u3JPp+BfOw9ZR
+         fHQA==
+X-Forwarded-Encrypted: i=1; AHgh+RqseXQuIkQD1KExxRPms4hF04KQXYv4FT5MRXaICHWR85bKK9yW9Vrs6lnrTWpEznTglR1QIskWTeY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyxnn9u0xjSrMjvrPujBLA7XDcrRsCWnxKljCjugsAw/npUs1hC
+	pgzVXAVRMKPwTeJJlU/0iC4My0bOyxZik49GW3ZvNhjbwKyEqnr2mbVb
+X-Gm-Gg: AfdE7cnaPSoDT55gKxBLxs8LXikTqkSfk+alVCI/nbDHxARZbT97pH7ZC0ozOP4c8jr
+	vx4E6x6eonLwZTtBxrkmTjXnvODSyurCzzZJ24sspaXmQ7EEYxPkW6w6PyJIVCvm2qU5h/iEMJO
+	QG1keKyYUNqTzhccmeOeFM76Y9Grj924OUrsPC3QmSEqSxV4tf0ZyllTUj/P4cJdkkSXCAsrj0O
+	J2067KtPO7UnGJkjAOwcb+kqumCyvM+u08VD3ukV2cGjo5n1AzTJb8wjvhyg1pSEWakLICWNFj8
+	m0aYuCC5/QDFHkEx5UGb+bkCpK6GKjTtdH9D6rY7x/4HhDmuN18/owE6104g5E5fYWPj64FFTaL
+	v2Z0YoHE+NCbYpFggieYW0m2q3RdkDMaxHQi2rTf+Wi8hFxN0OjriEfE7ZVLQ53pl8pw6TouLQu
+	QcGGxRaxF8sLI4MTSWBQwBkVCaaSb/vurkFIxmRf4gArz0P66LxyUy1+TZgBEqT0rZRuO8eNPQq
+	FJSjrKMKNnQ
+X-Received: by 2002:a05:6000:454a:b0:46d:d5f9:d170 with SMTP id ffacd0b85a97d-46dd5f9d3a6mr6557284f8f.46.1782465649353;
+        Fri, 26 Jun 2026 02:20:49 -0700 (PDT)
 Received: from Ansuel-XPS24.localdomain (host-80-183-219-152.pool80183.interbusiness.it. [80.183.219.152])
-        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-46e6167c05fsm9094388f8f.25.2026.06.26.02.20.45
+        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-46e6167c05fsm9094388f8f.25.2026.06.26.02.20.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 02:20:47 -0700 (PDT)
+        Fri, 26 Jun 2026 02:20:48 -0700 (PDT)
 From: Christian Marangi <ansuelsmth@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -82,9 +82,9 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-mediatek@lists.infradead.org,
 	linux-clk@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 3/4] dt-bindings: PCI: mediatek-gen3: Split Airoha schema and document 2-lanes
-Date: Fri, 26 Jun 2026 11:20:27 +0200
-Message-ID: <20260626092029.3525264-4-ansuelsmth@gmail.com>
+Subject: [PATCH v2 4/4] PCI: mediatek-gen3: Add 2-lanes mode support for Airoha AN7581
+Date: Fri, 26 Jun 2026 11:20:28 +0200
+Message-ID: <20260626092029.3525264-5-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260626092029.3525264-1-ansuelsmth@gmail.com>
 References: <20260626092029.3525264-1-ansuelsmth@gmail.com>
@@ -96,427 +96,206 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To permit proper documentation of required property to support PCIe
-configured for 2-lanes mode, split the Airoha schema part from the
-mediatek-gen3 schema to a dedicated schema.
+The Airoha AN7581 SoC supports configuring the first PCIe0 line to 2-lanes
+mode by bonding it with the second PCIe line. This is done by configuring
+the PCIe MUX in the SCU register.
 
-A PCIe configured for 2-lanes mode require an additional reg for the
-secondary PCIe to be configured and the airoha,scu phandle to correctly
-configure the PCIe MUX.
+To correctly configure the line for 2-lanes mode, it's required to define
+in DT an additional reg, 'sec-pcie-mac' for the secondary PCIe.
+It's also needed to define the additional reset and the PERSTOUT reset.
+Also 'airoha,scu' property is mandatory to correctly configure the SCU
+register for the PCIe MUX.
 
-Rework the mediatek-gen3 schema to drop any redundant constraint previsouly
-introduced for Airoha PCIe properties.
+Finally to toggle 2-lanes mode, it's needed to define in DT 'num-lanes' as
+2.
+
+In such configuration the EQ preset are configured to the same values.
+
+To permit correct configuration of the PCIe line, additional logic is added
+to assert and deassert the PERSTOUT resets.
 
 Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
 ---
- .../bindings/pci/airoha,en7581-pcie.yaml      | 251 ++++++++++++++++++
- .../bindings/pci/mediatek-pcie-gen3.yaml      |  77 +-----
- 2 files changed, 256 insertions(+), 72 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml
+ drivers/pci/controller/pcie-mediatek-gen3.c | 101 ++++++++++++++++----
+ 1 file changed, 82 insertions(+), 19 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml b/Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml
-new file mode 100644
-index 000000000000..c690ba7f207c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml
-@@ -0,0 +1,251 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/airoha,en7581-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Gen3 PCIe controller on Airoha SoCs
-+
-+maintainers:
-+  - Christian Marangi <ansuelsmth@gmail.com>
-+
-+description: |+
-+  PCIe Gen3 MAC controller for Airoha SoCs, it supports Gen3 speed
-+  and compatible with Gen2, Gen1 speed.
-+
-+  This PCIe controller supports up to 256 MSI vectors, the MSI hardware
-+  block diagram is as follows:
-+
-+                    +-----+
-+                    | GIC |
-+                    +-----+
-+                       ^
-+                       |
-+                   port->irq
-+                       |
-+               +-+-+-+-+-+-+-+-+
-+               |0|1|2|3|4|5|6|7| (PCIe intc)
-+               +-+-+-+-+-+-+-+-+
-+                ^ ^           ^
-+                | |    ...    |
-+        +-------+ +------+    +-----------+
-+        |                |                |
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+  |0|1|...|30|31|  |0|1|...|30|31|  |0|1|...|30|31| (MSI sets)
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+   ^ ^      ^  ^    ^ ^      ^  ^    ^ ^      ^  ^
-+   | |      |  |    | |      |  |    | |      |  |  (MSI vectors)
-+   | |      |  |    | |      |  |    | |      |  |
-+
-+    (MSI SET0)       (MSI SET1)  ...   (MSI SET7)
-+
-+  With 256 MSI vectors supported, the MSI vectors are composed of 8 sets,
-+  each set has its own address for MSI message, and supports 32 MSI vectors
-+  to generate interrupt.
-+
-+properties:
-+  compatible:
-+    const: airoha,en7581-pcie
-+
-+  reg:
-+    minItems: 1
-+    maxItems: 2
-+
-+  reg-names:
-+    minItems: 1
-+    maxItems: 2
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  ranges:
-+    minItems: 1
-+    maxItems: 8
-+
-+  iommu-map:
-+    maxItems: 1
-+
-+  iommu-map-mask:
-+    const: 0
-+
-+  resets:
-+    minItems: 1
-+    maxItems: 4
-+
-+  reset-names:
-+    minItems: 1
-+    maxItems: 4
-+
-+  clocks:
-+    maxItems: 1
-+
-+  clock-names:
-+    items:
-+      - const: sys-ck
-+
-+  phys:
-+    maxItems: 1
-+
-+  phy-names:
-+    items:
-+      - const: pcie-phy
-+
-+  num-lanes:
-+    enum: [1, 2]
-+
-+  mediatek,pbus-csr:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    items:
-+      - items:
-+          - description: phandle to pbus-csr syscon
-+          - description: offset of pbus-csr base address register
-+          - description: offset of pbus-csr base address mask register
-+    description:
-+      Phandle with two arguments to the syscon node used to detect if
-+      a given address is accessible on PCIe controller.
-+
-+  airoha,scu:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    items:
-+      - items:
-+          - description: phandle to airoha SCU syscon
-+    description:
-+      Phandle to SCU syscon to configure PCIe MUX for 2 lines support.
-+
-+  '#interrupt-cells':
-+    const: 1
-+
-+  interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    properties:
-+      '#address-cells':
-+        const: 0
-+      '#interrupt-cells':
-+        const: 1
-+      interrupt-controller: true
-+
-+    required:
-+      - '#address-cells'
-+      - '#interrupt-cells'
-+      - interrupt-controller
-+
-+    additionalProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - ranges
-+  - clocks
-+  - clock-names
-+  - '#interrupt-cells'
-+  - interrupt-controller
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-host-bridge.yaml#
-+  - if:
-+      properties:
-+        num-lanes:
-+          const: 2
-+    then:
-+      properties:
-+        reg:
-+          minItems: 2
-+
-+        reg-names:
-+          items:
-+            - const: pcie-mac
-+            - const: sec-pcie-mac
-+
-+        resets:
-+          minItems: 4
-+
-+        reset-names:
-+          items:
-+            - const: phy-lane0
-+            - const: phy-lane1
-+            - const: perstout
-+            - const: sec-perstout
-+
-+      required:
-+        - airoha,scu
-+
-+    else:
-+      properties:
-+        reg:
-+          maxItems: 1
-+
-+        reg-names:
-+          items:
-+            - const: pcie-mac
-+
-+        resets:
-+          minItems: 2
-+          maxItems: 3
-+
-+        reset-names:
-+          minItems: 2
-+          items:
-+            - enum: [ phy-lane0, phy-lane1, phy-lane2 ]
-+            - enum: [ phy-lane1, perstout ]
-+            - const: phy-lane2
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie@1fc00000 {
-+            compatible = "airoha,en7581-pcie";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+
-+            reg = <0x0 0x1fc00000 0x0 0x1670>,
-+                  <0x0 0x1fc20000 0x0 0x1670>;
-+            reg-names = "pcie-mac", "sec-pcie-mac";
-+
-+            clocks = <&scuclk 7>;
-+            clock-names = "sys-ck";
-+
-+            phys = <&pciephy>;
-+            phy-names = "pcie-phy";
-+
-+            ranges = <0x02000000 0 0x20000000 0x0 0x20000000 0 0x4000000>;
-+
-+            resets = <&scuclk 48>,
-+                     <&scuclk 49>,
-+                     <&scuclk 53>,
-+                     <&scuclk 54>;
-+            reset-names = "phy-lane0", "phy-lane1",
-+                          "perstout", "sec-perstout";
-+
-+            num-lanes = <2>;
-+
-+            mediatek,pbus-csr = <&pbus_csr 0x0 0x4>;
-+
-+            airoha,scu = <&scuclk>;
-+
-+            interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
-+            bus-range = <0x00 0xff>;
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+                            <0 0 0 2 &pcie_intc 1>,
-+                            <0 0 0 3 &pcie_intc 2>,
-+                            <0 0 0 4 &pcie_intc 3>;
-+            pcie_intc: interrupt-controller {
-+                      #address-cells = <0>;
-+                      #interrupt-cells = <1>;
-+                      interrupt-controller;
-+            };
-+        };
-+    };
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-index 4db700fc36ba..510f1f2b1c5a 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -59,7 +59,6 @@ properties:
-           - const: mediatek,mt8196-pcie
-       - const: mediatek,mt8192-pcie
-       - const: mediatek,mt8196-pcie
--      - const: airoha,en7581-pcie
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index b0accd828589..14893cff135a 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -32,6 +32,11 @@
  
-   reg:
-     maxItems: 1
-@@ -83,20 +82,20 @@ properties:
+ #include "../pci.h"
  
-   resets:
-     minItems: 1
--    maxItems: 3
-+    maxItems: 2
++/* AN7581 SCU register */
++#define SCU_PCIC			0x88
++#define SCU_PCIC_PCIE_CTRL		GENMASK(7, 0)
++
++/* PCIe register */
+ #define PCIE_BASE_CFG_REG		0x14
+ #define PCIE_BASE_CFG_SPEED		GENMASK(15, 8)
  
-   reset-names:
-     minItems: 1
--    maxItems: 3
-+    maxItems: 2
-     items:
--      enum: [ phy, mac, phy-lane0, phy-lane1, phy-lane2 ]
-+      enum: [ phy, mac ]
+@@ -131,6 +136,7 @@
+ #define PCIE_ATR_TLP_TYPE_IO		PCIE_ATR_TLP_TYPE(2)
  
-   clocks:
--    minItems: 1
-+    minItems: 4
-     maxItems: 6
+ #define MAX_NUM_PHY_RESETS		3
++#define MAX_NUM_PERSTOUT_RESETS		2
  
-   clock-names:
--    minItems: 1
-+    minItems: 4
-     maxItems: 6
+ #define PCIE_MTK_RESET_TIME_US		10
  
-   assigned-clocks:
-@@ -115,17 +114,6 @@ properties:
-   power-domains:
-     maxItems: 1
+@@ -203,9 +209,11 @@ struct mtk_msi_set {
+ struct mtk_gen3_pcie {
+ 	struct device *dev;
+ 	void __iomem *base;
++	void __iomem *sec_base;
+ 	phys_addr_t reg_base;
+ 	struct reset_control *mac_reset;
+ 	struct reset_control_bulk_data phy_resets[MAX_NUM_PHY_RESETS];
++	struct reset_control_bulk_data perstout_resets[MAX_NUM_PERSTOUT_RESETS];
+ 	struct phy *phy;
+ 	struct clk_bulk_data *clks;
+ 	int num_clks;
+@@ -928,6 +936,14 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie *pcie)
+ 	if (ret)
+ 		return dev_err_probe(dev, ret, "failed to get PHY bulk reset\n");
  
--  mediatek,pbus-csr:
--    $ref: /schemas/types.yaml#/definitions/phandle-array
--    items:
--      - items:
--          - description: phandle to pbus-csr syscon
--          - description: offset of pbus-csr base address register
--          - description: offset of pbus-csr base address mask register
--    description:
--      Phandle with two arguments to the syscon node used to detect if
--      a given address is accessible on PCIe controller.
--
-   '#interrupt-cells':
-     const: 1
++	pcie->perstout_resets[0].id = "perstout";
++	pcie->perstout_resets[1].id = "sec-perstout";
++
++	ret = devm_reset_control_bulk_get_optional_exclusive(dev, MAX_NUM_PERSTOUT_RESETS,
++							     pcie->perstout_resets);
++	if (ret)
++		return dev_err_probe(dev, ret, "failed to get PERSTOUT bulk reset\n");
++
+ 	pcie->mac_reset = devm_reset_control_get_optional_exclusive(dev, "mac");
+ 	if (IS_ERR(pcie->mac_reset))
+ 		return dev_err_probe(dev, PTR_ERR(pcie->mac_reset), "failed to get MAC reset\n");
+@@ -949,18 +965,38 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie *pcie)
+ 			pcie->num_lanes = num_lanes;
+ 	}
  
-@@ -177,16 +165,6 @@ allOf:
-             - const: peri_26m
-             - const: top_133m
++	/* Map secondary PCIe for 2-lanes mode for EN7581 */
++	if (num_lanes == 2 && device_is_compatible(dev, "airoha,en7581-pcie")) {
++		regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "sec-pcie-mac");
++		if (!regs)
++			return -EINVAL;
++		pcie->sec_base = devm_ioremap_resource(dev, regs);
++		if (IS_ERR(pcie->sec_base))
++			return dev_err_probe(dev, PTR_ERR(pcie->sec_base), "failed to map secondary register base\n");
++	}
++
+ 	return 0;
+ }
  
--        resets:
--          minItems: 1
--          maxItems: 2
--
--        reset-names:
--          minItems: 1
--          maxItems: 2
--
--        mediatek,pbus-csr: false
--
-   - if:
-       properties:
-         compatible:
-@@ -208,16 +186,6 @@ allOf:
-             - const: peri_26m
-             - const: peri_mem
+ static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
+ {
+ 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	unsigned int num_lanes = max(1, pcie->num_lanes);
++	struct regmap *pbus_regmap, *scu;
+ 	struct device *dev = pcie->dev;
+ 	struct resource_entry *entry;
+-	struct regmap *pbus_regmap;
+ 	u32 val, args[2], size;
+ 	resource_size_t addr;
+-	int err;
++	int i, err;
++
++	if (num_lanes > 2)
++		return dev_err_probe(dev, -EINVAL, "unsupported num-lanes, maximum 2 lanes supported\n");
++
++	if (num_lanes == 2) {
++		scu = syscon_regmap_lookup_by_phandle(dev->of_node, "airoha,scu");
++		if (IS_ERR(scu))
++			return dev_err_probe(dev, PTR_ERR(scu), "failed to map SCU regmap\n");
++	}
  
--        resets:
--          minItems: 1
--          maxItems: 2
--
--        reset-names:
--          minItems: 1
--          maxItems: 2
--
--        mediatek,pbus-csr: false
--
-   - if:
-       properties:
-         compatible:
-@@ -246,8 +214,6 @@ allOf:
-             - const: phy
-             - const: mac
+ 	/*
+ 	 * The controller may have been left out of reset by the bootloader
+@@ -992,6 +1028,19 @@ static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
+ 	size = lower_32_bits(resource_size(entry->res));
+ 	regmap_write(pbus_regmap, args[1], GENMASK(31, __fls(size)));
  
--        mediatek,pbus-csr: false
--
-   - if:
-       properties:
-         compatible:
-@@ -257,7 +223,6 @@ allOf:
-     then:
-       properties:
-         clocks:
--          minItems: 4
-           maxItems: 4
++	/* Assert PERSTOUT for all relevant lines */
++	err = reset_control_bulk_assert(MAX_NUM_PERSTOUT_RESETS,
++					pcie->perstout_resets);
++	if (err) {
++		dev_err(dev, "failed to assert PERSTOUTs\n");
++		return err;
++	}
++
++	/* Configure SCU MUX to disable PCIE1 for 2 lines mode */
++	if (num_lanes == 2)
++		regmap_update_bits(scu, SCU_PCIC, SCU_PCIC_PCIE_CTRL,
++				   FIELD_PREP(SCU_PCIC_PCIE_CTRL, BIT(1)));
++
+ 	/*
+ 	 * Unlike the other MediaTek Gen3 controllers, the Airoha EN7581
+ 	 * requires PHY initialization and power-on before PHY reset deassert.
+@@ -1024,33 +1073,47 @@ static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
+ 	pm_runtime_enable(dev);
+ 	pm_runtime_get_sync(dev);
  
-         clock-names:
-@@ -267,38 +232,6 @@ allOf:
-             - const: peri_26m
-             - const: top_133m
+-	val = FIELD_PREP(PCIE_VAL_LN0_DOWNSTREAM, 0x47) |
+-	      FIELD_PREP(PCIE_VAL_LN1_DOWNSTREAM, 0x47) |
+-	      FIELD_PREP(PCIE_VAL_LN0_UPSTREAM, 0x41) |
+-	      FIELD_PREP(PCIE_VAL_LN1_UPSTREAM, 0x41);
+-	writel_relaxed(val, pcie->base + PCIE_EQ_PRESET_01_REG);
+-
+-	val = PCIE_K_PHYPARAM_QUERY | PCIE_K_QUERY_TIMEOUT |
+-	      FIELD_PREP(PCIE_K_PRESET_TO_USE_16G, 0x80) |
+-	      FIELD_PREP(PCIE_K_PRESET_TO_USE, 0x2) |
+-	      FIELD_PREP(PCIE_K_FINETUNE_MAX, 0xf);
+-	writel_relaxed(val, pcie->base + PCIE_PIPE4_PIE8_REG);
+-
+ 	err = clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
+ 	if (err) {
+ 		dev_err(dev, "failed to prepare clock\n");
+ 		goto err_clk_prepare_enable;
+ 	}
  
--        resets:
--          minItems: 1
--          maxItems: 2
--
--        reset-names:
--          minItems: 1
--          maxItems: 2
--
--        mediatek,pbus-csr: false
--
--  - if:
--      properties:
--        compatible:
--          const: airoha,en7581-pcie
--    then:
--      properties:
--        clocks:
--          maxItems: 1
--
--        clock-names:
--          items:
--            - const: sys-ck
--
--        resets:
--          minItems: 3
--
--        reset-names:
--          items:
--            - const: phy-lane0
--            - const: phy-lane1
--            - const: phy-lane2
--
- unevaluatedProperties: false
+-	/*
+-	 * Airoha EN7581 performs PCIe reset via clk callbacks since it has a
+-	 * hw issue with PCIE_PE_RSTB signal. Add wait for the time needed to
+-	 * complete the PCIe reset.
+-	 */
++	/* Wait for refclk to stabilize */
+ 	msleep(PCIE_T_PVPERL_MS);
  
- examples:
++	/* Configure all the lines to the same EQ config */
++	for (i = 0; i < num_lanes; i++) {
++		void __iomem *base = pcie->base;
++
++		if (i == 1)
++			base = pcie->sec_base;
++
++		val = FIELD_PREP(PCIE_VAL_LN0_DOWNSTREAM, 0x47) |
++			FIELD_PREP(PCIE_VAL_LN1_DOWNSTREAM, 0x47) |
++			FIELD_PREP(PCIE_VAL_LN0_UPSTREAM, 0x41) |
++			FIELD_PREP(PCIE_VAL_LN1_UPSTREAM, 0x41);
++		writel_relaxed(val, base + PCIE_EQ_PRESET_01_REG);
++
++		val = PCIE_K_PHYPARAM_QUERY | PCIE_K_QUERY_TIMEOUT |
++			FIELD_PREP(PCIE_K_PRESET_TO_USE_16G, 0x80) |
++			FIELD_PREP(PCIE_K_PRESET_TO_USE, 0x2) |
++			FIELD_PREP(PCIE_K_FINETUNE_MAX, 0xf);
++		writel_relaxed(val, base + PCIE_PIPE4_PIE8_REG);
++	}
++
++	/* Deassert PERSTOUT for all relevant lines */
++	err = reset_control_bulk_deassert(MAX_NUM_PERSTOUT_RESETS,
++					  pcie->perstout_resets);
++	if (err) {
++		dev_err(dev, "failed to deassert PERSTOUTs\n");
++		goto err_perstout_deassert;
++	}
++
+ 	return 0;
+ 
++err_perstout_deassert:
++	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
+ err_clk_prepare_enable:
+ 	pm_runtime_put_sync(dev);
+ 	pm_runtime_disable(dev);
 -- 
 2.53.0
 
