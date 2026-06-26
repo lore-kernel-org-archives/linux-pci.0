@@ -1,33 +1,30 @@
 Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F03A3E3D93;
-	Fri, 26 Jun 2026 15:48:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0B8739BFF8;
+	Fri, 26 Jun 2026 15:50:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782488903; cv=none; b=hoyrurlibRVFK5XGo/4Pa+Rh1w3PJL21tRBVr7huFvrLxqdZNWmftrOrPEpBmwdkRJ0fHa1q4f4qFR+2Cqc/OhZOS4r/5iVB/NIvYUPf1HLpHLz4dD5L4jqFTpyL+KJluZxqjSt/GC1fsgv1rzWSuXZ7epnPK/k1r+vFOM/4BGk=
+	t=1782489050; cv=none; b=CW4YJjzfnoZUOaD7ptN+S+xVBqQ6nt7Snz8H743Pbhv0Qr+C4BZc/JeKW1D+FpBfkDCyVcDe9FSzzL+WX5Bk9tUT5XM9GfznSwV6qsY4rdbAu8hOP8YNwKKGsqaKYJKcNq7nPcMTvLqSIqg55ROkiAxUvx54NhKeULq4cKqsmik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782488903; c=relaxed/simple;
-	bh=zoeDgfUPvtY3sUBygUBp4EC0mMNsqeldZJWqBdb1LU4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lbduXmH+7f809bD31csQfrIsCtEDtmkdOcvfJX9tNeiv+2RRlvJOt0alu8jsHMKsYh+2vJmThnIuclpC8chNFOxNdRFSYAJRiVD8GBELm/LOLIwBTp2XcypSBFnf2ioVfHhKQRCp6LHb51YmpUI3aRAidApfNbRgP4emDzTSPgI=
+	s=arc-20240116; t=1782489050; c=relaxed/simple;
+	bh=rCNP1yWutDLr4XMGZPVW4ZAm2wgPDvVY9z78kY7RitE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=czy4ewA9JJ6LbLqsl60PH4Qa3Dc0F18da54RACYYIXBNPeL+jIVWMZch8h76XDPfb41sEYawn6fzV/Y9zTqjotYpRTUwunFSgvyArCCZAfgGHpvi/p7dC4Bm3DHzooapknOmXkFa4YZGE+VYcvXY5ozIvm2LOBK/CYTcq7FD/MQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from localhost.localdomain (unknown [117.182.75.66])
-	by APP-01 (Coremail) with SMTP id qwCowAAHoMg6nz5qQt1sAw--.17003S2;
-	Fri, 26 Jun 2026 23:48:11 +0800 (CST)
+	by APP-01 (Coremail) with SMTP id qwCowAAXsMjSnz5qlO1sAw--.17012S2;
+	Fri, 26 Jun 2026 23:50:44 +0800 (CST)
 From: WenTao Liang <vulab@iscas.ac.cn>
-To: Kishon Vijay Abraham I <kishon@kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof Wilczynski <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	stable@vger.kernel.org,
+Cc: stable@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	WenTao Liang <vulab@iscas.ac.cn>
-Subject: [PATCH] fix: PCI: dra7xx: dra7xx_pcie_probe: fix missing device_link_del on phy   error paths
-Date: Fri, 26 Jun 2026 23:48:09 +0800
-Message-Id: <20260626154809.53770-1-vulab@iscas.ac.cn>
+Subject: [PATCH] fix: PCI: pci_iov_remove_virtfn: fix unmatched pci_dev_put for PF device
+Date: Fri, 26 Jun 2026 23:50:42 +0800
+Message-Id: <20260626155042.53862-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -36,78 +33,52 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAAHoMg6nz5qQt1sAw--.17003S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZFy8AFW8tw1fWw1xWFW5GFg_yoW8Zr4UpF
-	W7tFW8tFyrXF4fXa43W3W5u3WYqF4DAa4UKws7C3WfuFy3ArWqvrWrJryIq3WftFZ5uFy3
-	tan8t3W7CFs8ZwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Cr0_Gr1UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
-	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
-	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
-	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14
-	v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Cr0_
-	Gr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Cr1j6rxdYxBIdaVFxhVjvjDU0xZFpf9x0JUJuc
-	_UUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwcKA2o+ikU3EgAAs3
+X-CM-TRANSID:qwCowAAXsMjSnz5qlO1sAw--.17012S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7JF17Cw47Jw15KF1kWrWfZrb_yoWDJrXE93
+	WUuF97Xw48Aw4DGa43KFWfZr9Fk3WYqay0ka18tF9akryavrs8XryUZr93WrZ8W3yUGFyU
+	Zw1q9r4akrWa9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb4AFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1q6rW5McIj6I8E87Iv67AKxVWxJVW8Jr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
+	AVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
+	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI
+	0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWxJVW8
+	Jr1lIxAIcVC2z280aVCY1x0267AKxVWxJr0_GcJvcSsGvfC2KfnxnUUI43ZEXa7VUbSdgJ
+	UUUUU==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAEKA2o+ids5DQAAs2
 
-In dra7xx_pcie_probe(), when devm_phy_get() fails for a later phy device
-  (i > 0), the function directly returns PTR_ERR(phy[i]) without calling
-  device_link_del() on previously added device links. Similarly, when
-  dra7xx_pcie_enable_phy() fails, all phy_count device links are leaked as
-  the function returns directly without cleanup.
+In pci_iov_remove_virtfn(), the function calls pci_dev_put(dev) on the PF
+  device at the end, but never acquired a reference to it via
+  pci_dev_get(). The function parameter dev is passed by the caller who
+  manages the reference. This unbalanced pci_dev_put causes a refcount
+  underflow, potentially leading to premature PF device release or
+  use-after-free.
 
-Change the error paths to jump to the existing err_link label which
-  properly iterates through link[0..i) and calls device_link_del() for
-  each.
+Remove the spurious pci_dev_put(dev) call.
 
 Cc: stable@vger.kernel.org
 Signed-off-by: WenTao Liang <vulab@iscas.ac.cn>
 ---
- drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/pci/iov.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index cd904659c321..153ee6f7dbfc 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -743,8 +743,10 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	for (i = 0; i < phy_count; i++) {
- 		snprintf(name, sizeof(name), "pcie-phy%d", i);
- 		phy[i] = devm_phy_get(dev, name);
--		if (IS_ERR(phy[i]))
--			return PTR_ERR(phy[i]);
-+		if (IS_ERR(phy[i])) {
-+			ret = PTR_ERR(phy[i]);
-+			goto err_link;
-+		}
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 91ac4e37ecb9..24a4fb3cd042 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -426,7 +426,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
  
- 		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
- 		if (!link[i]) {
-@@ -767,7 +769,8 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	ret = dra7xx_pcie_enable_phy(dra7xx);
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--		return ret;
-+		dra7xx_pcie_disable_phy(dra7xx);
-+		goto err_link;
- 	}
+ 	/* balance pci_get_domain_bus_and_slot() */
+ 	pci_dev_put(virtfn);
+-	pci_dev_put(dev);
+ }
  
- 	platform_set_drvdata(pdev, dra7xx);
-@@ -910,7 +913,8 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
- 	ret = dra7xx_pcie_enable_phy(dra7xx);
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--		return ret;
-+		dra7xx_pcie_disable_phy(dra7xx);
-+		goto err_link;
- 	}
- 
- 	return 0;
+ static ssize_t sriov_totalvfs_show(struct device *dev,
 -- 
 2.39.5 (Apple Git-154)
 
