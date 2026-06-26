@@ -1,77 +1,138 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4E0357CEC
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 15:03:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D0937882A
+	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 15:05:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782486201; cv=none; b=XOCthOIIKl6QlhDHOCZTOtPljdsW9rdAe8BHX4eZBrZuaD9FyV8abd9keWEq8afHwb0CSfJr0qmRu4XJKt84jdD6g4tcI499SpEAFWx7k1ByF32SLHPVYi6wp94oPiflut/kVgGD/cQGcjNp+KsOUF0u+cVJOEdlbUWswwKOqTU=
+	t=1782486328; cv=none; b=R2kRdUEaisIajrpUPXaMZOJ1K+UAPtqJrbNSKEHizq/EEsTx7nIpbdYpdFejSgVh+0KoT4czef56WOCPK3Ex7NdtH8HjQnc9rOop7kglTJqHHpQqB3Ga9mijImDTiiZxfyAlYAG41mBMy5FAX1XIPCpMidXnl1qtBB5DEn3Nrw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782486201; c=relaxed/simple;
-	bh=WTUBEe9ToRCnbDf8OIRUOOhjiS1r0jSeGcm4x2KilWY=;
+	s=arc-20240116; t=1782486328; c=relaxed/simple;
+	bh=g9FhMoP+9ojL0Ruu94/5bRsaT5Sm0EZTbo/FRhAmIr0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JUgtmJ4gsk4uVEk/CD7mzWPmssHDvK6av6Z7N7HkvOmr0VQbd1AcV6PT1ufpaNIkAnvn440ZEBLB0o78OKAfCSYs6ybbRhQ5SYYV6USZxR9EMPUsp9h17nQUhkGvGNLJr8qNpWsy0Eae2Stq7M2CpG1BI+/SCXrCb8wfvPeSgLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AvbzoTjB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bdBLk6KLE1Cx2+3/Uu49CErLuIx92VD6PqsGmgDPmKNJAP23Tbno+donpcKZW7okbLcbYVVDX9wmcqu7ynZU1buzldl3E8ZX8QZUHwWVoxNGcWBi8WcXVxYf6muKOmqT92EqZAmrqI3UenGL3DUlL1JrmiPzXMFckfM88OB6MMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f5yNFkYj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AvbzoTjB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60DF81F000E9;
-	Fri, 26 Jun 2026 15:03:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f5yNFkYj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D4381F00A3A;
+	Fri, 26 Jun 2026 15:05:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782486196;
-	bh=DydvaVcIYpBYhCA/4Yjj5+MV7fAZ2c7GCn63eHsHmOQ=;
+	s=k20260515; t=1782486319;
+	bh=hIMH/CW8sOItdSGkkqGRNFq3zKeoOYtSzviJ3wvaV6g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AvbzoTjBANXMK5Tm4IbjQpMiZg4dlzHgRmfr/z5MxYhZFFeHYzEEjEEs8i/UsAn9p
-	 802frsbHjg/m9Je/03yOtDAvjM2kkmgvzXRqiab/QxtdQoNVyRPkV17LOBbrWlvsfz
-	 WHWT40jvNqHRWG6yfqGX2jTHpFCF2JXjTW4tpSkBtjCHjoTtT+dlM82o7m9X8GM9iD
-	 HRLPblUxCGnAb4O4aNoCGcaGX0/JszyE7nyYlA5P35j3c5lb9EKQJ8hn9Y5FHeB9hA
-	 S2dBLIZct9Xj056w0ZSJTEdfKrHmgjn0h64sQJnmMNMZCUXM+suGgCn3gnMd6eA+iE
-	 JEI06mOHiQdJg==
+	b=f5yNFkYjMcVjwsSvo+vtFVjuuUE1LAQufFQR234cztX+uolEr7cxqx7FrGw+7wVoW
+	 XPllW9IUFmE0qH9JIr0baONau5lkDEHOnKriTcdHBB5IxvtGQjDvhABCWrn/P9TpJn
+	 pzNGVuK5HAmX1xdXvEMB/lu99mGlne1CEHGjotlGCE6l7KYLx27BaNILIaSTVRWufC
+	 QZDSiOqDKSqo2kQzFV2Co4o3CwvRho7zIF7CMCyZ5yfs90eKhUeOpXQ2vSWgF39Y/b
+	 6u8oq+Q90ayN5Aki6r+WQfIKNPSOnGugeaGoCqktGITF0KHU+sWksQn8aKkeyKHdPE
+	 KT+vKdAe9yOlQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 03/20] rust: io: restrict untyped IO access and
- `register!` to `Region`
+Subject: Re: [PATCH v5 15/20] rust: io: implement a view type for `Coherent`
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo Krummrich" <dakr@kernel.org>, ojeda@kernel.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260626-io_projection-v5-3-d0961471ae50@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260626-io_projection-v5-15-d0961471ae50@garyguo.net>
 References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-3-d0961471ae50@garyguo.net>
+ <20260626-io_projection-v5-15-d0961471ae50@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 15:03:13 +0000
-Message-Id: <20260626150315.60DF81F000E9@smtp.kernel.org>
+Date: Fri, 26 Jun 2026 15:05:18 +0000
+Message-Id: <20260626150519.4D4381F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Currently the `Io` trait exposes a bunch of untyped IO accesses, but if t=
-he
-> `Io` region itself is typed, then it might be weird to have
->=20
->     let io: Mmio<u32> =3D /* ... */;
->     io.read8(1);
->=20
-> while not unsound, it is surely strange. Thus, restrict the untyped metho=
-ds
-> and also the register macro to `Region` type only.
->=20
-> Implement it by adding a generic type to `IoLoc` indicating allowed base
-> types. This also paves the way to add typed register blocks in the future;
-> for example, we could use this mechanism to block driver A's `register!()`
-> generated macro from being used on driver B's MMIO. The same mechanism
-> could be used for relative IO registers. These are future opportunities,
-> and for now restrict everything to require `IoLoc<Region<SIZE>, _>`.
->=20
-> Suggested-by: Alexandre Courbot <acourbot@nvidia.com>
-> Link: https://lore.kernel.org/rust-for-linux/DHLB3RO3OSF5.2R7F27U99BKLN@n=
-vidia.com/
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] `CoherentView<'a, T>` automatically implements `Send` when `T: Syn=
+c`, but provides an `as_mut()` capability to generate `&mut T`, allowing th=
+read-safety bounds bypass.
+- [High] `CoherentView::as_mut` consumes `self` by value on a `Copy` type a=
+nd returns `&'a mut T`, but its safety documentation fails to require stric=
+t exclusivity.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 12e6f6d7abcd0a26719f3c4f268f24a07774b118
+Author: Gary Guo <gary@garyguo.net>
+
+rust: io: implement a view type for `Coherent`
+
+Implement a `CoherentView` type which is a view of `Coherent`. To be able
+to give out DMA handles, the view type contains both CPU and DMA pointers,
+and the projection method projects both at once.
+
+Delegate most of the `Io` implementation to `SysMemBackend`. Provide a
+method to erase the DMA handle and give out a `SysMem` view, if the user
+does not need the `dma_handle`.
+
+> diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
+> index 200def84fb69e..ab6504910e4f5 100644
+> --- a/rust/kernel/dma.rs
+> +++ b/rust/kernel/dma.rs
+
+[ ... ]
+
+> @@ -1133,6 +1140,132 @@ unsafe impl Send for CoherentHandle {}
+>  // plain `Copy` values.
+>  unsafe impl Sync for CoherentHandle {}
+> =20
+> +/// View type for `Coherent`.
+> +///
+> +/// This is same as [`SysMem`] but with additional information that allo=
+ws handing out a DMA handle.
+> +pub struct CoherentView<'a, T: ?Sized> {
+> +    cpu_addr: SysMem<'a, T>,
+> +    dma_handle: DmaAddress,
+> +}
+
+[Severity: High]
+Since SysMem<'a, T> automatically implements Send when T: Sync, CoherentView
+also implements Send when T: Sync.
+
+If T is !Send, can a caller move CoherentView to another thread and call
+as_mut() to get a mutable reference? This appears to allow bypassing Rust's
+concurrency guarantees and could lead to data races or memory corruption if
+the type relies on thread-local invariants.
+
+Note that this same pattern seems to pre-exist in Coherent<T> as well.
+
+[ ... ]
+
+> +    /// Returns a mutable reference to the data in the region.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// * Callers must ensure that the device does not read/write to/fro=
+m memory while the returned
+> +    ///   reference is live.
+> +    /// * Callers must ensure that this call does not race with a read o=
+r write to the same region
+> +    ///   while the returned reference is live.
+> +    #[inline]
+> +    pub unsafe fn as_mut(self) -> &'a mut T {
+
+[Severity: High]
+Because CoherentView derives Copy and as_mut() takes self by value instead =
+of
+taking a mutable borrow, can a caller call as_mut() multiple times in
+succession to create overlapping mutable references?
+
+While the safety documentation requires callers to prevent races, it does
+not explicitly require strict exclusivity. Could a caller sequentially use
+two aliases without data races, believing they adhered to the safety
+contract, but still trigger undefined behavior due to aliasing violations?
+
+This documentation omission might also exist in the preexisting
+Coherent::as_mut.
+
+> +        // SAFETY: pointer is aligned and valid per type invariant. Alia=
+sing rule is satisfied per
+> +        // safety requirement.
+> +        unsafe { &mut *self.cpu_addr.as_ptr() }
+> +    }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626-io_project=
-ion-v5-0-d0961471ae50@garyguo.net?part=3D3
-
+ion-v5-0-d0961471ae50@garyguo.net?part=3D15
