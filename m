@@ -1,138 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D0937882A
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 15:05:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 926A237AA75
+	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 15:06:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782486328; cv=none; b=R2kRdUEaisIajrpUPXaMZOJ1K+UAPtqJrbNSKEHizq/EEsTx7nIpbdYpdFejSgVh+0KoT4czef56WOCPK3Ex7NdtH8HjQnc9rOop7kglTJqHHpQqB3Ga9mijImDTiiZxfyAlYAG41mBMy5FAX1XIPCpMidXnl1qtBB5DEn3Nrw0=
+	t=1782486392; cv=none; b=NoUKdatGdniN4PKie96ANysaGzG4maTlq93TZfexi4QDtGTg6G1Xax4nN8NvzzLN8yOsvEH7eQgY1K8nzxEQ8ffg4+gjqldOaLCUJaX7YGcUQCkopd/9hbYq4T0xt7gJb8RXFFj3hvMIR4JGb1hJndPDB7IDqlzB8DVE/08j648=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782486328; c=relaxed/simple;
-	bh=g9FhMoP+9ojL0Ruu94/5bRsaT5Sm0EZTbo/FRhAmIr0=;
+	s=arc-20240116; t=1782486392; c=relaxed/simple;
+	bh=XpkfcQWXKo8U5w986VkItPJuj6YTwiymiuWR2iEQmRc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bdBLk6KLE1Cx2+3/Uu49CErLuIx92VD6PqsGmgDPmKNJAP23Tbno+donpcKZW7okbLcbYVVDX9wmcqu7ynZU1buzldl3E8ZX8QZUHwWVoxNGcWBi8WcXVxYf6muKOmqT92EqZAmrqI3UenGL3DUlL1JrmiPzXMFckfM88OB6MMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f5yNFkYj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=q1+2VItk/UomGnBgOdQ7NmZbhYyYkrVBZ8hDkpjkScWGD4Ts2YXoq3/xjhupgZ0U8bGzwi2EPjIxtMZQbdH1x60mVBlLLy7CFUcSMbjm9mdTEgvKDZc5vZHz6U1d9u6h2xFmlkaUCXseu8z9xwUM/X6LIHg6b0WofYji93UHRNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BDWpRwcS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f5yNFkYj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D4381F00A3A;
-	Fri, 26 Jun 2026 15:05:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BDWpRwcS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30A111F00A3A;
+	Fri, 26 Jun 2026 15:06:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782486319;
-	bh=hIMH/CW8sOItdSGkkqGRNFq3zKeoOYtSzviJ3wvaV6g=;
+	s=k20260515; t=1782486387;
+	bh=nWdhka9vlxHskt8+WKq6JmVRC3RuOXuW2e3AQwKJTbU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f5yNFkYjMcVjwsSvo+vtFVjuuUE1LAQufFQR234cztX+uolEr7cxqx7FrGw+7wVoW
-	 XPllW9IUFmE0qH9JIr0baONau5lkDEHOnKriTcdHBB5IxvtGQjDvhABCWrn/P9TpJn
-	 pzNGVuK5HAmX1xdXvEMB/lu99mGlne1CEHGjotlGCE6l7KYLx27BaNILIaSTVRWufC
-	 QZDSiOqDKSqo2kQzFV2Co4o3CwvRho7zIF7CMCyZ5yfs90eKhUeOpXQ2vSWgF39Y/b
-	 6u8oq+Q90ayN5Aki6r+WQfIKNPSOnGugeaGoCqktGITF0KHU+sWksQn8aKkeyKHdPE
-	 KT+vKdAe9yOlQ==
+	b=BDWpRwcSSsnPL1I9mSjsGmZUrxnyEcNzjTiaJJR/QJz8kswphtz9J4FRolfT+tdIl
+	 6oIMcv2x3DQIk0u8nW4LS+dH8lkZl/F319BQ2PigSyHuFnqFbS1Vg8tENU9f2Jsjre
+	 LR/t7ENiZTYqAPcfWYjL9cvspKvgDN4pcWWNzWbmXQVU8dsLZadBz8shw+4GXDeR6A
+	 HnK+aoHaqANJgzFFifSKFhZ/QSP8hyaliwe5OoM5W1WZJh/oYjovCikX1Uz4H5JkI2
+	 QUAYGUMU/7uvYvvFgRMRd+FMSgzxHIhsJaJQTRNm4tQ14Wzt6KQ7nXq/4Lc4nE5Yvl
+	 0SxWwJs+dAGkg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 15/20] rust: io: implement a view type for `Coherent`
+Subject: Re: [PATCH v5 17/20] gpu: nova-core: use I/O projection for cleaner
+ encapsulation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260626-io_projection-v5-15-d0961471ae50@garyguo.net>
+Cc: ojeda@kernel.org, "Danilo Krummrich" <dakr@kernel.org>, "Alexandre
+ Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260626-io_projection-v5-17-d0961471ae50@garyguo.net>
 References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-15-d0961471ae50@garyguo.net>
+ <20260626-io_projection-v5-17-d0961471ae50@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 15:05:18 +0000
-Message-Id: <20260626150519.4D4381F00A3A@smtp.kernel.org>
+Date: Fri, 26 Jun 2026 15:06:26 +0000
+Message-Id: <20260626150627.30A111F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] `CoherentView<'a, T>` automatically implements `Send` when `T: Syn=
-c`, but provides an `as_mut()` capability to generate `&mut T`, allowing th=
-read-safety bounds bypass.
-- [High] `CoherentView::as_mut` consumes `self` by value on a `Copy` type a=
-nd returns `&'a mut T`, but its safety documentation fails to require stric=
-t exclusivity.
+
+Pre-existing issues:
+- [High] Data corruption in GSP command queue due to missing memory barrier=
+ before updating the ring buffer write pointer.
 --
 
-commit 12e6f6d7abcd0a26719f3c4f268f24a07774b118
+commit abd2f0cd14180222d86d47f37c313be60a30d773
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: implement a view type for `Coherent`
+gpu: nova-core: use I/O projection for cleaner encapsulation
 
-Implement a `CoherentView` type which is a view of `Coherent`. To be able
-to give out DMA handles, the view type contains both CPU and DMA pointers,
-and the projection method projects both at once.
+This commit refactors the nova-core GSP driver to use the io_project!,
+io_read!, and io_write! macros for memory-mapped I/O access. It replaces
+the previous dma_read! and dma_write! usage to enforce better encapsulation
+for PTE arrays and message queues.
 
-Delegate most of the `Io` implementation to `SysMemBackend`. Provide a
-method to erase the DMA handle and give out a `SysMem` view, if the user
-does not need the `dma_handle`.
-
-> diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
-> index 200def84fb69e..ab6504910e4f5 100644
-> --- a/rust/kernel/dma.rs
-> +++ b/rust/kernel/dma.rs
+> diff --git a/drivers/gpu/nova-core/gsp/cmdq.rs b/drivers/gpu/nova-core/gs=
+p/cmdq.rs
+> --- a/drivers/gpu/nova-core/gsp/cmdq.rs
+> +++ b/drivers/gpu/nova-core/gsp/cmdq.rs
 
 [ ... ]
 
-> @@ -1133,6 +1140,132 @@ unsafe impl Send for CoherentHandle {}
->  // plain `Copy` values.
->  unsafe impl Sync for CoherentHandle {}
-> =20
-> +/// View type for `Coherent`.
-> +///
-> +/// This is same as [`SysMem`] but with additional information that allo=
-ws handing out a DMA handle.
-> +pub struct CoherentView<'a, T: ?Sized> {
-> +    cpu_addr: SysMem<'a, T>,
-> +    dma_handle: DmaAddress,
-> +}
+> @@ -438,12 +441,17 @@
+>      // Informs the GSP that it can process `elem_count` new pages from t=
+he command queue.
+>      fn advance_cpu_write_ptr(&mut self, elem_count: u32) {
+> -        super::fw::gsp_mem::advance_cpu_write_ptr(&self.0, elem_count)
+> +        let tx =3D io_project!(self.0, .cpuq.tx);
+> +        let wptr =3D MsgqTxHeader::write_ptr(tx).wrapping_add(elem_count=
+) % MSGQ_NUM_PAGES;
+> +        MsgqTxHeader::set_write_ptr(tx, wptr);
+> +
+> +        // Ensure all command data is visible before triggering the GSP =
+read.
+> +        fence(Ordering::SeqCst);
 
 [Severity: High]
-Since SysMem<'a, T> automatically implements Send when T: Sync, CoherentView
-also implements Send when T: Sync.
+This is a pre-existing issue, but is it possible that the memory barrier is
+placed too late in this function?
 
-If T is !Send, can a caller move CoherentView to another thread and call
-as_mut() to get a mutable reference? This appears to allow bypassing Rust's
-concurrency guarantees and could lead to data races or memory corruption if
-the type relies on thread-local invariants.
+In advance_cpu_write_ptr(), the fence(Ordering::SeqCst) is placed after
+updating the ring buffer's write pointer via set_write_ptr(). Since the
+payload is written to coherent memory using normal memory stores while the
+write pointer uses a volatile store, weakly-ordered CPUs might reorder the
+operations.
 
-Note that this same pattern seems to pre-exist in Coherent<T> as well.
+If the GSP firmware polls the write pointer before the payload writes are
+globally visible, could it read uninitialized or stale data? Should the
+fence be placed before the set_write_ptr() call to prevent this race?
 
-[ ... ]
-
-> +    /// Returns a mutable reference to the data in the region.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// * Callers must ensure that the device does not read/write to/fro=
-m memory while the returned
-> +    ///   reference is live.
-> +    /// * Callers must ensure that this call does not race with a read o=
-r write to the same region
-> +    ///   while the returned reference is live.
-> +    #[inline]
-> +    pub unsafe fn as_mut(self) -> &'a mut T {
-
-[Severity: High]
-Because CoherentView derives Copy and as_mut() takes self by value instead =
-of
-taking a mutable borrow, can a caller call as_mut() multiple times in
-succession to create overlapping mutable references?
-
-While the safety documentation requires callers to prevent races, it does
-not explicitly require strict exclusivity. Could a caller sequentially use
-two aliases without data races, believing they adhered to the safety
-contract, but still trigger undefined behavior due to aliasing violations?
-
-This documentation omission might also exist in the preexisting
-Coherent::as_mut.
-
-> +        // SAFETY: pointer is aligned and valid per type invariant. Alia=
-sing rule is satisfied per
-> +        // safety requirement.
-> +        unsafe { &mut *self.cpu_addr.as_ptr() }
-> +    }
+>      }
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626-io_project=
-ion-v5-0-d0961471ae50@garyguo.net?part=3D15
+ion-v5-0-d0961471ae50@garyguo.net?part=3D17
