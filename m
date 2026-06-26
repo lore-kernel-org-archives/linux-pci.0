@@ -1,57 +1,55 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021075.outbound.protection.outlook.com [52.101.100.75])
+Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020077.outbound.protection.outlook.com [52.101.195.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02B9C223DCE;
-	Fri, 26 Jun 2026 14:45:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF3737F007;
+	Fri, 26 Jun 2026 14:45:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.77
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782485125; cv=fail; b=uZCaJf5ZC+gtbCbKK6F7Wzwb+uiWrGdytM3p/JcxSWU/oSzEzNPpszv3dEyT0Bw7sbqvAcPPhQQFVIpayEBLJOIxW8HemBEX6DlD9c2T6cmc5Wz9UYdIfNChDeu0txcvUfFvl1z3/1uwSYkgzTCGeNW4uRQ0QA9pNtVN7NxcZyU=
+	t=1782485129; cv=fail; b=HNioFcpaigkH09Q4NCF6j830XGs/BuLIHKzKamfNhbaCiPjtPOuoZ29uEbG36FdI/9r1RdFCCfq6cnv2Er0S0Zswfc3GEBDj0hLZsXXCRazsAkbB1ixLV0pYs/1ql/42MDoJRoGACXc3l5a4dNYa+IT5eODFY/7FPS/PgdLtoEs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782485125; c=relaxed/simple;
-	bh=qN4Rp5rSJO9iZNzBa1LHWlwtyCVDcc4D/NvE7r0zlno=;
-	h=From:Subject:Date:Message-Id:Content-Type:To:Cc:MIME-Version; b=JMVakWghuR8SARU4sm/vNMEaA3Bqw9TUN/NCwbDMTZTUsYXimN/Glj13Xk7ZdzgcavSvuds1bHjz4kx009E3Vwjd9ar32KYaznCSNV0lSF2huu28CCOyWn6VHcrHyGCYDVmvTWPb0ueLE+07SpAvKzZz7Nb4mUuj7n2PRStzeu8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=wNM+PhPQ; arc=fail smtp.client-ip=52.101.100.75
+	s=arc-20240116; t=1782485129; c=relaxed/simple;
+	bh=fihaNEvBsUOHv/rajYVxMKB3dacL3pnz1EOCGPpcawA=;
+	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
+	 To:Cc:MIME-Version; b=KoocmWIErv6wGYkrF9D2/Y/0GRGPkYGsVNe0PZ7C26WaVnriyzFBKNgsOPsi9Q5hlYkR+AUgZDGLT2uqsl+4s8qABZ1gr9kyn4RfJSS69SyxfMteDpAUQPz1PdtqSOxD4VCvck28r9qsk76AzsgI7VD2oVmZlPnw8K+uic4j0fU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=jb+9qKNw; arc=fail smtp.client-ip=52.101.195.77
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="wNM+PhPQ"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="jb+9qKNw"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=X+Y3hmoYB6egyCsn6a7NLqmFmLL2G64l4pe1sqJ7jSZcNCSX1RXj27OysDYos8+kOQYd/WEftc85MOlFsXRSMWPJu165cqbEF4oELb5PR2owXKOPY6tKrCPbBtYEf9TyQamAAkFo09LX+sM+0nNUA3MVA1De/PdG2Ch0m90rvipneKBdtLoeEBGE4AMNgGe00PteHhlLc2GUmeV3gAVXEBn2PoVP0JCwuAe3lepd6TNd3l/8JjNPkPMZ9n1Qy46sq0ZPiCXe+iNmBKb4B4mlxxeXmq8TGtRA73F0baHcayvxBwNoh5f5IsqiP4xCNdUQf5tUonI5JkS/2d+TJmXiYg==
+ b=IJggK3FN16A9wdp5i9thhFePpwJH2Hu6tFLzvO4RRMpg29Lq8cgOr964iQK53OHEYrA0Zj9HKmcJJSfeyrrSBvr5CuGGvR+XIlzcdaZp8hpT+Y3zdThmH2hf559/u1/lVnvIPkBwm75fBWeKkLx5mTdVwzpFEZcSAvrAuVrZvnI5foBEoX0fT7N5OnEZ0s6BqXXbB/H2+egoR962wvtx04GTtyq1R2EOy1WCu7LmnCvdNozakO7FbCqkp4C5r4jWj74bWwLOluo2anmGnpNN4yj8XQWIcSy39xyEyNTMhmRjAwBewEazwn2KoD0vh8UoV7J0/qmwMUNaGZfe8ZULlQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q9TyOqJQzk8mjCBO2NwDdC56bw++GUQY2SSkgFqzlpc=;
- b=q7sKaFc3j6kh8eqOnP0MASvcPjVF/EzMIPEYokt5+DO2L4OdgMpTYL3HcoBw+CawDyWcl5LvS6n1o7WT/7srf48tfkvXBZqE6kJIHf5x3fJFhxpxWkxPN1ncmzt50zMFW6nuCRAMxks21w3fndEaSzFxv+jKonR58M2a4fR4M1Log2BSlyHJVVO67xdM0S3LpOv8i4QWF3Bsmtqd8cZxO3bPxxjEzdKZZDqO1db2tbHayAQDKvs5D2iUc1krxtau9yIB73uaU7ioEsHgzzSvcG6kpvUgYV6vpfBqtwJTxwMmpdxIm8tVmoXYYC9PHMEZsbu+UTBvmx1GI4nIGDDPdA==
+ bh=y8bLK5UA8+n0FfxqSaZGj8XCfzPJEMK5kNCq/p82M5g=;
+ b=NG7TsgKqx4lI4cPskYlLhr+WsuJExVRV7SPmpOY9gUjSYvqelwxWcoDAFQxuF/vVIkiTotZVLh7lH66JzoU1PhiFeCpfw+XWVHuFfSI/OLsrcjoJO4jpDO3gAVOTuhCHmtH4yIZB/XhbzmNFew8nRbb7GBKIRrpU/1bv/FhPlc4CKR3Q48LyJB8SyyBJD2TgEASQXmh929S8F/gVfcQJnMXNaTyNnp14egeP/FKNa4To2PWOJfw3hvxYUh3HSbZtKsrpMtuS/+j3FhtjD7bBCh9EmOW5Ucvj8zSyW5jQ6axZQXvuqvFitlchjB7bkmBxJ8t8Fu/TI3QFQb0QJNLVZA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q9TyOqJQzk8mjCBO2NwDdC56bw++GUQY2SSkgFqzlpc=;
- b=wNM+PhPQ5HWcZlZfk/4iRXz0gxxciaI8Oak5K2Tvi9NzgfBQ6tY3KNfkeYWJRtdeedtoGsTOK3lrxihW9KncXUk//tdSM1knExSq6u3W4hO8q990oJc2ANmssNZQw+7mc8ZPuZl0QcYbCSaLMOUfMe1IEexNxl7mgjBxN3DSou8=
+ bh=y8bLK5UA8+n0FfxqSaZGj8XCfzPJEMK5kNCq/p82M5g=;
+ b=jb+9qKNwgmMVUt/+Cq0klPPfOjgZiZmkYA+jW8Tbjja7V+bEb2GCZ99iElxthG7v5ek36MjJoFyoI1+6GjJiJptlFgvIr8/BjIVu7xPJviDLuWr3ZFI1wU/0BhPC1PRU20vm2wQaXVnNueXUMo8lAQ+zKN+sYrC6xwnVsggNzR8=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO6P265MB7248.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:341::11) with
+ by CWXP265MB2694.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:ab::5) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.17; Fri, 26 Jun
- 2026 14:45:17 +0000
+ 2026 14:45:21 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.016; Fri, 26 Jun 2026
- 14:45:17 +0000
+ 14:45:21 +0000
 From: Gary Guo <gary@garyguo.net>
-Subject: [PATCH v5 00/20] rust: I/O type generalization and projection
-Date: Fri, 26 Jun 2026 15:45:04 +0100
-Message-Id: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
+Date: Fri, 26 Jun 2026 15:45:12 +0100
+Subject: [PATCH v5 08/20] rust: pci: io: make `ConfigSpace` a view
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIAHGQPmoC/3WOyw6CMBBFf8V0bU07tKCu/A9jDAwD1AXVFoiG8
- O8WNMHn8k7OuXd65skZ8my76Jmjznhj6xD0csGwSuuSuMlDZiAgFgokN/Z4dvZE2ASSy5iSHHW
- WJqRYcM6OCnOd+vaHR/ZtNtJjyZNwdGnDUDNjlfGNdbfpiw7G67/BDrjgCkFLjDdAhdqVqbuVr
- V3V1LCxq4tmPxbrTz8KPmrMSUapJvzhqxdffu2r4MsiAVCZgByzd38YhjvXvfnqUwEAAA==
-X-Change-ID: 20260421-io_projection-16e7dc5ba7e4
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260626-io_projection-v5-8-d0961471ae50@garyguo.net>
+References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
+In-Reply-To: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
 To: Alice Ryhl <aliceryhl@google.com>, 
  Daniel Almeida <daniel.almeida@collabora.com>, 
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -72,14 +70,13 @@ To: Alice Ryhl <aliceryhl@google.com>,
 Cc: Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev, 
  rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, nova-gpu@lists.linux.dev, 
- dri-devel@lists.freedesktop.org, linux-pwm@vger.kernel.org, 
- Laura Nao <laura.nao@collabora.com>
+ dri-devel@lists.freedesktop.org, linux-pwm@vger.kernel.org
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782485116; l=8182;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782485116; l=5908;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=qN4Rp5rSJO9iZNzBa1LHWlwtyCVDcc4D/NvE7r0zlno=;
- b=5P1b+WmmSsFDW5eVEo1XahuF6Q+rI5zPBm1R+nmycF5fub+RJ6VwDXIktyMzFTBPiLgpi+jXH
- H9OBtHY3q51AIm0DzWD9bEoc/7yMB5InuvHq+xQ8Ttex2K6wLj+Cx3f
+ bh=fihaNEvBsUOHv/rajYVxMKB3dacL3pnz1EOCGPpcawA=;
+ b=4U6K2y3yHbcoEIoFOF6udWUNobuNqxq52fbS7cTBGbtUCowk9rqxCE0Aw9pGmF8mMtIXGzigr
+ ORyQkNAR2ZJAqF1U2OWYzhwidU9m0TRGUyRfYJwIj/YrC2u1Nwct4OO
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO6P265CA0010.GBRP265.PROD.OUTLOOK.COM
@@ -92,242 +89,217 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO6P265MB7248:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8f93a760-6fec-4821-4db5-08ded39189e9
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWXP265MB2694:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7236f7cc-e036-4b61-123a-08ded3918c55
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|10070799003|23010399003|366016|7416014|18002099003|921020|5023799004|56012099006|6133799003;
+	BCL:0;ARA:13230040|7416014|376014|23010399003|1800799024|366016|10070799003|921020|3023799007|18002099003|5023799004|22082099003|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	4Z1MiGqhtz3coS20BQ1dpU9rvzSQmS4tpqjBktUWDnV0ockpl3HbjoDua4yE6H/R5+OMA3SbWDhU8p/T3b+pBp+m8xoQTED7NrzSNmr9vIedBleqjWgEM6FMIlb4SfKYSDl97ndLNudeYJaDg7S+R2dZQbxF9tRvaLFxYAqp3eqDWKEuBWtRpfhufpUnguMKMQo8dCsJhVYm/etIDebnxFaPHpd9ykNNdnLOmwrp6XGjXPk2RPl/NafUocx0hYCcOudbOYv+7t1U2EMJF97ZH/aQ0/4BDghrqmjAEpCXkd1+/AzPaKoSIeQ3Aw2CX+dCEGlJXkFn1FxYhTzpozZ+nQot7M28m4Vx8kpftfeEoDo/pKxPkuigSEOqlDHXnkbZLiXHgBWs7ABCqXa/nulJntVLRBA4qBo7LGzUlZaX/JikpHlyhLQtxCMAinRRMaO4WNR9Zt55vfSZ92uYwQK0hNUOzGTsE7Hi7t8vACDcON/TkAec4jGEEVSegAdNcsUAEufIeJnpDnbSlnvexlE2cD19T0KdgosyqneI1n1BaxY6UH73EXLQAejiymd1VXMjENovrJmisXnWMA2plvoobJNFKfOOnqPY7SPuIYGbhIolMV6f0FVEMWgd3bq4jTkdxNF+yeENtK2xaTUBKchKFQ==
+	+1k87Rxba5G8D1ovsAcx51quZ5ub6qssO/qCf40xkH9mA5RyeO2+vQE2Dt93q0UaNbIxJ+BlsbJKSSoPUmlQmbgPXDYJf3WpSGE4l50EykS6sBfCPeEkne1NvPwmVd/6ku7KGO16Y2u1V/rsc+seukoKIoDADc97mwg9bGCFtG8F7WSL0DPXH+YkOAKtQ9iw5zDvLzcnWxHjwXuR+Dk9UbO46yvYbPwJRNRfVNIWf6az06a+98iQSy5XDMxNts6yPaeW79A3pUAh3+5s7M0EGEwtyqjd4mHftkQATRwfkVUquCUImb5Vn6SHhWCJf5ilIoqHUFSTNSMc39+buT57kLBHZjnv4LOYcnWihlTaatZY8SGWNJl1X2Pz1Q/iMZ3fjpZZ5er64CMgVeh0X0IpTsxdhRlAyOs3JmYYoa7Nm1hDTEWeUEGtwOMzb2qi7vXEbzvBXC84xS8vMJ4wmKSup37ndKY9efOyewPeH8/S1dqajeSvxtoiLIpKL8DhEvg44a9cbqmH+TtB8ycJNSM0lSLVlEeoddFqT4XOhWoVK3QUnCevPDqmMnuzyFgwB18LumkDnlMtnUF/32iyvEf1+y+bpNdCvMeaBpUuzoVsBinpLrLN6fxUx1QhuoKOIZRJeMuGbbL0EG85KPqQ7/ntaVTXUMONkg8O9X4Vq236M0Pt3+A3I3Jb+jWFV8MeAoQgIUP/NNgDV6KYLMVAmb7V3w==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(23010399003)(366016)(7416014)(18002099003)(921020)(5023799004)(56012099006)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(1800799024)(366016)(10070799003)(921020)(3023799007)(18002099003)(5023799004)(22082099003)(56012099006)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cmNjODkvL0xFT1c1MGQraDY0bmxRRnhReFNaRDFadlpmaE8rNnJoMllUTG9s?=
- =?utf-8?B?OU5jK2xZblFOMkoxR0VEVVM4UGUyMzI0V3YzTFVKcEc5Sm5LdFBkWWlIbnVz?=
- =?utf-8?B?SEUwN2hlb1NiRUQ4VU91OHVzT3dkL0daYWloMG56ajBIOUQ4VGFKU04vOGdM?=
- =?utf-8?B?N1NSVkplVmlXdWp4UHJaUGV1UjJNMHVMMkVRSDQrM3RNb1lnQkVDM1hXejlh?=
- =?utf-8?B?dHBkdWxFZEZBbkh6eDdrci9nc1dTZ085Mkd2Wk1LMG5iRzdrMEE3cU1RSU5p?=
- =?utf-8?B?Y0ErdXFYY1QyV08yWFYrUWo4eTV5OWRxcW1tbnBKVmdsMHhlS3MzdGF2YXdt?=
- =?utf-8?B?a3p4NlBOODVBV056NWI4UU9CVmZuMjVJcm5VanNlaS9UY0ZaZ0xkQWNCUGYr?=
- =?utf-8?B?cVIvOFFzcithdU5SM2NTSTE4QS9lQjVGYTR4TjE0Nmd5ckpHaHBwMEI3NjU0?=
- =?utf-8?B?U2dRRzlnTktTaXVLWHpvQnNXbkVCT0FORFRBN01JaWNNWkJoZjJheTZHNWJN?=
- =?utf-8?B?YnB4M0VUWEtRdE9hNGRDdXJnWmZGLzArRDdWYXZ3YzU1NDZaSGZ2eHJMWitO?=
- =?utf-8?B?MXV6UHUxTjhoVFJVd0pwWStFL1pHSzhLZHJORTViMUd0WUxkNmdTTkVjckdr?=
- =?utf-8?B?STVJTzNqRFVuZVBiWmttd2hNVlRiUDV4WFRWRURuN0dwSEd2ZnpzY0JzRVlp?=
- =?utf-8?B?M0t4cWh0U094WmhSQkZWeEhBYnpxSWxaeVJzN1ZzSytBM3MvdDNRUUozQkJp?=
- =?utf-8?B?c0V3QnRLWmR6Z0lqRW8xZnJNbG5DYzE5RUV5Sit3OElIVUNmWXpnUWlwQ0dV?=
- =?utf-8?B?SlhMODFoTEtBNlpzM1owbUp0blExZnIwSWVzNi96RW5DL0xWckNFUkJKZUxP?=
- =?utf-8?B?MDE4eXNDVDdWTFBONzBmbS8wTkVzU29KcGNpZUpmeXlMWUdacDJCOXptdUJ4?=
- =?utf-8?B?TmFJUkgwWi9UUEtpdS9MV0RNNndTbHhITms4aWVCOERlMTNmcVR5c25Sa2Jh?=
- =?utf-8?B?NSs5c05qWlRINzBqR2hhQklJRFVXL3dZM091OEFybVhZdFZMV0NzSVNZK3JY?=
- =?utf-8?B?VXA4bWRxSjlDOUtOREwyV3Y0WnpnZHpHcm45ZHZjY0hxVWY4VGMycVp1NXZS?=
- =?utf-8?B?ZUZDQmtEdGpFeStKclVXQ1RvWm9kL2Z2UVNwNmFHa21zWUFkN1dYWmErQ0ty?=
- =?utf-8?B?aVVST0E5QlVMa0RweDc3T0lBaG5WNVZ4SE1Zem10SEIrTzJpVTdhdHpaVWRV?=
- =?utf-8?B?aE9QUDdnQzFqK1hIaHhBcHNBSjJPbTdkQ210dWNBRG54Tm5qQVZoUkNuSUtj?=
- =?utf-8?B?OFBLNzFQOFdlVmVIWWx4L1ozN1pJSlhjZTA2bnZFVGI5d2pSSkVXY2VqUjRG?=
- =?utf-8?B?ZDdaVU5YWE1LSDMyN0Z6VEVMMENBcHBUR21mRlYwbnZOL0dxc01iNDBYajZm?=
- =?utf-8?B?UDUyV29LMU1XbkthQVlFNGdZT3Y2dDZER1IrcmowUEpUUDFmNy9WZ3NWS3dB?=
- =?utf-8?B?UVZKeUpKK09FUmdhNGd6ckVZMjZhbjVFUkRMZGRRajZnbmQyZm5ndDNtY1Bp?=
- =?utf-8?B?SUxhendVdnlqZU9ydVZKb0lFeWhaekFvQlpKM2tydnd1eEtVbm11RlZFZW5r?=
- =?utf-8?B?WTBobDhGNXdwUUMza1lrWk1Zc0xXSXdGOXhxbENnZTVQRTNCbFlpNkVxZXRB?=
- =?utf-8?B?dVg5aGxRbDIwTVM5dVJXeitkcmZ4L0d1WVJsaVA3T1I4L3NZOCtGNFg0eW43?=
- =?utf-8?B?WS9WdGRsMXhXRExEcVcvR084R2ROSS9UTFgrMmozQ1JIbUhzL2xPcisrdkZ1?=
- =?utf-8?B?WHBaL2dLNkJSakQwQXlRaE1vMDNaTzVaWjZxbTFpekd4bWkxbU9kY1EyVitW?=
- =?utf-8?B?djhwb1AwdjhoQndwc2Q5L3l3TFBwMmZpeUdodHd4QzQ5NzMvSkdId1VybThY?=
- =?utf-8?B?cHd5Tk1qelgxTExnSTQ3RFc5NXBsTjlKekgxVE9Ka3IycFMydE9EdGM5b01T?=
- =?utf-8?B?U0djdWZUbVFwUkZHN1lvamJjUGxKb1RKUDRhdkp1T3lTaXhJUVg0bytYb3oz?=
- =?utf-8?B?WTVId0hvWFlGVk9NNHBsRWJKZ0JnZUZzb21kV2FFcWNGdHA5VlJncE9NNGI5?=
- =?utf-8?B?VVFVTElrVVV6OElzS1lwY3FHZ0pLT29pc2M5ZGhtMzc1UzlONSsrKzE2MUhm?=
- =?utf-8?B?MWZrUlNKTkZKbGR3ckpTT0wzVEdPNE90eWd3RkxuMk5ZUmQwVVNEb0pTRXRO?=
- =?utf-8?B?RGhzYkl2UjJ4SXVaOUlzc2EvYnBZWlcyWFhGemw2Q0w4Z2s4dy9jL3NoVGxs?=
- =?utf-8?B?bXlDSFYrUy9Vc0o2VS9nVlBKWGJHOTB4YmVuTGRtcVdjL3BzUlhzUT09?=
+	=?utf-8?B?UkYvemZ0MXpkQnBqMGdvb1NrMjRGVEpHV3I0VTd3QUpnaEFrSWZQN3I0Yk4x?=
+ =?utf-8?B?cGFDMFN1QWxvVVJJcUViVUY0M0tyeEVMNDNhd2I2V2VVd3ErbXRTSks0VDg5?=
+ =?utf-8?B?Zms2TjVzTlpIVVUxYkVrUmxub0tCZTRTajBPdGtXamc5UytVaGtYS0toQUxN?=
+ =?utf-8?B?OHRGcm9QdUdOb1RJYUZZRjg3a0tTK01vaHhWdGVTaEhhNnJ5dDFCMmhQNmcw?=
+ =?utf-8?B?TUQ1Ump2UFZMZVE2dTA2MFUxZmVISkdkaFp0QU82WlJhMWpNK3JKdlg5MmZS?=
+ =?utf-8?B?UFluUEZ6Q0p6ajlQak53ay9yL0JHKzlWb08xWUdSWXh0VTdDcG1raktTSmxo?=
+ =?utf-8?B?T05Vem4xU2hQc3pKTU1KUk9kUWpnYUdUTytUTSs5czZmTjlIRk9jS1B1dDhR?=
+ =?utf-8?B?cUpRUDJycXNvd2F0RUhMNHlsWjJpWUVJaW5oaEpzcC9pUDUvaDBHU1J0ZHlj?=
+ =?utf-8?B?b0RDTXdPUExCb283NXkzRDcxQjF5S0lJemhjbGNkWU16dklhSkVIOTNJOG5h?=
+ =?utf-8?B?TmxQZFlIYTYyU1dlR1VsNGViYUo1Qko2RXdCUmx3TitTaUpxNi8vdjVTcWMv?=
+ =?utf-8?B?WDNxdVlkS2l3NjYxNkV5OXlXS3U3N0s5UkEvOXFyZkxVMmJMajlhNnl5NWNV?=
+ =?utf-8?B?eFFGN0Q5aGpDNEd3ZGkwU2hkamU2NStRMERydlVZKzFNdnpRdDc2VEhKZmhp?=
+ =?utf-8?B?dnpkb0JSNUFlc29vN0Z4Z1AyMVJPYzRTbUNPdjhMNzdhNlhpTWJveDU0L0pq?=
+ =?utf-8?B?RzBrMXo3aDltbEVCUUx2NW5UcTIrMVhXQkp2TWMxL1VMaVYxK2hUd2hyYVFM?=
+ =?utf-8?B?am1nRndaaDdGR09xQjF0WE9qMll5VWY0TlhZWHM0Z2lpM01wdkxkc3RCaUh4?=
+ =?utf-8?B?Y1MyU0FiSVlFTmQ3RXdqTjF2NWtNcUpuV1Q3elBwanRNZXI2ZXF3WUw5aW1u?=
+ =?utf-8?B?bjhMVGF3bldXSDZZaGlHZUo0V1RiNm83WnRpZU5hdmdZWWM1T0RQSG0veEdY?=
+ =?utf-8?B?V09JQmxoNGcyL3J6bVFNVmxmYnEwQjA5aWc2T25iZnNKZlhuaENpTTdCbW94?=
+ =?utf-8?B?UDlISWVOVFNZL2dWT2I0SDFpN2NaWU9BTDYwMXA1Yi9oL1BnY0l5dWlYOTh1?=
+ =?utf-8?B?RVppZFg1Q2Z3Ull6M2UxaVhpYjd5QzYyQ0ZMNXZCMTh3M3JNeUdPSmZYSi9q?=
+ =?utf-8?B?R0xIaHE1NGJCeXJUQzB1bWNXZ3YwdExJc0p1NitGcThHTkYrZ0pMdzZvZTBX?=
+ =?utf-8?B?enNXelAyR1hFcnljNTUvVHhkb0ZHaytRS3FIZ1FtRVp2dnRKUTJ3c09MRFg4?=
+ =?utf-8?B?YVEzUTJxa2xPWWJXdkFMUzJ3QVU4bDAyTC8xeFpxbXdCVlhleDM4a0ZUNjhz?=
+ =?utf-8?B?MWpTeUFXNW0zVndYTjhDYS9DTlh3ZXBtVXRtbGxpclRCKzBZejFWQmUzbWxn?=
+ =?utf-8?B?UW8zYkVIQ1QwTmdaM09vdG9CaExNWHVlTkhOcDhQOWpjMmFOZ1R6eFlqNzB1?=
+ =?utf-8?B?K2NXQVpGOC9VRVZpanNhSnU4SlFjYXovcFRrV2xjVkQxczM2TVFieSs0ZG5J?=
+ =?utf-8?B?TTNrejJVVjBRL1EzbW1TN1NnbXVzQnlmWWdXTC8vaDZXUWJoczVEMmZoWFNl?=
+ =?utf-8?B?ekVqQzlnckVHZzNYZTlIaW5FY0VYVU42ck5MK0s3Z09yRUhTblJjU2NlVGtw?=
+ =?utf-8?B?SXN2djlWRjlxUEFqeUtXd1JSdDVpOU9YVGxRNlJEa1o5c0NlV2labjBqS29K?=
+ =?utf-8?B?aDdFYzNVaitBNU15ODlleEpFcVhWQUZONXJxdFZkbno5d1lmWWFIeDNhRFla?=
+ =?utf-8?B?OWc4czk1dXV4TUJvQ2Q3V2lvejBGK08zWFFxZlkzUUVKV1BPZmM0YVEyVlFB?=
+ =?utf-8?B?L0oxU0xBV0g2Q2FvL3ZjcGZzcHA4QWl6L3RGV1hoQVdXQVFDR2cwUlRsTXlQ?=
+ =?utf-8?B?akovdWFycU9OQWMzdXJFWTAyc0tjaWdDTU9nbkJKRkhrVWtsTER0OXFTZStw?=
+ =?utf-8?B?d3BQOGlmZFZjTTRMajU2T0xMQ1FNbkRpOCs5SDVEYUdPdW1ybVR3RC9CZzJa?=
+ =?utf-8?B?Zm5UVmpWOXNvamxuRVBLRDhxOUFBajc3aGVnQkFBV2FmYzFSZCs0NnZacmpT?=
+ =?utf-8?B?czh1MDdaUHUrcm5FMjc0NHAzd0FxMjVXQXlTQm9Zcmp5SmtwYUJwNG43ckNj?=
+ =?utf-8?B?SitUdVh3WEo2dU40bC8rOE5USldwMnJsMDBYdTlYc3ZhNHlZcVFFZmpZMDll?=
+ =?utf-8?B?TFhWOUNzeXR4cUozTUdERTV5YTEvTDE2L0x0QUJLQ1pmcTFxQ01tN2tINWJO?=
+ =?utf-8?B?NERFemJydWYrVmhJZ3RrUGFKVHhtcVVlNTc5T2dkUnpLWWFMdjVyZz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8f93a760-6fec-4821-4db5-08ded39189e9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7236f7cc-e036-4b61-123a-08ded3918c55
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jun 2026 14:45:17.1478
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jun 2026 14:45:21.2172
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fxgM1OmffTb43BqYYhok7ogu9039Ls4r803TZYovo6J6M2E1rQ0lW+tO9LNy9lyHi9QrDwaB/1DyQHboYnERmw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO6P265MB7248
+X-MS-Exchange-CrossTenant-UserPrincipalName: AhcfCU+U8O0F7IpSp1Skvw9vWdSn1tJmNwgqIE1Yvnm3T8VLdsBsaS4ymDfn97NkUd/5Rvgeyx7ydi+6vQQcUQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB2694
 
-This series presents a major rework of I/O types, as a summary:
+In order to support I/O projection, we are splitting I/O types into two
+categories: owned objects and views. Owned objects have a specific type
+that is related to setting up and tearing down, while views can have their
+type changed with I/O projection.
 
-- Make I/O regions typed. The existing untyped region still exists
-  with a dynamically sized `Region` type.
+Things like `IoMem` or `Bar` are owned objects, which requires setting up
+mapping and cleaning up on drop. On the other side, `ConfigSpace` is really
+just a view, as the resource is associated with the `pci::Device`.
 
-- Create I/O view types to represent subregion of a full I/O region mapped.
-  A projection macro is added to allow safely create such subviews.
+Remove the `ConfigSpaceKind` bound on `ConfigSpace` and make it a generic
+view. This means that `ConfigSpace` object now represents a subregion and
+therefore encodes offset (as address of pointers) and size (as metadata of
+pointers) itself. The full region case is still supported with offset 0 and
+size of `cfg_size`.
 
-- Split I/O traits, make I/O views play a central role, avoid
-  duplicate monomorphization and less `unsafe` code.
-
-- Add a `SysMem` backend, and make `Coherent` implement `Io`.
-
-- Add copying methods (memcpy_{from,to}io and friends).
-
-This series generalize `Mmio` type from just an untyped region to typed
-representations (so `MmioRaw<T>` is `__iomem *T`). This allows us to remove
-the `IoKnownSize` trait; the information is sourced from just the pointer
-from the `KnownSize` trait instead.
-
-Building on top of that, `Mmio` and `ConfigSpace` have been converted to
-typed views of I/O regions rather than just a big chunk of untyped I/O
-memory. These changes made it possible to implement `Io` trait for
-`Coherent<T>`.
-
-Shared system memory, `SysMem` is also added to the series, given it
-similarity in implementation compared to `Coherent`. In fact, the series
-use `SysMem` to implement `Coherent`'s I/O methods.
-
-Built on these generalization, this series add `io_project!()`.
-`io_project!()` performs a safe way to project a bigger view to a small
-subviews, and some Nova code has been converted in this series to
-demonstrate cleanups possible with this addition.
-
-New `io_read!()`, `io_write!()` has been added that supersedes
-`dma_read!()`, `dma_write!()` macro. Although, they work for primitives
-only (to be exact, types that the backend is `IoCapable` of).
-One feature that was lost from the old `dma_read!()` and `dma_write!()`
-series was the ability to read/write a large structs. However, the
-semantics was unclear to begin with, as there was no guarantee about their
-atomicity even for structs that were small enough to fit in u32.
-
-For completeness, I've also included the support for copying methods,
-although this does not need to be taken together and can become a follow
-up.
-
-The last commit in the series is a reference on how you'd implement
-`iosys_map` using an enum type. It automatically gains all the methods via
-`Io` trait and can be projected with the macros.
-
-Suggested-by: Danilo Krummrich <dakr@kernel.org>
-Link: https://rust-for-linux.zulipchat.com/#narrow/channel/288089-General/topic/Generic.20I.2FO.20backends/near/571198078
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
-Changes in v5:
-- Fix bad squashing of `Region` safety invariants. (Alex)
-- Fix compiler warning in Rust 1.87+ on `only_derive_is_allowed_to_implement_this_trait`.
-- Many typo fixes. (Alex)
-- Rename `io_addr[_assert]` and make them standalone functions. (Alex)
-- Fix safety comment for `copy_read`.
-- Add note to `copy_read` and `copy_write` that they can be different from
-  `read_val` and `write_val`. (Sashiko)
-- Link to v4: https://patch.msgid.link/20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net
+ rust/kernel/pci/io.rs | 64 +++++++++++++++++++++++++++++----------------------
+ 1 file changed, 36 insertions(+), 28 deletions(-)
 
-Changes in v4:
-- Added `Send` and `Sync` for types that internally uses raw pointers. (Sashiko)
-- Make `Region` always 4-byte aligned. (Sashiko)
-- Removed `copy_from_io_slice` method due to unsoundness when regions
-  overlap. (Sashiko) This means that `is_mapped` hack is not needed anymore
-  so I've also cleaned up.
-- Switch `FromBytes`/`IntoBytes` to zerocopy from kernel::transmute.
-- Changed `Either` to specific-purpose `IoSysMap` enum (Miguel).
-- Link to v3: https://patch.msgid.link/20260608-io_projection-v3-0-c5cde13a5ec4@garyguo.net
+diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+index e0acb62f58a2..89f4bb483a7f 100644
+--- a/rust/kernel/pci/io.rs
++++ b/rust/kernel/pci/io.rs
+@@ -18,7 +18,6 @@
+     ptr::KnownSize, //
+ };
+ use core::{
+-    marker::PhantomData,
+     ops::Deref, //
+ };
+ 
+@@ -53,33 +52,42 @@ pub const fn into_raw(self) -> usize {
+ /// Alias for extended (4096-byte) PCIe configuration space.
+ pub type Extended = Region<4096>;
+ 
+-/// Trait for PCI configuration space size markers.
+-///
+-/// This trait is implemented by [`Normal`] and [`Extended`] to provide
+-/// compile-time knowledge of the configuration space size.
+-pub trait ConfigSpaceKind: KnownSize {}
+-
+-impl ConfigSpaceKind for Normal {}
+-
+-impl ConfigSpaceKind for Extended {}
+-
+-/// The PCI configuration space of a device.
++/// A view of PCI configuration space of a device.
+ ///
+ /// Provides typed read and write accessors for configuration registers
+ /// using the standard `pci_read_config_*` and `pci_write_config_*` helpers.
+ ///
+-/// The generic parameter `S` indicates the maximum size of the configuration space.
+-/// Use [`Normal`] for 256-byte legacy configuration space or [`Extended`] for
+-/// 4096-byte PCIe extended configuration space (default).
+-pub struct ConfigSpace<'a, S: ?Sized + ConfigSpaceKind = Extended> {
++/// The generic parameter `T` is the type of the view. The full configuration space is also a
++/// special type of view; in such cases, `T` can be [`Normal`] for 256-byte legacy configuration
++/// space or [`Extended`] for 4096-byte PCIe extended configuration space (default).
++///
++/// # Invariants
++///
++/// `ptr` is aligned and range `ptr..ptr + KnownSize::size(ptr)` is within
++/// `0..pdev.cfg_size().into_raw()`.
++pub struct ConfigSpace<'a, T: ?Sized = Extended> {
+     pub(crate) pdev: &'a Device<device::Bound>,
+-    _marker: PhantomData<S>,
++    ptr: *mut T,
+ }
+ 
++impl<T: ?Sized> Copy for ConfigSpace<'_, T> {}
++impl<T: ?Sized> Clone for ConfigSpace<'_, T> {
++    #[inline]
++    fn clone(&self) -> Self {
++        *self
++    }
++}
++
++// SAFETY: `ConfigSpace<'_, T>` is conceptually `&T` but in I/O memory.
++unsafe impl<T: ?Sized + Sync> Send for ConfigSpace<'_, T> {}
++
++// SAFETY: `ConfigSpace<'_, T>` is conceptually `&T` but in I/O memory.
++unsafe impl<T: ?Sized + Sync> Sync for ConfigSpace<'_, T> {}
++
+ /// Implements [`IoCapable`] on [`ConfigSpace`] for `$ty` using `$read_fn` and `$write_fn`.
+ macro_rules! impl_config_space_io_capable {
+     ($ty:ty, $read_fn:ident, $write_fn:ident) => {
+-        impl<'a, S: ?Sized + ConfigSpaceKind> IoCapable<$ty> for &ConfigSpace<'a, S> {
++        impl<'a, T: ?Sized> IoCapable<$ty> for ConfigSpace<'a, T> {
+             unsafe fn io_read(self, address: usize) -> $ty {
+                 let mut val: $ty = 0;
+ 
+@@ -112,19 +120,17 @@ unsafe fn io_write(self, value: $ty, address: usize) {
+ impl_config_space_io_capable!(u16, pci_read_config_word, pci_write_config_word);
+ impl_config_space_io_capable!(u32, pci_read_config_dword, pci_write_config_dword);
+ 
+-impl<'a, S: ?Sized + ConfigSpaceKind> Io for &ConfigSpace<'a, S> {
+-    type Target = S;
++impl<'a, T: ?Sized + KnownSize> Io for ConfigSpace<'a, T> {
++    type Target = T;
+ 
+-    /// Returns the base address of the I/O region. It is always 0 for configuration space.
+     #[inline]
+     fn addr(self) -> usize {
+-        0
++        self.ptr.addr()
+     }
+ 
+-    /// Returns the maximum size of the configuration space.
+     #[inline]
+     fn maxsize(self) -> usize {
+-        self.pdev.cfg_size().into_raw()
++        KnownSize::size(self.ptr)
+     }
+ }
+ 
+@@ -281,23 +287,25 @@ pub fn cfg_size(&self) -> ConfigSpaceSize {
+         }
+     }
+ 
+-    /// Return an initialized normal (256-byte) config space object.
++    /// Return a view of the normal (256-byte) config space.
+     pub fn config_space<'a>(&'a self) -> ConfigSpace<'a, Normal> {
++        // INVARIANT: null is aligned and the range is within config space.
+         ConfigSpace {
+             pdev: self,
+-            _marker: PhantomData,
++            ptr: Normal::ptr_from_raw_parts_mut(core::ptr::null_mut(), self.cfg_size().into_raw()),
+         }
+     }
+ 
+-    /// Return an initialized extended (4096-byte) config space object.
++    /// Return a view of the extended (4096-byte) config space.
+     pub fn config_space_extended<'a>(&'a self) -> Result<ConfigSpace<'a, Extended>> {
+         if self.cfg_size() != ConfigSpaceSize::Extended {
+             return Err(EINVAL);
+         }
+ 
++        // INVARIANT: null is aligned and we just checked the `cfg_size`.
+         Ok(ConfigSpace {
+             pdev: self,
+-            _marker: PhantomData,
++            ptr: Extended::ptr_from_raw_parts_mut(core::ptr::null_mut(), 4096),
+         })
+     }
+ }
 
-Changes in v3:
-- This version presents a major rework from the last version, mostly inspired
-  by discussions that happen during RustWeek. Notably, the new individual
-  view types are now the central piece of `Io` traits rather than an ad-hoc
-  addon using the `View` type. They also benefit from type-erasure; the
-  original type of `Mmio` or `Coherent` doesn't matter anymore for subviews.
-  This removes the need of specifying generics on types that take
-  `CoherentView` on Nova code, which is something that I'm not fully happy
-  with in the last version.
-- Add `SysMem` backend and use it for `Coherent` (Laura Nao).
-- Add examples to copying methods and read_val/write_val (Andreas).
-- Add a reference patch on `Either` implementation.
-- Link to v2: https://patch.msgid.link/20260421-io_projection-v2-0-4c251c692ef4@garyguo.net
-
-Changes in v2:
-- Rebased on projection syntax rework
-- Added a new patch to forbid use of untyped I/O accessors and register
-  macros on typed I/O structs (Alex).
-- Fixed a few safety comments (Andreas).
-- Added a new patch that implements copying methods (see above).
-- Link to v1: https://lore.kernel.org/rust-for-linux/20260323153807.1360705-1-gary@kernel.org/
-
-To: Danilo Krummrich <dakr@kernel.org>
-To: Alice Ryhl <aliceryhl@google.com>
-To: Daniel Almeida <daniel.almeida@collabora.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Miguel Ojeda <ojeda@kernel.org>
-To: Boqun Feng <boqun@kernel.org>
-To: Gary Guo <gary@garyguo.net>
-To: Björn Roy Baron <bjorn3_gh@protonmail.com>
-To: Benno Lossin <lossin@kernel.org>
-To: Andreas Hindborg <a.hindborg@kernel.org>
-To: Trevor Gross <tmgross@umich.edu>
-To: Tamir Duberstein <tamird@kernel.org>
-To: Onur Özkan <work@onurozkan.dev>
-To: Bjorn Helgaas <bhelgaas@google.com>
-To: Krzysztof Wilczyński <kwilczynski@kernel.org>
-To: Abdiel Janulgue <abdiel.janulgue@gmail.com>
-To: Robin Murphy <robin.murphy@arm.com>
-To: Alexandre Courbot <acourbot@nvidia.com>
-To: David Airlie <airlied@gmail.com>
-To: Simona Vetter <simona@ffwll.ch>
-To: Michal Wilczynski <m.wilczynski@samsung.com>
-To: Uwe Kleine-König <ukleinek@kernel.org>
-Cc: driver-core@lists.linux.dev
-Cc: rust-for-linux@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: nova-gpu@lists.linux.dev
-Cc: dri-devel@lists.freedesktop.org
-Cc: linux-pwm@vger.kernel.org
-
----
-Gary Guo (19):
-      rust: io: add dynamically-sized `Region` type
-      rust: io: add missing safety requirement in `IoCapable` methods
-      rust: io: restrict untyped IO access and `register!` to `Region`
-      rust: io: implement `Io` on reference types instead
-      rust: io: generalize `MmioRaw` to pointer to arbitrary type
-      rust: io: rename `Mmio` to `MmioOwned`
-      rust: io: implement `Mmio` as view type
-      rust: pci: io: make `ConfigSpace` a view
-      rust: io: use view types instead of addresses for `Io`
-      pwm: th1520: remove unnecessary `deref`
-      rust: io: remove `MmioOwned`
-      rust: io: move `Io` methods to extension trait
-      rust: io: add projection macro and methods
-      rust: io: implement a view type for `Coherent`
-      rust: io: add `read_val` and `write_val` functions on `Io`
-      gpu: nova-core: use I/O projection for cleaner encapsulation
-      rust: dma: drop `dma_read!` and `dma_write!` API
-      rust: io: add copying methods
-      rust: io: implement `IoSysMap`
-
-Laura Nao (1):
-      rust: io: add I/O backend for system memory with volatile access
-
- drivers/gpu/nova-core/gsp.rs      |   53 +-
- drivers/gpu/nova-core/gsp/cmdq.rs |   66 +-
- drivers/gpu/nova-core/gsp/fw.rs   |   82 +-
- drivers/pwm/pwm_th1520.rs         |    7 +-
- rust/helpers/io.c                 |   13 +
- rust/kernel/devres.rs             |   24 +-
- rust/kernel/dma.rs                |  280 +++----
- rust/kernel/io.rs                 | 1479 +++++++++++++++++++++++++++++--------
- rust/kernel/io/mem.rs             |   29 +-
- rust/kernel/io/poll.rs            |    6 +-
- rust/kernel/io/register.rs        |   44 +-
- rust/kernel/lib.rs                |    3 +
- rust/kernel/pci.rs                |    1 -
- rust/kernel/pci/io.rs             |  168 +++--
- rust/kernel/ptr.rs                |   12 +
- samples/rust/rust_dma.rs          |   12 +-
- 16 files changed, 1603 insertions(+), 676 deletions(-)
----
-base-commit: 6c94b38b83a04c43ea49004275f0391404051093
-change-id: 20260421-io_projection-16e7dc5ba7e4
-
-Best regards,
---  
-Gary Guo <gary@garyguo.net>
+-- 
+2.54.0
 
