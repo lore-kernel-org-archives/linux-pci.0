@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9443F4128
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 12:06:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55963F411F
+	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 12:06:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782475592; cv=none; b=aNSvxx+xxd/9z1N1UFR+Ge74kNKqb71cRdsezcw6cAjFwlaPx71FT30IAAhQ70wFOzW6CPw8SB+B++r0ED/bX2aEfIe9TFAwUTRtWFSVEGwz4vI/BJU4GOvo143A6MiLVfy+/DaLc0qwn5ajLQBHdRYmFutZTBx/kch/YgqBA28=
+	t=1782475599; cv=none; b=Qbrl3GQZKQDhb2aqXOX2ccTl8YL7KvnWQ/AStq9gIi01niU5g04FE72JbaDNEvleY+LJaa548ksc8PQkPm2NkD3tA9fvRasZPSVeBq2uLOkuFkWJO301DzBPOAkQQSUcMJzorp262NeCBruZ0NsxGTuDnnLULTVNIJ/rzf4jWFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782475592; c=relaxed/simple;
-	bh=MsedowHqXT6VDETNK7YrcXe5U8CgRS7mukA1NyAxsFw=;
+	s=arc-20240116; t=1782475599; c=relaxed/simple;
+	bh=c6N4Y8dYVGHjF1jSlBCnl3zkzSvsvF2JtwH93QQvtPg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VN36d/OG7ynbieyRd9GtmUClV2coqXzcM+lCviuGO8xovVVh3z4mkiJPg1ljaK1pfvMaF7I0gA+7KYWz3wijqB+xaBuH+bHogshtUT3RywqVc2ElL6B2YvlywiRl1SDM2cpVpw7U9ZrglecVCZJhf+bdieSsmaWUKotzcF9x2Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VHEyf3vT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aZJu7hyFzH0i/+r+Jv20S32zBGblgCuALYrSWrYsp5OhB2bJhFdq1Bx6ai2v7iQqFM41S9hIP8/GqucENpNzF4ZG2bhq/IR3MazSxNrq0z9fsqCGbUp5Rp14cGJIcOcZctK2SWiYUmYVbENPrVUFiwKcXqaxovIYRKIjC5JQw0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dvxIEU2E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VHEyf3vT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C45EE1F00A3A;
-	Fri, 26 Jun 2026 12:06:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dvxIEU2E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A9831F000E9;
+	Fri, 26 Jun 2026 12:06:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782475591;
-	bh=kA3E2g3ttE8yH6xTuGwPiUWm4eg6v9MsNrIT9t2Sh9A=;
+	s=k20260515; t=1782475598;
+	bh=Ebfyh62a+4cmQgbyCZOBJwwzYGPxadkF96xyvQ5+pd4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VHEyf3vTqV7IHp+OjWluIJUsYMrl9sK1u94HHyETLIc/au6uPK02ipseKe7J2GFTi
-	 4h1pUn0/RLTRODaTWwSZLcKZ+7v2G4I1rYO6kHVPRc1dYvWrT8CVTo9+Od8ri1+C2U
-	 Hf+eG+sqPCH9RDFE1Abv0eVfLOC99KXH2cDboDM3xkinzcc+w3tkWbNgJxj4We8B6B
-	 lLisp07yginLrGLHySaaefG1p6ZopNGmtJ1eJUobFSB9TbTVTXVBPgZdD2u/pTdabn
-	 rd1HuzSNukVhbtUzpv3NC505Li2+MbBi4ZTcIPUkPR1FYW6qfzZD2hLXRFsE4f8tkX
-	 KV77aWFgqZ92A==
+	b=dvxIEU2Ehsl2WQSBqM5ZAF29JJ4jUDbsb0bJivkBUy5ZE/FlpnNSdvESnrpXD+fLw
+	 vOVGf259zwZDeRFRyDzAeOglbUSgWVXyz6Nbp6N48nlds5A3nhwX12LyRdjPUsS4Hl
+	 YckIOZMfCgLb+VQoNyEa+DZivFFZCQndpw9MGpDg1BKT94GszCvMK5ct7DceC+n84C
+	 jMU1stoWnGlUmGdGXMJEk+iz0mrMHd7rHlHOMxYlXbmt8JslZCWXGHbfxfrbfwAcku
+	 DXciuAvnEBc6wi/4WsRzR+9r+Etmj76O+TU1TdwSZJwNg9Nz0NCN440Hz1e9HaLVsv
+	 DRnDa5tP2CPpg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 8/8] rust: page: add `from_raw()`
+Subject: Re: [PATCH v19 5/8] rust: rename `AlwaysRefCounted` to
+ `RefCounted`.
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, ojeda@kernel.org
-In-Reply-To: <20260626-unique-ref-v19-8-2607ca88dfdf@kernel.org>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260626-unique-ref-v19-5-2607ca88dfdf@kernel.org>
 References: <20260626-unique-ref-v19-0-2607ca88dfdf@kernel.org>
- <20260626-unique-ref-v19-8-2607ca88dfdf@kernel.org>
+ <20260626-unique-ref-v19-5-2607ca88dfdf@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 12:06:29 +0000
-Message-Id: <20260626120630.C45EE1F00A3A@smtp.kernel.org>
+Date: Fri, 26 Jun 2026 12:06:38 +0000
+Message-Id: <20260626120638.7A9831F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,52 +47,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The `# Safety` documentation for `Page::from_raw` fails to requi=
-re that `ptr` points to a valid kernel `struct page`.
+- [Low] Copy-paste error in SAFETY comments for `I2cAdapter` and `I2cClient=
+`.
 --
 
-commit 06f58b70c6165ba4fd1569c291c6f0d211dba674
-Author: Andreas Hindborg <a.hindborg@kernel.org>
+commit c7fe859c40ffae9a22f5e5fa80c3b5a426e7197d
+Author: Oliver Mangold <oliver.mangold@pm.me>
 
-rust: page: add from_raw()
+rust: rename AlwaysRefCounted to RefCounted.
 
-This commit adds a method to Page that allows construction of an instance
-from a struct page pointer.
+This commit splits the AlwaysRefCounted trait into RefCounted and a new
+marker trait AlwaysRefCounted. This prevents the unsound creation of an
+ARef<T> from an &Owned<T> when types can be either reference counted or
+owned.
 
-> diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
-> --- a/rust/kernel/page.rs
-> +++ b/rust/kernel/page.rs
+> diff --git a/rust/kernel/i2c.rs b/rust/kernel/i2c.rs
+> index 624b971ca8b0b..02b2c9220eb11 100644
+> --- a/rust/kernel/i2c.rs
+> +++ b/rust/kernel/i2c.rs
+
 [ ... ]
-> +    /// Create a &Page from a raw struct page pointer.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// ptr must be convertible to a shared reference with a lifetime of=
- 'a.
-> +    #[inline]
-> +    pub unsafe fn from_raw<'a>(ptr: *const bindings::page) -> &'a Self {
 
-[Severity: Medium]
-Does the safety documentation for from_raw() need to explicitly require
-that ptr points to a valid kernel struct page?
+> @@ -435,6 +436,9 @@ unsafe fn dec_ref(obj: NonNull<Self>) {
+>          unsafe { bindings::i2c_put_adapter(obj.as_ref().as_raw()) }
+>      }
+>  }
+> +// SAFETY: We do not implement `Ownable`, thus it is okay to obtain an `=
+ARef<Device>` from an
+> +// `&I2cAdapter`.
+> +unsafe impl AlwaysRefCounted for I2cAdapter {}
 
-The current safety requirements only demand that ptr is convertible to a
-shared reference (non-null, aligned, valid memory). However, the internal
-INVARIANT comment explicitly relies on ptr being a valid struct page.
+[Severity: Low]
+This isn't a bug, but should this SAFETY comment refer to ARef<I2cAdapter>
+instead of ARef<Device>? It appears to be a typo from copying the
+Device implementation.
 
-Could a caller technically satisfy the safety requirements with a
-stack-allocated or dummy struct page, but break the type invariant
-and cause issues when methods like page_to_nid() are called later?
+[ ... ]
 
-> +        // INVARIANT: By the function safety requirements, ptr refers to=
- a valid struct page, so
-> +        // the returned reference upholds the type invariant of Page.
-> +        // SAFETY: By function safety requirements, ptr is not null and =
-is convertible to a shared
-> +        // reference.
-> +        unsafe { &*ptr.cast() }
-> +    }
+> @@ -511,6 +515,9 @@ unsafe fn dec_ref(obj: NonNull<Self>) {
+>          unsafe { bindings::put_device(&raw mut (*obj.as_ref().as_raw()).=
+dev) }
+>      }
+>  }
+> +// SAFETY: We do not implement `Ownable`, thus it is okay to obtain an `=
+ARef<Device>` from an
+> +// `&I2cClient`.
+> +unsafe impl AlwaysRefCounted for I2cClient {}
+
+[Severity: Low]
+This isn't a bug either, but is ARef<Device> also a typo here? It looks
+like it should refer to ARef<I2cClient>.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626-unique-ref=
--v19-0-2607ca88dfdf@kernel.org?part=3D8
+-v19-0-2607ca88dfdf@kernel.org?part=3D5
