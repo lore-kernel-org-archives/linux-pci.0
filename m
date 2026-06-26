@@ -1,121 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452D92D7393
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 09:31:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9710039934B;
+	Fri, 26 Jun 2026 09:32:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782466279; cv=none; b=DnLUeGfcSt2+TgML8q7KNoJ3wMZeqAIZ93v2zO8FECELZN+szISYPYWlRuPP1oqIv00VIYSUwd1JyIAbJ2azlYkG32IkPxWPqvJDhKkvWSusBPqW1cpZ3xSz2UK3Zv5TGlCEWfCekgPCRjeT5bap1Fpr7oS9R+ghjdt+emRa6gs=
+	t=1782466344; cv=none; b=YJtgNwdrXF+sfK24mXr7szdZrxTtftFUz8Y/HzC8688ABxdTjqwFGeuASp+PcnKFI6xJX+9tLPwUKgIr00TPZKufNNneP/h9I/QH2CtnFSBjleR6VxCOnKgZgDYzj91JOsIJW3ou7xtg/Z/GD2gcpGmI5hKldXTOyW3moDTOGO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782466279; c=relaxed/simple;
-	bh=rpux6yDT16ic0wS3/2Ry77dxAooCngnSjhcLkmuwQiw=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jDvua74U3Ft4OrUVnyjTI3rp4q2MhMSzqGR9chMoThRvTZkmcxWqrspsZoh1jeOg/kvBwpclVslwQd8w8gWw+G5PDy1/dlugy7xMQ1GJ9d30MtX1p74uBUT9IP3s6z49jARBqa6PudT4txjyP+EHYjGju8SdRgB6eS9p8gOobA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G90fkQMu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782466344; c=relaxed/simple;
+	bh=ISETJgny0FhUBDWnCRGIvusL7DYxDMg1h3Myi/794yI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=D0beWEsLucPB9RkG/KmWaUPedZV6LvBBtbLm5IRAHvqShuCDkHMJLN16PPBEn+M9pBbiAHlrt7s4kNAQK7ZsRVkjR+szgJx8lVoGyyLK4sNNRB0EOggum4eoGKWp1vP9Jr/vqifMMf25PPe5Hjqa8KT9EWLeCUDr565aVRh/ZNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XiAFswy0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G90fkQMu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13E6F1F01558
-	for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 09:31:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XiAFswy0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A977A1F000E9;
+	Fri, 26 Jun 2026 09:32:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782466277;
-	bh=rpux6yDT16ic0wS3/2Ry77dxAooCngnSjhcLkmuwQiw=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=G90fkQMuun1t/Wp6zxYOeg/D7HZpVsMjn2FtnyT08x7T2P9fKKpfMiKyVFCjjJEBS
-	 Hig6i16MdG1odZcB4+x6A2/k0sSgT9JLL6kJYmNRbi0ovj6S6U/95H0JPruecT/nzg
-	 GMLo/fiCJUZwUmKeZiNuW0TqlXkPl+EUcKMy2wfAj15asrA54TtrLgsbw6d9OUZX0S
-	 PBRTwPDpQqTm+0YQdVTlhqOJfvV4P1xZo61IESQB8uwQARBjReB86geB9bm1X4/Xwk
-	 WYTjJauAiiZDs3RWrF1oBz7lq9ItbvNMff0EeXgbfY4m1CFfoGfdloe9mSRAE+dBE5
-	 UnfVQGI8Eh+Zg==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5ad583dc41eso645157e87.1
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jun 2026 02:31:17 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RrG15IwGxAV7kKKaStOb1svTsjOxyWp0bT0sWl//qHF8etQegkS8CpWeqUfP64nO0dL+PdO5NiPayo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWIEOCHFFBzqUfPEEujGrRi6wjy/PfUTzxPoGpcF3H+DyKPgDN
-	oyLn0Spk4jQR5Nn6Tx/y6wHa5T/5APuzLc2p5QyL03UjMjUgaJ7BfCjBY82aqTtGquDz8fgfg4p
-	D5fopib+vN1xc8MbrCV9vDZUqV3mM5AdoE8j7C2LVYw==
-X-Received: by 2002:a05:6512:70:b0:5aa:6f89:9378 with SMTP id
- 2adb3069b0e04-5aea1f4cc51mr1390413e87.33.1782466275655; Fri, 26 Jun 2026
- 02:31:15 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 26 Jun 2026 02:31:13 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 26 Jun 2026 02:31:13 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260624-wakeirq_support-v11-1-120fbfaebe59@oss.qualcomm.com>
+	s=k20260515; t=1782466343;
+	bh=xuaZxxUxiDkUsheq3lHvaYuGanzSsZ7TpmpR+u1/KAc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XiAFswy0N70ie9A8+dn8NgxpP467+mzDNhDtxFPAxZK/Ru6P7gpLTCLyiEnajyXMz
+	 yEXalNHOzt2UTIS8W5FK3W0yIdgGe1SK0UQQxmbGFfl3w6f14JXUPXRbXVXZqTvnPs
+	 paDT1YJGf9ckDNJRCSeio/w7hEHAGCkYGxmANVNsqnFjUgRU8I1Iw4iLnlgIEw1vhJ
+	 XR+6pG7Vdh7B6RKI6oKob4H48ZDBAR0bXIwGaqvruBhJvebYPtzQKCzjRQPj8YEL1m
+	 l35U0vjIkPr1QetAPBQWVtaSuIMtHkwswolVaUTp/p9HGawpoLIkCu11i2TBD1fLSN
+	 rUX9oezSRcAuA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 4/4] PCI: mediatek-gen3: Add 2-lanes mode support for
+ Airoha AN7581
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Christian Marangi" <ansuelsmth@gmail.com>
+Cc: linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260626092029.3525264-5-ansuelsmth@gmail.com>
+References: <20260626092029.3525264-1-ansuelsmth@gmail.com>
+ <20260626092029.3525264-5-ansuelsmth@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 26 Jun 2026 09:32:22 +0000
+Message-Id: <20260626093222.A977A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260624-wakeirq_support-v11-1-120fbfaebe59@oss.qualcomm.com>
-Date: Fri, 26 Jun 2026 02:31:13 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MenARGtsG9EhF7zVgcOeQGAYVRZc906j4tBDHQzzsc0hg@mail.gmail.com>
-X-Gm-Features: AVVi8Cf30tKZqffjS3ZAp3xIi5Kv5KtWMy22eC3tfJBlDmG5o9u1ykXsqyuQesk
-Message-ID: <CAMRc=MenARGtsG9EhF7zVgcOeQGAYVRZc906j4tBDHQzzsc0hg@mail.gmail.com>
-Subject: Re: [PATCH v11] PCI: Add support for PCIe WAKE# interrupt
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	quic_vbadigan@quicinc.com, sherry.sun@nxp.com, driver-core@lists.linux.dev, 
-	devicetree@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Saravana Kannan <saravanak@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 24 Jun 2026 13:25:49 +0200, Krishna Chaitanya Chundru
-<krishna.chundru@oss.qualcomm.com> said:
-> According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
-> two link wakeup mechanisms are defined: Beacon and WAKE#. Beacon is a
-> hardware-only mechanism and is invisible to software (PCIe r7.0,
-> Section 4.2.7.8.1). This change adds support for the WAKE# mechanism
-> in the PCI core.
->
-> According to the PCIe specification, multiple WAKE# signals can exist in
-> a system or each component in the hierarchy could share a single WAKE#
-> signal. In configurations involving a PCIe switch, each downstream port
-> (DSP) of the switch may be connected to a separate WAKE# line, allowing
-> each endpoint to signal WAKE# independently. From figure 5.4 in sec
-> 5.3.3.2, WAKE# can also be terminated at the switch itself. Such topologies
-> are typically not described in Device Tree, therefore it is out of scope
-> for this series.
->
-> To support this, the WAKE# should be described in the device tree node of
-> the endpoint/bridge. If all endpoints share a single WAKE# line, then each
-> endpoint node shall describe the same WAKE# signal or a single WAKE# in
-> the Root Port node.
->
-> In pci_device_add(), PCI framework will search for the WAKE# in device
-> node. Once found, register for the wake IRQ through
-> dev_pm_set_dedicated_wake_irq() associates a wakeup IRQ with a device
-> and requests it, but the PM core keeps the IRQ disabled by default. The
-> IRQ is enabled by the PM core, only when the device is permitted to wake
-> the system, i.e. during system suspend and after runtime suspend, and
-> only when device wakeup is enabled.
->
-> If the same WAKE# GPIO is described in multiple device tree nodes, only the
-> first device that successfully registers the wake IRQ will succeed, while
-> subsequent registrations may fail. This limitation does not affect
-> functional correctness, since WAKE# is only used to bring the link to D0,
-> and endpoint-specific wakeup handling is resolved later through
-> PME detection (PME_EN is set in suspend path by PCI core by default).
->
-> When the wake IRQ fires, the wakeirq handler invokes pm_runtime_resume() to
-> bring the device back to an active power state, such as transitioning from
-> D3cold to D0. Once the device is active and the link is usable, the
-> endpoint may generate a PME, which is then handled by the PCI core through
-> PME polling or the PCIe PME service driver to complete the wakeup of the
-> endpoint.
->
-> WAKE# is added in dts schema and merged based on below links.
->
-> Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
-> Link: https://github.com/devicetree-org/dt-schema/pull/170
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+New issues:
+- [High] Uninitialized stack variable `num_lanes` leads to unpredictable pr=
+obe failures
+
+Pre-existing issues:
+- [High] The return value of `pm_runtime_get_sync()` is ignored, which can =
+lead to hardware access on suspended devices.
+--
+
+commit b24fe645228ac8c1e16f2ba7617e18b13b23173d
+Author: Christian Marangi <ansuelsmth@gmail.com>
+
+PCI: mediatek-gen3: Add 2-lanes mode support for Airoha AN7581
+
+This commit adds 2-lanes mode support for the Airoha AN7581 SoC by
+configuring the PCIe MUX in the SCU register. It introduces logic to
+parse the secondary PCIe MAC region and handle necessary PERSTOUT resets
+for the newly supported lane configuration.
+
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/co=
+ntroller/pcie-mediatek-gen3.c
+> index b0accd8285892..14893cff135a1 100644
+> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+
+[ ... ]
+
+> @@ -949,18 +965,38 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie=
+ *pcie)
+>  			pcie->num_lanes =3D num_lanes;
+>  	}
+> =20
+> +	/* Map secondary PCIe for 2-lanes mode for EN7581 */
+> +	if (num_lanes =3D=3D 2 && device_is_compatible(dev, "airoha,en7581-pcie=
+")) {
+
+[Severity: High]
+If the num-lanes property is missing from the device tree,
+of_property_read_u32() returns an error without modifying the num_lanes out=
+put
+parameter, leaving it uninitialized. If the stack memory happens to contain=
+ 2,
+could this enter the block and fail the probe by returning -EINVAL since the
+sec-pcie-mac resource would be missing in a 1-lane configuration?
+
+Should this evaluate pcie->num_lanes instead?
+
+> +		regs =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "sec-pcie-=
+mac");
+> +		if (!regs)
+> +			return -EINVAL;
+> +		pcie->sec_base =3D devm_ioremap_resource(dev, regs);
+
+[ ... ]
+
+> @@ -1024,33 +1073,47 @@ static int mtk_pcie_en7581_power_up(struct mtk_ge=
+n3_pcie *pcie)
+>  	pm_runtime_enable(dev);
+>  	pm_runtime_get_sync(dev);
+
+[Severity: High]
+This is a pre-existing issue, but is it safe to ignore the return value of
+pm_runtime_get_sync()?
+
+If the runtime PM framework fails to power up or clock the device, accessing
+hardware registers directly afterward might cause a synchronous external ab=
+ort
+and kernel panic on ARM platforms. The same pre-existing behavior is also
+present in the legacy mtk_pcie_power_up() path.
+
+> -	val =3D FIELD_PREP(PCIE_VAL_LN0_DOWNSTREAM, 0x47) |
+> -	      FIELD_PREP(PCIE_VAL_LN1_DOWNSTREAM, 0x47) |
+> -	      FIELD_PREP(PCIE_VAL_LN0_UPSTREAM, 0x41) |
+> -	      FIELD_PREP(PCIE_VAL_LN1_UPSTREAM, 0x41);
+> -	writel_relaxed(val, pcie->base + PCIE_EQ_PRESET_01_REG);
+> -
+> -	val =3D PCIE_K_PHYPARAM_QUERY | PCIE_K_QUERY_TIMEOUT |
+> -	      FIELD_PREP(PCIE_K_PRESET_TO_USE_16G, 0x80) |
+> -	      FIELD_PREP(PCIE_K_PRESET_TO_USE, 0x2) |
+> -	      FIELD_PREP(PCIE_K_FINETUNE_MAX, 0xf);
+> -	writel_relaxed(val, pcie->base + PCIE_PIPE4_PIE8_REG);
+> -
+>  	err =3D clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626092029.3525=
+264-1-ansuelsmth@gmail.com?part=3D4
