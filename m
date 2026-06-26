@@ -1,54 +1,53 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022142.outbound.protection.outlook.com [52.101.101.142])
+Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021075.outbound.protection.outlook.com [52.101.100.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661383FD941;
-	Fri, 26 Jun 2026 14:45:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E2D3FCB05;
+	Fri, 26 Jun 2026 14:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.75
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782485155; cv=fail; b=Gg9xSReSRrzru6meQnLZnqgjyt2Xs2zf+58gOJHo7aRPT7NHoeyQdCwO0okFe1axQVP3MED1zO2v9akhT/GzzRHLK7Sv1Il4Ylc7xGwFjESNIeqtcIw0hC2lue2MdzzMmo68pKHiiZUkpAXPOW+Zf9C5GlXGfO8GZa5N7MY96T8=
+	t=1782485156; cv=fail; b=UrLZkAu48pc2w/17CtVcipwjnkuIq2DxGY3hr1mIZD+vO4aBGroYpA8phumLx69evdg+NO3IfMuxY5PTPXAmk8HGZZpFP/kzdA0V/N0o5vl5SWI01w/Ftv/V/Aj5UI89YgfmaiJn18B0fiq//o0bteapUb2DuD40ilo0mzchS2M=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782485155; c=relaxed/simple;
-	bh=X3jtfWZLQGJZh2g9tCEqgAxb4lmWw01CX+lOBYGY4qM=;
+	s=arc-20240116; t=1782485156; c=relaxed/simple;
+	bh=um6cTW9AX/ZfgyDuPqM0KWFysy6fm/Z3QMYdK6hsSXw=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=pdZ0mCKlXvBkyMkrq0yef4NmkcR7kSQTuwDrVP3fzsR43ME3KAdPxzLhA+oNorYkd26R2j+khhbxz41Ac97b+TBgv0EbQMpLZqKlSN4/Ygh+aMe1rQ0lF/pxfVnh0fo5NT5bSk6RiCXJDN+1rZby0YZD489rkcou3en87ducJ9w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=fXZvzix/; arc=fail smtp.client-ip=52.101.101.142
+	 To:Cc:MIME-Version; b=epFnBSt1RB5/1+zFgRDtwZFxmSFqiXOKB4Z3tJNuGGu1rhV87RW+7VqKR9EEFvYgwj1zrXkM8ORiKiJjyc7NVjDR9H8t7ibBexAMvtddx9JfaNTvVTuEAa0DWB23ourLAOYixVIGs300Rtaelc5B5vuPPTHDDflpO1JrOgmn5fk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=ZgxpmRg0; arc=fail smtp.client-ip=52.101.100.75
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="fXZvzix/"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="ZgxpmRg0"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m3iOwG8cpRaQiMV5iUXg3VO6rFllgUV+quh/FQhCEGVhsJcxzUuvWcaBzFIzF2/NUJW8S8SzpP1jVO9dvPTQU7+O60m/QLAZc0Le5Eo5vq7xu8+w4bbvt/cW0ylVbHjIKqPwS/ZReibZP/GpJuENlONg0WYu6p/y1wzjmIMH4h4FMqj1mnz+D0BsdR88lv9cFI+xONPbJ0RAhJp5jmFR5+NsPjHgwnP31tLAVlHSWvOIxEmUZdlJhPR8TF+EPpZD/cTebLX/q5vSoScjjyDDH2ue2zVcUQBzVnKYSNUGj2MAuHHxj9Ne520FCwzXn7JMWL3IiJAv31hmCORMz5l9Vg==
+ b=VM7ysP7Rydxt6osR1oCuw/z4P5pQbnlYecvqW+EBGy7EW7LYJiw+7mePXtIHwcyyZuDnDrw/+TwGaZ3YG4cvZLbqRh2U9lNOeD12G4qW0VzoTZ4nZydd4MJJhHJ0j1zYLeMJcMBSclkDW/sCqQctvaVbP+6XZXmIFlzuGWfxG+bFSTnH14+rF2lHHpYOWMPYRmmKyjlmi6Jdo8Ur4kWBLuZGDYBxLDMytN4mHy8Bf/HYxlK0ELLDTwvZkf4gIybQKLQaS9m0t1jA31TLSS42nuqIGpA8q2X6gULrkmqjNfrUAZAXzRDu+Y9Xjsy/noke2+AeGSZOvxi9OlVvREK97Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VvP3V1N2DDGsrmatTSvhoZJuRmdEBJem5u3DqqZsDrA=;
- b=TI0aWEjWVl578lKW01MLghCkMwqy0gQPLhbcSLtmg14rGPupcfkl4EOjrwbubktTn/Hrrmt7+jSh/cEqhTcjDQljRc7U/4TPlbXjGp4nZ8o7MPPSc0Ewgzc6/q1J1PS3/aWbZtWfsjEslqiFtXfJ9wsl788oEInKMHRfWZcjGH0aV9SPlPoBbckyWAEX8EN3MGUNcPVe+fq9rBuziV3V0ECYuf9MPlmY3SbMLIHBShicff5bdmm6EWA+GNWpO2WrIslnsoYAYlzB6QTVCVKxD6CpaHJE7uM7sMBoJw0GS7j7oPSJ85Pho/F7ditnZBKO6p48gPGbh+wUorCUYi9qRQ==
+ bh=H9wQ15I+NBRD+S+qojXgJPVcWlu9LaUPUdTo0T5SEhY=;
+ b=YQ+220HWn7T8ASNOd885YfW5S680c9j0RZ7OZSNXbdEbVgW4+twAbuJc9koe5z+AcVQHJSbcuojrtU9/TxXsg9c68ogtaoeJT6KgS09CkmsLNOQ7qIWqaXc7I3YOhQsT7UZ5LkdH0ya2O4/MZZjgQtuYX29cA1qYFcnH9dBccM2IgRFGi5LPo4p1XJDVVexcrFvbohnDCYuDk25XzOn/MEm9xCOjlCLSC0nzgOg6PZTcf/4pFHTu3AJ5ZKp2qynLcgvbIX8tNjDJXkKapk8OfCl1lbCHv5GUynEElz4Rt3KRQXMqHyjVu4YC3njQjTiHQfnvRoEOluQ3zhNoXUVMYw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VvP3V1N2DDGsrmatTSvhoZJuRmdEBJem5u3DqqZsDrA=;
- b=fXZvzix/Okv2IiJzlf5/ZGcgX+qtNkEDiia3b/+ib43mne2NXF6JzifaoBZlqh7uVWr/l3S6bGBBZTeYiEQy97I72kODd+DSgJdXVhD9YUfWS7l3s4p8e1CM1Yk5ouKU0FlWuGD/uXbrkGOmufMzxO56XbZaId0wlAP67s/SYHw=
+ bh=H9wQ15I+NBRD+S+qojXgJPVcWlu9LaUPUdTo0T5SEhY=;
+ b=ZgxpmRg0e1bCRX0Oo/scDyw5TsjPpey6KluWZqCWxx64bL4+3WKyrYaCXj21esTLNQDkQcDn5ebzI/1VeDmcHcJbPDntHAmj3gAzR38AsHPKQsLebpWpSPskOS4KV2Nkbq1DiCceKyJQJJwuVrrD2FatMrHS9Ac9JLIjNtDYmDg=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by CWXP265MB2694.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:ab::5) with
+ by LO6P265MB7248.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:341::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.17; Fri, 26 Jun
- 2026 14:45:25 +0000
+ 2026 14:45:20 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.016; Fri, 26 Jun 2026
- 14:45:25 +0000
+ 14:45:20 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Fri, 26 Jun 2026 15:45:21 +0100
-Subject: [PATCH v5 17/20] gpu: nova-core: use I/O projection for cleaner
- encapsulation
+Date: Fri, 26 Jun 2026 15:45:11 +0100
+Subject: [PATCH v5 07/20] rust: io: implement `Mmio` as view type
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260626-io_projection-v5-17-d0961471ae50@garyguo.net>
+Message-Id: <20260626-io_projection-v5-7-d0961471ae50@garyguo.net>
 References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
 In-Reply-To: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
 To: Alice Ryhl <aliceryhl@google.com>, 
@@ -73,11 +72,11 @@ Cc: Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev,
  linux-pci@vger.kernel.org, nova-gpu@lists.linux.dev, 
  dri-devel@lists.freedesktop.org, linux-pwm@vger.kernel.org
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782485116; l=13099;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782485116; l=16251;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=X3jtfWZLQGJZh2g9tCEqgAxb4lmWw01CX+lOBYGY4qM=;
- b=nEda+0TNrXVHYD4+jP9t2x1QdiB6dUKSJm0jCMPF+3KFg9gBHGZ/rfqOj45erTR1rtNEhFequ
- wyapF50FytyCUt6URynTKLkyJwuXsKGnHnXVUALJhp/7exfaQzNWvo5
+ bh=um6cTW9AX/ZfgyDuPqM0KWFysy6fm/Z3QMYdK6hsSXw=;
+ b=62yeWoQxrRrr3S1+JQ/YnNTd43j/Ocpama3E8HprvDW+iS9Z6jNzbenrX7joQ9N7BJssjvSw5
+ NQVGolTzBW/Ch3GUgj0erkgrUHJ+i4uPzj3SmRXJ6hC9fCyhCq4Xlk8
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO6P265CA0010.GBRP265.PROD.OUTLOOK.COM
@@ -90,436 +89,571 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWXP265MB2694:EE_
-X-MS-Office365-Filtering-Correlation-Id: a2dad0e0-8eb5-495a-dcff-08ded3918f05
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO6P265MB7248:EE_
+X-MS-Office365-Filtering-Correlation-Id: 806816a6-1688-4380-9678-08ded3918c05
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|23010399003|1800799024|366016|10070799003|921020|3023799007|18002099003|22082099003|56012099006|6133799003;
+	BCL:0;ARA:13230040|1800799024|376014|10070799003|23010399003|366016|7416014|18002099003|22082099003|921020|5023799004|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	2qlNOjhLuY0Y4U7foSe+0YZRwHPBsoNh1LRs7jT2JAQdJhFJR5cWuBKGy+aXSx9KqlQbG1yoNDhibZGOhdOaAdX1b1Ml7YGF54eGSWg8MX237I97ZiwgZaaUw25sI0Km2sg/ckYLAJtT8G+XfMpkg89cAE7gJoW5r+YMKPl5yJgmjq+hOpRDLcF7KBa6Ynyc8DbEDle7aTbzNaUN5YZJsoIn/b5h3BP+rJHwdE8R7QPlTBJ/DnSutDOXVj/ws9sexZeqwhNeW9yto0RooN7nHl3ASQxmRXfWmFvHFskhP0ssgfpDO92WZigLLpzspjb+xlvVqUGESBInzmdGzX+w92Wl/Kcr1G4nYOzyIL81kEVGKPz+hIxbtMBagIvnasQVwEwzzql/faKTKdrp6kUmmpmQ+1Fbcoo91vZTOlmSWpa3LSPDF3bkHzo4cyRcNM28rU1Ee7pvyBFyHLDc3RAd4L0h7nm+dJfUuMCnXEBYn7ivBwqLxxDQUh0CbxNCDoTad9PTpJzDV70NbfqPK1qir4NFgaMC/ob6K02L+2xyyOy7q2bgev9CCthdHM2GiECTMc/74Jbgvr5/8CkwFBDzpkObw9oEUAxB+DJyGH1W8g/TixID6k6DNDMq/1qNXTJSyM/YA75JZOlGxZ472UznGnCCflKsvFI5sDae/AHRkdhURfO0q3AIyxGtoVoFye166kXdlUSXqIhImAufFY7ObA==
+	B3O51/N66DIhwihGSdx9vu7YWgBaivQTtdpbcGl7dqs718G+1qC68UDfRIAmxFNDMKQAWEXRcNGO3MTFtS0n8JQMpvg1lACBF5hMYQPu4hHlASFCdWRkSvkxCKCVROxD7j+XNC1b8qZtbUlYF8l54/zGM0AjaQMpurwNdZGeNLWNcOQd4dDRFMGngBXSuSXOqwjOpez3BTIEqIIQPS60EyA6ZnSN7oYocg6rvIzUO0aonzIE6Aa1+mJe+LxKzOEWTNxBRHuUd4aBlWHKhKQsrOhcq7q9BJS6qYa3puqz/dqyZIpX69a1YFj1uc4Au788pMefoylRmN+67Z2UnZKVREYIm/fnYumbDJ6gWsOf7zcvnfyUFQepHoChfc2t1DkfWizP8/MlCO8as1zxIlmwaegb9JFBbFL/az0YfHaQ/2A3A4G65yIFtWABgtAx3JXtdLLwBnv8bqjX2DpH2bY+Na+uF9FTLSWsLHow/LI6JrEFygW4jIiIpBZBaHPgAR+9boGVeu6vaUG6NbN2QgeCYCVpDUY7NWhnZFmLmayZEXnvQNPs97JqrZMjbgGZ4NawDv7VJLR5RaKJiUX17yk3ZXfYAhFvWCsWtVF1IVSDJ6AaFI3yf2ZnNar9JJtvkk6G+o3bzdW2hATrCgAujjwijBc9jCcT43apLRkMdcHAX5JnVEnG4uzkV6WcsHSl3SKPt8Uv6SYTz8bTTfOIRULsgg==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(1800799024)(366016)(10070799003)(921020)(3023799007)(18002099003)(22082099003)(56012099006)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(10070799003)(23010399003)(366016)(7416014)(18002099003)(22082099003)(921020)(5023799004)(56012099006)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TTFiZWQ4RjVjOVJka0pkOThzQTBBVGFIeUpXdnBQa1B3TzZrblF1V1J1MlRP?=
- =?utf-8?B?RGtSU290aDlLSlBBbXJBSE96eWE0OUxaMk9DM1JHU2w2UjIxemQxNWU2eXJY?=
- =?utf-8?B?d0hXODRtcjM1QTgvLzRDNEo2QlFkOE1PUjRkbFNRaHZkMFdHSmxnK0xySkto?=
- =?utf-8?B?dHMrRHNTNklTSE9Vd1hiVzR2MlJ6eTJRTVZnQVA3NDNtclNMRDdyVjRLMVlG?=
- =?utf-8?B?Ri91eVdNWjdWYkN1dyt4RHdUY1Q2VzdlN3Mra2R1SWRxc1Q3a1dsV0NDZDlS?=
- =?utf-8?B?TkFZNFJ1bVFTV1JlZnpzOUI3eDZrSDEwUGxpVjg5eGlRd2R2bjBwakRmcVZC?=
- =?utf-8?B?K2wzcVBOWjJ1N3BiekRBS3l1YmZXN0cyVEZMUE85dHorN1R3Wk9OeDFua0Vz?=
- =?utf-8?B?VkxNWCs2Z29HdndNUmZ3cEJmcEp0d0RxSTZZd1FjU3hQbVA3UFBKK1cvYzAx?=
- =?utf-8?B?ZENDTFB5ZnlEcEpMYXVkV2pnelo4OHJEY3IrbndVVldDRG45Sk43WlZrZVRj?=
- =?utf-8?B?SGtFSmFLOEl1TWdnM3RwZjhGSlVTSlo4OFNnWkd5Y1A0RHBzYmltWW9YQVE1?=
- =?utf-8?B?b0RTS09jOXJOTDdnQUt3NENhaEx0dTRJaC9WTjhTeWhHcWdQdjNPdWx6eUwx?=
- =?utf-8?B?Q012L1dFbDF6TGtkNkZoSFN1Mm1Uci94Y3grRkwwUm0wemZMTXZrbkFFa3Ur?=
- =?utf-8?B?aWpBOVg5aHg4dVU5S0d6UjVINk5RdldZclhrZTl3Ny90enJYaFJEQllqblRu?=
- =?utf-8?B?dGUvb3EyR1BUK1RWeHk4V1Zha2NCWVp3dkRMdjR0Z2VjS0JsSHR1OTY2TmFz?=
- =?utf-8?B?OUE1c09OYlBQN3J2SmlnaWdnRGRyWnhGcHl6YTY4Rjg3NnJWY0xJSm1FWlVZ?=
- =?utf-8?B?clpWRG8rWnRYdUdzajJTdFJvS3ZvaWNTSUtJdjJZR0h5Y2VFTmw2MUluc1hM?=
- =?utf-8?B?cHZINi84UmJ3dDVyYmczcXdRQlZ1Z3RjaDBhQXZXZHFINzQvZkJFcWUvVUk5?=
- =?utf-8?B?K2Vwb0ZNQk9mbDBtelAzcysrUHgzV2RnaUN0c2JtVG9hQ3UwSFA5VXM4c2tj?=
- =?utf-8?B?K0g2ZXUwUnZWSXIxeVQ5cGkzd0w1c2ovTE1IaWY3dGNvc24yU2JWbU4vaXEw?=
- =?utf-8?B?Uk1yYmo5anFWa3ByZkNvQjJlUWRDdERxMFNCV0wyVjdRaUFuM3VQYjdlSFEv?=
- =?utf-8?B?cHBkWDVpcStWZXBYMUlPK00rWmxwelVqOHExeXBrQ3piRzZNUkxFNjhGOCtp?=
- =?utf-8?B?SnlvUlBuclNUSjZIYVJtVm1JdTRwUzdKdXpocjR4M3N0SUNFaDdFK0h1bmY4?=
- =?utf-8?B?Mm8yc1dZcnV1VVBrYWpwK3RxeHNOMHRBVUp5ZjNrNEpZcFRCSnBXRjh3UWd1?=
- =?utf-8?B?RUxDTDl5Z2JVWmF1b0h4SEMrdE96R0NabTNtSWJYSzM5S3pzZU5CbWZYcGUz?=
- =?utf-8?B?NEZUbWJDUFFMZlkzZGxxK0haNFVkZWJ6L3JRdlBrUC9GLzJ3Zjl6VnlsSkxP?=
- =?utf-8?B?Mkswc3JvcHliZXlGTVRFeVJqU3dxNGFrc1Vsb3BQL0NFZ0ZGRXJyZExvM1Z0?=
- =?utf-8?B?bEt4MCtNMXRqVmtMVm5RTUxiaC9IbVRtZDNBTWFyZHQ0bWpVWW5EcjNmV2Fq?=
- =?utf-8?B?R2x0TkJUUU9EWkRYblNWbEdxWGt0Q2VmcnkvdzFVV0hKdmJhanNsRjlKV29i?=
- =?utf-8?B?SDdZZXRiYVJmT244UXhmc2xLL0kyN0c5dVRoc2RqZU9vbFpDbUl2SGpCeVRQ?=
- =?utf-8?B?ZFpZQ3o1M05XdmxEaWFScTZlb0N6Nm82TmxSenJGZXFjME1CTlBJb2tXelk5?=
- =?utf-8?B?c3g3ZjZWRUlGazZkalliL2xEc0xRQVQ4cjJwTmR2cXYvRW4zMi8zZnRWQXpW?=
- =?utf-8?B?T291ZFZEMm5BWHZhaWJ2UkFrcmRQTHUwRnNtV3J5bm9IYUl6dDluall6VVJv?=
- =?utf-8?B?Y3J6ZU96aFYzY01xM3V2V0dGU3ZTRjUwTTRuMzJCWXRENU5haGdLNEI4TG9n?=
- =?utf-8?B?Um1rbEZQRkU5czZvSTVzZWFCRlZzUlZmZzNIaENvVGFZNmVSUjZ2Tkx0bktY?=
- =?utf-8?B?d0EzMXJqKzdyR3VqVUpydXJJUUJ4UHBEU0ZtaHA1UXFrL1JWL1JOMnFkdXVU?=
- =?utf-8?B?UDB6RXJVb28rTjBUS3lURVIrZ3JOcU9HUncvOU5xanlaR0t6R01aTExDb0hK?=
- =?utf-8?B?MlJtTDFZaUdiV0prOG9vT0xaVGd0VFRYTUdKcVNpMjA3RkYvSDlSdENCTlRn?=
- =?utf-8?B?UW1BbTE0WFVDbnJwM1JRYS9SaDVjNkx4NGt0Nmxicm5SVzRzVTJVaW9MRUZY?=
- =?utf-8?B?eGMyU0l3WDJhLy9WeVcrOW02MHFiVUFqbkRwSFpvdGJKNUcxL0VKdz09?=
+	=?utf-8?B?NXRqSTBVTlp3VTlwcGN1RTFSRHFJekFFTTI3TUowM3ByU2lrTDBMck1lQUZM?=
+ =?utf-8?B?QkdKTXg4dzZ6elJLTW9WNEJTcDc3WDlmNkw2UUV3cHJZWWhQUmUzK2ZjVTdG?=
+ =?utf-8?B?OXZzSWlLVWV2dXBwSTZHa1ZNaW1XS1k2anB6aXNYdjM3dC9IamhlbzNBcnhr?=
+ =?utf-8?B?dzdibGxlSjhQWUxEd2s0ZGtjSWxOOWs5TW1yVG84WVhmUlRhejJIZ2xKNVVi?=
+ =?utf-8?B?Y056Z1FYMTUwbkMyUUV4ZXFqeGhyV2pwWU5qU3JBNUsrUitWZ1dWNDQ0ZVV5?=
+ =?utf-8?B?alRmVUNXZy9VdHpUWU5vK1dEKzRhS0JxTTA1SmZYUjJ5MHZFN213b2Y5L1Jt?=
+ =?utf-8?B?czFWbUxpOGVJK2dHVkc5S2M4UmxoanpPM1A3TWQzWXNET1MvWVRwblN6Z1Vs?=
+ =?utf-8?B?bHpBMWlmNTlDbVpsSlRWemNjSnpqYnRZWVZNQ0dJZ0VHQm1uYnlUaGc5NEJC?=
+ =?utf-8?B?cVV4MGc3ZGNsNVZhanI3MHJoZzN2SUs5Tzdad09KalBLUUw2ZjdaSk9DV1pI?=
+ =?utf-8?B?U0h0M2F4QjBZQi84a2hoU05pYzF4VzhpaHZBakhjUkhrR1k3bjVTek9PcS90?=
+ =?utf-8?B?S3FGSDRrdG9ySnYvSVVRT2IxaWFtOWVlcnFLUEtyNVBsWmNtbExVdW1qb3Jv?=
+ =?utf-8?B?TFVEWUUzQW9JbFo4UmhRbmxaUVFHUGtnMlpibE9YVUczdnJLRkJBeFptTFFm?=
+ =?utf-8?B?MXBibk1JR0QyeUErbHZSdC9kNVZDT21CQkQ3ZUlzb1pjQlBwcGg2cFpqRGk0?=
+ =?utf-8?B?RFk2OUhqcjR1NC9VRWFuc3R2SE5kOURDVDFxVWEwdUYybGlvY0RRR28yQXhh?=
+ =?utf-8?B?Q3lPbnM4Q1R1Zk9Vc3JHUnM0VEdTN08xckdKZWc5S2hDci9DM29XRWVRL0Rz?=
+ =?utf-8?B?ZDNwREEzVWJqWkZaN1dEVDRIclVsdVlHSEhOa2ovLy9BL2J6dUhNd2g0cmdO?=
+ =?utf-8?B?ckQrRzU3Y1BoblhjL1pYMi9oU00rR0Z5aUswdHZXKzN5dlUrM0QvalRwbThN?=
+ =?utf-8?B?L1hsaktUZ1VNY2VhaFg1TlhXVUNVcnlibCt3R1MydjY2RjZZSGpYWWZoazZu?=
+ =?utf-8?B?VnNNVHFWWlBEUUQ3RTRtakxqWUxGV1pIQktRdXU1OUVCaGZCOU04Rk01TzY0?=
+ =?utf-8?B?aWw4VnJTYnpSd2JQQnh1ODltTUlpRS83VXkyeHE1OHZkQksyODVtRnZHRWpK?=
+ =?utf-8?B?c1ZPMjlRRnZLOGo3TGptdytxOXFJek00VnNjZlUzT01TZDhnUWxYb2lhUGNn?=
+ =?utf-8?B?QmIxb3BqSCtuQWNmbGo3aVg3T3pFT0w0Y3Bka3JyQ3p3QzI2K0Y4Yll3UDI1?=
+ =?utf-8?B?VWlGZC9jL3l5RUhJTmhxaTBudkJ0dllpdlRzQmZWZ0paem51cm84dzFhcURL?=
+ =?utf-8?B?RTUyRlJsNHFFMC9kQURBMGo0TVlQYkNtUnowKzRReEQ2M3NHekgzQUxXVysv?=
+ =?utf-8?B?a2pyN0ZYNG9GbWpldmN1dG1UZTFCVEFlR245MDErNEJOMzFTSFB3bDZSVUhE?=
+ =?utf-8?B?blc2YkVsb1grRGhQb3E2SkhKN3hrbk56OEpQYWNESFozVGlZSmszQjkxUE9v?=
+ =?utf-8?B?MWtLV0FxRm9reDd3b2tnY0xEd3B5aFFPdVhlbzFDcjk5b3BoaiszU0QwOTQv?=
+ =?utf-8?B?dk81Zmc1WGJnWXU4dVJLTEphUU95M3pUdFhyK3FlU09ybGsxNC90b0tLSXpQ?=
+ =?utf-8?B?dlZpdDNqYUJPb2ZFMk9mL2cyRFdSM0htbmVhVkhwN3ZFRnhEc2FBRmVqQWJS?=
+ =?utf-8?B?SDVsdlhPV0orNCtWRHdaM25zOEIvdStkWkE4S0IxMUZTRFJLVlg3VWRKUU1F?=
+ =?utf-8?B?WThXNUhxbFBHeEV2enJkbllzTVNwcnI1NnVLMEJYVTFFVXAwR1BvcFMrL3J3?=
+ =?utf-8?B?aUZXMXp4aWYycE9qcHk2TFpjS0h3OHdubW1Deks2MWMwZnpQUHlpU0tkTHox?=
+ =?utf-8?B?YWJ2ejJPS1FPeDVwbS8yRUZGTFVlZ3pDS01KL1RycDlXVWFudmFlM2E4d2x4?=
+ =?utf-8?B?MlJpMkhBanMzd3RRU1JtVytSclNPT0o0Y2VOSFFCSVpMZ0pHV256YUFrQjh3?=
+ =?utf-8?B?OTJJUkNPVWt4cERRUnl2Y0FmbG1KQzZjc29JOFd4UkVPc2VIeVMvVXdwOXZG?=
+ =?utf-8?B?R2xzM2pZNEpmR2VzRDJEcU91TGZtMWkzM3ZSaWNORUVyVmdRQy9wTHRCeFc3?=
+ =?utf-8?B?UUdkeE1LT2REZ1BNRUsvU0ZReGViMHhPS0U1YWNvbFN6QzUwUG1KYWVwNFBs?=
+ =?utf-8?B?bDlYVmNpeXlhL1ZCZHVzQmVQVDgwa3FqdTI5anhQTkFadEJuM0NwNHM4djNL?=
+ =?utf-8?B?YWxzWFhXTER1Ulhhdk1scnNwRy81OHhHR1FqM1dkTlJpWjUwSDBDZz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: a2dad0e0-8eb5-495a-dcff-08ded3918f05
+X-MS-Exchange-CrossTenant-Network-Message-Id: 806816a6-1688-4380-9678-08ded3918c05
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jun 2026 14:45:25.7154
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jun 2026 14:45:20.6760
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: eaTPfndXqM9SBXxVfJijJKAVx+2CuHobTPK28g+mLVfOE6nkPBff13LUUsI7xD5m1zvDhCXT64lPrOScm5VlgQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB2694
+X-MS-Exchange-CrossTenant-UserPrincipalName: rUxh6Ryhk9SvZG5FznFsW8qXNC+GpFwvezZJocXkBstWnBhXnpb8OGDQUJSLVqtMeDtqsc/XZVD+ellC/q2W8g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO6P265MB7248
 
-Use `io_project!` for PTE array and message queues to restore the proper
-encapsulation.
+Implement `Mmio` as view type and convert `RelaxedMmio` to view type as
+well. I/O implementations of `MmioOwned` are changed to delegate to the
+`Mmio` view type.
 
-The remaining `dma_read!` and `dma_write!` is now only acting on
-primitives; thus replace by `io_read!` and `io_write!`.
+All existing users of `MmioOwned` in the documentation which do not
+actually reflect the owning semantics is converted.
 
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- drivers/gpu/nova-core/gsp.rs      | 53 ++++++++++++-------------
- drivers/gpu/nova-core/gsp/cmdq.rs | 66 +++++++++++++++++--------------
- drivers/gpu/nova-core/gsp/fw.rs   | 82 +++++++++++++--------------------------
- 3 files changed, 90 insertions(+), 111 deletions(-)
+ rust/kernel/io.rs          | 176 ++++++++++++++++++++++++++++++++++-----------
+ rust/kernel/io/poll.rs     |  10 +--
+ rust/kernel/io/register.rs |  24 +++----
+ 3 files changed, 153 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/gpu/nova-core/gsp.rs b/drivers/gpu/nova-core/gsp.rs
-index 69175ca3315c..cfa7553cd820 100644
---- a/drivers/gpu/nova-core/gsp.rs
-+++ b/drivers/gpu/nova-core/gsp.rs
-@@ -9,14 +9,16 @@
-     dma::{
-         Coherent,
-         CoherentBox,
-+        CoherentView,
-         DmaAddress, //
-     },
-+    io::{
-+        io_project,
-+        io_write,
-+        Io, //
-+    },
-     pci,
--    prelude::*,
--    transmute::{
--        AsBytes,
--        FromBytes, //
--    }, //
-+    prelude::*, //
- };
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index f93be7f78069..8110b49aa430 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -4,6 +4,10 @@
+ //!
+ //! C header: [`include/asm-generic/io.h`](srctree/include/asm-generic/io.h)
  
- pub(crate) mod cmdq;
-@@ -48,21 +50,21 @@
- 
- /// Array of page table entries, as understood by the GSP bootloader.
- #[repr(C)]
-+#[derive(FromBytes, IntoBytes)]
- struct PteArray<const NUM_ENTRIES: usize>([u64; NUM_ENTRIES]);
- 
--/// SAFETY: arrays of `u64` implement `FromBytes` and we are but a wrapper around one.
--unsafe impl<const NUM_ENTRIES: usize> FromBytes for PteArray<NUM_ENTRIES> {}
--
--/// SAFETY: arrays of `u64` implement `AsBytes` and we are but a wrapper around one.
--unsafe impl<const NUM_ENTRIES: usize> AsBytes for PteArray<NUM_ENTRIES> {}
--
- impl<const NUM_PAGES: usize> PteArray<NUM_PAGES> {
--    /// Returns the page table entry for `index`, for a mapping starting at `start`.
--    // TODO: Replace with `IoView` projection once available.
--    fn entry(start: DmaAddress, index: usize) -> Result<u64> {
--        start
--            .checked_add(num::usize_as_u64(index) << GSP_PAGE_SHIFT)
--            .ok_or(EOVERFLOW)
-+    /// Initialize a new page table array mapping `NUM_PAGES` GSP pages starting at address `start`.
-+    fn init(view: CoherentView<'_, Self>, start: DmaAddress) -> Result<()> {
-+        for i in 0..NUM_PAGES {
-+            io_write!(view, .0[build: i],
-+                start
-+                    .checked_add(num::usize_as_u64(i) << GSP_PAGE_SHIFT)
-+                    .ok_or(EOVERFLOW)?
-+            );
-+        }
-+
-+        Ok(())
-     }
- }
- 
-@@ -89,17 +91,12 @@ fn new(dev: &device::Device<device::Bound>) -> Result<Self> {
- 
-         let start_addr = obj.0.dma_handle();
- 
--        // SAFETY: `obj` has just been created and we are its sole user.
--        let pte_region = unsafe {
--            &mut obj.0.as_mut()[size_of::<u64>()..][..RM_LOG_BUFFER_NUM_PAGES * size_of::<u64>()]
--        };
--
--        // Write values one by one to avoid an on-stack instance of `PteArray`.
--        for (i, chunk) in pte_region.chunks_exact_mut(size_of::<u64>()).enumerate() {
--            let pte_value = PteArray::<0>::entry(start_addr, i)?;
--
--            chunk.copy_from_slice(&pte_value.to_ne_bytes());
--        }
-+        let pte_view = io_project!(
-+            obj.0,
-+            [build: size_of::<u64>()..][build: ..RM_LOG_BUFFER_NUM_PAGES * size_of::<u64>()]
-+        )
-+        .try_cast::<PteArray<RM_LOG_BUFFER_NUM_PAGES>>()?;
-+        PteArray::init(pte_view, start_addr)?;
- 
-         Ok(obj)
-     }
-diff --git a/drivers/gpu/nova-core/gsp/cmdq.rs b/drivers/gpu/nova-core/gsp/cmdq.rs
-index 070de0731e95..c34b48961496 100644
---- a/drivers/gpu/nova-core/gsp/cmdq.rs
-+++ b/drivers/gpu/nova-core/gsp/cmdq.rs
-@@ -2,16 +2,23 @@
- 
- mod continuation;
- 
--use core::mem;
 +use core::{
-+    mem,
-+    sync::atomic::{
-+        fence,
-+        Ordering, //
-+    },
++    marker::PhantomData, //
 +};
- 
- use kernel::{
-     device,
-     dma::{
-         Coherent,
-+        CoherentBox,
-         DmaAddress, //
-     },
--    dma_write,
-     io::{
-+        io_project,
-         poll::read_poll_timeout,
-         Io, //
-     },
-@@ -171,20 +178,18 @@ struct MsgqData {
- #[repr(C)]
- // There is no struct defined for this in the open-gpu-kernel-source headers.
- // Instead it is defined by code in `GspMsgQueuesInit()`.
--// TODO: Revert to private once `IoView` projections replace the `gsp_mem` module.
--pub(super) struct Msgq {
-+struct Msgq {
-     /// Header for sending messages, including the write pointer.
--    pub(super) tx: MsgqTxHeader,
-+    tx: MsgqTxHeader,
-     /// Header for receiving messages, including the read pointer.
--    pub(super) rx: MsgqRxHeader,
-+    rx: MsgqRxHeader,
-     /// The message queue proper.
-     msgq: MsgqData,
- }
- 
- /// Structure shared between the driver and the GSP and containing the command and message queues.
- #[repr(C)]
--// TODO: Revert to private once `IoView` projections replace the `gsp_mem` module.
--pub(super) struct GspMem {
-+struct GspMem {
-     /// Self-mapping page table entries.
-     ptes: PteArray<{ Self::PTE_ARRAY_SIZE }>,
-     /// CPU queue: the driver writes commands here, and the GSP reads them. It also contains the
-@@ -192,13 +197,13 @@ pub(super) struct GspMem {
-     /// index into the GSP queue.
-     ///
-     /// This member is read-only for the GSP.
--    pub(super) cpuq: Msgq,
-+    cpuq: Msgq,
-     /// GSP queue: the GSP writes messages here, and the driver reads them. It also contains the
-     /// write and read pointers that the GSP updates. This means that the read pointer here is an
-     /// index into the CPU queue.
-     ///
-     /// This member is read-only for the driver.
--    pub(super) gspq: Msgq,
-+    gspq: Msgq,
- }
- 
- impl GspMem {
-@@ -232,20 +237,12 @@ fn new(dev: &device::Device<device::Bound>) -> Result<Self> {
-         const MSGQ_SIZE: u32 = num::usize_into_u32::<{ size_of::<Msgq>() }>();
-         const RX_HDR_OFF: u32 = num::usize_into_u32::<{ mem::offset_of!(Msgq, rx) }>();
- 
--        let gsp_mem = Coherent::<GspMem>::zeroed(dev, GFP_KERNEL)?;
--
--        let start = gsp_mem.dma_handle();
--        // Write values one by one to avoid an on-stack instance of `PteArray`.
--        for i in 0..GspMem::PTE_ARRAY_SIZE {
--            dma_write!(gsp_mem, .ptes.0[build: i], PteArray::<0>::entry(start, i)?);
--        }
-+        let mut gsp_mem = CoherentBox::<GspMem>::zeroed(dev, GFP_KERNEL)?;
-+        gsp_mem.cpuq.tx = MsgqTxHeader::new(MSGQ_SIZE, RX_HDR_OFF, MSGQ_NUM_PAGES);
-+        gsp_mem.cpuq.rx = MsgqRxHeader::new();
- 
--        dma_write!(
--            gsp_mem,
--            .cpuq.tx,
--            MsgqTxHeader::new(MSGQ_SIZE, RX_HDR_OFF, MSGQ_NUM_PAGES)
--        );
--        dma_write!(gsp_mem, .cpuq.rx, MsgqRxHeader::new());
-+        let gsp_mem: Coherent<_> = gsp_mem.into();
-+        PteArray::init(io_project!(gsp_mem, .ptes), gsp_mem.dma_handle())?;
- 
-         Ok(Self(gsp_mem))
-     }
-@@ -406,7 +403,7 @@ fn allocate_command(&mut self, size: usize, timeout: Delta) -> Result<GspCommand
-     //
-     // - The returned value is within `0..MSGQ_NUM_PAGES`.
-     fn gsp_write_ptr(&self) -> u32 {
--        super::fw::gsp_mem::gsp_write_ptr(&self.0)
-+        MsgqTxHeader::write_ptr(io_project!(self.0, .gspq.tx)) % MSGQ_NUM_PAGES
-     }
- 
-     // Returns the index of the memory page the GSP will read the next command from.
-@@ -415,7 +412,7 @@ fn gsp_write_ptr(&self) -> u32 {
-     //
-     // - The returned value is within `0..MSGQ_NUM_PAGES`.
-     fn gsp_read_ptr(&self) -> u32 {
--        super::fw::gsp_mem::gsp_read_ptr(&self.0)
-+        MsgqRxHeader::read_ptr(io_project!(self.0, .gspq.rx)) % MSGQ_NUM_PAGES
-     }
- 
-     // Returns the index of the memory page the CPU can read the next message from.
-@@ -424,12 +421,18 @@ fn gsp_read_ptr(&self) -> u32 {
-     //
-     // - The returned value is within `0..MSGQ_NUM_PAGES`.
-     fn cpu_read_ptr(&self) -> u32 {
--        super::fw::gsp_mem::cpu_read_ptr(&self.0)
-+        MsgqRxHeader::read_ptr(io_project!(self.0, .cpuq.rx)) % MSGQ_NUM_PAGES
-     }
- 
-     // Informs the GSP that it can send `elem_count` new pages into the message queue.
-     fn advance_cpu_read_ptr(&mut self, elem_count: u32) {
--        super::fw::gsp_mem::advance_cpu_read_ptr(&self.0, elem_count)
-+        let rx = io_project!(self.0, .cpuq.rx);
-+        let rptr = MsgqRxHeader::read_ptr(rx).wrapping_add(elem_count) % MSGQ_NUM_PAGES;
 +
-+        // Ensure read pointer is properly ordered.
-+        fence(Ordering::SeqCst);
-+
-+        MsgqRxHeader::set_read_ptr(rx, rptr)
-     }
- 
-     // Returns the index of the memory page the CPU can write the next command to.
-@@ -438,12 +441,17 @@ fn advance_cpu_read_ptr(&mut self, elem_count: u32) {
-     //
-     // - The returned value is within `0..MSGQ_NUM_PAGES`.
-     fn cpu_write_ptr(&self) -> u32 {
--        super::fw::gsp_mem::cpu_write_ptr(&self.0)
-+        MsgqTxHeader::write_ptr(io_project!(self.0, .cpuq.tx)) % MSGQ_NUM_PAGES
-     }
- 
-     // Informs the GSP that it can process `elem_count` new pages from the command queue.
-     fn advance_cpu_write_ptr(&mut self, elem_count: u32) {
--        super::fw::gsp_mem::advance_cpu_write_ptr(&self.0, elem_count)
-+        let tx = io_project!(self.0, .cpuq.tx);
-+        let wptr = MsgqTxHeader::write_ptr(tx).wrapping_add(elem_count) % MSGQ_NUM_PAGES;
-+        MsgqTxHeader::set_write_ptr(tx, wptr);
-+
-+        // Ensure all command data is visible before triggering the GSP read.
-+        fence(Ordering::SeqCst);
-     }
- }
- 
-diff --git a/drivers/gpu/nova-core/gsp/fw.rs b/drivers/gpu/nova-core/gsp/fw.rs
-index 4db0cfa4dc4d..b0e7de328eaf 100644
---- a/drivers/gpu/nova-core/gsp/fw.rs
-+++ b/drivers/gpu/nova-core/gsp/fw.rs
-@@ -10,7 +10,14 @@
- use core::ops::Range;
- 
- use kernel::{
--    dma::Coherent,
-+    dma::{
-+        Coherent,
-+        CoherentView, //
-+    },
-+    io::{
-+        io_read,
-+        io_write, //
-+    },
+ use crate::{
+     bindings,
      prelude::*,
-     ptr::{
-         Alignable,
-@@ -44,59 +51,6 @@
-     },
- };
- 
--// TODO: Replace with `IoView` projections once available.
--pub(super) mod gsp_mem {
--    use core::sync::atomic::{
--        fence,
--        Ordering, //
--    };
--
--    use kernel::{
--        dma::Coherent,
--        dma_read,
--        dma_write, //
--    };
--
--    use crate::gsp::cmdq::{
--        GspMem,
--        MSGQ_NUM_PAGES, //
--    };
--
--    pub(in crate::gsp) fn gsp_write_ptr(qs: &Coherent<GspMem>) -> u32 {
--        dma_read!(qs, .gspq.tx.0.writePtr) % MSGQ_NUM_PAGES
--    }
--
--    pub(in crate::gsp) fn gsp_read_ptr(qs: &Coherent<GspMem>) -> u32 {
--        dma_read!(qs, .gspq.rx.0.readPtr) % MSGQ_NUM_PAGES
--    }
--
--    pub(in crate::gsp) fn cpu_read_ptr(qs: &Coherent<GspMem>) -> u32 {
--        dma_read!(qs, .cpuq.rx.0.readPtr) % MSGQ_NUM_PAGES
--    }
--
--    pub(in crate::gsp) fn advance_cpu_read_ptr(qs: &Coherent<GspMem>, count: u32) {
--        let rptr = cpu_read_ptr(qs).wrapping_add(count) % MSGQ_NUM_PAGES;
--
--        // Ensure read pointer is properly ordered.
--        fence(Ordering::SeqCst);
--
--        dma_write!(qs, .cpuq.rx.0.readPtr, rptr);
--    }
--
--    pub(in crate::gsp) fn cpu_write_ptr(qs: &Coherent<GspMem>) -> u32 {
--        dma_read!(qs, .cpuq.tx.0.writePtr) % MSGQ_NUM_PAGES
--    }
--
--    pub(in crate::gsp) fn advance_cpu_write_ptr(qs: &Coherent<GspMem>, count: u32) {
--        let wptr = cpu_write_ptr(qs).wrapping_add(count) % MSGQ_NUM_PAGES;
--
--        dma_write!(qs, .cpuq.tx.0.writePtr, wptr);
--
--        // Ensure all command data is visible before triggering the GSP read.
--        fence(Ordering::SeqCst);
--    }
--}
--
- /// Maximum size of a single GSP message queue element in bytes.
- pub(crate) const GSP_MSG_QUEUE_ELEMENT_SIZE_MAX: usize =
-     num::u32_as_usize(bindings::GSP_MSG_QUEUE_ELEMENT_SIZE_MAX);
-@@ -720,6 +674,16 @@ pub(crate) fn new(msgq_size: u32, rx_hdr_offset: u32, msg_count: u32) -> Self {
-             entryOff: num::usize_into_u32::<GSP_PAGE_SIZE>(),
-         })
+@@ -537,10 +541,11 @@ fn write64(self, value: u64, offset: usize)
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_reads(io: &MmioOwned) -> Result {
++    /// fn do_reads(io: Mmio<'_, Region>) -> Result {
+     ///     // 32-bit read from address `0x10`.
+     ///     let v: u32 = io.try_read(0x10)?;
+     ///
+@@ -571,10 +576,11 @@ fn try_read<T, L>(self, location: L) -> Result<T>
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_writes(io: &MmioOwned) -> Result {
++    /// fn do_writes(io: Mmio<'_, Region>) -> Result {
+     ///     // 32-bit write of value `1` at address `0x10`.
+     ///     io.try_write(0x10, 1u32)?;
+     ///
+@@ -609,7 +615,8 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
+     /// use kernel::io::{
+     ///     register,
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+     /// register! {
+@@ -625,7 +632,7 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
+     ///     }
+     /// }
+     ///
+-    /// fn do_write_reg(io: &MmioOwned) -> Result {
++    /// fn do_write_reg(io: Mmio<'_, Region>) -> Result {
+     ///
+     ///     io.try_write_reg(VERSION::new(1, 0))
+     /// }
+@@ -654,10 +661,11 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_update(io: &MmioOwned<0x1000>) -> Result {
++    /// fn do_update(io: Mmio<'_, Region<0x1000>>) -> Result {
+     ///     io.try_update(0x10, |v: u32| {
+     ///         v + 1
+     ///     })
+@@ -691,10 +699,11 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_reads(io: &MmioOwned<0x1000>) {
++    /// fn do_reads(io: Mmio<'_, Region<0x1000>>) {
+     ///     // 32-bit read from address `0x10`.
+     ///     let v: u32 = io.read(0x10);
+     ///
+@@ -723,10 +732,11 @@ fn read<T, L>(self, location: L) -> T
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_writes(io: &MmioOwned<0x1000>) {
++    /// fn do_writes(io: Mmio<'_, Region<0x1000>>) {
+     ///     // 32-bit write of value `1` at address `0x10`.
+     ///     io.write(0x10, 1u32);
+     ///
+@@ -757,7 +767,8 @@ fn write<T, L>(self, location: L, value: T)
+     /// use kernel::io::{
+     ///     register,
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+     /// register! {
+@@ -773,7 +784,7 @@ fn write<T, L>(self, location: L, value: T)
+     ///     }
+     /// }
+     ///
+-    /// fn do_write_reg(io: &MmioOwned<0x1000>) {
++    /// fn do_write_reg(io: Mmio<'_, Region<0x1000>>) {
+     ///     io.write_reg(VERSION::new(1, 0));
+     /// }
+     /// ```
+@@ -801,10 +812,11 @@ fn write_reg<T, L, V>(self, value: V)
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     /// };
+     ///
+-    /// fn do_update(io: &MmioOwned<0x1000>) {
++    /// fn do_update(io: Mmio<'_, Region<0x1000>>) {
+     ///     io.update(0x10, |v: u32| {
+     ///         v + 1
+     ///     })
+@@ -828,16 +840,72 @@ fn update<T, L, F>(self, location: L, f: F)
      }
+ }
+ 
++/// A view of memory-mapped I/O region.
++///
++/// # Invariant
++///
++/// `ptr` points to a valid and aligned memory-mapped I/O region for the duration lifetime `'a`.
++pub struct Mmio<'a, T: ?Sized> {
++    ptr: *mut T,
++    phantom: PhantomData<&'a ()>,
++}
 +
-+    /// Returns the value of the write pointer for this queue.
-+    pub(crate) fn write_ptr(this: CoherentView<'_, Self>) -> u32 {
-+        io_read!(this, .0.writePtr)
++impl<T: ?Sized> Copy for Mmio<'_, T> {}
++impl<T: ?Sized> Clone for Mmio<'_, T> {
++    #[inline]
++    fn clone(&self) -> Self {
++        *self
++    }
++}
++
++impl<'a, T: ?Sized> Mmio<'a, T> {
++    /// Create a `Mmio`, providing the accessors to the MMIO mapping.
++    ///
++    /// # Safety
++    ///
++    /// `raw` represents a valid and aligned memory-mapped I/O region while `'a` is alive.
++    #[inline]
++    pub unsafe fn from_raw(raw: MmioRaw<T>) -> Self {
++        // INVARIANT: Per safety requirement.
++        Self {
++            ptr: raw.ptr,
++            phantom: PhantomData,
++        }
++    }
++}
++
++// SAFETY: `Mmio<'_, T>` is conceptually `&T` but in I/O memory.
++unsafe impl<T: ?Sized + Sync> Send for Mmio<'_, T> {}
++
++// SAFETY: `Mmio<'_, T>` is conceptually `&T` but in I/O memory.
++unsafe impl<T: ?Sized + Sync> Sync for Mmio<'_, T> {}
++
++impl<T: ?Sized + KnownSize> Io for Mmio<'_, T> {
++    type Target = T;
++
++    #[inline]
++    fn addr(self) -> usize {
++        self.ptr.addr()
 +    }
 +
-+    /// Sets the value of the write pointer for this queue.
-+    pub(crate) fn set_write_ptr(this: CoherentView<'_, Self>, val: u32) {
-+        io_write!(this, .0.writePtr, val)
++    #[inline]
++    fn maxsize(self) -> usize {
++        KnownSize::size(self.ptr)
++    }
++}
++
+ /// Implements [`IoCapable`] on `$mmio` for `$ty` using `$read_fn` and `$write_fn`.
+ macro_rules! impl_mmio_io_capable {
+     ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, $write_fn:ident) => {
+         $(#[$attr])*
+-        impl<const SIZE: usize> IoCapable<$ty> for &$mmio<SIZE> {
++        impl<T: ?Sized> IoCapable<$ty> for $mmio<'_, T> {
++            #[inline]
+             unsafe fn io_read(self, address: usize) -> $ty {
+                 // SAFETY: By the trait invariant `address` is a valid address for MMIO operations.
+                 unsafe { bindings::$read_fn(address as *const c_void) }
+             }
+ 
++            #[inline]
+             unsafe fn io_write(self, value: $ty, address: usize) {
+                 // SAFETY: By the trait invariant `address` is a valid address for MMIO operations.
+                 unsafe { bindings::$write_fn(value, address as *mut c_void) }
+@@ -847,17 +915,12 @@ unsafe fn io_write(self, value: $ty, address: usize) {
+ }
+ 
+ // MMIO regions support 8, 16, and 32-bit accesses.
+-impl_mmio_io_capable!(MmioOwned, u8, readb, writeb);
+-impl_mmio_io_capable!(MmioOwned, u16, readw, writew);
+-impl_mmio_io_capable!(MmioOwned, u32, readl, writel);
++impl_mmio_io_capable!(Mmio, u8, readb, writeb);
++impl_mmio_io_capable!(Mmio, u16, readw, writew);
++impl_mmio_io_capable!(Mmio, u32, readl, writel);
+ // MMIO regions on 64-bit systems also support 64-bit accesses.
+-impl_mmio_io_capable!(
+-    MmioOwned,
+-    #[cfg(CONFIG_64BIT)]
+-    u64,
+-    readq,
+-    writeq
+-);
++#[cfg(CONFIG_64BIT)]
++impl_mmio_io_capable!(Mmio, u64, readq, writeq);
+ 
+ impl<'a, const SIZE: usize> Io for &'a MmioOwned<SIZE> {
+     type Target = Region<SIZE>;
+@@ -875,6 +938,23 @@ fn maxsize(self) -> usize {
+     }
+ }
+ 
++impl<'a, const SIZE: usize, T> IoCapable<T> for &'a MmioOwned<SIZE>
++where
++    Mmio<'a, Region<SIZE>>: IoCapable<T>,
++{
++    #[inline]
++    unsafe fn io_read(self, address: usize) -> T {
++        // SAFETY: Per safety requirement.
++        unsafe { self.as_view().io_read(address) }
++    }
++
++    #[inline]
++    unsafe fn io_write(self, value: T, address: usize) {
++        // SAFETY: Per safety requirement.
++        unsafe { self.as_view().io_write(value, address) }
++    }
++}
++
+ impl<const SIZE: usize> MmioOwned<SIZE> {
+     /// Converts an `MmioRaw` into an `MmioOwned` instance, providing the accessors to the MMIO
+     /// mapping.
+@@ -887,19 +967,33 @@ pub unsafe fn from_raw(raw: &MmioRaw<Region<SIZE>>) -> &Self {
+         // SAFETY: `MmioOwned` is a transparent wrapper around `MmioRaw`.
+         unsafe { &*core::ptr::from_ref(raw).cast() }
+     }
++
++    /// Return a view that covers the full region.
++    #[inline]
++    pub fn as_view(&self) -> Mmio<'_, Region<SIZE>> {
++        // SAFETY: `Mmio` has same invariant as `MmioOwned`.
++        unsafe { Mmio::from_raw(self.0) }
 +    }
  }
  
- // SAFETY: Padding is explicit and does not contain uninitialized data.
-@@ -735,6 +699,16 @@ impl MsgqRxHeader {
-     pub(crate) fn new() -> Self {
-         Self(Default::default())
+-/// [`MmioOwned`] wrapper using relaxed accessors.
++/// [`Mmio`] but using relaxed accessors.
+ ///
+ /// This type provides an implementation of [`Io`] that uses relaxed I/O MMIO operands instead of
+ /// the regular ones.
+ ///
+-/// See [`MmioOwned::relaxed`] for a usage example.
+-#[repr(transparent)]
+-pub struct RelaxedMmio<const SIZE: usize = 0>(MmioOwned<SIZE>);
++/// See [`Mmio::relaxed`] for a usage example.
++pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
+ 
+-impl<'a, const SIZE: usize> Io for &'a RelaxedMmio<SIZE> {
+-    type Target = Region<SIZE>;
++impl<T: ?Sized> Copy for RelaxedMmio<'_, T> {}
++impl<T: ?Sized> Clone for RelaxedMmio<'_, T> {
++    #[inline]
++    fn clone(&self) -> Self {
++        *self
++    }
++}
++
++impl<T: ?Sized + KnownSize> Io for RelaxedMmio<'_, T> {
++    type Target = T;
+ 
+     #[inline]
+     fn addr(self) -> usize {
+@@ -912,8 +1006,8 @@ fn maxsize(self) -> usize {
      }
-+
-+    /// Returns the value of the read pointer for this queue.
-+    pub(crate) fn read_ptr(this: CoherentView<'_, Self>) -> u32 {
-+        io_read!(this, .0.readPtr)
-+    }
-+
-+    /// Sets the value of the read pointer for this queue.
-+    pub(crate) fn set_read_ptr(this: CoherentView<'_, Self>, val: u32) {
-+        io_write!(this, .0.readPtr, val)
-+    }
  }
  
- // SAFETY: Padding is explicit and does not contain uninitialized data.
+-impl<const SIZE: usize> MmioOwned<SIZE> {
+-    /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O operations.
++impl<'a, T: ?Sized> Mmio<'a, T> {
++    /// Returns a [`RelaxedMmio`] that performs relaxed I/O operations.
+     ///
+     /// Relaxed accessors do not provide ordering guarantees with respect to DMA or memory accesses
+     /// and can be used when such ordering is not required.
+@@ -923,20 +1017,20 @@ impl<const SIZE: usize> MmioOwned<SIZE> {
+     /// ```no_run
+     /// use kernel::io::{
+     ///     Io,
+-    ///     MmioOwned,
++    ///     Mmio,
++    ///     Region,
+     ///     RelaxedMmio,
+     /// };
+     ///
+-    /// fn do_io(io: &MmioOwned<0x100>) {
++    /// fn do_io(io: Mmio<'_, Region<0x100>>) {
+     ///     // The access is performed using `readl_relaxed` instead of `readl`.
+     ///     let v = io.relaxed().read32(0x10);
+     /// }
+     ///
+     /// ```
+-    pub fn relaxed(&self) -> &RelaxedMmio<SIZE> {
+-        // SAFETY: `RelaxedMmio` is `#[repr(transparent)]` over `MmioOwned`, so `MmioOwned<SIZE>`
+-        // and `RelaxedMmio<SIZE>` have identical layout.
+-        unsafe { core::mem::transmute(self) }
++    #[inline]
++    pub fn relaxed(self) -> RelaxedMmio<'a, T> {
++        RelaxedMmio(self)
+     }
+ }
+ 
+diff --git a/rust/kernel/io/poll.rs b/rust/kernel/io/poll.rs
+index 79828a8006b5..d75f2fcf46f2 100644
+--- a/rust/kernel/io/poll.rs
++++ b/rust/kernel/io/poll.rs
+@@ -47,14 +47,15 @@
+ /// ```no_run
+ /// use kernel::io::{
+ ///     Io,
+-///     MmioOwned,
++///     Mmio,
++///     Region,
+ ///     poll::read_poll_timeout, //
+ /// };
+ /// use kernel::time::Delta;
+ ///
+ /// const HW_READY: u16 = 0x01;
+ ///
+-/// fn wait_for_hardware<const SIZE: usize>(io: &MmioOwned<SIZE>) -> Result {
++/// fn wait_for_hardware<const SIZE: usize>(io: Mmio<'_, Region<SIZE>>) -> Result {
+ ///     read_poll_timeout(
+ ///         // The `op` closure reads the value of a specific status register.
+ ///         || io.try_read16(0x1000),
+@@ -134,14 +135,15 @@ pub fn read_poll_timeout<Op, Cond, T>(
+ /// ```no_run
+ /// use kernel::io::{
+ ///     Io,
+-///     MmioOwned,
++///     Mmio,
++///     Region,
+ ///     poll::read_poll_timeout_atomic, //
+ /// };
+ /// use kernel::time::Delta;
+ ///
+ /// const HW_READY: u16 = 0x01;
+ ///
+-/// fn wait_for_hardware<const SIZE: usize>(io: &MmioOwned<SIZE>) -> Result {
++/// fn wait_for_hardware<const SIZE: usize>(io: Mmio<'_, Region<SIZE>>) -> Result {
+ ///     read_poll_timeout_atomic(
+ ///         // The `op` closure reads the value of a specific status register.
+ ///         || io.try_read16(0x1000),
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index 43284d9fba96..80e638a892d7 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -58,7 +58,7 @@
+ //!     },
+ //!     num::Bounded,
+ //! };
+-//! # use kernel::io::MmioOwned;
++//! # use kernel::io::{Mmio, Region};
+ //! # register! {
+ //! #     pub BOOT_0(u32) @ 0x00000100 {
+ //! #         15:8 vendor_id;
+@@ -66,7 +66,7 @@
+ //! #         3:0 minor_revision;
+ //! #     }
+ //! # }
+-//! # fn test(io: &MmioOwned<0x1000>) {
++//! # fn test(io: Mmio<'_, Region<0x1000>>) {
+ //! # fn obtain_vendor_id() -> u8 { 0xff }
+ //!
+ //! // Read from the register's defined offset (0x100).
+@@ -446,7 +446,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///         Io,
+ ///     },
+ /// };
+-/// # use kernel::io::MmioOwned;
++/// # use kernel::io::{Mmio, Region};
+ ///
+ /// register! {
+ ///     FIXED_REG(u32) @ 0x100 {
+@@ -455,7 +455,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &MmioOwned<0x1000>) {
++/// # fn test(io: Mmio<'_, Region<0x1000>>) {
+ /// let val = io.read(FIXED_REG);
+ ///
+ /// // Write from an already-existing value.
+@@ -559,7 +559,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///         Io,
+ ///     },
+ /// };
+-/// # use kernel::io::MmioOwned;
++/// # use kernel::io::{Mmio, Region};
+ ///
+ /// // Type used to identify the base.
+ /// pub struct CpuCtlBase;
+@@ -584,7 +584,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: MmioOwned<0x1000>) {
++/// # fn test(io: Mmio<'_, Region<0x1000>>) {
+ /// // Read the status of `Cpu0`.
+ /// let cpu0_started = io.read(CPU_CTL::of::<Cpu0>());
+ ///
+@@ -601,7 +601,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test2(io: MmioOwned<0x1000>) {
++/// # fn test2(io: Mmio<'_, Region<0x1000>>) {
+ /// // Start the aliased `CPU0`, leaving its other fields untouched.
+ /// io.update(CPU_CTL_ALIAS::of::<Cpu0>(), |r| r.with_alias_start(true));
+ /// # }
+@@ -638,7 +638,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///         Io,
+ ///     },
+ /// };
+-/// # use kernel::io::MmioOwned;
++/// # use kernel::io::{Mmio, Region};
+ /// # fn get_scratch_idx() -> usize {
+ /// #   0x15
+ /// # }
+@@ -651,7 +651,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &MmioOwned<0x1000>)
++/// # fn test(io: Mmio<'_, Region<0x1000>>)
+ /// #     -> Result<(), Error>{
+ /// // Read scratch register 0, i.e. I/O address `0x80`.
+ /// let scratch_0 = io.read(SCRATCH::at(0)).value();
+@@ -724,7 +724,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///         Io,
+ ///     },
+ /// };
+-/// # use kernel::io::MmioOwned;
++/// # use kernel::io::{Mmio, Region};
+ /// # fn get_scratch_idx() -> usize {
+ /// #   0x15
+ /// # }
+@@ -752,7 +752,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test(io: &MmioOwned<0x1000>) -> Result<(), Error> {
++/// # fn test(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+ /// // Read scratch register 0 of CPU0.
+ /// let scratch = io.read(CPU_SCRATCH::of::<Cpu0>().at(0));
+ ///
+@@ -794,7 +794,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+ ///     }
+ /// }
+ ///
+-/// # fn test2(io: &MmioOwned<0x1000>) -> Result<(), Error> {
++/// # fn test2(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+ /// let cpu0_status = io.read(CPU_FIRMWARE_STATUS::of::<Cpu0>()).status();
+ /// # Ok(())
+ /// # }
 
 -- 
 2.54.0
