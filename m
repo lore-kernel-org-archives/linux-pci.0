@@ -1,58 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6261A31717E;
-	Sat, 27 Jun 2026 16:35:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 275F64D8CE;
+	Sat, 27 Jun 2026 17:30:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782578143; cv=none; b=R8AE44LV7QMfULGZuYE7CRBLOooa3IgHemTNfWsxZ90eKNsPfH/nf4IsZg/qZ8GDb5exj3SlJH8a+rRL0V9YEOjv94oz/zR0xxb1Nbw1q5pCtm7CzO9xuR6ZPyb7rpOwGbhuQLG8n0ZNjYE3ANerv0gNqJxF3ohY69Cn3tMtRKE=
+	t=1782581452; cv=none; b=YkjHnFyqf3RugOGV+wskwh/A+rCDWE/WPSXM+akVRvIWx3apJ+PLU8a0lO3Vf1vODU3gIP9R1YCmPG65op/lhJSkyoPxGxYqNdiafqxiQCFLPNXiMJMjDouPbViEnMXsVQt0gToWF/RqNsR+Dj24aPOy6oa5pzpDWDLyI7CSfB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782578143; c=relaxed/simple;
-	bh=j81zY+ENowzvmHdgZU/Kabqrxc+PPWoHxK6BkPIFzDE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TA73b36s86hTE+msNkDiQr+kWgJDJfPJWEpAQL18cSZuW0jItaOHUxPlg0nfHkyxMPQZZTWuRAEkfz7MEu4b5TeOGirIYYoazW/gD7Ev6GGPw9oRcjOEmQi1oGI/1EUIPQW50f5kAdIqtr29riVan5caz7yz1bct6AC4jeYiz/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KR9io5fM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782581452; c=relaxed/simple;
+	bh=MUvOJDeKWYuTsA1CfgW8NAV4Bn+ep0obKUA1c2gINtE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lgGr6QPmTN/ZMGNQcVvaVW+HjDJiHrULJ/JG68xjnckKnNfpeRc9q0W7LtzfKFuTdiDPDz3xU5g5uLGQ7ve6JjRR2kNPi+/I/rGMKHQ6zZwO/vpz7gDyTG5Z/pfgWxBhW0wQzV8yO7CCV/ekCVtz7BKRjiRYzN3IbfNvmp3HqSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=vK6q1Gp9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KR9io5fM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 424B21F000E9;
-	Sat, 27 Jun 2026 16:35:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782578141;
-	bh=/VhMs8dfIJPax9GDvj+2M3vwD2Sp7pTJxSUPoerARsg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KR9io5fMceHNCq+qNTAmI0BsGhJnXVourx67Tnde5IgBlmZEi7msVrYzuC45KMXge
-	 J1m32CMpIDGwFyXnpflmXlEcc4suaHc88uqgjsKlVuDUrUnBBeZrGHPrkEoElIZigJ
-	 pva7NZBOxEUk7rHRW0Scta39gQJ+JPxJvWvqcONiVQUUa2YBOeL+w/rDupeqQSRr9/
-	 NXa9dUFpMaxg6wLla8VWEVLHQ4z54lXiITbs3mOQED7XFtidcznvE/tLegrYX/PuuM
-	 YAG0Y4gw9Zg8995hrgoszH/TXPqy/Nzv+HSXyei9sm9GmY+qVgFI50qizswnuZ1vSf
-	 tXJ498WwP3lPw==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org,
-	mani@kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Paul Guder <paul.guder@example.com>
-Subject: Re: [PATCH 6.12.y] Revert "PCI: qcom: Advertise Hotplug Slot Capability with no Command Completion support"
-Date: Sat, 27 Jun 2026 12:35:28 -0400
-Message-ID: <stable-reply-item012-pci-qcom-612-20260627162226@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260627080913.14002-1-manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260627080913.14002-1-manivannan.sadhasivam@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="vK6q1Gp9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0141F000E9;
+	Sat, 27 Jun 2026 17:30:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1782581450;
+	bh=liOO4jziKPzOJng1mbgQ/bfcIvL/X9TLM0bz2VqDITk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=vK6q1Gp91tWXeHSxZdWU9Fu7NqJmkDXaFkqvYuAHD3+AhM2TXcf0O0ep2Wc3emVlK
+	 Ig16EYZOl1O+xucMz55U0KntMsVBlIiA4IslekmuXNyvIcAAC+KkrJSPrs6hE+pbq2
+	 20+65O58L+R5H0fxA30POKcXMBJo0yjp5byRcFG4=
+Date: Sat, 27 Jun 2026 18:29:28 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Frank Li <Frank.li@oss.nxp.com>,
+	Shuangpeng Bai <shuangpeng.kernel@gmail.com>,
+	kwilczynski@kernel.org, kishon@kernel.org, Frank.Li@kernel.org,
+	arnd@arndb.de, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] misc: pci_endpoint_test: fix use-after-free after
+ device unbind
+Message-ID: <2026062714-pretense-disprove-c1c9@gregkh>
+References: <20260621054609.186877-1-shuangpeng.kernel@gmail.com>
+ <20260622165249.374155-1-shuangpeng.kernel@gmail.com>
+ <ajmdy4yoYh7S2kS6@SMW015318>
+ <ambziiyr5u3653hihvvsg54fdhefcfme5hwbywgkthoo7hvxl4@xfgug6vq6dkx>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ambziiyr5u3653hihvvsg54fdhefcfme5hwbywgkthoo7hvxl4@xfgug6vq6dkx>
 
-On Sat, 27 Jun 2026 13:39 +0530, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com> wrote:
-> [PATCH 6.12.y] Revert "PCI: qcom: Advertise Hotplug Slot Capability with no Command Completion support"
+On Sat, Jun 27, 2026 at 06:29:07PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Jun 22, 2026 at 03:40:43PM -0500, Frank Li wrote:
+> > On Mon, Jun 22, 2026 at 12:52:49PM -0400, Shuangpeng Bai wrote:
+> > > [You don't often get email from shuangpeng.kernel@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> > >
+> > > An open miscdevice file descriptor can outlive the PCI driver binding.
+> > > misc_deregister() removes the device node and prevents new opens, but it
+> > > does not revoke file descriptors that are already open.
+> > >
+> > > Before this change, pci_endpoint_test stored the miscdevice inside struct
+> > > pci_endpoint_test, and ioctl() recovered the test object from
+> > > file->private_data with container_of(). Since the test object was allocated
+> > > with devm_kzalloc(), it was freed when the PCI device was unbound. A
+> > > process could therefore open /dev/pci-endpoint-test.N, unbind the PCI
+> > > device through sysfs, and then issue an ioctl on the stale file descriptor,
+> > > causing a use-after-free of struct pci_endpoint_test.
+> > 
+> > Anyways to provent unbound when still open? This driver is only for test
+> > ednpoint funciton, it is not worth to make complex for this unusual case.
+> > 
+> 
+> I disagree here. Even though this is a simple test driver, this is exposing an
+> IOCTL to userspace. So the driver should take all necessary steps to prevent
+> security issues like UAF.
 
-Queued for 6.12.
-
--- 
-Thanks,
-Sasha
+That UAF can ONLY happen if root causes it to happen :)
