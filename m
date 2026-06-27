@@ -1,119 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82A50397343;
-	Sat, 27 Jun 2026 09:28:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33E0F3AD538
+	for <linux-pci@vger.kernel.org>; Sat, 27 Jun 2026 12:15:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782552528; cv=none; b=Ys5swRTBtMRlcT8Isom9jzMUWvW7HlaUc5S0vFcJtka9odxfWYfLFMhEYLraes4wC80UlOTcx/sdw+MAlUjPoYsA4+hRq1yoTu/Fw6XxOQl9uiFJWkKSWyHwdgvamNkcQAT0gan105h/H5UY7rs06oSKWeQ9DtCICUYueyvlaLk=
+	t=1782562502; cv=none; b=MErZvzxP7Z1hCZ4VoYSZRnr6GTJavNkUQ7yuqtVbsC2ZWpHyBkiKfEMl8Tgs1AEn0hozdCZ627p4sTNJUe7dK8H+hhT32z52yzk8GLzPK6TAS1NOFC/h4JJIoaZ82pSZYxVstYcLHHSgeyLCf7ioLo4Ke0pC7+DZzS4GhKma8dY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782552528; c=relaxed/simple;
-	bh=0iEJ9CoHu7M3V0ejPEkK0764ck94VjFLyF6WPTDVWGc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=G2gTLQPyBaHFFe24YIGD8L6JpVBYnB1Ew1JkAK6LNYQt2famGljoBxG6PwFzksYVTeytsM/w+HS/0MeolqB0riAVTg4NRx5+H2gvOtUfrzY6nxiUveesGY/TK52RQmoNmbKTDh4twVs2SyUEaBf2PPDVELkkneItABSNnU80/aQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oyK6kx41; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1782562502; c=relaxed/simple;
+	bh=iOqbzTOr7Al7FRgdDYfrfx6rKgnAR26rPeCHRKlIgiM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=f+FJlPm1Cz/Cz/6dPH8Bu0uSUM1Q65Ro/X0+ZzdGtut2Rks8TlLd7LueZB/h50LTXlUQYFXsq9p+9fcOKyhcAlhb+YuZ67kxV/3m5V5IOenQZiLmZm2XMhO//6Y8DgRPnRdwmBzJmWCRXCsGYVcE2Yj2JKVs5P07mmjQ2gvRU2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c+F7+STo; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oyK6kx41"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4F8F5C2BCB8;
-	Sat, 27 Jun 2026 09:28:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1782552528; bh=0iEJ9CoHu7M3V0ejPEkK0764ck94VjFLyF6WPTDVWGc=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=oyK6kx41iE52q9VYYHo3SqSNyqYaaYvmrX150meBkFLJaRsUOAqIH12lOP11ITdn9
-	 +L3Xiy9OEYNGKA0R3/nB2kUSGVjUQgGQGGDWaxD6yu28368YRk3l5S/Slatnj84FAE
-	 WeLs2trD3xJcCi2IQbgq74cG/mPct+mU8hhB5PjI=
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45816C43602;
-	Sat, 27 Jun 2026 09:28:48 +0000 (UTC)
-From: Alvin Sun <alvin.sun@linux.dev>
-Date: Sat, 27 Jun 2026 17:28:46 +0800
-Subject: [PATCH v7 08/10] rust: binder: use `LocalModule` for `THIS_MODULE`
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c+F7+STo"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-49222fb062bso20431615e9.1
+        for <linux-pci@vger.kernel.org>; Sat, 27 Jun 2026 05:15:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782562500; x=1783167300; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ENGLhUzySY12FfgNeO/39C61qpfSr8IVf4djxpXqVbg=;
+        b=c+F7+SToXKOjitreIm7Brg6kMOEXdrDcrlPQ8e+9oH9P0hN2Az6Wy5jZgzkT8q9cgT
+         w3yvycvwwY1BXhEx3dc+HulQ0pOa1jSPttpInRZfEFARoeTvdHPDAt7iJNwBv9NJfewq
+         QjTlhHXgrpI9dBSNIuFdSZKZGn3tjsWmWNJKfnOv/0XxP/RDlMhmYsUSIxfGTK5hapvG
+         DPA9jWk87QLmNqtgYWkoGHIxEUV2+F5FyD5hMpLUBQmmTgmrn0ojnylWud1o2EJQX7qh
+         0NnQw5MyyOzqkRg3xuCjXoCMniWGc2NaTiO/lHWQTdHXbwQzrzHJqdqycA9l2CcDFAHC
+         1iSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782562500; x=1783167300;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ENGLhUzySY12FfgNeO/39C61qpfSr8IVf4djxpXqVbg=;
+        b=jAV7p8lDRE3Dw9qahRgWJyBWc16hX/xq5EJVl2tBnTFGJhoUq8WIMkAW/SHpQKbyl2
+         lT57Hf+HDqPHxHsV0b5Xb1z7gPnJW5QTiEb3wuojAd/w9ciBTG3mQyFJqdOJ+wP3W62C
+         Yt+2p31jsR0lxd6RGC5Isc7zzBXZm8xruxebaiz2gCCuuwq0Tn0F5ZGqtrTtt25I2Jse
+         ynKCaYxfFJSElGVTdwdZm+6Wv23Dth2uYBhmiQzZVtRa0AGVwMBaugkRQPP8iEIokWMM
+         o6mEqvOuoA99/+DyI6pny+fTsrRR69gUxS+gVqyps8QpqbBRUaOXVFo8ONEAt2sy4eN0
+         TIIg==
+X-Forwarded-Encrypted: i=1; AFNElJ8lPbcSAMhABlGsGqDRR9f4r0bimRk8m0z7CT7AT5mQtCue/64PG//DHiLY+dbkfdFDK4S+ul5gxQ0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxrs06v9UjM8j01M+O7n28n6efgDtC5SSkVGNEXcWu5WNrHRjl3
+	/cvCAygA8uIsCtD5kAW3S+2YHKgcS9LKvAceZXUrXnxQRnpEt4GK3W+n
+X-Gm-Gg: AfdE7ckV/iVd+X490lGlsey90dDNRj9XZUBavsdh7rv4r44YavC+Q35FjQdyzfgypyk
+	uNS7jZy9cRZMWPqESDJo/QbMBjfJWbWl20+raWEtIXnVhWLFzAu8yVGO6xURfX9ag6L7SUR3Y9X
+	AnwfT7KvDNsXXmCrLkrdKH2JDN0yb3nmLQvzNSvqkNWtW9nxopOevnRVnGLL70s4XAzzF6KgDHw
+	w+bpzFdSdMgYEb6Lx7NHk/Z1CCgzneU/10mb2X8SlNgAivRgdu6S11v+2bMmbaFPrgAUQa+PGJI
+	RDjbDXJTFpL3kauWtgXmuVzAF6xLRDy6V/7wkxsWhef3oMOGec42weBPMNAzIrWJs4CUAk3okph
+	poWDp8RK7FeBB+TLGTEw9DQI3ZVw6SjoJK+za6con+v6rqf2td1+Jov4fuQAzXhiNgac56PY1Ka
+	b+n3xr7SQ7heuj7EXoDJbslHrQaWZWwO9jpeo/jQ/dESorWMmfKXZb8yb1r0STuA==
+X-Received: by 2002:a05:600c:3f06:b0:492:33a8:5499 with SMTP id 5b1f17b1804b1-492668858a8mr160407315e9.17.1782562499407;
+        Sat, 27 Jun 2026 05:14:59 -0700 (PDT)
+Received: from Ansuel-XPS24.localdomain (93-34-89-195.ip49.fastwebnet.it. [93.34.89.195])
+        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-49269002511sm149028265e9.8.2026.06.27.05.14.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 27 Jun 2026 05:14:59 -0700 (PDT)
+From: Christian Marangi <ansuelsmth@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Brian Masney <bmasney@redhat.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Christian Marangi <ansuelsmth@gmail.com>,
+	Jianjun Wang <jianjun.wang@mediatek.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-clk@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 0/4] CI: mediatek-gen3: Add 2-lanes mode support + clock
+Date: Sat, 27 Jun 2026 14:14:41 +0200
+Message-ID: <20260627121450.3529133-1-ansuelsmth@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260627-fix-fops-owner-v7-8-33cd3990edf0@linux.dev>
-References: <20260627-fix-fops-owner-v7-0-33cd3990edf0@linux.dev>
-In-Reply-To: <20260627-fix-fops-owner-v7-0-33cd3990edf0@linux.dev>
-To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
- Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>, 
- Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Arnd Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, 
- David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>, 
- Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
- Igor Korotin <igor.korotin@linux.dev>, 
- FUJITA Tomonori <fujita.tomonori@gmail.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, 
- Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
- Carlos Llamas <cmllamas@google.com>
-Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org, 
- driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org, 
- nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org, 
- kunit-dev@googlegroups.com, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
- linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782552525; l=1377;
- i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=0iEJ9CoHu7M3V0ejPEkK0764ck94VjFLyF6WPTDVWGc=;
- b=gTuuCEJ8gtKcWIw1RgMbCrqPSvbbZMlfGmsTgC5PqBaXZyQg6v5HFiSdjglsWN3rHyH1dNDYO
- S3BW7zvQVxfDbBQ63MNSYEmzsZqvsEUbRl9gQgnrsoB+PBwrR+AYbu6
-X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
- pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
-X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
- auth_id=684
+Content-Transfer-Encoding: 8bit
 
-Replace the `THIS_MODULE` static reference in the binder fops with
-`this_module::<LocalModule>()`, consistent with the move of
-`THIS_MODULE` into the `ModuleMetadata` trait.
+This small series introduce support for 2-lanes mode for Airoha AN7581
+SoC. This is needed for correctly functionality of Eagle WiFi Card
+normally attached to this SoC that require a 2-line PCIe card to
+correctly work (and give the proper performance)
 
-Assisted-by: opencode:glm-5.2
-Reviewed-by: Gary Guo <gary@garyguo.net>
-Acked-by: Danilo Krummrich <dakr@kernel.org>
-Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
----
- drivers/android/binder/rust_binder_main.rs | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The first 2 patch address a limitation of the PCIe implementation
+where the PERSTOUT reset were indirectly asserted and deasserted
+all at the same time (for all the 3 PCIe card) with PCIe
+enable and disable.
+The 2 patch address this and introduce correct reset to control
+reset line for the relevant PCIe line.
 
-diff --git a/drivers/android/binder/rust_binder_main.rs b/drivers/android/binder/rust_binder_main.rs
-index dc1941cd2407b..d6ceebbd5f94e 100644
---- a/drivers/android/binder/rust_binder_main.rs
-+++ b/drivers/android/binder/rust_binder_main.rs
-@@ -17,6 +17,7 @@
-     bindings::{self, seq_file},
-     fs::File,
-     list::{ListArc, ListArcSafe, ListLinksSelfPtr, TryNewListArc},
-+    module::this_module,
-     prelude::*,
-     seq_file::SeqFile,
-     seq_print,
-@@ -318,7 +319,7 @@ unsafe impl<T> Sync for AssertSync<T> {}
-     let zeroed_ops = unsafe { core::mem::MaybeUninit::zeroed().assume_init() };
- 
-     let ops = kernel::bindings::file_operations {
--        owner: THIS_MODULE.as_ptr(),
-+        owner: this_module::<LocalModule>().as_ptr(),
-         poll: Some(rust_binder_poll),
-         unlocked_ioctl: Some(rust_binder_ioctl),
-         compat_ioctl: bindings::compat_ptr_ioctl,
+The last 2 patch add additional logic and support to assert
+and deassert the PERSTOUT and also apply the required configuration
+for 2-lanes mode.
+
+2-lanes mode is implemented in DT by adding the required property
+and by defining the "num-lanes" to 2.
+
+Changes v3:
+- Add Ack from Krzysztof
+- Improve commit description of PCIe patch
+- Use pcie->num_lanes instead of possible uninit variable num_lanes
+Changes v2:
+- Address typo regs -> reg in Documentation
+- Address typo lan -> lane in Documentation
+- Apply a suggested fix from Airoha for PCIe MUX configuration
+  before PHY init
+- Parse secondary reg in probe
+- Add missing reset_status handling for inverted bits
+- Move SCU to local handling in power_up
+- Add check for max num-lanes for EN7581
+
+Christian Marangi (4):
+  dt-bindings: clock: airoha: Add additional reset for PCIe PERSTOUT
+  clk: en7523: add support for dedicated PCIe PERSTOUT reset
+  dt-bindings: PCI: mediatek-gen3: Split Airoha schema and document
+    2-lanes
+  PCI: mediatek-gen3: Add 2-lanes mode support for Airoha AN7581
+
+ .../bindings/pci/airoha,en7581-pcie.yaml      | 251 ++++++++++++++++++
+ .../bindings/pci/mediatek-pcie-gen3.yaml      |  77 +-----
+ drivers/clk/clk-en7523.c                      |  39 ++-
+ drivers/pci/controller/pcie-mediatek-gen3.c   | 104 ++++++--
+ .../dt-bindings/reset/airoha,en7581-reset.h   |   4 +
+ 5 files changed, 375 insertions(+), 100 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml
 
 -- 
-2.43.0
-
+2.53.0
 
