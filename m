@@ -1,79 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B70E1A9FBD
-	for <linux-pci@vger.kernel.org>; Sat, 27 Jun 2026 08:13:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C1DC211466;
+	Sat, 27 Jun 2026 09:28:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782547981; cv=none; b=Rr/juWwmJlI83oy5bAC5Atqys+cACxHCIRTRcdAHcXzX50diIDonk0Gekn2A2iR2/TY9uBek2V5CYvzGAu17Zs02dR37cuarx4Qg7hyzrZ6zMlaDlMeN8zga5qqpZyM415LK8XMCdFSGd3jIi9DpLulCiIM1cbki9Y4ggQj5EBY=
+	t=1782552528; cv=none; b=LfI7PAG2348PSrOUwpc/lorTtvVcXsbwkc1Wv8j6Y/7hufOVOLahpMuRm21QX3K9RidblOXiYrXywOsBOjdRAkrzuaSrk6yiDPGs5c/CXgrQLAvR4Wyo9uXZV8Zt8GBPU7FHl3XKl+bxwUo1Ca8zNS3a2rUcgw+iybgQQ8eLc7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782547981; c=relaxed/simple;
-	bh=GWbDbC4Pg1imyqFa0s4+rrZ90Fj7gpLI4h1R3Qy0s3A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TkKsYXGoG+CETMkSQiNl8xo/kwTGMmH8PpsaHbrKFmIh0u3zTD+Qd2WQ62dRRyG4YT6s4iog8U8UkegCFZ2v2/UGCelUZl16cGrQW/haB9DmsZU0MbJYgulwhEDpaX/RGTNYQ+/S1wGYXB+5uMKmPrwo1/EvguI1jH1ROlHWEnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZxN8AyZ+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782552528; c=relaxed/simple;
+	bh=aF47iLMPZHY8ikZj0/3fPMH5Q4mRqmYCLQexdlk5/mo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=gpNkYLfuBY0Qex4lGk0agh2UM+QZfUF17aNErYAofdhk77PPxS66PmwLC02V6I7OoG5EOPZc+bYo1W0zhb7itHhJf0u+5nvWELJHzXrMxDiUJWOiClbwo8dXHVNVaRxl3lqKehUPC0i23SWlmd2xxuZ84QGFaAsBFf25w0Yzn6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TsWvUQMt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZxN8AyZ+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 025B71F000E9;
-	Sat, 27 Jun 2026 08:12:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782547980;
-	bh=mDEZ8a3RhZLbY/mr8lV1ztk8mywxZq8cSeMEg3+C5ns=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZxN8AyZ+ui2zzU4MNNRcsVXOaIyZxK6Ke5B0mFBWIaDMH+BSa2Wp5PqEpgJeUTc5B
-	 yWXYNc/vxlvMqqjsZJvV0B6jQg1wb2kROhkPbLYZUekhz7L5EgnWZhOSL6lU6LJLHr
-	 qUazXe2j3vJFnEiL4vD92u2o3FV/CrM5GH+6RfCNKIhInXmioY3TfHHR87pWjxbNaM
-	 A5KOZtW+zM+P0Ffa0EfqAZylNs43cv2HPBc6dOFAywNmN/g8Sye6IK7TMrbLx0Aj4x
-	 oHFHjLynOmO/b9//cyUa3XhjjHFgLVicqI4W9PO+/l0oE4Ie+HK9LchglDuA1VF05D
-	 8rGh3/23ZOkIg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6.12.y] Revert "PCI: qcom: Advertise Hotplug Slot
- Capability with no Command Completion support"
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260627080913.14002-1-manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260627080913.14002-1-manivannan.sadhasivam@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 27 Jun 2026 08:12:59 +0000
-Message-Id: <20260627081300.025B71F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TsWvUQMt"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BA97AC2BCF4;
+	Sat, 27 Jun 2026 09:28:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
+	t=1782552527; bh=aF47iLMPZHY8ikZj0/3fPMH5Q4mRqmYCLQexdlk5/mo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=TsWvUQMt62wgvD+ef+UVGOqHtKVfLbwtduFNfuSabHEs0UrZfg2NB048fs4EnTH47
+	 IyBXPPvoPmzKjxGu0DOzlihUKYk/pHITmJb2ozXO8ZmBw6mJz+/CHablDhSUftGImD
+	 ulkY+iqbXG6A0X82GkvfDMPCAV0ObG/Wicl4DkP0=
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA646C43602;
+	Sat, 27 Jun 2026 09:28:47 +0000 (UTC)
+From: Alvin Sun <alvin.sun@linux.dev>
+Date: Sat, 27 Jun 2026 17:28:40 +0800
+Subject: [PATCH v7 02/10] rust: module: add `THIS_MODULE` const to
+ `ModuleMetadata` trait
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260627-fix-fops-owner-v7-2-33cd3990edf0@linux.dev>
+References: <20260627-fix-fops-owner-v7-0-33cd3990edf0@linux.dev>
+In-Reply-To: <20260627-fix-fops-owner-v7-0-33cd3990edf0@linux.dev>
+To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+ Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>, 
+ Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Arnd Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, 
+ David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>, 
+ Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+ Igor Korotin <igor.korotin@linux.dev>, 
+ FUJITA Tomonori <fujita.tomonori@gmail.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, 
+ Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
+ Carlos Llamas <cmllamas@google.com>
+Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org, 
+ driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org, 
+ nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org, 
+ kunit-dev@googlegroups.com, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782552525; l=3594;
+ i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
+ bh=aF47iLMPZHY8ikZj0/3fPMH5Q4mRqmYCLQexdlk5/mo=;
+ b=7R/uNBFs1pvnOfA6/pe6CcnnqKBFT1zKiiahnOmqWa6q1JXz/QYMu5TA8HTmfpXdXZwymQcLc
+ qYCInzcENwBC5nnEPgxrUZrDd5pO/3oLK3qm3nWWEBIShkmRXUCzaor
+X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
+ pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
+X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
+ auth_id=684
 
-> This reverts commit 480c94d3affbc11b9e98ca223a9fa19d90b84fbb.
->=20
-> When the Qcom PCIe Root Port advertises itself as hotplug capable, the
-> PCI core pre-allocates a conservative 2MB non-prefetchable bridge window
-> with 1MB alignment during the initial bus scan. However, the WLAN device
-> (17cb:1103) on the ThinkPad X13s requires a 2MB BAR with 2MB alignment,
-> which cannot be satisfied from within the pre-allocated bridge window.
-> This causes the device to fail enumeration:
->=20
->   ath11k_pci 0006:01:00.0: BAR 0 [mem size 0x00200000 64bit]: can't assig=
-n; no space
->   ath11k_pci 0006:01:00.0: BAR 0 [??? 0x00000000 flags 0x20000000]: can't=
- assign; bogus alignment
->   ath11k_pci 0006:01:00.0: failed to assign pci resource: -22
->   ath11k_pci 0006:01:00.0: failed to claim device: -22
->   ath11k_pci 0006:01:00.0: probe with driver ath11k_pci failed with error=
- -22
->=20
-> [ ... ]
-> on the Qcom platforms.
->=20
-> Reported-by: Paul Guder <paul.guder@example.com>
-> Closes: https://lore.kernel.org/linux-pci/CAH-zrtu1Bci7M-tQc9Vme9z+Bw=3D1=
-gthM7z6=3DXX33Jjd_Q6itcg@mail.gmail.com
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
-com>
+Since `const_refs_to_static` has been stable as of the MSRV bump, a
+`ThisModule` pointer can now be used in const contexts.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Add a `THIS_MODULE` const to the `ModuleMetadata` trait so that modules
+can provide their `ThisModule` pointer in const contexts such as static
+`file_operations`.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260627080913.1400=
-2-1-manivannan.sadhasivam@oss.qualcomm.com?part=3D1
+Add a `this_module()` helper to retrieve the `THIS_MODULE` pointer of a
+given module type, and update `__init` to use it instead of the
+`THIS_MODULE` static generated by the `module!` macro.
+
+The `static THIS_MODULE` generated by the `module!` macro is retained
+for backwards compatibility with existing users and removed in a later
+patch once all references have been migrated.
+
+Assisted-by: opencode:glm-5.2
+Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
+Reviewed-by: Gary Guo <gary@garyguo.net>
+Acked-by: Danilo Krummrich <dakr@kernel.org>
+Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
+---
+ rust/kernel/module.rs |  9 +++++++++
+ rust/macros/module.rs | 18 +++++++++++++++++-
+ 2 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/rust/kernel/module.rs b/rust/kernel/module.rs
+index be242a82e86d2..d713705984477 100644
+--- a/rust/kernel/module.rs
++++ b/rust/kernel/module.rs
+@@ -42,6 +42,15 @@ fn init(module: &'static ThisModule) -> impl pin_init::PinInit<Self, crate::erro
+ pub trait ModuleMetadata {
+     /// The name of the module as specified in the `module!` macro.
+     const NAME: &'static crate::str::CStr;
++
++    /// The module's `THIS_MODULE` pointer.
++    const THIS_MODULE: ThisModule;
++}
++
++/// Returns a reference to the `THIS_MODULE` of the given module type.
++#[inline]
++pub const fn this_module<M: ModuleMetadata>() -> &'static ThisModule {
++    &M::THIS_MODULE
+ }
+ 
+ /// Equivalent to `THIS_MODULE` in the C API.
+diff --git a/rust/macros/module.rs b/rust/macros/module.rs
+index 06c18e2075083..aa9a618d5d19e 100644
+--- a/rust/macros/module.rs
++++ b/rust/macros/module.rs
+@@ -519,6 +519,22 @@ pub(crate) fn module(info: ModuleInfo) -> Result<TokenStream> {
+ 
+         impl ::kernel::ModuleMetadata for #type_ {
+             const NAME: &'static ::kernel::str::CStr = #name_cstr;
++
++            #[cfg(MODULE)]
++            const THIS_MODULE: ::kernel::ThisModule = {
++                extern "C" {
++                    static __this_module: ::kernel::types::Opaque<::kernel::bindings::module>;
++                }
++
++                // SAFETY: `__this_module` is constructed by the kernel at load time
++                // and lives until the module is unloaded.
++                unsafe { ::kernel::ThisModule::from_ptr(__this_module.get()) }
++            };
++
++            #[cfg(not(MODULE))]
++            const THIS_MODULE: ::kernel::ThisModule = unsafe {
++                ::kernel::ThisModule::from_ptr(::core::ptr::null_mut())
++            };
+         }
+ 
+         // Double nested modules, since then nobody can access the public items inside.
+@@ -616,7 +632,7 @@ pub extern "C" fn #ident_exit() {
+                 /// This function must only be called once.
+                 unsafe fn __init() -> ::kernel::ffi::c_int {
+                     let initer = <super::super::LocalModule as ::kernel::InPlaceModule>::init(
+-                        &super::super::THIS_MODULE
++                        ::kernel::module::this_module::<super::super::LocalModule>()
+                     );
+                     // SAFETY: No data race, since `__MOD` can only be accessed by this module
+                     // and there only `__init` and `__exit` access it. These functions are only
+
+-- 
+2.43.0
+
 
