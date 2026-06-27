@@ -1,79 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 272212771B;
-	Sat, 27 Jun 2026 12:59:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E053A544C
+	for <linux-pci@vger.kernel.org>; Sat, 27 Jun 2026 13:11:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782565162; cv=none; b=DPL5zuyqhIPJirtxOXBu7ccsi6WL0jnQBL/GJgPLVzZ70wXZmvuJO9hXRnPAqK3YzB9loAiwSCFyrPbDFj5SiQ9fxmnkw10wMnXtKW4nizPVU98sx+jCwOxv0msu7LYEp9gRlVqX5a94U3q8KG6W4mu10xpb8GC1BISmafKXQeI=
+	t=1782565884; cv=none; b=qnAdE4swVNuwAp/pmNqX7+29YI3i1kWd1+eevKHeL+gaKh+fYu6+7soicMshgemvXzvRT+mw4LIjHd6FnJo90mGVHI0QGe8RgytH2OR4yXnE9aiviMhmYD7PFvdF+LJcncPQFFDn1sYp0p0oOXzu32Z3tgnybz/CsIUdJfcOqgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782565162; c=relaxed/simple;
-	bh=jz07gwNJchY8M/55lC4UxBS3uTYoAw84hQ0rIL8DrTU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pw3xLRCuqTyXCPfn4KNGtnn8PbeEZ6JmfkZhjPeTbhUWYqOB/HfWGSSnPSNSd2Bon3iGzMn7lkGPbNjjIthIfeHBtG+K+Yuqb2P1BoUEWv+cOHfxRWmq89QlST1vcen4Gf96PO6EB3KpUZi4DfGdOD1T5K9U6Z5h440vt+pf0lU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=URv2Kxge; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782565884; c=relaxed/simple;
+	bh=0D3QtVTQ9/VyZ2GHdi7eh0l4L5UHK8hpuhOW6sOiDcg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pvyWFqX46yBLbj2ARM9NFjprEWSKQ/ceSF3GWNADi8ViXYh4V8izk5KYNkTVXMTC74av+2W2OOtLx/hMRzNe4nB2PMpLDDgIjyMAbP6EJkkh25G1qDeYcCdESeSJqYU2ge52CwiGHl8YeAbdPxQUfv+jnSHuu7bNlLd/OZBeSLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=I88UiKZ+; arc=none smtp.client-ip=91.218.175.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="URv2Kxge"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5736E1F000E9;
-	Sat, 27 Jun 2026 12:59:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782565160;
-	bh=sEiM6FmRPQVjvx0LJKIM1YbfiL62OV7OtdvScUo7Ynk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=URv2KxgegO2sg6qmqcWn2U6fGlsYypFJ+ltIntSvmn32lWHEyhHbCz2NWy7Wk8DTL
-	 KASegs92V/cvcw8OfTLZgWgjpx9u4ApEvjdoznLl1eoT/FrGWwTTHEcsAF85KpblRA
-	 Mxx7fT5jmzsWcwpMJrpCcI0hUcnw3BVkYjvTJTXpIuT/0r6aIhpfF2r8LIPXdeSE3u
-	 DsYIRRhm7N50qE9sL3kk+sAYOrvTMxIpI9cjOY6AwRlBeUjk+1KSOn8p3oQvLvrqLg
-	 wfMsi2fbUTgutEahHc4eDR0xIR1xsyPWf2Bb8ORSqRFo5pvK7X175LEXuitkjbtcXV
-	 Nh4cJuDB7X+OQ==
-Date: Sat, 27 Jun 2026 18:29:07 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Frank Li <Frank.li@oss.nxp.com>
-Cc: Shuangpeng Bai <shuangpeng.kernel@gmail.com>, kwilczynski@kernel.org, 
-	kishon@kernel.org, Frank.Li@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org, 
-	bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] misc: pci_endpoint_test: fix use-after-free after
- device unbind
-Message-ID: <ambziiyr5u3653hihvvsg54fdhefcfme5hwbywgkthoo7hvxl4@xfgug6vq6dkx>
-References: <20260621054609.186877-1-shuangpeng.kernel@gmail.com>
- <20260622165249.374155-1-shuangpeng.kernel@gmail.com>
- <ajmdy4yoYh7S2kS6@SMW015318>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="I88UiKZ+"
+Message-ID: <b35c76ac-030a-4458-b85b-90ef7bcd3894@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1782565869;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kTfmCVZgLsQAYxOGmqgi+d9SGTwihp06nkzRCBL0e+M=;
+	b=I88UiKZ+5NSVSOCF6J4gIIRkkZToigFcGN3SeLfMhryeUfJLFw4kvfe+NuwObJ0Mm2vtFf
+	tpQ1eQi/oIHPtsZgpegcnpq7MyzNRpWpRQ5M3ApzXTndtytC16U3Rb06RVXWdNorU7alQy
+	0BGxL8bMeCgEkMhwf/yUBhSRJmUrCN4=
+Date: Sat, 27 Jun 2026 21:10:43 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Subject: Re: [PATCH v6 07/10] rust: configfs: use `LocalModule` for
+ `THIS_MODULE`
+To: Gary Guo <gary@garyguo.net>, Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+ Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
+ Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>,
+ Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>,
+ Aaron Tomlin <atomlin@atomlin.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann
+ <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>,
+ David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>,
+ Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>,
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>,
+ Igor Korotin <igor.korotin@linux.dev>,
+ FUJITA Tomonori <fujita.tomonori@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ =?UTF-8?Q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>,
+ Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>,
+ Carlos Llamas <cmllamas@google.com>
+Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
+ driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org,
+ nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org,
+ kunit-dev@googlegroups.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260624-fix-fops-owner-v6-0-5295e333cb3e@linux.dev>
+ <20260624-fix-fops-owner-v6-7-5295e333cb3e@linux.dev>
+ <DJI7IOXAD84M.2F6VSBY64BO62@garyguo.net>
+ <34a009d9-a1f3-4347-9e92-866ec05ddb60@linux.dev>
+ <DJJ25JJ3TDO9.1UFOP60U0IPX5@garyguo.net>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Alvin Sun <alvin.sun@linux.dev>
+In-Reply-To: <DJJ25JJ3TDO9.1UFOP60U0IPX5@garyguo.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ajmdy4yoYh7S2kS6@SMW015318>
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jun 22, 2026 at 03:40:43PM -0500, Frank Li wrote:
-> On Mon, Jun 22, 2026 at 12:52:49PM -0400, Shuangpeng Bai wrote:
-> > [You don't often get email from shuangpeng.kernel@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
-> >
-> > An open miscdevice file descriptor can outlive the PCI driver binding.
-> > misc_deregister() removes the device node and prevents new opens, but it
-> > does not revoke file descriptors that are already open.
-> >
-> > Before this change, pci_endpoint_test stored the miscdevice inside struct
-> > pci_endpoint_test, and ioctl() recovered the test object from
-> > file->private_data with container_of(). Since the test object was allocated
-> > with devm_kzalloc(), it was freed when the PCI device was unbound. A
-> > process could therefore open /dev/pci-endpoint-test.N, unbind the PCI
-> > device through sysfs, and then issue an ioctl on the stale file descriptor,
-> > causing a use-after-free of struct pci_endpoint_test.
-> 
-> Anyways to provent unbound when still open? This driver is only for test
-> ednpoint funciton, it is not worth to make complex for this unusual case.
-> 
 
-I disagree here. Even though this is a simple test driver, this is exposing an
-IOCTL to userspace. So the driver should take all necessary steps to prevent
-security issues like UAF.
+On 6/26/26 22:41, Gary Guo wrote:
+> On Fri Jun 26, 2026 at 3:35 AM BST, Alvin Sun wrote:
+>> On 6/25/26 22:40, Gary Guo wrote:
+>>> On Wed Jun 24, 2026 at 4:00 PM BST, Alvin Sun wrote:
+>>>> Replace the `THIS_MODULE` static reference in the `configfs_attrs!`
+>>>> macro with `this_module::<LocalModule>()`, and update
+>>>> rnull to import `LocalModule` instead of `THIS_MODULE`, consistent
+>>>> with the move of `THIS_MODULE` into the `ModuleMetadata` trait.
+>>>>
+>>>> Assisted-by: opencode:glm-5.2
+>>>> Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
+>>>> Acked-by: Danilo Krummrich <dakr@kernel.org>
+>>>> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
+>>>> ---
+>>>>    drivers/block/rnull/configfs.rs | 6 ++----
+>>>>    rust/kernel/configfs.rs         | 8 +++++---
+>>>>    2 files changed, 7 insertions(+), 7 deletions(-)
+>>>>
+>>>> diff --git a/drivers/block/rnull/configfs.rs b/drivers/block/rnull/configfs.rs
+>>>> index c10a55fc58948..b2547ad1e5ddd 100644
+>>>> --- a/drivers/block/rnull/configfs.rs
+>>>> +++ b/drivers/block/rnull/configfs.rs
+>>>> @@ -1,9 +1,7 @@
+>>>>    // SPDX-License-Identifier: GPL-2.0
+>>>>    
+>>>> -use super::{
+>>>> -    NullBlkDevice,
+>>>> -    THIS_MODULE, //
+>>>> -};
+>>>> +use super::NullBlkDevice;
+>>>> +use crate::LocalModule;
+>>>>    use kernel::{
+>>>>        block::mq::gen_disk::{
+>>>>            GenDisk,
+>>>> diff --git a/rust/kernel/configfs.rs b/rust/kernel/configfs.rs
+>>>> index 2339c6467325d..c31d7882e216d 100644
+>>>> --- a/rust/kernel/configfs.rs
+>>>> +++ b/rust/kernel/configfs.rs
+>>>> @@ -875,7 +875,7 @@ fn as_ptr(&self) -> *const bindings::config_item_type {
+>>>>    ///                 configfs::Subsystem<Configuration>,
+>>>>    ///                 Configuration
+>>>>    ///                 >::new_with_child_ctor::<N,Child>(
+>>>> -///             &THIS_MODULE,
+>>>> +///             ::kernel::module::this_module::<crate::LocalModule>(),
+>>>>    ///             &CONFIGURATION_ATTRS
+>>>>    ///         );
+>>>>    ///
+>>>> @@ -1021,7 +1021,8 @@ macro_rules! configfs_attrs {
+>>>>    
+>>>>                        static [< $data:upper _TPE >] : $crate::configfs::ItemType<$container, $data>  =
+>>>>                            $crate::configfs::ItemType::<$container, $data>::new::<N>(
+>>>> -                            &THIS_MODULE, &[<$ data:upper _ATTRS >]
+>>>> +                            $crate::module::this_module::<LocalModule>(),
+>>> ^ You only changed one single place. This is still plain `LocalModule`.
+>> Initially I wrote it as `crate::LocalModule`, but clippy warned about it. So
+>> instead of putting the crate path in the macro body, I added `use
+>> crate::LocalModule` in the calling file.
+>>
+>> ```
+>> warning: `crate` references the macro call's crate
+>>       --> rust/kernel/configfs.rs:1024:59
+>>        |
+>> 1024 | ...  $crate::module::this_module::<crate::LocalModule>(),
+>>        |                                                     ^^^^^ help:
+>> to reference the macro definition's crate, use: `$crate`
+>>        |
+>>        = help: for further information visit
+>> https://rust-lang.github.io/rust-clippy/rust-1.94.0/index.html#crate_in_macro_def
+>>        = note: `-W clippy::crate-in-macro-def` implied by `-W clippy::all`
+>>        = help: to override `-W clippy::all` add
+>> `#[allow(clippy::crate_in_macro_def)]`
+>>
+>> warning: 1 warning emitted
+>> ```
+> Clippy has a point about `crate::` being usually wrong in macros, but it is what
+> we actually want here, so obviously you should allow the warning.
+>
+> It is the exact same case in `vtable` macro, just that Clippy is unable to check
+> proc macros!
 
-- Mani
+Thanks for the detailed explanation.
 
--- 
-மணிவண்ணன் சதாசிவம்
+I specifically searched for issues related to `crate_in_macro_def`, and 
+this information is very useful to me.
+
+Best regards,
+
+Alvin
+
+>
+> Best,
+> Gary
+>
+>> Alternatively, `#[allow(clippy::crate_in_macro_def)]` could be added on
+>> the macro
+>> definition. Would you suggest that approach?
