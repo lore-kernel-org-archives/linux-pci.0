@@ -1,76 +1,265 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DD4E3AFB06
-	for <linux-pci@vger.kernel.org>; Sun, 28 Jun 2026 14:46:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12DA3451B3;
+	Sun, 28 Jun 2026 23:37:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782658022; cv=none; b=ZSkXwzC2n7QBJgj2IiXFnYsHqbqkQ/j4mhKr2VdmXPJaK0H6BVGmwJGBRjJhN7hB98Nd/JAt+BF32/Uvsblixc/wMHtDBih8OQlZXVcywhbFrYx5KIBvdlh32DJXCio/J9qLeq9zfTJlFFXesKIGzLCYRQB4uad+XyUeEIxrn9k=
+	t=1782689856; cv=none; b=DJA1YjlIYDEq9ptu+Go8dF4FG1JrrT1j75rGEr8sSR/bMq5fx9FCRwX4MUNP+PJfV+hYOMUZhX6SV4Pez9SJyo9qwevqA3GmXhAZ2IO6aWEGJkkwuKMp4tbA+uzh38V56Q5OW0pELY+/phTO9hHUVd0gfvJ2AF9etwUMTgTKojg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782658022; c=relaxed/simple;
-	bh=5b1M+1TTMTBDgZc+kpo9kFDZt3aftDFFelWSLmydpx0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jO/EH0ZmPBWdIv3d+HYrH2cAgKAhogOEwPs3PQ3B53XvSMRFqlt8gPUiPYgEeaRwdAFzSPyMnKtjoJ5N14zrUNl9HIXlz6zA/E7Xd8TFK+gQ7zpUXRRnOQneP+qIlLBnXEd4VUFG/LcC6NHxUsvPbrEPMmToTo/1jKgTol/2wf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SBnn0GHU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782689856; c=relaxed/simple;
+	bh=oFEFVBD5fcKXppEp1kF7LsfMNyXXyuvUCfJ3219R1aw=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=BYF5rxwVmogJDStG2SbI4Mwutt2NkI8L4gjV00kVmED+rECOZcJ/CvEq4vrGD9tDrpLMtR2YN7Ji88N3lpZmHCW57VMlJMDjlX+Um7ILmn2Z2I5CWM11Cev1B3l9lAy/dylsNPWH9MGGTXCXbyQBEFhcLBC+/BmXF7GWRft1ts4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oO3ino49; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SBnn0GHU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6AE81F000E9;
-	Sun, 28 Jun 2026 14:46:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oO3ino49"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDF541F000E9;
+	Sun, 28 Jun 2026 23:37:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782658018;
-	bh=DCqgTBAW92LRehAhruqs32STzlqiKNd7HT1mL2IziGM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SBnn0GHUzgirDvseRje5DNtFRThfcTzyWgwSSziaHO4xWfoYILifIIlK8lXJtH/0U
-	 fvzUwPja+xRRyHXbEl0ENa1lIBw+17ZXCzyy0JztbZnx352WJC+3sw1NASMUtJM7++
-	 yn2mICRMnViIgdO15bk6iWasac+I/Tk/OP8umHuDp5QEng5dcRcSfJXg0wrGKHUij8
-	 JBiLWUSkg0DgathNEIP1Ua4xDQNR7uqtvFDSvCzL3DsDZ2QdBB2/oA3HnMQ5GXFTmC
-	 23gDl6wCFH9fSMczBvLkDfcikAFRf+RppTiG0j/Bh9mm4sR+Gs9CqB6S+Cg+ZdnE1C
-	 tEhXg+iUYLv3A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow
- Lake-HX
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ali Alaei" <ali.alaei.tabatabaei@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
-References: <20260604214051.11132-1-ali.alaei.tabatabaei@gmail.com>
- <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 28 Jun 2026 14:46:52 +0000
-Message-Id: <20260628144658.A6AE81F000E9@smtp.kernel.org>
+	s=k20260515; t=1782689854;
+	bh=AsaiapX2vikYIk/w5nfyMPF/cTpFXSz56W7bWM4Pb2M=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=oO3ino49R89n61CsRkBCR9diZ+DKsLiRHMwwMxaYp9HQ173yN75E/utZi7wXI1Zcf
+	 Q6bczIwGlyrmxzGJocFWVRoqN7oB17NuaydphaHrEIz+kQ7h97Ju7w3e7jpckDEfhg
+	 ktpRG4kICCVC3V0sbHoXH++Dsog9uBdzBqkuzrpAn4Kw913UmAZWd1hwwv83tc0kkz
+	 MMTDHUh2jCW9uHlzUzyksf2bAuvZzWfSMSRf58AaaRzD2dtc+qVIPxhR7qgq01N7rJ
+	 k96hLOo3hvvJ7p9+lkeC5/B1aO/8vwUEvJRI3Km6w9HQuDe4J8rk5+GF0h6OtoJNEE
+	 s5fOAwSZbkgOw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 29 Jun 2026 01:37:27 +0200
+Message-Id: <DJL2T5XDC53F.3C2QC5L1V2H6@kernel.org>
+Subject: Re: [PATCH v5 00/20] rust: I/O type generalization and projection
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
+ "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
+ <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Michal Wilczynski" <m.wilczynski@samsung.com>,
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pwm@vger.kernel.org>, "Laura Nao" <laura.nao@collabora.com>
+To: "Gary Guo" <gary@garyguo.net>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
+In-Reply-To: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
 
-> On Intel Arrow Lake-HX systems (e.g. Core Ultra 9 275HX on Acer Predator
-> PH16-73), the VMD controller reports BUS_RESTRICT_CFG =3D 3 in the VMCONF=
-IG
-> register. The existing switch statement only handled values 0, 1, and 2,
-> causing vmd_get_bus_number_start() to return -ENODEV and aborting the
-> entire VMD probe. This leaves NVMe drives behind the VMD controller
-> invisible to the kernel.
->=20
-> Hardware registers (VMCAP/VMCONFIG at offsets 0x40/0x44):
->   VMD 0000:00:0e.0 (8086:ad0b): VMCAP=3D0x000f, VMCONFIG=3D0x03b8
->   BUS_RESTRICT_CFG(0x03b8) =3D (0x03b8 >> 8) & 0x3 =3D 3
->=20
-> Add cfg=3D3 as a fallthrough to cfg=3D2, setting busn_start=3D224, which =
-is
-> the correct bus number base for this hardware.
->=20
-> Also add a PCI_POSSIBLE_ERROR() guard after reading VMCONFIG: a failed
-> config space read returns 0xFFFF, and BUS_RESTRICT_CFG(0xFFFF) =3D 3,
-> so without this guard a removed or errored device would falsely match
-> the new case 3 instead of being caught as an error.
->=20
-> Signed-off-by: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+On Fri Jun 26, 2026 at 4:45 PM CEST, Gary Guo wrote:
+> This series presents a major rework of I/O types, as a summary:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+There are two minor rustdoc warnings:
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260628143450.9249=
-2-1-ali.alaei.tabatabaei@gmail.com?part=3D1
+	warning: unresolved link to `include/linux/iosys-map.h`
+	    --> rust/kernel/io.rs:1456:7
+	     |
+	1456 | /// [`include/linux/iosys-map.h`] in C.
+	     |       ^^^^^^^^^^^^^^^^^^^^^^^^^ no item named `include/linux/iosys-=
+map.h` in scope
+	     |
+	     =3D help: to escape `[` and `]` characters, add '\' before them like =
+`\[` or `\]`
+	     =3D note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default
+=09
+	warning: unresolved link to `View`
+	    --> rust/kernel/io.rs:1620:74
+	     |
+	1620 | /// In addition to projecting from [`Io`], you may also project fro=
+m a [`View`] of an [`Io`].
+	     |                                                                    =
+      ^^^^ no item named `View` in scope
+	     |
+	     =3D help: to escape `[` and `]` characters, add '\' before them like =
+`\[` or `\]`
+=09
+	warning: 2 warnings emitted
 
+> Gary Guo (19):
+>       rust: io: add dynamically-sized `Region` type
+>       rust: io: add missing safety requirement in `IoCapable` methods
+>       rust: io: restrict untyped IO access and `register!` to `Region`
+>       rust: io: implement `Io` on reference types instead
+>       rust: io: generalize `MmioRaw` to pointer to arbitrary type
+>       rust: io: rename `Mmio` to `MmioOwned`
+>       rust: io: implement `Mmio` as view type
+>       rust: pci: io: make `ConfigSpace` a view
+>       rust: io: use view types instead of addresses for `Io`
+>       pwm: th1520: remove unnecessary `deref`
+>       rust: io: remove `MmioOwned`
+>       rust: io: move `Io` methods to extension trait
+>       rust: io: add projection macro and methods
+>       rust: io: implement a view type for `Coherent`
+>       rust: io: add `read_val` and `write_val` functions on `Io`
+>       gpu: nova-core: use I/O projection for cleaner encapsulation
+>       rust: dma: drop `dma_read!` and `dma_write!` API
+>       rust: io: add copying methods
+>       rust: io: implement `IoSysMap`
+>
+> Laura Nao (1):
+>       rust: io: add I/O backend for system memory with volatile access
+
+For sharing with the drm-rust tree:
+
+diff --git a/rust/kernel/drm/gem/shmem.rs b/rust/kernel/drm/gem/shmem.rs
+index 3ee19ef6264e..6868b5d80ab7 100644
+--- a/rust/kernel/drm/gem/shmem.rs
++++ b/rust/kernel/drm/gem/shmem.rs
+@@ -29,9 +29,10 @@
+         to_result, //
+     },
+     io::{
+-        Io,
+-        IoCapable,
+-        IoKnownSize, //
++        IoBase,
++        Region,
++        SysMem,
++        SysMemBackend, //
+     },
+     prelude::*,
+     scatterlist,
+@@ -467,6 +468,28 @@ pub fn owner(&self) -> &Object<D, C> {
+     }
+ }
+
++impl<'a, D, R, C, const SIZE: usize> IoBase<'a> for &'a VMap<D, R, C, SIZE=
+>
++where
++    D: DriverObject,
++    C: DeviceContext,
++    R: Deref<Target =3D Object<D, C>>,
++{
++    type Backend =3D SysMemBackend;
++    type Target =3D Region<SIZE>;
++
++    #[inline]
++    fn as_view(self) -> SysMem<'a, Region<SIZE>> {
++        let ptr =3D Region::ptr_from_raw_parts_mut(self.addr.cast(), self.=
+owner.size());
++
++        // SAFETY: Per type invariants of `VMap`:
++        // - `addr .. addr + owner.size()` is a valid kernel accessible me=
+mory region.
++        // - `addr` is page-aligned, which satisfies `Region`'s 4-byte ali=
+gnment requirement.
++        // - The memory remains valid until this `VMap` is dropped; since =
+`self` is `&'a VMap`,
++        //   the borrow prevents the `VMap` from being dropped for the lif=
+etime `'a`.
++        unsafe { SysMem::new(ptr) }
++    }
++}
++
+ impl<D, R, C, const SIZE: usize> Drop for VMap<D, R, C, SIZE>
+ where
+     D: DriverObject,
+@@ -508,69 +531,6 @@ unsafe impl<D, R, C, const SIZE: usize> Sync for VMap<=
+D, R, C, SIZE>
+ {
+ }
+
+-impl<D, R, C, const SIZE: usize> Io for VMap<D, R, C, SIZE>
+-where
+-    D: DriverObject,
+-    C: DeviceContext,
+-    R: Deref<Target =3D Object<D, C>>,
+-{
+-    #[inline]
+-    fn addr(&self) -> usize {
+-        self.addr as usize
+-    }
+-
+-    #[inline]
+-    fn maxsize(&self) -> usize {
+-        self.owner.size()
+-    }
+-}
+-
+-impl<D, R, C, const SIZE: usize> IoKnownSize for VMap<D, R, C, SIZE>
+-where
+-    D: DriverObject,
+-    C: DeviceContext,
+-    R: Deref<Target =3D Object<D, C>>,
+-{
+-    const MIN_SIZE: usize =3D SIZE;
+-}
+-
+-macro_rules! impl_vmap_io_capable {
+-    ($ty:ty) =3D> {
+-        impl<D, R, C, const SIZE: usize> IoCapable<$ty> for VMap<D, R, C, =
+SIZE>
+-        where
+-            D: DriverObject,
+-            C: DeviceContext,
+-            R: Deref<Target =3D Object<D, C>>,
+-        {
+-            #[inline]
+-            unsafe fn io_read(&self, address: usize) -> $ty {
+-                let ptr =3D address as *mut $ty;
+-
+-                // SAFETY: The safety contract of `io_read` guarantees tha=
+t address is a valid
+-                // address within the bounds of `Self` of at least the siz=
+e of $ty, and is properly
+-                // aligned.
+-                unsafe { ptr::read_volatile(ptr) }
+-            }
+-
+-            #[inline]
+-            unsafe fn io_write(&self, value: $ty, address: usize) {
+-                let ptr =3D address as *mut $ty;
+-
+-                // SAFETY: The safety contract of `io_write` guarantees th=
+at address is a valid
+-                // address within the bounds of `Self` of at least the siz=
+e of $ty, and is properly
+-                // aligned.
+-                unsafe { ptr::write_volatile(ptr, value) }
+-            }
+-        }
+-    };
+-}
+-
+-impl_vmap_io_capable!(u8);
+-impl_vmap_io_capable!(u16);
+-impl_vmap_io_capable!(u32);
+-#[cfg(CONFIG_64BIT)]
+-impl_vmap_io_capable!(u64);
+-
+ /// A reference to a GEM object that is known to have a mapped [`SGTable`]=
+.
+ ///
+ /// This is used by the Rust bindings with [`Devres`] in order to ensure t=
+hat mappings for SGTables
+@@ -638,6 +598,7 @@ mod tests {
+             UnregisteredDevice, //
+         },
+         faux,
++        io::Io,
+         page::PAGE_SIZE, //
+     };
+
+@@ -714,7 +675,7 @@ fn compile_time_vmap_sizes() -> Result {
+         assert!(ptr::eq(vmap.owner(), obj.deref()));
+
+         // Verify the max size matches the actual object size
+-        assert_eq!(vmap.maxsize(), PAGE_SIZE);
++        assert_eq!(vmap.size(), PAGE_SIZE);
+
+         // Make sure creating a vmap that's too large fails
+         assert!(obj.vmap::<{ PAGE_SIZE + 200 }>().is_err());
