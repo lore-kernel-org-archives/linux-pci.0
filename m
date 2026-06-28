@@ -1,490 +1,115 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCC12299937
-	for <linux-pci@vger.kernel.org>; Sun, 28 Jun 2026 09:29:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6DA3BB4A
+	for <linux-pci@vger.kernel.org>; Sun, 28 Jun 2026 09:37:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782638963; cv=none; b=g7S3qthw1LkdOSDwDU8AVVFEOY2z7Dc+wc/d5K2+XwqzY5EzYACg4lAEgZSVZ7Xo4DvHFI388/zK3xYWuySGaA1v34KgZIitKKJUPSToANskG0FT/9Id1FoIVZLU6Xmd0vyNfAcdwUZwT83GOS9PrFZkCoCtANrwUo8G3C/LvIM=
+	t=1782639427; cv=none; b=oKXuFQsdAIlnhD3L1lA8yCH7pG3V5LMGe1NdvpHXpRwzfjIUM+gJVInqB0nqIpiZ7jW+BHsxXQ8988POHwbRUe7nMnxTgr5CdW9oY72Vo5yu7VSScDyDZ7XYTUIvNWRWSM3KmFzqAkb1UN+t3JEafvF/JLdipJd3LMN3Mb4+rn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782638963; c=relaxed/simple;
-	bh=4tqhR98yZMXNIa6lul9m4s6O5kDDyKTNj4LbTgnz6co=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JLAFaBB+iRBT9fwo/qfYbi+uD4+iTZtQPmgQFOjtRPcDYVevOCtzWMlTHK0bnWbqJ2351cu5OHrF68cD0s7tLGZ5yIwl6F4McFiBg6DgjVOoboT42fu23bHyknWfBCaU+oTfAcG+EnPJLk1H+cgwqag7B9istejtKoTe/Y0SWw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=trevrosa.dev; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=trevrosa.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2c8007ce809so11811655ad.0
-        for <linux-pci@vger.kernel.org>; Sun, 28 Jun 2026 02:29:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782638959; x=1783243759;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=msiQeoD9bE2+9m/GBRmkavuhnEjua8HjkhejH4gaLD4=;
-        b=XQsdHQHnuZB+NJkVwv7D3zgmzr61gEGJxkKwS7ftfTJXxo3JCIzbGAfsACwVVYdX6j
-         KpcDndA41yLizHqyZJ1b8tZnPq+9RrIuogssG8909UQpeEAm8JghIE+bkB+twIslL3G4
-         CHKCi2Yh0rFeFq1CXz+IDs4/h87TnMFCcnTRu559TfIuFMYvwVcik/iwKh2mrMuvvHhK
-         Krl7tSVuxBA9GjHiyXem05mL/jtkv6+WvmJBnWcnDhE+I6kEhCCB6jclQU7Q3ZowTOGi
-         SauzpyDjiwwhWaXWKHYhr9prbc1rQu7AC1stkswzhpj8SAYbEf4KEEBJyiY8TCvpnHuY
-         JgAQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpsnW8a5f6yAGUItbw+nBMrqP2MlxmvdPJVmTSToOFUnWFr2PtqpHttifdjxAtJCmqDC6bcO77bSSM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxf/hLS2aGHZJDwdND/LY8IgUa+bqKf4eWOzj+djaibIF1CVlGe
-	a+gY+Ag9rFQtHnfiO6nG3Qsf099LH6ACfWXnPkyrmPkMlxMaJTJ3w8wd
-X-Gm-Gg: AfdE7cna+73TQ5Bz/FdNk5+hdY/0STt6tLIykP8sWKVW/PZEhEF/GiOhGlHGss9fQQQ
-	4FmdS2c1+3FfZd61bd0SxbOrN+UenCkiUPTSnnjH3wVtO1vN0hurAGhaxKkjtZm+8nPDmzxtdZc
-	sZlru5+hpSbBYd+U4HW1j4FpcVC8cuwr6stVSC4an6jLzM4Yk0Q/zGghGusEwmL/Ew6abY/kFLJ
-	pHEmVpvFipvXJ5H2RkDy+4qcjRzuXE4thX/5YmC/0vPbFzJBarKETJ2nbAcQFPzyqctwml3VjS2
-	49yZ148QItt6NM+PBaISjAEIcNo6i9NyLH585lTNMYl9HA6oTB/C8wFjD8trA8RUH+JCwg1ZO4T
-	lj1L/axOmn44gWl+M2ocjKEPMZy4sWFNr+B1c+7mojMAKv/0zXC0+arvzjw+vfxbPtpF0WTrbzR
-	M6qp1/qxYKZazCPuv3FuZQkstI1ubgF8qg2hs9VZcAGdEfftYBtQ==
-X-Received: by 2002:a17:903:1ac3:b0:2c9:97a7:3288 with SMTP id d9443c01a7336-2c997a733f5mr55740665ad.42.1782638958963;
-        Sun, 28 Jun 2026 02:29:18 -0700 (PDT)
-Received: from trevor.localdomain (n119236170163.netvigator.com. [119.236.170.163])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c9b43aeb3bsm23041205ad.54.2026.06.28.02.29.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Jun 2026 02:29:18 -0700 (PDT)
-From: Trevor Chan <trev@trevrosa.dev>
-To: gregkh@linuxfoundation.org,
-	rafael@kernel.org,
-	dakr@kernel.org,
-	ojeda@kernel.org,
-	a.hindborg@kernel.org,
-	paul@paul-moore.com,
-	airlied@gmail.com,
-	simona@ffwll.ch,
-	aliceryhl@google.com,
-	viro@zeniv.linux.org.uk,
-	brauner@kernel.org,
-	igor.korotin@linux.dev,
-	boqun@kernel.org,
-	gary@garyguo.net,
-	axboe@kernel.dk,
-	daniel.almeida@collabora.com,
-	shankari.ak0208@gmail.com,
-	lyude@redhat.com,
-	j@jananu.net,
-	akpm@linux-foundation.org,
-	acourbot@nvidia.com
-Cc: david.m.ertman@intel.com,
-	iweiny@kernel.org,
-	leon@kernel.org,
-	bjorn3_gh@protonmail.com,
-	lossin@kernel.org,
-	tmgross@umich.edu,
-	tamird@kernel.org,
-	work@onurozkan.dev,
-	sergeh@kernel.org,
-	jack@suse.cz,
-	ljs@kernel.org,
-	liam@infradead.org,
-	bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	ptikhomirov@virtuozzo.com,
-	elle@weathered-steel.dev,
-	rust-for-linux@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v5] rust: aref: make `AlwaysRefCounted::inc_ref` an associated function
-Date: Sun, 28 Jun 2026 17:28:53 +0800
-Message-ID: <20260628092853.16550-1-trev@trevrosa.dev>
-X-Mailer: git-send-email 2.47.3
+	s=arc-20240116; t=1782639427; c=relaxed/simple;
+	bh=qaVj558o/TKb1KEDtvq4R5TIepAsacKfnq0CUgJUh5E=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=kPgUibBvo/aV3UzKg8a84qDn23yIJM5cSda77JGwer15Sg/xQyBDIAinROXH3JozNH7sIL31+S+AtoUbQ2zCjrVMPNFn2LvX8/E8hTIdPYmqAS6j24m00GmvNYU2GgwjhOz/mfy+5ZR06l6pfzDx7MqlnHoqf/P9piAoo1osOXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J9MMAlOu; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J9MMAlOu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB2BB1F000E9;
+	Sun, 28 Jun 2026 09:37:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782639426;
+	bh=4jMbyawPfP607rzTm8dvsPRWuTuL2WG3lfWHHb0MQBo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=J9MMAlOuYwCjVAByQEGBv1WS5zsa4joqU/haPA5pB/uhFX439DUBgJ2TtBUYwCEvv
+	 a0AN6Cy8mUosL15+/gp7I2GQ8ucFKSWhGojWhFo0HGi4RSEOkXpNQnf6cjrO9nVsFe
+	 un2WSXGujTLLRrAt2PPO3XWkb+gkrFLOZIdsjbqUXhLQR1b82ooZNKabGGKQdyvBvD
+	 6lW5JQDVKN+HeXBgfwl06dIR+yfUaouU2qpPYilh44BDcmAORMzdjDF2vH3MixkRtM
+	 Hbd5qNf/w2voBjPGlB3wM2JGVwqAkgGPBWIX5x1IUF1PXG5poovKWrZRY7rej1l4Mw
+	 6AM+/W+TtFBAg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5] rust: aref: make `AlwaysRefCounted::inc_ref` an
+ associated function
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Trevor Chan" <trev@trevrosa.dev>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260628092853.16550-1-trev@trevrosa.dev>
+References: <20260628092853.16550-1-trev@trevrosa.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 28 Jun 2026 09:37:05 +0000
+Message-Id: <20260628093705.CB2BB1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-`AlwaysRefCounted::inc_ref` is a function that shouldn't be called lightly.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Un-updated AlwaysRefCounted trait implementations cause conditional=
+ compilation and rustdoc test errors.
+--
 
-To prevent accidentally calling it, change `inc_ref` to be an associated function.
+commit 5db284043a909f35f9aed5c1467a5f9cf863972d
+Author: Trevor Chan <trev@trevrosa.dev>
+rust: aref: make `AlwaysRefCounted::inc_ref` an associated function
 
-Modify all `AlwaysRefCounted` implementors to work with this change.
+This commit changes the AlwaysRefCounted::inc_ref function from a method
+to an associated function to prevent accidental calls. It updates the
+implementors of this trait to reflect this change.
 
-Suggested-by: Benno Lossin <lossin@kernel.org>
 Link: https://github.com/Rust-for-Linux/linux/issues/1177
-Reviewed-by: Alice Ryhl <aliceryhl@google.com>
-Signed-off-by: Trevor Chan <trev@trevrosa.dev>
----
-Changes in v2:
- - Don't word wrap the patch
-Changes in v3:
- - Make argument name of `Empty::inc_ref` consistent with `Empty::dec_ref` 
-Changes in v4:
- - Rebase to new rust-next, change new implementors
- - Reword explanation for change in `AlwaysRefCounted::inc_ref` doc comment
-Changes in v5:
- - Change commit message to be imperative
----
- rust/kernel/auxiliary.rs        | 4 ++--
- rust/kernel/block/mq/request.rs | 4 ++--
- rust/kernel/cred.rs             | 4 ++--
- rust/kernel/device.rs           | 4 ++--
- rust/kernel/device/property.rs  | 4 ++--
- rust/kernel/drm/device.rs       | 4 ++--
- rust/kernel/drm/gem/mod.rs      | 4 ++--
- rust/kernel/fs/file.rs          | 8 ++++----
- rust/kernel/i2c.rs              | 8 ++++----
- rust/kernel/mm.rs               | 8 ++++----
- rust/kernel/mm/mmput_async.rs   | 4 ++--
- rust/kernel/pci.rs              | 4 ++--
- rust/kernel/pid_namespace.rs    | 4 ++--
- rust/kernel/platform.rs         | 4 ++--
- rust/kernel/sync/aref.rs        | 9 ++++++---
- rust/kernel/task.rs             | 4 ++--
- rust/kernel/usb.rs              | 8 ++++----
- 17 files changed, 46 insertions(+), 43 deletions(-)
 
-diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
-index c42928d5a239..75a61b51cf79 100644
---- a/rust/kernel/auxiliary.rs
-+++ b/rust/kernel/auxiliary.rs
-@@ -345,9 +345,9 @@ unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx>
- 
- // SAFETY: Instances of `Device` are always reference-counted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for Device {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::get_device(self.as_ref().as_raw()) };
-+        unsafe { bindings::get_device(obj.as_ref().as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-diff --git a/rust/kernel/block/mq/request.rs b/rust/kernel/block/mq/request.rs
-index ce3e30c81cb5..f41d01ea4595 100644
---- a/rust/kernel/block/mq/request.rs
-+++ b/rust/kernel/block/mq/request.rs
-@@ -234,8 +234,8 @@ unsafe impl<T: Operations> Sync for Request<T> {}
- // keeps the object alive in memory at least until a matching reference count
- // decrement is executed.
- unsafe impl<T: Operations> AlwaysRefCounted for Request<T> {
--    fn inc_ref(&self) {
--        self.wrapper_ref().refcount().inc();
-+    fn inc_ref(obj: &Self) {
-+        obj.wrapper_ref().refcount().inc();
-     }
- 
-     unsafe fn dec_ref(obj: core::ptr::NonNull<Self>) {
-diff --git a/rust/kernel/cred.rs b/rust/kernel/cred.rs
-index ffa156b9df37..d53cbc792fa3 100644
---- a/rust/kernel/cred.rs
-+++ b/rust/kernel/cred.rs
-@@ -78,9 +78,9 @@ pub fn euid(&self) -> Kuid {
- // SAFETY: The type invariants guarantee that `Credential` is always ref-counted.
- unsafe impl AlwaysRefCounted for Credential {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference means that the refcount is nonzero.
--        unsafe { bindings::get_cred(self.0.get()) };
-+        unsafe { bindings::get_cred(obj.0.get()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
-index 645afc49a27d..ec44dcc405d5 100644
---- a/rust/kernel/device.rs
-+++ b/rust/kernel/device.rs
-@@ -449,9 +449,9 @@ pub fn name(&self) -> &CStr {
- 
- // SAFETY: Instances of `Device` are always reference-counted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for Device {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::get_device(self.as_raw()) };
-+        unsafe { bindings::get_device(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: ptr::NonNull<Self>) {
-diff --git a/rust/kernel/device/property.rs b/rust/kernel/device/property.rs
-index 5aead835fbbc..c39ccc1458b9 100644
---- a/rust/kernel/device/property.rs
-+++ b/rust/kernel/device/property.rs
-@@ -361,10 +361,10 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
- 
- // SAFETY: Instances of `FwNode` are always reference-counted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for FwNode {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the
-         // refcount is non-zero.
--        unsafe { bindings::fwnode_handle_get(self.as_raw()) };
-+        unsafe { bindings::fwnode_handle_get(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: ptr::NonNull<Self>) {
-diff --git a/rust/kernel/drm/device.rs b/rust/kernel/drm/device.rs
-index 477cf771fb10..0c70ec010bd9 100644
---- a/rust/kernel/drm/device.rs
-+++ b/rust/kernel/drm/device.rs
-@@ -363,9 +363,9 @@ fn deref(&self) -> &Self::Target {
- // SAFETY: DRM device objects are always reference counted and the get/put functions
- // satisfy the requirements.
- unsafe impl<T: drm::Driver, C: DeviceContext> AlwaysRefCounted for Device<T, C> {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::drm_dev_get(self.as_raw()) };
-+        unsafe { bindings::drm_dev_get(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-diff --git a/rust/kernel/drm/gem/mod.rs b/rust/kernel/drm/gem/mod.rs
-index c8b66d816871..ee9e412066ab 100644
---- a/rust/kernel/drm/gem/mod.rs
-+++ b/rust/kernel/drm/gem/mod.rs
-@@ -52,10 +52,10 @@ unsafe impl $( <$( $tparam_id ),+> )? $crate::sync::aref::AlwaysRefCounted for $
-             Self: IntoGEMObject,
-             $( $( $bind_param : $bind_trait ),+ )?
-         {
--            fn inc_ref(&self) {
-+            fn inc_ref(obj: &Self) {
-                 // SAFETY: The existence of a shared reference guarantees that the refcount is
-                 // non-zero.
--                unsafe { bindings::drm_gem_object_get(self.as_raw()) };
-+                unsafe { bindings::drm_gem_object_get(obj.as_raw()) };
-             }
- 
-             unsafe fn dec_ref(obj: core::ptr::NonNull<Self>) {
-diff --git a/rust/kernel/fs/file.rs b/rust/kernel/fs/file.rs
-index 23ee689bd240..8e5967afcd11 100644
---- a/rust/kernel/fs/file.rs
-+++ b/rust/kernel/fs/file.rs
-@@ -199,9 +199,9 @@ unsafe impl Sync for File {}
- // makes `ARef<File>` own a normal refcount.
- unsafe impl AlwaysRefCounted for File {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference means that the refcount is nonzero.
--        unsafe { bindings::get_file(self.as_ptr()) };
-+        unsafe { bindings::get_file(obj.as_ptr()) };
-     }
- 
-     #[inline]
-@@ -235,9 +235,9 @@ pub struct LocalFile {
- // makes `ARef<LocalFile>` own a normal refcount.
- unsafe impl AlwaysRefCounted for LocalFile {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference means that the refcount is nonzero.
--        unsafe { bindings::get_file(self.as_ptr()) };
-+        unsafe { bindings::get_file(obj.as_ptr()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/i2c.rs b/rust/kernel/i2c.rs
-index 624b971ca8b0..1a9882a64c4b 100644
---- a/rust/kernel/i2c.rs
-+++ b/rust/kernel/i2c.rs
-@@ -425,9 +425,9 @@ pub fn get(index: i32) -> Result<ARef<Self>> {
- 
- // SAFETY: Instances of `I2cAdapter` are always reference-counted.
- unsafe impl AlwaysRefCounted for I2cAdapter {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::i2c_get_adapter(self.index()) };
-+        unsafe { bindings::i2c_get_adapter(obj.index()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-@@ -501,9 +501,9 @@ unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for I2cClient<C
- 
- // SAFETY: Instances of `I2cClient` are always reference-counted.
- unsafe impl AlwaysRefCounted for I2cClient {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::get_device(self.as_ref().as_raw()) };
-+        unsafe { bindings::get_device(obj.as_ref().as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-diff --git a/rust/kernel/mm.rs b/rust/kernel/mm.rs
-index 4764d7b68f2a..c955cbd884b8 100644
---- a/rust/kernel/mm.rs
-+++ b/rust/kernel/mm.rs
-@@ -57,9 +57,9 @@ unsafe impl Sync for Mm {}
- // SAFETY: By the type invariants, this type is always refcounted.
- unsafe impl AlwaysRefCounted for Mm {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The pointer is valid since self is a reference.
--        unsafe { bindings::mmgrab(self.as_raw()) };
-+        unsafe { bindings::mmgrab(obj.as_raw()) };
-     }
- 
-     #[inline]
-@@ -93,9 +93,9 @@ unsafe impl Sync for MmWithUser {}
- // SAFETY: By the type invariants, this type is always refcounted.
- unsafe impl AlwaysRefCounted for MmWithUser {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The pointer is valid since self is a reference.
--        unsafe { bindings::mmget(self.as_raw()) };
-+        unsafe { bindings::mmget(obj.as_raw()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/mm/mmput_async.rs b/rust/kernel/mm/mmput_async.rs
-index b8d2f051225c..7df40777654c 100644
---- a/rust/kernel/mm/mmput_async.rs
-+++ b/rust/kernel/mm/mmput_async.rs
-@@ -36,9 +36,9 @@ unsafe impl Sync for MmWithUserAsync {}
- // SAFETY: By the type invariants, this type is always refcounted.
- unsafe impl AlwaysRefCounted for MmWithUserAsync {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The pointer is valid since self is a reference.
--        unsafe { bindings::mmget(self.as_raw()) };
-+        unsafe { bindings::mmget(obj.as_raw()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 5071cae6543f..0f16cf0da3d7 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -482,9 +482,9 @@ impl<'a> crate::dma::Device<'a> for Device<device::Core<'a>> {}
- 
- // SAFETY: Instances of `Device` are always reference-counted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for Device {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::pci_dev_get(self.as_raw()) };
-+        unsafe { bindings::pci_dev_get(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-diff --git a/rust/kernel/pid_namespace.rs b/rust/kernel/pid_namespace.rs
-index 979a9718f153..381c9f980b1f 100644
---- a/rust/kernel/pid_namespace.rs
-+++ b/rust/kernel/pid_namespace.rs
-@@ -43,9 +43,9 @@ pub unsafe fn from_ptr<'a>(ptr: *const bindings::pid_namespace) -> &'a Self {
- // SAFETY: Instances of `PidNamespace` are always reference-counted.
- unsafe impl AlwaysRefCounted for PidNamespace {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference means that the refcount is nonzero.
--        unsafe { bindings::get_pid_ns(self.as_ptr()) };
-+        unsafe { bindings::get_pid_ns(obj.as_ptr()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
-index 9b362e0495d3..85068ae5a405 100644
---- a/rust/kernel/platform.rs
-+++ b/rust/kernel/platform.rs
-@@ -519,9 +519,9 @@ impl<'a> crate::dma::Device<'a> for Device<device::Core<'a>> {}
- 
- // SAFETY: Instances of `Device` are always reference-counted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for Device {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
--        unsafe { bindings::get_device(self.as_ref().as_raw()) };
-+        unsafe { bindings::get_device(obj.as_ref().as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
-index b721b2e00b98..2ae2130d5bb1 100644
---- a/rust/kernel/sync/aref.rs
-+++ b/rust/kernel/sync/aref.rs
-@@ -44,7 +44,10 @@
- /// alive.)
- pub unsafe trait AlwaysRefCounted {
-     /// Increments the reference count on the object.
--    fn inc_ref(&self);
-+    ///
-+    /// This function should not be called accidentally; a type might declare their own `inc_ref`
-+    /// function and it shouldn't be confused with this one.
-+    fn inc_ref(obj: &Self);
- 
-     /// Decrements the reference count on the object.
-     ///
-@@ -145,7 +148,7 @@ pub fn into_raw(me: Self) -> NonNull<T> {
- 
- impl<T: AlwaysRefCounted> Clone for ARef<T> {
-     fn clone(&self) -> Self {
--        self.inc_ref();
-+        T::inc_ref(self);
-         // SAFETY: We just incremented the refcount above.
-         unsafe { Self::from_raw(self.ptr) }
-     }
-@@ -162,7 +165,7 @@ fn deref(&self) -> &Self::Target {
- 
- impl<T: AlwaysRefCounted> From<&T> for ARef<T> {
-     fn from(b: &T) -> Self {
--        b.inc_ref();
-+        T::inc_ref(b);
-         // SAFETY: We just incremented the refcount above.
-         unsafe { Self::from_raw(NonNull::from(b)) }
-     }
-diff --git a/rust/kernel/task.rs b/rust/kernel/task.rs
-index 38273f4eedb5..a7711e1558c2 100644
---- a/rust/kernel/task.rs
-+++ b/rust/kernel/task.rs
-@@ -349,9 +349,9 @@ pub fn group_leader(&self) -> &Task {
- // SAFETY: The type invariants guarantee that `Task` is always refcounted.
- unsafe impl crate::sync::aref::AlwaysRefCounted for Task {
-     #[inline]
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The existence of a shared reference means that the refcount is nonzero.
--        unsafe { bindings::get_task_struct(self.as_ptr()) };
-+        unsafe { bindings::get_task_struct(obj.as_ptr()) };
-     }
- 
-     #[inline]
-diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-index 7aff0c82d0af..c039059c1891 100644
---- a/rust/kernel/usb.rs
-+++ b/rust/kernel/usb.rs
-@@ -393,11 +393,11 @@ fn as_ref(&self) -> &Device {
- 
- // SAFETY: Instances of `Interface` are always reference-counted.
- unsafe impl AlwaysRefCounted for Interface {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The invariants of `Interface` guarantee that `self.as_raw()`
-         // returns a valid `struct usb_interface` pointer, for which we will
-         // acquire a new refcount.
--        unsafe { bindings::usb_get_intf(self.as_raw()) };
-+        unsafe { bindings::usb_get_intf(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
-@@ -444,11 +444,11 @@ fn as_raw(&self) -> *mut bindings::usb_device {
- 
- // SAFETY: Instances of `Device` are always reference-counted.
- unsafe impl AlwaysRefCounted for Device {
--    fn inc_ref(&self) {
-+    fn inc_ref(obj: &Self) {
-         // SAFETY: The invariants of `Device` guarantee that `self.as_raw()`
-         // returns a valid `struct usb_device` pointer, for which we will
-         // acquire a new refcount.
--        unsafe { bindings::usb_get_dev(self.as_raw()) };
-+        unsafe { bindings::usb_get_dev(obj.as_raw()) };
-     }
- 
-     unsafe fn dec_ref(obj: NonNull<Self>) {
--- 
-2.47.3
+> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
+> index b721b2e00b986..2ae2130d5bb1d 100644
+> --- a/rust/kernel/sync/aref.rs
+> +++ b/rust/kernel/sync/aref.rs
+> @@ -44,7 +44,10 @@
+>  /// alive.)
+>  pub unsafe trait AlwaysRefCounted {
+>      /// Increments the reference count on the object.
+> -    fn inc_ref(&self);
+> +    ///
+> +    /// This function should not be called accidentally; a type might de=
+clare their own `inc_ref`
+> +    /// function and it shouldn't be confused with this one.
+> +    fn inc_ref(obj: &Self);
 
+[Severity: Low]
+Will this change break the build for conditionally compiled modules and
+rustdoc tests that still use the old method signature?
+
+When compiling with CONFIG_RUST_DRM_GPUVM, CONFIG_PM_OPP, or
+CONFIG_RUST_PWM_ABSTRACTIONS enabled, it appears this will result in
+compiler error E0185 because the following implementations were not updated:
+
+rust/kernel/drm/gpuvm/mod.rs:
+unsafe impl<T: DriverGpuVm> AlwaysRefCounted for GpuVm<T> {
+    fn inc_ref(&self) {
+
+rust/kernel/drm/gpuvm/vm_bo.rs:
+unsafe impl<T: DriverGpuVm> AlwaysRefCounted for GpuVmBo<T> {
+    fn inc_ref(&self) {
+
+rust/kernel/opp.rs:
+unsafe impl AlwaysRefCounted for OPP {
+    #[inline]
+    fn inc_ref(&self) {
+
+rust/kernel/pwm.rs:
+unsafe impl<T: PwmOps> AlwaysRefCounted for Chip<T> {
+    #[inline]
+    fn inc_ref(&self) {
+
+Additionally, a rustdoc test in rust/kernel/sync/aref.rs for ARef::into_raw
+still implements it using the old signature:
+
+    /// unsafe impl AlwaysRefCounted for Empty {
+    ///     fn inc_ref(&self) {}
+
+Should these implementations be updated to use fn inc_ref(obj: &Self) to
+match the new trait definition?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260628092853.1655=
+0-1-trev@trevrosa.dev?part=3D1
