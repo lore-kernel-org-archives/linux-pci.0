@@ -1,254 +1,290 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E91360745
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 09:44:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F4A3EDAA8
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 10:15:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782726285; cv=none; b=W4JhyJEa/fMbLjtcE8zGyYLWwzfE7aTtwNfLkLsindDXiiZjNoM1wFkZiwia4yZsVbu1Lsn+pUPGXq3T1VDbhqsJXnqc6z+mZ6PnDcnO+maK9OdepPfmeULPAuPR3gtkokjelENijIIpsVPZKRmNFoC2RrrlyC1tuOw8/LJE4wI=
+	t=1782728144; cv=none; b=fexlmDvOSHjF7nRjRyr/NXTDUiOJgvn886NeSces5qi4ZVptw2lszcEYw/VR+X6fU0+VPhve8GD8S5FdRO73NVWmHj/wokqMCv7vJ8K23TquQS33Sxa9o/njWpj/y/jcS4Y3ur8Bci7qANDPrteoA+/mdWZ1Aez5+1jbEteVPrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782726285; c=relaxed/simple;
-	bh=MjjXrkMnUwdq0FJ4Cu9/oZ/NIF4VGt0nFl1suBh70b4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A0l+EAuriG1X0gmeMMDj1VX0GfElhoMW5j/Dy2pO9hwljRXegpjlNzE4eixpHchP0MP4S4v0GaAS6ISpZ4ecLPHRRy7iwJVRpkBTzdDKTqCdhXHKH3x0xsM8fX6VkVhmi/VtuufzT34CuzFyBvpYezg1fY95G6ZLeC2hwQCSeYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Nq0dTQhO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BCU1AENs; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1782728144; c=relaxed/simple;
+	bh=AAXXGwUBi9iAx/i/oIKC43Q37qy7bhny2XdA7KI8+lI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Pl34rZTAWMfIEZb1+DoQdHbSPZMfx1prrvSXl0D2RwtQBVtTuIE7TDLs9ZzqWSU0UPXHQR7ZHJCQbozrqcMsqVhL6LcqfP+qlX8HXcfReh/TkbV+Bw+4oc6G5xupDX6QtwXGjMP/dgkJZhwjioz8avgEL2wJV34Pjq60vXdMf24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=qL8NDiLe; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Nq0dTQhO";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BCU1AENs"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65T6sNZ12143207
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 09:44:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	29xDUNTed4jXAy3Mgxyo8ge5rsxJ/2Bn9rzkJN7OPjI=; b=Nq0dTQhObC4rViq8
-	hHEZ1cCiH0k/XJAfNPJgmIX1a/lj4zi3R2RIn2uCc6bDwNWPmxVgpitUNAQtfPoA
-	soN48DtvuBi0duKZozhcNkj3/BKV7Nkfu1Oapfs4FK8Wy5IDtQIdRmqiJWhfxFT+
-	21BuaT7nZAYyZ1B8DNrxj323ONG2jt8M+lfHNwJhSO4y4T+Ya+725vXDoc+vxqGL
-	1jor/PekNcFzoYt+9d6kK5+SPfQcA1t6O+jq8pFIbmvIynVwDdRPn15bFFLvBqNG
-	+SYJdAEhTC0zFWxP50x/mgdQzXMZKSMVYhHlq6I/zbBpnWM/XyJrukNHo79Aqifg
-	xqgepA==
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f26x8nvaa-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 09:44:42 +0000 (GMT)
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-845c733743eso2318611b3a.3
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 02:44:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1782726281; x=1783331081; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=29xDUNTed4jXAy3Mgxyo8ge5rsxJ/2Bn9rzkJN7OPjI=;
-        b=BCU1AENsrcqamFZ943Wr3D+TobYkJSw4NxAhAS3Zd5wrB2B0sePMXGg77+hLiMdDuq
-         5ZcKsw1epLRW3uY+6lMfWGhbdJACIJdn2GPbtoRNeHvDmAGgnOcQLGbUU0vZX+LqF+bY
-         VFs82o/JfeledXZOzm1JoQu6s4je1ErkQlSVlaUuKxJaJDizGXFss2JIsKz9GJFwYwJx
-         /o52mLwJU2QZMRZuYJ7I4jpiIRmRPS7Y2kDAi3YDW1t1y+hSuWfEveloBmuXQCZ2xbfs
-         1t7lrkm5Vmm5BcavnefQCDVfPb1AKsLH+603/Bd7kd5v6C7nYnIWlNWSf2ws3uycyAtt
-         qcRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782726281; x=1783331081;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=29xDUNTed4jXAy3Mgxyo8ge5rsxJ/2Bn9rzkJN7OPjI=;
-        b=OS5Kq8Evpe236Gww20GHZcgOh4LU/Ph5p39S8zqAl/oOf+5FMBIJhwe/tqZswEXxaw
-         P5JFZnOp8EJ7fOV4T12zK+lH1+K978z+iQiiEiWU0cEEhZDq8HRK3PFmy+ojxa9fY7yM
-         WfLWoXa9CkkZbfZV2LO51cvImZJTDbh5tPu/rHNafHff/21fTraMSXc+MP0Qf5SKXIQR
-         RCadkPNTAggMWjSNNgjkdUW/vVW2j+IUUpqNGreUrpuNRTU2lTBoIy4TScUnv4uCuqIy
-         kMmxGLZV2Kzl43gMdZSVDLP+Brx188QyCBqMMgWqADA3tW20YEGwe6G5+y2avmspky2U
-         vEUA==
-X-Forwarded-Encrypted: i=1; AHgh+RqgzZvsdm1h7/4xfRTlj9AkInl//8OYbOzHlNC8r3BWU9tl+obGoqyMKSc+XjRwbUQWp82Cil7IdTo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIWCRrpxfdUOswIJ5xMK1z3cMSG5azZmSKn7LtHbDS1MrhK+FB
-	Nr+/vOEuRKY09k4t4UMRqZUWo+SXP08Rmy/SO7nEQHIK8URNEDU+NsGgXc+VJ1guXkmb0f5Qi2R
-	FXjnnWq9JohfcH7ldkDWWyeCzTZstv4vY/ITWHa5GG+a+ccQMpFgwTvIukBWUAvA=
-X-Gm-Gg: AfdE7cnMYp7ycPgKv+lcxP3zWhUsXiXXY5pbiEtz3aYDKkHLcmai9XzzKZrVwmHhjsD
-	lEz7nZPVjgZoCU6Y3cy5lQPM+Om14LtSEjSVz0cr9MGvNibPqIk7+WOQ+XcztR3ScVnFPLeG9CO
-	c2aplfcTf2/8xCg/EMsTjtLkyi96gMbbm3pd8d5pRCXypLBHYgUOPyySoxv/JIW1xKedVgpu/Ud
-	kt7FJhcI1ozWMN1a4CAjAwLYA45CgYvXvcBnTIThEpFMs0/JjgSeQWuHR7VxRwd3P7btkF4IgV/
-	RbYDwQD2VrKvbJ42V/nC8+T9FZdoBsMeWeoHiuWGcrrWJEgF3ciFrUG5p0rESWgcwBiHktaBZL9
-	o7UrZSfxutcIK/XIFhnXtBMmxRdheG2P+MxC9jGtMZECgaSj1WUiDfGxBIY73fEYtClXraqddFM
-	WbamtOAA==
-X-Received: by 2002:a05:6a00:2d8d:b0:847:9692:5cb4 with SMTP id d2e1a72fcca58-84796926134mr348462b3a.53.1782726281029;
-        Mon, 29 Jun 2026 02:44:41 -0700 (PDT)
-X-Received: by 2002:a05:6a00:2d8d:b0:847:9692:5cb4 with SMTP id d2e1a72fcca58-84796926134mr348440b3a.53.1782726280533;
-        Mon, 29 Jun 2026 02:44:40 -0700 (PDT)
-Received: from [10.133.33.8] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847833efe03sm1741991b3a.44.2026.06.29.02.44.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Jun 2026 02:44:39 -0700 (PDT)
-Message-ID: <b2f3eb30-ff30-423b-aa8e-3cdf47aa600f@oss.qualcomm.com>
-Date: Mon, 29 Jun 2026 17:44:35 +0800
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="qL8NDiLe"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id A54BD240101
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 12:15:40 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1782728140; bh=lwTMmO4UqexC7rGulvdrPIAqN6FSZlXUMqGNPTREw6s=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=qL8NDiLeC3rSjyJdjWQanyUYRV+sdAET8Pj6pPCBqFtNuZi8BAsoS9/f97NjgMMM6
+	 7e8EeuUKOxCa7ZpC9t05yWkB0eGR8vrEZow7TrbzCASgU/GLLxLYR6lV1MMzeG7+Ai
+	 fd+engTQQCaAdS7leknDxhDtB653zMqqN2distbmkUb1N6Kd1LJTb+VMUYzwIDWp51
+	 qHZvE6GvuTWLz4dmbWeMQv9OAXHKtzTl5EdJTCU+YBPua09OObKgMF88K4tSayjhPh
+	 WWGBBPwtkTwhMxokEB4HwCQHIF5ah+4Pu8kYE0raSQ5N7m6Z7lDSLu1iM7prtnxIcQ
+	 I0N3XE/tlnrVg==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4gphxN5PCwz9rxK;
+	Mon, 29 Jun 2026 12:15:36 +0200 (CEST)
+From: Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v20 0/3] rust: leds: add led classdev abstractions
+Date: Mon, 29 Jun 2026 10:15:39 +0000
+Message-Id: <20260629-rust_leds-v20-0-f493ab053b4f@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
-        alex@shazbot.org, jjohnson@kernel.org, linux-pci@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org, mhi@lists.linux.dev,
-        linux-kernel@vger.kernel.org
-References: <20260623183115.1585273-1-jtornosm@redhat.com>
- <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
- <l3pcelhxn46p4smkkg5yob5enf4d4garp2p6macopnq5h2gwyf@zbbn65k4tz2q>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <l3pcelhxn46p4smkkg5yob5enf4d4garp2p6macopnq5h2gwyf@zbbn65k4tz2q>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjI5MDA3OCBTYWx0ZWRfXxBjloiBfeap2
- poYxR8VAIzPS26zwhwel+JZTH+x5DdvyuOkeUbL2+OJ1/DFnZHHCBdNBziqrS53jo9nmtYnM8qx
- 4J96m/xAIQJipLjrzS7CGzyd10rBl0Y=
-X-Authority-Analysis: v=2.4 cv=D+N37PRj c=1 sm=1 tr=0 ts=6a423e8a cx=c_pps
- a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=RRcNAnSy7hG7cj1Ejq8A:9 a=QEXdDO2ut3YA:10
- a=2VI0MkxyNR6bbpdq8BZq:22
-X-Proofpoint-GUID: A8FQOowIsAkLLzsX5cW83Fui9DdWkCgt
-X-Proofpoint-ORIG-GUID: A8FQOowIsAkLLzsX5cW83Fui9DdWkCgt
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjI5MDA3OCBTYWx0ZWRfX0+te4mcBEg5U
- ksS3wdtYm18f6Aky0nYs5a1YH+JhrC6CZh+09Fi6heU2rVCS1LdmhuG6fhh0AkLJWUntM9EvwCF
- bT4lTPjziC5jsB6w6/hsuiWbP0aM1fvSG5FXym5vHpA7MJ5jRgHAGD8LjgWoyEm+iBwv/lee9tF
- 5oQXxs+uDYnmbbX5FjhOAz6DLA+sMUH4z+vSTwAnCENbtbMthsI/pTj1Palb5TKo91PoeDcjbwF
- MLSgSir4cqBIE/MR3ayskBhlhwp9FQ2VzdLcg3Y+8w01u7Gedzzd5gElIyCAN6wVgAEyfhHvwwE
- yZlEvDhZp0AYkEERbQ5PpPq/BJvx7FTyhBSxmX5bZYhuhfe12RQT/1G3+9m91lfhom79L5nFu3p
- 7P7IrM4ZVVdkQfQlP9NgWaPDemo8MEtIdeg7Wk9Y3jfLtQ1WLf3TgSzgy+fX8toMUeknnbBQ3LY
- YRSeDAo6tsB6DK3dT2Q==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-29_02,2026-06-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 clxscore=1015 suspectscore=0 bulkscore=0 impostorscore=0
- malwarescore=0 lowpriorityscore=0 adultscore=0 spamscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606290078
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/2XTS07DMBAG4KtUWZPK43j86Ip7IIT8GNNItClJi
+ ECod2dahBLjjSVb/mZi5/d3M9HY09Qcdt/NSEs/9cOZJ1I87Jp49OdXavvEC40UEgFAtePHNL+
+ 8UZpa79BlE2U22TW8/zJS7j/vxZ6eeX7sp3kYv+61F3tb/auCmyqLbUWbnFeQO0Ts7ONlmGYa9
+ omaW5XFbaXbSsfS6giYPDihu/8SxB/VAoTeUhBsSXhAraxV2VUWVstDYYEtWkwQbSApYmXl1pr
+ CSrY5BQSrwASDle1W28niuNCxleDRuYhBJqisWq2SZV/FVmUVwBAmBF1Z3NqyL7J1hpwJ0lAI9
+ Tfr1aKAwuqbzXySnCjFVN+z2dhOFNawjUI7G1WnLcnK2q0t+95TJQwIGTyCEZV1q+WbLuwtV9K
+ z5X9MnopcXX+DPtL7Bz+W+TftTfATtXE4nfr5sFvMnvMSgTdffwBQmOheYQMAAA==
+X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+ Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ Ira Weiny <iweiny@kernel.org>, Boqun Feng <boqun@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5513;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=AAXXGwUBi9iAx/i/oIKC43Q37qy7bhny2XdA7KI8+lI=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqQkXHHAnsBw0476Xf3aYzOkzKTgWMOri9WHm2a
+ d4oc/AkqLiJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCakJFxxsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9JW2Q/+KkkGAJbpZZ0c1vlt1l5l/CtNzmxwT3g
+ 2EF5lUAtvrxAztPNi18KGTbo7SNXlOc3+uVUq8Nq4pjPHoH1E7EmxhrdDPkPRf6Xms5D0V+uX5r
+ NV6B+Tj0PWFCQS70UazHcfIv3TPNiGASOvqoU3Vfy5t4EZVjYZvX5+JHwe4eEpdOhsWaJMW3RUn
+ EhjxNYzKgFH6B2o/x5f+xdWYixTuIjI1HvRzbH1KTsu7i5ryct9CvPpv3q6TdZaUNRGvmENcgNz
+ 2UE/6pKUAIgUQnrF/4ZJeciSMdaZnKkceHge4SdrhbiSOgqYi8o56t9NMKgIlTyUaSGY0RvMo0/
+ DSHg25ldMhL1LtqSV789u7lAF1/ijcnoWQDXmwE153ryv8tEI6MhV42Vr2C+SFoX8XU+pZ9wwJk
+ QO6DNnih+6D1hwMyMsoVgBjJhkegJEHKtNoyus9xxmlqdl9lsDqCs5QLly0A6x1BSur0DIN4MhE
+ 7JfENF08Fgqqf0OrDVPI8HYBartq4vuCmv+ZRncqzFplfbCRwjoqMP9y+laH/gwNoEcYUx8t6kp
+ 63HP0rwfB/4Vk41c6DlORSmCaLguXjowO7Y2VVoLuFGWZpgw38haGw6+C7+NArSYGtU04nCMxKk
+ hFIdlZZCvtP8F6SVFUYgDhaO09yIpzchLO8jx4xAAYlEkcp1APCk=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
+This patch series has previously been contained in
+https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
+which added a rust written led driver for a microcontroller via i2c.
 
+As the reading and writing to the i2c client via the register!
+macro has not been implemented yet [1], the patch series will only
+contain the additional abstractions required.
 
-On 6/25/2026 9:03 PM, Manivannan Sadhasivam wrote:
-> On Wed, Jun 24, 2026 at 03:47:12PM +0800, Baochen Qiang wrote:
->>
->>
->> On 6/24/2026 2:31 AM, Jose Ignacio Tornos Martinez wrote:
->>> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
->>> lack working reset methods for VFIO passthrough scenarios. These devices
->>> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
->>> broken bus reset.
->>>
->>> The problem manifests in VFIO passthrough scenarios:
->>>
->>> - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WiFi devices:
->>>   Normal VM operation works fine, including clean shutdown/reboot.
->>>   However, when the VM terminates uncleanly (crash, force-off), VFIO
->>>   attempts to reset the device before it can be assigned to another VM.
->>>   Without a working reset method, the device remains in an undefined state,
->>>   preventing reuse.
->>>
->>> - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
->>>   on first VM assignment without proper reset capability.
->>>
->>> Add device-specific reset methods using BAR-space hardware reset registers
->>> that exist in these devices:
->>>
->>> - WCN6855/WCN7850 WiFi devices use SoC global reset via BAR0 (sequence from
->>>   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
->>>   ath11k_mhi_set_mhictrl_reset()):
->>>   - Write/clear reset bit at offset 0x3008
->>>   - Wait for PCIe link recovery (up to 5 seconds)
->>>   - Clear MHI controller SYSERR status at offset 0x38
->>>
->>> - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
->>>   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
->>>   - Write reset request to offset 0xb0
->>>   - Wait 2 seconds for reset completion
->>>
->>> These are true hardware reset mechanisms (not power management or firmware
->>> error recovery), providing proper device reset for VFIO scenarios.
->>>
->>> Testing was performed on desktop platforms with M.2 WiFi and modem cards
->>> using M.2-to-PCIe adapters, including extensive force-reset cycling to
->>> verify stability.
->>>
->>> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
->>> ---
->>> v10:
->>>   - Complete redesign based on maintainer feedback (Manivannan Sadhasivam,
->>>     Alex Williamson): use actual hardware reset registers from
->>>     device drivers instead of D3hot power cycling
->>> v9: https://lore.kernel.org/all/20260612142638.1243895-1-jtornosm@redhat.com/
->>>
->>>  drivers/pci/quirks.c | 118 +++++++++++++++++++++++++++++++++++++++++++
->>>  1 file changed, 118 insertions(+)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 431c021d7414..8ad3f214e520 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -4240,6 +4240,121 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->>>  	return 0;
->>>  }
->>>  
->>> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET	0x3008
->>> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
->>> +#define QUALCOMM_WIFI_MHISTATUS			0x48
->>> +#define QUALCOMM_WIFI_MHICTRL			0x38
->>> +#define QUALCOMM_WIFI_MHICTRL_RESET_MASK	0x2
->>> +
->>> +/*
->>> + * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
->>> + * registers.
->>> + */
->>> +static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
->>> +{
->>> +	bool link_recovered = false;
->>> +	unsigned long timeout;
->>> +	void __iomem *bar;
->>> +	u32 val;
->>> +	u16 cmd;
->>> +
->>> +	if (probe)
->>> +		return 0;
->>> +
->>> +	if (pdev->current_state != PCI_D0)
->>> +		return -EINVAL;
->>> +
->>> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
->>> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
->>> +
->>> +	bar = pci_iomap(pdev, 0, 0);
->>> +	if (!bar) {
->>> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
->>> +		return -ENODEV;
->>> +	}
->>> +
->>> +	val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
->>
->> QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET is beyond the first 4K bar area hence requires MHI
->> wakeup before accessing, see [1]. the wakeup callback for WCN6855 is
->> ath11k_pci_bus_wake_up() which calls mhi_device_get_sync(). Not sure how this can be done
->> here. Maybe Mani can provide some hints?
->>
-> 
-> I don't think the device needs to be waken up before
-> QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET. ath11k driver wakes up the device for
-> accessing the MHI interface I believe. Since this callback is not touching MHI,
-> there is no need to wakeup the device, AFAIK.
+This series depends on [1].
 
-MHI register space is constitute with 3 segments, with mhi offset always being 0, bhi
-offset 0x100 and bhie offset 0x224 (the latter two offsets are for WCN7850, but I think
-also apply to other devices). That said the whole MHI register space does not go beyond
-the first 4K region, hence wakeup is not for accessing MHI interface.
+[1] https://lore.kernel.org/rust-for-linux/20260525202921.124698-1-dakr@kernel.org/
 
-> 
-> - Mani
-> 
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
+
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
+
+Changes since v19:
+* rebase on v7.2-rc1:
+  * Add `max_intensity` to `MultiColorSubLed`
+* use safer `KBox::pin_slice` instead of `KVec`
+  (len might not equal capacity)
+* explicitly call `FwNode::dec_ref` instead of dropping a reconstructed
+  `ARef<FwNode>`.
+* remove direct access to `intensity` and `brightness` fields,
+  which may get mutated concurrently by the C side
+* fix safety comments pointing to functions from previous revisions
+
+Changes since v18:
+* add inlines
+* fix invalid documentation
+* improve led color duplicate checking
+
+Changes since v17:
+* use lifetimes instead of Devres
+
+Changes since v16:
+* use for loops for duplicate checking
+
+Changes since v15:
+* fix issues reported by Sashiko bot:
+  * fix returning error not possible on `brightness_get` callback
+
+Changes since v14:
+* fix issues reported by Sashiko bot:
+  * add missing inlines
+  * add missing Sync trait bound
+  * fix vertical import layout for public export of private types
+  * fix potential memory leak, if a multicolor led device with over
+    `u32::MAX` subleds is registered
+* remove default_trigger option
+* fix missing CAST doc
+
+Changes since v13:
+* rebased onto v7.1-rc1
+
+Changes since v12:
+* add `led::DeviceBuilder::name()` and `DeviceBuilderState'
+* add `led::Color::as_c_str`
+
+Changes since v11:
+* use `led::DeviceBuilder` instead of `led::InitData`
+* use static_assert instead of const { assert!(...) }
+* restructured patches to avoid moving `led::Device` from
+  rust/kernel/led.rs to rust/kernel/led/normal.rs in the 2. patch
+
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
+
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
+
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Markus Probst (3):
+      rust: leds: add basic led classdev abstractions
+      rust: leds: add Mode trait
+      rust: leds: add multicolor classdev abstractions
+
+ MAINTAINERS                     |   8 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 342 +++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 460 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 238 +++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 1050 insertions(+)
+---
+base-commit: 728e68a889bcf257b1e67298b12c360e5c3a13e0
+change-id: 20251114-rust_leds-a959f7c2f7f9
 
