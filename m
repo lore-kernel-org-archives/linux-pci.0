@@ -1,114 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-38.ptr.blmpb.com (va-2-38.ptr.blmpb.com [209.127.231.38])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBCA30EF9B;
-	Mon, 29 Jun 2026 08:59:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C40AC3BBFDE
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 09:27:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782723570; cv=none; b=ZRUtPe9q1p/RZR5H9JSCQWVA3vvvrUUtuGlv49oAIrrEoRBV4tD9zQqnbkO3wedx+VprBQne5BecCt823ujeLepxUUmiHUy8GBF+vQY7U6k/ZQtTPu8s0uMKOoGK/DdYZxtDQaLddPZtCQAOmB/TTyxIW9ggTGh5vgI+DKVLroQ=
+	t=1782725259; cv=none; b=CU1mjB0iD9CXOvG8FEYIQV4ZoqquRoGgDrHke7rMbgtp305RcgEsahPofT9+naybCCoj7zb95VXyt6oK/1fbqoJ1ZlOw1AllWTpq3k/xdxg5yLD3P9g1GJ8eDlPKXS7kOc82PLRkgmSWJnCmLc2/prLW4X5vuc4ag4+JFTqOCWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782723570; c=relaxed/simple;
-	bh=Uc62XIOTpsi3DLRZfWn/4Ium0ocXPqNcG7vzDxtmCuM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cUNZeDyjvV3qvXwGZwmVkaZQjn2H0S1SCZ6ARdS9UAWsS7o7veNGDldLQh32pSWyWfzuRIctLPobNdQRtXEH2KSkyEi8+Lql+rmO+AixTlIKRJx+Ret/mmormp+XncHvY94jDbubISGBPdgbK2gmg0Lk2LAaUqKM6GHZZcraGY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ES2/SLK3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782725259; c=relaxed/simple;
+	bh=M8ZYStHBPaDlJV4iE/Ttaz+6lqK7NDqa/oXH31Bd4a8=;
+	h=Message-Id:In-Reply-To:Content-Type:To:Cc:From:References:Subject:
+	 Date:Mime-Version; b=VI5zCYqfDj7lE55mc3tAjYXWzW/w/kZwnnNnmXvq6CqR1HW3kAsDs46VgOTZ/i8cFttEPubiS/rP41QN+NaHFhhTttTmuHuvhxtWdH+JIY1SJ57j85z4RNiB8rhU367Mn4AaJ6dWA7Jpzhucjxaes1x9m0L76jR7WdbQ4uFTlXw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=picoheart.com; spf=pass smtp.mailfrom=picoheart.com; dkim=pass (2048-bit key) header.d=picoheart.com header.i=@picoheart.com header.b=NJyyJPXG; arc=none smtp.client-ip=209.127.231.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=picoheart.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=picoheart.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ES2/SLK3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 922F31F000E9;
-	Mon, 29 Jun 2026 08:59:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782723568;
-	bh=nYToRKfvJQPTL5smrz5uLQO0EPLY3BNKOkX7dD1C8gE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ES2/SLK3IYZQyECLR2pIbC8zI8iK8US1empvKvI8FDyk3Q3wNO21ARx7JJDOyqkuC
-	 21MjKxuL/xp91ouoXkiF+tf9dX2hsNW6/q/GP7tEkRpdqyC1l7xo+eGTqsN6o4P291
-	 B2XDO2aIqwWrCETMRjyYrBO2MH4gOughERvEd76A1VAUX/azDiTK+seVJXZXyw7PMU
-	 HD3FXDRuU57PBw/8BISa1PJHkwsjrYSawV1INqkLVrU8AIhKECgAuaIcQqxVmUqMQK
-	 gkVosIQ5Sul4vGXFzdaWXYWu44O7krzxi5oQ0hNo2awkD3w9kL8yxYW79Q8Tg79Evz
-	 PZwvvnrySz5nA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] PCI: epf-mhi: Implement mhi_cntrl->flush_async() to
- flush DMA read/write
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260629-mhi-ep-flush-v1-3-714e0d56e87c@oss.qualcomm.com>
-References: <20260629-mhi-ep-flush-v1-0-714e0d56e87c@oss.qualcomm.com>
- <20260629-mhi-ep-flush-v1-3-714e0d56e87c@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 29 Jun 2026 08:59:28 +0000
-Message-Id: <20260629085928.922F31F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=picoheart.com header.i=@picoheart.com header.b="NJyyJPXG"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=feishu2604151535; d=picoheart.com; t=1782725246; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=4DtN0RAP3EGpuMNCDd5FU8AeKhCOsojX++bMHfZxsxk=;
+ b=NJyyJPXGT+iEh6pMh679POndJ5eNw+iMWxJlJuKD1qeszv6o2mmQIoY4v6EkVhUzSNjktm
+ pvEiBWSdHi/Wg+gqD0Mej9VCYOPjkiiTtRDfEbfjqGLNCCz1s1xI+j+pFE8/Bo7IBujl1B
+ hW81lM4b+p2xbvEtTRZ2Q779ozUiuRTzHS21H3VsJoruQ5hicl8/2HB1HRWjQtRB/RVmVv
+ QOIIfpVwl9ihq33cyZi2wMcA+OAkdAbUtgaJs2PLPS5ULr1u4XUwKPqWwj1J0u42iCCoaj
+ RBDNwNm4e7XvY9c5VYcS2JnNqt6IYLbvvCMwpENkIuDZHjxTC5LJwZF1n6ZNFA==
+Message-Id: <20260629092717.74946-2-yang.yicong@picoheart.com>
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20260629092717.74946-1-yang.yicong@picoheart.com>
+Received: from G9WYR9K0VW.bytedance.net ([61.141.241.118]) by smtp.feishu.cn with ESMTPS; Mon, 29 Jun 2026 17:27:23 +0800
+Content-Type: text/plain; charset=UTF-8
+To: <xueshuai@linux.alibaba.com>, <renyu.zj@linux.alibaba.com>, 
+	<will@kernel.org>, <mark.rutland@arm.com>, <jic23@kernel.org>, 
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>
+Cc: <jingoohan1@gmail.com>, <mani@kernel.org>, <juwenlong@picoheart.com>, 
+	<geshijian@picoheart.com>, <yang.yicong@picoheart.com>, 
+	<douyufan@picoheart.com>
+From: "Yicong Yang" <yang.yicong@picoheart.com>
+X-Original-From: Yicong Yang <yang.yicong@picoheart.com>
+X-Lms-Return-Path: <lba+26a423a7c+3fed8b+vger.kernel.org+yang.yicong@picoheart.com>
+References: <20260629092717.74946-1-yang.yicong@picoheart.com>
+X-Mailer: git-send-email 2.50.1
+Subject: [PATCH v2 1/3] perf/dwc_pcie: Add support for Picoheart vendor devices
+Date: Mon, 29 Jun 2026 17:27:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] pci_epf_mhi_edma_flush_async() violently terminates globally share=
-d DMA channels, which aborts active transfers for all unrelated MHI channel=
-s.
-- [High] Calling dmaengine_terminate_sync() in pci_epf_mhi_edma_flush_async=
-() cancels in-flight DMA operations, leaking dynamically allocated transfer=
- objects, DMA mappings, and orphaning upstream MHI buffers.
---
+Add PCI_VENDOR_ID_PICOHEART in pci_ids.h. Update the DWC PCIe
+vendor table with Picoheart PCIe vendorid to enable the PCIe
+PMU support.
 
-commit 6865f2474af30b8ecf0f56f29a02aca13c8836a3
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: PCI: epf-mhi: Implement mhi_cntrl->flush_async() to flush DMA read=
-/write
+Signed-off-by: Yicong Yang <yang.yicong@picoheart.com>
+---
+ include/linux/pci_ids.h  | 2 ++
+ include/linux/pcie-dwc.h | 2 ++
+ 2 files changed, 4 insertions(+)
 
-This commit implements the flush_async callback for the MHI endpoint
-controller. It terminates the DMA channels and flushes the workqueue to
-ensure transactions complete before removing channels.
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/e=
-ndpoint/functions/pci-epf-mhi.c
-> index 7f5326925ed54..4af3689921a3f 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> @@ -644,6 +644,15 @@ static int pci_epf_mhi_edma_write_async(struct mhi_e=
-p_cntrl *mhi_cntrl,
->  	return ret;
->  }
-> =20
-> +static void pci_epf_mhi_edma_flush_async(struct mhi_ep_cntrl *mhi_cntrl)
-> +{
-> +	struct pci_epf_mhi *epf_mhi =3D to_epf_mhi(mhi_cntrl);
-> +
-> +	dmaengine_terminate_sync(epf_mhi->dma_chan_rx);
-> +	dmaengine_terminate_sync(epf_mhi->dma_chan_tx);
-
-[Severity: High]
-Does this code globally abort DMA operations for all independent MHI channe=
-ls?
-
-When a single MHI client device is unbound, mhi_ep_remove() loops over the
-client's channels and calls mhi_cntrl->flush_async().
-
-Since dma_chan_tx and dma_chan_rx are globally shared by the endpoint,
-unconditionally calling dmaengine_terminate_sync() here appears to forcibly
-abort all active and pending DMA operations for all other unrelated MHI
-client devices currently sharing the controller.
-
-[Severity: High]
-Can this also leak dynamically allocated pci_epf_mhi_dma_transfer objects
-and their DMA mappings?
-
-The dmaengine_terminate_sync() function immediately drops pending and active
-DMA descriptors without executing their completion callbacks.
-
-Because the pci_epf_mhi_dma_transfer structures and their associated DMA
-mappings are only tracked and cleaned up inside the completion callback
-pci_epf_mhi_dma_async_callback(), aborting the transfers here seems to
-permanently leak these resources and orphan the upstream MHI buffers.
-
-> +	flush_workqueue(epf_mhi->dma_wq);
-> +}
-> +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629-mhi-ep-flu=
-sh-v1-0-714e0d56e87c@oss.qualcomm.com?part=3D3
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1c9d40e09107..2c17239aacea 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2640,6 +2640,8 @@
+ #define PCI_VENDOR_ID_SUNIX		0x1fd4
+ #define PCI_DEVICE_ID_SUNIX_1999	0x1999
+ 
++#define PCI_VENDOR_ID_PICOHEART		0x20fa
++
+ #define PCI_VENDOR_ID_HINT             0x3388
+ #define PCI_DEVICE_ID_HINT_VXPROII_IDE 0x8013
+ 
+diff --git a/include/linux/pcie-dwc.h b/include/linux/pcie-dwc.h
+index 8ff778e7aec0..b0ccb2ad74db 100644
+--- a/include/linux/pcie-dwc.h
++++ b/include/linux/pcie-dwc.h
+@@ -32,6 +32,8 @@ static const struct dwc_pcie_vsec_id dwc_pcie_rasdes_vsec_ids[] = {
+ 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+ 	{ .vendor_id = PCI_VENDOR_ID_SAMSUNG,
+ 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
++	{ .vendor_id = PCI_VENDOR_ID_PICOHEART,
++	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+ 	{}
+ };
+ 
+-- 
+2.50.1 (Apple Git-155)
