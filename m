@@ -1,99 +1,110 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA1F428841
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:00:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFE234534AC
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782752455; cv=none; b=tSk83iVpOLj8rs7YNoOgBfN4Dizbc9wXSxQ6rRnPDVjyIhsVCk8pSdp6TyVnyFO7EX2DHGl85y+BcG5pU90stnjiCDAlQJEFmCzlmgOrWAhc36zoYj6l/ZxFiKZAAZo/j8mCq52ttmL4Io/fzK8+8v507rXGHov9+vGeDbyIlYM=
+	t=1782752504; cv=none; b=L9GNbsJ54lq2ysfpIFrTBPBa9zHiMbyuAu/FY2yCpvYqXqBy0okS1AFMxYgRZ+Nh43g4+fvLb7iQZIsz/C+nylHp033K6NnzwWLmsCg6H+lu+N88L5bXTb3d0ALNCHlsPOWuofrpgEniUrlqZnj33arne/ICZ3pRNTIPrOG6ecA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782752455; c=relaxed/simple;
-	bh=2J5Fqs2ahHlvFcZVaxewM+t4fw0WhPY53YtHRg77aNg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DF9v1pwvVXZGHhBOhZ2jKoIZyK86NYlAs3xf0s3hN1uAuYVPQEKuLc0cZO+p/irBKz6Gje/D0k9DIY+rr0mqn4rnfPj95RqtCx0L5tXXaWVS/aKfmaUxNMRzZHJQ86RwWZ6/it8n7Rbm4Lnc1vYhuDnQ55qM+scSzkYBQsEwOks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g5HLVaiO; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1782752504; c=relaxed/simple;
+	bh=ndnHir1wNIxs67HHaZWro5YUgK8feeHfrZFLmipdlpw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=NKGn8VvQqPUcc5xKaIE/5kFw8g1ElHaf/2czTvhrtkOlU5NpYLoVgT/+nLx3lV41tcxwhQSBaZDScePybJP44L5/qx56ZCvRRQDZrZtOtjjTR3982+GfdFjRIhteMJyNIrIrMJXWjdS2Xeex6kgGC7qr6wA3gXBgRPMxz8QrnlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XPeql8LB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g5HLVaiO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782752455; x=1814288455;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=2J5Fqs2ahHlvFcZVaxewM+t4fw0WhPY53YtHRg77aNg=;
-  b=g5HLVaiOcxWZbMWXmoddmlxz5FuoM3ej+ihkLafAT9L1Vd4Olk/3XxvM
-   pDFK9d6cKGuAIGPSqIgEXBx3Bg+KdPn30GpPJnuQQSrx+bEBA5I2Onx8Y
-   JRDW43iKngF8f92mhE2+OZd5VJm+V25WZ/tVvMGnQYr888qcQbehleSnT
-   diQBiTA2h2lkHIYMVog30as3HsTTThclEIRgHqDvwDRC21wZS8pYgRQTa
-   trb74H4Sh73mAl1ZccF/dWTqTno8wBQ5ROyPdbwWEsGMhWuBjkb/tnaiD
-   VYPH50BLjFiUah6ZhVPsAtwNHsJe1EknzGy3aciNlX9s7qRuKxmwMVtPg
-   g==;
-X-CSE-ConnectionGUID: 1H2yoW9QRxmu5jdCw2icrg==
-X-CSE-MsgGUID: 7salbgDlQOibIRYNWeVECw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11832"; a="93804203"
-X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
-   d="scan'208";a="93804203"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:00:54 -0700
-X-CSE-ConnectionGUID: rVcCgpBlQF6a5zdpr+PMwg==
-X-CSE-MsgGUID: sa8ptrffQ1GcOXDaBMDshQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
-   d="scan'208";a="249384855"
-Received: from zp3110c002s0704.zpn.intel.com ([10.219.117.38])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:00:51 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: nirmal.patel@intel.com,
-	<linux-pci@vger.kernel.org>
-Cc: bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	lpieralisi@kernel.org,
-	linux-pc,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>
-Subject: [PATCH] PCI: vmd: Only assign _OSC features in bare metal OS.
-Date: Mon, 29 Jun 2026 17:01:17 +0000
-Message-ID: <20260629170117.269703-1-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XPeql8LB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9879B1F000E9;
+	Mon, 29 Jun 2026 17:01:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782752503;
+	bh=YO53AXB2nBQMxSUpnYnSLouYf8M/RRzxNLEoSX64DYM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XPeql8LBEb0RYxVkAE/V3rXr/AcCVxu4B7ioXC7En4OF5179tG66h0u0n7ZX+R4z0
+	 TsKEiyc6zT6kLqmVccHI8hvpzOjgniPSdh3JgGgpHKwzSiDYVyP902xs8fjWv6feHc
+	 HXpOPEcqJ5UELkaT2Ol0umJtv03FH6D4mNjChsOaroTGnmp++lfbIk231ztyQsaBtt
+	 jxjjYSZ+89eHInd0NvjCaN9CAH9gHOjQTCebdpPLKud/G9awHHOnR+gHojPCJ45IX+
+	 +YZ1Y+eTs5j+ZezH3TS/6ocUgToOu5CTOjneF/sgsb8drsb6BHz6UaxACyIRUd9Enx
+	 CAdlCQStdnqvg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260629165025.268836-1-nirmal.patel@linux.intel.com>
+References: <20260629165025.268836-1-nirmal.patel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 29 Jun 2026 17:01:41 +0000
+Message-Id: <20260629170142.9879B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Nirmal Patel <nirmal.patel@intel.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Unvalidated BAR 4 length could lead to an out-of-bounds read when =
+accessing shadow registers.
+--
 
-Copy valid _OSC flags from root bridge only when OS can provide correct
-values. In virtual machine, all of the control features are disabled as
-hypervisor will not passthrough root bridge information to VM.
+commit 7affe7834934181c54062f23e6c8641c3fb30366
+Author: Nirmal Patel <nirmal.patel@linux.intel.com>
 
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Reviewed-by:  Andy Shevchenko <andriy.shevchenko@intel.com>
----
- drivers/pci/controller/vmd.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+PCI: vmd: Add feature to scan BIOS enumerated devices.
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index d4ae250d4bc6..f9e38f2f926a 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -910,8 +910,10 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		return -ENODEV;
- 	}
- 
--	vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
--				   to_pci_host_bridge(vmd->bus->bridge));
-+	/* Don't copy _OSC control flags in VM, it disables features.*/
-+	if (!offset[0] || !offset[1])
-+		vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-+					 to_pci_host_bridge(vmd->bus->bridge));
- 
- 	vmd_attach_resources(vmd);
- 	if (vmd->irq_domain)
--- 
-2.43.0
+This commit adds support for newer VMD devices (ID 0x28c1) that rely on
+the BIOS to enumerate the device tree and configure settings. It retrieves
+the bus hide range and shadow register values from the VMD MMIO space in
+BAR4/BAR5 and uses them to perform a bus scan.
 
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index d4ae250d4bc6d..a02f2cc3d6ede 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+
+[ ... ]
+
+> @@ -661,6 +706,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *=
+vmd)
+>  	return 0;
+>  }
+> =20
+> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
+> +				       resource_size_t *offset1,
+> +				       resource_size_t *offset2)
+> +{
+> +	u64 phys1, phys2, bar4_2840;
+> +	void __iomem *bar4;
+> +	u32 base_id;
+> +	u8 base_bus;
+> +
+> +	bar4 =3D pci_ioremap_bar(vmd->dev, 4);
+> +	if (!bar4)
+> +		return -ENOMEM;
+> +
+> +	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
+> +	phys1 =3D readq(bar4 + SHADOW_MEMBAR1_28C1);
+
+[Severity: High]
+Can this cause an out-of-bounds read if the resource size of BAR 4 is
+smaller than the SHADOW_MEMBAR1_28C1 offset?
+
+If a malicious PCIe device (for example, connected via Thunderbolt) spoofs
+the VMD device ID but presents a malformed, small BAR 4 (e.g., 4 KB),
+pci_ioremap_bar() will only map the smaller size. The readq() call here
+would then access unmapped memory, which could trigger a kernel panic via
+a page fault in kernel mode.
+
+Is there a way to validate the length of the BAR 4 resource against
+the expected offsets before accessing these shadow registers?
+
+> +	phys2 =3D readq(bar4 + SHADOW_MEMBAR2_28C1);
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629165025.2688=
+36-1-nirmal.patel@linux.intel.com?part=3D1
