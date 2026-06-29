@@ -1,174 +1,57 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77CF11C8604;
-	Mon, 29 Jun 2026 13:36:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A51F212548;
+	Mon, 29 Jun 2026 13:40:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782740189; cv=none; b=t2aVpHDmsfGZCavFBtDWErOYJWvcWl+r+/NJy1f/wTVpvlNYD837Pd4jmNIllwkLjraZaRr0CUxBO/0s72ORyUayVGfJqpRu/WptRpqDwvdEa5irzR8jq9OvxDCPGJWM6gL6mSqssz9melYtfwrf57dPwIbiBz2bvoJMIYQ+028=
+	t=1782740406; cv=none; b=INjddQVyGOD3o/96mYgtCUYJQlK4ODBrNsk6O8HdQpxfXtOCBhZs4IPL4CTYGRU19HV7hQxsip+Qdxbl0go7fYopG3uWJaKZ5wsUSk5RNdn4MUF9Yckfxwx1rZ2yBc1I7Ev1rox4qegqnRKlvvrxh/3RBkkESEDzCYme7Te2o40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782740189; c=relaxed/simple;
-	bh=mcZyJUk1npepSg8RinS0ZsMEuDP8upSviZkiCiHl5BY=;
+	s=arc-20240116; t=1782740406; c=relaxed/simple;
+	bh=fFjOPI8ZqObFtENNlaUIXchv2hz4+4uJo1E55LwoHJA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ka0bxcy5fo1EolTYYaJiiRyuP1OvT7D+ktBzl4NN0XpUo7Sa84wXS5g57SaAhoC+N7xTF/H/Dv60JSk3cEY2ipPqVXwdIbroDI0YVrQZzLdhe7/VKH9dPlLLR2SzVgFaTmQ5ecFDuGaMSecaQt8RN0W0EpFauVzV93xHPHpGkq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8KowhHJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=eVnhN3aP1Z4joL524iwrYIuldB2/qA4SC005w6imkMUZRkc16F6x8iCo4pCPv6ZJCuDbUu5Luxw1idJpsl/QZySW6EmzupYlh9vQff6JtgbFuowTFpe1wr9YfEemYoqv/+Qo92bK6ii0rxW0Ng2IQQP/I3Yz/X5e1nfR5SY/SE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZY5ucqz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8KowhHJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A68C11F00A3A;
-	Mon, 29 Jun 2026 13:36:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZY5ucqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 368DD1F000E9;
+	Mon, 29 Jun 2026 13:40:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782740188;
-	bh=FuM/CmGZZOV5HHQD+7UUU254gmMHr9HS4jMiTyEs7l8=;
+	s=k20260515; t=1782740405;
+	bh=fFjOPI8ZqObFtENNlaUIXchv2hz4+4uJo1E55LwoHJA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=R8KowhHJrHm5QXnE7EguCvbeJFYJ9a5nyhThGgPRJHXBlkOH6s2qfYqCdBxnC4BpT
-	 3C43k2PhKTgZuEyrCBqcRyaM8CKnMOgBYiTFIeP+v5qXImlvNMgiRDNKje7IVLlfqW
-	 UQvSDcu3/XP+nueCXUuRMuAFE3/c1/C4vC/DtWpZWOqlLeDdtelJ7buYNqTM0yvMvy
-	 tPWAsO3LkPZSSM4yZUVsWLXKLcVHEt8cm6hDE0nLQ9AB6AHTYZFdMc+1EHnkXbi1m6
-	 6rS6HosY8NoHsrLM3XlNM2IA3/jCIEj8bhx7c+ntTohwnZHsW0psdHDw7mxhzRBb3l
-	 0uYHCQPoT68xw==
+	b=PZY5ucqz1Szy7k/AoZwZtHbiBKuwHvCu97trQAdro4VhxHI3HzO88KKmCO+TzGXny
+	 SdK3/71peonEpsiAIviDXbRb3lsBUbCXTGHJopinT0ZgARogioalTW0sRUuNmut58o
+	 kbkbbE1QR6RIF4LBa5HMMGx5ImrptCAczhaPb0qQdcnHfHninYDMKehLvAn7O7TeCp
+	 PlExs6n7iyDJXgSULn+DCz8w+hqGM733L3m4jAul4GIFi/p8/NvgiJXzgWGfs1szGk
+	 UCzpKH8RLEmtG1Rok4azgnfrSZ/wHCK9e4V0IOP3Agu/rNNAUijyTXhgKJlUuW9Cav
+	 SpNNAD6jCCt4g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v21 1/3] rust: leds: add basic led classdev abstractions
+Subject: Re: [PATCH v21 2/3] rust: leds: add Mode trait
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Markus Probst" <markus.probst@posteo.de>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, linux-leds@vger.kernel.org, lee@kernel.org
-In-Reply-To: <20260629-rust_leds-v21-1-4f0f19579db5@posteo.de>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org, linux-leds@vger.kernel.org, lee@kernel.org
+In-Reply-To: <20260629-rust_leds-v21-2-4f0f19579db5@posteo.de>
 References: <20260629-rust_leds-v21-0-4f0f19579db5@posteo.de>
- <20260629-rust_leds-v21-1-4f0f19579db5@posteo.de>
+ <20260629-rust_leds-v21-2-4f0f19579db5@posteo.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 29 Jun 2026 13:36:27 +0000
-Message-Id: <20260629133627.A68C11F00A3A@smtp.kernel.org>
+Date: Mon, 29 Jun 2026 13:40:03 +0000
+Message-Id: <20260629134004.368DD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] The `blink_set_callback` creates multiple mutable references (`&mu=
-t usize`) to the same shared memory concurrently, violating Rust's strict a=
-liasing rules.
-- [High] The `DeviceBuilder::build` method erases the lifetime of the `name=
-` string, allowing the `led_classdev.name` pointer to outlive the string an=
-d causing a Use-After-Free.
-- [High] Unsound `FwNode` reference count management in `Device::drop` retr=
-ieves the `fwnode` directly from the mutable C structure, leading to refcou=
-nt underflow and Use-After-Free.
---
+> Add the `led::Mode` trait to allow for other types of led class devices
+> in `led::LedOps`.
+>=20
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
 
-commit d59e3e50bab36d2a8936041aa09ed5823876969f
-Author: Markus Probst <markus.probst@posteo.de>
-
-rust: leds: add basic led classdev abstractions
-
-Implement the core abstractions needed for led class devices, including
-LedOps, DeviceBuilder, and Device.
-
-> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-> new file mode 100644
-> index 0000000000000..2769f690bb245
-> --- /dev/null
-> +++ b/rust/kernel/led/normal.rs
-
-[ ... ]
-
-> +impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
-> +    /// Registers a new [`Device`].
-> +    pub fn build<'bound: 'a, T: LedOps + 'bound>(
-> +        self,
-> +        parent: &'bound T::Bus,
-> +        ops: impl PinInit<T, Error> + 'a,
-> +    ) -> impl PinInit<Device<'bound, T>, Error> + 'a {
-
-[Severity: High]
-Is the lifetime bound <'bound: 'a> backwards here?
-
-By specifying 'bound: 'a, the returned Device ('bound) is explicitly permit=
-ted
-to outlive the builder's string lifetime ('a).
-
-Because the raw pointer to this string is written directly into the
-led_classdev.name field, a driver could initialize a Device with a temporary
-string, which drops the string while leaving led_cdev->name dangling. Can
-this lead to a use-after-free?
-
-[ ... ]
-
-> +    unsafe extern "C" fn blink_set_callback(
-> +        led_cdev: *mut bindings::led_classdev,
-> +        delay_on: *mut usize,
-> +        delay_off: *mut usize,
-> +    ) -> i32 {
-> +        from_result(|| {
-> +            // SAFETY: The function's contract guarantees that `led_cdev=
-` is a valid pointer to a
-> +            // `led_classdev` embedded within a `led::Device`.
-> +            let classdev =3D unsafe { Device::<T>::from_raw(led_cdev) };
-> +            // SAFETY: `classdev.parent()` is guaranteed to be contained=
- in `T::Bus`.
-> +            let parent =3D unsafe { T::Bus::from_device(classdev.parent(=
-)) };
-> +
-> +            classdev.ops.blink_set(
-> +                parent,
-> +                classdev,
-> +                // SAFETY: The function's contract guarantees that `dela=
-y_on` points to a `usize`
-> +                // and is exclusive for the period of this function.
-> +                unsafe { &mut *delay_on },
-> +                // SAFETY: The function's contract guarantees that `dela=
-y_off` points to a `usize`
-> +                // and is exclusive for the period of this function.
-> +                unsafe { &mut *delay_off },
-> +            )?;
-
-[Severity: High]
-Could this lead to a strict aliasing violation by creating multiple mutable
-references to the same shared memory concurrently?
-
-In the C LED subsystem, sysfs write operations to delay_on and delay_off can
-invoke led_blink_set() concurrently across different threads without holding
-locks on the device.
-
-This passes pointers to the shared led_cdev->blink_delay_on and
-led_cdev->blink_delay_off fields directly into the blink_set callback. By
-unconditionally casting these raw C pointers to &mut usize in Rust, the
-callback can create overlapping mutable references to the exact same memory
-locations.
-
-[ ... ]
-
-> +#[pinned_drop]
-> +impl<'bound, T: LedOps + 'bound> PinnedDrop for Device<'bound, T> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        let raw =3D self.classdev.get();
-> +        // SAFETY: The existence of `self` guarantees that `self.classde=
-v.get()` is a pointer to a
-> +        // valid `led_classdev`.
-> +        let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).dev) };
-> +
-> +        let _fwnode =3D dev
-> +            .fwnode()
-> +            // SAFETY: the reference count of `fwnode` has previously be=
-en
-> +            // incremented in `led::DeviceBuilder::build`.
-> +            .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
- });
-
-[Severity: High]
-Does this unsoundly steal a reference count from the C field dev->fwnode?
-
-In DeviceBuilder::build, self.fwnode is passed to C and its refcount is
-leaked via core::mem::forget. However, if self.fwnode was initially None, no
-reference count is leaked.
-
-If dev->fwnode is subsequently populated by external C code, this
-PinnedDrop implementation blindly constructs an ARef and drops it. Since
-Rust never incremented this refcount, could this result in an underflow
-and an eventual use-after-free of the FwNode?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629-rust_leds-=
-v21-0-4f0f19579db5@posteo.de?part=3D1
+v21-0-4f0f19579db5@posteo.de?part=3D2
+
