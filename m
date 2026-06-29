@@ -1,62 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1082F3F6C2A
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:11:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A47122C2360
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:13:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782753117; cv=none; b=WxY8qcGOQVFDZhe4PUjFNXHE+7riqJoLFvSP46TA0HFabA1cLShAjcL41CkHH9pnGD09tUwtW0nuDAC+CuDurX6tiTUmJNZ7dttErRNL0t2uaUr8CnsfL6rYfVUr21E01ANQ7cXy0nOl1DVLqApPrDCkk3mCtR1iqN9rvn/wNuY=
+	t=1782753224; cv=none; b=WRXCmH5kOdbPBJ5zwIsO2NRCeQnRDFBsvtpZYVh+UDO2dQ24QLojx6PDrTONDGr47o2JTFhlZX406nPp2ZRrnraX4X8ofuFkjqxtVHUbHXH5hrZQqu7UF6yeTdaDG0pLwk3tzLS0lSU7hk2Ciu31w+amlzEQBvu+6iX/KDOpptY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782753117; c=relaxed/simple;
-	bh=20TVxeYyVXRr/HbElV6ons+mWSyEARnimPywb9tyBgc=;
+	s=arc-20240116; t=1782753224; c=relaxed/simple;
+	bh=ttOEKUttWEIsU5crSFKASJF3y7DdFHgt9ND7DplJjX4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Jgc+UMWKYPEmgsrd1DHpAjxMGNaI2qiGXs1Gnk5Cwb1gnVHidUL+sNYqokJLOUX57Fq6F1ddFFfUs47w3RwvQVTeL95a6CGbcb6s6z7nr97jxNJXP+SXdft91LPuIMcbVT0/ryPOQKrvSAiLml4bGNcDNtJUaROlOv3+QVKnOu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RsDOb9w2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Rdoiz7U8XVEmVIMxBvOmKDowN+fg8bnp2o4RIMvSG4NAK4gttPCUB/TYmNfMVONF/rB9nlC75tQwdipK17agI1S0AEiIOc070d2AXC0m3FWz1KWaajNPLIakDQKkNTyRT7pS3T8xYgaHrX60JAHHWIFJ77fjlYT1itXjCXNyc9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JKXPtTLC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RsDOb9w2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8042C1F000E9;
-	Mon, 29 Jun 2026 17:11:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JKXPtTLC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27FDD1F000E9;
+	Mon, 29 Jun 2026 17:13:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782753115;
-	bh=BzVZexK+va5LIfpDNECVqfyogKcz/YtIcFxoB+wDYr4=;
+	s=k20260515; t=1782753223;
+	bh=roDAnDs0ltBckBauaykWfXLHjGWgxS0LITNHJKK+hF0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RsDOb9w2xrGW/4ZevIseobfsLGCswi40h9P77LzYVFtu6paypYxWBzTnbtGYsGv5x
-	 JGUhY612O63mbKLRVE7AMk+uD66OvE5GC4E4UKGJzfevq9mb84Z7+V6pC7ua2MYsp1
-	 Pl0wWqt0K1cbHqVYoerGQiemFDfkzIH8XmE6kF8Kv7GAO/bcdymcJyyJyUoiouDRZ8
-	 ToAR3hgnhvGXC8pVgCuhWXQWa0podKFRWd4vGviilUxiKZu6vV4kCRAJCyzTnJp9D/
-	 SbYFPPvzEeouwtcjUAk7yqMxw7tHJv/FOBPmLuVG/2e01kQB/bQ8nxjzx5sQzb6EKh
-	 Q2SfFcGzqKm9g==
+	b=JKXPtTLCoRVoLmTuNdgVxQZpx31juzVDcoP67LF9eNE3cSXlouF0HHBlZs6I2Gp0x
+	 uej/wEIUswMX0UGOCSFPChBywN9H7AtowS6Ifiy2zxI+NPMBTWZHl/3Oq8ESozUwiF
+	 wp7tUHo64/frOyfietUGBLcc5h7x1kXX38TsLZrPfdFbUbN+gJ3mOAmQM7ZB6IZZ+y
+	 TAXbxDop0OFlS+jltIzoVlnPUUCsM7J0LNWHYjlM2HT/zLkhKSuhUbqEAgaPQQIJ2X
+	 PHQh++0sB5jD20y4whvaherO7MHD5NelD99Eg97MoXcvUAceerTYHJUpWZkalC10Ck
+	 qj9itxJJFMhGg==
 From: sashiko-bot@kernel.org
 Subject: Re: [PATCH] PCI: vmd: Only assign _OSC features in bare metal OS.
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260629170117.269703-1-nirmal.patel@linux.intel.com>
-References: <20260629170117.269703-1-nirmal.patel@linux.intel.com>
+In-Reply-To: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
+References: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 29 Jun 2026 17:11:55 +0000
-Message-Id: <20260629171155.8042C1F000E9@smtp.kernel.org>
+Date: Mon, 29 Jun 2026 17:13:42 +0000
+Message-Id: <20260629171343.27FDD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Incorrect logical condition for bare-metal identification copies _=
-OSC flags in VMs.
-
-Pre-existing issues:
-- [High] Missing `pci_free_irq_vectors()` causes permanent IRQ resource lea=
-k.
-- [High] Use-After-Free of SRCU structures on device teardown.
+- [High] Incorrect boolean logic for detecting virtual machine environments=
+ due to a De Morgan's Law violation, leading to erroneous `_OSC` flag copyi=
+ng in VMs.
+- [High] The VM detection heuristic used for skipping `_OSC` flags fails to=
+ account for Xen domains and older VMD hardware lacking shadow registers.
 --
 
-commit e71e6e8c7000a74dc9ba1f30dbef4f5d9f13bf08
+commit 51d3c2c481556010415fe2cd5fa77be881005b5c
 Author: Nirmal Patel <nirmal.patel@intel.com>
 
 PCI: vmd: Only assign _OSC features in bare metal OS.
@@ -80,13 +76,30 @@ signed long features)
 > +	if (!offset[0] || !offset[1])
 
 [Severity: High]
-Does this logical condition correctly identify a bare-metal environment?
+Does this logical condition correctly identify bare-metal environments?
 
-If a VM exposes only one non-zero MEMBAR offset, this evaluates to true,
-which misidentifies the VM as bare metal. This results in copying the
-host bridge flags and incorrectly disabling control features in the VM.
+The patch uses !offset[0] || !offset[1] to execute bare-metal logic. Howeve=
+r,
+if a hypervisor identity-maps exactly one MEMBAR (offset is 0) while
+translating the other (offset is non-zero), this condition will evaluate to
+true.
 
-Should this use && instead of || to ensure both offsets are zero?
+Since earlier in the function offset[0] || offset[1] is used to indicate a =
+VM
+for MSI remapping, should the inverse (bare metal) be
+!offset[0] && !offset[1]?
+
+[Severity: High]
+Does this VM detection heuristic also cover Xen domains and older VMD hardw=
+are?
+
+If running in a Xen domain or a VM with older VMD hardware lacking the
+VMD_FEAT_HAS_MEMBAR_SHADOW capability, both offset variables remain 0.
+
+This causes the condition to evaluate to true, meaning the driver will still
+copy the _OSC flags in these VM environments, potentially breaking PCIe
+features. Could this be avoided by checking for xen_domain() or hardware
+capability constraints alongside the offsets?
 
 > +		vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
 > +					 to_pci_host_bridge(vmd->bus->bridge));
@@ -94,57 +107,6 @@ Should this use && instead of || to ensure both offsets are zero?
 >  	vmd_attach_resources(vmd);
 >  	if (vmd->irq_domain)
 
-[ ... ]
-
-[Severity: High]
-This is a pre-existing issue, but does vmd_remove() leak the IRQ vectors?
-
-vmd_alloc_irqs() allocates vectors without a devm wrapper:
-
-drivers/pci/controller/vmd.c:vmd_alloc_irqs() {
-...
-    vmd->msix_count =3D pci_alloc_irq_vectors(dev, vmd->first_vec + 1,
-                                            vmd->msix_count, PCI_IRQ_MSIX);
-...
-}
-
-However, the teardown function lacks a corresponding cleanup:
-
-drivers/pci/controller/vmd.c:vmd_remove() {
-...
-    vmd_cleanup_srcu(vmd);
-    vmd_detach_resources(vmd);
-    vmd_remove_irq_domain(vmd);
-...
-}
-
-Since pcim_enable_device() doesn't exempt explicit cleanup for this API,
-will this cause a permanent IRQ resource leak on module unload?
-
-[Severity: High]
-This is a pre-existing issue, but is there a use-after-free risk with the
-SRCU structures during device teardown?
-
-In vmd_remove(), the driver manually cleans up SRCU primitives:
-
-drivers/pci/controller/vmd.c:vmd_remove() {
-...
-    vmd_cleanup_srcu(vmd);
-...
-}
-
-Because the device's IRQ handlers are managed by devm_request_irq(), they
-are not freed or unmasked until after vmd_remove() returns.
-
-If an MSI-X interrupt fires in the intermediate window, could vmd_irq()
-access the destroyed srcu_struct?
-
-drivers/pci/controller/vmd.c:vmd_irq() {
-...
-    idx =3D srcu_read_lock(&irqs->srcu);
-...
-}
-
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629170117.2697=
-03-1-nirmal.patel@linux.intel.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629170243.2698=
+30-1-nirmal.patel@linux.intel.com?part=3D1
