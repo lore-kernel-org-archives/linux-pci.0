@@ -1,79 +1,68 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021078.outbound.protection.outlook.com [52.101.95.78])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013003.outbound.protection.outlook.com [52.101.72.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B90E41167C;
-	Mon, 29 Jun 2026 14:15:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4706830EF9B;
+	Mon, 29 Jun 2026 14:21:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.3
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782742541; cv=fail; b=rMqjM0LQAduT+knTGki4LCaRC8tcprXuLE1jG263lsae7u21lsmzyp4P459obnbirNcSx+lnx4yTbR8Xnzbmdb2Grq/KA5Y2UESjvhIJj/xZUCzulcpQ05OmIT8jjZhW/K93PTFndUs8RU3l8myR/Dq8YIXaTmRiKutFRF7hsi4=
+	t=1782742876; cv=fail; b=FuaH/ueoXRQ3zN+1i5SVhI68h68DYNK75TirTcD5+McnY5Tr9fk4tm3g4Lo1DbT7S5t5/p6r4ByYLHBthg8wz7krJcTynNe0gsN4JDugbCFgtZ+kRnpNYulGItJpbGt0A+WJEeR1jls08eAI3gV9d+k/U0QWFwXRGf+zBfQbaZ8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782742541; c=relaxed/simple;
-	bh=hYg2yXEzJkyz8Dmsr/GLSbevrFcbqjmapEbmDIzOebA=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=CJ3YEKH7aAvCEa++pAXfVidf7kcis4C5r6Gu9e0xKLrcnIcVxOe1VuVxj5gJoCqC0tkj6qPSEXMy+ChkrnFYEUbMUdPuPR90JmAdOFtyqHZOtn8GN8vRoIzKNRih9XPLWZG6vPHT+WNF92fX741JnEkjA3KeODQUSHNDv/r67jw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=fgLKUYkE; arc=fail smtp.client-ip=52.101.95.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1782742876; c=relaxed/simple;
+	bh=YYMWSTnFumtXfvYPmmc2mLZVH4+FvGYlQKy6WZRuTHQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=qgKLM6L75Y4PrFfKIWPufFhgnnImsEMpIoc/EQEo23rf7gi1oJH+/aRMPqSoBOtNOq8zB5bANcWJV6ixhkvme8gK2iL8tlqg3M8l+6xv9W0DUcRkTQSodU+76Z9S1sqTTv+dDZTT7eaAgPIKxDNBJuaB+IUf+G+YMSBWMyWmecI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=XdbKjJuX; arc=fail smtp.client-ip=52.101.72.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="fgLKUYkE"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="XdbKjJuX"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cvZUo8RACGD99Y9LDfZezOyTWi13LnxoMwWebqJbolXms1cGt+ey8YSAsAthVfzCQfioV/l64G/D8GIq27+LNlxNRZ8v+/A9aXrI6bQJi9PpbEwxUNX2b4Q9I1axRIsdCt/S+icXrAMca5ytBv6LshaXiD0cQhmqatP3Yh8nQnNFVLDX15Gx4/VZerMonVhd2Zf2KvvT1H+e7e4gB5o6MffSgGxFPG7kqouu82YDMygD+yP0hkB5WWXkE+vcovOhKqxcu3MVoJjO8NMTAi0+GBUtqpiF8SyEInJal5K+B8hOuM749osL/NYgfphjpcjEP7O5axJdti3Epl5fx2hwuw==
+ b=tj4zE6GL8hv3D0+dNRH0YKMTnJx7z5+1r7YWEBfAOom1EVAW39VO4X+7hi3lEDqN3k++L/gZhIobr0hzr/rk7lmMYCq+cDmcH1G07gp4/rSj8MiInsVTWZdHwmlAPCbcUaor1vIS5kkazY5xU7/4ZBKANGnfmW7/7uOhdHlvjsWet+j3B1wgQYmem53TYCfSdK2inP6PNBquVFjLQyFkNFEFOx6F+/zpwCkH0A5lecTdww4y/kJPNmykdGcNmU8IJFDIrmoku7cNoiUPFdX52A8COFdp0NZBYg7pxzUCAC4+zKOZdP7KAznnp4EBc32KAKMYYHWbk8/F2AdazlIzIA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M8/xDh5oAuNdq/nZ76azreETRKHc+Rr3sqq+XGf9XxQ=;
- b=i1ovo3lCQcgxDo2E/WjQ0G19tOwYWqsTXzebsr6LbnRLNhv89fCMCRbWvLjHYWZR4z5KqxzymCZ7mkTeN1dLVunm0YfhtIBss5Bb2yyAjeS6p7zG9vwiyA2eXVA3HoW4x5uBZYcXyDqabWTun3UIw2NsMRGyYxyMklsi4xksXf4G6eb0KZGyhzYowpp5s/aC9U5c59EIkTB3VjjBS4NRuuqb+gfM4alAnpytMOm49qsRKsRw8wjoCca5A0NmsdxiMfGh8AukELuJ0APLP4l7d3xhlI7tcg0fqvOCOLACit0Z3eSjmtDhpbUOExqhOv2FjtlIyIbQNJawx9cW2Fl/YQ==
+ bh=usr7+DCW9LJclHkgepMVGJjT7Nqs4YnW3rYOaCc/0s0=;
+ b=Dgxcc/Jfs/3qS4tOv0t0UJ0wbM1bM/KXMUzdBy+eqCO5rkLALTEd84KYZeV1pQ619GOOku+iwVjCJiBLOGi9uFCdqqCli1cE8fllTTIJvZSfhWcoTNFiDNSkZmNigKufGW5b3TawiumVdLvsvyjjwAAlQWf7i9xSZ0JWx6cj8hR+dSYfNYnZEEdOwyBMmpHWloBZiPceVMeXj0SI4OQPOx5O/B4XnHpt+lgZrPaRNacPb7zoKGKemofGE19HL9T4cRswLkbeP3gNlU47P3uyWdtYY9QkU0w/z80P/V2VIopwKDF0J7nQENnzdw6C/1BPhH4hbzYa9pd8jKuoRc7dYw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M8/xDh5oAuNdq/nZ76azreETRKHc+Rr3sqq+XGf9XxQ=;
- b=fgLKUYkET7jyO66g7+HJhLoI4t8t7H4NbuwcTF6kpoVbexLdKm9Oyw6njXb5TNBxuTui9U9LsycFuuSPARxbYsi1VvekbQbNvtO/aGKxHPGayS8BXS7Py6k7zyrQ9Wgl2Nkejhn1UdUP68Sqt54UEIvwVln5VKhsqQwWATs0VSQ=
+ bh=usr7+DCW9LJclHkgepMVGJjT7Nqs4YnW3rYOaCc/0s0=;
+ b=XdbKjJuX22YUq1o9ribwjCLKbQYO9Bw19nK+YAdac17zoQ/9x9DtyJWJ26/1Aa52lMzzU74MQugSgtp/30ZACt0ezwOceGL5UnsBbdLew9eu3vkU+hE2l1lV1qCXuurYRieBpSO4+W0Ca9bj6oGrBQvoien2C4Klu/WiVbJDMIgU+qnnBz4nU+JY4RhHqBtH3Jq5dWy2zGBERKYWV9c7EuhsfuT+bu1wORp2gsgG9sfiUFuGDoWtxcJoBm9qfoOau/LWmL6049JsGq9cg/vcvLvVpxVOXLeycBAk8s5a8wKppo29E6zfqPl6+e/DmKfLRxM5TlVgZi14qPVjoE0oFg==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO3P265MB2411.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:100::14) with
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by DU7PR04MB11090.eurprd04.prod.outlook.com (2603:10a6:10:5b0::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.19; Mon, 29 Jun
- 2026 14:15:35 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.018; Mon, 29 Jun 2026
- 14:15:35 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 29 Jun 2026 15:15:34 +0100
-Message-Id: <DJLLHI7FIYM0.2YB1QJ6TB8R6T@garyguo.net>
-Subject: Re: [PATCH v5 00/20] rust: I/O type generalization and projection
-From: "Gary Guo" <gary@garyguo.net>
-To: "Danilo Krummrich" <dakr@kernel.org>, "Gary Guo" <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
- <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Michal Wilczynski" <m.wilczynski@samsung.com>,
- =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pwm@vger.kernel.org>, "Laura Nao" <laura.nao@collabora.com>
-X-Mailer: aerc 0.21.0
-References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <DJL2T5XDC53F.3C2QC5L1V2H6@kernel.org>
-In-Reply-To: <DJL2T5XDC53F.3C2QC5L1V2H6@kernel.org>
-X-ClientProxiedBy: LO4P265CA0020.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2ae::16) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ 2026 14:21:07 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0159.007; Mon, 29 Jun 2026
+ 14:21:06 +0000
+Date: Mon, 29 Jun 2026 09:20:56 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, dmaengine@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mhi@lists.linux.dev,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] dmaengine: dw-edma: Implement device_synchronize()
+ callback
+Message-ID: <akJ_SH31xqs_AYCQ@SMW015318>
+References: <20260629-mhi-ep-flush-v1-0-714e0d56e87c@oss.qualcomm.com>
+ <20260629-mhi-ep-flush-v1-1-714e0d56e87c@oss.qualcomm.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260629-mhi-ep-flush-v1-1-714e0d56e87c@oss.qualcomm.com>
+X-ClientProxiedBy: SA1P222CA0062.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:2c1::13) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,317 +70,118 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO3P265MB2411:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9f55c1db-d02f-449f-493c-08ded5e8e317
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DU7PR04MB11090:EE_
+X-MS-Office365-Filtering-Correlation-Id: e8cc90e2-75e6-4578-9bf0-08ded5e9a8a2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|23010399003|7416014|376014|10070799003|56012099006|4143699003|22082099003|18002099003|5023799004|6133799003;
+	BCL:0;ARA:13230040|7416014|23010399003|376014|19092799006|366016|1800799024|4143699003|18002099003|11063799006|5023799004|56012099006|22082099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	IDXR2RlyEHt9YWL4qmsogoqXj6PkN7cxUkZdXlzuFAhmjFApNWvxIuPhnTiXrS81u41WIX+sUYHx200ge7gx8nT03tdtbJ0V4jZvLgCsnrfa0BDxciPmA5hGw2sVOxpQ9o3jTFFSm8JvMjbQEaSTbezR0L+NvwKA3xu9ZQCrkB4K1D6GsW19okvuJGQlM3EUg7xBLZShjt6PpCV6apuRhZDFlsh9AUIE6QEygMhtQkxzrx1i9hccVuh2tD2DhnUDfui3p9lpYftG6OcDSoT7Vc75k4+iFkHBGsa9GBSlcrQHQA8gxCVNpkUNoMoMd97h9wCsArhlSmvVMPU+hpT6+NGxJx+MFfkGIXxyx2alxJfjmeq9jpmpIvzYtDk5nFtMNOs3rT1ef4tkOGTQK21xDsksnYdsL79NsC55OUbLN5s3iYFkwYakvLT+fbB+w+uhJ1E/J6Y1hzotEJF/V2ohpt20xuzQSi/1V0YYvsmV2H0xga2GdMdJawgGb1RoLxVJwceyAKbdkW7RKa7n89KZZfSOnxbDFV2fASvJ4yF9ozhEd6jfcmevGshPkbR29F3LucA2cR377mOoAbsjGlzPyppYflHoKXCv14sfuFmXtT2JAvfcHm96UDEwtixAgaqI5wpmaXV29wVhXmvvhGU4tx86xu5zEkQLxq6IAX8aIJw=
+	kBWbKpt+YC+BmBj74GnJLMNmBkSFfyujniTaOPUSrHyp6K0b0b0KMl4gLQR4ryaoa1f0g8rXFyEXs651DeQEymz42syZ2IhrGO0K/+oEmUcJUTn11i0+AcjdDVcRvdON86s5efnX8jpF40eXE4EcVXtCgJeTJFajwQonyJpWRQ23oZAjJtj4Tnk1b/f042ExrGHiNwnImuyUrF+4Oz/m7SaBCmS7IGqRex1NLieKG2jm9iiX648WJ2oTfnX5bxb22ws6hCpMvEGVzswkTw8rc3DHvgICuCjrR3DDWQ+NPGuljYYxpWJcBPNGGPHl/+vfpgbLPUztxKdvPGeqdtCDviHm/H5URiZ3fdqpG8bVYDbeEASQQr3do+uOyEcxiiirjOt34tWpHt8P9JNyOXIsQ3rkYLRc1poiT0FmFAz3TNL9X2Xe7K7nlFFIBNdL7ZMKLVTid51RmwwW91TIQByysTI1vCYMHk0mRH7GCphB++7C+fYZoCwkUL9QEIn55jtT+Rdw1sp1yDpNIncn+dBjz05kGUFNVRnC49G8NCmBWJbYleb+tBhX4VsUeQ6XbmhIwrBAFBEgbiFtEuoPFRHlF6MbG6uYFM/OSpIriPpgaBZsXy6KG6lRgDiCp7CuKvm5LFYZ1/drj2KQjPB0O6/P/4IUpFn9Ejhpb0lGLYRrS8c=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(7416014)(376014)(10070799003)(56012099006)(4143699003)(22082099003)(18002099003)(5023799004)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(19092799006)(366016)(1800799024)(4143699003)(18002099003)(11063799006)(5023799004)(56012099006)(22082099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?U2lUclM1cTFqUVVmZ0xpK3B6bmR5aHp1NWxsdGxCYW16cDZYcnl0VE1OYVBq?=
- =?utf-8?B?WXI3SEp4WXgvVGIxQ3MvTnl1TUpRYVkrSmhKN2dteWh1U0NvRlNEWStnNVBs?=
- =?utf-8?B?akdyZlpJSDJILzRFeDhKTWhwWlpvVjNmazFvbzFMVXliRlhkWG1CaUZEc3dm?=
- =?utf-8?B?N2JQcDhGeFcvU1NHVzEvT3B6RnVXOFBXdGRYUWw1NjQvTlV0WUlxeUZqWWhk?=
- =?utf-8?B?bEY1enN5QVpXZFZCdzlhQ0JhVUhoUFRhRGtIZEhudjVIWE0yaTYvVnc2VTJB?=
- =?utf-8?B?N0UwbXJHeXZ2WFJBUEVBRG45RmpJTVUwQ2JKYWM1WHRtelVaRHZBZmFDVFhJ?=
- =?utf-8?B?NnpFUThiVkZ5eUJYUlR0YkNwSHZ4OUs3MlZiVm5TUC8xakxMOU1IQjRXZGlz?=
- =?utf-8?B?RVkyWUVlV00rNUZCTzlLMk9UdTJnWnlBMW5vMEZKeTNySG1EK1FnS0oyendj?=
- =?utf-8?B?MFlJSHNYSFNSemhKQ2dENytJUWhkaVpXdHRDWFZKYmhTZXdqNFBRcDFGdGY0?=
- =?utf-8?B?WE1oWkdmeldsTWZMaUNmTXpSKzRIRDJNOGxSaEV4UHFoQW16RVBwcUt4S0Nv?=
- =?utf-8?B?aXpHc0RpZldyMUNwdHZKR2U4WDhGaTJtZThtRDVSSjZsYnp0U1U1VTNvRW1y?=
- =?utf-8?B?ZzBDY2FLMVJ5M2VQemgxL0xtaGV6cVBVV1REYVpTMHVPUVF0RXNQb3hUa3BX?=
- =?utf-8?B?OUJTdmNqakd2NlVTYVRtY3E5Q0hWQzk4WUlLdUNhK0U1L0dvMEI5SmI5Mzdx?=
- =?utf-8?B?RGtJOE5IVHRBVHZiVS9vSnMweW5HTEJJdW5UczQzckxsQ2hOMnV5V3h2RFJJ?=
- =?utf-8?B?K09CL1lJS3lXVjlJZzIwNzJucTF6b2xOaDVENm5BOVUwdHAzU3VPMGxCYlFC?=
- =?utf-8?B?ZXFoa292blU2NUg1WnB5ZHA2M2NLaEN6bFdTTVhubTFNOWZvTEMyTlhXSG9E?=
- =?utf-8?B?Zjd2STF5TlROSTFqaG5iSVBHR1YzYjd4R1Qwcmd0UU9sNWY3UyswOEtDTENq?=
- =?utf-8?B?ZWlmY1ZGb3NabEljakFjcGc1WnFwTk12NU13eEMyMU1hbk1HVW90NnNYcTJB?=
- =?utf-8?B?T3V4T0xmRVpLam9xdVk4bGgyaFhpcFhmeFpoSXcrbXJnY1dCaGZyNzY0bUhW?=
- =?utf-8?B?aGxWVmZkczAvdzZTSFRyZjlKeW9QQTFRaEdKWmVxRVJ4QWVQdmFjamhYdHZS?=
- =?utf-8?B?YmRCcCtnYkJYMiswR2RFbjFib0V2YjdzVHlPeTc1Vi9lZWFiMW1ZQWJ3a1Br?=
- =?utf-8?B?NWhaNCtwckhTTFMzSUZkeGhVK0Z5LzV0MnIrdHR3ZDcvaVVGUHZ5aWpuOGdv?=
- =?utf-8?B?ZDdnUEJxc0s1eGF5dHVrdzlhblZ2cGlLYTJCZlFlV0E2MkxxTUN2WHdNL05N?=
- =?utf-8?B?dWE2R2ZJclQ5K09nL084TWV0QjJVWUhRSml4bWxZc2JlL2ovOTNoMmlqd3pL?=
- =?utf-8?B?bWt4eC9hRW13a2N5Q0VYdkJGOEdHUlh2bGQ2cC9sS3BvcUVtNUk5UkMveGJ1?=
- =?utf-8?B?MERqOEt0eHAycmtqZmtzR1M5Zks1Z3M1R0xpREQ3YzNaTFZDMWxFTzE1TE8r?=
- =?utf-8?B?c0FyUzlLOHVPbFpPSUNTeUozMEhXT3Zrd0lCQnNKS3lZdDgzUlFMeUVKZDZu?=
- =?utf-8?B?UFhPTXJmZUhRQWF6ZTI3L3JRWVQvQmNzbHlOaVZQc05qdWppeXBTYnIyNFJu?=
- =?utf-8?B?Q2dISlBleW1kNTM2SDhDRUxMYjRDREtxVG9pTE1tUjF5WFBvNnhUYW44Zk50?=
- =?utf-8?B?WXBhWit5WTNrN3lkTGRpeHJZczNvWW1OUWVIMEdvVVNZWFAxRWVGMUNOUkNm?=
- =?utf-8?B?ZzBsMWxJSzBVbmdsK2xJQ21mUkNNMFFkQ1ZVNGpYVWl1RTlHNm96OUZSZk5L?=
- =?utf-8?B?UTZsRTRVcEZmdjRocktMakc3UWFaUi9UTkt5V3RpVHc2TkE5b1BRUS9VcDBZ?=
- =?utf-8?B?K2l6RTZVTmpybEVZWHNVUnhDLy9wVWhaajFoVml4bVhVMzhBT3BOQ2ppSWN4?=
- =?utf-8?B?SENoRzBrVm9NWitmY2daQS9Rd0tqelBTR0N3SVg1M2FXSXFlVDJUZmVKODVZ?=
- =?utf-8?B?NzFaa0l1R3QzTG1HRFJnRW51YzhFNUZiZzVEU0FZZzdRSXJGcHk2eE5LbXpi?=
- =?utf-8?B?SGM5aDRnSC81Qnh1S0RncHErcCtZemZCaVBmQkVQbnFid0lMM1g2U29BeWlz?=
- =?utf-8?B?U1I3NlJlYVU1aW5FZFlnOElCY2xYbFhFNjhSWWQ1WlpLUDJ2R0RsWXBUUmQv?=
- =?utf-8?B?ZDRpdlE2K2hCd21rNGduMWpjWmFWTTk1YWVpMWNIRmRMUDFPcUZJcmZjQi9j?=
- =?utf-8?B?Q0NQeGlTNzJScGM0WFVXTzBFamxwUzYyVmI0RmlBMEpiU3BsbGpLdz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9f55c1db-d02f-449f-493c-08ded5e8e317
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?us-ascii?Q?ZOr+ivbrFk0FLnAwFB3dkVE+02vX8VjreMyAeiwDm4q2IdyyO+MrJq9l4U4W?=
+ =?us-ascii?Q?2qXXEM/pd/HvM9jq9bkYSXGuHrcn11MQzUq9cmK1kr14swGDm58CXZm15jNY?=
+ =?us-ascii?Q?JdAS/qBwuNiQw2zh6ifzyDYBtARgq6Ug4xSBK2agXFkd8BVTS6fjDGo4fjys?=
+ =?us-ascii?Q?F6nWZv46JIUQwLH2OVdprS6IogiS/tMJTPtwFzwsj3Qj7HMbJ8URYPWdOsFd?=
+ =?us-ascii?Q?XuQS+Dhc8yYVM1tEhtG9iBG3WmICyi434g+QYb8vTJ1ybQMRKM9pJz4tv3dP?=
+ =?us-ascii?Q?9u3A3eF2iAlTJvulQS8qZLqiegC05qrevJRxpQhvXp6++yJZDYxQgSVVtOfU?=
+ =?us-ascii?Q?2kn5wPjRCFrdSjIBytD5Nmkup+7ayp5kkAUPNAG3FX+QS9wmpxFIxNBhsBIM?=
+ =?us-ascii?Q?wxZrZg1Tqm91FwbBZc6p961+lOPm2vCsRq3Iog40lcexenql0aX+H7BHBZ5i?=
+ =?us-ascii?Q?LQyj+dd7di23Uo8SboJfxnpC9kZhTKFDpb4NGoQZYcJMiOFMEddNzZ35bsDP?=
+ =?us-ascii?Q?4fb61yMcCIzexr8ajxSrd54NPcx9MTp4htD7ydnqLy/U8OMYnBMjKtkUwqqA?=
+ =?us-ascii?Q?ohMsrEj87OAQEDbTd/nm504G2dDf/n6gy7/JdwkqU+wMUA8HQtS4yvfWH1yU?=
+ =?us-ascii?Q?GZVeEmp1hcDgSsXzSXaNwAfXxKXBVo03qaQri8XtxiRjKSEnEXtiy4wj1vGz?=
+ =?us-ascii?Q?g6f6rfxuAMAv4R9pi5tz4XejUgcXeshZvGhLV5PMKi5trujpJOvIqJt3a5lU?=
+ =?us-ascii?Q?EPbKRPbPxEwdKMoMrFASvB1XNz/KoSAs5+vI5aify4y0xK4CoRR+IJMgs4j1?=
+ =?us-ascii?Q?yPvtPsTlIdFSWV/T2fNmU0evj7Y94KkLhjtN3D0H583DzuBz56qRzksKVUIC?=
+ =?us-ascii?Q?wKuUH4TQhZQVXl/NlHakzVvHUFqV+E4hXnvqlJopJRnKRd0n3WiJGPAiiX6k?=
+ =?us-ascii?Q?n2KGv7c+5dG/SmNMJvbyC8vrRmktYsykGE8RMkxyc5H1AT/Xn0/s34bhfQ0N?=
+ =?us-ascii?Q?0R8ZXCDauvuitloux+zLDxQBHRbhCgC2jiKAeLLi0hLQ9sNZuXZrhN9Xf17Z?=
+ =?us-ascii?Q?PFMG6G093by24sqD6ySM5XyIUEgyzy/BPUQqipqOOCTOhzPh+QTarRerw0WN?=
+ =?us-ascii?Q?hLGMauCmN8zt+q0o9FjOYBbQfMEqmpILVPvfr5i2zXPHtrXNnE1nlx6ixrcu?=
+ =?us-ascii?Q?/vFK15pCDGO8VbnAWrtTJUBHAimc6nKwPLzTN47pyz2wMJZksETQtcIUKvZ6?=
+ =?us-ascii?Q?X8A6pjyqeE6wKWhtmjfgfjM1o9f1yb34DYSqtETsjK+msstsplXqCYwTHm6o?=
+ =?us-ascii?Q?KgBAe6AAfkNy+cIvz86vI/7srJjYRP97HS/iItQCSyv0wl94kyorTdq0987u?=
+ =?us-ascii?Q?fi/1Yao8GXxJs7Dhyj3T7VJQqoTwzMz1JqrkEc7fTavSDzWtq2Hp/nE/qLMV?=
+ =?us-ascii?Q?Os95y2SoLlzSnlFFWKBRwF3MqpPlzVqP+tSysCdtTrAR6eO6ipYslyd+GNtC?=
+ =?us-ascii?Q?os+8eXtXXDqL7pO2uzMJtkxi2bUE9Q7UYEhOjk7IpY22/1eJ8e3ISO6ZMnaG?=
+ =?us-ascii?Q?NCrm6WRE3h9U3wr0/6udcnVq9INDTofdICqGjgj7Q4FTPolAre2erGjQCnr7?=
+ =?us-ascii?Q?NcAftg4JIvQujOT3f1MNxGhrrZWpyx1Tgd8cTXoTYFU7UHPZUoO1ij+BwH2V?=
+ =?us-ascii?Q?GD+eNhx9KB47R2XsPrvqBJstzjghLOEMyjq2VfaecrZWKEK3+6jJsHJk+/I9?=
+ =?us-ascii?Q?jdkOM4k/QNJJwPATkv46+aNvJFlyw086fAm9hT7oRHEg1qfKlnsS?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e8cc90e2-75e6-4578-9bf0-08ded5e9a8a2
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2026 14:15:35.3211
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2026 14:21:06.8755
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XP9lJAuc55Y9ge3nriqs+gKOrop1n30g6kIrtl5sxdyT1Zd3XqOaTbMqtVKkHQK4+eXUuYUvEoIQPxgi7GU/LQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO3P265MB2411
+X-MS-Exchange-CrossTenant-UserPrincipalName: fadgYSVxwjmT38Z1jiug50Ygxgg3+9hGz47HlnB62VLGGwN4mcleHm6pOsgP6fQaTYssYoGRXZ+A+WPp7cMpc/H5oJ//ii7JqkIE9avEHVeSaVVYN9feZdB5zW5f8kn+
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU7PR04MB11090
 
-On Mon Jun 29, 2026 at 12:37 AM BST, Danilo Krummrich wrote:
-> On Fri Jun 26, 2026 at 4:45 PM CEST, Gary Guo wrote:
->> This series presents a major rework of I/O types, as a summary:
+On Mon, Jun 29, 2026 at 10:45:15AM +0200, Manivannan Sadhasivam via B4 Relay wrote:
 >
-> There are two minor rustdoc warnings:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 >
-> 	warning: unresolved link to `include/linux/iosys-map.h`
-> 	    --> rust/kernel/io.rs:1456:7
-> 	     |
-> 	1456 | /// [`include/linux/iosys-map.h`] in C.
-> 	     |       ^^^^^^^^^^^^^^^^^^^^^^^^^ no item named `include/linux/iosy=
-s-map.h` in scope
-> 	     |
-> 	     =3D help: to escape `[` and `]` characters, add '\' before them lik=
-e `\[` or `\]`
-> 	     =3D note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default
-
-Hmm, this looks like a false positive introduced in new version of rustdoc.
-I didn't get this with rustdoc 1.85, but do get it in latest rustc, however=
- the
-generated link is correct despite the warning.
-
-This pattern is used by other code, I'm unsure why it doesn't trigger there=
-.
-Anyhow, the following diff seems to be able to work around the issue.
-
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 0c5f53dd0939..5f2f3cafb0a2 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -1453,12 +1453,10 @@ fn as_view(self) -> <Self::Backend as IoBackend>::V=
-iew<'a, Self::Target> {
- ///
- /// This can be used when a piece of logic may wish to handle both MMIO or=
- system memory but does
- /// not want or cannot be generic over I/O backends. This serves a similar=
- purpose to
--/// [`include/linux/iosys-map.h`] in C.
-+/// [`include/linux/iosys-map.h`](srctree/include/linux/iosys-map.h) in C.
- ///
- /// This type can be used like any other types that implements [`Io`]; thi=
-s also include
- /// [`io_project!`], [`io_read!`], [`io_write!`].
--///
--/// [`include/linux/iosys-map.h`](srctree/include/linux/iosys-map.h)
- pub enum IoSysMap<'a, T: ?Sized> {
-     /// The view is I/O memory.
-     Io(Mmio<'a, T>),
-
-> =09
-> 	warning: unresolved link to `View`
-> 	    --> rust/kernel/io.rs:1620:74
-> 	     |
-> 	1620 | /// In addition to projecting from [`Io`], you may also project f=
-rom a [`View`] of an [`Io`].
-> 	     |                                                                  =
-        ^^^^ no item named `View` in scope
-> 	     |
-> 	     =3D help: to escape `[` and `]` characters, add '\' before them lik=
-e `\[` or `\]`
-
-Oops, this is a stray comment from earlier version that I didn't remove. Th=
-is whole line can be
-removed.
-
-> =09
-> 	warning: 2 warnings emitted
+> device_synchronize() callback is required by the client drivers to ensure
+> all the DMA operations are completed so that they can free the memory
+> associated with the complete callbacks.
 >
->> Gary Guo (19):
->>       rust: io: add dynamically-sized `Region` type
->>       rust: io: add missing safety requirement in `IoCapable` methods
->>       rust: io: restrict untyped IO access and `register!` to `Region`
->>       rust: io: implement `Io` on reference types instead
->>       rust: io: generalize `MmioRaw` to pointer to arbitrary type
->>       rust: io: rename `Mmio` to `MmioOwned`
->>       rust: io: implement `Mmio` as view type
->>       rust: pci: io: make `ConfigSpace` a view
->>       rust: io: use view types instead of addresses for `Io`
->>       pwm: th1520: remove unnecessary `deref`
->>       rust: io: remove `MmioOwned`
->>       rust: io: move `Io` methods to extension trait
->>       rust: io: add projection macro and methods
->>       rust: io: implement a view type for `Coherent`
->>       rust: io: add `read_val` and `write_val` functions on `Io`
->>       gpu: nova-core: use I/O projection for cleaner encapsulation
->>       rust: dma: drop `dma_read!` and `dma_write!` API
->>       rust: io: add copying methods
->>       rust: io: implement `IoSysMap`
->>
->> Laura Nao (1):
->>       rust: io: add I/O backend for system memory with volatile access
+> So implement this callback by first making sure that all the in-flight DMA
+> operations are completed and then call vchan_synchronize() to drain the
+> DMA tasklet.
 >
-> For sharing with the drm-rust tree:
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>  drivers/dma/dw-edma/dw-edma-core.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 >
-> diff --git a/rust/kernel/drm/gem/shmem.rs b/rust/kernel/drm/gem/shmem.rs
-> index 3ee19ef6264e..6868b5d80ab7 100644
-> --- a/rust/kernel/drm/gem/shmem.rs
-> +++ b/rust/kernel/drm/gem/shmem.rs
-> @@ -29,9 +29,10 @@
->          to_result, //
->      },
->      io::{
-> -        Io,
-> -        IoCapable,
-> -        IoKnownSize, //
-> +        IoBase,
-> +        Region,
-> +        SysMem,
-> +        SysMemBackend, //
->      },
->      prelude::*,
->      scatterlist,
-> @@ -467,6 +468,28 @@ pub fn owner(&self) -> &Object<D, C> {
->      }
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index c2feb3adc79f..7b12dfe8cfd3 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -331,6 +331,21 @@ static int dw_edma_device_terminate_all(struct dma_chan *dchan)
+>         return err;
 >  }
 >
-> +impl<'a, D, R, C, const SIZE: usize> IoBase<'a> for &'a VMap<D, R, C, SI=
-ZE>
-> +where
-> +    D: DriverObject,
-> +    C: DeviceContext,
-> +    R: Deref<Target =3D Object<D, C>>,
+> +static void dw_edma_device_synchronize(struct dma_chan *dchan)
 > +{
-> +    type Backend =3D SysMemBackend;
-> +    type Target =3D Region<SIZE>;
+> +       struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +       unsigned long timeout = jiffies + msecs_to_jiffies(5000);
 > +
-> +    #[inline]
-> +    fn as_view(self) -> SysMem<'a, Region<SIZE>> {
-> +        let ptr =3D Region::ptr_from_raw_parts_mut(self.addr.cast(), sel=
-f.owner.size());
+> +       /*
+> +        * Make sure all the in-flight DMA operations are completed before
+> +        * draining the tasklet using vchan_synchronize().
+> +        */
+> +       while (chan->status == EDMA_ST_BUSY && time_before(jiffies, timeout))
+> +               cpu_relax();
+
+read_poll_timeout(...),  Does need READ_ONCE(chan->status)?
+
+Frank
+
 > +
-> +        // SAFETY: Per type invariants of `VMap`:
-> +        // - `addr .. addr + owner.size()` is a valid kernel accessible =
-memory region.
-> +        // - `addr` is page-aligned, which satisfies `Region`'s 4-byte a=
-lignment requirement.
-> +        // - The memory remains valid until this `VMap` is dropped; sinc=
-e `self` is `&'a VMap`,
-> +        //   the borrow prevents the `VMap` from being dropped for the l=
-ifetime `'a`.
-> +        unsafe { SysMem::new(ptr) }
-> +    }
+> +       vchan_synchronize(&chan->vc);
 > +}
 > +
->  impl<D, R, C, const SIZE: usize> Drop for VMap<D, R, C, SIZE>
->  where
->      D: DriverObject,
-> @@ -508,69 +531,6 @@ unsafe impl<D, R, C, const SIZE: usize> Sync for VMa=
-p<D, R, C, SIZE>
+>  static void dw_edma_device_issue_pending(struct dma_chan *dchan)
 >  {
->  }
+>         struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> @@ -968,6 +983,7 @@ static int dw_edma_channel_setup(struct dw_edma *dw, u32 wr_alloc, u32 rd_alloc)
+>         dma->device_pause = dw_edma_device_pause;
+>         dma->device_resume = dw_edma_device_resume;
+>         dma->device_terminate_all = dw_edma_device_terminate_all;
+> +       dma->device_synchronize = dw_edma_device_synchronize;
+>         dma->device_issue_pending = dw_edma_device_issue_pending;
+>         dma->device_tx_status = dw_edma_device_tx_status;
+>         dma->device_prep_slave_sg = dw_edma_device_prep_slave_sg;
 >
-> -impl<D, R, C, const SIZE: usize> Io for VMap<D, R, C, SIZE>
-> -where
-> -    D: DriverObject,
-> -    C: DeviceContext,
-> -    R: Deref<Target =3D Object<D, C>>,
-> -{
-> -    #[inline]
-> -    fn addr(&self) -> usize {
-> -        self.addr as usize
-> -    }
-> -
-> -    #[inline]
-> -    fn maxsize(&self) -> usize {
-> -        self.owner.size()
-> -    }
-> -}
-> -
-> -impl<D, R, C, const SIZE: usize> IoKnownSize for VMap<D, R, C, SIZE>
-> -where
-> -    D: DriverObject,
-> -    C: DeviceContext,
-> -    R: Deref<Target =3D Object<D, C>>,
-> -{
-> -    const MIN_SIZE: usize =3D SIZE;
-> -}
-> -
-> -macro_rules! impl_vmap_io_capable {
-> -    ($ty:ty) =3D> {
-> -        impl<D, R, C, const SIZE: usize> IoCapable<$ty> for VMap<D, R, C=
-, SIZE>
-> -        where
-> -            D: DriverObject,
-> -            C: DeviceContext,
-> -            R: Deref<Target =3D Object<D, C>>,
-> -        {
-> -            #[inline]
-> -            unsafe fn io_read(&self, address: usize) -> $ty {
-> -                let ptr =3D address as *mut $ty;
-> -
-> -                // SAFETY: The safety contract of `io_read` guarantees t=
-hat address is a valid
-> -                // address within the bounds of `Self` of at least the s=
-ize of $ty, and is properly
-> -                // aligned.
-> -                unsafe { ptr::read_volatile(ptr) }
-> -            }
-> -
-> -            #[inline]
-> -            unsafe fn io_write(&self, value: $ty, address: usize) {
-> -                let ptr =3D address as *mut $ty;
-> -
-> -                // SAFETY: The safety contract of `io_write` guarantees =
-that address is a valid
-> -                // address within the bounds of `Self` of at least the s=
-ize of $ty, and is properly
-> -                // aligned.
-> -                unsafe { ptr::write_volatile(ptr, value) }
-> -            }
-> -        }
-> -    };
-> -}
-> -
-> -impl_vmap_io_capable!(u8);
-> -impl_vmap_io_capable!(u16);
-> -impl_vmap_io_capable!(u32);
-> -#[cfg(CONFIG_64BIT)]
-> -impl_vmap_io_capable!(u64);
-> -
->  /// A reference to a GEM object that is known to have a mapped [`SGTable=
-`].
->  ///
->  /// This is used by the Rust bindings with [`Devres`] in order to ensure=
- that mappings for SGTables
-> @@ -638,6 +598,7 @@ mod tests {
->              UnregisteredDevice, //
->          },
->          faux,
-> +        io::Io,
->          page::PAGE_SIZE, //
->      };
+> --
+> 2.43.0
 >
-> @@ -714,7 +675,7 @@ fn compile_time_vmap_sizes() -> Result {
->          assert!(ptr::eq(vmap.owner(), obj.deref()));
 >
->          // Verify the max size matches the actual object size
-
-The comment can be updated as well. Other than that, it looks correct to me=
-.
-
-Best,
-Gary
-
-> -        assert_eq!(vmap.maxsize(), PAGE_SIZE);
-> +        assert_eq!(vmap.size(), PAGE_SIZE);
->
->          // Make sure creating a vmap that's too large fails
->          assert!(obj.vmap::<{ PAGE_SIZE + 200 }>().is_err());
-
-
