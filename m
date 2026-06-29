@@ -1,112 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A47122C2360
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:13:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD66740D59F
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782753224; cv=none; b=WRXCmH5kOdbPBJ5zwIsO2NRCeQnRDFBsvtpZYVh+UDO2dQ24QLojx6PDrTONDGr47o2JTFhlZX406nPp2ZRrnraX4X8ofuFkjqxtVHUbHXH5hrZQqu7UF6yeTdaDG0pLwk3tzLS0lSU7hk2Ciu31w+amlzEQBvu+6iX/KDOpptY=
+	t=1782753517; cv=none; b=A1rSPPD039MUP+juZB2BsLb87yUdg+DtzKf5G2AOCjM9sYcYix2Vfuo9IVqLBiuwgvepayx8SrH0qR6+mqqMCbXBzqo82+Bsk1ZMM+Xc/F8hyM5g/Fb8dDH9eiLUWd20Ke9O3P3HtMpUKyXFpPVF2d8Oj3pYfeVZJgm3fsaxU7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782753224; c=relaxed/simple;
-	bh=ttOEKUttWEIsU5crSFKASJF3y7DdFHgt9ND7DplJjX4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Rdoiz7U8XVEmVIMxBvOmKDowN+fg8bnp2o4RIMvSG4NAK4gttPCUB/TYmNfMVONF/rB9nlC75tQwdipK17agI1S0AEiIOc070d2AXC0m3FWz1KWaajNPLIakDQKkNTyRT7pS3T8xYgaHrX60JAHHWIFJ77fjlYT1itXjCXNyc9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JKXPtTLC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782753517; c=relaxed/simple;
+	bh=nDyNKLFBqjMFpuWUcWrQamhSntDzVB9Y+Uo+4cx1HVk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tpkVNRfjTdVeHC/lSiIFLezgN1Ot+kNR3LmpRbiPZyCpF7sjYqAKUWzPohViTo64wLvnw9NfpolZ9YXEdTq6LSArWcxf+FbNftkyZwxUGAHWM2C6VrSOxluAPJgWNNSToVj4f6Sz52D7hGiNA4oTxAvdMR73MFf03rNgf8q9jsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Y4EM7UuE; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JKXPtTLC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27FDD1F000E9;
-	Mon, 29 Jun 2026 17:13:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782753223;
-	bh=roDAnDs0ltBckBauaykWfXLHjGWgxS0LITNHJKK+hF0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JKXPtTLCoRVoLmTuNdgVxQZpx31juzVDcoP67LF9eNE3cSXlouF0HHBlZs6I2Gp0x
-	 uej/wEIUswMX0UGOCSFPChBywN9H7AtowS6Ifiy2zxI+NPMBTWZHl/3Oq8ESozUwiF
-	 wp7tUHo64/frOyfietUGBLcc5h7x1kXX38TsLZrPfdFbUbN+gJ3mOAmQM7ZB6IZZ+y
-	 TAXbxDop0OFlS+jltIzoVlnPUUCsM7J0LNWHYjlM2HT/zLkhKSuhUbqEAgaPQQIJ2X
-	 PHQh++0sB5jD20y4whvaherO7MHD5NelD99Eg97MoXcvUAceerTYHJUpWZkalC10Ck
-	 qj9itxJJFMhGg==
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Y4EM7UuE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782753515; x=1814289515;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=nDyNKLFBqjMFpuWUcWrQamhSntDzVB9Y+Uo+4cx1HVk=;
+  b=Y4EM7UuEcAGAIgfOnpHmX5yn0Bfb4GFIETTODQ7lHXzVkP6xrux6hdrL
+   jBsjrAcMI3n9SZDC7zKDCMIpZidH7465vriw1We0j+vQp5UTVyWxx0dpW
+   YhcqpGKDOQhydOEZ++VyxG+wlwvi5z9Ku4YNKQK9gmEhSHcm39PRdL03h
+   4mDHuAfFSyIbcz64HCswGrzjwphLqn96AEDisfsVl92b6QsZyY2TdI9i8
+   F/UXnMmHYr8b/jYLEsczBxakfLyUI4L2aZSmqGc2gyrkaWI3csvVzb3sz
+   PFcK7+rnPW6gcWN7V7VqsqsJlWtUlzzknT8usB392wQSKbEjsQ4dGsNKT
+   g==;
+X-CSE-ConnectionGUID: kj/0SM/xTi6Na/m6ZVaiJg==
+X-CSE-MsgGUID: KNW+breYRf6V4AU7SUfUQw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11832"; a="106247285"
+X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
+   d="scan'208";a="106247285"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:18:35 -0700
+X-CSE-ConnectionGUID: +yOnrEtWQcuPOKr8VJ5xrg==
+X-CSE-MsgGUID: JtHLEYcESzOj/KP8byTjcg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
+   d="scan'208";a="245664688"
+Received: from kniemiec-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.207])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:18:33 -0700
+Date: Mon, 29 Jun 2026 20:18:31 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Nirmal Patel <nirmal.patel@linux.intel.com>
+Cc: nirmal.patel@intel.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	lpieralisi@kernel.org
 Subject: Re: [PATCH] PCI: vmd: Only assign _OSC features in bare metal OS.
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
+Message-ID: <akKo5w359FZU3uDU@ashevche-desk.local>
 References: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 29 Jun 2026 17:13:42 +0000
-Message-Id: <20260629171343.27FDD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Incorrect boolean logic for detecting virtual machine environments=
- due to a De Morgan's Law violation, leading to erroneous `_OSC` flag copyi=
-ng in VMs.
-- [High] The VM detection heuristic used for skipping `_OSC` flags fails to=
- account for Xen domains and older VMD hardware lacking shadow registers.
---
+On Mon, Jun 29, 2026 at 05:02:43PM +0000, Nirmal Patel wrote:
 
-commit 51d3c2c481556010415fe2cd5fa77be881005b5c
-Author: Nirmal Patel <nirmal.patel@intel.com>
+> Copy valid _OSC flags from root bridge only when OS can provide correct
+> values. In virtual machine, all of the control features are disabled as
+> hypervisor will not passthrough root bridge information to VM.
 
-PCI: vmd: Only assign _OSC features in bare metal OS.
+> Reviewed-by:  Andy Shevchenko <andriy.shevchenko@intel.com>
 
-Copy valid _OSC flags from root bridge only when OS can provide correct
-values. In virtual machine, all of the control features are disabled as
-hypervisor will not passthrough root bridge information to VM.
+I confirm that I reviewed this internally and agree on the main approach and
+the implementation. I think it's a redundant period in the Subject slipped,
+but it maybe tweaked whilst applying I think.
 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index d4ae250d4bc6d..f9e38f2f926a7 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -910,8 +910,10 @@ static int vmd_enable_domain(struct vmd_dev *vmd, un=
-signed long features)
->  		return -ENODEV;
->  	}
-> =20
-> -	vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> -				   to_pci_host_bridge(vmd->bus->bridge));
-> +	/* Don't copy _OSC control flags in VM, it disables features.*/
-> +	if (!offset[0] || !offset[1])
+-- 
+With Best Regards,
+Andy Shevchenko
 
-[Severity: High]
-Does this logical condition correctly identify bare-metal environments?
 
-The patch uses !offset[0] || !offset[1] to execute bare-metal logic. Howeve=
-r,
-if a hypervisor identity-maps exactly one MEMBAR (offset is 0) while
-translating the other (offset is non-zero), this condition will evaluate to
-true.
-
-Since earlier in the function offset[0] || offset[1] is used to indicate a =
-VM
-for MSI remapping, should the inverse (bare metal) be
-!offset[0] && !offset[1]?
-
-[Severity: High]
-Does this VM detection heuristic also cover Xen domains and older VMD hardw=
-are?
-
-If running in a Xen domain or a VM with older VMD hardware lacking the
-VMD_FEAT_HAS_MEMBAR_SHADOW capability, both offset variables remain 0.
-
-This causes the condition to evaluate to true, meaning the driver will still
-copy the _OSC flags in these VM environments, potentially breaking PCIe
-features. Could this be avoided by checking for xen_domain() or hardware
-capability constraints alongside the offsets?
-
-> +		vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> +					 to_pci_host_bridge(vmd->bus->bridge));
-> =20
->  	vmd_attach_resources(vmd);
->  	if (vmd->irq_domain)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629170243.2698=
-30-1-nirmal.patel@linux.intel.com?part=3D1
