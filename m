@@ -1,223 +1,178 @@
-Received: from fout-a1-smtp.messagingengine.com (fout-a1-smtp.messagingengine.com [103.168.172.144])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ACD9337BA6;
-	Mon, 29 Jun 2026 15:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7356A3E5EF9;
+	Mon, 29 Jun 2026 16:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782747814; cv=none; b=D7ise+PW4DMCW8ls8Jz+XdD2VrbyX+Yr0sDPieYp/x12XrLA9rora3emqpgPIn6c0jKmfOmsprzq3DQvw7PKWCuD34mVLMD75TK0k9Ev6Bxuv4KaBl0UY80Qf1FzIPAhj/u6tdkxXwMLwuxOQbFA/mabh54U1lF0uV7wuugjAVo=
+	t=1782748906; cv=none; b=EKunJKIqE1ulq/GZEkQWnAtYrcoCT49HGdB10LdIzvxfYyov6Iy22gTrVzGHpRE8XLVaH1SNXK42F7DJQQZXIp+IcCAZuURID6A4ZgVlIgX63IZ7Z72nIoCikYrwy6uAWS0RK1ikPucuFIp2wxSlB1V6PsBzl5Hslr47z4jdnNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782747814; c=relaxed/simple;
-	bh=5Y4BEJ8zwWvQTQHdqVwuTQLfjjB+iTFJRFh5ABHDOtE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bJFb75OfJbgjRE5PB3LW8iUrOMsJYvoqzp3RJddgfL4A7dC/wKCsm59wKtHrmmOnpgxvagcSJOyYRZgnytwjYCRJxMfdntxUfWwONuiRxpU4pOEytZTVPGQ03kVE5nazR3CU4awG0+K/1UbVGHFRWE93MwOvU4HdlMyl5eyXGyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=D0uvl3Eh; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YjcQppJ/; arc=none smtp.client-ip=103.168.172.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1782748906; c=relaxed/simple;
+	bh=gNf3+xtGsHZcEPpHO8DbFh36xC7Xv23kzYATNbWno/8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nq4+fkx2spsuGoAjXAa53V3NlWxog6NxWyuhiNSxBgnUq616dytqHD/fldOayO9T0ny+pvhz46VvPZqadl8sh3sOcw5TaWtCu8IYmu295xz9KDBorSbtLZB+nIrEfCkyeg+tB+PNFX51pgsFxuAs2X5JiEdvJ3bLGZVC6/XwdzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmwCUn9f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="D0uvl3Eh";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YjcQppJ/"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.phl.internal (Postfix) with ESMTP id 9E605EC00DB;
-	Mon, 29 Jun 2026 11:43:30 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Mon, 29 Jun 2026 11:43:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1782747810;
-	 x=1782834210; bh=oBO9AlUgesLs7bhNb3C7hDuAqAmu4BXNEtMP6hAnZ4o=; b=
-	D0uvl3EhJ2nxveUtN2hJABuHyt+1M1gZkjd6hx+VrZ79ppspk5Zn0zuH/NpLm/hc
-	CwKh4yas4SWqU+drQAVxeDibCwX/IpLtw9lLwqqby9v8HPdhbVqMVQZLK6so2poi
-	7TO7572grW3nAW45CsbvyRCcFC8l3A+o++DFEFkPymQwKrbeOsRv6AJvQ7LCn+zG
-	FBYdi6I4RGibX25tYuUOVZpFeI6ryAr3V8dmE60hYKUSps/Zd+maIIHUNYtw3AiS
-	PIiZW3KmIX3K4JYuxbFwoh1DR2F+D7BxADAFpaHwDDdbwV2Z2VShshhCiwKv2BK3
-	TgEc1/IiEX5eIPWV9dcumQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1782747810; x=
-	1782834210; bh=oBO9AlUgesLs7bhNb3C7hDuAqAmu4BXNEtMP6hAnZ4o=; b=Y
-	jcQppJ/IxGqBduXNk/9nPJbAhKjzZG4cBAmmjPD6+1RgX85V/+M3whIYeESWrYUB
-	rD0jdyS+pLhqgW6MscCYM2SOKC3C4LgBDo4aAhXOaOUmickDvPedenGdR/g/Idfc
-	dZNj3XNYSIQbk/adwd3YuKSuqfBujLYGIPiJO1R4SBPt+16AU7Hku8OIw+JYLlP6
-	qXbUaPQ2IDfk2KnknO3ilLUh8M6UAmRLt0+0z0fA5UjsMMuZClZw/9KdvWFZwHPH
-	XhADZ7GI1j7EFnQjPhcTthkvSehWU/t8j3g2Q2YW0cNkyT6mdWxL1tapLfEnYSTA
-	RjMWqCRC+bUm6CHFJzjOA==
-X-ME-Sender: <xms:oZJCaqn7E7GYlbrjvtza_sKhXD9RmAacgQtAFB_ovUUZMJc71i4_jA>
-    <xme:oZJCajY6FhobIvyFza-_UKKsPuo7h1FdmiY2urwjj52wTumc7ul89uWH1QSl1qkY-
-    eJJMkbw0NzZrT1Dhquw0UR1PxgALCvoTV2cidwW3UIleLI4vMV5Rak>
-X-ME-Received: <xmr:oZJCan7jFdj7sGXn0tIYLLRt3ll4K48EAzul60vsYJfv2FDo1IN8j3Rhch4>
-X-ME-Proxy-Cause: dmFkZTEHn75k5CFgeznKWlGGIrXbvs7qL+tjerljiXXOxMghxwvyGDwfT2S9oP9uhlX1A9
-    tuC4l6Vby03CawJ4JK7jAm/X3lKp5zXwWo1fjjxHIy6M/eEuqVh+q5JDBzJCLyESFMau0y
-    NVjUBZn4gCX0hkV0YU14kuqtEO9MwCJqgHvoJ3CJIwhaQ1ukdtTAKzLNJzJB1sG9g4kqSh
-    WhMHVxxBDHlZsrHs7aNm8PWsIvtWajeti0lzUrCXNV+b+GLyyUPmTzH7bF1UzRFHD0YogB
-    hmYlKsWmhEiWBpHeQpQmSCkXVtheO5p2FLys8xbSdIhP6bjBClZyhEBtl3zP+JDoZxVBVz
-    stZNU8ReUms4iutYZ8bWlZUVpBX2I64Fp8HSnjhsd68LRspWKO6AqftAsEhvCk4TX2m9jm
-    zsl3i3DXHeDmp2xy7BV2Ivz55DDyAOXx9IwHijY7/fL8Yx74yPNkGJ9HABwbf6j9zmW20C
-    OWJ+6lknm/hd/b/4ebBK1PlAMeGCzm4CVWKH+Lg5gsNQpTl/r+wnA4oeKvz9J1+oxDrQRq
-    /aw/lu8FdKwcJXZAfRBuY9AnVCUL41CopXHHUM83HtzC6Q5hF9Ym9czDDuYt+FBsWL+x2Y
-    QXMFK6wN9nnVMnBVm2uAWUgB/0vvof0FKiPiFrt5WTL/9tv2iKlyJFdI/CLw
-X-ME-Proxy: <xmx:oZJCalDi29KAquSyCPTfi9VtRyzDDkp_NPIGd4nkt2TMhkFN2oTxIw>
-    <xmx:oZJCat9JTCCBufPxC8iNE087OOX_B257OMbgP8PRmIqqZaE8VzRQyg>
-    <xmx:oZJCaoFM2BiKXwxM2Kg3eX504Rr9PQtF6cErSMCyUvVWIgivyiB4mA>
-    <xmx:oZJCanSasMq-HTDje7cIMomZF91S22UiBChdb9T5QXSp-GSMLc1_wg>
-    <xmx:opJCalYc49Sc2tAqYUmjU7LvPTXEXnTj9Zh-DBF3DqibJNVdziyu_MCy>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 29 Jun 2026 11:43:28 -0400 (EDT)
-Date: Mon, 29 Jun 2026 09:43:26 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
- <wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
- <wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- alex@shazbot.org
-Subject: Re: [PATCH v17 08/12] PCI/TPH: Add sysfs binary file to export CPU
- to steering-tag mapping
-Message-ID: <20260629094326.779ab0ff@shazbot.org>
-In-Reply-To: <5b389fb6-7d0e-8fea-1fd9-b873efc028c3@huawei.com>
-References: <20260616104621.41915-1-fengchengwen@huawei.com>
-	<20260616104621.41915-9-fengchengwen@huawei.com>
-	<20260616144224.GB3577091@ziepe.ca>
-	<20260616105754.784be22d@shazbot.org>
-	<9105ceef-5e27-4e3c-8903-d46aef52a2bd@huawei.com>
-	<20260626092232.53ed3a7c@shazbot.org>
-	<5b389fb6-7d0e-8fea-1fd9-b873efc028c3@huawei.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmwCUn9f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 780AD1F000E9;
+	Mon, 29 Jun 2026 16:01:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782748905;
+	bh=ZMagSuV/KEPQnZY+XS5s3kJW3BcH6iR0+wLbzdgK2X0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NmwCUn9fNzlLN6RHJFD4f7AaI7M+siGWgaA6KKEP8+YaHgbCT8Eo8ua71Hrl3tsBb
+	 EpcinpRLb8K5+ZYGfFCrfm7EX5pUXhwd2BSqPwDcPUh64Nk5R6nFyv7fw9tmx/PWoa
+	 s69IS3QurF0gsSQrR2oF5sNahDh46sdOzkV2qJUBVdWI9wGP4VGkAi+UmP5kFjb/Ds
+	 meVJPowgZXAb7UJobfEJ81GhUUY0N+OGFRk5wNRqM/PZgIS0yfCIQVKPoMH597Gonz
+	 PY9ic9oKw/XQW/PxJLHU+q6JjPJcYIjAlGlPO+EzOkAuHa1iOiwDQAOk+nrX2N1xLA
+	 JmMc0obmWEe7w==
+Date: Mon, 29 Jun 2026 18:01:37 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org, 
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+	ath12k@lists.infradead.org, mhi@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+Message-ID: <5mrwcurlf6xnqla5x5idpt7ug34nv2eqpijnjmccgdwazrmwyv@64tixxe4aa57>
+References: <20260626055023.197470-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
 
-On Sun, 28 Jun 2026 19:58:09 +0800
-fengchengwen <fengchengwen@huawei.com> wrote:
->=20
-> Thanks a lot for your extremely detailed and professional design breakdown
-> for the unified VFIO TPH uAPI framework. I=E2=80=99ve fully gone through =
-all your
-> design points and aligned my implementation plan accordingly. I have seve=
-ral
-> key implementation questions to confirm with you as below:
->=20
-> 1. Plan for dma-buf TPH metadata storage
->  =C2=A0 I plan to add the following TPH-related fields into struct=20
-> vfio_pci_dma_buf
->  =C2=A0 in my preparatory patch series, which can be fully reused after Z=
-hiping=E2=80=99s
->  =C2=A0 dma-buf TPH patches land upstream:
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u16 tph_st_ext;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 tph_st;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 revoked:1;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 tph_st_valid:1;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 tph_st_ext_valid:1;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 tph_ph:2;
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0 tph_ph_valid:1;
->  =C2=A0 The tph_ph_valid bit is newly added to track whether a valid PH v=
-alue=20
-> is bound
->  =C2=A0 to the dma-buf. Is this field layout and validity flag design acc=
-eptable?
+On Fri, Jun 26, 2026 at 07:50:23AM +0200, Jose Ignacio Tornos Martinez wrote:
+> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
+> 
+> The problem manifests in VFIO passthrough scenarios:
+> 
+> - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WiFi devices:
+>   Normal VM operation works fine, including clean shutdown/reboot.
+>   However, when the VM terminates uncleanly (crash, force-off), VFIO
+>   attempts to reset the device before it can be assigned to another VM.
+>   Without a working reset method, the device remains in an undefined state,
+>   preventing reuse.
+> 
+> - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
+>   on first VM assignment without proper reset capability.
+> 
+> Add device-specific reset methods using BAR-space hardware reset registers
+> that exist in these devices:
+> 
+> - WCN6855/WCN7850 WiFi devices use SoC global reset via BAR0 (sequence from
+>   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
+>   ath11k_mhi_set_mhictrl_reset()):
+>   - Write/clear reset bit at offset 0x3008
+>   - Wait for PCIe link recovery (up to 5 seconds)
+>   - Clear MHI controller SYSERR status at offset 0x38
+> 
+> - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
+>   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
+>   - Write reset request to offset 0xb0
+>   - Wait 2 seconds for reset completion
+> 
+> These are true hardware reset mechanisms (not power management or firmware
+> error recovery), providing proper device reset for VFIO scenarios.
+> 
+> Testing was performed on desktop platforms with M.2 WiFi and modem cards
+> using M.2-to-PCIe adapters, including extensive force-reset cycling to
+> verify stability.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-In Zhiping's design, the PH completer validity is bound to the ST
-validity.  In my proposal, the user makes a request relative to the
-namespace, EXTENDED set =3D 16-bit, clear =3D 8-bit.  Internally we do a
-.get_tph on the dmabuf based on the requested namespace and get back
-success or failure.  On success, the full PH + ST is provided to the
-user when running with DS or LITERAL capability available, otherwise the
-ST is withheld and only the PH is provided.  I don't see a need to track
-the ph validity separately.
+Couple of comments below, including one bug due to my previous suggestion. Once
+those are addressed, feel free to add:
 
-> 2. Validation rule for VFIO_DEVICE_TPH_EXTENDED flag mismatches
->  =C2=A0 The VFIO_DEVICE_TPH_EXTENDED modifier you defined is an excellent=
- design,
->  =C2=A0 letting users select either 8-bit base ST or 16-bit extended ST w=
-hen=20
-> hardware
->  =C2=A0 supports both variants.
->  =C2=A0 But a mismatch risk exists: users may set ST entries via TPH_ST w=
-ith=20
-> EXTENDED,
->  =C2=A0 then later enable TPH requester in pure 8-bit mode only, causing=
-=20
-> inconsistency
->  =C2=A0 between shadow config and active hardware mode.
->=20
->  =C2=A0 My proposed solution: maintain two separate shadow ST tables insi=
-de VFIO,
->  =C2=A0 one for base 8-bit ST and one for extended 16-bit ST. When enabli=
-ng TPH
->  =C2=A0 requester mode, activate the shadow table matching the selected S=
-T width.
->  =C2=A0 For devices only supporting 8-bit ST, directly reject EXTENDED fl=
-ag=20
-> in all
->  =C2=A0 TPH_ST ioctl calls.
->=20
->  =C2=A0 Should we enforce strict cross-check between EXTENDED flag used d=
-uring ST
->  =C2=A0 programming and the final active requester ST width during=20
-> enablement? If yes,
->  =C2=A0 is the dual shadow table approach reasonable?
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-We've abandoned the apply at enable-time approach in this proposal, TPH
-must first be enabled in device config space.  There is also no
-buffering of user values, they're written straight through to hardware.
-If the user has enabled only 8-bit mode, then a TPH_ST with the
-EXTENDED flag set should generate an error.  Likewise, if the user
-calls TPH_ST while Requester Enable is 00b, this generates an error
-regardless of the namespace.
-=20
-> 3. Virtualization logic for TPH requester enable bits with heterogeneous
-> completer capabilities
->  =C2=A0 Two complex real hardware topologies need proper handling:
->  =C2=A0 - Case 1: Single device with multiple queues routing TLPs to host=
- memory
->  =C2=A0=C2=A0=C2=A0 and P2P peer memory via dma-buf flow; root port and P=
-2P TPH completer
->  =C2=A0=C2=A0=C2=A0 capabilities may differ.
->  =C2=A0 - Case 2: Root port has no TPH completer support, while endpoint =
-and P2P
->  =C2=A0=C2=A0=C2=A0 peers fully support TPH completer.
->=20
->  =C2=A0 I=E2=80=99m confused about how to virtualize the device=E2=80=99s=
- TPH requester=20
-> control bits.
->  =C2=A0 My tentative idea: take the minimum supported capability between =
-endpoint
->  =C2=A0 and host root port. If root port lacks TPH completer, block TPH=20
-> requester enable
->  =C2=A0 entirely.
->=20
->  =C2=A0 Is this the correct approach to handle heterogeneous completer ca=
-pability
->  =C2=A0 across different traffic paths?
+> ---
+> v11: Address Manivannan Sadhasivam feedback:
+>   - Remove unused QUALCOMM_WIFI_MHISTATUS define
+>   - Use PCI_ERROR_RESPONSE instead of 0xffffffff
+>   - Sort device IDs in ascending order (0x0308, 0x1103, 0x1107)
+> v10: https://lore.kernel.org/all/20260623183115.1585273-1-jtornosm@redhat.com/
+> 
+>  drivers/pci/quirks.c | 117 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 117 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 431c021d7414..0de606366200 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4240,6 +4240,120 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
+>  }
+>  
+> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET	0x3008
+> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
+> +#define QUALCOMM_WIFI_MHICTRL			0x38
+> +#define QUALCOMM_WIFI_MHICTRL_RESET_MASK	0x2
 
-In case 1, this is why it doesn't work to allow the user to buffer per
-namespace STs to be applied based on the value written to Requester
-Enable.  Register value 11b allows the requester to operate in both
-namespaces simultaneously.  The only governance we can provide is to
-disallow EXTENDED STs to be written when Requester Enable is 01b.
+Qcom calls these WiFi devices as WLAN devices. So I'd prefer to use this term
+all around even for function names.
 
-The peer completer's capability is provided through the dmabuf.  The
-user can ask for the requester's preferred namespace, use the alternate
-if available, or fail if there's no compatible namespace available,
-which includes no .get_tph support.
+> +
+> +/*
+> + * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
+> + * registers.
+> + */
+> +static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
+> +{
+> +	bool link_recovered = false;
+> +	unsigned long timeout;
+> +	void __iomem *bar;
+> +	u32 val;
+> +	u16 cmd;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+> +	bar = pci_iomap(pdev, 0, 0);
+> +	if (!bar) {
+> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +		return -ENODEV;
+> +	}
+> +
+> +	val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +	val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	timeout = jiffies + msecs_to_jiffies(5000);
+> +	while (time_before(jiffies, timeout)) {
+> +		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> +		if (val != PCI_ERROR_RESPONSE) {
 
-In case 2, we're gated by the Linux TPH implementation and carry it
-through to the uAPI.  The overall TPH feature opt-in needs to depend on
-both TPH support in the requester (the user's device) AND TPH completer
-support at the root port (unless the requester itself is a RCiEP).  I
-had missed elaborating on this requirement in my write-up.
+As Sashiko also pointed out, this will always evaluate to true due to
+PCI_ERROR_RESPONSE being ~0ULL. Please use:
 
-I'm glad you're onboard with the design, please let me know if any
-further clarifications are needed.  Thanks,
+	if (!PCI_POSSIBLE_ERROR(val))
 
-Alex
+Sorry for the wrong suggestion earlier.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
