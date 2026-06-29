@@ -1,145 +1,251 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC0CB3F0747
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 10:27:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4967828CF5D;
+	Mon, 29 Jun 2026 10:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782728846; cv=none; b=msTjUpYIrcVO0ncQtjioW+PNvZUEJsuJkXbc1+zCHK0BfekTokjCTOOfYguoezcluGFsjtZQh370j0vPw+R83w8qFiI23qlAccgAkzGbXqqc2QeEepw0ImFpR3JFh1kYMjf7C0wOHaJf7A4a/zXYiax34O3BNWydAPhhdSg/FPg=
+	t=1782729114; cv=none; b=UUGQkQxF6RYP/a18oOXT3wQeVtTdRHbay/BmaYWQvxv8VCNDwk9w6VS2TWw7l5YwdhW7JH4s1kVlh+fldSVran1lJfCXrIhPdXoykaHosSU3u2EhRUxbmDB7C3mQgl8lgTFQrcH65lnsXPQQW3uOwIOjoPpezeZu0sWGsSQIsm0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782728846; c=relaxed/simple;
-	bh=Tl9bQ+51XPo/LulfGmSVbbF5nNVF2hL7yThKD/VLZg4=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F1PWzG0Drzhh3da+K1RvBJ1nPfmyKxNwwlI5K9zrcI/Ht4cnyAHVwC+or8WedIaFufD92yX7CM8QZe3YvrpqFaI2yVYdjgMU/aQxllTK6G4r0yjqdKzMUcfgNUq7ybEPztoDHdSJRmXGpdJQWA3Om60ipt2xjlWT+evlpHLPrnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x8JKdQPa; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=85ZC/ThA; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x8JKdQPa; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=85ZC/ThA; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1782729114; c=relaxed/simple;
+	bh=Sz+/LuJFyc5hxBLteswIhIodEcHbba395Zs06Im87/8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=px8avvYZ4WULeoJdH6TjJsOUxYLVblqavZegf7zpqByHtJosXXt98W2nr4s5p3ZMTP2ssAEUpenmIXdQGz/rpQNeUmARv2XudaRLYQY2DNWUY1KwcQf7Nwvv1vpp37GueXvfJU/c5wLwbkRvi31lMCmpd8rRL8oM6CcGYzWRT+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NJk3AZTy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x8JKdQPa";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="85ZC/ThA";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x8JKdQPa";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="85ZC/ThA"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3371675D81;
-	Mon, 29 Jun 2026 10:27:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782728842; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rGSIa4eM/0eYZdMY5DXFfdq8STEq7sU+S6e5gJolF2w=;
-	b=x8JKdQPalLCHnNsWOJu8QJ82dgmTztI8fDMIw+rFhMSDR7CUfY8AyBJpaRW3sGRySq2Cgr
-	b/yiWXMRXxZGrq7CaNoNT0ACRCIKkTf/NI+THjb9GjWCrZwaAXJ0yO+sMe174TpIuwct2x
-	jLSf37cl/XqW9460yafnoT7Ej9a/0y8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782728842;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rGSIa4eM/0eYZdMY5DXFfdq8STEq7sU+S6e5gJolF2w=;
-	b=85ZC/ThAKEhI8KhBdEqSm6mTivKE4cYqJ2ga/N4IhCQVwRHwKSa62kOTClVv6ETnV3iNmg
-	G2gKlrkt9qiOMUBA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=x8JKdQPa;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="85ZC/ThA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782728842; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rGSIa4eM/0eYZdMY5DXFfdq8STEq7sU+S6e5gJolF2w=;
-	b=x8JKdQPalLCHnNsWOJu8QJ82dgmTztI8fDMIw+rFhMSDR7CUfY8AyBJpaRW3sGRySq2Cgr
-	b/yiWXMRXxZGrq7CaNoNT0ACRCIKkTf/NI+THjb9GjWCrZwaAXJ0yO+sMe174TpIuwct2x
-	jLSf37cl/XqW9460yafnoT7Ej9a/0y8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782728842;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rGSIa4eM/0eYZdMY5DXFfdq8STEq7sU+S6e5gJolF2w=;
-	b=85ZC/ThAKEhI8KhBdEqSm6mTivKE4cYqJ2ga/N4IhCQVwRHwKSa62kOTClVv6ETnV3iNmg
-	G2gKlrkt9qiOMUBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C501D779A8;
-	Mon, 29 Jun 2026 10:27:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id U/qdLolIQmq1GwAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Mon, 29 Jun 2026 10:27:21 +0000
-Date: Mon, 29 Jun 2026 12:27:21 +0200
-Message-ID: <874iilr69i.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Fu Hao <fuhao@open-hieco.net>
-Cc: bhelgaas@google.com,
-	perex@perex.cz,
-	tiwai@suse.com,
-	linux-kernel@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	tingyin.duan@gmail.com
-Subject: Re: [PATCH v3 6/7] ALSA: hda: Add support for Hygon family 18h model 5h HD-Audio
-In-Reply-To: <8b38f2941375553e4246167736c6acb5a541e833.1781523812.git.fuhao@open-hieco.net>
-References: <cover.1781523812.git.fuhao@open-hieco.net>
-	<8b38f2941375553e4246167736c6acb5a541e833.1781523812.git.fuhao@open-hieco.net>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NJk3AZTy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 024461F000E9;
+	Mon, 29 Jun 2026 10:31:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782729112;
+	bh=r/P4urkfNnPMjPnBmZ60XyrvMfIM4ycf7CBb4sZTqGY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=NJk3AZTyme8jcznYSk6QQzAMIB35nQ6F6gvH95xF4rUGcDcP49QAc6OuYAx8mEs87
+	 ZFHMQmFOpPC6EJw0T+bU+DJurZVnsXPCA500spdVPTw9J4S0yp+5J1Xb8d9UQkls6i
+	 swWH7Eb+Nl3OswN2zknQAhvL3AQR6LMOGtZ1j1yEOEzyes3iqBH8PZOAWYCC+TcTST
+	 WjRsQ37xsTG6MfuWo2hQAS7M1xQ58G7zfl7mb98OlcL88wHWMFwyoblG4dtrcNTPq7
+	 y6N2/kkLGuafYtjAMdoD5+vsWoZAjGK4r/48YoJ3rdH3ttPXrW6SKScuwENl87aYUU
+	 oNXjUjYo6qRfA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v20 1/3] rust: leds: add basic led classdev abstractions
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Markus Probst" <markus.probst@posteo.de>
+Cc: linux-leds@vger.kernel.org, lee@kernel.org, linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260629-rust_leds-v20-1-f493ab053b4f@posteo.de>
+References: <20260629-rust_leds-v20-0-f493ab053b4f@posteo.de>
+ <20260629-rust_leds-v20-1-f493ab053b4f@posteo.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 29 Jun 2026 10:31:51 +0000
+Message-Id: <20260629103152.024461F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Spam-Flag: NO
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-2.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[google.com,perex.cz,suse.com,vger.kernel.org,gmail.com];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	TAGGED_RCPT(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:mid,suse.de:dkim]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 3371675D81
-X-Spam-Score: -2.01
 
-On Mon, 15 Jun 2026 14:22:40 +0200,
-Fu Hao wrote:
-> 
-> Add the new PCI ID 0x1d94 0x14a9 for Hygon family 18h model 5h
-> HDA controller.
-> 
-> Signed-off-by: Fu Hao <fuhao@open-hieco.net>
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] FwNode reference count leak and underflow (Use-After-Free) due to =
+retrieving fwnode from C device in drop
+- [High] FwNode reference count is decremented before unregistering the LED=
+ device, leading to a Use-After-Free during unregistration.
+- [High] Lifetime erasure in `DeviceBuilder::build` allows `Device` to outl=
+ive the `name` string, causing a dangling pointer in `led_classdev.name`.
+- [High] Creating `&mut usize` from shared C-provided pointers in `blink_se=
+t_callback` violates Rust's exclusive mutability guarantee (Undefined Behav=
+ior).
+--
 
-Applied to for-next branch now.
+commit 5790f9c92f07b2ed588fa76855369d33b813c58c
+Author: Markus Probst <markus.probst@posteo.de>
 
+rust: leds: add basic led classdev abstractions
+   =20
+Implement the core abstractions needed for led class devices, including:
 
-thanks,
+* `led::LedOps` - the trait for handling leds, including
+  `brightness_set`, `brightness_get` and `blink_set`
 
-Takashi
+* `led::DeviceBuilder` - the builder for the led class device
+
+* `led::Device` - a safe wrapper around `led_classdev`
+
+> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+> new file mode 100644
+> index 0000000000000..a294c96b34dc2
+> --- /dev/null
+> +++ b/rust/kernel/led/normal.rs
+[ ... ]
+> +impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
+> +    /// Registers a new [`Device`].
+> +    pub fn build<'bound: 'a, T: LedOps + 'bound>(
+> +        self,
+> +        parent: &'bound T::Bus,
+> +        ops: impl PinInit<T, Error> + 'a,
+> +    ) -> impl PinInit<Device<'bound, T>, Error> + 'a {
+> +        const_assert!(T::MAX_BRIGHTNESS <=3D i32::MAX.unsigned_abs() || =
+!T::HAS_BRIGHTNESS_GET);
+> +
+> +        try_pin_init!(Device {
+> +            ops <- ops,
+> +            classdev <- Opaque::try_ffi_init(|ptr: *mut bindings::led_cl=
+assdev| {
+> +                // SAFETY: `try_ffi_init` guarantees that `ptr` is valid=
+ for write.
+> +                // `led_classdev` gets fully initialized in-place by
+> +                // `led_classdev_register_ext` including `mutex` and `li=
+st_head`.
+> +                unsafe {
+> +                    ptr.write(bindings::led_classdev {
+> +                        brightness_set: (!T::BLOCKING)
+> +                            .then_some(Adapter::<T>::brightness_set_call=
+back),
+> +                        brightness_set_blocking: T::BLOCKING
+> +                            .then_some(Adapter::<T>::brightness_set_bloc=
+king_callback),
+> +                        brightness_get: T::HAS_BRIGHTNESS_GET
+> +                            .then_some(Adapter::<T>::brightness_get_call=
+back),
+> +                        blink_set: T::HAS_BLINK_SET.then_some(Adapter::<=
+T>::blink_set_callback),
+> +                        max_brightness: T::MAX_BRIGHTNESS,
+> +                        brightness: self.initial_brightness,
+> +                        color: self.color as u32,
+> +                        name: self.name.map_or(core::ptr::null(), CStrEx=
+t::as_char_ptr),
+                         ^^^^
+
+[Severity: High]
+Does this allow `Device` to outlive the `name` string, leaving a dangling
+pointer in `led_classdev.name`?
+
+The `DeviceBuilder` accepts a short-lived `name: &'a CStr`, and the pointer
+is copied into the C `led_classdev` struct. The returned `Device<'bound, T>`
+only enforces `'bound: 'a` (meaning `'bound` outlives `'a`). Because the
+resulting `Device` type itself does not capture the `'a` lifetime, the Rust
+borrow checker allows the `Device` to outlive the `name` string.
+
+If a driver uses a dynamically allocated local string or a short-lived form=
+at
+buffer for the device name, will this leave a dangling pointer that gets
+triggered upon system suspend/resume?
+
+> +                        ..bindings::led_classdev::default()
+> +                    })
+> +                };
+[ ... ]
+> +    unsafe extern "C" fn blink_set_callback(
+> +        led_cdev: *mut bindings::led_classdev,
+> +        delay_on: *mut usize,
+> +        delay_off: *mut usize,
+> +    ) -> i32 {
+> +        from_result(|| {
+> +            // SAFETY: The function's contract guarantees that `led_cdev=
+` is a valid pointer to a
+> +            // `led_classdev` embedded within a `led::Device`.
+> +            let classdev =3D unsafe { Device::<T>::from_raw(led_cdev) };
+> +            // SAFETY: `classdev.parent()` is guaranteed to be contained=
+ in `T::Bus`.
+> +            let parent =3D unsafe { T::Bus::from_device(classdev.parent(=
+)) };
+> +
+> +            classdev.ops.blink_set(
+> +                parent,
+> +                classdev,
+> +                // SAFETY: The function's contract guarantees that `dela=
+y_on` points to a `usize`
+> +                // and is exclusive for the period of this function.
+> +                unsafe { &mut *delay_on },
+                 ^^^^
+
+[Severity: High]
+Does creating `&mut usize` from these shared C-provided pointers violate
+Rust's exclusive mutability guarantees?
+
+In `Adapter::blink_set_callback`, the raw pointers `delay_on` and `delay_of=
+f`
+are unconditionally cast to exclusive Rust references (`&mut usize`). These
+pointers are passed from the C LED core, where they directly point to the
+`led_cdev->blink_delay_on` and `blink_delay_off` fields.
+
+Since these same fields are concurrently readable by lockless sysfs functio=
+ns
+like `led_delay_on_show()`, they can be read concurrently while the `&mut`
+reference is alive. Does this result in undefined behavior since they are n=
+ot
+exclusively owned by the callback?
+
+> +                // SAFETY: The function's contract guarantees that `dela=
+y_off` points to a `usize`
+> +                // and is exclusive for the period of this function.
+> +                unsafe { &mut *delay_off },
+> +            )?;
+> +            Ok(0)
+> +        })
+> +    }
+[ ... ]
+> +#[pinned_drop]
+> +impl<'bound, T: LedOps + 'bound> PinnedDrop for Device<'bound, T> {
+> +    fn drop(self: Pin<&mut Self>) {
+> +        let raw =3D self.classdev.get();
+> +        // SAFETY: The existence of `self` guarantees that `self.classde=
+v.get()` is a pointer to a
+> +        // valid `led_classdev`.
+> +        let dev: &device::Device =3D unsafe { device::Device::from_raw((=
+*raw).dev) };
+> +
+> +        if let Some(fwnode) =3D dev.fwnode() {
+> +            // SAFETY: the reference count of `fwnode` has previously be=
+en incremented in
+> +            // `led::DeviceBuilder::build`.
+> +            unsafe { FwNode::dec_ref(NonNull::from(fwnode)) };
+                 ^^^^
+
+[Severity: High]
+Can this cause a reference count underflow and use-after-free for the fwnod=
+e?
+
+If `DeviceBuilder::build()` is called without an explicitly provided `fwnod=
+e`,
+it does not leak a reference. However, during registration, the C core
+`device_add()` automatically inherits the parent's `fwnode` if the device
+has none.
+
+Later, in `PinnedDrop::drop()`, this code blindly calls `dev.fwnode()` and
+decrements its reference count. Doesn't this erroneously decrement the pare=
+nt
+device's `fwnode` reference count, which it never owned?
+
+> +        }
+> +
+> +        // SAFETY: The existence of `self` guarantees that `self.classde=
+v` has previously been
+> +        // successfully registered with `led_classdev_register_ext`.
+> +        unsafe { bindings::led_classdev_unregister(raw) };
+                 ^^^^
+
+[Severity: High]
+Is it safe to decrement the fwnode reference count before unregistering the
+LED device?
+
+The `FwNode::dec_ref()` call happens before
+`bindings::led_classdev_unregister()`. If this was the last reference, the
+fwnode is immediately freed. Then, `led_classdev_unregister()` calls
+`device_unregister()` and subsequently `device_del()`. Inside `device_del()=
+`,
+the core driver framework accesses `dev->fwnode`.
+
+Could this result in a use-after-free when the C core attempts to access the
+fwnode to clean up software nodes and links?
+
+> +    }
+> +}
+
+Note: The issues regarding `DeviceBuilder::build`, `blink_set_callback`, and
+`PinnedDrop::drop` appear to also apply to `MultiColorDevice` in
+`rust/kernel/led/multicolor.rs`.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629-rust_leds-=
+v20-0-f493ab053b4f@posteo.de?part=3D1
