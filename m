@@ -1,83 +1,139 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD66740D59F
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 17:18:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDC60472789;
+	Mon, 29 Jun 2026 17:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782753517; cv=none; b=A1rSPPD039MUP+juZB2BsLb87yUdg+DtzKf5G2AOCjM9sYcYix2Vfuo9IVqLBiuwgvepayx8SrH0qR6+mqqMCbXBzqo82+Bsk1ZMM+Xc/F8hyM5g/Fb8dDH9eiLUWd20Ke9O3P3HtMpUKyXFpPVF2d8Oj3pYfeVZJgm3fsaxU7Q=
+	t=1782754017; cv=none; b=rJhMDyYC5bTzbjFxt8uzgW2xioJjimf1qLxFBelxwM0a6NAGQWrHWwQeqw54SKp64Pluf+8yGW/Z1esWBrcoGA+OVi5BlhJ6US2n1NeAJK3zxl6/hWf8rPBV1x9h4bbGSrpTWGJeUdLvV8Lxn6SeizvZURihFhcFDHYg+Jug3Nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782753517; c=relaxed/simple;
-	bh=nDyNKLFBqjMFpuWUcWrQamhSntDzVB9Y+Uo+4cx1HVk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tpkVNRfjTdVeHC/lSiIFLezgN1Ot+kNR3LmpRbiPZyCpF7sjYqAKUWzPohViTo64wLvnw9NfpolZ9YXEdTq6LSArWcxf+FbNftkyZwxUGAHWM2C6VrSOxluAPJgWNNSToVj4f6Sz52D7hGiNA4oTxAvdMR73MFf03rNgf8q9jsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Y4EM7UuE; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1782754017; c=relaxed/simple;
+	bh=4/OzXg1kRwYcddjKntVN/+Mh8XEIs2dYDYalSRkf93E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q9HV9H5Wo7ZGHfieVrm7P+vmFm2WvsFXmOASXHT90TK9nxyoIjmcw8TwQ0wT9b/I3HPImiWzbqsrjcnjE0eGB1UVrAJFmM8eBPG0dynwIAh7PDtFXorI5OROuv8mjLYax0xqqdmvKsb1ZTLMUIqUzhwEZ5B48xyTN9IfQuWh1pA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=DrnVVqD2; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Y4EM7UuE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782753515; x=1814289515;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nDyNKLFBqjMFpuWUcWrQamhSntDzVB9Y+Uo+4cx1HVk=;
-  b=Y4EM7UuEcAGAIgfOnpHmX5yn0Bfb4GFIETTODQ7lHXzVkP6xrux6hdrL
-   jBsjrAcMI3n9SZDC7zKDCMIpZidH7465vriw1We0j+vQp5UTVyWxx0dpW
-   YhcqpGKDOQhydOEZ++VyxG+wlwvi5z9Ku4YNKQK9gmEhSHcm39PRdL03h
-   4mDHuAfFSyIbcz64HCswGrzjwphLqn96AEDisfsVl92b6QsZyY2TdI9i8
-   F/UXnMmHYr8b/jYLEsczBxakfLyUI4L2aZSmqGc2gyrkaWI3csvVzb3sz
-   PFcK7+rnPW6gcWN7V7VqsqsJlWtUlzzknT8usB392wQSKbEjsQ4dGsNKT
-   g==;
-X-CSE-ConnectionGUID: kj/0SM/xTi6Na/m6ZVaiJg==
-X-CSE-MsgGUID: KNW+breYRf6V4AU7SUfUQw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11832"; a="106247285"
-X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
-   d="scan'208";a="106247285"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:18:35 -0700
-X-CSE-ConnectionGUID: +yOnrEtWQcuPOKr8VJ5xrg==
-X-CSE-MsgGUID: JtHLEYcESzOj/KP8byTjcg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
-   d="scan'208";a="245664688"
-Received: from kniemiec-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.207])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 10:18:33 -0700
-Date: Mon, 29 Jun 2026 20:18:31 +0300
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Nirmal Patel <nirmal.patel@linux.intel.com>
-Cc: nirmal.patel@intel.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	lpieralisi@kernel.org
-Subject: Re: [PATCH] PCI: vmd: Only assign _OSC features in bare metal OS.
-Message-ID: <akKo5w359FZU3uDU@ashevche-desk.local>
-References: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="DrnVVqD2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1782754012;
+	bh=y6eTx+9vg9xblvO487zhAd78ZW9yRyedKnZlH9n/Q1A=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=DrnVVqD25H/vFxEfW5d4xHnG7Pc1MM3ub184VCpBbrQ08+Vf4/gSGAFi9Ztv5RPIp
+	 +DPnMkZN0Rq1BNhf0To8wcmDt8naUQB/8DUZdLPKIhznKdibD3VFtLP4xlygASScPR
+	 jsVI3JtM7hii5yp3iVe3S/QopyVb9AmjDxnbUO6kZpGnB12C8gZHGGf8mnv9GP31s1
+	 jGj2WBAOwoUMmvyKZ0acx9Ot5s11nbcNxJo7i0ahlb/jltZ5HKISUIJeH/IQPiAlDQ
+	 t1Iw8z5AmbdTwwik49LDPiro0BE7UDScxaB0rz4itKI4TL3Oha7z1PZvGdCOzBO/iz
+	 D06sFOHWNMXaA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gptVs3yzbz4w9j;
+	Tue, 30 Jun 2026 03:26:45 +1000 (AEST)
+Message-ID: <cc4e8b75-5b25-417c-898b-35b3fa41ccb2@ozlabs.org>
+Date: Mon, 29 Jun 2026 18:26:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260629170243.269830-1-nirmal.patel@linux.intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 6/9] vfio/pci: Clean up BAR zap and revocation
+Content-Language: en-GB
+To: "Tian, Kevin" <kevin.tian@intel.com>, Alex Williamson <alex@shazbot.org>,
+ Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>
+Cc: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
+ Pranjal Shrivastava <praan@google.com>, Alistair Popple
+ <apopple@nvidia.com>, "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+ "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+ "linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+ <20260610154327.37758-7-matt@ozlabs.org>
+ <DM6PR11MB3690CA709415069FFA5121838CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <DM6PR11MB3690CA709415069FFA5121838CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jun 29, 2026 at 05:02:43PM +0000, Nirmal Patel wrote:
+Hi Kevin,
 
-> Copy valid _OSC flags from root bridge only when OS can provide correct
-> values. In virtual machine, all of the control features are disabled as
-> hypervisor will not passthrough root bridge information to VM.
+On 16/06/2026 10:18, Tian, Kevin wrote:
+>> From: Matt Evans <matt@ozlabs.org>
+>> Sent: Wednesday, June 10, 2026 11:43 PM
+>>
+>> Previously, vfio_pci_zap_bars() (and the wrapper
+>> vfio_pci_zap_and_down_write_memory_lock()) calls were paired with
+>> calls to vfio_pci_dma_buf_move().
+>>
+>> This commit replaces them with a unified new function,
+>> vfio_pci_zap_revoke_bars() containing both the vfio_pci_dma_buf_move()
+>> and the unmap_mapping_range(), making it harder for callers to omit
+>> one.  It adds a wrapper, vfio_pci_lock_zap_revoke_bars(), which takes
+>> the write memory_lock before zapping, and adds a new
+>> vfio_pci_unrevoke_bars() for the re-enable path.
+> 
+> It's unusual to have three verbs (lock/zap/revoke) in one function name.
+> 
+> I wonder whether it's simpler to have:
+> 	vfio_pci_zap_bars_locked() 	// caller already holds the lock
+> 	vfio_pci_zap_bars()
+> 
+> 'revoke' is just a side-effect of 'zap', not necessarily to highlight it in
+> the name.
 
-> Reviewed-by:  Andy Shevchenko <andriy.shevchenko@intel.com>
+(Just found this one unacknowledged, apologies.)  If you reckon it's a
+handful, sure I can shorten them.
 
-I confirm that I reviewed this internally and agree on the main approach and
-the implementation. I think it's a redundant period in the Subject slipped,
-but it maybe tweaked whilst applying I think.
+As it already has ..._unrevoke_bars(), it makes sense to use
+..._revoke_bars() and ..._lock_revoke_bars().  IMHO the zap is a
+secondary effect, and "revoke the BARs" means to make them inaccessible
+from both DMA and CPU.
 
--- 
-With Best Regards,
-Andy Shevchenko
+I don't want to go down the path of _locked() though right now; I just
+want to tidy the current pattern without pulling new duties up to the
+call sites.
 
+>> As of "vfio/pci: Convert BAR mmap() to use a DMABUF", the
+>> unmap_mapping_range() to zap is no longer performed for vfio-pci since
+>> the DMABUFs used for BAR mappings already zap PTEs when the
+>> vfio_pci_dma_buf_move() occurs.
+>>
+>> However, it must be assumed that VFIO drivers which override the .mmap
+>> op could create mappings _not_ backed by DMABUFs.  So, the zap is
+>> still performed on revoke if .mmap is overridden, using a new
+>> zap_bars_on_revoke flag.  A driver can explicitly opt out; the flag is
+>> cleared by the hisi_acc_vfio_pci driver, since its .mmap just wraps
+>> vfio_pci_core_mmap() and so still uses DMABUFs.
+> 
+> the cost of unmap_mapping_range() is trivial when there is no mmap
+> on the device fd.
+> 
+> so it could be simpler by always doing:
+> 
+> 	vfio_pci_dma_buf_move();
+> 	unmap_mapping_range();
+> 
+> and remove the flag.
+
+I did consider this.  I do agree it's cheap, but I still prefer to avoid
+unnecessary activities (just to decouple and insulate against things
+somehow changing in future).  From previous postings, others didn't seem
+to mind the flag approach, at least.
+
+Thanks,
+
+
+Matt
 
