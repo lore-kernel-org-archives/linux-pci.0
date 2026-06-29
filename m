@@ -1,189 +1,109 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F2737E307;
-	Mon, 29 Jun 2026 16:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73CE43CECC
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 16:39:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782750761; cv=none; b=pVV/utaa/VKpwMhvnLiTeq79w4on72LeW2u2Ib7oM5KwgfOSZ8rzrTe74zgmqC4CDFH1KsBFu1F5joH3v6LnfOdDWOJbiqW20np7PnYGscemdRfzcgzCoj+FbSXDMyStUaJzpDyqqrzcWjk54iHOUkssUjZ2pzpfE/yh3airN3I=
+	t=1782751195; cv=none; b=GSA+yzJU3cPyTm9lYCH7o3eGQ3e1TQ+ySrBCMU0HYWuaWPO9Psvpdic9SWnYQ2Y/nXSN/99QB2alGgPi8YaJTcX/q4unh2JkqSfjk3BWXtKxAMRXfefQ6uIc6/jzTGzSvM8Q9DbjBSVkFCoXW3TOQl4IRKDsDCv9aCVFipltH0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782750761; c=relaxed/simple;
-	bh=WIdkcAohK7LeGO5ya6PB5DsiIrkffvVoD27wmvkjpgU=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=TqjelhlFGnq+U0spdFZSBleTAAaiiyohPCi4QocIsRKd5TTVR/4bG6BqTjQoAxA3IxOgNKbgYfBEbJ7yLsvxORZa/MLezVnBYy1KVavlSxHUbyoJ76E000kELWXVONWNQN6UIeJc541vPc4pnVi3QEeoDbUxOdmhxqfdeS+EiCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=qh88UNuk; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1782751195; c=relaxed/simple;
+	bh=rk+fcp/Nx5n12PENhkJjTIYWeWfMBeypQ+PtPKa/mV8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qeWiDAUD4GY97vjUZy+vzYtXtXMOE7BC8UTnvucMqi+GUMJkrZZ9H6kO200LsFp8OjLNtpbNeAi4QR6BMLGSzN0T6yNqln/oseMGYZGvZ5qNmA0xa+eEdckyaAjOZ+3dLw8+jIEpa117uPKLR8t5eviWcwIG4TKB2xlj6eKPrmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gE7Y3gxk; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="qh88UNuk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1782750749;
-	bh=lEyeCapBsVXYSpplIUA0PN6OvGWLHmv5pdfFL1Phu/8=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=qh88UNukwFc6dT9j/eKGL1AmHTkKB4THBoN2h8ulr24M43yQI7H2a3DniuYI4YQU/
-	 y+sEySwE1m/Yf7Z4VFExs88su0MVH5q9LvDDgm3FgbSwSerHA0qE+99HtFGQuSq59g
-	 FxbGAdDGAJa0us+28P1h8SwZbStEfY16odXIDBqOwMFsZRmzUmX3G24DLlJPC9HqMt
-	 AlrhiIGH2v4UHN+lsmYX4xgJg8hyB5WUMln6lluFMWJe2rYqxANowUQAhfaoHNwZ4s
-	 g1DEDbhTRfl1prBKA0d/k+37/uM3L3gfGP5wgLmM81glk8mKfiDysdxeSh8Nd0lNCJ
-	 lz5QMzOgdFabA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gpsJ43jdmz4x1q;
-	Tue, 30 Jun 2026 02:32:20 +1000 (AEST)
-Message-ID: <57055684-2008-4ba3-bfa8-674317be1a71@ozlabs.org>
-Date: Mon, 29 Jun 2026 17:32:14 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gE7Y3gxk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782751193; x=1814287193;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=rk+fcp/Nx5n12PENhkJjTIYWeWfMBeypQ+PtPKa/mV8=;
+  b=gE7Y3gxkvqOL/Fb52pOaREILmxD+N4l3y5A2pic/XePrD4xubTeuHkJw
+   l3zsjuPeeTdkjiB2bsmkC6m/0NIeDFBwFsukSldwlKCfzKDfqG3dBy5wu
+   LwN0b1C5fAE20LOkCPAMGPng1htjXY6BWOe2CT7JED/R1vU2hgrxx1g32
+   yM2NVYZqoaKd++XpZzEz/wp1wA2cMZYf/ZTOi1LC9sJQkyDmacDOCYgFb
+   2pD9UWwT0lJ9qxmMXkXd99Hx4IbercuTQYbwZp2hAb4xBjtGJt+b/ekGN
+   DEWjjXCoa3c5OHB6zU1s9RpJTZOsAaIEF2Q/3DZHRJt7tWiq1l29q/b1E
+   w==;
+X-CSE-ConnectionGUID: mUhPQXIfQi2bNRUW1kYRQw==
+X-CSE-MsgGUID: uraC9VQFTDa1r4jmBOk2HQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11832"; a="83478495"
+X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
+   d="scan'208";a="83478495"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 09:39:52 -0700
+X-CSE-ConnectionGUID: PgMeUyf4RfmWnnSrBthNQQ==
+X-CSE-MsgGUID: npdxnBrIT2O6yPY8N1sqxg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,232,1774335600"; 
+   d="scan'208";a="245650298"
+Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2026 09:39:51 -0700
+Date: Mon, 29 Jun 2026 09:39:50 -0700
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Message-ID: <20260629093950.00006c85@linux.intel.com>
+In-Reply-To: <20260623012058.D9C2C1F000E9@smtp.kernel.org>
+References: <20260623011305.134792-1-nirmal.patel@linux.intel.com>
+	<20260623012058.D9C2C1F000E9@smtp.kernel.org>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 8/9] vfio/pci: Permanently revoke a DMABUF on request
-Content-Language: en-GB
-From: Matt Evans <matt@ozlabs.org>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- Pranjal Shrivastava <praan@google.com>, Alistair Popple
- <apopple@nvidia.com>, "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
- "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
- "linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-9-matt@ozlabs.org>
- <DM6PR11MB3690886693898AD755FB246F8CE52@DM6PR11MB3690.namprd11.prod.outlook.com>
- <31d1265b-e264-4dc6-a8c3-1b64dc9867a1@ozlabs.org>
-In-Reply-To: <31d1265b-e264-4dc6-a8c3-1b64dc9867a1@ozlabs.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-Hi Kevin,
+On Tue, 23 Jun 2026 01:20:58 +0000
+sashiko-bot@kernel.org wrote:
 
-
-Digging this one up again,
-
-On 17/06/2026 17:08, Matt Evans wrote:
-> Hi Kevin,
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue(s) to consider:
+> - [Medium] The IRQ domain and its associated fwnode are permanently
+> leaked for devices with VMD_FEAT_USE_BIOS_INFO due to an
+> unconditional early return in vmd_remove_irq_domain(). --
 > 
-> On 16/06/2026 10:26, Tian, Kevin wrote:
->>> From: Matt Evans <matt@ozlabs.org>
->>> Sent: Wednesday, June 10, 2026 11:43 PM
->>>
->>> Expand the VFIO DMABUF revocation state to three states:
->>> Not revoked, temporarily revoked, and permanently revoked.
->>>
->>> The first two are for existing transient revocation, e.g. across a
->>> function reset, and the DMABUF is put into the last in response to a
->>> new VFIO feature VFIO_DEVICE_FEATURE_DMA_BUF.
->>
->> VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE
->>
->>>
->>> VFIO_DEVICE_FEATURE_DMA_BUF passes a DMABUF by fd and requests that
->>> the DMABUF is permanently revoked.  On success, it's guaranteed that
->>
->> ditto
+> commit 0711c95d550249c54951b1f20ee8a7fe26dafc0b
+> Author: Nirmal Patel <nirmal.patel@linux.intel.com>
 > 
-> Argh, thanks for catching these.  Fixed.
+> PCI: vmd: Add feature to scan BIOS enumerated devices.
 > 
->>> the buffer can never be imported/attached/mmap()ed in future, that
->>> dynamic imports have been cleanly detached, and that all mappings have
->>> been made inaccessible/PTEs zapped.
->>>
->>> This is useful for lifecycle management, to reclaim VFIO PCI BAR
->>> ranges previously delegated to a subordinate client process: The
->>> driver process can ensure that the loaned resources are revoked when
->>> the client is deemed "done", and exported ranges can be safely re-used
->>> elsewhere.
->>
->> probably clarify that re-use by creating a new dmabuf fd as the original
->> one is essentially zombie now.
+> This commit adds support for newer VMD hardware (like device ID
+> 0x28c1) by using BIOS-configured shadow registers and bus ranges
+> instead of manually configuring them.
 > 
-> Reworded this, plus added a note re the change below.
+> > diff --git a/drivers/pci/controller/vmd.c
+> > b/drivers/pci/controller/vmd.c --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c
+> > @@ -374,6 +393,9 @@ static void vmd_set_msi_remapping(struct
+> > vmd_dev *vmd, bool enable) 
+> >  static void vmd_remove_irq_domain(struct vmd_dev *vmd)
+> >  {
+> > +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> > +		return;
+> > +  
 > 
->>>
->>> +/* Set the DMABUF's revocation status (OK or temporarily/permanently
->>> revoked) */
->>> +static void vfio_pci_dma_buf_set_status(struct vfio_pci_dma_buf *priv,
->>> +					enum vfio_pci_dma_buf_status
->>> new_status)
->>> +{
->>> +	bool was_revoked;
->>> +
->>> +	lockdep_assert_held_write(&priv->vdev->memory_lock);
->>> +
->>> +	if (priv->status == VFIO_PCI_DMABUF_PERM_REVOKED ||
->>> +	    priv->status == new_status) {
->>> +		return;
->>> +	}
->>
->> the only interface to request PERM_REVOKED is via the new ioctl.
->>
->> vfio_pci_core_feature_dma_buf_revoke() returns -EBADFD if
->> it's already in PERM_REVOKED.
->>
->> so this check shouldn't be reached, suggesting a warning.
+> [Severity: Medium]
+> Does this early return cause an IRQ domain and fwnode resource leak?
 > 
-> Good point, both any change to PERM_REVOKED or a double-set of the same
-> state indicate some caller has gone wrong.  Added a warning.
-
-Well, after the D0/D3 reset thread, I noticed while testing that a
-double-revoke will naturally happen when cleaning up a buffer that was
-already revoked by a device having previously transitioned to D3.
-
-Similarly, cleaning up a buffer that was explicitly (permanently)
-revoked leads to an attempt to set TEMP whilst PERM, and this is OK too.
-
-So the only "surprising" case is a buffer already in the PERM_REVOKED
-state getting a second PERM_REVOKED (which is weeded out in the caller
-as you point out).  Any new caller asking for PERM_REVOKED repeatedly is
-odd, but still gets what it wants.  I really don't think a warning is
-warranted just for that (it's safe either way).  Sending this
-explanation separately, so you are not too disappointed if v4 reverts to
-this existing condition above...  :)
-
-
-Thanks,
-
-
-Matt
-
-
+> When a VMD device like 0x28c1 (which has VMD_FEAT_USE_BIOS_INFO) is
+> probed, vmd_enable_domain() can conditionally create an IRQ domain if
+> running under Xen or if the BIOS-configured shadow registers
+> offset[0] or offset[1] are non-zero.
 > 
->>> +
->>> +	dma_buf_invalidate_mappings(priv->dmabuf);
->>> +	dma_resv_wait_timeout(priv->dmabuf->resv,
->>> +			      DMA_RESV_USAGE_BOOKKEEP, false,
->>> +			      MAX_SCHEDULE_TIMEOUT);
->>> +	dma_resv_unlock(priv->dmabuf->resv);
->>
->> It's existing code but while at it let's make above conditional to
->> the actual revoke path. for unrevoked it's not required given the
->> previous revoke already cleans up everything.
+> If the driver is unloaded or fails later in the probe process, this
+> return causes the function to exit immediately before calling
+> irq_domain_remove() and irq_domain_free_fwnode(). Should the IRQ
+> domain teardown still execute even if VMD_FEAT_USE_BIOS_INFO is set?
 > 
-> I noticed this too though I was consciously trying to keep the diff as
-> small as possible.  But with this feedback from both you and Praan, I'll
-> move this.  It's still pretty readable before/after.
-> 
->> otherwise,
->>
->> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
-> 
-> 
-> Thank you.
-> 
-> 
-> Matt
-> 
-
+Fair point. xen can cause irq domain deletion failure. Let me remove
+the return statement from vmd_remove_irq_domain.
