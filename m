@@ -1,84 +1,87 @@
-Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D57B1A238F
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 21:16:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077D12C11D9
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 22:09:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782767781; cv=none; b=Pp0CzJyy5VdxsRwXo8CCjLJ/lOQnlsqKIIsZjoYRDbhe2/UfxHFMlS7YYDx+4GmfgLq3yjepCM49emzickV75Wz1EsSld/YBuOOYbgzDXpfkkkn2ZMzlMkdKqVMFGwYxyBKTu2gb6DDiGh75hzq8mD0sR49uMIVpCRxihlBCC4Y=
+	t=1782770977; cv=none; b=LgIn1sJhKt02Wr2xZb6o3jV31FoiK6F7CelU9qkyxIDHtu3Vvl6W4qGA1xMa3XxRFfYFt/Tiokur5yNUymeCG02npgNB10H+mzPSH/f34q+w/v8DKoC+Aw8GGT1mSTHFZpH7ANYxUadLkX0tbJeA3Y9RwZhxEUbxcEcL+h0bltY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782767781; c=relaxed/simple;
-	bh=T6+v8d/o7jVB4Wv2lLK1HbS/XnBrZ9N2kkM6xqzhMCg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NaA505YS0eXosjnt+vesE43UyA1diHn/+vQTKBReiv2mHurR0ou2G6qvcftkdEcnFJvwTLl/y7O4q5QOsPgt69QU1p4UFprsX8Q3rR1DmxNXR76NdFebXJjDJkQpYUKrwEQr5ISYaYYWjgYvNFHJU3GB3mXd9IjwyDPvD+ns9YM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o3vAhwuB; arc=none smtp.client-ip=74.125.224.44
+	s=arc-20240116; t=1782770977; c=relaxed/simple;
+	bh=3ZvgkqijbuMRZHZyVD7vTyjiiO3/fzLq7IsUEDeI/EI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fPG1iUUB2dWB3nOeKI6WGPQbBxMpX63wsTpKyEXz65iVDwiVQs+wFAJTmnmsWfmVQLmFAfFKZKR4G0E71JPGSCvo/+EF9DVSPCCrnNY2AeR5LyRW+k0biSKSJrF57wkip0OzqXSYN/yBUCwHwwCY13jydn5p71mSLBVAv1UiXT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nfyv7T2a; arc=none smtp.client-ip=209.85.221.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o3vAhwuB"
-Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-664d78637f8so1427670d50.3
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 14:16:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nfyv7T2a"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-475881b9a4bso67951f8f.3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jun 2026 15:09:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782767777; x=1783372577; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=thqCYPRl2r/uPWS1HtNvi/sQhkIC0Eju0+NcpOz/h1Y=;
-        b=o3vAhwuBdJ7FddSnqRhMt5Zn5qxtArjNg4GAiWmWdRDETG044bcCdJlWU9hB3r7CzO
-         KLNn/hgmE+lMR5WZUoHirj5+aqyvfTtNso2aKZrtJDqxVedy4nidYt7aX8+u30Qc4URI
-         mhZb9Do78hMEXR1zgQfHhLkEAH4Y8ApA9QqJzIIlD46pL9ALPrGXAJ1KKztKQLwkARLy
-         McS5qcDGDuSdBi+ui2QjBxu4MDlvZymWNQJ+2hl4ttQnSO8vwqD9lOgSgqyhbEelYgdk
-         vFScFYVFdH+3YZW8yAzcL7Sq2zcj8iZvzwy0hYPZbuVQolqSJVoxaOFDmdeaoC24m3XE
-         jSEQ==
+        d=gmail.com; s=20251104; t=1782770974; x=1783375774; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=eWtjIYRwzsZNUE+tnUUrysdcLHF0sFz6gPY6Xuye6sY=;
+        b=Nfyv7T2anmPIoTxMsdqt6/qvJe2Z0w1nuGNBBMDfI7Tj/Laacjf84nwbemPcE8xcS1
+         lDCsvWFTAztPRcjGF1lfnVEn6qRcEGcr395/RJzQcTvjqexHyy76ZFzCsyBUZTPt3AmP
+         cdeClix+O+3EXoyKDyIihifyOflHujd9cjD1WIpGCBiRkciOmAybz8k1GMe0670ayxIN
+         kB0PFwOj39YiZNSjjrGS/XoB3R7ysQZlGOnF4V0v4yLEG8HpVlZ3MocYGDVZgcXeeewP
+         WeeXr5uUI1fD3rWFRguueXv+z48MVq0zLRUxpbgUaBWLtOM9j/MBdw4QeznMrWAoRHHW
+         UuSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782767777; x=1783372577;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=thqCYPRl2r/uPWS1HtNvi/sQhkIC0Eju0+NcpOz/h1Y=;
-        b=iPOF65M3Lt7P6kedznYWD7iPzPGQkuNerTuD8WBMYYG15QGfbabFHXTZws19jEw24m
-         g/cM3KVY0S1Ir4Dm+O31vbOkdOFEgoTXLm+bfcPqVXzgzojtyCdJpHkSYNtUKc8vEgZa
-         6HxQHOWhs4a1qSNhYtMpBpOJmyUy0BvK8o7Sf1lwD4lvgXKnw31oqJBHFGhXvSKThc16
-         bPMVX6KRIlME1LM1mu3MI18OWB9LKux4YVcf0OpbZzoQr9cAGqqSs8K7laEAJ7DSA9I8
-         ti+NJoE3OgQquUFc6kCW1MprB8AkbI89RLzYgCyhlDHJFgEWPOTNxvEhMrC3mIMYVeML
-         aQ7A==
-X-Forwarded-Encrypted: i=1; AHgh+RrBKbtpncBb71jLP3tkrlzOmYGQA/rVl6cJLpa1EUe451n/mUeIrVv0LHXbkBVLBi+qXWAvIlDQJS8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxgPwxblUT/ulQbGWbAjnDWuhE6chvmk3Bq9VgGjrQJYxTXVa7+
-	L8MUG0LtrvhuVm9NhRENMlULn233Rts4buHpMDcKCYK1xZ5q+me2u1EU
-X-Gm-Gg: AfdE7cmbuvrlB1O6MUagYsvjfxhfHn/R/+4gx+1TlN+4d3pZm3G0+zitiU2c/jLKadh
-	JE1tserqnFRFiCO8ilX8wbKSGz1defWEfJxeazLpmNOSIGwlD929byZD1GRt16XWo7THSiHy+1d
-	LjyDgrsaCuO7AjS9FBsRcCa+HIGZMrFBEzv1i0eS8L9Yo4kPbK6zBMgvypQt64+vgGRZxhjtuAI
-	ItJ6vJjHP5vsZhLCXlksq43kmlLkEDAAgVUmMggsum8f3KC2xcmr6qg70Cits2NdZ2oexNQ6eaH
-	2E3aIwLKQ9NHsM+zLS1h4cH9q1dA4x0rxrrs/canbUSiFGGO7h5Yv1aKs7tG6YdxQu3b1WBJLBi
-	kBCPzOcWdVd44pz4tCe0KjFiv/BIQGmfnMbKY5JnhEDHsrLvp65LoNFcwUzj+PA4oU+FL/hZtam
-	0LwP9HCcE4pKx4RNXFChDdY7aD3aXD/8d6By95afY6GEfk0IeLJJ0Mk4CtQLQSVxXh+C6M7HA=
-X-Received: by 2002:a05:690e:43cd:b0:660:460e:2558 with SMTP id 956f58d0204a3-664f9a33d9amr1010562d50.43.1782767777025;
-        Mon, 29 Jun 2026 14:16:17 -0700 (PDT)
-Received: from localhost (104-48-214-220.lightspeed.snantx.sbcglobal.net. [104.48.214.220])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-664b8d0842asm4023556d50.19.2026.06.29.14.16.16
+        d=1e100.net; s=20251104; t=1782770974; x=1783375774;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eWtjIYRwzsZNUE+tnUUrysdcLHF0sFz6gPY6Xuye6sY=;
+        b=JN22adr2Mdci+Ga67MJsxbFh6JP755fr35zvmT94btaasjxZD1AUoPbuK/uznujUVi
+         ViR4IHdSp2iN4MKv41fA+7IaCEvhxBvPbRswN06zmyomqnMzyS+kga744wX4sSVg8u60
+         DdyXaZesG7db5uchVx/8U6jugHTTW9COK2CzkXydmwB2ZfclOG+srAfd/MGlvEKq6TAy
+         JrUy2ghfRbiDxi0l0Pv7qz5KbwVUD/DhFCNNlAtlF8U6zORP1sgfe8YVCZlGQP3bivv9
+         Tw1qJuoAhCp4UvBUpq779akYlY2Xy8m4tY326Te3o/Bn9PHYOkrEGbzFDh/ikn7165/1
+         0mLA==
+X-Forwarded-Encrypted: i=1; AHgh+RrenNMZEHzZooU2U1N6PsqikpCcYLDbiXujJ75CAnsDwB0SS4kUot+/uUZWesXcrYM/8prtSbmxdr0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzDKJywkkPDTo6OFy/ve2wPTgxyE60OFOjIGLRVbtHo8dZ6qvIx
+	/guvAWx/jMgiU2sUEOeSWe3UAWqHoPFCkcb6/0yizDWlK+orALsjSArO
+X-Gm-Gg: AfdE7cnvId2Z1pdA4abdV6XJcnVOLEtumaSAOGsfgKrhZv8s5dNhEXG+QXSNmDeUpX8
+	CmoTwZxG+fWbjFzbb4gAFjtbqmsPhPWNx1LdOJlj/KsNVkVbUuKTjzJZsm0+aWHHSmMI3IWciQi
+	S1tbF7FpkjxwavlRFsqeJzHpvgWKWmMyXq6T2GRZYwtDTFaI2jhvZeG1XpT0UXIOd/mhwvQcrdy
+	a0uycIf6I937UallmJUZq86n5NIF46sPBZkMgWHE9WPMCM0I6+mFOf/iP9iR2tt1HlkkKjtjCm2
+	c19H/F9s8iXtSPb2KMEGol9Nrpao5fiZcMYLjd7LC/xcfzVg+UpBM7yK5SQYMs0aw/dztfUkvaI
+	T0OD6L6B8LLf/ChEkll5wRoGJ6b8Vlk2MWHukrYj3dF8eVODRJa8hXU5PjglzkjHK/tDngWMcXG
+	XmVT9uG2Qo561uXA4Mt1VaqDBWcJhUxZyPzHlOxItg6ec3o8moILmnyGy6RSZ0aGovAXcm6o0XM
+	gz342E96pdnp6GgF5+nsmNEHWOZcL686n6Dlw==
+X-Received: by 2002:a5d:5d04:0:b0:460:1301:dec6 with SMTP id ffacd0b85a97d-475506e994fmr1291051f8f.10.1782770974226;
+        Mon, 29 Jun 2026 15:09:34 -0700 (PDT)
+Received: from iku.Home ([2a06:5906:61b:2d00:dfcc:acfa:dec0:e556])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47563d195b3sm1644670f8f.8.2026.06.29.15.09.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2026 14:16:16 -0700 (PDT)
-From: Steev Klimaszewski <threeway@gmail.com>
-To: krishna.chundru@oss.qualcomm.com
-Cc: bhelgaas@google.com,
-	bjorn.andersson@oss.qualcomm.com,
-	jingoohan1@gmail.com,
-	jonathanh@nvidia.com,
-	kwilczynski@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
+        Mon, 29 Jun 2026 15:09:33 -0700 (PDT)
+From: Prabhakar <prabhakar.csengg@gmail.com>
+X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	will@kernel.org
-Subject: Re: [PATCH v5 5/5] PCI: qcom: Add D3cold support
-Date: Mon, 29 Jun 2026 16:16:14 -0500
-Message-ID: <20260629211614.6942-1-threeway@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260429-d3cold-v5-5-89e9735b9df6@oss.qualcomm.com>
-References: <20260429-d3cold-v5-5-89e9735b9df6@oss.qualcomm.com>
+	Prabhakar <prabhakar.csengg+renesas@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v5 0/4] Add PCIe support for RZ/V2H(P) SoC
+Date: Mon, 29 Jun 2026 23:09:28 +0100
+Message-ID: <20260629220932.861445-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,816 +90,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Krishna, and Mani,
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-Turns out, this patchset causes issues but only on some machines.  On a WDK2023
-(Volterra), this breaks suspend, and on *my* X13s, it also seems to when using
-the command `sudo rtcwake -m freeze -s 300` when resuming it crashes the
-machine.  Interestingly, it does not crash on another user's X13s.
+Hi all,
 
-Included is the info from Volterra's lspci -vvv and further down will be my
-lspci -vvv - my X13s has a WD_BLACK 2TB SN770M in it which is not what it came
-with from Lenovo.
+This series adds support for the PCIe host controllers found on the
+Renesas RZ/V2H(P) SoCs. The RZ/V2H(P) controller includes additional
+features for PCIe lane control and supports multilink operation with
+two independent controllers.
 
-WDK2023:
+v4->v5:
+- Rebased on top v7.2-rc1
 
-[alex@volterra d3-bug]$ cat volterra-info.txt
-Linux volterra 7.0.14-gefea59a29f1a #17 SMP PREEMPT Mon Jun 29 14:47:59 CDT 2026 aarch64 GNU/Linux
-Windows Dev Kit 2023BOOT_IMAGE=/@/boot/vmlinuz-linux root=UUID=a8f7fb76-9ae0-49af-a830-09025b783224 rw rootflags=subvol=@ loglevel=3 efi=noruntime clk_ignore_unused pd_ignore_unused regulator_ignore_unused arm64.nopauth
-[alex@volterra d3-bug]$ cat volterra-lspci-vvv.txt
-0002:00:00.0 PCI bridge: Qualcomm Technologies, Inc SC8280XP PCI Express Root Port (prog-if 00 [Normal decode])
-Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c20000/pcie@0
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupts: pin B disabled, MSI(X) routed to IRQ 182
-Region 0: Memory at 3c700000 (32-bit, non-prefetchable) [size=4K]
-Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-I/O behind bridge: 100000-100fff [size=4K] [16-bit]
-Memory behind bridge: 3c300000-3c4fffff [size=2M] [32-bit]
-Prefetchable memory behind bridge: 3c500000-3c6fffff [size=2M] [32-bit]
-Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-Capabilities: [40] Power Management version 3
-Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
-Address: 0000000017a50040 Data: 0000
-Masking: fffffffe Pending: 00000000
-Capabilities: [70] Express (v2) Root Port (Slot+), IntMsgNum 0
-DevCap: MaxPayload 256 bytes, PhantFunc 0
-ExtTag- RBE+ TEE-IO-
-DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-MaxPayload 128 bytes, MaxReadReq 512 bytes
-DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 <64us
-ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
-LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
-LnkSta: Speed 8GT/s, Width x4
-TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-SltCap: AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise+
-Slot #0, PowerLimit 0W; Interlock+ NoCompl+
-SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-Control: AttnInd Off, PwrInd Off, Power- Interlock-
-SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-Changed: MRL- PresDet- LinkState-
-RootCap: CRSVisible-
-RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible-
-RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP+ LTR+
-10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-FRS- LN System CLS Not Supported, TPHComp+ ExtTPHComp- ARIFwd-
-AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-AtomicOpsCtl: ReqEn- EgressBlck-
-IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
-LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+ EqualizationPhase1+
-EqualizationPhase2+ EqualizationPhase3+ LinkEqualizationRequest-
-Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-Capabilities: [100 v2] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-MultHdrRecCap+ MultHdrRecEn- TLPPfxPres- HdrLogCap-
-HeaderLog: 00000000 00000000 00000000 00000000
-RootCmd: CERptEn+ NFERptEn+ FERptEn+
-RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-Capabilities: [148 v1] Secondary PCI Express
-LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-LaneErrStat: 0
-Capabilities: [168 v1] Transaction Processing Hints
-No steering table available
-Capabilities: [1fc v1] L1 PM Substates
-L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-T_CommonMode=70us LTR1.2_Threshold=136192ns
-L1SubCtl2: T_PwrOn=60us
-Capabilities: [20c v1] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-Capabilities: [30c v1] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-Capabilities: [344 v1] Vendor Specific Information: ID=0006 Rev=0 Len=018 <?>
-Kernel driver in use: pcieport
+v3->v4:
+- In rzv2h_pcie_setup_lanes() returned early in case of error
+- Added RB/TB tags
 
-0002:01:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2269XT (DRAM-less) NVMe SSD Controller (rev 03) (prog-if 02 [NVM Express])
-Subsystem: Silicon Motion, Inc. SM2269XT (DRAM-less) NVMe SSD Controller
-Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupts: pin B disabled, MSI(X) routed to IRQ 183-191
-Region 0: Memory at 3c300000 (64-bit, non-prefetchable) [size=16K]
-Capabilities: [40] Power Management version 3
-Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [50] MSI: Enable- Count=1/16 Maskable+ 64bit+
-Address: 0000000000000000 Data: 0000
-Masking: 00000000 Pending: 00000000
-Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
-DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
-ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0W TEE-IO-
-DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop- FLReset-
-MaxPayload 128 bytes, MaxReadReq 512 bytes
-DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
-LnkCap: Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <64us
-ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt- FltModeDis-
-LnkSta: Speed 8GT/s (downgraded), Width x4
-TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
-10BitTagComp+ 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-FRS+ TPHComp- ExtTPHComp-
-AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-AtomicOpsCtl: ReqEn-
-IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-LnkCap2: Supported Link Speeds: 2.5-16GT/s, Crosslink- Retimer+ 2Retimers+ DRS+
-LnkCtl2: Target Link Speed: 16GT/s, EnterCompliance- SpeedDis-
-Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+ EqualizationPhase1+
-EqualizationPhase2+ EqualizationPhase3+ LinkEqualizationRequest-
-Retimer- 2Retimers- CrosslinkRes: Upstream Port, FltMode-
-Capabilities: [b0] MSI-X: Enable+ Count=17 Masked-
-Vector table: BAR=0 offset=00002000
-PBA: BAR=0 offset=00003000
-Capabilities: [100 v2] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-HeaderLog: 00000000 00000000 00000000 00000000
-Capabilities: [148 v1] Power Budgeting <?>
-Capabilities: [158 v1] Alternative Routing-ID Interpretation (ARI)
-ARICap: MFVC- ACS-, Next Function: 0
-ARICtl: MFVC- ACS-, Function Group: 0
-Capabilities: [168 v1] Secondary PCI Express
-LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-LaneErrStat: 0
-Capabilities: [188 v1] Physical Layer 16.0 GT/s
-Phy16Sta: EquComplete- EquPhase1- EquPhase2- EquPhase3- LinkEquRequest-
-Capabilities: [1ac v1] Lane Margining at the Receiver
-PortCap: Uses Driver-
-PortSta: MargReady- MargSoftReady-
-Capabilities: [204 v1] Latency Tolerance Reporting
-Max snoop latency: 0ns
-Max no snoop latency: 0ns
-Capabilities: [20c v1] L1 PM Substates
-L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-PortCommonModeRestoreTime=10us PortTPowerOnTime=60us
-L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-T_CommonMode=0us LTR1.2_Threshold=136192ns
-L1SubCtl2: T_PwrOn=60us
-Capabilities: [390 v1] Data Link Feature <?>
-Kernel driver in use: nvme
-Kernel modules: nvme
+v2->v3:
+- Dropped using linux,pci-domain property.
+- Switched property to phandle-array for renesas,sysc
+  to support multiple controllers with different SYSC register sets.
+- Parsed controller-id from the "renesas,sysc" property instead of
+  using linux,pci-domain.
+- Updated commit message for clarity in patch #1
 
-0006:00:00.0 PCI bridge: Qualcomm Technologies, Inc SC8280XP PCI Express Root Port (prog-if 00 [Normal decode])
-Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c00000/pcie@0
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupts: pin B disabled, MSI(X) routed to IRQ 237
-Region 0: Memory at 30300000 (32-bit, non-prefetchable) [size=4K]
-Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-I/O behind bridge: 1000-1fff [size=4K] [16-bit]
-Memory behind bridge: 30400000-305fffff [size=2M] [32-bit]
-Prefetchable memory behind bridge: 30600000-307fffff [size=2M] [32-bit]
-Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-Capabilities: [40] Power Management version 3
-Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
-Address: 0000000017a50040 Data: 0000
-Masking: fffffffe Pending: 00000000
-Capabilities: [70] Express (v2) Root Port (Slot+), IntMsgNum 0
-DevCap: MaxPayload 128 bytes, PhantFunc 0
-ExtTag- RBE+ TEE-IO-
-DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-MaxPayload 128 bytes, MaxReadReq 512 bytes
-DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L1, Exit Latency L1 <64us
-ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-ExtSynch- ClockPM- AutWidDis- BWInt+ AutBWInt+ FltModeDis-
-LnkSta: Speed 5GT/s, Width x1
-TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-SltCap: AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise+
-Slot #0, PowerLimit 0W; Interlock+ NoCompl+
-SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-Control: AttnInd Off, PwrInd Off, Power- Interlock-
-SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-Changed: MRL- PresDet- LinkState-
-RootCap: CRSVisible+
-RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP+ LTR+
-10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-FRS- LN System CLS Not Supported, TPHComp+ ExtTPHComp- ARIFwd-
-AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-AtomicOpsCtl: ReqEn- EgressBlck-
-IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-LnkCap2: Supported Link Speeds: 2.5-5GT/s, Crosslink- Retimer- 2Retimers- DRS-
-LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
-EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-Capabilities: [100 v2] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-MultHdrRecCap+ MultHdrRecEn- TLPPfxPres- HdrLogCap-
-HeaderLog: 00000000 00000000 00000000 00000000
-RootCmd: CERptEn+ NFERptEn+ FERptEn+
-RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-Capabilities: [148 v1] Secondary PCI Express
-LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-LaneErrStat: 0
-Capabilities: [158 v1] Transaction Processing Hints
-No steering table available
-Capabilities: [1ec v1] L1 PM Substates
-L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-T_CommonMode=70us LTR1.2_Threshold=76800ns
-L1SubCtl2: T_PwrOn=0us
-Capabilities: [1fc v1] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-Capabilities: [2fc v1] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-Kernel driver in use: pcieport
+v1->v2:
+- Dropped RZ/V2N DT binding patch as it has been merged in the
+  pci/dt-binding branch.
+- Dropped un-necessary new line in schema.
+- Renamed RZG3S_PCIE_CHANNEL_ID* to RZG3S_PCIE_CONTROLLER_ID* for clarity.
+- Added locks to protect shared lane configuration state and
+  prevent concurrent access issues during probe.
+- Added cleanup action to release lanes on driver removal.
+- Reconfigured RZG3S_SYSC_FUNC_ID_LINK_MASTER in resume path.
+- Renamed num_channels to num_pcie_controllers for clarity.
+- Updated commit messages for clarity in patches 1-4.
 
-0006:01:00.0 Network controller: Qualcomm Technologies, Inc QCNFA765 Wireless Network Adapter (rev 01)
-Subsystem: Qualcomm Technologies, Inc Device 0108
-Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c00000/pcie@0/wifi@0
-Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupts: MSI(X) routed to IRQ 245-276
-Region 0: Memory at 30400000 (64-bit, non-prefetchable) [size=2M]
-Capabilities: [40] Power Management version 3
-Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [50] MSI: Enable+ Count=32/32 Maskable+ 64bit-
-Address: 17a50040 Data: 0000
-Masking: fe023c00 Pending: 00000000
-Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
-DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
-ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0W TEE-IO-
-DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-MaxPayload 128 bytes, MaxReadReq 512 bytes
-DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-LnkCap: Port #0, Speed 8GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <1us, L1 <64us
-ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
-LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
-LnkSta: Speed 5GT/s (downgraded), Width x1
-TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
-10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-FRS- TPHComp+ ExtTPHComp-
-AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-AtomicOpsCtl: ReqEn-
-IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
-LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
-EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-Capabilities: [100 v2] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-HeaderLog: 00000000 00000000 00000000 00000000
-Capabilities: [148 v1] Secondary PCI Express
-LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-LaneErrStat: 0
-Capabilities: [158 v1] Transaction Processing Hints
-No steering table available
-Capabilities: [1e4 v1] Latency Tolerance Reporting
-Max snoop latency: 0ns
-Max no snoop latency: 0ns
-Capabilities: [1ec v1] L1 PM Substates
-L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-T_CommonMode=0us LTR1.2_Threshold=76800ns
-L1SubCtl2: T_PwrOn=0us
-Kernel driver in use: ath11k_pci
-Kernel modules: ath11k_pci
+Cheers,
+Prabhakar
 
+Lad Prabhakar (4):
+  dt-bindings: PCI: renesas,r9a08g045-pcie: Add RZ/V2H(P) support
+  PCI: rzg3s-host: Use shared reset controls for power domain resets
+  PCI: rzg3s-host: Prepare System Controller handling for multiple
+    controllers
+  PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
 
-X13s:
-cmdline.txt: BOOT_IMAGE=/boot/vmlinuz-7.0.14 root=UUID=dc44a82f-6d97-490e-a4be-4c3bceacc658 ro arm64.nopauth ipv6.disable=1 clk_ignore_unused mitigations=off cfg80211.ieee80211_regdom=US efi=noruntime printk.always_kmsg_dump=Y efi_pstore.pstore_disable=N quiet splash
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  |  34 ++-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 233 ++++++++++++++++--
+ 2 files changed, 247 insertions(+), 20 deletions(-)
 
-lspci -vvv:
-steev@finn:~$ sudo lspci -vvv
-[sudo] password for steev:
-0002:00:00.0 PCI bridge: Qualcomm Technologies, Inc SC8280XP PCI Express Root Port (prog-if 00 [Normal decode])
-        Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c20000/pcie@0
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupts: pin B disabled, MSI(X) routed to IRQ 215
-        IOMMU group: 14
-        Region 0: Memory at 3c700000 (32-bit, non-prefetchable) [size=4K]
-        Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-        I/O behind bridge: 200000-200fff [size=4K] [16-bit]
-        Memory behind bridge: 3c300000-3c4fffff [size=2M] [32-bit]
-        Prefetchable memory behind bridge: 3c500000-3c6fffff [size=2M] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
-                Address: 00000000fffff040  Data: 0000
-                Masking: fffffffe  Pending: 00000000
-        Capabilities: [70] Express (v2) Root Port (Slot+), IntMsgNum 0
-                DevCap: MaxPayload 256 bytes, PhantFunc 0
-                        ExtTag- RBE+ TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 <64us
-                        ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
-                LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
-                LnkSta: Speed 8GT/s, Width x4
-                        TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                SltCap: AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise+
-                        Slot #0, PowerLimit 0W; Interlock+ NoCompl+
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-                        Changed: MRL- PresDet- LinkState-
-                RootCap: CRSVisible-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP+ LTR+
-                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- LN System CLS Not Supported, TPHComp+ ExtTPHComp- ARIFwd-
-                         AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                         AtomicOpsCtl: ReqEn- EgressBlck-
-                         IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+ EqualizationPhase1+
-                         EqualizationPhase2+ EqualizationPhase3+ LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap+ MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-        Capabilities: [148 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [168 v1] Transaction Processing Hints
-                No steering table available
-        Capabilities: [1fc v1] L1 PM Substates
-                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-                          PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-                L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1-
-                           T_CommonMode=70us LTR1.2_Threshold=86016ns
-                L1SubCtl2: T_PwrOn=10us
-        Capabilities: [20c v1] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-        Capabilities: [30c v1] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-        Capabilities: [344 v1] Vendor Specific Information: ID=0006 Rev=0 Len=018 <?>
-        Kernel driver in use: pcieport
+-- 
+2.54.0
 
-0002:01:00.0 Non-Volatile memory controller: Sandisk Corp WD Black SN770M NVMe SSD (DRAM-less) (rev 01) (prog-if 02 [NVM Express])
-        Subsystem: Sandisk Corp WD Black SN770M NVMe SSD (DRAM-less)
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupts: pin B disabled, MSI(X) routed to IRQ 253-261
-        IOMMU group: 14
-        Region 0: Memory at 3c300000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [80] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [90] MSI: Enable- Count=1/32 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [b0] MSI-X: Enable+ Count=65 Masked-
-                Vector table: BAR=0 offset=00003000
-                PBA: BAR=0 offset=00002000
-        Capabilities: [c0] Express (v2) Endpoint, IntMsgNum 0
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <1us, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0W TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <8us
-                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
-                LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-                        ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
-                LnkSta: Speed 8GT/s (downgraded), Width x4
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range B, TimeoutDis+ NROPrPrP- LTR+
-                         10BitTagComp+ 10BitTagReq- OBFF Not Supported, ExtFmt+ EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- TPHComp- ExtTPHComp-
-                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                         AtomicOpsCtl: ReqEn-
-                         IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-16GT/s, Crosslink- Retimer+ 2Retimers+ DRS-
-                LnkCtl2: Target Link Speed: 16GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+ EqualizationPhase1+
-                         EqualizationPhase2+ EqualizationPhase3+ LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-        Capabilities: [1b8 v1] Latency Tolerance Reporting
-                Max snoop latency: 0ns
-                Max no snoop latency: 0ns
-        Capabilities: [300 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [900 v1] L1 PM Substates
-                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1- L1_PM_Substates+
-                          PortCommonModeRestoreTime=32us PortTPowerOnTime=10us
-                L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1-
-                           T_CommonMode=0us LTR1.2_Threshold=86016ns
-                L1SubCtl2: T_PwrOn=10us
-        Capabilities: [910 v1] Data Link Feature <?>
-        Capabilities: [920 v1] Lane Margining at the Receiver
-                PortCap: Uses Driver+
-                PortSta: MargReady- MargSoftReady+
-        Capabilities: [9c0 v1] Physical Layer 16.0 GT/s
-                Phy16Sta: EquComplete- EquPhase1- EquPhase2- EquPhase3- LinkEquRequest-
-        Kernel driver in use: nvme
-        Kernel modules: nvme
-
-0004:00:00.0 PCI bridge: Qualcomm Technologies, Inc SC8280XP PCI Express Root Port (prog-if 00 [Normal decode])
-        Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c10000/pcie@0
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupts: MSI(X) routed to IRQ 217
-        IOMMU group: 15
-        Region 0: Memory at 34700000 (32-bit, non-prefetchable) [size=4K]
-        Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-        I/O behind bridge: 1000-1fff [size=4K] [16-bit]
-        Memory behind bridge: 34300000-344fffff [size=2M] [32-bit]
-        Prefetchable memory behind bridge: 34500000-346fffff [size=2M] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
-                Address: 00000000fffff040  Data: 0000
-                Masking: fffffffe  Pending: 00000000
-        Capabilities: [70] Express (v2) Root Port (Slot+), IntMsgNum 0
-                DevCap: MaxPayload 256 bytes, PhantFunc 0
-                        ExtTag- RBE+ TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 <16us
-                        ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-                LnkCtl: ASPM Disabled; RCB 128 bytes, LnkDisable- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt+ AutBWInt+ FltModeDis-
-                LnkSta: Speed 2.5GT/s, Width x1
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                SltCap: AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise+
-                        Slot #0, PowerLimit 0W; Interlock+ NoCompl+
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-                        Changed: MRL- PresDet- LinkState-
-                RootCap: CRSVisible+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP+ LTR+
-                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- LN System CLS Not Supported, TPHComp+ ExtTPHComp- ARIFwd-
-                         AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                         AtomicOpsCtl: ReqEn- EgressBlck-
-                         IDOReq- IDOCompl- LTR- EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete- EqualizationPhase1-
-                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap+ MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-        Capabilities: [148 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [168 v1] Transaction Processing Hints
-                No steering table available
-        Capabilities: [1fc v1] L1 PM Substates
-                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-                          PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-                L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
-                           T_CommonMode=70us LTR1.2_Threshold=0ns
-                L1SubCtl2: T_PwrOn=10us
-        Capabilities: [20c v1] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-        Capabilities: [30c v1] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-        Capabilities: [344 v1] Vendor Specific Information: ID=0006 Rev=0 Len=018 <?>
-        Kernel driver in use: pcieport
-
-0006:00:00.0 PCI bridge: Qualcomm Technologies, Inc SC8280XP PCI Express Root Port (prog-if 00 [Normal decode])
-        Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c00000/pcie@0
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupts: pin B disabled, MSI(X) routed to IRQ 267
-        IOMMU group: 35
-        Region 0: Memory at 30300000 (32-bit, non-prefetchable) [size=4K]
-        Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-        I/O behind bridge: 100000-100fff [size=4K] [16-bit]
-        Memory behind bridge: 30400000-305fffff [size=2M] [32-bit]
-        Prefetchable memory behind bridge: 30600000-307fffff [size=2M] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
-                Address: 00000000fffff040  Data: 0000
-                Masking: fffffffe  Pending: 00000000
-        Capabilities: [70] Express (v2) Root Port (Slot+), IntMsgNum 0
-                DevCap: MaxPayload 128 bytes, PhantFunc 0
-                        ExtTag- RBE+ TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L1, Exit Latency L1 <64us
-                        ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-                LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt+ AutBWInt+ FltModeDis-
-                LnkSta: Speed 5GT/s, Width x1
-                        TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                SltCap: AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surprise+
-                        Slot #0, PowerLimit 0W; Interlock+ NoCompl+
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-                        Changed: MRL- PresDet- LinkState-
-                RootCap: CRSVisible+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna+ CRSVisible+
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP+ LTR+
-                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- LN System CLS Not Supported, TPHComp+ ExtTPHComp- ARIFwd-
-                         AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                         AtomicOpsCtl: ReqEn- EgressBlck-
-                         IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-5GT/s, Crosslink- Retimer- 2Retimers- DRS-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
-                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap+ MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsgNum 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-        Capabilities: [148 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [158 v1] Transaction Processing Hints
-                No steering table available
-        Capabilities: [1ec v1] L1 PM Substates
-                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-                          PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-                L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-                           T_CommonMode=70us LTR1.2_Threshold=76800ns
-                L1SubCtl2: T_PwrOn=0us
-        Capabilities: [1fc v1] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
-        Capabilities: [2fc v1] Vendor Specific Information: ID=0001 Rev=1 Len=038 <?>
-        Kernel driver in use: pcieport
-
-0006:01:00.0 Network controller: Qualcomm Technologies, Inc QCNFA765 Wireless Network Adapter (rev 01)
-        Subsystem: Qualcomm Technologies, Inc Device 0108
-        Device tree node: /sys/firmware/devicetree/base/soc@0/pcie@1c00000/pcie@0/wifi@0
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupts: MSI(X) routed to IRQ 288-319
-        IOMMU group: 35
-        Region 0: Memory at 30400000 (64-bit, non-prefetchable) [size=2M]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable+ Count=32/32 Maskable+ 64bit-
-                Address: fffff040  Data: 0000
-                Masking: fe023c00  Pending: 00000000
-        Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0W TEE-IO-
-                DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend+
-                LnkCap: Port #0, Speed 8GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <1us, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
-                LnkCtl: ASPM L1 Enabled; RCB 128 bytes, LnkDisable- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
-                LnkSta: Speed 5GT/s (downgraded), Width x1
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
-                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- TPHComp+ ExtTPHComp-
-                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                         AtomicOpsCtl: ReqEn-
-                         IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
-                         10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
-                LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
-                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported, FltMode-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr- BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
-                        ECRC- UnsupReq- ACSViol- UncorrIntErr+ BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
-                        PoisonTLPBlocked- DMWrReqBlocked- IDECheck- MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr- CorrIntErr- HeaderOF-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+ CorrIntErr+ HeaderOF+
-                AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-        Capabilities: [148 v1] Secondary PCI Express
-                LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                LaneErrStat: 0
-        Capabilities: [158 v1] Transaction Processing Hints
-                No steering table available
-        Capabilities: [1e4 v1] Latency Tolerance Reporting
-                Max snoop latency: 0ns
-                Max no snoop latency: 0ns
-        Capabilities: [1ec v1] L1 PM Substates
-                L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-                          PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
-                L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-                           T_CommonMode=0us LTR1.2_Threshold=76800ns
-                L1SubCtl2: T_PwrOn=0us
-        Kernel driver in use: ath11k_pci
-        Kernel modules: ath11k_pci
-
-
-Sorry for taking so long to reply about this, Konrad suggested we provide the
-info now, as I have been applying the patchset to a 7.0 kernel, but I know the
-patchset is already in -next (maybe 7.1?)
-
--- steev
