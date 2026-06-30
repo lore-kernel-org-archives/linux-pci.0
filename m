@@ -1,101 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BFC71DDC37;
-	Tue, 30 Jun 2026 20:25:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214FD477980
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 20:29:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782851159; cv=none; b=ZoUP2iJnAk3aZ2LbqFZXlTBd41TZEtzpZ3MuAPnJKnxhvAY7qAkh5cuQiVaEiVdnYplx5+OSfRg6pakAPly3/INgNo5i3u5IXowdDBJQFZTOLOliOLLZkpYcvbQ1PwoEXNmq5byWXuozVgnfB3ftVIpRfmRx3U8frHwNBLTu3Ig=
+	t=1782851384; cv=none; b=GQQzYY/Ex51POGCyFGJAY13QkwPBjpBqziLVdJJL4AiTW0DmMzSdaILkATz3msRraGWRb6Wcu0hAzSBDyVLEQEPSWPwSyS7jBJ9lpx9IWFkOg66lwTQ4KTuCcr88CXm5gQsz/2M7cQzVOh1UWqnV74Tq0Yg/CnVbumWR3o1LgeU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782851159; c=relaxed/simple;
-	bh=fn0Si16fB/Py5zOnzWA6qcKRxBuEt44wN4T059GbeHQ=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
-	 References:In-Reply-To; b=gSQ74B2M92EC5oP1wJGzQ9qOQssikos9rbHKDcIpIjkqO8vqXbREa2eX4jUQ1fKoYzjdRWx77k0cfr4CL4IOc0aKeuRbH4ltVRay/ET/nqj3D84biRRGqBgSzJFCRO/ZZ95IDlPazai3V9zYY/gJYERRusLsZSLA22R21N2AWec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WwWjwHhL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782851384; c=relaxed/simple;
+	bh=T3hAAuEcnuvOxgSX7BF+epZ+XdQfUSblgvEQCfCRlVs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UZRKGFINNSGKZo/Zm0WZoUJg7vzt0Pu6xCulQLhKjhKEZH35YYMW/Yqp7bwOZFEEQtYw4JGAJthX/OXVGNISFCUpprmDZceAg88EydgwyYF1IbS5VyuBBb8jXcNAFwVBMOsANotmNx98VcNEf+MPqBoZu5ESel4TVf8tChSme4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HRQeK/n7; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WwWjwHhL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96F5F1F000E9;
-	Tue, 30 Jun 2026 20:25:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782851157;
-	bh=trroYMM3IfwYoctVWKL+QncsfIKLFxQDxzxhPjX3+k8=;
-	h=Date:From:Subject:Cc:To:References:In-Reply-To;
-	b=WwWjwHhL5J1M5x0eOeaEA8FJbRmsSukIX3hRDzcwMjbXAoK8ynCtWlT69RpYJ8Aqh
-	 zBE3qudaQ8zjX9cKd/afMNqMWvQF2TUW6q1VfJvBQEsEbK0orAFb5mLR16S4Zi0ga2
-	 AGDXke17+/TQBYa8h7LQ2+rRQMKffkAT5BT6DELy50uq5fmdSTDoojik90A9F0Shbj
-	 yPX+H1Ex2xFtwwqqj8FPVFZPuFejPE86TnQShkt4nUaYUW85pXW6wHRFmVElHv57gw
-	 N+GHTe3PhM/UcXtzhys1ouHvJGV1ptNDzDObepeX5t9j/FJaNr/NKu2DW62TKi7kie
-	 L5KwaT3b4t01g==
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HRQeK/n7"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8eefd4a8057so32761166d6.0
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 13:29:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782851382; x=1783456182; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VHkAtPDzDj99Aof3Amn7WPi3kL41U0foNenjtplF7UM=;
+        b=HRQeK/n7/VLAMsi8Hl7MNCKzK4OFtvquRBgqzZMogyg9Fz0wBEB6lfg69DBfWm/2Ae
+         WV8geQfBVl8Lnc8/Oxy7Y++MercluriXRhNoiRb/+FOzxu37zd+jNTL8HqdoyZXEqayb
+         PtRQTsPkL+J3Z+297pcyHyBIVF9jrXloywrj3tXMgb1BJdqEVz/mFPulzTNyLSZzJMqB
+         7aLgNipQkRe0uCQsyjIwuljQcaABELVFxlLucKeSMUsTRWAj3V04gor/84hASDltB3E3
+         hZoCHCDLar66AVVpEpEFygTltbPRtOmGb5zB2HPB78o9VHD+gYq/bSwgclHoa/NlYoQp
+         BSHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782851382; x=1783456182;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VHkAtPDzDj99Aof3Amn7WPi3kL41U0foNenjtplF7UM=;
+        b=Jw1f/IxQUKQJlBSTa03JqpR0hMTX121eoF5MR1hs3l1z68yXmEZVG9GosIlBj/33N0
+         vLT3LJgS7R4/nvIxajoaaQnx7AorwF/vWSsDfsZHGkCKQKAV4XJ00jeBJMBAWU8x0hMb
+         WXCpIbO2iCIk+6KYRlEvEpYZ3EVetKUealxI+cSNhPIzhh4TTzrOUHs4tJEbARrpWQ0T
+         cCvuXLB2GzmN/n8sYOFpdlmsF1h0L6g13A9jbBju4gmUZFAR4+asGbF6xjWbEfPf0F1Z
+         745WlkPD6SZYHq3n2paLajqjfYubQGnnW97OKJReEP5uGfCzEcChPHYFc8K78NMFsBlB
+         gOTg==
+X-Gm-Message-State: AOJu0Yx+q64PbKEpsEbr/KVhSkrAC+vj56wKlb5zcI6cNjCIqx2Ida6p
+	wZmwZK1bbKZQh0kT5wQgFqvCfAWSENwFyR9RRbb90nPJIlgG1yachV3I
+X-Gm-Gg: AfdE7clMrlZWGuOWpabfQRdHO0C4vy2fZks0G1Hb95GQSfV2KG5XBW8HC3j5Ahdw0ER
+	l7I8qvuvE3zFoGrScDoFUSd+MUJrmbzZdEToMrK4azxnTWRk6aTZhFTg91LNT13ZkeqTZ4uO4ZZ
+	6EgoQtqz1pgvhJPr9iDNhNhxqSKC9Q28gpmM2TwuWUVJg7PRnkqMViPw0Z3uJx36OkPw8XnLCUT
+	wLklbx5K+URI50jaqooCHVhWRMcLm+uWJhLLJFBpt2eFTnLwv4+nECinyxdjBpkGS4mnbE0c52o
+	Qa+S9+eAKA6mYEBH1/rQ0ljzW5cCNJeWbZjgg6c6YtpfWqrn/YOtXxLNVyOKI6+bz/F5p3JfV3F
+	DQlJnC74IWrAr5jKQcZJ/a1ACiSKyQuIiDOBdtiOOZ36TEByiSJpiW99alxnw7RlAW/UK8CjV+j
+	OPD0jFQ/LC26TQj89xrLWaC2sFMJGe6Q==
+X-Received: by 2002:a05:6214:4508:b0:8ce:f1b:74ec with SMTP id 6a1803df08f44-8f1ba49e96emr78192396d6.25.1782851382096;
+        Tue, 30 Jun 2026 13:29:42 -0700 (PDT)
+Received: from i4-gl-tmk5904.ad.psu.edu ([130.203.156.186])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8f1a717edc7sm32006346d6.36.2026.06.30.13.29.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jun 2026 13:29:41 -0700 (PDT)
+From: Yuho Choi <dbgh9129@gmail.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Frank Li <Frank.Li@nxp.com>,
+	Qianfeng Rong <rongqianfeng@vivo.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	linux-kernel@vger.kernel.org,
+	Yuho Choi <dbgh9129@gmail.com>
+Subject: [PATCH v1] PCI: keystone: Fix OF node reference leak in init
+Date: Tue, 30 Jun 2026 16:29:38 -0400
+Message-ID: <20260630202938.1877632-1-dbgh9129@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 30 Jun 2026 22:25:51 +0200
-Message-Id: <DJMNZJZYZGAW.2VLN3VNNOH03L@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v2 7/7] pci: fix UAF when probe runs concurrent to dyn
- ID removal
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Zhenzhong Duan"
- <zhenzhong.duan@gmail.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Damien Le Moal" <dlemoal@kernel.org>, "Niklas Cassel" <cassel@kernel.org>,
- "GOTO Masanori" <gotom@debian.or.jp>, "YOKOTA Hiroshi"
- <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "Vaibhav Gupta" <vaibhavgupta40@gmail.com>,
- "Jens Taprogge" <jens.taprogge@taprogge.org>, "Ido Schimmel"
- <idosch@nvidia.com>, "Petr Machata" <petrm@nvidia.com>, "Andrew Lunn"
- <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
- Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
- Abeni" <pabeni@redhat.com>, <linux-pci@vger.kernel.org>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
- <industrypack-devel@lists.sourceforge.net>, <netdev@vger.kernel.org>,
- "Sashiko" <sashiko-bot@kernel.org>
-To: "Gary Guo" <gary@garyguo.net>
-References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
-In-Reply-To: <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue Jun 30, 2026 at 1:09 PM CEST, Gary Guo wrote:
-> -static const struct pci_device_id *pci_match_device(struct pci_driver *d=
-rv,
-> -						    struct pci_dev *dev)
-> +static bool pci_match_device(struct pci_driver *drv,
-> +			     struct pci_dev *dev,
-> +			     struct pci_device_id *id)
->  {
->  	struct pci_dynid *dynid;
->  	const struct pci_device_id *found_id =3D NULL;
-> @@ -196,30 +198,33 @@ static const struct pci_device_id *pci_match_device=
-(struct pci_driver *drv,
->  	/* When driver_override is set, only bind to the matching driver */
->  	ret =3D device_match_driver_override(&dev->dev, &drv->driver);
->  	if (ret =3D=3D 0)
-> -		return NULL;
-> +		return false;
-> =20
->  	dev_id =3D pci_id_from_device(dev);
->  	/* Look at the dynamic ids first, before the static ones */
-> -	spin_lock(&drv->dynids.lock);
-> -	list_for_each_entry(dynid, &drv->dynids.list, node) {
-> -		if (pci_match_one_id(&dynid->id, &dev_id)) {
-> -			found_id =3D &dynid->id;
-> -			break;
-> +	{
-> +		guard(spinlock)(&drv->dynids.lock);
-> +		list_for_each_entry(dynid, &drv->dynids.list, node) {
-> +			if (pci_match_one_id(&dynid->id, &dev_id)) {
-> +				*id =3D dynid->id;
-> +				return true;
-> +			}
->  		}
->  	}
+of_find_matching_node() returns a device node with its reference count
+incremented. ks_pcie_init() only uses the returned node to decide whether
+to register the ARM external abort fault handler, but never drops the
+reference.
 
-Should be scoped_guard(spinlock, &drv->dynids.lock). It also looks like dyn=
-id
-could be moved into the scoped_guard().
+Store the lookup result in a temporary variable and release it with
+of_node_put() once the existence check has been made.
+
+Fixes: bc10d0ad540d ("PCI: keystone: Add support to build as a loadable module")
+Signed-off-by: Yuho Choi <dbgh9129@gmail.com>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 278d2dba1db0..f1b27aed488d 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -1389,13 +1389,17 @@ static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
+ 
+ static int __init ks_pcie_init(void)
+ {
++	struct device_node *np;
+ 	/*
+ 	 * PCIe access errors that result into OCP errors are caught by ARM as
+ 	 * "External aborts"
+ 	 */
+-	if (of_find_matching_node(NULL, ks_pcie_of_match))
++	np = of_find_matching_node(NULL, ks_pcie_of_match);
++	if (np) {
++		of_node_put(np);
+ 		hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
+ 				"Asynchronous external abort");
++	}
+ 
+ 	return platform_driver_register(&ks_pcie_driver);
+ }
+-- 
+2.43.0
+
