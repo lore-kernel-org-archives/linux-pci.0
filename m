@@ -1,58 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 171EF2F549F;
-	Tue, 30 Jun 2026 13:54:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 338C42882D7;
+	Tue, 30 Jun 2026 13:56:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782827653; cv=none; b=ODOz+oN01ak0GItDPFW/OjYPAeogQw9hdUf/gjbtF+c7naE6Xy5mY7LNdE1f7cFHyJdkdZrolDz4lD6rudMOmjZBMYXKWw6iBF97ugEdXj0aGEHqlbMEWJuh9aWQtDEOicbaUhTVoOi9XS4os/7VVM/A0JgTFMb1JjPft3E1WqY=
+	t=1782827817; cv=none; b=kD2gv98mWTjPmx6O6mT/VLmjwwmcAZGNTKG2TimDn3tDiYusJlkTpmPK+C7krSPcBybbli9aXBVGfoUjJFSG42fzt9Ryx8PnHjQ6UgKFW+E2lwJcBEUmZXSc2ur+6maZGSqUz0gjoV1xGcRHJb46tGaK60/SaOxlBfI8llrRh5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782827653; c=relaxed/simple;
-	bh=NxVC72j41uPL+tI1Aj2Q6Xf57UFf9x2HMej7fgmMn5A=;
+	s=arc-20240116; t=1782827817; c=relaxed/simple;
+	bh=8JoCxrKMklKuvRJyQBAFMhwx8pWF9D3tFjHvYs1ZVwM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=THSnS+vuziKPy1ycHbrYFO2OSXh5msoJFGRS+inMtHrvTg4W7cxvX6Vxc1PRAnxnTbnKuURFTsBkwbab1uHyOno6dspJxMlMZUr94jmzz9PzUun/OMBHI2q7W+oV0wro0BqJHHVGGK694tKFSLe5BclFwm6Dx49f4VjsfHu1/3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JxGtVFxE; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=n6TvtHgqWGBVdW4143FTqfstU+3CIQa3mMD6IFrSh/fEkNJz6/Bzmk2fQkEEtUulQTLxokdSfbQceYfSp7G/2S0JKOWyg6eBEDRHjeJm4F+/sXBJ+CNAjqn5WM8C3vl3bSXEs7CgaE0uqhg28h2wQmZJb68lzxCI6t/oT8GS6xM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bOy32PpT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JxGtVFxE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0625D1F00A3A;
-	Tue, 30 Jun 2026 13:54:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bOy32PpT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8D341F000E9;
+	Tue, 30 Jun 2026 13:56:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782827651;
-	bh=ENHSujfSW+4v2CmIMIlvxia/sjQrFFZFjN+o8GUkyIY=;
+	s=k20260515; t=1782827816;
+	bh=VCVIHwjK4UqwI7KSpGYiL5BOkDS0j1bQeNpENVLWHa8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JxGtVFxEw8vaMhnYcCm+Cuq5e5W2cCsEJv7juEB5WY3jF7MEuDgDFV5eOxo+/XeFz
-	 ZLv7D8eIpZCd2z14gLGNUzLnGi8UcT+WVI/A/UPlaNoZjtnWaZTRlQ0gPpMNZtmJGy
-	 HgYnLXoRggBGE8lSDrlwb9eyJpsImD8KYjUl4uBOCEdq50OZ/hYpElxnGiXHM4vWaj
-	 UEvTRTvJix5t2my6yHIsHifqnjUm2UUANKAyUUuWYfirY5u/XaBjYVhKgvFEm9azwP
-	 EpgWQM6wMVAggjhqkSlZxs1mhWQq4DDPDhb2h6Ad3HjP0dhI3aTfZsQsFuctlD4MQO
-	 2Rrxlpk9MOMcA==
-Date: Tue, 30 Jun 2026 08:54:10 -0500
+	b=bOy32PpToUElrUII5Et6U7A8yTaghJGFbiM/2zkeg3aVNy1kPzegpJJqxKFdQ1n74
+	 5ATG7ED0GDJ/QqZ4kCTgoBRoSpVj5Nlv/TiAcCulkyMWN6Bwp2Af7NFUqjWe5vCRAQ
+	 zISeLSljja4K30bS3aLcyJS2988UftE7vNBA/CzrA1BUjQQkgI4HCIEBppT4E5gEcs
+	 0ZR3gFth+2hWkG1sUDsNZzqwouupEkKLazhA6GHKfJIQ9XKh/uhpCaRaUDa6ZNoOoI
+	 WBrJS1Py8NBvImIOhcuJZssTXXIwsH9qIxOMfurTalWoUaqCDRgSPihSL6zygv4ihM
+	 aWecZ/Hm323+g==
+Date: Tue, 30 Jun 2026 08:56:55 -0500
 From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	linux-tegra@vger.kernel.org,
-	Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-	devicetree@vger.kernel.org,
-	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Thierry Reding <treding@nvidia.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Michal Simek <michal.simek@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Aksh Garg <a-garg7@ti.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Kevin Xie <kevin.xie@starfivetech.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: Re: [PATCH v7 1/4] dt-bindings: pci: Strictly distinguish C0 from
- C1-C5
-Message-ID: <178282764964.2982344.701815323079264876.robh@kernel.org>
-References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
- <20260617-tegra264-pcie-v7-1-eae7ae964629@nvidia.com>
+To: hongxing.zhu@oss.nxp.com
+Cc: linux-arm-kernel@lists.infradead.org, kwilczynski@kernel.org,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
+	mani@kernel.org, l.stach@pengutronix.de, kernel@pengutronix.de,
+	krzk+dt@kernel.org, bhelgaas@google.com, frank.li@nxp.com,
+	s.hauer@pengutronix.de, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, imx@lists.linux.dev,
+	Frank Li <Frank.Li@nxp.com>, lpieralisi@kernel.org,
+	festevam@gmail.com, conor+dt@kernel.org
+Subject: Re: [PATCH v7 1/3] dt-bindings: imx6q-pcie: Add optional
+ intr/aer/pme interrupts for i.MX95
+Message-ID: <178282781473.2986139.17262303228131453675.robh@kernel.org>
+References: <20260618092100.3669556-1-hongxing.zhu@oss.nxp.com>
+ <20260618092100.3669556-2-hongxing.zhu@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,44 +50,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260617-tegra264-pcie-v7-1-eae7ae964629@nvidia.com>
+In-Reply-To: <20260618092100.3669556-2-hongxing.zhu@oss.nxp.com>
 
 
-On Wed, 17 Jun 2026 18:01:28 +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Thu, 18 Jun 2026 17:20:58 +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
 > 
-> Instead of using the ECAM registers as the first entry, strictly make a
-> distinction between C0 and C1-C5. This is needed because otherwise the
-> unit address doesn't match the first "reg" entry. We also cannot change
-> the ordering of these nodes to follow the ECAM addresses because that
-> would put them outside of their "control bus" hierarchy since the ECAM
-> address space is a global one outside of any of the control busses.
+> The i.MX95 PCIe controller introduces three additional dedicated hardware
+> interrupt lines for specific events:
+> - intr: general controller events
+> - aer: Advanced Error Reporting events
+> - pme: Power Management Events
 > 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> These interrupts are optional on i.MX95. PCIe basic functionality
+> (enumeration, configuration, and data transfer) works correctly without
+> them, as the controller can operate using only the existing msi interrupt.
+> 
+> Earlier i.MX PCIe variants (imx6q, imx6sx, imx6qp, imx7d, imx8mm, imx8mp,
+> imx8mq, imx8q) do not have these three dedicated interrupt lines.
+> 
+> Update the binding to allow up to 5 interrupts for i.MX95, while
+> restricting earlier variants to a maximum of 2 interrupts using
+> conditional constraints (if/then schema). This ensures the schema
+> accurately reflects the hardware capabilities of each SoC variant.
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > ---
-> Changes in v7:
-> - undo changes suggested by Sashiko, should've trust the dedicated tool
->   rather than the AI
-> 
-> Changes in v6:
-> - add maxItems as suggested by Sashiko
-> 
-> Changes in v5:
-> - rebase on top of v7.1-rc1, make it into a fix
-> 
-> Changes in v4:
-> - ECAM is outside of the controller's region, so it cannot be the first
->   reg entry, otherwise we get warnings because it doesn't match the
->   unit-address, so revert back to oneOf construct
-> 
-> Changes in v2:
-> - move ECAM region first and unify C0 vs. C1-C5
-> - move unevaluatedProperties to right before the examples
-> - add description to clarify the two types of controllers
-> - add examples for C0 and C1-C5
-> ---
->  .../bindings/pci/nvidia,tegra264-pcie.yaml         | 75 ++++++++++++++--------
->  1 file changed, 50 insertions(+), 25 deletions(-)
+>  .../bindings/pci/fsl,imx6q-pcie.yaml          | 25 +++++++++++++++++++
+>  1 file changed, 25 insertions(+)
 > 
 
 Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
