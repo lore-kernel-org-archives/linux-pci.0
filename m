@@ -1,157 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90F43769FF
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 07:09:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9714384CDC
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 07:20:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782803356; cv=none; b=eQZaZA4wmXMz7Dg3iUxrhJSTyWeGRHuQn9LTPO5D9a/CPW40o8Rk+Tp27IpaIlcWXIMG2wEYYZooaxB/S6uVE6R8/3K+u3UHsmBMtV9qdVnHy4ZFMU+JIzzDkT5AFO70nzKqp2Kvfb8Js+o3VameOOnrzXYeUfVqUboJGr0F/b4=
+	t=1782804022; cv=none; b=KtYJoe33S7/RcqFNi6smI4ofBnN6/VZNOanoSNLWdxaWZap+/lm+Qt3OWItklVQLQ2oQPGqg2/KHwCzxXTuRtNGT1e4PnBnXmmnhj5REmK8Z3kQIBB/Qs/Xz6mQ5hlrsPgM+NH7JqvlzMT0szzae98fra/kc90f2jCRKNCxN8RY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782803356; c=relaxed/simple;
-	bh=OPsPLV1iijLPEOl4AgbF7IQFsPg6/WnRxxyRPVsWiU0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bt8n2QSUrELPgqcegM/9L6iLgpJ9eCLBxFFHuTwwqu0Zp6VGQ06ICYWqZOY+vS57rWgmyg4/bqBdPWlb0sWZzAO75GQYwv8lANzbHeByQYfxh65koTEWkfs8LBhURAa8oXQNmKGuPu0blRB5lrpCOcL8rS9qzII9r6exRNW1138=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P+gJblhC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782804022; c=relaxed/simple;
+	bh=m5hOpeZuulIzIeMFgswZviFdTs801wBKp4kwoyE7T+A=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=J4NlG2wweIsOKawWw+T+FM6/zOxKhKdtgSTXe3msmK7dqTxFKOMe6NioKd1nH9WRzlrdaqCvfKV6RyeMxiVgW+bduNpiQ0uDdJ/qKsip15aGZIHZQVAujRq0vf9WcCuuHPPPbYyBFsBdphzfDl3IoJxAoA/Qq3bFHFB6/l6NgYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=WCt1s9gk; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bZCg3XJ3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P+gJblhC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5E61F000E9;
-	Tue, 30 Jun 2026 07:09:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782803354;
-	bh=SMeblETSb8ICs3HuSQo/taKTJo2rIihcx8wPSNlGZQw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=P+gJblhCJzyA+H2hSe9r87G/DiiYBeWlGeJnEBXA24gDat2xCJfa/Z50Q3uqtkcVU
-	 8UIFhhNStO8f7YFcVqGYbqsMv6hK4a49bWC0r0ZdJp43tlrvS46ROIJhBSUhFYabNW
-	 Y/1bhbRdqwGEqp3Z/ybTnBQ/gqLc7/a3ozOlmUo9U9LV5ewpX4w3npQtileXn379xc
-	 t+brfAktlyuS/n+ObW7Yyom2QY43UTW19Y2bzuyUHnG0rDRg92dDjJjBAPnWWN4CsX
-	 jX1sK4dOldRMbU2mNTm5UVsWmcFYN4UWMIiFvlODK1b/Wm42rNiQJuMB3G6QHoz8se
-	 70yhzuX8R4H1Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260630065815.199693-1-jtornosm@redhat.com>
-References: <20260630065815.199693-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 07:09:13 +0000
-Message-Id: <20260630070914.3B5E61F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="WCt1s9gk";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bZCg3XJ3"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65U6CP3W1097887
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 07:20:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	3K81payB/ssmTCzPC25RG2gl9qwdhhPB6zdKyYaPSMA=; b=WCt1s9gkySEZXdgB
+	eQGrmZt2QpwpKzU6sgYaT7BGLzNL8hq9Nc/Cp83L2EENGpH/uhzY8NT7X8C6wOR2
+	ZJor6BJQOymIMEQvbMPRcTJgDWxIUbqp3ZOXCKRRM4oZwPkjBVV+FbS9lJKTumxA
+	0NVdk45Y9m1kFjxe9ihgb8U+SbPGfkx+x3ir32FXLm6WjNKsHhvSDYTscLCqcRW+
+	c1cQfyVEl1MeXHBnIVgZFNWvEHxwOVFKjqAItnyR+8T15gw948+xFGbfjSmy2Q5s
+	3ZM35zy61EewvOG6ZpllYxLZU5S2TOpqgUd3DNkdVjicsIICoYYVsgUTA/b4bnLM
+	kY3tAw==
+Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com [74.125.82.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f3x1cteat-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 07:20:20 +0000 (GMT)
+Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-138acbc0e69so19769641c88.0
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 00:20:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1782804020; x=1783408820; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3K81payB/ssmTCzPC25RG2gl9qwdhhPB6zdKyYaPSMA=;
+        b=bZCg3XJ3WN0ahz9QJuXfdgnCveSx0pLQ0EZGs+5yKcui1gIjuv/NTndwJ5F4HR/j7v
+         Nhly1lX3YGWZGF4lSs6x7M2G/dqzkreTtLFNlKV4KRK1FUehgH0GrSILW1dvypzJVXd8
+         OUxjrYwvetJgqSD7QeSpU/h6zHnclMVLnTb7PuplAOVaeD6Gp2y31SjuIWQSJZ1vHyZq
+         qH1gMEfNW8xTJTgpMHqf8y7vCBnkdLWViHjyiXzzY8hBy1L/O4FBIfWx3TfAFHSqQH0q
+         bSxr7cXmNWQ7hQyDU24OU9LZ3XWFDFyIJIpytLID28wFzVyqohMdhNllSozwlaMZ1mLu
+         n9DQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782804020; x=1783408820;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=3K81payB/ssmTCzPC25RG2gl9qwdhhPB6zdKyYaPSMA=;
+        b=lHaJvJ//vx1A0LurQnkWtPBQiX4/pjm3bd7i4pggT1VigHLM9j/achIVcDoa05oN/x
+         keND+MaBVhcZhYPn+I3v72Dbb4X41OnEbsr+91pXC/Wl7WWLSK0YSkvkAgvIJHdur70e
+         Dn8gbyuaOJsM09LXPIDl3GGwLi0mSaN8QAO8YESPVfdozCKDeP3whNBPl13P0yzWJU65
+         TnFY4rMW8gebBNquoMgLqGuXsWtixxMjoRfrCzuQqjqZwXF/GRu8Tbvf42cBhrf1XCWJ
+         YqjXBUkYUWVEV2rSezHMwZmqFYBPdjRBkeCGu18WZzq3fYjjUC0X7jA/n7m6FBMBtqa6
+         CECA==
+X-Forwarded-Encrypted: i=1; AHgh+RpypDle7m5iYwNATJBPFPYSMZuzTt0OD1KNFDDGGw/XHuVug15nmOhoNFyDebh+E7mAPmMcQic+zs8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzTvwbn+SkJikQBw8/t/t0wAJHV9N8AYAzrni0NMSVUyo6ImWxd
+	OkoQbQ1tzN0NrZ05TEEa3MDcedF6un5XIkPleChSdX/O/zfTvDZ/GRm2AnzgHocWr8hLR/6Ds7Q
+	cqze2U1cJRHKjMPY9FHozbmX0aM8KwwU32YV8ijliszxiUOU3APw7nm/AXPuTAs8=
+X-Gm-Gg: AfdE7clppu5ITARwlE8DER5LXW7pXDhpmFe8LYr8NZvNK8w2NsWxXGsv3LLGJBotI9v
+	ZL7xisuMdVgwutkvY4nkGrYn4FH9xUVd7Q48MViEDa3jw+zV2bn6cZ0/PdstjlBPN8qvFxadBgd
+	Bxl9qKYmN7NmBoXd07BVffo1a3IPczkHIyYSkIDyNeBrmAqIioHqhgtvSDZAO1bkQEvoct8GU5L
+	kktSVoxA+iHN83lshrKZCo7zMO+eAx97iJqTFB+HapO/v+OuepGpNGomWx84AUR0YMlMcy4rs0A
+	2Myj3uf9EC8HMMtLsnYPqC7th37CFlqNUBGH6H6R7a5zRxwTSMjlY/At3NELV/2O7azp0Kh7fKF
+	gtlh+OYDLtMHPHOi4OygWKbkIAMOH
+X-Received: by 2002:a05:7301:4888:b0:30b:c502:23df with SMTP id 5a478bee46e88-30ee1211bfemr2036186eec.13.1782804019645;
+        Tue, 30 Jun 2026 00:20:19 -0700 (PDT)
+X-Received: by 2002:a05:7301:4888:b0:30b:c502:23df with SMTP id 5a478bee46e88-30ee1211bfemr2036126eec.13.1782804018618;
+        Tue, 30 Jun 2026 00:20:18 -0700 (PDT)
+Received: from QCOM-IvKeorbwK5.na.qualcomm.com ([120.56.202.7])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30ee2fbe011sm4857374eec.9.2026.06.30.00.20.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jun 2026 00:20:18 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: hongxing.zhu@nxp.com, l.stach@pengutronix.de, Frank.Li@nxp.com,
+        bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+        robh@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de,
+        festevam@gmail.com, will@kernel.org,
+        "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
+Cc: imx@lists.linux.dev, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        sherry.sun@nxp.com
+In-Reply-To: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
+References: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
+Subject: Re: [PATCH V2 0/2] PCI: imx6: Improve PERST# fallback logic
+Message-Id: <178280401285.286395.10401291228239552702.b4-ty@b4>
+Date: Tue, 30 Jun 2026 09:20:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjMwMDA2MiBTYWx0ZWRfXzBD9MGMJR0Ka
+ llis39F9oyZLmC6zyfuRMKdB2U89erIUV8etpVZrBjMVXPSrQNuD5QOaz4jvMF4tZxho8Up3Agi
+ A7CHBOSAGEj7dFwiIKYoreXK+gkAJC9tZkzldlwC5C/jKhUXapjX8ZcvzHIofXpltWC6Xq9ESoI
+ D7plCvVNqbdQ+PeDArEM8C9cT4pnqqJ0+yNB7okuDL8unEJbAXJLjNnm5NxKDf3QoDXoHxCh1pB
+ 8YUnCIHRElazS0NlzCy4W9tlMqtEwKXlUhZQESJEkGdhJJtWi0K/n02gVIH4ci/kGg2ieZHEjhX
+ fWSxAbHFt1/8yN9/AH3FfaXE5KUFWWxrwdmz6Ut13q5hq1hnMUGQCObdqLGh/HeSuBJA7BX5G9O
+ ge4bbZeZN5vV0AbITntRa2LSS82snk3Ul7RhJRisagi0alBU+IcfNHqnkZRNxjwkHPIs59F9BWJ
+ 4iNYLN1ggMNVjfiwb1A==
+X-Proofpoint-ORIG-GUID: uHuVlwjH7TjYzuj5x2qwCHuq3-VzZNjA
+X-Proofpoint-GUID: uHuVlwjH7TjYzuj5x2qwCHuq3-VzZNjA
+X-Authority-Analysis: v=2.4 cv=ftfsol4f c=1 sm=1 tr=0 ts=6a436e34 cx=c_pps
+ a=SvEPeNj+VMjHSW//kvnxuw==:117 a=d0NiXODO0fVjScRmrPHHeg==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=8AirrxEcAAAA:8 a=tFJ3_42GrAp6gSAKR0AA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=zgiPjhLxNE0A:10 a=Kq8ClHjjuc5pcCNDwlU0:22 a=ST-jHhOKWsTCqRlWije3:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjMwMDA2MiBTYWx0ZWRfX4S6slEo1CGj4
+ kBfOP3BduO1bVpWDQdS4eug6FI7Vip0d8R3WmLSyFDp66+xWZIIrmyqcpZfDmdcW99subfaYTKe
+ YKuTZgEfUb2sTzxmWef1EnVOc34HBJQ=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-30_02,2026-06-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 adultscore=0 spamscore=0 clxscore=1015 malwarescore=0
+ phishscore=0 impostorscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606300062
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] The polling loop for PCIe link recovery lacks a final condition =
-check, making it vulnerable to spurious timeouts if the executing thread is=
- delayed or preempted.
-- [Medium] Read-modify-write operation on the SoC global reset register doe=
-s not handle `0xFFFFFFFF` (PCI_ERROR_RESPONSE), potentially writing an inva=
-lid state to the device.
---
 
-commit 6f0f5be433a0e989c17f01ae046c3574dc1fbf77
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+On Mon, 25 May 2026 14:54:41 +0800, Sherry Sun (OSS) wrote:
+> From: Sherry Sun <sherry.sun@nxp.com>
+> 
+> The pci_host_common_parse_port() shouldn't decide whether to fall back
+> to the legacy RC-level binding by checking for "reset-gpios/reset-gpio"
+> properties on the RC node and returning -ENODEV. That's a policy
+> decision belongs to the caller, not this common helper.
+> 
+> [...]
 
-PCI: Add device-specific reset for Qualcomm devices
+Applied, thanks!
 
-This commit adds device-specific hardware reset methods via BAR0 for=20
-specific Qualcomm PCIe devices (WCN6855/WCN7850 WLAN cards and SDX62/SDX65=
-=20
-modems). These resets are intended to fix issues during VFIO passthrough=20
-scenarios where the devices lack a working FLR or standard reset mechanism.
+[1/2] PCI: host-generic: Simplify return value handling in pci_host_common_parse_port(s)
+      commit: 4b523544008aa70cda4b34c0589bbe47172c2637
+[2/2] PCI: imx6: Add imx_pcie_perst_found() to inspect the parsed result
+      (no commit info)
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f7846fc..6d465f6d43054 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
 
-[ ... ]
 
-> +static int reset_qualcomm_wlan(struct pci_dev *pdev, bool probe)
-> +{
-> +	bool link_recovered =3D false;
-> +	unsigned long timeout;
-> +	void __iomem *bar;
-> +	u32 val;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state !=3D PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar =3D pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	val =3D ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-> +	val |=3D QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-
-[Severity: Medium]
-If the device is hung or the link is temporarily unresponsive, could the
-initial ioread32() return PCI_ERROR_RESPONSE (0xFFFFFFFF)?
-
-If it does, this read-modify-write operation would write 0xFFFFFFFF (and
-later 0xFFFFFFFE) back to the device. Could writing these values trigger
-unintended resets across the SoC or leave the hardware in an invalid state?
-
-Would it be safer to verify !PCI_POSSIBLE_ERROR(val) before modifying
-and writing it back?
-
-> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	val &=3D ~QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	timeout =3D jiffies + msecs_to_jiffies(5000);
-> +	while (time_before(jiffies, timeout)) {
-> +		val =3D ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-> +		if (!PCI_POSSIBLE_ERROR(val)) {
-> +			link_recovered =3D true;
-> +			break;
-> +		}
-> +		msleep(20);
-> +	}
-
-[Severity: Medium]
-Is this polling loop vulnerable to false timeouts due to scheduling delays?
-
-If the thread is preempted during msleep(20) and delayed for more than 5
-seconds, time_before(jiffies, timeout) will evaluate to false upon waking
-up. The loop will exit without a final check of the register, returning
--ETIMEDOUT even if the link successfully recovered during the delay.
-
-Should there be a final condition check after the loop, or perhaps use
-read_poll_timeout() instead to handle preemption robustly?
-
-> +
-> +	if (!link_recovered) {
-> +		pci_err(pdev, "PCIe link failed to recover after reset\n");
-> +		goto out_restore;
-> +	}
-> +
-> +	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-> +	 * and thus need to set MHICTRL_RESET to clear SYSERR.
-> +	 */
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630065815.1996=
-93-1-jtornosm@redhat.com?part=3D1
