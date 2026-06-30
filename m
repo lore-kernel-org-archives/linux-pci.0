@@ -1,148 +1,194 @@
-Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EDF3A48CE
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 18:59:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1222E23D297
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 19:03:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782845945; cv=none; b=R1Lpjrp7XYHnZPZLdI4EBysRKKYRcEUzqcgzFiRK3V9AjnuahiFL+0kJ7zTm5zQHF+V6cppVlaKqXwouufTgTZsDpv+1HVdVn4nG/DDNMZdkxFvtV3qFzug1YI3qkwnogAwfoREgsthkuPA4meHayb/nf4FnfMO4X9rH+BDKI1Y=
+	t=1782846202; cv=none; b=g5WTTSjLTY2b+YcZwMTPtXA3kMrM1RopXOAU8XXoqaUmZe4fInc2rYC3X+ROwK0e5Pa2t5pa79qSKbCoIlk3qswBUBQgBhSZZu/3n92PEdbX6krhA6J5CKhfUvq0Y0rmFKnxD+zOr26QnBqSPKQCGz3d6XcBa53EpBrOT/9CSwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782845945; c=relaxed/simple;
-	bh=XGgg+xXUmnlRvAbgTK542VK34Jp1hfwPb9Na535wrug=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=BMgWJglRA2H8XklqDXZCgzUUOV5xVUKDCI5E6GVnaQD2VTNJ3baj3+QZZn9LWxXAJMNt49e4GOWvaSqiBvUJfkP5/BbwHOtFw06KidyUHcN78ikvxMdvihQH+vVma72ZADIEluClco1ocakZF2tvQoXqJYBouVscdQqiLMs4f+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DRvCxO3s; arc=none smtp.client-ip=209.85.214.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	s=arc-20240116; t=1782846202; c=relaxed/simple;
+	bh=LvlwbbSfGWB/DCQMdh/o6bn7mfpSa5BBkE//6kj5XNQ=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=GMDhl7Nwb+bvmcQcFM66y6sB74oVwPnu8qWZATlmWAytWthpWkKd+/Tw2JS+fKS+T7t72gteBm1T31Q5qOdDXIhfxz5PZ24dybpmAc/A0bl9dBdurCARdb/4evLB3y7WtrBPmF63nRSYGRoybi4A6Od4HYIOgpFdEAvBGKqbeos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hS54l00K; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=j+gyJzl8; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DRvCxO3s"
-Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2ca0331d0b1so34252385ad.3
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 11:59:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hS54l00K";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="j+gyJzl8"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65UHkpIt2721639
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 19:03:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=54AYRgZXvf1coJSYDJ7gWV
+	G1vab9Ivg+RUjNrzNJr9E=; b=hS54l00KM3CPK3ibO6D+sKBkMYZKKW5zBhBPMj
+	FQoaKd34lrUQNQ4vqR06liGGQzQUFZCqquOZbaiV++D/oP9/26pv+3FxHl/KFMH1
+	UDPBtcWORSPnx0Ne4lh94tmcOEAnWcp7bgSCJfEpVIHi8bfrgm3EkfYLwB1aFx2l
+	yjaTC5dWjU0xLvtRQgB+xACEtYJSyD1BlBwHqJNoz1OK5Rfe6SKQXoDVvmVYGKjM
+	U7k8iC1RWLXCp/hD+0yl+aZKHwk2Uz819LAB10UU4C1wItrkwVZoNjv7Q6lfv6FL
+	SVE7HVRmpgHMFmnw9VnSf4FJlOa+oGBtuhDmYqAzJ0e5v3oQ==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f4fc09g8t-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 19:03:18 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-30c011c7cb9so13661377eec.1
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 12:03:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1782845942; x=1783450742; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=e+HRXjFGgcPzOleYtd12nce6K890KkClpjKYcrzynFs=;
-        b=DRvCxO3s7fAzwPiFXAB9aVc/zNtjtqSW1qEnzCzLdGeqbOuqmQ0E4CILi8ZL4LqIY0
-         VPT2/AbESYKfeXqqGG/uz8aNiqL8PQbflJz8LISBap3p/ciRrRXe5YgAYyp1NRa8emfp
-         bVsFGVAuZOQLrq5ocjFdUHMQkfZtnzn5jLuoYYvc61eHiLT2xujTaAemDk3OlA9dZ/sA
-         gRc/mVSWjZ+KLcOKP6bKGZRlIcPhVkb73piu6w7fVDCdXepcSpEJKfHrNERkhkFkjY/O
-         PNQFXGunHdChJEvgxW/Ko7OeijTLvYQIxrPsdzBnwQZMvctafGwYlrNmzpF9RS/rL435
-         i61Q==
+        d=oss.qualcomm.com; s=google; t=1782846198; x=1783450998; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=54AYRgZXvf1coJSYDJ7gWVG1vab9Ivg+RUjNrzNJr9E=;
+        b=j+gyJzl8lJ7hHfhpCdiB2cu9ZTKGEsShylZdNbDVspvb3bUuPQOfBmaMapdRZEClBy
+         BYqqMvD6fzdL09Z/W4KTzfACiZZIRE00E7ufqyxp0rQC+3gD/U6v7uc+8/yxC8ZV0Gzt
+         y7gUTFUK1MI0m/0IGYEg/izkWPVANpyxj2Wk+Ml1UBCAXwrcBOFvzm7waS1Xzv24069o
+         tw9uFSjVDpUMApuJUpOWe4yHBm54mFxwNCapJ8hD78A4v3N4yDZQsrsZsM0gT+rLa9tb
+         r/uj/5gkZLbcOgOKRsLjbNmFp4lefZky4FSQdHtEtsgYHkpFlrXhjov8rBO07HuzqfMT
+         0w0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782845942; x=1783450742;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=e+HRXjFGgcPzOleYtd12nce6K890KkClpjKYcrzynFs=;
-        b=jpaDk/PKSslF/r5yb4mmXOZgbcLiAwVKNbX7RFeIUk9dcJQdGbTzmBw9VaaIHF0ZVF
-         FeINjWC5lBMdjsObIpkiF5xVIDBz63kyOzhTMBWn78mAgz5YwOehNXONOMvGGGUtddE8
-         QXif5Crr0DRs8PpOPGzaMGE8jGJ5zAR8H1DBH5vKaBpfO7nja2NIf1HTNxj1l7k1nWRa
-         kIc3ay1lWv/3wO85wQ7LWpXyR4bidBpllMPzz9C2UGUtvoYwGy+uI7CTK9ZdOBkfkohI
-         6VInl43PunDfjBUGE4FHvWi3g/QRAkEFCXQNSen+aYUF8gy7z6bxu+fPYpCrkm9uiUEv
-         wqLA==
-X-Forwarded-Encrypted: i=1; AHgh+RpvqLKXry7o40kpJeTcXOrpaBY3xpOpjFfu84mKuJ9MwTOoYD7R1YVvjiEzQTkiLpcjbBoMrRHLS5w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyOPaDjBHmhahEfnOIAxiIrSTtSA2U5s6SjTp0nxjEvfed3IWeQ
-	Bux2fbgsSfPzvtKy/YKlwN0RxSS8/vxuYEj0Gxs4gzGZL0IoIn7mA+RR0uM4TFosYNVmJgeZUDk
-	mUiBeJg==
-X-Received: from plbko12.prod.google.com ([2002:a17:903:7cc:b0:2c6:9f66:d581])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:acd:b0:2c9:c517:d075
- with SMTP id d9443c01a7336-2ca5a581ab5mr15124165ad.15.1782845942348; Tue, 30
- Jun 2026 11:59:02 -0700 (PDT)
-Date: Tue, 30 Jun 2026 11:59:01 -0700
-In-Reply-To: <akJUz0kYkEBdLSZ3@gmail.com>
+        d=1e100.net; s=20251104; t=1782846198; x=1783450998;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=54AYRgZXvf1coJSYDJ7gWVG1vab9Ivg+RUjNrzNJr9E=;
+        b=bGZPlwz2dLz7//BfpV1puj1jQCvVJnPVid6sivr8fryqEjZ6mm8sYK/eL5TDBydXB0
+         9OXgwd/w+/C6cG28+iAn7tRFjMiqcd085L0RdZ9B87oiowEZ8LJB8lxIxPlGHnGkYdPO
+         nSxTolIHYiSorHKVja9Z7/XUZS3qnxnYnNd4PvFykElhw/2B9B8duW0IW6QNxNzkeTlV
+         qFGI1K0gixPwt/ABuqaWKS/8zWp2eRP/G5QN/kFUgtfmCdP1+FXqzWLq1podZDPfp+tU
+         WbnoqZXxC0uChNzOnFXLnu36a+k4i+u2EfcJUajJyyEijLjJzlCu+ntq0Ykk/yuiymdj
+         D2TA==
+X-Forwarded-Encrypted: i=1; AHgh+RrUb6PYjVCvQUgxZhqKUZbiYviIRw89Bs/KlFkKXoY6Cm2UvNUEgxd31oEnkJ9taR+Tza6seGCG4v0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzltJuHs/7ci4ZK5rGxgV31hytYZjCLxJh9ZZ1u0XRPFY49u+aQ
+	Xjo32WGD+19OOvDtnDVs5EJSqADZWq1NBjS8+xdHGMoYraBRKT4HOTmxyYTI0z6gUGkgAtRLlAl
+	P7LGFU+lSwp3DKRZ9oRUye5B6cWrVVUCbbppcVajrQrhr/y4qhJNfKEEQgtlyKBE=
+X-Gm-Gg: AfdE7clwkOMvLJ8gkk88O2Q7Xb5dJXoO8c2p72BBdG4i9asItDepWfcZlNJ/OmF8UPi
+	WV4IiygEWgsrMqqxJf4hypGbGW/0vZow6RNNONAIf+kwe7SvpMIQuVeJ7VoHyXvbKrKWpzinDwX
+	i3q1iakBlWmkS6V/MeobpZIFKdEouvDPrgMLOplBWc8MdKHc8Pf0RgHhI5L+R2out8cPpa7U8BW
+	zWrk7fQ7u1zFrgnEO49AIHNuSflrax35UJvKI7eZdJNYj5CEYYWfri3FKIzY8Cm/d5UekJW3WSX
+	RC6M9UqAsieKHYu5EzVcH0Qcfyd07vh0rQfYGSDjGdFZWm/6XyjAUV2tLIuIkOs65kX4HO4K6V2
+	VZSqX0s6gDZJM16/+nx10st3F17Dd2cVETJEKCQYe2mySMvc=
+X-Received: by 2002:a05:7301:e02:b0:30c:6025:da8a with SMTP id 5a478bee46e88-30ee134962dmr4071748eec.14.1782846197974;
+        Tue, 30 Jun 2026 12:03:17 -0700 (PDT)
+X-Received: by 2002:a05:7301:e02:b0:30c:6025:da8a with SMTP id 5a478bee46e88-30ee134962dmr4071698eec.14.1782846197362;
+        Tue, 30 Jun 2026 12:03:17 -0700 (PDT)
+Received: from hu-sushruts-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30ee317095dsm14963815eec.15.2026.06.30.12.03.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jun 2026 12:03:16 -0700 (PDT)
+From: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+Subject: [PATCH 0/9] PCI: qcom: Add PCIe support for Shikra SoC
+Date: Wed, 01 Jul 2026 00:32:42 +0530
+Message-Id: <20260701-shikra-upstream-v1-0-e1a721eb8943@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260629060526.3638272-1-jgross@suse.com> <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
- <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com> <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
- <akJUz0kYkEBdLSZ3@gmail.com>
-Message-ID: <akQR9YMtMHReJTfB@google.com>
-Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
-From: Sean Christopherson <seanjc@google.com>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org, 
-	linux-pm@vger.kernel.org, 
-	"linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org, linux-acpi@vger.kernel.org, 
-	kvm@vger.kernel.org, linux-coco@lists.linux.dev, linux-pci@vger.kernel.org, 
-	virtualization@lists.linux.dev, linux-ide@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, 
-	"open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>, linux-hyperv@vger.kernel.org, 
-	linux-hwmon@vger.kernel.org, linux-perf-users@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-	"Rafael J . Wysocki" <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
-	Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com" <lukasz.luba@arm.com>, 
-	Jason Baron <jbaron@akamai.com>, Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>, 
-	Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, "Kirill A. Shutemov" <kas@kernel.org>, 
-	Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>, 
-	Alexey Makhalov <alexey.makhalov@broadcom.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
-	Viresh Kumar <viresh.kumar@linaro.org>, Reinette Chatre <reinette.chatre@intel.com>, 
-	Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>, 
-	Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Dave Airlie <airlied@redhat.com>, 
-	Helge Deller <deller@gmx.de>, linux-geode@lists.infradead.org, 
-	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "K. Y. Srinivasan" <kys@microsoft.com>, 
-	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
-	Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
-	Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>, 
-	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, 
-	Mark Rutland <mark.rutland@arm.com>, 
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@kernel.org>, 
-	Ian Rogers <irogers@google.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	James Clark <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>, 
-	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, 
-	Andy Lutomirski <luto@kernel.org>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, 
-	Huang Rui <ray.huang@amd.com>, Mario Limonciello <mario.limonciello@amd.com>, 
-	Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>, 
-	"srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>, 
-	Artem Bityutskiy <artem.bityutskiy@linux.intel.com>, Artem Bityutskiy <dedekind1@gmail.com>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
-	Vignesh Raghavendra <vigneshr@ti.com>, Ashok Raj <ashok.raj.linux@gmail.com>, 
-	Hans de Goede <hansg@kernel.org>, 
-	"Ilpo =?utf-8?B?SsOkcnZpbmVu?=" <ilpo.jarvinen@linux.intel.com>, 
-	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>, David E Box <david.e.box@intel.com>, 
-	xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIANISRGoC/x3MzQpAUBBA4VfRrN2akS55FVlcDCb5aQYpeXc3y
+ 29xzgPGKmxQJQ8oX2KyrRGUJtBNYR3ZSR8NGWYeCyRnk8wa3LnboRwWR3lbel8OhEgQq115kPs
+ /1s37foi1EFVhAAAA
+To: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782846191; l=2304;
+ i=sushrut.trivedi@oss.qualcomm.com; s=20251127; h=from:subject:message-id;
+ bh=LvlwbbSfGWB/DCQMdh/o6bn7mfpSa5BBkE//6kj5XNQ=;
+ b=3763bsqpx1pPGmDO0q0eQLi+UTbzjWu7ITIUvsYsUGaOWDX8P5RJYqmMHKnQYZmHQ3zKg/ClK
+ xZZ8ExeoEK6CkefBKEg/3J2RCJy7MpS0xinHTnq6FQpeWGyLNJYnjmk
+X-Developer-Key: i=sushrut.trivedi@oss.qualcomm.com; a=ed25519;
+ pk=OrUHTxBaSg1oY3CtCictJ5A4bDMNLRZS1S+QfD9pdjw=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjMwMDE4MiBTYWx0ZWRfX8EpIlECBa878
+ 2Rjnzo9CCl35lSCpeED6PLfb9+cf06U3V9OQSRlI64hsEEJjElYpFIASszQS7HV+VEr414iokkR
+ 2aHfzy2IVc7f9B+Cm3O0QH8x4LAHP8qef0IVbtZAdacHXyQRyakuppyEI+z2fZsSVSymzuMZboC
+ 6ybigov8CNMHUq80iLBimsaLb1HXzSlsxhh36QVrI14ETCqJpI0T9iZlUBfqtSC71vBa5hG7DYX
+ jDrILjfvM7SjkEokXAM7dNKZrBoAALIwBFUNq+9KLMchLWSAkdzF7GD4XW1AJfvadzxvK9S2Sqx
+ hKlT5caJjHwGE9qHtiDNxZJueDGaNCAvqGukYd6gtKNijL0TyrJkj2KHycF+sQs79K1drPRisi5
+ TK2eU+0V8HPFm/PfIoAevBn13QRUM6Im8TKm/wfV0+60SMEszqZOohr594GncyuYa9oVzcU/ZtT
+ pfz9AVuzt2PEa+SnGsQ==
+X-Proofpoint-GUID: JzN5_gtuNL_fOeT2a1y7dZBpWgj4tCFN
+X-Proofpoint-ORIG-GUID: JzN5_gtuNL_fOeT2a1y7dZBpWgj4tCFN
+X-Authority-Analysis: v=2.4 cv=Ivkutr/g c=1 sm=1 tr=0 ts=6a4412f6 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=EUspDBNiAAAA:8 a=0S22rWqy9xk-ZxXqdxcA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjMwMDE4MiBTYWx0ZWRfX7SDTMR2ZCeuU
+ Hpk1zmC4z32vmSDwRHvZM8PDZX9sVJa05hsPs8jrZkFZ2VVFtLumgB7SqKHFlE1C6uak0CmdXqX
+ CY+xZPtatlJlp+zy2KOkxPcMwrAxcpk=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-30_04,2026-06-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 priorityscore=1501 impostorscore=0 clxscore=1015 malwarescore=0
+ bulkscore=0 adultscore=0 lowpriorityscore=0 suspectscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606300182
 
-On Mon, Jun 29, 2026, Ingo Molnar wrote:
-> * Arnd Bergmann <arnd@arndb.de> wrote:
-> 
-> > >>> Note that most patches of this series are independent from each other.
-> > >>> Only the patches removing a specific interface (patches 7, 15, 26 and
-> > >>> 30) and the last two patches of the series depend on all previous
-> > >>> patches.
-> > >> 
-> > >> It looks like you are touching most files twice or more here, to
-> > >> first convert from rdmsr to rdmsrq and then to change the
-> > >> two-argument rdmsrq() macro to a single-argument inline. If you
-> > >> introduce the inline version of rdmsrq() first, you should be
-> > >> able to skip the second step (patch 31) as they could be able
-> > >> to coexist.
-> > >
-> > > I've discussed how to structure the series with Ingo Molnar before [1]. The
-> > > current approach was his preference.
-> > 
-> > Ok.
-> 
-> Note that the individual patches are IMO significantly easier to review
-> through the actual 32-bit => 64-bit variable assignment changes done
-> in isolation (which sometimes include minor cleanups), while
-> the Coccinelle semantic patch:
-> 
->    { a(b,c) => c = a(b) }
-> 
-> which changes both the function signature and the order of terms as
-> well, is just a single add-on treewide patch.
+Add PCIe support for Shikra target, by adding dt-bindings for phy,
+controller and corresponding phy & controller drivers/device-tree
+changes.
 
-Is the plan for subsystem maintainers to pick up the relevant patches, and then
-do the treewide change one release cycle later?
+Shikra RC is connected to TC9563 PCIe switch on all three
+EVK variants: CQS, CQM and IQS. The individual downstream ports
+of TC9563 connect like below:
+
+DSP1: M.2 B-Key for 5G Modem
+DSP2: M.2 M-Key for NVMe
+DSP3: Embedded ethernet device
+
+Power and reset to M.2 B and M.2 M slot are controlled via
+TC9563 GPIO's. Hence, add DT nodes to enable TC9563 switch
+and include corresponding changes to configure power/reset
+to TC9563 endpoints as part of power on sequence.
+
+Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+---
+Sushrut Shree Trivedi (9):
+      dt-bindings: phy: sc8280xp-qmp-pcie: Document Shikra PCIe phy
+      dt-bindings: PCI: qcom: Document the Shikra PCIe Controller
+      dt-bindings: PCI: Add bindings for endpoint gpios
+      PCI: qcom: Add support for Shikra
+      phy: qcom: qmp-pcie: Add QMP PCIe PHY support for Shikra
+      PCI/pwrctrl: tc9563: Add API to control endpoint power and reset
+      arm64: dts: qcom: shikra: Add PCIe PHY and controller nodes
+      arm64: dts: qcom: shikra-evk: Add TC9563 PCIe switch node for PCIe
+      arm64: dts: qcom: shikra-(cqm/cqs/iqs)-evk: Enable PCIe PHY node
+
+ .../devicetree/bindings/pci/qcom,shikra-pcie.yaml  | 211 +++++++++++++++++++++
+ .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  22 ++-
+ .../bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   |   2 +
+ arch/arm64/boot/dts/qcom/shikra-cqm-evk.dts        |   7 +
+ arch/arm64/boot/dts/qcom/shikra-cqs-evk.dts        |   7 +
+ arch/arm64/boot/dts/qcom/shikra-evk.dtsi           | 152 +++++++++++++++
+ arch/arm64/boot/dts/qcom/shikra-iqs-evk.dts        |   7 +
+ arch/arm64/boot/dts/qcom/shikra.dtsi               | 154 +++++++++++++++
+ drivers/pci/controller/dwc/pcie-qcom.c             |   1 +
+ drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 152 ++++++++++++---
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           |  73 +++++++
+ 11 files changed, 764 insertions(+), 24 deletions(-)
+---
+base-commit: 565fa02f75448ce1ddd18bda6b31ad985cf75411
+change-id: 20260701-shikra-upstream-14b8668f1001
+
+Best regards,
+-- 
+Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+
