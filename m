@@ -1,92 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1354C8287E;
-	Tue, 30 Jun 2026 23:11:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBCA226D05;
+	Tue, 30 Jun 2026 23:18:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782861121; cv=none; b=NbTTHzoVwpsMa67aWZ73FzUTWnjd/vwdWMfhAWeDFPNaMqELtm3RJXPfyoWBUajbbnaW3oI7ptDaQEAB0FU/2fOu9Q32ChCUOtIDmKTCuMnS2Pk2JceOio3Z2Z8/7XUy+bd7Zqoe5FLa6lgnOxvK6KSXSCkprd18B1VMEjZQpyk=
+	t=1782861531; cv=none; b=G99yeJoD34Aj1XSZ2AkQRX0Ry9GNSsWZcYYi7hYuP8oGd1fz9HGoVm+79ak8NsWySD0YsIF+g3N+6pvKBUTBUzX/Dx25bdhlM6f+KewPvyfHxHiLOBCi7tbVshDXhQBDZyTJ0vheCxBZgt51gYS4x75Qkv+KWyjDzmCbwKJlgjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782861121; c=relaxed/simple;
-	bh=YouuZLEIEO5m2YlgfAG02ZFNT62OJ7IdcU08Y0jQvzM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KLjZJHuY+JN1QY9EMRgC1A+BCZ9WVmlsx/2IHlEvBLhVFoMCtrlEeL3GTyhZ+4rVJG1ykbd7A9HiXDdTerL06HCipofyP3kGYf2Fyki73XGM4XXJxmXdyt0QYl+p6ptwxp3xHpKtCHS2cpZhnqnn7tKYjHNGMY5DTPjBvUOmUG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SzVMxtqi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782861531; c=relaxed/simple;
+	bh=+eQ6M0K+eMeEG4XsANC9glVnlOlhJrlgi8sTZLZhzh4=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=bRwIOSPuDolGhCAGF3orJyWgko5EbEGgveG1/rRB9w3ljmWlwdgKfapQ3c6PX2zLw/YE8WgQIWNBpiLIsuNYtjbvwxAuJKlOLpTiJb73CKN6ogx/bwNdzmoSQ3nWCZ3Hn0/K1W0K1pMrsf4CLUDzRBzwTqBC38/pi2kyPTBgTJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZQCAWZ+J; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SzVMxtqi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1F8E1F000E9;
-	Tue, 30 Jun 2026 23:11:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782861119;
-	bh=YouuZLEIEO5m2YlgfAG02ZFNT62OJ7IdcU08Y0jQvzM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SzVMxtqip/rJUliRR038d9RAA0FCcpgF6HkBqJeAZ4y5MtONJKEM8i/YEhtnSHkt7
-	 Qd26cnG4AQfv2ITuISIUtpgXv+pWhRuEwCKGs0FXNjTD+JstCIdw0F5hb/6s4Mr3jW
-	 raxRnPerBpIN9PhIIOr/kdjrEwrZ/OG2aT89IrbRzvBi6PukFE4ahJQan5giK5o6WK
-	 NeR4a7XsaPiCSTRRtw7+FcRVb9cP3n4OdBdpub6AlGUNo7Ci0TFh+106+hZrXDKdjK
-	 3frdZqViiyfRepU77kF+aJ0Rr9PQ/a5CNefoRBzTouIGGo61ueEGLjUaz6kfOSuBIc
-	 QRoS8eeVIRFgA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 4/4] RDMA/mlx5: get tph for p2p access when
- registering dma-buf mr
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhiping Zhang" <zhipingz@meta.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
-In-Reply-To: <20260630224328.3218796-5-zhipingz@meta.com>
-References: <20260630224328.3218796-1-zhipingz@meta.com>
- <20260630224328.3218796-5-zhipingz@meta.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 23:11:59 +0000
-Message-Id: <20260630231159.A1F8E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZQCAWZ+J"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782861529; x=1814397529;
+  h=from:to:cc:subject:date:message-id;
+  bh=+eQ6M0K+eMeEG4XsANC9glVnlOlhJrlgi8sTZLZhzh4=;
+  b=ZQCAWZ+JFqHY7XuXfliRQJ3soYuvLPpgWNSE0aVzV0wS8WGZvLH4TWuO
+   vyeYGwJ5DWMDoNI4Vip49Ji+KbNwLMI1f+4wFUv2TcWx7f3lr/C5Me/fx
+   tznzUPzHm5M7VxWvLkX05CpgXDiToEiuEqBPSdROTvPbKh82+HldX+DBj
+   jYdyGBeCXpm5n4bOQFJ3Vsp9NKDiW7Ch/zPYeZ0tFsTNKQwyN1OaI631J
+   kKTMajZZIVGt+0g3QKqvCY355HPJrq/HPWoDrDZifYYWkTBfoir/0m50e
+   Lz/VmcMnm+fU5bkkO0ZrqjkB0RYJMh4tn0aU1UVGwY0Dn6NS2CUhX185f
+   Q==;
+X-CSE-ConnectionGUID: UxBO63F3R6q2QFmJsWYsmA==
+X-CSE-MsgGUID: qGfINolsTROb8KDGsaDwkg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11833"; a="86135256"
+X-IronPort-AV: E=Sophos;i="6.24,234,1774335600"; 
+   d="scan'208";a="86135256"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jun 2026 16:18:47 -0700
+X-CSE-ConnectionGUID: 64BaQv3RRWCocNHekXedBw==
+X-CSE-MsgGUID: 8wDUs1oHQ5+ASvCYfZXpJQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,234,1774335600"; 
+   d="scan'208";a="251972105"
+Received: from estantil-desk.jf.intel.com ([10.166.241.24])
+  by orviesa008.jf.intel.com with ESMTP; 30 Jun 2026 16:18:48 -0700
+From: Emil Tantilov <emil.s.tantilov@intel.com>
+To: intel-wired-lan@lists.osuosl.org
+Cc: netdev@vger.kernel.org,
+	przemyslaw.kitszel@intel.com,
+	jay.bhat@intel.com,
+	ivan.d.barrera@intel.com,
+	aleksandr.loktionov@intel.com,
+	larysa.zaremba@intel.com,
+	anthony.l.nguyen@intel.com,
+	andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	aleksander.lobakin@intel.com,
+	linux-pci@vger.kernel.org,
+	madhu.chittim@intel.com,
+	decot@google.com,
+	willemb@google.com,
+	sheenamo@google.com,
+	lukas@wunner.de
+Subject: [PATCH iwl-next v3 0/2] Introduce IDPF PCI callbacks
+Date: Tue, 30 Jun 2026 16:18:52 -0700
+Message-Id: <20260630231854.11536-1-emil.s.tantilov@intel.com>
+X-Mailer: git-send-email 2.17.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+This series implements PCI callbacks for the purpose of handling FLR and
+PCI errors in the IDPF driver.
 
-Pre-existing issues:
-- [High] Memory leak of `struct mlx5_st_idx_data` in `mlx5_st_dealloc_index=
-()` when its refcount reaches 0.
---
+The first patch removes the conditional deinitialization of the mailbox in
+the idpf_vc_core_deinit() function. Aside from being redundant, due to the
+shutdown of the mailbox after a reset is detected, the check was also
+preventing the driver from sending messages to stop and disable the vports
+and queues on FW side, which is needed for the prepare phase of the FLR
+handling.
 
-Note: Due to system recitation restrictions, this review report cannot quote
-the original patch diff inline. The findings are provided as a free-form
-summary below.
+The second patch implements the PCI callbacks. The logic here follows
+the reset handling done in idpf_init_hard_reset(), but is split in
+prepare and resume phases, where idpf_reset_prepare() stops all driver
+operations and the resume callback attempt to recover following the
+reset or the PCI error event.
 
-commit 9ada3f634918f1f6bc02c86bed9350c775185dbc
-Author: Zhiping Zhang <zhipingz@meta.com>
-Subject: RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+NOTE: These changes depend on, and apply on top of the IXD series:
+https://lore.kernel.org/netdev/20260608144127.2751230-1-larysa.zaremba@intel.com/
 
-This commit wires up mlx5_ib to query dma-buf TPH metadata at MR registrati=
-on
-time to program requester-side TPH on the outbound mkey. It translates
-exporter-provided steering tags into local ST entries and ties the extra
-ST-table reference to the MR lifetime.
+Testing hints:
+1. FLR via sysfs:
+echo 1 > /sys/class/net/<ifname>/device/reset
 
-[Severity: High]
-This is a pre-existing issue, but I noticed something while reviewing the
-surrounding code in drivers/net/ethernet/mellanox/mlx5/core/lib/st.c.
+Previously this would have been handled by idpf_init_hard_reset() as the
+driver detects the reset. Now it will be done by the PCI err callbacks,
+so this is the easiest way to test the reset_prepare/resume path.
 
-In the mlx5_st_dealloc_index() function, when the usecount refcount drops to
-zero, the code calls xa_erase() to remove the element from the xarray.
-However, it appears the dynamically allocated memory for the idx_data
-structure itself is never freed.
+2. PCI errors can be tested with aer-inject:
+./aer-inject -s 83:00.0 examples/<error_type>
 
-Could this lead to an unbounded memory leak when a user-space application
-repeatedly registers and deregisters a dma-buf MR with a TPH tag? During
-registration, mlx5_st_alloc_index_by_tag() allocates a new struct
-mlx5_st_idx_data via kzalloc_obj(). If deregistration drops the reference
-count to zero and removes the pointer from the xarray but fails to free the
-structure, could this be triggered in a loop by an unprivileged user-space
-process to deplete kernel memory?
+3. Stress testing can be done by combining various callbacks with the
+reset from step 1:
+echo 1 > /sys/class/net/<if>/device/reset& ethtool -L <if> combined 8
+ethtool -L <if> combined 16& echo 1 > /sys/class/net/<if>/device/reset
 
-Would it make sense to add a kfree() for the idx_data structure immediately
-after the xa_erase() call in the refcount_dec_and_test() block?
+Changelog:
+v2->v3:
+1/2:
+- Added call to libie_ctlq_xn_shutdown() in idpf_shutdown() to avoid
+possible regression when shutting down while FW is not responsive,
+causing long delays.
+- Fixed typo in the title s/conditonal/conditional/
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630224328.3218=
-796-1-zhipingz@meta.com?part=3D4
+2/2:
+- Improved the logic in idpf_reset_prepare() to make sure the
+  RESET_IN_PROG bit is set after the init task.
+- Renamed the err parameter in idpf_pci_err_detected() with state
+  and updated the description to match.
+- Added check for adapter->xnm before calling libie_ctlq_xn_shutdown()
+  in idpf_pci_err_detected().
+- Corrected a comment to add some context on the reasoning behind
+  the reset triggered on resume, following a PCI error.
+- Corrected the description for slot_reset callback by removing
+  the mention of AER as it is not the only trigger for the reset.
+- Use PCI_POSSIBLE_ERROR() macro when checking RSTAT value.
+- Add vport_ctrl_lock when calling idpf_vc_core_deinit() in 
+  idpf_reset_prepare().
+
+v1->v2:
+- Removed the call to pci_save_state() from idpf_pci_err_slot_reset(),
+  as it is no longer needed after pci_restore_state(). Suggested by
+  Lukas Wunner.
+
+v1:
+https://lore.kernel.org/netdev/20260411003959.30959-1-emil.s.tantilov@intel.com/
+
+Emil Tantilov (2):
+  idpf: remove conditional MBX deinit from idpf_vc_core_deinit()
+  idpf: implement pci error handlers
+
+ drivers/net/ethernet/intel/idpf/idpf.h        |   3 +
+ drivers/net/ethernet/intel/idpf/idpf_lib.c    |  13 +-
+ drivers/net/ethernet/intel/idpf/idpf_main.c   | 124 ++++++++++++++++++
+ .../net/ethernet/intel/idpf/idpf_virtchnl.c   |  10 +-
+ 4 files changed, 139 insertions(+), 11 deletions(-)
+
+-- 
+2.37.3
+
