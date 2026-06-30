@@ -1,255 +1,157 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EFDA379C4A
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 06:58:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90F43769FF
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 07:09:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782802711; cv=none; b=I6aE2qOuSYdHDW2bKYlmnY3seqHzQxP5xspgKTSzc2g8dcxC2sU8AuM+x24OUSFYn3zDDfZaDRZt8g4AY+scN8N50mOgdUc6eW0n7n0NHlL2iZVNVd4SXduMQLN3zaLlwaRT3N5wm1TJ6aqK+n9aeIM7natlRLK/bk7dXJ0fPdM=
+	t=1782803356; cv=none; b=eQZaZA4wmXMz7Dg3iUxrhJSTyWeGRHuQn9LTPO5D9a/CPW40o8Rk+Tp27IpaIlcWXIMG2wEYYZooaxB/S6uVE6R8/3K+u3UHsmBMtV9qdVnHy4ZFMU+JIzzDkT5AFO70nzKqp2Kvfb8Js+o3VameOOnrzXYeUfVqUboJGr0F/b4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782802711; c=relaxed/simple;
-	bh=O/RmpcJPhoXSXmdQPfuDXbLyqT8UOzjEC89MYWn2aSU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eHffqIkmrN3wpR7v1LBzvHCU/jtbQ1HLHfqfSx5+1WiEQTR1WGHl4MErh3ME2/U6lf6jnIKIgnYMHcop0x+xKcBfN72KejQNc6gFGxzncOVPefWDzUq6TGKMp3PsmzxBOcip7Z6wB9/+v4oKZ8o8u2J/WYxGPCd4e3RXJZ2WR5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ewK1iwWp; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1782803356; c=relaxed/simple;
+	bh=OPsPLV1iijLPEOl4AgbF7IQFsPg6/WnRxxyRPVsWiU0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bt8n2QSUrELPgqcegM/9L6iLgpJ9eCLBxFFHuTwwqu0Zp6VGQ06ICYWqZOY+vS57rWgmyg4/bqBdPWlb0sWZzAO75GQYwv8lANzbHeByQYfxh65koTEWkfs8LBhURAa8oXQNmKGuPu0blRB5lrpCOcL8rS9qzII9r6exRNW1138=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P+gJblhC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ewK1iwWp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782802709;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=IfvcY9uq6uLwM8t+kLexGrbIDeUDtwGI75Ilk2oh1y4=;
-	b=ewK1iwWpDlpBqRoZ1pu0QvM9h+LUWrbSWwPIsO0QasR+cm2oFHcDCwLYpXqF0L8MRtvdam
-	ImM4PQElHOgFcSFNb5Vs/j/GiDVH3iUluJl1r+hdNzxF53nprYYE73f2ui/pTTpPCMmkgL
-	PvCzge653UIbO/zbvx/ydy8RYIqJazU=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-612--7tlt8gNONKNQD7xg7TLfQ-1; Tue,
- 30 Jun 2026 02:58:27 -0400
-X-MC-Unique: -7tlt8gNONKNQD7xg7TLfQ-1
-X-Mimecast-MFC-AGG-ID: -7tlt8gNONKNQD7xg7TLfQ_1782802705
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 597D41856A55;
-	Tue, 30 Jun 2026 06:58:25 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.35])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 478CE180059E;
-	Tue, 30 Jun 2026 06:58:21 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org,
-	mani@kernel.org
-Cc: jjohnson@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
-Date: Tue, 30 Jun 2026 08:58:15 +0200
-Message-ID: <20260630065815.199693-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P+gJblhC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5E61F000E9;
+	Tue, 30 Jun 2026 07:09:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782803354;
+	bh=SMeblETSb8ICs3HuSQo/taKTJo2rIihcx8wPSNlGZQw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=P+gJblhCJzyA+H2hSe9r87G/DiiYBeWlGeJnEBXA24gDat2xCJfa/Z50Q3uqtkcVU
+	 8UIFhhNStO8f7YFcVqGYbqsMv6hK4a49bWC0r0ZdJp43tlrvS46ROIJhBSUhFYabNW
+	 Y/1bhbRdqwGEqp3Z/ybTnBQ/gqLc7/a3ozOlmUo9U9LV5ewpX4w3npQtileXn379xc
+	 t+brfAktlyuS/n+ObW7Yyom2QY43UTW19Y2bzuyUHnG0rDRg92dDjJjBAPnWWN4CsX
+	 jX1sK4dOldRMbU2mNTm5UVsWmcFYN4UWMIiFvlODK1b/Wm42rNiQJuMB3G6QHoz8se
+	 70yhzuX8R4H1Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260630065815.199693-1-jtornosm@redhat.com>
+References: <20260630065815.199693-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 30 Jun 2026 07:09:13 +0000
+Message-Id: <20260630070914.3B5E61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Some Qualcomm PCIe devices (WCN6855/WCN7850 WLAN cards, SDX62/SDX65 modems)
-lack working reset methods for VFIO passthrough scenarios. These devices
-have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-broken bus reset.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The polling loop for PCIe link recovery lacks a final condition =
+check, making it vulnerable to spurious timeouts if the executing thread is=
+ delayed or preempted.
+- [Medium] Read-modify-write operation on the SoC global reset register doe=
+s not handle `0xFFFFFFFF` (PCI_ERROR_RESPONSE), potentially writing an inva=
+lid state to the device.
+--
 
-The problem manifests in VFIO passthrough scenarios:
+commit 6f0f5be433a0e989c17f01ae046c3574dc1fbf77
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-- WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WLAN devices:
-  Normal VM operation works fine, including clean shutdown/reboot.
-  However, when the VM terminates uncleanly (crash, force-off), VFIO
-  attempts to reset the device before it can be assigned to another VM.
-  Without a working reset method, the device remains in an undefined state,
-  preventing reuse.
+PCI: Add device-specific reset for Qualcomm devices
 
-- SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
-  on first VM assignment without proper reset capability.
+This commit adds device-specific hardware reset methods via BAR0 for=20
+specific Qualcomm PCIe devices (WCN6855/WCN7850 WLAN cards and SDX62/SDX65=
+=20
+modems). These resets are intended to fix issues during VFIO passthrough=20
+scenarios where the devices lack a working FLR or standard reset mechanism.
 
-Add device-specific reset methods using BAR-space hardware reset registers
-that exist in these devices:
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b09f27f7846fc..6d465f6d43054 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
 
-- WCN6855/WCN7850 WLAN devices use SoC global reset via BAR0 (sequence from
-  ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
-  ath11k_mhi_set_mhictrl_reset()):
-  - Write/clear reset bit at offset 0x3008
-  - Wait for PCIe link recovery (up to 5 seconds)
-  - Clear MHI controller SYSERR status at offset 0x38
+[ ... ]
 
-- SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
-  driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
-  - Write reset request to offset 0xb0
-  - Wait 2 seconds for reset completion
+> +static int reset_qualcomm_wlan(struct pci_dev *pdev, bool probe)
+> +{
+> +	bool link_recovered =3D false;
+> +	unsigned long timeout;
+> +	void __iomem *bar;
+> +	u32 val;
+> +	u16 cmd;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (pdev->current_state !=3D PCI_D0)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+> +	bar =3D pci_iomap(pdev, 0, 0);
+> +	if (!bar) {
+> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> +		return -ENODEV;
+> +	}
+> +
+> +	val =3D ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	val |=3D QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
 
-These are true hardware reset mechanisms (not power management or firmware
-error recovery), providing proper device reset for VFIO scenarios.
+[Severity: Medium]
+If the device is hung or the link is temporarily unresponsive, could the
+initial ioread32() return PCI_ERROR_RESPONSE (0xFFFFFFFF)?
 
-Testing was performed on desktop platforms with M.2 WLAN and modem cards
-using M.2-to-PCIe adapters, including extensive force-reset cycling to
-verify stability.
+If it does, this read-modify-write operation would write 0xFFFFFFFF (and
+later 0xFFFFFFFE) back to the device. Could writing these values trigger
+unintended resets across the SoC or leave the hardware in an invalid state?
 
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
-v12: Address Manivannan Sadhasivam feedback:
-  - Use WLAN instead of WiFi (Qualcomm's preferred terminology)
-  - Fix link recovery check: use !PCI_POSSIBLE_ERROR(val) instead of
-    val != PCI_ERROR_RESPONSE (fixes type promotion bug)
-v11: https://lore.kernel.org/all/20260626055023.197470-1-jtornosm@redhat.com/
+Would it be safer to verify !PCI_POSSIBLE_ERROR(val) before modifying
+and writing it back?
 
- drivers/pci/quirks.c | 117 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 117 insertions(+)
+> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	val &=3D ~QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
+> +	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +
+> +	msleep(10);
+> +
+> +	timeout =3D jiffies + msecs_to_jiffies(5000);
+> +	while (time_before(jiffies, timeout)) {
+> +		val =3D ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+> +		if (!PCI_POSSIBLE_ERROR(val)) {
+> +			link_recovered =3D true;
+> +			break;
+> +		}
+> +		msleep(20);
+> +	}
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 431c021d7414..0de606366200 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4240,6 +4240,120 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
- 	return 0;
- }
- 
-+#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET	0x3008
-+#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
-+#define QUALCOMM_WLAN_MHICTRL			0x38
-+#define QUALCOMM_WLAN_MHICTRL_RESET_MASK	0x2
-+
-+/*
-+ * Qualcomm WLAN device-specific reset using SoC global reset via BAR0
-+ * registers.
-+ */
-+static int reset_qualcomm_wlan(struct pci_dev *pdev, bool probe)
-+{
-+	bool link_recovered = false;
-+	unsigned long timeout;
-+	void __iomem *bar;
-+	u32 val;
-+	u16 cmd;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (pdev->current_state != PCI_D0)
-+		return -EINVAL;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-+
-+	bar = pci_iomap(pdev, 0, 0);
-+	if (!bar) {
-+		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-+		return -ENODEV;
-+	}
-+
-+	val = ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+	val |= QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
-+	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+
-+	msleep(10);
-+
-+	val &= ~QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
-+	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+
-+	msleep(10);
-+
-+	timeout = jiffies + msecs_to_jiffies(5000);
-+	while (time_before(jiffies, timeout)) {
-+		val = ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
-+		if (!PCI_POSSIBLE_ERROR(val)) {
-+			link_recovered = true;
-+			break;
-+		}
-+		msleep(20);
-+	}
-+
-+	if (!link_recovered) {
-+		pci_err(pdev, "PCIe link failed to recover after reset\n");
-+		goto out_restore;
-+	}
-+
-+	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-+	 * and thus need to set MHICTRL_RESET to clear SYSERR.
-+	 */
-+	iowrite32(QUALCOMM_WLAN_MHICTRL_RESET_MASK, bar + QUALCOMM_WLAN_MHICTRL);
-+	ioread32(bar + QUALCOMM_WLAN_MHICTRL);
-+
-+	msleep(10);
-+
-+out_restore:
-+	pci_iounmap(pdev, bar);
-+	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-+
-+	return link_recovered ? 0 : -ETIMEDOUT;
-+}
-+
-+#define MHI_SOC_RESET_REQ_OFFSET		0xb0
-+#define MHI_SOC_RESET_REQ			BIT(0)
-+
-+/*
-+ * Qualcomm modem device-specific reset using MHI SoC reset via BAR0
-+ * register.
-+ */
-+static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
-+{
-+	void __iomem *bar;
-+	u16 cmd;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (pdev->current_state != PCI_D0)
-+		return -EINVAL;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-+
-+	bar = pci_iomap(pdev, 0, 0);
-+	if (!bar) {
-+		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-+		return -ENODEV;
-+	}
-+
-+	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
-+	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
-+
-+	/* Be sure device reset has been executed */
-+	msleep(2000);
-+
-+	pci_iounmap(pdev, bar);
-+	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -4255,6 +4369,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_chelsio_generic_dev },
- 	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
- 		reset_hinic_vf_dev },
-+	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_modem }, /* SDX62/SDX65 modems */
-+	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_wlan },  /* WCN6855 WLAN */
-+	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_wlan },  /* WCN7850 WLAN */
- 	{ 0 }
- };
- 
--- 
-2.54.0
+[Severity: Medium]
+Is this polling loop vulnerable to false timeouts due to scheduling delays?
 
+If the thread is preempted during msleep(20) and delayed for more than 5
+seconds, time_before(jiffies, timeout) will evaluate to false upon waking
+up. The loop will exit without a final check of the register, returning
+-ETIMEDOUT even if the link successfully recovered during the delay.
+
+Should there be a final condition check after the loop, or perhaps use
+read_poll_timeout() instead to handle preemption robustly?
+
+> +
+> +	if (!link_recovered) {
+> +		pci_err(pdev, "PCIe link failed to recover after reset\n");
+> +		goto out_restore;
+> +	}
+> +
+> +	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
+> +	 * and thus need to set MHICTRL_RESET to clear SYSERR.
+> +	 */
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630065815.1996=
+93-1-jtornosm@redhat.com?part=3D1
