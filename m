@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E277B3F39FA;
-	Tue, 30 Jun 2026 10:45:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30720400DF1;
+	Tue, 30 Jun 2026 10:52:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782816331; cv=none; b=Kz1i+/lijz8iuWQa/PpFaFUP8KSuVxqba9j03L97lxtiN7I+YpV07xl4u509Q9QJUMcmJ1rCLIHaKDKQBQ9VfXyiTLK0soe21ZY9qK1QSCKw3pY1anlQ1z3tC0GauwnDNxQDnJePXjTDxZn9TRmjlqDlC6mveGCFUUzwayZ+sMI=
+	t=1782816767; cv=none; b=Ablw7xdy3tvpJtcaqxY8vctyUsQf6LgBJdATqlMk9NKiIBsXobbKCX0hbKsjNqJOHpcNsYxi1Ee8F8dANhiouGFzfdTbOfWqlkOPX5M/eD/iy3qtlkh6i5T+sjzyiO6tSGyeqbuMGTpRTuDTFTn8uVaxmZDhFZ01Fyniq19zapk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782816331; c=relaxed/simple;
-	bh=1qzLgeayJRlHALMs6tH2nrzX4c0/URqfvtlEkVZTWAw=;
+	s=arc-20240116; t=1782816767; c=relaxed/simple;
+	bh=OdOIy38LjnooPWfdjrTjgq4gJyY5WXtc37T1PnA95cE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eX1QrPU9cs3sfNxI5L5ZCVC9JYKXCKHCljaYVW7AwRwleIF1wkhNtgh6aLrekjP+eyvqys2P4MXYVT2h2hMg1/QBAIiGknBXk75YSjWvBJuauF1wiQKETudutCkdErLwTsrf3XYqXv8KI4tp+Q/kJvy8oSNWEgTk5FjZd65Ijbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UTDf7Jfi; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GaWekKJ9YQ8533l1I9YBVh5x9s3zdUL9gyedjhj0CZTviz19mZeNNpVQSRmZ3Ldyny/G5tWmnor6q65QFH/RLCi1Ojg67Nf497aSsrwhtTCgmR3qRqsx04HRH1DXTlaYy7MxMCBmd6ck5yS/RaOGkasiZ3Jxi9exbb6ORTDWvx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XK6ISfYi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UTDf7Jfi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0B541F000E9;
-	Tue, 30 Jun 2026 10:45:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XK6ISfYi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 450DF1F00A3E;
+	Tue, 30 Jun 2026 10:52:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782816327;
-	bh=1qzLgeayJRlHALMs6tH2nrzX4c0/URqfvtlEkVZTWAw=;
+	s=k20260515; t=1782816758;
+	bh=OdOIy38LjnooPWfdjrTjgq4gJyY5WXtc37T1PnA95cE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UTDf7JfiaCt+uFpLISyuRucJJD7CdbOeuNj90btEGdyByMwqzFvKGygRwaTtT4fif
-	 79sy4lnV5bZkmR7XR9d4opcgSSGWWjx2UG1sqQ9EDeWugviMobxaufOEnRM/MnecOQ
-	 eHvvIlzOmWJgIKtbNfGyVgYyFXVlzdJhrG6WWAb6d/oGzRlSzs5LwWcHfozt0FbEgI
-	 3uYiYkU52fOCnS5aifN/f+cIQcCT3eENW7PEdT1CkZr6LpOkIIjhJRPWkOlz2oXMkt
-	 YjKjp77WuGlxyjF1e9J5gpchM/jotkLmWUcB1DzGR9NPtgNF+p/yOjuE1PXspVrAhd
-	 pabWohGaTBdag==
+	b=XK6ISfYiUl1W2uq3uLpcahiHG/JuDqAZ+VrDkgocVe5gaamcz82eIE2DM9eQZ1EqR
+	 rC6B7r+4CmEtWcSL4B9/6Wk2+QIgxJkHLGFN7f9mWZkyHZExoGnFHgxyEXZ6oVknrF
+	 Ebus2Rod+zLtSVq33vI6tw48iU+hGGJk61a4CyJKulONFgoPplihBhtvPrgYuoq1PW
+	 h6Cf/mQmuJV+pmj1rSgDEZri1GrsGHQNW2DMaHpzh7XXQ5aTzKpYPdGKl3OyV8WfMM
+	 9ltNwW2WE2pwOBSVN3S0TyQynqGiAd9zLJOFnZmrhOrwBKY61W5K9jrZ7efay414dq
+	 Bs0EdySVu/r6g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 2/8] drivers: core: Use fw_devlink_set_device()
+Subject: Re: [PATCH v8 3/8] pinctrl: cs42l43: Use fw_devlink_set_device()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Herve Codina" <herve.codina@bootlin.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260630102804.413563-3-herve.codina@bootlin.com>
+In-Reply-To: <20260630102804.413563-4-herve.codina@bootlin.com>
 References: <20260630102804.413563-1-herve.codina@bootlin.com>
- <20260630102804.413563-3-herve.codina@bootlin.com>
+ <20260630102804.413563-4-herve.codina@bootlin.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 10:45:26 +0000
-Message-Id: <20260630104526.D0B541F000E9@smtp.kernel.org>
+Date: Tue, 30 Jun 2026 10:52:37 +0000
+Message-Id: <20260630105238.450DF1F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,5 +55,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630102804.4135=
-63-1-herve.codina@bootlin.com?part=3D2
+63-1-herve.codina@bootlin.com?part=3D3
 
