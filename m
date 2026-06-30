@@ -1,69 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23FE13AA1B5;
-	Tue, 30 Jun 2026 17:27:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23BE0548EE;
+	Tue, 30 Jun 2026 17:37:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782840438; cv=none; b=iBN7vjuaxvrGxebDpDOBResQixp4wHdMbCnfXcJQSXI4ThY5R14UmiZRShwHRJmd3gsg+xqXOCGMrGD+8ROElh3HLvaHHDw9Gt91pjVpFGm7HjKCxKGMWof6AQg+mfOSo0MZJ+2xn6qe8Ec+kyQHG+C4ByNaNukgOSiXnmjgNIw=
+	t=1782841068; cv=none; b=Y3PiFy8jfiriPAgnsj7IemgtFsSJKN8NW7ncHMTKitpW2tkRag/Vc43Fa/ksz3MVXjjvsbYVJBLzzpUoZQ1UqNY8jr0kqbGSfgGr3GAzxGs1mosDJtkRX6zuWJNex5Hi3P31DIj1KASDAD9kTCfyUvSqlS7Cn+EPaKsp/IpNVjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782840438; c=relaxed/simple;
-	bh=ss2fGP3mjT1OY+/VMSawSf8lqidO9w0vy7lhQdI3bMI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DAuo4Pe9PoQsG0qJHJ5AMWRj9t74G9eSAMNsyymM3mWPIccVEgrWF891B9Wk61u7KkotBjMhor+W89mrTeda9hEb1AInrRpY5KAikImuw5E6oTxoaYsdrS6yz4qZRTw0B6QVMl5FkI2ph6uFT69hKS46biUqwdj8w4asxARZfvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQY3qv43; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782841068; c=relaxed/simple;
+	bh=HJRM5qHyE5meSMlSI6WRBAbKT5AnOu1oLTv0gbcogxk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=LWBEmsmcM4V4/kc4J4jsCeH/EqvZlAJvDIS7ElpivG72YXDR3u+836ZhRMmmwEv9J0TS9GJNwedDd4PeEDovjr4KsGQEgtqPDa7/6pxbrb0yX8hhPkeZDoXyMcaPEO4WyxKbox1OjaZLGEwav/MCKk5nDL9JIVroS+bhysvpo1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NERHJxgT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQY3qv43"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C2B1F000E9;
-	Tue, 30 Jun 2026 17:27:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NERHJxgT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65BEC1F000E9;
+	Tue, 30 Jun 2026 17:37:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782840436;
-	bh=ss2fGP3mjT1OY+/VMSawSf8lqidO9w0vy7lhQdI3bMI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IQY3qv4378O0uHaGupWP3DTvLJS+0eQgmrR4EuoIXIWInxqiKznJnKY31qa15AUHc
-	 pJ+Ine66RssE5WFv/xgNN50H9PcwCHQPgpJ8ztYPyN3/G0pZliW87oKJ1O0KibjF4r
-	 es6AuoEv8PbvMqSV6eNLo/n64WLArGGTMgQAfTjm2hWzK56No1pOyzUQlJxXEUpa5l
-	 ze9BW3Ai0M00qV2fcRCvWA+DX62V8Pk2RrlY+XtNJJF6AObcf46MpObZcgtX+dzM3p
-	 +OF9WgTuiepVzCnzo/qXCE1ZnYjb0fm0iVydJOXgLwqWu30buPZXN+X8yVAl1BrcL6
-	 74zUisvJiNGoA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v20 3/3] vfio/pci: Remove the pcie check for
- VFIO_PCI_ERR_IRQ_INDEX
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: "Vasily Gorbik" <gor@linux.ibm.com>, linux-pci@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>
-In-Reply-To: <20260630165553.725-4-alifm@linux.ibm.com>
-References: <20260630165553.725-1-alifm@linux.ibm.com>
- <20260630165553.725-4-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 17:27:15 +0000
-Message-Id: <20260630172715.E6C2B1F000E9@smtp.kernel.org>
+	s=k20260515; t=1782841066;
+	bh=oKhxSVXGDVm+qucXMK8YNhWI4lwMIt4fOF8+IcyMJ5E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=NERHJxgTlKQbLnw800mRU4wiRtidr8eWnJrJ6u1axUtwriB6g9JzkCQhz9rrdY+Xc
+	 Lg0RB0duZfXGnPVNlEWZ+xrl17cdL0/H+Do75pa/AK56vUOiNxUfSPEmwcy7QrFuOu
+	 cl0CLGjqiv5VrS0cr4EHHyY+93wUMTJpIfXXkscL1KpRb1DYFb+DXMuEz9kcKGeSdT
+	 KC5zCbtLTjHFlFzb1MgU0oh+jk/utS6XyjtH+7ukIKxnctwVGEz3358ser+97m8ZgH
+	 vH/UKSJJPjwAfB6CHNNYWYATM4bChF3YkQZ+p7sWTDFX7J58HFOoTt+ao4cFAIisti
+	 HckZe76qpZXbQ==
+Date: Tue, 30 Jun 2026 12:37:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+	Frank.Li@nxp.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, amitkumar.karwar@nxp.com,
+	neeraj.sanjaykale@nxp.com, marcel@holtmann.org,
+	luiz.dentz@gmail.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	bhelgaas@google.com, brgl@kernel.org, imx@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org,
+	sherry.sun@nxp.com
+Subject: Re: [PATCH V4 1/8] PCI: imx6: Move pci_pwrctrl_create_devices() to
+ imx_pcie_probe()
+Message-ID: <20260630173745.GA155769@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260630103139.3823329-2-sherry.sun@oss.nxp.com>
 
-> The error signaling is configured for the vast majority of devices and it=
-'s
-> extremely rare that it fires anyway. Removing the pcie check will allow
-> userspace to be notified on errors for legacy PCI devices. The Internal
-> Shared Memory (ISM) device on s390 is one such device. For PCI devices on
-> IBM s390 error recovery involves platform firmware and notification to
-> operating system is done by architecture specific way. So the ISM device
-> can still be recovered when notified of an error.
->=20
-> Reviewed-by: Julian Ruess <julianr@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Reviewed-by: Alex Williamson <alex@shazbot.org>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+On Tue, Jun 30, 2026 at 06:31:32PM +0800, Sherry Sun (OSS) wrote:
+> From: Sherry Sun <sherry.sun@nxp.com>
+> 
+> Move pci_pwrctrl_create_devices() to imx_pcie_probe() so that it is only
+> called once during probe, similar to other regulator_get calls.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Can we say something in the subject about the purpose of this?  "Move
+X to Y" summarizes the code change but not the motivation.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630165553.725-=
-1-alifm@linux.ibm.com?part=3D3
-
+I guess previously pci_pwrctrl_create_devices() would be called during
+probe and then again during resume, and we don't want it called during
+resume?
