@@ -1,168 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D073FBEC1;
-	Tue, 30 Jun 2026 12:40:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E3293FBEC1;
+	Tue, 30 Jun 2026 12:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782823221; cv=none; b=KROR7hMr+QKdH2KQ2iEeAJ27j5eRQDDOw+7hlP/TlFbmOsLkinbT0dD7gfWfUlI7McjXsLZpgy9OnzGaf1nXlwbY0omSbk1oGmnepdVnYCBCjC1Aj9EMyGnFMoKcTiWL1LA+CaYen49h6ivyxuz+7EznbThxzIC5Qg0XQfv0Kl8=
+	t=1782823223; cv=none; b=hGlsUPqCC/g5E02loN2XmTD1XI1qQkKP4gx1MYdWQxPLE4YslLgoTtU3ho4kX9HE8PsAM8oOqqdsqqgTlraPdCoV4WXyWo9fR1e2GIj9iJlmtqY8/Xtx/yo9hSyQLdAnqxs843mHJE/N1CivJHxrxBFuy/VDndXxyrV41vuJ12s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782823221; c=relaxed/simple;
-	bh=8sNsw41PkD3N6zA23RSeUreJrB4fPSibzTFMlnU35YI=;
+	s=arc-20240116; t=1782823223; c=relaxed/simple;
+	bh=RAU+Lul52N8K6Byh4bFswCtu9IP82zxsiXB/iSJn6mc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=krTFiFpyOZmxIX2TO2oqQg+h2kS9UWv90H5iXGkVztbPY7NUrYjVh4jaBn+DtS55OlclAjaU/xGbex+/gtoM29BueYMYHf7pnppjuXcnoK6W0Efyie2plyjdc2bCT+cacHRxinOBNNuWYEaAnNVcPedNmH3NDOdPejUTnI55nN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqPN9YGR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DpGprBZI9xT5kYgv46jI3bGNGGhIVz3LWxi6PEfe7pXbdPEPNtk4nphMLKv/fLe9wH7GotlX1YmiW93xq9rhu76rLKyryqGD8XZTjE1qjImvQKM7ci8OgSyiyZMpjRjA1WbMl8lpsD/KNPEjDJ5uHX8+sSL/Cmw5vhMMkDn/0/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brljn1eC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqPN9YGR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2FB71F000E9;
-	Tue, 30 Jun 2026 12:40:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brljn1eC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E2281F00A3A;
+	Tue, 30 Jun 2026 12:40:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782823220;
-	bh=S1DnQyBgzb1XI1kGhjTusFOlx5+UmQmiUDOy0vN2jHk=;
+	s=k20260515; t=1782823221;
+	bh=o/9CMvHy5knN9q2s+eDnWZgo8nVwDSb8fRgIcBA1kL4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bqPN9YGR8KLS61tKar5wTD2JnP+3vZIApKgJHTSLVUZ37NDCklX8DStKxK35yOaeG
-	 aqZGreDrYQTutpvIJp1iWRXRVxC1WSwysTDmZg6aJYDvucP0CooZbk6JAmYCzo1ECz
-	 /7Oo2mO5XMMWqCy7DbzobMPkpSBw1acmyBkNlItfZlhP+196K4euKhKtKAVyBx4yH+
-	 92nM6DctnBfbo2dSlSlaCjQTJLOI3A30BenjcTj4yJWyen4dFI/1rpoo3Mfy90gA/e
-	 SDmfkmUGvbuxNDacdUKJtOgZEcREaJw4W+aXgI1YpA9qckuzAYIusJo/U/dTcEX9FP
-	 LwpZlAl3NucJg==
+	b=brljn1eCSKnTLR7lA66U3D+P/mcfwfnk5r08rZNtM/BE6wt39RQpGqO3m74DOohJu
+	 Y5AsKwRzHf6WewncNP+GblW6WcDCU+44UtLKOs4MWRUWdGT9XwIsHDynUzya58tbsW
+	 Een59qj7l5Gg/AzW8ivmzpNfOIt+d46pv+Xu4Bl6lUnAo1NJDQDOs8EteJMOX6fZjR
+	 m9oG7HSY5iuO8XHOZL4tkqJQ7MIbuiCypz4HyZZfNnRNpUvbDgSR7XEEgFAe/mUVzS
+	 USizrum3mHFYrakd8Pje13+ltayE9fiRJoQoiVuc7BhbdM+MBx+qIu2mdwvGbLYz5o
+	 q2B0fvszEZacA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 08/11] rust: driver: store pointers in `DeviceId`
+Subject: Re: [PATCH v2 09/11] rust: driver: remove open-coded matching logic
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, ojeda@kernel.org, "Alexandre
- Courbot" <acourbot@nvidia.com>, "Danilo Krummrich" <dakr@kernel.org>, robh@kernel.org
-In-Reply-To: <20260629-id_info-v2-8-56fccbe9c5ef@garyguo.net>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, "Danilo
+ Krummrich" <dakr@kernel.org>, conor+dt@kernel.org, dri-devel@lists.freedesktop.org, "Alexandre
+ Courbot" <acourbot@nvidia.com>, ojeda@kernel.org
+In-Reply-To: <20260629-id_info-v2-9-56fccbe9c5ef@garyguo.net>
 References: <20260629-id_info-v2-0-56fccbe9c5ef@garyguo.net>
- <20260629-id_info-v2-8-56fccbe9c5ef@garyguo.net>
+ <20260629-id_info-v2-9-56fccbe9c5ef@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 12:40:19 +0000
-Message-Id: <20260630124019.A2FB71F000E9@smtp.kernel.org>
+Date: Tue, 30 Jun 2026 12:40:20 +0000
+Message-Id: <20260630124021.3E2281F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Undefined Behavior (null reference creation) due to uninitialized =
-`driver_data` in `IdArray::new_without_index`.
-
-Pre-existing issues:
-- [High] Use-After-Free in PCI and USB subsystem cores due to TOCTOU race c=
-ondition when matching dynamic IDs.
+- [High] Data race and NULL pointer dereference due to lockless access of `=
+dev->driver` in `Adapter::id_info`.
 --
 
-commit 6b9468ff67342f4c1fd6f7bf72f1fef7fa35aa2e
+commit 228e0cfe9ec1514c36d9085e1b3070934920f9ab
 Author: Gary Guo <gary@garyguo.net>
 
-rust: driver: store pointers in DeviceId
-   =20
-The common practice in C drivers is to store pointers into driver_data
-field of device IDs. The Rust code is however currently storing indices
-into the fields and then carry a side table that maps the index to
-pointers.
+rust: driver: remove open-coded matching logic
+
+This commit replaces the open-coded ACPI and OF matching logic in the Rust
+driver abstractions with a single call to device_get_match_data(). It remov=
+es
+the acpi_of_match_device() helper and updates the Adapter::id_info() functi=
+on
+to use the C API directly.
+
+> diff --git a/rust/kernel/driver.rs b/rust/kernel/driver.rs
+> index 824899d76fed2..c9c74c4dde8fa 100644
+> --- a/rust/kernel/driver.rs
+> +++ b/rust/kernel/driver.rs
 
 [ ... ]
 
-> diff --git a/rust/kernel/device_id.rs b/rust/kernel/device_id.rs
-> index 022f0101871f5..50d82bfca9b8c 100644
-> --- a/rust/kernel/device_id.rs
-> +++ b/rust/kernel/device_id.rs
-
+> @@ -325,117 +304,23 @@ pub trait Adapter {
 [ ... ]
-
-> @@ -133,7 +160,7 @@ impl<T: RawDeviceId, const N: usize> IdArray<T, (), N=
-> {
->      /// If the device implements [`RawDeviceIdIndex`], consider using [`=
-IdArray::new`] instead.
->      pub const fn new_without_index(ids: [T; N]) -> Self {
->          // SAFETY: `T` is layout-wise compatible with `T::RawType`, so i=
-s the array of them.
-> -        let raw_ids: [T::RawType; N] =3D unsafe { core::mem::transmute_c=
-opy(&ids) };
-> +        let raw_ids: [MaybeUninit<T::RawType>; N] =3D unsafe { core::mem=
-::transmute_copy(&ids) };
+> -    fn id_info(dev: &device::Device) -> Option<&'static Self::IdInfo> {
+[ ... ]
+> +    /// Returns the driver's private data from the matching entry of any=
+ of the ID tables, if any.
+> +    ///
+> +    /// If this returns `None`, it means that there is no match in any o=
+f the ID tables directly
+> +    /// associated with a [`device::Device`].
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// The caller must ensure that the `dev` matched data is of type `S=
+elf::IdInfo`.
+> +    #[inline]
+> +    unsafe fn id_info(dev: &device::Device) -> Option<&'static Self::IdI=
+nfo> {
+> +        // SAFETY: `dev` is guaranteed to be valid while it's alive, and=
+ so is `dev.as_raw()`.
+> +        let data =3D unsafe { bindings::device_get_match_data(dev.as_raw=
+()) };
 
 [Severity: High]
-If a driver uses the @none branch in macros like i2c_device_table! or
-auxiliary_device_table!, it expands to IdArray::new_without_index().
-Does this leave the driver_data field uninitialized (0)?
+Does this introduce a potential NULL pointer dereference if dev->driver is
+not set?=20
 
-When the device probes, the framework calls info_unchecked::<()>() on the
-matching ID, which unconditionally reads the 0 from driver_data and casts it
-to a &() reference:
+Previously, id_info() performed a table lookup that did not depend on the
+device being bound to a driver. By switching to device_get_match_data(), the
+underlying C implementations (such as of_device_get_match_data() or
+acpi_device_get_match_data()) will unconditionally dereference dev->driver.
 
-device_id.rs:info_unchecked() {
-    unsafe {
-        core::ptr::from_ref(self)
-            .byte_add(Self::DRIVER_DATA_OFFSET)
-            .cast::<&U>()
-            .read()
-    }
-}
+If a Rust driver calls Adapter::id_info() on a device::Device that is not
+currently bound (for example, from a concurrent sysfs attribute or a
+workqueue), could this lead to a panic?=20
 
-Will this cause Undefined Behavior by creating a null reference, even for
-zero-sized types like ()?
+Should this lifecycle precondition (that the device must be bound to a driv=
+er)
+be explicitly documented in the # Safety contract to prevent unsoundness, or
+should we ensure dev->driver is valid before calling this function?
 
-[ ... ]
-
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index a3dd48f763532..925cf280dae2a 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -110,10 +110,14 @@ extern "C" fn probe_callback(
->          // SAFETY: `DeviceId` is a `#[repr(transparent)]` wrapper of `st=
-ruct pci_device_id` and
->          // does not add additional invariants, so it's safe to transmute.
->          let id =3D unsafe { &*id.cast::<DeviceId>() };
-> -        let info =3D T::ID_TABLE.info(id.index());
 > +
-> +        // SAFETY: `id` comes from `T::ID_TABLE` which is of type `IdArr=
-ay<_, T::IdInfo>` or
-> +        // `pci_device_id_any` which has 0 as driver_data. It can also c=
-ome from dynamic IDs, which
-> +        // will ensure that `driver_data` exists in `T::ID_TABLE`.
-> +        let info =3D unsafe { id.info_unchecked_opt::<T::IdInfo>() };
-
-[Severity: High]
-This is a pre-existing issue, but does this dereference a potentially freed
-id pointer if there is a concurrent sysfs write to remove_id?
-
-In the C PCI core, pci_match_device() searches the dynamic ID list under
-dynids.lock. When a match is found, it drops the lock and returns a raw
-pointer to the pci_device_id embedded within the dynid structure:
-
-drivers/pci/pci-driver.c:pci_match_device() {
-    spin_lock(&drv->dynids.lock);
-    list_for_each_entry(dynid, &drv->dynids.list, node) {
-        if (pci_match_one_device(&dynid->id, dev)) {
-            found_id =3D &dynid->id;
-            break;
-        }
-    }
-    spin_unlock(&drv->dynids.lock);
-
-    if (found_id)
-        return found_id;
-}
-
-If a concurrent sysfs write to remove_id occurs, it unlinks and frees
-the dynid:
-
-drivers/pci/pci-driver.c:remove_id_store() {
-    list_del(&dynid->node);
-    kfree(dynid);
-}
-
-Since the lock is released before pci_match_device() returns, could this
-leave the found_id pointer unprotected and lead to a Use-After-Free when
-the probe callback dereferences it here?
+> +        // SAFETY: Per safety requirement, `data` is of type `Self::IdIn=
+fo`.
+> +        unsafe { data.cast::<Self::IdInfo>().as_ref() }
+>      }
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260629-id_info-v2=
--0-56fccbe9c5ef@garyguo.net?part=3D8
+-0-56fccbe9c5ef@garyguo.net?part=3D9
