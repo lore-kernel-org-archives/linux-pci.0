@@ -1,38 +1,38 @@
 Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D498F3EFFDD;
-	Tue, 30 Jun 2026 10:29:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C383F076B
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 10:29:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782815379; cv=none; b=VrL1thMxsaUVcatRb+nU3d3uNoy7GFtG25JPt0d/vQnifW0MlW1tZlc3gTIkNDWfbiiJG5AXc4z6MY6ntKpeynULP8/bAgNwPubzDuo3WJTesqpMeR4QUyRVUbSrqZzLndafphLV0yjdqbc54TE9Zl14uVZb1AY807gDFZFiU14=
+	t=1782815384; cv=none; b=RcmIdUTZHJu2Hu7p0igHdhflqRZeqSo+B6ZgzrZzrZUVk/bidkN3jrTTMfkUjJc3vt8B5WPjUrmqQMKT/fqoo+Tz6ki9WNnT+CegCH9XgtjYaViTQu6r0GRh3ICsI1v58hnrS3yslD/mIG1MOSXmwoyB5VrllSIeBmMqwnrZFk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782815379; c=relaxed/simple;
-	bh=P2gcSYVj+YSuIfptHAlHXowQVxHQHm6wtyHdqFyu/kI=;
+	s=arc-20240116; t=1782815384; c=relaxed/simple;
+	bh=usAfYevOmBkXN9Gjh8cAYdfXcFXSpaRP3X0m774TT44=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jcy4pFcMgijfRiX4L++9iBqo8s+EX/+K/kYdMkNeZpncc/0XBIDcHzlHAq/k2dSqVSUrYyN9itupDtabSqZgh0wWnXC19HXnUlMnIr59GV/tpsNLi42bZ81ncsLfKBfd3pRWQFCtBNry32pr5g1oTPyj+UkgCwLNo/37ni9jCyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=u0yPOZN2; arc=none smtp.client-ip=185.171.202.116
+	 MIME-Version; b=A0Fht6saJWDabFupaE3Ml3u98K5e6s3dFZesXRmnzKcOKf8FsulMcVp9iKSXXj+xA2kWxyXbv6JUAvzq2G/nOSVmXw+MjnJJktOh/9spPqohUdQqtCGRkVGBKjexCeyVE5EFVly41A4PArKYREs2J6RFR1uYeYlX9ugijWw5tzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=pCs4B57f; arc=none smtp.client-ip=185.171.202.116
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="u0yPOZN2"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="pCs4B57f"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 1DE70C5CD47;
-	Tue, 30 Jun 2026 10:29:47 +0000 (UTC)
+	by smtpout-04.galae.net (Postfix) with ESMTPS id A8251C5CD47;
+	Tue, 30 Jun 2026 10:29:52 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 9C9B06025A;
-	Tue, 30 Jun 2026 10:29:36 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 518B1106F1D9A;
-	Tue, 30 Jun 2026 12:29:27 +0200 (CEST)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 3239A6025A;
+	Tue, 30 Jun 2026 10:29:42 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 6CE31106F1D9E;
+	Tue, 30 Jun 2026 12:29:34 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1782815374; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1782815379; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=KqZe5pNjCZjTUX10ucdD2xXyOPwVWtL1RR7G2V3Xw8s=;
-	b=u0yPOZN2eB6v0h+2AlMZ6zWQIMZmHCZnO95bd0L/eQDnKYcCGsZKKxk3GAMlWfME12LSij
-	5vQKkBF8RUUI505jqmAswkVD5R5kzx0Ml3Hy4lSNT4YU9t5TTXHBiTSooz0HKd5bAIwP0l
-	DlPm5QAZG5DBcWet40dVv/XNGRxC4bawVD93F7yh0wlOKVpC1Ijh8FXh4ELN2Fj0BqGKbG
-	DyaUAMpKlwnJnNYXtT4KTKlgbxjicaw9YL/qIL0Crz9h+Apz0flkZOHTys+RuoQzC0A5Sn
-	Jg4CTuxE/EdGxcdQ//rBxX0TBh3OQd8oJo/r/f048PWykqEoT1aOmWYpULlXFw==
+	bh=n3rZDpxVJAIIliYiyVNYugjYn2qhcR56xtU5a8fFzdQ=;
+	b=pCs4B57fv5io/duzzZeNXJL+KpVUd9h6ytk0eXrDKL1DRxYlKxZdxUOotHHNNmJv0Pqdb9
+	DHJV+ZM4RukaklDtIJj14M1p9jM1l6moufF3klV7OAKqhYWf+UiBNuMoitOkuSRHU2ZtKr
+	+ADUCdfIh/CNiPIfso7XGhROTHcNpm4PwKqqWmTdlP97tUhWYGNKoAXVUO8oJVxcNueTkq
+	DcUCRbwzADCjH9xjgywIv4BJOgVW7WY3DxhH1S743jDiVBvy1BMlvHJzi6BJOw/YAaC0o2
+	WhkZOCvzFLqMi4bZxu6rY2AEDzxmxl4Wug+99PDnpRpI0Kd3FCL27R97Hw1tgQ==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Andrew Lunn <andrew@lunn.ch>,
 	Rob Herring <robh@kernel.org>,
@@ -75,9 +75,9 @@ Cc: driver-core@lists.linux.dev,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Jonathan Cameron <jonathan.cameron@huawei.com>
-Subject: [PATCH v8 4/8] cxl/test: Use device_set_node()
-Date: Tue, 30 Jun 2026 12:27:58 +0200
-Message-ID: <20260630102804.413563-5-herve.codina@bootlin.com>
+Subject: [PATCH v8 5/8] cxl/test: Use fw_devlink_set_device()
+Date: Tue, 30 Jun 2026 12:27:59 +0200
+Message-ID: <20260630102804.413563-6-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260630102804.413563-1-herve.codina@bootlin.com>
 References: <20260630102804.413563-1-herve.codina@bootlin.com>
@@ -90,9 +90,10 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-The code set directly dev->fwnode.
+The code set directly fwnode.dev field.
 
-Use the dedicated helper to perform this operation.
+Use the dedicated fw_devlink_set_device() helper to perform this
+operation.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
@@ -103,18 +104,18 @@ Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-index ef92dd35e030..69da0727362b 100644
+index 69da0727362b..95e39dfc6ec9 100644
 --- a/tools/testing/cxl/test/cxl.c
 +++ b/tools/testing/cxl/test/cxl.c
-@@ -1528,7 +1528,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
- {
+@@ -1529,7 +1529,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
  	device_initialize(&adev->dev);
  	fwnode_init(&adev->fwnode, NULL);
--	dev->fwnode = &adev->fwnode;
-+	device_set_node(dev, &adev->fwnode);
- 	adev->fwnode.dev = dev;
+ 	device_set_node(dev, &adev->fwnode);
+-	adev->fwnode.dev = dev;
++	fw_devlink_set_device(&adev->fwnode, dev);
  }
  
+ #ifndef SZ_64G
 -- 
 2.54.0
 
