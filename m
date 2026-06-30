@@ -1,163 +1,257 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011022.outbound.protection.outlook.com [52.101.70.22])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 283B23E6394;
-	Tue, 30 Jun 2026 07:50:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.22
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782805820; cv=fail; b=jlbImMExS/ESM+jDBbIQjSroZpxJOSTO7/GVZhq4WZEK1E0A1sWnv68KBPQUH8oXS2ewNClSI90khQIY7BBo8HQQyHGi7hvhkdqH/Z3YBhEGxIBuGbY1L39aHjxee9NqXHHfon9hdryA8HqmyXVRZ5bR8Csh8RPlp9Md0n+XQe0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782805820; c=relaxed/simple;
-	bh=w6hZqglnsS6GjMvFJm4DhKS4qg4YBXn2fx5PUR5mHB0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=EUXN6yLwOFSm6LSbu05ClhAIDkxni4uVMWK2734TSB6iPw/XhlMn8UWF0q0e/8XAtcrtAZ1YwiS2WoMf1ruL9OB5VuS+sUfLFB5sKu6Tw1fq0rQaj+nRSF7Yt+9v10zWVmxmJaYS8QFQLHJSGQ8oyMk8mH6s/AFtHy3zevsjiDc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=k3p6B6Um; arc=fail smtp.client-ip=52.101.70.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E961DD525;
+	Tue, 30 Jun 2026 08:03:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782806625; cv=none; b=AKfE9yfRWmz9rJqkHOqHOSqj4mdTRQOEKN0PlfncNT36ROSbi3AlKdRHGQhyHIv+joKjG08kc1cfIkKhHGY23I05nBvnZx0e8sei5nZunqbrBWJrK0LVQRjrliBzPned7IH4RYgxjY/SCYyFp7IPVmaJ5O1zGDclNhetgbYBmao=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782806625; c=relaxed/simple;
+	bh=kZ0lHqr/Qm+MZZg9bHttGiWVjJfxinrgqZbaxa1d6ng=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jEhc5M1wpPZMsWhAY+OIYvG3TfCnPb8TxEcRdkppamdfrm9gU5Yz3TprEQBIa7z1aimKYrjYM8vOqrgsOblwuGrVv8J0l6SPQnphnqtZ78fNVVFDJ75yIgmJrLs8S3MPgywocU0kAfWP4HecuFGTYVbqyRjDLiV1wo1qA+bbj1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HI3p9o8L; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="k3p6B6Um"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VAz0nvrX8YOgwZCe9A/8TTQ5J4itfeAj6tyQbzOkkzg24eMsTl/EmmH6M3IWwpgGL/P5UY40OaQ008x/AIAyBrHCYtxhWjHQWy0N4g4fppj86dYchKuz6J1TDZ2onqD/TI4h2Xfa2+b0saWIicZepudbs8avTfDUAgJNWud6qPQKfjq7nlY0UQmu6JN0SrbYR8doyFV/u2VeUz91Y7gkBeFpHC2Hev8a6exWeouM5qZR5ZTYw/X/lc3qklhoL+teLPRLnh0W+b1lw2U5083JGe0Vxy2ST0YsWZEp7sjULZ/J8NtCbaJXyyGpZxEJWfOiAgUwxbK2VhMLCjm1hfDylg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=w6hZqglnsS6GjMvFJm4DhKS4qg4YBXn2fx5PUR5mHB0=;
- b=Vwul31dDc8ar0zNXAPLTwzjjMyAwwPSUIUQkPeaitCTxIn7K5fFELWXKdghY8poK1YZ+JUdZ6FmA4+o3+hUBU5mitTfFrOovsi8datv4co0VFcIm0BQUw/aHC5/67N9fdKP2spV9GD89mUbIGeGmVqEmyG+Nny0ScZrBt5L7C9SPfMra5SiA86bdg4ByN36NXoKGjyOQIXPakkEnhwxicVTcbnQtb8Cr6Ewu9BmQU6PqyzyKoCAHpt5RNpyYiEK5zK0I43xrqOb4r+4jpJhgKmhjCIWl1iS9d27v/R3+WqgUtaDOVxxdXvaxHAHXEQdJhfsBZHpBtOIsEE6zZ8xU+w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w6hZqglnsS6GjMvFJm4DhKS4qg4YBXn2fx5PUR5mHB0=;
- b=k3p6B6UmL0/+OqWdvMn7C8bwOrg0CzzbRennp22V70GIVBwbhVohfipoCUIsY1zSVONcYnGIcX+QMOlcdNxHHtq5RHWf3tSGy6q9bZTEr8NEuGScKsEPndN5iCI759okjpecr016aFYQnk5e41fQMllOfU9AP7ek8yLqqLkHhpHR4jE+1ZyJIdSUvAeZ3q3lcsR3pshaWvhPpVRsNE/2zHdHVElCXpbfpfnRZjQYzRHvkT+ltyuQA1eMDnhufzHRshHhVWfTbT7NtMyJeee0TZyTSJLgQnSDqB9c8F+6C1HE7Px20pIgYdD7rHjoE3wle0/BZpGyjNpj1KJmzT9WGg==
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- (2603:10a6:800:315::13) by AS8PR04MB7701.eurprd04.prod.outlook.com
- (2603:10a6:20b:293::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.19; Tue, 30 Jun
- 2026 07:50:16 +0000
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0159.015; Tue, 30 Jun 2026
- 07:50:15 +0000
-From: Sherry Sun <sherry.sun@nxp.com>
-To: Manivannan Sadhasivam <mani@kernel.org>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@oss.qualcomm.com>
-CC: Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, Frank Li <frank.li@nxp.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org"
-	<robh@kernel.org>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, "will@kernel.org" <will@kernel.org>, "Sherry Sun (OSS)"
-	<sherry.sun@oss.nxp.com>, "imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V2 0/2] PCI: imx6: Improve PERST# fallback logic
-Thread-Topic: [PATCH V2 0/2] PCI: imx6: Improve PERST# fallback logic
-Thread-Index: AQHc7BMKFOTGzILnyUGrqarSljpmMLZW6aEAgAABGoCAAAcBMA==
-Date: Tue, 30 Jun 2026 07:50:14 +0000
-Message-ID:
- <VI0PR04MB12114AA4916834C5875D74DFE92F72@VI0PR04MB12114.eurprd04.prod.outlook.com>
-References: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
- <178280401285.286395.10401291228239552702.b4-ty@b4>
- <wj7dtqwadw4mletyq2s2an3g74acpmvvnkbogsdztgb27s2lul@i6ogmrnbd6to>
-In-Reply-To: <wj7dtqwadw4mletyq2s2an3g74acpmvvnkbogsdztgb27s2lul@i6ogmrnbd6to>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|AS8PR04MB7701:EE_
-x-ms-office365-filtering-correlation-id: 8042689b-75b5-4f4c-302c-08ded67c38d0
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|1800799024|19092799006|7416014|23010399003|376014|38070700021|4143699003|11063799006|18002099003|22082099003|56012099006;
-x-microsoft-antispam-message-info:
- a4EWuYrU1kI/t3DPBxL88a/oaXDvthUCjBJKIp5MfBeXGXppea8tExw5hRtn0omIT0KREkWJPg30qafFp6xVVoYch60E6DWWMgvHEZyyUSX44fw0BdWfrxV3zU2VIa9668KQG8HcGniIeQhSDgl39f/cWtdlkNen75z+J/0Cp0irN4hoD1l8n1QibmdlaQab5nJPRFlAMzYGcZQsWUHoYZUSfQa7V1c8ornd7ew/JpVXrtcpgKySVltTmD0P/gwBpVBucQmeeq/U61RJRadBJjSb9cilA8iqLvM4iskFi92F0/oNPZ8SGzdWkIelvZRE1mqi0FvNJOhozLE2h6NJBHz85Ty/jcP3ShA7UDIuEvjz/9UoWKoqPcOKoPFaBZeJpMchxmpySi+Lx+TI0E3toq/QSAYPKjdit6uJTZlJJu2lcYDNUY9re/CcjXWW9FBOWX+8wSxOgUDmzZYeabtjlLViY52wEab8SyeLtN0pGKdaDfpsFpp1JEfAkHxZT72txs8DYR3l38s6+Ew04l8uBKMcUHTY1UkbsChr3Qpns+tQh4ARvXZ/452ryoMvb324gTb/yZbFfx+UJ57tEGJzKFzfe1smOd8KPFELisyf4zfy/nYtW95rSwGfFzNG2UT3pT5CPd+yev38UBFFIj94jJFBCMz6SW6ikGoLy/7a1AOMjWV0uyveooE6C5NWQkZatZBb3bXIcLXKWGVKExZrALCAFdfxKJvy9p0XGvsmFj0=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(19092799006)(7416014)(23010399003)(376014)(38070700021)(4143699003)(11063799006)(18002099003)(22082099003)(56012099006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?ZWUzbk0xaGFUMDVyRFNUMkFVMldtTzJNS1FyQTBxNCtGQmJvT0hkQVlKQWRL?=
- =?utf-8?B?bUNqeUNhN2UvSWZWM21BeU8zUmdZWHJpQkhkcXhNZC8veGNpWUM3T3ArSG5l?=
- =?utf-8?B?T0JVRkxmWHRzWlJjaFRlZmN2Q0RGM1BkRGxsY2ZHRmdGWFcra2VqdVJGNHZx?=
- =?utf-8?B?MDJMWWEzZkx0UVh4Ym5IaFAxVTJ5SFlPcm5qUnNvOWpuTmxDK1Arci9MVHJo?=
- =?utf-8?B?bU8ra3NaOWpWSmhPNHRiUzg2RVg4c0RSMmlyVHA3VC9KRm9lVGpqMDlYMElN?=
- =?utf-8?B?OXFCVkNhWmxUNms2b294em92bzByZkwxaVBWMXloaXBlSVdFMG9tMThQaFRz?=
- =?utf-8?B?M0Vabk10ZTl1N2RJb2FtM2pDSGlzRjdwNGtkV2hXUDlHak1NZDhua3Fuckg1?=
- =?utf-8?B?VWlONTVjMlFsNzkxM091dmdzQlpuVmZvb1hwSkEvYnpnS1IyTm41RERlMXY2?=
- =?utf-8?B?bVpabVFMajlKQXA4ZStEL01KblI3ODR5Vk1sczRFV2Fwc0JhYWJqa01pMVJi?=
- =?utf-8?B?cC8yZlhrVTBjUHBWSzlqUXhCMURZZUhkay9sTVhFNTVMTzJ0NDZjWmFZeUpS?=
- =?utf-8?B?RDhDdHFuQ1pIaGZadERJM1BkMGNqeFYwdklLTWkrSFZON2lxN3NpeCtERExF?=
- =?utf-8?B?SzVTQ0xjbkROQmNNelZnUTBNTm5LNDA2TmI2Q3lNRnJ2UTh4Y092NzNhNnlX?=
- =?utf-8?B?UDNudCtrZXZ2WVMrRzBnaGtvcHNLL0I2SzF3N1V6RnJ4dXVhdHRMOUlNb0xi?=
- =?utf-8?B?NzlWWnZMWVhVcTQ0dVYwVUJ3UzJ0Ly9xN2k5RGUraUpyK3JKblE2d0YzMWdI?=
- =?utf-8?B?eDREQkxPbnNaaHZxbEpmd3hXM0ZSV3RXTFVCbjF2ZFFocVhBZ1I4MENrWXVi?=
- =?utf-8?B?NnBxV2EreGZoTE1NeERCcS9CTUJieldZaUNqbndaeE53V3ZlV1NoamV3V2Qw?=
- =?utf-8?B?MlUyQ0JLUmRuaXVvUFlWeVhQd2RnNlMwa0JyM2NDRFlGM2pCSnJOeWgydVFa?=
- =?utf-8?B?Yk81TjFrNGp0SEE3K01ydE83RWRIblFYMk4wREtibGRqZGNxWnAxRS9ka2lv?=
- =?utf-8?B?RGxhbkU3Y3RVRFBTQ1VvWVEyRUtvQ3dlZEw0aHhDcE5OaEVreXJtR0tEenNM?=
- =?utf-8?B?TDVjclZVa29HT1RPTlFxZ1lXRFA1ekJxdFp3eVZhWWhUa284T1krWkNSaWNk?=
- =?utf-8?B?WHB6V0dJTXpZc05HSHErdmkyNHlVYlkxa1c4RDk4a0pGMzBsSXEyQ29pdE5C?=
- =?utf-8?B?Vm1EUTVmNXhzWVhrdFoxcUR6MTJ5RnlkYmZJSDI1RThDMHdFR0FiWUZOdkRU?=
- =?utf-8?B?Y28vLzNCNzhZOC9hYTdhMEs2MEkwa1VLMlV0ZHRrUEh3UmxpcmpoSWk0T1Iy?=
- =?utf-8?B?enhpUVFPV0hCM01OazR5bk1NU2xIb3FEYjdsK3JjbG5pVUN3OTlhTjUvWDhG?=
- =?utf-8?B?NDgwcE13Z3FWeStCV1hWZTY4cFdTQzNKRXF6UjYralB5OUEyNDcxdUl4MEp1?=
- =?utf-8?B?VEN3OTRVZFVRdDdXOTk5VXpVQUxkQUY4L2pGUWRqSzhZRENFa3RvWklWbFlN?=
- =?utf-8?B?VDRCdDh2UmRMN2VKNFNMaSs0eFAxTHc4WU1xdFltMnZlaHFjM0w3a3p5YUV4?=
- =?utf-8?B?Y2taVy9oR3d4MkF2cjRVemJ5Vm1EL3JvY29OekJZTHI4b04wMC9pQTJBMnFz?=
- =?utf-8?B?RG4ramxKQWpKYi8yN1NFRUxjWXBQUVFPcVhFdlJrRTc5TEM1b0Q0R0hScWJR?=
- =?utf-8?B?ekpUc1E1TTBoMVNBT3ZCSjZrRFFUT1FiSDg0a1FMMVVQbk12dWJ0bi9QY3gr?=
- =?utf-8?B?K2NoV2thdFFtTjA2TFh2d3VMK3ozUFlJU0dKLzJSTE9OZVhJcitLVHFkczZW?=
- =?utf-8?B?R0JWT0RqMkZSY1NOYnZqZjluTG5xWnZ4Q3ZFcDd6Ti9LbjlvN2RlcDFjOUdH?=
- =?utf-8?B?WjJJM1lrUm4yOEpSZFZPUXk3QmFDb1JuWklmR1RHbXhMMVpCVUhSMUppVWpm?=
- =?utf-8?B?cTlmaGhwZWpDanl6OWlQL0FucURDUVFNMkxlVkh2aGd2TTdXcmZWSWU4OWZE?=
- =?utf-8?B?OUpMMys3N01jVSthVzYyempsUTBLdXVqMDJoVmVPODNUUlZrbDJ6VlczczJF?=
- =?utf-8?B?eHJ3cGtMVDFvVlNaRFc2aFVJNWFrSktDbnROVWhwZ1NrTDNhbmMyZlhYd3hZ?=
- =?utf-8?B?RDZuVlZDdkRib0dDV1pnTTRmejhMTENqd3ZsckdPOGRRU0EzVVVBVXdwYXhN?=
- =?utf-8?B?TS92UjYrZnRsbTZHSnJXVnR1OTlXNVp1Rjlod3VZVU9zdDFOeHdta0VUYUFQ?=
- =?utf-8?Q?JZdqdZ55L+Ml0xY8tY?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HI3p9o8L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BDBA1F00A3A;
+	Tue, 30 Jun 2026 08:03:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782806624;
+	bh=Q1CnJZuzdqRqrXbQOY1KrOxkKiVRaNwQ5PMPSeSwmyQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HI3p9o8LsCtg6Srxj8v1lfZCk6daGvVh4kE8F5nwWfIMOKRq4572HagmqtEjc+n2t
+	 l7Rf+zleSiwbvT45g0Zy9nL6w/1ABCza3NiFj52uitO1Z3roYtmrCv3iTo2tIauVlX
+	 YFgHFer7oSshsLGLEauzupjGuP9C4vrfC0FW/74LV7tJJdIbG4MGov/ismJEQ6+mB0
+	 1BUF1Obqf1Q229PeFVCSDsCu6QbJuFykJ1+Ax0MnEGakmfNCgJXf0GJ4PZPXUOTIqE
+	 1/OdKUY6EjQ6jrdo89pZTB8TD8eWtN2sgU7FaYgngb7WBODd4p5XdWiNaNKNNB7v/D
+	 etEm6GbRArB+Q==
+Date: Tue, 30 Jun 2026 10:03:31 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Thierry Reding <thierry.reding@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH v7 3/4] PCI: tegra: Add Tegra264 support
+Message-ID: <23rcfdnhnjhdlhiw6eclxap2tk6j5ni7qkfsd3fkfmucvjemie@fvf4j5earp47>
+References: <20260617-tegra264-pcie-v7-0-eae7ae964629@nvidia.com>
+ <20260617-tegra264-pcie-v7-3-eae7ae964629@nvidia.com>
+ <slfaxyt6p5mwsqmxvmriy6npilpjhjxv5ruegj4hnivj6zufkl@o6adjy5jmzfy>
+ <aju3jokcWR5DzPrv@orome>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8042689b-75b5-4f4c-302c-08ded67c38d0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jun 2026 07:50:14.9758
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8Jcxlbq7HgYdSuekxc3vHJqjhn3sV67S90iQboH8yWJbc/VZY3kRlyYc6O4h/UZGzelvoqEz1+jiDLQvV61W6Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7701
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aju3jokcWR5DzPrv@orome>
 
-PiBTdWJqZWN0OiBSZTogW1BBVENIIFYyIDAvMl0gUENJOiBpbXg2OiBJbXByb3ZlIFBFUlNUIyBm
-YWxsYmFjayBsb2dpYw0KPiANCj4gT24gVHVlLCBKdW4gMzAsIDIwMjYgYXQgMDk6MjA6MTJBTSAr
-MDIwMCwgTWFuaXZhbm5hbiBTYWRoYXNpdmFtIHdyb3RlOg0KPiA+DQo+ID4gT24gTW9uLCAyNSBN
-YXkgMjAyNiAxNDo1NDo0MSArMDgwMCwgU2hlcnJ5IFN1biAoT1NTKSB3cm90ZToNCj4gPiA+IEZy
-b206IFNoZXJyeSBTdW4gPHNoZXJyeS5zdW5AbnhwLmNvbT4NCj4gPiA+DQo+ID4gPiBUaGUgcGNp
-X2hvc3RfY29tbW9uX3BhcnNlX3BvcnQoKSBzaG91bGRuJ3QgZGVjaWRlIHdoZXRoZXIgdG8gZmFs
-bA0KPiA+ID4gYmFjayB0byB0aGUgbGVnYWN5IFJDLWxldmVsIGJpbmRpbmcgYnkgY2hlY2tpbmcg
-Zm9yICJyZXNldC1ncGlvcy9yZXNldC0NCj4gZ3BpbyINCj4gPiA+IHByb3BlcnRpZXMgb24gdGhl
-IFJDIG5vZGUgYW5kIHJldHVybmluZyAtRU5PREVWLiBUaGF0J3MgYSBwb2xpY3kNCj4gPiA+IGRl
-Y2lzaW9uIGJlbG9uZ3MgdG8gdGhlIGNhbGxlciwgbm90IHRoaXMgY29tbW9uIGhlbHBlci4NCj4g
-PiA+DQo+ID4gPiBbLi4uXQ0KPiA+DQo+ID4gQXBwbGllZCwgdGhhbmtzIQ0KPiA+DQo+ID4gWzEv
-Ml0gUENJOiBob3N0LWdlbmVyaWM6IFNpbXBsaWZ5IHJldHVybiB2YWx1ZSBoYW5kbGluZyBpbg0K
-PiBwY2lfaG9zdF9jb21tb25fcGFyc2VfcG9ydChzKQ0KPiA+ICAgICAgIGNvbW1pdDogNGI1MjM1
-NDQwMDhhYTcwY2RhNGIzNGMwNTg5YmJlNDcxNzJjMjYzNw0KPiA+IFsyLzJdIFBDSTogaW14Njog
-QWRkIGlteF9wY2llX3BlcnN0X2ZvdW5kKCkgdG8gaW5zcGVjdCB0aGUgcGFyc2VkIHJlc3VsdA0K
-PiA+ICAgICAgIChubyBjb21taXQgaW5mbykNCj4gPg0KPiANCj4gSSd2ZSBzcXVhc2hlZCBwYXRj
-aCAyIHdpdGggMSB0byBhdm9pZCBiaXNlY3RhYmlsaXR5IGlzc3VlIHBvaW50ZWQgb3V0IGJ5DQo+
-IFNhc2hpa28gYW5kIHJld3JvdGUgdGhlIHN1YmplY3QvZGVzY3JpcHRpb24gYXMgd2VsbC4NCj4g
-DQoNClN1cmUsIHRoYW5rcyENCg0KQmVzdCBSZWdhcmRzDQpTaGVycnkNCg==
+On Wed, Jun 24, 2026 at 02:35:04PM +0200, Thierry Reding wrote:
+
+[...]
+
+> > So not hotplug support? Also, you do not want the driver to error out? I'm
+> > wondering what's the use then?
+> 
+> Hotplug is supported via pciehp. We skip probing the host bridge if no
+> link was detected because there's simply nothing attached to the port,
+> otherwise the link would've come up.
+> 
+> pcie->link_up is slightly misleading because it actually means something
+> along the lines of "link could be up at some point", either during probe
+> or after some hotplug event later on. It is only ever false if there's
+> no link during probe and hotplug isn't supported at all.
+> 
+
+Ok. But if you skip pci_host_probe() then Root Port won't be enumerated at all.
+I think that would give a false indication to the user. Typically, Root Port
+would get enumerated during probe even if there are no devices atttached and
+once the device gets attached, pciehp will enumerate the device.
+
+> > > +
+> > > +	err = pci_host_probe(bridge);
+> > > +	if (err < 0) {
+> > > +		dev_err_probe(dev, err, "failed to register host\n");
+> > > +		goto free_ecam;
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +
+> > > +free_ecam:
+> > 
+> > Nit: Prefix 'err' for the labels.
+> 
+> I don't see any benefit of adding a prefix. Seems pretty redundant, but
+> I also don't feel too strongly about it, so I can add it.
+> 
+
+People tend to use goto labels to do skip some steps also. So if the error
+conditions are prefixed with 'err_' it helps to differentiate between them.
+
+> > > +	pci_ecam_free(pcie->cfg);
+> > > +put_pm:
+> > > +	pm_runtime_put_sync(dev);
+> > > +put_bpmp:
+> > > +	tegra_bpmp_put(pcie->bpmp);
+> > > +
+> > > +	return err;
+> > > +}
+> > > +
+> > > +static void tegra264_pcie_remove(struct platform_device *pdev)
+> > > +{
+> > > +	struct tegra264_pcie *pcie = platform_get_drvdata(pdev);
+> > > +
+> > > +	/*
+> > > +	 * If we undo tegra264_pcie_init() then link goes down and need
+> > > +	 * controller reset to bring up the link again. Remove intention is
+> > > +	 * to clean up the root bridge and re-enumerate during bind.
+> > 
+> > But the controller will be consuming power even if PCIe is not used. Do you
+> > really want that? Can't tegra264_pcie_init() handle the initialization? I'm
+> > wondering how tegra264_pcie_deinit() in tegra264_pcie_suspend() works then.
+> 
+> I had to clarify this with the PCI team and they indicated that
+> tegra264_pcie_deinit() is actually useless and maybe even harmful. The
+> reason is that there's a processor on these boards (BPMP) that takes
+> care of power sequencing and it will automatically take the PCI links
+> to L2 on suspend and assert PERST#.
+> 
+
+Then why are you calling tegra264_pcie_deinit() in tegra264_pcie_suspend()? If
+tegra264_pcie_deinit() is harmful, then calling it during suspend should also
+be, right?
+
+Or tegra264_pcie_deinit() has to be paired with BPMP doing its own power
+sequencing?
+
+Not a big deal, but it just feels weird to see suspend() and remove() doing
+different things.
+
+> Another reason why we don't want to reset the entire controller is that
+> it is already set up during early boot by UEFI and the kernel driver
+> does not redo the entire initialization.
+> 
+
+So tegra264_pcie_init() is not the full initialization? If so, is it sufficient
+during resume()?
+
+> So yes, I think a little bit of power consumption is the compromise that
+> we will have to live with. In the bigger picture it's probably not going
+> to be noticeable in most cases, and given that these are embedded
+> platforms we'll likely see fixed configurations most of the time and the
+> case where we remove the PCIe host controller will not be common.
+> 
+
+Fair enough.
+
+> > > +	 */
+> > > +	pci_lock_rescan_remove();
+> > > +	pci_stop_root_bus(pcie->bridge->bus);
+> > > +	pci_remove_root_bus(pcie->bridge->bus);
+> > > +	pci_unlock_rescan_remove();
+> > > +
+> > > +	pm_runtime_put_sync(&pdev->dev);
+> > > +	tegra_bpmp_put(pcie->bpmp);
+> > > +	pci_ecam_free(pcie->cfg);
+> > > +}
+> > > +
+> > > +static int tegra264_pcie_suspend(struct device *dev)
+> > > +{
+> > > +	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
+> > > +	int err;
+> > > +
+> > > +	tegra264_pcie_deinit(pcie);
+> > > +
+> > > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
+> > > +		err = enable_irq_wake(pcie->wake_irq);
+> > > +		if (err < 0)
+> > > +			dev_err(dev, "failed to enable wake IRQ: %pe\n",
+> > > +				ERR_PTR(err));
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +static int tegra264_pcie_resume(struct device *dev)
+> > > +{
+> > > +	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
+> > > +	int err;
+> > > +
+> > > +	err = pinctrl_pm_select_default_state(dev);
+> > > +	if (err < 0)
+> > > +		dev_err(dev, "failed to configure sideband pins: %pe\n",
+> > > +			ERR_PTR(err));
+> > 
+> > Please remind me if you justified this manual pinctrl handling before.
+> 
+> This is just regular pinctrl PM boilerplate. There's plenty of other
+> drivers where we do this, too. We want this because some of the pins
+> get configured to non-default states on boot/resume, so doing this
+> here ensures they are muxed correctly.
+> 
+
+But pinctrl core should already be doing it for you, no?
+
+> > > +
+> > > +	if (pcie->wake_gpio && device_may_wakeup(dev)) {
+> > > +		err = disable_irq_wake(pcie->wake_irq);
+> > > +		if (err < 0)
+> > > +			dev_err(dev, "failed to disable wake IRQ: %pe\n",
+> > > +				ERR_PTR(err));
+> > > +	}
+> > > +
+> > > +	if (pcie->link_up == false)
+> > > +		return 0;
+> > 
+> > How is this possible? If 'pcie->link_up' was 'false' during probe(), then it is
+> > going to stay until tegra264_pcie_init() is called below.
+> 
+> Yes, this keeps confusing me, too. The purpose of this is to skip
+> initialization if we've already determined during probe that there is
+> never going to be a link.
+
+But you are calling tegra264_pcie_deinit() during tegra264_pcie_suspend()
+unconditionally. So even if 'pcie->link_up' was false, the controller needs to
+be initialized (atleast partially), right? Because, you are calling
+tegra264_pcie_init() during probe() before 'pcie->link_up' check.
+
+> link_up will be false if and only if there was
+> no link during probe and we don't expect there ever will be a link
+> because there is no hotplug support.
+> 
+
+But above you said that this controller supports hotplug. Which one of the
+statement is true?
+
+> Maybe a different name for link_up could help here? maybe_link_up
+> perhaps? I don't know if that's any clearer, but I also couldn't come up
+> with a better name.
+> 
+> Or maybe we should split this into two booleans, since we're essentially
+> trying to use one boolean to track a tristate. What we want to know is
+> if a link is truly up and if the controller should be kept powered for
+> the case where hotplug is supported.
+> 
+> I suppose we could do:
+> 
+> 	bool link_up; /* track the link state */
+> 	bool supports_hotplug; /* track whether port is hotpluggable */
+> 
+
+Based on what criteria you'll set 'supports_hotplug' flag?
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
