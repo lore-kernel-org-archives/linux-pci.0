@@ -1,201 +1,134 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6DD47887A;
-	Tue, 30 Jun 2026 20:24:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782851084; cv=none; b=mK9HGYVl0eaAGcYURX+8clQ7rxB24mkSrmM1fgZ5JaUPomCZ6Tv1ONHO22Ldr+DKfBLyLl/FDuBJm7uMIAdNRpcD3ZL8FzpDPWt1xvnSi3LuiatPTGb6m8LZoR1EhixK4VPk51ZmYLq+K40m1qrSM685+jXXmyHlMFyWCOA8zco=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782851084; c=relaxed/simple;
-	bh=lvnSDXwnO2IamEnDSVp9Sr31rByjrt2f9gYfHAIvtUo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GlSAlkFRxFow8ZVhUjnE8VZbPacHYiyC5FmqRtpFlgEBQOF249CIyNGQMgMZm+mdFvICDK+gvSkzaN7i52a2O80KKilhLtxvFrTEjbUsXrza9JdjeO+hmSaa9OIhKUaDTLgVe9WMXRBB1IAKyMNuiLNPxEPYrRi15ji0NEbz+mU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=K5lFI3Zq; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2420A3E8C74
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 20:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782851154; cv=pass; b=B2RWAu+71lzhFsMPd73VWUCkMhKJZJFRBDwguDS0/hiaOm+oOutfcOhkY38RNlDi0uQyne587t59uL/UxnfrbH8sGuqSo6HHCu1CmAxENDNUK+HBkhH6qquUOxIpulI4i2Cmmg2fuvtPdi2QB5WlO+9FK15fSpFoIy6lYDWBQHk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782851154; c=relaxed/simple;
+	bh=woEJVo456NrwIsWH/wXSni7K2n8eZ9xu8Z8cS/c5ecM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BkoX818lBttaXWBxfvsL8Tx9W/EBl+LC7A0QAnPdw6FHellIvNAYgAq+4uHLyOWO90zxq3SMymQDbmJ4fgLQKLmFmInJiCUuTML6j8vZaXqx7sFlz7ouUEkW1UozIZIKDu6I0Mq5BU17zBmc9zmpXDmoEkr22HPqrhmb2kF4DCE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=M8W8An0n; arc=pass smtp.client-ip=74.125.82.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="K5lFI3Zq"
-Received: from [IPV6:2601:646:8081:7da1:c71f:dfcf:59c7:993c] ([IPv6:2601:646:8081:7da1:c71f:dfcf:59c7:993c])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 65UK6ofd3661806
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Tue, 30 Jun 2026 13:06:51 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 65UK6ofd3661806
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2026062701; t=1782850020;
-	bh=i2G6UAafySOmb8rY0Of+scGPJBnbme4rl6a4zKkZXos=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=K5lFI3Zq4F/mIozRU6/PLoKoYWvuV/6E6cXfs0gd3x7InpQddwy7n7lCqU9zTol6p
-	 iERjS1DYHe87ViLOQDzm87qe53A2nTT739eUJgh3GED1sB/6THV4FmbnfKfjF+gZM6
-	 V3hs8AlxsrgKHqVEonk0hhP6kKL9gYgNa+4EuHtRIhIHX/70mvzshRnY18tWCCdI5w
-	 Ll1EMcK2sxp8iMYsZYSnfeyWpSYeZ1t3FhRicQwouhz9KMqYRLpgCuNpQxbhJ9r8I9
-	 ZsFBJMIoIbws3i0Y3H2zHi5XFwogldA2J2JWZnvAJa/cf38a+7JjgFWPQpcUApHU2I
-	 YRs6tPbYTSHfg==
-Message-ID: <ccd35c56-08ac-46b1-9c76-2554d5a234a9@zytor.com>
-Date: Tue, 30 Jun 2026 13:06:44 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="M8W8An0n"
+Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-137335bc3caso10525541c88.0
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2026 13:25:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782851152; cv=none;
+        d=google.com; s=arc-20260327;
+        b=MHB4mKm1AMiEZxGRmIofbFuAVH46DeDrdEQ7IEDqaV2LrWedcJ8lV3Y6nZglS9y4zr
+         0tGS2nDYd5VRxo3nwQn7eGgAnQ4I55TnjDteV10sI9LxcvlghUk35szPx4q+Af2/IU6E
+         EOkKnBh6wkfCzyFtHhjC6kZRwn21xmXK0DgJ2eV4g2cRLYI6CdVpbYUk9lgDU5R4jxnN
+         Ubc//tA5jVMBc3d0wSETSd7IlJWav7NlMZqNJKBddEv9IcXea1ZaRHm+Dj0R6Hhd12vM
+         sNst2ge4R6XJuc/ECgsl74mYA9lpQ4e/k2gd6Oln3F4dw1NmZbXqj3c99VDTqZ3swius
+         Da0Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=UHtdbftmzwtk8eZlUQqO44pzJ12Z5O1UdIf5x8WuOoQ=;
+        fh=7C4dn3wz73eeTbrE1SqQ0glsAB6TVxMU218KnGcz7Js=;
+        b=pJSrnE7zmzcKTdREwW6LevGLMo6Ay4hC/NUKgHPaDXbyw5P6dg+Zwikdn/TN1cOrQl
+         Oxwa89xjslb1OQkyiDWwk9HIHeX4CEg4IbHpqKWdKgFwLvjGBdAIRjWioor4GCV+Hi1k
+         Z1NQ8EoSVa98DZyWlv+hzLDCqE+8w9Aa6MZMv2Y0LBNafXm+O3Ent/a3yw6SZ4X9s6TC
+         sVmAv+w4zAtsIN27LIzex6CdWK3MmgkibR0wwzwldpulcPwAnbMQj0XncxUvAv0SIO3U
+         FxLbaNbEf9pdS9da6/RoD/M93+DdjCif0bDQhrsBmIWUxRcnqsMJcad0wpVW1ca5+Cph
+         QrtQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1782851152; x=1783455952; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UHtdbftmzwtk8eZlUQqO44pzJ12Z5O1UdIf5x8WuOoQ=;
+        b=M8W8An0ndlJfLxRdlGsu4v2C1OvxpsT4rSzeMZ6qs4nyuC6VtN5cuMsBGNZ1twINTF
+         K7gHGNN5FMmSXemRx5czkX314ulJZvbNn0JfuT2Eup1ZgrcG2Dwy18mh0zRXFPs8bVJ+
+         AOPOfwcjNEzd810O6oLQwyCcbnnm/WmfjUqJ4teOmdzxY1K1+fRVKg2qYO/OV0kFiPLH
+         NgoVD6ub2PYhRN3Ua0O13xlh2MA/MCW570jB0TbA2xcl0IkDFdnR4m/FrW3E1x32HPWB
+         5JGQyOdu3xVDUVH47Hfvzf/NuCPjzbdqBe/nJ2ZDmOK6v3CW0k9bR+rHzVjIVwM9eTjT
+         WmRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782851152; x=1783455952;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=UHtdbftmzwtk8eZlUQqO44pzJ12Z5O1UdIf5x8WuOoQ=;
+        b=kddiFnOsvEPg/X8guPftThyh1VV/p832TgSapQeubM8GEfGBkuUESx654rgac+yTpN
+         PxTAuTxCY8ihPQoMvSVYrthqDK4ZeWldiccLOTpOALCYBEzU7Vrb5vXTijN31P5gi4Vz
+         IS3HANZhNamvicCgsoP2zq7+j1pKItGzgV4xsuBbdHSJ3eGCGmaOHJH9dKP0/+Q63N4P
+         w3txST8rlP9hn93BSToZQSicWFRVZ59yXS5fAqI+/dwWsTq/q/Gb2+HLdM/3HaCiGAqU
+         En8js7zheP1cOzYTFI+bo8P3IdLJq1gvQbaGqBJ7zOCAU6XzAw+z5yQWh61+CS7S8EdX
+         6LPg==
+X-Forwarded-Encrypted: i=1; AFNElJ93LTQINc271cM67No8gynA5lA0884wy7CsfIQoprLVTTKYySMr8G6uBhQpxmYH7tEt2mycHBEgsvA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwU1C4eWubfgZmV3C0oB4gagHeIMI8itcReBimXldjETujyS+1O
+	mPO00x0BJrsTFuco7wiNMUSu+eeq7ORqhE/h00pzhXvsIxoHNDRueeULVDd4SdsxHk4fmqoJUA3
+	hhzj5sTRmj5m/TopxshyZ+N0kMBmEIpNn1Ym6nWq/
+X-Gm-Gg: AfdE7cm+hjTxLoqwzroR4XLO8OVWKwkX/6CEU6FNGx55dvuaNimJFESLv98nbQVYXWv
+	Sv/IOx0TbE9jigtwigLYgZ+tP9Wi50kxZey3dkCrCc3hs3I+ddxGfA6wE+YsJ0PmIg5o+TbAPkQ
+	u0rJSV+CUSPBv/9lJ+YqlKUM/FArR4lBYJkXtklrzR5zX2e9FDWyM3sr9LQrDXXtuFtmLpQSKya
+	xkrWIB1lW70TmuQOKcFrCpxoMBf5lIcCTpFLiIEhR3Ul/Oe/meCu9Sp58R5gIPIjZ83YKKP
+X-Received: by 2002:a05:7022:eace:b0:138:51c:c5aa with SMTP id
+ a92af1059eb24-13b2a1a6039mr3014339c88.27.1782851151608; Tue, 30 Jun 2026
+ 13:25:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
-To: Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
-        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
-        "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>,
-        x86@kernel.org, linux-acpi@vger.kernel.org, kvm@vger.kernel.org,
-        linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-        virtualization@lists.linux.dev, linux-ide@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
-        linux-crypto@vger.kernel.org,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        linux-hyperv@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
-        platform-driver-x86@vger.kernel.org
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@kernel.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "lukasz.luba@arm.com" <lukasz.luba@arm.com>,
-        Jason Baron
- <jbaron@akamai.com>, Borislav Petkov <bp@alien8.de>,
-        Tony Luck <tony.luck@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>,
-        Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>,
-        Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Paolo Bonzini
- <pbonzini@redhat.com>,
-        "Kirill A. Shutemov" <kas@kernel.org>,
-        Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ajay Kaher <ajay.kaher@broadcom.com>,
-        Alexey Makhalov <alexey.makhalov@broadcom.com>,
-        Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Reinette Chatre <reinette.chatre@intel.com>,
-        Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
-        Babu Moger <babu.moger@amd.com>,
-        Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
-        Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-        Dave Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
-        linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Linus Walleij <linusw@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Namhyung Kim <namhyung@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        James Clark
- <james.clark@linaro.org>,
-        Josh Poimboeuf <jpoimboe@kernel.org>,
-        Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Huang Rui <ray.huang@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>,
-        Perry Yuan <perry.yuan@amd.com>,
-        K Prateek Nayak <kprateek.nayak@amd.com>,
-        "srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>,
-        Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Ashok Raj <ashok.raj.linux@gmail.com>,
-        Hans de Goede <hansg@kernel.org>,
-        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
-        David E Box <david.e.box@intel.com>, xen-devel@lists.xenproject.org
-References: <20260629060526.3638272-1-jgross@suse.com>
- <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
- <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com>
- <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
- <9acced19-573d-4923-9329-8be408d2e555@suse.com>
- <d315e0a8-e4e9-4f7e-80a9-7c236849eabd@app.fastmail.com>
-Content-Language: en-US, sv-SE
-From: "H. Peter Anvin" <hpa@zytor.com>
-In-Reply-To: <d315e0a8-e4e9-4f7e-80a9-7c236849eabd@app.fastmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260626213047.189951-1-bhelgaas@google.com>
+In-Reply-To: <20260626213047.189951-1-bhelgaas@google.com>
+From: David Matlack <dmatlack@google.com>
+Date: Tue, 30 Jun 2026 13:25:24 -0700
+X-Gm-Features: AVVi8CcLLGKx4wcfKCWubTql2j3yzitehbvvvjO6jZlkZaxQmxBrWjfnRn8YDV8
+Message-ID: <CALzav=dsWFJxc7WYKw7nvWpGPfqyjjQFkE=At5dLJsTTfpFe3A@mail.gmail.com>
+Subject: Re: [PATCH v1] sysfs: Include bridge window address size flags
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Martin Mares <mj@ucw.cz>, =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-06-29 01:38, Arnd Bergmann wrote:
->>
->> There is no RDMSRQ instruction on any x86 CPU. Are you mixing this up with
->> WRMSRNS/RDMSR using an immediate for addressing the MSR?
-> 
-> Yes, I was just confused about the exact definition here and assumed
-> the single-register output version was actually called rdmsrq.
-> 
-So just to be clear:
+On Fri, Jun 26, 2026 at 2:31=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> sysfs_get_resources() fills d->base_addr[] with CPU addresses of PCI BARs
+> (the CPU addresses in sysfs 'resource' differ from the BARs when a host
+> bridge applies an offset between CPU and PCI addresses).
+>
+> 119c1376f9ca ("libpci: Add support for filling bridge resources") fills
+> d->bridge_base_addr[] for bridge windows, but unlike for d->base_addr[], =
+it
+> did not include the low-order four bits of 'flags'.  For I/O windows, tho=
+se
+> bits indicate 16- or 32-bit addressing; for prefetchable memory windows,
+> they indicate 32- or 64-bit addressing.
+>
+> ccf68033a452 ("lspci: Use PCI_FILL_BRIDGE_BASES to detect if range behind
+> bridge is disabled or unsupported") tests the d->bridge_base_addr[] flag
+> bits to learn those properties, but since they weren't included by
+> 119c1376f9ca, 32-bit I/O windows were labeled as "[16-bit]" and 64-bit
+> prefetchable windows were labeled as "[32-bit]".
+>
+> Previous output of "lspci -v" on a bridge:
+>
+>   I/O behind bridge: 2000-2fff [size=3D4K] [16-bit]
+>   Prefetchable memory behind bridge: 48030000000-480401fffff [size=3D258M=
+] [32-bit]
+>
+> Similar output after this commit:
+>
+>   I/O behind bridge: 00002000-00002fff [size=3D4K] [32-bit]
+>   Prefetchable memory behind bridge: 0000048030000000-00000480401fffff [s=
+ize=3D258M] [64-bit]
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-There are three instructions(*):
+Thanks for the fix!
 
-	wrmsr		- implicit form only
-	wrmsrns		- implicit or immediate
-	rdmsr		- implicit or immediate
-
-The implicit form are the same on 32 and 64 bits (and, in fact, 16 bits): they
-take a MSR register address in %ecx and the data as two 32-bit words in
-%edx:%eax. This interface predates x86-64 by about a decade, and the Linux MSR
-interfaces were designed when Linux was 32-bit only, so it made sense at the
-time to treat them as two halves, especially since MSRs often are various
-kinds of bitfields. It didn't help that gcc at the time was extremely
-inefficient in its handling of multiword arithmetic (it is much better now),
-so using a u64 would have made for much worse code.
-
-The immediate forms are 64-bit only and use a single arbitrary 64-bit
-register; the MSR address is kept in an immediate in the instruction, just
-like they are for most other register types. The only thing that is "special"
-there is that the possible register address space is very large (2^32)
-although in practice a very small fraction of that is (currently) used.
-
-The immediate forms are expected to be faster, and provide for further
-performance improvements in future microarchitectures. This is important,
-because it provides a fine-grain uniform architecture for supervisor-only
-state, instead of having to give a bulk ISA (XSAVES/XRSTORS) that is different
-from the fine-grained architecture, and still get good performance. This gives
-the kernel very fine level control over the context switch flows, for one thing.
-
-WRMSRNS is a non-serializing form of WRMSR, which is defined as an
-architecturally hard-serializing instruction, although some MSRs have been
-retconned as non-serializing (and the set is different between vendors.) We
-want to switch that over to the model where the kernel explicitly opts in to
-nonserialization, but that means using alternatives since not all CPUs have
-the WRMSRNS instruction.
-
-Furthermore, we want to use alternatives so we can make use of the
-immediate-format instructions when the MSR address is known at compile time,
-which it is in *nearly* all cases. If we are smart about it we can also use
-this to let the tracing framework be specific about what MSRs to trace, since
-some MSRs are frequently accessed, but many are set at startup and then
-rarely, if ever, touched.
-
-
-(*) There are actually two more instructions:
-
-	RDMSRLIST
-	WRMSRLIST
-
-... which are bulk versions of RDMSR and WRMSRNS respectively. They can be
-useful to save and restore entire groups of MSRs in one shot, such as
-performance counter configurations. By architecturally allowing the memory
-operations and MSR operations to operate asynchronously, they give some of the
-pipeline benefits of the immediate MSR operations without requiring the MSR
-set to have been set at compile time or code to be dynamically generated.
-
-However, they expose an entirely different programming model, whereas the
-immediate- and -NS instruction choices can be entirely hidden at the C level.
-
+Tested-by: David Matlack <dmatlack@google.com>
