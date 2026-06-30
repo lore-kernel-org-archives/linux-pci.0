@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00E872DF3DA;
-	Tue, 30 Jun 2026 23:01:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71AF12F7EEE;
+	Tue, 30 Jun 2026 23:07:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782860491; cv=none; b=MR1D4wfWHy3H2ex8MteRTxauieFHO62KXeST1IrjkvXVAtFvikY1rnTDGFz8uPQYTpLVXcVj7uUu3MBIRJfwsQMqE+J7Be5/D/U9ngs36eJoVcn0yO/LPHRgAIHsradvsB7CwSEZwRlxGC7MWTfqV5MrE1ZlEBw7uaw/t8QGKp0=
+	t=1782860855; cv=none; b=stTYElRUC3rmlO6Yub0/fcn9JLPFN1DqGShOfDlE7LEpxqfxiS8JwY1O5reT0+iL9p7rwUTkPcNvI7DvEPOUonvD691h0ZDO+BIdArgJhGRvjRGlP9+ICaInNOcSWNWWtNV5F4uMU1dvam4+1N1g3y4brxxkx+9F4F4N26GD0CY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782860491; c=relaxed/simple;
-	bh=lbwayHLyKaxoCSC4ZlDiAfGvoLf72jfrhPKZjEugBVA=;
+	s=arc-20240116; t=1782860855; c=relaxed/simple;
+	bh=M/COxJA1hGmftVGtRc5rvlLFI53Tp69rMkrfmSNGuXk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cIiLQMOCY5zx+1jNv+yFHjrrZ9MrbqGAKXGvSmiTFVFYqkYhqFii0Hl595RrDO8/kbOeuNyx3Q2xgxNko9XREdquIxZeOKAlfZhixkyPHc9mkl3YNyOWKT9gUCngahS1FisSJ5fr6auSjddwQCFrYkypZRKUBVBju/TgiGr2CRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SFrRqqP9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=daE7PzEGsugDZ5a3oC0u1Sp5YSsXMVnGi+TfqYyW9T7x/Dwok8ZJP8Nf0uOuuL62LjiSchfmbm2WdADMi+Sb7fdzGCQ4g5gEzghwJfRH1QRIU6TUAk5YqG4Ma/L65KuelWqFjrsUSFs+wUjupbXItmVzRVTEbaMVH6oXfD1iW/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qa4ycMEN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SFrRqqP9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63ED71F000E9;
-	Tue, 30 Jun 2026 23:01:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qa4ycMEN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E71191F00A3A;
+	Tue, 30 Jun 2026 23:07:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782860489;
-	bh=h7/rUadFnk6bFerkVUrWSluDDuNjcx7d02Lw705w0BQ=;
+	s=k20260515; t=1782860854;
+	bh=Stg7AjDBiczf2/4Kj0vYqepZBBQYqeaJ/+PGUOKm+cI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SFrRqqP9DAe4/CZpJ8SEJlXWCF3d8XQfIeXYVsmKvUtdczAZUN53X3QFdhD1LvWKJ
-	 GhxUETZfq/F9dQT9aNor9xj78dTC3r9jFJtLXOt85u2NwwLxyR9qjbXnnU5CVexldT
-	 10kMfYWxq5IjV1dxE/HNlsxTW9eoh5pwFm7L9WyS7/05EQhU7Zf1J3LGbfDPldhF1u
-	 5cPkeYA0NSW+pvwODWwoULhupeWGrML19s+2P5gEYMpRz/yNVBLF/gssGt+b3SrNCi
-	 N2qnu+4pczk6DSOu0ZwqFIv7m0b7DJmLIisBzWh6M6eAFs2DC+s1kCQHgPbAJBKBWs
-	 0OHRD3UXBJBVA==
+	b=Qa4ycMENFl1HPE6hZTpRK7T8y+p1EoYB0ru1wQovl5MlTNJ5qf8fckpjRXYNsr3a6
+	 IWe/uBaXoNgWcL/z7/VziMnbtiPT1UY8It9SC5ZCeQGl6A0GyJZfiwuyy8GafC2iDv
+	 FOZvUVIcaTrzkFoYKtLR4Sw5+1B68kW29Jl0L+p/upzTpunR36eDGP0He2D28yrPvA
+	 pxo1ncWjV0/YERQZIE0+saefE+/5Mk0yVkGA2Km9enj+EHXMQKBjIvlSLz6KyQcx6M
+	 Zfx+JaGW8/m830Vp1SJURoobF3ZiJF7Ls+hFge0MhpfBHUHasSiDXhoIDvZH3oT1QQ
+	 TKLKBD+kO8gRA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 2/4] dma-buf: add optional get_pci_tph() callback
+Subject: Re: [PATCH v10 1/4] PCI/TPH: Add requester/completer type helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Zhiping Zhang" <zhipingz@meta.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
-In-Reply-To: <20260630224328.3218796-3-zhipingz@meta.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260630224328.3218796-2-zhipingz@meta.com>
 References: <20260630224328.3218796-1-zhipingz@meta.com>
- <20260630224328.3218796-3-zhipingz@meta.com>
+ <20260630224328.3218796-2-zhipingz@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 23:01:28 +0000
-Message-Id: <20260630230129.63ED71F000E9@smtp.kernel.org>
+Date: Tue, 30 Jun 2026 23:07:33 +0000
+Message-Id: <20260630230733.E71191F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,108 +46,73 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The newly added dma-buf API `dma_buf_get_pci_tph()` and its corresp=
-onding `get_pci_tph` callback are missing from the centralized dma-buf lock=
-ing convention documentation.
+- [Medium] The internal `get_rp_completer_type()` function was not updated =
+to use the new `pcie_tph_completer_type()` helper, leading to an API contra=
+ct violation in `pcie_tph_enabled_req_type()`.
 --
 
-commit aa25de1b77cd2b1778e96e6bffe1b1b6ce39fd9c
+commit d64d0831457ed161ad198682067e0f147ca1411e
 Author: Zhiping Zhang <zhipingz@meta.com>
 
-dma-buf: add optional get_pci_tph() callback
+PCI/TPH: Add requester/completer type helpers
 
-This commit adds an optional get_pci_tph callback to dma_buf_ops and a
-corresponding wrapper function dma_buf_get_pci_tph() for importers. These
-allow importers to retrieve PCIe TLP Processing Hint (TPH) metadata for
-peer-to-peer DMA. Both the callback and the wrapper require the dma-buf
-reservation lock to be held.
+This patch introduces pcie_tph_enabled_req_type() and
+pcie_tph_completer_type() to allow drivers to query TPH requester mode
+and completer capabilities without accessing pci_dev internals directly.
+It also ensures the reserved 0b10 completer capability encoding is
+folded into a "not supported" value for callers.
 
-> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-> index d504c636dc294..7a4c9b0d5dab4 100644
-> --- a/drivers/dma-buf/dma-buf.c
-> +++ b/drivers/dma-buf/dma-buf.c
-[ ... ]
-> @@ -1144,6 +1144,31 @@ void dma_buf_unpin(struct dma_buf_attachment *atta=
-ch)
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 655ffd60e62f6..e7693fd9d6763 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -173,6 +173,51 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
 >  }
->  EXPORT_SYMBOL_NS_GPL(dma_buf_unpin, "DMA_BUF");
+>  EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
 > =20
 > +/**
-> + * dma_buf_get_pci_tph - Retrieve PCIe TLP Processing Hint (TPH) metadata
-> + * @dmabuf: DMA buffer to query
-> + * @extended: false for 8-bit ST, true for 16-bit Extended ST
-> + * @steering_tag: returns the raw steering tag for the requested namespa=
-ce
-> + * @ph: returns the TPH processing hint
+> + * pcie_tph_enabled_req_type - Return the device's enabled TPH requester=
+ type
+> + * @pdev: PCI device to query
 > + *
-> + * Wrapper for the optional &dma_buf_ops.get_pci_tph callback.
-> + *
-> + * Must be called with &dma_buf.resv held. Returns -EOPNOTSUPP if the
-> + * exporter does not implement the callback or has no metadata for the
-> + * requested namespace.
+> + * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EXT_=
+TPH.
 > + */
-> +int dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool extended,
-> +			u16 *steering_tag, u8 *ph)
+> +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
 > +{
-> +	dma_resv_assert_held(dmabuf->resv);
-
-[Severity: Low]
-This isn't a bug, but should dma_buf_get_pci_tph() be added to the list of
-functions in the "DOC: locking convention" block earlier in this file?
-
-The centralized documentation block serves as a single source of truth for
-importers by listing all functions that require the dma-buf reservation loc=
-k,
-such as dma_buf_pin() and dma_buf_vmap(). Adding this new function to that
-list would help keep the locking documentation complete.
-
-> +
-> +	if (!dmabuf->ops->get_pci_tph)
-> +		return -EOPNOTSUPP;
-> +
-> +	return dmabuf->ops->get_pci_tph(dmabuf, extended, steering_tag, ph);
+> +	return pdev->tph_req_type;
 > +}
-> +EXPORT_SYMBOL_NS_GPL(dma_buf_get_pci_tph, "DMA_BUF");
+
+[Severity: Medium]
+Could this helper return an undocumented value of 2 if a Root Port's TPH
+Completer Supported field incorrectly exposes the reserved 0b10 value?
+
+The internal get_rp_completer_type() function was not updated to use the new
+pcie_tph_completer_type() helper, so it retains its manual decoding:
+
+drivers/pci/tph.c:get_rp_completer_type() {
+    ...
+    return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
+}
+
+If get_rp_completer_type() returns 2, pcie_enable_tph() can assign this to
+pdev->tph_req_type via the min() calculation:
+
+drivers/pci/tph.c:pcie_enable_tph() {
+    ...
+    rp_req_type =3D get_rp_completer_type(pdev);
+   =20
+    /* Final req_type is the smallest value of two */
+    pdev->tph_req_type =3D min(pdev->tph_req_type, rp_req_type);
+}
+
+Should get_rp_completer_type() be refactored to use pcie_tph_completer_type=
+()
+to properly fold the reserved 0b10 encoding and avoid this API contract
+violation?
 
 [ ... ]
-
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index d1203da56fc5f..53b2686ad8fc6 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-[ ... ]
-> @@ -113,6 +113,26 @@ struct dma_buf_ops {
->  	 */
->  	void (*unpin)(struct dma_buf_attachment *attach);
-> =20
-> +	/**
-> +	 * @get_pci_tph:
-> +	 *
-> +	 * Retrieve PCIe TLP Processing Hint (TPH) steering metadata for
-> +	 * this buffer so an importer can program a matching ST/PH hint on
-> +	 * outbound TLPs targeting the exporter for peer-to-peer DMA.
-> +	 *
-> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
-> +	 * @extended: false for 8-bit ST, true for 16-bit Extended ST
-> +	 * @steering_tag: Returns the raw TPH steering tag for the requested
-> +	 *                namespace
-> +	 * @ph: Returns the TPH processing hint (2-bit value)
-> +	 *
-> +	 * Optional callback for dma_buf_get_pci_tph(). Called with
-> +	 * &dma_buf.resv held. Returns 0 on success or -EOPNOTSUPP when
-> +	 * the exporter has no metadata for the requested namespace.
-> +	 */
-> +	int (*get_pci_tph)(struct dma_buf *dmabuf, bool extended,
-> +			   u16 *steering_tag, u8 *ph);
-
-[Severity: Low]
-Similarly, should &dma_buf_ops.get_pci_tph() be appended to the list of
-callbacks in the same "DOC: locking convention" block?
-
-The existing documentation explicitly calls out exporter callbacks that are
-invoked with the locked dma-buf reservation, so updating it here would keep
-the locking contract documentation consistent.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630224328.3218=
-796-1-zhipingz@meta.com?part=3D2
+796-1-zhipingz@meta.com?part=3D1
