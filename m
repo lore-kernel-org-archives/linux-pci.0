@@ -1,61 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72459370D5D
-	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 16:50:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC06374E71;
+	Wed,  1 Jul 2026 16:55:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782924610; cv=none; b=OVKRiy1t9x+D0rIE66f5x1eeiC9lRCQIFO29Vx36wq9lpM7CzLIGI2FB6MYvHqjgj4gmjtKGBQ/CWf6/H4CQ//TBIYSYtCK98AJUhL6SbeNeK2puOIqHhhdXugceCvGMbPyheQ81XVDDxSfLezx97rJ5Mlv3yFi0KtUDHrhI0nI=
+	t=1782924922; cv=none; b=p2OsK1d02earUAANC4DKsjHu/6Th3ZnDhqwYfVyxpXpCglhCp3GG/EmWW3pPIcILBZEPjrk0Dh29/jbYbFvythVRQ+S6L2dzXKF9e7kLpWFig7J0WtYpDAwWTlj4aRuA2PYUxjRNL9+wpJijao0WM/8I1+ELpWCc029Xn5+L8gU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782924610; c=relaxed/simple;
-	bh=B12VaDSwcV6Imr9ZRBpX9WibNhGcvX1MUyCf0LOs8cc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=WOer6HxOR05P7vxlACrFCRaTlIyikwilFe+mPFGqysMBW6raBbrDxWBppGxlhbo+yBD/gp8KJzIofMYcGhveTXZy6GQlkrtMlNSaBRf3oZWc0jWZJaKoErf3QGQs+uG//0BZ2vw8+siRUo+yx0pxCv8TRlB8Os1gPoL6N2y6D3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hi3LUFkL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782924922; c=relaxed/simple;
+	bh=wehnLxMMRrBDItrASTkvWAjFyIoEkEsvXkIvo0kbZK4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WbAFDN8aHw7HUQfXjbAGnmlFk4MIqR2vaVe+eAGJ3jI3N7eTXiHHI/DPKEb70ybPl6uJD9OnOGL5CMaEqxvITc/cMfu8xtESXpsN0Ki3Z95tFhyQWzbMC2x/NrP7EwvGtgvaTCF+RszXBxWguEPDLkl1cYKOgAb6/0sXEsxXPvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=W4bF+CtH; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hi3LUFkL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E42D31F000E9;
-	Wed,  1 Jul 2026 16:50:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782924609;
-	bh=MRxY+Sr+8xdGXwIDuDiuT5Ic22icJlWOnkfY1s7R9/8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=hi3LUFkLZNS5GZA1Z8F0vzsFJKk/poI6cVMlo+GcvkQ00O0cNPUmBQHY5RVJcNCms
-	 CmihKlYUXhD26oXt7af29mj1BudmEkcLiWEgtNqA9EJMWqOEo03hDw0lis8YZKNbqK
-	 QPZMr23uAJ2LwNQXAOc9I2EOsqZ8lJwV2IYDGIsAnAMV6uQXuNfn0LVzMgYgiSecS5
-	 dZLolJ1MLwIUreWr0NwFGo1cowCspTTQW18JlBqWHrswxTrN1BFArBGnG2PpkrrNZ0
-	 gPBg97WXAXeCmjXuRvbfdEBphnDSLMr+TrA4nTk0G4P7PUysR9Oip2G5GTa7+QPhvB
-	 jTJeKUMR4Jjbg==
-Date: Wed, 1 Jul 2026 11:50:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Lukas Wunner <lukas@wunner.de>,
-	Mitran Karthikeyan <kmitran@axiado.com>
-Subject: Re: [PATCH] MAINTAINERS: Drop Karthikeyan Mitran from MOBIVEIL PCIE
- entry
-Message-ID: <20260701165007.GA288736@bhelgaas>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="W4bF+CtH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1782924919;
+	bh=wehnLxMMRrBDItrASTkvWAjFyIoEkEsvXkIvo0kbZK4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=W4bF+CtHxHluTYTTBazDk/DMqkyNEMzzQbbT1GEKzGnSGKRibB2FrGXCIEbMOgdOv
+	 mGScluCTbecvVRpamQBfbYnQECedtOAQMZTxNBnDn7Q8J8kl4eQKuJUvyekO8kJ3yD
+	 hDc/4oSePedl4M8Qgv09SBMPl3CnUaXVHC+2XHDvI6DZ9WtK0RUnHDUmahR6Tq/Bh8
+	 K7SxEdTno5IXXmpATe1fwpQR4GYIjBcZGow8VptpAhFcEU0aFA1snThvMAoMwQNPGN
+	 qMoq9rQsd/2vNIb/6BpF+PJKzmG0Tbf5UgoWzVOOY5OkswCsuzppganUL3Z7hXVLhS
+	 53/2lM7htwJog==
+Received: from [100.64.1.21] (unknown [100.64.1.21])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id A4CDB17E0909;
+	Wed,  1 Jul 2026 18:55:18 +0200 (CEST)
+Message-ID: <9f59a89f-a58d-4151-bc7e-7e7cde8877f6@collabora.com>
+Date: Wed, 1 Jul 2026 18:55:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <178288258234.309464.3851851961009909953.b4-ty@b4>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Add support for MT8189
+ SoC
+To: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>,
+ Jianjun Wang <jianjun.wang@mediatek.com>
+Cc: kernel@collabora.com, linux-pci@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <20260701-mt8189-dt-bindings-pcie-v1-1-7c7a65087654@collabora.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Content-Language: en-US
+In-Reply-To: <20260701-mt8189-dt-bindings-pcie-v1-1-7c7a65087654@collabora.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jul 01, 2026 at 07:09:42AM +0200, Manivannan Sadhasivam wrote:
-> On Thu, 18 Jun 2026 10:08:11 +0200, Manivannan Sadhasivam wrote:
-> > Karthikeyan's Mobiveil email address is now bouncing and there is no sign
-> > of him [1] willing to carry out maintainership duties for this driver. So
-> > drop him from the MAINTAINERS entry for MOBIVEIL PCIE.
+On 7/1/26 17:27, Louis-Alexis Eyraud wrote:
+> Add compatible for MT8189 PCIe Gen3 controller, that is compatible with
+> the one found MT8192.
 > 
-> Applied, thanks!
-> 
-> [1/1] MAINTAINERS: Drop Karthikeyan Mitran from MOBIVEIL PCIE entry
->       commit: 8fb2ca9b9d3c82b8629c7331da6684bf269c60fb
+> Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 
-I moved this to pci/for-linus so we can include it in v7.2.  There's
-no risk for MAINTAINERS updates, so I don't think we need to wait for
-the next merge window.
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+
