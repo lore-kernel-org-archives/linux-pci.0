@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1206E3F4830;
-	Wed,  1 Jul 2026 11:04:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4D83BA249;
+	Wed,  1 Jul 2026 11:07:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782903864; cv=none; b=hiWL4qRvGFkDksia83dLJHQjtbPyw8qdj5O2SlmFywgGzWkYsydewFT4zW9+x4TyRLlUG00G+iuVMlLA2f3yDSZdhVZxKM2BJOlbelOkleO2AgjyTen0c4D8jR4EFNoBSiIdZ8KRjMt47XloAHIjAKGLHBF72Pz4ElpCbXT43yg=
+	t=1782904023; cv=none; b=MuoSDz5zIhepwrnkd84Okbzc4yE9WsXjuB536ASKJ28JdztEoavDL0nq4R/EhPnRZvZ9i+ukuUsmN7loU4D6DSlUuJ/YNQPKo6wMA/VVRMu4YYDzr5HCExeraMzCyNHn9ANm76dseUwUIQaPCPYI7D2lHE854LKoHf7N/T74Qsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782903864; c=relaxed/simple;
-	bh=3qesG+9F/KdPht7/nQwVxS12U3O+N/hmSshuhQUcJq8=;
+	s=arc-20240116; t=1782904023; c=relaxed/simple;
+	bh=oSlcK09PdBKIVNq39bqkYR0O6+AzUMdbk+zgIoJP+Xw=;
 	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cifx1vzxz2TZSSvfyA8qre2lxm0tqfCQ441Rw5Ou8KBURBzFIbVWT5N6zXbQcfllu6OIzNhXzdxJLa+Tz8tfhopU4e6tdzZiN7o5UXKbq+g5nrrRwNvZsGeelJTajyu3N7hPiurX4Jo6Znf5dwiHcTFXmsKj3f4Yg9o3u9fjjr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dA1qXZu+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VZH/BmT+Uk1tkjEnmkRMxbHf/k8jgdYFcODHhgrUBxVj9vdg2XdguqVQF3LK6e+G5eh47KwNrwOmvfhaepmFc0SepdKl9eQpyVYWwDCFLMhVhXEpmryqv4rcaEPJIEUngNU4I0Sv/GVDvU2gXnihQ0+YAwrKZGbaNofCe9fMp+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GIuIQLTW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dA1qXZu+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 438D01F000E9;
-	Wed,  1 Jul 2026 11:04:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GIuIQLTW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E1B81F000E9;
+	Wed,  1 Jul 2026 11:07:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782903862;
-	bh=HeoiFVV3lL3hREZrfPDaAqDcMsgmo+oIlOrM1bpGoFo=;
+	s=k20260515; t=1782904020;
+	bh=bNinqsNPFAPvqAYzmqzmK5X9Wv0GpzIpoiogbgAT7xY=;
 	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
-	b=dA1qXZu+awCq5reIEzSwSY4jjksyHjSNplRxjpVKaE/pDlW5sCE9HAR5TL2598y8x
-	 JfCC1ycLuUliHbRgRjKJGSJLKlHG/lwp6oCBzHPOkGqkzfZsnYgGYheWcmFUvZ6pan
-	 Zq+Kut9KiV+bp9T+UIDqdHRGAz/UZIkhcK/eRVnODa2Y1xQAOYNi/TARRuOMSQD1e4
-	 1+EFnCczeTNYa0XHs6K4baTgF65VPWZ54GArxWXdojcgIcdQ8GJwWyDLw1tXRh2nk7
-	 /Jz7QyaSDvpDkafInHpt5/UTpPnxPox5jsxm+l7ey+i1oS1XW2BsTjqQS11YASCsZu
-	 S9HDwCu46GIsw==
+	b=GIuIQLTW7mZhtstjSE6wJrKB53qF3rM+kd4CrBRS9ry6p8zfvezmxFUpnfER9qN2C
+	 KnDJ8la1TzGVb/QtCeHIFJahLACoGE8VhqStzAuTzxHKAI1Q3DZ2Owfq9ggZArQIeb
+	 T+A34JQeLhocpMXNE7lfKWENNmcswMvRkeJASOtn7e2bIE88uB+iPspWvebPWAptaX
+	 FTBla/32K+BOlTb7Mgm7TrMJcbHwlJcq1OAu92PSO+E/Jl6w+InFB6rT1CiignMHrD
+	 5loNtVEGsp2JPBlCV3G96IjJNyYqeW/wf5hj7AEZuBKpHzbsD95f/5Ad4PqZI2TxzQ
+	 fkoBfDJWeqBTA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V5 1/7] arm: dts: imx6qdl-sabresd: Add power supply
- property to Root Port node
+Subject: Re: [PATCH V5 7/7] arm64: dts: imx95: Move power supply properties
+ to Root Port node
 Reply-To: sashiko-reviews@lists.linux.dev
-Cc: imx@lists.linux.dev, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260701105234.198987-2-sherry.sun@oss.nxp.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, Frank.Li@kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev
+In-Reply-To: <20260701105234.198987-8-sherry.sun@oss.nxp.com>
 References: <20260701105234.198987-1-sherry.sun@oss.nxp.com>
- <20260701105234.198987-2-sherry.sun@oss.nxp.com>
+ <20260701105234.198987-8-sherry.sun@oss.nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 11:04:21 +0000
-Message-Id: <20260701110422.438D01F000E9@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 11:06:59 +0000
+Message-Id: <20260701110700.5E1B81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,68 +46,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Missing error check for pwrseq_power_on() in slot_pwrctrl_power_on=
-() leads to potential kernel panic.
+- [Low] The transition to the new PCI pwrctrl framework is incomplete acros=
+s the i.MX95 platform. Several other i.MX95 board definitions were omitted =
+from this migration and still retain the legacy `vpcie-supply` property in =
+the host controller node instead of moving them to the Root Port child node=
+s.
 --
 
-commit 4b51e513820a111cd03554e7f701a9ce808be27b
+commit b94f7498d750422b57ec34a9401c66058aec3470
 Author: Sherry Sun <sherry.sun@nxp.com>
 
-arm: dts: imx6qdl-sabresd: Add power supply property to Root Port node
+arm64: dts: imx95: Move power supply properties to Root Port node
 
-This commit adds the power supply property to the Root Port child node to
-support the new PCI pwrctrl framework. The legacy power supply property is
-retained for backward compatibility.
+Move the power supply properties from the PCIe controller nodes to the
+Root Port child nodes to support the new PCI pwrctrl framework.
 
-> diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi b/arch/arm/bo=
-ot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> index fe9046c03ddd6..60fe0f973668b 100644
-> --- a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> @@ -756,12 +756,14 @@ &pcie {
->  	pinctrl-0 =3D <&pinctrl_pcie>;
->  	/* This property is deprecated, use reset-gpios from the Root Port node=
-. */
->  	reset-gpio =3D <&gpio7 12 GPIO_ACTIVE_LOW>;
-> +	/* This property is deprecated, use power supply from the Root Port nod=
-e. */
->  	vpcie-supply =3D <&reg_pcie>;
->  	status =3D "okay";
->  };
-> =20
->  &pcie_port0 {
->  	reset-gpios =3D <&gpio7 12 GPIO_ACTIVE_LOW>;
-> +	vpcie3v3-supply =3D <&reg_pcie>;
+> Move the power supply properties from the PCIe controller nodes to the
+> Root Port child nodes to support the new PCI pwrctrl framework.
+>=20
+> Since i.MX95 is the new platform that under development phase, it should
+> be fine to simply move the power supply properties.
 
-[Severity: High]
-This is a pre-existing issue, but does enabling the pwrctrl framework here
-expose a regression where error checks are missing in the core code?
+[Severity: Low]
+Are there other i.MX95 boards that should be included in this migration?
 
-Looking at drivers/pci/pwrctrl/generic.c:slot_pwrctrl_power_on(), it drops
-the error code from pwrseq_power_on() and unconditionally returns 0:
+The transition to the new PCI pwrctrl framework appears incomplete across t=
+he
+i.MX95 platform. Several other i.MX95 board definitions were omitted from t=
+his
+migration and still retain the legacy vpcie-supply property in the host
+controller node instead of moving them to the Root Port child nodes.
 
-drivers/pci/pwrctrl/generic.c:slot_pwrctrl_power_on() {
-        ...
-        if (slot->pwrseq) {
-                pwrseq_power_on(slot->pwrseq);
-                return 0;
-        }
-        ...
-}
+For example, arch/arm64/boot/dts/freescale/imx95-15x15-frdm.dts retains the
+legacy power supply property in the host controller node:
 
-If the power sequencer fails to power on the slot, the PCI subsystem is
-falsely notified that the slot is ready. The PCI core will then enumerate
-the bus and attempt to access the configuration space of the unpowered
-device.=20
+&pcie0 {
+    ...
+    vpcie-supply =3D <&reg_m2_mkey_pwr>;
+    ...
+};
 
-On ARM/ARM64 platforms, couldn't accessing unpowered PCIe registers result
-in a synchronous external abort (SError) and an immediate kernel panic?
+Similar omissions appear in arch/arm64/boot/dts/freescale/imx95-19x19-frdm-=
+pro.dts:
 
->  };
-[ ... ]
+&pcie0 {
+    ...
+    vpcie-supply =3D <&reg_m2_mkey_1_pwr>;
+    ...
+};
+
+And in arch/arm64/boot/dts/freescale/imx95-19x19-verdin-evk.dts:
+
+&pcie0 {
+    ...
+    vpcie-supply =3D <&reg_pcie0>;
+    ...
+};
+
+Should these boards also be updated to ensure consistent power management
+behavior across the i.MX95 platform and allow future cleanup of the legacy
+code?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701105234.1989=
-87-1-sherry.sun@oss.nxp.com?part=3D1
+87-1-sherry.sun@oss.nxp.com?part=3D7
