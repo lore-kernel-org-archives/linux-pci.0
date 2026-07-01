@@ -1,56 +1,56 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60E9270545
-	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 20:22:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C55E56A
+	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 20:23:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782937355; cv=none; b=PhTPK5G6ziuOSNaCPwmu/AaWbEG2/+uYZ3Fheb92LVTzKxJaaz3uXpLEkLu2i2i0A1gRDrSqxjgIQfAt3EFtUZSY/tMBwzH9SdFAbIxrlQFWCj84pnSPE7cHE8hfXIUC6Lg36bjBxzqemwTlQTikznncOswddQSI2Q9LXuRqP7w=
+	t=1782937391; cv=none; b=UWZ2FWz/kSK+nz1ex/QkaOqmiHsTA/ZWropC1f0yMZYaFTGvUbPVyfxTd4+fNnIo4Qr5VrbBQ3HgBczdjS37w+myUenODYmFJFMG7CsAxJQoTL5GsTuBgf/fKDWL+b4bIgf8ED3FEyWXZCnX9NgZ8ETQBp6lrDHZutd/dcaZclo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782937355; c=relaxed/simple;
-	bh=Wdl/CpmR/VMFZ48C7FB8X3PfOeQaYePruNXxJzV8XRw=;
+	s=arc-20240116; t=1782937391; c=relaxed/simple;
+	bh=l0MbCq5Ag6y5Ty4pbQ6u9eyUbPK8/iUaV2dAiHRf42M=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h7zKDxJx5vJsg+1GO0Bl9+SzvfuXHYSKwQ8e3cC7vjEmbi/6TBkQk9qnPsXpUnb1+G6r8dTB6BTv4osZ8BQP0mHbJsEaztWBihkuRnWWArxRjeu+gtx6EUgG3FpH1osJwKbrEgxPITctF9yTsCQ6qULjDOuXkiDXB9CuqCZ9Z1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T/hhP9Zf; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=d+ZrG0q2FdGn55RyecBVVHHRGbYLIb3p4Uf662qDHS3tx0GcVO7fjTLg4ke6FfDWsHcw/pinD4fnRVDmkV+kM0btUe4h6vrt8yReFbqmXiLrxERHICgxfsaLCL1Q73uCVXu7NHrYpq1X628KzopJy4m0djBpqDQXvJzIKSY8ktg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MXF5iRCe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T/hhP9Zf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C6D1F000E9;
-	Wed,  1 Jul 2026 20:22:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MXF5iRCe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA4C71F000E9;
+	Wed,  1 Jul 2026 20:23:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782937354;
-	bh=Wdl/CpmR/VMFZ48C7FB8X3PfOeQaYePruNXxJzV8XRw=;
+	s=k20260515; t=1782937390;
+	bh=l0MbCq5Ag6y5Ty4pbQ6u9eyUbPK8/iUaV2dAiHRf42M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=T/hhP9ZfQ3Fm3C7DMZ3uwfZL8UB6A1ShKYRjWBXY/uSB5xaSYsqUt8FfvxFU/on/u
-	 v6kdXEzsDx/MbFubMHInT5O2DgIHFrAVA2WVK3m2ov3UE/ocdEO7nW2SPnwln5XLZi
-	 CuG0WpFfUOikr8ikUfgiic+c3l433XLP+9RAmz9zLEguA3zRZFPHYQuuOqnXwQjpYK
-	 QO/whsGtwEuFvUjJm8n14+gjQvL4bzADvFVq0sgmd5jAacf4lhCH2EQWXwlYAT/cDC
-	 7OA1AM4a0sWdOpUkTCwnxW4TejLeP/mlwjmGE0UfUj8KmHZWU0dHZNQ9XpLA1k8xWx
-	 lmjq5uiOFx2uQ==
+	b=MXF5iRCegBo1fjuuwLZuHT79PTGXP43SJVSB0eNqR+Z2POaNFM7dqkRqlwz2YR3Os
+	 gNxdFVACbpMkkNiQu7u/7rhFBUXGcAR8QODRvl/baAsHPvTygZYg0vP+lOaHOOZ0m/
+	 fWajK3Wq+/GRQPylpGCjI5CgNsFaq5oO18ZHIancenLNBPY4gxFVDNLkfaoNRV5zbu
+	 Hr2fjM7P1vTU9MHjBOeXWzw+rGV73BKA0cqSJ53glKe0Fgurr/1Fnc2qKWtH1KVT4d
+	 8y67e6XkC22vVWuRL+1Uz+PQtb3ivs860idTPKdkLJ6jf7lkX0Z9kppGYsiJIVONfl
+	 TkJgwCXTP/kSw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC RESEND 7/7] i3c: mipi-i3c-hci: Advertise IBI wakeup
- capability
+Subject: Re: [PATCH RFC RESEND 6/7] i3c: mipi-i3c-hci: Factor out
+ i3c_hci_sysdev()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: linux-i3c@lists.infradead.org, linux-pci@vger.kernel.org, "Alexandre
- Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org
-In-Reply-To: <20260701201533.220818-8-adrian.hunter@intel.com>
+Cc: linux-i3c@lists.infradead.org, Frank.Li@kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20260701201533.220818-7-adrian.hunter@intel.com>
 References: <20260701201533.220818-1-adrian.hunter@intel.com>
- <20260701201533.220818-8-adrian.hunter@intel.com>
+ <20260701201533.220818-7-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 20:22:33 +0000
-Message-Id: <20260701202234.10C6D1F000E9@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 20:23:09 +0000
+Message-Id: <20260701202309.AA4C71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Set master->ibi_wakeup during probe when the associated system device
-> advertises wakeup capability, allowing the I3C core to mark IBI-capable
-> I3C devices as wakeup capable.
+> The MIPI I3C HCI driver needs to identify the underlying system device
+> used for DMA mapping and PM operations. The logic for determining that
+> device is currently embedded in the DMA implementation.
 >=20
-> Tweak the comment for i3c_hci_sysdev() to mention the new usage.
+> Factor this code out into i3c_hci_sysdev() so it can be shared by other
+> parts of the driver and keep the device-selection logic in one place.
 >=20
 > Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 
@@ -58,5 +58,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701201533.2208=
-18-1-adrian.hunter@intel.com?part=3D7
+18-1-adrian.hunter@intel.com?part=3D6
 
