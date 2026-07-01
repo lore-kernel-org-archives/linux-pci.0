@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B13E3EFD37;
-	Wed,  1 Jul 2026 10:57:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6A8426EC5;
+	Wed,  1 Jul 2026 11:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782903469; cv=none; b=W78Jx9kIHJCxULEE0zIWc+0KHiJ0/H7Ez2urnEOZBbPIm3q7M2gvqREIrXD8lW8A8aIqCaH4fMvNksuB0LS3FxPvdB57+fz//Yhr5mVX++TxI/v9u0MuImm8DjzqisL6KetFNMOQ8WCz+wbcTFEwTYMcAvONgStqo4ooje+xsoM=
+	t=1782903694; cv=none; b=Eg76D/WqbszhNngCHDflJ/NJ9DJBl0W1hohn60k4qeLVLeu/NQj7iVIn7R1/mXdLwh3oVqSNIp3oL+ropLZRJWbiYFnIqulPE0ee1KwF3Sh1ZpQTE/U+rf+SrRRCHlrYOHL2/swgWjxiz/vg9oIyzVlZot9ZRHY8qChUYP07YXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782903469; c=relaxed/simple;
-	bh=yWtNQHCZI7apySTTxXuHad5vReJdsRTISEnyKkk2TTw=;
+	s=arc-20240116; t=1782903694; c=relaxed/simple;
+	bh=ryOZZdoSIg8P2ev+PBokRZ+7Q01YlY/faEWNt/pvbx0=;
 	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WDqopwBL+zcjYm+BtYaiKW7VkRVXZaIPou7tOWNMxEcN6WNHmpdTMUb2YULOrtPNEJZq8XdP2EJrWlUBRziNd301x5qG1Hm+6R3AN92UESjrsEQe6M4kfo0Sp+9ThNwdbV3l54hIBgrtAsxcHnVHU/HbmnsZTZb5xUyOWQrplb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kw03Nnrf; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=gkX0JUPiIdFeOCv6vGBXdmItnWfH0TSO8b2ne4kznQOPQn8flFrZJgHKxB3qJdI9RQBORb2jT9Ts5+2FWY/dy4cgGAionLi6xg3shgPRByDfVVU3v1HTaJH4ygkcuEw1YTbGwSi9ysvyo6pWY2A4KppYNbZB53ZevVPtCLv+QLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYSKGnw4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kw03Nnrf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F10D51F00A3D;
-	Wed,  1 Jul 2026 10:57:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYSKGnw4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D88E01F000E9;
+	Wed,  1 Jul 2026 11:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782903466;
-	bh=yWtNQHCZI7apySTTxXuHad5vReJdsRTISEnyKkk2TTw=;
+	s=k20260515; t=1782903693;
+	bh=ryOZZdoSIg8P2ev+PBokRZ+7Q01YlY/faEWNt/pvbx0=;
 	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
-	b=Kw03NnrfiZ3KDexC83Ui7bPIXMRB2TWSyFMJOsHrP6SwoURM7wFsB/v4WjRuan/dj
-	 CkXBOOlPFo16ukMyeKHRmNQZO4wXUxmh7IdrhOHP2ccEjLaF6KpvxQ0kQ4dygmlVyw
-	 hM6HQEMUSoygLhDuG8bSoIHB/RWusyiXnC6kvA/eDvoRsO0dstm8XPLwkIIYdF0U6e
-	 o2nQw/X/ayqub3yeV0a0YXqKpl4XsZJjpQ/ACvqFEtUYV3Pb7wNVe0+1V8SCt5lJTY
-	 nXoapJ6NxitMDnpQC+ZNPQGjzLtDzdJcZN13SJoYx5CLjPXoS6cXxjXuobo7caqXbe
-	 yYd51+Wd8q6yw==
+	b=dYSKGnw4RSXW3fdf3vU0PcDjGmRWXruWcBlchRRUdP7a3lR6O1O4Jcdmg2YlhPUOR
+	 dqY0YlmdxOoe8cPa3MMjn3Ngd8Rj8tTfau/VZtsKAm3DFaYwu7EgHaxk0okL5fB6WW
+	 dQYwkuRTWzVv8FNUgIVdeFaQaFHD/9rlITvVYa96N0qudZoetqaOu3tGIojzk9GtfS
+	 g88aeo3UDKjzTzd1eiahLVR0KwT2QXe4NnCjTJ/n32wNlms4mO6Vp/09O74Wi5CtkY
+	 V/znjfxqsBnx2JHa5FMiV/W+azeYZaZnm2+bOxdKGxsULFOYyYc/gRMCyv9BLHkSo9
+	 xTu4QGwxx8blw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V5 6/7] arm64: dts: imx8dxl/qm/qxp: Add power supply
+Subject: Re: [PATCH V5 5/7] arm64: dts: imx8mq-evk: Add power supply
  properties to Root Port node
 Reply-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, devicetree@vger.kernel.org, imx@lists.linux.dev, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260701105234.198987-7-sherry.sun@oss.nxp.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260701105234.198987-6-sherry.sun@oss.nxp.com>
 References: <20260701105234.198987-1-sherry.sun@oss.nxp.com>
- <20260701105234.198987-7-sherry.sun@oss.nxp.com>
+ <20260701105234.198987-6-sherry.sun@oss.nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 10:57:45 +0000
-Message-Id: <20260701105745.F10D51F00A3D@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 11:01:32 +0000
+Message-Id: <20260701110132.D88E01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -59,5 +59,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701105234.1989=
-87-1-sherry.sun@oss.nxp.com?part=3D6
+87-1-sherry.sun@oss.nxp.com?part=3D5
 
