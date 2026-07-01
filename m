@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73DBF3AEF3B
-	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 20:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB5734D3BE
+	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 20:33:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782938000; cv=none; b=eLeiP3bBwE0KJ/THu2s+rDaCMTPP2ogFDPADF1osFExmErs9VPONA1QrYXt4P571uRWh6s3rpbcTtiabT9X4Ezi5POi7Vyc2ZWpdA6llysVFESi8b/saLCKHrlRSMYOC7x8BbrSpeCLTReJGITmZQVlrlsg5KuAotBnK3NGsRwA=
+	t=1782938018; cv=none; b=UdJSn2UITIaFCLwo/g9VFh7ZdHjqTDU6RRMdQQ+5cWztkqxXi4+cFY8e6uLkBk/Uw8QFW4emhGxmmkS62qt2jdnqbW51iW8MlKlUsN4VLHmpqMa2TOJxr1zWJbL3dX+cheMiKIqtMPXDVnXpPITbMoG7QyCuiar7Y2asrX5q4OU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782938000; c=relaxed/simple;
-	bh=6mD35oTyshqzR7lmzBvJK35M+/uVOmiCnaaI/RdynPM=;
+	s=arc-20240116; t=1782938018; c=relaxed/simple;
+	bh=ELZutrj0QBfagOITFRDtjnOLG4ZbOXcswclL+n1kmu0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=doXa5gake4kCJdL/0wivMFnQnWnNTmEsbP9LA6upjnQCZrrE8i/xbmO/FRc9PnAigtCnEhb+NnTzV7RuLPoApBA24SI9fWxwC4iFzPunAdScl2nhLywsTBN+5j+AFhEw2xV1q1oml8IXuq2KYCL4H+3PbZH8Nd1JJixbwdyNDn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gmlRcEvM; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Yq6xLQei8gd/FMAu2aVmqat+kfc/8AeeCyXz9AGHKXX3KfBQv8RrBEOSEik/Bg8cwVEryblnqF96eAdWfNLOath6fvNQsesji2eT1hhqN6ZBzxrR7JczuW+jfbvo/G9KPUPIO3hXqPuHjsT/3oZSUvs1XUhoKyaaTG/YyGpuQtg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GBdmx60U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gmlRcEvM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6114A1F000E9;
-	Wed,  1 Jul 2026 20:33:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GBdmx60U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D13321F000E9;
+	Wed,  1 Jul 2026 20:33:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782937995;
-	bh=S9iJhbgMVUVi++yBye3lwbwqTW4EHy3M8xvme7yGP/g=;
+	s=k20260515; t=1782938017;
+	bh=NyVMPti0TCUuC112Dde4qDthm08jy8jxIFdrJwiV/Oc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gmlRcEvMW/ud8fyA72/UY5MvPJwoHDM3fvn+PALZLzDMvm4usR5o3rQZUfEc8ikn3
-	 uE6N4NzCbDTjxHGh+BC9tBKS9pyV9pLK3bc13hCphDaHjdOq2HXcaPqgn8cdpMdSs0
-	 FB81Lzgtp8RgpeK31B3FMvpnm/8mgbKJdL6bZkP8S8p2yxT30OkKEJNGtnXLUv4rom
-	 HcHeDInJBk781fKOKXaysxY80N3E1M5LSPytRdb5lselw83bMGhBZAJ8RXGE3v8nrj
-	 9W7v1Ke2+lwnPsaQTvY5TO4U3y+e8twU2CcVNWp91jxTAhrv8a9Gbjn1OHjZMY4iZE
-	 8Mw2tjB8SYXTw==
+	b=GBdmx60UAv5LPWXpzLXTCa5ewIonKVWxFSAsI/PVek5Fn7PdFr3Znd6IpnoKViXWy
+	 MrcKC638sAs2xZRxN0oksf/bQxGwD+jYLDZAPHwjo4z16XZVYwfE3Q/IPlWTOlrpQ5
+	 KkdpDoQR+Msrz+d5VA6EmROlYF2rWdKgjiyTs4NdltInKwIfgnBUI7VlzlAdNdqwaT
+	 uWPOh8h5BIrm351ykYvEe1J8vH3GXl3FTWJenr1vGx7JkbPw5Y0WFlc5IeRnpCeMU0
+	 VCha7Un8CEMQhZFCshHo6YHNtPNRukrKuAAWkRNPgHDMvToiBHliV0R4T0Zo2PJHCC
+	 Ly2bqS4y8Jp7Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC RESEND 3/7] i3c: master: Add helper to query bus
- wakeup requirements
+Subject: Re: [PATCH RFC RESEND 2/7] i3c: master: Report wakeup events for
+ IBIs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: linux-i3c@lists.infradead.org, linux-pci@vger.kernel.org, "Alexandre
- Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org
-In-Reply-To: <20260701201533.220818-4-adrian.hunter@intel.com>
+Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-pci@vger.kernel.org, linux-i3c@lists.infradead.org
+In-Reply-To: <20260701201533.220818-3-adrian.hunter@intel.com>
 References: <20260701201533.220818-1-adrian.hunter@intel.com>
- <20260701201533.220818-4-adrian.hunter@intel.com>
+ <20260701201533.220818-3-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 20:33:14 +0000
-Message-Id: <20260701203315.6114A1F000E9@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 20:33:36 +0000
+Message-Id: <20260701203336.D13321F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,76 +49,84 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Concurrent execution between `i3c_master_any_wakeup_enabled()` and=
- the device registration worker causes data races on `desc->dev` because bo=
-th paths use a read-side lock.
+- [High] Unconditional NULL pointer dereference of `dev->dev` in `i3c_maste=
+r_queue_ibi` during device teardown
 
 Pre-existing issues:
-- [High] The `i3c_master_any_wakeup_enabled()` helper can dereference a dan=
-gling `desc->dev` pointer if a previous I3C device registration failed.
+- [High] Lockless TOCTOU race leading to Use-After-Free of `dev->ibi` durin=
+g concurrent IBI teardown
 --
 
-commit 3ed97d097ea9f23fefcb772811737adab713eb66
+commit ffdd9b066a2bdadecaab205d187dab1a5ecff5ae
 Author: Adrian Hunter <adrian.hunter@intel.com>
 
-i3c: master: Add helper to query bus wakeup requirements
+i3c: master: Report wakeup events for IBIs
 
-This commit adds i3c_master_any_wakeup_enabled(), which iterates over the
-devices on an I3C bus and reports whether any of them are enabled for system
-wakeup. Controller drivers can use this helper to determine whether wakeup
-support must remain available while the system is suspended.
+An I3C device configured as a wakeup source can wake the system by
+generating an In-Band Interrupt (IBI).
+
+When an IBI is queued for processing, record a wakeup event for the
+device if wakeup is enabled.  Use a 100 ms processing interval to give
+the I3C device driver time to process the IBI.
 
 > diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index a36f9b617cbf7..979457e635bd9 100644
+> index a47e2924bb701..a36f9b617cbf7 100644
 > --- a/drivers/i3c/master.c
 > +++ b/drivers/i3c/master.c
 
 [ ... ]
 
-> +bool i3c_master_any_wakeup_enabled(struct i3c_master_controller *master)
-> +{
-> +	struct i3c_dev_desc *desc;
-> +	bool wakeup =3D false;
+> @@ -3007,6 +3010,9 @@ void i3c_master_queue_ibi(struct i3c_dev_desc *dev,=
+ struct i3c_ibi_slot *slot)
+>  	if (!dev->ibi || !slot)
+>  		return;
+> =20
+> +	if (device_may_wakeup(&dev->dev->dev))
+> +		pm_wakeup_event(&dev->dev->dev, I3C_WAKEUP_PROCESSING_TIME_MS);
 > +
-> +	i3c_bus_normaluse_lock(&master->bus);
 
 [Severity: High]
-Does this code risk a data race with the device registration worker?
+Does this code introduce a NULL pointer dereference if an interrupt arrives
+during device teardown?
 
-Looking at i3c_master_reg_work_fn(), it allocates and initializes desc->dev
-while holding this same read-side lock (i3c_bus_normaluse_lock). If the PCI
-controller runtime suspends and calls this helper while the registration wo=
-rk
-is executing, they can run concurrently since both only hold a read-side
-lock.
+During I3C master controller unregistration, i3c_master_unregister_i3c_devs=
+()
+clears the device description and sets i3cdev->dev to NULL:
 
-Can this lead to a use-before-initialization if device_may_wakeup() is
-called while the memory is still being initialized?
+	i3cdev->dev->desc =3D NULL;
+	if (device_is_registered(&i3cdev->dev->dev))
+		device_unregister(&i3cdev->dev->dev);
+	else
+		put_device(&i3cdev->dev->dev);
+	i3cdev->dev =3D NULL;
 
-> +	i3c_bus_for_each_i3cdev(&master->bus, desc) {
-> +		if (desc->dev && device_may_wakeup(&desc->dev->dev)) {
+Since clearing dev->desc prevents the driver's remove callback from disabli=
+ng
+the hardware IBI, the IBI may still fire. If i3c_master_queue_ibi() executes
+at this point, the newly added device_may_wakeup(&dev->dev->dev) will
+dereference the NULL dev->dev pointer.
+
+>  	atomic_inc(&dev->ibi->pending_ibis);
 
 [Severity: High]
-This is a pre-existing issue, but could this check trigger a use-after-free
-if a previous device registration failed?
+This is a pre-existing issue, but does this lockless check open a=20
+use-after-free race window?
 
-In i3c_master_register_new_i3c_devs(), if device_register() fails, the error
-path drops the reference with put_device(&desc->dev->dev). This frees the
-underlying memory, but desc->dev is never set to NULL.
+If a hardware IBI interrupt is processed concurrently on another CPU, it can
+evaluate if (!dev->ibi) as false, get preempted, and then access
+dev->ibi->pending_ibis and dev->ibi->wq after they have been freed by
+i3c_dev_free_ibi_locked():
 
-If that happens, won't this loop observe a dangling non-NULL desc->dev
-pointer and unconditionally dereference it during suspend?
+	kfree(dev->ibi);
+	dev->ibi =3D NULL;
 
-> +			wakeup =3D true;
-> +			break;
-> +		}
-> +	}
-> +	i3c_bus_normaluse_unlock(&master->bus);
-> +
-> +	return wakeup;
-> +}
-> +EXPORT_SYMBOL_GPL(i3c_master_any_wakeup_enabled);
+This is possible for hardware controllers like dw-i3c-master that do not
+implicitly synchronize with executing hardware IRQ handlers during their
+disable op.
+
+>  	queue_work(dev->ibi->wq, &slot->work);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701201533.2208=
-18-1-adrian.hunter@intel.com?part=3D3
+18-1-adrian.hunter@intel.com?part=3D2
