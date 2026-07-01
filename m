@@ -1,47 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7793371D07;
-	Wed,  1 Jul 2026 20:15:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 037803BFACE;
+	Wed,  1 Jul 2026 20:15:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782936945; cv=none; b=AXJ4EXGWupWEO7Y+1V6XqnCQSfnPzhAsqOhR4hqii6UT6sE6uuAv4yQ0oAUoj0ExLYq8NtZqJj/c4FfudVl/ShZa1Gm3tg2twoYFxfYtv/7G1iezJTq26Vmdqj6BM5rprMvhPesItVqflhYHgt8zGMsw5MEY9fu6qNgkS3UEmCY=
+	t=1782936948; cv=none; b=YYIOjmfvn7Z8JV1mDPdtb4TsCxsrog7yY3U8/r5FaDeHoJbuI+KM4l68MP69VrfGJemuk9TwJfyIVAI/DTW9xBeKs0GnhF1+UxF2Njv93n+WH1b65xS3Qy1BjC28PZ34d807v/Z7y0Z0MdUBF4WLN7PtZBrZVwq8B9UQPOUd+g0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782936945; c=relaxed/simple;
-	bh=5IxV5XbO4AnpYPehtaq3aUnzZA7FZgIQgSUmkIeGleQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UgvhvPNhY1MxV3vjhQqfcDEpdEM+Gp4fFqHCXjrcRxO80cq4BMZIXLWJ+1ydmcjbWpZilzFP/y2dyLQBxAXUWhx147Kbpvq2jKbEUiR9q/DtavaOFtxEeMdYRH1v8CwcumcCprWonesnONx5Dt+60fsTZg5LTVOTixr9fCLYkDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aID1ZVIo; arc=none smtp.client-ip=192.198.163.19
+	s=arc-20240116; t=1782936948; c=relaxed/simple;
+	bh=xpKgPGn7FASAl8THDfEQnPWCZu586ywBfc3bGU/xi4k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=XFk/De6yu9GcWn5QFSgzPY8XEOeLB+HBXOaZTMWpxZ1aiKMiKA2xxM0j+zKX/PBInzJFMpPlh1tNBNoC/DXrg7MI0T4sCa7QRvGANrsNWXTBMt15fYmVttWblk9fVZJJ1lWBemZks1G+0EIc5WilroVhDWuaR5usTVNy10OcDS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SIIQtiYY; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aID1ZVIo"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SIIQtiYY"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1782936944; x=1814472944;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5IxV5XbO4AnpYPehtaq3aUnzZA7FZgIQgSUmkIeGleQ=;
-  b=aID1ZVIoFwZ9rnQGw56e6sFc+YMgtqkbkYFocvtYYE/tHG1Swzt8Gjuu
-   dqPFrRdRd5j5oLC8qqhZvDHI9kVZzzizumC1lE7Kr2RdRK94N2Wv1Id09
-   8P12nIjWhV2l1Ys47yZzTvmMdPFgycQWiJ5FOKGDF+gX3DOvtMfma7mzq
-   LteWa36RJNwn7Pe8FgFxOIc+HyvH25FMXV1QTroW77OavOKSzBecotUSu
-   Z9BRJRRx/fheOD5hhhiwWdDc86L+e5ySoIvyGiuk2vVfvqltTivVE52pf
-   8MXvD9caXHaS6ZsfTCG0ZKZIskTXC9bvWpEOoVERGr2qCzMj2a0DAG635
+  t=1782936946; x=1814472946;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xpKgPGn7FASAl8THDfEQnPWCZu586ywBfc3bGU/xi4k=;
+  b=SIIQtiYYlmKPJeCRS9jRI2ajgYWjQL9NfyZz/s+Mf+g6owLb5oRpK1tl
+   jxm8qXwAbNtbxs6qdQFWcqrD4gu82Iz5oJD4OEBH49E+2wKQRf9IsIoIu
+   2jntIvjHco6ZH2d5yds0hnSDYhnhu/mYZLviNE0Q5/2ZEHWOgq7XxIL49
+   u6Bo8O3oP2ghNSPI+bbmETWOnUIUmGTBWSta1AhaF1uUYNx/AiJS3lHxd
+   e7x5Gcx5swt7dqKHHNASNjEwAqeuOLNPdbanyJ54j5LEaYyitv8jwwX9U
+   HdZIbxjkm3fcbrpgR8LmcV5YkkElLs/7VSzKMvJh6zpzZUSBjLspA4nfk
    w==;
-X-CSE-ConnectionGUID: 1u5zNvtHQo+ogUl984o16Q==
-X-CSE-MsgGUID: mHjN7Vi/T72LiBQ2kV0q8Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11834"; a="82671776"
+X-CSE-ConnectionGUID: dUdV3ohsRPu54dMQHR2sdA==
+X-CSE-MsgGUID: jt6pVbEBTlCxMVJbvvG/aw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11834"; a="82671784"
 X-IronPort-AV: E=Sophos;i="6.25,142,1779174000"; 
-   d="scan'208";a="82671776"
+   d="scan'208";a="82671784"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2026 13:15:43 -0700
-X-CSE-ConnectionGUID: ctUYThKLQ8+DNvkr4dPZVA==
-X-CSE-MsgGUID: NW1iyglNR36nO3JfkyzlMA==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2026 13:15:46 -0700
+X-CSE-ConnectionGUID: bztpNFPZRFyTDZ929/440Q==
+X-CSE-MsgGUID: +wmrM7/hQ3uKWso7miGTEw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,142,1779174000"; 
-   d="scan'208";a="282737042"
+   d="scan'208";a="282737047"
 Received: from conormcd-mobl2.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.244.30])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2026 13:15:41 -0700
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jul 2026 13:15:44 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -50,10 +51,12 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH RFC RESEND 0/7] i3c: Support IBI-based system wakeup
-Date: Wed,  1 Jul 2026 23:15:26 +0300
-Message-ID: <20260701201533.220818-1-adrian.hunter@intel.com>
+Subject: [PATCH RFC RESEND 1/7] i3c: master: Support IBI-based wakeup capability
+Date: Wed,  1 Jul 2026 23:15:27 +0300
+Message-ID: <20260701201533.220818-2-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260701201533.220818-1-adrian.hunter@intel.com>
+References: <20260701201533.220818-1-adrian.hunter@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,70 +66,70 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-Hi
+An I3C controller acts as a bus controller for one or more I3C devices.
+If the controller can wake the system in response to an In-Band
+Interrupt (IBI), then any device on that bus that is capable of
+generating IBIs can potentially be used as a wakeup source.
 
-[ Re-sent to correct email addresses of linux-pci and linux-pm mailing lists ]
+Add an ibi_wakeup flag to struct i3c_master_controller so controller
+drivers can advertise support for IBI-based wakeup.
 
-Intel LPSS I3C controllers support up to two I3C busses and can wake the
-system from an In-Band Interrupt (IBI) via a PCI PME.  Today that wakeup
-capability lives only at the PCI function, with no way to express which
-I3C device is actually responsible for waking the system, and no way for
-user space to enable or disable wakeup on a per-device basis.
+If set, mark IBI-capable I3C devices as wakeup capable when they are
+registered, allowing wakeup management through the standard device
+wakeup framework.
 
-This series pushes the wakeup capability down to the individual I3C
-devices and then aggregates the resulting wakeup state back up to the PCI
-device.
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/i3c/master.c       | 8 ++++++++
+ include/linux/i3c/master.h | 2 ++
+ 2 files changed, 10 insertions(+)
 
-An IBI-capable I3C device on a bus whose controller can wake the system
-is marked as wakeup capable, so it can be managed through the standard
-device wakeup framework (e.g. via power/wakeup in sysfs).  When such a
-device is enabled for wakeup, a wakeup event is reported each time it
-queues an IBI.
+diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+index f1be38a640ca..a47e2924bb70 100644
+--- a/drivers/i3c/master.c
++++ b/drivers/i3c/master.c
+@@ -17,6 +17,7 @@
+ #include <linux/list.h>
+ #include <linux/of.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pm_wakeup.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+ #include <linux/workqueue.h>
+@@ -1930,6 +1931,13 @@ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
+ 		if (desc->boardinfo)
+ 			desc->dev->dev.of_node = desc->boardinfo->of_node;
+ 
++		/*
++		 * In the case of IBI wakeup, any IBI-capable device can
++		 * wakeup.
++		 */
++		if (master->ibi_wakeup && (desc->info.bcr & I3C_BCR_IBI_REQ_CAP))
++			device_set_wakeup_capable(&desc->dev->dev, true);
++
+ 		ret = device_register(&desc->dev->dev);
+ 		if (ret) {
+ 			dev_err(&master->dev,
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index 4d2a68793324..af3c35a8e7b6 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -511,6 +511,7 @@ struct i3c_master_controller_ops {
+  * @hotjoin: true if the master support hotjoin
+  * @rpm_allowed: true if Runtime PM allowed
+  * @rpm_ibi_allowed: true if IBI and Hot-Join allowed while runtime suspended
++ * @ibi_wakeup: IBI can wakeup the system
+  * @shutting_down: set to true when master begins shutdown or unregister
+  * @boardinfo.i3c: list of I3C  boardinfo objects
+  * @boardinfo.i2c: list of I2C boardinfo objects
+@@ -545,6 +546,7 @@ struct i3c_master_controller {
+ 	unsigned int hotjoin: 1;
+ 	unsigned int rpm_allowed: 1;
+ 	unsigned int rpm_ibi_allowed: 1;
++	unsigned int ibi_wakeup: 1;
+ 	bool shutting_down;
+ 	struct {
+ 		struct list_head i3c;
+-- 
+2.53.0
 
-At suspend time, the mipi-i3c-hci PCI driver aggregates the wakeup
-configuration of the I3C devices across its HCI instances (up to two I3C
-busses) and enables PCI wakeup (PME) only when at least one attached I3C
-device is enabled as a wakeup source.  This keeps the PCI wakeup state in
-sync with the actual requirements of the devices on the busses.
-
-The series is organised as follows:
-
- - Patches 1-4 add the generic I3C core support: an ibi_wakeup flag for
-   controllers, marking IBI-capable devices as wakeup capable, reporting
-   wakeup events on IBIs, a helper to query whether any device on a bus
-   has wakeup enabled, and a fix to reject IBI requests from devices that
-   do not advertise IBI capability.
-
- - Patches 5-7 wire this up for the mipi-i3c-hci driver: propagate the
-   aggregated I3C wakeup requirements to the PCI function, factor out
-   i3c_hci_sysdev() for the shared device lookup, and advertise IBI
-   wakeup capability when the underlying system device can wake the
-   system.
-
-Note, since the PCI wakeup state is now derived from the wakeup
-configuration of the attached I3C devices, the PCI device's
-power/wakeup sysfs attribute no longer provides independent wakeup
-control.
-
-
-Adrian Hunter (7):
-      i3c: master: Support IBI-based wakeup capability
-      i3c: master: Report wakeup events for IBIs
-      i3c: master: Add helper to query bus wakeup requirements
-      i3c: master: Reject IBI requests from non-IBI-capable devices
-      i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
-      i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
-      i3c: mipi-i3c-hci: Advertise IBI wakeup capability
-
- drivers/i3c/device.c                               |  8 +++--
- drivers/i3c/master.c                               | 41 ++++++++++++++++++++++
- drivers/i3c/master/mipi-i3c-hci/core.c             | 15 ++++++++
- drivers/i3c/master/mipi-i3c-hci/dma.c              | 15 +-------
- drivers/i3c/master/mipi-i3c-hci/hci.h              |  2 ++
- drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c | 23 ++++++++++--
- include/linux/i3c/master.h                         |  3 ++
- 7 files changed, 88 insertions(+), 19 deletions(-)
-
-
-Regards
-Adrian
