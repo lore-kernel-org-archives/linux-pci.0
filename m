@@ -1,132 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB5734D3BE
-	for <linux-pci@vger.kernel.org>; Wed,  1 Jul 2026 20:33:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90EB35E953;
+	Wed,  1 Jul 2026 20:39:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782938018; cv=none; b=UdJSn2UITIaFCLwo/g9VFh7ZdHjqTDU6RRMdQQ+5cWztkqxXi4+cFY8e6uLkBk/Uw8QFW4emhGxmmkS62qt2jdnqbW51iW8MlKlUsN4VLHmpqMa2TOJxr1zWJbL3dX+cheMiKIqtMPXDVnXpPITbMoG7QyCuiar7Y2asrX5q4OU=
+	t=1782938395; cv=none; b=qlvKsz0EBQ1VaZUcTKE4npusA1vOICN7k0O7r04n+HAfca9AwpqzgAsr6zuqRY4U1wngptW1WEp0kJa2YbzmtQ59AtwQwjR+4/uni4h+AM+wjjZukhGkiSmXaiy57oS+ixSx0X66NItyvM9woEK3YHRzPWFaT6wZ2fm0NuHoh+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782938018; c=relaxed/simple;
-	bh=ELZutrj0QBfagOITFRDtjnOLG4ZbOXcswclL+n1kmu0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Yq6xLQei8gd/FMAu2aVmqat+kfc/8AeeCyXz9AGHKXX3KfBQv8RrBEOSEik/Bg8cwVEryblnqF96eAdWfNLOath6fvNQsesji2eT1hhqN6ZBzxrR7JczuW+jfbvo/G9KPUPIO3hXqPuHjsT/3oZSUvs1XUhoKyaaTG/YyGpuQtg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GBdmx60U; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782938395; c=relaxed/simple;
+	bh=CgNAV7QHqy6Pmf+Z+4p/YlNhc84BD1GouVTTtMgNtN8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RzsVQmIAVwyE67nTTfsRxVJOoNJf1Dwvg6PulAYxJxrvMqBohWMieUt82qPjopljYZy3sRvtXyoXDGG3F9tgPrWUIM/WJ2czvMnHd7urFKwk7beXjTOfwJAK+UbojwL6jH/2GnG0WqjjTSV6n5eomhUbcWpJKqrU5lCNJBs/pZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=rC/gRBAs; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=UMooT3WC; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GBdmx60U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D13321F000E9;
-	Wed,  1 Jul 2026 20:33:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782938017;
-	bh=NyVMPti0TCUuC112Dde4qDthm08jy8jxIFdrJwiV/Oc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GBdmx60UAv5LPWXpzLXTCa5ewIonKVWxFSAsI/PVek5Fn7PdFr3Znd6IpnoKViXWy
-	 MrcKC638sAs2xZRxN0oksf/bQxGwD+jYLDZAPHwjo4z16XZVYwfE3Q/IPlWTOlrpQ5
-	 KkdpDoQR+Msrz+d5VA6EmROlYF2rWdKgjiyTs4NdltInKwIfgnBUI7VlzlAdNdqwaT
-	 uWPOh8h5BIrm351ykYvEe1J8vH3GXl3FTWJenr1vGx7JkbPw5Y0WFlc5IeRnpCeMU0
-	 VCha7Un8CEMQhZFCshHo6YHNtPNRukrKuAAWkRNPgHDMvToiBHliV0R4T0Zo2PJHCC
-	 Ly2bqS4y8Jp7Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC RESEND 2/7] i3c: master: Report wakeup events for
- IBIs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-pci@vger.kernel.org, linux-i3c@lists.infradead.org
-In-Reply-To: <20260701201533.220818-3-adrian.hunter@intel.com>
-References: <20260701201533.220818-1-adrian.hunter@intel.com>
- <20260701201533.220818-3-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 20:33:36 +0000
-Message-Id: <20260701203336.D13321F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="rC/gRBAs";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="UMooT3WC"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4grBhj1pw6z8v1h;
+	Wed, 01 Jul 2026 22:39:49 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1782938389;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jzH8cIjmzkaTbzxcez6NOL9lvuXAy29AjJiZHK2/mzw=;
+	b=rC/gRBAsaZ3PrhN1J5BcUSJngZncbLvZbg0L+VBsOlTrptly9QIX6J2YB+MAZO51VtdfT+
+	H6cdyD7ue5oqmMMl9KHSlkhjzsLOSLbjBYbM135cmHXj1FO764BElba7op3R1y8YvzjD4X
+	MDc+p9y+vgwDVtiRjAFVqfdhiYmjM2z9LOW/2aoTuqijMl/hbuNwRwRuhLZ/7rmEu78IFV
+	8FgJbRFhjPyO0pnE2qmxZVaAtoHxqtiZXXEQDnd0aPEjpczduAU8XEc3ADTY+Jz584iFjc
+	xgRI/1GFmO22zWJ3NVS653QI8vXtCmsNwPj1pSuf8i5ESpmaSJPMXssOMvXTrw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=UMooT3WC;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1782938388;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jzH8cIjmzkaTbzxcez6NOL9lvuXAy29AjJiZHK2/mzw=;
+	b=UMooT3WC3YZwbPvyoOa8L8tzBx/dhNGaKQMoZzUF8WTt9uWCu/0g7RxL5S0g0I5YfuvSgl
+	Oz5Ps719Y/qvwaIE0gePP4DrNdSWqyiuboO3PKtmnXKBCDdGHOz2MFzp9gfOjl60UKDJKW
+	Nb29BdQFmKt58EWfpP1RR2wsAMBN041viyzt8Vm6qhOfbfpfhP1TH16gXYuC/bolj4kZhD
+	gD4ef0oxhJ0do/Qh+XHu70T1ABB8PSe/FT5RYTPWVikFvxGc1jXW+5GBTeuqiEijAzYsjW
+	YTb1DxsZOSUySpBZ3fuESBRgPsV8q80o71nPbxBgnEgLQBixNmvcp2jtjpnGxQ==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Zyngier <maz@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v3 1/5] PCI: dwc: Determine whether iMSI is used before calling .init
+Date: Wed,  1 Jul 2026 22:37:44 +0200
+Message-ID: <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
+References: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: a1heqr496enipirpo7hddet7dcxqyciw
+X-MBO-RS-ID: 08b502b8c3826dfc338
+X-Rspamd-Queue-Id: 4grBhj1pw6z8v1h
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+The R-Car Gen4 PCIe controller integration configures MSI registers
+in the controller driver .init callback, because those registers
+have to be configured while PERST signal is asserted, and the PERST
+signal is asserted across the controller driver .init callback.
 
-New issues:
-- [High] Unconditional NULL pointer dereference of `dev->dev` in `i3c_maste=
-r_queue_ibi` during device teardown
+The registers have to be configured differently in case the iMSI is
+or is not used. Assign pp->use_imsi_rx before the controller driver
+.init callback is called, so the controller driver .init callback
+implementation can use the pp->use_imsi_rx value.
 
-Pre-existing issues:
-- [High] Lockless TOCTOU race leading to Use-After-Free of `dev->ibi` durin=
-g concurrent IBI teardown
---
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V3: New patch
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-commit ffdd9b066a2bdadecaab205d187dab1a5ecff5ae
-Author: Adrian Hunter <adrian.hunter@intel.com>
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 06722259d2e37..f5a38e6fd8d79 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -587,6 +587,12 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (ret)
+ 		return ret;
+ 
++	if (pci_msi_enabled()) {
++		pp->use_imsi_rx = !(pp->ops->msi_init ||
++				    of_property_present(np, "msi-parent") ||
++				    of_property_present(np, "msi-map"));
++	}
++
+ 	if (pp->ops->init) {
+ 		ret = pp->ops->init(pp);
+ 		if (ret)
+@@ -594,10 +600,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+ 	}
+ 
+ 	if (pci_msi_enabled()) {
+-		pp->use_imsi_rx = !(pp->ops->msi_init ||
+-				     of_property_present(np, "msi-parent") ||
+-				     of_property_present(np, "msi-map"));
+-
+ 		/*
+ 		 * For the use_imsi_rx case the default assignment is handled
+ 		 * in the dw_pcie_msi_host_init().
+-- 
+2.53.0
 
-i3c: master: Report wakeup events for IBIs
-
-An I3C device configured as a wakeup source can wake the system by
-generating an In-Band Interrupt (IBI).
-
-When an IBI is queued for processing, record a wakeup event for the
-device if wakeup is enabled.  Use a 100 ms processing interval to give
-the I3C device driver time to process the IBI.
-
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index a47e2924bb701..a36f9b617cbf7 100644
-> --- a/drivers/i3c/master.c
-> +++ b/drivers/i3c/master.c
-
-[ ... ]
-
-> @@ -3007,6 +3010,9 @@ void i3c_master_queue_ibi(struct i3c_dev_desc *dev,=
- struct i3c_ibi_slot *slot)
->  	if (!dev->ibi || !slot)
->  		return;
-> =20
-> +	if (device_may_wakeup(&dev->dev->dev))
-> +		pm_wakeup_event(&dev->dev->dev, I3C_WAKEUP_PROCESSING_TIME_MS);
-> +
-
-[Severity: High]
-Does this code introduce a NULL pointer dereference if an interrupt arrives
-during device teardown?
-
-During I3C master controller unregistration, i3c_master_unregister_i3c_devs=
-()
-clears the device description and sets i3cdev->dev to NULL:
-
-	i3cdev->dev->desc =3D NULL;
-	if (device_is_registered(&i3cdev->dev->dev))
-		device_unregister(&i3cdev->dev->dev);
-	else
-		put_device(&i3cdev->dev->dev);
-	i3cdev->dev =3D NULL;
-
-Since clearing dev->desc prevents the driver's remove callback from disabli=
-ng
-the hardware IBI, the IBI may still fire. If i3c_master_queue_ibi() executes
-at this point, the newly added device_may_wakeup(&dev->dev->dev) will
-dereference the NULL dev->dev pointer.
-
->  	atomic_inc(&dev->ibi->pending_ibis);
-
-[Severity: High]
-This is a pre-existing issue, but does this lockless check open a=20
-use-after-free race window?
-
-If a hardware IBI interrupt is processed concurrently on another CPU, it can
-evaluate if (!dev->ibi) as false, get preempted, and then access
-dev->ibi->pending_ibis and dev->ibi->wq after they have been freed by
-i3c_dev_free_ibi_locked():
-
-	kfree(dev->ibi);
-	dev->ibi =3D NULL;
-
-This is possible for hardware controllers like dw-i3c-master that do not
-implicitly synchronize with executing hardware IRQ handlers during their
-disable op.
-
->  	queue_work(dev->ibi->wq, &slot->work);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701201533.2208=
-18-1-adrian.hunter@intel.com?part=3D2
