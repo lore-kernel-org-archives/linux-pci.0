@@ -1,116 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1D423B6BE3;
-	Wed,  1 Jul 2026 11:10:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55A53EFD09;
+	Wed,  1 Jul 2026 11:10:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782904254; cv=none; b=YU2QnEDoa5lPB2afti17MGuQyJA1921iskZpxO9nd97lFy/IYkzWyq9W0qICBvRky2+e32S8kl78eMRh1YLsy7UlQwAdCeAmWPPz0RF36ye18HZ1bv4mlxxiL4kqGcHBIYpxxT/xfSLI1GZxvri2apgRmRUVNcOdbXy8t8Kil5Y=
+	t=1782904260; cv=none; b=sgJM+c4tESFRS4Z2oZQP/Y/4RGNpmSh6jAN3PGufBONT3y3YiyMHncO1qu/dPFP0MJQjZWMwd9g8hI4C/io/72/jIC46iC3ntghIoBP6iSOcdNrZBYW2uVwewHHcJO9T7MMOlImZV8TC6cSio1POz/Ie9JClStZFbkuh+jbLsKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782904254; c=relaxed/simple;
-	bh=/JszStEefe+59OzMpCh3/UdR9ik2m4NjOqjsHGz0OrQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MUYWAOWgOqCJpXN8UGTG++gIRZWCpEJTGKIrurmIi89Qu9wUJU0+WAs3Mjmv0M+SwFpoigXSeSTRifJal7e3SVa3uZ2A0zSyU2/OpLHTHBA+tZdDtBU18n5b0r8irPOdnW2XHf9+pULORRzfjH8Y7b/xfXC6L9Wdvpkj4wxPAZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ctC0KpN8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782904260; c=relaxed/simple;
+	bh=VNQiKyq4HgcqP/QWG4QLn7djfhmUAouDeO/uc5ZopT8=;
+	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=apNM00qwpFz2RqQWm70ljo13NLvniToolStKyvTuP9Hmq+4q053YSUwzXpJx40+2x2mw2bB1FQaPO4Q1m1k/W9X1p5egJd6PIwdooFkRthjl0Be03oPqpQNjC3nUofGmcn0ypD4xRUUQtM2s6M8okyqVbxrcXEvAJdl5Muz+vSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O8QJfYJE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ctC0KpN8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E04E1F00A3A;
-	Wed,  1 Jul 2026 11:10:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O8QJfYJE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BA9A1F00ADF;
+	Wed,  1 Jul 2026 11:10:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782904252;
-	bh=+QFqAxv8syvMpFMYuAM1dG2hrLQEDLrQnncPdAO3mjY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ctC0KpN84JxpWcpZNzDaaso8ut2K24+TNpvnNl1nvgRC4QMXQ7Kxvv/OiBfDJgB2x
-	 VYOQeNYM1NXKeJUNVtGKkpiEtBLykrx2J/FHb2pOKgySuRr6SQSJ7PsnzK04IVX1Vg
-	 GtUMq0CD80R/FDKmTi0L8mv7+sxUp5BQ0BCuvw7o9GVqi1y4HiuAZcmVmlKdepYph3
-	 xUKap+r0eGkcYxm0dC9qEtPG/UnLlujXcoJKUKlBV3SIXmswk3u/TUOVP7dTcxNj2p
-	 zuwJp6ohg+eP3kHzN4RkZsaXhfoBwEpaDD6m5LZE2HXmO/dljOCUEebRiMqMx/6qNT
-	 8UbKiHKP2R8Hg==
+	s=k20260515; t=1782904258;
+	bh=VNQiKyq4HgcqP/QWG4QLn7djfhmUAouDeO/uc5ZopT8=;
+	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
+	b=O8QJfYJEJsU5wAFNDvnBkGMu/Gh+igh3b4BvDJaSGrzB+ptVsmnFrlZipXIEP7N5g
+	 3103CaNtEMO+eJSWI5ATD9v8cv5HXXG/tVWbvcxN5jjNsp1dC4QMoGIC6urtV89sKR
+	 dQGMZ+iJd/YG+lGgnnvWl56i+kh/l/V+02OOpoFub4Mk/s4Q8V2Nm7kJVh1d1pyOjq
+	 h8Ic5B9/c+AwH5WRWrpnCjPzxnxy6G/39gHCQ8q6OOTMH5vhQ6aW7ebGIVJxScF6L0
+	 ZyqmVRuZrJ20ND8M7IuHSfUyh+w6GQkqaZSsI7ZJW6H/xUre4lDfcfC33WtfrVY1Rh
+	 uDJkFHGw96b8g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 7/7] pci: fix UAF when probe runs concurrent to dyn
- ID removal
+Subject: Re: [PATCH V5 2/7] arm: dts: imx6sx-sdb: Add power supply property
+ to Root Port node
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
-References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev, robh@kernel.org
+In-Reply-To: <20260701105234.198987-3-sherry.sun@oss.nxp.com>
+References: <20260701105234.198987-1-sherry.sun@oss.nxp.com>
+ <20260701105234.198987-3-sherry.sun@oss.nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 11:10:51 +0000
-Message-Id: <20260701111052.3E04E1F00A3A@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 11:10:57 +0000
+Message-Id: <20260701111058.2BA9A1F00ADF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The `id` parameter passed to PCI driver probe functions is now a p=
-ointer to a stack-allocated variable, breaking drivers that rely on pointer=
- arithmetic to calculate indices or that cache the pointer.
---
+> From: Sherry Sun <sherry.sun@nxp.com>
+>=20
+> Add the power supply property to the Root Port child node to support the
+> new PCI pwrctrl framework.
+>=20
+> Legacy power supply property is retained for backward compatibility with
+> existing kernels. New device trees should specify power supply at the
+> Root Port level to utilize the pwrctrl framework.
+>=20
+> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 
-commit 0cf7c75b08e81435f8eec9e2453a6dda8624a99b
-Author: Gary Guo <gary@garyguo.net>
-Subject: pci: fix UAF when probe runs concurrent to dyn ID removal
-
-This commit modifies the PCI matching logic to copy the matched device ID
-instead of returning a pointer to it. This ensures dynamic IDs are safely
-handled without requiring the lock to be held during probe.
-
-Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.o=
-rg/
-
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-
-[ ... ]
-
-> @@ -465,15 +470,14 @@ void pci_probe_flush_workqueue(void)
->   */
->  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pc=
-i_dev)
->  {
-> -	const struct pci_device_id *id;
-> +	struct pci_device_id id;
->  	int error =3D 0;
-> =20
->  	if (drv->probe) {
->  		error =3D -ENODEV;
-> =20
-> -		id =3D pci_match_device(drv, pci_dev);
-> -		if (id)
-> -			error =3D pci_call_probe(drv, pci_dev, id);
-> +		if (pci_match_device(drv, pci_dev, &id))
-> +			error =3D pci_call_probe(drv, pci_dev, &id);
-
-[Severity: High]
-Does passing a pointer to the stack-allocated id variable here break drivers
-that rely on the pointer belonging to their static id_table?
-
-Some drivers compute an array index using pointer arithmetic against the
-provided id pointer. For example, in drivers/char/agp/amd-k7-agp.c:
-
-agp_amdk7_probe() {
-    ...
-    j =3D ent - agp_amdk7_pci_table;
-    dev_info(&pdev->dev, "AMD %s chipset\n",
-             amd_agp_device_ids[j].chipset_name);
-    ...
-}
-
-Since the pointer now points to the stack frame in __pci_device_probe()
-rather than the static table, won't this pointer subtraction yield a
-wildly out-of-bounds index and cause a memory read fault during device
-probing?
-
->  	}
->  	return error;
->  }
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630-pci_id_fix=
--v2-0-b834a98c0af2@garyguo.net?part=3D7
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701105234.1989=
+87-1-sherry.sun@oss.nxp.com?part=3D2
+
