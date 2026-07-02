@@ -1,167 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2906F492195;
-	Thu,  2 Jul 2026 13:00:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458CB35DA56;
+	Thu,  2 Jul 2026 13:01:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782997242; cv=none; b=QH/7t/PS55yiAHLW4swHypQasQxlYCu/ymFxsRWP5rTMiBnFSze0sG/dnKTuMRmdFQF8DqZsyaqMWx+RluiSFeOD2ZrTPrqMihMAeLredS6XEBnajedmPIy5On0ijQ8sMuAHVaBpu5OJBc8Rk5sfyHOKtljmpqACe6w/r0Cjb4k=
+	t=1782997274; cv=none; b=cxeREyAMcthfx0Dk0g1GNPsFM/GyXvfoDLMYrD1UsZ652G28c6AHHdE7ZLeJEUj+4AderblnT9EHmOm/JT7ihwWJtQiMoDKErShaO1xiMP+7WkUN0+v8eAkBhsYgHEVWHK4Dc5I2y4R2fdszg6QiVJP3vAWbqL0ajxfCODL5QZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782997242; c=relaxed/simple;
-	bh=LR+fDkkVDPjdDk/vKwcR50Ni7Ptoq9A8XG73pnGdz9g=;
+	s=arc-20240116; t=1782997274; c=relaxed/simple;
+	bh=9LPJGXyNMZVlWU5xi93yd6jDl5jHLT/UW1Hw3Im2k40=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cVffRiAv2zn5rmyUBDqr0PR4zZtSmsc9+V7sp5swaE12rotF3wumXw7waVpIgvUwYd503JtTMxC+R1//j5yHd24BZnhRbxBHivw+H4tCuqXiSzUyAs9pUBBtc/EsGCPEv6a31tzKXhnWAK/+tqgGJJOnLGdsQSUVtZL/p+2otnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n6O2l5Vq; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IViA707o1hDNmjN2jhsHlHHs+hx55KxiE9On2FDbiGtH7sr8jvqr5diZnN5BuZ4NUqlR40RdUWLpodL8mVUnq1imoAwGnA6mJfKlOzzArwD20dOWtBrynls5WCrKeUSVUgO3FpQuw3KeRTNhUCUXu85GGgITgRb8ysxshbXKwfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=icR9xknb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n6O2l5Vq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBAB51F00A3A;
-	Thu,  2 Jul 2026 13:00:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="icR9xknb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53211F000E9;
+	Thu,  2 Jul 2026 13:01:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782997240;
-	bh=PT1Gdc3z/wbi0N8om6DKabvbzCUoOAKeBYUxpU3aiQ0=;
+	s=k20260515; t=1782997273;
+	bh=oEp+/vGoImFliTwzEu1dW5vHYfkf55jjEfFR7L2vui0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=n6O2l5VqKzbUoFVw0wuV6dsKx3cE2CEW02kT7Ubds9yOC/YfdkS4mD4SbeIcP3S+E
-	 c8KRXTlvm5+d4KhUodcUXQmDyfrH/T0q+GNlUSfTrytEt0+9zkCn46KWgX5+ufzRxq
-	 R3cqih18GyHWfKePTRvT71zm4pLtVfYUP/RZHs2myC/FH94FGDgnwn08jZi9xHANzu
-	 8kgs/TZS3qU/7RZN1ZabkcHDV4VpspbwNdwJCxyxQ4+0GyiWRekOMLhhUmr1ZVNYjQ
-	 ddP6Vc/+lXwW0HYnpAgYI4py8I9duVEUjqCAURZY6zA4VdVSLBvv6Jfb9ka3hkSM6Z
-	 /Jaf6PzwhB7/A==
+	b=icR9xknbNacH8A0jCl/NZBp2kmjn5HKIGxpaXCh8XXZIqoWdfOiNGLClJtOqLgRbb
+	 qqiuFJUn3lvxtt1P8ZU7uJWrP9mG1dSU5EgvF/9AcaLPvBxGhvAogqmFBJtPrZcZzV
+	 n2jv8GZPT1G+xQvDPczumvRpl7DsOHDtSZVQvIHbrFhMF7vh+Y658eHYzb/J8mCmHr
+	 cBTAavXc14htX1zipXIwAkjA69LeN+yuRPmxhUATKBFK9CsAz7C2hbY0JvpuTuW8If
+	 VPlIQoRIFVmvA04BiFYY6BSgikC/F9LZuNMhR79bYlwTSMIRwRUf6YuOsALgAUJrba
+	 1R4UTOE5XBl6g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 15/18] vfio/pci: Implement TPH_RESOLVE feature for
- DMABUF and CPU source resolving
+Subject: Re: [PATCH v19 13/18] vfio/pci: Introduce VFIO_DEVICE_FEATURE_TPH
+ family uapi for PCI TPH control
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260702124224.57168-16-fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260702124224.57168-14-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-16-fengchengwen@huawei.com>
+ <20260702124224.57168-14-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 13:00:40 +0000
-Message-Id: <20260702130040.BBAB51F00A3A@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 13:01:12 +0000
+Message-Id: <20260702130112.D53211F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Flawed bitwise logic in flag validation allows userspace to bypass=
- TPH policy restrictions and breaks forward UAPI compatibility.
-
-Pre-existing issues:
-- [High] Missing reservation lock `dma_resv_lock` before calling `vfio_pci_=
-dma_buf_get_pci_tph` leads to a data race and lockdep assertion failure.
-- [Medium] The VFIO_DEVICE_FEATURE_TPH SET operation fails to validate that=
- the provided payload flags are zero, breaking forward compatibility.
+- [High] Missing dma_resv lock around `vfio_pci_dma_buf_get_pci_tph` in `vf=
+io_pci_dma_buf_get_tph_by_fd`.
 --
 
-commit 0733cb5339faa744645461c3f2055477418d1f5e
+commit dbd8da4bdde63982d3f30b59ace151720f7b743f
 Author: Chengwen Feng <fengchengwen@huawei.com>
 
-vfio/pci: Implement TPH_RESOLVE feature for DMABUF and CPU source resolving
+vfio/pci: Introduce VFIO_DEVICE_FEATURE_TPH family uapi for PCI TPH control
 
-This commit adds vfio_pci_core_feature_tph_resolve() to implement the
-VFIO_DEVICE_FEATURE_TPH_RESOLVE GET-only uAPI. It resolves PH/ST values=20
-from two supported sources: DMABUF fds and CPU IDs, dynamically gating=20
-source types based on the tph_policy level.
+Add user API definitions for PCI TPH device feature set, including three
+feature IDs for global enable, resolving PH/ST, and batch programming.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 14944d3ea86e6..ed6bbffa8b26a 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1641,6 +1641,78 @@ static int vfio_pci_core_feature_tph(struct vfio_p=
-ci_core_device *vdev,
->  	return copy_to_user(arg, &tph, sizeof(tph)) ? -EFAULT : 0;
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
+ci_dmabuf.c
+> index c16f460c01d68..d9c5e434e586f 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -81,6 +88,26 @@ static void vfio_pci_dma_buf_unmap(struct dma_buf_atta=
+chment *attachment,
+>  	kref_put(&priv->kref, vfio_pci_dma_buf_done);
 >  }
-
-[Severity: Medium]
-This is a pre-existing issue in vfio_pci_core_feature_tph() just above this
-new code, but does the SET operation properly validate the user payload?
-
-When VFIO_DEVICE_FEATURE_SET is passed, the function exits early without
-reading the user's struct vfio_device_feature_tph payload via=20
-copy_from_user():
-
-vfio_pci_core_feature_tph() {
-    if (flags & VFIO_DEVICE_FEATURE_SET) {
-        vdev->tph_permit =3D 1;
-        return 0;
-    }
-}
-
-Does this silently ignore any non-zero flags in the payload, potentially
-breaking UAPI forward compatibility if new flags are added later?
-
-> +static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device=
- *vdev,
-> +			u32 flags,
-> +			struct vfio_device_feature_tph_resolve __user *arg,
-> +			size_t argsz)
+> =20
+> +static int vfio_pci_dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool ext=
+ended,
+> +					u16 *tag, u8 *ph)
 > +{
+> +	struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
+> +
+> +	dma_resv_assert_held(priv->dmabuf->resv);
+> +
+> +	if (extended) {
 
 [ ... ]
 
-> +	if (copy_from_user(&resolve, arg, sizeof(resolve)))
-> +		return -EFAULT;
+> @@ -106,6 +133,26 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops =
+=3D {
+>  	.release =3D vfio_pci_dma_buf_release,
+>  };
+> =20
+> +int vfio_pci_dma_buf_get_tph_by_fd(int fd, bool extended, u16 *tag, u8 *=
+ph)
+> +{
+> +	struct dma_buf *dmabuf;
+> +	int ret =3D 0;
 > +
-> +	src_bits =3D resolve.flags & VFIO_DEVICE_TPH_SRC_MASK;
-> +	if (!(resolve.flags & permit_flags) || !is_power_of_2(src_bits))
-> +		return -EINVAL;
+> +	dmabuf =3D dma_buf_get(fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
+> +		ret =3D -EINVAL;
+> +		goto out;
+> +	}
+> +
+> +	ret =3D vfio_pci_dma_buf_get_pci_tph(dmabuf, extended, tag, ph);
+              ^^^^
 
 [Severity: High]
-Does this validation logic correctly reject unsupported flags?
+Is it necessary to acquire the dmabuf->resv lock before calling
+vfio_pci_dma_buf_get_pci_tph()?
 
-Since permit_flags unconditionally includes VFIO_DEVICE_TPH_EXTENDED,
-wouldn't any user payload that sets VFIO_DEVICE_TPH_EXTENDED along with
-an unpermitted flag bypass this check entirely? The bitwise AND would be
-non-zero, making the NOT condition false and bypassing the policy rejection.
+Since vfio_pci_dma_buf_get_pci_tph() has an explicit dma_resv_assert_held(),
+calling it here without the lock could trigger a lockdep assertion failure
+and cause data races when reading the priv fields.
 
-Could this be updated to use a strict subset check instead? For example:
-    if ((resolve.flags & ~permit_flags) || !is_power_of_2(src_bits))
+Should this code take the dma_resv_lock(dmabuf->resv, NULL) before calling
+the inner getter to satisfy the assertion and prevent races?
 
-> +	extended =3D !!(resolve.flags & VFIO_DEVICE_TPH_EXTENDED);
-> +	if (extended && !pcie_tph_supported(vdev->pdev, true))
-> +		return -EINVAL;
-> +
-> +	resolve.valid =3D 0;
-> +	resolve.ph =3D 0;
-> +	resolve.st =3D 0;
-> +
-> +	if (src_bits & VFIO_DEVICE_TPH_SRC_DMABUF) {
-> +		ret =3D vfio_pci_dma_buf_get_tph_by_fd(resolve.src, extended,
-> +						     &tag, &ph);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does calling=20
-vfio_pci_dma_buf_get_tph_by_fd() here trigger a lockdep splat?
-
-Looking at vfio_pci_dma_buf_get_tph_by_fd() in
-drivers/vfio/pci/vfio_pci_dmabuf.c, it delegates directly to
-vfio_pci_dma_buf_get_pci_tph() without acquiring the dma_resv_lock:
-
-vfio_pci_dma_buf_get_tph_by_fd() {
-    dmabuf =3D dma_buf_get(fd);
-    ...
-    ret =3D vfio_pci_dma_buf_get_pci_tph(dmabuf, extended, tag, ph);
-}
-
-However, vfio_pci_dma_buf_get_pci_tph() expects the reservation lock
-to be held, and asserts it:
-
-vfio_pci_dma_buf_get_pci_tph() {
-    dma_resv_assert_held(priv->dmabuf->resv);
-}
-
-Could this lead to unprotected concurrent reads of the priv struct fields
-and a data race if the lock is not taken?
-
-[ ... ]
+> +out:
+> +	dma_buf_put(dmabuf);
+> +	return ret;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702124224.5716=
-8-1-fengchengwen@huawei.com?part=3D15
+8-1-fengchengwen@huawei.com?part=3D13
