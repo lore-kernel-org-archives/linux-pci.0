@@ -1,46 +1,46 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F1A1480343;
-	Thu,  2 Jul 2026 12:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A5D47ECF0;
+	Thu,  2 Jul 2026 12:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782996158; cv=none; b=X7ckewO6BLWczrn3ccoTrOrJhdmWgmzpHA9ubUrYHGF6W/OVPeuy1b2l5d3o6YfKKASjsRly1phF1L9M18HW1a0vscU6pv5dG5vRJR43wQX3dYZ0qyMNv56HYgzmfitCwvua6tF5GIfMfqxE7popFaL6Wb2Sb2yBFtF51zMDyB4=
+	t=1782996158; cv=none; b=T2DNl6qvqMn/E1eczetyX/vMhHOhtTty1fNz+jqWUefzVVDujAl8erknygOAR0AbemAm7GG0dUzaiKpnYz/hmTMvEv970/d+C7vsmX5iuW3Ev5gPKkLSBxo+Z5k6yN6k28mQSI6sEjr66EZz6+R/5z328YItRFBYJIJ1xa6dIss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782996158; c=relaxed/simple;
-	bh=1I20F0sOkyAIFGveEr+AarBkEdX4A4ptcOVLnRyGEXM=;
+	bh=FB8G2rH2AkT57d4jMpVLa5ite3U8ZGh9Vv6Za4iJYIM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FOP4Is6gudlW+N9k7AZW0uzasDNJz1qq7eUspaNhoJ77qBuiZSeWtfjNjYdwRpPwVeJ6+zcTNAeG3QtgOGbT7I8HbqCimO2F7zcLhiCEY/+bEwKP9hE+ANUqiTv6wuGiwI/uYyXt2JVNh32kxQhDhx4bJjo7Oh5XFuJfx3NeEPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=JyWjjNXX; arc=none smtp.client-ip=113.46.200.219
+	 MIME-Version:Content-Type; b=P5utN512O84zWeKfh6RieolmEMz7XSkySdBN1njGsgSZNIDJ1rDG5Kfx5l+iEqff9Kvum3DIM6sJlxohqZ9wsctY1l/UQqLefhBw4XBndsRac/czb93DRSDwF4zLKZ2zgXsRWs9Z1cCg1PgLqfq79ZcacGNj72GsZwj569ufoLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=N6oCrO57; arc=none smtp.client-ip=113.46.200.223
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="JyWjjNXX"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="N6oCrO57"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=4+ptDmT+n9A1enwB0QkaJesWgn93OX0S2jpA9gv21dU=;
-	b=JyWjjNXXfv19Ot88qol2WXfUY+zVLBPRr8HzqmSdLXWfEj1E9PgazyRjwtVLNbzPrHm4AkDvS
-	SQHqD4E1jXbL/nQiudEc42prDCWmMUNkn9jVP1ITC8tif6LJ+6Is0Rpu8aE7nBdl2muTPRJJvnN
-	MLihLHXOwHpEy872gVw7p1Q=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4grbrx0LyCz1prL9;
+	bh=x63rgjjNT0xkLcyz7hNJSE08wK7CA0W0tSc+y/7Tzno=;
+	b=N6oCrO57LrTRFFdzmWsAlP60dmxytQyZHrZtcBaPT2EYEiRjqTo2Zdprhg5wyasPQn+CfSHzC
+	GMtD2omAby+hHk0qgUjLKUpuYuuWLGsmZBv/RpSzpAfQ4v4Z7L1VJziYlNKjHrnunCHFyfjIfdj
+	EuDaKTplPbfRvvxj3SZbpKE=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4grbrx1XhCzmV6V;
 	Thu,  2 Jul 2026 20:33:21 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 68ED040576;
-	Thu,  2 Jul 2026 20:42:33 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id C2AD64055B;
+	Thu,  2 Jul 2026 20:42:31 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 2 Jul 2026 20:42:32 +0800
+ 15.2.1544.36; Thu, 2 Jul 2026 20:42:31 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v19 05/18] PCI/TPH: Refactor pcie_tph_get_cpu_st & add explicit variant
-Date: Thu, 2 Jul 2026 20:42:11 +0800
-Message-ID: <20260702124224.57168-6-fengchengwen@huawei.com>
+Subject: [PATCH v19 02/18] PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
+Date: Thu, 2 Jul 2026 20:42:08 +0800
+Message-ID: <20260702124224.57168-3-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260702124224.57168-1-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
@@ -54,145 +54,38 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-Refactor pcie_tph_get_cpu_st(): extract core logic into static internal
-get_cpu_st() helper accepting explicit requester type parameter.
-
-- Preserve original pcie_tph_get_cpu_st() unchanged as auto wrapper; it
-  uses existing pdev->tph_req_type automatically, existing callers require
-  no change.
-- Add exported pcie_tph_get_cpu_st_explicit() with bool 'extended'
-  parameter for manual STD/EXT requester selection, consumed by upcoming
-  VFIO TPH code.
-- Add capability check: reject explicit EXT request when device does not
-  support extended TPH requester.
+Split tph_enabled from shared pci_dev bitfield into spare bit of tph_cap's
+u16: tph_cap is immutable post-enumeration (15 bits for offset), remaining
+1 bit stores tph_enabled. Removes cross-bitfield concurrent write hazards
+highlighted by Sashiko after VFIO TPH exposure. No functional changes.
 
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
- drivers/pci/tph.c       | 68 ++++++++++++++++++++++++++++++-----------
- include/linux/pci-tph.h |  7 +++++
- 2 files changed, 57 insertions(+), 18 deletions(-)
+ include/linux/pci.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index c22eb7f4b0bd..70273c44e8fd 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -230,21 +230,8 @@ static int write_tag_to_st_table(struct pci_dev *pdev, int index, u16 tag)
- 	return pci_write_config_word(pdev, offset, tag);
- }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 64b308b6e61c..ce520523b152 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -472,7 +472,6 @@ struct pci_dev {
+ 	unsigned int	ats_enabled:1;		/* Address Translation Svc */
+ 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
+ 	unsigned int	pri_enabled:1;		/* Page Request Interface */
+-	unsigned int	tph_enabled:1;		/* TLP Processing Hints */
+ 	unsigned int	fm_enabled:1;		/* Flit Mode (segment captured) */
+ 	unsigned int	is_managed:1;		/* Managed via devres */
+ 	unsigned int	is_msi_managed:1;	/* MSI release via devres installed */
+@@ -588,7 +587,8 @@ struct pci_dev {
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
  
--/**
-- * pcie_tph_get_cpu_st() - Retrieve Steering Tag for a target memory associated
-- * with a specific CPU
-- * @pdev: PCI device
-- * @mem_type: target memory type (volatile or persistent RAM)
-- * @cpu: associated CPU id
-- * @tag: Steering Tag to be returned
-- *
-- * Return the Steering Tag for a target memory that is associated with a
-- * specific CPU as indicated by cpu.
-- *
-- * Return: 0 if success, otherwise negative value (-errno)
-- */
--int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
--			unsigned int cpu, u16 *tag)
-+static int get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-+		      u8 req_type, unsigned int cpu, u16 *tag)
- {
- #ifdef CONFIG_ACPI
- 	struct pci_dev *rp;
-@@ -268,19 +255,64 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
- 		return -EINVAL;
- 	}
- 
--	*tag = tph_extract_tag(mem_type, pdev->tph_req_type, &info);
-+	*tag = tph_extract_tag(mem_type, req_type, &info);
- 
--	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu=%d, tag=%#04x\n",
-+	pci_dbg(pdev, "get steering tag: mem_type=%s, req_type=%u, cpu=%d, tag=%#04x\n",
- 		(mem_type == TPH_MEM_TYPE_VM) ? "volatile" : "persistent",
--		cpu, *tag);
-+		req_type, cpu, *tag);
- 
- 	return 0;
- #else
- 	return -ENODEV;
+ #ifdef CONFIG_PCIE_TPH
+-	u16		tph_cap;	/* TPH capability offset */
++	u16		tph_cap:15;	/* TPH capability offset */
++	u16		tph_enabled:1;	/* Whether TPH is enabled */
+ 	u8		tph_mode;	/* TPH mode */
+ 	u8		tph_req_type;	/* TPH requester type */
  #endif
- }
-+
-+/**
-+ * pcie_tph_get_cpu_st() - Retrieve Steering Tag for a target memory associated
-+ * with a specific CPU
-+ * @pdev: PCI device
-+ * @mem_type: target memory type (volatile or persistent RAM)
-+ * @cpu: associated CPU id
-+ * @tag: Steering Tag to be returned
-+ *
-+ * Return the Steering Tag for a target memory that is associated with a
-+ * specific CPU as indicated by cpu.
-+ *
-+ * Return: 0 if success, otherwise negative value (-errno)
-+ */
-+int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
-+			unsigned int cpu, u16 *tag)
-+{
-+	return get_cpu_st(pdev, mem_type, pdev->tph_req_type, cpu, tag);
-+}
- EXPORT_SYMBOL(pcie_tph_get_cpu_st);
- 
-+/**
-+ * pcie_tph_get_cpu_st_explicit - Get ST with explicit requester type
-+ * @pdev: PCI device
-+ * @mem_type: target memory type (volatile or persistent RAM)
-+ * @extended: true=EXT_TPH, false=standard TPH only
-+ * @cpu: associated CPU id
-+ * @tag: output steering tag pointer
-+ *
-+ * Unlike auto pcie_tph_get_cpu_st(), caller manually picks requester type.
-+ * Rejects EXT request if device lacks extended requester capability.
-+ *
-+ * Return: 0 on success, negative errno on failure.
-+ */
-+int pcie_tph_get_cpu_st_explicit(struct pci_dev *pdev,
-+				 enum tph_mem_type mem_type,
-+				 bool extended, unsigned int cpu, u16 *tag)
-+{
-+	u8 req_type = extended ? PCI_TPH_REQ_EXT_TPH : PCI_TPH_REQ_TPH_ONLY;
-+
-+	if (extended && !pdev->tph_ext_support)
-+		return -EINVAL;
-+
-+	return get_cpu_st(pdev, mem_type, req_type, cpu, tag);
-+}
-+EXPORT_SYMBOL(pcie_tph_get_cpu_st_explicit);
-+
- /**
-  * pcie_tph_set_st_entry() - Set Steering Tag in the ST table entry
-  * @pdev: PCI device
-diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-index ca0faa98afac..1a508b3d511f 100644
---- a/include/linux/pci-tph.h
-+++ b/include/linux/pci-tph.h
-@@ -27,6 +27,9 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev,
- int pcie_tph_get_cpu_st(struct pci_dev *dev,
- 			enum tph_mem_type mem_type,
- 			unsigned int cpu, u16 *tag);
-+int pcie_tph_get_cpu_st_explicit(struct pci_dev *pdev,
-+				 enum tph_mem_type mem_type,
-+				 bool extended, unsigned int cpu, u16 *tag);
- void pcie_disable_tph(struct pci_dev *pdev);
- int pcie_enable_tph(struct pci_dev *pdev, int mode);
- int pcie_enable_tph_explicit(struct pci_dev *pdev, int mode, bool extended);
-@@ -40,6 +43,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
- 				      enum tph_mem_type mem_type,
- 				      unsigned int cpu, u16 *tag)
- { return -EINVAL; }
-+static inline int pcie_tph_get_cpu_st_explicit(struct pci_dev *pdev,
-+				enum tph_mem_type mem_type,
-+				bool extended, unsigned int cpu, u16 *tag)
-+{ return -EINVAL; }
- static inline void pcie_disable_tph(struct pci_dev *pdev) { }
- static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
- { return -EINVAL; }
 -- 
 2.17.1
 
