@@ -1,97 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D264433E8C;
-	Thu,  2 Jul 2026 15:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 727E731A549;
+	Thu,  2 Jul 2026 15:46:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783006826; cv=none; b=h/jAU3LRFW1m64LoZsOZAhThcLsOu/XaTnz8dEoFb/kwsoUBbWcdWz9WupqvDBPo0BOK6oIk+RruJHz66Z80inMvVK4+RJhpwosgssUhsHoqMN4CVmlH0ByPVU20zqUdtA0dtFQ0g7uoA5LTTLLZ7eBMqR5Co+Mvh8CVw1ijwe4=
+	t=1783007207; cv=none; b=IzZ8E4zYMeL1Rt/V0BYOy62xbjl4pOM3OlHaCCjFVwXUBrvVGn7kaT6SRmc1qhPibDWQJGO049kzEqAtQgHUlOUsMnoBMqv1WDZUr/RvuinSqL5bIfHA2jtE9i4hcsswmCpf0ub5e+eADQDPcRrku2MazUBwxXU9NGegMc9aue4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783006826; c=relaxed/simple;
-	bh=+l7GAsk0x/vJ2hI6EK695h4bTdNyGuaXcZ77Z88pDOs=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=h/uCmrAuuAa1OJ56ZTneMFgIFZKS5mZp/EWXPVoI2d4CX7mBqCCkRM894Ig2oo5FdDu9WBSAG+hDqTmdf4WiMRyjBMJ/m3EZmX3aVmGjZV0xFd3dOAuF7u69RCrbxibPwYBnh/PLYN+WUkyPHipfVD1LggMUvJBtWGmww7K+4P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l4caPv5c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783007207; c=relaxed/simple;
+	bh=BpqZXQ7tSLN0BXpsRqxL1k64attfyEvZ0QKJFK8v+XM=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=hC/bQcj/Sax9EYAlN3dlx2Ma3YCD8B9+fVglM0S7JkN8wf9OWYw9KfU8XRfGgfPr8OgslX51SwVKyfQSdl6HinWIcj60Ua2/pSl3/ptGMb3p2A2Ai4Hoy/KM9esaj0xuSfpc+mxmTF69gjzvSV6qv7UM9LcQNJ9Og+R18EXCnhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=NMJlC0W9; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l4caPv5c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C56BF1F00A3D;
-	Thu,  2 Jul 2026 15:40:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783006825;
-	bh=yfUvHVI8SP80uIxkcQY9ZvZZE7Zv/L9JYU92dnt0O6I=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=l4caPv5c+0s5trvs6J0lgoEYtFiTAbTl0Xl5Ri7MILqVxlP/IORg74hGywAf3MIwi
-	 yFDk77A3fP3H28cEr7L8uqUqEaHKxwm8GyW99WNRjtQVmQZFcjZKaLBIATrTNcvPXH
-	 JkDRcDfp8nl32vMDJA1pGwClqS1Qlbs3kgXLRpsz5skrSo33iS2zegeT+/KR7LdI28
-	 XXAZmOw8peV8+E28AJZsUGucaTKvudpz6x1X//9GleDVpQ1QwqO4Xuq6kdI5ikNdiz
-	 JvjJ5sE17tCrimqEWF6IIBSgtSI3EaPDlvTHmhr5D1SfpY5Sndj/vQGZBilxFzhrbT
-	 OspK1zx1WDong==
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="NMJlC0W9"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=kyJzbfSqoUXaNBv1Ig4SDg9TeDVODqylZdwHs0c6zpw=; b=NMJlC0W9kihForMdCYYnlLUQ6m
+	Eo6IW7rO0b1c3osWSWCUUldacbvkYcIHJHIs657/dhe4oEXiTtpTQ/dWk3ifTTLUQaEbidde5h+Za
+	PcycMOPmLVTwDWHJQDPiDcGfQFjTrxGqlbaAn1kK1DM5rhbiznK9fasb+RfVbru6MJxXbEPCEc2BB
+	ISWRcrKmHu4YocW7NLlTKBCzF8RiOcqDAlrl1qmazF+AWcg8m31/uJD0FplDbG195cflmPyzGuwqL
+	1GZfpCJbvEWPB56K9HdzIMLEdCpT6Q5vbDcy9K/PQB2P0uo3+xF6t8DCMd8+dsioqd8R68fxzYcGo
+	8krZuUbA==;
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([96.51.150.74] helo=[10.0.33.8])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wfJcc-00000006yLj-3jeO;
+	Thu, 02 Jul 2026 09:46:39 -0600
+Message-ID: <26f74cf0-8892-4672-b0e1-1f1a385c42bb@deltatee.com>
+Date: Thu, 2 Jul 2026 09:45:38 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>,
+ Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>
+Cc: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260701171245.90111-1-matt@ozlabs.org>
+ <20260701171245.90111-3-matt@ozlabs.org>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260701171245.90111-3-matt@ozlabs.org>
 Content-Type: text/plain; charset=UTF-8
-Date: Thu, 02 Jul 2026 17:40:20 +0200
-Message-Id: <DJO761D977GM.34EF3PQ0XUI91@kernel.org>
-Subject: Re: [PATCH v2 4/4] rust: samples: add EDU PCI driver sample
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- "Alexandre Courbot" <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?=
- <work@onurozkan.dev>, "Lyude Paul" <lyude@redhat.com>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-To: "Maurice Hieronymus" <mhi@mailbox.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260620-b4-rust-pci-edu-driver-v2-0-6fd6684f2c14@mailbox.org>
- <20260620-b4-rust-pci-edu-driver-v2-4-6fd6684f2c14@mailbox.org>
- <DJEQ64V8HE19.2DMBHY4XRPMG6@kernel.org>
- <DJO6UALV8NXX.CQL2772AEKFE@mailbox.org>
-In-Reply-To: <DJO6UALV8NXX.CQL2772AEKFE@mailbox.org>
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 96.51.150.74
+X-SA-Exim-Rcpt-To: matt@ozlabs.org, alex@shazbot.org, leon@kernel.org, jgg@nvidia.com, amastro@fb.com, christian.koenig@amd.com, bhelgaas@google.com, kevin.tian@intel.com, praan@google.com, mngyadam@amazon.de, dmatlack@google.com, bjorn@kernel.org, sumit.semwal@linaro.org, ankita@nvidia.com, apopple@nvidia.com, vivek.kasireddy@intel.com, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v4 02/10] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Thu Jul 2, 2026 at 5:24 PM CEST, Maurice Hieronymus wrote:
-> On Sun Jun 21, 2026 at 2:27 PM CEST, Danilo Krummrich wrote:
->>> +impl pci::Driver for EduDriver {
->>> +    type IdInfo =3D ();
->>> +    type Data<'bound> =3D Self;
->>
->> Please make this a new type and take advantage of Rust native lifetimes =
-for
->> device resources, just like the existing sample driver and nova-core doe=
-s.
->>
->> I understand that the existing IRQ infrastructure is a bit in the way an=
-d you
->> have to work around it.
->>
->> I'm going to send a patch to make the irq::Registration compatible with =
-the
->> device driver lifetime rework soon. Please rebase onto that once it's se=
-nt, so
->> this sample can land as idiomatic as possible.
->
-> If you haven't started on the irq::Registration rework yet, I'd be happy =
-to take a
-> try at it myself. I saw the DevresLt/ForLt work on your driver-lifetime b=
-ranch;
-> is stacking on the I/O generalization series the direction you have in mi=
-nd for the
-> handler data?
 
-I do have the code already, I just have to get to sending it out. I will
-probably send it tomorrow.
 
-But I think there's some room for subsequent improvements on the device ena=
-ble
-and bus mastering stuff; going to reply there.
+On 2026-07-01 11:12 a.m., Matt Evans wrote:>
+>  PCI POWER CONTROL
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 33c88432b728..59d70bc84cc9 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -206,11 +206,7 @@ config PCIE_TPH
+>  config PCI_P2PDMA
+>  	bool "PCI peer-to-peer transfer support"
+>  	depends on ZONE_DEVICE
+> -	#
+> -	# The need for the scatterlist DMA bus address flag means PCI P2PDMA
+> -	# requires 64bit
+> -	#
+> -	depends on 64BIT
+> +	select PCI_P2PDMA_CORE
 
-Thanks,
-Danilo
+Can we remove this dependency on 64BIT? Althogh it looks like
+af2880ec440 complicated the issue a bit.
+
+If I remember correctly, the original reason for this is because on
+64bit systems dma_flags fit into unusued space in struct scatterlist and
+on 32bit systems this space didn't exist and thus adding the flag
+required increasing the size of the structure which wasn't desirable at
+the time.
+
+But af2880ec440 introduced CONFIG_NEED_SG_DMA_FLAGS which doesn't depend
+on 64bit which means if CONFIG_IOMMU_DMA and CONFIG_SWIOTLB are now set
+on 32bit systems that structure will grow quite a bit.
+
+So maybe at this point it's fine to enable this on 32bit systems and we
+can remove this requirement. However, I think we should do that
+explicitly in its own patch, not hide it in this refactoring patch.
+
+Logan
