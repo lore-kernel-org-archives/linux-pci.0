@@ -1,118 +1,103 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27B6B37A84C;
-	Thu,  2 Jul 2026 15:25:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A58553FCC;
+	Thu,  2 Jul 2026 15:26:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783005918; cv=none; b=Cw9V2jB9f8OhoZrXkdLGDZI44MwvHilF9GKhmc2oknDd88p4mNRLpQdou5pPcMLbGwJUh+7T5Juxhr5yeJbRgUh8R9O0B9tgZiH5QF0VbJm3YgWCbiXgNC4HDSD68dSZhB4uys+hHhEtDD4SSfohtHxIOfPz+HR4Gm9up3h5WlE=
+	t=1783005975; cv=none; b=QP1UXDBgXsqG3riNMlFmB3te/AFZ+0/ggqNKTD0nBfG6T145q8Gkh5V5mZLP5kaQOPwYfplVZl5QqWOu1nREiHc96hAa3UXyk4LiECclW1AL/XnJuOg1XtAR22Ql65Lti0TFtljxbUzNoXumcphDBqaZBAweR3xY/b0y8dMt5Rk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783005918; c=relaxed/simple;
-	bh=Iv+CS4zGcjpl9dgtplypLGqInhjimWb21gAdLeCVf4M=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
-	 References:In-Reply-To; b=tG90HPjfFl9GsIb3V7lj8m+1upIBaTuUCFqUIuUAIFgUvBBvGIibnJjs/MAm7A8kBj8WGwThbFWJXzAhtnv9+ZzMYxJkgfGUMwy3KrHypSBsLOtEyRnZmgTz0h0KxMgv0zhSkLRp6uSRfM5y8ChG0e6+UTo1pQeAkUiel4rr/ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=fSdJ6pdC; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SxPG9jDE; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783005975; c=relaxed/simple;
+	bh=P1huFSkBxlDWmM9Bex8x2Kh++bjeHpt6f165uZxIRCg=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=EwAGB4LaUZQeLz4mu7kBK7l5f1WLfRFA04gXWtX7X5bz75b8w5GTt3QONQ/HJzvZ/Od3H/Hx/3b6Sbv/0UKF7Me7/nQ2lZ84/luOFcZ0WRWPkaY/VJD6PSfLj58o65oMbmGaAjv+Zcf8MpGeJWUBX0KDtTwmdL7jJt5rlAQngLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VlT93tZX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="fSdJ6pdC";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SxPG9jDE"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4grggD5gkMz8v0C;
-	Thu, 02 Jul 2026 17:25:12 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783005912;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RjnMPXnF/dhQHuvEZSYY5RMLgAVlSQUXztQWCWzRLSE=;
-	b=fSdJ6pdCsE+UwBNL3kddRWXjArXh+JsA1hvkBKghwikAB6sApHqwBjXxDZe7VKzquNzx3k
-	SEWOF3ePWraXigEQAIFdJbBhkbZkkrwoAKHBhLxHD44ISpCnBXy7hhahGcXxI0z1B80t4b
-	1QWs+TGuqaRJdlpN4UkLb23I6kc6sgih+OyMNF2KHQjUZkpev8lwUSZ8o/U4R3prNSLgYh
-	Htej4zElQI9y73jeuWmwPqKlTcCzKLWx9f+Wve5UTdCh0K1/B7D4sOH4fIBWt1RobWDgXm
-	Flc0ZlL6fcdBG+Qyee5U2hCwf19LFmBjiYI56W52kwV+KT4v9CTXjbR1jfgS+A==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=SxPG9jDE;
-	spf=pass (outgoing_mbo_mout: domain of mhi@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=mhi@mailbox.org
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VlT93tZX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3BD81F000E9;
+	Thu,  2 Jul 2026 15:26:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783005974;
+	bh=7unR8yvtQ9taeigaG7HqsXFuVB10+E437UJK7eQF5HI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=VlT93tZX0KmWBgfzHBqYA6MZ4OVnMILicDuEgMwbD85mP+D8HPdzDcbfd7yUvqSu7
+	 pGFQ+VWyujHb9OvJX9VniLR9X363fkZ3vSck5JSYJ1kzbeq9j4r8LDR/JAKR9xEAU2
+	 xbSC92vIliVCwzZIbkQQmB6tdN/W6h4rVlm7nGj3XTLaZngZacN4tDYMywvu/c77Xy
+	 Nb1cBIy3LV93hMVbeySsB8bOcrwdBPLSHhRUowj+/YS+AaSKszuXcHDgz3qb1ArKTn
+	 dLVcBR0f80h8DG+EGDxcAjXukhVn4mDrkKAPY8NoC6kYNSqdWfKdhE83NXE6AfVcG6
+	 /O7PTlSQORlnA==
+From: Vinod Koul <vkoul@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, 
+ Nicolas Ferre <nicolas.ferre@microchip.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Koichiro Den <den@valinux.co.jp>, 
+ Niklas Cassel <cassel@kernel.org>, Frank.Li@oss.nxp.com
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>, 
+ Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com>
+References: <20260521-dma_prep_config-v7-0-1f73f4899883@nxp.com>
+Subject: Re: [PATCH v7 0/9] dmaengine: Add new API to combine configuration
+ and descriptor preparation
+Message-Id: <178300596742.727083.5865685817987530958.b4-ty@kernel.org>
+Date: Thu, 02 Jul 2026 20:56:07 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783005911;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RjnMPXnF/dhQHuvEZSYY5RMLgAVlSQUXztQWCWzRLSE=;
-	b=SxPG9jDEPtWML8dI4s59JRRZvazT9Ro4WIw8Z739R7ZmytWC00soHClKuI+/QOMMxClGRE
-	2zZRp4gHooBR0Z1mylbRh74qQX0A+/T44GI+rSNxHqoN45x0sahAVKLe25JbLG9X5AIla5
-	mgBBcqjlNlp8tbk2UMycYdrvVD/+PADLX/0KHIQopQrsK/ETrk1AfWV4QNcA30BfG7EKgx
-	tx5IDB0p7XTgUe+An2OLQUF2+i+aOw6SECAOWg3Q/cLIr0w7TpqxPIGSMSpf3dVIpOdA+b
-	7TxSnxTA6QXvlaFUVaUhETlbHmGGskEqi1va/C+GpEmnF9lEdk5SeSKwXTsspg==
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 02 Jul 2026 17:24:59 +0200
-Message-Id: <DJO6UALV8NXX.CQL2772AEKFE@mailbox.org>
-From: "Maurice Hieronymus" <mhi@mailbox.org>
-To: "Danilo Krummrich" <dakr@kernel.org>, "Maurice Hieronymus"
- <mhi@mailbox.org>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- "Alexandre Courbot" <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?=
- <work@onurozkan.dev>, "Lyude Paul" <lyude@redhat.com>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/4] rust: samples: add EDU PCI driver sample
-References: <20260620-b4-rust-pci-edu-driver-v2-0-6fd6684f2c14@mailbox.org>
- <20260620-b4-rust-pci-edu-driver-v2-4-6fd6684f2c14@mailbox.org>
- <DJEQ64V8HE19.2DMBHY4XRPMG6@kernel.org>
-In-Reply-To: <DJEQ64V8HE19.2DMBHY4XRPMG6@kernel.org>
-X-MBO-RS-META: urjtyqjub15b67qxzrh8edtqqum1ehkb
-X-MBO-RS-ID: fa0b7829f2d618b5ef4
-X-Rspamd-Queue-Id: 4grggD5gkMz8v0C
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13.0
 
-On Sun Jun 21, 2026 at 2:27 PM CEST, Danilo Krummrich wrote:
->> +impl pci::Driver for EduDriver {
->> +    type IdInfo =3D ();
->> +    type Data<'bound> =3D Self;
->
-> Please make this a new type and take advantage of Rust native lifetimes f=
-or
-> device resources, just like the existing sample driver and nova-core does=
-.
->
-> I understand that the existing IRQ infrastructure is a bit in the way and=
- you
-> have to work around it.
->
-> I'm going to send a patch to make the irq::Registration compatible with t=
-he
-> device driver lifetime rework soon. Please rebase onto that once it's sen=
-t, so
-> this sample can land as idiomatic as possible.
 
-If you haven't started on the irq::Registration rework yet, I'd be happy to=
- take a
-try at it myself. I saw the DevresLt/ForLt work on your driver-lifetime bra=
-nch;
-is stacking on the I/O generalization series the direction you have in mind=
- for the
-handler data?
+On Thu, 21 May 2026 11:32:46 -0400, Frank.Li@oss.nxp.com wrote:
+> Previously, configuration and preparation required two separate calls. This
+> works well when configuration is done only once during initialization.
+> 
+> However, in cases where the burst length or source/destination address must
+> be adjusted for each transfer, calling two functions is verbose.
+> 
+> 	if (dmaengine_slave_config(chan, &sconf)) {
+> 		dev_err(dev, "DMA slave config fail\n");
+> 		return -EIO;
+> 	}
+> 
+> [...]
 
-Thanks and best,
+Applied, thanks!
 
-Maurice
+[1/9] dmaengine: Add API to combine configuration and preparation (sg and single)
+      commit: 796bdb33e86aec8504bf8868e0665f120638ac72
+[2/9] dmaengine: Add safe API to combine configuration and preparation
+      commit: af900b7dc1e1cdac571ac38e7fee80f1a1776a62
+[3/9] PCI: endpoint: pci-epf-test: Use dmaenigne_prep_config_single() to simplify code
+      commit: 9605825841061bbdd2fc2a0218098373c539173e
+[4/9] dmaengine: dw-edma: Use new .device_prep_config_sg() callback
+      commit: bfb66d8098dbbaaada3ab877eda21cd447115c95
+[5/9] dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
+      commit: 1af246e9d222f93aee59f3b47ff3bd59d08725e7
+[6/9] nvmet: pci-epf: Remove unnecessary dmaengine_terminate_sync() on each DMA transfer
+      commit: bd00d2c4a1b2a1e7ad3060d3d606fb4c9db6a064
+[7/9] nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
+      commit: a0fba0a49f77effd3962723b1fa14c766fbc0ec4
+[8/9] PCI: epf-mhi: Use dmaengine_prep_config_single() to simplify code
+      commit: 53191cc449db1cf4f25db275978c61b1c6aaeba9
+[9/9] crypto: atmel: Use dmaengine_prep_config_sg() API
+      commit: c9e9927c6d8346cdf6555a8f97da093980172e4b
+
+Best regards,
+-- 
+~Vinod
+
 
