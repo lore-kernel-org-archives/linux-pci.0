@@ -1,157 +1,177 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889393CB2EF;
-	Thu,  2 Jul 2026 11:24:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4101F44D035
+	for <linux-pci@vger.kernel.org>; Thu,  2 Jul 2026 11:38:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782991453; cv=none; b=DU1oFSOTsf3FuII3vuit6Ps6kMkc0wdbvln9AXtXYsb2W1YgwGBPS191qfd0ve6BTt8OJaEe6EHJdWtDYtwJJQGcC5qJwrIiSL1J6yHduEL2ibus/hCwwDWU8m2vDboKwDpfWdeZc+FZHTh6WzpXIA/flCdMZYDvJzbtNKNLDRo=
+	t=1782992289; cv=none; b=anzvZxfrQ2NrsjPoMzZy0UHdXFH6FkXFX5xebNO8fiUBP9CrY25okk5MYP2DZ1xTD9TzioXs7rbPnYAPySAMpXI6zmOUkWN4l3UxTu3HvMej5lMxMRyF9D6upz4h40iYoi98sQU/xJrCBM+rI1GI53hXjUEV/x/KNfsejNp0+fo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782991453; c=relaxed/simple;
-	bh=qkoV9s2y6x4yNdhq0hTzUvepfbsJFBQynC64lFxnuaw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RM6ybe1GF3NeZkBE7sV/SYhnZCPE/gSdoTuKsoVCZTPi6wn/CpSkhJaGyMjO37/98DB0V5fCZMrUnFySS1fC4LR2GxcVveFZMFC+avIPJDi+M0ZW4KcfQHmfWH+SP/etmpDFWwy3X3gnKUXAWRkv1QaEWd3suX0faxIvKaJmDCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=gRKPHQdn; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1782992289; c=relaxed/simple;
+	bh=OCNpc2g+LCoeTZSoGLiMPfuveEr3Jwire3sCLTVGYWQ=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=ERYkBNfba9VKwRuiwTmJkDDjuD3o0NMg8HAx7O2EkVLCOBJg9ILE+PdMZjk6ouVsz6b8bdt24WQd5cCcF2l/vCvMzERBUSGBD9Ep3BeKV/LusjmTkXqjIpFZvbHkxhO7vVPibSf9NDlnTrpau0UdLXRg59QuSi1dgPJvpi4Z+Xs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JMi346Mo; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="gRKPHQdn"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 0F44C1A0DDF;
-	Thu,  2 Jul 2026 11:24:04 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id C2EE85FF03;
-	Thu,  2 Jul 2026 11:24:03 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id EEBBF104C9625;
-	Thu,  2 Jul 2026 13:23:49 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1782991441; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=UhZPL9qBPAYg4jDprXnZJkURUAU98LtK2IDx/RRjPVY=;
-	b=gRKPHQdndkfSqFS49JzsIHQw2aOVyEHrPo49N6M5vahEK4abVvfiNdgAcQZ85BqTYrDYa7
-	bgLIWbFxIEkSIFB0swC6iE9XJv8Ex/UNCwCUK2VH602vIVMKlgsgkVCB0kMkLUyVlXGAwh
-	WrlKxRi9YwfmHOoRW6XGCBIo2DbY76dKZcM2qU5WCc/tgL8G73urX+4WNs4mRzBaqFyTms
-	wzbg1YIUbmzkq/tLQjIDWEDm3GV8tSD7knUa16eYfGis9bnzsGsQnl51p65DzPCBQGMT2K
-	5finRL11wVel1S/u3qrLN6S4dAT3WZZiydzHKCLvRx/mUD38ag2hi2cYxOCn9w==
-Date: Thu, 2 Jul 2026 13:23:48 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Richard Cheng <icheng@nvidia.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Saravana
- Kannan <saravanak@kernel.org>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- David Rhodes <david.rhodes@cirrus.com>, Richard Fitzgerald
- <rf@opensource.cirrus.com>, Charles Keepax <ckeepax@opensource.cirrus.com>,
- Linus Walleij <linusw@kernel.org>, Len Brown <lenb@kernel.org>, Andy
- Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally
- <djrscally@gmail.com>, Heikki Krogerus <heikki.krogerus@linux.intel.com>,
- Sakari Ailus <sakari.ailus@linux.intel.com>, Davidlohr Bueso
- <dave@stgolabs.net>, Jonathan Cameron <jic23@kernel.org>, Dave Jiang
- <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>,
- Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Lizhi Hou
- <lizhi.hou@amd.com>, driver-core@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, patches@opensource.cirrus.com,
- linux-gpio@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-cxl@vger.kernel.org, Allan Nielsen <allan.nielsen@microchip.com>,
- Horatiu Vultur <horatiu.vultur@microchip.com>, Daniel Machon
- <daniel.machon@microchip.com>, Steen Hegelund
- <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v8 7/8] PCI: of: Set fwnode device of newly created PCI
- device nodes
-Message-ID: <20260702132348.034264b6@bootlin.com>
-In-Reply-To: <akXg4G4ksietvkwE@MWDK4CY14F>
-References: <20260630102804.413563-1-herve.codina@bootlin.com>
-	<20260630102804.413563-8-herve.codina@bootlin.com>
-	<akXg4G4ksietvkwE@MWDK4CY14F>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JMi346Mo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1782992285; x=1814528285;
+  h=date:from:to:cc:subject:message-id;
+  bh=OCNpc2g+LCoeTZSoGLiMPfuveEr3Jwire3sCLTVGYWQ=;
+  b=JMi346MoExdygMv5IO9zjgPRfoqRXRLMHW8fkfUxC9X9JkcomDneenkU
+   LW/8H5gXg5K7XBjdV5jSh8OzGRzjbIPAs4GbppFQbYYTaBQ5+aKmBFh8w
+   AM2/zC5i7mR1G4cqn9m92mTrhd5F6w6WlSYQuCr7lTar9xAnFW7KRrz05
+   Rembc2aRQ7ee1hQAcHX+J2DA8S5vRi+GLWTEuZhu/Ru7FcKqmNPAXYHXt
+   JWhKlF+NJKTBwt3O1563h5j2mkRV74ev4KuewCP1I4gQrdiBOzWGbXjAl
+   sALxCxfsxkqeXis1YA6n8I+CqZEwj25nXVcvk/a97kVHaIVcU47KPCM0l
+   Q==;
+X-CSE-ConnectionGUID: q4wjV52lTQG+9hAfegjRAA==
+X-CSE-MsgGUID: jHsf/2geQRSMg7fU2Gevyg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11834"; a="87422924"
+X-IronPort-AV: E=Sophos;i="6.25,143,1779174000"; 
+   d="scan'208";a="87422924"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2026 04:38:04 -0700
+X-CSE-ConnectionGUID: cY37m27sRNCK5ugKCeTD3w==
+X-CSE-MsgGUID: jMz8EH7kSwa3T3GTjVFvoQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,143,1779174000"; 
+   d="scan'208";a="252993884"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by orviesa007.jf.intel.com with ESMTP; 02 Jul 2026 04:38:03 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wfFk0-00000000AkK-43dR;
+	Thu, 02 Jul 2026 11:38:00 +0000
+Date: Thu, 02 Jul 2026 19:37:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:for-linus] BUILD SUCCESS
+ 34db32102439d948e0c9aea060e48f979aae827d
+Message-ID: <202607021940.Rs14BYye-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Richard,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
+branch HEAD: 34db32102439d948e0c9aea060e48f979aae827d  MAINTAINERS: Drop Karthikeyan Mitran from Mobiveil PCIe entry
 
-On Thu, 2 Jul 2026 12:02:35 +0800
-Richard Cheng <icheng@nvidia.com> wrote:
+elapsed time: 934m
 
-> > @@ -709,6 +709,13 @@ void of_pci_make_dev_node(struct pci_dev *pdev)
-> >  	if (ret)
-> >  		goto out_free_node;
-> >  
-> > +	/*
-> > +	 * Set the fwnode device in order to have fw_devlink creating links
-> > +	 * pointing to this PCI device instead of walking up to the PCI host
-> > +	 * bridge.
-> > +	 */
-> > +	fw_devlink_set_device(&np->fwnode, &pdev->dev);
-> > +
-> >  	ret = of_changeset_apply(cset);
-> >  	if (ret)
-> >  		goto out_free_node;
-> > -- 
-> > 2.54.0
-> > 
-> >  
-> 
-> Hi Herve,
-> 
-> I wonder if this part has some issue, it sets np->fwnode.dev = &pdev->dev,
-> but I don't see am matching clear on removal path, I doubt the back-pointer
-> can outlive the pci_dev.
-> 
-> device_del() do the check
-> """
-> if (dev->fwnode && dev->fwnode->dev == dev)
->     fw_devlink_set_device(dev->fwnode, NULL);
-> """
-> 
-> On removal, pci_stop_dev() calls of_pci_remove_node() before pci_destroy_dev()
-> calls device_del(), and of_pci_remove_node() -> device_remove_of_node() has already NULLed pdev->dev.fwnode by then, so the "dev->fwnode" guard is false, and
-> of_pci_remove_node() itself never clears np->fwnode.dev
-> 
-> If something holds an extra ref on np past removal, e.g. a DT overlay applied via configfs that pins np through its gragment targets,
-> np survives, the pci_dev is freed, and np->fwnode.dev dnalges into freed memory.
-> Then fw_devlink walker that resolve it via get_dev_from_fwnode() -> get_device() would hit a use-after-free .
-> 
-> I think of_pci_remove_node() should cleaer the back-pointer it set,
-> before dropping the node's ref, e.g.
-> 
-> """
-> np = pci_device_to_OF_node(pdev);
-> if (!np || !of_node_check_flag(np, OF_DYNAMIC))
->     return;
-> 
-> fw_devlink_set_device(&np->fwnode, NULL);
-> device_remove_of_node(&pdev->dev);
-> of_changeset_revert(np->data);
-> """
-> 
-> Does that make sense to you ?
-> 
+configs tested: 100
+configs skipped: 10
 
-Thanks for pointed out this issue.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-I am not sure that the scenario you proposed using configfs which can lead
-to the use-after-free is relevant but anyway this use-after-free is possible.
+tested configs:
+alpha                             allnoconfig    gcc-16.1.0
+alpha                            allyesconfig    gcc-16.1.0
+alpha                               defconfig    gcc-16.1.0
+arc                              allmodconfig    gcc-16.1.0
+arc                               allnoconfig    gcc-16.1.0
+arc                              allyesconfig    gcc-16.1.0
+arc                                 defconfig    gcc-16.1.0
+arm                               allnoconfig    clang-17
+arm                              allyesconfig    gcc-16.1.0
+arm                                 defconfig    clang-23
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-16.1.0
+arm64                               defconfig    gcc-16.1.0
+csky                             allmodconfig    gcc-16.1.0
+csky                              allnoconfig    gcc-16.1.0
+csky                                defconfig    gcc-16.1.0
+hexagon                          allmodconfig    clang-23
+hexagon                           allnoconfig    clang-23
+hexagon                             defconfig    clang-23
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                             allyesconfig    gcc-14
+i386                                defconfig    clang-22
+i386                  randconfig-012-20260702    gcc-13
+i386                           randconfig-016    gcc-14
+i386                           randconfig-017    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-20
+loongarch                           defconfig    clang-23
+m68k                             allmodconfig    gcc-16.1.0
+m68k                              allnoconfig    gcc-16.1.0
+m68k                             allyesconfig    gcc-16.1.0
+m68k                                defconfig    gcc-16.1.0
+microblaze                        allnoconfig    gcc-16.1.0
+microblaze                       allyesconfig    gcc-16.1.0
+microblaze                          defconfig    gcc-16.1.0
+mips                             allmodconfig    gcc-16.1.0
+mips                              allnoconfig    gcc-16.1.0
+mips                             allyesconfig    gcc-16.1.0
+mips                        omega2p_defconfig    clang-17
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+openrisc                         allmodconfig    gcc-16.1.0
+openrisc                          allnoconfig    gcc-16.1.0
+openrisc                            defconfig    gcc-16.1.0
+parisc                           allmodconfig    gcc-16.1.0
+parisc                            allnoconfig    gcc-16.1.0
+parisc                           allyesconfig    gcc-16.1.0
+parisc                              defconfig    gcc-16.1.0
+parisc                randconfig-001-20260702    gcc-10.5.0
+parisc                randconfig-002-20260702    gcc-12.5.0
+parisc64                            defconfig    gcc-16.1.0
+powerpc                          allmodconfig    gcc-16.1.0
+powerpc                           allnoconfig    gcc-16.1.0
+powerpc               randconfig-001-20260702    clang-17
+powerpc               randconfig-002-20260702    gcc-8.5.0
+powerpc64             randconfig-001-20260702    gcc-15.2.0
+powerpc64             randconfig-002-20260702    clang-17
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    gcc-16.1.0
+riscv                            allyesconfig    clang-23
+s390                             allmodconfig    clang-23
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-16.1.0
+sh                               allmodconfig    gcc-16.1.0
+sh                                allnoconfig    gcc-16.1.0
+sh                               allyesconfig    gcc-16.1.0
+sh                                  defconfig    gcc-16.1.0
+sparc                             allnoconfig    gcc-16.1.0
+sparc                               defconfig    gcc-16.1.0
+sparc                 randconfig-001-20260702    gcc-16.1.0
+sparc                 randconfig-002-20260702    gcc-16.1.0
+sparc64                          allmodconfig    clang-20
+sparc64                             defconfig    clang-23
+sparc64               randconfig-001-20260702    clang-23
+sparc64               randconfig-002-20260702    gcc-10.5.0
+um                               allmodconfig    clang-17
+um                                allnoconfig    clang-17
+um                               allyesconfig    gcc-14
+um                                  defconfig    clang-23
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260702    gcc-14
+um                    randconfig-002-20260702    gcc-14
+um                           x86_64_defconfig    clang-23
+x86_64                           allmodconfig    clang-22
+x86_64                            allnoconfig    clang-22
+x86_64                           allyesconfig    clang-22
+x86_64      buildonly-randconfig-001-20260702    clang-22
+x86_64      buildonly-randconfig-002-20260702    gcc-14
+x86_64      buildonly-randconfig-003-20260702    clang-22
+x86_64      buildonly-randconfig-004-20260702    clang-22
+x86_64      buildonly-randconfig-005-20260702    gcc-14
+x86_64      buildonly-randconfig-006-20260702    clang-22
+x86_64                              defconfig    gcc-14
+x86_64                          rhel-9.4-rust    clang-22
+xtensa                            allnoconfig    gcc-16.1.0
+xtensa                           allyesconfig    gcc-16.1.0
+xtensa                randconfig-001-20260702    gcc-16.1.0
+xtensa                randconfig-002-20260702    gcc-14.3.0
 
-The fwnode->dev is set by of_pci_make_dev_node() and so it is consistent 
-to unset it (set to NULL) in of_pci_remove_node().
-
-I will update this patch to add the fw_devlink_set_device(&np->fwnode, NULL);
-call in the next iteration.
-
-Also I will had a new patch in the next iteration to perform same operation
-for PCI root bridge. Same kind of code path, and so same issue but with
-of_pci_make_host_bridge_node() and of_pci_remove_host_bridge_node().
-
-Best regards,
-Hervé
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
