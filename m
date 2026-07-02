@@ -1,61 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 329F130D400;
-	Thu,  2 Jul 2026 15:56:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A102F1FF4;
+	Thu,  2 Jul 2026 15:58:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783007772; cv=none; b=kWb7WXVRxGohjC0RSHOKdG/RX45ZZr3776iN13LOwhjRmVqPbwu1T8OCVc5T2BLM69/aOHxh9/d+FFFyhBUfZIv9xNHG6sDTxbGH+FfAdLCsPRpuADbc6t8Z4P/n5kznJwYS/CMdBg8+49bfLyfBStWq38yVV/OCBvkcXmDrIi4=
+	t=1783007883; cv=none; b=S94WDAx5pAFumWzwl1NGXaIf4+7HeOLqbjtUHP+kLAR2UHafVDYuvmIX5bITWp6MCgggJShnIavoi5i6TDN8l+B+g8LPf+1Rp+t/KYzkCOPunRqtv0YpWMx92Xkh/JgUi4fz8gTawyHId/PwCh4wOhl7IB6vikv6xJmqsODrN/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783007772; c=relaxed/simple;
-	bh=cIFnEIkKpjgp2EyaqZwVX9TRZDm6r8qWcsBcKP2yb+s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nOzQV+AU0AAjG+AW5zMI66k6lhHaszuGHdDS2mPMJF3ZkD92YwuacT4fu8GSCZfcllR9o21APcXdPCAhy3nvRztI1w6bYSiiHvbwqdg4UJbffVuhEpZD4sIHN1HkeFIKaVe6l8DBsg9xjEzBsXQgS4RCnzW4iI1mptNZC8+wiw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gEmMPFq2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783007883; c=relaxed/simple;
+	bh=xLQZlGcrRQKBWU/T+lZQ4jgS7fH3b6kmKQmsUVndNSg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AXEjSagITfmFCFitgl3zahZYYkGDsCLM1P1gkXgTiMN0LYT7RN07/JcmJqA5K2MnbxL6WWRV3BWDkVAwo6e47eQ2hzc2bNpeMZlr9O1Da6CfvqIIrnzpkuJfJLrvEbMO/f6ql2kCf+Dk/K15pmq5oLl5AcnGK8Bh2kygjOmzpxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=SJnNNRP+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEmMPFq2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 658611F000E9;
-	Thu,  2 Jul 2026 15:56:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783007770;
-	bh=cIFnEIkKpjgp2EyaqZwVX9TRZDm6r8qWcsBcKP2yb+s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gEmMPFq2a7WvV/MOiUxFbnvBz6+8LmfxVtuPC0+FB/ImZW72Ntt+5IiHJDjEOdr19
-	 Ysl0xfx3/AL3poqWG+VSlVfYavvsarPh1223cv0E6SVcO10yoSYI0dcNrP1z/2FMUM
-	 1tMVUGOSXtjy4F1hkfqz10TSFF2jOFwKY/YKej0dEoEIz3H1LoHCj71xe8iONivSRK
-	 1/cwAGWfJRnRosfObfudTf+a+6KaodLnVYvybGYaEBaBsec/NNK/uUePfmIb5jKBDu
-	 fqMPTkYhY55/mVqYW8VrHk+Ktvc3YiFqyOYFqn0j/2H7/L0m7h8gOFfJ6nt3mZBeOB
-	 CNnSgsLBBYkQQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 10/11] perf: Use sysfs_emit() for cpumask show
- callbacks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yury Norov" <ynorov@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, imx@lists.linux.dev, linux-perf-users@vger.kernel.org
-In-Reply-To: <20260702154725.185376-11-ynorov@nvidia.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="SJnNNRP+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B03FE1F000E9;
+	Thu,  2 Jul 2026 15:58:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1783007881;
+	bh=2GojpbKbN4k2MdbuYx8HDDnbJJg9jcM6tSbyryOEvMk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=SJnNNRP+EGmmhh6KRiH7vrp7U5tcCQ4uUkk74aV3dBETWeDGJ2fYnPrhWEpA4mIVF
+	 a7YX2/PcQ1r9wtser/tab+01pWo35DpJF6WKp0qvZ0Uv0rU/X657DvwsQuIkVvEpqV
+	 TtOxbKTWJHUe4wOVptSf0WzHL3aO90+5UHJi4or4=
+Date: Thu, 2 Jul 2026 17:58:11 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yury Norov <ynorov@nvidia.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Russell King <linux@armlinux.org.uk>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	James Clark <james.clark@linaro.org>,
+	Thomas Gleixner <tglx@kernel.org>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Chanwoo Choi <cw00.choi@samsung.com>,
+	MyungJoo Ham <myungjoo.ham@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	Heiko Stuebner <heiko@sntech.de>, Xu Yilun <yilun.xu@intel.com>,
+	Tom Rix <trix@redhat.com>, Moritz Fischer <mdf@kernel.org>,
+	Yicong Yang <yangyicong@hisilicon.com>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Will Deacon <will@kernel.org>,
+	Jiucheng Xu <jiucheng.xu@amlogic.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Kevin Hilman <khilman@baylibre.com>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Jing Zhang <renyu.zj@linux.alibaba.com>,
+	Xu Yang <xu.yang_2@nxp.com>, Linu Cherian <lcherian@marvell.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>,
+	Ji Sheng Teoh <jisheng.teoh@starfivetech.com>,
+	Khuong Dinh <khuong@os.amperecomputing.com>,
+	Yury Norov <yury.norov@gmail.com>, Kees Cook <kees@kernel.org>,
+	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <thomas.weissschuh@linutronix.de>,
+	Aboorva Devarajan <aboorvad@linux.ibm.com>,
+	Ilkka Koskinen <ilkka@os.amperecomputing.com>,
+	Besar Wicaksono <bwicaksono@nvidia.com>, Ma Ke <make24@iscas.ac.cn>,
+	Chengwen Feng <fengchengwen@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Yushan Wang <wangyushan12@huawei.com>,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-perf-users@vger.kernel.org, x86@kernel.org,
+	driver-core@lists.linux.dev, linux-pm@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, linux-fpga@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-amlogic@lists.infradead.org, linux-cxl@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v2 01/11] arm: Use sysfs_emit() for cpumask show callbacks
+Message-ID: <2026070244-flier-large-17d1@gregkh>
 References: <20260702154725.185376-1-ynorov@nvidia.com>
- <20260702154725.185376-11-ynorov@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 15:56:09 +0000
-Message-Id: <20260702155610.658611F000E9@smtp.kernel.org>
+ <20260702154725.185376-2-ynorov@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260702154725.185376-2-ynorov@nvidia.com>
 
-> These callbacks are sysfs show paths. Use sysfs_emit() and
-> cpumask_pr_args() to emit the masks.
->=20
+On Thu, Jul 02, 2026 at 11:47:14AM -0400, Yury Norov wrote:
+> These callbacks are sysfs show paths.
+> 
+> Use sysfs_emit() and cpumask_pr_args() to emit the masks.
+> 
 > This prepares for removing cpumap_print_to_pagebuf().
->=20
-> Link: https://lore.kernel.org/all/akANJ-AT7nHpRMq-@yury/
+> 
 > Signed-off-by: Yury Norov <ynorov@nvidia.com>
+> ---
+>  arch/arm/mach-imx/mmdc.c     | 2 +-
+>  arch/arm/mm/cache-l2x0-pmu.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm/mach-imx/mmdc.c b/arch/arm/mach-imx/mmdc.c
+> index b71467c48b87..f6d993b9b1d4 100644
+> --- a/arch/arm/mach-imx/mmdc.c
+> +++ b/arch/arm/mach-imx/mmdc.c
+> @@ -127,7 +127,7 @@ static ssize_t mmdc_pmu_cpumask_show(struct device *dev,
+>  {
+>  	struct mmdc_pmu *pmu_mmdc = dev_get_drvdata(dev);
+>  
+> -	return cpumap_print_to_pagebuf(true, buf, &pmu_mmdc->cpu);
+> +	return sysfs_emit(buf, "%*pbl\n", cpumask_pr_args(&pmu_mmdc->cpu));
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Really?  Looks like the original is much simpler to understand, why must
+this function go away?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702154725.1853=
-76-1-ynorov@nvidia.com?part=3D10
+thanks,
 
+greg k-h
