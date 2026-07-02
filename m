@@ -1,49 +1,46 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9373E48035B;
-	Thu,  2 Jul 2026 12:42:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8530148BD47;
+	Thu,  2 Jul 2026 12:42:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782996164; cv=none; b=sAbsSPz87hWAineZJwcrHWlOP1wbK/nLQrRbZfVYo1NgI+pEf0pwBvfVOY79x2VRq0b4MKIVgMltho4TnL66IYnaKTxCpPZg4pGxSYaD04ECsIpJr3fynrthvU6H1lm6x1cDL+4N1iHVk99CDhpYirxmN2vYUBHbbN46PuiwgIg=
+	t=1782996164; cv=none; b=nzXqe7nxK39DDpuwpXWKXAQpegcWd7GAu4pK3QgDQEYQRPuUy6NgX4XUqhsnbQ8dOHnF4OMeRvgQTptdJJgj/PhjvXlsCzLQ+J+ExN4HduR8RRk37gCNEPwS5Hw+dW5WZrAjRgE5WJdU8JQXrEFT66SHUKHT7Y7AF4TV3i2vnEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782996164; c=relaxed/simple;
-	bh=hMEZE11em7VbrIXRt7omqbdleGid4WaWf8XPokAX2KY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e5QDDT7d2N3xj4QAuffnWz/m0M+p+JvqdFYLnn+XJ3tv+/nY/4lTX2s+gRPjGj9qWxTwWnbW5uT4c2zjO8gTOgUNstWY2u5nzpqcy0ll1KbYICjwvBtFdILhq2uaaaOOC5MMvgBnYMy+7pUFC3RWt14KsQ3iMk22sTStZ5UmuHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=DELd1m2r; arc=none smtp.client-ip=113.46.200.224
+	bh=qnrFbzOK6pVmKuT/nfyuyf/W4H/M6FMBbFnolj3mNJk=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dbV5/9cuKKPFihH6YsIRL1BfkisGkiZkACKOAG+Mib5xnydcJX/gv90hjAfhvVWFKbyre9l/G7i9yh5NGk/KFGe4C6S1F4k1Pn1vR2WgH6XNU0uby9oNOnrvbV+5CTzef0EVkuRcBF9muFxnM/jR37/5ofi/yBVCqq+Z6rotsWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=FO97dSrM; arc=none smtp.client-ip=113.46.200.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="DELd1m2r"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="FO97dSrM"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=XatmuPSbqTqglxhW2Q1s7oMVJfQv9dONjXaDlcKTK2M=;
-	b=DELd1m2rxJvzGyAiTnu9KJ8E5btnUFySa0wLFhe5FaVTukeWrsSOuk5F/g3UfBPZcEq/YF8r3
-	yI7Y7oR+5jmmwhjpflNrfmLIRLRJYV2V82kVTwLR2Nf7LFE3+QvyhqP7gXmVP8u7YfvfzTsS2Aa
-	YtWRpon/uLDJHsV7Qhz5hbQ=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4grbrz6JZ8z1cyNt;
-	Thu,  2 Jul 2026 20:33:23 +0800 (CST)
+	bh=0zetA8q8AlwIS7sWo2kQm5yp2DxB0v8DctpQEyiZLqI=;
+	b=FO97dSrMc7VnM19ekPYza2M/HfL5AGVEG4naAhBseGCTjOzwsJ8BSuftD40BjwHZw0YCYSg0H
+	epxljm+dopSNn42CYsUorbbM3UYQTokvI9CTzre50zv67I4dGaaHQQM/0X3en2Gyop6k23Nsf66
+	ecUYavZce6F7xn7lJcIw220=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4grbrx4ChBz1K97H;
+	Thu,  2 Jul 2026 20:33:21 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id D2AEB40565;
-	Thu,  2 Jul 2026 20:42:32 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id BBD984058D;
+	Thu,  2 Jul 2026 20:42:30 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 2 Jul 2026 20:42:32 +0800
+ 15.2.1544.36; Thu, 2 Jul 2026 20:42:30 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v19 04/18] PCI/TPH: Refactor pcie_enable_tph & add explicit requester variant
-Date: Thu, 2 Jul 2026 20:42:10 +0800
-Message-ID: <20260702124224.57168-5-fengchengwen@huawei.com>
+Subject: [PATCH v19 00/18] vfio/pci: Add PCIe TPH support                
+Date: Thu, 2 Jul 2026 20:42:06 +0800
+Message-ID: <20260702124224.57168-1-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260702124224.57168-1-fengchengwen@huawei.com>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,143 +51,120 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-Refactor pcie_enable_tph implementation: extract core logic into static
-internal enable_tph() helper accepting explicit requester type.
+This patchset enables full userspace configurable PCIe TPH support for          
+VFIO, which brings performance benefits for userspace workloads such as         
+DPDK and SPDK.                                                                  
+                                                                                
+Currently VFIO only exposes read-only TPH capability registers to               
+userspace, while all write operations are silently discarded. This              
+prevents userspace from enabling and configuring TPH, limiting performance      
+optimization opportunities.                                                     
+                                                                                
+Per PCIe spec 7.5.3.15: TPH Completer support is applicable to Root Ports       
+and Endpoints, allowing Steering Tags to target host CPUs or peer devices       
+for P2P transactions.                                                           
+                                                                                
+TPH usage model can be divided into three fundamental parts:                    
+1. Retrieve Steering Tag:                                                       
+   - Tags targeting host CPUs are obtained via platform methods (ACPI _DSM)     
+     wrapped in pcie_tph_get_cpu_st(). Userspace requires a generic             
+     interface to query these CPU-associated ST values.                         
+   - Tags targeting peer devices are managed by userspace drivers, and set
+     to kernel by dmabuf ioctl which address by zhiping's patchset.              
+2. Program Steering Tag table:                                                  
+   - For devices with standard ST table structures (in capability space or      
+     MSI-X table), userspace needs a unified interface to configure ST          
+     entries.                                                                   
+   - Devices without standard ST tables are handled by userspace itself.        
+3. Toggle device TPH Requester enable/disable state.
 
-- Preserve original pcie_enable_tph() unchanged as auto wrapper; it
-  auto-selects EXT/standard TPH requester per device capability, existing
-  bnxt/mlx5 callers require zero modification.
-- Add exported pcie_enable_tph_explicit() with bool 'extended' parameter
-  for explicit STD/EXT selection, used by upcoming VFIO TPH support.
+The patchset builds a complete, secure, staged TPH feature stack with core
+design objectives:
+1. Refactor & fix upstream PCI/TPH core implementation to provide clean, 
+   safe, extendable helper APIs for VFIO consumption;
+2. Introduce configurable per-device TPH policy for staged feature 
+   enablement, supporting progressive enabling of No-ST/IV/DS/LITERAL 
+   modes;
+3. Fully virtualize PCIe TPH config space: read-only capability header, 
+   virtually writable TPH_CTRL and ST-table entries, silent discard 
+   invalid writes;
+4. Implement unified VFIO user feature uAPI (TPH / TPH_RESOLVE / TPH_ST)
+   for TPH enablement, tag resolution and batch ST table programming;
 
-Input validation for EXT_TPH availability is retained inside helper to
-reject invalid explicit EXT request if hardware does not support extended
-requester.
+The patchset is split into two logical parts: the first eight patches fix       
+and refactor core PCI/TPH kernel code to export required helper interfaces,
+the remaining eight patches implement corresponding VFIO TPH virtualization
+and uAPI step by step.
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+Based on earlier RFC work by Wathsala Vithanage
+Based on zhiping's patchset of add TPH support for p2p access
+
 ---
- drivers/pci/tph.c       | 68 +++++++++++++++++++++++++++++------------
- include/linux/pci-tph.h |  4 +++
- 2 files changed, 52 insertions(+), 20 deletions(-)
+v19:
+- Address all comments from Alex
+  - Drop CPU-to-ST translation of PCI/TPH
+  - Re-implement vfio part, please refer:
+    https://lore.kernel.org/linux-pci/20260626092232.53ed3a7c@shazbot.org/
+- Add expose tph_policy via debugfs
+v18-resend:                                                                     
+- Fix apply failed only                                                         
+v18:                                                                            
+- Address all comments of [08/12] commit from Alex                              
+  - Add document in sysfs-bus-pci                                               
+  - Place the new field at the root port                                        
+  - Add new filed only when root port support TPH completer and _DSM            
+    method                                                                      
+  - Support random offset read, return zero if cpu is offline                   
+  - Zero-initialize the buffer rather than memset and reserved = 0              
+- Fix git am fail for [10/12] commit                                            
+- Fix folloing Sashiko review comments of [11/12] commit:                       
+  - Add __GFP_ACCOUNT in thp_st_shadow allocation                               
+  - Move reset tph_permit in vfio_pci_tph_init/deinit                           
+  - Refine feature PROBE for `TPH_ST_CONFIG`, make sure probe OK when           
+    enable_unsafe_tph is set                                                    
+  - Add commit-log about why TPH ST shadow table is not cleared when the        
+    VFIO device is reset 
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 4097787ea98a..c22eb7f4b0bd 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -363,23 +363,7 @@ void pcie_disable_tph(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL(pcie_disable_tph);
- 
--/**
-- * pcie_enable_tph - Enable TPH support for device using a specific ST mode
-- * @pdev: PCI device
-- * @mode: ST mode to enable. Current supported modes include:
-- *
-- *   - PCI_TPH_ST_NS_MODE: NO ST Mode
-- *   - PCI_TPH_ST_IV_MODE: Interrupt Vector Mode
-- *   - PCI_TPH_ST_DS_MODE: Device Specific Mode
-- *
-- * Check whether the mode is actually supported by the device before enabling
-- * and return an error if not. Additionally determine what types of requests,
-- * TPH or extended TPH, can be issued by the device based on its TPH requester
-- * capability and the Root Port's completer capability.
-- *
-- * Return: 0 on success, otherwise negative value (-errno)
-- */
--int pcie_enable_tph(struct pci_dev *pdev, int mode)
-+static int enable_tph(struct pci_dev *pdev, int mode, u8 req_type)
- {
- 	u32 reg;
- 	u8 dev_modes;
-@@ -400,10 +384,11 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 	if (!((1 << mode) & dev_modes))
- 		return -EINVAL;
- 
--	pdev->tph_mode = mode;
-+	if (req_type == PCI_TPH_REQ_EXT_TPH && !pdev->tph_ext_support)
-+		return -EINVAL;
- 
--	pdev->tph_req_type = pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
--						     PCI_TPH_REQ_TPH_ONLY;
-+	pdev->tph_mode = mode;
-+	pdev->tph_req_type = req_type;
- 
- 	/* Write them into TPH control register */
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
-@@ -417,8 +402,51 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 
- 	return 0;
- }
-+
-+/**
-+ * pcie_enable_tph - Enable TPH support for device using a specific ST mode
-+ * @pdev: PCI device
-+ * @mode: ST mode to enable. Current supported modes include:
-+ *
-+ *   - PCI_TPH_ST_NS_MODE: NO ST Mode
-+ *   - PCI_TPH_ST_IV_MODE: Interrupt Vector Mode
-+ *   - PCI_TPH_ST_DS_MODE: Device Specific Mode
-+ *
-+ * Check whether the mode is actually supported by the device before enabling
-+ * and return an error if not. Additionally determine what types of requests,
-+ * TPH or extended TPH, can be issued by the device based on its TPH requester
-+ * capability and the Root Port's completer capability.
-+ *
-+ * Return: 0 on success, otherwise negative value (-errno)
-+ */
-+int pcie_enable_tph(struct pci_dev *pdev, int mode)
-+{
-+	u8 req_type = pdev->tph_ext_support ? PCI_TPH_REQ_EXT_TPH :
-+					      PCI_TPH_REQ_TPH_ONLY;
-+	return enable_tph(pdev, mode, req_type);
-+}
- EXPORT_SYMBOL(pcie_enable_tph);
- 
-+/**
-+ * pcie_enable_tph_explicit - Enable TPH with explicit requester selection
-+ * @pdev: PCI device to operate
-+ * @mode: ST table operating mode (NS/IV/DS)
-+ * @extended: true = EXT_TPH, false = standard TPH only
-+ *
-+ * Unlike auto-detecting pcie_enable_tph(), caller selects requester type
-+ * manually instead of hardware auto-selection. Rejects EXT_TPH request
-+ * if device lacks extended requester capability.
-+ *
-+ * Return: 0 on success, negative errno on failure.
-+ */
-+int pcie_enable_tph_explicit(struct pci_dev *pdev, int mode, bool extended)
-+{
-+	u8 req_type = extended ? PCI_TPH_REQ_EXT_TPH : PCI_TPH_REQ_TPH_ONLY;
-+
-+	return enable_tph(pdev, mode, req_type);
-+}
-+EXPORT_SYMBOL(pcie_enable_tph_explicit);
-+
- void pci_restore_tph_state(struct pci_dev *pdev)
- {
- 	struct pci_cap_saved_state *save_state;
-diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-index 6f02b020d7d7..ca0faa98afac 100644
---- a/include/linux/pci-tph.h
-+++ b/include/linux/pci-tph.h
-@@ -29,6 +29,7 @@ int pcie_tph_get_cpu_st(struct pci_dev *dev,
- 			unsigned int cpu, u16 *tag);
- void pcie_disable_tph(struct pci_dev *pdev);
- int pcie_enable_tph(struct pci_dev *pdev, int mode);
-+int pcie_enable_tph_explicit(struct pci_dev *pdev, int mode, bool extended);
- u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
- u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
- #else
-@@ -42,6 +43,9 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
- static inline void pcie_disable_tph(struct pci_dev *pdev) { }
- static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
- { return -EINVAL; }
-+static inline int pcie_enable_tph_explicit(struct pci_dev *pdev, int mode,
-+					   bool extended)
-+{ return -EINVAL; }
- static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
- { return 0; }
- static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+Chengwen Feng (17):
+  PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+  PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
+  PCI/TPH: Cache TPH requester capability at probe time
+  PCI/TPH: Refactor pcie_enable_tph & add explicit requester variant
+  PCI/TPH: Refactor pcie_tph_get_cpu_st & add explicit variant
+  PCI/TPH: Add pcie_tph_supported() helper to check TPH capability
+    attributes
+  PCI/TPH: Add pci_tph_dsm_supported() helper to detect device TPH ST
+    _DSM
+  vfio/pci: Hide TPH capability when TPH is unsupported
+  vfio/pci: Introduce tph policy parameter for staged TPH feature
+    enablement
+  vfio/pci: Virtualize PCIe TPH capability registers
+  vfio/pci: Add dmabuf TPH metadata storage and fd query helper
+  vfio/pci: Introduce VFIO_DEVICE_FEATURE_TPH family uapi for PCI TPH
+    control
+  vfio/pci: Implement VFIO_DEVICE_FEATURE_TPH and valid TPH config write
+    support
+  vfio/pci: Implement TPH_RESOLVE feature for DMABUF and CPU source
+    resolving
+  vfio/pci: Implement TPH_ST feature for batch ST table programming
+  vfio/pci: Reset hardware TPH state on device enable/disable
+  vfio/pci: Expose tph_policy via debugfs
+
+Zhiping Zhang (1):
+  PCI/TPH: Expose the enabled TPH requester type
+
+ drivers/pci/tph.c                  | 246 +++++++++++++++++++++-------
+ drivers/vfio/pci/vfio_pci.c        |  25 +++
+ drivers/vfio/pci/vfio_pci_config.c | 129 +++++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c   | 252 ++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_dmabuf.c |  49 +++++-
+ drivers/vfio/pci/vfio_pci_priv.h   |  13 ++
+ include/linux/pci-tph.h            |  25 +++
+ include/linux/pci.h                |   6 +-
+ include/linux/vfio_pci_core.h      |   2 +
+ include/uapi/linux/vfio.h          |  62 +++++++
+ 10 files changed, 742 insertions(+), 67 deletions(-)
+
 -- 
 2.17.1
 
