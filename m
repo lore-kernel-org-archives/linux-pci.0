@@ -1,139 +1,185 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD52848C3F6;
-	Thu,  2 Jul 2026 13:04:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558FF48AE3C;
+	Thu,  2 Jul 2026 13:04:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782997455; cv=none; b=IMFSjFHiShlaHEm3rkQ40NLi85sRaLWHduPp8Y0Sgn6Go7s8CblaXlVln7r+JQBhB1u3epeY9fhk5wc+BEMigJwWEwTslkIRqbLLBoKnm9NZ1SfPJwndcQcOQ4/o9c4WUKEQwZ62M0UeeGZgZqGPtv60Q4EUORxVfCmn5GbNdIo=
+	t=1782997467; cv=none; b=pcx7tdK/YzUrya5O0RRiXB7gwA3k3FSyw8xgGw88gjfZjO4qI5+n6ebsSxOwZk5T230p2v541ti7suy3bATuFpShBUleRRUfJgJhFgT2rdlJhMVCVZy5Y/SUts6hjhbXa2VwNvZhmhhiqP0mGZCojemkNW5FR69GEJZI98/B0d8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782997455; c=relaxed/simple;
-	bh=xiFlcK7zXLHCbocxGkzbGn2SJX5Jc+lPLFBL6I2z6JU=;
+	s=arc-20240116; t=1782997467; c=relaxed/simple;
+	bh=xuBsKn68YquBeSa0d2HAP8fiYipNchxGGvBTntLtDkg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Snx3vjflO204hv4HFmPS11L05VPsNapGMOwwVAM3ANvYYTG8bhCEFQ6LkJ+msECFrsse242ECQJF7x9k+MtAuqz6qfueBVrV8skb8NArgtsXwY1302NTeBTY227uzTYdIA8YBIwAAvoje9HAdD5ZtweGVgVEnbQamJUATSDBxpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0EpzWDM; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IpXDQEDMJhwzjOcJkr+3jaCUCZSOWNnuDLCeNhCIKd4EuunLr4kKoCTrD9k7sOClAhaOcby87B3TV95TTH5Ch4iX/A/az43rjFdSGVNgmmYAWEvO/GmGGvjrRehhtZdQdl6vnA/wTi+0Hd422jXm2Jmpcy4CndI+7BlAfvQOY2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jHqD/w7x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0EpzWDM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DA5A1F00A3D;
-	Thu,  2 Jul 2026 13:04:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jHqD/w7x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA4641F00A3A;
+	Thu,  2 Jul 2026 13:04:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782997454;
-	bh=a2T1C08ltbKKfHWQikGdUmW4h1fsC62h+ORCVqUrHdQ=;
+	s=k20260515; t=1782997466;
+	bh=AiMyFeg+0d2yWlVmQlWz69yA55LVab6fY2dRNFFWBpQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j0EpzWDMBV5tLAudElV57/chvyOxZfudtPVEjmHRH8V8UfUBmzOGG9zw6fVKQyw+t
-	 fb9IlGxdMHejCHCxUauRLZ6AXlnVqyiLLf3DynlbyzSrDAv8yY9Mn93Y3ALhoQNFzZ
-	 wndH6k+BSZs88Hzg9+u/u46d63/Fv7ctDKi90ztFAX2pmneVdjxsjDjAxRR/d2PH7d
-	 bxHyM8J4wmV4uIeh24wScfZGR2CbqOESyqQsPzp26MurFY2mXYMf03BmEvKgN8Ps2q
-	 V4sv2ZfUOxB677jHqkb1c5gaNYVd2zRz5F0UBVFP0iVLlLW4JURX9eem4FLo1XI/o+
-	 aYCzjiUFEuWsQ==
+	b=jHqD/w7xRLNdDZjdXLT7oscs5Aid0dBw4VNiCvJWlspD3AZdNkswJAzqmAz28gWNi
+	 TsUFUmVYgcGzxApXzMdSesDbn6vDpX4cDN9iMb/zaZE84X+Sgzj7PPpwGSt/tPF763
+	 Fx5yvYTax/ljUu2ysJlqxmd7sX68lHOT8zrC/nnVA5D/VZ7C5bG9xHYwXCyk1ykUgH
+	 qqZqzqScZKds5BpQDSqphnWTyi9fx71+aoNuQbdMf4uOXMlxDR+bwv2+tHxgvXfSBk
+	 fXLDyQ8kuT/YDGbnsZ/D7hlu6XxAi7Qwoi81Tma32/Ki5P4QFGylY7fNj3dLoORXoy
+	 tbR+mwJU+2oKQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 11/18] vfio/pci: Virtualize PCIe TPH capability
- registers
+Subject: Re: [PATCH v19 14/18] vfio/pci: Implement VFIO_DEVICE_FEATURE_TPH
+ and valid TPH config write support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
 Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260702124224.57168-12-fengchengwen@huawei.com>
+In-Reply-To: <20260702124224.57168-15-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-12-fengchengwen@huawei.com>
+ <20260702124224.57168-15-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 13:04:13 +0000
-Message-Id: <20260702130414.5DA5A1F00A3D@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 13:04:25 +0000
+Message-Id: <20260702130425.EA4641F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 New issues:
-- [Critical] Out-of-bounds read and write on the `perm->virt` and `perm->wr=
-ite` kernel heap buffers due to unvalidated dynamic hardware TPH capability=
- length.
+- [High] Waking the device to PCI_D0 during TPH configuration writes or ST =
+table programming fails to restore zapped DMA buffers, permanently breaking=
+ device DMA.
+- [Medium] The `VFIO_DEVICE_FEATURE_SET` operation for TPH fails to copy an=
+d validate the userspace payload, breaking forward compatibility.
 
 Pre-existing issues:
-- [Critical] Missing bounds check in `vfio_ecap_init` can lead to a heap bu=
-ffer overflow when handling extended capabilities with dynamically parsed l=
-engths.
+- [High] Missing bounds checking in PCI capability parsing loops allows a m=
+alicious or spoofed PCIe endpoint to overflow the `vconfig` and `pci_config=
+_map` heap buffers.
 --
 
-commit 78dd911822344404c5af18d9dd92fb51e5d34a18
+commit 6662e41b04cb5eb843722e0409b68031565e33d6
 Author: Chengwen Feng <fengchengwen@huawei.com>
 
-vfio/pci: Virtualize PCIe TPH capability registers
+vfio/pci: Implement VFIO_DEVICE_FEATURE_TPH and valid TPH config write supp=
+ort
 
-This patch implements virtualization and policy masking for the PCIe TPH
-extended capability. It splits configuration space permissions to keep the
-header read-only while marking TPH_CTRL and ST-table entries as virtually
-writable, and adjusts virtual capability bits based on hardware support.
+This commit adds support for VFIO_DEVICE_FEATURE_TPH in
+vfio_pci_core_feature_tph, allowing GET and SET operations for TPH features.
+It also implements vfio_tph_config_write to support TPH_CTRL modifications =
+once
+TPH is permitted, managing power states as required for writing TPH registe=
+rs.
 
 > diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
 ci_config.c
-> index 5c6ab172df6c0..06d7b2fbf866a 100644
+> index 06d7b2fbf866a..388dd6fed16b5 100644
 > --- a/drivers/vfio/pci/vfio_pci_config.c
 > +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1086,6 +1086,73 @@ static int __init init_pci_ext_cap_pwr_perm(struct=
- perm_bits *perm)
+> @@ -1150,6 +1150,60 @@ static int vfio_tph_config_write(struct vfio_pci_c=
+ore_device *vdev, int pos,
+>  				 int count, struct perm_bits *perm,
+>  				 int offset, __le32 val)
+>  {
+[ ... ]
+> +	org_req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, org_ctrl);
+> +	if (req =3D=3D org_req)
+> +		goto out; /* Only care about requester enable */
+> +
+> +	ret =3D vfio_pci_set_power_state(vdev, PCI_D0);
+> +	if (ret)
+> +		goto restore; /* Drop this write */
+
+[Severity: High]
+Does waking the device to PCI_D0 here miss the required vfio_pci_dma_buf_mo=
+ve()
+call to restore DMA mappings?
+
+If the device is in a low-power state (like D3hot) and its DMA buffers are
+zapped, forcing it to D0 without restoring the DMA mappings could leave the
+device active but unable to perform DMA, potentially causing IOMMU faults a=
+nd
+breaking device functionality. Does the same issue also occur in the ioctl =
+path
+for ST table batch programming?
+
+[ ... ]
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 3f11a9624b9c0..14944d3ea86e6 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -1607,6 +1609,38 @@ static int vfio_pci_core_feature_token(struct vfio=
+_pci_core_device *vdev,
 >  	return 0;
 >  }
 > =20
-> +/* Permissions for TPH extended capability */
-> +static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
+> +static int vfio_pci_core_feature_tph(struct vfio_pci_core_device *vdev,
+> +				     u32 flags,
+> +				     struct vfio_device_feature_tph __user *arg,
+> +				     size_t argsz)
 > +{
-> +	int i;
+> +	struct vfio_device_feature_tph tph =3D {0};
+> +	int ret;
 > +
-> +	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_TPH]))
-
-[Severity: Critical]
-Does this code under-allocate the permission bits if the capability length
-is dynamically larger than 256 bytes?
-
-Because pci_ext_cap_length[PCI_EXT_CAP_ID_TPH] is 0xFF, alloc_perm_bits()
-will allocate a fixed 256-byte buffer. If vfio_ext_cap_len() calculates a
-dynamically larger TPH capability size based on a device's ST table, it
-appears subsequent user space reads or writes past offset 255 could cause an
-out-of-bounds heap access when vfio_default_config_read() or
-vfio_default_config_write() calls memcpy() against perm->virt and perm->wri=
-te.
-
-> +		return -ENOMEM;
+> +	if (!pcie_tph_supported(vdev->pdev, false))
+> +		return -EOPNOTSUPP;
 > +
-> +	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
+> +	ret =3D vfio_check_feature(flags, argsz,
+> +			VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_SET,
+> +			sizeof(tph));
+> +	if (ret <=3D 0)
+> +		return ret;
+> +
+> +	if (flags & VFIO_DEVICE_FEATURE_SET) {
+> +		vdev->tph_permit =3D 1;
+> +		return 0;
+> +	}
+
+[Severity: Medium]
+Does this code silently ignore userspace payloads for the VFIO_DEVICE_FEATU=
+RE_SET
+operation by skipping copy and validation?
+
+Future kernel extensions that add new flags to struct vfio_device_feature_t=
+ph
+for the SET operation could be silently ignored by older kernels, which mig=
+ht
+break userspace's ability to safely probe or use new features. Should it ve=
+rify
+that the payload is zeroed?
 
 [ ... ]
 
-> @@ -1704,6 +1774,8 @@ static int vfio_ecap_init(struct vfio_pci_core_devi=
-ce *vdev)
->  		ret =3D vfio_fill_vconfig_bytes(vdev, epos, len);
->  		if (ret)
->  			return ret;
-> +		if (ecap =3D=3D PCI_EXT_CAP_ID_TPH && !hidden)
-> +			vfio_tph_capability_adjust(vdev, epos);
+While reviewing this code, I also noticed a pre-existing issue in
+vfio_ecap_init() in drivers/vfio/pci/vfio_pci_config.c:
 
-[Severity: Critical]
-This is a pre-existing issue, but could the dynamically calculated length l=
-ead
-to a heap buffer overflow here?
-
-If a faulty or malicious device advertises a large ST table size,
-vfio_ext_cap_len() can calculate a length where epos + len significantly
-exceeds pdev->cfg_size. Since there appears to be no bounds check before:
+[Severity: High]
+This is a pre-existing issue, but does the while loop in vfio_ecap_init()
+lack a bounds check for the heap buffers?
 
 drivers/vfio/pci/vfio_pci_config.c:vfio_ecap_init() {
-    ...
-    memset(map + epos, ecap, len);
-    ret =3D vfio_fill_vconfig_bytes(vdev, epos, len);
-    ...
+[ ... ]
+	while (loops-- && epos >=3D PCI_CFG_SPACE_SIZE) {
+[ ... ]
+		for (i =3D 0; i < len; i++) {
+			if (likely(map[epos + i] =3D=3D PCI_CAP_ID_INVALID))
+				continue;
+[ ... ]
+		memset(map + epos, ecap, len);
+		ret =3D vfio_fill_vconfig_bytes(vdev, epos, len);
+[ ... ]
 }
 
-could this overflow the vdev->pci_config_map and vdev->vconfig heap buffers?
-
-> =20
->  		/*
->  		 * If we're just using this capability to anchor the list,
+The loop condition only checks that epos >=3D PCI_CFG_SPACE_SIZE, but never
+verifies that epos + len <=3D pdev->cfg_size before accessing the heap
+allocations (map and vconfig). Could a malicious or spoofed PCIe endpoint
+provide an ecap with an epos and len that overflows these buffers?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702124224.5716=
-8-1-fengchengwen@huawei.com?part=3D11
+8-1-fengchengwen@huawei.com?part=3D14
