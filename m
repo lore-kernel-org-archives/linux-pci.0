@@ -1,61 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B8FC480951;
-	Thu,  2 Jul 2026 12:49:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AA34481FAC;
+	Thu,  2 Jul 2026 12:50:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782996550; cv=none; b=UD8VE+xb71wuG7x9DFS7BhdNToNd3wztSpzX+/uFTTuBJ3DNHB2tK1bXFMKiwlTCUVNovFBXKDtZL6dn8JC5ijKf8OpCeEX9slfFMrr7i/22cdX4yXmC49LrEfBq7NiclOB9GsJ0UAZheGhIARE+0waU/NqwXvX+8xt/YRoYcBc=
+	t=1782996603; cv=none; b=TPvQUOg8Np68Kpb5S6lkDqSVll8OEkvGBGC6LYjGYrUAxFi6CQwQssJSKH361REWy2f1OLeNuNswjmLcCP7i4BpO6Fnhqxm95OZajWqKeeh3LTX+mC9VRiexAK+9C5ImaY5xdSbRy7DeeaiyWcu2H2+66TFojHBWhI/4EXl6O5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782996550; c=relaxed/simple;
-	bh=NnTKmcTplTnoc+7OfzBwnyzV6srkwQJaisNW1QnCxHQ=;
+	s=arc-20240116; t=1782996603; c=relaxed/simple;
+	bh=IAFjru7ownuTfej9vAzInwxggD/i5oKzuX6B86AWdCM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sl589veajftb7sWbO5g+qZKC8uPg99Trk+mlcncI72RZXvZSOzBDMQpV7OKxGLDdCsWIpqLmSyfgMoxstBceu0LWuznDTM+b/x+AJLjWnqhUUnCXrHrjNNZQ1skOOX8xhDpmZvFq4D9XBKGgkbJjbh+2PmARSBSPbELatyhKD7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EjFw8imY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=FjruJXPD92hJe20ZgQu4BAfMebUv8h+p87uveH6U1B7aWoBhkYr1ebNFRPo/DYRdA3BkQ/LxeS4WxQPwvEXSRT5Iyj/NB20JGJC12bWWQ4XUuoj5cMHEEhkWxV2Eb4O7rnqQtkWp5e4vVcc/Az3UvLexg9P7vvsPXjiAC8vYSwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PqqxPM/Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EjFw8imY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47F6A1F00A3A;
-	Thu,  2 Jul 2026 12:49:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PqqxPM/Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAC1F1F00A3D;
+	Thu,  2 Jul 2026 12:50:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782996549;
-	bh=NnTKmcTplTnoc+7OfzBwnyzV6srkwQJaisNW1QnCxHQ=;
+	s=k20260515; t=1782996601;
+	bh=WhZvuxQBWRdRkN41c6CDc5HvQO9pwDAv70+iuCX8TIE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EjFw8imYFhPvIGEwWc/aYLnp7/L/hkcSDrdqjEDJgg1mZKpy1nAefUqtrx6mibrxf
-	 9x+QL6VejpMEOdFAGrDhbwfW+xElJnQRsTijHXn2ZSleEby3UmlCIjFUG17z+iZfCV
-	 IkQuBteMbzvpRJhwecnADP2Ij4uRbHuK55/d9bLYaf+Owz4IdDCgijIiOyzJpftCam
-	 HzJvbSEqWCwkPt2rx2gJYhOuzQWTOJ80q4CiXS8fvciLCsY6aZH0DWdrpSQAGTejfE
-	 H5ISppURRbN6Y0pq4M4RNZAZs3fpaZQkdWlNYi5yNvJTajdfZsTsp2TdljPnZXo4pD
-	 QyBAeoz20TOPQ==
+	b=PqqxPM/ZE6IJGjEoC6QlWFvTx/ugbKzm+dwvhn9VuyThRsYiVcDzRcS6Nc2SafwNc
+	 2f1rKW3ejr5r/eUr+Xyf1Y+eoaOni5t2PZ8AfMI1Ur+YD/7/vWj2evFZltjOMhCedb
+	 xHFbXAt7BlQzeBE1mICf6LjrgeeLgOHQRvc9gaZREaEzsq5X4UeaIv08Tpn1ViV8bs
+	 2RydWdXtZrBZ4IGyA2S1gUmQFRknn7nfEe9DyK7t1/F8l0CqDVJekNqcCZfhkWcjXl
+	 176o6uwKqm2YIPcs1Tbf8HoAPdWQd4uGhXy9SJMl51rCViz9Al+07kolj4h4zPH5Qi
+	 sqJO2Y57JBDLQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 06/18] PCI/TPH: Expose the enabled TPH requester
- type
+Subject: Re: [PATCH v19 10/18] vfio/pci: Introduce tph policy parameter for
+ staged TPH feature enablement
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260702124224.57168-7-fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260702124224.57168-11-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-7-fengchengwen@huawei.com>
+ <20260702124224.57168-11-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 12:49:08 +0000
-Message-Id: <20260702124909.47F6A1F00A3A@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 12:50:00 +0000
+Message-Id: <20260702125000.EAC1F1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Zhiping Zhang <zhipingz@meta.com>
+> Add a module parameter 'tph' to implement staged TPH feature enabling
+> policy. The parameter accepts a value from 0 to 3 to progressively enable
+> TPH capabilities:
 >=20
-> Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
-> requester mode without reaching into pci_dev internals.
+> 0 =3D No-ST mode: RESOLVE only returns PH for DMABUF source;
+>                 ST programming unavailable
+> 1 =3D Add IV mode: RESOLVE only returns PH for DMABUF source;
+>                  ST program supports NONE/DMABUF/CPU sources
+> 2 =3D Add DS mode: RESOLVE returns PH+ST for DMABUF/CPU sources;
+>                  ST program supports NONE/DMABUF/CPU sources
+> 3 =3D Add LITERAL: RESOLVE returns PH+ST for DMABUF/CPU sources;
+>                  ST program supports NONE/DMABUF/CPU/LITERAL sources
 >=20
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> This commit only adds parameter plumbing and state storage, no
+> functional TPH logic is introduced yet.
+>=20
 > Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702124224.5716=
-8-1-fengchengwen@huawei.com?part=3D6
+8-1-fengchengwen@huawei.com?part=3D10
 
