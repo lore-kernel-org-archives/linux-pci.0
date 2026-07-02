@@ -1,42 +1,44 @@
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56BBF3A9870
-	for <linux-pci@vger.kernel.org>; Thu,  2 Jul 2026 18:16:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D3133A6B8F
+	for <linux-pci@vger.kernel.org>; Thu,  2 Jul 2026 18:16:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783016168; cv=none; b=DnsKJiR/wgB6C0AtUAgB91Vb1UGc5Ut1T8B+BXEKlFt+8HVyVKlrfOK+aBAkU0z31bXyURKoXyc4FVV7wOKsNtprYUdZ24FrO5oMqxKquk9mW0Ck5Od5CLhTiwOuogIwJARUHPd8QqW+b0xFUt9xgWxUzRIFfPxmaPjwL4lykTA=
+	t=1783016171; cv=none; b=o7uLCQbXOXvwzvvmw4ydmYeNsedJk5RYQJdwtq10fmeY1HuaxfZ4noOD55RbKf3R8d2KaRCXyWzJ52niWiB26DB3/5+gczkcBIeBhTSoyLypSTWB2hnt6IYphD3UOvYZloB+rzjwEZppPkQ/GhDOR2R/NBmdcxD4Uz3w5fCryIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783016168; c=relaxed/simple;
-	bh=4bHkuHPixuJyzSIuiSSLBQOtHDDkLSTmZzFcxpMjwNQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j98QO69aqUx/YyO/ViDxvYaD3HRenhoJWw+6Zy+Cajzh//DPNzeyXBV7BuOhelpEWcoCwHU6qdDhTRcigsbIWufDU4N+gmVyrYSosMR9DbOGWZFYha7Fgxv/Z2YmtOKCH6j9PFtG8+hv/YQITEpNZbz0DhJFDw86nVzUywB58gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=uL02NEkR; arc=none smtp.client-ip=67.231.145.42
+	s=arc-20240116; t=1783016171; c=relaxed/simple;
+	bh=bbG6+QmFVNP/YnoXzRENXF3/gCL3vZIFeEY5nqrNto4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lwyHqJrhUNgxT2Be0VXzUVlcO5EDbmzjDZvOOaWctyImvhXYMp/OPtZiLsh5Q4MeCf0kSVh23HL5pezM8LX/QZEWG8RSc7EhXSjQc8rnQOU+ajC9mtav0USRrSpmQ9dN1HQsSDtbzThZNVwQkMuHL1tPutnGlkaBcHP01cexcZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=dl7D7WYL; arc=none smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="uL02NEkR"
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="dl7D7WYL"
 Received: from pps.filterd (m0528009.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 662GoDSR3664291
-	for <linux-pci@vger.kernel.org>; Thu, 2 Jul 2026 11:16:05 -0700
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 662GoDSX3664291
+	for <linux-pci@vger.kernel.org>; Thu, 2 Jul 2026 11:16:09 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=7n6uaqb1WzaAlWb9XQ
-	OtXCQaeFqSCgmHchwojpRfK4c=; b=uL02NEkRqXyolFsKbYFBqmT3tp37VGXV+d
-	bBqI9naNP6F3hsSbMqdpZ/ozQcwozsrUZPN0K4oyZ4+X3ojhGVYkThXRcdfoKrEf
-	fBdkFINeMipIKffiAFFIRYJXT/XHl0q6LMHqeQJ6TDi2QxVbgAS3pGIyEStCiUrT
-	CvQ4yavXzW6e09CR7AbCKONNdV71vxdQOQkeaJT0F0nJAjKCJx0DWC8hRNOqykFh
-	xAXdlvNOADy+sdKVMya3JOHKy0tIA1BwjC5XSlpFQRaiFidbbq2a065969iVhcrt
-	yJn/bhX/+IQU1yyKaCXt+xymSMZeaybiRnl00yU6O1xGNy2+3NBg==
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=EI1AQGcRtMowZGpULfpK0Vp641YsGLWv8U+k3zFxilw=; b=dl7D7WYLqLnU
+	gNg2XM22oxYPHYVdLA5lo7a1Uh2JqqIwIqo63A8AbF7vz4keyFc+DEu48Biqa7Jm
+	Pv7RtxxBnR45GOi2XLR/9Gwi9I/+DKXpESNwT6TnAe/RWyOHLKzouXQZrqusYwGo
+	SONasQwbtqOkdOlL9UeyG3LQKWpJCwDvr3ZbVGOj1NIBNBJZxSBNQPh7xf4fMH9j
+	iLkxqWsZAdYAzsfPkAhL943XMGUo6RktPLUFxQCUEoeB2b/Yis8t+i5B0qmfEjoX
+	J3Dt0hNP6C9WHayyekBwfOcWwuOtXpEXILRG7WWppIe0+F/L/0hSK38ARtBeirZ6
+	aAAMucMbUg==
 Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4f55rea91d-5
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4f55rea91d-11
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2026 11:16:05 -0700 (PDT)
-Received: from twshared1653.04.snb2.facebook.com (2620:10d:c0a8:fe::f072) by
+	for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2026 11:16:09 -0700 (PDT)
+Received: from twshared96086.14.frc2.facebook.com (2620:10d:c0a8:1b::8e35) by
  mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.41; Thu, 2 Jul 2026 18:16:01 +0000
+ 15.2.2562.41; Thu, 2 Jul 2026 18:16:03 +0000
 Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 0589440EEE780; Thu,  2 Jul 2026 11:10:25 -0700 (PDT)
+	id DAEDA40EEE79A; Thu,  2 Jul 2026 11:10:26 -0700 (PDT)
 From: Zhiping Zhang <zhipingz@meta.com>
 To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
         Michael
@@ -50,176 +52,158 @@ CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
         Zhiping Zhang
 	<zhipingz@meta.com>
-Subject: [PATCH v11 0/4] vfio/dma-buf: add TPH support for peer-to-peer access
-Date: Thu, 2 Jul 2026 11:10:13 -0700
-Message-ID: <20260702181025.2694961-1-zhipingz@meta.com>
+Subject: [PATCH v11 1/4] PCI/TPH: Add requester/completer type helpers
+Date: Thu, 2 Jul 2026 11:10:14 -0700
+Message-ID: <20260702181025.2694961-2-zhipingz@meta.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260702181025.2694961-1-zhipingz@meta.com>
+References: <20260702181025.2694961-1-zhipingz@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAyMDE5MSBTYWx0ZWRfX6gR/t/3WBSYs
- 0/kCkCYXvjDuGt1Yxw3GZNi8YVfPsKbI++V9mqRv31qT5Be/sgnl5Bb954EZCMQFERgpmwN/Bns
- QkzwvoHm8pTdwgnOJlFZvvlLTOQwTfCcHVTtBDoS4hNd/1Dp2LhgVYuVgjeVzYNa2KrV7V+eIqz
- bMwHF4T4Hg34AGYbifwNsQxT0JrFz19NKcHkRE/wq0BuPGCReif5R5dgjUGsvcZC5HRLNDRPaKf
- IpcAxoHEjk+6egZjy8U35DuK+8HMvHZUXxgos5qjDmvGF2LK/TIxc7Uj37nWTERYmxYcm4xfw5w
- ZG46URwLhJnTHRAJL5sr2n/zbpqAin+IYJYrEgvuYIhPMlqyWVodiSLmfnGBDfvX9D4VJP1KoM/
- 0u7dpfr2T76Mt9uPDLIF1ndaAm9UIaSpyUv4Y18RCy+DqTwDqWXtfX8KA4bBHHb44/262lbhli1
- +l+72yaKdungwzAi1rw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAyMDE5MSBTYWx0ZWRfX1PkHa56nS2DB
- lsnDoultPCh4l0q1cY46fkgpBoRQfv894rm+ikHbet8Umq988Q5kRQA3GvjahF5OY7NzupHHbu6
- Y/cbSMTuZuKZSS8eX5HEQHIADVQrbE8=
-X-Authority-Analysis: v=2.4 cv=H6rrBeYi c=1 sm=1 tr=0 ts=6a46aae5 cx=c_pps
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAyMDE5MSBTYWx0ZWRfX0pPa2LMX6c2k
+ OcKTcZkDGOJfKEIjBkKhl85BGp+pBoj27L0JSlrZL4MWLK2+RFGPtE9aqABiWkR+RbWmODWtNza
+ SvS6vkN0agsfAOGE/RWaQZfr7bTJgnRI5KgU6qmf1N22O260kPM5SF7uKxCAX02zeec3k+bTM0D
+ LCVL6YYxggjPeWghQghKGmZaMuaJ9b9Xx5xU0IUd8JDoq9up7iNe1v3zxaaG9i1Sgc9xDumB7UW
+ 6IQHM/X0MmnKu1pMaDxxlnKK/mdTrz6QAH2Uoy+BbVhmAVrCh3wi/zAaz9fjMglYfEWfOWx6Vz4
+ efo0IHOEjho1naSK8xBQ7rC4GCZN2XL4kxdDmw45MRop9nQcdX24weqbprcfX0tyoNhp+Bi96Gd
+ IBkiRBTwLEjtylFFnpp4DERaJsvdnW+JmcXfHAsFTkurrJvE4JLTfkc1FNMBZjwf3BTRE1IKtNe
+ o9hcs94E22Sh7p3MVhw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAyMDE5MSBTYWx0ZWRfXzeukCBQvNDRo
+ l07w9kSg6HxW98yPfoETnyNTRqxGf338wa5XkEibuXSngyTLaf4oQhlR0gXCxXrB/QV1I7gQ6qx
+ woLKzQ08YAfjKKrGkdmk1pSxA8dlXlM=
+X-Authority-Analysis: v=2.4 cv=H6rrBeYi c=1 sm=1 tr=0 ts=6a46aae9 cx=c_pps
  a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=7x6HtfJdh03M6CCDgxCd:22 a=U_y8lYiYyhHBU5rMqhb2:22 a=VwQbUJbxAAAA:8
- a=VabnemYjAAAA:8 a=VFUPkbdMgoccpq6KJQIA:9 a=QEXdDO2ut3YA:10
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=U_y8lYiYyhHBU5rMqhb2:22 a=VabnemYjAAAA:8 a=K7z10gKaAp536EQdUv4A:9
  a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: nzOXym3ngn-Xa2rjjpvW4OolgNVZosUd
-X-Proofpoint-ORIG-GUID: nzOXym3ngn-Xa2rjjpvW4OolgNVZosUd
+X-Proofpoint-GUID: JnMKxBWSG5U1UxlOfN3as0HtrIus_dQJ
+X-Proofpoint-ORIG-GUID: JnMKxBWSG5U1UxlOfN3as0HtrIus_dQJ
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-07-02_02,2026-06-26_01,2025-10-01_01
 
-This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
-export path, allowing importing drivers (e.g. mlx5) to use the
-exporter's steering tag when performing peer-to-peer DMA into a
-VFIO-owned device.
+Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
+requester mode without reaching into pci_dev internals.
 
-There is no separate in-tree vendor kernel driver for the target device:
-vfio-pci is the in-tree driver and the targeted device is managed
-from userspace via VFIO passthrough. That is why the ST has to flow
-through a uAPI: userspace owns the device and its ST table, so it is the
-entity that can configure a meaningful value for a given dma-buf. The
-kernel-visible participants are still in-tree: vfio-pci exports the
-dma-buf and mlx5 imports it.
+Add pcie_tph_completer_type() so drivers that publish TPH metadata for
+a device acting as a completer can gate on the "TPH Completer
+Supported" field of Device Capabilities 2 (bits 13:12,
+PCI_EXP_DEVCAP2_TPH_COMP_MASK) rather than reusing requester-side
+state. Fold the reserved 0b10 encoding into NONE so callers only see
+the defined values.
 
-On the effect: the endpoint's PCIe ingress block uses the ST as
-an in-band instruction for the incoming P2P TLP -- selecting a target
-cache partition and, on writes, an in-flight operation on the data
-before it lands. The dma-buf callback keeps this opaque to the
-framework -- only the producer (userspace owner of the VFIO device)
-and the consumer (endpoint block) need to interpret the value. The
-dma-buf get_pci_tph callback itself is optional, but workloads that
-depend on the endpoint's in-flight operation need it because fallback
-does not produce the same result.
+This keeps pci_dev::tph_req_type and the completer-capability decode
+inside the PCI/TPH code and provides !CONFIG_PCIE_TPH stubs for
+callers.
 
-The dma-buf hook is intentionally generic and discoverable rather than
-a private side channel. The exporter owns the completing address
-space for the dma-buf and decides whether it can provide a meaningful
-ST/PH tuple for that completer; the dma-buf core keeps the tuple opaque,
-and importers merely request the namespace they support and place the
-returned value on generated TLPs. Exporters that cannot derive a
-meaningful tuple simply return -EOPNOTSUPP.
+Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+---
+ drivers/pci/tph.c       | 45 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-tph.h |  8 ++++++++
+ 2 files changed, 53 insertions(+)
 
-Patch 1 adds small PCI/TPH type helpers so drivers can query the enabled
-TPH requester mode and the device's TPH Completer Supported field
-without reaching into pci_dev internals (and so callers in
-CONFIG_PCIE_TPH=3Dn builds get a clean fallback).
-Patch 2 adds the optional dma_buf_ops::get_pci_tph callback plus the
-dma_buf_get_pci_tph() importer wrapper so importers can fetch TPH
-metadata from an exporter under dmabuf->resv.
-Patch 3 implements get_pci_tph in vfio-pci and adds the new uAPI
-(VFIO_DEVICE_FEATURE_DMA_BUF_TPH) for userspace to attach the metadata.
-Patch 4 wires up the mlx5 RDMA driver as a consumer.
-
-Build-tested with both CONFIG_PCIE_TPH=3Dy and CONFIG_PCIE_TPH=3Dn.
-Functional validation on the target topology: PCIe analyzer captures
-on the P2P TLPs confirm the ST emitted by mlx5 matches the value
-configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, and the end-to-end
-P2P workload only produces results consistent with the endpoint's
-ST-selected in-flight operation. For example, with userspace
-configuring 8-bit ST=3D0xf0 and PH=3D2, an analyzer capture of a peer-to-
-peer MWr64 shows "STP MWr64 TC=3D0 OHC=3D2 ..." followed by "OHC-B
-ST=3DF0h PH=3D2 HV=3D1":
-(TLP Captures)
-08000260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D0 Attr=3D0 L=3D8
-F0000004 -> RID=3D4h:0h.0h EP- Tag=3DF0h
-E0200000 -> AddrH=3D000020E0h
-00080006 -> AddrL=3D06000800h
-90F00000 -> OHC-B ST=3DF0h PH=3D2 HV=3D1 AMA=3D0 AV-
-
-The dma-buf get_pci_tph interface has also been exercised by a second,
-independent importer: a different vendor's NIC whose driver is not yet
-upstream, locally taught to call dma_buf_get_pci_tph(). A PCIe analyzer
-confirmed the ST it placed on outbound P2P TLPs matches the value
-configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, the same result as
-with mlx5. Two unrelated importer drivers exercising the callback
-end-to-end shows the interface is not tied to a single consumer. That
-importer change is out-of-tree and not part of this series. For that
-second importer, with userspace configuring 8-bit ST=3D0xe0 and PH=3D0,
-an analyzer capture shows:
-(TLP Captures)
-08200260 -> STP MWr64 TC=3D0 OHC=3D2 TS=3D1 Attr=3D0 L=3D8
-4E00004C -> RID=3D4Ch:0h.0h EP- Tag=3D4Eh
-00170000 -> AddrH=3D00001700h
-00200006 -> AddrL=3D06002000h
-10E00000 -> OHC-B ST=3DE0h PH=3D0 HV=3D1 AMA=3D0 AV-
-
-Depends on (submitted separately):
-  net/mlx5: free mlx5_st_idx_data on final dealloc
-    https://lore.kernel.org/linux-rdma/20260612170406.3339093-1-zhipingz@=
-meta.com
-
-Changes since v10:
-  Patch 2 (dma-buf): Per Christian K=C3=B6nig, document that the ST/PH
-  returned by dma_buf_get_pci_tph() is only valid until the exporter
-  invalidates the current mapping and must be re-queried afterwards;
-  note added to the wrapper kernel-doc and referenced from the callback
-  kernel-doc. Also add dma_buf_get_pci_tph() and dma_buf_ops.get_pci_tph(=
-)
-  to the central dma-buf locking convention.
-
-  Patch 3 (vfio/pci): Per Alex Williamson, update the vfio_pci_dma_buf
-  comment to note that @revoked is additionally protected by memory_lock,
-  and describe the READ_ONCE() rationale in the commit log. No behavior
-  change.
-
-Previous link:
-v10: https://lore.kernel.org/linux-pci/20260630224328.3218796-1-zhipingz@=
-meta.com/
-v9: https://lore.kernel.org/dri-devel/20260622184211.2229399-1-zhipingz@m=
-eta.com/
-v8: https://lore.kernel.org/dri-devel/20260615065912.2177918-1-zhipingz@m=
-eta.com/
-v7: https://lore.kernel.org/dri-devel/20260611161546.4075580-1-zhipingz@m=
-eta.com/
-v6: https://lore.kernel.org/dri-devel/20260608185646.4085127-1-zhipingz@m=
-eta.com/
-v5: https://lore.kernel.org/dri-devel/20260526144401.1485788-1-zhipingz@m=
-eta.com/
-v4: https://lore.kernel.org/linux-pci/20260519201401.1558410-1-zhipingz@m=
-eta.com/
-v3: https://lore.kernel.org/linux-pci/20260512184755.4137227-1-zhipingz@m=
-eta.com/
-v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipingz@me=
-ta.com/
-
-Zhiping Zhang (4):
-  PCI/TPH: Add requester/completer type helpers
-  dma-buf: add optional get_pci_tph() callback
-  vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-  RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-
- drivers/dma-buf/dma-buf.c                     |  32 +++++
- drivers/infiniband/hw/mlx5/main.c             |   1 +
- drivers/infiniband/hw/mlx5/mr.c               | 116 +++++++++++++++++-
- .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  49 ++++++--
- drivers/pci/tph.c                             |  45 +++++++
- drivers/vfio/pci/vfio_pci_core.c              |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c            | 102 ++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h              |  12 ++
- include/linux/dma-buf.h                       |  25 ++++
- include/linux/mlx5/driver.h                   |  15 +++
- include/linux/pci-tph.h                       |   8 ++
- include/uapi/linux/vfio.h                     |  43 +++++++
- 12 files changed, 435 insertions(+), 16 deletions(-)
-
-
---
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 655ffd60e62f..e7693fd9d676 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -173,6 +173,51 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+=20
++/**
++ * pcie_tph_enabled_req_type - Return the device's enabled TPH requester=
+ type
++ * @pdev: PCI device to query
++ *
++ * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EXT_=
+TPH.
++ */
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
++{
++	return pdev->tph_req_type;
++}
++EXPORT_SYMBOL(pcie_tph_enabled_req_type);
++
++/**
++ * pcie_tph_completer_type - Return the device's TPH Completer support
++ * @pdev: PCI device to query
++ *
++ * Reads the "TPH Completer Supported" field (bits 13:12) of Device
++ * Capabilities 2. The reserved 0b10 encoding is folded into
++ * "not supported" so callers only need to compare against the three
++ * defined values.
++ *
++ * Return: one of %PCI_EXP_DEVCAP2_TPH_COMP_NONE,
++ *         %PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY or
++ *         %PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH.
++ */
++u8 pcie_tph_completer_type(struct pci_dev *pdev)
++{
++	u32 reg;
++
++	if (pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP2, &reg))
++		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
++	if (PCI_POSSIBLE_ERROR(reg))
++		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
++
++	switch (FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg)) {
++	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
++		return PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY;
++	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
++		return PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH;
++	default:
++		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
++	}
++}
++EXPORT_SYMBOL(pcie_tph_completer_type);
++
+ /*
+  * Return the size of ST table. If ST table is not in TPH Requester Exte=
+nded
+  * Capability space, return 0. Otherwise return the ST Table Size + 1.
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index be68cd17f2f8..7743af6fe432 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -9,6 +9,8 @@
+ #ifndef LINUX_PCI_TPH_H
+ #define LINUX_PCI_TPH_H
+=20
++#include <linux/pci_regs.h>
++
+ /*
+  * According to the ECN for PCI Firmware Spec, Steering Tag can be diffe=
+rent
+  * depending on the memory type: Volatile Memory or Persistent Memory. W=
+hen a
+@@ -30,6 +32,8 @@ void pcie_disable_tph(struct pci_dev *pdev);
+ int pcie_enable_tph(struct pci_dev *pdev, int mode);
+ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
++u8 pcie_tph_completer_type(struct pci_dev *pdev);
+ #else
+ static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ 					unsigned int index, u16 tag)
+@@ -41,6 +45,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *=
+dev,
+ static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+ static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ { return -EINVAL; }
++static inline u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
++{ return PCI_TPH_REQ_DISABLE; }
++static inline u8 pcie_tph_completer_type(struct pci_dev *pdev)
++{ return PCI_EXP_DEVCAP2_TPH_COMP_NONE; }
+ #endif
+=20
+ #endif /* LINUX_PCI_TPH_H */
+--=20
 2.53.0-Meta
+
