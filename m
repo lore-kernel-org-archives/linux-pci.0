@@ -1,126 +1,172 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA43331EB9;
-	Thu,  2 Jul 2026 17:08:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83393469EE;
+	Thu,  2 Jul 2026 17:20:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783012128; cv=none; b=hw+OfqgH/xJMMvVRBfoDxFuOtWinYCwgvvb/k/FgCAF1CCMy/BtPCoCBUAc1z9dET7Gl/joRz0T0nCWlwO3cSndie3Dj5PKl4LZpPsfXOVILVmZTyiA13a0emI29YnH8xFt/EQeVs5Kq6OjQzalov8mk2m48xa9sAjPO+yFSqYg=
+	t=1783012845; cv=none; b=apT0K2nQzlWjvuZQKYyhN0NFs749WHiPZBFpT5jH4fvjyRy/Lz1GUrR3S9GCnuTGjPAE0n+HOtKz96gdarMd/QwkbG5p0u+AvEZNGTPdDYdKKniGNnji7ZI7lwECRe/uKg+raBR7InALjuDwttlXV4HrV8MI2FZaxXhy6QnpY+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783012128; c=relaxed/simple;
-	bh=wgC036mottjZzxDpnXROa86MUIAcVqsoBCPIB11K4Hc=;
+	s=arc-20240116; t=1783012845; c=relaxed/simple;
+	bh=ce1S+ZgapVXwrlV/4HcXKaBwsSjvb2yeyKQp8zbEQzI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BirRyxYYbFD7zxHX/tObIekC2D4rfRoxy/4UUOCwqekS01uCHaPMze9T/t2gzZP1Dh7AP20sO93o2mOYsk8c0Lm1hTKYpa2/l7oAMAEm0LKTY1XV9SovG2ylKgymT4BS/dGaKlfNb3SasOAqMCzoo/qs9kTDDPHPWcs1EXN5wNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O0qgfFuf; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=a6eirg+Zw9RDCnFODPgvSjN1l9ruqIdHV/jjdfScCutb+OYwxTvdHsAFIuPKV39ghXdSREOEYCdBL/tx3W7tLoVzFvSxHFatxpuQV5HAzKigdA+eziXJTl4TYprwfZ5I7KOQwKnwTGrMFZrePXMAtY3S0G8icu8PfZhbghfu2bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dwYo8dwq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O0qgfFuf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DEF91F000E9;
-	Thu,  2 Jul 2026 17:08:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dwYo8dwq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9551F000E9;
+	Thu,  2 Jul 2026 17:20:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783012126;
-	bh=e3qY9FSRbuloe9ihT5Gc6jvFAv42+7rMgkKp5Y0K1hk=;
+	s=k20260515; t=1783012843;
+	bh=1Ryc/FdHtu6IBlUPS5STD/MrWkXdkwIN7N2nc5SmXDY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=O0qgfFuf/yBymQPlLM7H7BPzXS/rl1fc1OvhiwZyDuK2bgEallCoz2lVjN+WRZWcr
-	 +BrkcBjxG5yiC1BpwHP0oeXTim+F5VXT2A5drc6JDBO7a8Sc98bVEccHRxNypeLBSj
-	 fhTwIopSHY8DSOaiA7X+ub9ru/Zmv8R7ts/wnyrG1P9QtQO/sv7bH7NOw+sLu/2PPs
-	 xyvWptqfjsJ1uG9VFt638mK+SlowRak5VFeWoZYF/StNQuzIt4Ppu5gHl/Ib92c+u5
-	 wkLO1kVtjmMQZVUllDHnX3vUU2v3gi35Ztz8BULHqXD2gjeI4Kc0UIDoZNX+EqtoLC
-	 B+uNqveGuwctg==
+	b=dwYo8dwqU3HcABYcGtSJYtukWReZaiv7afjCJwdXhcical8HM7hjUyuwO6Qw5ZzTg
+	 mCyBpDhMbr4zn896ykNHvuJLFN9DvP0x/r2j8Pgdpb9WznW9RxVenUCpzHt8uaOy3K
+	 Zv7bNjc3ZCOHyF6RS8EN/GdEqsMu9zWbf2NX6ArTfz1ITTZjd0tDq2GjYuUlVWyApT
+	 dHFr8PslOhEq5xvwj2C9oqaykMAhEsbFw+La9lzN9/vxD6PxPby8I+fyixC8x8dGvE
+	 HVZyIYcyg4i8XAqij6KS/LhefLnsaNPnY6LPZ4PH3OAWcxKhs0182Riig1c6VFZm7G
+	 w8U3D9iY5o+Fw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
+Subject: Re: [PATCH v2 4/4] iommu/hyperv: Add page-selective IOTLB flush
+ support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Zhang" <zhangyu1@linux.microsoft.com>
 Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+In-Reply-To: <20260702160518.311234-5-zhangyu1@linux.microsoft.com>
 References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+ <20260702160518.311234-5-zhangyu1@linux.microsoft.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 17:08:45 +0000
-Message-Id: <20260702170846.7DEF91F000E9@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 17:20:42 +0000
+Message-Id: <20260702172043.5A9551F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Undefined behavior when calculating `aperture_end` if the hypervis=
-or returns `max_iova_width >=3D 64`.
-- [High] Unconditional overwrite of `x86_init.iommu.iommu_init` causes hard=
-ware IOMMUs (VT-d/AMD) to fail initialization.
+- [High] Bitfield assignment on an uninitialized hypercall buffer element c=
+auses a read of uninitialized memory, triggering a KMSAN uninit-value warni=
+ng.
+- [High] Missing check for an empty `iotlb_gather` causes spurious flushes =
+of the entire IOTLB domain.
+- [Medium] The calculation of `last_pfn` uses an unnecessarily complex form=
+ula that theoretically overflows for IOVAs near the end of the 64-bit addre=
+ss space.
 --
 
-commit fdcb0264dfd6bd1cb7c3c4676b8a796ad8a85e4a
+commit 306d408fd1d04144672964e71dd7149937537189
 Author: Yu Zhang <zhangyu1@linux.microsoft.com>
 
-iommu/hyperv: Add para-virtualized IOMMU support for Hyper-V guest
+iommu/hyperv: Add page-selective IOTLB flush support
 
-Add a para-virtualized IOMMU driver for Linux guests running on Hyper-V.
-This driver implements stage-1 IO translation within the guest OS and
-integrates with the Linux IOMMU core using Hyper-V hypercalls.
-
-> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
-> index 55a8b6de2865a..094f9f7ddb728 100644
-> --- a/arch/x86/hyperv/hv_init.c
-> +++ b/arch/x86/hyperv/hv_init.c
-> @@ -578,6 +578,10 @@ void __init hyperv_init(void)
->  	old_setup_percpu_clockev =3D x86_init.timers.setup_percpu_clockev;
->  	x86_init.timers.setup_percpu_clockev =3D hv_stimer_setup_percpu_clockev;
-> =20
-> +#ifdef CONFIG_HYPERV_PVIOMMU
-> +	x86_init.iommu.iommu_init =3D hv_iommu_init;
-
-[Severity: High]
-The assignment to x86_init.iommu.iommu_init must be conditionally guarded to
-prevent hardware IOMMU initialization failures.
-
-Will this unconditional overwrite break hardware IOMMUs?
-
-Initial boot sequence logic and IOMMU detection parameters are validated.
-
-If pci_iommu_alloc() previously detected a hardware IOMMU (like VT-d/AMD) a=
-nd
-set iommu_detected=3D1, overwriting the pointer with hv_iommu_init() ensures
-failure since hv_iommu_init() immediately aborts when iommu_detected=3D=3D1.
-
-> +#endif
-> +
->  	hv_apic_init();
-
-[ ... ]
+Adds page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
+Calculates the minimal power-of-two aligned range for the target IOVA regio=
+n,
+falling back to a full domain flush if the page-selective flush fails.
 
 > diff --git a/drivers/iommu/hyperv/iommu.c b/drivers/iommu/hyperv/iommu.c
-> new file mode 100644
-> index 0000000000000..2541369464040
-> --- /dev/null
+> index 2541369464040..e9b104a322fd8 100644
+> --- a/drivers/iommu/hyperv/iommu.c
 > +++ b/drivers/iommu/hyperv/iommu.c
+> @@ -401,10 +402,74 @@ static void hv_iommu_flush_iotlb_all(struct iommu_d=
+omain *domain)
+>  	hv_flush_device_domain(to_hv_iommu_domain(domain));
+>  }
+> =20
+> +/*
+> + * Calculate the minimal power-of-two aligned range that covers [start, =
+end]
+> + * (end is inclusive). Returns a single (page_number, page_mask_shift)
+> + * descriptor that may over-flush when the range is not naturally aligne=
+d.
+> + */
+> +static void hv_iommu_calc_flush_range(unsigned long start, unsigned long=
+ end,
+> +				       union hv_iommu_flush_va *va)
+> +{
+> +	unsigned long start_pfn =3D HVPFN_DOWN(start);
+> +	unsigned long last_pfn =3D HVPFN_UP(end + 1) - 1;
+
+[Severity: Medium]
+Can this calculation overflow?
+
+If end is within the last 4095 bytes of the 64-bit address space, end + 1
+would wrap around. HVPFN_UP() expands to (((x) + 4095) >> 12), which would
+evaluate to 0 in that case.
+
+Subtracting 1 would then result in ULONG_MAX, causing __fls() to compute a
+mask_shift of 64 and triggering an undefined left shift by 64 in the later
+ALIGN_DOWN macro.
+
+Would it be safer to use HVPFN_DOWN(end) instead, which avoids the overflow
+entirely?
+
+> +	unsigned long mask_shift, aligned_pfn;
 
 [ ... ]
 
-> @@ -509,6 +509,16 @@ static void __init hv_init_iommu_device(struct hv_io=
-mmu_dev *hv_iommu,
-> +	hv_iommu->geometry =3D (struct iommu_domain_geometry) {
-> +		.aperture_start =3D 0,
-> +		.aperture_end =3D (((u64)1) << hv_iommu->max_iova_width) - 1,
+> +static void hv_flush_device_domain_list(struct hv_iommu_domain *hv_domai=
+n,
+> +					struct iommu_iotlb_gather *iotlb_gather)
+> +{
+> +	u64 status;
+> +	unsigned long flags;
+> +	struct hv_input_flush_device_domain_list *input;
+> +
+> +	local_irq_save(flags);
+> +
+> +	input =3D *this_cpu_ptr(hyperv_pcpu_input_arg);
+> +	memset(input, 0, sizeof(*input));
+> +
+> +	input->device_domain =3D hv_domain->device_domain;
+> +	input->flags |=3D HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
+> +	hv_iommu_calc_flush_range(iotlb_gather->start, iotlb_gather->end,
+> +				  &input->iova_list[0]);
 
 [Severity: High]
-The max_iova_width value must be bounds-checked against the maximum 64-bit
-integer width before performing the bitwise shift.
+Does this code trigger an uninitialized memory read KMSAN warning?
 
-Does this code overflow the 64-bit shift limit?
+Since iova_list is a flexible array member, sizeof(*input) evaluates to just
+the header size (24 bytes). This means memset() clears the header, but leav=
+es
+input->iova_list[0] uninitialized.
 
-Standard processing applied to the hypercall response.
+When hv_iommu_calc_flush_range() later assigns the page_number and
+page_mask_shift bitfields of the union, the compiler typically generates a
+read-modify-write operation on the underlying 64-bit value. This will read
+the uninitialized memory from the reused per-CPU page.
 
-If an untrusted hypervisor responds to HVCALL_GET_IOMMU_CAPABILITIES with
-max_iova_width >=3D 64, shifting ((u64)1) directly by that amount results in
-undefined behavior and unpredictable IOVA aperture sizing.
+> +
+> +	status =3D hv_do_rep_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
 
-> +		.force_aperture =3D true,
-> +	};
+[ ... ]
+
+>  static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
+>  				struct iommu_iotlb_gather *iotlb_gather)
+>  {
+> -	hv_flush_device_domain(to_hv_iommu_domain(domain));
+> +	hv_flush_device_domain_list(to_hv_iommu_domain(domain), iotlb_gather);
+
+[Severity: High]
+Does this unconditionally flush the entire IOTLB domain if the gather is
+empty?
+
+If iommu_unmap() returns without unmapping anything, iotlb_gather retains i=
+ts
+initialized values of start =3D ULONG_MAX and end =3D 0.
+
+Because there is no check like if (iotlb_gather->start > iotlb_gather->end)
+before issuing the flush, hv_iommu_calc_flush_range() will calculate a
+mask_shift of 52. This causes a spurious flush of the full 52-bit address
+space instead of returning early.
+
+> =20
+>  	iommu_put_pages_list(&iotlb_gather->freelist);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702160518.3112=
-34-1-zhangyu1@linux.microsoft.com?part=3D3
+34-1-zhangyu1@linux.microsoft.com?part=3D4
