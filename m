@@ -1,363 +1,285 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020106.outbound.protection.outlook.com [52.101.196.106])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B5A3CA4B5
-	for <linux-pci@vger.kernel.org>; Thu,  2 Jul 2026 11:03:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782990238; cv=none; b=bUvl58CqhKq6lO5ZJORnu6pgZfnZhFncOv3rfhjTDQw5iej3A4iNsdnjisEpX0DflN6ORD0WO4BGr9oLBvMFmN4g7Bq7TdTyjFt9MFmWR1CLA7K8NyBS+MMYEtQstFWdWWS1nDUaj74vyUXh5RqYlGkhv0h+dj9wyv8jSoncBTA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782990238; c=relaxed/simple;
-	bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g+fBU2rENI9HDBg1pw8E97oUqcpFXXvjvekSoLDIRDLJeosFsHf6hfzLinMXj5zDJx3cZ0gPINsFW1S2qYjIJaHP/zq3DLO7vT/3zqaf+UZ8sA5WtNjDDNISzz/b5VvjwJEkbeKRylph998QxzG1nY0AFcahCkn8o+LETO8wOIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=fFwMSklP; arc=none smtp.client-ip=209.85.218.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6CA53CB2EF;
+	Thu,  2 Jul 2026 11:09:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.106
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782990576; cv=fail; b=E1ZK+wiFyIy4NjrHK7ixdbhexKTnKMutHlYtZ0MFqBSmiAhD37aWZsnBLd4B+3+fATrVDbMiNtRbCW7v4adF55tHE9xwj1C6pE9HBGn6dOiEk4Csf7+B/vMkYb5w7ZQBLVlu9P5qHVUxc1YyNcF4jyobw6yeIQYmUp4t3f/vPrM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782990576; c=relaxed/simple;
+	bh=yhsZ9TXqEndVg+TbLFHOc0JR5r+aYTFsVgSO1eWuxJI=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=Fj8DOSjGSusoabl9TbdvT28SGZOIaPlbTrlqUC4AJB4AfLTr8XksgX6JW2T0rJ2ZrTPM0x2Or+PB0tDTrp/0XkNPYGT6V328KXsFc/ZKZaPQ81+yk0gmeB8x1LjY9v6ROVs7ZYgiOhRiVEn3B4ZW6onaj9GoIGNesBMgUPci0mM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=wtrwSExf; arc=fail smtp.client-ip=52.101.196.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="fFwMSklP"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c0e124d2a21so208666866b.2
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2026 04:03:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782990234; x=1783595034; darn=vger.kernel.org;
-        h=in-reply-to:autocrypt:from:content-language:references:cc:to
-         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
-        b=fFwMSklPk0K45f82cZkspN0XsW8ZtBuWJzhUe4xeCi24fLDRim2r9FMLcrAW2l2CRM
-         UmlK6M0QWT7XvyQM/cn09ziJXQjKd7ZsumWeSiaRRghFwEa6iOLf1yJ/AXt1ONpPEH3I
-         KstDJ1gUUMIVlpa1BSWwcRPDispmLW++j7GzDeNBM6Esg0RlzD91LniADw/G/qIAFALv
-         5Ozakp1uvbCNhx8DAcYIFY1YWcxmzb1yeuo2otcJDZDjAwK521FQlFsZEFHVi4khWsNy
-         Oyh76J9OzTaslFSKJKGQviWPawMCyN/bFcSJ46DTuzX0G+GuGgn652CKn2uSHsI7EPtQ
-         rl1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782990234; x=1783595034;
-        h=in-reply-to:autocrypt:from:content-language:references:cc:to
-         :subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
-        b=fj3ecSTOJxGn8YAHcL0skdnx+5q2nto5mx8Uky2Eynqnm7M1z+i68h1cuVZuMnsqrs
-         Hgd9c9CysK4eW/2RbW02dTWNQm8rLKBEsCLhMWmX8P3BiwACF5NMiyvY1zx0JaLHHAg5
-         Hi5N0Wo27zRxjBPw7Pz71IWhXOlUeeYsE7CILcDhXV0hl/8QYBlppNqek6rirAIUf6DC
-         lyVYn63ufsIX82dD1IPTCVeHcHMZAi8DhXTs1wvnKfnw55D3QjRkcx/tDgxzVzcRcFR+
-         MM++oxNh9ftdqwjj6bxVMDrflfiwAkNdBb6PmIsjStUl3QSfpakWjGAP1HNwqhf/7/JV
-         wWgg==
-X-Forwarded-Encrypted: i=1; AHgh+RoWYks2bK+Gk6CW+/kIqDFp8+1C/YAdokYRY5QZpmGV4eQYI9z8P9OiMBsKZm2VYv/CxiMmqEhvtM8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxL09DjjhTmvfK+cxxG8washSSRCmKWGmmir+TQzXSpmgTTGDz
-	114IK9tajraWXwB/SzUSyXA8OWpqrc/de3HXqWumIFq7a+e1x4XZwfy75H1jiWIpsYg=
-X-Gm-Gg: AfdE7clUQJF77E0LJCxyQaZZG5t9uM3jOmIzFMQrV7aNWpi2g3giIh5gTczLHFQryf3
-	cUoCb8rZ00jo0KCAqa98eagm6riyiqfmqNCUBWjsuQlZ2Oy9D1nn8wijP8n2KG0n/aoAZNY2HuQ
-	Dxa9eB3j0GrhHrV5VmZky/DWJZzyBvXJwMd9T+x8v/Lp7GpAnLQH3wCcHjx7G+PbCYhvU4uEY1Q
-	UT2H8g24Kp0Aa4BLspUfwgBnWQfn9UqqeVkfx1Qszt/EV9uYCG+qmQIEzpi/8eglEdo5wRK2j7r
-	y0vXRSTaS3SjQFpz+bZycw1N1UIszlEQjEiQu0JqBTP/5akUyFx7f09XlgxctNWiOrFy69fBFtk
-	Xf/EuCIAvniAedbOLwWsrnralPCRul3iV+igg6QgcENWElPmW6ULKs1HOmoWXW5AIt4nBydntsD
-	wFa6GcKInUpuoUMYcxH5s+bs8+zh23Cd/hrr2UYnFKOnw9dunDf0D3B5u7bCoOGuH614DTh9MPP
-	0a0GIXokuaIYX075x5XeWt0wi5ChRz2ckXKve0rkkk=
-X-Received: by 2002:a17:907:e14b:10b0:c12:3143:864f with SMTP id a640c23a62f3a-c12ae47556cmr180127966b.2.1782990234377;
-        Thu, 02 Jul 2026 04:03:54 -0700 (PDT)
-Received: from ?IPV6:2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112? (2a00-12d0-af5d-ad01-5d3f-14e6-9bcb-5112.ip.tng.de. [2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-698acf25f4dsm809220a12.8.2026.07.02.04.03.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jul 2026 04:03:53 -0700 (PDT)
-Message-ID: <99228803-b8b7-47a3-b77c-6fdf3b785730@suse.com>
-Date: Thu, 2 Jul 2026 13:03:52 +0200
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="wtrwSExf"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZHfoC1VcRdiLWDiIonId+XcMB2QOdhRcrsRx0Re1FTKQk+FnVGgYbkrSo6IPUBgS9tOghA/I8HymYc4l+SuV9vJgauH+PVcB6XUDe8Qyf4P8sQeZ6gBUsdxbQ/nL7J1JBI6+7ARcPYERq7nAFFiJUJNFjDnnMgaOJE6Ro/gVPt3HXnUzu0zNQ33opJvMHORT9KdV4MSgh/7VqCSd31fYOHs2pAB6Ogj0lGs/StoWZ/lypdX1Ecq6dFQOVdjRLh8+3cCKMbaWxtMV/NJbgkNu6GyHd/8CM/gQqkNwv6SGpbQwZnAeAojallkAUxqFCZCv3mPL6BzB7Tq5K6AQ4rRzVQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KSv0W54xSV2+H70TQ+bTr+mWN/lSi0T6F+IucvvdZQg=;
+ b=YuCzvG1t8cO9xiM4J+X9BKBSdxokZ6OyrnySAwM0VO9qgeT/DSYsUd3Vw0DNJbebc+NljIQDEsrvzm1WAw+EcNcfyNJ/Guenyo2lUdx1TTjoEc/SxeotDkKPE1JVQ/TwPSZxUBEymEywnm72faxrUg2ro8hPvH5iihoVMlZ0NbnmcPbCwbX9uiCl1d8NqUiYQGKBgVFY5IlpHb7dZOW/yKCWUx8DLKii0LxP8BTNBZXUtaSy9ftebRB5TsUcIKol+uWAkufiP5l2bJHdNhZ2raEvsxXlbOXC1busPRBbD1D9Bz0W+49jRot0Uig9I5uSDbRJ6+BUgybzce7DT1kYbQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KSv0W54xSV2+H70TQ+bTr+mWN/lSi0T6F+IucvvdZQg=;
+ b=wtrwSExfF5rruQMDxlxa6u2PYMxt4awHE1+WX5GL9//bsWprRfyqIHWygj6ocG5RBJqTo4UVqQuXQu/0hgbAGboXRA3ElUjAczHLOTkADI72YrzEp5XVuUdw/W3Du+L+DPP6BzBQ6UWIPYHnlwaSbowHyz1w5bK0ZqfwPRzO1gk=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWLP265MB6288.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:186::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Thu, 2 Jul
+ 2026 11:09:30 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.018; Thu, 2 Jul 2026
+ 11:09:29 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 02 Jul 2026 12:09:28 +0100
+Message-Id: <DJO1ENLRMXTG.20I6Q1L8QQ45G@garyguo.net>
+Cc: "Lee Jones" <lee@kernel.org>, "Pavel Machek" <pavel@kernel.org>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Dave Ertman"
+ <david.m.ertman@intel.com>, "Leon Romanovsky" <leon@kernel.org>, "Miguel
+ Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Gary
+ Guo" <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Trevor Gross" <tmgross@umich.edu>,
+ "Danilo Krummrich" <dakr@kernel.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Boqun
+ Feng" <boqun@kernel.org>, "Daniel Almeida" <daniel.almeida@collabora.com>,
+ "Tamir Duberstein" <tamird@kernel.org>, "Alexandre Courbot"
+ <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ "Ira Weiny" <iweiny@kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <linux-leds@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v21 1/3] rust: leds: add basic led classdev abstractions
+From: "Gary Guo" <gary@garyguo.net>
+To: "Alice Ryhl" <aliceryhl@google.com>, "Markus Probst"
+ <markus.probst@posteo.de>
+X-Mailer: aerc 0.21.0
+References: <20260629-rust_leds-v21-0-4f0f19579db5@posteo.de>
+ <20260629-rust_leds-v21-1-4f0f19579db5@posteo.de>
+ <akZBsBrMlxd4qbBl@google.com>
+In-Reply-To: <akZBsBrMlxd4qbBl@google.com>
+X-ClientProxiedBy: LO4P265CA0182.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:311::12) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
-To: Ingo Molnar <mingo@kernel.org>, Sean Christopherson <seanjc@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
- linux-pm@vger.kernel.org,
- "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org,
- linux-acpi@vger.kernel.org, kvm@vger.kernel.org, linux-coco@lists.linux.dev,
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
- linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-fbdev@vger.kernel.org, linux-crypto@vger.kernel.org,
- "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
- linux-hyperv@vger.kernel.org, linux-hwmon@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
- platform-driver-x86@vger.kernel.org, "Rafael J . Wysocki"
- <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>,
- Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com"
- <lukasz.luba@arm.com>, Jason Baron <jbaron@akamai.com>,
- Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>,
- Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>,
- Pavel Machek <pavel@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>,
- "Kirill A. Shutemov" <kas@kernel.org>,
- Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>,
- Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>,
- Alexey Makhalov <alexey.makhalov@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Viresh Kumar <viresh.kumar@linaro.org>,
- Reinette Chatre <reinette.chatre@intel.com>,
- Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
- Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Dave Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
- linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Linus Walleij <linusw@kernel.org>,
- Bartosz Golaszewski <brgl@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
- Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>,
- Arnaldo Carvalho de Melo <acme@kernel.org>,
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
- Alexander Shishkin <alexander.shishkin@linux.intel.com>,
- Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
- Adrian Hunter <adrian.hunter@intel.com>, James Clark
- <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>,
- Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
- Vitaly Kuznetsov <vkuznets@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>, Huang Rui <ray.huang@amd.com>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>,
- "srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>,
- Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
- Artem Bityutskiy <dedekind1@gmail.com>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Ashok Raj <ashok.raj.linux@gmail.com>, Hans de Goede <hansg@kernel.org>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
- David E Box <david.e.box@intel.com>, xen-devel@lists.xenproject.org
-References: <20260629060526.3638272-1-jgross@suse.com>
- <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
- <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com>
- <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
- <akJUz0kYkEBdLSZ3@gmail.com> <akQR9YMtMHReJTfB@google.com>
- <akY4U0jUZm4HOGZ_@gmail.com>
-Content-Language: en-US
-From: Juergen Gross <jgross@suse.com>
-Autocrypt: addr=jgross@suse.com; keydata=
- xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
- ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
- dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
- NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
- XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
- AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
- CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
- mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
- G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
- kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
- Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
- RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
- vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
- sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
- aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
- w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
- auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
- 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
- fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
- HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
- QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
- ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
-In-Reply-To: <akY4U0jUZm4HOGZ_@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------WjZXb44KsATEDkDSufWy2bKk"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB6288:EE_
+X-MS-Office365-Filtering-Correlation-Id: d82c6102-8b1a-458d-73e9-08ded82a630d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|1800799024|23010399003|10070799003|376014|22082099003|18002099003|4143699003|56012099006|6133799003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	bw3suqGTcV3XSv0++1iIwGNS8CvgLYpTEKzxfqkzMxhTWHkdxbZGfCAPOqQPgmCMYv6YsNXimH7yMVeVvF7kQ/HhUmj3XCVqvBHC8EKvKGcB5RvgtB075KiAAA+mNMWukkqON3j59DNbl/RtjAJPni+fWB5Ox4wdLe/Pzm7A/ImFbVTU0m7pANu+R0ROUC5DOkMgOy1Mbgy/7vrdPYAQxE7XJXMn7DDZcNnu0n7nkpphfgbbh4e6txd0339lT5cWbQpgFcrmJsQ7SuNkEIZWm2hx1tMraY1jxlzKEBqaPXLbg0y8NHZ5RQPCJH1Hl6Eok05tz5USRQSfmf+HFcW/IgyiCq4nyAgnrkLss9GsIZ+45SkcXMwajXK157cqb61PClj4ebB/1tAb7j669yoUVN4Xp6ltVHWy/pUjnfDBFWjtWxiT+BGVpXpk1KjT7Sj3KeiyH6qZN2uOncf+ZM+6ZylKS+e0RpyjZIpNgj3vQSBolmb3TMTgkmStqxVy9Sx+jsRxZMXzFZyJ+XNmZkvpxodUc0cWE/tpsp/BRpcZYdl3jnzl3rwWPUzWqQye21iaGc4SILTxc34OyIrUMeboFTkQDAFMVi36P7FhvgRbP5Ls5A+8Dt36jKI1HBEA3P5XThSk6RFksqKKB3Z+GgplYpmz2cmA7AugNtgi4yQC7hQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(1800799024)(23010399003)(10070799003)(376014)(22082099003)(18002099003)(4143699003)(56012099006)(6133799003)(3023799007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?d3cyZUlGZFJ0TzhzdzRSTjJBRWVwOEZtRlJDUWg1ODhleVBqOENqNUIwUmlW?=
+ =?utf-8?B?cHRjQUpHZ2owSnExTy9Gd2xlNWNTZmdZMUhuUmZ1YTdndk1SNGJOaDl0cnVR?=
+ =?utf-8?B?SjdYVG9Id1JmUE9teVZ3ZFpVbkk2a0JWRmUvZU03YjB0V3JVdVE2Nm9MRVZt?=
+ =?utf-8?B?dmttKzZTZ3g3dlRXeXdYMlpxUU85RVJQWVlneVlBb1R0OHVoQ01XR0p2Vks0?=
+ =?utf-8?B?eXFFNG1qSjhVc0VrK0w5UG5hQ1ZST1VSQ0ZIL2ovVkFmT1VZVkxzQlR2ZVVp?=
+ =?utf-8?B?MU5VenFkVjI1cVI5ejNKN1hrOHhBR1VVMXg4eW5ISmxiNGZNMWh3YzZaQmlN?=
+ =?utf-8?B?dURnMFZSck1KTEdRQkFEYm1tcE5QVkdVWlBObHl6eTJXQnY3VzhPNUxCVVhx?=
+ =?utf-8?B?dE5PV255emZHOTZKVExTSERGTkt2U2d5OFFCbXZnaEQrVURMZnB4V1QwMmpl?=
+ =?utf-8?B?eWhacGNuZ040clNpM2FnOEdJaGtRT3hnSU9CMXFRbnhMeTkvMmlLRkJWL0Nv?=
+ =?utf-8?B?dXYwd3czNW55YTNVSkVrbE1YUDVwa0JwUVdEZU9tZkZJWHdqdWltSVR0aFc0?=
+ =?utf-8?B?ajB4WG5Nb25HeUZlakpIRDJ2cDlSUEdJMERhbnZCdkN5bkdjQ1dZdGUwbGxC?=
+ =?utf-8?B?NzNBNlhhcitRWm9jb1BmdFYrT216QXF0MnJHQTl3V3FjWjU3ZElFOHV5bmRl?=
+ =?utf-8?B?ak1UYUNsQlFEY0JlZ2RGMTY5Tzc0UW1xWEZDMmxHRks0aStuRHpqNitES1d2?=
+ =?utf-8?B?b0ZMdnl0RDk3Qk9JRmNmQWZ2RXVnOWRwQjBDOTFtelFSWnBJM0RUc2FhbWt3?=
+ =?utf-8?B?V01xNlBqK2dLbk1XcWxNQUF0TTZJUVlWWkVMTU1OVTFyQXg1bzJsQmRPZG5i?=
+ =?utf-8?B?bTI0czZOek5zOW80THc4Qjd6UElpeC9ZaTliTnA3bUZoTjUwUUdtZUFRNElC?=
+ =?utf-8?B?dS85aVROU0NNRHFteFdENHROUCtDUlJaNGIyRW1MTDM0bS9qdXl6UThDNjNl?=
+ =?utf-8?B?SUdhRG5FbDJNcDZuYjNHbFVJdVhCRWFhYXl4ckFZYWRwaFRuM0RzNWw2K0Q4?=
+ =?utf-8?B?Tzk3Qks3TnFTTzJBWG1qMzBUSCtCZEtNMEo1ZWV0bVlCalpBTHRSZjEwaVZy?=
+ =?utf-8?B?ZDY5MzRxK3U5NnpmRWcrYm1iZURSdGx5ZkcrREYzU0tTYzc5T29ualIxRGJK?=
+ =?utf-8?B?djhUeEt0UGcrLzNuaHVsc1ZPRU1vdWRQckd3VXc4eXJnbzVSdlZCbDJKd21C?=
+ =?utf-8?B?R09Jd0JoNHllRWx0WHBuYkovNW1hVXNsdllxVHpMcjIvdmpSS252eU1UdWFS?=
+ =?utf-8?B?RXVhUGZSMHNRTnlEZmkxOGdjWklRMzdaMmVnQk90OGplb3hnZmtvSVJHQVd4?=
+ =?utf-8?B?U25lSnFzeGZvNjR0dC91VDdjdlpIMDdLOEJzeG1xTURzOEkxZG9NVDlFOWNq?=
+ =?utf-8?B?OU54VmtLRTlSbDN1SUJxZmtoaFRmM2VOT2JlcFpwYjdTVHRJdXhWN2VFcXYx?=
+ =?utf-8?B?SjRURFlEU1B3WTIwOEdLTnQ3TkF5Ky9xSHpvSk9BaytOWWdYUjFJeW5XZEFY?=
+ =?utf-8?B?MnY3K0h1aWYwTDNIc0RMMjlSaTRTcVROZWRyVGNOQjBpYXV1UjF1aUdZd1hz?=
+ =?utf-8?B?ZXlmZ2liMVVFTjN1VmpDVkg2OWcxSXNEdUdGcGcyQkVXRTJrWDI3SjlHUW1q?=
+ =?utf-8?B?ZkNQUS9hbTUxL2FZcU5YSGpOM0V3T0Vocm9CUFBvSTFMV2MzYVl6eW0xcVZK?=
+ =?utf-8?B?bENTczdlZit1T3NxRHZpMFZxRHc1RVRaRSs2SHlQZURmM2tIZ3liWWhxUXZO?=
+ =?utf-8?B?SHA4RHdybUJuUWFkT1krVkZIQ2N4UmthZzVsalJPYTBrd3lLaXhFZUJRYlVB?=
+ =?utf-8?B?dXUzK0svdzJtSDJvZ3Q4NENCWFJibXNjeWRiL0RITitKd1hlT3ptVjUzKzRa?=
+ =?utf-8?B?OFFzSHhKZXJTK3dkQ0VCa1pYYllMVWtUUXE3RUtncHhjcDVtYmUxTFZzemgx?=
+ =?utf-8?B?cmY1VThUcVZZTVluUzlWd3FncU1Ja0JGTUxteE4zRERwdUlqWEozN3ZRZEN5?=
+ =?utf-8?B?bXRmbmp5dWFDVmdKKzBTcDYzSTEwT0hucnZpVHI2NUYzTURPUnNKL2VUUVVL?=
+ =?utf-8?B?MkczTkJhSFFLWUI2VWx0MUg0VFFTMGQ5VUFlNnJYY29JbkVpeEZrVkhGRTNH?=
+ =?utf-8?B?QkhTTDcrUWtwRzBDejlqM1NHT0theWJTeDdNelB6SWdzbkY4UTVWMENxeTNZ?=
+ =?utf-8?B?WGplSi82NUhvcFVHUC9UbnRPcHNTMURwdmh3dmJUR3hHdHByblB4bnFCU1dq?=
+ =?utf-8?B?TE9FeUZhM05jZzJ0L0RCOGg5ZlhrWTRYU2ZoMm1OUDVTeW1aWnNMUT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: d82c6102-8b1a-458d-73e9-08ded82a630d
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jul 2026 11:09:29.6084
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KL2AukT6JbGHDmv149VIrpc/cHct0DrD41A4rBx7mI+VCmI0vzQzgtXPqivsz5ScpTge88RJyCp4qjhEHyiVuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB6288
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------WjZXb44KsATEDkDSufWy2bKk
-Content-Type: multipart/mixed; boundary="------------o2fircZpb09tU1GMO2GxqgPd";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: Ingo Molnar <mingo@kernel.org>, Sean Christopherson <seanjc@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
- linux-pm@vger.kernel.org,
- "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org,
- linux-acpi@vger.kernel.org, kvm@vger.kernel.org, linux-coco@lists.linux.dev,
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
- linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-fbdev@vger.kernel.org, linux-crypto@vger.kernel.org,
- "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
- linux-hyperv@vger.kernel.org, linux-hwmon@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
- platform-driver-x86@vger.kernel.org, "Rafael J . Wysocki"
- <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>,
- Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com"
- <lukasz.luba@arm.com>, Jason Baron <jbaron@akamai.com>,
- Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>,
- Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>,
- Pavel Machek <pavel@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>,
- "Kirill A. Shutemov" <kas@kernel.org>,
- Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>,
- Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>,
- Alexey Makhalov <alexey.makhalov@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Viresh Kumar <viresh.kumar@linaro.org>,
- Reinette Chatre <reinette.chatre@intel.com>,
- Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
- Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Dave Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
- linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Linus Walleij <linusw@kernel.org>,
- Bartosz Golaszewski <brgl@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
- Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>,
- Arnaldo Carvalho de Melo <acme@kernel.org>,
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
- Alexander Shishkin <alexander.shishkin@linux.intel.com>,
- Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
- Adrian Hunter <adrian.hunter@intel.com>, James Clark
- <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>,
- Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
- Vitaly Kuznetsov <vkuznets@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>, Huang Rui <ray.huang@amd.com>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>,
- "srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>,
- Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
- Artem Bityutskiy <dedekind1@gmail.com>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Ashok Raj <ashok.raj.linux@gmail.com>, Hans de Goede <hansg@kernel.org>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
- David E Box <david.e.box@intel.com>, xen-devel@lists.xenproject.org
-Message-ID: <99228803-b8b7-47a3-b77c-6fdf3b785730@suse.com>
-Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
-References: <20260629060526.3638272-1-jgross@suse.com>
- <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
- <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com>
- <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
- <akJUz0kYkEBdLSZ3@gmail.com> <akQR9YMtMHReJTfB@google.com>
- <akY4U0jUZm4HOGZ_@gmail.com>
-In-Reply-To: <akY4U0jUZm4HOGZ_@gmail.com>
+On Thu Jul 2, 2026 at 11:47 AM BST, Alice Ryhl wrote:
+> On Mon, Jun 29, 2026 at 01:10:28PM +0000, Markus Probst wrote:
+>> Implement the core abstractions needed for led class devices, including:
+>>=20
+>> * `led::LedOps` - the trait for handling leds, including
+>>   `brightness_set`, `brightness_get` and `blink_set`
+>>=20
+>> * `led::DeviceBuilder` - the builder for the led class device
+>>=20
+>> * `led::Device` - a safe wrapper around `led_classdev`
+>>=20
+>> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+>> ---
+>>  MAINTAINERS               |   8 ++
+>>  rust/kernel/led.rs        | 288 +++++++++++++++++++++++++++++++++++++++=
++++++++
+>>  rust/kernel/led/normal.rs | 230 ++++++++++++++++++++++++++++++++++++
+>>  rust/kernel/lib.rs        |   1 +
+>>  4 files changed, 527 insertions(+)
+>>=20
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index 15011f5752a9..ceb2285366ff 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -14662,6 +14662,14 @@ F:	drivers/leds/
+>>  F:	include/dt-bindings/leds/
+>>  F:	include/linux/leds.h
+>> =20
+>> +LED SUBSYSTEM [RUST]
+>> +M:	Markus Probst <markus.probst@posteo.de>
+>> +L:	linux-leds@vger.kernel.org
+>> +L:	rust-for-linux@vger.kernel.org
+>> +S:	Maintained
+>> +F:	rust/kernel/led.rs
+>> +F:	rust/kernel/led/
+>> +
+>>  LEGO MINDSTORMS EV3
+>>  R:	David Lechner <david@lechnology.com>
+>>  S:	Maintained
+>> diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
+>> new file mode 100644
+>> index 000000000000..c92d99d68497
+>> --- /dev/null
+>> +++ b/rust/kernel/led.rs
+>> @@ -0,0 +1,288 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +
+>> +//! Abstractions for the leds driver model.
+>> +//!
+>> +//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
+>> +
+>> +use core::{
+>> +    marker::PhantomData,
+>> +    mem::transmute,
+>> +    ptr::NonNull, //
+>> +};
+>> +
+>> +use crate::{
+>> +    container_of,
+>> +    device::{
+>> +        self,
+>> +        property::FwNode,
+>> +        AsBusDevice,
+>> +        Bound, //
+>> +    },
+>> +    error::{
+>> +        from_result,
+>> +        to_result,
+>> +        VTABLE_DEFAULT_ERROR, //
+>> +    },
+>> +    macros::vtable,
+>> +    prelude::*,
+>> +    str::CStrExt,
+>
+> CStrExt is in the prelude. Please check for unnecessary imports.
+>
+>> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+>> new file mode 100644
+>> index 000000000000..2769f690bb24
+>> --- /dev/null
+>> +++ b/rust/kernel/led/normal.rs
+>> @@ -0,0 +1,230 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +
+>> +//! Led mode for the `struct led_classdev`.
+>> +//!
+>> +//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
+>> +
+>> +use super::*;
+>> +
+>> +/// The led class device representation.
+>> +///
+>> +/// This structure represents the Rust abstraction for a led class devi=
+ce.
+>> +#[pin_data(PinnedDrop)]
+>> +pub struct Device<'bound, T: LedOps + 'bound> {
+>> +    #[pin]
+>> +    ops: T,
+>> +    #[pin]
+>> +    classdev: Opaque<bindings::led_classdev>,
+>> +    _p: PhantomData<&'bound ()>,
+>> +}
+>> +
+>> +impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
+>> +    /// Registers a new [`Device`].
+>> +    pub fn build<'bound: 'a, T: LedOps + 'bound>(
+>> +        self,
+>> +        parent: &'bound T::Bus,
+>> +        ops: impl PinInit<T, Error> + 'a,
+>> +    ) -> impl PinInit<Device<'bound, T>, Error> + 'a {
+>
+> I think it would be useful to separate out the two lifetimes more
+> clearly. You have two sets of lifetimes:
+>
+> * 'bound which is the duration in which the bus device is bound.
+> * 'a which is the duration in which the `name`/`devicename` fields are
+>   valid.
+>
+> And these have different constraints because 'bound is much larger than
+> 'a. The 'bound lifetime is longer than the entire Device struct, but the
+> 'a lifetime only needs to last for the duration of the initialization
+> because (I assume) the strings are copied by `led_classdev_register_ext`
+>
+> So under that logic, I would rename 'a to 'name or something like that
+> to indicate what it's the lifetime of.
+>
+> Note that if I'm wrong about the lifetime of the name strings, then this
+> code should be changed accordingly. It looks like you're actually
+> stashing the pointers in the led_classdev, and if that outlives this
+> initializer, then the current lifetimes are wrong, and Device must also
+> be annotated with 'name to indicate this additional lifetime.
 
---------------o2fircZpb09tU1GMO2GxqgPd
-Content-Type: multipart/mixed; boundary="------------DvT8SfkPmJRmXAYHiBwk9gCF"
+The lifetime here would probably be better named 'init.
 
---------------DvT8SfkPmJRmXAYHiBwk9gCF
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+It's the same case for async desugaring, where the lifetime is to capture
+everything used in the initializer.
 
-T24gMDIuMDcuMjYgMTI6MDcsIEluZ28gTW9sbmFyIHdyb3RlOg0KPiANCj4gKiBTZWFuIENo
-cmlzdG9waGVyc29uIDxzZWFuamNAZ29vZ2xlLmNvbT4gd3JvdGU6DQo+IA0KPj4+IE5vdGUg
-dGhhdCB0aGUgaW5kaXZpZHVhbCBwYXRjaGVzIGFyZSBJTU8gc2lnbmlmaWNhbnRseSBlYXNp
-ZXIgdG8gcmV2aWV3DQo+Pj4gdGhyb3VnaCB0aGUgYWN0dWFsIDMyLWJpdCA9PiA2NC1iaXQg
-dmFyaWFibGUgYXNzaWdubWVudCBjaGFuZ2VzIGRvbmUNCj4+PiBpbiBpc29sYXRpb24gKHdo
-aWNoIHNvbWV0aW1lcyBpbmNsdWRlIG1pbm9yIGNsZWFudXBzKSwgd2hpbGUNCj4+PiB0aGUg
-Q29jY2luZWxsZSBzZW1hbnRpYyBwYXRjaDoNCj4+Pg0KPj4+ICAgICB7IGEoYixjKSA9PiBj
-ID0gYShiKSB9DQo+Pj4NCj4+PiB3aGljaCBjaGFuZ2VzIGJvdGggdGhlIGZ1bmN0aW9uIHNp
-Z25hdHVyZSBhbmQgdGhlIG9yZGVyIG9mIHRlcm1zIGFzDQo+Pj4gd2VsbCwgaXMganVzdCBh
-IHNpbmdsZSBhZGQtb24gdHJlZXdpZGUgcGF0Y2guDQo+Pg0KPj4gSXMgdGhlIHBsYW4gZm9y
-IHN1YnN5c3RlbSBtYWludGFpbmVycyB0byBwaWNrIHVwIHRoZSByZWxldmFudCBwYXRjaGVz
-LA0KPj4gYW5kIHRoZW4gZG8gdGhlIHRyZWV3aWRlIGNoYW5nZSBvbmUgcmVsZWFzZSBjeWNs
-ZSBsYXRlcj8NCj4gDQo+IEknbGwgdHJ5IHRvIGtlZXAgdGhlIHBhdGNoZXMgaW4gYSBzaW5n
-bGUgdHJlZSAodGlwOng4Ni9tc3IpDQo+IGluIHRoZSBob3BlIG9mIG5vdCBwcm9sb25naW5n
-IHRoZSBwYWluIHR3byBjeWNsZXMgLSBidXQgaXQncw0KPiBvZiBjb3Vyc2UgZmluZSBmb3Ig
-bWFpbnRhaW5lcnMgdG8gcGljayB1cCB0aGUgcGF0Y2hlcyB0b28NCj4gKG1vc3Qgb2YgdGhl
-bSBhcmUgc3RhbmRhbG9uZSksIHdlJ2xsIHNvcnQgaXQgYWxsIG91dCBpbiB0aGUgZW5kLg0K
-DQpJbmdvLCB3b3VsZCB5b3UgYmUgZmluZSB3aXRoIG1lIHBvc3RpbmcgcGF0Y2ggdXBkYXRl
-cyBqdXN0IGFzIHJlcGxpZXMgdG8gdGhlDQpvcmlnaW5hbCBwYXRjaCBlbWFpbHM/IFRoaXMg
-d291bGQgc3BlZWQgdGhpbmdzIHVwLCBhcyBJIHdvdWxkbid0IG5lZWQgdG8gd2FpdA0KZm9y
-IG1vcmUgcmV2aWV3IGlucHV0IG9mIGFsbCB0aGUgcGF0Y2hlcyBiZWZvcmUgc2VuZGluZyBv
-dXQgbmV3IHZlcnNpb25zLg0KDQpBcyB0aGUgcGF0Y2hlcyBhcmUgKG1vc3RseSkgc3RhbmRh
-bG9uZSwgdGhpcyBzaG91bGQgbm90IGNhdXNlIGFueSB3ZWlyZA0KcHJvYmxlbXMuDQoNClRo
-ZSBsYXN0IHR3byBwYXRjaGVzIG1pZ2h0IG5lZWQgdXBkYXRlcywgYnV0IHRob3NlIGNhbiBi
-ZSBhcHBsaWVkIG9ubHkgYWZ0ZXINCnRoZSByZXN0IGhhcyBiZWVuIGFjY2VwdGVkIGFueXdh
-eS4NCg0KDQpKdWVyZ2VuDQo=
---------------DvT8SfkPmJRmXAYHiBwk9gCF
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
-
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-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
-kt+z4drzFUyEjLM1vVvIMjkUoJs=3D
-=3DeeAB
------END PGP PUBLIC KEY BLOCK-----
-
---------------DvT8SfkPmJRmXAYHiBwk9gCF--
-
---------------o2fircZpb09tU1GMO2GxqgPd--
-
---------------WjZXb44KsATEDkDSufWy2bKk
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmpGRZgFAwAAAAAACgkQsN6d1ii/Ey9T
-iQf8D4c54BGRNKMRsSJiXSFxOPiUVfGXcsH7BLGSCIbavlNKB6PC4nfBVKfvlEHUsQk3Zy7dOXCt
-DjWUBhqMxb+QCJKNrUGKsdDFtl1Agihz8PaRzzF6LAJL86LHnhjy30FkyEoT+wE8pfL61qKpyusy
-xGc+xkkzm+tcDAwQDn9wTrmDKRaa/yWjrPX2idLQ/ATrKILtNW/Ci7tbKeltRSGhWV7aNEtyEUco
-wq6RU91rH9miz+a9ZWCRa/bc1FU0brdudBe2pkTiDua5vzSwUx4gBoLQ98BcHb+bKidB+OS3WYBa
-Qfoo0sr6Uryp6mf98UcyNgyPhA4rdUuo1iUvfsGhdg==
-=MZUf
------END PGP SIGNATURE-----
-
---------------WjZXb44KsATEDkDSufWy2bKk--
+Best,
+Gary
