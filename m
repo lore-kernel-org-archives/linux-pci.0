@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372452E54B6;
-	Thu,  2 Jul 2026 21:31:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F9E2353A86;
+	Thu,  2 Jul 2026 21:36:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783027916; cv=none; b=R6TAeiq/MOlvhBv0MZJDSu2i74v1f9i/Xh1cNg8QxbXXfIFAbPTc50mwg2GtHPrOZcfTR1vzQVkBROxA6aRQ7DlWBUMjY+uRku2dTJDlMqk3ULHyNkowUxLvBV0ngFd8kDRE/8r7KweiLpuBPR2FgM2kXvOPY/hQbd7oO/sJ3Wg=
+	t=1783028188; cv=none; b=gJldB4Zdr8FWMHpYN6wT/UNQNKXdCbBsp1v0BY4eiyVFhuHXT9Jw2X0u01/ocQu1oJozRhoEbYDcTORyhshZs0ExjTX6KHQesdqpm557NSc+zloKDea7zF9T4IaOTdWztFvTIKcEpuaZuf1n1nBuV4TtizMjZufhG98Qj2vs4pI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783027916; c=relaxed/simple;
-	bh=HZhUV4EM8bWQkAKf3IuhmmwkAq/B5kh4zS9DhKoA/vA=;
+	s=arc-20240116; t=1783028188; c=relaxed/simple;
+	bh=BhPVnK9QdIKo3G+Y/KKEFfp/HcgPgBsGXjYfEkeNd+0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dS2MPa+Exyjod2aWrkxzAozlSHv2cTIMyWPUObEOdnH+A9R3hFIsWNpBm404SrUF5WNe72QllZXCreEgnDd7EYILQfWLwA7uNN0GAkgbFpHTydZGG9jNwY/h6t8U3gQY/8nLxT+tOWCW7YGUsQORJsfpgE3WDKrtRkv9L3TA4sc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BpmzKru2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=a3IE4PrNwQRPFc35stdjich4v29p30O34PIK17idWRqfpreXPZoTUbNEFNSmAZUtlucnjv9Tyw4Xy/7G4twIS/XWjoLewypk4uWwZ9Tz4rJFEdaM6la+T1WpZ4JzyWdixqRadKPbs8yuyoFT4PpcFR7pvaammayEyG7tWRUauRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kAvhhaUm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpmzKru2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDC411F00A3A;
-	Thu,  2 Jul 2026 21:31:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kAvhhaUm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 968BC1F000E9;
+	Thu,  2 Jul 2026 21:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783027915;
-	bh=FFbMX19yCdv1YwUWUuil3P0baYF2HqJEZ0RZlmyXBZo=;
+	s=k20260515; t=1783028186;
+	bh=x9xLxt16KaWmv4YSNxHIt5MqRLbZk2k/2yQ/9yq7dA0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BpmzKru2rP/kYuiRTzDkcie09BeRaQQUI69mlVEgu0ArOhxx59bE5myemSSxqbvpJ
-	 wKhA4tqcaMFbh3ZZWDovJd/tgtJClE/mP1Z8RA76yeqoYsno3VdfdYGvfMWgKLFpnZ
-	 i5w8ZDP/aJ3BUKZSGILZBRqks6XZ/Vzrv2KYAz3ANCieLiGtTLpCiwdrOTSkZLHlmD
-	 iYY2phlTT86bogziZ4en3S5+j7UDHVheiUdrgTCD9TDOBaL2hYnPrRn4+vvuRobVH5
-	 0fiFSGVDk/2pumFLJcTo2thN0cmqb+9/eCydM9GoQcx6y0dzSXdxv0oyeRFhsUzo5V
-	 u3Dw0YSlEleaQ==
+	b=kAvhhaUmquKRzYSIH6ua0PaLVz9s5jQ/zpUSmA7mKrgHVbdGIGxL+NY7bogOWdNEN
+	 HzB5t98j/khFSbz79j8/jkQdDZSjxqrp3daJVPLCC6i9MgjktsTjDIlfxVksdwMTQf
+	 SS8Gh9sdZ7ou7/wIo9FtceuIIotZ1OR8o/BIjsaw6AnAtXl4eYnbCi6NDMnjWUIDin
+	 UZQNDKbV4QOw8V1gHzwlQtzYweGi0QP+OEBY6Ah5DvmbTwMNhWmurx1AmHdu+6ed+x
+	 DwZkvUqtLwcgXDO32TKwKyuB6RsoKnRxJWSXRFv8AZCNEO8CLgwzO2Ojv5t0G5wmP5
+	 DFjgRQ3vsma5Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 03/10] dmaengine: dw-edma: Move ll_region from struct
- dw_edma_chunk to struct dw_edma_chan
+Subject: Re: [PATCH v3 07/10] dmaengine: dw-edma: Add non_ll_start()
+ callback
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Frank.Li@oss.nxp.com
-Cc: imx@lists.linux.dev, vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260702-edma_ll-v3-3-877aa463740c@nxp.com>
+Cc: imx@lists.linux.dev, vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260702-edma_ll-v3-7-877aa463740c@nxp.com>
 References: <20260702-edma_ll-v3-0-877aa463740c@nxp.com>
- <20260702-edma_ll-v3-3-877aa463740c@nxp.com>
+ <20260702-edma_ll-v3-7-877aa463740c@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 21:31:54 +0000
-Message-Id: <20260702213154.BDC411F00A3A@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 21:36:25 +0000
+Message-Id: <20260702213626.968BC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,50 +49,94 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing lock acquisition in dw_edma_device_resume() when accessing=
- vchan descriptors.
+- [High] Lockless channel state modification and list manipulation in dmaen=
+gine callbacks.
 --
 
-commit 80df5f151f3cb77451f6a2e4ec10cbaad5b50565
+commit 962243519d7014f0b711fe65a08901734b5c7e22
 Author: Frank Li <Frank.Li@nxp.com>
 
-dmaengine: dw-edma: Move ll_region from struct dw_edma_chunk to struct dw_e=
-dma_chan
+dmaengine: dw-edma: Add non_ll_start() callback
 
-This commit moves the ll_region field from struct dw_edma_chunk to struct
-dw_edma_chan to avoid redundant copies. Since the ll_region is identical
-for all chunks belonging to the same DMA channel, it can be shared.
+This commit adds a non_ll_start() callback and moves the common
+non-linked-list channel handling into the EDMA core so it can be shared
+by both the EDMA and HDMA.
 
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
-edma-core.c
-> index 53469c8c8b82e..2652ad8e7a8f6 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-=
+edma-core.h
+> index bab4d49c92feb..e18d6e827c2c9 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.h
+> +++ b/drivers/dma/dw-edma/dw-edma-core.h
 
 [ ... ]
 
-> static int dw_edma_device_resume(struct dma_chan *dchan)
-> {
->         ...
->         dw_edma_start_transfer(chan);
->         ...
-> }
+> @@ -201,7 +202,16 @@ dw_edma_core_handle_int(struct dw_edma_irq *dw_irq, =
+enum dw_edma_dir dir,
+>  static inline
+>  void dw_edma_core_start(struct dw_edma *dw, struct dw_edma_chunk *chunk,=
+ bool first)
+>  {
+> -	dw->core->start(chunk, first);
+> +	if (chunk->chan->non_ll) {
+> +		struct dw_edma_burst *child;
+> +
+> +		child =3D list_first_entry_or_null(&chunk->burst->list,
+> +						 struct dw_edma_burst, list);
+> +		if (child)
+> +			dw->core->non_ll_start(chunk->chan, child);
+> +	} else {
+> +		dw->core->start(chunk, first);
+> +	}
+>  }
 
 [Severity: High]
-This is a pre-existing issue, but can this sequence cause a data race on
-the descriptor lists?
+This is a pre-existing issue, but does dw_edma_device_resume() modify
+channel state and invoke dw_edma_start_transfer() locklessly?
 
-Looking at dw_edma_device_resume(), dw_edma_start_transfer() is called
-without holding the chan->vc.lock. This invokes vchan_next_desc(), which
-reads from the desc_issued list.
+Looking at drivers/dma/dw-edma/dw-edma-core.c, if a client driver invokes
+dmaengine_resume() (which calls dw_edma_device_resume()) concurrently with
+the channel's interrupt handler dw_edma_done_interrupt() or dmaengine_submi=
+t(),
+dw_edma_device_resume() modifies chan->status and calls
+dw_edma_start_transfer() without acquiring chan->vc.lock:
 
-If another CPU concurrently calls dw_edma_device_issue_pending(), it uses
-vchan_issue_pending() which runs list_splice_tail_init() on desc_issued
-while holding the lock.
+drivers/dma/dw-edma/dw-edma-core.c:dw_edma_device_resume() {
+    ...
+    chan->status =3D EDMA_ST_BUSY;
+    dw_edma_start_transfer(chan);
+    ...
+}
 
-Could this concurrent access corrupt the list pointers when a client driver
-dynamically pauses and resumes channels?
+Meanwhile, dw_edma_done_interrupt() and dw_edma_device_issue_pending()
+execute dw_edma_start_transfer() with chan->vc.lock held.
+
+If dw_edma_device_resume() and dw_edma_done_interrupt() run concurrently,
+both can invoke dw_edma_start_transfer() on the same channel, read the same
+descriptor via vchan_next_desc(&chan->vc), and perform state modifications =
+on
+it:
+
+drivers/dma/dw-edma/dw-edma-core.c:dw_edma_start_transfer() {
+    ...
+    vd =3D vchan_next_desc(&chan->vc);
+    ...
+    list_del(&child->list);
+    kfree(child);
+    ...
+}
+
+Could this sequence lead to a double-free and list corruption?
+
+Other functions like dw_edma_device_pause() and dw_edma_device_terminate_al=
+l()
+appear to similarly manipulate channel state locklessly:
+
+drivers/dma/dw-edma/dw-edma-core.c:dw_edma_device_pause() {
+    ...
+    chan->request =3D EDMA_REQ_PAUSE;
+    ...
+}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702-edma_ll-v3=
--0-877aa463740c@nxp.com?part=3D3
+-0-877aa463740c@nxp.com?part=3D7
