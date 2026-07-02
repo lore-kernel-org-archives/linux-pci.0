@@ -1,46 +1,46 @@
 Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D0ED48035F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C952A481234;
 	Thu,  2 Jul 2026 12:42:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782996173; cv=none; b=iTHz0APt/n25oCHm+NyrHwDs9WdqboQZkHm7cZmsWcPJBmu8z6/AIHyWYLVBO7FZ765Ot5omezhZFJgAALyS304gMnC5rrnVmyrZzGwiLFT9hZxN2yvhxcT9Gw92iE7dOlyCYUS/7sL+n+iE1nA7otLRHowPIBvfOlHfoHujgnI=
+	t=1782996174; cv=none; b=aHMvFTetgp7rWrvr17hug2QwoAYaqyPSCpbGK8Y22c6U2CnoXdXMgB2AdqJ6a6T//oQmywOKU6K/F/AJzDMMnOQkhR8nfb3x7OnLbd9B6/uqyw/XMs2nEypuYLY8pUjzbSt9HcPOV6EtSx4bJ2vTCfept4/VTIGFVo67vTO3ofY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782996173; c=relaxed/simple;
-	bh=sl3Cw/vU68yPBApoOz/bO2mn4QkBcHlU44c7dq96esQ=;
+	s=arc-20240116; t=1782996174; c=relaxed/simple;
+	bh=YmMsdiv5RUh14hkxxrV7/gZrHwJcENRVWJMIjms000Q=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QabKczxJ7F+BkGw9P02TVMD5OV+As3rX0Hh3KE7MjBVm8dnaIWth9kHaxN+R7zjsyL/o4DSw6c+bNE/Lx6bd768Ef1R22DaAFbxzYV5VdIDQgyCAbpQ0u8CZbYdg7No3iDntJal3BHbaZxicuLzp+ZdeiQJ8nWUZotAkIL7kwXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=nfsGgb5Y; arc=none smtp.client-ip=113.46.200.216
+	 MIME-Version:Content-Type; b=Yh5ZJ+gJGnSEx1kJ8oKjCGE2WEUJq2L/PffByJYFCPF7XLSCFYkVSos/ibSu0Mp6Ip5oDS2vIMIHbPrbG40zi7/9rvoanmOG7M8HsH2LtKG3yIVf54O5nUVg5sqbhTVKbDC47xM+yHbSM8bOv9I8AL3RdFn8aogn+DY9pG+hERQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=FA/9e+ZQ; arc=none smtp.client-ip=113.46.200.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="nfsGgb5Y"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="FA/9e+ZQ"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=Q/Ue3U2nrHycgLGbXVQQQV72WDENPys+ESkwIGLTA+I=;
-	b=nfsGgb5YbqTpizP/s759SLWNdJ5xJF2rislLIztRGtcOXZcffY/LIYM9zumK3AI/hjvw7ACIe
-	MNjF71B+dy1lA4S4go/bUbDlfc8X/2EO+kO0pKU7xipefqUBQL8Vd3LUKOFRk0W8jl5jegipLZi
-	NcHc6pfDpF05HD90zvb46go=
+	bh=9Q0tGZ8qgWagkw1cfrf2YAt7W20Ztqqk/ZbZEjZjBoM=;
+	b=FA/9e+ZQ+H4LHPhEwJ83mUYUQEzCS5n7DW/Y0VY89F1qdnhnyQqb2XrWos0QPhbRjkN4iSmKJ
+	Avg2yuNGXZ2MzlGfAUtC2xuAVEdEH+W9Sm/Am1aBaxNDEpT8DIVmfRxIGUEChvt/xC53VcSAiub
+	r0fukyKEYfWhoFzygfln+CA=
 Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4grbsR2yC6z1T4FV;
-	Thu,  2 Jul 2026 20:33:47 +0800 (CST)
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4grbsG6Rqjz1T52M;
+	Thu,  2 Jul 2026 20:33:38 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id C1DF440579;
-	Thu,  2 Jul 2026 20:42:39 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 446E940579;
+	Thu,  2 Jul 2026 20:42:31 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 2 Jul 2026 20:42:39 +0800
+ 15.2.1544.36; Thu, 2 Jul 2026 20:42:30 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v19 17/18] vfio/pci: Reset hardware TPH state on device enable/disable
-Date: Thu, 2 Jul 2026 20:42:23 +0800
-Message-ID: <20260702124224.57168-18-fengchengwen@huawei.com>
+Subject: [PATCH v19 01/18] PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+Date: Thu, 2 Jul 2026 20:42:07 +0800
+Message-ID: <20260702124224.57168-2-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260702124224.57168-1-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
@@ -54,48 +54,96 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-VFIO allows user space to enable and modify PCI TPH state, but device
-reset only clears hardware TPH registers, while the software TPH state
-maintained in pci/tph.c remains stale.
+pcie_tph_get_st_table_loc() incorrectly uses FIELD_GET(), which shifts the
+field value to bit 0. But the function is designed to return raw
+PCI_TPH_LOC_* values as defined in the function comment.
 
-Fix the stale state leakage by explicitly disabling TPH in core enable
-and disable paths:
-- In vfio_pci_core_enable(), clear leftover TPH state from previous
-  user sessions before device initialization.
-- In vfio_pci_core_disable(), revert any user-modified TPH state
-  when releasing the device.
+This causes incorrect ST table location detection. Fix it by using bitwise
+AND with PCI_TPH_CAP_LOC_MASK to return the unshifted field value matching
+the function specification.
 
-This ensures consistent TPH hardware and software state for each
-user session and avoids residual state contamination.
+This doesn't make a difference to mlx5_st_create(), the lone external
+caller, because it only checks for PCI_TPH_LOC_NONE (0), but will be needed
+for callers that check for PCI_TPH_LOC_CAP or PCI_TPH_LOC_MSIX.
 
+Also add tph_cap validation for pcie_tph_get_st_table_loc() to prevent
+invalid PCI configuration space access when TPH is not supported. Add stub
+functions for pcie_tph_get_st_table_size() and pcie_tph_get_st_table_loc()
+when !CONFIG_PCIE_TPH.
+
+Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
+Cc: stable@vger.kernel.org
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+Reviewed-by: Alex Williamson <alex.williamson@nvidia.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/pci/tph.c       | 12 +++++-------
+ include/linux/pci-tph.h |  5 +++++
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 7251e251824a..5a14439d1ccb 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -612,6 +612,8 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 
- 	vdev->reset_works = !ret;
- 	vdev->tph_permit = false;
-+	/* Reset TPH status on new user session */
-+	pcie_disable_tph(vdev->pdev);
- 	pci_save_state(pdev);
- 	vdev->pci_saved_state = pci_store_saved_state(pdev);
- 	if (!vdev->pci_saved_state)
-@@ -759,6 +761,9 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
- 
- 	vfio_pci_zdev_close_device(vdev);
- 
-+	/* Reset TPH status on exit user session */
-+	pcie_disable_tph(vdev->pdev);
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 655ffd60e62f..489487158b99 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -165,11 +165,14 @@ static u8 get_st_modes(struct pci_dev *pdev)
+  */
+ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+ {
+-	u32 reg;
++	u32 reg = 0;
 +
- 	/*
- 	 * If we have saved state, restore it.  If we can reset the device,
- 	 * even better.  Resetting with current state seems better than
++	if (!pdev->tph_cap)
++		return PCI_TPH_LOC_NONE;
+ 
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+ 
+-	return FIELD_GET(PCI_TPH_CAP_LOC_MASK, reg);
++	return reg & PCI_TPH_CAP_LOC_MASK;
+ }
+ EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+ 
+@@ -184,9 +187,6 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+ 
+ 	/* Check ST table location first */
+ 	loc = pcie_tph_get_st_table_loc(pdev);
+-
+-	/* Convert loc to match with PCI_TPH_LOC_* defined in pci_regs.h */
+-	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+ 	if (loc != PCI_TPH_LOC_CAP)
+ 		return 0;
+ 
+@@ -315,8 +315,6 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
+ 	set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
+ 
+ 	loc = pcie_tph_get_st_table_loc(pdev);
+-	/* Convert loc to match with PCI_TPH_LOC_* */
+-	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+ 
+ 	switch (loc) {
+ 	case PCI_TPH_LOC_MSIX:
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index be68cd17f2f8..6f02b020d7d7 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -8,6 +8,7 @@
+  */
+ #ifndef LINUX_PCI_TPH_H
+ #define LINUX_PCI_TPH_H
++#include <linux/pci.h>
+ 
+ /*
+  * According to the ECN for PCI Firmware Spec, Steering Tag can be different
+@@ -41,6 +42,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
+ static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+ static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ { return -EINVAL; }
++static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
++{ return 0; }
++static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
++{ return PCI_TPH_LOC_NONE; }
+ #endif
+ 
+ #endif /* LINUX_PCI_TPH_H */
 -- 
 2.17.1
 
