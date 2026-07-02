@@ -1,119 +1,160 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43037309F1C;
-	Thu,  2 Jul 2026 05:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9208433B6EF;
+	Thu,  2 Jul 2026 05:34:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782969427; cv=none; b=L4clIAHJXFyXVdfCD2/dVtq/kxdhMaET8n0MGy2G/TpJ3tr4qwTXn2kXXlC58JDvA3KN0Pz3jPGYN8RqwTSVfQpuENO6Vr9NFyzClbyF47Q9qXPTseWVvAoM72czxZV5MpHqC6e56iu6TLarbbBI/s1M/6RWxQM8semeFYWVotw=
+	t=1782970491; cv=none; b=bxUpopIs3kMv+X3aU2czODEz/OlPB7nCLxTGbdjB5wgLpmoqnQ2QV3MdulTp9PMI2pWnKMmw4GEJwAs/yd7uDwBLhYQVWXZn3ENdNrITzemFZnzZn3DOPOwdvfC80XTBZaUnbLGdWgkyhkYAIdxIJUYqMzQP/QbipDMhhTLiNUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782969427; c=relaxed/simple;
-	bh=Hv/Tg68BR/p6J7KoZcWW6I0o4dgoEHYJYxF1jYcYt60=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BSXPrsCwZ0otNB8PSzAK9bD1T8GSkIHE7PFv6fAocYbT1iwjdefuOsalMDRdSy61kBG3i/Eg9anIPkozH+Qh7QpUcX6CTOPKk09Ennzeqx187mGunxrG3Ucm3hiILAWoTiLks3hElfXZEzqo7+pXBPL7vF20+PghTTW48gl3K5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id C750110E41;
-	Thu, 02 Jul 2026 07:10:46 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id AA686602C804; Thu,  2 Jul 2026 07:10:46 +0200 (CEST)
-Date: Thu, 2 Jul 2026 07:10:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Max Lee <max.lee@canonical.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	acelan.kao@canonical.com, Kai-Heng Feng <kaihengf@nvidia.com>,
-	Victor Shih <victorshihgli@gmail.com>,
-	Jon Pan-Doh <pandoh@google.com>
-Subject: Re: [PATCH v2] PCI: Mask Replay Timer Timeout for Realtek RTS525A
-Message-ID: <akXy1gsijpfslOJm@wunner.de>
-References: <oc3i3yn4c22s5c3gtqgs7a4wrpqiywwvboxstdf7josxddqmpd@y43m75ovby2t>
- <20260701204201.GA302478@bhelgaas>
+	s=arc-20240116; t=1782970491; c=relaxed/simple;
+	bh=VROx4UNHpouW8fr4aaiSqX4i8MowYxEzhLMqqRSl1Zc=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=Akb0iIU5P3rj4hoRwgOuCmsMVPoUyb4fDS29d/B9iPbRsVaiB67Ag+TvfV5g39fqqUqRAvzgHBuaEqT20DS276iYyVILH6aEkc7TFlbu1i3YM9q6WBvZ0VtpXdTFkLS/WB9hPeOC6HPv8e10nkL6K47/Xn+4sz/5+p4Jyv+eHOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=WuzXtBN/; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="WuzXtBN/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=nvXrvmnXXqNldJyOx7EZECCIGfEQxkabt
+	waPOi8tNh4=; b=WuzXtBN/t7dkWDL01vmOznAVNkV5yZZvRqoN65f5iW8i2N0fn
+	y9UT/IRVWJxFSLGmuxbDAfMKUTnC3RlYLn5anlKDnGCu9Lrh2OlJzRuYKd/tx0SK
+	VMsI0foLvwuF6IiRA6CEX9Fvhyv1Or+5B7aHcskScFTHlX+NydYdrjyr/0=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwDXEEKM+EVqOpYOAA--.14792S2;
+	Thu, 02 Jul 2026 13:35:08 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260701204201.GA302478@bhelgaas>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/2] dt-bindings: pci: ultrarisc: add required DP1000
+ PCIe clocks
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Conor Dooley <conor@kernel.org>
+Cc: wangjia@ultrarisc.com, Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260629-caboose-outpour-6e1df34112ef@spud>
+References: <20260629-ultrarisc-pci-clk-v1-0-5ea3308fdab3@ultrarisc.com>
+ <20260629-ultrarisc-pci-clk-v1-1-5ea3308fdab3@ultrarisc.com>
+ <20260629-caboose-outpour-6e1df34112ef@spud>
+Date: Thu, 02 Jul 2026 13:34:35 +0800
+Message-Id: <178297047541.1082377.2444224045999313609.b4-reply@b4>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782970475; l=2479;
+ i=wangjia@ultrarisc.com; s=20260515; h=from:subject:message-id;
+ bh=VROx4UNHpouW8fr4aaiSqX4i8MowYxEzhLMqqRSl1Zc=;
+ b=p1J13cGbI19FzOi+1qjcrOy8zvXYB18rPgdNggmPvk4uTg47lcXc1o1d/bE7EE03FPWa9WbQI
+ VJrVP2Zki/dB/FyAXJfP4M0BEYorKwKGbzJ5RQAgcqSOx9AwRJBZqJT
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=wGVm18siRScehKOkOz0WKxgxDy7IezHEszhnN4/TUCY=
+X-CM-TRANSID:AQAAfwDXEEKM+EVqOpYOAA--.14792S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF4rWryfuryrKrWDZw4xZwb_yoW8try5pF
+	W3C3W5CF4ftr13Zwnaq3WUtF15Jr4IkFy5tr18Gr1UtFs0gr1vqFsxK343Ga45Zr47ZFyj
+	vF45uw17tw4UC3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAPEWpEjs0AFwAKsv
 
-On Wed, Jul 01, 2026 at 03:42:01PM -0500, Bjorn Helgaas wrote:
-> On Wed, Jul 01, 2026 at 08:27:13AM +0200, Manivannan Sadhasivam wrote:
-> > On Wed, Jun 10, 2026 at 10:47:23AM +0800, Max Lee wrote:
-> > > The Realtek RTS525A PCI-Express SD card reader (10ec:525a) generates
-> > > excessive Correctable Error (Replay Timer Timeout) AER events during
-> > > PCIe link initialization. On systems where firmware enables AER
-> > > reporting (CERptEn+), this causes an AER storm of ~240K error events
-> > > within 11 seconds of boot, overwhelming the kernel error handler and
-> > > blocking shutdown/reboot.
+On 2026-06-29 16:27 +0100, Conor Dooley wrote:
+> On Mon, Jun 29, 2026 at 01:59:50PM +0800, Jia Wang via B4 Relay wrote:
+> > From: Jia Wang <wangjia@ultrarisc.com>
+> > 
+> > Require the DP1000 PCIe controller nodes to provide clocks and
+> > clock-names, using the standard DesignWare clock names "core",
+> > "dbi", and "aux".
+> > 
+> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
 > 
-> Specifically, I guess these error events are the AER interrupts.  We
-> rate-limit the actual *messages*, but not the interrupts, so we can be
-> overwhelmed by handling them.
+> Probably should have a fixes tag here because the clocks are mandatory
+> and were missing.
+> With one,
+> Acked-by: Conor Dooley <conor.dooley@microchip.com>
+> pw-bot: not-applicable
+>
 
-Ratelimiting went into v6.16.  It would be good to know whether
-the behavior described in the commit message occurs only with
-older kernels or persists with ratelimiting.
+Thanks, Conor.
 
-It would also be good to know whether the "overwhelming" occurs
-with OS-native AER handling (aer_print_error()) or with Firmware
-First AER handling (pci_print_aer()).
-
-The PCIe port driver is registered in a device_initcall, which happens
-much later than PCI device enumeration in a subsys_initcall.  Do these
-errors occur before the port driver registers?  If they do, then the
-"overwhelming" likely happens through the Firmware First code path.
-Or perhaps "within 11 seconds of boot" is when portdrv probes and
-registers the AER driver?
-
-It would be good to have full dmesg output for analysis because this
-is all a little murky.
-
-> Based on the flowchart in PCIe r7.0, sec 6.2.5, it looks like an
-> Endpoint that detects a Correctable Error but lacks an AER Capability
-> sets PCI_EXP_DEVSTA_CED and, if PCI_EXP_DEVCTL_CERE is set, sends
-> ERR_COR upstream.
+I'll add the `Fixes:` tag in v2.
+Thanks for the Acked-by!
+ 
+> Thanks,
+> Conor.
 > 
-> I suspect that what we need here is:
-> 
->   - Mask PCI_ERR_COR_REP_TIMER in Endpoint to prevent it from sending
->     ERR_COR
-> 
->   - Mask PCI_ERR_COR_REP_TIMER in upstream bridge to prevent it from
->     sending ERR_COR
-> 
->   - If the upstream bridge is not the Root Port, mask
->     PCI_ERR_COR_REP_TIMER in Root Port to prevent AER interrupt if it
->     receives ERR_COR, e.g., if the Endpoint or bridge lacks AER
 
-The last bullet point doesn't sound quite right:  Per table 6-4 in
-PCIe r7.0 sec 6.2.7, Replay Timer Timeout is detected by the Transmitter.
-This can only be the Endpoint or its upstream bridge.  If the upstream
-bridge is not the Root Port, masking PCI_ERR_COR_REP_TIMER in the
-Root Port doesn't help.
+Best regards,
+Jia Wang
 
-If the Endpoint or its upstream bridge don't support AER, one has to
-clear Correctable Error Reporting Enable in the Device Control Register
-to suppress the Replay Timer Timeout errors.  Obviously this will
-suppress reporting of any other Correctable Error as well.
+> > ---
+> >  .../devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml   | 16 ++++++++++++++++
+> >  1 file changed, 16 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
+> > index 512b935bf5d1..d9d1488e915a 100644
+> > --- a/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
+> > +++ b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
+> > @@ -43,6 +43,18 @@ properties:
+> >        - description: Legacy INTC interrupt
+> >        - description: Legacy INTD interrupt
+> >  
+> > +  clocks:
+> > +    items:
+> > +      - description: PCIe core clock
+> > +      - description: Data Bus Interface (DBI) clock
+> > +      - description: Auxiliary clock
+> > +
+> > +  clock-names:
+> > +    items:
+> > +      - const: core
+> > +      - const: dbi
+> > +      - const: aux
+> > +
+> >    interrupt-names:
+> >      items:
+> >        - const: msi
+> > @@ -55,6 +67,8 @@ required:
+> >    - compatible
+> >    - reg
+> >    - reg-names
+> > +  - clocks
+> > +  - clock-names
+> >    - interrupts
+> >    - interrupt-names
+> >  
+> > @@ -71,6 +85,8 @@ examples:
+> >          reg = <0x0 0x21000000 0x0 0x01000000>,
+> >                <0x0 0x4fff0000 0x0 0x00010000>;
+> >          reg-names = "dbi", "config";
+> > +        clocks = <&clkc 9>, <&clkc 7>, <&clkc 10>;
+> > +        clock-names = "core", "dbi", "aux";
+> >          ranges = <0x81000000 0x0 0x4fbf0000 0x0 0x4fbf0000 0x0 0x00400000>,
+> >                   <0x82000000 0x0 0x40000000 0x0 0x40000000 0x0 0x0fbf0000>,
+> >                   <0xc3000000 0x40 0x00000000 0x40 0x00000000 0xd 0x00000000>;
+> > 
+> > -- 
+> > 2.34.1
+> > 
+> > 
 
-> I wonder if aer.c should disable the AER interrupt by temporarily
-> clearing PCI_ERR_ROOT_CMD_COR_EN if it detects a storm.  Maybe that
-> could avoid device quirks for transient issues like this.
 
-The hierarchy below the Root Port might be deeper and we'd risk
-losing errors reported by other devices in that hierarchy while
-interrupt generation is temporarily disabled.
-
-Thanks,
-
-Lukas
