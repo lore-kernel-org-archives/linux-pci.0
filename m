@@ -1,254 +1,870 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 331D5305968
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 17:32:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D53E528505E;
+	Fri,  3 Jul 2026 21:09:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783099971; cv=none; b=Benl9t+5WBkdNab5tRIL47ajr/q3LjCFWFeHAxH7LytlF0DNlOMEdoC10AdBPv4mHnMJTZv5VJcmm0v/zTuq0+/haQnEUTvaBr29kcZu6weuYaAZ6J/rSeGg/nEMhVXnwzW5PjcAEErZUFEQhHR5eVdj64f4PFSNnmsXrBg8QUE=
+	t=1783112988; cv=none; b=AE78TqKW6o7Ex3B3fmX1r+85fdFD2lH0p/YVBtN76wMc3P3hZ8EVzY71Lw+RGFJE1pqi9GWJ9I4TuXxregJZSiymchtqzmnNn4zWG+ihTkcGZdx9wBlFlzxyYhjmj02GXvMJND2GV/ciE1T8ZFvaWe4fHZifdjhM/ShSStH4VqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783099971; c=relaxed/simple;
-	bh=Wcpl1M8C6rbl+gWtOZA3jLQB6f728HV5z3+kNftSXRU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ukTTcWJu+Irz/kJYpkAmKb90iV9PfvxcFag/Gvu5yvBDVr2jO/3F4stNXGvtavKwN4qySNCkQBIalINu5NutZBZLd0GgAw574xSxoZmSYgZh/VhObGz4Xy1J+szjZZgvFkUD1itUAHlTBNpYLykvbMBykD2uq/8ShJ1Xg6iAzZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=mF1sVXMO; arc=none smtp.client-ip=209.85.160.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1783112988; c=relaxed/simple;
+	bh=6x/f2a/9w2jjApIyjjsc9qsKNhostpjDGT6vqcl63hM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AwnYbdMnzrfNKgDeDl8j4imt+t5TPhZ71E7bRg8iGNKpBkxsjKlTQAKDRVXcWPIW0d2LXipwr9MX3zawAkoHnx2hRsF45SjBHvyyYecBK3YBTUum+uUfrRdlbR7qeFU8IrTha85+MhegY5GP6htg2BSNgz9Q4LuvClP/Y2+CMNs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fpR1mX5j; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="mF1sVXMO"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-51c2a449c57so5414281cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 03 Jul 2026 10:32:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1783099969; x=1783704769; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=yiTtUHYVC+sBH8N9u4bqwWOXo++BMfy79AiAKwhU9io=;
-        b=mF1sVXMOMvgQrEnwIMqB4rY7uKNNPHHW+R+o0znH9WS0jEM7MZIf+ecJ0/qLq8jPvN
-         vzRc3UN8Gq9LdcPJla0jj0lihaWdydDDuPiknHRO1irv6GcFJHK/0GbmBuW+y9xeAJ3N
-         WlGbcSggJ6kW+KZntqyr4HnCXCPlQiwTIrz77E1tIT/bB30Z0ObKmrW4i1AgRJXGwmdJ
-         X9kuKH4lUeBuRXn6m5GQSzvvgCQtvqCkFdTigKl9qByon+KreNc+XXE536/tmda5hU82
-         cXr+0NYMK1I4qXU1MNlA7nOCUgYeI8Na0eN1sBCIgycVP5FNlehXzx3rvvWxqxOHWUFM
-         WdlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783099969; x=1783704769;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yiTtUHYVC+sBH8N9u4bqwWOXo++BMfy79AiAKwhU9io=;
-        b=V1AqxHNLxUGP4nDCIabamWAUiY+wrRuRGtrkEff7SfHIJXDPoYaLE7oq+VbV0CNtfG
-         GSnFjBBdjRRrQejqG4H5hf0YL7aMwP2XDiFqOyqg0gwOl7MrFplr392QRyA7LKfGxsD9
-         BrH8ONg4wFiuhwgi0KdmnxRRcDmrFbJBTgoMYMTRkxVFFovIb17101qlvxjVtCplawJQ
-         p3uLHppq06sJmYtgFUdWUEL3IWJSpI6z9ROiyozWh4nEM71cfj6bF1RzanxvWnT5xO8Y
-         2r3hiNsspiCpsUGbLa5CNWeltK/lY6EY9tOqTIe8MxiVNz5TdwxSHbtfWxUNwBmNUCNa
-         nCWA==
-X-Forwarded-Encrypted: i=1; AFNElJ8h2NNnXi0vtzq5pqv7BDAfjfl6BT58SsMD/5EgWNxnQMaoKDoNKvjyRD+mb3fJ/bh+N/8y+mE3pYc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwbCTyGpZVEe5IsVl9VTVI2AWsA99yv5lkDzfFGvuQ8xX6c4Mvk
-	Mi4r0oR09cVcy9QHrviSd//KqHw6/IwPYY06sCD+fIRnz5lYwek/xoef+iCOHveqdzdAtAcvbnV
-	jCGmp
-X-Gm-Gg: AfdE7clHiHzb+qs3BLJTmTSPy0lLCEe4L+YLMb8K4oxc0lYgDcqOcFR9sabaxi2VtPB
-	knMSSEO/wgrPp8BFjsLSaJW3DKo8zv82+SnOF7YeY+Qky2s5uvkyrvrzm1q+NOl8ClV7m/6YgNw
-	iDPcpVlz+QzDV9xaXfMTIwVKbTZQzqJXb/NQSR4nx5LMGGQbo+0w7c9SrpOia4yKbAMmy0ipWc6
-	UjYIXdqnuh2WB4aRcGMkLWejAiNXOjSJT9fDZF6IFSCzY1fJ3jfiODq4UaGC5Q1twN6LrVgDhxr
-	HTKHLSExytIi0yLvjqXZz/hbEwEqP9bT8Es7p9dfMdrH8EycWnd+hGL3ob1kvwHwENdBQAcJRln
-	BxyBF8cDiFRcXXR8EErBTRS7R9jxp7EfIzSuLKt40r3RCs++aIfbHWnqkNpjnyK5+iDK93hEPd4
-	vcsAe7G50NP22IPxs0Qe74VWFZ1ucH2dHKnQzGFg04K7imLI6CjGheOUdJowxhd6ZDBUw=
-X-Received: by 2002:a05:622a:290:b0:51c:e14:87a7 with SMTP id d75a77b69052e-51c4c214c01mr7650981cf.28.1783099969076;
-        Fri, 03 Jul 2026 10:32:49 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8f472a9ad1fsm58402856d6.47.2026.07.03.10.32.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Jul 2026 10:32:48 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wfhku-00000008Ink-0GPL;
-	Fri, 03 Jul 2026 14:32:48 -0300
-Date: Fri, 3 Jul 2026 14:32:48 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, wei.liu@kernel.org, kys@microsoft.com,
-	haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
-	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
-	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org,
-	mani@kernel.org, robh@kernel.org, arnd@arndb.de,
-	mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com,
-	mrathor@linux.microsoft.com
-Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <20260703173248.GB1968184@ziepe.ca>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fpR1mX5j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E32251F000E9;
+	Fri,  3 Jul 2026 21:09:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783112986;
+	bh=a9RVvfRrxThRB0XMcfQponpssTZqdDtsLB8632nX4+s=;
+	h=From:To:Cc:Subject:Date;
+	b=fpR1mX5jt0aI6IDPX7IUzHOHRIcGfRvgDdGZnU9iPAKLZfN+DxTtCv5kpGYPPB0Js
+	 y72N9XkbHHhxqUxRf0cp3e6YztvPehasPXZtJ9kvIAGZ/fmbg3lcKqp96P5LHAyroU
+	 YVcuDe2iCFKWKIfJxpZnXtBWRbqh6fgDbWXkdqKmtzpXn0Pb7TfcsKP2TGipFzLENA
+	 lY5ixmuE6wsSgjyvVtW2zdUtWljoishBW3vXQtsfVheh+8OJkofRW1Ei4at6N89iM+
+	 G8jd9NolxgyLYieow2Xr9M6PovWgH4LF3QUxKwNjlKqr/aGr0w7k8AyJAGclyjLcFY
+	 l278ywd6Antgw==
+From: Danilo Krummrich <dakr@kernel.org>
+To: dakr@kernel.org,
+	aliceryhl@google.com,
+	daniel.almeida@collabora.com,
+	ojeda@kernel.org,
+	boqun@kernel.org,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	lossin@kernel.org,
+	a.hindborg@kernel.org,
+	tmgross@umich.edu,
+	tamird@kernel.org,
+	acourbot@nvidia.com,
+	work@onurozkan.dev,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	gregkh@linuxfoundation.org,
+	rafael@kernel.org,
+	mhi@mailbox.org
+Cc: driver-core@lists.linux.dev,
+	rust-for-linux@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rust: irq: make Registration compatible with lifetime-bound drivers
+Date: Fri,  3 Jul 2026 23:09:21 +0200
+Message-ID: <20260703210936.1128698-1-dakr@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 03, 2026 at 12:05:17AM +0800, Yu Zhang wrote:
+Adapt the IRQ registration to work with the Higher-Ranked Lifetime Types
+(HRT) device driver architecture introduced in commit 2c7c65933600
+("Merge patch series "rust: device: Higher-Ranked Lifetime Types for
+device drivers"").
 
-> +static bool hv_iommu_capable(struct device *dev, enum iommu_cap cap)
-> +{
-> +	switch (cap) {
-> +	case IOMMU_CAP_CACHE_COHERENCY:
-> +		return true;
-> +	case IOMMU_CAP_DEFERRED_FLUSH:
-> +		return true;
+With HRT, driver structs carry a lifetime parameter tied to the device
+binding scope, allowing device resources such as pci::Bar<'bar> to be
+held directly rather than through Devres indirection. However, the IRQ
+abstraction required Handler: Sync + 'static, preventing handlers from
+embedding lifetime-parameterized resources.
 
-This CAP isn't necessary anymore
+Remove the 'static bound from Handler and ThreadedHandler and replace
+the Devres<RegistrationInner> indirection with direct request_irq() /
+free_irq() calls in the constructor and PinnedDrop.  Registration<'a, T>
+stores the IrqRequest<'a>, which structurally ties it to the device
+binding scope.
 
-> +static struct iommu_device *hv_iommu_probe_device(struct device *dev)
-> +{
-> +	struct pci_dev *pdev;
-> +	struct hv_iommu_endpoint *vdev;
-> +	struct hv_output_get_logical_device_property device_iommu_property = {0};
-> +
-> +	if (!dev_is_pci(dev))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	pdev = to_pci_dev(dev);
-> +
-> +	if (hv_iommu_get_logical_device_property(dev,
-> +						 HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU,
-> +						 &device_iommu_property) ||
-> +	    !(device_iommu_property.device_iommu & HV_DEVICE_IOMMU_ENABLED))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	vdev = kzalloc_obj(*vdev, GFP_KERNEL);
-> +	if (!vdev)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	vdev->dev = dev;
-> +	vdev->hv_iommu = hv_iommu_device;
-> +	dev_iommu_priv_set(dev, vdev);
-> +
-> +	if (hv_iommu_ats_supported(hv_iommu_device->cap) &&
-> +	    pci_ats_supported(pdev))
-> +		pci_enable_ats(pdev, __ffs(hv_iommu_device->pgsize_bitmap));
+Also remove the &Device<Bound> parameter from the handler callbacks,
+since handlers that need device access can embed it in their own type.
 
-This can probably just be PAGE_SHIFT
+IRQ handlers can now directly own device resources:
 
-Also ATS shouldn't be enabled until a translation is installed,
-otherwise the driver cannot participate in the ATS error handling
-Nicolin is working on.
+	struct IrqHandler<'irq> {
+	    bar: pci::Bar<'irq, BAR_SIZE>,
+	}
 
-> +static void hv_iommu_release_device(struct device *dev)
-> +{
-> +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (pdev->ats_enabled)
-> +		pci_disable_ats(pdev);
-> +
-> +	dev_iommu_priv_set(dev, NULL);
+	impl irq::Handler for IrqHandler<'_> {
+	    fn handle(&self) -> IrqReturn {
+	        let stat = self.bar.read(regs::STAT);
+	        ...
+	    }
+	}
 
-No necessary, the caller does it
+This eliminates the indirection previously required for IRQ handlers to
+access device resources and aligns with the broader goal of expressing
+every registration scoped to a driver binding through compile-time
+lifetime bounds.
 
-> +static struct iommu_group *hv_iommu_device_group(struct device *dev)
-> +{
-> +	if (dev_is_pci(dev))
-> +		return pci_device_group(dev);
-> +
-> +	WARN_ON_ONCE(1);
-> +	return generic_device_group(dev);
+Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+---
+ rust/kernel/irq/request.rs | 427 +++++++++++++++++--------------------
+ rust/kernel/pci/irq.rs     |  26 ++-
+ rust/kernel/platform.rs    |  48 +++--
+ 3 files changed, 250 insertions(+), 251 deletions(-)
 
-I think you can just return failure here instead of WARN_ON ?
+diff --git a/rust/kernel/irq/request.rs b/rust/kernel/irq/request.rs
+index f425fe12f7c8..88e474b2ab73 100644
+--- a/rust/kernel/irq/request.rs
++++ b/rust/kernel/irq/request.rs
+@@ -5,16 +5,21 @@
+ //! [`ThreadedRegistration`], which allow users to register handlers for a given
+ //! IRQ line.
+ 
+-use core::marker::PhantomPinned;
+-
+-use crate::alloc::Allocator;
+-use crate::device::{Bound, Device};
+-use crate::devres::Devres;
+-use crate::error::to_result;
+-use crate::irq::flags::Flags;
+-use crate::prelude::*;
+-use crate::str::CStr;
+-use crate::sync::Arc;
++use core::marker::{
++    PhantomData,
++    PhantomPinned, //
++};
++
++use crate::{
++    device::{
++        Bound,
++        Device, //
++    },
++    error::to_result,
++    irq::flags::Flags,
++    prelude::*,
++    str::CStr,
++};
+ 
+ /// The value that can be returned from a [`Handler`] or a [`ThreadedHandler`].
+ #[repr(u32)]
+@@ -27,7 +32,7 @@ pub enum IrqReturn {
+ }
+ 
+ /// Callbacks for an IRQ handler.
+-pub trait Handler: Sync + 'static {
++pub trait Handler: Sync {
+     /// The hard IRQ handler.
+     ///
+     /// This is executed in interrupt context, hence all corresponding
+@@ -36,73 +41,20 @@ pub trait Handler: Sync + 'static {
+     /// All work that does not necessarily need to be executed from
+     /// interrupt context, should be deferred to a threaded handler.
+     /// See also [`ThreadedRegistration`].
+-    fn handle(&self, device: &Device<Bound>) -> IrqReturn;
+-}
+-
+-impl<T: ?Sized + Handler + Send> Handler for Arc<T> {
+-    fn handle(&self, device: &Device<Bound>) -> IrqReturn {
+-        T::handle(self, device)
+-    }
+-}
+-
+-impl<T: ?Sized + Handler, A: Allocator + 'static> Handler for Box<T, A> {
+-    fn handle(&self, device: &Device<Bound>) -> IrqReturn {
+-        T::handle(self, device)
+-    }
++    fn handle(&self) -> IrqReturn;
+ }
+ 
+-/// # Invariants
+-///
+-/// - `self.irq` is the same as the one passed to `request_{threaded}_irq`.
+-/// - `cookie` was passed to `request_{threaded}_irq` as the cookie. It is guaranteed to be unique
+-///   by the type system, since each call to `new` will return a different instance of
+-///   `Registration`.
+-#[pin_data(PinnedDrop)]
+-struct RegistrationInner {
+-    irq: u32,
+-    cookie: *mut c_void,
+-}
+-
+-impl RegistrationInner {
+-    fn synchronize(&self) {
+-        // SAFETY: safe as per the invariants of `RegistrationInner`
+-        unsafe { bindings::synchronize_irq(self.irq) };
+-    }
+-}
+-
+-#[pinned_drop]
+-impl PinnedDrop for RegistrationInner {
+-    fn drop(self: Pin<&mut Self>) {
+-        // SAFETY:
+-        //
+-        // Safe as per the invariants of `RegistrationInner` and:
+-        //
+-        // - The containing struct is `!Unpin` and was initialized using
+-        // pin-init, so it occupied the same memory location for the entirety of
+-        // its lifetime.
+-        //
+-        // Notice that this will block until all handlers finish executing,
+-        // i.e.: at no point will &self be invalid while the handler is running.
+-        unsafe { bindings::free_irq(self.irq, self.cookie) };
+-    }
+-}
+-
+-// SAFETY: We only use `inner` on drop, which called at most once with no
+-// concurrent access.
+-unsafe impl Sync for RegistrationInner {}
+-
+-// SAFETY: It is safe to send `RegistrationInner` across threads.
+-unsafe impl Send for RegistrationInner {}
+-
+ /// A request for an IRQ line for a given device.
+ ///
+ /// # Invariants
+ ///
+ /// - `ìrq` is the number of an interrupt source of `dev`.
+-/// - `irq` has not been registered yet.
++/// - `irq` has not been registered yet; this is consumed by [`Registration::new()`].
+ pub struct IrqRequest<'a> {
+-    dev: &'a Device<Bound>,
+     irq: u32,
++    /// Proves the device is bound at registration time and ties `'a` to the device's bound
++    /// lifetime, ensuring the [`Registration`] cannot outlive it.
++    _dev: PhantomData<&'a Device<Bound>>,
+ }
+ 
+ impl<'a> IrqRequest<'a> {
+@@ -111,9 +63,12 @@ impl<'a> IrqRequest<'a> {
+     /// # Safety
+     ///
+     /// - `irq` should be a valid IRQ number for `dev`.
+-    pub(crate) unsafe fn new(dev: &'a Device<Bound>, irq: u32) -> Self {
++    pub(crate) unsafe fn new(_dev: &'a Device<Bound>, irq: u32) -> Self {
+         // INVARIANT: `irq` is a valid IRQ number for `dev`.
+-        IrqRequest { dev, irq }
++        IrqRequest {
++            irq,
++            _dev: PhantomData,
++        }
+     }
+ 
+     /// Returns the IRQ number of an [`IrqRequest`].
+@@ -139,10 +94,18 @@ pub fn irq(&self) -> u32 {
+ /// [`Completion::wait_for_completion()`]: kernel::sync::Completion::wait_for_completion
+ ///
+ /// ```
+-/// use kernel::device::{Bound, Device};
+-/// use kernel::irq::{self, Flags, IrqRequest, IrqReturn, Registration};
+-/// use kernel::prelude::*;
+-/// use kernel::sync::{Arc, Completion};
++/// use core::pin::Pin;
++/// use kernel::{
++///     irq::{
++///         self,
++///         Flags,
++///         IrqRequest,
++///         IrqReturn,
++///         Registration,
++///     },
++///     prelude::*,
++///     sync::Completion,
++/// };
+ ///
+ /// // Data shared between process and IRQ context.
+ /// #[pin_data]
+@@ -153,7 +116,7 @@ pub fn irq(&self) -> u32 {
+ ///
+ /// impl irq::Handler for Data {
+ ///     // Executed in IRQ context.
+-///     fn handle(&self, _dev: &Device<Bound>) -> IrqReturn {
++///     fn handle(&self) -> IrqReturn {
+ ///         self.completion.complete_all();
+ ///         IrqReturn::Handled
+ ///     }
+@@ -163,12 +126,21 @@ pub fn irq(&self) -> u32 {
+ /// //
+ /// // This runs in process context and assumes `request` was previously acquired from a device.
+ /// fn register_irq(
+-///     handler: impl PinInit<Data, Error>,
+ ///     request: IrqRequest<'_>,
+-/// ) -> Result<Arc<Registration<Data>>> {
+-///     let registration = Registration::new(request, Flags::SHARED, c"my_device", handler);
++/// ) -> Result<Pin<KBox<Registration<'_, Data>>>> {
++///     // SAFETY: The returned Registration is not leaked.
++///     let registration = unsafe {
++///         Registration::new(
++///             request,
++///             Flags::SHARED,
++///             c"my_device",
++///             try_pin_init!(Data {
++///                 completion <- Completion::new(),
++///             }? Error),
++///         )
++///     };
+ ///
+-///     let registration = Arc::pin_init(registration, GFP_KERNEL)?;
++///     let registration = KBox::pin_init(registration, GFP_KERNEL)?;
+ ///
+ ///     registration.handler().completion.wait_for_completion();
+ ///
+@@ -179,11 +151,10 @@ pub fn irq(&self) -> u32 {
+ ///
+ /// # Invariants
+ ///
+-/// * We own an irq handler whose cookie is a pointer to `Self`.
+-#[pin_data]
+-pub struct Registration<T: Handler> {
+-    #[pin]
+-    inner: Devres<RegistrationInner>,
++/// * We own an irq handler registered via `request_irq` whose cookie is a pointer to `Self`.
++#[pin_data(PinnedDrop)]
++pub struct Registration<'a, T: Handler> {
++    request: IrqRequest<'a>,
+ 
+     #[pin]
+     handler: T,
+@@ -194,43 +165,44 @@ pub struct Registration<T: Handler> {
+     _pin: PhantomPinned,
+ }
+ 
+-impl<T: Handler> Registration<T> {
++impl<'a, T: Handler> Registration<'a, T> {
+     /// Registers the IRQ handler with the system for the given IRQ number.
+-    pub fn new<'a>(
++    ///
++    /// # Safety
++    ///
++    /// Callers must not `mem::forget()` the returned [`Registration`] or otherwise prevent its
++    /// [`Drop`] implementation from running.
++    pub unsafe fn new(
+         request: IrqRequest<'a>,
+         flags: Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<Self, Error> + 'a {
++    ) -> impl PinInit<Self, Error> + 'a
++    where
++        T: 'a,
++    {
+         try_pin_init!(&this in Self {
+             handler <- handler,
+-            inner <- Devres::new(
+-                request.dev,
+-                try_pin_init!(RegistrationInner {
+-                    // INVARIANT: `this` is a valid pointer to the `Registration` instance
+-                    cookie: this.as_ptr().cast::<c_void>(),
+-                    irq: {
+-                        // SAFETY:
+-                        // - The callbacks are valid for use with request_irq.
+-                        // - If this succeeds, the slot is guaranteed to be valid until the
+-                        //   destructor of Self runs, which will deregister the callbacks
+-                        //   before the memory location becomes invalid.
+-                        // - When request_irq is called, everything that handle_irq_callback will
+-                        //   touch has already been initialized, so it's safe for the callback to
+-                        //   be called immediately.
+-                        to_result(unsafe {
+-                            bindings::request_irq(
+-                                request.irq,
+-                                Some(handle_irq_callback::<T>),
+-                                flags.into_inner(),
+-                                name.as_char_ptr(),
+-                                this.as_ptr().cast::<c_void>(),
+-                            )
+-                        })?;
+-                        request.irq
+-                    }
+-                })
+-            ),
++            request: {
++                // SAFETY:
++                // - The callbacks are valid for use with request_irq.
++                // - If this succeeds, the slot is guaranteed to be valid until the destructor of
++                //   Self runs, which will deregister the callbacks before the memory location
++                //   becomes invalid.
++                // - When request_irq is called, everything that handle_irq_callback will touch
++                //   has already been initialized, so it's safe for the callback to be called
++                //   immediately.
++                to_result(unsafe {
++                    bindings::request_irq(
++                        request.irq,
++                        Some(handle_irq_callback::<T>),
++                        flags.into_inner(),
++                        name.as_char_ptr(),
++                        this.as_ptr().cast::<c_void>(),
++                    )
++                })?;
++                request
++            },
+             _pin: PhantomPinned,
+         })
+     }
+@@ -241,19 +213,24 @@ pub fn handler(&self) -> &T {
+     }
+ 
+     /// Wait for pending IRQ handlers on other CPUs.
+-    ///
+-    /// This will attempt to access the inner [`Devres`] container.
+-    pub fn try_synchronize(&self) -> Result {
+-        let inner = self.inner.try_access().ok_or(ENODEV)?;
+-        inner.synchronize();
+-        Ok(())
++    pub fn synchronize(&self) {
++        // SAFETY: `self.request.irq` is a valid registered IRQ number (type invariant).
++        unsafe { bindings::synchronize_irq(self.request.irq) };
+     }
++}
+ 
+-    /// Wait for pending IRQ handlers on other CPUs.
+-    pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
+-        let inner = self.inner.access(dev)?;
+-        inner.synchronize();
+-        Ok(())
++#[pinned_drop]
++impl<T: Handler> PinnedDrop for Registration<'_, T> {
++    fn drop(self: Pin<&mut Self>) {
++        // SAFETY: The cookie was set to a pointer to `Self` in `Registration::new()`. This blocks
++        // until all in-flight handlers complete, so no references to `self` remain after this
++        // returns.
++        unsafe {
++            bindings::free_irq(
++                self.request.irq,
++                core::ptr::from_mut::<Self>(self.get_unchecked_mut()).cast::<c_void>(),
++            )
++        };
+     }
+ }
+ 
+@@ -261,13 +238,11 @@ pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
+ ///
+ /// This function should be only used as the callback in `request_irq`.
+ unsafe extern "C" fn handle_irq_callback<T: Handler>(_irq: i32, ptr: *mut c_void) -> c_uint {
+-    // SAFETY: `ptr` is a pointer to `Registration<T>` set in `Registration::new`
+-    let registration = unsafe { &*(ptr as *const Registration<T>) };
+-    // SAFETY: The irq callback is removed before the device is unbound, so the fact that the irq
+-    // callback is running implies that the device has not yet been unbound.
+-    let device = unsafe { registration.inner.device().as_bound() };
++    let ptr = ptr.cast_const().cast::<Registration<'_, T>>();
++    // SAFETY: `ptr` is a pointer to `Registration<'_, T>` set in `Registration::new()`.
++    let registration = unsafe { &*ptr };
+ 
+-    T::handle(&registration.handler, device) as c_uint
++    T::handle(&registration.handler) as c_uint
+ }
+ 
+ /// The value that can be returned from [`ThreadedHandler::handle`].
+@@ -284,7 +259,7 @@ pub enum ThreadedIrqReturn {
+ }
+ 
+ /// Callbacks for a threaded IRQ handler.
+-pub trait ThreadedHandler: Sync + 'static {
++pub trait ThreadedHandler: Sync {
+     /// The hard IRQ handler.
+     ///
+     /// This is executed in interrupt context, hence all corresponding
+@@ -293,8 +268,7 @@ pub trait ThreadedHandler: Sync + 'static {
+     /// handler, i.e. [`ThreadedHandler::handle_threaded`].
+     ///
+     /// The default implementation returns [`ThreadedIrqReturn::WakeThread`].
+-    #[expect(unused_variables)]
+-    fn handle(&self, device: &Device<Bound>) -> ThreadedIrqReturn {
++    fn handle(&self) -> ThreadedIrqReturn {
+         ThreadedIrqReturn::WakeThread
+     }
+ 
+@@ -302,27 +276,7 @@ fn handle(&self, device: &Device<Bound>) -> ThreadedIrqReturn {
+     ///
+     /// This is executed in process context. The kernel creates a dedicated
+     /// `kthread` for this purpose.
+-    fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn;
+-}
+-
+-impl<T: ?Sized + ThreadedHandler + Send> ThreadedHandler for Arc<T> {
+-    fn handle(&self, device: &Device<Bound>) -> ThreadedIrqReturn {
+-        T::handle(self, device)
+-    }
+-
+-    fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+-        T::handle_threaded(self, device)
+-    }
+-}
+-
+-impl<T: ?Sized + ThreadedHandler, A: Allocator + 'static> ThreadedHandler for Box<T, A> {
+-    fn handle(&self, device: &Device<Bound>) -> ThreadedIrqReturn {
+-        T::handle(self, device)
+-    }
+-
+-    fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+-        T::handle_threaded(self, device)
+-    }
++    fn handle_threaded(&self) -> IrqReturn;
+ }
+ 
+ /// A registration of a threaded IRQ handler for a given IRQ line.
+@@ -339,13 +293,20 @@ fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+ /// [`Mutex`](kernel::sync::Mutex) to provide interior mutability.
+ ///
+ /// ```
+-/// use kernel::device::{Bound, Device};
+-/// use kernel::irq::{
+-///   self, Flags, IrqRequest, IrqReturn, ThreadedHandler, ThreadedIrqReturn,
+-///   ThreadedRegistration,
++/// use core::pin::Pin;
++/// use kernel::{
++///     irq::{
++///         self,
++///         Flags,
++///         IrqRequest,
++///         IrqReturn,
++///         ThreadedHandler,
++///         ThreadedIrqReturn,
++///         ThreadedRegistration,
++///     },
++///     prelude::*,
++///     sync::Mutex,
+ /// };
+-/// use kernel::prelude::*;
+-/// use kernel::sync::{Arc, Mutex};
+ ///
+ /// // Declare a struct that will be passed in when the interrupt fires. The u32
+ /// // merely serves as an example of some internal data.
+@@ -363,7 +324,7 @@ fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+ ///     // This will run (in a separate kthread) if and only if
+ ///     // [`ThreadedHandler::handle`] returns [`WakeThread`], which it does by
+ ///     // default.
+-///     fn handle_threaded(&self, _dev: &Device<Bound>) -> IrqReturn {
++///     fn handle_threaded(&self) -> IrqReturn {
+ ///         let mut data = self.value.lock();
+ ///         *data += 1;
+ ///         IrqReturn::Handled
+@@ -375,13 +336,21 @@ fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+ /// // This is executing in process context and assumes that `request` was
+ /// // previously acquired from a device.
+ /// fn register_threaded_irq(
+-///     handler: impl PinInit<Data, Error>,
+ ///     request: IrqRequest<'_>,
+-/// ) -> Result<Arc<ThreadedRegistration<Data>>> {
+-///     let registration =
+-///         ThreadedRegistration::new(request, Flags::SHARED, c"my_device", handler);
++/// ) -> Result<Pin<KBox<ThreadedRegistration<'_, Data>>>> {
++///     // SAFETY: The returned Registration is not leaked.
++///     let registration = unsafe {
++///         ThreadedRegistration::new(
++///             request,
++///             Flags::SHARED,
++///             c"my_device",
++///             try_pin_init!(Data {
++///                 value <- kernel::new_mutex!(0),
++///             }? Error),
++///         )
++///     };
+ ///
+-///     let registration = Arc::pin_init(registration, GFP_KERNEL)?;
++///     let registration = KBox::pin_init(registration, GFP_KERNEL)?;
+ ///
+ ///     {
+ ///         // The data can be accessed from process context too.
+@@ -396,11 +365,11 @@ fn handle_threaded(&self, device: &Device<Bound>) -> IrqReturn {
+ ///
+ /// # Invariants
+ ///
+-/// * We own an irq handler whose cookie is a pointer to `Self`.
+-#[pin_data]
+-pub struct ThreadedRegistration<T: ThreadedHandler> {
+-    #[pin]
+-    inner: Devres<RegistrationInner>,
++/// * We own an irq handler registered via `request_threaded_irq` whose cookie is a pointer to
++///   `Self`.
++#[pin_data(PinnedDrop)]
++pub struct ThreadedRegistration<'a, T: ThreadedHandler> {
++    request: IrqRequest<'a>,
+ 
+     #[pin]
+     handler: T,
+@@ -411,44 +380,45 @@ pub struct ThreadedRegistration<T: ThreadedHandler> {
+     _pin: PhantomPinned,
+ }
+ 
+-impl<T: ThreadedHandler> ThreadedRegistration<T> {
++impl<'a, T: ThreadedHandler> ThreadedRegistration<'a, T> {
+     /// Registers the IRQ handler with the system for the given IRQ number.
+-    pub fn new<'a>(
++    ///
++    /// # Safety
++    ///
++    /// Callers must not `mem::forget()` the returned [`ThreadedRegistration`] or otherwise prevent
++    /// its [`Drop`] implementation from running.
++    pub unsafe fn new(
+         request: IrqRequest<'a>,
+         flags: Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<Self, Error> + 'a {
++    ) -> impl PinInit<Self, Error> + 'a
++    where
++        T: 'a,
++    {
+         try_pin_init!(&this in Self {
+             handler <- handler,
+-            inner <- Devres::new(
+-                request.dev,
+-                try_pin_init!(RegistrationInner {
+-                    // INVARIANT: `this` is a valid pointer to the `ThreadedRegistration` instance.
+-                    cookie: this.as_ptr().cast::<c_void>(),
+-                    irq: {
+-                        // SAFETY:
+-                        // - The callbacks are valid for use with request_threaded_irq.
+-                        // - If this succeeds, the slot is guaranteed to be valid until the
+-                        //   destructor of Self runs, which will deregister the callbacks
+-                        //   before the memory location becomes invalid.
+-                        // - When request_threaded_irq is called, everything that the two callbacks
+-                        //   will touch has already been initialized, so it's safe for the
+-                        //   callbacks to be called immediately.
+-                        to_result(unsafe {
+-                            bindings::request_threaded_irq(
+-                                request.irq,
+-                                Some(handle_threaded_irq_callback::<T>),
+-                                Some(thread_fn_callback::<T>),
+-                                flags.into_inner(),
+-                                name.as_char_ptr(),
+-                                this.as_ptr().cast::<c_void>(),
+-                            )
+-                        })?;
+-                        request.irq
+-                    }
+-                })
+-            ),
++            request: {
++                // SAFETY:
++                // - The callbacks are valid for use with request_threaded_irq.
++                // - If this succeeds, the slot is guaranteed to be valid until the destructor of
++                //   Self runs, which will deregister the callbacks before the memory location
++                //   becomes invalid.
++                // - When request_threaded_irq is called, everything that the two callbacks will
++                //   touch has already been initialized, so it's safe for the callbacks to be
++                //   called immediately.
++                to_result(unsafe {
++                    bindings::request_threaded_irq(
++                        request.irq,
++                        Some(handle_threaded_irq_callback::<T>),
++                        Some(thread_fn_callback::<T>),
++                        flags.into_inner(),
++                        name.as_char_ptr(),
++                        this.as_ptr().cast::<c_void>(),
++                    )
++                })?;
++                request
++            },
+             _pin: PhantomPinned,
+         })
+     }
+@@ -459,19 +429,24 @@ pub fn handler(&self) -> &T {
+     }
+ 
+     /// Wait for pending IRQ handlers on other CPUs.
+-    ///
+-    /// This will attempt to access the inner [`Devres`] container.
+-    pub fn try_synchronize(&self) -> Result {
+-        let inner = self.inner.try_access().ok_or(ENODEV)?;
+-        inner.synchronize();
+-        Ok(())
++    pub fn synchronize(&self) {
++        // SAFETY: `self.request.irq` is a valid registered IRQ number (type invariant).
++        unsafe { bindings::synchronize_irq(self.request.irq) };
+     }
++}
+ 
+-    /// Wait for pending IRQ handlers on other CPUs.
+-    pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
+-        let inner = self.inner.access(dev)?;
+-        inner.synchronize();
+-        Ok(())
++#[pinned_drop]
++impl<T: ThreadedHandler> PinnedDrop for ThreadedRegistration<'_, T> {
++    fn drop(self: Pin<&mut Self>) {
++        // SAFETY: The cookie was set to a pointer to `Self` in `ThreadedRegistration::new()`. This
++        // blocks until all in-flight handlers complete, so no references to `self` remain after
++        // this returns.
++        unsafe {
++            bindings::free_irq(
++                self.request.irq,
++                core::ptr::from_mut::<Self>(self.get_unchecked_mut()).cast::<c_void>(),
++            )
++        };
+     }
+ }
+ 
+@@ -482,24 +457,22 @@ pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
+     _irq: i32,
+     ptr: *mut c_void,
+ ) -> c_uint {
+-    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<T>` set in `ThreadedRegistration::new`
+-    let registration = unsafe { &*(ptr as *const ThreadedRegistration<T>) };
+-    // SAFETY: The irq callback is removed before the device is unbound, so the fact that the irq
+-    // callback is running implies that the device has not yet been unbound.
+-    let device = unsafe { registration.inner.device().as_bound() };
++    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T>>();
++    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T>` set in
++    // `ThreadedRegistration::new()`.
++    let registration = unsafe { &*ptr };
+ 
+-    T::handle(&registration.handler, device) as c_uint
++    T::handle(&registration.handler) as c_uint
+ }
+ 
+ /// # Safety
+ ///
+ /// This function should be only used as the callback in `request_threaded_irq`.
+ unsafe extern "C" fn thread_fn_callback<T: ThreadedHandler>(_irq: i32, ptr: *mut c_void) -> c_uint {
+-    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<T>` set in `ThreadedRegistration::new`
+-    let registration = unsafe { &*(ptr as *const ThreadedRegistration<T>) };
+-    // SAFETY: The irq callback is removed before the device is unbound, so the fact that the irq
+-    // callback is running implies that the device has not yet been unbound.
+-    let device = unsafe { registration.inner.device().as_bound() };
++    let ptr = ptr.cast_const().cast::<ThreadedRegistration<'_, T>>();
++    // SAFETY: `ptr` is a pointer to `ThreadedRegistration<'_, T>` set in
++    // `ThreadedRegistration::new()`.
++    let registration = unsafe { &*ptr };
+ 
+-    T::handle_threaded(&registration.handler, device) as c_uint
++    T::handle_threaded(&registration.handler) as c_uint
+ }
+diff --git a/rust/kernel/pci/irq.rs b/rust/kernel/pci/irq.rs
+index d9230e105541..fea484dcf9cf 100644
+--- a/rust/kernel/pci/irq.rs
++++ b/rust/kernel/pci/irq.rs
+@@ -173,34 +173,44 @@ fn drop(&mut self) {
+ 
+ impl Device<device::Bound> {
+     /// Returns a [`kernel::irq::Registration`] for the given IRQ vector.
+-    pub fn request_irq<'a, T: crate::irq::Handler + 'static>(
++    ///
++    /// # Safety
++    ///
++    /// Callers must not `mem::forget()` the resulting [`irq::Registration`] or otherwise prevent
++    /// its [`Drop`] implementation from running.
++    pub unsafe fn request_irq<'a, T: crate::irq::Handler + 'a>(
+         &'a self,
+         vector: IrqVector<'a>,
+         flags: irq::Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<irq::Registration<T>, Error> + 'a {
++    ) -> impl PinInit<irq::Registration<'a, T>, Error> + 'a {
+         pin_init::pin_init_scope(move || {
+             let request = vector.try_into()?;
+ 
+-            Ok(irq::Registration::<T>::new(request, flags, name, handler))
++            // SAFETY: Caller guarantees the Registration will not be leaked.
++            Ok(unsafe { irq::Registration::<T>::new(request, flags, name, handler) })
+         })
+     }
+ 
+     /// Returns a [`kernel::irq::ThreadedRegistration`] for the given IRQ vector.
+-    pub fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'static>(
++    ///
++    /// # Safety
++    ///
++    /// Callers must not `mem::forget()` the resulting [`irq::ThreadedRegistration`] or otherwise
++    /// prevent its [`Drop`] implementation from running.
++    pub unsafe fn request_threaded_irq<'a, T: crate::irq::ThreadedHandler + 'a>(
+         &'a self,
+         vector: IrqVector<'a>,
+         flags: irq::Flags,
+         name: &'static CStr,
+         handler: impl PinInit<T, Error> + 'a,
+-    ) -> impl PinInit<irq::ThreadedRegistration<T>, Error> + 'a {
++    ) -> impl PinInit<irq::ThreadedRegistration<'a, T>, Error> + 'a {
+         pin_init::pin_init_scope(move || {
+             let request = vector.try_into()?;
+ 
+-            Ok(irq::ThreadedRegistration::<T>::new(
+-                request, flags, name, handler,
+-            ))
++            // SAFETY: Caller guarantees the Registration will not be leaked.
++            Ok(unsafe { irq::ThreadedRegistration::<T>::new(request, flags, name, handler) })
+         })
+     }
+ 
+diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
+index 9b362e0495d3..a4510c68e290 100644
+--- a/rust/kernel/platform.rs
++++ b/rust/kernel/platform.rs
+@@ -339,22 +339,30 @@ macro_rules! define_irq_accessor_by_index {
+         $handler_trait:ident
+     ) => {
+         $(#[$meta])*
+-        pub fn $fn_name<'a, T: irq::$handler_trait + 'static>(
++        ///
++        /// # Safety
++        ///
++        /// Callers must not `mem::forget()` the resulting registration or otherwise prevent its
++        /// [`Drop`] implementation from running.
++        pub unsafe fn $fn_name<'a, T: irq::$handler_trait + 'a>(
+             &'a self,
+             flags: irq::Flags,
+             index: u32,
+             name: &'static CStr,
+             handler: impl PinInit<T, Error> + 'a,
+-        ) -> impl PinInit<irq::$reg_type<T>, Error> + 'a {
++        ) -> impl PinInit<irq::$reg_type<'a, T>, Error> + 'a {
+             pin_init::pin_init_scope(move || {
+                 let request = self.$request_fn(index)?;
+ 
+-                Ok(irq::$reg_type::<T>::new(
+-                    request,
+-                    flags,
+-                    name,
+-                    handler,
+-                ))
++                // SAFETY: Caller guarantees the Registration will not be leaked.
++                Ok(unsafe {
++                    irq::$reg_type::<T>::new(
++                        request,
++                        flags,
++                        name,
++                        handler,
++                    )
++                })
+             })
+         }
+     };
+@@ -368,22 +376,30 @@ macro_rules! define_irq_accessor_by_name {
+         $handler_trait:ident
+     ) => {
+         $(#[$meta])*
+-        pub fn $fn_name<'a, T: irq::$handler_trait + 'static>(
++        ///
++        /// # Safety
++        ///
++        /// Callers must not `mem::forget()` the resulting registration or otherwise prevent its
++        /// [`Drop`] implementation from running.
++        pub unsafe fn $fn_name<'a, T: irq::$handler_trait + 'a>(
+             &'a self,
+             flags: irq::Flags,
+             irq_name: &'a CStr,
+             name: &'static CStr,
+             handler: impl PinInit<T, Error> + 'a,
+-        ) -> impl PinInit<irq::$reg_type<T>, Error> + 'a {
++        ) -> impl PinInit<irq::$reg_type<'a, T>, Error> + 'a {
+             pin_init::pin_init_scope(move || {
+                 let request = self.$request_fn(irq_name)?;
+ 
+-                Ok(irq::$reg_type::<T>::new(
+-                    request,
+-                    flags,
+-                    name,
+-                    handler,
+-                ))
++                // SAFETY: Caller guarantees the Registration will not be leaked.
++                Ok(unsafe {
++                    irq::$reg_type::<T>::new(
++                        request,
++                        flags,
++                        name,
++                        handler,
++                    )
++                })
+             })
+         }
+     };
 
-> +static int __init hv_initialize_static_domains(void)
-> +{
-> +	int ret;
-> +	struct hv_iommu_domain *hv_domain;
-> +
-> +	/* Default stage-1 identity domain */
-> +	hv_domain = &hv_identity_domain;
-> +
-> +	ret = hv_create_device_domain(hv_domain, HV_DEVICE_DOMAIN_TYPE_S1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = hv_configure_device_domain(hv_domain, IOMMU_DOMAIN_IDENTITY);
-> +	if (ret)
-> +		goto delete_identity_domain;
+base-commit: e7e09a8546a9e41a164378979471a4b4bd166bc7
+-- 
+2.55.0
 
-IMHO I would change this around to have a single function that accepts
-a struct hv_input_configure_device_domain as input and does both of
-the hypercalls inside. Then here it is easy to directly construct the
-hv_input_configure_device_domain for blocking and identity.
-
-I'd be happy if this never touched domain_type, drivers shouldn't be
-touching that.
-
-> +static void __init hv_init_iommu_device(struct hv_iommu_dev *hv_iommu,
-> +			struct hv_output_get_iommu_capabilities *hv_iommu_cap)
-> +{
-> +	ida_init(&hv_iommu->domain_ids);
-> +
-> +	hv_iommu->cap = hv_iommu_cap->iommu_cap;
-> +	hv_iommu->max_iova_width = hv_iommu_cap->max_iova_width;
-> +	if (!hv_iommu_5lvl_supported(hv_iommu->cap) &&
-> +	    hv_iommu->max_iova_width > 48) {
-> +		pr_info("5-level paging not supported, limiting iova width to 48.\n");
-> +		hv_iommu->max_iova_width = 48;
-> +	}
-> +
-> +	hv_iommu->geometry = (struct iommu_domain_geometry) {
-> +		.aperture_start = 0,
-> +		.aperture_end = (((u64)1) << hv_iommu->max_iova_width) - 1,
-> +		.force_aperture = true,
-> +	};
-
-I don't see anything reading this, I don't expect this to be used?
-
-The max_iova_width has to be passed into the iommupt creation, which
-it does:
-
- +	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
- +	cfg.common.hw_max_oasz_lg2 = 52;
- +	cfg.top_level = (hv_iommu_device->max_iova_width > 48) ? 4 : 3;
- +	ret = pt_iommu_x86_64_init(&hv_domain->pt_iommu_x86_64, &cfg, GFP_KERNEL);
- +	if (ret)
-
-So just delete hv->iommu->geometry.
-
-Also, VT-D has weirdness where the HW can require a 4 level table but
-only a 3 level worth of IOVA width is being used. This was a
-real-world bug we hit when converting to iommupt. This interaction
-with the HV doesn't seem able to represent that.
-
-> +	/*
-> +	 * The page table code only maps x86 page sizes (4K/2M/1G); require the
-> +	 * hypervisor to advertise a non-empty subset of exactly those.
-> +	 */
-> +	if (!hv_iommu_cap.pgsize_bitmap ||
-> +	    (hv_iommu_cap.pgsize_bitmap & ~(u64)(SZ_4K | SZ_2M | SZ_1G))) {
-> +		pr_err("unsupported page sizes: pgsize_bitmap=0x%llx\n",
-> +		       hv_iommu_cap.pgsize_bitmap);
-> +		return -ENODEV;
-> +	}
-
-This can just be
-
-if (!(hv_iommu_cap.pgsize_bitmap & PAGE_SHIFT)) {
-		pr_err("unsupported page sizes: pgsize_bitmap=0x%llx\n",
-		       hv_iommu_cap.pgsize_bitmap);
-}		return -ENODEV;
-
-Which is all you really need. If the HV doesn't support 1G it is
-perfectly fine, the iommupt page bitmap is already masked by this. 
-
-> +	ret = iommu_device_register(&hv_iommu->iommu, &hv_iommu_ops, NULL);
-> +	if (ret) {
-> +		pr_err("iommu_device_register failed: %d\n", ret);
-> +		goto err_sysfs_remove;
-> +	}
-> +
-> +	pr_info("successfully initialized\n");
-
-Don't log someting so vauge?
-
-Jason
