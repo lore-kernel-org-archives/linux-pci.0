@@ -1,109 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8555531E820
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:32:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93F403195FA
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:34:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783053160; cv=none; b=g4BDxopJ1IRbgVPMF00wEbLC5Fi+D5Cqj3ad/lvQM3atqKsRjmXDdXDRrtxD4chVovBJJOqrf0D0mSBQtl4wHnMyY2vnZ9mvLCRq0i3XPz0ZvafqH91r2iYyYtfeAw9FsP2qDY31Dv9xhCdL/CFRd/w3dcG7r5X9noh/RdMDGfQ=
+	t=1783053260; cv=none; b=Sh2LG4ZYYQtCEl2FXus650cldh3zBsvAHnQ1CZD0Zxz0MUtQCg+8v46ZZ5sxdarhJdNnGESaxh8phPrcOBxwQal0UEmv/tOwy8NbUiXAUZn2rJspLfnTgWILaMnG9bvvdrY0i4B79n7164yeJKXx+Zt9n/90Gw76GPbRL12AVcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783053160; c=relaxed/simple;
-	bh=jfTRUnp9W5Bq5ppuTgCmSq1VyFFkcVbMry8hxNJMjRc=;
+	s=arc-20240116; t=1783053260; c=relaxed/simple;
+	bh=mxB+SKmThnWahfizU3ccDeCURhjo2skJxWd5wCmec5g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XGDISIv0XKonpWh8af/JYeR/PiUOEuTXYI8h6Q5bHEsSCjaO0n0RxQ4g8gprU3XtaJJfO2CtBzOJeGsjLAC1yLu8MGyCSzsvc7/fZvbN4cGTKCtVRp+xK36PujS6i138cCDcypuXvmR5fyNVJTtGbaFzFTU2nP034h+FGUrMcp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c5A8YfZX; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QBQev0pP78Lu6grHlE2KrVtrbYOkW+r2keVf3BmqIkgLvfx6QHilfMS0aQaWjHH7EkNj6/tfL9PvwY1g7JyEoN4ntRk1qb2N5V7pwQVDL9jTRxYZLXio5nufjpRkPg2qknZlCwFra8bYE8wD181IrZh04hUTAStsXWESmL5PW6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PIy2m0vL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c5A8YfZX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F9011F000E9;
-	Fri,  3 Jul 2026 04:32:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PIy2m0vL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE2F21F00A3A;
+	Fri,  3 Jul 2026 04:34:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783053148;
-	bh=7a0AsVt1eXzDMAfYB6+idTT9DOjSu7L1XRhy9NM1jVM=;
+	s=k20260515; t=1783053249;
+	bh=mxB+SKmThnWahfizU3ccDeCURhjo2skJxWd5wCmec5g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c5A8YfZXnbmJrXtcGjpgU+HUhF4HebfbX3w0zHJl9FQwQvTVh2w95njx47oXMhqYb
-	 eyES2Zby4Qyitu/shA6ka7IIAkk43JsXGEc6i6947xwms3bUff1a4yaBCRSaZi3uVa
-	 XDVVeAtR6gFdUKmAnOPdYKiu8oIcvkNAGaEaup0q68tNdkydoSGp/dmOWjRPEhq+22
-	 4oM1pJTTsOCKYkmTDmkzxIhXsMN12snW+sBJgYfdpJGeVjkl/G6msjQBlaQVs5z8LJ
-	 fZTpzWIT/ktSb4qnHKnTCb0yLbXZOVDQ/dFEYYggh8eW4ZEt35j77NDYas/COU8L18
-	 A63IgrglSOIuQ==
+	b=PIy2m0vL9FaXBB7INqXPsIR6WiN1K/jGAsdISUTr7kyGt2WjMLYla6P4yPdfTWqCI
+	 ck8UkYKXoSS2/vi2R+v/t43hz9PFdMsQzAhxxASxq3So6aF4vQSlKybD6ZJ6TkJeIw
+	 3Nm75vr4ChakWiRa50EgJcRpnJnfa6/HL8OwcSflyVcu2Lb2F8ZSVYM6NhotCIRWAo
+	 fZBtAms/nQptpSr4Y2eNvWq4kSh2N1P5iAAKdSnRHFeeotPzg1Nn+5ucnetsP6duDQ
+	 Ny0feM5FCeuk+9vjSZzK/QrblpujWgWxm14R8rSeE1XL/lsa5MLCN0XpqWZBssUKDt
+	 nXLpUUewu9Eiw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 09/18] iommu/arm-smmu-v3: Introduce per-cmdq
- cmdq_err_handler callback
+Subject: Re: [PATCH v5 15/18] iommu/arm-smmu-v3: Add INV_TYPE_ATS_BROKEN to
+ skip quarantined ATS masters
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <df41122bd28b74dbe2de09d6cbe6c636e647c93b.1783044582.git.nicolinc@nvidia.com>
+In-Reply-To: <18ebcb530ae161c5f4e37394ed1d69c5bf010667.1783044582.git.nicolinc@nvidia.com>
 References: <cover.1783044582.git.nicolinc@nvidia.com>
- <df41122bd28b74dbe2de09d6cbe6c636e647c93b.1783044582.git.nicolinc@nvidia.com>
+ <18ebcb530ae161c5f4e37394ed1d69c5bf010667.1783044582.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 04:32:28 +0000
-Message-Id: <20260703043228.7F9011F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 04:34:08 +0000
+Message-Id: <20260703043408.CE2F21F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+> A subsequent change quarantines a master whose ATC invalidation timed out,
+> marking its INV_TYPE_ATS / INV_TYPE_ATS_FULL entries in that domain's invs
+> as broken. Clearing STE.EATS makes the SMMU reject the device's ATS but
+> does not stop the driver from issuing ATC_INV, so without a marker those
+> commands would keep timing out on that master.
+>=20
+> Add the INV_TYPE_ATS_BROKEN type. __arm_smmu_domain_inv_range() skips it =
+in
+> its switch without issuing commands. arm_smmu_inv_is_ats() recognizes it =
+so
+> the iter's batch-boundary logic places it next to other ATS group entries.
+>=20
+> The setter writes cur->type via WRITE_ONCE while the inv_range iter holds
+> read_lock on invs->rwlock, so its loads of cur->type and next->type race
+> with it. A new arm_smmu_inv_type() helper wraps the load in READ_ONCE, and
+> the iter and arm_smmu_inv_cmp() read through it. cur->type is u8 so the
+> access is already atomic; READ_ONCE annotates it for KCSAN and matches the
+> [ ... ]
+> anywhere.
+>=20
+> Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
+> Assisted-by: Claude:claude-opus-4-7
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
-Pre-existing issues:
-- [High] `arm_smmu_device_disable()` sleeps while called from hardirq conte=
-xt in `arm_smmu_gerror_handler()`.
---
-
-commit d1df4f7525ea4b8d14160727c6a78de7c62b7cbb
-Author: Nicolin Chen <nicolinc@nvidia.com>
-
-iommu/arm-smmu-v3: Introduce per-cmdq cmdq_err_handler callback
-
-This patch adds a cmdq_err_handler and a paired cmdq_err_lock to struct
-arm_smmu_cmdq. It updates arm_smmu_gerror_handler() to take the per-cmdq
-cmdq_err_lock when acking CMDQ_ERR.
-
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index 8a4edefeec770..c6e3d1be23403 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-[ ... ]
-> @@ -2317,6 +2322,8 @@ static irqreturn_t arm_smmu_gerror_handler(int irq,=
- void *dev)
->  	if (active & GERROR_SFM_ERR) {
->  		/* SMMU is being disabled, so other errors don't matter */
->  		writel(gerror, smmu->base + ARM_SMMU_GERRORN);
-> +		/* Release before arm_smmu_device_disable() that sleeps */
-> +		raw_spin_unlock_irqrestore(&smmu->cmdq.cmdq_err_lock, flags);
->  		dev_err(smmu->dev, "device has entered Service Failure Mode!\n");
->  		arm_smmu_device_disable(smmu);
-
-[Severity: High]
-This is a pre-existing issue, but since the added comment explicitly mentio=
-ns
-that arm_smmu_device_disable() sleeps, can this cause a scheduling while
-atomic bug?
-
-Looking at the call chain, arm_smmu_gerror_handler() is registered as a
-hardirq handler, and arm_smmu_device_disable() eventually calls:
-
-arm_smmu_device_disable()
-  arm_smmu_write_reg_sync()
-    readl_relaxed_poll_timeout(..., 1, ARM_SMMU_POLL_TIMEOUT_US)
-
-Because the polling timeout is called with a non-zero delay of 1 microsecon=
-d,
-it expands to might_sleep_if() and usleep_range(), forcing the kernel to sl=
-eep.
-
-While releasing the spinlock avoids a deadlock, does sleeping directly insi=
-de
-the hardirq context still risk a panic when handling a Service Failure Mode
-error?
-
->  		return IRQ_HANDLED;
->  	}
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1783044582.gi=
-t.nicolinc@nvidia.com?part=3D9
+t.nicolinc@nvidia.com?part=3D15
+
