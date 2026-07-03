@@ -1,410 +1,253 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D961FFC48;
-	Fri,  3 Jul 2026 21:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34BFF2C9D
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 21:19:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783113141; cv=none; b=jqOUN/db4hEqiBd3S/g84D9m/GJ1eHLE7zhKWeJfbMxYXyi7hyhXEFPzVa7AehPSOUDz0Q1tq289w6xcuAtDjUKONZAxl6hhY24HTe+nqXA8kZM3p7Mm3uKjGPgFDYhBLbxw6wZyqWKBGtXUP7KyfqnAD500ItrsZa34oJB3ezY=
+	t=1783113543; cv=none; b=i2aoZnaim8otCXlivDoL0rvnjyp3hzJji46fe9tUdYJ+7uCJG7+29EZx6XN3j9cwnEoA80iyJypJRcqMbct1SBVkzWYvfd+g498QlU80iLl5GMtW9vJ7+oB6GvN4Bn69iPaqtI9eexqzHQByWKowtGa4GRea95dNPiXEpvqS3jU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783113141; c=relaxed/simple;
-	bh=9VWf4infm8V20Dp3e6wzvaCsfLv7XGcfSMuJRybRsRQ=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=p7dnmzqDC1O+eNHoHLoduGBqWUIVmga0dapbqs2wpknD9fMpL6iRraL0OQmF0vDLhVlczSiiuTl8Ay6VWfjXcBKk1SXr20Oax1db3MJkHZDRIJCRheUxTnwItarrBQRdxP16H6rfEWyERUNSyWuA9wodvom1Yg2njKfJwdOdEzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nLq1DOMH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783113543; c=relaxed/simple;
+	bh=W5GKYYKZs9KFdDqxh8PRV/lYtG8ICDkaXGDC62PwOiU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=KKoaKO2bDxaCi+El5heu5GabKXfsgFL1acYfluhz2ezmqzN6VuQC2ajSa/UE4okp2D7TrVLOWZZxx0o4DcRIAIMZayiQk2/zFSdVlPlfE2m9OPa6Z7ouhW6HzliJq+osVyROvZBdoiwlZ5mB5hFGsvw+OBZ5uaiRdgpKrAhaR6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OYwj6hHV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nLq1DOMH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D6401F000E9;
-	Fri,  3 Jul 2026 21:12:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OYwj6hHV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A777F1F000E9;
+	Fri,  3 Jul 2026 21:19:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783113139;
-	bh=fOFC/QF39f9FgArllPamaxq52CS03wol5+f7DSlkIeE=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=nLq1DOMHVrZ2RzriWTwXtuoFxsrlKZoATUzHfHWyrg0S+jmiQC5C6Xtn5WezTYZfW
-	 DifTEX/sxIGL7+Xyz7Yqa+qrJfLVjU4205yP5CiT1MEmWr9SWrF9daOKikhESUmPmt
-	 9AdCgbK/++A6XRap8OMpDNQ6s6p55hnAkZwi4K1Jk9MTv41HZS6shlKXUkCXJzEFMK
-	 dTGTbWn+eoyyJGQO046WyM4ICxSYJFO2GJ4tBczGkaA5qelA9+tluHugIUZD/zxdVs
-	 SIWqYesNaSCVLcuKK8mKEc/0ETHg59YclPl/l/cVt+mv+TQDsFY4wcYYEWU1SEkGNu
-	 8yNJHyRRv+ajQ==
+	s=k20260515; t=1783113541;
+	bh=U6B/97HNpu/kwk1TjifM3ydZPZNo6YTPE8XsiHR7tEM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OYwj6hHVRp3eSHuCyWwyLNWDGblyaHOYjUGsiGp7pRutc0QUCXk2Tm3yWN7udWBvr
+	 i+9OwvpJzkt/36LAmdC7egyEzMgh3tcuuS18FVhEziOPgypWUBeNsUjBPfBMALA0G8
+	 X+fBzT8fPETJPFhaU4Lla2VUuP+rjQvyoury9u9DS+WqwN6Bsv+QFo8FSf751PphEo
+	 JRTydXKyQy060Edfknd/LozA3zS0nMeEY4/UZ4n1TxGRm/5XuM6aDns5cr7w+unl5x
+	 spF/z9Cx7fFseZZWfuasBc0h8sdZwvnayiwrEEQETWkkJh8os6mE5qpKqo4nv90tqO
+	 okTXE+vp171Vg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] rust: irq: make Registration compatible with
+ lifetime-bound drivers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Danilo Krummrich" <dakr@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260703210936.1128698-1-dakr@kernel.org>
+References: <20260703210936.1128698-1-dakr@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 03 Jul 2026 21:19:01 +0000
+Message-Id: <20260703211901.A777F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 03 Jul 2026 23:12:14 +0200
-Message-Id: <DJP8UPM9XT95.102LJRRRY4P2S@kernel.org>
-Subject: Re: [PATCH v2 4/4] rust: samples: add EDU PCI driver sample
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary Guo"
- <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- "Alexandre Courbot" <acourbot@nvidia.com>, =?utf-8?q?Onur_=C3=96zkan?=
- <work@onurozkan.dev>, "Lyude Paul" <lyude@redhat.com>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-To: "Maurice Hieronymus" <mhi@mailbox.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260620-b4-rust-pci-edu-driver-v2-0-6fd6684f2c14@mailbox.org>
- <20260620-b4-rust-pci-edu-driver-v2-4-6fd6684f2c14@mailbox.org>
- <DJEQ64V8HE19.2DMBHY4XRPMG6@kernel.org>
-In-Reply-To: <DJEQ64V8HE19.2DMBHY4XRPMG6@kernel.org>
 
-On Sun Jun 21, 2026 at 2:27 PM CEST, Danilo Krummrich wrote:
-> I'm going to send a patch to make the irq::Registration compatible with t=
-he
-> device driver lifetime rework soon. Please rebase onto that once it's sen=
-t, so
-> this sample can land as idiomatic as possible.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-Please find the patch in [1]; purely mechanical conversion of the EDU drive=
-r for
-testing purposes in [2].
+New issues:
+- [Medium] The doctests for `Registration` and `ThreadedRegistration` demon=
+strate wrapping the `unsafe` constructors in safe functions, violating soun=
+dness requirements.
+- [Low] Missing `// INVARIANT:` comments when constructing structs with `# =
+Invariants` documentation.
 
-[1] https://lore.kernel.org/driver-core/20260703210936.1128698-1-dakr@kerne=
-l.org/
+Pre-existing issues:
+- [High] Creating a Rust reference to `Registration` or `ThreadedRegistrati=
+on` before its `request` field is fully initialized causes Undefined Behavi=
+or during IRQ registration.
+- [Low] Missing `#[inline]` annotations on small/forwarding functions.
+--
 
-[2]
+commit 8e263235d0a19c8fc9b9f8c688ce7dc1f63f4165
+Author: Danilo Krummrich <dakr@kernel.org>
 
-diff --git a/samples/rust/rust_driver_edu.rs b/samples/rust/rust_driver_edu=
-.rs
-index 5f4efd514032..301b780773cb 100644
---- a/samples/rust/rust_driver_edu.rs
-+++ b/samples/rust/rust_driver_edu.rs
-@@ -6,7 +6,6 @@
+rust: irq: make Registration compatible with lifetime-bound drivers
 
- use kernel::{
-     device::Bound,
--    devres::Devres,
-     dma::{Coherent, Device, DmaMask},
-     io::{
-         poll::read_poll_timeout,
-@@ -16,7 +15,7 @@
-     irq::{self, Flags},
-     pci::{self, IrqTypes},
-     prelude::*,
--    sync::{aref::ARef, Arc, Completion},
-+    sync::Completion,
-     time::Delta, //
- };
+This commit adapts the IRQ registration to support Higher-Ranked Lifetime
+Types (HRT) device drivers by removing the static bound from IRQ handlers.
+It replaces Devres indirection with direct request_irq() and free_irq()
+calls during initialization and drop, tying the registration directly to
+the device binding scope.
 
-@@ -66,20 +65,21 @@ mod regs {
-     pub(super) const END: usize =3D 0xA0;
- }
+> diff --git a/rust/kernel/irq/request.rs b/rust/kernel/irq/request.rs
+> --- a/rust/kernel/irq/request.rs
+> +++ b/rust/kernel/irq/request.rs
+[ ... ]
+> @@ -163,12 +126,21 @@ pub fn irq(&self) -> u32 {
+>  /// //
+>  /// // This runs in process context and assumes `request` was previously=
+ acquired from a device.
+>  /// fn register_irq(
+> -///     handler: impl PinInit<Data, Error>,
+>  ///     request: IrqRequest<'_>,
+> -/// ) -> Result<Arc<Registration<Data>>> {
+> -///     let registration =3D Registration::new(request, Flags::SHARED, c=
+"my_device", handler);
+> +/// ) -> Result<Pin<KBox<Registration<'_, Data>>>> {
+> +///     // SAFETY: The returned Registration is not leaked.
+> +///     let registration =3D unsafe {
+> +///         Registration::new(
+> +///             request,
+> +///             Flags::SHARED,
+> +///             c"my_device",
+> +///             try_pin_init!(Data {
+> +///                 completion <- Completion::new(),
+> +///             }? Error),
+> +///         )
+> +///     };
 
--type Bar0 =3D pci::Bar<'static, { regs::END }>;
-+type Bar0<'a> =3D pci::Bar<'a, { regs::END }>;
-+
-+struct EduDriver;
+[Severity: Medium]
+Is it safe to expose this leak-sensitive object from a safe function?
 
- #[pin_data(PinnedDrop)]
--struct EduDriver {
--    pdev: ARef<pci::Device>,
--    data: Arc<EduDriverData>,
-+struct EduDriverData<'bound> {
-+    pdev: &'bound pci::Device,
-     #[pin]
--    irq_handler: irq::Registration<Arc<EduDriverData>>,
-+    irq_handler: irq::Registration<'bound, IrqHandler<'bound>>,
- }
+The Registration::new() constructor is unsafe because callers must not
+leak the returned registration to guarantee proper drop semantics.
+Since register_irq() is a safe function returning a Pin<KBox<...>>,
+could a safe caller leak the registration and potentially trigger a=20
+use-after-free after the driver unbinds?
 
- #[pin_data]
--struct EduDriverData {
--    #[pin]
--    bar: Devres<Bar0>,
-+struct IrqHandler<'a> {
-+    pdev: &'a pci::Device,
-+    bar: Bar0<'a>,
-     #[pin]
-     irq_test_completion: Completion,
-     #[pin]
-@@ -88,16 +88,16 @@ struct EduDriverData {
- }
+Should this example function be marked unsafe fn?
 
- impl EduDriver {
--    fn init(pdev: &pci::Device<Bound>, bar: &Bar0, data: &EduDriverData) -=
-> Result {
-+    fn init(pdev: &pci::Device<Bound>, bar: &Bar0<'_>, handler: &IrqHandle=
-r<'_>) -> Result {
-         Self::magic(pdev, bar)?;
-         Self::liveness_check(pdev, bar)?;
-         Self::factorial(pdev, bar)?;
--        Self::test_irq(pdev, bar, data)?;
--        Self::test_dma(pdev, bar, data)?;
-+        Self::test_irq(pdev, handler)?;
-+        Self::test_dma(pdev, handler)?;
-         Ok(())
-     }
+[ ... ]
+> @@ -194,43 +165,44 @@ pub struct Registration<T: Handler> {
+[ ... ]
+> +    pub unsafe fn new(
+[ ... ]
+> +        try_pin_init!(&this in Self {
+> +            handler <- handler,
+> +            request: {
+> +                // SAFETY:
+> +                // - The callbacks are valid for use with request_irq.
+> +                // - If this succeeds, the slot is guaranteed to be vali=
+d until the destructor of
+> +                //   Self runs, which will deregister the callbacks befo=
+re the memory location
+> +                //   becomes invalid.
+> +                // - When request_irq is called, everything that handle_=
+irq_callback will touch
+> +                //   has already been initialized, so it's safe for the =
+callback to be called
+> +                //   immediately.
+> +                to_result(unsafe {
+> +                    bindings::request_irq(
+> +                        request.irq,
+> +                        Some(handle_irq_callback::<T>),
+> +                        flags.into_inner(),
+> +                        name.as_char_ptr(),
+> +                        this.as_ptr().cast::<c_void>(),
+> +                    )
+> +                })?;
+> +                request
+> +            },
 
--    fn magic(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
-+    fn magic(pdev: &pci::Device<Bound>, bar: &Bar0<'_>) -> Result {
-         let identification =3D bar.read(regs::IDENTIFICATION);
+[Severity: Low]
+This isn't a bug, but shouldn't there be an // INVARIANT: comment inside
+this initialization block to explain why the invariants for Registration
+are satisfied?
 
-         let magic: u8 =3D identification.magic().into();
-@@ -121,7 +121,7 @@ fn magic(pdev: &pci::Device<Bound>, bar: &Bar0) -> Resu=
-lt {
-         Ok(())
-     }
+[Severity: High]
+This is a pre-existing issue, but does this pattern trigger undefined=20
+behavior if the interrupt fires immediately?
 
--    fn liveness_check(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
-+    fn liveness_check(pdev: &pci::Device<Bound>, bar: &Bar0<'_>) -> Result=
+During try_pin_init!, bindings::request_irq() is called while the request=20
+field is still being initialized. If the IRQ handler is invoked before=20
+request_irq() returns:
+
+handle_irq_callback()
+    let ptr =3D ptr.cast_const().cast::<Registration<'_, T>>();
+    let registration =3D unsafe { &*ptr };
+
+Could this create a Rust reference to the Registration struct while the
+request field is not fully initialized?
+
+Could the request_irq call be moved into a _: { ... } block to ensure
+the struct is fully initialized before the interrupt can fire?
+
+[ ... ]
+> @@ -241,19 +213,24 @@ pub fn handler(&self) -> &T {
+>      }
+> =20
+>      /// Wait for pending IRQ handlers on other CPUs.
+> -    ///
+> -    /// This will attempt to access the inner [`Devres`] container.
+> -    pub fn try_synchronize(&self) -> Result {
+> -        let inner =3D self.inner.try_access().ok_or(ENODEV)?;
+> -        inner.synchronize();
+> -        Ok(())
+> +    pub fn synchronize(&self) {
+> +        // SAFETY: `self.request.irq` is a valid registered IRQ number (=
+type invariant).
+> +        unsafe { bindings::synchronize_irq(self.request.irq) };
+>      }
+
+[Severity: Low]
+This is a pre-existing issue and not a bug, but should this forwarding=20
+function (and the small accessor IrqRequest::irq() in the same file) be=20
+annotated with #[inline] according to the Rust subsystem guidelines?
+
+[ ... ]
+> @@ -375,13 +336,21 @@ fn handle_threaded(&self, device: &Device<Bound>) -=
+> IrqReturn {
+>  /// // This is executing in process context and assumes that `request` w=
+as
+>  /// // previously acquired from a device.
+>  /// fn register_threaded_irq(
+> -///     handler: impl PinInit<Data, Error>,
+>  ///     request: IrqRequest<'_>,
+> -/// ) -> Result<Arc<ThreadedRegistration<Data>>> {
+[ ... ]
+> +/// ) -> Result<Pin<KBox<ThreadedRegistration<'_, Data>>>> {
+> +///     // SAFETY: The returned Registration is not leaked.
+> +///     let registration =3D unsafe {
+> +///         ThreadedRegistration::new(
+
+[Severity: Medium]
+Is it safe to expose this leak-sensitive object from a safe function?
+
+Similar to register_irq(), the ThreadedRegistration::new() constructor
+is unsafe to guarantee proper drop semantics. Does returning a Pin<KBox>
+from a safe function allow a caller to trivially leak the registration?
+
+[ ... ]
+> @@ -411,44 +380,45 @@ pub struct ThreadedRegistration<T: ThreadedHandler>=
  {
-         let test_value =3D 0xabcd;
+[ ... ]
+> +    pub unsafe fn new(
+[ ... ]
+> +        try_pin_init!(&this in Self {
+> +            handler <- handler,
+> +            request: {
+> +                // SAFETY:
+> +                // - The callbacks are valid for use with request_thread=
+ed_irq.
+[ ... ]
+> +                to_result(unsafe {
+> +                    bindings::request_threaded_irq(
+> +                        request.irq,
+> +                        Some(handle_threaded_irq_callback::<T>),
+> +                        Some(thread_fn_callback::<T>),
+> +                        flags.into_inner(),
+> +                        name.as_char_ptr(),
+> +                        this.as_ptr().cast::<c_void>(),
+> +                    )
+> +                })?;
+> +                request
+> +            },
 
-         bar.write(regs::LIVENESS_CHECK, test_value.into());
-@@ -142,7 +142,7 @@ fn liveness_check(pdev: &pci::Device<Bound>, bar: &Bar0=
-) -> Result {
-         Ok(())
-     }
+[Severity: Low]
+This isn't a bug, but shouldn't there be an // INVARIANT: comment here=20
+explaining why the invariants are satisfied?
 
--    fn factorial(pdev: &pci::Device<Bound>, bar: &Bar0) -> Result {
-+    fn factorial(pdev: &pci::Device<Bound>, bar: &Bar0<'_>) -> Result {
-         Self::wait_until_compute_has_finished(pdev, bar)?;
+[Severity: High]
+This is a pre-existing issue, but does this pattern also trigger undefined=
+=20
+behavior if the interrupt fires immediately, similar to Registration::new()?
 
-         bar.write(regs::FACTORIAL, 4.into());
-@@ -167,28 +167,30 @@ fn factorial(pdev: &pci::Device<Bound>, bar: &Bar0) -=
-> Result {
-         Ok(())
-     }
+Could this request_threaded_irq call be moved into a _: { ... } block
+to avoid creating a reference to an uninitialized request field?
 
--    fn test_irq(pdev: &pci::Device<Bound>, bar: &Bar0, data: &EduDriverDat=
-a) -> Result {
-+    fn test_irq(pdev: &pci::Device<Bound>, handler: &IrqHandler<'_>) -> Re=
-sult {
-         dev_dbg!(pdev, "raising irq\n");
-
--        bar.write(regs::IRQ_RAISE, IRQ_MAGIC_VALUE.into());
-+        handler.bar.write(regs::IRQ_RAISE, IRQ_MAGIC_VALUE.into());
-
--        data.irq_test_completion.wait_for_completion();
-+        handler.irq_test_completion.wait_for_completion();
-         Ok(())
-     }
-
--    fn test_dma(pdev: &pci::Device<Bound>, bar: &Bar0, data: &EduDriverDat=
-a) -> Result {
-+    fn test_dma(pdev: &pci::Device<Bound>, handler: &IrqHandler<'_>) -> Re=
-sult {
-         dev_dbg!(pdev, "testing dma\n");
-
--        let dma =3D &data.dma;
-+        let dma =3D &handler.dma;
-
-         const DMA_VALUE: u64 =3D 42;
-
-         kernel::dma_write!(dma, , DMA_VALUE);
-
--        bar.write(regs::DMA_SRC, dma.dma_handle().into());
--        bar.write(regs::DMA_DST, QEMU_DMA_BASE.into());
--        bar.write(regs::DMA_COUNT, (dma.size() as u64).into());
--        bar.write(
-+        handler.bar.write(regs::DMA_SRC, dma.dma_handle().into());
-+        handler.bar.write(regs::DMA_DST, QEMU_DMA_BASE.into());
-+        handler
-+            .bar
-+            .write(regs::DMA_COUNT, (dma.size() as u64).into());
-+        handler.bar.write(
-             regs::DMA_COMMAND,
-             regs::DMA_COMMAND::zeroed()
-                 .with_start_transfer(true)
-@@ -196,15 +198,17 @@ fn test_dma(pdev: &pci::Device<Bound>, bar: &Bar0, da=
-ta: &EduDriverData) -> Resu
-                 .with_raise_irq(true),
-         );
-
--        data.irq_dma_completion.wait_for_completion();
-+        handler.irq_dma_completion.wait_for_completion();
-
-         // Destroy previous value to test roundtrip
-         kernel::dma_write!(dma, , 0);
-
--        bar.write(regs::DMA_SRC, QEMU_DMA_BASE.into());
--        bar.write(regs::DMA_DST, dma.dma_handle().into());
--        bar.write(regs::DMA_COUNT, (dma.size() as u64).into());
--        bar.write(
-+        handler.bar.write(regs::DMA_SRC, QEMU_DMA_BASE.into());
-+        handler.bar.write(regs::DMA_DST, dma.dma_handle().into());
-+        handler
-+            .bar
-+            .write(regs::DMA_COUNT, (dma.size() as u64).into());
-+        handler.bar.write(
-             regs::DMA_COMMAND,
-             regs::DMA_COMMAND::zeroed()
-                 .with_start_transfer(true)
-@@ -212,7 +216,7 @@ fn test_dma(pdev: &pci::Device<Bound>, bar: &Bar0, data=
-: &EduDriverData) -> Resu
-                 .with_raise_irq(true),
-         );
-
--        data.irq_dma_completion.wait_for_completion();
-+        handler.irq_dma_completion.wait_for_completion();
-
-         let result =3D kernel::dma_read!(dma,);
-
-@@ -230,7 +234,7 @@ fn test_dma(pdev: &pci::Device<Bound>, bar: &Bar0, data=
-: &EduDriverData) -> Resu
-         Ok(())
-     }
-
--    fn wait_until_compute_has_finished(pdev: &pci::Device<Bound>, bar: &Ba=
-r0) -> Result {
-+    fn wait_until_compute_has_finished(pdev: &pci::Device<Bound>, bar: &Ba=
-r0<'_>) -> Result {
-         read_poll_timeout(
-             || Ok(bar.read(regs::STATUS)),
-             |status| status.computing() =3D=3D 0,
-@@ -244,7 +248,7 @@ fn wait_until_compute_has_finished(pdev: &pci::Device<B=
-ound>, bar: &Bar0) -> Res
-
- impl pci::Driver for EduDriver {
-     type IdInfo =3D ();
--    type Data<'bound> =3D Self;
-+    type Data<'bound> =3D EduDriverData<'bound>;
-
-     const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
-
-@@ -275,76 +279,61 @@ fn probe<'bound>(
-                 .alloc_irq_vectors(1, 1, IrqTypes::default().with(pci::Irq=
-Type::Msi))
-                 .inspect_err(|e| dev_err!(pdev, "alloc_irq_vectors failed:=
- {:?}\n", e))?;
-
--            // State shared with the IRQ handler (the BAR and the completi=
-on the
--            // handler signals) lives in an `Arc<EduDriverData>`. `EduDriv=
-erData`
--            // itself implements `irq::Handler`, and the registration take=
-s an
--            // `Arc<T>` via the `impl Handler for Arc<T>` blanket impl. Th=
-is keeps
--            // the handler's state out of `EduDriver` and avoids a self-re=
-ference.
--            let data =3D Arc::pin_init(
--                try_pin_init!(EduDriverData {
--                    bar <- pdev
--                        .iomap_region_sized(0, c"rust_driver_edu")
--                        .and_then(|bar| bar.into_devres()),
--                    irq_test_completion <- Completion::new(),
--                    irq_dma_completion <- Completion::new(),
--                    dma: ca,
--                }),
--                GFP_KERNEL,
--            )?;
--
--            let req =3D irq::Registration::new(
--                (*irq.start()).try_into()?,
--                Flags::TRIGGER_NONE,
--                c"rust_edu_irq",
--                Ok(data.clone()),
--            );
-+            let bar =3D pdev.iomap_region_sized::<{ regs::END }>(0, c"rust=
-_driver_edu")?;
-
--            // Ordering matters: the handler is registered (`irq_handler <=
-- req`)
--            // *before* the `_:` block runs the self-tests, one of which r=
-aises an
--            // interrupt and waits for the handler. Raising before the han=
-dler is
--            // registered would hang (the completion is never signalled).
--            Ok(try_pin_init!(Self {
-+            // SAFETY: The Registration is not leaked.
-+            let req =3D unsafe {
-+                irq::Registration::new(
-+                    (*irq.start()).try_into()?,
-+                    Flags::TRIGGER_NONE,
-+                    c"rust_edu_irq",
-+                    try_pin_init!(IrqHandler {
-+                        pdev,
-+                        bar,
-+                        irq_test_completion <- Completion::new(),
-+                        irq_dma_completion <- Completion::new(),
-+                        dma: ca,
-+                    }? Error),
-+                )
-+            };
-+
-+            Ok(try_pin_init!(EduDriverData {
-                 irq_handler <- req,
--                // Side-effect block: run the staged self-tests against th=
-e mapped
--                // BAR now that the handler is live. A failure here aborts=
- probe.
-+                // Ordering matters: the handler is registered (`irq_handl=
-er <- req`)
-+                // *before* the `_:` block runs the self-tests, one of whi=
-ch raises an
-+                // interrupt and waits for the handler. Raising before the=
- handler is
-+                // registered would hang (the completion is never signalle=
-d).
-                 _: {
--                    let bar =3D data.bar.access(pdev.as_ref())?;
--                    EduDriver::init(pdev, bar, &data)?;
-+                    let handler =3D irq_handler.handler();
-+                    EduDriver::init(pdev, &handler.bar, handler)?;
-                     dev_info!(
-                         pdev,
-                         "rust_driver_edu successfully initialized\n",
-                     );
-                 },
--                data,
--                pdev: pdev.into()
-+                pdev,
-             }))
-         })
-     }
- }
-
--impl irq::Handler for EduDriverData {
--    fn handle(&self, pdev: &kernel::device::Device<Bound>) -> irq::IrqRetu=
-rn {
--        dev_dbg!(pdev, "irq handler called\n");
--        // `access()` only fails on device mismatch, so this branch is
--        // structurally unreachable here, but it must be handled.
--        let Ok(bar) =3D self.bar.access(pdev.as_ref()) else {
--            dev_err!(pdev, "cannot access bar register inside irq handler\=
-n");
--            return irq::IrqReturn::None;
--        };
--        let status: u32 =3D bar.read(regs::IRQ_STATUS).into();
-+impl irq::Handler for IrqHandler<'_> {
-+    fn handle(&self) -> irq::IrqReturn {
-+        dev_dbg!(self.pdev, "irq handler called\n");
-+        let status: u32 =3D self.bar.read(regs::IRQ_STATUS).into();
-
-         // DMA_IRQ
-         if status & DMA_IRQ !=3D 0 {
--            dev_dbg!(pdev, "handling dma completion in irq\n");
--            bar.write(regs::IRQ_ACK, DMA_IRQ.into());
-+            dev_dbg!(self.pdev, "handling dma completion in irq\n");
-+            self.bar.write(regs::IRQ_ACK, DMA_IRQ.into());
-             self.irq_dma_completion.complete();
-         }
-
-         // TEST_IRQ
-         let magic =3D status & !DMA_IRQ;
-         if magic =3D=3D IRQ_MAGIC_VALUE {
--            dev_dbg!(pdev, "handling test completion in irq\n");
--            bar.write(regs::IRQ_ACK, magic.into());
-+            dev_dbg!(self.pdev, "handling test completion in irq\n");
-+            self.bar.write(regs::IRQ_ACK, magic.into());
-             self.irq_test_completion.complete();
-         }
-
-@@ -353,7 +342,7 @@ fn handle(&self, pdev: &kernel::device::Device<Bound>) =
--> irq::IrqReturn {
- }
-
- #[pinned_drop]
--impl PinnedDrop for EduDriver {
-+impl PinnedDrop for EduDriverData<'_> {
-     fn drop(self: Pin<&mut Self>) {
-         dev_dbg!(self.pdev, "Remove Rust EDU driver sample.\n");
-     }
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703210936.1128=
+698-1-dakr@kernel.org?part=3D1
