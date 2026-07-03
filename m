@@ -1,295 +1,180 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012053.outbound.protection.outlook.com [52.101.43.53])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E31638E8A0;
-	Fri,  3 Jul 2026 11:37:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783078670; cv=fail; b=hEa8gR44DaX2cXzI72N/mLsRve2V/US4ZiE1uSgDqYd0fM4E0cypyYHjgfXy/SACEJA4j7zHjNSut43Upzxc/vjLSnLBO28Y8wLsKv0SJNcNvXw6LKjoLshiEaD91SUnFBRXwAUwjEJa3zVzqKas4ndPJNd6MITW0Gu0I4umW7Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783078670; c=relaxed/simple;
-	bh=rnc/sru4zFTg28C0RzDQsgWED+27oFUakh3KVrL+zgA=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=PIYHJt+le6xCecCAj2KSqnW6gKDUvmSROXxCwHk9wxm9c+5ZWxA++HCJD+p5A/fWDir4S5Q7qHb9ymYEp8jYegZ8d0uXLnEk0uv4FmPnRE1aAH0P50B/w2Sg2XosGdo7PVxYFqiJAeTBv1zTsJ+knrVIKxzH+ty8ERKPQcgsoiM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=rXJgqJZx; arc=fail smtp.client-ip=52.101.43.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5071A3CF043
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 12:08:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783080532; cv=none; b=RimQAF7JWMLgZ25vma8lLc4vCwXGk0Nsiu6RYglR41Hz4Shgrwmbokb5BPvYx9JqcWajX+K5eImuAApIgA5xJC8djB2GC6OtJJgcYBIsqR3U9VlefHbdrrvhJHUFH7eweCLCgmfz7Uy6KDaA+qs3sLLrWayVKXKCfDDmlcMOtXc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783080532; c=relaxed/simple;
+	bh=BUnkY/0PhRAAb4fytqk7lD65By8W889aQEAnDJ7aUVE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=UjeddBT0ljl0IRQ1aIMpPF9+yiS/jZ1lwn3ZmbLk1DhNPEvyiSjFXVNMjiLc5eT73utUrPLlhIOG9wwwEoAqZF2SvLwFMOrlsePCbADDF6uVEk9bAXzj0MHkOs0awWC5oRZwRdeeF2AgSXQBk6riOYFEC/JC3p+xKX4eShD3Idk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=lqrSXaoX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZTbqd9Em; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="rXJgqJZx"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Gl+euFfa+0gbyDQXBGh+3Fuuay3LtltxKIFkBl6kCzO9wIIhzka2RhGogahdvZOfrVqNKFUKhOuKKF5wD6bkscORsYz2ALsx3GdehAZ8IZGA4z8+6+0eTKmJx6M6rxyXwsjwKcZCSHOR7lDqqEq5H86bHIEDwMqIAKYLGG2ac5oFBLzchbPmhB/IBzxiiUZlxwYuw42oGhjnszc/NiThAxbrpQcxupy6+OEJXRX0XPuQOkvYlsAlZ2ItRoc75x8imPQ14eUPcGUIrVy7/8VSNuEuveUy/D4f5/awzyDzjW2cxPjpbvuXwPuSU8hUJj7SG84f5cNttCkAyITSza7Pqw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tAQF4F2b5VsFSYa7DIV7vmyWh5Rug0I7p74nDic7vFE=;
- b=yWQU+e44OQainn2JSBbFkwi46NHbs7SAl5XG7zzTZQ8CHiY9PDT+J8Y/JLlzjJiIyzpQR32+ysixGLu1Ah7KgvAMRV+t92gL7ZoC74xvE/g8fkR+eZB9SO/xvAguKCERxDT/nb+gdNSJv12nw633gDqsu0btTNJNdqoY8h+r9DYPhCvusM0O7ZZQocCnXApt+yso6M+sAA+Hp2khq1eaAnGGeXngJYxB6LtjLGXgtn/9s06Vw1O+H8ICNpEBYlszoHlVyNgaZP6530wF0GQ05NeBRZXzguDZemoF/s6SKtezvDYTolNe1J2lj3vfQgGXZ72HLV++Hrq4osGszU2Mdw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tAQF4F2b5VsFSYa7DIV7vmyWh5Rug0I7p74nDic7vFE=;
- b=rXJgqJZx6/nwGRqVFzgAsJfjs93QZu7No4xsFzlfNRbPdyuV07Yxg3vbb5Y0rP7mTIQL4Ds4aOooVPfMTQmCWJZ2OkIqm8AG7h0MQfBayqIWxV2ftX78RQNsze27FWCZWFCe/CRQyRSZc0m0pxpU+aMwpmrMTiveZbzJXfJB93PHXefMeLvhcSkK8Ix9TbAOebQIked4Zx58j9Y/uKl4Pi4wGvcfMKQfFJrJ3avLFTKSJQLiwI1KmBSAiPPieZDCWeXp/d3Dhq2Ye+Jy7hRJ+bnq3N28FaiADFA/WraYPfbj3HBgvqYr7/0C0aCdf/yQEn0MnnWQy7L112mupYTQng==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CY3PR12MB9556.namprd12.prod.outlook.com (2603:10b6:930:10a::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Fri, 3 Jul
- 2026 11:37:45 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0181.008; Fri, 3 Jul 2026
- 11:37:45 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 03 Jul 2026 20:37:41 +0900
-Message-Id: <DJOWMSPZW5D1.3DV2KKPXYXNYS@nvidia.com>
-Subject: Re: [PATCH v5 14/20] rust: io: add I/O backend for system memory
- with volatile access
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
- "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
- <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
- <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pwm@vger.kernel.org>, "Laura Nao" <laura.nao@collabora.com>
-Content-Transfer-Encoding: quoted-printable
-References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-14-d0961471ae50@garyguo.net>
-In-Reply-To: <20260626-io_projection-v5-14-d0961471ae50@garyguo.net>
-X-ClientProxiedBy: TYCP301CA0064.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:7d::16) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="lqrSXaoX";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZTbqd9Em"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 663B2gOK3126390
+	for <linux-pci@vger.kernel.org>; Fri, 3 Jul 2026 12:08:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=bgimtSI4aro2GhawYEE98j
+	B/geFpQ8EBMgBfF8FzehE=; b=lqrSXaoX1UEei3eG8FEcJ7G2MaTbKPG6Wikb9T
+	WuyIhFEerATSshhir549oADX71e1RXjE7X/HYb9Fz3flTfb5dSriEze7rYj2DXxT
+	CBnGKYArmTIrNyMR9AEhLKhRpjZXf+tiDqpSbZpjEWxGAuEhh3ie/zUqxwSfbwoo
+	iLZKE/chhvMwvbagxYtnpHJPPSofEVXbmCbK2lF3geEkhnp18O/kWGTCpbGViajW
+	LPquW0SF+8rskfeXySfvQFNvpoICOjw9gD87noBDKZSA4moazue6StXXxpXnN/6k
+	qoMimt/m7/YaV4j7P3dbKJw/8Y7qbyRGpBzkX5vJd4ctLYZw==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f5tpnmcug-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 03 Jul 2026 12:08:50 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c892143db7fso527931a12.1
+        for <linux-pci@vger.kernel.org>; Fri, 03 Jul 2026 05:08:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1783080529; x=1783685329; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bgimtSI4aro2GhawYEE98jB/geFpQ8EBMgBfF8FzehE=;
+        b=ZTbqd9EmJJlkvZzTFmycIq4ppqPRiOKrRoSwqzP4KvnPV8V3rE2fy4gRrtuaOPIBMc
+         Ud9i/5uenBXKhSAJsBRCbHpUGTeHJo9iKA3mNCobvaX4+gRpbR+JnxKmUvAA7D4+cPAD
+         YGy3O5FcG/aPNGz+kDIePfafny03COnK8EVtcnrphOHcOXGDNyg/aXGmQnw4lS47Qu+2
+         35skNgPgWW5VF8WAHFeRcDZrn67PyL9B5yl8aaS+BiRSfYvPUfqpiUGjYW5sep0JZRle
+         w1uIwykRoMYQ/GvfSzWAtlfb8FsxuM+X/sWmS8a1XyeJQXp20euGwjEjh196+DoOwcYW
+         F7nw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783080529; x=1783685329;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bgimtSI4aro2GhawYEE98jB/geFpQ8EBMgBfF8FzehE=;
+        b=jJ8A+CUo2kPz3iGi8gGa0s2OBNQ450OXaQ32zJtjgKy2Rrs0Doumvra7y3vTHef5P/
+         KEJnT8LHYjUUpUJM1FESJuUvJzhpa2f3BS9FsKJEPgNsG7qKzDiYdn5M4eiEzND9oddN
+         JNHB8AVWMbQ349zdNPaQO0EWIH+046iTxg/e9CMCeO6w9wbRUhDmWtsLjVtoL6ZM0vHW
+         pnL6bWSk474KADNuHUc8YTQ9nysPhblISI6HnxxGfH+WvqVG8cMJp61v/6zk5gyt5ggP
+         wLgrN1eg/HRVYLLiblh0VmpWyTyirV7gmU77LRiXtGvxweUqdNpa6Ri38EEQFCGbwup+
+         t4YQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+exE+wOVXGFbQTqF+Gy7q0HEHvyNhh7ZI7QZuDJFxaQVoZpyIFdKK2wSYvXyK9BSLtA1DMpFn4G0I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzTuCwHPm7/IrX66fgvh/0bBX2CUBvd38N9vxguutgZqC9UPDgy
+	DJ4Jm4EW+LVg58B2vkFr2zxwKafB2g312YjRmC3oCo6W+hExg/OpUelx4/T5QFQzk5kLV1l2IMN
+	yDTI7YgorAgNM55gUsnkdr7HaNopT1B7BnvxMu4XSXa1eSBgp2qBY645Ana2DEqU=
+X-Gm-Gg: AfdE7cmz9x46nUxNv3xKgMsICtst0kIZGnKZs54aly/baIbgdWduxheLlgmUKXjVn79
+	C+Jw00TXDYU2y001s9Zx74m44cY840VRf3Ch2NYbigApdQcN5+FV6Xnb0VuG+NOj9Brk4LGTVTW
+	Zcb0u23ykDPNESBd6NUVoiVlEIUxLEYypjJ6tht808G8gfNMfeRiButuE9yoSuBW3GOjn5A5lSX
+	Q8WOKmp9zhFoLieYqYBOJ9xzM45tqCBd24R949Pr6Nutko5DOtYUM4kcT2eN2Bje1B8taC4MjBM
+	gR9ep5kH4lK92Ds+yVUArAmFowI5WPH4Ncvyy0BoiOshkSI+ORuWL10gzyAKyYkJAn1goBer7Vf
+	lZ6T3pKFfOs+ksD6GEi4rO1HqVYAFVAVoxmer6Vb+Ms5whpES
+X-Received: by 2002:a05:6a20:2445:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3bff4255df7mr11649236637.33.1783080529186;
+        Fri, 03 Jul 2026 05:08:49 -0700 (PDT)
+X-Received: by 2002:a05:6a20:2445:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3bff4255df7mr11649190637.33.1783080528550;
+        Fri, 03 Jul 2026 05:08:48 -0700 (PDT)
+Received: from hu-vpernami-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c9e8eb10638sm2530779a12.2.2026.07.03.05.08.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jul 2026 05:08:48 -0700 (PDT)
+From: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
+Subject: [PATCH 0/2] dt-bindings: pci: qcom,hawi-pcie: Add Maili PCIe
+ compatibles
+Date: Fri, 03 Jul 2026 17:38:39 +0530
+Message-Id: <20260703-vdev_maili_dt_bindings-v1-0-c9df0916cd5e@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CY3PR12MB9556:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9f2ee731-5324-4988-5711-08ded8f7800b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|10070799003|366016|1800799024|6133799003|56012099006|11063799006|4143699003|5023799004|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	BKwwO4hDUnJ0k+SWrfAWF8F81Uxjsw7suMxvJVNBfrml1YNf8Y18DUL3ivjYHW6pC21Lpzas+gaTg4+Y+jIif3e73J+mi7iYfvClspo++Sav670xjVPRVlQ3RT+Yax3tEcHRQEB90CaJ9TM6np+dRyoUx7I6Y6EBO3tdrXMPiKoGAvfpdjJoZEqBbh19gUpSKlbreHhl1WpwRBPOUUO3nAOWrt39GFP5iVwlvs9XAHAuenNK8hNUM3XoX4Yh6EVKsLNvwGfD/CAHZ0CyqZ/mcByrla4Z/WMpKL1OpsZbO+0iJRdGyGOcaN5Gy5N4bgimt+q7hM38DymluqXitbdIm6Mhwqxfm2pkEbNkckivma8+KUybxQYy0txIRhWgQN+HAxUUZosrocPJ8n/1wl++9KMPmhBV+jAB3WB6+3xpY97W2uiURCvsI67cTzVlX2siNrgxReVUEp7YD14Z1G0we2G4QwYl+GOjv8zXvtJ6dihsQesjqf2Nh9SX/ToZSfQqOecRi5jwbPE/Jp7Osdg3y+gwXio9YtEjVGeE5b6deWM4HSj786rbsVOXhNN4zg/c0n9eeF2g6FhYPFAMU2TYoIJUwrXcwONh2NapU7hzU6jOdHlGNfA8dFO/oXtSVNBQ9zBYo+o5J1UTy2girMv2tmLHwch2R8KXP11uuNEstB0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(10070799003)(366016)(1800799024)(6133799003)(56012099006)(11063799006)(4143699003)(5023799004)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bllScVRFcDgzc2x6TFU1OWhhb1hwa1NXWTNuYkduREdMdVUrWUFsR0EwSjU5?=
- =?utf-8?B?ZEh3SnltVDROZzlzenVQVG1vOEU0d2ZRTG4yclhOcWxER3AwWFpCbyttL1hm?=
- =?utf-8?B?NXVrM3FaOVBZRDJJUmp1RDJacnJUTGJkUkNGejFKZ2VOYXRoQ1JtWFlvR2Vt?=
- =?utf-8?B?RVdMTzh2OHFsbFE1QTFUQWlZTVlya3BzK3JOaUhFWDdCdmJaTG54eXBIeHhi?=
- =?utf-8?B?YW4wWDJDSXI3ZmV3SDBta2VlMkJnQzdXL2l6M0svRlEwNU92TTRqbThIZjZK?=
- =?utf-8?B?WFlJelMydGhXRWxmSzVBSUpybVZKQS9SeE45N3dsVmk2WnRiS3QybnlpM3A0?=
- =?utf-8?B?ZXlQWm94VE9uaE5wWEs1REtQMWFqOXlWMDlnUGx5MzdtdHJBbE5aTEtBUFQ2?=
- =?utf-8?B?K3U1T2dEVEp4dFVEU3VsbFl6SjY0UG9NdW40bVFrbXJCa3ZHdVlnNWkyaC9x?=
- =?utf-8?B?YXluMFF1Yy8zeStJM1dPZzdjTExOYWxHVGYvWnRKYklncnZqWWV4UFkrNTlV?=
- =?utf-8?B?aGkzT0R4dHIvc1Z1SEF5TmpFUXl3cHRGK3ZrQjJYeEUrdjFaa25EQXJGSkkz?=
- =?utf-8?B?R1ozNW9mb2dZVVJHa3pJRXI1SWlhZEcxM01KajRuMHVnVXA1UUtwYzNqK1R6?=
- =?utf-8?B?NkxiNFR2NU9ZOHF6WFR6R1hxa3ByTzQ4TnF4c0NJZEdkVml5MGR5TmdWVXM2?=
- =?utf-8?B?dmJsM3BUWHpmSXNHM1M1QXBZbzFqZUlWeEZYY041S0Ntd2VKTWFScHczR3pu?=
- =?utf-8?B?bkZOVjdBUjU1VlY3d0Y5c0ptRSsybnZkanJIS2dCQXA0Wnp3VVp0S0V0MTRT?=
- =?utf-8?B?cG9rM0Y0ZHRuN3plR3RRcUtITlNIYlFWaXA4RDMrL0ZBZkZmcGdlZ29vZzRG?=
- =?utf-8?B?QnlHQ3p5bkRCQit5V2pTelZHQUlGbkxqeXNTNDY4L0JKK21Zd3lMNDFLbTQ0?=
- =?utf-8?B?RFJaU2J3bzR2ZVl0akpKb3k0Qll3eXlDTjkxelp0WXBQVVdVTGtvNm1oSHZD?=
- =?utf-8?B?MHczMjVoUlVJMzY2QWZkbTNOeG9VWHN4c0t0Q05TR3dqSVBwRkFEMVcrK1hN?=
- =?utf-8?B?Snl0anpUUEFGWllEbGM4eE83NUJ5c3h6K0d5dGNIT3lHUXJVVUtWSzlpRG1L?=
- =?utf-8?B?TFBZL1NhUXlKZUlTcFNmY3ZoempsUFhBUmhXakZFTUdmdHBlL0ZUY2hVcGlj?=
- =?utf-8?B?S01QNUd2a29mbUx1aEMvaHVmN2ZIVUt0UmF2OFZCTHBzdUVsVEQ5aTVCL0ZU?=
- =?utf-8?B?Mk1jL2VVRS96a1hUa1drK3FmTTRiTE5nYWlZV0pxSmFWdHcxZWMzNmNOM3NP?=
- =?utf-8?B?aWk3aUFoNGR5K1JxWGsvME04MGRoUk5hbk5yWlRBcmpEZGlkQzB5Zk5GUUI3?=
- =?utf-8?B?RlZYcEV2RWVXTW82ZC84bVZ1aEFIOW1tNnNEMVRNVHJnckUxVjZBY3cvSXk3?=
- =?utf-8?B?UXE5NVFSaVkySFdSYllLY1AwMnVBZFZkakpqb1B3amZRYTkzS3UrRjZsRXNw?=
- =?utf-8?B?VkhZY1ZMTWcrV1JyNldaWk1qOUdIQU5FTHJuM3RYVkw4V04yMDhpUjhLVTVK?=
- =?utf-8?B?Z3dQWkRENm5iZzgxWE11ZjFtdm9VM0VsWWVZMlVCOEhTNVJsNE84bWZ1ek9u?=
- =?utf-8?B?WTFlWXNVM3pmUC9PaS9QVjYyM0xGRko0VmpGcVVtZWpaeU9WYmtoZFlwSlBh?=
- =?utf-8?B?b1VXMTVIUEZxVlgvc1dkUHdLTUZZaVNxVUhnVUJOMFVJdnpxMFF4UXZCQlkz?=
- =?utf-8?B?Rlh6dlRWd2VkWXFpTlE0ZWRkamwvaDJnTTl5MXZBQjNvQXBvcGRhbjdCU3pv?=
- =?utf-8?B?RnNqRlkwcmZUOXNSQTVlU3dVMThWTDk2RTVrc1AvVGdnZ3J0VzRMZk5uWWZ0?=
- =?utf-8?B?eW1MbTlDUThHMk5mc1FTbjg3TmJEK0ZKTU5xdkk2ZFlkZysxR2s1M3JjTmJq?=
- =?utf-8?B?WEVrUDVvc3lWWkZuZGtpVUNQSHNJenV2MVRXMWN6VXd0YjBzdU1wYlRuN3Vq?=
- =?utf-8?B?Z1dqRlo5dkpHUWpobjFkQ0hlUExVL08zSmZPc3NxZEUvUW9NMkdRb09qb3lQ?=
- =?utf-8?B?RFoyTUkyME1KUU41RlVnSEtDaUQyWEFtSi9NekFkR3FuV1U0VXcwa0pFMmRu?=
- =?utf-8?B?K3NWUi9DRmtlb3VMUXNVVFpGQkF0eTM2dFl1LzI2aUhWcVRncXZGaUpDVnZV?=
- =?utf-8?B?T21Sa0h6UjJsNDdPUnVqRU1OTm5jRGZBMDdGTG5vQzFmSyt0T3lQZDFZdEtX?=
- =?utf-8?B?a04wc2lLTHVvL21KM2k3TW1SVjFOZkhmS3pNNno5amR1UTdXajRtdEtSSEto?=
- =?utf-8?B?dHJlaU9TMmtZdnhURFEyWHhycnRBZi9hUVVMdWhNNHNBbzQzbzl6YitOS2Jy?=
- =?utf-8?Q?T/PFllzIs9wu1OHUIE3sMsWd17LMb98sTfgwG9wvXoXlG?=
-X-MS-Exchange-AntiSpam-MessageData-1: jh43dAGuh3VfcQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9f2ee731-5324-4988-5711-08ded8f7800b
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Jul 2026 11:37:45.2550
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DL6X0m12LOTVquUWqL7vv5emuHBdDgRDrFHZvbdPtz/JRD3r8RmS6mWc/xt3tdqOp8xJ19hWXhYlebjti/+NfA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY3PR12MB9556
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAEemR2oC/4WOywqDMBBFf0WybmSMWh+r/kcRSXSsAz5qommL+
+ O+NdVG66mbg3Msc7soMakLDcm9lGi0ZGgcHwcljVSuHG3KqHTMB4gwJCG5rtGUvqaOynktFQ03
+ DzfAUEJIQmjTMgLnnu8aGnh/xtThY47Q4/3yEX33u/cpb+aDyaA0XSVzFWZOAalRuA7a7WjLzq
+ F+fzS7aZf/m2YADB4hSmUYKVSwuozH+tMiuGvved4cV27a9ARxJl7sPAQAA
+X-Change-ID: 20260702-vdev_maili_dt_bindings-80e0730f8390
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org,
+        Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783080523; l=1468;
+ i=vivek.pernamitta@oss.qualcomm.com; s=20241114; h=from:subject:message-id;
+ bh=BUnkY/0PhRAAb4fytqk7lD65By8W889aQEAnDJ7aUVE=;
+ b=IIvPLEPo3ILp9Ml/IKyB60FD/DR1nBHlasElwM1yCiueOsNQb+FaXoYLj0BA8j5VrgH1TnA1P
+ nRIggsUh3VGAp7smc+TYGlcTGklmUuwDq1XxSbXaEbmsXjLqaV0aShA
+X-Developer-Key: i=vivek.pernamitta@oss.qualcomm.com; a=ed25519;
+ pk=HDwn8xReb8K52LA6/CJc6S9Zik8gDCZ5LO4Cypff71Y=
+X-Proofpoint-GUID: 34HgqZGccjYCFEgk0YPdrr5gXqAYMDtS
+X-Proofpoint-ORIG-GUID: 34HgqZGccjYCFEgk0YPdrr5gXqAYMDtS
+X-Authority-Analysis: v=2.4 cv=UMft2ify c=1 sm=1 tr=0 ts=6a47a652 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=suQaG4udzKv4wnHqcH8A:9 a=QEXdDO2ut3YA:10
+ a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAzMDExOCBTYWx0ZWRfXxKov52yZSs08
+ 2E81rJwDpmkZrXY8AMWwug0/qkRRzzBYfO+tp3AOBgIyeojZf7FeqjF7YcPeNWi8lKDjauqqogF
+ kqtIruhJvkyCi1sG98cd5QjRjt0OIzM=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAzMDExOCBTYWx0ZWRfX9gDQJdRh3Ljn
+ rpK97ld0TOAJRoOodFmsrAlB1cpzO4qcG+ta4/F7Wj9aKFrZNvceSi7WzA8MIHSqBe+r9rsJSvv
+ ReaZOaCot38MQ0MasWvc7hYGUrCIpoHLtsroto+ESMYv/+1RdfM3ZgQHKXjxo0oPuFY9yNQWH72
+ m6nHChnPODVfaXpyii+kzSTaHihDCg7/0LzXgpDobq1WH5blx7UcxogjGH90dGyQxrHblP6WDSK
+ GhVi93RFH/eQDsePp+eXMWmiOfOUOKaOmUcty7FfIWWgt50QvU0rxRi+F0tOdjAaM3OHbE/q68l
+ iGmLZw5WZUbuJy1aa9ZFCiXdpRzppNwUbDwbk2SZBbkmby6rkYkQYZfxU70kWmhS6F0smrLnq8f
+ xJQZhPd2afgi63/ZbNplrRd1r62EbzoXfbVT3VjTi7Iyb28HEDarzF941tXiPQjGGtEz96BxvYw
+ G0rw7tTJtNqEpLR2vPg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-07-03_02,2026-06-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 suspectscore=0 phishscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 adultscore=0
+ clxscore=1011 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607030118
 
-On Fri Jun 26, 2026 at 11:45 PM JST, Gary Guo wrote:
-> From: Laura Nao <laura.nao@collabora.com>
->
-> Add `SysMem`, an `Io` trait implementation for kernel virtual address
-> ranges. It uses volatile accessors to provide safe access to shared
-> memory that may be concurrently accessed by external hardware. Implement
-> `IoCapable` for `u8`, `u16`, `u32`, and `u64` (for 64-bit system).
->
-> This can be used for instead of `Coherent` for cases where a different
+Add the qcom,maili-pcie compatible string and make it fall back to
+qcom,hawi-pcie, as the Maili SoC reuses the Hawi PCIe controller IP.
 
-typo: "can be used instead of".
+Also add the qcom,maili-qmp-gen3x2-pcie-phy and
+qcom,maili-qmp-gen4x1-pcie-phy compatible strings for the PCIe QMP PHYs
+used on the Maili SoC.
 
-> layer takes care of mapping the system memory to the device (e.g. dma-buf
-> or GPUVM).
->
-> Signed-off-by: Laura Nao <laura.nao@collabora.com>
-> [ Rebased and adapted on top of I/O rework. - Gary ]
-> Co-developed-by: Gary Guo <gary@garyguo.net>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
->  rust/kernel/io.rs | 122 ++++++++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 122 insertions(+)
->
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 96962498af77..5c06785facea 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -1034,6 +1034,128 @@ pub fn relaxed(self) -> RelaxedMmio<'a, T> {
->  #[cfg(CONFIG_64BIT)]
->  impl_mmio_io_capable!(RelaxedMmioBackend, u64, readq_relaxed, writeq_rel=
-axed);
-> =20
-> +/// I/O Backend for system memory.
-> +pub struct SysMemBackend;
-> +
-> +impl IoBackend for SysMemBackend {
-> +    type View<'a, T: ?Sized + KnownSize> =3D SysMem<'a, T>;
-> +
-> +    #[inline]
-> +    fn as_ptr<'a, T: ?Sized + KnownSize>(view: Self::View<'a, T>) -> *mu=
-t T {
-> +        view.ptr
-> +    }
-> +
-> +    #[inline]
-> +    unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownS=
-ize>(
-> +        _view: Self::View<'a, T>,
-> +        ptr: *mut U,
-> +    ) -> Self::View<'a, U> {
-> +        // INVARIANT: Per safety requirement, `ptr` is projection from `=
-view`, so it is also a valid
-> +        // kernel accessible memory region.
-> +        SysMem {
-> +            ptr,
-> +            phantom: PhantomData,
-> +        }
-> +    }
-> +}
-> +
-> +/// Implements [`IoCapable`] on `SysMemBackend` for `$ty` using `read_vo=
-latile` and
-> +/// `write_volatile`.
-> +macro_rules! impl_sysmem_io_capable {
-> +    ($ty:ty) =3D> {
-> +        impl IoCapable<$ty> for SysMemBackend {
-> +            #[inline]
-> +            fn io_read(view: SysMem<'_, $ty>) -> $ty {
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using read_volatile() here so that race with hardwa=
-re is well-defined.
-> +                // - Using read_volatile() here is not sound if it races=
- with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                // - The macro is only used on primitives so all bit pat=
-terns are valid.
-> +                unsafe { view.ptr.read_volatile() }
-> +            }
-> +
-> +            #[inline]
-> +            fn io_write(view: SysMem<'_, $ty>, value: $ty) {
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using write_volatile() here so that race with hardw=
-are is well-defined.
-> +                // - Using write_volatile() here is not sound if it race=
-s with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                unsafe { view.ptr.write_volatile(value) }
-> +            }
-> +        }
-> +    };
-> +}
-> +
-> +impl_sysmem_io_capable!(u8);
-> +impl_sysmem_io_capable!(u16);
-> +impl_sysmem_io_capable!(u32);
-> +#[cfg(CONFIG_64BIT)]
-> +impl_sysmem_io_capable!(u64);
-> +
-> +/// System memory region.
+The Maili SoC is a derivative of Hawi and shares the same PCIe
+controller and PHY architecture, allowing reuse of the existing Hawi
+PCIe DT bindings.
 
-Maybe "A view of a system memory region" for consistency with the other
-view types.
+Dependencies:
+- PCI: qcom: Add PCIe support for upcoming Hawi SoC
+  https://lore.kernel.org/all/20260625-hawi-pcie-v4-0-1a578603cd86@oss.qualcomm.com/
 
-Follow-up idea: `SysMem` and `IoSysMap` could maybe be moved into their
-own module to de-clutter `io.rs` a bit.
+- phy: qcom: qmp-pcie: Add PCIe PHY support for Hawi
+  https://lore.kernel.org/all/20260618-hawi-phy-pcie-v3-0-3fa42ca45ea4@oss.qualcomm.com/
 
-> +///
-> +/// Provides `Io` trait implementation for kernel virtual address ranges=
-,
-> +/// using volatile read/write to safely access shared memory that may be
-> +/// concurrently accessed by external hardware.
-> +///
-> +/// # Invariants
-> +///
-> +/// `self.ptr.addr() .. self.ptr.addr() + KnownSize::size(self.ptr)` is =
-valid and aligned kernel
-> +/// accessible memory region for the lifetime `'a`.
-> +pub struct SysMem<'a, T: ?Sized> {
-> +    ptr: *mut T,
-> +    phantom: PhantomData<&'a ()>,
-> +}
-> +
-> +impl<T: ?Sized> Copy for SysMem<'_, T> {}
-> +impl<T: ?Sized> Clone for SysMem<'_, T> {
-> +    #[inline]
-> +    fn clone(&self) -> Self {
-> +        *self
-> +    }
-> +}
-> +
-> +// SAFETY: `SysMem<'_, T>` is conceptually `&T` but in I/O memory.
+Signed-off-by: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
+---
+Vivek Pernamitta (2):
+      dt-bindings: pci: qcom,hawi-pcie: Add Maili PCIe compatible
+      dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Add Maili PCIe PHY compatibles
 
-IIUC `SysMem` is not I/O memory. :)
+ Documentation/devicetree/bindings/pci/qcom,hawi-pcie.yaml          | 7 ++++++-
+ .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml        | 6 ++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+---
+base-commit: ac5f929f2f373245abe6fac242c8d3fec4ca38af
+change-id: 20260702-vdev_maili_dt_bindings-80e0730f8390
+prerequisite-change-id: 20260702-vdev_hawi_changes-275c59f70bfb:v1
 
-> +unsafe impl<T: ?Sized + Sync> Send for SysMem<'_, T> {}
-> +
-> +// SAFETY: `SysMem<'_, T>` is conceptually `&T` but in I/O memory.
+Best regards,
+-- 
+Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
 
-Same here.
-
-With these considered,
-
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
