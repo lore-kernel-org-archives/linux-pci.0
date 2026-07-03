@@ -1,328 +1,212 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012069.outbound.protection.outlook.com [40.93.195.69])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856F2383991;
-	Fri,  3 Jul 2026 06:39:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7F83876CF
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 06:57:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=67.231.153.30
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783060760; cv=fail; b=FjwLXldM691+7MzdSLNA4yaVRZSeAOt65nX1IFM7NrrCKExrobYthkuEGXffybp75w71T6oaM7jIMSWZ3LpIuYyQKGPha+l2rcrblM5KbwbmEwoKW4U+JIkxdRJHiyujC1HBx8JOST+8YMYLL9OylEg56mR6S3B+NbcR2HWFjyE=
+	t=1783061847; cv=pass; b=VMMunFgyLdLYwdeFNICpWUQ1ZTqk+7lbTR3JHL4HEuKS3kDY/vY7V16+3WWGlpXoZqo7xpwc2vI60+GvJ62uNfIPfAUnUBD1lNVRtXExdg6uTLHS2jFDcxFnlu1kQ0ZGdsGDO65ia+2CBy2rICEJRC9g23RCu76nSW/VmMDnTK4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783060760; c=relaxed/simple;
-	bh=3gma7G7+GaF9cUf6bVeuM7JT9v0h9hLD3852ncQlEK8=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=AlVOcxkZPOMU5glS76YWoIAgFwdyflRvzXsNxIdklRkUjwKObj3xrkW2+1SE1zL22ZBfLYjZXlha3uXLn5HeEdc9kLPYTNxS6YIPKroMe9Z/Tyi/Rzruo7lTcxEHlwce/aH8PALVL2jlrGTcPJIVjsB/Y2jdBMs3QZj0YlWEFzY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=UgxMte0y; arc=fail smtp.client-ip=40.93.195.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1783061847; c=relaxed/simple;
+	bh=dSdsH9dksi+uHV/fTw6nPqI8igLABzvcuyiyNSlvbvQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cvkoqIKa0cGhFU2HZFPlssauwdXSyEvYVpH4aFglg5ySnxusZfk5WbjSslAW73kF//tlvzXoMo8HuQ3cGszBLaES/chD04mlHN/U4Mev8Sk/Qwg5oRwfPuNybhgDMayUIXA7bzEFVhjMkv7BbIG3adq4LPlCV0Ag8KzchXfUscE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=C0z5ENmq; arc=pass smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="UgxMte0y"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SYyyxkRC1EQoHVfwiCLOGN09kOy9Q/+00Pnctvaro4tiamiI5BF9GALBmjfzxvO+gJ4+2RLLqA9pHfHqM0/4ohsD+5oPHC+K8oguxhfMUB5bMA9zf98/0s8zitB/IovNAHV1XUwZ+xXjXjLSckNG9eMIFxR5k7SaICf5ZcBya/AWWYxTmsFVEq4jXBIBEn/R9j4FKL7/3hF48c2R6BbjQ6xr+9Fmm4Vpp4Sc38LlYaC3G8fYVyeJg47egkb1ND35xACaGVptd/dLY43IuyXAH/JnCnVUmwAfXuBvjhEZtcH6oulmssoyWQBw9NUF8TYc9m1FajOddZNCsyJThVjSpQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4OjOUjATYzSrZliGqpZ6BsaH5CrDw72EFgXxjBfguKA=;
- b=nDvXZcrcIY8FMpyE20hhmYqYT+D/PdDbBe5THp3ZHebDbjpYB8zqbvbs/UK11KOE1BVzmwtnL+lOpz/rO6ZR/GF7SfM7hX00ILwSmx0cDvc80naZwAZ1p2MEKukvrVgfr+ym36xeEa70CuC816o/SzGWYdtwKBsTRV1jVP3R/cO1a0MlT7v7FoUsOzQ8Rr5ywgkmuT9/VkR3HSdlvbudmMtyignRAN7gYYLdUkKB+tMGF8+KJyyPJGssMYrlHWT2ZVrvpz9ceX8we4IWdOksi18BkmzsqzqZuNu6txzcP9Lo4Q9iU9Zc2nvoahhiqhtMDw5QUc6Jcnj2qcYjfCoI8Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4OjOUjATYzSrZliGqpZ6BsaH5CrDw72EFgXxjBfguKA=;
- b=UgxMte0yXbSgfwkO2P+Vlrw7js4+lkwjk2L0z1hDOV5p9+nzebsJuAHSqYLYC7rKUZM0Bo5NxnRe4C3nxYvkq5cvYiupZS7vImjvzeF+CdbdCG2o0CHalbPr5DeYwpGyBS9sl341A3kkO+VsPXbRPXTmZpvLRfOxmUh3bwBG3rhKOsHO15mQcvLmuKfMrMs24xIqXLqdJBFpSlmJYOp0ibko15SGHHJyxDAY75dOC8XKJt1oXKO3+0h+u3Qd62dOsz8fb640/x9/kW+oGO+DnayxdSVQUe+QBd3zrG9ecXn0v9vD5P4q+DH/Ga5nh/fN8ccKEjYws2gmzbCV3il0iA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CH3PR12MB7524.namprd12.prod.outlook.com (2603:10b6:610:146::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Fri, 3 Jul
- 2026 06:39:11 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0181.008; Fri, 3 Jul 2026
- 06:39:11 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 03 Jul 2026 15:39:07 +0900
-Message-Id: <DJOQA74PU76T.21U7Q7N1J4XNK@nvidia.com>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
- "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
- <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
- <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pwm@vger.kernel.org>
-Subject: Re: [PATCH v5 13/20] rust: io: add projection macro and methods
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-Content-Transfer-Encoding: quoted-printable
-References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-13-d0961471ae50@garyguo.net>
-In-Reply-To: <20260626-io_projection-v5-13-d0961471ae50@garyguo.net>
-X-ClientProxiedBy: OSTPR01CA0079.jpnprd01.prod.outlook.com
- (2603:1096:604:218::8) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="C0z5ENmq"
+Received: from pps.filterd (m0528006.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6635rj121145990
+	for <linux-pci@vger.kernel.org>; Thu, 2 Jul 2026 23:57:24 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=s2048-2025-q2; bh=1ooYXEhr8R5Avu36PkA1
+	fDBaUkP8RkT4tBNox1TcVoA=; b=C0z5ENmqDzbJ1NLEJsUJo9CQ3N/uTO7VUwp4
+	kfTj0sxCwlKtZcFAbfH5EzA4i/QyE7hzmnXKp60uoJGQ6MOgjGVYxymZs1LzEGgR
+	KK/MabO62rFu7yFaRhdUXbWVs6RszHi4Llfrvj+O2Ur3DURJFa0bbiYbtGGtmf1S
+	48+CP9y9ZSyGN4WLNaqbVQgnwIsdkrlxGhdYdoaiAHm7xF2MwkQzJeva9fd6d3Yw
+	oQ3EMU2riwO6WaSrWDjGw+BApAFcAp1tWa/vlThjMXh9zmTVaUOIm+H2kTLvSMGL
+	86M/qI56en4xsmMLOVp5WIYEay69OIWSI0Mz0mScKxmp2zYwIw==
+Received: from mail-ot1-f71.google.com (mail-ot1-f71.google.com [209.85.210.71])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4f65au0t4a-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2026 23:57:24 -0700 (PDT)
+Received: by mail-ot1-f71.google.com with SMTP id 46e09a7af769-7e9e54e9cf5so349427a34.0
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jul 2026 23:57:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783061843; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XMbYaMmazFp3nHNsUuh0XStKLa9MwDc5Bi/hri5X6Rmm2TxSn8v++6/qdk+gx9+Kcn
+         n6qUVLqnt0k5amPlrMhFlEULC1kQCZT7YKwppOQI6xs3X7VYJUwnWK8cTGA7lEq9WDyA
+         42XRVkN/MDzEQ2eESxLu07HQIlE3WfFMY1rct6KIWhuiIUyMFmooNRQDGOkne8b9+GfB
+         E07jHUm06LVXreBlCanUbCf7uYPrCCaN96Q/5SMKdaH9qTyMc/73HWo5AAG8NNevVG6q
+         ODn1UxyH4X/gaALFI7BjMUWELPcddd1ovTxyvwhOJIDh8qKxos3SHgbRZlKuZ4yvwnB6
+         Tb7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version;
+        bh=1ooYXEhr8R5Avu36PkA1fDBaUkP8RkT4tBNox1TcVoA=;
+        fh=Vl4aQ2uignfiimEjmtJlXrKkUuU1hNCoo1w1h6FYuuc=;
+        b=Wim+jqFliXJRRwGx95XhNAgIVHJzVhnAXj9kXQ0sonye5lVff4qEytgssW3G5kwzjL
+         TI26qjW/Mdm9t9YM5A7INNoEmkl3iijhk40BH+i1JTjTBaHs7jZ8arBSiEDeG+RXjujs
+         LUh6k527Z9ZcXZa3lpo/qIsCiyBPHQL+MYTCMVVOaEE8TzrYotG+lC9nva/sqehKp/aB
+         uIsAQwJ1Xue+WPlPRgYLyFMYnos08DqeQBimyN5qUnqDm6z8pjBfN0dxDG9rOSO/x210
+         D7rmBykhtMlUJ7VmAnbeD2WfWkCz7ru0XMAtKH8v29h81ljOkjAo70Zl1s3wne5slx4K
+         GQQw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783061843; x=1783666643;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1ooYXEhr8R5Avu36PkA1fDBaUkP8RkT4tBNox1TcVoA=;
+        b=RJCl87TDuxfiiY/HNU8a0rOtiIWqC2ooy7QTxc/F6cQGcvOJsEDnwUqmo3186LaA6f
+         fDpqzIlfXAheujU1CDtzS5iq5R8CBI3CDDRyH947bOexhBZt6MeMIB06QHSRnl8ubM4W
+         XRSUMAe83fjr2yq6QGtg+1WLIqRw4R4NWFOucBIerWlmSu8jCqExDtBciEO+9mb8iZtJ
+         JSKDskwBm6yySXUShqPJjCIr7mwYgt4i+kIL3VDYmKh+/13gIQXLaSp2XZc0Sx0PuOKT
+         pQmqnixauuK2roCerrjIc2BOaBh6IuT3BaSHL9dapgmU4s03TSFdqEND2eNeDpaZ+V/u
+         CZsQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9e+qziQjvTOkzt6tC2x/N1Y3M+2ROZCnVPVDipjlyQvfY6imAhPBaOg9+WCjFBqNOvG0kaJvGkbqM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOGsrV44IsAQqiTAHdggQ2HwGh2uBWtZE64VX4fqVFGEYZJGad
+	W9Mi2K1SWASeW9TS5xxa16wSF1nspxEduQR/sQB6dOVyQ8lsYbBRlwo/l+UvsiDIyakywQuV6JR
+	x+dOEu101m8tOpKWZBdovkqV87opokQEWsByvf/Aa9Q/YnHAIe2uubuifDh79ta4wPQMSz+Xezd
+	fjrb5YO1/TRmZ3UENwATCobXqDqUp7f5LwvDA=
+X-Gm-Gg: AfdE7cmOTMK+vlb3ZjybdMtQGkbNfxk8xOSMtkb8qi9GYhiIRA5gYcVeERtsGSozOEH
+	PiCg40sAGAxtybqBTFaLzm2Mfngycc+Y/1k1aQLYFlSKfHFeoszXDj/EHJAwHLr6S7TnHMZYBlH
+	Ystjq60mDHY4n/tLKRBxPJ9/vxIs3ODtMqQ5/HOuEF8CMjN71MCGG6d9g8xhxOkHSx+NBgNESyn
+	DAIw8HdgU4yyKwR/2yt1ZGJ4XcO1Q==
+X-Received: by 2002:a05:6830:82c8:b0:7d9:d2b6:1568 with SMTP id 46e09a7af769-7eb4cc26248mr5970995a34.17.1783061843372;
+        Thu, 02 Jul 2026 23:57:23 -0700 (PDT)
+X-Received: by 2002:a05:6830:82c8:b0:7d9:d2b6:1568 with SMTP id
+ 46e09a7af769-7eb4cc26248mr5970963a34.17.1783061842839; Thu, 02 Jul 2026
+ 23:57:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CH3PR12MB7524:EE_
-X-MS-Office365-Filtering-Correlation-Id: b872bf6f-9980-4a5e-7015-08ded8cdca82
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|7416014|10070799003|22082099003|18002099003|56012099006|11063799006|5023799004|4143699003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	exbgZ5v+QSPZnx1GL33j35dNf4ScQ66gxbixSbXkJvgTCe8114R5RhzbVhqXLKqhOgO2Rwn0NuC0q94cIVMFlPYzB2ZiGjKh+aJBrFPiczhOVLy4qXflsynVJerCyAlBw0JJdV6P5O4Fkhlj/O2nO6Q7TgJLbIo7RL9hvysjqkbml5a6vi42w6tALjb4sUAdUGpUJZgh4qo64TJsATr4Ne3Xqu8aWqXRSrX+gk1H4N68DyBuvClRvUeC0hfuupUyfdE8USG9lDX1TK3CVjhnTBcseSTPYFeBa6+fqr/6z0EpDamVStps8VTrrMs8JKykbTxlQoAd9tlfeQcc7HqdS3lKCjr0UbSWZ1e34rmHI6K4GjEatYTPDynX2kB6PiVDHqawF2hzY3fnIUioxFmJDOaSpOEclCIG1KKkG+cW02MlFfmTCvONbjfP4qOSf5xu5mJ3uHL+YT0fpXqWGJzVMXa1CgScSF3BJkR/XFwh0algDbw9/28lXHhlFcijKo+Hzxd9CmYrIk2FgaBNzsq1q4hk3tTynTACvaCUczEKF1s1H8zWBJ0rbHXpnJ1NftmGyVw6nkK40BhKU7VWPEmDTp378u9GnRLlzLTZ69GIjHmpLLfhecgAD5MrRF1J/CdhWRMq8KpxQzsrZ+Jae8OC4ltBpFu5RCelOVHwUZy1URw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(7416014)(10070799003)(22082099003)(18002099003)(56012099006)(11063799006)(5023799004)(4143699003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Uk93SkYrcGg3YTl1STdiM3FvTldPOXczNzNKR3RzQXJ0eTVoQ3FLeGJETUlU?=
- =?utf-8?B?RVZPNDg3MnJUdnA0cnVQYllhRzg1OVk4cjVCREJTUmtzYmc0U1lGZ1pwZGQ1?=
- =?utf-8?B?NUZiNnhhdjVNVXc1OWtTamsySXVZeHA2YlVaMnRxN2xiOU9CNDUwRVVzYUdV?=
- =?utf-8?B?QmY3MU1tazIzSmFtdGNaTWFJZVYramxqRHF2Rk9wRTRSaFR2dTV6Vm1nSmIy?=
- =?utf-8?B?THQrcWZmTnRaY01TbW8rdHJORHZrY3pqSWt1c0pHRFJDdS9TMytiREJ2eDd4?=
- =?utf-8?B?TThsTkxKRUVpa2tQeXBKSkJzZTVMaktMOEdwMm1jY0xabnpLaHhVZS94TC9L?=
- =?utf-8?B?RWFGalJDa3BWeXY4elZQY2hvVGU1cVZUREgvWlRkRDZlM1F6WExGNkVSTThC?=
- =?utf-8?B?SjFFTGdSM25SODBaTFZaNDNwZ3ZRcm53VSthUDNOclhsWkF1Uk12MnVabHQ0?=
- =?utf-8?B?eWNOVFhsMjl4bEZmWmxlRWFiWXpId2VrTzJ1NkRmVFFtcytLcnFTbDlLc24w?=
- =?utf-8?B?SkwwL3B5Uk9hZnRIMTRSYXkyd1JtSWlmVXhwcGxJQTBpNW9ERGpJQStHL3o4?=
- =?utf-8?B?Zmxud2FydDA0NHdTUTVSMDBJazAva3VMN2NoTnVhUytWcUVReW00aERrMlB1?=
- =?utf-8?B?NUptMjMyUC8vQ2lwSlBKSjVROFNSd2VDUldnRnhmNWQ5am91UkNJUTRCK2sx?=
- =?utf-8?B?RHV2a1lxMW1MaHhSWUthbjM4WktJTEM2S2pZYVJpMCtBUE1lamhqTjQwT2JE?=
- =?utf-8?B?M0hPdEFjSHl3WjFKMDlmS2RPR2trSnJwQ2NEQ3BtSi9OSkRlaml2L0ltQWtQ?=
- =?utf-8?B?VFZ0RjNCUW0zZnh4NmJjMXRLMmc1bFhQZUpuZW56dUxZQkVLU01SVFdUR2pQ?=
- =?utf-8?B?ZmZ4a3Z5elJOK3VNeTdud0JXcnB5WmlKT3JpcGRCS1hrcEY0M2dqU1dnQUVR?=
- =?utf-8?B?blRiT3owdU5qNVE2ZTdJZGNjYjJFTVZ0ckdUaVZqaGdIV09ESGhLSGtqaDM3?=
- =?utf-8?B?eU1Pck1mVmFwTzd0UEFmenF0ZjdDQ01lYXlEY2NPVDhYU3p2NFRJMTdxdDYr?=
- =?utf-8?B?RzdxQzZ0dGNaM2pIZzc2MnJpdjQwQWRyUjZKenN3QUhZUGlibU1TVlc3czZP?=
- =?utf-8?B?cVFjVjNia1B2amdJU3pOZG8wbitWZ0ZsVFdqcktLcEdyejZRMnVJR0J1UWJr?=
- =?utf-8?B?TnZEVDhueWZnRUIzbDlGazlMaFNQOVhrNUEzM1JlWDdxd3BrV3ZqWnZySWU3?=
- =?utf-8?B?WlBUSys4TmtGSTlaaDYwUXVZZzlEVjFZMkF5N2pqSnFQNmNNVXFGUVFxSmhL?=
- =?utf-8?B?WTlyOXZNLzNNZUpkNUg2T1Y4THlYVUcyTmMvQ0FYVXhWYlViZmpmRXhhQjlX?=
- =?utf-8?B?Z1hIWFpvMUc4NTVhVlRROGs5ekdHWWh0bG0xTC9mejI4SkhMcHQ0cmZxVjJa?=
- =?utf-8?B?UUxFbmlFVEpMeVBma3p3Zzd3cmJnUzNNa01wUXdrU0c3WnR0NThoS0xTQ3Nq?=
- =?utf-8?B?emtKazF2L2tlWG1tRXNwZUl2ZG5tK0VXRGlCVFFwaSs5elVVVWpMUXFVc0Fu?=
- =?utf-8?B?bFc1bHZUN25mUjlNdHd6UXlRTkJmV3RGT2YrQjRzV3dadTBodzBZNHVKOHJ6?=
- =?utf-8?B?Q05pYjVhQWR2a0FLZy9SUnViQ0VYb3VkNlR1alVaQjgxRTF2QzVYKzFVQWdt?=
- =?utf-8?B?Y2xVeTJNZU9FbGNwUlFJRWxhcFYwdjlNUmtiTXllY0pUUVd2OE8rTU1DNXdr?=
- =?utf-8?B?MHRnTjhCRXJZblNBdm1MVVBOY0FqM0xQc0ZOSXRLQVh5NXdGMXhnbFZMSDl6?=
- =?utf-8?B?a2tHT0xsUEphOEgrL25sVS9jc3FZSE1Xb3lJZ0xwMll6ODIreW10bVlVS2NV?=
- =?utf-8?B?N3hkZXoybzFXcks3VGVmMk9hQzRUcDhJZXh4SytrMHhIQUF1ZUh6Vk50UmN4?=
- =?utf-8?B?a0IyR3YzNncwdGdZNEZtWjVJQndKUlFtMTB4bE5lZFhkUEQrdEx3dGdhTzdn?=
- =?utf-8?B?aUtJK1RTSE42S0RJb0NDOEFDUE9VZnNXdnRpZUZ1VVUwRTYzMDFqNjYxeEdr?=
- =?utf-8?B?SG9sUHhrajFkdHMzblpzZFd6dGRDaTM3RmlldExRaVFBeUsxSzRQMk1wQVdi?=
- =?utf-8?B?ZTF5RFNwWDdIZldRcXRseEg2cXJnSEdqVEhPVzR4Q01xYjNLbGRiRjYxWHc4?=
- =?utf-8?B?YkZ5dktLQlZpMjlXbW9IRkpFazNiZFFJKzI5TlM1QmFveUEzVmp2SXhoZ3ZG?=
- =?utf-8?B?MlJ6VzB3aHFQOGJIb1NTTUtuY0RoRHIyNlE5Mml0MlordkxsYmZBajNVczd1?=
- =?utf-8?B?OGhXd3BQYkkrSGxiUnV6eGxYYTJGclFwM1VSRDg3K3UvcHg0WFhGMGNIUHFi?=
- =?utf-8?Q?2vc0h1M2aMiFJhuDWNEk7uAhsHV0Cu7WgjzEgskF2o4M1?=
-X-MS-Exchange-AntiSpam-MessageData-1: 8IFbjJUt/gzLKg==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b872bf6f-9980-4a5e-7015-08ded8cdca82
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Jul 2026 06:39:11.5349
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hEioprEn9Q8fS6N6oxVisK2+125leK4rdl4cbavG6FgHXzekZu1VG0R1NVZM+In7UuYlfirLZvrNySz4fBrCtg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7524
+References: <20260702181025.2694961-1-zhipingz@meta.com> <20260702181025.2694961-4-zhipingz@meta.com>
+ <6ab4c781-2409-4015-aac1-01d5cc1b9f6f@huawei.com>
+In-Reply-To: <6ab4c781-2409-4015-aac1-01d5cc1b9f6f@huawei.com>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Thu, 2 Jul 2026 23:57:10 -0700
+X-Gm-Features: AVVi8Ccw8yAXcsgDvWHGsVO2xij76p-6UW92x4FC6KeN1aOXDWOhO-jLzIpoK30
+Message-ID: <CAH3zFs31yd9uyo3waOT=SxCGaKGBfxdAv2XDQ+9dQyuo-cCV3g@mail.gmail.com>
+Subject: Re: [PATCH v11 3/4] vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+        Michael Guralnik <michaelgur@nvidia.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Christian Konig <christian.koenig@amd.com>,
+        Alex Williamson <alex@shazbot.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="UTF-8"
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAzMDA2NCBTYWx0ZWRfX2rXTpB2zg712
+ gZKGIJ9I3jeFLS45blax+RyRSANrgrUQL/9GunN/vD7DhzvT2usMueQQNQSC45fW9m+1ixckMlI
+ T2u7wxBqNxDDYmM0j/sQLqzeRCPpT/qyONteW4tUa49VF5KFvHTysfK8qlt4zzHrI5PQ/IMGPGX
+ e3ozYPt5EUSiPM3Qxhb2/Bcycj2LtlKSm7/Xbujq/gX3P+jewWqxfLQoflEWy0iNjdD/aGlkqDj
+ iFXw8mv3+HLYeWtEw36Av/Jm5xhwdB3gSaWNMBsjF6jy/4/j5EligpI9sVF7aPTa32g1FqMtfMZ
+ QB1AiH/B1jRjdGvCDwfIU19fWTj81H52BDFHTeiS9g1dfBYrmNzeG64e9kj3Vi1iPcEiKq20heT
+ 6XIvPgZr/xe9vyL8xeSLl3fqWSx8w/JRlUWTlEDZ1Wvu8S9la/ggfW9tJ3FUWxt2odGq3oJ72KT
+ pxBOijgb4ORs6WA5yxg==
+X-Authority-Analysis: v=2.4 cv=Y8bIdBeN c=1 sm=1 tr=0 ts=6a475d54 cx=c_pps
+ a=OI0sxtj7PyCX9F1bxD/puw==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=kkcUborcUVj0H7zxAXTl:22
+ a=wlcL9-RM8ybxaKpgEcQA:9 a=QEXdDO2ut3YA:10 a=Z1Yy7GAxqfX1iEi80vsk:22
+X-Proofpoint-ORIG-GUID: QPIA2eUz9IYU5v1K16b8V-s0M58kfkgW
+X-Proofpoint-GUID: QPIA2eUz9IYU5v1K16b8V-s0M58kfkgW
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAzMDA2NCBTYWx0ZWRfX2/StPT8Ipab8
+ XJhm5mq1lC2ldrHhqJ6mWG8QcGYmAtjIs9r8P/2JsOnCxvLYbnBmOEu7EafeOaDZgKCfbSadSol
+ jpI4LOjfUb0aWr2V7ujd1gl/Y/GSci0=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-07-03_02,2026-06-26_01,2025-10-01_01
 
-On Fri Jun 26, 2026 at 11:45 PM JST, Gary Guo wrote:
-> Add an `io_project!()` macro allows projection from `Io` to a subview of
-
-nit: "to allow projection"?
-
-> it, using the pointer projection mechanism to perform compile-time checks=
-.
+...
+> > The attach path reads @revoked without holding memory_lock. Annotate it
+> > with READ_ONCE() to document this intentional lockless access: the read
+> > is a benign early-out, and a racing revocation is re-checked under
+> > dmabuf->resv in vfio_pci_dma_buf_map() before any mapping is handed out.
 >
-> For cases where type-casting is required, the `try_cast()` function may b=
-e
-> used where the size and alignment checks are performed at runtime.
+> I believe this modification (@revoked) might be related to resetting the
+> bit field segment and subsequently identifying a concurrency issue. It is
+> recommended to submit this as an independent commit.
 >
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
->  rust/kernel/io.rs | 124 ++++++++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 124 insertions(+)
+
+Thanks, I think the @revoked part is still closely related here. The lockless
+attach-path read existed before this patch; this only annotates it
+with READ_ONCE().
+The bitfield-to-bool change is needed because READ_ONCE() cannot be used on a
+bitfield. The real check remains the dmabuf->resv recheck in
+vfio_pci_dma_buf_map(),
+so I'd prefer to keep it in this patch.
+
+...
+> > +
+> > +     /*
+> > +      * Updates protected by dmabuf->resv, @revoked additionally
+> > +      * protected by memory_lock.
+> > +      */
+> > +     u16 tph_st_ext;
+> > +     u8 tph_st;
 >
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 0746b0d209ef..96962498af77 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -49,6 +49,7 @@
->  /// - Size of the region is at least as large as the `SIZE` generic para=
-meter.
->  /// - Size of the region is multiple of 4.
->  #[repr(C, align(4))]
-> +#[derive(FromBytes)]
->  pub struct Region<const SIZE: usize =3D 0> {
->      inner: [u8],
->  }
-> @@ -90,6 +91,16 @@ fn size(p: *const Self) -> usize {
->      }
->  }
-> =20
-> +// SAFETY: Values read from I/O are always treated as initialized.
-> +//
-> +// This cannot be derived as `derive(IntoBytes)` does not know that this=
- type is padding free (given
-> +// `repr(align(4))`).
+> how about: u16 tph_xst;
+>            u16 tph_st;
+>
 
-In that case the `SAFETY` comment should probably also justify that
-there is no padding by citing the invariant of `Region` (which will also
-allow us to remove the second paragraph).
+I'd prefer to keep tph_st/tph_st_ext if that works for you. They map directly to
+ST and Extended ST, and non-Extended ST is 8-bit, so u8 tph_st reflects the
+actual width.
 
-> +unsafe impl<const SIZE: usize> IntoBytes for Region<SIZE> {
-> +    #[inline]
-> +    #[allow(unused)] // Rust 1.87+ stops requiring this and will emit un=
-used warnings.
-> +    fn only_derive_is_allowed_to_implement_this_trait() {}
-> +}
-> +
->  /// Raw representation of an MMIO region.
->  ///
->  /// `MmioRaw<T>` is equivalent to `T __iomem *` in C.
-> @@ -339,6 +350,49 @@ fn size(self) -> usize {
->          KnownSize::size(Self::Backend::as_ptr(self.as_view()))
->      }
-> =20
-> +    /// Try to convert into a different typed I/O view.
-> +    ///
-> +    /// The target type must be of same or smaller size to current type,=
- and the current view must
-> +    /// be properly aligned for the target type.
+> > +     bool revoked;
+>
+> why not move revoked before or after tph fields if it don't take one bit field?
+>
 
-Maybe "Returns `EINVAL` if the target type..." to make it clear this is
-runtime-checked and not a static requirement.
+I kept @revoked there because the comment documents the locking for these
+dma-buf state fields: TPH under dmabuf->resv, and @revoked under dmabuf->resv
+plus memory_lock.
 
-> +    ///
-> +    /// # Examples
-> +    ///
-> +    /// ```no_run
-> +    /// use kernel::io::{
-> +    ///     io_project,
-> +    ///     Mmio,
-> +    ///     Io,
-> +    ///     Region,
-> +    /// };
-> +    /// #[derive(FromBytes, IntoBytes)]
-> +    /// struct MyStruct { field: u32, }
+> > +     u8 tph_st_valid:1;
+> > +     u8 tph_st_ext_valid:1;
+>
+> how about: u8 tph_xst_valid
+>
 
-Do we want to make this `#[repr(C)]` to give the right example to
-driver authors looking for inspiration here?
+I'd prefer tph_st_ext_valid since it matches VFIO_DMA_BUF_TPH_ST_EXT and the
+"Extended ST" wording used in the documentation.
 
-> +    ///
-> +    /// # fn test(mmio: &Mmio<'_, Region>) -> Result {
-> +    /// // let mmio: Mmio<'_, Region>;
-> +    /// let whole: Mmio<'_, MyStruct> =3D mmio.try_cast()?;
-> +    /// # Ok::<(), Error>(()) }
-> +    /// ```
-> +    #[inline]
-> +    fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a=
-, U>>
-> +    where
-> +        Self::Target: FromBytes + IntoBytes,
-> +        U: FromBytes + IntoBytes,
-> +    {
-> +        let view =3D self.as_view();
-> +        let ptr =3D Self::Backend::as_ptr(view);
-> +
-> +        if size_of::<U>() > KnownSize::size(ptr) {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        if ptr.addr() % align_of::<U>() !=3D 0 {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        // SAFETY: We have checked bounds and alignment, so this is a va=
-lid projection.
-> +        Ok(unsafe { Self::Backend::project_view(view, ptr.cast()) })
-> +    }
-> +
->      /// Fallible 8-bit read with runtime bounds check.
->      #[inline(always)]
->      fn try_read8(self, offset: usize) -> Result<u8>
-> @@ -979,3 +1033,73 @@ pub fn relaxed(self) -> RelaxedMmio<'a, T> {
->  // MMIO regions on 64-bit systems also support 64-bit accesses.
->  #[cfg(CONFIG_64BIT)]
->  impl_mmio_io_capable!(RelaxedMmioBackend, u64, readq_relaxed, writeq_rel=
-axed);
-> +
-> +// This helper turns associated functions to methods so it can be invoke=
-d in macro.
-> +// Used by `io_project!()` only.
-> +#[doc(hidden)]
-> +#[derive(Clone, Copy)]
-> +pub struct ProjectHelper<T>(pub T);
-> +
-> +impl<'a, T> ProjectHelper<T>
-> +where
-> +    T: Io<'a, Backend: IoBackend<View<'a, T::Target> =3D T>>,
-> +{
-> +    // These helper methods must not have symbols present in binary to a=
-void confusion.
+> > +     u8 tph_ph:2;
+> >  };
+>
+> ...
+>
+> > +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
+> > +
+> > +#define VFIO_DMA_BUF_TPH_ST          (1 << 0)
+> > +#define VFIO_DMA_BUF_TPH_ST_EXT              (1 << 1)
+> > +
+> > +struct vfio_device_feature_dma_buf_tph {
+> > +     __s32   dmabuf_fd;
+> > +     __u32   flags;
+> > +     __u16   steering_tag_ext;
+> > +     __u8    steering_tag;
+>
+> how about:
+>         __u16 xst;
+>         __u8 st;
+> and it corresponding to VFIO_DMA_BUF_TPH_ST/ST_EXT
+>
+> Thanks
+>
 
-nit: "in the binary", lest the reader thinks we are talking about
-symbols spelled with 0s and 1s. :)
+If that's OK, I'd prefer steering_tag/steering_tag_ext in the uAPI. They
+match the PCIe "Steering Tag" term and seem clearer for userspace than
+st/xst.
 
-> +    #[inline(always)]
-> +    pub fn as_ptr(self) -> *mut T::Target {
-> +        T::Backend::as_ptr(self.0)
-> +    }
-> +
-> +    /// # Safety
-> +    ///
-> +    /// Same as `IoBackend::project_view`
-> +    #[inline(always)]
-> +    pub unsafe fn project_view<U: ?Sized + KnownSize>(
-> +        self,
-> +        ptr: *mut U,
-> +    ) -> <T::Backend as IoBackend>::View<'a, U> {
-> +        // SAFETY: Per safety requirement.
-> +        unsafe { T::Backend::project_view::<T::Target, _>(self.0, ptr) }
-> +    }
-> +}
-> +
-> +/// Project an I/O type to a subview of it.
-> +///
-> +/// The syntax is of form `io_project!(io, proj)` where `io` is an expre=
-ssion to a type that
-> +/// implements [`Io`] and `proj` is a [projection specification](kernel:=
-:ptr::project!).
-> +///
-> +/// In addition to projecting from [`Io`], you may also project from a [=
-`View`] of an [`Io`].
-> +///
-> +/// # Examples
-> +///
-> +/// ```
-> +/// use kernel::io::{
-> +///     io_project,
-> +///     Mmio,
-> +/// };
-> +/// struct MyStruct { field: u32, }
-
-Same remark about `#[repr(C)]`.
-
-With these considered,
-
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Thanks a lot!
+Zhiping
