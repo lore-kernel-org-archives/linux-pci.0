@@ -1,141 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010068.outbound.protection.outlook.com [40.93.198.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B898984039
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:40:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783053611; cv=none; b=aIkywqcMhh46SvMhdO/tjrnBmwDHiBvfvUBQWNJkqVC1E6f9V2AWXQgWdWhVvX8z7Qwtnm8nE11LPs74ziO7Votazp6ygfM1FQkP1HlI0DNaqil6q/DrVW/tGAZkpQqAYqsenCCMr4yC+ezzFbgGp5NxMd+lpBjlz9uY9+LqnVI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783053611; c=relaxed/simple;
-	bh=1/DaATqrkHFYKG/clSmHNT+hdcht4ffM0ocGiJLnMmw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HcdA3+fx+v0q3DBibli9FlbfyfZrKcDCUlJ3drGuhQvmeD3PHRNxMdL6SUQtjlqTJki93FKR5RcXgZ0CP9QbiISMT1ebt5pz5CZYddg24LwsjENNbzdAgwqPnwojPNE9vIF3HrnLoU+8n1LGCwIYLtOQJnWOcXxWUzL6h46Lxck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RtwtnQd9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B493446BE;
+	Fri,  3 Jul 2026 05:03:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.68
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783055051; cv=fail; b=XrGqBtRfo/P38FWClBhTSmPMzrkee5kkJodnepSSWSRbmDr95DbZ2ppIw8i8ZtkMHea93bJmTvOwUdDrNQ4spJ9KT3Afv6Hm/33Uf/RMEnqUDhK6Uzxw27Cg2/rIq+VmEa4b21NmHpmLyBReS7GV41yj2uWLNxAOiNz/lTjyKu4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783055051; c=relaxed/simple;
+	bh=ZgRzKf3O4tzf75PIWFJJeQqswa4ydfTNssOSDgBm5hc=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=RMaKNo7+2dtwyH7ylA3kYEGbqscnUgrvA0aIcFsj+JChoRId+x+NGYWqyLG/OyGQ1sihZrt6C0MJvDsSzZrysJbe26SmoYZFnW1h3Er5xQTrW3L/T9vx7Ycksv0FsEVPlAvBydBwQYLngtqjF/ApfdEIPnPv0PnGusu1qSVaJfU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=h+RI5KX7; arc=fail smtp.client-ip=40.93.198.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RtwtnQd9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FB9E1F00A3E;
-	Fri,  3 Jul 2026 04:40:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783053602;
-	bh=6a17RHXlBKR2KaGgq6r4FDauu+5Kon/TtUvM1pBX8Ns=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RtwtnQd9YtQ8K96paGcJc2a6YXk/f4y7JeS9jQ8vePZhJAprQ6eTf2p5hOgqn1aCc
-	 AD+Q4aRIN3ahnLKjZZoBxkzFC2lpmZBtoYZfjHga7SgzbdaIg1+c1wbR8dSysFpTFo
-	 WfCw7FJqA60le1oYyWZrlHRDsZhZlfPFpPa9k6jFgTsLCGk8GwxkCkZJNUileYgQ+E
-	 5JjP1mx32ux3rg7PGmsiVz7jNVT3CHtoO0WQfRVaN/uHOw8Lcu8edlAgwomMYHQ08m
-	 9m2AVzjFMoOz1Qt1zx7Qo0agSetqx1foZ60gAOoqMIsEdwTuv6/U2nOu3W7DXBMEKN
-	 1zHZRxGTv/bQA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 10/18] iommu/arm-smmu-v3: Recheck CMDQ_ERR in
- tegra241_vintf0_handle_error()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nicolin Chen" <nicolinc@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <2f83aa2157ea08642f7f55c5dd3fb1c66e883c91.1783044582.git.nicolinc@nvidia.com>
-References: <cover.1783044582.git.nicolinc@nvidia.com>
- <2f83aa2157ea08642f7f55c5dd3fb1c66e883c91.1783044582.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="h+RI5KX7"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mphVkLXVetyJXD2+NRyvrUCxS+85D6CU3D8DxLYAUpDArLtaRbUed1L5NXcLdpHZ+NKK0+LkqlTr0IDzU5TdBY/TN2nmWMIQR9+xFztt+zWpWtwhCWiML67e8b6/ALtB+3xNUGpS/lWkGM8jKfFJN1KhEY4DIoY3tboNhF0zzNfdzXehabEgdWClnBhzYNNYpgAowE9vweLv47vGUT9N0AxMKNx9wXdevLcP8poFhezT78QniS0lb9iW9uTBV7GAQSsqbvFotk7DzVnzEgy4k42OusKwLD8i3NvF596E38dYlyPlQ4Uth3xd/dCDLIyHnRWpmi0yAGJjayVnABG/YA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZgRzKf3O4tzf75PIWFJJeQqswa4ydfTNssOSDgBm5hc=;
+ b=oya2EmMoR4jyVv+l3TZMUcg9hOBv4EyVXL4qitELZEht71FEahbzpHQ+82hxOlYipXlCpit/F/RCO+funpAxM3sk8nUoYvBeqRVcDvNzW87D7vkybwSz1lWNJhyXbpCUksRVmtF8h6FN87i3qctbRwnDzPLw2ByYE3rrhwMIQ8BuSwLIWV4KYPUQxvjOIuif/6x1/iQHKjXwIv18txuxzVhIuJPyRNxL4WB1HaQ0fj5OnvJtuUlAfYmzK4WdDrWyhEBNVyDg5BBdFq/n2+U4pgJayaYvJRKgLSV0Lnm23ng4RADzhdMIjccSBNDUTzVTjnAzliqbAcgGH5sNwEKPcw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZgRzKf3O4tzf75PIWFJJeQqswa4ydfTNssOSDgBm5hc=;
+ b=h+RI5KX78jeljRSBUJHsq5Oby8nWKbekAWWfIeJc9g1GN61YTw61tSHSiKoSaicROzvFhI+9157gPGwoZvcjX/5EghbU0Pw5T1AL5flLedGhGSrVcxru1RqS4tz1NjRva7Wd2v6gMjpkRppepoEpAOSIms2ide3k3V9T4bkgSMeM1MEYv07cvfdmSf6ZIY72AV4Z7JyFcWQcR+SP1bm9wjL2MdUPPF4UzI7Bwvs9Jz5/HFo+zkKyrnPUn4/YsgPg63K4qRuqmzIjlxEyoyuILW7rjXAlXSVBQMXscvEYaLzCwGp/braV8wPPQd48UUVJxywmcdc5ttti/R+fJQ0Jvg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by BY5PR12MB4051.namprd12.prod.outlook.com (2603:10b6:a03:20c::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Fri, 3 Jul
+ 2026 05:03:52 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0181.008; Fri, 3 Jul 2026
+ 05:03:51 +0000
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 03 Jul 2026 14:03:46 +0900
+Message-Id: <DJOO971HSZ7F.2XSQASVN5YZEU@nvidia.com>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
+ "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
+ "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
+ <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
+ <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pwm@vger.kernel.org>
+Subject: Re: [PATCH v5 09/20] rust: io: use view types instead of addresses
+ for `Io`
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 04:40:02 +0000
-Message-Id: <20260703044002.9FB9E1F00A3E@smtp.kernel.org>
+References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
+ <20260626-io_projection-v5-9-d0961471ae50@garyguo.net>
+In-Reply-To: <20260626-io_projection-v5-9-d0961471ae50@garyguo.net>
+X-ClientProxiedBy: OS3P301CA0049.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:604:21c::10) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|BY5PR12MB4051:EE_
+X-MS-Office365-Filtering-Correlation-Id: e871dd8a-d9ea-41a6-1522-08ded8c0789a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|10070799003|23010399003|7416014|376014|1800799024|18002099003|22082099003|11063799006|4143699003|6133799003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	Dpr3bz8JJWEP3DRe0eiDwv+tfFMvrDVUnY4u2jO8naKPkZMphu18sP6Gfb9DTXvyyUNGd4RRBwJl4JiF/YPVUwG7536m6ymRufKImZcAXpJkqh7rYf+0/XYuSIm9CajTbjGRlEtxFvth6DIpk/rO4km3aHKz97r9llGEyk6L3EyO1ivV2TLhBy+kRCaE1dT5N3B2d7Hp2gmUelv1P4W+XxlFuur4i+I14LW69hG3ruhLKpHXIGHEANNVmZPQyzwNKcA7fQE796aRCz3Q/T3OjYgMwECaCdyXSBgfBFOxLpoGdR5i26RQVGlDjaGuTI/4pNd7Yy9TFaVXMyyMFa/jdNhILB3yTTNWAnIfmUlYZjOvyXp8egIXfr8mL+hzii54LeqUElh6POkGBLK2w4cLsMuLfxTGXiuLd/HuyrLCgL18Fm+C7CMUdYhK7c0DkotNl5RbGgaTPJB+P4xcVQ2ZiKzEGYDLYa4lh34zvOJuBEI99sejVYZtxJyCO/Rx0MZeV2FaDkoy0QPBpzIVt8sQucG25vz014sfw9+BDNe7TPjz/wSb2lXNWQZtCH55ffTIaObkspJ+UL3MVWKn6iftWEsyrhAcPNX5Qi9jpRsmEVIrT7GEYsODCvesMserUInVQ7zS7uuR+JPjtZOi1cLvom6Fn3x9GP8yCOEW398O59s=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(23010399003)(7416014)(376014)(1800799024)(18002099003)(22082099003)(11063799006)(4143699003)(6133799003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WEZNOG1zNDNXWStpbDIxYmcrOEFhVFQvRkVwNGNLeGNrOFI3MWlML2JkUXVT?=
+ =?utf-8?B?T2d0eXNZdlhMVXpXQWxkU1BCdXpxQUlHTzZBWUVCQzd5M2FMcG53aTQzUmxJ?=
+ =?utf-8?B?VVlhK2dvQlZqNGs5VXd4akJSQjlEMmtCcGlydTRSZUhqR20vRStCU29jMTRM?=
+ =?utf-8?B?aTR2Y1VTRnBsRU4vdWp6Y2ZyVURIUW15ajhQeGRzOGVEUlBNdjBHcm9TbmpY?=
+ =?utf-8?B?aHRVbUdqakZMa2N3ZnJicFg5aTFJeU5RcnoraEVxZnZXaHN3dkNmZVFWM2U0?=
+ =?utf-8?B?NC9ENTBxNjd3bHFGWElsVWtpVEtoRW12ZWkrNUJLajZodFhoU2JVRFNQcTVE?=
+ =?utf-8?B?Q0xiNFNnRWRKNVpyWUZmSXFIeEZlRkdPN3Z5aVJ3SGtVZGRWVzZnRHpwY0Zz?=
+ =?utf-8?B?ODF5QUZDTC9OaHVCMnVGSmVndFQ0SjNkN1luQlNKZGhsclBDY2tNZmRsOUZZ?=
+ =?utf-8?B?NEM3TDdhUDlwSGJldUx3Vm14MDh0aFduUDlIVGdNMVdITGROYWFBWlRPWTlS?=
+ =?utf-8?B?a2tUUm5LMytCY2FLRy9xY3hUSnBOSDRTZkZNbDhCRi9wdERrTEhvRjhDOXBh?=
+ =?utf-8?B?OE5Xa2gzKytwQzVEOElyNVluam8wazBkc0xNVmZXTjRRSnBVQjFBV0o3QVNm?=
+ =?utf-8?B?RUpkQzhUbEJtSkw4OEFkdUFHMHZFdld6MTVOYjB2Umx3SW1zOThpdFpVa3B5?=
+ =?utf-8?B?ekE2c1hTK0krME9kd3MyMmtDMjE4ZkpOdSt1SGNQeGN0WHR3TGk5NVpUQ2Zm?=
+ =?utf-8?B?M0MzcWFGdUtyVXlxZFFobVYzRHE0STcyTncydVMvUCtDNDVBU2c3Sjd1VHRG?=
+ =?utf-8?B?T3cxZTNXSzBONXdZN2s0QkgxUkRzaUlLdWQyUGU3NnVpSjRJRHdXdmpSMGth?=
+ =?utf-8?B?cVVkd2FDazhIVDJSK050VHBiNTBucG9SSjEwdmpvd082Rms4NHFqRENBOUNI?=
+ =?utf-8?B?VW5IVjlIa2d6RTlWeVpiTm1nVnRyQjRSTmtFSWhSZzRRdExweTBmQVh1U1R1?=
+ =?utf-8?B?K0t3cnRsWDNTK2JibnpuNnpuTXpxYzhFVlh3ZmM1UXg2TVQrVlFkOEVMNXBp?=
+ =?utf-8?B?eXNqaTg1d2xPRG5GSkFlY0UzTk4ycjhvVHRhUmxoWnV4VDhDdVFqRDhRU3FY?=
+ =?utf-8?B?cTRCcFRFSDE5VFVYajI0UTBYZWRTa3U5dGZsWi9WaGYxbFlkRVc0K0JSZ24z?=
+ =?utf-8?B?SzlYQXVGYUpmUHR5ZXFUNithNWY3cW5Ja1piMjg1NytkVGErVkZSZkhNVmlN?=
+ =?utf-8?B?Ui8zK1NmODlmVUlTNXNiOHI3V1VTQjZ3MEtKZlpkcXNDV2E5amluKzNSSVBB?=
+ =?utf-8?B?YVM1Q2psSHhXcyttcXoxZ1UvN2xNU1pQQ25meXpUQ2xGc0NZL1hEaS9QWWR5?=
+ =?utf-8?B?eWNVdlBIdlpCOUYyNGNrTStTOVQ4dVpxUll3K3MzaHdOZjJIbThvZWpuMHBI?=
+ =?utf-8?B?a2tJYlJMSm1JakhFbm1VK0c5VzhLWG5Ja3NOempoNnY2dm15QzJzK2RYU0o2?=
+ =?utf-8?B?UEcxbFVWYWZYbUh5bjNkOG9BRkYzVFh6cXh4bWtpcTk3Tkdpb0U0d09UT2tT?=
+ =?utf-8?B?NVNhNU9EcEJwZUZSOTlxS2FWWTJIdlMvMG5qcFBMNm04QlovbmN1WG9TOTdB?=
+ =?utf-8?B?WVdGOWo2bDVBamR4U2VaL0hObkQrTVE5NC9yTjFWWDdacXZ5a0FUQkhrRnF2?=
+ =?utf-8?B?TDNITzBKVkVTVlhFaDd4V09JcHlxR0ZPNnhVVWhPM1NnaXNmc093R1gwbytm?=
+ =?utf-8?B?dTJOQk9ySmFLVFBQVkVlOHpSdjZoTTg0ckxOajdsUkorakNPejZpUkNONVJy?=
+ =?utf-8?B?TjVMZTltYy9DVkk4eFlmajlOYVdzemg0QkJPQ2NQS3pxSXI0TEJTVWk4SHh2?=
+ =?utf-8?B?ZmxjZS9MK2IzSXBHRFEvcHdKbEhobE84WlgrNUYvV1h5TVMrVEFXc3N1UWF3?=
+ =?utf-8?B?VXcwZDlsdDg4bzBHbnhzOEdlOWtPeVFjRUZJMUg1dG1RZlpnZGkrM3JiaTl4?=
+ =?utf-8?B?VTJONit1dGE3L1JnQ3JGTkc5WVhnalJ5TzJJUDN5MnhHalA2eDNKc1Y3V3Fo?=
+ =?utf-8?B?ZXR5MWlRc3poclpKSmltcUdSaUVNd21Fc3lDb3hEWktuYUhBK1VWU2pVWDUy?=
+ =?utf-8?B?aXlYNlBtZUlSUnl4ZHlNY1JsdzkyTmJaby9qUHNtWThNLzJCWURDOStTKzA1?=
+ =?utf-8?B?bWdCQWptMWU3dkxERlJKRTk5K2E4VjZXSFpSM0FjZk1XTXYxeFc0OHdFZ3NF?=
+ =?utf-8?B?b2l2RDlScExJQ2puYSthczVvWXpLNnp4aDVGT0JTa0orUjNpRjdIWGRWMWc2?=
+ =?utf-8?B?Nm9tR1piVFRtczF1c1VPTlZYNEhvaHpnYmpxamp3NWFuRUVGOFlxNmtGQ2ls?=
+ =?utf-8?Q?+Mh2hXbt2AnZ6ul4lXAn0Xu69qzCv4iCRE/yHvSOjvwcB?=
+X-MS-Exchange-AntiSpam-MessageData-1: 7vO4yDnuLHs0Hg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e871dd8a-d9ea-41a6-1522-08ded8c0789a
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Jul 2026 05:03:51.7260
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2/Y8fAsAGVcmaCU354sB1b+Ot5eNyiWPuIXgawlz+tgWEe8RbaORGsXgQKknJVAQu5V7Nx71y/g1p0zuMP6T5w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4051
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Fri Jun 26, 2026 at 11:45 PM JST, Gary Guo wrote:
+> Currently, `io_read` and `io_write` methods require the exact type of `Io=
+`
+> plus an address. This means that they need to be monomorphized for each
+> different `Io` instance. This also means that multiple I/O implementors f=
+or
+> the same I/O kind needs to duplicate implementation (e.g. `Mmio` and
+> `MmioOwned`).
+>
+> Create a new `IoBackend` trait and define these operations on it instead.
+> The operations are just going to receive a view type and operate on them.
+> This has the additional advantage that the invariants can be moved from t=
+he
+> trait (and guaranteed via `unsafe`) to type invariants on the canonical
+> view types of the backends, so `io_read` and `io_write` can be safe.
+>
+> Note that view type is needed; addresses are insufficient in this
+> design, as they do not carry sufficient information. For example,
+> `ConfigSpace` needs `&pci::Device` in addition to the address.
+>
+> `io_addr_assert` and `io_addr` are renamed to `io_view*` to reflect
+> that they operate on views now, and make them standalone functions so
+> they cannot be used by users to cast types outside io.rs.
 
-Pre-existing issues:
-- [High] Race condition between teardown paths and the threaded ISR leading=
- to a NULL pointer dereference.
-- [High] Missing index offset for the second 64-bit LVCMDQ error map causes=
- incorrect array access and an unhandled IRQ storm.
-- [High] Premature IRQ registration allows the ISR to fire before core data=
- structures are allocated, leading to an uninitialized pointer dereference.
---
+The extraction as standalone functions could have been its own patch so
+as to not distract from the meat of this one (and make the diff of the
+functional changes introduced by this patch to these functions easier to
+review), but regardless:
 
-commit 24d0e50ef454f78b71fd6e45f50c5e36ef3cc631
-Author: Nicolin Chen <nicolinc@nvidia.com>
-
-iommu/arm-smmu-v3: Recheck CMDQ_ERR in tegra241_vintf0_handle_error()
-
-This patch introduces locking when reading and acknowledging the
-GERROR/GERRORN pair in both tegra241_vintf0_handle_error() and
-tegra241_vcmdq_hw_deinit(). It ensures that concurrent acknowledgments
-do not skip errors on already-handled errors. It also properly
-initializes the cmdq_err_lock at allocation.
-
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c b/drivers/iom=
-mu/arm/arm-smmu-v3/tegra241-cmdqv.c
-> index 9012ab584d1dd..666dd23b0c7ca 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c
-> @@ -319,10 +319,19 @@ static void tegra241_vintf0_handle_error(struct teg=
-ra241_vintf *vintf)
->  		while (map) {
->  			unsigned long lidx =3D __ffs64(map);
->  			struct tegra241_vcmdq *vcmdq =3D vintf->lvcmdqs[lidx];
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does this code compute the
-correct array index for logical VCMDQs when the outer loop index i is
-greater than 0?
-
-Since this loop processes LVCMDQ_ERR_MAP_64(i), if an error occurs on a log=
-ical
-VCMDQ with an index >=3D 64, the hardware sets the corresponding bit in the
-second 64-bit error map. By computing lidx purely as __ffs64(map) and omitt=
-ing
-an (i * 64) offset, wouldn't it erroneously access an index in the 0..63 ra=
-nge
-instead of the correct queue? Could this fail to acknowledge the actual que=
-ue's
-hardware error and lead to an unhandled IRQ storm?
-
-[Severity: High]
-This is a pre-existing issue, but is it possible for a race condition to oc=
-cur
-between the teardown paths and this threaded ISR?
-
-If the driver is removed (e.g., via rmmod) and tegra241_cmdqv_remove() init=
-iates
-teardown and nullifies the vintf->lvcmdqs[lidx] pointers before free_irq() =
-is
-called, could this concurrently active ISR thread read the hardware map and
-dereference the newly nullified vintf->lvcmdqs[lidx] without holding any lo=
-cks?
-
-> -			u32 gerror =3D readl_relaxed(REG_VCMDQ_PAGE0(vcmdq, GERROR));
-> +			struct arm_smmu_cmdq *cmdq =3D &vcmdq->cmdq;
-> +			unsigned long flags;
-> +			u32 gerror, gerrorn;
-
-[ ... ]
-
-I also noticed another pre-existing issue outside the scope of this diff:
-
-drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c:__tegra241_cmdqv_probe() {
-    ...
-		ret =3D request_threaded_irq(irq, NULL, tegra241_cmdqv_isr,
-					   IRQF_ONESHOT, "tegra241-cmdqv",
-					   cmdqv);
-    ...
-}
-
-[Severity: High]
-This is a pre-existing issue, but is there a race condition here where the =
-IRQ
-handler is registered before core data structures are fully initialized?
-
-If request_threaded_irq() is called while cmdqv->vintfs is still an
-uninitialized pointer (e.g. following devm_krealloc without __GFP_ZERO), co=
-uld a
-latched interrupt cause the ISR to fire instantly and dereference
-cmdqv->vintfs[0] in tegra241_cmdqv_isr() before it is safely initialized?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1783044582.gi=
-t.nicolinc@nvidia.com?part=3D10
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
