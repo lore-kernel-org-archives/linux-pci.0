@@ -1,40 +1,40 @@
 Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9041918DB2A;
-	Fri,  3 Jul 2026 00:36:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9041D4606;
+	Fri,  3 Jul 2026 00:51:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783038981; cv=none; b=JOxM206/JA3pv3oSnzWFF+bAwKo0iVTrCOKgXr9JeuuGnH7NH6LUy6ht9Rmr70LfYwZ7thGE5Ig4QQnETfnuKMu5rdFtTMJctEzZ0UZmsJblOD1DiqmTXgK2ZS1iLGIuuUDs1cq5d0tR6CYLXmAwN71xbK9oTH1xlUR0PPLXom0=
+	t=1783039905; cv=none; b=bW2ZTnOBjgzIGNUfo0EUq8EIToQk19BeZKnCDwwiLx+oCCYVAYtwx92KsEZt+HilFP22C1R3iMtj0oKlX9v2VoO/kSYvHjEQLoUWUDTUKdT8SlP3nM343C5eeJcm50JeYzNFyW5/cvKR+SKSnDJQxdJ6Z8Qe4gzfl+9KxT8diDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783038981; c=relaxed/simple;
-	bh=HQOl5f+3BFXxdbqHvPxam/utoMEvo8BUmmSaeT0HYNc=;
+	s=arc-20240116; t=1783039905; c=relaxed/simple;
+	bh=Gpz1rYSNWNaTS+A5zRNo5P+td+nlUMUPa/xfq1B/cTY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=mI3W5DBOp/OKw8J8XfFFOaGjzBsn6151+CCtPcNDvYnd6vgn6UKHi4Ih9kmt+JVMx8qecxQ5hPsqws3MHq6UnUoswy9o8V2NUHTQIiY6WinPSQr1QkKAsU1aF2tdHqa3WEePzlBx8WiynD14RqonLSFQv8zu7UBRYzItOVqmGJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=w3GpvQQ5; arc=none smtp.client-ip=113.46.200.220
+	 In-Reply-To:Content-Type; b=abn60tCBS+MH0Gz6qex6jEpKQFBMGIa0fJKi2x+i1Mkswm5IvQav1KffNer+jhTPiZPRcGDzQmSOju5hd+tL8Iw2rCWblvQMUhEgDKyQsNuguD1VmOSoKiO5WF1CMQcPXlhkMjVE6/nGNukCxFr3OZPnUgQwRs+SUamS6sLEGXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=c7BXrWNU; arc=none smtp.client-ip=113.46.200.220
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="w3GpvQQ5"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="c7BXrWNU"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=ks18hZZIQFp1HIdQaDajUBkbfQZ3RKQTkJwHEed0hmg=;
-	b=w3GpvQQ5ZdlgY/RW5aI8QLtdzoZMKkMbRA5STbEjActyvnoewk4v4RI0I2hDbX6oCNrKV/s+n
-	/R/w2/jHYUGL69wALiROuh5o4F1iIXDXvMu5uuMgb6lqnP/XhnssdQ2L6s7e2doMx3znU8p6X5j
-	/tA9ZTFcTTyRQzAVcWJy96w=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4grvhz3bLTz12LFj;
-	Fri,  3 Jul 2026 08:27:31 +0800 (CST)
+	bh=ericW9Gt1+BueOa7uP3mnnG00WliJ4w3XvTiVRYrxcw=;
+	b=c7BXrWNUi27lPBb93eYpdYrRfD+pSPSap5C9h0iuI1fZyTyW5bNc9LuzYCEP0sp/zS7JWA/c5
+	g796VE5KfuATIkH/Dxpxil90BBBx+I7L93B8kvRsX3nCyJh1rbb4aLJ2raCdelABv/oIwfVCM7O
+	0Z609XWuxiAra9SeMJGsKfU=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4grw2m4MHyz12LFj;
+	Fri,  3 Jul 2026 08:42:56 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id B567D40572;
-	Fri,  3 Jul 2026 08:36:13 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id D1E834058F;
+	Fri,  3 Jul 2026 08:51:38 +0800 (CST)
 Received: from [10.67.121.161] (10.67.121.161) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Fri, 3 Jul 2026 08:36:13 +0800
-Message-ID: <3c7bf42e-9ff7-4bf2-a0d1-71e93c3cfdd1@huawei.com>
-Date: Fri, 3 Jul 2026 08:36:12 +0800
+ 15.2.1544.36; Fri, 3 Jul 2026 08:51:38 +0800
+Message-ID: <6ba50569-650b-400e-8d07-9d52abe3f98b@huawei.com>
+Date: Fri, 3 Jul 2026 08:51:37 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,90 +42,113 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 09/18] vfio/pci: Hide TPH capability when TPH is
- unsupported
+Subject: Re: [PATCH v19 11/18] vfio/pci: Virtualize PCIe TPH capability
+ registers
 To: <sashiko-reviews@lists.linux.dev>
-CC: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-10-fengchengwen@huawei.com>
- <20260702130039.87A7B1F000E9@smtp.kernel.org>
+ <20260702124224.57168-12-fengchengwen@huawei.com>
+ <20260702130414.5DA5A1F00A3D@smtp.kernel.org>
 Content-Language: en-US
 From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260702130039.87A7B1F000E9@smtp.kernel.org>
+In-Reply-To: <20260702130414.5DA5A1F00A3D@smtp.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-On 7/2/2026 9:00 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Hiding the TPH capability by returning a length of 0 unintentionally grants the guest raw read/write access to the physical TPH registers.
+Thanks for the review.
 
-After checking the full vfio_ecap_init logic, this is a false positive risk
-report.
+On 7/2/2026 9:04 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> New issues:
+> - [Critical] Out-of-bounds read and write on the `perm->virt` and `perm->write` kernel heap buffers due to unvalidated dynamic hardware TPH capability length.
 
-When vfio_ext_cap_len() returns 0 for unsupported TPH ecap, the !len branch
-takes over:
-1. It allocates minimal PCI_CAP_SIZEOF length and marks hidden=true;
-2. memset(map + epos, PCI_EXT_CAP_ID_TPH, len) populates pci_config_map,
-   so these offsets are never marked PCI_CAP_ID_INVALID;
-3. Accesses to TPH range hit the dedicated TPH ecap permission table
-   with vfio_tph_config_write handler which discards all writes,
-   never falling back to unassigned_perms raw physical write.
+TPH perm buffer OOB: Safe per PCI spec, ST table capped at 64 entries,
+all permission setup stays under 0xFF limit, VFIO access validates perm
+ranges.
 
-The hidden flag erases the capability ID in virtual config space so guests
-cannot enumerate TPH, while full permission isolation is retained for all
-config offsets of this ecap. No raw hardware bypass vulnerability exists
-with current implementation.
+> 
+> Pre-existing issues:
+> - [Critical] Missing bounds check in `vfio_ecap_init` can lead to a heap buffer overflow when handling extended capabilities with dynamically parsed lengths.
+
+vfio_ecap_init overflow: Pre-existing generic issue for all dynamic ecaps,
+not introduced by this patch; I think we need another patch for this (not
+in this serial).
 
 Thanks
 
 > --
 > 
-> commit 1d6f16c85a6a295f7dee447fc8d7ac56c232977a
+> commit 78dd911822344404c5af18d9dd92fb51e5d34a18
 > Author: Chengwen Feng <fengchengwen@huawei.com>
 > 
-> vfio/pci: Hide TPH capability when TPH is unsupported
+> vfio/pci: Virtualize PCIe TPH capability registers
 > 
-> Check the device negotiated TPH support status before parsing the TPH
-> extended capability. Return zero length to hide the capability from
-> userspace if TPH is disabled during topology negotiation.
+> This patch implements virtualization and policy masking for the PCIe TPH
+> extended capability. It splits configuration space permissions to keep the
+> header read-only while marking TPH_CTRL and ST-table entries as virtually
+> writable, and adjusts virtual capability bits based on hardware support.
 > 
 >> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
->> index a10ed733f0e3a..5c6ab172df6c0 100644
+>> index 5c6ab172df6c0..06d7b2fbf866a 100644
 >> --- a/drivers/vfio/pci/vfio_pci_config.c
 >> +++ b/drivers/vfio/pci/vfio_pci_config.c
+>> @@ -1086,6 +1086,73 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
+>>  	return 0;
+>>  }
+>>  
+>> +/* Permissions for TPH extended capability */
+>> +static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
+>> +{
+>> +	int i;
+>> +
+>> +	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_TPH]))
+> 
+> [Severity: Critical]
+> Does this code under-allocate the permission bits if the capability length
+> is dynamically larger than 256 bytes?
+> 
+> Because pci_ext_cap_length[PCI_EXT_CAP_ID_TPH] is 0xFF, alloc_perm_bits()
+> will allocate a fixed 256-byte buffer. If vfio_ext_cap_len() calculates a
+> dynamically larger TPH capability size based on a device's ST table, it
+> appears subsequent user space reads or writes past offset 255 could cause an
+> out-of-bounds heap access when vfio_default_config_read() or
+> vfio_default_config_write() calls memcpy() against perm->virt and perm->write.
+> 
+>> +		return -ENOMEM;
+>> +
+>> +	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
+> 
 > [ ... ]
->> @@ -1450,6 +1451,8 @@ static int vfio_ext_cap_len(struct vfio_pci_core_device *vdev, u16 ecap, u16 epo
->>  		byte &= PCI_DPA_CAP_SUBSTATE_MASK;
->>  		return PCI_DPA_BASE_SIZEOF + byte + 1;
->>  	case PCI_EXT_CAP_ID_TPH:
->> +		if (!pcie_tph_supported(pdev, false))
->> +			return 0;
 > 
-> [Severity: High]
-> Does hiding the capability by returning 0 here inadvertently grant the guest
-> raw read/write access to the physical TPH registers?
-> 
-> When a length of 0 is returned in vfio_ext_cap_len(), the VFIO capability
-> parsing loop skips mapping the capability. This leaves the physical offsets
-> marked as PCI_CAP_ID_INVALID in vdev->pci_config_map.
-> 
-> Guest accesses to unmapped offsets fall back to unassigned_perms:
-> 
-> static struct perm_bits unassigned_perms = {
-> 	.readfn = vfio_raw_config_read,
-> 	.writefn = vfio_raw_config_write
-> };
-> 
-> This allows a guest to perform raw writes directly to the physical device
-> using vfio_raw_config_write(), bypassing VFIO isolation.
-> 
-> Could a malicious guest use this raw access to manually enable TPH and
-> configure Steering Tags to steer DMA to arbitrary CPU caches?
-> 
->>  		ret = pci_read_config_dword(pdev, epos + PCI_TPH_CAP, &dword);
+>> @@ -1704,6 +1774,8 @@ static int vfio_ecap_init(struct vfio_pci_core_device *vdev)
+>>  		ret = vfio_fill_vconfig_bytes(vdev, epos, len);
 >>  		if (ret)
->>  			return pcibios_err_to_errno(ret);
+>>  			return ret;
+>> +		if (ecap == PCI_EXT_CAP_ID_TPH && !hidden)
+>> +			vfio_tph_capability_adjust(vdev, epos);
+> 
+> [Severity: Critical]
+> This is a pre-existing issue, but could the dynamically calculated length lead
+> to a heap buffer overflow here?
+> 
+> If a faulty or malicious device advertises a large ST table size,
+> vfio_ext_cap_len() can calculate a length where epos + len significantly
+> exceeds pdev->cfg_size. Since there appears to be no bounds check before:
+> 
+> drivers/vfio/pci/vfio_pci_config.c:vfio_ecap_init() {
+>     ...
+>     memset(map + epos, ecap, len);
+>     ret = vfio_fill_vconfig_bytes(vdev, epos, len);
+>     ...
+> }
+> 
+> could this overflow the vdev->pci_config_map and vdev->vconfig heap buffers?
+> 
+>>  
+>>  		/*
+>>  		 * If we're just using this capability to anchor the list,
 > 
 
