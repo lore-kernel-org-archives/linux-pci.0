@@ -1,84 +1,95 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D416030BBB6
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 17:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E938E12B94;
+	Fri,  3 Jul 2026 17:16:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783098623; cv=none; b=cQmZFkgmk0SEDrSsuJOeAuliNlSc8UfKl5+u9CMSrcfdBJxJMQYQDW+nSyWWfs7A6XQwGbGqJsFLzU/g24gvyZ2Ae1fMAseSN2xBRScLCSDQ8pR8YmK+UaW+nESGrJaOiZ0+3KCvIoLaEUbbIzeTzXpia9DAD2+InVnHkZhba+o=
+	t=1783098976; cv=none; b=rZIXBR8b2Su/Yea9Qe4OrsLo2GgCqgEhNuBXvNWqGWYc4TXCpKZb83sRkftU6v8nkfyavmhPkub4bdCoxJni23Ezlisol+3KiySf9bGNy3cUWM95IwMnTzt6B3c11v/8D8oAbaLUFWCgRzVl185oqimhOFZi+VVYOOJsDwVPDo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783098623; c=relaxed/simple;
-	bh=JqbyUGSlLgU7xpTZ+Kst/HuDrhY2T70S9MikqXlpd+w=;
+	s=arc-20240116; t=1783098976; c=relaxed/simple;
+	bh=Aisfcbh/44/KKLhN9ZwUoxlfYJncZf/ootV1BLAgoRU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sT9cO1mKiQ9TjQlPTxCiC6570RLCjiKU49B5N5y7ibOT7wjbfPyC916wqaOTWh0gRgX4DvrX8ZpHEKV9t6aqJYiYObse5LrRxUQOC71DqF9/f7TSWN8HPt3jUGhNAdfOelQilxClypjRjOhM0Ull0o3Hm8rNlmPA9nRvx1LiHtg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=BJNelsAl; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=T0iIdkgkDNGpLtrxvKEwZucP2D5+sEdaV6tkyCfZqgK+K84oaEZZfMuy71mCbh+ftZ2L77JVsEZJwF89x13dCQbgz7NMylk8eK1ZuMlfc3HlT1GkNLzRRwpz1L1mTbqw726LK8ELZhI+FabRDvxDoN3Dl8wDLjjmVSPmnx1HhNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=K998PyfI; arc=none smtp.client-ip=195.154.119.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="BJNelsAl"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92e57a753f9so57374285a.2
-        for <linux-pci@vger.kernel.org>; Fri, 03 Jul 2026 10:10:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1783098621; x=1783703421; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=n3oZ+zgqAAjsMiarR8e3Jw/svVLzceSmIMfYpYh96XE=;
-        b=BJNelsAlO6FnCo9zXD9lU+4SoRJW3Tg0r1YDSlnhVtpce/fKXpv6TZQ96ggJUP0RW3
-         OhY5I4MRnhMRmVVyF5tufLWyo6PRrBE2WMLMJ/fTAu/xd93sqmuhvsCKXrIHPo0AmOMZ
-         Fwvb4f4cZNrgoYyiQ9FrQoQKs5K1CQtzKoV7BZd1wh/H0/vDSidipaNbRED6rpYuaodD
-         fLFSsYGJGrSr9QGerD2znfRfvnicK811K+ffhJuhXjbO4/wWWAGx5M0+zI8ucdQqk4Uf
-         9bpxIv39X++mU0XhhvBHWDFMQlFmqDCzRtt6RDDyj+lTFDDkk9rCxOPK09J6QQfYMFDA
-         qsgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783098621; x=1783703421;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=n3oZ+zgqAAjsMiarR8e3Jw/svVLzceSmIMfYpYh96XE=;
-        b=WbOiCKC3BSdWh3605AS/LuyBARyLdS5Lcp1cSF1PH4BRQ86JWvw+qf0CmkMQcAJAl3
-         nDVDFHFpFdRSDefU/ijm710RNGv4ybRstpXdU9sX57NgYuZT03yCCMtFc0JzF+bUl021
-         NvkAVhgiWwsayb5cxwN0fi2elY8irFJiSxqhH5WPLWt1EN99oDILVgajRqw2FCOS1fVc
-         m56mrlXJ+9vTDuXy2X6HC0m2RV11w7UeJJ2H+K9uz3TFYc7U4xF5x0jo/FS1ubVjnfYQ
-         zNUm0uuyDVgRnpz1rVmgiTDuRMs2sc6uEbdCu+Po25LxaaC0j6rFhdXV5H0o46yNAHrH
-         hX+A==
-X-Forwarded-Encrypted: i=1; AFNElJ84GRgQihCgu7CbqzDjTEdmdSe6Dzdyiz0DQUhC5It7Pm15FqpSt88P4aMA6visJ2kvZtHXdpYWxl0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy/JZx1hxvWmyVtFNc5jvG4yYqNP7q38WAO/xvvJVD4M35ndBsI
-	tizBRvUVj+AqLh39d5fu91KJiT4uIcNKzxS//mgGNZMt2ycaayVQ1MmiOCPgMSZLqa0=
-X-Gm-Gg: AfdE7cmnagGl/ejgaO2pAZck9utiW5+V40oUymkg5TfiiKaiVstmUbbkx7Gq1ZcYEO3
-	uRR7Y8946HoZHCMeyEFVmZuJ6f756km5FVTs4BdRLGtwUpIAhU4Ljr1abCymGPkrpHU77v4N21U
-	zhwHSPIFoz55zHMUlAcQaWN3Jxad/KmPTYnXwzSofPtoCR/LYSeBs1w8+7gysYCgJWXmAgWXR8Y
-	Pg+Xs367DWpojqC5xCNMz7vckrJJ3r8zP9cE3Ch6n2kGSVK3QY7kXkXOq73c58JkXN59ByBQeR3
-	CBQlADhS7IMLLYW70pdiiwCvzYf6gfrBUE6pReyDSOJT6Wzgs5MJzTiYjbRKJ1xbqY0KbSyXqhw
-	0XJClC3NzvcQeAaJX4eOO7xgqPNSh7nKTlcTTB8SUfbAwPt/l6Vw+OUm+NO+uEPSVRfbK4EhyTX
-	Sof44NcRJjq2RglMJxOZm4EJ9CNXJctf93xGQUCFq1GbF2/syMtFQRPGSlj/4ihEL6JXE=
-X-Received: by 2002:a05:620a:46a5:b0:915:5379:b511 with SMTP id af79cd13be357-92e9a48e177mr44923985a.43.1783098620659;
-        Fri, 03 Jul 2026 10:10:20 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-92e90cbe3e2sm200315285a.35.2026.07.03.10.10.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Jul 2026 10:10:19 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wfhP8-00000008GuS-3eyQ;
-	Fri, 03 Jul 2026 14:10:18 -0300
-Date: Fri, 3 Jul 2026 14:10:18 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, wei.liu@kernel.org, kys@microsoft.com,
-	haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
-	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
-	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org,
-	mani@kernel.org, robh@kernel.org, arnd@arndb.de,
-	mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com,
-	mrathor@linux.microsoft.com
-Subject: Re: [PATCH v2 4/4] iommu/hyperv: Add page-selective IOTLB flush
- support
-Message-ID: <20260703171018.GA1968184@ziepe.ca>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-5-zhangyu1@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="K998PyfI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
+	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
+	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
+	bh=cLSKMctPdQKy5wsj9y1nB9/36ncfBFcUYoRxf9bQipI=; b=K998PyfIpWOrOmSAvJh3nisrSZ
+	LxHTwDQ0gZVhL3JFE07mIK2DPtN7e1gzoGK3M35DUURvhZEDm1PPJMbpL68IzJmWL2wVicQ1BE7Ar
+	jWiF8ojeEOFaxs9kW20TnXMQWUOF6TWOgaG/Arhmfi00SNMMr0yGjUhylqY9YsTQfWFQAK7Yp68LW
+	W/3yejE9iSLMwoeUivBwC+Pwkl8eC9icN4DJgCxKI/RqG7ueItf/qxmHQq13lZaOJ37JRvAR1S7Jq
+	2mYqTEX2h4mU7TbWBaeO6kPNfPOFF+nYynCutDVg4FZA3GiuNm7L+Z9Jx1brlrGEub+vURKEgTJja
+	7yqwnJgA==;
+Received: from authenticated user
+	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <aurelien@aurel32.net>)
+	id 1wfhUb-000000008iE-0Ehv;
+	Fri, 03 Jul 2026 19:15:57 +0200
+Date: Fri, 3 Jul 2026 19:15:56 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Alex Elder <elder@riscstar.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v3 0/6] riscv: spacemit: Add PCIe RC controller support
+ for K3
+Message-ID: <akfuTKD7fp10K2C-@aurel32.net>
+Mail-Followup-To: Inochi Amaoto <inochiama@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Alex Elder <elder@riscstar.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+References: <20260703020003.485436-1-inochiama@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,52 +98,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260702160518.311234-5-zhangyu1@linux.microsoft.com>
+In-Reply-To: <20260703020003.485436-1-inochiama@gmail.com>
+User-Agent: Mutt/2.2.13 (2024-03-09)
 
-On Fri, Jul 03, 2026 at 12:05:18AM +0800, Yu Zhang wrote:
+On 2026-07-03 09:59, Inochi Amaoto wrote:
+> The PCIe controller on Spacemit K3 is almost a standard Synopsys
+> Designware PCIe IP with extra control and external MSI controller
+> (IMSIC).
+> 
+> Add binding and driver support for PCIe RC controller support on K3.
+> 
+> Changed from v2:
+> - https://lore.kernel.org/linux-pci/20260517014841.254085-1-inochiama@gmail.com/
+> patch 2:
+> 1. Use unify PCIe phy get/enable/exit function for both K1 and K3.
+> patch 3:
+> 1. New patch for updating device id for both K1/K3
+> patch 5:
+> 1. Reuse binding for spacemit,k1-pcie-host
+> patch 6:
+> 1. Multiple cleanup for the logic already generalized in the previous
+>    patches.
+> 2. Use generic description for the Kconfig entry.
+> 
+> Changed from v1:
+> patch 1:
+> 1. Remove post_init callback.
+> patch 2:
+> 1. Fix devm_kmalloc_array arguments order and error check.
+> patch 3:
+> 1. Apply Rob's tag.
+> 2. Change check from oneOf to anyOf.
+> 3. Fix spelling mistakes in commit message.
+> patch 4:
+> 1. Add comment about PHY handle.
+> 2. Remove interrupt "app".
+> 3. Fix spelling mistakes in commit message.
+> patch 5:
+> 1. Remove all logic related to link up interrupt.
+> 2. Clean up all unused macros.
+> 3. Fix devm_kmalloc_array arguments order and error check.
+> 4. Remove unnecessary start_link logic.
+> 5. Make all magic number as a macro.
+> 6. Fix spelling mistakes in code and commit message.
+> 
+> Inochi Amaoto (6):
+>   PCI: spacemit-k1: Add device data support
+>   PCI: spacemit-k1: Add multiple PHY handles support
+>   PCI: spacemit-k1: Add device id update helper
+>   dt-bindings: PCI: snps,dw-pcie: Add msi-parent for MSI handle check
+>   dt-bindings: PCI: spacemit: Introduce Spacemit K3 PCIe host controller
+>   PCI: spacemit-k1: Add Spacemit K3 PCIe host controller support
+> 
+>  .../devicetree/bindings/pci/snps,dw-pcie.yaml |   7 +-
+>  .../bindings/pci/spacemit,k1-pcie-host.yaml   |  46 +++-
+>  drivers/pci/controller/dwc/Kconfig            |   4 +-
+>  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 237 ++++++++++++++++--
+>  4 files changed, 267 insertions(+), 27 deletions(-)
+> 
 
-> @@ -401,10 +402,74 @@ static void hv_iommu_flush_iotlb_all(struct iommu_domain *domain)
->  	hv_flush_device_domain(to_hv_iommu_domain(domain));
->  }
->  
-> +/*
-> + * Calculate the minimal power-of-two aligned range that covers [start, end]
-> + * (end is inclusive). Returns a single (page_number, page_mask_shift)
-> + * descriptor that may over-flush when the range is not naturally aligned.
-> + */
-> +static void hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
-> +				       union hv_iommu_flush_va *va)
-> +{
-> +	unsigned long start_pfn = HVPFN_DOWN(start);
-> +	unsigned long last_pfn = HVPFN_UP(end + 1) - 1;
+For patches 1, 2, 3 and 6:
 
-Pedantically end can be ULONG_MAX, you shouldn't be adding to it since
-it will overflow.
+Tested-by: Aurelien Jarno <aurelien@aurel32.net>
 
-> +	unsigned long mask_shift, aligned_pfn;
-> +
-> +	if (start_pfn == last_pfn) {
-> +		mask_shift = 0;
-> +	} else {
-> +		/*
-> +		 * Find the highest bit position where start_pfn and last_pfn
-> +		 * differ.  A range aligned to one above that bit is the
-> +		 * smallest power-of-two region that covers both endpoints.
-> +		 */
-> +		mask_shift = __fls(start_pfn ^ last_pfn) + 1;
-> +	}
-> +
-> +	aligned_pfn = ALIGN_DOWN(start_pfn, 1UL << mask_shift);
-
-I think the whole thing is simpler if it stays using bytes until the end:
-
-	sz_lg2 = __fls(gather->start ^ gather->end);
-	if (sz_lg2 < HV_PAGE_SHIFT)
-		cmd.sz_lg2 = HV_PAGE_SHIFT;
-
-	page_number = (gather->start & ~(1UL << sz_lg2)) >> HV_PAGE_SHIFT;
-	page_mask_shift = sz_lg2 - HV_PAGE_SIFT;
-
-No overflows that way either
-
-Jason
+-- 
+Aurelien Jarno                          GPG: 4096R/1DDD8C9B
+aurelien@aurel32.net                     http://aurel32.net
