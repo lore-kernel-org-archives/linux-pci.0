@@ -1,79 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9EE316199
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:26:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258FE31A556
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:27:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783052799; cv=none; b=O7ut07IC3nSW8e99ypwPhogZGNIqqTo5qU/FDPcJnu9dEgelbQ5fPGx0PvnZTV+tgsAsoR7A/l4JTH4q1+Pufrv23+Z0LBiW5J/59qDTJ1FZOsMn2KzrRhwVKBix7S8QlUUXHchqis+dxdWMm1pSarlU172ewBN1zCt0XdkwJHs=
+	t=1783052833; cv=none; b=iCOVThL2hmvGZhuf3NgwDbSKxXtxzfmsHqWuWPGxQcFgXAVMThYdZ2K8hClEpNZq/FXPyIvI1onY0V2pZwMD9JpvXxa2U5V9r2OpiDSow3KAXYzNJdWBWQh6lhMDY5S5TZ6nkJJPd60fmgPYSC3FYL5cMAWQzsvHg5XLd0wFcBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783052799; c=relaxed/simple;
-	bh=6/3BsalpgFDRT/UafcqZ+YPWi+MXk+xvTDGAkLFvYSw=;
+	s=arc-20240116; t=1783052833; c=relaxed/simple;
+	bh=s7vNd/kAeQgPbCj/6uvF6HGA9wZNKvsoXZB4/J2xFOY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B2+6a8ey3A8O5+1G8O+brpDaG7clx40rD/yM3f22cp+03daYPYD3/YoO6oPjcV2sr6g+rGXzlUy/tD7/gf3euXriWpf/8mwQ+22DBX9AO7rxPelXbXHtrSi0gpRkPzYkM9oyFicC903LpdAZ5Cn0gDOGy/YLDObiOqzkP2s+v5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkwWne3T; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MPHznK/FIgripzUP9nHO1c4JlGYiSAaHN8mGC0GOufMLneFjmc/FZdvZuzi9wPUMGxivVJMKko3kzl8lDg3ELxKJZ9EWK87AYU1j0ckuViyCOYn9/S6uVTgWVR09XjtDY0UMJxv7PTv0ofankY5oc84AKzG5r0QlILx6QUOJuI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lPH1evCG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkwWne3T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5921F00A3A;
-	Fri,  3 Jul 2026 04:26:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lPH1evCG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A50BD1F000E9;
+	Fri,  3 Jul 2026 04:27:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783052787;
-	bh=6/3BsalpgFDRT/UafcqZ+YPWi+MXk+xvTDGAkLFvYSw=;
+	s=k20260515; t=1783052823;
+	bh=s7vNd/kAeQgPbCj/6uvF6HGA9wZNKvsoXZB4/J2xFOY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GkwWne3T6xKRC0PXPsBogbXvjaKdu3NPLE/3cdT/aL630DJNUPUCP+TAMrLgZ2+qE
-	 t+OCNwo43HCXIp1e7nXiqcauscxRa5DYNjLtxapR2wLQHNOh0nV16S1yb+4C+a95Ea
-	 QniGQcIfKWaG5GjG2vgWLOG0b2ef6Lv9yfGozPe59t5pOCnIhAqcdGmyXQmpp5lI63
-	 Jw4lwnWTovfC0eoQfFpTp7MH+oNSGrJkYzVZB5zAvuknL6OJztqTyhZt4DHEVCCZ0B
-	 2SD++tjLTSrbERakvD90Hwxy1fApl00p6eI4bRRoKSaStlwIzmli6wPqNJ+AfI2k/t
-	 jLuWbPm3L882w==
+	b=lPH1evCG8iHO9hS+K40mry5kz4ynWDh6sFsCYop470gUKcL7oDFyyC75BL4forrIl
+	 i9JiOpPI0ssfrKNstYaP27DCSr2gPlCakmyC365rrQLZlLFtj+9p+u7msx/fuMaJ20
+	 0pTdxEH7/GrhY+xDu1jP02bhR0d+GT2Iw0jH9lLchhT7ytu+cDzu+iYIXssOM8Ym/d
+	 1RiNHjnkdT2WdYB8gO6kWO/cbgccWC/EeSeE7pRTLUbUgSFu9zHc8/kryDLmE8p8AH
+	 z9i1hTQTF8HvKYhHOLDDRIPHnnMZ3UL2o6Atq3cfOjehwOj25kLOFU6YcEXq9yLkIs
+	 0/3QJgDiKeY9Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 07/18] iommu/arm-smmu-v3: Mark ATC invalidate
- timeouts via lockless bitmap
+Subject: Re: [PATCH v5 01/18] PCI: Don't suspend IOMMU when probing reset
+ capability
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <032232b9bd506075910c9a809138c0a2ebcbd5c4.1783044582.git.nicolinc@nvidia.com>
+In-Reply-To: <6dbbbbe30cdc08a467de893fb9ecdc07d9cc1fec.1783044582.git.nicolinc@nvidia.com>
 References: <cover.1783044582.git.nicolinc@nvidia.com>
- <032232b9bd506075910c9a809138c0a2ebcbd5c4.1783044582.git.nicolinc@nvidia.com>
+ <6dbbbbe30cdc08a467de893fb9ecdc07d9cc1fec.1783044582.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 04:26:27 +0000
-Message-Id: <20260703042627.9C5921F00A3A@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 04:27:03 +0000
+Message-Id: <20260703042703.A50BD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> An ATC invalidation timeout is a fatal error. While the SMMUv3 hardware is
-> aware of the timeout via a GERROR interrupt, the driver thread issuing the
-> commands lacks a direct mechanism to verify whether its specific batch was
-> the cause or not, as polling the CMD_SYNC status doesn't natively return a
-> failure code, making it very difficult to coordinate per-device recovery.
+> reset_method_store() in drivers/pci/pci-sysfs.c discovers supported reset
+> methods by calling reset_fn(pdev, PCI_RESET_PROBE, ...) without holding a
+> device_lock, since the probe path is expected to query the device's reset
+> capability without changing device state.
 >=20
-> Introduce an atc_sync_timeouts bitmap in the cmdq structure to bridge this
-> gap. When the ISR detects an ATC timeout, set the bit corresponding to the
-> physical CMDQ index of the faulting CMD_SYNC command.
+> However, pci_reset_bus_function() and __pci_dev_specific_reset() violate
+> that contract after pci_dev_reset_iommu_prepare/done() were added, which
+> moves the device into a blocking domain and abruptly aborts any in-flight
+> DMA. Doing this for a probe -- a state-query call that does not even hold
+> device_lock -- can cause driver timeouts and data loss on a DMAing device.
 >=20
-> On the issuer side, after polling completes (or times out), test and clear
-> its dedicated bit. If set, return -EIO to trigger device quarantine. This
-> reader site tests with a plain test_bit() first and clear_bit() only when
-> the bit is set, sparing the shared cache line an atomic RMW in the common
-> no-timeout case. An smp_rmb() ahead of the issuer-side test orders it aft=
-er
-> the completion poll, which may observe the completion using a relaxed load
-> that would otherwise allow this bitmap read to be hoisted over it.
+> The peer reset helpers all handle this correctly: they short-circuit on a
+> probe input before touching the IOMMU.
 >=20
-> When inserting a CMD_SYNC, clear any stale bit left in its slot by a prior
-> wraparound, before the slot becomes visible to the SMMU, so that the GERR=
-OR
-> ISR can only set the bit for the new CMD_SYNC.
+> Skip pci_dev_reset_iommu_prepare()/_done() entirely when probe is set. The
+> inner reset routines already implement their own probe semantics, and they
+> perform the capability checks and return without changing device state.
 >=20
+> Fixes: f5b16b802174 ("PCI: Suspend iommu function prior to resetting a de=
+vice")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Claude:claude-opus-4-7
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1783044582.gi=
-t.nicolinc@nvidia.com?part=3D7
+t.nicolinc@nvidia.com?part=3D1
 
