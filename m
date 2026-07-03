@@ -1,59 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1135F3195F0
-	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:22:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765D6315D3E
+	for <linux-pci@vger.kernel.org>; Fri,  3 Jul 2026 04:24:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783052546; cv=none; b=LvPBhgxzZGUnWC+jm57u+6doPyTKSUlAUnXjGHTLd2J4XRB+L7J7grRCvEsznrKtBw+YGYWY3wimKdWMXi4UU0xStC2bsaCXys4QI7itNEYmLydTelbulsr+lIsPVOom/9VjvbE9vN+9gRIpMiHNQSZGK75Qyoj5fZoe8v6dQHY=
+	t=1783052667; cv=none; b=YXndFPMw+GL/i/6glWoAJ6DX72hOHwFh6bP0dOcdE5IfF7xpKfu3ttAjawroonvi7jrCxVO0i3kRD6XSNiiJQfmwLPO5GoV6RIfszcfkAiIUI1tAOQ0rQMV1IrrvuNaZjiBqwEbfzqB2Yv/V6U3zE/NM63qqOwq8etVHjnzcut0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783052546; c=relaxed/simple;
-	bh=dsWnfsQogslVRFt78YDPYVVXHJYjIXnk9lLCww3lyaY=;
+	s=arc-20240116; t=1783052667; c=relaxed/simple;
+	bh=xRb/+ruolbQny2mmrD5wVW9ARqi4YafsCHCXpgn9AH0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u/1nZMkI/iDbN8m7Gq1Vav2bZxBI3PAbfLK6QM9Yzj5df9OV4B5aD7byOeXq90tSmadVAJ8bGVFiS4j8Pm4Xxs0eLEyfMYsWFrZBl6y5AENHrXgcbTfAOfxxdy+zUEEC7yJJ6EqKdSkZIr65kjXcb0hk/bqbnWnVLwwQfl9bj3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jMGJF8zZ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MtiI67hP0jZVuNo5+1MrsiMFe/mZuG0GYzBpP460+sBfYAzfuiXKgLeWIFV0Eyj7NlcdPaQb1F02qI/IQczUeYWsCqsrIsaRr3mdHRVjluoPHjSqs9OA3sefekLYZKZQqyvvBNUqXcCQqQIOZw0axEtAbM5kUMq7Fj72gJr2B74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k3hbQU/o; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jMGJF8zZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11A2D1F000E9;
-	Fri,  3 Jul 2026 04:22:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k3hbQU/o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E2061F000E9;
+	Fri,  3 Jul 2026 04:24:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783052537;
-	bh=dsWnfsQogslVRFt78YDPYVVXHJYjIXnk9lLCww3lyaY=;
+	s=k20260515; t=1783052657;
+	bh=xRb/+ruolbQny2mmrD5wVW9ARqi4YafsCHCXpgn9AH0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jMGJF8zZm8Xyzma1RTUQtphaHTaSsbVl0ww4NtBXMup6GdlgrtvTsMLWrpHatJzpu
-	 J3C94XOsmsHtDmnhtwW2egCLHsKN9IitsMCmMMeQMIHuVFyRW2Xcf8dKzu8kK8V9BJ
-	 F8wjyh2Fd2JlsUu13cIxdSnp49P6umkUzs7XXjjlsmBBmThHbdw84xo5g2U0t6DpNh
-	 raADjgfe91fp+u3pNzEulEsy080h/ZnoI4j9bHlYX7ZwWnasBnvzw10dRaeMTgDW5d
-	 acXNJIIwKk8zLIJs+Ndpwlr+KPCmv1AxyY2dMoUhdoQSOv6C+BTX/K3jMHu8pv33BW
-	 t5HpD5Pb7pAwA==
+	b=k3hbQU/oFWXvMesOS8KkMGAT1MEVbw0eJtq5rZCGDNPsnvYC5wQAHI19V7xHMyuwd
+	 61KtdCWEiCPTAuKvXkUty87WXnF+Ezfh0HxGo0mbprG8e4bfi4whHtB+GDidjEGT71
+	 Gkk73TuT0IslM9ntHm54aIZOJrrNgTOygVAxHKzleCIeFL1wJFzV3w1jDHy1ei6W7Q
+	 plp1KLYrLJynLE6+jQhAwzTVvvIKbv8MORRqq83tDMKH2YxbYcmMRc1Ml9A+USI56N
+	 77gLSzqOtH1Mj4cQRTMwsTr+FZAy206C1O7oXPC9AghrWLWlQdgxIKJEU3wrbRzOyI
+	 ZwGQ2YYBdcqFg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 12/18] iommu/arm-smmu-v3: Introduce
- arm_smmu_cmdq_batch_issue() wrapper
+Subject: Re: [PATCH v5 04/18] iommu: Convert gdev->blocked from bool to enum
+ gdev_blocked
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <0abc2e92551aeb483091a975915eb5dfe07dc007.1783044582.git.nicolinc@nvidia.com>
+In-Reply-To: <05da17325cf02758fb0eb3bde34c8ef2a22decbe.1783044582.git.nicolinc@nvidia.com>
 References: <cover.1783044582.git.nicolinc@nvidia.com>
- <0abc2e92551aeb483091a975915eb5dfe07dc007.1783044582.git.nicolinc@nvidia.com>
+ <05da17325cf02758fb0eb3bde34c8ef2a22decbe.1783044582.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 04:22:16 +0000
-Message-Id: <20260703042217.11A2D1F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 04:24:17 +0000
+Message-Id: <20260703042417.8E2061F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Both arm_smmu_cmdq_batch_submit() and arm_smmu_cmdq_batch_add_cmd_p() call
-> arm_smmu_cmdq_issue_cmdlist() to flush batches. A future change will retry
-> the issued commands on -EIO, using the arm_smmu_invs carried in the batch.
-> So, a single hook point is preferred.
+> The gdev->blocked flag tracks whether a device is individually being held
+> in the group->blocking_domain while group->domain is retained. Up to now,
+> a PCI reset in flight is the only producer, so a bool suffices.
 >=20
-> Introduce an arm_smmu_cmdq_batch_issue() wrapper, so a retry logic will be
-> simply filled into the wrapper.
+> Subsequent changes will add more reasons to keep a device blocked, e.g. a
+> failed-reset case that must not auto-unblock, or a driver-side quarantine
+> for a hardware fault. These reasons are cleared by different events, which
+> a single bool cannot encode.
 >=20
-> No functional changes.
+> Convert "bool blocked" into "enum gdev_blocked blocked", provisioned with
+> two initial values: BLOCKED_NO and BLOCKED_RESETTING, for the existing use
+> cases. All readers keep the "if (gdev->blocked)" form, as BLOCKED_NO =3D=
+=3D 0.
+>=20
+> This is a pure type change with no behavior change. Follow-on changes will
+> add new enum values along with their producers.
 >=20
 > Assisted-by: Claude:claude-opus-4-7
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
@@ -62,5 +69,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1783044582.gi=
-t.nicolinc@nvidia.com?part=3D12
+t.nicolinc@nvidia.com?part=3D4
 
