@@ -1,166 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF97B17A300
-	for <linux-pci@vger.kernel.org>; Sat,  4 Jul 2026 12:36:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783168591; cv=none; b=cMtpRJFN7qGtYE8fESGxV7yRht4KvfjZuFEIE5kDKCiS1hNYAAipDhJZorsjM2OEuaa8oIfpwjEN6vUOiAXhhAeBX5kzh4EWmtA4u0pHvalDVHI8/NB6fXRU8fpRaSyWTh3kqnpYl2+1QFHZK5coFhqSSdui2nJPWaX8/lsgC9s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783168591; c=relaxed/simple;
-	bh=zDOdK4x/Ygu+SPOTV9kOSFZwsKtJ60k+qeYGPzFUM9g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hNWa4kZJcEgOm0rnKl0mxwzET8irmk0od4Dvc4IpUIFYK8mAmLQS0qGLq3X8t+PwWoiCtscmF4Jv3Ya/ycr9Zg68o6tmgatIxKcR8WFU7r92b18rKzQkl5yCvQ1ERzfMMoY86gdzuIPm3rIZHDYiC/48QGbnWE5gUe4Op2meMKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LtJsp6a9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32C2C27FD49
+	for <linux-pci@vger.kernel.org>; Sat,  4 Jul 2026 14:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.175
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783175217; cv=pass; b=aJCgiEVwZ4heiPoc+5Ww/QD9fq9roYGaxCwJMCT0RFD/G+pny2zFokq032OTZ+hO633MyKMadvr2ewZeRuJlesJGttRw0NgSlknmOwLkhwJX4Ks6EdkSS+sS4TVmYwRrW+bwTrQYbdQxHh+B+nYDpwoXCyi5PFQyVgzvZ4CtZH0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783175217; c=relaxed/simple;
+	bh=9YDFkrKXe8+xQwIOAGKt+OLc4uyD4YgCdy+nIHJ3u8A=;
+	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iYBxyebE47W8AZOqgp/plbgNIFIILwcju/2RUkx81/msyTAohy9Gf4cMxfgiAhfI5skOeV9zL5AZyxzmagj6ETPy3OtqFODguWv0UHgYGdFbHXlxPWBt3ZNrcCV3YYy3ZaDJXBvDU4IgxqY5PDu4cLvjf7nItnva3w3Lx2DLvS4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=M1baawTn; arc=pass smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LtJsp6a9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 383BA1F000E9;
-	Sat,  4 Jul 2026 12:36:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783168589;
-	bh=Liah/TcpHXJMxIn4ENLbe9BeY+z7bPzlqlnTGIdtynY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LtJsp6a93QpSg2Z18y1LiPANBcAH7E0KSzVSV3JuPtIJH6XpSuLv1OP/GGjm9WJm4
-	 M5hRAzm6XVB2tUeJPdbAx8KORO6FzGILJQgasKkm7xq5TUZmBWccElm0/RAsIuS/LR
-	 Z3eJE1UwMdJY9OCcqb7Oc1u9gnV20SCj12o0Gsu14sZ415uDe37BHHI0I5AnJ9vplH
-	 ylChmJ2t3xi8rCCbScTnEIYSaOzrc3SvgpWys4jXYRCbClA3h4EnSxAONjuZJR8qEE
-	 5z5m4GaCOM9QGyhPMFl4vvhhlZP03tYvg5WUawDdvxAN9mfBb7KrGBvHC0709ckt0M
-	 BYqmPxqpELy+Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: cadence: add missing MODULE_DEVICE_TABLE()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260704122835.14277-1-pengpeng@iscas.ac.cn>
-References: <20260704122835.14277-1-pengpeng@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 04 Jul 2026 12:36:28 +0000
-Message-Id: <20260704123629.383BA1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="M1baawTn"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cc7e86e7aeso215605ad.2
+        for <linux-pci@vger.kernel.org>; Sat, 04 Jul 2026 07:26:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783175215; cv=none;
+        d=google.com; s=arc-20260327;
+        b=hO9DD5iEl28s93qnEzlJcVZZTq8tMfclak9Kp579gCGXod2VxmcEWEEECQUaeOzx8q
+         oSU3c3kT8K2drmBqaMDfg85KBkPAxx7BydLvoKDnOdOVQxOcRBKv67EsS7P16FqFKp+Q
+         YFaIhbN/8DtdKryXy6oILcxwH7/L6D8rZBuKDKGnKU1VUPI8W2KkhPC4QCZiXjhdWpD6
+         iImRmEDy5FHUJ4SYVB77tXFWNfnDqIFb0otCT3palC1avxR8wlOmYqOKdGfWuRLCcUwH
+         Vn+jVWuwCHNEPJDbcFwhkqQf0ftG1sYFKSvqh7+x2XQ5NP0QhJFH4ToMWgMGz3sSwj0w
+         /N5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:dkim-signature;
+        bh=WFnktr3xnr1z9FtsyBzXxn1YoZbHM5Izj7pi+H56QNg=;
+        fh=zgtkgrkNd+WLkKQJrqkoS/jkpd9VFJl307AZgRFoTa0=;
+        b=np3b4I6zpAxAnZ6x0q3B4vo6YcwwZBEICp0ri9C/7E48+2OvAf83Klpia+iYW6shBh
+         x3KHnGclhzqPPmefSOsJBX1yp0tSrcI/Th+HE0aU9ieo9hvm3eTQ2sGmH5q4qazMfzxi
+         9/1gI3LfUN4SchUuL6wg3JlvdaDEO219EZXMX09SFoYeQyAkQnoe7C6MaZvcc77Q3wIR
+         DJ9e+2+4g58o8gY2r4VtBIK3ysuHNpHSwQhWl70TeZeWxoMiR646OM2cbhPMWws9R3ic
+         CqV4c/bfbZaySG4ZrCTGP9KdM/uzVpMY0BOIxlY/Sya1L5Ye2szRAAeDKZ2ZJ1nGd+eV
+         E6ig==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783175215; x=1783780015; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:mime-version:references
+         :in-reply-to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=WFnktr3xnr1z9FtsyBzXxn1YoZbHM5Izj7pi+H56QNg=;
+        b=M1baawTn9ZGAkIeapgq+EKg6iQ3Braxw5mPSq+yOk9IURTYNAjV/izx+ShHHke3+Zv
+         61wiMqaIun7SXk6LLntP13lSfZ3y8aiI8dvMwXSBB/Fn2AhCEEAXl3S09Tca3P1j0raE
+         Xz/DuZz4yprQNAjIqnnQDj1W0UQZgGEgBGxS/1WYFDnFBl4G00QMvnNFoQ0DLhVzWRlq
+         1keiRaipatCWZdJOK/wsWlK1dASpLw5DvK7VAzESrwvoY9TZN1lFfHvQEFfd4xiUjHOE
+         ncaD1AhnZPIrWXOPgDJbzTk5xy01dUgPDkPh7mzEP0+IGIshOt5Huc6s2qsE+l0VsMV9
+         1Hdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783175215; x=1783780015;
+        h=content-type:cc:to:subject:message-id:date:mime-version:references
+         :in-reply-to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=WFnktr3xnr1z9FtsyBzXxn1YoZbHM5Izj7pi+H56QNg=;
+        b=WmYrj1FI/DiYxzy0+t+XDzyRcJZLkzhFUwK58gJvXUslr74UUscpNcWQho9OC/GIJZ
+         LHdVhNAXUJhuw1F3xhBDurxo4a7NhzHRelh9k94UFwGMe9HG2KYX7SyIgD+QPPfVsUfc
+         u6yEb/wFaNutIC88qyOlAbaSVN82XmI1YarDiiJC6z9XAx9HBKKKcDHexTzqypq4JW2s
+         fyhYOWTsjRofqJVFnaksW1qbg37JpYpfTlfrx8Z3/jp+/GwlQNfwDrsZoPI4LL62qrDw
+         TNwg/QY5VvVq+1+WNfiLkkh24smkZ0F9LPZiVPsm1+GUFd62lAze4nHi8kFb8mRA3an7
+         /yGA==
+X-Forwarded-Encrypted: i=1; AHgh+RrpTw3qrZKOSLihfkcjkofHeND7ODcci0dIQwzDHbO0s+EFLmJ4fzvT2X+c5knrSFK88pwdgcwiD9k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTaf+LmMl0Mxx8SMDiDR84n6+CVGllU0PpuORmUtkCG2/8f/cQ
+	jq9ZvXksgdptjlfsoKqXfjKjC0f89Lrpai6aJ9vJeSUzwl6v1JL6KOfBTKQLHJl47y9kTSmEhUj
+	WF1zovZxHlESRTYFf/zcF1x0isloY2KA+98L+c2bp
+X-Gm-Gg: AfdE7ckEd4lFfmWOeC4zoLOVXu3IuRVlwEID3a1X9Kl67S5i8AzvYwe+Z8mqVQX2vPg
+	WXdTt9gajFMwRYMPcLhyCzkclbdXyGei6WPJ9vFUSUWOAK+fXczk/B/htFZlV+IednLEJBZfXJs
+	UtwmSl9KwfCbMWX5/9xdbV4YyYdoMFoyNnDtnbZQUlygW2448pQ4HWsqEsQhw3skQoYu96ZxDOa
+	tiaFPH0R6/zIXfGJ2S7kAliW4S++97gbMDiCh9/++rY1l1q5637Q3ogzQ8tlg0qD7Ts6QO8Luwh
+	sA1yIxPszY7izcNPMRGfor7vdnvgAFDAhZvsjF4=
+X-Received: by 2002:a17:903:1ce:b0:2c6:a012:6241 with SMTP id
+ d9443c01a7336-2cbb201b39cmr35063005ad.6.1783175214863; Sat, 04 Jul 2026
+ 07:26:54 -0700 (PDT)
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Sat, 4 Jul 2026 07:26:53 -0700
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Sat, 4 Jul 2026 07:26:53 -0700
+From: Ackerley Tng <ackerleytng@google.com>
+In-Reply-To: <20260327160132.2946114-16-yilun.xu@linux.intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-16-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Date: Sat, 4 Jul 2026 07:26:53 -0700
+X-Gm-Features: AVVi8CfdRsR_CKNKNIUlkjPTBxsOwA_Mmn0xqA4DX_E8qDCY3KX5iWgXVn3NJRs
+Message-ID: <CAEvNRgHauBdavhq68BepiOpJd1_UmBUQTkfsRmNimZycZ4VW-Q@mail.gmail.com>
+Subject: Re: [PATCH v2 15/31] coco/tdx-host: Introduce a "tdx_host" device
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev, 
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com, 
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org, 
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org, 
+	xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Xu Yilun <yilun.xu@linux.intel.com> writes:
 
-Pre-existing issues:
-- [High] Probe function silently masks initialization failures by returning=
- 0 in its error path.
-- [High] Driver data type mismatch leads to out-of-bounds memory access and=
- kernel panic on shutdown and suspend.
---
+> From: Chao Gao <chao.gao@intel.com>
+>
+> TDX depends on a platform firmware module that is invoked via instructions
+> similar to vmenter (i.e. enter into a new privileged "root-mode" context to
+> manage private memory and private device mechanisms). It is a software
+> construct that depends on the CPU vmxon state to enable invocation of
+> TDX module ABIs. Unlike other Trusted Execution Environment (TEE) platform
+> implementations that employ a firmware module running on a PCI device with
+> an MMIO mailbox for communication, TDX has no hardware device to point to
+> as the TEE Secure Manager (TSM).
+>
 
-commit 614cbd9081a5fd803fcc9fe1b172469d540e733c
-Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
+I'm trying to get up to speed on Confidential IO. Thank you for this
+summary!
 
-PCI: cadence: add missing MODULE_DEVICE_TABLE()
+s/TEE Secure Manager (TSM)/TEE Security Manager/
 
-The driver has an OF match table wired to .of_match_table, but does
-not export the table with MODULE_DEVICE_TABLE().
-
-Add the missing MODULE_DEVICE_TABLE(of, ...) entry so module alias
-information is generated for OF based module autoloading.
-
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers=
-/pci/controller/cadence/pcie-cadence-plat.c
-> index b067a3296dd37..a1ea24fc3b63f 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -163,6 +163,7 @@ static const struct of_device_id cdns_plat_pcie_of_ma=
-tch[] =3D {
->  	},
->  	{},
->  };
-> +MODULE_DEVICE_TABLE(of, cdns_plat_pcie_of_match);
-> =20
->  static struct platform_driver cdns_plat_pcie_driver =3D {
->  	.driver =3D {
-
-[Severity: High]
-This isn't a regression introduced by this patch, but I noticed a pre-exist=
-ing
-regression with error handling in the probe function in this file.
-
-In drivers/pci/controller/cadence/pcie-cadence-plat.c:cdns_plat_pcie_probe(=
-):
-
-	ret =3D cdns_pcie_ep_setup(ep);
-	if (ret)
-		goto err_init;
-...
- err_init:
- err_get_sync:
-	pm_runtime_put_sync(dev);
-	pm_runtime_disable(dev);
-	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
-	phy_count =3D cdns_plat_pcie->pcie->phy_count;
-	while (phy_count--)
-		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
-
-	return 0;
-
-Should this error path return the actual error code instead of returning 0?
-
-Returning 0 unconditionally masks the probe failure. Does this cause the
-driver core to register the device as successfully probed even when PHY or
-host/endpoint setup fails, potentially leading to undefined behavior later?
-
-[Severity: High]
-This is also a pre-existing regression, but there appears to be a driver da=
-ta
-type mismatch that could lead to out-of-bounds memory access during shutdown
-and suspend.
-
-In drivers/pci/controller/cadence/pcie-cadence-plat.c:cdns_plat_pcie_probe(=
-),
-the driver data is set to a struct cdns_plat_pcie pointer:
-
-	cdns_plat_pcie =3D devm_kzalloc(dev, sizeof(*cdns_plat_pcie), GFP_KERNEL);
-	...
-	platform_set_drvdata(pdev, cdns_plat_pcie);
-
-However, in cdns_plat_pcie_shutdown(), it is retrieved and cast as a
-struct cdns_pcie pointer:
-
-static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
-{
-	struct device *dev =3D &pdev->dev;
-	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
-	...
-	cdns_pcie_disable_phy(pcie);
-}
-
-The same incorrect cast happens in drivers/pci/controller/cadence/pcie-cade=
-nce.c
-during suspend and resume operations:
-
-static int cdns_pcie_suspend_noirq(struct device *dev)
-{
-	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
-
-	cdns_pcie_disable_phy(pcie);
-
-	return 0;
-}
-
-static int cdns_pcie_resume_noirq(struct device *dev)
-{
-	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
-	int ret;
-
-	ret =3D cdns_pcie_enable_phy(pcie);
-	...
-}
-
-Since struct cdns_plat_pcie is an 8-byte wrapper containing the actual stru=
-ct
-cdns_pcie pointer, does casting it directly to struct cdns_pcie cause
-cdns_pcie_disable_phy() and cdns_pcie_enable_phy() to read out-of-bounds
-memory when accessing fields like pcie->phy_count and pcie->phy?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260704122835.1427=
-7-1-pengpeng@iscas.ac.cn?part=3D1
+> Create a virtual device not only to align with other implementations but
+> also to make it easier to
+>
+>  - expose metadata (e.g., TDX module version, seamldr version etc) to
+>    the userspace as device attributes
+>
+>  - implement firmware uploader APIs which are tied to a device. This is
+>    needed to support TDX module runtime updates
+>
+>  - enable TDX Connect which will share a common infrastructure with other
+>    platform implementations. In the TDX Connect context, every
+>    architecture has a TSM, represented by a PCIe or virtual device. The
+>    new "tdx_host" device will serve the TSM role.
+>
+> A faux device is used for TDX because the TDX module is singular within
+> the system and lacks associated platform resources. Using a faux device
+> eliminates the need to create a stub bus.
+>
+> The call to tdx_get_sysinfo() ensures that the TDX module is ready to
+> provide services.
+>
+> Note that AMD has a PCI device for the PSP for SEV and ARM CCA will
+> likely have a faux device [1].
+>
+> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Signed-off-by: Chao Gao <chao.gao@intel.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Reviewed-by: Tony Lindgren <tony.lindgren@linux.intel.com>
+> Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Reviewed-by: Kai Huang <kai.huang@intel.com>
+> Reviewed-by: Kiryl Shutsemau (Meta) <kas@kernel.org>
+> Link: https://lore.kernel.org/all/2025073035-bulginess-rematch-b92e@gregkh/ # [1]
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+>
+> [...snip...]
+>
