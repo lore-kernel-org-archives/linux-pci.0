@@ -1,50 +1,53 @@
 Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43A12FF675;
-	Sat,  4 Jul 2026 20:28:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E8A8301471;
+	Sat,  4 Jul 2026 20:28:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783196891; cv=none; b=LsarOGK6deIG6G1lfBtlqZKUsucxY6WIJ4Z4HQ4/6ueI7vrfZND6FUPV88N5/c8ts2t7fUEVYXPDR6p2ZeEUqFeybzTRoI9Tom4YN3sBd7sPq7vjJrEF6X972NysoABJhENbfQK3yAWvHiAPWwjjC2o4brKb/MIZ+d3z8okUdeo=
+	t=1783196892; cv=none; b=g9hvoEaW7jUDxIdOfDoBzATktvcjptAI6AAESbImdFVW/52ulOd7RCrnCCDlf85IZkf4qGHcb1bionUpaYwh70wlqZe25f5NMiOG9Smz0Q/cF7HFG9rak2hjKRFRbSs0/HkcdJzRS2cY4ClFqt3vVpT6mfxh1RVdTzTc0jnN/u8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783196891; c=relaxed/simple;
-	bh=LVc2TEinO2WrEv73cUAuEMN7v04qGED0oNaOsC0wpOo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bwv7jv6Mp3tStz6h+1yYVwZaSvKqRaeqGuJK6Hm5wp5whmEBxcdSsyKusaVbpjxWJ3xEy+/+8oFaAlvnhZuyNEEKnEF97QH5gOslGOyifJVeJS9dzPRV7Fih4/hdDBeWvZkO52perFsFrLdSPihEWxbZ5R/C/ZEydWCNz2oPVPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=xkc7ZeAx; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SLcaHXI3; arc=none smtp.client-ip=80.241.56.161
+	s=arc-20240116; t=1783196892; c=relaxed/simple;
+	bh=h4rt3SXmL2I73225/0+wSSs1gZMx8Bc7yVSNzTdYcE4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Udgk2xH+3fs5MPQO9vTWHjs+fWBu6YE9quA7XnDAhZGT9c1VaQn1Gl10sKxz/CHZ+bWxBEWqN8PpF55XlVBevlfit5wIvQRLCr2ABuXehGEGcWPF8AqXjrm+2kMObJh+TXLcPjX99zsFcdk1HQqT/Cnf1nwJnmIbpnaTeYfXCGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=la0gsi7p; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=p+kqXQl4; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="xkc7ZeAx";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SLcaHXI3"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="la0gsi7p";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="p+kqXQl4"
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4gt2Hh3CjSz9tPg;
-	Sat,  4 Jul 2026 22:28:00 +0200 (CEST)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4gt2Hr5sL1z9srB;
+	Sat,  4 Jul 2026 22:28:08 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783196880;
+	t=1783196888;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=wG1WCsKg3RUuHGLn9ILO3Q4aycjzCLniXXvwWv//DhY=;
-	b=xkc7ZeAxSvAeomSfUrdTjy/YHjNWtmJIDMpAN/77ablwBM2wmAzCN5DAM0tLitiFlB2eiJ
-	oilJbsQAU0AoAOasICuZ6ItMLKm0XjLjnEEwMFk6Urv83F+rGg5Tp0wPMp4hJP7KN3vbHw
-	ZLm3gFiBlQS9JgEMRewmcFf+QNd91iSpsI/J6vQaqW5F2mA3ue8/QMlp8Z6vGfis46pnla
-	GejJEtq0yeWsROVWiMu8isRmPrkD7xqGi6UYoycBi5Uvv/QCancxIV0JrZD1yUZYL5IT4Y
-	nPAkCEQUnz8XehHTP0RTlM1cj4bbYs8gnEbUNpviFwzcJSCPmLKjO/f3o04q6A==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7BD+urEh+i89E79SYBLg3JalHMdIKd3ppGJa3pnquYE=;
+	b=la0gsi7prBrQuVmzyh9W3mJ8GJ1u9ePltr16NDg/4iImyKEl37Qja8bhF0LcdArHwf4Kw1
+	1F1jIhj6REVsYv1jQoP+pc8GvMaBtCdUv5GPZ/NTxva+P+wrokAn9mnwU/Vc6VdHthIgXM
+	dUFvGGawHL2r0fV75P7t64WdzQSc5vdtB4GZsxrP8JR5konfeyjiylVlh/sTRlLt8bp8x1
+	TXfR2L10bgdrTrNoGjed7EA1b5N2amRryDbVflboUZSeN0GiYcCftU02T8pqUXoSYjKTeY
+	4wrFCJgtib9t/sr/LTgsquavXidL3wUn7tpQvhitgUKbYsUW97/i6+1yHlxFsQ==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783196878;
+	t=1783196887;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=wG1WCsKg3RUuHGLn9ILO3Q4aycjzCLniXXvwWv//DhY=;
-	b=SLcaHXI3D41hvctl2/WSNyvNtybndAIkaE3vVH6PeU0Xq5kOo4kSKqyB/41EiM/zuvr2lg
-	gH31HqAZHxrEI9uLrkmE5wdSts9zjK+ab64D0LfotXH22YQQRudKPi1nY7nkRq1PWwiE9o
-	yHIu1TNdgfCdEZf6EdX5AyFKAu5cNBFFW4r09dcUZuD1j3kBvgLnbGgwYCbx8rWEuSS10F
-	3cDGtH+pZmn88iZ5kPrlhm8AMoR+q+84QQqBWL/YL58favabm2IdG7UeYWy7GVhJJ1TbZ+
-	r4LfcBczluNNZFaLsbB/PLYjNRyaxWxKyMehwyfGCJWP7I5u1ld1t0gYHP4gBg==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7BD+urEh+i89E79SYBLg3JalHMdIKd3ppGJa3pnquYE=;
+	b=p+kqXQl42XPSwn5XGQbOLReHSKfaQD1KR6y3kPjeEYico7HqdzT5IOmJHBVMm1wst9Vyb0
+	Zpy3DzO/kwncn2CAfd+4ob/EWikVkHUa4GwroqJE/Ka+1WvG2YjvWkv57IP6n8cSEWQnU8
+	Af/R1di3hYNchW5ef8kZlgPwgBvV1L3fRRagmXnkmhcqsaTPoOaa4pvtTbth9Kjim6WlPY
+	Tng6L5UWZcc/QUua4ykHQQ2X/YPN/KzpZj3P0ykGCPsw3MOukTXegSdyHowrUR7+XF9n6u
+	+DY3kg1aHpBbiRaRSHlx3eaOisoULNg1BwZI8VadKtQ09ppBlD8Zym+iJbFOAw==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -59,9 +62,11 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 0/5] PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
-Date: Sat,  4 Jul 2026 22:24:59 +0200
-Message-ID: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH 3/5] PCI: dwc: rcar-gen4: Split .start_link into ltssm_control and speed_control
+Date: Sat,  4 Jul 2026 22:25:02 +0200
+Message-ID: <20260704202748.355708-4-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
+References: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,34 +75,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: db54d7b53264bfe5a79
-X-MBO-RS-META: uy1cmxqpc78n344okxu7i1dgtw8h6o9d
+X-MBO-RS-ID: 01c802cadcec5a7d852
+X-MBO-RS-META: h7o1ui9t1iugnonriiatfrtxr3zdmpqe
 
-Add support for R8A78000 (R-Car X5H) PCIe4.
+Introduce new .speed_control callback and implement it on R-Car Gen4.
+The callback implements the second half of what is currently present
+in rcar_gen4_pcie_start_link(), and rcar_gen4_pcie_start_link() does
+call the .speed_control callback. This is a preparatory patch for
+R-Car Gen5 support, where the .speed_control implementation is
+different.
 
-This driver previously supported R-Car Gen4 S4/V4H/V4M. PCIe features
-of R-Car X5H PCIe4 are almost all the same, except for different PHY
-which has its own driver, slightly different initialization code and
-the DMA is no longer eDMA but HDMA.
-
-Endpoint mode is currently not implemented for R-Car Gen5 PCIe4.
-
-Depends:
-PCI: rcar-gen4: irqchip/gic-v3: Handle GIC ITS
-https://lore.kernel.org/all/20260701203918.63189-1-marek.vasut+renesas@mailbox.org/
-
-Marek Vasut (5):
-  dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car X5H PCIe4 compatible
-  PCI: dwc: rcar-gen4: Return error code from .additional_common_init
-  PCI: dwc: rcar-gen4: Split .start_link into ltssm_control and
-    speed_control
-  PCI: dwc: rcar-gen4: Handle PERST via reset subsystem
-  PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
-
- .../bindings/pci/rcar-gen4-pci-host.yaml      |  74 +++++--
- drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 209 ++++++++++++++++--
- 2 files changed, 239 insertions(+), 44 deletions(-)
-
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
 Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -112,7 +100,99 @@ Cc: devicetree@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 39 ++++++++++++++-------
+ 1 file changed, 26 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 7625cd338262d..05c22cc648135 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -89,6 +89,7 @@ struct rcar_gen4_pcie;
+ struct rcar_gen4_pcie_drvdata {
+ 	int (*additional_common_init)(struct rcar_gen4_pcie *rcar);
+ 	int (*ltssm_control)(struct rcar_gen4_pcie *rcar, bool enable);
++	int (*speed_control)(struct rcar_gen4_pcie *rcar);
+ 	enum dw_pcie_device_mode mode;
+ };
+ 
+@@ -140,20 +141,10 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
+ 	return -ETIMEDOUT;
+ }
+ 
+-/*
+- * Enable LTSSM of this controller and manually initiate the speed change.
+- * Always return 0.
+- */
+-static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
++static int rcar_gen4_pcie_speed_control(struct rcar_gen4_pcie *rcar)
+ {
+-	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+-	int i, changes, ret;
+-
+-	if (rcar->drvdata->ltssm_control) {
+-		ret = rcar->drvdata->ltssm_control(rcar, true);
+-		if (ret)
+-			return ret;
+-	}
++	struct dw_pcie *dw = &rcar->dw;
++	int i, changes;
+ 
+ 	/*
+ 	 * Require direct speed change with retrying here if the max_link_speed
+@@ -177,6 +168,24 @@ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
+ 	return 0;
+ }
+ 
++/*
++ * Enable LTSSM of this controller and manually initiate the speed change.
++ * Always return 0.
++ */
++static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
++{
++	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
++	int ret;
++
++	if (rcar->drvdata->ltssm_control) {
++		ret = rcar->drvdata->ltssm_control(rcar, true);
++		if (ret)
++			return ret;
++	}
++
++	return rcar->drvdata->speed_control(rcar);
++}
++
+ static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
+ {
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+@@ -856,23 +865,27 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
+ 
+ static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie = {
+ 	.ltssm_control = r8a779f0_pcie_ltssm_control,
++	.speed_control = rcar_gen4_pcie_speed_control,
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
+ 
+ static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie_ep = {
+ 	.ltssm_control = r8a779f0_pcie_ltssm_control,
++	.speed_control = rcar_gen4_pcie_speed_control,
+ 	.mode = DW_PCIE_EP_TYPE,
+ };
+ 
+ static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie = {
+ 	.additional_common_init = rcar_gen4_pcie_additional_common_init,
+ 	.ltssm_control = rcar_gen4_pcie_ltssm_control,
++	.speed_control = rcar_gen4_pcie_speed_control,
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
+ 
+ static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie_ep = {
+ 	.additional_common_init = rcar_gen4_pcie_additional_common_init,
+ 	.ltssm_control = rcar_gen4_pcie_ltssm_control,
++	.speed_control = rcar_gen4_pcie_speed_control,
+ 	.mode = DW_PCIE_EP_TYPE,
+ };
+ 
 -- 
 2.53.0
 
