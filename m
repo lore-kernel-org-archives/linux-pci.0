@@ -1,131 +1,160 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99D3529346F
-	for <linux-pci@vger.kernel.org>; Sat,  4 Jul 2026 14:45:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.174
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783176318; cv=pass; b=Ha7Bxp7ZyXWjTIW8XiwYEMisBJQJ9jH/TzUO3ulUPEugzPa+NcHr0frTBlkssC0O/zRiLAQpx/QeHBzWrW6nhdlo4BtREsd8wErdBB0I24h9JKy0RYdOVhR6YWlcqN9jXErQSPC1JqP5C1+cTqxjar0b5wq6MaNI+vrEPyBE79o=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783176318; c=relaxed/simple;
-	bh=XpQJwh2GgNhD6EAOhQ4I53c3yuO4+5Tzr8NzYHPiJFM=;
-	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rw1kqE6uUT10KMIGL2i8dwbdXDJOBBTu6SxXk9gELv4ij8ecw9cXZLOf4Eh2eMGNSuH7H2ORAqIKzrLC6UbESrA4Y8wZ85LSSYBDTYZZqD9QszsH/G/KBKqwCj+XORR/AQEn7/HlcYG6eeKRDpyNh3gxZSs7OP3OCot1dyd8lEM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mj3X2Ytv; arc=pass smtp.client-ip=209.85.215.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18D622C028F;
+	Sat,  4 Jul 2026 20:28:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783196890; cv=none; b=G/hSvEs7UUx9DWDSuq1WoIki6XniI78ZM3UNo8mBmL4F+7RsiUq64aMLO8p2iGnHqchM8xubefrTJMs4bbbf/CdpikYAo3BPJv6bkWzKDaY7YGoP9oVUTLpA8OnlsWz9I0S9OIHlhx0yj220NVIGijwQbJSwP9VY48ZMP1WOjrU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783196890; c=relaxed/simple;
+	bh=zsDkssVEVJ1mpXgjN1Uy1oEqYNf01QiGkzbDX8HBmzo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oSPCnJJJMV6fJCef1Q20okMlSQuBiVRhDp6IqV1seYTX3EZtAqWBfpL7UYpKr2K437dbByUtvBIbdKj14xbMoh8Bj6Xqm4Lkudj15ouycrd56l6JTGFyvvvXy+aQl3IDOQGjJR0cnB2nTi95dBJd58PoWG1j3q5+DWsf0whft1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=jBQCNuBp; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=lGa6+qaB; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mj3X2Ytv"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-c96cb024ee0so1031895a12.1
-        for <linux-pci@vger.kernel.org>; Sat, 04 Jul 2026 07:45:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783176317; cv=none;
-        d=google.com; s=arc-20260327;
-        b=LJ1WBH6nRrMzPpYsIUSQgerAHuqzFJyJ2eR9kKEQRgQrjV2nG4N3XR4D5lMz82e9SS
-         f9BTl1J1cpDgWcUzhKGtWv3mN3WGfD67G9mlAxuBQSr9Lo0G+LG8QTcSNJwJr3wk3Nkg
-         64D6tY/y9QKwMkoxZpQS1XlzOh7kkftMKtrL5uWFFTvkno2RtjMgwkMZlUoeCystJ8On
-         gF6teQTpJhLjzib82pkV7M7BRLLhEVx2qbmSNM/2AEbH8tejXbSZWV7JixQHfXHwJ0rW
-         fWbCFMh72s2EAOieC7izFaRFIWRdq2IUNSrDnHZ56uVIY+1lnzmv2V07TXvMqXnxpGl3
-         HWoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
-         :from:dkim-signature;
-        bh=L9xOVRuKFfEvpugkoigwFk6Gb+xTAo+YrZVd7V9k8iM=;
-        fh=uDpZu3WE6KAM6SyY53FMr6daP66juPjjWrSMBznIrqU=;
-        b=oJG3XkYO6De7wHRvtS+WtzhUydID3gyi6DxkzInHG91iIfGaA6O7LSA+FW/ilIWdOZ
-         QgIlxL/4PFMQDzi9W34Y/HA8meCnHBFVCK2IW4B/H3W+VGyNFCyOWXx4iyHlGZ7qXRyb
-         aBGW+aJdP1NjwJLVOMXbEMPkV0z9mvr/dJkedWzThTZ7DdtG/74Fjly/VQ94hbTQmh6M
-         pmtFYX8FLD0tL0fySBKhNlIbV4VluZwX4bgliXFa0g1FWhJuvrz6izLsJwb8iyu84+UZ
-         LXfuBFFFK1LuvWrvEnFAaW7hJh4870ByxdQfAZtDUdOBdImh+/g1nj/qsrzTdDi4H2oa
-         G/EA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783176317; x=1783781117; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=L9xOVRuKFfEvpugkoigwFk6Gb+xTAo+YrZVd7V9k8iM=;
-        b=mj3X2Ytv2uJl10pzQXvHCfrL/yHbrnGjhY6os/XF5FwN/hzaL5kNUKdZynWZxTSnvr
-         eeM1LDXSUlqrpEMC99soHkR07UZb51oDBHWk/xFa0kBEdHVr2HPyiKWjEWKDW2sC7yBC
-         DpejwBHBsJ9cBZXT8fl+83HeVoOGC4+vUGc6ZofqpCu5Zwfyr/WzF0sk2vCr9RoGVkLa
-         1CBJM6ybP1TsY2s7IPiEM3nTjpw2bXdDKsl3qw+ZIYt8ZaePulzIxDFg26MlqxO7RVD/
-         oi9NVH0hxXud1laOPBTfkpiRt4xE+wRGClmPkI3cjD+GZNhJsHmZfu4zEpbYJuwajkuP
-         jmAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783176317; x=1783781117;
-        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
-         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=L9xOVRuKFfEvpugkoigwFk6Gb+xTAo+YrZVd7V9k8iM=;
-        b=sk7MR6TwjkEwTMmW8aRVVMuFg3AH4dU0VgWxOwcxNG6KBijUxqWusZ3hxxOCEYvG8G
-         jLgzdjqGxPgh4uKA6tfuCfOruAhqpjbggMxSCZr/t9TJQJ8SFjborNfuKflGdRppuIFw
-         XrCjfu/A8qb3upqAgNkERxtlCjVShAk3xoqxTYmAV65wct8NWIxu2WyJ5GC+kq3SY7Ih
-         NItREmzK6Xh/MazB00AS9EZu/W7gFf/rwwcw1dswwTkwNdJbpoOpayqHpnS3Sxx8WKHp
-         JjyA8whH7Kdui8GUGNJ/o9W05IVzEAwH8RjVXVY0/kE/uIUFJ5yNKwzjssF9RMwng7V+
-         cVlA==
-X-Forwarded-Encrypted: i=1; AFNElJ88txtotA4ZQkz50mqHZJakAw2kTQ9WWwYKfMmT28G/kCjLb+G+IK1r2TmiB/2K2IJpJEbWCz0EwfM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxpVh75NwDBTmrOjtjitO/WaSPzoJsA4qLelBxC1bAXfSw7Q2aw
-	Mw5CkLxcmxv9nHfPNGh07DHtDPncXMYkYCpxa5k5/XK2otBtiDZDmQyc5533M89sLMgXXk0OjSr
-	NVpVWnQh+PaHczMb+HSmd4pYwbmWKyBaY3P4toQ9J
-X-Gm-Gg: AfdE7cndStppVa4QF4KO6Qpfc2V5saQZWUGvfBx4PkkA6CZOap7yKxhpOz30DjfEAfV
-	YqVaGd0l2bV+yr3PgaXVWpX5c9AxNbON6y0C0PTqCMjdta9X6VjXBYx3naPluh/9/KC3S3QiIiP
-	YOeU2et0/ZaI4IvubMW3sw1PgIIOfeG6ORJFMC3EL3tPtUffpNDT0pfMm139W5c2EJyDB8aWLg0
-	nepOzVUEYgm43cuPTL7F2ldC63MKfMXD/4vxkXFO8LyqdriJBlxz3MFb0sB48ttbEIsDL5QVieC
-	12gWLzpjI3fNvfWC5eAETKzsh8vh
-X-Received: by 2002:a05:6a21:4516:b0:3a2:d838:bfca with SMTP id
- adf61e73a8af0-3c03e18c1a6mr3784343637.3.1783176316400; Sat, 04 Jul 2026
- 07:45:16 -0700 (PDT)
-Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Sat, 4 Jul 2026 07:45:15 -0700
-Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Sat, 4 Jul 2026 07:45:15 -0700
-From: Ackerley Tng <ackerleytng@google.com>
-In-Reply-To: <BN9PR11MB52767E6C22CDF7DAD9D5FF1E8C582@BN9PR11MB5276.namprd11.prod.outlook.com>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-21-yilun.xu@linux.intel.com> <BN9PR11MB52767E6C22CDF7DAD9D5FF1E8C582@BN9PR11MB5276.namprd11.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="jBQCNuBp";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="lGa6+qaB"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gt2Hn64Gbz8tyV;
+	Sat, 04 Jul 2026 22:28:05 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1783196885;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V2ZzKWUJziEedBBXDtmeV8CH3y8VGPRfE3EVPWitS64=;
+	b=jBQCNuBp9ZLo5SLOztSfkDmERw+OG4zJNqfoBCQzPSO9jaZ7pNTa73f3CLLzJoEGvPo8Hg
+	4ZYDpczKqi6Ig9lHpKJd1gZeRSLiRVwXisuVO9Y7960YKR8QPlUG4UwsdKDesLCMrLAfWQ
+	MlnyY6xGiJK8V1wT6Wv5j82JsXfi3yf0ya0O1HnOfQiOkBt7Qlc/jsIenqvdp4LgWv9A//
+	SQWmZG3gocRg0eNZsB036ICGcuixZl6c+k/9g6S4dAycNwi6ttIGLlJgFYcdW3bN70ylYG
+	mS6BWGLQY0igFpBA9iK5yOrajGjNvt6FPzdZ+Gw/YuwfRYc8xfssDWSaDTTBIw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=lGa6+qaB;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1783196884;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V2ZzKWUJziEedBBXDtmeV8CH3y8VGPRfE3EVPWitS64=;
+	b=lGa6+qaBiNGyOrqMy53z0N8sKHqIrz/aDeYPrKJfI1oc2E76NWL5NiL31UkxQRq1sNXYlV
+	n5zZBv+rXRRnQz7BAE7FTmyaKgP6E3uhaZKqFfuEsxmMMFkOO0VINkzjPhsSgz6eiH0gcd
+	0ULvBd3VcwJYCyKsZlaCD65rHTH94AmbEEaPSnUVg4yARUojy/FIczdDheyVXiwkQ97rIx
+	rF4Tvmdxd6mdJxgL1qjH6+AOLmA0aG828Y8r3ht4h5MoF/0hD4He+8lmgNgORWl+nL/OZG
+	5UvKqjq7KS5Hcb7s0ZphShRycJ3DsQniqsqTY7QZ8ybCfmShoD0DGNtvkfIQEA==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 2/5] PCI: dwc: rcar-gen4: Return error code from .additional_common_init
+Date: Sat,  4 Jul 2026 22:25:01 +0200
+Message-ID: <20260704202748.355708-3-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
+References: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Sat, 4 Jul 2026 07:45:15 -0700
-X-Gm-Features: AVVi8CeBOQYKqHyO-ZgLrEnt9NfH2sTywpBsyBpG5p82n6nbBzKMaxoqUYDvD88
-Message-ID: <CAEvNRgFL_UYz8449z-PJ2ew9x3Ju6qzaBeSxVxLkcNMJeqzMww@mail.gmail.com>
-Subject: RE: [PATCH v2 20/31] x86/virt/tdx: Add a helper to loop on TDX_INTERRUPTED_RESUMABLE
-To: "Tian, Kevin" <kevin.tian@intel.com>, Xu Yilun <yilun.xu@linux.intel.com>, 
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, 
-	"x86@kernel.org" <x86@kernel.org>
-Cc: "Gao, Chao" <chao.gao@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, 
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>, "Xu, Yilun" <yilun.xu@intel.com>, 
-	"Duan, Zhenzhong" <zhenzhong.duan@intel.com>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, 
-	"Edgecombe, Rick P" <rick.p.edgecombe@intel.com>, 
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>, "kas@kernel.org" <kas@kernel.org>, 
-	"Li, Xiaoyao" <xiaoyao.li@intel.com>, "Verma, Vishal L" <vishal.l.verma@intel.com>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-ID: 52b3a66ca12ee368e24
+X-MBO-RS-META: jy91sfaobr38ahhahqqrn73mufum3adc
+X-Rspamd-Queue-Id: 4gt2Hn64Gbz8tyV
 
-"Tian, Kevin" <kevin.tian@intel.com> writes:
+Return error code from .additional_common_init callback and check
+the error code. This is a preparatory patch for R-Car Gen5 support,
+which may return non-zero error code from .additional_common_init.
 
->> From: Xu Yilun <yilun.xu@linux.intel.com>
->> Sent: Saturday, March 28, 2026 12:01 AM
->>
->> +static u64 __maybe_unused __seamcall_ir_resched(sc_func_t sc_func, u64
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-How about __seamcall_retry_interrupted, to emphasize that this function
-retries a certain kind of seamcall?
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 5f7211b91ee5b..7625cd338262d 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -87,7 +87,7 @@ MODULE_FIRMWARE(RCAR_GEN4_PCIE_FIRMWARE_NAME);
+ 
+ struct rcar_gen4_pcie;
+ struct rcar_gen4_pcie_drvdata {
+-	void (*additional_common_init)(struct rcar_gen4_pcie *rcar);
++	int (*additional_common_init)(struct rcar_gen4_pcie *rcar);
+ 	int (*ltssm_control)(struct rcar_gen4_pcie *rcar, bool enable);
+ 	enum dw_pcie_device_mode mode;
+ };
+@@ -241,11 +241,16 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
+ 	reset_control_status(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
+ 	fsleep(1000);
+ 
+-	if (rcar->drvdata->additional_common_init)
+-		rcar->drvdata->additional_common_init(rcar);
++	if (rcar->drvdata->additional_common_init) {
++		ret = rcar->drvdata->additional_common_init(rcar);
++		if (ret)
++			goto err_deassert;
++	}
+ 
+ 	return 0;
+ 
++err_deassert:
++	reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
+ err_unprepare:
+ 	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
+ 
+@@ -681,7 +686,7 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
+ 	return 0;
+ }
+ 
+-static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
++static int rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
+ {
+ 	struct dw_pcie *dw = &rcar->dw;
+ 	u32 val;
+@@ -695,6 +700,8 @@ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
+ 	val = readl(rcar->base + PCIEPWRMNGCTRL);
+ 	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
+ 	writel(val, rcar->base + PCIEPWRMNGCTRL);
++
++	return 0;
+ }
+ 
+ static void rcar_gen4_pcie_phy_reg_update_bits(struct rcar_gen4_pcie *rcar,
+-- 
+2.53.0
 
-I think resched is part of the implementation, of what's done while
-retrying, which might not need to be part of the name.
-
-No strong opinion though. Thanks for considering.
-
->> fn,
->> +						struct tdx_module_args *args)
->> +{
->
-> 'ir' sounds redundant with the trailing 'resched'?
->
-> not big deal, just a bit confusing when seeing it in IOMMU side where
-> 'ir' also refers to 'interrupt remapping' and is frequently used in
-> irq_remapping.c... :)
