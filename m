@@ -1,141 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpbgeu1.qq.com (smtpbgeu1.qq.com [52.59.177.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D87233134
-	for <linux-pci@vger.kernel.org>; Sat,  4 Jul 2026 03:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D6F3822AA;
+	Sat,  4 Jul 2026 04:07:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.59.177.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783134258; cv=none; b=RIeUiRvQVw6CAIM3gdy3Gw3iQmoTnuX+r1ZFeX4weRq4vJuwJKS1Oh+8zRjAvLHq0oTbDmhEDuKRQTX1LZ6QohP7+mIFSoqcfnFG9V3ZnNphFCUvZUH+/E73KbLGUKGhAb8r2zl2okyeG91rVG+OXUVWKDGA7oSvkpH96zuWrBw=
+	t=1783138091; cv=none; b=iBe9U/nTYhO85xLTUQmfGflq0wDbZJicdp0oMs/eRtrUZ8RZueYa0qgCN1QAzHC3nDh2beZ4nqyxqGW3bHAZPAMbmU04xH1ywn3gSnKg745mHSdAyzuez/hAerB3AgwhfdRRHX3+VJYfX8rGbz+s+Z68Kow1yN3ROA82J+Rpbas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783134258; c=relaxed/simple;
-	bh=XsXBIFDH8hslHHKzEORYTb8ux6CXXXyS0K1oHRUSzGg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pdj15SW2Liljj+Zn9KicWjbBRrIA6IrTxZDACz4ddtXgB+K9cz0lo1qrmy2VQZ+kFltOCwk4ibyMvuZz9d6Vbc4K6M/HEE+m78Kpn9PrwP0yX7a5GoFeTwttHbWsCkWaa+WHg0fRbfVJNoOTyu3NtZFYk37wLDgClABftmA0vpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cjIlTbC7; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cjIlTbC7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 527D61F000E9;
-	Sat,  4 Jul 2026 03:04:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783134257;
-	bh=Q5yr45CzFEjhlA/DlR3lSxSTVAwrNbbKB6u8kO0XLGg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cjIlTbC7RGf3Re8Ya80pbR0Ya9odQ/ZaAWs5uVKdiCQKy9GXrFg33Q0x07FRuMNky
-	 ft0ZgStv7ccvoOIeXJZBWouTSqxIDAknZ0md25SPmvmSWDqP+cwHd0ypLgVDx1Z1Mj
-	 QuFI8a0T35bPbH7PPTsavAKRJW+jNE+7BCDmB30ktAXKPEYwvtae+cTaCMPxIOPvxJ
-	 Ha4lZDZINjCp39grZZ2HSYDBBAEWASEuxVMIbyD8IxWsQM/lTB6Y2CW657gDwLnEbE
-	 wUvlFZLJIScROMYNl3qtOz+vwV1+U85WZe0NY4PZXdIXjVT/3oEgUHwVKuuhhHvjbH
-	 bjX1spuJSNdcg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI/ASPM: Mask ASPM states based on Devicetree
- properties
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260704-aspm-v3-1-157217aff76f@oss.qualcomm.com>
-References: <20260704-aspm-v3-1-157217aff76f@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 04 Jul 2026 03:04:16 +0000
-Message-Id: <20260704030417.527D61F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1783138091; c=relaxed/simple;
+	bh=nXymSW/VcDeMtmXhKW0zT1XxT85EAUSLbI6y+AmpCMI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qKOAMzwYB17hfaU5g0p/efjpFmMNHX0gF0L4m8neI+ikl8BL7N9r0r/ROYrGdHE2HRLcfmVLtQbFfJc93xVeybYcOXvQAkJu7Lwl3ucYE4Dd6KUW5oZ9u0KnmX2FnIPiS3E6ScbC/BDWsyXTngFpNOHN6QncOhcw/Pi/H/XmW8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=52.59.177.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
+X-QQ-mid: esmtpsz10t1783138057t5d0dfb99
+X-QQ-Originating-IP: Dagi/XUOgU2h5qBFe9Smlbn5jn2uD2jIEPlXcDV7yKU=
+Received: from [127.0.0.1] ( [119.98.234.251])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Sat, 04 Jul 2026 12:07:35 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 6974827005784446003
+Message-ID: <926681E76F71D6A7+5482f550-9a97-4a01-95dd-6d4083bcf5aa@radxa.com>
+Date: Sat, 4 Jul 2026 12:07:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Thunderbird Daily
+Subject: Re: [PATCH 2/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563
+ PCIe switch
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-pm@vger.kernel.org
+References: <20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com>
+ <20260703-eliza_evk-v1-2-7624440bd76d@oss.qualcomm.com>
+Content-Language: en-US
+From: Xilin Wu <sophon@radxa.com>
+In-Reply-To: <20260703-eliza_evk-v1-2-7624440bd76d@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: MDqtQ4jGWXAGJPZovyvPCYJer8V9eEM4AWqrivPcQd+WchzSxAehjxoX
+	krgFJgp0S/EU4O68ZatPVubjx/ZtsNZ2Nd72eG/TJuHdcr3rlMGkFJ7Oy52Od/325WZ84Rm
+	xFnN6p4ZhymwbDOT+8yUCDMnWOQzJYbwQsNhdLbz91FTfb21wym2/DyCxCGf3a67CT+l90y
+	lO5bq57tZae4YRRJ+gdAcpmy43gacqhfliqQoSgdiBbNRJRNFHalJugqKTiYkIIg8XkePVo
+	6nvchU/cJXcWKe39ZKS114xeCVKk2x8a/8dNnKawhGoZRd6KetBlnnBqKUBrzsDNVrDO46Y
+	oxtBMy9CyoSCl03rMQHN+0a3nnQtUjujjP1x/tWm8yOscCxTsfOF9gqKe5Kr0f7tu+C3P32
+	NfhANdmwW1Ka8yX2SJR+AKH679uPf75Is4UWuQ6Qo6Q79ZaqYi0supaiK1OepiTIpZgAduL
+	A7Z8TBePoC6xhj8ZrgWfOl7pDxYBHXivprZkzuJwr4+AT8+KTuIXHIBzbfBJ4sAmCpczRV0
+	mCgY6EcJ9hW7OEZnUyuXWUQtdg2X2QW/GP5LssysWmsoHS/OcepQSEgcX9aPTa6ni0FAOuR
+	AO63PmxZwOyVxaCVFAEticzF1PYSWmuQFPlNSD0SHMRlsi9SgF214zaz++pKJR1QPAuyVLi
+	D6RD+VXAQFNbQS75JpgJd6o56pDB7i4MK3BohaeO9/3rqFk0vkdamg9u1iNSXI3FaoaWUfG
+	j/PVQ7gmUSnE1RFzPI6e/MZREcPyn0rgwxz5VjgYVipf5sQZZqrXHogm7LZeIEb+E/fksF0
+	24dyZy5DzinaknOygPG6YEmenqD7+Sm9mhmwOAaKFNizcuUDqnuTbiHvh6lhiHUjmnaB4u+
+	nunku9l0LtTMq5ECDq9fDoDTqnpxTwQV0Bdavxe7Y9+D2WOtruMGXRmoknug4JQrGdmxAUe
+	un52AOqXHS0asndeClvWf67Gv4WJVpNtePgzUCItY/FCDhjfJmFE9VidKGPTpV/Cf3oYHf9
+	v0fi8Uey38uztaIKq+sEFK6PBzrKwgNJshcMPt8drN7Oj8rdXF
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
+X-QQ-RECHKSPAM: 0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-
-New issues:
-- [Medium] Software ASPM state (`link->aspm_enabled`) is not updated after =
-L1 PM Substates are explicitly disabled in hardware, causing sysfs to repor=
-t incorrect state.
-
-Pre-existing issues:
-- [High] The 'aspm-no-l0s' and 'aspm-no-l1' DT properties fail to prevent t=
-he firmware's L0s and L1 states from being temporarily or permanently re-en=
-abled, leaving broken link states active.
---
-
-commit cd6ce2c13b26fecd26cf240bdae31606cf6afab9
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-
-PCI/ASPM: Mask ASPM states based on Devicetree properties
-
-This patch introduces pcie_link_has_aspm_override to check Devicetree
-properties and mask ASPM support accordingly. It explicitly disables
-L1SS if requested and moves the initialization sequence before the
-restore block.
-
-Link [1]: https://github.com/devicetree-org/dt-schema/pull/188
-Link [2]: https://github.com/devicetree-org/dt-schema/pull/190
-
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -846,6 +889,33 @@ static void pcie_aspm_override_default_link_state(st=
-ruct pcie_link_state *link)
-
-[ ... ]
-
->  	/* For devicetree platforms, enable L0s and L1 by default */
->  	if (of_have_populated_dt()) {
-> +		bool no_l0s =3D pcie_link_has_aspm_override(link, "aspm-no-l0s");
-> +		bool no_l1 =3D pcie_link_has_aspm_override(link, "aspm-no-l1");
-> +		bool no_l1ss =3D pcie_link_has_aspm_override(link, "aspm-no-l1ss");
-
-[ ... ]
-
-> +		/*
-> +		 * Clear L1SS in hardware before updating aspm_support. Once
-> +		 * aspm_capable is derived from aspm_support, pcie_config_aspm_link()
-> +		 * skips pcie_config_aspm_l1ss() entirely via the aspm_capable guard,
-> +		 * leaving firmware-enabled L1SS substates active in hardware.
-> +		 * This applies equally when disabling L1 (which implies L1SS).
-> +		 */
-> +		if ((no_l1 || no_l1ss) && (link->aspm_enabled & PCIE_LINK_STATE_L1SS))
-> +			pcie_config_aspm_l1ss(link, 0);
-
-[Severity: Medium]
-Does this explicit disable step leave software's tracking of enabled ASPM
-states out of sync with the actual hardware state?
-
-By directly calling pcie_config_aspm_l1ss with a state of 0 without also
-clearing the corresponding PCIE_LINK_STATE_L1SS bits in link->aspm_enabled,
-could sysfs attributes and kernel APIs like pcie_aspm_enabled incorrectly
-report L1SS as enabled until pcie_config_aspm_link is later invoked to
-reconfigure the link?
-
-> @@ -924,6 +994,11 @@ static void pcie_aspm_cap_init(struct pcie_link_stat=
-e *link, int blacklist)
-> =20
->  	aspm_l1ss_init(link);
-> =20
-> +	/* Save default state */
-> +	link->aspm_default =3D link->aspm_enabled;
+On 7/3/2026 8:38 PM, Krishna Chaitanya Chundru wrote:
+> The Eliza EVK board connects PCIe1 (8GT/s x2) to a Toshiba TC9563
+> PCIe switch. Enable PCIe1 and its QMP PHY nodes.
+> 
+> TC9563 uses I2C (at address 0x77 on I2C4) for its management interface.
+> 
+> Override the base iommu-map with the expanded set covering all the
+> switch's downstream ports (0x1400-0x1408 SID range).
+> 
+> The TC9563 RESX# and PERST# are OR-ed internally to assert reset on the
+> switch. Use TC9563 RESX# pin via a TLMM GPIO and skip wiring PERST#
+> from the PCIe controller.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>   arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 141 ++++++++++++++++++++++++++++++++
+>   1 file changed, 141 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> index ba41dbc34b81..c2afb8372ab7 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> @@ -12,6 +12,26 @@ chosen {
+>   		stdout-path = "serial0:115200n8";
+>   	};
+>   
+> +	vreg_0p9: regulator-0v9 {
+> +		compatible = "regulator-fixed";
+> +		regulator-name = "VREG_0P9";
 > +
-> +	pcie_aspm_override_default_link_state(link);
+> +		regulator-min-microvolt = <900000>;
+> +		regulator-max-microvolt = <900000>;
+> +		regulator-always-on;
+> +		regulator-boot-on;
+> +	};
 > +
->  	/* Restore L0s/L1 if they were enabled */
->  	if (FIELD_GET(PCI_EXP_LNKCTL_ASPMC, child_lnkctl) ||
->  	    FIELD_GET(PCI_EXP_LNKCTL_ASPMC, parent_lnkctl)) {
-> @@ -931,11 +1006,6 @@ static void pcie_aspm_cap_init(struct pcie_link_sta=
-te *link, int blacklist)
->  		pcie_capability_write_word(child, PCI_EXP_LNKCTL, child_lnkctl);
->  	}
+> +	vreg_1p8: regulator-1v8 {
+> +		compatible = "regulator-fixed";
+> +		regulator-name = "VREG_1P8";
+> +
+> +		regulator-min-microvolt = <1800000>;
+> +		regulator-max-microvolt = <1800000>;
+> +		regulator-always-on;
+> +		regulator-boot-on;
+> +	};
+> +
+>   	vreg_pcie_m_3p3: regulator-3p3 {
+>   		compatible = "regulator-fixed";
+>   
+> @@ -102,6 +122,104 @@ pcieport0_ep: endpoint {
+>   	};
+>   };
+>   
+> +&pcie1 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pcie1_default_state>;
+> +
+> +	iommu-map = <0x0 &apps_smmu 0x1400 0x1>,
+> +		    <0x100 &apps_smmu 0x1401 0x1>,
+> +		    <0x208 &apps_smmu 0x1402 0x1>,
+> +		    <0x210 &apps_smmu 0x1403 0x1>,
+> +		    <0x218 &apps_smmu 0x1404 0x1>,
+> +		    <0x300 &apps_smmu 0x1405 0x1>,
+> +		    <0x400 &apps_smmu 0x1406 0x1>,
+> +		    <0x500 &apps_smmu 0x1407 0x1>,
+> +		    <0x501 &apps_smmu 0x1408 0x1>;
+> +
+> +	status = "okay";
+> +};
+> +
+> +&pcie1_phy {
+> +	vdda-phy-supply = <&vreg_l1k>;
+> +	vdda-pll-supply = <&vreg_l3k>;
+> +
+> +	status = "okay";
+> +};
+> +
+> +&pcie1port0 {
+> +	wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
+> +
 
-[Severity: High]
-This is a pre-existing issue, but does moving the override logic above the
-restore block still fail to prevent the firmware's L0s and L1 states from
-being temporarily or permanently re-enabled?
+Just wondering, is there any side effect if PERST# is described here as 
+well?
 
-Because the local variables child_lnkctl and parent_lnkctl hold the original
-firmware state and are not masked by the Devicetree overrides processed in
-pcie_aspm_override_default_link_state, will this restore block
-unconditionally write the original state back to the hardware and re-enable
-L0s/L1 despite the Devicetree prohibition?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260704-aspm-v3-1-=
-157217aff76f@oss.qualcomm.com?part=3D1
+-- 
+Best regards,
+Xilin Wu <sophon@radxa.com>
