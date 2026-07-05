@@ -1,81 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43E7F363089
-	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:08:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA47A371D02
+	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:08:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783289315; cv=none; b=nWCo75cKavi4CvjC0xbt3wg6rf4k4kVG0MDY+CM8boWL1pLMjaDcs3UyvlTXbVEGEiM2jo/Nr5Q4nzSxEDiEZ3Ty6AkrVFp0H/pVmWjrL+ju0Sd9HnaPPdjJhYJaAFt9HIaWdAZa9ohHAADajLEbhyZJ/Iih9/o5CMXp4QshaUU=
+	t=1783289318; cv=none; b=U/Wo9xITnbDhgK4Mm8m2wJ0U8X8wa0XTLo8BGG8Osji/OBriogzhi0uXEXurpUYaibz/EZwsI/4LiNloFLcFxBwTj3ahfRNiljOB3AKRb5lV7acoK0eUfJWTzVp0B9UwIXalUfdUzv1UZAvZjEWAz2tYFuXRpV5LTX0/rzF+BMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783289315; c=relaxed/simple;
-	bh=lB0Uwdd49bTxuSCetp8JhbpabVUwT9m9GvHRDConO6s=;
+	s=arc-20240116; t=1783289318; c=relaxed/simple;
+	bh=+L0837SdgIc+9JQpw2S89Q5vACzh3QkyrQAPfgKQ678=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lW/KyV/b0XXqnea8mlPXG2rl9RIYwNnncb47d4euAhFEpOc95oG6HfnrVMAR2beIJuSEmMxeTw30c3NllBbUe44aOKpF+Qtn7kyKP2TDhLv7UtwwFCz3+Fw6KTva1UHXWcKxs4X8chRFF34luGdO9vfH8OTPd+ZL8r9YBBIrx2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cPRPxtir; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=rXH0KlKaj3DlSRnJNVXUbAxkqCVDZnXzHHFzEBiaZtC2DK57kk/uEUKtZRaw59SvGP/BGnBctgVSlszBeLP2WxvuiOYmuCgEVFZgX46B/WDWRzOsK0yJE2N2jkzUVJ+EJ3gHLRcoV4qUxCRRXFKZwioY9pIV0uF464OyaQIZy+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HEkfu1yj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cPRPxtir"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CBD31F000E9;
-	Sun,  5 Jul 2026 22:08:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HEkfu1yj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74E641F000E9;
+	Sun,  5 Jul 2026 22:08:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783289314;
-	bh=vGvTccp18slMQK+gRwx0VSmoMI6t2tnpqPg8n2OFhJY=;
+	s=k20260515; t=1783289316;
+	bh=80ZdTpzVF3k0O1sGyuurKNJhFHjcC+FcXheESOGCqgM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=cPRPxtirceqpsFpa0pEH5WeD82gpkkVfrk+oe3Cbzoe6slPChx65U5jEkK5SaNeU5
-	 kdCe08P4Sddk/Gpdja2Sh4TG1Q0iW64Y2ZZQ+qehAYV61p/+Ru6SFTLz9DnmTW/qR/
-	 Lcmki0dRxW840m7zwcyUA4PalTeaExnmG2qhwY/ooRznKiLfc40SL0vGE11W+xq83d
-	 NxP5EMAbSFu6laYNU5aRhcytNr6GAk7Y/mpKqIow2OQEtTHTE4LgjtjHgoChE+9Z4Z
-	 KSCRfsBi5xNgVv6Ms/f03OMfZMy6G61/cyT7o+L2TJchCr6YxcWOXAjaU6qdJiZDjb
-	 kZCQOxkRfiAGw==
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfauth.phl.internal (Postfix) with ESMTP id C86D2F40068;
-	Sun,  5 Jul 2026 18:08:32 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Sun, 05 Jul 2026 18:08:32 -0400
-X-ME-Sender: <xms:4NVKahBFYg3S24ERXf9eU2y4mrZofd48osPe0fj8nlnPcPFzWrjCQw>
-    <xme:4NVKarYWp2PcKWlyc7dRQQOzWLzaoRDrsgrqEf8UZkC4wIRyOHSTmL6sqL1KRa4o6
-    sqRe6NbvcOnC2EwJ5NuTbEeCxnz7IbaCyXFFjwCo6m2d0aXzOquUbk>
-X-ME-Received: <xmr:4NVKaoEWaFmmQ2a-2CmhVm7Gn5a4L3nLS-x14vzhWCeDbkWbJK1Riv7SIMD0t2J1M2LzamloCuo_HOO-NReGBQpJe1bLuuDrD_Y>
-X-ME-Proxy-Cause: dmFkZTFW4DrwsoA7jiPQ/SYxavjnKvTVwJOvM8+n4Cymh77lN7HIpr25Nt433UIQsF1QRC
-    TtK3JnGUBp3zX2SJnjWLV8YEWH5/n64nuTY+54qwlL5101cxawSFo1WJ8SjJCy8ZoRC8kc
-    DpuD7J09e/T4vo0cHPFPH7vWIClVAcN6vERTMn+gJKrEEItEHHoEBxN1IX93vsoLKnXgAv
-    P1Pqz583odCRFNMps31OlwzygSPPLVlg3lbc/6i7nGVlb7Vx9dk75jHQ6SmV37tvlgoJuN
-    7OTkIW2lBpFRLxtqFq/WmDjpwUnVU5zxWqsPn75cQxnjchBgJuZK1TY7jrbnd/27KnuvF/
-    Mmh+kzl/HHWCNTcZfzWOSqa10ROspmHwyW6UZvfoBjrTA6roN82s/TZeOIadeUk/E3dd6T
-    Gsid3xf8mXAhNCHiPo8VnJ/Yqea8paxc8v4pccMRSstaWq8gCHQ/w2MGQkFJCb2VGefc4O
-    uXaD8YrTw3ylnD8/FLQjjs8ZJWl8PSOHGH+GWdRHGDYS7o2yzhnvMYXLR4pQOb82K5BEMr
-    e/5vR4Gcl0ebP2ggnnv+K2Dd+efm6C9OGUp5f9Sq2etaJXO+2Y9stAnMNkPLaTQ7smNJ7L
-    ZSoboQM47QKUK4mCTWEpt802OQZ0cAu8eOqFY8P03kW5W10rKG0epxeqWycA
-X-ME-Proxy: <xmx:4NVKavtk6IX88i3arGfOuhu91Vbj2WNPAwvC7H9YhqSSnzyVWarrnw>
-    <xmx:4NVKauI5fAuDfPFckes0AXdyEHkCEh7n6yFoVL4mfUO77WpQaJXD0Q>
-    <xmx:4NVKatNHmZhsUpG0wmX_P6Oud6Jl0lEWGJlXNjNJuYEjkYH3TipGTQ>
-    <xmx:4NVKamZIGeqyxfzzgyP_Mfk_gYdTWGS3K10kY1wWievu1pofi9mUnQ>
-    <xmx:4NVKapwr5l9OhRHsqAkiLzLqG5qMKKklmFop61PyK0CyA71o6rIwg4qy>
+	b=HEkfu1yjT8FKMSNG3tzaQYhjFR3bQap0yOfY+leA98auWteaiFBBPV+T3XQos01Tv
+	 mnwakTGHFfZZJ1zXCtivr+kqDkHljQU0gEUIrH+Iv11hB7ZIpoAv1ROL1uJgYFmBFK
+	 3yVsYqbQp+/u7TXEwrmrnP3Mt2rOCsDgLD36jyGCbyZ/vg6h2tr06qbiZUklTv1EER
+	 BW8T7Q2YBARJU1PxgkCkLr/crSs8j/gfueCMfVzwDi/ezcAUOCBtc65jqFdYabaTlb
+	 PdZbhcLxD6Q+qCvoPuCf8wzlOFXeOIuH7LKPjWhwbRHqkKGDJ4jzfMsRpf1nGkNrGa
+	 wjLp5UlYC3crA==
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfauth.phl.internal (Postfix) with ESMTP id B3785F40068;
+	Sun,  5 Jul 2026 18:08:35 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Sun, 05 Jul 2026 18:08:35 -0400
+X-ME-Sender: <xms:49VKagNhDth3LGc9xJuWg12gZZEp3SW_FeSO2XdQIe6WUMJOUSk_lg>
+    <xme:49VKapjgvySy1AnfIL5-OZLFN79ir1JJ493yMguQosfSY1eyWdEx4-5Lc22d-ghyT
+    KmWJc5uLLDySxIxdgkKFcFSmXqAPyqctFOy8vKOqxtam1OFsGV1qCA>
+X-ME-Received: <xmr:49VKaq4FuWw01KC7hk-I6vhaTP_Nvi5m4693wTsk0_qpB12VSyZDrdMKtN83HhxHH-aOtJa5F_RJkUubB2dKe7574P96BoizLDQ>
+X-ME-Proxy-Cause: dmFkZTG0CP0dZmdNcV8rsEn3S06MMs4XQ44MiZG4ZCs2XrFV7lXiuhlneABQQTaICxUcMc
+    P+1ODA6MGYz0784hsjgTsV05YmgkywfdQoOlfLicxDKeBGB4PrMhmwEUg4VUNYGlIkLxnH
+    8Vz49Kgo4ToQVoSAwCeEtDa3/OHzdnSDqWKev24jjGCmj5kHJaMOz9p5kq1uJzUfimZzDj
+    ctFoZtMPMLl03YRBfuxxVu6nPXCwDvd5MZ7lgUYxfFIoqbJvDommu29T6zUJ0gRL7R01wX
+    hVM5p5fOjqHaQ+xgr+tqvmWjcWIkq4/M5uivhsXs6QdfVAn+ffoPhIr1SLFEBgaVyEHHWz
+    2WV5q9qo8U1ZbeC54ZNOsnc+KoRn483PJQSc7MLTiHmN31PIuA0pyGLxIjpsP6nq0H3qBf
+    9jcNB72CboYgXKJrzVkZiGmA5MWn/g6nNdPcUbMgmglleuSeO2580eBQe5ZdGkNPDdoYS3
+    A3Jpfy2BW74LqX43PFDqjJdoKNLzUS5wyIRkOeLlZ1wxdRa9ALSzGpGANuCQRdHFJDr96q
+    Tn2V0V7psSpp1SHBnWluweFq9PNy4hCzkadi9XzaLWVJjr0aT0X2p6MyNSFLLil3YAbyBT
+    99SfQaM4WzyjY4LcgmCagvxDqROLsc6S64OPD4n1euHf0Y9SXeQ/wzbF1K9A
+X-ME-Proxy: <xmx:49VKao101rOhvJU8ugcWR_F3ZUzJr5yYnuhI3ox7EKLgmG5tjbbmsw>
+    <xmx:49VKatt9gngqvqnflaLxKp52ArbPz-yPgLSoCD7_q1lYnXsmfDj2tg>
+    <xmx:49VKam4OKI6xaqeoMJTUwb0lJpst-P0ErLI22i7sca50rnnmCwqbdg>
+    <xmx:49VKahf1c_6XmWeirx5UgqKfwgxZV-ciP7wgHH_4VSRn1TT35Q28lg>
+    <xmx:49VKarzrkeCG0IWfLCavrwikwzZKRWRCBie_mVcfljjeoiNLEiqMP_Am>
 Feedback-ID: i67ae4b3e:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
- 5 Jul 2026 18:08:32 -0400 (EDT)
+ 5 Jul 2026 18:08:35 -0400 (EDT)
 From: Dan Williams <djbw@kernel.org>
 To: linux-coco@lists.linux.dev
 Cc: linux-pci@vger.kernel.org,
 	driver-core@lists.linux.dev,
 	ankita@nvidia.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
 	Xu Yilun <yilun.xu@linux.intel.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>
-Subject: [PATCH 08/15] device core: Initial device trust infrastructure
-Date: Sun,  5 Jul 2026 15:08:12 -0700
-Message-ID: <20260705220819.2472765-9-djbw@kernel.org>
+	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
+Subject: [PATCH 10/15] PCI/TSM: Add device interface security LOCKED support
+Date: Sun,  5 Jul 2026 15:08:14 -0700
+Message-ID: <20260705220819.2472765-11-djbw@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260705220819.2472765-1-djbw@kernel.org>
 References: <20260705220819.2472765-1-djbw@kernel.org>
@@ -87,450 +75,601 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce a per-device trust concept [1]. To start, it plumbs "auto" and
-"none" levels to enable a scheme of requiring explicit opt-in to operate a
-device. This supports a Confidential Computing use case of operating a
-limited / vetted device and driver set to bootstrap the environment. It
-leans on module policy to effect changes to device's trust level.
+PCIe Trusted Execution Environment Device Interface Security Protocol
+(TDISP) has two distinct sets of operations. The first, already enabled in
+driver/pci/tsm.c, enables the VMM to authenticate the physical function
+(PCIe Component Measurement and Authentication (CMA)), establish a secure
+message passing session (DMTF SPDM), and establish physical link security
+(PCIe Integrity and Data Encryption (IDE)). The second set of operations
+lets a VM manage the security state of assigned devices (TEE Device
+Interfaces (TDIs)). Implement the LOCK/UNLOCK operations in pci_tsm_ops, to
+be followed with an operation to transition the interface to RUN.
 
-The motivations for using module policy to effect trust are:
+ - lock(): Transition the device to the TDISP LOCKED state. In this state
+   measurements can validated to ensure that the VM trusts the device's
+   security manager (DSM).
 
-1/ It exists, no new ABI needed to inject "device firewall" policy into the
-   kernel [2].
-2/ Trust is a function of how the device is operated. A driver can be
-   trusted to carefully operate an untrusted device.
+ - unlock(): Transition the device to the TDISP UNLOCKED state.
 
-It may prove too coarse for some situations, like a driver that talks to a
-mix of trusted and untrusted devices, or a module that contains multiple
-drivers, but it is a place to start.
+The device shall not be attached to a driver during these transitions.
 
-Specifically this "module trust" scheme allows for only attaching drivers
-from built-in modules by default, or modules that explicitly pass a
-"trust=auto" option by building with CONFIG_DEVICE_TRUST_NONE=y. Modules
-can also be configured to skip device attach by default by setting
-/sys/module/module/parameters/require_trust.
-
-The new dev->p->trust level is the operational trust level of a device. It is
-only in effect after device_add(). It is private to the device core because
-the "tcb" level is not suitable to be changed while a driver is attached to
-the device. The result force_dma_unencrypted() must be stable while the
-device is attached to its driver. That core coordination responsibility is
-not suitable to export to non-core code.
-
-Note that the overly trivial helper builtin_driver_trust() grows support
-for another trust level in a follow-on change.
-
-Also note that the IOMMU claims in the Kconfig commentary, where it says
-"possible" and "where available" imply follow-on work to assign
-DEVICE_TRUST_NONE devices to an IOMMU blocked domain.
-
-Link: http://lore.kernel.org/2026032621-astound-mounted-07a6@gregkh [1]
-Link: https://lwn.net/Articles/865918/ [2]
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Danilo Krummrich <dakr@kernel.org>
-Cc: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Petr Pavlu <petr.pavlu@suse.com>
-Cc: Daniel Gomez <da.gomez@kernel.org>
-Cc: Sami Tolvanen <samitolvanen@google.com>
-Cc: Aaron Tomlin <atomlin@atomlin.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Samuel Ortiz <sameo@rivosinc.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Dexuan Cui <decui@microsoft.com>
+Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+Co-developed-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 Signed-off-by: Dan Williams <djbw@kernel.org>
 ---
- drivers/base/Kconfig                  | 57 ++++++++++++++++++++
- drivers/base/Makefile                 |  1 +
- Documentation/ABI/stable/sysfs-module |  7 +++
- drivers/base/base.h                   | 15 ++++++
- include/linux/device/trust.h          | 42 +++++++++++++++
- include/linux/module.h                |  6 ++-
- drivers/base/core.c                   |  7 +++
- drivers/base/dd.c                     |  5 ++
- drivers/base/trust.c                  | 77 +++++++++++++++++++++++++++
- kernel/module/main.c                  | 13 +++++
- 10 files changed, 229 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/device/trust.h
- create mode 100644 drivers/base/trust.c
+ Documentation/ABI/testing/sysfs-bus-pci   |  34 +++-
+ Documentation/ABI/testing/sysfs-class-tsm |  19 ++
+ Documentation/driver-api/pci/tsm.rst      |  47 +++++
+ include/linux/pci-tsm.h                   |  21 ++-
+ drivers/pci/tsm/core.c                    | 213 +++++++++++++++++++++-
+ drivers/virt/coco/tsm-core.c              |  43 ++++-
+ 6 files changed, 366 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
-index e3929fe6b240..a08523d348d8 100644
---- a/drivers/base/Kconfig
-+++ b/drivers/base/Kconfig
-@@ -262,4 +262,61 @@ config FW_DEVLINK_SYNC_STATE_TIMEOUT
- 	  command line option on every system/board your kernel is expected to
- 	  work on.
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index b767db2c52cb..1ed77b9402a6 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -647,13 +647,16 @@ Description:
+ 		Encryption) establishment. Reads from this attribute return the
+ 		name of the connected TSM or the empty string if not
+ 		connected. A TSM device signals its readiness to accept PCI
+-		connection via a KOBJ_CHANGE event.
++		connection via a KOBJ_CHANGE event. This is a "link" TSM
++		attribute, see Documentation/ABI/testing/sysfs-class-tsm.
  
-+config DEVICE_TRUST
-+	bool "Device core support for specifying trust levels for devices"
-+	help
-+	  Enable support for generic device trust levels when building a kernel
-+	  that needs to operate in the presence of potentially adversarial
-+	  devices. This is selected by buses that want to operate devices with
-+	  reduced privileges, like externally connected devices, and it is a
-+	  pre-requisite for operating devices with access to private memory in a
-+	  Confidential Computing VM. See
-+	  Documentation/ABI/testing/sysfs-kernel-iommu_groups for the type of
-+	  IOMMU enforcement in effect.
+ What:		/sys/bus/pci/devices/.../tsm/disconnect
+ Contact:	linux-coco@lists.linux.dev
+ Description:
+ 		(WO) Write the name of the TSM device that was specified
+-		to 'connect' to teardown the connection.
++		to 'connect' to teardown the connection. This is a
++		"link" TSM attribute, see
++		Documentation/ABI/testing/sysfs-class-tsm.
+ 
+ What:		/sys/bus/pci/devices/.../tsm/dsm
+ Contact:	linux-coco@lists.linux.dev
+@@ -702,3 +705,30 @@ Description:
+ 		When present and the tsm/ attribute directory is present, the
+ 		authenticated attribute is an alias for the device 'connect'
+ 		state. See the 'tsm/connect' attribute for more details.
++		This is a "link" TSM attribute, see
++		Documentation/ABI/testing/sysfs-class-tsm.
 +
-+choice
-+	prompt "Default device trust"
-+	default DEVICE_TRUST_AUTO
-+	depends on DEVICE_TRUST
-+	help
-+	  Specify the device trust level at initial attachment. Any choice other
-+	  than "Auto" assumes auditing the built-in driver set for trusted
-+	  drivers, and an enlightened userspace modprobe policy for other
-+	  devices + drivers.
-+
-+config DEVICE_TRUST_NONE
-+	bool "None"
-+	help
-+	  Devices are disallowed from attaching to a driver, and where
-+	  possible, the device is blocked by an IOMMU from accessing
-+	  assets.
-+
-+config DEVICE_TRUST_AUTO
-+	bool "Auto"
-+	help
-+	  Typical historical driver model, devices eagerly attempt to attach to
-+	  a driver and deploy all available mechanisms to allow performant
-+	  direct memory access.
-+
-+endchoice
-+
-+choice
-+	prompt "Trust devices with built-in drivers"
-+	default BUILTIN_DEVICE_TRUST_AUTO
-+	depends on DEVICE_TRUST
-+	help
-+	  Built-in drivers always bind to devices they match. Only
-+	  select a setting other than "Auto" when building a kernel image
-+	  targeted for use in Confidential Computing or other known
-+	  adversarial environments.
-+
-+config BUILTIN_DEVICE_TRUST_AUTO
-+	bool "Auto"
-+	help
-+	  Typical historical driver model, devices eagerly attempt to attach to
-+	  a driver and deploy all available mechanisms to allow performant
-+	  direct memory access This trust level does not grant TCB privileges.
-+
-+endchoice
-+
- endmenu
-diff --git a/drivers/base/Makefile b/drivers/base/Makefile
-index 02bdc4f74019..0744511c0599 100644
---- a/drivers/base/Makefile
-+++ b/drivers/base/Makefile
-@@ -8,6 +8,7 @@ obj-y			:= component.o core.o bus.o dd.o syscore.o \
- 			   topology.o container.o property.o cacheinfo.o \
- 			   swnode.o faux.o
- obj-$(CONFIG_AUXILIARY_BUS) += auxiliary.o
-+obj-$(CONFIG_DEVICE_TRUST) += trust.o
- obj-$(CONFIG_DEVTMPFS)	+= devtmpfs.o
- obj-y			+= power/
- obj-$(CONFIG_ISA_BUS_API)	+= isa.o
-diff --git a/Documentation/ABI/stable/sysfs-module b/Documentation/ABI/stable/sysfs-module
-index 397c5c850894..5c4863f65d03 100644
---- a/Documentation/ABI/stable/sysfs-module
-+++ b/Documentation/ABI/stable/sysfs-module
-@@ -55,3 +55,10 @@ Description:
- 		requests, the "driver_async_probe=..." kernel command line, the
- 		"async_probe" module option, then this default. Write a valid
- 		boolean value to toggle this policy.
-+
-+What:		/sys/module/module/parameters/require_trust
++What:		/sys/bus/pci/devices/.../tsm/lock
++Contact:	linux-coco@lists.linux.dev
 +Description:
-+		(RW) Emits "1" if modules are required to specify a trust=
-+		option on load to permit driver(s) in the module to attach to
-+		matched devices. By default drivers always attach on match
-+		unless the kernel was compiled with DEVICE_TRUST_NONE.
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index a5b7abc10ff0..e9d508521b5e 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -103,6 +103,7 @@ struct driver_private {
-  *			   dev_err_probe() for later retrieval via debugfs
-  * @device: pointer back to the struct device that this structure is
-  *	    associated with.
-+ * @trust: device operational trust level
-  * @dead: This device is currently either in the process of or has been
-  *	  removed from the system. Any asynchronous events scheduled for this
-  *	  device should exit without taking any action.
-@@ -119,6 +120,7 @@ struct device_private {
- 	const struct device_driver *async_driver;
- 	char *deferred_probe_reason;
- 	struct device *device;
-+	enum device_trust	trust;
- 	u8 dead:1;
- };
- #define to_device_private_parent(obj)	\
-@@ -149,6 +151,19 @@ void auxiliary_bus_init(void);
- #else
- static inline void auxiliary_bus_init(void) { }
- #endif
-+#ifdef CONFIG_DEVICE_TRUST
-+bool device_trust_bind(const struct device_driver *drv, struct device *dev);
-+void device_initialize_trust(struct device *dev);
-+#else
-+static inline void device_initialize_trust(struct device *dev)
-+{
-+}
-+static inline bool device_trust_bind(const struct device_driver *drv,
-+				     struct device *dev)
-+{
-+	return true;
-+}
-+#endif
- 
- struct kobject *virtual_device_parent(void);
- 
-diff --git a/include/linux/device/trust.h b/include/linux/device/trust.h
-new file mode 100644
-index 000000000000..3377d26dc485
---- /dev/null
-+++ b/include/linux/device/trust.h
-@@ -0,0 +1,42 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright (C) 2026 NVIDIA Corporation & Affiliates */
-+#ifndef __DEVICE_TRUST_H__
-+#define __DEVICE_TRUST_H__
++		(RW) Write the name of a TSM (TEE Security Manager) device
++		instance to this file to request that the platform transition
++		the PCIe device configuration to the TDISP LOCKED state. This
++		puts the device in a state where security sensitive
++		configuration setting can not be changed without transitioning
++		the device the PCIe TDISP ERROR state. Reads from this attribute
++		return the name of the TSM device instance that has arranged for
++		the device to be locked, or the empty string if not locked. A
++		TSM class device signals its readiness for lock requests via a
++		KOBJ_CHANGE event. Writes fail with EBUSY if this device is
++		bound to a driver. This is a "devsec" TSM attribute, see
++		Documentation/ABI/testing/sysfs-class-tsm. See
++		Documentation/driver-api/pci/tsm.rst for more details.
 +
-+/**
-+ * enum device_trust - Level of restrictions and privileges for a
-+ * device. Trust is initially assigned by the bus, and the bus is
-+ * responsible for coordinating transitions between trust levels with
-+ * DMA/IOMMU and its own device security mechanisms.
++What:		/sys/bus/pci/devices/.../tsm/unlock
++Contact:	linux-coco@lists.linux.dev
++Description:
++		(WO) Write the name of the TSM device that was specified to
++		'lock' to teardown the connection. Writes fail with EBUSY if
++		this device is bound to a driver. This is a "devsec" TSM
++		attribute, see Documentation/ABI/testing/sysfs-class-tsm.
+diff --git a/Documentation/ABI/testing/sysfs-class-tsm b/Documentation/ABI/testing/sysfs-class-tsm
+index 2949468deaf7..44e8a0bf4dae 100644
+--- a/Documentation/ABI/testing/sysfs-class-tsm
++++ b/Documentation/ABI/testing/sysfs-class-tsm
+@@ -7,3 +7,22 @@ Description:
+ 		signals when the PCI layer is able to support establishment of
+ 		link encryption and other device-security features coordinated
+ 		through a platform tsm.
++
++What:		/sys/class/tsm/tsmN/pci_mode
++Contact:	linux-coco@lists.linux.dev
++Description:
++		(RO) A TSM with PCIe TDISP capability can be in one of two
++		modes.
++
++		    "link": typically for a hypervisor (VMM) to authenticate,
++			    establish a secure session, and setup link
++			    encryption.
++
++		    "devsec": typically for a confidential guest (TVM) to
++			      transition assigned devices through the TDISP
++			      state machine UNLOCKED->LOCKED->RUN.
++
++		See the "tsm/" entries in
++		Documentation/ABI/testing/sysfs-bus-pci for the available PCI
++		device attributes when a TSM with the given "pci_mode" is
++		registered.
+diff --git a/Documentation/driver-api/pci/tsm.rst b/Documentation/driver-api/pci/tsm.rst
+index 232b92bec93f..19df202107fa 100644
+--- a/Documentation/driver-api/pci/tsm.rst
++++ b/Documentation/driver-api/pci/tsm.rst
+@@ -5,6 +5,53 @@
+ PCI Trusted Execution Environment Security Manager (TSM)
+ ========================================================
+ 
++Overview
++========
++
++A "TSM", as detailed by PCIe r7.0 section 11 "TEE Device Interface
++Security Protocol (TDISP)", is an entity within the platform's Trusted
++Computing Base (TCB) that enforces security policies on the host. It
++serves to mitigate a threat model where devices may be under the control
++of an adversary. The adversarial threats are:
++
++- Identity: Device may be mimicking a legitimate device identity / firmware
++- Physical: link may be under observation, or control (reorder / drop data)
++- Virtual: Device MMIO presented to a guest may not actually map the
++  device, device DMA may be redirected.
++
++In Linux a "tsm" is a broader concept. It is a class device interface to
++mitigate one or more of the above threats. A "tsm driver" registers a
++tsm device that publishes either the 'tsm/connect' or
++'tsm/{lock,accept}' set of attributes for the PCIe device. The typical
++expectation is that 'tsm/{lock,accept}' is published by a guest "tsm
++driver" to mitigate "Virtual" threats. The 'tsm/connect' interface is
++published by a host "tsm driver" to mitigate "Identity" and/or
++"Physical" threats.
++
++Device Interface LOCK
++=====================
++The lock operation facilitated by tsm/lock (see
++Documentation/ABI/testing/sysfs-bus-pci) places the device in a mode
++where any security sensitive changes to the device configuration results
++in the device transitioning to the ERROR state. The device presents
++signed evidence of its LOCK state to the kernel through the tsm driver.
++The relying party is responsible for verifying not only the evidence but
++that the device is trusted to maintain those attested values while
++locked. Accepting the locked configuration moves the device to the RUN
++state where it will accept private (T=1) traffic to its MMIO interface.
++
++Note that the RUN state is necessary, but not sufficient for the device
++to access private host memory (send T=1 DMA). That is only enabled after
++the device's trust level has been elevated to indicate it can operate
++within the TCB.
++
++A device in the RUN state is trusted to cease TCB interactions (send T=1
++DMA / accept T=1 MMIO TLPs) when it is next unlocked or encounters a
++security relevant error. The TSM is responsible for enforcing that the
++device is not unlocked within the interval between evidence collection
++and acceptance, by correlating the evidence from LOCK to the subsequent
++RUN request.
++
+ Subsystem Interfaces
+ ====================
+ 
+diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+index 8bc16029d31e..326471f1e01a 100644
+--- a/include/linux/pci-tsm.h
++++ b/include/linux/pci-tsm.h
+@@ -72,7 +72,8 @@ struct pci_tsm_ops {
+ 	 * @unlock: destroy TSM context and return device to UNLOCKED state
+ 	 *
+ 	 * Context: @lock and @unlock run under pci_tsm_rwsem held for write to
+-	 * sync with TSM unregistration and each other
++	 * sync with TSM unregistration and each other. All operations run under
++	 * the device lock for mutual exclusion with driver attach and detach.
+ 	 */
+ 	struct_group_tagged(pci_tsm_devsec_ops, devsec_ops,
+ 		struct pci_tsm *(*lock)(struct tsm_dev *tsm_dev,
+@@ -115,6 +116,13 @@ struct pci_tdi {
+  * sub-function (SR-IOV virtual function, or non-function0
+  * multifunction-device), or a downstream endpoint (PCIe upstream switch-port as
+  * DSM).
 + *
-+ * @DEVICE_TRUST_UNSET: Unregistered device object with no current bus
-+ * @DEVICE_TRUST_NONE: Blocked when idle, cannot bind
-+ * @DEVICE_TRUST_AUTO: All typical privileges granted
++ * For devsec operations it serves to indicate that the function / TDI has been
++ * locked to a given TSM.
++ *
++ * The common expectation is that there is only ever one TSM, but this is not
++ * enforced. The implementation only enforces that a device can be "connected"
++ * to a TSM instance or "locked" to a different TSM.
+  */
+ struct pci_tsm {
+ 	struct pci_dev *pdev;
+@@ -136,6 +144,14 @@ struct pci_tsm_pf0 {
+ 	struct pci_doe_mb *doe_mb;
+ };
+ 
++/**
++ * struct pci_tsm_devsec - context for tracking private/accepted PCI resources
++ * @base_tsm: generic core "tsm" context
 + */
-+enum device_trust {
-+	DEVICE_TRUST_UNSET,
-+	DEVICE_TRUST_NONE,
-+	DEVICE_TRUST_AUTO,
++struct pci_tsm_devsec {
++	struct pci_tsm base_tsm;
 +};
 +
-+#define DEVICE_DEFAULT_TRUST                                        \
-+	(IS_ENABLED(CONFIG_DEVICE_TRUST_NONE) ? DEVICE_TRUST_NONE : \
-+						DEVICE_TRUST_AUTO)
-+
-+struct device;
-+struct device_driver;
-+
-+#ifdef CONFIG_DEVICE_TRUST
-+void module_driver_trust(struct module *mod, const char *val);
-+void module_driver_trust_init(struct module *mod, bool distrust);
-+#else
-+static inline void module_driver_trust(struct module *mod, const char *val)
-+{
-+	pr_warn("module: %s: trust= support disabled\n", mod->name);
-+}
-+static inline void module_driver_trust_init(struct module *mod, bool distrust)
-+{
-+}
-+#endif
-+
-+#endif /* __DEVICE_TRUST_H__ */
-diff --git a/include/linux/module.h b/include/linux/module.h
-index 7566815fabbe..0315035e6b3b 100644
---- a/include/linux/module.h
-+++ b/include/linux/module.h
-@@ -29,6 +29,7 @@
- #include <linux/srcu.h>
- #include <linux/static_call_types.h>
- #include <linux/dynamic_debug.h>
-+#include <linux/device/trust.h>
+ /* physical function0 and capable of 'connect' */
+ static inline bool is_pci_tsm_pf0(struct pci_dev *pdev)
+ {
+@@ -216,6 +232,8 @@ int pci_tsm_link_constructor(struct pci_dev *pdev, struct pci_tsm *tsm,
+ 			     struct tsm_dev *tsm_dev);
+ int pci_tsm_pf0_constructor(struct pci_dev *pdev, struct pci_tsm_pf0 *tsm,
+ 			    struct tsm_dev *tsm_dev);
++int pci_tsm_devsec_constructor(struct pci_dev *pdev, struct pci_tsm_devsec *tsm,
++			       struct tsm_dev *tsm_dev);
+ void pci_tsm_pf0_destructor(struct pci_tsm_pf0 *tsm);
+ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
+ 			 size_t req_sz, void *resp, size_t resp_sz);
+@@ -230,6 +248,7 @@ static inline const struct pci_tsm_ops *to_pci_tsm_ops(struct pci_tsm *tsm)
+ {
+ 	return tsm->tsm_dev->pci_ops;
+ }
++struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm);
+ #else
+ static inline int pci_tsm_register(struct tsm_dev *tsm_dev)
+ {
+diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
+index 220842df42bc..590e19f6c2b8 100644
+--- a/drivers/pci/tsm/core.c
++++ b/drivers/pci/tsm/core.c
+@@ -9,6 +9,7 @@
+ #define dev_fmt(fmt) "PCI/TSM: " fmt
  
- #include <linux/percpu.h>
- #include <asm/module.h>
-@@ -443,6 +444,10 @@ struct module {
- #endif
- 
- 	bool async_probe_requested;
-+#ifdef CONFIG_DEVICE_TRUST
-+	/* Trust level override for devices matching this module's drivers. */
-+	enum device_trust trust;
-+#endif
- 
- 	/* Exception table */
- 	unsigned int num_exentries;
-@@ -865,7 +870,6 @@ static inline bool module_requested_async_probing(struct module *module)
- 	return false;
+ #include <linux/bitfield.h>
++#include <linux/ioport.h>
+ #include <linux/pci.h>
+ #include <linux/pci-doe.h>
+ #include <linux/pci-tsm.h>
+@@ -58,6 +59,26 @@ static struct pci_tsm_pf0 *to_pci_tsm_pf0(struct pci_tsm *tsm)
+ 	return container_of(pf0->tsm, struct pci_tsm_pf0, base_tsm);
  }
  
--
- /* Dereference module function descriptor */
- static inline
- void *dereference_module_function_descriptor(struct module *mod, void *ptr)
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 4d026682944f..155ff5852286 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -3754,6 +3754,13 @@ int device_add(struct device *dev)
- 		fw_devlink_link_device(dev);
- 	}
- 
-+	/*
-+	 * The bus and all device add notifiers have had a chance to
-+	 * initialize trust, set a fallback default in case the trust
-+	 * level is not yet established.
-+	 */
-+	device_initialize_trust(dev);
++static inline bool is_devsec(struct pci_dev *pdev)
++{
++	return pdev->tsm && pdev->tsm->dsm_dev == NULL &&
++	       pdev->tsm->tdi == NULL;
++}
 +
- 	/*
- 	 * The moment the device was linked into the bus's "klist_devices" in
- 	 * bus_add_device() then it's possible that probe could have been
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 60c005223844..f0b2d58c89a0 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -857,6 +857,11 @@ static int __driver_probe_device(const struct device_driver *drv, struct device
- 	dev_dbg(dev, "bus: '%s': %s: matched device with driver %s\n",
- 		drv->bus->name, __func__, drv->name);
- 
-+	if (!device_trust_bind(drv, dev)) {
-+		dev_dbg(dev, "not trusted to bind\n");
-+		return -ENODEV;
++/* 'struct pci_tsm_devsec' wraps 'struct pci_tsm' when ->tdi == ->dsm == NULL */
++struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm)
++{
++	struct pci_dev *pdev = tsm->pdev;
++
++	if (!is_devsec(pdev) || !has_tee(pdev)) {
++		pci_WARN_ONCE(pdev, 1, "invalid context object\n");
++		return NULL;
 +	}
 +
- 	pm_runtime_get_suppliers(dev);
- 	if (dev->parent)
- 		pm_runtime_get_sync(dev->parent);
-diff --git a/drivers/base/trust.c b/drivers/base/trust.c
-new file mode 100644
-index 000000000000..0fd494e1557d
---- /dev/null
-+++ b/drivers/base/trust.c
-@@ -0,0 +1,77 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright (C) 2026 NVIDIA Corporation & Affiliates */
-+
-+#include <linux/device.h>
-+#include <linux/device/trust.h>
-+#include <linux/module.h>
-+#include "base.h"
-+
-+void device_initialize_trust(struct device *dev)
-+{
-+	if (dev->p->trust == DEVICE_TRUST_UNSET)
-+		dev->p->trust = DEVICE_DEFAULT_TRUST;
++	return container_of(tsm, struct pci_tsm_devsec, base_tsm);
 +}
++EXPORT_SYMBOL_GPL(to_pci_tsm_devsec);
 +
-+/* Driver trust policy requires modules, builtin drivers always attach */
-+static enum device_trust builtin_driver_trust(void)
-+{
-+	return DEVICE_TRUST_AUTO;
-+}
-+
-+static enum device_trust driver_trust(struct module *mod)
-+{
-+	if (!mod)
-+		return builtin_driver_trust();
-+	return mod->trust;
-+}
-+
-+/*
-+ * @dev matches @drv and is locked for probe. Check if the driver has
-+ * policy on trusting devices it attaches, update the device's trust
-+ * level from that policy. Trust privileges beyond driver bind are
-+ * realized in a bus's ->dma_configure().
-+ */
-+bool device_trust_bind(const struct device_driver *drv, struct device *dev)
-+{
-+	enum device_trust drv_trust = driver_trust(drv->owner);
-+
-+	if (drv_trust != DEVICE_TRUST_UNSET)
-+		dev->p->trust = drv_trust;
-+	return dev->p->trust > DEVICE_TRUST_NONE;
-+}
-+
-+static const char * const device_trust_names[] = {
-+	[DEVICE_TRUST_NONE]	 = "none",
-+	[DEVICE_TRUST_AUTO]	 = "auto",
-+};
-+
-+static enum device_trust device_trust_parse(const char *name)
-+{
-+	int i;
-+
-+	if (!name)
-+		return DEVICE_TRUST_UNSET;
-+
-+	for (i = 0; i < ARRAY_SIZE(device_trust_names); i++)
-+		if (device_trust_names[i] &&
-+		    sysfs_streq(name, device_trust_names[i]))
-+			return i;
-+	return DEVICE_TRUST_UNSET;
-+}
-+
-+void module_driver_trust(struct module *mod, const char *val)
-+{
-+	mod->trust = device_trust_parse(val);
-+}
-+
-+/*
-+ * Honor the module core forcing all modules to no trust by default,
-+ * otherwise fallback to the compile-time default for all devices
-+ */
-+void module_driver_trust_init(struct module *mod, bool require_trust)
-+{
-+	if (require_trust)
-+		mod->trust = DEVICE_TRUST_NONE;
-+	else
-+		mod->trust = DEVICE_DEFAULT_TRUST;
-+}
-diff --git a/kernel/module/main.c b/kernel/module/main.c
-index 46dd8d25a605..3e1fe9966d50 100644
---- a/kernel/module/main.c
-+++ b/kernel/module/main.c
-@@ -36,6 +36,7 @@
- #include <linux/notifier.h>
- #include <linux/sched.h>
- #include <linux/device.h>
-+#include <linux/device/trust.h>
- #include <linux/string.h>
- #include <linux/mutex.h>
- #include <linux/rculist.h>
-@@ -3068,6 +3069,12 @@ void flush_module_init_free_work(void)
- static bool async_probe;
- module_param(async_probe, bool, 0644);
+ static void tsm_remove(struct pci_tsm *tsm)
+ {
+ 	struct pci_dev *pdev;
+@@ -531,6 +552,125 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RO(dsm);
  
-+#ifdef CONFIG_DEVICE_TRUST
-+/* Default value for module trust. When true, trust= override required */
-+static bool require_trust;
-+module_param(require_trust, bool, 0644);
-+#endif
++/**
++ * pci_tsm_unlock() - Transition TDI from LOCKED/RUN to UNLOCKED
++ * @pdev: TDI device to unlock
++ *
++ * Returns void, requires all callers to have satisfied dependencies like making
++ * sure the device is locked and detached from its driver.
++ */
++static void pci_tsm_unlock(struct pci_dev *pdev)
++{
++	lockdep_assert_held_write(&pci_tsm_rwsem);
++	device_lock_assert(&pdev->dev);
++
++	if (dev_WARN_ONCE(&pdev->dev, pdev->dev.driver,
++			  "unlock attempted on driver attached device\n"))
++		return;
++
++	device_cc_reject(&pdev->dev);
++	to_pci_tsm_ops(pdev->tsm)->unlock(pdev->tsm);
++	pdev->tsm = NULL;
++}
++
++static int pci_tsm_lock(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
++{
++	const struct pci_tsm_ops *ops = tsm_dev->pci_ops;
++	struct pci_tsm *tsm;
++	int rc;
++
++	ACQUIRE(device_intr, lock)(&pdev->dev);
++	if ((rc = ACQUIRE_ERR(device_intr, &lock)))
++		return rc;
++
++	if (pdev->dev.driver)
++		return -EBUSY;
++
++	tsm = ops->lock(tsm_dev, pdev);
++	if (IS_ERR(tsm))
++		return PTR_ERR(tsm);
++
++	pdev->tsm = tsm;
++	return 0;
++}
++
++static ssize_t lock_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t len)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	int rc, id;
++
++	rc = sscanf(buf, "tsm%d\n", &id);
++	if (rc != 1)
++		return -EINVAL;
++
++	ACQUIRE(rwsem_write_kill, lock)(&pci_tsm_rwsem);
++	if ((rc = ACQUIRE_ERR(rwsem_write_kill, &lock)))
++		return rc;
++
++	if (pdev->tsm)
++		return -EBUSY;
++
++	struct tsm_dev *tsm_dev __free(put_tsm_dev) = find_tsm_dev(id);
++	if (!is_devsec_tsm(tsm_dev))
++		return -ENXIO;
++
++	rc = pci_tsm_lock(pdev, tsm_dev);
++	if (rc)
++		return rc;
++	return len;
++}
++
++static ssize_t lock_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tsm_dev *tsm_dev;
++	int rc;
++
++	ACQUIRE(rwsem_read_intr, lock)(&pci_tsm_rwsem);
++	if ((rc = ACQUIRE_ERR(rwsem_read_intr, &lock)))
++		return rc;
++
++	if (!pdev->tsm)
++		return sysfs_emit(buf, "\n");
++
++	tsm_dev = pdev->tsm->tsm_dev;
++	return sysfs_emit(buf, "%s\n", dev_name(&tsm_dev->dev));
++}
++static DEVICE_ATTR_RW(lock);
++
++static ssize_t unlock_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t len)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tsm_dev *tsm_dev;
++	int rc;
++
++	ACQUIRE(rwsem_write_kill, lock)(&pci_tsm_rwsem);
++	if ((rc = ACQUIRE_ERR(rwsem_write_kill, &lock)))
++		return rc;
++
++	if (!pdev->tsm)
++		return -EINVAL;
++
++	tsm_dev = pdev->tsm->tsm_dev;
++	if (!sysfs_streq(buf, dev_name(&tsm_dev->dev)))
++		return -EINVAL;
++
++	ACQUIRE(device_intr, dev_lock)(&pdev->dev);
++	if ((rc = ACQUIRE_ERR(device_intr, &dev_lock)))
++		return rc;
++
++	if (pdev->dev.driver)
++		return -EBUSY;
++
++	pci_tsm_unlock(pdev);
++
++	return len;
++}
++static DEVICE_ATTR_WO(unlock);
++
+ /* The 'authenticated' attribute is exclusive to the presence of a 'link' TSM */
+ static bool pci_tsm_link_group_visible(struct kobject *kobj)
+ {
+@@ -556,6 +696,13 @@ static bool pci_tsm_link_group_visible(struct kobject *kobj)
+ }
+ DEFINE_SIMPLE_SYSFS_GROUP_VISIBLE(pci_tsm_link);
+ 
++static bool pci_tsm_devsec_group_visible(struct kobject *kobj)
++{
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
++
++	return pci_tsm_devsec_count && has_tee(pdev);
++}
 +
  /*
-  * This is where the real work happens.
-  *
-@@ -3375,6 +3382,11 @@ static int unknown_module_param_cb(char *param, char *val, const char *modname,
- 		return 0;
+  * 'link' and 'devsec' TSMs share the same 'tsm/' sysfs group, so the TSM type
+  * specific attributes need individual visibility checks.
+@@ -587,12 +734,19 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
+ 		}
  	}
  
-+	if (strcmp(param, "trust") == 0) {
-+		module_driver_trust(mod, val);
-+		return 0;
++	if (pci_tsm_devsec_group_visible(kobj)) {
++		if (attr == &dev_attr_lock.attr ||
++		    attr == &dev_attr_unlock.attr)
++			return attr->mode;
 +	}
 +
- 	/* Check for magic 'dyndbg' arg */
- 	ret = ddebug_dyndbg_module_param_cb(param, val, modname);
- 	if (ret != 0)
-@@ -3544,6 +3556,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
- 		goto bug_cleanup;
+ 	return 0;
+ }
  
- 	mod->async_probe_requested = async_probe;
-+	module_driver_trust_init(mod, require_trust);
+ static bool pci_tsm_group_visible(struct kobject *kobj)
+ {
+-	return pci_tsm_link_group_visible(kobj);
++	return pci_tsm_link_group_visible(kobj) ||
++	       pci_tsm_devsec_group_visible(kobj);
+ }
+ DEFINE_SYSFS_GROUP_VISIBLE(pci_tsm);
  
- 	/* Module is ready to execute: parsing args may do that. */
- 	after_dashes = parse_args(mod->name, mod->args, mod->kp, mod->num_kp,
+@@ -601,6 +755,8 @@ static struct attribute *pci_tsm_attrs[] = {
+ 	&dev_attr_disconnect.attr,
+ 	&dev_attr_bound.attr,
+ 	&dev_attr_dsm.attr,
++	&dev_attr_lock.attr,
++	&dev_attr_unlock.attr,
+ 	NULL
+ };
+ 
+@@ -729,6 +885,29 @@ int pci_tsm_link_constructor(struct pci_dev *pdev, struct pci_tsm *tsm,
+ }
+ EXPORT_SYMBOL_GPL(pci_tsm_link_constructor);
+ 
++/**
++ * pci_tsm_devsec_constructor() - devsec TSM context initialization
++ * @pdev: The PCI device
++ * @tsm: context to initialize
++ * @tsm_dev: Platform TEE Security Manager, initiator of security operations
++ */
++int pci_tsm_devsec_constructor(struct pci_dev *pdev, struct pci_tsm_devsec *tsm,
++			       struct tsm_dev *tsm_dev)
++{
++	struct pci_tsm *pci_tsm = &tsm->base_tsm;
++
++	if (!is_devsec_tsm(tsm_dev))
++		return -EINVAL;
++
++	pci_tsm->dsm_dev = NULL;
++	pci_tsm->tdi = NULL;
++	pci_tsm->pdev = pdev;
++	pci_tsm->tsm_dev = tsm_dev;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_tsm_devsec_constructor);
++
+ /**
+  * pci_tsm_pf0_constructor() - common 'struct pci_tsm_pf0' (DSM) initialization
+  * @pdev: Physical Function 0 PCI device (as indicated by is_pci_tsm_pf0())
+@@ -756,6 +935,13 @@ void pci_tsm_pf0_destructor(struct pci_tsm_pf0 *pf0_tsm)
+ }
+ EXPORT_SYMBOL_GPL(pci_tsm_pf0_destructor);
+ 
++static void devsec_sysfs_enable(struct pci_dev *pdev)
++{
++	pci_dbg(pdev, "TEE I/O Device capability detected (TDISP)\n");
++
++	sysfs_update_group(&pdev->dev.kobj, &pci_tsm_attr_group);
++}
++
+ int pci_tsm_register(struct tsm_dev *tsm_dev)
+ {
+ 	struct pci_dev *pdev = NULL;
+@@ -777,8 +963,10 @@ int pci_tsm_register(struct tsm_dev *tsm_dev)
+ 		for_each_pci_dev(pdev)
+ 			if (is_pci_tsm_pf0(pdev))
+ 				link_sysfs_enable(pdev);
+-	} else if (is_devsec_tsm(tsm_dev)) {
+-		pci_tsm_devsec_count++;
++	} else if (is_devsec_tsm(tsm_dev) && pci_tsm_devsec_count++ == 0) {
++		for_each_pci_dev(pdev)
++			if (has_tee(pdev))
++				devsec_sysfs_enable(pdev);
+ 	}
+ 
+ 	return 0;
+@@ -813,6 +1001,9 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 	if (is_link_tsm(tsm_dev) && is_pci_tsm_pf0(pdev) && !pci_tsm_link_count)
+ 		link_sysfs_disable(pdev);
+ 
++	if (is_devsec_tsm(tsm_dev) && !pci_tsm_devsec_count)
++		sysfs_update_group(&pdev->dev.kobj, &pci_tsm_attr_group);
++
+ 	/* Nothing else to do if this device never attached to the departing TSM */
+ 	if (!tsm)
+ 		return;
+@@ -823,10 +1014,18 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 	else if (tsm_dev != tsm->tsm_dev)
+ 		return;
+ 
+-	if (is_link_tsm(tsm_dev) && is_pci_tsm_pf0(pdev))
+-		pci_tsm_disconnect(pdev);
+-	else
+-		pci_tsm_fn_exit(pdev);
++	/* Disconnect DSMs, unlock assigned TDIs, or cleanup DSM subfunctions */
++	if (is_link_tsm(tsm_dev)) {
++		if (is_pci_tsm_pf0(pdev))
++			pci_tsm_disconnect(pdev);
++		else
++			pci_tsm_fn_exit(pdev);
++	}
++
++	if (is_devsec_tsm(tsm_dev) && has_tee(pdev)) {
++		guard(device)(&pdev->dev);
++		pci_tsm_unlock(pdev);
++	}
+ }
+ 
+ void pci_tsm_destroy(struct pci_dev *pdev)
+diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
+index e784993353d8..8e298bda10fc 100644
+--- a/drivers/virt/coco/tsm-core.c
++++ b/drivers/virt/coco/tsm-core.c
+@@ -9,10 +9,50 @@
+ #include <linux/cleanup.h>
+ #include <linux/pci-tsm.h>
+ 
++static ssize_t pci_mode_show(struct device *dev, struct device_attribute *attr,
++			     char *buf)
++{
++	struct tsm_dev *tsm_dev = container_of(dev, struct tsm_dev, dev);
++	const struct pci_tsm_ops *ops = tsm_dev->pci_ops;
++
++	if (ops->connect)
++		return sysfs_emit(buf, "link\n");
++	if (ops->lock)
++		return sysfs_emit(buf, "devsec\n");
++	return sysfs_emit(buf, "none\n");
++}
++static DEVICE_ATTR_RO(pci_mode);
++
++static umode_t tsm_pci_visible(struct kobject *kobj, struct attribute *attr, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct tsm_dev *tsm_dev = container_of(dev, struct tsm_dev, dev);
++
++	if (tsm_dev->pci_ops)
++		return attr->mode;
++	return 0;
++}
++
++static struct attribute *tsm_pci_attrs[] = {
++	&dev_attr_pci_mode.attr,
++	NULL
++};
++
++static const struct attribute_group tsm_pci_group = {
++	.attrs = tsm_pci_attrs,
++	.is_visible = tsm_pci_visible,
++};
++
++static const struct attribute_group *tsm_pci_groups[] = {
++	&tsm_pci_group,
++	NULL
++};
++
+ static void tsm_release(struct device *);
+ static const struct class tsm_class = {
+ 	.name		= "tsm",
+-	.dev_release	= tsm_release
++	.dev_release	= tsm_release,
++	.dev_groups	= tsm_pci_groups,
+ };
+ static DEFINE_IDA(tsm_ida);
+ 
+@@ -72,6 +112,7 @@ static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
+ 		device_unregister(&tsm_dev->dev);
+ 		return ERR_PTR(rc);
+ 	}
++	sysfs_update_group(&tsm_dev->dev.kobj, &tsm_pci_group);
+ 
+ 	/* Notify TSM userspace that PCI/TSM operations are now possible */
+ 	kobject_uevent(&tsm_dev->dev.kobj, KOBJ_CHANGE);
 -- 
 2.54.0
 
