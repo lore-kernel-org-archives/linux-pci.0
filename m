@@ -1,146 +1,202 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BCA360EC0
-	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:25:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BBB3655C0
+	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:25:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783290305; cv=none; b=Lj9uj4Nrm6XXpE4z6bo0ieZ+0oZXaDGQXbt8jtNs/SaTZ2J76e+k4YIlP/ePWCqAez4cDOVBocZv7suta6aX1MCcjhe7hnuCiOgmnqD1UkV+BMnedIoOtOhZ+R6aqL3tCUc4T11p33RInUsh1sPUeQNpX16crzbAX/7wf/uyTL8=
+	t=1783290306; cv=none; b=FJYRZNTgfQ+heBgUUMtYofVQOrO/yCh0FaQ92FBOeC5+AWKPp54/nZCQBEbmKpYUsqTIgQ9Ib0XpoACSoRnXNFbH/CY8feWgPJUQlBBpZHQ5tEX4jwS4XbVPKT+UVrOUJruwCq9uBuvlF1sKyzxp7MICxLvkfX2ht/gT+IuT9Gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783290305; c=relaxed/simple;
-	bh=cVWWj1PpHa2OzWqtl7hhgw2QNWLYRrv+LVKgesO+M44=;
+	s=arc-20240116; t=1783290306; c=relaxed/simple;
+	bh=d49MHNqbLJ+90WqqWoCNa2LhQ8UOnfoq3PU/v5TCwPU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aGIeTWFY/1S+XpbWLCptFLbTaWA5QmBycjFopUNfdkcCr4eH5w5oxBbUfTsSBWLD4z6sAbpxdpSt1BPA4ciBLwj9YpnEN/Gs4AvwwZTM2OSRK9Bz5jXI22qICfuYyMbvDRpAnU5xRl6Qsi2HnWtmyu6dAOdqV7xjfYkzAlJqPKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KIfdjfKM; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sPKyGlzLYNo1ynJqv+seRo4QcHekjvUDMkK5amdomf3EbgasOgTcaEozmG3XvjXcRq1PRCgGabMrMQA/VEp03i8hFpkshWz4Yd/W+gHZH0cDvvcsmUUtU6/IaRuKmkbrGgIEjAvcLUoENyEiCcGoeWfYnSEIQaENQLrXl8LNCyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lcN9//CA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KIfdjfKM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6ACF01F00A3A;
-	Sun,  5 Jul 2026 22:25:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lcN9//CA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CBEE1F00A3D;
+	Sun,  5 Jul 2026 22:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783290304;
-	bh=8aP6SnCaHNRo09+iRQJukyvuS5v6B2rQUNt2vfQn7LE=;
+	s=k20260515; t=1783290305;
+	bh=CiAOYOAxp06oadh3Z8p+rqvydnHmaoGhTr9hxh7HdzI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KIfdjfKMgn5mSGDEIONCD0/Jcn68Z0r0QjEiQiOoddI3fBrZPgkdTpQLYjKxU7dqE
-	 M6I76AM/2rmdwxFmp7tosbNEA6RmVCkflS3H+Z8fosvJgxBwId0D3FZe17FQRKn5T1
-	 EN2lOi6d1+7npAXAL0P1/HR92nWX4gvDJb8ZD3winOudZnPGOVZlIVPdBVdcmUttsx
-	 Yr5u5wpFGRTTCKhjmPnt3a58SDv1GmBahWvS6mIJBGq4p2Sv0sob6/gpA5V4tgokkK
-	 BHWqXFjPaZtUwckJtjqOyEltm1YK0lXMmwBNiGIgzQMdIwvHKaBLahhW3vQzmzjbgd
-	 vGRwWXTPsTScg==
+	b=lcN9//CAaly38srksPz0C1KlA7RrJIJyaxwQHcO/Sk3AZL1rVS5zIZMyw1N0BZ2Bu
+	 xP1HCNcnvMQI/4tqCJ6UoyORUJn8NQEHRuBNbXpof7yTR/xTWawVzaH909bRRH0aHv
+	 gp37eA+gzsQadHAtpk9IrHejOLh1qGaHKeZfAO4r6uVgBrYzx6LmnGbnS+cJKXgsUe
+	 Bq2sknFSDrNXp619KW8nV+gRvd0D29BjpBdYG6BIK/1UufJLGCJdh71lGRX98zQivs
+	 TpcErz+TQ1xPClzX2bDq8D7jCLqSFMev1vgu7MdNHQS1eEwJPkoTzM7R4pCWEdMAWd
+	 i4TtqWR2JBetw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 15/15] PCI/TSM: Add relative MMIO offset support?
+Subject: Re: [PATCH 12/15] PCI/TSM: Add device interface security DMA
+ enable/disable
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dan Williams" <djbw@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260705220819.2472765-16-djbw@kernel.org>
+In-Reply-To: <20260705220819.2472765-13-djbw@kernel.org>
 References: <20260705220819.2472765-1-djbw@kernel.org>
- <20260705220819.2472765-16-djbw@kernel.org>
+ <20260705220819.2472765-13-djbw@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Sun, 05 Jul 2026 22:25:04 +0000
-Message-Id: <20260705222504.6ACF01F00A3A@smtp.kernel.org>
+Message-Id: <20260705222505.2CBEE1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Missing NULL pointer check for optional `ops->disable_dma` in `pci=
+_tsm_disable_dma()`.
+- [Medium] TSM flags are defined as bit masks instead of bit numbers, misus=
+ing bitops APIs and creating a latent out-of-bounds write hazard.
+- [Low] Invalid member access syntax in `__must_hold()` lock annotations ca=
+uses build failures for static analysis tools.
+
 Pre-existing issues:
-- [High] The BAR mask calculation in `pci_tsm_mmio_alloc()` uses a 32-bit `=
-unsigned long` for `mask` on 32-bit architectures, corrupting 64-bit `tsm_o=
-ffset` calculations.
-- [High] A 32-bit integer overflow when calculating `size` in `pci_tsm_mmio=
-_alloc()` silently truncates MMIO ranges of 4GB or larger.
+- [High] Missing NULL pointer checks for optional TSM operations (`run`, `u=
+nlock`) in the TSM core.
 --
 
-commit 39c72d1b357cb53c2cb3c0f7292c8909846cff30
+commit b2823259422c2c0267dccac4b1d9d8a5703f85ac
 Author: Dan Williams <djbw@kernel.org>
 
-PCI/TSM: Add relative MMIO offset support?
+PCI/TSM: Add device interface security DMA enable/disable
 
-The RMM specification documents the expectation that the MMIO_REPORTING_OFF=
-SET
-chosen for TDISP Interface Reports is always BAR aligned. This patch adds
-support to ask the TSM drivers for the offset calculation scheme if it
-deviates from this assumption.
-
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Signed-off-by: Dan Williams <djbw@kernel.org>
+This patch adds helper functions to enable and disable device access to
+private memory for the PCI TSM interface. It also introduces a new flag
+to track when DMA access is enabled for a given device.
 
 > diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
-> index 9ac216ad896d9..19ad35f2da4a9 100644
 > --- a/drivers/pci/tsm/core.c
 > +++ b/drivers/pci/tsm/core.c
-> @@ -643,13 +643,15 @@ struct pci_tsm_devif_report {
->  /**
->   * pci_tsm_mmio_alloc() - allocate encrypted MMIO range descriptor
->   * @pdev: device owner of MMIO ranges
-> + * @scheme: allow the low level TSM driver to hint the offset calc scheme
->   *
->   * Return: the encrypted MMIO range descriptor on success, NULL on failu=
-re
+> @@ -754,6 +754,48 @@ static ssize_t unlock_store(struct device *dev, stru=
+ct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_WO(unlock);
+> =20
+> +/* pci_dma_configure() helper to finalize access to private memory. */
+> +int pci_tsm_enable_dma(struct pci_dev *pdev) __must_hold(&pdev->dev->mut=
+ex)
 
-[Severity: High]
-This is a pre-existing issue, but I noticed a potential 32-bit
-multiplication overflow in this function.
+[Severity: Low]
+Does this __must_hold() annotation cause build failures with static analysis
+tools?
 
-When calculating the size in pci_tsm_mmio_alloc():
-    u64 size =3D __le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
+The dev field in struct pci_dev is an embedded struct device, not a
+pointer, so it looks like this should use the dot operator instead of the
+arrow operator for accessing the mutex.
 
-Since both operands are 32-bit, will this overflow if nr_pfns is 1,048,576
-(representing 4GB) or greater? The overflow would occur before being
-promoted and assigned to the 64-bit size variable, causing MMIO ranges of
-4GB or larger to be silently truncated.
-
->   *
->   * Assumes that this is called within the live lifetime of a PCI device's
->   * association with a low level TSM.
->   */
-> -struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev)
-> +struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev,
-> +					enum tdisp_offset_scheme scheme)
->  {
+> +{
+> +	struct device *dev =3D &pdev->dev;
+> +	const struct pci_tsm_ops *ops;
+> +	int rc;
 
 [ ... ]
 
-> @@ -712,10 +714,14 @@ struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_=
-dev *pdev)
->  			last_bar =3D bar;
-> =20
->  			/*
-> -			 * Determine the obfuscated base of the BAR. BAR
-> -			 * offsets are never obfuscated.
-> +			 * Either the first range per bar always maps
-> +			 * the start of the BAR, or the reporting_offset
-> +			 * is BAR size aligned.
->  			 */
-> -			reporting_bar_base =3D tsm_offset & ~mask;
-> +			if (scheme =3D=3D TDISP_OFFSET_RELATIVE)
-> +				reporting_bar_base =3D tsm_offset;
-> +			else
-> +				reporting_bar_base =3D tsm_offset & ~mask;
+> +	ops =3D to_pci_tsm_ops(pdev->tsm);
+> +	if (!ops->enable_dma)
+> +		return 0;
+> +
+> +	rc =3D ops->enable_dma(pdev);
+> +	if (rc =3D=3D 0)
+> +		set_bit(PCI_TSM_F_DMA, &pdev->tsm->flags);
+
+[Severity: Medium]
+Can this corrupt memory?
+
+The set_bit() function expects a bit number as its argument, but the
+PCI_TSM_F_DMA flag is defined as a bit mask. Passing the evaluated mask
+value instead of the bit index causes it to set the wrong bit in the flags
+field.
+
+If a future flag shifts by 64, wouldn't passing 64 to set_bit() write past
+the end of the unsigned long flags field and silently corrupt adjacent
+memory?
+
+> +	return rc;
+> +}
+> +
+> +/*
+> + * pci_dma_cleanup() helper to block private memory access as device is
+> + * going idle
+> + */
+> +void pci_tsm_disable_dma(struct pci_dev *pdev) __must_hold(&pdev->dev->m=
+utex)
+
+[Severity: Low]
+Is this __must_hold() annotation affected by the same embedded struct access
+issue mentioned in pci_tsm_enable_dma()?
+
+> +{
+> +	const struct pci_tsm_ops *ops;
+> +
+> +	if (!pdev->tsm)
+> +		return;
+> +
+> +	if (!test_and_clear_bit(PCI_TSM_F_DMA, &pdev->tsm->flags))
+> +		return;
+> +
+> +	ops =3D to_pci_tsm_ops(pdev->tsm);
+> +	ops->disable_dma(pdev);
 
 [Severity: High]
-This is a pre-existing issue, but could this bitwise AND corrupt 64-bit
-calculations on 32-bit architectures?
+Will this crash if a backend driver implements enable_dma but leaves
+disable_dma as NULL?
 
-Looking at the definition of mask earlier in pci_tsm_mmio_alloc():
-    unsigned long mask =3D pci_resource_len(pdev, bar) - 1;
+The disable_dma pointer is unconditionally dereferenced here, whereas
+pci_tsm_enable_dma() checks for the presence of the enable_dma callback
+before calling it.
 
-Since pci_resource_len() returns a 64-bit resource_size_t on PAE systems,
-it gets truncated to a 32-bit unsigned long mask on 32-bit architectures.
-When ~mask is evaluated, it results in a 32-bit value.
+> +}
 
-Would applying bitwise AND with the 64-bit u64 tsm_offset here cause
-zero-extension of ~mask, explicitly clearing all bits above 4GB in
-tsm_offset?
+[ ... ]
 
->  		} else if (tsm_offset < last_reporting_end) {
+> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+> --- a/include/linux/pci-tsm.h
+> +++ b/include/linux/pci-tsm.h
+
+[ ... ]
+
+> @@ -102,6 +104,8 @@ struct pci_tdi {
+> =20
+>  /* Private operation acknowledged, future ioremap will use private alias=
+ */
+>  #define PCI_TSM_F_ACCEPT (1UL << 0)
+> +/* DMA access to private memory enabled */
+> +#define PCI_TSM_F_DMA (1UL << 1)
+
+[Severity: Medium]
+Is this flag intended to be used with atomic bitops?
+
+Because it is defined as a bit mask instead of a bit number, using it with
+functions like set_bit() or test_and_clear_bit() will operate on bit 2
+instead of bit 1.
+
+[ ... ]
+
+While reviewing this patch, I also noticed a potential issue in the
+existing TSM core code:
+
+drivers/pci/tsm/core.c:pci_tsm_accept() {
+    ...
+    rc =3D to_pci_tsm_ops(pdev->tsm)->run(pdev);
+    if (rc)
+        return rc;
+    ...
+}
+
+[Severity: High]
+This is a pre-existing issue, but could this cause a kernel panic if a
+backend driver omits the optional run or unlock callbacks?
+
+The code in pci_tsm_accept() and pci_tsm_unlock() seems to unconditionally
+dereference these pointers without checking if they are NULL, similar to
+the disable_dma issue mentioned above.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260705220819.2472=
-765-1-djbw@kernel.org?part=3D15
+765-1-djbw@kernel.org?part=3D12
