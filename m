@@ -1,60 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15E2A3655C0
-	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:15:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821C9253958
+	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:16:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783289719; cv=none; b=saHhtV7fDaljavqeHUORHQEzR+BXmR36X2u9+A2f8ocNAlpJV5NY4j0G7vgv5Oa+M1jZv5bKBslfhnYmVtAcFo7wWRVxWGxz/BGmz3rG/sC7MSnxGQagMyfZp1xoEek4wDLlhnXyJ58F439JZ88rqUz/+iRM9503cLvrc7Ifo3M=
+	t=1783289815; cv=none; b=ZjiLXFR8LstX4unLhlmiTVE4FX2zmSj74DP3pJ9zh1IcPRdEA0qsQqsoGs8HYBNCg9SUtu97CX34fgNj8hGNLX4doKOH+hhr280Qz6glNk6C/s0F3Wo3ovXML5r5Boi20lrpbwscHPx31MWI21C5qnQhk/2BnauVk0GFP8hAgy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783289719; c=relaxed/simple;
-	bh=thGYh/dZREQIY1dDp/Iv2/O0/6FgJpJiZzC871HAH8E=;
+	s=arc-20240116; t=1783289815; c=relaxed/simple;
+	bh=WGk9PvjtVJwFdUGnkm/OjHGSBJk2dIIES8Z7GuPlSls=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WGQVEfg6xihVrrwAZjhv6fRVvIBSO71KK1fNfYEL1FoAyADyLlDL3PcMI3empRAXEchoxOio3kz4VBpRj8vWWFQCO4tS68a796C0wQCaKKLb7xjRSzaeVAydb8GZg8M4DR/tOuwNPscroGEIjsO1cDUD5ThGzg1iRBnDcSSpPhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RpLnbsMj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SAsoGCryOnJ+Tt02Ip8Z0TgrmwJ0nFvrTkFSdpX/ksv4+9pX6y86yNwinBCr4sXPcvDvX36zA/mS8raN10buD7VzOwEtKfrMQKHTXh6CeTSeUMTn7+BnQeIIhAkLhD0yxnVeN2dAuTkWYYrWdDo3foJSRS9YKVj0pCiL0DnnFc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OGIM3lr+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RpLnbsMj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AB451F000E9;
-	Sun,  5 Jul 2026 22:15:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OGIM3lr+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 032A41F000E9;
+	Sun,  5 Jul 2026 22:16:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783289717;
-	bh=thGYh/dZREQIY1dDp/Iv2/O0/6FgJpJiZzC871HAH8E=;
+	s=k20260515; t=1783289814;
+	bh=H40DUk58YNckAxDIhNtUtmXFIQP9KCrNHop2DAVMQEo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RpLnbsMj9V6sSKtQMumnmryoX/Y6RtJkwd0Cm9kNuzFt3TCLAoWq/vjdhnOtKbaqr
-	 +7hu6qPcl09GzoEvXQh9jVsH+4Sy/BrnhFVSVyhnVMebCCX35r6vQo+hLgDvjXyysH
-	 5mjOvwrcI7CKbe6y+yKsqJBPpU1AqI6sGeAVSB92QBxTvbxq+TwyByRPYEyxB3mY4e
-	 XF3V/FWpjaEKsmF2o6Uil1EMDmNg+Tm7CxbteFmSon0c2cK+vu8P5yLj0Y7qZSgQt1
-	 cpAMxxbaOiwCpBPjDP72ySzqFDNVKGQQpr/0HW8KJxO/nKsvGHNgG4wDp8cZpu/TLS
-	 k1we3AEBj5X1w==
+	b=OGIM3lr+MSheq3tTsX5bYQUrFNOhRhx9XFCzPVoTA2urLtqldMBvqGkt71JX2mOOh
+	 v9V/FygwbRiGtvJqb0nt5G2QVRuuVT7wRMiUb6KpLnWs4C8ueBagkseCtpj4nBdKYP
+	 qzh//AqWu9MKRNlXEQWbzPoQU/zHUpjJlGPUr8MCrHTiSiF5upU2DynShefxpi2o5g
+	 Vdg+62Dv6QsgqgZlBdQTVl/zIuNHFM643ZTtkguSYe+nlXbK/xYKowwaB1bdEqE326
+	 1M5e7yDsEjsgk0VIhCO3MOey40fTAWjBUbJi3UlX5A7eGPlvqvHZntiPSLSpZrbqaL
+	 LOHb74jLK0TGw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/15] modules: Document the global async_probe
- parameter
+Subject: Re: [PATCH 06/15] PCI/TSM: Add device evidence support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dan Williams" <djbw@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260705220819.2472765-8-djbw@kernel.org>
+In-Reply-To: <20260705220819.2472765-7-djbw@kernel.org>
 References: <20260705220819.2472765-1-djbw@kernel.org>
- <20260705220819.2472765-8-djbw@kernel.org>
+ <20260705220819.2472765-7-djbw@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 05 Jul 2026 22:15:17 +0000
-Message-Id: <20260705221517.8AB451F000E9@smtp.kernel.org>
+Date: Sun, 05 Jul 2026 22:16:53 +0000
+Message-Id: <20260705221654.032A41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> In preparation for adding another /sys/module/module/parameters entry,
-> document the existing async_probe parameter.
->=20
-> Cc: Saravana Kannan <saravanak@google.com>
-> Cc: Luis Chamberlain <mcgrof@kernel.org>
-> Signed-off-by: Dan Williams <djbw@kernel.org>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Missing NULL check for `pdev->tsm->evidence` in `pci_tsm_refresh_e=
+vidence()` leads to a NULL pointer dereference.
+- [Medium] `pci_tsm_evidence_read_begin()` incorrectly masks wait interrupt=
+ errors, returning `-ENXIO` instead of the original error code.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 59da43773186eeb0cfa223261094a555b176c018
+Author: Dan Williams <djbw@kernel.org>
+
+PCI/TSM: Add device evidence support
+
+This commit registers the PCI TSM framework with the device-evidence
+netlink ABI. It introduces a struct device_evidence context for TSMs to own
+SPDM sessions and handle evidence refresh requests.
+
+> diff --git a/drivers/pci/tsm/evidence.c b/drivers/pci/tsm/evidence.c
+> new file mode 100644
+> index 0000000000000..ffb08208f0c0d
+> --- /dev/null
+> +++ b/drivers/pci/tsm/evidence.c
+[ ... ]
+> +static struct device_evidence *pci_tsm_evidence_read_begin(struct device=
+ *dev)
+> +{
+[ ... ]
+> +	/* Hold the evidence stable against conflicting refresh updates */
+> +	evidence =3D pdev->tsm->evidence;
+> +	rc =3D down_read_interruptible(&evidence->lock);
+> +	if (rc)
+> +		goto err;
+> +
+> +	return evidence;
+> +err:
+> +	up_read(&pci_tsm_rwsem);
+> +	return ERR_PTR(-ENXIO);
+
+[Severity: Medium]
+Does this error path intentionally mask the error code from
+down_read_interruptible()?
+
+If the wait is interrupted, rc is populated with -EINTR, but the err label
+unconditionally returns -ENXIO. Could this lead to userspace receiving a
+misleading 'No such device or address' error instead of a retryable
+interrupt signal?
+
+[ ... ]
+> +static int pci_tsm_refresh_evidence(struct device *dev, const void *nonc=
+e,
+> +				    size_t nonce_len)
+> +{
+[ ... ]
+> +	/* Sync against pci_tsm_evidence_read_begin */
+> +	evidence =3D pdev->tsm->evidence;
+> +	ACQUIRE(rwsem_write_kill, elock)(&evidence->lock);
+
+[Severity: High]
+Is it possible for pdev->tsm->evidence to be NULL here?
+
+Looking at the evidence_available() helper earlier in this file, it appears
+structurally valid for a TSM to exist without an associated evidence contex=
+t.
+
+If evidence is NULL, would passing &evidence->lock into ACQUIRE() cause a
+NULL pointer dereference?
+
+> +	if ((rc =3D ACQUIRE_ERR(rwsem_write_kill, &elock)))
+> +		return rc;
+> +
+> +	return ops->refresh_evidence(pdev->tsm, nonce, nonce_len);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260705220819.2472=
-765-1-djbw@kernel.org?part=3D7
-
+765-1-djbw@kernel.org?part=3D6
