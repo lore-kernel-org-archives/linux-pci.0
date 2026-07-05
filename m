@@ -1,314 +1,216 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5B0301471;
-	Sat,  4 Jul 2026 20:28:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9386B38D
+	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 01:53:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783196905; cv=none; b=jICfjY5ZYPdo0BMYGMfmHnH35YkoZgMU3Xj9ue0tVKgzTBaKqPHtKga/L0KjdV6+jdpM2UrNj99FIfPtyvMrkAvGgh/CpAwBNoTy/Zv5UYKvl2Jga//M8Auu0qN8G3mE5eM7SJ+qFx51yz+NlLIozYpBt5gUV14Pczn2ENT4WZo=
+	t=1783216395; cv=none; b=MiKrcvr58Am63vfDZLw5JM9obpzJrdYRZlTwfIfDiGZR1T/Ktgyb9FRfPWpWJzFXNMxFYQ0vlfjTmftNkdq1XEsu0Ft+JJBh/VLOPjzqVSW+hc+kWAXKAEcBHqY6VndqtfXaQPVDiz+pYl+hQI7Ya6xZbylHIRyodY+fGncjBso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783196905; c=relaxed/simple;
-	bh=1lkB7+1Trnr5UGpQP00QgoQwV1YztjZcXuv6sF+kAJc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OVlsgguDnqnU5p3xnx5xpkoP+XUiR2/SbEH99yhbZnl9BugaVCUgyGVmIFh2n8BDN25KXuX9hAAZ9AnJi6OnsJtgfckd9h8FlmLdPaYnKfjZqg+irdHyfKzQnaR+aC4ReLbJP1okTQt1cHCTNqw8ZmykfWdZ9Q7NHlAnyDhdjA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ciX0H/56; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=QaG/dJhA; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783216395; c=relaxed/simple;
+	bh=2HWg0oST1IiXTqUM6qiNbG9g7AItoDJP2s+ptaWWz10=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PoxsgaTIr6V5ObLBQzNuAtez6f/7rPtpAQ3l8BgsWo8VA9molc/DDbGZl6kobtybr48pfFkfNbC8AxRjpGRaGm4D00tjdHLabHDHJALIhuQoJEQTHuAms/vxK75hKrRdr7JqUTHVwaQB89wTJh+HTgZV7XKqWOO/tzg430nX7e4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=agEPGyaN; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ciX0H/56";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="QaG/dJhA"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gt2Hy5YRrz9tN5;
-	Sat,  4 Jul 2026 22:28:14 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783196894;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TKawrTkNvDnROBLym0oquR1qEV5tI5DualC+BhLUuoU=;
-	b=ciX0H/56UGdUFYcJlc/QGxhMnvPnpZZ7f3Z7L6G4+s0OtXgF6YErHzn0+g71oL+uYArBS4
-	6pGgKt22YEP0saGb5KOhvaX21QvbNyHpA35naqf76kvMhB05URzKLrRYCS3QDb1XHhJOJu
-	iMRWgEySHA5XmGeIuVLkdjmYybdTNdIY7QMkj6ZarvEOYWr2WPvj+QmlQ4FRNzvpz2Abta
-	/+b95lPrA3jpWsDA4oEu/nf1x6mdH0bF/vzdvdv59+DCm8Qqfbd89sbErCfFmE+1FwRu2s
-	qsDOpMhdUYgloA16dbY+G5GrnbkWg8k8ckFB0vDp8bTMpIopGPGLT7SR5p7YGg==
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783196893;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TKawrTkNvDnROBLym0oquR1qEV5tI5DualC+BhLUuoU=;
-	b=QaG/dJhAP4KEpBQLO4FuBiEKEGLuJJdcL9gvoFwW5fidYsA+vt7O6IGeTJpgIf8iPUtNmu
-	w1OpTRil4YenfXRIVu0ysiWFWI3/G4PaEHjcuS484ByhKfWTgXaIufUI9YAWiwll8Eavdp
-	njnI4+W3KgYB1EwHC/u2ofyS7oKbSI9bLdQHQqn1Z1sxNY9rDD5MBp+k0HN4/VyTgtfWPh
-	nMPq3VvpZTkhdrfxLLxgDlma50dkTmGbm6mN+3cucn9+YjJjDGwxr3L51iaHBtwe+36sYQ
-	ms4lyrmXf3GqTInEpqz1xgUXI1BlrtagYZRJRLZ39boL2bcAvwTInHYB1gAZQA==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 5/5] PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
-Date: Sat,  4 Jul 2026 22:25:04 +0200
-Message-ID: <20260704202748.355708-6-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
-References: <20260704202748.355708-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="agEPGyaN"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-845b6d9bf39so1459961b3a.1
+        for <linux-pci@vger.kernel.org>; Sat, 04 Jul 2026 18:53:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783216394; x=1783821194; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=mmBarBS2P3KqburN5n4cfJE0l/iJod9d0iroSCl5SmE=;
+        b=agEPGyaNFX6bJlwJvZUyxO81YiVwSbF9T1/D0KY/8Z3ytuRhtAIIytRNNhtXzQO0wf
+         t50DxY+5HcZd8fbpDXH6gegfVsgTxO9tcfTikz4r4ES7IoVGBAH2ng348lX4/dEKhcJP
+         awmj5Z5IKnqYEPBpeDazFhySHLilq0zZwRkZwDDAC/jdFfdW2XG91biCMo6BnG59qJlf
+         6m2Juxkvtv6X12Y3cjpHMekGXi+bBg5i8q+3xUeYif31rcboQnxn0KxyVaoNj914HH2d
+         vOaLku3HBxxkaCFYK+fFGuoeUvgrB2Qp1+qnh57iuN2cPLCiukpbOfCX7eLsTkMbPSFS
+         Dr0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783216394; x=1783821194;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mmBarBS2P3KqburN5n4cfJE0l/iJod9d0iroSCl5SmE=;
+        b=DAH87xoqElVRuAuFNN83g/7Cp9LJGCr4yablfamnhf7uKHtIHlaV4Vh1Lg1HF7VE/3
+         T5n2oC0k8m1cvf44mIofpkqDTG2DvFdjiLmfHFHq46J88ltPaC/AoHZQtkdSJgkj+ah1
+         asS4itHMF7wgFC+3viwrMZR2IexpNqVeGyT86Oih7iYM5C9Hno0DuIvNcJeDixH/Ble9
+         +KWym/vcaAdF88cRB0hNoiaAZ4EZTJSy1jBFdrXQderRRtWMdgDiBwEPjXbJjJTg9yT0
+         arCUjYRUUtsjioyu4UJIhndt0QUj0d6BP1Om9S+78N8J8M+lwDCXnJJeIVIp6YdSy3MR
+         OyRg==
+X-Forwarded-Encrypted: i=1; AHgh+RoP4CBxAsMB1Mwjt3R1Hq46rC0NnqgVXy8NHhiT5/uFcQSZp8s5F7QU1nEIfy456Y+vxLHewmXQ+7M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqaXctzDaolWaIqyZSGndfbU8Pn3/+fVd4nHZ0wbAWNLCreqVh
+	cJy9NiIsFEX3fMsE6iMIeDDgXkt595hYXLcYO/qogihIm/Yod3WbNQeH
+X-Gm-Gg: AfdE7ck52H/W0HL8QyqD9SohCbU54vaBZsuV8dBk6/cODuAkvK/GWwCh9GRb/7/D/ko
+	UvFS6+MwLD3IJvF3SKSgQlRCt8kYcdXtZ0gzjt/WXEr62Ig7WIUsdfbrJShZIb2WnkUowMkqfjP
+	DcRE47pDNG3f69l9HsHMRjtAfJFVIR5SXvNGaD0Op769NVCQe1wSMBn9knoze4hy3tRdDO9PCr/
+	1Ol0oGY/0Gk+wjc+yJCs94UPeWf2jWuvh8h+x1bQFo5Eud7LwTmJBNw6034nu8ffx8Pq4leP32m
+	VMqySELypsSavfFWvUoF5IID9t8bhfF9qmF9ln6TwtUteLI6yG+A7QJVpFIXuseVQDpM/AINIe7
+	otOsMw+up6Zs0RVr8AQEguHQwje8cGMEl+T423Q9wdDDK+tr/0jxqL+bJS0j9Xjcy
+X-Received: by 2002:a05:6a00:94c6:b0:847:9223:9726 with SMTP id d2e1a72fcca58-847e186de64mr8695417b3a.18.1783216393864;
+        Sat, 04 Jul 2026 18:53:13 -0700 (PDT)
+Received: from localhost ([2001:da8:7001:11::cb])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6bb2753sm1790716b3a.23.2026.07.04.18.53.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 Jul 2026 18:53:13 -0700 (PDT)
+Date: Sun, 5 Jul 2026 09:52:40 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: sashiko-reviews@lists.linux.dev, Inochi Amaoto <inochiama@gmail.com>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
+ controller support
+Message-ID: <akm4VHY-BRikbF2v@inochi.infowork>
+References: <20260703020003.485436-1-inochiama@gmail.com>
+ <20260703020003.485436-7-inochiama@gmail.com>
+ <20260703022058.1FD001F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: 1hoet8mdswsn8546yq373dfkbhc6z6rr
-X-MBO-RS-ID: eb3c9fb682a62484ad8
+In-Reply-To: <20260703022058.1FD001F000E9@smtp.kernel.org>
 
-Add support for R8A78000 (R-Car X5H) PCIe4.
+On Fri, Jul 03, 2026 at 02:20:57AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 4 potential issue(s) to consider:
+> - [High] Unclocked MMIO access during probe triggers a synchronous bus abort.
+> - [High] Incorrect `.deinit` callback for K3 prevents PERST# assertion on teardown.
+> - [High] AXI cache coherency initialization is bypassed when MSIs are disabled.
+> - [Medium] Misleading comment and potential missing initialization for Root Complex mode.
+> --
+> 
+> commit 93fac4ee5b6c6ef1d779cae9b2ff5efed7a8fb39
+> Author: Inochi Amaoto <inochiama@gmail.com>
+> 
+> PCI: spacemit-k1: Add Spacemit K3 PCIe host controller support
+> 
+> The PCIe controller on Spacemit K3 is almost a standard Synopsys
+> DesignWare PCIe IP with extra link and reset control. Unlike
+> the PCIe controller on K1, this controller supports external MSI
+> interrupt controller and can use multiple PHYs at the same time.
+> 
+> Add driver to support PCIe controller on Spacemit K3 PCIe.
+> 
+> > diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > index 31aac056b68ed..680acc93f5395 100644
+> > --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> [ ... ]
+> > @@ -340,6 +354,109 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
+> >  	return ret;
+> >  }
+> >  
+> > +static int k3_pcie_init(struct dw_pcie_rp *pp)
+> > +{
+> [ ... ]
+> > +	/*
+> > +	 * Put the controller in root complex mode, and indicate that
+> > +	 * Vaux (3.3v) is present.
+> > +	 */
+> > +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+> > +			PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+> 
+> [Severity: Medium]
+> Will this omit initializing the controller into root complex mode?
+> 
 
-This driver previously supported R-Car Gen4 S4/V4H/V4M. PCIe features
-of R-Car X5H PCIe4 are almost all the same.
+Yes
 
-The controller initialization sequence is slightly different and is
-factored out into controller specific callbacks, in a manner similar
-to previous R-Car Gen4 handling.
+> Unlike k1_pcie_init(), this code block only drives the PERST# reset pins and
+> seems to skip setting DEVICE_TYPE_RC.
+> 
 
-The controller does have a PHY attached to it, but the PHY is operated
-by a separate PHY driver, the PHY driver instance binding is handled
-in rcar_gen4_pcie_get_resources() and controlled in the aforementioned
-controller specific callbacks.
+> > +
+> > +	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
+> [ ... ]
+> > +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
+> > +{
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +	u32 val;
+> > +
+> > +	dw_pcie_dbi_ro_wr_en(pci);
+> > +
+> > +	val = dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
+> > +	val = u32_replace_bits(val, K3_CACHE_MSTR_AWCACHE_BEHAVIOR,
+> > +			       K3_CACHE_MSTR_AWCACHE_MODE);
+> > +	dw_pcie_writel_dbi(pci, COHERENCY_CONTROL_3_OFF, val);
+> > +
+> > +	dw_pcie_dbi_ro_wr_dis(pci);
+> > +
+> > +	return 0;
+> > +}
+> 
+> [Severity: High]
+> Does this code miss initializing AXI cache coherency when MSIs are disabled?
+> 
 
-The controller driver is deliberately using "renesas,rcar-gen5-pcie4"
-DT compatible string to discern R-Car X5H PCIe4 controller supported
-by this driver, from R-Car X5H PCIe6 controller which will most likely
-use a separate driver.
+No
 
-The R-Car X5H PCIe4 controller embeds HDMA instead of EDMA embedded
-in the R-Car Gen4 PCIe controller, "dw-edma" driver supports both
-DMA variants.
+> Since k3_pcie_msi_host_init() is only called if pci_msi_enabled() is true,
+> booting with pci=nomsi would skip this callback, silently skipping general
+> cache coherency initialization for the controller.
+> 
 
-Endpoint mode is currently not implemented for R-Car Gen5 PCIe4.
+The PCIe controller is broken as it does not support INTx in this driver.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczy≈Ñski" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 113 +++++++++++++++++++-
- 1 file changed, 111 insertions(+), 2 deletions(-)
+> > +
+> > +static const struct dw_pcie_host_ops k3_pcie_host_ops = {
+> > +	.init		= k3_pcie_init,
+> > +	.deinit		= k1_pcie_deinit,
+> 
+> [Severity: High]
+> Can reusing k1_pcie_deinit() prevent PERST# assertion on teardown?
+> 
+> During initialization, k3_pcie_init() bypasses the K1 mechanism by setting
+> PCIE_IGNORE_PERSTN in PCIE_CONTROL_LOGIC. Since k1_pcie_deinit() attempts to
+> toggle PCIE_RC_PERST, won't the K3 hardware ignore it?
+> 
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 186eedb33c27d..55c40424937c1 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -19,6 +19,7 @@
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/pci.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
- #include <linux/reset.h>
-@@ -36,6 +37,7 @@
- 
- /* MSI Capability */
- #define MSICAP0			0x0050
-+#define MSICAP0_MMESCAP_MASK	GENMASK(19, 17)
- #define MSICAP0_MSIE		BIT(16)
- 
- /* PCIe Interrupt Status 0 */
-@@ -74,6 +76,11 @@
- #define PCIEPWRMNGCTRL		0x0070
- #define APP_CLK_REQ_N		BIT(11)
- #define APP_CLK_PM_EN		BIT(10)
-+#define APP_READY_ENTR_L23	BIT(6)
-+#define APP_REQ_ENTR_L1		BIT(5)
-+
-+/* PCI Express capability */
-+#define EXPCAP(x)		(0x0070 + (x))
- 
- #define RCAR_NUM_SPEED_CHANGE_RETRIES	10
- #define RCAR_MAX_LINK_SPEED		4
-@@ -97,6 +104,7 @@ struct rcar_gen4_pcie {
- 	struct dw_pcie dw;
- 	void __iomem *base;
- 	void __iomem *phy_base;
-+	struct phy *phy;
- 	struct platform_device *pdev;
- 	struct reset_control *perst;
- 	const struct rcar_gen4_pcie_drvdata *drvdata;
-@@ -169,6 +177,35 @@ static int rcar_gen4_pcie_speed_control(struct rcar_gen4_pcie *rcar)
- 	return 0;
- }
- 
-+static int rcar_gen5_pcie_speed_control(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+	u32 lnkcap = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCAP));
-+	u32 lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
-+	u32 val, retries;
-+
-+	if ((lnksta & PCI_EXP_LNKSTA_CLS) == (lnkcap & PCI_EXP_LNKCAP_SLS))
-+		return 0;
-+
-+	/* Retrain link */
-+	val = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCTL));
-+	val |= PCI_EXP_LNKCTL_RL;
-+	dw_pcie_writel_dbi(dw, EXPCAP(PCI_EXP_LNKCTL), val);
-+
-+	/* Wait for link retrain */
-+	for (retries = 0; retries <= 10; retries++) {
-+		lnksta = dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
-+
-+		/* Check retrain flag */
-+		if (!(lnksta & PCI_EXP_LNKSTA_LT))
-+			break;
-+
-+		usleep_range(1000, 1100);
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Enable LTSSM of this controller and manually initiate the speed change.
-  * Always return 0.
-@@ -304,8 +341,11 @@ static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
- 	struct reset_control *perst;
- 
- 	rcar->phy_base = devm_platform_ioremap_resource_byname(rcar->pdev, "phy");
--	if (IS_ERR(rcar->phy_base))
--		return PTR_ERR(rcar->phy_base);
-+	if (IS_ERR(rcar->phy_base)) {
-+		rcar->phy = devm_phy_get(dev, NULL);
-+		if (IS_ERR(rcar->phy))
-+			return PTR_ERR(rcar->phy);
-+	}
- 
- 	rcar->perst = NULL;
- 	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-@@ -731,6 +771,28 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
- 	return 0;
- }
- 
-+static int rcar_gen5_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
-+{
-+	u32 val;
-+
-+	val = readl(rcar->base + PCIERSTCTRL1);
-+	if (enable) {
-+		val |= APP_LTSSM_ENABLE;
-+		val &= ~APP_HOLD_PHY_RST;
-+	} else {
-+		val &= ~APP_LTSSM_ENABLE;
-+		val |= APP_HOLD_PHY_RST;
-+	}
-+	writel(val, rcar->base + PCIERSTCTRL1);
-+
-+	if (enable)
-+		phy_power_on(rcar->phy);
-+	else
-+		phy_power_off(rcar->phy);
-+
-+	return 0;
-+}
-+
- static int rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
- {
- 	struct dw_pcie *dw = &rcar->dw;
-@@ -749,6 +811,42 @@ static int rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
- 	return 0;
- }
- 
-+static int rcar_gen5_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+	int ret;
-+	u32 val;
-+
-+	ret = phy_set_mode(rcar->phy, PHY_MODE_PCIE);
-+	if (ret)
-+		return ret;
-+
-+	ret = phy_init(rcar->phy);
-+	if (ret)
-+		return ret;
-+
-+	dw_pcie_dbi_ro_wr_en(dw);
-+
-+	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-+	val &= ~PORT_LANE_SKEW_INSERT_MASK;
-+	if (dw->num_lanes < 8)
-+		val |= BIT(6);
-+	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
-+
-+	val = dw_pcie_readl_dbi(dw, MSICAP0);
-+	FIELD_MODIFY(MSICAP0_MMESCAP_MASK, &val, 4);
-+	dw_pcie_writel_dbi(dw, MSICAP0, val);
-+
-+	dw_pcie_dbi_ro_wr_dis(dw);
-+
-+	val = readl(rcar->base + PCIEPWRMNGCTRL);
-+	val |= APP_CLK_REQ_N | APP_CLK_PM_EN |
-+	       APP_READY_ENTR_L23 | APP_REQ_ENTR_L1;
-+	writel(val, rcar->base + PCIEPWRMNGCTRL);
-+
-+	return 0;
-+}
-+
- static void rcar_gen4_pcie_phy_reg_update_bits(struct rcar_gen4_pcie *rcar,
- 					       u32 offset, u32 mask, u32 val)
- {
-@@ -925,6 +1023,13 @@ static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie_ep = {
- 	.mode = DW_PCIE_EP_TYPE,
- };
- 
-+static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen5_pcie = {
-+	.additional_common_init = rcar_gen5_pcie_additional_common_init,
-+	.ltssm_control = rcar_gen5_pcie_ltssm_control,
-+	.speed_control = rcar_gen5_pcie_speed_control,
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
- static const struct of_device_id rcar_gen4_pcie_of_match[] = {
- 	{
- 		.compatible = "renesas,r8a779f0-pcie",
-@@ -942,6 +1047,10 @@ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
- 		.compatible = "renesas,rcar-gen4-pcie-ep",
- 		.data = &drvdata_rcar_gen4_pcie_ep,
- 	},
-+	{
-+		.compatible = "renesas,rcar-gen5-pcie4",
-+		.data = &drvdata_rcar_gen5_pcie,
-+	},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
--- 
-2.53.0
+The K3 has handled this properly. You should treat the K3 and K1
+ totally differently.
 
+> > +	.msi_init	= k3_pcie_msi_host_init,
+> > +};
+> > +
+> > +static const struct dw_pcie_ops k3_pcie_ops = {
+> > +	.link_up	= k1_pcie_link_up,
+> > +	.start_link	= k1_pcie_start_link,
+> > +	.stop_link	= k1_pcie_stop_link,
+> > +};
+> > +
+> > +static void k3_pcie_clear_irq_status(struct k1_pcie *k1,
+> > +				     u32 *status0, u32 *status1, u32 *status2)
+> > +{
+> > +	*status0 = readl_relaxed(k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
+> > +	*status1 = readl_relaxed(k1->link + INTR_STATUS);
+> > +	*status2 = readl_relaxed(k1->link + K3_ADDR_INTR_STATUS1);
+> 
+> [Severity: High]
+> Could this read unclocked MMIO memory and trigger a synchronous bus abort?
+> 
+
+No, it is possible to access.
+
+> In k1_pcie_probe(), data->parse_port() is called before dw_pcie_host_init():
+> 
+> k1_pcie_probe() {
+>     ...
+>     ret = data->parse_port(k1);
+>     ...
+>     ret = dw_pcie_host_init(&k1->pci.pp);
+> }
+> 
+> This means k3_pcie_parse_port() and k3_pcie_clear_irq_status() are executed
+> before the required hardware clocks are enabled, accessing hardware registers
+> while their backing clocks are gated.
+> 
+> -- 
+> Sashiko AI review ∑ https://sashiko.dev/#/patchset/20260703020003.485436-1-inochiama@gmail.com?part=6
