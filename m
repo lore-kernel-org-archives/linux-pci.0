@@ -1,205 +1,182 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021095.outbound.protection.outlook.com [52.101.95.95])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7AF72FE071;
-	Sun,  5 Jul 2026 16:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.95
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783269909; cv=fail; b=Q+HMmyCybR610Gw6/VexDtSUGh+MQM3D4qgq9kw3BEP+C9XE24F5CUnRq0/9hsDPofJSxZGOkB2t2n2oKsjix3ApH2yqEC4zLd8lwZEvKANGdQun3SaRPflFoaIkqoeobRFNPVXVlYCF0ojNyI7APGftkgGzDxFkAgKQAAz5SzE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783269909; c=relaxed/simple;
-	bh=rqGf6nJ0fEVcmtr4+GEUj1i5pIF7PGqQcnrus6yaoB8=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=cbylde8n0yBBOiNfFzwdmqBJp5mShvmSLpCD0xo8SdOiL5Xpiqh5yH2hRww5GQz7ha4X2ePqDBclt3kacWLe1e3k9qfAiCQ97G3fFPzZdBTgKT4pIbz0ygnC4w04SN5juuJ1hQhXs3eCYjlnAO/u3BWlQayTv06ays2qAFVToOM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=lnX6bjPk; arc=fail smtp.client-ip=52.101.95.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0ED1F4C96;
+	Sun,  5 Jul 2026 17:11:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783271508; cv=none; b=cno2NhfSW7FZGqi0UORqPnM1ATFAxpmXPaLnztggCWu+1H4DWvzCcRpYip6uRl2e/ghQPGn8BkRt+UD0VN1B4a3+NkPhtgKp8ShicVpI4yCU+BSmpjkKEk5ekKWkh+Gi/XKNZdgxdZu8v+tATopLLVgH0g20cYZ76eAU3lIGwIc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783271508; c=relaxed/simple;
+	bh=T2lhnNdkV4SpN9Uczb+KgNsko4p+UMaKpgAbeG7OU8g=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=L7KkuUu+u66x0YWlVuMoq1DsHnkEfgk9itaWxZbKAgO9DnGv6K6Co8lBOi2ZEhf68Y9LJ+azXoUhkVtravRS762dJiQtToMY5L2PdT4trLWqz2w06YinmIxoilWbvR7r0K68nRkoe0aEHVDU9iAwbswvr/7rFpF8z8Pr/0vPIx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KFPFwn2P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="lnX6bjPk"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=whg7R14qc0jI9T+oCz2muwPeNL7v/Baetutg9ZPrnMhCtsUd7CXWWuTywpNqK0axmwrckESU9Nd9Ecnz54CV3qOgDucOMpUvg/zc7Hp8QGwXaX0kdcXQnbiQUUJAoCHS1kAm5KZNHl4iLdu0sGUjkgym1V+mSAWhIGbsp2RivChRRcV21oLMBQq2pjouNKG8uYRD2JQkUIG7yVJpmixJd4VcKvp3Mzlei860+2cBf2FkRO2XbJemYV3kC0KYOyUlpeX0QxLrjwM3gwkue9xD3UTOLjiJ8vXt/Nq+7A1cl7qtbF1IsdGb7iU3NR4FEE8JgRp6NqBUjzuc2UuOjB7G8g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=l8Sdi+Mjyw7Bgzq7oGaLUd1mt6x4rF27k9S4N9IJzSQ=;
- b=NESekU8p4q0hLsBp2JfXVuB8T2iW3MivC8xD/x7495dd1nnHZPeYUUWZjcEwOIPPZLLOWHKp1wTzb4QBEulb+Ep+/zDkTcjlnTq0u8l0XbZJzZOwE5U6BbPCpycvHk568xHnvfAKO4q9+6zcBog5RWWE1DH5nAO6mw4AnPFQfhYlft0n1jyZwU4KQlUc5UypZseEyiVeSOMZ3LUcm/lpTQjoAFm6E/6iQy5kYrY4Ex2Je3HvZ51h+F5Dq47vrquLqn7EXb2Y+Gy8hYTzarPuj92IAy/vXH0YWqYLgWGs2IkgkQX0ION4LiwviHwn90Ln0JM7H9j3viFxY6dk1MYdrA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l8Sdi+Mjyw7Bgzq7oGaLUd1mt6x4rF27k9S4N9IJzSQ=;
- b=lnX6bjPkLyV5fTFbtwD5/dXfYCxW1CWWi/DvaOOKZjunvRLxnwoxIL0gp0Hw1PXXgaeoVA4HIcTtgDieN6sk7P97HO781iSoOocEup9GcqNuSl+D+AvBuQpqIIexUbNa7zuu9C8jYr7xun+Kl4E3JN7Bw61jm3GEDS3GBfS1f/I=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO7P265MB7479.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:41b::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Sun, 5 Jul
- 2026 16:45:04 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0181.008; Sun, 5 Jul 2026
- 16:45:04 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 05 Jul 2026 17:45:03 +0100
-Message-Id: <DJQSF84B204K.3KVYKIRG35SY3@garyguo.net>
-Subject: Re: [PATCH v5 02/20] rust: io: add missing safety requirement in
- `IoCapable` methods
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Gary Guo" <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
- "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
- <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
- <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pwm@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-2-d0961471ae50@garyguo.net>
- <DJOLKP1V1IDU.1GWHOHBG9CS7@nvidia.com>
- <DJOXUW6ODKCI.1GLNDU00TDJWU@garyguo.net>
- <DJOYL5QPEM76.1N99BVDVHB8VS@nvidia.com>
- <DJOZFG9XDNYV.1Z0BXKIODDTAF@garyguo.net>
- <DJQOWA2VOJ3G.2YGSYJGK7HPBJ@nvidia.com>
-In-Reply-To: <DJQOWA2VOJ3G.2YGSYJGK7HPBJ@nvidia.com>
-X-ClientProxiedBy: LO4P265CA0068.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2af::22) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KFPFwn2P"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1DE66C2BCB8;
+	Sun,  5 Jul 2026 17:11:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1783271508;
+	bh=T2lhnNdkV4SpN9Uczb+KgNsko4p+UMaKpgAbeG7OU8g=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=KFPFwn2PXRi/EBw7e8pZ15X03rIbemVRROt0qP4aSCEGuwJh8AQS4xn5gGpAFMpnU
+	 z5VUWbOyu9273e2pO4SpAedbDVKMeGCxBWlFiCbcIQALy8JS1Gixj/U9CC9uXhJyOh
+	 vDzUFU5gQDB2cG/LwlhwXkHn51KpRW+7t/oYHJww3Hu5QJEyb7M4DUeR4NV9X0huaV
+	 9BR3xhWUmgUNYsB83dyWALAxa9XppsyfariMnFi3HeRnNJMWXobCECFXlovJpX7dvQ
+	 iXV7OuDWvo67iTq82y+BLSS6dflZzOl5Ib16YpVdCt/4bvLuPGney6bbz9JKoI24Vd
+	 vqbpelPK0tivA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B65C43458;
+	Sun,  5 Jul 2026 17:11:48 +0000 (UTC)
+From: Liz Fong-Jones via B4 Relay <devnull+lizf.honeycomb.io@kernel.org>
+Date: Sun, 05 Jul 2026 10:11:43 -0700
+Subject: [PATCH] PCI: Fix BAR resize for devices on a root bus
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO7P265MB7479:EE_
-X-MS-Office365-Filtering-Correlation-Id: 861e1c19-e0af-477e-4c92-08dedab4c35c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|7416014|10070799003|1800799024|366016|4143699003|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	EZ77z2F866ilvDrW9Tb9xCYy5y9eZJiaHJcXN7lsQWVejHg+zcxoCl1Z+D+HsB9FfoWKY2YlKj3Vf4JHnCfY4tCATFVG1LfLTxzGUm9svcrvW4CxF7BmSUwRtHD+dDXv8WXLfUaRfziwrCrGyDZjHPg9PzsHGxjjYilRVjxDk1EKudFa9bnexaudF/bCBM0ltktiH/lkpZyNmmP8yiSbmjTF+my+d/Z0j0z/ddDZ2s+67APwlUHhPXed5grXbCNqQOK+h/UFpqsGNlxkxVxd/C3IzlYMFKCG8BSOI55XqzwDLwzmUI1BxP+guwwyVYWOIDrn2iwioTRgxBOB3kTKeHZSF1nV5BQrzmDl534zNqUD3PbQwQV4nenYCQLGW0CXIuR5MhlCVJPrpGK9mu5ltYwbftCRXL2MQSFHHsY9QciOqW6B8g2ofHrTV+9xX/tMGKFLhkddk2uNCxvS+8nWrZZ2vH9eZg7paoBPaM4lv/spUwC/IlDj/z3P7nDJ2oIXUXU1RiDEpFr1sAVXkdtARBneMXn0jaskISZ/R3Y69WFlbq4eN075fiSNXxXHS0ZFWlr89CpDQf5A4PX1ZiCg04Qy3zwqBas0WaXxWAutyng=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(10070799003)(1800799024)(366016)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?SlZwcUxQTEtaN1M2Q1pqK00weStRMWk5TXE2OEJNcjlhSjhQc3BRb0x1Nzlt?=
- =?utf-8?B?WkdnVWREOURzT2tXeUNTV2hjTDJmZ2VYaWFtSFptVG9rZ3JJWGQ1Q3FFdWlR?=
- =?utf-8?B?NlBVZ3ZhU2c2ZGI2SWdMQ2VrRnV5MVRPTE5MK2JDdGNTd2JtZ2RpQTZzVWZ3?=
- =?utf-8?B?T2JPYWtXN2JCWFlJQlB1akNDU2x0amF0STZLOVIxTlNUeTRCZXAra0NPK1Yx?=
- =?utf-8?B?TDczYm0vM0syNkp5eTJSdFBQb2lDSlpCa2FMRFR2aE9CakhVQXdmb2krZUlX?=
- =?utf-8?B?U3FQVDVrY2RPYUtvUEFRcVUyZ2NuNVV1OEpqZjgrYXJqYWh6NzVja0hlTnoy?=
- =?utf-8?B?cERyTlhBYlF3M0dubWFNUWZLaHlXRWIxZWFpdmJlQU9lYVhpakhkVUJDU3ZZ?=
- =?utf-8?B?ZU12KzMzV0dZRUg1d01ETXE1VW0xaVdFdXpKcVcyc0dvakd3T0FtZ1ZEODNz?=
- =?utf-8?B?Zm5JTDZGendPT29XWjdsY0RhYWVWSWxla29aN1Z6MlRiQjNsd1REMC9ES252?=
- =?utf-8?B?Y1hzdDU2bmJkM0xQNGd5bHdKMk5Ld2pKeXRZVU5TM2pHelV2LytmS1k3S3BT?=
- =?utf-8?B?dmgwajdVVThsUFlQZU1pS3dOSE1Va0NYWHBQTXRIdGdiZklqcnE0bEVUWGVI?=
- =?utf-8?B?SEtWUUJRdStBRXdMTHJXblRxRFQ0bEdMRWNTTklWUjF3MHpMbFU0VURnTVRE?=
- =?utf-8?B?WTZ0K0pwK053ZmFVYnNzVkdDdERJa3diRW5pRlMrd05lWGhUNGVZRFRWcGp6?=
- =?utf-8?B?VWtVSCtNcEdlS3VuU2lIZWRXdlYvanBHUVZWVENQTmU2bkVJc21IbkxXQUMx?=
- =?utf-8?B?QzBCQzBJZ2pDYzhlOGtqMW5ldTZ0bjFHODhHN2psczh1WFpVMlpiSUUxMTlq?=
- =?utf-8?B?cVFtbWlaSjZ4b2c1NWVPVUlPRVIwdm1kenpjTDhwd1lvNDRza2pkc0kzajBT?=
- =?utf-8?B?MFo5VktxQlJLOUQrdjFPbFFGZU9xRUN4aC9xUTdCSzc0ckZuN3NnQy9qZktm?=
- =?utf-8?B?RXZCZWRuRGxvbWtkT2NLMVhhR1JOdHBHclJMVUxRdUd4a1llclRZeTFmMkFa?=
- =?utf-8?B?VU9IUkNhcC8zc2kyRjk3ZW53aXMveTE5NDZFQkEramdscTBvMDlnK05vMm1K?=
- =?utf-8?B?dExRQnRlKzlaRDFlWVR3cGphZVF1dTJwcmZaZ29OK3RCV2YxWkp0TWlsOEpG?=
- =?utf-8?B?YzlYZWMyUW1GTW5qUW41cWJrdjFZVjBTM1UydXFuM1RkNU94czBlTmd4Y1h3?=
- =?utf-8?B?VWhTdDlmVHFkNEluY2RXZXRvaWV1M0daaGhpZTVtWjVkL1p0OEtxa3gzQVAw?=
- =?utf-8?B?VTczSUp1V2Q0VlBpNmp6ZDNJVGVvS052cUc1Nk5tZGUxOGoxSUh4eEJjNkQ4?=
- =?utf-8?B?NEFOcnhUZkUrZkozVk03dnpxRnI3UHV1ZFI4bTNrMWovYXZ2cGtHSmplS1RI?=
- =?utf-8?B?anBjOE9NTTNIZUhwaXBqdWlGMGZmTEIwbEE0cjdTQjNzVU1vS2dRQmsyOVQ2?=
- =?utf-8?B?eEttU1pMMlp3aGVQOUtja1AxY3ppSjFMWkRuT2Z0TzdPRVVxMENPOGJHOVhn?=
- =?utf-8?B?RXdqdE83ZkdqaVRzWS9JV1V3Z3phaGxTVXZQTTFIYitwa1hGYzJWOXV2L09S?=
- =?utf-8?B?bHV2YklwZ3NIOXplbXlMUTlVb3NyeDliak1IcDdiaWx1a00yR0J4ZEdIQ1Bm?=
- =?utf-8?B?ZEVuS2NKK2VMamVLMWw2dWQ4Ui9HL3Z2a01VMmJ4Q2ZYWVBhd3gxbTFLdlU2?=
- =?utf-8?B?TXhMS2hLS1g2TjhoS2cwdEpDeG55UDlzVjFwS3ZYamNabWlJMjN3ekFuTUZI?=
- =?utf-8?B?RFhiZGhyRDUwQ2k4OUFyK3h6aTYxdExnUmZtelJqQXpib0FiRTBHSnFGanVy?=
- =?utf-8?B?eXJmdWR3c2lyU2lUejhUS21QRlhrMG84YmlpY1JaSFBiWE10SktQT2djL1lR?=
- =?utf-8?B?ZVRncVNkVy95MzRpaC8wK1RkY0h3R1FVcGxBYjhLUVd4SG1yaUJKN3BvZ3JI?=
- =?utf-8?B?Z0Q4TFFDZGJ2c1ZSWURZR3lsdFIvTm1JLzlIRGlQWUtTNDh5aE00d3dhL1Jo?=
- =?utf-8?B?cm9xTVRSdmhkVmJVNXh6c05UQ1ZDa0JtdmRBd0dNQXhlcjV6Z2pkWUZURHlC?=
- =?utf-8?B?cFQ0ZEY4UWRiTmRBQmVhR3M3NDB6Ung0ZW9VZ3RFWXdCTkNvalJOMTJuY0Mw?=
- =?utf-8?B?S0ljSjBURHVpS2JiVmFHZWFkaVJjYk5GaEttUEdHQnpjZ3Y5aG9icVdxOTJw?=
- =?utf-8?B?eXJTaGZjVHRwVU45WG9IQlJ5QXdiWlZHQjdyZlpRbk1ZSTVOVjdsdzdMSFRK?=
- =?utf-8?B?U1Q4Ui9zMnRSRlF6SzVMQ3VsY29rZW9oRUNNeGtzTmFYYVpQaG9GUT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 861e1c19-e0af-477e-4c92-08dedab4c35c
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jul 2026 16:45:04.0520
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ywR9br1V2Xz9CUURa2iMCr85snfXtjcROvkxKwqcvMRJRNgSV2ez9+ocyOOee+nRyWZELXQ8zsgs7niRSgMMlw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO7P265MB7479
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260705-pci-rebar-root-bus-v1-1-55df70cbdd88@honeycomb.io>
+X-B4-Tracking: v=1; b=H4sIAE6QSmoC/yXMQQqEMAxA0atI1gbaOih4FXFha6pxYSXRYUC8u
+ 3VcvsX/JygJk0JbnCD0ZeW0ZtiygDAP60TIYzY442rTmA9ugVHID4KS0o7+UIyVdVUka2JoIIe
+ bUOTff9r1r/XwC4X9OcF13R/1e3F2AAAA
+X-Change-ID: 20260704-pci-rebar-root-bus-f3123fe10fc7
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ regressions@lists.linux.dev, amd-gfx@lists.freedesktop.org, 
+ Jon Nettleton <jon@solid-run.com>, Jon Nettleton <jon.nettleton@gmail.com>, 
+ stable@vger.kernel.org, Liz Fong-Jones <lizf@honeycomb.io>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4287; i=lizf@honeycomb.io;
+ s=gpg; h=from:subject:message-id;
+ bh=WjhPR946S5kQ2MM+7TqB/nQbZuHdNxuSaUo3YEdJ1dU=;
+ b=owEBbQGS/pANAwAKAaXO1OOXra/CAcsmYgBqSpBT2VQkT7xS0DBT4bFs/PNduIzCpXSUdbhlx
+ +BUdSUWfm+JATMEAAEKAB0WIQSfW1LPQ0gyJmoTHwelztTjl62vwgUCakqQUwAKCRClztTjl62v
+ wuU9B/43wnUMX1r7OFzOUOLhs7jAFwO76sMfFglIIx4+jiZsAeECwbTO6vJ/B7uxJqWNBjoDBU5
+ +qBnydr+Zy8aNRAgrClef7W2QitCPB9JyGuOSMQn6nlhA/9LSJvt2shilGGo28Ekw8JbeRehZE3
+ YfEAbYPDNj6y66wpKdNAANSXa+Saj4YnmX5piKeTE2qv+qJwpMy7HZ69ov+iOg2lzmwHkjhTj9l
+ TRcjq86rbWran3ghttXJsjZ77jyY2Iw22zBQfFrlX6QV/4purUnKtLqcQ0Wih9PW7OZ5veO0vYG
+ QM53tH07CgWLmOwRFMHiVToYw4a/ZvH3h0+/9gm3H3ssJXYV
+X-Developer-Key: i=lizf@honeycomb.io; a=openpgp;
+ fpr=1F7714D7EC3441D2CECC24606A3F8B00FBDDD2A4
+X-Endpoint-Received: by B4 Relay for lizf@honeycomb.io/gpg with auth_id=854
+X-Original-From: Liz Fong-Jones <lizf@honeycomb.io>
+Reply-To: lizf@honeycomb.io
 
-On Sun Jul 5, 2026 at 2:59 PM BST, Alexandre Courbot wrote:
-> On Fri Jul 3, 2026 at 10:49 PM JST, Gary Guo wrote:
->> On Fri Jul 3, 2026 at 2:09 PM BST, Alexandre Courbot wrote:
->>> On Fri Jul 3, 2026 at 9:35 PM JST, Gary Guo wrote:
->>>> On Fri Jul 3, 2026 at 3:57 AM BST, Alexandre Courbot wrote:
->>>>> On Fri Jun 26, 2026 at 11:45 PM JST, Gary Guo wrote:
->>>>> <...>
->>>>>> @@ -309,7 +312,11 @@ pub trait Io {
->>>>>>      // Always inline to optimize out error path of `build_assert`.
->>>>>>      #[inline(always)]
->>>>>>      fn io_addr_assert<U>(&self, offset: usize) -> usize {
->>>>>> -        build_assert!(offset_valid::<U>(offset, Self::Target::MIN_S=
-IZE));
->>>>>> +        // We cannot check alignment with `offset_valid` using `sel=
-f.addr()`. So set 0 for it and
->>>>>> +        // ensure alignment by checking that the alignment of `U` i=
-s smaller or equal to the
->>>>>> +        // alignment of `Self::Target`.
->>>>>> +        const_assert!(Alignment::of::<U>().as_usize() <=3D Self::Ta=
-rget::MIN_ALIGN.as_usize());
->>>>>
->>>>> With `Region::MIN_ALIGN` being `4`, my understanding is that this wil=
-l
->>>>> make `read64` and other infallible 64-bit accessors unusable on untyp=
-ed
->>>>> I/O regions?
->>>>
->>>> That's correct.
->>>
->>> Isn't that a limitation we may want to eventually address? The fallible
->>> accessors are still usable, but it seems arbitrary that the non-fallibl=
-e
->>> ones stop at 32 bits...
->>
->> It'd probably be solved by having typed regions. 32-bit is the most comm=
-on
->> alignment for I/O memory, so that's chosen.
->>
->> None of the existing Rust drivers require 64-bit accessors yet.
->
-> Mmm I'd like to see whether we can't make it work for untyped regions as
-> well, but since we don't have many users (nor do we expect many to come
-> I guess) this can be a follow-up.
->
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+From: Liz Fong-Jones <lizf@honeycomb.io>
 
-See https://rust-for-linux.zulipchat.com/#narrow/channel/288089-General/top=
-ic/Generic.20I.2FO.20backends/near/601402429
+pci_do_resource_release_and_resize() releases the device BARs that
+share a bridge window with the BAR being resized, but when the device
+sits directly on a root bus (pdev->bus->self == NULL) it then skips
+resource assignment entirely and returns success, leaving the BARs it
+just released unassigned (IORESOURCE_UNSET).
 
-However, I'd prefer we eventually use typed regions.
+Skipping pbus_reassign_bridge_resources() is correct in that case --
+there is no bridge window to adjust -- but the device BARs still have
+to be reassigned. Before the BAR release was consolidated into the PCI
+core, this case worked for amdgpu because the driver released the BARs
+itself and then called pci_assign_unassigned_bus_resources()
+unconditionally after the resize, which assigns unassigned device BARs
+also on a root bus. Commit db92e3fef53e ("drm/amdgpu: Remove driver
+side BAR release before resize") removed that call, so nothing assigns
+the released BARs anymore.
 
-Best,
-Gary
+This breaks amdgpu completely on the SolidRun HoneyComb LX2 (NXP
+LX2160A, arm64, ACPI), where the GPU endpoint is enumerated directly
+on the root bus of its segment (there is no root port device, so
+pdev->bus->self is NULL):
+
+  amdgpu 0004:01:00.0: BAR 0 [mem 0xa400000000-0xa40fffffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: BAR 2 [mem 0xa410000000-0xa4101fffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: sw_init of IP block <gmc_v8_0> failed -19
+  amdgpu 0004:01:00.0: amdgpu_device_ip_init failed
+  amdgpu 0004:01:00.0: Fatal error during GPU init
+
+No error is logged because the resize path reports success; amdgpu
+then finds BAR0 IORESOURCE_UNSET and bails out with -ENODEV.
+
+Assign the released BARs directly from the root bus windows when there
+is no upstream bridge. On failure, roll back through the existing
+restore path exactly as in the bridged case.
+
+The root bus path also had a locking bug that any fix here necessarily
+touches: the old "goto out" jumped to up_read(&pci_bus_sem) without a
+matching down_read() (as does the "goto restore" taken when
+pci_dev_res_add_to_list() fails in the release loop). Take pci_bus_sem
+before the BAR release loop so every path through the function holds
+it exactly once.
+
+Fixes: 337b1b566db0 ("PCI: Fix restoring BARs on BAR resize rollback path")
+Cc: stable@vger.kernel.org # v6.19+
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
+#regzbot introduced: 337b1b566db0
+
+Observed at runtime on Ubuntu's linux-hwe-7.0 (7.0.0-14, broken) vs
+linux-hwe-6.17 (working), but nothing here is distro-specific: Ubuntu
+carries this code unmodified, and the affected function is identical
+to current mainline. By source inspection the regression window is
+v6.18 (old code paths) to v6.19 (consolidation). Workaround for
+affected users: amdgpu.rebar=0.
+---
+ drivers/pci/setup-bus.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c0a949f2c995..9db1951f6e5c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2397,6 +2397,8 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 	if (ret)
+ 		return ret;
+ 
++	down_read(&pci_bus_sem);
++
+ 	pci_dev_for_each_resource(pdev, r, i) {
+ 		if (i >= PCI_BRIDGE_RESOURCES)
+ 			break;
+@@ -2415,13 +2417,24 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 
+ 	pci_resize_resource_set_size(pdev, resno, size);
+ 
+-	if (!bus->self)
+-		goto out;
++	if (bus->self) {
++		ret = pbus_reassign_bridge_resources(bus, res, &saved);
++		if (ret)
++			goto restore;
++	} else {
++		/*
++		 * A device on a root bus has no bridge windows to adjust.
++		 * Assign the BARs released above directly from the root bus
++		 * windows.
++		 */
++		list_for_each_entry(dev_res, &saved, list) {
++			i = pci_resource_num(pdev, dev_res->res);
+ 
+-	down_read(&pci_bus_sem);
+-	ret = pbus_reassign_bridge_resources(bus, res, &saved);
+-	if (ret)
+-		goto restore;
++			ret = pci_assign_resource(pdev, i);
++			if (ret)
++				goto restore;
++		}
++	}
+ 
+ out:
+ 	up_read(&pci_bus_sem);
+
+---
+base-commit: 7404ce51637231382873d0b55edabc2f3b841a9d
+change-id: 20260704-pci-rebar-root-bus-f3123fe10fc7
+
+Best regards,
+--  
+Liz Fong-Jones <lizf@honeycomb.io>
+
+
