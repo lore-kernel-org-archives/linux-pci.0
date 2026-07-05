@@ -1,137 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 426912FE56E
-	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:26:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FB8370D54
+	for <linux-pci@vger.kernel.org>; Sun,  5 Jul 2026 22:28:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783290394; cv=none; b=nAPlsSHHT1sUgd15rHWl3pBfbdha6UTZ54TXucaG0hYATEhalrkqVOu7NP+zTmuI3jI/mP8SnqVa2N4qpWRhxmp8dVKjUqSahm2ljfikF3erz6P1tQCvfq69jy2QLmQs0L0MpqZeA8Am8mhSr7cIV9hD7u3o7TSueprwUAKLgNU=
+	t=1783290506; cv=none; b=efHaLd2z4cuhDEXGMd8JXovVmBGhU55GcYfvA8wxuRgSxGKohpy+VtPyZBq3LWTtq5INXvpk4i99TnWqrVekoq0LFHMfkLjashj8pa2pnYjLK13p4+baz3UYtP0KE5dgOjApDjQxpUJXYPcqBxx/r9/crenTwiY+luKYRmXFkag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783290394; c=relaxed/simple;
-	bh=deX7ZzVbrTZwObIIUQ1PC6h5R5oIOvkqagyKGHutJas=;
+	s=arc-20240116; t=1783290506; c=relaxed/simple;
+	bh=XVtJ5dGybOsgTqYw1DooCZyJIzwXn2iNNSIQPP3fecA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Pr82PKDXlh3Z+xoXXd9YsRK+xj4cqC4cUsdA1Rm5vQ81YiEv34JxgVOGPq3v9dDPD6thUImY3ZgYeqt4gmTC4G7WhZxY3ylJq7MK6+V23C9KliAB5A2KVXbLwjnokwqG//XyHyWIdslBCsBkLY9jSQS6PIGmQNsRbl8lW+pGvcw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BhmbHlQO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aROP8LWG1FX7oD+r+dAigE2QUH+4YJM9LNpMElHihBkLg83WBc91PZN/VBM4JA84hDl5a55niODooNQoe627q67iCClvGlKqfpW34Fj5YXf9vb7GSdcdaBgvKYGwroWm3LlCKo0xgi+Li9YNYj3Ajsorm3ge6FhOHODrNbIOO4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UsfJr6CJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BhmbHlQO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F320B1F000E9;
-	Sun,  5 Jul 2026 22:26:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UsfJr6CJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4BA41F000E9;
+	Sun,  5 Jul 2026 22:28:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783290393;
-	bh=AYpykJWM3k+F8o+12cMIs3YEON0qd+Nxmb2Be3cw2Yo=;
+	s=k20260515; t=1783290504;
+	bh=Bqx5rbSc2dqxWJf5WcZMsGSBzgaFueEu3lTmwz4lwew=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BhmbHlQOeObvFI8NSQY6xMkH8B6knc6iFJebdmx+AZ65Hp+1tAhwS8U/UrgHL26xU
-	 XGUj4JVyT5JKAf9rmurPdBxK2+vvGMU2uwrO94RUSbeOEvyIkVoSto/nksZ5Bl5uHk
-	 7sCLrrRRFpbXqDftlahX057P32o6ItjFF6oL1AjZHA7MnMMCzQhe95MNfUghOejPSD
-	 irozxZs986faJwrrf/L9hss135JsK7brkCSEjWEiwt/xxg4bo2z4ITKno45ZDHmCYl
-	 RFsmzKa5pQ1Ra79dsbyOrJeygbm5rnpg2BV3HqGMvNARhWUMtYjjaBNO881bAFzkHH
-	 2FNB41upqLlbQ==
+	b=UsfJr6CJsj4LzDE9pmK6aNHTbdPS+EUsSlvDgm+Jz0hl+k/pz+JOHH56bdyu45cph
+	 Np0l0arRlXWLWiXxWB3Os9BuOzIjBYuD9D9eQdz4pufvYRo+W5LBlZeOQABGaLjPkb
+	 +Q8PhA3dqiU5f+W+5vcdER8U4fRbzI8X/w4I7p8QP/rptpt97TdBya7YRbN+1tYFYP
+	 s/3jCSv2YvkBETPm1H3b4SlgtlnXbgvO8c55ni42FHfGCPjEI8B0pg/iEa2zkSK3qz
+	 froiVi5S2sEFa5Q7zlGom/qfpXil8vHuC0O7AXFKFCXl4l+RG8WzaX9P79zUctkBaQ
+	 blfsviuJSRz8A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/15] device core: Add "device evidence" 'validate'
- command
+Subject: Re: [PATCH 13/15] PCI, device core: Add private memory access for
+ DEVICE_TRUST_TCB
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dan Williams" <djbw@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260705220819.2472765-6-djbw@kernel.org>
+In-Reply-To: <20260705220819.2472765-14-djbw@kernel.org>
 References: <20260705220819.2472765-1-djbw@kernel.org>
- <20260705220819.2472765-6-djbw@kernel.org>
+ <20260705220819.2472765-14-djbw@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 05 Jul 2026 22:26:32 +0000
-Message-Id: <20260705222632.F320B1F000E9@smtp.kernel.org>
+Date: Sun, 05 Jul 2026 22:28:24 +0000
+Message-Id: <20260705222824.C4BA41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] Holding the global `device_evidence_lock` across the provider's =
-`evidence_read_begin()` callback blocks system-wide operations and causes g=
-lobal lock contention.
+- [High] Missing pci_tsm_disable_dma() in pci_dma_configure() error path an=
+d pci_dma_cleanup() to revoke TCB DMA access.
+- [Low] Invalid syntax in __must_hold attribute for pci_tsm_enable_dma and =
+pci_tsm_disable_dma.
 --
 
-commit e225a84deccb758c0117766e62b3f41123a9e5e3
+commit 02fe1d53a8bdd83c53510c3c6636b82d7cd34b02
 Author: Dan Williams <djbw@kernel.org>
 
-device core: Add "device evidence" 'validate' command
+PCI, device core: Add private memory access for DEVICE_TRUST_TCB
 
-When DMA is to be enabled for a PCI TDISP device, the CC VM passes a digest
-of the device evidence used to make the trust decision. This commit adds a
-validate command to require the CC VM to ack and not invalidate the evidence
-before the next DMA enable event.
+This commit introduces the DEVICE_TRUST_TCB trust level to allow devices
+within the Trusted Compute Boundary to access private memory. It updates
+the PCI DMA configuration to validate DMA access with a TSM driver when a
+device is TCB-trusted.
 
-> diff --git a/drivers/base/evidence.c b/drivers/base/evidence.c
-> --- a/drivers/base/evidence.c
-> +++ b/drivers/base/evidence.c
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f36778e62ac1a..e6a4bc3ca9b06 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
 
 [ ... ]
 
-> @@ -446,6 +446,48 @@ int device_evidence_nl_read_dumpit(struct sk_buff *s=
-kb,
->  	return device_evidence_read(skb, cb);
->  }
+> @@ -1688,16 +1690,21 @@ static int pci_dma_configure(struct device *dev)
+>  	 * the standard ACS capability but still support ACS via those
+>  	 * quirks.
+>  	 */
+> -	pci_enable_acs(to_pci_dev(dev));
+> -
+> -	pci_put_host_bridge_device(bridge);
+> +	pci_enable_acs(pdev);
 > =20
-> +int device_evidence_nl_validate_doit(struct sk_buff *skb,
-> +				     struct genl_info *info)
-> +{
-> +	const struct device_evidence_ops *ops;
-> +	struct device_evidence *evidence;
-> +	struct device_evidence_ctx _ctx;
-> +	u32 generation;
-> +	int rc;
+>  	/* @drv may not be valid when we're called from the IOMMU layer */
+> -	if (!ret && drv && !to_pci_driver(drv)->driver_managed_dma) {
+> +	if (ret || !drv)
+> +		return ret;
 > +
-> +	if (GENL_REQ_ATTR_CHECK(info, DEVICE_EVIDENCE_A_OBJECT_GENERATION)) {
-> +		NL_SET_ERR_MSG(info->extack, "missing evidence generation");
-> +		return -EINVAL;
-> +	}
-> +	generation =3D nla_get_u32(info->attrs[DEVICE_EVIDENCE_A_OBJECT_GENERAT=
-ION]);
+> +	if (device_tcb_trusted(dev))
+> +		ret =3D pci_tsm_enable_dma(pdev);
 > +
-> +	ACQUIRE(mutex_intr, lock)(&device_evidence_lock);
-> +	if ((rc =3D ACQUIRE_ERR(mutex_intr, &lock)))
-> +		return rc;
+> +	if (!ret && !to_pci_driver(drv)->driver_managed_dma)
+>  		ret =3D iommu_device_use_default_domain(dev);
+> -		if (ret)
+> -			arch_teardown_dma_ops(dev);
+> -	}
 > +
-> +	struct device_evidence_ctx *ctx __free(put_ctx) =3D
-> +		device_evidence_ctx_setup(info, &_ctx);
-> +	if (IS_ERR(ctx))
-> +		return PTR_ERR(ctx);
-> +
-> +	ops =3D ctx->subsys->ops;
-> +	evidence =3D ops->evidence_read_begin(ctx->dev);
+> +	/* undo {of,acpi}_dma_configure() */
+> +	if (ret)
+> +		arch_teardown_dma_ops(dev);
 
-[Severity: Medium]
-Will holding device_evidence_lock across the evidence_read_begin() callback
-cause global lock contention and system-wide stalls?
+[Severity: High]
+If iommu_device_use_default_domain() fails, does this error path need to
+call pci_tsm_disable_dma() to revoke the TCB DMA access granted above?
 
-If a slow hardware refresh operation starts on one device and acquires its
-per-device evidence lock, and a concurrent validate command on that same
-device blocks in evidence_read_begin() while holding the global
-device_evidence_lock:
+Also, when the device driver unbinds, should pci_dma_cleanup() be updated
+to call pci_tsm_disable_dma() as well?=20
 
-Device A (refresh):
-  acquires evidence->lock for write
-  (slow hardware communication)
+Without these cleanup calls, it appears the TSM could incorrectly maintain
+DMA authorization for a device even after a probe failure or driver unbind.
 
-Device A (validate):
-  device_evidence_nl_validate_doit()
-    acquires device_evidence_lock
-    evidence_read_begin()
-      blocks on evidence->lock
+[Severity: Low]
+On a related note regarding the TSM core API modified in this series, are
+the __must_hold() attributes in drivers/pci/tsm/core.c syntactically
+correct?
 
-It seems this would cause any concurrent read or validate commands on unrel=
-ated
-devices (like Device B) to block on the global device_evidence_lock until
-Device A's hardware operation completes.
+drivers/pci/tsm/core.c:pci_tsm_enable_dma() {
+    ...
+    int pci_tsm_enable_dma(struct pci_dev *pdev)
+        __must_hold(&pdev->dev->mutex)
 
-Could the global lock scope be reduced here to prevent this stall?
-
-> +	if (IS_ERR(evidence)) {
-> +		NL_SET_ERR_MSG(info->extack, "failed to acquire evidence context");
-> +		return PTR_ERR(evidence);
-> +	}
+Since dev is a nested struct within struct pci_dev, not a pointer,=20
+shouldn't this be &pdev->dev.mutex to avoid compiler errors? The same
+appears to apply to pci_tsm_disable_dma().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260705220819.2472=
-765-1-djbw@kernel.org?part=3D5
+765-1-djbw@kernel.org?part=3D13
