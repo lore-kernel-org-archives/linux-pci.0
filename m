@@ -1,126 +1,303 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBB873DDB1F
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:01:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766FD40A93E
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:02:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783342920; cv=none; b=QPi0XRxmLCdKVgiCsKgNT/7IqrDwacm08bP35plawCULQQ+9VK2yuF3x66OVJoyLK3jJ2inG8nQwfLYBb/pAMyJu4rYQrAOsrvvagPu81/tkgdMyDoPNKHBzlzhmML+rinEK7GLfn+S7/zkiemFACA6HAPnw++fL14Xc2SHdVbw=
+	t=1783342967; cv=none; b=vCyrMNzncuSQFEieSAKONKKkNkTc7nAtEgKfVgkLh3lKAqhC9b1a/LBE6wh6mcsg9DYsPXuaKl4BxuyBluc0g1eBTt/ISvX7HN9N5Uz80jT/FbrUFOJchv3yqVeuLsUBJelll85XkmIQs/NCoMpF0C4nr4kN7IgQV5NwQJ95cgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783342920; c=relaxed/simple;
-	bh=6y+MFKM8FK6FI6vAUyrQtaX8ybVsV3ndRJ9X7q7rkf8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oBuyvOLqNa6qdwRoDghIW/l4oe6tmx4A1qhXjssnt/Fh/C+PBcVA0YurlM7igK3WQpbdG9ycyaxJXu3IU1l5aQeXGuI45Abd8HVhfCWQ0oMF1780lc+QJCisU1nVzjO1Z4gODJP72JXBN1ed92DD1prua4Kcpa4fF+sFzdJ66Jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JnoeaQqn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783342967; c=relaxed/simple;
+	bh=fMTp2xfwkQn7K1hoJt/kMBwNz1OzRZZiv+QObT+EQNM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EJlU4espOVgdHzWX7l1lxPhbfbXTTRt54HUr/QQQaOMtUvIlKpLRgIgASXOXNyiH3EBLZwwQ9xLgV600HLfuWZLYJ2ennsVfAFqrFbaDoiajbFmw8dALTJzEo0FCrrbeuZFHRlsqVrxSmTQANZC/KHnYLGZOKcjoAy+JG1y7558=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=lYjFi9UB; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=B8z7QJ5j; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JnoeaQqn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FD0C1F00A3A;
-	Mon,  6 Jul 2026 13:01:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783342919;
-	bh=OGmcyP6BmS9wQc7/06ZhpmOGMu2PkE14odFg3emM7FI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JnoeaQqn4NU0cOna5olKzlDfV+nDyX5+m/u0/e1BC0uzXbtlE907X0k8vMDtl0ZwK
-	 e7S8ES0unCnuPEBXpWGuGaLaO6dfcqRZbzvbQbHF7OkNmsktF1kTwEREw7sa6ZIRSb
-	 Bpk5fI5n2C8RsnkK32u8VeaF8Oat4xAYGal1rD2MPSh/YwTK3XU3r+4NZ4AihV8FVb
-	 svb7pWRNeeRObm242nQqBwBRJSY1AIF/n4GqHt12KZhFtYIxVGHqma8vk1tjZaS8CC
-	 hXAKoCgldcQrZs+6yBzwzglVRJRvtlnfwJz8/h/jt4nM8SoymhCq3A4kpbHZODyAda
-	 DIThiuDh8jgIA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 14/20] rust: io: add I/O backend for system memory
- with volatile access
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, "Danilo
- Krummrich" <dakr@kernel.org>, ojeda@kernel.org
-In-Reply-To: <20260706-io_projection-v6-14-72cd5d055d54@garyguo.net>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-14-72cd5d055d54@garyguo.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 13:01:59 +0000
-Message-Id: <20260706130159.5FD0C1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="lYjFi9UB";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="B8z7QJ5j"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 666AxJIM369080
+	for <linux-pci@vger.kernel.org>; Mon, 6 Jul 2026 13:02:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=DVcCI9ZM81scdZz2xkffhcd3kgysZQhC81H
+	k7a0bKy0=; b=lYjFi9UBoJ9g748TnaGj99W5JrBgfv913uJTU2pf0ZbbXOD0CCZ
+	4kkpOyWp0eU4Z6NtioiBbH8WYZCW5x+/hEqYqqq2lXnjnxsc+9CRTh+XEyPANRp2
+	wYFyjstXYmNktU9P8vSoK1m7BthKGXA/9QPvmSXaDfQHhYvlPnp59YiICzavfZQ3
+	MeOnut/GFEEuuenQHjez6CNi4SxRajth2IIZVZkGGUi1iC8hjGCx/WZjwXfgLXeK
+	PtNTGxFK8XeMOApTUVC5pV8AF56nrMtkumB+gh4bHAN4x9pSQp28LmllntQM+yEP
+	0xy9+MgX/xnl045vnyQjybxgNyzfeEDozZw==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f88h995gk-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 13:02:44 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c8895156101so4511300a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 06:02:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1783342963; x=1783947763; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=DVcCI9ZM81scdZz2xkffhcd3kgysZQhC81Hk7a0bKy0=;
+        b=B8z7QJ5j7Cb29+AAHhOgEWBkWfWl7KiZn4W7udGf4JsiKbstA2Cwic/5mkId0xD/9A
+         T6nv4+PYSAb3n1wmCuaYHFSER0OITAaVkJ5A5SyGeRFvKfzwXzXzVBZ9G+qGnR3aWI6e
+         Y/uQDKI2IWNb6jaWuGS7jWeHUVWraxZjainQRf8GIMZhGLWE2vcRowu7HaEc7AKrg7Eu
+         FjziYfNmg0OSjhXmhYfy4Ae+d/K0DOYR/+5/9kYToH1jy+c2X9+kyOkjzvwQ0ypiX35I
+         sIAtQ+fV84721inIBkzIZ9cfVHFhUK/dS5WR80Kr5xo1KlyCMkqwPwyit8BQhnL82gBy
+         B9Jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783342963; x=1783947763;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DVcCI9ZM81scdZz2xkffhcd3kgysZQhC81Hk7a0bKy0=;
+        b=tGkGx/3xgizn+joadmqOADbNOJ4srafDvhFlat0Yt7CpaU1s78v2rLxuiD4NaU42P9
+         5ur21965W4YhVUGZtvJwFNLVgKoV9dp+3MOhf87L6tv8ge5cf5XxvnIXzfBcqc90xvCL
+         KDRTt+2SEQZ0rnrgpU8Tm2tWaw1oMhkDFEmMuyCygj/uFeHFSBWECwUJuhr8NIS7rPof
+         pU3FqMbYSEkZgDbTmdWVb3ycQ+jWgn3HNAjoBSxoRf5ZtGu3IZu7Waf/vhbV5Lp+RBFT
+         EtOUpvFlJEzWnMd9dtZlw3jSP0M1AW11ouJOiy2Lg2YhS5LBr2lS0mN0LHxIpx6cYaNC
+         eYSg==
+X-Forwarded-Encrypted: i=1; AHgh+RrGZ7+tsNLg7CKQ/UuqaTfSZaB7lPuxt6BQXkVsQCZ4pmWfrQ1CkDHOra2TKRiRgLNEou9YVAbwjAo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YygqadOu1tcwichgurH+VrnP4KDTgujLRqkpuEU6iiCZlYAcuJo
+	f4HzkEecFpSy8k1HmBrwRM2BTAs59kF/sjcga3Cka9YrCaNoE8u4tYNJsw+PXg5RYOQ2N/mi7Jo
+	2uRtRvFnnARD+yAcr02nGhwovYTDMKIVFUVn8ay+KPHxco6+g5NCeXG2/s9TdWsI=
+X-Gm-Gg: AfdE7clPGmvdI+B4n21vUdjWhPPrkBiDgsK2VinbmPtyT/L1Wes/kAoqc4Y1eiilAej
+	jk0JkFYOFM4Ew9ugsdVDdw86mCOleD2aWpwhMh4+TotpJ8X646qqep3Ybi4KFx821sxPcZCS0ey
+	aEqAto8mGZizSKxi+OCaDKbmMlfFBC+T+b90Ny7aWCbyOvopfQ9l+1efkfUfJOJAkzL3ZaVlHaI
+	MHJ/QE1hv5ns67Vqb6LY2DAXB8BsUumidI2FsFe9qSUMDugUJH4flX2TJ3JqgqbeSCvH+9Xf5Mb
+	hE7TgEmEx0IGNMWatyBSWdptb7iT6LGfFuAAnK/5ONKYiLm6qC+AI4FRgmKewq0pY7Ur9Wdsd+C
+	xNlB+47rAM/tb9il/T7KWRJAisNgxJ+LchmRizRpAlnpMdtXqxYvIITICTJg=
+X-Received: by 2002:a05:6a21:2c11:b0:398:837a:7af0 with SMTP id adf61e73a8af0-3c08ee92db9mr511876637.30.1783342960838;
+        Mon, 06 Jul 2026 06:02:40 -0700 (PDT)
+X-Received: by 2002:a05:6a21:2c11:b0:398:837a:7af0 with SMTP id adf61e73a8af0-3c08ee92db9mr511681637.30.1783342959107;
+        Mon, 06 Jul 2026 06:02:39 -0700 (PDT)
+Received: from QCOM-IvKeorbwK5.na.qualcomm.com ([120.60.53.18])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3113c88041fsm22374340eec.15.2026.07.06.06.02.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jul 2026 06:02:38 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: bhelgaas@google.com, robh@kernel.org, krzk+dt@kernel.org
+Cc: mani@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        qiang.yu@oss.qualcomm.com,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: [RESEND RFC PATCH] PCI: Get the hotplug bridge window sizes from DT
+Date: Mon,  6 Jul 2026 15:02:30 +0200
+Message-ID: <20260706130230.546108-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: R4tcQg2VapcFu1XF3qYolp-15KHQl0Al
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA2MDEzMiBTYWx0ZWRfX58HKZROqd0tI
+ zt5eG6dacVJ/ajSY9ELNellqZhxaMT/5vHYXIJjF/iTjD1IAFYyItuNqRgFQpQHT8O6NEv6ez0z
+ 5GQpINnGyzzffqbTskSmF48uZcH8Bnw=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA2MDEzMiBTYWx0ZWRfX/fkk7LsZINLW
+ gsmKHeN9Tvs9QXO9aOMBh3whnKIlFVzNSNOCyO3UdrLVEtbsxKYeJdwZTeSzdpeTDvocgyilr+I
+ k4zBn0Jgacm9ioq1hgk0IrRXVoj9wCEhTWnE1uva+lN+sxEbXp7qjjPQ8gX/yrEGGhLqJ/kcUQg
+ BORBzM6AOKNrth5dtyK1bRIVQD35LgoY/H3LTQMQmuDn2VY13PuupuQ8q7oV4lCeI6We/5pa7eP
+ YdPUg1fMusNzA2K3gFrXXvHOk9H7pYosMUj+2hoHjKtHM5p7vywLwiGTvOdqtPzaWrFxrmtLITN
+ Z91zKaNfpl828HVvIpNvZNWDO3ahQ+uTAcmT1tpHxTDMw0LeCCCAj151GE2XsisRFOkc8A6XGuz
+ kSSht083PuNWvnRC65Y0mmAyEHIbtS+hX20ks8FuWQx7lNwY1FySRy089Rj+fsHHiCU03viA4Ax
+ IlcHMtJqzOH7s26hl7A==
+X-Proofpoint-GUID: R4tcQg2VapcFu1XF3qYolp-15KHQl0Al
+X-Authority-Analysis: v=2.4 cv=GulyPE1C c=1 sm=1 tr=0 ts=6a4ba774 cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=vYqYOKFkAlPdjFj/OIoQHw==:17
+ a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22 a=EUspDBNiAAAA:8
+ a=WFfvNbHBsTILdoynm0kA:9 a=bFCP_H2QrGi7Okbo017w:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-06_01,2026-07-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 clxscore=1015 malwarescore=0 impostorscore=0
+ priorityscore=1501 suspectscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607060132
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] SysMem silently breaks the implicit endianness and memory ordering=
- contracts of the Io trait, making generic I/O abstraction unsafe on big-en=
-dian architectures and weakly-ordered CPUs.
---
+Most of the PCI hotplug bridges used in Devicetree platforms do not have
+their bridge windows populated by firmware. So the PCI core allocates the
+bridge windows based on the requirements below:
 
-commit f9c9f4f480b4daad1545ae67d8a19099030dc2fd
-Author: Laura Nao <laura.nao@collabora.com>
+1. Total size needed by the downstream devices
+2. Default size (2MiB for MMIO, 256 bytes for IO) if no devices are
+   available during the initial bus scan
+3. Command line params like hpmemsize etc...
 
-rust: io: add I/O backend for system memory with volatile access
+If no devices are available during the initial bus scan, then the PCI core
+allocates the default conservative 2MiB MMIO bridge windows. But this size
+sometimes becomes insufficient when a BAR hungry device like a GPU gets
+plugged in later. So users have to resort to command line params to
+increase the window sizes. But this is very inconvenient and causes a lot
+of pain in distro integration.
 
-This commit adds a SysMem backend for the Io trait, intended for kernel=20
-virtual address ranges. It uses volatile accessors to provide access to=20
-shared memory, allowing alternative mapping layers to devices.
+To address this issue, parse the 'ranges' property from the bridge DT node
+(if available) and use the sizes for each bridge window. This works well
+because the 'ranges' property is already allowed by the DT binding for PCI
+bridges and it lets system designers pre-define the hotplug bridge window
+size requirements in firmware.
 
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 62643b23e9042..78c6ae2a0db82 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
+The DT derived sizes are applied as the additional (hotplug) reservation for
+each window. Command line parameters (hpmemsize etc...) continue to take
+precedence over DT.
 
-[ ... ]
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
 
-> +macro_rules! impl_sysmem_io_capable {
-> +    ($ty:ty) =3D> {
-> +        impl IoCapable<$ty> for SysMemBackend {
-> +            #[inline]
-> +            fn io_read(view: SysMem<'_, $ty>) -> $ty {
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using read_volatile() here so that race with hardwa=
-re is well-defined.
-> +                // - Using read_volatile() here is not sound if it races=
- with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                // - The macro is only used on primitives so all bit pat=
-terns are valid.
-> +                unsafe { view.ptr.read_volatile() }
-> +            }
-> +
-> +            #[inline]
-> +            fn io_write(view: SysMem<'_, $ty>, value: $ty) {
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using write_volatile() here so that race with hardw=
-are is well-defined.
-> +                // - Using write_volatile() here is not sound if it race=
-s with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                unsafe { view.ptr.write_volatile(value) }
-> +            }
+[Resending the patch due to mailserver issue at my end]
 
-[Severity: High]
-Do these volatile accessors break the implicit endianness and memory orderi=
-ng
-contracts established for the Io trait?
+Sending this patch as RFC because I'm not 100% sure if 'ranges' if the correct
+property here. I chose this property as it is already allowed for PCI bridges
+and allows specifying the window sizes. But for this usecase, bridge start
+addresses specified with this property are ignored.
 
-The MmioBackend implements io_write and io_read using writel and readl,
-which perform little-endian byte-swapping and include memory barriers. In
-contrast, SysMemBackend uses native-endian write_volatile and read_volatile
-without memory barriers.
+Other option would be to introduce a new property to specify the bridge window
+size.
 
-If a driver uses the Io trait generically, could this difference lead to
-data corruption or DMA race conditions on big-endian or weakly-ordered
-architectures? For instance, if a driver manually byte-swaps to little-endi=
-an,
-MmioBackend would double-swap it, whereas SysMemBackend would write the
-manually swapped data.
+But nevertheless, having a DT property for specifying the window sizes will help
+with usecases like USB4 PCIe Tunnelling, multi-Root Port setups where firmware
+doesn't pre-allocate the bridge windows.
 
-> +        }
-> +    };
-> +}
+ drivers/pci/pci.c       |  3 --
+ drivers/pci/pci.h       |  4 +++
+ drivers/pci/setup-bus.c | 75 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 79 insertions(+), 3 deletions(-)
 
-[ ... ]
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d34266651ad0..5b6474a18b51 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -102,9 +102,6 @@ bool pci_reset_supported(struct pci_dev *dev)
+ int pci_domains_supported = 1;
+ #endif
+ 
+-#define DEFAULT_HOTPLUG_IO_SIZE		(256)
+-#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
+-#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
+ /* hpiosize=nn can override this */
+ unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+ /*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e543a..055c9b8c052b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -414,6 +414,10 @@ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
+ 
++#define DEFAULT_HOTPLUG_IO_SIZE		(256)
++#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
++#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
++
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+ 	return dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4cf120ebe5ad..3dc82e3d3fd5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -29,6 +29,8 @@
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
+ #include "pci.h"
+ 
+ #define PCI_RES_TYPE_MASK \
+@@ -1385,6 +1387,54 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+ 	}
+ }
+ 
++/*
++ * pci_bridge_of_get_window - Get bridge window from DT.
++ *
++ * If the bridge's DT node has a "ranges" property, then parse the property and
++ * return the bridge window sizes. This allows per-bridge resource allocation
++ * from DT.
++ *
++ * Return: 'true' if a valid 'ranges' property was found in DT node, with bridge
++ * window resources populated in @io, @mmio, @mmio_pref arguments. 'false'
++ * otherwise.
++ */
++static bool pci_bridge_of_get_window(struct pci_dev *dev,
++				     struct resource *io,
++				     struct resource *mmio,
++				     struct resource *mmio_pref)
++{
++	struct device_node *np = dev->dev.of_node;
++	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	bool found = false;
++
++	if (!np || !of_property_present(np, "ranges"))
++		return false;
++
++	if (of_pci_range_parser_init(&parser, np))
++		return false;
++
++	for_each_of_pci_range(&parser, &range) {
++		struct resource *res;
++
++		if (range.flags & IORESOURCE_IO)
++			res = io;
++		else if (range.flags & IORESOURCE_PREFETCH)
++			res = mmio_pref;
++		else if (range.flags & IORESOURCE_MEM)
++			res = mmio;
++		else
++			continue;
++
++		res->flags = range.flags;
++		res->start = range.cpu_addr;
++		res->end = range.cpu_addr + range.size - 1;
++		found = true;
++	}
++
++	return found;
++}
++
+ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+@@ -1430,9 +1480,34 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_HEADER_TYPE_BRIDGE:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
++			struct resource dt_io = {}, dt_mmio = {}, dt_mmio_pref = {};
++
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mmio_size = pci_hotplug_mmio_size;
+ 			additional_mmio_pref_size = pci_hotplug_mmio_pref_size;
++
++			/*
++			 * If the bridge has a DT ranges property, use that to
++			 * override the default window sizes. Command line
++			 * parameters (hpmemsize etc...) take precedence over
++			 * DT.
++			 */
++			if (pci_bridge_of_get_window(bus->self,
++						     &dt_io, &dt_mmio,
++						     &dt_mmio_pref)) {
++				if (dt_io.flags &&
++				    pci_hotplug_io_size == DEFAULT_HOTPLUG_IO_SIZE)
++					additional_io_size =
++						resource_size(&dt_io);
++				if (dt_mmio.flags &&
++				    pci_hotplug_mmio_size == DEFAULT_HOTPLUG_MMIO_SIZE)
++					additional_mmio_size =
++						resource_size(&dt_mmio);
++				if (dt_mmio_pref.flags &&
++				    pci_hotplug_mmio_pref_size == DEFAULT_HOTPLUG_MMIO_PREF_SIZE)
++					additional_mmio_pref_size =
++						resource_size(&dt_mmio_pref);
++			}
+ 		}
+ 		fallthrough;
+ 	default:
+-- 
+2.43.0
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-io_project=
-ion-v6-0-72cd5d055d54@garyguo.net?part=3D14
