@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A83DA3195F0
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:03:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3830C3CB8E6
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:07:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783343036; cv=none; b=emPJg8pvR5w9nK2N2QiEHeLN+M36tmaajaQ9YDSVnlHT0303p8Zy7ngMjVVXUTYyA+tSvg3zrEHqzHRHwauhDMepkxR9X1iIt+WsLSPF2UWeLlWQyBdFsKMXhnYJ+jNsPSMDk9FKleQGLKwcEDezV/E1AM0PmfPq/g6lts7cSZM=
+	t=1783343243; cv=none; b=dWc+pq5ZsGYP/MIfFIoVBwpi2plg/HxeIGLq1oOqawe8bkNBr9S01YQs+8Cw4Txp73+6EXka36JoVX3QjYAkskFzIdqbmUdypEZaz99VKeBpNH70/Byk04JxxgYcd4kTeFTPZzBu0hxRYuj7U/ddy4WLui5sB8x3iU8vPP7zDFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783343036; c=relaxed/simple;
-	bh=bydMBcztW6BIAqkmv+we+pMUx3JD/yllLrVIMywAE2M=;
+	s=arc-20240116; t=1783343243; c=relaxed/simple;
+	bh=y3IPMqu/K8gDhMpUYuGbanalWyCko+XF0hlwCLaBACk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=f7+9X/IdtO90fGzwzn8Ch3SDbzUZnKR53xiUuFiyKEH/X0zwZHPrKJS2NiAKBDPNFkefFvxzV/SmdrKMXtc43YUFDVY03totykKO79RtF+TOaNjYZt/cNO2KF0YOudeCZA3ypBjN7FVIVKQLerbLPtmUq/jUt/tZtRWl27sqVFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWZ0xSev; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Xgj+g0daXdWkkeursd9l7g5HQIx9ugUrfRppxE0aOgfUL87ttJzGoNRKi2veEqhn1a3TujQvWnbYoET3EayG/TKNgsUhgN2d6O+GSlLoNAY7frFlT8tiPVFsBldDgdJVO+phdYKGL1H/jZnQvPo0ativTLZgh5ghgSR8r61mSfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FRu5wm4G; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWZ0xSev"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B39F81F000E9;
-	Mon,  6 Jul 2026 13:03:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FRu5wm4G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F9F11F00A3A;
+	Mon,  6 Jul 2026 13:07:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783343035;
-	bh=T1XaYNNK0CiQFk1JAwIphcm52VlAbKrAR8NvG0QeYy4=;
+	s=k20260515; t=1783343241;
+	bh=/5gX+7WV1J0jIuXNz4HBAwXbYCmWbobXBpWvUfivXt0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EWZ0xSevsuDTbAaEQEK7qliTlNNiRlYy5rhwyEPdvd0lYDHD7KPIsGIRtRpFr/ybM
-	 pAexvbfeH76C+pSzJk3eT0XAcpkG2aQf+WvCcQxEUMmyt+XWZRwnxdCoQO13k7kY4L
-	 P7/T/Bmcf0JGLtwYRx6BB/KrkNofGH9dMrkF/2qSVfOmoROjYO5t2rfTva+S2LY+wg
-	 XnBq4LmbfHZJfo5PmxiLKZDl6w2X2PBC/mZbnjXVVrPevxiqpoJAMjGYvGRdk6q8qA
-	 XvwhH2hNVE8SypELMlasZHwADGhWk72GZoZoHD8Xwxul0D+THZXWIW/UJP493sMEAi
-	 0lme7fb3yJ8Ig==
+	b=FRu5wm4G+cxAwbiQgSNuSJFxw8Ns7C+OVML5hBcxxBBhNJxudHFoZr2G0niq2aW5C
+	 /kqR73es2N0F378LaUZOGYWcF8tOUOSYV6wOfCd9fGOpnjTNZ1UG0G/e8GTaM2fEQ5
+	 9aGMiwSwpj0Myz8DpPqdC73wIQCtAtT7cc0c0tpjYPxuYlAjByGkE53fwVeCWRAVl0
+	 Nf8dFQIPs6ym8AeHq23orX90bwfmFX5KHx9YLGax0pKog9ZrCty4ye8PEPadkWXUd3
+	 bHC/ju806LbfdBbg/gaIjNqvpSVIHJ7wWU+lw5SP30uxaV6dSHPZKXN6/WUgP6p5Ny
+	 FtV3dzmPsorxw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 03/20] rust: io: restrict untyped IO access and
- `register!` to `Region`
+Subject: Re: [PATCH v6 17/20] gpu: nova-core: use I/O projection for cleaner
+ encapsulation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: ojeda@kernel.org, "Alexandre Courbot" <acourbot@nvidia.com>, linux-pci@vger.kernel.org, "Danilo
- Krummrich" <dakr@kernel.org>, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260706-io_projection-v6-3-72cd5d055d54@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org, ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260706-io_projection-v6-17-72cd5d055d54@garyguo.net>
 References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-3-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-17-72cd5d055d54@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 13:03:54 +0000
-Message-Id: <20260706130354.B39F81F000E9@smtp.kernel.org>
+Date: Mon, 06 Jul 2026 13:07:21 +0000
+Message-Id: <20260706130721.9F9F11F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,59 +47,79 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Infallible 64-bit I/O accesses (`read64`, `write64`, etc.) will fa=
-il to compile on 64-bit systems due to a failing `const_assert!` in `io_vie=
-w_assert` (formerly `io_addr_assert`).
+
+Pre-existing issues:
+- [High] Missing acquire and release memory barriers in the lock-free ring =
+buffer implementation between the CPU and GSP firmware.
 --
 
-commit 9e28956aa7e8253fe2ab41dc7ddbf9af5d160ab2
+commit 0033519811b496066fb6090d793690e7fd6d3d45
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: restrict untyped IO access and register! to Region
+gpu: nova-core: use I/O projection for cleaner encapsulation
 
-This commit restricts untyped I/O accesses and the register macro to the Re=
-gion
-type. It adds a generic type to IoLoc to indicate allowed base types, paving
-the way for typed register blocks.
+This commit refactors PTE arrays and message queues to use io_project!.
+It replaces primitive dma_read! and dma_write! usage with io_read!
+and io_write! to restore proper encapsulation.
 
-Link: https://lore.kernel.org/rust-for-linux/DHLB3RO3OSF5.2R7F27U99BKLN@nvi=
-dia.com/
-
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index d821ee48ed317..87141eb070564 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
+> diff --git a/drivers/gpu/nova-core/gsp/cmdq.rs b/drivers/gpu/nova-core/gs=
+p/cmdq.rs
+> index 070de0731e950..c34b489614962 100644
+> --- a/drivers/gpu/nova-core/gsp/cmdq.rs
+> +++ b/drivers/gpu/nova-core/gsp/cmdq.rs
 
 [ ... ]
 
-> @@ -437,6 +449,7 @@ fn read32(&self, offset: usize) -> u32
->      #[inline(always)]
->      fn read64(&self, offset: usize) -> u64
->      where
-> +        usize: IoLoc<Self::Target, u64, IoType =3D u64>,
->          Self: IoCapable<u64>,
->      {
->          self.read(offset)
+> @@ -438,12 +441,17 @@ fn advance_cpu_read_ptr(&mut self, elem_count: u32)=
+ {
+>      //
+>      // - The returned value is within `0..MSGQ_NUM_PAGES`.
+>      fn cpu_write_ptr(&self) -> u32 {
+> -        super::fw::gsp_mem::cpu_write_ptr(&self.0)
+> +        MsgqTxHeader::write_ptr(io_project!(self.0, .cpuq.tx)) % MSGQ_NU=
+M_PAGES
+>      }
+> =20
+>      // Informs the GSP that it can process `elem_count` new pages from t=
+he command queue.
+>      fn advance_cpu_write_ptr(&mut self, elem_count: u32) {
+> -        super::fw::gsp_mem::advance_cpu_write_ptr(&self.0, elem_count)
+> +        let tx =3D io_project!(self.0, .cpuq.tx);
+> +        let wptr =3D MsgqTxHeader::write_ptr(tx).wrapping_add(elem_count=
+) % MSGQ_NUM_PAGES;
+> +        MsgqTxHeader::set_write_ptr(tx, wptr);
+> +
+> +        // Ensure all command data is visible before triggering the GSP =
+read.
+> +        fence(Ordering::SeqCst);
 
 [Severity: High]
-Does this regression cause a failure to compile when a driver invokes an
-infallible 64-bit access method on 64-bit systems?
+This is a pre-existing issue, but does placing the fence after the write
+pointer update fail to order the preceding command payload writes?
 
-By restricting usize offsets to target Region, invoking an infallible 64-bit
-access like read64(), write64(), or write_reg() with 64-bit registers
-instantiates io_addr_assert() with U =3D u64.
+In advance_cpu_write_ptr() in drivers/gpu/nova-core/gsp/cmdq.rs, the driver
+updates the TX pointer via io_write!() (inside set_write_ptr) and then issu=
+es
+a fence(Ordering::SeqCst).
 
-Region has a hardcoded MIN_ALIGN of 4. The compile-time check explicitly
-requires:
+Since io_write!() compiles to a plain write_volatile without an implicit
+barrier, placing the fence after the pointer update could allow the
+firmware to observe the updated write pointer before the command payload
+is fully visible. This could lead to garbage command processing on
+architectures with weak memory ordering.
 
-const_assert!(Alignment::of::<U>().as_usize() <=3D Self::Target::MIN_ALIGN.=
-as_usize());
+Should this fence be placed before the set_write_ptr() call instead?
 
-On 64-bit architectures, align_of::<u64>() is 8. Thus, 8 <=3D 4 evaluates to
-false, causing an immediate unconditional compilation error for any driver
-attempting to perform an infallible 64-bit MMIO access. Fallible variants
-like try_read64() use runtime alignment checks and are unaffected.
+Additionally, looking at the wider lock-free ring buffer implementation, do
+wait_for_msg() and allocate_command() lack acquire memory barriers?
+
+If wait_for_msg() polls the GSP write pointer via read_volatile and proceeds
+to read the payload without an acquire barrier, the CPU might speculatively
+read the message payload before the pointer read completes.
+
+>      }
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-io_project=
-ion-v6-0-72cd5d055d54@garyguo.net?part=3D3
+ion-v6-0-72cd5d055d54@garyguo.net?part=3D17
