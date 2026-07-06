@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 606A4433BC8;
-	Mon,  6 Jul 2026 16:36:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2603388394;
+	Mon,  6 Jul 2026 16:43:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783355816; cv=none; b=SfpTplNJRSI5cfapHGba3lVJcejphU9+V+9oxGNMIA0rlVfxZWTnCPhFGJpAZqn7ERIS/od7E3dN+/2uc7mRC0XbEzDlbmDPeQF9agViRVnKxFH2952ZuKBINWfzbR8sWz77XhX3jdJctpDICNW+grLcnlULMBe3wfT+T6XxpyA=
+	t=1783356236; cv=none; b=S4if7iJFZo+hDl+Y7wVd664y40EkAVOhLfIB1HPCdCj2avYa6w6JpOhQwHj/sGSFNpW22V1ZSV5QDbO1UL4mBE/bD4UjnT3M+AUPL7GNiZsHWDNgMMx1xd9JYeLAizhND0bMOm1pAVpz0yzeylC3x9vtn8muKuS3w9dEAl5+Vak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783355816; c=relaxed/simple;
-	bh=aQ155oMS1aP+sJU1cZKSwbFH910mTtNPsrItaY8zzSY=;
+	s=arc-20240116; t=1783356236; c=relaxed/simple;
+	bh=p78k45P81yo3snN4PdpWqgMyu8URmblJURKX4ZSmRY0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IVy2+hLZOlCpwYMqwsrTIhVsaiJ2y6gMhifkm76h/1XDp7CV/dcYOsW2MkxEwJUUL5a8XO1C7pk/D3wcrCBCbY3nlPox8zi6K8+cFIT4mcIOZHFA3tiHSVLgsyDHnuTbjSJfsaor6IFUHUV/H91fz8uznybNFwTc46mhKGocc/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oXFMh8Su; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=aM/HB7Ja5lWLrg/ZQA3jJVk1oGcRs77QN5EXksvpYC5bBZjZV3LlgXENObxEs3D9QDwPcqCnNNP7VvQltyJ+8w+miTSxiE6HuBd2fBQ1vrFcKGRULGCwemwPY8OEjd6L9vcUczBPPdeft3dxFo83c2zRf/Ps2x8Pg4nlB17irGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fba2E7g5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oXFMh8Su"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98BD71F000E9;
-	Mon,  6 Jul 2026 16:36:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fba2E7g5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01EF61F000E9;
+	Mon,  6 Jul 2026 16:43:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783355815;
-	bh=zCwhz7SYOBzlCyq63S3QzaXZnIA6AhTV8JUT7OVdLRI=;
+	s=k20260515; t=1783356234;
+	bh=ut0uwGUHWw94blqbm1llRwcmHPYES1flSFqSaCMAUek=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oXFMh8SuHX6p8AYT4D45ZGncYnMZ8zgmBtiO0fs6l3A+K/J7wbMNs1XuDjNlcw6Ol
-	 hQrJok8zs4BTv03w1DVwFFjDlvET/xTX3yIIWjjrV2PnN5Kqg1H7XUQbT0B77E4UZR
-	 olAfo1CmXXTr0nxInCItcU9UxxtlJ7sqMrdsM+WAeLvUGL/JWK2KeCy5LkwYRDB+7n
-	 G/EQyWYj3v+ALcs+1b/uo6umqo9tIbH9Jcgt8fmeXiRfMiGPpAAUVFys/0rqTM/U7D
-	 cFacpwcDjISVcoQoZswHZuTidL36gyYMFnFotMMTcoHGX5JZNOeF4r/vG5CxLZFqAF
-	 33f18wXKuct7g==
-Date: Mon, 6 Jul 2026 18:36:45 +0200
+	b=fba2E7g5/hQ1iwXdVKgfv7Ph9Gnt4E2HMHIqPhiVfcCBpy5DTgnudHerNmBviyqSo
+	 6KgbJzKLB7/dSkzQGFujwwJj0EMXk7nn+gSj0IpqJfxDpWInrQQrdOD6BZAZY9tNBb
+	 0x+dM/NFZK9we+73Jt3aV/n9PEmtlj2XPupkRgZS9uOnR3ZKSLhW5afpJ5Ir9uRoju
+	 +CS9gp3ib1vnkoeqifIQj6MHP0JChc6jnExvu7G8bLRkDVX8eKQJCF7OsEE8WGytAS
+	 yVVJWNmx+UIfcMe28FLyobhnG653Fw9SAFaIPDtHsqnzO+QyJi0hD8NMVw3JPLyFss
+	 r9wBSOzTjly6w==
+Date: Mon, 6 Jul 2026 18:43:44 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH 1/2] dt-bindings: pci: qcom,hawi-pcie: Add Maili PCIe
- compatible
-Message-ID: <yntj62kr7tixc7capwdr6xhv2zpisfrjg62bwftgiuujf4fzt5@cjdrkglo4dv5>
-References: <20260703-vdev_maili_dt_bindings-v1-0-c9df0916cd5e@oss.qualcomm.com>
- <20260703-vdev_maili_dt_bindings-v1-1-c9df0916cd5e@oss.qualcomm.com>
- <20260706-pastoral-okapi-of-reading-e5bdb3@quoll>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: dwc: Determine whether iMSI is used before
+ calling .init
+Message-ID: <4qyn4fljtb3cbzcmfpkdomkm7vqnwn2rfbtqng4iwmtvfd4bpj@t6kkw53erl7f>
+References: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
+ <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,29 +50,80 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260706-pastoral-okapi-of-reading-e5bdb3@quoll>
+In-Reply-To: <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
 
-On Mon, Jul 06, 2026 at 08:46:41AM +0200, Krzysztof Kozlowski wrote:
-> On Fri, Jul 03, 2026 at 05:38:40PM +0530, Vivek Pernamitta wrote:
-> > Add qcom,maili-pcie as a compatible string that falls back to
-> > qcom,hawi-pcie, as the Maili SoC reuses the Hawi PCIe controller IP.
-> > 
-> > The Maili SoC is a derivative of Hawi and shares the same PCIe
-> > controller architecture, allowing reuse of the existing Hawi PCIe
-> > DT bindings.
-> > 
-> > Signed-off-by: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
-> > ---
-> > Dependencies:
-> > - PCI: qcom: Add PCIe support for upcoming Hawi SoC
-> >   https://lore.kernel.org/all/20260625-hawi-pcie-v4-0-1a578603cd86@oss.qualcomm.com/
+On Wed, Jul 01, 2026 at 10:37:44PM +0200, Marek Vasut wrote:
+> The R-Car Gen4 PCIe controller integration configures MSI registers
+> in the controller driver .init callback, because those registers
+> have to be configured while PERST signal is asserted, and the PERST
+> signal is asserted across the controller driver .init callback.
 > 
-> Squash the patches then.
+> The registers have to be configured differently in case the iMSI is
+> or is not used. Assign pp->use_imsi_rx before the controller driver
+> .init callback is called, so the controller driver .init callback
+> implementation can use the pp->use_imsi_rx value.
 > 
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-But these are two independent SoC additions, isn't it?
+LGTM!
 
 - Mani
+
+> ---
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Conor Dooley <conor+dt@kernel.org>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Marc Zyngier <maz@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+> V3: New patch
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 06722259d2e37..f5a38e6fd8d79 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -587,6 +587,12 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>  	if (ret)
+>  		return ret;
+>  
+> +	if (pci_msi_enabled()) {
+> +		pp->use_imsi_rx = !(pp->ops->msi_init ||
+> +				    of_property_present(np, "msi-parent") ||
+> +				    of_property_present(np, "msi-map"));
+> +	}
+> +
+>  	if (pp->ops->init) {
+>  		ret = pp->ops->init(pp);
+>  		if (ret)
+> @@ -594,10 +600,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>  	}
+>  
+>  	if (pci_msi_enabled()) {
+> -		pp->use_imsi_rx = !(pp->ops->msi_init ||
+> -				     of_property_present(np, "msi-parent") ||
+> -				     of_property_present(np, "msi-map"));
+> -
+>  		/*
+>  		 * For the use_imsi_rx case the default assignment is handled
+>  		 * in the dw_pcie_msi_host_init().
+> -- 
+> 2.53.0
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
