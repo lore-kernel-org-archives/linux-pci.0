@@ -1,90 +1,132 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 478F741F7E5;
-	Mon,  6 Jul 2026 09:41:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADAE33CBE66;
+	Mon,  6 Jul 2026 09:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783330893; cv=none; b=n9Cvi5RfptBANtp1d3qbKBePj5AhuqVctneEvx1PZgu4AbjXpaRVANEtmrP2pZwBPVZLE3UqnUZ+TgbFoyAr+KiHS16J4WqWR3qMGSDSjlt9hRoGJ3S6VhIoBc0ekGQOrZgKlXqLk4nisvqaxyZ/ModV7k0fZDOtFw4zm7ZArrg=
+	t=1783331978; cv=none; b=TxzShDlTiDFWZvzjSg1wmjjh3ajaotXRbVxe4nxWBB8X37d9IBDMNju+ghKOzU2un1PLMmwbkrgc3iM+UiM8gz6NtqzlQoTaGYEr5KMKaYfoeM3fXT2zhXVgNqGK1j64tZB6Kn9lh4ReYuJVKle519Ksa4+E8mZC0A2mtACOjUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783330893; c=relaxed/simple;
-	bh=h34R6Lcwv4p/OZOtfrFH2N0tXGTaAUvCHzqULjc+DtQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WyMeUyOtSOM64QLWDqy0L7Pu5aIpzi41QOFLycPcBvJf4pFtf3ZHCBf8JUiOQRhgn5YKNUxPrRGO1MSBO1JzOhLSXqWpNYhw5GcOcWiYknYaukrjQcLDSJaMiL2G07Iu7iSWkTrMnMhiDLjaIlnPWSlhgXjnmzeuCMv+i7DXZd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id EAD59221B;
-	Mon, 06 Jul 2026 11:41:19 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D5305600EA59; Mon,  6 Jul 2026 11:41:19 +0200 (CEST)
-Date: Mon, 6 Jul 2026 11:41:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Max Lee <max.lee@canonical.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, acelan.kao@canonical.com,
-	mani@kernel.org, helgaas@kernel.org, kaihengf@nvidia.com,
-	victorshihgli@gmail.com, pandoh@google.com
-Subject: Re: [PATCH v3] PCI: Disable ASPM L0s for Realtek RTS525A
-Message-ID: <akt4P2C8vAHJzePv@wunner.de>
-References: <20260610024723.188514-1-max.lee@canonical.com>
- <20260706025358.516607-1-max.lee@canonical.com>
+	s=arc-20240116; t=1783331978; c=relaxed/simple;
+	bh=ARa8ZnsgdLdg/iKhWkG3xGMLOPSSmk89NzD5EyIWAbs=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Y2RM0cl9skAi23UyK+wUXxXkOCBd+2GZXN7frq7qyprhQcjwx7u/C+stRYOgFSEviuRkmmmghbj5WB7z7KoODDHRGUBSZlrCkt1E1TjlVSwwYT89Ly9PtKLlJqs5UMbikmI25J9h5choBe0yfSnJj1PpoFSYliPbeGDm+nDfsrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iLmOrzh8; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iLmOrzh8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 149AAC2BCB8;
+	Mon,  6 Jul 2026 09:59:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1783331978;
+	bh=ARa8ZnsgdLdg/iKhWkG3xGMLOPSSmk89NzD5EyIWAbs=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=iLmOrzh8fGnSQHM6W6roI4fnzHfk7thBQJApT09bhlz8eeWjlujYsbEA/pAIPX4GU
+	 iGPJKSQHKDOmKFSoDk+hrimdRq3g2ul/fNWyH3+gsgiO1ZPD0ycIJJ6sw9NRNhYBR3
+	 fk6v974sRjsj1Ml9JC1BomFRe78FH/FBGcw2836BPbQxTHg2kWJ6Ny9MnSlnuhlirZ
+	 OCpu5St6Dvw/vW4d39KkEJLg1JsSvwCi1WRv86YS4xsT/gY+JlJM0vlD0zjmPKKBw1
+	 i25CmoazoT6VurhZ35ZBHgwfAsos41eQE+2vRc5+L2NKlvp3Hj2W306zKJz98OuIrO
+	 EyMPYghxSmCVg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0077CC43458;
+	Mon,  6 Jul 2026 09:59:38 +0000 (UTC)
+From: Jia Wang via B4 Relay <devnull+wangjia.ultrarisc.com@kernel.org>
+Subject: [PATCH v2 0/3] PCI: ultrarisc: Add DP1000 PCIe clock support
+Date: Mon, 06 Jul 2026 17:58:48 +0800
+Message-Id: <20260706-ultrarisc-pci-clk-v2-0-2f3fb6fba66b@ultrarisc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260706025358.516607-1-max.lee@canonical.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAFh8S2oC/22NSw6CQBAFr0J67ZiZQUFceQ/DomkaaeWXGSAaw
+ t0FNK5cVlKv3gSenbCHczCB41G8tM0CdhcAldjcWEm+MFhtIx2ZWA1V79CJJ9WRKKoeCskk+hB
+ jYRhh2XWOC3luzWv6YT9kd6Z+Da1GKb5v3Ws7Hc3qffs2+dMfjdLqyBiG+lTkmIWXn7OntoZ0n
+ uc3Ou1X98gAAAA=
+X-Change-ID: 20260617-ultrarisc-pci-clk-ac19047af1ea
+To: Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Jia Wang <wangjia@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ Conor Dooley <conor.dooley@microchip.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783331975; l=2442;
+ i=wangjia@ultrarisc.com; s=20260515; h=from:subject:message-id;
+ bh=ARa8ZnsgdLdg/iKhWkG3xGMLOPSSmk89NzD5EyIWAbs=;
+ b=5liZG14Wgp0p6+iNL2dfhOlq6P6dQowxxxSHIu4uQK7sAy+VOk6RH3YDFH1wPKB8Plnr7O4FC
+ 3a2I2ilLYHRDGPIhmxh3pOgEYtGo1yt8PmKN9lHEGe87CgUq3CjCl8o
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=wGVm18siRScehKOkOz0WKxgxDy7IezHEszhnN4/TUCY=
+X-Endpoint-Received: by B4 Relay for wangjia@ultrarisc.com/20260515 with
+ auth_id=779
+X-Original-From: Jia Wang <wangjia@ultrarisc.com>
+Reply-To: wangjia@ultrarisc.com
 
-On Mon, Jul 06, 2026 at 10:53:58AM +0800, Max Lee wrote:
-> The Realtek RTS525A PCIe card reader reports an AER Correctable Replay
-> Timer Timeout storm when ASPM L0s is enabled on its link.  On an affected
-> HP ZBook Power 16 inch G11, the Root Port received tens of millions of
-> AER interrupts from the RTS525A even when the rtsx_pci driver was
-> blacklisted and the endpoint was not enabled by a driver.
-> 
-> Testing with OS-native AER control showed that disabling only L0s on the
-> RTS525A link stops new AER interrupt and counter growth while leaving L1
-> enabled.  Disabling L1, L1 substates, or Clock PM alone did not stop the
-> storm.
-> 
-> Prevent the broken L0s configuration by removing L0s from the RTS525A
-> advertised ASPM capability.  This avoids enabling the non-working ASPM
-> state instead of masking the resulting AER Replay Timer Timeout reports.
-> 
-> Signed-off-by: Max Lee <max.lee@canonical.com>
+Add clock handling for the UltraRISC DP1000 DesignWare PCIe host
+controller.
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
-Cc: stable@vger.kernel.org
+The DP1000 PCIe controller depends on three input clocks: core, dbi, and
+aux. The driver accesses DBI registers during host initialization, so the
+clocks must be enabled before the controller registers are touched.
 
-Thanks for your great analysis in:
+This series documents the required clocks in the device tree binding,
+enables the core, dbi, and aux clocks before DesignWare host
+initialization, and keeps them managed across probe failure, detach, and
+system suspend/resume. It also switches the driver to
+module_platform_driver() so the existing tristate Kconfig option builds
+correctly as a module.
 
-https://lore.kernel.org/r/CA+YcyLw0HpR1Dnz-mOL1Ryym89ytc=1a_Ri9buMt3at-9mib+g@mail.gmail.com/
+Testing:
+- Build and module build tested with ARCH=riscv.
+- Boot tested on UltraRISC DP1000.
+- Validated the PCIe binding with dt_binding_check and dtbs_check.
 
-In fact a quick Google search finds other reports of ASPM issues with
-this card reader.  This one is for Linux and talks about Receiver Errors
-with RTS525A which are fixed by pcie_aspm=off, a more targeted fix was
-apparently not developed:
+Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+---
+Changes in v2:
+- Add Fixes and Acked-by tags to the binding patch.
+- Add a Fixes tag to the driver clock handling patch.
+- Fix the suspend/resume clock handling so clocks are disabled only after a
+  successful suspend and kept enabled on resume failure.
+- Add a module build fix by switching to module_platform_driver().
+- Link to v1: https://patch.msgid.link/20260629-ultrarisc-pci-clk-v1-0-5ea3308fdab3@ultrarisc.com
 
-https://github.com/pop-os/pop/issues/3775
+To: Xincheng Zhang <zhangxincheng@ultrarisc.com>
+To: Jia Wang <wangjia@ultrarisc.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Krzysztof Wilczyński <kwilczynski@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+To: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+To: Krzysztof Kozlowski <krzk+dt@kernel.org>
+To: Conor Dooley <conor+dt@kernel.org>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-And another one for macOS specifically mentioning non-working L0s on
-RTS525A:
+---
+Jia Wang (3):
+      dt-bindings: pci: ultrarisc: add required DP1000 PCIe clocks
+      PCI: ultrarisc: get and enable DP1000 PCIe clocks
+      PCI: ultrarisc: allow DP1000 driver to build as module
 
-https://github.com/5T33Z0/OC-Little-Translated/blob/main/Content/04_Fixing_Sleep_and_Wake_Issues/Setting_ASPM_Operating_Mode/README.md
+ .../bindings/pci/ultrarisc,dp1000-pcie.yaml        | 16 +++++
+ drivers/pci/controller/dwc/pcie-ultrarisc.c        | 70 +++++++++++++++++++---
+ 2 files changed, 79 insertions(+), 7 deletions(-)
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260617-ultrarisc-pci-clk-ac19047af1ea
 
-It looks like this product just doesn't support L0s and the vendor
-neglected to set the ASPM Support bits in the Link Capabilities Register
-correctly.
+Best regards,
+--  
+Jia Wang <wangjia@ultrarisc.com>
 
-Thanks,
 
-Lukas
