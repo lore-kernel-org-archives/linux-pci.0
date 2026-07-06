@@ -1,55 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65BA2420868
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 12:58:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C74EE3DDAE3
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 12:59:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783342732; cv=none; b=q4flahqPwmCFUE9OJf1XVZSY7PPj94lV0CcKBcK0Jrih4Q4o6nKzQpxmMTGiC3695K4REDR230Meqt8branjvYt+8gj+5hFriv7gZbDgMRpgKdxB5NuRCYXPVayVtfkV1asuTk7r/WgirFq6udDp64azOLD1zBh6av8LdRSfLdE=
+	t=1783342768; cv=none; b=FfUqSdGXs++ow6M5Al65O/76TB809HRgkw7OwkIVsyvZhz2fgeVZ5ju+OLAbsggGfFpM2q5MPB6aeKxgqZUfvJYPl2Mi+hKlqqAVxgj0dSoYMOBOj+B7M3kAN4gveCeR3GI3B2VYyoa9aU3Yv84bJWajXwdFGo4l2T7MOWcjUZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783342732; c=relaxed/simple;
-	bh=e9YcVi8TzkKb/NF51WCy2xs+cIuvDfI9ZQOmvym0bUo=;
+	s=arc-20240116; t=1783342768; c=relaxed/simple;
+	bh=oggRVS2rgIQ9ABXYY+afSkwOSL7t1/1fYeYp25SWOM8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=igjFu52wd6gLGGNGgXnRX9jyggcjK0/UVOs/7EBJ+hHgLsNCeq6ifOR0scmfflyb+0BCkzU5qP5ed1pPFjV+mXVIItwiSP8sQZZuC/bP8TLtLgYah/7LJTrf9PPXJgZiDJMz3Kq1bFkw+exwMntSZxJWatrjwVOqN28aA71/Ooc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jV6cEu7y; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Mitd84+GIdm5x1Po2N5XlGYlsBKgctQ7/UdE36D5eJq5gNWRBFo82n1A4s5PCFF/C8t/AhXjVmeJiv/KUYEGkedB0W4iYb6hXGHWHpuE/nhO3eATEWyxw0No1NFxDRk3pPAm0GPCWheIp7GWxyFM9COlo1e9YWXYqgwqQYn/sHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JwLM4TU8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jV6cEu7y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67351F000E9;
-	Mon,  6 Jul 2026 12:58:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JwLM4TU8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14B511F000E9;
+	Mon,  6 Jul 2026 12:59:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783342731;
-	bh=e9YcVi8TzkKb/NF51WCy2xs+cIuvDfI9ZQOmvym0bUo=;
+	s=k20260515; t=1783342767;
+	bh=oggRVS2rgIQ9ABXYY+afSkwOSL7t1/1fYeYp25SWOM8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jV6cEu7yDR+99WD6NxEF/oU0uIMeuexwAVCPOviBjG9JhP84owRuy5w8jTYIlD3Un
-	 0+asuca7goZp3cs/4uN40iOxYA0W17rBuWMHDkMzYYNMFwYMCIVRXlQCtQ1cto5Tiv
-	 WlG6zWMvc66c3IVWN4RZEi1BjhWrbSnF4ICmaMnxuFbce+M213uiAZ0YGhKX0+ibRP
-	 m03nhRwBkVihp8Rbu2jYCKeXb+d5f2A2NHmB84ezrRBsUxbec5UYLd7hkChGH8k6Qg
-	 /L0LGvL1EhJIcgrJ/l4VV48C2fAwUWQYHJwKN+Tyw8haH8c2lB6RqL6IPx7x2vk8T5
-	 uRa0jBE8qsGLw==
+	b=JwLM4TU84CVQpv1ggZ5AtcOXtRbJXTEJr2P06XjvrrRMcbWyODJWorTR4a+wsdfr1
+	 I4dRSaeFBNMpeTjF/FVEwuH1LVYXXSPYrVbujG/OMFxNTlQIro7LFi1vMg9lkw2c5J
+	 RhiM23qkvFTP6O4vSBNwFuA5acONkjXgkBirvDqXxpCvfLiUav3d7rRoqiZNp6YxKU
+	 UGSDq54vznEIW4DQZV6ABDpjSvZIW/qtOgyTL95ZhpSamNOy8jYLXNPMXdUpBeFTz9
+	 z3FgBZ6ZgUq/OLTrbKE7vSXDVL2vD/i73tZFQHg89Glfmwds/pw34WXMQQ0agd35n6
+	 o36UmYznEcSNw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 13/20] rust: io: add projection macro and methods
+Subject: Re: [PATCH v6 20/20] rust: io: implement `IoSysMap`
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, ojeda@kernel.org, "Danilo
- Krummrich" <dakr@kernel.org>, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260706-io_projection-v6-13-72cd5d055d54@garyguo.net>
+Cc: linux-pci@vger.kernel.org, "Danilo Krummrich" <dakr@kernel.org>, "Alexandre
+ Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org, ojeda@kernel.org
+In-Reply-To: <20260706-io_projection-v6-20-72cd5d055d54@garyguo.net>
 References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-13-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-20-72cd5d055d54@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 12:58:50 +0000
-Message-Id: <20260706125850.E67351F000E9@smtp.kernel.org>
+Date: Mon, 06 Jul 2026 12:59:26 +0000
+Message-Id: <20260706125927.14B511F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Add an `io_project!()` macro to allow projection from `Io` to a subview of
-> it, using the pointer projection mechanism to perform compile-time checks.
+> Add an enum as sum type for `Mmio` and `SysMem`. This serves similar
+> purpose of `iosys_map`. Thanks to Rust's type system, all of projection a=
+nd
+> struct read/write can be handled by the generic I/O projection mechanism
+> (i.e. `io_project!`, `io_read!, `io_write!`) for free, and there is no ne=
+ed
+> to provide things like `iosys_map_rd_field` or `iosys_map_wr_field`. An
+> enum type also makes it very easy to construct or destruct.
 >=20
-> For cases where type-casting is required, the `try_cast()` function may be
-> used where the size and alignment checks are performed at runtime.
+> This could be made more generic by implementing on a general purpose sum
+> type like `Either`; however this is kept specific unless a need arises th=
+at
+> warrants this to be generic over other I/O backends.
 >=20
 > Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
 > Signed-off-by: Gary Guo <gary@garyguo.net>
@@ -58,5 +66,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-io_project=
-ion-v6-0-72cd5d055d54@garyguo.net?part=3D13
+ion-v6-0-72cd5d055d54@garyguo.net?part=3D20
 
