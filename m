@@ -1,89 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6949F3812C2
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 15:13:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76351433BB1;
+	Mon,  6 Jul 2026 15:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783350786; cv=none; b=gAAthwZiFOGakywgbgVhT5nYMJ3+voGjhwodL7byhsZga6xcaJYsyKoFF1N0ZRSkPoSdB3e7aIhIPy7m7pjjxjiZoHQ8mt0FTTyJEUcf8zZGaJ4PraidvgM06pkojLwO8K+WN6Qz9ZnpJC4jJTsdlrJkuqTivYtRvlS8mx/tNiA=
+	t=1783352149; cv=none; b=uvSZ9QTbGLk05r2gYzm4gTGB2HM4Yk8jcRLPaTJw+UNK+QpnZ8CmaXJMynx/JN64oefVxIvNf9wYIgtylT/kTxCU5t9tIrOuvQkCQYXQ1Ln33Z/gaytgwfjBgrQwxOH2SWJ/ZXCHwF7HseuItPLtvPOVBE6x9IFIxKB6CKdrPWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783350786; c=relaxed/simple;
-	bh=JevGBzmWQO9zbrhY97otZQ1cXEXB1tRQttW1vQz7XMs=;
-	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=clGB17ylfzA9Qwu7LVisArXqjOV6dQBoX26cnuWy8U1zCF9zl6to3m3hlM4NzCVkztMaSdN9r5YRspX4ebEAo2bJ2a8qQ9iQ94AFFAPehthFU71Pr1E5dq+Ej7zqtlyoHJM0lQ9qcXSaWtMRtgxiyfpUOPvKvZMeU/nDNMZOkGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=krOi3OW1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783352149; c=relaxed/simple;
+	bh=3gJV4JtItQt16iIJXRMMlVKAxvbct7RZWpJgvYxNdLQ=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=BCGeaT8WWrKczO7TQbo/36k4f4HHAXRdjzwyZtQGT+2dnYa0D2XaBSPWKqweDLfaHlKhnXIfyoOs9heyY2sS5/R/L/v8IvPmqxH4/z+MBNqihccDOm40ehehr8RTbo0PJttTlgxta71IrmbSk9pZc9qcpxcPWmgmxGGgxHBTIK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=YlSGiAiy; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="krOi3OW1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D44521F000E9
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 15:13:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783350785;
-	bh=CabqnN8/KK/kZOS3/MFLTfj5rd4TkvLO+0w9sPiM1Zw=;
-	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
-	b=krOi3OW12ngJLscoCga3Lde0FIChi7F8zJV++U2qwAppy+aKFJLY0Xr/0cCbJlZw/
-	 6ZcW4QQAOMO5DarcdzhjlqVUuFMsGxQ+wzoqfLsTXTta7JS7z1wHsvNY4n1G5D3DKf
-	 Aj4jaU5gnPKxXo7bIeLrURnAxi5qfnwHDff6weB6Qy0PGXMO2CEXT7ryYIsfrmWJaM
-	 qxaQO+kQuz2sgjGkL/kMJLjT7GWGQ7kdHpuemHmTRwnuZWv8VSlkpZ65tw6PqNPB63
-	 lxJ0rRn+zvEoi8IheQVjegW+ZoA0LmsG/BBnsvgzagqytMwsgOcQhI2lwk8WFjOOFt
-	 xxET9JAbUV8Ew==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] Documentation: Update after split of
- <linux/mod_devicetable.h>
-Reply-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <ede7ce64f20e10660ebf6bc1b41836dad750ae3b.1783349758.git.ukleinek@kernel.org>
-References: <ede7ce64f20e10660ebf6bc1b41836dad750ae3b.1783349758.git.ukleinek@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 15:13:04 +0000
-Message-Id: <20260706151304.D44521F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="YlSGiAiy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=VSwdCWKV/nLqywQb3ggYqrp7aJvjbBGRNOaSZqaDaOQ=; b=YlSGiAiyxVlFNhHvsy6aNxf4xq
+	P19oyKC8FQMNqtBJPOn/8VodrTeR0ndrufsCj4j4YZuEyLIKveQ/nOBR2Nt6YXjWq8vGvRIlqFUzP
+	txD+/mjPudhWwrZ+yznaGJ7PQX0sd9xRQ3WvCIj2kFqNW9kFTskz44gVTUSZtACPoZ07FTW0LuFW9
+	ZHlm6kpE1i/8ZwATwRZvUKnATRNNvZWRzQsnltx3mPT60Emj1XHDkWBqakZGcghNHra2udIuddOCx
+	zhoL1ZecgI9N3nKZCeL5/uE2fDruf7GE9S40xEGx/7oNoMURfH538k0pywV0AAvsi+WDX2JpsjukH
+	UA9jmhYA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wglMD-00000009yMZ-0aoO;
+	Mon, 06 Jul 2026 09:35:41 -0600
+Message-ID: <5ef21f59-ef01-4e7d-b6b6-a540b48d08aa@deltatee.com>
+Date: Mon, 6 Jul 2026 09:35:40 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260705-p2p-vr-v1-1-3cd45cab3fb4@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260705-p2p-vr-v1-1-3cd45cab3fb4@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH] PCI/P2PDMA: Add Nvidia Vera Rubin device to P2P whitelist
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] The kernel-doc for the ACPI_DEVICE_CLASS macro is lost because incl=
-ude/linux/device-id/acpi.h is omitted from the new explicit header list in =
-basics.rst.
---
 
-commit c40d3b75cc5cb1e55623d0db318301a1e8676b9b
-Author: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@baylibre.c=
-om>
 
-Documentation: Update after split of <linux/mod_devicetable.h>
+On 2026-07-05 03:54, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> Nvidia Vera Rubin platforms support PCI peer‑to‑peer transactions.
+> Add them to the P2P whitelist to enable this functionality.
+> 
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Most structs that were defined in include/linux/mod_devicetable.h before we=
-re
-moved to a bus specific header. This commit follows the movement to get the
-documentation back by using an explicit list of per-subsystem headers.
+Looks fine to me:
 
-> diff --git a/Documentation/driver-api/basics.rst b/Documentation/driver-a=
-pi/basics.rst
-> index 8b6a5888cb11d..647e14254cfb8 100644
-> --- a/Documentation/driver-api/basics.rst
-> +++ b/Documentation/driver-api/basics.rst
-> @@ -10,9 +10,36 @@ Driver Entry and Exit points
->  Driver device table
->  -------------------
-> =20
-> -.. kernel-doc:: include/linux/mod_devicetable.h
-> +.. kernel-doc:: include/linux/device-id/amba.h
-> +   :internal:
+Acked-by: Logan Gunthorpe <logang@deltatee.com>
 
-[Severity: Low]
-Does this new explicit list of headers miss include/linux/device-id/acpi.h?
-
-It appears that leaving it out drops the kernel-doc for the ACPI_DEVICE_CLA=
-SS
-macro from the generated documentation.
-
-> +.. kernel-doc:: include/linux/device-id/cdx.h
-> +   :internal:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/ede7ce64f20e10660eb=
-f6bc1b41836dad750ae3b.1783349758.git.ukleinek@kernel.org?part=3D1
