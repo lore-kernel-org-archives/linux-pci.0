@@ -1,265 +1,170 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020136.outbound.protection.outlook.com [52.101.196.136])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E4E3939A3;
-	Mon,  6 Jul 2026 14:12:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.136
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783347136; cv=fail; b=W7P+QNqUChjpZhCGzIUc5YCaG/H35j8tiXwqvGH0EN5BFxcQSEqPvW2uD3AnwogT2krlwHI42NZt++Smg+joTAF4YTcpmt4zewALk8cdCg8+Ca4OJY93CCBPCcuH92Y2JSNNix1atDoTNMUrYzOVIE0/JDcbg0D8oJz+7LX3p40=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783347136; c=relaxed/simple;
-	bh=TDdsV/I55ZZqAffWsj7qX9Ah2rjfQSGfyhKlJd6/clI=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=YnbrXWdolETJEqOGlCZM3itT3CDRr/XI6/6+Rg4hwtLtwlevR8QhxpXZCGaaqrpOBLvJECT1bJFnmx8d2slbmhll6PlS7gRCIZYlVpYeC+r0bvCuuSyyu5RJBHqges+PxmSZh/kPe2vdVcVNsQ+M97qxllJbtHN2r8NME2kKxtM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=EpcHIvhD; arc=fail smtp.client-ip=52.101.196.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC4137F738;
+	Mon,  6 Jul 2026 14:29:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783348173; cv=none; b=PxMxAHWc6vE/+j/NBb0c18ko3DNMaIO4ftXowZTk8IKCso1rP6FU0CFXj1rw8mnu6C9wnadlIZTo0M2rGl5Q/KXA+xoVV1GNn7EXgrutGMMljRgiDP/WLfm0damazmbXb88JHcIySAtfwkhtwBsgHWnpGT5tDG4jZmyED9frn9M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783348173; c=relaxed/simple;
+	bh=Sg2W91u2WOlNeYky+E9Az5PesJHW+j6DLJEmMDv3Nrc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JzDrm3rqr58zoPP9UhELazcU1KUXh4hTZnaET7TWNGm3vKlUYwG2oS72yuyrahUU7x3gwHfVx6u1OUVOCwDzpqqcb/u2YYS5uJwZns86jnIr6XqG0z3jOk9OBYIJweG3E20dkRGrKBaiv8hqe8qIBIarez3WIphI1cHj6eVQC1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JM0PxGSS; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="EpcHIvhD"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yEKIQkITvFIDLwwa3rYWrZ7PVd+V9GRi4Pa1Qa5VxwNVJGA/ax3IWTD98aveMLC2sHVxZpTa20lflw0O1nN180kDd9DzYzxqOA4w+S9TB0RypwmDW+VKS4HGHPwAElAuQpS0dGi1XUuairbk9ulgFjMsStSm/SU4yezC/YRdho0MO2MWSvYDwOozaFmYDnB4DzbXo/em7RKQTbLbYdYvkcQfsqMJNwORbMhPFrZhtK0G/H4A3qFydRBNJ35vMkx2MNVHPIQ2f6DwqKuCVvrTyYhRV1Cmod+Fez/N93vb+e41/1WE2p04kX6MtYkiNpMXYq+VP6YLv9PG18BCNKAzgQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dn5GfkAHBwl6DlMqCNIir8ki6qq2M4UNsYDn2heV0L0=;
- b=GV+Zkh2ONYI+we43pKX7NX6JQPI0JdHtIULEU+FT8uLUTuqlnKaBfP1YLbzIif8bmgFQsYJh3ikFN95Mmn4IPEKN9J/hRfkGFXD5IImYkSwELzo+3WA4JT7UyVXA3IPczBnMMZxHdDZGw9SI/1DHjjDGZY5IgUkdkcGU5OcsEPHR4Q5c56iiBU/Rlu6ibWDpGhq8FLpTFyR3mY4QYDhRogc7lkJJ6ct339nSy3zth+4LHaaldDP+HDv3XXwVqYClx82bnVb4aQNSDnwSw81lY45PcxbJr9EYi1GeBitdsWGbScgCBp7exVK/Usv5nCBwYhihYNHqrZmA2j2Zf8ACrQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dn5GfkAHBwl6DlMqCNIir8ki6qq2M4UNsYDn2heV0L0=;
- b=EpcHIvhDgTEkKudXhFPU0BoxAFWGZS1cCVQWmfUFEMmtdFVvuvEwgIv+LQ1EZiUKztb/r+Me2XnM3D/FcMUl4vja+bIwmoJTKriP1+mOE8dO6pWl6spLAYSmOaB+Md5ukpnFYLH4Y9IwPWd8Dn+TmqDv7oyJVKWOrX9bvnEETiY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by CW1P265MB9444.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:28e::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Mon, 6 Jul
- 2026 14:11:40 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0181.008; Mon, 6 Jul 2026
- 14:11:40 +0000
-From: Gary Guo <gary@garyguo.net>
-Date: Mon, 06 Jul 2026 15:11:21 +0100
-Subject: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn ID
- removal
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
-References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
-In-Reply-To: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Zhenzhong Duan <zhenzhong.duan@gmail.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- GOTO Masanori <gotom@debian.or.jp>, 
- YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Vaibhav Gupta <vaibhavgupta40@gmail.com>, 
- Jens Taprogge <jens.taprogge@taprogge.org>, 
- Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- David Airlie <airlied@redhat.com>
-Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev, 
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
- linux-scsi@vger.kernel.org, industrypack-devel@lists.sourceforge.net, 
- netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- Sashiko <sashiko-bot@kernel.org>, Gary Guo <gary@garyguo.net>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783347093; l=3982;
- i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=TDdsV/I55ZZqAffWsj7qX9Ah2rjfQSGfyhKlJd6/clI=;
- b=+DMYV7M6raQTuaiuwv5aTzj5U3FZ856wubyHoyHmFByzWMezRBiRds1a95igsvRgRKo77IoaE
- BFeunoBkY8eCcJqZILBchy+BomLG/ZMbUhl+O17L5wbpIiQnvewtbCX
-X-Developer-Key: i=gary@garyguo.net; a=ed25519;
- pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
-X-ClientProxiedBy: LO4P123CA0509.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:272::13) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JM0PxGSS"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 666EIjj4606520;
+	Mon, 6 Jul 2026 14:29:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=ExJM01xnOdeglBWEwoWd8ermrj1heSrMTZ9DOnd0jm8=; b=JM0PxGSSxzv2
+	kBojaIG+Mv8sBspk/I0n+i5bBposjjI6VpjU0O2VVXSXNuPZHyVbPIP9nTvrKq/g
+	sgPwzZPeOvdNlXyO003Zm0J02ojTuZ+IbfzAAiOx1iC6BskfkYS+Irwq02ZXQ3lX
+	0jtI/65218WpgFoAXX+j2dzlh/vUfUN7elv/Pdmcb0X7e/l5YPkm9dXw5kf415zV
+	tX82VlreWrcEH7Kh9ZntzmI2mp4ax5o2oK5A8Rkdsy/O0i858PEYQKunUe7AvwDE
+	1ilIt/uvb9t5+WrDN3wCAp/rz7/M/QPlA2pxu0RDrbq0aIotAMFJWe60nyklocqm
+	3kFFSskMKQ==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4f6qkn9yr4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 06 Jul 2026 14:29:11 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 666EJwo0014754;
+	Mon, 6 Jul 2026 14:29:10 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4f7e0h5uqy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 06 Jul 2026 14:29:10 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 666ET4JF51380482
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 6 Jul 2026 14:29:04 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9CBA420043;
+	Mon,  6 Jul 2026 14:29:04 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8471F20040;
+	Mon,  6 Jul 2026 14:29:04 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.111.22.53])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon,  6 Jul 2026 14:29:04 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.4)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1wgkJk-00000002A01-0gbJ;
+	Mon, 06 Jul 2026 16:29:04 +0200
+Date: Mon, 6 Jul 2026 16:29:04 +0200
+From: Benjamin Block <bblock@linux.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bjorn.helgaas@gmail.com>
+Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com, sebott@linux.ibm.com,
+        schnelle@linux.ibm.com, linux@roeck-us.net, lukas@wunner.de,
+        stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
+        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
+        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
+        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
+        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
+Subject: Re: [PATCH v14 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
+ deadlock
+Message-ID: <20260706142904.GA17215@p1gen4-pw042f0m>
+References: <cover.1776839248.git.ionut.nechita@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CW1P265MB9444:EE_
-X-MS-Office365-Filtering-Correlation-Id: b2588099-4b92-48e0-0689-08dedb687ec8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|10070799003|23010399003|376014|1800799024|366016|56012099006|18002099003|22082099003|921020;
-X-Microsoft-Antispam-Message-Info:
-	0QRcjdJtib4t6lRQHjPF24nB2zycJB6qSoVXN+3DVrkm5IYwBg3KUEXJCx+LpeLGlXtKTxNaX0xX3fgDobPVOBxITqMCuBDVn9/wJQHgWVwOd3Bi2FADxiGr8S7dVHQjzH7rHESAEAo+1OMblO+mGzwjTk2PYssM8+KpRrHdtYNkZCEbH9w/Ivu2ZWTpS49uVlKpzwTKVeMkIdfF0WcXdwtLRqPqL7GhdhRQl8WWDnLv0mM8KcEedlPi8X2l5vTHLLHS3HRSkILFZ8TqnslwL8+M22bfTLwfsgKIDOX/rX92HxedfowpqtQFU9QzIvbMDRc8C6NBBvxWa5UL9pN7v1/nH0QjAZrlmzeNcJbD2UiJ1Vj6lfsFtfes+98bFyHi5avNV9oSSYEHTP8+tgTlZXWijF3UkuIzWVfpnoaZHg2p4Wv1Rb8/PBpmbY1YeoLVblTKu/1HL7b26HJL0uUL5kA9Xa56ovnnq4s2l+ytbnqhj29mua6wa937ctJVTHyxqoYBboML2wvH/1P/rz9RLFb+YuuwvU3YDWmzoYrpEcR6ixXQsgEG2qubpnkNp0M9RuoC1oZhdMq3dA6UYo4kzqzvx2cnu97mlVNLB0zTIHMq8b7RdDyX256jX3gAlEt25/eYRF5p/7t2bRbdGdZPP8qgMRuM+ULRxydNK2YBCg8VVf+53BzDFOdGuuJlve5VwU2KM3RElUgTwdY3NW1XuQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(10070799003)(23010399003)(376014)(1800799024)(366016)(56012099006)(18002099003)(22082099003)(921020);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?MlExWEtlNGZjaE5hcU1iRUhicThGSi9WaWY2c3o1d0JHRzhnVE1GKzZMZ2Q0?=
- =?utf-8?B?WHV0WHFsQUhXQzdjcWczMUtSQ01JRDE0amxSMHUxOFhBSjN0VVZRdk8vOXBY?=
- =?utf-8?B?Z0p3dmwrY25ybTF0VUlLeXBQNGZUMG1LVzJlVngyZkFTRytCT0RXelMwbyt2?=
- =?utf-8?B?bEZXWXdVRkpBRytOWDE3RS9uUU4raXk2TFhYMGt5S281WnVrTVVsRFEzeUpr?=
- =?utf-8?B?WUVoK2l5U0ltUFgyOUVYT0oyU2dpSVNDZWVLMjJKclpJbzVSOUJnRVlMTFo0?=
- =?utf-8?B?NHFZY2UrUlU5YjdBZVY0ODZ1bWFzL1pEbkt6QlJ6UlJmWkloSzFOWGQwUlJt?=
- =?utf-8?B?ZnZTaWlFS2JFM3pDUTVGKzFQR05UNzcrdG1xSUU5K1o2WTdac0hKQnNMaGZT?=
- =?utf-8?B?MVBPdUh0T0hVWU5aVngvaGlEdUFuTHJFeDg1RW9kMFdhS21kbGNMejUzek1i?=
- =?utf-8?B?V2JENXh2MDRDWlFDeEFiWm9abkhBM0JjVVRVeEtiTGxvZFMxUnMrNXE2N3pp?=
- =?utf-8?B?dHorM3Y4ZDVwM3VMbjRUUmRLamxaYlpPQUZ0S2h3YnBDa0ZEMk5pTWVTVU1V?=
- =?utf-8?B?VnhJNVJCUHQvV0t4TkE3R0xSbkNNSThCTklYMGpyMFNiK05qSloxK0djZGE4?=
- =?utf-8?B?SENHd0R3MWlDbWJuYSs0dUh0SytWQ216Q0wzb3RJeVVrNFE4TlhYL2NrQ0pj?=
- =?utf-8?B?N3paY0x6ZzhYWGM0VkVpUFYyT1FGKzNrd3k3Y2EyUUl6UnNrQ2JRNE9ObEpL?=
- =?utf-8?B?M3B4NUhGYTJtNTN4cHQvU3dBYktqcW11YkFySnFPRk9NbCtuTXMvUUkxUllN?=
- =?utf-8?B?MlpPQzN5aTZkK0xDenZkYWo2dmRuQU5sZHRGWkhzbFdpYUhtY0hUdkwrWXJH?=
- =?utf-8?B?bjFzZFRGVDZYVXRMRjZtOXorcTdUa1ltSkVRbHZzSjFlK1lrRld4UTJzQlJR?=
- =?utf-8?B?azdITmtOajJVa0JZMm5uNzZ3TGNtUUJBZm5uZDVVUWtudldTd1kzZTR5ZEpq?=
- =?utf-8?B?b000VHUwdHh4Wi9NaTNROWhxMWcwcFU4ZHMyNnNsbGJCMmlETElOOUNXcEpV?=
- =?utf-8?B?bHYwQ2xjMnMwREFVTTlld3pxMXg3YlhmeTlENTRuSUFMdzdVcnp3R3RwZ1RP?=
- =?utf-8?B?QW9RaER5SlZyM3RyZ05KZ2kwZkFUN1MvUmtvT1IrN0FaQ0VZYTI5ZEdMbnNv?=
- =?utf-8?B?WDhmRnBHWGVRTmNuYnEwUUluVzBlcUR6cUN3cGdCNStqaWF6U0NmUWlIRDVR?=
- =?utf-8?B?SU9DVXJSWXNhMFdrTXo3Z0s5L2F2MlRNeHpLVkZLSlNOR1FJNktMY1drWXk1?=
- =?utf-8?B?RnVEbGxPeVZ3Q3NRRFdVcm14eHZIajE4QlZrMkQwbTlCZzE1M0NLVnZxK0Qy?=
- =?utf-8?B?NW5BWmVtbW5SeHQxbnJYOHF4Yk15MTZFb3BLdklmSmxpUkJldksyL3RhV0JC?=
- =?utf-8?B?UzluM05kTXpZWTREL09XWCtSM1hDdW1YblFyZlArRGNxaU1zbGRXOXhyNVVx?=
- =?utf-8?B?MTZDcjIvNHRGMjJGcE5hYUtJNnFiZ1pRS2lKUEJ2NXVDQ0IxVmVWSEhXNk10?=
- =?utf-8?B?UGJNWGhLeTFwK0RRL0pMbGZNUEJPL0tWekhxNWZxb1ZsYW9pZXFjdDIrQ1pH?=
- =?utf-8?B?Ry8xbW13MkhUNUkrMmhGZE05Zk8xemt6LzlSUDByTmN6VTNjUEl2OGYyRXBR?=
- =?utf-8?B?L0N2ZUpvTFBycGFzVlhURDJSUTNNU21QSXhDRFJXUTdESmVjbzVScXllamN1?=
- =?utf-8?B?TEQrM2VsOWdRSEJqQkw5c2loTXhkSjZ4UG5YS2hxa0hyemN1b2tadXFWajg4?=
- =?utf-8?B?bW9iK1ppNWYzKzRBdW5seG5tOGlxRjdsWkhGQUhEOHJGendZdGMyNnFNK1g2?=
- =?utf-8?B?V0hlM09qQWRYUFVzQ1VrdjJWTHF3TUkzNzR0b3VEQUFWdjNhcGpDNmJnMXBV?=
- =?utf-8?B?T1ByQkVQckluVHRmREZESThDZUEwaTRMY2pQSmR5WFNaZmJYNGlGdWxNZU5w?=
- =?utf-8?B?cmNMdWRmSGJYeit6N0Q0NnBzN091UitGYlUwTlc2YmNrck5iQ2xFZklvTEgz?=
- =?utf-8?B?SWltVDZTRUJhUUE3MzNPVzd4d3VTTnpYUEozYzJhWlBqZFBBRGpGU2JoZVBH?=
- =?utf-8?B?aWVlTlFUN2hMVUliWmxJeGNCRWV5bzBpSWh0cndMdWlNRVY1TzBneUdsdGxT?=
- =?utf-8?B?ekJRZVozQjA3cWxjampYN3A2QWl6WVM2N1NWSXp5WnkvRko3eWMvVHNNM1Ni?=
- =?utf-8?B?MTFWYlR4UHE2RDFwQlFxYktWeTlIMVgxSkpyaHIvMlJuK3N1NXlmUXRrSTNZ?=
- =?utf-8?B?cTl6aWR2ajVDTy96WEdGNDc0OEpWY2xIKzYwdkJBK3o0RDJ3cU91UT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2588099-4b92-48e0-0689-08dedb687ec8
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2026 14:11:38.4104
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YZUnxxOpG5p97CCr74kSLPcruxAX7U4o5SYk2LOnkQMSb0zCHDbYESyL5Yqn/4cEENGkGBB7Ljkt0DwTnPon+Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P265MB9444
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <cover.1776839248.git.ionut.nechita@windriver.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=Q/XiJY2a c=1 sm=1 tr=0 ts=6a4bbbb7 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=8nJEP1OIZ-IA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=t7CeM3EgAAAA:8 a=J6SQpo7RyPDJe7EV0JwA:9 a=3ZKOabzyN94A:10
+ a=wPNLvfGTeEIA:10 a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-GUID: dnTLI0PmbyKfdG5MEaD6-cLFhttYCGxL
+X-Proofpoint-ORIG-GUID: sn6hIZ1ohfrJk-91SBe9umMj8kbOdiuy
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA2MDE0NiBTYWx0ZWRfX0wNTi73Va8Y2
+ WFydKbH5110MWxt2L+l01A6MIzmFCD/vD0N0nKYHpQWdbw5qDvijgXTjnLT+9zVQ27XSFLHIR8e
+ wcCjv1TCpNH4VykuGpF0oQW2xrHWMKU=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA2MDE0NiBTYWx0ZWRfXxJm4uznkAmJe
+ kKvXLBENGV2QwgKvxnmuxr8C/zMXx8MdohUXhkxz8oIjlUVGfZHuGXn+cRWbYVizuyPEk2pkUt8
+ d556kKmyO7n5Kq337S7P9MQiHUQnOA+2S7TuYkY60iO2gxYMWdq6M2zhKyoLraFZYbzowzjsqHa
+ 5s8pBRfnq0Un9Na16OFw98/U70s1rXWPjuCilE227UbaXSNqrd4LHa7cJRcmbitXqeOXyxEJUSU
+ Kj18u9ExjdX4Satre0ioKmj40q4s/s1z1yC8ISUqjlEDnOZUn65kaRTDLfp7jk5NIKPk4p5Oujk
+ Qp0KG1bH7jgcBjJ4Kid+BW1i3DBGnN8gHGayZLh0SXP70s/NCG8cmF91da1NqgjwmduAjBwPdGu
+ yCXoRfQKadb3BDij6fNDukCpvm3d/mJxpibeRqmOL4vPK4TX0lbpGa2Rnl122D9+ayfyB7JvTrx
+ 6pQDiWzsp/8dGWtPhDw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-06_01,2026-07-06_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 impostorscore=0 spamscore=0 phishscore=0 priorityscore=1501
+ bulkscore=0 clxscore=1015 lowpriorityscore=0 suspectscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607060146
 
-Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-as remove_id_store can free the node. Thus, make a copy in
-pci_match_device. Also, clarify that the id parameter is only valid during
-probe.
+Hey Bjorn,
 
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-Signed-off-by: Gary Guo <gary@garyguo.net>
----
- drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
- include/linux/pci.h      |  1 +
- 2 files changed, 16 insertions(+), 13 deletions(-)
+On Wed, Apr 22, 2026 at 09:32:40AM +0300, Ionut Nechita (Wind River) wrote:
+> From: Ionut Nechita <ionut.nechita@windriver.com>
+> 
+> This is v14 of the fix for the SR-IOV race between driver .remove()
+> and concurrent hotplug events.
+> 
+--8<--
+> 
+> This race has been independently observed by multiple organizations:
+>   - IBM (s390 platform-generated hot-unplug events racing with
+>     sriov_del_vfs during PF driver unload)
+>   - NVIDIA (tested by Dragos Tatulea in earlier versions)
+>   - Intel (xe driver hitting lockdep warnings and deadlocks when
+>     calling pci_disable_sriov from .remove)
+>   - Wind River (original reporter and patch author)
+> 
+> Test environment:
+>   - Tested on s390 by Benjamin Block and Niklas Schnelle (IBM)
+>   - Tested on x86_64 with Intel and NVIDIA SR-IOV devices (earlier
+>     versions)
+> 
+> Based on linux-next (next-20260420).
+> 
+--8<--
+> 
+> Ionut Nechita (Wind River) (2):
+>   PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
+>     sriov_add_vfs/sriov_del_vfs
+>   PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock
+>     in remove_store
+> 
+>  drivers/pci/iov.c       |  9 +++++----
+>  drivers/pci/pci-sysfs.c | 30 +++++++++++++++++++++++++++++-
+>  drivers/pci/probe.c     | 18 ++++++++++++++++--
+>  3 files changed, 50 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 2e80ae150ff4..4851061babcb 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -179,6 +179,7 @@ static const struct pci_device_id pci_device_id_any = {
-  * pci_match_device - See if a device matches a driver's list of IDs
-  * @drv: the PCI driver to match against
-  * @dev: the PCI device structure to match against
-+ * @id_copy: Place to store copy of pci_device_id for dynamic ID
-  *
-  * Used by a driver to check whether a PCI device is in its list of
-  * supported devices or in the dynids list, which may have been augmented
-@@ -186,9 +187,9 @@ static const struct pci_device_id pci_device_id_any = {
-  * structure or %NULL if there is no match.
-  */
- static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
--						    struct pci_dev *dev)
-+						    struct pci_dev *dev,
-+						    struct pci_device_id *id_copy)
- {
--	struct pci_dynid *dynid;
- 	const struct pci_device_id *found_id = NULL;
- 	struct pci_device_id dev_id;
- 	int ret;
-@@ -200,17 +201,16 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
- 
- 	dev_id = pci_id_from_device(dev);
- 	/* Look at the dynamic ids first, before the static ones */
--	spin_lock(&drv->dynids.lock);
--	list_for_each_entry(dynid, &drv->dynids.list, node) {
--		if (pci_match_one_id(&dynid->id, &dev_id)) {
--			found_id = &dynid->id;
--			break;
-+	scoped_guard(spinlock, &drv->dynids.lock) {
-+		struct pci_dynid *dynid;
-+
-+		list_for_each_entry(dynid, &drv->dynids.list, node) {
-+			if (pci_match_one_id(&dynid->id, &dev_id)) {
-+				*id_copy = dynid->id;
-+				return id_copy;
-+			}
- 		}
- 	}
--	spin_unlock(&drv->dynids.lock);
--
--	if (found_id)
--		return found_id;
- 
- 	found_id = do_pci_match_id(drv->id_table, &dev_id, ret > 0);
- 	if (found_id)
-@@ -466,12 +466,13 @@ void pci_probe_flush_workqueue(void)
- static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- {
- 	const struct pci_device_id *id;
-+	struct pci_device_id id_copy;
- 	int error = 0;
- 
- 	if (drv->probe) {
- 		error = -ENODEV;
- 
--		id = pci_match_device(drv, pci_dev);
-+		id = pci_match_device(drv, pci_dev, &id_copy);
- 		if (id)
- 			error = pci_call_probe(drv, pci_dev, id);
- 	}
-@@ -1559,12 +1560,13 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct pci_driver *pci_drv;
- 	const struct pci_device_id *found_id;
-+	struct pci_device_id id_copy;
- 
- 	if (pci_dev_binding_disallowed(pci_dev))
- 		return 0;
- 
- 	pci_drv = (struct pci_driver *)to_pci_driver(drv);
--	found_id = pci_match_device(pci_drv, pci_dev);
-+	found_id = pci_match_device(pci_drv, pci_dev, &id_copy);
- 	if (found_id)
- 		return 1;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 64b308b6e61c..92c17c116de6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -979,6 +979,7 @@ struct module;
-  *		function returns zero when the driver chooses to
-  *		take "ownership" of the device or an error code
-  *		(negative number) otherwise.
-+ *		The pci_device_id parameter is only valid during probe.
-  *		The probe function always gets called from process
-  *		context, so it can sleep.
-  * @remove:	The remove() function gets called whenever a device
+did you find some time to take a look at this patchset?
+
+I'd love to know how we can continue with this?
+
+As mentioned, I also still have a s390x-specific patchset outstanding:
+https://lore.kernel.org/linux-pci/cover.1776868550.git.bblock%40linux.ibm.com/
+which depends on this one; and this still regularly deadlocks the kernel on
+s390 with PCI hotplug. It really is something I'd like to have fixed as soon
+as possible.
 
 -- 
-2.54.0
-
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
