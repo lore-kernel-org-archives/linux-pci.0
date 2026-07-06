@@ -1,210 +1,137 @@
-Received: from mail.cyberchaos.dev (mail.cyberchaos.dev [195.39.247.168])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5A0C436BCD;
-	Mon,  6 Jul 2026 22:38:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.39.247.168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F2D3D2FFC;
+	Mon,  6 Jul 2026 22:58:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783377531; cv=none; b=c5nwcyUlUn+qYBetT7OvtbKLHgpGoGC4cxRMVQZX4TCvbR5MCpu8V4IpyGXd4ldsxDMlIYiFT8akjxerZfSfdO9frKmVCiklb2lsUFdEBLVv3ajBA6eEj99iWJPK5/xKPlpUZOPuXR7AGZD25ZuJylVsAjfJvc5no9JxKerqgvU=
+	t=1783378717; cv=none; b=Jov1m5mQyKz6d0AOovHjnLwf/UTdLT1Tn/LSU65ASieFoeQPRYrnfkVBnk2cQ1Gy0oGeqra4J4QrZ6h5W8Cys7ATjqvX9sEoMQmpfRCIOvPVK0aAFORfb8hV9CtGgTnBuuzNwqUbUcdou4xsgcgN0+ziewgHLsAY06aNvST7qAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783377531; c=relaxed/simple;
-	bh=bRgfs9ShIxfVOO8/0MKdtw0wiqFFApzCj5xKPcw+2F4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WZQeR91YPGYm+g9EaHocqHR9gjYKaRCvSWkKF+XWTMbUHdiUFNZQistdqzrOuE+fy7XuWeC5MC0hF1ZkSPed1lwB5yTIOOlI4k4z7MVv2oZRqhv/XIqNVmGS427t13Xx07lKE5DEkPbHhwf9bJ5zxOi/543MekfoURb+3UdYdYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cyberchaos.dev; spf=pass smtp.mailfrom=cyberchaos.dev; dkim=pass (1024-bit key) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.b=ogXyt1qe; arc=none smtp.client-ip=195.39.247.168
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cyberchaos.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cyberchaos.dev
+	s=arc-20240116; t=1783378717; c=relaxed/simple;
+	bh=YQ8U9xvmniz5vi39E0l1c8YRPF3r9m//I9Tf+jPH43U=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=f01wMAH0VkAyM5H1wCWFoIMpPw2LMax0nPnlj7u/ivB1tF6x+TbrTyrYHyRU+3suKhdUynNgtz4r0NWHe1yl6zmuXA+6A/TY8U/Ks+MGu1zeAW1BGmz9kw1jSdeIRiKLyGTovXoMenYlZWLTPcke06keBClWbIYqGXJFKTi4OEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xc6p3p7F; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.b="ogXyt1qe"
-From: Yureka Lilian <yureka@cyberchaos.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cyberchaos.dev;
-	s=mail; t=1783377522;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2MYdzoSewcFcQWVr1xi0SARyuuH/Y7lXURwUtog43pY=;
-	b=ogXyt1qeaC0mL0e/L8Uq+VzkHdS7iKaPeWOctmTgKN4+XG+0TRitSM359QiWNzhBDfA9Td
-	IoaXjAe+NJ04ZV2xVxK0VRqaexmDFiPis0Le4g7gAd8qhfuatgVL5ICvRJm387y/gzh1pi
-	9l+NQxDg9U984Yh6P4dDezjV5bDJXCY=
-Date: Tue, 07 Jul 2026 00:38:28 +0200
-Subject: [PATCH 2/2] arm64: dts: apple: t600x: Add PCIe pwren gpios
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xc6p3p7F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2261D1F000E9;
+	Mon,  6 Jul 2026 22:58:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783378716;
+	bh=UohOdC3VB/uU6Ice+PZTZY1IottMYvMEedbYR6HBD80=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Xc6p3p7FfJ1MtRb9kY8cotEWvjjBiobz8qBDqrhXvun7PX/cSz19HZZAZAAVjzpm3
+	 4C1kFIbO7C4yazpXw2N0So9ICkGwLD1BfGm/CsEmv8LIkv0szqQW25eaRchj8ELEF2
+	 O2WV2LG7z+LPw3s3SkjGlHQyXrtCKdOIfPLWy5R1pFx5kAWlepbH3W9bIzRNse3kDQ
+	 bsp1SaIL9LiUy0bUqSErPuY8gbaZTQbQGz7a4gxOToOYVoKvF/BH4+4kiZqgWKuhbZ
+	 rTqdBVEpssavbBgs5iHtdnwsk5gmXIJLConAg0h4P2KxbVQZ//84uXJTCdKaa+qybc
+	 lMZtZP7rcSFDw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/2] arm64: dts: apple: t600x: Add PCIe pwren gpios
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yureka Lilian" <yureka@cyberchaos.dev>
+Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org
+In-Reply-To: <20260707-apple-pcie-pwren-v1-2-5a281b182fe2@cyberchaos.dev>
+References: <20260707-apple-pcie-pwren-v1-0-5a281b182fe2@cyberchaos.dev>
+ <20260707-apple-pcie-pwren-v1-2-5a281b182fe2@cyberchaos.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 06 Jul 2026 22:58:35 +0000
+Message-Id: <20260706225836.2261D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260707-apple-pcie-pwren-v1-2-5a281b182fe2@cyberchaos.dev>
-References: <20260707-apple-pcie-pwren-v1-0-5a281b182fe2@cyberchaos.dev>
-In-Reply-To: <20260707-apple-pcie-pwren-v1-0-5a281b182fe2@cyberchaos.dev>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <maz@kernel.org>, 
- Sven Peter <sven@kernel.org>, Janne Grunau <j@jannau.net>, 
- Neal Gompa <neal@gompa.dev>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
- devicetree@vger.kernel.org, Yureka Lilian <yureka@cyberchaos.dev>
 
-For the MacBook Pro and Mac Studio devices using the M1 Pro/Max/Ultra
-SoCs, add the appropriate fixed regulators for enabling the peripherals
-connected to the PCIe ports (WiFi, SD card reader and USB xHCI), which
-are controlled by GPIOs connected to the SMC.
-Set the regulators as the power-supply of the respective PCIe port, so
-that the endpoints are powered on before probing the ports.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] The device tree changes are non-functional because the Apple PCIe =
+controller driver lacks the required `pci-pwrctrl` framework integration, l=
+eaving the endpoints unpowered.
+- [High] The fixed regulator nodes for the PCIe ports omit the `startup-del=
+ay-us` property, which will cause a violation of the PCIe CEM specification=
+ T_PVPERL timing constraint when enabled.
+--
 
-Add the 'pciclass,0604' compatible string to the PCIe bridge nodes in
-the SoC to allow the pci-pwrctrl-generic driver to bind to them.
+--- Patch [2]: [PATCH 2/2] arm64: dts: apple: t600x: Add PCIe pwren gpios -=
+--
+commit b2b3991e65bd2ca1aa384e079e00556daa346284
+Author: Yureka Lilian <yureka@cyberchaos.dev>
 
-Signed-off-by: Yureka Lilian <yureka@cyberchaos.dev>
----
- arch/arm64/boot/dts/apple/t600x-die0.dtsi      |  4 ++++
- arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi | 16 +++++++++++++++
- arch/arm64/boot/dts/apple/t600x-j375.dtsi      | 27 ++++++++++++++++++++++++++
- 3 files changed, 47 insertions(+)
+arm64: dts: apple: t600x: Add PCIe pwren gpios
+   =20
+This commit adds fixed regulators to enable PCIe peripherals (WiFi, SD card
+reader, and USB xHCI) on Apple M1 Pro/Max/Ultra SoCs. It sets these regulat=
+ors
+as the power-supply for the respective PCIe ports and adds the pciclass,0604
+compatible string to allow the pci-pwrctrl-generic driver to bind.
 
-diff --git a/arch/arm64/boot/dts/apple/t600x-die0.dtsi b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-index f715b19efd16..53a633a3c652 100644
---- a/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-+++ b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-@@ -449,6 +449,7 @@ pcie0: pcie@590000000 {
- 		pinctrl-names = "default";
- 
- 		port00: pci@0,0 {
-+			compatible = "pciclass,0604";
- 			device_type = "pci";
- 			reg = <0x0 0x0 0x0 0x0 0x0>;
- 			reset-gpios = <&pinctrl_ap 4 GPIO_ACTIVE_LOW>;
-@@ -468,6 +469,7 @@ port00: pci@0,0 {
- 		};
- 
- 		port01: pci@1,0 {
-+			compatible = "pciclass,0604";
- 			device_type = "pci";
- 			reg = <0x800 0x0 0x0 0x0 0x0>;
- 			reset-gpios = <&pinctrl_ap 5 GPIO_ACTIVE_LOW>;
-@@ -487,6 +489,7 @@ port01: pci@1,0 {
- 		};
- 
- 		port02: pci@2,0 {
-+			compatible = "pciclass,0604";
- 			device_type = "pci";
- 			reg = <0x1000 0x0 0x0 0x0 0x0>;
- 			reset-gpios = <&pinctrl_ap 6 GPIO_ACTIVE_LOW>;
-@@ -507,6 +510,7 @@ port02: pci@2,0 {
- 		};
- 
- 		port03: pci@3,0 {
-+			compatible = "pciclass,0604";
- 			device_type = "pci";
- 			reg = <0x1800 0x0 0x0 0x0 0x0>;
- 			reset-gpios = <&pinctrl_ap 7 GPIO_ACTIVE_LOW>;
-diff --git a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-index fee84f809a9c..7954cbbe4514 100644
---- a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-+++ b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-@@ -55,6 +55,20 @@ led-0 {
- 			default-state = "keep";
- 		};
- 	};
-+
-+	vreg_pcie0_port0: regulator-pcie0-port0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwren-pcie0-port0";
-+		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
-+	vreg_pcie0_port1: regulator-pcie0-port1 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwren-pcie0-port1";
-+		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
- };
- 
- &serial0 {
-@@ -176,6 +190,7 @@ &nco_clkref {
- /* PCIe devices */
- &port00 {
- 	/* WLAN */
-+	power-supply = <&vreg_pcie0_port0>;
- 	bus-range = <1 1>;
- 	wifi0: wifi@0,0 {
- 		compatible = "pci14e4,4433";
-@@ -195,6 +210,7 @@ bluetooth0: bluetooth@0,1 {
- 
- &port01 {
- 	/* SD card reader */
-+	power-supply = <&vreg_pcie0_port1>;
- 	bus-range = <2 2>;
- 	sdhci0: mmc@0,0 {
- 		compatible = "pci17a0,9755";
-diff --git a/arch/arm64/boot/dts/apple/t600x-j375.dtsi b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-index 8a1494949e4c..412b2fe109be 100644
---- a/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-+++ b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-@@ -42,6 +42,30 @@ memory@10000000000 {
- 		device_type = "memory";
- 		reg = <0x100 0 0x2 0>; /* To be filled by loader */
- 	};
-+
-+	/* WLAN/BT */
-+	vreg_pcie0_port0: regulator-pcie0-port0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwren-pcie0-port0";
-+		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
-+	/* SD card reader */
-+	vreg_pcie0_port1: regulator-pcie0-port1 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwren-pcie0-port1";
-+		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
-+	/* USB xHCI */
-+	vreg_pcie0_port3: regulator-pcie0-port3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwren-pcie0-port3";
-+		gpio = <&smc_gpio 20 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
- };
- 
- &serial0 {
-@@ -356,6 +380,7 @@ &nco_clkref {
- /* PCIe devices */
- &port00 {
- 	/* WLAN */
-+	power-supply = <&vreg_pcie0_port0>;
- 	bus-range = <1 1>;
- 	wifi0: wifi@0,0 {
- 		compatible = "pci14e4,4433";
-@@ -375,6 +400,7 @@ bluetooth0: bluetooth@0,1 {
- 
- &port01 {
- 	/* SD card reader */
-+	power-supply = <&vreg_pcie0_port1>;
- 	bus-range = <2 2>;
- 	sdhci0: mmc@0,0 {
- 		compatible = "pci17a0,9755";
-@@ -397,6 +423,7 @@ ethernet0: ethernet@0,0 {
- 
- &port03 {
- 	/* USB xHCI */
-+	power-supply = <&vreg_pcie0_port3>;
- 	bus-range = <4 4>;
- 	status = "okay";
- };
+> diff --git a/arch/arm64/boot/dts/apple/t600x-die0.dtsi b/arch/arm64/boot/=
+dts/apple/t600x-die0.dtsi
+> index f715b19efd167..53a633a3c6527 100644
+> --- a/arch/arm64/boot/dts/apple/t600x-die0.dtsi
+> +++ b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
+[ ... ]
+> @@ -449,6 +449,7 @@ pcie0: pcie@590000000 {
+>  		pinctrl-names =3D "default";
+> =20
+>  		port00: pci@0,0 {
+> +			compatible =3D "pciclass,0604";
 
--- 
-2.54.0
+[Severity: High]
+Will this generic power control driver actually be probed?
 
+The pci-pwrctrl-generic driver requires the PCIe host controller to explici=
+tly
+call pci_pwrctrl_create_devices() to instantiate platform devices for these
+child nodes.
+
+Looking at drivers/pci/controller/pcie-apple.c, this API is never invoked. =
+As
+a result, the pci-pwrctrl device is never created, the power-supply propert=
+ies
+will be ignored, and the connected endpoints will remain unpowered.
+
+>  			device_type =3D "pci";
+>  			reg =3D <0x0 0x0 0x0 0x0 0x0>;
+>  			reset-gpios =3D <&pinctrl_ap 4 GPIO_ACTIVE_LOW>;
+> diff --git a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi b/arch/arm64/=
+boot/dts/apple/t600x-j314-j316.dtsi
+> index fee84f809a9cc..7954cbbe45140 100644
+> --- a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
+> +++ b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
+[ ... ]
+> @@ -55,6 +55,20 @@ led-0 {
+>  			default-state =3D "keep";
+>  		};
+>  	};
+> +
+> +	vreg_pcie0_port0: regulator-pcie0-port0 {
+> +		compatible =3D "regulator-fixed";
+> +		regulator-name =3D "pwren-pcie0-port0";
+> +		gpio =3D <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
+> +		enable-active-high;
+> +	};
+
+[Severity: High]
+Does this regulator need a startup-delay-us property to meet PCIe timing?
+
+When the generic power control framework eventually manages this regulator
+(either once the pci-pwrctrl driver is supported or via direct host control=
+ler
+control), it will enable it without implicit delays.=20
+
+Without startup-delay-us =3D <100000>, regulator_enable() returns immediate=
+ly.
+The apple_pcie_setup_port() function then asserts PERST#, waits only 100us,
+and deasserts PERST#.=20
+
+Could this result in a T_PVPERL of ~100us instead of the spec-mandated 100m=
+s,
+causing the PCIe endpoints to fail initialization or act erratically? (This
+also applies to the other fixed regulators introduced in this patch).
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707-apple-pcie=
+-pwren-v1-0-5a281b182fe2@cyberchaos.dev?part=3D2
