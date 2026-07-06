@@ -1,209 +1,147 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4A43D524E;
-	Mon,  6 Jul 2026 20:02:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783368177; cv=none; b=PuQWVLdqrDc9usRIt1euZwWbUMESueonUFkreSUsnBOVdS0DtFx86j7XiI/AMptyQJNNeHmO+kTu/ZPdRt8cGW1dotyz5AyG6l+LUA6jkRd/dXcknG7DJsKavYFj9DiOdTWaCa9oI1O9jH4Cphdw9BiWO+RI1ZcLQePGkD6cMDA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783368177; c=relaxed/simple;
-	bh=cxFKF1uQ8sXtBuLecwnfAqbeXGEn+xLM2QbVkFG0hNU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uDS/orsyu7wAsvoUAna2+wapdjn53tlb/moIIe6l8zDpWj4/pW2QmUL57acGA4ppWD2SFF/PhTOEFIyj6QS1gwQk0aLwhn8bvIRfj0e4FtAGDeRn43OUA31MsN0LwOJz8ePWPNpwDAm8P8sTcjIeozcM4eDxBNIGf8zuy6R7TLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=CurLZwnL; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 525E33D4112
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 20:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.175
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783368327; cv=pass; b=smMjslOWCBlEyqbYfKflf+rpOVv0ZSx7DFkzVi6zErFFuseW1NqgBomuUBLGqqqzLNPhCZiUWjdoUZV5cM9MBK/e8Ycb/RToI8/o8P0/FNePDGyaOrJ2eDPgiFML+owVfqRYpfqRi5Bq/2+G93tp4DjJ5r8o7n0B9j3kYUsVbTw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783368327; c=relaxed/simple;
+	bh=cZzLDtUOUx2+M6TxkHymIb2lPpb+5tNDsr6avCKlGmI=;
+	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TgbqS7hn/Kx8S8I3OAGeV7/7zk5APHBARH7SIKwhJjFJ4um8iZ+VzgR6wFLMTCAv/y8NoIG5rifl70uKXPJAy6x3D5dGCU7zfb8ZxSn/mEnYTKh8WMphIjrQWxtKy2cslgF6LZ4Vo1R+7ijpxIWp8ZciltzpwMltjEL/5F27Lz8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=giEuSFaE; arc=pass smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="CurLZwnL"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 666FIJ0p507358;
-	Mon, 6 Jul 2026 20:02:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=U6Usfd8i3/homWF3g
-	nhKhYGoqHmZe/mo7+UAjaY/tSs=; b=CurLZwnLLP51BKjVlqrY5ZuCZanP2WexM
-	GQFEliRTMg9tQDoxo0hl1cLr0oVXEddPZ5S6DX1UOn3JG574SlTcZj7EKW804T+N
-	eSIzNCdIL8BVnJlnh4XmN0MTIC9vaTDVdTLN4Pgf8VG94EQUbOyVB1Krc9111uq+
-	RYe0amsciTpAOJ1896/0kJIchUNEDoJWISAfNk9RzUIjfjdVq42Hn85xbvtviEnJ
-	+u+APy/yf3NqttReCK5bTR7JkF8Dl6djEiwRt6ZEgD8eoM87+bJWWaZss9XJS6J1
-	WWHUPiLEAJ3tIYV2RgIZ9ZcPy1xBeOlscAqU8AN9x6C1GW5fCVekA==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4f6sw4k6nw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 20:02:51 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 666JnaYg024239;
-	Mon, 6 Jul 2026 20:02:50 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4f7cgpy8m5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 20:02:50 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 666K2mtQ67043738
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 6 Jul 2026 20:02:48 GMT
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AA19358056;
-	Mon,  6 Jul 2026 20:02:48 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 62A6158052;
-	Mon,  6 Jul 2026 20:02:48 +0000 (GMT)
-Received: from IBM-GVXK264.atx-us.ibm.com (unknown [9.16.47.12])
-	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  6 Jul 2026 20:02:48 +0000 (GMT)
-From: Ramesh Errabolu <ramesh@linux.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
-        driver-core@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Farhan Ali <alifm@linux.ibm.com>,
-        Ramesh Errabolu <ramesh@linux.ibm.com>
-Subject: [PATCH v5 1/1] PCI: hotplug: Add 'uevent' sysfs attribute to trigger slot events
-Date: Mon,  6 Jul 2026 15:02:44 -0500
-Message-ID: <20260706200244.91130-2-ramesh@linux.ibm.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260706200244.91130-1-ramesh@linux.ibm.com>
-References: <20260706200244.91130-1-ramesh@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="giEuSFaE"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2caf228a910so20560845ad.2
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 13:05:26 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783368326; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Unj+qVC0wZIybf/LLzacmwHaTZ7yPU5PXYri5b8h/elKg+WPiBVZZUHRnZLena1LRM
+         IaHGBZx/o0F1jMvSqkSscC28fW1RcuUyJCWUE+cVnue+8XnMpe2OJSchx6SK6gNyXEaq
+         TXhACJXilmJa0WrV/HEk+DwvbkYNrb7BRQDmK8beK6bYXXPvjXd7T6ONL3qM8orI5rQE
+         lw4nDOBvlpI7G+aDcTW2y4VtPoSlAMpiZSWewGd8+E2/OEXAdvWTzPZXq2izUr//QBOE
+         qun/AhTnIMWzzgsL7vsDfrdSNKuyRyzmomWtXHjIsABj+c3tzxH8KvvVNagr+NMoR+Hq
+         AoUA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:dkim-signature;
+        bh=y1sJvcjfFSzHCYkLQviAR+AOvGzP6D3rFksnjCW+sao=;
+        fh=QHfpjlVpLw9K40w/9EeLTvXsIowzmEKebRMjGVAClVE=;
+        b=d+IJPwLVvzlUzxaxw1YlIv9eUMGi3ObU3sDSJ6u4tWluEu1N3Y7VB2s+D6o3mBtWlO
+         ll5vTwsuxlfwhnQY/iRRHqzKU2O+cpZiNLNtLogKXPkhY2vrO9ylIm9LFGFCf67JiBS4
+         S1WyWKee09BX8Jv3eMR2KGSK+SnWgDOqh+zbSQiGgAPf0SM3DmoheSy4vTdmuGWw5p9M
+         pMFrdncAgYpX5N2osGUdkMG9qLlcSj0fjZe4FcQZ1ykJybWAJEIqY26wFMgxAErZVfiF
+         aJDkW2+8souSWqbdDS0Ii8B/VJECYyVZWZLefH6mdbWko2JIcs6CESadAAnb9v+8ANCv
+         Wn0w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783368326; x=1783973126; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:mime-version:references
+         :in-reply-to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=y1sJvcjfFSzHCYkLQviAR+AOvGzP6D3rFksnjCW+sao=;
+        b=giEuSFaES94oPLNtxlzSLGWTrYdHjqulVc0bXKs2L3S5JEmNYfFUpA5YOTtIS6nqUg
+         2HbHOdAxImIcjWvWqvwRtG1L5ZXYO9FkdigxKnl8zoyTk+6zJ5AGxyLaYPU1q0JPdnLl
+         LG66fEZFEUs/0scj73t3I77WPgDrMLj/0weBGalDk1bMKbFldBvLa/62xBwlR4Ra6MsO
+         o1n/jjTZZkgyvrlcpqavJlPTFvvC7O0pwnmKLHFO+mVuIsBZACX6ZqwfuicN6venrej7
+         29Oxkc7hgn3mmFEcrp+pSqVcDU+0Gp/dJ+BCqAeRPyBcuqClK+/qKo6zhvlRusSoaAAi
+         hN5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783368326; x=1783973126;
+        h=content-type:cc:to:subject:message-id:date:mime-version:references
+         :in-reply-to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=y1sJvcjfFSzHCYkLQviAR+AOvGzP6D3rFksnjCW+sao=;
+        b=fcKA1+Z8i/tBvBO8PcN+Ezt1sC2jHEJJZu1/0CsxiJqOzl4+vZ6sTF84zOFwW6j2Mh
+         U9oS8VxTSF3DIxne9paBJHyH4g0KlrD2sq2pbXiCihVk8u13FJ4zZgzrZM37E1VsYMeA
+         /xV3LtYJUSs+OSxX15goAiKf1kaTyCJ7YjiAXdW2NXA0EPpWo5ZauZRJ4cUaE9OKhmG6
+         4vEf0LT8aUIsKF1Md6rwut+g+IEmvpyCteAKSpRvxcbq46tLUaoZZeBwKxC6iOeQ2G87
+         2G5aig48tEQk8pM8e+1XQD3KjMCH4U3rMwUm/XtT8Z/nZKjdzgGHCguswWrVpALMCMlg
+         TwyQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoXvh8W4ji6L8jCyESovB/MZkS9xgdhQQVeoJiFWhXdHAJMYQXoaRhHuq6S55K+5gTRYhFQ7xtZosQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFoxnXPyQJcXrA6dZLSYtoPTcydhaVqnrW//3tVwnH9WfkMHuh
+	DXesR36QF5FKR+cmSanLzt7l5+DoNDCnsIOuIlY/1xa66EU+ynuYexiI3Dk7rbt3wQEmZFYJRR3
+	8rVzynZ9HKJb+dDnEzrXGlFtez+v0JuLba3Y7Qdu6
+X-Gm-Gg: AfdE7clM/fkS2DGg4QLBNvhgp8CZ6rYcW2oG4sMgg8PbDBUHvABuvrdl7aMAhUlxMBE
+	36291rlLVAhbyMzY6HIvMdpdAGsHJKv3l8OlAKWNZoTuLAHOtuD4XG4xSas8jIXQkcCFay+QmSN
+	FmWClj5AyjdsrZOfcHCqAf6Y+CCwzpiMKLtQOHdikSMVtNSRnU4tkK8rrbDJkSEQiwcokccGSrY
+	U1jHwk2Qruf9xXylQPZ2B/0ybahLPADGFegZ6SXryn3HkHaecgsx200aB70x4LYNqrsK7Pkksfq
+	oB0eHdlkV2HYOWMcIEEzsPf9+lMWxbBr13Wtyj3RBUi71aI9U7YfklI5thw=
+X-Received: by 2002:a17:902:fc8e:b0:2ca:e0ff:e696 with SMTP id
+ d9443c01a7336-2ccbe509767mr23472615ad.9.1783368325085; Mon, 06 Jul 2026
+ 13:05:25 -0700 (PDT)
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 6 Jul 2026 13:05:24 -0700
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 6 Jul 2026 13:05:24 -0700
+From: Ackerley Tng <ackerleytng@google.com>
+In-Reply-To: <20260327160132.2946114-31-yilun.xu@linux.intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-31-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: I2geCtfitfia2aIRc5imbofIbM7AExP6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA2MDIwMCBTYWx0ZWRfX8QtLWMBdgACy
- YJONj55GLAoGZdrjER7PedP4caznzdxyPRe3vctIKqW0XWxVzwXNlPO/CPgJwtwJfDZbvuH2q8s
- mgXFLeImWX0joabw2yJOdUGu0zj1Z+otVXdPd0fmEEI5EwxumYwt3SGdYM/Qccgp512jSN4oHuF
- BXg+5L7buOuComzEBSkbQMAbfCoV53ya2dHY6WtuXJnBPko8pWXzTweECQG2j1HF31AWxwPgTSD
- 620j1xPKkNHPXcWQcFyommrGYdtWkMS0xvF/+22tbzoZZNwBUHPBplUjtlSDRH0dt961gYCDl+3
- glGBVVSdF5OPFvtkn20mLWymA1qZy6wGukmYRSvnlMRcPolKRiukVmsADNV2FXMFS4OxFOZSwkr
- 5699No256HjkTA3Jtqk82xqOwMeqLBv0CS1Dlf1ci2SeBYgN2PfRFnmYVxK+/MSH/86W6aWlo9Z
- 1cZMlBEoAZuiyaIiCkw==
-X-Proofpoint-ORIG-GUID: AzpBnPsVTJAu1Y96mrqQXj5_k2IkJIPz
-X-Authority-Analysis: v=2.4 cv=FqQ1OWrq c=1 sm=1 tr=0 ts=6a4c09eb cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=RLFbKyCAV2Q4rzo76dmsHbHSXqs=:19 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=EZCWm4vck40sK4hgDfAA:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA2MDIwMCBTYWx0ZWRfX1xvRLUq53uci
- DRTJhYVQCn3cKe6ZjAz2q1guz9UZJjgzA6Ie/3ldAYzGxqaM5VqOe9Cbx0VChQaKlsdwvG1zGvD
- qOlbqgtLDTepyk2LWUUq6G2+jvui9sg=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-06_02,2026-07-06_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 impostorscore=0 clxscore=1011 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 suspectscore=0 spamscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607060200
+Date: Mon, 6 Jul 2026 13:05:24 -0700
+X-Gm-Features: AVVi8CfBjO2gULD3GETeRHh9h0KndZBQaojE74hhluZ7n9qbjhbk_11LUC5m6bk
+Message-ID: <CAEvNRgFpD3xOAPJPziVy0EvT61a0jjAf2VH0X3ZeHC2z3Om8nA@mail.gmail.com>
+Subject: Re: [PATCH v2 30/31] coco/tdx-host: Implement IDE stream setup/teardown
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev, 
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com, 
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org, 
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org, 
+	xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Add a write-only 'uevent' sysfs attribute for synthesizing
-uevents for a PCI slot. This extends the existing uevent
-support which emits a KOBJ_ADD uevent in pci_hp_add() with
-the ability to replay such uevents for cold plugged devices.
-As such events are only emitted by hotplug capable PCI slots
-so is the support for synthesizing them.
+Xu Yilun <yilun.xu@linux.intel.com> writes:
 
-The change was validated by manually triggering 'add' uevent
-for a specific hotplug PCI slot:
+>
+> [...snip...]
+>
+>  static int tdx_tsm_link_connect(struct pci_dev *pdev)
+>  {
+>  	struct tdx_tsm_link *tlink = to_tdx_tsm_link(pdev->tsm);
+> @@ -362,7 +579,15 @@ static int tdx_tsm_link_connect(struct pci_dev *pdev)
+>  		return PTR_ERR(tlink_spdm);
+>  	}
+>
+> +	struct tdx_tsm_link *tlink_ide __free(tdx_ide_stream_teardown) =
+> +		tdx_ide_stream_setup(tlink);
+> +	if (IS_ERR(tlink_ide)) {
+> +		pci_err(pdev, "fail to setup ide stream\n");
+> +		return PTR_ERR(tlink_ide);
+> +	}
+> +
+>  	retain_and_null_ptr(tlink_spdm);
+> +	retain_and_null_ptr(tlink_ide);
+>
+>  	return 0;
+>  }
 
-    $ echo "add $(uuidgen)" | sudo tee   \
-                /sys/bus/pci/slots/<slot-id>/uevent
+Would it be possible to define .connect = tdx_tsm_link_connect in the
+patch that sets up spdm, and then update tdx_tsm_link_connect in this
+patch?
 
-Signed-off-by: Ramesh Errabolu <ramesh@linux.ibm.com>
-Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Tested-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/pci/hotplug/pci_hotplug_core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+I think it would help in showing how the spdm is associated with
+tdx_tsm_link_ops.
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index fadcf98a8a66..c3634b1cc7a8 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -173,12 +173,27 @@ static ssize_t presence_read_file(struct pci_slot *pci_slot, char *buf)
- 
- static struct pci_slot_attribute hotplug_slot_attr_presence = {
- 	.attr = {.name = "adapter", .mode = S_IFREG | S_IRUGO},
- 	.show = presence_read_file,
- };
- 
-+static ssize_t uevent_write_file(struct pci_slot *slot,
-+				 const char *buf, size_t len)
-+{
-+	int rc;
-+
-+	rc = kobject_synth_uevent(&slot->kobj, buf, len);
-+	return rc ? rc : len;
-+}
-+
-+static struct pci_slot_attribute hotplug_slot_attr_uevent = {
-+	.attr = {.name = "uevent", .mode = S_IFREG | 0200},
-+	.show = NULL,
-+	.store = uevent_write_file
-+};
-+
- static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
- 			       size_t count)
- {
- 	struct hotplug_slot *slot = pci_slot->hotplug;
- 	unsigned long ltest;
- 	u32 test;
-@@ -251,12 +266,17 @@ static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- 		if (retval)
- 			dev_err(&pci_slot->bus->dev,
- 				"Error creating sysfs link (%d)\n", retval);
- 		kobject_put(kobj);
- 	}
- 
-+	retval = sysfs_create_file(&pci_slot->kobj,
-+				   &hotplug_slot_attr_uevent.attr);
-+	if (retval)
-+		goto exit_uevent;
-+
- 	if (has_power_file(slot)) {
- 		retval = sysfs_create_file(&pci_slot->kobj,
- 					   &hotplug_slot_attr_power.attr);
- 		if (retval)
- 			goto exit_power;
- 	}
-@@ -303,19 +323,24 @@ static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- 		sysfs_remove_file(&pci_slot->kobj,
- 				  &hotplug_slot_attr_attention.attr);
- exit_attention:
- 	if (has_power_file(slot))
- 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_power.attr);
- exit_power:
-+	sysfs_remove_file(&pci_slot->kobj,
-+			  &hotplug_slot_attr_uevent.attr);
-+exit_uevent:
- 	sysfs_remove_link(&pci_slot->kobj, "module");
- exit:
- 	return retval;
- }
- 
- static void fs_remove_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- {
-+	sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_uevent.attr);
-+
- 	if (has_power_file(slot))
- 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_power.attr);
- 
- 	if (has_attention_file(slot))
- 		sysfs_remove_file(&pci_slot->kobj,
- 				  &hotplug_slot_attr_attention.attr);
--- 
-2.43.0
+Would it also be possible to bring the definition of .probe in
+tdx_tsm_link_ops till after this patch too?
 
+> @@ -371,6 +596,7 @@ static void tdx_tsm_link_disconnect(struct pci_dev *pdev)
+>  {
+>  	struct tdx_tsm_link *tlink = to_tdx_tsm_link(pdev->tsm);
+>
+> +	tdx_ide_stream_teardown(tlink);
+>  	tdx_spdm_session_teardown(tlink);
+>  }
+>
+> --
+> 2.25.1
