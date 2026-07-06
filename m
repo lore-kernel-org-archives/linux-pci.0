@@ -1,97 +1,97 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B909C3164A9
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 19:31:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139CA3C553F
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 19:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.48
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783366287; cv=pass; b=ow0ULmHnUCfd+EW5Sx0fk6o5m9tJFqSpDWUVcLg34zii+Qz38gPKnLs5+a+CXSekDG60TRQzZBmHO5AYEWBUWBRQDPYVX5lrSiNE60N+bJ3u5nmOls+qpxmCapASyGkWfYDjZyJHHDfg/OophAdTY6UGxthmBTlHKn3uY8KT6Zw=
+	t=1783367214; cv=pass; b=Qrbgk1UuFRKcRDFt1mE4Y8Tw5PajlDCraZrXHUO+Ed1uALtOQ+P9a8AFAb/S5TN8mawJYIiEJdnycPgbXh93BQgqq0vA0pa6K7gaTY98/I4HUGkXtsjkqqCuvLppLKy8NTNpGrYCHap11P+pvwEzTDnY4N3GMzEYnqjPBQJM4zI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783366287; c=relaxed/simple;
-	bh=ZqWVpOj6fMq4bOzwenk+eFayci0sBP705y2M1gKjVSc=;
+	s=arc-20240116; t=1783367214; c=relaxed/simple;
+	bh=NWmBQOj8652++0u4BApvFgERW3/zvAIHNwGxjXYSCL0=;
 	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NnbptAHLY6IfA3osImIVmQpTwtlutZNAC+YWk3//D/5AbbyMc/uuxYzyvrNYcqJcJ0FkCJ8ANxSHb8UjJd7lkiOYNsvQ7zHse8gV10E+MPcZtHMZY51NkFXD99RiZnaT47IBOzAciI100wq5PvhgQ9x7sGiTEJ5zhWuc9p9m79k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HgpMkLyQ; arc=pass smtp.client-ip=209.85.214.175
+	 To:Cc:Content-Type; b=HPdB26LmaU+sVgTW16MYLO60yyr0T/oF+YqF818yALyguFO8McGy6QICTtow4fbZjq8lTet24r8iTL6wa8+wgtY3LhDuEklIeqTxTnU+HHX46jD6WMjguNst7isyacO1arGA2kHvrszSSyaO5t+FqQW5LEQZp9t7mA0I1rW1lyQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fB6DsmM/; arc=pass smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HgpMkLyQ"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cace7da66eso31953255ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 12:31:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783366284; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fB6DsmM/"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-381891a9525so3143541a91.3
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 12:46:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783367212; cv=none;
         d=google.com; s=arc-20260327;
-        b=iDe5pDHIXet/J/XbeIqCAU0aG5X9zogvwQ+iCYyUTdlOhX7IpbPAMia7XMaZgj/Pv5
-         s1ryEtVvf612l7ffH8ox5y7iLsIBHszxiuFkIIj4nHyJj9wkER8GHg+dv7kIZHa1pHqU
-         nAI91ynjrb5L2NJV4Z94JKj5kWiv6FXP8tET1V5a2NSFIW7CRi3yiZLwptt42VU38Rrr
-         30ZLVCdA69lMBWm40r7Mk2gyYslFY4NZVBrJM2nf21kHXOTpe3A8ZJ3/x32tUMR0cEUk
-         mskcrG7K8oj+nkMxBkQ+xwo6wqpWB7SAjxb8sBEqTiiMNl+Ps4Ex5rkzrTKRBWMfZUtn
-         n8qg==
+        b=ddkO0UFwcTw/5iWkloiIurVGvLdVhQWKbdUwaxmiG9sPSU6Tc3HRs5ybfOUaex2VuI
+         dVgI3UzylrjB4iyA4fbXWjoIJBJxT/xKBvVf2T8mV7R0eRSOFJubE2qI2nGlIPlf3p21
+         8E9p36eRC3DDAZy2Kq7n4/0PfU0OrUSwvX5/QInwOqo9/tlj79UDP8La6r9/WoYNB9HN
+         fj+hIXt1LnPEhNo7gVC2vYLdKVJb9ecFhy6IE98z3NcP5dqb8tq4uOMc/hFifZWcA5H0
+         Ztu+eaZDMqsEfHbJ2cUl1fYeDszI0w25/IyrJW8SzY4qU+iX6X6DRcY/EEKU9nMKzGVc
+         eEdQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
          :from:dkim-signature;
-        bh=5sBbN6AQhjUw4Kzr8zci20KvZDn+C3bKKaEIfQEAul4=;
-        fh=VI43HhwvxqQA3+E6t0SG3pKM/NWy8UqLiUef4J5TiCc=;
-        b=ITf3OvFn91ehxxmpJQFc8a3duj8XosgQQ8CjHbs5I850ZTHeF5c0hFwVh/ZC44wfrO
-         I4J3IUgIqVi8gCAgOE4w1IZCOguelOgXDQL7U7Dgb286KY0Jho3tvdM+JcaEJ4oLkz13
-         ANzAMIIvUVHxm3RGfISWxsd6SNAd9xzXgG7wkh6nRyG2YS4EE7dUbXgNoxBhJxHyxkJd
-         4yd2gf275XrST5JYxWr/27nqHvX784RXUwa5IRiRgCLjotCMgtATFU+zg6P4jryQt2hu
-         A/VOmTcjLeMQfRVc+AIRvtGD91hcaQsKgXGBuCrPVXVrV9khfqIYJUc76ysMvfQLy8Qh
-         91LA==;
+        bh=AzvZmiu3pxyjrq+71eavJJITG4fAyaLNCptSx2v/fpA=;
+        fh=NJUdtAt4mkPc+7aDr94p1HAjwXhri/EjrI+bxhNekAk=;
+        b=gFSlbQUCBIyJ08hO95CVSm6qMMGOgp1Tr0temfVnsr2zvgmu6dzdM62j8k7a7OMuPE
+         rQ0qLYJwcG/fRrqa6K+CDdl1HC0cHCQnFZ4xkRgDGlQZkMkYH1vI8YINm7MPAIHb9F4m
+         pHEjIrEoXzdi77FhCgOOowJ/obpx5F/EZOq9l1gzJUBOqH8XiK9DXFudOnwzsaEPh6v4
+         /ShQMYGJrN1N7PIXaSRZlaiq5Z6YUBlPL4LqKx5Ov5z7I0OjgqwEdRlAs1j5i8UjBmha
+         FEMXfMbpLNx27FhqH6sWulSLkRzErdss67+6rT01/bK6XSTJJ0V1SigivcyasA9TkiLK
+         +dhA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783366284; x=1783971084; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:mime-version:references
-         :in-reply-to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5sBbN6AQhjUw4Kzr8zci20KvZDn+C3bKKaEIfQEAul4=;
-        b=HgpMkLyQAbE7kiJuX4f6XG1jTKmgl19svI3zJrxw8juY5eUe3UqNSc9v6DCrpqymwK
-         NYlqycL4tEDwLieSg0lvkjx7W3eUWYUEUvBmRWH2CYz+IaWFQAK4HIg6Xdjjosk/c43Z
-         7YurBFzAF/pP4hIildyYQ+5o9RgeImGuW8GhSE84Yben2mJxS2YfdV3hrettSEjZtKlH
-         8lYzaJgYxtVJ54D6EiheLqcxADgOGMyrL8v+/adVp1dtADSzqqRU4ZRsFw2wzKwB2d5+
-         gveZlqJFeTCXIsyGMItRjyW++fLwtd2q4CdHCh7r+1iM5XI39thkjAj18wt7JDCGFZ3N
-         cfDw==
+        d=google.com; s=20251104; t=1783367212; x=1783972012; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=AzvZmiu3pxyjrq+71eavJJITG4fAyaLNCptSx2v/fpA=;
+        b=fB6DsmM/mJCULx9ef7HEqcipew3ZzQtn7NIQ+OtCQxuSWUAqKXbpVhmdvhUzsZh1az
+         DpVNKbtR4+LjmVqVmYT4WJtBUgCoHjxYSpWkquLJCyZcXGxfQxnWvw8Gdlt9SfXw90wy
+         rhVGTIgAOXYQO555HuRAes97GXpdtOZ82lVJRXZ48nFuO3xxo5fKmGx9RO0WoP97LXc7
+         AsIMp42jA5H81uHacYC+ahlRN3gI0pnka0tgoJMAnnIWsd46E8+sTKi/SqFdaLiXhiUQ
+         XvqnPHEFhMVtiybWe7RLkDgn2jSuIkzfhPlKZL8bc+1JpHttApCQwDd1LCPU/o9FCDHv
+         BUhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783366284; x=1783971084;
-        h=content-type:cc:to:subject:message-id:date:mime-version:references
-         :in-reply-to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5sBbN6AQhjUw4Kzr8zci20KvZDn+C3bKKaEIfQEAul4=;
-        b=gES2YOg8eqqHbS44daHNZlKHicosTl4rX012v3k+HeDnTD1KkD2KOAQtiEkKphGOce
-         vLgAxgLbbVn/CsBXJb61K7Wt2VmaowEdmPhzkbxnej7FUPY/pG0lrH8iAMbItuLgRjfg
-         36tp/5XC/Z9ivMwVIGVoGQz0kuxxF9bl5Cc46BLLHjHdXDl3ZZJO4gpw6vTk+zkVtXsn
-         LdgzbBeD4PKneU2dNO/aOOFg50YmZTVZSmx68l+CiEDlppe7/FaFGV1i3ZoSUODSh/YM
-         Jcg2ouDfMBF3Oh+IrCFhlor1iwNQHqrVCaHsbrM9Y9i4BhBSKuQmPohchWpKsQUa1H2g
-         zCMQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpUGJC0bvtMOBbWTpw/4DYBpnVhwXWGHXdiz8OATdK0jfCXfIoog78VwBwuGfwmMqRyBRXtLDFnsDg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxfzcxbXKRSqDeo0covN3zdhx6G1FkhRL2Ju20yer+90RNvBcn/
-	bQ2kumcFpyJND9adVu+bULuqCVU+Bask8dQZEQ8Gvs01zpsfXZoaH8ufywQIXXkQH1WKZsgXBwc
-	0oF8B8hj0f2jWhefdRaPLHHyoQAYQUPoEH7uef/pY
-X-Gm-Gg: AfdE7cmzlDUkq9qReqdmP3D/FNH7bU871nO7NiVS3BijaoBvcwU99+Tp7sG5928nlKm
-	B9UAtdSLCacKEYHegAuENFhYgSjJ/e8Wr7iBk3ftBgj9BNRTiiJNgAKVVz+hoHNK1JFE03rBPoo
-	kPcSSJYKhJGwOSxtWVvoEui9S3NunLn4FjL9NkU6iP+lRsLww8KRfTT+HO9v7N51wxjULUcxhyx
-	rPdT5/n7FPPwlU5DtzTHjMUIMIfqP1tNgsZmJXB7sZ2dcOg4KlUXmhvsZJNty8upaJGAIzhpVbP
-	ptKfbm/eMPOoZqv6xi71LnRZSMvW4AOSBvJiHy2OBHKGd4WXPiRxVl/H4/A=
-X-Received: by 2002:a17:902:eccd:b0:2ca:a284:a136 with SMTP id
- d9443c01a7336-2ccbf188823mr18530635ad.42.1783366283312; Mon, 06 Jul 2026
- 12:31:23 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1783367212; x=1783972012;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AzvZmiu3pxyjrq+71eavJJITG4fAyaLNCptSx2v/fpA=;
+        b=sUExDAomKZAVVhqcFkiADjYJQXH2s+hiPsooc1ss8JfrN4O/zMogEVnpTwGyqkAWWg
+         0ZRwaPke71a63mJ5jfkmxsBgUcid1bpkn6paUT/OJvyujPT+k+Mq1646WZgA3WIwgBGj
+         Ii8fi4XcoeVKQClU2rh1ZTYmi39QEyVLH2N3d1jz/DPHfHnZ0V58UTFyvs+8GtPOeGKU
+         8tNJpsy20UfztRFBmGc80aayLJSIw/ZE+9oCjev/aba5bQhvnqfhTCJiVoLua13xxyXX
+         6DdTRoaG8pldnOqtHIlapnVgVznvjp8ywfGlOOFt/8/V7snlJyzslX3/5iYlS7Defkg3
+         NWwg==
+X-Forwarded-Encrypted: i=1; AHgh+RomMoTBSDT4xPXdAJZ9RVamjZytwKZUvLKM3TOA7pXJfx4AF5pFPCOu0ysblTtr6DFZ1d7oFs6lpdk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfhsmuvhIWtr7+W8UswlkysxBwg/u1aVdy+Mj3c0KT3zMzd0JO
+	hgDj4/YuIJQrQczbE41ZwsPx4bdWC0De5AgCXzIolWbu45eLb1GkrzaOKaDeTeBbwr19ruiOkfJ
+	9wYx6Ej1q/HLiTyHCrmjiMuENAsnPoVTvqj2/ABwWRekSfSRLlAUE2fkzVDE=
+X-Gm-Gg: AfdE7clZmFwZry+UxbpnNQciC6+1/wyhUlgt98JQJNJe8YIrbY0W1vXmUMQgQ7Pp1R5
+	58bTjVWQi3qql5IT/q6qSkk9mNhfjPFbUbYdQUOLfkEHKEZyvDbRdIKC1PR+orpV/pnqDUn9RcO
+	haC6wPBkFnJ2rSeR7lDxX/5V/CfV5onaUx5e5iljbz00OHFCZLDV/YRQYcRGk55erkD3wudZ6Ii
+	ys1qoGvT+blEDdI4H9eBQt19bvrmVyR9OCwD7p0kQ9bSxKm1dbiU8bgefq2zZ6mmNqkUeQzEyxJ
+	0IyH/J9F4zCtT6lQqkqEJwi7ymbLKEImvQACkZAe2A7o2s6DpFXPHO8D6LBo7MFdqqRoHg==
+X-Received: by 2002:a05:6a21:b85:b0:3b4:6f7e:d0f4 with SMTP id
+ adf61e73a8af0-3c08edb3a11mr2931533637.15.1783367211635; Mon, 06 Jul 2026
+ 12:46:51 -0700 (PDT)
 Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 6 Jul 2026 12:31:22 -0700
+ HTTPREST; Mon, 6 Jul 2026 12:46:50 -0700
 Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 6 Jul 2026 12:31:22 -0700
+ HTTPREST; Mon, 6 Jul 2026 12:46:50 -0700
 From: Ackerley Tng <ackerleytng@google.com>
-In-Reply-To: <20260327160132.2946114-27-yilun.xu@linux.intel.com>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-27-yilun.xu@linux.intel.com>
+In-Reply-To: <20260327160132.2946114-29-yilun.xu@linux.intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-29-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 6 Jul 2026 12:31:22 -0700
-X-Gm-Features: AVVi8Cc5ZxA9qF5433WWwdnaZDh9j1Ge4U5yFtnsyhw7BB1GFtQumPojoRxoK00
-Message-ID: <CAEvNRgE4fbMWpTJTMLru-8QW9bJyUEan=K1GYWxvpXY8+LUBrw@mail.gmail.com>
-Subject: Re: [PATCH v2 26/31] mm: Add __free() support for __free_page()
+Date: Mon, 6 Jul 2026 12:46:50 -0700
+X-Gm-Features: AVVi8CfkcrWdoJa4oiL9WXk9nP0XfiXZ-99BLCRJyOFg5gFNH5Ab_FxLanD5vnY
+Message-ID: <CAEvNRgEdGPhXh8KrWexFv7DBbun6d_eSeOJHzAb0S+pp0ieKAw@mail.gmail.com>
+Subject: Re: [PATCH v2 28/31] coco/tdx-host: Parse ACPI KEYP table to init IDE
+ for PCI host bridges
 To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev, 
 	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
 Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com, 
@@ -102,56 +102,183 @@ Content-Type: text/plain; charset="UTF-8"
 
 Xu Yilun <yilun.xu@linux.intel.com> writes:
 
-> Allow for the declaration of struct page * variables that trigger
-> __free_page() when they go out of scope.
+> Parse the KEYP Key Configuration Units (KCU), to decide the max IDE
+> streams supported for each host bridge.
 >
-> A example usage would be in the following patch:
+> The KEYP table points to a number of KCU structures that each associates
+> with a list of root ports (RP) via segment, bus, and devfn. Sanity check
+> the KEYP table, ensure all RPs listed for each KCU are included in one
+> host bridge. Then extact the max IDE streams supported to
+> pci_host_bridge via pci_ide_set_nr_streams().
 >
->   static struct pci_tsm *tdx_tsm_link_pf0_probe(...)
->   {
-> 	...
->
-> 	struct page *in_msg_page __free(__free_page) =
-> 		alloc_page(GFP_KERNEL | __GFP_ZERO);
-> 	if (!in_msg_page)
-> 		return NULL;
->
-> 	struct page *out_msg_page __free(__free_page) =
-> 		alloc_page(GFP_KERNEL | __GFP_ZERO);
-> 	if (!out_msg_page)
-> 		return NULL;
->
-> 	...
->
-> 	tlink->in_msg = no_free_ptr(in_msg_page);
-> 	tlink->out_msg = no_free_ptr(out_msg_page);
->
-> 	...
->   }
->
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Co-developed-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 > Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
 > ---
->  include/linux/gfp.h | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/virt/coco/tdx-host/tdx-host.c | 111 ++++++++++++++++++++++++++
+>  1 file changed, 111 insertions(+)
 >
-> diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-> index 51ef13ed756e..d37e5564234e 100644
-> --- a/include/linux/gfp.h
-> +++ b/include/linux/gfp.h
-> @@ -391,6 +391,7 @@ extern void free_pages_nolock(struct page *page, unsigned int order);
->  extern void free_pages(unsigned long addr, unsigned int order);
+> diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
+> index 4d127b7c2591..d5072a68b81a 100644
+> --- a/drivers/virt/coco/tdx-host/tdx-host.c
+> +++ b/drivers/virt/coco/tdx-host/tdx-host.c
+> @@ -5,6 +5,7 @@
+>   * Copyright (C) 2025 Intel Corporation
+>   */
 >
->  #define __free_page(page) __free_pages((page), 0)
-> +DEFINE_FREE(__free_page, struct page *, if (_T) __free_page(_T))
->  #define free_page(addr) free_pages((addr), 0)
+> +#include <linux/acpi.h>
+>  #include <linux/bitfield.h>
+>  #include <linux/device/faux.h>
+>  #include <linux/dmar.h>
+> @@ -12,6 +13,7 @@
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci-doe.h>
+> +#include <linux/pci-ide.h>
+>  #include <linux/pci-tsm.h>
+>  #include <linux/tsm.h>
+>  #include <linux/vmalloc.h>
+> @@ -474,6 +476,111 @@ static void unregister_link_tsm(void *link)
+>  	tsm_unregister(link);
+>  }
 >
->  void page_alloc_init_cpuhp(void);
+> +#define KCU_STR_CAP_NUM_STREAMS		GENMASK(8, 0)
+> +
+> +/* The bus_end is inclusive */
+> +struct keyp_hb_info {
+> +	/* input */
+> +	u16 segment;
+> +	u8 bus_start;
+> +	u8 bus_end;
+
+Would you consider using bus_last instead of bus_end to indicate that
+bus_last is inclusive? Or would it be better to say nr_buses to avoid
+the inclusive/exclusive problem?
+
+> +	/* output */
+> +	u8 nr_ide_streams;
+> +};
+> +
+> +static bool keyp_info_match(struct acpi_keyp_rp_info *rp,
+> +			    struct keyp_hb_info *hb)
+> +{
+> +	return rp->segment == hb->segment && rp->bus >= hb->bus_start &&
+> +	       rp->bus <= hb->bus_end;
+> +}
+> +
+> +static int keyp_config_unit_handler(union acpi_subtable_headers *header,
+> +				    void *arg, const unsigned long end)
+> +{
+> +	struct acpi_keyp_config_unit *acpi_cu =
+> +		(struct acpi_keyp_config_unit *)&header->keyp;
+> +	struct keyp_hb_info *hb_info = arg;
+> +	int rp_size, rp_count, i;
+> +	void __iomem *addr;
+> +	bool match = false;
+> +	u32 cap;
+> +
+> +	rp_size = acpi_cu->header.length - sizeof(*acpi_cu);
+> +	if (rp_size % sizeof(struct acpi_keyp_rp_info))
+> +		return -EINVAL;
+> +
+> +	rp_count = rp_size / sizeof(struct acpi_keyp_rp_info);
+> +	if (!rp_count || rp_count != acpi_cu->root_port_count)
+> +		return -EINVAL;
+> +
+> +	for (i = 0; i < rp_count; i++) {
+> +		struct acpi_keyp_rp_info *rp_info = &acpi_cu->rp_info[i];
+> +
+> +		if (i == 0) {
+> +			match = keyp_info_match(rp_info, hb_info);
+> +			/* The host bridge already matches another KCU */
+> +			if (match && hb_info->nr_ide_streams)
+> +				return -EINVAL;
+> +
+> +			continue;
+> +		}
+> +
+> +		if (match ^ keyp_info_match(rp_info, hb_info))
+> +			return -EINVAL;
+> +	}
+> +
+> +	if (!match)
+> +		return 0;
+> +
+> +	addr = ioremap(acpi_cu->register_base_address, sizeof(cap));
+> +	if (!addr)
+> +		return -ENOMEM;
+> +	cap = ioread32(addr);
+> +	iounmap(addr);
+> +
+> +	hb_info->nr_ide_streams = FIELD_GET(KCU_STR_CAP_NUM_STREAMS, cap) + 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static u8 keyp_find_nr_ide_stream(u16 segment, u8 bus_start, u8 bus_end)
+> +{
+> +	struct keyp_hb_info hb_info = {
+> +		.segment = segment,
+> +		.bus_start = bus_start,
+> +		.bus_end = bus_end,
+> +	};
+> +	int rc;
+> +
+> +	rc = acpi_table_parse_keyp(ACPI_KEYP_TYPE_CONFIG_UNIT,
+> +				   keyp_config_unit_handler, &hb_info);
+> +	if (rc < 0)
+> +		return 0;
+> +
+> +	return hb_info.nr_ide_streams;
+> +}
+> +
+> +static void keyp_setup_nr_ide_stream(struct pci_bus *bus)
+> +{
+> +	struct pci_host_bridge *hb = pci_find_host_bridge(bus);
+> +	u8 nr_ide_streams;
+> +
+> +	nr_ide_streams = keyp_find_nr_ide_stream(pci_domain_nr(bus),
+> +						 bus->busn_res.start,
+> +						 bus->busn_res.end);
+> +
+> +	pci_ide_set_nr_streams(hb, nr_ide_streams);
+> +}
+> +
+> +static void tdx_setup_nr_ide_stream(void)
+
+Was wondering, is nr in the name meant as an abbreviation for number?
+Why not just tdx_setup_ide_streams(), since this doesn't really set up a
+specific number of streams.
+
+Same for the naming of keyp_setup_nr_ide_stream().
+
+> +{
+> +	struct pci_bus *bus = NULL;
+> +
+> +	while ((bus = pci_find_next_bus(bus)))
+> +		keyp_setup_nr_ide_stream(bus);
+> +}
+> +
+>  static DEFINE_XARRAY(tlink_iommu_xa);
+>
+>  static void tdx_iommu_clear(u64 iommu_id, struct tdx_page_array *iommu_mt)
+> @@ -569,6 +676,8 @@ static int __maybe_unused tdx_connect_init(struct device *dev)
+>  	if (ret)
+>  		return ret;
+>
+> +	tdx_setup_nr_ide_stream();
+> +
+>  	link = tsm_register(dev, &tdx_tsm_link_ops);
+>  	if (IS_ERR(link))
+>  		return dev_err_probe(dev, PTR_ERR(link),
+> @@ -612,5 +721,7 @@ static void __exit tdx_host_exit(void)
+>  }
+>  module_exit(tdx_host_exit);
+>
+> +MODULE_IMPORT_NS("ACPI");
+> +MODULE_IMPORT_NS("PCI_IDE");
+>  MODULE_DESCRIPTION("TDX Host Services");
+>  MODULE_LICENSE("GPL");
 > --
 > 2.25.1
-
-This is nice to have, independent of this series. Perhaps it should be
-sent separately, and some existing function could be refactored to use
-this, maybe __tdx_td_init?
-
-Reviewed-by: Ackerley Tng <ackerleytng@google.com>
