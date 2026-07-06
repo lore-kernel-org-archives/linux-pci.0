@@ -1,41 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 746B33ACA71;
-	Mon,  6 Jul 2026 10:29:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5F66389115;
+	Mon,  6 Jul 2026 10:33:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783333791; cv=none; b=SmkJXNHraa4SKztlpFO/FNrNc12d6ZsPPYQZVqVp1BG6YBs8G7fiibHWqjwQf/aF9voc0zFVqdiADTFB4FpGbHbS/0YL6pRX1XZaa/pV5E3RikMKvpYnfa3EkbZyLbDBhH8EaU6UQbMO1wvxcSxSQYXuTUKAIkYqCHjxWo1EVCo=
+	t=1783334003; cv=none; b=f5MoedQrcyzfYvN8ZhyXCy1W6T60cW19w1PG0QyU60OT6Ns4gMS4RryDROeMN9XQqvzYJTtX4AH/suEPPqgn8Uz2rum6KHOE27rwLFSwZLG24QwgVdYHjqU/H1Y0Wa/F0e86NxplT4Tu0C8UkOuGeXDxp6PXUkc/2CzZR9OeHsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783333791; c=relaxed/simple;
-	bh=HP+bijMJa9X7wYxSCkOyzfRBILRidWOlKxrUNln+31Y=;
+	s=arc-20240116; t=1783334003; c=relaxed/simple;
+	bh=aUmAMuZshk/vGhRHPkoY5uIQ21ykG3+oFzJ6+qzChF0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D5Gvvel4+JhD0YYijf7b5NbyYwN0xcZ4u5yE1GMSzRnyuNlP0zFaO/P4sqeS6fzOQ1rZabMk+3rSAZGtuzEKVA6mJP1ESCzzBkCEEHsaDFcZDMBuMuNG2as9B1wycEjRfE+ZVjK84Z6luMoaWgMV5UfkLsushlK35wUGaV9j7x8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=deZw+PHZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=TejxG/q2HSHrx515Mc43a2v4hsgWyLfyU6wHnOAGzI96IR6cwBgQ07u/jPRO2Wu0Bck25JzkFYz7TX1XUUR1IZXwIPhH3Kim54RDO74QxNRL7K4+F3ZT4PFlS7ntexxXLcyILX6x9VlE5hCKkr7tFy0SgfhJuihhWKn5nPeWyhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KV4wPO/l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="deZw+PHZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 366911F000E9;
-	Mon,  6 Jul 2026 10:29:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KV4wPO/l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 171271F000E9;
+	Mon,  6 Jul 2026 10:33:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783333788;
-	bh=YaiT2z3qpXhTNE58QdMIFf3NiMwIsaqv9pHhX1hnvXY=;
+	s=k20260515; t=1783334002;
+	bh=t25qHMlDNnh6C/Tw3ZIkerSb4sQ88yhV2t+isWLtyXg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=deZw+PHZpD4PiC0sDZ+djpQLp9rq1RHiV3XJ4vz8ya27J+ITC8sQrrFsxsgM2rbWh
-	 QuSF3XOxqXtS59J7ZItsOgAlnu8M2dhW2VLiuzRfi1OnHZe4bXe6JoL+JMdZDMVL7u
-	 cbW/kExxihnu45MyBitLObmt8fn15wK+TewA4KedSUbFbJ+PU2eAdTumd7y9ggk92o
-	 aGjvtMcgUi/3cVFZXh3NKYfH6BJtKa5cl5Cben3FaoC11KQD2j/b1wMO0aXBnZuL/d
-	 ekH98V2cPLpFUPgye9mTySNgTjrat1iOCiF7PT/7uH0Eu7S8MW/lJD3wKNwAIVjBM8
-	 PLDBE0qSS+ydw==
-Date: Mon, 6 Jul 2026 12:29:35 +0200
+	b=KV4wPO/lIdDhMMx2OeP7Xzyjo5h9OK+KGeqmHhjWNyu4fzwZHizgtfIO0cjKljdHf
+	 /TlmkQ9qj+7sY4jGW5K6ZgyhZRPW/h+TQwp9g2atGUUHViYjblUBzp9kZz+WEfDgrx
+	 WQ9WPFg7IKO6mvchG+PhCRqh4A1EdtZs8Gq6pTy49p4gYt09wMiyG9+6TO3HdjcAa3
+	 7mDXwztjEJDR2yVXURvjMnthYqtWp3LWYpllC35ikLa1nhCmQIRteO+j//Yyz5GjS/
+	 7/zA1sSyF43HIEyBCEi6zbMgSRXOAOYV7BhYTjdRD41SWe3A4yO4FoS0VW+2d4Y6CF
+	 b0saWgmDI96og==
+Date: Mon, 6 Jul 2026 12:33:07 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Soeren Moch <smoch@web.de>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org, 
-	Lucas Stach <l.stach@pengutronix.de>, Frank Li <Frank.Li@nxp.com>, Fabio Estevam <festevam@gmail.com>, 
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
-Message-ID: <2cbqhvfjszzuanp4i3rohntkxpfgftfjvzt66te3wkohsvw26g@yv4txuy74tvu>
-References: <20260427115804.134231-1-smoch@web.de>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH 2/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563
+ PCIe switch
+Message-ID: <pdzsy4vlwayotjqawcu5b6atf3g6hs6o7knttvxpyefufggs5z@tavxdidtjscy>
+References: <20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com>
+ <20260703-eliza_evk-v1-2-7624440bd76d@oss.qualcomm.com>
+ <7ce4844c-8025-48e5-a1fc-4d1cf9f7917d@oss.qualcomm.com>
+ <b5a6a0a4-4c7e-4fcd-96eb-54041c29ccba@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,72 +51,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260427115804.134231-1-smoch@web.de>
+In-Reply-To: <b5a6a0a4-4c7e-4fcd-96eb-54041c29ccba@oss.qualcomm.com>
 
-On Mon, Apr 27, 2026 at 01:58:04PM +0200, Soeren Moch wrote:
-> Also on the NXP i.MX6Q chipset MSIs from the endpoints won't be received by
-> the iMSI-RX MSI controller if the Root Port MSI capability is disabled.
+On Mon, Jul 06, 2026 at 10:52:27AM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> Even though the Root Port MSIs won't be received by the iMSI-RX controller
-> due to design, this chipset has some weird hardware bug that prevents
-> the endpoint MSIs from reaching when the Root Port MSI capability is
-> disabled.
 > 
-> Hence, always keep the Root Port MSI capability for this chipset.
+> On 7/3/2026 8:39 PM, Konrad Dybcio wrote:
+> > On 7/3/26 2:38 PM, Krishna Chaitanya Chundru wrote:
+> >> The Eliza EVK board connects PCIe1 (8GT/s x2) to a Toshiba TC9563
+> >> PCIe switch. Enable PCIe1 and its QMP PHY nodes.
+> >>
+> >> TC9563 uses I2C (at address 0x77 on I2C4) for its management interface.
+> >>
+> >> Override the base iommu-map with the expanded set covering all the
+> >> switch's downstream ports (0x1400-0x1408 SID range).
+> >>
+> >> The TC9563 RESX# and PERST# are OR-ed internally to assert reset on the
+> >> switch. Use TC9563 RESX# pin via a TLMM GPIO and skip wiring PERST#
+> >> from the PCIe controller.
+> >>
+> >> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> >> ---
+> > [...]
+> >
+> >> +&pcie1 {
+> >> +	pinctrl-names = "default";
+> >> +	pinctrl-0 = <&pcie1_default_state>;
+> > flipped order
+> >
+> > [...]
+> >
+> >> +&pcie1port0 {
+> > This port should also get the compatible
+> for pcie1 it is not required, only for m.2 connector we need the compatible.
 > 
-> Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
-> PME and others won't be received by default. So users need to use
-> workarounds such as passing 'pcie_pme=nomsi' cmdline param.
-> 
-> Fixes: 3a4e8302e72f ("PCI: imx6: Keep Root Port MSI capability with iMSI-RX to work around hardware bug")
 
-This is not the correct fixes tag. Correct one is:
-f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
+There is no harm in adding the compatible property, even though it is not
+strictly required. As konrad mentioned, if someone creates a board that makes
+use of this instance, then we'd need a separate patch for adding the compatible.
 
-> Cc: <stable@vger.kernel.org> # 7.0.x
-> Signed-off-by: Soeren Moch <smoch@web.de>
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-@Bjorn: Can you merge this patch for 7.2-rcS with correct fixes tag?
+Let's make sure we add the compatible for all Root Port nodes in SoC dtsi.
 
 - Mani
-
-> ---
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <Frank.Li@nxp.com>
-> Cc: Fabio Estevam <festevam@gmail.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: imx@lists.linux.dev
-> Cc: linux-kernel@vger.kernel.org
-> 
-> Tested on a tbs2910 board [1]
-> [1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 6d6a1688e7eb..3d461bdef967 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1865,7 +1865,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
->  		.flags = IMX_PCIE_FLAG_IMX_PHY |
->  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
->  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
-> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
->  		.dbi_length = 0x200,
->  		.gpr = "fsl,imx6q-iomuxc-gpr",
->  		.ltssm_off = IOMUXC_GPR12,
-> -- 
-> 2.43.0
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
