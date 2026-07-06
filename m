@@ -1,165 +1,287 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010016.outbound.protection.outlook.com [52.101.46.16])
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B66313B7AE;
-	Mon,  6 Jul 2026 01:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E99A371072
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 02:34:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.125.188.122
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783299757; cv=fail; b=CSKXP4Yw1+PqqraUIkKA+b7o9EKyvIRUyX0IiGr3qXQCXH21hM0XRnc/OClLy7oliK83OL0YNHy6Gv2StIpYnKZvpq9pGPniD53rqza3s4QlporgW3gighgn59yDNL6YcCNzv+5q/DjaIFWlAly7BQ6ddsnU3IyN2qokJ0v5ft8=
+	t=1783305269; cv=pass; b=oLod+qD1K3dWjFYvQGGKg43SEeOTQ9wfIuKVWl0JulpgebvkcsP9w1MJtFYFqikqFigT/9GMxBuw9HDBZdA+IEPWATYhbA7D8LH4QAlICWaq+aXsuWsFMS4G8XTG7RLhtmuK7gXjTC+9hAUzEezNQDeCFXsJHBfpVix2UYWdPko=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783299757; c=relaxed/simple;
-	bh=HHDwR2nyxZ4rcVLGVAO/afZ+vZY6+3KGUqaSdSw8Rh8=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=hzdR/quunFzD4wbzAcyTsic2R0iennRtkG4W7ie3eb+NzhKLJTuvG3MpisNJdWKl6v+5oZzcZ1wAxS4DtcHhiiEJ+QPVzcnsHEWiVXnmdZyvsttR4xq+W64/nFqp3xagOZL3JPGdPI50oL11nOENppHtbE0bxnCJe1YpafRejc0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ttFvF73F; arc=fail smtp.client-ip=52.101.46.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1783305269; c=relaxed/simple;
+	bh=nrE0aDhjgLNq3fwnuI7XYukBFgsH1fovA84RYILYFgg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HP4aXQZOTj4iY+Yt/eIFKoxlvucY8Vc69jyNQ5Hoku+emKHOGMoCKilce7xz+bLEoHS4QrJ3T3sDrF91qwpaa/TAjG9+nu22Mxl02Gyhf6WlJmgOOovPYJpQEOz9IfVMweBlCjwl9ZthgBcuCiKITUvRO/LhCOqUBXwzg5uT00g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=qQiFYGtM; arc=pass smtp.client-ip=185.125.188.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ttFvF73F"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OCTd1jNB0VkDePaytJHagQIWG6Y8IBPYPg7GqkR7JaXbmqtX6XNdUTKGGtGW/6nhE/g/vGehUuJXjAHMxPeUEYG12X6JIx3p2C2kqujes//jDxHY14R9IhTmlNX3HopGiF8Ww7bSdlfDLbab/lD7Ivx4iR5oT9XiFmiOKuzP8U57eb39A8ICYArKHsBgQyjIxRLOyJ2YYx99wbGDpdoJMc86IIdE01VgmTmwoJIedbrBQA3T5VMv4fXb7k1TWfMXsY8bpDFpdC22opmjSZkSC6pX6fj7zbnOvVebmWS26+iap5b7rDAa9goYj3tUQrb0Yij+CaBIT9MXKSQW1jJLvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HHDwR2nyxZ4rcVLGVAO/afZ+vZY6+3KGUqaSdSw8Rh8=;
- b=p9t8XQwWB8d1k/5LeaZ6intUuhldoAZ5OV0Ztxbs+PqGpOMxrrt5wPNEQXFR4d2sLzbqtU4sCP4QNFwMYhet21+DxayLp/vkSpmB1Zn/JQkZ0+MEUA7mOTIMvtYaa6vWrUr6eMmgCPmC2ELyQQW+qB2HArc8fNrpy5zgBU9yysvbzJDJtkwgXvf+HM7zoRPB0rgHBgrZfJnVPkc7DptaUBcil09aLkDmlGu9ClLuq5kgdZgTaYhVY9PxGSIMCswnq9WmPxD+HN6Uio2V4hBi4OQnTnq82zGdeVLgQfbAbIJ1a1IPuPsYktJmSaCZ2fdpNN+Bw80rzqQZGa88cPxejg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HHDwR2nyxZ4rcVLGVAO/afZ+vZY6+3KGUqaSdSw8Rh8=;
- b=ttFvF73FjPZmd7R048a6cWfZRaNgd2wuaa+CqpE02hNkNN3d8UNenGE6GQXWHQeGLxbaYbVXMeYuwmjKGO6/WJagaxrDU1xp3tPrrHCG7XrsU84CJvGpfuhGgdnmxqyLPJBR69DTF1YOs8sK26kdo3wAZ2qmvXgNzjL3ulSsm2wrVpXkQTgotJnBfGPGww+AAD14JAZQ+MBw7H+0W2NftBYc1Z92VmpVys32GBOPEqxHkUv8c+BlwKBGCiLbg3wVqtFqErpjLLeMiDHAwmxAmahKNPoaynx68ZvSCXW8Zz+4oh9vp9UP4AY5WZkCC1W8/YuINvT0CYKOV6ASE4M96A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by PH7PR12MB9073.namprd12.prod.outlook.com (2603:10b6:510:2eb::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Mon, 6 Jul
- 2026 01:02:33 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0181.012; Mon, 6 Jul 2026
- 01:02:32 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 06 Jul 2026 10:02:27 +0900
-Message-Id: <DJR3027LIR8A.1DEP2QGUASM2W@nvidia.com>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
- "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
- <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
- <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pwm@vger.kernel.org>
-Subject: Re: [PATCH v5 20/20] rust: io: implement `IoSysMap`
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Gary Guo" <gary@garyguo.net>
-References: <20260626-io_projection-v5-0-d0961471ae50@garyguo.net>
- <20260626-io_projection-v5-20-d0961471ae50@garyguo.net>
-In-Reply-To: <20260626-io_projection-v5-20-d0961471ae50@garyguo.net>
-X-ClientProxiedBy: TY6P301CA0012.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:3be::13) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="qQiFYGtM"
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 319853F29C
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 02:34:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20251003; t=1783305258;
+	bh=O8K1BMdVNsFQnG1EmX0I8oupbELNb98/C6Pqphsagy4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=qQiFYGtM9d6oW5yudD0w0OXFRioA4GIzDLv9v3cljsZJmP2w6J1STmjIy207tMVkO
+	 jm9BJIerTwfx0zIVVMgzt519uoDf6rOdPn234D471MhmgowHZH9mMfZA4yuPPKiPqb
+	 NiaoyCSlNUcF/iY5PgmwobYuYOL/zvVeoCxJyZssb1awu0DA1/GGvWPLnNlxv81sh8
+	 88yZElYwJ8YQZltrL6CzUiHv+y3jJlVMd7FBhhu2PBN2gmsh3sUGmakRWUAvJJo9Ep
+	 TO9zt3c92Mv2E7v5TgdZDNVy6afqeZHOHELUiIMyav9x9UTWmT0MK8QSuwFB9jCvlD
+	 Qv9LvzU5W2jgVVNAB3jKP85Vk3uc+MyYvs++A5c4svAp9JtDs0rNd54LRbxqw/ZXvh
+	 oHtaKaB36uE5BXfogvPSDqjFOl9MUVS34LBg6rHsezUjWJD/SX2UQHaQWWkHGsTWHR
+	 W8eymxRfGUaWs5k2h1Cx/R2hAmNqqzDrMPiKkOiBMePxllMzKpFRS/3bAsp+hnOqql
+	 UlNCZ9FYXgn4DmyjJ5uWYSfZTnrflRzxJaSBbFZ8LhcA2pb9KMRqNUxf+yEDr+ELl0
+	 emZOdq4c15FiE2qReVU1rTRtqSBAiXnZqjJIhUjfco85MUAqDrOrOS8wNDPbGABEKc
+	 GX3IyotufG+h1pE78dnVVdYw=
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-84770f89b99so4082125b3a.1
+        for <linux-pci@vger.kernel.org>; Sun, 05 Jul 2026 19:34:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783305256; cv=none;
+        d=google.com; s=arc-20260327;
+        b=oCl7ZL89z34nk35d1zyCRy0WVjvmIoTsN1AZBZRuyr0GhpYAn9JXkqR8opcSfpy5ss
+         QPU1zNdcTc8jWhLWEsi8LVGttZ8e0pDUA6E1HpcPcS1Fz5auRCO86DEFK+kkjcgB+aTH
+         r8o3sx89N/GMK348nSbD/tw2sd/+tnaD2G4lL2mTzc5ckUDFXba5w+o2nK2w7TJM+SLX
+         14wD32ldogrOIpmhSIS3lptaRlMdYDfhK9aR/cmwcy2ZDKUFHt8CpyGbus9CqwkCKRB4
+         +2/amw1DeC06sLL3KDx+j+1NPjvR4HTFVPDQocu8Fj1iNVG61GAQTNJPeQpfpM8rIr00
+         t6Xg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version;
+        bh=O8K1BMdVNsFQnG1EmX0I8oupbELNb98/C6Pqphsagy4=;
+        fh=2FbvbSQTAuaWj9kAVFnhQ89MozJ/J7Sz7nrw9ZGxJ40=;
+        b=MCf5PfV83blxv8TrX6FxV6leGl+ExKs0hlEA/sLqQ0agUyylhEb3aMf7K2vPQKZKQb
+         XGRuvrTXSWR+k8n2fNm+pC+WV+meG1NrUAvKe2L1aJ/LnfBechVIo2V1x+hEejk+Gwnm
+         bLMWGyf8WeTQ5w1gzSrtGXnWPNbVtM290PRWAXJ2+1YT+Wf5fIKwwfU+7QoKqwMiIye4
+         V1IPR1CxH1jqrwvs+GhcYUAgeYzR+gYl7j8Zhu+ErEvyr4y16cReXJNum/N6PFMPNi+1
+         jqmG3+qPK6ysdUCV9KsoSd1sTslK2Lly43SmSjHYwWMcnSqGYAF6be+KCKfGhLYO+I0R
+         5CAg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783305256; x=1783910056;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=O8K1BMdVNsFQnG1EmX0I8oupbELNb98/C6Pqphsagy4=;
+        b=GG44obyP5jbok+sbQ/DovOK9ehSzP2rDhLsszPrUeekn7pz9LPU28I22XWnikpPNH7
+         zTmoMozak/uZrdvs/xFILbn55HBAKMaTVHkWQTJHzsF/b5PogcYroqCXg7MRETFPNWzv
+         WoMqH+n7NwNKz1S5uT+mZyfW8MfNy6HAj2yMQaGofh+mINj0IAkB8TnWnbhGkzj4CM85
+         kLrKo1Ttk4Sksqn4CXxiSskYKwo0yUObapvINySSl0/8RirvDGnMqEH7D1sYwyXZEfDM
+         3mun48veeqNbb8TbcSK/+oE0NPTgVS5E6psB+c3K22dnVDJXaP/zpHmHMJ29BuLkYOw/
+         t8pw==
+X-Forwarded-Encrypted: i=1; AHgh+Rq31FlnwTe/VFtdORWCYUf+/dYV+aaiXfSUY4ZxHpUMvn4tMwUP/Zw1Spjsiye5vzuh3uDTCfj+o3E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/4AiFx7Cu7r6FfZTpzLfYbS4FepddSEH2jn2/DzApUx+Z8G8l
+	2ropDb8wTcmoP9+q+IkauqJZR5BNzYSUp7quVsyVmM3LBSPMEeBc+F1UIaWcoBE9bcbrPIC730d
+	EABCgfx+gYqB+N/8BLwjuGULV9jXA7pijK9bcdPq8jfp2rpDC6jOc2js+zJttcXaq9wzP4hRCA6
+	Gk41J9Rx/sQ73n6oF5oAQ3iYn7qXhR4LoNPOdncG6uOX5GH7rW8lV5
+X-Gm-Gg: AfdE7clLBBVFk4BoTF+37b178CGWerCD/hBmMbUhiQzJ+voBnjPHruoe7atQ5sHNBeR
+	Em3vrpTYY2BwMYupNf7twDHJFjgQsqsLRd4D6ttquU+D272cbMfCaQcM1X1Ug3kiZI6bgtPRhSS
+	doO+ZCLG8OMfhramLzBsUQs26GEm9cuzQrLWAWTEggfYQYXqUmEvUb+Vuzg5+VHRx1mq1q
+X-Received: by 2002:a05:6a00:8d81:b0:845:dedd:89b1 with SMTP id d2e1a72fcca58-847f6ef4e59mr7035648b3a.34.1783305256403;
+        Sun, 05 Jul 2026 19:34:16 -0700 (PDT)
+X-Received: by 2002:a05:6a00:8d81:b0:845:dedd:89b1 with SMTP id
+ d2e1a72fcca58-847f6ef4e59mr7035627b3a.34.1783305255958; Sun, 05 Jul 2026
+ 19:34:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|PH7PR12MB9073:EE_
-X-MS-Office365-Filtering-Correlation-Id: c71249c6-a2f3-485b-9d53-08dedafa4225
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|10070799003|7416014|376014|4143699003|11063799006|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	/gcDTHFJiyVlBHk6BCmbljrk7Om0n4ig6JiiP+6zAv/2WXOyhdlv3XawAPPGwroIJXEycGErzWOo0324kVU4TMbTZGCU353zRZHZusLQiz5A4ru8XbFBtyJgVt1rbjpxkwyidUx++MeYhaRigM9jnoKQfCJuxknGXZ5R7cD2QQBnCE6XYYho7cGHJb4ckK5luoFc/pwmJb2TRcXoNRtGgC7E8FrTTVdvI7h2Ehn4WjYNlhi+RKXBvP5UYiJvDmkclGzh9hRW35g3v79AHx8oWw4sLHqbEljnAz3euZUveTVQTOsLtd2IMmFQ2RTz8esURAP0X5BOZxe6v64lzA4NwwvUgJLKMmksFFs1wAWswso7qKxDiJaQfvEwH5yM4IIfklRhfxiFlb0YkfG4xbEHoVn6Lahxf8/PjQnK9efkeItlKr/a0F2gze9+6NhFVEasJm1EAov+g5s1xBdbPia2ahMsTnmGv3mUQFSJE2Lar17ZMyAOfoddmIbUnrJpg7ORvb6oFluLjHlONzFlmJJldUFW3Jg7gUiaGAvGrH9NVGGvCdmQjkj93oEnssUCyrn8gMs2gMBbWy1Va4wAOunTtmI2FeemsvcCz95tnQnz1aHh7gIvo01bLEGjQ95Al1J3Y3JkLsr556npGzYBQT4BhWJtz2VQ2ZLz9gV4/I17ffM=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(10070799003)(7416014)(376014)(4143699003)(11063799006)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Q0I0MEc1dU9Wd2hab0o4bk5SMlFCbG1BUzRqMUg1cDAyL3ppVlZGSTIwclpO?=
- =?utf-8?B?UUMyUTkrYUMwSzNYeTJOcjhmNTk5QUpHd1BLZVF1UVljY1lvR25WQm9xL2l4?=
- =?utf-8?B?UnhSbE4veEhvQytJdUx4R3A3R2dtbmJ0YjY3aUJuWU5qYUgxSXdkcXpYY0Q4?=
- =?utf-8?B?c0FTUXBSaWlVQ1NDODRCSXFueC9IaTBmb2xzMjExVm8wMGVpUlRYaXZNdlpK?=
- =?utf-8?B?TVp3ckFadjZITmVOOXRXRmJtOEhCc1NZTmJEcFB0L0VFSFUwNjdFbWNVN0JC?=
- =?utf-8?B?UkZxejR0b2h5QmI3OE1yQXlOS0owNFN2dWNMR1NtdkxwTDNnekY5NFkwWEN1?=
- =?utf-8?B?NW5WM0RoRjFGY01kaU9jdktVR3RHZ1hrOFQ4T3ROakJkWnY4RUxpdFh4ZEsw?=
- =?utf-8?B?Vms0ZTlVcTdYUHh0alptOW5wZ3VJN1RjSWloQ2JMN1M0bWhpUnFFN3J2ekhj?=
- =?utf-8?B?eXhRdkpBcVZIbDNST0F0NEd1dW5qeS9GZ3Zia2VvUmJPUmphWTA0UzEzMnBx?=
- =?utf-8?B?TUFMRHpuN3duNWxpR2h5N0tTdklLSTZBSm0wMmk5UERJWVQrdEhrbUw4bmhv?=
- =?utf-8?B?R2NKUHYzTUJEYm5iL3Y1RkVVK1VpR3ZBckZCWng2TmtTQmFva2FRQlU3WTNj?=
- =?utf-8?B?TE91d0x2RDVuVGhpV0VMS1RzdTJRR3hIVTgvakpmSnlFSmFnV3dUU3pQVEMz?=
- =?utf-8?B?c2MwaEdUemIrWlhDU1JvbVVPdjB1T2lHTENsNG5lSnhUOXU5eXZCRWhYRjBN?=
- =?utf-8?B?MnZsVUM0cXMvSkd1R2RmYWpqbEdOc2h2WjRTVDVjdkp4NTB2aXBDTXgyZUJ2?=
- =?utf-8?B?S1ZVQW00UTBpdTBaUHFoU0l4Z0diL25PZitmZVowaWgxYWgrZ204bGFMeGNN?=
- =?utf-8?B?bW1aV2k2WkJFQ3lFTDM4Y3NiaE1xQXVVRHpXcGhxQ3NjSHh1ZzArZXRpVHY3?=
- =?utf-8?B?SkpVZTBRb1RVdUJyZmt3am8vWTZSMlpVVTZ5QkZlN2JUNVNXN3FwejY3aEVh?=
- =?utf-8?B?MHQ0cXJ4dnVVUkJYYXk3SFAzRXBmMmtSdzhyRnVTdXFaOGh2YTVveDcrejlj?=
- =?utf-8?B?T1VoQklNNmFJZWZCdzZRWWpuUDl0ZE1mTG03cG9mTmNBYi9DMUdhSlRwdUhy?=
- =?utf-8?B?ajVLUXN6clVvNDZ0K3dkY3ptdzBuZlpwb0dqMkdLaW5EbU5rNnEwd0Y4QVhU?=
- =?utf-8?B?elZYbHJVcVFOemZDRGorRU04djA5cUJOL0JpNGYxdDJBM3djTGJCQjhMR1dN?=
- =?utf-8?B?UGxOUllhQ1A0NWh1ZWh3T0R3WUFkVnJVang4T2kyRDZ6K3dqSUs1OGdJOFBE?=
- =?utf-8?B?U2JDMWNBUkRxclhid2NSaDF3Skh3ZmxjRlRzbU9WNzBYa05tWkFUaWljNVUx?=
- =?utf-8?B?OFZzL2xnS2E2c0lsby9VMFc4QmF0VzhJTEV4RFJKUjlxaFFMOTFvQmZpQmVI?=
- =?utf-8?B?eEEvaFVSZmNXQ3JpbFo2c1pwRkJyQ3RyZEUxU0RLQ2krRUNSaTQ1cUR3K1Fn?=
- =?utf-8?B?cGNkT3h2M0J0aDloMzhuUGhvdjNZTVJNSVQ0K1VpZUFZSmtnbzBuS3pIUy9y?=
- =?utf-8?B?TFQzcEcrSVJhSTk3WjZqNC9RWWFsUHk0Tld1ZmpLZjdrdXdYeUNwMVhPRm9n?=
- =?utf-8?B?K290cm5KOENEMWYvNUdsT3drQm1nTE5NT20rMUxzZFU1R1RMYzNycUIwTmFW?=
- =?utf-8?B?cFBzSTJBOU5UTzdqT3dsU2c4aDdZLzI3K1RKL3NtSVVGN2t0MWk5UG9KUyts?=
- =?utf-8?B?N1RnV3FSRHpYcFpjMXRKSUtmRXk0Z05hWTZGVUYyellyL2ExSEJWbDVmZG8z?=
- =?utf-8?B?M0FmdW5XNGgvQUpPSWpyL21IdEdaTTUzZnc2MkNDd2ROTEdHRGZmQVRERHJ0?=
- =?utf-8?B?aG5nZVBBN2lHOHYzNUdRSHNtWG50L3doT2FGUmJTNCtINEw0LzVoOFo4L2NV?=
- =?utf-8?B?Uld1TnJ1RWZtamUrQzlWMU5iVyt4NTltY0hGNG9Ib3J6NnBrd05qcHdGbHZw?=
- =?utf-8?B?ZmlVN21HdnlCU2R6YzNjOHhub1l1Q0RDZ0REMytBWWNDS2FGNk9vejhuTFZJ?=
- =?utf-8?B?YWxueEVpNkdKcGlJazJaQVlmT2loZmhVK2t0TVcxbWxFRUxZWnpaRlh2bnhH?=
- =?utf-8?B?RnhLZitlMDRaQVlVdWlHUHlaaTQyNWdaSUxrNStMZnllN05MMy9mTC9IMHlj?=
- =?utf-8?B?WTVUTDZnWllLcFFvSmltTDdQQWY2R1E3QzZ3NlFnekhHZTBFZHhhcGtwMnYv?=
- =?utf-8?B?M1NoK3RBSC8wcXRjRzNjWlMyNDdnMHRUZStwY0ZqTmdJRVhsVHVTQzhBS1p4?=
- =?utf-8?B?d0VDNjRvTEhDZ1NaUUJSQXh2cENrRXlBSFdBNElYRU9oRThuNTZ6Q1pNZ0pW?=
- =?utf-8?Q?9JIpk7ZpxFHf2riqgdAyVcittMEOFxXJxKl5fLDWHiZrK?=
-X-MS-Exchange-AntiSpam-MessageData-1: umGzy2RrFz6j2Q==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c71249c6-a2f3-485b-9d53-08dedafa4225
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2026 01:02:32.2225
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ilNCXGMhXryJXIlFq0++JTUb5hvvc03rLaw0nTjazKpjAsaayLY+5456FLMilhO5EmIrdIHi5tkyNGayQL/WGw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB9073
+References: <oc3i3yn4c22s5c3gtqgs7a4wrpqiywwvboxstdf7josxddqmpd@y43m75ovby2t>
+ <20260701204201.GA302478@bhelgaas> <akXy1gsijpfslOJm@wunner.de>
+ <CA+YcyLx3XS3LEeVzPEfD+OdktsLFyLuN4mQGk9EyEgQUmKPLBA@mail.gmail.com> <akZ448o-YMGfEEOP@wunner.de>
+In-Reply-To: <akZ448o-YMGfEEOP@wunner.de>
+From: Max Lee <max.lee@canonical.com>
+Date: Mon, 6 Jul 2026 10:34:04 +0800
+X-Gm-Features: AVVi8CfXfQdb8_CfDd0b3PV8S98QpOeIcsJuOPPxI9Qi3G1EKg4okk_D0h5SBLs
+Message-ID: <CA+YcyLw0HpR1Dnz-mOL1Ryym89ytc=1a_Ri9buMt3at-9mib+g@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Mask Replay Timer Timeout for Realtek RTS525A
+To: Lukas Wunner <lukas@wunner.de>
+Cc: bhelgaas@google.com, Manivannan Sadhasivam <mani@kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, acelan.kao@canonical.com, 
+	Kai-Heng Feng <kaihengf@nvidia.com>, Victor Shih <victorshihgli@gmail.com>, 
+	Jon Pan-Doh <pandoh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri Jun 26, 2026 at 11:45 PM JST, Gary Guo wrote:
-> Add an enum as sum type for `Mmio` and `SysMem`. This serves similar
-> purpose of `iosys_map`. Thanks to Rust's type system, all of projection a=
-nd
-> struct read/write can be handled by the generic I/O projection mechanism
-> (i.e. `io_project!`, `io_read!, `io_write!`) for free, and there is no ne=
-ed
-> to provide things like `iosys_map_rd_field` or `iosys_map_wr_field`. An
-> enum type also makes it very easy to construct or destruct.
+On Thu, Jul 02, 2026 at 04:42:43PM +0200, Lukas Wunner wrote:
+> There were Advisory Non-Fatal Errors on both ends of the links.
+> The upstream kernel does not support ANFE so far, but this
+> development branch contains three tentative patches to add it:
 >
-> This could be made more generic by implementing on a general purpose sum
-> type like `Either`; however this is kept specific unless a need arises th=
-at
-> warrants this to be generic over other I/O backends.
+> https://github.com/l1k/linux/commits/anfe_v1/
 >
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+> So far this is compile-tested only. You may want to give these
+> patches a spin to see which Non-Fatal Errors are signaled. The
+> kernel should also dump the TLP Prefix Log for those errors and
+> you can use this tool to decode it:
+>
+> https://github.com/mmpg-x86/tlp-tool
+>
+> See the example usage in: Documentation/PCI/pcieaer-howto.rst
+>
+> The TLP Prefix Log might give a hint as to the root cause.
+>
+> [...]
+>
+> Bjorn mentioned commit eeee3b5e6d0b, which states that the Replay Timer
+> Timeout errors (only) occur when ASPM is enabled. That may be the
+> actual root cause, so you may want to play with ASPM settings (disable
+> L1 substates etc) to see if it makes the issue go away. Disabling
+> non-working ASPM settings in a quirk would be better than silencing
+> the ensuing errors.
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Thanks Lukas for the suggestions
+
+I tested Lukas' anfe_v1 branch on the affected system:
+
+https://github.com/l1k/linux.git anfe_v1
+ca3701e1b037 ("PCI/AER: Support Advisory Non-Fatal Errors")
+
+The tested kernel was:
+
+Linux localhost 7.2.0-rc1+ #2 SMP PREEMPT_DYNAMIC Fri Jul 3 08:00:24 UTC 2026
+
+With that kernel, the storm still reproduced, but the reported error
+remained a Correctable Replay Timer Timeout. I did not see Advisory
+Non-Fatal Error or TLP Prefix/Header Log output for this storm.
+
+The relevant dmesg lines were still:
+
+pcieport 0000:00:1c.6: AER: Correctable error message received from 0000:58:00.0
+pci 0000:58:00.0: PCIe Bus Error: severity=Correctable
+pci 0000:58:00.0: device [10ec:525a] error status/mask=00001000/00004000
+pci 0000:58:00.0: [12] Timeout | Transmitter | Data Link Layer
+
+In that boot, dmesg contained 767 printed Correctable/Timeout messages
+and 76 aer_ratelimit lines. The actual interrupt/counter volume was much
+higher. Before stopping the storm, /proc/interrupts showed:
+
+IR-PCI-MSI-0000:00:1c.6 ... 37981589 ... PCIe PME, aerdrv, PCIe bwctrl
+
+The AER sysfs counters showed:
+
+Endpoint 0000:58:00.0:
+Timeout 12018352
+TOTAL_ERR_COR 12018352
+TOTAL_ERR_FATAL 0
+TOTAL_ERR_NONFATAL 0
+
+Root Port 0000:00:1c.6:
+aer_rootport_total_err_cor 12062319
+aer_rootport_total_err_fatal 0
+aer_rootport_total_err_nonfatal 0
+
+I then tested the ASPM settings directly. With OS-native AER active,
+disabling only L0s on the RTS525A link stopped new AER interrupt and
+counter growth while leaving L1 enabled:
+
+echo 0 > /sys/bus/pci/devices/0000:58:00.0/link/l0s_aspm
+
+After that, over a 10 second interval:
+
+irq_delta=0
+endpoint_cor_delta=0
+rootport_cor_delta=0
+link_l0s=0
+link_l1=1
+
+Disabling L1, L1 substates, or Clock PM alone did not stop the storm.
+The storm also did not require the rtsx_pci driver to bind: it was
+reproducible while rtsx_pci/rtsx_pci_sdmmc were blacklisted and the
+endpoint was not enabled by a driver.
+
+Based on this, I agree that disabling the non-working ASPM state is a
+better direction than masking the resulting AER reports.
+
+I tested a v3 patch that disables L0s for the RTS525A by removing L0s
+from the device's ASPM link capability:
+
+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x525a,
+quirk_disable_aspm_l0s);
+
+I tested that patch on top of Lukas' anfe_v1 branch. The patched kernel
+booted as:
+
+Linux localhost 7.2.0-rc1-rts525a-l0s+ #4 SMP PREEMPT_DYNAMIC Mon Jul
+6 02:08:30 UTC 2026
+
+The quirk ran during enumeration:
+
+pci 0000:58:00.0: ASPM: Link Capabilities L0s treated as unsupported
+to avoid device defect
+
+With the temporary rtsx_pci blacklist removed and the initramfs rebuilt,
+the card reader driver bound normally:
+
+  rtsx_pci 0000:58:00.0: enabling device (0000 -> 0002)
+
+  rtsx_pci_sdmmc         36864  0
+  rtsx_pci              143360  1 rtsx_pci_sdmmc
+
+The endpoint was enabled and bound to rtsx_pci:
+
+  0000:58:00.0 enable=1
+  0000:58:00.0 power_state=D3hot
+  driver=/sys/bus/pci/drivers/rtsx_pci
+
+L0s was no longer enabled, while L1 remained enabled on both ends of the
+link:
+
+  0000:00:1c.6:
+    LnkCtl: ASPM L1 Enabled
+
+  0000:58:00.0:
+    LnkCtl: ASPM L1 Enabled
+
+The endpoint link sysfs state also showed L1 and L1 substates still
+enabled:
+
+  clkpm=1
+  l1_1_aspm=1
+  l1_1_pcipm=1
+  l1_2_aspm=1
+  l1_2_pcipm=1
+  l1_aspm=1
+
+The l0s_aspm sysfs file was no longer present for the endpoint link,
+consistent with L0s being removed from the ASPM capability.
+
+After booting the patched kernel with rtsx_pci bound, there were no AER
+Correctable Replay Timer Timeout messages and no aer_ratelimit lines in
+dmesg:
+
+  aer_correctable=0
+  timeout_lines=0
+  ratelimit_lines=0
+
+Over a 10 second interval after boot, IRQ and AER counters did not
+increase:
+
+  irq_delta=0
+  endpoint_cor_delta=0
+  rootport_cor_delta=0
+
+The counters stayed at zero:
+
+  Endpoint 0000:58:00.0:
+    Timeout 0
+    TOTAL_ERR_COR 0
+
+  Root Port 0000:00:1c.6:
+    aer_rootport_total_err_cor 0
+
+So for this system, the evidence points specifically at L0s on the
+RTS525A link: enabling L0s triggers the Correctable Replay Timer Timeout
+storm, and disabling L0s stops it while leaving L1 enabled.
+
+I will send v3 changing the quirk from masking AER Replay Timer Timeout
+to disabling ASPM L0s for the RTS525A.
+
+Thanks,
+Max
