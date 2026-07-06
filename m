@@ -1,132 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC0927A107
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 18:05:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783361158; cv=none; b=WUIv0KGsGugNjGrTceeJrK2kyVjga76iEHmLybbRK5tRZzJHBU0Z+gKwxh2pOnWT1oiV64WS0QzBY7ZfDjcTER6YV3CjnXZcAZpK+R0F1ie+uCCPQnX2C1acNX/SKeKEymw1/TUZAB5JyLEXASPrz9LgixkI0GiNMyYhklKKGHQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783361158; c=relaxed/simple;
-	bh=6XwRp+HxaWgqwPH2sVjYfM6zgkmHeoAOvVSDFddJglw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=p4aHgQHR6q7BKrvK5HfjQl28ofM4TKGcmDJbqAIxkn0tU8Xi8XZP8NmgjGX62qa2AZl1BCpmo5Gp/kQINGoxyM1pPZjDHMmlBEAhwZvfGy/RzotipCNhV4HWh+9w20R5+Nhow/g2wGjj919xMWpCRyy/ozaMbQGhEH/oDJAfu6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TfwDqUe6; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246C53BE647
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 18:35:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.180
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783362937; cv=pass; b=bILbQoOAgJLhPcv4CHU4SF81jZ+l3uhPT/AmOoySZ4bDty//pSfhy9jPQfjMhQu1upeU7DV7fD+xHHX3fZJkRBc6N+i+xoyv9tVB435/JV//JoMRkFryAyPg9MCCQ6lAP4WLR++x9DlLUa52GeRwtcMgZdkf1qHH99ZYgeWCql8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783362937; c=relaxed/simple;
+	bh=HPrlRjR/87Sgv7afW4R5TLpUfuybQzJj2nJz3LNjgt4=;
+	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QPrZIpBKdKKxAxWFyWcNLs2mp4kZlg3Ipjjqe8oHvf8pJeRl6rixi5LjmTwFjgJtxj9pz0spOSEOHztzg7FceVx6jrIckarMyqD9RoWpR6f1KgSxsguViX8rQpDGPHupL2O8+wTabFavxg18rP41JZp+Gso5tjaOXyHpl0lV4VA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=n3t+io6M; arc=pass smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TfwDqUe6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBDC71F000E9;
-	Mon,  6 Jul 2026 18:05:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783361156;
-	bh=KMVNOVQRyu20srq1QFkH/jp4ZK49sepsueY/OoqIkO0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TfwDqUe6xhbC46/GqJT8YiblM30uhTsHW+z7DYng2pQQchFOaAZeu5CuqmLhbcKh+
-	 f0OsGUPo6XrsSqwWwIrP90FHg34sAkKr8iwLtajLH3hR7U+XJZLvwtLUP1uJuNcKjm
-	 N/JOrZ4zfHvXVoUR8qMGI1MIa8Po18jAWHXBuFR41day4mnUt9nA3Gqh8Mfoyckxxu
-	 af+1IDp+ArYjj39Lq7Vs7XcmZq5srTNE4zUQCnvbrLoFoKxZCJYw30LR5kGh61+2uf
-	 yVAzg42c4wO6ngSX7nNYB/KC3EyZ9miPGCun0a2RSAcoIKtEwOj7PlbUaGGahTimHP
-	 hLCBCTh/jaD+g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] alpha/PCI: Fix I/O port accessor argument order in
- pci_legacy_write()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260706175423.98305-1-kwilczynski@kernel.org>
-References: <20260706175423.98305-1-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 18:05:56 +0000
-Message-Id: <20260706180556.BBDC71F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="n3t+io6M"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cc73e322dbso19077925ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 11:35:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783362935; cv=none;
+        d=google.com; s=arc-20260327;
+        b=VAImQ/+v6LOYeiyWCkljAcjpg+7BtcPO86dEn0gaWll2nFr5NpXus7kaWj9hVY8lTE
+         6hxKSERPmO3cs+GJE3iqNMQkgpg40y3nspDubFV/0dhfQjmpvcyBV84ghg2ofUtO7Mj+
+         CMpdzL5GRVadbtp4Kg32zJdBi3x1E8anDKldxHrIjxXfp9ZXAHwGf/kga4KrMxidiFSn
+         G+0WBqxPKOBBCwNpPx65P373zSJhq/b8gXScOUHzZ5zj2oD2/Tc/7YoYOUmBLMlOMvyM
+         gIgdKbWwQpVdRFrY9+3UR/+1JIF5yABjyb/Uccb4RF1XO9HMKR8Q4yRHIOAosj92Lmio
+         xHqQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:dkim-signature;
+        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
+        fh=lj55TCxuIvGu/DAw7Ox6Ff7WmYL2ZYccA6wmE0yAPbQ=;
+        b=iMIlrmwNxAcAhbliplxdAO1mXj6YzGbqHLuE1HO2YQ02uTxIBNqPTUROfoXS/6ZWGq
+         V951TdgV/YXfs6twytVYw/iRHImhxf62b8M1vGUWZxXZqPKfmy4NRKgbX3O5xJd69Cca
+         VQb5imM+ZFexMLdf/mH/y5jZZinIjk+dgoLihjrpPM3V4+IurfN1auYraTuEGTj/NYP5
+         ro52LDmK7bVErzcy6Pcca1OvXVkek1urNDg+EgFbPiELgrU8CMuY+ofXjl5eBeiMJCWo
+         eZ6W1CoOc5TSkJzAXnQ1xHMlGavwmjVTIxoy1gfOHPsVnNDqRKWY6Xt0uNx5RUWEDUeJ
+         PFkg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783362935; x=1783967735; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
+        b=n3t+io6MUV6oVZqKUv+EkZCGqFBDhvPkntajDpa81/Yf5U97GTXkqgXGEW+YkLEjZS
+         e6OS9E16hSOVLibDCiLKl9aWzML+644BdraflfYsGWR53fgiNAF/8hmbzSSZ53ZFbqf4
+         kfk2OA9AKl95zdx2xIeWsQatUWKGPbJOlwOZ9KVzQEu5v1/++oKX5veR2FcLCWhDJ5c7
+         Stbfg3VeDpCzLHM3PjrsODPYAY2cJwzVf8HoQhfYoiQ5WxcFZwKAVpZNwINK4kORCGfe
+         RApZGiLYRXFhQ3WAJT6D2o0D+xbiZE9gvbxjXueQulU4axzExLTv8CbBb9LM/Dm0fSvJ
+         WGRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783362935; x=1783967735;
+        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
+        b=qoXCELAq44RN5xVrGVn76Cxhn6NEmEn+8JlAvdl4KkhCPUDljAyZe0e305fmz4p/ky
+         ZDiOxh/CuyoiUdkmTd4EZ1MHq1hpt8uETWX6bwUelcWgmoi45CjCM6vccgd2HmRURCBI
+         B7mMP23Uhr9ZsMEtguTIg4Uq1MIJUWwRtgwCWItsXaL2pkng2MAX5jZDB8IZKbWr8bzP
+         gI4uCtCiyT//X4Ic3jA+FwOT/42nrFkPeY62ftiQQq7+kRNWlBWHIUhui0baMyndgt70
+         jyt4ar6O7pVQqkK5jMcQ1m6NxXTH9DYXUVnPag5On2CDHNyCdogIo8Tc3SpVsCW1+raU
+         uRCg==
+X-Forwarded-Encrypted: i=1; AHgh+Ro1hWrNPYbQw76KDTuhB6d53PGYpBv952Mw6EexQvkzvv9S1uZq+oBA+Wn/gKgZ+zhKw//OZaZDvu0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwEkOQH3cAts7roJMD9+ddDsrdRrRiqR9ZXuUCFN9CaumBrOGcy
+	UcL67ehPuF3aozkFPrjhoAzUl08h1TSHcJ4rCHEulW9XgYDNCknHO+nAfVrPwicYgPmxGbJ3kW3
+	wU9iqa+trl6mqyRmjN12ar2va4ILreybeErt62jTx
+X-Gm-Gg: AfdE7clDMdjqEzW7DZkqjfCfIqy/BqurQ1AWY7T/fGg7sBUKCc0UJFuc1RaVqkxZ8DB
+	vZonsQopXt5mJYl0X179TFdJwL88YAc7m6u4wdr0UaYcsNscUr0XSiY8ctmuC0hmjVBK7cW9A02
+	MH0jRYDcohhyB9gBD1UJxU5MJ4tWy2xT5UgMn3eXmF37zQGhCbw/wJXFg9qEJk9AdaHm+R4mK5F
+	qUfcmzCOTMT49GXPavWIy7coxHUVj9pIwlCmuf7HGzycQB3iKSHLC7vgAWGdbx17ISsOvBsxzIc
+	kgg3ZFPxXF0cOMIIAwiVWF14ETFPBxw037i6HpqUnVLgpwve2XxV6y3PChg=
+X-Received: by 2002:a05:6a21:1f83:b0:3bf:6c04:a812 with SMTP id
+ adf61e73a8af0-3c08ef1dd4dmr2080840637.51.1783362934943; Mon, 06 Jul 2026
+ 11:35:34 -0700 (PDT)
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 6 Jul 2026 11:35:34 -0700
+Received: from 176938342045 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 6 Jul 2026 11:35:34 -0700
+From: Ackerley Tng <ackerleytng@google.com>
+In-Reply-To: <20260327160132.2946114-23-yilun.xu@linux.intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-23-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Date: Mon, 6 Jul 2026 11:35:34 -0700
+X-Gm-Features: AVVi8CdqD5g74lv_vdWGXV2KWJo0HCHGQ2q9sBsYTjhrRT829V9HzSMACy2bRlo
+Message-ID: <CAEvNRgG-6aOgtW9cB6zE7278B=0fB9KSEH18Kw8qNF2sBtUBsQ@mail.gmail.com>
+Subject: Re: [PATCH v2 22/31] iommu/vt-d: Export a helper to do function for
+ each dmar_drhd_unit
+To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev, 
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
+Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com, 
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org, 
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com, kas@kernel.org, 
+	xiaoyao.li@intel.com, vishal.l.verma@intel.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Xu Yilun <yilun.xu@linux.intel.com> writes:
 
-Pre-existing issues:
-- [High] KASAN Slab-Out-of-Bounds Read due to blind 32-bit cast on dynamica=
-lly allocated buffer.
-- [High] Missing kernel lockdown checks in legacy PCI sysfs interfaces allo=
-ws Secure Boot bypass.
---
+> Enable the tdx-host module to get VTBAR address for every IOMMU device.
+> The VTBAR address is for TDX Module to identify the IOMMU device and
+> setup its trusted configuraion.
+>
 
-commit be452ca0a927e25b05ef8e9af9aca2fcb7ecfaa3
-Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+I think this commit message doesn't match the commit subject or the
+change, unless I'm misunderstanding something
 
-alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
-
-This patch corrects the argument order for outb(), outw(), and outl()
-in the Alpha architecture's pci_legacy_write() function. The previous
-implementation wrote the port number as data to the address derived from
-the user-supplied value. By swapping the arguments to match the expected
-value and port order, the intended I/O port writes are now performed
-correctly.
-
-> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-> index 94dbc470cd6c0..7050f0f7fe3d7 100644
-> --- a/arch/alpha/kernel/pci-sysfs.c
-> +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -224,17 +224,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t po=
-rt, u32 val, size_t size)
-
-[Severity: High]
-This is a pre-existing issue, but could the caller of this function trigger=
- a
-KASAN slab-out-of-bounds read when passing the val argument?
-
-Looking at drivers/pci/pci-sysfs.c:pci_write_legacy_io(), the buffer is cast
-directly to a 32-bit integer before calling pci_legacy_write():
-
-    return pci_legacy_write(bus, off, *(u32 *)buf, count);
-
-If a user performs a 1-byte or 2-byte write to the legacy_io sysfs file,
-fs/kernfs/file.c:kernfs_fop_write_iter() dynamically allocates buf to the
-exact write length plus a null terminator:
-
-    buf =3D kmalloc(len + 1, GFP_KERNEL);
-
-Unconditionally casting this smaller buffer to u32 * and dereferencing it
-reads past the allocation boundary. Should the buffer cast be bounded by the
-count parameter?
-
-[Severity: High]
-This is also a pre-existing issue, but does this legacy write path allow a
-Kernel Lockdown and Secure Boot bypass?
-
-Unlike standard resource handlers like pci_write_resource(), the generic
-handlers in drivers/pci/pci-sysfs.c for legacy endpoints completely omit
-the security_locked_down() checks.
-
-For example, drivers/pci/pci-sysfs.c:pci_write_legacy_io() allows writes:
-
-    static ssize_t pci_write_legacy_io(struct file *filp, struct kobject *k=
-obj,
-                                       const struct bin_attribute *bin_attr,
-                                       char *buf, loff_t off, size_t count)
-
-And drivers/pci/pci-sysfs.c:pci_mmap_legacy_mem() allows raw memory access:
-
-    static int pci_mmap_legacy_mem(struct file *filp, struct kobject *kobj,
-                                   const struct bin_attribute *attr,
-                                   struct vm_area_struct *vma)
-
-Neither function checks security_locked_down(LOCKDOWN_PCI_ACCESS). Can a
-privileged user exploit this to write directly to hardware I/O ports or mmap
-legacy memory?
-
-> =20
->  	switch(size) {
->  	case 1:
-> -		outb(port, val);
-> +		outb(val, port);
->  		return 1;
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706175423.9830=
-5-1-kwilczynski@kernel.org?part=3D1
+> Suggested-by: Lu Baolu <baolu.lu@linux.intel.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> ---
+>  include/linux/dmar.h       |  2 ++
+>  drivers/iommu/intel/dmar.c | 16 ++++++++++++++++
+>  2 files changed, 18 insertions(+)
+>
+> diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+> index 692b2b445761..cd8d9f440975 100644
+> --- a/include/linux/dmar.h
+> +++ b/include/linux/dmar.h
+> @@ -86,6 +86,8 @@ extern struct list_head dmar_drhd_units;
+>  				dmar_rcu_check())			\
+>  		if (i=drhd->iommu, 0) {} else
+>
+> +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *));
+> +
+>  static inline bool dmar_rcu_check(void)
+>  {
+>  	return rwsem_is_locked(&dmar_global_lock) ||
+> diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
+> index 4f9571eee1d4..eea9ba691f99 100644
+> --- a/drivers/iommu/intel/dmar.c
+> +++ b/drivers/iommu/intel/dmar.c
+> @@ -2452,3 +2452,19 @@ bool dmar_platform_optin(void)
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(dmar_platform_optin);
+> +
+> +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *))
+> +{
+> +	struct dmar_drhd_unit *drhd;
+> +	int ret;
+> +
+> +	guard(rwsem_read)(&dmar_global_lock);
+> +
+> +	for_each_drhd_unit(drhd) {
+> +		ret = fn(drhd);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(do_for_each_drhd_unit);
+> --
+> 2.25.1
