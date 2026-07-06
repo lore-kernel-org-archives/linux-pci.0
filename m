@@ -1,129 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2603388394;
-	Mon,  6 Jul 2026 16:43:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BE7A642B307;
+	Mon,  6 Jul 2026 16:55:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783356236; cv=none; b=S4if7iJFZo+hDl+Y7wVd664y40EkAVOhLfIB1HPCdCj2avYa6w6JpOhQwHj/sGSFNpW22V1ZSV5QDbO1UL4mBE/bD4UjnT3M+AUPL7GNiZsHWDNgMMx1xd9JYeLAizhND0bMOm1pAVpz0yzeylC3x9vtn8muKuS3w9dEAl5+Vak=
+	t=1783356917; cv=none; b=TrGKFLji3HBM+QCvO2CenBTurRLXtrCOXP0214ywtPCjzGceoae/inyiPw9Rd9C5u0X7MNfs+unJaD0TXU/4LfIzGccGnNUq08eKDvEsXOHOpR+iA38NALtvcSngKanGxvs5I3RrjmNhDJwOdntNIGz+GRL9yLnYjodExF3q7wA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783356236; c=relaxed/simple;
-	bh=p78k45P81yo3snN4PdpWqgMyu8URmblJURKX4ZSmRY0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aM/HB7Ja5lWLrg/ZQA3jJVk1oGcRs77QN5EXksvpYC5bBZjZV3LlgXENObxEs3D9QDwPcqCnNNP7VvQltyJ+8w+miTSxiE6HuBd2fBQ1vrFcKGRULGCwemwPY8OEjd6L9vcUczBPPdeft3dxFo83c2zRf/Ps2x8Pg4nlB17irGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fba2E7g5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783356917; c=relaxed/simple;
+	bh=V27uU26z+OREAxOjfC3mYvFlmRfHErKF0t40vNkBFcw=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ts0nudDRhtKpdxZ0IkswkpFS+j+XqiEsgUsd5TXHMdzEjvhIXITOTMFxJ/Us4l+hLVYhZPEkr8ksFlDxlktNQlB9BUATZrY19jVM4wdIk267ApLkkNub7IfMmXSghPhBpkF3521gu/OwyTE1fMQ3mrfe6j82DlQXGdpsCyss5DQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=e6MVuqKk; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fba2E7g5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01EF61F000E9;
-	Mon,  6 Jul 2026 16:43:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783356234;
-	bh=ut0uwGUHWw94blqbm1llRwcmHPYES1flSFqSaCMAUek=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fba2E7g5/hQ1iwXdVKgfv7Ph9Gnt4E2HMHIqPhiVfcCBpy5DTgnudHerNmBviyqSo
-	 6KgbJzKLB7/dSkzQGFujwwJj0EMXk7nn+gSj0IpqJfxDpWInrQQrdOD6BZAZY9tNBb
-	 0x+dM/NFZK9we+73Jt3aV/n9PEmtlj2XPupkRgZS9uOnR3ZKSLhW5afpJ5Ir9uRoju
-	 +CS9gp3ib1vnkoeqifIQj6MHP0JChc6jnExvu7G8bLRkDVX8eKQJCF7OsEE8WGytAS
-	 yVVJWNmx+UIfcMe28FLyobhnG653Fw9SAFaIPDtHsqnzO+QyJi0hD8NMVw3JPLyFss
-	 r9wBSOzTjly6w==
-Date: Mon, 6 Jul 2026 18:43:44 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] PCI: dwc: Determine whether iMSI is used before
- calling .init
-Message-ID: <4qyn4fljtb3cbzcmfpkdomkm7vqnwn2rfbtqng4iwmtvfd4bpj@t6kkw53erl7f>
-References: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
- <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="e6MVuqKk"
+Received: from localhost (unknown [20.236.11.42])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 8E0BF20B716A;
+	Mon,  6 Jul 2026 09:55:11 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8E0BF20B716A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783356912;
+	bh=HoZoevdHv2yQT0DlpD5qpPEyASfbpumwXGMTTLcX+qw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=e6MVuqKkQaSr4NlvXcDV/ZTz4kzbCtf9HiZ4CcO444sIzlXx9W6tm9/IqySvh72+U
+	 8gaf3+8hXJUUgIBBNsB+k/sjKVpgqoXacPtkkq5DqYTj1WwU/IUu+3RKyL3FradD3Z
+	 lo/CunsxQln6iyAgEt++juRrk+vNQQV/XVE57oCg=
+Date: Mon, 6 Jul 2026 09:55:10 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: Yu Zhang <zhangyu1@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-arch@vger.kernel.org, wei.liu@kernel.org, kys@microsoft.com,
+ haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
+ joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
+ bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org,
+ mani@kernel.org, robh@kernel.org, arnd@arndb.de, jgg@ziepe.ca,
+ mhklinux@outlook.com, tgopinath@linux.microsoft.com,
+ easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com,
+ jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <20260706095510.00007ce1@linux.microsoft.com>
+In-Reply-To: <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+	<20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jul 01, 2026 at 10:37:44PM +0200, Marek Vasut wrote:
-> The R-Car Gen4 PCIe controller integration configures MSI registers
-> in the controller driver .init callback, because those registers
-> have to be configured while PERST signal is asserted, and the PERST
-> signal is asserted across the controller driver .init callback.
-> 
-> The registers have to be configured differently in case the iMSI is
-> or is not used. Assign pp->use_imsi_rx before the controller driver
-> .init callback is called, so the controller driver .init callback
-> implementation can use the pp->use_imsi_rx value.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Hi Yu,
 
-LGTM!
+On Fri,  3 Jul 2026 00:05:17 +0800
+Yu Zhang <zhangyu1@linux.microsoft.com> wrote:
 
-- Mani
-
-> ---
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Conor Dooley <conor+dt@kernel.org>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> V3: New patch
-> ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 06722259d2e37..f5a38e6fd8d79 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -587,6 +587,12 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  	if (ret)
->  		return ret;
->  
-> +	if (pci_msi_enabled()) {
-> +		pp->use_imsi_rx = !(pp->ops->msi_init ||
-> +				    of_property_present(np, "msi-parent") ||
-> +				    of_property_present(np, "msi-map"));
-> +	}
+> +static int hv_iommu_attach_dev(struct iommu_domain *domain, struct
+> device *dev,
+> +			       struct iommu_domain *old)
+> +{
+> +	u64 status;
+> +	u32 prefix;
+> +	unsigned long flags;
+> +	struct pci_dev *pdev;
+> +	struct hv_input_attach_device_domain *input;
+> +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
+> +	struct hv_iommu_domain *hv_domain =
+> to_hv_iommu_domain(domain);
+> +	int ret;
 > +
->  	if (pp->ops->init) {
->  		ret = pp->ops->init(pp);
->  		if (ret)
-> @@ -594,10 +600,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  	}
->  
->  	if (pci_msi_enabled()) {
-> -		pp->use_imsi_rx = !(pp->ops->msi_init ||
-> -				     of_property_present(np, "msi-parent") ||
-> -				     of_property_present(np, "msi-map"));
-> -
->  		/*
->  		 * For the use_imsi_rx case the default assignment is handled
->  		 * in the dw_pcie_msi_host_init().
-> -- 
-> 2.53.0
-> 
+> +	if (vdev->hv_domain == hv_domain)
+> +		return 0;
+> +
+Is this needed? seems the core code already skips same domain attach?
+i.e.
 
--- 
-மணிவண்ணன் சதாசிவம்
+static int __iommu_group_set_domain_internal(struct iommu_group *group,
+					     struct iommu_domain
+*new_domain, unsigned int flags)
+{
+...
+	if (group->domain == new_domain)
+		return 0;
