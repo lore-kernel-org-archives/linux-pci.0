@@ -1,60 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1BBB374E62
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 10:28:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 746B33ACA71;
+	Mon,  6 Jul 2026 10:29:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783333704; cv=none; b=WEyVlWZanp57akRPN5vq8wPxcOSuFcyiyYjldccSuBt9r/FcfESLZCXpVfVjPYnfK5jtpJgXJTR7vT7zTPFLgWcf3ogwlEs9ple2Xel4nW0IRCZazYbAxY7yZ7o3bK0pZhoC0ARXwnAkqfQC+gZIpQV25q90BtfCfyEO8Yb3xAc=
+	t=1783333791; cv=none; b=SmkJXNHraa4SKztlpFO/FNrNc12d6ZsPPYQZVqVp1BG6YBs8G7fiibHWqjwQf/aF9voc0zFVqdiADTFB4FpGbHbS/0YL6pRX1XZaa/pV5E3RikMKvpYnfa3EkbZyLbDBhH8EaU6UQbMO1wvxcSxSQYXuTUKAIkYqCHjxWo1EVCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783333704; c=relaxed/simple;
-	bh=z1ELzB+sdvuje19ORyJflT7d4PyaYLAWHiX0xYmnGaY=;
-	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Cs4v1aey26Ud5nipVElyqcto5qG6JbIVYQk0qu2TzS0UROW/bhxQFAOnQiBN/7ncFwUwYlDh6urDUT0B31awefWycL6ia1mfhuIhk/pjdlH1/CRL+knaC+LFRYmLanZFDY4I3UlItLAR+e2wXT6N4virLUDVEUCeRyjG8Dz6Thc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NnoI5Zfi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783333791; c=relaxed/simple;
+	bh=HP+bijMJa9X7wYxSCkOyzfRBILRidWOlKxrUNln+31Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=D5Gvvel4+JhD0YYijf7b5NbyYwN0xcZ4u5yE1GMSzRnyuNlP0zFaO/P4sqeS6fzOQ1rZabMk+3rSAZGtuzEKVA6mJP1ESCzzBkCEEHsaDFcZDMBuMuNG2as9B1wycEjRfE+ZVjK84Z6luMoaWgMV5UfkLsushlK35wUGaV9j7x8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=deZw+PHZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NnoI5Zfi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B907E1F00A3A
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 10:28:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="deZw+PHZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 366911F000E9;
+	Mon,  6 Jul 2026 10:29:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783333703;
-	bh=z1ELzB+sdvuje19ORyJflT7d4PyaYLAWHiX0xYmnGaY=;
-	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
-	b=NnoI5Zfi6E22zz7JpQh6vCypD+MwL5jU2JPXGzSOQ9FwYMgE3w6ounwPv8+Cjqj1f
-	 si0EoITzSl8ySravdtsVpMUR3gTNB9ltkk8wwdux4KH7pPxc04Nm7fMOEZgK4Cr0Xn
-	 biykq4qR7151D6gnfrvZ1BHcVn7VOXGAQ0EcNcKh1bkBYQN3dgeB4V8rl9ekuB0p+R
-	 0j8e2VU5LMe4GSuyO4tq55Yi7IA0UE2+mLxjetb/LGT7exHCBLCttlShLGkro46Toi
-	 /jreRs178AUnMd2VHZDrbi59ZJ43eOoVzeAqj5oCmW24ZFe7BxI1LLUUV64BESRJiP
-	 DCW5JNjacNr5Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] Documentation: PCI: Update header defining struct
- pci_device_id
-Reply-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <a01d1cca33187c8b2715227d3db7146465513ced.1783332821.git.u.kleine-koenig@baylibre.com>
-References: <a01d1cca33187c8b2715227d3db7146465513ced.1783332821.git.u.kleine-koenig@baylibre.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 10:28:23 +0000
-Message-Id: <20260706102823.B907E1F00A3A@smtp.kernel.org>
+	s=k20260515; t=1783333788;
+	bh=YaiT2z3qpXhTNE58QdMIFf3NiMwIsaqv9pHhX1hnvXY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=deZw+PHZpD4PiC0sDZ+djpQLp9rq1RHiV3XJ4vz8ya27J+ITC8sQrrFsxsgM2rbWh
+	 QuSF3XOxqXtS59J7ZItsOgAlnu8M2dhW2VLiuzRfi1OnHZe4bXe6JoL+JMdZDMVL7u
+	 cbW/kExxihnu45MyBitLObmt8fn15wK+TewA4KedSUbFbJ+PU2eAdTumd7y9ggk92o
+	 aGjvtMcgUi/3cVFZXh3NKYfH6BJtKa5cl5Cben3FaoC11KQD2j/b1wMO0aXBnZuL/d
+	 ekH98V2cPLpFUPgye9mTySNgTjrat1iOCiF7PT/7uH0Eu7S8MW/lJD3wKNwAIVjBM8
+	 PLDBE0qSS+ydw==
+Date: Mon, 6 Jul 2026 12:29:35 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Soeren Moch <smoch@web.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, stable@vger.kernel.org, 
+	Lucas Stach <l.stach@pengutronix.de>, Frank Li <Frank.Li@nxp.com>, Fabio Estevam <festevam@gmail.com>, 
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
+Message-ID: <2cbqhvfjszzuanp4i3rohntkxpfgftfjvzt66te3wkohsvw26g@yv4txuy74tvu>
+References: <20260427115804.134231-1-smoch@web.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260427115804.134231-1-smoch@web.de>
 
-> The defintion of struct pci_device_id was moved from
-> <linux/mod_devicetable.h> to a PCI specific header. Follow the movement
-> to get the struct's documenation back.
->=20
-> Fixes: ad428f5811bd ("mod_devicetable.h: Split into per subsystem headers=
-")
-> Signed-off-by: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@b=
-aylibre.com>
+On Mon, Apr 27, 2026 at 01:58:04PM +0200, Soeren Moch wrote:
+> Also on the NXP i.MX6Q chipset MSIs from the endpoints won't be received by
+> the iMSI-RX MSI controller if the Root Port MSI capability is disabled.
+> 
+> Even though the Root Port MSIs won't be received by the iMSI-RX controller
+> due to design, this chipset has some weird hardware bug that prevents
+> the endpoint MSIs from reaching when the Root Port MSI capability is
+> disabled.
+> 
+> Hence, always keep the Root Port MSI capability for this chipset.
+> 
+> Note that by keeping Root Port MSI capability, Root Port MSIs such as AER,
+> PME and others won't be received by default. So users need to use
+> workarounds such as passing 'pcie_pme=nomsi' cmdline param.
+> 
+> Fixes: 3a4e8302e72f ("PCI: imx6: Keep Root Port MSI capability with iMSI-RX to work around hardware bug")
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+This is not the correct fixes tag. Correct one is:
+f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/a01d1cca33187c8b271=
-5227d3db7146465513ced.1783332821.git.u.kleine-koenig@baylibre.com?part=3D1
+> Cc: <stable@vger.kernel.org> # 7.0.x
+> Signed-off-by: Soeren Moch <smoch@web.de>
 
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+@Bjorn: Can you merge this patch for 7.2-rcS with correct fixes tag?
+
+- Mani
+
+> ---
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <Frank.Li@nxp.com>
+> Cc: Fabio Estevam <festevam@gmail.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: imx@lists.linux.dev
+> Cc: linux-kernel@vger.kernel.org
+> 
+> Tested on a tbs2910 board [1]
+> [1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 6d6a1688e7eb..3d461bdef967 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1865,7 +1865,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>  		.ltssm_off = IOMUXC_GPR12,
+> -- 
+> 2.43.0
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
