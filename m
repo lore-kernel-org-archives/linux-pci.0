@@ -1,137 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C743E8326
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:10:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17A903EDAD2
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 13:12:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783343436; cv=none; b=tdpprYWCZzanzpfuxPC4zeb29HRokbw3nDabXHhjkeVJG+G+J6yMH5fCEblz5EIDCIRKeAYM2eN6a09OkPGaQ5CgFNw1DJd3cEbhzHySOYnddZwz8qz8AEYwlT/hcFwC82cCkqqmAeq+yJVFol+CuvvZOepWifpXcbUX6YGziiU=
+	t=1783343548; cv=none; b=MnE0LYym4Od2v56sgbyLEclCihpiql0tUH9vsabMEQmAX72SVOW2OVU0a3cCDQmVZ90HwfOuRll2nCwtV2S6e/pkJH7wmzgH6hy4MEddmuYIktM0cMrHodLD793BagQBcv7xpfDhHvRPcSuelwFa3Z+lp0X+dBi5SAm6fHEJFdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783343436; c=relaxed/simple;
-	bh=L9P9VmFUCYYKzWGNUCoW2Ad6arjfF9eZeV9sH0/guf0=;
+	s=arc-20240116; t=1783343548; c=relaxed/simple;
+	bh=q8zE/niDhrvBmh7CW6UIB9eDzUHKR5H645+nG3yKDwQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s3AF0CcvyPDf3DyesHZNcHwzqvR9H6YLDzBhHRO/Tj6p8fehzgzZevBEsgxmEsjYtOfhhn7azZZ+MZroOW1XeX25S2jSWApGTZjDZm/KV8Pf9fDX7xmuruO+S98F/DFHA56jvP9mfbq1BBUJDgxG4RwHKaL/355n3sFGpK1aE1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HMoRup3x; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=r2rosMmEGFvWaycOrMItQPaK4Fe8nI9awNKw+QestEFD/3VLXmk8m1q8kzcj7SpqMw1KScRswJEc+v1RKVxSDzH6v2PgcaPhP26E1y2lrmQVTJUyJxiZZSIw8kkANozLhaeldZPs5Rmu5ilmI7Jf+5YDB6Th/OP4E50j1DoX9f0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eGI+ayW8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HMoRup3x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 175F51F000E9;
-	Mon,  6 Jul 2026 13:10:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eGI+ayW8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DC6B1F000E9;
+	Mon,  6 Jul 2026 13:12:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783343434;
-	bh=ZiL3sRyR05DrFAzCUBWTWf1OQLCDLTViJmJOMURuh/I=;
+	s=k20260515; t=1783343546;
+	bh=gLIqp45KvgqfKScCoHAJLRAwaHteq5+tRvneJIt1q/o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HMoRup3xLKnjwClZtz6qL3qOiGrW4zowH4wfI1qnBbv5Ft/k/PFPAxQRHYHGxc1dz
-	 v7JoUgsZO8hnmIB6r1RA7p2ETk44ozpS83syVsntfpVPbG2V6fRUl452jCAcis2wLc
-	 syhPInbp/SGglPhKzmyT4OT828ki8V7R3hGqqvYzUM5lZTlrv6pmyk9sYCKv0mrS2l
-	 Ue3gy8skzTxWsosXPAeBjKp4t7PcI4VXiBkL21O4eH4X05gJaZqYh+GG6orZtk79sq
-	 LuUeNbBE7u8R39Hu3AYOy6gwCSufVqcifw+tZLHVtGonW2AEUrqwU7TImuaVTX3Spm
-	 sf96vfTX1XHjw==
+	b=eGI+ayW8s6H4+t3ywNwE98bXzkKO5aB2Q15L8D/wI4esDr7Afi1KFMKCER6EWqbr0
+	 liKGjuDgDGDmrZ0w+CcHnRD9SQh7x71/6vs272g3b+3tywfEgUW7EX5c8a4Kt6/OfR
+	 qWZ4SWAQR8PS2GqJjqtkKwY/iacSuOTXySRk53vQi/r+I/HS/NqYYY06eMbYiXHeYx
+	 2023xxW/rO5KC8oEkcCEcJLbkyZukI66cDOZkUa7NQBY9Chxx/20DzNmSFYIFqUdrp
+	 WEk1zYMV6EQb+nXiMDzx+74nC7WESE/YeXrNSFQfzNKYQ9aHWUnGyUHOO0LslgBjBZ
+	 zvhpbC/py/hlg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 18/20] rust: dma: drop `dma_read!` and `dma_write!`
- API
+Subject: Re: [RESEND RFC PATCH] PCI: Get the hotplug bridge window sizes
+ from DT
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: ojeda@kernel.org, "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo
- Krummrich" <dakr@kernel.org>, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260706-io_projection-v6-18-72cd5d055d54@garyguo.net>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-18-72cd5d055d54@garyguo.net>
+To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260706130230.546108-1-manivannan.sadhasivam@oss.qualcomm.com>
+References: <20260706130230.546108-1-manivannan.sadhasivam@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 13:10:33 +0000
-Message-Id: <20260706131034.175F51F000E9@smtp.kernel.org>
+Date: Mon, 06 Jul 2026 13:12:25 +0000
+Message-Id: <20260706131226.4DC6B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] The memory barrier intended to order command data writes before th=
-e doorbell ring is placed after the doorbell is updated, failing to prevent=
- the hardware from reading stale command data.
-- [High] Missing read memory barrier after reading the GSP write pointer do=
-orbell, which can cause the CPU to read stale message queue data due to spe=
-culative execution or memory reordering.
+- [Medium] Command-line parameters matching default hotplug window sizes ar=
+e incorrectly overridden by Device Tree sizes.
 --
 
-commit 4f52030a2d0bed4fa2789f818006faedda8d1221
-Author: Gary Guo <gary@garyguo.net>
+commit a20e61c301c97bb0b8018d5f602c3d28d1cc752e
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-rust: dma: drop dma_read! and dma_write! API
+PCI: Get the hotplug bridge window sizes from DT
 
-This patch removes the dma_read and dma_write APIs. It states that primitive
-read and write use cases are now covered by the io_read and io_write macros,
-and non-primitive cases should use CoherentBox or as_ref/as_mut to ensure
-lack of concurrent access.
+This commit allows parsing the 'ranges' property from PCI bridge device tree
+nodes to define hotplug bridge window sizes based on firmware requirements.
+The DT sizes apply as additional reservations for the bridge windows.
+Command-line overrides are intended to continue taking precedence over the
+DT settings.
 
-[ ... ]
-
-> --- a/drivers/gpu/nova-core/gsp/cmdq.rs
-> +++ b/drivers/gpu/nova-core/gsp/cmdq.rs
-> @@ -317,7 +317,7 @@
->      fn driver_read_area(&self) -> (&[[u8; GSP_PAGE_SIZE]], &[[u8; GSP_PA=
-GE_SIZE]]) {
->          let tx =3D self.gsp_write_ptr();
->          let rx =3D self.cpu_read_ptr();
-> =20
->          // Pointer to the first entry of the GSP message queue.
->          let data =3D ptr::project!(self.0.as_ptr(), .gspq.msgq.data[buil=
-d: 0]);
-> =20
->          let (tail_end, wrap_end) =3D if rx <=3D tx {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is a read memory barrier nee=
-ded
-after reading the GSP write pointer doorbell?
-
-When polling the GSP write pointer via self.gsp_write_ptr(), there is no
-intervening Acquire memory barrier (such as fence(Ordering::Acquire) or
-dma_rmb()) before the buffer is accessed via slice creation.
-
-On weakly-ordered memory models like ARM64, could the CPU speculatively pre=
-fetch
-the message data before the doorbell read completes or is validated, causin=
-g the
-driver to read stale message queue data?
-
->              // Read area is non-wrapping and stops right before tx.
->              (tx, 0)
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index c0a949f2c9956..3fbd097728bd6 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
 
 [ ... ]
 
-> @@ -448,7 +448,7 @@
->      fn advance_cpu_write_ptr(&mut self, elem_count: u32) {
->          let tx =3D io_project!(self.0, .cpuq.tx);
->          let wptr =3D MsgqTxHeader::write_ptr(tx).wrapping_add(elem_count=
-) % MSGQ_NUM_PAGES;
->          MsgqTxHeader::set_write_ptr(tx, wptr);
-> =20
->          // Ensure all command data is visible before triggering the GSP =
-read.
->          fence(Ordering::SeqCst);
+> @@ -1430,9 +1480,34 @@ void __pci_bus_size_bridges(struct pci_bus *bus, s=
+truct list_head *realloc_head)
+>  	case PCI_HEADER_TYPE_BRIDGE:
+>  		pci_bridge_check_ranges(bus);
+>  		if (bus->self->is_hotplug_bridge) {
+> +			struct resource dt_io =3D {}, dt_mmio =3D {}, dt_mmio_pref =3D {};
+> +
+>  			additional_io_size  =3D pci_hotplug_io_size;
+>  			additional_mmio_size =3D pci_hotplug_mmio_size;
+>  			additional_mmio_pref_size =3D pci_hotplug_mmio_pref_size;
+> +
+> +			/*
+> +			 * If the bridge has a DT ranges property, use that to
+> +			 * override the default window sizes. Command line
+> +			 * parameters (hpmemsize etc...) take precedence over
+> +			 * DT.
+> +			 */
+> +			if (pci_bridge_of_get_window(bus->self,
+> +						     &dt_io, &dt_mmio,
+> +						     &dt_mmio_pref)) {
+> +				if (dt_io.flags &&
+> +				    pci_hotplug_io_size =3D=3D DEFAULT_HOTPLUG_IO_SIZE)
+> +					additional_io_size =3D
+> +						resource_size(&dt_io);
+> +				if (dt_mmio.flags &&
+> +				    pci_hotplug_mmio_size =3D=3D DEFAULT_HOTPLUG_MMIO_SIZE)
 
-[Severity: High]
-This is a pre-existing issue, but is the memory barrier placed correctly he=
-re?
+[Severity: Medium]
+Will this correctly honor command line parameters if the user explicitly
+requests the default size (e.g., pci=3Dhpmemsize=3D2M)?
 
-The fence is placed after the volatile write to the doorbell
-(MsgqTxHeader::set_write_ptr). Without a barrier before the doorbell write,
-couldn't the CPU or compiler reorder the doorbell volatile write to become
-globally visible before the preceding command data writes?
+The commit message states that command line parameters continue to take
+precedence over DT. However, checking against the default macros here fails
+to distinguish between an unconfigured state and an explicitly configured
+value that equals the default size.
 
-If so, could the GSP observe the updated doorbell and process the command b=
-efore
-the payload is actually flushed to memory, leading to the hardware reading =
-stale
-command data?
+If a user explicitly passes pci=3Dhpmemsize=3D2M to restrict a large DT-pro=
+vided
+window size, wouldn't this condition incorrectly ignore their command-line
+parameter and apply the DT size instead?
 
->      }
+> +					additional_mmio_size =3D
+> +						resource_size(&dt_mmio);
+> +				if (dt_mmio_pref.flags &&
+> +				    pci_hotplug_mmio_pref_size =3D=3D DEFAULT_HOTPLUG_MMIO_PREF_SIZE)
+> +					additional_mmio_pref_size =3D
+> +						resource_size(&dt_mmio_pref);
+> +			}
+>  		}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-io_project=
-ion-v6-0-72cd5d055d54@garyguo.net?part=3D18
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706130230.5461=
+08-1-manivannan.sadhasivam@oss.qualcomm.com?part=3D1
