@@ -1,182 +1,234 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ACBF2EBDDE;
-	Mon,  6 Jul 2026 22:59:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3E453DC4C8;
+	Mon,  6 Jul 2026 23:13:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783378776; cv=none; b=ADlxXhlm5X2P+cQlz3hG3g/61UIKo9Ha0EocsoNSLRqmGYyUnRVqQuE4/SFUf5at1R2dFaShx8RTJP/LvB2goaqJSE5LbAI8ZIhQ/Y7BqlTu8hQCTMzX+tB9KtqievsjFnK4JGAYzev8u5+eXdqEsVmi1pf0IRaK8d5Nj9eznOQ=
+	t=1783379600; cv=none; b=W1GblVQW6enGrCYY1t6CZYxa3vlrfMRUEJgdV0g8Z5IPatD8IWRUlxdCmCCUZimvFx3rjpUJaxJ/3uxeDvj9MRHxOmTdQhcS2ParatrSc9QRRkiWxavbVCYS1CI7h058a3S0idDPvVPhQybh22s+H2H6dr5pFLOmVGWRrNgjj0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783378776; c=relaxed/simple;
-	bh=ptqgcGp5cRHqyL3XeoeWvjzM/BM58yDGqarH5YbanTQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=auOve8K/8r/qPa8c+jDoiwFskzJkUWifZhmeHeexbSQaJzS+cMq6++AvrLu/jHaCfXuuQN0b5Oz6ghjO9rBWjwo8p5YWEHNbJgXE/J++io6fm1Nfo1Kb3Ctu+6VjlOesXufhrnV6gN7RNiBIQHtrOTnss5aqDrGUIIW7R1VF2oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LlrfT22K; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783379600; c=relaxed/simple;
+	bh=+x8wcxuE61wQFRgp9QDTuo3XMv+m2kTOJVo5ggvW3iU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qNbNGrliW1FEIzYbjhVIf2DGISBTOYMiSh/81LMBfdaRYgNhWdJi6Q9Ma75sG2A2pEDxQhlhu6Q5lMM7okG3chdMnMD6RWac+2VorvxGKBvKv/kgWOmsmwLmsx+xoflLuP1jZBh5fn0abiFeWIKAhVAh/tqDg/4fxhMtZY5w+Xs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mpl0CHL6; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LlrfT22K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B2491F000E9;
-	Mon,  6 Jul 2026 22:59:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783378774;
-	bh=saA9KT9maPK2PRUwGt1UO16/rxvb6cwmEV5YwfrJ9us=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LlrfT22KHAcMFYN9x/qCLhBUceHLMRid/obD19e+wm8a2rWtzmf8W8krF1KZMnHpq
-	 2GobgEaSJk9iioZobJTESThfPlP3jd9WVfkF8JXArhokkBK9D872n+b1+59L//QxSg
-	 d5h5+ERUKF4NfDgNFmKn/8WxdA3a0VB7Q8qIxnftH9Ngl7rVuAg7pcX++MGsQsJWzC
-	 LRF7zZH3kRzQM8DqcAA/Jbk9r2eiyQLuTa64pzBAyNUvV7X6pPrxJQ6Ws6NrouG5Hv
-	 qnpbhuLziE5CAd6H0TVIcLjuLK9CLKtCCdjGp3F91MbZulcqArqWa0Xl73N1tnX1LP
-	 9hJTztXfU9ImQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] PCI: apple: Integrate pwrctrl API
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yureka Lilian" <yureka@cyberchaos.dev>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260707-apple-pcie-pwren-v1-1-5a281b182fe2@cyberchaos.dev>
-References: <20260707-apple-pcie-pwren-v1-0-5a281b182fe2@cyberchaos.dev>
- <20260707-apple-pcie-pwren-v1-1-5a281b182fe2@cyberchaos.dev>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 22:59:34 +0000
-Message-Id: <20260706225934.9B2491F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mpl0CHL6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783379599; x=1814915599;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=+x8wcxuE61wQFRgp9QDTuo3XMv+m2kTOJVo5ggvW3iU=;
+  b=mpl0CHL60JAlwZ/qmM0b2VRORuPj8yyDwZxJL8Gdz+sKb0xg8Go82AqJ
+   G+YAnduYQ4SignBaUMr005EqBE8fEsGjYhhDyCjRLiZSFfWNQ4nCJCAxm
+   BhqQBGid1IeLVn4phyEtEwl3ILD/9Z/CMwePs2mQBUs4P4QDLrHcPkhvY
+   zpCB0IMIjocwrq9EO1o8utAvJsTf745zLUNFQ6fYjduwD0h5yzwT2LEa7
+   a8G0lEpDJTxSUahrMk1mNRloy81b09Y47fyIFRlte6ztcyPsMVfNl9OlV
+   pZO5bGEAJHJ7pR1hAR2JgmnaZsxTsr0+b4JfdEMb+RBAEOamp/q7J9Ntk
+   Q==;
+X-CSE-ConnectionGUID: zE3K3dpASN2KBHS1E212Ng==
+X-CSE-MsgGUID: Sdvi7XTLR1izRtAKH/Fepg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11839"; a="95402825"
+X-IronPort-AV: E=Sophos;i="6.25,151,1779174000"; 
+   d="scan'208";a="95402825"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2026 16:13:17 -0700
+X-CSE-ConnectionGUID: 5QC7oYaQQ02ESW7ppKV3Dg==
+X-CSE-MsgGUID: 3odZuw7TSviwbCBmn0S01w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,151,1779174000"; 
+   d="scan'208";a="251161693"
+Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.110.202]) ([10.125.110.202])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2026 16:13:16 -0700
+Message-ID: <fb9a53ea-2743-4e4c-b3b3-faa81dfac156@intel.com>
+Date: Mon, 6 Jul 2026 16:13:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2
+ devices
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
+ Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com, Dan Williams <danwilliams@nvidia.com>,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260703220508.546528-1-smadhavan@nvidia.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260703220508.546528-1-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
 
-New issues:
-- [High] Missing cleanup of PCI pwrctrl devices on error paths in apple_pci=
-e_init().
-- [Medium] Using the `%pe` format specifier with an integer error code inst=
-ead of an error pointer.
 
-Pre-existing issues:
-- [Critical] Use-After-Free and resource leak of port IRQ handlers and doma=
-ins on probe failure.
-- [High] MSI IRQ domain is permanently leaked on probe deferral, heavily ex=
-acerbated by the new pwrctrl deferred probing.
---
+On 7/3/26 3:04 PM, Srirangan Madhavan wrote:
+> Hi folks!
+> 
+> This series adds CXL Reset support for CXL Type 2 devices through the
+> existing PCI reset_method ABI. The reset sequence follows the CXL 4.0
+> specification [1], including CXL.cache disable, optional cache
+> writeback, CXL Reset initiation, ResetComplete polling, and ResetError
+> reporting.
+> 
+> The userspace ABI is the existing PCI reset interface:
+> 
+>     /sys/bus/pci/devices/.../reset_method
+>     /sys/bus/pci/devices/.../reset
+> 
+> Userspace can select "cxl_reset" in reset_method and then trigger reset
+> through the existing reset attribute.
+> 
+> Following Dan's v6 feedback, this replaces the proposed memdev sysfs ABI
+> with the existing PCI reset_method interface.
+> 
+> v8 changes from v7 [2]:
+> - Drop the PCI helper export patch.
+> - Drop the multi-function sibling coordination patch. cxl_reset is only
+>   exposed as a function-scoped reset method when the CXL reset scope is
+>   limited to the target function.
+> - Keep the reset-scope discovery needed to reject non-function-scoped
+>   CXL resets.
+> - Cache HDM location as BAR-relative metadata instead of keeping an
+>   enum-time MMIO mapping.
+> - Restore HDM through a temporary mapping based on the current BAR
+>   assignment after PCI config state is restored.
+> - Cache raw HDM decoder register state so uncommitted decoders can be
+>   restored as uncommitted, while committed decoders are recommitted
+>   through the normal HDM commit flow.
+> - Share HDM decoder decode and validation between normal CXL core
+>   enumeration and early PCI HDM caching.
+> - Put cxl_reset ahead of FLR in reset_method priority because FLR does
+>   not reset CXL.cache or CXL.mem protocol state.
+> 
+> Motivation:
+> -----------
+> - Type 2 devices need a CXL-specific reset mechanism beyond existing PCI
+>   reset methods.
+> 
+> - FLR does not reset CXL.cache or CXL.mem protocol state. CXL Reset is
+>   the architectural reset mechanism for those protocols.
+> 
+> - The PCI reset_method ABI lets userspace select this narrower CXL reset
+>   before falling back to broader bus reset methods.
+> 
+> Change Description:
+> -------------------
+> 
+> Patch 1: cxl/hdm: Split decoder programming into a reusable helper
+> - Move shared decoder settings to include/cxl/cxl.h.
+> - Factor low-level HDM register programming into cxl_commit().
+> 
+> Patch 2: cxl/hdm: Cache decoder settings on PCI devices
+> - Cache CXL core HDM decoder settings in pci_dev->hdm.
+> - Refresh the cache as decoders are enumerated, committed, or reset.
+> 
+> Patch 3: cxl/hdm: Share HDM decoder decode logic
+> - Share HDM decoder decode and validation between normal CXL core
+>   enumeration and early PCI HDM cache setup.
+> 
+> Patch 4: cxl/hdm: Cache endpoint decoder settings during PCI enumeration
+> - Snapshot endpoint HDM state during PCI capability initialization.
+> - Cache the HDM register locator as BAR-relative metadata.
+> - Cache raw decoder register state in addition to committed decoder
+>   settings.
+> 
+> Patch 5: PCI/CXL: Add CXL Device Reset helper
+> - Add the internal DVSEC reset sequence.
+> - Disable CXL.cache, perform cache writeback where supported, initiate
+>   CXL Reset, and wait for completion.
+> 
+> Patch 6: PCI/CXL: Validate HDM ranges before CXL reset
+> - Collect enabled cached HDM ranges.
+> - Reject reset if affected ranges are busy.
+> - Invalidate CPU caches when runtime cache-invalidation support is
+>   available, otherwise continue after warning.
+> 
+> Patch 7: PCI/CXL: Discover the CXL reset scope
+> - Discover whether CXL Reset is function-scoped using the Non-CXL
+>   Function Map and CXL cache/mem capability bits.
+> 
+> Patch 8: cxl/pci: Restore CXL HDM state after PCI reset
+> - Restore cached global and per-decoder HDM state after reset.
+> - Re-map HDM registers from the current BAR assignment during restore.
+> - Replay raw decoder state for uncommitted decoders and recommit
+>   decoders that were committed before reset.
+> 
+> Patch 9: PCI/CXL: Expose CXL Reset as a PCI reset method
+> - Add "cxl_reset" to the PCI reset_method table for Type 2 reset-capable
+>   CXL devices.
+> - Prioritize cxl_reset ahead of FLR.
+> 
+> Patch 10: Documentation/ABI: Document CXL Reset PCI reset method
+> - Document the new reset_method value and reset behavior.
+> 
+> The CPU cache invalidation step depends on
+> cpu_cache_invalidate_memregion() support for the affected address ranges.
+> If no runtime provider is available, the kernel emits a warning and
+> continues after the affected HDM ranges have been reserved.
+> 
+> Example:
+> 
+>     echo cxl_reset > /sys/bus/pci/devices/0000:bb:dd.f/reset_method
+>     echo 1 > /sys/bus/pci/devices/0000:bb:dd.f/reset
+> 
+> Testing:
+> - Ran 100 iterations of cxl_reset through the PCI reset sysfs ABI on a
+>   CXL Type 2 device. All iterations completed successfully and
+>   ResetComplete was observed.
+> - Exercised cxl_bus reset separately with an add-on HDM restore patch.
+> 
+> References:
+> [1] https://computeexpresslink.org/wp-content/uploads/2026/02/CXL-Specification_rev4p0_ver1p0_2026February26_clean_evalcopy_v2.pdf
+> [2] https://lore.kernel.org/linux-cxl/20260623032453.3404772-1-smadhavan@nvidia.com/
+> [3] https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@nvidia.com/
+> 
+> Srirangan Madhavan (10):
+>   cxl/hdm: Split decoder programming into a reusable helper
+>   cxl/hdm: Cache decoder settings on PCI devices
+>   cxl/hdm: Share HDM decoder decode logic
+>   cxl/hdm: Cache endpoint decoder settings during PCI enumeration
+>   PCI/CXL: Add CXL Device Reset helper
+>   PCI/CXL: Validate HDM ranges before CXL reset
+>   PCI/CXL: Discover the CXL reset scope
+>   cxl/pci: Restore CXL HDM state after PCI reset
+>   PCI/CXL: Expose CXL Reset as a PCI reset method
+>   Documentation/ABI: Document CXL Reset PCI reset method
+> 
+>  Documentation/ABI/testing/sysfs-bus-pci |   14 +
+>  drivers/cxl/Kconfig                     |    4 +
+>  drivers/cxl/core/Makefile               |    2 +-
+>  drivers/cxl/core/hdm.c                  |  257 ++---
+>  drivers/cxl/core/region.c               |    6 +-
+>  drivers/cxl/core/regs.c                 |    4 +
+>  drivers/cxl/core/reset.c                | 1354 +++++++++++++++++++++++
+>  drivers/cxl/cxl.h                       |   43 -
+>  drivers/pci/pci.c                       |    2 +
+>  drivers/pci/probe.c                     |    3 +
+>  include/cxl/cxl.h                       |  102 +-
+>  include/linux/pci.h                     |    8 +-
+>  include/uapi/linux/pci_regs.h           |   15 +
+>  tools/testing/cxl/test/cxl.c            |   10 +-
+>  14 files changed, 1615 insertions(+), 209 deletions(-)
+>  create mode 100644 drivers/cxl/core/reset.c
+> 
+> base-commit: 90cf2e0d702c8a132ccbe72e7687f33c04c14658
 
---- Patch [1]: [PATCH 1/2] PCI: apple: Integrate pwrctrl API ---
-commit 937db91081c31bded4a8e5eaa8859cec8bb3fc57
-Author: Yureka Lilian <yureka@cyberchaos.dev>
-Subject: PCI: apple: Integrate pwrctrl API
 
-This patch integrates the PCI pwrctrl framework into the Apple PCIe host
-driver to provide standardized power management. It allows powering on
-devices like WiFi and SD card readers using the pci-pwrctrl-generic
-driver before probing the ports.
-
-Link: https://lore.kernel.org/lkml/20220502093832.32778-4-marcan@marcan.st/
-
-> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller=
-/pcie-apple.c
-> index c2cffc0659f44..db038a9d4831f 100644
-> --- a/drivers/pci/controller/pcie-apple.c
-> +++ b/drivers/pci/controller/pcie-apple.c
-
-[ ... ]
-
-> @@ -825,6 +826,21 @@ static int apple_pcie_init(struct pci_config_window =
-*cfg)
->  	if (WARN_ON(!pcie))
->  		return -ENOENT;
-> =20
-> +	ret =3D pci_pwrctrl_create_devices(pcie->dev);
-> +	if (ret) {
-> +		dev_err(pcie->dev, "Failed to create pwrctrl devices: %pe\n", ret);
-
-[Severity: Medium]
-Are we using the %pe format specifier with an integer error code instead
-of a pointer here?
-
-Passing the 32-bit integer ret directly might cause undefined behavior on
-64-bit architectures, or print a hashed pointer address instead of the
-actual error string since IS_ERR() evaluates to false.
-
-Should this be cast with ERR_PTR(ret)?
-
-> +		return ret;
-> +	}
-> +
-> +	ret =3D pci_pwrctrl_power_on_devices(pcie->dev);
-> +	if (ret) {
-> +		if (ret !=3D -EPROBE_DEFER) {
-> +			dev_err(pcie->dev, "Failed to power on devices: %pe\n", ret);
-
-[Severity: Medium]
-Is this %pe format specifier also receiving the integer ret directly
-instead of a pointer?
-
-> +			pci_pwrctrl_destroy_devices(pcie->dev);
-> +		}
-> +		return ret;
-
-[Severity: High]
-This is a pre-existing issue, but does returning -EPROBE_DEFER here
-exacerbate a memory leak in apple_msi_init()?
-
-Because pci_pwrctrl_power_on_devices() relies on of_platform_device_create()
-spawning child devices that probe asynchronously, it seems this might
-frequently return -EPROBE_DEFER.
-
-Earlier in the probe path, apple_msi_init() creates an MSI domain via
-msi_create_parent_irq_domain(), but lacks a devm_add_action() to clean
-it up.
-
-If we defer probe here, do we permanently leak the previous MSI domain and
-pcie->bitmap allocations on each retry?
-
-> +	}
-> +
->  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
->  		ret =3D apple_pcie_setup_port(pcie, of_port);
->  		if (ret) {
->  			dev_err(dev, "Port %pOF setup fail: %d\n", of_port, ret);
->  			return ret;
-
-[Severity: High]
-If apple_pcie_setup_port() fails and we return ret here, do we bypass
-tearing down the successfully created pwrctrl devices?
-
-If pci_pwrctrl_create_devices() and pci_pwrctrl_power_on_devices()
-succeeded earlier, it seems this error path leaves the hardware powered on
-indefinitely and leaks the child platform devices since they are not
-devres-managed.
-
-Should we call pci_pwrctrl_power_off_devices() and
-pci_pwrctrl_destroy_devices() before returning?
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but could this error path lead
-to a use-after-free and resource leak of port IRQ handlers?
-
-If the loop successfully sets up the first port but fails on a subsequent
-port, the probe fails and devres frees the struct apple_pcie_port for
-the successful port.
-
-However, looking at apple_pcie_port_register_irqs(), it registers the
-handler using request_irq() without devm:
-
-drivers/pci/controller/pcie-apple.c:apple_pcie_port_register_irqs() {
-    ...
-    ret =3D request_irq(irq, apple_pcie_port_irq, 0, port_irqs[i].name, por=
-t);
-    ...
-}
-
-Similarly, apple_pcie_port_setup_irq() uses
-irq_set_chained_handler_and_data() without a devm teardown.
-
-Since the IRQs remain active, could an incoming interrupt trigger the
-handlers and dereference the freed port structure?
-
->  		}
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707-apple-pcie=
--pwren-v1-0-5a281b182fe2@cyberchaos.dev?part=3D1
+Hi Srirangan,
+I am not able to apply the patch series using b4 with the above base commit.
+b4 picks up the last RFC patch as the first patch and fails to apply. However, skipping it b4 is still having trouble. Can you push a public git branch somewhere please? Also in the future the last RFC patch should be labeled 11/11. Thanks!
