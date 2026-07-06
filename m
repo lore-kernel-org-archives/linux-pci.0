@@ -1,137 +1,216 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10EBC3BBA09
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 10:41:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B5542CB15;
+	Mon,  6 Jul 2026 12:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783334478; cv=none; b=ra0DUboeJc//OIbroN7aMo37kTndOFTtvdm9PkaqaEzsfmDHNQffGdexqfbTss9lHL8lf5nFkNJYgGXOMTf1oodbm+FXjQuooO+Dvfb3RKayTh5tEPsSAcJHSJu4Y9hz6yKf0lYUPdZayO7duo8yxYZ4cERbbEZzs1jtndrvfC0=
+	t=1783341114; cv=none; b=M3Mbkg3M4MMOnkQnX213VdZ0wFoqpq6bloFJtp52LNUP2oY3WPRtJLRji64rQq9fhRd4c+F6OHDjVkLt5oZVO7cGLrbeuednMEkvIH6q35v1BV286eXnQmDa+yJGwgV1O1E7sn0koER/lvG+hk8PxH812H67egvpx7QRD4biQGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783334478; c=relaxed/simple;
-	bh=tcRl1VT3E4bY3Iz0hzz0D0GMh/W67RUbYGutLFyNepQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AP9h/duaoWnH33mWQqBnHjhXDueIRS/TfIs3lhjPh/OpIg679l7GADBFqahcQ21WI45eeg61aavvuCeNXOzyJIRQNbTOYh1ivcIjHyuyPs8VOtKJog9NzJoDS7p3XDGvBbibHi3oliYZntfgnG99xPnE5FGQ8RxLi2UGCLpg4Lw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=P3BmNy+a; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="P3BmNy+a"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-472326ca506so1867433f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 03:41:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1783334475; x=1783939275; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gC0UcNZnbE6CbmrSx0jp7Sr1t92Q0XTpYVp2pbMGzto=;
-        b=P3BmNy+akynJWhMlFFcWxCDBj0fg0QHIoyugBh46JM+58xryILTvAxHrPeHFp65nQ1
-         kZVqHBlPxn8N884pcsyfJ2hVVXfqYBDYMO16h5n1iQGErAlIG4DYa8Nom7AS+qR8yEqw
-         ka5C03pHpx5k6n7l79B6N6lnSh0+vqPewclBljKmYzcKOzex7o4npLWJIV8BNPp9JHKE
-         5SrWgE6Ouz3eidOY0zBoKcC/KYfeA8VPlTCPJ34pY+178sgmspZZvzvrMHc4wKqxWODx
-         lhgsIK+qoHR8WBMAv+wt7tbh15PpmIqGeGrzpbkTgeUtymJIEnIfJYQaNWeWymSNa5aZ
-         jQdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783334475; x=1783939275;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gC0UcNZnbE6CbmrSx0jp7Sr1t92Q0XTpYVp2pbMGzto=;
-        b=l1M9S4KCV/hueqAgWrux7HDZIYFWt9Nq1XdHWTR6q04JNm8Nwj4kUmdn83WvVtCi2v
-         YYhCczHLcLeB7189QHZPPLTfuV+4KYcVt5sYV9JiAo1yxhdUuBXc3njrWAeW2MdVbKRT
-         Nt7Ts95h+FS1sBJPtGEEiCkWExzPOKAy2DqXfvlM2bTjd+GaJNB+RtiLqKp2JGpNf+XO
-         a/L8MQ7viasVLmDlI8PWA0h5CbfO9Qn0DVcsqnwkF2jS48Q6AmCo+o0aBSH7Um8Gk3/G
-         AsAss94pjA0CUNVCiRxfLAjEc4Y6SvTfnEdbDgCxoPw6hySLnF+AEEskQML+Rw39FMUN
-         KQhg==
-X-Forwarded-Encrypted: i=1; AHgh+Rrx9CH6C3Xas7SKk2VxVO5yhU9AEBwyw3nRB81Tjj6/dkWiskAvsrTGWt1F7KrfKRAeorAFCOhdaRk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyvjx86fHyATZzh/81B5qOOELkUXGBeZ7oNt8fxOGx0oAz9mNoS
-	BQyI/4gexTUOyauY2F39d4jxguElxh9WraZWjR79tUi8u5WcQedWSbytmu53n5tvFpI=
-X-Gm-Gg: AfdE7cn09YCuKZyzVpBZQaK8Gv5/vlaLzYzjaLFLWnXr5r216wTA4xbCv/RX2d8UnUm
-	Tie8aL0Xxo//SAaB+U6wGkFGKAI/OXsoyBh6lQKshqaQ6Uuuvqr+SEvBUtfhExr6PGpACG7q7XE
-	OZRKVmGRTZ+7Ly9LxzfBthTgxYyvD0tvUgTu+Db7I/gvaqXSA85ZLbjxZdHGyDYaNLsctRdj0yB
-	RvEOYusr4onDwXj9IqCR2JINDuaDJKCUCZJreq+iqmmxi8cZxVH86kQiCek5Q6HDxrLmKs1Ita5
-	kAhOt6p7lvygOjHGI4h5nZedNGZG4rT7UhV2rwTAsd1Z6gIcxFFZKK2aaKwDr7Vbr9YPyPYMiLi
-	P0A4xykcaDK9teNrwnHVn7UdhhFqAuhtABg+aPa7szBQt37UDmRpHS6BiBGT+wayY6Lzbdpbc0L
-	tNHyeZO4euDGXR+UG2Wpa6ymsKVmlcOUyDT+kxPcuGM1bHOSxgE1S2IAUnXC3Ytdfen/bm1EMAr
-	v5+QFLrldE4xLs=
-X-Received: by 2002:adf:e448:0:b0:473:57d9:d014 with SMTP id ffacd0b85a97d-47aac5e19a9mr9203337f8f.17.1783334472541;
-        Mon, 06 Jul 2026 03:41:12 -0700 (PDT)
-Received: from localhost (p200300f65f47db0426af56a07ec3b32d.dip0.t-ipconnect.de. [2003:f6:5f47:db04:26af:56a0:7ec3:b32d])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-47a9de1d8cdsm25716162f8f.1.2026.07.06.03.41.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jul 2026 03:41:11 -0700 (PDT)
-Date: Mon, 6 Jul 2026 12:41:11 +0200
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Shuah Khan <skhan@linuxfoundation.org>, linux-pci@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] Documentation: PCI: Update header defining struct
- pci_device_id
-Message-ID: <akuF--S3u2ighG47@monoceros>
-References: <a01d1cca33187c8b2715227d3db7146465513ced.1783332821.git.u.kleine-koenig@baylibre.com>
+	s=arc-20240116; t=1783341114; c=relaxed/simple;
+	bh=gNyu2oOxMt+apODRtjcAwyggE55SfeckBgDsgVzE7oQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g42W9ZTtpAUc/UaAyrCxKzAASOaOCGTFe0NTFqwyfrTcZCsUAPfBXpfn7hhJNPOB8gQzlhF3XRT6vqjG4Bzkdq1q3ynSxW4fNuHbRp1061TYWWh6/Yc+8RbtHJuUIiZBve97YoflEE9BGCZhaLI32YmNiMpZwVxoYC+aC4dEYEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC44A1F00A3D;
+	Mon,  6 Jul 2026 12:31:45 +0000 (UTC)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: bhelgaas@google.com,
+	robh@kernel.org,
+	krzk+dt@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	qiang.yu@oss.qualcomm.com,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: [RFC PATCH] PCI: Get the hotplug bridge window sizes from DT
+Date: Mon,  6 Jul 2026 14:31:33 +0200
+Message-ID: <20260706123133.545104-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="fydpeoqoyqksxjta"
-Content-Disposition: inline
-In-Reply-To: <a01d1cca33187c8b2715227d3db7146465513ced.1783332821.git.u.kleine-koenig@baylibre.com>
+Content-Transfer-Encoding: 8bit
 
+Most of the PCI hotplug bridges used in Devicetree platforms do not have
+their bridge windows populated by firmware. So the PCI core allocates the
+bridge windows based on the requirements below:
 
---fydpeoqoyqksxjta
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v1] Documentation: PCI: Update header defining struct
- pci_device_id
-MIME-Version: 1.0
+1. Total size needed by the downstream devices
+2. Default size (2MiB for MMIO, 256 bytes for IO) if no devices are
+   available during the initial bus scan
+3. Command line params like hpmemsize etc...
 
-On Mon, Jul 06, 2026 at 12:21:15PM +0200, Uwe Kleine-K=F6nig (The Capable H=
-ub) wrote:
-> The defintion of struct pci_device_id was moved from
-> <linux/mod_devicetable.h> to a PCI specific header. Follow the movement
-> to get the struct's documenation back.
->=20
-> Fixes: ad428f5811bd ("mod_devicetable.h: Split into per subsystem headers=
-")
-> Signed-off-by: Uwe Kleine-K=F6nig (The Capable Hub) <u.kleine-koenig@bayl=
-ibre.com>
-> ---
-> Hello,
->=20
-> I'm unsure about the best way to apply it. The obvious options are:
->=20
->  - Linus applies it as he also pulled the header split without involving =
-the
->    PCI tree; or
->  - it goes in via the pci tree
->  - it goes in via the documentation tree
->=20
-> The 2nd is probably preferable if there are pending pci fixes for 7.2
-> anyhow?!
+If no devices are available during the initial bus scan, then the PCI core
+allocates the default conservative 2MiB MMIO bridge windows. But this size
+sometimes becomes insufficient when a BAR hungry device like a GPU gets
+plugged in later. So users have to resort to command line params to
+increase the window sizes. But this is very inconvenient and causes a lot
+of pain in distro integration.
 
-There are a few more instances that need a similar fix. So please
-disregard this patch, I'll post a complete patch adapting all the now
-broken references and target for the first or third option then.
+To address this issue, parse the 'ranges' property from the bridge DT node
+(if available) and use the sizes for each bridge window. This works well
+because the 'ranges' property is already allowed by the DT binding for PCI
+bridges and it lets system designers pre-define the hotplug bridge window
+size requirements in firmware.
 
-Best regards
-Uwe
+The DT derived sizes are applied as the additional (hotplug) reservation for
+each window. Command line parameters (hpmemsize etc...) continue to take
+precedence over DT.
 
---fydpeoqoyqksxjta
-Content-Type: application/pgp-signature; name="signature.asc"
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
 
------BEGIN PGP SIGNATURE-----
+Sending this patch as RFC because I'm not 100% sure if 'ranges' if the correct
+property here. I chose this property as it is already allowed for PCI bridges
+and allows specifying the window sizes. But for this usecase, bridge start
+addresses specified with this property are ignored.
 
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmpLhkQACgkQj4D7WH0S
-/k6GPAf9FX7sv4VNoogpb9+xtXJSRMue+Gk2u7O3FsjA2IcWhdxa+p3tGns/By/I
-lqXKtM+4v8g8aaOcbC472qd9t5w+7qT4ysbXlgNtPpV3D+89dG6laib7J7A3xQsY
-fTvXONa3pwR5mVDqng6w0c140cBUTNGc+3CnttlvbfTgu7zyk75K8bez0eURGqlV
-61OYwO7sYyQ2mn3GyXF/Jr5f3tzGg4Ha2VwRt5RGG8GjA9W5qfTzfbkYLaO6nHFb
-L82PUJlqB8m6VE0EKhUXzRbXHR2pACHf5GYZu76ngs2QVm5MV4Vnd+ry4bGIY5c1
-FaeA494W+6sRHzN8JWPIl+HLt5n6tA==
-=meB0
------END PGP SIGNATURE-----
+Other option would be to introduce a new property to specify the bridge window
+size.
 
---fydpeoqoyqksxjta--
+But nevertheless, having a DT property for specifying the window sizes will help
+with usecases like USB4 PCIe Tunnelling, multi-Root Port setups where firmware
+doesn't pre-allocate the bridge windows.
+
+ drivers/pci/pci.c       |  3 --
+ drivers/pci/pci.h       |  4 +++
+ drivers/pci/setup-bus.c | 75 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 79 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d34266651ad0..5b6474a18b51 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -102,9 +102,6 @@ bool pci_reset_supported(struct pci_dev *dev)
+ int pci_domains_supported = 1;
+ #endif
+ 
+-#define DEFAULT_HOTPLUG_IO_SIZE		(256)
+-#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
+-#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
+ /* hpiosize=nn can override this */
+ unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+ /*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e543a..055c9b8c052b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -414,6 +414,10 @@ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
+ 
++#define DEFAULT_HOTPLUG_IO_SIZE		(256)
++#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
++#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
++
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+ 	return dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4cf120ebe5ad..3dc82e3d3fd5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -29,6 +29,8 @@
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
+ #include "pci.h"
+ 
+ #define PCI_RES_TYPE_MASK \
+@@ -1385,6 +1387,54 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+ 	}
+ }
+ 
++/*
++ * pci_bridge_of_get_window - Get bridge window from DT.
++ *
++ * If the bridge's DT node has a "ranges" property, then parse the property and
++ * return the bridge window sizes. This allows per-bridge resource allocation
++ * from DT.
++ *
++ * Return: 'true' if a valid 'ranges' property was found in DT node, with bridge
++ * window resources populated in @io, @mmio, @mmio_pref arguments. 'false'
++ * otherwise.
++ */
++static bool pci_bridge_of_get_window(struct pci_dev *dev,
++				     struct resource *io,
++				     struct resource *mmio,
++				     struct resource *mmio_pref)
++{
++	struct device_node *np = dev->dev.of_node;
++	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	bool found = false;
++
++	if (!np || !of_property_present(np, "ranges"))
++		return false;
++
++	if (of_pci_range_parser_init(&parser, np))
++		return false;
++
++	for_each_of_pci_range(&parser, &range) {
++		struct resource *res;
++
++		if (range.flags & IORESOURCE_IO)
++			res = io;
++		else if (range.flags & IORESOURCE_PREFETCH)
++			res = mmio_pref;
++		else if (range.flags & IORESOURCE_MEM)
++			res = mmio;
++		else
++			continue;
++
++		res->flags = range.flags;
++		res->start = range.cpu_addr;
++		res->end = range.cpu_addr + range.size - 1;
++		found = true;
++	}
++
++	return found;
++}
++
+ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+@@ -1430,9 +1480,34 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_HEADER_TYPE_BRIDGE:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
++			struct resource dt_io = {}, dt_mmio = {}, dt_mmio_pref = {};
++
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mmio_size = pci_hotplug_mmio_size;
+ 			additional_mmio_pref_size = pci_hotplug_mmio_pref_size;
++
++			/*
++			 * If the bridge has a DT ranges property, use that to
++			 * override the default window sizes. Command line
++			 * parameters (hpmemsize etc...) take precedence over
++			 * DT.
++			 */
++			if (pci_bridge_of_get_window(bus->self,
++						     &dt_io, &dt_mmio,
++						     &dt_mmio_pref)) {
++				if (dt_io.flags &&
++				    pci_hotplug_io_size == DEFAULT_HOTPLUG_IO_SIZE)
++					additional_io_size =
++						resource_size(&dt_io);
++				if (dt_mmio.flags &&
++				    pci_hotplug_mmio_size == DEFAULT_HOTPLUG_MMIO_SIZE)
++					additional_mmio_size =
++						resource_size(&dt_mmio);
++				if (dt_mmio_pref.flags &&
++				    pci_hotplug_mmio_pref_size == DEFAULT_HOTPLUG_MMIO_PREF_SIZE)
++					additional_mmio_pref_size =
++						resource_size(&dt_mmio_pref);
++			}
+ 		}
+ 		fallthrough;
+ 	default:
+-- 
+2.43.0
+
