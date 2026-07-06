@@ -1,81 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE9AD42E004
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 12:37:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F3F42CAE0;
+	Mon,  6 Jul 2026 12:40:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783341458; cv=none; b=PjLeWHZAJPhRa29MwttO4FIi9J6fVPtE/buBJTy7lQuO9A04skJpp5J7XDRAjfp7+/pUtKaqfjsDtFsTGINpT1UrUCKAVwyNhdMpd5TdOU1XmZ5Yy2n2y4t2aByndkVR4y95/AsFWrG/122A7Djjadv2/rdV00fVZRItdH8hKzs=
+	t=1783341627; cv=none; b=f/5YQWReuvknusH2wCbDKbx7UHtpu+oez3eO77D4G80sWi4UMhNfuullvQcIZCnXyBVexHOnz8Mja6y1J3qQlHrJO5Y2NGlsNAzuuph88Slv5GCqROdhqAt7/skQR64C3xEWBfZZhE8j4H+4qlhP40fQrNYtcS8z3Be4QkjOl3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783341458; c=relaxed/simple;
-	bh=A+TzSzTWMVwGu/4O/ST/AhSChLuRtfENjmPqTz2jWfI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LMKwgPWivWJR3C14KTnpTvP6g5q0I2R/FrnuKbATLDiRqoagztLo6cC2NXtv8nsEzyxYGHGPjmUYf7FVBCdB5AAs56sANBKi5y6d0Klp/tFaoktbi+n2xczw1bOW8/PYJTHAEzw+bn4YMoGgLh4rKv0cURQM5WsEsRecDiAElYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lf20jMnq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783341627; c=relaxed/simple;
+	bh=DwuScNVFy48ypLlKiTPMXNym/1tGjmsdpAYygi6LIDE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mpWhYYzhR2W7N5T5YL28lx/qEdNMCqZPVjF2Awm7WGbZaf/F7UTNf+jdSQ8aC+Vopc/2MNb2+SajQRYrNw+uZHxyzLcw2/fzXWOKUtMmA5/+Nwa+8dGhASwNN/Tqx3WxJgoNHn1BGwuQeTU+s7UrRR+W5ypM+pjAV9YjUdB+GEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OpPYr98p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lf20jMnq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AE8E1F00A3A;
-	Mon,  6 Jul 2026 12:37:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OpPYr98p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B79611F000E9;
+	Mon,  6 Jul 2026 12:40:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783341455;
-	bh=Dkwciwub+LC3jtmcGo18YxxwOqPtztOBGVcQ1TkgDsk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lf20jMnqvCEOW4zQrrQfnQ/ToPd3XNy/+FgrjoiQ5zhllV6vJoOxE8QePM569Dcze
-	 h3kDWCSchOBOl6dyraQyQQ9B2SAhVnbxlEktbIPGItMWyebpp8tFnX64JVyAoMGays
-	 gPXAzlwxPZffMee8OuIH9ufwFOmcRrBKDTyB1GABf2rPy+d6UJmxRA/VXyGnvgmTOF
-	 Noci46RsqLtuTODX8gZ6FMd1EZf6XXM9Dd8uFGpR413LYO4Aaf1fNR8H535JsvcP8g
-	 O9tgGoxLPTm1/nc4N9keBENnF+0en93FiPXiNofFEPWnBqNmzt8yKQARlPvpCoSNwb
-	 lfy7jWmathr+g==
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH] PCI: Get the hotplug bridge window sizes from DT
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260706123133.545104-1-manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260706123133.545104-1-manivannan.sadhasivam@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 12:37:34 +0000
-Message-Id: <20260706123735.7AE8E1F00A3A@smtp.kernel.org>
+	s=k20260515; t=1783341624;
+	bh=+Vwk9lX7OjF6cB8h0QPRGiEM7HXO/E0m8UvURF95vTI=;
+	h=From:To:Cc:Subject:Date;
+	b=OpPYr98pD/tJWFfIPQkVRuWP5/6ur/OsUF8qfZUKDETYPTN6scsuYwhHtglnEDWbh
+	 H2O02jKMlcK+3EaW2+R3pzbIz3m4sO1UuKfEcFO3RLmDNbMIxwjzP7VMWttAOUibDR
+	 XaE0Dx6raxRhQEm/VcEQAiAjtd36nKlrFYoFAFn+Pytd4F8rlbtkfOpxZl45jn4Ylh
+	 6W+2ZcH4NMOBWOkIJHQorN9hDQS+5sl1uhOOlCzEr/8v1sRpZT9hY6G+fpWkFQ0hTJ
+	 B3okkCI6xH8XHmPnCcaX/Axt4AHYoBnxxgzJpSDQ3LUfFVt3D5lJYR7AJCw3f9K/NG
+	 MZM+1AVz/ICug==
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Linux PCI <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] PCI: acpiphp_ibm: Do not use uninitialized device_class
+Date: Mon, 06 Jul 2026 14:40:22 +0200
+Message-ID: <8730724.T7Z3S40VBb@rafael.j.wysocki>
+Organization: Linux Kernel Development - Intel
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
 
-> Most of the PCI hotplug bridges used in Devicetree platforms do not have
-> their bridge windows populated by firmware. So the PCI core allocates the
-> bridge windows based on the requirements below:
->=20
-> 1. Total size needed by the downstream devices
-> 2. Default size (2MiB for MMIO, 256 bytes for IO) if no devices are
->    available during the initial bus scan
-> 3. Command line params like hpmemsize etc...
->=20
-> If no devices are available during the initial bus scan, then the PCI core
-> allocates the default conservative 2MiB MMIO bridge windows. But this size
-> sometimes becomes insufficient when a BAR hungry device like a GPU gets
-> plugged in later. So users have to resort to command line params to
-> increase the window sizes. But this is very inconvenient and causes a lot
-> of pain in distro integration.
->=20
-> To address this issue, parse the 'ranges' property from the bridge DT node
-> (if available) and use the sizes for each bridge window. This works well
-> because the 'ranges' property is already allowed by the DT binding for PCI
-> bridges and it lets system designers pre-define the hotplug bridge window
-> size requirements in firmware.
->=20
-> The DT derived sizes are applied as the additional (hotplug) reservation =
-for
-> each window. Command line parameters (hpmemsize etc...) continue to take
-> precedence over DT.
->=20
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
-com>
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Passing an uninitialized pnp.device_class string to
+acpi_bus_generate_netlink_event() is effectively equivalent
+to passing an empty string literal to it.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706123133.5451=
-04-1-manivannan.sadhasivam@oss.qualcomm.com?part=3D1
+Accordingly, make the driver do the latter instead of doing the
+former.
+
+No intentional functional impact.
+
+This will facilitate the removal of device_class from struct
+acpi_device_pnp in the future.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_ibm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+index f8016ed24523..7337bd1ac6df 100644
+--- a/drivers/pci/hotplug/acpiphp_ibm.c
++++ b/drivers/pci/hotplug/acpiphp_ibm.c
+@@ -258,8 +258,7 @@ static void ibm_handle_events(acpi_handle handle, u32 event, void *context)
+ 
+ 	if (subevent == 0x80) {
+ 		pr_debug("%s: generating bus event\n", __func__);
+-		acpi_bus_generate_netlink_event(note->device->pnp.device_class,
+-						  dev_name(&note->device->dev),
++		acpi_bus_generate_netlink_event("", dev_name(&note->device->dev),
+ 						  note->event, detail);
+ 	} else
+ 		note->event = event;
+-- 
+2.51.0
+
+
+
 
