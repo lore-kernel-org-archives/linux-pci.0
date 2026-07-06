@@ -1,97 +1,97 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246C53BE647
-	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 18:35:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6743D3D75A1
+	for <linux-pci@vger.kernel.org>; Mon,  6 Jul 2026 19:21:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.180
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783362937; cv=pass; b=bILbQoOAgJLhPcv4CHU4SF81jZ+l3uhPT/AmOoySZ4bDty//pSfhy9jPQfjMhQu1upeU7DV7fD+xHHX3fZJkRBc6N+i+xoyv9tVB435/JV//JoMRkFryAyPg9MCCQ6lAP4WLR++x9DlLUa52GeRwtcMgZdkf1qHH99ZYgeWCql8=
+	t=1783365716; cv=pass; b=E5Fg5o5W7tZXx1fr+ASqKrWEiCObQZ3LYQM+PIiEGxGOzB1W9xIK7VDb3UMeYxoSmw8q1sWmXxxzRyDJ1jPwwxLe8jxKW6YeDnVc6uvUaqeKNbqYm9jtfJDHqayWB32PAqkjdxZQxqyRiUWdEyBdy0704vMIE31Dq/RgGMDpUsg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783362937; c=relaxed/simple;
-	bh=HPrlRjR/87Sgv7afW4R5TLpUfuybQzJj2nJz3LNjgt4=;
+	s=arc-20240116; t=1783365716; c=relaxed/simple;
+	bh=OWqGJ2RXJX8lewCAqOdEDrfTZRegAiM0hVxCTzGD9RM=;
 	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QPrZIpBKdKKxAxWFyWcNLs2mp4kZlg3Ipjjqe8oHvf8pJeRl6rixi5LjmTwFjgJtxj9pz0spOSEOHztzg7FceVx6jrIckarMyqD9RoWpR6f1KgSxsguViX8rQpDGPHupL2O8+wTabFavxg18rP41JZp+Gso5tjaOXyHpl0lV4VA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=n3t+io6M; arc=pass smtp.client-ip=209.85.214.180
+	 To:Cc:Content-Type; b=hbJVcm630Kh/JyKbvFD+ez9YTz87r8a3ueIDGTqb+rlq+zQg0wWIl2o9hzwi96lM3Y67nU+P2pK3W3qQsU7va9X1k4bhXWRzj5eFPtZESW0A1xryfjqJ1oKIS+KAA7k13s5OYhuNxMvEHCyaqK2lZiKRJQ9NkOsWPZOW0acidGI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cDtUgk5g; arc=pass smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="n3t+io6M"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cc73e322dbso19077925ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 11:35:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783362935; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cDtUgk5g"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-845eb7b96feso3273681b3a.0
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2026 12:21:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783365715; cv=none;
         d=google.com; s=arc-20260327;
-        b=VAImQ/+v6LOYeiyWCkljAcjpg+7BtcPO86dEn0gaWll2nFr5NpXus7kaWj9hVY8lTE
-         6hxKSERPmO3cs+GJE3iqNMQkgpg40y3nspDubFV/0dhfQjmpvcyBV84ghg2ofUtO7Mj+
-         CMpdzL5GRVadbtp4Kg32zJdBi3x1E8anDKldxHrIjxXfp9ZXAHwGf/kga4KrMxidiFSn
-         G+0WBqxPKOBBCwNpPx65P373zSJhq/b8gXScOUHzZ5zj2oD2/Tc/7YoYOUmBLMlOMvyM
-         gIgdKbWwQpVdRFrY9+3UR/+1JIF5yABjyb/Uccb4RF1XO9HMKR8Q4yRHIOAosj92Lmio
-         xHqQ==
+        b=H03Fls6Vcg8zJ/QdHZi/vrCA2p7qy6xGazmNdm+s3RLztwCOhTCBwEC4uiSiaLCWMH
+         ecGRAtc6oAqNTWWLCBnEMNNTtHIETfvykTRCkIEt+UZqSFW3QMmin+8XAXOMcseAhZ/S
+         1Vl6d7SOOFkGuK380LIHqxDBJqpdNo3UC2Hzxf2tNL/STp/331B/tMtJkWra0WkYjnlP
+         Pwmw2R9JN2CAMkymvrQ8Dalri8+oOBVpe25MnIsBqMaWY88IFNltZ/rsr6TRsfxvhyCI
+         NvvRc6V183k5bY9zS2sfBFSS9ZRO8lQAKVLDiRBLMktzGX6/R6UB/UqrRnBZutYHBkua
+         JSmA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
          :from:dkim-signature;
-        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
-        fh=lj55TCxuIvGu/DAw7Ox6Ff7WmYL2ZYccA6wmE0yAPbQ=;
-        b=iMIlrmwNxAcAhbliplxdAO1mXj6YzGbqHLuE1HO2YQ02uTxIBNqPTUROfoXS/6ZWGq
-         V951TdgV/YXfs6twytVYw/iRHImhxf62b8M1vGUWZxXZqPKfmy4NRKgbX3O5xJd69Cca
-         VQb5imM+ZFexMLdf/mH/y5jZZinIjk+dgoLihjrpPM3V4+IurfN1auYraTuEGTj/NYP5
-         ro52LDmK7bVErzcy6Pcca1OvXVkek1urNDg+EgFbPiELgrU8CMuY+ofXjl5eBeiMJCWo
-         eZ6W1CoOc5TSkJzAXnQ1xHMlGavwmjVTIxoy1gfOHPsVnNDqRKWY6Xt0uNx5RUWEDUeJ
-         PFkg==;
+        bh=3V+CQWicM3KLCiA78W5fLi8JtVISekHIFvC89/oYT3Q=;
+        fh=eryslbNqNJ0jlO5SDW24vqGSyGGp2qTDg+ZJhIp2yKc=;
+        b=RyVCdUyxXC+654KFDlmYgPmjGsMWW4NcN2zQsjWteoZhujQdMeYDhYw5dnTjiyq7ga
+         wIS5Vi1TgRagvoZlCX7VxJarAiUstOJ/2sGk7qXrhxOFxPRMqS44/gyGH+qPVyHSErH5
+         FK5rCjMRbI63VdOSHXmjAUetdrWVZmWXYKxtU7ZUwKoCcg6eCc0/cTZE3mZ5boOdKui6
+         wsPMNBs6zwhNcvCTbmWkNxnLiBoPWHUs+RXu+npkPC/47nqd/4kyifKaYKmXpyuexvMJ
+         w0wHOJuifwMqG4WN5zRDArNjKbMgdQUsqwrO/QcY0fXb6x4zsYNsVC8y3nNkUR8Tu6tj
+         iWjQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783362935; x=1783967735; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1783365715; x=1783970515; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
-        b=n3t+io6MUV6oVZqKUv+EkZCGqFBDhvPkntajDpa81/Yf5U97GTXkqgXGEW+YkLEjZS
-         e6OS9E16hSOVLibDCiLKl9aWzML+644BdraflfYsGWR53fgiNAF/8hmbzSSZ53ZFbqf4
-         kfk2OA9AKl95zdx2xIeWsQatUWKGPbJOlwOZ9KVzQEu5v1/++oKX5veR2FcLCWhDJ5c7
-         Stbfg3VeDpCzLHM3PjrsODPYAY2cJwzVf8HoQhfYoiQ5WxcFZwKAVpZNwINK4kORCGfe
-         RApZGiLYRXFhQ3WAJT6D2o0D+xbiZE9gvbxjXueQulU4axzExLTv8CbBb9LM/Dm0fSvJ
-         WGRw==
+        bh=3V+CQWicM3KLCiA78W5fLi8JtVISekHIFvC89/oYT3Q=;
+        b=cDtUgk5grI4JivQMpngGR+G819QprS220QfFKY28LJilMW34JnPn6e82RXYUP1429S
+         6Z+pmhzu+BO1YVay5kodS80Dm8cOieI8vLeE6bYe7nDjX7wHeZNEEKJe3Bz26N+dwif6
+         75PJKFPv1KzOKCgB+eP1TyJeBdRanOnEmDD/do1OopRJALv5yChma/0gPcDaaqoUBE87
+         vS11S/ukwfIFXUNUORBoP0X0IVqCE8pDFdJBkJHR7NVHVWRNR2yIOBHxnuQOj2DyMiuS
+         kM3bkzJK70xC85wSsVeODBUW4P4gL072e/RmhAMLEuZWEdoQyeXV048kKehJlTh9FdP2
+         p4Ww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783362935; x=1783967735;
+        d=1e100.net; s=20251104; t=1783365715; x=1783970515;
         h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
          :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=WnS2RNIXat7zDN2phUDyBGT8PFFJ5aIBlxvkpKQm44c=;
-        b=qoXCELAq44RN5xVrGVn76Cxhn6NEmEn+8JlAvdl4KkhCPUDljAyZe0e305fmz4p/ky
-         ZDiOxh/CuyoiUdkmTd4EZ1MHq1hpt8uETWX6bwUelcWgmoi45CjCM6vccgd2HmRURCBI
-         B7mMP23Uhr9ZsMEtguTIg4Uq1MIJUWwRtgwCWItsXaL2pkng2MAX5jZDB8IZKbWr8bzP
-         gI4uCtCiyT//X4Ic3jA+FwOT/42nrFkPeY62ftiQQq7+kRNWlBWHIUhui0baMyndgt70
-         jyt4ar6O7pVQqkK5jMcQ1m6NxXTH9DYXUVnPag5On2CDHNyCdogIo8Tc3SpVsCW1+raU
-         uRCg==
-X-Forwarded-Encrypted: i=1; AHgh+Ro1hWrNPYbQw76KDTuhB6d53PGYpBv952Mw6EexQvkzvv9S1uZq+oBA+Wn/gKgZ+zhKw//OZaZDvu0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwEkOQH3cAts7roJMD9+ddDsrdRrRiqR9ZXuUCFN9CaumBrOGcy
-	UcL67ehPuF3aozkFPrjhoAzUl08h1TSHcJ4rCHEulW9XgYDNCknHO+nAfVrPwicYgPmxGbJ3kW3
-	wU9iqa+trl6mqyRmjN12ar2va4ILreybeErt62jTx
-X-Gm-Gg: AfdE7clDMdjqEzW7DZkqjfCfIqy/BqurQ1AWY7T/fGg7sBUKCc0UJFuc1RaVqkxZ8DB
-	vZonsQopXt5mJYl0X179TFdJwL88YAc7m6u4wdr0UaYcsNscUr0XSiY8ctmuC0hmjVBK7cW9A02
-	MH0jRYDcohhyB9gBD1UJxU5MJ4tWy2xT5UgMn3eXmF37zQGhCbw/wJXFg9qEJk9AdaHm+R4mK5F
-	qUfcmzCOTMT49GXPavWIy7coxHUVj9pIwlCmuf7HGzycQB3iKSHLC7vgAWGdbx17ISsOvBsxzIc
-	kgg3ZFPxXF0cOMIIAwiVWF14ETFPBxw037i6HpqUnVLgpwve2XxV6y3PChg=
-X-Received: by 2002:a05:6a21:1f83:b0:3bf:6c04:a812 with SMTP id
- adf61e73a8af0-3c08ef1dd4dmr2080840637.51.1783362934943; Mon, 06 Jul 2026
- 11:35:34 -0700 (PDT)
+        bh=3V+CQWicM3KLCiA78W5fLi8JtVISekHIFvC89/oYT3Q=;
+        b=YBqoxpS8yk5qG8JTdP4+ucR4UYOvk1ifr56nm1AH3Io4bFi4/9vmAQq0/xIGXqVn3I
+         DMU2rs4LcF/DbwAJYAaoq/xnTgiex/5cjSKh0xOMFx/MLCQuz/gZSKGSfMmFa2vP9RPX
+         CJhgmQjR1E4/300oJNLnMW49N/8XA2878RfXeEXLXUpLqnmkbh0lfgsgMBl1DbzeMdSW
+         JIR2KBwVrwKy5R7ydw3B3zXQ3crp/pc6WWf58p1I6B8zgbv2TUjxZzeSehQplRC/M0kE
+         it3OdjdQHw7TEI6vYFAVTwNalbWLftRNEgCUzbN75ZMdPBHTjxa67GcBoEQjq7ucBke+
+         m7lg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq1bV5E+T463P+ow98MjEB/qNDTcgpkAjzlxwTPAx0xEQhG9ZiqnyKRIFFhjxXe7KzRIhQ2Ri2YKb4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxNENApmOoUnDOQtqyl6Mgd9blhlc+p5A/SF7OJ+Iwrvgmnaugv
+	S/BghisYCrF4GI6CJHHHYbb+LNt6jDoRASJKmfg5DOh1fz8qlxFLb7EDz5hMoT/bQ9T8ozKkn1A
+	icd0anye6Ch2vGqCZ3KWK0vlfj4qowGKi/1+N2uSY
+X-Gm-Gg: AfdE7cnWmEfZxMy4+M0E1fILOklWR9v1XO+aBPkyz0ZLcR4WffKqR4ejTBEm09KiKLZ
+	1D+ccT3mj9XtgeLalrUrWkPLjBbjWcO/ae9l7gAMx2luBBr5W3MN8BwaYbxTu1TIbl0uu5pbQxW
+	3zSE6TJd83Wx6nWeVk7kXoM3KSUethoVKkSNMwTBSpm97z/i4LfufxUckQ7lagjTlhSpfI7Yldp
+	pvIwEVQGhdur3aBA6f0Iaq5W64CPhowhT+gzBXQ3Mu7MAmrzPgPDjXSRFsaLFZ8JsZuqP63B0wH
+	rEvt12zmmlTnttVgJ5QEsdEEipG80oUisTbZp40ygFx68tPTss8Miybzh1M=
+X-Received: by 2002:a05:6a20:d499:b0:3b2:a809:1000 with SMTP id
+ adf61e73a8af0-3c08ed14337mr2309434637.3.1783365714229; Mon, 06 Jul 2026
+ 12:21:54 -0700 (PDT)
 Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 6 Jul 2026 11:35:34 -0700
+ HTTPREST; Mon, 6 Jul 2026 12:21:53 -0700
 Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 6 Jul 2026 11:35:34 -0700
+ HTTPREST; Mon, 6 Jul 2026 12:21:53 -0700
 From: Ackerley Tng <ackerleytng@google.com>
-In-Reply-To: <20260327160132.2946114-23-yilun.xu@linux.intel.com>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-23-yilun.xu@linux.intel.com>
+In-Reply-To: <20260327160132.2946114-24-yilun.xu@linux.intel.com>
+References: <20260327160132.2946114-1-yilun.xu@linux.intel.com> <20260327160132.2946114-24-yilun.xu@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 6 Jul 2026 11:35:34 -0700
-X-Gm-Features: AVVi8CdqD5g74lv_vdWGXV2KWJo0HCHGQ2q9sBsYTjhrRT829V9HzSMACy2bRlo
-Message-ID: <CAEvNRgG-6aOgtW9cB6zE7278B=0fB9KSEH18Kw8qNF2sBtUBsQ@mail.gmail.com>
-Subject: Re: [PATCH v2 22/31] iommu/vt-d: Export a helper to do function for
- each dmar_drhd_unit
+Date: Mon, 6 Jul 2026 12:21:53 -0700
+X-Gm-Features: AVVi8Cd9CK0d5hkj-fvDpFPP8e629cstUI2GaeEwDwzmHyMfLj4nBn8EKPgaG0Y
+Message-ID: <CAEvNRgGg9YVnLzanueJrHyt9Ra3-q7CmRvP2Sg5dkdctaZpKqw@mail.gmail.com>
+Subject: Re: [PATCH v2 23/31] coco/tdx-host: Setup all trusted IOMMUs on TDX
+ Connect init
 To: Xu Yilun <yilun.xu@linux.intel.com>, linux-coco@lists.linux.dev, 
 	linux-pci@vger.kernel.org, dan.j.williams@intel.com, x86@kernel.org
 Cc: chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com, 
@@ -102,57 +102,141 @@ Content-Type: text/plain; charset="UTF-8"
 
 Xu Yilun <yilun.xu@linux.intel.com> writes:
 
-> Enable the tdx-host module to get VTBAR address for every IOMMU device.
-> The VTBAR address is for TDX Module to identify the IOMMU device and
-> setup its trusted configuraion.
+> Setup all trusted IOMMUs on TDX Connect initialization and clear all on
+> TDX Connect removal.
+>
+> Trusted IOMMU setup is the pre-condition for all following TDX Connect
+> operations such as SPDM/IDE setup. It is more of a platform
+> configuration than a standalone IOMMU configuration, so put the
+> implementation in tdx-host driver.
 >
 
-I think this commit message doesn't match the commit subject or the
-change, unless I'm misunderstanding something
+I was wondering about hotplug. There's dmar_device_hotplug(). Does it
+make sense to do TDH.IOMMU.SETUP from there?
 
-> Suggested-by: Lu Baolu <baolu.lu@linux.intel.com>
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> ---
->  include/linux/dmar.h       |  2 ++
->  drivers/iommu/intel/dmar.c | 16 ++++++++++++++++
->  2 files changed, 18 insertions(+)
+For boot, is the platform-level configuration due to dependencies? Is it
+because TDX is set up after IOMMUs and hence TDH.IOMMU.SETUP is done
+from the creation of the faux device?
+
+> There is no dedicated way to enumerate which IOMMU devices support
+> trusted operations. The host has to call TDH.IOMMU.SETUP on all IOMMU
+> devices and tell their trusted capability by the return value.
 >
-> diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-> index 692b2b445761..cd8d9f440975 100644
-> --- a/include/linux/dmar.h
-> +++ b/include/linux/dmar.h
-> @@ -86,6 +86,8 @@ extern struct list_head dmar_drhd_units;
->  				dmar_rcu_check())			\
->  		if (i=drhd->iommu, 0) {} else
 >
-> +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *));
-> +
->  static inline bool dmar_rcu_check(void)
->  {
->  	return rwsem_is_locked(&dmar_global_lock) ||
-> diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
-> index 4f9571eee1d4..eea9ba691f99 100644
-> --- a/drivers/iommu/intel/dmar.c
-> +++ b/drivers/iommu/intel/dmar.c
-> @@ -2452,3 +2452,19 @@ bool dmar_platform_optin(void)
->  	return ret;
+> [...snip...]
+>
+> @@ -119,6 +120,82 @@ static void unregister_link_tsm(void *link)
+>  	tsm_unregister(link);
 >  }
->  EXPORT_SYMBOL_GPL(dmar_platform_optin);
+>
+> +static DEFINE_XARRAY(tlink_iommu_xa);
 > +
-> +int do_for_each_drhd_unit(int (*fn)(struct dmar_drhd_unit *))
+> +static void tdx_iommu_clear(u64 iommu_id, struct tdx_page_array *iommu_mt)
 > +{
-> +	struct dmar_drhd_unit *drhd;
+> +	u64 r;
+> +
+> +	r = tdh_iommu_clear(iommu_id, iommu_mt);
+> +	if (r) {
+> +		pr_err("fail to clear tdx iommu 0x%llx\n", r);
+> +		goto leak;
+> +	}
+> +
+> +	if (tdx_page_array_ctrl_release(iommu_mt, iommu_mt->nr_pages,
+> +					virt_to_phys(iommu_mt->root))) {
+> +		pr_err("fail to release iommu_mt pages\n");
+> +		goto leak;
+> +	}
+> +
+> +	return;
+> +
+> +leak:
+> +	tdx_page_array_ctrl_leak(iommu_mt);
+> +}
+> +
+> +static int tdx_iommu_enable_one(struct dmar_drhd_unit *drhd)
+> +{
+> +	unsigned int nr_pages = tdx_sysinfo->connect.iommu_mt_page_count;
+> +	u64 r, iommu_id;
 > +	int ret;
 > +
-> +	guard(rwsem_read)(&dmar_global_lock);
+> +	struct tdx_page_array *iommu_mt __free(tdx_page_array_free) =
+> +		tdx_page_array_create_iommu_mt(1, nr_pages);
+> +	if (!iommu_mt)
+> +		return -ENOMEM;
 > +
-> +	for_each_drhd_unit(drhd) {
-> +		ret = fn(drhd);
-> +		if (ret)
-> +			return ret;
+> +	r = tdh_iommu_setup(drhd->reg_base_addr, iommu_mt, &iommu_id);
+> +	/* This drhd doesn't support tdx mode, skip. */
+> +	if ((r & TDX_SEAMCALL_STATUS_MASK)  == TDX_OPERAND_INVALID)
+
+Extra space here before ==.
+
+Is there a chance that TDX_OPERAND_INVALID might be returned for some
+other reason other than that the drhd doesn't support TDX? I'm concerned
+that some drhd would be silently skipped for some other error.
+
+> +		return 0;
+> +
+> +	if (r) {
+> +		pr_err("fail to enable tdx mode for DRHD[0x%llx]\n",
+> +		       drhd->reg_base_addr);
+> +		return -EFAULT;
 > +	}
+> +
+> +	ret = xa_insert(&tlink_iommu_xa, (unsigned long)iommu_id,
+> +			no_free_ptr(iommu_mt), GFP_KERNEL);
+> +	if (ret) {
+> +		tdx_iommu_clear(iommu_id, iommu_mt);
+> +		return ret;
+> +	}
+> +
 > +	return 0;
 > +}
-> +EXPORT_SYMBOL_GPL(do_for_each_drhd_unit);
+> +
+> +static void tdx_iommu_disable_all(void *data)
+> +{
+> +	struct tdx_page_array *iommu_mt;
+> +	unsigned long iommu_id;
+> +
+> +	xa_for_each(&tlink_iommu_xa, iommu_id, iommu_mt)
+> +		tdx_iommu_clear(iommu_id, iommu_mt);
+> +}
+> +
+
+Is there an equivalent teardown operation? Like on kexec, if TDX is torn
+down, would tdx_iommu_disable_all() need to be called to undo
+everything, so that after TDX is started again tdx_iommu_enable_all()
+would be set up again?
+
+For hot-unplug, would the TDX IOMMU config need to be disabled?
+
+> +static int tdx_iommu_enable_all(void)
+> +{
+> +	int ret;
+> +
+> +	ret = do_for_each_drhd_unit(tdx_iommu_enable_one);
+> +	if (ret)
+> +		tdx_iommu_disable_all(NULL);
+> +
+> +	return ret;
+> +}
+> +
+>  static int __maybe_unused tdx_connect_init(struct device *dev)
+>  {
+>  	struct tsm_dev *link;
+> @@ -130,6 +207,14 @@ static int __maybe_unused tdx_connect_init(struct device *dev)
+>  	if (!(tdx_sysinfo->features.tdx_features0 & TDX_FEATURES0_TDXCONNECT))
+>  		return 0;
+>
+> +	ret = tdx_iommu_enable_all();
+> +	if (ret)
+> +		return dev_err_probe(dev, ret, "Enable tdx iommu failed\n");
+> +
+> +	ret = devm_add_action_or_reset(dev, tdx_iommu_disable_all, NULL);
+> +	if (ret)
+> +		return ret;
+> +
+>  	link = tsm_register(dev, &tdx_tsm_link_ops);
+>  	if (IS_ERR(link))
+>  		return dev_err_probe(dev, PTR_ERR(link),
 > --
 > 2.25.1
