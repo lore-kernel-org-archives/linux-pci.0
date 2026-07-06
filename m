@@ -1,126 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F23144211B;
-	Mon,  6 Jul 2026 10:11:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E801F35898;
+	Mon,  6 Jul 2026 10:20:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783332677; cv=none; b=O0pQHS03cWaYS7JEvFWIjqGBSlp5HVYKdTj6wU2vxOz0VUao3nUkM1mt14OBZNkwMz6n4P/M0HMBhKK0Tg5Sv9byDXdzlRZ9mjH9YtIIhuov13JxZjy9WMeap0pFQ2uonUl80bWRNrYQg0iPcucRau5meRGWR7DEIkHgRRuKD6Y=
+	t=1783333228; cv=none; b=tegNwqJnfadYJ4NkDP1e0nMv95xRjk3XuBiDNBwuLVpQtLF+ExGqSJqxFST49I5D1X2iJGa6zgpex3A3jAP38NTqsRD6ofop0mPEG5EC4AcuPOcVhQWkCLH6zAtKGkUicG44JEXfaftVxlPobFo+MZ3AObRWOQbI8epyTS8DwRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783332677; c=relaxed/simple;
-	bh=XLJCpIqyZeJR3MaC+rGwOiu/ENSVIjHHPZxnvNPL0Qc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sz0eueiKyCIrw2TvU7L9xAXSO2NEVK/vhBFRAGjAxpcposSBkzqk4U1utnN48HJTeFYokvwfEba7OUQ0EStOpM59J6TWI6Kc2fKj1U2JgCH+H/y04TqE9RQ2CXRdTWWuKsLeS8syADou9ZIVG77q4VDhnXpeOiNVJHisPnoAYbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nJgk3G6H; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783333228; c=relaxed/simple;
+	bh=Y0syRuIVofEMjjtOeH1ANg/7jjajXELMxkgB/W/o9bI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=taxETZw7V8fT6MQJPVGPnXS6YglSwYy7SnpbRbsmXsfKZB2jQDmWiGgGft+l1aPbZQN6SqIjC11mHsmHKA1NkUzVIMpebqRM+8t9wYVoGeYGONa8QUIBxMDYbkvdW56XUJ6+/BHhTYF7ebAVyN3WN1ev0bizfHh9wBCacK9Y49U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CYQoNd7u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nJgk3G6H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 129681F000E9;
-	Mon,  6 Jul 2026 10:11:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYQoNd7u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1278A1F000E9;
+	Mon,  6 Jul 2026 10:20:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783332675;
-	bh=MgovdVc4mJn8kTmi6osOtTdAyAEgyLg4UqymjNiprtE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nJgk3G6HsqVGeTknuTvDyn72NCeKEyEOOLvXaR8FcRu+ms1rKjj2wXUOAYgVe0b+m
-	 1y51wdj6PP1KorP/8rFd7ic+8ZDmzdlV9YScbLh9ssTttPW5aF39i/VdO/msD9FPwo
-	 8h4/H9W18COj9m/KlhqrzkljI2D9S3VW588Nm41EvFoHYTHo6vz8BoiGITB8yU3LWf
-	 22bL3U9bbql53twXhAz2CRuQHFHtrfhJnrfneYkhxy5R2d6csA2uY+hFbZL0qTGslx
-	 Ijyiyt8K03ZvKHbgMyNhjG1WbjSCBp3TpyF4Z6bzt9X/ESjWrtnP89myIJ1M4Gia54
-	 9m7QslAYyUSMw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/3] PCI: ultrarisc: get and enable DP1000 PCIe
- clocks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jia Wang" <wangjia@ultrarisc.com>
-Cc: linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260706-ultrarisc-pci-clk-v2-2-2f3fb6fba66b@ultrarisc.com>
-References: <20260706-ultrarisc-pci-clk-v2-0-2f3fb6fba66b@ultrarisc.com>
- <20260706-ultrarisc-pci-clk-v2-2-2f3fb6fba66b@ultrarisc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 06 Jul 2026 10:11:13 +0000
-Message-Id: <20260706101114.129681F000E9@smtp.kernel.org>
+	s=k20260515; t=1783333225;
+	bh=kdbgxryyt7nPSImKYfr1DLB9M/vQ6ED7BOqODhY7wXU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=CYQoNd7u0Jr9BrkiPChKd82GoPZDDwC8AlOHXpwgtwr5PKOzPcDA/RefbgH2Nr+/x
+	 K1RjsOcUtWBG3KebLTuitnFrrUKJpgDW5vp5p9gg414HukAWEPJCLIxG4Epj5Rmsve
+	 /VtPMP9JXfUmvETrGR9AIa6Yp/wTvIgjyRgEGnnspf3Deqq/UkzDRCQzasAM5UrikO
+	 N2IANFLOT6PLkpceXy1I3NY0G5Xk0Xqk6JrwyEqE5xElkdR4RO+a8VuojTmEqm3IlV
+	 WdvZF5lGaU3hVuiZ2sLuWnU1OytLhPi0rLestZkN20IWQxXbGJHNo+m3zK9nxGHMG9
+	 Q3tCPG4qOkX5g==
+Date: Mon, 6 Jul 2026 12:20:07 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Max Lee <max.lee@canonical.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, acelan.kao@canonical.com, helgaas@kernel.org, 
+	kaihengf@nvidia.com, victorshihgli@gmail.com, lukas@wunner.de, pandoh@google.com
+Subject: Re: [PATCH v3] PCI: Disable ASPM L0s for Realtek RTS525A
+Message-ID: <jnxtx4pl36dzuddqugpfack5hfmwo2wazg5t7g2sill37urtng@3bvsmzehfygl>
+References: <20260610024723.188514-1-max.lee@canonical.com>
+ <20260706025358.516607-1-max.lee@canonical.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260706025358.516607-1-max.lee@canonical.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Unconditional register access in suspend after a prior resume fail=
-ure causes kernel panic.
---
+On Mon, Jul 06, 2026 at 10:53:58AM +0800, Max Lee wrote:
+> The Realtek RTS525A PCIe card reader reports an AER Correctable Replay
+> Timer Timeout storm when ASPM L0s is enabled on its link.  On an affected
+> HP ZBook Power 16 inch G11, the Root Port received tens of millions of
+> AER interrupts from the RTS525A even when the rtsx_pci driver was
+> blacklisted and the endpoint was not enabled by a driver.
+> 
+> Testing with OS-native AER control showed that disabling only L0s on the
+> RTS525A link stops new AER interrupt and counter growth while leaving L1
+> enabled.  Disabling L1, L1 substates, or Clock PM alone did not stop the
+> storm.
+> 
+> Prevent the broken L0s configuration by removing L0s from the RTS525A
+> advertised ASPM capability.  This avoids enabling the non-working ASPM
+> state instead of masking the resulting AER Replay Timer Timeout reports.
+> 
 
-commit 91b0a79d0e5b5b1e0d3c9731fd011273f668f0a9
-Author: Jia Wang <wangjia@ultrarisc.com>
+If you can add the AER log snippet here, it will help others to find this quirk
+in the future.
 
-PCI: ultrarisc: get and enable DP1000 PCIe clocks
+> Signed-off-by: Max Lee <max.lee@canonical.com>
 
-Add the required core, dbi, and aux clocks for the DP1000 PCIe
-controller and enable them before initializing the DesignWare host.
-Also manage the clocks across system suspend and resume.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-> diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/co=
-ntroller/dwc/pcie-ultrarisc.c
-> index 6ee661ceff67a..6ed244770d538 100644
-> --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-[ ... ]
-> @@ -135,14 +174,31 @@ static int ultrarisc_pcie_probe(struct platform_dev=
-ice *pdev)
-> =20
->  static int ultrarisc_pcie_suspend_noirq(struct device *dev)
->  {
-> -	struct dw_pcie *pci =3D dev_get_drvdata(dev);
-> +	struct ultrarisc_pcie *ultra =3D dev_get_drvdata(dev);
-> +	struct dw_pcie *pci =3D &ultra->pci;
-> +	int ret;
-> +
-> +	ret =3D dw_pcie_suspend_noirq(pci);
+One minor nit below...
 
-[Severity: High]
-What happens here if a previous resume attempt failed to enable the clocks?
+> ---
+> Changes in v3:
+>   - Disable ASPM L0s for RTS525A instead of masking AER Replay Timer
+>     Timeout reports.
+>   - Keep ASPM L1 enabled based on testing that only L0s is required to
+>     reproduce the storm.
+>   - Drop the endpoint/root-port AER mask quirk from v2.
+> 
+>  drivers/pci/quirks.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index caaed1a01dc0..e63ed055f466 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2520,6 +2520,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x10f1, quirk_disable_aspm_l0s);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x10f4, quirk_disable_aspm_l0s);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1508, quirk_disable_aspm_l0s);
+>  
+> +/* Realtek RTS525A generates Replay Timer Timeouts when L0s is enabled. */
 
-Looking at ultrarisc_pcie_resume_noirq() below, if clk_bulk_prepare_enable()
-fails, the function returns an error while the clocks remain disabled and
-pci->suspended remains true.
+s/Replay Timer Timeouts/Replay Timer Timeout Storm
 
-If the system then undergoes another suspend cycle, this function will call
-dw_pcie_suspend_noirq(), which accesses hardware registers via
-dw_pcie_link_up().
+to stress the severity.
 
-Since the clocks are disabled, could this register access cause a bus error
-and subsequent kernel panic?
+- Mani
 
-Should we check if the device is already suspended (or if the clocks are
-already off) before calling dw_pcie_suspend_noirq()?
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (pci->suspended)
-> +		clk_bulk_disable_unprepare(ARRAY_SIZE(ultra->clks), ultra->clks);
-> =20
-> -	return dw_pcie_suspend_noirq(pci);
-> +	return 0;
->  }
-> =20
->  static int ultrarisc_pcie_resume_noirq(struct device *dev)
->  {
-> -	struct dw_pcie *pci =3D dev_get_drvdata(dev);
-> +	struct ultrarisc_pcie *ultra =3D dev_get_drvdata(dev);
-> +	struct dw_pcie *pci =3D &ultra->pci;
-> +	int ret;
-> +
-> +	if (pci->suspended) {
-> +		ret =3D clk_bulk_prepare_enable(ARRAY_SIZE(ultra->clks), ultra->clks);
-> +		if (ret)
-> +			return ret;
-> +	}
-> =20
->  	return dw_pcie_resume_noirq(pci);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-ultrarisc-=
-pci-clk-v2-0-2f3fb6fba66b@ultrarisc.com?part=3D2
+-- 
+மணிவண்ணன் சதாசிவம்
