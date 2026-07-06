@@ -1,64 +1,39 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A653C9454;
-	Mon,  6 Jul 2026 09:16:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 478F741F7E5;
+	Mon,  6 Jul 2026 09:41:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783329425; cv=none; b=VZcVrk1MEwgPRfDs38eg/F/LaI4cd/eezc2nCrncLxyoXVQ2fCIz+UPVzKntrC5hWbDd39EemyYI7JS6ObDMWgcpazYN6qyABaTsaYHBwOGhQFMRn8y3YfBu8blY/yKd7Kq+jMzcyC2YD6MNHcbEcrEXQx4byymC7BfC0z4HIao=
+	t=1783330893; cv=none; b=n9Cvi5RfptBANtp1d3qbKBePj5AhuqVctneEvx1PZgu4AbjXpaRVANEtmrP2pZwBPVZLE3UqnUZ+TgbFoyAr+KiHS16J4WqWR3qMGSDSjlt9hRoGJ3S6VhIoBc0ekGQOrZgKlXqLk4nisvqaxyZ/ModV7k0fZDOtFw4zm7ZArrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783329425; c=relaxed/simple;
-	bh=r8IHjgajWWCYQeCDyqlBFZQ+jiagfASXseQII/EtCXs=;
+	s=arc-20240116; t=1783330893; c=relaxed/simple;
+	bh=h34R6Lcwv4p/OZOtfrFH2N0tXGTaAUvCHzqULjc+DtQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ue0tHeX+TVdZcoxKFc01J8hexyQCjGSdpkGLZENI9bgu715JRbyAkwRkRKSAVm44CwrfGSz2EbWiw0xqiTOVtcXOmLfMv5ZE9G+2pxN+Q908nxEETTLIrh+kw5OF+cxUpN6phqJH+O60CfFV2OAThZwrnjX5/+CAG6X+Pdfd83o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=i6RHYSv4; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="i6RHYSv4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783329421; x=1814865421;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=r8IHjgajWWCYQeCDyqlBFZQ+jiagfASXseQII/EtCXs=;
-  b=i6RHYSv4EV725yzAjlTFRsp/BZvhoXSPHG1Bcv1AoEWUUCUg/KOhGyHW
-   pLEvtFxK/ffd2Ximp1YN8wGAGTk46sWAHT+QsG9XHozQFwMtczZi4WFPV
-   B1wrrh2LPt07IVQqYTx6Hg0wiPYpGC7GvfFFfLaQ583/zXW8cz2udp2Lt
-   v/UQYUfwzFsO6QA1rjrRoAO48sMZgwtDPYdGiKEXHsWhXIi4IJ03KDGJ7
-   YCDIloEZgqUXkqwkgm651zOOQXtBAQvlByMdt1UU/6NNPhp8GxnJozlDY
-   dbhiORksxFlty/2dnRlxck5O/rx/ZZp+YGBSV7r2KpG4dap8jJQjivN39
-   A==;
-X-CSE-ConnectionGUID: z2YkQrMGSECksD78A6ajKg==
-X-CSE-MsgGUID: AwOF1jPSSyuSsy3DefrXgw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11838"; a="87874114"
-X-IronPort-AV: E=Sophos;i="6.25,149,1779174000"; 
-   d="scan'208";a="87874114"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2026 02:16:56 -0700
-X-CSE-ConnectionGUID: Rrj/AClhTViGonEcemZGMw==
-X-CSE-MsgGUID: fmG3KLkoSNS9rV8fv5x97w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,149,1779174000"; 
-   d="scan'208";a="283757779"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa002.jf.intel.com with ESMTP; 06 Jul 2026 02:16:52 -0700
-Date: Mon, 6 Jul 2026 17:16:51 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Ackerley Tng <ackerleytng@google.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	dan.j.williams@intel.com, x86@kernel.org, chao.gao@intel.com,
-	dave.jiang@intel.com, baolu.lu@linux.intel.com, yilun.xu@intel.com,
-	zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	kas@kernel.org, xiaoyao.li@intel.com, vishal.l.verma@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 20/31] x86/virt/tdx: Add a helper to loop on
- TDX_INTERRUPTED_RESUMABLE
-Message-ID: <aktyg51hj0SeSG50@yilunxu-OptiPlex-7050>
-References: <20260327160132.2946114-1-yilun.xu@linux.intel.com>
- <20260327160132.2946114-21-yilun.xu@linux.intel.com>
- <CAEvNRgGgTkOPWELeg5U3pjjw9NZOBQ5zswWy=MRxOXsUXXuFhQ@mail.gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=WyMeUyOtSOM64QLWDqy0L7Pu5aIpzi41QOFLycPcBvJf4pFtf3ZHCBf8JUiOQRhgn5YKNUxPrRGO1MSBO1JzOhLSXqWpNYhw5GcOcWiYknYaukrjQcLDSJaMiL2G07Iu7iSWkTrMnMhiDLjaIlnPWSlhgXjnmzeuCMv+i7DXZd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id EAD59221B;
+	Mon, 06 Jul 2026 11:41:19 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id D5305600EA59; Mon,  6 Jul 2026 11:41:19 +0200 (CEST)
+Date: Mon, 6 Jul 2026 11:41:19 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Max Lee <max.lee@canonical.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, acelan.kao@canonical.com,
+	mani@kernel.org, helgaas@kernel.org, kaihengf@nvidia.com,
+	victorshihgli@gmail.com, pandoh@google.com
+Subject: Re: [PATCH v3] PCI: Disable ASPM L0s for Realtek RTS525A
+Message-ID: <akt4P2C8vAHJzePv@wunner.de>
+References: <20260610024723.188514-1-max.lee@canonical.com>
+ <20260706025358.516607-1-max.lee@canonical.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,51 +42,49 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAEvNRgGgTkOPWELeg5U3pjjw9NZOBQ5zswWy=MRxOXsUXXuFhQ@mail.gmail.com>
+In-Reply-To: <20260706025358.516607-1-max.lee@canonical.com>
 
-> > +static u64 __maybe_unused __seamcall_ir_resched(sc_func_t sc_func, u64 fn,
-> > +						struct tdx_module_args *args)
-> > +{
-> > +	struct tdx_module_args _args;
-> > +	u64 r;
-> > +
-> > +	while (1) {
-> > +		_args = *(args);
+On Mon, Jul 06, 2026 at 10:53:58AM +0800, Max Lee wrote:
+> The Realtek RTS525A PCIe card reader reports an AER Correctable Replay
+> Timer Timeout storm when ASPM L0s is enabled on its link.  On an affected
+> HP ZBook Power 16 inch G11, the Root Port received tens of millions of
+> AER interrupts from the RTS525A even when the rtsx_pci driver was
+> blacklisted and the endpoint was not enabled by a driver.
 > 
-> Is this copying meant to ensure that every retry has the same input
-> args? Perhaps a comment should be added so it's obvious that every retry
-> will have the same input, and outputs from each retry are dropped.
-
-Yes, that's the intent.
-
-But now I've found this is not a good convention for INTERRUPTED_RESUMABLE.
-If outputs are necessary why we drop them, if outputs are not useful why
-we output them to overwrite inputs. The fact is that TDX module only
-outputs all 0's to zero out the inputs, that makes no sense.
-
-So we now switch to another existing convention - if there is valid
-output, use the output to update the input for next loop, or keep the input
-unchanged. This way we only need to:
-
-	do {
-		r = seamcall(TDH_XX_XX, &args);
-	} while (r == TDX_INTERRUPTED_RESUMABLE);
-
-	if (r != TDX_SUCCESS)
-		return -EFAULT;
-
-https://lore.kernel.org/kvm/20260618081355.3253581-6-yilun.xu@linux.intel.com/
-https://lore.kernel.org/kvm/20260618081355.3253581-5-yilun.xu@linux.intel.com/
-
+> Testing with OS-native AER control showed that disabling only L0s on the
+> RTS525A link stops new AER interrupt and counter growth while leaving L1
+> enabled.  Disabling L1, L1 substates, or Clock PM alone did not stop the
+> storm.
 > 
-> > +		r = sc_retry(sc_func, fn, &_args);
-> > +		if (r != TDX_INTERRUPTED_RESUMABLE)
-> > +			break;
-> > +
-> > +		cond_resched();
-> > +	}
-> > +
-> > +	*args = _args;
-> > +
-> > +	return r;
-> > +}
+> Prevent the broken L0s configuration by removing L0s from the RTS525A
+> advertised ASPM capability.  This avoids enabling the non-working ASPM
+> state instead of masking the resulting AER Replay Timer Timeout reports.
+> 
+> Signed-off-by: Max Lee <max.lee@canonical.com>
+
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org
+
+Thanks for your great analysis in:
+
+https://lore.kernel.org/r/CA+YcyLw0HpR1Dnz-mOL1Ryym89ytc=1a_Ri9buMt3at-9mib+g@mail.gmail.com/
+
+In fact a quick Google search finds other reports of ASPM issues with
+this card reader.  This one is for Linux and talks about Receiver Errors
+with RTS525A which are fixed by pcie_aspm=off, a more targeted fix was
+apparently not developed:
+
+https://github.com/pop-os/pop/issues/3775
+
+And another one for macOS specifically mentioning non-working L0s on
+RTS525A:
+
+https://github.com/5T33Z0/OC-Little-Translated/blob/main/Content/04_Fixing_Sleep_and_Wake_Issues/Setting_ASPM_Operating_Mode/README.md
+
+It looks like this product just doesn't support L0s and the vendor
+neglected to set the ASPM Support bits in the Link Capabilities Register
+correctly.
+
+Thanks,
+
+Lukas
