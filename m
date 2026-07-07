@@ -1,55 +1,59 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3FE010785;
-	Tue,  7 Jul 2026 20:38:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A09B3E5EC5;
+	Tue,  7 Jul 2026 20:38:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783456693; cv=none; b=WxJaQfeuGpD3zMDaNiz/ExtCzzQqroax5qNCcsxIrsQneB+jm5n7bTiGGESFMC6K7D0vlTup+/EGIE12OlfDvQNSNfkTt2BKJttaGtJ9xpJ3tec1ZYTkgkn99Tf8tccx2n8tpYWXTV54T27j7XRhXxuXOZWMuSayxAJhCkhHmHY=
+	t=1783456701; cv=none; b=NJcYPxSbnKMyReE9u/olUj+tIlIUlRZa2Br+kp0LA5/2sHaEaIqubMJqp5e7sH+xbkB+3OobfatSoWNMPg1VPbmzYTaJaTfeiKzL5FQvGtFKKnXQyqFS62CMRzCbUaw+aztO80xBgL395luw2jGwaJyVUAK0pPWNOHYX5OgmWoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783456693; c=relaxed/simple;
-	bh=Zi3czAew4d3ZlftWkZwM7s4gZmhFyFUIS+7NMB7dNwM=;
+	s=arc-20240116; t=1783456701; c=relaxed/simple;
+	bh=SOhgij37R3cGSxuZdXbiSlfRT75516/0tXqGcrO9ljI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OULcd0ntgvCZlerIw3xJZBYbOhRonZ1Ar00Tm1XWXpoLNyLPXSRrSSJOpin/b3pwrmoz3C89MNeBg+Oo/Ds6c2nEra1x/fkkvXxDPN6SIaU7FpRp7suqQMZndzSm8vpP+MOf3K8lpkCFjSXG05oO33dWXcdRWMOW5YuDXc+Ihvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Tmxt6nto; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=YdS1Cmmj; arc=none smtp.client-ip=80.241.56.171
+	 MIME-Version:Content-Type; b=fPv2fFS8QY2+4wwPeYEXbU0j2lAwi8dJEFc3m1ackQnTdMK5T1er1iZT8sn2uebBtOKW6HTKfg0KkPj+5vZ3oBcHWA+dQPxSXGCzXxVaiXsGJ2pGjSjVaqlP3KnjCzNWpvmjw+eDp+H27LLQrF7CSMxjBQXpeh4GRVLWuqlSgV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=HciGiTdG; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=P0opyTmz; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Tmxt6nto";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="YdS1Cmmj"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="HciGiTdG";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="P0opyTmz"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4gvtMv5yBGzMlMJ;
-	Tue, 07 Jul 2026 22:38:03 +0200 (CEST)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4gvtNB1gDqzKnYq;
+	Tue, 07 Jul 2026 22:38:18 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783456683;
+	t=1783456698;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=X2Us4mdNEvhuyOgKQU3GzWXQxNS9dEkI8BiRToUpUN4=;
-	b=Tmxt6nto5vPwu2cDgw3ZE1aOER2/fwL/o8QTkxlb1D3WMHQtFRuOw/EwwYhWenpOVN7D4e
-	lYY/cKImq427Lkhp7UfiDgsY1cWq1qge7a2jcJ1Bar/zcF9TYNG2dJ5DE6USCXasVkxvmd
-	rf6mGOxjJSf7A6bBTiWVH/dG1aJHOv8am7u2FnpsrJQ1n8qalKOuP3EP8MKKmf9AcG49hM
-	8Iova3+cnmhdZD5L65uSepuMlC7MbftlelCtBmIycKYh+QKCuV9yiUFPja7/iAAcC0EwUC
-	msvcGyAplSWkr75vS+NIJCRgYEimBKQ6XJ4EhlmdPfvtM6W+kED0r6UgUXE0mQ==
+	bh=xfccldLVCxkbEtlVItFgKJxpZCQLxtTCzIH5oBIqVAM=;
+	b=HciGiTdGX0B4YjvdZOHv6vtUEhYWXigGBFKcFX2uE8+b39utoCSA8Ct1P2KyRaIU05rSQq
+	9OfMIZjQptVYSf7HSEt56HlND0Mtc4eA75yMW99Rw65TucrfAiiIZLIvmHfET1MYlUUc0P
+	ps5+b5EYZvHZph8rNbE0kVjn8aMeYY4KYPrVKnoDbIUq6mzsYnl49shAxNPjuR6Pgh4pyM
+	x+yr1V0KmulirhafauMAaZAsnRanNjnkqn1ARvA8DOMCSMMhtFdeRnYJRAZ02yFFDblvTc
+	HE+UMp88BZ3L9PabznZCUMlB2KnmxKEGXONwmbhLlQ8ZfFP8IqWW7PuLWWxLRw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=P0opyTmz;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783456682;
+	t=1783456696;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=X2Us4mdNEvhuyOgKQU3GzWXQxNS9dEkI8BiRToUpUN4=;
-	b=YdS1CmmjByWm7CZo4bLVwH/7paBZDulYxGFpsF0EN3oN6Nv8Opd1PqZqZ2ZEA2yr4PmnfO
-	zsem0EAM3t9zExN7bEpwsTkjDWTV+FLG3eynh8ghZbL407r6ObMu1QPF53QFchpwO4YD3y
-	icVrAnn0AIYy/oqpLqCUqbiZevj9nWtcPbQYdLYbjuj7mAw2OX8LLpIhzNQuOmMb+uGzF1
-	Oo+nxQBk/aJtXipiTP6GWpwtpKEPRrg5pSL/Ej3NzfDz4eBAAfUiNWQA6I/+rQWW7qeYZ1
-	s/TBPo8FcVVrGWCQYfwj3HENFbc0E2S2UhL4mvyfuagiVv1DyEcNj85FrNifug==
+	bh=xfccldLVCxkbEtlVItFgKJxpZCQLxtTCzIH5oBIqVAM=;
+	b=P0opyTmz2tfP23EpSSkte30I85hZ6Fr3d3HZsnt6Y3CoVRaqcpxEc4pZm7Svzdljp/FLkX
+	mbOOKZF7MpRA1fTDONiCZF8K8qsxgLcmsnvLzepWJsKsOyAkmMDKUKRcpUGfHPe2HpPbyu
+	+FpMg+hAUObutRqu99moHH8mYf+BT8ZrOH/nRi7vDOMX14TuBCUBq6n3TKgk0z8L6feacK
+	zZsNlFt5xqISGIHiCzl1A2Pm16S9qDHKK2KaPxFapLsARBhsU0MFJrq+vDsJx5/eEi/DtK
+	hFgZeI7McPFMhrWYCXW6UTB4NqyZ9iLnTqZGrYyPpAC3rl55A6pO4v3IBzFbhQ==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <catalin.marinas@arm.com>,
@@ -60,15 +64,14 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	Marc Zyngier <maz@kernel.org>,
 	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
 	devicetree@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v4 1/5] PCI: dwc: Determine whether iMSI is used before calling .init
-Date: Tue,  7 Jul 2026 22:35:39 +0200
-Message-ID: <20260707203743.88299-2-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH v4 5/5] arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
+Date: Tue,  7 Jul 2026 22:35:43 +0200
+Message-ID: <20260707203743.88299-6-marek.vasut+renesas@mailbox.org>
 In-Reply-To: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
 References: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
@@ -79,20 +82,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: r583po4qoa15sromgjb4oesm4cdjryrp
-X-MBO-RS-ID: f11fc97ecda8cba6624
+X-MBO-RS-ID: c41e573af602e797cf2
+X-MBO-RS-META: ywcwk7y9uqr5xhh5osbrhnjh1p73wr5x
+X-Rspamd-Queue-Id: 4gvtNB1gDqzKnYq
 
-The R-Car Gen4 PCIe controller integration configures MSI registers
-in the controller driver .init callback, because those registers
-have to be configured while PERST signal is asserted, and the PERST
-signal is asserted across the controller driver .init callback.
+This SoC implements GIC600 with GICv3 ITS and PCIe host mode on this
+SoC can use it. Add GIC ITS node into GIC node, update interrupt-map
+and add msi-map into PCIe controller node.
 
-The registers have to be configured differently in case the iMSI is
-or is not used. Assign pp->use_imsi_rx before the controller driver
-.init callback is called, so the controller driver .init callback
-implementation can use the pp->use_imsi_rx value.
+The GIC ITS does have master interface to issue transactions to RAM.
+The interface does support cacheable transactions, however, it does
+not support shareable attribute, because the AXI port signals are tied
+to inactive in this implementation. Therefore, add "dma-noncoherent"
+DT property into the GIC ITS subnode.
 
+The GIC redistributor does not have cacheable/shareable, therefore
+add "dma-noncoherent" DT property into the GIC node.
+
+Co-developed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+NOTE: This would not be possible without prior work from Shimoda-san
+      https://lore.kernel.org/all/20240214052144.1966569-1-yoshihiro.shimoda.uh@renesas.com/
 ---
 Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -112,40 +124,87 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
-V3: New patch
+V2: No change
+V3: Add Co-developed-by to credit Shimoda-san
 V4: No change
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/renesas/r8a779g0.dtsi | 31 ++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 06722259d2e37..f5a38e6fd8d79 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -587,6 +587,12 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		return ret;
+diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+index c25642a620db8..dba46499b5e9c 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+@@ -809,6 +809,7 @@ pciec0: pcie@e65d0000 {
+ 			resets = <&cpg 624>;
+ 			reset-names = "pwr";
+ 			max-link-speed = <4>;
++			msi-parent = <&its>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -819,10 +820,10 @@ pciec0: pcie@e65d0000 {
+ 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 2 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 3 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 4 &gic GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>;
+ 			snps,enable-cdm-check;
+ 			status = "disabled";
  
-+	if (pci_msi_enabled()) {
-+		pp->use_imsi_rx = !(pp->ops->msi_init ||
-+				    of_property_present(np, "msi-parent") ||
-+				    of_property_present(np, "msi-map"));
-+	}
+@@ -856,6 +857,7 @@ pciec1: pcie@e65d8000 {
+ 			resets = <&cpg 625>;
+ 			reset-names = "pwr";
+ 			max-link-speed = <4>;
++			msi-parent = <&its>;
+ 			num-lanes = <2>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -866,10 +868,10 @@ pciec1: pcie@e65d8000 {
+ 			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 2 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 3 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+-					<0 0 0 4 &gic GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>;
+ 			snps,enable-cdm-check;
+ 			status = "disabled";
+ 
+@@ -2148,11 +2150,22 @@ ipmmu_mm: iommu@eefc0000 {
+ 		gic: interrupt-controller@f1000000 {
+ 			compatible = "arm,gic-v3";
+ 			#interrupt-cells = <3>;
+-			#address-cells = <0>;
++			#address-cells = <2>;
++			#size-cells = <2>;
+ 			interrupt-controller;
+ 			reg = <0x0 0xf1000000 0 0x20000>,
+ 			      <0x0 0xf1060000 0 0x110000>;
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
++			dma-noncoherent;
 +
- 	if (pp->ops->init) {
- 		ret = pp->ops->init(pp);
- 		if (ret)
-@@ -594,10 +600,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	}
++			ranges = <0x0 0x0 0x0 0xf1000000 0x0 0x200000>;
++
++			its: msi-controller@40000 {
++				compatible = "arm,gic-v3-its";
++				reg = <0x0 0x40000 0x0 0x20000>;
++				dma-noncoherent;
++				msi-controller;
++			};
+ 		};
  
- 	if (pci_msi_enabled()) {
--		pp->use_imsi_rx = !(pp->ops->msi_init ||
--				     of_property_present(np, "msi-parent") ||
--				     of_property_present(np, "msi-map"));
--
- 		/*
- 		 * For the use_imsi_rx case the default assignment is handled
- 		 * in the dw_pcie_msi_host_init().
+ 		gpu: gpu@fd000000 {
 -- 
 2.53.0
 
