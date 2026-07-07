@@ -1,94 +1,176 @@
-Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010024.outbound.protection.outlook.com [52.101.61.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC1F03FD121;
-	Tue,  7 Jul 2026 12:13:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783426395; cv=none; b=SS1pXqI0+ZFjtplKGzgCKkjJ/YwovJzitbtLbUMfUDwxNg4XdJ/pTBUzq0GmEu0ZM7DKWdcPBiMvWR5rS7xgMgNbUuokte4/M59Gb4mHjme75w/AvR0cpar69NyUN9kMlDdvHEo2nsJhMCSOty1PSa73MztgufjN6yQnz0eVgLA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783426395; c=relaxed/simple;
-	bh=iM/ITSzEjuuTnsAsuu2IRTw4GsnoxQTq+5wqGHC7Z5M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YB2R/z9XWh8XAeSuSLXEuvZB9VwgzKk2/TuIbBOl5obrlPr0x1LL+l0rh9BsL1Q9PqtJZSyjyl2Q+FtSQUOY8nFL0VeZHi6Jot8AZInHzoqRa+vjSSkyHX5lOtZdjHpn+E72H/0ei4eCvZTk7cAxXb+s/FBeHbbbw5bqEB1hi2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=LVr/OK96; arc=none smtp.client-ip=115.124.30.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B4523955E3;
+	Tue,  7 Jul 2026 12:17:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783426651; cv=fail; b=Etg7t269mVOpvDU/kO1YQccBd9FbO5rpOpUbyN0KyTYqpiHjFRobpCXJgGP70zKRZt8249nGGfKY6qClKsIjZrIKh3ZlmaiB6k9nWF43jRVxPpGDFQJ344rAUPQJCxt4VONsc3BRXvqf0gjwAwLFJkhmV0DyK6CVqnIYvSVL1eY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783426651; c=relaxed/simple;
+	bh=ECMnqzjjCVSPSyw/vsvnRp58+eqCdKfXipR5b3K5raY=;
+	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
+	 In-Reply-To:MIME-Version; b=RE+kM+8ABZX8xNAqU8IlbV3F7eGvZ7C69rObVAzR7C72X5m0da7MBhld0l3jLcQwp1EeNM6f87IO142OdXSpzWupCLeFWGB2GEjtP/s1YnzkFvO6XMEpyMUyX+jLDeKpBgWzgExURlU3KIfZhWFqFtq5mUd/Ae20QTBOfxVQ5NY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=HKw/xQZ7; arc=fail smtp.client-ip=52.101.61.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="LVr/OK96"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1783426384; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=ZazC41qgP28ya/4IG3D9ZyNZ1aQYNlbRht3eBUU3JMQ=;
-	b=LVr/OK96W4/77kZq6MbsuiFiQ1R3fEqSuS54MgqETMfP3ShDgBCfAf3yXkY3F200/NY5M25MaiV+HrYocZIhPFsAdT0PqIjPPTJblqfCL1hbe+HRtU8P9Vb6hTOqtOiPAtk2p6gulxByeRN5pP5iH3Whz0YyCtPO4cbFVpiyrDw=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=cp0613@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0X6dZr4z_1783426379;
-Received: from DESKTOP-S9E58SO.localdomain(mailfrom:cp0613@linux.alibaba.com fp:SMTPD_---0X6dZr4z_1783426379 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 07 Jul 2026 20:13:03 +0800
-From: Chen Pei <cp0613@linux.alibaba.com>
-To: dave.jiang@intel.com,
-	alison.schofield@intel.com,
-	bhelgaas@google.com,
-	rafael@kernel.org,
-	lenb@kernel.org,
-	guoren@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Sashiko AI review <sashiko-bot@kernel.org>
-Subject: [PATCH] ACPI: PCI: Clear driver_data on all error paths in acpi_pci_root_add()
-Date: Tue,  7 Jul 2026 20:12:58 +0800
-Message-ID: <20260707121258.11640-1-cp0613@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="HKw/xQZ7"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=yulDVWMtEHIjj1z9dK3QpiHsy+WcjUTxizE3XkHmCVrH+yGjum3HPLUUbFDvtBBmkCGVot0sVSCIc5ULXTa07Gxm0/6Q+UUMtJQr64RZgoZkaFu8fSA1V8DQom5/wOVHAiE6fO1we3ZbXwVbD8yKYqcD+y7If+yxyJ0jssUcw8x1v7cLdOjHFQkLVxfrw1D5c7FSO5cDGYTYsQ+oHAK5ZQA48eLKdlCUHCbLOQc53a5Xptou9P7mHPBOTvCLGvi8aUEQixK4IgtWJBceTjmP1z+JZ6p+YftN+R/dGHs0SwQbLq5if7GjNaJdP+yVAlyJUFWBCisMpZhtdGZWpWuGVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xBEm80D4hUWVjzgAJpeF+ZOwGVdY+Ew0vWkLmUGqk5c=;
+ b=LbB7Cym+K7zbV2qQwUmr8n+uzgA+WVtLtWSgJvJem+7yfawBXdNJ2ruPpKLJLZZDcSxX0iZqWhvgKKuOr/kGJ0IpsmuFtwlD2vBll1AjSlW3e2hYahfps7SuXAneXmm3fUY7QAmbE+Yj7oEx/A6RmuG6RTSbMgVXppFs1uFMW3nzxn0PzAqUPjZdSXvy1CSBJHbBUikH3KcR2/hyHFSXIeeCfRAolaWUUwh2bpzNDd2di9IWwy03HENKC/s0dCe9Rp0W9ywIL4cLacFhMDxoA0xzJR3IIZC1WiiOOlUxBEeZmoRVYqBttchPX2yv7PZL5K97UD8KVLahWO/H+37V/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xBEm80D4hUWVjzgAJpeF+ZOwGVdY+Ew0vWkLmUGqk5c=;
+ b=HKw/xQZ71EJJ5RTSe0zajIeH5hKol26girRbEzoHoabIuqh8xgHg/sHLOcL5G7nf3xnqMvEqmNzSgCC5LRszx6Po2eYgASt4qhFWF+cIPOVF+Gne+I9hP3xaPxaE1xTli6LrufeFsmmWYN/FfQH0TNDWvE57yhy+F4Bn51TMF+bpnZK0gphPd0dc2kUZ3P5m4qW2WEE/Npeamkh3+D7gBmmh0wORQJY7TblJlKgsfr1U3BpZaPmQio0hkqGG71EutkoViv/QBCRvosy67noVlVy898bx7xHCKNQsTgxXFmIA6TU+kUzG6Fi5QhAgd6CVXoXA85iiIMHlUrV0+1BDwQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB3997.namprd12.prod.outlook.com (2603:10b6:208:161::11)
+ by DM4PR12MB7670.namprd12.prod.outlook.com (2603:10b6:8:105::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Tue, 7 Jul
+ 2026 12:17:23 +0000
+Received: from MN2PR12MB3997.namprd12.prod.outlook.com
+ ([fe80::73c6:e479:9b75:b2cf]) by MN2PR12MB3997.namprd12.prod.outlook.com
+ ([fe80::73c6:e479:9b75:b2cf%6]) with mapi id 15.21.0181.012; Tue, 7 Jul 2026
+ 12:17:23 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 07 Jul 2026 21:17:18 +0900
+Message-Id: <DJSBZBFDAAMM.38N1H7RP6FJV1@nvidia.com>
+Subject: Re: [PATCH v6 19/20] rust: io: add copying methods
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
+ "Robin Murphy" <robin.murphy@arm.com>, "David Airlie" <airlied@gmail.com>,
+ "Simona Vetter" <simona@ffwll.ch>, "Michal Wilczynski"
+ <m.wilczynski@samsung.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
+ <ukleinek@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pwm@vger.kernel.org>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-19-72cd5d055d54@garyguo.net>
+In-Reply-To: <20260706-io_projection-v6-19-72cd5d055d54@garyguo.net>
+X-ClientProxiedBy: TYCPR01CA0189.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b0::14) To MN2PR12MB3997.namprd12.prod.outlook.com
+ (2603:10b6:208:161::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3997:EE_|DM4PR12MB7670:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0c2119cc-4608-42c3-1b8c-08dedc21b2f0
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|10070799003|23010399003|376014|7416014|18002099003|22082099003|4143699003|11063799006|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	5EqVAGTgrSHm0wjhoT31XD4AitAcN/HX67LdoHlinoaRIZTuNXRPPWXSqqANXixBRo4CXiz5wSb0VDVD2HBT7NUtRTQNILA7lZALPs4rvYfJw6ECovFkZYu/ANibGcPiCb7ih5Hi011vOj/qu6AN0aSfuCNwnyj9e0c4rt+AbTFVdp5JIS8bIr9UrUt0KB+GNVsWJ0JudeMtyrgBrqiKB8BUiF7sKTJukCMqdPIOVCS78LaSKf59SGqWkqOGK73Elzs/nSVPxxu1oBNn5WPI+Xkzi46Ej8JtEosW9S1hVqSbfWg+LKhoXihMkCGEYXPzwerTq6hPGjGae5ZmGI7awWnLTkCE/6Xa4+qPuYwNXmdL7P3Yuep6SQT2WcSkY7bCxHs+9hP0+eFGqWkkOBkQQGBiGM+H7xj2mgR9gmDUpGH1fAzWQ/nTc7+EB7+VlzU4mzJtAKTlNg0AoXkrr0u7b/7aoxsV0/s3KBtz6OBf64dAoakO/qFSnKkvc2TX6fl2/U3k1vMqoPr2st/DC65cLvcFGJSMn/J4er4yhFnhX3nadasr9mWtDuUwddKbYAtSNfz5fVxwsRUSfRI5en4pgjDuWawA7zTyxMs3sGxHBjEhMvPRIdmJSq5kAjR+dN+o5EBGoP2OZSJ1eNp4lsn1QI2ZnJMBNoxir5e1apLdWQg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB3997.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(10070799003)(23010399003)(376014)(7416014)(18002099003)(22082099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?QitIK2txaWxBUGtKcjJyU002MVdaUUJwRnlrcEJkQjZaYTMrbFdtL1pIK0Vz?=
+ =?utf-8?B?RUdCb0JQdkpnTUFSWkxMMzl1SE5uQ2NyS2wxT0RoMFJHZkdLOStuV0FHOVE0?=
+ =?utf-8?B?bXVsdXpVbFVFcnFLYytrM3JJVVp5MVBRaVhFMWp5WmhXYjM3cWw5cWVjaXBW?=
+ =?utf-8?B?VnJuVWw2cVNMWTFUeEJWb0s3VitoaHhxVFNWbTUvS21pcFZKYnRpeU5EOTdK?=
+ =?utf-8?B?QUhtTHdGT3Q2YldodWlDWnhzTVRucXlra3EyLzRVMFYydjNBUTRHN3Q5ZGgy?=
+ =?utf-8?B?MXR4T3A1Z0loYXg0NEJITXB3QmxyRDZWSUdVYm04YXNqWlZZVDlOcjd3dzUz?=
+ =?utf-8?B?TUVjWWowQjErS245Nkd4S2xkckJPSHpvK3MxUEpKWUdGOVNZWjVKMlVvRitv?=
+ =?utf-8?B?NnpqMEhRZHp3M2ptNi9JOGNXTURzeFE3ZU9aOWhmMjRZejVIVXNxL0FYRjJK?=
+ =?utf-8?B?azh3Z2RwQm5qMittb2hKM3MxYjY5SzJKaitXbGMzNGhKUDhEZG14U2ZTaFNJ?=
+ =?utf-8?B?QVNKV2RNV09aWmREVVFIeTJqcTRySEVBb2cyazcxWkVueTNmM1BtemU5Z2RF?=
+ =?utf-8?B?c0U2ZTlEVGVISDg0ZmRobXgxQkRsWWpQdzh1aFVISCtiYmY2VWgyRUdpODVr?=
+ =?utf-8?B?YWhGbnltZmQ5VWNjeGQ4QU9vanlRaXhhRXhRdElqWC9jTldkeVQyRDluWDFD?=
+ =?utf-8?B?VUZkNER3VWlYeWRyaFpqZjdUU2NGTTlMczhYaE1PbmFWWmJkRFZGcnRKREtH?=
+ =?utf-8?B?b2ErOFpTMVU3YmxaeCtZL25NVklWUi9YaHRYVzNCei9qZFdmclYrTEtRU0oy?=
+ =?utf-8?B?OFJuL1IxY05uUndEU01SV3lqS3oyeEFFQnZ1STMveEJrd1BodVVzbFZPejcr?=
+ =?utf-8?B?VWdWa1BadysvRFY1YmxVZXVRVXVaLzJCZGZmS3lIQ1p5QmdYTU01RStNaTZ3?=
+ =?utf-8?B?cjFHdkk2WXlmQWFKZ1YyaUFlV0NBUWEwZnNheUxaNTJXUWhXZzRRK3prUmFJ?=
+ =?utf-8?B?bTZBcjB4UjVzaUVreDMzUjZYZklPU0JQUWVEdnRjZHNMUysxbnJDRVpJN2ly?=
+ =?utf-8?B?eXVucE9tZmtrUlluRkU1NzBvRldIVHNjNVJOUFl1bnFCbmJGdnlsdFNZWnZP?=
+ =?utf-8?B?aWhTeGJiY2I0Qkc2V1FkcmxoaUtaTFRyQkNkMTlJYTNQY2g0akJMTXhNcGRS?=
+ =?utf-8?B?TmFoT29DOC9ldHExbkNuK05LT2YwZVBhRk5TcHFzQ2NweWc4SWRqazV5bWtD?=
+ =?utf-8?B?Y0U4MlE0aXFCMnhJaUJ2cFNGMmViQVN6enJ1Y21ieTN4eGlsMERXTVBFc3dm?=
+ =?utf-8?B?cWcwYjUvaU11MkdDUFpPaDByNWNuejFCOXlyaUl6Uk0vakxrRXU0TnlDejRQ?=
+ =?utf-8?B?NXZ1UG1uUStsTTJYdnpiM1pRd040UkNHZTFTTTREOXM3OVRjcUYzZ01jclVU?=
+ =?utf-8?B?Um5lbVp3S3JQbjJpM0pyUzUyNUNNOGZkcDNMamhPdWxFZklKQ0FVOVdsQ3pT?=
+ =?utf-8?B?cXNOZG9udWk0SEw0bTZLZW0rMTM2RW9tQWYzUEE3K0lQZGtVLzhqQmJiMjU3?=
+ =?utf-8?B?RmVlUU9odTd5c3VXdTIwRkxiYk1OSDlMRVhYN2hvN0IrUnlmb045Ylp4c0dQ?=
+ =?utf-8?B?bDdqWVFqN3M1QU9Sb1lMWWFJQUx4RUhWNzI3SzBhajdSOGZVODFPcWs3UDNu?=
+ =?utf-8?B?RnVzNHBNRFNDWVJaKzVsam0rZERhN0c3SWo5NnNSLy9zSmdZYUFCNlRQNGRQ?=
+ =?utf-8?B?M2pKYjJZTEFhYWlKZmRQZWh1SlhUWEpzcWxJSXd5TFQ5VnNnYnBsNU84K2lK?=
+ =?utf-8?B?U0pwcGNNdzZmOGc3a2pBRXM5bGpzVjlrVGZsaDY2ckkvYXphYVY0MDBTKzVB?=
+ =?utf-8?B?aHJ3dG1BMFlDNTY2MDMyWGZPdXFlN2NPWXJoTHhmRmtSNUhmdDhVeVlxVXNz?=
+ =?utf-8?B?NWJLRjFydXVnbnBiUEdlZ3IxYTNLb0xuaFlibFdOeThQaW4rekpBS3A0ekhk?=
+ =?utf-8?B?Y1o3aGhiMXRYZ1Z2c205UGY0K1VDcit2NjRBd1RFZ0RUOGIvZFhibWhxQ2FK?=
+ =?utf-8?B?NG10TDVKc1lwVXJCWlZ6cE5QMHFDMzdkTldsZ1kzc1VaSjFPQW4yR2M4dWlE?=
+ =?utf-8?B?bmd0b3BBS2xxK1NFSndqaWVNU0JFVVBtWHVDcTBndXhvOXBxZllUWGJjUjlK?=
+ =?utf-8?B?czA2b2JWaUtxdnNvb1ZxdFRyRWpLYkw5ekZYWVU4OWd5QWthNHIvd2QvY0dC?=
+ =?utf-8?B?U0pYVDhTa0p3MDNyaS9XdEROempyenFqd3h0dGNLSWpvWHNoY3JiT0FjR1Vl?=
+ =?utf-8?B?KzNvWWliUUlCRVFWZWIxR01xSUk3UlZoLzJOSFNyQlg5L0Z2K3hxNGJhb3FI?=
+ =?utf-8?Q?/W2z7ghfDvBc2EhsKkd4/utH0lGc/IfpKqMRcexo9P9sX?=
+X-MS-Exchange-AntiSpam-MessageData-1: OM8MPYFnMYa9DQ==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0c2119cc-4608-42c3-1b8c-08dedc21b2f0
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB3997.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2026 12:17:23.0408
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TabuitDVfESlXXGbkNdoWtt5YrKweETaUhWUjv6qzpQ9MxqeVMHVnR5vsTxotW90emoHHm9JVhm5PHTOH7lbdQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB7670
 
-acpi_pci_root_add() assigns the freshly allocated root to
-device->driver_data before dmar_device_add() and pci_acpi_scan_root().
-Both failure paths reach the end: label where root is kfree()'d, but
-only the pci_acpi_scan_root() path clears driver_data first.
+On Mon Jul 6, 2026 at 9:44 PM JST, Gary Guo wrote:
+> One feature that was lost from the old `dma_read!` and `dma_write!` when
+> moving to `io_read!` and `io_write!` was the ability to read/write a larg=
+e
+> structs. However, the semantics was unclear to begin with, as there was n=
+o
+> guarantee about their atomicity even for structs that were small enough t=
+o
+> fit in u32. Re-introduce the capability in the form of copying methods.
+>
+>     dma_read!(foo, bar) -> io_project!(foo, bar).copy_read()
+>     dma_write!(foo, bar, baz) -> io_project!(foo, bar).copy_write(baz)
+>
+> Model these semantics after memcpy so user has clear expectation of lack =
+of
+> atomicity. As an additional benefit of this change, this now works for MM=
+IO
+> as well by mapping them to `memcpy_{from,to}io`.
+>
+> For slices which is DST so the `copy_read` and `copy_write` API above can=
+'t
+> work, add `copy_from_slice` and `copy_to_slice` to copy from/to normal
+> memory.
+>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-When dmar_device_add() fails during a hot-add, root is freed while
-device->driver_data still points at it.  The ACPI core does not clear
-driver_data on attach failure, so a later acpi_pci_find_root() call
-may dereference this dangling pointer.
+Thanks for addressing all the feedback so promptly!
 
-Move the NULL assignment to the shared end: label so every error path
-clears driver_data before freeing root.
-
-Fixes: db89b4f0dbab ("ACPI: catch calls of acpi_driver_data on pointer of wrong type")
-Reported-by: Sashiko AI review <sashiko-bot@kernel.org>
-Link: https://sashiko.dev/#/patchset/20260526025118.38935-1-cp0613@linux.alibaba.com
-Signed-off-by: Chen Pei <cp0613@linux.alibaba.com>
----
- drivers/acpi/pci_root.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 4c06c3ffd0cb..f6cddd11075c 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -725,7 +725,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		dev_err(&device->dev,
- 			"Bus %04x:%02x not present in PCI namespace\n",
- 			root->segment, (unsigned int)root->secondary.start);
--		device->driver_data = NULL;
- 		result = -ENODEV;
- 		goto remove_dmar;
- 	}
-@@ -765,6 +764,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (hotadd)
- 		dmar_device_remove(handle);
- end:
-+	device->driver_data = NULL;
- 	kfree(root);
- 	return result;
- }
--- 
-2.50.1
-
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
