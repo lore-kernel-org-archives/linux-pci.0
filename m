@@ -1,205 +1,93 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020096.outbound.protection.outlook.com [52.101.196.96])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06ED5420867;
-	Tue,  7 Jul 2026 20:02:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.96
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783454553; cv=fail; b=ZEhkzTR7hkdlnrqsFd7AQaAyZ6g+DFaH/2u9vDaDnLLH+1LLu2ylkFHJG+iDpQfJ4mb1sRcH36jRPKJR77fLmHHSdT9HTEAPDOljGMHkOkc9LFxxf+5b+sryQfDpb8OGjLXx/XOPuX/piUG9eBcUGG6IesGyKodZlHWCmbbx8jc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783454553; c=relaxed/simple;
-	bh=cCSNlYfeohOKK/6J0luGKxD3NCmfDLHfP7PolBYFyj8=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=cX3gBKfOOYu+fiCZJABXov+JIoUcUDYx4Xq4oiX16V7l5nSzTuY+F0NdcRJi3tANRRfIKl171mhuLsCSvpFAZ9ECRJUhjiPd1L1yLjRl/hq4luCUrOAt6EC2pRQ4V1ptqMEZ5df6s1bOD0wRPUsGDP7lOXdOINbT1W7OwfwmODU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=G1lbQnNV; arc=fail smtp.client-ip=52.101.196.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E38F442087F;
+	Tue,  7 Jul 2026 20:24:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783455861; cv=none; b=bp+ag6D0kCMed7oSiJyygW+jHv36+sVMPuz9M6PZJQ1yNcfpvNnL9x7QPO6qEtffb3sEzDUVRflWYxoasVTFa4dnRJPvtxwWQeR27gIa7C0qUggm2Zr94pX3RxHa5In57zQtj0qME62BEWxXgQNTbGSCgF+a4ph1JqBnl0oBZOw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783455861; c=relaxed/simple;
+	bh=fwReva9uoUxB1MQyBfEquSl0KIEHdpI1AQyr6XKGsNI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aa32OWy9EGSIVcOwfJHEX0kU7L2lUA/8Vxe4kFEdl74/h26T8nGWCqQdImAzK4iDCmnD/y1XWveGMA1W/rdCE7XrEHHp5SJ9qQ0kmIkyK/jQ8e+KFQWpbsXqoexiuoi8a06ZmnZd+nr+9la1AxkzkglLKdnuR0EIFzGdOKNOCDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=hlX9qH3P; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="G1lbQnNV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=M+4jPjXk6rSnBvI5sBdvGVbwHFNnXp4RQ4Fq5Imhxhv0h5qL4v3bMnCPbPbizIAz9SnpCheROIXHsGDEbjCXVe7hJ2cUsIwIxTFHphYZeDHLH1dzCOrAN/eYalOB1wwuCyxCWX+qTVxu+e7oHxjNDnZiYgTt27pp8vUvyM1GdyFwP9hhkERsIVth3+66l1pajfLfr991ymvg/5sVMEdPDRjPnr6UtQDnx0p5pDTgDwQ69YQohxihsSH06Fcn8iVN4AZy2i6ChNX8kg0fKAZza0KgMH+JVKTisrJwZl5mL+dkIKsrvln6tqiyUux4WFWs50oqsEovnVaFxptaXgP47Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cCSNlYfeohOKK/6J0luGKxD3NCmfDLHfP7PolBYFyj8=;
- b=WF1SDu1iv2Dw6fhbBe4S7SIe9RoPmxojv4y+jfZ47yqNT0pBidHH870sK32KetaUs4atubBfS6abvAcihdNRVu/QMUqSZdo9oRDCvhlnnkDl3ErQcfBNIQG5dfOQm6Q4T1qcKaT4d/jcp+qKCBRUbrI9RUSBLAXEk9idHb4aN0emM/nzIDx1vWaFnICNcgMFrPHOxQp3NqNGj9QCnSLhqzVmrYdjqryDPrd+gM8/QU1fHr3kBbKZEhMzvcy+B0erqYDAAlxIdyJ53n44WZs/hYf16CzqCjXWoaDJ0W63ANG5spWOEtGSPEyfRls3frfe/E5kz7xkW6rGc7sU0iAHgw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cCSNlYfeohOKK/6J0luGKxD3NCmfDLHfP7PolBYFyj8=;
- b=G1lbQnNV+UGnPxmYhZUc8NQOYY1kTxiZFjuF5VlZI4ExJ62eTgWGdlBp46c1AjKDbHdHEM/NcKDrcLUtYzfG6gfFkffv7GOjcEfXJyCr9MivmH84SxERzytOI150sru69i0wYU1dDm4E+8G1Gm/jVM5GmDsM9YhYHtvdcWj/BSo=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO8P265MB7871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:3a8::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Tue, 7 Jul
- 2026 20:02:28 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0181.008; Tue, 7 Jul 2026
- 20:02:28 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 07 Jul 2026 21:02:27 +0100
-Message-Id: <DJSLVGBW90CT.3W3FHC3J5NPMG@garyguo.net>
-Subject: Re: [PATCH v6 01/20] rust: io: add dynamically-sized `Region` type
-From: "Gary Guo" <gary@garyguo.net>
-To: "Daniel Almeida" <daniel.almeida@collabora.com>, "Gary Guo"
- <gary@garyguo.net>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
- "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
- <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Michal Wilczynski" <m.wilczynski@samsung.com>,
- =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>, "Danilo Krummrich"
- <dakr@kernel.org>, <driver-core@lists.linux.dev>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
- <dri-devel@lists.freedesktop.org>, <linux-pwm@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-1-72cd5d055d54@garyguo.net>
- <9AC77170-279D-4C0A-89F7-8D07F418AADF@collabora.com>
-In-Reply-To: <9AC77170-279D-4C0A-89F7-8D07F418AADF@collabora.com>
-X-ClientProxiedBy: LO2P265CA0494.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:13a::19) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="hlX9qH3P"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gvt3r6X4zzMlHZ;
+	Tue, 07 Jul 2026 22:24:08 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1783455848;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pE6yNMp+uXpgGUcwJt1cNGBLI12Hj8FXQ5m2BI8bX4s=;
+	b=hlX9qH3P7QNIy3fjcF4n/8eSucWZ176Mk6rgjs1M739zaMKvTQvGGk549o/lK7yzZY8UKe
+	jrzFdT6d+qGQ8TmH5E8onyjvFhIdY+IgHM7HLT6Llob5IE5V+y8Fk7WgrW3QqWf4ODCQIa
+	eYSgnfyQrdAPnV8IUCnsSUcelKJAkz9guNykDXeTGHK/kY5secL5vamRRk/cwduEriTwSM
+	f8CZF+4XnDZ0VgOApdQJ4+L+WpHH7MVIYfFxN6LKJEcgVUhp1FGVkc5sucYDAu0sbcym+B
+	BmjQEfAMRLzikJr7elz3UFrWy8d2X9uQAUaLcjfAlrZXHRJsHRxMO6xWLW81Dw==
+Message-ID: <e67d526b-7e4c-424d-b971-35e06c163376@mailbox.org>
+Date: Tue, 7 Jul 2026 22:24:03 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO8P265MB7871:EE_
-X-MS-Office365-Filtering-Correlation-Id: 964527ab-e269-4429-199f-08dedc62abbb
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|10070799003|1800799024|366016|376014|4143699003|3023799007|18002099003|6133799003|56012099006|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	RRVgLtZc6wFtJRfabuGOQ7KDg8ROpkf7RDU34e5z1Ud8lEvPCbcmTijr9ELHGwFTqALPH92lBiO+N/8Tzxio6OrJrEdnT3RBM4mcSm59epTpCKBvdY+7OYk7ihpBCVUwu4D0zCQahL2x2Uk+6rf/OWMeUaLFnSfA45Tv1xAZO6uLcJjWRpfodEQJi2GlRclyu8r8YCmS8UeOFijZeNmnuhZD5M/+ugj2V2uSx9kYB8vaneNHtOWqY5rt+pWNUNCeuLPROjT3bvQV2YhFkMJIkGwYqUyA0xXdUAybvmmJ5u9r9eyt4xZZgJW/Dx1OdnoWRCHDggSbWKCdI5aHhQ/CwoPHYuWp7L6/b/qBaGRGK1AZmt1G6anVoCDqLLIo2p1nCHkItrJWC70g/cUJFWTSBzujSCu4m+oghdQXMZcgtJwHrsLmr/z2IiBmR2XtsydzATR4I+hNAq3jhZgIP/HF9r9FLSj4tHjnvJAvisOuk+/wNsZa/EgNp2XmLtpqwoxWsuAv9N6JzUGs6VaXnMwE18nGjL7R6YOptw1uXQskbUo6vczv+qNHuGrJGNf0HtXJEgEuYU9fsWXa2AGgHbEQ83u6Nh3IKD3qCdYMm65N/Z0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(10070799003)(1800799024)(366016)(376014)(4143699003)(3023799007)(18002099003)(6133799003)(56012099006)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Tm9oUjY3bStxK1F0RzBSbkZVYTUwS1I5NFQ1OU9GeEQvNmRhWFVkc25tY3RM?=
- =?utf-8?B?ZkcxVzJQWUlKUWtJSk5jTUtrSFdVWXhHdklHL01RaHJRb1EzL0VFSCtHVEdC?=
- =?utf-8?B?dHpFQWVQeWlkUjdvOG9aVkZ3VUpTMFR5TVF3TmVmMWZ0MkZKOGNNQjdsNWlw?=
- =?utf-8?B?R2o3SDZqVjlFaEFzRERvWVpoNGxEdjZzR25nQWwwQ1dSYUJmVkdsOFFtd1VL?=
- =?utf-8?B?c3Uyc1NMZkQ5cHVtV29JNmRqTGtwNFZ3bnA5WDlUcXo0NW96cXgwUHhsR01N?=
- =?utf-8?B?WFVyNE1nVTRaS01aTnlidkpGeEg2SVRjT3RNRWdzcjVIMTArSXJUSjBQVmRy?=
- =?utf-8?B?WE1MZHhjNkVLbXhBOWVMeFk0b1dpbzZ4Q1JGVk8vR3VFZ2ovVDgvbndnK0xF?=
- =?utf-8?B?dVVjK3lQMmhwN1A1TzNyTGx4VE9WQUVNYVdDYmlPWFdCVkVsR3hKRkNwaVJQ?=
- =?utf-8?B?QU1VMitoZFJaRUR4K3R5UHJTMGtSS3ArZnRWd21JSExuY3Z4cnpudTZLZk1Z?=
- =?utf-8?B?aXdibklVcEhmalhaM0Z2dlkrTU1CTFgyaTN4TitLcUpFVzcvaWZ5VS9JeEUz?=
- =?utf-8?B?Zm9LVzlGZGtwdURpRDBTZXJjQkVBRCtKUEhFZUxTb3ZuTTlFdjVkTHVlUjFD?=
- =?utf-8?B?eCtCUWo4TzAvajdWQ21qZHZLTDJvMWY5Y1V1ZnZ0bldsWWladzY2UWJySDFY?=
- =?utf-8?B?dWEweTdZdnJDY3lxTW1BODd2bFhlQ0RJWDlsMGFnYTNtcS9ESmM5dmR5ei84?=
- =?utf-8?B?azRKVk9uTUYrUUx3MENIN2pGZHo0VWExNUpEVVRQMzFzUmw3UVNIZkt5dGw1?=
- =?utf-8?B?cHZpRzFIeTA2TFk0SWNrTm1VTTRRMnJxeWZsWng1QVpvR2JjRVdMZlVIYUUx?=
- =?utf-8?B?eVVyZGNncjBqOWdYTXRLTE01cHdvVVJLQy9uZHRvY1FNbEZQOHB0WmtpdzhJ?=
- =?utf-8?B?UWIyc0lpUU16azJCckRiU2N5OGIySlNwQUlRdlFEQUdIRldaSFQxUGRxZjRx?=
- =?utf-8?B?ZkZJeEp4VHRnZGpqTHRQWVVNOGRxU3p1Y3BKSm8zMktZbTFnNVlESThhdll4?=
- =?utf-8?B?S1RUVW9QcGZKdDVzNnBEZ0VkaHpoVnpkRHRhaVJQRTlNRmV3Z095TVI5ZDht?=
- =?utf-8?B?cWtSektrUXY5WGswNU1OK2pYa2M0c2Y1cUxsUVJkcEI3RkE3NmJ4TDdvOE4v?=
- =?utf-8?B?aGl3bjRwOGhUeVBPa1k3VjFocWNNNEhidE9lYnQ1dHU5SnNnWFdkRjFYd2Fr?=
- =?utf-8?B?S3NCbENnV3RQOEczaDZYVDhHa3gzaG9TTitkMGI1YzhHL2ErWnlUTWREQ2hP?=
- =?utf-8?B?MlRZK0xOTFJQbDkxa2E2cVdWYTU2TUZvRGkrNDBLeUVpVmpUNXZuMWJYL3dT?=
- =?utf-8?B?Zy9jcFQ0OWY0NlJlVDkyVkJlcXpGTTE0WWZSNkVqeWNEOG4vK1VaTWIrTFpa?=
- =?utf-8?B?emlERHFvOTFyczJQR1pOejFMK1dnb0FLTW44b1dpYXFoUGZaTSthVnBpSDQ2?=
- =?utf-8?B?WFU4aktCdTI1NVBCRG9xbWtCRjV0QTBicTkzYnVQdmovdG5odGd6cy91Y3Ru?=
- =?utf-8?B?VDcyYnoyQzZpTHBxK0E0ZUk3R2VKdFVkc2dtUDFjVy95ZGl1R1hEZHpYNzRL?=
- =?utf-8?B?Z0ZucFJmWHZleDhCQkdMVTd0SDBYbC9HUGNHdHBLemtnSzMvYlRSK2VlYi93?=
- =?utf-8?B?VkVhKzh2S3RpbFdRK2NPbzhuVXFsaVkyTEN2OXdiZ2lOYTZZWlhvWXRBRlV0?=
- =?utf-8?B?N3ZYTEpJSnRvbGtTWGJQcEV0MnpLVmM1UHpZc2xqWmFMSk9XbUJ1ZTJOdDlB?=
- =?utf-8?B?R0lGNStuRlFFd0VLclBjOThlakpZb1VqODg1QVJwVnYrV1hONGFrVi90Szdi?=
- =?utf-8?B?a1R0dHBLMjc5RExXUHZLdXA1MEtuOWtSYW9jT29PUVo3bkRaQmlzUVRUUnRV?=
- =?utf-8?B?WVdXVjJhYUw3T1l4Q2RBc2JRMGcrNGswbGtHNmRhbStjQ25JSFh4b3V2c3hr?=
- =?utf-8?B?dnczVTUwZTdTZEZlM3hJSzZMa3gra0puSXYyakN0YkJ4NlJRQUlUeURzRUlD?=
- =?utf-8?B?Y1ZBa0NmSFU2T0xKb3lLNHlBQVVYazNOejVHVDhxU0NIQnlxV0kyaXpHTjJh?=
- =?utf-8?B?VmZYNXRJeVZZK1lpQ2I1RitBM2hLWVU5Q21IRnFkdVJ0Y21COWxQR0tVZWdT?=
- =?utf-8?B?dGRNaWxpNmFNSXpiSXF1NlBrQUg2UWo3bHkzUDVCb1JJOWZkUnREZG5scGtp?=
- =?utf-8?B?THdXMDh3dEh5bGU3a0sxRGNRblZKWmdjemprZFN2L0ZPRlpmWS9EaGlXcjF2?=
- =?utf-8?B?V0hSVGg4SFVMNVJwa3NiUWhQV3dBZEJ4cHViMzBhOTRDT1dOTEUvQT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 964527ab-e269-4429-199f-08dedc62abbb
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2026 20:02:28.0060
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kJj+5zxcwk1DulXAwjxjP8DWnQYa8j3jhCXt2R6Ec/DCFNSDbafxMJKLcKVfy+AXNmPdaR4k55FPgojiNglJjQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO8P265MB7871
+Subject: Re: [PATCH v3 1/5] PCI: dwc: Determine whether iMSI is used before
+ calling .init
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley
+ <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
+ <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
+ <4qyn4fljtb3cbzcmfpkdomkm7vqnwn2rfbtqng4iwmtvfd4bpj@t6kkw53erl7f>
+ <8a921ce9-e339-445a-af05-d20f9f2df01e@mailbox.org>
+ <p4it4hcg24narbtjtoqdk6zg7wpfs5hc2mm77acyoi6hwfkh5u@5bqlwhylosmo>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <p4it4hcg24narbtjtoqdk6zg7wpfs5hc2mm77acyoi6hwfkh5u@5bqlwhylosmo>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: 073d86a19c85a0d025b
+X-MBO-RS-META: 5dycfot7945dqgf3kieqojhkr9yf6hae
 
-On Tue Jul 7, 2026 at 6:14 PM BST, Daniel Almeida wrote:
-> Hi Gary,
->
-> A bit late to the party here, but going through this series one by one :)
->
->> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
->>=20
->> Currently many I/O related structs carry a `SIZE` parameter to denote th=
-e
->> minimum size of the I/O region, while they also carry a field indicating
->> the actual size. Proliferation of the pattern creates a lot of duplicate=
-d
->> code, and makes it hard to create typed views of I/O.
->>=20
->> Introduce a `Region` type that carries the `SIZE` parameter. It is a
->> wrapper of `[u8]`, which makes it dynamically sized with a metadata of
->> `usize`. This way, pointers to `Region` naturally carry size information=
-.
->> This type is required to be 4-byte aligned.
->
-> Why 4, specifically? i.e.: I wonder if this breaks u64 mmio accessors?
-
-It does, but if the alignment is 8 then it breaks a lot of platform devices=
-. 4
-is the most common alignment needed so it is chosen. Different base types c=
-an be
-added subsequently when needs arise.
-
-There's some additional discussions here:
-https://rust-for-linux.zulipchat.com/#narrow/channel/288089-General/topic/G=
-eneric.20I.2FO.20backends/with/601411822
-and in earlier versions.
-
-Best,
-Gary
-
->>=20
->> Expose the minimum size information via `MIN_SIZE` constant of the
->> `KnownSize` trait. Similarly, expose the minimum alignment information v=
-ia
->> `KnownSize::MIN_ALIGN`.
->>=20
->> With these changes, it is possible to add an associated type to `Io` tra=
-it
->> to represent the type of I/O region. For untyped regions, this is the ne=
-wly
->> added `Region` type. Remove `IoKnownSize` as it is no longer necessary. =
-Use
->> the same mechanism to indicate minimum size of PCI config spaces.
->>=20
->> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
->> Signed-off-by: Gary Guo <gary@garyguo.net>
->
-> If MIN_ALIGN =3D 4 is actually intentional:
->
-> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
-
-
+On 7/7/26 5:36 PM, Manivannan Sadhasivam wrote:
+> On Mon, Jul 06, 2026 at 07:48:24PM +0200, Marek Vasut wrote:
+>> On 7/6/26 6:43 PM, Manivannan Sadhasivam wrote:
+>>> On Wed, Jul 01, 2026 at 10:37:44PM +0200, Marek Vasut wrote:
+>>>> The R-Car Gen4 PCIe controller integration configures MSI registers
+>>>> in the controller driver .init callback, because those registers
+>>>> have to be configured while PERST signal is asserted, and the PERST
+>>>> signal is asserted across the controller driver .init callback.
+>>>>
+>>>> The registers have to be configured differently in case the iMSI is
+>>>> or is not used. Assign pp->use_imsi_rx before the controller driver
+>>>> .init callback is called, so the controller driver .init callback
+>>>> implementation can use the pp->use_imsi_rx value.
+>>>>
+>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+>>>
+>>> LGTM!
+>> Thank you. Can I get AB/RB before sending V4 ?
+> 
+> Why? Since this series goes through PCI tree and all PCI patches are controller
+> patches, I'm going to merge the series. So no need of the A-b/R-b tags.
+All right, V4 patchset is coming shortly.
