@@ -1,129 +1,81 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 13F2730AABE;
-	Tue,  7 Jul 2026 14:48:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B10C41F7C6;
+	Tue,  7 Jul 2026 15:36:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783435699; cv=none; b=ZiBIrYp3J2RKMXHLC/lENhVK6Jri9560B/o9yCAYHxPlLpcgaaqDxoAl/1Xl7wxdwDICkat6Gp+lJETh2MgpiZQLd/insidJgo+DB0jTMZmoTy2ov15haIvYigQm8lGK3tqlOmJxYZAttTGMDanp/S/RoVpcHiAdoQEAvwCJUw4=
+	t=1783438619; cv=none; b=q6dgiBWgSgSQU5ud3zO9J+sSu2T9+8JYApuj+CGZRFWKRh5oYIm//Ju5GaPH9DdY8C73vrRgJfgOUfy2mQyq8RqBd+DxvLLU1QVhqCHRAru4Od6DnHqkBmBr9y1IwHFFlsmp7IrW1xzwDVFtNXGAUb2rCbfeQ9xw/7pC/6sXXj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783435699; c=relaxed/simple;
-	bh=3tWkLtv1r5S9y1Rh08QPuFqmn/Edh3V72WQL303pkDY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=thpfKRXYu1Z2uV714oKOJNMyp2VLzYlXfCDnJzorsc+iML6ahnvLFi6KgEwGUz77eYOxgzei1qyJBDk/xpm2/6EmG2Zu/xdQjs+y4P3W2xKoJaenevDyKbl3CDgIN5FbV2go85SGfZkF7iP1A+kIKfyODJoei3t7V5J2p3aJA7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=jCD1N2xC; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1783438619; c=relaxed/simple;
+	bh=j/3Eg1ogVsf3EmghcOQfm3oTgU47ZEQlOMVHS9D3Rbw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cDywjkpacydYLOLlRYcpBeF4NyfESPX+p0HLrFeqFOCVA5Anpjfme5tIqEkF03OjlVm0mlr+KlM4t4+hJc4NmGB17idiEDNtmB+RIEnEH0DCcCdcPQuZLnOHhFCAqkQfoM0n9mRrjj6Gc0dUckck1W/Yxw2viZ44/YXIF2tYnPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCn30mtF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="jCD1N2xC"
-Received: from localhost (unknown [20.236.11.29])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 2F94920B7166;
-	Tue,  7 Jul 2026 07:48:12 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2F94920B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1783435693;
-	bh=jZRO96unfBRPa4hmnICsULiigA4xhGgQeUwW9uBSN7c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=jCD1N2xCD97HB8h/7Xd9VHwi0f+vmVZsGMEZ0RLfbm9mvrKY8H9ja5k8PSAMrq5US
-	 znoXfGfJ2Gg6fI/jfFerPC6XQy/g79MMpXS7tHDNwPG8S/10KbOGHrV+GFbq2Yru/I
-	 ilErZQbReXPQ4sF24kgh5fOy7X6ZKcueVHgVWA+U=
-Date: Tue, 7 Jul 2026 07:48:14 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: Yu Zhang <zhangyu1@linux.microsoft.com>, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, wei.liu@kernel.org,
- kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
- longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- jgg@ziepe.ca, mhklinux@outlook.com, tgopinath@linux.microsoft.com,
- easwar.hariharan@linux.microsoft.com, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <20260707074814.000010a0@linux.microsoft.com>
-In-Reply-To: <1f57d1d9-ccbb-ff4e-9680-d45adc7821ea@linux.microsoft.com>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
-	<20260702160518.311234-4-zhangyu1@linux.microsoft.com>
-	<1f57d1d9-ccbb-ff4e-9680-d45adc7821ea@linux.microsoft.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCn30mtF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61E2A1F000E9;
+	Tue,  7 Jul 2026 15:36:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783438613;
+	bh=D3Hdmnxss7OooEgBEaSE5nTSXMIcAOWWTRBg34hgO0Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hCn30mtFhYuHNFmflRAj8e0RXUg7hftdiZ1o8Mm1go/UH+dJdJBodkFnxKdloC0OE
+	 So9Ac5qObrNlv4fVnj9kON4kDnG7uQ8LIe847OC8QYp3WF6dTE+pI9XrUh7zCsofkS
+	 REhK6j3D1uzmtnaK2F5/pkLzHhWOY42CP1Dd4Yy2UJV+0l73W1iR64BfaPa6Wbi8Ub
+	 DjE0pDbW5TFf5zShp2nTWaq+UJ2h9mJYXZXZc1KVAXypDLCzwYfWnIJTCyKe1uFt48
+	 5OvXbfaZE09kbe4ahUhkLAgy9F+xmn6bMs0CfLL+xx/5KTVH1fiQYU/el2jtg8hy65
+	 CgbU7o/kNV2Qg==
+Date: Tue, 7 Jul 2026 17:36:43 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Marek Vasut <marek.vasut@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: dwc: Determine whether iMSI is used before
+ calling .init
+Message-ID: <p4it4hcg24narbtjtoqdk6zg7wpfs5hc2mm77acyoi6hwfkh5u@5bqlwhylosmo>
+References: <20260701203918.63189-1-marek.vasut+renesas@mailbox.org>
+ <20260701203918.63189-2-marek.vasut+renesas@mailbox.org>
+ <4qyn4fljtb3cbzcmfpkdomkm7vqnwn2rfbtqng4iwmtvfd4bpj@t6kkw53erl7f>
+ <8a921ce9-e339-445a-af05-d20f9f2df01e@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8a921ce9-e339-445a-af05-d20f9f2df01e@mailbox.org>
 
-Hi Mukesh,
+On Mon, Jul 06, 2026 at 07:48:24PM +0200, Marek Vasut wrote:
+> On 7/6/26 6:43 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Jul 01, 2026 at 10:37:44PM +0200, Marek Vasut wrote:
+> > > The R-Car Gen4 PCIe controller integration configures MSI registers
+> > > in the controller driver .init callback, because those registers
+> > > have to be configured while PERST signal is asserted, and the PERST
+> > > signal is asserted across the controller driver .init callback.
+> > > 
+> > > The registers have to be configured differently in case the iMSI is
+> > > or is not used. Assign pp->use_imsi_rx before the controller driver
+> > > .init callback is called, so the controller driver .init callback
+> > > implementation can use the pp->use_imsi_rx value.
+> > > 
+> > > Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> > 
+> > LGTM!
+> Thank you. Can I get AB/RB before sending V4 ?
 
-On Mon, 6 Jul 2026 17:08:50 -0700
-Mukesh R <mrathor@linux.microsoft.com> wrote:
+Why? Since this series goes through PCI tree and all PCI patches are controller
+patches, I'm going to merge the series. So no need of the A-b/R-b tags.
 
-> From: Mukesh R <mrathor@linux.microsoft.com>
-> To: Yu Zhang <zhangyu1@linux.microsoft.com>,
-> linux-kernel@vger.kernel.org,  linux-hyperv@vger.kernel.org,
-> iommu@lists.linux.dev,  linux-pci@vger.kernel.org,
-> linux-arch@vger.kernel.org Cc: wei.liu@kernel.org, kys@microsoft.com,
-> haiyangz@microsoft.com,  decui@microsoft.com, longli@microsoft.com,
-> joro@8bytes.org, will@kernel.org,  robin.murphy@arm.com,
-> bhelgaas@google.com, kwilczynski@kernel.org,  lpieralisi@kernel.org,
-> mani@kernel.org, robh@kernel.org, arnd@arndb.de,  jgg@ziepe.ca,
-> mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
-> tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
-> Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU
-> support  for Hyper-V guest Date: Mon, 6 Jul 2026 17:08:50 -0700
-> User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
-> Thunderbird/91.13.1
-> 
-> On 7/2/26 09:05, Yu Zhang wrote:
-> > Add a para-virtualized IOMMU driver for Linux guests running on
-> > Hyper-V. This driver implements stage-1 IO translation within the
-> > guest OS. It integrates with the Linux IOMMU core, utilizing
-> > Hyper-V hypercalls for:
-> >   - Capability discovery
-> >   - Domain allocation, configuration, and deallocation
-> >   - Device attachment and detachment
-> >   - IOTLB invalidation
-> > 
-> > The driver constructs x86-compatible stage-1 IO page tables in the
-> > guest memory using consolidated IO page table helpers. This allows
-> > the guest to manage stage-1 translations independently of vendor-
-> > specific drivers (like Intel VT-d or AMD IOMMU).
-> > 
-> > Hyper-V consumes this stage-1 IO page table when a device domain is
-> > created and configured, and nests it with the host's stage-2 IO page
-> > tables, therefore eliminating the VM exits for guest IOMMU mapping
-> > operations. For unmapping operations, VM exits to perform the IOTLB
-> > flush are still unavoidable.
-> > 
-> > To identify a device in its hypercall interface, the driver looks
-> > up the logical device ID prefix registered for the device's PCI
-> > domain (see the logical device ID registry in hv_common.c) and
-> > combines it with the PCI function number of the endpoint device.
-> > 
-> > Co-developed-by: Wei Liu <wei.liu@kernel.org>
-> > Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> > Co-developed-by: Easwar Hariharan
-> > <easwar.hariharan@linux.microsoft.com> Signed-off-by: Easwar
-> > Hariharan <easwar.hariharan@linux.microsoft.com> Signed-off-by: Yu
-> > Zhang <zhangyu1@linux.microsoft.com> ---
-> >   arch/x86/hyperv/hv_init.c       |   4 +
-> >   arch/x86/include/asm/mshyperv.h |   4 +
-> >   drivers/iommu/Kconfig           |   1 +
-> >   drivers/iommu/hyperv/Kconfig    |  16 +
-> >   drivers/iommu/hyperv/Makefile   |   1 +
-> >   drivers/iommu/hyperv/iommu.c    | 620
-> > ++++++++++++++++++++++++++++++++ drivers/iommu/hyperv/iommu.h    |
-> > 51 +++ 7 files changed, 697 insertions(+)
-> >   create mode 100644 drivers/iommu/hyperv/Kconfig
-> >   create mode 100644 drivers/iommu/hyperv/iommu.c  
-> 
-> Hey Jacob,
-> 
-> You had suggested I rename iommu.c to iommu-root.c (I called it
-> hv-iommu-root.c eventually), so this needs to be renamed also,
-> right?
+- Mani
 
-yes, I agree. I feel it is clearer to name it hv-iommu-guest.c since
-this is a guest only driver.
+-- 
+மணிவண்ணன் சதாசிவம்
