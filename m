@@ -1,178 +1,122 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011013.outbound.protection.outlook.com [52.101.70.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB7D2F12A5;
-	Tue,  7 Jul 2026 06:31:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783405905; cv=fail; b=SCeBUBA5ouRXkjk15GrVJ6GLRsKBotXxK1iXgLPlWXF7LNllw3ZD3reyMceKGqyFdpMjbyp0/NH2FAlTFsKfEFNG3lqAgKBKWUh9EHxw/X9YEp3YMIuZj4/3/jkK29W0BPhaUhO+195930vKGDV7MDeIiW743Jm8UZf6chDrNJg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783405905; c=relaxed/simple;
-	bh=nNQ200gKRk42U6qFjyr9UFdwEQxw/PjW4Lif6Kz4ZVA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=BEyAlhqy4xTkh7G2gS2uOd9a7jLQwlnz1LIHIce8RxwkPw/2b5WaNPJkWS49+Dg/mI6OL9dne31FbTgptLs4hpQxfb5QxFyhyxhLwa7mEkMWfokT1BxWM55k9m2+g5rpVzR8Co0MdGuxWlb3ecIeGBCdx/AtZiaSZvY0nYrRiU8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=BZWOX5c6; arc=fail smtp.client-ip=52.101.70.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 627AA3AB285;
+	Tue,  7 Jul 2026 06:48:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783406899; cv=none; b=XQvzvr8fLMQHohrWvU102uZ9U75pLWYmiqy2pYh7+zaIGr0Ay4oC5KVpsw4zz4YbBzYKx5u+S26nLyyObFgU+XjUrcfh/pR4ZbaGF8kFGD77Pq9LD2EVUZJxlAmcbsTsSoS6IMAfh7qwwGP14a65nrEiFRnOWOAQcSefrdZVeTg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783406899; c=relaxed/simple;
+	bh=UwUjbwSrwUSMFsUgMlKlenkSVxB9MMMg7w0wXZ/EZEs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iPpFKvl2F2+9aYFqH1uaL75SM+IU6Sz9AMJf5CkGG/NJZ5aKw6Im+wrVYv+A031jGwX9toHXNjOeDrNAE88ECp+tzJF6wW5ze5PkckphrpAJBjIxVfooftj+cdvKDBJO+r4CZ/iBCIrC3KVIQzBKq/n2BNttexXWgHLPsz3gsVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TH9OBtFk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="BZWOX5c6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ai0llvNccEdETU2J8p18a8exakY6cdGRocO9AaaulU3Pv/cVikdkwUv4MZW6leaTv5BpInIjJ5SNoIOgMRwhSC1GRktUW2Qil9bHAEyt3RnS2d8NDURrG0ZGjkTdT4zP1GUMZ0arcpBweWOqgbsnty2XKMAOKOxN6Uorq4YEKjYyvURuzc7+EfCtPdEMvVA2lawb0ZBe4trnwWN7ZdVYbAPag49H0qDeoNgjT0J9+xWkMSroV2xyeZE1C1lSRiJKLWI5NS7LMFlabhyIv5rFjWijEDyMwXsLxTLvfwZtPs2mYJddKPtRraHd0O7qiEhp/P95DKi6NITt8+VIRWfTcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nNQ200gKRk42U6qFjyr9UFdwEQxw/PjW4Lif6Kz4ZVA=;
- b=SVqEU+mGNQHa9g4n/QUZQYmCmoSMvnS5+LbxNYVjvL31BMjX1MLvgbftwh45fGC/6Q1VUmuFWkypwU9nqakxVZsVPYj52FS5eYcjKJN4a7jGc4px93nRTY4VuwaaQNgABqIiiG+HnoPcY5CsgzAR9Ik3WuI7Kym4SWDzHJ+z7aKwHM+sPfc+5iTWaa+vAg/Da4nOsavugyZURdY5MPNNgSycb3npn49viPC9CHW6qBOhKypp4lXoLX0s19TvKos6trMvFNBBBuXmOwn8IoH/GRw+01Ht9mInvY+zRHsoJzAlnK9XIf6dezO/pGCCsmRTKRe+vi4aciNyISps5e8dlw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nNQ200gKRk42U6qFjyr9UFdwEQxw/PjW4Lif6Kz4ZVA=;
- b=BZWOX5c62wB8mHYAXiwWmKTq91f2PVx405AfJc3KwD6/Iftqti/89p7u6Q9Ueo/Ux/lHm+HmoUbgzvEF5UOOmlQjj+XBfx9IJ0gMZFiFe2DMO3WYf6WeA0nfRw+StZWDClGEwlDf+nnn60Rv9Zc4+C2gssi827CKfJNhkjC4OYEYtmMiz3KYSEkBv3q6P6cszOq4oTEsQ+95Cf7egUSd8eujYr7W2RSgkqs7kbeB9X2sQy2sIrAjQcsZLnXCqTa2be6VkYN85l+jwO8h5Ln/kCHwW3gWhSpED0Ie6gCLbvwukaekTFKmr8a2USYZAbxEa3E3R6ZBxm1xD6j6fWCNXA==
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- (2603:10a6:150:30c::14) by AM0PR04MB11855.eurprd04.prod.outlook.com
- (2603:10a6:20b:6fd::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.8; Tue, 7 Jul 2026
- 06:31:40 +0000
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0181.008; Tue, 7 Jul 2026
- 06:31:39 +0000
-From: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-To: Francesco Dolcini <francesco@dolcini.it>, "Hongxing Zhu (OSS)"
-	<hongxing.zhu@oss.nxp.com>
-CC: Frank Li <frank.li@nxp.com>, "smoch@web.de" <smoch@web.de>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, "s.hauer@pengutronix.de"
-	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
-	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: RE: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
- power and reference clock control
-Thread-Topic: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
- power and reference clock control
-Thread-Index: AQHdDPQZ0wHas+96Pka7gtnungxJKbZhmCkAgAACatA=
-Date: Tue, 7 Jul 2026 06:31:39 +0000
-Message-ID:
- <GV2PR04MB120193893B395EC33845C717C8CF02@GV2PR04MB12019.eurprd04.prod.outlook.com>
-References: <20260706030629.3264320-1-hongxing.zhu@oss.nxp.com>
- <20260707062250.GA20259@francesco-nb>
-In-Reply-To: <20260707062250.GA20259@francesco-nb>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|AM0PR04MB11855:EE_
-x-ms-office365-filtering-correlation-id: 29bb3213-a912-4ba0-6705-08dedbf1671a
-x-ms-exchange-sharedmailbox-routingagent-processed: True
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|7416014|1800799024|19092799006|376014|23010399003|366016|6133799003|22082099003|18002099003|4143699003|11063799006|56012099006|38070700021;
-x-microsoft-antispam-message-info:
- dgVTWA6Q6hRIh5rPb7h/ctqSjcSB3kFRK0ceEtjDznjKOIi28ZQz1fbmD9BNzUFG8x39pzSqv7+5ForXt85+rHwwmrlo5/byf+D5/Ubg+xVwrcTBmcECq//U3OJGAo/U7zyfvuP+GfTtfwAsQSrCF5YoeM4vpiy2Wn3y59Vj3Uy4pHLzUTUXadSUKhzmNEourfw3T4IkPidOztUkBvqy/V3Y9v+Wt1izF1Ng4fLMAq1I4VoG6/iVp/coqutsIWRjqhbKgsWF/W5Sc78dAQK/Kzac7Fvx7ONX5fDuPYGF/s9OdvSAO217FJjo43pgqvSR9na/OaKVW8X8Oq9/fJ/G1FP9lKcsMXcTzrGrFLwVjhZ/lUUgelxLJHtpP6KFjXDJ0QpnwDb/u5PVjE8o5IsfetA25IfWRdKh0+r2zr/52hmepYk8J/acUyxQqbew4iVO/1yq8QRHvhfW9B7+o+lBnasa6jW4NHZIh6HdwNPaoKurzKQew+wx3WvBsyoQpVm57Lnb6elYUZZDdBK67k4nVXrfFT+olMRnZfMWw+b8IDmZehnRucMFWkpMBeG/2s0ex4Zes767I8uX6c8kX00BaswfUR07pkggOl+jD9FrPqbfb+X0p7POPnhk11wZF25vedB2nAdiNDP9GzU4BjwJFxTYW5JMUPVb8M3RzJl29adHLKrPDuGpiSVcy0K2xENsFnVK7dw8LN/1CY2Ngp5N5ahCZcfDFQrcsZmiAFHl2/A=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(19092799006)(376014)(23010399003)(366016)(6133799003)(22082099003)(18002099003)(4143699003)(11063799006)(56012099006)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?eV2wNae43pbLxYZpMf5MwvrPYpG0Ct6dTjbzui5Sg+KPP7ApgdQ2DqKW36ES?=
- =?us-ascii?Q?w9FBYEbgLicrQR8Cp+UNj3kENLvAGrafk7c1Skpfdv4iGHI/PIYwDu1bdOF2?=
- =?us-ascii?Q?Yzp03oPNwQXURnWmnjySLweRHoe+8shG+oF9+V5tUqlSAFbqDoAIyOczuEOK?=
- =?us-ascii?Q?PDjibzSVtsz2wdlltPwTHQ+vV0yCdjivd1aLdQyzbabY8JH8tKgw9bhao5iV?=
- =?us-ascii?Q?TB//ORQmO44Jrf8iWAc18qHvmWXYkr+pdvEK0EkfZJpbNmNtDqMhrfA0G6rW?=
- =?us-ascii?Q?cA6QC//DOQGCXbbmf6fJusUGru3lsiomAEFDG6xRK761/39fSH/yAUVcf2+C?=
- =?us-ascii?Q?70XslzRikfBtv3dDPHudEEF5csKLukXAF+6hsGUo1FUwyrTl7DOjGfKw3Civ?=
- =?us-ascii?Q?5iKFEb9hVX8r5oo5rydjsgMUkvtoWUP3OQuUtWBTm3K+qegcAFlFaaQiCjRn?=
- =?us-ascii?Q?nh2UjEGRBpgvSrQBUgLbzWVFJ/nqigP4JqN0m1tiabs3HWsEUkNnA0/r2FJr?=
- =?us-ascii?Q?vnyke5heeBS7Kc4HPr52/dwdk1bhFJxqmL6nM9O4FYKWZVws7Qc0S+RrrfGX?=
- =?us-ascii?Q?qrOESfdfi4rsjfcKqzpRZOXuWtUwBSUjXD1GC4ywC4wfBokBpz8H+8ikbSWT?=
- =?us-ascii?Q?ppvYXcU6/dDw9ijBRFEoBOX4fNdATEEHznY/UqVojL7ElZTdh5t/kNJ/I3xZ?=
- =?us-ascii?Q?W1Z/dH2vsojyKQnjmYZXGEoGh6DvR5lg7PNIOfQFVLxx47xjFUx3SzwkxuIf?=
- =?us-ascii?Q?AVeE7bBzTPUBcNBUm6DrzrXnKHukXrdgmv9jqJVv0SKQFg8zvElfutPb+cer?=
- =?us-ascii?Q?uJWrwXv7AtBamfPFBvM+BjK83IOTANbXTU4ke+GBVYqUW/IY24QogWOv3DIt?=
- =?us-ascii?Q?JU7d7D5e5bq1bBpd0pyAVt4vVZnP1pG1NUefenuSAiiAzxLfOzGDfojH+V+3?=
- =?us-ascii?Q?We8xCoWjhnWfO54znUxiuRDW2f2CaxOLdXhn5v5uOY2Aqw13XxAFaee8S9aV?=
- =?us-ascii?Q?w2IUYpS9mwlVPfGXC+tdj4E/X/ms8RFcpy6PUci7z7xSs49OAbQJfkObwOlz?=
- =?us-ascii?Q?VN+UixZEFghenldELkH80uBFX8cQmZJjwtUNeTbGNACxdWAy84UUuxtz9QpG?=
- =?us-ascii?Q?QpsAV3wJNqCM9jKbdfJoKI3jkDzy32edF20CaDOx3C7zpksmK6LWUowMbVK8?=
- =?us-ascii?Q?Rc/y2WgGI30Hs4l/gXwxyo+Y1yt4V4F2Fb8Q4mzNO6jJmkhEjmki8EEMK5lY?=
- =?us-ascii?Q?cC/1Q1re8h+bXvmXbarIP+X6zJ3eD163hs6lIcTL/LUX6PnvGfsIAtCokoHb?=
- =?us-ascii?Q?WSBv//ZVfJzJabIPEC3FZxLy4IdrRnr9eOk1lMhKVSenpYUQINeevR4qFS49?=
- =?us-ascii?Q?fHwG6ULlICdQsEpCiF8deetbd0WNT53MQIYNB7ICF7+7uBbEEJ6zO9PU62op?=
- =?us-ascii?Q?dSjAAGKTiKwf3HkhmIyq3xdQrTUHFTplBTxeXGsp7CQBYBLAI7CejQH2kvax?=
- =?us-ascii?Q?1PxzP4nlOsE+Kjx6S9nWpOjZRziJRlAAGhA5N210sAMV2+23h527RzK+9UBS?=
- =?us-ascii?Q?t5kIYjGoSo+PrAl5OXKNIeA3RiPK8cGAJBKytKrKu5MkQZBXIvlGdbCEqzHZ?=
- =?us-ascii?Q?Jtn4M4YgCjS7kNQJsAYoUzEoJyQsNjXNyqV7wRAdx7pC2QN4uviYxsXYrKy3?=
- =?us-ascii?Q?lanS94Pl/qYE8yeYgo2lUJeeFo8pjAqEAnjRFcWH4C5nmapxsg70ycEitSAo?=
- =?us-ascii?Q?yUt1PTeBnQ=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TH9OBtFk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 886F51F000E9;
+	Tue,  7 Jul 2026 06:48:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783406898;
+	bh=Hac1D+DwkuFoG+G5po4P0T2lLHD81goBLdqm6cccAAY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TH9OBtFkWh6yDb+swE9L0AP0Cfza5ifewJC9fCyNVxzdtFX654XOAQxmTCIdwkF5c
+	 roEsiK2qWY5xCEu2XhpkJE+Cmfle4Wo8HAabFOyCG6VIwXhDzZrQJws5B9GPtecC8J
+	 KFEUfU9X4jbwcoD6inu5drqF13ClAh/qGkKr+/3xXumgYeQAqhEO9wYsd3+zID3DMk
+	 FRwjkVSOr75iihiK3gkw4Z6Gq50N5pBmoIEIgix0/J2VfcTR3+XZFDmuJ+m2uUoLVj
+	 nD/DNGbw5E6kErE0yg63oi2Lr4mtbZgJlPmreVJwo/M4mq9pZ6CdNRByUJ6CPt2/F6
+	 QQxnhtlwEhecQ==
+Date: Tue, 7 Jul 2026 08:48:08 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/9] dt-bindings: PCI: Add bindings for endpoint gpios
+Message-ID: <34ao6p6f3alyqynyscpdmc7k4svmbcrlmamzhwjq2qdn47lnm5@u5bpordfbams>
+References: <20260701-shikra-upstream-v1-0-e1a721eb8943@oss.qualcomm.com>
+ <20260701-shikra-upstream-v1-3-e1a721eb8943@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 29bb3213-a912-4ba0-6705-08dedbf1671a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Jul 2026 06:31:39.5942
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: J4h1/lGUcleL2YSsoHpMWcheXZXTyRnXGsY9wAcxEI8ufdc0LlG9IXg8rh8xs/LIuW/AmQtrdyMLyR94FMS0pg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB11855
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260701-shikra-upstream-v1-3-e1a721eb8943@oss.qualcomm.com>
 
-> -----Original Message-----
-> From: Francesco Dolcini <francesco@dolcini.it>
-> Sent: Tuesday, July 7, 2026 2:23 PM
-> To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> Cc: Frank Li <frank.li@nxp.com>; smoch@web.de; l.stach@pengutronix.de;
-> lpieralisi@kernel.org; kwilczynski@kernel.org; mani@kernel.org;
-> robh@kernel.org; bhelgaas@google.com; s.hauer@pengutronix.de;
-> kernel@pengutronix.de; festevam@gmail.com; linux-pci@vger.kernel.org;
-> linux-arm-kernel@lists.infradead.org; imx@lists.linux.dev; linux-
-> kernel@vger.kernel.org; Hongxing Zhu <hongxing.zhu@nxp.com>
-> Subject: Re: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating =
-PHY
-> power and reference clock control
->=20
-> [You don't often get email from francesco@dolcini.it. Learn why this is
-> important at https://aka.ms/LearnAboutSenderIdentification ]
->=20
-> On Mon, Jul 06, 2026 at 11:06:29AM +0800, hongxing.zhu@oss.nxp.com
-> wrote:
-> > From: Richard Zhu <hongxing.zhu@nxp.com>
-> >
-> > Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
-> > regulators") introduced a boot hang on i.MX6Q/DL variants by changing
-> > the initialization sequence.
->=20
-> Is this related to
->=20
-> https://lore.kernel.org/all/20260629143439.361560-1-
-> leoreis.costa@gmail.com/
->=20
-> ?
-Yes, it is like my test results.
-Thanks for your reminder.
+On Wed, Jul 01, 2026 at 12:32:45AM +0530, Sushrut Shree Trivedi wrote:
 
-Best Regards
-Richard Zhu
->=20
-> Thanks,
-> Francesco
+Use proper prefix for the subject.
 
+> Add devicetree bindings for TC9563 GPIO's which are
+> used to control endpoint power and reset.
+> 
+> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+> ---
+>  .../devicetree/bindings/pci/toshiba,tc9563.yaml    | 22 +++++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> index b3ad05d90201..f9f71f28aa92 100644
+> --- a/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> +++ b/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml
+> @@ -26,6 +26,11 @@ properties:
+>    reg:
+>      maxItems: 1
+>  
+> +  gpio-controller: true
+> +
+> +  '#gpio-cells':
+> +        const: 2
+
+Fix indent.
+
+> +
+>    resx-gpios:
+>      maxItems: 1
+>      description:
+> @@ -69,6 +74,17 @@ $defs:
+>      type: object
+>  
+>      properties:
+> +      reset-gpios:
+> +        description:
+> +          Specify the TC9563 GPIO used to reset the endpoint
+> +          connected to the particular TC9563 downstream port.
+> +
+
+This the PERST# signal, isn't it? If so, mention it as-is.
+
+> +      ep-pwr-en-gpios:
+> +        description:
+> +          Specify the TC9563 GPIO used for enabling power to
+> +          the endpoint connected to the particular TC9563
+> +          downstream port.
+> +
+
+So this GPIO controls 3.3v supply to the endpoint? If so, it should be described
+as a GPIO controlled regulator:
+
+	vreg_pcie_3v3: regulator-pcie-3v3 {
+		compatible = "regulator-fixed";		
+		...
+		gpio = <&tc9563 2 GPIO_ACTIVE_HIGH>;
+		...
+	};
+
+And then you should let the pwrctrl driver control the upstream port. The upside
+here is that the pwrctrl driver already controls both 3.3v and reset-gpios
+(PERST#). So you do not need to have any change in the TC9563 driver.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
