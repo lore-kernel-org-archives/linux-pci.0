@@ -1,866 +1,658 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6D76C800;
-	Tue,  7 Jul 2026 00:08:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B396522301;
+	Tue,  7 Jul 2026 00:22:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783382935; cv=none; b=RvLgP2OSueJLyMOo1Nofp/mj6DfTJgIJBiu0sxKGheSvfWSJUF8w7OuDhl0q7iBjEpBuD5GvTmwEFTCOZ6gP30+0HLypipDfe8AVlTyOAyN8Lp/Igi+yIKaMDch+vwvBWKxzUO1o3u2srN3088AyKUiqJFZtN3KbLGxdHOVu4DM=
+	t=1783383747; cv=none; b=nM/HmYongwVhP5i9vGQtji+GKJu0Uh4N8lNujeGaH9rDszdInj4S7DXwiW840v2sYxSsGb+rMRWrPgeybXHdz6CRtBKrYz5sld3QEYOw+QJcEMg1mfNzB28PzZrbteJAeqCALuLWxaNSzsyi5DHRcGr5q0WKaHXn2G/nhTPDIx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783382935; c=relaxed/simple;
-	bh=vQ3Ot95KpfffyDmcrFtzU0a0dI2cIUNNfcN/bq7H3SQ=;
+	s=arc-20240116; t=1783383747; c=relaxed/simple;
+	bh=/jO4qytjAalu21b8tVuH9tW9VBbhouPVvUtNrvNULSI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MllQF6K0hxFva1kkkWQYiyqzX14gi0huXxfSWNzvC8aHyZ2GvHTK9+l21qj05qXcKpuBnye6PioHRvGyQNWxrhN8xwEGKyb/SYURl38OaP0u4PuePQjNuVMCE4V57mQb5E1WTC/NIQEsANwbm/loLYS0iDp2I1OKeU0jNV1+gYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=aQvzZMf/; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 In-Reply-To:Content-Type; b=eBghq6ro8va2ywEggpGelnZjtiChFMV7h450TqpUb2ZSwyE5pdv0C3Pmzn+i/3mI1fmbENUlTlfS5YRKBA9vepxShhaRG14Od7ElX7eKlZw9pgpYDloWBgoP6b3BSMxxwSlM81jBmLYWXZfQ12wcRfmc2QZXDCF4s52JpVEuRyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H3iP4Zoa; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="aQvzZMf/"
-Received: from [100.93.32.144] (unknown [40.86.181.13])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 30FF420B7166;
-	Mon,  6 Jul 2026 17:08:47 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 30FF420B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1783382928;
-	bh=pFWAGiTTjEpk9ajKWI0+o1+G3RvkLcvrJIrY5UwPX2g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aQvzZMf/gb2exMPujaE7V8XuGW0JYXnNHovxoB+ekR8FtlodMjfhkxccPtOJBlaWi
-	 kNms+czv8QBVwb6QoaI32GZy3t1tmKaVPEor2NS2MMEQlGVHkmXhWLmxmB+FGnA49G
-	 4u0pAw/2vVklT7ZQCAZ5ZqBgrTyucvad4zoJLEkY=
-Message-ID: <1f57d1d9-ccbb-ff4e-9680-d45adc7821ea@linux.microsoft.com>
-Date: Mon, 6 Jul 2026 17:08:50 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H3iP4Zoa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783383746; x=1814919746;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=/jO4qytjAalu21b8tVuH9tW9VBbhouPVvUtNrvNULSI=;
+  b=H3iP4ZoakQ9OidcXukqJTb7fAh8yYi/ZKbth0h7uFth2g14pDckUzbY5
+   qkaTFMGhN+mBkwSBBl9jmijMUQF6PBKxOUmrK/di7sgspvOXcZea2SG0e
+   6vWBLXTNKxqLevG6vxXjVoJ16EXDu+S7dwx49//raWVtog8krhdUSvMro
+   kGQ1gdudt4Aw4SdpLtvOPytaeq3nzYRQAz2xcmI1WoK9HBQJ7k+X/PVz3
+   u0OGV3cLnahJvRHE35aeXUTnjJILNdeweSG6E42gQyLFJw4SL185PRUmX
+   7vZ8g5nlqB5j5pkutQ9iyzdg08pp6WD8ysAFn2LDfMwquRYxLM3a93jqg
+   Q==;
+X-CSE-ConnectionGUID: 220A72QlRAqexjdYWSrErQ==
+X-CSE-MsgGUID: 5yfP0uxLTRGeF9rGAZzwAQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11839"; a="101447281"
+X-IronPort-AV: E=Sophos;i="6.25,151,1779174000"; 
+   d="scan'208";a="101447281"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2026 17:22:25 -0700
+X-CSE-ConnectionGUID: EKhccX1GRpO2FkmjdH+LqQ==
+X-CSE-MsgGUID: Q+3trOLAQDurTXrUUNmYkw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,151,1779174000"; 
+   d="scan'208";a="257426054"
+Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.110.202]) ([10.125.110.202])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2026 17:22:22 -0700
+Message-ID: <b7e43392-acdb-47d6-a4ba-45f319551b15@intel.com>
+Date: Mon, 6 Jul 2026 17:22:21 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 01/10] cxl: Split decoder programming into a reusable
+ helper
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
+ Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com, Dan Williams <danwilliams@nvidia.com>,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260703220508.546528-1-smadhavan@nvidia.com>
+ <20260703220508.546528-2-smadhavan@nvidia.com>
 Content-Language: en-US
-To: Yu Zhang <zhangyu1@linux.microsoft.com>, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Cc: wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- jgg@ziepe.ca, mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
- tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260703220508.546528-2-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/2/26 09:05, Yu Zhang wrote:
-> Add a para-virtualized IOMMU driver for Linux guests running on Hyper-V.
-> This driver implements stage-1 IO translation within the guest OS.
-> It integrates with the Linux IOMMU core, utilizing Hyper-V hypercalls
-> for:
->   - Capability discovery
->   - Domain allocation, configuration, and deallocation
->   - Device attachment and detachment
->   - IOTLB invalidation
+
+
+On 7/3/26 3:04 PM, Srirangan Madhavan wrote:
+> Move common HDM decoder settings to include/cxl/cxl.h and route the
+> register programming sequence through cxl_commit(). This lets reset code
+> restore cached HDM state without depending on private cxl_core types while
+> keeping hdm.c in charge of the existing commit policy checks.
 > 
-> The driver constructs x86-compatible stage-1 IO page tables in the
-> guest memory using consolidated IO page table helpers. This allows
-> the guest to manage stage-1 translations independently of vendor-
-> specific drivers (like Intel VT-d or AMD IOMMU).
+> Build the low-level HDM helper under CONFIG_CXL_HDM so it is available even
+> when cxl_core is modular.
+
+Maybe this patch would be cleaner to review if there's a prep patch that move things that needs to be moved without the additional changes as well.
+
 > 
-> Hyper-V consumes this stage-1 IO page table when a device domain is
-> created and configured, and nests it with the host's stage-2 IO page
-> tables, therefore eliminating the VM exits for guest IOMMU mapping
-> operations. For unmapping operations, VM exits to perform the IOTLB
-> flush are still unavoidable.
-> 
-> To identify a device in its hypercall interface, the driver looks up the
-> logical device ID prefix registered for the device's PCI domain (see the
-> logical device ID registry in hv_common.c) and combines it with the PCI
-> function number of the endpoint device.
-> 
-> Co-developed-by: Wei Liu <wei.liu@kernel.org>
-> Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > ---
->   arch/x86/hyperv/hv_init.c       |   4 +
->   arch/x86/include/asm/mshyperv.h |   4 +
->   drivers/iommu/Kconfig           |   1 +
->   drivers/iommu/hyperv/Kconfig    |  16 +
->   drivers/iommu/hyperv/Makefile   |   1 +
->   drivers/iommu/hyperv/iommu.c    | 620 ++++++++++++++++++++++++++++++++
->   drivers/iommu/hyperv/iommu.h    |  51 +++
->   7 files changed, 697 insertions(+)
->   create mode 100644 drivers/iommu/hyperv/Kconfig
->   create mode 100644 drivers/iommu/hyperv/iommu.c
-
-Hey Jacob,
-
-You had suggested I rename iommu.c to iommu-root.c (I called it
-hv-iommu-root.c eventually), so this needs to be renamed also,
-right?
-
-Thanks,
--Mukesh
-
->   create mode 100644 drivers/iommu/hyperv/iommu.h
+>  drivers/cxl/Kconfig          |   4 ++
+>  drivers/cxl/core/Makefile    |   1 +
+>  drivers/cxl/core/hdm.c       | 122 ++++-------------------------------
+>  drivers/cxl/core/region.c    |   6 +-
+>  drivers/cxl/core/reset.c     | 118 +++++++++++++++++++++++++++++++++
+>  drivers/cxl/cxl.h            |  43 ------------
+>  include/cxl/cxl.h            |  55 +++++++++++++++-
+>  tools/testing/cxl/test/cxl.c |  10 +--
+>  8 files changed, 197 insertions(+), 162 deletions(-)
+>  create mode 100644 drivers/cxl/core/reset.c
 > 
-> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
-> index 55a8b6de2865..094f9f7ddb72 100644
-> --- a/arch/x86/hyperv/hv_init.c
-> +++ b/arch/x86/hyperv/hv_init.c
-> @@ -578,6 +578,10 @@ void __init hyperv_init(void)
->   	old_setup_percpu_clockev = x86_init.timers.setup_percpu_clockev;
->   	x86_init.timers.setup_percpu_clockev = hv_stimer_setup_percpu_clockev;
->   
-> +#ifdef CONFIG_HYPERV_PVIOMMU
-> +	x86_init.iommu.iommu_init = hv_iommu_init;
-> +#endif
+> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> index 80aeb0d556bd..87d719ea1e14 100644
+> --- a/drivers/cxl/Kconfig
+> +++ b/drivers/cxl/Kconfig
+> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
+>  	select FW_UPLOAD
+>  	select PCI_DOE
+>  	select FIRMWARE_TABLE
+> +	select CXL_HDM
+>  	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
+>  	select FWCTL if CXL_FEATURES
+>  	help
+> @@ -243,4 +244,7 @@ config CXL_ATL
+>  	depends on CXL_REGION
+>  	depends on ACPI_PRMT && AMD_NB
+>  
+> +config CXL_HDM
+> +	bool
 > +
->   	hv_apic_init();
->   
->   	x86_init.pci.arch_init = hv_pci_init;
-> diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
-> index f64393e853ee..20d947c2c758 100644
-> --- a/arch/x86/include/asm/mshyperv.h
-> +++ b/arch/x86/include/asm/mshyperv.h
-> @@ -313,6 +313,10 @@ static inline void mshv_vtl_return_hypercall(void) {}
->   static inline void __mshv_vtl_return_call(struct mshv_vtl_cpu_context *vtl0) {}
->   #endif
->   
-> +#ifdef CONFIG_HYPERV_PVIOMMU
-> +int __init hv_iommu_init(void);
-> +#endif
+>  endif
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index ce7213818d3c..dc075cee0450 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> +obj-$(CONFIG_CXL_HDM) += reset.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+>  
+>  ccflags-y += -I$(srctree)/drivers/cxl
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 0c80b76a5f9b..fa978c297546 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -16,11 +16,6 @@
+>   * for enumerating these registers and capabilities.
+>   */
+>  
+> -struct cxl_rwsem cxl_rwsem = {
+> -	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> -	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
+> -};
+> -
+>  static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld)
+>  {
+>  	int rc;
+> @@ -255,11 +250,11 @@ static void __cxl_dpa_release(struct cxl_endpoint_decoder *cxled)
+>  	lockdep_assert_held_write(&cxl_rwsem.dpa);
+>  
+>  	/* save @skip_start, before @res is released */
+> -	skip_start = res->start - cxled->skip;
+> +	skip_start = res->start - cxled->cxld.skip;
+>  	__release_region(&cxlds->dpa_res, res->start, resource_size(res));
+> -	if (cxled->skip)
+> -		release_skip(cxlds, skip_start, cxled->skip);
+> -	cxled->skip = 0;
+> +	if (cxled->cxld.skip)
+> +		release_skip(cxlds, skip_start, cxled->cxld.skip);
+> +	cxled->cxld.skip = 0;
+>  	cxled->dpa_res = NULL;
+>  	put_device(&cxled->cxld.dev);
+>  	port->hdm_end--;
+> @@ -388,7 +383,7 @@ static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
+>  		return -EBUSY;
+>  	}
+>  	cxled->dpa_res = res;
+> -	cxled->skip = skipped;
+> +	cxled->cxld.skip = skipped;
+>  
+>  	/*
+>  	 * When allocating new capacity, ->part is already set, when
+> @@ -679,35 +674,6 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+> -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> -{
+> -	u16 eig;
+> -	u8 eiw;
+> -
+> -	/*
+> -	 * Input validation ensures these warns never fire, but otherwise
+> -	 * suppress unititalized variable usage warnings.
+> -	 */
+> -	if (WARN_ONCE(ways_to_eiw(cxld->interleave_ways, &eiw),
+> -		      "invalid interleave_ways: %d\n", cxld->interleave_ways))
+> -		return;
+> -	if (WARN_ONCE(granularity_to_eig(cxld->interleave_granularity, &eig),
+> -		      "invalid interleave_granularity: %d\n",
+> -		      cxld->interleave_granularity))
+> -		return;
+> -
+> -	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> -	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> -	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> -}
+> -
+> -static void cxld_set_type(struct cxl_decoder *cxld, u32 *ctrl)
+> -{
+> -	u32p_replace_bits(ctrl,
+> -			  !!(cxld->target_type == CXL_DECODER_HOSTONLYMEM),
+> -			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> -}
+> -
+>  static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  {
+>  	struct cxl_dport **t = &cxlsd->target[0];
+> @@ -730,73 +696,6 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
+>  }
+>  
+> -/*
+> - * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> - * committed or error within 10ms, but just be generous with 20ms to account for
+> - * clock skew and other marginal behavior
+> - */
+> -#define COMMIT_TIMEOUT_MS 20
+> -static int cxld_await_commit(void __iomem *hdm, int id)
+> -{
+> -	u32 ctrl;
+> -	int i;
+> -
+> -	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> -		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> -			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> -			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -			return -EIO;
+> -		}
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> -			return 0;
+> -		fsleep(1000);
+> -	}
+> -
+> -	return -ETIMEDOUT;
+> -}
+> -
+> -static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
+> -{
+> -	int id = cxld->id;
+> -	u64 base, size;
+> -	u32 ctrl;
+> -
+> -	/* common decoder settings */
+> -	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
+> -	cxld_set_interleave(cxld, &ctrl);
+> -	cxld_set_type(cxld, &ctrl);
+> -	base = cxld->hpa_range.start;
+> -	size = range_len(&cxld->hpa_range);
+> -
+> -	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> -	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> -
+> -	if (is_switch_decoder(&cxld->dev)) {
+> -		struct cxl_switch_decoder *cxlsd =
+> -			to_cxl_switch_decoder(&cxld->dev);
+> -		void __iomem *tl_hi = hdm + CXL_HDM_DECODER0_TL_HIGH(id);
+> -		void __iomem *tl_lo = hdm + CXL_HDM_DECODER0_TL_LOW(id);
+> -		u64 targets;
+> -
+> -		cxlsd_set_targets(cxlsd, &targets);
+> -		writel(upper_32_bits(targets), tl_hi);
+> -		writel(lower_32_bits(targets), tl_lo);
+> -	} else {
+> -		struct cxl_endpoint_decoder *cxled =
+> -			to_cxl_endpoint_decoder(&cxld->dev);
+> -		void __iomem *sk_hi = hdm + CXL_HDM_DECODER0_SKIP_HIGH(id);
+> -		void __iomem *sk_lo = hdm + CXL_HDM_DECODER0_SKIP_LOW(id);
+> -
+> -		writel(upper_32_bits(cxled->skip), sk_hi);
+> -		writel(lower_32_bits(cxled->skip), sk_lo);
+> -	}
+> -
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -}
+> -
+>  static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  {
+>  	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
+> @@ -834,17 +733,20 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>  		}
+>  	}
+>  
+> -	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
+> -		setup_hw_decoder(cxld, hdm);
+> +	if (is_switch_decoder(&cxld->dev)) {
+> +		struct cxl_switch_decoder *cxlsd =
+> +			to_cxl_switch_decoder(&cxld->dev);
 > +
->   #include <asm-generic/mshyperv.h>
->   
->   #endif
-> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-> index 6e07bd69467a..0d128f377929 100644
-> --- a/drivers/iommu/Kconfig
-> +++ b/drivers/iommu/Kconfig
-> @@ -195,6 +195,7 @@ config MSM_IOMMU
->   source "drivers/iommu/amd/Kconfig"
->   source "drivers/iommu/arm/Kconfig"
->   source "drivers/iommu/intel/Kconfig"
-> +source "drivers/iommu/hyperv/Kconfig"
->   source "drivers/iommu/iommufd/Kconfig"
->   source "drivers/iommu/riscv/Kconfig"
->   
-> diff --git a/drivers/iommu/hyperv/Kconfig b/drivers/iommu/hyperv/Kconfig
+> +		cxlsd_set_targets(cxlsd, &cxld->targets);
+> +	}
+>  
+> -	rc = cxld_await_commit(hdm, cxld->id);
+> +	rc = cxl_commit(&cxld->settings, hdm);
+>  	if (rc) {
+>  		dev_dbg(&port->dev, "%s: error %d committing decoder\n",
+>  			dev_name(&cxld->dev), rc);
+>  		return rc;
+>  	}
+>  	port->commit_end++;
+> -	cxld->flags |= CXL_DECODER_F_ENABLE;
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
+> index ce99f0650764..00f79b4862cb 100644
+> --- a/drivers/cxl/core/region.c
+> +++ b/drivers/cxl/core/region.c
+> @@ -2954,9 +2954,9 @@ static int poison_by_decoder(struct device *dev, void *arg)
+>  	cxlds = cxlmd->cxlds;
+>  	mode = cxlds->part[cxled->part].mode;
+>  
+> -	if (cxled->skip) {
+> -		offset = cxled->dpa_res->start - cxled->skip;
+> -		length = cxled->skip;
+> +	if (cxled->cxld.skip) {
+> +		offset = cxled->dpa_res->start - cxled->cxld.skip;
+> +		length = cxled->cxld.skip;
+>  		rc = cxl_mem_get_poison(cxlmd, offset, length, NULL);
+>  		if (rc == -EFAULT && mode == CXL_PARTMODE_RAM)
+>  			rc = 0;
+> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
 > new file mode 100644
-> index 000000000000..8b6abbaaf9b8
+> index 000000000000..14f024098e82
 > --- /dev/null
-> +++ b/drivers/iommu/hyperv/Kconfig
-> @@ -0,0 +1,16 @@
-> +# SPDX-License-Identifier: GPL-2.0-only
-> +# HyperV paravirtualized IOMMU support
-> +config HYPERV_PVIOMMU
-> +	bool "Microsoft Hypervisor para-virtualized IOMMU support"
-> +	depends on X86_64 && HYPERV
-> +	select IOMMU_API
-> +	select GENERIC_PT
-> +	select IOMMU_PT
-> +	select IOMMU_PT_X86_64
-> +	select IOMMU_IOVA
-> +	default HYPERV
-> +	help
-> +	  Para-virtualized IOMMU driver for Linux guests running on
-> +	  Microsoft Hyper-V. Provides DMA remapping and IOTLB
-> +	  flush support to enable DMA isolation for devices
-> +	  assigned to the guest.
-> diff --git a/drivers/iommu/hyperv/Makefile b/drivers/iommu/hyperv/Makefile
-> index 6ef0ef97f3dd..fefb409d976b 100644
-> --- a/drivers/iommu/hyperv/Makefile
-> +++ b/drivers/iommu/hyperv/Makefile
-> @@ -1,2 +1,3 @@
->   # SPDX-License-Identifier: GPL-2.0
->   obj-$(CONFIG_IRQ_REMAP) += hv-irq-remap-x86.o
-> +obj-$(CONFIG_HYPERV_PVIOMMU) += iommu.o
-> diff --git a/drivers/iommu/hyperv/iommu.c b/drivers/iommu/hyperv/iommu.c
-> new file mode 100644
-> index 000000000000..254136946404
-> --- /dev/null
-> +++ b/drivers/iommu/hyperv/iommu.c
-> @@ -0,0 +1,620 @@
-> +// SPDX-License-Identifier: GPL-2.0
+> +++ b/drivers/cxl/core/reset.c
+
+While I can't come up with a better name for this file, putting decoder bits in reset.c just doesn't seem right. There has to be a better name to represent what's in this file. Especially against CONFIG_CXL_HDM. Maybe hdm_lib.c and CONFIG_CXL_HDM_LIB? idk....
+
+> @@ -0,0 +1,118 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright(c) 2026 NVIDIA Corporation. All rights reserved. */
+> +#include <linux/delay.h>
+> +#include <linux/bug.h>
+> +#include <linux/errno.h>
+> +#include <linux/export.h>
+> +#include <linux/kernel.h>
 > +
-> +/*
-> + * Hyper-V IOMMU driver.
-> + *
-> + * Copyright (C) 2019, 2024-2026 Microsoft, Inc.
-> + */
+> +#include "cxl.h"
+> +#include "core.h"
 > +
-> +#define pr_fmt(fmt) "Hyper-V pvIOMMU: " fmt
-> +#define dev_fmt(fmt) pr_fmt(fmt)
-> +
-> +#include <linux/iommu.h>
-> +#include <linux/pci.h>
-> +#include <linux/dma-map-ops.h>
-> +#include <linux/generic_pt/iommu.h>
-> +#include <linux/pci-ats.h>
-> +
-> +#include <asm/iommu.h>
-> +#include <asm/hypervisor.h>
-> +#include <asm/mshyperv.h>
-> +
-> +#include "iommu.h"
-> +#include "../iommu-pages.h"
-> +
-> +struct hv_iommu_dev *hv_iommu_device;
-> +
-> +/*
-> + * Identity and blocking domains are static singletons: identity is a 1:1
-> + * passthrough with no page table, blocking rejects all DMA. Neither holds
-> + * per-IOMMU state, so one instance suffices even with multiple vIOMMUs.
-> + */
-> +static const struct iommu_domain_ops hv_iommu_identity_domain_ops;
-> +static const struct iommu_domain_ops hv_iommu_blocking_domain_ops;
-> +static struct iommu_ops hv_iommu_ops;
-> +
-> +static struct hv_iommu_domain hv_identity_domain = {
-> +	.domain = {
-> +		.type	= IOMMU_DOMAIN_IDENTITY,
-> +		.ops	= &hv_iommu_identity_domain_ops,
-> +		.owner	= &hv_iommu_ops,
-> +	},
+> +struct cxl_rwsem cxl_rwsem = {
+> +	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> +	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
 > +};
-> +static struct hv_iommu_domain hv_blocking_domain = {
-> +	.domain = {
-> +		.type	= IOMMU_DOMAIN_BLOCKED,
-> +		.ops	= &hv_iommu_blocking_domain_ops,
-> +		.owner	= &hv_iommu_ops,
-> +	},
-> +};
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
 > +
-> +static inline bool hv_iommu_present(u64 cap)
+> +static void cxld_set_interleave(struct cxl_decoder_settings *settings, u32 *ctrl)
 > +{
-> +	return cap & HV_IOMMU_CAP_PRESENT;
-> +}
-> +
-> +static inline bool hv_iommu_s1_domain_supported(u64 cap)
-> +{
-> +	return cap & HV_IOMMU_CAP_S1;
-> +}
-> +
-> +static inline bool hv_iommu_5lvl_supported(u64 cap)
-> +{
-> +	return cap & HV_IOMMU_CAP_S1_5LVL;
-> +}
-> +
-> +static inline bool hv_iommu_ats_supported(u64 cap)
-> +{
-> +	return cap & HV_IOMMU_CAP_ATS;
-> +}
-> +
-> +static int hv_create_device_domain(struct hv_iommu_domain *hv_domain, u32 domain_stage)
-> +{
-> +	int ret;
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct hv_input_create_device_domain *input;
-> +
-> +	ret = ida_alloc_range(&hv_iommu_device->domain_ids,
-> +			hv_iommu_device->first_domain, hv_iommu_device->last_domain,
-> +			GFP_KERNEL);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	hv_domain->device_domain.partition_id = HV_PARTITION_ID_SELF;
-> +	hv_domain->device_domain.domain_id.type = domain_stage;
-> +	hv_domain->device_domain.domain_id.id = ret;
-> +	hv_domain->hv_iommu = hv_iommu_device;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +	input->device_domain = hv_domain->device_domain;
-> +	input->create_device_domain_flags.forward_progress_required = 1;
-> +	input->create_device_domain_flags.inherit_owning_vtl = 0;
-> +	status = hv_do_hypercall(HVCALL_CREATE_DEVICE_DOMAIN, input, NULL);
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status)) {
-> +		pr_err("HVCALL_CREATE_DEVICE_DOMAIN failed, status %lld\n", status);
-> +		ida_free(&hv_iommu_device->domain_ids, hv_domain->device_domain.domain_id.id);
-> +	}
-> +
-> +	return hv_result_to_errno(status);
-> +}
-> +
-> +static void hv_delete_device_domain(struct hv_iommu_domain *hv_domain)
-> +{
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct hv_input_delete_device_domain *input;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +	input->device_domain = hv_domain->device_domain;
-> +	status = hv_do_hypercall(HVCALL_DELETE_DEVICE_DOMAIN, input, NULL);
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_DELETE_DEVICE_DOMAIN failed, status %lld\n", status);
-> +
-> +	ida_free(&hv_domain->hv_iommu->domain_ids, hv_domain->device_domain.domain_id.id);
-> +}
-> +
-> +static bool hv_iommu_capable(struct device *dev, enum iommu_cap cap)
-> +{
-> +	switch (cap) {
-> +	case IOMMU_CAP_CACHE_COHERENCY:
-> +		return true;
-> +	case IOMMU_CAP_DEFERRED_FLUSH:
-> +		return true;
-> +	default:
-> +		return false;
-> +	}
-> +}
-> +
-> +static void hv_flush_device_domain(struct hv_iommu_domain *hv_domain)
-> +{
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct hv_input_flush_device_domain *input;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +	input->device_domain = hv_domain->device_domain;
-> +	status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN, input, NULL);
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_FLUSH_DEVICE_DOMAIN failed, status %lld\n", status);
-> +}
-> +
-> +static int hv_iommu_attach_dev(struct iommu_domain *domain, struct device *dev,
-> +			       struct iommu_domain *old)
-> +{
-> +	u64 status;
-> +	u32 prefix;
-> +	unsigned long flags;
-> +	struct pci_dev *pdev;
-> +	struct hv_input_attach_device_domain *input;
-> +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
-> +	struct hv_iommu_domain *hv_domain = to_hv_iommu_domain(domain);
-> +	int ret;
-> +
-> +	if (vdev->hv_domain == hv_domain)
-> +		return 0;
-> +
-> +	pdev = to_pci_dev(dev);
-> +	dev_dbg(dev, "attaching to domain %d\n",
-> +		hv_domain->device_domain.domain_id.id);
-> +
-> +	ret = hv_iommu_lookup_logical_dev_id(pci_domain_nr(pdev->bus), &prefix);
-> +	if (ret) {
-> +		dev_err(&pdev->dev, "no IOMMU registration for vPCI bus\n");
-> +		return ret;
-> +	}
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +	input->device_domain = hv_domain->device_domain;
-> +	input->device_id.as_uint64 = (u64)prefix | PCI_FUNC(pdev->devfn);
-> +	status = hv_do_hypercall(HVCALL_ATTACH_DEVICE_DOMAIN, input, NULL);
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_ATTACH_DEVICE_DOMAIN failed, status %lld\n", status);
-> +	else
-> +		vdev->hv_domain = hv_domain;
-> +
-> +	return hv_result_to_errno(status);
-> +}
-> +
-> +static int hv_iommu_blocking_attach_dev(struct iommu_domain *domain,
-> +					struct device *dev,
-> +					struct iommu_domain *old)
-> +{
-> +	int ret = hv_iommu_attach_dev(domain, dev, old);
+> +	u16 eig;
+> +	u8 eiw;
 > +
 > +	/*
-> +	 * Attaching to the blocking domain only asks the hypervisor to
-> +	 * disable translation and IOPF for the device, so it cannot fail
-> +	 * unless there is a driver or hypervisor bug. Return the hypercall
-> +	 * status rather than 0 so that a failure on the DMA ownership claim
-> +	 * path (VFIO/iommufd) fails the claim instead of leaving the device
-> +	 * unblocked. WARN since such a failure indicates a bug.
+> +	 * Input validation ensures these warns never fire, but otherwise
+> +	 * suppress uninitialized variable usage warnings.
 > +	 */
-> +	WARN_ON(ret);
-> +	return ret;
-> +}
-> +
-> +static int hv_iommu_get_logical_device_property(struct device *dev,
-> +					u32 code,
-> +					struct hv_output_get_logical_device_property *property)
-> +{
-> +	u64 status;
-> +	u32 prefix;
-> +	unsigned long flags;
-> +	int ret;
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct hv_input_get_logical_device_property *input;
-> +	struct hv_output_get_logical_device_property *output;
-> +
-> +	ret = hv_iommu_lookup_logical_dev_id(pci_domain_nr(pdev->bus), &prefix);
-> +	if (ret)
-> +		return ret;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	output = (struct hv_output_get_logical_device_property *)(input + 1);
-> +	memset(input, 0, sizeof(*input));
-> +	input->partition_id = HV_PARTITION_ID_SELF;
-> +	input->logical_device_id = (u64)prefix | PCI_FUNC(pdev->devfn);
-> +	input->code = code;
-> +	status = hv_do_hypercall(HVCALL_GET_LOGICAL_DEVICE_PROPERTY, input, output);
-> +	*property = *output;
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_GET_LOGICAL_DEVICE_PROPERTY failed, status %lld\n", status);
-> +
-> +	return hv_result_to_errno(status);
-> +}
-> +
-> +static struct iommu_device *hv_iommu_probe_device(struct device *dev)
-> +{
-> +	struct pci_dev *pdev;
-> +	struct hv_iommu_endpoint *vdev;
-> +	struct hv_output_get_logical_device_property device_iommu_property = {0};
-> +
-> +	if (!dev_is_pci(dev))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	pdev = to_pci_dev(dev);
-> +
-> +	if (hv_iommu_get_logical_device_property(dev,
-> +						 HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU,
-> +						 &device_iommu_property) ||
-> +	    !(device_iommu_property.device_iommu & HV_DEVICE_IOMMU_ENABLED))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	vdev = kzalloc_obj(*vdev, GFP_KERNEL);
-> +	if (!vdev)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	vdev->dev = dev;
-> +	vdev->hv_iommu = hv_iommu_device;
-> +	dev_iommu_priv_set(dev, vdev);
-> +
-> +	if (hv_iommu_ats_supported(hv_iommu_device->cap) &&
-> +	    pci_ats_supported(pdev))
-> +		pci_enable_ats(pdev, __ffs(hv_iommu_device->pgsize_bitmap));
-> +
-> +	return &vdev->hv_iommu->iommu;
-> +}
-> +
-> +static void hv_iommu_release_device(struct device *dev)
-> +{
-> +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (pdev->ats_enabled)
-> +		pci_disable_ats(pdev);
-> +
-> +	dev_iommu_priv_set(dev, NULL);
-> +
-> +	kfree(vdev);
-> +}
-> +
-> +static struct iommu_group *hv_iommu_device_group(struct device *dev)
-> +{
-> +	if (dev_is_pci(dev))
-> +		return pci_device_group(dev);
-> +
-> +	WARN_ON_ONCE(1);
-> +	return generic_device_group(dev);
-> +}
-> +
-> +static int hv_configure_device_domain(struct hv_iommu_domain *hv_domain, u32 domain_type)
-> +{
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct pt_iommu_x86_64_hw_info pt_info;
-> +	struct hv_input_configure_device_domain *input;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +	input->device_domain = hv_domain->device_domain;
-> +	input->settings.flags.blocked = (domain_type == IOMMU_DOMAIN_BLOCKED);
-> +	/*
-> +	 * Clearing translation_enabled bypasses translation (DMA uses the GPA
-> +	 * directly), which only suits identity. The hypervisor requires paging
-> +	 * and blocked domains to keep it set.
-> +	 */
-> +	input->settings.flags.translation_enabled = (domain_type != IOMMU_DOMAIN_IDENTITY);
-> +
-> +	if (domain_type & __IOMMU_DOMAIN_PAGING) {
-> +		pt_iommu_x86_64_hw_info(&hv_domain->pt_iommu_x86_64, &pt_info);
-> +		input->settings.page_table_root = pt_info.gcr3_pt;
-> +		input->settings.flags.first_stage_paging_mode =
-> +			pt_info.levels == 5;
-> +	}
-> +	status = hv_do_hypercall(HVCALL_CONFIGURE_DEVICE_DOMAIN, input, NULL);
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_CONFIGURE_DEVICE_DOMAIN failed, status %lld\n", status);
-> +
-> +	return hv_result_to_errno(status);
-> +}
-> +
-> +static int __init hv_initialize_static_domains(void)
-> +{
-> +	int ret;
-> +	struct hv_iommu_domain *hv_domain;
-> +
-> +	/* Default stage-1 identity domain */
-> +	hv_domain = &hv_identity_domain;
-> +
-> +	ret = hv_create_device_domain(hv_domain, HV_DEVICE_DOMAIN_TYPE_S1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = hv_configure_device_domain(hv_domain, IOMMU_DOMAIN_IDENTITY);
-> +	if (ret)
-> +		goto delete_identity_domain;
-> +
-> +	/* Default stage-1 blocked domain */
-> +	hv_domain = &hv_blocking_domain;
-> +
-> +	ret = hv_create_device_domain(hv_domain, HV_DEVICE_DOMAIN_TYPE_S1);
-> +	if (ret)
-> +		goto delete_identity_domain;
-> +
-> +	ret = hv_configure_device_domain(hv_domain, IOMMU_DOMAIN_BLOCKED);
-> +	if (ret)
-> +		goto delete_blocked_domain;
-> +
-> +	return 0;
-> +
-> +delete_blocked_domain:
-> +	hv_delete_device_domain(&hv_blocking_domain);
-> +delete_identity_domain:
-> +	hv_delete_device_domain(&hv_identity_domain);
-> +	return ret;
-> +}
-> +
-> +/* x86 architectural MSI address range */
-> +#define INTERRUPT_RANGE_START	(0xfee00000)
-> +#define INTERRUPT_RANGE_END	(0xfeefffff)
-> +static void hv_iommu_get_resv_regions(struct device *dev,
-> +		struct list_head *head)
-> +{
-> +	struct iommu_resv_region *region;
-> +
-> +	region = iommu_alloc_resv_region(INTERRUPT_RANGE_START,
-> +				      INTERRUPT_RANGE_END - INTERRUPT_RANGE_START + 1,
-> +				      0, IOMMU_RESV_MSI, GFP_KERNEL);
-> +	if (!region)
+> +	if (WARN_ONCE(ways_to_eiw(settings->interleave_ways, &eiw),
+> +		      "invalid interleave_ways: %d\n",
+> +		      settings->interleave_ways))
+> +		return;
+> +	if (WARN_ONCE(granularity_to_eig(settings->interleave_granularity, &eig),
+> +		      "invalid interleave_granularity: %d\n",
+> +		      settings->interleave_granularity))
 > +		return;
 > +
-> +	list_add_tail(&region->list, head);
+> +	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> +	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> +	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
 > +}
 > +
-> +static void hv_iommu_flush_iotlb_all(struct iommu_domain *domain)
+> +static void cxld_set_type(struct cxl_decoder_settings *settings, u32 *ctrl)
 > +{
-> +	hv_flush_device_domain(to_hv_iommu_domain(domain));
+> +	u32p_replace_bits(ctrl,
+> +			  !!(settings->target_type == CXL_DECODER_HOSTONLYMEM),
+> +			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
 > +}
-> +
-> +static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
-> +				struct iommu_iotlb_gather *iotlb_gather)
-> +{
-> +	hv_flush_device_domain(to_hv_iommu_domain(domain));
-> +
-> +	iommu_put_pages_list(&iotlb_gather->freelist);
-> +}
-> +
-> +static void hv_iommu_paging_domain_free(struct iommu_domain *domain)
-> +{
-> +	struct hv_iommu_domain *hv_domain = to_hv_iommu_domain(domain);
-> +
-> +	/* Free all remaining mappings */
-> +	pt_iommu_deinit(&hv_domain->pt_iommu);
-> +
-> +	hv_delete_device_domain(hv_domain);
-> +
-> +	kfree(hv_domain);
-> +}
-> +
-> +static const struct iommu_domain_ops hv_iommu_identity_domain_ops = {
-> +	.attach_dev	= hv_iommu_attach_dev,
-> +};
-> +
-> +static const struct iommu_domain_ops hv_iommu_blocking_domain_ops = {
-> +	.attach_dev	= hv_iommu_blocking_attach_dev,
-> +};
-> +
-> +static const struct iommu_domain_ops hv_iommu_paging_domain_ops = {
-> +	.attach_dev	= hv_iommu_attach_dev,
-> +	IOMMU_PT_DOMAIN_OPS(x86_64),
-> +	.flush_iotlb_all = hv_iommu_flush_iotlb_all,
-> +	.iotlb_sync = hv_iommu_iotlb_sync,
-> +	.free = hv_iommu_paging_domain_free,
-> +};
-> +
-> +static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *dev)
-> +{
-> +	int ret;
-> +	struct hv_iommu_domain *hv_domain;
-> +	struct pt_iommu_x86_64_cfg cfg = {};
-> +
-> +	hv_domain = kzalloc_obj(*hv_domain, GFP_KERNEL);
-> +	if (!hv_domain)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	ret = hv_create_device_domain(hv_domain, HV_DEVICE_DOMAIN_TYPE_S1);
-> +	if (ret)
-> +		goto err_free;
-> +
-> +	hv_domain->pt_iommu.nid = dev_to_node(dev);
-> +
-> +	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
-> +	cfg.common.hw_max_oasz_lg2 = 52;
-> +	cfg.top_level = (hv_iommu_device->max_iova_width > 48) ? 4 : 3;
-> +
-> +	ret = pt_iommu_x86_64_init(&hv_domain->pt_iommu_x86_64, &cfg, GFP_KERNEL);
-> +	if (ret)
-> +		goto err_delete_domain;
-> +
-> +	/* Constrain to page sizes the hypervisor supports */
-> +	hv_domain->domain.pgsize_bitmap &= hv_iommu_device->pgsize_bitmap;
-> +
-> +	hv_domain->domain.ops = &hv_iommu_paging_domain_ops;
-> +
-> +	ret = hv_configure_device_domain(hv_domain, __IOMMU_DOMAIN_PAGING);
-> +	if (ret)
-> +		goto err_pt_deinit;
-> +
-> +	return &hv_domain->domain;
-> +
-> +err_pt_deinit:
-> +	pt_iommu_deinit(&hv_domain->pt_iommu);
-> +err_delete_domain:
-> +	hv_delete_device_domain(hv_domain);
-> +err_free:
-> +	kfree(hv_domain);
-> +	return ERR_PTR(ret);
-> +}
-> +
-> +static struct iommu_ops hv_iommu_ops = {
-> +	.capable		  = hv_iommu_capable,
-> +	.domain_alloc_paging	  = hv_iommu_domain_alloc_paging,
-> +	.probe_device		  = hv_iommu_probe_device,
-> +	.release_device		  = hv_iommu_release_device,
-> +	.device_group		  = hv_iommu_device_group,
-> +	.get_resv_regions	  = hv_iommu_get_resv_regions,
-> +	.owner			  = THIS_MODULE,
-> +	.identity_domain	  = &hv_identity_domain.domain,
-> +	.blocked_domain		  = &hv_blocking_domain.domain,
-> +	.release_domain		  = &hv_blocking_domain.domain,
-> +};
-> +
-> +static int hv_iommu_detect(struct hv_output_get_iommu_capabilities *hv_iommu_cap)
-> +{
-> +	u64 status;
-> +	unsigned long flags;
-> +	struct hv_input_get_iommu_capabilities *input;
-> +	struct hv_output_get_iommu_capabilities *output;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	output = (struct hv_output_get_iommu_capabilities *)(input + 1);
-> +	memset(input, 0, sizeof(*input));
-> +	input->partition_id = HV_PARTITION_ID_SELF;
-> +	status = hv_do_hypercall(HVCALL_GET_IOMMU_CAPABILITIES, input, output);
-> +	*hv_iommu_cap = *output;
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_GET_IOMMU_CAPABILITIES failed, status %lld\n", status);
-> +
-> +	return hv_result_to_errno(status);
-> +}
-> +
-> +static void __init hv_init_iommu_device(struct hv_iommu_dev *hv_iommu,
-> +			struct hv_output_get_iommu_capabilities *hv_iommu_cap)
-> +{
-> +	ida_init(&hv_iommu->domain_ids);
-> +
-> +	hv_iommu->cap = hv_iommu_cap->iommu_cap;
-> +	hv_iommu->max_iova_width = hv_iommu_cap->max_iova_width;
-> +	if (!hv_iommu_5lvl_supported(hv_iommu->cap) &&
-> +	    hv_iommu->max_iova_width > 48) {
-> +		pr_info("5-level paging not supported, limiting iova width to 48.\n");
-> +		hv_iommu->max_iova_width = 48;
-> +	}
-> +
-> +	hv_iommu->geometry = (struct iommu_domain_geometry) {
-> +		.aperture_start = 0,
-> +		.aperture_end = (((u64)1) << hv_iommu->max_iova_width) - 1,
-> +		.force_aperture = true,
-> +	};
-> +
-> +	hv_iommu->first_domain = HV_DEVICE_DOMAIN_ID_DEFAULT + 1;
-> +	hv_iommu->last_domain = HV_DEVICE_DOMAIN_ID_NULL - 1;
-> +	hv_iommu->pgsize_bitmap = hv_iommu_cap->pgsize_bitmap;
-> +	hv_iommu_device = hv_iommu;
-> +}
-> +
-> +int __init hv_iommu_init(void)
-> +{
-> +	int ret = 0;
-> +	struct hv_iommu_dev *hv_iommu = NULL;
-> +	struct hv_output_get_iommu_capabilities hv_iommu_cap = {0};
-> +
-> +	if (no_iommu || iommu_detected)
-> +		return -ENODEV;
-> +
-> +	if (!hv_is_hyperv_initialized())
-> +		return -ENODEV;
-> +
-> +	ret = hv_iommu_detect(&hv_iommu_cap);
-> +	if (ret) {
-> +		pr_err("HVCALL_GET_IOMMU_CAPABILITIES failed: %d\n", ret);
-> +		return -ENODEV;
-> +	}
-> +
-> +	if (!hv_iommu_present(hv_iommu_cap.iommu_cap) ||
-> +	    !hv_iommu_s1_domain_supported(hv_iommu_cap.iommu_cap)) {
-> +		pr_err("IOMMU capabilities not sufficient: cap=0x%llx\n",
-> +		       hv_iommu_cap.iommu_cap);
-> +		return -ENODEV;
-> +	}
-> +
-> +	/*
-> +	 * The page table code only maps x86 page sizes (4K/2M/1G); require the
-> +	 * hypervisor to advertise a non-empty subset of exactly those.
-> +	 */
-> +	if (!hv_iommu_cap.pgsize_bitmap ||
-> +	    (hv_iommu_cap.pgsize_bitmap & ~(u64)(SZ_4K | SZ_2M | SZ_1G))) {
-> +		pr_err("unsupported page sizes: pgsize_bitmap=0x%llx\n",
-> +		       hv_iommu_cap.pgsize_bitmap);
-> +		return -ENODEV;
-> +	}
-> +
-> +	iommu_detected = 1;
-> +	pci_request_acs();
-> +
-> +	hv_iommu = kzalloc_obj(*hv_iommu, GFP_KERNEL);
-> +	if (!hv_iommu)
-> +		return -ENOMEM;
-> +
-> +	hv_init_iommu_device(hv_iommu, &hv_iommu_cap);
-> +
-> +	ret = hv_initialize_static_domains();
-> +	if (ret) {
-> +		pr_err("static domains init failed: %d\n", ret);
-> +		goto err_free;
-> +	}
-> +
-> +	ret = iommu_device_sysfs_add(&hv_iommu->iommu, NULL, NULL, "%s", "hv-iommu");
-> +	if (ret) {
-> +		pr_err("iommu_device_sysfs_add failed: %d\n", ret);
-> +		goto err_delete_static_domains;
-> +	}
-> +
-> +	ret = iommu_device_register(&hv_iommu->iommu, &hv_iommu_ops, NULL);
-> +	if (ret) {
-> +		pr_err("iommu_device_register failed: %d\n", ret);
-> +		goto err_sysfs_remove;
-> +	}
-> +
-> +	pr_info("successfully initialized\n");
-> +	return 0;
-> +
-> +err_sysfs_remove:
-> +	iommu_device_sysfs_remove(&hv_iommu->iommu);
-> +err_delete_static_domains:
-> +	hv_delete_device_domain(&hv_blocking_domain);
-> +	hv_delete_device_domain(&hv_identity_domain);
-> +err_free:
-> +	kfree(hv_iommu);
-> +	return ret;
-> +}
-> diff --git a/drivers/iommu/hyperv/iommu.h b/drivers/iommu/hyperv/iommu.h
-> new file mode 100644
-> index 000000000000..3a9f40fa2403
-> --- /dev/null
-> +++ b/drivers/iommu/hyperv/iommu.h
-> @@ -0,0 +1,51 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
 > +
 > +/*
-> + * Hyper-V IOMMU driver.
-> + *
-> + * Copyright (C) 2024-2025, Microsoft, Inc.
-> + *
+> + * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> + * committed or error within 10ms, but just be generous with 20ms to account for
+> + * clock skew and other marginal behavior.
 > + */
+> +#define COMMIT_TIMEOUT_MS 20
+> +static int cxld_await_commit(void __iomem *hdm, int id)
+> +{
+> +	u32 ctrl;
+> +	int i;
 > +
-> +#ifndef _HYPERV_IOMMU_H
-> +#define _HYPERV_IOMMU_H
+> +	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> +		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> +			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> +			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +			return -EIO;
+> +		}
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> +			return 0;
+> +		fsleep(1000);
+> +	}
 > +
-> +struct hv_iommu_dev {
-> +	struct iommu_device iommu;
-> +	struct ida domain_ids;
+> +	return -ETIMEDOUT;
+> +}
 > +
-> +	/* Device configuration */
-> +	u8  max_iova_width;
-> +	u8  max_pasid_width;
-> +	u64 cap;
-> +	u64 pgsize_bitmap;
+> +static void setup_hw_decoder(struct cxl_decoder_settings *settings,
+> +			     void __iomem *hdm)
+> +{
+> +	int id = settings->id;
+> +	u64 target_or_skip;
+> +	u64 base, size;
+> +	u32 ctrl;
 > +
-> +	struct iommu_domain_geometry geometry;
-> +	u64 first_domain;
-> +	u64 last_domain;
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxld_set_interleave(settings, &ctrl);
+> +	cxld_set_type(settings, &ctrl);
+> +	base = settings->hpa_range.start;
+> +	size = range_len(&settings->hpa_range);
+> +	target_or_skip = settings->targets;
+> +
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	/* Target-list and endpoint-skip registers alias the same slot. */
+> +	writel(upper_32_bits(target_or_skip),
+> +	       hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	writel(lower_32_bits(target_or_skip),
+> +	       hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> +
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +}
+> +
+> +int cxl_commit(struct cxl_decoder_settings *settings, void __iomem *hdm)
+> +{
+> +	int rc;
+> +
+> +	scoped_guard(rwsem_read, &cxl_rwsem.dpa) {
+> +		setup_hw_decoder(settings, hdm);
+> +	}
+> +
+> +	rc = cxld_await_commit(hdm, settings->id);
+> +	if (rc)
+> +		return rc;
+> +
+> +	settings->flags |= CXL_DECODER_F_ENABLE;
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_commit, "cxl_core");
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index f43abd1903ce..b433262ab256 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -252,49 +252,8 @@ int cxl_dport_map_rcd_linkcap(struct pci_dev *pdev, struct cxl_dport *dport);
+>  #define CXL_DECODER_F_NORMALIZED_ADDRESSING BIT(6)
+>  #define CXL_DECODER_F_RESET_MASK (CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK)
+>  
+> -enum cxl_decoder_type {
+> -	CXL_DECODER_DEVMEM = 2,
+> -	CXL_DECODER_HOSTONLYMEM = 3,
+> -};
+> -
+> -/*
+> - * Current specification goes up to 8, double that seems a reasonable
+> - * software max for the foreseeable future
+> - */
+> -#define CXL_DECODER_MAX_INTERLEAVE 16
+> -
+>  #define CXL_QOS_CLASS_INVALID -1
+>  
+> -/**
+> - * struct cxl_decoder - Common CXL HDM Decoder Attributes
+> - * @dev: this decoder's device
+> - * @id: kernel device name id
+> - * @hpa_range: Host physical address range mapped by this decoder
+> - * @interleave_ways: number of cxl_dports in this decode
+> - * @interleave_granularity: data stride per dport
+> - * @target_type: accelerator vs expander (type2 vs type3) selector
+> - * @region: currently assigned region for this decoder
+> - * @flags: memory type capabilities and locking
+> - * @target_map: cached copy of hardware port-id list, available at init
+> - *              before all @dport objects have been instantiated. While
+> - *              dport id is 8bit, CFMWS interleave targets are 32bits.
+> - * @commit: device/decoder-type specific callback to commit settings to hw
+> - * @reset: device/decoder-type specific callback to reset hw settings
+> -*/
+> -struct cxl_decoder {
+> -	struct device dev;
+> -	int id;
+> -	struct range hpa_range;
+> -	int interleave_ways;
+> -	int interleave_granularity;
+> -	enum cxl_decoder_type target_type;
+> -	struct cxl_region *region;
+> -	unsigned long flags;
+> -	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
+> -	int (*commit)(struct cxl_decoder *cxld);
+> -	void (*reset)(struct cxl_decoder *cxld);
+> -};
+> -
+>  /*
+>   * Track whether this decoder is free for userspace provisioning, reserved for
+>   * region autodiscovery, whether it is started connecting (awaiting other
+> @@ -310,7 +269,6 @@ enum cxl_decoder_state {
+>   * struct cxl_endpoint_decoder - Endpoint  / SPA to DPA decoder
+>   * @cxld: base cxl_decoder_object
+>   * @dpa_res: actively claimed DPA span of this decoder
+> - * @skip: offset into @dpa_res where @cxld.hpa_range maps
+>   * @state: autodiscovery state
+>   * @part: partition index this decoder maps
+>   * @pos: interleave position in @cxld.region
+> @@ -318,7 +276,6 @@ enum cxl_decoder_state {
+>  struct cxl_endpoint_decoder {
+>  	struct cxl_decoder cxld;
+>  	struct resource *dpa_res;
+> -	resource_size_t skip;
+>  	enum cxl_decoder_state state;
+>  	int part;
+>  	int pos;
+> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
+> index 016c74fb747c..757d916a6330 100644
+> --- a/include/cxl/cxl.h
+> +++ b/include/cxl/cxl.h
+> @@ -5,8 +5,10 @@
+>  #ifndef __CXL_CXL_H__
+>  #define __CXL_CXL_H__
+>  
+> +#include <linux/device.h>
+>  #include <linux/node.h>
+>  #include <linux/ioport.h>
+> +#include <linux/range.h>
+>  #include <cxl/mailbox.h>
+>  
+>  /**
+> @@ -23,7 +25,56 @@ enum cxl_devtype {
+>  	CXL_DEVTYPE_CLASSMEM,
+>  };
+>  
+> -struct device;
+> +struct cxl_region;
+> +
+> +enum cxl_decoder_type {
+> +	CXL_DECODER_DEVMEM = 2,
+> +	CXL_DECODER_HOSTONLYMEM = 3,
 > +};
 > +
-> +struct hv_iommu_domain {
-> +	union {
-> +		struct iommu_domain    domain;
-> +		struct pt_iommu        pt_iommu;
-> +		struct pt_iommu_x86_64 pt_iommu_x86_64;
-> +	};
-> +	struct hv_iommu_dev *hv_iommu;
-> +	struct hv_input_device_domain device_domain;
-> +	u64		pgsize_bitmap;
+> +/*
+> + * Current specification goes up to 8, double that seems a reasonable
+> + * software max for the foreseeable future
+> + */
+> +#define CXL_DECODER_MAX_INTERLEAVE 16
+> +
+> +/**
+> + * struct cxl_decoder - Common CXL HDM Decoder Attributes
+> + * @dev: this decoder's device
+> + * @id: kernel device name id
+> + * @hpa_range: Host physical address range mapped by this decoder
+> + * @skip: offset into @dpa_res where @cxld.hpa_range maps (endpoint)
+> + * @targets: interleave position to dport mapping (switch)
+> + * @interleave_ways: number of cxl_dports in this decode
+> + * @interleave_granularity: data stride per dport
+> + * @target_type: accelerator vs expander (type2 vs type3) selector
+> + * @flags: memory type capabilities and locking
+> + * @region: currently assigned region for this decoder
+> + * @target_map: cached copy of hardware port-id list, available at init
+> + *              before all @dport objects have been instantiated. While
+> + *              dport id is 8bit, CFMWS interleave targets are 32bits.
+> + * @commit: device/decoder-type specific callback to commit settings to hw
+> + * @reset: device/decoder-type specific callback to reset hw settings
+> + */
+> +struct cxl_decoder {
+> +	struct device dev;
+> +
+> +	struct_group_tagged(cxl_decoder_settings, settings, int id;
+> +		struct range hpa_range;
+> +		union {
+> +			u64 skip;
+> +			u64 targets;
+> +		};
+
+I don't like the moving of 'skip' from cxled to cxld just for convenience. It takes away of using skip intentionally with an endpoint decoder. Not only that, the type is changed. Same with targets.
+
+DJ
+
+> +		int interleave_ways;
+> +		int interleave_granularity;
+> +		enum cxl_decoder_type target_type;
+> +		unsigned long flags;
+> +	);
+> +	struct cxl_region *region;
+> +	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
+> +	int (*commit)(struct cxl_decoder *cxld);
+> +	void (*reset)(struct cxl_decoder *cxld);
 > +};
+>  
+>  /*
+>   * Using struct_group() allows for per register-block-type helper routines,
+> @@ -70,6 +121,8 @@ struct cxl_regs {
+>  	);
+>  };
+>  
+> +int cxl_commit(struct cxl_decoder_settings *settings, void __iomem *hdm);
 > +
-> +PT_IOMMU_CHECK_DOMAIN(struct hv_iommu_domain, pt_iommu, domain);
-> +PT_IOMMU_CHECK_DOMAIN(struct hv_iommu_domain, pt_iommu_x86_64.iommu, domain);
-> +
-> +struct hv_iommu_endpoint {
-> +	struct device *dev;
-> +	struct hv_iommu_dev *hv_iommu;
-> +	struct hv_iommu_domain *hv_domain;
-> +};
-> +
-> +#define to_hv_iommu_domain(d) \
-> +	container_of(d, struct hv_iommu_domain, domain)
-> +
-> +#endif /* _HYPERV_IOMMU_H */
+>  struct cxl_reg_map {
+>  	bool valid;
+>  	int id;
+> diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
+> index 296516eecfd6..4db5071aa25a 100644
+> --- a/tools/testing/cxl/test/cxl.c
+> +++ b/tools/testing/cxl/test/cxl.c
+> @@ -840,11 +840,11 @@ static int cxld_registry_restore(struct cxl_decoder *cxld,
+>  		dbg_cxld(port, "restore", &td->cxled.cxld);
+>  		cxld_copy(cxld, &td->cxled.cxld);
+>  		cxled->state = td->cxled.state;
+> -		cxled->skip = td->cxled.skip;
+> +		cxld->skip = td->cxled.cxld.skip;
+>  		if (range_len(&td->dpa_range)) {
+>  			rc = devm_cxl_dpa_reserve(cxled, td->dpa_range.start,
+>  						  range_len(&td->dpa_range),
+> -						  td->cxled.skip);
+> +						  td->cxled.cxld.skip);
+>  			if (rc) {
+>  				init_disabled_mock_decoder(cxld);
+>  				return rc;
+> @@ -882,7 +882,7 @@ static void __cxld_registry_save(struct cxl_test_decoder *td,
+>  
+>  		cxld_copy(&td->cxled.cxld, cxld);
+>  		td->cxled.state = cxled->state;
+> -		td->cxled.skip = cxled->skip;
+> +		td->cxled.cxld.skip = cxled->cxld.skip;
+>  
+>  		if (!(cxld->flags & CXL_DECODER_F_ENABLE)) {
+>  			td->dpa_range.start = 0;
+> @@ -970,7 +970,7 @@ static void mock_decoder_reset(struct cxl_decoder *cxld)
+>  			to_cxl_endpoint_decoder(&cxld->dev);
+>  
+>  		cxled->state = CXL_DECODER_STATE_MANUAL;
+> -		cxled->skip = 0;
+> +		cxled->cxld.skip = 0;
+>  	}
+>  	if (decoder_reset_preserve_registry)
+>  		dev_dbg(port->uport_dev, "decoder%d: skip registry update\n",
+> @@ -1021,7 +1021,7 @@ static void init_disabled_mock_decoder(struct cxl_decoder *cxld)
+>  			to_cxl_endpoint_decoder(&cxld->dev);
+>  
+>  		cxled->state = CXL_DECODER_STATE_MANUAL;
+> -		cxled->skip = 0;
+> +		cxled->cxld.skip = 0;
+>  	}
+>  }
+>  
 
