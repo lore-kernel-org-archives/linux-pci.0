@@ -1,112 +1,120 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617BF22A1D4;
-	Tue,  7 Jul 2026 16:54:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783443271; cv=none; b=UelDsgy/iyyxKJyD684n0YMLjydsdoo48PU0BJJTv9PzwfKTJqq1zjQqBF257atSLqIcPIeuFFN+D01MucYVp3HCAsku/MruuWurdIUpRpSMGxj63KBha8EzDjHJtOeHkvQbkxT0VzAteKyokH9KyB+ieRs5eE5Der5jHLZjtCI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783443271; c=relaxed/simple;
-	bh=FpXqF6jk5toMGJXq4EtPaKYm/o4ECCY0nVqige8yqNM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DQq+XPu1kAfKySmLhGRYELlWK+SQdUeCuh2f7kZyXSkWn6bXFnNc/Nr9cc3dPhuUrKMaGuQplhW87C68WCkHVEthnbOLCxht8voCyHyV7OLU8prRmmuvDGoL4wwhY+z8ZjGFaFAzG3wldHWTnutyUujc/Kp8sOJXW4VkZDAN2Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=Pl4p1yal; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=debian.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCBF0437857;
+	Tue,  7 Jul 2026 17:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783444515; cv=pass; b=IJrOe0Zlh3ol/ng9VpuUbbgIiLNqaQZq5tceSHPc0nKswkqVksFVwaVyYqHw9qWWB8ltnuN6dGq0WgNVDFm73S8nT49xfqdJIHIDU2EeWNVxCJFGoaSILJPa3cfFljmrSyzTC/S0f7oa5aS08nrscdpOmIV5dEE3M4ggjN1XytA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783444515; c=relaxed/simple;
+	bh=Fk3AkZVjgqLR06RoMyFMddArIDiVOz+n2M7Zso8MwdE=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=CIIxNkXV1CmGcT2qYTBUXvB2Dbni58HwFEXBtUlOpB6jNn1XOwUxZfj5nRJAGTz5w5jaJsFsmne2QzWUF367Fe8SnCU+jLVFgeD2Gjln/0a4VqOrV2ivwSKVrBj4DGV56X2je+quQsLGAHGfs4a8zvJ72Xgyx4zbjDesIu8T1EQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=ORVn9N7W; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="Pl4p1yal"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Reply-To:Content-ID:Content-Description;
-	bh=j2Rqn1Z44LxF7P3FTLDUbHYmw1rGJj24sZvFbQfBOow=; b=Pl4p1yalKmm+mrZN7WFY+OF3pM
-	EKFT9R+1VEqiL2myq3u6bDdn34eocPOjGy9JrK477auMsnFu7fLI5bKaCGN2GvnTsj3kBl6mV7AcU
-	4YBbRFNWwR3rWAFsVDWI1ibDYxasy5K/hDqoS3SBo/MCJcDQqsx19Spietc/z21PqdKLeXsNQHs+1
-	wSqtBxnD+ylek2GfjgWVFqC6hyb8pS3dIofyFEnYVP/ia3JodiWWQ9PNFlbDtW3fw8LDlDUszQc1s
-	p9v1z5eBEx7PinOyrxu7eLDXRctpsmbQKHA3d+AabcpgqwuctT2osEXUEMxp42Y990eiWJOEXngH3
-	0SzOND0g==;
-Received: from authenticated-user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <leitao@debian.org>)
-	id 1wh93F-002KMz-26;
-	Tue, 07 Jul 2026 16:53:42 +0000
-Date: Tue, 7 Jul 2026 09:53:34 -0700
-From: Breno Leitao <leitao@debian.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Tony Luck <tony.luck@intel.com>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Hanjun Guo <guohanjun@huawei.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>, 
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Breno Leitao <leitao@kernel.org>, linux-kernel@vger.kernel.org, 
-	linux-edac@vger.kernel.org, linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-pci@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH RFC] RAS: hwerr_tracking: move recoverable hardware error
- tracking out of vmcoreinfo
-Message-ID: <ak0sGAX_NWMyeofC@gmail.com>
-References: <20260707-hwerr-ras-v1-1-4aea4a79d085@debian.org>
- <20260707160247.GBak0jJwNxVHlvzijD@fat_crate.local>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="ORVn9N7W"
+ARC-Seal: i=1; a=rsa-sha256; t=1783444482; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=II9cW/m5Vv18fw/Fz0WLyRsiGR6pKU06k+7ZwMGqReK255ZDRP+Jcp5dBlcizDWNyvEanGLJAxhtbX2689uNiQHmw6Wa9j+MeejeWwFXdRa3Ncl0GBynkxxAnywIU1y/SXh88KtqABYgZGvhyTmTfatUwJ3YXgWTJFyTLnnGjLk=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1783444482; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=fEaD+gRjp8aYJ0as2zjJ9AwHePMS8+98otLPU9UgGEY=; 
+	b=NF3cGoe+89Uz0P9E6l0xjqep6c1vBs5OJJ3jFlQYC94rlcmLovPksrhYRmUI7e/1t+kOWHicCBLvO14LH3btunv4gfXdtllXAcfzHSRxzc6+82CHXvuaV37slE/Y56sDnPSRM9Us1YGpWIGEFGfxdFKZavuEJ5VgKK5GzuUw+ms=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783444482;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
+	bh=fEaD+gRjp8aYJ0as2zjJ9AwHePMS8+98otLPU9UgGEY=;
+	b=ORVn9N7W+sewhCy0ODkKQiTiYiIu8blGoZgZYks+GXl3DwIhze+UBxhL88yseY7q
+	KZsWnlwNvAalMQUWiqQ/AUv+RVX3Em9Tfc0Exhem3ygzUzXJLA3rbf48HlVJnyoKL0X
+	dhD/xcgwYmXTkDul9KnOmpl+HpUxZDMb/qKpIKTM=
+Received: by mx.zohomail.com with SMTPS id 1783444480458298.4850949227821;
+	Tue, 7 Jul 2026 10:14:40 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260707160247.GBak0jJwNxVHlvzijD@fat_crate.local>
-X-Debian-User: leitao
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [PATCH v6 01/20] rust: io: add dynamically-sized `Region` type
+From: Daniel Almeida <daniel.almeida@collabora.com>
+In-Reply-To: <20260706-io_projection-v6-1-72cd5d055d54@garyguo.net>
+Date: Tue, 7 Jul 2026 14:14:20 -0300
+Cc: Alice Ryhl <aliceryhl@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>,
+ Tamir Duberstein <tamird@kernel.org>,
+ =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>,
+ David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Michal Wilczynski <m.wilczynski@samsung.com>,
+ =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ driver-core@lists.linux.dev,
+ rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ nova-gpu@lists.linux.dev,
+ dri-devel@lists.freedesktop.org,
+ linux-pwm@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <9AC77170-279D-4C0A-89F7-8D07F418AADF@collabora.com>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-1-72cd5d055d54@garyguo.net>
+To: Gary Guo <gary@garyguo.net>
+X-Mailer: Apple Mail (2.3826.700.81)
+X-ZohoMailClient: External
 
-On Tue, Jul 07, 2026 at 09:02:47AM -0700, Borislav Petkov wrote:
-> On Tue, Jul 07, 2026 at 07:02:34AM -0700, Breno Leitao wrote:
-> > Move the implementation to drivers/ras/hwerr_tracking.c and the
-> > declaration (with its no-op stub) to <linux/ras.h>.  Give it a dedicated
-> > CONFIG_RAS_HWERR (bool, under RAS, default y) rather than riding
+Hi Gary,
+
+A bit late to the party here, but going through this series one by one :)
+
+> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
 > 
-> Definitely not default y.
-
-The current vmcoreinfo implementation defaults to enabled, so I wanted to
-preserve that behavior to avoid silently removing symbols that existing
-tools may depend on. Would you prefer a different default?
-
-> Do not explain the WHAT - that's visible from the diff below; explain the WHY.
-
-Will do.
-
-> > Link: https://lore.kernel.org/all/aYvi4Y_HNqk_u1-v@fedora/ [1]
-> > Signed-off-by: Breno Leitao <leitao@debian.org>
-> > ---
-> > Once we move it outside of vmcore info, I am planning to add new
-> > features that are in the limbo now, given they don't belong to vmcore
-> > info, such as:
-> > 
-> > Track fatal hardware errors
-> > 	https://lore.kernel.org/all/20260617-hwerr-v1-0-ff131cd6203c@debian.org/
-> > 
-> > Expose hardware error recovery statistics via sysfs
-> > 	https://lore.kernel.org/all/20260202-vmcoreinfo_sysfs-v2-0-8f3b5308b894@debian.org/
+> Currently many I/O related structs carry a `SIZE` parameter to denote the
+> minimum size of the I/O region, while they also carry a field indicating
+> the actual size. Proliferation of the pattern creates a lot of duplicated
+> code, and makes it hard to create typed views of I/O.
 > 
-> We already have rasdaemon and a whole pile of infrastructure around reporting
-> errors. Why isn't what we have, enough?
+> Introduce a `Region` type that carries the `SIZE` parameter. It is a
+> wrapper of `[u8]`, which makes it dynamically sized with a metadata of
+> `usize`. This way, pointers to `Region` naturally carry size information.
+> This type is required to be 4-byte aligned.
+
+Why 4, specifically? i.e.: I wonder if this breaks u64 mmio accessors?
 > 
-> The stick-the-error-into-vmcore makes sense as a use case, sure. But this
-> other information we already have plenty. I think you should use/extend that
-> instead of adding more.
+> Expose the minimum size information via `MIN_SIZE` constant of the
+> `KnownSize` trait. Similarly, expose the minimum alignment information via
+> `KnownSize::MIN_ALIGN`.
+> 
+> With these changes, it is possible to add an associated type to `Io` trait
+> to represent the type of I/O region. For untyped regions, this is the newly
+> added `Region` type. Remove `IoKnownSize` as it is no longer necessary. Use
+> the same mechanism to indicate minimum size of PCI config spaces.
+> 
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-I agree the sysfs exposure duplicates existing infrastructure, points
-taken. However, tracking fatal hardware errors provides value at crash
-analysis time—it lets us quickly determine whether a fatal hardware
-error occurred during the kernel's lifetime, which is useful for
-root-cause attribution.
+If MIN_ALIGN = 4 is actually intentional:
 
-> The stick-the-error-into-vmcore makes sense as a use case
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
 
-For this, would you like to keep it in vmcore info (as of today), or
-move to RAS subsystem?
-
-Thanks for the review and direction,
---breno
