@@ -1,289 +1,310 @@
-Received: from mout.web.de (mout.web.de [212.227.15.14])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F7C26E71E;
-	Tue,  7 Jul 2026 08:55:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783414550; cv=none; b=gcWXZ4qJS2F16PxTsfSp/RQQizVSPVLz077c6Sxt2YmMDLfOfNcktA1P5+Gj2BWI8Cwq4A4Zm8DR2lHwQOuJfk2dxTVIVmdJ7QvA8+7hT26pevVoVynjQZLtU+hADPd47XODC3sKg8aIJgEqXsp7YUl3Cv1I9Ji4esnL2MUtC0Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783414550; c=relaxed/simple;
-	bh=t241H8Fby9gUNN/o/dRLXYZIif/dvFrYf81DZTQeehg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s58cLxza3beBYaiWirGj6eWNRMtY/ow2l6E3YHyyHW8nfGeaeH32TjY9iGBe8BsUNOEEIghY2QQOScO1EyboR73z8KBApfDM26jid96ywCx5rm9S0OkapZoK/4B6ZmrBo4KoxPBxs+oFnX7wAug2hydN6FY5ZKaWMnriqyAs9aU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b=waoyR/9B; arc=none smtp.client-ip=212.227.15.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D08EE38F251
+	for <linux-pci@vger.kernel.org>; Tue,  7 Jul 2026 09:14:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783415666; cv=pass; b=YVRN/oVe1pxeoTjke5JIG17k/AsmKLG/xM38AuNoD3o/B/U4ZRryn41FzTTZ6YFwV4WkETWmxSA76yfjmQR+bmbLfApzwQ2hufWwEz3MfMfq5qXSz3gmqQPTSwuiq9Jaa5nupc2mb+Pa4I+/sfIHjWax/7TBhBDia9vWw5qFhh8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783415666; c=relaxed/simple;
+	bh=tId6bX+sfVblETA9h7jW1T52GCPIi9+Oqbw/3POIA/0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Fl/UtEbXp+ikycydi16WMekzFDt0xf6XghzuB5kgJZ8LZARcgeLWuc+CQbLy+MkR/DunrutSsLM5hJYvRiSPTIbVjysG91P30PkxzGlML1IbdL6Xbqo6tHpepxL9p5/6Y348s1HPjUOEZnaf5lzbb5igfePnM5Nle6n2LPfOH/k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=k2CayWgQ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bRQsKiBS; arc=pass smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b="waoyR/9B"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1783414541; x=1784019341; i=smoch@web.de;
-	bh=vd+nnRMHyGsU3KmgANxpwezMHUP8vXgFVUmNLtg6kDs=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=waoyR/9BKgvyEUHWgVVd5AwiI58aR0OYANJ8kXyIMWe1H+iqg6kDMXjXcaWp5jZA
-	 1SuwIx6HUWC4kJ9/H0Cn+2bFb/FX45vEJY8vRyZTOiaszqlNgZRA5luDOrn3POWlz
-	 9gs19Q6y2Ra75B/HM6gEEU1/Q48bv9Fu4ps5A/j+DvPzizM9Noa7SRLHGFIK473nw
-	 2A71eenXa6NOY0HV45UP6larIDJk9KR8TtdODoSAWx2f2LudTFBP1e5xGLsHFhoyc
-	 yasL/IbCH93BiW8iK0nfJtl69feQ/JDH+EAJdpj7R06SHM1XD8ezpchHeQMJSXKAJ
-	 HN9aoo1ThjMqniCwlw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MKdLM-1wMBLk3Y3Y-00OBJU; Tue, 07
- Jul 2026 10:55:40 +0200
-Message-ID: <4836b6f1-d40d-479d-acf7-a67769e0c8ac@web.de>
-Date: Tue, 7 Jul 2026 10:55:38 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="k2CayWgQ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bRQsKiBS"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6678E74i3004730
+	for <linux-pci@vger.kernel.org>; Tue, 7 Jul 2026 09:14:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	pu/T3O5IFYIVcL/NKBgCksHrYTwl+ICEoKPHOSRHwDI=; b=k2CayWgQ9+eFsDZN
+	dLJAaNE/s5IHgx3dicq5hpFCeEUpvXrRFa43+MSueA137TE5WdAt9yIPM1hHIv6W
+	PYx/ScLFu4fQ4GAy5NV/NSeQ5ybHlBrMjxtd5OAlJRAy6svBwmZpjqaZKialOVOC
+	OFDLQnj+0mIJKYU40Cp/j73wr6BmMzERSCC4k3kw+LJZoYpukHaoNXFcp73lVMHN
+	jDByRKHPfOnsUpUh3t9nTBir8FYZinQ12/71lYvN2Qp7PICF1Y1TOzpadp+X7cdq
+	vJET/n5FqtrqWGccj4jNDvCWv6YXJGJZ7jXk5yI8kq5iLsPAedV8MmoTQYDOpD1a
+	1Y/IEA==
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f8su715uf-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2026 09:14:22 +0000 (GMT)
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-91ed0e140c5so728231385a.0
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2026 02:14:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783415662; cv=none;
+        d=google.com; s=arc-20260327;
+        b=eBnPKhaodbVpRNHp6AjyACCnhED8/vPcLaoepm3Z/B5l1a6x47KzNiRyr5GqoJXurX
+         FHveszUpoiyx2H4177vzNaHVyUIWW3kfnXC2o7Art1lxTT8RVtdvc6xxnABq9eMalJbd
+         PshEu5e41nGE3Td//R6c0+fog0EZou0IgwUcklGqxytERk3DS+qM+E3n6LJpNektmOcj
+         UytxCuB3mMXlQmthNwtwaA2BIZvEMk77nKveknXvz6KspSpXjQ6y3p0Flcsr4oVf6i1b
+         bEe1h3s/tgVJIajVephqIdxyZnPgq8io5zJ3/zQf9J83QDTi/DP4RdvCgBumYs6tRY+1
+         MzSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=pu/T3O5IFYIVcL/NKBgCksHrYTwl+ICEoKPHOSRHwDI=;
+        fh=M18a9vcB1ow2aSc3RDPyd1PFOdKT3hC5JOmXUh7KhlA=;
+        b=Kb/ChbL9NLXvt6zlYlWGKkrrXS50Ap9Q1w3aoVAkMAap+P2/zOPZTfUsYOU5YcpMwB
+         TukcTh3EaiKe93JDb62R5yt8O8JMaSwQ5IfFyFbHtWg+pNnko0cYMJci1+IAUMr5/UAm
+         ohrekFWlSJJIhL16hfthnIOswlYP/GseLtl3FU9r6xUpdbHW0bL7onuTDHzvA62pECjr
+         jbIiQpfa8kzzD5KqEFNE07LAwxoMG3GeYQ6Y9j4cuGLA8u9PfdmNKM1WpwCcJZ1o1Njr
+         3aOIK+a/Bxqcojm0JgrutHxb51vR+7MWCH5PUyaizuN7x9Y7B3DPYXlwL/AKHee1bhf3
+         iKtg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1783415662; x=1784020462; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pu/T3O5IFYIVcL/NKBgCksHrYTwl+ICEoKPHOSRHwDI=;
+        b=bRQsKiBS5xGF01cbFrmL+CU9JHe1A0cM9jSj49rAB9mh8aLD7ZSSENZ+wRHojAs7Qu
+         1fX4UDDoNScN9T1cTiXO87mOCjmiPKLI0vt/1vNszSnxbSVzWWzV3QKX80PBfuMmNJef
+         8R2HYI4IKW9qNSgEuOxwV2wPXqZyDAbRApJEUwKnwlcXf91HSXWb+B6NeXXPzECQwBeI
+         aNOKCUL00B/K9NeBWnL42AlKgPQTyXuNXzDR4Nr3ZBy/jKR0HUQK3J3lUHYI3cCcn/n0
+         9KXi5zuiMiWRkNqfbaG0gInpQPlx5PX8l90BWh6u2khS0CqRRtxaFuoi7+H4toK3lTOU
+         fDnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783415662; x=1784020462;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=pu/T3O5IFYIVcL/NKBgCksHrYTwl+ICEoKPHOSRHwDI=;
+        b=AXKdRVMRaCmbUS6mV7/SMx4eaqxx7YMsV5cPnwQ4MgONpZBbTiePscFfIAWUWnwKiJ
+         6H8/v1yKBLYVaAEZropltrRfcD60vAmXNPzJoII/dNxrde0A8vRPqFPRTNhnpFynGCkR
+         mcB5G/SPQEqK/wg8XDtZPmLhLhR/LLDjy+CDIKWH/VJfUY5v5ORA4818mkI7HRjSU1aP
+         /WGzB6vmlBGD1CuK01Flm9nJ8OHKcLBmW1MFfp3/IybOu/mE7g6F3kG29xN2e+c48xhW
+         v28bKCqYJsVvLvS8jSxdojDnK3evYmUcNCQp6s1qvlTB9cdhBVBrE8KlrccUHY95xrin
+         Sdcg==
+X-Forwarded-Encrypted: i=1; AHgh+RpVk5L4u5bGIbkbqkx0nC8M1ODImWKkWbQMQtc2gbBjxLtOxA5tTMoP348mChS9UHJffVupVsbn+ac=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4AcIu0ZXGgAbM4XwQvPSQb+4OKiVvVXBiGp7/q9cFUJA6IG4n
+	kAXi44GhE5MT24UOhL+Tk7wRaJS2QhuEayQeBBLwb7qw5A/1Xv+DyZExC5c2e5XL0J7FZw5EZyN
+	h392v7GefZ/vhZf7pvI46q3yPuwTcs3YslelkePXDABrMVb/ZhR/aRcBzppJDw/tR8L9qnp8eVf
+	CPEdT0WS5FIQNrGd/e2r6KZMSFL5G2BwT18jQVTQ==
+X-Gm-Gg: AfdE7cnPqwy1HN9RamjafcGZzyforOQp1LWJXQ3J7emV6xd7WK1qS3OWACqg0g50sRu
+	VhdO9MFPMhO99F7GLmmAvvH6RzU8S8G6vHFeN3nvar4oWAR3vxilMSsTR+hc2x4Mwhfgyu+0gLB
+	k7rm0oDHnhugIWAz9yWO+OpwmY7MVTqO4u6W66fO1W3MK5j0xYpg74hcL4ZC7DyWYuv069hKBf8
+	I8pCSKrFhrqy7kLfZIpVC25sJKQ/UjuKNnbHd8lHIqvYsjEDAUF1ksJYAE/r1YqW0D/I1/aGN4M
+	P9+3iVVBUlo=
+X-Received: by 2002:a05:620a:17ab:b0:92b:8c84:3e61 with SMTP id af79cd13be357-92ebb4b43aamr520579285a.3.1783415661793;
+        Tue, 07 Jul 2026 02:14:21 -0700 (PDT)
+X-Received: by 2002:a05:620a:17ab:b0:92b:8c84:3e61 with SMTP id
+ af79cd13be357-92ebb4b43aamr520574385a.3.1783415661343; Tue, 07 Jul 2026
+ 02:14:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
- power and reference clock control
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>,
- Frank Li <frank.li@nxp.com>, "l.stach@pengutronix.de"
- <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
- "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
- "mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- "festevam@gmail.com" <festevam@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "imx@lists.linux.dev" <imx@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Hongxing Zhu <hongxing.zhu@nxp.com>
-References: <20260706030629.3264320-1-hongxing.zhu@oss.nxp.com>
- <a42a7e16-1798-4db5-9f03-ba608a700645@web.de>
- <GV2PR04MB120197631BE612B526EAA33068CF02@GV2PR04MB12019.eurprd04.prod.outlook.com>
-Content-Language: en-US, de-DE
-From: Soeren Moch <smoch@web.de>
-In-Reply-To: <GV2PR04MB120197631BE612B526EAA33068CF02@GV2PR04MB12019.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20260702-monza-wireless-v2-0-7b56e2a6a6d4@oss.qualcomm.com>
+ <20260702-monza-wireless-v2-3-7b56e2a6a6d4@oss.qualcomm.com>
+ <43re752djujsh2kiyvjlkpmztxsh4atg6472qhir4lgay24zbo@mtlkn2xc2ors>
+ <rxt4n6vuscu33mrw24af72lb3s6urqfpkhtia44yfo4j7wtu6o@3xp57owekrgj>
+ <u5ieok3hgjcf74sxjdzv6xurmlbve46xa3imgfnom4hpjarmxa@fna5daqpyk3r>
+ <zat6uuvh7jwfxajvqtif6d67osf6h5b2vxig3bmuch76btpdkj@bfxjj7kk5fjk>
+ <ynhos7h4x3kbqbio2gkigoo5rqbwogrzihkylxv5pqjtqpqmnq@rlyjaiopx74a> <l4qycbmz2zaroe5rreuop4dx7ugfcx37hfaketvn43trdpaept@jyx65agqznq4>
+In-Reply-To: <l4qycbmz2zaroe5rreuop4dx7ugfcx37hfaketvn43trdpaept@jyx65agqznq4>
+From: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Date: Tue, 7 Jul 2026 11:14:10 +0200
+X-Gm-Features: AVVi8CduE2Nonq5P1YApvPwl-pxo6P4sEIM2US1PAw61u8B5ymQBuhJPdhfD7bE
+Message-ID: <CAFEp6-0AA-hTy=3KaRNEJ+kF0otGLTGTujvWJqhT2dHDj94E4w@mail.gmail.com>
+Subject: Re: [PATCH v2 3/4] Bluetooth: hci_qca: Support QCA2066 on M.2
+ connector via pwrseq
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:nmcnLEXO7GY/phT0DGDwKsg0Ynvc1CL90x/cdqQM0zVS/Ajv2mK
- XO6/YZYp/HPwYlQr+vLHoESgFn1faIlNLmADmBeLOYPSNUpfIdEme2IipbjbC79QKeqg+F/
- kmiwkcihyWoWZdnjY/6436bClOvyQigduW93r5VSpRIuAi3Z4vG5GPDOfI4xtY2rtQSQQjC
- tfHcymhkvISuo6tov/O2g==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:TEuXNA2cO1g=;upVu3S0O19GWhkoG7RuzMoMuwKy
- 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
- bx4btmaD0=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA4OSBTYWx0ZWRfXwX8ew3zylO/k
+ tQ8IymxJ2HRkq+7qxQkFc5RWzOf7Xz9FwepbdG19U6cTiME/5pxvvMP7ZhKkfHzqSpM8k1GaKxh
+ k5L5WZOuxhfczs61M69GFZxpZPS5ajeD8KB9+e4Kmpk9cq0pW6qeHeXZ1jlizIabxrNDRKgiZiU
+ u2cxoybFdRLL546myHayRJLgMwhGF/hH4EjkDqyARR8Eg7xHI3K9MMjSPBfHhv+HdNuVym/EBoX
+ fSILpkcwmLdcS2GTpsTeD0WAUR3uLaLaYDEYaRgdbulU3sjQ2OQGS/iDFLkVToIxD6JFKQWTjve
+ PptLIDbRUE452UYDLz50NR2nui0m5Qyfn+US7Q0po5mZefEFmc1f7lRcY/PwRp8dfVytPKWto7U
+ lY9tixYo2W6wgs8pX1Z5SOYLihd0AYJL+P4am0/pMd3BtG26tsij0ey1x7TFvVU7aKnj/9wrNNC
+ vT2yMZR8Si96Uvtg6nw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA4OSBTYWx0ZWRfXyzFrNatEpvL0
+ 62BowUlLYTYr/T/G1GU6/RDfSyqK77T92nq5IUhjVlwXD5rVpcw68PADNnkgsJY7pnUFv1DXFnJ
+ aD/w6pG5Z13UW8Of5oR1tjqPaLwwqiU=
+X-Proofpoint-GUID: b34UGZig9wZHLFh7CoVjS1lGYiKcHG8w
+X-Proofpoint-ORIG-GUID: b34UGZig9wZHLFh7CoVjS1lGYiKcHG8w
+X-Authority-Analysis: v=2.4 cv=HN7z0Itv c=1 sm=1 tr=0 ts=6a4cc36f cx=c_pps
+ a=50t2pK5VMbmlHzFWWp8p/g==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=DJpcGTmdVt4CTyJn9g5Z:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=CFFC92ghu-o7u9NOV88A:9 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-07_02,2026-07-06_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0 clxscore=1015
+ bulkscore=0 suspectscore=0 lowpriorityscore=0 impostorscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607070089
 
-On 07.07.26 05:03, Hongxing Zhu (OSS) wrote:
->> -----Original Message-----
->> From: Soeren Moch <smoch@web.de>
->> Sent: Monday, July 6, 2026 10:09 PM
->> To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>; Frank Li
->> <frank.li@nxp.com>; l.stach@pengutronix.de; lpieralisi@kernel.org;
->> kwilczynski@kernel.org; mani@kernel.org; robh@kernel.org;
->> bhelgaas@google.com; s.hauer@pengutronix.de; kernel@pengutronix.de;
->> festevam@gmail.com
->> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->> imx@lists.linux.dev; linux-kernel@vger.kernel.org; Hongxing Zhu
->> <hongxing.zhu@nxp.com>
->> Subject: Re: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separatin=
-g PHY
->> power and reference clock control
->>
->>
->>
->> On 06.07.26 05:06, hongxing.zhu@oss.nxp.com wrote:
->>> From: Richard Zhu <hongxing.zhu@nxp.com>
->>>
->>> Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
->>> regulators") introduced a boot hang on i.MX6Q/DL variants by changing
->>> the initialization sequence.
->>>
->>> The issue stems from coupling PHY power (TEST_PD) and reference clock
->>> (REF_CLK_EN) control in imx6q_pcie_enable_ref_clk(). When these are
->>> managed together, the timing between PHY power-up and reference clock
->>> enablement cannot be properly controlled, leading to initialization
->>> failures.
->>>
->>> Fix this by separating the two concerns:
->>>
->>> - Move PHY power control (TEST_PD) to imx6q_pcie_core_reset() where it
->>>     logically belongs with reset operations. This ensures PHY power st=
-ate
->>>     is managed as part of the core reset sequence.
->>>
->>> - Update imx6qp_pcie_core_reset() to call imx6q_pcie_core_reset() for
->>>     shared PHY power management, avoiding code duplication.
->>>
->>> - Make imx6q_pcie_enable_ref_clk() responsible only for reference cloc=
-k
->>>     (REF_CLK_EN) control, simplifying its purpose.
->>>
->>> - Remove the 10us delay workaround from imx6q_pcie_enable_ref_clk() as
->>>     proper sequencing is now handled by the core_reset functions.
->>>
->>> This refactoring ensures PHY power is controlled during reset
->>> operations, fixing the boot hang while improving code maintainability.
->>>
->>> Fixes: 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
->>> regulators")
->>> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
->> With this patch on top of v7.2-rc2 I see everything booting, lspci show=
+On Mon, Jul 6, 2026 at 8:44=E2=80=AFAM Manivannan Sadhasivam <mani@kernel.o=
+rg> wrote:
+>
+> On Sat, Jul 04, 2026 at 03:11:13AM +0300, Dmitry Baryshkov wrote:
+> > On Thu, Jul 02, 2026 at 05:08:56PM +0200, Manivannan Sadhasivam wrote:
+> > > On Thu, Jul 02, 2026 at 05:34:31PM +0300, Dmitry Baryshkov wrote:
+> > > > On Thu, Jul 02, 2026 at 04:17:43PM +0200, Manivannan Sadhasivam wro=
+te:
+> > > > > On Thu, Jul 02, 2026 at 03:14:49PM +0300, Dmitry Baryshkov wrote:
+> > > > > > On Thu, Jul 02, 2026 at 12:46:15PM +0200, Loic Poulain wrote:
+> > > > > > > For QCA2066 (and other QCA chips) on M.2 connectors, the UART=
+ enable
+> > > > > > > is controlled by the W_DISABLE2# signal managed by the pcie-m=
+2 power
+> > > > > > > sequencer rather than a dedicated BT enable GPIO.
+> > > > > > >
+> > > > > > > When the serdev controller has an OF graph (indicating it is =
+connected
+> > > > > > > to an M.2 connector), acquire the 'uart' pwrseq target from t=
+he
+> > > > > > > connector's power sequencer and use it to control BT power in=
+stead of
+> > > > > > > the bt-enable GPIO.
+> > > > > > >
+> > > > > > > Also allocate bt_power unconditionally for all SOC types sinc=
+e the
+> > > > > >
+> > > > > > Can we just fold it into the main struct?
+> > > > > >
+> > > > > > > pwrseq path is independent of the SOC type switch.
+> > > > > > >
+> > > > > > > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> > > > > > > ---
+> > > > > > >  drivers/bluetooth/hci_qca.c | 81 ++++++++++++++++++++++++---=
+------------------
+> > > > > > >  1 file changed, 43 insertions(+), 38 deletions(-)
+> > > > > > > @@ -2387,6 +2390,35 @@ static int qca_init_regulators(struct =
+qca_power *qca,
+> > > > > > >     return 0;
+> > > > > > >  }
+> > > > > > >
+> > > > > > > +/*
+> > > > > > > + * Acquire the M.2 connector power sequencer.
+> > > > > > > + *
+> > > > > > > + * An OF graph link on the serdev controller is only present=
+ when the BT
+> > > > > > > + * device is attached through an M.2 Key E connector. In tha=
+t case the UART
+> > > > > > > + * enable (W_DISABLE2#) is driven by the pcie-m2 power seque=
+ncer instead of a
+> > > > > > > + * dedicated BT enable GPIO, so grab the "uart" pwrseq targe=
+t from it.
+> > > > > > > + *
+> > > > > > > + * Returns 0 if no M.2 connector is present (nothing to do),=
+ a negative errno
+> > > > > > > + * on error, otherwise 0 with qcadev->bt_power->pwrseq popul=
+ated.
+> > > > > > > + */
+> > > > > > > +static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcade=
+v, bool *bt_en_available)
+> > > > > > > +{
+> > > > > > > +   struct serdev_device *serdev =3D qcadev->serdev_hu.serdev=
+;
+> > > > > > > +   struct device *dev;
+> > > > > > > +
+> > > > > > > +   if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev))=
+)
+> > > > > > > +           return 0;
+> > > > > > > +
+> > > > > > > +   qcadev->bt_power->pwrseq =3D devm_pwrseq_get(&serdev->ctr=
+l->dev, "uart");
+> > > > > > > +   if (IS_ERR(qcadev->bt_power->pwrseq))
+> > > > > > > +           return PTR_ERR(qcadev->bt_power->pwrseq);
+> > > > > > > +
+> > > > > > > +   dev =3D pwrseq_to_device(qcadev->bt_power->pwrseq);
+> > > > > > > +   *bt_en_available =3D device_property_present(dev, "w-disa=
+ble2-gpios");
+> > > > > >
+> > > > > > I think here you are looking into the exact details of the othe=
+r of the
+> > > > > > graph. There might be other devices on that side, while the cod=
+e now
+> > > > > > assumes M.2. Or, consider having an M.2 controller which handle=
+s
+> > > > > > W_DISABLE2# internally rather than through the GPIO.
+> > > > > >
+> > > > >
+> > > > > This code only deals with M.2 connector in specific, so I'm not s=
+ure why we need
+> > > > > to worry about *other* kind of devices. Let's worry about them wh=
+en they show up
+> > > > > (with graph interface ofc).
+> > > >
+> > > > I don't think we want to go through the drivers using M.2 connector=
+s in
+> > > > such a case. In the end, the contract should be that there is a pow=
+er
+> > > > sequencer on the other side of the graph, but the specifics of the
+> > > > connector should be abstracted out. Do you know, if in the x86 worl=
+d the
+> > > > W_DISABLE2# is a GPIO or is controleed by the hub.
+> > > >
+> > >
+> > > I tried to abstract out, but Bartosz didn't want pwrctrl APIs to do t=
+hat level
+> > > of abstraction as pwrctrl APIs should be generic and should not be bi=
+nd to a
+> > > specific connector and exposing its internals.
+> > >
+> > > That's why we ended up having pwrctrl core exposing the 'struct dev' =
+using
+> > > pwrseq_to_device() and letting the consumer extracting whatever infor=
+mation it
+> > > needs.
+> >
+> > Do we have other ways to control M.2? For example on the x86 systems,
+> > are those signals controlled via GPIOs (or GPIO-like registers) or are
+> > they controlled separately by something like M.2 controller? Or do you
+> > have an idea about other non-x86 systems?
+> >
+>
+> Thre is no OS-visible M.2 power control in ACPI systems. ACPI defines PRx
+> objects to control power to the PCI devices based on the D-state and the =
+OS just
+> evaluates the _ON/_OFF methods of the respective objects.
+>
+> So this API is not going to be useful on non-DT systems where the BT_EN G=
+PIO
+> handling is abstracted away. And also on platforms where BT_EN is not con=
+trolled
+> by GPIOs. But I haven't seen DT platforms handling BT_EN (or W_DISABLE2#)
+> signal in a non-GPIO way.
+>
+> I too prefer an API to query whether the connector supports BT_EN or not,=
+ but
+> I'm not sure how to come up with a generic pwrseq API which also satisfie=
 s the
->> root complex, but no PCIe device behind it.
->> Tested on a i.MX6Q based tbs2910 board.
->>
->> For me it is not clear whether this fail to detect PCIe devices is rela=
-ted to the
->> patches in question, the reset timing, or something else. Needs further
->> investigation.
-> Thanks for your kindly help to tests.
-> Did you ever encounter the boot failure without this patch based on v7.2=
--rc1
-> or later?
-Have not tested this. Unfortunately currently I have no access to my=20
-tbs2910 test board.
-I used a production system for this test here, but this is very=20
-difficult to recover
-from boot hangs.
+> requirement. If you have any suggestions, please let me know!
 >
-> After applied this patch, my i.MX6Q Sabresd board can boot up successful=
-ly.
-> And the endpoint device can be detected as well.
->
-> My Local commits:
-> ad5939d49b268 (HEAD -> v7.2-rc2_pcie) PCI: imx6: Add runtime PM support =
-for i.MX95
-> db7b15f198125 PCI: imx6: Update MPLLB bandwidth for i.MX95 PCIe Gen3 sta=
-bility
-> a26735515c076 PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY power=
- and reference clock control
-> d617eadf52a46 PCI: dwc: Add force_l2 flag for platforms requiring L2 ent=
-ry without D3cold
-> 8cdeaa50eae8d (tag: v7.2-rc2) Linux 7.2-rc2
+> FWIW, I tried adding pwrseq_is_fixed() API [1] earlier, which was turned =
+down by
+> Bartosz.
 
-My commits (v7.2-rc2 plus my patch to enable MSIs for the endpoint plus=20
-this patch discussed here):
-8cdeaa50eae8 Linux 7.2-rc2
-b62414d07e24 PCI: imx6: Keep Root Port MSI capability also for i.MX6Q
-e8176c6a27ed PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY power=20
-and reference clock control
+So, I'll submit a new version incorporating Dmitry's request to fold
+bt_power into the main structure.
+However, what should we do about the powerseq point? Should we keep it as i=
+t is?
 
-I'm not sure what your other mentioned patches are.
->
-> Kernel logs:
-> Starting kernel ...
->
-> [    0.000000] Booting Linux on physical CPU 0x0
-> [    0.000000] Linux version 7.2.0-rc2-00004-gad5939d49b26 (nxa08258@shl=
-inux89) (arm-poky-linux-gnueabi-gcc (GCC) 15.2.0, GNU ld (GNU Binutils) 2.=
-45.0.20250908) #38 SMP Tue Jul  7 02:36:46 UTC 2026
-> ...
-> root@imx6qpdlsolox:~# lspci
-> 00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-> 01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Co=
-nnection
-on linux-7.2-rc2 plus patches (see above):
-root@matrix2:~# lspci
-00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-
-on linux-7.0 (not tested on 7.1):
-root@matrix2:~# lspci
-00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-01:00.0 Multimedia controller: Philips Semiconductors SAA7160 (rev 02)
-
-I guess the new power-on/reset timing is not sufficient to init the=20
-endpoint in time.
-Did you reduce the time from powering up the PCIe slot to release of PERST=
-#?
-There is a power switch on the tbs2910 board for the PCIe slot, not sure i=
-f
-this is available also on SabreSD.
-
-Best regards,
-Soeren
-> Best Regards
-> Richard Zhu
->> Regards,
->> Soeren
+Regards,
+Loic
