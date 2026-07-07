@@ -1,49 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBD723183F;
-	Tue,  7 Jul 2026 04:53:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4275E35898;
+	Tue,  7 Jul 2026 05:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783400023; cv=none; b=UIR7zqqIyz9D5HWlCzh63kPsw+qjNKZpoL2FcPpfdooBvQOU/Fglq3FtxRDCYvWZebyP4yz3alt1VwUeVX+9D52pnjL+VX5TBk8Ezt/XOToxgztsr8glkJsR7R2uA6HnzBC8OMkRUpHLFVmYsMEsugHDBVFoNUpBxEo2PnWAcmQ=
+	t=1783400493; cv=none; b=KMLcaa2SLcTnZcnvwQEoTTgqEmLoWVCD9VHP+iS3/zwy9D+va8yHN0MlWkawDSLR8WH3D/mZhzQV0ROgxQjyB6EdgkS72siD/zVf0pMqHbunjt3zSrWeb7OJIRP/spcyL/1u39OkS6mhuBgIbPGRzFYCy3WTmRr8Yd5sJtl5b6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783400023; c=relaxed/simple;
-	bh=rX5iaofbXbOpSh+lRtn4L63OqxQeL6DGzfQYwC6cr6s=;
+	s=arc-20240116; t=1783400493; c=relaxed/simple;
+	bh=mxytIN/UFgCA0tvBfOVeqmq6MfS3mnFBdlfExS/ORi4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HoDEjk5V+gCF0omGmc8H/rxhR+8wG8yE48MUNucYMR1asQhn8tDpb9LZezfLc0HpTl+cCLwsDOe+dx9NCsPCgpzijyI7K4HQxPaJiVBpW7un1XK+FnWid3FfKngxf1VKkcDQETYlHoljrbjj2T97GyZuzFEbNtfi+dPX/I1MVKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IMZ9IxUk; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=NnkXCyp5pcQkm1sMRmqMgp6a5FJnKHQLi28PsfWscXwgYvcRpAJfsKk/u/dUrpW4BQDgyZ3m4sborSFcuyDnLytV12dSEXxrkn99Vv6yTho0mfUf7aV9BW72bsXbk4JODjcsV+4MeoySNtoMocXoXIqzUO/bRuGSWBi/L1Q0Rc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=Q/5j5tq8; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IMZ9IxUk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2660F1F000E9;
-	Tue,  7 Jul 2026 04:53:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783400022;
-	bh=6nzkmfJ6Uv5FSEajJK/nz5K8722h+71LROCSrSNOHd0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IMZ9IxUkiFg23ctSK8a7yxkZG6exNx5yK0jQCw4PXitWmmu/xoNyyW+3vTyGvSwyy
-	 YrYfcEuNDPLS7XEKoUUaSnPnLC7iwC2UsZeHjJGqdBCPeUzaH8Qj7G4Bf/y6rT11sT
-	 W/kh4z654JE1eHhLzBQkahN62FQp61mIAlXvY504c35vCCxJjDZ2aUM57hRWc8PFTT
-	 hP1yBcomR3DhQMjm55dMkhI1X/H6VBVvtkpuSc1AINdGgEoPqLqn645h850oOl/a3r
-	 eg4h93UCUyXzESADe+GMJWNZmwRwr0O35LzFn4AaKkV67X4LGu7PkQH5xIEAh/XBpm
-	 bRc30qJppXPqw==
-Date: Tue, 7 Jul 2026 06:53:32 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH 1/2] dt-bindings: pci: qcom,hawi-pcie: Add Maili PCIe
- compatible
-Message-ID: <43b5xhqvnapamfv4aomid647kaxrudgjcbnnca23t3vxitv67t@njdlthj2oisa>
-References: <20260703-vdev_maili_dt_bindings-v1-0-c9df0916cd5e@oss.qualcomm.com>
- <20260703-vdev_maili_dt_bindings-v1-1-c9df0916cd5e@oss.qualcomm.com>
- <20260706-pastoral-okapi-of-reading-e5bdb3@quoll>
- <yntj62kr7tixc7capwdr6xhv2zpisfrjg62bwftgiuujf4fzt5@cjdrkglo4dv5>
- <9967f1a0-a9e3-4d62-b5df-7f625610a89d@kernel.org>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="Q/5j5tq8"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 02E2E40E00DC;
+	Tue,  7 Jul 2026 05:01:30 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id e4YWmARrWxwQ; Tue,  7 Jul 2026 05:01:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1783400480; bh=lf4G1Hvt3a3wr7cV52/ElcWQzEi1uqBet5MCciNxKME=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Q/5j5tq8zAyh94A1ZqrGdDrE4PsgRxWQsOw2msvC20cjgog1XBiCvRCgmzDq5Bavi
+	 zaMIosRNkrwUfiFK6mngQ7O16Beqd1riMeBYCQ+YGA0NXulX3UrH+rWEEmUDZgXQqc
+	 CazAxHxIUZfqDqlDIrWvKVmuzaIKQZkwASfDws4HfwUBCj7/m3bCe5rjvzhsMLh7Ar
+	 HisTvKDywg+D3J12ZI9YFDPhSQd8B2ino9TMv6fBtbrH34XpoUlqBxjkZ69jP3m6Eh
+	 1btKlBUCdzHCdObhzym8JK3lA/8gfgelDljZIuXA1Qo8CQAQxA7jI8WtY7MBdVx+Rf
+	 kDexJhjCfJsXPdXekLEihjK9+ZrTYMyhmCoZF+RK5yIFJahGjuZk9rW7nstkcGmXhU
+	 vKXqGp4OtRGxjqbGSY/DCmPU4ZemWmH6fOzsHZvASO1Utcm5CBzgln9etozcZ8pTf2
+	 4KoOF8BzXCw6PhuItACRxGoR8CLH40QXa0tstUEoh+6uvZdMb9WwXxGiBxFG8gULHQ
+	 1dwyZBNKLTzqWjshBqxE6GgeW8gFlXfYMau2hzu6p0y2QssgAvP0rzFcnXL6JGOnO1
+	 O2uRHuM2NMaaUmuzDjZEaTYp/vNEmb7Tzpjd92UTejn06og9rH6dTe4s3k0o3LSMZw
+	 EVF50bJ6fy4tRRFXgZGCAA60=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::42])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 5818140E0163;
+	Tue,  7 Jul 2026 05:01:08 +0000 (UTC)
+Date: Mon, 6 Jul 2026 22:01:04 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Mario Limonciello <superm1@kernel.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	Aaron Ma <aaron.ma@canonical.com>
+Subject: Re: [PATCH v2] x86/video: Only fall back to vga_default_device()
+ without screen info
+Message-ID: <20260707050104.GCakyIEMSp5SXvf52F@fat_crate.local>
+References: <20260623141505.1816786-1-mario.limonciello@amd.com>
+ <CAJ6xRxWBtaPZZ=SVff2WVE+B2c+fMJ6vTTracHU4BqH16ROXeA@mail.gmail.com>
+ <5ef1c84d-729e-4b9d-a3e4-dc20d8242982@amd.com>
+ <a23f2003-4ceb-4307-a469-dc683e6eb0f0@amd.com>
+ <20260707035645.GAakx4_XEpHpSFBYzn@fat_crate.local>
+ <e002b48f-fda8-45b3-bff7-07f1318f2d67@kernel.org>
+ <20260707041852.GBakx-LFXxLiouBLwg@fat_crate.local>
+ <f87df9b4-fd6e-45c3-aea7-e76a7995c050@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,44 +76,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9967f1a0-a9e3-4d62-b5df-7f625610a89d@kernel.org>
+In-Reply-To: <f87df9b4-fd6e-45c3-aea7-e76a7995c050@kernel.org>
 
-On Mon, Jul 06, 2026 at 07:35:52PM +0200, Krzysztof Kozlowski wrote:
-> On 06/07/2026 18:36, Manivannan Sadhasivam wrote:
-> > On Mon, Jul 06, 2026 at 08:46:41AM +0200, Krzysztof Kozlowski wrote:
-> >> On Fri, Jul 03, 2026 at 05:38:40PM +0530, Vivek Pernamitta wrote:
-> >>> Add qcom,maili-pcie as a compatible string that falls back to
-> >>> qcom,hawi-pcie, as the Maili SoC reuses the Hawi PCIe controller IP.
-> >>>
-> >>> The Maili SoC is a derivative of Hawi and shares the same PCIe
-> >>> controller architecture, allowing reuse of the existing Hawi PCIe
-> >>> DT bindings.
-> >>>
-> >>> Signed-off-by: Vivek Pernamitta <vivek.pernamitta@oss.qualcomm.com>
-> >>> ---
-> >>> Dependencies:
-> >>> - PCI: qcom: Add PCIe support for upcoming Hawi SoC
-> >>>   https://lore.kernel.org/all/20260625-hawi-pcie-v4-0-1a578603cd86@oss.qualcomm.com/
-> >>
-> >> Squash the patches then.
-> >>
-> > 
-> > But these are two independent SoC additions, isn't it?
-> 
-> It's adding a single compatible, no? If a patch adding a single
-> compatible cannot be done without multi-patchset dependencies making
-> testing by tooling impossible, then probably that work should not be
-> sent separately or even as separate patch. And I am not saying anything
-> new because half a year ago (around Kaanapali and Glymur) I voiced
-> strong opinion about that.
-> 
-> But really, you do not need to add two compatibles in two separate patches.
-> 
+On Mon, Jul 06, 2026 at 11:47:48PM -0500, Mario Limonciello wrote:
+> So my point here is that even if boot_display fails to be populated on
+> anything in your system (such as reasons the LLM called out) you will still
+> have boot_vga, and userspace still uses boot_vga.
 
-Ok then. I'll squash this patch with Hawi patch which already got applied.
+Aha, ok. Thanks for taking the time - that does make more sense.
 
-- Mani
+So looking at Fixes: I presume you want me to send this to Linus now so that
+it goes to stable too?
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
