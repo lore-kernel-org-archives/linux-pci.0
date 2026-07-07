@@ -1,314 +1,264 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3013C465;
-	Tue,  7 Jul 2026 20:46:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5DE0630C167;
+	Tue,  7 Jul 2026 21:10:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783457175; cv=none; b=h7YAIu4Ex7LThp+MqDq6R0K+4VIocVquttSzbd223/FX0TinKRmqQyHTCQKvahU1fHVyLEYgbGYAbyhUDQEi+ZBAQglPtJJqZuAisGYAkQCNRNp1xGjkCc4RSmT7JovSff/6egeVU5hWmUCstbQoaAOKxW/qO4cr6v7xgxW5YsA=
+	t=1783458656; cv=none; b=Pu4iS4czRvMFfA2se/vMx+vyVD7dArSixe8/sBXrBTGQaAuYcaDJyPEUiNB9rzaCktR5sKBRO1FZF9IuEHamHB26xpYiwDmztbnz487ktrZ2nfPhKAjCUvzHJn1jNd0cEo+81H8yfi/byPl2s7/ltXGGPpuH5qdeZiEB9SRSE8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783457175; c=relaxed/simple;
-	bh=sTqMhYE+xLCp28bXAFAQdjGE/gfFj/qOo86cYqaWGWE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fXqoKoFPHuFW+TakdezOt3ryDVOkXGnsiKPZ6maRzhojoQBvzYaC4cKatlyForN0LbYetQ5DMpdMxiLy3PGbuAeyJZmg+HrRtk6EAbLPJFrN5HZh+P0S1Cc1/aLE8VcIT2tZraBCPkGHvKgPw8VbFcStlLx7cmqHY0/DuMJNww8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Kv/4dQd1; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=MtpujWlS; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783458656; c=relaxed/simple;
+	bh=1/y3KjQ2fjlRD1cyuJqrpsmwbxft2UO8DFm9hMzhE/k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=o7fe+CCHcuFf9OJ6nZA1qyyE/ZZ38QzBFq8UqBUMiw0TcEI4bYft9rWBwrvStvSDCXns17rOwAhTE1FiY0KwLmWW3Ga9GDE7a0YKQsXTYIZwwStCZYqNQRwGJmwNyGcoXT3ZyD16za1aYpTLT4FWZVhBYqZZpgtz7SoZe7x8xi0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Rskp2gQn; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Kv/4dQd1";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="MtpujWlS"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gvtN02F1Nz8v8b;
-	Tue, 07 Jul 2026 22:38:08 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783456688;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P+KHULNUGO23fKouFSgH85v42r+d7/wZHkSXeBZEIno=;
-	b=Kv/4dQd1kRa42MH6ABoVp5Gta9fBtNQ9sonVEZl4HjeOrBOLzVXQ+CTgNZ2ErPn2JEIOVO
-	X4NsZF6XG3DVdQ8coTN7zqCdTizNujWbWf7OJgw4qgGKBRUev6gUcwAjhptLx1DmazjBei
-	91ACjR4MaKScBtVWY49LJd8WDD8INIPY20WtZc8wK4FN+8+oIZwkAPNV3MYlS7oriliwyR
-	QG0mQVc835nyh9m1YGFtTrIdGJwtJYqpLlKyQRFJh7SpDzHfYcAGt4drIogTq9TWGNnTcn
-	Tx+uk4ND3AHBFVE9GpB9YCMxC/sVZEJHIoO8aaq+GJssAExulpiGUIiHCRtlMA==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=MtpujWlS;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783456686;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P+KHULNUGO23fKouFSgH85v42r+d7/wZHkSXeBZEIno=;
-	b=MtpujWlSni6HxH3bWQh6hxG/aOjSfBZJf6MoZ+KNdrpJ6cSLEyhzdlxlgwxB9KyeTLc6il
-	9sic+Tl1/YSW9qyAmwULkIJD06A0Rvu8UuSyYD10UGXhcPrqyZZut1k2fMnjlLKnaZVgTn
-	QLssvOEB9VGJDTKzkbH3DcGvEeb6aNZqO0N8hYFy7+V/iiHT7Pjm8gFjxfDD9vPQlM9Iyh
-	RfY31GN2erNmlXk8cK3PUokCS0sCpJYuQ1pqbSkz8hk3BjwYr/bI63XBDSBiAZHQzg82iu
-	KqGz1U+BLpaWrP3iyhALY5MlvqC3KdK00/yoPEorzcWVOiih2eKVwxOpJrhFcQ==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Zyngier <maz@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v4 2/5] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
-Date: Tue,  7 Jul 2026 22:35:40 +0200
-Message-ID: <20260707203743.88299-3-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
-References: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Rskp2gQn"
+Received: from [100.93.96.56] (unknown [40.86.181.13])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C7A4820B7166;
+	Tue,  7 Jul 2026 14:10:42 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C7A4820B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783458643;
+	bh=6ZuqzjFeYeI8YCp2Qv7P1iu3j5Efggu6mHkwGAeF6FE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Rskp2gQnhnj0cYn4aI9k+LX+HRw1X1zUgMQypRfmf1aLFz1I2KEdfKGB2KGqEKwre
+	 4qMCYpCQ8FP3o/gOup/xktdEl4Nm9KiobnOfP28nTXO0emiAg4Lw5I4shYs6N9pNXU
+	 IMRCiI6W40amC8bxZ+DrUZl9RRovo5JFOJ+NPsv8=
+Message-ID: <9e999605-0527-f1c1-5c82-0055ede045b5@linux.microsoft.com>
+Date: Tue, 7 Jul 2026 14:10:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 325d9fb9c0dbff73c3a
-X-MBO-RS-META: wxct99y3u7k5nqxtqbj4samnz8ui7drt
-X-Rspamd-Queue-Id: 4gvtN02F1Nz8v8b
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH v2 1/4] hyperv: Introduce new hypercall interfaces used by
+ Hyper-V guest IOMMU
+Content-Language: en-US
+To: Yu Zhang <zhangyu1@linux.microsoft.com>, linux-kernel@vger.kernel.org,
+ linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Cc: wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
+ decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org,
+ robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
+ lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
+ jgg@ziepe.ca, mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
+ tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+ <20260702160518.311234-2-zhangyu1@linux.microsoft.com>
+From: Mukesh R <mrathor@linux.microsoft.com>
+In-Reply-To: <20260702160518.311234-2-zhangyu1@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In case MSI are enabled, but DWC built-in iMSI-RX is not in use, the
-MSI are handled via GIC ITS. Configure all controller MSI registers
-fully.
+On 7/2/26 09:05, Yu Zhang wrote:
+> From: Wei Liu <wei.liu@kernel.org>
+> 
+> Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
+> Introduce the hypercalls used by the child partition to interact with
+> this facility.
+> 
+> These hypercalls fall into below categories:
+> - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
+>    detect the existence and capabilities of the guest IOMMU.
+> 
+> - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
+>    check whether an endpoint device is managed by the guest IOMMU.
+> 
+> - Domain management: A set of hypercalls is provided to handle the
+>    creation, configuration, and deletion of guest domains, as well as
+>    the attachment/detachment of endpoint devices to/from those domains.
+> 
+> - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
+>    for a domain-selective IOTLB flush (which in its handler may flush
+>    the device TLB as well).
+> 
+> Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> ---
+>   include/hyperv/hvgdk_mini.h |   8 +++
+>   include/hyperv/hvhdk_mini.h | 124 ++++++++++++++++++++++++++++++++++++
+>   2 files changed, 132 insertions(+)
+> 
+> diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
+> index 6a4e8b9d570f..5bdbb44da112 100644
+> --- a/include/hyperv/hvgdk_mini.h
+> +++ b/include/hyperv/hvgdk_mini.h
+> @@ -486,10 +486,16 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
+>   #define HVCALL_GET_VP_INDEX_FROM_APIC_ID		0x009a
+>   #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_SPACE	0x00af
+>   #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_LIST	0x00b0
+> +#define HVCALL_CREATE_DEVICE_DOMAIN			0x00b1
+> +#define HVCALL_ATTACH_DEVICE_DOMAIN			0x00b2
+>   #define HVCALL_SIGNAL_EVENT_DIRECT			0x00c0
+>   #define HVCALL_POST_MESSAGE_DIRECT			0x00c1
+>   #define HVCALL_DISPATCH_VP				0x00c2
+> +#define HVCALL_DETACH_DEVICE_DOMAIN			0x00c4
+> +#define HVCALL_DELETE_DEVICE_DOMAIN			0x00c5
+>   #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
+> +#define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
+> +#define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
+>   #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
+>   #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
+>   #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
+> @@ -502,6 +508,8 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
+>   #define HVCALL_MMIO_READ				0x0106
+>   #define HVCALL_MMIO_WRITE				0x0107
+>   #define HVCALL_DISABLE_HYP_EX                           0x010f
+> +#define HVCALL_GET_IOMMU_CAPABILITIES			0x0125
+> +#define HVCALL_GET_LOGICAL_DEVICE_PROPERTY		0x0127
+>   #define HVCALL_MAP_STATS_PAGE2				0x0131
+>   
+>   /* HV_HYPERCALL_INPUT */
+> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
+> index b4cb2fa26e9b..493608e791b4 100644
+> --- a/include/hyperv/hvhdk_mini.h
+> +++ b/include/hyperv/hvhdk_mini.h
+> @@ -547,4 +547,128 @@ union hv_device_id {		/* HV_DEVICE_ID */
+>   	} acpi;
+>   } __packed;
+>   
+> +/* Device domain types */
+> +#define HV_DEVICE_DOMAIN_TYPE_S1	1 /* Stage 1 domain */
+> +
+> +/* ID for default domain and NULL domain */
+> +#define HV_DEVICE_DOMAIN_ID_DEFAULT 0
+> +#define HV_DEVICE_DOMAIN_ID_NULL    0xFFFFFFFFULL
+> +
+> +union hv_device_domain_id {
+> +	u64 as_uint64;
+> +	struct {
+> +		u32 type: 4;
+> +		u32 reserved: 28;
+> +		u32 id;
+> +	} __packed;
+> +};
+> +
+> +struct hv_input_device_domain {
+> +	u64 partition_id;
+> +	union hv_input_vtl owner_vtl;
+> +	u8 padding[7];
+> +	union hv_device_domain_id domain_id;
+> +} __packed;
+> +
+> +union hv_create_device_domain_flags {
+> +	u32 as_uint32;
+> +	struct {
+> +		u32 forward_progress_required: 1;
+> +		u32 inherit_owning_vtl: 1;
+> +		u32 reserved: 30;
+> +	} __packed;
+> +};
+> +
+> +struct hv_input_create_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	union hv_create_device_domain_flags create_device_domain_flags;
+> +} __packed;
+> +
+> +struct hv_input_delete_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +} __packed;
+> +
+> +struct hv_input_attach_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	union hv_device_id device_id;
+> +} __packed;
+> +
+> +struct hv_input_detach_device_domain {
+> +	u64 partition_id;
+> +	union hv_device_id device_id;
+> +} __packed;
+> +
+> +struct hv_device_domain_settings {
+> +	struct {
+> +		/*
+> +		 * Enable translations. If not enabled, all transaction bypass
+> +		 * S1 translations.
+> +		 */
+> +		u64 translation_enabled: 1;
+> +		u64 blocked: 1;
+> +		/*
+> +		 * First stage address translation paging mode:
+> +		 * 0: 4-level paging (default)
+> +		 * 1: 5-level paging
+> +		 */
+> +		u64 first_stage_paging_mode: 1;
+> +		u64 reserved: 61;
+> +	} flags;
+> +
+> +	/* Address of translation table */
+> +	u64 page_table_root;
+> +} __packed;
+> +
+> +struct hv_input_configure_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	struct hv_device_domain_settings settings;
+> +} __packed;
+> +
+> +struct hv_input_get_iommu_capabilities {
+> +	u64 partition_id;
+> +	u64 reserved;
+> +} __packed;
+> +
+> +struct hv_output_get_iommu_capabilities {
+> +	u32 size;
+> +	u16 reserved;
+> +	u8  max_iova_width;
+> +	u8  max_pasid_width;
+> +
+> +#define HV_IOMMU_CAP_PRESENT (1ULL << 0)
+> +#define HV_IOMMU_CAP_S2 (1ULL << 1)
+> +#define HV_IOMMU_CAP_S1 (1ULL << 2)
+> +#define HV_IOMMU_CAP_S1_5LVL (1ULL << 3)
+> +#define HV_IOMMU_CAP_PASID (1ULL << 4)
+> +#define HV_IOMMU_CAP_ATS (1ULL << 5)
+> +#define HV_IOMMU_CAP_PRI (1ULL << 6)
+> +
+> +	u64 iommu_cap;
+> +	u64 pgsize_bitmap;
+> +} __packed;
+> +
+> +enum hv_logical_device_property_code {
+> +	HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU = 10,
+> +};
+> +
+> +struct hv_input_get_logical_device_property {
+> +	u64 partition_id;
+> +	u64 logical_device_id;
+> +	/* Takes values from enum hv_logical_device_property_code. */
+> +	u32 code;
+> +	u32 reserved;
+> +} __packed;
+> +
+> +struct hv_output_get_logical_device_property {
+> +#define HV_DEVICE_IOMMU_ENABLED (1ULL << 0)
+> +	u64 device_iommu;
+> +	u64 reserved;
+> +} __packed;
+> +
+> +struct hv_input_flush_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	u32 flags;
+> +	u32 reserved;
+> +} __packed;
+> +
+>   #endif /* _HV_HVHDK_MINI_H */
 
-Set or clear MSI capability register MSICAP0 MSI enable MSIE bit and
-PCIe Interrupt Status 0 Enable register PCIEINTSTS0EN MSI interrupt
-enable MSI_CTRL_INT bit according to MSI enable state, set both bits
-if MSI are enabled, clear both bits if MSI are disabled.
 
-If MSI are disabled, or MSI are enabled and iMSI-RX is used, then
-deconfigure AXIINTCADDR and AXIINTCCONT to 0, which disables any
-pass through of MSI TLPs onto the AXI bus and then further into
-GIC ITS translation registers.
+Please add tags to all structs, like,
 
-If MSI are enabled and iMSI-RX is not used, the configure AXIINTCADDR
-with target address of GIC ITS translation registers, and configure
-AXIINTCCONT to enable MSI TLP pass through onto AXI bus and into the
-GIC ITS. This specific configuration allows handling of MSI via the
-GIC ITS instead of integrated iMSI-RX.
+struct hv_input_device_domain { /* HV_INPUT_DEVICE_DOMAIN */
 
-Co-developed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-NOTE: This would not be possible without prior work from Shimoda-san
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: Pull GITS_TRANSLATER address from DT, which also fixes missing +0x40
-    offset of the GITS_TRANSLATER register
-V3: Add Co-developed-by to credit Shimoda-san
-V4: Fix INTC_MASK to be GENMASK(11, 3) instead of GENMASK(11, 2)
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 118 +++++++++++++++++++-
- 1 file changed, 113 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 8b03c42f8c84c..5f7211b91ee5b 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -13,8 +13,11 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/iopoll.h>
-+#include <linux/irqchip/arm-gic-v3.h>
- #include <linux/module.h>
- #include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-@@ -31,6 +34,10 @@
- #define DEVICE_TYPE_RC		BIT(4)
- #define BIFUR_MOD_SET_ON	BIT(0)
- 
-+/* MSI Capability */
-+#define MSICAP0			0x0050
-+#define MSICAP0_MSIE		BIT(16)
-+
- /* PCIe Interrupt Status 0 */
- #define PCIEINTSTS0		0x0084
- 
-@@ -55,6 +62,14 @@
- #define APP_HOLD_PHY_RST	BIT(16)
- #define APP_LTSSM_ENABLE	BIT(0)
- 
-+/* INTC address */
-+#define AXIINTCADDR		0x0a00
-+
-+/* INTC control & mask */
-+#define AXIINTCCONT		0x0a04
-+#define INTC_EN			BIT(31)
-+#define INTC_MASK		GENMASK(11, 3)
-+
- /* PCIe Power Management Control */
- #define PCIEPWRMNGCTRL		0x0070
- #define APP_CLK_REQ_N		BIT(11)
-@@ -305,13 +320,103 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
- 	return rcar;
- }
- 
-+static int rcar_gen4_pcie_host_msi_addr(struct dw_pcie_rp *pp, u32 *msi_addr)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-+	struct device_node *msi_node = NULL;
-+	struct device *dev = dw->dev;
-+	struct resource res;
-+	u64 addr;
-+	int ret;
-+
-+	/*
-+	 * Either the "msi-parent" or the "msi-map" phandle needs to exist
-+	 * to obtain the MSI node.
-+	 */
-+	of_msi_xlate(dev, &msi_node, 0);
-+	if (!msi_node)
-+		return -ENODEV;
-+
-+	/* Check if "msi-parent" or the "msi-map" points to ARM GICv3 ITS. */
-+	if (!of_device_is_compatible(msi_node, "arm,gic-v3-its"))
-+		return dev_err_probe(dev, -ENODEV, "Compatible MSI controller not found\n");
-+
-+	/* Derive GITS_TRANSLATER address from GICv3 */
-+	ret = of_address_to_resource(msi_node, 0, &res);
-+	if (ret < 0)
-+		return dev_err_probe(dev, ret, "MSI controller resources not obtained\n");
-+
-+	addr = res.start + GITS_TRANSLATER;
-+	if (addr >= SZ_4G)
-+		return dev_err_probe(dev, -EINVAL, "MSI controller address above 32bit range\n");
-+
-+	*msi_addr = addr;
-+	return 0;
-+}
-+
-+static int rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	u32 val;
-+	int ret;
-+
-+	/* Make sure MSICAP0 MSIE is configured. */
-+	val = dw_pcie_readl_dbi(dw, MSICAP0);
-+	if (pci_msi_enabled())
-+		val |= MSICAP0_MSIE;
-+	else
-+		val &= ~MSICAP0_MSIE;
-+	dw_pcie_writel_dbi(dw, MSICAP0, val);
-+
-+	if (!pci_msi_enabled() || pp->use_imsi_rx) {
-+		/* Clear AXIINTC mapping. */
-+		writel(0, rcar->base + AXIINTCADDR);
-+		writel(0, rcar->base + AXIINTCCONT);
-+	} else {
-+		ret = rcar_gen4_pcie_host_msi_addr(pp, &val);
-+		if (ret)
-+			goto err;
-+
-+		/* Point AXIINTC to GIC ITS and enable. */
-+		writel(val, rcar->base + AXIINTCADDR);
-+		writel(INTC_EN | INTC_MASK, rcar->base + AXIINTCCONT);
-+	}
-+
-+	/* Configure MSI interrupt signal */
-+	val = readl(rcar->base + PCIEINTSTS0EN);
-+	if (pci_msi_enabled())
-+		val |= MSI_CTRL_INT;
-+	else
-+		val &= ~MSI_CTRL_INT;
-+	writel(val, rcar->base + PCIEINTSTS0EN);
-+
-+	return 0;
-+
-+err:
-+	/* Deconfigure MSICAP0 MSIE. */
-+	val = dw_pcie_readl_dbi(dw, MSICAP0);
-+	val &= ~MSICAP0_MSIE;
-+	dw_pcie_writel_dbi(dw, MSICAP0, val);
-+
-+	/* Clear AXIINTC mapping. */
-+	writel(0, rcar->base + AXIINTCADDR);
-+	writel(0, rcar->base + AXIINTCCONT);
-+
-+	/* Deconfigure MSI interrupt signal */
-+	val = readl(rcar->base + PCIEINTSTS0EN);
-+	val &= ~MSI_CTRL_INT;
-+	writel(val, rcar->base + PCIEINTSTS0EN);
-+
-+	return ret;
-+}
-+
- /* Host mode */
- static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
- 	int ret;
--	u32 val;
- 
- 	gpiod_set_value_cansleep(dw->pe_rst, 1);
- 
-@@ -328,16 +433,19 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- 	dw_pcie_writel_dbi2(dw, PCI_BASE_ADDRESS_0, 0x0);
- 	dw_pcie_writel_dbi2(dw, PCI_BASE_ADDRESS_1, 0x0);
- 
--	/* Enable MSI interrupt signal */
--	val = readl(rcar->base + PCIEINTSTS0EN);
--	val |= MSI_CTRL_INT;
--	writel(val, rcar->base + PCIEINTSTS0EN);
-+	ret = rcar_gen4_pcie_host_msi_init(pp);
-+	if (ret)
-+		goto err;
- 
- 	msleep(PCIE_T_PVPERL_MS);	/* pe_rst requires 100msec delay */
- 
- 	gpiod_set_value_cansleep(dw->pe_rst, 0);
- 
- 	return 0;
-+
-+err:
-+	rcar_gen4_pcie_common_deinit(rcar);
-+	return ret;
- }
- 
- static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
--- 
-2.53.0
+Or just wait for my patches.
+
+Thanks,
+-Mukesh
+
 
