@@ -1,264 +1,112 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5DE0630C167;
-	Tue,  7 Jul 2026 21:10:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C022420861;
+	Tue,  7 Jul 2026 21:16:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783458656; cv=none; b=Pu4iS4czRvMFfA2se/vMx+vyVD7dArSixe8/sBXrBTGQaAuYcaDJyPEUiNB9rzaCktR5sKBRO1FZF9IuEHamHB26xpYiwDmztbnz487ktrZ2nfPhKAjCUvzHJn1jNd0cEo+81H8yfi/byPl2s7/ltXGGPpuH5qdeZiEB9SRSE8A=
+	t=1783458990; cv=none; b=LODSOoUubVTorNpOgd3diKB3bmsu6TQkbzUefNp294hDrwUWOhRBOV4hcvPKzAF3S74zGWfIT5Ll13lBYIJzNh0HDiyXbViXFjr89GN86v+3TC/jPZ83nnCYUbayKRcEDvf4cc8yGlBnnNM4ejhtm4vNqys7CQGxxTAeDlUEDnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783458656; c=relaxed/simple;
-	bh=1/y3KjQ2fjlRD1cyuJqrpsmwbxft2UO8DFm9hMzhE/k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=o7fe+CCHcuFf9OJ6nZA1qyyE/ZZ38QzBFq8UqBUMiw0TcEI4bYft9rWBwrvStvSDCXns17rOwAhTE1FiY0KwLmWW3Ga9GDE7a0YKQsXTYIZwwStCZYqNQRwGJmwNyGcoXT3ZyD16za1aYpTLT4FWZVhBYqZZpgtz7SoZe7x8xi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Rskp2gQn; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1783458990; c=relaxed/simple;
+	bh=+mU2V2lNFf7RD4UqN0PvbUf1cG2Eudz94fXgpP0KWwE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=n/vgI6NtQWBceG8Yd4F62wzOWvCLuMpBptRgIlo+eE0Q5Ywbl6PaGz8liZCd83DPhGygoayrdWtHNshkEjMNbE+vt1EaDbWIYs8yt3tvKVLLR8cE5dYglHXmQdbmhf5DCcmZyNCGCqxuEGkNR4qQb+XnGJw2VGTMwLC0edufMf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=XdwZYmB9; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Y3TIAVti; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Rskp2gQn"
-Received: from [100.93.96.56] (unknown [40.86.181.13])
-	by linux.microsoft.com (Postfix) with ESMTPSA id C7A4820B7166;
-	Tue,  7 Jul 2026 14:10:42 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C7A4820B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1783458643;
-	bh=6ZuqzjFeYeI8YCp2Qv7P1iu3j5Efggu6mHkwGAeF6FE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Rskp2gQnhnj0cYn4aI9k+LX+HRw1X1zUgMQypRfmf1aLFz1I2KEdfKGB2KGqEKwre
-	 4qMCYpCQ8FP3o/gOup/xktdEl4Nm9KiobnOfP28nTXO0emiAg4Lw5I4shYs6N9pNXU
-	 IMRCiI6W40amC8bxZ+DrUZl9RRovo5JFOJ+NPsv8=
-Message-ID: <9e999605-0527-f1c1-5c82-0055ede045b5@linux.microsoft.com>
-Date: Tue, 7 Jul 2026 14:10:46 -0700
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="XdwZYmB9";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Y3TIAVti"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id DD2CA7A0109;
+	Tue,  7 Jul 2026 17:16:25 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-02.internal (MEProxy); Tue, 07 Jul 2026 17:16:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1783458985;
+	 x=1783545385; bh=vkTzXFusKTTIzAQzapZbpKsgu5UXxCg9u56mTBnUn7E=; b=
+	XdwZYmB9Wj4oqWvOIK7bccnJslD6HR8FgaMBfQWZYWFlT8Z+vBsobTe42nYcWuNT
+	+zew7RpbwujCzxlPa/K+9CtdvsLHI0ctWZbEXCzCkMvjD7cEZTlY4DKEe2oJsBUq
+	ehU7OuLiOckXV+d4s7PX8BBMjP0w/KzYp+y16Eu+0L20qbFDE9O6AjZ9U5wxJAcG
+	SYf/qx8c8cXSd4ji5TAVU4kYWkld7UVzo8VrCvFTkMohgtd6SQiHabu4C5zJYzmj
+	C2acCPSiQ6W3TvfQTVnpq4v1nETBDUJ1HoTZoPKUbONgVMizM6ueeYoJbPwYkQaY
+	IMBGexgUoF09FW67PBZw+Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783458985; x=
+	1783545385; bh=vkTzXFusKTTIzAQzapZbpKsgu5UXxCg9u56mTBnUn7E=; b=Y
+	3TIAVtivpTUnsA+Mi5eq5BacL2+3GBZIO595ClYpUhuD1u6wR90XAloOwCYGUmez
+	OskdUD2E5iUR/R/NTAuE7IbFYmTl2bgCOxQnTzQg5tJQ9zJEdHaRplFzDJie15TT
+	jcZ3eu4BsafddtPhge6Hui5x3yXu49noXegJza2H9IZwf6Nct/7f93lLTTsBWsy9
+	thJKxdx1709dmZfP2wYpG+Oh3kTQYCEIA1X0KHKaSMRfggD7L48qwehKpG/rGYSP
+	V36JWk1GmrFwdXj+sdlFJRItNyAxtH1Yqk82z4F4e8nzzIbjpSczsdGMrPvruzod
+	8mo67cTe+SZJZ21BNDLWA==
+X-ME-Sender: <xms:qGxNaiqsjFChoxPMCCyTFgtWVk59FW8Tj_bPLLiwwekTSBLycVJfLA>
+    <xme:qGxNasXZ7d3K94TrK5Hqd-3_KqmcGGHNUgBnDM6KS-Fh80B__4oSHpa-2NLhxHVWX
+    VlWyMIrNfd3S6GKpdikEZJeQCvdOoaklUaRye6B3Mg-0xLfQS2cnw>
+X-ME-Received: <xmr:qGxNah4Q0WO-OL2gA9k_5tAKz4mVcqOEQK0vMrpOq-SY9ibT9UZkQnU_rFI>
+X-ME-Proxy-Cause: dmFkZTGZWM0TZAYrez3OUUVryhpKd4yBz4AC3t1m3FkOUK7rQ5mGJ4wrt4utdwOVYPjpQp
+    vzQtgJbhl8rO/x/CT9lk4Zp3f4iiNmlVyK9JAdRnk+zJK0ETjdKCobP3R9NLjCnoEjfNAv
+    txL/7RwaZE/cmZiUsnkpcFbWnkixRDRAG9X+ot3yl5IutpYx6Jdahs0nXCnd4lBTXrjGX/
+    QN9h2Lvfl1ViCbBWWKbgcHme930j7OPe4HLWznK0DBqLyQX0WvphwSbm+uDQ8ztc5iBuTi
+    +FV3waBa2MmWtUt0rU/S1hteG77+Mx6/10h/wbTQKXc41WSIOLVnSrvU4tkxSuwq2S09ig
+    tWNR7X7iLIx00DcIlNZrohC8zkRj7NAdZtje+7b9qpULkOfaliC1QJilJB/V+S4w1GzLSN
+    ipP6jo5pnbodPKAvNK2guRF7NeGQ8dabSCInLGizMzmO74o37/mas7XpniWxhmnGjNEusz
+    +TMTFHHYYyCXNO/5ssMxGsxLoA+O/0gJB95eMgKsC8Gv+jOPFhAvxuvYbKuiXKlZ92SHut
+    /Ry0n610i7H7Ougj/OfoRPKK41qb7/q+1BIWFVhXOAXDzwcVDwP4Je/OOiS6PWW3J5Q9et
+    Tgb/hc3n8cF/fPpQLhwhj/AI+cojyxehy42/j85EzmTuV/uvMLHOERPoKljw
+X-ME-Proxy: <xmx:qGxNai0YUQKckzrnWgqMvctSdfFOW7SlApkhvhKvdILX6E9_yle2RA>
+    <xmx:qGxNag_5eHBCfXMhWqA9g-yhtlg2eDA3EQzPl-69iyFuq1zFTNulpQ>
+    <xmx:qGxNajuW9aDdn3mdSBIA-9HdtfcU1HNFoICIN5LlnG19xbX3HA4mMA>
+    <xmx:qGxNaspLtqRXcjTGjtK42yqtwdLxJgghDB44m-4kK_bj4Utvvv0saw>
+    <xmx:qWxNar8-nB_4JdGiKT5Nlb8zOgYid1ncsMBRLiw0IAUZUBYTLIkJGT0O>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 7 Jul 2026 17:16:23 -0400 (EDT)
+Date: Tue, 7 Jul 2026 15:16:21 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Matt Evans <matt@ozlabs.org>
+Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, Logan
+ Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>, Pranjal
+ Shrivastava <praan@google.com>, Mahmoud Adam <mngyadam@amazon.de>, David
+ Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal
+ <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>, Vivek Kasireddy
+ <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v4 00/10] vfio/pci: Add mmap() for DMABUFs
+Message-ID: <20260707151621.6bb023d0@shazbot.org>
+In-Reply-To: <20260701171245.90111-1-matt@ozlabs.org>
+References: <20260701171245.90111-1-matt@ozlabs.org>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v2 1/4] hyperv: Introduce new hypercall interfaces used by
- Hyper-V guest IOMMU
-Content-Language: en-US
-To: Yu Zhang <zhangyu1@linux.microsoft.com>, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Cc: wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- jgg@ziepe.ca, mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
- tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-2-zhangyu1@linux.microsoft.com>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <20260702160518.311234-2-zhangyu1@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On 7/2/26 09:05, Yu Zhang wrote:
-> From: Wei Liu <wei.liu@kernel.org>
+On Wed,  1 Jul 2026 18:12:12 +0100
+Matt Evans <matt@ozlabs.org> wrote:
 > 
-> Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
-> Introduce the hypercalls used by the child partition to interact with
-> this facility.
-> 
-> These hypercalls fall into below categories:
-> - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
->    detect the existence and capabilities of the guest IOMMU.
-> 
-> - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
->    check whether an endpoint device is managed by the guest IOMMU.
-> 
-> - Domain management: A set of hypercalls is provided to handle the
->    creation, configuration, and deletion of guest domains, as well as
->    the attachment/detachment of endpoint devices to/from those domains.
-> 
-> - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
->    for a domain-selective IOTLB flush (which in its handler may flush
->    the device TLB as well).
-> 
-> Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> ---
->   include/hyperv/hvgdk_mini.h |   8 +++
->   include/hyperv/hvhdk_mini.h | 124 ++++++++++++++++++++++++++++++++++++
->   2 files changed, 132 insertions(+)
-> 
-> diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
-> index 6a4e8b9d570f..5bdbb44da112 100644
-> --- a/include/hyperv/hvgdk_mini.h
-> +++ b/include/hyperv/hvgdk_mini.h
-> @@ -486,10 +486,16 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
->   #define HVCALL_GET_VP_INDEX_FROM_APIC_ID		0x009a
->   #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_SPACE	0x00af
->   #define HVCALL_FLUSH_GUEST_PHYSICAL_ADDRESS_LIST	0x00b0
-> +#define HVCALL_CREATE_DEVICE_DOMAIN			0x00b1
-> +#define HVCALL_ATTACH_DEVICE_DOMAIN			0x00b2
->   #define HVCALL_SIGNAL_EVENT_DIRECT			0x00c0
->   #define HVCALL_POST_MESSAGE_DIRECT			0x00c1
->   #define HVCALL_DISPATCH_VP				0x00c2
-> +#define HVCALL_DETACH_DEVICE_DOMAIN			0x00c4
-> +#define HVCALL_DELETE_DEVICE_DOMAIN			0x00c5
->   #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
-> +#define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
-> +#define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
->   #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
->   #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
->   #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
-> @@ -502,6 +508,8 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
->   #define HVCALL_MMIO_READ				0x0106
->   #define HVCALL_MMIO_WRITE				0x0107
->   #define HVCALL_DISABLE_HYP_EX                           0x010f
-> +#define HVCALL_GET_IOMMU_CAPABILITIES			0x0125
-> +#define HVCALL_GET_LOGICAL_DEVICE_PROPERTY		0x0127
->   #define HVCALL_MAP_STATS_PAGE2				0x0131
->   
->   /* HV_HYPERCALL_INPUT */
-> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-> index b4cb2fa26e9b..493608e791b4 100644
-> --- a/include/hyperv/hvhdk_mini.h
-> +++ b/include/hyperv/hvhdk_mini.h
-> @@ -547,4 +547,128 @@ union hv_device_id {		/* HV_DEVICE_ID */
->   	} acpi;
->   } __packed;
->   
-> +/* Device domain types */
-> +#define HV_DEVICE_DOMAIN_TYPE_S1	1 /* Stage 1 domain */
-> +
-> +/* ID for default domain and NULL domain */
-> +#define HV_DEVICE_DOMAIN_ID_DEFAULT 0
-> +#define HV_DEVICE_DOMAIN_ID_NULL    0xFFFFFFFFULL
-> +
-> +union hv_device_domain_id {
-> +	u64 as_uint64;
-> +	struct {
-> +		u32 type: 4;
-> +		u32 reserved: 28;
-> +		u32 id;
-> +	} __packed;
-> +};
-> +
-> +struct hv_input_device_domain {
-> +	u64 partition_id;
-> +	union hv_input_vtl owner_vtl;
-> +	u8 padding[7];
-> +	union hv_device_domain_id domain_id;
-> +} __packed;
-> +
-> +union hv_create_device_domain_flags {
-> +	u32 as_uint32;
-> +	struct {
-> +		u32 forward_progress_required: 1;
-> +		u32 inherit_owning_vtl: 1;
-> +		u32 reserved: 30;
-> +	} __packed;
-> +};
-> +
-> +struct hv_input_create_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +	union hv_create_device_domain_flags create_device_domain_flags;
-> +} __packed;
-> +
-> +struct hv_input_delete_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +} __packed;
-> +
-> +struct hv_input_attach_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +	union hv_device_id device_id;
-> +} __packed;
-> +
-> +struct hv_input_detach_device_domain {
-> +	u64 partition_id;
-> +	union hv_device_id device_id;
-> +} __packed;
-> +
-> +struct hv_device_domain_settings {
-> +	struct {
-> +		/*
-> +		 * Enable translations. If not enabled, all transaction bypass
-> +		 * S1 translations.
-> +		 */
-> +		u64 translation_enabled: 1;
-> +		u64 blocked: 1;
-> +		/*
-> +		 * First stage address translation paging mode:
-> +		 * 0: 4-level paging (default)
-> +		 * 1: 5-level paging
-> +		 */
-> +		u64 first_stage_paging_mode: 1;
-> +		u64 reserved: 61;
-> +	} flags;
-> +
-> +	/* Address of translation table */
-> +	u64 page_table_root;
-> +} __packed;
-> +
-> +struct hv_input_configure_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +	struct hv_device_domain_settings settings;
-> +} __packed;
-> +
-> +struct hv_input_get_iommu_capabilities {
-> +	u64 partition_id;
-> +	u64 reserved;
-> +} __packed;
-> +
-> +struct hv_output_get_iommu_capabilities {
-> +	u32 size;
-> +	u16 reserved;
-> +	u8  max_iova_width;
-> +	u8  max_pasid_width;
-> +
-> +#define HV_IOMMU_CAP_PRESENT (1ULL << 0)
-> +#define HV_IOMMU_CAP_S2 (1ULL << 1)
-> +#define HV_IOMMU_CAP_S1 (1ULL << 2)
-> +#define HV_IOMMU_CAP_S1_5LVL (1ULL << 3)
-> +#define HV_IOMMU_CAP_PASID (1ULL << 4)
-> +#define HV_IOMMU_CAP_ATS (1ULL << 5)
-> +#define HV_IOMMU_CAP_PRI (1ULL << 6)
-> +
-> +	u64 iommu_cap;
-> +	u64 pgsize_bitmap;
-> +} __packed;
-> +
-> +enum hv_logical_device_property_code {
-> +	HV_LOGICAL_DEVICE_PROPERTY_PVIOMMU = 10,
-> +};
-> +
-> +struct hv_input_get_logical_device_property {
-> +	u64 partition_id;
-> +	u64 logical_device_id;
-> +	/* Takes values from enum hv_logical_device_property_code. */
-> +	u32 code;
-> +	u32 reserved;
-> +} __packed;
-> +
-> +struct hv_output_get_logical_device_property {
-> +#define HV_DEVICE_IOMMU_ENABLED (1ULL << 0)
-> +	u64 device_iommu;
-> +	u64 reserved;
-> +} __packed;
-> +
-> +struct hv_input_flush_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +	u32 flags;
-> +	u32 reserved;
-> +} __packed;
-> +
->   #endif /* _HV_HVHDK_MINI_H */
+> This is based on v7.1.
 
+Hi Matt,
 
-Please add tags to all structs, like,
+This needs to be rebased.  Sashiko has failed to apply every version of
+this series since the v1 posting.  It's straightforward to rebase, but
+there are some subtle gotchas and running Sashiko against the result
+indicates this probably still has some bugs to work through.  Thanks,
 
-struct hv_input_device_domain { /* HV_INPUT_DEVICE_DOMAIN */
-
-
-Or just wait for my patches.
-
-Thanks,
--Mukesh
-
-
+Alex
