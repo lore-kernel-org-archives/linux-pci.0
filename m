@@ -1,61 +1,63 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5133D646B
-	for <linux-pci@vger.kernel.org>; Tue,  7 Jul 2026 22:18:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F0D3D75A4
+	for <linux-pci@vger.kernel.org>; Tue,  7 Jul 2026 22:18:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783462684; cv=none; b=txISSr/ukWX4dNXWHurRUNuZGvJKINPjk3NIj2prAXBE/rEGW0ZHKMWjWLUCNTiLaqIotvRyW/jNUAM+qHJchsBQAdPr5XoYzH7Oa4un5ER2teYAqUoGYzlaIguVzUdICsxy9RgVfbC3JkzVmCBhvhdenkdsKcsaLMN72d7XKtk=
+	t=1783462685; cv=none; b=U8r8UYDAj6RPjNwlFv47cggPaDBNdsCRxJKqGgJFgMkD/icPtEXRc1P5TgKQg8wy6f6vTQrIHrJh+PA8djwXC9wnMvk1Mb1B1H3tBp8hK/AdyUp2sDF3rRxh0mInjlOYKJz3Msrm3/xMH9fJY1u5hbFzorTFt6v7/J5Mhd1uI8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783462684; c=relaxed/simple;
-	bh=Uc0zof6LZh+Fb0Drs4uaiCtz6yJZ87/MeeJ+NK3MAgk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bcIfnvEarRA30CpGq6cHVUCH79gAE3hCpLd9tla/UUp/OtzYLRFJ2GQctkmL3SAMHt6FBYuVbe2tx38N6+oL23u4zkA+B420IKvBihsX5Nm1ysV1+JFYsRuJlfaEkY9W6HnoUqmd62+MLbpNM+hGe0fsfKRoo1hwtvcbXDKwXDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dOgcRsIJ; arc=none smtp.client-ip=209.85.210.173
+	s=arc-20240116; t=1783462685; c=relaxed/simple;
+	bh=keJFmUDE9eYTIUkU2BtPM6NdQhjVMwsXz3k/octdvxw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OCpPp0a4auWkFHFDJgkHfegGrCaHQLHwq3jZ1XO5OOYNSQxk2NMzHjQBLkJE2gcgTehzFBkoDLVU+sNUoBUwyQ3uhzCwfi9+7eP9l4AbK3ZggRRz81KdoHb9Ee9YGUihBDfNKHrRIQ0r+CkoJhoPsbf8mZFUMuJCVRH/UoSE+iE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MTf+rmVz; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dOgcRsIJ"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-847a52edeb2so29173b3a.0
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2026 15:18:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MTf+rmVz"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-8478a25f268so13458b3a.2
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2026 15:18:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783462682; x=1784067482; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=dzc6zUnzBc09yCHRWQIcDGGskftQH+8tg7FFfD1h3jk=;
-        b=dOgcRsIJ54mk7wqh81gJqyrtH9s8IBzZE/IAvqsmwUKpaMTe56gWW18k0ITIVE9nHG
-         6CCRDh8IMb/i1gHjQyZ/wpGRQSlUJxahkraZotmla296xR7cX8NwWtzMx10haye4ZhPN
-         0qxuEmgwKByRx5K3uZ2a8/Zqkimc2+u6U6yG2xJuj/r5xCJ4t8Gu03DEe4EcRkl9d9PU
-         GIEtaI0seC+vq7pSm5LdAucl/AfXbbaXMVKC7QEX8Kf8EB/XPw9VSMrC/4w5TQEmj2cU
-         E4TWVoKr6AOfc3ZJEH/bPaaxAprsObnwm0mAbGM4uA27e2yIhXTOSExQ1Zi2QWGuyIfR
-         ZZIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783462682; x=1784067482;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1783462684; x=1784067484; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=dzc6zUnzBc09yCHRWQIcDGGskftQH+8tg7FFfD1h3jk=;
-        b=j0E0KkxEKvlciuxqfaZdyx1AsBtN+kLTCwKBrhoLo8mTE/9GqvXP4RgiUdlGqn+OQL
-         Nhrtck91whlkkBwgpz2r4wCsRjeXPNC48g1yTNMumypn6B+Nf+scu79GclMBGtMz47NH
-         olNdZjM3dw7m8Mw4xCP+MaNU5idwfxq5/wT/Nc7IrWGAkXQucTWs1s5QJ1zoBiQKposI
-         G9sOLRnIMwcEw0uuMkuQOcXFZhs4Lk4+XL2q3K89PUM0DC+Im0qHAQOWkkicMUXLTljh
-         bEPS5RlvVcSVYoCcC6GFw04V6p6gJ+tF8KLlLE84wY+ba2I6ojr2Wg4yLN3x+hwBgCFu
-         qu4Q==
-X-Gm-Message-State: AOJu0YwoIQqIB9qHpH59rgPVZKvqRXwLlJe/IQpe+iFu05+OVEwOEER7
-	vg5ZzxFxxYmTPW5IA2FMjnXIazGp1l+KDLv5t/MdhHw5jcn0HOIwOTz5xrb5CPih
-X-Gm-Gg: AfdE7cl3EZkpw+mj2uW2ecxrFmxt7qJpPX4DoE/563Vt78Mr1dlc0Uu/cE9G1sixhw6
-	PRgEzhOjjF1Otl3vwK0WDorv214T8nyxwb7T6T3Th0yKqaziLxnJTl/XPvG7nSSYiM089hYmiOu
-	PJHnYbxVYVz+DgSFAJ80XqE2sfSjb7Tqlk6ZyMJ07JoRdxUrGVz3PT3cOxMvdrceSXxqjJAaLH7
-	7OU4OnZW7V4r2LbWbRKHerFLKBd4WTd9OuJtHMEtY9onu4D6CtXf0FpsPOyZPL7oUAhhOf+vSbB
-	G4lBdFAWbOVC6YNypudd1LQJH8f1hceaP5N3PjCmTX6xz10ZZxuf2PBGSiis4+NJEyIzLd8pPdH
-	OCamAAqThE5XhE/HCkuJp3OuAnAupRdEGv0Hrn3waAA9p9h55pzybKf+F8B6yTKvl47mjQIC6f5
-	B56tCQTLUwiu3cBubiKvs/AfgXWvf+XZ5EqH5yDUrGmJkpOMWbs8MQCFgYksBYDfICyOodTxIUq
-	BH2ofvLdw==
-X-Received: by 2002:a05:6a00:178f:b0:846:7507:4e07 with SMTP id d2e1a72fcca58-84842f9fe4amr35250b3a.39.1783462682220;
-        Tue, 07 Jul 2026 15:18:02 -0700 (PDT)
+        bh=+Z+gXnMHt+I3hUv9fEYe3mjH8MUPTsA2HkK5nnE7LNQ=;
+        b=MTf+rmVzaxOt238gpS2AXxD91Xxb1IrQ5h2HuEuOPKQOl7NSk+NEhKbF3QxUdaEZOm
+         aj1zHT7rmW1RBvpFnhZQz3TtsgtroXeSBWOFVY/Q9PG+2cYYia5XADnTJq/DHwx3mFk1
+         sTx9SYDn1rpQjcvuxHULh81v43vzxRQBdOMDF69YDOW8ECnr7ib1MGD1oPhzRWpJqZsm
+         69gAXZv5L4Fd6TxA76KHtXUf4dzbU0uQIg8VxjUpig7qqcNk1MFRezdXslZspzzXkIxH
+         mkM93swto7EnSbJg4k/w2FO7XCgcTVv0nrBgr8i/T3dH619NX/SE/4Wq9nYclpsSnQSh
+         fyYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783462684; x=1784067484;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+Z+gXnMHt+I3hUv9fEYe3mjH8MUPTsA2HkK5nnE7LNQ=;
+        b=hE5L/0n4KPjO5vuHcU2Fx4MNQlXEsbA5QFlV+h+H1Y7dzvmrp+4ao+NQcKkvIFiVGT
+         fRKPfFjafzrt/O8q5w3ouXa+yE09KHkUN+hziY8ibaQmOjtuU1WDTLzRt7njZC9UF2Z2
+         vvCDUzw8hazCN4uEiK0itu9mhQEWWy7OWulWg/Fg9+//EAPkQSlHGd/W7/sI2wepJvM3
+         z4tIYXQWWRgekjYIGQ5S+LVOI37nDA+RXHKoHSUZAEeKeC3b65AQ9lytBRX5iLtjZpla
+         ygEH5roHDBf+mZZSCI6Vj9nJrWWG5aphEDud0UPJi4bIzm75y9VCBy20tl7bUXRTd3dH
+         3N5w==
+X-Gm-Message-State: AOJu0Yy7DpseDhIEl04zMF4GeXhDjJPtGIfovnZe8S75Ek6znqf53LIA
+	OHEUO0twBZrIm2sQiS+K7QojvTpf58wr6xJOvtz6HrwQAtzzJDJjhDqFnLYAJYlT
+X-Gm-Gg: AfdE7cl9Mr2VYNQJjI9xhGI4K3nnxtvSWtTYEidiDCATJNYmw4otothEtkDy099MaDk
+	GVjj+ceAZ9B+oRh2MGVoSlBowTICAxRrODQc9kVHRiLxe9pw9MHvTtHrFRNIRCSUlYp1rrB+3CZ
+	ncbduj2KLogTFNFv/vYQ57JoPKAZ4HK9+LZXEqMp2SxUE17bx50sZw7p+VI0K8CZD/dQfgvay4B
+	RySpdX25kPtURzE7QeCFIs6Djy4BGvXxJVmaLYBRaDZUNOS3ijorxJeCi3OiUORVEABcb+dAnyl
+	oIvVbiKJz2GDcxOVThheENxIur/wHpBlRD0LP9mWqCB6vGwn96YfP0hl1KB5vl3me32wwMrdN3X
+	ObCk+ZUT+9jlBcOfS9lH1DUobD4WlxPU6cyziFSAeuqrawRSs5jYhtrnCwq0yfqJWYSdaBMmkmg
+	lpIvfSVX8IpMz2Gn8IALPubj8CpEWxGY/fxDTkkOTmvsOo+vJtUrsWxvNUw7epa6fdQTJH+lbaz
+	dYU2gxhiQ==
+X-Received: by 2002:a05:6a00:b48:b0:845:31a6:d84d with SMTP id d2e1a72fcca58-84842eb7ed1mr72550b3a.7.1783462683786;
+        Tue, 07 Jul 2026 15:18:03 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6b9b389sm6180281b3a.13.2026.07.07.15.18.00
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6b9b389sm6180281b3a.13.2026.07.07.15.18.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2026 15:18:01 -0700 (PDT)
+        Tue, 07 Jul 2026 15:18:03 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-pci@vger.kernel.org
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -66,10 +68,12 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
 	"H. Peter Anvin" <hpa@zytor.com>,
 	linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [PATCH 0/8] x86/pci: consolidate x86-specific PCI quirks into arch/x86/pci/fixup.c
-Date: Tue,  7 Jul 2026 15:17:52 -0700
-Message-ID: <20260707221800.920270-1-rosenp@gmail.com>
+Subject: [PATCH 1/8] x86/pci: gate arch fixups with CONFIG_PCI_QUIRKS
+Date: Tue,  7 Jul 2026 15:17:53 -0700
+Message-ID: <20260707221800.920270-2-rosenp@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260707221800.920270-1-rosenp@gmail.com>
+References: <20260707221800.920270-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,33 +82,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series moves all x86-specific PCI quirks from the generic
-drivers/pci/quirks.c into arch/x86/pci/fixup.c, where they
-architecturally belong. This reduces the ifdef burden in the generic
-quirk file and improves build granularity by gating the x86 fixups
-behind CONFIG_PCI_QUIRKS.
+arch/x86/pci/fixup.c was compiled unconditionally when PCI is
+enabled on x86, meaning x86-specific quirks ran even with
+CONFIG_PCI_QUIRKS=n.  Make it depend on CONFIG_PCI_QUIRKS so
+that disabling the option disables all quirks.
 
-The series is organized as a preparatory commit followed by one
-commit per vendor/family, keeping each move reviewable.
+Assisted-by: opencode:big-pickle
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ arch/x86/pci/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Suggested by: https://lore.kernel.org/all/20161221142607.GA8594@infradead.org/
-
-Rosen Penev (8):
-  x86/pci: gate arch fixups with CONFIG_PCI_QUIRKS
-  x86/pci: move Intel chipset quirks to arch/x86/pci/fixup.c
-  x86/pci: move VIA chipset quirks to arch/x86/pci/fixup.c
-  x86/pci: move SiS chipset quirks to arch/x86/pci/fixup.c
-  x86/pci: move ALi chipset quirks to arch/x86/pci/fixup.c
-  x86/pci: move AMD x86 chipset quirks to arch/x86/pci/fixup.c
-  x86/pci: move x86 ifdef-gated quirks to arch/x86/pci/fixup.c
-  x86/pci: move remaining x86-specific quirks to fixup.c
-
- arch/x86/pci/Makefile |    2 +-
- arch/x86/pci/fixup.c  | 2284 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h     |    3 +
- drivers/pci/quirks.c  | 2330 +----------------------------------------
- 4 files changed, 2316 insertions(+), 2303 deletions(-)
-
---
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index c1efd5b0d198..2ceb9f94db17 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_DIRECT)	+= direct.o
+ obj-$(CONFIG_PCI_OLPC)		+= olpc.o
+ obj-$(CONFIG_PCI_XEN)		+= xen.o
+ 
+-obj-y				+= fixup.o
++obj-$(CONFIG_PCI_QUIRKS)		+= fixup.o
+ obj-$(CONFIG_ACPI)		+= acpi.o
+ obj-y				+= legacy.o irq.o
+ 
+-- 
 2.55.0
 
