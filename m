@@ -1,34 +1,35 @@
 Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 075FE407CCD;
-	Wed,  8 Jul 2026 13:59:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8D10240BCA5;
+	Wed,  8 Jul 2026 13:59:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783519175; cv=none; b=Kyh/Rqp5UI6suBtVabz07kDWOwPWAtpAvNcM7k9abrMHmnMGnK8ku6xpXwu68ebPJRF7C6NeejE2pwJ++ihsX9ciSj46kjK5OKO6zEJREtKy1I0rt2H5Roa5SsOftohUi+q/5/mu1b1QGsXmJndcdL160xE8j5OF4zamSQgCJAk=
+	t=1783519182; cv=none; b=POTWZzym6SRYiOlH9VE918QXjsBLhoUScp9BxIQguofPYMhJZrTfOudc7wH+URWFo2exT1XMBzU8awYUt0xLWvIlt3WEW1GY+2kZvatE7UuLermcb80WoiYckGsOuIPtIxkRidqE/jlqWwjK+H4J9+ap4rtB4istwOCDhJKiIfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783519175; c=relaxed/simple;
-	bh=ZCjtntdw7IwCo8ZKJV9f9QDaaQ3JL7ULHfeyEQr0Ykw=;
+	s=arc-20240116; t=1783519182; c=relaxed/simple;
+	bh=6D1ATnmtPMLSPbhlAQPEO8Y+WCryx65f/IRUC4gRpU0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AvvfBJ+WNsef8UdWO5/96lXhlISYNIgwfq+W+RjhNfIw/0WYkmHnkkD5pvluxKvyni1EIxPttRuu/wMKF/rN1el51IXK4z0E3uC6PsIsEMBoYkK/0/hAj0FHJsFxItLtVy8Rc2yWxzpQvPukhESu/irqZaLtEmvhXdkO79TBXnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=Nh1LgSSo; arc=none smtp.client-ip=217.140.110.172
+	 In-Reply-To:To:Cc; b=HEhSXQDMXOOwZksI9uSndbQYknl43sS6E7XZ8AuIBtVISf/47Oi20doNFYiD8OaJFZN5WY6KpBmfKsfDoAjkrEWpXM5e0ZDWv7AMI3x7j2cx/CZOu6FXsfRqMAkBtPnFJJGpKd4GiMvzxfjiJ9khf1pEVCkuhnqIEMlZYZRjYcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=jJt5/MoD; arc=none smtp.client-ip=217.140.110.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="Nh1LgSSo"
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="jJt5/MoD"
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3815D1E2F;
-	Wed,  8 Jul 2026 06:59:29 -0700 (PDT)
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AAF841F37;
+	Wed,  8 Jul 2026 06:59:34 -0700 (PDT)
 Received: from e134710.arm.com (e134710.arm.com [10.33.10.82])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A90623F66F;
-	Wed,  8 Jul 2026 06:59:28 -0700 (PDT)
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D90983F66F;
+	Wed,  8 Jul 2026 06:59:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1783519173; bh=ZCjtntdw7IwCo8ZKJV9f9QDaaQ3JL7ULHfeyEQr0Ykw=;
+	t=1783519179; bh=6D1ATnmtPMLSPbhlAQPEO8Y+WCryx65f/IRUC4gRpU0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Nh1LgSSo7Kxer50UXcAQnZmv8Ut4F2lkXkWyhErvpv6nu6n81TLonduW4DcBNwxlT
-	 Q3vbfDEFdHwD804W1ImL5TzOql4uSNdwFDTbzVFe3j24EvmUGZmFBK2CEgHx5d0W6X
-	 YvM+HHgSnLW9/NAKeQEo8JsZ/aSoKf7gHns7PUKI=
+	b=jJt5/MoD6SSY46+GYnOn9EKcI27ZHHRBnw9eRQFAP0p4QKpt3iOgfEFGkz5oPY48o
+	 p/Z7MzcNT1OmGzeNuRfCM4QkZksuqlfbhMeOp68MJ9+SuDuXW+0sMUhw/bORSIEw+p
+	 XCH5LhJTfMchsKdxgefwqeFxyT2YLUmZuEA9W1wU=
 From: Ahmed Tiba <ahmed.tiba@arm.com>
-Date: Wed, 08 Jul 2026 14:59:01 +0100
-Subject: [PATCH v7 02/10] ACPI: APEI: GHES: move CPER read helpers
+Date: Wed, 08 Jul 2026 14:59:02 +0100
+Subject: [PATCH v7 03/10] ACPI: APEI: GHES: move GHESv2 ack and alloc
+ helpers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-2-8b3a85216cef@arm.com>
+Message-Id: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-3-8b3a85216cef@arm.com>
 References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
 In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
 To: "Rafael J. Wysocki" <rafael@kernel.org>, 
@@ -62,448 +63,177 @@ Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
  devicetree@vger.kernel.org, linux-edac@vger.kernel.org, 
  linux-doc@vger.kernel.org, Dmitry.Lamerov@arm.com
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783519157; l=12095;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783519157; l=4777;
  i=ahmed.tiba@arm.com; s=20260219; h=from:subject:message-id;
- bh=ZCjtntdw7IwCo8ZKJV9f9QDaaQ3JL7ULHfeyEQr0Ykw=;
- b=b3tpQhpemXve2i6+uYcvkdAhs1pZYYsrFoeS+WiuzP6TYvXAZ6Fnk6LCoc8pzE9K2V7YvY9+Q
- w8nPIf0P7ldBCM9YyT/LMvvQA+Xym1ShRkMFeefoOjt1yywqeMMwflU
+ bh=6D1ATnmtPMLSPbhlAQPEO8Y+WCryx65f/IRUC4gRpU0=;
+ b=A1iciDqzSYu3pKCsCoSpzuEYVQi8okiNnwxZ7puXbFo/Fq5dXFoUJrFcxA8skk8RLMtwR2UOs
+ 5B48ze28kjrBPBadeUgjUYqskVZp3OILqLcRDN6VHXxSzTjTy1TF+d2
 X-Developer-Key: i=ahmed.tiba@arm.com; a=ed25519;
  pk=xVOtd+Qklh/4tuM3tB+BEZD4jj5a6W59C3KCNX6v7OE=
 
-Relocate the CPER buffer mapping, peek, and clear helpers from ghes.c into
-ghes_cper.c so they can be shared with other firmware-first providers.
-This commit only shuffles code; behavior stays the same.
-
-While here, fix ghes_ack_error() mask handling and add second-copy length
-validation in __ghes_read_estatus().
+Move the GHESv2 acknowledgment and error-source allocation helpers from
+ghes.c into ghes_cper.c. This is a mechanical refactor that keeps the
+logic unchanged while making the helpers reusable.
 
 Reviewed-by: Jonathan Cameron <jic23@kernel.org>
 Signed-off-by: Ahmed Tiba <ahmed.tiba@arm.com>
 ---
- drivers/acpi/apei/Makefile    |   2 +-
- drivers/acpi/apei/ghes.c      | 166 ---------------------------------
- drivers/acpi/apei/ghes_cper.c | 210 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 211 insertions(+), 167 deletions(-)
+ drivers/acpi/apei/ghes.c      | 65 -------------------------------------------
+ drivers/acpi/apei/ghes_cper.c | 65 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/acpi/apei/Makefile b/drivers/acpi/apei/Makefile
-index 66588d6be56f..f57f3b009d8e 100644
---- a/drivers/acpi/apei/Makefile
-+++ b/drivers/acpi/apei/Makefile
-@@ -1,6 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-$(CONFIG_ACPI_APEI)		+= apei.o
--obj-$(CONFIG_ACPI_APEI_GHES)	+= ghes.o
-+obj-$(CONFIG_ACPI_APEI_GHES)	+= ghes.o ghes_cper.o
- # clang versions prior to 18 may blow out the stack with KASAN
- ifeq ($(CONFIG_COMPILE_TEST)_$(CONFIG_CC_IS_CLANG)_$(call clang-min-version, 180000),y_y_)
- KASAN_SANITIZE_ghes.o := n
 diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index c73a316644e8..f74fd5de34cc 100644
+index f74fd5de34cc..bda535224422 100644
 --- a/drivers/acpi/apei/ghes.c
 +++ b/drivers/acpi/apei/ghes.c
-@@ -118,26 +118,6 @@ static struct gen_pool *ghes_estatus_pool;
- static struct ghes_estatus_cache __rcu *ghes_estatus_caches[GHES_ESTATUS_CACHES_SIZE];
- static atomic_t ghes_estatus_cache_alloced;
- 
--static void __iomem *ghes_map(u64 pfn, enum fixed_addresses fixmap_idx)
--{
--	phys_addr_t paddr;
--	pgprot_t prot;
--
--	paddr = PFN_PHYS(pfn);
--	prot = arch_apei_get_mem_attribute(paddr);
--	__set_fixmap(fixmap_idx, paddr, prot);
--
--	return (void __iomem *) __fix_to_virt(fixmap_idx);
--}
--
--static void ghes_unmap(void __iomem *vaddr, enum fixed_addresses fixmap_idx)
--{
--	int _idx = virt_to_fix((unsigned long)vaddr);
--
--	WARN_ON_ONCE(fixmap_idx != _idx);
--	clear_fixmap(fixmap_idx);
--}
--
- int ghes_estatus_pool_init(unsigned int num_ghes)
- {
- 	unsigned long addr, len;
-@@ -193,21 +173,6 @@ static void unmap_gen_v2(struct ghes *ghes)
- 	apei_unmap_generic_address(&ghes->generic_v2->read_ack_register);
+@@ -163,71 +163,6 @@ void ghes_estatus_pool_region_free(unsigned long addr, u32 size)
  }
+ EXPORT_SYMBOL_GPL(ghes_estatus_pool_region_free);
  
--static void ghes_ack_error(struct acpi_hest_generic_v2 *gv2)
+-static int map_gen_v2(struct ghes *ghes)
 -{
--	int rc;
--	u64 val = 0;
--
--	rc = apei_read(&val, &gv2->read_ack_register);
--	if (rc)
--		return;
--
--	val &= gv2->read_ack_preserve << gv2->read_ack_register.bit_offset;
--	val |= gv2->read_ack_write    << gv2->read_ack_register.bit_offset;
--
--	apei_write(val, &gv2->read_ack_register);
+-	return apei_map_generic_address(&ghes->generic_v2->read_ack_register);
 -}
 -
- struct ghes *ghes_new(struct acpi_hest_generic *generic)
- {
- 	struct ghes *ghes;
-@@ -280,137 +245,6 @@ static inline int ghes_severity(int severity)
- 	}
- }
- 
--static void ghes_copy_tofrom_phys(void *buffer, u64 paddr, u32 len,
--				  int from_phys,
--				  enum fixed_addresses fixmap_idx)
+-static void unmap_gen_v2(struct ghes *ghes)
 -{
--	void __iomem *vaddr;
--	u64 offset;
--	u32 trunk;
--
--	while (len > 0) {
--		offset = paddr - (paddr & PAGE_MASK);
--		vaddr = ghes_map(PHYS_PFN(paddr), fixmap_idx);
--		trunk = PAGE_SIZE - offset;
--		trunk = min(trunk, len);
--		if (from_phys)
--			memcpy_fromio(buffer, vaddr + offset, trunk);
--		else
--			memcpy_toio(vaddr + offset, buffer, trunk);
--		len -= trunk;
--		paddr += trunk;
--		buffer += trunk;
--		ghes_unmap(vaddr, fixmap_idx);
--	}
+-	apei_unmap_generic_address(&ghes->generic_v2->read_ack_register);
 -}
 -
--/* Check the top-level record header has an appropriate size. */
--int __ghes_check_estatus(struct ghes *ghes,
--			 struct acpi_hest_generic_status *estatus)
+-struct ghes *ghes_new(struct acpi_hest_generic *generic)
 -{
--	u32 len = cper_estatus_len(estatus);
--	u32 max_len = min(ghes->generic->error_block_length,
--			  ghes->estatus_length);
--
--	if (len < sizeof(*estatus)) {
--		pr_warn_ratelimited(FW_WARN GHES_PFX "Truncated error status block!\n");
--		return -EIO;
--	}
--
--	if (!len || len > max_len) {
--		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid error status block length!\n");
--		return -EIO;
--	}
--
--	if (cper_estatus_check_header(estatus)) {
--		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid CPER header!\n");
--		return -EIO;
--	}
--
--	return 0;
--}
--
--/* Read the CPER block, returning its address, and header in estatus. */
--int __ghes_peek_estatus(struct ghes *ghes,
--			struct acpi_hest_generic_status *estatus,
--			u64 *buf_paddr, enum fixed_addresses fixmap_idx)
--{
--	struct acpi_hest_generic *g = ghes->generic;
+-	struct ghes *ghes;
+-	unsigned int error_block_length;
 -	int rc;
 -
--	rc = apei_read(buf_paddr, &g->error_status_address);
--	if (rc) {
--		*buf_paddr = 0;
--		pr_warn_ratelimited(FW_WARN GHES_PFX
--				    "Failed to read error status block address for hardware error source: %d.\n",
--				   g->header.source_id);
--		return -EIO;
--	}
--	if (!*buf_paddr)
--		return -ENOENT;
+-	ghes = kzalloc_obj(*ghes);
+-	if (!ghes)
+-		return ERR_PTR(-ENOMEM);
 -
--	ghes_copy_tofrom_phys(estatus, *buf_paddr, sizeof(*estatus), 1,
--			      fixmap_idx);
--	if (!estatus->block_status) {
--		*buf_paddr = 0;
--		return -ENOENT;
+-	ghes->generic = generic;
+-	if (is_hest_type_generic_v2(ghes)) {
+-		rc = map_gen_v2(ghes);
+-		if (rc)
+-			goto err_free;
 -	}
 -
--	return 0;
--}
--
--int __ghes_read_estatus(struct acpi_hest_generic_status *estatus,
--			u64 buf_paddr, enum fixed_addresses fixmap_idx,
--			size_t buf_len)
--{
--	ghes_copy_tofrom_phys(estatus, buf_paddr, buf_len, 1, fixmap_idx);
--	if (cper_estatus_check(estatus)) {
--		pr_warn_ratelimited(FW_WARN GHES_PFX
--				    "Failed to read error status block!\n");
--		return -EIO;
--	}
--
--	return 0;
--}
--
--int ghes_read_estatus(struct ghes *ghes,
--		      struct acpi_hest_generic_status *estatus,
--		      u64 *buf_paddr, enum fixed_addresses fixmap_idx)
--{
--	int rc;
--
--	rc = __ghes_peek_estatus(ghes, estatus, buf_paddr, fixmap_idx);
+-	rc = apei_map_generic_address(&generic->error_status_address);
 -	if (rc)
--		return rc;
+-		goto err_unmap_read_ack_addr;
+-	error_block_length = generic->error_block_length;
+-	if (error_block_length > GHES_ESTATUS_MAX_SIZE) {
+-		pr_warn(FW_WARN GHES_PFX
+-			"Error status block length is too long: %u for "
+-			"generic hardware error source: %d.\n",
+-			error_block_length, generic->header.source_id);
+-		error_block_length = GHES_ESTATUS_MAX_SIZE;
+-	}
+-	ghes->estatus = kmalloc(error_block_length, GFP_KERNEL);
+-	ghes->estatus_length = error_block_length;
+-	if (!ghes->estatus) {
+-		rc = -ENOMEM;
+-		goto err_unmap_status_addr;
+-	}
 -
--	rc = __ghes_check_estatus(ghes, estatus);
--	if (rc)
--		return rc;
+-	return ghes;
 -
--	return __ghes_read_estatus(estatus, *buf_paddr, fixmap_idx,
--				   cper_estatus_len(estatus));
--}
--
--void ghes_clear_estatus(struct ghes *ghes,
--			struct acpi_hest_generic_status *estatus,
--			u64 buf_paddr, enum fixed_addresses fixmap_idx)
--{
--	estatus->block_status = 0;
--
--	if (!buf_paddr)
--		return;
--
--	ghes_copy_tofrom_phys(estatus, buf_paddr,
--			      sizeof(estatus->block_status), 0,
--			      fixmap_idx);
--
--	/*
--	 * GHESv2 type HEST entries introduce support for error acknowledgment,
--	 * so only acknowledge the error if this support is present.
--	 */
+-err_unmap_status_addr:
+-	apei_unmap_generic_address(&generic->error_status_address);
+-err_unmap_read_ack_addr:
 -	if (is_hest_type_generic_v2(ghes))
--		ghes_ack_error(ghes->generic_v2);
+-		unmap_gen_v2(ghes);
+-err_free:
+-	kfree(ghes);
+-	return ERR_PTR(rc);
 -}
- 
- /**
-  * struct ghes_task_work - for synchronous RAS event
+-
+-void ghes_fini(struct ghes *ghes)
+-{
+-	kfree(ghes->estatus);
+-	apei_unmap_generic_address(&ghes->generic->error_status_address);
+-	if (is_hest_type_generic_v2(ghes))
+-		unmap_gen_v2(ghes);
+-}
+-
+ static inline int ghes_severity(int severity)
+ {
+ 	switch (severity) {
 diff --git a/drivers/acpi/apei/ghes_cper.c b/drivers/acpi/apei/ghes_cper.c
-new file mode 100644
-index 000000000000..0c3f52b2d7f1
---- /dev/null
+index 0c3f52b2d7f1..9c668725e08a 100644
+--- a/drivers/acpi/apei/ghes_cper.c
 +++ b/drivers/acpi/apei/ghes_cper.c
-@@ -0,0 +1,210 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Shared GHES helpers for firmware-first CPER error handling.
-+ *
-+ * This file holds the GHES helper code that is shared by the in-tree GHES
-+ * driver and by other firmware-first error sources that reuse the same CPER
-+ * handling flow.
-+ *
-+ * Derived from the ACPI APEI GHES driver.
-+ *
-+ * Copyright 2010,2011 Intel Corp.
-+ *   Author: Huang Ying <ying.huang@intel.com>
-+ */
-+
-+#include <linux/err.h>
-+#include <linux/io.h>
-+#include <linux/kernel.h>
-+#include <linux/mm.h>
-+#include <linux/ratelimit.h>
-+#include <linux/slab.h>
-+
-+#include <acpi/apei.h>
-+#include <acpi/acpi_io.h>
-+#include <acpi/ghes_cper.h>
-+
-+#include <asm/fixmap.h>
-+#include <asm/tlbflush.h>
-+
-+#include "apei-internal.h"
-+
-+static void __iomem *ghes_map(u64 pfn, enum fixed_addresses fixmap_idx)
+@@ -63,6 +63,71 @@ static void ghes_ack_error(struct acpi_hest_generic_v2 *gv2)
+ 	apei_write(val, &gv2->read_ack_register);
+ }
+ 
++static int map_gen_v2(struct ghes *ghes)
 +{
-+	phys_addr_t paddr;
-+	pgprot_t prot;
-+
-+	paddr = PFN_PHYS(pfn);
-+	prot = arch_apei_get_mem_attribute(paddr);
-+	__set_fixmap(fixmap_idx, paddr, prot);
-+
-+	return (void __iomem *) __fix_to_virt(fixmap_idx);
++	return apei_map_generic_address(&ghes->generic_v2->read_ack_register);
 +}
 +
-+static void ghes_unmap(void __iomem *vaddr, enum fixed_addresses fixmap_idx)
++static void unmap_gen_v2(struct ghes *ghes)
 +{
-+	int _idx = virt_to_fix((unsigned long)vaddr);
-+
-+	WARN_ON_ONCE(fixmap_idx != _idx);
-+	clear_fixmap(fixmap_idx);
++	apei_unmap_generic_address(&ghes->generic_v2->read_ack_register);
 +}
 +
-+static void ghes_ack_error(struct acpi_hest_generic_v2 *gv2)
++struct ghes *ghes_new(struct acpi_hest_generic *generic)
 +{
-+	int rc;
-+	u64 val = 0;
-+
-+	rc = apei_read(&val, &gv2->read_ack_register);
-+	if (rc)
-+		return;
-+
-+	val &= gv2->read_ack_preserve;
-+	val |= gv2->read_ack_write;
-+
-+	apei_write(val, &gv2->read_ack_register);
-+}
-+
-+static void ghes_copy_tofrom_phys(void *buffer, u64 paddr, u32 len,
-+				  int from_phys,
-+				  enum fixed_addresses fixmap_idx)
-+{
-+	void __iomem *vaddr;
-+	u64 offset;
-+	u32 trunk;
-+
-+	while (len > 0) {
-+		offset = paddr - (paddr & PAGE_MASK);
-+		vaddr = ghes_map(PHYS_PFN(paddr), fixmap_idx);
-+		trunk = PAGE_SIZE - offset;
-+		trunk = min(trunk, len);
-+		if (from_phys)
-+			memcpy_fromio(buffer, vaddr + offset, trunk);
-+		else
-+			memcpy_toio(vaddr + offset, buffer, trunk);
-+		len -= trunk;
-+		paddr += trunk;
-+		buffer += trunk;
-+		ghes_unmap(vaddr, fixmap_idx);
-+	}
-+}
-+
-+/* Check the top-level record header has an appropriate size. */
-+int __ghes_check_estatus(struct ghes *ghes,
-+			 struct acpi_hest_generic_status *estatus)
-+{
-+	u32 len = cper_estatus_len(estatus);
-+	u32 max_len = min(ghes->generic->error_block_length,
-+			  ghes->estatus_length);
-+
-+	if (len < sizeof(*estatus)) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX "Truncated error status block!\n");
-+		return -EIO;
-+	}
-+
-+	if (len > max_len) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid error status block length!\n");
-+		return -EIO;
-+	}
-+
-+	if (cper_estatus_check_header(estatus)) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid CPER header!\n");
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Read the CPER block, returning its address, and header in estatus. */
-+int __ghes_peek_estatus(struct ghes *ghes,
-+			struct acpi_hest_generic_status *estatus,
-+			u64 *buf_paddr, enum fixed_addresses fixmap_idx)
-+{
-+	struct acpi_hest_generic *g = ghes->generic;
++	struct ghes *ghes;
++	unsigned int error_block_length;
 +	int rc;
 +
-+	rc = apei_read(buf_paddr, &g->error_status_address);
-+	if (rc) {
-+		*buf_paddr = 0;
-+		pr_warn_ratelimited(FW_WARN GHES_PFX
-+				    "Failed to read error status block address for hardware error source: %d.\n",
-+				    g->header.source_id);
-+		return -EIO;
-+	}
-+	if (!*buf_paddr)
-+		return -ENOENT;
++	ghes = kzalloc_obj(*ghes);
++	if (!ghes)
++		return ERR_PTR(-ENOMEM);
 +
-+	ghes_copy_tofrom_phys(estatus, *buf_paddr, sizeof(*estatus), 1,
-+			      fixmap_idx);
-+	if (!estatus->block_status) {
-+		*buf_paddr = 0;
-+		return -ENOENT;
++	ghes->generic = generic;
++	if (is_hest_type_generic_v2(ghes)) {
++		rc = map_gen_v2(ghes);
++		if (rc)
++			goto err_free;
 +	}
 +
-+	return 0;
-+}
-+
-+int __ghes_read_estatus(struct acpi_hest_generic_status *estatus,
-+			u64 buf_paddr, enum fixed_addresses fixmap_idx,
-+			size_t buf_len)
-+{
-+	u32 len;
-+
-+	ghes_copy_tofrom_phys(estatus, buf_paddr, buf_len, 1, fixmap_idx);
-+
-+	len = cper_estatus_len(estatus);
-+	if (len < sizeof(*estatus)) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX "Truncated error status block!\n");
-+		return -EIO;
-+	}
-+
-+	if (len > buf_len) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid error status block length!\n");
-+		return -EIO;
-+	}
-+
-+	if (cper_estatus_check(estatus)) {
-+		pr_warn_ratelimited(FW_WARN GHES_PFX
-+				    "Failed to read error status block!\n");
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+int ghes_read_estatus(struct ghes *ghes,
-+		      struct acpi_hest_generic_status *estatus,
-+		      u64 *buf_paddr, enum fixed_addresses fixmap_idx)
-+{
-+	int rc;
-+
-+	rc = __ghes_peek_estatus(ghes, estatus, buf_paddr, fixmap_idx);
++	rc = apei_map_generic_address(&generic->error_status_address);
 +	if (rc)
-+		return rc;
++		goto err_unmap_read_ack_addr;
++	error_block_length = generic->error_block_length;
++	if (error_block_length > GHES_ESTATUS_MAX_SIZE) {
++		pr_warn(FW_WARN GHES_PFX
++			"Error status block length is too long: %u for "
++			"generic hardware error source: %d.\n",
++			error_block_length, generic->header.source_id);
++		error_block_length = GHES_ESTATUS_MAX_SIZE;
++	}
++	ghes->estatus = kmalloc(error_block_length, GFP_KERNEL);
++	ghes->estatus_length = error_block_length;
++	if (!ghes->estatus) {
++		rc = -ENOMEM;
++		goto err_unmap_status_addr;
++	}
 +
-+	rc = __ghes_check_estatus(ghes, estatus);
-+	if (rc)
-+		return rc;
++	return ghes;
 +
-+	return __ghes_read_estatus(estatus, *buf_paddr, fixmap_idx,
-+				   cper_estatus_len(estatus));
-+}
-+
-+void ghes_clear_estatus(struct ghes *ghes,
-+			struct acpi_hest_generic_status *estatus,
-+			u64 buf_paddr, enum fixed_addresses fixmap_idx)
-+{
-+	estatus->block_status = 0;
-+
-+	if (!buf_paddr)
-+		return;
-+
-+	ghes_copy_tofrom_phys(estatus, buf_paddr,
-+			      sizeof(estatus->block_status), 0,
-+			      fixmap_idx);
-+
-+	/*
-+	 * GHESv2 type HEST entries introduce support for error acknowledgment,
-+	 * so only acknowledge the error if this support is present.
-+	 */
++err_unmap_status_addr:
++	apei_unmap_generic_address(&generic->error_status_address);
++err_unmap_read_ack_addr:
 +	if (is_hest_type_generic_v2(ghes))
-+		ghes_ack_error(ghes->generic_v2);
++		unmap_gen_v2(ghes);
++err_free:
++	kfree(ghes);
++	return ERR_PTR(rc);
 +}
++
++void ghes_fini(struct ghes *ghes)
++{
++	kfree(ghes->estatus);
++	apei_unmap_generic_address(&ghes->generic->error_status_address);
++	if (is_hest_type_generic_v2(ghes))
++		unmap_gen_v2(ghes);
++}
++
+ static void ghes_copy_tofrom_phys(void *buffer, u64 paddr, u32 len,
+ 				  int from_phys,
+ 				  enum fixed_addresses fixmap_idx)
 
 -- 
 2.43.0
