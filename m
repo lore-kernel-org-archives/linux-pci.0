@@ -1,136 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D433548034C;
-	Wed,  8 Jul 2026 14:20:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0B4477E53;
+	Wed,  8 Jul 2026 14:21:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783520461; cv=none; b=S/A6kRiulk793KhnnjK578cr3a/MkUOXWAue9WtCWqsB623EdhyMCuAzZ1ifWhRE9uttHsSgZV4PFr+vU9UtQxtdslaT2TyPcZD7UtP7f6KLxxGwQDNyEtWm3K3hxl6usb6+wGKiO4q9bta9l/sbnBzjihOCWDgV/WObPkKY4nI=
+	t=1783520481; cv=none; b=Odz17pCn69czG7R1pSXO0FCZZCyXBSRbzpC1JfZmnW9F0+NizaI4OCziXztSp/OR4LQlNuJe/dX3pQmdoycM6nmMeMfAzJeoCysj5hRksvRIivtmIZ0PzFgtbS0PKqy9s+/4tY+v/oQZWAcE7ReonXffVimR0Ke5XKvrLwPQDnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783520461; c=relaxed/simple;
-	bh=ei29EELG4Ffd+NwGSq8v/69ckdiC/I8U3+BIjtcs2jo=;
+	s=arc-20240116; t=1783520481; c=relaxed/simple;
+	bh=eptoqU3kcoiZ2MPYXhf+3yYOkpZj8bF8iCd83eySl6Y=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oLOlRUUJwTFgVrPJXNnwMoQD9n6tw5f9psKlMza9I65BnQxmPUrZkPSvAvf57jGK/8sTWMUVaBFD4bZRX38JeJY93TQr/GY+iAF4a1/KvKkF+4WaDx9pT5CoPWUTa5jIiRuGU7/6MygbaoTVtL1j0UTnGoYOupp05Mi6jbAA85k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftlG50/M; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GQ7irYtfGsU6wFVhy7vNC+2SgkNtBHnKuDTEPlB4ycf6AOPwuFHT1d5zUhBQnyhpu0gq18PshPLbDlEVT1pWROig9t/CVWuAUKX1Lazcyc5S4aIIZNC93kJjOAdWHpLMVO2mgIt1kwyfPDsWY/ovWHccfLEN4R1XIxCDWtuu4r8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jVC0Li+x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftlG50/M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2531D1F000E9;
-	Wed,  8 Jul 2026 14:20:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jVC0Li+x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 311B21F00A3A;
+	Wed,  8 Jul 2026 14:21:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783520459;
-	bh=h0TUJyrXzKtdLdL5k7vEC9WTZLW4bHSICqLOAzx8YLQ=;
+	s=k20260515; t=1783520480;
+	bh=EwqgsRzc4TDNJUcYjGgk9JH6x1MFE3isguoRJhDocHw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ftlG50/MeO3Cv2QyFWn1g6hTNSIxWLjGOVy6W71NxOrrMCo00jxvqiXWXCzPeRz9M
-	 RHG1IJrQgZkhR3a2kUkAV0Uc1MGML0SiyilRpdx91hUhwZnv90JE9nO5dZyltBxKXu
-	 4mfflXQZbrSjp4u36l/n+2aCDDNKbQxwX78D7/Fr62DqxUL/tXfpLQkLTZ6IdVs2V+
-	 kPgNdRH0+cCnj+6qwkNI6tT3J32LiaCYBNvZgXml5UmRK4xUy6ZJvi+S7B7F516LBd
-	 FNDRKL6Usz65YLntN38YSS+9XZiVL7tDv7SfD1+Euj3RH6mw6TzQk77WDqjRo4mDob
-	 cPSrBMMM0zxHg==
+	b=jVC0Li+xN/1ij1SL2KPvng+w2Q7MpryAem5TDTXRqLvsSUXG4Mxfr0bV7QSPFYc2f
+	 qzJQL1NnYBPCMtDPzDaJ5H5iFP/zE3IiivkAjYwSimIRug66Xz8RoZyvK7pv0x/wAn
+	 kq8TOYhfbz5ma+3zBhH5AxIenj4LC4w23xTrP4mQlYTa4wa4uF7NQeYaGMYea6sMrH
+	 NaS6rOQJ3RxJHqAiLAnIzyTCM89+kR9ejDrnWjUwOFVBOBAqDcM5iGg427f43CZbvH
+	 e1h80rV0X0Bz60w2cTztSrIGmSTEh1TLfGZp8MaoIVYs2erkozflUdyMpkH1gxBwLf
+	 edldXfOZZb3JA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 02/10] ACPI: APEI: GHES: move CPER read helpers
+Subject: Re: [PATCH v7 07/10] ACPI: APEI: introduce GHES helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ahmed Tiba" <ahmed.tiba@arm.com>
-Cc: linux-cxl@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-2-8b3a85216cef@arm.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-7-8b3a85216cef@arm.com>
 References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
- <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-2-8b3a85216cef@arm.com>
+ <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-7-8b3a85216cef@arm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 14:20:58 +0000
-Message-Id: <20260708142059.2531D1F000E9@smtp.kernel.org>
+Date: Wed, 08 Jul 2026 14:21:19 +0000
+Message-Id: <20260708142120.311B21F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] A 32-bit integer overflow in `cper_estatus_check_header()` allows =
-malicious hardware/firmware to bypass bounds checks, leading to an out-of-b=
-ounds read during CPER parsing.
+- [Medium] The decoupled `GHES_CPER_HELPERS` config relies on symbols defin=
+ed in `ghes.o`, causing linker errors if enabled independently of `ACPI_APE=
+I_GHES`.
+- [Medium] `GHES_CPER_HELPERS` lacks dependencies on `ACPI_APEI` and archit=
+ectural support, causing implicit declarations and linker errors if enabled=
+ independently.
 --
 
---- Patch [2]: [PATCH v7 02/10] ACPI: APEI: GHES: move CPER read helpers ---
-commit 04015aac8e37e710180920d3ccbdeddf2e3b4a43
+--- Patch [7]: [PATCH v7 07/10] ACPI: APEI: introduce GHES helper ---
+commit 0f74f9098911a0c1e3d2f8f68c8908787e6ae1b7
 Author: Ahmed Tiba <ahmed.tiba@arm.com>
 
-ACPI: APEI: GHES: move CPER read helpers
+ACPI: APEI: introduce GHES helper
+   =20
+This commit introduces a new GHES_CPER_HELPERS Kconfig entry so the shared
+helper code can be built even when ACPI_APEI_GHES is disabled. It updates
+the build glue and headers to depend on the new symbol.
 
-Relocate the CPER buffer mapping, peek, and clear helpers from ghes.c into
-ghes_cper.c so they can be shared with other firmware-first providers.
-This commit only shuffles code; behavior stays the same.
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index f165d14cf61a3..13ef0e99f840b 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -6,6 +6,10 @@
+>  config ARCH_SUPPORTS_ACPI
+>  	bool
+> =20
+> +config GHES_CPER_HELPERS
+> +	bool
+> +	select UEFI_CPER
+> +
 
-> diff --git a/drivers/acpi/apei/ghes_cper.c b/drivers/acpi/apei/ghes_cper.c
-> new file mode 100644
-> index 0000000000000..0c3f52b2d7f1c
-> --- /dev/null
-> +++ b/drivers/acpi/apei/ghes_cper.c
+[Severity: Medium]
+Since the commit message indicates this config is meant to be built even
+when ACPI_APEI_GHES is disabled, should this have a depends on ACPI_APEI
+rule?
+
+If a future config selects GHES_CPER_HELPERS without ACPI_APEI, it looks
+like ghes_cper.c will fail to compile. For example, ghes_map() calls
+arch_apei_get_mem_attribute(), which lacks a fallback stub in
+arch/x86/include/asm/acpi.h when CONFIG_ACPI_APEI is disabled.
+
+Similarly, ghes_ack_error() calls apei_read(), which is only compiled
+when CONFIG_ACPI_APEI is enabled.
+
+>  menuconfig ACPI
+>  	bool "ACPI (Advanced Configuration and Power Interface) Support"
+>  	depends on ARCH_SUPPORTS_ACPI
 
 [ ... ]
 
-> +int __ghes_read_estatus(struct acpi_hest_generic_status *estatus,
-> +			u64 buf_paddr, enum fixed_addresses fixmap_idx,
-> +			size_t buf_len)
-> +{
-> +	u32 len;
-> +
-> +	ghes_copy_tofrom_phys(estatus, buf_paddr, buf_len, 1, fixmap_idx);
-> +
-> +	len =3D cper_estatus_len(estatus);
-> +	if (len < sizeof(*estatus)) {
-> +		pr_warn_ratelimited(FW_WARN GHES_PFX "Truncated error status block!\n"=
-);
-> +		return -EIO;
-> +	}
-> +
-> +	if (len > buf_len) {
-> +		pr_warn_ratelimited(FW_WARN GHES_PFX "Invalid error status block lengt=
-h!\n");
-> +		return -EIO;
-> +	}
-> +
-> +	if (cper_estatus_check(estatus)) {
+> diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h
+> index 8d7e5caef3f18..2ffab36b61541 100644
+> --- a/include/acpi/ghes.h
+> +++ b/include/acpi/ghes.h
+> @@ -83,15 +83,17 @@ int devm_ghes_register_vendor_record_notifier(struct =
+device *dev,
+>  					      struct notifier_block *nb);
+> =20
+>  struct list_head *ghes_get_devices(void);
+> -
+> -void ghes_estatus_pool_region_free(unsigned long addr, u32 size);
+>  #else
+>  static inline struct list_head *ghes_get_devices(void) { return NULL; }
+> -
+> -static inline void ghes_estatus_pool_region_free(unsigned long addr, u32=
+ size) { return; }
+>  #endif
+> =20
+> +#ifdef CONFIG_GHES_CPER_HELPERS
+>  int ghes_estatus_pool_init(unsigned int num_ghes);
+> +void ghes_estatus_pool_region_free(unsigned long addr, u32 size);
+> +#else
+> +static inline int ghes_estatus_pool_init(unsigned int num_ghes) { return=
+ -ENODEV; }
+> +static inline void ghes_estatus_pool_region_free(unsigned long addr, u32=
+ size) { }
+> +#endif
 
-[Severity: High]
-This is a pre-existing issue, but can this lead to an out-of-bounds read
-when parsing the CPER block?
+[Severity: Medium]
+If GHES_CPER_HELPERS is enabled but ACPI_APEI_GHES is disabled, will this
+cause linker errors?
 
-On 32-bit architectures, a maliciously crafted CPER block with an extremely
-large data_length (e.g., 0xFFFFFFFF), a small raw_data_offset (e.g., 20),
-and a non-zero raw_data_length (e.g., 1) could bypass the header validation
-check.
+It appears ghes_defer_non_standard_event() in drivers/acpi/apei/ghes_cper.c
+allocates from ghes_estatus_pool:
 
-In drivers/firmware/efi/cper.c:cper_estatus_check_header():
+drivers/acpi/apei/ghes_cper.c:ghes_defer_non_standard_event() {
+    ...
+    entry =3D (void *)gen_pool_alloc(ghes_estatus_pool, len);
+    ...
+}
 
-    if (estatus->raw_data_length &&
-        estatus->raw_data_offset < sizeof(*estatus) + estatus->data_length)
-            return -EINVAL;
+However, ghes_estatus_pool is defined in drivers/acpi/apei/ghes.c, which is
+entirely omitted when ACPI_APEI_GHES is disabled.
 
-The addition of sizeof(*estatus) and estatus->data_length can integer
-overflow. For example, 20 + 0xFFFFFFFF =3D 19. The validation 20 < 19
-evaluates to false, allowing it to pass.
-
-Because cper_estatus_len() would just return the offset + raw_data_length
-(21 in this case), the len > buf_len check above also passes.
-
-Finally, when cper_estatus_check() is called,
-apei_estatus_for_each_section() will iterate using the massive data_length
-over unmapped memory, resulting in an out-of-bounds read and likely a
-kernel panic.
-
-Could we add safeguards against this overflow in the header validation?
-
-> +		pr_warn_ratelimited(FW_WARN GHES_PFX
-> +				    "Failed to read error status block!\n");
-> +		return -EIO;
-> +	}
-> +
-> +	return 0;
-> +}
+Additionally, exposing the prototype here for ghes_estatus_pool_init()
+disables the inline stub, which could cause link errors for callers like
+hest.c if ghes.o is missing.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708-topics-ahm=
-tib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com?part=3D2
+tib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com?part=3D7
