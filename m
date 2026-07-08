@@ -1,170 +1,134 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C9C38B7C3
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 10:56:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783508201; cv=pass; b=WcImQZ/LNuCHldNcZG0iCjOMoWAQXs1vvuAzWNrjwaMOeTnW41Qub8WlCr85y+fiQ/5eFSOPb1AcHNEetJCc3GHqd1cDdssPfUVYz2D6JviB017uhFBke5ecXlQAc9wZA0hyKOyBzKwVSOdfkw9ZnmKwZSpJozV0eoQ/f+Ityqc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783508201; c=relaxed/simple;
-	bh=WfD4dCVWiG8ERAjlT2lUVZEkQgo52iiyfAGVYhwTEPU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Pue/fQ59rv3lrAyWXg7mQRRObozl4wKLoT3XCpxv9S+9ldN3iGuH+5cLR4IZKHxdG6NLVIclmRbpcXhmVZLOa6kApXTmk0PF2IjgWOR/MO8MABFlS2+DPWUpcNWBbKwsAZ5honuKiwoWF/hQhcAfxNHKjJ8LJVDwHm0cQ5H+gI8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=irGoNKdo; arc=pass smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7607842DFFB;
+	Wed,  8 Jul 2026 11:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783508730; cv=none; b=HJny/xl5WEsBUl8Ae4pn00NfAKSOio6VJGgP+88CERYeSAIE7cIUXi8g4ER2caxqzqtvci0whimrjopQ/0HH9JXzKK0fBnyDDd7zC+DIfVG/mencb5327CET7LlB5OEO3QyPoE0mPSB8Y72Rn0SEsFC8I7bmgEIsp7/26XLq0Zk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783508730; c=relaxed/simple;
+	bh=7xN3gN/1fufW2zcG5xVQZNt3mgjfLnXivIEcwpleKQI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nWmvKiHoOidU/2cdbWj8McS+nzuirtUzY7U8COK99x8X7jFVeqyMeL92DjAnUYqDrK24zMIMoJCZO/G4D3sVWx/eHllOMTGZ8OkaEn0n6fo/xVXHJ8HOomWAy0LIMxCYf/zJO0jBW2k8D2R1i4icChad9cbDXx4UeIWSVJvq7BM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=aisOYdqk; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="irGoNKdo"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-698e5859a3cso1223956a12.0
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jul 2026 03:56:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783508191; cv=none;
-        d=google.com; s=arc-20260327;
-        b=A0CLBj0zK3mwWT5UXMz6nY6b/wGPDtC5ve0REitjMGwB1UX+d3FB6AEhthP+Sb5vKS
-         VdNcdBoSdBjddiwljkAjJ1e7/p08TtUSB07yjbz8686mxAD/eNvBijyDN3kUbpQeRqci
-         yPN4Xzl9s7BVlAj0yjCG0S47ctnUnb8g3YAmTwPYMuB9I1O30kZXpI209cixQJrZdBus
-         y+CR2GVN9AJNwV4DKdjvji9H9aYVHon7239NDBx+MyJInT2Af1rmbO7Mt3WJFQHX1CV8
-         +yhDVh58pwNRzQVgIAEFZGHvGOXSWsv6SQRo9SEmUAekY0IAYJe0gg0YDCmeVb9dRP2w
-         aEng==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=c2fiM2VYmvB72xpzWLhl8f8r7LxlArjuugnUoazlpVE=;
-        fh=0kV9ED6hjKYvHoKXH31jVUvIzxChI21lF4L2CWu52bM=;
-        b=JO0X9MlXRSr4v35vbseQ2010kHU6PTnF/iF8tZ9hc/rhn7sJefHZH2zPtmNUX6svhy
-         JQb+AtVfuUgtll0P93v/Jv0BmlGdtiilQ5x0g5kvglr0gV/vLpzjjUi+FeH/kz7FrnRX
-         TJU/UcSYFWwXpP6PKJvfgY7Azu2tyrl3J6x0Qm+t+doWuLweUsCRq9vyxaZ0Rw1N6woj
-         sLilAl7IinD3VDLWMQ6gBI9VZvomOQ7lzpT4VsyMewH/TvUesZnv69mNIARySc1CRiBw
-         8WBg6zTAWqnBpT7etX00jRFDw9hg4ci1jwdYGAPDyo6K8ZlYOKlRXUw34/7c7TsgEbC/
-         jZFw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783508191; x=1784112991; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=c2fiM2VYmvB72xpzWLhl8f8r7LxlArjuugnUoazlpVE=;
-        b=irGoNKdolUUgTf0DnlsaMqcv8EFqrqNt9G+UMU3794JepIYHPimEvdH1xV3PIdcEtC
-         gQCwvRBq9PJwzARs9DoxCRJVJG3iDuQVnx+EoGl9vRNS7fcM9OX0vVKFNikxcx+5XrvE
-         a5Nt09e8LJOOk/nliwuP7Es6nZ5ZRrpjVDB9R7SUfoXABmq1NRwvaVZbtctVrHLUizU/
-         qdsxxkixSVjcoaszy/86kN/sFfXdm/49c/udVyh2bNaDB8je1wRETjszs3hOW8ODMv7+
-         DWrync3UG+N8UGuuBD6Zor82yrI9AnhxOhaKYubosdTZCTi/2LRwX71T5YeYmpPkHsjt
-         7cQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783508191; x=1784112991;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=c2fiM2VYmvB72xpzWLhl8f8r7LxlArjuugnUoazlpVE=;
-        b=iZdSmvcrkcTb/Ug0wEzIXcIbfCn9hS1lrcDH8V5SBXbY4fJ1dWdsbFImjUIwQggUWD
-         HQyXktCbQCw1gNem/Ls1BGOBH9tTepFTBKft+Y8X/yRJe5c/mSceFqFKAytp8dW6a2Va
-         VRRNnUAP7zgUx2LLcE+kCDG0ExbEfiW399ULCgKOT1gAaDBJOMrjaAi0dvOkuKJ7doZW
-         QyNmWCVsu6l20FM0kD/WX3QEpigHYFPH63tnI1No7KptidTG3PJBqWEbafefg/E1ppbo
-         CWif290Y5XnD0zIzObwjz6FmToVor5Q90UxeOJcw1M0/hbAY37xSXTGTniGTl7gV5tSF
-         IYjQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpJttsieRvtSXEAta5CRG0ikGy4rmzgQrqV/1tJeeEJ1n/u3dT6gwLTMAFvoZBFnPd1Sb5aPf4z8gg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YysO0YyA58sXLG5N0mtuhD/QrXVl4BVuzndQBPruqvtHr43Shn6
-	VsYzZxHW47jc+PJmrLvGksbiXIh66t9BA/6fqLgixl8mu0ttsNgRSCGXj2UhyTu+FpFI02IwMiL
-	AuBa/+N6N7widKCz0+FCpUlJrqp5Fnnk=
-X-Gm-Gg: AfdE7ck0+MRR+kL/j40IaQ5f7U/A6rCVzPGpss8/Qd/b5loeoP65sq56JRzFzzYhbjh
-	yKIheY6APLQlfMHCiZKjiC2pY9ZDyUV8WrSwcmr7O7aCJZ+oUQYywyaT+vCth6HZ73scFbsvkXm
-	WLrWNFEQD5L95t9wHqtNkGi6sACkjjnNA1GUZ+LwRxcTvUu8Dkk83XXd46q6l2AGUqDTfL319nJ
-	O1jIchgJRvuRFgBZR6p214ojbA/9WFkUBjL+SlrBDez0wqvoPv1XfnK4F3U+6UwhjXbfILKj2by
-	WGYDr9suvidjZxB/d5BJnNfwe5zh4Ys=
-X-Received: by 2002:a05:6402:3058:20b0:695:ded2:52d7 with SMTP id
- 4fb4d7f45d1cf-69a910978edmr2584484a12.3.1783508190638; Wed, 08 Jul 2026
- 03:56:30 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="aisOYdqk"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id E033920B7166;
+	Wed,  8 Jul 2026 04:05:19 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E033920B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783508720;
+	bh=NfmX2Gu/X4lDwJwfowtrot5xu5EOiks7e+Fc49sNRR0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aisOYdqk1Lm2WQ/Q/WjXnlJHEwO8YMfW/+p3Gn9mVKsA7RbU/6imb7DzVvsV1eLhO
+	 I/UgK3F6r0ySTnIKjvc3ruv1/x6HQcTpU4VFId6G2gUYPwgF3Bk/Xm/FEkZ8q3b9OK
+	 sd1/3Lxfxbf7IZyVyHufcfpFV6LlzFhqU95uPJAs=
+Date: Wed, 8 Jul 2026 19:05:22 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: Mukesh R <mrathor@linux.microsoft.com>, linux-kernel@vger.kernel.org, 
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-arch@vger.kernel.org, wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, 
+	decui@microsoft.com, longli@microsoft.com, joro@8bytes.org, will@kernel.org, 
+	robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org, 
+	lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de, jgg@ziepe.ca, 
+	mhklinux@outlook.com, tgopinath@linux.microsoft.com, 
+	easwar.hariharan@linux.microsoft.com
+Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <smr7cmmhvqeuddmoxwyt774qtb5clf6s3vbkfmusrvccav6ey4@cqtqgkeqv5lx>
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+ <20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+ <1f57d1d9-ccbb-ff4e-9680-d45adc7821ea@linux.microsoft.com>
+ <20260707074814.000010a0@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260706175423.98305-1-kwilczynski@kernel.org>
-In-Reply-To: <20260706175423.98305-1-kwilczynski@kernel.org>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Wed, 8 Jul 2026 12:56:19 +0200
-X-Gm-Features: AVVi8CeoFjDXhiwTTyAokp7GmJLW8914hLJ0O-UdzoTFxDt0DrR1yRktWckx52o
-Message-ID: <CA+=Fv5T8GUH-d0PG6fjn6ARRcenpcDmsg8uy3dJbQ2gKZ85KhQ@mail.gmail.com>
-Subject: Re: [PATCH v2] alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
-To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: Richard Henderson <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, 
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Jesse Barnes <jbarnes@virtuousgeek.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-alpha@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260707074814.000010a0@linux.microsoft.com>
 
-On Mon, Jul 6, 2026 at 7:54=E2=80=AFPM Krzysztof Wilczy=C5=84ski
-<kwilczynski@kernel.org> wrote:
->
-> pci_legacy_write() in arch/alpha/kernel/pci-sysfs.c passes its arguments
-> to outb(), outw() and outl() in the wrong order:
->
->   outb(port, val);
->
-> The Alpha I/O accessors in arch/alpha/include/asm/io.h take the value
-> first and the port second:
->
->   extern void outb(u8 b, unsigned long port);
->
-> So the port number is written as data to the I/O address taken from the
-> user-supplied value, and the intended write to the requested port never
-> happens.
->
-> The arguments have been reversed since the file was added, and the
-> function returns the access size regardless, so the caller sees success
-> while the requested port is left untouched.
->
-> Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
-> Tested-by: Magnus Lindholm <linmag7@gmail.com>
-> Reviewed-by: Magnus Lindholm <linmag7@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
-> ---
-> Changes in v2:
->  https://lore.kernel.org/linux-pci/20260612232400.585195-1-kwilczynski@ke=
-rnel.org/
->
->  - Collected Reviewed-by and Tested-by tags from Magnus Lindholm.
->
->  arch/alpha/kernel/pci-sysfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.=
-c
-> index 94dbc470cd6c..7050f0f7fe3d 100644
-> --- a/arch/alpha/kernel/pci-sysfs.c
-> +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -224,17 +224,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t po=
-rt, u32 val, size_t size)
->
->         switch(size) {
->         case 1:
-> -               outb(port, val);
-> +               outb(val, port);
->                 return 1;
->         case 2:
->                 if (port & 1)
->                         return -EINVAL;
-> -               outw(port, val);
-> +               outw(val, port);
->                 return 2;
->         case 4:
->                 if (port & 3)
->                         return -EINVAL;
-> -               outl(port, val);
-> +               outl(val, port);
->                 return 4;
->         }
->         return -EINVAL;
-> --
-> 2.55.0
->
+On Tue, Jul 07, 2026 at 07:48:14AM -0700, Jacob Pan wrote:
+> Hi Mukesh,
+> 
+> On Mon, 6 Jul 2026 17:08:50 -0700
+> Mukesh R <mrathor@linux.microsoft.com> wrote:
+> 
+> > From: Mukesh R <mrathor@linux.microsoft.com>
+> > To: Yu Zhang <zhangyu1@linux.microsoft.com>,
+> > linux-kernel@vger.kernel.org,  linux-hyperv@vger.kernel.org,
+> > iommu@lists.linux.dev,  linux-pci@vger.kernel.org,
+> > linux-arch@vger.kernel.org Cc: wei.liu@kernel.org, kys@microsoft.com,
+> > haiyangz@microsoft.com,  decui@microsoft.com, longli@microsoft.com,
+> > joro@8bytes.org, will@kernel.org,  robin.murphy@arm.com,
+> > bhelgaas@google.com, kwilczynski@kernel.org,  lpieralisi@kernel.org,
+> > mani@kernel.org, robh@kernel.org, arnd@arndb.de,  jgg@ziepe.ca,
+> > mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
+> > tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
+> > Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU
+> > support  for Hyper-V guest Date: Mon, 6 Jul 2026 17:08:50 -0700
+> > User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+> > Thunderbird/91.13.1
+> > 
+> > On 7/2/26 09:05, Yu Zhang wrote:
+> > > Add a para-virtualized IOMMU driver for Linux guests running on
+> > > Hyper-V. This driver implements stage-1 IO translation within the
+> > > guest OS. It integrates with the Linux IOMMU core, utilizing
+> > > Hyper-V hypercalls for:
+> > >   - Capability discovery
+> > >   - Domain allocation, configuration, and deallocation
+> > >   - Device attachment and detachment
+> > >   - IOTLB invalidation
+> > > 
+> > > The driver constructs x86-compatible stage-1 IO page tables in the
+> > > guest memory using consolidated IO page table helpers. This allows
+> > > the guest to manage stage-1 translations independently of vendor-
+> > > specific drivers (like Intel VT-d or AMD IOMMU).
+> > > 
+> > > Hyper-V consumes this stage-1 IO page table when a device domain is
+> > > created and configured, and nests it with the host's stage-2 IO page
+> > > tables, therefore eliminating the VM exits for guest IOMMU mapping
+> > > operations. For unmapping operations, VM exits to perform the IOTLB
+> > > flush are still unavoidable.
+> > > 
+> > > To identify a device in its hypercall interface, the driver looks
+> > > up the logical device ID prefix registered for the device's PCI
+> > > domain (see the logical device ID registry in hv_common.c) and
+> > > combines it with the PCI function number of the endpoint device.
+> > > 
+> > > Co-developed-by: Wei Liu <wei.liu@kernel.org>
+> > > Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> > > Co-developed-by: Easwar Hariharan
+> > > <easwar.hariharan@linux.microsoft.com> Signed-off-by: Easwar
+> > > Hariharan <easwar.hariharan@linux.microsoft.com> Signed-off-by: Yu
+> > > Zhang <zhangyu1@linux.microsoft.com> ---
+> > >   arch/x86/hyperv/hv_init.c       |   4 +
+> > >   arch/x86/include/asm/mshyperv.h |   4 +
+> > >   drivers/iommu/Kconfig           |   1 +
+> > >   drivers/iommu/hyperv/Kconfig    |  16 +
+> > >   drivers/iommu/hyperv/Makefile   |   1 +
+> > >   drivers/iommu/hyperv/iommu.c    | 620
+> > > ++++++++++++++++++++++++++++++++ drivers/iommu/hyperv/iommu.h    |
+> > > 51 +++ 7 files changed, 697 insertions(+)
+> > >   create mode 100644 drivers/iommu/hyperv/Kconfig
+> > >   create mode 100644 drivers/iommu/hyperv/iommu.c  
+> > 
+> > Hey Jacob,
+> > 
+> > You had suggested I rename iommu.c to iommu-root.c (I called it
+> > hv-iommu-root.c eventually), so this needs to be renamed also,
+> > right?
+> 
+> yes, I agree. I feel it is clearer to name it hv-iommu-guest.c since
+> this is a guest only driver.
+> 
 
-Thanks for doing this, this is just me acking the v2 version of this patch,
-please go ahead and take this through your tree.
+hv-iommu-guest.c sounds good to me. :)
 
-Acked-by: Magnus Lindholm <linmag7@gmail.com>
+B.R.
+Yu
