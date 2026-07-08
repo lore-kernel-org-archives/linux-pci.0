@@ -1,324 +1,226 @@
-Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011003.outbound.protection.outlook.com [52.101.65.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719E83F12C0;
-	Wed,  8 Jul 2026 15:16:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82ECD3B47FD;
+	Wed,  8 Jul 2026 15:19:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.3
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783523777; cv=pass; b=MjXVhSAqkxAR1KuEefAgrJp5hTZSAD67AXOs37Xnd66zx3CJct9pW7m2o8BakL1ThAAF5PB8iMXLmfAm/PmOo30kaOLNo/JTK9szQzCsJrYuK4KwS8w9fAIRpeVVIWE1eWqlYKo7xU/5oDe0ESN/fcQLu0Q8LdJPTCoh6ypj7Bs=
+	t=1783523962; cv=fail; b=nhC9A1tnCh8TKvzb4Z/poF44IE9BBYMY7xXnjNZwX2eyvU3HD0LHdIA+QF7ZwOuUB/InzKTyc5hUez8AhDKiapwx03k1kqlmXPoXB9+/OHcQPrdeLXSF0fejp17cm4NeRsRGkoSo1HzZJCYj6wVUdXN/agTQabNd4c8mAHYCr+E=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783523777; c=relaxed/simple;
-	bh=Iqkz9HZz7KsJqF6xvtRqT8xxwG+y4KVbP4uJohB9BWs=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=QatHFlcHTBOo7htkq15b5L5WJ+neDFPSUK6GCRE7kMmcwxUiq8JM5VWAmOxdK7IQ0twYa8r26cOu96Qm3aWjK2MmoOxB8dTUOATVZSVsBdRlBDRP9E9FICVusyi0j9qr4RpRsMkQ6255q/Lu7VOFRLgqqOUS5HWL+WWjoq6gO2k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=kEQVPxM2; arc=pass smtp.client-ip=136.143.188.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1783523962; c=relaxed/simple;
+	bh=A7ZTQecetBSvwVoNO5zI2q/LE/xSxNBiqZmR4rFD4ms=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=E9IglWa6rEUKDCn6iE5nhIld9kvQCnGeWO0JCzpjOcxrSg1Dd/X+QBJttLLqKKVt8kFqKwpe2DSZ6mHaFiS1CMLVYpfZPWl8PRTRIUG+h9fTxwhFyVYdruBqb7fvd7jBapbzRtizwZ3I5yabDWo9pq5JALjwfhsUZNj1D2yeFPM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=mjeb1EKC; arc=fail smtp.client-ip=52.101.65.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="kEQVPxM2"
-ARC-Seal: i=1; a=rsa-sha256; t=1783523745; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=Igr8wTpfjpo1ZHqfHQn/lVnKM79U43R4E1eSVy71wQBDvHXW+bF2eW4ui7Wlm05zH+F72ZB1/Z8/x/j2BjCf6ilcdsUjooa7PMNX2Itz8G6jjHMaqhORMJ57RCIwSpetHbyI/YisCdVWgJJ+Jkg9KMKGe9UypP5HMpFPa+hUgoc=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1783523745; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=X1plbi+Oxfx02jtUPa4CfsK/IllRKlSLbG1pvpCqSpQ=; 
-	b=ktkjpgWkVW6XS4KQ16E5h2wy3zjPg33F3Disl5c7Xbo6Ak/eJHWeP+MTTNCv/kUnYxsakGAJc4kX9AIFBxOw9FF7H72JZo1sGw/y8N5mUnV7WnyroupyOdtSyfuOrKdMIplwZp2uY3xAbF+J1yhiZ/KCEPV37ZCNJg+jiZbtOe4=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783523745;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=X1plbi+Oxfx02jtUPa4CfsK/IllRKlSLbG1pvpCqSpQ=;
-	b=kEQVPxM223LBIzrF2IQm1wNUlGBrh7MiW/mQZVoJUUrpCmGJaJANC3xJZOK2YDrv
-	xnEBPy87uWH2C/WN4gbtJqhZyHIrU5COGHHkBOurTwH2t2OlYhQJka3vJWns6loEqZg
-	9HOXk3Qw8egDZvS6KrbvTfVp3KU8Ghu9DBnuGY74=
-Received: by mx.zohomail.com with SMTPS id 1783523742904701.646089296638;
-	Wed, 8 Jul 2026 08:15:42 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="mjeb1EKC"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=s2oyrePzo7Ol47fUk0hNrnMnCbS3fwx4s7i4Z1YilPP8NlRjXERlHwWwq5/yVkJYDFneBK9+BGgfiKWIOEyXPydPW57JJRYdSspUlO0kZA9/WP0IzErmfZBmXSbR7PNc6eGySK8c6yIhjdpYt7l5HjLWJJJUKQUFFBSdMT2gLaibd+yJ7JblmNSDXvCbuXCrmWRrpK132egfSW7iNm33CdnWrweKCHsbCBhwWNCrXNXoUSzLzSqJsdyB+wU7zDQhSz0ElJr7u/gJVix8B6PCSQY7fIcNf0fzhE5P6RgRoR5IC2VEnLkFOiNwh0AP/8WiwT9CwTH7FM2WqUWsSTJQ5g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NFhFa2Ii9TmzpYQN/UZouh7djHLEwjb3i4yEv9XD3Xw=;
+ b=wndWXyIkGkJMMxLRGdQGao4ePPPjpRhUB3W9Yxf3BdIBz3FH8LJtvd5JYohfz2t8nc3wDrVQILjagwplkld7mbNCM7TOoP1F46ylM4coAwYgFfaa9mfjywK2SvsNEWbKcKsuCHsQwTuZgLtndqKnKRSFlGQ8ZP6n0l2zDITWe9vJZcFI7cZP4LxIrNW1zdfIXWEi7jbKmW9Rvf3blzeTU2OE4ifcMX7M4rr+MQk1YyM5AfB44yRt/wMiYdGDp5HZrJznxsuJpATVasb1xlot+WgJOU8NH70SJH9KFtFWpGAC/xlsC5Cd0DBxwQYJefkFbfB0oGxoZCVgedPLN2msew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NFhFa2Ii9TmzpYQN/UZouh7djHLEwjb3i4yEv9XD3Xw=;
+ b=mjeb1EKC6NRXFv6S6ayAHF4dLKHm3UtXwmO8BaJ+YSbRUNQdDMh89ZfVtzDs2ZiOKUpH4TDrEIwzccPOgFOldoRxXugQuYDRumgHx8Wpi+Es2UV34ujw6uVJ/xaljQhsqb5Ij+foqdoOHXt99Nh5x0KfURaqbWAqoZOfzHstpYUhpMsp1/51l2pPg+y34X2W3Ht/l30EH09MRADcKhPUUZviSYYaBr1M17n1azNa9OOXmTbzhCiTqsVRGW2L0HAD28Tr4X0ZhYbkbU8FYHQ/HxCuH3JdxlcpA8PlY5/djLEl0noNhgLZYdxY7t2iFtaGT82HDFWqjmwWw0+DmenqHA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by GV2PR04MB11325.eurprd04.prod.outlook.com (2603:10a6:150:2a8::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Wed, 8 Jul
+ 2026 15:19:15 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0159.007; Wed, 8 Jul 2026
+ 15:19:15 +0000
+Date: Wed, 8 Jul 2026 10:19:03 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v2] PCI: imx6: Update MPLLB bandwidth to improve i.MX95
+ Gen3 PCIe stability
+Message-ID: <ak5qZxsTsIWqe-ML@SMW015318>
+References: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
+ <20260708035928.580236-3-hongxing.zhu@oss.nxp.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260708035928.580236-3-hongxing.zhu@oss.nxp.com>
+X-ClientProxiedBy: PH7P220CA0150.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:510:327::13) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH v6 12/20] rust: io: move `Io` methods to extension trait
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260706-io_projection-v6-12-72cd5d055d54@garyguo.net>
-Date: Wed, 8 Jul 2026 12:15:23 -0300
-Cc: Alice Ryhl <aliceryhl@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>,
- Boqun Feng <boqun@kernel.org>,
- =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Benno Lossin <lossin@kernel.org>,
- Andreas Hindborg <a.hindborg@kernel.org>,
- Trevor Gross <tmgross@umich.edu>,
- Tamir Duberstein <tamird@kernel.org>,
- =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Abdiel Janulgue <abdiel.janulgue@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Alexandre Courbot <acourbot@nvidia.com>,
- David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>,
- Michal Wilczynski <m.wilczynski@samsung.com>,
- =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>,
- driver-core@lists.linux.dev,
- rust-for-linux@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org,
- nova-gpu@lists.linux.dev,
- dri-devel@lists.freedesktop.org,
- linux-pwm@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <CDAB04DF-F46F-4E78-A981-E6B171FAE606@collabora.com>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-12-72cd5d055d54@garyguo.net>
-To: Gary Guo <gary@garyguo.net>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV2PR04MB11325:EE_
+X-MS-Office365-Filtering-Correlation-Id: d800b8fc-e18d-45ae-f105-08dedd04457a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|23010399003|19092799006|1800799024|366016|4143699003|56012099006|18002099003|22082099003|11063799006|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	HrHXCXPZvwaRbmtImtSMTvdD2ALEyIc0k+NSYzrsozvlbkaRw/SuE9uxAb2OlzWCMPj4PN0p8MalWHpTOhzaoiLw+DHp6R2KLOs0jGCQSkVVtKtFPrnbICdzVS88s8gNGkk7VB7/NDq1v/+JiqIYRdagP2EeFKq/6Mtk3t1Jw2EfqBstUF7nwyfyQl3tJFaIQtRRJywkxKXHHu/q/VIPO64x4uRRhqcda3i8D/OYe9lFQP6UlbIvWpW3YRCEoC26JXSA86/AWS/wp1ccosNFzgyHaLg/EtZLdhFSHd1xZn4VnuxFF8o6T5gj5aUaQP9vb5nH73AhyPHQ1LsJ+MYKUIQXexuuMX3j0VPO7XSq5B9/UaRmpUnLj4BJ+rjVFoQP4x7OLE4esIw8F6qm32zloPhvxoJM3t6CGLlaYGiZyhOeh40NtyTw6n7KUzs2Q00kiRpJdxnctNIcJpCCBa0+q30B+KlyRUOsUJ2ZGBr6CnofbRRSioSM8i7Kh5xCmTHQ2ahhhvv/wnPKXx8us+qHFWY/xFDbYvtMF3b9aQjEUsa0vXTqAtY628P75lhjsTJ6zfn2/DMa2O++Oawi3IACJ/8pBtuXD+nv1P+8B7LW+auXQGBYriN/frLpVzp1Yk0PmVYnwkPhyMp2B1Qu1fqjYZg0tukY1GLQHi8ObbGb6+M=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(19092799006)(1800799024)(366016)(4143699003)(56012099006)(18002099003)(22082099003)(11063799006)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?6pZ8NpwH1a/00N/z5HqgbpSVizl/mRNgR0AplVmeIQW6OqfKatPQ6kuWP5mT?=
+ =?us-ascii?Q?r0cli7fhp74RbzDHINESClCljm//3Tu1L0gQmHE2SRqENImEG6ApABvochae?=
+ =?us-ascii?Q?PxzpjRDqvzpCBxKsV6O3WN0w2AJBFRejErm4r8ylPmkcAagP8yY+lVM0EvaU?=
+ =?us-ascii?Q?IqHvtciJPuCq7Qt00g3mgHMVc7xA9mQHhNo7YXwkrK31AQ3uLUUksPBPBLja?=
+ =?us-ascii?Q?v971sq/5mhcHcvkgzm1ESpHv4wPNtZwtBJV+SZXiM26aueuH8far8NNi6qjF?=
+ =?us-ascii?Q?Ca7oZQrRyEo92xidTKKajrWDf25G1xfYFoba2gH10Oh/g6Xyos+h6lHoWKDN?=
+ =?us-ascii?Q?/1/fqpqOfwDd2FeSD+f9VTKwN+Vc+QBv1uMyslM6tBlIAaY2RZWnC1LCLEXh?=
+ =?us-ascii?Q?gRF8XvPvGZ75JmBPir5uYvzdpqKzCgMIMoIwXIv0/K5/8Oh2+x4A6oLnQgTA?=
+ =?us-ascii?Q?c1x8Hxtelz23k0vIlMr47WTPC2O7nBW9ReGEscLbJNTJR3VFldVC4kavZ13d?=
+ =?us-ascii?Q?BoACHwaWrzYzPnGp5XAv4RFi3/YJ4XGw+9PIauM1EqdQ6EV2XBsFeNFizzTf?=
+ =?us-ascii?Q?WwRU9ELOy+LIjKYPjPUSGLAMPUhYw6EOTC5Q4PkX/UHBuFmcfCe8deD/ik9C?=
+ =?us-ascii?Q?hAHteYjT9ByOsBcR+3TbIckkeRSzUmZUH1IC/i8FwxD26MGj3xJEv7g5vtFA?=
+ =?us-ascii?Q?tRqYUcpUgeIGz0UZMqqRy7j0FUZBdO+teg7sLvXweYBNQ+dX/acAuEw8hZvl?=
+ =?us-ascii?Q?P2ahnez0OgMU9g1G9z+FfTpMNuF4QBYvN6zsy+UXKOAGATYjDoBxzVLAI47a?=
+ =?us-ascii?Q?ILAkf9lPmM9LksxSBDPHeU/7zIiB7iGU4aFz4cOsiduMh8ueDcWzh0StAXB1?=
+ =?us-ascii?Q?v57FHHbli9QKL+dAgQ3toLIPVw19VNYm7WpXO0FN9DUj5XypXt+Zb5OJLqhw?=
+ =?us-ascii?Q?UO16zHqiHwzpvxKOiZcQCzFHzfQAlJCmeHm6clB0qT6gNuOYY0Vf3iirSp6A?=
+ =?us-ascii?Q?D21lnOh+6oDOBUjlxaFV5XOU1s8wDGDre2/smadcnaAUNQdXVfitVsDMpgkp?=
+ =?us-ascii?Q?HOLeJpbrGaQafxJZlzv8yswPW1E+zMVcSQHNvrXiDOrA8eYG+/h05FTyn7X3?=
+ =?us-ascii?Q?FD85ddkimizZ2sJJB9pMC14iNyXlkni+jbtInQlioavO/tGcxUVDb4pbKnJm?=
+ =?us-ascii?Q?mvaxU6zAJYkwElmwgNzihBC4+fCfLzMhu5IOiwJnArk0BGLkEFwKJ/mDjhnv?=
+ =?us-ascii?Q?f2WxHxflXv4fFHtNo/jL0ppICqZx0dhSbRGubdQUqsXuz+xGR/X82pAMS4oZ?=
+ =?us-ascii?Q?OI8Y7hnEudvNPS1W3EEby+HKA4RecNvoBaFVjzRxYmTWvbKbkrIWIrCMu9s5?=
+ =?us-ascii?Q?CUVnko3WJwOwVBRO92RbOrjRqgzaWjFngaNCq4PLsVzYhmYqzQBkGLCLY7GG?=
+ =?us-ascii?Q?j7nnK+oMpqmUK3h5H9X+xlAt1KLxV/hApuksVYO4YZP7R1fS1SvNV1CqSuNR?=
+ =?us-ascii?Q?eldqTM9cM39r4HlmOh5k32fnL8LHMjR6FWzOCDn/bE6Rm3Khp9fryip0dOEX?=
+ =?us-ascii?Q?F6/o2WovAVZY8DkFD1rpUH8Cc8JsGWFFvOCHAG1S9NX4FqvJqEyb3NcLEoBx?=
+ =?us-ascii?Q?E8WHua5KOCE5h5XMKBUn4pE18icIkyjAorEzDaCoGI4FJMNOVkQB8MuEM49V?=
+ =?us-ascii?Q?mEJTBJ4GV4QyKf5rHcTp1HZ/ZQrxwzhhODcNp0tzCC8NerUMMglOr96aQAu4?=
+ =?us-ascii?Q?2mNTOpwzgL69N7urC/WwsABL0vGlXL81gQClgBGOpgV18OHI6NvS?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d800b8fc-e18d-45ae-f105-08dedd04457a
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2026 15:19:15.2370
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wpbuThyLnrPcmLdtVABqJFxYpE3mrE7FBgQorkXRPEVI4yBwMCMeQCswTL1dVQWNTNjLfTXepiySGp9wxMsAsgd5vLA6xJbLLo1QcUs8EQThEk2xDS/tFONPdkQCrAkP
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11325
 
-
-
-> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
->=20
-> `Io` trait now has a single required method with many more provided
-> methods. Provided methods may want to rely on their implementations to =
-not
-> be arbitrarily overridden by implementers for correctness or =
-soundness.
-> A good example is the `size` method, it may be relied by unsafe code =
-and
-> thus must be consistent with the metadata obtained from `as_ptr`.
->=20
-> Thus, create a new trait to host `size` method, extract existing =
-provided
-> methods to the new trait, and provide a blanket implementation. This
-> pattern is used extensively in userspace Rust libraries e.g. `tokio` =
-where
-> `AsyncRead` has minimum methods and `AsyncReadExt` is what users =
-mostly
-> interact with.
->=20
-> To avoid changing all user imports, the base trait is renamed to =
-`IoBase`
-> and the newly added trait takes the existing `Io` name.
->=20
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Suggested-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+On Wed, Jul 08, 2026 at 11:59:28AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
+>
+> Bandwidth marginality was observed during i.MX95 Gen3 PCIe tests with
+> the default MPLLB_BINDWIDTH value. This margin degradation worsens
+> across voltage and temperature (VT) variations and different test
+> matrices, potentially causing link stability issues.
+>
+> Testing with MPLLB_BINDWIDTH value of 140 (0x8c) shows significant
+> improvement in bandwidth margins across all VT conditions and test
+> scenarios.
+>
+> Implement PHY register write helper function and configure:
+> - MPLLB_BW_OVRD_IN = 140 (0x8c) for improved bandwidth margin
+> - MPLLB_BW_OVRD_EN to enable the override
+>
+> This ensures robust PCIe Gen3 performance across all operating
+> conditions.
+>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 > ---
-> rust/kernel/devres.rs |  3 ++-
-> rust/kernel/io.rs     | 34 ++++++++++++++++++++++++----------
-> rust/kernel/io/mem.rs |  6 +++---
-> rust/kernel/pci/io.rs |  6 +++---
-> 4 files changed, 32 insertions(+), 17 deletions(-)
->=20
-> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-> index 3545ffc5345d..6e0b845b229b 100644
-> --- a/rust/kernel/devres.rs
-> +++ b/rust/kernel/devres.rs
-> @@ -68,6 +68,7 @@ struct Inner<T> {
-> ///     devres::Devres,
-> ///     io::{
-> ///         Io,
-> +///         IoBase,
-> ///         Mmio,
-> ///         MmioRaw,
-> ///         MmioBackend,
-> @@ -105,7 +106,7 @@ struct Inner<T> {
-> ///     }
-> /// }
-> ///
-> -/// impl<'a, const SIZE: usize> Io<'a> for &'a IoMem<SIZE> {
-> +/// impl<'a, const SIZE: usize> IoBase<'a> for &'a IoMem<SIZE> {
-> ///    type Backend =3D MmioBackend;
-> ///    type Target =3D Region<SIZE>;
-> ///
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index c7533d605678..ab970e8b2e78 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -223,7 +223,7 @@ fn io_view<'a, IO: Io<'a>, U>(
-> /// operation.
-> pub trait IoBackend {
->     /// View type for this I/O backend.
-> -    type View<'a, T: ?Sized + KnownSize>: Io<'a, Backend =3D Self, =
-Target =3D T>;
-> +    type View<'a, T: ?Sized + KnownSize>: IoBase<'a, Backend =3D =
-Self, Target =3D T>;
->=20
->     /// Convert a `view` to a raw pointer for projection.
->     ///
-> @@ -309,15 +309,12 @@ fn offset(self) -> usize {
-> /// Types implementing this trait (e.g. MMIO BARs or PCI config =
-regions)
-> /// can perform I/O operations on regions of memory.
-> ///
-> -/// The [`Io`] trait provides:
-> -/// - Method to convert into [`IoBackend::View`].
-> -/// - Helper methods for offset validation and address calculation
-> -/// - Fallible (runtime checked) accessors for different data widths
-> -///
-> -/// Which I/O methods are available depends on the associated =
-[`IoBackend`] implementation.
-> +/// This trait defines which backend shall be used for I/O operations =
-and provides a method to
-> +/// convert into [`IoBackend::View`]. Users should use the [`Io`] =
-trait which provides the actual
-> +/// methods to perform I/O operations.
-> ///
-> /// This should be implemented on cheaply copyable handles, such as =
-references or view types.
-> -pub trait Io<'a>: Copy {
-> +pub trait IoBase<'a>: Copy {
->     /// Type that defines all I/O operations.
->     type Backend: IoBackend;
->=20
-> @@ -326,6 +323,21 @@ pub trait Io<'a>: Copy {
->=20
->     /// Return a view that covers the full region.
->     fn as_view(self) -> <Self::Backend as IoBackend>::View<'a, =
-Self::Target>;
+> Changes in v2:
+> Update the register name and bit definitions.
+> Don't move IMX95_PCIE_PHY_CR_PARA_SEL settings.
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+>
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 53f3da6ab30d5..5f75aa09e0377 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -80,6 +80,15 @@
+>  #define IMX95_SID_MASK				GENMASK(5, 0)
+>  #define IMX95_MAX_LUT				32
+>
+> +#define IMX95_PCIE_PHY_REG_ADDR			0x3008
+> +#define IMX95_PCIE_PHY_REG_EN			BIT(31)
+> +#define IMX95_PCIE_PHY_REG_ADDR_MASK		GENMASK(15, 0)
+> +#define IMX95_PCIE_PHY_REG_DATA			0x300c
+> +#define IMX95_PCIE_PHY_MPLLB_OVRD_IN		0x2004
+> +#define IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN		0x400
+
+> +#define IMX95_PCIE_PHY_MPLLB_OVRD_BW_IN		0x2005
+
+This one IMX95_PCIE_PHY_MPLLB_BW_IN to keep naming consistent
+
+write IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN -> IMX95_PCIE_PHY_MPLLB_OVRD_IN
+write IMX95_PCIE_PHY_MPLLB_BW -> IMX95_PCIE_PHY_MPLLB_BW_IN
+
+> +#define IMX95_PCIE_PHY_MPLLB_BW			0x8c
+
+0x8c only one special value.
+
+IMX95_PCIE_PHY_MPLLB_BW_XXX put special name for 0x8c, if no means, you
+can put 0x8c direct at
+
+imx95_pcie_phy_write(imx_pcie, IMX95_PCIE_PHY_MPLLB_OVRD_BW_IN, 0x8c)
+
+We need knows what's macro means, like it is offset of regiser or it is
+field in register easily.
+
+Frank
+
+> +
+>  #define IMX95_PCIE_RST_CTRL			0x3010
+>  #define IMX95_PCIE_COLD_RST			BIT(0)
+>
+> @@ -269,6 +278,16 @@ static int imx95_pcie_select_ref_clk_src(struct imx_pcie *imx_pcie)
+>  	return 0;
+>  }
+>
+> +static void imx95_pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+> +{
+> +	udelay(200);
+> +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
+> +			   IMX95_PCIE_PHY_REG_EN, IMX95_PCIE_PHY_REG_EN);
+> +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
+> +			   IMX95_PCIE_PHY_REG_ADDR_MASK, addr);
+> +	regmap_write(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_DATA, data);
 > +}
 > +
-> +/// Extension trait to provide I/O operation methods to types that =
-implement [`IoBase`].
-> +///
-> +/// This trait provides:
-> +/// - Helper methods for offset validation and address calculation
-> +/// - Fallible (runtime checked) accessors for different data widths
-> +///
-> +/// Which I/O methods are available depends on the associated =
-[`IoBackend`] implementation.
-> +pub trait Io<'a>: IoBase<'a> {
-> +    /// Returns the size of this I/O region.
-> +    #[inline]
-> +    fn size(self) -> usize {
-> +        KnownSize::size(Self::Backend::as_ptr(self.as_view()))
-> +    }
->=20
->     /// Fallible 8-bit read with runtime bounds check.
->     #[inline(always)]
-> @@ -779,6 +791,8 @@ fn update<T, L, F>(self, location: L, f: F)
->     }
-> }
->=20
-
-IIUC this is what makes the methods non-overridable?
-
-If so, consider leaving a comment? i.e.:
-
-// Provided methods may want to rely on their implementations to not be
-// arbitrarily overridden by implementers for correctness or soundness, =
-thus,
-// enforce it through this blanket implementation
-
-Makes it easier to maintain later IMHO.
-
-> +impl<'a, T: IoBase<'a>> Io<'a> for T {}
+>  static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+>  {
+>  	/*
+> @@ -289,6 +308,11 @@ static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+>  			IMX95_PCIE_PHY_CR_PARA_SEL,
+>  			IMX95_PCIE_PHY_CR_PARA_SEL);
+>
+> +	imx95_pcie_phy_write(imx_pcie, IMX95_PCIE_PHY_MPLLB_OVRD_BW_IN,
+> +			     IMX95_PCIE_PHY_MPLLB_BW);
+> +	imx95_pcie_phy_write(imx_pcie, IMX95_PCIE_PHY_MPLLB_OVRD_IN,
+> +			     IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN);
 > +
-> /// A view of memory-mapped I/O region.
-> ///
-> /// # Invariant
-> @@ -819,7 +833,7 @@ unsafe impl<T: ?Sized + Sync> Send for Mmio<'_, T> =
-{}
-> // SAFETY: `Mmio<'_, T>` is conceptually `&T` but in I/O memory.
-> unsafe impl<T: ?Sized + Sync> Sync for Mmio<'_, T> {}
->=20
-> -impl<'a, T: ?Sized + KnownSize> Io<'a> for Mmio<'a, T> {
-> +impl<'a, T: ?Sized + KnownSize> IoBase<'a> for Mmio<'a, T> {
->     type Backend =3D MmioBackend;
->     type Target =3D T;
->=20
-> @@ -920,7 +934,7 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, =
-U: ?Sized + KnownSize>(
->     }
-> }
->=20
-> -impl<'a, T: ?Sized + KnownSize> Io<'a> for RelaxedMmio<'a, T> {
-> +impl<'a, T: ?Sized + KnownSize> IoBase<'a> for RelaxedMmio<'a, T> {
->     type Backend =3D RelaxedMmioBackend;
->     type Target =3D T;
->=20
-> diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
-> index d9b3189d09b4..e95b769ebe47 100644
-> --- a/rust/kernel/io/mem.rs
-> +++ b/rust/kernel/io/mem.rs
-> @@ -14,7 +14,7 @@
->             Region,
->             Resource, //
->         },
-> -        Io,
-> +        IoBase,
->         Mmio,
->         MmioBackend,
->         MmioRaw, //
-> @@ -210,7 +210,7 @@ pub fn into_devres(self) -> =
-Result<Devres<ExclusiveIoMem<'static, SIZE>>> {
->     }
-> }
->=20
-> -impl<'a, const SIZE: usize> Io<'a> for &'a ExclusiveIoMem<'_, SIZE> {
-> +impl<'a, const SIZE: usize> IoBase<'a> for &'a ExclusiveIoMem<'_, =
-SIZE> {
->     type Backend =3D MmioBackend;
->     type Target =3D super::Region<SIZE>;
->=20
-> @@ -292,7 +292,7 @@ fn drop(&mut self) {
->     }
-> }
->=20
-> -impl<'a, const SIZE: usize> Io<'a> for &'a IoMem<'_, SIZE> {
-> +impl<'a, const SIZE: usize> IoBase<'a> for &'a IoMem<'_, SIZE> {
->     type Backend =3D MmioBackend;
->     type Target =3D super::Region<SIZE>;
->=20
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index 4be33ecb4192..4d1d0afdc491 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -8,8 +8,8 @@
->     device,
->     devres::Devres,
->     io::{
-> -        Io,
->         IoBackend,
-> +        IoBase,
->         IoCapable,
->         Mmio,
->         MmioBackend,
-> @@ -144,7 +144,7 @@ fn io_write(view: ConfigSpace<'_, $ty>, value: =
-$ty) {
-> impl_config_space_io_capable!(u16, pci_read_config_word, =
-pci_write_config_word);
-> impl_config_space_io_capable!(u32, pci_read_config_dword, =
-pci_write_config_dword);
->=20
-> -impl<'a, T: ?Sized + KnownSize> Io<'a> for ConfigSpace<'a, T> {
-> +impl<'a, T: ?Sized + KnownSize> IoBase<'a> for ConfigSpace<'a, T> {
->     type Backend =3D ConfigSpaceBackend;
->     type Target =3D T;
->=20
-> @@ -267,7 +267,7 @@ fn drop(&mut self) {
->     }
-> }
->=20
-> -impl<'a, const SIZE: usize> Io<'a> for &'a Bar<'_, SIZE> {
-> +impl<'a, const SIZE: usize> IoBase<'a> for &'a Bar<'_, SIZE> {
->     type Backend =3D MmioBackend;
->     type Target =3D crate::io::Region<SIZE>;
->=20
->=20
-> --=20
-> 2.54.0
->=20
-
-Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
-
+>  	return 0;
+>  }
+>
+> --
+> 2.34.1
+>
+>
