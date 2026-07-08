@@ -1,134 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CAF3F12CA;
-	Wed,  8 Jul 2026 15:35:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD60842DA37
+	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 15:38:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783524912; cv=none; b=nf0EuHrrzATOVVAF6F5aJherS73SgvNgf4QSLBExKX8w8y7UNXUtl3yWZIsAR0SCdVi7ogA0rVC9Ws1XcwFKGRzcHHF8H+i7jZ46xywiaS4xGDotliLR/QLyeVA1HqfKwDUTMhdRThn6eihRwSyeNyhVqhqrupp5KbS/qBtC9D8=
+	t=1783525129; cv=none; b=VvwVR/1dDBaHSt76Go9FY4+TcwdqCqbPgldOudDx9HID83XKJKZfIAh0UjIFkyLwz6Odiqny2nAZvR1gSGjgDhxPUFqEnhvmwVrXbm1JXCnyEYx2TUaS3ZFgLrF9YLhjdjAtS304J4AYxa/uzt/2ebiIDOuddW66zBg3Xxs+uCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783524912; c=relaxed/simple;
-	bh=F8FzxmDbQnJT3S3eLejXFlR+nREK0IwYMuvQdmG/i3A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bpV4MHFTdZdHXBa6ML/Tvjg2wGuQodvaRTYAXdjhPf1/JBLSnWX6DOnLzNJPrXlE2a65KzZkBvKlGF/YuRJwnCRZrJIct2RIOdz5nt3UrA2hHkHqQpxlgkyn+yW3i7KfxN4S6ZwQ9kFu5xmKUJj831niDg7xOMCGLTkzQCs+v5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GFEfWq56; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783525129; c=relaxed/simple;
+	bh=wdk9XRPTKB2glI1lMEYARKLoBtHdJ8qFqxrd8eMN1uM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=t/lQzbI1axrRPbW5NuULl9XZ2ggke2aZBTIYsDWdpmPJbQnntTBFp9hg7/2/Znm1jHhlCB6Iw29q4neeF/fCcFLpk4Fg2Fi9r9fhakdnxZ+OKCZFfphPvMol1ayQbggGruUTwTWv6pwFJ7DvUpuPVw6WEJQ5Fzma65iXogVJjJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VdFvmEGO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GFEfWq56"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5568C1F000E9;
-	Wed,  8 Jul 2026 15:35:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VdFvmEGO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 934511F00ACA;
+	Wed,  8 Jul 2026 15:38:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783524911;
-	bh=TIhd5QGHHUH29LQnzEnCvrF+ZQHuAr9wGStJF7y8ltE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GFEfWq56iIsrg049quekywIWXYbcbmVhtKMHr4wPLUG9XA4AEuR9c9v2tx+uce6Lu
-	 f2gEw9XMdbiYfZfIyO48tMp4gqnCU9MS8/VU99gdm+A18RUyAgx+T3WWf5k48ymWQE
-	 NmaQsvnMIuNMVp5Yunm5v552kngUVGxqyfZLABzaaChawmyKGKQv73NhlHTHyvMslY
-	 DsHcIbYlFxCfuMPI5u1+FtQkHZDtUubHA/CNPjaVTIkCR3Ptafslbh9IfGoudPBxd0
-	 neIlEUPOhNIw9ZcBw2JnOmtM/fFtypxT1cPNS8TRxAOOIMJG62jOPE0JsdOyD5B8ld
-	 0YsYLbiF90wQQ==
-Date: Wed, 8 Jul 2026 10:35:07 -0500
-From: Bjorn Andersson <andersson@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v2 0/2] arm64: dts: qcom: eliza-evk: Enable PCIe0 and
- PCIe1 with M.2 and TC9563 switch
-Message-ID: <ak5sfkmrhorCY6lf@baldur>
-References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
+	s=k20260515; t=1783525128;
+	bh=ILwKUW+5jKWVLwszVa73GnXAVhb0UDGEn8WiJiIQ/e8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=VdFvmEGOQu60lHgFYwegh/6XPDfpZbBg7zI99Irbv75JvZT8ZuRnIRuCqT/aZjFO6
+	 sBhNreW1QEUIvXHCnybHah+JMhROdmogNs077nWK6ahXm23nExvLi6gIwcqyc8Bfrs
+	 LWebUc/ud0XgitvTOcpEAJ7IwuCHxOA0dYwmrIw9GQ0cCpa6MBSyk14JZ+hcA0Ia2a
+	 XCghIYHDSUasfEtvl/Lpc9cKqFBFmICYrjhcn4OJ6ouCuWM8DY0OzfeRNYZ7tNtQVj
+	 UBGr3bdzEV7AWfljN29P+/LxmAw+xDqXDEI7QE8M+f2nc1X68brGXSYJnC/cNCvvwL
+	 CP17oWk+FgLAQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Apply mandatory recovery delay on return from
+ D3cold
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mario Limonciello" <mario.limonciello@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260708152650.536604-2-mario.limonciello@amd.com>
+References: <20260708152650.536604-1-mario.limonciello@amd.com>
+ <20260708152650.536604-2-mario.limonciello@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 08 Jul 2026 15:38:48 +0000
+Message-Id: <20260708153848.934511F00ACA@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
 
-On Wed, Jul 08, 2026 at 11:47:15AM +0530, Krishna Chaitanya Chundru wrote:
-> This series enables PCIe for the Eliza EVK board (CQS SoM on EVK carrier).
-> 
-> The Eliza EVK exposes two PCIe ports:
-> 
-> - PCIe0 drives an M.2 E key connector. The 3.3V supply is GPIO-controlled
->   via a TCA9538 I/O expander on I2C4. The slot hosts a WLAN module
->   (connected over PCIe) and a Bluetooth device (connected over UART5),
->   modelled with the pcie-m2-e-connector binding.
-> 
-> - PCIe1 (8GT/s x2) connects to a Toshiba TC9563 PCIe switch, whose
->   management interface sits on I2C4 (address 0x77). The TC9563 RESX# and
->   PERST# lines are OR-ed internally; reset is driven via a TLMM GPIO on
->   the RESX# pin. The iommu-map covers all downstream switch ports
->   (SID range 0x1400-0x1408).
-> 
-> The M.2 WLAN module carries a Qualcomm QCC2072 Bluetooth chip. A device-ID
-> entry is added to the M.2 power sequencer so the serdev node for the BT
-> UART interface is created on PCI enumeration.
-> 
-> Bluetooth is enabled with this patch https://lore.kernel.org/all/20260529175822.3366535-1-yepuri.siddu@oss.qualcomm.com/
-> 
-> This seris Depends-on:
->   https://lore.kernel.org/all/20260610-eliza_dt-v1-1-7bb72b75fc5b@oss.qualcomm.com/
+> Per the "PCI Bus Power Management Interface Specification", rev. 1.2,
+> sec. 5.4, there is a minimum recovery time between programming a function
+> from D3 to D0 and accessing it.  The spec does not limit this to D3hot; it
+> applies to the D3cold to D0 transition as well.
+>=20
+> pci_power_up() only honors this delay on the D3hot branch.  When a device
+> returns from D3cold, platform_pci_set_power_state() has already restored
+> main power before PCI_PM_CTRL is read, so the state read from the register
+> is D0 and the transition delay block is skipped by the
+>=20
+> 	if (state =3D=3D PCI_D0)
+> 		goto end;
+>=20
+> early return.  The register value is masked with PCI_PM_CTRL_STATE_MASK
+> and cannot represent D3cold, so only dev->current_state still reflects the
+> D3cold origin at this point.
+>=20
+> Apply the delay based on dev->current_state, ahead of the early return, so
+> it takes effect on the D3cold to D0 path before the device is accessed.
+> Use the device's d3cold_delay, which the platform may tune via _DSM and
+> quirks may raise, rather than the D3hot delay.
+>=20
+> To keep the existing D3hot callers unchanged, pci_dev_d3_sleep() now takes
+> the delay in milliseconds and a pci_dev_d3hot_sleep() wrapper supplies the
+> D3hot delay as before.
+>=20
+> Reported-by: mrh@frame.work
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D221073
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 
-Why send this patch, when this dependency is known bad - when would I
-ever be able to merge this patch?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-And why are you sending separate series concurrently with dependencies
-between them!? It's one thing to send patches saying "I depend on
-someone else's completely unrelated work", but saying "here's a random
-bunch of tangled patches, good luck everyone!" is not okay.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708152650.5366=
+04-2-mario.limonciello@amd.com?part=3D1
 
-I expect all three patches to be rebased and send in one series that I
-can just click "Submit" on next time.
-
-Thanks,
-Bjorn
-
->   https://lore.kernel.org/all/20260630-eliza-dts-qcs-evk-v4-3-18cbbdba6e7e@oss.qualcomm.com/
->   https://lore.kernel.org/all/20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com/
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
-> Changes in v2:
-> - Drop patch 3, as this is already applied
-> - Rebase on top of https://lore.kernel.org/all/20260708055017.A90C91F000E9@smtp.kernel.org/
->   and remove pincntrl as pincntrl is added in the eliza.dtsi patch and also remove
->   pinctrl for resx as this is covered in pcie1_default_state as perst gpio.
-> - Link to v1: https://patch.msgid.link/20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com
-> 
-> To: Bjorn Andersson <andersson@kernel.org>
-> To: Konrad Dybcio <konradybcio@kernel.org>
-> To: Rob Herring <robh@kernel.org>
-> To: Krzysztof Kozlowski <krzk+dt@kernel.org>
-> To: Conor Dooley <conor+dt@kernel.org>
-> Cc: linux-arm-msm@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> 
-> ---
-> Krishna Chaitanya Chundru (2):
->       arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
->       arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
-> 
->  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 228 ++++++++++++++++++++++++++++++++
->  arch/arm64/boot/dts/qcom/eliza.dtsi     |   2 +
->  2 files changed, 230 insertions(+)
-> ---
-> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-> change-id: 20260629-eliza_evk-6f30686b161f
-> prerequisite-message-id: <20260708-eliza_dt-v2-1-e6281da26408@oss.qualcomm.com>
-> prerequisite-patch-id: 7654ff4f899ac0094a2e791e7f208998fcc7d5fa
-> prerequisite-patch-id: 9e10dfbe360941cdac0300aaf163149755952f9f
-> prerequisite-patch-id: fecce0170351baf00cbe8f6b302d1def4d99bbfc
-> prerequisite-patch-id: 97cd6cb495fdd198f6de7fbe45ef32e4a638ec9c
-> prerequisite-message-id: <20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com>
-> prerequisite-patch-id: f3615b5c1e2222a2491f862a7fba3994058ecc53
-> 
-> Best regards,
-> --  
-> Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> 
