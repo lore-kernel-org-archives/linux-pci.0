@@ -1,49 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F2A37647E;
-	Wed,  8 Jul 2026 09:58:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DDB33876BE;
+	Wed,  8 Jul 2026 10:04:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783504700; cv=none; b=DRrnJDXPC5mpf0ZSJZq70V0rsuANHKQFxOkp5HcqJhFj1z/bHmD8jAcvNebG1io2esP0PMbd4QiCOd8syr5mcIP5h96N1sRh5OUcG9QUST0WMu3WWUe9BPkm/WrU9ZDRlXzdmbAwEy2s9jTvzeq7YMwIVqTcp7HAgsfMn3kGm9A=
+	t=1783505064; cv=none; b=IM6yHWa7bFHK1ndZYEC42xFY5FYtAf0iozRYg6sf8wQw9N1fwMArrtHYHJCWBSSobcV/H+rGvyKapbZMIXmpKQE2WsPpL+LopbH4y95eQ3grtzV4AIw4bHB2vkTdDm8ZBohontOMo9YLuYf+Vk0nnPcD6BuFxR/FhP/OHjdfu8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783504700; c=relaxed/simple;
-	bh=/pag6WqfUx7M6W9IF09UbWrL57C1eYrYraDPiIBWQqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bg5d5b0e1cT6H+NKil+bvS3wETD+/hIUjjUZFEUuKLmX7arcIFSLfLKrStpIOYPLokPx3Md44+x4NzVw1VZ9JZNhRM1ja+6Plmw796d06AhdRr8Os34pq4N//o3wOoYKAxuXkK+lwkaHGv65Dw2czG4K2TPuvSkuyuaR2dm3teI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9aDP3qa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783505064; c=relaxed/simple;
+	bh=K5M9eQNsPTwK1Pb2MbjOOmIyIv4BnY9GthleSmPbrlM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lKy83wWDnT4PRqZqAOZ2DJxHtMpr7b/cTc9+ZpRm4xSNbgBNRxq57fcQ0hH0TxOJx/Gov7YNA+kcANvXwOgFf2MdPsXjwYevhku5u3RYEPSy2iPuz5t0lBWWzH04UPRXHVB63U0PPaSHYZkPO95OcJPvSI3FoMclI66wLoI/rMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=JSJik8//; arc=none smtp.client-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9aDP3qa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 904611F000E9;
-	Wed,  8 Jul 2026 09:58:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783504698;
-	bh=RWwnnS6GeaolTc9bMDjJoioBxiXpdchd+xEqkloj854=;
-	h=From:To:Cc:Subject:Date;
-	b=h9aDP3qaagnR2LQYiES34wpJhH6BpLm1rDyCK1/kU+o2iPw9xoXYUyWD1pDFq+hFF
-	 DtP3VWpsBT5QZ0eKeqQrZaLFSNVu8NLdBH/mBGbTtQY7w1JpzsntHQgqvWdvq1Nkah
-	 HrmXFkyXFKhOq5l4NDjtwnJY4GZ16QVa/V6ZIdGuhwvBWTYUWAryOxWNTjXn9CHuhm
-	 glJA1Fxh0YtkK/2CIRZ1OAkMgCDiU55aIZAYwg+ybMF6i6nL+LFEf2TyHhp6+jUOqp
-	 SqBOae0AQ3tbOuSP8XiPXSQNum4YRitjWC0Ssp2EBpKRxKVzZ2IFmm/86Y3wNNqQ5k
-	 VWXQ3kjKC9n2A==
-From: "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org,
-	"Jiri Slaby (SUSE)" <jirislaby@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Jacky Chou <jacky_chou@aspeedtech.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="JSJik8//"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 5E5B0C8F448;
+	Wed,  8 Jul 2026 10:04:34 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 74F6B60337;
+	Wed,  8 Jul 2026 10:04:20 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 23D9811BC31A3;
+	Wed,  8 Jul 2026 12:04:03 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1783505058; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=dapdUZsmq38t8TKgkYjpjuGLpN++XKdT6bObS/bqssI=;
+	b=JSJik8//86rk6lpVzXStWSdMmHFlkS+T5elE4FAssEpE/BixcaLaJq4gO0EAF9PhXVCvuA
+	A1UjggPxhuHGRLdTrmhORA3qyQtnqD7Aak6R18gwrlrqZY/WTAr2pY5Zt2GUaJ7Hoq4CZ/
+	YFCq/J9hZXT+b6L0xFTRCGCp5UoydjCq4QNfqrmuf8xSbFkVOI1d4IKYHv5TQls1YSv9R4
+	9yJYAwd7olF40K6oDM1d8020ODSEn23Qz3RGcuc6Fm0wtBysE3a8m3X6D482IHBNtvRt90
+	EM3zPz2Iqod9PXoGPc/3rFZOgp+YH2dZ3Z96oRyp5cXmD9RS8CPpyNt7rPWTDw==
+From: Herve Codina <herve.codina@bootlin.com>
+To: Richard Cheng <icheng@nvidia.com>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Rob Herring <robh@kernel.org>,
-	Joel Stanley <joel@jms.id.au>,
-	Andrew Jeffery <andrew@codeconstruct.com.au>,
-	linux-aspeed@lists.ozlabs.org,
+	Saravana Kannan <saravanak@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dan Williams <djbw@kernel.org>,
+	Ira Weiny <iweiny@kernel.org>,
+	Li Ming <ming.li@zohomail.com>,
+	Lizhi Hou <lizhi.hou@amd.com>,
+	Herve Codina <herve.codina@bootlin.com>
+Cc: driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: aspeed: Switch to irq_domain_create_linear()
-Date: Wed,  8 Jul 2026 11:58:14 +0200
-Message-ID: <20260708095814.385480-1-jirislaby@kernel.org>
-X-Mailer: git-send-email 2.55.0
+	linux-sound@vger.kernel.org,
+	patches@opensource.cirrus.com,
+	linux-gpio@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v9 0/9] lan966x pci device: Add support for SFPs, PCI part
+Date: Wed,  8 Jul 2026 12:02:50 +0200
+Message-ID: <20260708100302.517792-1-herve.codina@bootlin.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,55 +85,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-irq_domain_add_linear() is going away as being obsolete now. Switch to
-the preferred irq_domain_create_linear(). That differs in the first
-parameter: It takes more generic struct fwnode_handle instead of struct
-device_node. Therefore, of_fwnode_handle() is added around the
-parameter.
+Hi,
 
-Note some of the users can likely use dev->fwnode directly instead of
-indirect of_fwnode_handle(dev->of_node). But dev->fwnode is not
-guaranteed to be set for all, so this has to be investigated on case to
-case basis (by people who can actually test with the HW).
+Previously, I sent a big picture series adding support for SFP ports
+available on the LAN966x PCI device [0].
 
-Signed-off-by: Jiri Slaby (SUSE) <jirislaby@kernel.org>
-Cc: Thomas Gleixner <tglx@kernel.org>
-Cc: Jacky Chou <jacky_chou@aspeedtech.com>
----
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joel Stanley <joel@jms.id.au>
-Cc: Andrew Jeffery <andrew@codeconstruct.com.au>
-Cc: linux-aspeed@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
----
- drivers/pci/controller/pcie-aspeed.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+In this series patches touch several parts and sub-system in the kernel.
+Reviews have be done and it makes sense to split the series and send
+parts separately.
 
-diff --git a/drivers/pci/controller/pcie-aspeed.c b/drivers/pci/controller/pcie-aspeed.c
-index 9aa9e14c6148..74b03a55643f 100644
---- a/drivers/pci/controller/pcie-aspeed.c
-+++ b/drivers/pci/controller/pcie-aspeed.c
-@@ -725,10 +725,10 @@ static int aspeed_pcie_init_irq_domain(struct aspeed_pcie *pcie)
- {
- 	int ret;
- 
--	pcie->intx_domain = irq_domain_add_linear(pcie->dev->of_node,
--						  PCI_NUM_INTX,
--						  &aspeed_intx_domain_ops,
--						  pcie);
-+	pcie->intx_domain = irq_domain_create_linear(dev_fwnode(pcie->dev),
-+						     PCI_NUM_INTX,
-+						     &aspeed_intx_domain_ops,
-+						     pcie);
- 	if (!pcie->intx_domain) {
- 		ret = dev_err_probe(pcie->dev, -ENOMEM,
- 				    "failed to get INTx IRQ domain\n");
+This current series is the extraction of patches related to issues in
+the PCI subsystem. It has to be seen as a continuation of the big
+picture series but related to this specific core part.
+
+Patches 1 to 6 introduce and use fw_devlink_set_device() in already
+existing code. No functional change but the introduction of the
+fw_devlink_set_device() wrapper.
+
+Patch 7 avoid a dangling pointer.
+
+Patches 8 and 9 fix fw_devlink issues specific to PCI and the
+device-tree nodes created during enumeration.
+
+[0] https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
+
+Best regards,
+Hervé
+
+Changes:
+
+v8 -> v9
+  v8: https://lore.kernel.org/all/20260630102804.413563-1-herve.codina@bootlin.com/
+
+  - Patch 7 (new patch in v9)
+    Clear fwnode->dev during root bridge node removal (avoid a dangling
+    pointer).
+
+  - Patch 8 (patch 7 in v8)
+    Clear fwnode->dev during PCI device node removal.
+
+v7 -> v8
+  v7: https://lore.kernel.org/all/20260511155930.34604-1-herve.codina@bootlin.com/
+
+  Rebase on top of v7.2-rc1
+
+  - patches 4 and 5
+    Add 'Reviewed-by: Andy Shevchenko'
+
+  - Other Patches
+    No other changes
+
+v6 -> v7
+
+  Rebase on top of v7.1-rc1
+
+  - Patch 1
+     Add Cc stable. Needed for patches 11 and 12
+
+  - Patches 2 to 5
+    No changes
+
+  - Patch 6
+     Add Cc stable. Needed for patch 13
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 7
+     Fix a typo in commit log
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 8
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+Older iterations:
+  Patches 6 to 13 in the big picture series
+  https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
+
+Herve Codina (9):
+  driver core: fw_devlink: Introduce fw_devlink_set_device()
+  drivers: core: Use fw_devlink_set_device()
+  pinctrl: cs42l43: Use fw_devlink_set_device()
+  cxl/test: Use device_set_node()
+  cxl/test: Use fw_devlink_set_device()
+  PCI: of: Use fw_devlink_set_device()
+  PCI: of: Clear fwnode->dev during root bridge node removal
+  PCI: of: Set fwnode device of newly created PCI device nodes
+  PCI: of: Remove fwnode_dev_initialized() call for a PCI root bridge
+    node
+
+ drivers/base/core.c                      |  4 ++--
+ drivers/pci/of.c                         | 12 ++++++++++--
+ drivers/pinctrl/cirrus/pinctrl-cs42l43.c |  2 +-
+ include/linux/fwnode.h                   |  6 ++++++
+ tools/testing/cxl/test/cxl.c             |  4 ++--
+ 5 files changed, 21 insertions(+), 7 deletions(-)
+
 -- 
-2.55.0
+2.54.0
 
