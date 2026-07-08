@@ -1,446 +1,186 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19012046.outbound.protection.outlook.com [52.103.23.46])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011008.outbound.protection.outlook.com [52.101.65.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34CDA2E3FE;
-	Wed,  8 Jul 2026 02:52:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.23.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D92A37997E;
+	Wed,  8 Jul 2026 03:56:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783479168; cv=fail; b=sH8nscXRdxiOc+ROrmN4Sk53zs7tOgb9NZ+rT+UMz2ChA3i8KPT6QjOlJObQdrh/TcXjl4Fr5EqQ7jjOqMPg2H3CWQkbnVxWlyrDheMVI7Vb1DY0UZHhFuMh4AUxmg92nGB7YayjuQnUl3ULzeAHMLcG+D2HFS8NdxWEDSRCeis=
+	t=1783482973; cv=fail; b=PxvrFn2tdAqehoa9dFx8e79JVUGnaD1XMJlaSheYY2gkVLetTxuomp7x9BQtO/6Qv2L7P71V01ozYvum/53lDji12BL0UgNkpMl3I/3yKLRyDqNYHK9boSRFlSKwdqqUOKSBh9YSTStUQJ3Cym9+iHXQzarLPjqikeNuzfjHLKI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783479168; c=relaxed/simple;
-	bh=M9Ias/ZrwgRrqkzPIbFhNSReyX4JhFrrSl4OeZFxDG8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Gq9u0eQ/ptYteMr3c+ZYEAfw/YyAjxtf0QVFHTYZujCYJBs0a1V5N3YRXelmYomI12RwDjU5dUOw4Jq4fpFWdSm54jex/l4vBPq5w2thkZtjABrFWKAn6+vQOImEcGYwcNrbcmtj1dFeDs8iS60CMeHyzOt3DQdHx7FcGOnNYRs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=Dp3nS1Z3; arc=fail smtp.client-ip=52.103.23.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	s=arc-20240116; t=1783482973; c=relaxed/simple;
+	bh=w+zH+5/tPz/NO3rK0FiN5rv9mqzF0k3riLhf1UVYvnA=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=PTkkjiNFTGzZcbTk91OhLGWV+805nFSRCKm9ibknp8zd4f86MalIwtyByaFAgFEG6ZSHzmcfEAxfKt61wIR8KAVv8SQhzaff1LHVsnHyLVLjNK4e5AyjEO48nhycu/3YE5vRxohdZno4DLApAHr8ZZel74FBx1yIwb3RNkoGDpo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=X6rb9GIS; arc=fail smtp.client-ip=52.101.65.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="Dp3nS1Z3"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="X6rb9GIS"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RrgSjeFZKDChCO5YgtPNTMD/3cWbvz1knUhNbi1QKHxjYso1v6/QVAO6IEGjuCihd1GPKAhXYn29MlGOsMw6ZT8rhdia3xLoeVckAON+IaqMzAoRKs7W4vt/9QBF+PtffwjS0E0HQH6iSIRO+kP3m1PI71UADAr/aXaYBjdt1jgCUzqLcjo7HtLPOA4z8eUqayw7dxmq9a1BsCTd2VzzTzhdfMddfkVkfqLenLh9qh+gUmwf/mmfFSgip/BOs4fUOuEE1UbgyHDAC8IEvjWe67mqnKJN1vBmWHMQp4SYVSODPj2rT02hXac4mCL0aQxRDg4nAbOLnZ3FVYMyW95bFQ==
+ b=jafiK/Q0H+tQa1OFkXfy5oqPDTPxlZh3ZutXvvCueue09jUwBfl6m4Zj1BeG+OdDfjNaWsENvZv/TBCpSjiX5khgRNYjjQS3+1hR8xEHXdkopVPiSENn/AUkAFbAvZs9h86jqZPNeu/mHhfMP1TOQYaRSCrnGnpCptcir+1x0TUL5duTqMnHT+F5onl3UsASCfMdPQh62KyvQ5BnKoR35PbTIYECO00q6dKblFv97I71ep+/BsPbC2zXSYRekOsuKYkdpU4sP4w2D5NpFQO/KmFMGUeudgaow0a/cGOE6FYhgmGbgmlm7OT/k9D58JB9Cvg9ma5GhELvCZquTFoAlQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=F/PsNTXO+6QvcB+an6JCZt0PsnyY0OmBMrjRHEKntOo=;
- b=GtdlFbLOLR+qLt4zNbWm6TD42/7gH6GDsf4uLzReXvLvIIt7Sl+T9d8Z077dUTPF+kS9t5a0tWetS+o63e7w15oEbhyR7sxCIYoC4mP19N6Z8TfxNv/D8nTEVsvAVJrNNadPoKB1/a24Kzh5PV0rvtYyfLUl0UPmEDif4uitnConRexyaay4MnneREOs3e0nL8OjfeJ3XT+O+lqztVD/drSwI6K61ShOx0akcZHzYQe36YEId+jbOnskjwkPSSy1nH9IUYPwvjzwJafinhpYuw/HCMbzUKYI5MnSEZvHhb4Z65Zy7THcf9x2jvMrG0srH2ozws29TWJsKkDnkDJdmA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
+ bh=UF0DShPB594xmXLdF+/XUGRl1VbjVyxijhtAnek4/uY=;
+ b=dx2+6/hI37UbrkrJyKVRUajQ2IghSoEOt/CRqaKHDAufZLzdXy129aBGZbhaJ+NCz6zl8gtNoaDqA2o0PigdvX68QWLQYWluBfLD++PC264rNco1/dJDrR5cah2i3YLNfPoOIhqVVCDBX06EAsgGjFencSu2AuGiJG3IGZjNLWm0Pbz8E7vE3nzvvZdEWtnpjw0vZijDFb9/sLNgL3gzmOoWKtQiaXVTjtVqb008uI5eWyswGIBpUw4LETRmMEI+BurkSc9u3dA1Mvacbhc6J3j9s0ez8hg0YTxITvW7ZGHbijS/Pmr6zvQpOT0ztAfTXhlIdbRSXjUv6ArzJrDb3A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F/PsNTXO+6QvcB+an6JCZt0PsnyY0OmBMrjRHEKntOo=;
- b=Dp3nS1Z38aXDDGyHw59kPFICFs5dbx6+ZgiLUVcAMYitOJZznKodsYZD9b4bV+RJ8Ira9gugN/hD2YAb2L0JhE/i/HCyW50A+WaRl03ZsRn9mA33+UP2R0W1fBsF4eLAJIm/zwjQ3FhnDl1cd39TYuotHz09lha52hpJdZq0HvXAIE4ajlCOWt+f9RnVy8xJvaqsN8kP0yHbPZADKkFrujxwMRydcXBa6oce52vCyI485cai3XrAP8CN3AJcW/YM9c9GgZVN5M24xS9mWn7PPFQ7gCptIyjhe8VUDUzpZdYG9jkyw0zPJTpX+/RMivN+6wFUGmi3bBcqBoUSblintg==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by CH3PR02MB10154.namprd02.prod.outlook.com (2603:10b6:610:19f::15) with
+ bh=UF0DShPB594xmXLdF+/XUGRl1VbjVyxijhtAnek4/uY=;
+ b=X6rb9GIS23GQclLA/eYNUMBzQxZIz+u9q3Fjy41VgTV0FGJbsZ6Ap6wqBNETMKqMIxgKBwUI9NG72OlZWlz03SMb8IClSNVLuRtLqZV6JoKKtlqWj5UgT891i+5J14uklbWahIqpsnNsOEf5qnunwEcRjChr8ves9n+rWYYd3EBByciwkmTFwe7YW6yPYWdffLuYCU7mF2sworaxKfnJ4/i9Sqje5TB8UZSoYI0NWKQXHfJxJ/anMb6BYS/c9XF5aPqVycwqn9fTfBDm1emPY/ttX81L23RdfOmGWZ+4xtBG8wt1Jvt+sARFmLQ4ZjjMPCmVccARf6QYYQ47WB+QAg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from PAXPR04MB8096.eurprd04.prod.outlook.com (2603:10a6:102:1c7::19)
+ by VI0PR04MB11768.eurprd04.prod.outlook.com (2603:10a6:800:2ee::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.8; Wed, 8 Jul 2026
- 02:52:43 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%3]) with mapi id 15.21.0181.012; Wed, 8 Jul 2026
- 02:52:43 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev"
-	<iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
-	<linux-arch@vger.kernel.org>
-CC: "wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com"
-	<kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
-	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com"
-	<longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>,
-	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
-	<robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
-	"jgg@ziepe.ca" <jgg@ziepe.ca>, Michael Kelley <mhklinux@outlook.com>,
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>,
-	"tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
-	"easwar.hariharan@linux.microsoft.com"
-	<easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com"
-	<mrathor@linux.microsoft.com>
-Subject: RE: [PATCH v2 2/4] Drivers: hv: Add logical device ID registry for
- vPCI devices
-Thread-Topic: [PATCH v2 2/4] Drivers: hv: Add logical device ID registry for
- vPCI devices
-Thread-Index: AQHdCjyhy62fRqTOH0yC7zsP+xZ0eLZi9TRg
-Date: Wed, 8 Jul 2026 02:52:43 +0000
-Message-ID:
- <SN6PR02MB415798534DFCC14E5202D021D4FF2@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-3-zhangyu1@linux.microsoft.com>
-In-Reply-To: <20260702160518.311234-3-zhangyu1@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|CH3PR02MB10154:EE_
-x-ms-office365-filtering-correlation-id: 940dd482-4910-49eb-6573-08dedc9bfba8
-x-microsoft-antispam:
- BCL:0;ARA:14566002|13091999003|19110799012|19101099003|41001999006|31061999003|51005399006|8062599012|8060799015|15080799012|25010399006|37011999003|40105399003|56899033|12091999003|102099032|440099028|3412199025|1710799026;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?q/LyB9FjV/9mKc4QNtPJae9OkvRZazONhvtRXO/yz9y2pD+5iY0/5A1MmfyG?=
- =?us-ascii?Q?lSRST5lDfF6xaxbqRkiQzVV2phqg1S7YIyNBAp1sbqPJJZWWxSbQfZxgyjek?=
- =?us-ascii?Q?yXPr+bJBwsPI2z7U4BjI9zSLtzXkfZQtDRD/MdsOgOIlD74luI8DfEovzji/?=
- =?us-ascii?Q?YoVQ8WTj9MkPKXX5Mk7ePjUDUO4T13h5scIkcFyl9X+XlHVaeZnXr5IzY3lz?=
- =?us-ascii?Q?s8rGn2z4yVAjAkG9HSgxsCjLmiVn4KjtCd5eK9k58X6AOZG65tKrKdQ7C3+Y?=
- =?us-ascii?Q?wpxAj+nFmGG6eq1KYX0WO9/suORhjj6iJnkRonfPTARRRDBteFDaHNlBvIRB?=
- =?us-ascii?Q?gkPJckdwllYXUnhqRfnbloZCSnjNGTwQFUek4XMP2yTY0a9JFgU1t03cJE7m?=
- =?us-ascii?Q?LBAt6DBaLutC262n5icqf6wKe8Q7P0++k0GDkXHMgOd2A4uc8L4ninwflpDp?=
- =?us-ascii?Q?l4646hoA+K8S67ztr5odHIP39shkWLFKQ7+EmPbm6XnfsavvEPYQXkYATFgS?=
- =?us-ascii?Q?sZC59Ryqv8aCjlJ469PUx7zGOsaJaVtr8f+h4xJ9suznSSp44XKCHYJvOz9X?=
- =?us-ascii?Q?gNcCdOGQnla/0EJ9iNe2eQ0v2d2eksgQm+pemhiKTZTVaIW1V3LrzZ1PkDsO?=
- =?us-ascii?Q?yC8hJQE0U4E3tMg+wqM0L+c3pvwf7/8ZKm2DI4P52ba1Fewd78t9wPLUX3+t?=
- =?us-ascii?Q?JN1OhEaEXjPP3O0LGjVrWk5zgZqw61sqALToV+ev5YGg6D6yarjqI658n8Tz?=
- =?us-ascii?Q?sMikFD+mwh7xJ/0luQNRFBlpVISgwsA40WLq1rZFej71HhzPniQn57tOUsko?=
- =?us-ascii?Q?1OxpPM35IpRoX+97Y4q3aFhyIAzGbKGPwNdAAl/vuhTduM+mfnKSe9cSiRdS?=
- =?us-ascii?Q?2rhBtRosKETGU+aY8olJSiEy4gyciMbXUhAjmeNAzQtZqm3JoeBi0LBYzdDs?=
- =?us-ascii?Q?sGAGO2SYil4l5vr5wU89+J+Tv2INGLKtrlf7v6DVAM2HOri/PsV1+69LX/0B?=
- =?us-ascii?Q?/2Zgs67FwTF36K7346dDkOiEs96SvGLpZxL10vyrqzQsvzFjQaga7bCHYTGn?=
- =?us-ascii?Q?77/v/p0GLvE68w96J0qjsXIir3tCk47/Oi/t8Uqfvla3VvQRcDQ=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?2K3FMb6+9qaYcdqdbh9KZQ7qhOcG/FYOLzLLZKP18xIkQLyIMiSMpHU2vYcq?=
- =?us-ascii?Q?YpImfqkB3U9XLggeVZQRTQILBCmWBw83bp3rjNqMJS4w5ZUXOrSWjQ4msU9p?=
- =?us-ascii?Q?on0n6CEVkeSY2gCnhu6D52wcskWDsuE2JF58zFQ3U0DL7TIgG0wj+B+4QaOw?=
- =?us-ascii?Q?DJRAfIdkbY+QElxZYD+zx/PEnUnyPVo449OZVTyM+CaCEnb3EUfd+WObuc9t?=
- =?us-ascii?Q?LOpsnKlz4HJEckjE/XXdhBoabzDinndGgWGp9KOxPVaI5DRcDTAZkhtyFbMW?=
- =?us-ascii?Q?hD6pwbCGOjoSqW3h9CBR8fj60BlH1Hr45rNjdtJFLJmXUi/0K/ou0jYERnN1?=
- =?us-ascii?Q?u5SEaP4hpsGO7r6ursvkFJ5wdm54zg4PxpcKsO1q/6/DIbkgWq+7g3mpHGZV?=
- =?us-ascii?Q?PCrlrd0aymUwC34ut+Ca+7nYD0Sq1EVkXRka26m2hkuCv4YF5ckDQt8TRTnj?=
- =?us-ascii?Q?LXoXW+NI9LNT9i5LAGHNLc5aKc+vWzW2C4bhqP3jbSyiAlKNrAmsU/i7+t2n?=
- =?us-ascii?Q?Fi1/V9juTwRXbvS4ladyC/1uBQ8vasb43ltFm4xppZSom8TJK3kOs0wLEs70?=
- =?us-ascii?Q?ARDPKa3xV7JwPX+2SiUXR+ea3z9ge6prA8c5Cg6e6QX/Zwc42Nv6YontuvS6?=
- =?us-ascii?Q?LBu4ZZpn1I8KHOrgj67DhB9YNI4mWToc+O8FPozDQRq0jjTyOq+K5S6DTRnk?=
- =?us-ascii?Q?QkRUcCrKi9D6ZWtnxPJGU3laAxUdRRcmIVZ7mx1LeOWlhlP9HEN75lMAxFts?=
- =?us-ascii?Q?rkzoCJeGgKO3EPKLjNBLmHYR0wb1zNoQDereceJVCQ1Ht2VTptpJ7SA4AVUT?=
- =?us-ascii?Q?eMjo3Yzh2/19EDvsaWPggVBkLmODydup7oWp9XVw6POjsv0i9/OzDzAfgkNv?=
- =?us-ascii?Q?ZwyVPdkhNuWIL/jjjvBBa4Ezvs6zUPTeWz0czzIXpwfj+CVRFwNV0TMNjssv?=
- =?us-ascii?Q?WQEjGpcvO2r8B/x4pRpRlxJ39khQLFuApwcZw5mPVt6Ycq6FMvF4OSoWfKxp?=
- =?us-ascii?Q?E2HoWTKqzFSR/uQNJbAX9iKBsIDBwOfWY5N90J4ZQv42ABpbHDMnZnRsfWwP?=
- =?us-ascii?Q?Mif31w8HgEUq5OFW9+N8JxQ6EgARc6UHfn5RYWIqxkKGa5ATHLLuDTfi9eCz?=
- =?us-ascii?Q?LeJytlfE/nbDIQz4WmaqmiqlacXq+1el3wxx+pZDKfKjiiWTHz4iZa+Mc7In?=
- =?us-ascii?Q?PPXGYhNFOs6Th8oClviicqUi2PM+BI5BahyeJdrBzbh8aeuhYBC+S0o8qy6E?=
- =?us-ascii?Q?0BokG1a5Z2Iqbx0DEcPooTMBLtQyaYld3WxYRMyGn2uVIaMd97lDfZinLROX?=
- =?us-ascii?Q?eLrrBHvQH2LxiSWf8e5CQZkMn3OcDGaBTqONwDJfcuPp6bj6uuEb4ZGkwYBy?=
- =?us-ascii?Q?I91ama8=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.14; Wed, 8 Jul
+ 2026 03:56:08 +0000
+Received: from PAXPR04MB8096.eurprd04.prod.outlook.com
+ ([fe80::68be:f721:5000:3f2d]) by PAXPR04MB8096.eurprd04.prod.outlook.com
+ ([fe80::68be:f721:5000:3f2d%5]) with mapi id 15.21.0181.012; Wed, 8 Jul 2026
+ 03:56:08 +0000
+From: hongxing.zhu@oss.nxp.com
+To: frank.li@nxp.com,
+	l.stach@pengutronix.de,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	s.hauer@pengutronix.de,
+	kernel@pengutronix.de,
+	festevam@gmail.com
+Cc: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [PATCH v2] PCI: imx6: Add runtime PM support for i.MX95
+Date: Wed,  8 Jul 2026 11:59:26 +0800
+Message-Id: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR04CA0003.apcprd04.prod.outlook.com
+ (2603:1096:4:197::23) To AM9PR04MB8083.eurprd04.prod.outlook.com
+ (2603:10a6:20b:3b5::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAXPR04MB8096:EE_|VI0PR04MB11768:EE_
+X-MS-Office365-Filtering-Correlation-Id: 54fa8711-46a0-473b-8020-08dedca4d75a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|19092799006|366016|921020|11063799006|56012099006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	8cvcZXGzYAJalQsQ4+aRgLVmsK0E1bx58376/9Z7lQkyiBAGO2Mi/2CdVilEkpWdVkaZ9z0O8omKLergBnkNE4f3bkLvIVfw877s9lJZFxn1MkpmfF36P7ebWorcznYt920z9VeMUi+aMRVESBnbxhXd9rFabEdCBe9XhXYNhmGiTK8Mcy8p+VQ8pKwHyUfni2kyJKT33F67MU17CJiq9zARFBXrXs7tGnbaurIAgeNnR1qjb7VyIrPZU3f3HpYNg4q8Fy7anKcuMHiTSIpVWpVUjdtrlb0tpVX4VLitZ5fPiv/QtKZbf9tJXG+xh7fLBmEdWrM3znhT7AVMneW9u9K02x0939X7Ikcyys8EqALMsytarP1W9jhcXq3XqY+Of6c0syzTrF1uwXfk84tLTsYnHn1PIe8lJmEzntUAZDGhcsOISqZEI6DjobJ7ZvVh3yrhgSZox0Sn2SmfLQq0ZQLXwr2nIyIwtl7GDmX0sqAKEai+4aVvcypMkIMTj+DwZzt7En5mb6O1/L1bDUFQtBoK4SNvdATLOI1mtXIGaL/Tm+HOxI0gda6jFfWUmLzY4GhlM5TGWXVCp35qwlx/7tJxgoUx1wCjhE3uwuwUUAngjV1e798Laobf0zkgYxARnNNhGBlCci3cGh8mKbGlCpw5+4LyGWiD75t7Drk9EtGYX9Tq9EGkRipylnzDSreJysafO2JXVgtZGKv4OhUZBQ==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8096.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(19092799006)(366016)(921020)(11063799006)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Ecse3Kf0pU5e6EjTIGZbXq90Qvw+NvpvMkDfdJ7QzGVoeZfZQeZlCsHZBJRS?=
+ =?us-ascii?Q?I2ITXDGoK1iXe0lHQpMFuBIixVe8iRlSBUJK1wHCK9IdU93Xg5NdVCIyCn7v?=
+ =?us-ascii?Q?qmPEo4YJsunRBPig/fG3g/ISdPgTHWXNAta1jNKK31rNI3Gm/2eSnj+hfGTk?=
+ =?us-ascii?Q?91Y+SCmvnGckW7LEhPv+tQu/OVswtf8iPW4st2vRKz+QbKCwNCqTIDdW22zv?=
+ =?us-ascii?Q?d6K6nFk/nsiJICPe8yjR1JFmmehM4SgpJ0UBDrKecs0hHrsvvCx94q4JjQ+Y?=
+ =?us-ascii?Q?eyuw1H1gBoqr0S419w/y6po4U+2Suywq6nQO/Hh1++Y7kmC+pP8K/E2DEV1d?=
+ =?us-ascii?Q?IS/87lHVDHo+6dHnIyohznLeSPlbljU1EgApQHXNkIXlKbeQ8HEdyKMhikv9?=
+ =?us-ascii?Q?zDBsfXTEmzzQd48yNmlDXxj7xCPLEn5WAItA/KUD9cpWF6JdDGaK8wmbSNs1?=
+ =?us-ascii?Q?NIPu//tCzeVp6jRwEXNviwsm5bjNUrr/UqbE30aH2DgjzpYozB+bXMdtrjse?=
+ =?us-ascii?Q?sagRugNwjkEuUOTaV1fOgIHi4B1ouoTidehycfIcdU6r8GqVcDeEkJisvegH?=
+ =?us-ascii?Q?A3T/DYWygt2CJV3+T1bW0lSQXXU5B4eZXjaO6GUU5Z2B9YkNZyuXDsv2iJjM?=
+ =?us-ascii?Q?r/Jkf/C9NhEadzzlQK4u0bOkUSzhYjmxcwZUZ46pLKpcZ7x6fOSMC0Vw7rLQ?=
+ =?us-ascii?Q?c4pvIVG3vIwbvBzjfjRhOj2hb0JZmZnaOWEI/WZw1Vqn6MvO34S1wBPT5BbY?=
+ =?us-ascii?Q?oWaHcolNmknufsXoPLkI2289QsS00EzaX78qkwtEh0pjSWJmc5bms3oEd2CO?=
+ =?us-ascii?Q?O45BBRMLnWOs1gdFPskKPRftx4SIbDA/UispIyUQMljxfUOkFWOWK6A8Ut5I?=
+ =?us-ascii?Q?cD8LNFPSdTIyciFohoPjFmkSC0vgnSzwmbeoex511JnNgBHsYPnulvdkAqxT?=
+ =?us-ascii?Q?LB2LhoAvhPLN5G2OPOyP9CbeHPt+YKVp0Td6kuvO94G+Ply1KW8PB3ScDzkW?=
+ =?us-ascii?Q?UEBhVAbodYxCow0HcHsznJ2ST8pxItrzhpQi6Ic6BPWfMeLznklyjMGV2HUj?=
+ =?us-ascii?Q?+7LYhJGXqtW5YHqJySU83m+sfB2055ByQmk81aSQF7WLSghc8j5RCyrwZDnD?=
+ =?us-ascii?Q?6QXDxkudyYfkxIeHQDOIJrobjH1X3Qvq89WcVpgM2HM1KA6TDuUdj5vS/U0i?=
+ =?us-ascii?Q?PcoEdBvsxh5hxS7XuDGdE9eNKYhHte6mryPdsKawkVQtvoTrmymxMFY9oDpW?=
+ =?us-ascii?Q?xhWF8GyxnuDh0jZDG5M3/UYf33RMbAzrSZsI4NQEFktUoaV75OVRYvQHpv6t?=
+ =?us-ascii?Q?zx3dm88DpvKAh3VINTOGVYvgsU3W2f0SEQS2f1XlIyAjfnR0nsD+MVTCXuHu?=
+ =?us-ascii?Q?bylJ3vjmbf4PJzMypw6+MwtiVCiwqMc9LG9B0tCXBND1YLfC0lpmzWI7rJ0d?=
+ =?us-ascii?Q?j9bbNzMWHcAOYszQl1DSp9+WhDRTnZgrd8+KElXUoEeVepSnqOf5usYu6Ex5?=
+ =?us-ascii?Q?mLmXM0OecY39zVw4rpNSabcGTC94zA3QzgnR+ifJLnIJg3NEUbmp4yJE3Ng+?=
+ =?us-ascii?Q?dTkTH54mu5Vc70/yhD9n2Vxs7sT8+zcZSM7KOc0xqL/Ys4NkTYqLbPeE5ixq?=
+ =?us-ascii?Q?rCp0L1CgiKdCmJ2zveBKFomoDmfQJq7DD9Umimt843BDzbHzzeUji3txA0k/?=
+ =?us-ascii?Q?RVDtZknrbnTyDgP30t19fNDSUmnVaXOMbtWXNCQX+gPW9FB1k24su6dL6oRq?=
+ =?us-ascii?Q?SSkM+Nb3IWlqQqA13pokmJwzNWQ+YYeCoOa+Bw2K8Yv81JjRp5bP?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 54fa8711-46a0-473b-8020-08dedca4d75a
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8083.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 940dd482-4910-49eb-6573-08dedc9bfba8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2026 02:52:43.2778
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2026 03:56:08.6120
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR02MB10154
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Zs0pvTVivPxR/jSEeGecsID0/Z2v8dX6cVvTmLqfNZ62n9Kng/aCE/BFShvjHWjjQ3TFTvcTEms3nXU3WPeaGc/4CgmNy8R1xmW6oisJiG0ZX0S2ZnNxomVAdml14xBK
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB11768
 
-From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Thursday, July 2, 2026 =
-9:05 AM
->=20
-> From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
->=20
-> Hyper-V identifies each PCI pass-thru device by a logical device ID in
-> its hypercall interface. This ID consists of a per-bus prefix, derived
-> from the VMBus device instance GUID, combined with the PCI function
-> number of the endpoint device.
->=20
-> Add a small registry in hv_common.c that maps a PCI domain number to its
-> logical device ID prefix. The vPCI bus driver (pci-hyperv) registers the
-> prefix when a bus is probed and unregisters it when the bus is removed.
-> Consumers such as the para-virtualized IOMMU driver look up the prefix
-> by PCI domain number and combine it with the function number to form the
-> complete logical device ID for hypercalls.
->=20
-> The prefix construction is shared via hv_build_logical_dev_id_prefix() so
-> that pci-hyperv's interrupt retargeting path and the registry use exactly
-> the same byte layout. It is derived on demand from the constant hv_device
-> instance GUID rather than cached in struct hv_pcibus_device, which is
-> private to the pci-hyperv module; this keeps the interface narrow and
-> avoids depending on pci-hyperv internals.
->=20
-> Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> ---
->  drivers/hv/hv_common.c              | 95 +++++++++++++++++++++++++++++
->  drivers/pci/controller/pci-hyperv.c | 21 +++++--
->  include/asm-generic/mshyperv.h      | 13 ++++
->  include/linux/hyperv.h              |  8 +++
->  4 files changed, 132 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
-> index 6b67ac616789..53493f8d14dc 100644
-> --- a/drivers/hv/hv_common.c
-> +++ b/drivers/hv/hv_common.c
-> @@ -26,6 +26,8 @@
->  #include <linux/kmsg_dump.h>
->  #include <linux/sizes.h>
->  #include <linux/slab.h>
-> +#include <linux/list.h>
-> +#include <linux/spinlock.h>
->  #include <linux/dma-map-ops.h>
->  #include <linux/set_memory.h>
->  #include <hyperv/hvhdk.h>
-> @@ -863,3 +865,96 @@ const char *hv_result_to_string(u64 status)
->  	return "Unknown";
->  }
->  EXPORT_SYMBOL_GPL(hv_result_to_string);
-> +
-> +#ifdef CONFIG_HYPERV_PVIOMMU
-> +/*
-> + * Logical device ID registry shared between the vPCI bus driver
-> + * (pci-hyperv) and the para-virtualized IOMMU driver. The vPCI driver
-> + * registers the per-bus logical device ID prefix at bus probe time, and
-> + * the pvIOMMU driver looks it up to build the full logical device ID us=
-ed
-> + * in IOMMU hypercalls.
-> + */
-> +struct hv_pci_busdata {
-> +	int		 pci_domain_nr;
-> +	u32		 logical_dev_id_prefix;
-> +	struct list_head list;
-> +};
-> +
-> +static LIST_HEAD(hv_pci_bus_list);
-> +static DEFINE_SPINLOCK(hv_pci_bus_lock);
-> +
-> +int hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_pref=
-ix)
-> +{
-> +	struct hv_pci_busdata *bus, *new;
-> +	int ret =3D 0;
-> +
-> +	new =3D kzalloc_obj(*new, GFP_KERNEL);
-> +	if (!new)
-> +		return -ENOMEM;
-> +
-> +	spin_lock(&hv_pci_bus_lock);
-> +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> +		if (bus->pci_domain_nr !=3D pci_domain_nr)
-> +			continue;
-> +
-> +		if (bus->logical_dev_id_prefix !=3D logical_dev_id_prefix) {
-> +			pr_err("stale registration for PCI domain %d (old prefix 0x%08x, new =
-0x%08x)\n",
-> +			       pci_domain_nr, bus->logical_dev_id_prefix,
-> +			       logical_dev_id_prefix);
-> +			ret =3D -EEXIST;
-> +		}
-> +
-> +		goto out_free;
-> +	}
-> +
-> +	new->pci_domain_nr =3D pci_domain_nr;
-> +	new->logical_dev_id_prefix =3D logical_dev_id_prefix;
-> +	list_add(&new->list, &hv_pci_bus_list);
-> +	spin_unlock(&hv_pci_bus_lock);
-> +	return 0;
-> +
-> +out_free:
-> +	spin_unlock(&hv_pci_bus_lock);
-> +	kfree(new);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_register_pci_bus, "pci-hyperv");
-> +
-> +void hv_iommu_unregister_pci_bus(int pci_domain_nr)
-> +{
-> +	struct hv_pci_busdata *bus, *tmp;
-> +
-> +	spin_lock(&hv_pci_bus_lock);
-> +	list_for_each_entry_safe(bus, tmp, &hv_pci_bus_list, list) {
-> +		if (bus->pci_domain_nr =3D=3D pci_domain_nr) {
-> +			list_del(&bus->list);
-> +			kfree(bus);
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&hv_pci_bus_lock);
-> +}
-> +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_unregister_pci_bus, "pci-hyperv");
-> +
-> +/*
-> + * Look up the logical device ID prefix registered for @pci_domain_nr.
-> + * Returns 0 on success with *prefix filled in; -ENODEV if no entry is
-> + * registered for that PCI domain.
-> + */
-> +int hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix)
-> +{
-> +	struct hv_pci_busdata *bus;
-> +	int ret =3D -ENODEV;
-> +
-> +	spin_lock(&hv_pci_bus_lock);
-> +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> +		if (bus->pci_domain_nr =3D=3D pci_domain_nr) {
-> +			*prefix =3D bus->logical_dev_id_prefix;
-> +			ret =3D 0;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&hv_pci_bus_lock);
-> +	return ret;
-> +}
+From: Richard Zhu <hongxing.zhu@nxp.com>
 
-I started thinking about the mechanism here because it's somewhat
-annoying that it takes 77 lines of code (sans comments) to manage
-this simple little mapping. I also started thinking about how many entries
-are likely to be in the mapping. A guest VM probably has fewer than 10
-entries unless it has multiple NICs and maybe some GPUs. But this code
-is also intended to be used by the Linux-as-root code, and I'm thinking
-that the number of PCI devices managed by the root could easily be a
-hundred or more if the root is managing a couple dozen VMs on a large
-physical server. Searching a linked list with 100 or more entries could be
-a bit slow.
+Enable runtime PM support for i.MX95 PCIe Root Complex to allow dynamic
+power management when the PCIe link is idle.
 
-If only the guest scenario were needed, you could declare a static
-array with 64 entries (64 is an arbitrary upper bound), and just search
-through the array instead of having to allocate memory, deal with
-allocation failures, and deal with linked lists. But a fixed size array
-would need to be much bigger for the root scenario, and you would
-still be doing a linear search.
+The i.MX95 PCIe controller supports entering D3hot state when PCIe
+devices are not actively in use. This implementation uses
+pm_runtime_no_callbacks() to leverage the PCI core's generic runtime PM
+handling. The PCI core automatically manages D-state transitions based
+on the runtime PM state of connected endpoint devices.
 
-A better alternative to consider is rhashtable, which is an existing
-Linux kernel facility. Based on what an AI bot generated for me, the
-code for setting up and using rhashtable is straightforward, and
-would probably result in far fewer than 77 lines of code. Lookups
-would also be faster than a linear search, at least for the root case
-with more than just a few entries. I'd suggest looking at rhashtable
-to see whether you like how the resulting code comes out for this
-use case, and whether it really is simpler than a roll-your-own linked
-list.
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+Changes in v2:
+Use devm_pm_runtime_set_active_enabled() simplify the codes and error
+path.
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Michael
-
-> +#endif /* CONFIG_HYPERV_PVIOMMU */
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-hyperv.c
-> index cfc8fa403dad..58ca2c95bd10 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -641,10 +641,7 @@ static void hv_irq_retarget_interrupt(struct irq_dat=
-a *data)
->  	params->int_entry.source =3D HV_INTERRUPT_SOURCE_MSI;
->  	params->int_entry.msi_entry.address.as_uint32 =3D int_desc->address & 0=
-xffffffff;
->  	params->int_entry.msi_entry.data.as_uint32 =3D int_desc->data;
-> -	params->device_id =3D (hbus->hdev->dev_instance.b[5] << 24) |
-> -			   (hbus->hdev->dev_instance.b[4] << 16) |
-> -			   (hbus->hdev->dev_instance.b[7] << 8) |
-> -			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
-> +	params->device_id =3D hv_build_logical_dev_id_prefix(hbus->hdev) |
->  			   PCI_FUNC(pdev->devfn);
->  	params->int_target.vector =3D hv_msi_get_int_vector(data);
->=20
-> @@ -3715,6 +3712,7 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	struct hv_pcibus_device *hbus;
->  	int ret, dom;
->  	u16 dom_req;
-> +	u32 prefix;
->  	char *name;
->=20
->  	bridge =3D devm_pci_alloc_host_bridge(&hdev->device, 0);
-> @@ -3857,13 +3855,22 @@ static int hv_pci_probe(struct hv_device *hdev,
->=20
->  	hbus->state =3D hv_pcibus_probed;
->=20
-> -	ret =3D create_root_hv_pci_bus(hbus);
-> +	/* Notify pvIOMMU before any device on the bus is scanned. */
-> +	prefix =3D hv_build_logical_dev_id_prefix(hdev);
-> +
-> +	ret =3D hv_iommu_register_pci_bus(dom, prefix);
->  	if (ret)
->  		goto free_windows;
->=20
-> +	ret =3D create_root_hv_pci_bus(hbus);
-> +	if (ret)
-> +		goto unregister_pviommu;
-> +
->  	mutex_unlock(&hbus->state_lock);
->  	return 0;
->=20
-> +unregister_pviommu:
-> +	hv_iommu_unregister_pci_bus(dom);
->  free_windows:
->  	hv_pci_free_bridge_windows(hbus);
->  exit_d0:
-> @@ -3977,6 +3984,8 @@ static void hv_pci_remove(struct hv_device *hdev)
->=20
->  	hbus =3D hv_get_drvdata(hdev);
->  	if (hbus->state =3D=3D hv_pcibus_installed) {
-> +		int dom =3D hbus->bridge->domain_nr;
-> +
->  		tasklet_disable(&hdev->channel->callback_event);
->  		hbus->state =3D hv_pcibus_removing;
->  		tasklet_enable(&hdev->channel->callback_event);
-> @@ -3994,6 +4003,8 @@ static void hv_pci_remove(struct hv_device *hdev)
->  		hv_pci_remove_slots(hbus);
->  		pci_remove_root_bus(hbus->bridge->bus);
->  		pci_unlock_rescan_remove();
-> +
-> +		hv_iommu_unregister_pci_bus(dom);
->  	}
->=20
->  	hv_pci_bus_exit(hdev, false);
-> diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyper=
-v.h
-> index bf601d67cecb..f65344f2bb81 100644
-> --- a/include/asm-generic/mshyperv.h
-> +++ b/include/asm-generic/mshyperv.h
-> @@ -73,6 +73,19 @@ extern enum hv_partition_type hv_curr_partition_type;
->  extern void * __percpu *hyperv_pcpu_input_arg;
->  extern void * __percpu *hyperv_pcpu_output_arg;
->=20
-> +#ifdef CONFIG_HYPERV_PVIOMMU
-> +int  hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_pre=
-fix);
-> +void hv_iommu_unregister_pci_bus(int pci_domain_nr);
-> +int  hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix);
-> +#else
-> +static inline int hv_iommu_register_pci_bus(int pci_domain_nr,
-> +					    u32 logical_dev_id_prefix)
-> +{
-> +	return 0;
-> +}
-> +static inline void hv_iommu_unregister_pci_bus(int pci_domain_nr) { }
-> +#endif
-> +
->  u64 hv_do_hypercall(u64 control, void *inputaddr, void *outputaddr);
->  u64 hv_do_fast_hypercall8(u16 control, u64 input8);
->  u64 hv_do_fast_hypercall16(u16 control, u64 input1, u64 input2);
-> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-> index 9de2c8d6037a..10ee2c462d7c 100644
-> --- a/include/linux/hyperv.h
-> +++ b/include/linux/hyperv.h
-> @@ -1287,6 +1287,14 @@ struct hv_device {
->  #define device_to_hv_device(d)	container_of_const(d, struct hv_device, d=
-evice)
->  #define drv_to_hv_drv(d)	container_of_const(d, struct hv_driver, driver)
->=20
-> +static inline u32 hv_build_logical_dev_id_prefix(struct hv_device *hdev)
-> +{
-> +	return ((u32)hdev->dev_instance.b[5] << 24) |
-> +	       ((u32)hdev->dev_instance.b[4] << 16) |
-> +	       ((u32)hdev->dev_instance.b[7] << 8) |
-> +	       (hdev->dev_instance.b[6] & 0xf8u);
-> +}
-> +
->  static inline void hv_set_drvdata(struct hv_device *dev, void *data)
->  {
->  	dev_set_drvdata(&dev->device, data);
-> --
-> 2.52.0
->=20
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index eae495a1b7990..578410f262aed 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -130,6 +130,7 @@ enum imx_pcie_variants {
+ #define IMX_PCIE_FLAG_SKIP_L23_READY		BIT(12)
+ /* Preserve MSI capability for platforms that require it */
+ #define IMX_PCIE_FLAG_KEEP_MSI_CAP		BIT(13)
++#define IMX_PCIE_FLAG_PM_RUNTIME		BIT(14)
+ 
+ #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
+ 
+@@ -1973,6 +1974,13 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 		 */
+ 		imx_pcie_add_lut_by_rid(imx_pcie, 0);
+ 	} else {
++		if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_PM_RUNTIME) {
++			pm_runtime_no_callbacks(dev);
++			ret = devm_pm_runtime_set_active_enabled(dev);
++			if (ret < 0)
++				return ret;
++		}
++
+ 		/*
+ 		 * i.MX RC is powered off during suspend, force L2 entry to
+ 		 * ensure proper endpoint notification before power loss.
+@@ -2121,6 +2129,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 		.flags = IMX_PCIE_FLAG_HAS_SERDES |
+ 			 IMX_PCIE_FLAG_HAS_LUT |
+ 			 IMX_PCIE_FLAG_8GT_ECN_ERR051586 |
++			 IMX_PCIE_FLAG_PM_RUNTIME |
+ 			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 		.ltssm_off = IMX95_PE0_GEN_CTRL_3,
+ 		.ltssm_mask = IMX95_PCIE_LTSSM_EN,
+-- 
+2.34.1
 
