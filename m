@@ -1,73 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC71929405;
-	Wed,  8 Jul 2026 04:10:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3536123BD06
+	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 04:53:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783483854; cv=none; b=ft1OtgvbWPQHkAEEtHMkqYk9RVCdCCFWsrC5KRnEha2nye+oZe6CTyCKE7TPv6DYyTAh5gwFFZIMmFbmvJyKMiW29n47uB4dMqsAmR/Um9uZ5CKkEIazEEggutYfpZ3HZWKftKAsUWDslg7tna6ajNd04OX2+Vq9bV3hwEQaA3w=
+	t=1783486435; cv=none; b=hS5m1yTz4kpYQVCkAJ0RKK4bVn4TdpTcfQRtSNvotQ59euVkMgGZqkqDtW7YjQL2BVH2J9G7nChDfTKBvfzsea82IrPC+LiUc2kmHVKQS2L8LQDHEq6dLf6HqhENmL+a1WfR0c8tHWams5x3G0qpROcMLBsE3FYOqLWoj5lF42o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783483854; c=relaxed/simple;
-	bh=9tTb+m7EW4BfsXyEqk9FwJhOreMGgj15jbP5+biAxJI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NFRXOjgAjS3HporiXPZaHpxfvOKWbmAbW4TWD76WIOxwtX9+B+ds4p9V9L33L9+En0t1yguk0DFuWuk5pRTVNaoDUCDNYMQGqwERjjGQc0HxYGphJU8Pd6Q0tUwWtX/e+JGIqqA7kuA8rrpdxBEZnPH6rJRFNKPpDwMqUwQe6gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dKf6xpHb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783486435; c=relaxed/simple;
+	bh=cW7Ix/tkCr37LiuIgaKSz6SxHzCDmgSjbLyC7Gew+w8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=d/z/Lq+jND6CHH/nIpxg7SMuDm9icllGEq5bqke0/6y2B7aEglP+KpzhjbPKuitWKWtfYHAbddw5tdkbzTH3QfSXS0RuAqtYkU8zSk/IXSim+FgNqw44CtleyeqSYBLbDAiHwFUIvHmxAh5dvuKejkmloiufZg4mypGd2TJWGYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=Ic/ULLEj; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dKf6xpHb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F39C1F000E9;
-	Wed,  8 Jul 2026 04:10:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783483853;
-	bh=9tTb+m7EW4BfsXyEqk9FwJhOreMGgj15jbP5+biAxJI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dKf6xpHbiN0iUoBlOdTg8Z8di+wo6YfmclwLlFCtPfHmtm8FG28MqNgn9Y2Z73Afk
-	 Z/wwillkRh3Oof3B4ZBC1fLjl/WCciMXa5rNXejRf/N0WjMldyzyCy5DsPhJjb3aDF
-	 QvMzWL3KsMcYwmF3wpJNWvwajD+zBKgaOks7Rp0507b3zqNQaeM0afILwwuRgdUpMW
-	 R2PovjkdNlQMwMx0NvYRvrcCzQwS1ADvEd76Lrhttb/tGUPYuleVzIf4T8kj1PvlC2
-	 vvUbnJ+xgnfMtSKw/69MHgIzsDev85qfnfl7FdW8E0TmNMmTBLelQjn/N5NxVSCuun
-	 6U0K+Tpj35uaA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: imx6: Update MPLLB bandwidth to improve i.MX95
- Gen3 PCIe stability
-Reply-To: sashiko-reviews@lists.linux.dev
-To: hongxing.zhu@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
-In-Reply-To: <20260708035928.580236-3-hongxing.zhu@oss.nxp.com>
-References: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
- <20260708035928.580236-3-hongxing.zhu@oss.nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 04:10:52 +0000
-Message-Id: <20260708041053.5F39C1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="Ic/ULLEj"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-493b6f1b14bso630015e9.0
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2026 21:53:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre.com; s=google; t=1783486431; x=1784091231; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lR6urvfGdrDv+jncCfpvYz8EpWZuaAhkK2ctmUuEaWE=;
+        b=Ic/ULLEjULk1FzT+vQm9NQgTegFZcz2nBviPLmhTy2X7RPYRrD6l6QS0c8W+4ceV0X
+         npJG8T67LQ1dOTrTeQiwBlqhu/+9vGVSeXG2MC97Sl4AStNQIX1d9i4BJsJ4qctTKnbX
+         lcS9cS28WMIpus0jxkLRVDSVvJREFzDToPwH/tWTNHQLd0RBgxi9CEHET8tPGPA/Cb6W
+         P1U5FWLbCUv94m5DcrjiDb4tVTPB5wb9i7RnL2mmwnNfkGO1dJfdhaWGoReUG5mUfZpj
+         qHeTARSA3hVLS9bA/XdudtMCjMNpIAhmEFQm/riWqB5H1twL87c/af+LYQA2SunUpWDw
+         EwMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783486431; x=1784091231;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lR6urvfGdrDv+jncCfpvYz8EpWZuaAhkK2ctmUuEaWE=;
+        b=Zi0Zi8OZr2Y6J8QregZOUZHoDrL8vJzewbdqAz54gizNcA516+Q16EoGhav83VFewI
+         R85ZhZTT/0a/QtxhZGXGvt6x7LroRcxl4gJJSfrvzOVASkJ9YHjA1L5rCEdoQQfv7igw
+         jtzW5DzvxRSR4vrqVzb4F3hxvAxpM2T2+gfKQZeqwjaG9a8Zb4Foleqp02l55gWqsOp8
+         JT1OXF4QIFP7wEORRY1Du5arzu4r7nL1IY24Y8FCQy1hO6HYSoKd+qjNww5tW9JU7avd
+         Nrd4RRy45PuczaCX0oP7fq4LHop4YlsLQM4XNatXtYB0XIwtr7HX0rs0nWZcfo8sAhRJ
+         2rNw==
+X-Gm-Message-State: AOJu0YwMxk3ovvIZOniA944pd40CE3LxGu43nyctpFpw0LaI4TPOWjaO
+	sfB+R5AkN/9IdwwXPD7FS09Jk+OjuJSguUTShRIcQ4TMasYwIrPSwpcLxLaW1eoLsyzVjhdJttC
+	ZXxxu
+X-Gm-Gg: AfdE7cmliY26IFU3EzspYp7ogxHOEJbSJdMx2hmA83e/eVG+Coco249Ce3FVipwUg26
+	rkFp2JPOcWoF+bPqUpXeM3UMX0YD28xOH0VVuohLsAkVe0t5SB2udMpckNW3fT7p4/vOQxwP8DR
+	vzS5zrXFGaz78XrAZAfbDX+ptBHvlm9+Wyzp//F2yvmUgvRb1lHaQKkLEoiOSLDMDP6tXPRE4CM
+	wxJxSEXkxS2nQHtgPb27wk23lGplx9XSMjVGNrbMzfxV+GXK9qSC9CqIeazp1S07Zw27aQtG3Hh
+	4kYhWKBSs9o/+6pjXtPOffklR76FQhxbTZSRf0E5MHb8/7VlwG4TcAyVYwVVE2cbMa8RY0Y1JfI
+	8U6AS7FAMsab+Vvew7UWgmj2WMv1UtKTgxV8cgiiGNutjgUkoZT8/uLI/5eEToNTjmz3yrwAVdN
+	P2YL5zlI/NIP7wCLte819/2yMHvKLk52zcB4hkkpUInNivbX7qP0h6Pq6SOg==
+X-Received: by 2002:a05:600c:8284:b0:493:c8cf:27bd with SMTP id 5b1f17b1804b1-493e68642c1mr6847545e9.19.1783486431355;
+        Tue, 07 Jul 2026 21:53:51 -0700 (PDT)
+Received: from localhost (ip-091-089-005-024.um28.pools.vodafone-ip.de. [91.89.5.24])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-493e0f4ef53sm120746745e9.8.2026.07.07.21.53.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2026 21:53:50 -0700 (PDT)
+Date: Wed, 8 Jul 2026 06:53:48 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] Documentation: Update after split of
+ <linux/mod_devicetable.h>
+Message-ID: <ak3Xc44D5KKn8Ttf@monoceros>
+References: <ede7ce64f20e10660ebf6bc1b41836dad750ae3b.1783349758.git.ukleinek@kernel.org>
+ <20260706151304.D44521F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="futkkaxv7oliuq6j"
+Content-Disposition: inline
+In-Reply-To: <20260706151304.D44521F000E9@smtp.kernel.org>
 
-> From: Richard Zhu <hongxing.zhu@nxp.com>
->=20
-> Bandwidth marginality was observed during i.MX95 Gen3 PCIe tests with
-> the default MPLLB_BINDWIDTH value. This margin degradation worsens
-> across voltage and temperature (VT) variations and different test
-> matrices, potentially causing link stability issues.
->=20
-> Testing with MPLLB_BINDWIDTH value of 140 (0x8c) shows significant
-> improvement in bandwidth margins across all VT conditions and test
-> scenarios.
->=20
-> Implement PHY register write helper function and configure:
-> - MPLLB_BW_OVRD_IN =3D 140 (0x8c) for improved bandwidth margin
-> - MPLLB_BW_OVRD_EN to enable the override
->=20
-> This ensures robust PCIe Gen3 performance across all operating
-> conditions.
->=20
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--futkkaxv7oliuq6j
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2] Documentation: Update after split of
+ <linux/mod_devicetable.h>
+MIME-Version: 1.0
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708035928.5802=
-36-3-hongxing.zhu@oss.nxp.com?part=3D1
+Hello,
 
+On Mon, Jul 06, 2026 at 03:13:04PM +0000, sashiko-bot@kernel.org wrote:
+> > -.. kernel-doc:: include/linux/mod_devicetable.h
+> > +.. kernel-doc:: include/linux/device-id/amba.h
+> > +   :internal:
+>=20
+> [Severity: Low]
+> Does this new explicit list of headers miss include/linux/device-id/acpi.=
+h?
+>=20
+> It appears that leaving it out drops the kernel-doc for the ACPI_DEVICE_C=
+LASS
+> macro from the generated documentation.
+
+This is a change to before the split mod_devicetable.h, but IMHO it's a
+good thing that ACPI_DEVICE_CLASS isn't described in the list of
+device-id structs.
+
+Best regards
+Uwe
+
+--futkkaxv7oliuq6j
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmpN17MACgkQj4D7WH0S
+/k6sSQgAg2UbkPnq5fCVNEJREJjjG9/Jv6ANnY/8SITChPH2ixON8cQo1bXOCmsG
+pR63i+Yq8pY/at+KPNbpIdA9rLNhnVEQP9Snzb1LXk7SVvAYxdBSMBDogepdUKfa
+knQ5pyInDjs2FAbN2a5Akpf3zJUiZN33Pg6kNK9G3LKgsGsfzLfpp+Wsl500T53G
+LaC4uZVMmnw98scQzNlTP48XoKSJ+1/f/m+/9mf0zIG7jKUnBZG9Uu2K1hXjw5bH
+zjKa3Y928b14e5upG+PjW1MkDjg92XMnQRLT02emQvLXHThcgMbCZbS5dEf+kPAZ
+F5AQfU2FM3YS0pVmNYQk6ShV3pVCAQ==
+=mpmq
+-----END PGP SIGNATURE-----
+
+--futkkaxv7oliuq6j--
