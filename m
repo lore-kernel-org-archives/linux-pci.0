@@ -1,158 +1,395 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C59B175A75
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 14:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783522145; cv=none; b=LsEtXnQcnIDRntK9NPEPbkz+k+gTYaUwoeCwh/oEAC0mqUAD3DM0jvaVntOk90MG6BkRvGzxgPFHBnR7ZUQneAicOThNKATuZt6VW/6rV0g5RPa5iUpPlekF2J2QQjPYzI7eKsKXSeO8fSdoQiqc3gOLGTfbmNRfexIy8+nhtEU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783522145; c=relaxed/simple;
-	bh=OH0ZgcC2t+nR7YNnis1bo/t3xXj8L49Yj8Wm7tUEIvc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CeL4vXcoUq0FHRAqxRrdMevfuky2PIC2odpG9THS5++un0C+EaAQf0jyfT3x409EVJY1dN42kMLf/fCFVrU3IK28dNUxRVu71H672VWEkwsFslr8sReLwWa08CSfRSLlZLCnTz0otQ+f9TpTaeK75DoTBWk4pDdAB3+fwnAFaQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsZA2j1o; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E00F0380FFB;
+	Wed,  8 Jul 2026 14:49:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783522180; cv=pass; b=LE3sYy5IP1PgRj2KiSf8//rtXXqovNp9XJ8YIaQV+WGoFHRjJ3YXT9ANIc0BG2rCMfmg3dDnL9ui8SszjpZLLXa6VJtOb9weQ1PZAkIt+vtzjOf5ck7bLwl6sPgeoBDQze0XLXwpp52AJ7WizovnILbYgo1KUoGKIZwajPOFFlY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783522180; c=relaxed/simple;
+	bh=p9UVZdQviaIM7RRmMiAoAltcfQyAv+LLnchHDDFUqR8=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=nP6ANwFNooje+yHVm1tGc1piaD2eIVMCt2zlQ6Yj0TA6dv9MTY2ToXy/YX4dtlAxKYaoby8LzFscF81LV9xnPpSgzOGCOZKMoEZuL0XYX93n48uHtBmIox9W30ZQDy6p15FHO8EjDU9UrYZmXI5dbH7AW2nPeijpgrmO+2uS/t8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=BqgX68aZ; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsZA2j1o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CC4F1F000E9;
-	Wed,  8 Jul 2026 14:49:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783522144;
-	bh=a+wG6LcWmYz9w2DSgF+ke8M98EsJo43uBgcB6hAqix4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PsZA2j1o2RdDjkt6DOJdZf3M8IwlW2lhU+fFnlhHG28pnSA5FIC2LJTwSLRtq7rM7
-	 uPEASC3Zg7GSmgYdecj4z/5VqpaSK3RnUJT8hFC9wjVMXThqxCw83etDlkWm78OTFh
-	 Nt2npUqXib9DUC04shnWXVfGmR+2AwNg9pGt/01MX0crvDB+K5a2JieyNU2IDkm3fY
-	 MfcnTvLeMe1mgFOxnxfDD6hPWnfWUeaM5uOcuxOIF569kseno5vcJYYjcMlGt8ZeoL
-	 W7TdN10jxoBxlXkctNDfmlDRksDs5KfFVoEKW1McWuK+o47GRMca4tnukOW/M9dMYi
-	 v/AUyQpn4GUAA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 6/8] wifi: ath12k: Use
- pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260708-pci-aspm-fix-v3-6-6bd72451746e@kernel.org>
-References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
- <20260708-pci-aspm-fix-v3-6-6bd72451746e@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 14:49:03 +0000
-Message-Id: <20260708144904.0CC4F1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="BqgX68aZ"
+ARC-Seal: i=1; a=rsa-sha256; t=1783522135; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=bpdfpAPoLcSj38gcmEk2W/IMuf6DLCeA1M8IV40jkNqT5xVAIxBmWxuxqB7ExufSghrKFbSVfQcs5J27DAy2Ut8z+NZbwCCnr8FUYKxZ9o1xQ2idOIp/hlNVhyywtN6G9wYvS2eVzalpAgO2OV8UYnxgPIqZIidkV+dzJd9igX8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1783522135; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=4szMuqOI9JIjS8/kOAhVMC5VSKoQ9b+UCMsEA4pJKao=; 
+	b=Q9Q2usmguFIY0JgQ8ctP2lfmqHIvDkwdj5XxEO0ghHgtG1xSNAeu3lzU70jxmsPU0lL3ept8wRTIbfssk0ZyqguMLJyijIna5ZOYLyzNsEOXMc1olPEt1MfHPNuMebvHmVGrdVBL8YhjBFlrsMdAEDnlKAH7iWIeyMcaonpBc54=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783522135;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
+	bh=4szMuqOI9JIjS8/kOAhVMC5VSKoQ9b+UCMsEA4pJKao=;
+	b=BqgX68aZ2rJ5M0QZeOx8Q+mChiooQJyvC8he/hgev0iHS+XBMjSR779q2FrhT3W7
+	l8lWrFxj4G9ICt6BRakEGDBlQBJitE8uoetb4bKLUc7muIoR6m/XnuWdmXU51Zlm4zp
+	IbKX1oM2tbfP+poX6TmhAwenoHQCtzdU7wMUZKks=
+Received: by mx.zohomail.com with SMTPS id 1783522133821946.0992772309626;
+	Wed, 8 Jul 2026 07:48:53 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [PATCH v6 11/20] rust: io: remove `MmioOwned`
+From: Daniel Almeida <daniel.almeida@collabora.com>
+In-Reply-To: <20260706-io_projection-v6-11-72cd5d055d54@garyguo.net>
+Date: Wed, 8 Jul 2026 11:48:33 -0300
+Cc: Alice Ryhl <aliceryhl@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>,
+ Tamir Duberstein <tamird@kernel.org>,
+ =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>,
+ David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Michal Wilczynski <m.wilczynski@samsung.com>,
+ =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ driver-core@lists.linux.dev,
+ rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ nova-gpu@lists.linux.dev,
+ dri-devel@lists.freedesktop.org,
+ linux-pwm@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <BB56CB09-819F-48D3-8C71-B85C33E03065@collabora.com>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-11-72cd5d055d54@garyguo.net>
+To: Gary Guo <gary@garyguo.net>
+X-Mailer: Apple Mail (2.3826.700.81)
+X-ZohoMailClient: External
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
 
-New issues:
-- [Medium] Adding `depends on PCIEASPM` unnecessarily restricts the driver =
-from being built on kernels where ASPM control is disabled.
 
-Pre-existing issues:
-- [High] ASPM state is permanently lost (leaked as disabled) if initializat=
-ion fails before `ath12k_pci_start()`.
---
-
---- Patch [6]: [PATCH v3 6/8] wifi: ath12k: Use pci_{enable/disable}_link_s=
-tate() APIs to enable/disable ASPM states ---
-commit 6aeb96e7a1d3a96df659d6e1d629f287d946f802
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-
-wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enable/disable =
-ASPM states
-
-This commit changes the ath12k driver to use the PCI core's
-pci_disable_link_state() and pci_force_enable_link_state() APIs for managing
-ASPM states instead of directly modifying the LNKCTL register. It also adds=
- a
-Kconfig dependency on PCIEASPM.
-
-> diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wirele=
-ss/ath/ath12k/Kconfig
-> index 4a2b240f967af..7852ede3eaea8 100644
-> --- a/drivers/net/wireless/ath/ath12k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath12k/Kconfig
-> @@ -1,7 +1,7 @@
->  # SPDX-License-Identifier: BSD-3-Clause-Clear
->  config ATH12K
->  	tristate "Qualcomm Wi-Fi 7 support (ath12k)"
-> -	depends on MAC80211 && HAS_DMA && PCI
-> +	depends on MAC80211 && HAS_DMA && PCI && PCIEASPM
-
-[Severity: Medium]
-Is the PCIEASPM dependency necessary here?
-
-The PCI subsystem provides static inline no-ops for pci_disable_link_state(=
-),
-pcie_aspm_enabled(), and pci_force_enable_link_state() in linux/pci.h when
-CONFIG_PCIEASPM is not set. Adding this strict dependency restricts the
-driver from being built on kernels where ASPM control is intentionally
-disabled.
-
->  	select QCOM_QMI_HELPERS
->  	select MHI_BUS
->  	select QRTR
-
-[ ... ]
-
-> diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless=
-/ath/ath12k/pci.c
-> index d9a22d6afbb02..6d48fb25690de 100644
-> --- a/drivers/net/wireless/ath/ath12k/pci.c
-> +++ b/drivers/net/wireless/ath/ath12k/pci.c
-> @@ -884,19 +884,9 @@ static void ath12k_pci_free_region(struct ath12k_pci=
- *ab_pci)
-> =20
->  static void ath12k_pci_aspm_disable(struct ath12k_pci *ab_pci)
->  {
-> -	struct ath12k_base *ab =3D ab_pci->ab;
+> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
+>=20
+> `Io` trait is now very easy to implement. Thus, implement it on `Bar` =
+and
+> `IoMem` directly and remove the `MmioOwned` struct.
+>=20
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+> rust/kernel/devres.rs |  12 +++---
+> rust/kernel/io.rs     | 103 =
++-------------------------------------------------
+> rust/kernel/io/mem.rs |  26 +++++++------
+> rust/kernel/pci/io.rs |  16 ++++----
+> 4 files changed, 32 insertions(+), 125 deletions(-)
+>=20
+> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
+> index aed0c994fd30..3545ffc5345d 100644
+> --- a/rust/kernel/devres.rs
+> +++ b/rust/kernel/devres.rs
+> @@ -68,8 +68,9 @@ struct Inner<T> {
+> ///     devres::Devres,
+> ///     io::{
+> ///         Io,
+> -///         MmioOwned,
+> +///         Mmio,
+> ///         MmioRaw,
+> +///         MmioBackend,
+> ///         PhysAddr,
+> ///         Region, //
+> ///     },
+> @@ -104,12 +105,13 @@ struct Inner<T> {
+> ///     }
+> /// }
+> ///
+> -/// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+> -///    type Target =3D MmioOwned<SIZE>;
+> +/// impl<'a, const SIZE: usize> Io<'a> for &'a IoMem<SIZE> {
+> +///    type Backend =3D MmioBackend;
+> +///    type Target =3D Region<SIZE>;
+> ///
+> -///    fn deref(&self) -> &Self::Target {
+> +///    fn as_view(self) -> Mmio<'a, Region<SIZE>> {
+> ///         // SAFETY: The memory range stored in `self` has been =
+properly mapped in `Self::new`.
+> -///         unsafe { MmioOwned::from_raw(&self.0) }
+> +///         unsafe { Mmio::from_raw(self.0) }
+> ///    }
+> /// }
+> /// # fn no_run(dev: &Device<Bound>) -> Result<(), Error> {
+> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+> index 89039b3defd5..c7533d605678 100644
+> --- a/rust/kernel/io.rs
+> +++ b/rust/kernel/io.rs
+> @@ -98,8 +98,8 @@ fn size(p: *const Self) -> usize {
+> /// the represented MMIO region does exist or is properly mapped.
+> ///
+> /// Instead, the bus specific MMIO implementation must convert this =
+raw representation into an
+> -/// `MmioOwned` instance providing the actual memory accessors. Only =
+by the conversion into an
+> -/// `MmioOwned` structure any guarantees are given.
+> +/// `Mmio` instance providing the actual memory accessors. Only by =
+the conversion into an `Mmio`
+> +/// structure any guarantees are given.
+> pub struct MmioRaw<T: ?Sized> {
+>     /// Pointer is in I/O address space.
+>     ///
+> @@ -156,80 +156,6 @@ pub fn size(&self) -> usize {
+>     }
+> }
+>=20
+> -/// IO-mapped memory region.
+> -///
+> -/// The creator (usually a subsystem / bus such as PCI) is =
+responsible for creating the
+> -/// mapping, performing an additional region request etc.
+> -///
+> -/// # Invariant
+> -///
+> -/// `addr` is the start and `maxsize` the length of valid I/O mapped =
+memory region of size
+> -/// `maxsize`.
+> -///
+> -/// # Examples
+> -///
+> -/// ```no_run
+> -/// use kernel::{
+> -///     bindings,
+> -///     ffi::c_void,
+> -///     io::{
+> -///         Io,
+> -///         MmioOwned,
+> -///         MmioRaw,
+> -///         PhysAddr,
+> -///         Region,
+> -///     },
+> -/// };
+> -/// use core::ops::Deref;
+> -///
+> -/// // See also `pci::Bar` for a real example.
+> -/// struct IoMem<const SIZE: usize>(MmioRaw<Region<SIZE>>);
+> -///
+> -/// impl<const SIZE: usize> IoMem<SIZE> {
+> -///     /// # Safety
+> -///     ///
+> -///     /// [`paddr`, `paddr` + `SIZE`) must be a valid MMIO region =
+that is mappable into the CPUs
+> -///     /// virtual address space.
+> -///     unsafe fn new(paddr: usize) -> Result<Self>{
+> -///         // SAFETY: By the safety requirements of this function =
+[`paddr`, `paddr` + `SIZE`) is
+> -///         // valid for `ioremap`.
+> -///         let addr =3D unsafe { bindings::ioremap(paddr as =
+PhysAddr, SIZE) };
+> -///         if addr.is_null() {
+> -///             return Err(ENOMEM);
+> -///         }
+> -///
+> -///         Ok(IoMem(MmioRaw::new_region(addr as usize, SIZE)?))
+> -///     }
+> -/// }
+> -///
+> -/// impl<const SIZE: usize> Drop for IoMem<SIZE> {
+> -///     fn drop(&mut self) {
+> -///         // SAFETY: `self.0.addr()` is guaranteed to be properly =
+mapped by `Self::new`.
+> -///         unsafe { bindings::iounmap(self.0.addr() as *mut c_void); =
+};
+> -///     }
+> -/// }
+> -///
+> -/// impl<const SIZE: usize> Deref for IoMem<SIZE> {
+> -///    type Target =3D MmioOwned<SIZE>;
+> -///
+> -///    fn deref(&self) -> &Self::Target {
+> -///         // SAFETY: The memory range stored in `self` has been =
+properly mapped in `Self::new`.
+> -///         unsafe { MmioOwned::from_raw(&self.0) }
+> -///    }
+> -/// }
+> -///
+> -///# fn no_run() -> Result<(), Error> {
+> -/// // SAFETY: Invalid usage for example purposes.
+> -/// let iomem =3D unsafe { IoMem::<{ core::mem::size_of::<u32>() =
+}>::new(0xBAAAAAAD)? };
+> -/// iomem.write32(0x42, 0x0);
+> -/// assert!(iomem.try_write32(0x42, 0x0).is_ok());
+> -/// assert!(iomem.try_write32(0x42, 0x4).is_err());
+> -/// # Ok(())
+> -/// # }
+> -/// ```
+> -#[repr(transparent)]
+> -pub struct MmioOwned<const SIZE: usize =3D 0>(MmioRaw<Region<SIZE>>);
 > -
-> -	pcie_capability_read_word(ab_pci->pdev, PCI_EXP_LNKCTL,
-> -				  &ab_pci->link_ctl);
+> /// Checks whether an access of type `U` at the given `base` and the =
+given `offset`
+> /// is valid within this region.
+> ///
+> @@ -957,31 +883,6 @@ fn io_write(view: <$backend as =
+IoBackend>::View<'_, $ty>, value: $ty) {
+> #[cfg(CONFIG_64BIT)]
+> impl_mmio_io_capable!(MmioBackend, u64, readq, writeq);
+>=20
+> -impl<'a, const SIZE: usize> Io<'a> for &'a MmioOwned<SIZE> {
+> -    type Backend =3D MmioBackend;
+> -    type Target =3D Region<SIZE>;
 > -
-> -	ath12k_dbg(ab, ATH12K_DBG_PCI, "pci link_ctl 0x%04x L0s %d L1 %d\n",
-> -		   ab_pci->link_ctl,
-> -		   u16_get_bits(ab_pci->link_ctl, PCI_EXP_LNKCTL_ASPM_L0S),
-> -		   u16_get_bits(ab_pci->link_ctl, PCI_EXP_LNKCTL_ASPM_L1));
-> +	ab_pci->aspm_states =3D pcie_aspm_enabled(ab_pci->pdev);
+> -    #[inline]
+> -    fn as_view(self) -> Mmio<'a, Self::Target> {
+> -        // SAFETY: `Mmio` has same invariant as `MmioOwned`
+> -        unsafe { Mmio::from_raw(self.0) }
+> -    }
+> -}
+> -
+> -impl<const SIZE: usize> MmioOwned<SIZE> {
+> -    /// Converts an `MmioRaw` into an `MmioOwned` instance, providing =
+the accessors to the MMIO
+> -    /// mapping.
+> -    ///
+> -    /// # Safety
+> -    ///
+> -    /// Callers must ensure that `addr` is the start of a valid I/O =
+mapped memory region of size
+> -    /// `maxsize`.
+> -    pub unsafe fn from_raw(raw: &MmioRaw<Region<SIZE>>) -> &Self {
+> -        // SAFETY: `MmioOwned` is a transparent wrapper around =
+`MmioRaw`.
+> -        unsafe { &*core::ptr::from_ref(raw).cast() }
+> -    }
+> -}
+> -
+> /// [`Mmio`] but using relaxed accessors.
+> ///
+> /// This type provides an implementation of [`Io`] that uses relaxed =
+I/O MMIO operands instead of
+> diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
+> index 8f6c257c5b8e..d9b3189d09b4 100644
+> --- a/rust/kernel/io/mem.rs
+> +++ b/rust/kernel/io/mem.rs
+> @@ -2,8 +2,6 @@
+>=20
+> //! Generic memory-mapped IO.
+>=20
+> -use core::ops::Deref;
+> -
+> use crate::{
+>     device::{
+>         Bound,
+> @@ -16,7 +14,9 @@
+>             Region,
+>             Resource, //
+>         },
+> -        MmioOwned,
+> +        Io,
+> +        Mmio,
+> +        MmioBackend,
+>         MmioRaw, //
+>     },
+>     prelude::*,
+> @@ -210,11 +210,13 @@ pub fn into_devres(self) -> =
+Result<Devres<ExclusiveIoMem<'static, SIZE>>> {
+>     }
+> }
+>=20
+> -impl<const SIZE: usize> Deref for ExclusiveIoMem<'_, SIZE> {
+> -    type Target =3D MmioOwned<SIZE>;
+> +impl<'a, const SIZE: usize> Io<'a> for &'a ExclusiveIoMem<'_, SIZE> {
+> +    type Backend =3D MmioBackend;
+> +    type Target =3D super::Region<SIZE>;
+>=20
+> -    fn deref(&self) -> &Self::Target {
+> -        &self.iomem
+> +    #[inline]
+> +    fn as_view(self) -> Mmio<'a, Self::Target> {
+> +        self.iomem.as_view()
+>     }
+> }
+>=20
+> @@ -290,11 +292,13 @@ fn drop(&mut self) {
+>     }
+> }
+>=20
+> -impl<const SIZE: usize> Deref for IoMem<'_, SIZE> {
+> -    type Target =3D MmioOwned<SIZE>;
+> +impl<'a, const SIZE: usize> Io<'a> for &'a IoMem<'_, SIZE> {
+> +    type Backend =3D MmioBackend;
+> +    type Target =3D super::Region<SIZE>;
+>=20
+> -    fn deref(&self) -> &Self::Target {
+> +    #[inline]
+> +    fn as_view(self) -> Mmio<'a, Self::Target> {
+>         // SAFETY: Safe as by the invariant of `IoMem`.
+> -        unsafe { MmioOwned::from_raw(&self.io) }
+> +        unsafe { Mmio::from_raw(self.io) }
+>     }
+> }
+> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+> index e67c1e3694fb..4be33ecb4192 100644
+> --- a/rust/kernel/pci/io.rs
+> +++ b/rust/kernel/pci/io.rs
+> @@ -11,16 +11,14 @@
+>         Io,
+>         IoBackend,
+>         IoCapable,
+> -        MmioOwned,
+> +        Mmio,
+> +        MmioBackend,
+>         MmioRaw,
+>         Region, //
+>     },
+>     prelude::*,
+>     ptr::KnownSize, //
+> };
+> -use core::{
+> -    ops::Deref, //
+> -};
+>=20
+> /// Represents the size of a PCI configuration space.
+> ///
+> @@ -269,12 +267,14 @@ fn drop(&mut self) {
+>     }
+> }
+>=20
+> -impl<const SIZE: usize> Deref for Bar<'_, SIZE> {
+> -    type Target =3D MmioOwned<SIZE>;
+> +impl<'a, const SIZE: usize> Io<'a> for &'a Bar<'_, SIZE> {
+> +    type Backend =3D MmioBackend;
+> +    type Target =3D crate::io::Region<SIZE>;
+>=20
+> -    fn deref(&self) -> &Self::Target {
+> +    #[inline]
+> +    fn as_view(self) -> Mmio<'a, Self::Target> {
+>         // SAFETY: By the type invariant of `Self`, the MMIO range in =
+`self.io` is properly mapped.
+> -        unsafe { MmioOwned::from_raw(&self.io) }
+> +        unsafe { Mmio::from_raw(self.io) }
+>     }
+> }
+>=20
+>=20
+> --=20
+> 2.54.0
+>=20
+>=20
 
-[Severity: High]
-This is a pre-existing issue, but does this logic permanently lose the ASPM
-state if initialization fails before ath12k_pci_start()?
-
-If ath12k_mhi_start() fails in ath12k_pci_power_up(), the initialization
-is aborted. The current ASPM state is unconditionally saved to
-ab_pci->aspm_states here and then disabled. On failure,
-ath12k_pci_power_down() is called to clean up, but it returns early if
-ATH12K_PCI_FLAG_INIT_DONE is not set:
-
-drivers/net/wireless/ath/ath12k/pci.c:ath12k_pci_power_down() {
-	if (!test_bit(ATH12K_PCI_FLAG_INIT_DONE, &ab_pci->flags))
-		return;
-
-	/* restore aspm in case firmware bootup fails */
-	ath12k_pci_aspm_restore(ab_pci);
-	...
-}
-
-This early return skips the restore and leaves ASPM disabled. When the
-device is later retried, ath12k_pci_power_up() is called again, overwriting
-ab_pci->aspm_states with the now-disabled state (0). When initialization
-finally succeeds, it restores 0, permanently disabling ASPM.
-
-> =20
-> -	/* disable L0s and L1 */
-> -	pcie_capability_clear_word(ab_pci->pdev, PCI_EXP_LNKCTL,
-> -				   PCI_EXP_LNKCTL_ASPMC);
-> +	pci_disable_link_state(ab_pci->pdev, PCIE_LINK_STATE_ASPM_ALL);
-> =20
->  	set_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708-pci-aspm-f=
-ix-v3-0-6bd72451746e@kernel.org?part=3D6
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>=
