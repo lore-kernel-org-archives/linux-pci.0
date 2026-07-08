@@ -1,500 +1,395 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013016.outbound.protection.outlook.com [52.101.83.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519C04D98F2;
-	Wed,  8 Jul 2026 18:36:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.16
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783535764; cv=fail; b=BSKZ107XgoNGOK7tsg7WNSnmE+KP+hLCuC7J+5o5t81TD1xQ5GneaG1XaWspwtPjwLFPwOc3ETDxkTs3xRNhWJwSFzOLOVgUEl9Zd2dIgXpCCdW9CYbrgeBDv8Iad1u8lfwqEWeJlUbsbh+h4gIh/l/cmTbSKiT3E3F6FDOIMxg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783535764; c=relaxed/simple;
-	bh=CC5lrM4DrCHPb1wQSb8h7AcW8T0yg3jm3yJvrePLd48=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=dE9zrIbtmrRtoCG+yBbd2P068MX9I21bjVTTFJdfsXTdWDWVq6bdFrDz3xkreot+P0M2KFD7Zo8T/qeqoteaULc9FPYkNvZL8DP9vm+ipY4685dPjwXcJx2sElRmkeRr1jrCYv6JvqSrHnUoznQDDUBnGyQiWGknjpQCpfwPA4I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=wIEA8BwK; arc=fail smtp.client-ip=52.101.83.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EF7B47F2E1;
+	Wed,  8 Jul 2026 18:37:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783535878; cv=none; b=QMz+wxATre/hzn31YeXkhmyI6Zdi9Oam0r9+jDfxvMAPjt/yQtsTPbe0Nqe7stEAjpslf++DxNyCCovtGL0d602vgMYNEHaGC5n4DmYXbukmX5Fq+Am+wbb2R/RG/RY/6hZ6ieAyRGsfa/tHfMI8aPTOGJHEOv7YrdEElx/UdRI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783535878; c=relaxed/simple;
+	bh=jfCrr6K9uE3b8qK25npysl1cOgdHR/5ebFCwC3Uj1Vk=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=KJDjR0TMFiIuihmPjK3ICoz2jHYndW5Ci8UTqTGYfdumi08v+H0A16aMPnUc0MaDK/t4x+yzeFjFnWcegBtJ1Vm8XXxsuvhMVWLFvm7AbBVdpt5xFtHQM2TPjYnLOD3ZQcCIhRJ9dn3TzKk3/PXMr63B5VsowsARe7s6GbVgww0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CmOKN4KG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="wIEA8BwK"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HuFeeI2nd8ytcnoUwG0SWG4MS4w1/9WG6Nv7AehTKBJo20zCfqU3KOy9z0fFTeg7ohIOhDLu1I3CfVDPEop4jLaa+kG6BfiasAduoYwNBZIeohGC5fp5eAhS0OUgmUuxMd1qo3rzaO0vbIy4fEuzbnmb3ERMbv8UnuQ7Ni3oPggBbjALUGmVYP4bTUuUL6BFz5004W+rJcYebCHttDlcDfON53leqWjuYb0nIrCmmSXltk+g7xfkf+zbVvr0ryB4K3EtNxseFm64k+jL0SG3euLOlqbMHJYSzxFGTQ2FXLK3tj9NNimKJ2jFTnPZyhuYFiz7jkKCsye4YKRWe1VUvQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LTil+8xNqLIewzwvDORcBzICK5g7RqTNYQehSrRj61g=;
- b=p20DLOR2V+8PQoxaE+IYJCK8r7G+hikhuxZMmKMxV5zV5p+TIjaxa9nAvRG2bWiVjOxrR3TX5oMSmFp5KcdcgDjUeGp94AvVD0rGp9GE3PxKgSlcrBWjuVFOf9CxtS/lruIXrzfSkvu+YuJgiCk+vcxrq+pmjJFbsWeHQvqqxJN+XAl60DSR+wP1Q1z8EcRA5dYEH0pOX09Krm03ZMrg/YEpc8sy4Plx2pHBQgR0QaEWw7rCrysugBF4BHf6OGXPx3obK+jnQESvOtrWNU6MMn/fHyeE8gAVTamEXLo6yfuEcRKs5ZQqVtveahOqfaKi3mgQKIYRVrTyjUgRypLoMQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LTil+8xNqLIewzwvDORcBzICK5g7RqTNYQehSrRj61g=;
- b=wIEA8BwKZj5Rp8e+HOlM6/kT3CsYQEUhVgufJI4zwZ5/jSoAY33Io7xoPo4fIweJjxKD559nHfm+Qi+1XW9H5vTqp9YhFyjSpo2Y28jL4yXVzXhwXh7MU3Xjc71wQdfyCL7AU71yW2GcouhrOvhuXiL0dDtvFH/5dNRxGYc3hi9X9MOIPvklOO9mKgXxPAMjvpx5RcgSMo5rCXGWwjeETug6SjN2U/u8ulDkmmiqyuWTGKzlMprGx5TFEvY23TeZtrw1FMJMQWnYXxezi05cBieWqu+1JTi3YivAQfmKPca5yM0ddbRiBpKpGgRYvxPcD5Nh+PHKKQh8B9ZfuKHylw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by VI1PR04MB9810.eurprd04.prod.outlook.com (2603:10a6:800:1df::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Wed, 8 Jul
- 2026 18:35:58 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0159.007; Wed, 8 Jul 2026
- 18:35:58 +0000
-From: Frank.Li@oss.nxp.com
-Date: Wed, 08 Jul 2026 14:35:10 -0400
-Subject: [PATCH v4 10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20260708-edma_ll-v4-10-cc128f0afb61@nxp.com>
-References: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
-In-Reply-To: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
-To: Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
- Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, 
- Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-nvme@lists.infradead.org, Koichiro Den <den@valinux.co.jp>, 
- imx@lists.linux.dev, "Verma, Devendra" <devverma@amd.com>, 
- Frank Li <Frank.Li@nxp.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783535707; l=10259;
- i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
- bh=YRqAocW0qP2hltMHxZ3RUTaSv5Ync8DH/nO7wV195V4=;
- b=dw7uhC+qRQGBZh1Z0Wb2JdhAjKV6NtctdlsNubttL4u+IVHDIwfEAr3Sacv7a72fYWF3pMBuH
- M2qZ7SMp1PxAwafE7BBkrhSQW/KFdIDSyQxusccmS/eUow/Swdg/s+s
-X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
- pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
-X-ClientProxiedBy: SN7PR04CA0034.namprd04.prod.outlook.com
- (2603:10b6:806:120::9) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CmOKN4KG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C28341F000E9;
+	Wed,  8 Jul 2026 18:37:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783535876;
+	bh=F9fTK8V0clF1wRFMxmagE6aqDmFRSGTYI8+y8ktusvI=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To;
+	b=CmOKN4KGvTSWLVPgXVWqEnRkfhuIMSilgq2PW2Srs2iQpWcilBnSI7a/gd0XuRKit
+	 gnlt7UOBNjPx2WjtrdGfuMYibkGLGna1ge0F260cRT+dPgGG57UFvnLs9tnXo+fIcF
+	 GYJVwdbz2pRr1KGtgeoQB4EYKz5dUHVWr0lTJEl0zjjhNBlBQZcODziqn4CSz9Fkd9
+	 8+lhKo9393lIojLvdxzCNOTei60gkmCMKVI7Z8WOkQ7NZXYHDtW8WKzue3Z44x25MH
+	 Okeo9JjS8H+Ckkp8uVe+e7WYoI2yMG1fZ5j9uMlDVj3d+hGmnc+AYQssSeJfhXISju
+	 O83Qrc0LEHUfg==
+Message-ID: <5abee20c-aea5-4209-a6d5-2929cd325a9f@kernel.org>
+Date: Wed, 8 Jul 2026 13:37:55 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI1PR04MB9810:EE_
-X-MS-Office365-Filtering-Correlation-Id: 30f2fede-68c3-461c-449c-08dedd1fc085
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|19092799006|376014|1800799024|23010399003|56012099006|22082099003|11063799006|18002099003|921020;
-X-Microsoft-Antispam-Message-Info:
-	p1Ym3INiL5NNNVc1hKJfYaNkfTh4XTF3zxvqwm+bC8ctxjXNxonfFA4tjcAEYN99N7WRzWciAB5bWZoy5MHMket6hkHBGhzT1sv/+Z9TsCmRmtoptRk7UVeibutnig20sVBRK6ZHgimOC1P+Wnedp0QpzllJdSyKqjTGXnY/vIAYY71M20VSIxUP8ksJExd+aCspcpoPp5lpDcBnzoOzvp+M8kHidDX1TWQQctUaHEPUWDewS1inQUKWyYQh1f/sRrRfGpGefhlnO/WeLS4AswDPtTb0NTafTYuy2kP34UN5CURMJyMPbixshOI0j6bSx6EDiuIK0IGWQmKyWBTlumgLsb5JwQbUPNLvktoWItQcqj7kyVetq4oPLgM0CqqP8TdXdEgFL52MBx3D971Tz3IEHS/RnCVQ4Eu4gwEKJam/zrqrutTEx4vu76TncbBzI+74aS1YD/9suu0WHCiwBmtTxDrTYGD38Pm+ggY5erySNSI3NtAFKfxvZIqdJ1PhPANTx0A+sWZmAuX4cy/uRGxvN1Y+DAMeokBVME82rmSSfsAclSXcvXbloow/SP8h1w25Y8J7ZBtrGX/nSn6OwTnEERqufnLipeID8JeEeH/92hmbNfPVp2TDxHFypxmYu/LxIDBfJ2hM0XUH7ApuaT7x1sadnDsvreiMBTbNJ+xTizTm5YeY39+oQ2nnZMVYXc6wzoGo4GnFvTYmFHICDQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(19092799006)(376014)(1800799024)(23010399003)(56012099006)(22082099003)(11063799006)(18002099003)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TVBBUmlHK0QwS0tNMmJZaHUvSCtwNkdvbE1rOU92eFFIZWdyYWVJQld6R1lp?=
- =?utf-8?B?Nk1ac3I5STc2YVRqSFdhaUFJM2YyNnI0THN2YSsrOWpwRWxReWVsTDFJRlBz?=
- =?utf-8?B?RXQ2WHRQUnZ0YmtoM3ZNYmRvaGw3M3JhSy94NXpTZ0h2RWJoVFdlZWVoRmtR?=
- =?utf-8?B?OTFWT2FNUXJuQnRTNGFqY202NWt1MU04c0ZNUmR1Z0tCNXhpMnI0TS9zR0I5?=
- =?utf-8?B?MEtnbEt6NkZvL3k4Y3dDN1dNVmxtblhvRUR2ZGFyTjdpeEhjemFaSGIzRGVy?=
- =?utf-8?B?SngrWlVFMVltMXJuTmhvWnJaSm14enV5bnMxZGdaUlMrTStrSUhDR29JTXJF?=
- =?utf-8?B?dWNUdVdZWWNOMlYzaWlOZWJwbkx5cDlIUnNZaG43OVUva0J6RUhvb2hBK1dn?=
- =?utf-8?B?bFJoditzQnFYZWVHZEpFcFhOVWVRdm9hYTRyQjlha04zY1A5bitmaS9BVktz?=
- =?utf-8?B?elRtLzMvalNsYXRpL2p3RGxUOHJoZEcyYlROVS9yVm9lYjVQOGhUT2FPUk5r?=
- =?utf-8?B?RjFrdytsQno3Qm1RaW1ESTNTUWYzVHQzSFhjb0tXSjJYYUw2YVk2NEF4d0xH?=
- =?utf-8?B?Z2lERkZhZnFnWU5VSmc3RzRtcGI5SHlyOFlJblJJLytwbnB3bzNRNDFrUlFI?=
- =?utf-8?B?bXl3ZE5MU3NwR1BIdHRHc1B1Syt3TzBSK2lHNUJVSlRLL3JHWi9KTGZQSHdq?=
- =?utf-8?B?Y25kRk1FMXpQdDdJWkJFQUM2RzYrdDFnMnZuNjcwS014dFhHUXE5cjE0emVx?=
- =?utf-8?B?b0gxeVhScEpUTGZRNGdLdDJKbXJxY3N2THpEc1cxUVhGRHVsL0REQVJrQVZi?=
- =?utf-8?B?aWVsekF3L3ZhK1Z2TXl1Z3p4NHJqV1dTdGx2c0h2UGpZLytJZEpwbWE1OS84?=
- =?utf-8?B?ZkNqRlZLMmV3YUdPOFEzbGJQNjNCdXdSZnhablBBZHZCTmVCNWp4ejEyYThM?=
- =?utf-8?B?bGpnWTR2TjAzWUhkVnJBRHFTdGI1UE85dzlLb0hrWmQ3a1ROQ1BYdHk5Nm5a?=
- =?utf-8?B?cEhFeG96elcrTlhuWjRGRTNja1JPZDN3UE1UeDE4VFVFaGIxb3gwcERzNExC?=
- =?utf-8?B?T0F4WmpsUjNDR0tjWnBHTnpNclB5MHdiRmhCaDM1SmJFRCtrSGtCR3h1K1dK?=
- =?utf-8?B?WkthR2Y0L21GWllUZjR1MzlGUUhCQWF2TTl1VzlqQmhJS0FoRk5TZmNBbkFk?=
- =?utf-8?B?Q2s3L3hEZkdFZzV5RjlsMlc3Vmhac25vWVVMbGx0TDZzSmNRUjVRNHErbHlR?=
- =?utf-8?B?UmhJaDY0TUVUOUR3RFVwcDZvRFRZZ050bmUxZ1o4NGpYbmNVamQxeWdBTnlu?=
- =?utf-8?B?Nkg1dDl1bHdkbUs2UlBLbGIxaWxDSkkzY3VUdEVTaUZuajdYamowcTlsWFJv?=
- =?utf-8?B?TDFPNjNFRlhVckt5WXN1QzRrQUtFTUQzL280NGI2VHNZcDR0b3ZIZllLZHhJ?=
- =?utf-8?B?K2tsMkFiTWdEbC8xUjhnaW8wM3ZZWDR0SWlQZkJyK21haGRTeFlrNFZLQXU0?=
- =?utf-8?B?cHVYRVZnZ1g4MW5KSGlsK1VWNkN4Mlh6UEh4UVZJTCtVbXJFc2lqZ1RDWDcw?=
- =?utf-8?B?YjJiRDB1ZlB1ZW1GakduN3lEdUVmbEVSSlEyb2Voc3JWdnI2MGpHRXJPTThT?=
- =?utf-8?B?cm1peTBJc0twRk5ibE9TQWc1V0lhOGFiU2M4WW9pQW5SeDlRSUZOMXpNYUhT?=
- =?utf-8?B?d1JOcVR0ZHlCRzNaanNiQjhoUzg1U2ZiaVBlMlZyWllPOStHL1B2eGhqWlQr?=
- =?utf-8?B?TE5xbE9Pay8zMmxWaTNPcmM0bmNKS0xrNlRjSWtFWGxPSU1lRmdaMnNRZFpX?=
- =?utf-8?B?bEhtQmtuRFNteGx3ZFpISnNYblViZldQL0loVm1tMVVBWkFoM1ZaZTRwOWY5?=
- =?utf-8?B?UGVEOWdUUXN0V3V2cnFYd1pxcFZMNkNJN3hvSk1GYUt2cDR1THhVMzNWalln?=
- =?utf-8?B?WTVrcEMvQWJsZUJWQTVUOXkxTEdEMmV4TFNxbG8xWFc2aXRGZkVHamhyeWFZ?=
- =?utf-8?B?YjlEK0JKMlNJL0JQSUpYenhLVGdHSk41cCt5cFduQUtiU2dLZEM2U2l4ODR6?=
- =?utf-8?B?SnM0MG1MSnBhT2JKMGtGY3FLTTk2QkN6YzVYd3VVZnNKazBmckVUUkNFcmkr?=
- =?utf-8?B?Njh3Ymt1STZjQ0xoUkVDVlJoSnZnb3pDdFByd3k2TytnVER3ODUxajJSVXMw?=
- =?utf-8?B?RGd4cDMrVGFOVkVXK1d2RjNMckhKVExMRGc5WUpYZWhSdDFNUWs5WVRBWk1V?=
- =?utf-8?B?LzBxY1JaYmJ1N2lSN1U2N0M0YzVrbG9nNUcwQ214V3pVNkFsdk5UZjJuL25l?=
- =?utf-8?B?bEJQdUZsOHc1Yi9sM2wwa3JaMEsrT3hDTk5aUmhVbWxHS3BVaGEwTDE3NkF1?=
- =?utf-8?Q?8YwzyzrUFJve5KLWSrl2tTmx4GkxLfxthdXmf?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 30f2fede-68c3-461c-449c-08dedd1fc085
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2026 18:35:57.9939
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iuJzeKkRryzixwFDDcl1s1Su+q1XpkC9IZheOyOvTyfGVaxcNplWA7oJU6ldkbQAYFN6NCgIragC3QxaHwBBQtwAEJChXeRszmY2Pa3Z5xenA0pbWb6QMNDmubGmMW5d
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB9810
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC][PATCH] thunderbolt: Quiesce AMD NHI during suspend
+Content-Language: en-US
+From: Mario Limonciello <superm1@kernel.org>
+To: "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>,
+ Andreas Noever <andreas.noever@gmail.com>,
+ Mika Westerberg <westeri@kernel.org>, Yehezkel Bernat <YehezkelShB@gmail.com>
+Cc: Yo-Jung Leo Lin <Leo.Lin@amd.com>, linux-usb@vger.kernel.org,
+ linux-kernel@vger.kernel.org, "S, Sanath" <sanath.s@amd.com>,
+ "Natikar, Basavaraj" <basavaraj.natikar@amd.com>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+References: <20260706023422.3647320-1-acelan.kao@canonical.com>
+ <2ff2d9b9-12fb-4908-8738-2498b2927571@kernel.org>
+In-Reply-To: <2ff2d9b9-12fb-4908-8738-2498b2927571@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From: Frank Li <Frank.Li@nxp.com>
+Some comments about your changes too.
 
-The current descriptor layout is:
+On 7/8/26 10:34, Mario Limonciello wrote:
+> ++ linux-pci
+> ++ Sanath && Basavaraj
+> 
+> On 7/5/26 21:34, Chia-Lin Kao (AceLan) wrote:
+>> On some AMD USB4 systems, resuming from system suspend with a
+>> Thunderbolt dock in the picture hard-hangs the machine very early in the
+>> resume path, before the Thunderbolt driver gets a chance to rescan and
+>> re-establish the topology. It is a PCIe bus wedge: the system never
+>> reaches the point where the thunderbolt module could recover the dock,
+>> and the kernel journal does not persist past "PM: suspend entry
+>> (s2idle)".
+>>
+>> Reproduce:
+>>
+>>    1. Affected platform: an AMD USB4 host with the thunderbolt driver
+>>       bound to its NHI PCI functions. Observed on a Dell Pro 14 Plus
+>>       (PB14255, AMD Phoenix) which exposes two USB4 NHI functions
+>>       (0000:c6:00.5 and 0000:c6:00.6).
+>>
+>>    2. Put the system into s2idle (Low Power S0 Idle / Modern Standby)
+>>       with no dock attached.
+>>
+>>    3. While the system is suspended, plug in a Dell SD25TB4 Thunderbolt 4
+>>       dock (Goshen Ridge). The plug event wakes the system, and the 
+>> dock's
+>>       downstream PCIe bridges are enumerated behind the AMD USB4 PCIe
+>>       tunnel during the resume.
+>>
+>>    4. The machine hard-hangs during the noirq resume phase, before the
+>>       thunderbolt driver re-establishes the topology. The Dell power
+>>       indicator flashes the "3A5W" code (3 amber + 5 white lights).
+>>
+>>    Removing the trigger makes resume reliable: unbinding the two NHI PCI
+>>    functions, or unloading the thunderbolt module, before suspend both
+>>    avoid the hang completely. The difference in those cases is the PCI
+>>    state the core restores for the driver-bound NHI on resume.
+>>
+>> EC team findings (from the platform EC log):
+>>
+>> The EC/PD/dock side is healthy across the failing cycle, which points
+>> the finger at the host resume path rather than the dock:
+>>
+>>    - Modern Standby entry and resume are seen on the EC side; the dock
+>>      plug interrupt during MS is handled and the full power sequence
+>>      recovers (SLP_S3# okay, PLTRST# received, U8-U20 sequence 
+>> completed).
+>>
+>>    - The EC-to-dock DDM command exchange fully succeeds: all CMsd/CMgd
+>>      transactions return success (device type, TBT cable type, dock
+>>      module config for USB/TBT/Audio/LAN).
+>>
+>>    - PD/Type-C renegotiation is normal (power contracts up to 95W/100W);
+>>      no persistent protocol error appears in the log.
+>>
+>>    - The only suspicious symptom is host-side: the EC repeatedly logs
+>>      PmSt_Timeout_Count while waiting for the BIOS/host to consume the
+>>      wake (PWRB pressed) event. That indicates the host resume path is
+>>      late or stuck, not an EC-to-dock transport failure. The Dell "3A5W"
+>>      diagnostic LED code (3 amber + 5 white) maps in the EC code to an
+>>      SLP_S3#/PLTRST#/RUNPWROK failure indication.
+>>
+>> Root cause:
+>>
+>> With the driver bound, the PCI core restores the saved NHI config space
+>> during the noirq resume phase, including PCI_COMMAND with memory space
+>> and bus mastering enabled. This is the same phase in which the core
+>> restores the config space of the tunneled PCI bridges and whatever sits
+>> behind them (the dock). If the AMD host router is made active (memory +
+>> bus mastering) while the downstream USB4 PCIe tunnel to the dock is still
+>> being restored and is not yet ready, the host interface starts bus
+>> activity toward a not-yet-ready endpoint and the PCIe hierarchy wedges.
+>>
+>> This matches the workarounds: unbinding the NHI or unloading the module
+>> means the core does not restore an active NHI over the tunnel during
+>> noirq, and the hang disappears. Several Thunderbolt-side attempts did not
+>> help (returning early from nhi_resume_noirq(), disabling host-router wake
+>> flags, adding an unconditional delay before tunnel activation), which is
+>> why the actionable boundary is the PCI PM state of the driver-bound AMD
+>> NHI rather than a later Thunderbolt protocol step. We do not have
+>> visibility into what the host router does internally in that window; that
+>> uncertainty is the main reason for sending this as an RFC (see open
+>> questions below).
+>>
+>> What this patch does:
+>>
+>> Add a QUIRK_QUIESCE_ON_SUSPEND quirk, currently set for all AMD USB4 host
+>> routers (matched by vendor AMD + USB4 PCI class), and:
+>>
+>>    - clear PCI_COMMAND_MEMORY and PCI_COMMAND_MASTER before the PCI core
+>>      saves the NHI config space in runtime and system suspend, so the NHI
+>>      is restored inactive on resume;
+>>
+>>    - keep the NHI quiescent across nhi_resume_noirq() (return early 
+>> without
+>>      touching the controller), so it stays inactive while the core
+>>      restores the tunneled bridges and the dock;
+>>
+>>    - once the whole system has resumed, re-enable memory space and bus
+>>      mastering and bring the domain back up from the PM complete callback
+>>      via tb_domain_resume_noirq(), and from nhi_runtime_resume() for the
+>>      runtime PM path.
+>>
+>> The result is that Thunderbolt/USB4 stays functional after resume instead
+>> of the machine hanging or the tunnels staying down until the module is
+>> reloaded.
+>>
+>> Test results:
+>>
+>> Tested on the Dell Pro 14 Plus (PB14255, AMD Phoenix, two USB4 host
+>> routers) with the Dell SD25TB4 dock. Without the patch, the sequence
+>> above hard-hangs during resume. With the patch, repeated suspend/resume
+>> cycles with the dock connected complete cleanly with no hang. After
+>> resume the NHI PCI_COMMAND reads back with MEMORY|MASTER set again, and
+>> the dock's downstream USB devices re-enumerate, confirming the USB tunnel
+>> is restored and the domain is functional.
+>>
+>> Caveats observed while the NHI is quiescent across noirq: config space
+>> reads to the host router time out and TMU configuration restore fails
+>> during that window; the controller and domain are fully brought back in
+>> nhi_complete(). The DP tunnel restore path was not exercised in this
+>> test, as no external display was driven through the dock during the
+>> tested cycle.
+>>
+>> Open questions for RFC discussion:
+>>
+>>    1. Root cause: what does the AMD host router actually do when it is
+>>       restored with memory + bus mastering enabled during noirq while the
+>>       downstream tunnel is not ready? Is this an expected ordering
+>>       constraint, a firmware behavior, or a hardware erratum?
+>>
+>>    2. Scope: the quirk currently matches all AMD USB4 host routers by
+>>       class. Which parts are actually affected? Should this be narrowed
+>>       (e.g. by DMI or specific device IDs) instead of applied to all AMD
+>>       USB4?
+>>
+>>    3. Mechanism: is clearing both PCI_COMMAND_MEMORY and 
+>> PCI_COMMAND_MASTER
+>>       the right lever, or would clearing bus mastering alone suffice 
+>> and be
+>>       less invasive? Is poking PCI_COMMAND directly acceptable in the NHI
+>>       driver, or should this move into a PCI backend op / PCI quirk?
+>>
+>> Signed-off-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+> 
+> I have no idea why I didn't receive this patch in my mailbox - I'm 
+> obviously CC'ed.  But I checked my spam and it's not there either.
+> 
+> But anyway, I am wondering if the real issue here is that we're 
+> accessing the hardware before it's ready.  If you can readily reproduce 
+> the issue, can you try this series to see if it helps?
+> 
+> https://lore.kernel.org/linux-pci/20260708152650.536604-1- 
+> mario.limonciello@amd.com/
+> 
+>> ---
+>>   drivers/thunderbolt/nhi.c | 78 +++++++++++++++++++++++++++++++++++++--
+>>   drivers/thunderbolt/nhi.h |  5 ++-
+>>   drivers/thunderbolt/pci.c |  8 ++++
+>>   3 files changed, 85 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+>> index 698fb124d529..787185c745ae 100644
+>> --- a/drivers/thunderbolt/nhi.c
+>> +++ b/drivers/thunderbolt/nhi.c
+>> @@ -16,6 +16,7 @@
+>>   #include <linux/interrupt.h>
+>>   #include <linux/iommu.h>
+>>   #include <linux/module.h>
+>> +#include <linux/pci.h>
+>>   #include <linux/delay.h>
+>>   #include <linux/property.h>
+>>   #include <linux/string_choices.h>
+>> @@ -40,6 +41,31 @@ static bool host_reset = true;
+>>   module_param(host_reset, bool, 0444);
+>>   MODULE_PARM_DESC(host_reset, "reset USB4 host router (default: true)");
+>> +static bool nhi_quirk_quiesce_on_suspend(const struct tb_nhi *nhi)
+>> +{
+>> +    return nhi->quirks & QUIRK_QUIESCE_ON_SUSPEND;
+>> +}
+>> +
+>> +static void nhi_disable_pci_mem_master(struct tb_nhi *nhi)
+>> +{
+>> +    struct pci_dev *pdev = to_pci_dev(nhi->dev);
+>> +    u16 cmd;
+>> +
+>> +    pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+>> +    cmd &= ~(PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
+>> +    pci_write_config_word(pdev, PCI_COMMAND, cmd);
+>> +}
+>> +
+>> +static void nhi_enable_pci_mem_master(struct tb_nhi *nhi)
+>> +{
+>> +    struct pci_dev *pdev = to_pci_dev(nhi->dev);
+>> +    u16 cmd;
+>> +
+>> +    pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+>> +    cmd |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER;
+>> +    pci_write_config_word(pdev, PCI_COMMAND, cmd);
+>> +}
+>> +
 
-  struct dw_edma_desc *desc
-   └─ chunk list
-        └─ burst[]
+Is this basically an open coded version of pci_set_master() and 
+pci_clear_master()?
 
-Creating a DMA descriptor requires at least two kzalloc() calls because
-each chunk is allocated as a linked-list node. Since the number of bursts
-is already known when the descriptor is created, this linked-list layer is
-unnecessary.
+Or is the PCI_COMMAND_MEMORY actually important for this issue?
 
-Move the burst array directly into struct dw_edma_desc and remove the
-struct dw_edma_chunk layer entirely.
+>>   static int ring_interrupt_index(const struct tb_ring *ring)
+>>   {
+>>       int bit = ring->hop;
+>> @@ -988,6 +1014,9 @@ static int __nhi_suspend_noirq(struct device 
+>> *dev, bool wakeup)
+>>               return ret;
+>>       }
+>> +    if (nhi_quirk_quiesce_on_suspend(nhi))
+>> +        nhi_disable_pci_mem_master(nhi);
+>> +
 
-Use start_burst and done_burst to track the current bursts, which current
-are in the DMA link list.
+Isn't this going to break wakeup interrupts?
 
-Tested-by: Koichiro Den <den@valinux.co.jp>
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
-change in v4
-- fix loop condition check in dw_edma_core_start(), found by sashiko AI.
-- collect Koichiro tag
+>>       return 0;
+>>   }
+>> @@ -1038,6 +1067,18 @@ static int nhi_resume_noirq(struct device *dev)
+>>       struct tb_nhi *nhi = tb->nhi;
+>>       int ret;
+>> +    /*
+>> +     * If the NHI was quiesced on suspend keep it quiescent (bus
+>> +     * mastering and memory access disabled) across the noirq phase.
+>> +     * The PCI core restores the config space of the tunneled PCI
+>> +     * bridges and anything behind them (e.g. a dock) here; letting the
+>> +     * AMD host router become active now can wedge the PCIe bus before
+>> +     * the dock side is ready. The controller and domain are brought
+>> +     * back up in nhi_complete() once the whole system has resumed.
+>> +     */
+>> +    if (nhi_quirk_quiesce_on_suspend(nhi))
+>> +        return 0;
+>> +
+>>       /*
+>>        * Check that the device is still there. It may be that the user
+>>        * unplugged last device which causes the host controller to go
+>> @@ -1064,16 +1105,33 @@ static int nhi_suspend(struct device *dev)
+>>   static void nhi_complete(struct device *dev)
+>>   {
+>>       struct tb *tb = dev_get_drvdata(dev);
+>> +    struct tb_nhi *nhi = tb->nhi;
+>>       /*
+>>        * If we were runtime suspended when system suspend started,
+>>        * schedule runtime resume now. It should bring the domain back
+>> -     * to functional state.
+>> +     * to functional state (and undo the quiesce, if any, via
+>> +     * nhi_runtime_resume()).
+>>        */
+>> -    if (pm_runtime_suspended(dev))
+>> +    if (pm_runtime_suspended(dev)) {
+>>           pm_runtime_resume(dev);
+>> -    else
+>> -        tb_domain_complete(tb);
+>> +        return;
+>> +    }
+>> +
+>> +    /*
+>> +     * A quiesced NHI (see __nhi_suspend_noirq()) was intentionally
+>> +     * left with bus mastering and memory access disabled and its
+>> +     * domain was not resumed in nhi_resume_noirq(). Now that the whole
+>> +     * system has resumed and the PCI core has finished restoring the
+>> +     * tunneled bridges, re-enable the controller and bring the domain
+>> +     * back up so Thunderbolt/USB4 keeps working after resume.
+>> +     */
+>> +    if (nhi_quirk_quiesce_on_suspend(nhi)) {
+>> +        nhi_enable_pci_mem_master(nhi);
+>> +        tb_domain_resume_noirq(tb);
+>> +    }
+>> +
+>> +    tb_domain_complete(tb);
+>>   }
+>>   static int nhi_runtime_suspend(struct device *dev)
+>> @@ -1091,6 +1149,10 @@ static int nhi_runtime_suspend(struct device *dev)
+>>           if (ret)
+>>               return ret;
+>>       }
+>> +
+>> +    if (nhi_quirk_quiesce_on_suspend(nhi))
+>> +        nhi_disable_pci_mem_master(nhi);
+>> +
+>>       return 0;
+>>   }
+>> @@ -1100,6 +1162,14 @@ static int nhi_runtime_resume(struct device *dev)
+>>       struct tb_nhi *nhi = tb->nhi;
+>>       int ret;
+>> +    /*
+>> +     * The NHI is quiesced (bus mastering and memory access disabled)
+>> +     * across runtime suspend as well; re-enable it before resuming the
+>> +     * domain.
+>> +     */
+>> +    if (nhi_quirk_quiesce_on_suspend(nhi))
+>> +        nhi_enable_pci_mem_master(nhi);
+>> +
+>>       if (nhi->ops->runtime_resume) {
+>>           ret = nhi->ops->runtime_resume(nhi);
+>>           if (ret)
+>> diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
+>> index d488eadadfce..c8b973150434 100644
+>> --- a/drivers/thunderbolt/nhi.h
+>> +++ b/drivers/thunderbolt/nhi.h
+>> @@ -119,8 +119,9 @@ struct tb_nhi_ops {
+>>   #define PCI_CLASS_SERIAL_USB_USB4            0x0c0340
+>>   /* Host interface quirks */
+>> -#define QUIRK_AUTO_CLEAR_INT    BIT(0)
+>> -#define QUIRK_E2E        BIT(1)
+>> +#define QUIRK_AUTO_CLEAR_INT        BIT(0)
+>> +#define QUIRK_E2E            BIT(1)
+>> +#define QUIRK_QUIESCE_ON_SUSPEND    BIT(2)
+>>   /*
+>>    * Minimal number of vectors when we use MSI-X. Two for control channel
+>> diff --git a/drivers/thunderbolt/pci.c b/drivers/thunderbolt/pci.c
+>> index dbb6badda867..4cf8107f1ce8 100644
+>> --- a/drivers/thunderbolt/pci.c
+>> +++ b/drivers/thunderbolt/pci.c
+>> @@ -43,6 +43,14 @@ static void nhi_pci_check_quirks(struct tb_nhi_pci 
+>> *nhi_pci)
+>>       struct tb_nhi *nhi = &nhi_pci->nhi;
+>>       struct pci_dev *pdev = to_pci_dev(nhi->dev);
+>> +    /*
+>> +     * AMD USB4 host routers may otherwise become active too early 
+>> during
+>> +     * resume after the PCI core restores the saved COMMAND register.
+>> +     */
+>> +    if (pdev->vendor == PCI_VENDOR_ID_AMD &&
+>> +        pdev->class == PCI_CLASS_SERIAL_USB_USB4)
+>> +        nhi->quirks |= QUIRK_QUIESCE_ON_SUSPEND;
+>> +
 
-change in v2
-- remove debug code
-- move "residue = desc->alloc_sz;"  in if(desc) check
-- keep inline to avoid build warning
----
- drivers/dma/dw-edma/dw-edma-core.c | 143 ++++++++++++-------------------------
- drivers/dma/dw-edma/dw-edma-core.h |  24 ++++---
- 2 files changed, 61 insertions(+), 106 deletions(-)
+If quirks do end up being correct direction thunderbolt quirks are 
+applied via drivers/thunderbolt/quirks.c
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 01bee22fe3b3e..474debb53c470 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -40,82 +40,54 @@ u64 dw_edma_get_pci_address(struct dw_edma_chan *chan, phys_addr_t cpu_addr)
- 	return cpu_addr;
- }
- 
--static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc, u32 nburst)
--{
--	struct dw_edma_chan *chan = desc->chan;
--	struct dw_edma_chunk *chunk;
--
--	chunk = kzalloc_flex(*chunk, burst, nburst, GFP_NOWAIT);
--	if (unlikely(!chunk))
--		return NULL;
--
--	chunk->chan = chan;
--	/* Toggling change bit (CB) in each chunk, this is a mechanism to
--	 * inform the eDMA HW block that this is a new linked list ready
--	 * to be consumed.
--	 *  - Odd chunks originate CB equal to 0
--	 *  - Even chunks originate CB equal to 1
--	 */
--	chunk->cb = !(desc->chunks_alloc % 2);
--
--	chunk->nburst = nburst;
--
--	list_add_tail(&chunk->list, &desc->chunk_list);
--	desc->chunks_alloc++;
--
--	return chunk;
--}
--
--static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
-+static struct dw_edma_desc *
-+dw_edma_alloc_desc(struct dw_edma_chan *chan, u32 nburst)
- {
- 	struct dw_edma_desc *desc;
- 
--	desc = kzalloc_obj(*desc, GFP_NOWAIT);
-+	desc = kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
- 	if (unlikely(!desc))
- 		return NULL;
- 
- 	desc->chan = chan;
--
--	INIT_LIST_HEAD(&desc->chunk_list);
-+	desc->nburst = nburst;
-+	desc->cb = true;
- 
- 	return desc;
- }
- 
--static void dw_edma_free_desc(struct dw_edma_desc *desc)
--{
--	struct dw_edma_chunk *child, *_next;
--
--	/* Remove all the list elements */
--	list_for_each_entry_safe(child, _next, &desc->chunk_list, list) {
--		list_del(&child->list);
--		kfree(child);
--		desc->chunks_alloc--;
--	}
--
--	kfree(desc);
--}
--
- static void vchan_free_desc(struct virt_dma_desc *vdesc)
- {
--	dw_edma_free_desc(vd2dw_edma_desc(vdesc));
-+	kfree(vd2dw_edma_desc(vdesc));
- }
- 
--static void dw_edma_core_start(struct dw_edma_chunk *chunk, bool first)
-+static void dw_edma_core_start(struct dw_edma_desc *desc, bool first)
- {
--	struct dw_edma_chan *chan = chunk->chan;
-+	struct dw_edma_chan *chan = desc->chan;
- 	u32 i = 0;
- 
- 	if (chan->non_ll) {
--		if (chunk->nburst == 1)
--			chan->dw->core->non_ll_start(chunk->chan, &chunk->burst[0]);
-+		chan->dw->core->non_ll_start(chan, &desc->burst[desc->start_burst]);
-+		desc->done_burst = desc->start_burst;
-+		desc->start_burst += 1;
- 		return;
- 	}
- 
--	for (i = 0; i < chunk->nburst; i++)
--		dw_edma_core_ll_data(chan, &chunk->burst[i], i, chunk->cb,
--				     i == chunk->nburst - 1);
-+	for (i = 0; i + desc->start_burst < desc->nburst; i++) {
-+		u32 idx = i + desc->start_burst;
- 
--	dw_edma_core_ll_link(chan, i, chunk->cb, chan->ll_region.paddr);
-+		if (i == chan->ll_max - 1)
-+			break;
-+
-+		dw_edma_core_ll_data(chan, &desc->burst[idx],
-+				     i, desc->cb,
-+				     idx == desc->nburst - 1 || i == chan->ll_max - 2);
-+	}
-+
-+	desc->done_burst = desc->start_burst;
-+	desc->start_burst += i;
-+
-+	dw_edma_core_ll_link(chan, i, desc->cb, chan->ll_region.paddr);
- 
- 	if (first)
- 		dw_edma_core_ch_enable(chan);
-@@ -125,7 +97,6 @@ static void dw_edma_core_start(struct dw_edma_chunk *chunk, bool first)
- 
- static int dw_edma_start_transfer(struct dw_edma_chan *chan)
- {
--	struct dw_edma_chunk *child;
- 	struct dw_edma_desc *desc;
- 	struct virt_dma_desc *vd;
- 
-@@ -137,16 +108,9 @@ static int dw_edma_start_transfer(struct dw_edma_chan *chan)
- 	if (!desc)
- 		return 0;
- 
--	child = list_first_entry_or_null(&desc->chunk_list,
--					 struct dw_edma_chunk, list);
--	if (!child)
--		return 0;
-+	dw_edma_core_start(desc, !desc->start_burst);
- 
--	dw_edma_core_start(child, !desc->xfer_sz);
--	desc->xfer_sz += child->xfer_sz;
--	list_del(&child->list);
--	kfree(child);
--	desc->chunks_alloc--;
-+	desc->cb = !desc->cb;
- 
- 	return 1;
- }
-@@ -337,8 +301,10 @@ dw_edma_device_tx_status(struct dma_chan *dchan, dma_cookie_t cookie,
- 	vd = vchan_find_desc(&chan->vc, cookie);
- 	if (vd) {
- 		desc = vd2dw_edma_desc(vd);
--		if (desc)
--			residue = desc->alloc_sz - desc->xfer_sz;
-+
-+		residue = desc->alloc_sz;
-+		if (desc && desc->done_burst)
-+			residue -= desc->burst[desc->done_burst].xfer_sz;
- 	}
- 	spin_unlock_irqrestore(&chan->vc.lock, flags);
- 
-@@ -355,12 +321,10 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer,
- 	struct dw_edma_chan *chan = dchan2dw_edma_chan(xfer->dchan);
- 	enum dma_transfer_direction dir = xfer->direction;
- 	struct scatterlist *sg = NULL;
--	struct dw_edma_chunk *chunk = NULL;
- 	struct dw_edma_burst *burst;
- 	struct dw_edma_desc *desc;
- 	u64 src_addr, dst_addr;
- 	size_t fsz = 0;
--	u32 bursts_max;
- 	u32 cnt = 0;
- 	u32 i;
- 
-@@ -418,17 +382,6 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer,
- 		return NULL;
- 	}
- 
--	/*
--	 * For non-LL mode, only a single burst can be handled
--	 * in a single chunk unlike LL mode where multiple bursts
--	 * can be configured in a single chunk.
--	 */
--	bursts_max = chan->non_ll ? 1 : chan->ll_max;
--
--	desc = dw_edma_alloc_desc(chan);
--	if (unlikely(!desc))
--		goto err_alloc;
--
- 	if (xfer->type == EDMA_XFER_INTERLEAVED) {
- 		src_addr = xfer->xfer.il->src_start;
- 		dst_addr = xfer->xfer.il->dst_start;
-@@ -452,19 +405,15 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer,
- 		fsz = xfer->xfer.il->frame_size;
- 	}
- 
-+	desc = dw_edma_alloc_desc(chan, cnt);
-+	if (unlikely(!desc))
-+		return NULL;
-+
- 	for (i = 0; i < cnt; i++) {
- 		if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
- 			break;
- 
--		if (!(i % chan->ll_max)) {
--			u32 n = min(cnt - i, chan->ll_max);
--
--			chunk = dw_edma_alloc_chunk(desc, n);
--			if (unlikely(!chunk))
--				goto err_alloc;
--		}
--
--		burst = chunk->burst + (i % chan->ll_max);
-+		burst = desc->burst + i;
- 
- 		if (xfer->type == EDMA_XFER_CYCLIC)
- 			burst->sz = xfer->xfer.cyclic.len;
-@@ -473,8 +422,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer,
- 		else if (xfer->type == EDMA_XFER_INTERLEAVED)
- 			burst->sz = xfer->xfer.il->sgl[i % fsz].size;
- 
--		chunk->xfer_sz += burst->sz;
- 		desc->alloc_sz += burst->sz;
-+		burst->xfer_sz = desc->alloc_sz;
- 
- 		if (dir == DMA_DEV_TO_MEM) {
- 			burst->sar = src_addr;
-@@ -529,12 +478,6 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer,
- 	}
- 
- 	return vchan_tx_prep(&chan->vc, &desc->vd, xfer->flags);
--
--err_alloc:
--	if (desc)
--		dw_edma_free_desc(desc);
--
--	return NULL;
- }
- 
- static struct dma_async_tx_descriptor *
-@@ -605,8 +548,14 @@ static void dw_hdma_set_callback_result(struct virt_dma_desc *vd,
- 		return;
- 
- 	desc = vd2dw_edma_desc(vd);
--	if (desc)
--		residue = desc->alloc_sz - desc->xfer_sz;
-+	if (desc) {
-+		residue = desc->alloc_sz;
-+
-+		if (result == DMA_TRANS_NOERROR)
-+			residue -= desc->burst[desc->start_burst - 1].xfer_sz;
-+		else if (desc->done_burst)
-+			residue -= desc->burst[desc->done_burst - 1].xfer_sz;
-+	}
- 
- 	res = &vd->tx_result;
- 	res->result = result;
-@@ -625,7 +574,7 @@ static void dw_edma_done_interrupt(struct dw_edma_chan *chan)
- 		switch (chan->request) {
- 		case EDMA_REQ_NONE:
- 			desc = vd2dw_edma_desc(vd);
--			if (!desc->chunks_alloc) {
-+			if (desc->start_burst >= desc->nburst) {
- 				dw_hdma_set_callback_result(vd,
- 							    DMA_TRANS_NOERROR);
- 				list_del(&vd->node);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index 4950c57fca34f..7f2ec871f5bd5 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -46,15 +46,8 @@ struct dw_edma_burst {
- 	u64				sar;
- 	u64				dar;
- 	u32				sz;
--};
--
--struct dw_edma_chunk {
--	struct list_head		list;
--	struct dw_edma_chan		*chan;
--	u8				cb;
-+	/* precalulate summary of previous burst total size */
- 	u32				xfer_sz;
--	u32                             nburst;
--	struct dw_edma_burst            burst[] __counted_by(nburst);
- };
- 
- struct dw_edma_desc {
-@@ -66,6 +59,12 @@ struct dw_edma_desc {
- 
- 	u32				alloc_sz;
- 	u32				xfer_sz;
-+
-+	u32				done_burst;
-+	u32				start_burst;
-+	u8				cb;
-+	u32				nburst;
-+	struct dw_edma_burst            burst[] __counted_by(nburst);
- };
- 
- struct dw_edma_chan {
-@@ -128,7 +127,6 @@ struct dw_edma_core_ops {
- 	void (*ll_link)(struct dw_edma_chan *chan, u32 idx, bool cb, u64 addr);
- 	void (*ch_doorbell)(struct dw_edma_chan *chan);
- 	void (*ch_enable)(struct dw_edma_chan *chan);
--
- 	void (*ch_config)(struct dw_edma_chan *chan);
- 	void (*debugfs_on)(struct dw_edma *dw);
- 	void (*ack_emulated_irq)(struct dw_edma *dw);
-@@ -170,6 +168,14 @@ struct dw_edma_chan *dchan2dw_edma_chan(struct dma_chan *dchan)
- 	return vc2dw_edma_chan(to_virt_chan(dchan));
- }
- 
-+static inline u64 dw_edma_core_get_ll_paddr(struct dw_edma_chan *chan)
-+{
-+	if (chan->dir == EDMA_DIR_WRITE)
-+		return chan->dw->chip->ll_region_wr[chan->id].paddr;
-+
-+	return chan->dw->chip->ll_region_rd[chan->id].paddr;
-+}
-+
- static inline
- void dw_edma_core_off(struct dw_edma *dw)
- {
-
--- 
-2.43.0
+>>       if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+>>           /*
+>>            * Intel hardware supports auto clear of the interrupt
+> 
 
