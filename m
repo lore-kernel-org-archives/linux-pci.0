@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A035847D920;
-	Wed,  8 Jul 2026 14:19:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC68E49251F;
+	Wed,  8 Jul 2026 14:19:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783520380; cv=none; b=kqdKIsvAmQxCw4bT596edrzLzekxSAIthxT3m/4umZFHSyQqt4WxXEqfg1OPEfuOQZNq61x/y5HRLr5dkvb1c5p7SbKR9OzmdpFbkbARPS+nvmwPBBVnufom9aRN/8OPABGia8yqh0LHkSKPAm9XwVRwLNnAVrcwxLpflkOHCBU=
+	t=1783520382; cv=none; b=aCaiZwHTrwAxfB3xdb1RRmhzaGWlT5riukIeGg9woHcrEOeWY3C7L5zAcCGL0RSTH6xq9Ytkb61KTl866BUBJb8Db7F43D/zhFPtIvLSII0jt77z9JJ5FPUMZ+zkvzBhAIshoHz13bSjtCXEdML6wP7NU2Z+gDGPtuIqU0o945E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783520380; c=relaxed/simple;
-	bh=hi1COVShy8CmEk4KXz+iPhjpDxv27EyzPdzQNq5vYwA=;
+	s=arc-20240116; t=1783520382; c=relaxed/simple;
+	bh=p7UcU81snsGsdUZMEy/2oUwE+1vlPk75sPcR6pU3K5k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mlGPmd7gWW9SjvDrqvfE092SfyJl9Pi6mAejWNsywFqyDFpCxvnks3DHw/o4zHyFovNT5qWp5uJ+fFYD1OAv5FxZHNRvs9JQdlJxRP176uldCzmX7OR5G3yIjgW7Z/E2Sd9MIblfWPXxAn/uU/+rMAsOxXvzwTxifKVu7TfNkyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B4jFqrHm; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IFnOp8iQCFhnTn6GDhS6ws2Hwb1HNL+oRklrBsZY6M2+GX1ztPe6CPHH9NMYDpWGiwWEATnfKXoqkFi8lvQFdY9hR6soy8MjtInwjFrrQDNH6N4JXhPGnICLlMY9APuJiUxe4lMrJMnb32mTfQ6E0OCbFACVWciu/nQTSc23r9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ihN9R2kn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B4jFqrHm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0DE71F00A3A;
-	Wed,  8 Jul 2026 14:19:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ihN9R2kn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75EA51F000E9;
+	Wed,  8 Jul 2026 14:19:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783520379;
-	bh=HqBSkGuC3iESCa7R9QMmbcf6/8gWTk6ewdxGeIaLSys=;
+	s=k20260515; t=1783520380;
+	bh=MYMKjnLQ21z7cidLxamDMY/t68Jc2T9j8FrXG+Qu5fw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=B4jFqrHmLZOhXWJfa0Os++NeWe8OYmMdpR8edqnFioJGXg6Vski+5VDUNWsA0Ga0Y
-	 c3lHTEbIntPWgGlx6X2K7dwvNFTLMYoGxV4nkA8Ph4tn1hsnKonvxp9BQ2TiEheZ8M
-	 PlgWUwVJZjjfPyoJEod4uDKWfaTpKPuSbjoVEmIg5ph9YD0J6jwKQnyvaCpB8YVyb6
-	 w+OBQZqoURu8izD1g43RO3vwC4DX/YbRmYKTgcaInHbJpHreby+Jd6gc3RZsSKGmxF
-	 PFEzprY0a9hirFL4Ysq9MnU2pOPyuKsiL5pLYyoQBxDMOBiaG0JJb/ElmDF+yPty68
-	 QFshv8UbffoUg==
+	b=ihN9R2knWygm4/B4qdPwh8HbZ/wul4Qtnu+le/5Vs3TGvCdUp2dR6e/mm1huHvCIl
+	 9CPWZvKqYhBPJ4Gx+m7H9My3arR8nYVSGOh/GHJzxeZ0DpKO9QDKhAS2tt5NgGzI+1
+	 nmIe00pyLMgrkxZooT54ENQPFhVO9/kbFcAwPX2I1ZZp1Q0xaJWl8nRXz+8jRIGCYy
+	 E6KHhSFi/oSOYkdINn6YQMuPqKNqvHeQvsUV5mIHzbXF2V5amx2pItAHdCl+I1wACR
+	 c3Makf0dnaxkprTmLeCPBEUgVMVGjo+HszZ9PZRwqOJ2joRt4YRrm8qx0fJEqOzTd7
+	 CLZviARnhMOEA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 06/10] ACPI: APEI: GHES: move CXL CPER helpers
+Subject: Re: [PATCH v7 04/10] ACPI: APEI: GHES: move estatus cache helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ahmed Tiba" <ahmed.tiba@arm.com>
-Cc: devicetree@vger.kernel.org, linux-cxl@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-6-8b3a85216cef@arm.com>
+Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-4-8b3a85216cef@arm.com>
 References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
- <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-6-8b3a85216cef@arm.com>
+ <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-4-8b3a85216cef@arm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 14:19:37 +0000
-Message-Id: <20260708141938.E0DE71F00A3A@smtp.kernel.org>
+Date: Wed, 08 Jul 2026 14:19:40 +0000
+Message-Id: <20260708141940.75EA51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,58 +48,62 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unsafe out-of-bounds dereference of `rec->hdr.length` in error rep=
-orting when the CXL CPER payload is smaller than expected.
+- [High] Malicious hardware or firmware can cause a memory leak in the fixe=
+d-size `ghes_estatus_pool` by reducing the CPER error status length between=
+ the peek and full read operations.
 --
 
---- Patch [6]: [PATCH v7 06/10] ACPI: APEI: GHES: move CXL CPER helpers ---
-commit ee2f071640d051dd6e9cf685ba55c5b9e8dbf870
+--- Patch [4]: [PATCH v7 04/10] ACPI: APEI: GHES: move estatus cache helper=
+s ---
+commit 838eea76a409eda9e1dc7c8c377f46dbbbad493c
 Author: Ahmed Tiba <ahmed.tiba@arm.com>
 
-ACPI: APEI: GHES: move CXL CPER helpers
+ACPI: APEI: GHES: move estatus cache helpers
 
-This patch moves the CXL CPER handling code out of ghes.c and into
-ghes_cper.c to allow for code reuse. It also adds new CXL CPER section
-length checks and uses spinlock_irqsave() in the CXL register/unregister
-paths for locking consistency.
-
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index 07e4001ea8d77..2a83d326e692b 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
+This patch relocates the estatus cache allocation and lookup helpers from
+ghes.c into ghes_cper.c. It also fixes a bug in ghes_estatus_cache_add()
+to avoid memory leaks and counter exhaustion.
 
 [ ... ]
 
-> @@ -549,6 +417,42 @@ static void ghes_log_hwerr(int sev, guid_t *sec_type)
->  	hwerr_log_error_type(HWERR_RECOV_OTHERS);
->  }
+> diff --git a/include/acpi/ghes_cper.h b/include/acpi/ghes_cper.h
+> index 4649e3140888c..15305c8be9a74 100644
+> --- a/include/acpi/ghes_cper.h
+> +++ b/include/acpi/ghes_cper.h
+> @@ -55,6 +55,8 @@
+>  	((struct acpi_hest_generic_data *)                              \
+>  	((struct ghes_vendor_record_entry *)(vendor_entry) + 1))
 > =20
-> +static bool ghes_cxl_event_len_valid(struct acpi_hest_generic_data *gdat=
-a,
-> +				     struct cxl_cper_event_rec *rec)
-> +{
-> +	if (gdata->error_data_length < sizeof(*rec) ||
-> +	    rec->hdr.length <=3D sizeof(rec->hdr) ||
-> +	    rec->hdr.length > gdata->error_data_length ||
-> +	    rec->hdr.length > sizeof(*rec)) {
-> +		pr_err(FW_WARN "CXL CPER Invalid section length (%u)\n",
-> +		       rec->hdr.length);
+> +extern struct gen_pool *ghes_estatus_pool;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but if the first condition
-(gdata->error_data_length < sizeof(*rec)) is true, won't evaluating
-rec->hdr.length in this error message cause an out-of-bounds memory read?
+This is a pre-existing issue, but does the system have a memory leak in
+ghes_estatus_pool if the hardware or firmware changes the CPER error status
+length between the peek and full read operations?
 
-If the firmware provides an empty or severely truncated CXL CPER payload,
-reading past the end of the estatus buffer could trigger a KASAN splat or a
-kernel panic.
+If malicious or compromised hardware reduces the length mid-read, it seems =
+we
+can permanently leak memory in the fixed-size pool:
 
-> +		return false;
-> +	}
+1. ghes_in_nmi_queue_one_entry() allocates from ghes_estatus_pool based on
+   the original length from the initial hardware peek.
+2. __ghes_read_estatus() performs a second fetch from hardware memory. It
+   accepts the new length if it is smaller than the original, persisting it
+   in kernel RAM.
+3. ghes_proc_in_irq() later calculates the free size using
+   cper_estatus_len(estatus) on the copied memory.
+
+Since the length is now smaller, gen_pool_free() would free fewer bytes than
+were originally allocated. Could this eventually exhaust the pool and preve=
+nt
+the kernel from queuing further NMI-based hardware errors?
+
 > +
-> +	return true;
-> +}
+>  static inline bool is_hest_type_generic_v2(struct ghes *ghes)
+>  {
+>  	return ghes->generic->header.type =3D=3D ACPI_HEST_TYPE_GENERIC_ERROR_V=
+2;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708-topics-ahm=
-tib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com?part=3D6
+tib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com?part=3D4
