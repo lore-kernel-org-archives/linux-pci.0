@@ -1,301 +1,164 @@
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012024.outbound.protection.outlook.com [40.107.209.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C4C37F727
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 13:48:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783518528; cv=none; b=Q6l0Qe/aQnuhg1b8+YHK+EHsYGbQFjyCCDvqBtIcL/FBsIqASXPl41cpVa4laGRLnKYy6ZT+DOkLHiVF39WIM+2ZFJUEp/YG/dXuWwTk/LRmbVVpz6zRxuDB5yFHNFnJFtvlOljQnrKjg2H9Vm2D+QWoUrx5n5crQgKsz6ipzgg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783518528; c=relaxed/simple;
-	bh=/OWJXGJs8SSkmcHPkdwWCPWcLueZZf5qaZwsy+85OT4=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
-	 MIME-Version:Content-Type; b=mBXGtRBP/djLqSUcMSOwAvEmV7hVRBq0ENfw9bEq+XpFBhH+ZNrV05IQMbsHQ3HPUGyfskpqF3j6fI8r0BEEJXZup0cPxH7vYrKu/rydMRFm9231TQ19VEHzRP56asGXOddOAcjYImmUdovCZ9FI/IINDQhQU+f0b53nJAsBOkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PqaWHgcH; arc=none smtp.client-ip=209.85.167.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B493F39F8;
+	Wed,  8 Jul 2026 13:54:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783518872; cv=fail; b=RaiDqbmYuLeWiCkShVC1q96VTdxFSetreccuSDTM0wQAIgGNcTY3toeU/eIZhDAPgsjzsFMzYQdy6QDd0m7jhI5ehfCJTIf45D9z53JTFiBsg9jmQ7PKf/Ww+a62gHLtJJnjYYgxhfgYol+rsgYqv2lwzo/ThyxWrxDSPw7NEFs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783518872; c=relaxed/simple;
+	bh=fIE7ARIS4fHoAUheORo1zoJVULIhL6cD7wLvSAQRw1E=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=KYBIQayqL9oJOalP0HXoUt5c1Ivpc2F9EVvLD7bSmv71uKmnNO5QkX4ogf7qzdDosemZKjq1JBHw+oDtL+xUaA+Xea3Vx4ATI+n8h7yXk8vjggEt82ZWXVWj4Af+46pGJOQD4Y6HNWrjAH5YNaqbYg8U8g4TWRYLNBiWqlYXtoM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=D4ICdeSN; arc=fail smtp.client-ip=40.107.209.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PqaWHgcH"
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5aeba09900bso605669e87.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jul 2026 06:48:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783518525; x=1784123325; darn=vger.kernel.org;
-        h=content-type:mime-version:user-agent:references:message-id:date
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=pMIZknUnUy6XFCDmMjtt4ptvm8FYoUm42a75htqi/WM=;
-        b=PqaWHgcH/WsLwMtC6jbMSngMIwuFGxfZ/zykw0VvpU3yCHJJNjR32ASq+PWUOKI7If
-         YxGbHqavP0jKmZ/SNm5PJKgPGRl+yvBd/CYFJWVF7O6QzrgzkwMweKjzin17W33yumKO
-         a9iWR8seBPfTg9IzT2miG82VHdG5cOiNp2VBj7yNqJj2e/6ceu4TE+wytZIJ5HgZGBmR
-         xOGCaZpXs4122peaADyjD+iLOfXInKGvYMltfkZYGYp5gh/Vpv10EXpfeUVwNiJe0II6
-         ux5oU8z2AOB+3TFx+jB15LtLUYriIiCGw/4TCnujEs6aYksRNY7Rga/2sXFANScyYs8a
-         0IkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783518525; x=1784123325;
-        h=content-type:mime-version:user-agent:references:message-id:date
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=pMIZknUnUy6XFCDmMjtt4ptvm8FYoUm42a75htqi/WM=;
-        b=ex2dhBhsVJrP2SdrTo/+bHSZThiigXmxJMlMQWoNYyTRatlZh+oNf7xq/JU1jnxgrc
-         f0308RZO0yK2xxQ11gtSvb/jGw1PQk6d/QazfvTEDehLMU0n3wobab2CnadyyFHMS97m
-         0o1XUhGBjBkPzuu43puUYYHNqYc+cjUYIoFBmGDWy0ivYRl8qsNigGlm1AJFXIi/6KI4
-         bQXAzA3p2AJFGyuIe2Wnvv0dWHZUmfDmC58R/H1Buup+px82Pw7GJ8WFFn9iIFubj+1f
-         AKVxnGn6d46RtYPTj+FPRFgl1zRmlbv5SpG3/k/IXiZOnnLhZAdYa/JRHGgeSclU2Lia
-         +yyw==
-X-Forwarded-Encrypted: i=1; AHgh+Ro2cnXmNUkuRhnZwV5mYItUnbS6xtmJRZ7bAmfqfOJSyf9BPBaegwDGhtqJgD6XbadFlv4QAI25wMs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyraHhrw+hUXQL65BeMJg/N5k2tADfSyu5DeWiUCSoxEupHximC
-	vTBT8CpFqoMeXsJPrmzeZ7MpSAOWNqzGTWa4QGg5k1ANEYOsD62w1EZy
-X-Gm-Gg: AfdE7cm8lV+SUBXmhvIzMj8H8QRty+dBlUV70k/JQEu322HOdRilZTW0XMCNN/ioKYr
-	9//USU0I+vYqs/dNy/KEkCIITno9/UBM5qofeuR0WYTfuMhWj3+HD8v3OaQ5NjnZvROMu8Ke+i5
-	R2/EwY1ItB9pm2rDEdmlqjfambuSqU4l+ZAJ/HfdH9vodLZpXjfBWr0LDwyJl2OTcq6ftOUEekY
-	wc5ysBCCi8bysL/rtRn8Xv2A6qQwFfn7x7Wv0nWLA5x6530XITPgNry9CI7mg7yPGE51sIQQ9sq
-	byInWkpAwjoK7Jsy4NLXHGPcRZu6C6J5QdAYwijYNbV05hHIpaIin9iN1B/CE/9ZOGDK8rGxSYQ
-	SbSgQmbZM8UVJBExNB2Vn0VQPlhlreFuOc2aJg1PsrmerAqaKO6AcsiDKTBXvIzdi7GGK3qgYys
-	ULqm4jLOZ6HmCeQDCN+RgKUHYI/7HO6g==
-X-Received: by 2002:a05:6512:6205:b0:5b0:eda:de1b with SMTP id 2adb3069b0e04-5b0114440f8mr751542e87.16.1783518525235;
-        Wed, 08 Jul 2026 06:48:45 -0700 (PDT)
-Received: from imac ([2a02:8010:60a0:0:eccc:7ea2:9458:892d])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-39b4ad3614fsm31087491fa.12.2026.07.08.06.48.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 06:48:44 -0700 (PDT)
-From: Donald Hunter <donald.hunter@gmail.com>
-To: Dan Williams <djbw@kernel.org>
-Cc: linux-coco@lists.linux.dev,  linux-pci@vger.kernel.org,
-  driver-core@lists.linux.dev,  ankita@nvidia.com,  Alistair Francis
- <alistair.francis@wdc.com>,  Lukas Wunner <lukas@wunner.de>,  Jakub
- Kicinski <kuba@kernel.org>
-Subject: Re: [PATCH 02/15] tools: ynl: Teach pyynl to handle blobs
-In-Reply-To: <20260705220819.2472765-3-djbw@kernel.org>
-Date: Wed, 08 Jul 2026 14:48:28 +0100
-Message-ID: <m2ldblbnir.fsf@gmail.com>
-References: <20260705220819.2472765-1-djbw@kernel.org>
-	<20260705220819.2472765-3-djbw@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="D4ICdeSN"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nwlfKIkqRIwsv2CzT92SBs6fmliAMEkG738HSYBF9sLFKRFacAgU4as5Adoi8X/hEKs7MqPIlEZjCG0nJGWPDWSFVnRM6vdSO52kfjcYLEUQsb6QlaySNk0I61inwvLkibYzWfRY3jdHI7/puH6w90VYecioj9a6y0MX0079IKPhvdt+8Z5iM/BH1nwjJJLPMxh+HhmR0hQ4VKkdfdefUCyYfUMtNPGfPiuj6rs5F8NNXfHkYIuN4dsIIbUF6/478+niUH3I7kH8cvjNwEx3RmeH2S+F/SK3luP+wJeJ3ovT8bUEvBfU2utCejh3VAeSdN+l6Fns0Pz5sSYIx4bRKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fIE7ARIS4fHoAUheORo1zoJVULIhL6cD7wLvSAQRw1E=;
+ b=Y/7EFmMwGfmLXrdEi0BWdZ3mZh9Vrwj/zh838BVE+Xnx/m8XLaQwDbd/8OwUVQpySciydVZegQ3VxU2OS296TJOIgDokROY0uvWRQCK1p1ls25CpheJ3DgyS5HVXpFnPQpjCjg1WAoA8sGElBOVttxAqzEBPH1lGDJXYFBZKYTLEkvdk6Gr5cObWUAOMwwOWmZcg6PUI/H63pmX8gyZaSL3TMI8P+uXkxPz4izajsQhdsiYX6FdZOaM5r3Oc8HBm5/mQv8ddBVTOddN9Rw8tVPKpG9IbNfmvq9mowbWbI+pSaF+ix8GWSbSP1HtWQ2RYcrC3YEvwCONXr9XBIBMeQA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fIE7ARIS4fHoAUheORo1zoJVULIhL6cD7wLvSAQRw1E=;
+ b=D4ICdeSNH0I12X6UaoJY8ccJ/rywYOU0qhVkF9XEf2Nk3PvH99eoxuubNvEBMc3XglmJWAKm8sx2AECuYkZgOlGIta+s5eJPyyf7EY+/3So0Cw4cUd1DQFRe9K5twCR8jXp6wax7sSSoY2a7bcjaIH6+zO2FBBFuXFoHIxLvQLlbjWa/x5yfMeGHZPQPoDP/uBRO37VjIt6svUsmu49QHkoRARI0p/0hN7tSGxODZe7oxB/9YTIkfWyLmXoOs+HK1X6zROcEG9pwu5BADOf+4NCJIGJiqv+eGO4iufae26Nt99KSci5Zg2hwirVqU+FX1Fl2h92RnlEJVvKtTCi88A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by SA1PR12MB6751.namprd12.prod.outlook.com (2603:10b6:806:258::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Wed, 8 Jul
+ 2026 13:54:16 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0181.012; Wed, 8 Jul 2026
+ 13:54:16 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 08 Jul 2026 22:54:12 +0900
+Message-Id: <DJT8O1RG43FI.1G66ZTP2DRPII@nvidia.com>
+Cc: <dakr@kernel.org>, <airlied@gmail.com>, <simona@ffwll.ch>,
+ <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <aliceryhl@google.com>, <tmgross@umich.edu>,
+ <jhubbard@nvidia.com>, <ecourtney@nvidia.com>, <joelagnelf@nvidia.com>,
+ <apopple@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <nova-gpu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <zhiwang@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, "David Laight"
+ <david.laight.linux@gmail.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 1/8] PCI/IOV: Return unsigned int from
+ pci_sriov_get_totalvfs()
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Zhi Wang" <zhiw@nvidia.com>
+References: <20260701062622.3499033-1-zhiw@nvidia.com>
+ <20260701062622.3499033-2-zhiw@nvidia.com>
+In-Reply-To: <20260701062622.3499033-2-zhiw@nvidia.com>
+X-ClientProxiedBy: TY6P286CA0013.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:3b8::14) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|SA1PR12MB6751:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3bec6ce9-97b1-4bbe-d671-08dedcf86648
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|10070799003|23010399003|18002099003|22082099003|11063799006|4143699003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	Qejg/GokBhiOxZm+Mln+73Kaim2HHEYL790w0PSVota4AZxagwAt5ryyt7ZlXgeOOysVr2BK4o1QhDsbI7hM7hXhDjFH0Fy0C3QcQ0sJNuaNy7YVC0/rsvOKQrovRQj076lUxKPsX0znWT62xBe2gmPtc4E3NLfoSashNDslh+1UkaWWVtNXti+BXYpotuWIog0vo81xNo4eGv8yaCqDbdXrlpZsKLMbHxoY9LJyEeXfC3Wd9Mf7vGfuxrjtmA1zI7hUi4LDbZQjVbLlrB83T6/rBhEGGMPcVgNKao947L3nKmqPvsXzgqy5rxrwRBL9D4MLFCXo4L6Zw9cVFlUNLrrzzhXN8PEnZ90bNwSQRnQD293H24sbai0gXkpgJ5y7GWRcEsCkjnUWVG4wwB6HbfltsCUA8jTMZxWEWbzyBJ0CCiX5OH6OTrCT9Dq1xxqV8Ax4SVoBa0Ce1pqTEPgz0407zo2QSvhu6dyHMi90V0t/UOLmqmlrI3MlryCnASbXVxC2iz0+JCLCfoaxVnj3az9WXLkLUY3/VnrAPQiygDKeOHmWPlMWya2PzSx9u4SWnkTQJgwrTRyP0xiUO7nI56uCOi7LGiNEwgz5LMVJN3Q68wh6ap/OvuKDmiNj+CrwJgKlvxntOH1mQZMV9BwGKHwSyUUEMmerV65Xss3JPSc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(10070799003)(23010399003)(18002099003)(22082099003)(11063799006)(4143699003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?T083TDNzVzdEQnJNNGNueXZkc0UxSVlFQzdsWG1rbis2d3JmSk5kemV3SDNr?=
+ =?utf-8?B?alBOQzhvSW9wbTRUb3UraTE1MVdjd1o3T3FRcmFzQlgxYng4eC9lSEM1eGlG?=
+ =?utf-8?B?RW0vc2dQVmhacWxsdUpIVzhvNlZQTHZINzFPYXVzYnZlSUd5Skh2MGEweURi?=
+ =?utf-8?B?V0t4SVphQ1l1QzEzSzRmVE5sR01sNnJ5OUExaUxKYUgzQnJZK3NSU3hOdU1v?=
+ =?utf-8?B?T3psOVpUakZQMHM4NTRjYis1NjdmZ2VCMnQ5NEJrUjlVeVU2KytDTmtsbVZi?=
+ =?utf-8?B?cjJCbGhsNlQ2WHlPbjRkMExmUG5VdnpJRW41Y0dwMDh6KzUrMkxLZ3FQSStl?=
+ =?utf-8?B?QTNIZkNVKys2empTb1dhZjQ5TnBvb29SOVdwWG1aY0llOFRCTTdYU2o4NGkw?=
+ =?utf-8?B?OVBWMS8wSnZiTE95dms3MHZ4ZEFYRm16emVKNmJPcGlsZ01NcVQ2SjZ2QTR1?=
+ =?utf-8?B?OFUzc1RBaDBNYmhJWXV6MmM2eko2bGsyeEFOd0FpdWFpT3l4WWQvVGI4c252?=
+ =?utf-8?B?SisxR01GTHBVY1Z3dDQxWVAwSFg1WS9QOEJCV3EzS045RDQ3UHBQVXlCOVgx?=
+ =?utf-8?B?dzkxVUh5RUtlQ3B1WmxaS1Ewd0FXeVZjKzRqZklidnd5VlBNUEF1cDhZMXc1?=
+ =?utf-8?B?ZzRjQjl0VlhXUW9BSHVpdGwwdHRxMUZQTXVPanRjaCtVYWRBUCtpMHhRNzlD?=
+ =?utf-8?B?WUZuVGdoa2ZGSTlvUEltamtLRFhaenJhbmJaV1F6VGlpZTZoaENMTjJjNlFa?=
+ =?utf-8?B?STg2MWU2QkZaTk9oV2ZGbm5yK3lPZWVYaXBEMWpldStKaFZuNFZkdUxHR2VI?=
+ =?utf-8?B?L2tCekEvbDJ1czM5b20rcm5paXBIZzVKQTkwMGthNXFPQlIrM2JaOHh0d3VD?=
+ =?utf-8?B?UUpxM2JsYUZFTXNhLzIxTVExZ1pmSzJJNG5pdWZKQW11YUN6VTVnRGxNcEdZ?=
+ =?utf-8?B?OGRtZkF0VzlYdE93RUlJdmtRZWFKeDgzaThsUGJ2K1JRd0IzYThOL1ExOTJt?=
+ =?utf-8?B?VHF3djBtUENpMXpvM3VocThTNFpOa1VzWW05ZG9iUUE3SldXMzdyUk9Pdmsw?=
+ =?utf-8?B?M2d2N29KcDVBTmx5Mi94L0lMSW9nOC9ucGpuTVF2WWg2bnZ5cUZOSng4K3hS?=
+ =?utf-8?B?aTdmOEhNM0dOWkRva1huVDBmaFc1TjlBU29aMWNkcTl1anN6SnZldG9nLzFV?=
+ =?utf-8?B?b2ZPZGF0eUROK2lma2xvWE8rS1FDaXl1MEtZejFTOGdseVpDZHhFVGtEMzNu?=
+ =?utf-8?B?bzFMRmJkNmVMWkE4YWFZTnBQYTJiblpYQ0ZqSTRvSjBDVTVrOUZleEVWR3hZ?=
+ =?utf-8?B?cUkvR0t1QVVZTGRCamNpenFWdVVQZzVqdTBBaldpcEtxVFZMWU9hS1FtbEl1?=
+ =?utf-8?B?MzJoUkFDOUZUWXdtek9ydG5odUZsUTFtQ0h1bWRsK1hiaHVnbUtqUk56cytR?=
+ =?utf-8?B?eWN1Q1hJSjdHMk5RLzROczNVbHZ3c3JoWXJTdnVqbkQ0Vktjakd5SFFJbkhi?=
+ =?utf-8?B?b3VDY2dCS2prMDlrUWp1ZTBscmdLMEp6UzVwaVhGWDQ3OWF6b2VwUXlsVThD?=
+ =?utf-8?B?Y1c2OFdOYXNkSlYyOGxDNEpGTDJRRHVwaHZvSkNlK0VVTk9tOUpqWXQ2RGF2?=
+ =?utf-8?B?UFdYengwUWoyajVGQWtIZWE2dkdTVDJ5QXVJS3l0aEV5VXdmOWNVT0FqTEpZ?=
+ =?utf-8?B?Zy9IcitHUkNGZjZFMTh6MzhpZGxmUUhJaVN6NlZkUXd5ekEyUnoxb2lwVFlx?=
+ =?utf-8?B?TUZsRTZIZ2RlblM4UkNuV1BYSDdTVXMraVRmc21CVHFzY3lLdVdoQkljdXJl?=
+ =?utf-8?B?d3dBdldOK2JxUVRZdDBabjY5NGE1RHZJRmVzR3UyR2VUQTd2dlk1M0hhN2s4?=
+ =?utf-8?B?UGUrTzdRb0w2ei9odjY2dEJSRExaMTRpYTZ1ZldxcEI0RWFlK0pMT3NzNVd1?=
+ =?utf-8?B?R1AxeTBZQ2thbGs4YnVBWGdLbjNFYjYwZHF3WC92eGlvVXVqVFdsazFKZW5a?=
+ =?utf-8?B?WFpQMGZLellQdkFnMU5hUXRIWW9aQjE3MXltK2UweW94aEJQZ1Z4OCtvNEp6?=
+ =?utf-8?B?bGo1dzN1bkhQQWRwUDVRYWQ4bHZUdlk0NVEybW5DNGw3NCtSaStjdUxBWVMz?=
+ =?utf-8?B?OTBuelRrZy9OT1hJWG11b21Ma0NMUys5NFlVc1VtU01sWnUxbnZMbGIydmFH?=
+ =?utf-8?B?ZHJwcHNMQ2hJUndYcENDVzhya3RQMXphaHVoMjdhc3Q2enhCNndQdGxJdjZM?=
+ =?utf-8?B?MXBKRElxbVA4aW5mSnBGNVNmZEtNQXZjZTlQSGlXRTYzN0E4V0RXOVZyNERN?=
+ =?utf-8?B?YWJoQUYyWUlaMnNZanMzbWJLQ01CWnMrVSsrSWF0bkwrRlZRbW5XTHRUaWJ6?=
+ =?utf-8?Q?dZ3OsVpm1GHIopZV/lu+bZeoxY0HXaJrHro38ceDCDlcx?=
+X-MS-Exchange-AntiSpam-MessageData-1: NKw0Y6bLN2+6xg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3bec6ce9-97b1-4bbe-d671-08dedcf86648
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2026 13:54:16.4855
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +l2Er6GVJsuoa+Jhj8mC3gpTtK4Urka7Omxf5W3cAyaM5l7gwmynQ/xf8zetepkqkUnguGXi0Q9b0r2DtJs7Kw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB6751
 
-Dan Williams <djbw@kernel.org> writes:
-
-> The generic "device evidence" facility wants to convey large objects
-> (certificate chains, measurements) and support various security commands
-> relative to that evidence (like validate) [1].
+On Wed Jul 1, 2026 at 3:26 PM JST, Zhi Wang wrote:
+> pci_sriov_get_totalvfs() reports a VF count, not an errno-style
+> status. It returns 0 when SR-IOV is unavailable or the device is not a
+> PF, and otherwise returns the PF's driver_max_VFs value.
 >
-> Update pyynl to understand the "bloblen" property indicates:
-> * the associated attribute is a variable length byte array
-> * it is multi-attr where each message with the same attribute represents
->   chunks of the byte array
-> * the byte array's size is conveyed in a scalar attribute named by the
->   "bloblen" property.
-> * the attribute identified by "bloblen" always arrives in a message before
->   the first chunk of the associated blob
+> driver_max_VFs is stored as a u16 in struct pci_sriov. It is derived
+> from the SR-IOV TotalVFs field or from a driver-provided limit, so the
+> implementation cannot return a negative value.
 >
-> A "multi-attr" without "bloblen" retains the legacy behavior where repeated
-> reception of the same attribute across messages results in a new instance
-> of the object. The new behavior causes repeated reception of an
-> attribute to be treated as filling consecutive bytes of an array.
+> Change the declaration, CONFIG_PCI_IOV stub, and implementation to
+> return unsigned int.
 >
-> Assisted-by: Codex:GPT-5
-> [codex: drafted initial python changes]
-> Cc: Alistair Francis <alistair.francis@wdc.com>
-> Cc: Lukas Wunner <lukas@wunner.de>
-> Cc: Donald Hunter <donald.hunter@gmail.com>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Link: http://lore.kernel.org/20260318170014.6650d2bf@kernel.org [1]
-> Signed-off-by: Dan Williams <djbw@kernel.org>
-> ---
->  tools/net/ynl/pyynl/lib/nlspec.py | 12 ++++++
->  tools/net/ynl/pyynl/lib/ynl.py    | 62 ++++++++++++++++++++++++++++++-
->  2 files changed, 72 insertions(+), 2 deletions(-)
+> Suggested-by: Alexandre Courbot <acourbot@nvidia.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: David Laight <david.laight.linux@gmail.com>
+> Cc: Gary Guo <gary@garyguo.net>
+> Cc: linux-pci@vger.kernel.org
+> Link: https://lore.kernel.org/all/DJHPRE4TGGT8.BUTMYOF5YE05@nvidia.com/
+> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 
-I am mid-review of this but I think it could be simplified. See initial
-thoughts below. Can you show me how to configure a test env so I can try
-it out?
+FWIW,
 
->
-> diff --git a/tools/net/ynl/pyynl/lib/nlspec.py b/tools/net/ynl/pyynl/lib/nlspec.py
-> index 0469a0e270d0..4764263968ea 100644
-> --- a/tools/net/ynl/pyynl/lib/nlspec.py
-> +++ b/tools/net/ynl/pyynl/lib/nlspec.py
-> @@ -172,6 +172,7 @@ class SpecAttr(SpecElement):
->          selector      string, name of attribute used to select
->                        sub-message type
->  
-> +        bloblen       string, name of attr which reports the blob length
->          is_auto_scalar bool, attr is a variable-size scalar
->      """
->      def __init__(self, family, attr_set, yaml, value):
-> @@ -181,6 +182,7 @@ class SpecAttr(SpecElement):
->          self.value = value
->          self.attr_set = attr_set
->          self.is_multi = yaml.get('multi-attr', False)
-> +        self.bloblen = yaml.get('bloblen')
->          self.struct_name = yaml.get('struct')
->          self.sub_type = yaml.get('sub-type')
->          self.byte_order = yaml.get('byte-order')
-> @@ -191,6 +193,10 @@ class SpecAttr(SpecElement):
->  
->          self.is_auto_scalar = self.type in ("sint", "uint")
->  
-> +        if self.bloblen and not self.is_multi:
-> +            raise SpecException(
-> +                f"Attribute '{attr_set.name}.{self.name}' has bloblen without multi-attr")
-> +
->  
->  class SpecAttrSet(SpecElement):
->      """ Netlink Attribute Set class.
-> @@ -355,6 +361,8 @@ class SpecOperation(SpecElement):
->          attr_set        attribute set name
->          fixed_header    string, optional name of fixed header struct
->  
-> +        dump_blob_attrs set, reply blob attribute names which may span messages
-> +
->          yaml            raw spec as loaded from the spec file
->      """
->      def __init__(self, family, yaml, req_value, rsp_value):
-> @@ -369,6 +377,7 @@ class SpecOperation(SpecElement):
->          self.is_async = 'notify' in yaml or 'event' in yaml
->          self.is_resv = not self.is_async and not self.is_call
->          self.fixed_header = self.yaml.get('fixed-header', family.fixed_header)
-> +        self.dump_blob_attrs = frozenset()
-
-Initialising to None would avoid some other logic.
-
->  
->          # Added by resolve:
->          self.attr_set = None
-> @@ -388,6 +397,9 @@ class SpecOperation(SpecElement):
->              raise SpecException(f"Can't resolve attribute set for op '{self.name}'")
->          if attr_set_name:
->              self.attr_set = self.family.attr_sets[attr_set_name]
-> +            reply_attrs = self.yaml.get('dump', {}).get('reply', {}).get('attributes', ())
-> +            self.dump_blob_attrs = frozenset(
-> +                name for name in reply_attrs if self.attr_set[name].bloblen)
->  
->  
->  class SpecMcastGroup(SpecElement):
-> diff --git a/tools/net/ynl/pyynl/lib/ynl.py b/tools/net/ynl/pyynl/lib/ynl.py
-> index 092d132edec1..f21b68043bd3 100644
-> --- a/tools/net/ynl/pyynl/lib/ynl.py
-> +++ b/tools/net/ynl/pyynl/lib/ynl.py
-> @@ -998,6 +998,47 @@ class YnlFamily(SpecFamily):
->          else:
->              rsp[name] = [decoded]
->  
-> +    def _blob_fill(self, buf, off, chunks, name):
-> +        for chunk in chunks:
-> +            end = off + len(chunk)
-> +            if end > len(buf):
-> +                raise YnlException(f"Blob '{name}' data exceeds reported length")
-> +            buf[off:end] = chunk
-> +            off = end
-> +        return off
-> +
-> +    def _blob_init(self, op, rsp, blob_attrs):
-> +        """
-> +        Start a new blob object. Preallocate each blob payload using the
-> +        length carried ahead of the data and copy in the first chunk(s).
-> +        Return the per-attribute write offsets for any following messages.
-> +        """
-> +        offsets = {}
-> +        for name in blob_attrs:
-> +            if name not in rsp:
-> +                continue
-> +            length = rsp.get(op.attr_set[name].bloblen, 0)
-> +            buf = bytearray(length)
-> +            offsets[name] = self._blob_fill(buf, 0, rsp[name], name)
-> +            rsp[name] = buf
-> +        return offsets
-> +
-> +    def _blob_extend(self, rsp, update, blob_attrs, offsets):
-> +        """
-> +        Continue filling the previous object's blob(s) when the current
-> +        message carries only blob continuation attributes.
-> +        """
-> +        if any(name in rsp and name not in blob_attrs for name in update):
-> +            return False
-> +
-> +        for name, value in update.items():
-> +            if name in blob_attrs and name in rsp:
-> +                offsets[name] = self._blob_fill(rsp[name], offsets.get(name, 0),
-> +                                                value, name)
-> +            else:
-> +                rsp[name] = value
-> +        return True
-> +
->      def _resolve_selector(self, attr_spec, search_attrs):
->          sub_msg = attr_spec.sub_message
->          if sub_msg not in self.sub_msgs:
-> @@ -1356,7 +1397,10 @@ class YnlFamily(SpecFamily):
->          for (method, vals, flags) in ops:
->              op = self.ops[method]
->              msg = self._encode_message(op, vals, flags, req_seq)
-> -            reqs_by_seq[req_seq] = (op, vals, msg, flags)
-> +            blob_attrs = None
-> +            if Netlink.NLM_F_DUMP in flags:
-> +                blob_attrs = op.dump_blob_attrs or None
-> +            reqs_by_seq[req_seq] = (op, vals, msg, flags, blob_attrs)
-
-I think this hunk can be dropped and instead use op.dump_blob_attrs directly
-
->              payload += msg
->              req_seq += 1
->  
-> @@ -1365,6 +1409,7 @@ class YnlFamily(SpecFamily):
->          done = False
->          rsp = []
->          op_rsp = []
-> +        blob_off = {}
->          while not done:
->              reply, ancdata = self._recvmsg()
->              nsid = self._decode_nsid(ancdata)
-> @@ -1372,13 +1417,14 @@ class YnlFamily(SpecFamily):
->              self._recv_dbg_print(reply, nms)
->              for nl_msg in nms:
->                  if nl_msg.nl_seq in reqs_by_seq:
-> -                    (op, vals, req_msg, req_flags) = reqs_by_seq[nl_msg.nl_seq]
-> +                    (op, vals, req_msg, req_flags, blob_attrs) = reqs_by_seq[nl_msg.nl_seq]
->                      if nl_msg.extack:
->                          nl_msg.annotate_extack(op.attr_set)
->                          self._decode_extack(req_msg, op, nl_msg.extack, vals)
->                  else:
->                      op = None
->                      req_flags = []
-> +                    blob_attrs = None
->  
->                  if nl_msg.error:
->                      raise NlError(nl_msg)
-> @@ -1388,6 +1434,11 @@ class YnlFamily(SpecFamily):
->                          print(nl_msg)
->  
->                      if Netlink.NLM_F_DUMP in req_flags:
-> +                        if blob_attrs:
-> +                            for obj in op_rsp:
-> +                                for name in blob_attrs:
-> +                                    if isinstance(obj.get(name), bytearray):
-> +                                        obj[name] = bytes(obj[name])
->                          rsp.append(op_rsp)
->                      elif not op_rsp:
->                          rsp.append(None)
-> @@ -1414,6 +1465,13 @@ class YnlFamily(SpecFamily):
->                  rsp_msg = self._decode(decoded.raw_attrs, op.attr_set.name)
->                  if op.fixed_header:
->                      rsp_msg.update(self._decode_struct(decoded.raw, op.fixed_header))
-> +
-> +                if blob_attrs:
-> +                    if op_rsp and self._blob_extend(op_rsp[-1], rsp_msg,
-> +                                                    blob_attrs, blob_off):
-> +                        continue
-> +                    blob_off = self._blob_init(op, rsp_msg, blob_attrs)
-> +
-
-This approach seems unnecessary for pyynl. Just let multi-attr do its
-thing and then concatenate them at the end.
-
->                  op_rsp.append(rsp_msg)
->  
->          return rsp
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
