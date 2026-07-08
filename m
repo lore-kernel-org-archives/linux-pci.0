@@ -1,279 +1,123 @@
-Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A3D3451AF;
-	Wed,  8 Jul 2026 13:29:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783517365; cv=pass; b=lhVCcB0CAatZUQggwLw4ML1R5Quw2tY2sNieC3jgSWEXk1cGE7jhVjrN1Jm7gN4UlsFd68nSV5IAJk2Erz3jG7si1JSztJfaduoRKKfukZfBvHPKxIp339QlgTLIDbt3gKpVUmNum6RKq2i7BOs6knK56BAseF06T8kxYuDOj9g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783517365; c=relaxed/simple;
-	bh=ETQdonLxG6BeOHA2ebnsm6g2M7LbKtjJ01Uu/UKKt3o=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=lgsXmVIvONk6AUwSUexCRGDV+vgutfPHXyTrth/Dd0h3xRJhchBrp8bdP4utN6pTVxRT/4oICkr1OY1huW4kLkbbD6J4Pitt1yGtaT7HTVstelXrIhcV003uGi4LQVaMZCAXtjtWLvY+GWinzVvEx3jh9ZRRSyEb2v0FfJdjg38=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=LJa8K7tM; arc=pass smtp.client-ip=136.143.188.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B57972E3AF1
+	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 13:48:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783518521; cv=none; b=Pe/AGYKxgtNZTNIjNrJ8vQow8WWxxlxwGzDB5xdmCIOUZJWcxKRNq2Ck3YEWFhXiY99YVZVmDs2GSo0y1sHUL3RJ4TQE6AZr/HUT5TPWOz2P5SZiqJXVZazYbzTP2Yxunf6Xm3GTVzhvTIq2jipDy7shAg/h7JN9sShJI1sxn64=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783518521; c=relaxed/simple;
+	bh=Q5Qk0KHQjVZbp0lFmVKnGWZtxtkKr3ZAe8XmELX1/6o=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
+	 MIME-Version:Content-Type; b=PTI4Q9TixTIIBZ/K9mY8tIjhMx1hl8/XjjRy6qmF4OBsCIlRSKQU9SDKD1ODn1DfKFpNG+KQtTIyrDea3dlzVumPuSK8ik+uIPzsuAfO2oqoVERiKctL9Vm5RIqVMacbIPIrDQKUeHaXSQtmoRaeeBYWpEbFpdgLvAHdk4Wm7ZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DtX/OGdA; arc=none smtp.client-ip=209.85.208.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="LJa8K7tM"
-ARC-Seal: i=1; a=rsa-sha256; t=1783517327; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=B+Egv0Lv2asl5B+0Cz16zaqh+07u7bw/Z4PcDRUSCEp+Vg0J9eIaBCfrOLLfDFWE8vXa2bW5PqcCvTPlKLnNTQpeQf8YCfh2DuLflyV4Dj6xkS77wQJRi8voG+J1D8vqdtwkwE3arZhieL/72+4/eUB+P3QT+EPtoo4NZGDkszc=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1783517327; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=ZHKUpaaxOG3TiKrgenFjszrnO2+S4PB/WTF9AEj1jxc=; 
-	b=iYVogWpR7vcbX78qbgwKLENddeH4eO5kNoh+cYZIf8Vem02s+hnpZU8qmcF2taAYOM1r/36v+qFP6hFHPtj1DXrhz2pWho42ppgyMLMn/hKdYAFu5o7p/hXpocaYdjqm6hquwe4NcxaKoar+uQ4LUkOWZUUnp2GuZvTmFeNWROs=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783517327;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=ZHKUpaaxOG3TiKrgenFjszrnO2+S4PB/WTF9AEj1jxc=;
-	b=LJa8K7tMVVJNWGHpCGK3WFWR/3cneDzKZ6v8lQFSFL4wI9kDLA1FI7GN2sC2i0Zk
-	ZLdi1xXwKIG4LkYS9sPFvUKEoeev27ZUbx+zCoR5v0mx3cxcfM2l2GPOEZesq/9lkDL
-	RwNV2BHrJ/zIMx058CSwVWtL1nA/JH0DBB1NSufI=
-Received: by mx.zohomail.com with SMTPS id 1783517324399189.77230306485933;
-	Wed, 8 Jul 2026 06:28:44 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DtX/OGdA"
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-39c7050a48fso5716301fa.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Jul 2026 06:48:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783518518; x=1784123318; darn=vger.kernel.org;
+        h=content-type:mime-version:user-agent:references:message-id:date
+         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=bzsuqGeu2ZztC5uiYt7ZwxUJKrCKRdPms1njvftvolk=;
+        b=DtX/OGdAhe7yA91L46I19bvLHRht6xiVp76N1JqMr1SNWnF0qz2E+9vE3j0Q66hqBg
+         ZsOQzVJxz13O+Rxpd6rmvy4MOVZ+kYbnZBWDBSygnTYP11PlfYZjLphRnEXQe0bgDYS5
+         ItciuIvXjC2IB7C/6Fbdou6GB+MxyX11hIlyJqxAgTbUemybl/2i18zdYp0PZXqj/kgE
+         Q5KL9A95KfbhqWY9elL2ay5Sg/d9w04gwxZmAPxHro/rUPorZk/HN0B28tdHBjlwl5q2
+         hu16D8B6+3s1fPrEooGQgJoLUN/tQVQF5RPA+5XBLACeOjPdS+t4d7va2WlnXndAQkxw
+         A3/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783518518; x=1784123318;
+        h=content-type:mime-version:user-agent:references:message-id:date
+         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=bzsuqGeu2ZztC5uiYt7ZwxUJKrCKRdPms1njvftvolk=;
+        b=XOABmWeYzKR1NfLe2NTPi45oJxoCezLQ3Mdqf5K0lEPpsS3EvMR/tQWy9+Bv6YhZ3u
+         uKZxXZkvK9CXda5ZFMA7ULBQ6weWFakbiD/hIWtbpC3oO58DFjkSRu71KgRZHM2OBBtm
+         7uG5ZaOWBWHjSL2bCExdIHQ7/EmoRfXCqikJDDV/ZcXwOhbidOzUy0AVL9D9l/xNOJSf
+         6+fw0UU/KofveSPeGZea0dt2SAI79m3pDQuPL+10SRXf17UhsqQCZ1QXAcIZwn0Ean3G
+         CbsAEcUsned7PmOdqN4J7q5ugJFKL8/j04niphcZNlTHJ0uJJ0Wj+3lEvjOeP8i9awd9
+         24OQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrMXvASp/G9wumCJy9cGAG+eZWIr3lEvQzNG7n8f3Zs8XXs6Ot7ONMrQj+aJnvNbgSHm7aP5TjE7ZU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEd4hsQtkUDLgMPRcbCAbbJTbPdgLXQgPJSM/1frnaITfQINX3
+	YT0dJL0Orxnl/jBfN9m9ZyvDPOu4QUQ9lgD0w4rB9T96bOfYMhF+a93p
+X-Gm-Gg: AfdE7ckUMpZFzmUE3d8Pf5m1/ih5f3t5n3qYn78DXMZpYU0D0H+5ccI6RJsNpophg6D
+	KxpUZfhJXGghz0qGxqFGacr483fMyiCe6Yfe27wkx4lnQdUzHQNedOTzNV1RngqXa7ktPTWr1sN
+	QZgdnQmMYsm4qBlv4oh6EnqsjvDGQTqpgLgAx3hhKa6XUCUglPjrRLySu2D6OfO5jyrFq/BwFKU
+	YTyQzM4puZkOurrwQoBqr6ekraF7CDjCpw25je/nu4PIaG1sgx9o5e2XymQDrE/HakMK/ejcbDA
+	YIq5RljkFVpzNzuZWpfQNqIspvGPvkc4D1YYdOgLIP+lM0Hc7DiCUgsXNBfgVdiCXuENv3pqGGS
+	KmDuxH9R+5P+A1as7P7XCjo+wD1dPJwF0nyrHNIPag5rKSWp1f5P122PNNYfy6Tf/TZ2z1hwxM+
+	o+8fQHtO/Y7Wm/1J6BNixfvc/Jx1ck2h1rzLD1jRJTI+wQCT7W
+X-Received: by 2002:a05:6512:66da:b0:5b0:eda:de34 with SMTP id 2adb3069b0e04-5b0114ad7b9mr525977e87.43.1783518517539;
+        Wed, 08 Jul 2026 06:48:37 -0700 (PDT)
+Received: from imac ([2a02:8010:60a0:0:eccc:7ea2:9458:892d])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5aed136f8dcsm4528257e87.11.2026.07.08.06.48.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jul 2026 06:48:37 -0700 (PDT)
+From: Donald Hunter <donald.hunter@gmail.com>
+To: Dan Williams <djbw@kernel.org>
+Cc: linux-coco@lists.linux.dev,  linux-pci@vger.kernel.org,
+  driver-core@lists.linux.dev,  ankita@nvidia.com,  Alistair Francis
+ <alistair.francis@wdc.com>,  Lukas Wunner <lukas@wunner.de>,  Jakub
+ Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH 01/15] netlink: specs: Introduce multi-message blobs for
+ SPDM
+In-Reply-To: <20260705220819.2472765-2-djbw@kernel.org>
+Date: Wed, 08 Jul 2026 12:13:57 +0100
+Message-ID: <m2y0flbuoa.fsf@gmail.com>
+References: <20260705220819.2472765-1-djbw@kernel.org>
+	<20260705220819.2472765-2-djbw@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH v6 08/20] rust: pci: io: make `ConfigSpace` a view
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260706-io_projection-v6-8-72cd5d055d54@garyguo.net>
-Date: Wed, 8 Jul 2026 10:28:23 -0300
-Cc: Alice Ryhl <aliceryhl@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>,
- Boqun Feng <boqun@kernel.org>,
- =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Benno Lossin <lossin@kernel.org>,
- Andreas Hindborg <a.hindborg@kernel.org>,
- Trevor Gross <tmgross@umich.edu>,
- Tamir Duberstein <tamird@kernel.org>,
- =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Abdiel Janulgue <abdiel.janulgue@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Alexandre Courbot <acourbot@nvidia.com>,
- David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>,
- Michal Wilczynski <m.wilczynski@samsung.com>,
- =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>,
- driver-core@lists.linux.dev,
- rust-for-linux@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org,
- nova-gpu@lists.linux.dev,
- dri-devel@lists.freedesktop.org,
- linux-pwm@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <043E32BB-789D-4ABA-9491-185108A19EAE@collabora.com>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-8-72cd5d055d54@garyguo.net>
-To: Gary Guo <gary@garyguo.net>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+Content-Type: text/plain
 
+Dan Williams <djbw@kernel.org> writes:
 
+> The SPDM, Security Protocol and Data Model, underpins PCI device security
+> and other use cases. It defines objects that allow for verification of
+> device identity and configuration. These objects can be large in size 16MB.
+> Netlink is otherwise suitable to define the operations, with optional
+> parameters, and notifications for working with these objects. For example,
+> operations like "regenerate evidence with nonce", "mark evidence
+> validated", and "broadcast evidence / security state change events".
+>
+> A netlink 'blob' is introduced as a way to teach YNL that one instance of a
+> attribute may span multiple messages. It enables netlink to convey all the
+> data needed for verification and manipulation of SPDM transported evidence.
+>
+> The schema change to allows YNL to infer that an attribute may span
 
-> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
->=20
-> In order to support I/O projection, we are splitting I/O types into =
-two
-> categories: owned objects and views. Owned objects have a specific =
-type
-> that is related to setting up and tearing down, while views can have =
-their
-> type changed with I/O projection.
->=20
-> Things like `IoMem` or `Bar` are owned objects, which requires setting =
-up
-> mapping and cleaning up on drop. On the other side, `ConfigSpace` is =
-really
-> just a view, as the resource is associated with the `pci::Device`.
->=20
-> Remove the `ConfigSpaceKind` bound on `ConfigSpace` and make it a =
-generic
-> view. This means that `ConfigSpace` object now represents a subregion =
-and
-> therefore encodes offset (as address of pointers) and size (as =
-metadata of
-> pointers) itself. The full region case is still supported with offset =
-0 and
-> size of `cfg_size`.
->=20
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+change to allows -> change allows
+
+> multiple messages and interrogate its length to preallocate an
+> appropriately sized receive buffer.
+>
+> The design direction to extend the netlink schema for a "multi-message
+> object receive" case was the result of this discussion [1].
+>
+> Cc: Alistair Francis <alistair.francis@wdc.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Donald Hunter <donald.hunter@gmail.com>
+> Link: http://lore.kernel.org/20260318170014.6650d2bf@kernel.org [1]
+> Signed-off-by: Dan Williams <djbw@kernel.org>
 > ---
-> rust/kernel/pci/io.rs | 64 =
-+++++++++++++++++++++++++++++----------------------
-> 1 file changed, 36 insertions(+), 28 deletions(-)
->=20
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index e0acb62f58a2..89f4bb483a7f 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -18,7 +18,6 @@
->     ptr::KnownSize, //
-> };
-> use core::{
-> -    marker::PhantomData,
->     ops::Deref, //
-> };
->=20
-> @@ -53,33 +52,42 @@ pub const fn into_raw(self) -> usize {
-> /// Alias for extended (4096-byte) PCIe configuration space.
-> pub type Extended =3D Region<4096>;
->=20
-> -/// Trait for PCI configuration space size markers.
-> -///
-> -/// This trait is implemented by [`Normal`] and [`Extended`] to =
-provide
-> -/// compile-time knowledge of the configuration space size.
-> -pub trait ConfigSpaceKind: KnownSize {}
-> -
-> -impl ConfigSpaceKind for Normal {}
-> -
-> -impl ConfigSpaceKind for Extended {}
-> -
-> -/// The PCI configuration space of a device.
-> +/// A view of PCI configuration space of a device.
-> ///
-> /// Provides typed read and write accessors for configuration =
-registers
-> /// using the standard `pci_read_config_*` and `pci_write_config_*` =
-helpers.
-> ///
-> -/// The generic parameter `S` indicates the maximum size of the =
-configuration space.
-> -/// Use [`Normal`] for 256-byte legacy configuration space or =
-[`Extended`] for
-> -/// 4096-byte PCIe extended configuration space (default).
-> -pub struct ConfigSpace<'a, S: ?Sized + ConfigSpaceKind =3D Extended> =
-{
-> +/// The generic parameter `T` is the type of the view. The full =
-configuration space is also a
-> +/// special type of view; in such cases, `T` can be [`Normal`] for =
-256-byte legacy configuration
-> +/// space or [`Extended`] for 4096-byte PCIe extended configuration =
-space (default).
-> +///
-> +/// # Invariants
-> +///
-> +/// `ptr` is aligned and range `ptr..ptr + KnownSize::size(ptr)` is =
-within
-> +/// `0..pdev.cfg_size().into_raw()`.
-> +pub struct ConfigSpace<'a, T: ?Sized =3D Extended> {
->     pub(crate) pdev: &'a Device<device::Bound>,
-> -    _marker: PhantomData<S>,
-> +    ptr: *mut T,
-> }
->=20
-> +impl<T: ?Sized> Copy for ConfigSpace<'_, T> {}
-> +impl<T: ?Sized> Clone for ConfigSpace<'_, T> {
-> +    #[inline]
-> +    fn clone(&self) -> Self {
-> +        *self
-> +    }
-> +}
-> +
-> +// SAFETY: `ConfigSpace<'_, T>` is conceptually `&T` but in I/O =
-memory.
-> +unsafe impl<T: ?Sized + Sync> Send for ConfigSpace<'_, T> {}
-> +
-> +// SAFETY: `ConfigSpace<'_, T>` is conceptually `&T` but in I/O =
-memory.
-> +unsafe impl<T: ?Sized + Sync> Sync for ConfigSpace<'_, T> {}
-> +
-> /// Implements [`IoCapable`] on [`ConfigSpace`] for `$ty` using =
-`$read_fn` and `$write_fn`.
-> macro_rules! impl_config_space_io_capable {
->     ($ty:ty, $read_fn:ident, $write_fn:ident) =3D> {
-> -        impl<'a, S: ?Sized + ConfigSpaceKind> IoCapable<$ty> for =
-&ConfigSpace<'a, S> {
-> +        impl<'a, T: ?Sized> IoCapable<$ty> for ConfigSpace<'a, T> {
->             unsafe fn io_read(self, address: usize) -> $ty {
->                 let mut val: $ty =3D 0;
->=20
-> @@ -112,19 +120,17 @@ unsafe fn io_write(self, value: $ty, address: =
-usize) {
-> impl_config_space_io_capable!(u16, pci_read_config_word, =
-pci_write_config_word);
-> impl_config_space_io_capable!(u32, pci_read_config_dword, =
-pci_write_config_dword);
->=20
-> -impl<'a, S: ?Sized + ConfigSpaceKind> Io for &ConfigSpace<'a, S> {
-> -    type Target =3D S;
-> +impl<'a, T: ?Sized + KnownSize> Io for ConfigSpace<'a, T> {
-> +    type Target =3D T;
->=20
-> -    /// Returns the base address of the I/O region. It is always 0 =
-for configuration space.
->     #[inline]
->     fn addr(self) -> usize {
-> -        0
-> +        self.ptr.addr()
->     }
->=20
-> -    /// Returns the maximum size of the configuration space.
->     #[inline]
->     fn maxsize(self) -> usize {
-> -        self.pdev.cfg_size().into_raw()
-> +        KnownSize::size(self.ptr)
->     }
-> }
->=20
-> @@ -281,23 +287,25 @@ pub fn cfg_size(&self) -> ConfigSpaceSize {
->         }
->     }
->=20
-> -    /// Return an initialized normal (256-byte) config space object.
-> +    /// Return a view of the normal (256-byte) config space.
->     pub fn config_space<'a>(&'a self) -> ConfigSpace<'a, Normal> {
-> +        // INVARIANT: null is aligned and the range is within config =
-space.
->         ConfigSpace {
->             pdev: self,
-> -            _marker: PhantomData,
-> +            ptr: =
-Normal::ptr_from_raw_parts_mut(core::ptr::null_mut(), =
-self.cfg_size().into_raw()),
->         }
->     }
->=20
-> -    /// Return an initialized extended (4096-byte) config space =
-object.
-> +    /// Return a view of the extended (4096-byte) config space.
->     pub fn config_space_extended<'a>(&'a self) -> =
-Result<ConfigSpace<'a, Extended>> {
->         if self.cfg_size() !=3D ConfigSpaceSize::Extended {
->             return Err(EINVAL);
->         }
->=20
-> +        // INVARIANT: null is aligned and we just checked the =
-`cfg_size`.
->         Ok(ConfigSpace {
->             pdev: self,
-> -            _marker: PhantomData,
-> +            ptr: =
-Extended::ptr_from_raw_parts_mut(core::ptr::null_mut(), 4096),
->         })
->     }
-> }
->=20
-> --=20
-> 2.54.0
->=20
+>  Documentation/netlink/genetlink-legacy.yaml | 6 ++++++
+>  Documentation/netlink/genetlink.yaml        | 7 +++++++
+>  Documentation/netlink/netlink-raw.yaml      | 7 +++++++
 
-Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+I suggest you drop the changes to genetlink-legacy and netlink-raw
+because I don't think we want to support the blob functionality for
+legacy families.
 
+Can you also update Documentation/userspace-api/netlink/specs.rst to
+describe the multi-attr / bloblen API behaviour.
