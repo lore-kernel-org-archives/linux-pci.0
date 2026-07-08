@@ -1,86 +1,86 @@
 Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE6E38551A;
-	Wed,  8 Jul 2026 23:33:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE30F39D6F6;
+	Wed,  8 Jul 2026 23:33:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783553635; cv=none; b=KYl7HbfFuu70WAcbtwp4a71qlMKzXmLvZ01RHSLsaUbEDmL7NqHZpe7U+yIAMoQYldweir52/lrwREadpgLae4OFvHANbd2UCZPxhrYdeAootlz0DBfQh/EiXmg3OSVIC5waWLDrnJfQJfFn+fkFAm7p7bAs3P4OdUOX1f/w3yg=
+	t=1783553636; cv=none; b=uWkD+ZuzmniUi6sMdlFeZWUbv57xXm667ujKxrpIsjHorlUb4BV4pFNameKqKu5QtsAADPXwf/yVvXYR0bfZJxV2KuVx0Di1viIssp7Ewt+EVkMralQLjRasdEHF0DCaq/L0oDQZ40m4hcL9QdScINgaPtZGPqX8TejwvcrbH2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783553635; c=relaxed/simple;
-	bh=nrVGoNf0AQ1Pf1j/HXa7m19KJOTbgbVK32Iru/v1VEs=;
+	s=arc-20240116; t=1783553636; c=relaxed/simple;
+	bh=TeOZCT1CSjCD//Mde/eHby8hGSNRMwFbz5C8L1/Voso=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fSlPS+jDzv4kJ9s89vDaPKBTDTVAywKbUI8Jj33W+KDPerBo0HlVUF9NwvCSDggyqfhs6nRDGxaAzH9vUD5kfl6f7xCbZQycXW7W8bGVKG1Z14PDtY+sbNxkhkDEJR1V4ZYUvfRnmrJGqflK+jUcELgoQVBNh6jsfOyF7J0oHhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=ByOPLzxY; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=RyHQL+5E; arc=none smtp.client-ip=103.168.172.145
+	 MIME-Version:Content-Type; b=uBoQaIYeZZvCQi9utAVDwli6bV3d+12anovxEaS7dpWL2hwHCn9WeRuf/JN/53bgKyNc9UEccyH5zWJu9Nc+Msp/oaIiX4muRcF3Ld1YzCP2Gm+W1jWZM+tKEPnUxHIWoi+Kw0DRqWcoMx1aRn0LMuMH9tJ3dP9vehcnoWczoz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=MpzDryqQ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=iASotOeZ; arc=none smtp.client-ip=103.168.172.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="ByOPLzxY";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="RyHQL+5E"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfout.phl.internal (Postfix) with ESMTP id B6116EC0092;
-	Wed,  8 Jul 2026 19:33:52 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="MpzDryqQ";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="iASotOeZ"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.phl.internal (Postfix) with ESMTP id 1AC23EC0093;
+	Wed,  8 Jul 2026 19:33:54 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-09.internal (MEProxy); Wed, 08 Jul 2026 19:33:52 -0400
+  by phl-compute-04.internal (MEProxy); Wed, 08 Jul 2026 19:33:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1783553632;
-	 x=1783640032; bh=08xlNeBWtwlCE5iQ/YpRt53+LZLMhwf6NzqlJeZlhG0=; b=
-	ByOPLzxYO4pQlWMxPq91aVdWFKUrSBi2WAZt72Fj4TSl0Pd5I1CbBW+gDES1qWYD
-	V6j5uX5YEv9fwz9Qfiv5FzoPnprtUVyvHLWpkDLPcpMSVROW5wimev9R6E8TCcwS
-	z6zhQ1qpy9XzhWH8hmb3MnXVzRlyA4lhhF8uuNskJSICNcmwAz2GLdoqxI5kYmdW
-	NGzg/m5yVrERNBYmNj6z8r3adBQNueTMypCVGYyYWpENZDUlVPUdXS+F7NipATqo
-	nA+qOhz55FkZ6vdLM6FGPDoCHUfWeSbTSI/emO3A5D/PUg5vXMD3TI1i1chv43G7
-	kH7VQhFv0bjeoMIoj572eA==
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1783553634;
+	 x=1783640034; bh=hPKXcFD12UQCcNoVTj4iaNDykpuJgUfDN+ak0KVK74M=; b=
+	MpzDryqQzf2Dd8ZjsOiQzi4SfovLKUa7fZh6BZRWiKHSXw4mvGa8jzldSnnFu4K6
+	a0llto2yxzIaelHlb7Dw+SQROqlUCDNDxoNaBiDYeP+V8hz1jJww3ZhK21HIAmex
+	YSwuquXszMW8CZf1Cr/s23eFejYWGLdcGnNh/agQ3nBaZMjkDOTth7mg7nznV/jr
+	r3k2KJ/BzXqsMKIAVwWBYk14NICmAIn8YEKA64GImb939w782Y+T5bFZH4OADQkx
+	8o9ibcYxBuJIKZidXl9jUG6Mnf304L+aEv8MHWYVnuDfwqTJKBe1kbzO6KzmATmI
+	/e9IwBhoazUsaoD+2BU6OA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783553632; x=
-	1783640032; bh=08xlNeBWtwlCE5iQ/YpRt53+LZLMhwf6NzqlJeZlhG0=; b=R
-	yHQL+5EJFWeoCNV2v0JHJ3bNiVzQsq0kKuczcqz1M8O4+dsp0WDaGCu5EzlQuObl
-	7/io+WUGDwGBlHkd03oMgk/h2zfvu5+VneQoyk6oN5amTGS4ntZPYhuhOKfB23ni
-	egr2kOeqbmQoofunzhVmFlGPiAqQ3lSgfuYw6xLfUDVoWGHiHGmK3MMB8xeCksvl
-	G99dPvJYtz77L8POjgD7OBpB+OO4ALtGbkitPH+G4JQLbKHgdpYdzefo+NCaOdGD
-	/0dEfdqc1NU/WymZe9ihjd/AjvKOHGf3HucmWsS9NJUrWJDyw2DS6Uy5sxaYanYX
-	S+h2416UC9Y2yT9MUI4Nw==
-X-ME-Sender: <xms:YN5Oav9G_tVPeKCYX8Ol46U_CBpvLergDy0fDQPiGfqTMIMy7xuIyg>
-    <xme:YN5OatSRz1g1LTCDUwgoMGTlhn0BI3DDbn_oRcihVgVK-7fISG9__kJFVEd9t2xGE
-    x_0hGVoAwLqC0hsQJqBnhb3HjgJiuVZWRUaE4PkK0lbsx6FYcA>
-X-ME-Received: <xmr:YN5OasQlYNu6KXnReH9UJktrpITpHY2Z9zMGhN85Z_llwlyvZHymZLOappg>
-X-ME-Proxy-Cause: dmFkZTFk66Tr4PZ1RpoJ2yXE2BF2dN68DoODhH+NgpAxw/zva66bqnWHxfSCYuZR+JyEHm
-    flF4GbtFnt8bLxJgMnCN6nvmLvaELOEEjMTryq/TRPaGVQdVxjfdjdFdCfsRXGWtaOQPLj
-    vzEmEj9I22CJ/UbhUOEd0yW0tDBXwpjK6Sjvuhsts1Pkn254JZLVYCPz1f8XdQrd79LQIU
-    jMi262mhG4so7FIUMKsu10QFKFjSCejJBkuIBhOwSViFF1N3o2bNmiSB1Bnpugtb4NhQFP
-    ywoiS6dLdLko78Xju90QoFu5L4u4/khGmtDl8gm0o7afMlgiE6wqGIDcb9T/cN8hCOZMN+
-    klUlokKrO1eXlzIGM+dZCqF7LkHUM2zQe9EhAjZdi8jkGdwtRdI45zqOlpSdntVX5tKoZJ
-    aXcMsDJrtnV/ID+W8lk7LJm1cXahvE5GrbsAkJaJgFzrwcgNsS0piX7WTxCww0geC5Je08
-    43hgeYffcSimKZLxGF8lGiU25q9TRAO9th2uKO+J23elkQp9H2hT5nUEyRQ4dQDTCZZlQ4
-    Vm1jdkTTYmdwxupDKDmxVqdlkLUuUzj2nX2d9nx/AjYLClkrvFW98fDptrSH0Ruo2CUCn9
-    gawNtb8hQKRhiFVhLGBULKQz9+lSTeeNaBM6SvXdOx/F7KmS9T6yK6hL4IWg
-X-ME-Proxy: <xmx:YN5Oah7-jL2NoMkn1CTn6eYx4djiF_Aw7-cAPupSH98xkujHjCCeeg>
-    <xmx:YN5OapU0mHKMVXRNwjrfp_4dkwkV8NhpwsWB7Tzf116IHfxBTwztwA>
-    <xmx:YN5Oav-_0otAPFbbUlSFU4BmBwQcmnxLRHGm5B5FCcE6URYPxIRpPA>
-    <xmx:YN5Oahr7Pn9iyVTaUOi7DlyQQEmu8fjUkXSkYt29SwYqhqA4E7vQAQ>
-    <xmx:YN5Oavy-ixxTAUH_3MuM4pkLVYbcG5UzVzi-XbIvNkXeh-MoGvpQKPHf>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783553634; x=
+	1783640034; bh=hPKXcFD12UQCcNoVTj4iaNDykpuJgUfDN+ak0KVK74M=; b=i
+	ASotOeZXA60TDAYn6BdbQ4281Slpy0oeH48mUxh/10P6qLoqPC7S+PGj2s68HS1W
+	E+Yv9W+H8Tg2Y2PWYHUp02YbRskiDvWpn89bXTf1crqyTwGQ6+I1AEj+ZA2iIf6o
+	Pr4lut4gozv4+g9+mUj5waztwCFW1XDWtZIJTj2zOS1T9ovL9V1Grok5Shnneklf
+	tVdDAcz5dHn63idYHcCzkxXFJpw0zy3HSavA9I5FUN4VwyW4MNLU4nqlcRbg+hEU
+	Fe3abthDpms+5Es/qxeLXkUfB8bTb5Ub7ixKOmOybDWPcTacBJgOPrOuJ3MIIY7G
+	L+FNJNy6A+z/bLzxdTHww==
+X-ME-Sender: <xms:Yt5OaosaoizvLj7h7KJf3mq_7N_LlXw9WHUfyZYaSp9mULc9-Ke9aQ>
+    <xme:Yt5OanBssNmb5qTjq0lvc-5rkb_rMc_C-qrasIoFtvKdMBQTPpyKodxQYKS6uqYd-
+    1tjnW4doHgaXortaJ-SIY3w4OgO-Ak467wtsvkGR9HzJtmJdxCHnA>
+X-ME-Received: <xmr:Yt5OajBiVY83GO12PA2g1LEfCOVtzLqHIlR7cH1a4tDNOpEDDxbc_0Uyo-M>
+X-ME-Proxy-Cause: dmFkZTFte9WprN0NxcJROcfQFoEYm4B20MOLRP0aieXCyUdPRt+dzeE8Foerkd28PADnVQ
+    Q2OHQyexbOYRg0rBSNOhchlTE+r/ewb9pSaPJb36wKXVH9KGO8zOd2ACKSAkP71biec0nW
+    AiYi6lJEcJuY92jHX23f2U7Qb1Dg05BGKYh0T/ac7eHxqJqxnMLvbEkhPqn19+QJmg51Bi
+    R83/qttr1Zc3Z5ixxRe9NSaWY+LnlyEwiLj4EwFEmOG4Lb+4OmLVuoXmcpjG+fAzjJwsof
+    el3RyOoiWDxEYOLUI/eLpV38WJAiH7Apu9E5tR2zCkAGUlL+0Ao0YBSWPfngxFwsSk3UpU
+    ifQOS8Qx8+xD3hVYWeaQO6GhoSUDrGd6ZaWPkuwdjjNRqFSYKVcpWqSIRdHt7qrzXbXCVA
+    QQilYqsK9ovE/7DOZBMXacUsCC6zVJc+IN30LxMzIdlBr7QKOXTylG/nTCC0+P9TnbzEhW
+    hWrIARq/Dm9KT3t/R77TUj9IWUV+9EIJGeVOM/MwVLfJp/NdjrS7Al7nrHaqAR4mZWxlVj
+    LTxREr328K2wOnPJL+PtnmDdNWiNP9WTk98mdOqC5SDMR61npCi5a/QfCIYefEs+fFjU2n
+    H0DDIPFc4ND35RFgDLF4h1ID6i5NfOqCm/UzBJqkh/NDcSyH8r9+oYlZPrSQ
+X-ME-Proxy: <xmx:Yt5OahrA0AxfINOTzFSEHRUkE2TiNfsJsiX0im3SyLD10chaolIBGQ>
+    <xmx:Yt5OauE0Cm8SNXS62pWa2y7XqgVc0ms7B4PbV2hxWFdfMHAc3nlQXA>
+    <xmx:Yt5OalsosaL3FZpFh_XiT8DhsVTH9UeyZorneH6orTmSouhPe3eHTA>
+    <xmx:Yt5OakYShAor6Yuylle4O7IQHc0GZFogiSF06eQ-aZTB2T_J-trzFg>
+    <xmx:Yt5OajyaDBRXk69icuWoBsS1XWQTB2wIVpXVA9W4ecyGps-1BvzxJvv5>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 8 Jul 2026 19:33:51 -0400 (EDT)
-Date: Wed, 8 Jul 2026 17:31:28 -0600
+ 8 Jul 2026 19:33:52 -0400 (EDT)
+Date: Wed, 8 Jul 2026 17:31:17 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: Chengwen Feng <fengchengwen@huawei.com>
 Cc: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
  <wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
  <wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
  <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v19 11/18] vfio/pci: Virtualize PCIe TPH capability
- registers
-Message-ID: <20260708173128.687525c6@shazbot.org>
-In-Reply-To: <20260702124224.57168-12-fengchengwen@huawei.com>
+Subject: Re: [PATCH v19 12/18] vfio/pci: Add dmabuf TPH metadata storage and
+ fd query helper
+Message-ID: <20260708173117.3e399c4b@shazbot.org>
+In-Reply-To: <20260702124224.57168-13-fengchengwen@huawei.com>
 References: <20260702124224.57168-1-fengchengwen@huawei.com>
-	<20260702124224.57168-12-fengchengwen@huawei.com>
+	<20260702124224.57168-13-fengchengwen@huawei.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -91,154 +91,130 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 2 Jul 2026 20:42:17 +0800
+On Thu, 2 Jul 2026 20:42:18 +0800
 Chengwen Feng <fengchengwen@huawei.com> wrote:
 
-> Implement virtualization and policy masking for PCIe TPH extended
-> capability:
-> - Split TPH config space permissions: keep header read-only, mark
->   TPH_CTRL and ST-table entries virtually writable.
-> - Adjust virtual TPH capability bits according to hardware capability
->   and tph_policy, hiding unsupported modes.
-> - Silently discard all write operations.
+> Add TPH metadata fields to struct vfio_pci_dma_buf to store PH,
+> basic/extended ST and their validity flags.
 > 
+> Implement vfio_pci_dma_buf_get_pci_tph() to fetch TPH tag and PH from
+> dmabuf, distinguish basic and extended ST namespace.
+> 
+> Add vfio_pci_dma_buf_get_tph_by_fd() to resolve TPH data via dmabuf fd,
+> validate dmabuf owner ops. Provide stub implementation if
+> CONFIG_VFIO_PCI_DMABUF is unset.
+> 
+> Lay dmabuf foundation for the upcoming TPH_RESOLVE feature.
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 > Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 > ---
->  drivers/vfio/pci/vfio_pci_config.c | 72 ++++++++++++++++++++++++++++++
->  1 file changed, 72 insertions(+)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index 5c6ab172df6c..06d7b2fbf866 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1086,6 +1086,73 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
->  	return 0;
->  }
->  
-> +/* Permissions for TPH extended capability */
-> +static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
-> +{
-> +	int i;
-> +
-> +	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_TPH]))
-> +		return -ENOMEM;
-> +
-> +	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
-> +	p_setd(perm, PCI_TPH_CAP, ALL_VIRT, NO_WRITE);
-> +
-> +	p_setd(perm, PCI_TPH_CTRL, ALL_VIRT,
-> +	       PCI_TPH_CTRL_MODE_SEL_MASK | PCI_TPH_CTRL_REQ_EN_MASK);
+>  drivers/vfio/pci/vfio_pci_dmabuf.c | 49 +++++++++++++++++++++++++++++-
+>  drivers/vfio/pci/vfio_pci_priv.h   |  6 ++++
+>  2 files changed, 54 insertions(+), 1 deletion(-)
 
-This makes the control bits virtualized, writable with no backing
-support yet.
-
-> +
-> +	/* Per PCI specification: There is an upper limit of 64 entries
-> +	 * when the ST table is located in the TPH Requester Extended
-> +	 * Capability structure.
-> +	 * And the pci_ext_cap_length[PCI_EXT_CAP_ID_TPH] is 0xFF, so the
-> +	 * following operation is fine.
-> +	 */
-
-Wrong multi-line comment style.  Also 0xFF for cap length doesn't
-really explain why this is fine.  You are however highlighting that the
-above perm bits alloc of size 0xFF is not fine.
-
-> +	for (i = 0; i < 64; i++)
-> +		p_setw(perm, PCI_TPH_BASE_SIZEOF + i * sizeof(u16),
-> +		       (u16)ALL_VIRT, (u16)ALL_WRITE);
-> +
-> +	return 0;
-> +}
-> +
-> +static void vfio_tph_capability_adjust(struct vfio_pci_core_device *vdev,
-> +				       int pos)
-
-Precedent is vfio_update_tph_vconfig_bytes(...)
-
-> +{
-> +	__le32 *vptr = (__le32 *)&vdev->vconfig[pos + PCI_TPH_CAP];
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	u32 val = le32_to_cpu(*vptr);
-> +	bool need_adjust = false;
-
-Just write it back unconditionally, not worth tracking.
-
-However, any modification to the capability needs to be gated by the
-device feature opt-in, so this might be better handled in a readfn
-rather than managed through permission bits.
-
-> +
-> +	if (!pcie_tph_supported(pdev, true)) {
-> +		/* Remove extend TPH if root-port don't support */
-> +		val &= ~PCI_TPH_CAP_EXT_TPH;
-> +		need_adjust = true;
-> +	}
-> +
-> +	if (vdev->tph_policy == VFIO_PCI_TPH_POLICY_NO_ST) {
-> +		/* Report only No-ST mode supported */
-> +		val &= ~(PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS |
-> +			 PCI_TPH_CAP_LOC_MASK | PCI_TPH_CAP_ST_MASK);
-> +		need_adjust = true;
-> +	} else if (vdev->tph_policy == VFIO_PCI_TPH_POLICY_IV_ST) {
-> +		/* Report only No-ST and IV modes supported */
-> +		val &= ~PCI_TPH_CAP_ST_DS;
-> +		/* Remove ST location and size if dev don't support IV mode */
-
-s/don't/doesn't/
-
-> +		if (!(val & PCI_TPH_CAP_ST_IV))
-> +			val &= ~(PCI_TPH_CAP_LOC_MASK | PCI_TPH_CAP_ST_MASK);
-> +		need_adjust = true;
-> +	}
-> +
-> +	if (need_adjust)
-> +		*vptr = cpu_to_le32(val);
-> +}
-> +
-> +static int vfio_find_cap_start(struct vfio_pci_core_device *vdev, int pos);
-
-??
-
-> +static int vfio_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
-> +				 int count, struct perm_bits *perm,
-> +				 int offset, __le32 val)
-> +{
-> +	return count;
-> +}
-> +
->  /*
->   * Initialize the shared permission tables
->   */
-> @@ -1101,6 +1168,7 @@ void vfio_pci_uninit_perm_bits(void)
->  
->  	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
->  	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
-> +	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
->  }
->  
->  int __init vfio_pci_init_perm_bits(void)
-> @@ -1121,6 +1189,8 @@ int __init vfio_pci_init_perm_bits(void)
->  	/* Extended capabilities */
->  	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
->  	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
-> +	ret |= init_pci_ext_cap_tph_perm(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
-> +	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_tph_config_write;
->  	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
->  	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
->  
-> @@ -1704,6 +1774,8 @@ static int vfio_ecap_init(struct vfio_pci_core_device *vdev)
->  		ret = vfio_fill_vconfig_bytes(vdev, epos, len);
->  		if (ret)
->  			return ret;
-> +		if (ecap == PCI_EXT_CAP_ID_TPH && !hidden)
-
-Never hidden.  Thanks,
+Please don't send competing patches, just indicate the series is based
+on Zhiping's series v#.  This makes all the naming changes that Zhiping
+declined yet you still included their sign-off.  Thanks,
 
 Alex
 
-> +			vfio_tph_capability_adjust(vdev, epos);
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> index c16f460c01d6..d9c5e434e586 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -19,7 +19,14 @@ struct vfio_pci_dma_buf {
+>  	u32 nr_ranges;
+>  	struct kref kref;
+>  	struct completion comp;
+> -	u8 revoked : 1;
+> +
+> +	/* Protected by dmabuf->resv. */
+> +	u8 revoked:1;
+> +	u8 tph_ph:2;
+> +	u8 tph_st_valid:1;
+> +	u8 tph_xst_valid:1;
+> +	u8 tph_st;
+> +	u16 tph_xst;
+>  };
 >  
->  		/*
->  		 * If we're just using this capability to anchor the list,
+>  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
+> @@ -81,6 +88,26 @@ static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
+>  	kref_put(&priv->kref, vfio_pci_dma_buf_done);
+>  }
+>  
+> +static int vfio_pci_dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool extended,
+> +					u16 *tag, u8 *ph)
+> +{
+> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
+> +
+> +	dma_resv_assert_held(priv->dmabuf->resv);
+> +
+> +	if (extended) {
+> +		if (!priv->tph_xst_valid)
+> +			return -EOPNOTSUPP;
+> +		*tag = priv->tph_xst;
+> +	} else {
+> +		if (!priv->tph_st_valid)
+> +			return -EOPNOTSUPP;
+> +		*tag = priv->tph_st;
+> +	}
+> +	*ph = priv->tph_ph;
+> +	return 0;
+> +}
+> +
+>  static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
+>  {
+>  	struct vfio_pci_dma_buf *priv = dmabuf->priv;
+> @@ -106,6 +133,26 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
+>  	.release = vfio_pci_dma_buf_release,
+>  };
+>  
+> +int vfio_pci_dma_buf_get_tph_by_fd(int fd, bool extended, u16 *tag, u8 *ph)
+> +{
+> +	struct dma_buf *dmabuf;
+> +	int ret = 0;
+> +
+> +	dmabuf = dma_buf_get(fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+> +
+> +	ret = vfio_pci_dma_buf_get_pci_tph(dmabuf, extended, tag, ph);
+> +out:
+> +	dma_buf_put(dmabuf);
+> +	return ret;
+> +}
+> +
+>  /*
+>   * This is a temporary "private interconnect" between VFIO DMABUF and iommufd.
+>   * It allows the two co-operating drivers to exchange the physical address of
+> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> index c997cc9bf330..d7bc52f488c6 100644
+> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> @@ -122,12 +122,18 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+>  }
+>  
+>  #ifdef CONFIG_VFIO_PCI_DMABUF
+> +int vfio_pci_dma_buf_get_tph_by_fd(int fd, bool extended, u16 *tag, u8 *ph);
+>  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  				  struct vfio_device_feature_dma_buf __user *arg,
+>  				  size_t argsz);
+>  void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
+>  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
+>  #else
+> +static inline int vfio_pci_dma_buf_get_tph_by_fd(int fd, bool extended,
+> +						 u16 *tag, u8 *ph)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+>  static inline int
+>  vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  			      struct vfio_device_feature_dma_buf __user *arg,
 
