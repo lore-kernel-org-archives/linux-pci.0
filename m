@@ -1,143 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C9C03033DE
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 14:38:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783521481; cv=none; b=Mk3vIcW2BIMC+hlvCWI8xsDdBVNkv9ZBlCg8V1yxN8TG7OF1glE++uNgZwSNIwfIXmmYZGPuCAuRqrhX0pVCNSliF2Bhhl+0AShr6KGcl8HUyZlEcr+oE9pLDn6ujKS4BGG+KwtuvIs6FQ+NMJ+EOc/+X7e7lBXdaoRgOVOl8Gw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783521481; c=relaxed/simple;
-	bh=ryKeeYNqWzd3TG6eSYgMN9cr23biI4zNGhFk9MHQYts=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Mdw9dk99XVwH5KmDI48i4AQhAYMogp+tZ8pU6NrtwVLHSjXlJMyhB4i1BMFs0yQzHyJdJRlq1ANH44uQDbUxKjdG/Fu6NqHm2vtWNhnri+KGJ51OQKMWqINV6oqZrBaLaz1Te1hNGiw4a4imTNPX4qGjr6qVoj8bhvPSt6jjftw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WUAnzQCn; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A1513161A2;
+	Wed,  8 Jul 2026 14:38:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783521530; cv=pass; b=ijvpg8NUc7DosmEqjIAwXD+cBvvyWCB+lszo8MwdLFfDlOoAi8fEEJ3e2xEBnjuQOZSMxqjf+UPkHQDSjElBbN3d/fM1Pb7qvIFTF8P6zA6lsIQEEeEsSUUuN3nh0026sBtVKOCvOAyexvnypxpWu8vxWF3H/nw9dnDlnpqLTD4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783521530; c=relaxed/simple;
+	bh=LS3Er9/rUJO4Uq0PFkYQ5J0m8lSbFGIMaWRGsJ5V5j8=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=hxWZijObDEuJ2ikRnmYV4nprO20D5AAPQTCG6gwvH0o1t03OCPVt3GCEScibE7dslaBlZ2T77+HdvTZ6uU3pSj3cx8atKwcyLyDQ8Xzk5fc/RHWKc61kTVCfFrP5zrSg+Pm4PUGvMmpCTdDvcFynm9geWJOojx5pli81sNG8vZw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=f6SQ6ozR; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WUAnzQCn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC52E1F000E9;
-	Wed,  8 Jul 2026 14:37:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783521479;
-	bh=0Z7UlLWutAXYFRu0qm7PFsAiMJV/mmRDlyn61S3rgBM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WUAnzQCn7COLTkB+WL7CN5ylKYJ+0MwEZw+orNnowm+U2hUB/+68gvO9ckFCLgjst
-	 GtzoZz72fQ/X9YQ0mlDcmoMsXJG1T0FdhxOFHVhM0eEswW73OdSsH5gvksN6pEkn6p
-	 R2Gslg6s+eM4xH9b9lsQSdrb3SgZHDucU05XTV68IPqJVxq1LT7eC3iyWULMTqIIdP
-	 YzCrD78lCN8zJu+OMlEz0D+/BVDXAy7vev7XmHreHQ61VJMvsGx1XC9/mytuOuiyry
-	 CsSCy4h3iqqp+2auLX3UIHS86q0ld0zFVaquLOTN9+tZ2Z0E3WEVxTyCLT4SrN/4Ze
-	 Rts3rY4+5H75w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 4/8] PCI/ASPM: Improve the kernel-doc for
- pci_{enable,disable}_link_state*() APIs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260708-pci-aspm-fix-v3-4-6bd72451746e@kernel.org>
-References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
- <20260708-pci-aspm-fix-v3-4-6bd72451746e@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 14:37:59 +0000
-Message-Id: <20260708143759.BC52E1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="f6SQ6ozR"
+ARC-Seal: i=1; a=rsa-sha256; t=1783521497; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=YI9KLNSqgyAoa9aM0cAmQldkCgz+KrFLJRASnXJQROPxfYRP23SbxOpE6MeJyV+l1vz1VD1nktiIXdBZwvteyJzUOaZx9DWqBF1atBX+7tCIHNVYV3hYMhO6M646K+iEzEOpb6Sti3pRlJOEJIB903Q3Z60OeJhP5nP1n8uWuKA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1783521497; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=Dz9e3DzXA9jmsTd/AXX4tRzwMh81Cxl6isVCCv3t7Pw=; 
+	b=hVaBJbC3/bVUjDT9Aa+qm37WLClM65VhFxRHZweepi/UqlFOM+xKDDarhVOJ4n0TMjzXm99cVLLk438zcVQ/igSi1dbQPdPOprXEckXY/+awKIeWl0zATfThI2Kt7fbMRT8veL8vD0ZQt/6mjwVFVap7+IY4hkMpjx5UEKXESL8=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783521497;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
+	bh=Dz9e3DzXA9jmsTd/AXX4tRzwMh81Cxl6isVCCv3t7Pw=;
+	b=f6SQ6ozR7FZO4RAo5W+scxh4D3hMm20YJG1+8gvebA7kW5e2C4DHiOh6dQO8UGzm
+	tGf+4H4A27OfSG/b/6uoEYwYIACXfch3KwR5rJmXufWILrNXF1o6gM58U/dONIPBg+v
+	kTc3hjEw33xHfh9ZM3MZkm7/CrRl3/MclcWmeFOI=
+Received: by mx.zohomail.com with SMTPS id 1783521495227502.89899039827594;
+	Wed, 8 Jul 2026 07:38:15 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [PATCH v6 10/20] pwm: th1520: remove unnecessary `deref`
+From: Daniel Almeida <daniel.almeida@collabora.com>
+In-Reply-To: <20260706-io_projection-v6-10-72cd5d055d54@garyguo.net>
+Date: Wed, 8 Jul 2026 11:37:55 -0300
+Cc: Alice Ryhl <aliceryhl@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>,
+ Tamir Duberstein <tamird@kernel.org>,
+ =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>,
+ David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Michal Wilczynski <m.wilczynski@samsung.com>,
+ =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ driver-core@lists.linux.dev,
+ rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ nova-gpu@lists.linux.dev,
+ dri-devel@lists.freedesktop.org,
+ linux-pwm@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <F4BA6E3F-3011-4DF6-930B-367C795966A8@collabora.com>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-10-72cd5d055d54@garyguo.net>
+To: Gary Guo <gary@garyguo.net>
+X-Mailer: Apple Mail (2.3826.700.81)
+X-ZohoMailClient: External
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The kernel-doc for pci_enable_link_state_locked() incorrectly advi=
-ses callers to use an incompatible API, which can lead to a recursive read =
-lock deadlock.
-- [Medium] The commit message claims to fix the kernel-doc for `pci_disable=
-_link_state()`, but no such change is included in the patch.
---
 
---- Patch [4]: [PATCH v3 4/8] PCI/ASPM: Improve the kernel-doc for pci_{ena=
-ble,disable}_link_state*() APIs ---
-commit 544fcb510ac42577bcfc280750b6446d3bc52764
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-PCI/ASPM: Improve the kernel-doc for pci_{enable,disable}_link_state*() APIs
+> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
+>=20
+> `Deref` is automatic and should normally not be used directly.
+> Also, `IoMem` is going to be implementing `Io` directly, so it will no
+> longer to be implementing `Deref`.
+>=20
+> Reported-by: Andreas Hindborg <a.hindborg@kernel.org>
+> Link: =
+https://rust-for-linux.zulipchat.com/#narrow/channel/291565-Help/topic/.E2=
+.9C.94.20Projection.20in.20dma.20bus.20address.20space/near/606672061
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+> drivers/pwm/pwm_th1520.rs | 7 ++-----
+> 1 file changed, 2 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/pwm/pwm_th1520.rs b/drivers/pwm/pwm_th1520.rs
+> index 3e3fa51ccef9..022338d17218 100644
+> --- a/drivers/pwm/pwm_th1520.rs
+> +++ b/drivers/pwm/pwm_th1520.rs
+> @@ -20,7 +20,6 @@
+> //!   this method is not used in this driver.
+> //!
+>=20
+> -use core::ops::Deref;
+> use kernel::{
+>     clk::Clk,
+>     device::{Bound, Core, Device},
+> @@ -213,8 +212,7 @@ fn read_waveform(
+>     ) -> Result<Self::WfHw> {
+>         let data =3D chip.drvdata();
+>         let hwpwm =3D pwm.hwpwm();
+> -        let iomem_accessor =3D data.iomem.access(parent_dev)?;
+> -        let iomap =3D iomem_accessor.deref();
+> +        let iomap =3D data.iomem.access(parent_dev)?;
+>=20
+>         let ctrl =3D iomap.try_read32(th1520_pwm_ctrl(hwpwm))?;
+>         let period_cycles =3D =
+iomap.try_read32(th1520_pwm_per(hwpwm))?;
+> @@ -248,8 +246,7 @@ fn write_waveform(
+>     ) -> Result {
+>         let data =3D chip.drvdata();
+>         let hwpwm =3D pwm.hwpwm();
+> -        let iomem_accessor =3D data.iomem.access(parent_dev)?;
+> -        let iomap =3D iomem_accessor.deref();
+> +        let iomap =3D data.iomem.access(parent_dev)?;
+>         let duty_cycles =3D iomap.try_read32(th1520_pwm_fp(hwpwm))?;
+>         let was_enabled =3D duty_cycles !=3D 0;
+>=20
+>=20
+> --=20
+> 2.54.0
+>=20
 
-This commit updates the kernel-doc comments for the PCI ASPM link state
-management functions. It standardizes the format for the enable APIs and
-adds missing documentation for the locked disable API.
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
 
-> Add kernel-doc for pci_disable_link_state_locked() API and fix the
-> kernel-doc for pci_disable_link_state() API.
-
-[Severity: Medium]
-Is the commit message accurate about fixing the kernel-doc for
-pci_disable_link_state()?
-
-Looking at the diff, it does not appear that pci_disable_link_state() was
-modified in this patch, and its return format seems to remain as "Return: 0
-or a negative errno" instead of the standard format applied to the other
-functions.
-
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 6d6862fd2ebb7..5e7e199c78d26 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-
-[ ... ]
-
-> @@ -1574,19 +1588,22 @@ int pci_enable_link_state(struct pci_dev *pdev, i=
-nt state)
->  EXPORT_SYMBOL(pci_enable_link_state);
-> =20
->  /**
-> - * pci_enable_link_state_locked - Clear and set the default device link =
-state
-> - * so that the link may be allowed to enter the specified states. Note t=
-hat if
-> - * the BIOS didn't grant ASPM control to the OS, this does nothing becau=
-se we
-> - * can't touch the LNKCTL register. Also note that this does not enable =
-states
-> - * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-> + * pci_enable_link_state_locked - Enable device's link state
-> + * @pdev: PCI device
-> + * @state: Mask of ASPM link states to enable
-> + *
-> + * Enable device's link state, so the link will enter the specified stat=
-es.
-> + * Note that if the BIOS didn't grant ASPM control to the OS, this does
-> + * nothing because we can't touch the LNKCTL register. Also note that th=
-is
-> + * does not enable states disabled by pci_disable_link_state(). Use
-> + * pci_force_enable_link_state() for that.
-
-[Severity: High]
-Does suggesting pci_force_enable_link_state() here introduce a deadlock ris=
-k?
-
-The context for this function requires the caller to hold the pci_bus_sem
-read lock. However, pci_force_enable_link_state() is an unlocked API that
-internally calls down_read(&pci_bus_sem).
-
-If a developer follows this documentation and replaces
-pci_enable_link_state_locked() with pci_force_enable_link_state() while
-holding pci_bus_sem, could this cause a recursive read lock deadlock if a
-writer is queued in between the two acquisitions?
-
->  *
->  * Note: The device will be transitioned to D0 state if the PCI-PM L1 Sub=
-states
->  * are getting enabled.
->  *
-> - * @pdev: PCI device
-> - * @state: Mask of ASPM link states to enable
-> - *
->  * Context: Caller holds pci_bus_sem read lock.
-> + *
-> + * Return: 0 on success, a negative errno otherwise.
->  */
->  int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
->  {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708-pci-aspm-f=
-ix-v3-0-6bd72451746e@kernel.org?part=3D4
