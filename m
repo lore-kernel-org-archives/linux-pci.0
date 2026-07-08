@@ -1,513 +1,269 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013006.outbound.protection.outlook.com [40.93.196.6])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011070.outbound.protection.outlook.com [52.101.70.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719AA23ED6F
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 09:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D707C314D16;
+	Wed,  8 Jul 2026 09:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.70
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783504194; cv=fail; b=jcPELEEx2O52lBZHXTD82kFzuHdMkQDZdPAGM02s9jraKrO4YAAt7OGCZuUlnDUKnuLpRBjF/VfVZ0M+WcaA+qZjqnL57ODjPhqKTqaSRC5sps9UeOAgDfMAn1ql5n9gky1XTFLdyjhBNyzyv8DPMPfARgBxJEa6qSMV9WS0sTc=
+	t=1783504228; cv=fail; b=dL735VWGhCmbAcYpxPt/JzSLuuya8xjB4+SpTIXNkVGZGbF3pvk5mBFxDFXO79kCgm7/whtNAiLqCrbCEj+QusuavkkpsumT9FrZ1+cj6zsM9aUppNpGbP5zc1objVni05Qh/oh6JsWhwKCkX8vUjqc3pE9Fcj9lYO7UPsht1ds=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783504194; c=relaxed/simple;
-	bh=BM+b6di7vpv4p1NkntOWnBG3HcSNSvsO6OAs/3h38B8=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=TMd6Wq4WbCdj6PfwjDirv8eQKGoHS/KvOFhvfWzP42EkttibJl/Tj4q8SQ0VKX9Ky14lBdeNC14sSvr3o81+xKn5lc9O6MRHwsfMajqWJfuOiYxbIcvnrzYCouNS2sVOeTc9KR1nC7y4aujpZkKRS9/EymE6lwJdFLO+1FcWGBc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=jQwynM3O; arc=fail smtp.client-ip=40.93.196.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1783504228; c=relaxed/simple;
+	bh=cTonN24FuffXV1VNEbBU1FBj9tRMU4+HgZOyG6q71fA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=V15Exsg8FOYvnRRESvWDnGBoSPI32naDLGtXk3UpSGMoe3WqkpbklTOl2JmK3qZ94c7LA4D+56nuXwQIDwzeSUijOUbOcpnIIf/TrB934MCaTvVNosuswHb788avw5ndNW2VeDaKSSKEJ/NdJoswCi5eDwrnOmJL24NjzvRWk/I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=Aja67cF8; arc=fail smtp.client-ip=52.101.70.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="jQwynM3O"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="Aja67cF8"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=p3wsH6ritdgIc8v7WthZjd34u1wCm+qQoBiu8nSP4xM/QIQrjgyhEDZo/Kg06XK4B+aQ21V2C6HSbYgf33ieMgN5zUpnInsQmEJmpH2vXEc5qe+RkPFbaYLtOEo35zsBNfXHX4K9NyHqV+IGCw5n0P0YjkuKFA0mceaAaeuD0exj2idSu/UoMe7bMQBd8a9I6B8Nge4nLxA6tRWt7ieUIsSK0E1hsx/Y9dEp0Xmp7hTNLbMsj8ajZQ6DYObJJbaWU86qgVCneSJOa77JiqJFNL1sA96nYIAkjbJRyixeLfpKwBb+Q7nNEcJM+QU2418/HsatPZlXxJ7QM9fuE2/F9A==
+ b=s0Jds2rHAVXRzEi+fvDhbbPggzvpbARKGJcbl7/xzN45432yi+vqbw48Yk3WkUztCm0thwcNDqIyEVirP1JxspE29MR6/kHEEz4w5adOePlwyjc8Wht5xzWDc3JWXO8BCfopC71KErTs8d5U3K368I/B3s/tWwKjPgTimzNrCoQy9iEzKNBfT+3Zy5yQ1PnBtnpwrjPtrT4slOTGLSdtABabq4S4XYdmsutytp1DygnnZTRa3gfppaI/0zfQzgyZqkop+uU5glU+wFdPDaRhYEx5GgNYtAd2LaHFvzvhHQL0gGJ362A5pVojefMNp0LqoNLO+i+wZBQv/l8+ajcImw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aWi9jVdySQ4FPvzgUatHEWGfbvBnMMP+WLVM/EYN73A=;
- b=paAsNEBhZtY9tvERXUf6H/sufQZhDv3fhBl6k9r9/44qOe0x6jEYF/1cNy5ltHOQjbzRukhWwurbH/707Ln/svigaZJ0rYtTFPUWrGOJzht1CGX0F5+PQWKbdHSNZACEzcEYuH1VIKUbfoeV2PBx6TXbZdVi2dyGiE40MQNdq8ndbosXN3zoX7adX12+zl9yQeRlaZGy+scPWyVnEPrFsLCCxMcgAQD4n0CntnuOujuErZQ3xnV3Gq5jSJ0g6DpWyBBWjfaYq9dlfmHjz1VEMbBrYvTdLpjtNAlZ7S90scfLWvzsVvOVwJKN25I9PVuSPYefGjn/3ABjuVWJqjTkhg==
+ bh=cTonN24FuffXV1VNEbBU1FBj9tRMU4+HgZOyG6q71fA=;
+ b=cPD85h5uqUg5pWzCXvvn/607nThZCuaArSQ3Hd8wtO+SMKLiVozwf0Qv/5WxbkBGAE3miLp6aePz+luiDYb/dhXNJu5UWieZNH3EZ+H3o6yWnJOFtlxaywJ9UPVSEFP5UCnehoA0wI2VKyk9LoViFBz2ZyZOqz2buTAnxbLOGtWLYNT/IBXutxfXDK00WL0mcPAl+/2vQJLzrYMZ5g6j9lTXlUMEXuJ7Qt7l1YR41/or8sEAUanVmzd9t/tC6IwilOUGU5iaO/IQTSIGgvWkqLPekBeJBhUj4MgTHi7AnwjO4p/FPbMSfqY0ke83lnScTtFhqlp19i7ZmIQpom4Q8Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aWi9jVdySQ4FPvzgUatHEWGfbvBnMMP+WLVM/EYN73A=;
- b=jQwynM3OBnEE1PBK8w8AkLO5lbmJYErmPMq3fLvOCmFGL5uYTuWI6RJXs8SUvRw4jYxxes6MtNbdktH9N3iukbLRStXHb3/MJmdA7NQlsXnnA0hjJzbrGzR4TJNPR44cku2/23BCL7gBo3ydU+4UXDSWI6IJ3cyFEO7yLo3xWjM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by CY8PR12MB7267.namprd12.prod.outlook.com
- (2603:10b6:930:55::17) with Microsoft SMTP Server (version=TLS1_2,
+ bh=cTonN24FuffXV1VNEbBU1FBj9tRMU4+HgZOyG6q71fA=;
+ b=Aja67cF8nADEJV0fqXalORfxyAqWFZgKsGtUY4mWRLOcIFrg+MUKC+wP1oBZmor83mM++amzJCaBK+4YEPHP66GF/U7HyjTBw/O4G7HzKvLdzg+rqkQUdxrDaPvZcEwhpdVKCWOpAOnoNcockrrbgMs4S5rN5HM6OfIXaaEt30wlpgYRr4dAlJQx8pzIZ8OuN9N9dq0FdCh30OyQsEg4aNsJVqjjjGAV1aMazMwN4b7BVjEWHOPo/i8RCxy9nSlDh6zC0AiqTogbOiivBObs3bXJYdlA+5L+4GXZ4BQHlLy9UYYHgDXOt92gx04ddIEccKerjzA+QYpL/wb6I3kPkA==
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by PA3PR04MB11251.eurprd04.prod.outlook.com
+ (2603:10a6:102:4b0::16) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.8; Wed, 8 Jul 2026
- 09:49:48 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%4]) with mapi id 15.21.0181.009; Wed, 8 Jul 2026
- 09:49:48 +0000
-Message-ID: <6ad2d32c-f759-4be9-b388-00fc1267da71@amd.com>
-Date: Wed, 8 Jul 2026 19:49:42 +1000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 14/15] PCI/TSM: Create MMIO descriptors via TDISP Report
-To: Dan Williams <djbw@kernel.org>, linux-coco@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
- ankita@nvidia.com, Arnd Bergmann <arnd@arndb.de>,
- Xu Yilun <yilun.xu@linux.intel.com>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <20260705220819.2472765-15-djbw@kernel.org>
+ 09:50:22 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0181.008; Wed, 8 Jul 2026
+ 09:50:20 +0000
+From: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
+To: Soeren Moch <smoch@web.de>, "Hongxing Zhu (OSS)"
+	<hongxing.zhu@oss.nxp.com>, Frank Li <frank.li@nxp.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "s.hauer@pengutronix.de"
+	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
+Subject: RE: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
+ power and reference clock control
+Thread-Topic: [PATCH v1] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
+ power and reference clock control
+Thread-Index: AQHdDPQZ0wHas+96Pka7gtnungxJKbZgh/4AgADYTSCAAGKPAIAAI+AAgAF9roA=
+Date: Wed, 8 Jul 2026 09:50:20 +0000
+Message-ID:
+ <GV2PR04MB12019244AC0F11642FA466DE78CFF2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+References: <20260706030629.3264320-1-hongxing.zhu@oss.nxp.com>
+ <a42a7e16-1798-4db5-9f03-ba608a700645@web.de>
+ <GV2PR04MB120197631BE612B526EAA33068CF02@GV2PR04MB12019.eurprd04.prod.outlook.com>
+ <4836b6f1-d40d-479d-acf7-a67769e0c8ac@web.de>
+ <0c649fcb-f084-4cc2-bed4-cc335b40c599@web.de>
+In-Reply-To: <0c649fcb-f084-4cc2-bed4-cc335b40c599@web.de>
+Accept-Language: en-US
 Content-Language: en-US
-From: Alexey Kardashevskiy <aik@amd.com>
-In-Reply-To: <20260705220819.2472765-15-djbw@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5PR01CA0076.ausprd01.prod.outlook.com
- (2603:10c6:10:1f5::6) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|PA3PR04MB11251:EE_
+x-ms-office365-filtering-correlation-id: 4f4cf5eb-407c-416d-b053-08dedcd652bb
+x-ms-exchange-sharedmailbox-routingagent-processed: True
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|376014|19092799006|7416014|23010399003|366016|921020|18002099003|22082099003|38070700021|6133799003|4143699003|11063799006|56012099006;
+x-microsoft-antispam-message-info:
+ Ti1+GfI1OFQxymefZe8WYzkrVcDJCPDswDOcjd6WUtfHReJExffMFjtjCTdV68V6eH5nPsYZykidAizmOL32JIgmBFFGTCdtHHIuYkmpKTyCm/edmZOMKI+Hq5VUYBPl0GkqrennnMjayu2dSo9bGLaG207DXIrMKx+ZsFJmGxcn1dyNwYhXTHLl5oFqppl77MvlL/pGAIxIy0ripZjg3h6KiTiTEnqYdjidMCb2s8OxmAjMqsobDZrG/cGmbI8pwNI9GHJbQZQzrWVoOXJLkxspgMEcpOEI3tIOVhAMGdgIaloEBQaRgmEBqDAqKyXEOzk512Gjn3HIrSeVSgo29lMOF48NX/l6SAwWuPqtrUXi8jhwW87hmnuEu4PsSXWS+AiUEpYRDoC/qP1yIwDq+/bwnnduX/XwwEgpCXinn5bqhYIa3+BVvwsHxTNpAfqAlmvGKd00aJ0nujUy9HCrrTlX2ETyboQ2+937sd0gggnaWMZChfUGm1Pp2ESM8IkuK9AG8LiP8FGwlOVMAWffADWnT7uJcQDeklukLPrf4aoNEnj6alQ3Gi0XXE9TTt8prgY5ZaxohcSkFzlnXRCEu8eONO90Vb6OV6enrwhapOLG+6jMou5sQYyTCKpfphIT8aXEDESPI6lwn5IkCH1r42hNxccXsc9Rt7DEVuFXHfKBpfFCVfrlfJiH6IUEUYuHjywdno3SIGJI2cOe2LR1afaBWIWZeG+CFAv4wh1k4sx1oU97RXlUIU85z70ZxdM+
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(19092799006)(7416014)(23010399003)(366016)(921020)(18002099003)(22082099003)(38070700021)(6133799003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?UCtZcnM1MWFXeElxUmROL3BpaVphNExYZktqUlltSVZZdXRSQldKUTIrVncz?=
+ =?utf-8?B?VXJWWVlvaEpFRE9HeDFtc0Qya1EvcFFBRXdobHZWUkhiTnVQRWF1enFSM0Ro?=
+ =?utf-8?B?T2EwWWI5Z3I3NExQbXlkZ3Y0MkhoSm9TNG9kYW1GSWV6Y3g0RFRrc3ZzL0Zo?=
+ =?utf-8?B?NHdXWUMrY2JGRlBuZVdUVSt2UXN5dHJ1a1dMUUIrblI1ajhEVmlMdnViUjBa?=
+ =?utf-8?B?dUI0OUVjaHBVK2FSZnJlTm14WU1TMWN1RzVFanJHQlBwOUg0akZOd01pclhj?=
+ =?utf-8?B?U3M0K3BEaWMvb1VKVTVXOTBBMmlCNjRhVnhwUnhUUnpVVE5JYnVjLzYzNFFq?=
+ =?utf-8?B?UFdkQ0xQalJZeU9NS2V5cFJ0OXZrSmRoQjQxSjU4cEE2em5XUTBVak00MFZD?=
+ =?utf-8?B?Tm8wcldnVmM0d0t4RzJDRTFGM3dzcVJYODE0SnhiSTVCVnd5YkNYOW5NK1BP?=
+ =?utf-8?B?Uzc1ZzNHY2RhelNpNFhKTFhKZjJqYUxnTFgvMWdsZGNWNi96dlRqWGtUZjlv?=
+ =?utf-8?B?aDFmRXJRMlpTYzdYOEF3bFBMRE1DWG5NU205eFhEbHNJckFZY3lBV0tZZ0tp?=
+ =?utf-8?B?OVl4NVhsc1VGZEM5K05icVlRSCtVMEYvUDlaVm1MazZiS2dnbk5ST0hCS1ND?=
+ =?utf-8?B?N1VQVlJWdWw3ODRhcTVMM1V3c2F1ZTVNWi80anJUaGhKZXU2bUdKM2x6TXZY?=
+ =?utf-8?B?SzNFQmtqbkowZExZZFV6MWkySnNwTjh3UGhJYjJiRzNZLzRNK2JlU2o5bDVH?=
+ =?utf-8?B?N1BrQy9BZXpDLzFEdzgzUENic25KMnNoN1pxV3ZuNXpYZldkVytJVTNOK3U0?=
+ =?utf-8?B?U2htZ1ByTFIxUE5CZUFBMEJ1WExobjVHWWZXZDdyRGNWcDZ0ckkvN1ZKY0Fz?=
+ =?utf-8?B?cXBHUnUwV0V0YWphczBTYWlpMXFVbGZMbDFRTFpWTG82VUg4azN6UVBDY3FB?=
+ =?utf-8?B?Vmw2aHAxUXg1Uk1xbXZBRUk0T1RkYmRpZFVtcURJbytrUllhdHN5V2h4cmpU?=
+ =?utf-8?B?M1luOW8yRkR6L1RBVDVYQURrMlZQZlpaeEdlMDNqMmNIWXh4ekpLbVVuczVE?=
+ =?utf-8?B?OU1laXc3RXNOSFVBazc5N1dPekJUblZ6UUVpOW5lRE9RS0RCVkV6ZW5VM3I3?=
+ =?utf-8?B?eHcwcnc4WjkycWkyVk90Q3JNWDRuZFF3SDlnWGoyT0c5NnNvZ3FBUWR2NG9r?=
+ =?utf-8?B?RjlZSVRYem9IL1VNSlFVVktTMThzTHhFcXY3RHFUS2JqK3VQZTc4UVZmZTBQ?=
+ =?utf-8?B?OHZPc0dDaEE3RHZrRXF1b3RtNW13Rk5GbHo1dWZoa1RPRDdkbXl3UE1zWmZ5?=
+ =?utf-8?B?SEY5Qm5aN0JYOEswN3ZSb01VZTFyMXNmV0dlckNXTDBiS0tpSHF5YXhzY2Zv?=
+ =?utf-8?B?UjM0ZER3S0dkamxQMEJnRmpiQlFpUGFCdlZIb2h6NFQyTmprVm1SVVlQcjF0?=
+ =?utf-8?B?MG92dnhYSDlJU2g3WUM2ZTh3bUg1T3lkc1ZNWE9SWjBBZk1DUWh5RlhvSDBq?=
+ =?utf-8?B?NENwWFhYMmFGNWhpT1IxczJqWXpQNmZhYmttVDdzZjlCUk9BaGpxL0JUUmZn?=
+ =?utf-8?B?UjN5bndYcHJ2RGpDeGVubTZyYzZzVlJsL1VtL1BIYXJkQzgzTkJKa2ZwU0N3?=
+ =?utf-8?B?b1VVNUlyMUJOeTQySHl2ME5MNU9kTHRnc0VMVHRJeEY5cDd1M3k1TWlwenFB?=
+ =?utf-8?B?WEJJS1kvTUNyUWgrSUFmd1piYkZqNmFNdEpJTHdIcENoRWtUaGU3aU9BL0dj?=
+ =?utf-8?B?NjhFdmtjQXdnYytBNUM5THQ5bHhYa3pZbGFqMmRsY3RueXdBWFpBd25TTUVN?=
+ =?utf-8?B?eEtrRXkyVHVxYXBqUWcrUHkzb3luc3d4d05rODc3Q2c0ZjhWUmVOTDdjSFR2?=
+ =?utf-8?B?Sm52c0hVMVhnbzdza3dPVFNXVXM3SWJYWm5KbWhVOVdFRWhBSk5SbDdoVzRo?=
+ =?utf-8?B?THFHZXRRQW83bS9BM1FyblE5cTlSS1h4UGN3Q0lrZzJnc3Ixam1pV25NdUxv?=
+ =?utf-8?B?aldWcDhSQUZoNzRBdWUyOFF5a2NjQldOeWRVamoyY0tRZTJSVytmQk5OL3lC?=
+ =?utf-8?B?SlZDQlpVdE1RNDdoWkQ1MEdzVVFkaFJhTEhXcFRQbG9ZUkVmY1FkTE5BNGt3?=
+ =?utf-8?B?c1cwaVdJWkdRS1c5Ym0yWmxyU3VpVHRmVS8rMC9QU0tFVE9PbzdyOXlUY3RI?=
+ =?utf-8?B?RVc1YWhEL0lMQ1daRXBvL3ZtbCt4YndObDEzUHRwTU00cEVPa0NrQVpVMXRM?=
+ =?utf-8?B?R1Q5VU1CK0dnZVFVZ1FERExabGJ6QnZxYmR1N3JwRnJkVkhMRm5VMXJjMEMv?=
+ =?utf-8?B?UFEybVlJTitMMUVoVVRyRE5JQ0xmSWJGV1gzL3BXWVZsT2lRaDJ4Zz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|CY8PR12MB7267:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2b60562f-3d5d-4c24-ec20-08dedcd63f7c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|376014|1800799024|22082099003|18002099003|3023799007|4143699003|6133799003|11063799006|5023799004|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	exS+SXu/KgpUrR5jaR3pRLC9AXi7EvsP3cv28kakgDTGZ3lzLpLJV76LpDbi+RbEwhX+U6COXmXFsezMvUGKTAUkHq8YzQvyUIFI1iehZaJN36svVyBhodCO/Rc+RW9N5PhWqjmjzZxnr2emLK5p5QsGRxaYg0P+4T5WH8H8AbyKlLClGFf0+VDbuNDuRYvYpDItFFb4TGyTUtOTjpHIa6Sy0q/3Mn3BptSQfj0h30B4Mtun/YSEhogPex0XyDV19YKjDaQi88On6FqVZ31VMMTM6KWoxa8bSWMVW5YpCfNNHQC38gh1aYW7lbsjmkwZQaDxEX8vH3pIpkV9xaiTVsFw3N3XBA2A73xcik1bxCkmUe5q4ty/C3rOgwvfmpAW7rsdEy5zJpAJV8TJ6VNiqCOOL6vnInfDUe7+nHgaHmxyOWJYD//zHfWfJ5vHTaX5lTa5CKaeIgB23wK7W2+iDyZFfteTnZtvNqvSlEEmsvwygjVtClyqBMOBwtYnVlayfOH3TcIMWc6s/XtjLjPwVeRdISGQsRNYPRSfsDRXz3e8O67g45gucs0vrRYSvPFBo7tQWtfi6jR49AqXXW8YNLXm+8qw9CMw6NJHml4U4t4ZdNI23zYo85msp2+WdiGOfszZmX7X9RPayTs96gAmNwbCzNB8pfp4S8bX+YJeDCc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(376014)(1800799024)(22082099003)(18002099003)(3023799007)(4143699003)(6133799003)(11063799006)(5023799004)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RjRQUFhITG9TY0xLQXNzWGFaMHBBc2U4UWJOYlFSblVwcmlXTHJ0bmJhcDdr?=
- =?utf-8?B?QjREanN1Q2gzbi92L1RZb3g2T1ZFTTFMUnBzMzlSd0ZvWWJMSW9jQXdudWc2?=
- =?utf-8?B?M2R6cTBKVUc0THJNdEtpN1ZPMkxJUDhrVVJQdFU5dEl4K3AwZ2hGT01rZTcw?=
- =?utf-8?B?eUFZbWZrSHVXdkhwSTBEcXBGZE55eWZyQ1lSTkdrYmlnQTgvV0dINyt5QkVT?=
- =?utf-8?B?N2k4QlcwRlBZM0Jtcm4raGpYSVVjOUQ2U1J1YWloVmEveEU3QkVTMks2ZUdv?=
- =?utf-8?B?L2Nnd0RvcWNSeWkwdTJsemlNVkJOc1BnMFRmWkszM1Vic1pOY21qWWFhUmp1?=
- =?utf-8?B?ZUhvaHptUlMwMHlxM0pTa0E2MXYxODdLOXhEdzBzZmZmdUF3S2dDVDMvNDNm?=
- =?utf-8?B?bVU4VUVOQVI1WFpPRDhEVXVTMjdBOGtuREJDOW5TdDBUZnl2c1JobDdJU1ZU?=
- =?utf-8?B?azlYSFNzK2dOTUM1ZGp3SVZGMGZBTHkzbkwxWWh6SndRSXZ2enI4U2wzYWhH?=
- =?utf-8?B?Y3h6dUZkZ3ptajJPdDJHMUFVUTB2dmVlUDBOVEJac0FuNlB3bXhHeDd0a08w?=
- =?utf-8?B?dUlCOU5panh0V1ZTSktOWXhTQVo2U29Rd3gzakpXSzRGOXIzSFlpSTJMSzdW?=
- =?utf-8?B?aXhTZ09oajgvVy9BWDBOUlRFVmFhUG5kZjRBeDQrWFZ1L3BhNEwrZGRwbXho?=
- =?utf-8?B?bzMwUlhnaWN2WGpoOGMxMEZpS25ydWMxa01UQ2N3cDc5NXErZjdrVEVxR1Rn?=
- =?utf-8?B?ZGc1ZjE1VXVxWUxVcCtuM3k2eUFaejBvZ3d3VmNLSE10NTdycVg4OHFkTTV1?=
- =?utf-8?B?RXhsRTBzMU5TcXRxc3VtVVhHV1NEUzlvU2cwWTFJYUgvOE16NndZRHRKRVFm?=
- =?utf-8?B?WVUrQWZNem82eThVVWEvUEhyNFMwMG1wSVg0TnI2T3cwNkdNaTVSeGpCckdj?=
- =?utf-8?B?cGZxU2RlWGpRQVFPcFBZbHNEV05ob1lqZ1lSaWJmTnNLZXBTZUoyRFJjNGpj?=
- =?utf-8?B?OG9LRW4zY3R2dWNneW5sL1dqeXVFOFVkaWwyUWJFbkFSR0oyZTFHeFFZU0tw?=
- =?utf-8?B?ZHdvVlVlaU5tSXdYNzBTelYycmg3WEx1NDNUbHRUbmdjcEpsVTJaUnZ0MXAw?=
- =?utf-8?B?d1g1SkR3NUF1R2h6Wk52NFMrVmFGelduTDd0U0tyNElaNXI1ZDNNZHczK1hS?=
- =?utf-8?B?SGtISG9hY1E5eTBCKzg3QjJiUDVPSXdxNkdSZTRmSm1taFBrQUFRK0EydEQy?=
- =?utf-8?B?MjE5SVFQTDRsa0ZEd1BGbFVHcENuWnpTSUQ4Z0dBNmR2VERzclRIZ0VKZW8w?=
- =?utf-8?B?WTEycUlQdWZuTTk5T0Y4aFZHVFJIS0ZHdERBOGZEMTIzSXo4S2NvZGducVgy?=
- =?utf-8?B?QjE5RkR4M2loKzVvQkZUK3dPaE9CV2oxM2U2RisrMys3MVkrTWswVEFFcE5P?=
- =?utf-8?B?ckJON3Fxa0NMdHpnZ2x5RExhUzg1M29kazRqQjJ2d2JQcHExTlYwZStJT1Bq?=
- =?utf-8?B?S29pNUpPSXRjVnJNQkhDbi9zY1FwOE16MVpGNVBmdG9QRHFhYkVFYmx2bGJ5?=
- =?utf-8?B?a3B1NlJ0Qk1UT3p3NHM2Ni95a00rZldGTHQzbDh3OS9Jdnh5ME5HZnp1S2xp?=
- =?utf-8?B?WUd3ZDBvRTJBZ2VYVlVicDBSU2d4OHh0S2MyVXcvYkV1OGkxdkV3VG1VdnNK?=
- =?utf-8?B?amp1MkpGeDNpUjdua3JQRWRGNDYxNkFsRFpDLzE2d2xadTdzUUpNTTFFTjc1?=
- =?utf-8?B?TFlOZEpXc09JWWVURmkvNVNYRTBnY3RnNXBzVTZIOERvU1N3M0JoazV4S3Nq?=
- =?utf-8?B?cmVXY2o4eXBGcm5meVZGc20yMmVjTXNVd3d5S0JlK1RibFkvMVFScjFrSzJW?=
- =?utf-8?B?bzRidXkzU2Z1ZUdjVFBLRWZnWXBnSUlDanE4dzNqOWRvb3hZTzQxdUJaaXZm?=
- =?utf-8?B?cXR5KytHcHBmcStlbDNpRzRNLzRQUGw2RDlrVnNuc0xTakpyVmtEamxqcVF3?=
- =?utf-8?B?RmNYNTFDeGpEWFNJbjdDSzFCR3FNNjdndStBUm5hdHZWVVIvWWxEZHBkZ0Rv?=
- =?utf-8?B?MGEwMENhTUtaMjRpNHYwYi9reWtUVXovdFA2WUlsZk1MZng5b1lqaEpQSHM2?=
- =?utf-8?B?Y2QzY3ZuVmE1alpXdUswenpqbWdLVHVnL3NzN2ZMbmx2TFE5cmZrOXhyU3Qw?=
- =?utf-8?B?MDJUSzN0WVdQYk0yRG9yVUR6d3N0V0h5aUloNU5mZjJwV3dwRDdyaUl4MG13?=
- =?utf-8?B?bUhRUUpLaXVIeWY1VzNrSFpGVm14MThLTVl2WTl0VXgrR3BXM0xTNk1WM3E1?=
- =?utf-8?B?V092elljSWxOcXhoSVYyVDdLdzdIQjVOVVdIOUhOdHVKb0JidXVNQT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2b60562f-3d5d-4c24-ec20-08dedcd63f7c
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
+X-OriginatorOrg: oss.nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2026 09:49:48.1928
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4f4cf5eb-407c-416d-b053-08dedcd652bb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2026 09:50:20.1816
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: M7o7KX007sueOl1as/CO0OSj+pKQU+qHB3K0cbjKmRMdZcOGey0RhS03nlsMSFZy8kXXMdLAEXqFdS2vYjMffQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7267
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: VtPRQt6yCj7PELkaE3JxtUoWOY56NP57dNxSlolDpYcxPfHsIJe3oQ4Je+09QC8wzL8sIKk6DfTTzBU8o4YluA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA3PR04MB11251
 
-On 6/7/26 08:08, Dan Williams wrote:
-> After pci_tsm_bind() and pci_tsm_lock() the low level TSM driver is
-> expected to populate PCI_TSM_EVIDENCE_TYPE_REPORT in its evidence store.
-> This report is defined by the TDISP GET_DEVICE_INTERFACE_REPORT response
-> payload.
-> 
-> Add a helper to create encrypted MMIO descriptors from that report
-> data. With those descriptors the TSM driver can use pci_tsm_mmio_setup() to
-> inform ioremap() how to map the device per the device's expectations. The
-> VM is expected to validate the interface with the relying party before
-> accepting the device for operation.
-> 
-> The helper also provides the obfuscated starting address for each encrypted
-> MMIO range as the VM is never disclosed on the hpa that correlates to the
-> gpa of the device's mmio. The obfuscated address is BAR aligned.
-> 
-> Based on an original patch by Aneesh [1]
-> 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Link: https://lore.kernel.org/linux-coco/20251117140007.122062-8-aneesh.kumar@kernel.org/ [1]
-> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> Signed-off-by: Dan Williams <djbw@kernel.org>
-> ---
->   include/linux/ioport.h  |   2 +
->   include/linux/pci-tsm.h |  35 +++++++
->   drivers/pci/tsm/core.c  | 224 ++++++++++++++++++++++++++++++++++++++++
->   kernel/resource.c       |   8 ++
->   4 files changed, 269 insertions(+)
-> 
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index f7930b3dfd0a..122f1eefb4b9 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -144,6 +144,7 @@ enum {
->   	IORES_DESC_RESERVED			= 7,
->   	IORES_DESC_SOFT_RESERVED		= 8,
->   	IORES_DESC_CXL				= 9,
-> +	IORES_DESC_ENCRYPTED			= 10,
->   };
->   
->   /*
-> @@ -240,6 +241,7 @@ struct resource_constraint {
->   extern struct resource ioport_resource;
->   extern struct resource iomem_resource;
->   extern struct resource soft_reserve_resource;
-> +extern struct resource encrypted_iomem_resource;
->   
->   extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
->   extern int request_resource(struct resource *root, struct resource *new);
-> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-> index 397e5d8459cb..6d5fadd79360 100644
-> --- a/include/linux/pci-tsm.h
-> +++ b/include/linux/pci-tsm.h
-> @@ -156,12 +156,42 @@ struct pci_tsm_pf0 {
->   	struct pci_doe_mb *doe_mb;
->   };
->   
-> +/**
-> + * struct pci_tsm_mmio_entry - an encrypted MMIO range
-> + * @res: MMIO address range (typically Guest Physical Address, GPA)
-> + * @tsm_offset: Host Physical Address, HPA obfuscation offset added by the TSM.
-> + *		Translates report addresses to GPA.
-> + */
-> +struct pci_tsm_mmio_entry {
-> +	struct resource res;
-> +	u64 tsm_offset;
-> +};
-> +
-> +struct pci_tsm_mmio {
-> +	int nr;
-> +	struct pci_tsm_mmio_entry mmio[];
-> +};
-> +
-> +static inline struct pci_tsm_mmio_entry *
-> +pci_tsm_mmio_entry(struct pci_tsm_mmio *mmio, int idx)
-> +{
-> +	return &mmio->mmio[idx];
-> +}
-> +
-> +static inline struct resource *pci_tsm_mmio_resource(struct pci_tsm_mmio *mmio,
-> +						     int idx)
-> +{
-> +	return &mmio->mmio[idx].res;
-> +}
-> +
->   /**
->    * struct pci_tsm_devsec - context for tracking private/accepted PCI resources
->    * @base_tsm: generic core "tsm" context
-> + * @mmio: encrypted MMIO resources for this assigned device
->    */
->   struct pci_tsm_devsec {
->   	struct pci_tsm base_tsm;
-> +	struct pci_tsm_mmio *mmio;
->   };
->   
->   /* physical function0 and capable of 'connect' */
-> @@ -263,6 +293,11 @@ static inline const struct pci_tsm_ops *to_pci_tsm_ops(struct pci_tsm *tsm)
->   	return tsm->tsm_dev->pci_ops;
->   }
->   struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm);
-> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
-> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio);
-> +
-> +struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev);
-> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
->   #else
->   static inline int pci_tsm_register(struct tsm_dev *tsm_dev)
->   {
-> diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
-> index 372363a39a44..9ac216ad896d 100644
-> --- a/drivers/pci/tsm/core.c
-> +++ b/drivers/pci/tsm/core.c
-> @@ -15,6 +15,7 @@
->   #include <linux/pci-tsm.h>
->   #include <linux/sysfs.h>
->   #include <linux/tsm.h>
-> +#include <linux/unaligned.h>
->   #include <linux/xarray.h>
->   #include "../pci.h"
->   
-> @@ -552,6 +553,229 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
->   }
->   static DEVICE_ATTR_RO(dsm);
->   
-> +static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
-> +{
-> +	while (nr--)
-> +		remove_resource(pci_tsm_mmio_resource(mmio, nr));
-> +}
-> +
-> +/**
-> + * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
-> + * @pdev: device owner of MMIO resources
-> + * @mmio: container of an array of resources to mark encrypted
-> + */
-> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
-> +{
-> +	int i;
-> +
-> +	device_lock_assert(&pdev->dev);
-> +	if (pdev->dev.driver)
-> +		return -EBUSY;
-> +
-> +	for (i = 0; i < mmio->nr; i++) {
-> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
-> +		int j;
-> +
-> +		if (resource_size(res) == 0 || !res->end)
-> +			break;
-> +
-> +		/* Only require the caller to set the range, init remainder */
-> +		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
-> +					     pci_name(pdev), IORESOURCE_MEM,
-> +					     IORES_DESC_ENCRYPTED);
-> +
-> +		for (j = 0; j < PCI_NUM_RESOURCES; j++)
-> +			if (resource_contains(pci_resource_n(pdev, j), res))
-> +				break;
-> +
-> +		/* Request is outside of device MMIO */
-> +		if (j >= PCI_NUM_RESOURCES)
-> +			break;
-> +
-> +		if (insert_resource(&encrypted_iomem_resource, res) != 0)
-> +			break;
-> +	}
-> +
-> +	if (i >= mmio->nr)
-> +		return 0;
-> +
-> +	mmio_teardown(mmio, i);
-> +
-> +	return -EINVAL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_setup);
-> +
-> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio)
-> +{
-> +	mmio_teardown(mmio, mmio->nr);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
-> +
-> +/*
-> + * PCIe ECN TEE Device Interface Security Protocol (TDISP)
-> + *
-> + * Device Interface Report data object layout as defined by PCIe r7.0 section
-> + * 11.3.11
-> + */
-> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE BIT(0)
-> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA BIT(1)
-> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
-> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
-> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
-> +
-> +/* An interface report 'pfn' is 4K in size */
-> +struct pci_tsm_devif_mmio {
-> +	__le64 phys;
-> +	__le32 nr_pfns;
-> +	__le32 attributes;
-> +};
-> +
-> +struct pci_tsm_devif_report {
-> +	__le16 interface_info;
-> +	__le16 reserved;
-> +	__le16 msi_x_message_control;
-> +	__le16 lnr_control;
-> +	__le32 tph_control;
-> +	__le32 mmio_range_count;
-> +	struct pci_tsm_devif_mmio mmio[];
-> +};
-> +
-> +/**
-> + * pci_tsm_mmio_alloc() - allocate encrypted MMIO range descriptor
-> + * @pdev: device owner of MMIO ranges
-> + *
-> + * Return: the encrypted MMIO range descriptor on success, NULL on failure
-> + *
-> + * Assumes that this is called within the live lifetime of a PCI device's
-> + * association with a low level TSM.
-> + */
-> +struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev)
-> +{
-> +	struct device_evidence *evidence = pdev->tsm->evidence;
-> +	u64 reporting_bar_base, last_reporting_end;
-> +	struct device_evidence_object *report_obj;
-> +	const struct pci_tsm_devif_report *report;
-> +	u32 mmio_range_count;
-> +	int last_bar = -1;
-> +	int i;
-> +
-> +	if (!evidence)
-> +		return NULL;
-> +
-> +	report_obj = &evidence->obj[DEVICE_EVIDENCE_TYPE_REPORT];
-> +
-> +	guard(rwsem_read)(&evidence->lock);
-> +	if (report_obj->len < sizeof(struct pci_tsm_devif_report))
-> +		return NULL;
-> +
-> +	report = report_obj->data;
-> +	mmio_range_count = __le32_to_cpu(report->mmio_range_count);
-> +
-> +	/* check that the report object is self-consistent on mmio entries */
-> +	if (report_obj->len < struct_size(report, mmio, mmio_range_count))
-> +		return NULL;
-> +
-> +	/* create pci_tsm_mmio descriptors from the report data */
-> +	struct pci_tsm_mmio *mmio __free(kfree) =
-> +		kzalloc_flex(*mmio, mmio, mmio_range_count);
-> +	if (!mmio)
-> +		return NULL;
-> +
-> +	for (i = 0; i < mmio_range_count; i++) {
-> +		u64 range_off;
-> +		struct range range;
-> +		const struct pci_tsm_devif_mmio *mmio_data = &report->mmio[i];
-> +		struct pci_tsm_mmio_entry *entry =
-> +			pci_tsm_mmio_entry(mmio, mmio->nr);
-> +		u64 tsm_offset = __le64_to_cpu(mmio_data->phys);
-
-* SZ_4K is missing.
-
-> +		u64 size = __le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
-> +		u32 attr = __le32_to_cpu(mmio_data->attributes);
-> +		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
-> +				    attr);
-> +
-> +		if (bar >= PCI_STD_NUM_BARS ||
-> +		    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
-> +		    (pci_resource_flags(pdev, bar) & IORESOURCE_UNSET)) {
-> +			pci_dbg(pdev, "Invalid reporting bar ID %d\n", bar);
-> +			return NULL;
-> +		}
-> +
-> +		if (last_bar > bar) {
-> +			pci_dbg(pdev, "Reporting bar ID not in ascending order\n");
-> +			return NULL;
-> +		}
-> +
-> +		if (last_bar < bar) {
-> +			unsigned long mask = pci_resource_len(pdev, bar) - 1;
-> +
-> +			/* Transition to a new bar */
-> +			last_bar = bar;
-> +
-> +			/*
-> +			 * Determine the obfuscated base of the BAR. BAR
-> +			 * offsets are never obfuscated.
-> +			 */
-> +			reporting_bar_base = tsm_offset & ~mask;
-> +		} else if (tsm_offset < last_reporting_end) {
-> +			pci_dbg(pdev, "Reporting ranges within BAR not in ascending order\n");
-> +			return NULL;
-> +		}
-> +
-> +		/* Per spec the tsm_offset never results in overflow / underflow */
-> +		last_reporting_end = tsm_offset + size;
-> +		if (last_reporting_end < tsm_offset) {
-> +			pci_dbg(pdev, "Reporting range overflow\n");
-> +			return NULL;
-> +		}
-> +
-> +		range_off = tsm_offset - reporting_bar_base;
-
-
-If we all do the mmio_reporting_offset in the same way (use the bar size low bits), then this can be simplified and should be as it does not account for the non-locked (==not reported) MSIX anyway. Thanks,
-
-
-> +		if (pci_resource_len(pdev, bar) < range_off + size) {
-> +			pci_dbg(pdev, "Reporting range larger than BAR size\n");
-> +			return NULL;
-> +		}
-> +
-> +		range.start = pci_resource_start(pdev, bar) + range_off;
-> +		range.end = range.start + size - 1;
-> +
-> +		/* Only record the TEE ranges for later consideration by ioremap() */
-> +		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE,
-> +			      attr)) {
-> +			pci_dbg(pdev, "Skipping non-TEE range, BAR%d %pra\n",
-> +				 bar, &range);
-> +			continue;
-> +		}
-> +
-> +		entry->res.start = range.start;
-> +		entry->res.end = range.end;
-> +		entry->tsm_offset = tsm_offset;
-> +		mmio->nr++;
-> +	}
-> +
-> +	return_ptr(mmio);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_alloc);
-> +
-> +/**
-> + * pci_tsm_mmio_free() - free a pci_tsm_mmio instance
-> + * @pdev: device owner of MMIO ranges
-> + * @mmio: instance to free
-> + *
-> + * Returns 0 if @mmio was idle on entry, -EBUSY otherwise
-> + */
-> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
-> +{
-> +	for (int i = 0; i < mmio->nr; i++) {
-> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
-> +
-> +		if (dev_WARN_ONCE(&pdev->dev, resource_assigned(res),
-> +				  "MMIO resource still assigned %pr\n", res))
-> +			return -EBUSY;
-> +	}
-> +	kfree(mmio);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_free);
-> +
->   /**
->    * pci_tsm_accept() - accept a device for private MMIO operation
->    * @pdev: PCI device to accept
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 3d17e3196a3e..ba91ce43ff7a 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -56,6 +56,14 @@ struct resource soft_reserve_resource = {
->   	.flags	= IORESOURCE_MEM,
->   };
->   
-> +struct resource encrypted_iomem_resource = {
-> +	.name	= "Encrypted MMIO",
-> +	.start	= 0,
-> +	.end	= -1,
-> +	.desc	= IORES_DESC_ENCRYPTED,
-> +	.flags	= IORESOURCE_MEM,
-> +};
-> +
->   static DEFINE_RWLOCK(resource_lock);
->   
->   /*
-
--- 
-Alexey
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBTb2VyZW4gTW9jaCA8c21vY2hA
+d2ViLmRlPg0KPiBTZW50OiBUdWVzZGF5LCBKdWx5IDcsIDIwMjYgNzowNCBQTQ0KPiBUbzogSG9u
+Z3hpbmcgWmh1IChPU1MpIDxob25neGluZy56aHVAb3NzLm54cC5jb20+OyBGcmFuayBMaQ0KPiA8
+ZnJhbmsubGlAbnhwLmNvbT47IGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU7IGxwaWVyYWxpc2lAa2Vy
+bmVsLm9yZzsNCj4ga3dpbGN6eW5za2lAa2VybmVsLm9yZzsgbWFuaUBrZXJuZWwub3JnOyByb2Jo
+QGtlcm5lbC5vcmc7DQo+IGJoZWxnYWFzQGdvb2dsZS5jb207IHMuaGF1ZXJAcGVuZ3V0cm9uaXgu
+ZGU7IGtlcm5lbEBwZW5ndXRyb25peC5kZTsNCj4gZmVzdGV2YW1AZ21haWwuY29tDQo+IENjOiBs
+aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
+ZC5vcmc7DQo+IGlteEBsaXN0cy5saW51eC5kZXY7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
+cmc7IEhvbmd4aW5nIFpodQ0KPiA8aG9uZ3hpbmcuemh1QG54cC5jb20+DQo+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0ggdjFdIFBDSTogaW14NjogRml4IGkuTVg2US9ETCBib290IGhhbmcgYnkgc2VwYXJh
+dGluZyBQSFkNCj4gcG93ZXIgYW5kIHJlZmVyZW5jZSBjbG9jayBjb250cm9sDQo+IA0KPiBPbiAw
+Ny4wNy4yNiAxMDo1NSwgU29lcmVuIE1vY2ggd3JvdGU6DQo+ID4gT24gMDcuMDcuMjYgMDU6MDMs
+IEhvbmd4aW5nIFpodSAoT1NTKSB3cm90ZToNCj4gPj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQo+ID4+PiBGcm9tOiBTb2VyZW4gTW9jaCA8c21vY2hAd2ViLmRlPg0KPiA+Pj4gU2VudDog
+TW9uZGF5LCBKdWx5IDYsIDIwMjYgMTA6MDkgUE0NCj4gPj4+IFRvOiBIb25neGluZyBaaHUgKE9T
+UykgPGhvbmd4aW5nLnpodUBvc3MubnhwLmNvbT47IEZyYW5rIExpDQo+ID4+PiA8ZnJhbmsubGlA
+bnhwLmNvbT47IGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU7IGxwaWVyYWxpc2lAa2VybmVsLm9yZzsN
+Cj4gPj4+IGt3aWxjenluc2tpQGtlcm5lbC5vcmc7IG1hbmlAa2VybmVsLm9yZzsgcm9iaEBrZXJu
+ZWwub3JnOw0KPiA+Pj4gYmhlbGdhYXNAZ29vZ2xlLmNvbTsgcy5oYXVlckBwZW5ndXRyb25peC5k
+ZTsga2VybmVsQHBlbmd1dHJvbml4LmRlOw0KPiA+Pj4gZmVzdGV2YW1AZ21haWwuY29tDQo+ID4+
+PiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5p
+bmZyYWRlYWQub3JnOw0KPiA+Pj4gaW14QGxpc3RzLmxpbnV4LmRldjsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsgSG9uZ3hpbmcgWmh1DQo+ID4+PiA8aG9uZ3hpbmcuemh1QG54cC5jb20+
+DQo+ID4+PiBTdWJqZWN0OiBSZTogW1BBVENIIHYxXSBQQ0k6IGlteDY6IEZpeCBpLk1YNlEvREwg
+Ym9vdCBoYW5nIGJ5DQo+ID4+PiBzZXBhcmF0aW5nIFBIWSBwb3dlciBhbmQgcmVmZXJlbmNlIGNs
+b2NrIGNvbnRyb2wNCj4gPj4+DQo+ID4+Pg0KPiA+Pj4NCj4gPj4+IE9uIDA2LjA3LjI2IDA1OjA2
+LCBob25neGluZy56aHVAb3NzLm54cC5jb20gd3JvdGU6DQo+ID4+Pj4gRnJvbTogUmljaGFyZCBa
+aHUgPGhvbmd4aW5nLnpodUBueHAuY29tPg0KPiA+Pj4+DQo+ID4+Pj4gQ29tbWl0IDYxMGZhOTFk
+OTg2MyAoIlBDSTogaW14NjogQXNzZXJ0IFBFUlNUIyBiZWZvcmUgZW5hYmxpbmcNCj4gPj4+PiBy
+ZWd1bGF0b3JzIikgaW50cm9kdWNlZCBhIGJvb3QgaGFuZyBvbiBpLk1YNlEvREwgdmFyaWFudHMg
+YnkNCj4gPj4+PiBjaGFuZ2luZyB0aGUgaW5pdGlhbGl6YXRpb24gc2VxdWVuY2UuDQo+ID4+Pj4N
+Cj4gPj4+PiBUaGUgaXNzdWUgc3RlbXMgZnJvbSBjb3VwbGluZyBQSFkgcG93ZXIgKFRFU1RfUEQp
+IGFuZCByZWZlcmVuY2UNCj4gPj4+PiBjbG9jaw0KPiA+Pj4+IChSRUZfQ0xLX0VOKSBjb250cm9s
+IGluIGlteDZxX3BjaWVfZW5hYmxlX3JlZl9jbGsoKS4gV2hlbiB0aGVzZSBhcmUNCj4gPj4+PiBt
+YW5hZ2VkIHRvZ2V0aGVyLCB0aGUgdGltaW5nIGJldHdlZW4gUEhZIHBvd2VyLXVwIGFuZCByZWZl
+cmVuY2UNCj4gPj4+PiBjbG9jayBlbmFibGVtZW50IGNhbm5vdCBiZSBwcm9wZXJseSBjb250cm9s
+bGVkLCBsZWFkaW5nIHRvDQo+ID4+Pj4gaW5pdGlhbGl6YXRpb24gZmFpbHVyZXMuDQo+ID4+Pj4N
+Cj4gPj4+PiBGaXggdGhpcyBieSBzZXBhcmF0aW5nIHRoZSB0d28gY29uY2VybnM6DQo+ID4+Pj4N
+Cj4gPj4+PiAtIE1vdmUgUEhZIHBvd2VyIGNvbnRyb2wgKFRFU1RfUEQpIHRvIGlteDZxX3BjaWVf
+Y29yZV9yZXNldCgpIHdoZXJlDQo+ID4+Pj4gaXQNCj4gPj4+PiDCoMKgwqAgbG9naWNhbGx5IGJl
+bG9uZ3Mgd2l0aCByZXNldCBvcGVyYXRpb25zLiBUaGlzIGVuc3VyZXMgUEhZIHBvd2VyDQo+ID4+
+Pj4gc3RhdGUNCj4gPj4+PiDCoMKgwqAgaXMgbWFuYWdlZCBhcyBwYXJ0IG9mIHRoZSBjb3JlIHJl
+c2V0IHNlcXVlbmNlLg0KPiA+Pj4+DQo+ID4+Pj4gLSBVcGRhdGUgaW14NnFwX3BjaWVfY29yZV9y
+ZXNldCgpIHRvIGNhbGwgaW14NnFfcGNpZV9jb3JlX3Jlc2V0KCkNCj4gPj4+PiBmb3INCj4gPj4+
+PiDCoMKgwqAgc2hhcmVkIFBIWSBwb3dlciBtYW5hZ2VtZW50LCBhdm9pZGluZyBjb2RlIGR1cGxp
+Y2F0aW9uLg0KPiA+Pj4+DQo+ID4+Pj4gLSBNYWtlIGlteDZxX3BjaWVfZW5hYmxlX3JlZl9jbGso
+KSByZXNwb25zaWJsZSBvbmx5IGZvciByZWZlcmVuY2UNCj4gPj4+PiBjbG9jaw0KPiA+Pj4+IMKg
+wqDCoCAoUkVGX0NMS19FTikgY29udHJvbCwgc2ltcGxpZnlpbmcgaXRzIHB1cnBvc2UuDQo+ID4+
+Pj4NCj4gPj4+PiAtIFJlbW92ZSB0aGUgMTB1cyBkZWxheSB3b3JrYXJvdW5kIGZyb20gaW14NnFf
+cGNpZV9lbmFibGVfcmVmX2NsaygpDQo+ID4+Pj4gYXMNCj4gPj4+PiDCoMKgwqAgcHJvcGVyIHNl
+cXVlbmNpbmcgaXMgbm93IGhhbmRsZWQgYnkgdGhlIGNvcmVfcmVzZXQgZnVuY3Rpb25zLg0KPiA+
+Pj4+DQo+ID4+Pj4gVGhpcyByZWZhY3RvcmluZyBlbnN1cmVzIFBIWSBwb3dlciBpcyBjb250cm9s
+bGVkIGR1cmluZyByZXNldA0KPiA+Pj4+IG9wZXJhdGlvbnMsIGZpeGluZyB0aGUgYm9vdCBoYW5n
+IHdoaWxlIGltcHJvdmluZyBjb2RlIG1haW50YWluYWJpbGl0eS4NCj4gPj4+Pg0KPiA+Pj4+IEZp
+eGVzOiA2MTBmYTkxZDk4NjMgKCJQQ0k6IGlteDY6IEFzc2VydCBQRVJTVCMgYmVmb3JlIGVuYWJs
+aW5nDQo+ID4+Pj4gcmVndWxhdG9ycyIpDQo+ID4+Pj4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBa
+aHUgPGhvbmd4aW5nLnpodUBueHAuY29tPg0KPiA+Pj4gV2l0aCB0aGlzIHBhdGNoIG9uIHRvcCBv
+ZiB2Ny4yLXJjMiBJIHNlZSBldmVyeXRoaW5nIGJvb3RpbmcsIGxzcGNpDQo+ID4+PiBzaG93cyB0
+aGUgcm9vdCBjb21wbGV4LCBidXQgbm8gUENJZSBkZXZpY2UgYmVoaW5kIGl0Lg0KPiA+Pj4gVGVz
+dGVkIG9uIGEgaS5NWDZRIGJhc2VkIHRiczI5MTAgYm9hcmQuDQo+ID4+Pg0KPiA+Pj4gRm9yIG1l
+IGl0IGlzIG5vdCBjbGVhciB3aGV0aGVyIHRoaXMgZmFpbCB0byBkZXRlY3QgUENJZSBkZXZpY2Vz
+IGlzDQo+ID4+PiByZWxhdGVkIHRvIHRoZSBwYXRjaGVzIGluIHF1ZXN0aW9uLCB0aGUgcmVzZXQg
+dGltaW5nLCBvciBzb21ldGhpbmcNCj4gPj4+IGVsc2UuIE5lZWRzIGZ1cnRoZXIgaW52ZXN0aWdh
+dGlvbi4NCj4gPj4gVGhhbmtzIGZvciB5b3VyIGtpbmRseSBoZWxwIHRvIHRlc3RzLg0KPiA+PiBE
+aWQgeW91IGV2ZXIgZW5jb3VudGVyIHRoZSBib290IGZhaWx1cmUgd2l0aG91dCB0aGlzIHBhdGNo
+IGJhc2VkIG9uDQo+ID4+IHY3LjItcmMxDQo+ID4+IG9yIGxhdGVyPw0KPiA+IEhhdmUgbm90IHRl
+c3RlZCB0aGlzLiBVbmZvcnR1bmF0ZWx5IGN1cnJlbnRseSBJIGhhdmUgbm8gYWNjZXNzIHRvIG15
+DQo+ID4gdGJzMjkxMCB0ZXN0IGJvYXJkLg0KPiA+IEkgdXNlZCBhIHByb2R1Y3Rpb24gc3lzdGVt
+IGZvciB0aGlzIHRlc3QgaGVyZSwgYnV0IHRoaXMgaXMgdmVyeQ0KPiA+IGRpZmZpY3VsdCB0byBy
+ZWNvdmVyIGZyb20gYm9vdCBoYW5ncy4NCj4gPj4NCj4gPj4gQWZ0ZXIgYXBwbGllZCB0aGlzIHBh
+dGNoLCBteSBpLk1YNlEgU2FicmVzZCBib2FyZCBjYW4gYm9vdCB1cA0KPiA+PiBzdWNjZXNzZnVs
+bHkuDQo+ID4+IEFuZCB0aGUgZW5kcG9pbnQgZGV2aWNlIGNhbiBiZSBkZXRlY3RlZCBhcyB3ZWxs
+Lg0KPiA+Pg0KPiA+PiBNeSBMb2NhbCBjb21taXRzOg0KPiA+PiBhZDU5MzlkNDliMjY4IChIRUFE
+IC0+IHY3LjItcmMyX3BjaWUpIFBDSTogaW14NjogQWRkIHJ1bnRpbWUgUE0NCj4gPj4gc3VwcG9y
+dCBmb3IgaS5NWDk1DQo+ID4+IGRiN2IxNWYxOTgxMjUgUENJOiBpbXg2OiBVcGRhdGUgTVBMTEIg
+YmFuZHdpZHRoIGZvciBpLk1YOTUgUENJZSBHZW4zDQo+ID4+IHN0YWJpbGl0eQ0KPiA+PiBhMjY3
+MzU1MTVjMDc2IFBDSTogaW14NjogRml4IGkuTVg2US9ETCBib290IGhhbmcgYnkgc2VwYXJhdGlu
+ZyBQSFkNCj4gPj4gcG93ZXIgYW5kIHJlZmVyZW5jZSBjbG9jayBjb250cm9sDQo+ID4+IGQ2MTdl
+YWRmNTJhNDYgUENJOiBkd2M6IEFkZCBmb3JjZV9sMiBmbGFnIGZvciBwbGF0Zm9ybXMgcmVxdWly
+aW5nIEwyDQo+ID4+IGVudHJ5IHdpdGhvdXQgRDNjb2xkIDhjZGVhYTUwZWFlOGQgKHRhZzogdjcu
+Mi1yYzIpIExpbnV4IDcuMi1yYzINCj4gPg0KPiA+IE15IGNvbW1pdHMgKHY3LjItcmMyIHBsdXMg
+bXkgcGF0Y2ggdG8gZW5hYmxlIE1TSXMgZm9yIHRoZSBlbmRwb2ludA0KPiA+IHBsdXMgdGhpcyBw
+YXRjaCBkaXNjdXNzZWQgaGVyZSk6DQo+ID4gOGNkZWFhNTBlYWU4IExpbnV4IDcuMi1yYzINCj4g
+PiBiNjI0MTRkMDdlMjQgUENJOiBpbXg2OiBLZWVwIFJvb3QgUG9ydCBNU0kgY2FwYWJpbGl0eSBh
+bHNvIGZvciBpLk1YNlENCj4gPiBlODE3NmM2YTI3ZWQgUENJOiBpbXg2OiBGaXggaS5NWDZRL0RM
+IGJvb3QgaGFuZyBieSBzZXBhcmF0aW5nIFBIWQ0KPiA+IHBvd2VyIGFuZCByZWZlcmVuY2UgY2xv
+Y2sgY29udHJvbA0KPiA+DQo+ID4gSSdtIG5vdCBzdXJlIHdoYXQgeW91ciBvdGhlciBtZW50aW9u
+ZWQgcGF0Y2hlcyBhcmUuDQo+ID4+DQo+ID4+IEtlcm5lbCBsb2dzOg0KPiA+PiBTdGFydGluZyBr
+ZXJuZWwgLi4uDQo+ID4+DQo+ID4+IFvCoMKgwqAgMC4wMDAwMDBdIEJvb3RpbmcgTGludXggb24g
+cGh5c2ljYWwgQ1BVIDB4MCBbwqDCoMKgIDAuMDAwMDAwXSBMaW51eA0KPiA+PiB2ZXJzaW9uIDcu
+Mi4wLXJjMi0wMDAwNC1nYWQ1OTM5ZDQ5YjI2DQo+ID4+IChueGEwODI1OEBzaGxpbnV4ODkpIChh
+cm0tcG9reS1saW51eC1nbnVlYWJpLWdjYyAoR0NDKSAxNS4yLjAsIEdOVSBsZA0KPiA+PiAoR05V
+IEJpbnV0aWxzKSAyLjQ1LjAuMjAyNTA5MDgpICMzOCBTTVAgVHVlIEp1bMKgIDcgMDI6MzY6NDYg
+VVRDIDIwMjYNCj4gPj4gLi4uDQo+ID4+IHJvb3RAaW14NnFwZGxzb2xveDp+IyBsc3BjaQ0KPiA+
+PiAwMDowMC4wIFBDSSBicmlkZ2U6IFN5bm9wc3lzLCBJbmMuIERXQ191c2IzIC8gUENJZSBicmlk
+Z2UgKHJldiAwMSkNCj4gPj4gMDE6MDAuMCBFdGhlcm5ldCBjb250cm9sbGVyOiBJbnRlbCBDb3Jw
+b3JhdGlvbiA4MjU3NEwgR2lnYWJpdCBOZXR3b3JrDQo+ID4+IENvbm5lY3Rpb24NCj4gPiBvbiBs
+aW51eC03LjItcmMyIHBsdXMgcGF0Y2hlcyAoc2VlIGFib3ZlKToNCj4gPiByb290QG1hdHJpeDI6
+fiMgbHNwY2kNCj4gPiAwMDowMC4wIFBDSSBicmlkZ2U6IFN5bm9wc3lzLCBJbmMuIERXQ191c2Iz
+IC8gUENJZSBicmlkZ2UgKHJldiAwMSkNCj4gPg0KPiA+IG9uIGxpbnV4LTcuMCAobm90IHRlc3Rl
+ZCBvbiA3LjEpOg0KPiA+IHJvb3RAbWF0cml4Mjp+IyBsc3BjaQ0KPiA+IDAwOjAwLjAgUENJIGJy
+aWRnZTogU3lub3BzeXMsIEluYy4gRFdDX3VzYjMgLyBQQ0llIGJyaWRnZSAocmV2IDAxKQ0KPiA+
+IDAxOjAwLjAgTXVsdGltZWRpYSBjb250cm9sbGVyOiBQaGlsaXBzIFNlbWljb25kdWN0b3JzIFNB
+QTcxNjAgKHJldiAwMikNCj4gPg0KPiA+IEkgZ3Vlc3MgdGhlIG5ldyBwb3dlci1vbi9yZXNldCB0
+aW1pbmcgaXMgbm90IHN1ZmZpY2llbnQgdG8gaW5pdCB0aGUNCj4gPiBlbmRwb2ludCBpbiB0aW1l
+Lg0KPiA+IERpZCB5b3UgcmVkdWNlIHRoZSB0aW1lIGZyb20gcG93ZXJpbmcgdXAgdGhlIFBDSWUg
+c2xvdCB0byByZWxlYXNlIG9mDQo+ID4gUEVSU1QjPw0KPiA+IFRoZXJlIGlzIGEgcG93ZXIgc3dp
+dGNoIG9uIHRoZSB0YnMyOTEwIGJvYXJkIGZvciB0aGUgUENJZSBzbG90LCBub3QNCj4gPiBzdXJl
+IGlmIHRoaXMgaXMgYXZhaWxhYmxlIGFsc28gb24gU2FicmVTRC4NCk5vLCBpLk1YNlEgU2FicmVz
+ZCBib2FyZCBkb2Vzbid0IGhhdmUgYSBwb3dlciBzd2l0Y2guDQo+IEkgZm91bmQgb3V0IHRoYXQg
+dGhlIGVuZHBvaW50IGRldmljZSBpcyAob2Z0ZW4/KSBkZXRlY3RlZCBhZnRlciByZWJvb3QsIGl0
+IGlzIG5vdA0KPiAobmV2ZXIpIG9uIGNvbGQgYm9vdC4gKGxpbnV4LTcuMi1yYzIgcGx1cyBwYXRj
+aGVzKSBDb3VsZCBhbHNvIHBvaW50IHRvIHRpbWluZw0KPiBwcm9ibGVtcyBvZiB0aGUgc2xvdCBw
+b3dlciBzdXBwbHkgKG9yIHJlc2V0IGR1cmF0aW9uKS4NCj4gVW5mb3J0dW5hdGVseSBJIGhhdmUg
+b25seSB2ZXJ5IGxpbWl0ZWQgdGltZSBmb3IgdGVzdGluZy4NClVuZGVyc3RhbmQsIHRoYW5rcyBm
+b3IgeW91ciBraW5kbHkgaGVscC4NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KPiA+DQo+
+ID4gQmVzdCByZWdhcmRzLA0KPiA+IFNvZXJlbg0KPiA+PiBCZXN0IFJlZ2FyZHMNCj4gPj4gUmlj
+aGFyZCBaaHUNCj4gPj4+IFJlZ2FyZHMsDQo+ID4+PiBTb2VyZW4NCg0K
