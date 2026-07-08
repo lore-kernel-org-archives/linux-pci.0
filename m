@@ -1,381 +1,638 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2855D25524C;
-	Wed,  8 Jul 2026 13:08:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783516140; cv=none; b=YuHFfQH4NPjGrEHVe6T4Pl2W5qKDz4YU4SZiRUynKcniDhTmwKZJ5gwgo9S2DJF/EfQ7XKzzY2aGHnGB56iAJcBaYBFVYbTaTNg7vNbatGodLt9jsaMEH9t7s1jUiWraACgj9bm5f6uGipOrA5bDrE2rblvrN8oejxxr2jgtX9k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783516140; c=relaxed/simple;
-	bh=nWlM7nDs+Ehx5fhLbXpm/09fzp4EvEITzuNKLHJxYb0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HvM8k9D6ZHTxanqvalpzcpnSc0t4h/GHyZM90RC4qp6i6JF0B4wqUA19JTyLoI4I8IqtMvhZof5oBi+Nvc5hrm01LZcWIOHxXPjdZMsQ+Si45vMEyPFT2fO2LKV40RL8piKQA8n8qEg+1eaWodFrUxlmCzJm4md9WvSOP/Ub08A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Sy7F/cjK; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553F6281369;
+	Wed,  8 Jul 2026 13:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783516278; cv=pass; b=MeIRVMHePEWcthOYd2Y/Qan5hFLXM5twlEoZOdlKxpdAas6Gqg7hZjpLIjbAE+w8f0F/3i+eGZ1oNC8nKK4mwubnH/+UbizrAyBNLtzICF4Sp9R7idWQRjrgWyEUtv1pGMhFeC7PYrqBKUOQ8FkAWIs9DRFrzwsTi04xDAPS9lk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783516278; c=relaxed/simple;
+	bh=LyMPmHxHOQ6eDXl4I4BLy2jd4ntW8YQp39+vDKoIf2w=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=b2kF7T/HYeqbR6jkULZKbojxh6K5JCmkdJLWw1Jn+jBRxCNfQIMrKaxynPjvyZNbuneggC0cspxNZG7hAbO+dCX460H84Hu6ujvna6VwkBC4vBk5FzW4G9FDGvboON6kywwZmb+b8SGN8ArJKJPrmzBvslN+wjdIs7VNaRnsz4Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=FuKr9Dvo; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Sy7F/cjK"
-Received: from localhost (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id D10D120B7166;
-	Wed,  8 Jul 2026 06:08:52 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D10D120B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1783516133;
-	bh=/hSmkr+dIyafyncKqTXRAo+CdjfIAF4DNB/jk9lnxO8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Sy7F/cjKk+upbwjLploWfMegU+27nNSPh9IWPQ6muPe1H9SH5JTa2pAKz0Bt117Mk
-	 Lc4jqwuyz3jeY+s1frCVhzBitrxEnBrbHfEJiEou0nwXBU7ykvbK34FKUUePGTrBXt
-	 Ting0Wwv5me2QZume4tavc7rEFxGOpOPz799+nz0=
-Date: Wed, 8 Jul 2026 21:08:55 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, 
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>, 
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>, 
-	"longli@microsoft.com" <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>, 
-	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>, 
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com" <mrathor@linux.microsoft.com>
-Subject: Re: [PATCH v2 2/4] Drivers: hv: Add logical device ID registry for
- vPCI devices
-Message-ID: <u2l4lz5skybcukrb6hwp2u6v3jdibrugokxmclgv3uq4ljj3vw@x7mlfvuwb5f4>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-3-zhangyu1@linux.microsoft.com>
- <SN6PR02MB415798534DFCC14E5202D021D4FF2@SN6PR02MB4157.namprd02.prod.outlook.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="FuKr9Dvo"
+ARC-Seal: i=1; a=rsa-sha256; t=1783516233; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=VxX87XaouBpnkXiVPtN4DYtw84IPZKmh6CVC2DtX3diBxlXmZHje2ZVDWjxuSFvAAhmN5+MwGwhvMHtpqpcLbIraZqRFN6VxTlTpmu0/NB6njVEdRT48cYgJbe75Te1zKeG9biYPsExKDYBeyQ8HGDzfYIyWIEmujqhHsEjS6KY=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1783516233; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=UTlHlLqqFS+y76nWC5IWjsnNvvO8MsWQtswtgtQQ5Lo=; 
+	b=B1sE7d12IxQ4VSn4c5YuIkDmg9atx1HFinoLE3UbWbA1o3JYltHkV5rdohlHQRaDFaOhvFOXqcGmCt+lWextVpWZE1EiP7GHeMUpEmkWQHUvapSlutFz0mBpPQ7+D5NQ6Dt9lNT9JdN667y268G9rbNGieHKqZKfKRGNRUCJ8lM=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783516233;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
+	bh=UTlHlLqqFS+y76nWC5IWjsnNvvO8MsWQtswtgtQQ5Lo=;
+	b=FuKr9DvoZJOO5I/8wQz+d6ZM/Yd5LVyRU22wvKkBq0BpX2kLPn8wh9ZFYdsWTU1M
+	zaWAvy5RmBiNhsk82fqYDZGOO3FUhMHFJT+2IOegrY26trlNSoZ11BVjiAQ3o74AZEP
+	8nXTEzktJwPgim7ErlhNqIQ1DJl9vWS1wmXn7Cvw=
+Received: by mx.zohomail.com with SMTPS id 1783516231275340.7934923442349;
+	Wed, 8 Jul 2026 06:10:31 -0700 (PDT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <SN6PR02MB415798534DFCC14E5202D021D4FF2@SN6PR02MB4157.namprd02.prod.outlook.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [PATCH v6 07/20] rust: io: implement `Mmio` as view type
+From: Daniel Almeida <daniel.almeida@collabora.com>
+In-Reply-To: <20260706-io_projection-v6-7-72cd5d055d54@garyguo.net>
+Date: Wed, 8 Jul 2026 10:10:10 -0300
+Cc: Alice Ryhl <aliceryhl@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>,
+ Tamir Duberstein <tamird@kernel.org>,
+ =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>,
+ David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Michal Wilczynski <m.wilczynski@samsung.com>,
+ =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ driver-core@lists.linux.dev,
+ rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ nova-gpu@lists.linux.dev,
+ dri-devel@lists.freedesktop.org,
+ linux-pwm@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <7CE0D9BF-E945-44A3-AAC6-C230B67EA335@collabora.com>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-7-72cd5d055d54@garyguo.net>
+To: Gary Guo <gary@garyguo.net>
+X-Mailer: Apple Mail (2.3826.700.81)
+X-ZohoMailClient: External
 
-On Wed, Jul 08, 2026 at 02:52:43AM +0000, Michael Kelley wrote:
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Thursday, July 2, 2026 9:05 AM
-> > 
-> > From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > 
-> > Hyper-V identifies each PCI pass-thru device by a logical device ID in
-> > its hypercall interface. This ID consists of a per-bus prefix, derived
-> > from the VMBus device instance GUID, combined with the PCI function
-> > number of the endpoint device.
-> > 
-> > Add a small registry in hv_common.c that maps a PCI domain number to its
-> > logical device ID prefix. The vPCI bus driver (pci-hyperv) registers the
-> > prefix when a bus is probed and unregisters it when the bus is removed.
-> > Consumers such as the para-virtualized IOMMU driver look up the prefix
-> > by PCI domain number and combine it with the function number to form the
-> > complete logical device ID for hypercalls.
-> > 
-> > The prefix construction is shared via hv_build_logical_dev_id_prefix() so
-> > that pci-hyperv's interrupt retargeting path and the registry use exactly
-> > the same byte layout. It is derived on demand from the constant hv_device
-> > instance GUID rather than cached in struct hv_pcibus_device, which is
-> > private to the pci-hyperv module; this keeps the interface narrow and
-> > avoids depending on pci-hyperv internals.
-> > 
-> > Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> > Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> > Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > ---
-> >  drivers/hv/hv_common.c              | 95 +++++++++++++++++++++++++++++
-> >  drivers/pci/controller/pci-hyperv.c | 21 +++++--
-> >  include/asm-generic/mshyperv.h      | 13 ++++
-> >  include/linux/hyperv.h              |  8 +++
-> >  4 files changed, 132 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
-> > index 6b67ac616789..53493f8d14dc 100644
-> > --- a/drivers/hv/hv_common.c
-> > +++ b/drivers/hv/hv_common.c
-> > @@ -26,6 +26,8 @@
-> >  #include <linux/kmsg_dump.h>
-> >  #include <linux/sizes.h>
-> >  #include <linux/slab.h>
-> > +#include <linux/list.h>
-> > +#include <linux/spinlock.h>
-> >  #include <linux/dma-map-ops.h>
-> >  #include <linux/set_memory.h>
-> >  #include <hyperv/hvhdk.h>
-> > @@ -863,3 +865,96 @@ const char *hv_result_to_string(u64 status)
-> >  	return "Unknown";
-> >  }
-> >  EXPORT_SYMBOL_GPL(hv_result_to_string);
-> > +
-> > +#ifdef CONFIG_HYPERV_PVIOMMU
-> > +/*
-> > + * Logical device ID registry shared between the vPCI bus driver
-> > + * (pci-hyperv) and the para-virtualized IOMMU driver. The vPCI driver
-> > + * registers the per-bus logical device ID prefix at bus probe time, and
-> > + * the pvIOMMU driver looks it up to build the full logical device ID used
-> > + * in IOMMU hypercalls.
-> > + */
-> > +struct hv_pci_busdata {
-> > +	int		 pci_domain_nr;
-> > +	u32		 logical_dev_id_prefix;
-> > +	struct list_head list;
-> > +};
-> > +
-> > +static LIST_HEAD(hv_pci_bus_list);
-> > +static DEFINE_SPINLOCK(hv_pci_bus_lock);
-> > +
-> > +int hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_prefix)
-> > +{
-> > +	struct hv_pci_busdata *bus, *new;
-> > +	int ret = 0;
-> > +
-> > +	new = kzalloc_obj(*new, GFP_KERNEL);
-> > +	if (!new)
-> > +		return -ENOMEM;
-> > +
-> > +	spin_lock(&hv_pci_bus_lock);
-> > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> > +		if (bus->pci_domain_nr != pci_domain_nr)
-> > +			continue;
-> > +
-> > +		if (bus->logical_dev_id_prefix != logical_dev_id_prefix) {
-> > +			pr_err("stale registration for PCI domain %d (old prefix 0x%08x, new 0x%08x)\n",
-> > +			       pci_domain_nr, bus->logical_dev_id_prefix,
-> > +			       logical_dev_id_prefix);
-> > +			ret = -EEXIST;
-> > +		}
-> > +
-> > +		goto out_free;
-> > +	}
-> > +
-> > +	new->pci_domain_nr = pci_domain_nr;
-> > +	new->logical_dev_id_prefix = logical_dev_id_prefix;
-> > +	list_add(&new->list, &hv_pci_bus_list);
-> > +	spin_unlock(&hv_pci_bus_lock);
-> > +	return 0;
-> > +
-> > +out_free:
-> > +	spin_unlock(&hv_pci_bus_lock);
-> > +	kfree(new);
-> > +	return ret;
-> > +}
-> > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_register_pci_bus, "pci-hyperv");
-> > +
-> > +void hv_iommu_unregister_pci_bus(int pci_domain_nr)
-> > +{
-> > +	struct hv_pci_busdata *bus, *tmp;
-> > +
-> > +	spin_lock(&hv_pci_bus_lock);
-> > +	list_for_each_entry_safe(bus, tmp, &hv_pci_bus_list, list) {
-> > +		if (bus->pci_domain_nr == pci_domain_nr) {
-> > +			list_del(&bus->list);
-> > +			kfree(bus);
-> > +			break;
-> > +		}
-> > +	}
-> > +	spin_unlock(&hv_pci_bus_lock);
-> > +}
-> > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_unregister_pci_bus, "pci-hyperv");
-> > +
-> > +/*
-> > + * Look up the logical device ID prefix registered for @pci_domain_nr.
-> > + * Returns 0 on success with *prefix filled in; -ENODEV if no entry is
-> > + * registered for that PCI domain.
-> > + */
-> > +int hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix)
-> > +{
-> > +	struct hv_pci_busdata *bus;
-> > +	int ret = -ENODEV;
-> > +
-> > +	spin_lock(&hv_pci_bus_lock);
-> > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> > +		if (bus->pci_domain_nr == pci_domain_nr) {
-> > +			*prefix = bus->logical_dev_id_prefix;
-> > +			ret = 0;
-> > +			break;
-> > +		}
-> > +	}
-> > +	spin_unlock(&hv_pci_bus_lock);
-> > +	return ret;
-> > +}
-> 
-> I started thinking about the mechanism here because it's somewhat
-> annoying that it takes 77 lines of code (sans comments) to manage
-> this simple little mapping. I also started thinking about how many entries
-> are likely to be in the mapping. A guest VM probably has fewer than 10
-> entries unless it has multiple NICs and maybe some GPUs. But this code
-> is also intended to be used by the Linux-as-root code, and I'm thinking
-> that the number of PCI devices managed by the root could easily be a
-> hundred or more if the root is managing a couple dozen VMs on a large
-> physical server. Searching a linked list with 100 or more entries could be
-> a bit slow.
-> 
-> If only the guest scenario were needed, you could declare a static
-> array with 64 entries (64 is an arbitrary upper bound), and just search
-> through the array instead of having to allocate memory, deal with
-> allocation failures, and deal with linked lists. But a fixed size array
-> would need to be much bigger for the root scenario, and you would
-> still be doing a linear search.
-> 
-> A better alternative to consider is rhashtable, which is an existing
-> Linux kernel facility. Based on what an AI bot generated for me, the
-> code for setting up and using rhashtable is straightforward, and
-> would probably result in far fewer than 77 lines of code. Lookups
-> would also be faster than a linear search, at least for the root case
-> with more than just a few entries. I'd suggest looking at rhashtable
-> to see whether you like how the resulting code comes out for this
-> use case, and whether it really is simpler than a roll-your-own linked
-> list.
-> 
 
-Thank you so much for thinking this through, Michael! That is really
-a valid concern.
 
-How about using XArray? It might be more lightweight compared with
-rhashtable. Using pci_domain_nr as the key and prefix as the value.
-Maybe sth. like:
-                                                                                                                                                        ┃
-	static DEFINE_XARRAY(hv_pci_bus_xa);
+> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
+>=20
+> Implement `Mmio` as view type and convert `RelaxedMmio` to view type =
+as
+> well. I/O implementations of `MmioOwned` are changed to delegate to =
+the
+> `Mmio` view type.
+>=20
+> All existing users of `MmioOwned` in the documentation which do not
+> actually reflect the owning semantics is converted.
+>=20
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+> rust/kernel/io.rs          | 176 =
+++++++++++++++++++++++++++++++++++-----------
+> rust/kernel/io/poll.rs     |  10 +--
+> rust/kernel/io/register.rs |  24 +++----
+> 3 files changed, 153 insertions(+), 57 deletions(-)
+>=20
+> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+> index f93be7f78069..8110b49aa430 100644
+> --- a/rust/kernel/io.rs
+> +++ b/rust/kernel/io.rs
+> @@ -4,6 +4,10 @@
+> //!
+> //! C header: =
+[`include/asm-generic/io.h`](srctree/include/asm-generic/io.h)
+>=20
+> +use core::{
+> +    marker::PhantomData, //
+> +};
+> +
+> use crate::{
+>     bindings,
+>     prelude::*,
+> @@ -537,10 +541,11 @@ fn write64(self, value: u64, offset: usize)
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_reads(io: &MmioOwned) -> Result {
+> +    /// fn do_reads(io: Mmio<'_, Region>) -> Result {
+>     ///     // 32-bit read from address `0x10`.
+>     ///     let v: u32 =3D io.try_read(0x10)?;
+>     ///
+> @@ -571,10 +576,11 @@ fn try_read<T, L>(self, location: L) -> =
+Result<T>
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_writes(io: &MmioOwned) -> Result {
+> +    /// fn do_writes(io: Mmio<'_, Region>) -> Result {
+>     ///     // 32-bit write of value `1` at address `0x10`.
+>     ///     io.try_write(0x10, 1u32)?;
+>     ///
+> @@ -609,7 +615,8 @@ fn try_write<T, L>(self, location: L, value: T) -> =
+Result
+>     /// use kernel::io::{
+>     ///     register,
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+>     /// register! {
+> @@ -625,7 +632,7 @@ fn try_write<T, L>(self, location: L, value: T) -> =
+Result
+>     ///     }
+>     /// }
+>     ///
+> -    /// fn do_write_reg(io: &MmioOwned) -> Result {
+> +    /// fn do_write_reg(io: Mmio<'_, Region>) -> Result {
+>     ///
+>     ///     io.try_write_reg(VERSION::new(1, 0))
+>     /// }
+> @@ -654,10 +661,11 @@ fn try_write_reg<T, L, V>(self, value: V) -> =
+Result
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_update(io: &MmioOwned<0x1000>) -> Result {
+> +    /// fn do_update(io: Mmio<'_, Region<0x1000>>) -> Result {
+>     ///     io.try_update(0x10, |v: u32| {
+>     ///         v + 1
+>     ///     })
+> @@ -691,10 +699,11 @@ fn try_update<T, L, F>(self, location: L, f: F) =
+-> Result
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_reads(io: &MmioOwned<0x1000>) {
+> +    /// fn do_reads(io: Mmio<'_, Region<0x1000>>) {
+>     ///     // 32-bit read from address `0x10`.
+>     ///     let v: u32 =3D io.read(0x10);
+>     ///
+> @@ -723,10 +732,11 @@ fn read<T, L>(self, location: L) -> T
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_writes(io: &MmioOwned<0x1000>) {
+> +    /// fn do_writes(io: Mmio<'_, Region<0x1000>>) {
+>     ///     // 32-bit write of value `1` at address `0x10`.
+>     ///     io.write(0x10, 1u32);
+>     ///
+> @@ -757,7 +767,8 @@ fn write<T, L>(self, location: L, value: T)
+>     /// use kernel::io::{
+>     ///     register,
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+>     /// register! {
+> @@ -773,7 +784,7 @@ fn write<T, L>(self, location: L, value: T)
+>     ///     }
+>     /// }
+>     ///
+> -    /// fn do_write_reg(io: &MmioOwned<0x1000>) {
+> +    /// fn do_write_reg(io: Mmio<'_, Region<0x1000>>) {
+>     ///     io.write_reg(VERSION::new(1, 0));
+>     /// }
+>     /// ```
+> @@ -801,10 +812,11 @@ fn write_reg<T, L, V>(self, value: V)
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     /// };
+>     ///
+> -    /// fn do_update(io: &MmioOwned<0x1000>) {
+> +    /// fn do_update(io: Mmio<'_, Region<0x1000>>) {
+>     ///     io.update(0x10, |v: u32| {
+>     ///         v + 1
+>     ///     })
+> @@ -828,16 +840,72 @@ fn update<T, L, F>(self, location: L, f: F)
+>     }
+> }
+>=20
+> +/// A view of memory-mapped I/O region.
+> +///
+> +/// # Invariant
+> +///
+> +/// `ptr` points to a valid and aligned memory-mapped I/O region for =
+the duration lifetime `'a`.
+> +pub struct Mmio<'a, T: ?Sized> {
+> +    ptr: *mut T,
+> +    phantom: PhantomData<&'a ()>,
+> +}
+> +
+> +impl<T: ?Sized> Copy for Mmio<'_, T> {}
+> +impl<T: ?Sized> Clone for Mmio<'_, T> {
+> +    #[inline]
+> +    fn clone(&self) -> Self {
+> +        *self
+> +    }
+> +}
+> +
+> +impl<'a, T: ?Sized> Mmio<'a, T> {
+> +    /// Create a `Mmio`, providing the accessors to the MMIO mapping.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// `raw` represents a valid and aligned memory-mapped I/O region =
+while `'a` is alive.
+> +    #[inline]
+> +    pub unsafe fn from_raw(raw: MmioRaw<T>) -> Self {
+> +        // INVARIANT: Per safety requirement.
+> +        Self {
+> +            ptr: raw.ptr,
+> +            phantom: PhantomData,
+> +        }
+> +    }
+> +}
+> +
+> +// SAFETY: `Mmio<'_, T>` is conceptually `&T` but in I/O memory.
+> +unsafe impl<T: ?Sized + Sync> Send for Mmio<'_, T> {}
+> +
+> +// SAFETY: `Mmio<'_, T>` is conceptually `&T` but in I/O memory.
+> +unsafe impl<T: ?Sized + Sync> Sync for Mmio<'_, T> {}
+> +
+> +impl<T: ?Sized + KnownSize> Io for Mmio<'_, T> {
+> +    type Target =3D T;
+> +
+> +    #[inline]
+> +    fn addr(self) -> usize {
+> +        self.ptr.addr()
+> +    }
+> +
+> +    #[inline]
+> +    fn maxsize(self) -> usize {
+> +        KnownSize::size(self.ptr)
+> +    }
+> +}
+> +
+> /// Implements [`IoCapable`] on `$mmio` for `$ty` using `$read_fn` and =
+`$write_fn`.
+> macro_rules! impl_mmio_io_capable {
+>     ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, =
+$write_fn:ident) =3D> {
+>         $(#[$attr])*
+> -        impl<const SIZE: usize> IoCapable<$ty> for &$mmio<SIZE> {
+> +        impl<T: ?Sized> IoCapable<$ty> for $mmio<'_, T> {
+> +            #[inline]
+>             unsafe fn io_read(self, address: usize) -> $ty {
+>                 // SAFETY: By the trait invariant `address` is a valid =
+address for MMIO operations.
+>                 unsafe { bindings::$read_fn(address as *const c_void) =
+}
+>             }
+>=20
+> +            #[inline]
+>             unsafe fn io_write(self, value: $ty, address: usize) {
+>                 // SAFETY: By the trait invariant `address` is a valid =
+address for MMIO operations.
+>                 unsafe { bindings::$write_fn(value, address as *mut =
+c_void) }
+> @@ -847,17 +915,12 @@ unsafe fn io_write(self, value: $ty, address: =
+usize) {
+> }
+>=20
+> // MMIO regions support 8, 16, and 32-bit accesses.
+> -impl_mmio_io_capable!(MmioOwned, u8, readb, writeb);
+> -impl_mmio_io_capable!(MmioOwned, u16, readw, writew);
+> -impl_mmio_io_capable!(MmioOwned, u32, readl, writel);
+> +impl_mmio_io_capable!(Mmio, u8, readb, writeb);
+> +impl_mmio_io_capable!(Mmio, u16, readw, writew);
+> +impl_mmio_io_capable!(Mmio, u32, readl, writel);
+> // MMIO regions on 64-bit systems also support 64-bit accesses.
+> -impl_mmio_io_capable!(
+> -    MmioOwned,
+> -    #[cfg(CONFIG_64BIT)]
+> -    u64,
+> -    readq,
+> -    writeq
+> -);
+> +#[cfg(CONFIG_64BIT)]
+> +impl_mmio_io_capable!(Mmio, u64, readq, writeq);
+>=20
+> impl<'a, const SIZE: usize> Io for &'a MmioOwned<SIZE> {
+>     type Target =3D Region<SIZE>;
+> @@ -875,6 +938,23 @@ fn maxsize(self) -> usize {
+>     }
+> }
+>=20
+> +impl<'a, const SIZE: usize, T> IoCapable<T> for &'a MmioOwned<SIZE>
+> +where
+> +    Mmio<'a, Region<SIZE>>: IoCapable<T>,
+> +{
+> +    #[inline]
+> +    unsafe fn io_read(self, address: usize) -> T {
+> +        // SAFETY: Per safety requirement.
+> +        unsafe { self.as_view().io_read(address) }
+> +    }
+> +
+> +    #[inline]
+> +    unsafe fn io_write(self, value: T, address: usize) {
+> +        // SAFETY: Per safety requirement.
+> +        unsafe { self.as_view().io_write(value, address) }
+> +    }
+> +}
+> +
+> impl<const SIZE: usize> MmioOwned<SIZE> {
+>     /// Converts an `MmioRaw` into an `MmioOwned` instance, providing =
+the accessors to the MMIO
+>     /// mapping.
+> @@ -887,19 +967,33 @@ pub unsafe fn from_raw(raw: =
+&MmioRaw<Region<SIZE>>) -> &Self {
+>         // SAFETY: `MmioOwned` is a transparent wrapper around =
+`MmioRaw`.
+>         unsafe { &*core::ptr::from_ref(raw).cast() }
+>     }
+> +
+> +    /// Return a view that covers the full region.
+> +    #[inline]
+> +    pub fn as_view(&self) -> Mmio<'_, Region<SIZE>> {
+> +        // SAFETY: `Mmio` has same invariant as `MmioOwned`.
+> +        unsafe { Mmio::from_raw(self.0) }
+> +    }
+> }
+>=20
+> -/// [`MmioOwned`] wrapper using relaxed accessors.
+> +/// [`Mmio`] but using relaxed accessors.
+> ///
+> /// This type provides an implementation of [`Io`] that uses relaxed =
+I/O MMIO operands instead of
+> /// the regular ones.
+> ///
+> -/// See [`MmioOwned::relaxed`] for a usage example.
+> -#[repr(transparent)]
+> -pub struct RelaxedMmio<const SIZE: usize =3D 0>(MmioOwned<SIZE>);
+> +/// See [`Mmio::relaxed`] for a usage example.
+> +pub struct RelaxedMmio<'a, T: ?Sized>(Mmio<'a, T>);
+>=20
+> -impl<'a, const SIZE: usize> Io for &'a RelaxedMmio<SIZE> {
+> -    type Target =3D Region<SIZE>;
+> +impl<T: ?Sized> Copy for RelaxedMmio<'_, T> {}
+> +impl<T: ?Sized> Clone for RelaxedMmio<'_, T> {
+> +    #[inline]
+> +    fn clone(&self) -> Self {
+> +        *self
+> +    }
+> +}
+> +
+> +impl<T: ?Sized + KnownSize> Io for RelaxedMmio<'_, T> {
+> +    type Target =3D T;
+>=20
+>     #[inline]
+>     fn addr(self) -> usize {
+> @@ -912,8 +1006,8 @@ fn maxsize(self) -> usize {
+>     }
+> }
+>=20
+> -impl<const SIZE: usize> MmioOwned<SIZE> {
+> -    /// Returns a [`RelaxedMmio`] reference that performs relaxed I/O =
+operations.
+> +impl<'a, T: ?Sized> Mmio<'a, T> {
+> +    /// Returns a [`RelaxedMmio`] that performs relaxed I/O =
+operations.
+>     ///
+>     /// Relaxed accessors do not provide ordering guarantees with =
+respect to DMA or memory accesses
+>     /// and can be used when such ordering is not required.
+> @@ -923,20 +1017,20 @@ impl<const SIZE: usize> MmioOwned<SIZE> {
+>     /// ```no_run
+>     /// use kernel::io::{
+>     ///     Io,
+> -    ///     MmioOwned,
+> +    ///     Mmio,
+> +    ///     Region,
+>     ///     RelaxedMmio,
+>     /// };
+>     ///
+> -    /// fn do_io(io: &MmioOwned<0x100>) {
+> +    /// fn do_io(io: Mmio<'_, Region<0x100>>) {
+>     ///     // The access is performed using `readl_relaxed` instead =
+of `readl`.
+>     ///     let v =3D io.relaxed().read32(0x10);
+>     /// }
+>     ///
+>     /// ```
+> -    pub fn relaxed(&self) -> &RelaxedMmio<SIZE> {
+> -        // SAFETY: `RelaxedMmio` is `#[repr(transparent)]` over =
+`MmioOwned`, so `MmioOwned<SIZE>`
+> -        // and `RelaxedMmio<SIZE>` have identical layout.
+> -        unsafe { core::mem::transmute(self) }
+> +    #[inline]
+> +    pub fn relaxed(self) -> RelaxedMmio<'a, T> {
+> +        RelaxedMmio(self)
+>     }
+> }
+>=20
+> diff --git a/rust/kernel/io/poll.rs b/rust/kernel/io/poll.rs
+> index 79828a8006b5..d75f2fcf46f2 100644
+> --- a/rust/kernel/io/poll.rs
+> +++ b/rust/kernel/io/poll.rs
+> @@ -47,14 +47,15 @@
+> /// ```no_run
+> /// use kernel::io::{
+> ///     Io,
+> -///     MmioOwned,
+> +///     Mmio,
+> +///     Region,
+> ///     poll::read_poll_timeout, //
+> /// };
+> /// use kernel::time::Delta;
+> ///
+> /// const HW_READY: u16 =3D 0x01;
+> ///
+> -/// fn wait_for_hardware<const SIZE: usize>(io: &MmioOwned<SIZE>) -> =
+Result {
+> +/// fn wait_for_hardware<const SIZE: usize>(io: Mmio<'_, =
+Region<SIZE>>) -> Result {
+> ///     read_poll_timeout(
+> ///         // The `op` closure reads the value of a specific status =
+register.
+> ///         || io.try_read16(0x1000),
+> @@ -134,14 +135,15 @@ pub fn read_poll_timeout<Op, Cond, T>(
+> /// ```no_run
+> /// use kernel::io::{
+> ///     Io,
+> -///     MmioOwned,
+> +///     Mmio,
+> +///     Region,
+> ///     poll::read_poll_timeout_atomic, //
+> /// };
+> /// use kernel::time::Delta;
+> ///
+> /// const HW_READY: u16 =3D 0x01;
+> ///
+> -/// fn wait_for_hardware<const SIZE: usize>(io: &MmioOwned<SIZE>) -> =
+Result {
+> +/// fn wait_for_hardware<const SIZE: usize>(io: Mmio<'_, =
+Region<SIZE>>) -> Result {
+> ///     read_poll_timeout_atomic(
+> ///         // The `op` closure reads the value of a specific status =
+register.
+> ///         || io.try_read16(0x1000),
+> diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+> index fd3bf6220f95..6cb07fc92cc3 100644
+> --- a/rust/kernel/io/register.rs
+> +++ b/rust/kernel/io/register.rs
+> @@ -58,7 +58,7 @@
+> //!     },
+> //!     num::Bounded,
+> //! };
+> -//! # use kernel::io::MmioOwned;
+> +//! # use kernel::io::{Mmio, Region};
+> //! # register! {
+> //! #     pub BOOT_0(u32) @ 0x00000100 {
+> //! #         15:8 vendor_id;
+> @@ -66,7 +66,7 @@
+> //! #         3:0 minor_revision;
+> //! #     }
+> //! # }
+> -//! # fn test(io: &MmioOwned<0x1000>) {
+> +//! # fn test(io: Mmio<'_, Region<0x1000>>) {
+> //! # fn obtain_vendor_id() -> u8 { 0xff }
+> //!
+> //! // Read from the register's defined offset (0x100).
+> @@ -446,7 +446,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///         Io,
+> ///     },
+> /// };
+> -/// # use kernel::io::MmioOwned;
+> +/// # use kernel::io::{Mmio, Region};
+> ///
+> /// register! {
+> ///     FIXED_REG(u32) @ 0x100 {
+> @@ -455,7 +455,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test(io: &MmioOwned<0x1000>) {
+> +/// # fn test(io: Mmio<'_, Region<0x1000>>) {
+> /// let val =3D io.read(FIXED_REG);
+> ///
+> /// // Write from an already-existing value.
+> @@ -559,7 +559,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///         Io,
+> ///     },
+> /// };
+> -/// # use kernel::io::MmioOwned;
+> +/// # use kernel::io::{Mmio, Region};
+> ///
+> /// // Type used to identify the base.
+> /// pub struct CpuCtlBase;
+> @@ -584,7 +584,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test(io: MmioOwned<0x1000>) {
+> +/// # fn test(io: Mmio<'_, Region<0x1000>>) {
+> /// // Read the status of `Cpu0`.
+> /// let cpu0_started =3D io.read(CPU_CTL::of::<Cpu0>());
+> ///
+> @@ -601,7 +601,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test2(io: MmioOwned<0x1000>) {
+> +/// # fn test2(io: Mmio<'_, Region<0x1000>>) {
+> /// // Start the aliased `CPU0`, leaving its other fields untouched.
+> /// io.update(CPU_CTL_ALIAS::of::<Cpu0>(), |r| =
+r.with_alias_start(true));
+> /// # }
+> @@ -638,7 +638,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///         Io,
+> ///     },
+> /// };
+> -/// # use kernel::io::MmioOwned;
+> +/// # use kernel::io::{Mmio, Region};
+> /// # fn get_scratch_idx() -> usize {
+> /// #   0x15
+> /// # }
+> @@ -651,7 +651,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test(io: &MmioOwned<0x1000>)
+> +/// # fn test(io: Mmio<'_, Region<0x1000>>)
+> /// #     -> Result<(), Error>{
+> /// // Read scratch register 0, i.e. I/O address `0x80`.
+> /// let scratch_0 =3D io.read(SCRATCH::at(0)).value();
+> @@ -724,7 +724,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///         Io,
+> ///     },
+> /// };
+> -/// # use kernel::io::MmioOwned;
+> +/// # use kernel::io::{Mmio, Region};
+> /// # fn get_scratch_idx() -> usize {
+> /// #   0x15
+> /// # }
+> @@ -752,7 +752,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test(io: &MmioOwned<0x1000>) -> Result<(), Error> {
+> +/// # fn test(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+> /// // Read scratch register 0 of CPU0.
+> /// let scratch =3D io.read(CPU_SCRATCH::of::<Cpu0>().at(0));
+> ///
+> @@ -794,7 +794,7 @@ fn into_io_op(self) -> (FixedRegisterLoc<T>, T) {
+> ///     }
+> /// }
+> ///
+> -/// # fn test2(io: &MmioOwned<0x1000>) -> Result<(), Error> {
+> +/// # fn test2(io: Mmio<'_, Region<0x1000>>) -> Result<(), Error> {
+> /// let cpu0_status =3D =
+io.read(CPU_FIRMWARE_STATUS::of::<Cpu0>()).status();
+> /// # Ok(())
+> /// # }
+>=20
+> --=20
+> 2.54.0
+>=20
 
-	int hv_iommu_register_pci_bus(int domain_nr, u32 prefix)
-	{
-		return xa_insert(&hv_pci_bus_xa, domain_nr,
-				xa_mk_value(prefix), GFP_KERNEL);
-	}                                                                                                                                                ┃
 
-	void hv_iommu_unregister_pci_bus(int domain_nr)
-	{
-		xa_erase(&hv_pci_bus_xa, domain_nr);
-	}
+Ran the tests again, they=E2=80=99re passing.
 
-	int hv_iommu_lookup_logical_dev_id(int domain_nr, u32 *prefix)
-	{
-		void *entry = xa_load(&hv_pci_bus_xa, domain_nr);
-		if (!entry)                                                                                                                                  ┃
-			return -ENODEV;
-		*prefix = xa_to_value(entry);
-		return 0;                                                                                                                                    ┃
-	}
-
-B.R.
-Yu
-	                                                                                                                                                 
-                                                                                                                                                        ┃
-> Michael
-> 
-> > +#endif /* CONFIG_HYPERV_PVIOMMU */
-> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> > index cfc8fa403dad..58ca2c95bd10 100644
-> > --- a/drivers/pci/controller/pci-hyperv.c
-> > +++ b/drivers/pci/controller/pci-hyperv.c
-> > @@ -641,10 +641,7 @@ static void hv_irq_retarget_interrupt(struct irq_data *data)
-> >  	params->int_entry.source = HV_INTERRUPT_SOURCE_MSI;
-> >  	params->int_entry.msi_entry.address.as_uint32 = int_desc->address & 0xffffffff;
-> >  	params->int_entry.msi_entry.data.as_uint32 = int_desc->data;
-> > -	params->device_id = (hbus->hdev->dev_instance.b[5] << 24) |
-> > -			   (hbus->hdev->dev_instance.b[4] << 16) |
-> > -			   (hbus->hdev->dev_instance.b[7] << 8) |
-> > -			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
-> > +	params->device_id = hv_build_logical_dev_id_prefix(hbus->hdev) |
-> >  			   PCI_FUNC(pdev->devfn);
-> >  	params->int_target.vector = hv_msi_get_int_vector(data);
-> > 
-> > @@ -3715,6 +3712,7 @@ static int hv_pci_probe(struct hv_device *hdev,
-> >  	struct hv_pcibus_device *hbus;
-> >  	int ret, dom;
-> >  	u16 dom_req;
-> > +	u32 prefix;
-> >  	char *name;
-> > 
-> >  	bridge = devm_pci_alloc_host_bridge(&hdev->device, 0);
-> > @@ -3857,13 +3855,22 @@ static int hv_pci_probe(struct hv_device *hdev,
-> > 
-> >  	hbus->state = hv_pcibus_probed;
-> > 
-> > -	ret = create_root_hv_pci_bus(hbus);
-> > +	/* Notify pvIOMMU before any device on the bus is scanned. */
-> > +	prefix = hv_build_logical_dev_id_prefix(hdev);
-> > +
-> > +	ret = hv_iommu_register_pci_bus(dom, prefix);
-> >  	if (ret)
-> >  		goto free_windows;
-> > 
-> > +	ret = create_root_hv_pci_bus(hbus);
-> > +	if (ret)
-> > +		goto unregister_pviommu;
-> > +
-> >  	mutex_unlock(&hbus->state_lock);
-> >  	return 0;
-> > 
-> > +unregister_pviommu:
-> > +	hv_iommu_unregister_pci_bus(dom);
-> >  free_windows:
-> >  	hv_pci_free_bridge_windows(hbus);
-> >  exit_d0:
-> > @@ -3977,6 +3984,8 @@ static void hv_pci_remove(struct hv_device *hdev)
-> > 
-> >  	hbus = hv_get_drvdata(hdev);
-> >  	if (hbus->state == hv_pcibus_installed) {
-> > +		int dom = hbus->bridge->domain_nr;
-> > +
-> >  		tasklet_disable(&hdev->channel->callback_event);
-> >  		hbus->state = hv_pcibus_removing;
-> >  		tasklet_enable(&hdev->channel->callback_event);
-> > @@ -3994,6 +4003,8 @@ static void hv_pci_remove(struct hv_device *hdev)
-> >  		hv_pci_remove_slots(hbus);
-> >  		pci_remove_root_bus(hbus->bridge->bus);
-> >  		pci_unlock_rescan_remove();
-> > +
-> > +		hv_iommu_unregister_pci_bus(dom);
-> >  	}
-> > 
-> >  	hv_pci_bus_exit(hdev, false);
-> > diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
-> > index bf601d67cecb..f65344f2bb81 100644
-> > --- a/include/asm-generic/mshyperv.h
-> > +++ b/include/asm-generic/mshyperv.h
-> > @@ -73,6 +73,19 @@ extern enum hv_partition_type hv_curr_partition_type;
-> >  extern void * __percpu *hyperv_pcpu_input_arg;
-> >  extern void * __percpu *hyperv_pcpu_output_arg;
-> > 
-> > +#ifdef CONFIG_HYPERV_PVIOMMU
-> > +int  hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_prefix);
-> > +void hv_iommu_unregister_pci_bus(int pci_domain_nr);
-> > +int  hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix);
-> > +#else
-> > +static inline int hv_iommu_register_pci_bus(int pci_domain_nr,
-> > +					    u32 logical_dev_id_prefix)
-> > +{
-> > +	return 0;
-> > +}
-> > +static inline void hv_iommu_unregister_pci_bus(int pci_domain_nr) { }
-> > +#endif
-> > +
-> >  u64 hv_do_hypercall(u64 control, void *inputaddr, void *outputaddr);
-> >  u64 hv_do_fast_hypercall8(u16 control, u64 input8);
-> >  u64 hv_do_fast_hypercall16(u16 control, u64 input1, u64 input2);
-> > diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-> > index 9de2c8d6037a..10ee2c462d7c 100644
-> > --- a/include/linux/hyperv.h
-> > +++ b/include/linux/hyperv.h
-> > @@ -1287,6 +1287,14 @@ struct hv_device {
-> >  #define device_to_hv_device(d)	container_of_const(d, struct hv_device, device)
-> >  #define drv_to_hv_drv(d)	container_of_const(d, struct hv_driver, driver)
-> > 
-> > +static inline u32 hv_build_logical_dev_id_prefix(struct hv_device *hdev)
-> > +{
-> > +	return ((u32)hdev->dev_instance.b[5] << 24) |
-> > +	       ((u32)hdev->dev_instance.b[4] << 16) |
-> > +	       ((u32)hdev->dev_instance.b[7] << 8) |
-> > +	       (hdev->dev_instance.b[6] & 0xf8u);
-> > +}
-> > +
-> >  static inline void hv_set_drvdata(struct hv_device *dev, void *data)
-> >  {
-> >  	dev_set_drvdata(&dev->device, data);
-> > --
-> > 2.52.0
-> > 
-> 
+Tested-by: Daniel Almeida <daniel.almeida@collabora.com>
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>=
