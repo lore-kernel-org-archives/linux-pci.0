@@ -1,110 +1,111 @@
-Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C26344212E;
-	Wed,  8 Jul 2026 12:36:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783514169; cv=pass; b=QJlGsPReP7x9jmWODpuBHJ89YQEEzkPJywA+NmHBGGVBg7a6B+mg5DxtTYSi9jqqzCsOrtfxbkcfGD7kvFZ3IZIngCSnNSJ1MNTQCNDWEhmQaIt0N0xeFkDsQnv0ByTCSfr2CIVKVQr7oX7jdVvcl+0CHa6yROmprjSi0ePWx28=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783514169; c=relaxed/simple;
-	bh=iVSkh2VwHSzz7wWJRMIJkqotFEcn/VKW9uhYBLa2OGc=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=KkIL3NfQS16TaeUrABd4/s08g2yK6iIdgFgqldOM0lrufYnKogHLYIABaDf0KZSJOg1/OZj6kMxpB/6aiCQeu9D1geUBs6HPbJrE2a1o3Rov7WD1OSHyb2vfc+iyc/4n4nF6F654aGGzIKHWViQ+TuJ37cQBBGTf+az4mpB1Aos=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=P2BamEQP; arc=pass smtp.client-ip=136.143.188.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BBD2443B6FA;
+	Wed,  8 Jul 2026 12:43:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783514614; cv=none; b=gk0cTzVfJhFFIX/9yMf5D68rcHDa9QBlmp9gdD9E26GbuiFIF824DHwNxQ1H1vhn28SO7YcH6WEIA9GS9ry/SS5z7XD2oWots9UdFI09PSksNINQY1iEmvPuoyHj3sU7uPEb7VWCspyH7NE2N8rYCmfA5m2apmdIWo1kTqF+iNI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783514614; c=relaxed/simple;
+	bh=YPSlorxvKGGGAn9rS2DCDvIqf9nDCHFr8SvpqVkku20=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BQgt5ltGdqz6o3Znd/EYCL0vq3iigz5J7JrnYVgnfAhnoXxHJexWvdr/IOOD6vIDbY4pRSdS+xFOG+0KFqo6a2Cphq/Ip+imb6PC1W4umZzEcChn/3afgUCHbePLdxl2VSM30tH3z7+Rf+Ce7fQYUrjh7nKDHXbAlIQmsigH7oA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=nraVjsSR; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="P2BamEQP"
-ARC-Seal: i=1; a=rsa-sha256; t=1783514132; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=IgwsLR4YXBgeg9hdXqWl3cRAQoCUFHeID18vfCW14pLGEsBs2lTGBH0XWXt4+DsG8gkfddyt8lct1gzG8rPkohvfBp0xUXc8UyiD0SjHLoL1o/OfUNp2DcaBZuoXVUOtkM+tuP24oCrkRrd1vtsSRWcVRet7OxiLMFU4+OVficI=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1783514132; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=iVSkh2VwHSzz7wWJRMIJkqotFEcn/VKW9uhYBLa2OGc=; 
-	b=lC4muKZKKPm0kaluZqEAn0zONJITLYX5/jK9Q+XVJGg12BIVqNcv8ZaLIpuzMaa7xXz3ZymEDNHjfNSYjUCQr+ShwlBwMkKAmYv2QgVw1j5zYN5xMBcs580ujnMW06riHAXVjJmgUDxEVJA9t3Nepv+2Q7Mywz1LwfQDnJksiO4=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783514132;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=iVSkh2VwHSzz7wWJRMIJkqotFEcn/VKW9uhYBLa2OGc=;
-	b=P2BamEQP4hm1JT6pEhN1zEc9jKWFUKzPpewzYeYr4Y3RaTGV58Wi7FWb3yGQMlOF
-	Mjme7sx7/yU+7mR5by6jGul74PhS3s/Xbi0KKhMkohDU8ebCyJnUZSxQo/ozJAiu7gR
-	ECWXYuo4EP2YOMryQdUBFpETza0KZRa+4XvDebzc=
-Received: by mx.zohomail.com with SMTPS id 1783514129301929.26979926663;
-	Wed, 8 Jul 2026 05:35:29 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="nraVjsSR"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id CAE2620B7166;
+	Wed,  8 Jul 2026 05:43:26 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CAE2620B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783514607;
+	bh=dfjsnvM8L5ZEJeKFiMUV10x0T6Aph9uTpWPOLGW1LMQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nraVjsSRVBgKsrN/h1nM6C7JA7jJ0k9gFZTfs+/Og9Z0dB8pNTZbK2UGbxLjIPgD+
+	 AImB40Rw+RgziAN2jG3RnRhpc+xCs/JTeB2KD9br3fpd2m18sVMnGQ+eqPF77kfWQy
+	 jGDtWc2Guou3/dC2yGgQKSTHfAPwmY0Ov3BmpkGY=
+Date: Wed, 8 Jul 2026 20:43:28 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
+	wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com, 
+	longli@microsoft.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
+	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org, mani@kernel.org, 
+	robh@kernel.org, arnd@arndb.de, mhklinux@outlook.com, 
+	jacob.pan@linux.microsoft.com, tgopinath@linux.microsoft.com, 
+	easwar.hariharan@linux.microsoft.com, mrathor@linux.microsoft.com
+Subject: Re: [PATCH v2 4/4] iommu/hyperv: Add page-selective IOTLB flush
+ support
+Message-ID: <x2aatvemtx5sjnkcudcj6q5uwsjg533kiitqmg7lriknsfcd5c@t3ohzsw3ylr3>
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+ <20260702160518.311234-5-zhangyu1@linux.microsoft.com>
+ <20260703171018.GA1968184@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH v6 06/20] rust: io: rename `Mmio` to `MmioOwned`
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260706-io_projection-v6-6-72cd5d055d54@garyguo.net>
-Date: Wed, 8 Jul 2026 09:35:09 -0300
-Cc: Alice Ryhl <aliceryhl@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>,
- Boqun Feng <boqun@kernel.org>,
- =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Benno Lossin <lossin@kernel.org>,
- Andreas Hindborg <a.hindborg@kernel.org>,
- Trevor Gross <tmgross@umich.edu>,
- Tamir Duberstein <tamird@kernel.org>,
- =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Abdiel Janulgue <abdiel.janulgue@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Alexandre Courbot <acourbot@nvidia.com>,
- David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>,
- Michal Wilczynski <m.wilczynski@samsung.com>,
- =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>,
- driver-core@lists.linux.dev,
- rust-for-linux@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org,
- nova-gpu@lists.linux.dev,
- dri-devel@lists.freedesktop.org,
- linux-pwm@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <6A9DE6F3-F8EC-4C85-B92C-619839DD4985@collabora.com>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-6-72cd5d055d54@garyguo.net>
-To: Gary Guo <gary@garyguo.net>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260703171018.GA1968184@ziepe.ca>
 
+On Fri, Jul 03, 2026 at 02:10:18PM -0300, Jason Gunthorpe wrote:
+> On Fri, Jul 03, 2026 at 12:05:18AM +0800, Yu Zhang wrote:
+> 
+> > @@ -401,10 +402,74 @@ static void hv_iommu_flush_iotlb_all(struct iommu_domain *domain)
+> >  	hv_flush_device_domain(to_hv_iommu_domain(domain));
+> >  }
+> >  
+> > +/*
+> > + * Calculate the minimal power-of-two aligned range that covers [start, end]
+> > + * (end is inclusive). Returns a single (page_number, page_mask_shift)
+> > + * descriptor that may over-flush when the range is not naturally aligned.
+> > + */
+> > +static void hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
+> > +				       union hv_iommu_flush_va *va)
+> > +{
+> > +	unsigned long start_pfn = HVPFN_DOWN(start);
+> > +	unsigned long last_pfn = HVPFN_UP(end + 1) - 1;
+> 
+> Pedantically end can be ULONG_MAX, you shouldn't be adding to it since
+> it will overflow.
+> 
 
+Good catch!
 
-> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
->=20
-> Most users would more commonly reach out to a view of `Mmio` rather =
-than an
-> owned instance of `Mmio`. Only implementor of `Io` like `Bar` or =
-`IoMem`
-> would need the owned version. Thus, rename `Mmio` to `MmioOwned` so =
-that
-> the name `Mmio` can be used for the view type instead.
->=20
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
->=20
+> > +	unsigned long mask_shift, aligned_pfn;
+> > +
+> > +	if (start_pfn == last_pfn) {
+> > +		mask_shift = 0;
+> > +	} else {
+> > +		/*
+> > +		 * Find the highest bit position where start_pfn and last_pfn
+> > +		 * differ.  A range aligned to one above that bit is the
+> > +		 * smallest power-of-two region that covers both endpoints.
+> > +		 */
+> > +		mask_shift = __fls(start_pfn ^ last_pfn) + 1;
+> > +	}
+> > +
+> > +	aligned_pfn = ALIGN_DOWN(start_pfn, 1UL << mask_shift);
+> 
+> I think the whole thing is simpler if it stays using bytes until the end:
+> 
+> 	sz_lg2 = __fls(gather->start ^ gather->end);
+> 	if (sz_lg2 < HV_PAGE_SHIFT)
+> 		cmd.sz_lg2 = HV_PAGE_SHIFT;
+> 
+> 	page_number = (gather->start & ~(1UL << sz_lg2)) >> HV_PAGE_SHIFT;
+> 	page_mask_shift = sz_lg2 - HV_PAGE_SIFT;
+> 
+> No overflows that way either
+> 
 
-Hmm.. thinking a bit more about this, shouldn=E2=80=99t the adjective =
-precede the
-noun? OwnedMmio would mimic the English language and there is already
-precedence in RelaxedMmio.
+Indeed. It is much cleaner. Will rewrite using this logic.
 
-=E2=80=94 Daniel
-
-
+B.R.
+Yu
+> Jason
+> 
