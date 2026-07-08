@@ -1,106 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8170D38BF6C
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jul 2026 10:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1888B38BF7A;
+	Wed,  8 Jul 2026 10:04:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783505095; cv=none; b=lIcCb1KCt86M8GOzuGKFDWnV7PdGCZ8oCvXISQHCAHwAKnVp4OF2DSs7TnOq5WPr3lEto5uKQhABCTXhXvId1PCRL7DNLayMc0TLbFI4BEQLGABMeA8uNlVmwZPWvCgyt3QV0CrSlqjdD/PQHLtXSIQQHQq9YVqeyReEPU+lP/A=
+	t=1783505098; cv=none; b=EyyJLimzqqBUDX8shmXrLs+DqzwizbhYOWCoiKvt4UcGXQQWEBk5chC696eMBCEZPEhu1Qbdlav6Eq1dHg9YpeIt+w6NywfoXGSOpwfmbIo66P3NsR7RilwX809dE5I7vhjHlYrf6cUXTEv9etuEE2foq8CWjnT+yFETht10yG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783505095; c=relaxed/simple;
-	bh=LmUkoIJL4++leoQBziNDPcAXO07FsSR0hCorhNFIoO8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pfkygXkxUF+b5n33i4TuDRIdu0A73M74CgZHxMpNR/dI9anx4Lujp3qqDkWMPrVxMHS4cMWL8OQui6aF4XV+9ErWCSrRfjh8qd/lPn2wJlvZDmIXgaQbx1TNPeehhotPzInrl6YDH1Y4C7dfqTz0S8YWKbaG9IiPH1zw6fk2xQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jOLEE9nf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783505098; c=relaxed/simple;
+	bh=xyfH6doCc7i4sKmvbyl3EEgYdlvB7hed8KKE/NxYwQE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NidjWVqNO96/8s8XmDOfNfGI+HIwCm5Rt1OvEqSA554S9nMIiEK/i9vaqem7ypJUJYfdye1GMRaGa1MxMxs/Rgy97GAk4gbV+Uh1KBMCo/8kBKJtdPWuwerFRs5yDQfg56glYq2cGxLRweJLtWVJO49Lovg3BRWbom2ukPhQtfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=aZVFJSBl; arc=none smtp.client-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jOLEE9nf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00A621F000E9;
-	Wed,  8 Jul 2026 10:04:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783505094;
-	bh=pkang7y9RnFSvS/KW0qylm49cN3pNWTBejIps/C2DqM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jOLEE9nfgGTbHO0yexoUv8m2ezhhxjIWUpXs+WuNE7jmEKvHBcZ4uQLigfDES3scC
-	 smtp75V3ut8R3vmWn7jGR1ho17W2GMLITI4VTJ96YHfUmUZp4uiEtn1deGNJ9e1Zr4
-	 ceG3cU3n3ail/3wrP5n0Ipw1NHB9bb4VJbZH6ravU4w241axlQv8Al7udDvbwdBDrY
-	 eTL8cN9S4mof3inIdjLUCwPanRBwmjjQqZlAirmAT1nzgAyBOZZrhCMulZtJnYcF/l
-	 wznOFBYMijYfhjT5JJcrEHphbSN0al+8eCBEO994aki1Rm9fYb91rAw3WRuHROfjlX
-	 /Ov20aNhu3zcA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: aspeed: Switch to irq_domain_create_linear()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?SmlyaSBTbGFieSAoU1VTRSk=?= <jirislaby@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260708095814.385480-1-jirislaby@kernel.org>
-References: <20260708095814.385480-1-jirislaby@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 10:04:53 +0000
-Message-Id: <20260708100454.00A621F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="aZVFJSBl"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-02.galae.net (Postfix) with ESMTPS id B99891A0ED6;
+	Wed,  8 Jul 2026 10:04:55 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 8C1C560337;
+	Wed,  8 Jul 2026 10:04:55 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id BC29E11BC333A;
+	Wed,  8 Jul 2026 12:04:49 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1783505093; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=w9+HL8YzUCvPl39+FuJI3IoQ23qvAeEZjFCCDFbNqtk=;
+	b=aZVFJSBlkrdzNUA9dPq+XKYA+Z9LUoiiblc3dvEMdNTEEg4Rk/QybiycMePYtR9L/lXRDf
+	yWmt04VhpfkxUuyw4SA/A57nkOYTNdX/tdIP75sF50uexRfUTZrFsHJ4Cmdkdv32C6MODw
+	iGddlE+SN4gg5iS1qmrZ7bDJO9Rw/L05u4MLVWvKWMqxT9uidDMEIJgk3IwmcWNiVxk/bG
+	frSosNJWneZiSB3814wz1Qm4Gfkz37ktpCnw1EulnqbvVsa+aDGI8/tUeaLAyzGxoJqRz6
+	gJQA7q9d+BXJLUR+HgUHgDa182Od+4gzRldRqmzT6a/uib3JETNpOdVrUwu8Qw==
+From: Herve Codina <herve.codina@bootlin.com>
+To: Richard Cheng <icheng@nvidia.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dan Williams <djbw@kernel.org>,
+	Ira Weiny <iweiny@kernel.org>,
+	Li Ming <ming.li@zohomail.com>,
+	Lizhi Hou <lizhi.hou@amd.com>,
+	Herve Codina <herve.codina@bootlin.com>
+Cc: driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	patches@opensource.cirrus.com,
+	linux-gpio@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v9 6/9] PCI: of: Use fw_devlink_set_device()
+Date: Wed,  8 Jul 2026 12:02:56 +0200
+Message-ID: <20260708100302.517792-7-herve.codina@bootlin.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260708100302.517792-1-herve.codina@bootlin.com>
+References: <20260708100302.517792-1-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The commit message claims to use `of_fwnode_handle()`, but the c=
-ode actually uses `dev_fwnode()`.
---
+The code set directly fwnode.dev field.
 
---- Patch [1]: [PATCH] PCI: aspeed: Switch to irq_domain_create_linear() ---
-commit aee46b37ad2da511a238368770cbd10115b36171
-Author: Jiri Slaby (SUSE) <jirislaby@kernel.org>
+Use the dedicated fw_devlink_set_device() helper to perform this
+operation.
 
-PCI: aspeed: Switch to irq_domain_create_linear()
+Cc: stable@vger.kernel.org
+Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+Cc stable because used by other patches with Fixes + Cc stable
+---
+ drivers/pci/of.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This commit updates the driver to use the modern irq_domain_create_linear()
-function instead of the obsolete irq_domain_add_linear(). It adjusts the
-first parameter to pass a fwnode_handle rather than a device_node.
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 8b18c4ba845c..ee9eb384b377 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -803,7 +803,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
+ 	 * bus. Avoid any new device creation.
+ 	 */
+ 	of_node_set_flag(np, OF_POPULATED);
+-	np->fwnode.dev = &bridge->dev;
++	fw_devlink_set_device(&np->fwnode, &bridge->dev);
+ 	fwnode_dev_initialized(&np->fwnode, true);
+ 
+ 	ret = of_changeset_apply(cset);
+-- 
+2.54.0
 
-> irq_domain_add_linear() is going away as being obsolete now. Switch to
-> the preferred irq_domain_create_linear(). That differs in the first
-> parameter: It takes more generic struct fwnode_handle instead of struct
-> device_node. Therefore, of_fwnode_handle() is added around the
-> parameter.
->=20
-> Note some of the users can likely use dev->fwnode directly instead of
-> indirect of_fwnode_handle(dev->of_node). But dev->fwnode is not
-> guaranteed to be set for all, so this has to be investigated on case to
-> case basis (by people who can actually test with the HW).
-
-> diff --git a/drivers/pci/controller/pcie-aspeed.c b/drivers/pci/controlle=
-r/pcie-aspeed.c
-> index 9aa9e14c61484..74b03a55643fa 100644
-> --- a/drivers/pci/controller/pcie-aspeed.c
-> +++ b/drivers/pci/controller/pcie-aspeed.c
-> @@ -725,10 +725,10 @@ static int aspeed_pcie_init_irq_domain(struct aspee=
-d_pcie *pcie)
->  {
->  	int ret;
-> =20
-> -	pcie->intx_domain =3D irq_domain_add_linear(pcie->dev->of_node,
-> -						  PCI_NUM_INTX,
-> -						  &aspeed_intx_domain_ops,
-> -						  pcie);
-> +	pcie->intx_domain =3D irq_domain_create_linear(dev_fwnode(pcie->dev),
-> +						     PCI_NUM_INTX,
-> +						     &aspeed_intx_domain_ops,
-> +						     pcie);
-
-[Severity: Medium]
-Does this code change contradict the commit message?=20
-
-The commit message explicitly mentions adding of_fwnode_handle() around the
-parameter and warns against using dev->fwnode directly since it is not
-guaranteed to be set.
-
-The patch uses dev_fwnode(pcie->dev) here, which fetches dev->fwnode, rather
-than using of_fwnode_handle(pcie->dev->of_node) as described. Should the
-implementation be updated to use of_fwnode_handle(), or does the commit
-message need to be revised to match this dev_fwnode() approach?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708095814.3854=
-80-1-jirislaby@kernel.org?part=3D1
