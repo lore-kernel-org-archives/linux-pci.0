@@ -1,116 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A9C1B4223;
-	Thu,  9 Jul 2026 01:18:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE441A6836;
+	Thu,  9 Jul 2026 01:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783559911; cv=none; b=sZ10H6uxqa33Fj24G9zZ8IiEhBioFCaIeQX5h+9YrzHq9sQn02XeXBBNabQcgKQc7Ej3ToCzHS8H8mi9n3meQmCFzIqON0j1ewJfDxGUuriHLzK0tIAMhz8C60m9k9Uf2TEnT24CaLFOsfjVgT2VPNqhJTU15P4cuS2veGDv8iY=
+	t=1783560024; cv=none; b=t1QrCOF5Slz84w4szmQ58DqdO28SaatHNl7p/0TmFbGru8YeQUvIw2SAS6rtrx2MlaQvPnf9exYboX5pgyCy3dxlsQO1c9D2BBje9V01jVeqneh5BOL+IqsYvUeJ6DwulfB7HCVoYm/9MNHNNtAtr8cvqylJSQSaMqA8kIt0lDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783559911; c=relaxed/simple;
-	bh=5bKQR/p3q+ukR9/LwjmWORHu1qZh9GjIDqGTkQbIs8A=;
+	s=arc-20240116; t=1783560024; c=relaxed/simple;
+	bh=+iZ5Wu7mOJCVtM+qc4Ka7t6v/isc3p8LA8SYpOWbaC8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EOTJ4KOISoYLCdLtsLq3U3z7bRkY4ypc2hBz4FvC8sVvUdgsgxIfp443Ep04/fEkL1DPXFMmsYqzps0fRcRT2MRdR6xNownTtzK1sl4E64E2+zxM9pWAAcUiqI4uSG1r4EcFM2u8sO2NpFi2o0nieHyFidaaq3R5rg3wAHJqW4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JwXb9vI/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HNKJBDfFCgA8AYPgcRg9h7+E6/RzXaYgGnUG2NdAkMh1eqstY2dlaGAbbYbLkaVAYuiHpuUO3d5X5AqCEBZiMkmCbj17Xhh2doMx1WqQe3BDapFoCAlvtEsziFYd3F4HRtZ03SNj3DUGJgKwIqBn1i404E0UAqfP4IWWwrWPyTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZjvrSnyu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JwXb9vI/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD481F000E9;
-	Thu,  9 Jul 2026 01:18:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZjvrSnyu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24DCA1F000E9;
+	Thu,  9 Jul 2026 01:20:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783559910;
-	bh=bNzyeVpAcKUJni5BYJx6rFOwbz9l4557hI1UsuB+WNQ=;
+	s=k20260515; t=1783560023;
+	bh=uxoV8tAnVlrB9aHh59xG/Ec/6ybc5vw1dPWD2Zozw3w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JwXb9vI//DCXv5tMEtEA8ZRQvYnIUuZ4blZZMHhmXvyuAfFcY4avM79lkexqR+8GZ
-	 +GRl1UzlSsx7yF61oisu+AMjUh6JUbv34d9GRXc2PhdNdzO2lbhj+KOe+jcNkz0+YM
-	 xylzLIGu+257TxAD8GsYbJOnychUs7lTsByLFX0liUE/M1kiPrsIxdDHdvCn1LxzQQ
-	 BXzdm9qDF4FCrwxlNTnvuDw9zac3ZcGH2i02ivzci/3W/I44cSP68eE9ymuiGOF/VJ
-	 S6Cb4nMiaovaxtZzrLR5a7DLz3wwhZPwacVJ+3iJQpDDafbCWiox8bBqY38t6C9eWW
-	 8i16+qF85GLrQ==
+	b=ZjvrSnyuqe9XI2XS041GV3O9gmrzur09a6tCrGlgzDOB17ncd/y+Va4IFvEF9QEle
+	 Wo2drnRQ+HqaaiTxiIyr1DVN9OwAFU+NJmD4Zi3QWiUOKh0cuUPpGumrd8snrooo95
+	 WfMEjGX2AYqFNxbD7HJEvvRhiyE27kTBGDdFlB5b+XLpRtiaeRFQDWYwJd0JXSM0Bq
+	 1rpirL9RAWksWUCllrhn+UFJYwcV9TVOD73PBcyRy/GtVa+2rnb3Qh9lDc9MNYOYS+
+	 sHjkt+FKP2nV6iQNpaJO6PO/rAD/KCqp0XtXnD74SvbAPScuD+T/H/WXZRSGntgfqr
+	 uCm/e6wMQAeIw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 03/11] cxl: Share HDM decoder decode logic
+Subject: Re: [PATCH v9 11/11] PCI/CXL: Restore HDM state after CXL bus reset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260709010304.680422-4-smadhavan@nvidia.com>
+In-Reply-To: <20260709010304.680422-12-smadhavan@nvidia.com>
 References: <20260709010304.680422-1-smadhavan@nvidia.com>
- <20260709010304.680422-4-smadhavan@nvidia.com>
+ <20260709010304.680422-12-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 01:18:29 +0000
-Message-Id: <20260709011829.CAD481F000E9@smtp.kernel.org>
+Date: Thu, 09 Jul 2026 01:20:22 +0000
+Message-Id: <20260709012023.24DCA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Out-of-bounds stack read leaking kernel memory to userspace via de=
-coder target maps when processing decoders with more than 8 interleave ways.
-- [High] Endianness bug when extracting 8-bit Target IDs via a 64-bit union=
-, leading to broken routing on big-endian architectures.
+- [High] HDM decoder restoration is performed before the PCI device's BARs =
+are restored, causing MMIO writes to be dropped by the hardware or triggeri=
+ng Unsupported Requests.
 --
 
---- Patch [3]: [PATCH v9 03/11] cxl: Share HDM decoder decode logic ---
-commit 0c55ebf0416f52a7748df44eabd5450eb7aba244
+--- Patch [11]: [PATCH v9 11/11] PCI/CXL: Restore HDM state after CXL bus r=
+eset ---
+commit 4e02f0f18a7abbebc3cc9b8384269906531ad726
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Share HDM decoder decode logic
+PCI/CXL: Restore HDM state after CXL bus reset
 
-This commit moves HDM decoder register decoding into a shared helper functi=
-on.
-It consolidates the validation of base, size, interleave, target type, and
-enable state to simplify early PCI HDM cache setup.
+This commit restores cached HDM state after a successful CXL bus reset while
+the IOMMU reset block remains active. It introduces a helper to restore the
+state and calls it directly from the PCI reset path.
 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 83cda63f76a5a..e9e00c68a0ad9 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -952,6 +952,7 @@ static int init_hdm_decoder(struct cxl_port *port, st=
-ruct cxl_decoder *cxld,
->  	u32 remainder;
->  	int i, rc;
->  	u32 ctrl;
-> +	struct cxl_decoder_settings settings;
->  	union {
->  		u64 value;
->  		unsigned char target_id[8];
->  	} target_list;
-
-[ ... ]
-
-> @@ -1036,32 +1030,11 @@ static int init_hdm_decoder(struct cxl_port *port=
-, struct cxl_decoder *cxld,
-[ ... ]
->  	if (!cxled) {
-> -		lo =3D readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
-> -		hi =3D readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
-> -		target_list.value =3D (hi << 32) + lo;
-> -		cxld->targets =3D target_list.value;
->  		for (i =3D 0; i < cxld->interleave_ways; i++)
->  			cxld->target_map[i] =3D target_list.target_id[i];
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ef25ba5f7fe95..b394704950a5f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5004,6 +5004,9 @@ static int cxl_reset_bus_function(struct pci_dev *d=
+ev, bool probe)
+>  		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
+>  				      reg);
+> =20
+> +	if (!rc)
+> +		rc =3D cxl_restore_hdm_after_pci_reset(dev);
+> +
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this loop cause an
-out-of-bounds stack read if cxld->interleave_ways is greater than 8?
+Is it safe to restore the HDM decoders here before the PCI state (including
+BARs) has been restored?
 
-The target_list union is only 8 bytes wide, but CXL decoders can have up to=
- 16
-interleave ways. This would result in reading uninitialized stack memory in=
-to
-the target_map array.
+When pci_reset_bus_function() is called earlier in this function, the
+hardware reset clears the device's BARs to 0. The caller of the reset
+function typically restores the saved PCI state after this returns.
 
-[Severity: High]
-This is a pre-existing issue, but can using a union to map a 64-bit integer
-to a byte array lead to endianness issues here?
+However, cxl_restore_hdm_after_pci_reset() calls cxl_restore_hdm(), which
+enables memory decoding and writes to the cached BAR address:
 
-On big-endian CPUs, target_list.value would store the bytes in reverse order
-compared to little-endian CPUs, causing the loop to map memory to the wrong
-routing targets.
+drivers/cxl/core/reset.c:cxl_restore_hdm() {
+    ...
+    rc =3D cxl_hdm_enable_mem(pdev, &command, &restore_command);
+    ...
+    writel(global_ctrl, hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+    ...
+}
+
+Because the hardware BARs are still 0 at this point, will enabling
+PCI_COMMAND_MEMORY cause the device to incorrectly claim physical address 0?
+
+Furthermore, will the MMIO writes to the cached BAR address result in PCIe
+Unsupported Requests (Master Aborts) since the hardware isn't actually
+decoding the cached address yet?
+
+>  	pci_dev_reset_iommu_done(dev);
+>  	return rc;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709010304.6804=
-22-1-smadhavan@nvidia.com?part=3D3
+22-1-smadhavan@nvidia.com?part=3D11
