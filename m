@@ -1,143 +1,101 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6FE834E760;
-	Thu,  9 Jul 2026 20:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A073D093B
+	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 20:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783627879; cv=none; b=E1E8cBlo8erXbEZkz5r8nJGjX7nvMX2EH6U6BMD01KTi3JIM0se5W6/hC8m8nB91+lUq6DxFVNqyQrwP/iM6by0Kd1MFvNVZoE+wVDC0Lx6I7Cb1jDo4LtS/ITuo1TzyRapdAQfIWlW6JYto9L0ilHDxU3SD6bJHEqDLQgFQgeI=
+	t=1783629567; cv=none; b=mQPHpzro34MmMwM1kTqB8ZDe3M9GKQmz3TFbbJrRNmkWJf12ZifNbL9hnlSjLi3ftftbDhLiH8QczgcQdUWtE3TCvtuVSdHPQm91MW1Y8tf6zdDVtl7NnXKUCOIt0FaY0B1RH9PZU+k5MBGDq1TKiFtng0ExCDkMe8idBBjgDrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783627879; c=relaxed/simple;
-	bh=697dOg9otW0jG2CIkQQbYlazKssUUzIfVc8/qYRWTBg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qRqx+PxLyD7P7TkApZLiu3VmFCEjm9m3wSOac1Ue9FROr8VqYGwEzZpckDXKpDmStPWmrEEDh06nJJLL2VIh4Gwt731shHiqbI9br1fPq62vDE+M1xTktcNe3cOMPvrLVO/pXpCjSZ1JHVhjTvz0CmbLAqkvNGKcJ66C+sc1Tr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=kTKLOhlw; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=uIkgdiNH; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783629567; c=relaxed/simple;
+	bh=aHWS/UnnUq7xztHIV7aZMIErzImXOCmV/mEZOu1WNzs=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=hIh1hBysNi3XOP8WM0K0QJE/3pn27QqVcwXHC+6GJdkh7CcvDDaUPSUn9b2kpTtabaQVjM6cl4RNJ1+MsCpd9gSHqUTRyI+bM6zlxXJIn2Wv/yagOB1QK3ppeZEyYH+mGQm+Q/UQ/M6XXF2ekUZfpvAL5JioI2yc8TFnWIafiEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bLfEtiMN; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="kTKLOhlw";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="uIkgdiNH"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gx5h2054QzMlG0;
-	Thu, 09 Jul 2026 22:11:14 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783627874;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=y63+X/Dp2CE9yVCvl/H556o9pFY78+UE7i0NS2qgTOQ=;
-	b=kTKLOhlw3dsSSCas3hT947tSt8hLZ7VuE67zkz08cCekv0sCG3XK+UWyejs4mZXm/va7Z5
-	PdzXUQCODshhkZkBiwgPll1wKekhioHcvTUQIz9rs3CLR/ZdDEGSX/DTTbXl0zT5h/iHGN
-	jbV1mFi1kStbkfj5O5/e5ObfZb3kh40msFybnVGzzry5zDXvxqcGVFQUKFpsYjzOjgrevl
-	HyyRYodIxwP6J4Ht0a2+2zo0xHqxVHphGbGty9dqMdopKpBm5/P14gAkOr8bTZYqisaA+R
-	A+zEv65aQk2Qb2EUlaiYo8r0C7sLkHE7RL31HoRfoQNDhT1ddd0m67wxpOPgpA==
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783627871;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=y63+X/Dp2CE9yVCvl/H556o9pFY78+UE7i0NS2qgTOQ=;
-	b=uIkgdiNHZKtufAVbUtlD0aL5irzPN8QnGD6gc3U6mD9xmTsOzlYD6M8kNcqq+9lFU8WzxX
-	vU5WAZxE9F75QicH1c667VzICAvmEF8hT49vrqjKaDYi7H0JWlHsHYmpNhRhEA9mUTuMzO
-	2E94bRKN2g+6nmfBw8z0dUUc6OUZB5FmftpadY4IPB680c+Z7TaDjqWN7/lQV0n0B0hWXV
-	uu5R1uYiTa6eS5Ei4LsnsKqtdybZYew9G+YV0B3A8uGPiho2zRYilhAin6GSbglylT48vu
-	24ePWv1x7fGKiGtzNHgl1VuqeQui93ZpxmmOnqnjrKBKNdrHLdGbD8hxtdJKiA==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	kernel test robot <lkp@intel.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Zyngier <maz@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-Date: Thu,  9 Jul 2026 22:10:03 +0200
-Message-ID: <20260709201103.90162-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bLfEtiMN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783629565; x=1815165565;
+  h=date:from:to:cc:subject:message-id;
+  bh=aHWS/UnnUq7xztHIV7aZMIErzImXOCmV/mEZOu1WNzs=;
+  b=bLfEtiMNFUp5ObyX8cxMQQ6Ms1yCFhampZIQkzUGeQX9N1NAgaoZnkgh
+   1JBsAK1OddhdstQ6YkaXrVSoHXE5Ql1KCk2n5TaL5RbYLKxnDvBb4Mtg6
+   EEcjS8pIz11RpMAwkv/0Z7OA4ezfh+05+QFCpmHr1EgMVUhfLi6KzqwQj
+   VbMQSqIJ0LbTt6aJ/iKf241JnkddUJwdG3PLjQl7FCjOvnT/dUnL3aLT1
+   RqqxrczBmsbNKRHpOjx2Ij1PUndqqtlPThEsCNABfpBNlspQFyK5NNTCG
+   wiI7hw8z8s1HhxYrDAc/BQ9i8i8hqRMjGWuTLgAZn5FNFHiGl9DfSMIx+
+   w==;
+X-CSE-ConnectionGUID: BkO8JfvRQyyxwygzDscuxQ==
+X-CSE-MsgGUID: l1knkVpvST2OF7G1uYRD/g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="88244190"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="88244190"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 13:39:25 -0700
+X-CSE-ConnectionGUID: eXER+/CNSeacbuBeNTOdag==
+X-CSE-MsgGUID: x9d/58RIRXGKLTDGLPKKuQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="255341154"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by orviesa009.jf.intel.com with ESMTP; 09 Jul 2026 13:39:22 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1whvWh-00000000I6R-202d;
+	Thu, 09 Jul 2026 20:39:19 +0000
+Date: Fri, 10 Jul 2026 04:38:29 +0800
+From: kernel test robot <lkp@intel.com>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [pci:controller/dwc-rcar-gen4 2/4]
+ include/linux/irqchip/arm-gic-v3.h:605:10: fatal error: asm/arch_gicv3.h: No
+ such file or directory
+Message-ID: <202607100424.xo06gLTB-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: d77ea4e9cdf5251e9bc
-X-MBO-RS-META: 5e9qh5qrbhxy7cjhaabxdnijm8n14tk1
 
-Instead of pulling in the whole linux/irqchip/arm-gic-v3.h , copy the
-one GITS_TRANSLATER register offset macro directly into the driver.
-This repairs the ability to build the driver on non-ARM non-GIC targets
-the way it was possible until now, which retains good build test coverage.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
+head:   14e8394423ffd4fd28884ec8b4d5ba15be6e7e0d
+commit: 8ba5de8db3acd06e35c42ecd0becc38134348df3 [2/4] PCI: rcar-gen4: Configure AXIINTC if iMSI-RX is not used
+config: parisc-randconfig-r071-20260709 (https://download.01.org/0day-ci/archive/20260710/202607100424.xo06gLTB-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 16.1.0
+smatch: v0.5.0-9185-gbcc58b9c
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260710/202607100424.xo06gLTB-lkp@intel.com/reproduce)
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel.com/
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-Note: The alternative I could think of would be ifdeffery which
-      is not nice and thwarts the build coverage, or limit the
-      driver to ARM/ARM64 in Kconfig which also thwarts the build
-      coverage. I could also split off the register macros in
-      linux/irqchip/arm-gic-v3.h into some separate header
-      linux/irqchip/arm-gic-v3-regs.h and include that which
-      might be OKish and avoids duplication. Thoughts ?
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202607100424.xo06gLTB-lkp@intel.com/
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 5f7211b91ee5b..4b75615c516f0 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -13,7 +13,6 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/iopoll.h>
--#include <linux/irqchip/arm-gic-v3.h>
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
-@@ -26,6 +25,9 @@
- #include "../../pci.h"
- #include "pcie-designware.h"
- 
-+/* GIC ITS TRANSLATER register offset in GIC ITS space */
-+#define GITS_TRANSLATER		0x10040
-+
- /* Renesas-specific */
- /* PCIe Mode Setting Register 0 */
- #define PCIEMSR0		0x0000
--- 
-2.53.0
+All errors (new ones prefixed by >>):
 
+   In file included from drivers/pci/controller/dwc/pcie-rcar-gen4.c:16:
+>> include/linux/irqchip/arm-gic-v3.h:605:10: fatal error: asm/arch_gicv3.h: No such file or directory
+     605 | #include <asm/arch_gicv3.h>
+         |          ^~~~~~~~~~~~~~~~~~
+   compilation terminated.
+
+
+vim +605 include/linux/irqchip/arm-gic-v3.h
+
+7e5802781c3e109 Andre Przywara        2014-11-12  604  
+7936e914f7b0827 Jean-Philippe Brucker 2015-10-01 @605  #include <asm/arch_gicv3.h>
+021f653791ad17e Marc Zyngier          2014-06-30  606  
+
+:::::: The code at line 605 was first introduced by commit
+:::::: 7936e914f7b0827c2dcfe63fbefdc21de2d61dcb irqchip/gic-v3: Refactor the arm64 specific parts
+
+:::::: TO: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+:::::: CC: Marc Zyngier <marc.zyngier@arm.com>
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
