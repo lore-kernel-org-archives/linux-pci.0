@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9ABF2ED872;
-	Thu,  9 Jul 2026 01:24:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 496BE18B0F;
+	Thu,  9 Jul 2026 01:27:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783560249; cv=none; b=tUNGLmRjsIqoUR1IZRBZwpL5ZaydZeQs/MO8v5c1aZKOseDcnsFIb2P8VMZcfPnHPG5Nf0aKjNrUl4p0MWhJ6iCIlwP81y2XjvTrjOSaPVWtvNk4Ym3mqhE6BOmUtHi6FFCj9FIpH+/Q9SLn6xdZ1r532SHekj1IWn2qEbZLZfc=
+	t=1783560423; cv=none; b=uFBQm/L5cDCyPSr66Gpl4poFO9TwAmnUMUyN7w/RLQMwwf+rntEcXzkWRsSr4RsY9vRTJxaH4+TgsmY8CFrJUHYRQlalMIjYkCxraMYzaxvzZuO9AzS7sR2bj9A98aPm7ctpr6hfHj+J/QQCk2f3ajgXIjNOm+IozjlTCwcFtQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783560249; c=relaxed/simple;
-	bh=qUXjTO9Ev/HXe1vb57Nn7npLVY0BWu8WKcbu3YNYDiQ=;
+	s=arc-20240116; t=1783560423; c=relaxed/simple;
+	bh=UTjigRJFpERL2rUoyh3WDgQKRFR6CoXTLLuIIRI0CMI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pvf+3jeCK7SvjoD9s73VjpRFxXDarlvqaWQ0OXAlnJ7RoH92lZIbLgs5eDOBuCM3A2kkdgrrOJwsK/rzmUNV4jRqdT3sHSYZTDoWwTuCiXaS4iRWj0uhojdPTGPH8WbI1L8XEYHqYts/18QsjlI3tzA8eTSXq5LzqqYL72wTqQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=odlm0641; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HP8qLdNwmd5Wsh1x08gyFKOfPoAnCVvQn7NqZGp7y5n0vBRIIAjYLreRxhc5CXqLjr/aZdEWegfJZUswx227vWnO9VQIwqJm27HLV3KyVpoj/wSi2Yuivv+f4tgcCBFRcerPNvry33ksUVqk2tLjcQcgoWXnranHxCpxnm30cWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QKP31xzK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="odlm0641"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B5401F000E9;
-	Thu,  9 Jul 2026 01:24:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QKP31xzK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB9A11F000E9;
+	Thu,  9 Jul 2026 01:27:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783560248;
-	bh=wbPieze4mk1wbE5Rz+uuCQxbVJQ5QYCGcyrX8BnSlJE=;
+	s=k20260515; t=1783560421;
+	bh=mnT9OXj+y4SXzlyOJZ2MDkMEKp41Wd+y0zBQrmSoxEE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=odlm0641FZVjb26j0HYQv6UNTMnPX3c0/d5RukUb4bz5a0D64fiZAsKlSVGtl+VCf
-	 fHtfTb4ZxilFKA2uLtHQzQxqyoet7jnP9NeCUkW9TU08Fz3PaAJsyNRQs+7U6or0B6
-	 wz1dmcyDWyuM4N8LUoTZ5ZL/r/kRJR6BcqSvNtXMJlUmFuCuAR5/1x+PpGNNOvVq9q
-	 NajrQWcGicIbvxTBeljX0OCX5fMMd0G06FTBryeIkjveyE9gSFkyUy/lhREUE+GOU+
-	 HwRTWcoZFaI/KPyMg79IXr2NZM7yx9Rti+/zi8iotMrg57L4LxIfWcDAzD5eoI3S+l
-	 ofsznByJ00UOw==
+	b=QKP31xzKPkpz4oFs8oMKpqhHs2gJR/8iTlxpiPjCJuWWxkpEBFWhwMrZ+6KNrNkMk
+	 oQLRC26PQ3uYxOT7vrG30NaNFYpdGgGrrrPgWpXMeRWlSGsn7hzg5hCJVFRwa1URso
+	 Qy6jotkD/qb1e/JV9+W8uBQASL27www7GK5TVUCHAHrEfGtOad8IO3E/tVsvLztWyq
+	 nk9h4VOuJFvHF47/QBcH6HFsyadCGHXBe2v0tATJeltLt76zoDqLG8J1gBvla14iTs
+	 qYl8GdH3I7kQwfWv5wJTw1AY09YWAVfqQNB90juvHMVfVzhJb74PzmUe3J72I8oy61
+	 du5+LsO06Z8mg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 07/11] PCI/CXL: Discover the CXL reset scope
+Subject: Re: [PATCH v9 09/11] PCI/CXL: Expose CXL Reset as a PCI reset
+ method
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260709010304.680422-8-smadhavan@nvidia.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260709010304.680422-10-smadhavan@nvidia.com>
 References: <20260709010304.680422-1-smadhavan@nvidia.com>
- <20260709010304.680422-8-smadhavan@nvidia.com>
+ <20260709010304.680422-10-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 01:24:07 +0000
-Message-Id: <20260709012408.0B5401F000E9@smtp.kernel.org>
+Date: Thu, 09 Jul 2026 01:27:01 +0000
+Message-Id: <20260709012701.AB9A11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,65 +47,73 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] CXL Reset scope validation is conditionally bypassed during actual=
- reset execution, creating a TOCTOU vulnerability that fails to protect sib=
-lings.
+- [High] The CXL reset method skips function-scoped validation during execu=
+tion, relying entirely on a flawed probe-time check that occurs before sibl=
+ing functions are added to the PCI bus.
 --
 
---- Patch [7]: [PATCH v9 07/11] PCI/CXL: Discover the CXL reset scope ---
-commit 363800e2ebd7dad78179683be8d0a027b5bd8a7e
+--- Patch [9]: [PATCH v9 09/11] PCI/CXL: Expose CXL Reset as a PCI reset me=
+thod ---
+commit f2ff500e92a2699aaf86703b4ef5bcf21ad27f7b
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-PCI/CXL: Discover the CXL reset scope
+PCI/CXL: Expose CXL Reset as a PCI reset method
 
-This commit adds reset context support to validate that a CXL Reset is
-function-scoped before advertising it as a PCI reset method. It uses the
-Non-CXL Function Map, ARI/devfn rules, and CXL capability bits to reject
-the reset if another same-scope function would be affected.
+Add the CXL Reset helper to the PCI reset-method table so userspace can
+select it through the existing reset_method ABI. Advertise the method for
+Type 2 CXL devices that report CXL Reset support in the CXL Device DVSEC.
 
-> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
-> index fb741b66e5022..cdfaa699583d2 100644
-> --- a/drivers/cxl/core/reset.c
-> +++ b/drivers/cxl/core/reset.c
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee615..ef25ba5f7fe95 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
 [ ... ]
-> @@ -890,6 +1037,7 @@ static int cxl_reset_execute(struct pci_dev *pdev, i=
-nt dvsec)
->  int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  {
->  	struct cxl_hdm_range_context range_ctx;
-> +	struct cxl_reset_context ctx;
->  	int dvsec;
->  	int rc;
-> =20
-> @@ -897,8 +1045,9 @@ int cxl_reset_function(struct pci_dev *pdev, bool pr=
-obe)
->  	if (dvsec < 0)
->  		return dvsec;
-> =20
-> +	cxl_reset_context_init(&ctx, pdev);
->  	if (probe)
-> -		return 0;
-> +		return cxl_reset_validate_function_scoped(&ctx);
+> @@ -5092,6 +5093,7 @@ const struct pci_reset_fn_method pci_reset_fn_metho=
+ds[] =3D {
+>  	{ },
+>  	{ pci_dev_specific_reset, .name =3D "device_specific" },
+>  	{ pci_dev_acpi_reset, .name =3D "acpi" },
+> +	{ cxl_reset_function, .name =3D "cxl_reset" },
 
 [Severity: High]
-Is it safe to conditionally bypass scope validation when probe is false?
+Does adding this reset method here introduce a regression where multi-funct=
+ion
+CXL devices are exposed to state corruption when a reset is triggered?
 
-During the early probe phase, when this is called from pci_init_capabilitie=
-s()
-for Function 0, higher-numbered sibling functions might not have been
-enumerated and added to the bus list yet. As a result,
-cxl_reset_validate_function_scoped() could find no siblings and incorrectly
-report the reset as safe.
+During early system boot, PCI enumeration calls pci_init_reset_methods()
+which evaluates this method with probe =3D true. The method then calls
+cxl_reset_validate_function_scoped() to walk the bus looking for siblings:
 
-Later, when a user or driver actually triggers the reset and this function
-is called with probe=3D0, it skips validation and executes the reset direct=
-ly.
-Could this inadvertently reset and destroy the state of active sibling
-functions that were enumerated after the initial probe?
+drivers/cxl/core/reset.c:cxl_reset_validate_function_scoped() {
+    ...
+    pci_walk_bus(pdev->bus, cxl_reset_validate_function_scope, &wctx);
+    ...
+}
 
-> =20
->  	cxl_hdm_range_context_init(&range_ctx);
+Because function 0 has not yet been added to the bus list at this early sta=
+ge
+and sibling functions have not been scanned, the bus walk is empty. The res=
+et
+method is then incorrectly recorded as valid for function 0.
+
+When the reset is actually executed later via VFIO or sysfs,
+cxl_reset_function() is called with probe =3D false. This skips the validat=
+ion:
+
+drivers/cxl/core/reset.c:cxl_reset_function() {
+    ...
+    if (probe)
+        return cxl_reset_validate_function_scoped(&ctx);
+    ...
+}
+
+This means the bus is not re-evaluated when the siblings are actually prese=
+nt.
+Will this proceed to reset the entire device without isolating sibling
+functions, resulting in corrupted or lost state for those siblings?
+
+>  	{ pcie_reset_flr, .name =3D "flr" },
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709010304.6804=
-22-1-smadhavan@nvidia.com?part=3D7
+22-1-smadhavan@nvidia.com?part=3D9
