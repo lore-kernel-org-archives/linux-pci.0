@@ -1,166 +1,285 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48763F99E3;
-	Thu,  9 Jul 2026 11:33:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0C78141B37F;
+	Thu,  9 Jul 2026 11:33:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783596818; cv=none; b=MQM+8mHQT4l4gfUwCE6PHK+IVPlmosUgsGCG5RYeduQ69vJJYU7aXjU8neLsp324kKka9NGNBkYBYHuIINlvPklc6FE+h83khqr6yKYkRnK98jn4PWFNnhJOU94TEFHXHZ6XOS0EhlcwJP6vyd63xf+fgcihYFWf8EgjqHIt0RM=
+	t=1783596830; cv=none; b=VmYftbZuqx/g+0Yz/k/UXSY55T2LQUt+uwVfu2hrsKpU9xJ5C4BkMQk7488CEgAGISI9P9LW3YoaqoWsn+fRez72EnxIlLcmAnUTDFwsoQ+KSR2+f2BwUzdOEVqyUg/RZdXcZUFsoFa6bNK9qR896EYU9muX9IGR4VfQZAuESrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783596818; c=relaxed/simple;
-	bh=3u1eCIMC61U1iunia4gabiq+oDAXttkxAv6ATOhWy2A=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=lq+Cm6NJKvsaLybeDhHp7B79qoER8sWa035s9+6wXFWjnpd6+/JSAP5FcxZZUGS66eIUamQ/Ad1eWjMogts2dQ4GaP1NZ7bisLkGoedIVTJxMIGqGYH+j8r+AMRXqtXGMo12Tbox35HOLUDhRoMhGEZr8UtkTJWTifaa5B7Yc0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=ApEx2uWT; arc=none smtp.client-ip=212.227.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1783596830; c=relaxed/simple;
+	bh=K0THlXNwZqipz/KEI06FjAdUeSpg5s7LDONtQ2Zte8g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A3Of4dP9I/Akf5phD5Z5OgdQCrc3odfuk4wDVOHz02BSvv8k6XYtKkFOG5H5bw31MAUFu16bOjfnb+bRjoYpYcPypj2/pXTOMSboGVQiTAjZnU1oQ5LA+3/HRkj4kK22CVIEMh1v3SWZRKZgQRxFJWd9ud3HMMPnzHz6wmIGKuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=hovpNZ3T; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="ApEx2uWT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1783596808; x=1784201608; i=markus.elfring@web.de;
-	bh=dU3V5lsCup//9g4z3abO31CvstIgXQ6vFr0DdAt97Vk=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=ApEx2uWT2md4Ljv7OHE2JGXqcbX/scE8BbdwHpueNt/FfjNRPd7zMo5xWTJ64KA+
-	 4HD4/CmpOpy4leFt00T+d515WIuTFPEkT8ol5X2FRuM6ttauJK91ZSjl47bKkq6mj
-	 0+Y4zx2epfB7tmTepLDGItLZQD/3SYGuWhpaXd6Y3Ok/+3d3YuV5apyTEn5kgLaO/
-	 NXKsDFrjTUD7AYIsr+O/ZafS9APq3ogw9k2o8D1ErXmD0DbcQeLCxORtZjRbNmc8s
-	 BW1FAN5znfDfut8cAqUK8pdpaSxhXmCD69ancM4JHm1reQCmZlpc2f56Pg6yeovPF
-	 pfy3VVHXnyvvnn828Q==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MVJRl-1wXA3L0Rrb-00RPky; Thu, 09
- Jul 2026 13:33:28 +0200
-Message-ID: <eb695a2a-2e80-414c-91a1-3d7fa580c7ec@web.de>
-Date: Thu, 9 Jul 2026 13:33:24 +0200
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="hovpNZ3T"
+Received: from localhost (unknown [167.220.233.38])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 4A43420B716B;
+	Thu,  9 Jul 2026 04:33:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4A43420B716B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783596818;
+	bh=LJd/+GU+PpP/Ium6hNk30csI0fmCJwtgCwZHUVsgKho=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hovpNZ3TPhHx/HgG/98cgurUwIpqSkztqwDe0evKW+PVJY8k7FqGSIMz2PlREZPEW
+	 5FRx12WtVtyS1Sjp6ozdvLGdCLoGIMag2WiCU2x6FgNo6nsSQ7VensjxunuGYb+i+H
+	 undDj7/2n65it5yFFcbnKT4Asefw6BMab67xV/Nk=
+Date: Thu, 9 Jul 2026 19:33:41 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>, 
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, 
+	"wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>, 
+	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>, 
+	"longli@microsoft.com" <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>, 
+	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>, 
+	"bhelgaas@google.com" <bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>, 
+	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
+	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com" <mrathor@linux.microsoft.com>
+Subject: Re: [PATCH v2 2/4] Drivers: hv: Add logical device ID registry for
+ vPCI devices
+Message-ID: <ja2drof5i7xjhpj4vbpavnphtn6cx4y5d3337vjrofxr47gxtq@msvg6xpbkb2h>
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+ <20260702160518.311234-3-zhangyu1@linux.microsoft.com>
+ <SN6PR02MB415798534DFCC14E5202D021D4FF2@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <u2l4lz5skybcukrb6hwp2u6v3jdibrugokxmclgv3uq4ljj3vw@x7mlfvuwb5f4>
+ <BN7PR02MB4148C8DB748CFD863B97D1B7D4FF2@BN7PR02MB4148.namprd02.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Frank Li <Frank.Li@nxp.com>, dmaengine@vger.kernel.org,
- linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, imx@lists.linux.dev,
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
- "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, Kees Cook
- <kees@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Vinod Koul <vkoul@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Devendra Verma <devverma@amd.com>,
- Koichiro Den <den@valinux.co.jp>
-References: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
-Subject: Re: [PATCH v4 00/10] dmaengine: dw-edma: flatten desc structions and
- simple code
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:lazUhBIMmLzqNSbxN+eYaYB2AqlmNHAb516c8ebt3InwwhzLtrl
- JOpmxNLhNl0IGmmgJGm4FIip5O7NhfW9Q72B3HqfOpbI6n9lkr37fMKSuMcllBOayHT34Ej
- dWsUTUCocwfbqdOphT2+KXnImaUeXXrLj2zus2RjLoJRYfsnwi1MY8kdF38mq3HXujFwSmi
- ecu9u0pPRgv56187FP8Gw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:+Sjfrk61JOk=;sgpjzjLoMopB1XcWzDVZmB7Gaex
- 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
- TZd1CGY3MxPtY0zsSGDpfPyMdP4=
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <BN7PR02MB4148C8DB748CFD863B97D1B7D4FF2@BN7PR02MB4148.namprd02.prod.outlook.com>
 
-=E2=80=A6
-> And reduce at least 2 times kzalloc() for each dma descriptor create.
-=E2=80=A6
+On Wed, Jul 08, 2026 at 01:28:42PM +0000, Michael Kelley wrote:
+> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, July 8, 2026 6:09 AM
+> > 
+> > On Wed, Jul 08, 2026 at 02:52:43AM +0000, Michael Kelley wrote:
+> > > From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Thursday, July 2, 2026 9:05 AM
+> > > >
+> > > > From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> > > >
+> > > > Hyper-V identifies each PCI pass-thru device by a logical device ID in
+> > > > its hypercall interface. This ID consists of a per-bus prefix, derived
+> > > > from the VMBus device instance GUID, combined with the PCI function
+> > > > number of the endpoint device.
+> > > >
+> > > > Add a small registry in hv_common.c that maps a PCI domain number to its
+> > > > logical device ID prefix. The vPCI bus driver (pci-hyperv) registers the
+> > > > prefix when a bus is probed and unregisters it when the bus is removed.
+> > > > Consumers such as the para-virtualized IOMMU driver look up the prefix
+> > > > by PCI domain number and combine it with the function number to form the
+> > > > complete logical device ID for hypercalls.
+> > > >
+> > > > The prefix construction is shared via hv_build_logical_dev_id_prefix() so
+> > > > that pci-hyperv's interrupt retargeting path and the registry use exactly
+> > > > the same byte layout. It is derived on demand from the constant hv_device
+> > > > instance GUID rather than cached in struct hv_pcibus_device, which is
+> > > > private to the pci-hyperv module; this keeps the interface narrow and
+> > > > avoids depending on pci-hyperv internals.
+> > > >
+> > > > Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> > > > Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> > > > Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> > > > ---
+> > > >  drivers/hv/hv_common.c              | 95 +++++++++++++++++++++++++++++
+> > > >  drivers/pci/controller/pci-hyperv.c | 21 +++++--
+> > > >  include/asm-generic/mshyperv.h      | 13 ++++
+> > > >  include/linux/hyperv.h              |  8 +++
+> > > >  4 files changed, 132 insertions(+), 5 deletions(-)
+> > > >
+> > > > diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
+> > > > index 6b67ac616789..53493f8d14dc 100644
+> > > > --- a/drivers/hv/hv_common.c
+> > > > +++ b/drivers/hv/hv_common.c
+> > > > @@ -26,6 +26,8 @@
+> > > >  #include <linux/kmsg_dump.h>
+> > > >  #include <linux/sizes.h>
+> > > >  #include <linux/slab.h>
+> > > > +#include <linux/list.h>
+> > > > +#include <linux/spinlock.h>
+> > > >  #include <linux/dma-map-ops.h>
+> > > >  #include <linux/set_memory.h>
+> > > >  #include <hyperv/hvhdk.h>
+> > > > @@ -863,3 +865,96 @@ const char *hv_result_to_string(u64 status)
+> > > >  	return "Unknown";
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(hv_result_to_string);
+> > > > +
+> > > > +#ifdef CONFIG_HYPERV_PVIOMMU
+> > > > +/*
+> > > > + * Logical device ID registry shared between the vPCI bus driver
+> > > > + * (pci-hyperv) and the para-virtualized IOMMU driver. The vPCI driver
+> > > > + * registers the per-bus logical device ID prefix at bus probe time, and
+> > > > + * the pvIOMMU driver looks it up to build the full logical device ID used
+> > > > + * in IOMMU hypercalls.
+> > > > + */
+> > > > +struct hv_pci_busdata {
+> > > > +	int		 pci_domain_nr;
+> > > > +	u32		 logical_dev_id_prefix;
+> > > > +	struct list_head list;
+> > > > +};
+> > > > +
+> > > > +static LIST_HEAD(hv_pci_bus_list);
+> > > > +static DEFINE_SPINLOCK(hv_pci_bus_lock);
+> > > > +
+> > > > +int hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_prefix)
+> > > > +{
+> > > > +	struct hv_pci_busdata *bus, *new;
+> > > > +	int ret = 0;
+> > > > +
+> > > > +	new = kzalloc_obj(*new, GFP_KERNEL);
+> > > > +	if (!new)
+> > > > +		return -ENOMEM;
+> > > > +
+> > > > +	spin_lock(&hv_pci_bus_lock);
+> > > > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
+> > > > +		if (bus->pci_domain_nr != pci_domain_nr)
+> > > > +			continue;
+> > > > +
+> > > > +		if (bus->logical_dev_id_prefix != logical_dev_id_prefix) {
+> > > > +			pr_err("stale registration for PCI domain %d (old prefix 0x%08x, new 0x%08x)\n",
+> > > > +			       pci_domain_nr, bus->logical_dev_id_prefix,
+> > > > +			       logical_dev_id_prefix);
+> > > > +			ret = -EEXIST;
+> > > > +		}
+> > > > +
+> > > > +		goto out_free;
+> > > > +	}
+> > > > +
+> > > > +	new->pci_domain_nr = pci_domain_nr;
+> > > > +	new->logical_dev_id_prefix = logical_dev_id_prefix;
+> > > > +	list_add(&new->list, &hv_pci_bus_list);
+> > > > +	spin_unlock(&hv_pci_bus_lock);
+> > > > +	return 0;
+> > > > +
+> > > > +out_free:
+> > > > +	spin_unlock(&hv_pci_bus_lock);
+> > > > +	kfree(new);
+> > > > +	return ret;
+> > > > +}
+> > > > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_register_pci_bus, "pci-hyperv");
+> > > > +
+> > > > +void hv_iommu_unregister_pci_bus(int pci_domain_nr)
+> > > > +{
+> > > > +	struct hv_pci_busdata *bus, *tmp;
+> > > > +
+> > > > +	spin_lock(&hv_pci_bus_lock);
+> > > > +	list_for_each_entry_safe(bus, tmp, &hv_pci_bus_list, list) {
+> > > > +		if (bus->pci_domain_nr == pci_domain_nr) {
+> > > > +			list_del(&bus->list);
+> > > > +			kfree(bus);
+> > > > +			break;
+> > > > +		}
+> > > > +	}
+> > > > +	spin_unlock(&hv_pci_bus_lock);
+> > > > +}
+> > > > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_unregister_pci_bus, "pci-hyperv");
+> > > > +
+> > > > +/*
+> > > > + * Look up the logical device ID prefix registered for @pci_domain_nr.
+> > > > + * Returns 0 on success with *prefix filled in; -ENODEV if no entry is
+> > > > + * registered for that PCI domain.
+> > > > + */
+> > > > +int hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix)
+> > > > +{
+> > > > +	struct hv_pci_busdata *bus;
+> > > > +	int ret = -ENODEV;
+> > > > +
+> > > > +	spin_lock(&hv_pci_bus_lock);
+> > > > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
+> > > > +		if (bus->pci_domain_nr == pci_domain_nr) {
+> > > > +			*prefix = bus->logical_dev_id_prefix;
+> > > > +			ret = 0;
+> > > > +			break;
+> > > > +		}
+> > > > +	}
+> > > > +	spin_unlock(&hv_pci_bus_lock);
+> > > > +	return ret;
+> > > > +}
+> > >
+> > > I started thinking about the mechanism here because it's somewhat
+> > > annoying that it takes 77 lines of code (sans comments) to manage
+> > > this simple little mapping. I also started thinking about how many entries
+> > > are likely to be in the mapping. A guest VM probably has fewer than 10
+> > > entries unless it has multiple NICs and maybe some GPUs. But this code
+> > > is also intended to be used by the Linux-as-root code, and I'm thinking
+> > > that the number of PCI devices managed by the root could easily be a
+> > > hundred or more if the root is managing a couple dozen VMs on a large
+> > > physical server. Searching a linked list with 100 or more entries could be
+> > > a bit slow.
+> > >
+> > > If only the guest scenario were needed, you could declare a static
+> > > array with 64 entries (64 is an arbitrary upper bound), and just search
+> > > through the array instead of having to allocate memory, deal with
+> > > allocation failures, and deal with linked lists. But a fixed size array
+> > > would need to be much bigger for the root scenario, and you would
+> > > still be doing a linear search.
+> > >
+> > > A better alternative to consider is rhashtable, which is an existing
+> > > Linux kernel facility. Based on what an AI bot generated for me, the
+> > > code for setting up and using rhashtable is straightforward, and
+> > > would probably result in far fewer than 77 lines of code. Lookups
+> > > would also be faster than a linear search, at least for the root case
+> > > with more than just a few entries. I'd suggest looking at rhashtable
+> > > to see whether you like how the resulting code comes out for this
+> > > use case, and whether it really is simpler than a roll-your-own linked
+> > > list.
+> > >
+> > 
+> > Thank you so much for thinking this through, Michael! That is really
+> > a valid concern.
+> > 
+> > How about using XArray? It might be more lightweight compared with
+> > rhashtable. Using pci_domain_nr as the key and prefix as the value.
+> > Maybe sth. like:
+> >                                                                                                                                                         ┃
+> > 	static DEFINE_XARRAY(hv_pci_bus_xa);
+> > 
+> > 	int hv_iommu_register_pci_bus(int domain_nr, u32 prefix)
+> > 	{
+> > 		return xa_insert(&hv_pci_bus_xa, domain_nr,
+> > 				xa_mk_value(prefix), GFP_KERNEL);
+> > 	}                                                                                                                                                ┃
+> > 
+> > 	void hv_iommu_unregister_pci_bus(int domain_nr)
+> > 	{
+> > 		xa_erase(&hv_pci_bus_xa, domain_nr);
+> > 	}
+> > 
+> > 	int hv_iommu_lookup_logical_dev_id(int domain_nr, u32 *prefix)
+> > 	{
+> > 		void *entry = xa_load(&hv_pci_bus_xa, domain_nr);
+> > 		if (!entry)
+> > ┃
+> > 			return -ENODEV;
+> > 		*prefix = xa_to_value(entry);
+> > 		return 0;
+> > ┃
+> > 	}
+> > 
+> 
+> xarray is best where the keys are dense or mostly dense integers. In
+> this use case, the pci_domain_nr keys are essentially random 16-bit
+> values, which doesn't fit xarray as well. It would work, but wouldn't
+> be very efficient. See the 2nd paragraph of the documentation here:
+> 
+> https://www.kernel.org/doc/html/latest/core-api/xarray.html#xarray
+> 
 
-How do you think about to use a summary phrase like =E2=80=9CFlatten destr=
-uctions
-and simplify code=E2=80=9D?
+Thanks for pointing out the documentation. You're right. With sparse
+16-bit keys, a hash-based data structure makes more sense than a
+radix-based one. I'll try reworking it with rhashtable and let you
+know if it doesn't work out.
 
-
-=E2=80=A6
-> The finial goal is dymatic add DMA request when DMA running. =E2=80=A6
-
-                     dynamic?
-
-Regards,
-Markus
-
+B.R.
+Yu
+> Michael
