@@ -1,167 +1,121 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E453842640D
-	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 12:39:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585F5423A83;
+	Thu,  9 Jul 2026 12:41:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783600775; cv=none; b=KKv4WZlbWv1aWAYUuyV1LVX1YGAV3q1bEQjm2c6z0GEHuinHEXwyLr98IB3YQNQhT0pKWHatAiDH+dEWDWs2OczQvyDx539UMtqPelMuaAlLf5q5lR/OGCUE0/Gdt+KQerMk0oOYTqR51/p5qFoGIjV8t4TDCjeVb+mLPp2rYLg=
+	t=1783600905; cv=none; b=h0ebnFZrhDNUpa2IfR0Rjm9kc7J06vpeA23dijwYRHm9jBYtOIr3+DOd7R5zeFzwNxfcx+xNjaZ1/db8lk1h+3SsXocOqJ8WhT019RFIwGBsx5vsFR9BQjQ9MchNQVbM5J+2ieyM4UAxDPqE1cnH87IyVbhTehFpfJJY+JSNcz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783600775; c=relaxed/simple;
-	bh=CWLhb44JceD6Ohrb5A71pGlYjuSfOvm8G8ZrDiwhJiM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Prkqz4dDJmMdsL4i/LNJnD0TUylXTvNiBN2SsW+xyik5/ODaLlHvbR1q0d2z90JnYLBgir7jfP7JgHHMKZ3NsFHbI18enASCg0mQu4D8UCZc5qKduG2jClVLP4Saf2cfXA8F26HuxSM42inXGBE4h05cGDFLDt2YV5I8Vb+3VPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g8s7Pt0/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783600905; c=relaxed/simple;
+	bh=LvE5Bv+Q9Kb3QhOwyuRjRXb/JhFAVTspcyRqZ8jaZaA=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pyDW3kiWtDIp2GcgdxU7svO9HmMjZ922bDRejtstw1bQGB9oNkvc6QzOJk4dKQZCBiVyIiEC4oj+JzSosFlbVEaoX5KEL+LA4uHgdzNcdzlwaS8LSHX8Nq40KxwuSHM8zcg5H5SMD0qokSbYlWBEKOCtzqGYnyDimdlQe8R4CRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xzjy5hPy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g8s7Pt0/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CFF01F00A3A;
-	Thu,  9 Jul 2026 12:39:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xzjy5hPy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E90C01F000E9;
+	Thu,  9 Jul 2026 12:41:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783600773;
-	bh=d/fnDmIK4NNYiABWLYHcpQZbodNiRhaGApr0GdWpnf4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=g8s7Pt0/D1Ix3vjLzcYZybs8x/I8IsRer/4bxfAjUtskYNv1Cq3aUbX+WWdnG5oRe
-	 Jc/5a64ftpHw9kk2xfBnHtoheSZ645XLa5KM7NxnRDpdFX1+ujUMxlhSlV6/ZUqp5T
-	 4zpFYNijK0yNCZSlZXXDhIaLVuh2ReSUwe91lHgllcj8DX7RGOIo6+ixVqnvoj6nGX
-	 AOivSgTOHnLJZYv4XJ5K414tz6kf3yJjv2npf61lq09TV9SaZjfWSiET71oaxRk22D
-	 5A6CQKsj/5tkdGt9DOgDBfShJ8pFZczgjfPAWsSqqWzez0VWklBHNpBpCSVgM3aP2h
-	 Pr4dUYWwrCq6A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: host-generic: Fix NULL pointer dereference on
- 32-bit CAM systems
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Steffen Persvold" <spersvold@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260709122446.3151899-1-spersvold@gmail.com>
-References: <20260709122446.3151899-1-spersvold@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 12:39:32 +0000
-Message-Id: <20260709123933.5CFF01F00A3A@smtp.kernel.org>
+	s=k20260515; t=1783600904;
+	bh=WQqtsvZ3BMfepcYWgRcnRUjPPP25Gh+uDRBYwRXYJWE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Xzjy5hPyo2DjQhrnPLTIzPPYdMyyaV7ZD45/nq1TbE60yWbX/IIB0ild2cKXv5CD+
+	 omiPZc+Fjr8HR7CNhBGhSnuUhyEZBmnSAL03WO8W/K/4O1G8U3Y98cDqkD6cJb6GL9
+	 0UhM+8nWfaisUyai710fHlLO5QNWvvMlQVtIsL50BuvG1aSdoiKqSfa+rtVbITJmo0
+	 prZYGStsyMBKoiyMSzXo/+qM6nj/wW7pCI46zNcGD41ieo0wTPUvgH3ROsJ+PGYya2
+	 u9HM1jyNGc/S+KOLm45XYmTi/mcBHMmb9W26tP6nOdMyYvzqkGnYsLRs+pHAU6/QeS
+	 fvDoBTX9su/Tg==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=lobster-girl.misterjones.org)
+	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <maz@kernel.org>)
+	id 1who4T-00000003H2e-1Npk;
+	Thu, 09 Jul 2026 12:41:41 +0000
+Date: Thu, 09 Jul 2026 13:43:26 +0100
+Message-ID: <87v7ao5o5t.wl-maz@kernel.org>
+From: Marc Zyngier <maz@kernel.org>
+To: Marek Vasut <marek.vasut@mailbox.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,	linux-pci@vger.kernel.org,
+	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Bjorn
+ Helgaas <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,
+	Conor Dooley <conor+dt@kernel.org>,	Geert Uytterhoeven
+ <geert+renesas@glider.be>,	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org,	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v4 0/5] PCI: rcar-gen4: irqchip/gic-v3: Handle GIC ITS
+In-Reply-To: <c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
+References: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
+	<ybnitlgx3dcqsesubz6jz7pn6snseuxhtz564tinbtvukianaq@33ubmcynyqmt>
+	<c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: marek.vasut@mailbox.org, mani@kernel.org, linux-pci@vger.kernel.org, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, robh@kernel.org, yoshihiro.shimoda.uh@renesas.com, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Thu, 09 Jul 2026 13:33:22 +0100,
+Marek Vasut <marek.vasut@mailbox.org> wrote:
+> 
+> On 7/9/26 2:19 PM, Manivannan Sadhasivam wrote:
+> > On Tue, Jul 07, 2026 at 10:35:38PM +0200, Marek Vasut wrote:
+> >> Configure all R-Car Gen4 PCIe controller MSI registers fully, both in
+> >> case MSI are enabled and disabled.
+> >> 
+> >> Patch GIC ITS driver and add quirks for R-Car Gen4 GIC ITS, which is
+> >> configured to 32-bit address width for AXI or APB interface.
+> >> 
+> >> Switch R-Car V4H to use GIC ITS in its DT and describe the GIC ITS
+> >> implementation cacheable and shareable limitations.
+> >> 
+> >> Marek Vasut (5):
+> >>    PCI: dwc: Determine whether iMSI is used before calling .init
+> >>    PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+> >>    irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
+> >>    irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+> > 
+> > Is there a functional dependency between irqchip and PCI patches? Since the
+> > irqchip patches touch ARM64 Kconfig etc... I'm wondering if it still need to go
+> > through PCI tree.
+> I do not believe there is.
+> 
+> These two configure the PCIe controller hardware:
+>   PCI: dwc: Determine whether iMSI is used before calling .init
+>   PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+> 
+> These two fill in GIC ITS quirks:
+>   irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
+>   irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+> 
+> This one does yes depend on the two and two patches above, and can
+> only be applied once all four aforementioned patches land, otherwise
+> things really yes will break:
+>   arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
+> 
+> Would you like me to split the series up , or can you and Marc (?)
+> pick the relevant parts via matching trees ?
 
-Pre-existing issues:
-- [High] Incomplete Fix / NULL Pointer Dereference in `pci_dw_ecam_bus_ops`=
- on 32-bit platforms.
-- [High] Missing NULL pointer validation in `pci_ecam_map_bus()` leading to=
- invalid memory access.
-- [High] Logic error in `pci_ecam_map_bus()` causes cross-device config spa=
-ce corruption for CAM mode.
---
+I don't think there's anything for me to pick. The whole thing looks
+like a consistent set, and it probably should be kept together.
 
---- Patch [1]: [PATCH] PCI: host-generic: Fix NULL pointer dereference on 3=
-2-bit CAM systems ---
-commit 208f10f6fcd6715f0a5bbab0d769a909c797f297
-Author: Steffen Persvold <spersvold@gmail.com>
+Given that the irqchip stuff has been acked by the relevant party, and
+that the last patch will cause havoc if taken on its own, the only
+course of action is to route the whole thing together, the PCI tree
+being the most obvious victim.
 
-PCI: host-generic: Fix NULL pointer dereference on 32-bit CAM systems
+	M.
 
-This commit fixes a NULL pointer dereference on 32-bit systems using CAM
-by defining pci_generic_cam_ops with .add_bus and .remove_bus callbacks
-and updating the host generic driver to reference it.
-
-> diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/cont=
-roller/pci-host-generic.c
-> index c1bc0d34348f4..9e85c6e9b4254 100644
-> --- a/drivers/pci/controller/pci-host-generic.c
-> +++ b/drivers/pci/controller/pci-host-generic.c
-
-[ ... ]
-
-> @@ -60,7 +51,7 @@ static const struct pci_ecam_ops pci_dw_ecam_bus_ops =
-=3D {
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but pci_dw_ecam_bus_ops shown just above this
-context seems to be missing the same .add_bus and .remove_bus callbacks.
-
-If a 32-bit system uses snps,dw-pcie-ecam or similar compatibles, does it
-also crash with a NULL pointer dereference during bus enumeration because
-the per-bus mapping is never populated?
-
->  static const struct of_device_id gen_pci_of_match[] =3D {
->  	{ .compatible =3D "pci-host-cam-generic",
-> -	  .data =3D &gen_pci_cfg_cam_bus_ops },
-> +	  .data =3D &pci_generic_cam_ops },
-> =20
-
-[ ... ]
-
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index 119de32ff07bd..a9b3bce2492f0 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -208,6 +208,19 @@ const struct pci_ecam_ops pci_generic_ecam_ops =3D {
->  };
->  EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
-> =20
-> +/* CAM ops */
-> +const struct pci_ecam_ops pci_generic_cam_ops =3D {
-> +	.bus_shift	=3D 16,
-> +	.pci_ops	=3D {
-> +		.add_bus	=3D pci_ecam_add_bus,
-> +		.remove_bus	=3D pci_ecam_remove_bus,
-> +		.map_bus	=3D pci_ecam_map_bus,
-
-[Severity: High]
-This isn't a bug introduced by this patch, but there might be a missing
-pointer check in pci_ecam_map_bus() when pci_ecam_add_bus() fails on
-32-bit systems.
-
-If pci_ecam_add_bus() fails, for example due to an ioremap failure, the
-per-bus pointer remains NULL. pci_ecam_map_bus() handles it like this:
-
-drivers/pci/ecam.c:pci_ecam_map_bus() {
-    ...
-    if (per_bus_mapping) {
-        base =3D cfg->winp[busn];
-        ...
-        return base + (bus_offset | devfn_offset | where);
-    }
-    ...
-}
-
-Since the offset is usually non-zero, it returns a small non-NULL invalid
-pointer. Can this bypass the null check in callers like
-pci_generic_config_read() and cause an invalid memory access?
-
-[Severity: High]
-This is also a pre-existing issue, but using pci_ecam_map_bus() for CAM ops
-might cause cross-device config space corruption.
-
-In pci_ecam_map_bus(), the register offset is unconditionally masked:
-
-drivers/pci/ecam.c:pci_ecam_map_bus() {
-    ...
-    bus_offset =3D (busn & PCIE_ECAM_BUS_MASK) << bus_shift;
-    devfn_offset =3D (devfn & PCIE_ECAM_DEVFN_MASK) << devfn_shift;
-    where &=3D PCIE_ECAM_REG_MASK;
-
-    return base + (bus_offset | devfn_offset | where);
-}
-
-For CAM mode, bus_shift is 16, making devfn_shift 8. This places
-devfn_offset in bits 8-15. However, PCIE_ECAM_REG_MASK is 0xfff, which
-allows the where variable to occupy bits 0-11.
-
-Does this allow extended config space offsets to overlap and bitwise OR
-with devfn_offset, inadvertently redirecting accesses to adjacent devices
-instead of the intended target?
-
-> +		.read		=3D pci_generic_config_read,
-> +		.write		=3D pci_generic_config_write,
-> +	}
-> +};
-> +EXPORT_SYMBOL_GPL(pci_generic_cam_ops);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709122446.3151=
-899-1-spersvold@gmail.com?part=3D1
+-- 
+Jazz isn't dead. It just smells funny.
