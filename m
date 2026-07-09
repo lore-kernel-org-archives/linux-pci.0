@@ -1,194 +1,196 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFACB40BCB6;
-	Thu,  9 Jul 2026 12:20:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A1FD41CB5A
+	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 12:25:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783599647; cv=none; b=nmV7sawE2njb1UHpKrmYSrBWCB5vXEYhlzLUYAm3hzKb+UrEyIXaJPYxRT27zKn76dafSr/Wj164j9wSfhB8ZwkG9GlWOQbWQsAfnvSt3guMjqi04rtDh3ojgCMZp8uxiG+JLjbX/B/gxmSjtrlf9KQtne/vsskmKMUTrzOzH+Y=
+	t=1783599914; cv=none; b=TaUU3SrhW0TjSPM/IQMNFwh+dQe8d6DsznVC5Qa69OqpH/x/ytFzxdnhOI5sZruC/GUCVsBh5zFsqRpnHyy7+ZmC+gwnU5hlomsTsrf3FKrk9lP+RNVedJ0I2dMKBt4Whqr3D9Qben6F44GnH0ObQjt0uUT5eOhNFQkJTxLcEL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783599647; c=relaxed/simple;
-	bh=5uW5InlbDcEn9JQ9EtoUbvYsc6CJu8iXl0aIJKkpVUE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=RBKzdnt6Qtjr6I6qZul9aEMf4y+IfHS6tVIjM+t29Fe8/SScFkm9Uimbo/p3AKk7JkjfIQXHarm7Nf5qedy9ZVQCWN8ksRhIU791bYC44zKRbKcqK5OLiYI4PgYLkJ/9ZN9FKYLSDZHPcVBUml6lLwQzMxTiDy10DQEc5xhJ5GY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=T4+binM/; arc=none smtp.client-ip=113.46.200.221
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1783599914; c=relaxed/simple;
+	bh=y9cAnsHqNIYb0P++QnO5XIYO7nF4SS978HjjVVaE8xE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nDFfADJWMBW1w9tiCHfu/nEde9GcJsJjtsHdc8NAuAf1DBH0vOMV3Xhp5l4I9bux7AaqWyOxhACZler/E3zglloeChGofYQGfr95eAmDiXE20OsxSsvPfG4+E7fC+AjCL2nivvupEx7hEPod7zYeHe2nOXSVY5bkn6XlZQ2iUy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L9q6o9zt; arc=none smtp.client-ip=209.85.167.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="T4+binM/"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=bN74CJXas4xbBrm76ad5iOMyctClI0oPu6K3/qxBxQY=;
-	b=T4+binM/mQu7/4YcV4B8WfEv+MNUD4TbLJs7Tu8IiSvIS3rH+tECwmKuy60qVEgWzfr2Qe/nH
-	aIoS3zGTK7XBo3H0MjtuDuDQ5mpEuzwNIx9DypbYJoL0WaMlkUpQJndQ8I3RWS8yPoN63g1Vdl7
-	yjjHaGiRPRDcOUm8fPLeMtw=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4gwv2P6yh5zRhQS;
-	Thu,  9 Jul 2026 20:11:25 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 69C5C4058C;
-	Thu,  9 Jul 2026 20:20:39 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 9 Jul 2026 20:20:38 +0800
-Message-ID: <dad40817-9c87-494c-86b2-e0e2b75e60e7@huawei.com>
-Date: Thu, 9 Jul 2026 20:20:38 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L9q6o9zt"
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5b00ca000ceso966435e87.0
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2026 05:25:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783599911; x=1784204711; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vu/X/SkKCf8BDgHCKFoN7Pak7eOCPEtAIjSdYOyjR7k=;
+        b=L9q6o9ztCekmPSt8fmsF9PoiTQPD5RVZXoKzbNRaDc6VENSNqt22iJojfsvxQRoYsV
+         2M8RmBSWbvXQG0ObRiG2wovGENL67NqRI+PpjW7ggOJWFEFGQS4fFcCjP6F2/ZJI7Bp2
+         3dolaU2g/kZU+RRieN4/8IqbPgF75JRqP0KGQsKuOmicu35WNG6wdnL2NL8UBHiOVWqb
+         0FP+NFAheqNpGGxd0sF7fCBDbD2W+lJ/DSF0uISK9bii+dHaiKZzcAFj/OL1Zkj49F7m
+         u6DfEE3KbVd2HOamYD7H6XJsJcrKJ648fptuJpBw44B4mD04OnqA7ZtfYgaNJGou+IQq
+         P7Jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783599911; x=1784204711;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vu/X/SkKCf8BDgHCKFoN7Pak7eOCPEtAIjSdYOyjR7k=;
+        b=Iwmh8F1Jyk3qRgzMPK6SShFsQQAQdkCJyfB3euc6vZ8ZgGXvNW1gVFcQODoMI/dlhQ
+         7SCqtmeHQ0lb84MJuJ0zuAC9Rcwgi01nQFb7LPO+RMTDNGTTrde3WeuqjFnp58Ofi48Z
+         xYg2sPQTcXeLuGOOG7CaZRv5r9QYr3DBDSvoPrxjgnP9YdEGdjK9UcyXs5x5jL44Ua0a
+         I2oBOvdpeT/UUBRfZEqXCnaj4wVU+3YESyU8SG3bUuB5ISfwfZQvGh+7oI7jDlq9eBsU
+         GqJE/zFYpDwoYn18FL9lh8BKM69LYudbkGRn9cHPEeZVg9gxg16uyDPaSri6nIoHACNn
+         FIpA==
+X-Forwarded-Encrypted: i=1; AHgh+Rott585hwJP/haQGLhL5KEPBVDb2vSms8AM6270L4ydS4FXsU2/rlulIp0dQI0vKFZKCtnE8xfhWvk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx+KDMd4xYnahjxMqOGPF3Rot1hkauMQ+kVGdZlLOsLUKaLeATt
+	xJ2gtg6BwOaCxkojeYDk0n/TvDN0Dl4p0yk7r9wNF2NL3p/yzp7r7CA/
+X-Gm-Gg: AfdE7cm+lpGeG1KHylWquQIa8bky+hN4VRNXhW59He0raqN2riRJtIYdNgu61J4WeuD
+	NI98bCNcpOaEruIXk9SH4DAu0pkEodS363DhYROKnYiEmQUqYhTE0ekw9gUHdcJYGldOeEpS+12
+	JwcUJWwJ+WjnVdqXDeuXiebatli3Pb265wXbFGVl2o0RcimpFYEjpVebXjrKeMP+YDvYO5IPXph
+	zWtlWNCqJr5GHT2uk9jRKsOp75I6Ns0SuAMZJ0eveBc2QCrPC8/oBlrU8qCmk3rvdtSYmAVKGm+
+	JjhtO3VbVox40Ak4BaCo791BOAfz1ll392kj7g74qmWXFolB4DTRbIiTEtWHy9mRgQkTbOcaAgf
+	77UCkv+gJAmf82NxMsjyGoUnVDCBs81oolSdcuADjOBOIlmvmcfR2t4fT3uMHZRpt8zpiP2vIKc
+	xlBjdHQnDXc7SpEdB1hsSS/c4zNqYVk8vnFdbvfwgpKaHN9DcujbTGjgyJHu06QTHmxhmcm+Vx
+X-Received: by 2002:a05:6512:2c93:b0:5b0:197b:9829 with SMTP id 2adb3069b0e04-5b0197b99b7mr332166e87.41.1783599910888;
+        Thu, 09 Jul 2026 05:25:10 -0700 (PDT)
+Received: from maverickamd.dyn.int.numascale.com (fwa5d93-21.bb.online.no. [88.93.147.21])
+        by smtp.googlemail.com with ESMTPSA id 2adb3069b0e04-5aed13c3bf2sm5277697e87.69.2026.07.09.05.25.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Jul 2026 05:25:10 -0700 (PDT)
+From: Steffen Persvold <spersvold@gmail.com>
+To: Will Deacon <will@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Steffen Persvold <spersvold@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] PCI: host-generic: Fix NULL pointer dereference on 32-bit CAM systems
+Date: Thu,  9 Jul 2026 14:24:46 +0200
+Message-Id: <20260709122446.3151899-1-spersvold@gmail.com>
+X-Mailer: git-send-email 2.40.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 15/18] vfio/pci: Implement TPH_RESOLVE feature for
- DMABUF and CPU source resolving
-To: Alex Williamson <alex@shazbot.org>
-CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
-	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
-	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-16-fengchengwen@huawei.com>
- <20260708173106.21d26a9a@shazbot.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260708173106.21d26a9a@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+Content-Transfer-Encoding: 8bit
 
-On 7/9/2026 7:31 AM, Alex Williamson wrote:
-> On Thu, 2 Jul 2026 20:42:21 +0800
-> Chengwen Feng <fengchengwen@huawei.com> wrote:
-> 
->> Add vfio_pci_core_feature_tph_resolve() to implement the
->> VFIO_DEVICE_FEATURE_TPH_RESOLVE GET-only uAPI.
->>
->> Resolve PH/ST values from two supported sources:
->> - DMABUF fd: retrieve stored TPH metadata via dmabuf helper
->> - CPU ID: fetch ST tag from platform via PCIe TPH core helper
->>
->> Gate supported source types dynamically according to the tph_policy level:
->> No-ST/IV modes only permit DMABUF resolution, while DS+ modes additionally
->> allow CPU volatile/persistent sources.
-> 
-> RESOLVE is not an oracle, it's not only the sources that can be
-> resolved, but whether the user has a means to use the value.  RESOLVE
-> should not return a LITERAL unless the device supports DS mode or
-> supports IV mode AND we're in POLICY_LITERAL.  Thanks,
+On 32-bit systems the config space is too large to ioremap in one go, so
+pci_ecam_create() maps each bus segment separately and relies on the
+->add_bus callback (pci_ecam_add_bus) to populate the per-bus mapping in
+cfg->winp[]. pci_ecam_map_bus() then uses that mapping as the base for
+every config access.
 
-Got it. My current RESOLVE logic only filters allowed sources by policy,
-but does not check whether the device can actually use the resolved ST.
+The generic ECAM ops (pci_generic_ecam_ops) already provide the ->add_bus
+and ->remove_bus callbacks, but the CAM (legacy) ops in pci-host-generic.c
+do not. As a result, on a 32-bit host using "pci-host-cam-generic" the
+per-bus mapping is never set up and the first config read dereferences a
+NULL base, crashing during bus enumeration:
 
-I will fix it: ST will only be reported when the hardware supports IV/DS
-ST table capability, even under LITERAL policy.
+[    1.430647] Unable to handle kernel NULL pointer dereference at virtual address 00000800
+[    1.439441] Oops [#1]
+[    1.442152] CPU: 0 PID: 1 Comm: swapper Not tainted 6.9.7+ #43
+[    1.448753] Hardware name: Digilent Nexys-Video-A7 RV32 (DT)
+[    1.454968] epc : pci_generic_config_read+0x40/0xb0
+[    1.460652]  ra : pci_generic_config_read+0x2c/0xb0
+[    1.534729] [<c038db9c>] pci_generic_config_read+0x40/0xb0
+[    1.541096] [<c038da04>] pci_bus_read_config_dword+0x50/0xb0
+[    1.547623] [<c0391e94>] pci_bus_generic_read_dev_vendor_id+0x3c/0x1ec
+[    1.555010] [<c039245c>] pci_scan_single_device+0xa4/0x11c
+[    1.561273] [<c0392570>] pci_scan_slot+0x9c/0x23c
+[    1.566716] [<c039388c>] pci_scan_child_bus_extend+0x58/0x2f4
+[    1.573275] [<c0393db0>] pci_scan_root_bus_bridge+0x64/0xe8
+[    1.579650] [<c0393e54>] pci_host_probe+0x20/0xc8
+[    1.591396] [<c03bc6f4>] pci_host_common_probe+0x144/0x1e4
 
-Thanks
+Fix this by giving the CAM ops the same ->add_bus/->remove_bus callbacks.
+Since pci_ecam_add_bus() and pci_ecam_remove_bus() are static to ecam.c,
+move the CAM ops definition there as pci_generic_cam_ops (mirroring
+pci_generic_ecam_ops) and export it for pci-host-generic.c to reference.
 
-> 
-> Alex
-> 
->  
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  drivers/vfio/pci/vfio_pci_core.c | 75 ++++++++++++++++++++++++++++++++
->>  1 file changed, 75 insertions(+)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index 14944d3ea86e..ed6bbffa8b26 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -1641,6 +1641,78 @@ static int vfio_pci_core_feature_tph(struct vfio_pci_core_device *vdev,
->>  	return copy_to_user(arg, &tph, sizeof(tph)) ? -EFAULT : 0;
->>  }
->>  
->> +static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device *vdev,
->> +			u32 flags,
->> +			struct vfio_device_feature_tph_resolve __user *arg,
->> +			size_t argsz)
->> +{
->> +	const u32 permit_src_mask[] = {
->> +		[VFIO_PCI_TPH_POLICY_NO_ST] = VFIO_DEVICE_TPH_SRC_DMABUF,
->> +		[VFIO_PCI_TPH_POLICY_IV_ST] = VFIO_DEVICE_TPH_SRC_DMABUF,
->> +		[VFIO_PCI_TPH_POLICY_DS_ST ... VFIO_PCI_TPH_POLICY_LITERAL] =
->> +					VFIO_DEVICE_TPH_SRC_DMABUF |
->> +					VFIO_DEVICE_TPH_SRC_CPU_VOLATILE |
->> +					VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT,
->> +	};
->> +	u32 permit_flags = permit_src_mask[vdev->tph_policy] |
->> +			   VFIO_DEVICE_TPH_EXTENDED;
->> +	struct vfio_device_feature_tph_resolve resolve = {0};
->> +	enum tph_mem_type mtype;
->> +	bool extended;
->> +	u32 src_bits;
->> +	u16 tag = 0;
->> +	u8 ph = 0;
->> +	int ret;
->> +
->> +	if (!vdev->tph_permit)
->> +		return -EOPNOTSUPP;
->> +
->> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
->> +				 sizeof(resolve));
->> +	if (ret <= 0)
->> +		return ret;
->> +
->> +	if (copy_from_user(&resolve, arg, sizeof(resolve)))
->> +		return -EFAULT;
->> +
->> +	src_bits = resolve.flags & VFIO_DEVICE_TPH_SRC_MASK;
->> +	if (!(resolve.flags & permit_flags) || !is_power_of_2(src_bits))
->> +		return -EINVAL;
->> +	extended = !!(resolve.flags & VFIO_DEVICE_TPH_EXTENDED);
->> +	if (extended && !pcie_tph_supported(vdev->pdev, true))
->> +		return -EINVAL;
->> +
->> +	resolve.valid = 0;
->> +	resolve.ph = 0;
->> +	resolve.st = 0;
->> +
->> +	if (src_bits & VFIO_DEVICE_TPH_SRC_DMABUF) {
->> +		ret = vfio_pci_dma_buf_get_tph_by_fd(resolve.src, extended,
->> +						     &tag, &ph);
->> +		if (ret)
->> +			return ret;
->> +		resolve.ph = ph;
->> +		resolve.valid = VFIO_DEVICE_TPH_VALID_PH;
->> +		if (vdev->tph_policy >= VFIO_PCI_TPH_POLICY_DS_ST) {
->> +			resolve.st = tag;
->> +			resolve.valid |= VFIO_DEVICE_TPH_VALID_ST;
->> +		}
->> +		goto out;
->> +	}
->> +
->> +	mtype = (src_bits & VFIO_DEVICE_TPH_SRC_CPU_VOLATILE) ?
->> +			TPH_MEM_TYPE_VM : TPH_MEM_TYPE_PM;
->> +	ret = pcie_tph_get_cpu_st_explicit(vdev->pdev, mtype, extended,
->> +					   resolve.src, &tag);
->> +	if (ret)
->> +		return ret;
->> +	resolve.valid = VFIO_DEVICE_TPH_VALID_ST;
->> +	resolve.st = tag;
->> +
->> +out:
->> +	return copy_to_user(arg, &resolve, sizeof(resolve)) ? -EFAULT : 0;
->> +}
->> +
->>  int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->>  				void __user *arg, size_t argsz)
->>  {
->> @@ -1661,6 +1733,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->>  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
->>  	case VFIO_DEVICE_FEATURE_TPH:
->>  		return vfio_pci_core_feature_tph(vdev, flags, arg, argsz);
->> +	case VFIO_DEVICE_FEATURE_TPH_RESOLVE:
->> +		return vfio_pci_core_feature_tph_resolve(vdev, flags,
->> +							 arg, argsz);
->>  	default:
->>  		return -ENOTTY;
->>  	}
-> 
+Fixes: 8fe55ef23387 ("PCI: Dynamically map ECAM regions")
+Cc: stable@vger.kernel.org
+Signed-off-by: Steffen Persvold <spersvold@gmail.com>
+---
+ drivers/pci/controller/pci-host-generic.c | 11 +----------
+ drivers/pci/ecam.c                        | 13 +++++++++++++
+ include/linux/pci-ecam.h                  |  3 +++
+ 3 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
+index c1bc0d34..9e85c6e9 100644
+--- a/drivers/pci/controller/pci-host-generic.c
++++ b/drivers/pci/controller/pci-host-generic.c
+@@ -16,15 +16,6 @@
+ 
+ #include "pci-host-common.h"
+ 
+-static const struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+-	.bus_shift	= 16,
+-	.pci_ops	= {
+-		.map_bus	= pci_ecam_map_bus,
+-		.read		= pci_generic_config_read,
+-		.write		= pci_generic_config_write,
+-	}
+-};
+-
+ static bool pci_dw_valid_device(struct pci_bus *bus, unsigned int devfn)
+ {
+ 	struct pci_config_window *cfg = bus->sysdata;
+@@ -60,7 +51,7 @@ static const struct pci_ecam_ops pci_dw_ecam_bus_ops = {
+ 
+ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "pci-host-cam-generic",
+-	  .data = &gen_pci_cfg_cam_bus_ops },
++	  .data = &pci_generic_cam_ops },
+ 
+ 	{ .compatible = "pci-host-ecam-generic",
+ 	  .data = &pci_generic_ecam_ops },
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index 119de32f..a9b3bce2 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -208,6 +208,19 @@ const struct pci_ecam_ops pci_generic_ecam_ops = {
+ };
+ EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
+ 
++/* CAM ops */
++const struct pci_ecam_ops pci_generic_cam_ops = {
++	.bus_shift	= 16,
++	.pci_ops	= {
++		.add_bus	= pci_ecam_add_bus,
++		.remove_bus	= pci_ecam_remove_bus,
++		.map_bus	= pci_ecam_map_bus,
++		.read		= pci_generic_config_read,
++		.write		= pci_generic_config_write,
++	}
++};
++EXPORT_SYMBOL_GPL(pci_generic_cam_ops);
++
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+ /* ECAM ops for 32-bit access only (non-compliant) */
+ const struct pci_ecam_ops pci_32b_ops = {
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index d9306514..044f67ce 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -81,6 +81,9 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ /* default ECAM ops */
+ extern const struct pci_ecam_ops pci_generic_ecam_ops;
+ 
++/* default CAM ops */
++extern const struct pci_ecam_ops pci_generic_cam_ops;
++
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+ extern const struct pci_ecam_ops pci_32b_ops;	/* 32-bit accesses only */
+ extern const struct pci_ecam_ops pci_32b_read_ops; /* 32-bit read only */
+
+base-commit: 53bf92818a8362815708fc7b18e6d2c6a5fc665b
+-- 
+2.40.1
 
