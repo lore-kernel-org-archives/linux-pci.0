@@ -1,299 +1,215 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50802175A88
-	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 02:45:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783565114; cv=none; b=Q51LRFXildPA+c5/8wbtfyncjPnchiAsscxuu7370e9j9QvNAeqcRj/55up9QwuS4X5K3GkbqQtDpMDyevqiCTTxMgSOqRq2bKX6JQz9ymi8KaoXEoHv+/z9ACeOFeK0CqnW/Nlog/77sUvO23fnEXFRPeo+/bT6jdKe8KZhA6Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783565114; c=relaxed/simple;
-	bh=5yogYnG6Dlco/lFZ71lVJUPfGlx8F1VylFaX7l1IeZQ=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=aOEj6dlWbtT/JPV8sRjh+qhgsaKJ77dp0NkL2EbcBUrmyQfwqtrklWpB3kNtEnjmBHQDUyobMxursF1Iskat/emDztArSHw8daJjBJ2ezerEM2BE6Rf9npLbAaJfuGvfPvNSjCvcXXWrjPKf9E2qXUPRSTEGLpAY45MucRbHK3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eufZ2GUo; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0D072236E0;
+	Thu,  9 Jul 2026 03:30:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783567820; cv=fail; b=GoWFvMgcSPq4L6JzQiHq/VJKoTdhUoYwFWrNi8pvgY/t2eya3ZORDohSwwviVziAbN2hRupObRGU44HAUs6/iecSZhpLjdp/UcTA6OVLQ96xL37ol8xL5+/ZukF29ze3DGfFrwlMD36nHOXe9LiQyFjFYX+QUMVXaDx02exOmNU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783567820; c=relaxed/simple;
+	bh=SdXmtwq/K46d/SM2/2Cd3sTYwQ1iiLQoR9MxnWFe/Go=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=mz6VLi7aa8xiU1oYQBH5XLuZmBFNFjkOLE33ZhoiSR2y7D31RH0WffhzFe0BwD6+T9u7abTTM+iFEQS4GGY5Rx52hF8fvXxMYUVHkwIw1TGzhEyovcR4FV4WHHrMacidK5bsgXGRxsRmNpu9ITd/IqCW7U84P2auKmp5WikF8x4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=llBcDXlA; arc=fail smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eufZ2GUo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60B051F00A3D;
-	Thu,  9 Jul 2026 02:45:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783565112;
-	bh=wylYEceSROIfSQqRInOTqju8R0pfnz5zMsXN2HHh0qg=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=eufZ2GUoN8+BeiuUAqP56kvHirhPhJXHTZlP2atA6uTr37VaFASxzKoqPPw0qJiXS
-	 q6PCzpq44xAof2cwKC7H0G1Rq6RzAsbtRUW+H/hZXD9Om7sk3EiHaoCAsyGCjhHPj+
-	 OWMc+0EEjzDpbvjlN5IDuaZWJJqCjojKEY8R3rRowCUz9wcbSmU9mVa9ZtiXtPbm22
-	 dNGZ8pDzwYIA+BxdpyKy/NHZSmlFUqeHvHYzjq5anvcn4+2gI3q1kT+BAtytsYIgLJ
-	 hgnqwNWG3T80rsYcWSDpR8JLsmKbdh1uOrlbrwdRyNIcFFplQL0XUj64aJMro9X5QE
-	 Irw6J+4zIWaiA==
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 5B330F40068;
-	Wed,  8 Jul 2026 22:45:11 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Wed, 08 Jul 2026 22:45:11 -0400
-X-ME-Sender: <xms:NwtPalJwm70TMKrYaY-bh8D7e0SDhdIfdMqZu9ANTzCAHyHLy_5j9A>
-    <xme:NwtPaorWp8GAp3wK46FGWxFmexyVMQoLvTw9MA8OjPzZD6uQ7e6qnwrLQ-NYrSuFG
-    Ue_AuEGgAbmAgdWtVOXONYC_GNaS5OqAOZ7VYFiDlV_JiS5amfhDE0>
-X-ME-Received: <xmr:NwtPajxrEjy62J6DT43rPW0BpXkFH3Cnyn60w4FHXcL7q8eh-j-JKxEnsy7dV5uUdZi-4tVKeYYsLkodjQCDjU2yEr1_MeJ9vTM>
-X-ME-Proxy-Cause: dmFkZTE1C3L7Zr11pLJKwAhuU92xmmLnv4zXE4T/EqOBslopKhtxVbexgJRKkK4ct0SSB1
-    2lx+D4BJxiAZyDeVAnsgWjvO1RVgcBM4+MSlw1m0kP5JMx9hTxkoPVOrR4Hx8MaKJOn5im
-    2eBpl3TY0TaLHNP7EcUfEX/i1c4Y8W/G8G6vHCtfbWnLa+nTFOaAWJ+bEcLqDY87yO3iZs
-    qrcxTDIP+HLRida1YgAhQSQ+w0iSUQV7fEdDe15IQGW1N+qnAOkGPeqUiGzuTO8x84n/mn
-    nEhSnk0DaWCayCnZdkXZQ3HPKfNll61w1b5MEAzD2MY5oxOLMDLXsa/sP+6/S+Hc5mhfHl
-    +6ZGKzsdOj2Js6qSeB7T7oU6SE6zOBBJpyZ5tEzTLJjYcZXs3rdI56Cc50sP6Xv/yGuGfo
-    DZ8INkEVkoNyL+1WwU/mJ9G/e9W/olV5lXe/kKdcMMQLHBGJ2APiE4X3BFZ/Kzy2TvoE4n
-    b6eGk6aCu6oP2/uO9kwYd0Fk8oiYvJ7xzHZfh9sBoHHHAuQ5mUjCH1e/gBbhzEIDh42yvh
-    ZuJL7v3/OhCwSvDpvTl1nQjqelfwUIgFPS26GDiGsOpeLTHm+hllB/t1uVDcw+VQFWvX/y
-    2toWU8WGbkz0DLuB/VHRAZ5E2TA2oWXkqwDkMjw2K4mk4JrapicQIzNt5yKQ
-X-ME-Proxy: <xmx:NwtPakeaMFP8EMgeCxanSd71Ck3aPijH7-TUQo3UREFMvh4iv2ozPQ>
-    <xmx:NwtPandbb98JOxdn313nLmfR3igg0V7hr1CxjDhP6vETXlO1pIWAkQ>
-    <xmx:NwtPauYubu9kU8u2_1JwBDU3AVYXlGwWSSE8A0PVt9Fr4kn21tnntA>
-    <xmx:NwtPag-Gz4SogRiBIfOX36H7mfI-u6JQ85kRj9YWUbKSNsFBRM-xlA>
-    <xmx:NwtPaiUS7RLWOsc7Gc_JPbUOfy64-Y06glGByCLxqZB9ktsouxsLDXJM>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 8 Jul 2026 22:45:10 -0400 (EDT)
-Date: Wed, 08 Jul 2026 19:45:09 -0700
-From: "Dan Williams (nvidia)" <djbw@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>, 
- "Dan Williams (nvidia)" <djbw@kernel.org>
-Cc: linux-coco@lists.linux.dev, 
- linux-pci@vger.kernel.org, 
- driver-core@lists.linux.dev, 
- ankita@nvidia.com, 
- Aaron Tomlin <atomlin@atomlin.com>, 
- Alexey Kardashevskiy <aik@amd.com>, 
- Alistair Francis <alistair.francis@wdc.com>, 
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
- Arnd Bergmann <arnd@arndb.de>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Daniel Gomez <da.gomez@kernel.org>, 
- Danilo Krummrich <dakr@kernel.org>, 
- Dexuan Cui <decui@microsoft.com>, 
- Donald Hunter <donald.hunter@gmail.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Jakub Kicinski <kuba@kernel.org>, 
- Luis Chamberlain <mcgrof@kernel.org>, 
- Lukas Wunner <lukas@wunner.de>, 
- Petr Pavlu <petr.pavlu@suse.com>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Robin Murphy <robin.murphy@arm.com>, 
- Sami Tolvanen <samitolvanen@google.com>, 
- Samuel Ortiz <sameo@rivosinc.com>, 
- Saravana Kannan <saravanak@google.com>, 
- Will Deacon <will@kernel.org>, 
- Xu Yilun <yilun.xu@linux.intel.com>
-Message-ID: <6a4f0b35683b4_353c8910011@djbw-dev.notmuch>
-In-Reply-To: <20260708143153.GH118978@ziepe.ca>
-References: <20260705220819.2472765-1-djbw@kernel.org>
- <20260706125140.GB107792@ziepe.ca>
- <6a4c163072c60_174db6100c4@djbw-dev.notmuch>
- <20260707124321.GF118978@ziepe.ca>
- <6a4d95fcc92c2_2f05d5100f7@djbw-dev.notmuch>
- <20260708143153.GH118978@ziepe.ca>
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security Protocol
- (TDISP)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="llBcDXlA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783567819; x=1815103819;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=SdXmtwq/K46d/SM2/2Cd3sTYwQ1iiLQoR9MxnWFe/Go=;
+  b=llBcDXlANEtGXiIxlGbx1kDEz6mzltz7uwUZJJ96pkAmzVF0LzN7FYia
+   dzLOvkRXdsHKf2iZQNlXZyi7BAUObxjm3QQ11Sl1n9Ouu9tY/J+GWcon0
+   eyu8YbTOADfrH0PFMJ88iLK+cXBFaVxIQD5QJkNyRDeJg8SBT3xX+Y/gr
+   cD4RUhs3XtpTWH00aIomWYaVKHpv1eH8RrCDV+oFmLAd/CG2UtZf6UTD7
+   RTeshaw5Uv7O86s4MH+YfDcIe83QCFZkiBmEqVfmTGCVG5EdrXYtHlheE
+   drheiVTlobgKNhOK9gFuSfoYCkfRrMDXqWVAqU2o20VIIBmTi92eFp79v
+   w==;
+X-CSE-ConnectionGUID: Rjzr0Cp8QCyhdaoolXj5hQ==
+X-CSE-MsgGUID: oIRFbexOTzKMhhrkJ9Td0w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="94847820"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="94847820"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2026 20:30:18 -0700
+X-CSE-ConnectionGUID: nAB9fxnCTdaAm0Z4O2NJvw==
+X-CSE-MsgGUID: 9+v6flO2QiOKZySUqfIsKQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="256375261"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by fmviesa004.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2026 20:30:18 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 8 Jul 2026 20:30:17 -0700
+Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43 via Frontend Transport; Wed, 8 Jul 2026 20:30:17 -0700
+Received: from DM1PR04CU001.outbound.protection.outlook.com (52.101.61.52) by
+ edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 8 Jul 2026 20:30:17 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=I5p5p7lA6oacs8KtCuLfHMFFPDZhX4FxsOgcuTQ6v9n5XBICaQmq6HfBPUWs4+93E4VABL68NMB+/gGU4QKRL12/PCBjtV18IuIcKPKRG85MPG3VZv61J0OV5hzCmnrXD8Z9HVyFykItrfKQZUY8HKXfIkNDOzAU+0It+IgvniPmCRiSUIvhCj+LG5YyktZBAPTGAyJXEPiixGtkCfvVi6q8lDMcFKV1gOgrb8hBPmh5bhMYUSOHQDcjug/oX3F7eE5otagjwNRGPoOX185SSeUUdLdD8MAIt+HZ3fHbranv3aEiycuJesH0u/oIfCvns58ZtC4BZORIanhkD/dBuw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xNIkbIPk7iKVItw8ZkeqteDumGem/EhVFkPpOopXTB0=;
+ b=BPddNhAZeh0OcAHEGEOd0RbB7gfCb2g/zyQSZmZbK+Wzw+KuEghx71AypJvhlEF2jft79rE93DUVpsix3Mp4B9glXVWM7CuhOfzpzWER4g5fo70jJ7RJ4EmA5CR/7dcJahP5odTiJSadIjK3GWU1eV31sFuDuXJeK16i1q+J2+ysMHFb0uFFjAojulGMOeRA3aNt617tgBRzKvT04dKRRp1rzlZ1Qvseg0K8r1hBj8Ri9JFS18iPqQoGqcLhRsZ+fkctPHpFip5N4OU03NxRLlAIjuc/xIm6UA9+WuXOF+HLvPOcrLkXZfDjgylls2RdD3z0/dv6RfG1MCmzvkTHTQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com (2603:10b6:f:fc02::9)
+ by DM4PR11MB5263.namprd11.prod.outlook.com (2603:10b6:5:38a::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.159.16; Thu, 9 Jul
+ 2026 03:30:15 +0000
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891]) by DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891%4]) with mapi id 15.21.0181.014; Thu, 9 Jul 2026
+ 03:30:15 +0000
+Date: Wed, 8 Jul 2026 20:30:10 -0700
+From: Alison Schofield <alison.schofield@intel.com>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>, "Dave
+ Jiang" <dave.jiang@intel.com>, Davidlohr Bueso <dave@stgolabs.net>, "Jonathan
+ Cameron" <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
+	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>,
+	<vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Dan Williams
+	<danwilliams@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v9 04/11] cxl: Cache endpoint decoder settings during PCI
+ enumeration
+Message-ID: <ak8Vwi2W2vVM0n0D@aschofie-mobl2.lan>
+References: <20260709010304.680422-1-smadhavan@nvidia.com>
+ <20260709010304.680422-5-smadhavan@nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260709010304.680422-5-smadhavan@nvidia.com>
+X-ClientProxiedBy: BY1P220CA0003.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:a03:59d::10) To DS4PPF0BAC23327.namprd11.prod.outlook.com
+ (2603:10b6:f:fc02::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPF0BAC23327:EE_|DM4PR11MB5263:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3d1549f1-034f-48ef-9206-08dedd6a6404
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|7416014|4143699003|6133799003|22082099003|18002099003|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info: FtdSeMN6WI/XG++aMQBBZlZosn4Xi9/vPwBIPm3NM62l5eryDFVSVl7GvSM3pZkmpPotIZc1p+Tz67+qimWveDNtr1AmaRh800Ebpqskbltg/afRx7VzbbAwoRl0ks1WIT5XbpvNxvpru0BWt935IRF3hN8gJZ19+8l7xKtW7sJUrG4PBNTlcagsvH5LRCIQ81hDRPJyCo2bK4s6WEnxW0R7MhiIDcftfdznkcSMM/mGE2h4inpfhH3yOxtJ9AC+lKde86FhBQufkp5J3ldYC87cBnxLn9LoNn+iLYIMCZtelH84/w5u91JhZh21zLPVfoCQ69T8B1RiH8f5LSBKrkScbYIX8vzHl+0AzvHAACkn3J6iqvuJzhfG9fU2O5kPuQt9quxHop6eLy3p4hMSKxsxMhSCWyVWzbgFpIZLvKH5Q3XFoqZ+uOxpqF5B9tgwAOgfzuN5+P+84twNIcKZ5lp9kIOp7li9JWfHP1MDwGnD+gaJBciArzMbg5gehGW1FVH643/IdnOtaPLyipTDtJu+A/QDiJSQvv2FNrgIqYV0Lsh3s5SeA5EiIZm58jNA6C/dNAMXdDOa2SVYS08IvqYp1cjsd7+5sVHRvwCZfxo44hgHy3XhkxO0bc3RkM63D+XS+L62iYI9wMBX5BdLugZI94s73YiPOpMMArQjaQA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF0BAC23327.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(7416014)(4143699003)(6133799003)(22082099003)(18002099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LTIBs2czGjDCl4LALW9h7b4QhggjbkgHnRLFEprQFPgNCBkem4z4Fk9IU3PE?=
+ =?us-ascii?Q?tpMZXlROWDVnp/QZcMdp2lU+rLPSkuRtn6WvrF7rfKuGsVvUmPhRjv62JKrJ?=
+ =?us-ascii?Q?q+VWuiKklvBkPndZJ4qLyHJdTto5jLK7JvEL5BO05ROvjyVrViw2k5qW3WkY?=
+ =?us-ascii?Q?bIGwxiOGGsoWymIU8FKC0ly4n/QDNWLmkzKkUziXWrxVBivlDDxNa0ILvTVu?=
+ =?us-ascii?Q?gG0YYy2RYmSA06MfMgXRAMbIvS4DmNqaIiQ8PwdMdLvhTG654smmlgMm17g1?=
+ =?us-ascii?Q?DTB2wlsg03Jen45Of54coK179+vfA2LjPylGnRIUxBAe9x+K1aohHxEVDd9K?=
+ =?us-ascii?Q?gaCmWQObJaIIhUkdMNDJJx379L0pTXATFWuqAYWESlN2bzc1RcyxSKNKb3TQ?=
+ =?us-ascii?Q?3v2eVQ6BKDBG72SwVw0paERUpD60cCcBYe5fkewKzpdPjWdDNp/C2pEBIzvX?=
+ =?us-ascii?Q?zERt9UOlph5ovhd2NYA20EikyDnf/+6fa6xVOORVaBeIiYYPYvA5rk5vJztG?=
+ =?us-ascii?Q?3GaV6zAH+5GxV2VQNNeBVF2B/0pLK4+VQpg/u/gjo0T+8/201FULjbohC1pb?=
+ =?us-ascii?Q?aR1aX3SLRwz11mqzwmKxzi71pXeTNyfGO3rm3jWyfdSIZ++sO+FjRMFe6alO?=
+ =?us-ascii?Q?9GIsNfk0PtBpzaOcAUD/KB8XKuJYUgOvrDnA2EOtsME/KvFaknER39WyWr2c?=
+ =?us-ascii?Q?LkGX7rN076Ci64yeezOlcvq+J6CKR08JVYGzXBPQdOEZwAw5B3nYMGori2q7?=
+ =?us-ascii?Q?zcOmhFJSe7QMZlASn1OF/z8sAczufhrGYdvfSAOLX3boM4pcSeU0xcJ+lQUK?=
+ =?us-ascii?Q?K5EDABXMZmn4ELyV0IDFOsKtqSb3vQ73PMnip5KbP4W5C5BkOroqurcmkVqS?=
+ =?us-ascii?Q?rZsyi7dHUxu5kH/GUeQbvrUf3xJOeqJu8Wx+tbQCrzh5y1QV3hMw4pet8H3P?=
+ =?us-ascii?Q?Q8Kw6V+rYiRB7fX5/Kgsquros6nto1wZL/1HdqdIj3AUUfkf3BZwF6nzR3Ps?=
+ =?us-ascii?Q?e93acPlDd+HpsuJ0TKjZNTx34lAtRaHTUpWQTEZm1jM7638znaJhhPHeD7OQ?=
+ =?us-ascii?Q?r5tL54Rte3oyLy4WBoS8hlrC4QzyiwhTPp2SVqWNGXNL93ebMaXJb4tnFxj/?=
+ =?us-ascii?Q?LYxwQAOGXFK0hPJnrmqCFqbduLRqDKtI1FsKSl2N6tRKCB+XAKE64hBp6qi0?=
+ =?us-ascii?Q?Ict2KabLyrAVTK9S6fslEtxLrJnv2OF3kSJHVNYy2Hmak4vTFtSdWIiQD5Ta?=
+ =?us-ascii?Q?/KG0XCNP1lxpngIKtIaLAsuPmDfqRGYlxVxDv6B6M4yiSQ5aPRrQzThOmd82?=
+ =?us-ascii?Q?fbW8pm2yDUnd9ThsO01A9w4HqxVyt+yrbbzMJph/3Dn8XmOyQzB0pKdzEZTi?=
+ =?us-ascii?Q?6iSRdI31UkQYAKls9EOmaTot9Czw8AhEx3KZTI0YstyyOgUumy+bT00kIC4C?=
+ =?us-ascii?Q?PxUmKvvGSAUU1nH0KYmap57G/lGXx6eYfnGg+KylMVSoibT0T7xVn8Kb/qlb?=
+ =?us-ascii?Q?FSpvY3jFuQFjSNGwBHeuZc/o/lVNkW/PK7OQToRHEF6/370w78Ny4E/o6xLO?=
+ =?us-ascii?Q?l3WTgbOWdkLo2YEXYpjvwauZrdEYd+MoEagKvDEMHLgk2du3eJcS/IrLCm26?=
+ =?us-ascii?Q?uhS614BfOeJZ1WnEo+mMI1ZYj5J0DyCFAirPT/00hf2U3CrLSfEGxrpxP8Q2?=
+ =?us-ascii?Q?LnVTvJSpMBT8Z+0U5tA2CetWad9T77EV/iq9eJyaRPoL300k2pS2THmUPZTY?=
+ =?us-ascii?Q?/y18/RWiG4m5PlP3Lw4sTLhsVylccKo=3D?=
+X-Exchange-RoutingPolicyChecked: IvzPnixU8TFtmX0o5WL5xIQzqSuJJXunuFmXiYVf25DGubAQMGhHq5Q9m2p3Wqt8kXacBDTY/Z+mJ8BuDSjnFFkNoHb7IK4dQBFiL0xJT0g+FTOeITM37K3Rs/RK3C8fn0KLN2cd/GkOt4n0YmLhiT+k75Jx8y3sA8ZLGJt4BvcMKeVikFZ628j+owMLzMaxqOWNG4RcZ4Ib+e/0GyhMjGTkR8e/j1xbQ/9boKX/I66Dgwn3fCJVVXDZi3+O01duJJ0OfandK9QzCqya7iA/qDb/uA7vYnVp8rXyADY65v+gsbwykGi1NwdoZ/IPAx6dY3sdzb7LcxAg9mG4Ye8G5g==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3d1549f1-034f-48ef-9206-08dedd6a6404
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPF0BAC23327.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2026 03:30:14.9723
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Sysyf6XNYbuLPlKAnvqMr1zGRfLkpAyTMQZCsS0unXoCat2LnUBUKdpb8iVXyJ4btRdzkb59/joKRi6SJhbCPzTheBcrFb6WZyu3QD7PvsI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR11MB5263
+X-OriginatorOrg: intel.com
 
-Jason Gunthorpe wrote:
-> On Tue, Jul 07, 2026 at 05:12:44PM -0700, Dan Williams (nvidia) wrote:
->  
-> > 1/ We previously discussed a use case to operate a device's private MMIO
-> > while not allowing access to private memory (software encrypted NVME
-> > with private MMIO [1]). Many of the following comments are based on
-> > preserving this assumption so you can save some reading if we agree that
-> > use case can be abandoned.
+On Thu, Jul 09, 2026 at 01:02:57AM +0000, Srirangan Madhavan wrote:
+> Populate pci_dev->hdm from PCI capability initialization for CXL.mem
+> functions. If Memory Space Enable is clear, temporarily set it while
+> reading HDM MMIO and restore the original PCI_COMMAND value before
+> returning. This gives driver-free reset paths an early HDM snapshot.
 > 
-> force_dma_unencrypted() does not *prevent* device access to private
-> memory and provides no security properties on its own. It's only
-> purpose is to inform the DMA API what the HW restrictions are for
-> doing DMA.
-
-Right, to be clear, this mode's security properties come from never
-asking the TSM to enable private DMA while the device is in RUN.
-
-force_dma_unencrypted() has no security properties.
-
-> The use case I had in mind relied on the vIOMMU to police access to
-> the private memory. I think if you do T=1 and ADVERSARY you must have
-> a vIOMMU or it is an illogical configuration.
-
-Ok, the software encryption aspect of the suggestion was what threw me.
-So we are saying, "no need, outside of defense in depth or data at rest
-concerns, to include software encryption on top of an NVME device being
-operated adversarially with T=1."
-
-> So, IMHO there is no use case for a T=1 device to only use shared
-> memory, I would abandon that combination.
+> CXL core later reuses and refreshes the same cache. Move the register
+> helpers into the built-in CONFIG_CXL_HDM set so the early cache path is
+> available without cxl_core.
 > 
-> > 2/ The confirmation of the trust level and the enabling of DMA are
-> > separated in time from setting the trust level and entering the RUN
-> > state.
-> > 
-> > All the archs separate the RUN step from the ENABLE DMA step, and the
-> > implementation separates those steps in time.
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/core/Makefile |   3 +-
+>  drivers/cxl/core/hdm.c    |  59 ++++----
+>  drivers/cxl/core/regs.c   |   4 +
+>  drivers/cxl/core/reset.c  | 288 ++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c       |   3 +
+>  include/cxl/cxl.h         |  31 +++-
+>  6 files changed, 349 insertions(+), 39 deletions(-)
 > 
-> Yes, until the device is fully accepted the DMA has to be kept off. If
-> you have to measure in the RUN state then we must have a second step
-> after measurement completes, however we are measuring in LOCKED right?
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index dc075cee0450..69cf2ea7ee74 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,6 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> -obj-$(CONFIG_CXL_HDM) += reset.o
+> +obj-$(CONFIG_CXL_HDM) += regs.o reset.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
 
-Yes, measure while in LOCKED, but nothing strictly prevents taking
-measurements after RUN.
+Hi Srirangan,
 
-> > echo tsm0 > $pdev/tsm/lock
-> > cat $nonce | device-evidence dump $pdev
-> > device-evidence validate $pdev $generation
-> 
-> So the device is in LOCKED here, DMA remains off both because of
-> LOCKED and becuase ENABLE DMA has not been done.
-> 
-> > echo 1 > $pdev/tsm/accept
-> 
-> And now it is RUN. So I don't see the issue with enabling DMA at the
-> same time as gonig to RUN? (though defering it to driver probe would
-> be a very nice touch as well)
+This breaks cxl-test module builds with an 'exported twice' error,
+14 symbols are both built-in and in cxl_core.ko.
+All from drivers/cxl/core/regs.c
 
-It requires "accept" to consider the trust level. E.g. what does it mean
-to do something like change requirements after accept?
+With that fixed up, this set passes the cxl unit test suite :)
 
-echo full $pdev/trust
-echo 1 > $pdev/tsm/accept
-echo adversary > $pdev/trust
+diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
+index 2be1df80fcc9..e80500f457a9 100644
+--- a/tools/testing/cxl/Kbuild
++++ b/tools/testing/cxl/Kbuild
+@@ -55,7 +55,6 @@ obj-m += cxl_core.o
 
-In that scenario this now adversary device may have been allowed to
-operate without an enforcing vIOMMU, and needs to unlock the device to
-correct that.
+ cxl_core-y := $(CXL_CORE_SRC)/port.o
+ cxl_core-y += $(CXL_CORE_SRC)/pmem.o
+-cxl_core-y += $(CXL_CORE_SRC)/regs.o
+ cxl_core-y += $(CXL_CORE_SRC)/memdev.o
+ cxl_core-y += $(CXL_CORE_SRC)/mbox.o
+ cxl_core-y += $(CXL_CORE_SRC)/pci.o
 
-Delaying enable DMA means the implementation can say, "all trust and
-security privileges are reconciled at device driver bind, and revoked at
-unbind".
+-- Alison
 
-> With this API you can't set the devices to RUN and *then* collect the
-> evidence, is that restriction OK?
-
-The Enable DMA step requires evidence in the end. So it is more
-implementation ergonomics driving whether "accept" includes Enable DMA
-or defers to driver bind.
-
-> > echo full > $pdev/trust
-> > echo $pdev > $driver/bind
-> 
-> Then we can set the trust and bind the driver, knowing that the T=1
-> security property is in place.
-
-Or, "accept" success tells you the full T=1 property is required for
-"bind" to succeed.
-
-> > The configuration window where $pdev/trust and $pdev/accept can be
-> > dynamically changing should not be changing the force_dma_unencrypyted()
-> > result if only because that value will mismatch the hardware state until
-> > the next ->dma_configure() event.
-> 
-> T=x cannot be changed while a driver is bound, we need to block
-> that. Changing it will mess up all DMA and the DMA API won't work
-> anymore.
-> 
-> Thus force_dma_unencrypted() can only change when a driver is
-> unbound.
-> 
-> If a driver is unbound nothing ever reads force_dma_unencrypted() so
-> it is safe to change it, thus we can just synchronize T=1 and
-> force_dma_unencrypted() whenever T changes.
-> 
-> The error case has to wait for the driver to unbind if userspace wants
-> to go from ERROR->UNLOCKED. IMHO for RAS we are going to need a flow
-> to logically go from ERROR->RUN, probably with the 'same device
-> acceptance' I suggested earlier. In this case the DMAs will be halted,
-> the devices gets back to T=1 and RUN, then the DMAs are turned on
-> again. The driver remains in T=1 and force_dma_unencrypted() is always
-> false.
-
-Ideally this recovery does not need userspace round trips, but for that
-the kernel needs SPDM transcript parsing. The measurement digest that
-CCA provides is over the full previous transcript. A fresh nonce to
-validate same device leads to the kernel need to validate the signature
-with a cached key and compare the extracted measurement payload from the
-previous transcript.
-
-> > There are also buses and paravisors that may know that private-DMA is
-> > enabled for a device by construction. In that case it is also a "trusted
-> > to access" signal, and not a "required to access" signal.
-> 
-> In this case they wire force_dma_unencrypted()=false.
-
-Yeah, I just need a scheme where modular bus providers do not end up
-compromising the private / unexported method of changing the flag that
-force_dma_unencrypted() consumes.
-
-> > My answer, given the concerns of drivers dangerously flipping the
-> > force_dma_unencrypted() result at runtime was to place it in 'struct
-> > device_private' 
-> 
-> Yes, this seems good idea in general
-> 
-> > Otherwise it is confusing when 2 devices are at FULL trust, but
-> > one has private memory access and the other does not. One is FULL the
-> > other is FULL+.
-> 
-> It is confusing when phrased like this, but this is also why I was
-> suggesting below that a pure trust level may not be sufficient as we
-> have quite a cross product of scenarios.
-> 
-> If the user wants to operate a device without T=1 and without
-> ADVERSARY then that's goofy, but technically the kernel doesn't really
-> need to care? It can do it.
-> 
-> IMHO a big question is how much do we want the kernel to nanny
-> userspace by having options to double check its work?
-> 
-> Either we trust the user to have checked all the policy conditions
-> before writing /sys/trust, or we encode some policy conditions and
-> tell the kernel so it can double-check prior to probe.
-> 
-> At least if we omit the double check it can be fairly easy to add in
-> later if it really was needed for some time of use reason.
-
-As long as IOMMU presence can be enumerated prior to acceptance, T=1
-always includes private DMA, and the T=1 status is tracked independent
-of the trust level then yes, the cross product can be avoided.
-
-> > The question is whether these requirements belong on a central device
-> > trust mechanism bitmap or should be pushed out to other ABI.
-> 
-> Yes, for sure, I don't have a good sense what is better.
-> 
-> > For
-> > example, if the presence of the secure IOMMU is enumerated
-> > after the device is in the LOCKED state then userspace policy can know
-> > what it is getting into without needing to tell the kernel. 
-> 
-> Yes, I think for almost all of this we could push it out to userspace
-> and have knobs all over. Like IOMMU already has a knob to switch to
-> DMA mode, we could add an IOMMU specific trust level to set ADVERSARY
-> also if we go in this direction.
-> 
-> But, I also do really like the idea of a central knob that was fairly
-> general and simple DISABLE/ADVERSARY/FULL which all sorts of things
-> can hang off. Including IOMMU and the drivers themselves that may
-> change operation in ADVERSARY mode.
-
-Yes, even if some of the ancillary requirements move to other ABI the
-central question of DISABLE/ADVERSARY/FULL stays common.
-
-> That means they need simple general definitions for what they are, and
-> I really like this ADVERSARY naming vs trust as it makes it very clear
-> what the device disposition intention is.
-
-I will do the "device_adversarial()" conversion throughout.
-
-'struct device' grows some "request" policy for trust and T=1 that can
-be changed by modules etc. 'struct device_private' grows the operational
-trust level stable under device_lock() and a new flag to reflect T=1.
