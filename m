@@ -1,285 +1,246 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0C78141B37F;
-	Thu,  9 Jul 2026 11:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2D4379C32;
+	Thu,  9 Jul 2026 11:40:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783596830; cv=none; b=VmYftbZuqx/g+0Yz/k/UXSY55T2LQUt+uwVfu2hrsKpU9xJ5C4BkMQk7488CEgAGISI9P9LW3YoaqoWsn+fRez72EnxIlLcmAnUTDFwsoQ+KSR2+f2BwUzdOEVqyUg/RZdXcZUFsoFa6bNK9qR896EYU9muX9IGR4VfQZAuESrs=
+	t=1783597260; cv=none; b=AfLeSo2F9MKnXhF8Obu1XBiIcoO6tyzfNCKT9gceoLxyG5pygnIJoGNZskQsbgt9CO/7krMWGDU5uhDpxqrxQFx26rCkcnCz2UAC8ez+VzGI0jEgG7BGnhsVnl4nSQjZxuIrJjJslbCld7NrOmnSy9A4fcmOjqz72hRZ7rMACIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783596830; c=relaxed/simple;
-	bh=K0THlXNwZqipz/KEI06FjAdUeSpg5s7LDONtQ2Zte8g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A3Of4dP9I/Akf5phD5Z5OgdQCrc3odfuk4wDVOHz02BSvv8k6XYtKkFOG5H5bw31MAUFu16bOjfnb+bRjoYpYcPypj2/pXTOMSboGVQiTAjZnU1oQ5LA+3/HRkj4kK22CVIEMh1v3SWZRKZgQRxFJWd9ud3HMMPnzHz6wmIGKuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=hovpNZ3T; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1783597260; c=relaxed/simple;
+	bh=FHrDlkrRjdOi33vFhwepsd9AkgF+dmss0uOzvOG2IGs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ghwMe5+nVkQ7g47Xfe4QlFepMXyJrJ+B/6LkIQC+PG/Xoc96K+6eJSVDXAxY7Uj0IpQSQa+6thPWyOqkHq0bqH/+PH0J/fWKl4LoYuNKvLmHi6TdhfVat1Gg28vhgmpf0/+VMjb8TQRZeomS94tenRFLhxMrWmrZZKs6Hmv5cv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=mCEae15t; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="hovpNZ3T"
-Received: from localhost (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 4A43420B716B;
-	Thu,  9 Jul 2026 04:33:38 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4A43420B716B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1783596818;
-	bh=LJd/+GU+PpP/Ium6hNk30csI0fmCJwtgCwZHUVsgKho=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hovpNZ3TPhHx/HgG/98cgurUwIpqSkztqwDe0evKW+PVJY8k7FqGSIMz2PlREZPEW
-	 5FRx12WtVtyS1Sjp6ozdvLGdCLoGIMag2WiCU2x6FgNo6nsSQ7VensjxunuGYb+i+H
-	 undDj7/2n65it5yFFcbnKT4Asefw6BMab67xV/Nk=
-Date: Thu, 9 Jul 2026 19:33:41 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, 
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>, 
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>, 
-	"longli@microsoft.com" <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>, 
-	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>, 
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com" <mrathor@linux.microsoft.com>
-Subject: Re: [PATCH v2 2/4] Drivers: hv: Add logical device ID registry for
- vPCI devices
-Message-ID: <ja2drof5i7xjhpj4vbpavnphtn6cx4y5d3337vjrofxr47gxtq@msvg6xpbkb2h>
-References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
- <20260702160518.311234-3-zhangyu1@linux.microsoft.com>
- <SN6PR02MB415798534DFCC14E5202D021D4FF2@SN6PR02MB4157.namprd02.prod.outlook.com>
- <u2l4lz5skybcukrb6hwp2u6v3jdibrugokxmclgv3uq4ljj3vw@x7mlfvuwb5f4>
- <BN7PR02MB4148C8DB748CFD863B97D1B7D4FF2@BN7PR02MB4148.namprd02.prod.outlook.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="mCEae15t"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=kAwH566p+bzKlmSM3SbiC5fBtpMIEBFI20SGPrKDoJA=;
+	b=mCEae15tlDbKrbo3shjEofcI6v8RfK8sITEOVS2odfJRKkVvyyDDeq75YF0DCSR93yyUsGecQ
+	7cokVuSAZ4aGUKAzTXCqa1nU32qNloOX4u48Hm6gFbn4L8K1lKXcF4g/975+JTfr7Eyc/MZSWth
+	siR4ljicjAGIqubHF+aKMxI=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gwt8X27psz1K96m;
+	Thu,  9 Jul 2026 19:31:40 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id BD8E84057A;
+	Thu,  9 Jul 2026 19:40:53 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 9 Jul 2026 19:40:53 +0800
+Message-ID: <9092fc02-1ecb-46b7-870f-3560bdb426ca@huawei.com>
+Date: Thu, 9 Jul 2026 19:40:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <BN7PR02MB4148C8DB748CFD863B97D1B7D4FF2@BN7PR02MB4148.namprd02.prod.outlook.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v19 11/18] vfio/pci: Virtualize PCIe TPH capability
+ registers
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
+	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+References: <20260702124224.57168-1-fengchengwen@huawei.com>
+ <20260702124224.57168-12-fengchengwen@huawei.com>
+ <20260708173128.687525c6@shazbot.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260708173128.687525c6@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On Wed, Jul 08, 2026 at 01:28:42PM +0000, Michael Kelley wrote:
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, July 8, 2026 6:09 AM
-> > 
-> > On Wed, Jul 08, 2026 at 02:52:43AM +0000, Michael Kelley wrote:
-> > > From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Thursday, July 2, 2026 9:05 AM
-> > > >
-> > > > From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > > >
-> > > > Hyper-V identifies each PCI pass-thru device by a logical device ID in
-> > > > its hypercall interface. This ID consists of a per-bus prefix, derived
-> > > > from the VMBus device instance GUID, combined with the PCI function
-> > > > number of the endpoint device.
-> > > >
-> > > > Add a small registry in hv_common.c that maps a PCI domain number to its
-> > > > logical device ID prefix. The vPCI bus driver (pci-hyperv) registers the
-> > > > prefix when a bus is probed and unregisters it when the bus is removed.
-> > > > Consumers such as the para-virtualized IOMMU driver look up the prefix
-> > > > by PCI domain number and combine it with the function number to form the
-> > > > complete logical device ID for hypercalls.
-> > > >
-> > > > The prefix construction is shared via hv_build_logical_dev_id_prefix() so
-> > > > that pci-hyperv's interrupt retargeting path and the registry use exactly
-> > > > the same byte layout. It is derived on demand from the constant hv_device
-> > > > instance GUID rather than cached in struct hv_pcibus_device, which is
-> > > > private to the pci-hyperv module; this keeps the interface narrow and
-> > > > avoids depending on pci-hyperv internals.
-> > > >
-> > > > Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> > > > Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> > > > Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> > > > ---
-> > > >  drivers/hv/hv_common.c              | 95 +++++++++++++++++++++++++++++
-> > > >  drivers/pci/controller/pci-hyperv.c | 21 +++++--
-> > > >  include/asm-generic/mshyperv.h      | 13 ++++
-> > > >  include/linux/hyperv.h              |  8 +++
-> > > >  4 files changed, 132 insertions(+), 5 deletions(-)
-> > > >
-> > > > diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
-> > > > index 6b67ac616789..53493f8d14dc 100644
-> > > > --- a/drivers/hv/hv_common.c
-> > > > +++ b/drivers/hv/hv_common.c
-> > > > @@ -26,6 +26,8 @@
-> > > >  #include <linux/kmsg_dump.h>
-> > > >  #include <linux/sizes.h>
-> > > >  #include <linux/slab.h>
-> > > > +#include <linux/list.h>
-> > > > +#include <linux/spinlock.h>
-> > > >  #include <linux/dma-map-ops.h>
-> > > >  #include <linux/set_memory.h>
-> > > >  #include <hyperv/hvhdk.h>
-> > > > @@ -863,3 +865,96 @@ const char *hv_result_to_string(u64 status)
-> > > >  	return "Unknown";
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(hv_result_to_string);
-> > > > +
-> > > > +#ifdef CONFIG_HYPERV_PVIOMMU
-> > > > +/*
-> > > > + * Logical device ID registry shared between the vPCI bus driver
-> > > > + * (pci-hyperv) and the para-virtualized IOMMU driver. The vPCI driver
-> > > > + * registers the per-bus logical device ID prefix at bus probe time, and
-> > > > + * the pvIOMMU driver looks it up to build the full logical device ID used
-> > > > + * in IOMMU hypercalls.
-> > > > + */
-> > > > +struct hv_pci_busdata {
-> > > > +	int		 pci_domain_nr;
-> > > > +	u32		 logical_dev_id_prefix;
-> > > > +	struct list_head list;
-> > > > +};
-> > > > +
-> > > > +static LIST_HEAD(hv_pci_bus_list);
-> > > > +static DEFINE_SPINLOCK(hv_pci_bus_lock);
-> > > > +
-> > > > +int hv_iommu_register_pci_bus(int pci_domain_nr, u32 logical_dev_id_prefix)
-> > > > +{
-> > > > +	struct hv_pci_busdata *bus, *new;
-> > > > +	int ret = 0;
-> > > > +
-> > > > +	new = kzalloc_obj(*new, GFP_KERNEL);
-> > > > +	if (!new)
-> > > > +		return -ENOMEM;
-> > > > +
-> > > > +	spin_lock(&hv_pci_bus_lock);
-> > > > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> > > > +		if (bus->pci_domain_nr != pci_domain_nr)
-> > > > +			continue;
-> > > > +
-> > > > +		if (bus->logical_dev_id_prefix != logical_dev_id_prefix) {
-> > > > +			pr_err("stale registration for PCI domain %d (old prefix 0x%08x, new 0x%08x)\n",
-> > > > +			       pci_domain_nr, bus->logical_dev_id_prefix,
-> > > > +			       logical_dev_id_prefix);
-> > > > +			ret = -EEXIST;
-> > > > +		}
-> > > > +
-> > > > +		goto out_free;
-> > > > +	}
-> > > > +
-> > > > +	new->pci_domain_nr = pci_domain_nr;
-> > > > +	new->logical_dev_id_prefix = logical_dev_id_prefix;
-> > > > +	list_add(&new->list, &hv_pci_bus_list);
-> > > > +	spin_unlock(&hv_pci_bus_lock);
-> > > > +	return 0;
-> > > > +
-> > > > +out_free:
-> > > > +	spin_unlock(&hv_pci_bus_lock);
-> > > > +	kfree(new);
-> > > > +	return ret;
-> > > > +}
-> > > > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_register_pci_bus, "pci-hyperv");
-> > > > +
-> > > > +void hv_iommu_unregister_pci_bus(int pci_domain_nr)
-> > > > +{
-> > > > +	struct hv_pci_busdata *bus, *tmp;
-> > > > +
-> > > > +	spin_lock(&hv_pci_bus_lock);
-> > > > +	list_for_each_entry_safe(bus, tmp, &hv_pci_bus_list, list) {
-> > > > +		if (bus->pci_domain_nr == pci_domain_nr) {
-> > > > +			list_del(&bus->list);
-> > > > +			kfree(bus);
-> > > > +			break;
-> > > > +		}
-> > > > +	}
-> > > > +	spin_unlock(&hv_pci_bus_lock);
-> > > > +}
-> > > > +EXPORT_SYMBOL_FOR_MODULES(hv_iommu_unregister_pci_bus, "pci-hyperv");
-> > > > +
-> > > > +/*
-> > > > + * Look up the logical device ID prefix registered for @pci_domain_nr.
-> > > > + * Returns 0 on success with *prefix filled in; -ENODEV if no entry is
-> > > > + * registered for that PCI domain.
-> > > > + */
-> > > > +int hv_iommu_lookup_logical_dev_id(int pci_domain_nr, u32 *prefix)
-> > > > +{
-> > > > +	struct hv_pci_busdata *bus;
-> > > > +	int ret = -ENODEV;
-> > > > +
-> > > > +	spin_lock(&hv_pci_bus_lock);
-> > > > +	list_for_each_entry(bus, &hv_pci_bus_list, list) {
-> > > > +		if (bus->pci_domain_nr == pci_domain_nr) {
-> > > > +			*prefix = bus->logical_dev_id_prefix;
-> > > > +			ret = 0;
-> > > > +			break;
-> > > > +		}
-> > > > +	}
-> > > > +	spin_unlock(&hv_pci_bus_lock);
-> > > > +	return ret;
-> > > > +}
-> > >
-> > > I started thinking about the mechanism here because it's somewhat
-> > > annoying that it takes 77 lines of code (sans comments) to manage
-> > > this simple little mapping. I also started thinking about how many entries
-> > > are likely to be in the mapping. A guest VM probably has fewer than 10
-> > > entries unless it has multiple NICs and maybe some GPUs. But this code
-> > > is also intended to be used by the Linux-as-root code, and I'm thinking
-> > > that the number of PCI devices managed by the root could easily be a
-> > > hundred or more if the root is managing a couple dozen VMs on a large
-> > > physical server. Searching a linked list with 100 or more entries could be
-> > > a bit slow.
-> > >
-> > > If only the guest scenario were needed, you could declare a static
-> > > array with 64 entries (64 is an arbitrary upper bound), and just search
-> > > through the array instead of having to allocate memory, deal with
-> > > allocation failures, and deal with linked lists. But a fixed size array
-> > > would need to be much bigger for the root scenario, and you would
-> > > still be doing a linear search.
-> > >
-> > > A better alternative to consider is rhashtable, which is an existing
-> > > Linux kernel facility. Based on what an AI bot generated for me, the
-> > > code for setting up and using rhashtable is straightforward, and
-> > > would probably result in far fewer than 77 lines of code. Lookups
-> > > would also be faster than a linear search, at least for the root case
-> > > with more than just a few entries. I'd suggest looking at rhashtable
-> > > to see whether you like how the resulting code comes out for this
-> > > use case, and whether it really is simpler than a roll-your-own linked
-> > > list.
-> > >
-> > 
-> > Thank you so much for thinking this through, Michael! That is really
-> > a valid concern.
-> > 
-> > How about using XArray? It might be more lightweight compared with
-> > rhashtable. Using pci_domain_nr as the key and prefix as the value.
-> > Maybe sth. like:
-> >                                                                                                                                                         ┃
-> > 	static DEFINE_XARRAY(hv_pci_bus_xa);
-> > 
-> > 	int hv_iommu_register_pci_bus(int domain_nr, u32 prefix)
-> > 	{
-> > 		return xa_insert(&hv_pci_bus_xa, domain_nr,
-> > 				xa_mk_value(prefix), GFP_KERNEL);
-> > 	}                                                                                                                                                ┃
-> > 
-> > 	void hv_iommu_unregister_pci_bus(int domain_nr)
-> > 	{
-> > 		xa_erase(&hv_pci_bus_xa, domain_nr);
-> > 	}
-> > 
-> > 	int hv_iommu_lookup_logical_dev_id(int domain_nr, u32 *prefix)
-> > 	{
-> > 		void *entry = xa_load(&hv_pci_bus_xa, domain_nr);
-> > 		if (!entry)
-> > ┃
-> > 			return -ENODEV;
-> > 		*prefix = xa_to_value(entry);
-> > 		return 0;
-> > ┃
-> > 	}
-> > 
+Hi Alex,
+
+On 7/9/2026 7:31 AM, Alex Williamson wrote:
+> On Thu, 2 Jul 2026 20:42:17 +0800
+> Chengwen Feng <fengchengwen@huawei.com> wrote:
 > 
-> xarray is best where the keys are dense or mostly dense integers. In
-> this use case, the pci_domain_nr keys are essentially random 16-bit
-> values, which doesn't fit xarray as well. It would work, but wouldn't
-> be very efficient. See the 2nd paragraph of the documentation here:
+>> Implement virtualization and policy masking for PCIe TPH extended
+>> capability:
+>> - Split TPH config space permissions: keep header read-only, mark
+>>   TPH_CTRL and ST-table entries virtually writable.
+>> - Adjust virtual TPH capability bits according to hardware capability
+>>   and tph_policy, hiding unsupported modes.
+>> - Silently discard all write operations.
+>>
+>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+>> ---
+>>  drivers/vfio/pci/vfio_pci_config.c | 72 ++++++++++++++++++++++++++++++
+>>  1 file changed, 72 insertions(+)
+>>
+>> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+>> index 5c6ab172df6c..06d7b2fbf866 100644
+>> --- a/drivers/vfio/pci/vfio_pci_config.c
+>> +++ b/drivers/vfio/pci/vfio_pci_config.c
+>> @@ -1086,6 +1086,73 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
+>>  	return 0;
+>>  }
+>>  
+>> +/* Permissions for TPH extended capability */
+>> +static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
+>> +{
+>> +	int i;
+>> +
+>> +	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_TPH]))
+>> +		return -ENOMEM;
+>> +
+>> +	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
+>> +	p_setd(perm, PCI_TPH_CAP, ALL_VIRT, NO_WRITE);
+>> +
+>> +	p_setd(perm, PCI_TPH_CTRL, ALL_VIRT,
+>> +	       PCI_TPH_CTRL_MODE_SEL_MASK | PCI_TPH_CTRL_REQ_EN_MASK);
 > 
-> https://www.kernel.org/doc/html/latest/core-api/xarray.html#xarray
+> This makes the control bits virtualized, writable with no backing
+> support yet.
+
+I will gate all TPH config space virtualization and masking logic behind
+the VFIO_DEVICE_FEATURE_TPH SET opt-in check. Without explicit opt-in,
+TPH_CTRL and ST table entries will remain read-only to avoid exposing
+writable virtual bits with no functional backing.
+
+> 
+>> +
+>> +	/* Per PCI specification: There is an upper limit of 64 entries
+>> +	 * when the ST table is located in the TPH Requester Extended
+>> +	 * Capability structure.
+>> +	 * And the pci_ext_cap_length[PCI_EXT_CAP_ID_TPH] is 0xFF, so the
+>> +	 * following operation is fine.
+>> +	 */
+> 
+> Wrong multi-line comment style.  Also 0xFF for cap length doesn't
+> really explain why this is fine.  You are however highlighting that the
+> above perm bits alloc of size 0xFF is not fine.
+
+I will try to fix the length
+
+> 
+>> +	for (i = 0; i < 64; i++)
+>> +		p_setw(perm, PCI_TPH_BASE_SIZEOF + i * sizeof(u16),
+>> +		       (u16)ALL_VIRT, (u16)ALL_WRITE);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void vfio_tph_capability_adjust(struct vfio_pci_core_device *vdev,
+>> +				       int pos)
+> 
+> Precedent is vfio_update_tph_vconfig_bytes(...)
+
+OK
+
+> 
+>> +{
+>> +	__le32 *vptr = (__le32 *)&vdev->vconfig[pos + PCI_TPH_CAP];
+>> +	struct pci_dev *pdev = vdev->pdev;
+>> +	u32 val = le32_to_cpu(*vptr);
+>> +	bool need_adjust = false;
+> 
+> Just write it back unconditionally, not worth tracking.
+
+OK
+
+> 
+> However, any modification to the capability needs to be gated by the
+> device feature opt-in, so this might be better handled in a readfn
+> rather than managed through permission bits.
+
+OK, I will try that in v20
+
+> 
+>> +
+>> +	if (!pcie_tph_supported(pdev, true)) {
+>> +		/* Remove extend TPH if root-port don't support */
+>> +		val &= ~PCI_TPH_CAP_EXT_TPH;
+>> +		need_adjust = true;
+>> +	}
+>> +
+>> +	if (vdev->tph_policy == VFIO_PCI_TPH_POLICY_NO_ST) {
+>> +		/* Report only No-ST mode supported */
+>> +		val &= ~(PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS |
+>> +			 PCI_TPH_CAP_LOC_MASK | PCI_TPH_CAP_ST_MASK);
+>> +		need_adjust = true;
+>> +	} else if (vdev->tph_policy == VFIO_PCI_TPH_POLICY_IV_ST) {
+>> +		/* Report only No-ST and IV modes supported */
+>> +		val &= ~PCI_TPH_CAP_ST_DS;
+>> +		/* Remove ST location and size if dev don't support IV mode */
+> 
+> s/don't/doesn't/
+
+ok
+
+> 
+>> +		if (!(val & PCI_TPH_CAP_ST_IV))
+>> +			val &= ~(PCI_TPH_CAP_LOC_MASK | PCI_TPH_CAP_ST_MASK);
+>> +		need_adjust = true;
+>> +	}
+>> +
+>> +	if (need_adjust)
+>> +		*vptr = cpu_to_le32(val);
+>> +}
+>> +
+>> +static int vfio_find_cap_start(struct vfio_pci_core_device *vdev, int pos);
+> 
+> ??
+
+I will move vfio_find_cap_start in front of this new function.
+
+> 
+>> +static int vfio_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
+>> +				 int count, struct perm_bits *perm,
+>> +				 int offset, __le32 val)
+>> +{
+>> +	return count;
+>> +}
+>> +
+>>  /*
+>>   * Initialize the shared permission tables
+>>   */
+>> @@ -1101,6 +1168,7 @@ void vfio_pci_uninit_perm_bits(void)
+>>  
+>>  	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+>>  	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
+>> +	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
+>>  }
+>>  
+>>  int __init vfio_pci_init_perm_bits(void)
+>> @@ -1121,6 +1189,8 @@ int __init vfio_pci_init_perm_bits(void)
+>>  	/* Extended capabilities */
+>>  	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+>>  	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
+>> +	ret |= init_pci_ext_cap_tph_perm(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
+>> +	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_tph_config_write;
+>>  	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
+>>  	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
+>>  
+>> @@ -1704,6 +1774,8 @@ static int vfio_ecap_init(struct vfio_pci_core_device *vdev)
+>>  		ret = vfio_fill_vconfig_bytes(vdev, epos, len);
+>>  		if (ret)
+>>  			return ret;
+>> +		if (ecap == PCI_EXT_CAP_ID_TPH && !hidden)
+> 
+> Never hidden.  Thanks,
+
+OK
+
+Thanks
+
+> 
+> Alex
+> 
+>> +			vfio_tph_capability_adjust(vdev, epos);
+>>  
+>>  		/*
+>>  		 * If we're just using this capability to anchor the list,
 > 
 
-Thanks for pointing out the documentation. You're right. With sparse
-16-bit keys, a hash-based data structure makes more sense than a
-radix-based one. I'll try reworking it with rhashtable and let you
-know if it doesn't work out.
-
-B.R.
-Yu
-> Michael
