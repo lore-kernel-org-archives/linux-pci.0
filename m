@@ -1,190 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AAB2CCB9;
-	Thu,  9 Jul 2026 04:12:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79C533A7858;
+	Thu,  9 Jul 2026 05:41:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783570325; cv=none; b=dHjnZK2Ybz92vqK7PO0tYqUxctBUXtCUihTe9as+VYzFVOIYMowpCgGkkHeewsHTCOcG+izNLuWihLMMxFfXocwqX1vPnQ91r1ThQdXWt1ML3nyjoLlPoy6ZIWGACO6PStpFOuVgpaDO4v4cVuc5wx0MErCAAaIO4F1vY8qC4Oo=
+	t=1783575678; cv=none; b=USzP2bWOrV6Kedt+mLsJj8wG34JRjSjOIgYDANDZTheb5phvB2WaZAouVC5KPfSmejB4HEhx6hl9h414ryXUoK1tQuRR3iRelgxQe8Sv4W7NbhQ3tocqXuW1BWd3WdC8N8WvWbKQHOlAPIz3W5dGtNVwiEqkISKTUegRyC44cWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783570325; c=relaxed/simple;
-	bh=aasVeW0gUIoeDEIU0h4FVXCVuXH4x7zDXo5AIHel890=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ufEWDPU8UzlCCthFbg1bCCvUfGkpve8Hc5JtLAdJ71gQZQZuORN8ANB2MC8TN5ABt7g9BvvT1m2VJqsdGO+9Y4kRoYFClQjc2QuA1kNbKD8Nektd3ba96COmvURwWHif+dqDmQ8L6O50LBx1sqwIpHQtSeKAyiUodbzs0KfxFFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kLYVXJwE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783575678; c=relaxed/simple;
+	bh=vd/pKHnN9hHEq/PC2ZKa5Ks5FAZG9ipiDZlCtIFKHWA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Sz+AMAyFvMaIp2ihH/XHgskQbhUvphToTAOUip8OSlcT4ZwgVSYZ5RLdHGSqaLSFcCyqY7FP5CNKrq2Aj+R26BW153pLHwRNBXYsN+kGhdIV3R2va4LrL5luOzrWzq8KJpv4vo2BDoV3P7SdYpn9LodkJ10feZ+KCBIncmmCP5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PMF7MIfe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kLYVXJwE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A7A01F000E9;
-	Thu,  9 Jul 2026 04:12:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PMF7MIfe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EAE21F000E9;
+	Thu,  9 Jul 2026 05:40:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783570324;
-	bh=6p67w3yyaoOLwx0GJ94SQRmKCv2bdHwh7YgPLCvytNY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kLYVXJwEWOsFSD9PszBWrzFM4G+/RgOR8oItUnyuFc8d3UIWM5G+JBumVj1S/z/wY
-	 5+lc0Y+hfcVioIEGhaSPM3FuMaIl3CFzF54uDe9IEQJCV3uBVRGLs+7qzQ6DbFbFXB
-	 JH3mRwAvQuXlJ6LPbtahyui6Jq0e1f0hl6h6mGBDlrS8+LM22vCUrfJHSJ3Dk8DpSR
-	 xnXvCjbmVdpblqyJvFd8poc1YGzNtzUWxfc10RITzDhdjCrW2i9zdLEmoMuSGm4drE
-	 e03LHmnSUKhoCbCkZ8hRtK2WiV2pNlPKOwq1KJZV7Jkei1NWDH7VUXsacioQB6PoAq
-	 +5gPH6XqqEj4g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Inochi Amaoto" <inochiama@gmail.com>
-Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260709040027.958400-7-inochiama@gmail.com>
-References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-7-inochiama@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 04:12:03 +0000
-Message-Id: <20260709041204.5A7A01F000E9@smtp.kernel.org>
+	s=k20260515; t=1783575677;
+	bh=GUR46VabSVZbPyehLw4syLT30MNmMe+mudnTx0VnTpA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=PMF7MIfeOb6sPplAJM3ptwtGVrsjDjcmNM8+KBGIZapvBcxEoEW05Z71w8wT7OiCo
+	 DpyTqd8LBQSOVV2LXf12bv3I6Pc0h9ojZxvVDoieC+rI/KlduqQsbmNYRbApokpMUS
+	 906x2f5dfccmHGNLaQwrgeNkFJeM+vrwSPjhiXoBgGmr7P/GzXUVoT8b+iN+kTpuYZ
+	 3miqhB4alxgUPujwFkL9mVwHxHABNpvGLd+MKygFosR17bCiXd9AFhTno3Tpzpr8G2
+	 W04sec2rt03zdANmLtdpyqOtx7Xh3Wl/PfkGMSLLD5Y/7X7CmPps6HOirGFsnoRUm/
+	 YRXFW3BE6RuOQ==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ "Vaibhaav Ram T . L" <vaibhaavram.tl@microchip.com>, 
+ Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>, 
+ Even Xu <even.xu@intel.com>, Xinpeng Sun <xinpeng.sun@intel.com>, 
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, 
+ Jiri Kosina <jikos@kernel.org>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Zhou Wang <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>, 
+ Vinod Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>, 
+ Jijie Shao <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, 
+ Sunil Goutham <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ Heiner Kallweit <hkallweit1@gmail.com>, 
+ "David S . Miller" <davem@davemloft.net>, 
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Maciej Falkowski <maciej.falkowski@linux.intel.com>, 
+ Karol Wachowski <karol.wachowski@linux.intel.com>, 
+ Min Ma <mamin506@gmail.com>, Lizhi Hou <lizhi.hou@amd.com>, 
+ Andreas Noever <andreas.noever@gmail.com>, 
+ Mika Westerberg <westeri@kernel.org>, Will Deacon <will@kernel.org>, 
+ Xinliang Liu <xinliang.liu@linaro.org>, Tian Tao <tiantao6@hisilicon.com>, 
+ Davidlohr Bueso <dave@stgolabs.net>, Srujana Challa <schalla@marvell.com>, 
+ Bharat Bhushan <bbhushan2@marvell.com>, Antoine Tenart <atenart@kernel.org>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, Raag Jadav <raag.jadav@intel.com>, 
+ Hans de Goede <hansg@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Jiri Slaby <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>, 
+ Mika Westerberg <mika.westerberg@linux.intel.com>, 
+ Andi Shyti <andi.shyti@kernel.org>, Robert Richter <rric@kernel.org>, 
+ Mark Brown <broonie@kernel.org>, 
+ Nirmal Patel <nirmal.patel@linux.intel.com>, 
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>, 
+ Logan Gunthorpe <logang@deltatee.com>, Linus Walleij <linusw@kernel.org>, 
+ Bartosz Golaszewski <brgl@kernel.org>, 
+ Sakari Ailus <sakari.ailus@linux.intel.com>, 
+ Bingbu Cao <bingbu.cao@intel.com>, 
+ Tomasz Jeznach <tomasz.jeznach@linux.dev>, 
+ Jonathan Cameron <jic23@kernel.org>, Ulf Hansson <ulfh@kernel.org>, 
+ Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>, 
+ linux-input@vger.kernel.org, linux-i3c@lists.infradead.org, 
+ dmaengine@vger.kernel.org, Philipp Stanner <phasta@kernel.org>, 
+ netdev@vger.kernel.org, nic_swsd@realtek.com, linux-arm-msm@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-usb@vger.kernel.org, 
+ iommu@lists.linux.dev, linux-riscv@lists.infradead.org, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org, 
+ platform-driver-x86@vger.kernel.org, linux-serial@vger.kernel.org, 
+ mhi@lists.linux.dev, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Jan Dabros <jsd@semihalf.com>, linux-i2c@vger.kernel.org, 
+ Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, 
+ linux-spi@vger.kernel.org, Jonathan Derrick <jonathan.derrick@linux.dev>, 
+ linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org, 
+ linux-mmc@vger.kernel.org
+In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+Subject: Re: (subset) [PATCH 0/37] PCI/MSI: Enforce explicit IRQ vector
+ management by removing devres auto-free
+Message-Id: <178357565325.731734.7291964273199898845.b4-ty@b4>
+Date: Thu, 09 Jul 2026 07:40:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] k3_pcie_parse_port() accesses memory-mapped registers before the h=
-ardware clocks are enabled and resets are deasserted, causing a synchronous=
- external abort.
-- [High] k3_pcie_msi_host_init() misuses the .msi_init callback to configur=
-e general AXI cache coherency, which breaks DMA coherency if MSI is disable=
-d.
-- [Medium] The K3 controller reuses k1_pcie_deinit() for its .deinit callba=
-ck, which uses an incompatible mechanism to assert PERST#, leaving the PCIe=
- endpoint without a proper hard reset upon driver unbind or probe failure.
-- [Low] Misleading copy-pasted comment regarding root complex mode and Vaux=
- configuration.
---
 
---- Patch [6]: [PATCH v4 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host c=
-ontroller support ---
-commit b7987f86bd7e30a14ad7fab3615f89d71ad70fed
-Author: Inochi Amaoto <inochiama@gmail.com>
+On Mon, 23 Feb 2026 23:29:39 +0800, Shawn Lin wrote:
+> This patch series addresses a long-standing design issue in the PCI/MSI
+> subsystem where the implicit, automatic management of IRQ vectors by
+> the devres framework conflicts with explicit driver cleanup, creating
+> ambiguity and potential resource management bugs.
+> 
+> ==== The Problem: Implicit vs. Explicit Management ====
+> Historically, `pcim_enable_device()` not only manages standard PCI resources
+> (BARs) via devres but also implicitly triggers automatic IRQ vector management
+> by setting a flag that registers `pcim_msi_release()` as a cleanup action.
+> 
+> [...]
 
-PCI: spacemit-k1: Add Spacemit K3 PCIe host controller support
+Applied, thanks!
 
-This commit adds support for the PCIe controller on the Spacemit K3 SoC. It
-introduces the K3-specific initialization sequence, operations, and interru=
-pt
-handling, while reusing the existing Spacemit K1 driver structure.
+[13/37] bus: mhi: host: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+        commit: 256995e80fcd39cab94eee8135dd90f6da6ac744
 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/=
-controller/dwc/pcie-spacemit-k1.c
-> index 31aac056b68ed..680acc93f5395 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
 
-[ ... ]
 
-> @@ -340,6 +354,109 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
->  	return ret;
->  }
-> =20
-> +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> +{
-
-[ ... ]
-
-> +	/*
-> +	 * Put the controller in root complex mode, and indicate that
-> +	 * Vaux (3.3v) is present.
-> +	 */
-> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
-
-[Severity: Low]
-This isn't a bug, but does this comment match the code beneath it?
-
-The code seems to only toggle PERST# via PCIE_PERSTN_OUT and PCIE_PERSTN_OE,
-whereas the comment states it is putting the controller in root complex
-mode and indicating Vaux is present.
-
-> +
-> +	val =3D dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
-
-[ ... ]
-
-> +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-> +	u32 val;
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +	val =3D dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
-> +	val =3D u32_replace_bits(val, K3_CACHE_MSTR_AWCACHE_BEHAVIOR,
-> +			       K3_CACHE_MSTR_AWCACHE_MODE);
-> +	dw_pcie_writel_dbi(pci, COHERENCY_CONTROL_3_OFF, val);
-
-[Severity: High]
-Does configuring general AXI DMA coherency inside an MSI-specific hook break
-DMA coherency if the system is booted with 'pci=3Dnomsi'?
-
-dw_pcie_host_init() only calls the .msi_init callback if pci_msi_enabled() =
-is
-true. If MSI is disabled, this initialization is skipped and standard DMA
-coherency attributes might not be applied.
-
-> +
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_host_ops k3_pcie_host_ops =3D {
-> +	.init		=3D k3_pcie_init,
-> +	.deinit		=3D k1_pcie_deinit,
-
-[Severity: Medium]
-Will this properly hard-reset the K3 PCIe endpoint during driver unbind or
-probe failure?
-
-The K3 controller reuses k1_pcie_deinit() here, which asserts PCIE_RC_PERST
-in PCIE_CLK_RESET_CONTROL. However, k3_pcie_init() shows that K3 requires
-PERST# to be asserted via PCIE_PERSTN_OE and PCIE_PERSTN_OUT in
-PCIE_CONTROL_LOGIC.
-
-> +	.msi_init	=3D k3_pcie_msi_host_init,
-> +};
-
-[ ... ]
-
-> +static void k3_pcie_clear_irq_status(struct k1_pcie *k1,
-> +				     u32 *status0, u32 *status1, u32 *status2)
-> +{
-> +	*status0 =3D readl_relaxed(k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	*status1 =3D readl_relaxed(k1->link + INTR_STATUS);
-> +	*status2 =3D readl_relaxed(k1->link + K3_ADDR_INTR_STATUS1);
-> +
-> +	writel_relaxed(*status0, k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	writel_relaxed(*status1, k1->link + INTR_STATUS);
-> +	writel_relaxed(*status2, k1->link + K3_ADDR_INTR_STATUS1);
-> +}
-> +
-> +static int k3_pcie_parse_port(struct k1_pcie *k1)
-> +{
-> +	u32 status0, status1, status2;
-> +
-> +	k3_pcie_clear_irq_status(k1, &status0, &status1, &status2);
-
-[Severity: High]
-Can accessing these memory-mapped registers here cause a synchronous
-external abort?
-
-During probe, k1_pcie_probe() calls data->parse_port() before calling
-dw_pcie_host_init(). However, the hardware clocks are enabled and resets are
-deasserted later, inside dw_pcie_host_init(), when it invokes the .init
-callback (k3_pcie_init()). Accessing the k1->link registers before they are
-clocked may crash the system.
-
-> +
-> +	return k1_pcie_parse_port(k1);
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709040027.9584=
-00-1-inochiama@gmail.com?part=3D6
