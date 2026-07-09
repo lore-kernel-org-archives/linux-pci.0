@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AD8CDF6C;
-	Thu,  9 Jul 2026 01:17:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3287BDF6C;
+	Thu,  9 Jul 2026 01:17:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783559838; cv=none; b=WVjFTQseItguzis7Q/AN9lgwhxMFQaHBC4BiSK+zY/vUozUF1Q+8xg6xa12PS7CEr1venOgzw2ZB4A1M4PnmPdOACPRiXOo4kGyqbIgu0YolVY0qm7OwQwzkB4WjcUKa27CNJKgEQ46XdjTosrz05nl3BBsNzUBeT8zbfMnE8ag=
+	t=1783559875; cv=none; b=LLv/zMiEfOmuKerjwzzRUNCENY/ACG+Z4S0MnpmfKq6Nh2pu5af40MFmGNVsoPBEQF/TVMQSWOvQ+zZeD4fG1StSEAqPakwwdeXXfxN1fTTbC3DCrRypc2rbjZBezXA0wrVEYqnQW6FndTiM23/p4vUr8LWaJKd4K4xW7TTWaz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783559838; c=relaxed/simple;
-	bh=ooDXSPG7iCZrtMF+50d0m6JL4u8xMbFWAgitJbocI34=;
+	s=arc-20240116; t=1783559875; c=relaxed/simple;
+	bh=x6An3o3hCx4Ob6kJRNXXsvohqazfeeTuVHHctyOEa8c=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KHzj/h1/pP+wHLXjapbRFKGDH2tkQG/8eMANLA9b6Nd817a5wRAbcmn1i/Ml0EkR8F+Wp4IlGShsaUVyuS9sxpOhZ/U+lbVtC0M7KmL8NejQuh9Pzy4HTxPdRpjFRDQ0wec5bUOmeWpLIhYTNI7hbXwrlZOFWxVFZ5EDqTEo5/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JBuruB0h; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Jz4QnbCOyBH55YM/xL4K3ELc3P8PYrFvR/RBaXtBccdgHTg3h9DAHa/b8dH+O7o6FDxFTx6yMjl7y310u6tUf/5dHAs7XO/SRlrwbdknB8oJn4BEil5nEyVFRQ75T6rUUmYGj37FsTQl01tUZTAjoYUS6wiDVo15KRCDkQe9zpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X1C0bb6V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JBuruB0h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B8A71F000E9;
-	Thu,  9 Jul 2026 01:17:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X1C0bb6V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9867E1F000E9;
+	Thu,  9 Jul 2026 01:17:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783559837;
-	bh=wb6z6Rc98DYt+ZOD8/WcZ4vLBC3uR6Cg0oLA6gPPhXk=;
+	s=k20260515; t=1783559873;
+	bh=4MMr5Yafd+8H5/b7rM+mUdwNj0xPsnMEWyOVLmKeOok=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JBuruB0hLDVm/fhXc8YVrbQbmlRb0akfDhP81f27Gvfm6ErIs1UAyAPgcik9uOGnN
-	 IILyUj7yc1BTXRitlGDv39Ylj9skC3zfpmvLyV0IgTLvL5qTNCoL6rcJhdi5CcnrHW
-	 7hJrioSGkhRq+1bFU93+kqKQ0YdM7caL1e0UG+3ULVZRvsS+9F0A1IFkIpoBRbMQDI
-	 m3Kjyg2Hwxn1TRY8P53V7Os1nToZy02wejTY1S4RL3mKNWwB115y2B9AULS0CnOYZI
-	 APQzAPQKl660sx8Bi3NLxE8V21sSzSOzKo287Nt9kXZbSvZ7S+SXmIRC+UBhUxn7E5
-	 k4WykYuvriAyg==
+	b=X1C0bb6VEaR/KrvxJDBPeE6bxtSLYz9gDCWMWFbx6EOfMRQ/eM5H7MicREwlajp28
+	 HsTVC841xV440jfeyGxFzNn5SJOG6O284pd5ADJORYC5UifBGlQiu6x36ls5V7gvXB
+	 2U/5SgjB9J6C6+pY/J6N572sSRIfIDrKnGwktFStR3u9cZaT+MYTh+sv+96I8xjnYi
+	 p0PjDvbss3JluP0kWNaCQ2zgPsx7u7X5qI6hoXMx0sOLUJHc+PBfiDOYAt228tuCJL
+	 e2d6PD7IIq++rGQ+7GuyfAvXInQvZ7rW4+FxgYC0xHmvxY4p9GwQhEAt0myQ1YL+SP
+	 tgf5zIo0L90gg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 08/11] cxl: Restore CXL HDM state after PCI reset
+Subject: Re: [PATCH v9 04/11] cxl: Cache endpoint decoder settings during
+ PCI enumeration
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260709010304.680422-9-smadhavan@nvidia.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260709010304.680422-5-smadhavan@nvidia.com>
 References: <20260709010304.680422-1-smadhavan@nvidia.com>
- <20260709010304.680422-9-smadhavan@nvidia.com>
+ <20260709010304.680422-5-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 01:17:16 +0000
-Message-Id: <20260709011717.0B8A71F000E9@smtp.kernel.org>
+Date: Thu, 09 Jul 2026 01:17:53 +0000
+Message-Id: <20260709011753.9867E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,110 +47,85 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Hardware PCI BARs are not restored before attempting HDM MMIO acce=
-ss post-reset, causing the restore to fail silently or trigger bus errors.
-- [Medium] Mixing `goto`-based error handling with scope-based cleanups (`_=
-_free()` and `scoped_guard()`) in the same function.
+- [High] Enabling PCI_COMMAND_MEMORY and mapping unassigned BARs during ear=
+ly PCI enumeration causes severe resource conflicts and system instability.
+- [Medium] Mixing goto-based error handling with scope-based cleanup helper=
+s (`scoped_guard()`), leading to a logical fall-through bug.
 --
 
---- Patch [8]: [PATCH v9 08/11] cxl: Restore CXL HDM state after PCI reset =
----
-commit a1cce28cbb5bb68a25127de7ce247a2950193943
+--- Patch [4]: [PATCH v9 04/11] cxl: Cache endpoint decoder settings during=
+ PCI enumeration ---
+commit 64ea438bc1dd54d340a46889f9f340251bdf644f
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-cxl: Restore CXL HDM state after PCI reset
+cxl: Cache endpoint decoder settings during PCI enumeration
 
-After CXL reset, restore PCI config state enough to reach HDM MMIO,
-restore cached global and per-decoder HDM state, and then run the normal
-PCI restore callbacks.
+This patch populates pci_dev->hdm from PCI capability initialization
+for CXL.mem functions. It temporarily sets memory space enable to read
+HDM MMIO and restores the original configuration value.
 
 > diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
 > --- a/drivers/cxl/core/reset.c
 > +++ b/drivers/cxl/core/reset.c
-> @@ -455,6 +531,164 @@ void pci_cxl_hdm_init(struct pci_dev *pdev)
 
 [ ... ]
 
-> +static int cxl_restore_hdm(struct pci_dev *pdev)
+> +static int __pci_cxl_hdm_init(struct pci_dev *pdev)
 > +{
-> +	struct cxl_hdm_decoder_state *decoder_state __free(kfree) =3D NULL;
-> +	struct cxl_decoder_settings *settings __free(kfree) =3D NULL;
 
 [ ... ]
 
-> +	hdm =3D cxl_pci_hdm_ioremap_current(pdev, hdm_bar, hdm_offset, hdm_size=
-);
-> +	if (IS_ERR(hdm)) {
-> +		first_rc =3D PTR_ERR(hdm);
-> +		goto out_restore_command;
-> +	}
-
-[Severity: Medium]
-Is it safe to mix goto-based error handling with scope-based cleanups
-like __free() in this function?=20
-
-The kernel cleanup guidelines suggest converting all resources that need a=
-=20
-goto cleanup to scope-based cleanup, or converting none of them, because=20
-mixing them creates confusing ownership semantics.
-
+> +	if (!(command & PCI_COMMAND_MEMORY))
+> +		restore_command =3D true;
 > +
-> +	/*
-> +	 * Restore global HDM control before per-decoder commit. PCI config
-> +	 * memory decoding is enabled for MMIO access, but IOMMU reset blocks
-> +	 * remain active until HDM restore completes.
-> +	 */
-> +	writel(global_ctrl, hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +	if (restore_command) {
+> +		rc =3D pci_write_config_word(pdev, PCI_COMMAND,
+> +					   command | PCI_COMMAND_MEMORY);
 
 [Severity: High]
-Will this MMIO access fail or trigger bus errors?=20
+Is it safe to forcefully enable memory decoding before the PCI core has
+verified or assigned safe base address registers?
 
-The CXL reset clears the device's PCI configuration space, which sets the=20
-hardware BARs to 0. Although cxl_hdm_enable_mem() sets the=20
-PCI_COMMAND_MEMORY bit earlier in this function, it doesn't appear to write=
-=20
-the physical address back into the hardware BARs before we attempt to acces=
-s=20
-the MMIO region here.
+Since this function is called during early enumeration in
+pci_init_capabilities():
 
-[ ... ]
+drivers/pci/probe.c:pci_init_capabilities() {
+    ...
+    pci_ide_init(dev);
+    pci_cxl_hdm_init(dev);
+    ...
+}
 
->  int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  {
+Could uninitialized or overlapping physical addresses cause the endpoint to
+decode transactions intended for system memory, leading to resource
+conflicts or machine check exceptions?
 
-[ ... ]
-
->  	cxl_hdm_range_context_init(&range_ctx);
-> =20
-> +	if (!cxl_reset_scope_hdm_available(&ctx)) {
-> +		rc =3D -ENOTTY;
-> +		goto out;
+> +		if (rc)
+> +			return pcibios_err_to_errno(rc);
 > +	}
-> +
-> +	rc =3D cxl_pci_target_reset_prepare(&ctx);
-> +	if (rc)
-> +		goto out;
-> +
->  	scoped_guard(rwsem_write, &cxl_rwsem.region) {
+
+[ ... ]
+
+> +	scoped_guard(rwsem_write, &cxl_rwsem.dpa) {
+> +		if (pdev->hdm)
+> +			goto out_unmap;
 
 [Severity: Medium]
-Could we also avoid mixing the legacy goto error paths with the=20
-scoped_guard() block in this function?
+Could this goto inside a scoped_guard() block lead to logical fall-through
+bugs?
 
-> -		rc =3D cxl_hdm_ranges_prepare(&range_ctx, pdev);
-> +		rc =3D cxl_hdm_ranges_prepare(&range_ctx, &ctx);
->  		if (!rc)
->  			rc =3D cxl_reset_execute(pdev, dvsec);
-> +		if (!rc)
-> +			rc =3D cxl_restore_hdm_decoders(&ctx);
->  	}
-> +
-> +	cxl_pci_target_reset_done(&ctx);
-> +out:
->  	cxl_hdm_range_context_destroy(&range_ctx);
->  	return rc;
->  }
+The cleanup subsystem guidelines advise against mixing goto and scope-based
+cleanups in the same function. If pdev->hdm is already set, execution
+jumps to out_unmap and then falls through to out_restore_command.
+
+Could this cause the configuration write to be re-executed redundantly
+during the error handling fall-through?
+
+> +		pdev->hdm =3D info;
+> +	}
+> +	iounmap(hdm);
+> +	return 0;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709010304.6804=
-22-1-smadhavan@nvidia.com?part=3D8
+22-1-smadhavan@nvidia.com?part=3D4
