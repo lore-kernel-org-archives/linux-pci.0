@@ -1,134 +1,590 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0E8388E7D
-	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 08:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE9C3FE65D;
+	Thu,  9 Jul 2026 09:04:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783584783; cv=none; b=Vrs21F2RZPNPiZ0tR7DYVMn/O+wIQDyNQumdJZYqqJzjItdxDclh9uGesdjoDuXSuXnZIikPxYr2VGf9q9P8pABTfXY/EDp56AyS1TMWYumpXEW+9s/5ikGOmyW0ph/mnHAqN3eefp8nTeSrPJGrJzfKCHtUCTqRZlJIL5ikVYA=
+	t=1783587864; cv=none; b=AIEd+eDZpKGZituoW210TpuJk2QeLJxekSXG4Dk4aUZVDdQXY49PQNZ6/tnHjP1e+bDLI0LjsTJLeiZuqCr+P/iZA2T60DuQMyW/Ob4SeeiaOXV48cGAohLQ0BOhR9q/fzIjNoDmQYupgopp/SKUAwyXZ9kQZAZnLHWHxHYA6v8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783584783; c=relaxed/simple;
-	bh=sw4ZYQUkSTfi2fUJscACJ/CQoJQ5XIsAIE9CStuEUTY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DlVkUcFnQTOxYtHsyIS6oB/RswruKrOjHrYiOMCTzXqSVUqqll67/PS1vkep9U7Bm2TXl+9z2E5omftKrUmeOwK3uoRTBApcvnPlw9gDnT46M+e/EUBfaImlpJnoeIvbK/yRAjEy/gzUrWjpHSept3QHLuLWqBP8yPppmOx6wDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=R20WDevu; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=iwniuEWH; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1783587864; c=relaxed/simple;
+	bh=+s9G4L8GOq7nuh9DAyW2suIfyaVtSElsEIJ1v5WY2q4=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=uH88l5VQSV1HNsOv2Q4Wu8H6hQnjjJLQ7QYbPNzRQLJk/wWHEnndipUwgFAQ/MZWDnZoc8j4wRquUXoBwyO621yCutGWP4zSgRQ3xu8UacHns8MSW6XA+yOjA7PXReH89+SjLJmDOHfwsTJXSZyPQDFju07M9/En0YmHDfedE8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mhgPdYCy; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="R20WDevu";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="iwniuEWH"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6695xt94929251
-	for <linux-pci@vger.kernel.org>; Thu, 9 Jul 2026 08:13:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=b1d7ZhWs9f1
-	sgfVpFc0YAcv2UrqZgyUhnYNnbfueP+Q=; b=R20WDevuhVIFqzclgrOp2Phy05C
-	m1JVaAb/UgDNQdE5wCtzUBSXIqB/B1xmONzdPUBNSQ89ehj685Lv5gSStfmtQHl1
-	dx85KmaDa8KDzv6I+6xXQBqEgOzN7SGTdAVWexjsgNRafanLQTPH7EPl9NOVZjcx
-	0ZacKNr6GIUg++8T2RaLlvgQul6iFIpqNQ2LcLWF65nUzt3JWdxNaonaTxzJjBT/
-	5JNCdx6zIu0XmJ4LAAop0av6v8zR7fiYSgK7Iu0rYt7ap1Zsy7saoyzBbQ/2izVS
-	P6j43w1q/XN4DV7KbFQTc9nwsfYSlh87yEj4cpjXrRfA+QwslMJH5HxmA2A==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fa418gxsy-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2026 08:13:01 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-37dedbd1cf1so533194a91.3
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2026 01:13:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1783584781; x=1784189581; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=b1d7ZhWs9f1sgfVpFc0YAcv2UrqZgyUhnYNnbfueP+Q=;
-        b=iwniuEWHOLXfGIH4WEvjEqTGBJkbvqMFVAhbAN657xFZh8JgFrmjAom/sUy9rdlc0k
-         njnVe+VB0ptEYnnaJ15jlCz7xu5IoBDzC+iD2ST8tvHsbQ3n0lBlGW2XQ3ErdsnQyiMe
-         8LMyghzHZG1QLVsPtxXdAKeQUHng0a7U5w0qN5W+17iMF08nT0NQc9qPw3oKNOx+AriE
-         r6KJQSG6euJWmqokcV+0oawXqKs1zg7zVG9P1P/lFFjHmA65Rj3oI/i3bYM2N9K9DuXi
-         TpFeNcqAL/u9UUwjHwNeBVtMYkBVPNH10l99G214Sq+lD0vRqsrjhSy+wK6WWXxGR22E
-         93fQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783584781; x=1784189581;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=b1d7ZhWs9f1sgfVpFc0YAcv2UrqZgyUhnYNnbfueP+Q=;
-        b=YuV5rr5fdfBlaZCjMNWZUrPbK2TdVJUnsQ4+3qLQPDG7RPv+d5aKUNlOBhovEqCZn2
-         93rJwo7qoR8XgTAVn9cc/iY1u6+FWj5auMMMAFMAELe+CrgziGmyX5DipsB6L8MPhagf
-         rJSZkDyUSyFn5N4lggLYZQGdXxhkPQLuAke4CD2URHvlpbW68JlZisEuv0fE16Nc3899
-         e99H+xGJGk7GgldqS+jU9XQnIm7fvdOPRpScYjFrCkieJ+CqRyb5Rek/68PMuOaf0JQ4
-         ++7BfoONFPZ+pw36MuS7SdbtrFUqm6BRnElALIJ1YuJV5BNHRjahKzeOocU5XOWr9Ric
-         JzFA==
-X-Forwarded-Encrypted: i=1; AHgh+Rrn29MhUOq47wXIJoTrxYzYShIVhKtgfdQBy+AfNobljLTurHVyHW9MAWCeDTubrOle3hYEC1HqoL4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQjB72u9xGJ9N3oo1Qh6vhkv282gUInDLof+uoUM2bOHO50Cqz
-	WetuJWbxulsQXl73Bf63tzDgfae+iqetfLdjtszhkGVx3Edi7+7xUgUwN0h2fdtDMK3zJl3Zv2K
-	Obz40MR3R1AnNcOKAjy83r0AlR07Im2Yct1o41ROUX6dRhJmZOe4wvz9SifI98rc=
-X-Gm-Gg: AfdE7cm19GhcHF314q+/lcXTSzbAzhy5RHWnofvG8pKjn0TJzzEcTeirrW+cuR8nUfL
-	PaC2SVNpNDFDBs6EUkWIuOiQwNkameGZ93VPPPKFtBwfdS8FZrmIYSMDARMHUjYQgQUHGWEYsSw
-	D5E5h/0MJWqc+fvgIi4E+kc/5U0lACMS4XTxkWDyK7wImejwU3/dtokXie5QshnKdSzUcBBrsBp
-	T2sR5PBGY5xLJdQQoSAiz01I6zcByH1w23VrDUXw6akO6SUFiufkYAErDN3lY9OPgRHCDTewNOf
-	CPhGo1UsnbS+WPWa7F20t01mu9YFdxkFGBbWETNqtf0N0XC6F8r12eSE+0flb5ItRFxjxVyFXOH
-	lks4qnhQNK7csWUcqxD60VfzPqE9yJMvXIaBobB7u/7AI3kewkn4llZopmPQwoQ==
-X-Received: by 2002:a17:90b:2f0c:b0:381:abcc:c8d8 with SMTP id 98e67ed59e1d1-38a1f1de21emr2603839a91.1.1783584780876;
-        Thu, 09 Jul 2026 01:13:00 -0700 (PDT)
-X-Received: by 2002:a17:90b:2f0c:b0:381:abcc:c8d8 with SMTP id 98e67ed59e1d1-38a1f1de21emr2603808a91.1.1783584780378;
-        Thu, 09 Jul 2026 01:13:00 -0700 (PDT)
-Received: from hu-weiden-sha.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38a5506b48bsm774740a91.1.2026.07.09.01.12.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2026 01:13:00 -0700 (PDT)
-From: Wei Deng <wei.deng@oss.qualcomm.com>
-To: dmitry.baryshkov@oss.qualcomm.com
-Cc: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, mani@kernel.org,
-        brgl@kernel.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 1/3] arm64: dts: qcom: hamoa-iot-evk: Describe the PCIe M.2 Key E connector
-Date: Thu,  9 Jul 2026 13:42:54 +0530
-Message-Id: <20260709081254.422145-1-wei.deng@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <vpsczyjw3ew4lhjwy6edzjomryna7ygyamgr5idw2aiq7al2lh@64to3cet3ufz>
-References: <vpsczyjw3ew4lhjwy6edzjomryna7ygyamgr5idw2aiq7al2lh@64to3cet3ufz>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mhgPdYCy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783587863; x=1815123863;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=+s9G4L8GOq7nuh9DAyW2suIfyaVtSElsEIJ1v5WY2q4=;
+  b=mhgPdYCylNhhSLHBAZIAQuDN3UdZ2B4oSchI5fjCLmTbR6zLfhduEt8+
+   G3OHwgKf4EnnFERFMtoW+pRfGDqYh+ecOLj0Lm3YslNatWNiYtUTSG/v7
+   qqn3hDFKmEymO3qlj68kyiRmcrEXLCxYvwWubKBQY/VT7pxO8hcxX95zW
+   sXZh94Qx8dILc4IPb0vOcs7UdnjcNpCpUu3uJ2wfzH+PNnkxOE34QmeWx
+   HKWdbekgFAo4aXCHPFtjj1d//FaTO9+N6U5HFBrL6W/2PS18rmKvlvw4J
+   n/E+0/apwjnXTOfqjU5JvWBAZe9+x7nvjjOYSihnx56/ytMoh9z4GxVoC
+   g==;
+X-CSE-ConnectionGUID: Fwh864JUTUeJ8tcHOHwDhw==
+X-CSE-MsgGUID: EQ8+O2iRT8ui8VPeUQsqTQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="84281696"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="84281696"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 02:04:22 -0700
+X-CSE-ConnectionGUID: ym8NmuWoQ4CHYPcvwHbQsA==
+X-CSE-MsgGUID: s5CZyK3UTXS63KDXn2Oe5Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="284637086"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.36])
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 02:04:19 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 9 Jul 2026 12:04:14 +0300 (EEST)
+To: Eric Auger <eauger@redhat.com>
+cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    Dominik Brodowski <linux@dominikbrodowski.net>, 
+    LKML <linux-kernel@vger.kernel.org>, Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 13/23] PCI: Add pbus_mem_size_optional() to handle optional
+ sizes
+In-Reply-To: <313af044-b9b7-496d-8d1c-dba61c606592@redhat.com>
+Message-ID: <ef311b13-565b-aa2e-2f35-a94bc53d975a@linux.intel.com>
+References: <20251219174036.16738-1-ilpo.jarvinen@linux.intel.com> <20251219174036.16738-14-ilpo.jarvinen@linux.intel.com> <f23946f2-06ac-4607-8f2c-3ffbc52b627a@redhat.com> <fbdc88d3-b6b4-8098-58c5-1fdb2f7b19d6@linux.intel.com> <04c3d618-c38e-46bd-8618-ed95657b6a60@redhat.com>
+ <e2dfd270-a831-06f4-6ddf-c14eb9bce1f8@linux.intel.com> <313af044-b9b7-496d-8d1c-dba61c606592@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=UI3t2ify c=1 sm=1 tr=0 ts=6a4f580d cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
- a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22 a=eHU-EKddRagIODziGN8A:9
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA5MDA3NyBTYWx0ZWRfX1fYGfoTr1rfx
- bd8Xkaj5aZdGzs9+1XMknMp58HneL0R7vBM0RNK3U6gtrmUWrtg/VdFtfTXItbfuPDnbNdtWFYr
- k16YyKhRl8puFR7nZlFIccVCzkKhSN7fD630LuW9cllzPNdifOCFHu4X3ID7lMrbHH513X6TNLk
- z+D42c3cdIDXOLEpDHKOOolSMNogEsyU5+jk3SxQheD459LG6kffGgv4itJwVo64RbDc1CKxJ+n
- iBrK9JLbrdmxo5bfGkeFPI5U5ZzTZ3Lnyha1EAliD/StPZ3+j8A1Ag/R+Vmz9NxGDt2JqinyvXN
- pqFlQbQTyIoXlJopa1Sph5r65e7k91ii1DCjaIG4GZpkpTMafX2CNOlNQRE2brvAUW/jhxt7EQf
- EmPNCYLQftW5C3s+8T7cV5rjQ/PZAn41IWsR0roCgYPVFBRmCuHA/kD5BUPPAxHF/G8P231dHTg
- tngy51UMgKyW35J9EWQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA5MDA3NyBTYWx0ZWRfX+1yCZAZthvEl
- 3tVSmdsef/gDetGC9c4dRnJ5J+j2c02l6xcalagrxnha4tPokgDT9//HJKScCNkGgLtXG5ar/WP
- WiB+UCSlhngBUqRnI3hDAeVcTDfgKi8=
-X-Proofpoint-GUID: XMgQL0bkxY5AxOacUHClBLQheE_VJ4IX
-X-Proofpoint-ORIG-GUID: XMgQL0bkxY5AxOacUHClBLQheE_VJ4IX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-09_01,2026-07-08_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 spamscore=0 malwarescore=0 bulkscore=0
- adultscore=0 clxscore=1015 lowpriorityscore=0 impostorscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607090077
+Content-Type: multipart/mixed; boundary="8323328-308014175-1783587854=:1261"
 
-On Thu, 9 Jul 2026, Dmitry Baryshkov wrote:
-> Separate, unrelated change?
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Agreed, will split it into a separate commit in v2.
+--8323328-308014175-1783587854=:1261
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
--- 
-Best Regards,
-Wei Deng
+On Wed, 8 Jul 2026, Eric Auger wrote:
+> On 7/8/26 4:05 PM, Ilpo J=C3=A4rvinen wrote:
+> > On Wed, 8 Jul 2026, Eric Auger wrote:
+> >> On 7/7/26 6:12 PM, Ilpo J=C3=A4rvinen wrote:
+> >>> On Tue, 7 Jul 2026, Eric Auger wrote:
+> >>>
+> >>>> Hi Ilpo,
+> >>>>
+> >>>> On 12/19/25 6:40 PM, Ilpo J=C3=A4rvinen wrote:
+> >>>>> The resource loop in pbus_size_mem() handles optional resources tha=
+t
+> >>>>> are either fully optional (SRIOV and disabled Expansion ROMs) or br=
+idge
+> >>>>> windows that may be optional only for a part. The logic is little
+> >>>>> inconsistent when it comes to a bridge window that has only optiona=
+l
+> >>>>> children resources as it would be more natural to treat it similar =
+to
+> >>>>> any fully optional resource. As resource size should be zero in tha=
+t
+> >>>>> case, it shouldn't cause any bugs but it still seems useful to addr=
+ess
+> >>>>> the inconsistency.
+> >>>>>
+> >>>>> Place the optional size related code of pbus_size_mem() into
+> >>>>> pbus_mem_size_optional() and add check into pci_resource_is_optiona=
+l()
+> >>>>> for entirely optional bridge windows. Reorder the logic inside
+> >>>>> pbus_mem_size_optional() such that fully optional resources are han=
+dled
+> >>>>> the same irrespective to whether the resource is a bridge window or
+> >>>>> not.
+> >>>>
+> >>>> This patch seems to introduce a regression when trying to hotplug a
+> >>>> virtio-net-pci device behind a XIO3130 downstream port in the follow=
+ing
+> >>>> hierarchy.
+> >>>>
+> >>>> this happens with a v7.2-rc2 guest kernel, on an arm64 guest with qe=
+mu vmm.
+> >>>>
+> >>>>
+> >>>>
+> >>>> 00:01.0 Host bridge: Red Hat, Inc. QEMU PCIe Expander bridge
+> >>>> =09Subsystem: Red Hat, Inc. Device 1100
+> >>>>
+> >>>> |_ 0a:00.0 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+> >>>>    Subsystem: Red Hat, Inc. Device 0000
+> >>>>    Kernel driver in use: pcieport
+> >>>>
+> >>>>    |_ 0b:00.0 PCI bridge: Texas Instruments XIO3130 PCI Express Swit=
+ch
+> >>>>
+> >>>> =09(Upstream) (rev 02)
+> >>>> =09Kernel driver in use: pcieport
+> >>>>
+> >>>> =09|_ 0c:02.0 PCI bridge: Texas Instruments XIO3130 PCI Express
+> >>>> =09=09Switch (Downstream) (rev 01)
+> >>>> =09=09Kernel driver in use: pcieport
+> >>>
+> >>> Hi Eric,
+> >>>
+> >>> Thanks for the report.
+> >>>
+> >>> I cannot get much done with the log snippets. The first line with=20
+> >>> difference is a symptom of something that originates from outside of =
+the=20
+> >>> snippet.
+> >>>
+> >>> Could you please take a log with dyndbg=3D"file drivers/pci/*.c +p" o=
+n the=20
+> >>> kernel command line and also include a /proc/iomem dump. Like=20
+> >>> you did now, preferrably take those from both working and failing cas=
+e so=20
+> >>> I can easily diff them.
+> >>>
+> >>> --
+> >>>  i.
+> >>>
+> >>>
+> >>>> This produces the following trace
+> >>>>
+> >>>>
+> >>>> [   28.557947] pcieport 0000:0c:02.0: pciehp: Slot(0-1): Card presen=
+t
+> >>>> [   28.557949] pcieport 0000:0c:02.0: pciehp: Slot(0-1): Link Up
+> >>>> [   29.605376] pci 0000:0d:00.0: [1af4:1041] type 00 class 0x020000 =
+PCIe
+> >>>> Endpoint
+> >>>> [   29.605724] pci 0000:0d:00.0: BAR 1 [mem 0x00000000-0x00000fff]
+> >>>> [   29.605765] pci 0000:0d:00.0: BAR 4 [mem 0x00000000-0x00003fff 64=
+bit
+> >>>> pref]
+> >>>> [   29.605816] pci 0000:0d:00.0: enabling Extended Tags
+> >>>> [   29.606994] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   29.606998] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   29.607003] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: can't assign; no space
+> >>>> [   29.607005] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: failed to assign
+> >>>> [   29.607007] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: can't assign; no space
+> >>>> [   29.607008] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: failed to assign
+> >>>> [   29.607010] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   29.607012] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   29.607014] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000]: can't assign; no space
+> >>>> [   29.607016] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000]: failed to assign
+> >>>> [   29.607018] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref]: can't assign; no space
+> >>>> [   29.607019] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref]: failed to assign
+> >>>> [   29.607021] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   29.607022] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   29.607025] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> can't assign; no space
+> >>>> [   29.607026] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> failed to assign
+> >>>> [   29.607027] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: can't
+> >>>> assign; no space
+> >>>> [   29.607028] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: failed=
+ to
+> >>>> assign
+> >>>> [   29.607029] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> can't assign; no space
+> >>>> [   29.607030] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> failed to assign
+> >>>> [   29.607031] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: can't
+> >>>> assign; no space
+> >>>> [   29.607032] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: failed=
+ to
+> >>>> assign
+> >>>> [   29.607033] pcieport 0000:0c:02.0: PCI bridge to [bus 0d]
+> >>>> [   29.611260] PCI: No. 2 try to assign unassigned res
+> >>>> [   29.611269] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   29.611272] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   29.611276] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: can't assign; no space
+> >>>> [   29.611277] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: failed to assign
+> >>>> [   29.611278] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: can't assign; no space
+> >>>> [   29.611279] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: failed to assign
+> >>>> [   29.611280] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   29.611280] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   29.611281] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000]: can't assign; no space
+> >>>> [   29.611282] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000]: failed to assign
+> >>>> [   29.611283] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref]: can't assign; no space
+> >>>> [   29.611283] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref]: failed to assign
+> >>>> [   29.611284] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   29.611284] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   29.611286] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> can't assign; no space
+> >>>> [   29.611286] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> failed to assign
+> >>>> [   29.611287] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: can't
+> >>>> assign; no space
+> >>>> [   29.611288] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: failed=
+ to
+> >>>> assign
+> >>>> [   29.611288] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> can't assign; no space
+> >>>> [   29.611289] pci 0000:0d:00.0: BAR 4 [mem size 0x00004000 64bit pr=
+ef]:
+> >>>> failed to assign
+> >>>> [   29.611289] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: can't
+> >>>> assign; no space
+> >>>> [   29.611290] pci 0000:0d:00.0: BAR 1 [mem size 0x00001000]: failed=
+ to
+> >>>> assign
+> >>>> [   29.611291] pcieport 0000:0c:02.0: PCI bridge to [bus 0d]
+> >>>> [   29.616141] ACPI: \_SB_.L0A2: Enabled at IRQ 37
+> >>>> [   29.616378] virtio-pci 0000:0d:00.0: virtio_pci: leaving for lega=
+cy
+> >>>> driver
+> >>>>
+> >>>> Previous to this commit hotplug was successful:
+> >>>>
+> >>>> vm-rhel10 login: [   38.385692] pcieport 0000:0c:02.0: pciehp:
+> >>>> Slot(0-1): Button press: will power on in 5 sec
+> >>>> [   38.385798] pcieport 0000:0c:02.0: pciehp: Slot(0-1): Card presen=
+t
+> >>>> [   38.385799] pcieport 0000:0c:02.0: pciehp: Slot(0-1): Link Up
+> >>>> [   39.553709] pci 0000:0d:00.0: [1af4:1041] type 00 class 0x020000 =
+PCIe
+> >>>> Endpoint
+> >>>> [   39.554018] pci 0000:0d:00.0: BAR 1 [mem 0x00000000-0x00000fff]
+> >>>> [   39.554042] pci 0000:0d:00.0: BAR 4 [mem 0x00000000-0x00003fff 64=
+bit
+> >>>> pref]
+> >>>> [   39.554099] pci 0000:0d:00.0: enabling Extended Tags
+> >>>> [   39.555202] pcieport 0000:0c:02.0: bridge window [mem size 0x0010=
+0000
+> >>>> 64bit pref] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   39.555206] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00100000] to [bus 0d] add_size 100000 add_align 100000
+> >>>> [   39.555212] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: can't assign; no space
+> >>>> [   39.555213] pcieport 0000:0c:02.0: bridge window [mem size
+> >>>> 0x00200000]: failed to assign
+> >>>> [   39.555215] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: can't assign; no space
+> >>>> [   39.555216] pcieport 0000:0c:02.0: bridge window [mem size 0x0020=
+0000
+> >>>> 64bit pref]: failed to assign
+> >>>> [   39.555218] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   39.555219] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   39.555222] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10a00000-0x10afffff]: assigned
+> >>>> [   39.555224] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10b00000-0x10bfffff 64bit pref]: assigned
+> >>>> [   39.555225] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   39.555227] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   39.555228] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10a00000-0x10afffff]: failed to expand by 0x100000
+> >>>> [   39.555230] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10a00000-0x10afffff]: failed to add optional 100000
+> >>>> [   39.555232] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10b00000-0x10bfffff 64bit pref]: failed to expand by 0x100000
+> >>>> [   39.555234] pcieport 0000:0c:02.0: bridge window [mem
+> >>>> 0x10b00000-0x10bfffff 64bit pref]: failed to add optional 100000
+> >>>> [   39.555236] pci 0000:0d:00.0: BAR 4 [mem 0x10b00000-0x10b03fff 64=
+bit
+> >>>> pref]: assigned
+> >>>> [   39.555290] pci 0000:0d:00.0: BAR 1 [mem 0x10a00000-0x10a00fff]: =
+assigned
+> >>>> [   39.555305] pcieport 0000:0c:02.0: PCI bridge to [bus 0d]
+> >>>> [   39.556804] pcieport 0000:0c:02.0:   bridge window [mem
+> >>>> 0x10a00000-0x10afffff]
+> >>>> [   39.557730] pcieport 0000:0c:02.0:   bridge window [mem
+> >>>> 0x10b00000-0x10bfffff 64bit pref]
+> >>>> [   39.559629] PCI: No. 2 try to assign unassigned res
+> >>>> [   39.559636] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   39.559638] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   39.559640] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> can't assign; no space
+> >>>> [   39.559642] pcieport 0000:0c:02.0: bridge window [io  size 0x1000=
+]:
+> >>>> failed to assign
+> >>>> [   39.559644] pcieport 0000:0c:02.0: PCI bridge to [bus 0d]
+> >>>> [   39.561078] pcieport 0000:0c:02.0:   bridge window [mem
+> >>>> 0x10a00000-0x10afffff]
+> >>>> [   39.562011] pcieport 0000:0c:02.0:   bridge window [mem
+> >>>> 0x10b00000-0x10bfffff 64bit pref]
+> >>>> [   39.564500] ACPI: \_SB_.L0A2: Enabled at IRQ 37
+> >>>> [   39.564541] virtio-pci 0000:0d:00.0: enabling device (0000 -> 000=
+2)
+> >>>> [   39.572231] virtio_net virtio2 enp13s0: renamed from eth0
+> >>>>
+> >>>> Any clue?
+> >>>>
+> >>>> Thank you in advance
+> >>>>
+> >>>> Eric
+> >>>>
+> >>>>
+> >>>>
+> >>>>
+> >>>>
+> >>>>
+> >>>>
+> >>>>>
+> >>>>> Additional motivation for this are the upcoming changes that add
+> >>>>> complexity to the optional sizing logic due to Resizable BAR awaren=
+ess.
+> >>>>> The extra logic would exceed any reasonable indentation level if th=
+e
+> >>>>> optional sizing code is kept within the loop body.
+> >>>>>
+> >>>>> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> >>>>> ---
+> >>>>>  drivers/pci/setup-bus.c | 77 +++++++++++++++++++++++++++++--------=
+----
+> >>>>>  1 file changed, 54 insertions(+), 23 deletions(-)
+> >>>>>
+> >>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> >>>>> index 3d1d3cefcdba..3fcc7641c374 100644
+> >>>>> --- a/drivers/pci/setup-bus.c
+> >>>>> +++ b/drivers/pci/setup-bus.c
+> >>>>> @@ -125,15 +125,6 @@ static resource_size_t get_res_add_size(struct=
+ list_head *head,
+> >>>>>  =09return dev_res ? dev_res->add_size : 0;
+> >>>>>  }
+> >>>>> =20
+> >>>>> -static resource_size_t get_res_add_align(struct list_head *head,
+> >>>>> -=09=09=09=09=09 struct resource *res)
+> >>>>> -{
+> >>>>> -=09struct pci_dev_resource *dev_res;
+> >>>>> -
+> >>>>> -=09dev_res =3D res_to_dev_res(head, res);
+> >>>>> -=09return dev_res ? dev_res->min_align : 0;
+> >>>>> -}
+> >>>>> -
+> >>>>>  static void restore_dev_resource(struct pci_dev_resource *dev_res)
+> >>>>>  {
+> >>>>>  =09struct resource *res =3D dev_res->res;
+> >>>>> @@ -386,6 +377,8 @@ bool pci_resource_is_optional(const struct pci_=
+dev *dev, int resno)
+> >>>>>  =09=09return true;
+> >>>>>  =09if (resno =3D=3D PCI_ROM_RESOURCE && !(res->flags & IORESOURCE_=
+ROM_ENABLE))
+> >>>>>  =09=09return true;
+> >>>>> +=09if (pci_resource_is_bridge_win(resno) && !resource_size(res))
+> >> adding
+> >>
+> >> && !dev->is_hotplug_bridge makes the hotplug successful.
+> >>
+> >>
+> >> My understanding is that otherwise the hotplug bridge window is
+> >> considered as optional and no memoy window is allocated to assign chid
+> >> device's BARS
+> >>
+> >> Please let me know if that makes sense. In the positive I can send a p=
+atch.
+> >=20
+> > I don't think that is the correct solution.
+> >=20
+> >=20
+> > These bridges, have both non-prefetchable and prefetchable windows, but=
+=20
+> > the initial setup only sets the non-prefetchable one to 2M (and nothing=
+=20
+> > more would fit to the associated root bus resource). There's only a sin=
+gle=20
+> > root bus resource that is 2M + a bit more (to fit that BAR0).
+> >=20
+> > Now, when sizing the bridge windows, the kernel sizing algorithm just u=
+ses=20
+> > the default 2M hotplug reservation to both of those windows as there ar=
+e=20
+> > not yet any real devices underneath (the default hp reservation is=20
+> > controllable with hpmmiosize/hpmmioprefsize/hpmemsize cmdline parameter=
+s).=20
+> > Thus, to fit everything, the root bus resource should be 4M + a bit mor=
+e=20
+> > for BAR0.
+> >=20
+> > However, it looks to me there's also a 4M add_size miscalculation (the=
+=20
+> > downstream bridge window is only 2M per each type):
+> >=20
+> > [    0.048078] pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fff=
+ff 64bit pref] to [bus 0b-0d] add_size 400000 add_align 100000
+> > [    0.048079] pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fff=
+ff] to [bus 0b-0d] add_size 400000 add_align 100000
+>=20
+> Hum even with the patch below I still get:
+>=20
+> [    0.047253] pci 0000:0a:00.0: bridge window [mem
+> 0x00100000-0x000fffff 64bit pref] to [bus 0b-0d] add_size 400000
+> add_align 100000
+> [    0.047254] pci 0000:0a:00.0: bridge window [mem
+> 0x00100000-0x000fffff] to [bus 0b-0d] add_size 400000 add_align 100000
+
+Okay, I'll then have to do a debug patch to know what the loop adds into=20
+it. I'll try to get it done today.
+
+Thanks anyway for testing.
+
+--=20
+ i.
+
+> > It's almost as if both of the child windows would be summed into it, no=
+t=20
+> > just the one with the correct type. Maybe this is caused by the=20
+> > pci_is_root_bus() thing in pbus_select_window_for_type() (which I don't=
+=20
+> > like but cannot currently really get rid of either) and=20
+> > find_bus_resource_of_type() messing things up.
+> >=20
+> > There's an attempt in the patch below to address that problem.
+> >=20
+> >=20
+> > But, even if the sizing would calculate 2M there, 2M + 2M windows are n=
+ot=20
+> > going to fit. This works what looks like by chance in the older kernel,=
+=20
+> > which (illogically) picks 1M required size for the both window (probabl=
+y=20
+> > that comes from min alignment) which magically just happens to fit to t=
+he=20
+> > ~2M root bus resource.
+> >=20
+> > So to solve that issue, you could try with hpmemsize=3D1M on the kernel=
+'s=20
+> > cmndline to see if it elimnates those failures together with the patch=
+=20
+> > below.
+> Unfortunately it doens't (combination of this fix + hpmemsize=3D1M)
+> >=20
+> > Why the system setup doesn't create large enough root bus resource for =
+it=20
+> > is way beyond my qemu and/or aarch64 knowledge and it seems to be where=
+=20
+> > the problem kind of originates from.
+>=20
+> OK I need more time to investigate. I will come back to you.
+>=20
+> Thanks
+>=20
+> Eric
+> >=20
+> >=20
+> > --
+> > [PATCH 1/1] PCI: Fix mem resource type matching
+> >=20
+> > pbus_select_window_for_type() handles root bus differently by calling
+> > find_bus_resource_of_type() with different sets of flags to handle
+> > memory window type fallbacks.
+> >=20
+> > The first case is intended to match only exactly, but if type is
+> > IORESOURCE_MEM, the check in find_bus_resource_of_type() will not
+> > include IORESOURCE_MEM_64 in the mask. As a result, wrong resource
+> > may be selected even if a more precise match is available.
+> >=20
+> > Similarly for the other case with IORESOURCE_PREFETCH.
+> >=20
+> > Separate mask handling from the type of the particular resource to
+> > ensure the matching progresses from finer-grained matches towards more
+> > allowing matches.
+> >=20
+> > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> > ---
+> >  drivers/pci/setup-bus.c | 10 +++++++---
+> >  1 file changed, 7 insertions(+), 3 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index c0a949f2c995..912a30211505 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -209,17 +209,21 @@ static struct resource *pbus_select_window_for_ty=
+pe(struct pci_bus *bus,
+> >  =09=09return NULL;
+> > =20
+> >  =09if (pci_is_root_bus(bus)) {
+> > -=09=09win =3D find_bus_resource_of_type(bus, type, type);
+> > +=09=09unsigned long mask =3D PCI_RES_TYPE_MASK;
+> > +
+> > +=09=09win =3D find_bus_resource_of_type(bus, mask, type);
+> >  =09=09if (win)
+> >  =09=09=09return win;
+> > =20
+> >  =09=09type &=3D ~IORESOURCE_MEM_64;
+> > -=09=09win =3D find_bus_resource_of_type(bus, type, type);
+> > +=09=09mask &=3D ~IORESOURCE_MEM_64;
+> > +=09=09win =3D find_bus_resource_of_type(bus, mask, type);
+> >  =09=09if (win)
+> >  =09=09=09return win;
+> > =20
+> >  =09=09type &=3D ~IORESOURCE_PREFETCH;
+> > -=09=09return find_bus_resource_of_type(bus, type, type);
+> > +=09=09mask &=3D ~IORESOURCE_PREFETCH;
+> > +=09=09return find_bus_resource_of_type(bus, mask, type);
+> >  =09}
+> > =20
+> >  =09switch (iores_type) {
+> >=20
+> > base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+>=20
+--8323328-308014175-1783587854=:1261--
