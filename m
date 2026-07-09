@@ -1,104 +1,280 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D13304229B9;
-	Thu,  9 Jul 2026 12:33:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCD11A0BD0;
+	Thu,  9 Jul 2026 12:36:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783600413; cv=none; b=czYTjW0xnOS6CwGhXDl5Vfu6jG9GHjT3QG+CF4zVSt6nldTGzYCewqNKKnn+VXJjfm/biCUuxD22ktARzejmCIiCsYZZfvmWd2CI6nrnY5nXzWarwVIe9TFQN4MJYKmFegKPuXVwcw+WwdI1oNfaUwQdVPCBmjhkY+x3ifxzHaY=
+	t=1783600575; cv=none; b=l4rERJavQQ15CJMrpweEMGUPUyMYnvuHysoHbmOUKs05n2QYzcvzVOtv5K3ZC77Oy2wnUNyBdDtmsuftvmpM/qco6evSl5I/xVR7qPt5Prnkpmp+PETsQmwjaNMq8Gr97w7FfIHxRlUb07yUfEwQuGYu73j5w27eqwGPKwfmpN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783600413; c=relaxed/simple;
-	bh=5SS856U/nCy4jJiMrV8ZnkSZPJeo0BvH/8EL343aghc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YRJojjeXSnLvt/YA27LJmhYuIt6rv5wqv9BEUk3CK/eKlNY5N1ZHplTUM67XpXQHLjd7HyGPkrjGMijWnJ+iD8uTJ1jX4Tgl1Rr9ejCFgv92X7x0ZZo6yvZFTb+T5x2a2EG/vtZReeNuHyho3+5ZKCbqu7ZAYlzb+MbFQq7RVlo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=tyMdvF2x; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783600575; c=relaxed/simple;
+	bh=I3FxDMN53urdgK+dh7/JtbbO5k/e2rnDs7sOQgXI/4s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=HPICRJ2AM8kLjxnRsG9UDf9I/1ZJnUMpxVGJhECCOcgPSytPxxrTANfYm7xbi0cogERtIvFBIJD3A9XPInu/LdHOAO8H+cviFOU4dcavchLS4VD/vDd7dlybchsH6Wh0FSe50cjtpzA0+97HhPxK5Wml+os6DUNtjUVm8Zm7aCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=1j1/oqD1; arc=none smtp.client-ip=113.46.200.224
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="tyMdvF2x"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gwvWr1BmTzMlHC;
-	Thu, 09 Jul 2026 14:33:28 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783600408;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bTRYbwF/XxEjYYFob5S+WLNVX0HYy0ckmE1WUa6o3cY=;
-	b=tyMdvF2xv5nIaXfmCYxbD6fRdAiNP55s0Xay6tcyDLZrqQOMXLTJyKpAAw0Axl9uJsn9H/
-	p8JvUbMcfGOoTIZRbQddoYA0iZ7D5dLVGObch3s0ZKgetZBbBOuGBJHV3zuvlpjIjec333
-	maPFXff9ntUELPQ7/XzebTVp/tx9R/9W2i+mzO9lF9F82FWnTE/+jTH05RsMS1XGZOS7nu
-	zSibBMFF8pCrKFwSRGQfvwvyVTLwG83C9AF0CW0YzlkPEd/nTsLetHNaY1d2vL2XZWF3SK
-	262lnO+lrhsIe+m5MAM8+pTj4smXWeFKJM2iZC7KXGU/1xScS8lLbZhzoKdiWg==
-Message-ID: <c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
-Date: Thu, 9 Jul 2026 14:33:22 +0200
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="1j1/oqD1"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=xltD8i6BKFseW1B4W1EmsW9uozfSgc6BLF3q62kY4uE=;
+	b=1j1/oqD15VwV49lbOTYvwHRJILOhQKzOi2DmSq+t7h+vTxCMhtP1tGR1SJDwdTiHSFTmechjb
+	1qTD8uAz2XeMLmQSPsSxAXFcrjoX0T3/qoGA0C+ehHnDoyzs/3QK4ADjmEbt7jX9VsZKraJNSas
+	a6LEIoDOdDEUGdM42dwQk94=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4gwvNF2k7dz1cyVj;
+	Thu,  9 Jul 2026 20:26:53 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id A39E140586;
+	Thu,  9 Jul 2026 20:36:06 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 9 Jul 2026 20:36:05 +0800
+Message-ID: <b3c5827c-c16e-4cd1-bf13-2ed0220716ba@huawei.com>
+Date: Thu, 9 Jul 2026 20:36:05 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 0/5] PCI: rcar-gen4: irqchip/gic-v3: Handle GIC ITS
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley
- <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>,
- Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org
-References: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
- <ybnitlgx3dcqsesubz6jz7pn6snseuxhtz564tinbtvukianaq@33ubmcynyqmt>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v19 16/18] vfio/pci: Implement TPH_ST feature for batch ST
+ table programming
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
+	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+References: <20260702124224.57168-1-fengchengwen@huawei.com>
+ <20260702124224.57168-17-fengchengwen@huawei.com>
+ <20260708172954.14bff5c4@shazbot.org>
 Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <ybnitlgx3dcqsesubz6jz7pn6snseuxhtz564tinbtvukianaq@33ubmcynyqmt>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260708172954.14bff5c4@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: a566168d3a29b829815
-X-MBO-RS-META: r9xtkd8txggmkzk54mcmgk1r644y6icg
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On 7/9/26 2:19 PM, Manivannan Sadhasivam wrote:
-> On Tue, Jul 07, 2026 at 10:35:38PM +0200, Marek Vasut wrote:
->> Configure all R-Car Gen4 PCIe controller MSI registers fully, both in
->> case MSI are enabled and disabled.
->>
->> Patch GIC ITS driver and add quirks for R-Car Gen4 GIC ITS, which is
->> configured to 32-bit address width for AXI or APB interface.
->>
->> Switch R-Car V4H to use GIC ITS in its DT and describe the GIC ITS
->> implementation cacheable and shareable limitations.
->>
->> Marek Vasut (5):
->>    PCI: dwc: Determine whether iMSI is used before calling .init
->>    PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
->>    irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
->>    irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+On 7/9/2026 7:29 AM, Alex Williamson wrote:
+> On Thu, 2 Jul 2026 20:42:22 +0800
+> Chengwen Feng <fengchengwen@huawei.com> wrote:
 > 
-> Is there a functional dependency between irqchip and PCI patches? Since the
-> irqchip patches touch ARM64 Kconfig etc... I'm wondering if it still need to go
-> through PCI tree.
-I do not believe there is.
+>> Add vfio_pci_core_feature_tph_st() to implement the SET-only
+>> VFIO_DEVICE_FEATURE_TPH_ST uAPI for batch TPH ST table programming.
+>>
+>> Implement helper routines to calculate ST table size and resolve ST tags
+>> from multiple sources: NONE, DMABUF, CPU volatile/persistent, and LITERAL.
+>>
+>> Batch program contiguous ST table entries according to user inputs, support
+>> stop-on-zero-ST semantics, and return the number of successfully written
+>> entries. Hold memory_lock and ensure device is in D0 state during hardware
+>> operations.
+>>
+>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+>> ---
+>>  drivers/vfio/pci/vfio_pci_core.c | 119 +++++++++++++++++++++++++++++++
+>>  1 file changed, 119 insertions(+)
+>>
+>> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+>> index ed6bbffa8b26..7251e251824a 100644
+>> --- a/drivers/vfio/pci/vfio_pci_core.c
+>> +++ b/drivers/vfio/pci/vfio_pci_core.c
+>> @@ -1713,6 +1713,123 @@ static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device *vdev,
+>>  	return copy_to_user(arg, &resolve, sizeof(resolve)) ? -EFAULT : 0;
+>>  }
+>>  
+>> +static u32 tph_calc_st_size(struct vfio_pci_core_device *vdev)
+>> +{
+>> +	struct pci_dev *pdev = vdev->pdev;
+>> +	u32 loc = pcie_tph_get_st_table_loc(pdev);
+>> +	int ret;
+>> +
+>> +	if (loc == PCI_TPH_LOC_CAP) {
+>> +		return pcie_tph_get_st_table_size(pdev);
+>> +	} else if (loc == PCI_TPH_LOC_MSIX) {
+>> +		ret = pci_msix_vec_count(pdev);
+>> +		if (ret < 0)
+>> +			return 0;
+>> +		return ret;
+>> +	} else {
+>> +		return 0;
+>> +	}
+>> +}
+>> +
+>> +static int tph_get_st_tag(struct pci_dev *pdev, u32 src_bits, u32 src_hndl,
+>> +			  bool extended, u16 *tag)
+>> +{
+>> +	int ret = 0;
+>> +	u8 ph;
+>> +
+>> +	if (src_bits & VFIO_DEVICE_TPH_SRC_NONE)
+>> +		*tag = 0;
+>> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_DMABUF)
+>> +		ret = vfio_pci_dma_buf_get_tph_by_fd(src_hndl, extended,
+>> +						     tag, &ph);
+>> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_VOLATILE)
+>> +		ret = pcie_tph_get_cpu_st_explicit(pdev, TPH_MEM_TYPE_VM,
+>> +					extended, src_hndl, tag);
+>> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT)
+>> +		ret = pcie_tph_get_cpu_st_explicit(pdev, TPH_MEM_TYPE_PM,
+>> +					extended, src_hndl, tag);
+>> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_LITERAL)
+>> +		*tag = src_hndl;
+>> +
+>> +	if (ret != 0)
+>> +		*tag = 0;
+>> +
+>> +	return ret;
+>> +}
+>> +
+>> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
+>> +				u32 flags,
+>> +				struct vfio_device_feature_tph_st __user *arg,
+>> +				size_t argsz)
+>> +{
+>> +	u32 permit_flags = VFIO_DEVICE_TPH_SRC_MASK | VFIO_DEVICE_TPH_EXTENDED;
+>> +	struct vfio_device_feature_tph_st tph_st = {0};
+>> +	struct pci_dev *pdev = vdev->pdev;
+>> +	u32 src_bits, st_size;
+>> +	bool stop_on_zero_st;
+>> +	u32 *src_hndl = NULL;
+>> +	void __user *uptr;
+>> +	bool extended;
+>> +	int ret, i;
+>> +	u16 tag;
+>> +
+>> +	if (!vdev->tph_permit || vdev->tph_policy == VFIO_PCI_TPH_POLICY_NO_ST)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
+>> +				 sizeof(tph_st));
+>> +	if (ret <= 0)
+>> +		return ret;
+> 
+> Again, not how vfio_check_feature() convetion.
 
-These two configure the PCIe controller hardware:
-   PCI: dwc: Determine whether iMSI is used before calling .init
-   PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+OK, will use: if (ret != 1)
 
-These two fill in GIC ITS quirks:
-   irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
-   irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+> 
+>> +
+>> +	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
+>> +		return -EFAULT;
+>> +
+> 
+> MUST validate undefined flags are zero.
 
-This one does yes depend on the two and two patches above, and can only 
-be applied once all four aforementioned patches land, otherwise things 
-really yes will break:
-   arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
+The following "if (!(tph_st.flags & permit_flags)" check the undefined flags bit.
 
-Would you like me to split the series up , or can you and Marc (?) pick 
-the relevant parts via matching trees ?
+> 
+>> +	src_bits = tph_st.flags & VFIO_DEVICE_TPH_SRC_MASK;
+>> +	if (vdev->tph_policy != VFIO_PCI_TPH_POLICY_LITERAL)
+>> +		permit_flags &= ~VFIO_DEVICE_TPH_SRC_LITERAL;
+>> +	if (!(tph_st.flags & permit_flags) || !is_power_of_2(src_bits))
+>> +		return -EINVAL;
+>> +	extended = !!(tph_st.flags & VFIO_DEVICE_TPH_EXTENDED);
+>> +	if (extended && !pcie_tph_supported(vdev->pdev, true))
+>> +		return -EINVAL;
+>> +
+>> +	st_size = tph_calc_st_size(vdev);
+>> +	if (tph_st.start >= st_size || tph_st.count > st_size - tph_st.start ||
+>> +		tph_st.count == 0)
+>> +		return -EINVAL;
+>> +
+>> +	uptr = u64_to_user_ptr(tph_st.dests);
+>> +	if (!(src_bits & VFIO_DEVICE_TPH_SRC_NONE)) {
+>> +		src_hndl = memdup_array_user(uptr, tph_st.count, sizeof(u32));
+>> +		if (IS_ERR(src_hndl))
+>> +			return PTR_ERR(src_hndl);
+>> +	}
+>> +
+>> +	down_write(&vdev->memory_lock);
+> 
+> No, vfio_pci_memory_lock_and_enable().
+
+OK
+
+> 
+>> +	ret = vfio_pci_set_power_state(vdev, PCI_D0);
+> 
+> No, PM runtime get/set, but once again it's already done in the call
+> path.
+
+OK, I will remove this invoke
+
+> 
+>> +	if (ret)
+>> +		goto out;
+>> +
+>> +	stop_on_zero_st = !!(tph_st.flags & VFIO_DEVICE_TPH_REQUIRE_ST);
+>> +	if (tph_st.flags & VFIO_DEVICE_TPH_SRC_NONE)
+>> +		stop_on_zero_st = false;
+>> +	for (i = 0; i < tph_st.count; i++) {
+>> +		ret = tph_get_st_tag(pdev, src_bits, src_hndl ? src_hndl[i] : 0,
+>> +				     extended, &tag);
+>> +		if (ret || (stop_on_zero_st && tag == 0))
+>> +			break;
+> 
+> Missing bounds check on tag if !extended.
+
+OK, I will check the tag > 0xFF if !extended.
+
+> 
+> In IV mode, don't we need to know the vector is enabled?
+
+pcie_tph_set_st_entry()
+  -> pci_msix_write_tph_tag(), this function already check msix_enabled:
+
+drivers/pci/msi/msi.c:938:int pci_msix_write_tph_tag(struct pci_dev *pdev, unsigned int index, u16 tag)
+drivers/pci/msi/msi.c-939-{
+drivers/pci/msi/msi.c-940-	struct msi_desc *msi_desc;
+drivers/pci/msi/msi.c-941-	struct irq_desc *irq_desc;
+drivers/pci/msi/msi.c-942-	unsigned int virq;
+drivers/pci/msi/msi.c-943-
+drivers/pci/msi/msi.c-944-	if (!pdev->msix_enabled)
+drivers/pci/msi/msi.c-945-		return -ENXIO;
+
+> 
+>> +		ret = pcie_tph_set_st_entry(pdev, tph_st.start + i, tag);
+> 
+> We're defeating the entire reason we created a batching interface by
+> not also implementing a batching interface in the PCI/TPH code.  This
+> does a disable before each set.  Thanks,
+
+Yes, it will first disable req and then enable req after write tag
+I will try add on batch set tag API in PCI/TPH
+
+Thanks
+
+> 
+> Alex
+> 
+>> +		if (ret)
+>> +			break;
+>> +	}
+>> +	ret = i;
+>> +
+>> +out:
+>> +	up_write(&vdev->memory_lock);
+>> +	kfree(src_hndl);
+>> +	return ret;
+>> +}
+>> +
+>>  int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>>  				void __user *arg, size_t argsz)
+>>  {
+>> @@ -1736,6 +1853,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>>  	case VFIO_DEVICE_FEATURE_TPH_RESOLVE:
+>>  		return vfio_pci_core_feature_tph_resolve(vdev, flags,
+>>  							 arg, argsz);
+>> +	case VFIO_DEVICE_FEATURE_TPH_ST:
+>> +		return vfio_pci_core_feature_tph_st(vdev, flags, arg, argsz);
+>>  	default:
+>>  		return -ENOTTY;
+>>  	}
+> 
+
