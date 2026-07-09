@@ -1,275 +1,348 @@
-Received: from fhigh-a2-smtp.messagingengine.com (fhigh-a2-smtp.messagingengine.com [103.168.172.153])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013021.outbound.protection.outlook.com [40.93.201.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D641037E2E2;
-	Wed,  8 Jul 2026 23:34:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783553650; cv=none; b=sxCEgeRBcrLovI+EqnqGLNgisThGBH8OU/N2zbfyblEa9iNnZwYRoc/cjR0VwyqPgTKsvSG8eGeHaZah8bqxjSOp4IiSXITQtra3M6hmf5CrV7lSOCeHHI5LNO/jEigWaiXif+DPOpNEqmI6hVc2jvKb5n4oWHPjUhVBsZm54Es=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783553650; c=relaxed/simple;
-	bh=axRByRxelrkFqgEv23wD/UsPVPrlv+8YX23UAy/oGxM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M3zP1ox/Fp8IRGQ2saa+zErGYONep4EFf9R6Vx1o1qvFg5uGymmbUk6CRAvY2MmTbPdL+4Ax9iOVopxHCFntl8xDs2H9g0ySD2VpfoBuQ7SYYHF95w7X7M34rmahAnQ/dmhEc20QetkeA+Wx9WRGrYX2O0RRHSzumBXnaDNLb90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=ci18Xcdj; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BqheIICr; arc=none smtp.client-ip=103.168.172.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D60D81A683B;
+	Thu,  9 Jul 2026 00:34:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783557297; cv=fail; b=Zi/yDm1JIXjBnfQWoj7ihr1KqxFwPaSMACJRbMcmXtUZpnnRmA7eefT4bI1OIJi52M+wCT5cMZoocCHTHNvH3QECYT2Km/s/nwe41RJX2uxa71Z0TPXSK5Loxc8CIB74GuxZnncEMsacaJnw9hbcetBZwq/JHJLKPGdSlu1dmrQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783557297; c=relaxed/simple;
+	bh=1uLRCRpptzdSP0dTMQXzqan5vENjnE3yAvCiY6D2h7U=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=eEwlmlyE8r14gUwdR5xBzxXrwedlb8RIuADgyGsrEjdrjdn+uIYFCZXtmIacY2yqYRQB6DUrCg9on0IqH8a6liOtCaeiwcbeaxqtys5NRJ3s6a6nqMSqgwqGNRIAknJVbvhRURWnqsDQS4UnSOtssiqTeHw1Dw7ftCv1bcE4XGA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=GbSpl+Mr; arc=fail smtp.client-ip=40.93.201.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="ci18Xcdj";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BqheIICr"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 4330A14000A2;
-	Wed,  8 Jul 2026 19:34:06 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Wed, 08 Jul 2026 19:34:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1783553646;
-	 x=1783640046; bh=gNzvrxNv7zQ9srJ7QGENVoB+ORW9mDFFs6dEKRh1E84=; b=
-	ci18XcdjNL9l4jBV1mw4skYHWxIZMYScoXF3UJm4FtuMs7oR9/o9aRs+5i1UYSPG
-	Nx1y2Km+DttjSiElRCSNYL8RUcP3QfHeqfCdNa8OBPSf28yyOP/7KxDTZSkuXRWh
-	ACw1SSWB2H7FBpoSN7+KugzBWqdyR5jhjwfm8bWvpcotcaZ5HzuTNoqTI8LZ9fih
-	U7IGrD/gQ+qmr5LUTHMi13jHnhFhoKu/QoRg9nxWjTgR25+ycmSw6wZ5ngX5pIAP
-	eVyh/h8ZzcGI6gq1UzF+Uht4hajORgeCQgMaupqod3vM+lcNRtZQ3HTDgSH9askS
-	MInEpS2du7XhknU/Iwd82A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783553646; x=
-	1783640046; bh=gNzvrxNv7zQ9srJ7QGENVoB+ORW9mDFFs6dEKRh1E84=; b=B
-	qheIICrqhuipstZSAqClHG5hW9hFPKrYWRvM6+b+g1hQzcjZbsNjwWLdCCN6qbsy
-	gb31f2wdamXNeQ9CQlKT7a2fPJrPjvIvScuPVvZ3lu+vKD0IfpBmkKsZUBb+EDRj
-	gveI9bKCEV4HMcOpOrkUcT0T6hJyjRGgfTs9R6eh+Y+A59ksDRpTV/RtIBPmDg0P
-	UsuT2uL/XG3lR59yRMCF7hNnnudcI1NHi7+fizGaOMZXIii5i7ympFxp+xYfBNzd
-	b9H9gUusKb6v1pYqELf7xh0w2/F2igUbTUi7h7wSl8NUQcXv3BFsNMSdBv9JNl09
-	q4s1w6mE5DJjGsREVgYdg==
-X-ME-Sender: <xms:bt5OahQlt_xQbFEtO4PRwLGMUaN0MxrRccs1QghMSYyf_S6gTyf99g>
-    <xme:bt5OagRYRfKZSm6fFufvVe0Lmza_vph22cGqYLZavWNInVwEWnxD270tXIVNYCzIK
-    XjIrxhtbEM8fG44Om36aUybTnnDvvG1yrxRUoQmAhNAbHTpVQH5BA>
-X-ME-Received: <xmr:bt5Oal7jSDsjhBZdE3aUD-yYUbOJOdkiX_JNQyhicd_8ldTL7wk9KvwLZMs>
-X-ME-Proxy-Cause: dmFkZTF7UcUU4Y3WDZRTQWDCK1Byb23HRnJp+Faq1G3D8RtL7hYGl6JFjaGdMXzAICQHA+
-    XqcIU6GZsrthOywnQjf1wxVvn4pLS1EXq646WTLg8DOELNUY4w/wQJOKp10J/PZbJUSK4v
-    Fx0R4HXnsIh4g6B9RzzhJzwe7PMFO6Vxx203G4GNcRGcjThD6sD8GyRFSV1IrKHpLw2XXx
-    /GFEe6JZQ8jywi4eGClo6TvyyXcHYqUqIFdc4zrub7KyT3YnYVzkHoIvsK1a/EuUNFqUPo
-    ijwv/0xb+0b/ynjmyMkXG/330YEmG/AW9ulMXS92NurtWcjcsNOTw07hSbFPDObnsjOmZg
-    5wwe1Y5QOzoddOY0H9hU4ZszRwEvr8G2uC/K7+XF6fhA68daE3KLpHrh3OBM5FAy1DzWog
-    o817bT8LJy9mI3u4BcBf4fnfSuS8v3T61J/3LIh9piuQf6/dfXAz5CvttDgB6rlcTUt6md
-    8MQkJbj47BkpPFIg7/BmcX8YOufjazlFp2CWMykQpCR7mgJyfK35cuUIoigwdUdzQ1DgrR
-    FZQEmMtET7TIqoO4KTYmy2oY8tDmUgeQWfPIdiqjmhrEvJcg+hDzcZAwhG6pJoJ0KhCBCt
-    EDOnc5b3MKJr6/zAqm4EsllvKLJ+CY2YqpzoU66sT/97W73PEta+ym0terEQ
-X-ME-Proxy: <xmx:bt5OatVQkKKQb2YxYmDGsvUkdQ__V7Gcx9R-wKG-zxZi_9Ru7aenEA>
-    <xmx:bt5Oaj9H2Gy4Pb_sJhm01uQqrlgQZUCkPXowT80kT3C3EOm5QxNFtQ>
-    <xmx:bt5OaloRHXU4VXjXReZ8C0ZoM_7jNFEXK-buSYSOa7gxPnOjHbkkmw>
-    <xmx:bt5OauLeXGvY1wOFv8QxxIIjmf2ttv60Pc5z61oTBRVlAdkKoQHEXg>
-    <xmx:bt5OajyVCiFDJg7f919UruAXc9Q-cPmyJtNQ6FflCMDrkOcCvhxjE0nb>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 8 Jul 2026 19:34:05 -0400 (EDT)
-Date: Wed, 8 Jul 2026 17:29:54 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
- <wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
- <wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v19 16/18] vfio/pci: Implement TPH_ST feature for batch
- ST table programming
-Message-ID: <20260708172954.14bff5c4@shazbot.org>
-In-Reply-To: <20260702124224.57168-17-fengchengwen@huawei.com>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
-	<20260702124224.57168-17-fengchengwen@huawei.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="GbSpl+Mr"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=JQJYklGYnbKlH4BWP5uDVDEH0eqKIeJtmQUYGUa637lNWWVydN7gxKpKuJ1HpE4BCxoLiTSqfb7rZHiY8WzHYkKGnXpR1Vntl9M4Gn+krLsZyt4Sy20kvuT9O2DO2teS81iWgJAsHmFwLl/q7D0p5cvzSidHV+Wl8ym+gZfXzPPZXU/8/FIXi7dy6PXryvx5ZCH6HzeL4hWjgYnlfYzpaBMY4a4ihGqK6Ceoc1BB1EuaV/b2wfQkBBmsV/oJH4PQvtsHkAUxwI6Y41iYMJ1OLjF7k0E+ow/12dFRP2Q1Qdng7jPYolA8W7aMMU9f3bXKCrxbrRg09Sd1ehqXxipahQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=HnkEzYrTSxQTQMgeDxSmAGgrdM7KEIl6fw9qyujpFFk=;
+ b=f8zQ5N6rUWAzE8tTis36YSs3BW7Enp1qIS/kXoVX+PKtC1HoWtUrXtu+I/ZsijYauyKfVDI4EjjSD11fKnyNU+5G7AeRNBmUZyx2sdUPtSo9RgQmZmF5mJqCfp9t01UpZ6zg6XWVdGWU/xx3fTYmvYUQXQN+FxbkRW+S83Zuv6RDubLLsbPhsUvX51ev12HmDKmW7Tu9KlXmEq6caO2K2RZrq+1uJS9o+0DjF5pmUBHqbgPzfYW6GcE1wlF48e87jg02L1eP4Bw9RPbSazoRnHQ9zUgPOdxPhkyJcL9x2p/czrs14MzrTUNX7TclP+gmOmj2NV+vbtn7Qs2pswXxGA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HnkEzYrTSxQTQMgeDxSmAGgrdM7KEIl6fw9qyujpFFk=;
+ b=GbSpl+Mra/DnFvT/DKRkI1zn4/F07Fu72L2kSxqLBzIvlpYBCOzfacsZGa+6jWkMNGOVdcKo+RjGe2dCYQA+RU/S8Sbw8DNr0n41BnaqkyKDJA54prKfgzqKhZlZZ9/Echow202/n8NOzLda0V8+5A1SubxbB7O2S2SHMVA3IEF++c1ZOKe0UJzlnTTqQnWEaPmEnPxjZomfnVWABGPzaClPnN87y+6ppuFss4i5T7NXL/ZTG1n/y7+PGFsKIQQjx3IeHGsTyBf9BOUuvyYcdK+9VlRCBetRoqCIPS1IvdJ9wRUA3AuB9a+7CjXGyAWbmm9fn2eRHr00vdWh8MGmpA==
+Received: from DS7PR12MB9474.namprd12.prod.outlook.com (2603:10b6:8:252::17)
+ by BN5PR12MB9464.namprd12.prod.outlook.com (2603:10b6:408:2ab::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Thu, 9 Jul
+ 2026 00:34:50 +0000
+Received: from DS7PR12MB9474.namprd12.prod.outlook.com
+ ([fe80::31ad:931:ef07:8ad7]) by DS7PR12MB9474.namprd12.prod.outlook.com
+ ([fe80::31ad:931:ef07:8ad7%6]) with mapi id 15.21.0181.009; Thu, 9 Jul 2026
+ 00:34:50 +0000
+From: Srirangan Madhavan <smadhavan@nvidia.com>
+To: Dave Jiang <dave.jiang@intel.com>, Alison Schofield
+	<alison.schofield@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Dan
+ Williams <djbw@kernel.org>, Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny
+	<ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+	<vishal.l.verma@intel.com>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+CC: Alex Williamson <alex.williamson@redhat.com>, Vikram Sethi
+	<vsethi@nvidia.com>, Alex Williamson <alwilliamson@nvidia.com>, Dan Williams
+	<danwilliams@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+	<icheng@nvidia.com>, "linux-tegra@vger.kernel.org"
+	<linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2
+ devices
+Thread-Topic: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2
+ devices
+Thread-Index: AQHdCzgEuTE+32HQ8EmgWKGcZTRWp7ZhI5oAgAGKkACAAbAUEg==
+Date: Thu, 9 Jul 2026 00:34:50 +0000
+Message-ID:
+ <DS7PR12MB9474EE81286538A24E1C095CC3FE2@DS7PR12MB9474.namprd12.prod.outlook.com>
+References: <20260703220508.546528-1-smadhavan@nvidia.com>
+ <fb9a53ea-2743-4e4c-b3b3-faa81dfac156@intel.com>
+ <103e562b-1685-412f-adaa-679409818d7f@intel.com>
+In-Reply-To: <103e562b-1685-412f-adaa-679409818d7f@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DS7PR12MB9474:EE_|BN5PR12MB9464:EE_
+x-ms-office365-filtering-correlation-id: 8a466ac3-ebd2-4ecb-71a0-08dedd51e327
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|1800799024|23010399003|7416014|366016|921020|38070700021|4143699003|22082099003|56012099006|11063799006|5023799004|3023799007|18002099003|6133799003;
+x-microsoft-antispam-message-info:
+ xB6nGohfw75K9TCezRK+BEDH9lYdcn3YIkjHiAzQ9hQxsMRgNEnsHLYrmjuZ5ok8m3wW/RrLSLMtyWn6WkcMQVPTXkd0mCPxUZI+/syVuShlsLH3RVQBLlVPpfM19RT2LJ8CyAlqomp78AZxrqYJ2HXYywg3vM80OL7R0SDL5l+sLppkVxZFLZ+wRL4xcgkNBj1Tmft9vAoFAQ/e1lGX3/GY272YFuLrpnKK7TlqatWs/NSrqMXofRBfzHGq2Tu15MXMAQ43gDg8eNbNLC3g19NDGwnfCcRaNWFTtKIjga5JOGdq8caPwPkeoZ5MZSjL3Vd85VFdkviY5ikKrl1a51H016V0FrrbEeFVGuOMyUdW6dUd6ymdW8evblD1JxcboKxs7rh7lbrFPr0c9FeRJHo+xWZXFAyhySNz5pSuvrjbPDZ+Yu4CPxqyCaogqI7ZVljNWYguOrAyfe+WjRD9fmHlrwwXMa/pnDtpWcV7EE9Pso4Jw52CMkIWvqyMlgbrIDubTesEpBCJPrkcI53CHktlZQmmMOMiUnkZ918Qc5i6fJl19G03KbeFds2vNDC1uS3UO8YzBolhUCFjJn+5kFJ4HTubpVO6vwEjZanx/iGoOaPz6TuZpjBJFS4i/v4O2QC2GBTZRTbJAsEGHPZX0Y3qUUAZdjDcC0MkSIxuzQGYGJMOeoBQEHofo88yYEfk1tPO62Jlo/NsYnk/MUrKndLk5SIVPfnh6drr08wHaAd3f89KZofkYIgdAFZ0AQdz
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9474.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(7416014)(366016)(921020)(38070700021)(4143699003)(22082099003)(56012099006)(11063799006)(5023799004)(3023799007)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?0MSmY+e7ac0K1lDgydCCIRiYnZufJI4picUgSSTNj/2Gcw6JaK5O4wE/Yb4S?=
+ =?us-ascii?Q?2dM78LvrCl2ktk2UbcVATvOJSST2v8L265Vb/fjYUSr4nUcx6fsXqhA5OABC?=
+ =?us-ascii?Q?8MWm+AWrd4PIpxKWiOwZyg4nQr0peNVdB0+0JauwSPnWtm7Mhjg0BONcy/3v?=
+ =?us-ascii?Q?YJvWP0OTxdYTsRDMBtxNKHhFOD1iq4VKLpqsbKYWj1dsBqUEDBNZPUwIRhPt?=
+ =?us-ascii?Q?Fu3wnY0TXnsFL5REH9tUbljVFTSEKPcpBZ9m9gZih3R95YhD9uKSF8HGXsoC?=
+ =?us-ascii?Q?cdfmC3Ft8daKFllnY0tGuJnt79i273h9NJpMs1SHSmdl3Ou1MaDDPud/DyKR?=
+ =?us-ascii?Q?0BsTWjyjQ5ia3M1RkGMof/jAFrFuKSWGcyn1qwRTlXp4TuUdJzAFSvN0qXrX?=
+ =?us-ascii?Q?daIL5SyTxc56uUx0gyWCOMfP6X+tcy9ylMKtXZuCMAieWe99hp7+UAkty+QD?=
+ =?us-ascii?Q?dJl9kavi9W+ZKxIAZLuPpvHRJHGS4mdA9m0yq05zR93kdzExOHd+zYpFpFLp?=
+ =?us-ascii?Q?FA1O+b5Ba8EunLupyVlvMaDe25CeTRHNCUbmp/FnUMpVWLIuVQPdtbzGMowy?=
+ =?us-ascii?Q?bI9bfA3wWP5L1amHZiCzpKvSgvEvoYO1a1DFwEGWngdXvRldJml8d9+W9jss?=
+ =?us-ascii?Q?hG6w+bgIrd+tgQz0Y5zZ+MiTLDqyCeXgogQUe1CYpK8lUk4JFb+mdk6Mi/sm?=
+ =?us-ascii?Q?TD712Godo8UKYZj/jBYBDJQavCCYjs17JbmAkESYzwg1+REbTauHhgKEE+EJ?=
+ =?us-ascii?Q?Ei5WPCUhLwwjAsjVdA6yew5jPOiZppZUUlltWPbQs2X8GaIQascMml2P4W00?=
+ =?us-ascii?Q?h3zAVckN80U9/9r3Wu06UXm+pQimPxefPKY5cu2BZXCEmDBgNoTqO/yy4xra?=
+ =?us-ascii?Q?qqMRZL0ZMHCiOCnhEotX4Is5Op8m9gqZ8lcj+QnqWcq2RqsEkndmNmJE6WmR?=
+ =?us-ascii?Q?SQv6ax1rGQT8wBGUMOJ2u3LOYk9j8QXOxz5npbESYikY3kW1QSuuGPeew23t?=
+ =?us-ascii?Q?Y7xY6B+hSRMhf0w36i9gtQjtvyoWjRiXvpok0GeQmKeqW+JxYNaaIbAKNFve?=
+ =?us-ascii?Q?Uidx6WyMVkY8UyOiXhSuMvCm1tJKvr6v3c9Gr4DlwKlOjEYt2mN1yGMDft8s?=
+ =?us-ascii?Q?AxiiiTJumcZYcLg+YAUtLIoioDL+o3SCf7Ef1lvCMmgKmW1ZcDmnDmAieMr4?=
+ =?us-ascii?Q?7ibORzdqOScdxSZ48HMml/tv228STTo9mcZnuxFqCvEZkgdv4cQ+eGeugbcF?=
+ =?us-ascii?Q?UA2pJs3eQyAPDL8eyr3frY/pyebQGTAA52EaUierY0AnbiAkK6mWm4umpwVT?=
+ =?us-ascii?Q?Zit+RrAB3YvnrG6EK4Uvjpfxe5RhZnJ9lL5eNM8+haBbsACthepSiv7a3ZZ4?=
+ =?us-ascii?Q?rUbVT23u99ChcAGZdY7s2MBOHZlRQpp+yTmD40Z+GW5yBiHg9CTDlowYrMiC?=
+ =?us-ascii?Q?HN2L48hoimFKBlb1CJP8XBe6ARdTW07PcRhDeHvnRAZNVZLV+vXh+thS5kho?=
+ =?us-ascii?Q?8/frV/BWm3Z5P9gRf9N6dvbHjfdENmrCkAv8LNfGb6bfN6e1Dc/Kroz4hsse?=
+ =?us-ascii?Q?AOyzLpW1qUS0668cmgtMWGdaV3QHzFdDpxQ8Nl4YcD1p/JWOakxWVvfgHnzW?=
+ =?us-ascii?Q?BsGV4XlUFRoXNdfPcQLglwRms35nPK9GV829zgpyp7sdWTUwmFTs9gl1q3Pb?=
+ =?us-ascii?Q?lUlCvmG4jGeDBUIg6k/H50um3TfjLVCBy5WoVumEJL+5ZGtZ?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9474.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8a466ac3-ebd2-4ecb-71a0-08dedd51e327
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jul 2026 00:34:50.5807
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Gy16jXhJj9yohkfclzgdhjDKpslproSith6cKa1HE2udQIpFyslk6Ng3IC9bVRXfaV4fe0T1g5FwS5/At1rltA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9464
 
-On Thu, 2 Jul 2026 20:42:22 +0800
-Chengwen Feng <fengchengwen@huawei.com> wrote:
+>BTW, can this be applied cleanly against a Linus rc tag? If so please do t=
+hat next rev. I understand you need the type2 stuff for testing.
+> But preferably when posting, post it against a Linus tag if there are no =
+symbol dependencies. I'd really like sashiko run a review through
+> it and currently it is not able to. Thank you.
 
-> Add vfio_pci_core_feature_tph_st() to implement the SET-only
-> VFIO_DEVICE_FEATURE_TPH_ST uAPI for batch TPH ST table programming.
-> 
-> Implement helper routines to calculate ST table size and resolve ST tags
-> from multiple sources: NONE, DMABUF, CPU volatile/persistent, and LITERAL.
-> 
-> Batch program contiguous ST table entries according to user inputs, support
-> stop-on-zero-ST semantics, and return the number of successfully written
-> entries. Hold memory_lock and ensure device is in D0 state during hardware
-> operations.
-> 
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> ---
->  drivers/vfio/pci/vfio_pci_core.c | 119 +++++++++++++++++++++++++++++++
->  1 file changed, 119 insertions(+)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index ed6bbffa8b26..7251e251824a 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1713,6 +1713,123 @@ static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device *vdev,
->  	return copy_to_user(arg, &resolve, sizeof(resolve)) ? -EFAULT : 0;
->  }
->  
-> +static u32 tph_calc_st_size(struct vfio_pci_core_device *vdev)
-> +{
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	u32 loc = pcie_tph_get_st_table_loc(pdev);
-> +	int ret;
-> +
-> +	if (loc == PCI_TPH_LOC_CAP) {
-> +		return pcie_tph_get_st_table_size(pdev);
-> +	} else if (loc == PCI_TPH_LOC_MSIX) {
-> +		ret = pci_msix_vec_count(pdev);
-> +		if (ret < 0)
-> +			return 0;
-> +		return ret;
-> +	} else {
-> +		return 0;
-> +	}
-> +}
-> +
-> +static int tph_get_st_tag(struct pci_dev *pdev, u32 src_bits, u32 src_hndl,
-> +			  bool extended, u16 *tag)
-> +{
-> +	int ret = 0;
-> +	u8 ph;
-> +
-> +	if (src_bits & VFIO_DEVICE_TPH_SRC_NONE)
-> +		*tag = 0;
-> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_DMABUF)
-> +		ret = vfio_pci_dma_buf_get_tph_by_fd(src_hndl, extended,
-> +						     tag, &ph);
-> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_VOLATILE)
-> +		ret = pcie_tph_get_cpu_st_explicit(pdev, TPH_MEM_TYPE_VM,
-> +					extended, src_hndl, tag);
-> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT)
-> +		ret = pcie_tph_get_cpu_st_explicit(pdev, TPH_MEM_TYPE_PM,
-> +					extended, src_hndl, tag);
-> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_LITERAL)
-> +		*tag = src_hndl;
-> +
-> +	if (ret != 0)
-> +		*tag = 0;
-> +
-> +	return ret;
-> +}
-> +
-> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
-> +				u32 flags,
-> +				struct vfio_device_feature_tph_st __user *arg,
-> +				size_t argsz)
-> +{
-> +	u32 permit_flags = VFIO_DEVICE_TPH_SRC_MASK | VFIO_DEVICE_TPH_EXTENDED;
-> +	struct vfio_device_feature_tph_st tph_st = {0};
-> +	struct pci_dev *pdev = vdev->pdev;
-> +	u32 src_bits, st_size;
-> +	bool stop_on_zero_st;
-> +	u32 *src_hndl = NULL;
-> +	void __user *uptr;
-> +	bool extended;
-> +	int ret, i;
-> +	u16 tag;
-> +
-> +	if (!vdev->tph_permit || vdev->tph_policy == VFIO_PCI_TPH_POLICY_NO_ST)
-> +		return -EOPNOTSUPP;
-> +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(tph_st));
-> +	if (ret <= 0)
-> +		return ret;
+Thanks Dave.  And sorry for that mixup of the RFC patch & the applicability=
+ issue.
 
-Again, not how vfio_check_feature() convetion.
+  I rebased the series onto v7.2-rc2, folded the cxl_bus HDM restore
+  follow-up into the same series as patch 11/11, and verified that b4 appli=
+es
+  the full series cleanly against that base. I'll send this as v9 (deferrin=
+g other comments)
 
-> +
-> +	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
-> +		return -EFAULT;
-> +
+  I do not have a public branch ready yet, but I can publish one if it woul=
+d
+  still help review or testing.
 
-MUST validate undefined flags are zero.
+________________________________________
+From: Dave Jiang <dave.jiang@intel.com>
+Sent: Tuesday, July 7, 2026 3:45 PM
+To: Srirangan Madhavan; Alison Schofield; Bjorn Helgaas; Dan Williams; Davi=
+dlohr Bueso; Ira Weiny; Jonathan Cameron; Vishal Verma; linux-cxl@vger.kern=
+el.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+Cc: Alex Williamson; Vikram Sethi; Alex Williamson; Dan Williams; Sai Yashw=
+anth Reddy Kancherla; Vishal Aslot; Manish Honap; Jiandi An; Richard Cheng;=
+ linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2 dev=
+ices
 
-> +	src_bits = tph_st.flags & VFIO_DEVICE_TPH_SRC_MASK;
-> +	if (vdev->tph_policy != VFIO_PCI_TPH_POLICY_LITERAL)
-> +		permit_flags &= ~VFIO_DEVICE_TPH_SRC_LITERAL;
-> +	if (!(tph_st.flags & permit_flags) || !is_power_of_2(src_bits))
-> +		return -EINVAL;
-> +	extended = !!(tph_st.flags & VFIO_DEVICE_TPH_EXTENDED);
-> +	if (extended && !pcie_tph_supported(vdev->pdev, true))
-> +		return -EINVAL;
-> +
-> +	st_size = tph_calc_st_size(vdev);
-> +	if (tph_st.start >= st_size || tph_st.count > st_size - tph_st.start ||
-> +		tph_st.count == 0)
-> +		return -EINVAL;
-> +
-> +	uptr = u64_to_user_ptr(tph_st.dests);
-> +	if (!(src_bits & VFIO_DEVICE_TPH_SRC_NONE)) {
-> +		src_hndl = memdup_array_user(uptr, tph_st.count, sizeof(u32));
-> +		if (IS_ERR(src_hndl))
-> +			return PTR_ERR(src_hndl);
-> +	}
-> +
-> +	down_write(&vdev->memory_lock);
+External email: Use caution opening links or attachments
 
-No, vfio_pci_memory_lock_and_enable().
 
-> +	ret = vfio_pci_set_power_state(vdev, PCI_D0);
+On 7/6/26 4:13 PM, Dave Jiang wrote:
+>
+>
+> On 7/3/26 3:04 PM, Srirangan Madhavan wrote:
+>> Hi folks!
+>>
+>> This series adds CXL Reset support for CXL Type 2 devices through the
+>> existing PCI reset_method ABI. The reset sequence follows the CXL 4.0
+>> specification [1], including CXL.cache disable, optional cache
+>> writeback, CXL Reset initiation, ResetComplete polling, and ResetError
+>> reporting.
+>>
+>> The userspace ABI is the existing PCI reset interface:
+>>
+>>     /sys/bus/pci/devices/.../reset_method
+>>     /sys/bus/pci/devices/.../reset
+>>
+>> Userspace can select "cxl_reset" in reset_method and then trigger reset
+>> through the existing reset attribute.
+>>
+>> Following Dan's v6 feedback, this replaces the proposed memdev sysfs ABI
+>> with the existing PCI reset_method interface.
+>>
+>> v8 changes from v7 [2]:
+>> - Drop the PCI helper export patch.
+>> - Drop the multi-function sibling coordination patch. cxl_reset is only
+>>   exposed as a function-scoped reset method when the CXL reset scope is
+>>   limited to the target function.
+>> - Keep the reset-scope discovery needed to reject non-function-scoped
+>>   CXL resets.
+>> - Cache HDM location as BAR-relative metadata instead of keeping an
+>>   enum-time MMIO mapping.
+>> - Restore HDM through a temporary mapping based on the current BAR
+>>   assignment after PCI config state is restored.
+>> - Cache raw HDM decoder register state so uncommitted decoders can be
+>>   restored as uncommitted, while committed decoders are recommitted
+>>   through the normal HDM commit flow.
+>> - Share HDM decoder decode and validation between normal CXL core
+>>   enumeration and early PCI HDM caching.
+>> - Put cxl_reset ahead of FLR in reset_method priority because FLR does
+>>   not reset CXL.cache or CXL.mem protocol state.
+>>
+>> Motivation:
+>> -----------
+>> - Type 2 devices need a CXL-specific reset mechanism beyond existing PCI
+>>   reset methods.
+>>
+>> - FLR does not reset CXL.cache or CXL.mem protocol state. CXL Reset is
+>>   the architectural reset mechanism for those protocols.
+>>
+>> - The PCI reset_method ABI lets userspace select this narrower CXL reset
+>>   before falling back to broader bus reset methods.
+>>
+>> Change Description:
+>> -------------------
+>>
+>> Patch 1: cxl/hdm: Split decoder programming into a reusable helper
+>> - Move shared decoder settings to include/cxl/cxl.h.
+>> - Factor low-level HDM register programming into cxl_commit().
+>>
+>> Patch 2: cxl/hdm: Cache decoder settings on PCI devices
+>> - Cache CXL core HDM decoder settings in pci_dev->hdm.
+>> - Refresh the cache as decoders are enumerated, committed, or reset.
+>>
+>> Patch 3: cxl/hdm: Share HDM decoder decode logic
+>> - Share HDM decoder decode and validation between normal CXL core
+>>   enumeration and early PCI HDM cache setup.
+>>
+>> Patch 4: cxl/hdm: Cache endpoint decoder settings during PCI enumeration
+>> - Snapshot endpoint HDM state during PCI capability initialization.
+>> - Cache the HDM register locator as BAR-relative metadata.
+>> - Cache raw decoder register state in addition to committed decoder
+>>   settings.
+>>
+>> Patch 5: PCI/CXL: Add CXL Device Reset helper
+>> - Add the internal DVSEC reset sequence.
+>> - Disable CXL.cache, perform cache writeback where supported, initiate
+>>   CXL Reset, and wait for completion.
+>>
+>> Patch 6: PCI/CXL: Validate HDM ranges before CXL reset
+>> - Collect enabled cached HDM ranges.
+>> - Reject reset if affected ranges are busy.
+>> - Invalidate CPU caches when runtime cache-invalidation support is
+>>   available, otherwise continue after warning.
+>>
+>> Patch 7: PCI/CXL: Discover the CXL reset scope
+>> - Discover whether CXL Reset is function-scoped using the Non-CXL
+>>   Function Map and CXL cache/mem capability bits.
+>>
+>> Patch 8: cxl/pci: Restore CXL HDM state after PCI reset
+>> - Restore cached global and per-decoder HDM state after reset.
+>> - Re-map HDM registers from the current BAR assignment during restore.
+>> - Replay raw decoder state for uncommitted decoders and recommit
+>>   decoders that were committed before reset.
+>>
+>> Patch 9: PCI/CXL: Expose CXL Reset as a PCI reset method
+>> - Add "cxl_reset" to the PCI reset_method table for Type 2 reset-capable
+>>   CXL devices.
+>> - Prioritize cxl_reset ahead of FLR.
+>>
+>> Patch 10: Documentation/ABI: Document CXL Reset PCI reset method
+>> - Document the new reset_method value and reset behavior.
+>>
+>> The CPU cache invalidation step depends on
+>> cpu_cache_invalidate_memregion() support for the affected address ranges=
+.
+>> If no runtime provider is available, the kernel emits a warning and
+>> continues after the affected HDM ranges have been reserved.
+>>
+>> Example:
+>>
+>>     echo cxl_reset > /sys/bus/pci/devices/0000:bb:dd.f/reset_method
+>>     echo 1 > /sys/bus/pci/devices/0000:bb:dd.f/reset
+>>
+>> Testing:
+>> - Ran 100 iterations of cxl_reset through the PCI reset sysfs ABI on a
+>>   CXL Type 2 device. All iterations completed successfully and
+>>   ResetComplete was observed.
+>> - Exercised cxl_bus reset separately with an add-on HDM restore patch.
+>>
+>> References:
+>> [1] https://computeexpresslink.org/wp-content/uploads/2026/02/CXL-Specif=
+ication_rev4p0_ver1p0_2026February26_clean_evalcopy_v2.pdf
+>> [2] https://lore.kernel.org/linux-cxl/20260623032453.3404772-1-smadhavan=
+@nvidia.com/
+>> [3] https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@=
+nvidia.com/
+>>
+>> Srirangan Madhavan (10):
+>>   cxl/hdm: Split decoder programming into a reusable helper
+>>   cxl/hdm: Cache decoder settings on PCI devices
+>>   cxl/hdm: Share HDM decoder decode logic
+>>   cxl/hdm: Cache endpoint decoder settings during PCI enumeration
+>>   PCI/CXL: Add CXL Device Reset helper
+>>   PCI/CXL: Validate HDM ranges before CXL reset
+>>   PCI/CXL: Discover the CXL reset scope
+>>   cxl/pci: Restore CXL HDM state after PCI reset
+>>   PCI/CXL: Expose CXL Reset as a PCI reset method
+>>   Documentation/ABI: Document CXL Reset PCI reset method
+>>
+>>  Documentation/ABI/testing/sysfs-bus-pci |   14 +
+>>  drivers/cxl/Kconfig                     |    4 +
+>>  drivers/cxl/core/Makefile               |    2 +-
+>>  drivers/cxl/core/hdm.c                  |  257 ++---
+>>  drivers/cxl/core/region.c               |    6 +-
+>>  drivers/cxl/core/regs.c                 |    4 +
+>>  drivers/cxl/core/reset.c                | 1354 +++++++++++++++++++++++
+>>  drivers/cxl/cxl.h                       |   43 -
+>>  drivers/pci/pci.c                       |    2 +
+>>  drivers/pci/probe.c                     |    3 +
+>>  include/cxl/cxl.h                       |  102 +-
+>>  include/linux/pci.h                     |    8 +-
+>>  include/uapi/linux/pci_regs.h           |   15 +
+>>  tools/testing/cxl/test/cxl.c            |   10 +-
+>>  14 files changed, 1615 insertions(+), 209 deletions(-)
+>>  create mode 100644 drivers/cxl/core/reset.c
+>>
+>> base-commit: 90cf2e0d702c8a132ccbe72e7687f33c04c14658
+>
+>
+> Hi Srirangan,
+> I am not able to apply the patch series using b4 with the above base comm=
+it.
+> b4 picks up the last RFC patch as the first patch and fails to apply. How=
+ever, skipping it b4 is still having trouble. Can you push a public git bra=
+nch somewhere please? Also in the future the last RFC patch should be label=
+ed 11/11. Thanks!
+>
 
-No, PM runtime get/set, but once again it's already done in the call
-path.
-
-> +	if (ret)
-> +		goto out;
-> +
-> +	stop_on_zero_st = !!(tph_st.flags & VFIO_DEVICE_TPH_REQUIRE_ST);
-> +	if (tph_st.flags & VFIO_DEVICE_TPH_SRC_NONE)
-> +		stop_on_zero_st = false;
-> +	for (i = 0; i < tph_st.count; i++) {
-> +		ret = tph_get_st_tag(pdev, src_bits, src_hndl ? src_hndl[i] : 0,
-> +				     extended, &tag);
-> +		if (ret || (stop_on_zero_st && tag == 0))
-> +			break;
-
-Missing bounds check on tag if !extended.
-
-In IV mode, don't we need to know the vector is enabled?
-
-> +		ret = pcie_tph_set_st_entry(pdev, tph_st.start + i, tag);
-
-We're defeating the entire reason we created a batching interface by
-not also implementing a batching interface in the PCI/TPH code.  This
-does a disable before each set.  Thanks,
-
-Alex
-
-> +		if (ret)
-> +			break;
-> +	}
-> +	ret = i;
-> +
-> +out:
-> +	up_write(&vdev->memory_lock);
-> +	kfree(src_hndl);
-> +	return ret;
-> +}
-> +
->  int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->  				void __user *arg, size_t argsz)
->  {
-> @@ -1736,6 +1853,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->  	case VFIO_DEVICE_FEATURE_TPH_RESOLVE:
->  		return vfio_pci_core_feature_tph_resolve(vdev, flags,
->  							 arg, argsz);
-> +	case VFIO_DEVICE_FEATURE_TPH_ST:
-> +		return vfio_pci_core_feature_tph_st(vdev, flags, arg, argsz);
->  	default:
->  		return -ENOTTY;
->  	}
+BTW, can this be applied cleanly against a Linus rc tag? If so please do th=
+at next rev. I understand you need the type2 stuff for testing. But prefera=
+bly when posting, post it against a Linus tag if there are no symbol depend=
+encies. I'd really like sashiko run a review through it and currently it is=
+ not able to. Thank you.
 
