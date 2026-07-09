@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6CADF6C;
-	Thu,  9 Jul 2026 01:15:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19000DF6C;
+	Thu,  9 Jul 2026 01:16:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783559744; cv=none; b=GHLhiE9ujni4r0KrvkXccsbTd2qUs+LDoioHbuEiA7ihjLihdv8SKaTqVoyr9yt+qFmoJCQ24uI8GPob5mVNeHNaBBDUG+uC8dKx7BKful+xvTvV8x1uKG+HhEOZgdR1j/SlOPnyL/Lcvs+iaMSHh7/vsyoIfdNf7Msks09h8Uw=
+	t=1783559787; cv=none; b=Oayyn/Vf+nChAubyhpsMiOnJBNpFjEJUHFWzX7djD3p+mIst+nFfmKDpP+IduQeBOHP49ySiRaYLVLUN9cpS+QIUVNDWriWAKj63jzEV++ZDRf4XTf0QYLph0EZpift2UN+0qyLLDeiex1ixIaiF9uiJSdNabf9RYofB/k+1R5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783559744; c=relaxed/simple;
-	bh=BQTktWmkupE2sji08A0dwyP8jltxpKgHNZWcUtvLFIE=;
+	s=arc-20240116; t=1783559787; c=relaxed/simple;
+	bh=ITPBp8p8DF+gNTmAW7Nwi3usxB8BGAIZqGH0Kwf9s6w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AD8iUk/8i+Gs59eecGqXrQ9PXIyyzh0JvFdkYrUrbtDlz9LUfYfujkwh0J5FJz+eZLlCIPQ/MsLsUISHlZpFb+bLNU2TFHN+0b/3DQmABw4VkYBdhM5jXptZjknV3N4sBI+7Ugr4pAdw1fmPLyh/8Bs/Z3Oc4M7ZExREqn2gpcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CTJLLFbL; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PGF+1KULgxBGxzQkL1bgRJNTixSIwmU6phA79yEWd0O5MlAMiwADBQDqxPDpNk3lFSywLWvKE6zRb9EPj6xxb54m0WhhFA/AIWQlgOfs8Iu3E2cfpVJZElFJkjJc7/tY4fu+BkUS4kLIIzxKG5rGeNmMpOP17dojDANurJm8XxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FzoWfOEE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CTJLLFbL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0694B1F000E9;
-	Thu,  9 Jul 2026 01:15:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FzoWfOEE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76CE21F000E9;
+	Thu,  9 Jul 2026 01:16:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783559743;
-	bh=OyjMOgPpV+hS1iAuW6/einjrjMYHVtf/rjEV3fl0jeY=;
+	s=k20260515; t=1783559785;
+	bh=1Evh+pKETM9vTaKIQQxL/GKkI8E0dN28t7+aJXtcOlQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CTJLLFbLLE+cdl/S4bJS7CFYAVAzdMhqS9wpYtQJNLFZztF/iY46SGTVD3rEFdjFG
-	 Pg1NFJjzXrf54dLPI73mLaTUYTgQo75dZRQwf7FNiKUZFUqi1K6RoLM0mPhiSA9/Z4
-	 ZoZC6JFMNvo8QM0eOOsKrhqa0YbrFDSlVT5UFr75mZzjZymGaaHiezvzFTm+D2P9sg
-	 fOMonWmBLycqZvxIinzm0aa9b0/9v5pzIc56qQH2wtZxnV2tK+3q39V64kyC65bL35
-	 QMDGKTcNlt+nbr8BOQnQHothyu8ds74tQu08UpbefEGKP5aa/ZElkhivFKfFZYQkVj
-	 cDN7NVmJWNydg==
+	b=FzoWfOEEpdQAoRFtM9VWBV3jRxV1GuI/JV4ZbssAhixZ6J2iRby2OyROThdl7KB7n
+	 l75YXNb7GMLR3WruDYL0jwLMgYcD0tw60s3ZqxiMNbeGE2ZfGACXS9Kh0gaXwbsjge
+	 OK42z8a45fUwyXjHyyLFGxLoUBE3V3qd0y0cVuM9Adki89vm4vQrST8/iKf0mD8HYk
+	 DvScr3dM/7BU3+DmdF/AVcpnLpPIkiQ6VZhCCOmfdJLn3DL+pVLm6+dwxUZmmyCqHW
+	 IjcPyDj8+qDcTpJ16KQUoQEOgi7U1u5w7rA8b0NZUGXH7kuS1hKZmFbrelBDGzESDZ
+	 n2kWfXm71U74Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 05/11] cxl: Add CXL Device Reset helper
+Subject: Re: [PATCH v9 02/11] cxl: Cache decoder settings on PCI devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260709010304.680422-6-smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260709010304.680422-3-smadhavan@nvidia.com>
 References: <20260709010304.680422-1-smadhavan@nvidia.com>
- <20260709010304.680422-6-smadhavan@nvidia.com>
+ <20260709010304.680422-3-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 01:15:42 +0000
-Message-Id: <20260709011543.0694B1F000E9@smtp.kernel.org>
+Date: Thu, 09 Jul 2026 01:16:25 +0000
+Message-Id: <20260709011625.76CE21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,151 +46,102 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Incorrect ordering of CXL cache writeback (WBI), pending transacti=
-on wait, and IOMMU reset preparation.
-- [Medium] Premature success of WBI wait loop on device disconnect due to u=
-nhandled U16_MAX status.
-- [Medium] Potential false timeout in the reset wait loop due to a missing =
-final hardware status check.
+
+New issues:
+- [High] Resource Leak / Devres Lifecycle Bug
+
+Pre-existing issues:
+- [Critical] Out-of-bounds Read / Information Leak
+- [High] Endianness / Byte Order Logic Error
 --
 
---- Patch [5]: [PATCH v9 05/11] cxl: Add CXL Device Reset helper ---
-commit c832f1294f231fc19fa036ee29639b20e723c1a1
+--- Patch [2]: [PATCH v9 02/11] cxl: Cache decoder settings on PCI devices =
+---
+commit b30e35d89911fd38d088f7e8ed1637175c1c6ae9
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
+cxl: Cache decoder settings on PCI devices
 
-cxl: Add CXL Device Reset helper
+This commit caches CXL core's HDM decoder settings in pci_dev->hdm as decod=
+ers
+are enumerated, committed, or reset. PCI reset paths can use this snapshot =
+to
+restore HDM programming without walking CXL topology during reset recovery.
 
-This commit adds an internal CXL Device Reset helper for Type 2 functions
-that advertise CXL Reset in the CXL Device DVSEC. The helper handles cache
-disabling, writeback, reset initiation, and re-enabling caching.
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index fa978c297546f..83cda63f76a5a 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
 
-> diff --git a/drivers/cxl/core/reset.c b/drivers/cxl/core/reset.c
-> index 97b72cc67b6bd..7a9b1ecfadcf9 100644
-> --- a/drivers/cxl/core/reset.c
-> +++ b/drivers/cxl/core/reset.c
 [ ... ]
-> +static int cxl_reset_disable_cache(struct pci_dev *pdev, int dvsec, u16 =
-cap)
+
+> +static int devm_cxl_pci_setup_hdm_info(struct cxl_hdm *cxlhdm)
 > +{
-> +	int remaining_us =3D CXL_CACHE_WBI_TIMEOUT_US;
-> +	u16 status2;
-> +	int rc, rc2;
-> +
-> +	rc =3D cxl_reset_update_ctrl2(pdev, dvsec,
-> +				    PCI_DVSEC_CXL_DISABLE_CACHING, 0);
-> +	if (rc)
-> +		return rc;
-> +
-> +	if (!(cap & PCI_DVSEC_CXL_CACHE_WBI_CAPABLE))
+> +	struct cxl_port *port =3D cxlhdm->port;
+> +	struct cxl_hdm_info *info;
+> +	struct pci_dev *pdev;
+> +	struct device *uport;
+
+[ ... ]
+
+> +	if (!dev_is_pci(uport))
 > +		return 0;
 > +
-> +	rc =3D cxl_reset_update_ctrl2(pdev, dvsec,
-> +				    PCI_DVSEC_CXL_INIT_CACHE_WBI, 0);
-> +	if (rc)
-> +		goto err_enable_cache;
+> +	pdev =3D to_pci_dev(uport);
+> +	info =3D devm_kzalloc(&pdev->dev,
+> +			    struct_size(info, settings, cxlhdm->decoder_count),
+> +			    GFP_KERNEL);
+> +	if (!info)
+> +		return -ENOMEM;
 > +
-> +	do {
-> +		usleep_range(CXL_CACHE_WBI_POLL_US, CXL_CACHE_WBI_POLL_US + 1);
-> +		remaining_us -=3D CXL_CACHE_WBI_POLL_US;
+> +	info->decoder_count =3D cxlhdm->decoder_count;
+> +	WRITE_ONCE(pdev->hdm, info);
 > +
-> +		rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +					  &status2);
-> +		if (rc) {
-> +			rc =3D pcibios_err_to_errno(rc);
-> +			goto err_enable_cache;
-> +		}
-> +	} while (!(status2 & PCI_DVSEC_CXL_CACHE_INV) && remaining_us > 0);
-
-[Severity: Medium]
-If the device is disconnected or offline, pci_read_config_word() will return
-success (0) and set status2 to U16_MAX (0xFFFF). Would this cause the loop
-condition !(status2 & PCI_DVSEC_CXL_CACHE_INV) to evaluate to false and
-bypass the wait entirely, falsely reporting success?
-
-> +
-> +	if (!(status2 & PCI_DVSEC_CXL_CACHE_INV)) {
-> +		rc =3D -ETIMEDOUT;
-> +		goto err_enable_cache;
-> +	}
-> +
-> +	return 0;
-[ ... ]
-> +static int cxl_reset_wait_done(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-[ ... ]
-> +	do {
-> +		rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +					  &status2);
-> +		if (rc || status2 =3D=3D U16_MAX)
-> +			goto not_ready;
-> +
-> +		if (status2 & PCI_DVSEC_CXL_RST_ERR)
-> +			return -EIO;
-> +
-> +		if (status2 & PCI_DVSEC_CXL_RST_DONE)
-> +			return 0;
-> +
-> +not_ready:
-> +		if (time_after_eq(jiffies, deadline))
-> +			return -ETIMEDOUT;
-
-[Severity: Medium]
-Does this timeout check need a final hardware status read?
-
-If a thread preemption, interrupt, or scheduling delay occurs after the
-config space read but before the timeout check, the hardware condition may
-be met concurrently while the jiffies have advanced past the deadline. This
-could potentially lead to a false -ETIMEDOUT error despite the device being
-ready.
-
-> +
-> +		msleep(CXL_RESET_STATUS_POLL_MS);
-> +	} while (true);
+> +	return devm_add_action_or_reset(&pdev->dev, clear_hdm_info, pdev);
 > +}
-> +
-> +static int cxl_reset_execute(struct pci_dev *pdev, int dvsec)
-> +{
-> +	bool cache_disabled =3D false;
-> +	u16 cap;
-> +	int rc;
-> +
-> +	rc =3D pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +
-> +	if (!pci_wait_for_pending_transaction(pdev))
-> +		pci_err(pdev, "timed out waiting for pending transactions\n");
-> +
-> +	rc =3D pci_dev_reset_iommu_prepare(pdev);
-> +	if (rc) {
-> +		pci_err(pdev, "failed to stop IOMMU for CXL reset: %d\n", rc);
-> +		return rc;
-> +	}
-> +
-> +	rc =3D cxl_reset_disable_cache(pdev, dvsec, cap);
 
 [Severity: High]
-Is it safe to wait for pending transactions and prepare the IOMMU for reset
-before initiating the CXL cache Write-Back Invalidate (WBI)?
+Could this cause a memory leak if the CXL port driver is unbound and rebound
+by a user via sysfs?
 
-Initiating WBI in cxl_reset_disable_cache() forces the device to flush its
-dirty cache lines via new DMA transactions. If the IOMMU has already been
-prepared for reset (which may disable ATS, PRI, and block translations), co=
-uld
-these WBI transactions fault and lead to silent data loss or IOMMU errors?
+Because pdev is the long-lived parent PCI device rather than the child
+cxl_port device being probed, these devres resources are tied to the
+parent's lifecycle. Repeated bind/unbind cycles on the port driver could
+cause the devres allocations and cleanup actions to accumulate infinitely
+on the parent device.
 
-Additionally, creating new pending transactions immediately before asserting
-the CXL Reset might violate the PCIe requirement to drain all transactions
-prior to reset. Should cxl_reset_disable_cache() happen before the IOMMU
-preparation and pending transaction wait?
+[ ... ]
 
-> +	if (rc)
-> +		goto out;
-> +	cache_disabled =3D true;
-> +
-> +	rc =3D cxl_reset_update_ctrl2(pdev, dvsec, PCI_DVSEC_CXL_INIT_CXL_RST,
-> +				    PCI_DVSEC_CXL_RST_MEM_CLR_EN);
+> @@ -989,6 +1061,7 @@ static int init_hdm_decoder(struct cxl_port *port, s=
+truct cxl_decoder *cxld,
+>  		lo =3D readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
+>  		hi =3D readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
+>  		target_list.value =3D (hi << 32) + lo;
+
+[Severity: High]
+This is a pre-existing issue, but does this byte-by-byte access of a
+native 64-bit integer break on big-endian architectures?
+
+Since hi and lo are correctly read as native 32-bit CPU-endian integers
+and combined into a native 64-bit integer, accessing individual bytes via
+target_list.target_id[i] on a big-endian system will place the most
+significant byte at index 0. This would reverse the target IDs and result
+in incorrect downstream port routing.
+
+> +		cxld->targets =3D target_list.value;
+>  		for (i =3D 0; i < cxld->interleave_ways; i++)
+>  			cxld->target_map[i] =3D target_list.target_id[i];
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but can this loop read past the
+end of the 8-byte union and leak kernel stack memory?
+
+Looking at parse_hdm_decoder_caps(), cxld->interleave_ways can be set
+to 16. The target_list union is only 8 bytes long (containing an 8-byte
+u64 value and an 8-byte unsigned char target_id[8]). If a device
+reports a 16-way interleave, this loop will read uninitialized stack memory
+from indices 8 through 15, which could then be exposed to userspace via
+the sysfs target_list attribute.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709010304.6804=
-22-1-smadhavan@nvidia.com?part=3D5
+22-1-smadhavan@nvidia.com?part=3D2
