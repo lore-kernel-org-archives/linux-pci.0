@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39F1274FD1;
-	Thu,  9 Jul 2026 15:46:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D688405C3B;
+	Thu,  9 Jul 2026 15:50:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783612020; cv=none; b=g0dvKjwkObNBjlcjzs8QwVUu721trEIdKOy9+lwiCfgqIymKi4M4PZijxI1P43w7bV+4lHIUXYq3+KTUwuLfY1rdNOkXc8dRnPOZB91nR023+gMtjQAFO4svOOm+h2tA/93nn/hYCgU63ZNhnGBiwsWWmoULAJ20MQAf9aggpns=
+	t=1783612230; cv=none; b=oe3esMZs5pi39qwzgmBtERWkrVWur/2tLV35DzSH/4LmKoZgG7T9y1zOMDRo4X3Mic5rTqTVGlVaD+Rw58RbJeUaE6f6hzJJH9OIX+dGcI6keokB1j1Iy6214gwtKMlaMDegCJabZ+DjGMQkvh44DgwbY5yqUAqQIvnWVPRY1KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783612020; c=relaxed/simple;
-	bh=rpTPAQO8B2j0SuxiCO2nTIwL6jv0aW/9C/ORSgLsHNU=;
+	s=arc-20240116; t=1783612230; c=relaxed/simple;
+	bh=p61JnNmORJCAS5qpy197F3v+UJ8Cus4bOe/jeDUJJKg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mHjzCuYtWkwWXGNSnv3NYkjTlQEytM5cnzLC/dk9+q3z7NeN/zRMC6UT3HOvW5/7udkHo57I82nqfhl1w3A1/1pL1m9InGYTDjdOz8NWGfA3RE5PEJi1HbGRv8+ZNuQ0wFs8OnEHPBVH4fH7z4uDGIePSCNWXBfU8RM3SnO1JAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muERIO6C; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MPodqHoR+k2cbiQasNptniGqP0J0ak1R2OsF+tyjBYKdYbyrtu73N/tV9gX9153qnEauQTr/RyTrCTFXVFMudzCT4eD9p3SVvcaOiK1HE5mVU6iRANd3E2f6FHfR4FZUZz1NL4hgb13jPTCGqcyPqf6ktJ91ML0W9Sr6zg4sOp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MJRZckMR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muERIO6C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 522331F000E9;
-	Thu,  9 Jul 2026 15:46:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MJRZckMR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEBDF1F000E9;
+	Thu,  9 Jul 2026 15:50:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783612019;
-	bh=hia3ZzYxJbVWfdQouoVfTdODNDb+brOfP3M+wdoFBgM=;
+	s=k20260515; t=1783612227;
+	bh=DnH83pvC0h4TUwGP2rKo4bDR733vXWJJf+PZeTxwNoA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=muERIO6CROCHEuaOf/YBVq8CSscsrqqNMR+wpAwAJuPhWeoTqNuRhb76dTzkEqXn7
-	 3m248FV4UZfrt9Zg7+RMrEBDIBRcjvWiXkwv3Ta/2Cb8OiQt3ZNsjicd70hrp/uUz7
-	 650HEgUwfYjhHSp7TtXQy0UXnew89N8t0pxXNJO93SCz0DOR9YY5cJgwvoEXBQPX8u
-	 iRPYLhNgH8H7eeeP0ytdl20gMj9xltsGCRiquwJaKyATyoX3/cE+Ktw2zq0E1QssmQ
-	 N1+UaT2+KMd4fx8Sw2at1ISNrOglh1K+03Pm/vgDobKf+bHYqepaHnNdz/C2Gbdd+R
-	 CX+TIi1B7v6ew==
+	b=MJRZckMReQxWPGJ1m9AuSnP1BxB8pxTuokTP4bi1J+/qNQRSsdChVfkhF6kjISqKY
+	 en+3I6zj0c/vN3CXJMlfFoeAqI0io36ewFFtQILsoHWuApGqcNjUNCEnaqUHiGn/0P
+	 V70aPmpRNED+8UWiTAVI4uOtpsh6ykKnhTyLOUmnwUzMad6So9CWPoEP3t3vc/fV6m
+	 6AavjiWpd104AdSoG4W24BgUyhutaXeisxKX3L0yIEe6rLFIv37L8/nQDyE6EhzHla
+	 8G3j40oU0oZatCUrqyWX+ljX7Wv/RUhxX9M0UEKiujnp9HpJ5XxrGFWFigVBMSTjqy
+	 /qgZiwqQQAlUQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 08/10] dmaengine: dw-edma: Use common
- dw_edma_core_start() for both eDMA and HDMA
+Subject: Re: [PATCH v5 07/10] dmaengine: dw-edma: Add non_ll_start()
+ callback
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Frank.Li@oss.nxp.com
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev
-In-Reply-To: <20260709-edma_ll-v5-8-e199053d4300@nxp.com>
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
+In-Reply-To: <20260709-edma_ll-v5-7-e199053d4300@nxp.com>
 References: <20260709-edma_ll-v5-0-e199053d4300@nxp.com>
- <20260709-edma_ll-v5-8-e199053d4300@nxp.com>
+ <20260709-edma_ll-v5-7-e199053d4300@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 15:46:58 +0000
-Message-Id: <20260709154659.522331F000E9@smtp.kernel.org>
+Date: Thu, 09 Jul 2026 15:50:26 +0000
+Message-Id: <20260709155026.BEBDF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,68 +49,79 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Race condition and lockdep violation in dw_edma_device_resume via =
-lockless virt-dma list access
+- [High] Missing spinlock in dw_edma_device_resume leads to list corruption=
+ and double-free vulnerabilities.
 --
 
---- Patch [8]: [PATCH v5 08/10] dmaengine: dw-edma: Use common dw_edma_core=
-_start() for both eDMA and HDMA ---
-commit bffbb7894cff6d55d1d7037fe698320bf5288b87
+--- Patch [7]: [PATCH v5 07/10] dmaengine: dw-edma: Add non_ll_start() call=
+back ---
+commit ea651917c2d3298c559360685146e9b6a9ee99c3
 Author: Frank Li <Frank.Li@nxp.com>
 
-dmaengine: dw-edma: Use common dw_edma_core_start() for both eDMA and HDMA
+dmaengine: dw-edma: Add non_ll_start() callback
+   =20
+Add a non_ll_start() callback and move the common non-linked-list channel
+handling into the EDMA core so it can be shared by both the EDMA and HDMA.
+Prepare for the upcoming reorganization of the burst and chunk structures.
 
-This patch consolidates the eDMA and HDMA start routines by introducing a
-common dw_edma_core_start() function. It removes the now-redundant start
-callbacks from the eDMA and HDMA core structures.
-
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
-edma-core.c
-> index 2652ad8e7a8f6..f52d9fd18e573 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-=
+edma-core.h
+> index bab4d49c92feb..e18d6e827c2c9 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.h
+> +++ b/drivers/dma/dw-edma/dw-edma-core.h
 
 [ ... ]
 
-> @@ -183,7 +211,7 @@ static int dw_edma_start_transfer(struct dw_edma_chan=
- *chan)
->  	if (!child)
->  		return 0;
-> =20
-> -	dw_edma_core_start(dw, child, !desc->xfer_sz);
-> +	dw_edma_core_start(child, !desc->xfer_sz);
+> @@ -201,7 +202,16 @@ dw_edma_core_handle_int(struct dw_edma_irq *dw_irq, =
+enum dw_edma_dir dir,
+>  static inline
+>  void dw_edma_core_start(struct dw_edma *dw, struct dw_edma_chunk *chunk,=
+ bool first)
+>  {
+> -	dw->core->start(chunk, first);
+> +	if (chunk->chan->non_ll) {
+> +		struct dw_edma_burst *child;
+> +
+> +		child =3D list_first_entry_or_null(&chunk->burst->list,
+> +						 struct dw_edma_burst, list);
+> +		if (child)
+> +			dw->core->non_ll_start(chunk->chan, child);
 
 [Severity: High]
-This is a pre-existing issue, but can this lead to a race condition and
-lockdep splat when called from dw_edma_device_resume()?
+This isn't a bug introduced by this patch, but does dw_edma_device_resume()
+safely call dw_edma_start_transfer() without holding the virtual channel
+spinlock (chan->vc.lock)?
 
-When the client driver calls dmaengine_resume(), it reaches
-dw_edma_device_resume(). This function evaluates if the channel is paused,
-and calls dw_edma_start_transfer() without acquiring chan->vc.lock:
+In drivers/dma/dw-edma/dw-edma-core.c:
 
-drivers/dma/dw-edma/dw-edma-core.c:dw_edma_device_resume() {
-	...
-	} else {
-		chan->status =3D EDMA_ST_BUSY;
-		dw_edma_start_transfer(chan);
-	}
-}
+dw_edma_device_resume()
+    chan->status =3D EDMA_ST_BUSY;
+    dw_edma_start_transfer(chan);
 
-Inside dw_edma_start_transfer(), vchan_next_desc() is called, which
-immediately trips lockdep_assert_held(&vc->lock).=20
+When dw_edma_start_transfer() executes, it starts the hardware and then fre=
+es
+the chunk descriptor:
 
-If an in-flight or delayed interrupt triggers dw_edma_done_interrupt()
-concurrently, both paths may execute dw_edma_start_transfer() simultaneously
-on the same descriptor, which could result in double list_del() and kfree()
-on the chunk.
+dw_edma_start_transfer()
+    dw_edma_core_start(dw, child, !desc->xfer_sz);
+    desc->xfer_sz +=3D child->xfer_sz;
+    dw_edma_free_burst(child);
+    list_del(&child->list);
+    kfree(child);
 
-Should dw_edma_device_resume() take the chan->vc.lock before calling
-dw_edma_start_transfer()?
+Since hardware is started before the descriptor is safely removed from
+the list and freed, and no lock is held during resume, could the hardware
+complete the transfer and fire an interrupt immediately?
 
->  	desc->xfer_sz +=3D child->xfer_sz;
->  	dw_edma_free_burst(child);
->  	list_del(&child->list);
+This would cause the interrupt handler (dw_edma_done_interrupt) to acquire
+the spinlock and concurrently process the same chunk, leading to list
+corruption and a double-free on the descriptor memory.
+
+> +	} else {
+> +		dw->core->start(chunk, first);
+> +	}
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709-edma_ll-v5=
--0-e199053d4300@nxp.com?part=3D8
+-0-e199053d4300@nxp.com?part=3D7
