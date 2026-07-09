@@ -1,90 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585F5423A83;
-	Thu,  9 Jul 2026 12:41:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B6501A0BF1;
+	Thu,  9 Jul 2026 12:42:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783600905; cv=none; b=h0ebnFZrhDNUpa2IfR0Rjm9kc7J06vpeA23dijwYRHm9jBYtOIr3+DOd7R5zeFzwNxfcx+xNjaZ1/db8lk1h+3SsXocOqJ8WhT019RFIwGBsx5vsFR9BQjQ9MchNQVbM5J+2ieyM4UAxDPqE1cnH87IyVbhTehFpfJJY+JSNcz4=
+	t=1783600923; cv=none; b=Ewj8dpcItj1g37sJ30/E5YNyr6PF3thlydETTXEyWK+SgsNTHEgaHvdD/+5+EYp2Aa6OdqXhugxxnsuAxWzh0qGLEQgTfK92fmNe5XbZhZ79o5n35L27bboXpvLfSrEu0b3cxVvf6h5LUkcn/b2mpQEP6V5+33avHPBZF4X3z1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783600905; c=relaxed/simple;
-	bh=LvE5Bv+Q9Kb3QhOwyuRjRXb/JhFAVTspcyRqZ8jaZaA=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pyDW3kiWtDIp2GcgdxU7svO9HmMjZ922bDRejtstw1bQGB9oNkvc6QzOJk4dKQZCBiVyIiEC4oj+JzSosFlbVEaoX5KEL+LA4uHgdzNcdzlwaS8LSHX8Nq40KxwuSHM8zcg5H5SMD0qokSbYlWBEKOCtzqGYnyDimdlQe8R4CRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xzjy5hPy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783600923; c=relaxed/simple;
+	bh=2MCe7VGg9C5eHcivd6H/L/FitdOf5Z7bQBysBSZUxNI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kZiNzvJO5mKQd4IT1xvrfCEYGmeXFaWnKjAM2ET09jtkp65zBymE0umHpC71AemBDKQ978gky8aXC3xRnQLHUBBm1UjzmUGFWvkfaegvak8U6gMPBCjf5FUlS2yKSUhB9y4z87HQ7i5X5n8ZFtrNXqmxAn3wwbaajBWOKjuYavs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V6Zu/moV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xzjy5hPy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E90C01F000E9;
-	Thu,  9 Jul 2026 12:41:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V6Zu/moV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D03BB1F000E9;
+	Thu,  9 Jul 2026 12:41:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783600904;
-	bh=WQqtsvZ3BMfepcYWgRcnRUjPPP25Gh+uDRBYwRXYJWE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Xzjy5hPyo2DjQhrnPLTIzPPYdMyyaV7ZD45/nq1TbE60yWbX/IIB0ild2cKXv5CD+
-	 omiPZc+Fjr8HR7CNhBGhSnuUhyEZBmnSAL03WO8W/K/4O1G8U3Y98cDqkD6cJb6GL9
-	 0UhM+8nWfaisUyai710fHlLO5QNWvvMlQVtIsL50BuvG1aSdoiKqSfa+rtVbITJmo0
-	 prZYGStsyMBKoiyMSzXo/+qM6nj/wW7pCI46zNcGD41ieo0wTPUvgH3ROsJ+PGYya2
-	 u9HM1jyNGc/S+KOLm45XYmTi/mcBHMmb9W26tP6nOdMyYvzqkGnYsLRs+pHAU6/QeS
-	 fvDoBTX9su/Tg==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=lobster-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1who4T-00000003H2e-1Npk;
-	Thu, 09 Jul 2026 12:41:41 +0000
-Date: Thu, 09 Jul 2026 13:43:26 +0100
-Message-ID: <87v7ao5o5t.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
+	s=k20260515; t=1783600921;
+	bh=wUBlcEnGApt/7Mw66KcgTZ0NsDullSXiDqZImdqYWzI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=V6Zu/moVwwHFxIa4gm4Zz4rPu8o1umr1KjhPuYvfpRLTRGb6BufJQB4IdPCXCaviJ
+	 UF7JzVSuiDP91dTU2vbj5JGzg8vACiiqi/0aZ+a6Sgub9oS20DzsajelCtk0EPZJyX
+	 6zVikU6GJIwbY34RGJyotbcXCMhyHtcpUaRE3a/xUbsPJKYeG06Nj2Tzek/U4ToyM2
+	 yRyLh7GXzbt+0mgjpiSlfU9I1z8Q2PuUU6AdAGdULocfMaHTxje0r7GPdoG1ocuX9m
+	 jza0pNn5wRPE395q4eLOBJkH7a7XCFlgMWqV0GJmeKVqf23q00WZnm7RNgLWl7q8dz
+	 Ax0roqnXc4Uig==
+Date: Thu, 9 Jul 2026 14:41:50 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
 To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,	linux-pci@vger.kernel.org,
-	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Bjorn
- Helgaas <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,	Geert Uytterhoeven
- <geert+renesas@glider.be>,	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
 Subject: Re: [PATCH v4 0/5] PCI: rcar-gen4: irqchip/gic-v3: Handle GIC ITS
-In-Reply-To: <c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
+Message-ID: <c6btcryv3ziapzdktqqxd7ucrlt42omlqfhduld2snzqlxdj4y@spvm4or5eacb>
 References: <20260707203743.88299-1-marek.vasut+renesas@mailbox.org>
-	<ybnitlgx3dcqsesubz6jz7pn6snseuxhtz564tinbtvukianaq@33ubmcynyqmt>
-	<c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+ <ybnitlgx3dcqsesubz6jz7pn6snseuxhtz564tinbtvukianaq@33ubmcynyqmt>
+ <c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut@mailbox.org, mani@kernel.org, linux-pci@vger.kernel.org, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, robh@kernel.org, yoshihiro.shimoda.uh@renesas.com, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c12941e4-3715-404e-b674-090c62b868b8@mailbox.org>
 
-On Thu, 09 Jul 2026 13:33:22 +0100,
-Marek Vasut <marek.vasut@mailbox.org> wrote:
-> 
+On Thu, Jul 09, 2026 at 02:33:22PM +0200, Marek Vasut wrote:
 > On 7/9/26 2:19 PM, Manivannan Sadhasivam wrote:
 > > On Tue, Jul 07, 2026 at 10:35:38PM +0200, Marek Vasut wrote:
-> >> Configure all R-Car Gen4 PCIe controller MSI registers fully, both in
-> >> case MSI are enabled and disabled.
-> >> 
-> >> Patch GIC ITS driver and add quirks for R-Car Gen4 GIC ITS, which is
-> >> configured to 32-bit address width for AXI or APB interface.
-> >> 
-> >> Switch R-Car V4H to use GIC ITS in its DT and describe the GIC ITS
-> >> implementation cacheable and shareable limitations.
-> >> 
-> >> Marek Vasut (5):
-> >>    PCI: dwc: Determine whether iMSI is used before calling .init
-> >>    PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
-> >>    irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
-> >>    irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+> > > Configure all R-Car Gen4 PCIe controller MSI registers fully, both in
+> > > case MSI are enabled and disabled.
+> > > 
+> > > Patch GIC ITS driver and add quirks for R-Car Gen4 GIC ITS, which is
+> > > configured to 32-bit address width for AXI or APB interface.
+> > > 
+> > > Switch R-Car V4H to use GIC ITS in its DT and describe the GIC ITS
+> > > implementation cacheable and shareable limitations.
+> > > 
+> > > Marek Vasut (5):
+> > >    PCI: dwc: Determine whether iMSI is used before calling .init
+> > >    PCI: rcar-gen4: Configure AXIINTC if iMSI-RX not used
+> > >    irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
+> > >    irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
 > > 
 > > Is there a functional dependency between irqchip and PCI patches? Since the
 > > irqchip patches touch ARM64 Kconfig etc... I'm wondering if it still need to go
@@ -99,23 +83,17 @@ Marek Vasut <marek.vasut@mailbox.org> wrote:
 >   irqchip/gic-v3: Refactor GIC600 limited to 32bit PA erratum handling
 >   irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
 > 
-> This one does yes depend on the two and two patches above, and can
-> only be applied once all four aforementioned patches land, otherwise
-> things really yes will break:
+> This one does yes depend on the two and two patches above, and can only be
+> applied once all four aforementioned patches land, otherwise things really
+> yes will break:
 >   arm64: dts: renesas: r8a779g0: Add GICv3 ITS and update PCIe nodes
 > 
-> Would you like me to split the series up , or can you and Marc (?)
-> pick the relevant parts via matching trees ?
+> Would you like me to split the series up , or can you and Marc (?) pick the
+> relevant parts via matching trees ?
 
-I don't think there's anything for me to pick. The whole thing looks
-like a consistent set, and it probably should be kept together.
+I'll merge the PCI patches and it is Thomas who can merge irqchips ones.
 
-Given that the irqchip stuff has been acked by the relevant party, and
-that the last patch will cause havoc if taken on its own, the only
-course of action is to route the whole thing together, the PCI tree
-being the most obvious victim.
-
-	M.
+- Mani
 
 -- 
-Jazz isn't dead. It just smells funny.
+மணிவண்ணன் சதாசிவம்
