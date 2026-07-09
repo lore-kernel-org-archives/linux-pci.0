@@ -1,40 +1,40 @@
-Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
+Received: from mout.web.de (mout.web.de [212.227.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6504E3AEF28;
-	Thu,  9 Jul 2026 11:29:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48763F99E3;
+	Thu,  9 Jul 2026 11:33:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783596552; cv=none; b=G37pENR2fJNdING6naYEfMvQ1ZNnwIBB2TlvfyIlegj65dD8S3eTnko+4DjqlT4VWj3VpAkfD5RuTEsWHuadiG24zHho5VXJiKIQsDtsdyLRmT9M2tNEoYE7MMSFpn3408clhKbjanEE9eaHU2kvQk5z9LXcsZgbfvi1lHuEOqU=
+	t=1783596818; cv=none; b=MQM+8mHQT4l4gfUwCE6PHK+IVPlmosUgsGCG5RYeduQ69vJJYU7aXjU8neLsp324kKka9NGNBkYBYHuIINlvPklc6FE+h83khqr6yKYkRnK98jn4PWFNnhJOU94TEFHXHZ6XOS0EhlcwJP6vyd63xf+fgcihYFWf8EgjqHIt0RM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783596552; c=relaxed/simple;
-	bh=dttovKsgdTALzqG14NOlTJ3K28IDuY7UhJ3GCItvNos=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=PcLD/PgdUdV8OXUSsvCILy8Y0+XDXSgjJVlYkFwUzIImrE3jE+llJkmdrzhuHzx+QH186+0DnuGvOda34v1S7VaJoqE0RbhXULo/9b7qUv3s4MVyZ7wes1ADzLn0EZji6Fti+rchM3UAt7iFnfZLTk0rSWXX0TOrY9aCIGqIkwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=y7E4zTJr; arc=none smtp.client-ip=113.46.200.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1783596818; c=relaxed/simple;
+	bh=3u1eCIMC61U1iunia4gabiq+oDAXttkxAv6ATOhWy2A=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=lq+Cm6NJKvsaLybeDhHp7B79qoER8sWa035s9+6wXFWjnpd6+/JSAP5FcxZZUGS66eIUamQ/Ad1eWjMogts2dQ4GaP1NZ7bisLkGoedIVTJxMIGqGYH+j8r+AMRXqtXGMo12Tbox35HOLUDhRoMhGEZr8UtkTJWTifaa5B7Yc0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=ApEx2uWT; arc=none smtp.client-ip=212.227.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="y7E4zTJr"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=4rDJ1Q0UgWNKtTD6noBVDj+2dWCi8Wn40ibvakeVnc0=;
-	b=y7E4zTJr8GBw6EksgRAIRaMttITa7ZdV3A7LYA6wbyOHo0E2hGOZ8pQmG16BwlOSdH64MLIp9
-	DNi4bZ5jI16Kp+vMmB8VZ87U7sNysbTaGtsmuUdHIJaFjVrGN5klLfN/OQ5Kbk2xi+qTXZqwFQF
-	bdXjdbxbfOfdDACQ7w7la4E=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4gwsvX1vJyzpStn;
-	Thu,  9 Jul 2026 19:20:24 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5FD5B4057A;
-	Thu,  9 Jul 2026 19:29:06 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 9 Jul 2026 19:29:05 +0800
-Message-ID: <8c5c1be5-6ffa-4aef-a644-19f3be732bd0@huawei.com>
-Date: Thu, 9 Jul 2026 19:29:05 +0800
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="ApEx2uWT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1783596808; x=1784201608; i=markus.elfring@web.de;
+	bh=dU3V5lsCup//9g4z3abO31CvstIgXQ6vFr0DdAt97Vk=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=ApEx2uWT2md4Ljv7OHE2JGXqcbX/scE8BbdwHpueNt/FfjNRPd7zMo5xWTJ64KA+
+	 4HD4/CmpOpy4leFt00T+d515WIuTFPEkT8ol5X2FRuM6ttauJK91ZSjl47bKkq6mj
+	 0+Y4zx2epfB7tmTepLDGItLZQD/3SYGuWhpaXd6Y3Ok/+3d3YuV5apyTEn5kgLaO/
+	 NXKsDFrjTUD7AYIsr+O/ZafS9APq3ogw9k2o8D1ErXmD0DbcQeLCxORtZjRbNmc8s
+	 BW1FAN5znfDfut8cAqUK8pdpaSxhXmCD69ancM4JHm1reQCmZlpc2f56Pg6yeovPF
+	 pfy3VVHXnyvvnn828Q==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from client.hidden.invalid by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MVJRl-1wXA3L0Rrb-00RPky; Thu, 09
+ Jul 2026 13:33:28 +0200
+Message-ID: <eb695a2a-2e80-414c-91a1-3d7fa580c7ec@web.de>
+Date: Thu, 9 Jul 2026 13:33:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,182 +42,125 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 10/18] vfio/pci: Introduce tph policy parameter for
- staged TPH feature enablement
-To: Alex Williamson <alex@shazbot.org>
-CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
-	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
-	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-11-fengchengwen@huawei.com>
- <20260708173141.31aae027@shazbot.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260708173141.31aae027@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+To: Frank Li <Frank.Li@nxp.com>, dmaengine@vger.kernel.org,
+ linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, imx@lists.linux.dev,
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, Kees Cook
+ <kees@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Vinod Koul <vkoul@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Devendra Verma <devverma@amd.com>,
+ Koichiro Den <den@valinux.co.jp>
+References: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
+Subject: Re: [PATCH v4 00/10] dmaengine: dw-edma: flatten desc structions and
+ simple code
+Content-Language: en-GB, de-DE
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20260708-edma_ll-v4-0-cc128f0afb61@nxp.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:lazUhBIMmLzqNSbxN+eYaYB2AqlmNHAb516c8ebt3InwwhzLtrl
+ JOpmxNLhNl0IGmmgJGm4FIip5O7NhfW9Q72B3HqfOpbI6n9lkr37fMKSuMcllBOayHT34Ej
+ dWsUTUCocwfbqdOphT2+KXnImaUeXXrLj2zus2RjLoJRYfsnwi1MY8kdF38mq3HXujFwSmi
+ ecu9u0pPRgv56187FP8Gw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:+Sjfrk61JOk=;sgpjzjLoMopB1XcWzDVZmB7Gaex
+ 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
+ TZd1CGY3MxPtY0zsSGDpfPyMdP4=
 
-Hi Alex,
+=E2=80=A6
+> And reduce at least 2 times kzalloc() for each dma descriptor create.
+=E2=80=A6
 
-On 7/9/2026 7:31 AM, Alex Williamson wrote:
-> On Thu, 2 Jul 2026 20:42:16 +0800
-> Chengwen Feng <fengchengwen@huawei.com> wrote:
-> 
->> Add a module parameter 'tph' to implement staged TPH feature enabling
->> policy. The parameter accepts a value from 0 to 3 to progressively enable
->> TPH capabilities:
->>
->> 0 = No-ST mode: RESOLVE only returns PH for DMABUF source;
->>                 ST programming unavailable
->> 1 = Add IV mode: RESOLVE only returns PH for DMABUF source;
->>                  ST program supports NONE/DMABUF/CPU sources
->> 2 = Add DS mode: RESOLVE returns PH+ST for DMABUF/CPU sources;
->>                  ST program supports NONE/DMABUF/CPU sources
->> 3 = Add LITERAL: RESOLVE returns PH+ST for DMABUF/CPU sources;
->>                  ST program supports NONE/DMABUF/CPU/LITERAL sources
->>
->> This commit only adds parameter plumbing and state storage, no
->> functional TPH logic is introduced yet.
-> 
-> This adds module options for a feature that doesn't exist yet.  That's
-> the wrong ordering.  The module option is the only introspection that
-> the administrator has to the capabilities of the driver.
-> 
-> The intention of the proposal was also that support is added
-> incrementally, ie. "an incremental support path".
-> 
-> We should start with adding No-ST support to the driver, concluding
-> with the module parameter infrastructure that essentially advertises
-> the driver support on the host, 0 (default) is the only accepted value.
-> 
-> The next step would be incrementally revising the driver support to
-> include IV mode, concluding with exposing it and configuring it through
-> the driver option. Repeat for DS mode.  Repeat for LITERAL mode.
-> 
-> This is what allows us to decide where to stop in the implementation.
-> For example, we've designed LITERAL mode, but if no VMM intends to
-> support it, why implement it?
-> 
-> Also, this module option is being defined on vfio_pci.  Are we
-> intending that this is a feature that each variant driver would
-> opt-in to via their own module options?  LITERAL mode is incompatible
-> with migration, so it's possible each variant driver would define what
-> level of support they expose.  Thanks,
+How do you think about to use a summary phrase like =E2=80=9CFlatten destr=
+uctions
+and simplify code=E2=80=9D?
 
-Thanks for the clear feedback on module parameter ordering and variant driver
-concerns, I fully agree with your incremental implementation principle.
 
-First about patch ordering: It’s wrong to add full 0~3 policy plumbing ahead
-of corresponding functional logic, admins see param descriptions unmatched
-with actual driver capability. I will reorganize the series into incremental
-steps:
-1. Initial patch only implements No-ST(policy=0), param limited to 0 with
-   minimal MODULE_PARM_DESC only describing level 0;
-2. Separate follow-up patches add IV, DS, Literal mode one by one, each
-   extends param valid range and updates param description only after full
-   policy logic lands;
-If Literal mode turns out unnecessary for real VMM workloads later, we can
-stop at policy=2 without dead code or unused param documentation.
+=E2=80=A6
+> The finial goal is dymatic add DMA request when DMA running. =E2=80=A6
 
-Second, your question about variant drivers and migration conflict of Literal:
-Variant drivers refer to different vfio-pci derivatives built on vfio-pci-core.
-For this v7.3 version, we do not plan to support custom TPH policy control
-inside vendor variant drivers, the global tph module param in vfio-pci is the
-only official host-wide security baseline.
-We explicitly mark level 3(Literal) breaks live migration in param desc, users
-running migration workloads shall set tph <= 2.
+                     dynamic?
 
-I will drop this standalone module parameter patch and integrate param
-plumbing into incremental feature implementation patches for v20.
-
-Thanks
-
-> 
-> Alex
-> 
->  
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  drivers/vfio/pci/vfio_pci.c      | 25 +++++++++++++++++++++++++
->>  drivers/vfio/pci/vfio_pci_priv.h |  7 +++++++
->>  include/linux/vfio_pci_core.h    |  1 +
->>  3 files changed, 33 insertions(+)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index 830369ff878d..7ef82b445722 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -60,6 +60,28 @@ static bool disable_denylist;
->>  module_param(disable_denylist, bool, 0444);
->>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
->>  
->> +static unsigned int tph_policy;
->> +static int tph_set(const char *val, const struct kernel_param *kp)
->> +{
->> +	return param_set_uint_minmax(val, kp, VFIO_PCI_TPH_POLICY_NO_ST,
->> +				     VFIO_PCI_TPH_POLICY_LITERAL);
->> +}
->> +static const struct kernel_param_ops tph_param_ops = {
->> +	.set = tph_set,
->> +	.get = param_get_uint,
->> +};
->> +module_param_cb(tph, &tph_param_ops, &tph_policy, 0644);
->> +MODULE_PARM_DESC(tph,
->> +	"Global TPH policy level (0=default No-ST):\n"
->> +	"0 = No-ST mode: RESOLVE only returns PH for DMABUF source;\n"
->> +	"                ST programming unavailable\n"
->> +	"1 = Add IV mode: RESOLVE only returns PH for DMABUF source;\n"
->> +	"                 ST program supports NONE/DMABUF/CPU sources\n"
->> +	"2 = Add DS mode: RESOLVE returns PH+ST for DMABUF/CPU sources;\n"
->> +	"                 ST program supports NONE/DMABUF/CPU sources\n"
->> +	"3 = Add LITERAL: RESOLVE returns PH+ST for DMABUF/CPU sources;\n"
->> +	"                 ST program supports NONE/DMABUF/CPU/LITERAL sources\n");
->> +
->>  static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
->>  {
->>  	switch (pdev->vendor) {
->> @@ -142,6 +164,9 @@ static int vfio_pci_init_dev(struct vfio_device *core_vdev)
->>  #ifdef CONFIG_VFIO_PCI_VGA
->>  	vdev->disable_vga = disable_vga;
->>  #endif
->> +#ifdef CONFIG_PCIE_TPH
->> +	vdev->tph_policy = tph_policy;
->> +#endif
->>  
->>  	return vfio_pci_core_init_dev(core_vdev);
->>  }
->> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
->> index fca9d0dfac90..c997cc9bf330 100644
->> --- a/drivers/vfio/pci/vfio_pci_priv.h
->> +++ b/drivers/vfio/pci/vfio_pci_priv.h
->> @@ -11,6 +11,13 @@
->>  /* Cap maximum number of ioeventfds per device (arbitrary) */
->>  #define VFIO_PCI_IOEVENTFD_MAX		1000
->>  
->> +enum vfio_pci_tph_policy {
->> +	VFIO_PCI_TPH_POLICY_NO_ST = 0,
->> +	VFIO_PCI_TPH_POLICY_IV_ST = 1,
->> +	VFIO_PCI_TPH_POLICY_DS_ST = 2,
->> +	VFIO_PCI_TPH_POLICY_LITERAL = 3,
->> +};
->> +
->>  struct vfio_pci_ioeventfd {
->>  	struct list_head	next;
->>  	struct vfio_pci_core_device	*vdev;
->> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
->> index 9a1674c152aa..a0641286dd90 100644
->> --- a/include/linux/vfio_pci_core.h
->> +++ b/include/linux/vfio_pci_core.h
->> @@ -149,6 +149,7 @@ struct vfio_pci_core_device {
->>  	struct notifier_block	nb;
->>  	struct rw_semaphore	memory_lock;
->>  	struct list_head	dmabufs;
->> +	u8			tph_policy;
->>  };
->>  
->>  enum vfio_pci_io_width {
-> 
+Regards,
+Markus
 
