@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71FF225A354;
-	Thu,  9 Jul 2026 13:06:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EAF31DE894;
+	Thu,  9 Jul 2026 13:07:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783602416; cv=none; b=u4yvYj8wect81MBdPLZjj1wXgn3t4mljUYbtMFs6d0At1l63FhfD74fNnNcCRS/XocvCjmz6hrBKZCBEVUTBPUofwn3F0vVbGjQ0uuUlv22TGR2lwRFi5tn0T5xVY/0Ec+96O752pK5wC3Ek8nLkrmXIypn2p45vFdCAr0AUkdg=
+	t=1783602464; cv=none; b=MOlO66UFksan5CK+FMyUCVZVuQXt33R0iIDQGOgHHMR4xd8R1yjn9bypbsbNzk+E3g+tzecxA+k9Gpnx7jddniKBh9eOKEnXbf1yGf4Zvr8oaHWkF5Zadj9fme2M7eeKVIyRnKj4xoJkzaZtFRbrS5rR2GbvsJpFXPOc8Q5sQmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783602416; c=relaxed/simple;
-	bh=Dof8XhwYjSFqmcMhLA8ka9FKc3kOtS19iaB0epMgNho=;
+	s=arc-20240116; t=1783602464; c=relaxed/simple;
+	bh=l7f9vxaw2MdMxdoVP2gBg9wBZgo2IBmfeDUUscs5Q8A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cb2aH3hBL0ftbSEocvbToCwdWA9WyQNbQ1vUnTVecCVoeAEswuRhiG8BFm2yyu/uRuAhUNTMX+kGSRIGIRzrUzDM9NjBey7J/7SEwRbtufk2+I4UjPZDDtxFtcIZE8KBh/g2jbFnabxQ/WUM4Xi6FY2oFsCsGGYh7FA+Ql1IQYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cWeCNFvZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=IK+x1CFc7rGrUdqRpbDdZqYRvloDb+6teQBYpha5mKJ1XoqULNfDD0HhTFUFQG/m9jGfievKDfTDR8jBcbKisDAThIsaDdsWq3QIuWJGcegcCWOveESIfCLd0dF23YJTu8rC5mTkFmqnWFl2s6wPTydvch4mwdZlx7YyfwyRcxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g83wU/Hb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cWeCNFvZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5B0C1F000E9;
-	Thu,  9 Jul 2026 13:06:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g83wU/Hb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20E0C1F000E9;
+	Thu,  9 Jul 2026 13:07:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783602415;
-	bh=z6JSKq8c4C6JVKQqJp+bC2Msv4Dnv7XkGJWu/rV3OJw=;
+	s=k20260515; t=1783602462;
+	bh=cQaJMRNmmA1vl1WYQvth1d02HrNlNYAnM97zhsPLMJI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cWeCNFvZP8OeaOr/gLHsGq+E2lqITQPDNpDs1bNwIYjG4aDA9rYKqC6z2epF5raR8
-	 NyfsU5i8wq93jg4Un+Pxr3FbT0Oa6DZ9TV4gEd+nBu0XSkRSjF9XU4PoAJtMOQvRVY
-	 buB6Oi5P9BMpAAqGSzFEQZPLnlEhCgryYFAemmnlbWbsKUhPJOHO36AIZGMbLU1Si8
-	 LEqK360T9wT59rSOym0aCgfeFBapZ2cj53Rz0F5uEJptvBH/PdYSbLnJbm5SXx5g+f
-	 7+dHE8yy96KiRVExaBq4xnUO7G59yye5D4b20VSIrTyZLDD2l4etFrGrw97xlE78VZ
-	 joM/OyxPNqyrw==
-Date: Thu, 9 Jul 2026 15:06:39 +0200
+	b=g83wU/Hb/QrgoIckaMqewBdKWR0h6zKJeKsBzscO0h26F2vUPQXTvBejAyao7hq66
+	 0Q3C2dH7goBXe8AaPIxQfvN8HAuBmJ3z7+qvargLuPO1P5bUyi9prtXgTDE1tPEyeZ
+	 xdyYVf30OQJLtkdul8jhh3pqtvGo62LLmwudIAbwNIZxmhYKV7xw+axFvQ1bV/iGg0
+	 bp/vKgksKVO3h8M3e9dYzD6j+QYKelzVYkJUeQTqsAbedtwrgWBd1zv/cSfIuvGtz6
+	 0AOpA0UNf2bAM4JwkSg7AEtxOoG+kdZBnfsoOcsVz6cBju/u6/oDy6rP/gIC8nnsko
+	 zMf+rzl7LCoGA==
+Date: Thu, 9 Jul 2026 15:07:23 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
 	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
 	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
 	Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v2 1/2] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E
- key connector
-Message-ID: <ze7dfikl7kzz3ovenrpjw62obimwgxwwvlycwoebgx4ify3e46@dnvp4olbatbh>
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] arm64: dts: qcom: eliza-evk: Add PCIe1 with
+ TC9563 PCIe switch
+Message-ID: <n4s25nftmn3ginddls4u3tpzabkgiotwzh4kws5s4jfppup36s@ccbfrrrqxihq>
 References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
- <20260708-eliza_evk-v2-1-c599246ceba1@oss.qualcomm.com>
+ <20260708-eliza_evk-v2-2-c599246ceba1@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,170 +48,170 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260708-eliza_evk-v2-1-c599246ceba1@oss.qualcomm.com>
+In-Reply-To: <20260708-eliza_evk-v2-2-c599246ceba1@oss.qualcomm.com>
 
-On Wed, Jul 08, 2026 at 11:47:16AM +0530, Krishna Chaitanya Chundru wrote:
-> The Eliza EVK board features an M.2 E key connector connected to PCIe0.
-> Enable the PCIe0 root port and its QMP PHY with the necessary RPMH
-> regulator supplies. The M.2 slot's 3.3V supply rail is GPIO-controlled
-> via a TCA9538 I/O expander on I2C4.
+On Wed, Jul 08, 2026 at 11:47:17AM +0530, Krishna Chaitanya Chundru wrote:
+> The Eliza EVK board connects PCIe1 (8GT/s x2) to a Toshiba TC9563
+> PCIe switch. Enable PCIe1 and its QMP PHY nodes.
 > 
-> The M.2 E key slot hosts a WLAN card connected over PCIe and a Bluetooth
-> device connected over UART. Model the connector using the
-> pcie-m2-e-connector binding, wiring the PCIe root port and UART5 for
-> the respective interfaces.
+> TC9563 uses I2C (at address 0x77 on I2C4) for its management interface.
 > 
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Override the base iommu-map with the expanded set covering all the
+> switch's downstream ports (0x1400-0x1408 SID range).
+> 
+> The TC9563 RESX# and PERST# are OR-ed internally to assert reset on the
+> switch. Use TC9563 RESX# pin via a TLMM GPIO and skip wiring PERST#
+> from the PCIe controller.
+> 
 > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-- Mani
-
 > ---
->  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 116 ++++++++++++++++++++++++++++++++
+>  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 112 ++++++++++++++++++++++++++++++++
 >  arch/arm64/boot/dts/qcom/eliza.dtsi     |   1 +
->  2 files changed, 117 insertions(+)
+>  2 files changed, 113 insertions(+)
 > 
 > diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> index e47b24f8b827..6d76715ccffb 100644
+> index 6d76715ccffb..e099b7c8c371 100644
 > --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
 > +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> @@ -11,6 +11,92 @@ aliases {
->  	chosen {
+> @@ -12,6 +12,26 @@ chosen {
 >  		stdout-path = "serial0:115200n8";
 >  	};
-> +
-> +	vreg_pcie_m_3p3: regulator-3p3 {
+>  
+> +	vreg_0p9: regulator-0v9 {
 > +		compatible = "regulator-fixed";
+> +		regulator-name = "VREG_0P9";
 > +
-> +		regulator-name = "vreg_3p3";
-> +		regulator-min-microvolt = <3300000>;
-> +		regulator-max-microvolt = <3300000>;
-> +
-> +		gpio = <&gpio_expander1 6 GPIO_ACTIVE_HIGH>;
-> +		enable-active-high;
+> +		regulator-min-microvolt = <900000>;
+> +		regulator-max-microvolt = <900000>;
+> +		regulator-always-on;
+> +		regulator-boot-on;
 > +	};
 > +
-> +	connector-0 {
-> +		compatible = "pcie-m2-e-connector";
-> +		vpcie3v3-supply = <&vreg_pcie_m_3p3>;
-> +		w-disable1-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
-> +		w-disable2-gpios = <&pm8550vs_g_gpios 4 GPIO_ACTIVE_HIGH>;
+> +	vreg_1p8: regulator-1v8 {
+> +		compatible = "regulator-fixed";
+> +		regulator-name = "VREG_1P8";
 > +
-> +		pinctrl-0 = <&m2_w_disable1>, <&m2_w_disable2>;
-> +		pinctrl-names = "default";
-> +
-> +		ports {
-> +			#address-cells = <1>;
-> +			#size-cells = <0>;
-> +
-> +			port@0 {
-> +				reg = <0>;
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +
-> +				m2_e_pcie_ep: endpoint@0 {
-> +					reg = <0>;
-> +					remote-endpoint = <&pcieport0_ep>;
-> +				};
-> +			};
-> +
-> +			port@3 {
-> +				reg = <3>;
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +
-> +				m2_e_uart_ep: endpoint@0 {
-> +					reg = <0>;
-> +					remote-endpoint = <&uart5_ep>;
-> +				};
-> +			};
-> +		};
+> +		regulator-min-microvolt = <1800000>;
+> +		regulator-max-microvolt = <1800000>;
+> +		regulator-always-on;
+> +		regulator-boot-on;
 > +	};
-> +};
 > +
-> +&i2c4 {
-> +	pinctrl-0 = <&qup_i2c4_data_clk>;
-> +	pinctrl-names = "default";
+>  	vreg_pcie_m_3p3: regulator-3p3 {
+>  		compatible = "regulator-fixed";
+>  
+> @@ -99,6 +119,98 @@ pcieport0_ep: endpoint {
+>  	};
+>  };
+>  
+> +&pcie1 {
+> +	iommu-map = <0x0 &apps_smmu 0x1400 0x1>,
+> +		    <0x100 &apps_smmu 0x1401 0x1>,
+> +		    <0x208 &apps_smmu 0x1402 0x1>,
+> +		    <0x210 &apps_smmu 0x1403 0x1>,
+> +		    <0x218 &apps_smmu 0x1404 0x1>,
+> +		    <0x300 &apps_smmu 0x1405 0x1>,
+> +		    <0x400 &apps_smmu 0x1406 0x1>,
+> +		    <0x500 &apps_smmu 0x1407 0x1>,
+> +		    <0x501 &apps_smmu 0x1408 0x1>;
 > +
-> +	clock-frequency = <400000>;
-> +
-> +	status = "okay";
-> +
-> +	gpio_expander1: gpio@3c {
-> +		compatible = "ti,tca9538";
-> +		#gpio-cells = <2>;
-> +		gpio-controller;
-> +		reg = <0x3c>;
-> +	};
-> +};
-> +
-> +&pcie0 {
 > +	status = "okay";
 > +};
 > +
-> +&pcie0_phy {
+> +&pcie1_phy {
 > +	vdda-phy-supply = <&vreg_l1k>;
 > +	vdda-pll-supply = <&vreg_l3k>;
 > +
 > +	status = "okay";
 > +};
 > +
-> +&pcie0port0 {
-> +	wake-gpios = <&tlmm 114 GPIO_ACTIVE_LOW>;
-> +	reset-gpios = <&tlmm 78 GPIO_ACTIVE_LOW>;
+> +&pcie1port0 {
+> +	wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
+
+No reset-gpios?
+
+- Mani
+
 > +
-> +	port {
-> +		pcieport0_ep: endpoint {
-> +			remote-endpoint = <&m2_e_pcie_ep>;
+> +	tc9563: pcie@0,0 {
+> +		compatible = "pci1179,0623";
+> +		reg = <0x10000 0x0 0x0 0x0 0x0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +
+> +		device_type = "pci";
+> +		ranges;
+> +		bus-range = <0x2 0xff>;
+> +
+> +		vddc-supply = <&vreg_0p9>;
+> +		vdd18-supply = <&vreg_1p8>;
+> +		vdd09-supply = <&vreg_0p9>;
+> +		vddio1-supply = <&vreg_1p8>;
+> +		vddio2-supply = <&vreg_1p8>;
+> +		vddio18-supply = <&vreg_1p8>;
+> +
+> +		i2c-parent = <&i2c4 0x77>;
+> +
+> +		resx-gpios = <&tlmm 54 GPIO_ACTIVE_LOW>;
+> +
+> +		pcie@1,0 {
+> +			reg = <0x20800 0x0 0x0 0x0 0x0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +
+> +			device_type = "pci";
+> +			ranges;
+> +			bus-range = <0x3 0xff>;
+> +		};
+> +
+> +		pcie@2,0 {
+> +			reg = <0x21000 0x0 0x0 0x0 0x0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +
+> +			device_type = "pci";
+> +			ranges;
+> +			bus-range = <0x4 0xff>;
+> +		};
+> +
+> +		pcie@3,0 {
+> +			reg = <0x21800 0x0 0x0 0x0 0x0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			ranges;
+> +			bus-range = <0x5 0xff>;
+> +
+> +			pci@0,0 {
+> +				reg = <0x50000 0x0 0x0 0x0 0x0>;
+> +				#address-cells = <3>;
+> +				#size-cells = <2>;
+> +				device_type = "pci";
+> +				ranges;
+> +			};
+> +
+> +			pci@0,1 {
+> +				reg = <0x50100 0x0 0x0 0x0 0x0>;
+> +				#address-cells = <3>;
+> +				#size-cells = <2>;
+> +				device_type = "pci";
+> +				ranges;
+> +			};
 > +		};
 > +	};
->  };
->  
+> +};
+> +
 >  &uart13 {
-> @@ -18,3 +104,33 @@ &uart13 {
+>  	compatible = "qcom,geni-debug-uart";
 >  
->  	status = "okay";
->  };
-> +
-> +&uart5 {
-> +	status = "okay";
-> +
-> +	port {
-> +		uart5_ep: endpoint {
-> +			remote-endpoint = <&m2_e_uart_ep>;
-> +		};
-> +	};
-> +};
-> +
-> +&pm8550vs_g_gpios {
-> +	m2_w_disable2: m2-w-disable2-state {
-> +		pins = "gpio4";
-> +		function = "normal";
-> +		input-disable;
-> +		output-enable;
-> +		bias-disable;
-> +		power-source = <2>;
-> +	};
-> +};
-> +
-> +&tlmm {
-> +	m2_w_disable1: m2-w-disable1-state {
-> +		pins = "gpio35";
-> +		function = "gpio";
-> +		drive-strength = <2>;
-> +		bias-pull-up;
-> +	};
-> +};
 > diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qcom/eliza.dtsi
-> index 7cfd242bc192..cce65e18f979 100644
+> index cce65e18f979..363cabc5f55c 100644
 > --- a/arch/arm64/boot/dts/qcom/eliza.dtsi
 > +++ b/arch/arm64/boot/dts/qcom/eliza.dtsi
-> @@ -1909,6 +1909,7 @@ opp-8000000-3 {
->  			};
+> @@ -2102,6 +2102,7 @@ opp-16000000-3 {
 >  
->  			pcie0port0: pcie@0 {
+>  			};
+>  			pcie1port0: pcie@0 {
 > +				compatible = "pciclass,0604";
 >  				device_type = "pci";
 >  				reg = <0x0 0x0 0x0 0x0 0x0>;
