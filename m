@@ -1,49 +1,49 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C72365A17;
-	Thu,  9 Jul 2026 07:16:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7B4395266;
+	Thu,  9 Jul 2026 07:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783581399; cv=none; b=Q/1rehyCuqR8GBoDae90c3MSgubm4CTjJjwwAaw1vMzekA0p43tgtz2f/t3D3tDagEVnx03DT0sNYl9IfnuliMvsc6R48evvTgPxCS6xa4uzneOawooJFytdU2wDgf5HUhEPOqkw45LZWQjkid4qBn/7/Ng25zaVKUAKEaLKCoU=
+	t=1783581688; cv=none; b=ktNATJRsSRubtyf9kUxqY+03kDUk6kllBJvSwPngBlTxl+XGxN1gVQRLmhkIdvFr73hQYxfHH39iVpxmnOD6a0TGx1HRpXebMnOkOxJI2h9gzGGJyi5pTlJELd6nzQONPIZ+XV3d90UafOOogNPINsA6ciBOpAybNC3EI7evQFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783581399; c=relaxed/simple;
-	bh=dvT1QZNOdjtOMYfMH1zYDVT1RPz7VJjAh7dTKE2ZvSM=;
+	s=arc-20240116; t=1783581688; c=relaxed/simple;
+	bh=5H4IhXLZzOH5Ha9ASFgpDI9HdBv56YUDrwZoMEH/IOo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uvMdkXm75b8X83imrZ0J4Uz6+Q6wxJvrus2vEw9MCHazR3rHYYmb8IueDmsA1QeJOxWADk2SFvxU20Ul1lsQIeHIIVgni5SJ6MwFE+RwAt/5EVaz3z61Huyvj+hGYw6O4ONP608KVpgeMxLwdTkA72n8Q3tVsLpiQdqkS5/4O50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IDiDsm7l; arc=none smtp.client-ip=192.198.163.13
+	 Content-Type:Content-Disposition:In-Reply-To; b=kAcceC6sVoAlaKAu4/ZIgTKWKLev7CaZ+yFYMKYhNegu+8jZJjDCH/JjpfYU43pstUeQrdLQK4Xk2MDeEkD6W1sZ3b1QVOwTua9RcUhpvXiLND3EXE5yqDe3McS6o2n5X32j/5+cmxpf7WYULCgfVyZWRkGyhu96SHIPOxZPeM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A0GL9i25; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IDiDsm7l"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A0GL9i25"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783581398; x=1815117398;
+  t=1783581687; x=1815117687;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=dvT1QZNOdjtOMYfMH1zYDVT1RPz7VJjAh7dTKE2ZvSM=;
-  b=IDiDsm7lOK922AKAkRXrMfCNeWhqnHA7PBzpGBgB/5nB8YpzQlZ9xrHU
-   V9uhoH4UIcJBBn8Azs2bogZRGWNg28oR1xhPvuh2O6/ff8Zoi76j8MVih
-   iLL56KhGzWgcL42VgEMSrWnEQ/VdI+HmtehciG/kdLxu7amL5LjTnYXow
-   iULW69lt5vAQdyZFFVchVNC+wHRCkZjTC7YZPaFxqDqZ+0NUMiVcNHv9+
-   vceqQLM34OgSCCW/nMV1W3wDSSPn7eyPVh8Dix7CsnPcXfnVZSI0d4py2
-   13qGZYcF0senIokauwFrFjRTTJka9CzRr/8XP9XF0lJgcKH2MX6+LK8CE
-   w==;
-X-CSE-ConnectionGUID: U6gYMbCdRQi7hITmmDnZmw==
-X-CSE-MsgGUID: OWbhHF1eRtqPDGlH+tR4AQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="86797425"
+  bh=5H4IhXLZzOH5Ha9ASFgpDI9HdBv56YUDrwZoMEH/IOo=;
+  b=A0GL9i25BCWVRckwgiNOcmczs2lNpnn+CHo/7SnOLHpZN35wV3QFpk9U
+   TqA5cPoQ6NJeyZXiGwkRiXfuLCzDt2v5ewb4vpLGx0ggRqJUJ5rdp9k6I
+   iTAtFmSO4qN3HddoI07nAKBUbZou4K8CwF5NJmQPB0nnbkYUhw/59Wb74
+   J8O0MtlcZ3Wxu26+5HfgZ+zMcn0QGpdPo6mqrn/UXrsFr7N/bPJhYhWeh
+   byTh3S2EjthH3sHh9Tz0ZqatDrvOmqSacAHnr4PTj2Su6SFA/GrzzJD8m
+   601JZOmPR3Ogt7vQYtGm6eKDbaaD/hgymj8RbenVK4x92kUr6HLh9OI/+
+   g==;
+X-CSE-ConnectionGUID: CiFzn1CCQ1uvOLaikcSHDQ==
+X-CSE-MsgGUID: eoJeBEZ/S/2kErAvmk/weg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="84367188"
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="86797425"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 00:16:37 -0700
-X-CSE-ConnectionGUID: rigr31JtQJ6eedVSCMiIKw==
-X-CSE-MsgGUID: KgjB/8nlRJSPDPGa3kZGXw==
+   d="scan'208";a="84367188"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 00:21:26 -0700
+X-CSE-ConnectionGUID: q4RcSDcZRd2GSX+oXmPy3g==
+X-CSE-MsgGUID: w8q0zeu0RTKucseODByeZg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="278894335"
+   d="scan'208";a="259412572"
 Received: from ettammin-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.235])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 00:16:31 -0700
-Date: Thu, 9 Jul 2026 10:16:28 +0300
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 00:21:20 -0700
+Date: Thu, 9 Jul 2026 10:21:18 +0300
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Inochi Amaoto <inochiama@gmail.com>
 Cc: Jingoo Han <jingoohan1@gmail.com>,
@@ -70,10 +70,11 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
 	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
 	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v4 2/6] PCI: spacemit-k1: Add multiple PHY handles support
-Message-ID: <ak9KzNFF26B0Kttz@ashevche-desk.local>
+Subject: Re: [PATCH v4 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
+ controller support
+Message-ID: <ak9L7k-_aivk1_Uu@ashevche-desk.local>
 References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-3-inochiama@gmail.com>
+ <20260709040027.958400-7-inochiama@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,125 +83,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260709040027.958400-3-inochiama@gmail.com>
+In-Reply-To: <20260709040027.958400-7-inochiama@gmail.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
  krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Jul 09, 2026 at 12:00:22PM +0800, Inochi Amaoto wrote:
-> The PCIe controller on Spacemit K3 may use multiple PHYs at the
-> same time. The feature is not support by the current driver.
-> So extend the PHY definition to support multiple PHY handles.
+On Thu, Jul 09, 2026 at 12:00:26PM +0800, Inochi Amaoto wrote:
+> The PCIe controller on Spacemit K3 is almost a standard Synopsys
+> DesignWare PCIe IP with extra link and reset control. Unlike
+> the PCIe controller on K1, this controller supports external MSI
+> interrupt controller and can use multiple PHYs at the same time.
+> 
+> Add driver to support PCIe controller on Spacemit K3 PCIe.
 
 ...
 
->  struct k1_pcie {
->  	struct dw_pcie pci;
->  	const struct k1_pcie_device_data *data;
-> -	struct phy *phy;
-> +	struct phy **phy;
+> +	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
+> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+> +			PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
+> +	usleep_range(1000, 2000);
 
-Should it be annotated by __counted_by_ptr() ?
+fsleep(1 * USEC_PER_MSEC)
 
-> +	unsigned int phy_count;
+> +	regmap_clear_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT);
+> +
+> +	msleep(PCIE_T_PVPERL_MS);
 
-Ah, you allocate much more memory than possible PHYs... Can you redesign and
-use the above annotation?
+If PCIE_T_PVPERL_MS is too small, msleep() maybe not a good choice,
+perhaps
 
->  	void __iomem *link;
->  	struct regmap *pmu;	/* Errors ignored; MMIO-backed regmap */
->  	u32 pmu_off;
-
->  }
+fsleep(PCIE_T_PVPERL_MS * USEC_PER_MSEC)
 
 ...
 
-> +static int k1_pcie_get_phy_handle(struct k1_pcie *k1, struct device_node *node)
-> +{
-> +	const struct k1_pcie_device_data *data = k1->data;
-> +	struct device *dev = k1->pci.dev;
-> +	unsigned int i;
-> +
-> +	k1->phy = devm_kmalloc_array(dev, data->max_phy_count,
-> +				     sizeof(*k1->phy), GFP_KERNEL);
-> +	if (!k1->phy)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < data->max_phy_count; i++) {
-> +		k1->phy[i] = devm_of_phy_get_by_index(dev, node, i);
+> +	val = u32_replace_bits(val, BIT(7),
+> +			       GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
 
-> +		if (IS_ERR(k1->phy[i])) {
-> +			if (PTR_ERR(k1->phy[i]) == -ENODEV)
-> +				break;
-> +
-> +			return PTR_ERR(k1->phy[i]);
-> +		}
-
-		if (PTR_ERR(k1->phy[i]) == -ENODEV)
-			break;
-		if (IS_ERR(k1->phy[i]))
-			return PTR_ERR(k1->phy[i]);
-
-
-> +	}
-
-> +	k1->phy_count = i;
-> +	if (k1->phy_count == 0)
-> +		return -EINVAL;
-> +
-> +	return 0;
-
-This doesn't seem correct to me, I would expect phy_count to be assigned only
-when it's valid. (Yes, perhaps 0 is the same as it was, but semantically it's
-different 0 in this case.)
-
-See also above. Do we have some PHY API that just counts provided PHYs?
-If not, that what you should probably add first, before this patch.
-
-> +}
-> +
-> +static int k1_pcie_enable_phy(struct k1_pcie *k1)
-> +{
-> +	unsigned int i;
-> +	int ret;
-> +
-> +	for (i = 0; i < k1->phy_count; i++) {
-> +		ret = phy_init(k1->phy[i]);
-> +		if (ret)
-> +			goto err_phy;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_phy:
-> +	while (i--)
-> +		phy_exit(k1->phy[i]);
-> +
-> +	return ret;
-> +}
+It's perfectly a single line.
 
 ...
 
-> static void k1_pcie_deinit(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct k1_pcie *k1 = to_k1_pcie(pci);
+>  static const struct of_device_id k1_pcie_of_match_table[] = {
+>  	{ .compatible = "spacemit,k1-pcie", .data = &k1_pcie_device_data},
+> +	{ .compatible = "spacemit,k3-pcie", .data = &k3_pcie_device_data},
 
-> +	int i;
->  
->  	/* Assert fundamental reset (drive PERST# low) */
->  	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
->  			PCIE_RC_PERST);
->  
-> -	phy_exit(k1->phy);
+Missed space.
 
-> +	for (i = 0; i < k1->phy_count; i++)
+>  	{ }
+>  };
 
-	for (unsigned int i = 0; i < k1->phy_count; i++)
-
-> +		phy_exit(k1->phy[i]);
->  
->  	k1_pcie_disable_resources(k1);
->  }
+I don't see (and haven't checked) the context, do you have
+MODULE_DEVICE_TABLE() for this?
 
 -- 
 With Best Regards,
