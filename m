@@ -1,277 +1,288 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010047.outbound.protection.outlook.com [52.101.69.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2514A282F35;
-	Thu,  9 Jul 2026 15:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783611144; cv=none; b=AkIyzK+8qzEQp3UhNZzdnj9wm7apIfYirwoUrJkUqQq2WQ3EuOXG2FSTdFvOTurNEpvakihn/I3Jm7/f/YCuKhEOk1lvxuVkhsQpfMSdnzMJy1BGCotBUanFEBDQyGQm5wZCpY+/Ep4GSUOKoW7u/RJX9H5HlhNagtlWAxkwdx8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783611144; c=relaxed/simple;
-	bh=hhQgk6MX+guE1jG0zCvEY1ZEHB5WbGIGGdBZWiGnziI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Oz6Pe0urUg04LpntWBjw0nPlngOHE7BJtFN6Skf8D287Ki3NT8JrEB9Cm1qPXwsvhd3UBo1gpQ5pnE81tAQWHjOa+dgCv0wee3OduYirDx9r8JlLR16pj+payqsqoPMFqcVWSXXduB43DxHqPulkK7JFnYY/ZuVputudRamDH4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kvY9BSPT; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4E436CDF3;
+	Thu,  9 Jul 2026 15:33:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783611225; cv=fail; b=ncM/eF+Ym0ReyHExna8YxetCEcbpxdOGY9XcOfbyDeyJZP16tV/udYMjczAnZxh7yDKaV/JKAqffi/eydZ1smQzQKOulevPP453++28Ia/CouRNoKS8AlHOt5Y0LE3RVUajTOL0cR6Rlm/gkyYSj2dAQr8fwDy/4F+roSVQimLk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783611225; c=relaxed/simple;
+	bh=0XK618ST1cu8mcAjZEcAcAttaixSifeH7PtCQEMfRUk=;
+	h=From:Subject:Date:Message-Id:Content-Type:To:Cc:MIME-Version; b=sGYhye2155Rm7dVSHiIbsWCvPQLAbbLoXpWh9Chh4Z/n8EIZ6W9juO+bg3h6H+L71KpAQgJA4MoNeBy0ifHU9gdK9svNH9TqXc8pZkrEzAlbHZggbJpEmbV3bZSIkgAnW1FTsQuJJHRjwqv8gr9qMBws/uG1896+MiIlgtzO5Vg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=kx1hS6jq; arc=fail smtp.client-ip=52.101.69.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kvY9BSPT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783611142; x=1815147142;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=hhQgk6MX+guE1jG0zCvEY1ZEHB5WbGIGGdBZWiGnziI=;
-  b=kvY9BSPTkWs/aW2RXw6MwVXRc8lFioaLTIlTRdsp8eMM5a0WS5KFzhlF
-   MYAV2rDLB/9JuQjuz6bggCG2z9tXuDcuLgwRQV+Z0fh2gkLHnDVyV8K8M
-   csPJJyknC52Id/2QBWG5bertpiFSb6qEtmwfUFXd1FZYQridOjmhtiTko
-   2+9xCgyhHnaGhjMfE3OfZhzUNtndDgu316S1GRi1abEccskY7ANCNyphk
-   0ftvS+p/p8O1dhtmKzyEA5R1VxgB0uV5/creazOHg56/RkM16tX9RAe/w
-   0VR9eepEa72BjiY5pwatliHtJ4lV9pC6ugjgvHcX1l7aRENwxELTjP1wP
-   A==;
-X-CSE-ConnectionGUID: oXKJ6aj7QZ6vKZAsydYk/g==
-X-CSE-MsgGUID: OBom76p/Tw2cA2A5gSCw1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="95810448"
-X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="95810448"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 08:32:21 -0700
-X-CSE-ConnectionGUID: c6wWqBt7T6yBBeDqTHqNWw==
-X-CSE-MsgGUID: TXN0B+QzTvScl8zXIoZZpA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="254124728"
-Received: from bradocaj-mobl.ger.corp.intel.com (HELO [10.125.111.142]) ([10.125.111.142])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jul 2026 08:32:20 -0700
-Message-ID: <da098c60-7258-47d1-925e-a8cb48741366@intel.com>
-Date: Thu, 9 Jul 2026 08:32:19 -0700
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="kx1hS6jq"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VpNDQIMiwpg2obQu0HWJgl00wa8lxa6/yJehRMXOcQxvIH4dWZ47WzuISw+ha6T/V0+4Ijpeo1CzHNHWIetYkNBungomCPeZLY2Kx0RthvJ56R0hCFvRH3vmkiMr0G7qSeEzOMLetfCC0RSLCH+OYkZ4Tw9J0EHeThwps1s3opYjkynW4o/hw0ZTUjd15/fWCWyikA6eVxEMD0b7c0Rw7xDyk6rSr6VJV16AGbpIwIlOp0o79Y6vdxYx32uAlIyxI+gEWee0pJad2tbzGUR74K/DZsP3DYDpQzPFwk2ZsTkcHtq4stgHdybxy0CwG9X2gx+sNdzj60cIj+tD9U0CKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Rv+nEDhF+OVqfOGl0iATc5AFyFzhgGxkEjWmX35k3tk=;
+ b=eru0SEtTtao883eiHdSKJD4fzXZOuD+N10sLrIJH7NmcEd+v2D5VnlqFjc9xleJenKNfTxWguUUvHX4kzyLEem8SEcL1bSFnEkU7OLknDeL1XkD8CBcy4pOokiUuPMR4O54ZicjnWHCS7A3s5iAFz9MW2+xIbu9NhnfpX+yBsAErm4Rjq99hdFiWfz7CW1/igIrAK8TjkwZtZb/Ozxm2yNhSDPaQ/8RARj2NuHxJuGyXRIvEvPuepIKzlttaNQEfHjSAySP+TQfx9nAVQoXqVLJekmx1PR1g9xQDEbPrIQDiIfecdwODKBQq5JZC8BWq+9dyWwdzxfgMo//9RdPZMw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Rv+nEDhF+OVqfOGl0iATc5AFyFzhgGxkEjWmX35k3tk=;
+ b=kx1hS6jqtWmQdHZdJqEOSmYk/dm2HyJqrXj7Bgb5PBiF8N023tu4BSYoQINyN0rR+dGE5WwdvewrBLIJ62qpFPeJFa+mX/LDSVCobiEiV6kQQZNG7H4IgmByOVv0+GQibb39gxpK9d4FFxJKXCxkg/f1ueYuCw78w+pqjPkxfZhLD/SXSD5Y8+joR5WukMNufgufpdqp+FPmb+/RZbqdHiZwcpqqIAt6IsctbL0Pn7N6eRp8Ud18mH7+5bTkh6t9x4zLxLMFaT4RMrr1pevHmEhGbPC3mqoRP89yn+KFQ20vi/G3TEFVzrrpVPuiB40jjf5//aSJVjQdF4b9PE0JcA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by AM7PR04MB6968.eurprd04.prod.outlook.com (2603:10a6:20b:dc::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.15; Thu, 9 Jul
+ 2026 15:33:38 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0159.007; Thu, 9 Jul 2026
+ 15:33:37 +0000
+From: Frank.Li@oss.nxp.com
+Subject: [PATCH v5 00/10] dmaengine: dw-edma: flatten desc structions and
+ simplify code
+Date: Thu, 09 Jul 2026 11:33:29 -0400
+Message-Id: <20260709-edma_ll-v5-0-e199053d4300@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAEm/T2oC/1XNQQrCMBCF4atI1kZmJmmSuvIeIpJOEw1oK60Up
+ fTupoJWl2/I92cUfehS6MV2NYouDKlPbZNHsV4JPvvmFGSq8xYEVCAhylBf/fFykVCCrjy4MgK
+ K/PrWhZge79L+kPc59fe2e77DA87XT4O+jQElyMjOqLqMBXu1ax63DbdXMRcG+igDCOWiKKuCo
+ SJbERuj/5ValIWfv1RWzlrvtVFWA/8r/avconRWzEgugo+VwUVN0/QCnqXh2T4BAAA=
+X-Change-ID: 20251211-edma_ll-0904ba089f01
+To: Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
+ Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, 
+ Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-nvme@lists.infradead.org, Koichiro Den <den@valinux.co.jp>, 
+ imx@lists.linux.dev, "Verma, Devendra" <devverma@amd.com>, 
+ Frank Li <Frank.Li@nxp.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783611213; l=6631;
+ i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
+ bh=0XK618ST1cu8mcAjZEcAcAttaixSifeH7PtCQEMfRUk=;
+ b=7FRRcbn2A3WwoRvMZ8wmTuyJceLFfEXn2YwlGw6JP2g4l8oJ5OTyDJdf8p1vVNDblXw3PjlkF
+ OLbT6zA2GERCvKsYjgjHc5OME3mP400u0BQa3m5gzxGlCUXG9mgsl0u
+X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
+ pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
+X-ClientProxiedBy: SA1P222CA0066.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:2c1::21) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2
- devices
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>,
- "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
- Vikram Sethi <vsethi@nvidia.com>, Alex Williamson <alwilliamson@nvidia.com>,
- Dan Williams <danwilliams@nvidia.com>,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-References: <20260703220508.546528-1-smadhavan@nvidia.com>
- <fb9a53ea-2743-4e4c-b3b3-faa81dfac156@intel.com>
- <103e562b-1685-412f-adaa-679409818d7f@intel.com>
- <DS7PR12MB9474EE81286538A24E1C095CC3FE2@DS7PR12MB9474.namprd12.prod.outlook.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <DS7PR12MB9474EE81286538A24E1C095CC3FE2@DS7PR12MB9474.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|AM7PR04MB6968:EE_
+X-MS-Office365-Filtering-Correlation-Id: ea930080-3eed-4ee6-16a7-08deddcf7223
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|19092799006|376014|7416014|1800799024|921020|18002099003|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	N3uABp+mvk+km1QZzwlhW2HmznOU/GgObeYHEovi+25kqtdUgLgxNQnYDF4pLOTWyeST+fTY+zNCkZKjTH0P2+9NmWJ0vnVqWcwPUL7BYh7DyXJJgHHeYxn2Z01iWFSjwldhsc0/8uj6sjvG0J635E9u8dlZir65W5GQsQh16645NWtIHFcay/NjMqsiU3RT9R18u0CG4phiyRyZe6dyqjnjMj/XYAZmUicgNsfK6odrjPX+ZDnjaVNQ4L3IkMO82bFNMnfbfO0eWiEzxwcqiFqbinYsyj57s5Ww0VnLhXeHbymHPi9CHcmxYo7+IUtpKTPYbDxisNZHLoFgABtnalrk9GAiHYDcc9VXzapTuv/gqaA3PHfUWgFjS+YB7ZoJtpoilXSV0CSe+Q/ziGiRGeVaAAhBZDktHFJQoD08MTWbZCXw69gDx6FSe8H8wOATsIKWCVCWmFbu+bQ2Y1AQvzwMko8/Vf1ND/bHv0ByHo5Q5GWZgG0wfZPpJpE27l0XHR7DUorvIawZ1zIq9tSPcpVXP6r8hG3uwLU5phpYvVtkL1sAtGyaP8ZL796AOc2xnZGE0Q5GtRX0RVF32D1l6DyHs1RNtkUIPccY6zHxa+rHkSTULhFmT22n7bR9IzkInDOTL3jZ30TWI/JjTN+5QPgNrP9XA4eauEu4J7iiCfs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(19092799006)(376014)(7416014)(1800799024)(921020)(18002099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NTNQanNzOXU1VEp3VTJNSWRYQm9IejUzU3YyZWo2cXBTQmlJU1AyUnVjMUVi?=
+ =?utf-8?B?VVU4WmVOZCtPNjVFU0h3TnBJWEI0ZitvQkcvc1VlcERkeXd4dU04RU1Wbkdl?=
+ =?utf-8?B?STMzYndHbGtMOWJ5UkIzTmtCUXU0TGQ4MytYZDZkVk9EbjRGaFNML1UwaHUz?=
+ =?utf-8?B?ZjNrMzRtc2diMi9UZHR1ejBGSmpMd3YvZVRuOW9sWUYrK2lyakZzZlhEbE55?=
+ =?utf-8?B?SC9tQ09acXBaVmRlVFcrbUhXdktnS0VkQjB6TDVjK0RqcVpDUlE3TkNoRkdM?=
+ =?utf-8?B?N1RqWkxEaVNlUDdIMU1ZaWZiZ3lBRGdFM3VYUkdEOTEyV3BiVTl2WGxvNDVn?=
+ =?utf-8?B?a1BXNUlmcGRkamZmYStIQngyR2xKVGVRMFZUS2hNYmNEcVMxTEsyZlBaM2lr?=
+ =?utf-8?B?Wk5UdS9OYlpOSG9WQ2h3QU9zZGtvd3c3SXBPZXhBK2tpMUV3WDBwbVhEVnFQ?=
+ =?utf-8?B?U3ZDL3Y1QlV1M0JRdEdVbzRDNzNrY0JCRFY0UTVpL1JvRTRHeDR6azBmK0sr?=
+ =?utf-8?B?U1U3T1Rvb0krVzhjRGRNYjJqTlordEwreWNCUTdHVC9tQS84TDVXOGI0bjg4?=
+ =?utf-8?B?REZWZDBtWXZ0d2IybURpalVHbWIwdERUSTlleFB0RGkrRk83anl0cGZiU1FN?=
+ =?utf-8?B?NjEwOG5MVnRkRDM3MzhIdE9SbkR2TXpDUXhHNWlVNEdtdUsyRG0xTHp6OGlI?=
+ =?utf-8?B?eGdLd0FXTXd5TUc0OThNd0YyUnZrbXBtaGtHMWt6Ti9qV1Y5ZW40VWtVTUxw?=
+ =?utf-8?B?eUc2eVdYa2ZmNVFtV3ZRMzZFVGl6Nm0rOGQxOTdxMmRBOVl6NXRXckdaNHdk?=
+ =?utf-8?B?bnQ1eUFLZ29oNE05UGRVZmhha1U4a2Y3ZFRaaGp5amtXYVFqcnc4QnkyNEkx?=
+ =?utf-8?B?NVJCY3c2ZFR0ZFF5L0NDc204anNjTjdiRXlQMTA5VUZnUG9nT2FiY2hpdmor?=
+ =?utf-8?B?Slh2RDlLMllkUExyMmlveFRPSW5EMm5zM3VoVGZwYlhMeDFCUitkdUxrUGUy?=
+ =?utf-8?B?azI5Zm1jdXhYTDdmeXNVWjZoeEV3SExUVFNCWGNHTi9RS3dTMDl5eUVsVjd3?=
+ =?utf-8?B?TUg1amZET2MrMWJWWnhIby9FcVAxa01XWVZrRm8xVkd1dWxjdDdPbk1IWVkv?=
+ =?utf-8?B?YVVkeEhLejVqdDFHMk05REdnelZMbWVPckNRc21JRlFMNlFZbW9GUW1UdXpT?=
+ =?utf-8?B?R2ZvVG9vSGRhYkpRd3R4ZzEzZ3luOER3bjh2Nko2cmJENXVMbE13NHhzNkw3?=
+ =?utf-8?B?eGEzakpXMlpZdUlYT0RKWU1JaEE4NWE4Z1k4c3FSM3Bvek01bnlUUnErbGZV?=
+ =?utf-8?B?RWV6eWFVOWx4b1BHU3dkd3lld3QxTm50Nm9HMDhRanRXcTB0ZThDSys2K1Fn?=
+ =?utf-8?B?eTBTcllIa0xCTUpyOGE1NFlWTi82ZExHN05rbnBKU0tQK0FibDA0ejZ6S2NX?=
+ =?utf-8?B?M1kxZENHQUNqUHN0YWpEc2grTW13K2RUdDZJaVl1SG0rREZ2SmJ1bksxOS9r?=
+ =?utf-8?B?QVRCV2pKYzlaVUM5K2VhU0U3K1AzOUp6dGZzd1g1YXVXNEJaWW5jOWRTdmFw?=
+ =?utf-8?B?VzByZGp6U0FGcm5TZlluR3NtdDIrc3V5N0JVckxIT1hCTHkrbUl6MkpyLzhJ?=
+ =?utf-8?B?WkVycEUyeWhaTjlkS0tZaHhGVHlIU3F4T1gwZHR0R0xYMjFUUmx1dUl3UUVt?=
+ =?utf-8?B?Sk1mSTFpK21ud1pFN0VWbkpTNFU2ekpBTzVPajY4MTA5aGdHTVRDdzRWa1pP?=
+ =?utf-8?B?T3VQWW16QlVJaDB3ekJFbmt4U3BWTVB6cDNXVHRtRXBBODBSa0hpY0pMTGlD?=
+ =?utf-8?B?MnJGdXo1NVdDcFExbW9wb3IxQlpqU1U4MFRVK2RZa29FTWRuKzJLNnZEdWs2?=
+ =?utf-8?B?RzlQZkFYRmx3OHZQR3laUkNGTnZyMUVUWVcvMlNoMUt5TWhOWXh0SzU4Tmo2?=
+ =?utf-8?B?OVQzWVVVdCtDc2d0c29uMEZoOXhkbTZnaWtjenBWNWp4NFZXRGpJNUNyZDk4?=
+ =?utf-8?B?LzR3eXZNWG11MEE3REZnTW50VzUzQTByZDk4Ykx4NEd3OVJ4ZHZzL0NiVzRY?=
+ =?utf-8?B?SWd4QzUvenRJTlJoN29uUTkvbnFua1hJdWR6N0tqM1U4R25ySGszMjM2S0sy?=
+ =?utf-8?B?TDdXT3lwN2ZGbkt0SnNRU05PNy96b016bkZVUHpUa0ZESDZoOXFzRHBENU5B?=
+ =?utf-8?B?RmdOZ2JvMlJ5eWQxU2YyNlJuTk9WREtLTHFJTGdWZ28yTzdjcjZYNDg1M0d3?=
+ =?utf-8?B?bWhGYW5rQVY2ZDBOT0VyYVBWR05BQ2VDR0RYZzdVSFNGKzVXNHYzK3J0UHh3?=
+ =?utf-8?B?UW1JZlptbjhUcVpNRjRVOS9ibEJJOHl0SEhzZkYxZGNnZkMxMmt0dzBiNkNQ?=
+ =?utf-8?Q?EQluFIBoUrJ/1L7egzLiiNuGA3q7l0WJzATLJ?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ea930080-3eed-4ee6-16a7-08deddcf7223
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2026 15:33:37.8672
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9GrNCZNv24E7cpxS6rGOk8E2jYjCPgVR5150nJkrjpt0y4J2cULOqfhpCTlq8vueKp+jnZzFDqVivobMJNrnAzE7Cl/5oEh4LmqBhUAxAFo6Q1MUEozpcs9bVzTN4Tm9
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB6968
 
+Verma, Devendra:
+	Can you help check if block non-ll mode?
 
+Basic change
 
-On 7/8/26 5:34 PM, Srirangan Madhavan wrote:
->> BTW, can this be applied cleanly against a Linus rc tag? If so please do that next rev. I understand you need the type2 stuff for testing.
->> But preferably when posting, post it against a Linus tag if there are no symbol dependencies. I'd really like sashiko run a review through
->> it and currently it is not able to. Thank you.
-> 
-> Thanks Dave.  And sorry for that mixup of the RFC patch & the applicability issue.
-> 
->   I rebased the series onto v7.2-rc2, folded the cxl_bus HDM restore
->   follow-up into the same series as patch 11/11, and verified that b4 applies
->   the full series cleanly against that base. I'll send this as v9 (deferring other comments)
-> 
->   I do not have a public branch ready yet, but I can publish one if it would
->   still help review or testing.
+struct dw_edma_desc *desc
+       └─ chunk list
+            └─ burst list
 
-Thanks! That's typically helpful if the series has a lot of dependencies. If it applies cleanly to Linus RC then it's not as necessary.
+To
 
-DJ
+struct dw_edma_desc *desc
+            └─ burst[n]
 
-> 
-> ________________________________________
-> From: Dave Jiang <dave.jiang@intel.com>
-> Sent: Tuesday, July 7, 2026 3:45 PM
-> To: Srirangan Madhavan; Alison Schofield; Bjorn Helgaas; Dan Williams; Davidlohr Bueso; Ira Weiny; Jonathan Cameron; Vishal Verma; linux-cxl@vger.kernel.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> Cc: Alex Williamson; Vikram Sethi; Alex Williamson; Dan Williams; Sai Yashwanth Reddy Kancherla; Vishal Aslot; Manish Honap; Jiandi An; Richard Cheng; linux-tegra@vger.kernel.org
-> Subject: Re: [PATCH v8 00/10] PCI/CXL: Add CXL reset support for Type 2 devices
-> 
-> External email: Use caution opening links or attachments
-> 
-> 
-> On 7/6/26 4:13 PM, Dave Jiang wrote:
->>
->>
->> On 7/3/26 3:04 PM, Srirangan Madhavan wrote:
->>> Hi folks!
->>>
->>> This series adds CXL Reset support for CXL Type 2 devices through the
->>> existing PCI reset_method ABI. The reset sequence follows the CXL 4.0
->>> specification [1], including CXL.cache disable, optional cache
->>> writeback, CXL Reset initiation, ResetComplete polling, and ResetError
->>> reporting.
->>>
->>> The userspace ABI is the existing PCI reset interface:
->>>
->>>     /sys/bus/pci/devices/.../reset_method
->>>     /sys/bus/pci/devices/.../reset
->>>
->>> Userspace can select "cxl_reset" in reset_method and then trigger reset
->>> through the existing reset attribute.
->>>
->>> Following Dan's v6 feedback, this replaces the proposed memdev sysfs ABI
->>> with the existing PCI reset_method interface.
->>>
->>> v8 changes from v7 [2]:
->>> - Drop the PCI helper export patch.
->>> - Drop the multi-function sibling coordination patch. cxl_reset is only
->>>   exposed as a function-scoped reset method when the CXL reset scope is
->>>   limited to the target function.
->>> - Keep the reset-scope discovery needed to reject non-function-scoped
->>>   CXL resets.
->>> - Cache HDM location as BAR-relative metadata instead of keeping an
->>>   enum-time MMIO mapping.
->>> - Restore HDM through a temporary mapping based on the current BAR
->>>   assignment after PCI config state is restored.
->>> - Cache raw HDM decoder register state so uncommitted decoders can be
->>>   restored as uncommitted, while committed decoders are recommitted
->>>   through the normal HDM commit flow.
->>> - Share HDM decoder decode and validation between normal CXL core
->>>   enumeration and early PCI HDM caching.
->>> - Put cxl_reset ahead of FLR in reset_method priority because FLR does
->>>   not reset CXL.cache or CXL.mem protocol state.
->>>
->>> Motivation:
->>> -----------
->>> - Type 2 devices need a CXL-specific reset mechanism beyond existing PCI
->>>   reset methods.
->>>
->>> - FLR does not reset CXL.cache or CXL.mem protocol state. CXL Reset is
->>>   the architectural reset mechanism for those protocols.
->>>
->>> - The PCI reset_method ABI lets userspace select this narrower CXL reset
->>>   before falling back to broader bus reset methods.
->>>
->>> Change Description:
->>> -------------------
->>>
->>> Patch 1: cxl/hdm: Split decoder programming into a reusable helper
->>> - Move shared decoder settings to include/cxl/cxl.h.
->>> - Factor low-level HDM register programming into cxl_commit().
->>>
->>> Patch 2: cxl/hdm: Cache decoder settings on PCI devices
->>> - Cache CXL core HDM decoder settings in pci_dev->hdm.
->>> - Refresh the cache as decoders are enumerated, committed, or reset.
->>>
->>> Patch 3: cxl/hdm: Share HDM decoder decode logic
->>> - Share HDM decoder decode and validation between normal CXL core
->>>   enumeration and early PCI HDM cache setup.
->>>
->>> Patch 4: cxl/hdm: Cache endpoint decoder settings during PCI enumeration
->>> - Snapshot endpoint HDM state during PCI capability initialization.
->>> - Cache the HDM register locator as BAR-relative metadata.
->>> - Cache raw decoder register state in addition to committed decoder
->>>   settings.
->>>
->>> Patch 5: PCI/CXL: Add CXL Device Reset helper
->>> - Add the internal DVSEC reset sequence.
->>> - Disable CXL.cache, perform cache writeback where supported, initiate
->>>   CXL Reset, and wait for completion.
->>>
->>> Patch 6: PCI/CXL: Validate HDM ranges before CXL reset
->>> - Collect enabled cached HDM ranges.
->>> - Reject reset if affected ranges are busy.
->>> - Invalidate CPU caches when runtime cache-invalidation support is
->>>   available, otherwise continue after warning.
->>>
->>> Patch 7: PCI/CXL: Discover the CXL reset scope
->>> - Discover whether CXL Reset is function-scoped using the Non-CXL
->>>   Function Map and CXL cache/mem capability bits.
->>>
->>> Patch 8: cxl/pci: Restore CXL HDM state after PCI reset
->>> - Restore cached global and per-decoder HDM state after reset.
->>> - Re-map HDM registers from the current BAR assignment during restore.
->>> - Replay raw decoder state for uncommitted decoders and recommit
->>>   decoders that were committed before reset.
->>>
->>> Patch 9: PCI/CXL: Expose CXL Reset as a PCI reset method
->>> - Add "cxl_reset" to the PCI reset_method table for Type 2 reset-capable
->>>   CXL devices.
->>> - Prioritize cxl_reset ahead of FLR.
->>>
->>> Patch 10: Documentation/ABI: Document CXL Reset PCI reset method
->>> - Document the new reset_method value and reset behavior.
->>>
->>> The CPU cache invalidation step depends on
->>> cpu_cache_invalidate_memregion() support for the affected address ranges.
->>> If no runtime provider is available, the kernel emits a warning and
->>> continues after the affected HDM ranges have been reserved.
->>>
->>> Example:
->>>
->>>     echo cxl_reset > /sys/bus/pci/devices/0000:bb:dd.f/reset_method
->>>     echo 1 > /sys/bus/pci/devices/0000:bb:dd.f/reset
->>>
->>> Testing:
->>> - Ran 100 iterations of cxl_reset through the PCI reset sysfs ABI on a
->>>   CXL Type 2 device. All iterations completed successfully and
->>>   ResetComplete was observed.
->>> - Exercised cxl_bus reset separately with an add-on HDM restore patch.
->>>
->>> References:
->>> [1] https://computeexpresslink.org/wp-content/uploads/2026/02/CXL-Specification_rev4p0_ver1p0_2026February26_clean_evalcopy_v2.pdf
->>> [2] https://lore.kernel.org/linux-cxl/20260623032453.3404772-1-smadhavan@nvidia.com/
->>> [3] https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@nvidia.com/
->>>
->>> Srirangan Madhavan (10):
->>>   cxl/hdm: Split decoder programming into a reusable helper
->>>   cxl/hdm: Cache decoder settings on PCI devices
->>>   cxl/hdm: Share HDM decoder decode logic
->>>   cxl/hdm: Cache endpoint decoder settings during PCI enumeration
->>>   PCI/CXL: Add CXL Device Reset helper
->>>   PCI/CXL: Validate HDM ranges before CXL reset
->>>   PCI/CXL: Discover the CXL reset scope
->>>   cxl/pci: Restore CXL HDM state after PCI reset
->>>   PCI/CXL: Expose CXL Reset as a PCI reset method
->>>   Documentation/ABI: Document CXL Reset PCI reset method
->>>
->>>  Documentation/ABI/testing/sysfs-bus-pci |   14 +
->>>  drivers/cxl/Kconfig                     |    4 +
->>>  drivers/cxl/core/Makefile               |    2 +-
->>>  drivers/cxl/core/hdm.c                  |  257 ++---
->>>  drivers/cxl/core/region.c               |    6 +-
->>>  drivers/cxl/core/regs.c                 |    4 +
->>>  drivers/cxl/core/reset.c                | 1354 +++++++++++++++++++++++
->>>  drivers/cxl/cxl.h                       |   43 -
->>>  drivers/pci/pci.c                       |    2 +
->>>  drivers/pci/probe.c                     |    3 +
->>>  include/cxl/cxl.h                       |  102 +-
->>>  include/linux/pci.h                     |    8 +-
->>>  include/uapi/linux/pci_regs.h           |   15 +
->>>  tools/testing/cxl/test/cxl.c            |   10 +-
->>>  14 files changed, 1615 insertions(+), 209 deletions(-)
->>>  create mode 100644 drivers/cxl/core/reset.c
->>>
->>> base-commit: 90cf2e0d702c8a132ccbe72e7687f33c04c14658
->>
->>
->> Hi Srirangan,
->> I am not able to apply the patch series using b4 with the above base commit.
->> b4 picks up the last RFC patch as the first patch and fails to apply. However, skipping it b4 is still having trouble. Can you push a public git branch somewhere please? Also in the future the last RFC patch should be labeled 11/11. Thanks!
->>
-> 
-> BTW, can this be applied cleanly against a Linus rc tag? If so please do that next rev. I understand you need the type2 stuff for testing. But preferably when posting, post it against a Linus tag if there are no symbol dependencies. I'd really like sashiko run a review through it and currently it is not able to. Thank you.
-> 
+Flatten desc structions and simplify code.
+
+I only test eDMA part, not hardware test hdma part.
+
+The finial goal is dymatic add DMA request when DMA running. So needn't
+wait for irq for fetch next round DMA request.
+
+This work is neccesary to for dymatic DMA request appending.
+
+The post this part first to review and test firstly during working dymatic
+DMA part.
+
+performance is little bit better. Use NVME as EP function
+
+Before
+
+  Rnd read,    4KB,  QD=1, 1 job :  IOPS=6660, BW=26.0MiB/s (27.3MB/s)
+  Rnd read,    4KB, QD=32, 1 job :  IOPS=28.6k, BW=112MiB/s (117MB/s)
+  Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
+  Rnd read,  128KB,  QD=1, 1 job :  IOPS=914, BW=114MiB/s (120MB/s)
+  Rnd read,  128KB, QD=32, 1 job :  IOPS=1204, BW=151MiB/s (158MB/s)
+  Rnd read,  128KB, QD=32, 4 jobs:  IOPS=1255, BW=157MiB/s (165MB/s)
+  Rnd read,  512KB,  QD=1, 1 job :  IOPS=248, BW=124MiB/s (131MB/s)
+  Rnd read,  512KB, QD=32, 1 job :  IOPS=353, BW=177MiB/s (185MB/s)
+  Rnd read,  512KB, QD=32, 4 jobs:  IOPS=388, BW=194MiB/s (204MB/s)
+  Rnd write,   4KB,  QD=1, 1 job :  IOPS=6241, BW=24.4MiB/s (25.6MB/s)
+  Rnd write,   4KB, QD=32, 1 job :  IOPS=24.7k, BW=96.5MiB/s (101MB/s)
+  Rnd write,   4KB, QD=32, 4 jobs:  IOPS=26.9k, BW=105MiB/s (110MB/s)
+  Rnd write, 128KB,  QD=1, 1 job :  IOPS=780, BW=97.5MiB/s (102MB/s)
+  Rnd write, 128KB, QD=32, 1 job :  IOPS=987, BW=123MiB/s (129MB/s)
+  Rnd write, 128KB, QD=32, 4 jobs:  IOPS=1021, BW=128MiB/s (134MB/s)
+  Seq read,  128KB,  QD=1, 1 job :  IOPS=1190, BW=149MiB/s (156MB/s)
+  Seq read,  128KB, QD=32, 1 job :  IOPS=1400, BW=175MiB/s (184MB/s)
+  Seq read,  512KB,  QD=1, 1 job :  IOPS=243, BW=122MiB/s (128MB/s)
+  Seq read,  512KB, QD=32, 1 job :  IOPS=355, BW=178MiB/s (186MB/s)
+  Seq read,    1MB, QD=32, 1 job :  IOPS=191, BW=192MiB/s (201MB/s)
+  Seq write, 128KB,  QD=1, 1 job :  IOPS=784, BW=98.1MiB/s (103MB/s)
+  Seq write, 128KB, QD=32, 1 job :  IOPS=1030, BW=129MiB/s (135MB/s)
+  Seq write, 512KB,  QD=1, 1 job :  IOPS=216, BW=108MiB/s (114MB/s)
+  Seq write, 512KB, QD=32, 1 job :  IOPS=295, BW=148MiB/s (155MB/s)
+  Seq write,   1MB, QD=32, 1 job :  IOPS=164, BW=165MiB/s (173MB/s)
+  Rnd rdwr, 4K..1MB, QD=8, 4 jobs:  IOPS=250, BW=126MiB/s (132MB/s)
+  IOPS=261, BW=132MiB/s (138MB/s
+
+After
+  Rnd read,    4KB,  QD=1, 1 job :  IOPS=6780, BW=26.5MiB/s (27.8MB/s)
+  Rnd read,    4KB, QD=32, 1 job :  IOPS=28.6k, BW=112MiB/s (117MB/s)
+  Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
+  Rnd read,  128KB,  QD=1, 1 job :  IOPS=1188, BW=149MiB/s (156MB/s)
+  Rnd read,  128KB, QD=32, 1 job :  IOPS=1440, BW=180MiB/s (189MB/s)
+  Rnd read,  128KB, QD=32, 4 jobs:  IOPS=1282, BW=160MiB/s (168MB/s)
+  Rnd read,  512KB,  QD=1, 1 job :  IOPS=254, BW=127MiB/s (134MB/s)
+  Rnd read,  512KB, QD=32, 1 job :  IOPS=354, BW=177MiB/s (186MB/s)
+  Rnd read,  512KB, QD=32, 4 jobs:  IOPS=388, BW=194MiB/s (204MB/s)
+  Rnd write,   4KB,  QD=1, 1 job :  IOPS=6282, BW=24.5MiB/s (25.7MB/s)
+  Rnd write,   4KB, QD=32, 1 job :  IOPS=24.9k, BW=97.5MiB/s (102MB/s)
+  Rnd write,   4KB, QD=32, 4 jobs:  IOPS=27.4k, BW=107MiB/s (112MB/s)
+  Rnd write, 128KB,  QD=1, 1 job :  IOPS=1098, BW=137MiB/s (144MB/s)
+  Rnd write, 128KB, QD=32, 1 job :  IOPS=1195, BW=149MiB/s (157MB/s)
+  Rnd write, 128KB, QD=32, 4 jobs:  IOPS=1120, BW=140MiB/s (147MB/s)
+  Seq read,  128KB,  QD=1, 1 job :  IOPS=936, BW=117MiB/s (123MB/s)
+  Seq read,  128KB, QD=32, 1 job :  IOPS=1218, BW=152MiB/s (160MB/s)
+  Seq read,  512KB,  QD=1, 1 job :  IOPS=301, BW=151MiB/s (158MB/s)
+  Seq read,  512KB, QD=32, 1 job :  IOPS=360, BW=180MiB/s (189MB/s)
+  Seq read,    1MB, QD=32, 1 job :  IOPS=193, BW=194MiB/s (203MB/s)
+  Seq write, 128KB,  QD=1, 1 job :  IOPS=796, BW=99.5MiB/s (104MB/s)
+  Seq write, 128KB, QD=32, 1 job :  IOPS=1019, BW=127MiB/s (134MB/s)
+  Seq write, 512KB,  QD=1, 1 job :  IOPS=213, BW=107MiB/s (112MB/s)
+  Seq write, 512KB, QD=32, 1 job :  IOPS=273, BW=137MiB/s (143MB/s)
+  Seq write,   1MB, QD=32, 1 job :  IOPS=168, BW=168MiB/s (177MB/s)
+  Rnd rdwr, 4K..1MB, QD=8, 4 jobs:  IOPS=255, BW=128MiB/s (134MB/s)
+   IOPS=266, BW=135MiB/s (141MB/s)
+
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+Changes in v5:
+- Fix cover letter typo
+- Fix double subtract found by sashiko AI
+- Link to v4: https://patch.msgid.link/20260708-edma_ll-v4-0-cc128f0afb61@nxp.com
+
+Changes in v4:
+- collect Koichiro Den test by tags
+- use addr in argument when set ll address, found by sashiko
+- fix iterate burst problem when exceed max link list, found by sashiko
+- Link to v3: https://patch.msgid.link/20260702-edma_ll-v3-0-877aa463740c@nxp.com
+
+Changes in v3:
+- remove patch dmaengine: dw-edma: Remove ll_max = -1 in dw_edma_channel_setup()
+- rebase to vnod's dmaengine topic/config_prep_api
+- Add non-ll-start() callback to handle non-ll mode transfer
+- Link to v2: https://lore.kernel.org/r/20260109-edma_ll-v2-0-5c0b27b2c664@nxp.com
+
+Changes in v2:
+- use 'eDMA' and 'HDMA' at commit message
+- remove debug code.
+- keep 'inline' to avoid build warning
+- Link to v1: https://lore.kernel.org/r/20251212-edma_ll-v1-0-fc863d9f5ca3@nxp.com
+
+---
+Frank Li (10):
+      dmaengine: dw-edma: Move control field update of DMA link to the last step
+      dmaengine: dw-edma: Add xfer_sz field to struct dw_edma_chunk
+      dmaengine: dw-edma: Move ll_region from struct dw_edma_chunk to struct dw_edma_chan
+      dmaengine: dw-edma: Pass down dw_edma_chan to reduce one level of indirection
+      dmaengine: dw-edma: Add helper dw_(edma|hdma)_v0_core_ch_enable()
+      dmaengine: dw-edma: Add callbacks to fill link list entries
+      dmaengine: dw-edma: Add non_ll_start() callback
+      dmaengine: dw-edma: Use common dw_edma_core_start() for both eDMA and HDMA
+      dmaengine: dw-edma: Use burst array instead of linked list
+      dmaengine: dw-edma: Remove struct dw_edma_chunk
+
+ drivers/dma/dw-edma/dw-edma-core.c    | 218 ++++++++----------------------
+ drivers/dma/dw-edma/dw-edma-core.h    |  65 ++++++---
+ drivers/dma/dw-edma/dw-edma-v0-core.c | 240 +++++++++++++++++-----------------
+ drivers/dma/dw-edma/dw-hdma-v0-core.c | 169 ++++++++++++------------
+ 4 files changed, 304 insertions(+), 388 deletions(-)
+---
+base-commit: c9e9927c6d8346cdf6555a8f97da093980172e4b
+change-id: 20251211-edma_ll-0904ba089f01
+
+Best regards,
+--  
+Frank Li <Frank.Li@nxp.com>
 
