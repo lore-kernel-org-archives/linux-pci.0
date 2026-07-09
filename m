@@ -1,227 +1,351 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013023.outbound.protection.outlook.com [40.93.196.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BCC3AC0CD
-	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 05:55:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783576550; cv=none; b=SUsbUwNlCefyCysNEAZeZkksUchMBmGgp2OXif5MDL+xeP/D/Msfx2vgj54FwiTSWXzXhY+nMmZXfk603+0n4+wus/7D/bCAlvrh2YC6C2IBzF1cQWVbVbosuZM53CskDtteTnHwo/cf83n5lq4TIgjCIackixY1FRpaeLBHb2c=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783576550; c=relaxed/simple;
-	bh=sXgLEOgI2SCOJhE/tWVh0lCN5/y6oBCIOWbl2fyUefA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ghsOzjqVfn5HGYXbh5/GlzERPeXwLwIB6l8W7pu1y38e0YfOg0xQwvSyYemkNr0zsysOD08peV3+ywysz+hMj7Xtbk50Vic7oXfaYWq+E3zz574sdbtuymekckAEloCxAlw/cHUcmMM9aJg3mw/Y//TUohjLQNiMUFcH+FY/C74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ze1fMsuR; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Miuv8mri; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526C83CF042
+	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 06:33:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.23
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783578786; cv=fail; b=mjMoi3p8nwutbx/XNEEuYDz6GWtB4f9QA7jZ5gBaqH0FelxkMbhtUuUzoxEpwZyAT60UzdJv+RLo7E8VqAQVh6y/4/VX5f8kB2+0zTUl8YXrshWlaCWpsSgwJ6cHnrO5AD/oxHMQI6bA58URS88typFg3UbJAxx7ThcTswNc5aY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783578786; c=relaxed/simple;
+	bh=CZ/+TU6/cU1+5YlX+vzzqbVYJHBn2+VXzdWh1Buj5Dg=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=SC0sIilixoLSheGx97URLZvn8OkipDRiywytGx6QcIdaQJ5ZO157yMfJfpz5lBdc6Nixb3XUH4KHcbP8K3rjTsnZ52X9teXMSigbjj1Diknxyhfhg4aGfnrGCFYjbey6y30iIcYKDiuex2QgNOXnRAL2+XB8f6QG2gagk+1LsN4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=VD/7I588; arc=fail smtp.client-ip=40.93.196.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ze1fMsuR";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Miuv8mri"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 668N8RG94053793
-	for <linux-pci@vger.kernel.org>; Thu, 9 Jul 2026 05:55:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2SdAfcm2bDQkGugOuxGblXVTFcWe/K4asZRKOKIZkDM=; b=Ze1fMsuRHeyn4W+1
-	YlNA0umD9w1RYyTxkpudsWTLeSj41d9e84zXLDUs7viAdwxrEhh2WYMHBFVNifIE
-	Ovoz1mrUgyDnS9fHEZTzq7xBFlHc09jTvgQiopbi2Wbi/80trFxWhuQhTwjmMt3j
-	9QwTLRz79E4OHy2wHH5erokMvSdFOQXIhbjEZw+vitdotq5aA3BaqwHUI5mIAa5O
-	wHqDOfueNVyP8oceBmnYhzm+QM+1lO3MIjG/OjxQ9NSdXs+NW8oiXMWcczfuWSAF
-	I056P3DAF7oMcrlALedj+HiSweMSOEI4iVmDWOEns0xpsGLjsLEedmzInBCaPVTB
-	cxztnw==
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f9wwfsh27-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2026 05:55:47 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c8924f4d0a4so2159441a12.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jul 2026 22:55:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1783576546; x=1784181346; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2SdAfcm2bDQkGugOuxGblXVTFcWe/K4asZRKOKIZkDM=;
-        b=Miuv8mriS0v965ibXFgEV/if3lXmWgpISmlSeWEdZa2zvWS1eM926/Qw7t3rRdp3XC
-         swJpHkJokTtOhjDxHTYQYkkIlQ+piEy1V/+N770m/7HhAEYgsOPjViTqv9hg8CSIYcpd
-         mPwtqa0CtVbMhOqgMMgpErRnf1u4mUclRpAuhwIqsZgC3R4I0fSb2FRW5NiGfUN/QSDY
-         B2dg3pYN4xn7/3VWQvI70Gfx7381HodfZ4VV418QigL8kbwVARQyVoW4lRVxOirwzFRj
-         TQdGW7OMRfDWsSV5dhlyoqPSYbE+D+Mrw9rmZUQjrhkfr99TRpKBeS+8rQFrx7RNSjUA
-         nfhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783576546; x=1784181346;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2SdAfcm2bDQkGugOuxGblXVTFcWe/K4asZRKOKIZkDM=;
-        b=X858pUQZqXsAqoMqnNM6rgRlYHnInwSp1+L5G2qhvPIVI4bpZjGe9CJxDTNJ39oXfc
-         3oaXASa7MeTokhYNlwNrPsjGfnircgT9PyldxZCVoXBzQ2gkEse9TlB2ZJ4QvbD7bPDc
-         YvbSssHzMv+D+G1qsh0DBnM71QPhtqxgsO31rfPVH4EPdCuKTN7D7OGDircoRj29E9eV
-         eINJtj/8tR1jKS8OLGAdX7pO6pm5YxAnboHluXFf7/RSVmF3kL8C1VnIc8Fs0coebIhS
-         FMsU8DidXHosz5aCoh4GUSWSZY1BkiPsHApTZf6VBTIpzyuWjFuFhuEOXyLlpqPCufow
-         eVFg==
-X-Forwarded-Encrypted: i=1; AHgh+Rrfwk5aVT0RtGX2A0ErrkgKlJs+ZqZ61jTaIZoxQgDCIIexX16GdIxwGK+FZop8SBeB7rdorxjAiDU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzm9rMgW9rdjPDqxRXl9kv/58Bk3f+ThC32hTfD3Q1g8sqFwiId
-	Cun3GoxYGP5XYaBD9IuyQ9f5BlOlIiz6Ck73/qXiK6nyShLhxyGuqpIAbqK8ZJYCgwY0G27UaTj
-	Lg9oY+68zbeF7uX620xvEsMEw2EE+HEAY62JaRYBRz+10T6ENtRgX83WV2KoJu1M=
-X-Gm-Gg: AfdE7cl5peEWjOk+U1c+optAXJYhd3Il5QturxIGYrazVLVB13ckthqnhGJ8CwqZCgO
-	d+hWAmPMmnnxmk6U7JJ55KMaIcWL2zcujaJqfMlXLqyJ17gJDAiIjS+1fyOR4Kq/PEDrSOOGYH0
-	BiJX6Lv9tK65ng6lGZiBK+rt+VdMBcVWTSGzbs7IPQ4tVLHBDEo9ZXcF/3yXGMxBuE/I+9jUiWh
-	cOMDBW7aXE7qog/rpftSy/Ye3r44234WaDid6VbXSRFBfv/i5wLd0WqM2TdQhePDSewqU/LVttd
-	dI+ulZAxIfaBTp1RmSl/SGwBgDptvG83lDJwoKH+kd2OKFAnGtxzH6PhC/pQHXzyEEksSl3huOC
-	NtBXx9vCe/wTGr7t0UTVGjyzo09lTupGMaldCfhE8ZcA=
-X-Received: by 2002:a05:6a21:a96:b0:3bf:d0c8:2aa7 with SMTP id adf61e73a8af0-3c0bcbc5172mr6875955637.47.1783576546154;
-        Wed, 08 Jul 2026 22:55:46 -0700 (PDT)
-X-Received: by 2002:a05:6a21:a96:b0:3bf:d0c8:2aa7 with SMTP id adf61e73a8af0-3c0bcbc5172mr6875920637.47.1783576545686;
-        Wed, 08 Jul 2026 22:55:45 -0700 (PDT)
-Received: from [10.218.35.45] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5af7d5946sm3184667a12.7.2026.07.08.22.55.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Jul 2026 22:55:45 -0700 (PDT)
-Message-ID: <04365920-4abf-439a-816e-3ae6ff06521c@oss.qualcomm.com>
-Date: Thu, 9 Jul 2026 11:25:40 +0530
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="VD/7I588"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MTF08TqXnmmexYO/C9ziETB+6xgWCRyYsGrtmXi4HCSZqTobxhHAUtaUgNgdKeRnXU72pxC+Ir7h05btTWxPktvVPWsLnagQAFPOm65JG/hmwVJh7w82S33N/GGzwSlRo6/Lk6v9Wjjv5/jCwuufrM8QXq+D37ib2VgEpDsl01qGMBp+94G1nGfdVpycVg5U93p6eByvlOspCC/nkX3ZDIBRDdgve36k2nBhWKIv9CppRXxn5mAoGwRGV14YiARfUSSork5ye2ZN63CzODPcVYYjz7Frr+Oc3G+bNw2wXMpci7db3v8HIs5dTjEFrlRUdhn4GIqoFCkd38hTQfFXRA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0OccKTftxReSFz+KjCzDd0KbQlE9f4bzS7e09R453Ec=;
+ b=XSleXu0F6YCCCy+fAoegSQrgEPQnFqjEhQgLq5SpY2A2NUXCLZQLn3PUX7/8Oq9lH1DtYpJarGAoto0gF+CteQ0BNH48ES1j/NdNwwG31lLySxhYY/rGNOIwvusr5IclvNGp7cqOdrL6lqU7M4mMh1R6q+4wdZLC8VP2ByW9Q1HwFr2XfhDwCpqhkpTupR/0tiRGFeqWU7wYr/pzhat5XGiUIm7GqyuBYwySBh9fa3mBwCvJ1VnL/deit6YpUWVpooOKp89ERCuYjPeYx4MlnQ5Y+NMutajEiIDwpnDqTO/Rby/aTnMpd717GABbcFc0/FH9Pozww+kfIaEcyyTeig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0OccKTftxReSFz+KjCzDd0KbQlE9f4bzS7e09R453Ec=;
+ b=VD/7I588RZCtuwosY8C2QuX42e3tRlzKsCwRXCInt7Y4NHPgLh+Kz3H4hQZ7ivFzJp0GVcp6XyhM+4vXxPQkk9PYZ7UwnKDtuaofbW/lIMSt3R7RUwjHnD+i62/ulITyaxJIvbZu9czn29bCk8Hrv/jcxti1ZKs4ccTEY4qUoO4=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SA1PR12MB999228.namprd12.prod.outlook.com
+ (2603:10b6:806:4db::10) by CH3PR12MB8969.namprd12.prod.outlook.com
+ (2603:10b6:610:17c::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.15; Thu, 9 Jul
+ 2026 06:32:59 +0000
+Received: from SA1PR12MB999228.namprd12.prod.outlook.com
+ ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
+ ([fe80::4dba:119e:8e7c:37b3%4]) with mapi id 15.21.0181.009; Thu, 9 Jul 2026
+ 06:32:59 +0000
+Message-ID: <f8b5b966-ea36-4b4a-a9f5-58a20855a6fb@amd.com>
+Date: Thu, 9 Jul 2026 16:32:54 +1000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/15] PCI, device core: Add private memory access for
+ DEVICE_TRUST_TCB
+To: Dan Williams <djbw@kernel.org>, linux-coco@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+ ankita@nvidia.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dexuan Cui <decui@microsoft.com>
+References: <20260705220819.2472765-1-djbw@kernel.org>
+ <20260705220819.2472765-14-djbw@kernel.org>
+Content-Language: en-US
+From: Alexey Kardashevskiy <aik@amd.com>
+In-Reply-To: <20260705220819.2472765-14-djbw@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SY5P300CA0011.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:1fb::18) To SA1PR12MB999228.namprd12.prod.outlook.com
+ (2603:10b6:806:4db::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] arm64: dts: qcom: eliza-evk: Enable PCIe0 and
- PCIe1 with M.2 and TC9563 switch
-To: Bjorn Andersson <andersson@kernel.org>
-Cc: Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
- <ak5sfkmrhorCY6lf@baldur>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <ak5sfkmrhorCY6lf@baldur>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA5MDA1MyBTYWx0ZWRfX+yoU0BGGl4iS
- XjYxklY0ygd4vNkgUZ0iTf40MsmMqsFLuKUcF/Ehs99FttwmvbKyGGFae0ch2rFCZZxo9mcXqHL
- LzYJDgNx1/DC5cdfJGxGWLcBKbXkJhgmRq2u5o4gnSmF5c4NAEqyV+iJeJ56ieKMNJsGGzNdb2V
- hQRFCfvS+1mTiCPzVdDoQdBjcgKQxafsAmc390JVpeBlNMX86okS17iKkuB9x7EyhHCai9cePw1
- 2Y2f1vssULg0TmM1i7UfOg/RzlzRnaDFCPBMQt5LKVkekX7DqDjQV1nVihzX3wqvWvLcQJUmsk/
- AFN2TYVBh4K70KKpGIaAPNLFwVpRWexQzbqDkDkZQgzY1vtbcQcCAslTt5XY3sR6j0TRs5j1h97
- LaTITlECI6upDk/7N8Sfe27g7WZyIXWV3hCDPFehNTx/w022ldGRdURfALIBEDN+KVPRMfUZYJA
- W4eaA3Ums+7ur2pAx1Q==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA5MDA1MyBTYWx0ZWRfX+Q4dDJ7mCcqg
- 0JJ+rgaUNnEzPrDi51KXr77pVRnMBfLVaG7cV4FCjGfAeVGkkAmPtv/7BB6g8baDAIayq5aodVm
- zhUhf57S/RHOq62esiy3qmCJkwygKek=
-X-Proofpoint-ORIG-GUID: GwJgAY00VVLVlWRu-pkWn4oLn9625GNv
-X-Proofpoint-GUID: GwJgAY00VVLVlWRu-pkWn4oLn9625GNv
-X-Authority-Analysis: v=2.4 cv=Krh9H2WN c=1 sm=1 tr=0 ts=6a4f37e3 cx=c_pps
- a=rz3CxIlbcmazkYymdCej/Q==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=bC-a23v3AAAA:8 a=UtvHBniHWTLL8wGpZJ8A:9
- a=QEXdDO2ut3YA:10 a=bFCP_H2QrGi7Okbo017w:22 a=FO4_E8m0qiDe52t0p3_H:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-08_05,2026-07-08_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 priorityscore=1501 impostorscore=0
- lowpriorityscore=0 adultscore=0 spamscore=0 suspectscore=0 bulkscore=0
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607090053
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|CH3PR12MB8969:EE_
+X-MS-Office365-Filtering-Correlation-Id: 95f72868-2f90-462a-2fc2-08dedd83eb48
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|23010399003|376014|7416014|1800799024|18002099003|22082099003|56012099006|11063799006|4143699003|6133799003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	DHxbujAtZ5DF70z75NT65UNIwXsbjMnBNxyUEx8DsZywHVR3T9Ls7rRDTAAHRKiNrh9YkOSBdB/Fx9cBPOdouhVIUjQWdV9FQVBvqfhPaOgzijt7tOd+rLaORek6326+AYm/RlnYHk7G8CJvePQgf3YUOQxieA8qjg1lFrx4iAw2uTIeRSrIPpV9aENdzfOrA4kSMRqeSZ1SXfUJndkEbO5uyvRq2Qd0V7kq0J26P3VxJPOxkGuIzfCtiu8+kYE4n2nBl+eSOOtn9iSa9PyHeJuJ2IJ+HwwII4D9pv8KLnB1TSOeI/e1/uV1glOmnVytBzyHvf6L+TH85/RqTwvEjOH4XqInrYDiGD+QMIprlbAqnLEPeTrNDeST/CFsZaT7XoXPuvuf5sXthdB3TFfa4LjWyEjPg61CHKo/r9ZiKCRw0gLY1L7VYzSq50n6dEt5Sd/qSVzx6AmSqRNp2vCXiBgAeNrklY8iw31w6RnSVEv893P1Jrc4pksPgtI483eMySnRRGh/M6s9i6fFUIfSAJITwA1r3pVQLEZiLpyhrutqj1s9XXPbkkUjSGP/6gN/DZFiawcLKu4v1rgOAuHwn/0Ylnw54zOoxlNnyD6KBx3MUcw68yNu4F+G/+vkYZZdrEf3vJEj7zOK8URLZNCvZMAz1OKeTMILLr0HhNRKgEQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(7416014)(1800799024)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ZkVBK01VZGhUb3lvWkl2dmlrWXd2TndoNldIWVQxYzBwNWw0Um9naFNTR1FI?=
+ =?utf-8?B?ZXUvWUtrb3Q3dnA3NDUvaHhRYlVCaEF3cXAxY053ZnFoRnlQd08yWG12YmIw?=
+ =?utf-8?B?V3dXRUwzNFNCOFVjZFdEUDNObWVRcklXK0JhSEs1QWxtZklzNTlxZFRqTy96?=
+ =?utf-8?B?WDBVbGhYcm54WWpkaGNnU2pBcklPQmVHNEM0bTBSNENkZVgzT0FVMXVWeTJW?=
+ =?utf-8?B?V0g2anNXbndiTmh3UlRMMDY3aVFZa3IrdUxFOHk1UUIydytIbVVQUFZzVTh5?=
+ =?utf-8?B?djA0RTVoaW9DYlp3N3F1bkFzOHVIMGxlOEZPUmp1aXJBSXhOMU1TOUJHaWxh?=
+ =?utf-8?B?dDRQYWRHaWtGUXVJdldRYXp2SVdSY2sya3RMQXA1Z0tMRjJ2RXdRTmxDbUdR?=
+ =?utf-8?B?QkdCdHJQeHVDTWNPWlA1N3FnSUNGcVBqb2tqS0pRQzhLbXlYdnVsNDRuZWF6?=
+ =?utf-8?B?Y21WbnV3dnQvN0ZaNlg5NUJWNHZDVXVSaWYwdWRyRVozN2I5MHM0VmF6R3pW?=
+ =?utf-8?B?eDJ2cVdPV3liMW5hNHlDaTJWZEFESFE1UW0wN3BWTXZFVk8xeVNINGFuUkhl?=
+ =?utf-8?B?c2xKWXM2dmNCczlJSUlmN2ppSmlTU3JjQ2lScDJ3N0lRUC9OTHA3NFZFb2hR?=
+ =?utf-8?B?UTE1bTM1M1dnSGJQbWVEMmx6aThwRjZZbmZUc1I5MGFHQXdRRXdDSzRxMWdM?=
+ =?utf-8?B?VGowa0Iwc3Q4b2lTWUtFMkY5SXN5ZWdPNnd4SXA3cTRtT2hPdkZYeGgrS2Fv?=
+ =?utf-8?B?czFIRjh3V1JWM3NnckJWRUwraTNYRDlZUmd6eUhnL1VVZldMZjJ0V0NrYW1I?=
+ =?utf-8?B?SlIxU3JJck81L3NqRWx3cVREVTU2dHdVcmJEQnpvbVdkZGluRWx1aDZTdTMr?=
+ =?utf-8?B?bjdxcFFqcDV5M1lqRU1rdW9tL0N5ZUJ1MnM4OUFFNlNkejFsL1N1SlVkZ3BB?=
+ =?utf-8?B?ZGY1djJCUmxCZ3NMMWlmamZpV0ZUR1BVQmxzM1prTWp3T2ZtYlVrSnRGdU1a?=
+ =?utf-8?B?eCtBdGFpT0RHR0FsRUl3dWFTWHAwamc2VHNYTU9oMTA3QzBSRGxqMUFoRWhG?=
+ =?utf-8?B?QzQ0RXVVYkVmQ042ZERHZ3haZGdNQmZ4c24yU2xTcjlZY090KzZHN3BTNVJn?=
+ =?utf-8?B?VVB3K2Zrc3c4R3BScXdPZHF1OFZVREpYelIyU3NPVVlzUE5UemMwN3NQNDBI?=
+ =?utf-8?B?MzVxVm9kV2ViTXVrU2NSZ05QbDFEYkJCQlgvY1hmM0l0NjZubml4OTJWTGVn?=
+ =?utf-8?B?eHhPTndmN1ZVU05sZk00RGZkN29YRGMvQmlTZnpnUHB2Y0xwb1FBZjV4b1g1?=
+ =?utf-8?B?R1hVSXRrbGYzMG10MFBodXd5S25IQ1NFbjhzT2c0bENsQklFYWlUUkFiWXVq?=
+ =?utf-8?B?ME40Z1dlbzd0dWhvMDZ3ajJPc2NDak1lOEhydTZ6ZndjcEFkdUsybE9naVVl?=
+ =?utf-8?B?QmRSZ2t0Mzh6NTdGNFYzeFVJdjFLUk1oeWNEdGt3ME9XUnFLeTB2MGVvTDBi?=
+ =?utf-8?B?aVRDaUY0OVFUS0hkS3hSNCswZ3cxcmVIVGFrV1hjVmJSbnltNEw2eUhTN0VU?=
+ =?utf-8?B?RXBueXcwMDg1SVlWZFdBUytYUFJUZ215TjAwR0pRZlorM0ZlYUc3M3o2SEJK?=
+ =?utf-8?B?WVJqMVI0TitFbTZ5ZUppNG42UXg5SmNQeC95TEtRenkrajdKdTY4R2lsMTZH?=
+ =?utf-8?B?bThDNGg1NzVCSHo0REdKYWxhQnlUcC8yc05SMkRrZWlHemEzekx2aTUzdXhr?=
+ =?utf-8?B?eXFMQ2lyZXpRRDZQRHVTTHhwNitUZm1DZmJ1SXYrRzBqcUZXRXJhZ0lRekhD?=
+ =?utf-8?B?T09qZk0vWFpSTlA4R3N3cmE4VldaRmQ4UEVrdVN1ZTJYR1doLzlmbXdNOUR1?=
+ =?utf-8?B?UXRvUitMMnFYYzNlcGJmVVpKM1hWMUdYVWtEemFCb3BBZGJXdG9yU3d2ZTh5?=
+ =?utf-8?B?N0haakhTVDlkZVZTanJRVnVUMHdJUWx6eXNEWjlTSG45K0lEcWpYQXlrVUFY?=
+ =?utf-8?B?YTlnRzNHeGJzSk5uY3RlUDZ5TTI1bURTbmE5ZGhjRFJrMzJLd1UzcGxRQUdw?=
+ =?utf-8?B?M25KUzg4UVJZZElGVWJUT1hhajJOTHRvemxDU21vY2paQzIwOEZkTkpDZWlT?=
+ =?utf-8?B?RlhrSzN6MzJvbnc3YTM2TWV4L29zS0tUMjdwcDRVdmtqYWNtREtUaFRCcFI2?=
+ =?utf-8?B?bEcwQmFrU2pVQ2h2VG4zREQ5WEdPanhYY2t1U1lDMXlQMnM2MDZPc3piaXdT?=
+ =?utf-8?B?c3NTY2hGRUFtcG8yTDg0RWhqWStPWnQreHpIVmwrazkvdWRNZjN3ZkY3Q2tw?=
+ =?utf-8?B?dkpvS2xsWWhlZlNFcUV2TGlsVzY3MnR0MG40ckFBSU0xc2Y2YU9OUT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 95f72868-2f90-462a-2fc2-08dedd83eb48
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2026 06:32:59.3236
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4Pj7f1NdaaNpSSRYF+2gSObR6v9Y/RXIbXahyE5+HelW3KzqQTvihMt1kCW0ZxsyAaptBxuxiy8B0t3rKpyTjg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8969
+
+On 6/7/26 08:08, Dan Williams wrote:
+> A device that wants to access private memory needs to have its trust
+> elevated to DEVICE_TRUST_TCB. That trust is established either at compile
+> time (unlikely), the bus knows the device is within the TCB to start (some
+> paravisor setups), or the device is dynamically added to the TCB in
+> coordination with a TSM driver (primary TDISP use case) and the trust is
+> elevated by driver match.
+> 
+> When a PCI device is associated with a TSM for security services the low
+> level TSM driver in the CC VM has the opportunity validate DMA access.
+> That validation happens at ->dma_configure() time when the device attaches
+> to a driver. The TSM driver is responsible for proving to the platform TSM
+> that the VM is enabling DMA with respect to the most recently generated
+> evidence. If that fails, driver attach fails.
+> 
+> When a PCI device is not associated with a TSM provider for security
+> services, but the device is trusted there are 3 options.
+> 
+> 1/ Arch requires all DMA enable events to be acked by TSM driver
+> 
+> 2/ Arch does not require, but admin policy is responsible for knowing which
+>     devices need TSM coordination to become active within the TCB.
+> 
+> 3/ Device is approved by a paravisor to operate within the TCB, no TSM
+>     coordination required.
+> 
+> In cases 2 and 3 if the device needed TSM driver coordination, but the TSM
+> driver or association to the device is missing, it triggers hardware
+> errors. Those errors are a configuration error that the kernel does not
+> actively prevent.
+> 
+> Architectures still need to fixup force_dma_unencrypted() to call
+> device_tcb_trusted() to tell the DMA layer that TCB access is granted.
+> 
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Dexuan Cui <decui@microsoft.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
+> ---
+>   drivers/base/Kconfig         | 19 ++++++++++++++++++-
+>   include/linux/device/trust.h |  4 ++++
+>   drivers/base/trust.c         |  8 ++++++++
+>   drivers/pci/pci-driver.c     | 25 ++++++++++++++++---------
+>   4 files changed, 46 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+> index a4233bdf9804..3597b39ee0e3 100644
+> --- a/drivers/base/Kconfig
+> +++ b/drivers/base/Kconfig
+> @@ -304,7 +304,17 @@ config DEVICE_TRUST_AUTO
+>   	help
+>   	  Typical historical driver model, devices eagerly attempt to attach to
+>   	  a driver and deploy all available mechanisms to allow performant
+> -	  direct memory access.
+> +	  direct memory access. This trust level does not include TCB privileges.
+> +
+> +config DEVICE_TRUST_TCB
+> +	bool "TCB"
+> +	depends on EXPERT
+> +	help
+> +	  Devices are assumed to be within the Trusted Compute Boundary (TCB)
+> +	  with access to private TCB resources by default. This requires buses
+> +	  to have trust awareness and opt devices out of private operation,
+> +	  otherwise TCB integrity may fail the device's access or escalate to
+> +	  terminating the execution context (kill the CC VM).
+>   
+>   endchoice
+>   
+> @@ -330,6 +340,13 @@ config BUILTIN_DEVICE_TRUST_ADVERSARY
+>   	help
+>   	  Deploy mitigations in the IOMMU layer and driver to limit access.
+>   
+> +config BUILTIN_DEVICE_TRUST_TCB
+> +	bool "TCB"
+> +	depends on EXPERT
+> +	help
+> +	  Devices bound by built-in drivers are assumed to be within the
+> +	  Trusted Compute Boundary with access to private/encrypted memory.
+> +
+>   endchoice
+>   
+>   endmenu
+> diff --git a/include/linux/device/trust.h b/include/linux/device/trust.h
+> index 283d3196e5e6..24951f5c56ba 100644
+> --- a/include/linux/device/trust.h
+> +++ b/include/linux/device/trust.h
+> @@ -13,6 +13,7 @@
+>    * @DEVICE_TRUST_NONE: Blocked when idle, cannot bind
+>    * @DEVICE_TRUST_ADVERSARY: Blocked when idle, constrained when active.
+>    * @DEVICE_TRUST_AUTO: All typical privileges granted
+> + * @DEVICE_TRUST_TCB: AUTO privileges + private/encrypted memory access
+>    *
+>    * Devices flagged as adversarial are the ones that can potentially
+>    * execute DMA attacks and similar. They are typically connected through
+> @@ -25,11 +26,13 @@ enum device_trust {
+>   	DEVICE_TRUST_NONE,
+>   	DEVICE_TRUST_ADVERSARY,
+>   	DEVICE_TRUST_AUTO,
+> +	DEVICE_TRUST_TCB,
+>   };
+>   
+>   #define DEVICE_DEFAULT_TRUST \
+>   	(IS_ENABLED(CONFIG_DEVICE_TRUST_NONE)      ? DEVICE_TRUST_NONE      : \
+>   	 IS_ENABLED(CONFIG_DEVICE_TRUST_ADVERSARY) ? DEVICE_TRUST_ADVERSARY : \
+> +	 IS_ENABLED(CONFIG_DEVICE_TRUST_TCB)       ? DEVICE_TRUST_TCB       : \
+>   	 DEVICE_TRUST_AUTO)
+>   
+>   struct device;
+> @@ -37,6 +40,7 @@ struct device_driver;
+>   
+>   #ifdef CONFIG_DEVICE_TRUST
+>   bool device_untrusted(struct device *dev);
+> +bool device_tcb_trusted(struct device *dev);
+>   void module_driver_trust(struct module *mod, const char *val);
+>   void module_driver_trust_init(struct module *mod, bool require_trust);
+>   #else
+> diff --git a/drivers/base/trust.c b/drivers/base/trust.c
+> index 8efbe5c51250..21d374affbba 100644
+> --- a/drivers/base/trust.c
+> +++ b/drivers/base/trust.c
+> @@ -23,11 +23,18 @@ bool device_untrusted(struct device *dev)
+>   	return dev->bus_trust && dev->bus_trust <= DEVICE_TRUST_ADVERSARY;
+>   }
+>   
+> +bool device_tcb_trusted(struct device *dev)
+> +{
+> +	return dev->p->trust >= DEVICE_TRUST_TCB;
+> +}
+> +
+>   /* Driver trust policy requires modules, builtin drivers always attach */
+>   static enum device_trust builtin_driver_trust(void)
+>   {
+>   	if (IS_ENABLED(CONFIG_BUILTIN_DEVICE_TRUST_ADVERSARY))
+>   		return DEVICE_TRUST_ADVERSARY;
+> +	else if (IS_ENABLED(CONFIG_BUILTIN_DEVICE_TRUST_TCB))
+> +		return DEVICE_TRUST_TCB;
 
 
+No plan to override this via the kernel cmdline?
 
-On 7/8/2026 9:05 PM, Bjorn Andersson wrote:
-> On Wed, Jul 08, 2026 at 11:47:15AM +0530, Krishna Chaitanya Chundru wrote:
->> This series enables PCIe for the Eliza EVK board (CQS SoM on EVK carrier).
->>
->> The Eliza EVK exposes two PCIe ports:
->>
->> - PCIe0 drives an M.2 E key connector. The 3.3V supply is GPIO-controlled
->>   via a TCA9538 I/O expander on I2C4. The slot hosts a WLAN module
->>   (connected over PCIe) and a Bluetooth device (connected over UART5),
->>   modelled with the pcie-m2-e-connector binding.
->>
->> - PCIe1 (8GT/s x2) connects to a Toshiba TC9563 PCIe switch, whose
->>   management interface sits on I2C4 (address 0x77). The TC9563 RESX# and
->>   PERST# lines are OR-ed internally; reset is driven via a TLMM GPIO on
->>   the RESX# pin. The iommu-map covers all downstream switch ports
->>   (SID range 0x1400-0x1408).
->>
->> The M.2 WLAN module carries a Qualcomm QCC2072 Bluetooth chip. A device-ID
->> entry is added to the M.2 power sequencer so the serdev node for the BT
->> UART interface is created on PCI enumeration.
->>
->> Bluetooth is enabled with this patch https://lore.kernel.org/all/20260529175822.3366535-1-yepuri.siddu@oss.qualcomm.com/
->>
->> This seris Depends-on:
->>   https://lore.kernel.org/all/20260610-eliza_dt-v1-1-7bb72b75fc5b@oss.qualcomm.com/
-> Why send this patch, when this dependency is known bad - when would I
-> ever be able to merge this patch?
->
-> And why are you sending separate series concurrently with dependencies
-> between them!? It's one thing to send patches saying "I depend on
-> someone else's completely unrelated work", but saying "here's a random
-> bunch of tangled patches, good luck everyone!" is not okay.
->
-> I expect all three patches to be rebased and send in one series that I
-> can just click "Submit" on next time.
-Sorry for the mess, I will resend all 3 pcie patches in a single series today.
 
-- Krishna Chaitanya.
-> Thanks,
-> Bjorn
->
->>   https://lore.kernel.org/all/20260630-eliza-dts-qcs-evk-v4-3-18cbbdba6e7e@oss.qualcomm.com/
->>   https://lore.kernel.org/all/20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com/
->>
->> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->> ---
->> Changes in v2:
->> - Drop patch 3, as this is already applied
->> - Rebase on top of https://lore.kernel.org/all/20260708055017.A90C91F000E9@smtp.kernel.org/
->>   and remove pincntrl as pincntrl is added in the eliza.dtsi patch and also remove
->>   pinctrl for resx as this is covered in pcie1_default_state as perst gpio.
->> - Link to v1: https://patch.msgid.link/20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com
->>
->> To: Bjorn Andersson <andersson@kernel.org>
->> To: Konrad Dybcio <konradybcio@kernel.org>
->> To: Rob Herring <robh@kernel.org>
->> To: Krzysztof Kozlowski <krzk+dt@kernel.org>
->> To: Conor Dooley <conor+dt@kernel.org>
->> Cc: linux-arm-msm@vger.kernel.org
->> Cc: devicetree@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->>
->> ---
->> Krishna Chaitanya Chundru (2):
->>       arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
->>       arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
->>
->>  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 228 ++++++++++++++++++++++++++++++++
->>  arch/arm64/boot/dts/qcom/eliza.dtsi     |   2 +
->>  2 files changed, 230 insertions(+)
->> ---
->> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
->> change-id: 20260629-eliza_evk-6f30686b161f
->> prerequisite-message-id: <20260708-eliza_dt-v2-1-e6281da26408@oss.qualcomm.com>
->> prerequisite-patch-id: 7654ff4f899ac0094a2e791e7f208998fcc7d5fa
->> prerequisite-patch-id: 9e10dfbe360941cdac0300aaf163149755952f9f
->> prerequisite-patch-id: fecce0170351baf00cbe8f6b302d1def4d99bbfc
->> prerequisite-patch-id: 97cd6cb495fdd198f6de7fbe45ef32e4a638ec9c
->> prerequisite-message-id: <20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com>
->> prerequisite-patch-id: f3615b5c1e2222a2491f862a7fba3994058ecc53
->>
->> Best regards,
->> --  
->> Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->>
+>   	return DEVICE_TRUST_AUTO;
+>   }
+>   
+> @@ -61,6 +68,7 @@ static const char * const device_trust_names[] = {
+>   	[DEVICE_TRUST_NONE]	 = "none",
+>   	[DEVICE_TRUST_ADVERSARY] = "adversary",
+>   	[DEVICE_TRUST_AUTO]	 = "auto",
+> +	[DEVICE_TRUST_TCB]	 = "tcb",
+>   };
+>   
+>   static enum device_trust device_trust_parse(const char *name)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f36778e62ac1..e6a4bc3ca9b0 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -19,6 +19,7 @@
+>   #include <linux/kexec.h>
+>   #include <linux/of_device.h>
+>   #include <linux/acpi.h>
+> +#include <linux/pci-tsm.h>
+>   #include <linux/dma-map-ops.h>
+>   #include <linux/iommu.h>
+>   #include "pci.h"
+> @@ -1668,10 +1669,11 @@ static int pci_bus_num_vf(struct device *dev)
+>   static int pci_dma_configure(struct device *dev)
+>   {
+>   	const struct device_driver *drv = READ_ONCE(dev->driver);
+> -	struct device *bridge;
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+>   	int ret = 0;
+>   
+> -	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+> +	struct device *bridge __free(put_device) =
+> +		pci_get_host_bridge_device(pdev);
+>   
+>   	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
+>   	    bridge->parent->of_node) {
+> @@ -1688,16 +1690,21 @@ static int pci_dma_configure(struct device *dev)
+>   	 * the standard ACS capability but still support ACS via those
+>   	 * quirks.
+>   	 */
+> -	pci_enable_acs(to_pci_dev(dev));
+> -
+> -	pci_put_host_bridge_device(bridge);
+> +	pci_enable_acs(pdev);
+>   
+>   	/* @drv may not be valid when we're called from the IOMMU layer */
+> -	if (!ret && drv && !to_pci_driver(drv)->driver_managed_dma) {
+> +	if (ret || !drv)
+> +		return ret;
+> +
+> +	if (device_tcb_trusted(dev))
+> +		ret = pci_tsm_enable_dma(pdev);
+
+
+pci_tsm_disable_dma() is missing in pci_dma_cleanup() then. Otherwise works fine. Thanks!
+
+
+> +
+> +	if (!ret && !to_pci_driver(drv)->driver_managed_dma)
+>   		ret = iommu_device_use_default_domain(dev);
+> -		if (ret)
+> -			arch_teardown_dma_ops(dev);
+> -	}
+> +
+> +	/* undo {of,acpi}_dma_configure() */
+> +	if (ret)
+> +		arch_teardown_dma_ops(dev);
+>   
+>   	return ret;
+>   }
+
+-- 
+Alexey
 
