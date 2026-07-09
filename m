@@ -1,128 +1,167 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E0B424660;
-	Thu,  9 Jul 2026 12:39:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E453842640D
+	for <linux-pci@vger.kernel.org>; Thu,  9 Jul 2026 12:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783600773; cv=none; b=VqpnIdEmJDBFarVwXGuaXaBhZ6KdJO4iWup2iTRx/Q1BIxFveEOlgG9Y52Tt1DAVXwRctMHozSAJHj8kIU+67dZEhidwFjFU1IXJOcP0TWW6aAOl6o1Ql5lVDrhI/fsS3COd45pr74JGNGJjgfqteoa6qIdt9BTOWx9gRt/oB9w=
+	t=1783600775; cv=none; b=KKv4WZlbWv1aWAYUuyV1LVX1YGAV3q1bEQjm2c6z0GEHuinHEXwyLr98IB3YQNQhT0pKWHatAiDH+dEWDWs2OczQvyDx539UMtqPelMuaAlLf5q5lR/OGCUE0/Gdt+KQerMk0oOYTqR51/p5qFoGIjV8t4TDCjeVb+mLPp2rYLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783600773; c=relaxed/simple;
-	bh=RZ8VjDklG/jzIcIcYaBb3OzMYd/YgJHyt56veG+RMsI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Y+GJtCXtafnwP7hlXlPKwtzqEkS57SpPx2iGYbHomcBQ9JjcwxTeFNQ97DXDin3xcjSachxmW2nU1MpKgBcSBKkPgtUbxpXSjJNZFPk1y48NqQw4FLX5SzVppS2h7HHRQ52gBKwrifRQ7yWAEfXUpkeEAh7ydqM9BLMYXanemHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=dA2zXK/M; arc=none smtp.client-ip=113.46.200.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1783600775; c=relaxed/simple;
+	bh=CWLhb44JceD6Ohrb5A71pGlYjuSfOvm8G8ZrDiwhJiM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Prkqz4dDJmMdsL4i/LNJnD0TUylXTvNiBN2SsW+xyik5/ODaLlHvbR1q0d2z90JnYLBgir7jfP7JgHHMKZ3NsFHbI18enASCg0mQu4D8UCZc5qKduG2jClVLP4Saf2cfXA8F26HuxSM42inXGBE4h05cGDFLDt2YV5I8Vb+3VPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g8s7Pt0/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="dA2zXK/M"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=IJ8deCNBpt+7i94SRWOOCRLpkE+NC9fmOvAWjZIqzss=;
-	b=dA2zXK/MGkYJ/hTvP78vCbhdEwyW6AXx9Aro/SnINH+SMa74hBKM6E6Tk9uEKwchP34sRjfPx
-	MX1zAStsxFls1YFxBTG93qsxz8MIcsrf+nwwpLbJMDxdIP8Tub3NWM6Ji1ZY9fG2xf/2eiiuB07
-	vvrh/m/7jkDGETfWYwVdMtQ=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gwvS35MBYzKm73;
-	Thu,  9 Jul 2026 20:30:11 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id F3A2440586;
-	Thu,  9 Jul 2026 20:39:28 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 9 Jul 2026 20:39:28 +0800
-Message-ID: <60bc4baf-47c5-4457-8a35-373925c9fd80@huawei.com>
-Date: Thu, 9 Jul 2026 20:39:27 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g8s7Pt0/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CFF01F00A3A;
+	Thu,  9 Jul 2026 12:39:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783600773;
+	bh=d/fnDmIK4NNYiABWLYHcpQZbodNiRhaGApr0GdWpnf4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=g8s7Pt0/D1Ix3vjLzcYZybs8x/I8IsRer/4bxfAjUtskYNv1Cq3aUbX+WWdnG5oRe
+	 Jc/5a64ftpHw9kk2xfBnHtoheSZ645XLa5KM7NxnRDpdFX1+ujUMxlhSlV6/ZUqp5T
+	 4zpFYNijK0yNCZSlZXXDhIaLVuh2ReSUwe91lHgllcj8DX7RGOIo6+ixVqnvoj6nGX
+	 AOivSgTOHnLJZYv4XJ5K414tz6kf3yJjv2npf61lq09TV9SaZjfWSiET71oaxRk22D
+	 5A6CQKsj/5tkdGt9DOgDBfShJ8pFZczgjfPAWsSqqWzez0VWklBHNpBpCSVgM3aP2h
+	 Pr4dUYWwrCq6A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: host-generic: Fix NULL pointer dereference on
+ 32-bit CAM systems
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Steffen Persvold" <spersvold@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260709122446.3151899-1-spersvold@gmail.com>
+References: <20260709122446.3151899-1-spersvold@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 09 Jul 2026 12:39:32 +0000
+Message-Id: <20260709123933.5CFF01F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 17/18] vfio/pci: Reset hardware TPH state on device
- enable/disable
-To: Alex Williamson <alex@shazbot.org>
-CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
-	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
-	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-18-fengchengwen@huawei.com>
- <20260708172944.685c3cea@shazbot.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260708172944.685c3cea@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemo500009.china.huawei.com (7.202.194.199)
 
-On 7/9/2026 7:29 AM, Alex Williamson wrote:
-> On Thu, 2 Jul 2026 20:42:23 +0800
-> Chengwen Feng <fengchengwen@huawei.com> wrote:
-> 
->> VFIO allows user space to enable and modify PCI TPH state, but device
->> reset only clears hardware TPH registers, while the software TPH state
->> maintained in pci/tph.c remains stale.
-> 
-> It's saved and restored, why is it "stale"?  It seems more that the
-> interface simply doesn't meet our use case.
-> 
-> What about resets through vfio-pci interfaces, should TPH be
-> automatically disabled?  Thanks,
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-The PCI saved state only covers hardware registers, the internal software
-context inside pci/tph.c won’t be cleared by device reset. This leaves stale
-TPH enable state across VFIO user sessions.
+Pre-existing issues:
+- [High] Incomplete Fix / NULL Pointer Dereference in `pci_dw_ecam_bus_ops`=
+ on 32-bit platforms.
+- [High] Missing NULL pointer validation in `pci_ecam_map_bus()` leading to=
+ invalid memory access.
+- [High] Logic error in `pci_ecam_map_bus()` causes cross-device config spa=
+ce corruption for CAM mode.
+--
 
-I will also add TPH disable logic into VFIO device reset path to keep all
-reset scenarios consistent.
+--- Patch [1]: [PATCH] PCI: host-generic: Fix NULL pointer dereference on 3=
+2-bit CAM systems ---
+commit 208f10f6fcd6715f0a5bbab0d769a909c797f297
+Author: Steffen Persvold <spersvold@gmail.com>
 
-Thanks
+PCI: host-generic: Fix NULL pointer dereference on 32-bit CAM systems
 
-> 
-> Alex 
-> 
->> Fix the stale state leakage by explicitly disabling TPH in core enable
->> and disable paths:
->> - In vfio_pci_core_enable(), clear leftover TPH state from previous
->>   user sessions before device initialization.
->> - In vfio_pci_core_disable(), revert any user-modified TPH state
->>   when releasing the device.
->>
->> This ensures consistent TPH hardware and software state for each
->> user session and avoids residual state contamination.
->>
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  drivers/vfio/pci/vfio_pci_core.c | 5 +++++
->>  1 file changed, 5 insertions(+)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index 7251e251824a..5a14439d1ccb 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -612,6 +612,8 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
->>  
->>  	vdev->reset_works = !ret;
->>  	vdev->tph_permit = false;
->> +	/* Reset TPH status on new user session */
->> +	pcie_disable_tph(vdev->pdev);
->>  	pci_save_state(pdev);
->>  	vdev->pci_saved_state = pci_store_saved_state(pdev);
->>  	if (!vdev->pci_saved_state)
->> @@ -759,6 +761,9 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->>  
->>  	vfio_pci_zdev_close_device(vdev);
->>  
->> +	/* Reset TPH status on exit user session */
->> +	pcie_disable_tph(vdev->pdev);
->> +
->>  	/*
->>  	 * If we have saved state, restore it.  If we can reset the device,
->>  	 * even better.  Resetting with current state seems better than
-> 
+This commit fixes a NULL pointer dereference on 32-bit systems using CAM
+by defining pci_generic_cam_ops with .add_bus and .remove_bus callbacks
+and updating the host generic driver to reference it.
 
+> diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/cont=
+roller/pci-host-generic.c
+> index c1bc0d34348f4..9e85c6e9b4254 100644
+> --- a/drivers/pci/controller/pci-host-generic.c
+> +++ b/drivers/pci/controller/pci-host-generic.c
+
+[ ... ]
+
+> @@ -60,7 +51,7 @@ static const struct pci_ecam_ops pci_dw_ecam_bus_ops =
+=3D {
+> =20
+
+[Severity: High]
+This is a pre-existing issue, but pci_dw_ecam_bus_ops shown just above this
+context seems to be missing the same .add_bus and .remove_bus callbacks.
+
+If a 32-bit system uses snps,dw-pcie-ecam or similar compatibles, does it
+also crash with a NULL pointer dereference during bus enumeration because
+the per-bus mapping is never populated?
+
+>  static const struct of_device_id gen_pci_of_match[] =3D {
+>  	{ .compatible =3D "pci-host-cam-generic",
+> -	  .data =3D &gen_pci_cfg_cam_bus_ops },
+> +	  .data =3D &pci_generic_cam_ops },
+> =20
+
+[ ... ]
+
+> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+> index 119de32ff07bd..a9b3bce2492f0 100644
+> --- a/drivers/pci/ecam.c
+> +++ b/drivers/pci/ecam.c
+> @@ -208,6 +208,19 @@ const struct pci_ecam_ops pci_generic_ecam_ops =3D {
+>  };
+>  EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
+> =20
+> +/* CAM ops */
+> +const struct pci_ecam_ops pci_generic_cam_ops =3D {
+> +	.bus_shift	=3D 16,
+> +	.pci_ops	=3D {
+> +		.add_bus	=3D pci_ecam_add_bus,
+> +		.remove_bus	=3D pci_ecam_remove_bus,
+> +		.map_bus	=3D pci_ecam_map_bus,
+
+[Severity: High]
+This isn't a bug introduced by this patch, but there might be a missing
+pointer check in pci_ecam_map_bus() when pci_ecam_add_bus() fails on
+32-bit systems.
+
+If pci_ecam_add_bus() fails, for example due to an ioremap failure, the
+per-bus pointer remains NULL. pci_ecam_map_bus() handles it like this:
+
+drivers/pci/ecam.c:pci_ecam_map_bus() {
+    ...
+    if (per_bus_mapping) {
+        base =3D cfg->winp[busn];
+        ...
+        return base + (bus_offset | devfn_offset | where);
+    }
+    ...
+}
+
+Since the offset is usually non-zero, it returns a small non-NULL invalid
+pointer. Can this bypass the null check in callers like
+pci_generic_config_read() and cause an invalid memory access?
+
+[Severity: High]
+This is also a pre-existing issue, but using pci_ecam_map_bus() for CAM ops
+might cause cross-device config space corruption.
+
+In pci_ecam_map_bus(), the register offset is unconditionally masked:
+
+drivers/pci/ecam.c:pci_ecam_map_bus() {
+    ...
+    bus_offset =3D (busn & PCIE_ECAM_BUS_MASK) << bus_shift;
+    devfn_offset =3D (devfn & PCIE_ECAM_DEVFN_MASK) << devfn_shift;
+    where &=3D PCIE_ECAM_REG_MASK;
+
+    return base + (bus_offset | devfn_offset | where);
+}
+
+For CAM mode, bus_shift is 16, making devfn_shift 8. This places
+devfn_offset in bits 8-15. However, PCIE_ECAM_REG_MASK is 0xfff, which
+allows the where variable to occupy bits 0-11.
+
+Does this allow extended config space offsets to overlap and bitwise OR
+with devfn_offset, inadvertently redirecting accesses to adjacent devices
+instead of the intended target?
+
+> +		.read		=3D pci_generic_config_read,
+> +		.write		=3D pci_generic_config_write,
+> +	}
+> +};
+> +EXPORT_SYMBOL_GPL(pci_generic_cam_ops);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709122446.3151=
+899-1-spersvold@gmail.com?part=3D1
