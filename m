@@ -1,135 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C82372EDB;
-	Fri, 10 Jul 2026 17:08:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E179135E1D8;
+	Fri, 10 Jul 2026 17:22:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783703318; cv=none; b=cuVDiD6HIIilZu6X8MxL2VDWbYzE/Asf6CCtDcfXCZzMZAowIaLS9LH3rLy+lkjjdAcsOgTR66JmlQzCikHfk4zxzpmGP9W/ks1TBQz52EJsbzv6gxiFm31ecjupYr3l+jNd1BskVhRv2o8lssKcQoZVfnKCDr5Sw9ioZBRaJuk=
+	t=1783704136; cv=none; b=P1pLWHorBccB1jcITCn6KrEAuHEs2SbG/bZezobfBTmmOO1OnQOD+6xJj3jfdsgfeA2+SmFhtEBZY1DHsa9FVyxwVLstlDE7HBV9J8sejVgqkUV5GWv38/1zgRUPJiOtfnuUrCR8He6amCigh384dMDazafjKjPtNBnQmBsOPz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783703318; c=relaxed/simple;
-	bh=cbdTD4LNdtaYIciu/PLq/aQSgXLCeORVJUSexNODIc8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Rs3qTPy9BF4/8gRsY429bS3vbrttL42Zwx4wUz/c7W8gp3bnUByWMKxqLIGyyGZUP/ZZrJJJhqoOzJcyrsNzUPde5Gl+kFAIIdkFg8SQ1Ohrp8cM080Fkr5EqUb9VQxHTwjtHVPdAxgnKNG6bJ3MhweRTWQrqxdD/KfvmuFbDII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jjgRVSlN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783704136; c=relaxed/simple;
+	bh=lrlFXK9wQgkeckYdeG5oJhdPd0lU1wwNTbFCgPh0hgk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=h1Tf+XEdpUCNoP6zbpCFa51UeTTEYJw/oD+Y0LXfCojK4O2poyqTFofg4y7SQkFHcaAglDXCXfehIsEW+ZtyOwozAGL/WdnyPAS5UDKavwCrrrdUM28oP/+M8IyF0wjdDzrlYOUkXAD3evz+XDrmAMt2M3Tx0eM85fqMlHry4Vs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2ap2bLG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jjgRVSlN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C423E1F000E9;
-	Fri, 10 Jul 2026 17:08:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2ap2bLG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45CB91F000E9;
+	Fri, 10 Jul 2026 17:22:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783703317;
-	bh=hhPbd1UCtd/0zITFksdr7GEBYN5kVbAXeYXNDGLHc4M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jjgRVSlNFXmCql/94JtcLrR/pKYijeR7fm9h2buYS1b/vMUNdZSdcn0PySGKwjjlC
-	 jLCy/5W9qzqWgEoJf2YuLJeDUZrTZSOEmuogjJACTAALhDX2SoBjDG7+o0lhxC8NG9
-	 W6/7pNhumkvDFMeqHsGegwFDcVUjDKje21Z5OOzCFM8/4ZQrwWP5F3bGdVXNLdLBxj
-	 ArmxpOEknu69hmNolmQr3uhWthqoOmuX4rQxioViWjJPqeHjtvVcsCjHyAgntBIAP1
-	 b8GScY2O+FSntfxFTHZRSt/lokUAWF3xkHgKpNeFYonR2TQBB/lT5KnVQVwfK9i10G
-	 3Wo9y6FXAbHrQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 10/10] dmaengine: dw-edma: Remove struct
- dw_edma_chunk
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Frank.Li@oss.nxp.com
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
-In-Reply-To: <20260710-edma_ll-v6-10-1471d278b73a@nxp.com>
-References: <20260710-edma_ll-v6-0-1471d278b73a@nxp.com>
- <20260710-edma_ll-v6-10-1471d278b73a@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 17:08:36 +0000
-Message-Id: <20260710170836.C423E1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783704134;
+	bh=Z0Pv9tzr/FZMi7xTOe2Z3MlV+9ZplrxaF/7cIABnMMg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=W2ap2bLG/mpmp2S/bn7ALpmbTExjyTRUT185oOSQwC1UVX6NFX1iWnJpeMxPtYZHt
+	 OLgADLexPerUUcmg+e4+Ciii/WX/dyA3AyGk3Fw1IAS4Z0YU+B4lZAuZ9spwp6cDSS
+	 B3viFJCI/tAvb/baddUfPDBKXkYQ51O8+GRv+o3UznHlDCLuskFK+xdPsQWVNl7sH1
+	 Eg551RfuBGLMakPczJvtiz99mUpi480R2PAkDXm+JPrg0LXc3jKW8dsSN51g7fjols
+	 Tp28aZze4zb9g4g6lIqpG1IbgWdy9F2DDPMX8gfbKQWZKgLjXdmF+1vXWHKyseCVsY
+	 ulZJRi4jqXNqQ==
+Date: Fri, 10 Jul 2026 12:22:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Braden Zhang <braden_zhang@lecomputing.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Brett Zhou <brett_zhou@lecomputing.com>
+Subject: Re: [PATCH v2 v2] arm64/pcie/pmu: Add pci id for LECARC pcie pmu
+Message-ID: <20260710172212.GA964796@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260710-pcie-pmu-v2-1-a3d73d4d9051@lecomputing.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Fri, Jul 10, 2026 at 06:24:08PM +0800, Braden Zhang wrote:
+> From: Brett Zhou <brett_zhou@lecomputing.com>
+> 
+> This patch adds support for the PCIe PMU found
+> on LECARC SoCs, which utilize the DesignWare PCIe Controller IP
+> 
+> Signed-off-by: Brett Zhou <brett_zhou@lecomputing.com>
+> ---
+> Signed-off-by: Braden Zhang <braden_zhang@lecomputing.com>
 
-New issues:
-- [High] Refactoring from bounded chunk arrays to a monolithic descriptor a=
-rray introduces unbounded high-order atomic memory allocations that are pro=
-ne to failure under fragmentation.
+Bad S-o-B chain ("---" shouldn't be in the middle because things after
+"---" get dropped).
 
-Pre-existing issues:
-- [High] Pre-existing locking violation: `dw_edma_device_resume` invokes `d=
-w_edma_start_transfer` without acquiring the virtual channel lock.
---
+Since PCI_VENDOR_ID_LECARC is only used in one place, please put the
+#define in include/linux/pcie-dwc.h for now, per comment at the top of
+pci_ids.h.
 
---- Patch [10]: [PATCH v6 10/10] dmaengine: dw-edma: Remove struct dw_edma_=
-chunk ---
-commit 04c138d15d0c47167bf151873232daba3b9881ad
-Author: Frank Li <Frank.Li@nxp.com>
-Subject: dmaengine: dw-edma: Remove struct dw_edma_chunk
+Is this all that's needed to enable the PMU on LECARC PCIe
+controllers?  I see that the SoC uses DesignWare PCIe IP; is there
+already a native DWC driver that can operate this controller?
 
-This commit simplifies the DMA descriptor layout by removing the
-dw_edma_chunk linked-list layer. The burst array is now allocated
-directly within dw_edma_desc to reduce the number of allocations
-required per descriptor.
+Update the subject line and commit log to follow the style of previous
+pcie-dwc.h changes.
 
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
-edma-core.c
-> index 202862a828b4d..30eeb7bffad80 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
-
-[ ... ]
-
-> -static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
-> +static struct dw_edma_desc *
-> +dw_edma_alloc_desc(struct dw_edma_chan *chan, size_t nburst)
->  {
->  	struct dw_edma_desc *desc;
-> =20
-> -	desc =3D kzalloc_obj(*desc, GFP_NOWAIT);
-> +	desc =3D kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
-
-[Severity: High]
-Will this monolithic allocation approach cause large DMA transfers to fail?
-
-In dw_edma_device_transfer(), the total burst count is passed directly here
-as nburst without chunking. For large scatter-gather transfers, nburst could
-be very large.
-
-Since GFP_NOWAIT cannot sleep or reclaim memory, won't these large atomic
-allocations fail reliably under memory fragmentation?
-
->  	if (unlikely(!desc))
->  		return NULL;
-> =20
->  	desc->chan =3D chan;
-> -
-> -	INIT_LIST_HEAD(&desc->chunk_list);
-> +	desc->nburst =3D nburst;
-> +	desc->cb =3D true;
-
-[ ... ]
-
->  static int dw_edma_start_transfer(struct dw_edma_chan *chan)
->  {
-> -	struct dw_edma_chunk *child;
->  	struct dw_edma_desc *desc;
->  	struct virt_dma_desc *vd;
-> =20
->  	vd =3D vchan_next_desc(&chan->vc);
-
-[Severity: High]
-This is a pre-existing issue, but is it safe for dw_edma_device_resume()
-to call dw_edma_start_transfer() without holding the virtual channel lock?
-
-dw_edma_start_transfer() calls vchan_next_desc() here, which actively unlin=
-ks
-entries from the list.
-
-If dw_edma_device_resume() bypasses spin_lock_irqsave(&chan->vc.lock) and a
-concurrent hardware interrupt occurs, could this corrupt the virtual channel
-lists?
-
->  	if (!vd)
->  		return 0;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710-edma_ll-v6=
--0-1471d278b73a@nxp.com?part=3D10
+> ---
+> Changes in v2:
+> - Format: repalce space with tab to separate the macro name and the value.
+> - Link to v1: https://patch.msgid.link/20260710-pcie-pmu-v1-1-1519e580313f@lecomputing.com
+> 
+> To: Bjorn Helgaas <bhelgaas@google.com>
+> To: Jingoo Han <jingoohan1@gmail.com>
+> To: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  include/linux/pci_ids.h  | 1 +
+>  include/linux/pcie-dwc.h | 2 ++
+>  2 files changed, 3 insertions(+)
+> 
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 1c9d40e09107..eb0020f9d366 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -173,6 +173,7 @@
+>  #define PCI_VENDOR_ID_DYNALINK		0x0675
+>  #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
+>  
+> +#define PCI_VENDOR_ID_LECARC		0x0720
+>  #define PCI_VENDOR_ID_UBIQUITI		0x0777
+>  
+>  #define PCI_VENDOR_ID_BERKOM			0x0871
+> diff --git a/include/linux/pcie-dwc.h b/include/linux/pcie-dwc.h
+> index 8ff778e7aec0..1a31fe4db228 100644
+> --- a/include/linux/pcie-dwc.h
+> +++ b/include/linux/pcie-dwc.h
+> @@ -32,6 +32,8 @@ static const struct dwc_pcie_vsec_id dwc_pcie_rasdes_vsec_ids[] = {
+>  	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+>  	{ .vendor_id = PCI_VENDOR_ID_SAMSUNG,
+>  	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+> +	{ .vendor_id = PCI_VENDOR_ID_LECARC,
+> +	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+>  	{}
+>  };
+>  
+> 
+> ---
+> base-commit: a635d6748234582ea287c5ffeae28b9b23f91c7e
+> change-id: 20260710-pcie-pmu-5ef78c56c3b6
+> 
+> Best regards,
+> --  
+> Braden Zhang <braden_zhang@lecomputing.com>
+> 
