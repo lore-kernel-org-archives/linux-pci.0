@@ -1,89 +1,89 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 406343FCB34
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DEDC4028E9
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783677472; cv=none; b=C6kOQPGOYP8KWYACLCw1OInWk0irb/Y8FRDPjlkFcaf2tX+h1F7NqSC5cXR02/V/ecMkWQ4GyUrhv6j1fakDhVoxhr+rvaoQQZxHhj1bWnm16X1rf4L3ZDBa1PCilJW1MOYBW8yAi1ltgz+0UaoH7/CdfjaIiZW7DzXjLSJcwmo=
+	t=1783677474; cv=none; b=Q3l/82UYQk5dI4KwbQqyL2pCtwDamBz/5+O3LaObvNDRIGIT8uIakwtl+fEkNU6gc6Nu0G/g46gGg5lPyl/KpzfZB1QxA6G5FGWIUpzoJsfQKxibN8jGX3J4Zx+bniSqzB1q+uUvLQEJAVy9WVsmbSOrgFdRK6XAoAewv2rvBYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783677472; c=relaxed/simple;
-	bh=jak2vbWmlDxX6sjIkSns6YH/+A3MhzHcWj1aIP5tIEE=;
+	s=arc-20240116; t=1783677474; c=relaxed/simple;
+	bh=3pbAc12Jj3zIRz8oWGZPCYd6KNJWtOhdSqNPzVF1EiE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Gf6pQ7Qj8U3qSxzDCk2qrXLeGDA1kH5SPHfZfYYglgS8DY2t1tpiTKwFIWSgiOVDZ2URX/EoF+HArI6eFx/PHVFHYMDXGofCgAps+AHJ0QwJBjYQUnBz4Fg3JlKLqQF9iI19bZMHXeR27RFXt5iZpMIhXuzAkX/k0+CNALIMKMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=D/D2jK7s; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=d0JIck98; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=lOpLHhHxIYJq6jPHXHOXcdazn8A2EHV1POre+C/b+b8Evn0X2jogp5/T2DPsAja0tpKgpFJmB5XFdHTdmlk/2ORWQVIcfAT1ek5hpLLGawYzFvLx6cu1ct+Dwvy1G3EZ5qeg1KtqkHZUJbvnF51+wVaKrwO69tXcnDGV3Fqh4qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Pg88vCAz; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=A/5cUMev; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="D/D2jK7s";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="d0JIck98"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66A7eI2P141535
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:45 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Pg88vCAz";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="A/5cUMev"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66A7dm9U4156841
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	TPH+i5HvLekvhup2XBK3JToyvmBF7nw7B0CLErOBc1A=; b=D/D2jK7sp374QMHJ
-	H2e42JSrk1/dO8Kfs+sqpSiyuE3CiQBaj9HLTeuj2LttAFge70bxeCQOpYlR/NTQ
-	Lt8s96POUO/SQbTPmlTWJ8fq4yh3QkXhOYhhlLDpUKk0va4O7+1qhyPsnDQ/DMIN
-	R77zdpCZvcD0ZVi9KdVVzPOK4431qfpGJ2vQK5WK9ShSdb4VJ4TIU6epjhvee8DX
-	XA/tKuU/WJutt6ZopHZ7czglmITuroV1RXPu09Fkh73AkVguKRDh/QT6QJkgv5yu
-	O4nY14i6IgpiIh7V7+fRG698CAEFfA/gqoTNJtpbBGx8t9MPPX2VIuIz5lNxedLt
-	xBNeLg==
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4faf5munq8-1
+	n7NkL9sW/e578DxWIXV/0BLe24fAF1y1jIyxSoVkA6c=; b=Pg88vCAzPx8z+khj
+	GxO7gSx9tGdtK6F29YnF2D1jkJygeRL/iIsIzLLBUvhYINZrs41F4kun2GPF+qyn
+	4zE/9vUBLssjPdV1sY7jCNf0Y/xOuwXC6lEZHi+LnuNExDBb41GCAUyWWX83ZtIC
+	dvzwfz7B7LSW/kXpFTmSH0OwAnwW7iYemmVy5+gbWzWOy0Nw/V8rhHshg7IIRdnm
+	1kpa6+BjIkBu+9YaePq5+xeqmtkteXAzLw7vw/zx04Hv5XU+xhGzSNpYJtpKtG/w
+	HcIMPenZLSg4CCPzHuECGJlBCvbIp7RLlz1ZW9HdcPmzYvgLW9QKKLVkBVXt/07g
+	9KxdYQ==
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fahv8jr2c-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:45 +0000 (GMT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-51c33f48ee4so7624721cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 02:57:45 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:57:47 +0000 (GMT)
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-51c110a3b6aso10114471cf.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 02:57:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1783677465; x=1784282265; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1783677466; x=1784282266; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TPH+i5HvLekvhup2XBK3JToyvmBF7nw7B0CLErOBc1A=;
-        b=d0JIck982Xf+61T8uTc5kOHM7MzsAJKes5RtNLuM+u7TD2lwQxpN6JQ4hWjLP/ZN18
-         /f4i8iMGO1hK0y2M+eX9TSE87H3OTT/rXwYGpHJdR3sFTOoGrxKv3kZMRT7TLzm9Co0x
-         QxUa8haEt8gINU6ZGNhK9PwvI2jUO6e/nBLo9rY+tstb7/bf4ntRmJC4hVb9po+JaLvK
-         rhXp5YI89FOByMyRO3lEtdBXYUb0sGlHxD8vIheg9j3+gcAHCapo6EZpyaLpxXKZDOM5
-         L+ZWLBXq5h26qBzGKHR7lmkynMpkilwXxFMQkA6cUF8jqAonVTuwI7hjIIpWMOgxVI9Y
-         dshQ==
+        bh=n7NkL9sW/e578DxWIXV/0BLe24fAF1y1jIyxSoVkA6c=;
+        b=A/5cUMevjc2JZp06iCboiLZzNvcgT69m0pTsN3poes1nzooGTe73MN/tnZMAXTjYas
+         JG8H7t/K40/AYLnQoTmOj3KGXnCWZIEwpZ6KPCSF6Dk0f0viS+Co8JUlHa2AP8YLEbdK
+         l61Yh4gfNmYoyyPAmvyWIwqs7P4CXnhAs2382c8NLS27UdInTKLu1QENJWU68BAliUPK
+         a2aJ5Z2KYlYYHZ9mSk0mMx6o5fRjiFyXstSkIhmcreNZ1SzcV3p+uwZKRfz90T18NYBq
+         pD1Px4l650Yc/rcOFdLaf/xrt/R+xWydd9oKLTBBo0aruAfU0OCaLDBJyMqBOsmAapcS
+         JSVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783677465; x=1784282265;
+        d=1e100.net; s=20251104; t=1783677466; x=1784282266;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TPH+i5HvLekvhup2XBK3JToyvmBF7nw7B0CLErOBc1A=;
-        b=Xnf+s6opEls6o4WPhIRjPdxFqVXL9AZ4im8xm71QHS57IZXNuMzj9uKPI7x0HBGC6u
-         1hnbUEkVNjdcLlttcGtc7ydkz/UZmAT4SuvkVH73tXVh3L8CmbvoHDgfq6rlVx0yi5P8
-         XFd697XkHwx7GDjZFh9r7C5xIkcsndgnEvlkl0tP9Aqr/QImwS5Dv1tMZ7W0RQimeCFd
-         sMu//qIZPrWRKiGr3NimP9YtZNA1jHQnCQ81UlP6PuRSQ1UTtaYugiE7NeLlqenwnSpc
-         Oj+R6AfLrUBqNUrvcYnTj3rF0QU7xrG+gr6inU8hlMpoYnPOA16gEpblfe0TiKlqDpDc
-         w6kw==
-X-Gm-Message-State: AOJu0YwANnq/VkGA3HsRE99+yuof0v03MfP2gLygiR6o+t4dnWhOAGS9
-	HleFWUs197JqJq9g3N48eHVuUeMgF/bP24+QqWD5ewPjWjKFQ8zn2vDFvPM04uf80NdOCdamuBn
-	Hjq5kIFfH4tKaxzAYzIjEbcDJuec8hf16nrEkZ+EGPXmcsHjBfj2c/9hWrfylXe4=
-X-Gm-Gg: AfdE7ckHsL4OeRVFsLTjwc+ZhBuuUkdmds4RPo+7lso4sDqLcRjyUsnin27Jgp3ey5l
-	e4/qgrCDtw/j1z/ZuYHV3L33lM4Efxpi+8aG2Id5hw3YvKn4DvwFPwOIn/hg5UOYpf0Z62L+dqv
-	L53V7iV1rwfZa06gXzJMvM6qlzK2ZpuVB3UrKLQkZZXmW5XdKexVpYc+ZkUVdHSVneeuukJTDz2
-	aC6AFwZAfvJXsqY2FWTt/vyPSU4fBC7EHWyp9NlytCawWDPPEto84gErs4sYnVWH5rvvHJj5fVV
-	A+7y9uNbkith0xaIPHU5cq2GQaKs0Tu9vDiNLH45+8ODHTCFbGwTsZlMOIfoUogvO7L7p9U1JoP
-	8R0/55sBB5zxFRvduHSF2IZKMTwNmhu523yhnySjdC/gDh0NloPCXqxmuaJNcvqe3IO7t7w5qyJ
-	8T3s0+pGXEy1ygbZM27ov/TU5R9qY+SepravpGO6aqHkikowtP/1Cqac/1zF0p0o49fw821FCMN
-	iUy7e0OV3j3OEddD+8T
-X-Received: by 2002:a05:622a:588:b0:51c:7b12:5ffe with SMTP id d75a77b69052e-51c8b5767ecmr113377861cf.74.1783677464641;
-        Fri, 10 Jul 2026 02:57:44 -0700 (PDT)
-X-Received: by 2002:a05:622a:588:b0:51c:7b12:5ffe with SMTP id d75a77b69052e-51c8b5767ecmr113377591cf.74.1783677464091;
-        Fri, 10 Jul 2026 02:57:44 -0700 (PDT)
+        bh=n7NkL9sW/e578DxWIXV/0BLe24fAF1y1jIyxSoVkA6c=;
+        b=bmE7lV/MsMMW7NI0dpiZvJC0KPP3nhouwBJoLHWxrKkmY60lvDl1/7ltSViGWqCuvf
+         8VgK6szE26EZxOAMgK5sOXf8pSxWqsMzOo+lc4BCwnvuB4IzI8KfW81R5iTYsfuzgnD3
+         JH1jqS+jrjPi0Hh4ErbCJD+Z2XSswp9gZYy/IlzrZgsLu8B0jH8aaJYWe4PNlLYTeuYb
+         p/WLA7LkXH80wFUJEiIDFMa+WYXsSxU/KMPM4cvk0uREuNLqawBiCw+dF53ZZ+zrlZ+8
+         ujNCMZUy6Jj8Hz3cbY9OcuPrWwnl+QLwtDMZlhd7psiNmlMhkXeTkQf5Dfp/5z2uU/RH
+         n9Zw==
+X-Gm-Message-State: AOJu0Yy2qOjcd8rHbUbKA7xhOP24QPpPYrAVsiLnaLS90ZdO2zagCCZQ
+	9MTTpl4sjuhckLQhLXxPsYPct67twJTpdqiP2soykzZ/J0HFimdZb5qQnH6964WZL14pGM8MNpV
+	oSs0JYqsvg0xf5LyaT+l9CrjSO6I9bCHJku8htaAkDF94d2FpwQg3vdx3nNzWHeQ=
+X-Gm-Gg: AfdE7cm1lWR78z+mYwBu8SeYu4f4l2HF7/5EDBjrHzKyWgcP8LDO+spcwOkq3l4W9Rx
+	a5BwQcndzsOnZvUBlNorqIUIC0Vbbb/c3Zuf1HQ5FlFNdpWFoX42J9SROE3gWgYPjsK2BXrkuwN
+	APO2f4uuaK7GjHefvMMw8tugCLp12Nv9BJgHmt1JRRjHtIpYMtVliJvIMoJuK6837TTTiIM8vHv
+	rDVWMGLDBmYqhwD7bqUiihzSpJC76h1iYTW/OPhrNCPyt+dqIHbl4toZdKJkVPuE/gLsNClaqUR
+	diwORvmfC+6ymtJPMttuLIfpv5J50CO8Zugi1GZ7TEvqkOfcI2kRlRPU1FA4gkXrK5jz1dICtuM
+	xMZUtoxyjZCkbmXjxv6fzS/a39GWL1NGHxUxbX5rMEXzTgwg/50y/8dl4fyldeDsC6fe7srLaH9
+	PcAVdvGspZ6QQEn1exkbtvdEsUcrGTVMlDwU+EE6oTAVJNfBMCUT4UroJmXPnLobSdx/B0A7g0E
+	kXb8X5mqp//IC7QB0iT
+X-Received: by 2002:ac8:5fcd:0:b0:51c:1568:3a53 with SMTP id d75a77b69052e-51c8b39902fmr117003161cf.16.1783677466468;
+        Fri, 10 Jul 2026 02:57:46 -0700 (PDT)
+X-Received: by 2002:ac8:5fcd:0:b0:51c:1568:3a53 with SMTP id d75a77b69052e-51c8b39902fmr117002821cf.16.1783677465981;
+        Fri, 10 Jul 2026 02:57:45 -0700 (PDT)
 Received: from QCOM-eG0v1AUPpu.na.qualcomm.com (82-64-236-198.subs.proxad.net. [82.64.236.198])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c15dfda815dsm265357966b.36.2026.07.10.02.57.42
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c15dfda815dsm265357966b.36.2026.07.10.02.57.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jul 2026 02:57:43 -0700 (PDT)
+        Fri, 10 Jul 2026 02:57:45 -0700 (PDT)
 From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Fri, 10 Jul 2026 11:57:33 +0200
-Subject: [PATCH v3 07/11] Bluetooth: hci_qca: Embed bt_power in struct
- qca_serdev
+Date: Fri, 10 Jul 2026 11:57:34 +0200
+Subject: [PATCH v3 08/11] Bluetooth: hci_qca: Support QCA2066 on M.2
+ connector via pwrseq
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -92,7 +92,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260710-monza-wireless-v3-7-46253587af64@oss.qualcomm.com>
+Message-Id: <20260710-monza-wireless-v3-8-46253587af64@oss.qualcomm.com>
 References: <20260710-monza-wireless-v3-0-46253587af64@oss.qualcomm.com>
 In-Reply-To: <20260710-monza-wireless-v3-0-46253587af64@oss.qualcomm.com>
 To: Manivannan Sadhasivam <mani@kernel.org>,
@@ -109,231 +109,124 @@ Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
         Loic Poulain <loic.poulain@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Proofpoint-ORIG-GUID: 8cKAK5ETeMs9NJcFFl0h3h-w0-MsJyvz
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEwMDA5NyBTYWx0ZWRfX21fxBwDsjryz
- 1rGYljCM7DSY/+EIlITodthb41hEEKv0qUE6eU4wgLXTJeduGtizlhqnEIK+mXeL4TN0e8ZHr0B
- 340lGp/jyk1LwmmjsLdTMYbniry3voQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEwMDA5NyBTYWx0ZWRfX1whRNsFcPRif
- 3a1VHcEExzz9YcKGsKcM/Iqg1U5t/8KDLAtuZEwsDCzUil/TGcQDwwNzp3qGayYl/VQEVEdKlVh
- h9GMT4t8pZZNUCW9NJW4Px/K1Q3ROZ0ixMbyhxdksNFKFtvn9kJ1q8GwzRuBg+hZxDEcblUirp8
- YBkhTyIBuowQcD1ShDgNRPxJhVRI7h55cm6Ey2UMJ/YGVSAn4z6+NJxkcDcMjOoI5/dTtWzTwhZ
- 7lcQhQnmjeihvKXut6bfZKRmfxr3/sQlF1EQ7q2JeUIEJ51pvb2hiWsI1y8EHE5i8GQczV14MDh
- +kEEBsxnbzaHNy7u0ZIxBWxqJppxBlIX3WGFjHBzzG9flSHqqnImk/CODCnovbPkqPd7LN5AaSY
- 7KXJLY//sF4f4wjYe+g94p8PVe+pCECvQFjkhNEIW88ekZUCxJFzZhufv+zKwQENUU82q3fn9gl
- YzR3uNfiGXjbwya7MNw==
-X-Proofpoint-GUID: 8cKAK5ETeMs9NJcFFl0h3h-w0-MsJyvz
-X-Authority-Analysis: v=2.4 cv=N+QZ0W9B c=1 sm=1 tr=0 ts=6a50c219 cx=c_pps
- a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=MDeckJw97qnk8wCBExTehA==:17
+X-Proofpoint-GUID: eXQt8Dvunaf_iRfEFhix7QzqcygOeVqP
+X-Proofpoint-ORIG-GUID: eXQt8Dvunaf_iRfEFhix7QzqcygOeVqP
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEwMDA5OCBTYWx0ZWRfX9QdI+1QC/D4m
+ JZbcgMHQFj/N3uqV+f5WkQap4S8ZzIKOp8DhhJVISdKBdvcT7fFtw8EiCEXoa8zpfI88qjKPFh+
+ BS8fOZg4rZYSC8LQmhgblhp2fU84b9w=
+X-Authority-Analysis: v=2.4 cv=funsol4f c=1 sm=1 tr=0 ts=6a50c21b cx=c_pps
+ a=WeENfcodrlLV9YRTxbY/uA==:117 a=MDeckJw97qnk8wCBExTehA==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=EUspDBNiAAAA:8 a=Z5-lucBUan0SmjtTDS4A:9 a=QEXdDO2ut3YA:10
- a=dawVfQjAaf238kedN5IG:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=CW3gqymaXyTMcD2nhgsA:9 a=QEXdDO2ut3YA:10
+ a=kacYvNCVWA4VmyqE58fU:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEwMDA5OCBTYWx0ZWRfX1RZQIKeaf7/F
+ la+/3jpVvY9XNII0GJhij2yK19Z/gWCNrz0knoSb2w3FMR3WiF5HdYWAI4cljScEeZpxKkZ90oC
+ N5DzY/tuYVIY7JBypER3ww8V0f9SN6qJJnM5aPj8XWR3jcvaaBRsmoiQVut+cXJhen+f6OBvmPK
+ yY1H9Pj4/kLTGKvStaGbSSDIWTn2TFYserOmA0vew3lnyiB2NqXoxw7Qi3TRqHR6kK+BEmJpw2B
+ H6zyCe8Px+pcyLNJ2IDbblRQWMfuHC1eZAp1tn+2/8YKtfa55wlFmHN2FtBKGPgqEwo/sQCPGe3
+ ulGrVPJu20muI/T3erKmP3LlOy3ll0rlmOKuxSa9D/nfmPyyQQHQXMFWZytifRAMl9X3ESWp2qk
+ K8UXkZUZ6hHmyUtQ10N7jm6F9bz7B5DmX/h+IrWwRoNyt0/DsuKWZxzdRQYrbk8IZE/d3Ap9YGV
+ qqyy0c20sdAGjD4p6UA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-10_02,2026-07-09_04,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 priorityscore=1501 phishscore=0 adultscore=0
- suspectscore=0 impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ spamscore=0 phishscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 priorityscore=1501 impostorscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607100097
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607100098
 
-'bt_power' is allocated dynamically only for a subset of SOC types, using a
-switch on the SOC type that mirrors the one that follows it. This is about
-to become pointless as the power sequencer path (used by M.2 modules) is
-independent of the SOC type and needs 'bt_power' populated for any type.
+For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable is
+controlled by the W_DISABLE2# signal managed by the pcie-m2 power sequencer
+rather than a dedicated BT enable GPIO.
 
-Embed 'struct qca_power' directly in 'struct qca_serdev' instead of
-allocating it separately. This drops the extra allocation and its dedicated
-SOC-type switch, and removes the need for NULL checks on the pointer.
+When the serdev controller has an OF graph (indicating it is connected to
+an M.2 connector), acquire the 'uart' pwrseq target from the connector's
+power sequencer and use it to control BT power instead of the bt-enable
+GPIO. This is factored out into qca_serdev_get_m2_pwrseq().
 
-No functional change intended.
-
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 ---
- drivers/bluetooth/hci_qca.c | 72 ++++++++++++++++-----------------------------
- 1 file changed, 26 insertions(+), 46 deletions(-)
+ drivers/bluetooth/hci_qca.c | 35 ++++++++++++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-index 4a1ef316e715f4f1f0c8f7deafa971887af040f3..24dc5bf6d192be7e1d500df6bdf36e6184f9eaf7 100644
+index 24dc5bf6d192be7e1d500df6bdf36e6184f9eaf7..f6529d359ffbd97f8a3c4c0593680ab200215b36 100644
 --- a/drivers/bluetooth/hci_qca.c
 +++ b/drivers/bluetooth/hci_qca.c
-@@ -226,7 +226,7 @@ struct qca_serdev {
- 	struct gpio_desc *sw_ctrl;
- 	struct clk	 *susclk;
- 	enum qca_btsoc_type btsoc_type;
--	struct qca_power *bt_power;
-+	struct qca_power bt_power;
- 	u32 init_speed;
- 	u32 oper_speed;
- 	bool bdaddr_property_broken;
-@@ -1776,7 +1776,7 @@ static int qca_regulator_init(struct hci_uart *hu)
- 	 */
- 	qcadev = serdev_device_get_drvdata(hu->serdev);
- 
--	if (!qcadev->bt_power->vregs_on) {
-+	if (!qcadev->bt_power.vregs_on) {
- 		serdev_device_close(hu->serdev);
- 		ret = qca_regulator_enable(qcadev);
- 		if (ret)
-@@ -2242,7 +2242,7 @@ static void qca_power_off(struct hci_uart *hu)
- 		return;
- 
- 	qcadev = serdev_device_get_drvdata(hu->serdev);
--	power = qcadev->bt_power;
-+	power = &qcadev->bt_power;
- 
- 	switch (soc_type) {
- 	case QCA_WCN3988:
-@@ -2256,7 +2256,7 @@ static void qca_power_off(struct hci_uart *hu)
- 		break;
+@@ -1872,6 +1872,9 @@ static int qca_power_on(struct hci_dev *hdev)
+ 			/* Controller needs time to bootup. */
+ 			msleep(150);
+ 		}
++
++		if (qcadev->bt_power.pwrseq)
++			pwrseq_power_on(qcadev->bt_power.pwrseq);
  	}
  
--	if (power && power->pwrseq) {
-+	if (power->pwrseq) {
- 		pwrseq_power_off(power->pwrseq);
- 		set_bit(QCA_BT_OFF, &qca->flags);
- 		return;
-@@ -2313,7 +2313,7 @@ static int qca_hci_shutdown(struct hci_dev *hdev)
+ 	clear_bit(QCA_BT_OFF, &qca->flags);
+@@ -2387,6 +2390,20 @@ static int qca_init_regulators(struct qca_power *qca,
+ 	return 0;
+ }
  
- static int qca_regulator_enable(struct qca_serdev *qcadev)
++static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcadev)
++{
++	struct serdev_device *serdev = qcadev->serdev_hu.serdev;
++
++	if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))
++		return 0;
++
++	qcadev->bt_power.pwrseq = devm_pwrseq_get(&serdev->ctrl->dev, "uart");
++	if (IS_ERR(qcadev->bt_power.pwrseq))
++		return PTR_ERR(qcadev->bt_power.pwrseq);
++
++	return 0;
++}
++
+ static int qca_serdev_probe(struct serdev_device *serdev)
  {
--	struct qca_power *power = qcadev->bt_power;
-+	struct qca_power *power = &qcadev->bt_power;
- 	int ret;
- 
- 	if (power->pwrseq)
-@@ -2345,7 +2345,7 @@ static void qca_regulator_disable(struct qca_serdev *qcadev)
- 	if (!qcadev)
- 		return;
- 
--	power = qcadev->bt_power;
-+	power = &qcadev->bt_power;
- 
- 	/* Already disabled? */
- 	if (!power->vregs_on)
-@@ -2417,26 +2417,6 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 	struct qca_serdev *qcadev;
+@@ -2417,6 +2434,10 @@ static int qca_serdev_probe(struct serdev_device *serdev)
  	else
  		qcadev->btsoc_type = QCA_ROME;
  
--	switch (qcadev->btsoc_type) {
--	case QCA_QCA6390:
--	case QCA_WCN3950:
--	case QCA_WCN3988:
--	case QCA_WCN3990:
--	case QCA_WCN3991:
--	case QCA_WCN3998:
--	case QCA_WCN6750:
--	case QCA_WCN6855:
--	case QCA_WCN7850:
--		qcadev->bt_power = devm_kzalloc(&serdev->dev,
--						sizeof(struct qca_power),
--						GFP_KERNEL);
--		if (!qcadev->bt_power)
--			return -ENOMEM;
--		break;
--	default:
--		break;
--	}
--
++	err = qca_serdev_get_m2_pwrseq(qcadev);
++	if (err)
++		return err;
++
  	switch (qcadev->btsoc_type) {
  	case QCA_WCN3950:
  	case QCA_WCN3988:
-@@ -2451,10 +2431,10 @@ static int qca_serdev_probe(struct serdev_device *serdev)
- 		 * the M.2 Key E connector.
- 		 */
- 		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
--			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->ctrl->dev,
--								   "uart");
--			if (IS_ERR(qcadev->bt_power->pwrseq))
--				return PTR_ERR(qcadev->bt_power->pwrseq);
-+			qcadev->bt_power.pwrseq = devm_pwrseq_get(&serdev->ctrl->dev,
-+								  "uart");
-+			if (IS_ERR(qcadev->bt_power.pwrseq))
-+				return PTR_ERR(qcadev->bt_power.pwrseq);
+@@ -2426,17 +2447,9 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 	case QCA_WCN6750:
+ 	case QCA_WCN6855:
+ 	case QCA_WCN7850:
+-		/*
+-		 * OF graph link is only present for BT devices attached through
+-		 * the M.2 Key E connector.
+-		 */
+-		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
+-			qcadev->bt_power.pwrseq = devm_pwrseq_get(&serdev->ctrl->dev,
+-								  "uart");
+-			if (IS_ERR(qcadev->bt_power.pwrseq))
+-				return PTR_ERR(qcadev->bt_power.pwrseq);
++		/* M.2 connector modules are powered by the pwrseq acquired above. */
++		if (qcadev->bt_power.pwrseq)
  			break;
- 		}
+-		}
  
-@@ -2465,8 +2445,8 @@ static int qca_serdev_probe(struct serdev_device *serdev)
- 			 * let's use the power sequencer. Otherwise, let's
- 			 * drive everything ourselves.
- 			 */
--			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->dev,
--								   "bluetooth");
-+			qcadev->bt_power.pwrseq = devm_pwrseq_get(&serdev->dev,
-+								  "bluetooth");
- 
+ 		if (!device_property_present(&serdev->dev, "enable-gpios")) {
  			/*
- 			 * Some modules have BT_EN enabled via a hardware pull-up,
-@@ -2474,21 +2454,21 @@ static int qca_serdev_probe(struct serdev_device *serdev)
- 			 * through the power sequence. In such cases, fall through
- 			 * to follow the legacy flow.
- 			 */
--			if (IS_ERR(qcadev->bt_power->pwrseq))
--				qcadev->bt_power->pwrseq = NULL;
-+			if (IS_ERR(qcadev->bt_power.pwrseq))
-+				qcadev->bt_power.pwrseq = NULL;
- 			else
- 				break;
- 		}
- 
--		qcadev->bt_power->dev = &serdev->dev;
--		err = qca_init_regulators(qcadev->bt_power, data->vregs,
-+		qcadev->bt_power.dev = &serdev->dev;
-+		err = qca_init_regulators(&qcadev->bt_power, data->vregs,
- 					  data->num_vregs);
- 		if (err) {
- 			BT_ERR("Failed to init regulators:%d", err);
- 			return err;
- 		}
- 
--		qcadev->bt_power->vregs_on = false;
-+		qcadev->bt_power.vregs_on = false;
- 
- 		qcadev->bt_en = devm_gpiod_get_optional(&serdev->dev, "enable",
- 					       GPIOD_OUT_LOW);
-@@ -2522,10 +2502,10 @@ static int qca_serdev_probe(struct serdev_device *serdev)
- 
- 	case QCA_QCA6390:
- 		if (dev_of_node(&serdev->dev)) {
--			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->dev,
--								   "bluetooth");
--			if (IS_ERR(qcadev->bt_power->pwrseq))
--				return PTR_ERR(qcadev->bt_power->pwrseq);
-+			qcadev->bt_power.pwrseq = devm_pwrseq_get(&serdev->dev,
-+								  "bluetooth");
-+			if (IS_ERR(qcadev->bt_power.pwrseq))
-+				return PTR_ERR(qcadev->bt_power.pwrseq);
- 			break;
- 		}
- 		fallthrough;
-@@ -2549,14 +2529,14 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+@@ -2528,7 +2541,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 			return PTR_ERR(qcadev->susclk);
  		}
  	}
- 	
--	if (qcadev->bt_power->pwrseq) {
--		bt_en_available = pwrseq_power_is_controllable(qcadev->bt_power->pwrseq);
-+	if (qcadev->bt_power.pwrseq) {
-+		bt_en_available = pwrseq_power_is_controllable(qcadev->bt_power.pwrseq);
+-	
++
+ 	if (qcadev->bt_power.pwrseq) {
+ 		bt_en_available = pwrseq_power_is_controllable(qcadev->bt_power.pwrseq);
  		if (!bt_en_available) {
- 			/* The host cannot gate the BT power individually.
- 			 * Treat it as always-on and drop the pwrseq handle.
- 			 */
--			pwrseq_power_on(qcadev->bt_power->pwrseq);
--			qcadev->bt_power->pwrseq = NULL;
-+			pwrseq_power_on(qcadev->bt_power.pwrseq);
-+			qcadev->bt_power.pwrseq = NULL;
- 		}
- 	}
- 
-@@ -2594,7 +2574,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
- static void qca_serdev_remove(struct serdev_device *serdev)
- {
- 	struct qca_serdev *qcadev = serdev_device_get_drvdata(serdev);
--	struct qca_power *power = qcadev->bt_power;
-+	struct qca_power *power = &qcadev->bt_power;
- 
- 	switch (qcadev->btsoc_type) {
- 	case QCA_WCN3988:
 
 -- 
 2.34.1
