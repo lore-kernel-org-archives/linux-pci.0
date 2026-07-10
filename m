@@ -1,243 +1,232 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013066.outbound.protection.outlook.com [40.107.159.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BB4421CC5C
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 01:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783648668; cv=none; b=VB16bNG1BSXqm3YHBjkDOvziA/zxd3e9bYrWqS3ymWCmlph8553AY+ACrpahsJWPI4UDJLanqi8ouSk2ATIRMTpCLVOXlFs1oAhzbBMwQPtZBF0rxFTEjyHLngHX0DEIeSJJExVfbrJ3HjMUANN8Uhtrcf5+VwRkBEGU7uLrfRc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783648668; c=relaxed/simple;
-	bh=dHlhaxBZM7dXqt8/qgDa0jI803YV2CvBpu+tjHS7fCo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X6HHn9jPCy2NKCQp4OAbNmO+Vg2wFYpwYDEYwDXOQjEdIIZHl260OBLWwB5fD1BMv2pooU/R3yNbC5ODVf71V9L7zHoxo8SG2RNbA6RsENoK2C3FqffHEjNoxdQ56NUhxepfyqQ1FX8m1BeMX4QUA+wVyJBvp8O9RZAhQ/eJtA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eSPbH2HF; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797C91DB92C;
+	Fri, 10 Jul 2026 02:16:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.66
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783649801; cv=fail; b=BgpuyWBN1UmNBHLYpEqFgq6c6jkMU7U9YcYlKVHhsxnCEr+MbH7b7veIFM1gYvCCcAhkeXTaRP53SpsuShJHnXEXlSRTehMFIv4D6BANBhUcvzj0npPbwV2YxS7byl8T/thoXk78AIvp2o6def3cWeI0X9XkRRL+kVj6iXsOWx0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783649801; c=relaxed/simple;
+	bh=E8z+qpXmx2fQbTOr26br2PSoUtzrBM/d8N+rI2Gsz9M=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=W/f9ChD5+V6UcyxuQ+PxZAhJb7MBei0AL2TA6WHz4J1cVjkqvw0DGz82OVwMMAGxh/CcqoFr/B/IWfzTdPymO8VLXTp8+Q3zSXnUt2vLRHchfJnt+t+DJjyvFfd+SUJkGqfr+52S8IXFq+olMHnMEgxKVvPGxtBYlYEwmNY645M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=h3IEK8vD; arc=fail smtp.client-ip=40.107.159.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eSPbH2HF"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2cae1a3a744so2552325ad.3
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2026 18:57:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783648666; x=1784253466; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yNnnvPqeszB5BO6wBdcbAXNtS5SR1xypVlNj/wphgrw=;
-        b=eSPbH2HF86IK1D8xyAWd3Ovr2ycC0AcFUKNWOZcBC7qp+vLwsA97BUZ3KfVyXbVC9p
-         vDx3XsshlSGuxXN3WScaHxPkhH4Ud9O3lhukKuWXUJ05bq83I+goEWEA9GE1rxlgFAkk
-         dGS893+LHGQpdEgeGjcz3LY/IOvgE0yLCj8g/1zim8teEytw2FatCO/Q13MOihQMVPBm
-         IUAz69eiXGdSvhfyiF3l9rjKjWDNKVm/p17230CpaFrcZru/O2IaeupIN5n/UnJ69xU7
-         3fS2671NL2ztAaki1duaoRJ8PWiPlZq4Q2H4PwkbtFQhiFveIRPghWQZZATtpoBTNEFi
-         5wuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783648666; x=1784253466;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yNnnvPqeszB5BO6wBdcbAXNtS5SR1xypVlNj/wphgrw=;
-        b=Z2wIvZ8mV/VzgQszP+HOVLJM6aPNJV2cNen9g34K2d8N5UkqJKFnp6Arh2dkrDt7Lg
-         rzowIEkQdd3y2IjYVkpjIkx0paOfSZsnI1cFZ5n3VXiP2sUraXiEr9BL1xOj/oxrYKnG
-         eEyAJY8QxHKag50qJMFIPlRQz7jchs6Ft7YfcNx0elmqNS3vhUy7iR6bl+LntNpHLejX
-         Kf3MlOHvp8adyrMFYkJVoQIzu/WxWppF7CGdbUk34DHyR6RlimI3CZGe40m4PrbaFHSn
-         NyPSKvSQUQ/mDSml/Il06sREXbfvHw87zIs4SotZWaBQYTqXhCgW5GTkx4bO1WEQj276
-         W5Fw==
-X-Forwarded-Encrypted: i=1; AHgh+RqQLijDft+pJhHMrDS/qs7wlq+B783t5b8uDwoCdPRzs+kSLqGjcaOCEpFDwRYyBssij70XXGRvI3U=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz87Y1Q0tXPKJ4itzHfeigmEb/y+/DdosS89oRDl5B3yBEjL1P1
-	78kep2rBu+aNgB4sxqueA5xDFZUFwSrigBqhUhsp9/2TvPE8Dp4+Saf1
-X-Gm-Gg: AfdE7cmFLYunJwcUsmY7mBC0Z2pPYE1Y9wg+MpHMzw596D1UlpGlnKnkbIYQ/3ZfakQ
-	D3hlxy7DJiR97186S7zVw2v+E5Zy/+zlgBfCm3fP7Wzk2sER9mjjn/jlLMp6Au5zKrF15nA/aRI
-	vIQPMQjIKSpxtyb7CGOC08XbaqcdLsqwwB1QzdiIWF0fCqdKqLkjJcq74C+3dOUHhrIYnvVykke
-	o96JA+9wL3swtovFOxt/+5fgSlA0h+ZClsOECz426Knw59RHCqnzMr7wwX+yKp0XWwFZVYD7Ygh
-	zAQtpCIQJPolHDoH+++nB2Xx+kwjsgkkV3JctutrfYCBJUGADjqwhZVqFiUwM6IphvdKIwEjVQM
-	1j8m+PInyNEwGBVOq1GAYJ9CFlOMHuHPOegU2cF6GKRW8KhEFy9XRebyR0L40UxN1
-X-Received: by 2002:a05:6a20:1587:b0:3c0:b3f7:e5e9 with SMTP id adf61e73a8af0-3c0bc8c42f4mr11229276637.15.1783648666263;
-        Thu, 09 Jul 2026 18:57:46 -0700 (PDT)
-Received: from localhost ([2001:da8:7001:11::cb])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-311b00048a3sm5608901eec.5.2026.07.09.18.57.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2026 18:57:45 -0700 (PDT)
-Date: Fri, 10 Jul 2026 09:57:05 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Inochi Amaoto <inochiama@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Christian Bruel <christian.bruel@foss.st.com>, 
-	Frank Li <Frank.Li@nxp.com>, Nam Cao <namcao@linutronix.de>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>, Alex Elder <elder@riscstar.com>, 
-	Siddharth Vadapalli <s-vadapalli@ti.com>, Vidya Sagar <vidyas@nvidia.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>, 
-	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v4 2/6] PCI: spacemit-k1: Add multiple PHY handles support
-Message-ID: <alBNXgMAwXPKwiJ2@inochi.infowork>
-References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-3-inochiama@gmail.com>
- <ak9KzNFF26B0Kttz@ashevche-desk.local>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="h3IEK8vD"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=prFbypYXp3xFsX8mTURR4YSRL8QSM4rDJCdXmzxVY35QG66tEm731C7OKTJLhq10ESW7c27uboavS4SHKCUXLo4Ghw+SlTp+lhW0HzNt5kbOIG9ZWw0O5oHVNv7u9hFcbtK2lxHwwCwM/sLPzF0sG5Sct/8pKjafTfU01I8Z8/fL0IEbMuU3wvQ6oRLOm0yI/wmKGe2cVQmAwL5CDXdK9yquHtO+qdomTzn4e2nRR1EizWpgDWs3vccDB8gesKoR3GvZU+BpxCdOEtLEbwn1DplWOldsnUd6Isj9+X2JYjxdP4pi/Fa0Uc+4bfG/MTKBGoEMflYgVwvdwSchulB3FQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BQ2XQJJpEbG8LgVhOYRov9PedDbL7AzaPPHgDBxSjGc=;
+ b=Bu0+rWu10L8mB54EXh5M1nxONuF2YYnk1nW2gTEFZ2HQEa5rHojZbetT6ArPxPcR9LsPolOed9Aj7ZSk+NdRk7x3e74ZGuSv8wTNDUooLj0cyiHFyKRZtV/K9JINsh+hQ9B1SNUjAQMD7jUQaBZTwK94JCVkRFv1SEToQJ77FztWSww7vPpASXK7RD99FHewOyt5vGAcqlibhCU/vmlchIAEXYyS+J2UYIKdT2D0qOvgdu6/qZw1N8EUC3ikkhiqSTrAgSvlkBcF32pSRJm+uqjy4yBXnEVCr97DXRBUm7+jk6KMR1H9vRDwPgWQn00WEZoUsoGjqN1k8iGw1vvYIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BQ2XQJJpEbG8LgVhOYRov9PedDbL7AzaPPHgDBxSjGc=;
+ b=h3IEK8vDUyLMNreCw8yEf8D3n9Mbep7JPxc8AiKfjucaovmXgqtKznkRWc2hJTzsfaAlVnZDDi984uK7kPOLvcvggIkqYSG/ngifjKRZxiVDepbED1CynaETXwH/abOxUTE3g5MPFUi5WZbuNhguFTKUnr4GwmPfx8n2yZmDk7Wgjzeo+zap1qanZijBOXxzugtuRWVXc6a6+J7d4Z5HMLX989vrP9OAgscyT2utiLfsss1gMcEn392s/K4eLrF/nntje8UrLzni/g7ZMUWM43lnTApIrOZUnjHnyGzxL1fn+/s6HyonaEdVNYeGXGDjzYl4wOwOC0wiPu03+MbQlA==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by AMCPR04MB12669.eurprd04.prod.outlook.com
+ (2603:10a6:20b:76f::15) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.10; Fri, 10 Jul
+ 2026 02:16:36 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0181.009; Fri, 10 Jul 2026
+ 02:16:35 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: "Frank Li (OSS)" <frank.li@oss.nxp.com>, "Sherry Sun (OSS)"
+	<sherry.sun@oss.nxp.com>
+CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li
+	<frank.li@nxp.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>, Amitkumar Karwar <amitkumar.karwar@nxp.com>, Neeraj
+ Sanjay Kale <neeraj.sanjaykale@nxp.com>, "marcel@holtmann.org"
+	<marcel@holtmann.org>, "luiz.dentz@gmail.com" <luiz.dentz@gmail.com>,
+	Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"brgl@kernel.org" <brgl@kernel.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-bluetooth@vger.kernel.org"
+	<linux-bluetooth@vger.kernel.org>
+Subject: RE: [PATCH V5 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Topic: [PATCH V5 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
+Thread-Index: AQHdD4ujVRVB+PtT7EGhgJZURkmGHLZlRnKAgAC5bGA=
+Date: Fri, 10 Jul 2026 02:16:35 +0000
+Message-ID:
+ <VI0PR04MB12114FB4F1C79ADFA5F3F215092FD2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260709101555.3034853-1-sherry.sun@oss.nxp.com>
+ <20260709101555.3034853-3-sherry.sun@oss.nxp.com>
+ <ak-2BQEUMg8Ewjz9@SMW015318>
+In-Reply-To: <ak-2BQEUMg8Ewjz9@SMW015318>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|AMCPR04MB12669:EE_
+x-ms-office365-filtering-correlation-id: 7ae9bebe-f584-4d1f-eee6-08dede294481
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|19092799006|7416014|23010399003|1800799024|376014|366016|18002099003|22082099003|4143699003|11063799006|56012099006|38070700021;
+x-microsoft-antispam-message-info:
+ hkbmZ2N+vfpkNmtnDcbnxFqMwhE1eGg73stt+yljn4wikbWufOcIvbrj2KxXj79CQ6PTjnTzoqKT4KutfQiYBUWf01kkvme3kErX/UorjAwpRrtlJV7Jgwi5kL7hZp6Tl/IDk03ZImvhCzgdkpmsBKhQwth58euZBXrGFCr0iR3mwFPWjXh3tMXRQ64wMrlfhPTemWfZGMoxDrTsf/lqA1pRUVRzbsiSyrDXHIZgXijMbhfwD3HWxEa3K/c/ZvbCyfWkmdi0Yqsg+Cx+DrjYnNPITq1SgSq22xduwKbruhzwkOewhGrl9F/26zZX2E44kV7l5ls7BqIOfaMbGcvv9VcvSyNCRcCnM3taONS8D3OeR/CoKaO9NNOq3tQVa0IeMU0c7UJVbIZvbCo9AlRwcQvZ6hYQa5WYYXFl5GjXjGso2033Z6u+9L6uoyws2SY/TRDbgUBhf+4sN0qwUyasa25KUPGwKeCBkqcDcm06pSZjwcnjfTgY0J31GQRaSt7m2tJgBD7aw2huIQyuEzl5Gq6+M3nCwoHOzRIqJSa4iT+o4DCMLwXz6h1h1JyQ2NuE8VaEb0hUJgd7oEBxNzBb62SbjfKsgt4IOvIs17DIFMNexO/tPkQKagxmzbcUJlzrV7bhPg6lxmfG1y1zv1E/4c9q3Z31WwBWESmvqjnqVFlYvL2iPu2uGTEShyZCCAs5vKPZCSPE8wZnuwPBWMhFTWg5jZi5BoHhrg8cJMqK8Tk=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(7416014)(23010399003)(1800799024)(376014)(366016)(18002099003)(22082099003)(4143699003)(11063799006)(56012099006)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?EUJdiA0FqUOMQuIxrePlXDyjeBRPzSuvJ00Rr1JDFuA/hXcGUNY9OSVLwUmg?=
+ =?us-ascii?Q?c9K1fdlOqA664RlEWmUZkToDLLd8/mJy6EFWNm1gLJIW8rTdoaDHeTbmuubA?=
+ =?us-ascii?Q?oOY2rTRNB7EaOfZ6WplzpS2ql7//Ny3jcujcG+MgaFH/3EqdkHH3Ne3R5vKI?=
+ =?us-ascii?Q?595dAUmASFIQZLIMQVaQrUGTDSKa3Z5Wv/c0D+Yu3jetE3xNsgHvGhdHUQYL?=
+ =?us-ascii?Q?sIKx85t9Rl6eicn2IW5g0mzkfpFjR41q+GKFgzPlTCk2LYvTJi7NFp9Qjld+?=
+ =?us-ascii?Q?+JmNLiRG3/0N3kuwXsT2rg3rzxn2i+ZUX7B8mw2EB1Ui4FIuq9Nlnd4Cb5WE?=
+ =?us-ascii?Q?Hbgqa3kbUF1zPpPeLlRTCjngXC27IbnZFikNl+mDaWf2eySpRk+SPP+6V8yP?=
+ =?us-ascii?Q?qq6HS3wl00iKCHYKWoQgzcnwIUdS0Di5DCwpEsJSw2wFToR0jKercFcuH0Dy?=
+ =?us-ascii?Q?RKpwha5w1rJLcW+Wx9guaZjCLjC2OvVDyJgJWNDecOsx19+6uN/2U5qJuwA5?=
+ =?us-ascii?Q?R5eusxTQha+LW1P8kFmd4cJiFzmkiav1Uv5mEibtuHYfyLo+h1Ig9JAce2Qj?=
+ =?us-ascii?Q?dlwtX1OTZuolnovB308Jq9NXMFpMci7JiFk/5t31SNapCbIlr/HxG2Auc2aF?=
+ =?us-ascii?Q?EmbYZecsmVmN1ZouSHiHqDhcAQbhR1XIKoL9hxx5mF//MmOj9Sk/2hrWESGy?=
+ =?us-ascii?Q?XQiivtOwZqXZLXkUIfhoKRWSrtBc266Ay+BXH9wwOPqivJM5RGbnmIoV70NG?=
+ =?us-ascii?Q?UpflIi6qC2S08qm3kGkNsZ1ql8qhVZFhwrYAs785jI5i/zF2A2xPXNBmy2mt?=
+ =?us-ascii?Q?2op0EVbFzRc2hc0S6oIOqt5Gon7ADHzgdS/d2Fz/T6//s30YwjCQJC6hLK7S?=
+ =?us-ascii?Q?IcoXpKiEVeUOgpYi2lClt9A/87Y2uMd8w7Nw+hRJ7Hc6tnzMiXC1huZt2i0s?=
+ =?us-ascii?Q?wcoYLBy2kooP36LMzSaLOGCqX/9j2Ni1y/6RFDRVzXp2uw8AGyNzSQYfpgkE?=
+ =?us-ascii?Q?I1d3WqIhWjYcTxbqTc2emIFtvy0yU9fYDYel+B2aoNXRBz0KrJNZ5A9zrfDL?=
+ =?us-ascii?Q?ZUYlpGq8l7q9bmaqyuj6Jiu+A4VK5GmRE+7JXek1G/XFi+yEtVPKe+FWjIPC?=
+ =?us-ascii?Q?0oIlDEXrtmfp1x4YqRGPpRW7Anf4hAzN5ENQH/jXYyLGQpa2gTUN/ZzdGyo+?=
+ =?us-ascii?Q?j+Sr+ni0ZasLgFvFAKpRPnhWoh+LGCz1PxiYmVWAt67v3gB68o1sU8swndki?=
+ =?us-ascii?Q?zLn5BJRWxOh+SpYSfK6Hnhdk4/RyfjrZjOcJAHWHm3DvZZ3+Mog9UJNFe8YR?=
+ =?us-ascii?Q?NTPNifL+aYinm20+q+1l7nMaT3/LRCC8PBtJzrDLJZ3VoC6bqI2CXbkcsl5n?=
+ =?us-ascii?Q?87k9LvC5GKp2PQOB4H06olaqdPbWl6kpU5SwoM/Ls4DP2JqQkpdGE6UNFczn?=
+ =?us-ascii?Q?XXjodG12GrjfpChdSGhBk42heyPrBGECYaZepemxnaf4Qss9WTjgrNUurNdJ?=
+ =?us-ascii?Q?O2rFRDLeVUIM5WQNjsGjEh0KsBniOD50/tuY+r3wu3g9x8V34ND3EyzLUcb2?=
+ =?us-ascii?Q?KfdsJ9mwxVZZCugrMETD8HAJ58mtTWdx0b5R2QbdjIJJmu7+CcP0ENZH7/sa?=
+ =?us-ascii?Q?yRl9yHJc8frmib4hNxhoh/4vUuTcVipFgZ7p1vCtmdFfNvENXn/+kGVRUQYN?=
+ =?us-ascii?Q?M0n4wILkfz7WzIE1P+wiuxsNHT0JgCTRqFRKhPjvx26CwXO1?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ak9KzNFF26B0Kttz@ashevche-desk.local>
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7ae9bebe-f584-4d1f-eee6-08dede294481
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jul 2026 02:16:35.7026
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: R0q5HGzvMd5koOpedF7dFMtkimtkCvz/frfbaa1NOVaJkFxQS9s/NyCJoaSwp7nOe3FQrzJu61/8kFukuKqldA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AMCPR04MB12669
 
-On Thu, Jul 09, 2026 at 10:16:28AM +0300, Andy Shevchenko wrote:
-> On Thu, Jul 09, 2026 at 12:00:22PM +0800, Inochi Amaoto wrote:
-> > The PCIe controller on Spacemit K3 may use multiple PHYs at the
-> > same time. The feature is not support by the current driver.
-> > So extend the PHY definition to support multiple PHY handles.
-> 
-> ...
-> 
-> >  struct k1_pcie {
-> >  	struct dw_pcie pci;
-> >  	const struct k1_pcie_device_data *data;
-> > -	struct phy *phy;
-> > +	struct phy **phy;
-> 
-> Should it be annotated by __counted_by_ptr() ?
-> 
+> Subject: Re: [PATCH V5 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
+>=20
+> On Thu, Jul 09, 2026 at 06:15:53PM +0800, Sherry Sun (OSS) wrote:
+> > From: Sherry Sun <sherry.sun@nxp.com>
+> >
+> > Use dw_pcie_rp::skip_pwrctrl_off to avoid powering off devices during
+> > suspend to preserve wakeup capability of the devices and also not to
+> > power on the devices in the init path.
+> >
+> > This allows controller power-off to be skipped when some devices (e.g.
+> > M.2 Key E cards without auxiliary power) need to support PCIe L2 link
+> > state and wake-up mechanisms.
+> >
+> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 16 ++++++++++------
+> >  1 file changed, 10 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> > b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 92f8e4a299e8..afcf3b6bf3cd 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -1382,10 +1382,12 @@ static int imx_pcie_host_init(struct dw_pcie_rp
+> *pp)
+> >  		}
+> >  	}
+> >
+> > -	ret =3D pci_pwrctrl_power_on_devices(dev);
+> > -	if (ret) {
+> > -		dev_err(dev, "failed to power on pwrctrl devices\n");
+> > -		goto err_reg_disable;
+> > +	if (!pp->skip_pwrctrl_off) {
+>=20
+> if pci_pwrctrl_power_on_devices is true, where call
+> pci_pwrctrl_power_on_devices()
 
-Yes, I think it can, this is something I have missed.
+Hi Frank,
+The skip_pwrctrl_off flag defaults to false during the pcie bus probing pha=
+se,
+so the pci_pwrctrl_power_on_devices() is called at least once to ensure all
+regulators are enabled.
+The value of skip_pwrctrl_off is only changed in dw_pcie_suspend_noirq(),
+and is refreshed by calling the pci_host_common_d3cold_possible() each
+time a suspend occurs.
+This is why we use this flag at runtime to avoid powering off devices durin=
+g
+suspend to preserve wakeup capability of the devices.
 
-> > +	unsigned int phy_count;
-> 
-> Ah, you allocate much more memory than possible PHYs... Can you redesign and
-> use the above annotation?
-> 
-
-IIRC use the annotation does not reduce this memory usage...
-
-
-> >  	void __iomem *link;
-> >  	struct regmap *pmu;	/* Errors ignored; MMIO-backed regmap */
-> >  	u32 pmu_off;
-> 
-> >  }
-> 
-> ...
-> 
-> > +static int k1_pcie_get_phy_handle(struct k1_pcie *k1, struct device_node *node)
-> > +{
-> > +	const struct k1_pcie_device_data *data = k1->data;
-> > +	struct device *dev = k1->pci.dev;
-> > +	unsigned int i;
-> > +
-> > +	k1->phy = devm_kmalloc_array(dev, data->max_phy_count,
-> > +				     sizeof(*k1->phy), GFP_KERNEL);
-> > +	if (!k1->phy)
-> > +		return -ENOMEM;
-> > +
-> > +	for (i = 0; i < data->max_phy_count; i++) {
-> > +		k1->phy[i] = devm_of_phy_get_by_index(dev, node, i);
-> 
-> > +		if (IS_ERR(k1->phy[i])) {
-> > +			if (PTR_ERR(k1->phy[i]) == -ENODEV)
-> > +				break;
-> > +
-> > +			return PTR_ERR(k1->phy[i]);
+>=20
+> > +		ret =3D pci_pwrctrl_power_on_devices(dev);
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to power on pwrctrl devices\n");
+> > +			goto err_reg_disable;
 > > +		}
-> 
-> 		if (PTR_ERR(k1->phy[i]) == -ENODEV)
-> 			break;
-> 		if (IS_ERR(k1->phy[i]))
-> 			return PTR_ERR(k1->phy[i]);
-> 
+> >  	}
+> >
+> >  	ret =3D imx_pcie_clk_enable(imx_pcie); @@ -1454,7 +1456,8 @@ static
+> > int imx_pcie_host_init(struct dw_pcie_rp *pp)
+> >  err_clk_disable:
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >  err_pwrctrl_power_off:
+> > -	pci_pwrctrl_power_off_devices(dev);
+> > +	if (!pp->skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(dev);
+> >  err_reg_disable:
+> >  	if (imx_pcie->vpcie)
+> >  		regulator_disable(imx_pcie->vpcie);
+> > @@ -1473,7 +1476,8 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
+> *pp)
+> >  	}
+> >  	imx_pcie_clk_disable(imx_pcie);
+> >
+> > -	pci_pwrctrl_power_off_devices(pci->dev);
+> > +	if (!pci->pp.skip_pwrctrl_off)
+> > +		pci_pwrctrl_power_off_devices(pci->dev);
+>=20
+> Not sure if there are counter in side power_(on|off) function, if not, ju=
+st skip
+> power_off is enough.
 
-Yeah, this is more clear. Thanks.
+It depends on the pwrctrl drivers implementation, for the generic pwrctrl, =
+it will
+call regulator_bulk_enable/disable() to handle this, so has enable/use coun=
+ter.
 
-> 
-> > +	}
-> 
-> > +	k1->phy_count = i;
-> > +	if (k1->phy_count == 0)
-> > +		return -EINVAL;
-> > +
-> > +	return 0;
-> 
-> This doesn't seem correct to me, I would expect phy_count to be assigned only
-> when it's valid. (Yes, perhaps 0 is the same as it was, but semantically it's
-> different 0 in this case.)
-> 
+As mentioned above, the value of skip_pwrctrl_off is refreshed in
+dw_pcie_suspend_noirq() for each suspend/resume, so we need this runtime
+check to avoid powering off some specific devices during suspend.
 
-I guess you think 0 is a valid number? I can not understand what you thing
-Assign this to 0 if there is no phy is fine to me, which shows there is 0
-vaild phy found.
-
-> See also above. Do we have some PHY API that just counts provided PHYs?
-> If not, that what you should probably add first, before this patch.
-> 
-
-I have not found any api for this. But the actual problem is, how the api
-is designed. I have checked both the array bulk api for reset and clock,
-it seems like it is much more than this patch...
-
-> > +}
-> > +
-> > +static int k1_pcie_enable_phy(struct k1_pcie *k1)
-> > +{
-> > +	unsigned int i;
-> > +	int ret;
-> > +
-> > +	for (i = 0; i < k1->phy_count; i++) {
-> > +		ret = phy_init(k1->phy[i]);
-> > +		if (ret)
-> > +			goto err_phy;
-> > +	}
-> > +
-> > +	return 0;
-> > +
-> > +err_phy:
-> > +	while (i--)
-> > +		phy_exit(k1->phy[i]);
-> > +
-> > +	return ret;
-> > +}
-> 
-> ...
-> 
-> > static void k1_pcie_deinit(struct dw_pcie_rp *pp)
-> >  {
-> >  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> >  	struct k1_pcie *k1 = to_k1_pcie(pci);
-> 
-> > +	int i;
-> >  
-> >  	/* Assert fundamental reset (drive PERST# low) */
-> >  	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
-> >  			PCIE_RC_PERST);
-> >  
-> > -	phy_exit(k1->phy);
-> 
-> > +	for (i = 0; i < k1->phy_count; i++)
-> 
-> 	for (unsigned int i = 0; i < k1->phy_count; i++)
-> 
-
-I agree with the unsigned int, but I guess this definition is not
-allowed in linux.
-
-> > +		phy_exit(k1->phy[i]);
-> >  
-> >  	k1_pcie_disable_resources(k1);
-> >  }
-> 
-> -- 
-> With Best Regards,
-> Andy Shevchenko
-> 
-> 
-
-Regards,
-Inochi
+Best Regards
+Sherry
