@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F46D344023
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 18:32:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E2D357CEA
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 18:33:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783708327; cv=none; b=R0QOCdXwhzc8+rbVDejwoISZzOdp0wv0KV1h0QWUdJjI6VyS5PuznilJ1H6kDPWeiNNi8somUFyIR2DeFUlFEeZjDFjEfp32KTxR5VEYrUg1hl2u44j1v8rAAlmge5527ZsN76bXivtTi6BhWJfA+aiIiqefp+GLIjdNKf3MznU=
+	t=1783708387; cv=none; b=Wec5i+WALZMTTJX1g3JEDZ0ifqn8z73hn67iP6P2Y8f1I7XApN6VCHb7J99LdDl8rKkiUxxei02wldYnvX+wFrQQGjftbm6UykmiVHJBEZDwZmvFzOOeHTQkOsRNWSIEwq+Qaq18/YXcz7KO16B3AFNs4rJnRTbtOGazn9xamq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783708327; c=relaxed/simple;
-	bh=yIVaC8+nohpXF3AqvqrsU+YBiAEv8psOFyT5er1xrDM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Dfe+tB1wiKl2cHbrKDZks0zgGtK/KcG25mu8OUNdObh/iAAiagthvUSfLF0dACdlRpL18uQTG4o0hKCyy2CMpZmErGZ4Iv9GihJIgh9xoaM8bE62qPXkPZSM0Q1353AxypuCxqS6EhySsRKVGRQBxBOh+dGv49Nlcs7zAT5ftRw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WjwhJrze; arc=none smtp.client-ip=198.175.65.12
+	s=arc-20240116; t=1783708387; c=relaxed/simple;
+	bh=StHpTVxZtptOgU/btaDylWiXwYUI3OGdG2q1cmBKrf0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=qL1IU982cIfrZjAmlWEJRJ9RzRaKS0paWrNJ8JQPoEgVbghBWlbzM8Ylo7dyrotJN5SMrXj8Ihe5YKc9G78hKKknKOuH5r//ydVYez8szKJ4+KO3YYjW/tBnHO/UV2BoO5EfpWse5MIBZnXrxi7Uo52KJ5rrwWvVNsJnOVuEUCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ltSYsXoU; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WjwhJrze"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ltSYsXoU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783708325; x=1815244325;
+  t=1783708385; x=1815244385;
   h=date:from:to:cc:subject:message-id;
-  bh=yIVaC8+nohpXF3AqvqrsU+YBiAEv8psOFyT5er1xrDM=;
-  b=WjwhJrzejqs0cBxCaA1EkEvwvT5PSQAQ4EAiF8x9DEo+FDRqGQ128c1m
-   ZNmiwfO2AV7eQPzOGbTfI5MVqDYYa/0oDKIl6UuJ9mOgz9GU+vn2NWkmf
-   NEVdwQ8HRvRnPQlUuA/FJwJJtI6/EXQGMxQCqRFxAP8m6cpqv/2/BMP+e
-   9lSH0Coum21JodiayW4y/apzRLsG2FhzGvSLCbpmFHWhag5/CjSG3Ykpz
-   JwimSW13cd+zwEkKz34fftBdDOYfg7JtL5WNVBmJy8UoDUt4XIRLmjt2b
-   8Oe5TXaRDA8va0yvL2vrNtQxVmyRJ3sm2vQHR2RUCdLGpl427SC7zYTBh
+  bh=StHpTVxZtptOgU/btaDylWiXwYUI3OGdG2q1cmBKrf0=;
+  b=ltSYsXoUkPb0Iw4OM2orAnVC7uS0YJ5od89GBAeI97K4UO+iW2upxQU2
+   PmZFFfArbsZR/bNkLyO9NsXhety7YK9K2i8LnuaNlyg4nCsg/mO8zSKnx
+   UPBQBgJH8SmwqefcZS8VmzcDtWkMHAsHUmZ2hYI4XHiw7Av5gFnUTrb5S
+   FTRAb762+f2gQU7PjyJsdBZ2zJypmRIaFzhGoxTYiIG+heP5HFWQJdh82
+   xSofcQsa3KtVLCBc2vExX7Ail5+hJLAYco/2GYbO4Oy1kAQ7yI4cYuT7V
+   PpsVLapSyrfkBQLyCx5+QQ/pmDgo7JdNhBK/8i5ttbf33qcPwK3ocx8rh
    A==;
-X-CSE-ConnectionGUID: y96B5FovTvy1FO+Tx7uQtQ==
-X-CSE-MsgGUID: Ww9/IQkgQH+GiBev2cjYYg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="95925882"
+X-CSE-ConnectionGUID: LxLsJqXARt26txFtKeJGjw==
+X-CSE-MsgGUID: BboFyP6YRzutNDqDCA35dg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="83529213"
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="95925882"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jul 2026 11:32:05 -0700
-X-CSE-ConnectionGUID: qfljC+zlTCG6G5Vy8liAFg==
-X-CSE-MsgGUID: FTIuudt4RZeukdjRP7MbOw==
+   d="scan'208";a="83529213"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jul 2026 11:33:05 -0700
+X-CSE-ConnectionGUID: +Bzj15JmSfCyaCgaNXRRJA==
+X-CSE-MsgGUID: DqhcrvilRE2hbksQAGS8Zw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="251581330"
+   d="scan'208";a="259845033"
 Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa007.fm.intel.com with ESMTP; 10 Jul 2026 11:32:03 -0700
+  by fmviesa005.fm.intel.com with ESMTP; 10 Jul 2026 11:33:03 -0700
 Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wiG12-00000000JFj-3sjj;
-	Fri, 10 Jul 2026 18:32:00 +0000
-Date: Sat, 11 Jul 2026 02:31:46 +0800
+	id 1wiG21-00000000JFt-1C7T;
+	Fri, 10 Jul 2026 18:33:01 +0000
+Date: Sat, 11 Jul 2026 02:32:33 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 5d9f1dd3b3e7bd64ac7ddedf28fcb7db81053819
-Message-ID: <202607110235.RfqF74Qo-lkp@intel.com>
+Subject: [pci:controller/dwc-rcar-gen4] BUILD SUCCESS
+ 6bd0f589488396d14c4d9e4f030954ccc2ee4f93
+Message-ID: <202607110222.SU1ivW18-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 5d9f1dd3b3e7bd64ac7ddedf28fcb7db81053819  Merge branch 'pci/controller/rzg3s-host'
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
+branch HEAD: 6bd0f589488396d14c4d9e4f030954ccc2ee4f93  irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
 
-elapsed time: 752m
+elapsed time: 753m
 
-configs tested: 232
+configs tested: 244
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -93,6 +93,7 @@ arm                            randconfig-003    clang-23
 arm                   randconfig-003-20260710    clang-23
 arm                            randconfig-004    clang-23
 arm                   randconfig-004-20260710    clang-23
+arm                          sp7021_defconfig    gcc-16.1.0
 arm64                            allmodconfig    clang-23
 arm64                             allnoconfig    gcc-16.1.0
 arm64                               defconfig    gcc-16.1.0
@@ -121,7 +122,9 @@ hexagon                          allmodconfig    gcc-16.1.0
 hexagon                           allnoconfig    gcc-16.1.0
 hexagon                             defconfig    gcc-16.1.0
 hexagon               randconfig-001-20260710    gcc-12.5.0
+hexagon               randconfig-001-20260711    gcc-16.1.0
 hexagon               randconfig-002-20260710    gcc-12.5.0
+hexagon               randconfig-002-20260711    gcc-16.1.0
 i386                             allmodconfig    clang-22
 i386                              allnoconfig    gcc-16.1.0
 i386                             allyesconfig    clang-22
@@ -163,7 +166,9 @@ loongarch                        allmodconfig    clang-23
 loongarch                         allnoconfig    gcc-16.1.0
 loongarch                           defconfig    clang-23
 loongarch             randconfig-001-20260710    gcc-12.5.0
+loongarch             randconfig-001-20260711    gcc-16.1.0
 loongarch             randconfig-002-20260710    gcc-12.5.0
+loongarch             randconfig-002-20260711    gcc-16.1.0
 m68k                             allmodconfig    gcc-16.1.0
 m68k                              allnoconfig    gcc-16.1.0
 m68k                             allyesconfig    clang-23
@@ -178,7 +183,9 @@ nios2                            allmodconfig    clang-20
 nios2                             allnoconfig    clang-23
 nios2                               defconfig    clang-23
 nios2                 randconfig-001-20260710    gcc-12.5.0
+nios2                 randconfig-001-20260711    gcc-16.1.0
 nios2                 randconfig-002-20260710    gcc-12.5.0
+nios2                 randconfig-002-20260711    gcc-16.1.0
 openrisc                         allmodconfig    clang-20
 openrisc                          allnoconfig    clang-23
 openrisc                            defconfig    gcc-16.1.0
@@ -186,17 +193,22 @@ parisc                           allmodconfig    gcc-16.1.0
 parisc                            allnoconfig    clang-23
 parisc                           allyesconfig    clang-17
 parisc                              defconfig    gcc-16.1.0
+parisc                         randconfig-001    clang-17
 parisc                randconfig-001-20260710    clang-17
+parisc                         randconfig-002    clang-17
 parisc                randconfig-002-20260710    clang-17
 parisc64                            defconfig    clang-23
 powerpc                          allmodconfig    gcc-16.1.0
 powerpc                           allnoconfig    clang-23
-powerpc                       eiger_defconfig    clang-23
 powerpc                 mpc836x_rdk_defconfig    clang-23
 powerpc                     mpc83xx_defconfig    clang-21
+powerpc                        randconfig-001    clang-17
 powerpc               randconfig-001-20260710    clang-17
+powerpc                        randconfig-002    clang-17
 powerpc               randconfig-002-20260710    clang-17
+powerpc64                      randconfig-001    clang-17
 powerpc64             randconfig-001-20260710    clang-17
+powerpc64                      randconfig-002    clang-17
 powerpc64             randconfig-002-20260710    clang-17
 riscv                            allmodconfig    clang-23
 riscv                             allnoconfig    clang-23
