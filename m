@@ -1,47 +1,47 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021110.outbound.protection.outlook.com [52.101.125.110])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020086.outbound.protection.outlook.com [52.101.228.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA76B366079;
-	Fri, 10 Jul 2026 08:22:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A0413EF0D0;
+	Fri, 10 Jul 2026 08:22:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.86
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783671728; cv=fail; b=Q9Qf++ZS8ZQ4s1jKL55MjdCoZW1KVh+078FYDjbHUxg5gcFQJKDtdEGTwyWi3e4od/4fBODP3TH6plwNQ3VD3uWc/YZPxCYs7PYNMucw5XvWz6b49HjW1Dh0ph7167qQBynnVJLFBFUjy/wtj6Kljwnc/koMqwqQzYR43vkPvCY=
+	t=1783671730; cv=fail; b=jTvArBEc8roUHSGwbjbTsUeATz1Uxfk/KCqW5fhXseshqGNLl7h/SRjlZQWNVW6GDc6Fu2oXQygCAxU+7bwQVX9/IEdSY8UQFKEwTolBVYCwh/Xet7GMFabrjWPr1DvKV6qa5/+uTCKIgjW5QUKX8aJi8wXAhg9gbtYn5f3HWzM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783671728; c=relaxed/simple;
-	bh=xzX8rqrmsbwqTUNeb2svHGMEYsv3Wz/Lid53+COnAlA=;
+	s=arc-20240116; t=1783671730; c=relaxed/simple;
+	bh=1EYrRlU0eypBhfvbMcWpCKAlEBBCdgl7udIDefXtHIs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NEWQqudPgAH2VktrKc2BrxGK+JuaILBXW7UxqVYZtWrsTDJY9nMemkjijCMLp87J/IA4ngKp49u4eQoutsFu09jgIecLCS/1Sp5UAK6jzCXdOo0m7qR4MLbSe5B4OduQC1Ai4XMmictnOegBICddf9KbATtoQ/P9RbCDNRQDKW4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=XDkzse39; arc=fail smtp.client-ip=52.101.125.110
+	 Content-Type:MIME-Version; b=H4BnPHL3OuArcwatyxh8FC7MzrlrUl1sCun7xX8/e5MJajq0UVv3F7hYYJ5mP80EHe2ycJXgv3t+ouAnFxkzUqKvv7gsSwUBWNEffbr1qdlYJPnWChc9Wzddk/v0VB3kpTC8GTJFMdRFHpJTgnxPx8TknFeomcBY+9i6ae0cw9Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=KGPJ9Hfw; arc=fail smtp.client-ip=52.101.228.86
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="XDkzse39"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="KGPJ9Hfw"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=V6JQt9mwCN4Xqnca59tXQNrzxelKEkG5UldvhzhrpDn29ecehKAX77v7VdpU6LfNxmscAr0uBUU8zCcdaGs66SGQ1kHH72oHdi2/G16Hc+p2EPc45ddFS+NM/kZbya454YwCBNnTbs0zrjY5+TFNrx8qW3pJx4OSWlpMPCsHKWqrFXXccfK4xibHAEeK7NMCYLRpjm7SrCT5FaHKsDM2B56fAbNDPxqTYlBJDkugTyuk9rQJf3DkNSrDKDiN3M/ZPXPrGSpcNmaAyRBY4NTAYJIGlBS2ULt86I70bH8AQVVIYdQvQS+ovBTPPeny3Tb/qORejn7bJA513e25K/J4OA==
+ b=anUN6To0NHhAKiAVjTc8OYX/woo0gK4cwY6ejtYTrwgsGRcR52uwMyYof8oIZ21oaaeCoiucZ+hh+1ZX3PEsO8DSkYT7mgc19FyQZth92n1EMroHhjwV+Dm0p1c9fMvkmoerjleKgVnPfmNGzzKVFaann53JIWUTgTEuxDfFyzRAZ/n0I/pJMM2TTiNs+3/GERSK07StilDlvTvoykMuv/JlLnpWGWtU+aGRj6BJo4UKI0RJ6PFIYKCqos08MMrK1DvJ+5FwkyboJfYz82bQccFM43EECmFIVs6sk5SYSvr4PBRKQSxqW1b+UV5YyBnUv6A7QLv0qlFahCl9xEUL3Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=E+uAlsP9rykDYoaKG8SSofefd5/wIY2+oO3/Vs9FyPM=;
- b=K7SgeTGraWlh9d6wx3v63bxb1pGmYmQeFLloYJndtTxSseL3ix5xFZ27nEWkk9MmVyKwyrzxNDMlIp2brHFl1lzFdjM9+gxkS1d+r16JhztRrSRTonoRUUD/05pNA8ecC788KCZflV0K9iFU6Imz4c/OHnfSOhZ6VjTMrrJw/YjfFAeMWnTilkKY4dGek/UAEiXajdp/dOIzTzWgDNgSYHPlRN0o1GqwMLiW4lg0rxlR5aLEP+1pLE6CSVyGzdmWyprdnYpMxfJR1ufrh68yfivhdVGdPzRDRXCVIQj56IOrUm7oO+ABRoeI0uaxdWVykBQWQnC7uki2RK/fgFNOgA==
+ bh=VKomF5BQ4iFLFqQQiPmlXUz8qCqHQR9F9PU5t65N8ZE=;
+ b=Fs/mnEcCEHS7P/sLBUrSU9xdnyeEeKaToGkuhhW6/82DrXym+7qzNMHtQYClckaOK0y87ONJLPCLeI3oyqvl1NRrE14ZQE7IeyerSWPIunobmYFwB/0BLCEyk43Jf/U2fs7bLZEGLuaeAG2iZsiVOqSCYuC4Z+iSBxHrOPql0gmHY2ZUDQ2XrbqLgovRclwYktb6G5zRpI5duVLxD+wuczlMqOatIymGsf8r/64ywb83LuFthadKQIlptXcyDdbr8ti5touztcHggKfx+Xaooorrq7UCg13qn15vI567hWeK+t/ThPgDhMwKdr8hSj+AMNRskupX/vIYIFz5Qk++ug==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E+uAlsP9rykDYoaKG8SSofefd5/wIY2+oO3/Vs9FyPM=;
- b=XDkzse39rwosA1Lfd5ZYdHb55XVM6+d9AfcwvHIGZq7VAEQE2wI4VnFLlOLMLtSI4p6+Jh3OjxM6dqcl/6Sf/vOqlVgRPZh/F5EeANmjZ+Ht/3RXB11z7Dafog4EHrfpta3wP5nFFBPSeLqwsC3jwCY5s8vX3RykPRmTCHkKfz0=
+ bh=VKomF5BQ4iFLFqQQiPmlXUz8qCqHQR9F9PU5t65N8ZE=;
+ b=KGPJ9HfwljBFLeuturTBMhIy1+rKHeDvSo29PxUtE+0f1UqDGZnsacdFAMnCAR4s7fH+4k2A93B7dDBFkdHUsdSy58wYqG2ttPEY3UzFYbf3QW8dAh7B8bEmyVY649VAm4VUOnr85BV8zCWmprKBJTVdUfMDe/TDJEAuq0fH76A=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY7P286MB6531.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:323::7) with
+ by OS3P286MB2742.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:1fe::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.17; Fri, 10 Jul
- 2026 08:22:04 +0000
+ 2026 08:22:01 +0000
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0181.009; Fri, 10 Jul 2026
- 08:22:04 +0000
+ 08:22:01 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Manivannan Sadhasivam <mani@kernel.org>,
 	Vinod Koul <vkoul@kernel.org>,
@@ -57,16 +57,16 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	linux-kernel@vger.kernel.org,
 	dmaengine@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v4 4/6] PCI: dwc: Expose endpoint DMA resources
-Date: Fri, 10 Jul 2026 17:21:54 +0900
-Message-ID: <20260710082156.2395844-5-den@valinux.co.jp>
+Subject: [PATCH v4 1/6] PCI: endpoint: Define endpoint DMA BAR metadata format
+Date: Fri, 10 Jul 2026 17:21:51 +0900
+Message-ID: <20260710082156.2395844-2-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260710082156.2395844-1-den@valinux.co.jp>
 References: <20260710082156.2395844-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0077.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b3::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY6P286CA0012.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:3b8::19) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -75,265 +75,275 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB6531:EE_
-X-MS-Office365-Filtering-Correlation-Id: ba5b587c-071d-48ed-3748-08dede5c52d0
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS3P286MB2742:EE_
+X-MS-Office365-Filtering-Correlation-Id: 69c30271-7eec-41c9-9f27-08dede5c514d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|10070799003|1800799024|366016|56012099006|6133799003|22082099003|18002099003;
+	BCL:0;ARA:13230040|376014|7416014|1800799024|10070799003|23010399003|366016|56012099006|6133799003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	zKlif0kU4aqf4E9qxq5vo+jcZa2w0rood1wGbiek5izvgFe90PDRqTuGrbrmsm6kNiOEL481mmHsD9XG0HkPplDQxfeGVpneQPLVj5UURt3jgc3+L+CnScDaTk3dNoVONqEn/iaL9EalKk5HHn1kNG6XEYe6GrdRO3M6s2vdPCJk3i+oiZXTbuW47W5vV7uKOVKJ0lgMMrki5/OzjMuMhdrGOvtD0EvvZSX3s8nJzF8Vjrel8IWej+tU/yvJA0eW7oju68xHTlfi4g6PhoT+ygHg7MrV78zJo9f9Trmqz/Q2lSChMdrpwGPLIHhDZwqM+mbU+uQ+bIcz0/5co+ARbNfN59m6vU5G2zB5LiwkGprzu6nlB02C81UbXuSWGeoME5PqNc8Q1xNOwrxTjEwrFFXI9Btwgua8z5FD1Yg9zPNWhp4gyg4Nz8mMNF0VeuFj7iFSZr1JKoa9ReTzY3/opQAJFb15VuVxRuns7p8NTQZxcPhAqA6nCdVz0aGRYJhByFqE2ukfgvz+kePLV5EjxAUzoIJRCMnzx8KL7Vlwcu8SOWPx7tgi0UcbHwCUxYAAHQ5xqbB6VR3WKBhV9l/B/jpMtl1ylJxR4c82diGDEzZhWmzZ6Jh4mICkUzoP/TWfxDC3U1LjRwoqlsnGM+9WNejLrMsP3k0CqANQot/ZPI0=
+	plJB/RKj23QlGR9W03GK385lG2UCxK5qifZSKsdWRsxv87NCli7+ekR3Qg//UhEYHRiHSIoTikYIW0woG05IyCHlMQveG/5GM8IMaujV2a4NFT7zRKeAQGovqDOr/rdrXiR+INnYzT+x3dPPTHzpca8aa7KJgfb4OO4zX4TqDKEADYyp9f+u/KrdxOktFWg+iVIb/SKllrL8n+tu52Zd7D1NduH7vcLxyjniTuXdWV6uCLdDRpBgFsb7CNYgDkRpFLQ0fOMFSSU/YWrULp7EK7cxukx273d4SLFNq1cHIeJqqv1pu8BRR81CzWFl14DrYcdnhWLtOVsS2M65FFmyeLBAZjxXIKvM9/2HLV8Zd12MjhomxSnBHDUqGiuLaV3pcB+4fDuaRmKNDamYCWrJhPv94egB5t651UKfbi3f/LPRLbq6sts2Yf67xpM4mMaj4IREk1Sq9fIv3VpVW+yqjLM2TtoJNUv1qezGW7rqr0iVqaSbnd7EN/DpJzikAVmetLBd8LDQUsEuFGMRhPvk72F78M8INpvekjv7QeQ09gtnJnnJwe/9ORN1ZT8xNYUI3gE2HY5FChaQeJzKyDiKPZA9ETrAYxoKgkMVLJaMkr5CNb4DkCEJ45p2F3S43MWjdIFGFw+XnRN2AE1BWqoxzdDiqdgTQRUJqxYTgZRNZHo=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(10070799003)(1800799024)(366016)(56012099006)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(10070799003)(23010399003)(366016)(56012099006)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?6DyxNuBH+eDEgIx/mRslDeAfnS4VAovjbHwL1673R/O6gp6GOQVQw5O3Qz4W?=
- =?us-ascii?Q?AQnp21tgOEglSKvQp+OK5kln1beQT25kpba7JCqNrAMWXJHKHUcBwNCVnCOh?=
- =?us-ascii?Q?H0A+Odoatla+SxtndiHhav/JJTQYLEdFg9j1KRhFkuUOUDR5S17cEjCndbBi?=
- =?us-ascii?Q?lpU5T3EWsPKzuz6X3SkDP4CxRKSTRW2Pl8IiElW+7xxvnWp4dS+OThQTb1qo?=
- =?us-ascii?Q?+EVtAJZf1TPxehyqR+/ilY6bo4wMAaJdtRmjOoymJS4NhcoFXOWoy9W9HtWs?=
- =?us-ascii?Q?C6lxfGUG7oLK2/p/VrWSBgUQOFrSyc+AUWT2+qtmIWcVNC1RObEKi/tIVMlY?=
- =?us-ascii?Q?KGOV006SyAqyUvE0SaNHBgh3HBkd8gbe1gKVxmPlHWrFAx7q0zeWkchZgkUC?=
- =?us-ascii?Q?zWmluzgQkYKhueUp55H1O1NiS/KtnLsDvpj/D8rhyJh1VldWcSDl/1W8NiOd?=
- =?us-ascii?Q?sYB9Jyu6bY4yVsgIugAcXbCHrUD3v+VdR0SmMbkjJgK/4cvo3er77FDwpkPd?=
- =?us-ascii?Q?LBUe8+gYAo3Rsq4eFUOs0SjfBI5lRyZc9LQ8RS+Xo9VteyI0j85s+qmTzTNt?=
- =?us-ascii?Q?brRZVI17DdxnmQHpCIW7/aszNTwo2qCC2GI3uMuyfUD1K7VsERBEnNkKPSNo?=
- =?us-ascii?Q?mZTBnmwWdiISOiYcDcAgrchAxr+sYoQ/u1qDlc53yUq9ovtWbK7WHSJPs/WP?=
- =?us-ascii?Q?maomdmxBQnJmoSKE9JQP/D4zROErsisz9pCt6c8u7PLwGT4WsPiDuApCwTFs?=
- =?us-ascii?Q?m5qBSAq/d0SjcvaSsRCb51Joh6ccsNdVeHbzJ0gYyg8CgfGLjw2InS33R6BI?=
- =?us-ascii?Q?NjH3+oFdILE5PgcpFHvBKXmhECh8VPjW8b1HExsaGKcBTynQfLW445vpZXDy?=
- =?us-ascii?Q?RZ7IXSIENO3/4IRdsuxhC0puZFJRXtH2B5qzPESJSmMQRIJNyZyv0lnRGwYe?=
- =?us-ascii?Q?8uKyE4GapyoiFYIGXtWlvup3qAc4NMUeZ5eO65TSwnh9UlgapOLeFHxm5E7L?=
- =?us-ascii?Q?Ox8Gtqdj7hxxJkLX7ZIIFraX26Opvd9+/ZupuifHccqzsoqMzN3gIimHGTUd?=
- =?us-ascii?Q?yCnf702fRiUBFC8OruTlUJcNjYdZO2X+oY3abZHJihqfe6SIIFgdPhQNIarB?=
- =?us-ascii?Q?y5rxdJrViHqk68pat9SW8Z7i8bSF43tTLc0qW9itv2SNVHm0IrJqoHdrGYfT?=
- =?us-ascii?Q?+mCz/gq6IX+eGG9hrNGd922KSxrq/1nKERtQwM2Hwq56pzWRiqdXGrWLOXUG?=
- =?us-ascii?Q?HN7KGWaARnwnqU7GlI2JJdlfPEcUSM6yO5U7Lc14Sfct02Z9c6D8ihEnILH+?=
- =?us-ascii?Q?7RSdTtFQ3kR3cSeQ5JLwHx9bOhnN/REPTYSKWeCtaRxEDa/A3o+oZ83IexoI?=
- =?us-ascii?Q?2hKiztcNeWAk+BuGrgbOHrevq1vyq8XCA3/EpSYjAfKsj2TsWbY1q+7aROmf?=
- =?us-ascii?Q?C7sR3nv/ZdA/mSvo8rdL4CjTRQBBlOweUiZjqLM5OCDAvziLpMLdu/AlAC+M?=
- =?us-ascii?Q?Yo3dBw8dnjxO739s3INMqxd7lAHTVgNTyy1tAWHxQkyYv0yf8jAwE1Exresy?=
- =?us-ascii?Q?4DWqz8LR3z382q+adFe6tfS4tQ3il16CEk1hD+p4jcDG7AMHbAN5wVu/vmGB?=
- =?us-ascii?Q?JkbK3apEZKlHhL0sp4/+aoB7cXdzhqZ9ebZSBP83W9kKBEuDX8xaqAVw03oC?=
- =?us-ascii?Q?tcKk6jW0uzfqWkHfDFxudc8sPn0HpguFYqckg1dGGPW1oEvYdkMnp79ldzpY?=
- =?us-ascii?Q?G0B6zdPq381b5n/oXxxLBu+Y3SSe8ew7IPsR9GwoC91nTSXx6J+j?=
+	=?us-ascii?Q?OA9VofMWn7xshStT9yAXBRlz3e6EMHosgoV0VIEe15KpvLK7EmKf5tCfoGOf?=
+ =?us-ascii?Q?3euTB+UPgNU3mFKFcrUS+aO2IyXa0zoqfm4FAJ6d4/iHIwfCtBHpmeZbyv/a?=
+ =?us-ascii?Q?spNWAvi8vkQYusku1SwXn5D6IRJIaTe2kcSFAx1m47hAcg7kNdNgAnENAwnt?=
+ =?us-ascii?Q?eneO8WzghZGW9tWQb7hkj1+q/Dp4u7yYu31yjR1vFqlBGWQfmNk5/PSYOFJq?=
+ =?us-ascii?Q?vULjIgbVFMh49M41U4bmKZbXwg0XwlHErDuETJ+uxcjMVi0cxy1Txyc61QgE?=
+ =?us-ascii?Q?cRkd0CnhdQ+a0bn0oR2r6KI9MGyj+5rFQBqy+di4V+BlX41wzgSXlQarfkGl?=
+ =?us-ascii?Q?bjGWHw1t99ECZVYuL4mD9xX7jic8iQbsb+JnaKl5U7ov65Ta0+1vJ7BGzm9U?=
+ =?us-ascii?Q?HAWF3sM8hSNd3qYdCYdK9coSom9JvvJo1HZf96YZR5fUkIn5LLsv5JXoWIPV?=
+ =?us-ascii?Q?6JNCkwy68uf7CzZA9Fx/WuMiL0UXd/HwjldoS2VPlrZoqHFHzsPydu91I//a?=
+ =?us-ascii?Q?KlI5ss9yPyX4r/NyGumcDsURK89GInjPCHv+rDooAi8vFdc0kHsloHCbW8SB?=
+ =?us-ascii?Q?3gFqrRdxXCsQCNZugkPxBgby4GipkoRg7cH0/W2uMu2fzl5JUKyvm1TdUA0X?=
+ =?us-ascii?Q?JcFG98cilWnsRpoRf8AVhR76SB9uog/IqgLHm3zlyIlLnleK4vSmVeT7RXt5?=
+ =?us-ascii?Q?dh5Pfs+PNCF2NcTAODgpNyVaeY/T2QbaTsbtELPwmdpe9nB5zJ0g4Ev8v7PJ?=
+ =?us-ascii?Q?tr0Xnsa7BrPxgK33XEnXHeczNjOMAAZDtY4BhmJMNYuOiBuBWBLuv9JQkSzw?=
+ =?us-ascii?Q?N0D0n0cFzylO3vPlGSBlkYrXrcHjccj3rvpoE3aGonH2FrgRWezzTlWEvwLn?=
+ =?us-ascii?Q?aQUGr/mHq724MKFbKxQBTnXo4/woz/5Be11xDU2ITxnKjMCVi/hJdUXw8TFE?=
+ =?us-ascii?Q?PhaZkairMFbZ0pwoSPRf0Bg593qV5aXo7c0scuw2Y2FBsKWWl9XsFGHi0J0k?=
+ =?us-ascii?Q?jx+TLl78PC/g+5bEpgdhTpMhJ6XLVvyMKEcduZQDrYuyfyZ1FeHkuG28AMYA?=
+ =?us-ascii?Q?tJbyT48PqphqGplhavOf0sS14DkJUweviBe3K9TUh/qgexzeQPTcGcq8TdxJ?=
+ =?us-ascii?Q?gWoGa2VkcxXYEjVjIvkQOMy/2/M3Orojnkk/g2suDpRenW4prKgPYxZbaF2m?=
+ =?us-ascii?Q?LVP2UEqukH/UmnY5GjrjGLxREp5DXr2Kg5yzV6nKc0YvQOoKU25vBAvwFBbn?=
+ =?us-ascii?Q?4INbf2lQhgZ917mAlVV2W86itcB1OKacTgJv3hJJooVfJRMcM8vU66iATz9W?=
+ =?us-ascii?Q?ml/qyj1GwSbi1FMdU5OJohcP13l8gBPrxS40EYJVo0Zmnm3uIzgbIi1wEiYp?=
+ =?us-ascii?Q?TcVtJbNEri/KloH+ODNf1rHEQ1kMX54umB3IvXx+n0lrWUd4805OTH14UQjs?=
+ =?us-ascii?Q?pG6yiounCUGEQkykzQuOSrNonRYNjtkfE8mMUetd1WSaAzcttnMt+cWp2+tp?=
+ =?us-ascii?Q?7r6Tme8dSAzYw+L+6hJmyZNl5H9DKqVnbimA/cvgYGFAqX130FZv3ob2vPWm?=
+ =?us-ascii?Q?uk8mFQRlUlEf8DyCQUMlUvo3RHKLnQ1rB15WQZWFEdBLgLOtn/fNP46UkbU2?=
+ =?us-ascii?Q?cR8N79HR7lmVzeBLRox4TvaUcx4d+LhXPo7gDCf0e2XFnANS98pHGLMwFWpZ?=
+ =?us-ascii?Q?8t8/lrphSI0InikPOohVTyN2PHrROaUV0GAKiW9kNha96xdetG7YJbjtGMNv?=
+ =?us-ascii?Q?/KgyAplPVNUv98AYqw5ey0ps0nr+59O0AI6sMpbkglED4rsjiAcv?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: ba5b587c-071d-48ed-3748-08dede5c52d0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69c30271-7eec-41c9-9f27-08dede5c514d
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jul 2026 08:22:04.1592
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jul 2026 08:22:01.6143
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zkdGZ07nm2nwJg9zUS3/Xp19RUuClhh5sgUiEEWxnciEqX38gYmV0/quqWf/knCrc3k9PFzuLMyql5z+C5XMUA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB6531
+X-MS-Exchange-CrossTenant-UserPrincipalName: XfULxZqRwWAcRzb0vKz+OBDPLFkW+8RvfBz/e7eSbKoNMYE2ydlRTmxpdwM5yT2inznxpuWSM6b3n5PR5ogV5Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3P286MB2742
 
-Expose the DesignWare endpoint-integrated eDMA register window, logical
-DMA channels, and linked-list descriptor memories through the EPC
-auxiliary resource API. This lets endpoint functions decide which
-channels to publish to the host.
+Define the BAR-resident metadata format used by endpoint functions that
+expose an endpoint-integrated DMA controller to the host.
 
-When the DMA register window is already visible through a reserved BAR
-region, report its BAR and offset. Otherwise report it as a normal
-physical resource so an endpoint function can map it. DMA channel
-resources carry hardware channel selectors and refer to linked-list
-descriptor memory by ID.
+A VSEC-based discovery scheme would be a natural fit, and existing
+dw-edma-pcie providers such as Synopsys EDDA and AMD (Xilinx) MDB/CPM6
+already use VSECs for DMA discovery. However, some endpoint controllers
+cannot provide enough writable configuration-space storage for a
+complete, controller-defined payload. Keep the extensible metadata in a
+BAR instead, where the endpoint function controls the layout and size.
 
-Expose DMA controller and channel resources only after the local DW eDMA
-provider has been registered, and only expose channels whose linked-list
-descriptor memory is available. The interrupt-emulation doorbell remains
-reported when its register offset is valid because it is a standalone
-resource and does not depend on the eDMA provider. DWC non-LL exposure
-needs a metadata ABI and host parser extension, so leave it unsupported
-for now. Reject VF auxiliary resource queries because the
-RC-programmable DWC eDMA/HDMA register window is assigned to a PF BAR
-only.
+The format describes the DMA register window, exported channel counts,
+descriptor windows, optional auxiliary windows, endpoint-local descriptor
+and auxiliary DMA addresses, and a ready bit that tells the host when the
+described BAR windows are usable. Channel entries keep the auxiliary
+window optional so layouts that need a separate data or auxiliary aperture
+can describe it without a format bump.
 
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
 Changes in v4:
-  - Drop an unnecessary ternary as dma_ctrl_bar_offset is already 0 when
-    NO_BAR.
+  - Improve kdoc.
 
- .../pci/controller/dwc/pcie-designware-ep.c   | 131 +++++++++++++++++-
- 1 file changed, 127 insertions(+), 4 deletions(-)
+ MAINTAINERS                |   1 +
+ include/linux/pci-ep-dma.h | 170 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 171 insertions(+)
+ create mode 100644 include/linux/pci-ep-dma.h
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7d2794945704..dd47537f390e 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -858,6 +858,38 @@ dw_pcie_ep_find_bar_rsvd_region(struct dw_pcie_ep *ep,
- 	return NULL;
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 15011f5752a9..c8a171fa15d1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20801,6 +20801,7 @@ F:	Documentation/PCI/endpoint/*
+ F:	Documentation/misc-devices/pci-endpoint-test.rst
+ F:	drivers/misc/pci_endpoint_test.c
+ F:	drivers/pci/endpoint/
++F:	include/linux/pci-ep-dma.h
+ F:	tools/testing/selftests/pci_endpoint/
  
-+static int dw_pcie_ep_check_edma_ll_regions(struct dw_edma_region *region,
-+					    u16 count)
-+{
-+	unsigned int i;
+ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
+diff --git a/include/linux/pci-ep-dma.h b/include/linux/pci-ep-dma.h
+new file mode 100644
+index 000000000000..73f72455843c
+--- /dev/null
++++ b/include/linux/pci-ep-dma.h
+@@ -0,0 +1,170 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __LINUX_PCI_EP_DMA_H
++#define __LINUX_PCI_EP_DMA_H
 +
-+	for (i = 0; i < count; i++) {
-+		if (region[i].sz)
-+			continue;
++#include <linux/bits.h>
 +
-+		/*
-+		 * To-Do: Add non-LL support to the endpoint DMA metadata ABI
-+		 * and host parser before exposing channels without descriptor
-+		 * memory.
-+		 */
-+		return -EOPNOTSUPP;
-+	}
++/*
++ * BAR metadata format used by PCI endpoint functions that expose an
++ * endpoint-integrated DMA controller to a PCI host.
++ *
++ * Offsets are relative to the beginning of the metadata blob. Multi-byte
++ * fields are little-endian. The blob is normally placed at offset 0 of a
++ * function BAR selected by the endpoint function and discovered by the host
++ * driver using device-specific policy. Other data in the same BAR, such as a
++ * standard MSI-X table or PBA, is outside this metadata format.
++ *
++ *          31                                                              0
++ *          +---------------------------------------------------------------+
++ * +0x000   | metadata magic                                                |
++ *          +---------------------------------------------------------------+
++ *          31                            16 15            8 7              0
++ *          +-------------------------------+---------------+---------------+
++ * +0x004   | metadata length               | reserved      | revision      |
++ *          +-------------------------------+---------------+---------------+
++ *          31 30 29     27 26          19 18          11 10           3 2  0
++ *          +--+--+--------+--------------+--------------+--------------+---+
++ * +0x008   |R |H |reserved| ch entry size| RD count     | WR count     |BAR|
++ *          +--+--+--------+--------------+--------------+--------------+---+
++ * +0x00c   | register window offset[31:0]                                  |
++ *          +---------------------------------------------------------------+
++ * +0x010   | register window offset[63:32]                                 |
++ *          +---------------------------------------------------------------+
++ *          31                            16 15            8 7              0
++ *          +-------------------------------+---------------+---------------+
++ * +0x014   | reserved                      | layout data   | layout        |
++ *          +-------------------------------+---------------+---------------+
++ * +0x018   | register window size                                          |
++ *          +---------------------------------------------------------------+
++ * +0x01c   | write table                                                   |
++ *          | ( channel table entries #0 ~ #N )                             |
++ *          +---------------------------------------------------------------+
++ *          | read table                                                    |
++ *          | ( channel table entries #0 ~ #N )                             |
++ *          +---------------------------------------------------------------+
++ *
++ *          metadata magic: PCI_EP_DMA_METADATA_MAGIC.
++ *          metadata length: byte size of the whole metadata blob. The value
++ *                           must fit in PCI_EP_DMA_METADATA_HDR_LEN_FIELD and
++ *                           in the BAR allocation that contains the metadata.
++ *          revision: metadata format revision.
++ *          R: ready bit. Set only by the endpoint after all fields and BAR
++ *             windows described by this metadata have been programmed and can
++ *             be used by the host. The host must not consume the windows
++ *             before observing this bit.
++ *          H: host-request bit. Set only by the host driver after it has found
++ *             this metadata. The endpoint may use this as the trigger to
++ *             program DMA window BAR subrange mappings, and may clear it while
++ *             revoking R during teardown or reinitialization.
++ *          ch entry size: byte stride between consecutive channel table
++ *                         entries. Revision 1 requires at least
++ *                         PCI_EP_DMA_METADATA_CH_ENTRY_SIZE bytes.
++ *          RD count: number of exposed RC-to-endpoint DMA read channels and
++ *                    read channel-table entries.
++ *          WR count: number of exposed endpoint-to-RC DMA write channels and
++ *                    write channel-table entries.
++ *          BAR: BAR that contains the DMA controller register window.
++ *          register window offset: BAR-local byte offset of the DMA controller
++ *                                  register window in BAR.
++ *          register window size: DMA controller register window size in bytes.
++ *          layout: DMA controller register layout identifier.
++ *          layout data: layout-specific data. For
++ *                       PCI_EP_DMA_METADATA_REG_LAYOUT_DW_EDMA this is the
++ *                       DesignWare eDMA/HDMA map format.
++ *          write table: starts at PCI_EP_DMA_METADATA_HDR_LEN if write channel
++ *                       count is non-zero.
++ *          read table: starts at PCI_EP_DMA_METADATA_HDR_LEN plus the write
++ *                      table size if read channel count is non-zero.
++ *          reserved fields and bits: write zero and ignore on read.
++ *
++ *
++ * Channel table entry:
++ *
++ *          31                 17 16 15 14   12 11 10     8 7                0
++ *          +--------------------+--+--+-------+--+--------+----------------+
++ * +0x000   | reserved           |A |rs|aux BAR|rs|desc BAR|hardware channel|
++ *          +--------------------+--+--+-------+--+--------+----------------+
++ * +0x004   | descriptor window BAR offset[31:0]                            |
++ *          +---------------------------------------------------------------+
++ * +0x008   | descriptor window BAR offset[63:32]                           |
++ *          +---------------------------------------------------------------+
++ * +0x00c   | descriptor window size                                        |
++ *          +---------------------------------------------------------------+
++ * +0x010   | descriptor DMA address[31:0]                                  |
++ *          +---------------------------------------------------------------+
++ * +0x014   | descriptor DMA address[63:32]                                 |
++ *          +---------------------------------------------------------------+
++ * +0x018   | auxiliary window BAR offset[31:0]                             |
++ *          +---------------------------------------------------------------+
++ * +0x01c   | auxiliary window BAR offset[63:32]                            |
++ *          +---------------------------------------------------------------+
++ * +0x020   | auxiliary window size                                         |
++ *          +---------------------------------------------------------------+
++ * +0x024   | auxiliary DMA address[31:0]                                   |
++ *          +---------------------------------------------------------------+
++ * +0x028   | auxiliary DMA address[63:32]                                  |
++ *          +---------------------------------------------------------------+
++ *
++ *          A: auxiliary-window-valid bit. If clear, aux BAR and auxiliary
++ *             window fields are ignored.
++ *          aux BAR: BAR that contains the optional auxiliary window.
++ *          desc BAR: BAR that contains the descriptor window.
++ *          hardware channel: DMA controller's hardware channel number.
++ *                            Revision 1 entries are currently consumed in dense
++ *                            0-based order.
++ *          descriptor window BAR offset: BAR-local byte offset of the
++ *                                        descriptor window in desc BAR.
++ *          descriptor window size: descriptor window size in bytes.
++ *          descriptor DMA address: endpoint-local address used by the DMA
++ *                                  controller to fetch descriptors.
++ *          auxiliary window BAR offset: BAR-local byte offset of the auxiliary
++ *                                       window in aux BAR.
++ *          auxiliary window size: auxiliary window size in bytes.
++ *          auxiliary DMA address: endpoint-local address corresponding to the
++ *                                 auxiliary window.
++ *          reserved fields and bits: write zero and ignore on read.
++ */
++#define PCI_EP_DMA_METADATA_MAGIC		0x4d444550 /* "PEDM" */
++#define PCI_EP_DMA_METADATA_REV			0x1
 +
-+	return 0;
-+}
++#define PCI_EP_DMA_METADATA_HDR_LEN		0x1c
 +
-+static int dw_pcie_ep_check_edma_vfunc(u8 vfunc_no)
-+{
-+	/*
-+	 * The DWC endpoint databook says it is not possible to assign the
-+	 * DMA/HDMA registers to any Virtual Function.
-+	 */
-+	if (vfunc_no)
-+		return -EOPNOTSUPP;
++#define PCI_EP_DMA_METADATA_HDR			0x04
++#define  PCI_EP_DMA_METADATA_HDR_REV		GENMASK(7, 0)
++#define  PCI_EP_DMA_METADATA_HDR_LEN_FIELD	GENMASK(31, 16)
 +
-+	return 0;
-+}
++#define PCI_EP_DMA_METADATA_CTRL		0x08
++#define  PCI_EP_DMA_METADATA_CTRL_REG_BAR	GENMASK(2, 0)
++#define  PCI_EP_DMA_METADATA_CTRL_WR_CH_COUNT	GENMASK(10, 3)
++#define  PCI_EP_DMA_METADATA_CTRL_RD_CH_COUNT	GENMASK(18, 11)
++#define  PCI_EP_DMA_METADATA_CTRL_CH_ENTRY_SIZE	GENMASK(26, 19)
++#define  PCI_EP_DMA_METADATA_CTRL_HOST_REQ	BIT(30)
++#define  PCI_EP_DMA_METADATA_CTRL_READY		BIT(31)
 +
- static int
- dw_pcie_ep_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
- 				   u8 vfunc_no)
-@@ -865,14 +897,34 @@ dw_pcie_ep_get_aux_resources_count(struct pci_epc *epc, u8 func_no,
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct dw_edma_chip *edma = &pci->edma;
-+	int ret;
-+	int count = 0;
- 
- 	if (!pci->edma_reg_size)
- 		return 0;
- 
--	if (edma->db_offset == ~0)
--		return 0;
-+	ret = dw_pcie_ep_check_edma_vfunc(vfunc_no);
-+	if (ret)
-+		return ret;
++#define PCI_EP_DMA_METADATA_REG_OFF_LO		0x0c
++#define PCI_EP_DMA_METADATA_REG_OFF_HI		0x10
++#define PCI_EP_DMA_METADATA_REG_LAYOUT		0x14
++#define  PCI_EP_DMA_METADATA_REG_LAYOUT_ID	GENMASK(7, 0)
++#define  PCI_EP_DMA_METADATA_REG_LAYOUT_DATA	GENMASK(15, 8)
++#define PCI_EP_DMA_METADATA_REG_SIZE		0x18
 +
-+	if (edma->dw) {
-+		ret = dw_pcie_ep_check_edma_ll_regions(edma->ll_region_wr,
-+						       edma->ll_wr_cnt);
-+		if (ret)
-+			return ret;
++#define PCI_EP_DMA_METADATA_REG_LAYOUT_DW_EDMA	0x1
 +
-+		ret = dw_pcie_ep_check_edma_ll_regions(edma->ll_region_rd,
-+						       edma->ll_rd_cnt);
-+		if (ret)
-+			return ret;
++#define PCI_EP_DMA_METADATA_CH_ENTRY_SIZE	0x2c
++#define PCI_EP_DMA_METADATA_CH_CTRL		0x00
++#define  PCI_EP_DMA_METADATA_CH_CTRL_HW_CH	GENMASK(7, 0)
++#define  PCI_EP_DMA_METADATA_CH_CTRL_DESC_BAR	GENMASK(10, 8)
++#define  PCI_EP_DMA_METADATA_CH_CTRL_AUX_BAR	GENMASK(14, 12)
++#define  PCI_EP_DMA_METADATA_CH_CTRL_AUX_VALID	BIT(16)
++#define PCI_EP_DMA_METADATA_CH_DESC_OFF_LO	0x04
++#define PCI_EP_DMA_METADATA_CH_DESC_OFF_HI	0x08
++#define PCI_EP_DMA_METADATA_CH_DESC_SIZE	0x0c
++#define PCI_EP_DMA_METADATA_CH_DESC_ADDR_LO	0x10
++#define PCI_EP_DMA_METADATA_CH_DESC_ADDR_HI	0x14
++#define PCI_EP_DMA_METADATA_CH_AUX_OFF_LO	0x18
++#define PCI_EP_DMA_METADATA_CH_AUX_OFF_HI	0x1c
++#define PCI_EP_DMA_METADATA_CH_AUX_SIZE		0x20
++#define PCI_EP_DMA_METADATA_CH_AUX_ADDR_LO	0x24
++#define PCI_EP_DMA_METADATA_CH_AUX_ADDR_HI	0x28
 +
-+		count += 1 + 2 * (edma->ll_wr_cnt + edma->ll_rd_cnt);
-+	}
-+
-+	if (edma->db_offset != ~0)
-+		count++;
- 
--	return 1;
-+	return count;
- }
- 
- static int
-@@ -888,6 +940,7 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	resource_size_t db_offset = edma->db_offset;
- 	resource_size_t dma_ctrl_bar_offset = 0;
- 	resource_size_t dma_reg_size;
-+	unsigned int i;
- 	int count;
- 
- 	count = dw_pcie_ep_get_aux_resources_count(epc, func_no, vfunc_no);
-@@ -909,6 +962,76 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	if (rsvd && rsvd->size < dma_reg_size)
- 		dma_reg_size = rsvd->size;
- 
-+	count = 0;
-+	if (edma->dw) {
-+		resources[count++] = (struct pci_epc_aux_resource) {
-+			.type = PCI_EPC_AUX_DMA_CTRL_MMIO,
-+			.phys_addr = pci->edma_reg_phys,
-+			.size = dma_reg_size,
-+			.bar = dma_ctrl_bar,
-+			.bar_offset = dma_ctrl_bar_offset,
-+			.u.dma_ctrl = {
-+				.reg_layout = PCI_EPC_AUX_DMA_REG_LAYOUT_DW_EDMA,
-+				.reg_layout_data = edma->mf,
-+				.ep_to_rc_ch_cnt = edma->ll_wr_cnt,
-+				.rc_to_ep_ch_cnt = edma->ll_rd_cnt,
-+			},
-+		};
-+
-+		for (i = 0; i < edma->ll_wr_cnt; i++) {
-+			struct dw_edma_region *ll = &edma->ll_region_wr[i];
-+			u16 desc_mem_id = i;
-+
-+			resources[count++] = (struct pci_epc_aux_resource) {
-+				.type = PCI_EPC_AUX_DMA_CHAN,
-+				.bar = NO_BAR,
-+				.u.dma_chan = {
-+					.dir = PCI_EPC_AUX_DMA_EP_TO_RC,
-+					.hw_ch = i,
-+					.desc_mem_id = desc_mem_id,
-+				},
-+			};
-+
-+			resources[count++] = (struct pci_epc_aux_resource) {
-+				.type = PCI_EPC_AUX_DMA_DESC_MEM,
-+				.phys_addr = ll->paddr,
-+				.size = ll->sz,
-+				.bar = NO_BAR,
-+				.u.dma_desc = {
-+					.id = desc_mem_id,
-+				},
-+			};
-+		}
-+
-+		for (i = 0; i < edma->ll_rd_cnt; i++) {
-+			struct dw_edma_region *ll = &edma->ll_region_rd[i];
-+			u16 desc_mem_id = edma->ll_wr_cnt + i;
-+
-+			resources[count++] = (struct pci_epc_aux_resource) {
-+				.type = PCI_EPC_AUX_DMA_CHAN,
-+				.bar = NO_BAR,
-+				.u.dma_chan = {
-+					.dir = PCI_EPC_AUX_DMA_RC_TO_EP,
-+					.hw_ch = i,
-+					.desc_mem_id = desc_mem_id,
-+				},
-+			};
-+
-+			resources[count++] = (struct pci_epc_aux_resource) {
-+				.type = PCI_EPC_AUX_DMA_DESC_MEM,
-+				.phys_addr = ll->paddr,
-+				.size = ll->sz,
-+				.bar = NO_BAR,
-+				.u.dma_desc = {
-+					.id = desc_mem_id,
-+				},
-+			};
-+		}
-+	}
-+
-+	if (db_offset == ~0)
-+		return 0;
-+
- 	/*
- 	 * For interrupt-emulation doorbells, report a standalone resource
- 	 * instead of bundling it into the DMA controller MMIO resource.
-@@ -917,7 +1040,7 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 				  sizeof(u32), dma_reg_size))
- 		return -EINVAL;
- 
--	resources[0] = (struct pci_epc_aux_resource) {
-+	resources[count] = (struct pci_epc_aux_resource) {
- 		.type = PCI_EPC_AUX_DOORBELL_MMIO,
- 		.phys_addr = pci->edma_reg_phys + db_offset,
- 		.size = sizeof(u32),
++#endif /* __LINUX_PCI_EP_DMA_H */
 -- 
 2.51.0
 
