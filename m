@@ -1,391 +1,291 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011066.outbound.protection.outlook.com [40.107.208.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C479D43CEF7
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 16:01:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783699315; cv=none; b=QT+NqFfM34M6A+VUN2bR1u7PYKjR4c5PlWFklEIp/+HR4lXVc1s+GljK6dg6UtrTqY31tjyOguOgqtravfgCZdWDU6a0gqUQlgSzLBMsiONvGleKWn1NOouXKuQrBdgw42o+KDgL3r1ZzBv3/D0UY0eTqNUEQVheDWjSm7g5+8E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783699315; c=relaxed/simple;
-	bh=BuusjmyLM9llTrQ0v7SsMQLhFi2DSB/Rbltw114e7q8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hVv1jhmVWuVbS8zl/WMq8q4UnAqT6dIzIwZ+67kiBOf5g3yGRzuss2sPpJZCVi1qq4ZkFOioUHNHoJWaNbRae3Dst9KNyS/p9AcQ/zvuBgH+uGFY86hmJ52D99s0yjDz6nz8gxlrfeNNvNNiUDYaH2KEG8i5Ht28NJ+LSCjsNwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=WVfTkQFr; arc=none smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F65F367284;
+	Fri, 10 Jul 2026 16:45:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.66
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783701941; cv=fail; b=CMyXK2CD3d1aADZr/HLX92ZueX/T9t49xM+IogPn4UuVGI2/99vq6nup0uXxTV2G61gTXPRWA0Q1V+06Nily4fZGm5nXjQX02fSFpv0o5NnzwXo5soYIvNGZJh+yIwmeCIJXMj30h4gH26LfV/vuM6AG8+LDi446X6BaUNTRBIo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783701941; c=relaxed/simple;
+	bh=BHT0zHYRTXsS5azgj08A3qwWjVHrIXErIx+em9iuLRY=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=lekl+NWQL8h0s2CSqZxWOL0ftCbPyTj/r/Xm7PRQIykdGCq89TKDFPlptAMXjdFrdhXj5fFY0zRji34f5ob3ciCK0bqzkki0iFzk7J6ASPHQome8OHsDS+srQJCRABj2driIunvqSsD1mybHNA6uSKO4M8bbCCkfjMqnkA94TGI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=z4UD3hOX; arc=fail smtp.client-ip=40.107.208.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="WVfTkQFr"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51c2c8f43aaso8101711cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:01:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1783699307; x=1784304107; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fWNfOaNlHk0GiFu1v0JlG7D8WzjWj+a5Z4WDgZZuLZs=;
-        b=WVfTkQFryPTxxSKAcydrbbPIgMgu6WNWcYBDaCBbthdjDweh/GWw9fZ3crX93krmBP
-         WkPcEV1n3toUm7FExw+imV4j/nrUFbNzHCdBmrCbKJFMZEqby5P4hgU5BFc0JVXt4N8B
-         Rooq1C3FGspxPnXORAFWmrHKOENEHCDPBigVGq1igsEh9zhoSQOI9cWHj7AgEXkqM0g1
-         +jQOv/9nrBuJYfcOBOE5X/xoRt/Dl8LWVjGxGJirYySgE4ntnnpbiamuru+FXVfNn0OK
-         s4chFoQLi9bIpHkqEyE7gXvELk54d0FNC57yMQsuQncQuVFwB7Jaqc7JiU5IaWxZ0hpA
-         7xFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783699307; x=1784304107;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=fWNfOaNlHk0GiFu1v0JlG7D8WzjWj+a5Z4WDgZZuLZs=;
-        b=WDoCauXFg+VN3q1pDtwXlct+kZjBQrH8hIO9tXmOKffANbnBgxly9Yd7i7qcjAdCFF
-         vxWC1wDb2mC4tPB+09izB/Lj4EAEShgEjTQ1exOVFq5ho2V6fNBkjbSxAhaH8LUSt7hr
-         3pXsyj9eL+cb3cWrAuDG2bZdDCYMH71I9Z9lGeBJtTW5+VjFsU0e/vekwjE4GA/Akwna
-         ZVPWrp9wUlbhBPZQg6KkiVyf4HOmh15icoV4RKN2Ba/8CleG5WjY8ajnWVFbza3jlLuO
-         zJRCSmGI4R3gIYZle8aIrdLDa/z8TOY8cFJUrkv8aBj6W6SKUReEGtNqAcf1v2ACkH+U
-         u1XQ==
-X-Gm-Message-State: AOJu0YwL23V0fiugS3UG7HBKmmAfXroyAi6PtD4gEIuQOkH7m9wC+J62
-	2Qx8m9BrMOfSMDWBdxt8f1+U5VbEn3Rvmpw/q+f+/yDhE2asngteXozPZSxNI2HSKW4=
-X-Gm-Gg: AfdE7cnJYUOKAjtxFT/PqoeFhfAcoJAGQNPmxE5TQb/zkMBNG4dIpLP2BQgWEl13Spe
-	zNhvdt6CSb8T27WuQNVbf3kFJPlpHvBKpd8O/4A/telCGhSpXTdGgtKcT0PAgBEHQ5ugIpRXJHg
-	5yNDoy7CRGaR+PUm+zWV95Q/Ya44kqe7GIRKDu8S+KIYhBsWrRpYDWkDRn/Y4fUbOtapqvHLTDc
-	HN+O2czkSvAzPwAqBGrezPND263dEIPK6yvOmEjJSK1cMePQQve/X/9hflJYRaw2TyZ+Z6B8+io
-	tWeqC2G3CLHFC4EPUaPRmL+fQS0cGtlELMFm8QYZnU+JPh2ZIV8FgIDekrRlTH2MqxLNInvgD4R
-	E8yCzL9mxE2fkrlHLuYo40n6XrpvS89GlyQJLat/ZNUPTmXWLfdqKOXu9G0UvEkqAW3KE3UBRQv
-	xeHLm5giJUVHBF
-X-Received: by 2002:a05:622a:1aa5:b0:51c:7b12:5fff with SMTP id d75a77b69052e-51c8b57c8e8mr126511541cf.75.1783699306855;
-        Fri, 10 Jul 2026 09:01:46 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51caaf5f61csm18644921cf.22.2026.07.10.09.01.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Jul 2026 09:01:46 -0700 (PDT)
-Message-ID: <900e6239-bc00-46b6-aa9f-abe219c039d2@riscstar.com>
-Date: Fri, 10 Jul 2026 11:01:44 -0500
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="z4UD3hOX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jwT46/jTfTHWMUboJzKmL+EQbwiCd8Fxa8AZVLHtbYezG7dkIjLC2NI9GOEuTd9VMUFYQSEAl4WYUp2y8D6w/VluWyqefHNlXZAre2/c8MiapapB1gkuVga3U2IEfd3FeFgBoFX4jVwVR46J7y4wgdzlZIhA9bGgqprLE+pJPah5Z/GANdplC8j7087/j2k1qMeF+lMp60TMugIXpmfPikEZzC+8NfL26dB0U+Tz/rlCwbMr/vHvzsP0MYs6dlU5pfZDtbr/qw8uB9npCY6lbeOjtmzkWqgjAWQOrCPg4RqVPkSwuSZ2WRdOJXDRyHAUeDyID/oFWsjQaPoCb3ISRQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UJfCbXl2xVadEhgwkEF9VcBCZxMqh4Z8EanCCByehqU=;
+ b=NfNATZdIN/iQut+itpXaomLpKjME7kiQwLUHwZkguHPGKXxGnM6KROnTxO/x2ZNcT0+W5fmB2lvIix19AuaNGJyc4ygrnIsBKbyh6yxw6NVkO8IxEK/QPtlgAYR/dFrIv6rF4CjK0TiSsdgKqCUHDyYYJ2EG+XlD2HoGuN0pxR5KmKUcn0kLG65hzMWiSCoKqYAEGHr3/Hm0ffutE0TkdTstOXQ7XOxdzqoFUWqARyYYv1njiRx0RvYIFGrwSrui7AeIobHU+J1p3Iqcmnwcr0s/jDh5vfxBdThSxBoQPqGtHhYtkR9TeP4W7BNk88g5YJAhKSpOnK0T4Elcdz30eQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UJfCbXl2xVadEhgwkEF9VcBCZxMqh4Z8EanCCByehqU=;
+ b=z4UD3hOXxGewwqZZz8A8/Z4+OkZN1oWntffeyRGYseFvCU59vp9r7iWL4hQjvGQ0M/nIdqvUq+TJIXcbzjTO6J62+3vTiPAdrhH7JGqGsNhFf0wmO2x+2P27SNX7GCDi3nNM0ziF/iz7nMBx1lW0muIuBXuUao6nUNoEZDGG/iY=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from BL4PR12MB9482.namprd12.prod.outlook.com (2603:10b6:208:58d::19)
+ by IA5PR12MB999325.namprd12.prod.outlook.com (2603:10b6:208:603::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.16; Fri, 10 Jul
+ 2026 16:45:33 +0000
+Received: from BL4PR12MB9482.namprd12.prod.outlook.com
+ ([fe80::e4cf:3801:9631:2965]) by BL4PR12MB9482.namprd12.prod.outlook.com
+ ([fe80::e4cf:3801:9631:2965%4]) with mapi id 15.21.0181.016; Fri, 10 Jul 2026
+ 16:45:33 +0000
+Message-ID: <1fad886d-9d69-4c73-b6d8-c1771c0a1075@amd.com>
+Date: Fri, 10 Jul 2026 22:15:24 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 00/10] dmaengine: dw-edma: flatten desc structions and
+ simplify code
+To: Frank.Li@oss.nxp.com, Manivannan Sadhasivam <mani@kernel.org>,
+ Vinod Koul <vkoul@kernel.org>,
+ Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, Kees Cook
+ <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Koichiro Den <den@valinux.co.jp>,
+ imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>
+References: <20260709-edma_ll-v5-0-e199053d4300@nxp.com>
+Content-Language: en-US
+From: "Verma, Devendra" <devverma@amd.com>
+In-Reply-To: <20260709-edma_ll-v5-0-e199053d4300@nxp.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: PN2PR01CA0098.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:c01:27::13) To BL4PR12MB9482.namprd12.prod.outlook.com
+ (2603:10b6:208:58d::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-To: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
- Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
- Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
- Christian Bruel <christian.bruel@foss.st.com>, Frank Li <Frank.Li@nxp.com>,
- Nam Cao <namcao@linutronix.de>, Qiang Yu <qiang.yu@oss.qualcomm.com>,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Xincheng Zhang <zhangxincheng@ultrarisc.com>,
- Siddharth Vadapalli <s-vadapalli@ti.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Vidya Sagar <vidyas@nvidia.com>, Neil Armstrong <neil.armstrong@linaro.org>,
- Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
- spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
- Longbin Li <looong.bin@gmail.com>
-References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-7-inochiama@gmail.com>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260709040027.958400-7-inochiama@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL4PR12MB9482:EE_|IA5PR12MB999325:EE_
+X-MS-Office365-Filtering-Correlation-Id: 18db16d0-8847-4159-e8c1-08dedea2a897
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|1800799024|23010399003|366016|11063799006|56012099006|22082099003|18002099003|921020;
+X-Microsoft-Antispam-Message-Info:
+	xrcQVGFyIvsRW1OByWCBRVu/s668/dEGiL/s6513zgutR/7SAMikqiF6G6lnb0uZtJQReDMPsxSwGMJHnZyZfmDxCqrh+FjzXxyZnxCtfzUzWIXmjQjYjXZN+Je42+k8vsumkjHl6uuQTKZZlvV6h9oJgzTSLXE2b4bU95bRHhcgiSVqBE2yggsPQg0LPf5KNhCi2XUHlv/ClO1JfNk8sfPfEwRbYWokmdgOjt29Tirf+6RodDx8FaQkcRV+xvzwhhHoWKEvA7wJ6XUyrc1LbagSCH8Gic25j+PRDQ1qd4cC9qLcskP6NX84wpkOgaPyV1wn8wZuYxvXbL4rDTsPCvPtmFQpGa/tk5C4mebD0L8f2SHnTsf/2aaccK61cjOb4eH6kTEpIqmG4xvqgl7+BjfyFh+Y3xQiHef8PbcNA+9Tn0myxz1b+Iay6H0Yq14310i1idNKglD0siDHUfi+eAscga32N0UJ8sPTS6e0sMvhjYrsWY9hRqDTm983Jdf0mYsNDlzwRvcmshTJ70bSv3IkCUzlXOd04fMoEeZ0sgrsQ0kWQoAKWsE1MqbO4xnN1R2vUohfm8xgxU8BccIw5pvxlj0JpVPjBTcp/F8OB9LhIqpxD9McqIDQPGB0V9hkZZQhqAowL9OzfDpqu2dcPCcjOXMSeb4UvflHP1DW4zw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL4PR12MB9482.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(23010399003)(366016)(11063799006)(56012099006)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?TnhYd25uNTVlbUVKUS91TTlKR29VNmxBTkhmOHFyKzlCRkpLd2tuTE5KVVdO?=
+ =?utf-8?B?aG03bUFFMVBrSHlDbGhweGZickttVXhRYXNoTGhtRnRXNGlyRGxzcE9vRnVi?=
+ =?utf-8?B?eGJBWGRuNjZuY0laL0I1WFZvS1hyUlBRcDNXQTgwR1UyN240MEdENkFpandy?=
+ =?utf-8?B?MDNVaUhsOG9aK3RvRzY2dVd6VnRVd1ptQWZIT2FYQkx4ekZGdTNMcGMxRU1W?=
+ =?utf-8?B?Ym9rclJBc2piN0EwMmJsYlgwVkR4OE5ZM0JjZkM4UTJlcnU1QUtrYzlBTTlT?=
+ =?utf-8?B?SjZGcEVza3NNTk1mMC9scmtpaGlZcUEvOE5CQ1JKUXh1NlRlSUIzSTMwTFhv?=
+ =?utf-8?B?c3VWUlNHbHVTNG55THdEcE1OQkJxWkwwb21VTmxoNjFPaUc4djdUSUhGRzli?=
+ =?utf-8?B?VUFSWUZNU0ZBUmVQa0t1TWVLR1hMaFNZY1I1NE9LLyttRHEyeDJyNi8xbjBz?=
+ =?utf-8?B?UTNaSU5FdHZLYkVTVmFsVDNTVXFmRTg4TWZEb252UFE4eGVnZWFTVHNacVB3?=
+ =?utf-8?B?RDBGdHQxQ3hVaEhWSmJ5MG9DbWx3YWltSy9SNkU5YWxON0twOVQ1UXBVWlJv?=
+ =?utf-8?B?ZEpxZkJKeXNTNCt1bkxXT1FLZDFtWFNBdThvZDZNS1NIMHA3aG94NWJrYjFG?=
+ =?utf-8?B?YmZXWmhqMUw2ODRwK3o4NkNVeVQzeEhheDhsM3djSm9iVnc1UHhKbHIzeUZj?=
+ =?utf-8?B?Wjg4c0dQR2NOWkdGbk8zZ1VqNjFPWVFSTG1rQnFqNk5CeWpiUzdLMkw0dHlk?=
+ =?utf-8?B?czY4SjErMENXanZZQ1hkNHRyUUNIOE9OOXZnMkNVUjluV0U4SkN4TFBXeGIx?=
+ =?utf-8?B?REV1Q1pheWJSVzJRRW1Qam9VclJjcDd3NThVdkJvaWQ5QU0vQmo1NDhJSGsw?=
+ =?utf-8?B?MW9IWnlkUmhPU2ozYUlvTzZRZnRpZytyVFBKSkI3bzZCbGdxSU1Da29yNXd0?=
+ =?utf-8?B?empKM2RvY244UU1UZzl0ejhFY3RGQlcvcFBia0g4T0QvUVhDV3owSmVwVXlr?=
+ =?utf-8?B?d1ArRm9HUEE2bDE3Qmtkc01Pc0hGeVNSR2lvR2V2WVRLVjBlWGpTcys0eHps?=
+ =?utf-8?B?cWJvdkVwVExyaVhZR1F2dmJMa2FoVFNIR3hXZVJwazYwTWJLK21rdk0xK1o4?=
+ =?utf-8?B?Q2t5ckNpNm9IMDA0OTRINXNVWldGbHZXU21uTjk2aGQweHRzY0lDU2NveGJh?=
+ =?utf-8?B?bTRmd0NRa1hIbEpjaE8vYUtwT1lhWURTWWt4KzhLQlA0dlMyZmdoL2hwbkJx?=
+ =?utf-8?B?bjdpNXVVdkRKN3B0UW9xK21seSs5YzJ2d1ZsQ2Q5M1JXSU9QdnhyUVl6a2tC?=
+ =?utf-8?B?ZXIxb2RvOXR2QzZDNUJYZS91TVdBVkN2VnpidnNyeTF4djA1RGZ3TmNuZFFa?=
+ =?utf-8?B?Y09nWXBhVXdVOFUwMzBtOXdtLzVhVzFiSFd6VGw5aktmck5rTUF5YWdlRS9v?=
+ =?utf-8?B?RVdBc1pUUGptL2FHcjlFWVdwVEQ4M2hZNFh6UnkxbG9oWGZPeXRYQ1NQQ0dE?=
+ =?utf-8?B?Njkwd1Q4UUt5QWdZcEJDaTREWXQzcU1ES1dUZFVVeEhZSWNDQTB2Tis1Umlz?=
+ =?utf-8?B?TG1VcFZWUlBtL2k2dUx5TlhobzVsaVBHS2E5Q3dmTUdwbHJPSmRlV3dFWWhy?=
+ =?utf-8?B?eFlOTG12N2hrWFgrSndzSDlRNzJwMmdFcXVYRzBBOTJ6WW9aUk5KM3BNQjBV?=
+ =?utf-8?B?OFZVOGdQK1J1Z1N2U0ZnbTNSV2hLVzhDZDV0WnBSQUpvdmlYQldvUURnMFJB?=
+ =?utf-8?B?MjlMVHEyQUQ0U0czc2JpNG05Ty9TR0VUak1FR2t0MmZkQkNkYVc2YUhUMjNl?=
+ =?utf-8?B?QjFkOHN0VkNwenR4QnNQclNsZ2pzd1YvRXB2UVl0eVJXMG1jd1ZkTDVqdnp1?=
+ =?utf-8?B?RWc3aUZMcnhqWDNrV2pqOWRHRnVwOEpWOTdvV3NUejFIQzM0d1BRZUNPaHdw?=
+ =?utf-8?B?YUk0TEMrMlU3aVdXUGxOKzBKZ1VxTkFRNzlOOTFnZzJnR0t1bU1rSUZFaW5F?=
+ =?utf-8?B?MEJ5K3hEbTduZlNrSzUvN2JPUkRhdTZnbDVkY1lURkFQMENFZzE3TzFHMTBk?=
+ =?utf-8?B?bzVja0pHVEw0ZGN4WGVLdEZNbE9pZitvbWVFUVFQL1hpalRqY3MxNXBzRjZS?=
+ =?utf-8?B?WDMvdTJXL09WNWIycVBBVjNCb1hOMmhOVFRaSlVjZytnb2l3anBqVXB0dkIv?=
+ =?utf-8?B?REJpY2FKZnowZVZURWJ1ZE5PWXhKRGI0M0ZycWREQmtudjZpS3VBVXVPQW1V?=
+ =?utf-8?B?T3pEaTJqY3ZvVzQ3UWhSOTN1cTExeGsrc0hmUVBNd0pDVzlqcnM4WVMxa0J5?=
+ =?utf-8?B?MHh4cDg5N01PanRQR2VZQzNOYzRyTWl0QjZIbGZGZXFaUTZiQXA3Zz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18db16d0-8847-4159-e8c1-08dedea2a897
+X-MS-Exchange-CrossTenant-AuthSource: BL4PR12MB9482.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jul 2026 16:45:33.2296
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: IRjX78pnaiC6+yFyTm2NKc0hHD9PF6Z9RrSv7m1S7n25TMjNgdJ6W8g2W3WpPVr3ESS+9Nwk1zAgeKah8dkw/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA5PR12MB999325
 
-On 7/8/26 11:00 PM, Inochi Amaoto wrote:
-> The PCIe controller on Spacemit K3 is almost a standard Synopsys
-> DesignWare PCIe IP with extra link and reset control. Unlike
-> the PCIe controller on K1, this controller supports external MSI
-> interrupt controller and can use multiple PHYs at the same time.
+
+
+On 09-Jul-26 21:03, Frank.Li@oss.nxp.com wrote:
+> Verma, Devendra:
+> 	Can you help check if block non-ll mode?
 > 
-> Add driver to support PCIe controller on Spacemit K3 PCIe.
 
-I think it would be good to summarize how the K3 differs from
-the K1 here as well, since they're sharing code.  It looks
-like it supports up to 6 PHYs, not just 1 (as the K1 does).
+The current patch series is tested for non-LL mode.
+The testing included varying data sizes for transfer and running
+C2H (Write) & H2C (Read) for a specified duration on all the 8 Read
+and 8 Write channels.
+non-LL code works fine with this patch series.
+Tested-By: Devendra Verma <devendra.verma@amd.com>
 
-> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+-Devendra
+
+> Basic change
+> 
+> struct dw_edma_desc *desc
+>         └─ chunk list
+>              └─ burst list
+> 
+> To
+> 
+> struct dw_edma_desc *desc
+>              └─ burst[n]
+> 
+> Flatten desc structions and simplify code.
+> 
+> I only test eDMA part, not hardware test hdma part.
+> 
+> The finial goal is dymatic add DMA request when DMA running. So needn't
+> wait for irq for fetch next round DMA request.
+> 
+> This work is neccesary to for dymatic DMA request appending.
+> 
+> The post this part first to review and test firstly during working dymatic
+> DMA part.
+> 
+> performance is little bit better. Use NVME as EP function
+> 
+> Before
+> 
+>    Rnd read,    4KB,  QD=1, 1 job :  IOPS=6660, BW=26.0MiB/s (27.3MB/s)
+>    Rnd read,    4KB, QD=32, 1 job :  IOPS=28.6k, BW=112MiB/s (117MB/s)
+>    Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
+>    Rnd read,  128KB,  QD=1, 1 job :  IOPS=914, BW=114MiB/s (120MB/s)
+>    Rnd read,  128KB, QD=32, 1 job :  IOPS=1204, BW=151MiB/s (158MB/s)
+>    Rnd read,  128KB, QD=32, 4 jobs:  IOPS=1255, BW=157MiB/s (165MB/s)
+>    Rnd read,  512KB,  QD=1, 1 job :  IOPS=248, BW=124MiB/s (131MB/s)
+>    Rnd read,  512KB, QD=32, 1 job :  IOPS=353, BW=177MiB/s (185MB/s)
+>    Rnd read,  512KB, QD=32, 4 jobs:  IOPS=388, BW=194MiB/s (204MB/s)
+>    Rnd write,   4KB,  QD=1, 1 job :  IOPS=6241, BW=24.4MiB/s (25.6MB/s)
+>    Rnd write,   4KB, QD=32, 1 job :  IOPS=24.7k, BW=96.5MiB/s (101MB/s)
+>    Rnd write,   4KB, QD=32, 4 jobs:  IOPS=26.9k, BW=105MiB/s (110MB/s)
+>    Rnd write, 128KB,  QD=1, 1 job :  IOPS=780, BW=97.5MiB/s (102MB/s)
+>    Rnd write, 128KB, QD=32, 1 job :  IOPS=987, BW=123MiB/s (129MB/s)
+>    Rnd write, 128KB, QD=32, 4 jobs:  IOPS=1021, BW=128MiB/s (134MB/s)
+>    Seq read,  128KB,  QD=1, 1 job :  IOPS=1190, BW=149MiB/s (156MB/s)
+>    Seq read,  128KB, QD=32, 1 job :  IOPS=1400, BW=175MiB/s (184MB/s)
+>    Seq read,  512KB,  QD=1, 1 job :  IOPS=243, BW=122MiB/s (128MB/s)
+>    Seq read,  512KB, QD=32, 1 job :  IOPS=355, BW=178MiB/s (186MB/s)
+>    Seq read,    1MB, QD=32, 1 job :  IOPS=191, BW=192MiB/s (201MB/s)
+>    Seq write, 128KB,  QD=1, 1 job :  IOPS=784, BW=98.1MiB/s (103MB/s)
+>    Seq write, 128KB, QD=32, 1 job :  IOPS=1030, BW=129MiB/s (135MB/s)
+>    Seq write, 512KB,  QD=1, 1 job :  IOPS=216, BW=108MiB/s (114MB/s)
+>    Seq write, 512KB, QD=32, 1 job :  IOPS=295, BW=148MiB/s (155MB/s)
+>    Seq write,   1MB, QD=32, 1 job :  IOPS=164, BW=165MiB/s (173MB/s)
+>    Rnd rdwr, 4K..1MB, QD=8, 4 jobs:  IOPS=250, BW=126MiB/s (132MB/s)
+>    IOPS=261, BW=132MiB/s (138MB/s
+> 
+> After
+>    Rnd read,    4KB,  QD=1, 1 job :  IOPS=6780, BW=26.5MiB/s (27.8MB/s)
+>    Rnd read,    4KB, QD=32, 1 job :  IOPS=28.6k, BW=112MiB/s (117MB/s)
+>    Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
+>    Rnd read,  128KB,  QD=1, 1 job :  IOPS=1188, BW=149MiB/s (156MB/s)
+>    Rnd read,  128KB, QD=32, 1 job :  IOPS=1440, BW=180MiB/s (189MB/s)
+>    Rnd read,  128KB, QD=32, 4 jobs:  IOPS=1282, BW=160MiB/s (168MB/s)
+>    Rnd read,  512KB,  QD=1, 1 job :  IOPS=254, BW=127MiB/s (134MB/s)
+>    Rnd read,  512KB, QD=32, 1 job :  IOPS=354, BW=177MiB/s (186MB/s)
+>    Rnd read,  512KB, QD=32, 4 jobs:  IOPS=388, BW=194MiB/s (204MB/s)
+>    Rnd write,   4KB,  QD=1, 1 job :  IOPS=6282, BW=24.5MiB/s (25.7MB/s)
+>    Rnd write,   4KB, QD=32, 1 job :  IOPS=24.9k, BW=97.5MiB/s (102MB/s)
+>    Rnd write,   4KB, QD=32, 4 jobs:  IOPS=27.4k, BW=107MiB/s (112MB/s)
+>    Rnd write, 128KB,  QD=1, 1 job :  IOPS=1098, BW=137MiB/s (144MB/s)
+>    Rnd write, 128KB, QD=32, 1 job :  IOPS=1195, BW=149MiB/s (157MB/s)
+>    Rnd write, 128KB, QD=32, 4 jobs:  IOPS=1120, BW=140MiB/s (147MB/s)
+>    Seq read,  128KB,  QD=1, 1 job :  IOPS=936, BW=117MiB/s (123MB/s)
+>    Seq read,  128KB, QD=32, 1 job :  IOPS=1218, BW=152MiB/s (160MB/s)
+>    Seq read,  512KB,  QD=1, 1 job :  IOPS=301, BW=151MiB/s (158MB/s)
+>    Seq read,  512KB, QD=32, 1 job :  IOPS=360, BW=180MiB/s (189MB/s)
+>    Seq read,    1MB, QD=32, 1 job :  IOPS=193, BW=194MiB/s (203MB/s)
+>    Seq write, 128KB,  QD=1, 1 job :  IOPS=796, BW=99.5MiB/s (104MB/s)
+>    Seq write, 128KB, QD=32, 1 job :  IOPS=1019, BW=127MiB/s (134MB/s)
+>    Seq write, 512KB,  QD=1, 1 job :  IOPS=213, BW=107MiB/s (112MB/s)
+>    Seq write, 512KB, QD=32, 1 job :  IOPS=273, BW=137MiB/s (143MB/s)
+>    Seq write,   1MB, QD=32, 1 job :  IOPS=168, BW=168MiB/s (177MB/s)
+>    Rnd rdwr, 4K..1MB, QD=8, 4 jobs:  IOPS=255, BW=128MiB/s (134MB/s)
+>     IOPS=266, BW=135MiB/s (141MB/s)
+> 
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
 > ---
->   drivers/pci/controller/dwc/Kconfig            |   4 +-
->   drivers/pci/controller/dwc/pcie-spacemit-k1.c | 126 ++++++++++++++++++
->   2 files changed, 128 insertions(+), 2 deletions(-)
+> Changes in v5:
+> - Fix cover letter typo
+> - Fix double subtract found by sashiko AI
+> - Link to v4: https://patch.msgid.link/20260708-edma_ll-v4-0-cc128f0afb61@nxp.com
 > 
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index aa0b784c85b4..dacbac5cc35c 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -440,7 +440,7 @@ config PCIE_SOPHGO_DW
->   	  Sophgo SoCs.
->   
->   config PCIE_SPACEMIT_K1
-> -	tristate "SpacemiT K1 PCIe controller (host mode)"
-> +	tristate "SpacemiT PCIe controller (host mode)"
->   	depends on ARCH_SPACEMIT || COMPILE_TEST
->   	depends on HAS_IOMEM
->   	select PCIE_DW_HOST
-> @@ -448,7 +448,7 @@ config PCIE_SPACEMIT_K1
->   	default ARCH_SPACEMIT
->   	help
->   	  Enables support for the DesignWare based PCIe controller in
-> -	  the SpacemiT K1 SoC operating in host mode.  Three controllers
-> +	  the SpacemiT SoC operating in host mode. Three controllers
->   	  are available on the K1 SoC; the first of these shares a PHY
->   	  with a USB 3.0 host controller (one or the other can be used).
->   
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> index 31aac056b68e..680acc93f539 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -23,6 +23,7 @@
->   
->   #define PCI_VENDOR_ID_SPACEMIT		0x201f
->   #define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
-> +#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
->   
->   /* Offsets and field definitions for link management registers */
->   #define K1_PHY_AHB_IRQ_EN			0x0000
-> @@ -32,8 +33,18 @@
->   #define SMLH_LINK_UP			BIT(1)
->   #define RDLH_LINK_UP			BIT(12)
->   
-> +#define INTR_STATUS				0x0010
-
-This register offset should probably be named K3_PHY_INTR_STATUS
-(or maybe it's just K3_INTR_STATUS?).  I see that INTR_ENABLE
-doesn't have a prefix, and I don't know why--that should have
-a similar name.  (Please fix that in your next version as well;
-I think it's OK to included it with this patch with a simple
-mention in the patch description.)
-
-> +
->   #define INTR_ENABLE				0x0014
->   #define MSI_CTRL_INT			BIT(11)
-> +#define RDLH_LINK_UP_INT		BIT(20)
-> +
-> +#define K3_PHY_AHB_IRQSTATUS_INTX		0x0008
-
-So is this enabling INTX support?  If so, you should do that
-first in a separate patch that only applies to K1 (and that
-should be verified to work correctly).  If all you're doing
-is ensuring the status is cleared, that's OK here, but if
-you don't enable it I'm not sure it matters.
-
-> +
-> +#define K3_ADDR_INTR_STATUS1			0x0018
-> +
-> +#define K3_CACHE_MSTR_AWCACHE_MODE	GENMASK(14, 11)
-> +#define K3_CACHE_MSTR_AWCACHE_BEHAVIOR	0xf
->   
->   /* Some controls require APMU regmap access */
->   #define SYSCON_APMU			"spacemit,apmu"
-> @@ -48,6 +59,9 @@
->   
->   #define PCIE_CONTROL_LOGIC			0x0004
->   #define PCIE_SOFT_RESET			BIT(0)
-> +#define PCIE_PERSTN_OE			BIT(24)
-> +#define PCIE_PERSTN_OUT			BIT(25)
-> +#define PCIE_IGNORE_PERSTN		BIT(31)
->   
->   struct k1_pcie;
->   
-> @@ -340,6 +354,109 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
->   	return ret;
->   }
->   
-
-I ask a few questions in this function; I'm basically
-asking "are you *sure* this must be different for K3
-than K1?"  Because for the most part this function looks
-very similar to k1_pcie_init().
-
-> +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct k1_pcie *k1 = to_k1_pcie(pci);
-> +	u32 reset_ctrl = k1->pmu_off + PCIE_CLK_RESET_CONTROL;
-> +	u32 val;
-> +	int ret;
-> +
-> +	regmap_clear_bits(k1->pmu, reset_ctrl, LTSSM_EN);
-
-Would it be OK to clear this bit in the reset control
-register for K1 as well?
-
-> +
-> +	k1_pcie_toggle_soft_reset(k1);
-> +
-> +	ret = k1_pcie_enable_resources(k1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_AUX_PWR_DET);
-> +	regmap_clear_bits(k1->pmu, reset_ctrl, APP_HOLD_PHY_RST);
-> +
-> +	ret = k1_pcie_enable_phy(k1);
-> +	if (ret) {
-> +		k1_pcie_disable_resources(k1);
-> +		return ret;
-> +	}
-> +
-
-The handling of PERSTN looks different for K3 than K1.  Could you
-implement a helper function that abstracts the differences?
-
-I don't really understand what's happening here, but if it's
-comparable to this for K1:
-
-         /* Deassert fundamental reset (drive PERST# high) */
-         regmap_clear_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
-
-...then a callback function (similar to parse_port) in the device
-data might be able to be called for both platforms, allowing
-the init function to be common for both.
-
-> +	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
-> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
-> +	usleep_range(1000, 2000);
-> +	regmap_clear_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT);
-> +
-> +	msleep(PCIE_T_PVPERL_MS);
-> +
-> +	/*
-> +	 * Put the controller in root complex mode, and indicate that
-> +	 * Vaux (3.3v) is present.
-
-Here too, you could abstract what's happening and that might
-allow the init function to be common for both (all) platforms.
-
-> +	 */
-> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
-> +
-> +	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
-> +	val = u32_replace_bits(val, BIT(7),
-> +			       GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
-> +	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, val);
-> +
-> +	k1_pcie_set_device_id(k1);
-
-This is done earlier in k1_pcie_init().  Could it be done at the
-same time for both platforms?
-
-> +
-> +	/* Finally, as a workaround, disable ASPM L1 */
-> +	k1_pcie_disable_aspm_l1(k1);
-> +
-> +	return 0;
-> +}
-> +
-> +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
-
-Why is this needed for K3, but not for K1?  Does this
-enable any functionality that K1 could use and benefit
-from?
-
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	u32 val;
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +	val = dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
-> +	val = u32_replace_bits(val, K3_CACHE_MSTR_AWCACHE_BEHAVIOR,
-> +			       K3_CACHE_MSTR_AWCACHE_MODE);
-> +	dw_pcie_writel_dbi(pci, COHERENCY_CONTROL_3_OFF, val);
-> +
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_host_ops k3_pcie_host_ops = {
-> +	.init		= k3_pcie_init,
-> +	.deinit		= k1_pcie_deinit,
-> +	.msi_init	= k3_pcie_msi_host_init,
-> +};
-> +
-> +static const struct dw_pcie_ops k3_pcie_ops = {
-
-This is identical to k1_pcie_ops, so isn't needed.
-
-> +	.link_up	= k1_pcie_link_up,
-> +	.start_link	= k1_pcie_start_link,
-> +	.stop_link	= k1_pcie_stop_link,
-> +};
-> +
-> +static void k3_pcie_clear_irq_status(struct k1_pcie *k1,
-> +				     u32 *status0, u32 *status1, u32 *status2)
-
-I don't see any value in this helper function, at
-least not based on how it's used now.  It is used
-exactly once, to clear (by writing) three interrupt
-status registers.  Just do that inline.
-
-Even if you want to use this helper function in a
-second place (when handling the itnerrupt), don't
-pass in these status arguments, they're not needed
-in the caller.  Just define them here.
-
-Also you could read/write each register, and use
-a single local variable (status) to hold the value
-read and written.
-
-> +{
-> +	*status0 = readl_relaxed(k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	*status1 = readl_relaxed(k1->link + INTR_STATUS);
-> +	*status2 = readl_relaxed(k1->link + K3_ADDR_INTR_STATUS1);
-> +
-> +	writel_relaxed(*status0, k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	writel_relaxed(*status1, k1->link + INTR_STATUS);
-> +	writel_relaxed(*status2, k1->link + K3_ADDR_INTR_STATUS1);
-> +}
-> +
-> +static int k3_pcie_parse_port(struct k1_pcie *k1)
-> +{
-> +	u32 status0, status1, status2;
-> +
-> +	k3_pcie_clear_irq_status(k1, &status0, &status1, &status2);
-
-Is it really necessary to clear the IRQ status *only* for K3?
-It seems like it would be a good idea (or at least harmless)
-to do it for K1 as well.  And in that case, it should just be
-added to the existing k1_pcie_parse_port() function.
-
-> +
-> +	return k1_pcie_parse_port(k1);
-> +}
-> +
->   static int k1_pcie_probe(struct platform_device *pdev)
->   {
->   	const struct k1_pcie_device_data *data;
-> @@ -417,8 +534,17 @@ static const struct k1_pcie_device_data k1_pcie_device_data = {
->   	.device_id	= PCI_DEVICE_ID_SPACEMIT_K1,
->   };
->   
-> +static const struct k1_pcie_device_data k3_pcie_device_data = {
-> +	.host_ops	= &k3_pcie_host_ops,
-> +	.ops		= &k3_pcie_ops,
-
-I think ops could just point to k1_pcie_ops here.
-
-					-Alex
-
-> +	.parse_port	= k3_pcie_parse_port,
-> +	.max_phy_count	= 6,
-> +	.device_id	= PCI_DEVICE_ID_SPACEMIT_K3,
-> +};
-> +
->   static const struct of_device_id k1_pcie_of_match_table[] = {
->   	{ .compatible = "spacemit,k1-pcie", .data = &k1_pcie_device_data},
-> +	{ .compatible = "spacemit,k3-pcie", .data = &k3_pcie_device_data},
->   	{ }
->   };
->   
+> Changes in v4:
+> - collect Koichiro Den test by tags
+> - use addr in argument when set ll address, found by sashiko
+> - fix iterate burst problem when exceed max link list, found by sashiko
+> - Link to v3: https://patch.msgid.link/20260702-edma_ll-v3-0-877aa463740c@nxp.com
+> 
+> Changes in v3:
+> - remove patch dmaengine: dw-edma: Remove ll_max = -1 in dw_edma_channel_setup()
+> - rebase to vnod's dmaengine topic/config_prep_api
+> - Add non-ll-start() callback to handle non-ll mode transfer
+> - Link to v2: https://lore.kernel.org/r/20260109-edma_ll-v2-0-5c0b27b2c664@nxp.com
+> 
+> Changes in v2:
+> - use 'eDMA' and 'HDMA' at commit message
+> - remove debug code.
+> - keep 'inline' to avoid build warning
+> - Link to v1: https://lore.kernel.org/r/20251212-edma_ll-v1-0-fc863d9f5ca3@nxp.com
+> 
+> ---
+> Frank Li (10):
+>        dmaengine: dw-edma: Move control field update of DMA link to the last step
+>        dmaengine: dw-edma: Add xfer_sz field to struct dw_edma_chunk
+>        dmaengine: dw-edma: Move ll_region from struct dw_edma_chunk to struct dw_edma_chan
+>        dmaengine: dw-edma: Pass down dw_edma_chan to reduce one level of indirection
+>        dmaengine: dw-edma: Add helper dw_(edma|hdma)_v0_core_ch_enable()
+>        dmaengine: dw-edma: Add callbacks to fill link list entries
+>        dmaengine: dw-edma: Add non_ll_start() callback
+>        dmaengine: dw-edma: Use common dw_edma_core_start() for both eDMA and HDMA
+>        dmaengine: dw-edma: Use burst array instead of linked list
+>        dmaengine: dw-edma: Remove struct dw_edma_chunk
+> 
+>   drivers/dma/dw-edma/dw-edma-core.c    | 218 ++++++++----------------------
+>   drivers/dma/dw-edma/dw-edma-core.h    |  65 ++++++---
+>   drivers/dma/dw-edma/dw-edma-v0-core.c | 240 +++++++++++++++++-----------------
+>   drivers/dma/dw-edma/dw-hdma-v0-core.c | 169 ++++++++++++------------
+>   4 files changed, 304 insertions(+), 388 deletions(-)
+> ---
+> base-commit: c9e9927c6d8346cdf6555a8f97da093980172e4b
+> change-id: 20251211-edma_ll-0904ba089f01
+> 
+> Best regards,
+> --
+> Frank Li <Frank.Li@nxp.com>
+> 
 
