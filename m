@@ -1,116 +1,341 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB8A1C3BF7;
-	Fri, 10 Jul 2026 20:32:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B542B386C0C;
+	Fri, 10 Jul 2026 20:35:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783715576; cv=none; b=rK43TXsO1Nw8xziFEMyABq+aZEauyVA7M6vQcDsWZfCY7BtdHw6lAHk4kTsXxSKWuiGSUqp7eOLnSG8Dtk0qtzfiX8+ubEtLA6fGkq3tLlSPsUYVAgZFKBi+eDNNRmm1HU3OtYazLoJoDw1e1qEX/ObA4dnphWdtE1MK3VeCauA=
+	t=1783715753; cv=none; b=bSZR+i7sQvg3SBHypNIZtofG0oh1i1/iVq/mmfy9A4ImSiGoweR8bkc3BYn4qt6zKhbEfdUKJFgGykdaj7SP3kLcLIXVHwFNH6LIylLUat7AHlr4kVtbp6bRk5LUFin5yxv/QTmSOdSlCtdX94kd1TIFewFYtJUcCX1NhseERfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783715576; c=relaxed/simple;
-	bh=FSy4jwxyQ59esSyBRhQmrEfTjzZcMjXq41qYxVIJ5QA=;
+	s=arc-20240116; t=1783715753; c=relaxed/simple;
+	bh=DjrKcLDRDZrO7E5J1X7XpKrm3UTWLPutt1MD6Bth3N4=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=iIfOxLuACT8ztbZHUGx/bcElbJvhFbG7W9VMNv/BZTVaYrAZl+hdes55POuci6YxEVggSvE+JI1dFA2Z30tij7hslLbdmZxbMGwrK0EgHZ0uWYCi+0/e7aNimE2+6tsG1kPzwxeLFj19Eb1eToOww5ThswdI6fJV25bNN1MTaiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IrvND1j+; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=EpB60GcqavZ3PC/yLHfP9wDmzo383wDME/WT+0Dx8jnhCnZnZWL/6QPNQ0Bt+Fu9+Q6jSShEwcntWbBlzkswBj25jBDtXjl5dStvlEJG5xcAtA25iSa6oIO4GVwFbH7DdkG3sUCHFeli6F80NP73hmHGzHlkdxON72kSIHLk01U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EIUJZeVB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IrvND1j+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F15E1F000E9;
-	Fri, 10 Jul 2026 20:32:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EIUJZeVB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F0D01F000E9;
+	Fri, 10 Jul 2026 20:35:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783715575;
-	bh=b11VeVAjomHNx2suD7mMVJxmSoUMdq9YZhyW8JZN954=;
+	s=k20260515; t=1783715751;
+	bh=HeTUxy/TjLlBcQhUPrCj068Skd26U8xRhPY9J+8AKso=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=IrvND1j+0x6bspf50eB7800KJZ+zfhPj6fLZkVRLzEPTPfqhGrmPPGL+oWwSUx1Yt
-	 uvJKuHoH40HgbaaC+wIeo9TDx7KXrBU7EEfikQXho7Y5hx5LgGMRVgCl2TwIem1C9d
-	 i29rlcyFWdLTH5r7rDUdaHzathV0YTipmThI96rjU+UP2q1CMDJD4q0aRTpHen80Oj
-	 QfeD+bjqGwwBwmhJlSSWx5TvWS6TU5fB86zBriOtPoik8DkR7WVNUNh0wN/FmwxP0B
-	 tfG3aa3Au7q0j8VM72LGjcn0FfN/qM2D+r+i3KLNmQGiya4WysCwjqas+Hu4KhlyJa
-	 OBToKH/4FpSnQ==
-Date: Fri, 10 Jul 2026 15:32:54 -0500
+	b=EIUJZeVBfo+vl1lUNoSPNryYCSm3D9wqwOcYCOL5kOTtE3l25HyXvqF3gA7TQ+J4L
+	 yKIn4iUuRGfqfaqNTmussxPbjcnazrVXNvJFZ65fkkFpRQ/ud92t5F10vB3132TSW/
+	 opsDxyV3bP4HLIrYft7FgiHF0AzD8IAwqW1LzEUhEIMJikfXjeeH6SiCDfZgRzSvss
+	 9Sn3QB+UtLzlBYhrD8ymYlG1jjlxr2UAV3KG9T8qVog0y4NY98IH4Zzt/T/3/NIpxG
+	 C8jbYEkACVgeTzo1PMi/ukCwYdi3rryu/U6ROLfvqan9CdTDJ4rBU73hAkaBSCuPRs
+	 3L6E9q3T2OzdA==
+Date: Fri, 10 Jul 2026 15:35:50 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: Richard Henderson <richard.henderson@linaro.org>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Matt Turner <mattst88@gmail.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-alpha@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] alpha/PCI: Fix I/O port accessor argument order in
- pci_legacy_write()
-Message-ID: <20260710203254.GA993990@bhelgaas>
+To: Breno Leitao <leitao@debian.org>
+Cc: Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Breno Leitao <leitao@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH RFC] RAS: hwerr_tracking: move recoverable hardware error
+ tracking out of vmcoreinfo
+Message-ID: <20260710203550.GA994216@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260706175423.98305-1-kwilczynski@kernel.org>
+In-Reply-To: <20260707-hwerr-ras-v1-1-4aea4a79d085@debian.org>
 
-On Mon, Jul 06, 2026 at 05:54:23PM +0000, Krzysztof Wilczyński wrote:
-> pci_legacy_write() in arch/alpha/kernel/pci-sysfs.c passes its arguments
-> to outb(), outw() and outl() in the wrong order:
+On Tue, Jul 07, 2026 at 07:02:34AM -0700, Breno Leitao wrote:
+> The recoverable hardware error tracking (hwerr_log_error_type() and the
+> hwerr_data[] counters) was added under vmcoreinfo, but it uses none of the
+> vmcoreinfo note machinery: hwerr_data[] is a plain global array that crash
+> tools read from the vmcore by symbol, like any other global.  Functionally
+> it is RAS code, fed only by the hardware error paths (x86 MCE, APEI GHES
+> and PCIe AER).
 > 
->   outb(port, val);
+> I wanted to expand it, and Baoquan suggested moving it away from vmcore
+> info, which makes sense. [1]
 > 
-> The Alpha I/O accessors in arch/alpha/include/asm/io.h take the value
-> first and the port second:
+> Move the implementation to drivers/ras/hwerr_tracking.c and the
+> declaration (with its no-op stub) to <linux/ras.h>.  Give it a dedicated
+> CONFIG_RAS_HWERR (bool, under RAS, default y) rather than riding
+> CONFIG_VMCORE_INFO, so it is a first-class RAS feature that can be turned
+> off on its own.  The producers now reach hwerr_log_error_type() through
+> <linux/ras.h>: x86 MCE and APEI GHES already include it, so drop their
+> <linux/vmcore_info.h> include; PCIe AER switches its include from
+> <linux/vmcore_info.h> to <linux/ras.h>.
 > 
->   extern void outb(u8 b, unsigned long port);
+> enum hwerr_error_type stays in <uapi/linux/vmcore.h> as it has been part
+> of the UAPI since the feature shipped; <linux/ras.h> includes it from
+> there.
 > 
-> So the port number is written as data to the I/O address taken from the
-> user-supplied value, and the intended write to the requested port never
-> happens.
+> hwerr_data[] keeps its name and layout, so existing crash/drgn recipes
+> keep working.  The config gate moves from CONFIG_VMCORE_INFO to
+> CONFIG_RAS_HWERR (default y).
 > 
-> The arguments have been reversed since the file was added, and the
-> function returns the access size regardless, so the caller sees success
-> while the requested port is left untouched.
-> 
-> Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
-> Tested-by: Magnus Lindholm <linmag7@gmail.com>
-> Reviewed-by: Magnus Lindholm <linmag7@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-
-Applied to pci/sysfs for v7.3, thank you!
-
+> Link: https://lore.kernel.org/all/aYvi4Y_HNqk_u1-v@fedora/ [1]
+> Signed-off-by: Breno Leitao <leitao@debian.org>
 > ---
-> Changes in v2:
->  https://lore.kernel.org/linux-pci/20260612232400.585195-1-kwilczynski@kernel.org/
+> Once we move it outside of vmcore info, I am planning to add new
+> features that are in the limbo now, given they don't belong to vmcore
+> info, such as:
 > 
->  - Collected Reviewed-by and Tested-by tags from Magnus Lindholm.
+> Track fatal hardware errors
+> 	https://lore.kernel.org/all/20260617-hwerr-v1-0-ff131cd6203c@debian.org/
 > 
->  arch/alpha/kernel/pci-sysfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Expose hardware error recovery statistics via sysfs
+> 	https://lore.kernel.org/all/20260202-vmcoreinfo_sysfs-v2-0-8f3b5308b894@debian.org/
+> ---
+>  MAINTAINERS                    |  7 +++++++
+>  arch/x86/kernel/cpu/mce/core.c |  1 -
+>  drivers/acpi/apei/ghes.c       |  1 -
+>  drivers/pci/pcie/aer.c         |  2 +-
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> # drivers/pci
+
+>  drivers/ras/Kconfig            | 12 ++++++++++++
+>  drivers/ras/Makefile           |  1 +
+>  drivers/ras/hwerr_tracking.c   | 35 +++++++++++++++++++++++++++++++++++
+>  include/linux/ras.h            |  7 +++++++
+>  include/linux/vmcore_info.h    |  7 -------
+>  kernel/vmcore_info.c           | 21 ---------------------
+>  10 files changed, 63 insertions(+), 31 deletions(-)
 > 
-> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-> index 94dbc470cd6c..7050f0f7fe3d 100644
-> --- a/arch/alpha/kernel/pci-sysfs.c
-> +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -224,17 +224,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t port, u32 val, size_t size)
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1705eb823dd00..356a51032e4b0 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -22539,6 +22539,13 @@ L:	linux-edac@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/ras/amd/fmpm.c
 >  
->  	switch(size) {
->  	case 1:
-> -		outb(port, val);
-> +		outb(val, port);
->  		return 1;
->  	case 2:
->  		if (port & 1)
->  			return -EINVAL;
-> -		outw(port, val);
-> +		outw(val, port);
->  		return 2;
->  	case 4:
->  		if (port & 3)
->  			return -EINVAL;
-> -		outl(port, val);
-> +		outl(val, port);
->  		return 4;
->  	}
->  	return -EINVAL;
-> -- 
-> 2.55.0
+> +RAS RECOVERABLE HARDWARE ERROR TRACKING
+> +M:	Breno Leitao <leitao@kernel.org>
+> +L:	linux-edac@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/driver-api/hw-recoverable-errors.rst
+> +F:	drivers/ras/hwerr_tracking.c
+> +
+>  RASPBERRY PI PISP BACK END
+>  M:	Jacopo Mondi <jacopo.mondi@ideasonboard.com>
+>  R:	Raspberry Pi Kernel Maintenance <kernel-list@raspberrypi.com>
+> diff --git a/arch/x86/kernel/cpu/mce/core.c b/arch/x86/kernel/cpu/mce/core.c
+> index 9bba1e2f03af7..58f1d7a601883 100644
+> --- a/arch/x86/kernel/cpu/mce/core.c
+> +++ b/arch/x86/kernel/cpu/mce/core.c
+> @@ -45,7 +45,6 @@
+>  #include <linux/task_work.h>
+>  #include <linux/hardirq.h>
+>  #include <linux/kexec.h>
+> -#include <linux/vmcore_info.h>
+>  
+>  #include <asm/fred.h>
+>  #include <asm/cpu_device_id.h>
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 3236a3ce79d6b..4b6666bc19c77 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -45,7 +45,6 @@
+>  #include <linux/uuid.h>
+>  #include <linux/ras.h>
+>  #include <linux/task_work.h>
+> -#include <linux/vmcore_info.h>
+>  
+>  #include <acpi/actbl1.h>
+>  #include <acpi/ghes.h>
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index c4fd9c0b2a548..00cdca26a5114 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -30,7 +30,7 @@
+>  #include <linux/kfifo.h>
+>  #include <linux/ratelimit.h>
+>  #include <linux/slab.h>
+> -#include <linux/vmcore_info.h>
+> +#include <linux/ras.h>
+>  #include <acpi/apei.h>
+>  #include <acpi/ghes.h>
+>  #include <ras/ras_event.h>
+> diff --git a/drivers/ras/Kconfig b/drivers/ras/Kconfig
+> index fc4f4bb94a4c6..241642679c1f1 100644
+> --- a/drivers/ras/Kconfig
+> +++ b/drivers/ras/Kconfig
+> @@ -34,6 +34,18 @@ if RAS
+>  source "arch/x86/ras/Kconfig"
+>  source "drivers/ras/amd/atl/Kconfig"
+>  
+> +config RAS_HWERR
+> +	bool "Track hardware errors for crash analysis"
+> +	default y
+> +	help
+> +	  Record the count and timestamp of the most recent recoverable
+> +	  hardware error for each source (CPU, memory, PCI, CXL, ...).  The
+> +	  data is written at runtime and read post-mortem from a vmcore by
+> +	  tools such as crash or drgn, to correlate recoverable errors with a
+> +	  later panic.
+> +
+> +	  If unsure, say Y.
+> +
+>  config RAS_FMPM
+>  	tristate "FRU Memory Poison Manager"
+>  	default m
+> diff --git a/drivers/ras/Makefile b/drivers/ras/Makefile
+> index 11f95d59d3972..4217bee75d910 100644
+> --- a/drivers/ras/Makefile
+> +++ b/drivers/ras/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0-only
+>  obj-$(CONFIG_RAS)	+= ras.o
+> +obj-$(CONFIG_RAS_HWERR)	+= hwerr_tracking.o
+>  obj-$(CONFIG_DEBUG_FS)	+= debugfs.o
+>  obj-$(CONFIG_RAS_CEC)	+= cec.o
+>  
+> diff --git a/drivers/ras/hwerr_tracking.c b/drivers/ras/hwerr_tracking.c
+> new file mode 100644
+> index 0000000000000..847c01fb24d55
+> --- /dev/null
+> +++ b/drivers/ras/hwerr_tracking.c
+> @@ -0,0 +1,35 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Track recoverable hardware errors (visible to the OS but not fatal) so that
+> + * crash tools like crash/drgn can read the count and timestamp of the last
+> + * occurrence from a vmcore and correlate them with a subsequent panic.
+> + *
+> + * Copyright (c) 2026 Meta Platforms, Inc. and affiliates
+> + * Copyright (c) 2026 Breno Leitao <leitao@kernel.org>
+> + */
+> +
+> +#include <linux/atomic.h>
+> +#include <linux/export.h>
+> +#include <linux/ras.h>
+> +#include <linux/timekeeping.h>
+> +
+> +struct hwerr_info {
+> +	atomic_t count;
+> +	time64_t timestamp;
+> +};
+> +
+> +/*
+> + * Keep hwerr_data[] at global scope so it stays accessible from the vmcore
+> + * (via crash/drgn) even when Link Time Optimization (LTO) is enabled.
+> + */
+> +struct hwerr_info hwerr_data[HWERR_RECOV_MAX];
+> +
+> +void hwerr_log_error_type(enum hwerr_error_type src)
+> +{
+> +	if (src < 0 || src >= HWERR_RECOV_MAX)
+> +		return;
+> +
+> +	atomic_inc(&hwerr_data[src].count);
+> +	WRITE_ONCE(hwerr_data[src].timestamp, ktime_get_real_seconds());
+> +}
+> +EXPORT_SYMBOL_GPL(hwerr_log_error_type);
+> diff --git a/include/linux/ras.h b/include/linux/ras.h
+> index 468941bfe855f..1019183c00342 100644
+> --- a/include/linux/ras.h
+> +++ b/include/linux/ras.h
+> @@ -5,6 +5,7 @@
+>  #include <asm/errno.h>
+>  #include <linux/uuid.h>
+>  #include <linux/cper.h>
+> +#include <uapi/linux/vmcore.h>
+>  
+>  #ifdef CONFIG_DEBUG_FS
+>  int ras_userspace_consumers(void);
+> @@ -35,6 +36,12 @@ static inline void
+>  log_arm_hw_error(struct cper_sec_proc_arm *err, const u8 sev) { return; }
+>  #endif
+>  
+> +#ifdef CONFIG_RAS_HWERR
+> +void hwerr_log_error_type(enum hwerr_error_type src);
+> +#else
+> +static inline void hwerr_log_error_type(enum hwerr_error_type src) { }
+> +#endif
+> +
+>  struct atl_err {
+>  	u64 addr;
+>  	u64 ipid;
+> diff --git a/include/linux/vmcore_info.h b/include/linux/vmcore_info.h
+> index e71518caacdfc..fb6f29b7202e3 100644
+> --- a/include/linux/vmcore_info.h
+> +++ b/include/linux/vmcore_info.h
+> @@ -5,7 +5,6 @@
+>  #include <linux/linkage.h>
+>  #include <linux/elfcore.h>
+>  #include <linux/elf.h>
+> -#include <uapi/linux/vmcore.h>
+>  
+>  #define CRASH_CORE_NOTE_HEAD_BYTES ALIGN(sizeof(struct elf_note), 4)
+>  #define CRASH_CORE_NOTE_NAME_BYTES ALIGN(sizeof(NN_PRSTATUS), 4)
+> @@ -79,10 +78,4 @@ Elf_Word *append_elf_note(Elf_Word *buf, char *name, unsigned int type,
+>  			  void *data, size_t data_len);
+>  void final_note(Elf_Word *buf);
+>  
+> -#ifdef CONFIG_VMCORE_INFO
+> -void hwerr_log_error_type(enum hwerr_error_type src);
+> -#else
+> -static inline void hwerr_log_error_type(enum hwerr_error_type src) {};
+> -#endif
+> -
+>  #endif /* LINUX_VMCORE_INFO_H */
+> diff --git a/kernel/vmcore_info.c b/kernel/vmcore_info.c
+> index 8614430ca212a..5c288796bdbf5 100644
+> --- a/kernel/vmcore_info.c
+> +++ b/kernel/vmcore_info.c
+> @@ -29,17 +29,6 @@ u32 *vmcoreinfo_note;
+>  /* trusted vmcoreinfo, e.g. we can make a copy in the crash memory */
+>  static unsigned char *vmcoreinfo_data_safecopy;
+>  
+> -struct hwerr_info {
+> -	atomic_t count;
+> -	time64_t timestamp;
+> -};
+> -
+> -/*
+> - * The hwerr_data[] array is declared with global scope so that it remains
+> - * accessible to vmcoreinfo even when Link Time Optimization (LTO) is enabled.
+> - */
+> -struct hwerr_info hwerr_data[HWERR_RECOV_MAX];
+> -
+>  Elf_Word *append_elf_note(Elf_Word *buf, char *name, unsigned int type,
+>  			  void *data, size_t data_len)
+>  {
+> @@ -127,16 +116,6 @@ phys_addr_t __weak paddr_vmcoreinfo_note(void)
+>  }
+>  EXPORT_SYMBOL(paddr_vmcoreinfo_note);
+>  
+> -void hwerr_log_error_type(enum hwerr_error_type src)
+> -{
+> -	if (src < 0 || src >= HWERR_RECOV_MAX)
+> -		return;
+> -
+> -	atomic_inc(&hwerr_data[src].count);
+> -	WRITE_ONCE(hwerr_data[src].timestamp, ktime_get_real_seconds());
+> -}
+> -EXPORT_SYMBOL_GPL(hwerr_log_error_type);
+> -
+>  static int __init crash_save_vmcoreinfo_init(void)
+>  {
+>  	int order;
+> 
+> ---
+> base-commit: 3d5670d672ae08b8c534b7beed6f57c8b44e7b43
+> change-id: 20260629-hwerr-ras-e26664926c58
+> 
+> Best regards,
+> --  
+> Breno Leitao <leitao@debian.org>
 > 
