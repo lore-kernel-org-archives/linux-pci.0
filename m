@@ -1,82 +1,85 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602BB35C1A6
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 20:45:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02283537D0;
+	Fri, 10 Jul 2026 20:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783716351; cv=none; b=ra/SFGRunkn4g2CheveIeBYyWAHehMY6/hWbAKi5oBX119Lc5FsSuWL6qWSr6ksm9jWmHXazb+TMwM+gZXcl6LCF9lXhNdFaSRdxA5Mx/L5ODfB51BWynt17X8OaM+GeCN8pj04Th+X+FEE9l+ldIbz1qATzN2WtJckjqbERSkc=
+	t=1783716413; cv=none; b=siKMkr9FMkLpwb7Heq2DRSZVjavjAk9C6pqmMBL/StuUYTJ8/eYZZuqqwzPam9RyESIMSQTTz7+HGLwxwhgHoawtFhuOR0PTlzdgZba4C9Ngghtd+/m9THtkYqNxoM6DH0YkkszcZSecxxVUboPFnwzg+2Lb+WKX+iYjjz3xaS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783716351; c=relaxed/simple;
-	bh=a/5D9uvy7CE+nh22S+ywojXZ2qCzycGH3eQNAiYVPr8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BiiAyaBB9qtqMWzLagHulrvmuPUDx5y/8ubJHLPpJtW3IOXEZWdw1U8xL5FJjTuwodCVuy2xeZBi50YvGzqJ+2qmc2M3Wlwxa+Z5kK2BfMYkPIkcFCfAbRKBZzgGrrhVwOyx68iHFDBhancRrNyDPsXf0gAnmKYuzW2oq1F6Nvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=I+PQROLR; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783716413; c=relaxed/simple;
+	bh=O/nH8NFFtDf39iVENkiFt/8hgUDNcbuSKoU/4iTc8RM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=G4g57IAFWWGV3qIMkDNm1ajbFIvLMac27iRbWvhlMQQSE1M5g+9bxfuV3ZiM6LPQOY5t0c+6pYOTCpJbreACFJwFno61F2z5dbOCreVlxknrJ77Ku6vdguj1JSvCbmuPRgWt5b0v8xoSXt0OJyZtOwXUBctLchbQTyqdR4RLZIc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dd1oVQ5S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="I+PQROLR"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4gxkPP1qt7zMlGZ;
-	Fri, 10 Jul 2026 22:45:45 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783716345;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yA8DCPfNfFl8+NUMRg0Pw5CP9XWsu7v/HiAVvMGc+WY=;
-	b=I+PQROLRgG0bWaoVw3QGLu3oFm6yg9BXG6+k8y2qzstxsqYmPpCEKCCLMwrGfHRhU9UZXR
-	GE+tgsvgA+Fz6ywxF8B1GsCJhNkyv+XdNRZR04HCk13KAZBzjR+nIOsA3v/ho4UgBKv2Zb
-	RBotEJv5atdsFR4DrjjuRWO8snx70w/qUuPeauhCGoHFr7ZDeDOMvdQ7JPuNqPLm6WAmyp
-	M6TtkFrIIl0gfUtvMpY6aS7PdkE+jd3v53RpefYuMsFxA9RN9CIljm5sK69VwPYcT+7Kak
-	qzAJBYu3qZ+UJGphGz7JgXDDbz4NdT4EpErTY8P9TB/dpO/izjeYUILO0FP3fA==
-Message-ID: <a3b46640-f5ff-4189-bf1b-fdf1cd873493@mailbox.org>
-Date: Fri, 10 Jul 2026 22:45:42 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dd1oVQ5S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 036F31F000E9;
+	Fri, 10 Jul 2026 20:46:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783716412;
+	bh=4FXuD88xnQiyJIRdYMZFBXUOXQg1ApsCo+B8ICNsSeY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=Dd1oVQ5SswVaWQAJ4Sh0rPhuwFNetoGiB/rMHf1oYG4qH5X0aRVbX2xisgA8ahbd2
+	 oKKxKRE3UU/wcBzvSZcYwKRRU2x0z4tSrpz5+9fxHlkys/VnG7jXETm68pqnatOE0t
+	 xfmoXqziVfLbhVDw5jZYTnvq60fFn4dg0zsuKmFFSKyyGlFp/bFQvl21D4uI1t/t74
+	 /qo+GcJXuLRo9qF5wz619eh6Adx9yUoIJvM3D+sCU/tP+qHYhkhGHp98cfhjnO8juy
+	 IVqGu1ZmRTc9KtlWm38twV2cf4hX5CWBIQEDq7BZTzIUoGRWO2zxavzCeFF67M7eMS
+	 vtDEA8Z4QFgIg==
+Date: Fri, 10 Jul 2026 15:46:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/8] x86/pci: consolidate x86-specific PCI quirks into
+ arch/x86/pci/fixup.c
+Message-ID: <20260710204650.GA998073@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [pci:controller/dwc-rcar-gen4] BUILD SUCCESS
- 6bd0f589488396d14c4d9e4f030954ccc2ee4f93
-To: Bjorn Helgaas <helgaas@kernel.org>, kernel test robot <lkp@intel.com>
-Cc: linux-pci@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-References: <20260710185046.GA979125@bhelgaas>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20260710185046.GA979125@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: d4224a42b44dc981b8a
-X-MBO-RS-META: 4orzs49kz6zf5kn1b5rczipnaqqnxtcr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260707221800.920270-1-rosenp@gmail.com>
 
-On 7/10/26 8:50 PM, Bjorn Helgaas wrote:
-> On Sat, Jul 11, 2026 at 02:32:33AM +0800, kernel test robot wrote:
->> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
->> branch HEAD: 6bd0f589488396d14c4d9e4f030954ccc2ee4f93  irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround
+On Tue, Jul 07, 2026 at 03:17:52PM -0700, Rosen Penev wrote:
+> This series moves all x86-specific PCI quirks from the generic
+> drivers/pci/quirks.c into arch/x86/pci/fixup.c, where they
+> architecturally belong. This reduces the ifdef burden in the generic
+> quirk file and improves build granularity by gating the x86 fixups
+> behind CONFIG_PCI_QUIRKS.
 > 
-> I don't think this "BUILD SUCCESS" is accurate.  On x86_64, defconfig
-
-Indeed.
-
-> plus all PCI drivers enabled, building this same commit:
+> The series is organized as a preparatory commit followed by one
+> commit per vendor/family, keeping each move reviewable.
 > 
->    01:42:29 ~/linux (controller/dwc-rcar-gen4)$ git --no-pager show -s --pretty=format:"%h (\"%s\")%n"
->    6bd0f5894883 ("irqchip/gic-v3: Add Renesas R-Car Gen4 erratum workaround")
+> Suggested by: https://lore.kernel.org/all/20161221142607.GA8594@infradead.org/
 > 
->    01:42:32 ~/linux (controller/dwc-rcar-gen4)$ make drivers/pci/
->      DESCEND objtool
->      CC      drivers/pci/controller/dwc/pcie-rcar-gen4.o
->    In file included from drivers/pci/controller/dwc/pcie-rcar-gen4.c:16:
->    ./include/linux/irqchip/arm-gic-v3.h:605:10: fatal error: asm/arch_gicv3.h: No such file or directory
->      605 | #include <asm/arch_gicv3.h>
-> 	|          ^~~~~~~~~~~~~~~~~~
+> Rosen Penev (8):
+>   x86/pci: gate arch fixups with CONFIG_PCI_QUIRKS
+>   x86/pci: move Intel chipset quirks to arch/x86/pci/fixup.c
+>   x86/pci: move VIA chipset quirks to arch/x86/pci/fixup.c
+>   x86/pci: move SiS chipset quirks to arch/x86/pci/fixup.c
+>   x86/pci: move ALi chipset quirks to arch/x86/pci/fixup.c
+>   x86/pci: move AMD x86 chipset quirks to arch/x86/pci/fixup.c
+>   x86/pci: move x86 ifdef-gated quirks to arch/x86/pci/fixup.c
+>   x86/pci: move remaining x86-specific quirks to fixup.c
+> 
+>  arch/x86/pci/Makefile |    2 +-
+>  arch/x86/pci/fixup.c  | 2284 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h     |    3 +
+>  drivers/pci/quirks.c  | 2330 +----------------------------------------
+>  4 files changed, 2316 insertions(+), 2303 deletions(-)
 
-Please note that the following should address the build failure:
-[PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
+I don't object to any of this from a PCI perspective, so I guess it's
+up to the x86 folks if they want them.
+
+It looks like the typical subject line style in fixup.c is:
+
+  x86/PCI: <Capitalized-first-word> ...
