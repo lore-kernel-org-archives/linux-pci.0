@@ -1,134 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E1A8434408;
-	Fri, 10 Jul 2026 17:07:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C82372EDB;
+	Fri, 10 Jul 2026 17:08:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783703230; cv=none; b=jWAQpMYfukxBJ0YHk99lChqdx0aqNOFeStsUdQQ3/WIX2drvPIk8eGLizrWOUmYU4KYyl6VqrEw+L7cPAHKkMUSkWNHRPYIM+ccKP+1NNG6DzTZ01muPZ/8NBpJDm9IlK4kRwmkBbFgRFpXiXGmctv3llVPCdtWMEZWzXsMRgAY=
+	t=1783703318; cv=none; b=cuVDiD6HIIilZu6X8MxL2VDWbYzE/Asf6CCtDcfXCZzMZAowIaLS9LH3rLy+lkjjdAcsOgTR66JmlQzCikHfk4zxzpmGP9W/ks1TBQz52EJsbzv6gxiFm31ecjupYr3l+jNd1BskVhRv2o8lssKcQoZVfnKCDr5Sw9ioZBRaJuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783703230; c=relaxed/simple;
-	bh=kwEpGpTES/SECB5AzWXXvxM3AgBrprRApMyOzIMuP5Y=;
+	s=arc-20240116; t=1783703318; c=relaxed/simple;
+	bh=cbdTD4LNdtaYIciu/PLq/aQSgXLCeORVJUSexNODIc8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h7J62IZc3WlW132Bng8T/NTZ90r5s7E2+CWl9OW6Cy8KLy1eUHVRiOnPUYrpsFLJbPel/QTs4Lf3q0bQIZsbs5DTVfN5mk2oIIg3TrMnO4Y6VIN5fQNjL2AJD6MMN9H04W0FjyYntl56Zg0j7eXnflcJrjksRagBhT/yyYVdCF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gbJ5KIzj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Rs3qTPy9BF4/8gRsY429bS3vbrttL42Zwx4wUz/c7W8gp3bnUByWMKxqLIGyyGZUP/ZZrJJJhqoOzJcyrsNzUPde5Gl+kFAIIdkFg8SQ1Ohrp8cM080Fkr5EqUb9VQxHTwjtHVPdAxgnKNG6bJ3MhweRTWQrqxdD/KfvmuFbDII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jjgRVSlN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gbJ5KIzj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACD611F000E9;
-	Fri, 10 Jul 2026 17:07:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jjgRVSlN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C423E1F000E9;
+	Fri, 10 Jul 2026 17:08:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783703229;
-	bh=wsjYCuKWTfokQ/+ixcLrkIiA5mWulO+PKTTEJ2EeMDg=;
+	s=k20260515; t=1783703317;
+	bh=hhPbd1UCtd/0zITFksdr7GEBYN5kVbAXeYXNDGLHc4M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gbJ5KIzjBk0dJFQTAZoyVkTVczMV6rJMagMNKa0j48YPGN17AsyfHtVqo/rPXC1TA
-	 a+je47x/i1kIz+gfa5MyA6yvLOoO/t7h0bRlIiI+24fiA+p9/BKwSjTuB9SE+HUkJY
-	 Z3K79uDSuhn2KEeUioznjUJ+mbLHUC7jAj5AqDXpNWdFL4Yl+KrKUTi5zgUhiIij+b
-	 orMkKv19BPm4Rydk/eEodgC5eEJ3zpU3Ar1pNrYunOP81J+zsxv9UPvyQ3MgGXMC8E
-	 +BQa6IJgHws1v6tGPCqNgR8CYboBgBQ4K5g/CeuNoOqxKGEVv4jl1nROwVWCHr99bd
-	 97BC3/yp6qC6A==
+	b=jjgRVSlNFXmCql/94JtcLrR/pKYijeR7fm9h2buYS1b/vMUNdZSdcn0PySGKwjjlC
+	 jLCy/5W9qzqWgEoJf2YuLJeDUZrTZSOEmuogjJACTAALhDX2SoBjDG7+o0lhxC8NG9
+	 W6/7pNhumkvDFMeqHsGegwFDcVUjDKje21Z5OOzCFM8/4ZQrwWP5F3bGdVXNLdLBxj
+	 ArmxpOEknu69hmNolmQr3uhWthqoOmuX4rQxioViWjJPqeHjtvVcsCjHyAgntBIAP1
+	 b8GScY2O+FSntfxFTHZRSt/lokUAWF3xkHgKpNeFYonR2TQBB/lT5KnVQVwfK9i10G
+	 3Wo9y6FXAbHrQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 09/10] dmaengine: dw-edma: Use burst array instead of
- linked list
+Subject: Re: [PATCH v6 10/10] dmaengine: dw-edma: Remove struct
+ dw_edma_chunk
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Frank.Li@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, imx@lists.linux.dev, vkoul@kernel.org
-In-Reply-To: <20260710-edma_ll-v6-9-1471d278b73a@nxp.com>
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
+In-Reply-To: <20260710-edma_ll-v6-10-1471d278b73a@nxp.com>
 References: <20260710-edma_ll-v6-0-1471d278b73a@nxp.com>
- <20260710-edma_ll-v6-9-1471d278b73a@nxp.com>
+ <20260710-edma_ll-v6-10-1471d278b73a@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 17:07:08 +0000
-Message-Id: <20260710170708.ACD611F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 17:08:36 +0000
+Message-Id: <20260710170836.C423E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] In non-linked-list (non_ll) mode, the burst array index is inc=
-orrectly calculated using `chan->ll_max` instead of `bursts_max`. This caus=
-es a heap buffer overflow and leaves the actual DMA descriptor uninitialize=
-d.
+
+New issues:
+- [High] Refactoring from bounded chunk arrays to a monolithic descriptor a=
+rray introduces unbounded high-order atomic memory allocations that are pro=
+ne to failure under fragmentation.
+
+Pre-existing issues:
+- [High] Pre-existing locking violation: `dw_edma_device_resume` invokes `d=
+w_edma_start_transfer` without acquiring the virtual channel lock.
 --
 
---- Patch [9]: [PATCH v6 09/10] dmaengine: dw-edma: Use burst array instead=
- of linked list ---
-commit 755f4cc5fb98a43f3634cf5e1dc7f15a35af8c49
+--- Patch [10]: [PATCH v6 10/10] dmaengine: dw-edma: Remove struct dw_edma_=
+chunk ---
+commit 04c138d15d0c47167bf151873232daba3b9881ad
 Author: Frank Li <Frank.Li@nxp.com>
+Subject: dmaengine: dw-edma: Remove struct dw_edma_chunk
 
-dmaengine: dw-edma: Use burst array instead of linked list
-
-Creating a DMA descriptor requires at least three kzalloc() calls because
-each burst is allocated as a linked-list node. This commit allocates a
-burst array when creating each chunk to simplify the code and eliminate
-one kzalloc() call.
+This commit simplifies the DMA descriptor layout by removing the
+dw_edma_chunk linked-list layer. The burst array is now allocated
+directly within dw_edma_desc to reduce the number of allocations
+required per descriptor.
 
 > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
 edma-core.c
-> index f52d9fd18e573..202862a828b4d 100644
+> index 202862a828b4d..30eeb7bffad80 100644
 > --- a/drivers/dma/dw-edma/dw-edma-core.c
 > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+
 [ ... ]
-> @@ -166,23 +103,17 @@ static void vchan_free_desc(struct virt_dma_desc *v=
-desc)
->  static void dw_edma_core_start(struct dw_edma_chunk *chunk, bool first)
+
+> -static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
+> +static struct dw_edma_desc *
+> +dw_edma_alloc_desc(struct dw_edma_chan *chan, size_t nburst)
 >  {
->  	struct dw_edma_chan *chan =3D chunk->chan;
-> -	struct dw_edma_burst *child;
->  	u32 i =3D 0;
-> -	int j;
+>  	struct dw_edma_desc *desc;
 > =20
->  	if (chan->non_ll) {
-> -		child =3D list_first_entry_or_null(&chunk->burst->list,
-> -						 struct dw_edma_burst, list);
-> -		if (child)
-> -			chan->dw->core->non_ll_start(chunk->chan, child);
-> +		if (chunk->nburst =3D=3D 1)
-> +			chan->dw->core->non_ll_start(chunk->chan, &chunk->burst[0]);
+> -	desc =3D kzalloc_obj(*desc, GFP_NOWAIT);
+> +	desc =3D kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
 
-[Severity: Critical]
-If chunk->burst[0] is bypassed during allocation in dw_edma_device_transfer=
-()
-when i > 0, does this code submit an uninitialized descriptor to the
-hardware?
+[Severity: High]
+Will this monolithic allocation approach cause large DMA transfers to fail?
+
+In dw_edma_device_transfer(), the total burst count is passed directly here
+as nburst without chunking. For large scatter-gather transfers, nburst could
+be very large.
+
+Since GFP_NOWAIT cannot sleep or reclaim memory, won't these large atomic
+allocations fail reliably under memory fragmentation?
+
+>  	if (unlikely(!desc))
+>  		return NULL;
+> =20
+>  	desc->chan =3D chan;
+> -
+> -	INIT_LIST_HEAD(&desc->chunk_list);
+> +	desc->nburst =3D nburst;
+> +	desc->cb =3D true;
 
 [ ... ]
-> @@ -530,15 +456,15 @@ dw_edma_device_transfer(struct dw_edma_transfer *xf=
-er,
->  		if (xfer->type =3D=3D EDMA_XFER_SCATTER_GATHER && !sg)
->  			break;
+
+>  static int dw_edma_start_transfer(struct dw_edma_chan *chan)
+>  {
+> -	struct dw_edma_chunk *child;
+>  	struct dw_edma_desc *desc;
+>  	struct virt_dma_desc *vd;
 > =20
-> -		if (chunk->bursts_alloc =3D=3D bursts_max) {
-> -			chunk =3D dw_edma_alloc_chunk(desc);
-> +		if (!(i % bursts_max)) {
-> +			u32 n =3D min(cnt - i, bursts_max);
-> +
-> +			chunk =3D dw_edma_alloc_chunk(desc, n);
->  			if (unlikely(!chunk))
->  				goto err_alloc;
->  		}
-> =20
-> -		burst =3D dw_edma_alloc_burst(chunk);
-> -		if (unlikely(!burst))
-> -			goto err_alloc;
-> +		burst =3D chunk->burst + (i % chan->ll_max);
+>  	vd =3D vchan_next_desc(&chan->vc);
 
-[Severity: Critical]
-Does this code overflow chunk->burst[] when chan->non_ll is true?
+[Severity: High]
+This is a pre-existing issue, but is it safe for dw_edma_device_resume()
+to call dw_edma_start_transfer() without holding the virtual channel lock?
 
-If chan->non_ll is true, bursts_max is 1, so dw_edma_alloc_chunk() allocates
-a chunk with a 1-element burst array for each i. However, burst is indexed
-using chan->ll_max.
+dw_edma_start_transfer() calls vchan_next_desc() here, which actively unlin=
+ks
+entries from the list.
 
-For example, when i =3D 1:
-- i % bursts_max is 0, so a new chunk is allocated with nburst =3D 1.
-- If chan->ll_max > 1, i % chan->ll_max is 1.
-- burst is set to &chunk->burst[1], which is out of bounds.
+If dw_edma_device_resume() bypasses spin_lock_irqsave(&chan->vc.lock) and a
+concurrent hardware interrupt occurs, could this corrupt the virtual channel
+lists?
 
-Consequently, chunk->burst[0] remains uninitialized.
+>  	if (!vd)
+>  		return 0;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710-edma_ll-v6=
--0-1471d278b73a@nxp.com?part=3D9
+-0-1471d278b73a@nxp.com?part=3D10
