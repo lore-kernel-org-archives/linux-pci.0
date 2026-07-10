@@ -1,119 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C149D3EFFD7;
-	Fri, 10 Jul 2026 08:28:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 161DD3E0255;
+	Fri, 10 Jul 2026 08:29:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783672097; cv=none; b=YNeZ8k/I8I45QER+Lp6H72zCw+aND4GnEEEQrg8QqQa5PGprGBc9XjyEhd5FpEGl1uUwHDKVCehahULaLkleR9vm79mJKlIKEALrm4FiG5DnvEruShNw6qFrtuVWB5pFF1pwltc9dh0/QRfTwb+x7EGMYkU4IufP2CpNxCohiJE=
+	t=1783672173; cv=none; b=ME4/V9iHTtVkFva2dH6PXneNOVIZI+yOzSROu2kQIJH6lfzC64C2T4rpbJvisRo+WqSmmvLIX0VrR3w/UkdvyzGP1eCV/3qfTMj3Vsgl+9ul/rAh0YibX+jjFCn7YZHP8/rq5LBss7rTppFx7ml9d6QtqJkXA8eJxYZ877k1zIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783672097; c=relaxed/simple;
-	bh=SXhT/IG4Sn1qQjgoVmJGVUCKPwTprjMulXhkXSPMVk8=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rixWurDLRJzzr4+j16C4x386za4oDGzXOcH5SCrC3dryCjb/7jAxTfhl089Td6MU00witxBuRiLBbGdfb2Yq21UwoOtKZFS7RBxr2ejep7rwCyOvjMX1HSCdH6o6aIGybvAAgU82wARZUNXDIcYzYCdWxS5y1Ewat+PBV0kRLvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N+SX3jrl; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783672173; c=relaxed/simple;
+	bh=iT8xMWwHvgzRujoLuaEWU4s8yh5aAK5NmggJsd1NJF0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nODvZ4sRRHvhexEedXarq25z0vIh+T/DXhQ1XEuUEPUWiHLKARWl9hwesK6oH8S5t1l8FpEjV1hPvv97Aq5P33wJ2DDJSlUau5eQnYZKm7sGfsHlrdqUvg8E9L8KEEZWF3m1aVpMDEnNEE0j78zxuOWfmFlQQ5aZLAYTqNBTxsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ml1XVnXe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N+SX3jrl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 587891F000E9;
-	Fri, 10 Jul 2026 08:28:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ml1XVnXe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E7161F000E9;
+	Fri, 10 Jul 2026 08:29:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783672095;
-	bh=F6KudrFDGEDQqOhegar75aieWQMc2k5wBts8J2fU69w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=N+SX3jrlYmsL5bMWiQ1GMDeRKxW9iAigjmPFC06Wz319fosORES2zhht2QaH/6qFq
-	 DwmmN17OAX/kzxh+a2JI+o4ifiTmNWEPHKxuiUuX0B0MULGUhJi0t3Fevbi0OiDEXz
-	 A7laFPH8WbFKGhOC36Yygn6qAz+sNpKGn9pdookoPdWdYqt+2MlTojVKF+9R54TIcR
-	 /FYacKL0pAatQHo3G/oFCy5hp54dc69KxWmNbAxfdmpv20n+KQyxYbVLNn/aCzECBJ
-	 3dUBpVjy1o7y2Roi5/yQdpsZn102AV8KToXzOnO+/W/q0dLmu64YnwWJiju6W4aqJU
-	 lmzAH9Fcl7WeQ==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=lobster-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wi6aj-00000003b2r-1kdZ;
-	Fri, 10 Jul 2026 08:28:13 +0000
-Date: Fri, 10 Jul 2026 09:30:02 +0100
-Message-ID: <87qzlb5jsl.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org,	kernel test robot <lkp@intel.com>,	Krzysztof
- =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Bjorn Helgaas
- <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,	Conor
- Dooley <conor+dt@kernel.org>,	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,	Lorenzo Pieralisi
- <lpieralisi@kernel.org>,	Manivannan Sadhasivam <mani@kernel.org>,	Rob
- Herring <robh@kernel.org>,	Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>,	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-In-Reply-To: <20260709201103.90162-1-marek.vasut+renesas@mailbox.org>
-References: <20260709201103.90162-1-marek.vasut+renesas@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	s=k20260515; t=1783672171;
+	bh=qCRlnMCaLc7Fw9gWpQoyxlKA/AM49TaQZl8wZmT+oRM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ml1XVnXedJLC/JBjsx85Ets5qYNVq3uRkHUxZGSCAbynivBK05kq4okwxljCFLW0+
+	 3tx+JAY9IlYIgMBySED1Diy7jgpe2/3v6EUs23SKlb/EFHEuRzr3+vh6APm9RZdXqM
+	 Ikwht8ga75kn5EprLmtZvwrEJ3kV3LCVXCvbACEeHG50DECa0xjsokKNARQFzfp0t/
+	 1bwrq3GpbfSZQYfDwTpgREl7dFk23E9my93p6lqA8YNVv6aTZnV3G2Oy+GpAXQ+HLI
+	 pAFahRXoRSlmhcIJEkhu0UDLiiJzVP2HXseJmgK4Hhkhp3ustxm2NjNX0vbNco4W7/
+	 TlTV8dlrBjIpQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 4/6] PCI: dwc: Expose endpoint DMA resources
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260710082156.2395844-5-den@valinux.co.jp>
+References: <20260710082156.2395844-1-den@valinux.co.jp>
+ <20260710082156.2395844-5-den@valinux.co.jp>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 10 Jul 2026 08:29:30 +0000
+Message-Id: <20260710082931.5E7161F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut+renesas@mailbox.org, linux-pci@vger.kernel.org, lkp@intel.com, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, yoshihiro.shimoda.uh@renesas.com, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-On Thu, 09 Jul 2026 21:10:03 +0100,
-Marek Vasut <marek.vasut+renesas@mailbox.org> wrote:
->=20
-> Instead of pulling in the whole linux/irqchip/arm-gic-v3.h , copy the
-> one GITS_TRANSLATER register offset macro directly into the driver.
-> This repairs the ability to build the driver on non-ARM non-GIC targets
-> the way it was possible until now, which retains good build test coverage.
->=20
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@i=
-ntel.com/
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> ---
-> Cc: "Krzysztof Wilczy=C5=84ski" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Conor Dooley <conor+dt@kernel.org>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> Note: The alternative I could think of would be ifdeffery which
->       is not nice and thwarts the build coverage, or limit the
->       driver to ARM/ARM64 in Kconfig which also thwarts the build
->       coverage. I could also split off the register macros in
->       linux/irqchip/arm-gic-v3.h into some separate header
->       linux/irqchip/arm-gic-v3-regs.h and include that which
->       might be OKish and avoids duplication. Thoughts ?
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The doorbell resource is incorrectly hidden and auxiliary resource=
+ queries fail entirely when the eDMA provider is registered in non-LL mode,=
+ contradicting the commit intent.
+--
 
-No, I'm not hacking something that is purely architecture specific for
-the purpose of a bizarre integration quirk that should be handled by
-the boot firmware, and not Linux.
+--- Patch [4]: [PATCH v4 4/6] PCI: dwc: Expose endpoint DMA resources ---
+commit 14327ef69239f572929efa8665a21b5950efac88
+Author: Koichiro Den <den@valinux.co.jp>
 
-Add whatever you want to the PCI glue code, limit this to arm64 (which
-is the only architecture this can ever be used on, and the build
-coverage argument really doesn't hold), but please leave the GIC code
-alone.
+PCI: dwc: Expose endpoint DMA resources
 
-	M.
+This patch exposes the DesignWare endpoint-integrated eDMA register window,
+logical DMA channels, and linked-list descriptor memories through the EPC
+auxiliary resource API. It also handles the interrupt-emulation doorbell
+when its register offset is valid.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pc=
+i/controller/dwc/pcie-designware-ep.c
+> index 7d2794945704e..dd47537f390e5 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -865,14 +897,34 @@ dw_pcie_ep_get_aux_resources_count(struct pci_epc *=
+epc, u8 func_no,
+>  	struct dw_pcie_ep *ep =3D epc_get_drvdata(epc);
+>  	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
+>  	struct dw_edma_chip *edma =3D &pci->edma;
+> +	int ret;
+> +	int count =3D 0;
+> =20
+>  	if (!pci->edma_reg_size)
+>  		return 0;
+> =20
+> -	if (edma->db_offset =3D=3D ~0)
+> -		return 0;
+> +	ret =3D dw_pcie_ep_check_edma_vfunc(vfunc_no);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (edma->dw) {
+> +		ret =3D dw_pcie_ep_check_edma_ll_regions(edma->ll_region_wr,
+> +						       edma->ll_wr_cnt);
+> +		if (ret)
+> +			return ret;
+
+[Severity: High]
+The commit message states the doorbell remains reported, but if eDMA lacks
+linked-list memory, dw_pcie_ep_check_edma_ll_regions() returns -EOPNOTSUPP,
+which causes this function to return an error. Does this inadvertently hide
+the doorbell resource and cause the entire query to fail in non-LL mode?
+
+[ ... ]
+
+> @@ -909,6 +962,76 @@ dw_pcie_ep_get_aux_resources(struct pci_epc *epc, u8=
+ func_no, u8 vfunc_no,
+>  	if (rsvd && rsvd->size < dma_reg_size)
+>  		dma_reg_size =3D rsvd->size;
+> =20
+> +	count =3D 0;
+> +	if (edma->dw) {
+> +		resources[count++] =3D (struct pci_epc_aux_resource) {
+> +			.type =3D PCI_EPC_AUX_DMA_CTRL_MMIO,
+
+[Severity: High]
+If dw_pcie_ep_get_aux_resources_count() is updated to ignore the eDMA
+channels instead of returning an error, this unconditionally populates the
+eDMA resources when edma->dw is true. Could this cause an out-of-bounds
+write to the resources array since the array would have been allocated
+based on the smaller count?
 
 --=20
-Jazz isn't dead. It just smells funny.
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710082156.2395=
+844-1-den@valinux.co.jp?part=3D4
