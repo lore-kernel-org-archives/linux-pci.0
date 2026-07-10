@@ -1,66 +1,66 @@
-Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44010426D19
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 16:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3B043B4BB
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 16:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783699303; cv=none; b=UORfbwGUNBppKe0F/Txj1BP2oFayf5qpXeZZDJXs2EFe1+nEW78ygFpXOH3l3H/Mt1a26oonjfFFW8hLPP07OJNH4quwgqQg5ElhDfAcF2kHRSc3aK7j7btxwQTihbpHOFOc+GZ2YAcRcy8wMTeYSMWqhu3936ZceDBHBROiydM=
+	t=1783699309; cv=none; b=KhGl/oMLVO135170TGD48mrRgOvELnFtraqr02oUIgollvaQnXF3ABX0yP4tnG99c1Oab9tByXIi/fNhHvDd4IfzHlwzb+Lj98IQwpLYzK/zDtlazw8HMZtNyFSGSHwnTtnOkg8e4nHfcHOK7ntOX+RUVUEeRVBXw7jdp4gPb/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783699303; c=relaxed/simple;
-	bh=X+CM6CcZvtG3xrXzA+E7vFdnehcFp/XJxB85EcmWIbw=;
+	s=arc-20240116; t=1783699309; c=relaxed/simple;
+	bh=FpvBMFOBjGbtex0F2E85sDkJ0mHA1kFz8fwtEFKL9Fs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HyDbxjMrrr/Ep5Ux0PVLy1zOMJ71mfywaNLhSxRkqL2jAxEDxV6Yb+Vc4K8UJjocBpSZjewRmKWUVwteU62T8vcYW+TGJjQfYIg/CjTLaS0K9fphpEc1zv8h8db0835ruwW6GAZeieIT+x0cqf/q+NqXZ6MLUQs/s581bh0Rkok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=V20EhwOl; arc=none smtp.client-ip=209.85.219.51
+	 In-Reply-To:Content-Type; b=dqa87Z1JnRBVT0QnvT0TPe/FEUhqis2hGtGpJDVRRAlb6Vzg+X3dJEihe9Re0G/Bd3Xh++yp12a3qPOWs829aAuhkwXlnu6ou7m/BO5zHPdEf+R8dSRjP0M7sWuQd6f/HCIDhZX/1pdWU3FX4F+owY0nfBoTuomusZh9ZNFgJcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=YMqYFWBH; arc=none smtp.client-ip=209.85.160.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="V20EhwOl"
-Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-8f186025973so11324266d6.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:01:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="YMqYFWBH"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-51c21495722so5123281cf.3
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 09:01:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1783699294; x=1784304094; darn=vger.kernel.org;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1783699302; x=1784304102; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=BJ1o73BxjtDCU3tES64jvElPh2pTfJj5ck4Dt4zpj7w=;
-        b=V20EhwOl/eMXIJLYmaVemob+mNOMJKQLnDKN19M/Iz9vCwrBr6tzsKttk+gSmyntLT
-         VUtHivmhudKH19TE84ks8ZYoHBSCoiEw6+Fbb1zNL0X+HWClWJSTD9hNS3SJph3aQGYQ
-         Qd+DxtajUZdSW645jUdIrUWA18rdoyWzDNBfd+N1LJDu1Ka/eEEm0FkYKD+tLFfiG9LH
-         xPHr2bVOHLIdEkp5Gm6vYpaII76+MViGyheOKR7E2OJkYRNzwoF+NWSkQJVaQK8Rft1j
-         m/GqVliME115NivtsJ5U7XFVjmqblJAWRIO+FrEVf5u5Sy2xD8es6FCQXObrb8ElkiEE
-         Tg+A==
+        bh=Xplki/WjnUaATCo6uGj8PBglmca7aRIHrcSArfmWE/8=;
+        b=YMqYFWBHH3a37kqe/Jc/56EqUtfRQqBlg6YZmh6HajWWXHheWFEfPvkYeQoN6OABTH
+         9K+nAf/FI7lNo+1rMbGACesyTcZnBJ3iaa9bVTWWiXI9aqhprCw66xzOEiHH0t4pHUDm
+         9F0TiiPv/Sh0RjbyctyPl5i4uwkWWTIhAfXLdgQ8XzS1ZR5u7jre2hlq604XreguIz7B
+         Hs35lVokfrCXvgZNSHXfLfFHYB6BMAAuAhQO3NmXzeagV+lUwqPOLs/a1YeUMjuxuetD
+         bgILXOUIFUv6/mTcwZ3caimiuO06QnaeAR0CQDPTdlZtwXkyuejmBUMKp/PgC+uw5sYH
+         pGEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783699294; x=1784304094;
+        d=1e100.net; s=20251104; t=1783699302; x=1784304102;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=BJ1o73BxjtDCU3tES64jvElPh2pTfJj5ck4Dt4zpj7w=;
-        b=WxpV9OEHHfyFByxQ835/1fflO1nI3lexhwHIqu5zkxhjq2bG+H8Y0MxoH2Ln2JBxTq
-         OETnmy1OnQn1Bq5hbqhuskx+tG/WRiJWWHZaXw1l9/qKfyxSLSGqNSn6XPk+d2DLvMrs
-         OrI5M0Tm3WTuWsb8UC7WwFrJ6KxefNtdY1JC3ZzmcGmkVi6suCq8jijjaAIXW+h2hk7s
-         UleHW6bwXX/rM023HLpA67JqdR0QLTJAKW4SOImIWyv2hYkQdufEA4TEyQDuSbiSm9Q2
-         Gxlul1YmkOOr74xFz9IkBp7WCD4m5GCzldZE/w2nBPu9bBw46tsPGwbvVS0LTu0FJ6kG
-         x1Xg==
-X-Gm-Message-State: AOJu0Yx8tqxXiOt6Iep40qTBhajCUEb5SNz16/1Hoqy6dh0m0ZVOfC8i
-	RvNqfr3aAflxwXs44lxPwMh/KkJGFog6rSfimgtjw2EHigK4ATsjehyHXnvS1O+XprI=
-X-Gm-Gg: AfdE7cnq5TElkrXdRRFXK7vshGTdCJzku0D42+pA0LhC+YNPfjYdhRFozVDl5h+/Tnd
-	Jmi2KN/C9LoanoVUP8HmSxD5wiqORE4zcxrENyxFgzMSwpTq/f5tm8/+9J938QGjn1kWMXPEKzq
-	Gg8d2NVBDxnpsS6h85SX31v5HpXMb8B/eThFsxNoQrILuIHqfff6Z7eVwIP0mU2OLcLgecpaJwt
-	l2pYBRkYK6tHTkP2iip+yfx9iOKlmbXkP+LaTFyyznVQiBiDj/7G9qebCPfNbCDws1ThhczMcV4
-	a6HMCZCPcrYHCgTRUj/hY87vPrkCDbRJ2ckQTxHk1tp9dVriU8BBgscuqVXYLHO72N5RdsnXmjV
-	Xq0sEGGLnHgG1sXAQSGhO71eXENVVPhbdMOU5M2OdFLZt7s6wuG55wqJzWV9gaJ9YA+Tmxgx8Tk
-	4jmJhTpBVDVG5s
-X-Received: by 2002:ad4:5f86:0:b0:8f0:f35c:23ab with SMTP id 6a1803df08f44-8fec189aed8mr127228496d6.16.1783699290317;
-        Fri, 10 Jul 2026 09:01:30 -0700 (PDT)
+        bh=Xplki/WjnUaATCo6uGj8PBglmca7aRIHrcSArfmWE/8=;
+        b=VBcIzg6LfrV/2EezCpTqbfERzO0tl2rkoaRrL429sfg3Ih9MTpzyaotazkJdkoX0Df
+         Z0/63pbUW9Se4QFZH+y9jzgeUSa/x5ifGE8KrjmitsUzVfMk2EGnXH06Tj95Fp7hntpM
+         +YW3AoEbxMQhdYlClwuMItutP67E6DkOSl1C8PJjVp2ys3YN4o00sI6B0daoGF3k2d6M
+         q7Qomqfphr2cNHS6kl3Y77e7EwDyAk8LeEiYA6euovqN5kmsMfgFHpCzuYF3tby0vRT0
+         wE1gB4zANGoXfmKs8OyrEvt92ZiFSNrbtdGd+nwyloax44ZA1NyfjT90pug8mMoF0SZs
+         JrsQ==
+X-Gm-Message-State: AOJu0YwAFvIJ/1JP5oQO7uDWhcTtEkC9mq4DqzUKzVAuu72xAwJTi6ot
+	+Ni3bEvQSnpBSpaHB/TKjICyfv33EvFU52jFqG/ZDYnbPxhm5h1NDAbgeK8jbG7reb0=
+X-Gm-Gg: AfdE7cnPs6vM8Dp2XJTRIxm8lSLd3ZDfXHkt4rkG0t8WrQCCHr1mfxKa/ZQmyL3m2Xl
+	SUfxlVQp/8i17t5xLWhENU8P1053iseTc2mUD+kaC0X5g8Xrsulu2UrZ/t9tenBC6bsgMHx3Uvp
+	HMt8ClwlgLzDvvPHFdDqmtjqxfxQr/Xf2OfavFQ9LcwcWAazmdrbNIv2hn4xeOSrPDZ4l3uz4s+
+	/eYJymhKLYGJlcb4BsJ4rVWdkiwZPaO+/H5tXKmjhSAnS5QCAuQ1jMyA4NQNi/5+4Bil5jlrpSj
+	IJkeqwVAF7uLUZh+Cd9KM0mP/n7IvYCqxAFcTV67KyxQkgKjWt5KWl86rP3xubiJhgucxPWzcru
+	GR0peWKBZRtYrp5tE1P1Fh0p6RrWfwZluoOZszEXOzfxJpvyQiXH27pMY6rARkXuPHr5mVvHw3f
+	z9WhynT4d1FKn9
+X-Received: by 2002:a05:622a:2c6:b0:516:df62:bdd2 with SMTP id d75a77b69052e-51c8b3c65f5mr122904381cf.55.1783699301497;
+        Fri, 10 Jul 2026 09:01:41 -0700 (PDT)
 Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9036e27f765sm8965376d6.11.2026.07.10.09.01.27
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51caaf5f61csm18644921cf.22.2026.07.10.09.01.38
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Jul 2026 09:01:29 -0700 (PDT)
-Message-ID: <cdf06f51-5df5-4322-bd25-a33a3f0a3788@riscstar.com>
-Date: Fri, 10 Jul 2026 11:01:27 -0500
+        Fri, 10 Jul 2026 09:01:40 -0700 (PDT)
+Message-ID: <58948c74-0990-449e-8eee-88cbb38db7e7@riscstar.com>
+Date: Fri, 10 Jul 2026 11:01:38 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,7 +68,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/6] PCI: spacemit-k1: Add device id update helper
+Subject: Re: [PATCH v4 5/6] dt-bindings: PCI: spacemit: Introduce Spacemit K3
+ PCIe host controller
 To: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
  Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
  <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -90,88 +91,138 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
  spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
  Longbin Li <looong.bin@gmail.com>
 References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-4-inochiama@gmail.com>
+ <20260709040027.958400-6-inochiama@gmail.com>
 Content-Language: en-US
 From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20260709040027.958400-4-inochiama@gmail.com>
+In-Reply-To: <20260709040027.958400-6-inochiama@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 7/8/26 11:00 PM, Inochi Amaoto wrote:
-> Both K1 and K3 needs to set vendor id and device id, add a helper function
-
-s/needs/need/
-
-> to simplify this.
-
-I think someone might have commented on this, but I expected to find
-that the next patch would fill in the code that's needed to support
-K3, but that patch is at the end of your series.
-
-The reason I say it here is that I wondered while looking at this
-one why it was needed to create this helper function.  I now know
-that k3_pcie_init() will call it (but I had to find that in the
-last patch, which was later than I expected).
-
-Your series should start with DT binding changes, then code changes,
-and (often) end with DTS changes.
-
-Anyway, this looks good.
-
-Reviewed-by: Alex Elder <elder@riscstar.com>
-
-> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> ---
->   drivers/pci/controller/dwc/pcie-spacemit-k1.c | 17 +++++++++++++----
->   1 file changed, 13 insertions(+), 4 deletions(-)
+> Add binding support for the PCIe controller on the SpacemiT K3 SoC.
+> This controller is almost a standard Synopsys DesignWare PCIe IP,
+> with some extra link and reset state control.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> index e22ecbd09579..31aac056b68e 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -56,6 +56,7 @@ struct k1_pcie_device_data {
->   	const struct dw_pcie_ops *ops;
->   	int (*parse_port)(struct k1_pcie *k1);
->   	unsigned int max_phy_count;
-> +	unsigned int device_id;
->   };
+> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+
+This looks OK to me.  What I see is that K3 does not require
+the interrupts and interrupt-names properties, allows up to
+six PHYs (not just one), and adds a dbi2 register that is not
+used by K1.
+
+I might have missed it, but I don't see where the dbi2 register
+is used by the K3 code you have added.  In pcie-designware.c,
+I see that if no "dbi2" resource is found, memory at offset
+4096 from the "dbi" base is used.  Does that apply for K3?
+If so, maybe there's no need to define dbi2.
+
+					-Alex
+
+> ---
+>   .../bindings/pci/spacemit,k1-pcie-host.yaml   | 50 ++++++++++++++++---
+>   1 file changed, 43 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml b/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
+> index c4c00b5fcdc0..54817d6fd9af 100644
+> --- a/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
+> +++ b/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml
+> @@ -14,26 +14,29 @@ description: >
+>     PCIe IP.  The controller uses the DesignWare built-in MSI interrupt
+>     controller, and supports 256 MSIs.
 >   
->   struct k1_pcie {
-> @@ -186,6 +187,16 @@ static void k1_pcie_disable_aspm_l1(struct k1_pcie *k1)
->   	dw_pcie_dbi_ro_wr_dis(pci);
->   }
+> -allOf:
+> -  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+> -
+>   properties:
+>     compatible:
+> -    const: spacemit,k1-pcie
+> +    enum:
+> +      - spacemit,k1-pcie
+> +      - spacemit,k3-pcie
 >   
-> +static void k1_pcie_set_device_id(struct k1_pcie *k1)
-> +{
-> +	struct dw_pcie *pci = &k1->pci;
+>     reg:
+> +    minItems: 4
+>       items:
+>         - description: DesignWare PCIe registers
+>         - description: ATU address space
+>         - description: PCIe configuration space
+>         - description: Link control registers
+> +      - description: Data Bus Interface (DBI) shadow registers.
+>   
+>     reg-names:
+> +    minItems: 4
+>       items:
+>         - const: dbi
+>         - const: atu
+>         - const: config
+>         - const: link
+> +      - const: dbi2
+>   
+>     clocks:
+>       items:
+> @@ -66,6 +69,8 @@ properties:
+>     interrupt-names:
+>       const: msi
+>   
+> +  msi-parent: true
 > +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_SPACEMIT);
-> +	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, k1->data->device_id);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +}
+>     spacemit,apmu:
+>       $ref: /schemas/types.yaml#/definitions/phandle-array
+>       description:
+> @@ -84,7 +89,8 @@ patternProperties:
+>   
+>       properties:
+>         phys:
+> -        maxItems: 1
+> +        minItems: 1
+> +        maxItems: 6
+>   
+>         vpcie3v3-supply:
+>           description:
+> @@ -96,13 +102,43 @@ patternProperties:
+>   
+>       unevaluatedProperties: false
+>   
+> +allOf:
+> +  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: spacemit,k1-pcie
+> +    then:
+> +      properties:
+> +        reg:
+> +          maxItems: 4
 > +
->   static int k1_pcie_init(struct dw_pcie_rp *pp)
->   {
->   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> @@ -201,10 +212,7 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
->   		return ret;
+> +        reg-names:
+> +          maxItems: 4
+> +
+> +      patternProperties:
+> +        '^pcie@':
+> +          properties:
+> +            phys:
+> +              maxItems: 1
+> +
+> +      required:
+> +        - interrupts
+> +        - interrupt-names
+> +    else:
+> +      properties:
+> +        reg:
+> +          minItems: 5
+> +
+> +        reg-names:
+> +          minItems: 5
+> +
+>   required:
+>     - clocks
+>     - clock-names
+>     - resets
+>     - reset-names
+> -  - interrupts
+> -  - interrupt-names
+>     - spacemit,apmu
 >   
->   	/* Set the PCI vendor and device ID */
-> -	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_SPACEMIT);
-> -	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_SPACEMIT_K1);
-> -	dw_pcie_dbi_ro_wr_dis(pci);
-> +	k1_pcie_set_device_id(k1);
->   
->   	/*
->   	 * Start by asserting fundamental reset (drive PERST# low).  The
-> @@ -406,6 +414,7 @@ static const struct k1_pcie_device_data k1_pcie_device_data = {
->   	.ops		= &k1_pcie_ops,
->   	.parse_port	= k1_pcie_parse_port,
->   	.max_phy_count	= 1,
-> +	.device_id	= PCI_DEVICE_ID_SPACEMIT_K1,
->   };
->   
->   static const struct of_device_id k1_pcie_of_match_table[] = {
+>   unevaluatedProperties: false
 
