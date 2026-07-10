@@ -1,58 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349454071E2
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 10:29:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 702E53E3D90;
+	Fri, 10 Jul 2026 10:43:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783679346; cv=none; b=oief69zR9hpjdzLB3a06wBrHBkU+rmSNjdbHN8UPAvBWpVip2DSr3wgY0qDKvey9pvVkfPLJoIA2G/Z+lwI4ZFHr5ntQqVK+4YFPot4DI+Ynu0IGyernTFF4IK53yQQJ2B7VDAtjmiJra8z/MK4hDobx8Wj5tFGUQiISmYXf6lo=
+	t=1783680234; cv=none; b=RO0XEZ2rcLdC8NSC2/4O11cMNl/fPyl+4VHcX5gxEzQdvnNOwrwhZv2g4b2+I3XXVEGYaaid/3CDLGE98tnzpBA9wvbo0DPytfvy6op0VXpmeIyOTfzuji8wwPGcHc/CnBzed0XHur400KBycPn20iQ1s3wX13ngoMVDyoFTXu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783679346; c=relaxed/simple;
-	bh=LrDTnYOAMnl6e4yKuuCnRep5OeH18gjI3JyyUJakUgg=;
+	s=arc-20240116; t=1783680234; c=relaxed/simple;
+	bh=/OkMsSt2pEZeE3L97MlLY3KCCaaTYO+eAl6y3/W7H/I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rhMJ0dnG+XuGAJN1SxBUezRDT4ggnQ4B8jFhJiG3aU5WxOdL7ldkEONZxlS0yLnOP9AkUbp/FizVg1BCD+Uni6K+qYv1DhWo953hzE0dPOcH9vudMrxwBytj4lIpY7rKlK/0SDILRez+Q1N/J+KtTw5fJIXSEnUrqkLjS3AuKDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LEQBWisC; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GqHdq+zzUGIZ0vmYgHx7n13yzQNlxn01Ul/6SaPye3/sRmCDAIJgvY4J4zR+FMj5QKyCBg0jDvfMGGtjGDDvdTKFwXpEyprBzaTuVtCV8yBupdYdjXcgjf/sTPHT8Lnt0ujamOb3Au6gFmqDqywpllGUbyfWJv0KyntEpjwMosg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RffkoNhX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LEQBWisC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3DA61F000E9;
-	Fri, 10 Jul 2026 10:29:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RffkoNhX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9D671F00A3A;
+	Fri, 10 Jul 2026 10:43:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783679344;
-	bh=LrDTnYOAMnl6e4yKuuCnRep5OeH18gjI3JyyUJakUgg=;
+	s=k20260515; t=1783680233;
+	bh=C/lSeXagT+mgcjUZOLp/BIsZTNEz+dIkjPEvhvMwzaM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LEQBWisC2ApjICTvpHATPOZrTznVok3Rqg/8+dorMX6y4Pc+6YLIqHVACRVDbGR15
-	 uYCQEeR9VSRq7jPpu+lpq4SVntuYoWQ4QKWsk9k7EeN5bzUasIzNI/6IJA+EweCD9T
-	 ww9bI+DZXTOwy4eQMD/k3DkfN9fn4AASkFZ2V0pzBko6qrdh+RCIrO2P6w7cVK7TV8
-	 kuZlN2KyLw3egaAVFDB+7vzz39kjjyR2QkgWrq8rKQ0zTXqrc5hT/3XnX3d7QOv7rr
-	 ANasNWqjOhW0eGlPM9bQSHFKJAV4yOMWGxzN6hktobJiCnINVTQCx6xGAyhv6Ot9S4
-	 QbI3tyoWczMEw==
+	b=RffkoNhXMGWbrcYteWv1afwKNGsrf6IfRxJGUxd7xpUP+G7fOiLy2qoDL/Cov+8NK
+	 hZPY6Koxshgv4auYznOPxBUXv84jvd3AS7AcHe9jdUrrYncE6gM30ob/y1m09FXW9/
+	 K+M5obFmGP3uKsoIbN0UxkQovRP43Ukq0TFCSc6cSls04Y+ULJIaiNuS76YADNv1mj
+	 aL5EvcX9N5maa/YVLseJ/PyKhF7wp49Ebi8/0TDYq9TxRn57Eq19eoiFnCZhysgObb
+	 SqUEuTBD0kfck/HTdjpFaUk3KVehuH9CFePQGhOojeoD9ir47SL5w9B38NVnFxR7d7
+	 SY1nrzlUPaklw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 v2] arm64/pcie/pmu: Add pci id for LECARC pcie pmu
+Subject: Re: [PATCH v4 5/6] dmaengine: dw-edma: Add delegated channel
+ request helpers
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Braden Zhang" <braden_zhang@lecomputing.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260710-pcie-pmu-v2-1-a3d73d4d9051@lecomputing.com>
-References: <20260710-pcie-pmu-v2-1-a3d73d4d9051@lecomputing.com>
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org
+In-Reply-To: <20260710082156.2395844-6-den@valinux.co.jp>
+References: <20260710082156.2395844-1-den@valinux.co.jp>
+ <20260710082156.2395844-6-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 10:29:03 +0000
-Message-Id: <20260710102904.A3DA61F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 10:43:52 +0000
+Message-Id: <20260710104352.C9D671F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Brett Zhou <brett_zhou@lecomputing.com>
->=20
-> This patch adds support for the PCIe PMU found
-> on LECARC SoCs, which utilize the DesignWare PCIe Controller IP
->=20
-> Signed-off-by: Brett Zhou <brett_zhou@lecomputing.com>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Critical] The patch references nonexistent constants, functions, and str=
+uct fields, which will cause an immediate compilation failure.
+- [Medium] The `irq_mode` field is modified without holding `chan->vc.lock`=
+ during channel release, violating the locking discipline established durin=
+g delegation.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--- Patch [5]: [PATCH v4 5/6] dmaengine: dw-edma: Add delegated channel req=
+uest helpers ---
+commit 15a8e802b8e938899858a00862b359f85ce5f547
+Author: Koichiro Den <den@valinux.co.jp>
+
+dmaengine: dw-edma: Add delegated channel request helpers
+
+This commit adds DW eDMA-specific helpers that request a write/read
+hardware channel through DMAengine. It switches the selected endpoint-local
+channel to remote interrupt routing after reservation, and restores default
+routing upon release.
+
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
+edma-core.c
+> index 89a4c498a17b8..cbf6f539d4369 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+[ ... ]
+> @@ -1178,6 +1178,92 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+[ ... ]
+> +static int dw_edma_delegate_chan(struct dma_chan *dchan)
+> +{
+> +	struct dw_edma_chan *chan =3D dchan2dw_edma_chan(dchan);
+> +	unsigned long flags;
+> +	int ret =3D 0;
+> +
+> +	if (!(chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL))
+> +		return -EINVAL;
+> +
+> +	spin_lock_irqsave(&chan->vc.lock, flags);
+> +	if (chan->configured || chan->status !=3D EDMA_ST_IDLE ||
+> +	    chan->request !=3D EDMA_REQ_NONE)
+> +		ret =3D -EBUSY;
+> +	else
+> +		chan->irq_mode =3D DW_EDMA_CH_IRQ_REMOTE;
+
+[Severity: Critical]
+Are we missing a prerequisite patch in this series? The field irq_mode does
+not seem to exist in struct dw_edma_chan, and the DW_EDMA_CH_IRQ_REMOTE
+macro appears to be undefined, which will cause a build regression here.
+
+> +	spin_unlock_irqrestore(&chan->vc.lock, flags);
+> +
+> +	return ret;
+> +}
+[ ... ]
+> +void dw_edma_release_delegated_chan(struct dma_chan *dchan, bool quiesce)
+> +{
+> +	struct dw_edma_chan *chan;
+> +
+> +	if (!dchan)
+> +		return;
+> +
+> +	chan =3D dchan2dw_edma_chan(dchan);
+> +	if (quiesce)
+> +		dw_edma_core_ch_quiesce(chan);
+> +	chan->irq_mode =3D dw_edma_get_default_irq_mode(chan);
+
+[Severity: Critical]
+Are there missing prerequisites for this code as well?=20
+dw_edma_core_ch_quiesce() and dw_edma_get_default_irq_mode() appear to be
+undeclared functions in this tree.
+
+[Severity: Medium]
+Does chan->irq_mode need to be protected by chan->vc.lock here?
+
+In dw_edma_delegate_chan() above, chan->irq_mode is modified while holding
+the chan->vc.lock. Here, it is modified locklessly.=20
+
+If quiesce is false, could an ongoing interrupt handler concurrently read
+irq_mode while it is being restored?
+
+> +	dma_release_channel(dchan);
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710-pcie-pmu-v=
-2-1-a3d73d4d9051@lecomputing.com?part=3D1
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710082156.2395=
+844-1-den@valinux.co.jp?part=3D5
