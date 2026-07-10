@@ -1,241 +1,243 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013059.outbound.protection.outlook.com [40.107.159.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD6F3B635A;
-	Fri, 10 Jul 2026 21:24:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.59
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783718650; cv=fail; b=pZ/sZb03NsbBFWqwN+BlRu5rJC6Di+2saeF40i7SFkqXxF07YYuq6twT/bQqDtrPdo6ceGH6VR/6e1ftyIGkwwF+z2iWlWOPn9o0KJfKQfPzrfqE8zIYZh7dri9u49WSHoDsC79+fSljPDm2gzkBXD5YKUOqA5adPQb9VCyD604=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783718650; c=relaxed/simple;
-	bh=ASaccPxLFGoT4gjLDpFy4nrX090dqDX/gkykB/F0sA4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=bOd9aaycHzCB34e8e1XXy1p7r+2WD/br2gb8qipxZ++lFi80wx2pBOC9iegD9+tV1Sdi9RLSvII4zu/nZFZRGSawE9jDBGr/+ETe45DaYcEVXndYlmwEEqPkkSebz9VwHXL2S/sOHeux2EdUhAN8bgptMwe3aRlVJdk5lCgcAeA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=PxSc0uUX; arc=fail smtp.client-ip=40.107.159.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A8C3B95F8
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 21:26:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783718785; cv=none; b=aVA7r3u9idSqXHU6VOuU6pb5JJ5MmSD3Tf5Z9YD1yweycboslddy312TU2GPIidMlWyvNUlacmIJNwiRqMbUw4KMbdx83KcKu+01bkv5UcQ0TnV0mCClFUsz0z7VOPl8l13bSfVnDTLMC4tPt2IEP7sOfWGVkBEuiiC3AyG3Ij0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783718785; c=relaxed/simple;
+	bh=1aHgjBy7B5CxJBu4ZKVWz0/EFWhYHP/gU/x++i2l4Gs=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=T3NRjztVUwz4TuLN0cQVyuMsS5HdheXNeffhgCV3pcQufKlzyv/mtRji+SSO206pC/52pD0v1c6xDRCPGSJsAmO0qv7mKoqbt7BCgq7LUAywX0/FRn/eyAZoNzYIH36NnyT72H35ErjmFFD5r4x1s8G6bO/fQPHgIEvMC8ZXyPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hZ38aPit; arc=none smtp.client-ip=209.85.210.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="PxSc0uUX"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jpVTRIaIUuFyQ1NwDTUigHi6ay2jfYAwOP7yAE2uBtOrxEmfdhbt4x8s9eyCq8XUD2vgEFborQDxb9+eYRLIWAtxRbbf6hd6fG8AVTZEOMPA0n/7px1w26B8kqfYxEMcVoCmb+chp/yVqpXRpQTSH9prLt0c0HGvRBcrL2R/JM7PM7IXhDXkpbqLzzpdFUbI9nB2xrcVCE0j5QfXQY0kpP9nU1f6bcwl/zsI41J/UmdEyV3Wy8ws2zAbNFukpKPKF5b1uVxpjb6SzinQ3ly09MIFScXiVpCk0n+JgoPun2RIpk4MnHCwvXof9N5c2Ww8juULzeL1Wtwz/hWdzl12aQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8/l8vy5zZkoDag1MWepxwlUdBv52+qXKsGL67itiZIE=;
- b=baPoa88XtwYM3YPxXk4TATyhdkyZhyKXy0IIWiyR2qs17OEVnaqJHFVNO0EG2dM2+ztqcfCeeCfpPbpnEozC0MNfmwfgT+SglpTKwJrf35To3u2akTBoXssrYH9udbxAE5OjD+WDdHfn6uzhghR6DIMtmONHvghFO7DYV6rv8ZSBe7WvrDmsCHJ+0wxnVoCK/2Q2UDm1f4TLUQAnrTBYajYIWM4Hii//OvkD6z8TEGpRPgJFDJg0EzzSM9oxQgkn1c/Z53itSvfms474TadNh2Xbm23aj/fjMmWiWpFFHBZrC0x9G3P0lvEwllVpfRK5JScaT9/yBmkTk9Hnf+XSEQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8/l8vy5zZkoDag1MWepxwlUdBv52+qXKsGL67itiZIE=;
- b=PxSc0uUXmZ3qYeYNgJhMQ/M3rCR0Dh+0MKvH+yJ5kODA0FDpdvu+r0u/qniXzoRvyMplz6KcnJQptRbAd9G2WZ1btRsZV9K/t1rNS3P8I/Hj3p05ZSnUOH81yMwzL7FYQPR5jjCa/fO0CW702P+BCVY9THAWFbwYSptM8Z1OJ8N/ex0FkrXWgtQ2oYO1E/byinYHNx2jtwuALtwObBnzsSx+aW3FSCPxM3pqn6e/xgny/MMzQstuFldRDSNNo+Gy3xsAJmdVaalrLz7qj+SaSF19mBeIyzt+Ium99+4CTkxRycpoh6xn9B8nd6YSZFZFZ+tKf4D2EEgHiz1fx7Bv5g==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by AM7PR04MB6997.eurprd04.prod.outlook.com (2603:10a6:20b:10d::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.18; Fri, 10 Jul
- 2026 21:24:05 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0159.007; Fri, 10 Jul 2026
- 21:24:05 +0000
-Date: Fri, 10 Jul 2026 16:23:55 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Sherry Sun <sherry.sun@nxp.com>
-Cc: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>,
-	Frank Li <frank.li@nxp.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	Amitkumar Karwar <amitkumar.karwar@nxp.com>,
-	Neeraj Sanjay Kale <neeraj.sanjaykale@nxp.com>,
-	"marcel@holtmann.org" <marcel@holtmann.org>,
-	"luiz.dentz@gmail.com" <luiz.dentz@gmail.com>,
-	Hongxing Zhu <hongxing.zhu@nxp.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"brgl@kernel.org" <brgl@kernel.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
-Subject: Re: [PATCH V5 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
-Message-ID: <alFi63W80HiYfDfC@SMW015318>
-References: <20260709101555.3034853-1-sherry.sun@oss.nxp.com>
- <20260709101555.3034853-3-sherry.sun@oss.nxp.com>
- <ak-2BQEUMg8Ewjz9@SMW015318>
- <VI0PR04MB12114FB4F1C79ADFA5F3F215092FD2@VI0PR04MB12114.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <VI0PR04MB12114FB4F1C79ADFA5F3F215092FD2@VI0PR04MB12114.eurprd04.prod.outlook.com>
-X-ClientProxiedBy: SA9P223CA0007.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:806:26::12) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hZ38aPit"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-848662cd2a1so1740495b3a.2
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 14:26:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783718783; x=1784323583; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=he4LlVclK6dw2y5zUcgVn+6YxGRxdITg+d/Le4uVaLE=;
+        b=hZ38aPitmeqOJBbteG1aSNiMhcbmq/k0vyRSNG/G4qkMw59dBeTru1NizEu0G0zByh
+         FNi43/mDatKbD6gwKzujOntTpIusDwk/wdzn2WHTVeG+/6H0yZKRC66zi04CiBi3wWmH
+         eFRVUdRD4YNT15RTwlzClekqnWv8gNvQ6cnp+3XSv+xuWfoA3i/lUCS70w/KK4mrBxxq
+         HbDtaE8iKiGSe1OP1tzzhyqUprrQTt1CaDrsR6dKWQerEIDEDavADPIJt1RDCckW4puP
+         2LCAE+Ym7Os80N74iKRy9DWd5TfDGvelUx8+Q0zDOK6r2JWREstJI/uz9p0SkT4yIWi+
+         aBJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783718783; x=1784323583;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=he4LlVclK6dw2y5zUcgVn+6YxGRxdITg+d/Le4uVaLE=;
+        b=ccF/6n/smkTeh8L1aaftGrojv0484I1fC+/P36mo9pWMCog1WZfR0DwtED5FjM1KC2
+         G7lyFqS4jBwadwISdQy7ehXL+WEX9f5UwgXXmMuSFzZWbboiN0W6hkv019JLY3VPS65U
+         WBcEf0PUAr6LHGMA5z/nGOZlNt8m2rq1yDy2XTg85/hF2426n+mtZSGdAzQ/7CM6q9Wv
+         bPgGFGh7oHE1qK0GokPxgU7unJiEYp29NZJhe3JV+F1HBMwYM91EGI461LRwdVrg9uMU
+         gCJ5tA8IAMEq9O7XcLUJpMHgMIxYJv32VXnj08LiHpxD61w6v2vu5YhDG6j2UMwE109E
+         3ftg==
+X-Forwarded-Encrypted: i=1; AHgh+RoT4DIaq2Bci2Oqs03nR9h+qQK+ljglzJiV2fyJxM57yiam5yV/7PUq5wKezdby00YOMAU6C9XLXMk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwX671q02mv9TP6OT4VtIneb5bzoUzmr0Od+QaNJOPyqa+xJx6d
+	SelEOsol3w5CmyKIHmyE1bk41Jejly6gSX/SiAK6VTIuloA+GQBlhUtK1DcdJ1qnEm2coB9+XId
+	fNJGoP4hPvwYkog==
+X-Received: from pfud15.prod.google.com ([2002:a05:6a00:10cf:b0:847:9be8:84d5])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:228e:b0:82c:e9cc:f61d with SMTP id d2e1a72fcca58-848896c39e2mr550236b3a.9.1783718783127;
+ Fri, 10 Jul 2026 14:26:23 -0700 (PDT)
+Date: Fri, 10 Jul 2026 21:26:03 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|AM7PR04MB6997:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4c425c46-0a74-4960-65fc-08dedec991da
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|19092799006|23010399003|7416014|376014|4143699003|18002099003|22082099003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	9n5wKRjOeQTr3Jn/mJMmarfc806vFgxs2I9u0Ywh/demo94IIRdaYkMs/SL72vLBjJwXxfD0O7YEHqWdNge5jBwHy3IhVgXREZlIN0yTvoax8B2bLl9+A5/4W2kgIJQ+pr9Yb+tDW5p7W+kbxiKCqigZ+kYdATYnCTenq4z4A/gaCZGDSotK1QxhQt86mP3RvPBhExbXyKNyvICdTFjOnftqzSLBGKcc09/wRtEHvPbmGuagvchE0WNbmnc4g9VlWNdEVNPafTvRpLyw4TTspKhuoqHx5xjYeku9I4flUP7nPS5+oLEZzS1uM7UpyGd0p9J2rfaiKFmb9gFlAeBdrGIcJL7xSYRrdbPxANq1pMcBVR5ziybFBdkas7iy619jmbsbVUu/Rq4tiadKRgeL6kVxeJKoIRNvkgT38oTLD/cwB4oH94dhF+e1G2ElIjR7ajmeagaY0y/wa2mJllKj+vJFAD6tH0bzmtLr/xRjgFbc2QuUvBUxKb+nj8M0xkioiW5TVJs9ayAwz64W/Om/yubLCq/avVH1X5tUZsoivCeL4pBxl9fSZBJr0A4RVkMe2tOve7DfOqRqkvJcSvxB+i44JmOir2ozLI2KmVp1fDTLqM38GjXREFq0IspXe2/Kwz/qf/r4y9d5KKlMLRM5ggzBoIFSMZxMiKcyMwJEXpY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(19092799006)(23010399003)(7416014)(376014)(4143699003)(18002099003)(22082099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?fQB9KoXla8nd/oTq50dgvUzKpFGLQp8F3KmNvueoJ1RtymstOTgkEeDN+Ngu?=
- =?us-ascii?Q?IW7jZN15aULNhzgL1AFqeDQ+N+DaeNHHlNouxGERxxCu1WLHQmidy3TtMI6q?=
- =?us-ascii?Q?vy2vvwooT2OileB7BHCLCoDFlafm3zw06MTebUuiLMB5pDVwgO8+rK/93/35?=
- =?us-ascii?Q?mOpOH0uKo9OwwEThEbWqxIldfTl5ksLaMHfPIcVG3hI23xgShAp/59vmmJwc?=
- =?us-ascii?Q?Z2+1RXw6a7Fw45+vVu0dsx+CpOKXpzRaShSzIAV9HzVj0vVB2vJns1/o1LmZ?=
- =?us-ascii?Q?H953j/hGS9SqZ2O6typAXAkcG06hTj1fmRcHxENZekM+8W0TaWZHFOtLatJM?=
- =?us-ascii?Q?ecuAVc4btGtExfKAeBhpGdAZMtnuYYQQniD9tAm2KrWl47EAnWt/OOB0p9nm?=
- =?us-ascii?Q?6jFQOj+9nM8J8vc5RIMMtyFGJ/CLZNFkvVIDsSX2MFWIFxeFYiB3MH/Od0XK?=
- =?us-ascii?Q?FdY/lbHlfEfXYQT9MByhjyN09qe6HwnelRrjuG5Ac2O4VmZ0QrYYprgCzlJb?=
- =?us-ascii?Q?Ia9mNzoPHNK+eN0Le8W1BljORJLTelYcLuInEceXuRpF7URxpDP4bv6GW/jL?=
- =?us-ascii?Q?OV25JEVON7X1E+fSR3DIvXwRV+E6wTcaEYBk9UBe07ON3+KpnphYSrljjm1I?=
- =?us-ascii?Q?XhyJEg7iyiwaVRap6Fnu1Z/hCS9mC/Xc3UHME9C5dGLkBu6ppDxdwd9Asmeb?=
- =?us-ascii?Q?heCffx6dnfGwQTfa6zx6wospdvHK125HmMnlA4Pa/EkEkA0z85uXOj95KWZl?=
- =?us-ascii?Q?qi3P7clfse3FxBhClO1WiBJIC2JTe/sSf66oeFpjZNWwkoJLdA8BRnoTF5LX?=
- =?us-ascii?Q?9Tsq+E95PpjZbg2f5ddQH2qIDaWYUnshnb745WBXrGGC0UEnBo3Iw4PyFvGL?=
- =?us-ascii?Q?cjvI8CxYh+V7PNopy/TTrqHiE5kGFswqbD+6CgvjjpVcTKEJXe0E+NzwLnRn?=
- =?us-ascii?Q?DTTMqkHnZi8Qt7M6OSwYEZGCmfFvn+Om3/mnLHYC47ezfqsMbqjDU5IEpmEx?=
- =?us-ascii?Q?dhI+MZ5lK72kZFeh26WJuQj/NVRQT59p9oNc7b5uAskm0Qs2OVz7LAgzWkWx?=
- =?us-ascii?Q?c53YyNE6M+icMmUbr6de3gK+FoylrUXFn7NSDTh+pf7nt40x/e5UsbbUwnQY?=
- =?us-ascii?Q?I5JDADHpMLfEtWNXPt3XV8/w8fCz4ziTR8y0fvB+d4sNemC8IV4uUXq7eQRH?=
- =?us-ascii?Q?0ueMPNz9l92ksZflfTuZq3LdtGXyQvDmAPNcFX5IxiHlgFK2Q0NxVZE9XCRF?=
- =?us-ascii?Q?DlZJuydpTEso1CGvDWt+08ZdIyi6mm589qICcPvFN3Ghy3eX2Cd3kKv3xOKc?=
- =?us-ascii?Q?2OZiML2hwGVmnaPQ0ROao0DI5k6gDiwmQS5oqZFVTKD9zqnYS/hbfYYcehPe?=
- =?us-ascii?Q?TVNcnZ/SgZuYczoHW3HZe+qyK8AdfBmBaPnOpBuJlQr03vb+H3yEKbr32azS?=
- =?us-ascii?Q?CwWwk7p4x0sNwVItEm39vyCG4qs0sZHM7l6vTQEv/wwPWe5tQwTVKQHr4pS6?=
- =?us-ascii?Q?FW3zaWAOIAhO0LI+HD3+FarnNh1tsNy3pQlsmFKtQMLmubulRCqtgD7OD+jJ?=
- =?us-ascii?Q?DMT8nL/lk82sqQysGPhPBnsKnWP7LJLI4yIJ1PNAr08daJ3vZAAxdpo48H/M?=
- =?us-ascii?Q?YkH1WrWA/bVQ3YgFNTEbGOC5AdAHy2B3u6cnc8fE7ag2kYiU+dbrCV+fygfl?=
- =?us-ascii?Q?cOAU8waQluVaXH3UCzsTxvGznQ7N7LETuesos3oSLUoInqDuk4owKmyXc/Gp?=
- =?us-ascii?Q?P0x4liE67r/hLzlGc9lBuhaEhk34HxoJXEOng+9Tz6Gr55oORwYx?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c425c46-0a74-4960-65fc-08dedec991da
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jul 2026 21:24:05.3670
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KJP40vf728jW82pX92ppteU48cG0Ccb3fDCHcL3X3FV5kzwaIMj33b6BgD3qqF5giMJGBgFkcpyTKx6XPQGrWhdbyOAxkdPhuEd+M/zAq7YMGz8hRIqbICJZO2oQJf5J
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB6997
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.795.g602f6c329a-goog
+Message-ID: <20260710212616.1351130-1-dmatlack@google.com>
+Subject: [PATCH v7 00/12] PCI: liveupdate: PCI core support for Live Update
+From: David Matlack <dmatlack@google.com>
+To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Matlack <dmatlack@google.com>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
+	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Jul 10, 2026 at 02:16:35AM +0000, Sherry Sun wrote:
-> > Subject: Re: [PATCH V5 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
-> >
-> > On Thu, Jul 09, 2026 at 06:15:53PM +0800, Sherry Sun (OSS) wrote:
-> > > From: Sherry Sun <sherry.sun@nxp.com>
-> > >
-> > > Use dw_pcie_rp::skip_pwrctrl_off to avoid powering off devices during
-> > > suspend to preserve wakeup capability of the devices and also not to
-> > > power on the devices in the init path.
-> > >
-> > > This allows controller power-off to be skipped when some devices (e.g.
-> > > M.2 Key E cards without auxiliary power) need to support PCIe L2 link
-> > > state and wake-up mechanisms.
-> > >
-> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > > ---
-> > >  drivers/pci/controller/dwc/pci-imx6.c | 16 ++++++++++------
-> > >  1 file changed, 10 insertions(+), 6 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
-> > > b/drivers/pci/controller/dwc/pci-imx6.c
-> > > index 92f8e4a299e8..afcf3b6bf3cd 100644
-> > > --- a/drivers/pci/controller/dwc/pci-imx6.c
-> > > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> > > @@ -1382,10 +1382,12 @@ static int imx_pcie_host_init(struct dw_pcie_rp
-> > *pp)
-> > >  		}
-> > >  	}
-> > >
-> > > -	ret = pci_pwrctrl_power_on_devices(dev);
-> > > -	if (ret) {
-> > > -		dev_err(dev, "failed to power on pwrctrl devices\n");
-> > > -		goto err_reg_disable;
-> > > +	if (!pp->skip_pwrctrl_off) {
-> >
-> > if pci_pwrctrl_power_on_devices is true, where call
-> > pci_pwrctrl_power_on_devices()
->
-> Hi Frank,
-> The skip_pwrctrl_off flag defaults to false during the pcie bus probing phase,
-> so the pci_pwrctrl_power_on_devices() is called at least once to ensure all
-> regulators are enabled.
-> The value of skip_pwrctrl_off is only changed in dw_pcie_suspend_noirq(),
-> and is refreshed by calling the pci_host_common_d3cold_possible() each
-> time a suspend occurs.
-> This is why we use this flag at runtime to avoid powering off devices during
-> suspend to preserve wakeup capability of the devices.
+This series can be found on GitHub:
 
-Okay, It would be better this part code can move into common dwc later.
-this is not specific for imx.
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v7
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+This series introduces initial support in the PCI core for Live Update,
+enabling drivers to preserve PCI devices across a kexec-based kernel
+update without interrupting the device. This functionality is critical
+for minimizing downtime in environments where PCI devices (e.g., those
+assigned to VMs via VFIO) must continue operating or maintain state
+across a host kernel upgrade.
 
-Frank
+Specifically, this series allows preserved PCI devices to perform
+uninterrupted memory transactions (DMA) to/from system memory across a
+Live Update. These devices can be behind a bridge but must not be VFs.
+Support for P2P and VF preservation will be addressed in future series.
 
->
-> >
-> > > +		ret = pci_pwrctrl_power_on_devices(dev);
-> > > +		if (ret) {
-> > > +			dev_err(dev, "failed to power on pwrctrl devices\n");
-> > > +			goto err_reg_disable;
-> > > +		}
-> > >  	}
-> > >
-> > >  	ret = imx_pcie_clk_enable(imx_pcie); @@ -1454,7 +1456,8 @@ static
-> > > int imx_pcie_host_init(struct dw_pcie_rp *pp)
-> > >  err_clk_disable:
-> > >  	imx_pcie_clk_disable(imx_pcie);
-> > >  err_pwrctrl_power_off:
-> > > -	pci_pwrctrl_power_off_devices(dev);
-> > > +	if (!pp->skip_pwrctrl_off)
-> > > +		pci_pwrctrl_power_off_devices(dev);
-> > >  err_reg_disable:
-> > >  	if (imx_pcie->vpcie)
-> > >  		regulator_disable(imx_pcie->vpcie);
-> > > @@ -1473,7 +1476,8 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
-> > *pp)
-> > >  	}
-> > >  	imx_pcie_clk_disable(imx_pcie);
-> > >
-> > > -	pci_pwrctrl_power_off_devices(pci->dev);
-> > > +	if (!pci->pp.skip_pwrctrl_off)
-> > > +		pci_pwrctrl_power_off_devices(pci->dev);
-> >
-> > Not sure if there are counter in side power_(on|off) function, if not, just skip
-> > power_off is enough.
->
-> It depends on the pwrctrl drivers implementation, for the generic pwrctrl, it will
-> call regulator_bulk_enable/disable() to handle this, so has enable/use counter.
->
-> As mentioned above, the value of skip_pwrctrl_off is refreshed in
-> dw_pcie_suspend_noirq() for each suspend/resume, so we need this runtime
-> check to avoid powering off some specific devices during suspend.
->
-> Best Regards
-> Sherry
+Series Overview
+---------------
+
+This series implements the following to support PCI device preservation
+across Live Update:
+
+  1. Set up a File-Lifecycle-Bound (FLB) handler to track and preserve
+     PCI-specific state (struct pci_ser) across Live Update using Kexec
+     Handover (KHO).
+
+  2. Add APIs for drivers to register devices for preservation
+     (outgoing) and for the PCI core to identify preserved devices
+     during enumeration (incoming)
+
+  3. Automatically preserve all upstream bridges for any preserved
+     endpoint. Use reference counting to ensure bridges remain preserved
+     as long as any downstream device is preserved.
+
+  4. Guarantee that preserved devices retain the same RequesterID (bus,
+     device, function) for the duration of their preservation by
+     inheriting secondary bus numbers, subordinate bus numbers, and ARI
+     Forwarding Enable on preserved bridges.
+
+  5. Guarantee that memory transactions to/from preserved devices are
+     routed consistently by inheriting Access Control Services (ACS)
+     flags across a Live Update, from the endpoint up to the root port.
+
+  6. Modify the PCI shutdown path to avoid disabling bus mastering on
+     preserved devices, thereby allowing preserved devices to perform
+     uninterrupted during kexec for Live Update.
+
+  7. Provide comprehensive documentation for the FLB API, device
+     tracking mechanisms, and the division of responsibilities between
+     the PCI core, drivers, and userspace.
+
+Dependencies
+------------
+
+This series is built on top of the next branch of the liveupdate.git
+tree:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/liveupdate/linux.git/log/?h=next
+
+Testing
+-------
+
+This series was tested in conjunction with v4 of the VFIO PCI driver
+series:
+
+  https://lore.kernel.org/kvm/20260511234802.2280368-1-vipinsh@google.com/
+
+The full set of patches used for testing can be found on GitHub. Some
+conflict resolution was required to rebase VFIO v4 patchs on top of the
+7.2-rc1 base.
+
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v7-with-vfio
+
+Testing was performed using the new VFIO selftests:
+
+  - vfio_pci_liveupdate_uapi_test
+  - vfio_pci_liveupdate_kexec_test
+
+Both tests were run in a QEMU-based VM environment (using a single
+virtio-net PCIe device connected to a root port to exercise bridge
+support) and on bare metal using an Intel EMR server with 8x Intel DSA
+PCIe devices and 1x NVMe device.
+
+Future Work
+-----------
+
+Following this series, we expect to make further improvements to the PCI
+core support for Live Update:
+
+  - Allow P2P across Live Update by avoiding resizing or moving
+    preserved device BARs and preserving all upstream bridge windows.
+
+  - Support preserving Virtual Functions by preserving SR-IOV
+    configuration on PFs and enumerating VFs after Live Update.
+
+Changelog
+---------
+
+v7:
+ - Use kho_block_set for dynamic device preservation, redefining ABI struct
+   pci_ser to use a physical address instead of a fixed-size flexible array
+   (Pasha Tatashin)
+ - Add kernel-doc comments for pci_liveupdate_scan_bridge_begin() and
+   pci_liveupdate_scan_bridge_end() (Pasha Tatashin)
+ - Move refcount to patch 1 and adjust KHO ABI versioning progression
+   accordingly (Pasha Tatashin)
+ - Sphinx documentation improvements: add _luo and _flb labels and use
+   acronyms with :ref: links (Pasha Tatashin)
+ - Panic on failure to retrieve incoming PCI FLB data to avoid ongoing
+   DMA from preserved devices causing memory corruption (Sashiko,
+   Samiullah Khawaja)
+ - Clarify comment about device-specific ACS quirks in incoming kernel
+   (Pranjal Shrivastava)
+ - Sort includes alphabetically in liveupdate.c (Pasha Tatashin)
+
+v6: https://lore.kernel.org/linux-pci/20260522202410.3104264-1-dmatlack@google.com/
+v5: https://lore.kernel.org/linux-pci/20260512184846.119396-1-dmatlack@google.com/
+v4: https://lore.kernel.org/linux-pci/20260423212316.3431746-1-dmatlack@google.com/
+v3: https://lore.kernel.org/kvm/20260323235817.1960573-1-dmatlack@google.com/
+v2: https://lore.kernel.org/kvm/20260129212510.967611-1-dmatlack@google.com/
+v1: https://lore.kernel.org/kvm/20251126193608.2678510-1-dmatlack@google.com/
+rfc: https://lore.kernel.org/kvm/20251018000713.677779-1-vipinsh@google.com/
+
+
+David Matlack (12):
+  PCI: liveupdate: Set up FLB handler for the PCI core
+  PCI: liveupdate: Track outgoing preserved PCI devices
+  PCI: liveupdate: Track incoming preserved PCI devices
+  PCI: liveupdate: Document driver binding responsibilities
+  PCI: liveupdate: Keep bus numbers constant during Live Update
+  PCI: liveupdate: Auto-preserve upstream bridges across Live Update
+  PCI: Refactor matching logic for pci_dev_acs_ops
+  PCI: liveupdate: Inherit ACS flags in incoming preserved devices
+  PCI: liveupdate: Inherit ARI Forwarding Enable on preserved bridges
+  PCI: liveupdate: Freeze preservation status during shutdown
+  PCI: liveupdate: Do not disable bus mastering on preserved devices
+    during kexec
+  Documentation: PCI: Add documentation for Live Update
+
+ Documentation/PCI/index.rst                   |   1 +
+ Documentation/PCI/liveupdate.rst              |  29 +
+ .../admin-guide/kernel-parameters.txt         |   6 +-
+ Documentation/core-api/liveupdate.rst         |   5 +
+ MAINTAINERS                                   |  15 +
+ drivers/pci/Kconfig                           |  15 +
+ drivers/pci/Makefile                          |   1 +
+ drivers/pci/liveupdate.c                      | 910 ++++++++++++++++++
+ drivers/pci/liveupdate.h                      |  68 ++
+ drivers/pci/pci-driver.c                      |   9 +-
+ drivers/pci/pci.c                             |  14 +-
+ drivers/pci/pci.h                             |   5 +
+ drivers/pci/probe.c                           |  22 +-
+ drivers/pci/quirks.c                          |  58 +-
+ include/linux/kho/abi/pci.h                   |  59 ++
+ include/linux/pci.h                           |   4 +
+ include/linux/pci_liveupdate.h                |  77 ++
+ 17 files changed, 1260 insertions(+), 38 deletions(-)
+ create mode 100644 Documentation/PCI/liveupdate.rst
+ create mode 100644 drivers/pci/liveupdate.c
+ create mode 100644 drivers/pci/liveupdate.h
+ create mode 100644 include/linux/kho/abi/pci.h
+ create mode 100644 include/linux/pci_liveupdate.h
+
+
+base-commit: 1354afac14579ad38279f12d660df961b5f20246
+-- 
+2.55.0.795.g602f6c329a-goog
+
