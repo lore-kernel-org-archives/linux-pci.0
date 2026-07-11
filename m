@@ -1,281 +1,271 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A40F3914E4
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 22:32:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1DFF28F5;
+	Sat, 11 Jul 2026 01:27:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783722742; cv=pass; b=J1Zf2R87w9GV7UQMo86GBsAxBNsDpo/8+Fu6rPxhVnYuX/WToGnUzDblV2gWxdrPFcPl1TmiU5nQQ45AhJAyfkVgISTO5S7a1+hD/5N1QJA2tnCVCHpgcbc+RorSb2bmSTHy2/XCs1UECcfs3BuDwY2TGCcmRrdLgIKkPfs7PfI=
+	t=1783733229; cv=pass; b=F2k1xP6rPqVtCaBZncYZQWhk/nMTSC/nJIMPaG29e094HEPhG0AdyrPjO6V1sVQELyVGBDpf9J9d4oegGYkUb5IUep9SYWvNcRh85cn+QkdJOrc3f7rOOB5RqCOVMWKp1qMkvdM05sdB01NRdqZx2GwjToum5/y9mMTyWvLDCB0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783722742; c=relaxed/simple;
-	bh=n3jWPBEXC7YO12UP+Hg3xDyh43EJdvNxaruIU8/G3A4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=LZJWRYm86JEFkvBgal4vCyrm50GTYtu6G5bc4t2DgP4hx+w18ccJxGOHBLch+gSCDxpleQD9FNIlgkACEN16DuWdkc7dPYuqQMhqtKZhUSdYuMMwmSoo7H+sJpUWJ4l+NaCbySM9FfoDmHcBBNN/mcGmb0TNZ51M0uSR0gOEYLg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=g1d8I3Bq; arc=pass smtp.client-ip=209.85.215.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1783733229; c=relaxed/simple;
+	bh=XatPcgaBayRgywKUDu6SUeeMeB8y2HW7cvkwmV/GjR0=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=baKIq6tVoOOKvtjIi0dd+tAkK8CbGmvUSuN+agUeKPQ/PsxY7OxEWhLBFo/YMTTkKSVLKJLL5opid9yiHg+8DNgel7q2htqGYkT3xDwzZfDblBCmt/LmUC4JqRKIgJV6hA0LyRO0NHeKEaG1UOxLg3SJmSQr63Na9C9wVRsYnCc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=WjJzkoEo; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="g1d8I3Bq"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c99eaa1f020so1372748a12.2
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2026 15:32:21 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783722741; cv=none;
-        d=google.com; s=arc-20260327;
-        b=TCxS3pz7dxKIST7BObNpn6ePQT8l/3fvsRJ8u5bsAa12969hynt08qT9ePVisTEerF
-         b5qXPBCAB5ucwUyzhzaAC0uAlt5jr2mnR13Qd0gIz0UWHxKLegkQoAePJcCVyt9BSPui
-         u/jIPs1fHeJE1Co6WxepsHRc4UJLKEgDFXBGe0xZunGEVbr6NtCFNS2Hk1pePlPiM2Es
-         P5OvFB6+ZJA6OFmIPpojt1XQ2FAzcvvSdcv4HopaqUW18qExkD847UuFokugdOJN9BpQ
-         FEvLBz9oXHV1soNaPN5IgRX9fXC2VS7YLU2L2KwTfVk79P6kqxsbE0dA7VdQEYSJvrPz
-         /tDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=rEqvrzWdNs03NSYY4Llo7JEtAwRyuEAURCyKKRu8aMg=;
-        fh=2E8G5L5HRIhYv0SLHRh0bmuG4bK/RxhrEd6+zC1U6gY=;
-        b=gNXxwe1qAE7+QuNe3yY6WQ1DPJ6TPeeM/GHJVoX0bNuW86gq/ztes8u+bGGQ+vSfQs
-         qm7js0Iy027+pF6y1dbFwPEZC6p17lM6MaF7tgPKkBRRVuKWEMENn78LKIgVIpYF9qlD
-         RFXlWzvB5rHYcGHPFghMkMKEhStKHLnPxudmnbCB2FW0+y64zNAbrf2ar7eZnoJ3CUaq
-         1xHWQcVQJLETp2nvjpxFvhv1A2xD/g0HfZFsXvsH5jAage+LOa2YNLjfysyRhri9zETF
-         ADkd95Xq39s4dvoKLahdb4g2HKqaeLS01O3FouUvlXrNqb3QrWb0HiqZyZAnDeY85Lyb
-         PZ3g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783722741; x=1784327541; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=rEqvrzWdNs03NSYY4Llo7JEtAwRyuEAURCyKKRu8aMg=;
-        b=g1d8I3BqbCxj2vyuBb+fUQJr8KgiIH6CIRMSRWB4hS2MScYpQcga+aY0Iv5ROBJqln
-         iWqzrI2mN6RGLo0jrTAx3C9zjyni/FtYNLt/9/RdqKc3eZLqLUK+YdtK3vT5v+fUUUUP
-         3NGiJxsqMPX4ZCJpLwvi2BfA8TbfTWqx3d2p7MxdWehHSRBGYVPbffVRt5h9qjA/5mS7
-         CNv8SHF2eW0NwLPCILOlIwDHVNoa14G+89SHwkgwvwQitla5sW3cYiZlkCoNvE3pw21N
-         nbl1k/oxMZxLbqJ9Mwx/SeinoQmsJdYY0be6gFRtZOyobRBE8PuCaeCQYnFq+xClziZN
-         8g2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783722741; x=1784327541;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=rEqvrzWdNs03NSYY4Llo7JEtAwRyuEAURCyKKRu8aMg=;
-        b=IbGW1NM3G+C4s/Ir2g4Jbfjj+xNwzBxgz0YYZdsDPTjczN/OG2ps/bPuDWwCB0wTqQ
-         rYzcv1WhMFGntKzHd/4zvcBoRkjkdZ1RWNVYgyaTXJHRweisaTn61eCMITW9R5SlDAmN
-         4i7ZSsduphi7JpDWJFA4kIytjp9miolLNQu83uKL1iQ5HtPbaePTyQ42biTknXWAFddf
-         goiS4PzI/smjMBqicMjx/AakeQY12LkRT2/z+xNA6n/f/8JJElRA3O/Dqv95KKdI8iWh
-         qT4KSyPouMIDNdc/Zrk4e79cN3jtlF2dZ3j0ZiL9xbTOdQHYmG1eDtHMhWhjd7SmcEUr
-         0QPw==
-X-Gm-Message-State: AOJu0YyYIQrhd8oL81COfMA/sLJZnq9KjoqPJLzYox+SXgAq0CqB3MKB
-	uBBBPH0FvhZce1edw99YyJeBkkWRK6tlizs+0TVgWoyikdjctiVRs4aB8QW6aXCASxGe2yOCNJq
-	6qs43+AN5vkoP2bRx8DDNpliZ1Mp1y7qiHvEExDdT
-X-Gm-Gg: AfdE7ckVmgF5L3LRSYTw5vhY3Wsgv3fJG/2YleE93kbo38527hn4laQhuffwmBAlOmN
-	hhG/s9VSTWnEVk0Mqv5F3FdZDfx6PlCIHSwdA4kvIVUa6a+glLVMzGDkaaIvUQJ037aS3EdlEkA
-	MO5OgdcGdYhgkkYYlTbc6romINDqvhen5GB5lVWwK3wfOIs3nMRpA/V+cOtx0I5+c23ob2F5CZO
-	ZCDt2g6NCvZyN/2KSDq2jIP55VTQOw330O1kzkWea+mpuEzo2UiQ4xU5MfDUINt1yQNS1rN
-X-Received: by 2002:a05:6a20:3d0c:b0:3c0:9c1b:d0bf with SMTP id
- adf61e73a8af0-3c110a50703mr921139637.74.1783722740175; Fri, 10 Jul 2026
- 15:32:20 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="WjJzkoEo"
+ARC-Seal: i=1; a=rsa-sha256; t=1783733197; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=RYw/ccei8GfX2ZZYi5r7tnJpr9sLHJfVlXIfaYz6xZDpSAiaTQu3ouXyU1/NM0I+K+fIrjZbPGqChW360+2dPur+0MYqE3MqDBgf9ZrGxl4PLJlpbl2oxjWJ8IQ1Gi7ne1e9zke6/gQx5PNP6C/ngrxk5aqV/m5Oo0mG7SMtq78=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1783733197; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=NdyoGdZ9jTNEWZfdQkrxE0H2N74xEabOBVRJ0yaV9C4=; 
+	b=XgeW3bYosXFnYvL8k6DprxzOzjOeMRRc5q8wXX0fmNu1J6GE32zwaNigLYbqYTqsFFJJDrRIrq2MpyW+VlZ/rOMcCE8TrQFPEKi/Xhvb9bUn+W6DlSJ3wS82Qhwb5qihD+XCYC3CNSzaJikvoyTjM1nDI3JMtROT2D9Hvgv1KIM=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783733197;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
+	bh=NdyoGdZ9jTNEWZfdQkrxE0H2N74xEabOBVRJ0yaV9C4=;
+	b=WjJzkoEo1YrCsUfjHkpDs2EXhf3fABLES5atC/TwYWQDR935XA5wRg6Lku1BcIb2
+	rZS7XoaDHB/H+glh+j+18u3elU7PyJxwqtQbwzjgiTcKo9qT2+k14vzfyFrwBvIwyF0
+	smSD55wEbPye66OlSdu3dQYOJV8aD2IabDA8ELr4=
+Received: by mx.zohomail.com with SMTPS id 1783733193918344.7896144010489;
+	Fri, 10 Jul 2026 18:26:33 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-4-dmatlack@google.com>
- <20260710213928.E7CE11F0155B@smtp.kernel.org>
-In-Reply-To: <20260710213928.E7CE11F0155B@smtp.kernel.org>
-From: David Matlack <dmatlack@google.com>
-Date: Fri, 10 Jul 2026 15:31:53 -0700
-X-Gm-Features: AVVi8Cfjqrg4u4sl-DpUERrkw0gK2lYYXpeCMTm0VWzP26rFLxArTRQ3P79NdQ4
-Message-ID: <CALzav=eL+nA2w7KzTXkn-_qm5couU9nANsEkqF+1qCA9NNV0Dw@mail.gmail.com>
-Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI devices
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [PATCH v6 14/20] rust: io: add I/O backend for system memory with
+ volatile access
+From: Daniel Almeida <daniel.almeida@collabora.com>
+In-Reply-To: <20260706-io_projection-v6-14-72cd5d055d54@garyguo.net>
+Date: Fri, 10 Jul 2026 22:26:12 -0300
+Cc: Alice Ryhl <aliceryhl@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun@kernel.org>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>,
+ Tamir Duberstein <tamird@kernel.org>,
+ =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>,
+ David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Michal Wilczynski <m.wilczynski@samsung.com>,
+ =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ driver-core@lists.linux.dev,
+ rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ nova-gpu@lists.linux.dev,
+ dri-devel@lists.freedesktop.org,
+ linux-pwm@vger.kernel.org,
+ Laura Nao <laura.nao@collabora.com>
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <926125C1-22E2-47BC-AFD4-788BA300601C@collabora.com>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260706-io_projection-v6-14-72cd5d055d54@garyguo.net>
+To: Gary Guo <gary@garyguo.net>
+X-Mailer: Apple Mail (2.3826.700.81)
+X-ZohoMailClient: External
 
-On Fri, Jul 10, 2026 at 2:39=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 3 potential issu=
-e(s) to consider:
-> - [High] pci_liveupdate_finish_device() incorrectly aborts if refcount !=
-=3D 1, completely breaking the preservation lifecycle for parent bridges an=
-d leaking their FLB references.
-> - [Medium] `pci_liveupdate_cleanup_device()` fails to clear `dev_ser->ref=
-count`, leading to state contamination for subsequently hot-plugged devices=
-.
-> - [Medium] Memory allocated for incoming preserved PCI devices (the KHO b=
-lock set) is leaked in `pci_flb_retrieve()` if `kzalloc_obj()` fails.
-> --
->
-> --- Patch [3]: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved=
- PCI devices ---
-> commit 4fcd6c9f661309adcb1a2b891b9c5a34af9e319f
-> Author: David Matlack <dmatlack@google.com>
->
-> PCI: liveupdate: Track incoming preserved PCI devices
->
-> This patch adds support to the PCI core for tracking preserved PCI device=
-s
-> across Live Update. It introduces pci_liveupdate_setup_device() to fetch
-> serialized state from the Live Update Orchestrator and exposes APIs for
-> drivers to notify the PCI core when preservation is finished.
->
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index 03075ce06ac98..df6a02240aa47 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
->
-> [ ... ]
->
-> > @@ -138,13 +172,58 @@ static void pci_flb_unpreserve(struct liveupdate_=
-flb_op_args *args)
-> >
-> >  static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
-> >  {
-> > -     args->obj =3D phys_to_virt(args->data);
-> > +     struct pci_ser *ser =3D phys_to_virt(args->data);
-> > +     struct pci_flb_incoming *incoming;
-> > +     struct pci_dev_ser *dev_ser;
-> > +     struct kho_block_set_it it;
-> > +     int ret =3D -ENOMEM;
-> > +
-> > +     incoming =3D kzalloc_obj(*incoming);
-> > +     if (!incoming)
-> > +             goto err_restore_free;
->
-> [ ... ]
->
-> > +err_block_set_destroy:
-> > +     kho_block_set_destroy(&incoming->block_set);
-> > +err_free_incoming:
-> > +     xa_destroy(&incoming->xa);
-> > +     kfree(incoming);
-> > +err_restore_free:
-> > +     kho_restore_free(ser);
-> > +     return ret;
-> >  }
->
-> [Severity: Medium]
-> If kzalloc_obj() fails, the code jumps to err_restore_free and calls
-> kho_restore_free(ser).
->
-> Because the underlying memory pages backing ser->devices (the KHO block s=
-et)
-> have not been restored or explicitly freed, does this error path permanen=
-tly
-> leak the memory reserved for the block set?
 
-Yes. If retrieve fails, it permanently free the preserved memory and
-then panic sin the caller (pci_liveupdate_flb_get_incoming()).
 
->
-> [ ... ]
->
-> > @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev=
-)
->
-> [ ... ]
->
-> > +void pci_liveupdate_setup_device(struct pci_dev *dev)
-> > +{
->
-> [ ... ]
->
-> > +     dev_ser =3D xa_load(&incoming->xa, key);
-> > +
-> > +     /*
-> > +      * This device was not preserved across Live Update, or it was pr=
-eserved
-> > +      * but has already been probed and gone through pci_liveupdate_fi=
-nish(),
-> > +      * e.g. due to removing and re-adding the device. Either way, it'=
-s not
-> > +      * treated as incoming-preserved.
-> > +      */
-> > +     if (!dev_ser || !dev_ser->refcount) {
-> > +             pci_liveupdate_flb_put_incoming();
-> > +             return;
-> > +     }
->
-> [ ... ]
->
-> >  void pci_liveupdate_cleanup_device(struct pci_dev *dev)
-> >  {
-> >       /*
-> > @@ -309,7 +469,83 @@ void pci_liveupdate_cleanup_device(struct pci_dev =
-*dev)
-> >        */
-> >       if (READ_ONCE(dev->liveupdate.outgoing))
-> >               pci_WARN(dev, 1, "Destroying outgoing-preserved device!\n=
-");
-> > +
-> > +     if (READ_ONCE(dev->liveupdate.incoming)) {
-> > +             pci_WARN(dev, 1, "Destroying incoming-preserved device!\n=
-");
-> > +             pci_liveupdate_flb_put_incoming();
-> > +     }
-> >  }
->
-> [Severity: Medium]
-> In pci_liveupdate_cleanup_device(), the FLB reference is dropped but
-> dev_ser->refcount is left unmodified.
->
-> If a preserved device is removed or destroyed before its driver calls
-> pci_liveupdate_finish() (for instance, if probe fails), and a new device
-> is subsequently hot-plugged at the same BDF, won't pci_liveupdate_setup_d=
-evice()
-> see the stale dev_ser with a non-zero refcount and incorrectly associate =
-the
-> new device with the stale preserved state?
+> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
+>=20
+> From: Laura Nao <laura.nao@collabora.com>
+>=20
+> Add `SysMem`, an `Io` trait implementation for kernel virtual address
+> ranges. It uses volatile accessors to provide safe access to shared
+> memory that may be concurrently accessed by external hardware. =
+Implement
+> `IoCapable` for `u8`, `u16`, `u32`, and `u64` (for 64-bit system).
+>=20
+> This can be used instead of `Coherent` for cases where a different =
+layer
+> takes care of mapping the system memory to the device (e.g. dma-buf or
+> GPUVM).
+>=20
+> Signed-off-by: Laura Nao <laura.nao@collabora.com>
+> [ Rebased and adapted on top of I/O rework. - Gary ]
+> Co-developed-by: Gary Guo <gary@garyguo.net>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+> ---
+> rust/kernel/io.rs | 122 =
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> 1 file changed, 122 insertions(+)
+>=20
+> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+> index 62643b23e904..78c6ae2a0db8 100644
+> --- a/rust/kernel/io.rs
+> +++ b/rust/kernel/io.rs
+> @@ -1039,6 +1039,128 @@ pub fn relaxed(self) -> RelaxedMmio<'a, T> {
+> #[cfg(CONFIG_64BIT)]
+> impl_mmio_io_capable!(RelaxedMmioBackend, u64, readq_relaxed, =
+writeq_relaxed);
+>=20
+> +/// I/O Backend for system memory.
+> +pub struct SysMemBackend;
+> +
+> +impl IoBackend for SysMemBackend {
+> +    type View<'a, T: ?Sized + KnownSize> =3D SysMem<'a, T>;
+> +
+> +    #[inline]
+> +    fn as_ptr<'a, T: ?Sized + KnownSize>(view: Self::View<'a, T>) -> =
+*mut T {
+> +        view.ptr
+> +    }
+> +
+> +    #[inline]
+> +    unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + =
+KnownSize>(
+> +        _view: Self::View<'a, T>,
+> +        ptr: *mut U,
+> +    ) -> Self::View<'a, U> {
+> +        // INVARIANT: Per safety requirement, `ptr` is projection =
+from `view`, so it is also a valid
+> +        // kernel accessible memory region.
+> +        SysMem {
+> +            ptr,
+> +            phantom: PhantomData,
+> +        }
+> +    }
+> +}
+> +
+> +/// Implements [`IoCapable`] on `SysMemBackend` for `$ty` using =
+`read_volatile` and
+> +/// `write_volatile`.
+> +macro_rules! impl_sysmem_io_capable {
+> +    ($ty:ty) =3D> {
+> +        impl IoCapable<$ty> for SysMemBackend {
+> +            #[inline]
+> +            fn io_read(view: SysMem<'_, $ty>) -> $ty {
+> +                // SAFETY:
+> +                // - Per type invariant, `ptr` is valid and aligned.
+> +                // - Using read_volatile() here so that race with =
+hardware is well-defined.
+> +                // - Using read_volatile() here is not sound if it =
+races with other CPU per Rust
+> +                //   rules, but this is allowed per LKMM.
+> +                // - The macro is only used on primitives so all bit =
+patterns are valid.
+> +                unsafe { view.ptr.read_volatile() }
+> +            }
+> +
+> +            #[inline]
+> +            fn io_write(view: SysMem<'_, $ty>, value: $ty) {
+> +                // SAFETY:
+> +                // - Per type invariant, `ptr` is valid and aligned.
+> +                // - Using write_volatile() here so that race with =
+hardware is well-defined.
+> +                // - Using write_volatile() here is not sound if it =
+races with other CPU per Rust
+> +                //   rules, but this is allowed per LKMM.
+> +                unsafe { view.ptr.write_volatile(value) }
+> +            }
+> +        }
+> +    };
+> +}
+> +
+> +impl_sysmem_io_capable!(u8);
+> +impl_sysmem_io_capable!(u16);
+> +impl_sysmem_io_capable!(u32);
+> +#[cfg(CONFIG_64BIT)]
+> +impl_sysmem_io_capable!(u64);
+> +
+> +/// A view of a system memory region.
+> +///
+> +/// Provides `Io` trait implementation for kernel virtual address =
+ranges,
+> +/// using volatile read/write to safely access shared memory that may =
+be
+> +/// concurrently accessed by external hardware.
+> +///
+> +/// # Invariants
+> +///
+> +/// `self.ptr.addr() .. self.ptr.addr() + KnownSize::size(self.ptr)` =
+is valid and aligned kernel
+> +/// accessible memory region for the lifetime `'a`.
+> +pub struct SysMem<'a, T: ?Sized> {
+> +    ptr: *mut T,
+> +    phantom: PhantomData<&'a ()>,
+> +}
+> +
+> +impl<T: ?Sized> Copy for SysMem<'_, T> {}
+> +impl<T: ?Sized> Clone for SysMem<'_, T> {
+> +    #[inline]
+> +    fn clone(&self) -> Self {
+> +        *self
+> +    }
+> +}
+> +
+> +// SAFETY: `SysMem<'_, T>` is conceptually `&T`.
+> +unsafe impl<T: ?Sized + Sync> Send for SysMem<'_, T> {}
+> +
+> +// SAFETY: `SysMem<'_, T>` is conceptually `&T`.
+> +unsafe impl<T: ?Sized + Sync> Sync for SysMem<'_, T> {}
+> +
+> +impl<'a, T: ?Sized> SysMem<'a, T> {
+> +    /// Create a `SysMem` from a raw pointer.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// `ptr.addr() .. ptr.addr() + KnownSize::size(ptr)` must be =
+valid and aligned kernel
+> +    /// accessible memory region for the lifetime `'a`.
+> +    #[inline]
+> +    pub unsafe fn new(ptr: *mut T) -> Self {
+> +        // INVARIANT: Per safety requirement.
+> +        Self {
+> +            ptr,
+> +            phantom: PhantomData,
+> +        }
+> +    }
+> +
+> +    /// Obtain the raw pointer to the memory.
+> +    #[inline]
+> +    pub fn as_ptr(self) -> *mut T {
+> +        self.ptr
+> +    }
+> +}
+> +
+> +impl<'a, T: ?Sized + KnownSize> IoBase<'a> for SysMem<'a, T> {
+> +    type Backend =3D SysMemBackend;
+> +    type Target =3D T;
+> +
+> +    #[inline]
+> +    fn as_view(self) -> <Self::Backend as IoBackend>::View<'a, =
+Self::Target> {
+> +        self
+> +    }
+> +}
+> +
+> // This helper turns associated functions to methods so it can be =
+invoked in macro.
+> // Used by `io_project!()` only.
+> #[doc(hidden)]
+>=20
+> --=20
+> 2.54.0
+>=20
 
-Same thing can happen if the user hot-plugs a device during Live
-Update before the new kernel enumerates that slot. The user should not
-hot-plug devices they are preserving across Live Update.
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
 
-Also, probe() failing does not cause the device to be removed. probe()
-can still be retried.
-
-The only way this would happen is if the initial setup of the device
-fails, e.g. the kernel can't allocate memory during scanning. The
-reason I opted to keep the refcount elevated is it at least gives the
-user the possibility of trying another scan and recovering the device
-if the issue was transient.
-
->
-> > +static void pci_liveupdate_finish_device(struct pci_ser *ser, struct p=
-ci_dev *dev)
-> > +{
-> > +     if (!dev->liveupdate.incoming) {
-> > +             pci_warn(dev, "Cannot finish preserving an unpreserved de=
-vice\n");
-> > +             return;
-> > +     }
-> > +
-> > +     if (dev->liveupdate.incoming->refcount !=3D 1) {
-> > +             pci_WARN(dev, 1, "Preserved device has a corrupted refcou=
-nt!\n");
-> > +             return;
-> > +     }
->
-> [Severity: High]
-> Is this strict refcount !=3D 1 check correct for PCI bridges?
->
-> Looking at the outgoing path in pci_liveupdate_preserve_device_again(), a
-> bridge legitimately has its refcount incremented for each preserved downs=
-tream
-> device, making it greater than 1.
->
-> When the bridge driver calls pci_liveupdate_finish() on the incoming side=
-,
-> won't this check fail, abort the finish process, and permanently leak the
-> FLB reference for the bridge?
-
-No, the refcount can only be 0 or 1 in this patch. Bridge preservation
-and pci_liveupdate_preserve_device_again() are not introduced until a
-later patch in this series, and that patch updates this code to
-decrement the refcount instead of checking for 1.
-
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710212616.13=
-51130-1-dmatlack@google.com?part=3D3
