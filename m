@@ -1,139 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E0A2C21E6;
-	Sat, 11 Jul 2026 16:08:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9841D2C21E6;
+	Sat, 11 Jul 2026 16:11:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783786114; cv=none; b=uwL27z2wTkrLMPOPtC5TZ0B2vPv0tdOLJXuF1Rv16fDGFivVofhKY4p9UEdMiXZAo6K5CwpsMsNaLUaRHnEVwwlw9yiN+7QxovhZquMi+4yypz/KLQmnFzor9IN3yyn3tQbL/IIde1N3W5GVHqM9CG9R3VykwSRuuo06FZii/l0=
+	t=1783786272; cv=none; b=Y/m1XE2+ipSB+nxNf2YabZzi7NcqmPw7yB9Mo4hb0on80LhbltnTapE1hTyxfPWwaritCXI73UP6algB3yFejW6ZC2D/obnfKSmXC3AHUYN5LcLSlBCO02OGK7113QehDYBXFm4a+YMrxACPySqGKcvboJEt8dC6pDvzIof3WyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783786114; c=relaxed/simple;
-	bh=aJbuPjyRpjc36PC/A4LIO9alsbLAU1c4RukZqjuqX8E=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=gXTPVLTsQ4fhPmDrplJCOuBh/VZZsxhp7S0S1bzan5cBulmSHDTco6XU46dox+RL4XbZ5Y3p0SgEMWI7ZxDEBEC39DzKbbZhxXu4xJkQN+W3ZbSOHy5n6I2v9ojlxcaveYfnKMPDt/HgKcFGjuaMRPxOgJi3jJfJBzJ1xZXXe0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ExIGC3g/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783786272; c=relaxed/simple;
+	bh=PEmfnP3Viq0Iq57bVtkUe663Z9qvI2bWV0EPII+zm3M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uHD6SciXtHgrcJ6ILjhIZ4l72CVGGmf1WUKG251cfbcOz1otVtUoFYmXsXjhqh9yR6In/3pKB2LC7AsfDfGgpBxvDVh/o9JI7yuqFoFdddVgnaHH/9TX8ohvCWxXxZeVkfxyg63z/e5hR09j6mzsVEN9gdHjhm0w0BGX1uJrvp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lArd3Na1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ExIGC3g/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B4C61F000E9;
-	Sat, 11 Jul 2026 16:08:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lArd3Na1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5631F000E9;
+	Sat, 11 Jul 2026 16:11:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783786113;
-	bh=1a6TrSrUODvTgz6nkNSC5mFKMqJ+6PJ8Uo5YoxndzSA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ExIGC3g/uu8AYYEm7OCs7Al08Sn5duw6NEZGMp1Rl22zSI6zD+jIR2Ge3h+R5WuSy
-	 OA6Pz6/GUyhB6U+pjjkfjcRzxd6kDQaaD9WUaSR00sLd8t6TYR2krUdkWtgqIG0m1P
-	 hvcg2/jimLhCWZcoMF+kjPvlrGc+9V1wePiATGjNnTm7aBN4qAw7IYz5XMopIYwGt0
-	 DaKVKgd8n87w2olZO0nOVsC1Zl19jHZxM0FmT8cnw2gIIZvvPChWw15XSw4cZK5zVP
-	 pxeRriY1bqVZ+3WLJfK5j4FvDm2o2aSVsI79fs++BOvXoucRr53NcVgLqFhWtVLE8r
-	 dlh66wVETZkEA==
-Date: Sat, 11 Jul 2026 11:08:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Darshit Shah <darnshah@amazon.de>
-Cc: lukas@wunner.de, Jonthan.Cameron@huawei.com, bhelgaas@google.com,
-	darnir@gnu.org, feng.tang@linux.alibaba.com, kbusch@kernel.org,
-	kwilczynski@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, nh-open-source@amazon.com,
-	olof@lixom.net, sathyanarayanan.kuppuswamy@linux.intel.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3] drivers/pci: Decouple DPC from AER service
-Message-ID: <20260711160831.GA1041396@bhelgaas>
+	s=k20260515; t=1783786271;
+	bh=l157i8Cbrra3gsqHh/wXLRqMCSqeyLs3OdEljp8wurU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=lArd3Na1tBACCTa0rtlAkbcQ+djURemz6aRjlt6N0k/8t6r0PBRgovVvcyHCDbHzA
+	 LJwYirK/usCJULhtOoOIqTJDf9ZLKevYYc2OU8GG9bTsLm281wrQNBsbZF8u8B6LOC
+	 w8G3MjGwmEdaPpbIlk4SZBdIr/XLdvY8Km86tNKxbqPu+BCHBwyqaEXqLtUCW5kGAk
+	 mTs10adg9ucQ/28mQ4N/G7R9GfS7sJuMi4pzJgxHJ7r9v/9/rhbVh5Lv83aDCB/mG4
+	 CdVGUi5+2Z1raFOA8856mTZUnkfLayu7BgYnzHGHZgAEAXkMPpEbXMw72EsjOsfXsZ
+	 92Ix6+oXxDefA==
+From: Danilo Krummrich <dakr@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Alice Ryhl <aliceryhl@google.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Boqun Feng <boqun@kernel.org>,
+	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Trevor Gross <tmgross@umich.edu>,
+	Tamir Duberstein <tamird@kernel.org>,
+	=?UTF-8?q?Onur=20=C3=96zkan?= <work@onurozkan.dev>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Michal Wilczynski <m.wilczynski@samsung.com>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	driver-core@lists.linux.dev,
+	rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	nova-gpu@lists.linux.dev,
+	dri-devel@lists.freedesktop.org,
+	linux-pwm@vger.kernel.org,
+	Laura Nao <laura.nao@collabora.com>
+Subject: Re: [PATCH v6 00/20] rust: I/O type generalization and projection
+Date: Sat, 11 Jul 2026 18:10:36 +0200
+Message-ID: <20260711161035.370023-2-dakr@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+X-Patch-Reply: applied
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260710170057.GA960077@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 10, 2026 at 12:00:57PM -0500, Bjorn Helgaas wrote:
-> On Thu, Dec 11, 2025 at 04:42:53PM +0000, Darshit Shah wrote:
-> > According to PCIe r7.0, sec. 6.2.11, "Implementation Note: Determination
-> > of DPC Control", it is recommended that the Operating System link the
-> > enablement of Downstream Port Containment (DPC) to the enablement of
-> > Advanced Error Reporting (AER).
-> > 
-> > However, AER is advertised only on Root Port (RP) or Root Complex Event
-> > Collector (RCEC) devices. On the other hand, DPC may be advertised on
-> > any PCIe device in the hierarchy. In fact, since the main usecase of DPC
-> > is for the switch upstream of an endpoint device to trigger a signal to
-> > the host-bridge, it is imperative that it be supported on non-RP,
-> > non-RCEC devices.
-> > 
-> > Previously portdrv has interpreted the spec to mean that the AER service
-> > must be available on the same device in order for DPC to be available.
-> > This is not what the implementation note meant to imply. If the firmware
-> > hands Linux control of AER via _OSC on the host bridge upstream of the
-> > device, then Linux should be allowed to assume control of DPC on the device.
-> > 
-> > The comment above this check alludes to this, by saying:
-> >   > With dpc-native, allow Linux to use DPC even if it doesn't have
-> >   > permission to use AER.
-> > 
-> > However, permission to use AER is negotiated at the host bridge, not
-> > per-device. So we should not link DPC to enabling AER at the device.
-> > Instead, DPC should be enabled if the OS has control of AER for the
-> > host bridge that is upstream of the device in question, or if dpc-native
-> > was set on the command line.
-> > 
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Darshit Shah <darnshah@amazon.de>
-> > Reviewed-by: Lukas Wunner <lukas@wunner.de>
-> > Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> 
-> Sorry for the delay in picking this up.  Thanks for doing this; I
-> think it's the right thing.  I think the commit log is not completely
-> accurate in terms on which devices advertise AER and DPC, so I propose
-> the following.  I also reordered the || operands to make the patch
-> easier to read.  Your thoughts?
-
-Path below applied to pci/dpc for v7.3, thanks, Darshit!
-
-I'm actually a little surprised that this wasn't an issue earlier.  I
-guess DPC hasn't really been exercised on switches.
-
-> commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
-> Author: Darshit Shah <darnshah@amazon.de>
-> Date:   Thu Dec 11 16:42:53 2025 +0000
-> 
->     PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER
->     
->     PCIe r7.0, sec 6.2.11, "Implementation Note: Determination of DPC Control",
->     recommends that "... operating systems always link control of DPC to the
->     control of Advanced Error Reporting."
->     
->     Any PCIe device may advertise AER, but only Root Ports and Root Complex
->     Event Collectors can generate AER interrupts, so the AER driver only binds
->     to RPs and RCECs.
->     
->     Any Root Port or Switch Downstream Port may advertise Downstream Port
->     Containment (DPC), but previously the DPC driver was limited to devices the
->     AER driver could bind to, i.e., only RPs that advertised AER.
->     
->     Since any Port with DPC can generate DPC interrupts, allow the DPC driver
->     to bind to such a Port as long as the OS controls AER, regardless of
->     whether the AER driver binds to it.
->     
->     Signed-off-by: Darshit Shah <darnshah@amazon.de>
->     [bhelgaas: commit log, reorder || operands to simplify patch]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Lukas Wunner <lukas@wunner.de>
->     Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->     Cc: stable@vger.kernel.org
->     Link: https://patch.msgid.link/20251211164257.81655-1-darnshah@amazon.de
-> 
-> 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index 2d6aa488fe7b..65f502602dee 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	 */
->  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
->  	    pci_aer_available() &&
-> -	    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
-> +	    (pcie_ports_dpc_native || host->native_aer))
->  		services |= PCIE_PORT_SERVICE_DPC;
->  
->  	/* Enable bandwidth control if more than one speed is supported. */
+On Mon, 06 Jul 2026 13:44:13 +0100, Gary Guo wrote:=0D
+> [PATCH v6 00/20] rust: I/O type generalization and projection=0D
+=0D
+Applied, thanks!=0D
+=0D
+  Branch: topic/rust_io-7.2-rc1=0D
+  Tree:   git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-=
+core.git=0D
+=0D
+[1/20] rust: io: add dynamically-sized `Region` type=0D
+      commit: 426c92ca1bdd=0D
+=0D
+      [ Add brief explanation on MIN_ALIGN. - Danilo ]=0D
+=0D
+[2/20] rust: io: add missing safety requirement in `IoCapable` methods=0D
+      commit: 65f6abf9fa81=0D
+[3/20] rust: io: restrict untyped IO access and `register!` to `Region`=0D
+      commit: 6461c5776bf0=0D
+[4/20] rust: io: implement `Io` on reference types instead=0D
+      commit: 46b1b54139c3=0D
+[5/20] rust: io: generalize `MmioRaw` to pointer to arbitrary type=0D
+      commit: 9734e905119c=0D
+[6/20] rust: io: rename `Mmio` to `MmioOwned`=0D
+      commit: 691c75967d44=0D
+[7/20] rust: io: implement `Mmio` as view type=0D
+      commit: 9f64c84af008=0D
+[8/20] rust: pci: io: make `ConfigSpace` a view=0D
+      commit: 6e5f28968d7b=0D
+[9/20] rust: io: use view types instead of addresses for `Io`=0D
+      commit: e0454ec1220c=0D
+[10/20] pwm: th1520: remove unnecessary `deref`=0D
+      commit: 0adc93b85374=0D
+[11/20] rust: io: remove `MmioOwned`=0D
+      commit: bed01ca9e9cf=0D
+[12/20] rust: io: move `Io` methods to extension trait=0D
+      commit: 9b36c13cbd4f=0D
+=0D
+      [ Add comment explaining the purpose of the Io blanket implementation=
+.=0D
+        - Danilo ]=0D
+=0D
+[13/20] rust: io: add projection macro and methods=0D
+      commit: 1f989555fe5c=0D
+[14/20] rust: io: add I/O backend for system memory with volatile access=0D
+      commit: 2fabff780785=0D
+[15/20] rust: io: implement a view type for `Coherent`=0D
+      commit: 1d409d1e7a87=0D
+[16/20] rust: io: add `read_val` and `write_val` functions on `Io`=0D
+      commit: 89814c42c19e=0D
+[17/20] gpu: nova-core: use I/O projection for cleaner encapsulation=0D
+      commit: 0722567f5085=0D
+[18/20] rust: dma: drop `dma_read!` and `dma_write!` API=0D
+      commit: 6ff7d69b7e6e=0D
+[19/20] rust: io: add copying methods=0D
+      commit: e7219e53c525=0D
+[20/20] rust: io: implement `IoSysMap`=0D
+      commit: 11a4784f902e=0D
+=0D
+The patches are in the topic/rust_io-7.2-rc1 topic branch and will be merge=
+d=0D
+into the corresponding target branch soon.=0D
