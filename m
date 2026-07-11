@@ -1,111 +1,139 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2DE92E11C7;
-	Sat, 11 Jul 2026 15:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E0A2C21E6;
+	Sat, 11 Jul 2026 16:08:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783783558; cv=none; b=kSH4cqgAROosU8LLNcavdN2ewRsZRE9t6KmOmPBsP4ZBgSABaBMep1oLuTtmbs3THqHQxyvGSjPrcmVJKVS9vJXY8fAp25VxjDQaJRJI1c73pAIPuZdFK7WPw0jNXJWSzv+tautQVmk1h+fo3JzLY8EnaS6TVXWYoLPTOhH4KIA=
+	t=1783786114; cv=none; b=uwL27z2wTkrLMPOPtC5TZ0B2vPv0tdOLJXuF1Rv16fDGFivVofhKY4p9UEdMiXZAo6K5CwpsMsNaLUaRHnEVwwlw9yiN+7QxovhZquMi+4yypz/KLQmnFzor9IN3yyn3tQbL/IIde1N3W5GVHqM9CG9R3VykwSRuuo06FZii/l0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783783558; c=relaxed/simple;
-	bh=Nek5ZXdB0D0IztbJf7PZdn++vHjyXt3SZbRe3hbsYHY=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=WsmykvBj9OqHqo+wGLfrn6bEAcTCon6BO7cAbdgfgUZ8qwCEaOXtLFuL/5JjZdDdpZQy5aFBFNWUXbV8OqhY/n3L27MdcqEsj8/9g6N7UDE65JJe1yzveh3YqnvLspnT/UlJCnm0Abrc+CQYKZQMGPSeprUF4F++zimWRjxiAgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=KMAcG9yW; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=bpa/bxJ1; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1783786114; c=relaxed/simple;
+	bh=aJbuPjyRpjc36PC/A4LIO9alsbLAU1c4RukZqjuqX8E=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=gXTPVLTsQ4fhPmDrplJCOuBh/VZZsxhp7S0S1bzan5cBulmSHDTco6XU46dox+RL4XbZ5Y3p0SgEMWI7ZxDEBEC39DzKbbZhxXu4xJkQN+W3ZbSOHy5n6I2v9ojlxcaveYfnKMPDt/HgKcFGjuaMRPxOgJi3jJfJBzJ1xZXXe0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ExIGC3g/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="KMAcG9yW";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="bpa/bxJ1"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gyCFs59c2zKv86;
-	Sat, 11 Jul 2026 17:25:53 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783783553;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Nek5ZXdB0D0IztbJf7PZdn++vHjyXt3SZbRe3hbsYHY=;
-	b=KMAcG9yWg9CKKonB0vGgRybLd0s3D3yGLE4S/8GwQSU4c99qGBpzYHlHbxpc/AGvfet1gf
-	ngqHOVgcVddhtifMTglo3uLG0Odtk+NRN5mvE/FOZIjJubNlVHRortuU0Oxm+WYkAUEqeA
-	OztR6QztfDIGUcguWy9n5B/Um8oEAwSUjD1Z/zKbfURkiRXGuJ3BljKOr3vg1cWBu2bffv
-	Kc2szbjfoCRQcEdhHTsk/I3hy4rAUkCfkduxctZE060dACfV02K+ysjytFl9ShwXhLmbrH
-	ApZqI8PTjZMkWZU0zIBfyihx8mshAxr0hbDE3xYdImfXNer1YvclVsg5hipRFA==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b="bpa/bxJ1";
-	spf=pass (outgoing_mbo_mout: domain of mhi@mailbox.org designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=mhi@mailbox.org
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ExIGC3g/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B4C61F000E9;
+	Sat, 11 Jul 2026 16:08:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783786113;
+	bh=1a6TrSrUODvTgz6nkNSC5mFKMqJ+6PJ8Uo5YoxndzSA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ExIGC3g/uu8AYYEm7OCs7Al08Sn5duw6NEZGMp1Rl22zSI6zD+jIR2Ge3h+R5WuSy
+	 OA6Pz6/GUyhB6U+pjjkfjcRzxd6kDQaaD9WUaSR00sLd8t6TYR2krUdkWtgqIG0m1P
+	 hvcg2/jimLhCWZcoMF+kjPvlrGc+9V1wePiATGjNnTm7aBN4qAw7IYz5XMopIYwGt0
+	 DaKVKgd8n87w2olZO0nOVsC1Zl19jHZxM0FmT8cnw2gIIZvvPChWw15XSw4cZK5zVP
+	 pxeRriY1bqVZ+3WLJfK5j4FvDm2o2aSVsI79fs++BOvXoucRr53NcVgLqFhWtVLE8r
+	 dlh66wVETZkEA==
+Date: Sat, 11 Jul 2026 11:08:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Darshit Shah <darnshah@amazon.de>
+Cc: lukas@wunner.de, Jonthan.Cameron@huawei.com, bhelgaas@google.com,
+	darnir@gnu.org, feng.tang@linux.alibaba.com, kbusch@kernel.org,
+	kwilczynski@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, nh-open-source@amazon.com,
+	olof@lixom.net, sathyanarayanan.kuppuswamy@linux.intel.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v3] drivers/pci: Decouple DPC from AER service
+Message-ID: <20260711160831.GA1041396@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1783783551;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Nek5ZXdB0D0IztbJf7PZdn++vHjyXt3SZbRe3hbsYHY=;
-	b=bpa/bxJ1dnVX+D9YGJrza67flkA2OrXluM6lCrue/JCkP1e5HbjPNJqT0qVhoaGj2NrliU
-	9Xvf4r3lr7cWhb7rhVPfK8Erpev7YpmhZLWkbC7WPTjHBflM4R7UqGinC6k7ZwoPOvGEIO
-	7xcdBJeB1Vok6mrVb6Y+cWOVLpzF8748cKEqmlNntgsiFOhH8qc6Pv2L8rrVhPm4hAB3qv
-	wJ9DJQEw/DBVIDS+lAfh/HCaJ98HDv0+qyHtxCPnJqmBJ5BX3S5TxcsKsa2OGCyP3/X9QI
-	WrtwH7DpX/T1WyiQQ76VbtmsC4LO4zLI3hJmHVSyZFvFNUsaLZg9tKZaRyoi1Q==
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 11 Jul 2026 17:25:45 +0200
-Message-Id: <DJVUHS5VHP4Z.G2FV1QJQ8ZYH@mailbox.org>
-Cc: "Alice Ryhl" <aliceryhl@google.com>, "Alexandre Courbot"
- <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng"
- <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Tamir Duberstein" <tamird@kernel.org>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, "Beata Michalska"
- <beata.michalska@arm.com>
-Subject: Re: [PATCH] rust: pci: rework device enabling API
-From: "Maurice Hieronymus" <mhi@mailbox.org>
-To: "Maurice Hieronymus" <mhi@mailbox.org>, "Danilo Krummrich"
- <dakr@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>
-References: <20260702-rust-pci-enable-device-managed-v1-1-75bc4ff2935c@mailbox.org> <DJOEYVBS17MJ.1YD3TNGQBWHNK@kernel.org> <DJQXXV5KC973.1XAINGJFCKSWE@mailbox.org>
-In-Reply-To: <DJQXXV5KC973.1XAINGJFCKSWE@mailbox.org>
-X-MBO-RS-META: enmjie771wiyeac8q44io5gtiagfegew
-X-MBO-RS-ID: 433528a3916b0c56860
-X-Rspamd-Queue-Id: 4gyCFs59c2zKv86
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260710170057.GA960077@bhelgaas>
 
-On Sun Jul 5, 2026 at 11:04 PM CEST, Maurice Hieronymus wrote:
->
-> The one question is where the bit should live. pci_dev already has
-> priv_flags, but its bit definitions and accessors are private to
-> drivers/pci, while is_busmaster is accessed directly from outside:
-> xen-pciback writes it, lpfc and sfc read it. So either priv_flags
-> grows public accessors for this bit, or struct pci_dev gets a public
-> flags bitmap with an accessor macro, like struct device.
->
-> Bjorn, would you take such a patch, and which of the two would you
-> prefer?
->
-I went ahead and sent a series implementing the second option, a
-public flags bitmap with generated accessors following the driver
-core precedent, converting is_busmaster and broken_parity_status:
+On Fri, Jul 10, 2026 at 12:00:57PM -0500, Bjorn Helgaas wrote:
+> On Thu, Dec 11, 2025 at 04:42:53PM +0000, Darshit Shah wrote:
+> > According to PCIe r7.0, sec. 6.2.11, "Implementation Note: Determination
+> > of DPC Control", it is recommended that the Operating System link the
+> > enablement of Downstream Port Containment (DPC) to the enablement of
+> > Advanced Error Reporting (AER).
+> > 
+> > However, AER is advertised only on Root Port (RP) or Root Complex Event
+> > Collector (RCEC) devices. On the other hand, DPC may be advertised on
+> > any PCIe device in the hierarchy. In fact, since the main usecase of DPC
+> > is for the switch upstream of an endpoint device to trigger a signal to
+> > the host-bridge, it is imperative that it be supported on non-RP,
+> > non-RCEC devices.
+> > 
+> > Previously portdrv has interpreted the spec to mean that the AER service
+> > must be available on the same device in order for DPC to be available.
+> > This is not what the implementation note meant to imply. If the firmware
+> > hands Linux control of AER via _OSC on the host bridge upstream of the
+> > device, then Linux should be allowed to assume control of DPC on the device.
+> > 
+> > The comment above this check alludes to this, by saying:
+> >   > With dpc-native, allow Linux to use DPC even if it doesn't have
+> >   > permission to use AER.
+> > 
+> > However, permission to use AER is negotiated at the host bridge, not
+> > per-device. So we should not link DPC to enabling AER at the device.
+> > Instead, DPC should be enabled if the OS has control of AER for the
+> > host bridge that is upstream of the device in question, or if dpc-native
+> > was set on the command line.
+> > 
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Darshit Shah <darnshah@amazon.de>
+> > Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> > Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> 
+> Sorry for the delay in picking this up.  Thanks for doing this; I
+> think it's the right thing.  I think the commit log is not completely
+> accurate in terms on which devices advertise AER and DPC, so I propose
+> the following.  I also reordered the || operands to make the patch
+> easier to read.  Your thoughts?
 
-https://lore.kernel.org/r/20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.=
-org
+Path below applied to pci/dpc for v7.3, thanks, Darshit!
 
-Happy to respin on top of priv_flags instead if that is preferred.
+I'm actually a little surprised that this wasn't an issue earlier.  I
+guess DPC hasn't really been exercised on switches.
 
-Best,
-
-Maurice
-
+> commit 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
+> Author: Darshit Shah <darnshah@amazon.de>
+> Date:   Thu Dec 11 16:42:53 2025 +0000
+> 
+>     PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER
+>     
+>     PCIe r7.0, sec 6.2.11, "Implementation Note: Determination of DPC Control",
+>     recommends that "... operating systems always link control of DPC to the
+>     control of Advanced Error Reporting."
+>     
+>     Any PCIe device may advertise AER, but only Root Ports and Root Complex
+>     Event Collectors can generate AER interrupts, so the AER driver only binds
+>     to RPs and RCECs.
+>     
+>     Any Root Port or Switch Downstream Port may advertise Downstream Port
+>     Containment (DPC), but previously the DPC driver was limited to devices the
+>     AER driver could bind to, i.e., only RPs that advertised AER.
+>     
+>     Since any Port with DPC can generate DPC interrupts, allow the DPC driver
+>     to bind to such a Port as long as the OS controls AER, regardless of
+>     whether the AER driver binds to it.
+>     
+>     Signed-off-by: Darshit Shah <darnshah@amazon.de>
+>     [bhelgaas: commit log, reorder || operands to simplify patch]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Reviewed-by: Lukas Wunner <lukas@wunner.de>
+>     Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+>     Cc: stable@vger.kernel.org
+>     Link: https://patch.msgid.link/20251211164257.81655-1-darnshah@amazon.de
+> 
+> 
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index 2d6aa488fe7b..65f502602dee 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -264,7 +264,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  	 */
+>  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+>  	    pci_aer_available() &&
+> -	    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
+> +	    (pcie_ports_dpc_native || host->native_aer))
+>  		services |= PCIE_PORT_SERVICE_DPC;
+>  
+>  	/* Enable bandwidth control if more than one speed is supported. */
