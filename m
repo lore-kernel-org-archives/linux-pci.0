@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C7B14A619
-	for <linux-pci@vger.kernel.org>; Sat, 11 Jul 2026 18:34:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D708B24A067
+	for <linux-pci@vger.kernel.org>; Sat, 11 Jul 2026 18:35:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783794844; cv=none; b=qXgCgUiyhlM/mVjY3FOvc6lWJUON0HSQbXtsyzY/EYAK7253GZCpijNr56ddx7flmpS6sWqSBaR60ISNOvEpSK/Mkahp+dl5i0LpAWJ5FqoNHC8bmEKfK5/6r1sQ5QCRraCYIwLMZfQX9oMY7u2ZfUoUQ7ByfIkkXrXko8GO6ik=
+	t=1783794909; cv=none; b=rY3MjTvrr9IypOXYNrV/Lsr4NujJKE6fcdCX2CXRL8KSiLEV+ZgkX9e40o5ZvWEFZRScfvyQ8ClBRLKPr2eZSW9yJMLOUEIYK+R6/PVdiNWLKX6j8GRKZLZJeiHcNXVXGZiZGql8hzsCQpWyEGeZvMciPUdTO9AmGfneIjxH1LQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783794844; c=relaxed/simple;
-	bh=QZLrtTlCCsBiHbyYbB05VKyLfo66kYHm9dM7lL+xcoA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=vA1E5I/8adwgDbRLLeJ7BBT8i1N62igWM2jgQK1Yf4kNPbkFUCWpgG3vS/VI7YbXCijbhJPNhN91qhMq+cVvwe4l3cgp/wfK/KlKD2yW38qcmmbWYh1tWmkKW8DaxfuN2qRxyuSlJBuO0k+MRHL43W0IplCbkWnsS70kLQ3bn5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lbHegazj; arc=none smtp.client-ip=192.198.163.15
+	s=arc-20240116; t=1783794909; c=relaxed/simple;
+	bh=Y/GXQzSrmKDPvEUvyzM2GL2GAoRkEcf0PuCVhOeTzQ8=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=hRCitkX8L2+/RrSqV4j4ag1IEb1HFLifZBJCr7/5p3we/G402QFV91pUqMn0GgxX82F2JKtKOVUcW4fUg4MKmNsT94oTEdg9zOJD/IvMSnsJeH6qltL3hmqZG01ICzQwdMust5iaqF1RWQXv2lYHIGimAt2Rhx2e50MVF2eYfUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VvjWdQ+w; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lbHegazj"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VvjWdQ+w"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783794843; x=1815330843;
+  t=1783794908; x=1815330908;
   h=date:from:to:cc:subject:message-id;
-  bh=QZLrtTlCCsBiHbyYbB05VKyLfo66kYHm9dM7lL+xcoA=;
-  b=lbHegazjkoWB0/EaQ/JU6ag/mkpQgB6JzVAQe+gtISRYh/0wK90WPZ54
-   CIc+1dn4xmE0WsUCFBm9gvfxxKMpFGLn37dNpKRxuHW5WUua1SsuN3o+j
-   tVzaLkAXpti9AjN7tyvMqa0ik/bFkzIJoNnp9jUlNcQ97nY2lJT2oXSKM
-   scfnaqw4XprnxARR6e6pGHNVc74MNQw8osNO1Nvd5gRiGrQlGtEl6wS48
-   WoWbyxKdJL5bjASqKGDWQKBDZ/DmPna0UNdY7uXrJ7Qa+c1rycVXvyDB5
-   xn+eYSwBViXW5mzaaG0owed5BM6KSDMToqQeSRwA7HfanJsFZPb3ruuvS
-   w==;
-X-CSE-ConnectionGUID: LnV+oguFRRqPiHNmMFZ1IA==
-X-CSE-MsgGUID: +xZh1brhTV2AYsfl2r+fbg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="84584789"
+  bh=Y/GXQzSrmKDPvEUvyzM2GL2GAoRkEcf0PuCVhOeTzQ8=;
+  b=VvjWdQ+w2tqz/zyhkpnCHQSVkETjjTYwB/wM0+F1oaKFwrLCBIUv6aj7
+   z/mjTK3OS5wjVjV5XVtB0pS1LK1npNRpYReh/+C3IzFBlhWz5T4++Cbm4
+   hI7txfz0hltEJzNV1AWYk/A9aUluBWvRhhMUCARxmSMwYYtGQXDpVa8MY
+   5EmDE3v3b9UL69p3vp7r0SuzT3n9RbbAYhPOjyqbJ1oRt7T3BZT2wq0mH
+   PviogOFZrd6hxCMKw6ej/6TAb/Lc1sYK96s7CbPN8s9OfXPT5NBV6Y52M
+   Pv8WpRusG4Z+Tn6yputIMpfr4QDzvogFbqLyajvQ86ZU3BJFD6X1ecjmL
+   A==;
+X-CSE-ConnectionGUID: Q323HbUUS9udJsivri3H2A==
+X-CSE-MsgGUID: C3DcmYLOSzO+btenHr7Z0g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="84520017"
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="84584789"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2026 11:34:02 -0700
-X-CSE-ConnectionGUID: tcjPTDj+QluY1fGaZQbLwg==
-X-CSE-MsgGUID: s0+trJ+dSe+FOmev0PmQOw==
+   d="scan'208";a="84520017"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2026 11:35:07 -0700
+X-CSE-ConnectionGUID: E/Jb+k9yQj2JGNsXEafcYA==
+X-CSE-MsgGUID: 5QBxUk8/QkKue0hXYcSuNA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="258746435"
+   d="scan'208";a="250750698"
 Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa003.jf.intel.com with ESMTP; 11 Jul 2026 11:34:01 -0700
+  by fmviesa006.fm.intel.com with ESMTP; 11 Jul 2026 11:35:06 -0700
 Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wicWT-00000000KJ3-45GG;
-	Sat, 11 Jul 2026 18:33:57 +0000
-Date: Sun, 12 Jul 2026 02:33:14 +0800
+	id 1wicXX-00000000KJ7-2ntB;
+	Sat, 11 Jul 2026 18:35:03 +0000
+Date: Sun, 12 Jul 2026 02:34:35 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:hotplug] BUILD SUCCESS
- 985fb7419fe27bc2ba17397f9bd8cc52151350ba
-Message-ID: <202607120203.BVkWsgP4-lkp@intel.com>
+Subject: [pci:sysfs] BUILD SUCCESS
+ 651fb94aaf245430590216d497fb8b02dd73d5f9
+Message-ID: <202607120222.DM8KqCg4-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,13 +59,13 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git hotplug
-branch HEAD: 985fb7419fe27bc2ba17397f9bd8cc52151350ba  PCI: acpiphp_ibm: Do not use uninitialized device_class
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git sysfs
+branch HEAD: 651fb94aaf245430590216d497fb8b02dd73d5f9  alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
 
-elapsed time: 746m
+elapsed time: 747m
 
-configs tested: 241
-configs skipped: 12
+configs tested: 238
+configs skipped: 178
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -170,7 +170,6 @@ mips                             allmodconfig    gcc-16.1.0
 mips                              allnoconfig    gcc-16.1.0
 mips                             allyesconfig    gcc-16.1.0
 nios2                            allmodconfig    clang-20
-nios2                            allmodconfig    gcc-11.5.0
 nios2                             allnoconfig    clang-23
 nios2                               defconfig    clang-23
 nios2                          randconfig-001    gcc-11.5.0
@@ -180,7 +179,6 @@ nios2                          randconfig-002    gcc-11.5.0
 nios2                 randconfig-002-20260711    gcc-11.5.0
 nios2                 randconfig-002-20260711    gcc-16.1.0
 openrisc                         allmodconfig    clang-20
-openrisc                         allmodconfig    gcc-16.1.0
 openrisc                          allnoconfig    clang-23
 openrisc                            defconfig    gcc-16.1.0
 parisc                           allmodconfig    gcc-16.1.0
@@ -307,7 +305,6 @@ x86_64                           rhel-9.4-ltp    gcc-14
 x86_64                          rhel-9.4-rust    clang-22
 xtensa                            allnoconfig    clang-23
 xtensa                           allyesconfig    clang-20
-xtensa                           allyesconfig    gcc-16.1.0
 xtensa                         randconfig-001    gcc-16.1.0
 xtensa                randconfig-001-20260711    gcc-16.1.0
 xtensa                         randconfig-002    gcc-16.1.0
