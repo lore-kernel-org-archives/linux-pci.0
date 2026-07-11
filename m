@@ -1,335 +1,184 @@
-Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAABD286A7;
-	Sat, 11 Jul 2026 02:05:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783735522; cv=pass; b=o91l2s15eC6nADwS0AraapA55sTm+QO8nK5slcxWVb3HGJP3LH90NzOjYDY+JuwNskRz2fHU2y4xSaImYMibQi5LVZWUUGa1jDiOCbaidYqUSYGKYVydCBl630PE/TaZjCJdLveUz+AeDprRSxfT4kJcU9SL2BgeImyLughW15s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783735522; c=relaxed/simple;
-	bh=in/+ZBP/VNtN9DiFiv6zUBxrlTruZ58XjuqQXGDk4xw=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=BfdpUMCB7QUimsBaMng7JNqKSkfdgDVvoNcn1tXdgdO4Q/w3hQrknsb2QKH7qhlehecamFCP31BzVwWkpcjInq0EayFMpF52XxgIj9u5zj+WC05xe8HsQ9DFRDFZBEJ2UKEeR6bDWc5hYW8y4PoE+mOs+LMeZPKE+ArpwuqO/gA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=Hhf/cKNh; arc=pass smtp.client-ip=136.143.188.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7939A3126AD;
+	Sat, 11 Jul 2026 12:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783773862; cv=none; b=mZoC0ooE2UZi7aVu9DscnY2pEkKOV4NV/fJs4LYZDvixQb/4lkREMnN6A4CVcK+1MPzY7q0jKecXd2RGOj/A4kHuFEqA1T788XFfQTxpcXPayz5rCiyecLzLQYhjAPWWDczGnGPyp6cpsckGT6W2uyu0+44zbaRc4h0PB+ypb3c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783773862; c=relaxed/simple;
+	bh=qqdphEGA6+7P5vo5z9LUEDm4KQwk81RmJ+HPo2OWlqU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M+I6lOnF976MfUa66UPK0Wnd7L2vQgfH2ylZ/wT6bgf9WfCV8k3P/rX3yJFn7XxNOmIz9wPEbtWvJtxo7ByQRLGYO7QGcMl15Ri9lgDmdtxXJT+GSMYuFXKkzFV0M67nIsOcSXHQY6Je5BZpDBQJSDjZ533Bf/UdOYSYXmukTHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n289I0EX; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="Hhf/cKNh"
-ARC-Seal: i=1; a=rsa-sha256; t=1783735493; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=DFt5XI/uVIlPrhi6BtcY2PK8BsEqMJOrtwekYuk6TL6sy07VTBlZx1Tr+hAOkCbOyMI4B/bvU56tDDdNUDfqgZuD2hItRKzjFLrUtDzzWR3JGrBhCDNNffIwmL/0Y9uBdpWrB+S4xNfMiKrTxXNWKoeVKWIoFrlLo/3RR+mK4no=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1783735493; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=GheCYDBFLZZB5JG+aBFxTpvjzySJCMbAaM1ydg78v1c=; 
-	b=H2N5ciVYyEmPE9quuYsVvUMqGWK3erEmjVvVcyKnBhxeYkaaAFhoLqeGF5/ECWW9kEZgQN2Vx36hOoYv0Wd3YUHKXcSIFNxhfSZ/bDvXkzhJXDdKEmTbmcF1TtWI4t5Y8PMsgud2jcUSdvoRWbuuBnc+lAcxWRzibKedAqLzKGI=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783735493;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=GheCYDBFLZZB5JG+aBFxTpvjzySJCMbAaM1ydg78v1c=;
-	b=Hhf/cKNhwLOFWPO5pkhC2vRYS4duMk+TKKkU5qgJwH+JNY802v8BRlYuQpY88TLb
-	/Uc1sEkVnwvk2P4c8um7DvuDUYPD0ukW85yRP+uCfqWxmlqq4zGXRjllXYO2jBWg6XC
-	yPixNXDbcxX2j6q8iHLqMoJpjrBtmCRJwOo0wfFk=
-Received: by mx.zohomail.com with SMTPS id 1783735492286730.8704422431059;
-	Fri, 10 Jul 2026 19:04:52 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n289I0EX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783773861; x=1815309861;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qqdphEGA6+7P5vo5z9LUEDm4KQwk81RmJ+HPo2OWlqU=;
+  b=n289I0EXvqZSVDYRObvUwn7sEEk0J7BjGl2I1/Y7S9Mu6mryNvs0ntxk
+   JEOOyh7B7UcD4zDr2K+8FY7lF0WR8JpIkj6z1ssM3Hohv3LGvkoKlnF47
+   IuZTqSAHesFdNibv7Iie/uhpKilIM3Se6E7eS0I3f1aVUKuGqZqYzgXq3
+   h42FvXk/pGB2vBkVuTI6FPwRar4NgzY6NMQpRhcZOo7s8hVXhSFLrlC2o
+   THJH3qi2PPMyGyDiUCVFp960SJZuk3m/ObXSBD1HZcGD3XCOJWl5cRMyX
+   nHRe8y+8CW3X2VMJ06n2yD6ufp4J4xFOe/pvQx6AUCC2ZEQIqlHGGg3Xn
+   g==;
+X-CSE-ConnectionGUID: +jbi3BchSa+/NvCSRC7Omg==
+X-CSE-MsgGUID: wX14C6ssTs6ahaCJapyaVg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="84505115"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="84505115"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2026 05:44:20 -0700
+X-CSE-ConnectionGUID: I0xxxA1WRZ+3GkRt9TAmmg==
+X-CSE-MsgGUID: ro29f7pBQWioi7CrIV0nXQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="254622845"
+Received: from abityuts-desk.ger.corp.intel.com (HELO localhost) ([10.245.244.254])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2026 05:44:13 -0700
+Date: Sat, 11 Jul 2026 15:44:10 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Frank Li <Frank.Li@nxp.com>, Nam Cao <namcao@linutronix.de>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Alex Elder <elder@riscstar.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v4 2/6] PCI: spacemit-k1: Add multiple PHY handles support
+Message-ID: <alI6ml4xQboFOgxG@ashevche-desk.local>
+References: <20260709040027.958400-1-inochiama@gmail.com>
+ <20260709040027.958400-3-inochiama@gmail.com>
+ <ak9KzNFF26B0Kttz@ashevche-desk.local>
+ <alBNXgMAwXPKwiJ2@inochi.infowork>
+ <alCoTEDUY8AO9OzD@ashevche-desk.local>
+ <alDNlfb0_T9g-ATO@inochi.infowork>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH v6 18/20] rust: dma: drop `dma_read!` and `dma_write!` API
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260706-io_projection-v6-18-72cd5d055d54@garyguo.net>
-Date: Fri, 10 Jul 2026 23:04:32 -0300
-Cc: Alice Ryhl <aliceryhl@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>,
- Boqun Feng <boqun@kernel.org>,
- =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Benno Lossin <lossin@kernel.org>,
- Andreas Hindborg <a.hindborg@kernel.org>,
- Trevor Gross <tmgross@umich.edu>,
- Tamir Duberstein <tamird@kernel.org>,
- =?utf-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Abdiel Janulgue <abdiel.janulgue@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Alexandre Courbot <acourbot@nvidia.com>,
- David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>,
- Michal Wilczynski <m.wilczynski@samsung.com>,
- =?utf-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>,
- driver-core@lists.linux.dev,
- rust-for-linux@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org,
- nova-gpu@lists.linux.dev,
- dri-devel@lists.freedesktop.org,
- linux-pwm@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <4990B3CF-C19E-4282-B749-D02ABECD59DC@collabora.com>
-References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
- <20260706-io_projection-v6-18-72cd5d055d54@garyguo.net>
-To: Gary Guo <gary@garyguo.net>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alDNlfb0_T9g-ATO@inochi.infowork>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
+On Fri, Jul 10, 2026 at 06:55:10PM +0800, Inochi Amaoto wrote:
+> On Fri, Jul 10, 2026 at 11:07:40AM +0300, Andy Shevchenko wrote:
+> > On Fri, Jul 10, 2026 at 09:57:05AM +0800, Inochi Amaoto wrote:
+> > > On Thu, Jul 09, 2026 at 10:16:28AM +0300, Andy Shevchenko wrote:
+> > > > On Thu, Jul 09, 2026 at 12:00:22PM +0800, Inochi Amaoto wrote:
 
+...
 
-> On 6 Jul 2026, at 09:44, Gary Guo <gary@garyguo.net> wrote:
->=20
-> The primitive read/write use case is covered by the `io_read!` and
-> `io_write!` macro. The non-primitive use case was finicky; they should
-> either be achieved using `CoherentBox` or `as_ref()/as_mut()` to =
-assert the
-> lack of concurrent access, or should be using memcpy-like APIs to =
-express
-> the non-atomic and tearable nature.
->=20
-> Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
-> rust/kernel/dma.rs       | 128 =
------------------------------------------------
-> samples/rust/rust_dma.rs |  11 ++--
-> 2 files changed, 8 insertions(+), 131 deletions(-)
->=20
-> diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
-> index 1535bc6eec64..6e7ea3b72f2f 100644
-> --- a/rust/kernel/dma.rs
-> +++ b/rust/kernel/dma.rs
-> @@ -661,52 +661,6 @@ pub unsafe fn as_mut(&self) -> &mut T {
->         // SAFETY: per safety requirement.
->         unsafe { &mut *self.as_mut_ptr() }
->     }
-> -
-> -    /// Reads the value of `field` and ensures that its type is =
-[`FromBytes`].
-> -    ///
-> -    /// # Safety
-> -    ///
-> -    /// This must be called from the [`dma_read`] macro which ensures =
-that the `field` pointer is
-> -    /// validated beforehand.
-> -    ///
-> -    /// Public but hidden since it should only be used from =
-[`dma_read`] macro.
-> -    #[doc(hidden)]
-> -    pub unsafe fn field_read<F: FromBytes>(&self, field: *const F) -> =
-F {
-> -        // SAFETY:
-> -        // - By the safety requirements field is valid.
-> -        // - Using read_volatile() here is not sound as per the usual =
-rules, the usage here is
-> -        // a special exception with the following notes in place. =
-When dealing with a potential
-> -        // race from a hardware or code outside kernel (e.g. =
-user-space program), we need that
-> -        // read on a valid memory is not UB. Currently =
-read_volatile() is used for this, and the
-> -        // rationale behind is that it should generate the same code =
-as READ_ONCE() which the
-> -        // kernel already relies on to avoid UB on data races. Note =
-that the usage of
-> -        // read_volatile() is limited to this particular case, it =
-cannot be used to prevent
-> -        // the UB caused by racing between two kernel functions nor =
-do they provide atomicity.
-> -        unsafe { field.read_volatile() }
-> -    }
-> -
-> -    /// Writes a value to `field` and ensures that its type is =
-[`AsBytes`].
-> -    ///
-> -    /// # Safety
-> -    ///
-> -    /// This must be called from the [`dma_write`] macro which =
-ensures that the `field` pointer is
-> -    /// validated beforehand.
-> -    ///
-> -    /// Public but hidden since it should only be used from =
-[`dma_write`] macro.
-> -    #[doc(hidden)]
-> -    pub unsafe fn field_write<F: AsBytes>(&self, field: *mut F, val: =
-F) {
-> -        // SAFETY:
-> -        // - By the safety requirements field is valid.
-> -        // - Using write_volatile() here is not sound as per the =
-usual rules, the usage here is
-> -        // a special exception with the following notes in place. =
-When dealing with a potential
-> -        // race from a hardware or code outside kernel (e.g. =
-user-space program), we need that
-> -        // write on a valid memory is not UB. Currently =
-write_volatile() is used for this, and the
-> -        // rationale behind is that it should generate the same code =
-as WRITE_ONCE() which the
-> -        // kernel already relies on to avoid UB on data races. Note =
-that the usage of
-> -        // write_volatile() is limited to this particular case, it =
-cannot be used to prevent
-> -        // the UB caused by racing between two kernel functions nor =
-do they provide atomicity.
-> -        unsafe { field.write_volatile(val) }
-> -    }
-> }
->=20
-> impl<T: AsBytes + FromBytes> Coherent<T> {
-> @@ -1266,85 +1220,3 @@ fn as_view(self) -> CoherentView<'a, =
-Self::Target> {
->         }
->     }
-> }
-> -
-> -/// Reads a field of an item from an allocated region of structs.
-> -///
-> -/// The syntax is of the form `kernel::dma_read!(dma, proj)` where =
-`dma` is an expression evaluating
-> -/// to a [`Coherent`] and `proj` is a [projection =
-specification](kernel::ptr::project!).
-> -///
-> -/// # Examples
-> -///
-> -/// ```
-> -/// use kernel::device::Device;
-> -/// use kernel::dma::{attrs::*, Coherent};
-> -///
-> -/// struct MyStruct { field: u32, }
-> -///
-> -/// // SAFETY: All bit patterns are acceptable values for `MyStruct`.
-> -/// unsafe impl kernel::transmute::FromBytes for MyStruct{};
-> -/// // SAFETY: Instances of `MyStruct` have no uninitialized =
-portions.
-> -/// unsafe impl kernel::transmute::AsBytes for MyStruct{};
-> -///
-> -/// # fn test(alloc: &kernel::dma::Coherent<[MyStruct]>) -> Result {
-> -/// let whole =3D kernel::dma_read!(alloc, [try: 2]);
-> -/// let field =3D kernel::dma_read!(alloc, [panic: 1].field);
-> -/// # Ok::<(), Error>(()) }
-> -/// ```
-> -#[macro_export]
-> -macro_rules! dma_read {
-> -    ($dma:expr, $($proj:tt)*) =3D> {{
-> -        let dma =3D &$dma;
-> -        let ptr =3D $crate::ptr::project!(
-> -            $crate::dma::Coherent::as_ptr(dma), $($proj)*
-> -        );
-> -        // SAFETY: The pointer created by the projection is within =
-the DMA region.
-> -        unsafe { $crate::dma::Coherent::field_read(dma, ptr) }
-> -    }};
-> -}
-> -
-> -/// Writes to a field of an item from an allocated region of structs.
-> -///
-> -/// The syntax is of the form `kernel::dma_write!(dma, proj, val)` =
-where `dma` is an expression
-> -/// evaluating to a [`Coherent`], `proj` is a
-> -/// [projection specification](kernel::ptr::project!), and `val` is =
-the value to be written to the
-> -/// projected location.
-> -///
-> -/// # Examples
-> -///
-> -/// ```
-> -/// use kernel::device::Device;
-> -/// use kernel::dma::{attrs::*, Coherent};
-> -///
-> -/// struct MyStruct { member: u32, }
-> -///
-> -/// // SAFETY: All bit patterns are acceptable values for `MyStruct`.
-> -/// unsafe impl kernel::transmute::FromBytes for MyStruct{};
-> -/// // SAFETY: Instances of `MyStruct` have no uninitialized =
-portions.
-> -/// unsafe impl kernel::transmute::AsBytes for MyStruct{};
-> -///
-> -/// # fn test(alloc: &kernel::dma::Coherent<[MyStruct]>) -> Result {
-> -/// kernel::dma_write!(alloc, [try: 2].member, 0xf);
-> -/// kernel::dma_write!(alloc, [panic: 1], MyStruct { member: 0xf });
-> -/// # Ok::<(), Error>(()) }
-> -/// ```
-> -#[macro_export]
-> -macro_rules! dma_write {
-> -    (@parse [$dma:expr] [$($proj:tt)*] [, $val:expr]) =3D> {{
-> -        let dma =3D &$dma;
-> -        let ptr =3D $crate::ptr::project!(
-> -            mut $crate::dma::Coherent::as_mut_ptr(dma), $($proj)*
-> -        );
-> -        let val =3D $val;
-> -        // SAFETY: The pointer created by the projection is within =
-the DMA region.
-> -        unsafe { $crate::dma::Coherent::field_write(dma, ptr, val) }
-> -    }};
-> -    (@parse [$dma:expr] [$($proj:tt)*] [.$field:tt $($rest:tt)*]) =3D> =
-{
-> -        $crate::dma_write!(@parse [$dma] [$($proj)* .$field] =
-[$($rest)*])
-> -    };
-> -    (@parse [$dma:expr] [$($proj:tt)*] [[$flavor:ident: $index:expr] =
-$($rest:tt)*]) =3D> {
-> -        $crate::dma_write!(@parse [$dma] [$($proj)* [$flavor: =
-$index]] [$($rest)*])
-> -    };
-> -    ($dma:expr, $($rest:tt)*) =3D> {
-> -        $crate::dma_write!(@parse [$dma] [] [$($rest)*])
-> -    };
-> -}
-> diff --git a/samples/rust/rust_dma.rs b/samples/rust/rust_dma.rs
-> index 5046b4628d0e..4af46e99d2dd 100644
-> --- a/samples/rust/rust_dma.rs
-> +++ b/samples/rust/rust_dma.rs
-> @@ -12,6 +12,10 @@
->         Device,
->         DmaMask, //
->     },
-> +    io::{
-> +        io_project,
-> +        io_read, //
-> +    },
->     page, pci,
->     prelude::*,
->     scatterlist::{Owned, SGTable},
-> @@ -77,7 +81,8 @@ fn probe<'bound>(
->                 Coherent::zeroed_slice(pdev.as_ref(), =
-TEST_VALUES.len(), GFP_KERNEL)?;
->=20
->             for (i, value) in TEST_VALUES.into_iter().enumerate() {
-> -                kernel::dma_write!(ca, [try: i], =
-MyStruct::new(value.0, value.1));
-> +                // SAFETY: `ca` is not yet shared with device or =
-other threads.
-> +                unsafe { *io_project!(ca, [panic: i]).as_mut() =3D =
-MyStruct::new(value.0, value.1) };
->             }
->=20
->             let size =3D 4 * page::PAGE_SIZE;
-> @@ -97,8 +102,8 @@ fn probe<'bound>(
-> impl DmaSampleDriver {
->     fn check_dma(&self) {
->         for (i, value) in TEST_VALUES.into_iter().enumerate() {
-> -            let val0 =3D kernel::dma_read!(self.ca, [panic: i].h);
-> -            let val1 =3D kernel::dma_read!(self.ca, [panic: i].b);
-> +            let val0 =3D io_read!(self.ca, [panic: i].h);
-> +            let val1 =3D io_read!(self.ca, [panic: i].b);
->=20
->             assert_eq!(val0, value.0);
->             assert_eq!(val1, value.1);
->=20
-> --=20
-> 2.54.0
->=20
->=20
+> > > > > +	k1->phy_count = i;
+> > > > > +	if (k1->phy_count == 0)
+> > > > > +		return -EINVAL;
+> > > > > +
+> > > > > +	return 0;
+> > > > 
+> > > > This doesn't seem correct to me, I would expect phy_count to be assigned only
+> > > > when it's valid. (Yes, perhaps 0 is the same as it was, but semantically it's
+> > > > different 0 in this case.)
+> > > 
+> > > I guess you think 0 is a valid number? I can not understand what you thing
+> > > Assign this to 0 if there is no phy is fine to me, which shows there is 0
+> > > vaild phy found.
+> > 
+> > Isn't it already 0? Semantically code is wrong in a flow (not in the result).
+> 
+> In fact it is already 0 here. But I am not understand why you thing is wrong.
+> Could you explain it in detail? (Maybe you think it is not good to return 
+> -EINVAL?)
 
-Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+You rewrite 0 by 0, but the fact of the rewriting is inaccuracy.
+We should not rewrite the default (whatever it is) with 0 count
+as semantically they are different cases. The rule of thumb, we
+don't assign values in case of errors, we leave them as is and
+it's user / caller responsibility to assign the default and handle
+errors properly. This is simple layering violation.
+
+Your code should be
+
+	if (i == 0)
+		return -EINVAL;
+
+	k1->phy_count = i;
+	return 0;
+
+> > > > See also above. Do we have some PHY API that just counts provided PHYs?
+> > > > If not, that what you should probably add first, before this patch.
+> > > 
+> > > I have not found any api for this. But the actual problem is, how the api
+> > > is designed. I have checked both the array bulk api for reset and clock,
+> > > it seems like it is much more than this patch...
+> > 
+> > Yeah, I looked at the phy-core and I think it will be hard to implement.
+> > So, the idea is then is to reallocate the pointer each time you get a new PHY.
+> > In this case the phy_count will reflect the actual memory consumption by phy.
+> 
+> Emmm, I think it is kind of buggy and not necessary. In most case
+> this array is not long actually, so allocate some pointer should be
+> fine and be an acceptable cost.
+
+Then the counted_by will be incorrect as it may access valid memory, but
+unused by the driver.
+
+...
+
+> > > > > +	for (i = 0; i < k1->phy_count; i++)
+> > > > 
+> > > > 	for (unsigned int i = 0; i < k1->phy_count; i++)
+> > > > 
+> > > 
+> > > I agree with the unsigned int, but I guess this definition is not
+> > > allowed in linux.
+> > 
+> > It's allowed and it's encouraged even by Linus. As long as iterator is local,
+> > use this syntax sugar and reduce its scope. It hardens the code.
+> 
+> Could you give me a reference url to check,
+
+Sure, there are two (one for integers and one for pointers)
+https://lore.kernel.org/lkml/CAHk-=wiCOTW5UftUrAnvJkr6769D29tF7Of79gUjdQHS_TkF5A@mail.gmail.com/
+https://lore.kernel.org/lkml/CAHk-=wgy8p4is8ApEQCT5NS7XFb+NXeo-TKz7jRRZVksLLBSrQ@mail.gmail.com/
+
+> I have not found this on the coding-style.
+> https://www.kernel.org/doc/html/latest/process/coding-style.html
+
+Feel free to update the documentation.
+
+> > > > > +		phy_exit(k1->phy[i]);
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
 
