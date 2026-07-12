@@ -1,172 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f9.google.com (mail-wm2-f9.google.com [74.125.225.137])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEE4E241CB7;
-	Sun, 12 Jul 2026 17:42:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 176ED3655D7
+	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 17:55:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783878155; cv=none; b=OOMdHG/JPv7fEZsFof4ZxginsrWWtzNep1pPQcYrKhG3+BZxKFnwps0sWQu5vFa46y4R1FjiY15liGSoeLA8WGiXncN3TemMF91On0Yxi9OM8MZDA0Wo+EyXM3ykdnUluWDCZNJxTfsWMgLD32aIR/Hyd+OUOeeV/i8esUg8csk=
+	t=1783878942; cv=none; b=BoJvDVuMiX86/vEQf6BGHuWJa6l5K593Cx1i/MWLN3obHIk+X0NwfBiUU50aMB0OkRLOjhPQrfZtrOx7+s0VKJV86SCtobMNkF4/XC2ZUNJ5bIpat72621T9seHSIcUBL2BfMij255JwxjpsFrGiv/boZOEUJnnmlErhcZ2ncx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783878155; c=relaxed/simple;
-	bh=XXSmvUqKYkjxJW5RdcI+U+ckwNWBEWNVYPSU+ZRdKME=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=K1R3Nm3XMzm8Gsj0O1XiTFvDDH7ksKiZJtIB89lktFu6NvuYgYOgdef4UhXuR+6KlMgy3cs7bbNu6iVrMgB+Ie/PdNH5/98aICxd5TyL+h+SGfJxC6rpfmw06Il0RQL6rDOnxutU9FUT+ZlcJKIf6KrP3TY8lWTS54ALFue4PVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HRoLogRf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783878942; c=relaxed/simple;
+	bh=RgZg+NcjKlFBkqbvlYHtvyMRvFEwM8G5G0XCnD835vw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DbR/5ivcpL9ewjKlVYZkdWD+NvpzxeKUa4Gkw3RYqPVE8Rn30RUs3Oob621sWzg9pNsYwLCsBet4o6JSfRCz7PC/jYZoRulDWKDXbSVDbHFp0fD62BF6QZskptn0Y0hrwb0vL7ht0isKvOBNlkQYRXDE0WNVHpWMEiK/oxzI9c8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SbeGXB+N; arc=none smtp.client-ip=74.125.225.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HRoLogRf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D17E1F000E9;
-	Sun, 12 Jul 2026 17:42:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783878153;
-	bh=hhJACipbEfiF13bfNQ0EewP0VVo5SoqJbX4Ev8wBfDM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HRoLogRfJas+fQU3peoSSrNlvWHIjC1EH5ylrXUvm0b3ar7Taplgga9X6WBEY5UYx
-	 NHCIqAVfZk0x/YrVRZ/F9KT7VG+NazRLSUViTpe/36IiuAW4N2weZ9IKArcSESNQSH
-	 ou8vj9PWMJTgpy3WYQ4C+mzLjxRiTG8Rb5Zv3tAy44rKXGn8rhgwQSp7Nz9T/PLTF8
-	 NBsdZ2DCXv2VG+qTWz4Mp4u2k+EkTaVDCy2XDPhInf6n+A3u9hQyRL8mFAvoMdWJWk
-	 fefs8uBYdVZmgQkjmq0M3TeQhxBizSn4ujgcnOqRAbdMWSEQkaPMB2gWO7rP+NR580
-	 cfuukuNGDnhtA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v22 1/3] rust: leds: add basic led classdev abstractions
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: ojeda@kernel.org, linux-leds@vger.kernel.org, lee@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260712-rust_leds-v22-1-055b0459a079@posteo.de>
-References: <20260712-rust_leds-v22-0-055b0459a079@posteo.de>
- <20260712-rust_leds-v22-1-055b0459a079@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 12 Jul 2026 17:42:32 +0000
-Message-Id: <20260712174233.5D17E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SbeGXB+N"
+Received: by mail-wm2-f9.google.com with SMTP id 5b1f17b1804b1-493e55619a2so7291315e9.1
+        for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 10:55:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783878939; x=1784483739; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=0E37CKL1qGtMYOAXyCjsl6PdtLnZ6H9NtG5TxTyJ8tM=;
+        b=SbeGXB+NjdncMZubtVGJecIQjD7/1ZJQDXWAzWfTzfgZqzFjixGzQyXFJWXA7O32XE
+         Xka38BCDdyp5mdYKCL9jOGj9m3NUjXm82fyWKMTbOAzePLObFUes2nXO2zi05XktYfgF
+         xtuIVqu4nqT5Z/1TTAHKLB+hKcM6XMuDycEIWMyBO5eVgS/nuLs9VWWyBPTDYFkw5h2H
+         yJYS5iEzvV/1AAXozwzi5hOW1xmMh19NXElythFS+NxEUc4z5gFJXJOxY5cXk7ajlb/8
+         pylrnBrdDG3NO+OYy390oOPJnB0+ADUrSyTUoh30zAMXcXu22gt8ykmQarCzeb9eUVGo
+         rQng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783878939; x=1784483739;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0E37CKL1qGtMYOAXyCjsl6PdtLnZ6H9NtG5TxTyJ8tM=;
+        b=UOx9vwW2oWm4ogXLjpbVo5QPhmnuGxHVb2Blm4CUX9JLVPOclLwi664HBLHMs3aobz
+         jiAmxcRrXDFDDNXQ5GqLHkPKO5l/RxNvYB/tMT0CBSKl/N4Q02o5YiPRq6G3veFDPrpD
+         knkUAro2B7azOla8xm9O+ZAZrZoS5W0v4xoh2JWc1dnzYse0/Kkd0hwpiKjr8CGnNZqu
+         G6mnCSzkDBg34u+58aDLMo/MeYRNJ2GBXIRzypoyPgG/ohl3E57kzBenqyNFDJX/IihF
+         6M8720uP8XKvkxXnMm3x/GN3yhIbR2/mK0J0SwRoBqphZy8UVR3Coyx9PZr5FEa/BGME
+         IfYQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqHq0oJVsmiG69mdgNTds+to1GYZEhoPQYWWK+fQDlFLkyH3nR0BB9PHr+qR9Lyp0zl0dpoiya4o5M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqwQ7dOjYViMm4y7W12T3fzgqEoOCU4kjzdUzDmlqSTo4oxPI4
+	ImRiQRVEXPPPjIibYyL9WMFekUQQFJwZhPu7Sqk09Bkxk/8JFICa8WgQ
+X-Gm-Gg: AfdE7cknYBquVYjHrCs26qgE8kmL5UnoOZ0aLrigfPbzWcB57yzCrI+A6qoBh0id+Bz
+	PjOKIIksISGYGP9xRLi9AXjNKBMnTFDEfRoP+nSnzfwi3VwqEIdfT6EeMqe+TesWE0P5k5DKuP/
+	2eaAdLpqeGf3MXmvSUfJNkVOg2oezhdUM4VTzPsPfZLv2KJXrlLHzJDalbX/rfPEkbTOcJ9B8jp
+	KbvKYrGjHbOYwROrkd3qZQJjlTNvSTQDeFgG6QTh82vbZrAr90QKYTfm+AOckxGbGVDRK7I1HY0
+	v+NbpWUvQVct8VDBgGeZbuPo+CK06SWYJ67o7ZHWilkFIXo+kLNvjw5U+d/cRb8r+ioa0GOP3t/
+	hm5mdzfufGvRZ7Skx1L59KT9ohmiMn7Z83eb3WJpd3Vnawfur9+cyQHC1jqDEehMCQexIC1boVR
+	I21A688xATScdoBf/JH1k=
+X-Received: by 2002:a05:6000:1ac9:b0:478:77c1:787c with SMTP id ffacd0b85a97d-47f2dd0d98bmr6806058f8f.56.1783878939166;
+        Sun, 12 Jul 2026 10:55:39 -0700 (PDT)
+Received: from workstation.. ([202.163.123.30])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f273195d9sm19562091f8f.3.2026.07.12.10.55.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 12 Jul 2026 10:55:38 -0700 (PDT)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: Kevin Xie <kevin.xie@starfivetech.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ali Tariq <alitariq45892@gmail.com>
+Subject: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
+Date: Sun, 12 Jul 2026 22:54:27 +0500
+Message-Id: <20260712175427.232234-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The firmware node reference is insecurely tracked by assuming the =
-C layer's `dev->fwnode` field remains unmodified, which can lead to referen=
-ce count underflow, use-after-free, or memory leaks.
-- [Medium] The LED device is registered using the unmanaged `led_classdev_r=
-egister_ext()` instead of the managed `devm_led_classdev_register_ext()`, v=
-iolating subsystem lifecycle guidelines and introducing devres LIFO orderin=
-g hazards.
---
+pm_runtime_get_sync() is called in starfive_pcie_probe() without
+checking its return value. If runtime resume fails, the driver
+proceeds to configure PCIe hardware through regmap_update_bits(),
+enable clocks and resets, and power on the PHY, even though the
+device may not actually be powered.
 
---- Patch [1]: [PATCH v22 1/3] rust: leds: add basic led classdev abstracti=
-ons ---
-commit 7eff903565ff4a4fae9e842098053e60f2989206
-Author: Markus Probst <markus.probst@posteo.de>
+pm_runtime_get_sync() also increments the usage counter even when
+resume fails, which would leave the counter unbalanced if this
+error path were later handled without additional cleanup.
 
-rust: leds: add basic led classdev abstractions
+Switch to pm_runtime_resume_and_get(), which balances the usage
+counter internally on failure, and bail out of probe before any
+hardware is touched if resume does not succeed.
 
-This commit introduces core abstractions for LED class devices in Rust. It
-implements traits for handling LED operations, a device builder, and a safe
-wrapper for led_classdev.
+Tested on StarFive VisionFive 2 v1.2A board.
 
-> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-> index 0000000000000..816db7c576894
-> --- /dev/null
-> +++ b/rust/kernel/led/normal.rs
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+---
+ drivers/pci/controller/plda/pcie-starfive.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-[ ... ]
+diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+index 298036c3e7f9..e9a472985b8a 100644
+--- a/drivers/pci/controller/plda/pcie-starfive.c
++++ b/drivers/pci/controller/plda/pcie-starfive.c
+@@ -410,7 +410,11 @@ static int starfive_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	pm_runtime_enable(&pdev->dev);
+-	pm_runtime_get_sync(&pdev->dev);
++	ret = pm_runtime_resume_and_get(&pdev->dev);
++	if (ret < 0) {
++		pm_runtime_disable(&pdev->dev);
++		return dev_err_probe(dev, ret, "failed to resume device\n");
++	}
+ 
+ 	plda->host_ops = &sf_host_ops;
+ 	plda->num_events = PLDA_MAX_EVENT_NUM;
+-- 
+2.34.1
 
-> @@ -65,22 +65,22 @@ impl<'init, S: DeviceBuilderState> DeviceBuilder<'ini=
-t, S> {
->                  // SAFETY:
->                  // - `parent.as_ref().as_raw()` is guaranteed to be a po=
-inter to a valid
->                  //    `device`.
->                  // - `ptr` is guaranteed to be a pointer to an initializ=
-ed `led_classdev`.
->                  to_result(unsafe {
->                      bindings::led_classdev_register_ext(
-
-[Severity: Medium]
-Does calling the unmanaged bindings::led_classdev_register_ext() instead of
-the managed bindings::devm_led_classdev_register_ext() violate the LED
-subsystem lifecycle guidelines?
-
-Relying on manual PinnedDrop for unregistration appears to decouple the
-device lifecycle from the C driver core's devres cleanup. Could this
-introduce devres teardown ordering hazards, use-after-free, or resource
-leaks if user-space sysfs attributes are accessed after device removal?
-
->                          parent.as_ref().as_raw(),
->                          ptr,
->                          if self.name.is_none() {
->                              &raw mut init_data
->                          } else {
->                              core::ptr::null_mut()
->                          },
->                      )
->                  })?;
-> =20
->                  core::mem::forget(self.fwnode); // keep the reference co=
-unt incremented
-
-[Severity: High]
-If the driver was built without an fwnode (where self.fwnode is None), but
-the C layer assigns a node to dev->fwnode during the device's lifetime, will
-dev.fwnode() return Some(fwnode) during unregistration?
-
-It seems this would unconditionally create an ARef from this unowned pointer
-and drop it, decrementing a reference count it never acquired.
-
-Similarly, if the C layer replaces a previously provided node, could the
-original node leak and the new node be improperly decremented?
-
-> =20
->                  Ok::<_, Error>(())
->              }),
->              _p: PhantomData,
->          })
->      }
->  }
-
-[ ... ]
-
-> @@ -211,20 +211,20 @@ impl<T: LedOps> Adapter<T> {
->  #[pinned_drop]
->  impl<'bound, T: LedOps + 'bound> PinnedDrop for Device<'bound, T> {
->      fn drop(self: Pin<&mut Self>) {
->          let raw =3D self.classdev.get();
->          // SAFETY: The existence of `self` guarantees that `self.classde=
-v.get()` is a pointer to a
->          // valid `led_classdev`.
->          let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).dev) };
-> =20
->          let _fwnode =3D dev
->              .fwnode()
->              // SAFETY: the reference count of `fwnode` has previously be=
-en
->              // incremented in `led::DeviceBuilder::build`.
->              .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
- });
-
-[Severity: High]
-As mentioned above, if the fwnode was dynamically assigned or replaced by t=
-he
-C layer, is it safe to unconditionally construct an ARef from the dev->fwno=
-de
-pointer here?
-
-> =20
->          // SAFETY: The existence of `self` guarantees that `self.classde=
-v` has previously been
->          // successfully registered with `led_classdev_register_ext`.
->          unsafe { bindings::led_classdev_unregister(raw) };
-
-[Severity: Medium]
-As asked earlier, could relying on manual unregistration here during Drop
-break standard C-level devres lifecycle ordering?
-
->      }
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260712-rust_leds-=
-v22-0-055b0459a079@posteo.de?part=3D1
