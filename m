@@ -1,254 +1,204 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE2E1449985
-	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 19:51:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C09F623393B;
+	Sun, 12 Jul 2026 21:49:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783885880; cv=none; b=LLcV95FsHnYgCRooKWKHQajJckd+FIDDUEmGCw/2A46JbrvQezXHOhB3Tdj0d9EsC+Ryu9nFipWb6cbKu6m8H8BCRdzeDyoYs+J0cIzY0b7LfGFNgN3mT2GyeSrYXMrGS5EpD9PI8qjYh2VzX4DZxc23pF0Vb4HUrLjd1ln9iM8=
+	t=1783892993; cv=none; b=o5N58GG6KsymVnw6C0Sxj+mrDs0rSgQXKtsrlnZD8ZtokNzY+MdLmt3Vg/ylzM6VLKHnJN3W67pvRZmTimhR8Sk6VTZ6gj7t3P8aGDXetVOr4bisqlndnYRJ7dw6QvKc2+QLrUApfhv/F1ZQD6DiLR4PSbfFK9A1bc6CJZWun0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783885880; c=relaxed/simple;
-	bh=/kpOwfNDhZ9Lk4ufOYttu74yt9BNOCBe4i10pL03gy4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ThLrh1Kykc+o3WoeB77Y6GlG/CwkLlVtvwTlz5XRiIRMwIrDTTo7As1Ood5EeN6G3CTZFvrrs/zrTvEW553/TEkYlWWkwXlzW45DLwQGPON6+/7ciYIhGLMcfPwUoBe8XGscMj4+v/bBgfDwuedTn/6m1e5UD3nP2pC4FDiFQO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=AFUy3vut; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
+	s=arc-20240116; t=1783892993; c=relaxed/simple;
+	bh=8yi6L47DUqwP0koj4WCyLUvHsfQeIY6bTQhI1L+9lOY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=HQzr3ptisL5qbh8VzXDQi5pu8Th7et9RgSEwwJMoUOWLahKSfzu7nAgczXxS+AtYUhzRQXbr+F8SQH8ATtIlYR2DOR9FlMSG1nTIC+4ARJD6oJTHf4LMo9JxDjHV8zsPHdsQSAsHRONNCfF1R3d15yp4EX20N0AGc5m/fq9aDMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iHd/WqL4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="AFUy3vut"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-51c5382806fso23357121cf.2
-        for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 12:51:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ieee.org; s=google; t=1783885877; x=1784490677; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=/kpOwfNDhZ9Lk4ufOYttu74yt9BNOCBe4i10pL03gy4=;
-        b=AFUy3vuteXhJ6waw9l+CwkfKz6xxeOSkVyI5svVAfsn8yLp2oBMH8MUwl5L8aiWCDD
-         qLThyZfKGnIaQ+Q+yKsdy7Pkqf0v2Nb2FO5g8dH9PR9g8e39I65OzjOiR4AH3gVyQwfs
-         xEGvSesesKN6lWcW6u5FHhECumnza41Bjotdw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783885877; x=1784490677;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/kpOwfNDhZ9Lk4ufOYttu74yt9BNOCBe4i10pL03gy4=;
-        b=Cr72n1E843yKOaP4Ntbaka8StVGqtJzpmiEzytzjNQaCOANew0nBGxXX2mFG3zG0ZD
-         O6665iLIzTyDzfziRRv3eEm5B8d3FBueciu5dBwhSIDtWIf+emXY+YEbeEGqlnXz7OzJ
-         bbKk84qIEV8b1PCVLA8rRI+HCG17aDvx+0g2T5MQaMz9WikaM+ndZ6sIYItqyZxsmGX3
-         jP6hSFWRgsGLSQlT0eNJ4DTGsyk16VRQfI7iFtOMLJMpVT6Usm3cdRD27tXE4oJ00B4u
-         jxOpfLDLnQ+CGaRTtFJtLCZEYOFjzbWYB9se5sOarO34AyocsMY17JKbGrTsY0NVZ/+b
-         TewQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rr+ST4u6qmxJ7bUJN59+hVAu+PFmncLL052hOPUi+Bm635tJrAM0xKuiY70tPQbU9m4PGHNxFj9A2I=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+wqB6vgvP3NoVUpHQ9o9qqK+EzmHi5CiA6rvELtPiXNo6qbMF
-	koGPLitVudBam/nVFn9MSGGRzqfpbc0/NKe0tNy+VT8zy3/YRGQd14GB51yKMnCHQ7D5CFQQiW9
-	PHMKilw==
-X-Gm-Gg: AfdE7ckNvCMXXdkSO+IFkciHox/tBUPGOnPyA0yjFDD/Y5USeKfMVt2fX2909EZfe4+
-	xMHRdHKr4s4OLyoJDS+Djwx3rhFMSBhog3LKaWbUxESadOrpNTlEqcRthH41g6YslirjSsREBvw
-	q0jk5VAyvPwlPtBGVEkxVQJyP49ExJQhNH83Rd0kCg/k0ilpWRI2vcQznK9HjqtRjksl0nTdV0v
-	OlpmV1ydb1V8ZBz8jR3qvo/NPb2RvyloHEBv74stigoVJ0VWz8Px6rz19fBtDuJna0248X7uA3Y
-	PmpMvA0buPAiocNgNr4Sn3TvmayWeIxFgAO+znZWC0sOOdCgbeBcm2kN1pBQySvEZqeGjF14bVS
-	PW7dwO48zD7iAhobOqsE9udkvaOK7uriSaxu7vdbkb26sEw5tPbwEqFO5gvLSCnKABZz69ROkQ/
-	xuzfyF972/T3rh
-X-Received: by 2002:a05:622a:8c3:b0:51c:1ec5:d11 with SMTP id d75a77b69052e-51cbf130085mr70850201cf.19.1783885876680;
-        Sun, 12 Jul 2026 12:51:16 -0700 (PDT)
-Received: from [192.168.153.215] ([73.29.38.247])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51caacaad78sm67873231cf.7.2026.07.12.12.51.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Jul 2026 12:51:16 -0700 (PDT)
-Message-ID: <b39d319d20fd47af077f2444c9c7e446382e372c.camel@ieee.org>
-Subject: Re: [PATCH v3] PCI: release empty sibling bridge windows during
- window resize
-From: Cristian Cocos <cristi@ieee.org>
-To: Geramy Loveless <gloveless@jqluv.com>, Christian
- =?ISO-8859-1?Q?K=F6nig?=	 <christian.koenig@amd.com>
-Cc: Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	linux-pci@vger.kernel.org, Mario Limonciello <mario.limonciello@amd.com>
-Date: Sun, 12 Jul 2026 15:51:15 -0400
-In-Reply-To: <CAGpo2meOiExOK=r9y7Jiio0XmJ2vDtE_4NkeCniQ873jEqynyw@mail.gmail.com>
-References: <20260428225146.3104063-1-gloveless@jqluv.com>
-	 <21ed8a45-f19f-4a14-9aed-dbe0f545ae27@amd.com>
-	 <CAGpo2meOiExOK=r9y7Jiio0XmJ2vDtE_4NkeCniQ873jEqynyw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.60.2 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iHd/WqL4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7B536C2BCB7;
+	Sun, 12 Jul 2026 21:49:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1783892993;
+	bh=8yi6L47DUqwP0koj4WCyLUvHsfQeIY6bTQhI1L+9lOY=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=iHd/WqL4DAzFm4aCDIdIYpBDIx325w5h89Ve1dhLUCs2N2T4v8qvkItSmgmxvI446
+	 fZIg11S2ebSjdUveQSnDJvSjgj+vrfmH+CYiydVhhWVN8eyysGOWMWd7dy5Zbv1CYr
+	 GPLeNX3otNU4kdeV+tHYKVxaAdI8Yaf6WXC5vTrACCCP+qSt7KFBAXDKJjqBQV+F5H
+	 VwHQP1aCLV0/dRxFXJG5ncgsQKgBG34yQyr7jh5kcr4nME0UHizm8K4ro5xlGqWakX
+	 r9FeelKElJQBUiyrHtZWQX1SGDati569iY/LM9ZSoYRwh37852SpVBa0/m8BIfDQ/Q
+	 PSIoq+4ltAMIw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EDAC43458;
+	Sun, 12 Jul 2026 21:49:53 +0000 (UTC)
+From: Liz Fong-Jones via B4 Relay <devnull+lizf.honeycomb.io@kernel.org>
+Date: Sun, 12 Jul 2026 14:49:43 -0700
+Subject: [PATCH v2] PCI: Fix BAR resize for devices on a root bus
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260712-pci-rebar-root-bus-v2-1-a1b9107a82dc@honeycomb.io>
+X-B4-Tracking: v=1; b=H4sIAPcLVGoC/22NQQ6CMBBFr0K6dkxbRIwr72FY0HYqYyJDpkAkh
+ LsLGHcuX/L/e7NKKIRJXbNZCY6UiNsV7CFTvqnbBwKFlZXV9qxLfYLOEwi6WkCYe3BDgpgbm0c
+ 0OvpSrcdOMNJ7l96rL6fBPdH3m2lbNJR6lmmvjmbb/QLFv8BowEBRhFhq70K4XG4Ntzh5frkjs
+ aqWZfkAikjFPckAAAA=
+X-Change-ID: 20260704-pci-rebar-root-bus-f3123fe10fc7
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ regressions@lists.linux.dev, amd-gfx@lists.freedesktop.org, 
+ Jon Nettleton <jon@solid-run.com>, Jon Nettleton <jon.nettleton@gmail.com>, 
+ stable@vger.kernel.org, Liz Fong-Jones <lizf@honeycomb.io>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5205; i=lizf@honeycomb.io;
+ s=gpg; h=from:subject:message-id;
+ bh=vBrFJX+DbiBY8ecJBWODKdSvo4Ut8q4cPC9VjlwNcjc=;
+ b=owEBbQGS/pANAwAKAaXO1OOXra/CAcsmYgBqVAwB7q+gSFs3pjbJ2WCjri1eHLPsZId7kMQ1J
+ p1bjXQXYTaJATMEAAEKAB0WIQSfW1LPQ0gyJmoTHwelztTjl62vwgUCalQMAQAKCRClztTjl62v
+ wskVCACGL5RiL2Qa8kFTuvYchIfyxr/n5SDdn9pybXUvVdvn0iRsV96Pvpz/XrLRYFi+Nh5VmgA
+ acSW3KZLMCZV7LKMz4FWo9H5rDFvBNTER0XSsWDIf6XJoaPkGLvKrgNSZhmUL8X4L02qovZzsXf
+ x687vJ7gI5tjXEaTx3FC4ynpeUOTqgNcREE+5SIU5CpdNETIcgulHRHbtDz26T53AntzCBNr3co
+ KNg+vfs2qIkLbNuQk9sReNI4A055VddZE+b6ozKWQWM72iYXgweVG91Xz8No7Bxojx5L17z0Nl9
+ 42h6lV7TFjRRGp1/BissKIF+YYRYoxa2UpBgDVgNA+NX7sIo
+X-Developer-Key: i=lizf@honeycomb.io; a=openpgp;
+ fpr=1F7714D7EC3441D2CECC24606A3F8B00FBDDD2A4
+X-Endpoint-Received: by B4 Relay for lizf@honeycomb.io/gpg with auth_id=854
+X-Original-From: Liz Fong-Jones <lizf@honeycomb.io>
+Reply-To: lizf@honeycomb.io
 
-QW55IGNoYW5jZSB0aGVyZSdzIGJlZW4gYW55IHByb2dyZXNzIGluIHRoaXMgbWF0dGVyPwoKQwoK
-T24gV2VkLCAyMDI2LTA0LTI5IGF0IDA5OjIxIC0wNzAwLCBHZXJhbXkgTG92ZWxlc3Mgd3JvdGU6
-Cj4gPiBPbiA0LzI5LzI2IDAwOjUxLCBHZXJhbXkgTG92ZWxlc3Mgd3JvdGU6Cj4gPiA+IHBidXNf
-cmVhc3NpZ25fYnJpZGdlX3Jlc291cmNlcygpIHJlZnVzZXMgdG8gcmVsZWFzZSBicmlkZ2UKPiA+
-ID4gd2luZG93cyB0aGF0Cj4gPiA+IGhhdmUgY2hpbGQgcmVzb3VyY2VzLiBPbiBtdWx0aS1wb3J0
-IFBDSWUgc3dpdGNoZXMgKGUuZy4KPiA+ID4gVGh1bmRlcmJvbHQKPiA+ID4gZG9ja3MpLCBlbXB0
-eSBzaWJsaW5nIGRvd25zdHJlYW0gcG9ydHMgaG9sZCBzbWFsbCByZXNlcnZhdGlvbnMKPiA+ID4g
-dGhhdAo+ID4gPiBwcmV2ZW50IHRoZSBwYXJlbnQgd2luZG93IGZyb20gYmVpbmcgZnJlZWQgYW5k
-IHJlLXNpemVkIGZvcgo+ID4gPiByZWJhci4KPiA+ID4gCj4gPiA+IFdhbGsgZGVzY2VuZGFudHMg
-b2YgdGhlIHRhcmdldCB3aW5kb3cgZGVwdGgtZmlyc3QsIHNhdmluZyBhbmQKPiA+ID4gZnJlZWlu
-Zwo+ID4gPiBlYWNoIGVtcHR5IGJyaWRnZSB3aW5kb3cgc28gdGhlIHBhcmVudCBjYW4gdGhlbiBi
-ZSByZWxlYXNlZCBhbmQKPiA+ID4gZ3Jvd24uCj4gPiA+IAo+ID4gPiBXaXRob3V0IHRoaXMgY2hh
-bmdlLCBhdHRlbXB0cyB0byBncm93IGEgd2luZG93IGRlZXAgYmVsb3cgYQo+ID4gPiBzd2l0Y2gK
-PiA+ID4gZmFicmljIGxlYXZlIG5lc3RlZCBlbXB0eSB3aW5kb3dzIHBpbm5pbmcgdGhlIGFuY2Vz
-dG9yOgo+ID4gPiAKPiA+ID4gwqAgcGNpZXBvcnQgMDAwMDo2NTowMC4wOiBicmlkZ2Ugd2luZG93
-IFttZW0gMHg4ODgwMDAwMDAwLQo+ID4gPiAweDk4ODAwZmZmZmYKPiA+ID4gwqDCoMKgIDY0Yml0
-IHByZWZdOiBub3QgcmVsZWFzZWQsIGFjdGl2ZSBjaGlsZHJlbiBwcmVzZW50Cj4gPiA+IMKgIHBj
-aWVwb3J0IDAwMDA6MDA6MDMuMjogYnJpZGdlIHdpbmRvdyBbbWVtIDB4ODg4MDAwMDAwMC0KPiA+
-ID4gMHg5ODgwMGZmZmZmCj4gPiA+IMKgwqDCoCA2NGJpdCBwcmVmXTogbm90IHJlbGVhc2VkLCBh
-Y3RpdmUgY2hpbGRyZW4gcHJlc2VudAo+ID4gPiAKPiA+ID4gV2l0aCB0aGUgYm90dG9tLXVwIHdh
-bGsgYW5kIHVwc3RyZWFtIGFuY2VzdHJ5IGNoZWNrLCB0aGUgY2hhaW4KPiA+ID4gdW53aW5kcwo+
-ID4gPiBhbmQgdGhlIHJlYmFyIHN1Y2NlZWRzOgo+ID4gPiAKPiA+ID4gwqAgcGNpZXBvcnQgMDAw
-MDo5NjowMC4wOiBicmlkZ2Ugd2luZG93IFsuLi5dOiByZWxlYXNpbmcKPiA+ID4gwqAgcGNpZXBv
-cnQgMDAwMDo5NTowMC4wOiBicmlkZ2Ugd2luZG93IFsuLi5dOiByZWxlYXNpbmcKPiA+ID4gwqAg
-cGNpZXBvcnQgMDAwMDo5NDowMC4wOiBicmlkZ2Ugd2luZG93IFsuLi5dOiByZWxlYXNpbmcKPiA+
-ID4gwqAgcGNpZXBvcnQgMDAwMDo2NTowMC4wOiBicmlkZ2Ugd2luZG93IFsuLi5dOiByZWxlYXNp
-bmcKPiA+ID4gwqAgYW1kZ3B1IDAwMDA6OTc6MDAuMDogQkFSIDAgW21lbSAweDkwMDAwMDAwMDAt
-MHg5N2ZmZmZmZmZmIDY0Yml0Cj4gPiA+IHByZWZdOgo+ID4gPiDCoMKgwqAgYXNzaWduZWQKPiA+
-IAo+ID4gVGhhdCBzb3VuZHMgcmVhc29uYWJsZSBhbmQgSSBjYW4gc2VlIHRoZSByb2xsYmFjayBz
-dG9yZQo+ID4gCj4gPiBCdXQgZG8gd2UgbWFrZSBzdXJlIHRoYXQgd2UgY2FuIGFsbG9jYXRlIGFs
-bCByZWxlYXNlZCBjaGlsZAo+ID4gcmVzb3VyY2VzIGFkZGl0aW9uYWwgdG8gdGhlIHJlc2l6ZWQg
-cmVzb3VyY2U/Cj4gSSBhbSBub3Qgc3VyZSBJIHdpbGwgbmVlZCB0byBpbnZlc3RpZ2F0ZSB0byBz
-ZWUgaWYgdGhlIG90aGVyIGNvZGUgaW4KPiB0aGUga2VybmVsIGZvbGxvd3MgdGhpcyBwYXRoIGNv
-cnJlY3RseSwgSSB3b3VsZCBhc3N1bWUgaXQgZG9lcyBzaW5jZQo+IHRoZSBwYXJlbnQgaXMgYmVp
-bmcgcmVsZWFzZWQgYnkgdGhpcyBjb2RlIGlmIHRoZXJlIHdhcyBubyBjaGlsZHJlbiwKPiB3ZQo+
-IGFyZSBqdXN0IHJlbGVhc2luZyB0aGUgY2hpbGRyZW4gdG9vIGlmIGFwcGxpY2FibGUgZXNzZW50
-aWFsbHkuCj4gVGhhdHMgbXkgdGhvdWdodHMgdGhleSBjb3VsZCBiZSBpbmFjY3VyYXRlIHRob3Vn
-aCBzaW5jZSBpJ20gbm90Cj4gZXh0cmVtZWx5IGludm9sdmVkIGluIGxpbnV4IGtlcm5lbCBjb2Rl
-IHVudGlsIHJlY2VudGx5Lgo+IAo+ID4gCj4gPiBFLmcuIGluIHRoZSBhYm92ZSBleGFtcGxlIGhv
-dyBpcyB0aGUgbmV3IHNpemUgb2YgdGhlIGJyaWRnZSB3aW5kb3cKPiA+IGRldGVybWluZWQ/IERv
-ZXMgaXQgaW5jbHVkZSB0aGUgcmVsZWFzZWQgY2hpbGQgcmVzb3VyY2VzIHNvIHRoYXQKPiA+IHRo
-ZXkgY2FuIGJlIGV2ZW50dWFsbHkgYmUgcmUtYWxsb2NhdGVkIHdoZW4gZHJpdmVycyBzdGFydCBu
-ZWVkaW5nCj4gPiB0aGVtPwo+IAo+IFRoaXMgcGF0Y2ggYmFzaWNhbGx5IHJlbGVhc2VzIHRoZSBj
-aGlsZHJlbiBzbyB0aGUgc3lzdGVtIHRoYXQgZGVhbHMKPiB3aXRoIGFsbG9jYXRpbmcgYW5kIGNo
-YW5naW5nIHdpbmRvdyBzaXplIGNhbiBhY3R1YWxseSBjaGFuZ2UgaXQuCj4gU28gYmFzaWNhbGx5
-IHRoZSBvbmx5IGJsb2NrZXIgdG8gd2luZG93IHJlc2l6aW5nIHdhcyB0aGlzIHBhdGNoLAo+IHdo
-YXRldmVyIHBjaWUgYWxyZWFkeSBkb2VzIGluIGxpbnV4IGJhc2ljYWxseSBub3cgY2FuIGhhcHBl
-biB3aXRoIHRoZQo+IGNoaWxkcmVuIHJlbGVhc2VkIHdpdGhvdXQgZnVydGhlciBjaGFuZ2VzLgo+
-IERvZXMgdGhhdCBtYWtlIHNlbnNlPwo+IAo+IEJhc2ljYWxseSBvdXIgb25seSBqb2IgaXMgdG8g
-bWFrZSBzdXJlIHRvIHJlbGVhc2UgdGhlIGNoaWxkcmVuIGFuZAo+IHRoZQo+IHJlc3Qgb2YgdGhl
-IGxpbnV4IGtlcm5lbCBjYW4gY29udGludWUgZm9yd2FyZCBhbmQgcmVzaXplIHRoZSB3aW5kb3cs
-Cj4gdGhlIHN0b3BwZXIgd2FzIHRoZSBjaGlsZHJlbiBub3QgZ2V0dGluZyByZWxlYXNlZCBlc3Nl
-bnRpYWxseS4KPiAKPiA+IAo+ID4gUmVnYXJkcywKPiA+IENocmlzdGlhbi4KPiA+IAo+ID4gPiAK
-PiA+ID4gU3VnZ2VzdGVkLWJ5OiBJbHBvIErDpHJ2aW5lbiA8aWxwby5qYXJ2aW5lbkBsaW51eC5p
-bnRlbC5jb20+Cj4gPiA+IFNpZ25lZC1vZmYtYnk6IEdlcmFteSBMb3ZlbGVzcyA8Z2xvdmVsZXNz
-QGpxbHV2LmNvbT4KPiA+ID4gLS0tCj4gPiA+IHYzOgo+ID4gPiDCoC0gUmVzdHJ1Y3R1cmUgaGVs
-cGVyOiBvdXRlciBsb29wIG9ubHkgcmVjdXJzZXM7IGlubmVyIGl0ZXJhdGVzCj4gPiA+IGJ1cwo+
-ID4gPiDCoMKgIHJlc291cmNlcyB2aWEgcGNpX2J1c19mb3JfZWFjaF9yZXNvdXJjZSgpLiBUaGUg
-cmVsZWFzZSBwYXRoIGlzCj4gPiA+IG5vdwo+ID4gPiDCoMKgIHVuaWZpZWQsIHNvIHRoZSBjYWxs
-ZXItc2lkZSBibG9jayBpbgo+ID4gPiBwYnVzX3JlYXNzaWduX2JyaWRnZV9yZXNvdXJjZXMoKQo+
-ID4gPiDCoMKgIGlzIGdvbmUuCj4gPiA+IMKgLSBXYWxrIHRoZSByZXNvdXJjZSB0cmVlIHVwc3Ry
-ZWFtIHdoZW4gY2hlY2tpbmcgYW5jZXN0cnkgb2YKPiA+ID4gQGJfd2luLAo+ID4gPiDCoMKgIHNv
-IGRlc2NlbmRhbnRzIGluIG5lc3RlZCB0b3BvbG9naWVzIGFyZSBhbHNvIHJlbGVhc2VkIChJbHBv
-KS4KPiA+ID4gwqAtIERyb3AgcGNpX3Jlc291cmNlX2lzX2JyaWRnZV93aW4oKSBmaWx0ZXI7IGJ1
-cyByZXNvdXJjZXMgYXJlCj4gPiA+IMKgwqAgaW5oZXJlbnRseSBicmlkZ2Ugd2luZG93cy4KPiA+
-ID4gwqAtIFJlbmFtZSBwY2lfYnVzX3JlbGVhc2VfZW1wdHlfYnJpZGdlX3Jlc291cmNlcygpIHRv
-Cj4gPiA+IMKgwqAgcGJ1c19yZWxlYXNlX2VtcHR5X2JyaWRnZV9yZXNvdXJjZXMoKS4KPiA+ID4g
-wqAtIERyb3AgbWlzbGVhZGluZyAiVXNlcyBQQ0kgYnVzL2RldmljZSBpdGVyYXRvcnMuLi4iIHBh
-cmFncmFwaAo+ID4gPiBmcm9tCj4gPiA+IMKgwqAgY29tbWl0IG1lc3NhZ2UuCj4gPiA+IMKgLSBL
-ZXJuZWxkb2MgdHdlYWtzIHBlciBJbHBvJ3MgcmV2aWV3Lgo+ID4gPiAKPiA+ID4gdjI6Cj4gPiA+
-IMKgLSBVc2UgUENJIGJ1cy9kZXZpY2UgaXRlcmF0b3JzIGluc3RlYWQgb2Ygd2Fsa2luZyByYXcg
-cmVzb3VyY2UKPiA+ID4gdHJlZS4KPiA+ID4gwqAtIFNhdmUgcmVsZWFzZWQgcmVzb3VyY2VzIHRv
-IHJvbGxiYWNrIGxpc3QuCj4gPiA+IMKgLSBGaWx0ZXIgdmlhIHBjaV9yZXNvdXJjZV9pc19icmlk
-Z2Vfd2luKCkgKG5vdyByZW1vdmVkIGluIHYzKS4KPiA+ID4gwqAtIENhbGwgcmVsZWFzZSBiZWZv
-cmUgdGhlICFyZXMtPmNoaWxkIGNoZWNrLgo+ID4gPiDCoC0gQ2hlY2sgYnJpZGdlLT5zdWJvcmRp
-bmF0ZSBiZWZvcmUgcmVjdXJzaW9uLgo+ID4gPiAtLS0KPiA+ID4gwqBkcml2ZXJzL3BjaS9zZXR1
-cC1idXMuYyB8IDYzCj4gPiA+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-Ky0tCj4gPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDYxIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
-KC0pCj4gPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgYi9k
-cml2ZXJzL3BjaS9zZXR1cC1idXMuYwo+ID4gPiBpbmRleCA0Y2YxMjBlYmU1YS4uMGMxZmI2NTRj
-OWMgMTAwNjQ0Cj4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj4gPiA+ICsrKyBi
-L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj4gPiA+IEBAIC0yMjkyLDYgKzIyOTIsNjAgQEAgdm9p
-ZAo+ID4gPiBwY2lfYXNzaWduX3VuYXNzaWduZWRfYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QgcGNp
-X2RldiAqYnJpZGdlKQo+ID4gPiDCoH0KPiA+ID4gwqBFWFBPUlRfU1lNQk9MX0dQTChwY2lfYXNz
-aWduX3VuYXNzaWduZWRfYnJpZGdlX3Jlc291cmNlcyk7Cj4gPiA+IAo+ID4gPiArLyoKPiA+ID4g
-KyAqIHBjaV9idXNfcmVsZWFzZV9lbXB0eV9icmlkZ2VfcmVzb3VyY2VzIC0gQm90dG9tLXVwIHJl
-bGVhc2Ugb2YKPiA+ID4gYnJpZGdlCj4gPiA+ICsgKiB3aW5kb3cgcmVzb3VyY2VzIGluIGVtcHR5
-IHN1YnRyZWVzLgo+ID4gPiArICogQGJ1czogUENJIGJ1cyB3aG9zZSBjaGlsZCBicmlkZ2VzIHRv
-IHByb2Nlc3MKPiA+ID4gKyAqIEBiX3dpbjogQW5jZXN0b3IgYnJpZGdlIHdpbmRvdzsgb25seSBj
-aGlsZHJlbiBvZiB0aGlzCj4gPiA+IHJlc291cmNlIGFyZSByZWxlYXNlZAo+ID4gPiArICogQHNh
-dmVkOiBMaXN0IHRvIHNhdmUgcmVsZWFzZWQgcmVzb3VyY2VzIGZvciByb2xsYmFjawo+ID4gPiAr
-ICoKPiA+ID4gKyAqIFJlY3Vyc2VzIGRlcHRoLWZpcnN0IGludG8gc3Vib3JkaW5hdGUgYnVzZXMs
-IHRoZW4gcmVsZWFzZXMKPiA+ID4gYnJpZGdlIHdpbmRvd3MKPiA+ID4gKyAqIG9uIHRoZSB3YXkg
-YmFjayB1cC7CoCBFYWNoIHJlc291cmNlIGlzIGluZGl2aWR1YWxseSBzYXZlZAo+ID4gPiBiZWZv
-cmUgcmVsZWFzZSBzbwo+ID4gPiArICogdGhlIGVudGlyZSBvcGVyYXRpb24gY2FuIGJlIHJvbGxl
-ZCBiYWNrLgo+ID4gPiArICovCj4gPiA+ICtzdGF0aWMgdm9pZCBwY2lfYnVzX3JlbGVhc2VfZW1w
-dHlfYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QKPiA+ID4gcGNpX2J1cyAqYnVzLAo+ID4gPiArwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzdHJ1Y3QgcmVzb3VyY2UKPiA+ID4g
-KmJfd2luLAo+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzdHJ1
-Y3QgbGlzdF9oZWFkCj4gPiA+ICpzYXZlZCkKPiA+ID4gK3sKPiA+ID4gK8KgwqDCoMKgIHN0cnVj
-dCBwY2lfZGV2ICpkZXY7Cj4gPiA+ICsKPiA+ID4gK8KgwqDCoMKgIGxpc3RfZm9yX2VhY2hfZW50
-cnkoZGV2LCAmYnVzLT5kZXZpY2VzLCBidXNfbGlzdCkgewo+ID4gPiArwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgIHN0cnVjdCByZXNvdXJjZSAqcjsKPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoCB1bnNpZ25lZCBpbnQgaTsKPiA+ID4gKwo+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgIGlmICghZGV2LT5zdWJvcmRpbmF0ZSkKPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqAgY29udGludWU7Cj4gPiA+ICsKPiA+ID4gK8KgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCAvKiBSZWN1cnNlIGZpcnN0IOKAlCByZWxlYXNlIGRlZXBlc3QgcmVzb3VyY2Vz
-IGJlZm9yZQo+ID4gPiBwYXJlbnRzICovCj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
-cGNpX2J1c19yZWxlYXNlX2VtcHR5X2JyaWRnZV9yZXNvdXJjZXMoZGV2LQo+ID4gPiA+c3Vib3Jk
-aW5hdGUsCj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-IGJfd2luLAo+ID4gPiBzYXZlZCk7Cj4gPiA+ICsKPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoCBwY2lfZGV2X2Zvcl9lYWNoX3Jlc291cmNlKGRldiwgciwgaSkgewo+ID4gPiArwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoIXBjaV9yZXNvdXJjZV9pc19i
-cmlkZ2Vfd2luKGkpKQo+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqAgY29udGludWU7Cj4gPiA+ICsKPiA+ID4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKCFyZXNvdXJjZV9hc3NpZ25lZChyKSkK
-PiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIGNvbnRpbnVlOwo+ID4gPiArCj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgIGlmIChyLT5wYXJlbnQgIT0gYl93aW4pCj4gPiA+ICvCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb250aW51ZTsK
-PiA+ID4gKwo+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBp
-ZiAoci0+Y2hpbGQpIHsKPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNvbnN0IGNoYXIgKnJlc19uYW1lID0KPiA+ID4gcGNpX3Jl
-c291cmNlX25hbWUoZGV2LCBpKTsKPiA+ID4gKwo+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcGNpX2luZm8oZGV2LCAiJXMgJXBS
-OiBub3QKPiA+ID4gcmVsZWFzZWQsIGNoaWxkcmVuIHN0aWxsIHByZXNlbnRcbiIsCj4gPiA+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoCByZXNfbmFtZSwgcik7Cj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb250aW51ZTsKPiA+ID4gK8Kg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfQo+ID4gPiArCj4gPiA+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmIChwY2lfZGV2X3Jlc19h
-ZGRfdG9fbGlzdChzYXZlZCwgZGV2LCByLAo+ID4gPiAwLCAwKSkKPiA+ID4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNvbnRpbnVlOwo+
-ID4gPiArCj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHBj
-aV9yZWxlYXNlX3Jlc291cmNlKGRldiwgaSk7Cj4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqAgfQo+ID4gPiArwqDCoMKgwqAgfQo+ID4gPiArfQo+ID4gPiArCj4gPiA+IMKgLyoKPiA+ID4g
-wqAgKiBXYWxrIHRvIHRoZSByb290IGJ1cywgZmluZCB0aGUgYnJpZGdlIHdpbmRvdyByZWxldmFu
-dCBmb3IKPiA+ID4gQHJlcyBhbmQKPiA+ID4gwqAgKiByZWxlYXNlIGl0IHdoZW4gcG9zc2libGUu
-IElmIHRoZSBicmlkZ2Ugd2luZG93IGNvbnRhaW5zCj4gPiA+IGFzc2lnbmVkCj4gPiA+IEBAIC0y
-MzE2LDcgKzIzNzAsMTIgQEAgc3RhdGljIGludAo+ID4gPiBwYnVzX3JlYXNzaWduX2JyaWRnZV9y
-ZXNvdXJjZXMoc3RydWN0IHBjaV9idXMgKmJ1cywgc3RydWN0Cj4gPiA+IHJlc291cmNlICoKPiA+
-ID4gCj4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGkgPSBwY2lfcmVzb3VyY2VfbnVt
-KGJyaWRnZSwgcmVzKTsKPiA+ID4gCj4gPiA+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgLyog
-SWdub3JlIEJBUnMgd2hpY2ggYXJlIHN0aWxsIGluIHVzZSAqLwo+ID4gPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgIC8qIFJlbGVhc2UgZW1wdHkgc2libGluZyBicmlkZ2Ugd2luZG93cyBib3R0
-b20tdXAKPiA+ID4gKi8KPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoYnJpZGdl
-LT5zdWJvcmRpbmF0ZSkKPiA+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqAgcGNpX2J1c19yZWxlYXNlX2VtcHR5X2JyaWRnZV9yZXNvdXJjZXMoCj4gPiA+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBicmlk
-Z2UtPnN1Ym9yZGluYXRlLCByZXMsIHNhdmVkKTsKPiA+ID4gKwo+ID4gPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgIC8qIElnbm9yZSBicmlkZ2Ugd2luZG93cyB3aGljaCBhcmUgc3RpbGwgaW4g
-dXNlICovCj4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmICghcmVzLT5jaGlsZCkg
-ewo+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcmV0ID0g
-cGNpX2Rldl9yZXNfYWRkX3RvX2xpc3Qoc2F2ZWQsCj4gPiA+IGJyaWRnZSwgcmVzLCAwLCAwKTsK
-PiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmIChyZXQp
-Cj4gPiA+IEBAIC0yMzI3LDcgKzIzODYsNyBAQCBzdGF0aWMgaW50Cj4gPiA+IHBidXNfcmVhc3Np
-Z25fYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLCBzdHJ1Y3QKPiA+ID4gcmVz
-b3VyY2UgKgo+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
-Y29uc3QgY2hhciAqcmVzX25hbWUgPQo+ID4gPiBwY2lfcmVzb3VyY2VfbmFtZShicmlkZ2UsIGkp
-Owo+ID4gPiAKPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-IHBjaV93YXJuKGJyaWRnZSwKPiA+ID4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgIiVzICVwUjogd2FzIG5vdCByZWxlYXNlZCAoc3Rp
-bGwKPiA+ID4gY29udGFpbnMgYXNzaWduZWQgcmVzb3VyY2VzKVxuIiwKPiA+ID4gK8KgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgIiVzICVw
-Ujogbm90IHJlbGVhc2VkLCBhY3RpdmUKPiA+ID4gY2hpbGRyZW4gcHJlc2VudFxuIiwKPiA+ID4g
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgIHJlc19uYW1lLCByZXMpOwo+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB9Cj4g
-PiA+IAo+ID4gCg==
+From: Liz Fong-Jones <lizf@honeycomb.io>
+
+pci_do_resource_release_and_resize() releases the device BARs that
+share a bridge window with the BAR being resized, but when the device
+sits directly on a root bus (pdev->bus->self == NULL) it then skips
+resource assignment entirely and returns success, leaving the BARs it
+just released unassigned (IORESOURCE_UNSET).
+
+Skipping pbus_reassign_bridge_resources() is correct in that case --
+there is no bridge window to adjust -- but the device BARs still have
+to be reassigned. Before the BAR release was consolidated into the PCI
+core, this case worked for amdgpu because the driver released the BARs
+itself and then called pci_assign_unassigned_bus_resources()
+unconditionally after the resize, which assigns unassigned device BARs
+also on a root bus. Commit db92e3fef53e ("drm/amdgpu: Remove driver
+side BAR release before resize") removed that call, so nothing assigns
+the released BARs anymore.
+
+This breaks amdgpu completely on the SolidRun HoneyComb LX2 (NXP
+LX2160A, arm64, ACPI), where the GPU endpoint is enumerated directly
+on the root bus of its segment (there is no root port device, so
+pdev->bus->self is NULL):
+
+  amdgpu 0004:01:00.0: BAR 0 [mem 0xa400000000-0xa40fffffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: BAR 2 [mem 0xa410000000-0xa4101fffff 64bit pref]: releasing
+  amdgpu 0004:01:00.0: sw_init of IP block <gmc_v8_0> failed -19
+  amdgpu 0004:01:00.0: amdgpu_device_ip_init failed
+  amdgpu 0004:01:00.0: Fatal error during GPU init
+
+No error is logged because the resize path reports success; amdgpu
+then finds BAR0 IORESOURCE_UNSET and bails out with -ENODEV.
+
+Assign the released BARs directly from the root bus windows when there
+is no upstream bridge. On failure, roll back through the existing
+restore path exactly as in the bridged case.
+
+The root bus path also had a locking bug that any fix here necessarily
+touches: the old "goto out" jumped to up_read(&pci_bus_sem) without a
+matching down_read() (as does the "goto restore" taken when
+pci_dev_res_add_to_list() fails in the release loop). Take pci_bus_sem
+before the BAR release loop so every path through the function holds
+it exactly once.
+
+Fixes: 337b1b566db0 ("PCI: Fix restoring BARs on BAR resize rollback path")
+Cc: stable@vger.kernel.org
+Link: https://bugs.launchpad.net/ubuntu/+source/linux-hwe-7.0/+bug/2159596
+Assisted-by: Claude:claude-fable-5 checkpatch
+Assisted-by: Claude:claude-sonnet-5
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
+#regzbot introduced: 337b1b566db0
+
+Observed at runtime on Ubuntu's linux-hwe-7.0 (7.0.0-14, broken) vs
+linux-hwe-6.17 (working), but nothing here is distro-specific: Ubuntu
+carries this code unmodified, and the affected function is identical
+to current mainline. By source inspection the regression window is
+v6.18 (old code paths) to v6.19 (consolidation). Workaround for
+affected users: amdgpu.rebar=0.
+---
+Changes in v2:
+- Add Assisted-by tags (missing from v1; required per
+  Documentation/process/coding-assistants.rst)
+- Add Link: to the corresponding Ubuntu bug report
+- Drop the "# v6.19+" annotation on Cc: stable; unnecessary noise
+  given the Fixes: tag already lets the stable team derive applicable
+  versions (per stable-kernel-rules.rst)
+- Link to v1: https://patch.msgid.link/20260705-pci-rebar-root-bus-v1-1-55df70cbdd88@honeycomb.io
+
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: regressions@lists.linux.dev
+Cc: amd-gfx@lists.freedesktop.org
+Cc: Jon Nettleton <jon@solid-run.com>
+Cc: Jon Nettleton <jon.nettleton@gmail.com>
+---
+ drivers/pci/setup-bus.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c0a949f2c995..9db1951f6e5c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2397,6 +2397,8 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 	if (ret)
+ 		return ret;
+ 
++	down_read(&pci_bus_sem);
++
+ 	pci_dev_for_each_resource(pdev, r, i) {
+ 		if (i >= PCI_BRIDGE_RESOURCES)
+ 			break;
+@@ -2415,13 +2417,24 @@ int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size
+ 
+ 	pci_resize_resource_set_size(pdev, resno, size);
+ 
+-	if (!bus->self)
+-		goto out;
++	if (bus->self) {
++		ret = pbus_reassign_bridge_resources(bus, res, &saved);
++		if (ret)
++			goto restore;
++	} else {
++		/*
++		 * A device on a root bus has no bridge windows to adjust.
++		 * Assign the BARs released above directly from the root bus
++		 * windows.
++		 */
++		list_for_each_entry(dev_res, &saved, list) {
++			i = pci_resource_num(pdev, dev_res->res);
+ 
+-	down_read(&pci_bus_sem);
+-	ret = pbus_reassign_bridge_resources(bus, res, &saved);
+-	if (ret)
+-		goto restore;
++			ret = pci_assign_resource(pdev, i);
++			if (ret)
++				goto restore;
++		}
++	}
+ 
+ out:
+ 	up_read(&pci_bus_sem);
+
+---
+base-commit: 7404ce51637231382873d0b55edabc2f3b841a9d
+change-id: 20260704-pci-rebar-root-bus-f3123fe10fc7
+
+Best regards,
+--  
+Liz Fong-Jones <lizf@honeycomb.io>
+
 
