@@ -1,57 +1,64 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BD9C3AC0C7
-	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 12:30:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C878E1FF5E3;
+	Sun, 12 Jul 2026 14:28:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783859408; cv=none; b=k691WeDyXYQ7bc/VBa01ZAU9AS4EODebI/4RTllT08JWGGsDS8bbeEMjbmFetea8K3cObUpSh5jgSa2NjLB9E5wlyU5aEaZNSfNtEchsIit5YN/zigRdag88XI9piSmbkEdGjENBNSdlniecm3HMEwywmTagrpkI+J4nszovxvM=
+	t=1783866510; cv=none; b=n1aJwmjBRr8pFyn517/nzvpa6R7VFKssgzT0bL+iu1dGcpmFVxV4kuEekcqoYpsgUO2rohCl/y0KzfGAJ3b5hITe2PuOB58JY+hYzQFI82gYOma4ZTME/tnqu3umjnwS10fFWGUVV7906AJGq2+1AeCDF0fv43wjQFJ5O9F461k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783859408; c=relaxed/simple;
-	bh=UZhO67pPsDDCcsBGmRVk8mTcw23+lbNXtxXjSjmwd30=;
+	s=arc-20240116; t=1783866510; c=relaxed/simple;
+	bh=I+KFbiFzvw83rXUdeHnCjoqry53vD1aM4l4d4CLSeSw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pQRF7RigISMZU9mjU9AQP0GI1O1qb9ZxwdcuwjOyxD95sCyXnKSw6Gp07QI5GNrdtt55ZNZm1EtPQ+/rnCBhUTGMYc1L7Cx3Vio7pp+u/v7sfyctbD7bC+7dvDrLRxM1ciFoFRDRDPY1oLGsTB72cK+fxQcUe5Y4a07BMstISec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eA1pk8hi; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eA1pk8hi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783859406; x=1815395406;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=UZhO67pPsDDCcsBGmRVk8mTcw23+lbNXtxXjSjmwd30=;
-  b=eA1pk8hi8ogyNj1Qkyo5Np/WWscpoa6WObSGMdj3SagDD1Whd1Vju2Xx
-   YHDnFOp+50Bx0xuhZFObA1JeuK6TZB/57tvLJSPTRyo55IukqL6rO2cZb
-   0sUfM49WSvQT4rVpo/Qc1/nwzRMjLgcdULl0rtmufLtvJq2jHUS+6cElR
-   d3ijm6NIXc/Ka6E9Iz9OTtPUEKipGdIxe7LuYh2rBcD3IFZGi878u5TIt
-   0rlhhsc80KfkjuiN6YINVfy74s/643Kc0cSon3M1oQmWW811bJo80I4gU
-   GDpzfQSRQ2FMycpUmdwYxRswfo8ucaZLGRfqLdCFKJWYiEkG3nEMb+nc7
-   A==;
-X-CSE-ConnectionGUID: WFJ4W0ihTF+c+QXusXHGow==
-X-CSE-MsgGUID: tqadGM4DSP+GKaoDsbbhVg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="88174734"
-X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="88174734"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jul 2026 05:30:06 -0700
-X-CSE-ConnectionGUID: IWnT2MZdTiWkoZHz75ARVA==
-X-CSE-MsgGUID: BDQoNfu2SHaYOZwkTeCiwQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
-   d="scan'208";a="260190001"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.24])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jul 2026 05:30:04 -0700
-Date: Sun, 12 Jul 2026 15:30:01 +0300
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Nirmal Patel <nirmal.patel@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, lpieralisi@kernel.org,
-	Nirmal Patel <nirmal.patel@linux.intel.com>
-Subject: Re: [PATCH v2] PCI: vmd: Only assign OSC features in bare metal OS.
-Message-ID: <alOIyYDz_RhsqT8v@ashevche-desk.local>
-References: <20260710200558.499434-1-nirmal.patel@intel.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=EPrz05+eupWN0PJSnAkhZzrnov4MWd6yBHZA8PtbCN3k58ZVym5HTJJWW8+Xp8om0hjp+rnNaVpIXzUFeQpEsln76mGso+Is63xK/EJFMYgURomRX6osV7IEqbi8LNnEJLqi2T+26zYNNwB8Yf22B5RdV89HLnnloq7m2uiPht4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id DD65710632;
+	Sun, 12 Jul 2026 16:28:18 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id CA35D60211BE; Sun, 12 Jul 2026 16:28:18 +0200 (CEST)
+Date: Sun, 12 Jul 2026 16:28:18 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Maurice Hieronymus <mhi@mailbox.org>
+Cc: Edward Cree <ecree.xilinx@gmail.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
+	Gary Guo <gary@garyguo.net>,
+	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Tamir Duberstein <tamird@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Onur =?iso-8859-1?Q?=D6zkan?= <work@onurozkan.dev>,
+	Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>,
+	Danilo Krummrich <dakr@kernel.org>, rust-for-linux@vger.kernel.org,
+	netdev@vger.kernel.org, linux-net-drivers@amd.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-edac@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Replace pci_dev->is_busmaster with accessors
+Message-ID: <alOkgrK7Fm6opB4r@wunner.de>
+References: <20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.org>
+ <20260711-pci-dev-flags-v1-1-2fcf2811138c@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,55 +67,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260710200558.499434-1-nirmal.patel@intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+In-Reply-To: <20260711-pci-dev-flags-v1-1-2fcf2811138c@mailbox.org>
 
-On Fri, Jul 10, 2026 at 08:05:58PM +0000, Nirmal Patel wrote:
-> Copy valid OSC flags from root bridge only when OS can provide correct
-> values. In virtual machine, all of the control features are disabled as
-> hypervisor will not passthrough root bridge information to VM.
+On Sat, Jul 11, 2026 at 05:21:06PM +0200, Maurice Hieronymus wrote:
+> `is_busmaster` is one bit of a ~60-bit C bitfield in `struct pci_dev`.
+> Bits sharing a bitfield word must not be modified concurrently, but its
+> writers take no common lock: `pci_set_master()` can run without the
+> device lock (e.g. from runtime PM resume paths), `pci_disable_device()`
+> clears the bit, and other bits in the same word are written from
+> entirely different contexts, e.g. `broken_parity_status` from sysfs.
+> Concurrent read-modify-write cycles of the shared word can then lose
+> updates.
+> 
+> Move `is_busmaster` into a new `flags` bitmap modified with atomic
+> bitops and accessed through generated accessor functions, following the
+> example of commit a7cc262a1135 ("driver core: Replace dev->offline +
+> ->offline_disabled with accessors"). More bitfield flags can follow the
+> same pattern later.
 
-...
+We already have the priv_flags member in struct pci_dev,
+please use that instead of adding another one for the same purpose.
 
-> v2 : Added descriptive boolean and removed period from commit message.
+Thanks,
 
-It's still in the $Subject. You probably misinterpreted the comment(s).
-
-...
-
-> +	/* Non-zero offset means guest/direct assign view. */
-> +	vmd_in_guest = offset[0] || offset[1];
-
-+ Blank line?
-
->  	/*
->  	 * Currently MSI remapping must be enabled in guest passthrough mode
->  	 * due to some missing interrupt remapping plumbing. This is probably
->  	 * acceptable because the guest is usually CPU-limited and MSI
->  	 * remapping doesn't become a performance bottleneck.
->  	 */
-> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> -	    offset[0] || offset[1]) {
-> +	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) || vmd_in_guest) {
->  		ret = vmd_alloc_irqs(vmd);
->  		if (ret)
->  			return ret;
-
-...
-
-> -	vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> -				   to_pci_host_bridge(vmd->bus->bridge));
-> +	/* Don't copy OSC control flags in VM, it disables features.*/
-
-Missing space before */.
-
-> +	if (!vmd_in_guest)
-> +		vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> +					 to_pci_host_bridge(vmd->bus->bridge));
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Lukas
