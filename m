@@ -1,84 +1,85 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DD9371D13
-	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 07:39:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D932248F73;
+	Sun, 12 Jul 2026 09:35:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783841977; cv=none; b=RN6tlgMQksE5rZw99nlshnO2PlDUvmmPASQqMWMb70rrWB7vSPNm2+W5N4MehFkw7oOZ8lHrv1WYr3sUYl2JaI7aaxUt5t6aJbYewE7ytejFbsIJeC2VnSFDRo9IgP+nU6nbeSEk40v5g/mXBaPpcbhWsACwkILx2nbe5ZFvqYU=
+	t=1783848929; cv=none; b=lh0fWxhKGojkDxhK96q+zqt2klCF5OOZtM5Xw0qztQbd5KVn/AhTJrb9vNX0RQREFBlh4m2vkc+Hpdl0urdg0e8B/aMSq3x4sZzDYGYklomeFnTHQQuz3IK6uPD4UEIyiiHnNe3yfc1NsXM9xB/G1ZiwDXuFfRdRfNtA205Ihu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783841977; c=relaxed/simple;
-	bh=fAvTWsD9sw32WdUtuhGi8/HFepILucEW6Mr5vR3sUUk=;
+	s=arc-20240116; t=1783848929; c=relaxed/simple;
+	bh=mGp1bq6AA1K85gaOp9+XDByvUL2SultskddshE44Syk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RkLdUl46bCK7UDxDU9HxJPagNImY42He18kVgnX8bDcevV24ceWR5+xvtyQwJd4sWojSBEz/LLZQ+eWm5GlY1KfBuo3RoE0l46135wAcf3XuxpKISBvPSwuMxaqhGLrtb2i+//1Oe56nosXpUXwUI9nfRtqn7qg1cYwC7I++f1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AN7tBUf4; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Do62rfIeLVMNglI6qgSST+x27WFXww3dwqyPyi9EX9JaC7mp64qLsuvls9r3pkLodumielPPSkirjCrOxlf8oiv690SnAaWuX4c46tqWbZWV9iljwtTwI0srvuoMVTXJqzrDujo4UAKC75md006G0JXAh6eLIU5u8hW7nv5H4WQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fMBNjoPn; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AN7tBUf4"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-38deea72eebso114748a91.1
-        for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 00:39:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783841976; x=1784446776; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=/eu7dHrjo+8poscG/MBw9L5sZo7bmfQR/ckNZrU5PQs=;
-        b=AN7tBUf4NqPN83MpMU81a3Ld6ZrAnePqB/Yi3CYpJHa2jqgZAe2prfl+lP6zRqq1r7
-         snY2SeiRfQfz1R2cQhfUsopPsazRng8zwKDe1+088pBH2XkoRzewTY4Q9lbWL1v6yFG5
-         qBXbyTVEFpjfQxpYH7Uyh+uyHYtcBuyIDw9lCOTX2yp+RiRlIABsy2D+trfH1nEblFM8
-         QnX9iTwCo0u9P68SQFrQhdN+EKaJQp1cnBj2xKd2YKa2oHgoTI0NpxZxwIn9j09dtEm1
-         Waq6rtWg1XXyXfbh177V0iIY1fCTMjtIzIyAFZHsQ6arXv+Z7v2b8/YDpui51QwLG8V0
-         0oNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783841976; x=1784446776;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/eu7dHrjo+8poscG/MBw9L5sZo7bmfQR/ckNZrU5PQs=;
-        b=D2tMRhxyPwWdAAsT7nQXSO8sFLx1UFL0Sb3oOZef3VozhZ22JS7yRz/5ABBeX/M2i9
-         djJ+BIMAWUu9KGQ2NsSknJtL1lVKv4thwwVPyEh1dEdlKV/J9e9mmAGcFQiNx7IyKnTu
-         ZIwpud8g91tIBlVP+1Z8BSQnnmkMaiv8TJe5Tci04tAb2dDGo8uIS/NKu7CsIjWY37Ub
-         UvY2WLSd8Bnl0Vf94eMTSCEDYdyMWb3qbfI1h1AwpqP/0fQ7pjsGSF/d1gdC83UdvvtO
-         2OwWhtyVWG2QTUIqPCa7+rsv4r/fshHODsTO3BXiE/4L7Ptiunfd0RgXXIIni9SuUoGK
-         kDbA==
-X-Gm-Message-State: AOJu0Yy4GKsl48DnZJpU71DecfkK4UeR0v78zL1tGjpQq/DLqPX2f2cp
-	gdQv2Cl3AGGMgpigpKQdHoUwMggxf+i6C5ruHf25CM0AqfEo9bWpXoI4
-X-Gm-Gg: AfdE7cn9sa4k5dl/ygAEhF/Lo3csI3m3X9Y6S9Ur+npB40mKUO8clLTgkKHTF2MP4zx
-	XklxFPa3lePBzfpBHMkRLWwbbI9aJVV429hi2TQ85ixwZbPBVY56q1U/nokHPkt/akW4YMb5ux6
-	vlse1KWhkwN9aaQa93rnvag1y1oPQikPcR9Z51CbvkPjKJkwBhOhIiCooMTXlF1SgYryWeVXv8j
-	r1OevGmzMIaiVfQVaEct9zvah58XoMynNycniN3W/aX6trxW+It/g9Iw8YwTCEDmqDVypZ0XUcN
-	D1RccIpqXZZ1eRAXVRn43lHzjydVSIwQWxuJOp3PLhBaBxK3sXIaoTp5nmdslYnKonpfvE1UGyK
-	K4fsLIqI5GO2yuULmtWWXQZS4PURKrm3fuBWqyzrY0E7VAle7DcnIH932AKa6tQqo
-X-Received: by 2002:a17:90b:390f:b0:387:df8f:1406 with SMTP id 98e67ed59e1d1-38dc77ce51amr4336096a91.39.1783841975574;
-        Sun, 12 Jul 2026 00:39:35 -0700 (PDT)
-Received: from localhost ([2001:da8:7001:11::cb])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38a5516ad85sm4803452a91.2.2026.07.12.00.39.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Jul 2026 00:39:35 -0700 (PDT)
-Date: Sun, 12 Jul 2026 15:38:51 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Alex Elder <elder@riscstar.com>, Inochi Amaoto <inochiama@gmail.com>, 
-	Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>, 
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
-	Christian Bruel <christian.bruel@foss.st.com>, Frank Li <Frank.Li@nxp.com>, Nam Cao <namcao@linutronix.de>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>, Siddharth Vadapalli <s-vadapalli@ti.com>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vidya Sagar <vidyas@nvidia.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
-	Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v4 1/6] PCI: spacemit-k1: Add device data support
-Message-ID: <alNDI8JVUuhpJblo@inochi.infowork>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fMBNjoPn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783848928; x=1815384928;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=mGp1bq6AA1K85gaOp9+XDByvUL2SultskddshE44Syk=;
+  b=fMBNjoPnwxgVuxXOYNLMbPEfaTGGPHn38BhktDWNkZzHsTtt1y5W9lfr
+   x22OfgafT0ltAXeZ+BIdyD1ObyAVCTLt6Xzjz9fxabBuH607k0ajHQRIe
+   IYYKWy/yoiQPKvzCtlNJFMYQ3q9DJCzDf93LosjDX0DUtW6pw2yV6jJU8
+   UMfrMEXMwl09+IuftKVnuj2xhdVUSYwPuVn9nQ8zVNR6PZMmJ5sKwVxYz
+   IIhlqi4Uh1po+XOjqquHAMpn8YUhaByMn+9sBg8vy9f+2eINUtH+JorNT
+   UKYh2/VBEkourxrCKFW2DhZjUHSwhLJFMKnDDFidZBecooQhOzzEUJl81
+   w==;
+X-CSE-ConnectionGUID: z75NNL6kTVSOMK86JBfheg==
+X-CSE-MsgGUID: iXf+9jT6SjaylLiMNFKM8g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="102038664"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="102038664"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jul 2026 02:35:26 -0700
+X-CSE-ConnectionGUID: 9iJqSNd8TrO9jHI70RXUgg==
+X-CSE-MsgGUID: yangtqhOTzKX89W8YnrRww==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="259587848"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.24])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jul 2026 02:35:19 -0700
+Date: Sun, 12 Jul 2026 12:35:16 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Frank Li <Frank.Li@nxp.com>, Nam Cao <namcao@linutronix.de>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Alex Elder <elder@riscstar.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v4 2/6] PCI: spacemit-k1: Add multiple PHY handles support
+Message-ID: <alNf1OoBtscauPXV@ashevche-desk.local>
 References: <20260709040027.958400-1-inochiama@gmail.com>
- <20260709040027.958400-2-inochiama@gmail.com>
- <338687f9-e80e-40e8-b14e-1218e61e4e0c@riscstar.com>
+ <20260709040027.958400-3-inochiama@gmail.com>
+ <ak9KzNFF26B0Kttz@ashevche-desk.local>
+ <alBNXgMAwXPKwiJ2@inochi.infowork>
+ <alCoTEDUY8AO9OzD@ashevche-desk.local>
+ <alDNlfb0_T9g-ATO@inochi.infowork>
+ <alI6ml4xQboFOgxG@ashevche-desk.local>
+ <alMmkHrfgWoN8RqS@inochi.infowork>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,125 +88,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <338687f9-e80e-40e8-b14e-1218e61e4e0c@riscstar.com>
+In-Reply-To: <alMmkHrfgWoN8RqS@inochi.infowork>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Fri, Jul 10, 2026 at 11:01:16AM -0500, Alex Elder wrote:
-> On 7/8/26 11:00 PM, Inochi Amaoto wrote:
-> > To reuse the K1 PCIe driver logic for K3 PCIe controller, add device
-> > data to handle the K1 specific logic and make room for the incoming
-> > logic for K3.
+On Sun, Jul 12, 2026 at 01:41:25PM +0800, Inochi Amaoto wrote:
+> On Sat, Jul 11, 2026 at 03:44:10PM +0300, Andy Shevchenko wrote:
+> > On Fri, Jul 10, 2026 at 06:55:10PM +0800, Inochi Amaoto wrote:
+> > > On Fri, Jul 10, 2026 at 11:07:40AM +0300, Andy Shevchenko wrote:
+> > > > On Fri, Jul 10, 2026 at 09:57:05AM +0800, Inochi Amaoto wrote:
+> > > > > On Thu, Jul 09, 2026 at 10:16:28AM +0300, Andy Shevchenko wrote:
+> > > > > > On Thu, Jul 09, 2026 at 12:00:22PM +0800, Inochi Amaoto wrote:
+
+...
+
+> > Then the counted_by will be incorrect as it may access valid memory, but
+> > unused by the driver.
+> 
+> After some search I found a requirement in GCC patch:
+> https://gcc.gnu.org/pipermail/gcc-patches/2024-May/653123.html
+> 
+> It seems like the array can have more elements than the counter.
+> Some I guess the reallocation is not necessary and the counter
+> is still correct. Correct me if I am wrong.
+
+There will be no problem from memory accesses point of view, but there are two
+disadvantages:
+- the waste of memory for unused items
+- the memory accesses beyond used items, which may lead to or show the subtle
+  issues in the code elsewhere
+
+Better to be correct. It might help debugging as well in some other cases.
+
+...
+
+> > > > > > > +	for (i = 0; i < k1->phy_count; i++)
+> > > > > > 
+> > > > > > 	for (unsigned int i = 0; i < k1->phy_count; i++)
+> > > > > 
+> > > > > I agree with the unsigned int, but I guess this definition is not
+> > > > > allowed in linux.
+> > > > 
+> > > > It's allowed and it's encouraged even by Linus. As long as iterator is local,
+> > > > use this syntax sugar and reduce its scope. It hardens the code.
+> > > 
+> > > Could you give me a reference url to check,
 > > 
-> > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> 
-> I have two suggestions/questions, but I think this looks
-> good overall (please add the space that Andy suggested).
-> 
-> If you drop the data field in the k1_pcie structure you
-> can keep this tag:
-> 
-> Reviewed-by: Alex Elder <elder@riscstar.com>
-> 
-> > ---
-> >   drivers/pci/controller/dwc/pcie-spacemit-k1.c | 30 ++++++++++++++++---
-> >   1 file changed, 26 insertions(+), 4 deletions(-)
+> > Sure, there are two (one for integers and one for pointers)
+> > https://lore.kernel.org/lkml/CAHk-=wiCOTW5UftUrAnvJkr6769D29tF7Of79gUjdQHS_TkF5A@mail.gmail.com/
+> > https://lore.kernel.org/lkml/CAHk-=wgy8p4is8ApEQCT5NS7XFb+NXeo-TKz7jRRZVksLLBSrQ@mail.gmail.com/
 > > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > index be20a520255b..f6ae8ff3589a 100644
-> > --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > @@ -49,8 +49,17 @@
-> >   #define PCIE_CONTROL_LOGIC			0x0004
-> >   #define PCIE_SOFT_RESET			BIT(0)
-> > +struct k1_pcie;
-> > +
-> > +struct k1_pcie_device_data {
-> > +	const struct dw_pcie_host_ops *host_ops;
-> > +	const struct dw_pcie_ops *ops;
-> > +	int (*parse_port)(struct k1_pcie *k1);
-> > +};
-> > +
-> >   struct k1_pcie {
-> >   	struct dw_pcie pci;
-> > +	const struct k1_pcie_device_data *data;
+> > > I have not found this on the coding-style.
+> > > https://www.kernel.org/doc/html/latest/process/coding-style.html
+> > 
+> > Feel free to update the documentation.
 > 
-> Is it strictly necessary to keep a copy of the data
-> pointer in the k1_pcie structure?
-> 
-> It can be convenient to do so if you reuse the fields
-> in that structure rather than duplicating them, but
-> often the constant platform data is meant only for
-> initialization, and never needed after that.
-> 
+> Good to know thanks.
 
-In fact it is not, I think it is fine to remove it.
-Recording this is more like a habit for me for the
-future usage.
+Are you going to update documentation? I can review it.
 
-> >   	struct phy *phy;
-> >   	void __iomem *link;
-> >   	struct regmap *pmu;	/* Errors ignored; MMIO-backed regmap */
-> > @@ -278,14 +287,21 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
-> >   static int k1_pcie_probe(struct platform_device *pdev)
-> >   {
-> > +	const struct k1_pcie_device_data *data;
-> >   	struct device *dev = &pdev->dev;
-> >   	struct k1_pcie *k1;
-> >   	int ret;
-> > +	data = device_get_match_data(dev);
-> > +	if (!data)
-> > +		return -ENODEV;
-> > +
-> >   	k1 = devm_kzalloc(dev, sizeof(*k1), GFP_KERNEL);
-> >   	if (!k1)
-> >   		return -ENOMEM;
-> > +	k1->data = data;
-> > +
-> >   	k1->pmu = syscon_regmap_lookup_by_phandle_args(dev_of_node(dev),
-> >   						       SYSCON_APMU, 1,
-> >   						       &k1->pmu_off);
-> > @@ -299,11 +315,11 @@ static int k1_pcie_probe(struct platform_device *pdev)
-> >   				     "failed to map \"link\" registers\n");
-> >   	k1->pci.dev = dev;
-> > -	k1->pci.ops = &k1_pcie_ops;
-> > +	k1->pci.ops = data->ops;
-> >   	k1->pci.pp.num_vectors = MAX_MSI_IRQS;
-> >   	dw_pcie_cap_set(&k1->pci, REQ_RES);
-> > -	k1->pci.pp.ops = &k1_pcie_host_ops;
-> > +	k1->pci.pp.ops = data->host_ops;
-> >   	/* Hold the PHY in reset until we start the link */
-> >   	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
-> > @@ -320,7 +336,7 @@ static int k1_pcie_probe(struct platform_device *pdev)
-> >   	platform_set_drvdata(pdev, k1);
-> > -	ret = k1_pcie_parse_port(k1);
-> > +	ret = data->parse_port(k1);
-> >   	if (ret)
-> >   		return dev_err_probe(dev, ret, "failed to parse root port\n");
-> > @@ -338,8 +354,14 @@ static void k1_pcie_remove(struct platform_device *pdev)
-> >   	dw_pcie_host_deinit(&k1->pci.pp);
-> >   }
-> > +static const struct k1_pcie_device_data k1_pcie_device_data = {
-> > +	.host_ops	= &k1_pcie_host_ops,
-> > +	.ops		= &k1_pcie_ops,
-> > +	.parse_port	= k1_pcie_parse_port,
-> > +};
-> > +
-> >   static const struct of_device_id k1_pcie_of_match_table[] = {
-> > -	{ .compatible = "spacemit,k1-pcie", },
-> > +	{ .compatible = "spacemit,k1-pcie", .data = &k1_pcie_device_data},
-> 
-> In addition to the missing space that Andy mentioned,
-> adding a comma means the line won't need to change
-> when you add another entry to the array.
-> 
+> > > > > > > +		phy_exit(k1->phy[i]);
 
-I do not think the comma has this meaning in this scene. It is
-weird to wrap in the device table when having enough space.
-Further more, this line must be changed for the last "}", so
-it always require a change for adding data.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-> >   	{ }
-> >   };
-> 
 
-Regards,
-Inochi
