@@ -1,121 +1,164 @@
-Received: from mail-wm2-f9.google.com (mail-wm2-f9.google.com [74.125.225.137])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 176ED3655D7
-	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 17:55:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6CB4A0C
+	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 18:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783878942; cv=none; b=BoJvDVuMiX86/vEQf6BGHuWJa6l5K593Cx1i/MWLN3obHIk+X0NwfBiUU50aMB0OkRLOjhPQrfZtrOx7+s0VKJV86SCtobMNkF4/XC2ZUNJ5bIpat72621T9seHSIcUBL2BfMij255JwxjpsFrGiv/boZOEUJnnmlErhcZ2ncx4=
+	t=1783879481; cv=none; b=GGLTddRvKKKg4riCcWHEo94kpA/TxNKD9bhMgdLU5WuwIDzyWQN0iqz8psx5vOyUc96zK4bnyx5mqxq8mxHj+Zog5QJMF1b+fqyF3d1C+diPM6g1KEuQAMm5UguyFOEr3QUdNw6KRc9/clTo5GScZHJTVdzlNeG5Jul3h5ROeG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783878942; c=relaxed/simple;
-	bh=RgZg+NcjKlFBkqbvlYHtvyMRvFEwM8G5G0XCnD835vw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DbR/5ivcpL9ewjKlVYZkdWD+NvpzxeKUa4Gkw3RYqPVE8Rn30RUs3Oob621sWzg9pNsYwLCsBet4o6JSfRCz7PC/jYZoRulDWKDXbSVDbHFp0fD62BF6QZskptn0Y0hrwb0vL7ht0isKvOBNlkQYRXDE0WNVHpWMEiK/oxzI9c8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SbeGXB+N; arc=none smtp.client-ip=74.125.225.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783879481; c=relaxed/simple;
+	bh=V8O5utpmd+dGZ4lw7JGrO7MyBI9hzNdzhw0ygRXiZCk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=mdZ8B5EDDbKfBg4ug5uJUQlMXnpjLXMAzh/awiI8ttdk2JVrOx98nWu4XtBGq4uCtIChdnTM3NsvYqjcAmpixP3NV6hLSPO5XFAzk7Ux4NoIm67NwXnPcMLu27wxt/fC/ak08cL6GRnJeOkFg2Cf72ePe9PFoWhvr+tEyIhnCzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBi/ttT1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SbeGXB+N"
-Received: by mail-wm2-f9.google.com with SMTP id 5b1f17b1804b1-493e55619a2so7291315e9.1
-        for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 10:55:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783878939; x=1784483739; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=0E37CKL1qGtMYOAXyCjsl6PdtLnZ6H9NtG5TxTyJ8tM=;
-        b=SbeGXB+NjdncMZubtVGJecIQjD7/1ZJQDXWAzWfTzfgZqzFjixGzQyXFJWXA7O32XE
-         Xka38BCDdyp5mdYKCL9jOGj9m3NUjXm82fyWKMTbOAzePLObFUes2nXO2zi05XktYfgF
-         xtuIVqu4nqT5Z/1TTAHKLB+hKcM6XMuDycEIWMyBO5eVgS/nuLs9VWWyBPTDYFkw5h2H
-         yJYS5iEzvV/1AAXozwzi5hOW1xmMh19NXElythFS+NxEUc4z5gFJXJOxY5cXk7ajlb/8
-         pylrnBrdDG3NO+OYy390oOPJnB0+ADUrSyTUoh30zAMXcXu22gt8ykmQarCzeb9eUVGo
-         rQng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783878939; x=1784483739;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=0E37CKL1qGtMYOAXyCjsl6PdtLnZ6H9NtG5TxTyJ8tM=;
-        b=UOx9vwW2oWm4ogXLjpbVo5QPhmnuGxHVb2Blm4CUX9JLVPOclLwi664HBLHMs3aobz
-         jiAmxcRrXDFDDNXQ5GqLHkPKO5l/RxNvYB/tMT0CBSKl/N4Q02o5YiPRq6G3veFDPrpD
-         knkUAro2B7azOla8xm9O+ZAZrZoS5W0v4xoh2JWc1dnzYse0/Kkd0hwpiKjr8CGnNZqu
-         G6mnCSzkDBg34u+58aDLMo/MeYRNJ2GBXIRzypoyPgG/ohl3E57kzBenqyNFDJX/IihF
-         6M8720uP8XKvkxXnMm3x/GN3yhIbR2/mK0J0SwRoBqphZy8UVR3Coyx9PZr5FEa/BGME
-         IfYQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqHq0oJVsmiG69mdgNTds+to1GYZEhoPQYWWK+fQDlFLkyH3nR0BB9PHr+qR9Lyp0zl0dpoiya4o5M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqwQ7dOjYViMm4y7W12T3fzgqEoOCU4kjzdUzDmlqSTo4oxPI4
-	ImRiQRVEXPPPjIibYyL9WMFekUQQFJwZhPu7Sqk09Bkxk/8JFICa8WgQ
-X-Gm-Gg: AfdE7cknYBquVYjHrCs26qgE8kmL5UnoOZ0aLrigfPbzWcB57yzCrI+A6qoBh0id+Bz
-	PjOKIIksISGYGP9xRLi9AXjNKBMnTFDEfRoP+nSnzfwi3VwqEIdfT6EeMqe+TesWE0P5k5DKuP/
-	2eaAdLpqeGf3MXmvSUfJNkVOg2oezhdUM4VTzPsPfZLv2KJXrlLHzJDalbX/rfPEkbTOcJ9B8jp
-	KbvKYrGjHbOYwROrkd3qZQJjlTNvSTQDeFgG6QTh82vbZrAr90QKYTfm+AOckxGbGVDRK7I1HY0
-	v+NbpWUvQVct8VDBgGeZbuPo+CK06SWYJ67o7ZHWilkFIXo+kLNvjw5U+d/cRb8r+ioa0GOP3t/
-	hm5mdzfufGvRZ7Skx1L59KT9ohmiMn7Z83eb3WJpd3Vnawfur9+cyQHC1jqDEehMCQexIC1boVR
-	I21A688xATScdoBf/JH1k=
-X-Received: by 2002:a05:6000:1ac9:b0:478:77c1:787c with SMTP id ffacd0b85a97d-47f2dd0d98bmr6806058f8f.56.1783878939166;
-        Sun, 12 Jul 2026 10:55:39 -0700 (PDT)
-Received: from workstation.. ([202.163.123.30])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f273195d9sm19562091f8f.3.2026.07.12.10.55.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Jul 2026 10:55:38 -0700 (PDT)
-From: Ali Tariq <alitariq45892@gmail.com>
-To: Kevin Xie <kevin.xie@starfivetech.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ali Tariq <alitariq45892@gmail.com>
-Subject: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
-Date: Sun, 12 Jul 2026 22:54:27 +0500
-Message-Id: <20260712175427.232234-1-alitariq45892@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBi/ttT1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 423421F000E9;
+	Sun, 12 Jul 2026 18:04:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783879480;
+	bh=DiYr5ooiX1L3b4lEmAcVS0NmFUsdcPVc+6RfUnGqh8w=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gBi/ttT1AIG8KuqNIwOMcYyR+tJveDm6hb9RVnjZ5e8D8+h5jTx8ghIkrj08vLuYz
+	 m+UDQQSteqmhOs4+at121mWYKgV1DbGAchUr6jcPG/RPma0ZvXquGPebFTmzIxojkA
+	 aQAxPexEAfBQFmwK1mvmLGcHQb44jDxsmJWZOeYXVyU223QaxJ6zvbM6fXsZsNsKMT
+	 jC3HnM57enkQTr+57KKDhHh6PD9idCrDAWkYbqbdwkBgqlaNQTyt3YGS+IqyVmaJWr
+	 1JYvfL3Mrgl5DmPcuyM+tDxTqCjZ5NAyVhjN91gYG55JGiZDy8idJvZqVKTM3NL6Cy
+	 olgXe3uKbzfTg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() in
+ probe
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ali Tariq" <alitariq45892@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260712175427.232234-1-alitariq45892@gmail.com>
+References: <20260712175427.232234-1-alitariq45892@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 12 Jul 2026 18:04:39 +0000
+Message-Id: <20260712180440.423421F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-pm_runtime_get_sync() is called in starfive_pcie_probe() without
-checking its return value. If runtime resume fails, the driver
-proceeds to configure PCIe hardware through regmap_update_bits(),
-enable clocks and resets, and power on the PHY, even though the
-device may not actually be powered.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-pm_runtime_get_sync() also increments the usage counter even when
-resume fails, which would leave the counter unbalanced if this
-error path were later handled without additional cleanup.
+Pre-existing issues:
+- [High] The driver's removal path incorrectly calls asynchronous pm_runtim=
+e_put() before pm_runtime_disable(), and tears down PM references before di=
+sabling the hardware.
+- [High] Failure in starfive_pcie_clk_rst_init() returns directly without p=
+owering off the PHY, causing a resource leak.
+- [High] Missing return statement after regulator_enable() failure causes a=
+ silent fallthrough, later leading to an unbalanced regulator_disable().
+--
 
-Switch to pm_runtime_resume_and_get(), which balances the usage
-counter internally on failure, and bail out of probe before any
-hardware is touched if resume does not succeed.
+--- Patch [1]: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() i=
+n probe ---
+commit 83a329f8aee98c4aec071468fc96ecc89497124e
+Author: Ali Tariq <alitariq45892@gmail.com>
 
-Tested on StarFive VisionFive 2 v1.2A board.
+PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
 
-Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
----
- drivers/pci/controller/plda/pcie-starfive.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+This patch replaces pm_runtime_get_sync() with pm_runtime_resume_and_get()
+in starfive_pcie_probe() to properly handle runtime resume failures. It
+adds error handling to disable runtime PM and bail out of the probe
+function if the device fails to resume, preventing unbalanced usage
+counters and hardware configuration on an unpowered device.
 
-diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
-index 298036c3e7f9..e9a472985b8a 100644
---- a/drivers/pci/controller/plda/pcie-starfive.c
-+++ b/drivers/pci/controller/plda/pcie-starfive.c
-@@ -410,7 +410,11 @@ static int starfive_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 
- 	pm_runtime_enable(&pdev->dev);
--	pm_runtime_get_sync(&pdev->dev);
-+	ret = pm_runtime_resume_and_get(&pdev->dev);
-+	if (ret < 0) {
-+		pm_runtime_disable(&pdev->dev);
-+		return dev_err_probe(dev, ret, "failed to resume device\n");
-+	}
- 
- 	plda->host_ops = &sf_host_ops;
- 	plda->num_events = PLDA_MAX_EVENT_NUM;
--- 
-2.34.1
+> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/co=
+ntroller/plda/pcie-starfive.c
+> index 298036c3e7f94..e9a472985b8ac 100644
+> --- a/drivers/pci/controller/plda/pcie-starfive.c
+> +++ b/drivers/pci/controller/plda/pcie-starfive.c
+> @@ -410,7 +410,11 @@ static int starfive_pcie_probe(struct platform_devic=
+e *pdev)
+>  		return ret;
+> =20
+>  	pm_runtime_enable(&pdev->dev);
+> -	pm_runtime_get_sync(&pdev->dev);
+> +	ret =3D pm_runtime_resume_and_get(&pdev->dev);
+> +	if (ret < 0) {
+> +		pm_runtime_disable(&pdev->dev);
+> +		return dev_err_probe(dev, ret, "failed to resume device\n");
+> +	}
+> =20
+>  	plda->host_ops =3D &sf_host_ops;
+>  	plda->num_events =3D PLDA_MAX_EVENT_NUM;
 
+[Severity: High]
+This isn't a bug introduced by this patch, but looking at starfive_pcie_rem=
+ove():
+
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_remove() {
+    ...
+	pm_runtime_put(&pdev->dev);
+	pm_runtime_disable(&pdev->dev);
+	plda_pcie_host_deinit(&pcie->plda);
+    ...
+}
+
+Does this leave the hardware in an active power state upon module unload?
+
+Since pm_runtime_put() is asynchronous, wouldn't calling pm_runtime_disable=
+()
+immediately afterward risk canceling the idle/suspend work?
+
+Also, does tearing down the PM reference before stopping the PCIe host
+controller via plda_pcie_host_deinit() reverse the proper teardown order?
+Could this cause the device to power off while still being actively accessed
+by the core?
+
+[Severity: High]
+This is a pre-existing issue, but I noticed a potential resource leak in
+starfive_pcie_host_init():
+
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_host_init() {
+    ...
+	ret =3D starfive_pcie_enable_phy(dev, pcie);
+	if (ret)
+		return ret;
+    ...
+	ret =3D starfive_pcie_clk_rst_init(pcie);
+	if (ret)
+		return ret;
+    ...
+}
+
+If starfive_pcie_clk_rst_init() fails, it returns the error code directly.
+Does this fail to clean up the successfully initialized PHY?
+
+Since plda_pcie_host_init() detects this initialization failure and returns
+early without invoking host_deinit, does this result in permanently leaked
+PHY resources and an unbalanced power state?
+
+[Severity: High]
+This is a pre-existing issue, but does this code swallow the regulator erro=
+r?
+
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_host_init() {
+    ...
+	if (pcie->vpcie3v3) {
+		ret =3D regulator_enable(pcie->vpcie3v3);
+		if (ret)
+			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
+	}
+    ...
+}
+
+Because there is no return statement after dev_err_probe(), the function
+proceeds and eventually returns success at the end. Could this cause the
+driver to continue operating with unpowered hardware?
+
+Later on, starfive_pcie_host_deinit() unconditionally calls
+regulator_disable(). Since the regulator was not successfully enabled,
+would this trigger an unbalanced disable warning in the regulator core and
+corrupt regulator use counts?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260712175427.2322=
+34-1-alitariq45892@gmail.com?part=3D1
