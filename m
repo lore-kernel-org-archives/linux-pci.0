@@ -1,73 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010035.outbound.protection.outlook.com [52.101.201.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF69449985
-	for <linux-pci@vger.kernel.org>; Sun, 12 Jul 2026 22:01:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783893702; cv=none; b=e/ThMZS3PaQlw8Wtv3mDzsiCftNBvROUZtQOVK4s/CE8ZUmWkXkw4zHOb3Emzp+0wl9t0Z5HXzVxHFTLOxxbjPwtH0Bk187JoZgUKqtt0Tcm+WmQ6yY1fAGwqRARoCUvbISIAQARBff5P+X2x86vn1ajD3Vw1AUAtYHq6LF6jzw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783893702; c=relaxed/simple;
-	bh=D/2+PRiWAN492aOwPFBPgbPGq+CYzcqHZ52uvN14YNs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qCOVeNjRVOoMB/M6gv857bymhzeY82Wyyuc3hl6xMI3OXsL1sM6BHPLuNk5oznMqLWes+Mqs8NDDe8Bq2Ps+RKqvmdKe58ZwYQEXQG1eFFm4/zWNLROkG/VgOnPfHNee2QNo1IXAlG9HBWszctBM7Z8DjvJ67ovn5S/85hTPfJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HS1cCIvd; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D47F30D3FF;
+	Sun, 12 Jul 2026 22:19:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.35
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783894781; cv=fail; b=J1ZjYuteRP8Zn6Lywdv2kqXT5+cicBQoE9gXpCyXercXwJwgBBy4/PfjY+JnUaVBfUGo4Jf0vqqZI+ebT1f3zH37cFG+MT4QZeYc9YCRcUxa1QSxDzERmJ1GpVi/pv7xIxmDTZIxmJHjs8W8HGpLWuYvkZN3OzY7lIjR5K6UXsc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783894781; c=relaxed/simple;
+	bh=0pBg2Zvhy3lLlv0pJ3JysI/SLTC+HlufjfVrN+eNtaY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=GzJu/1DyIdDbBDVeiahlBBOaxILfiMK8+InET+ckLhPe03aWpcPkq3QhooxNm8D8C3BnRO1j21riYeLmYQYBdr9h++apImhKeVgGlKgMlgtIs21p5fyuSHS1EZGjZlqzdPVULWP4ifBc+BA14xz9EyzPxMQIcQ0bMtBjpYcdBxc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=CgzVsmcA; arc=fail smtp.client-ip=52.101.201.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HS1cCIvd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0589B1F000E9;
-	Sun, 12 Jul 2026 22:01:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783893701;
-	bh=D/2+PRiWAN492aOwPFBPgbPGq+CYzcqHZ52uvN14YNs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HS1cCIvdtAbldOCb9IdmsTsyYcvYNXXIfELblIlrHSZ/WZgSz91wceze3aDUW+f9n
-	 tF06Wx7kubiYZ4fl6NvhxRhCOwcLJVYYfO567s1Qk1a4opye9S9//ophUEHcQrNnFp
-	 s0yqH26vJ8f2A12TKtk0NKLPuuT+K3hMZ0uDPI1f/QiAeLrTMlute1PZId/x2gbf15
-	 7ejLUQj/Fp126pPMlutyw9iqL3g2fDjXP/UUx9pYsLmXbSgUp7dLQKSFcC0UfAZI8B
-	 qagUMkkAGM1egB+I/rRvmshEdH5uM4S1Z2MasEp/yQfsr/lvk8wnEZY/DVZ56QbqOe
-	 q8jRSpXAOKE8Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: Fix BAR resize for devices on a root bus
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Liz Fong-Jones" <lizf@honeycomb.io>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260712-pci-rebar-root-bus-v2-1-a1b9107a82dc@honeycomb.io>
-References: <20260712-pci-rebar-root-bus-v2-1-a1b9107a82dc@honeycomb.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 12 Jul 2026 22:01:40 +0000
-Message-Id: <20260712220141.0589B1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="CgzVsmcA"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=vvLKxktm6CH3omDWqO0E6G7mUQ9+W7u4yPkroNsGFrdcIrid0xKQmUpNy9pG+iOYr+jiSlt/HtmWD0DLnL07Cw2/IUSl1FE0E4GqBZgP3U90Bx0IvwOHd8yF/TM/pWKVXxngP1JVMlfsoIJRzuzwJonhOaohvLl81aBgzg2OJto/UKrGw52hPSk+sZiN+sNtLKoP7JafoVH9VhtIFDzLT4a7Tdr3R0L67VLheWRGHjJ0iDZPoULuXaccAlHrJBzgURtpK8ASK5XCN2/pGjG2WCUDFaaOmT8WMBUIR28SvVL6K1xnf3BkED7LJJ0L1frc/AJBe8fmYAANIxBpg5dMSw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0pBg2Zvhy3lLlv0pJ3JysI/SLTC+HlufjfVrN+eNtaY=;
+ b=SdfgRqFG5Yc3yS6v78+rpizimGT9qlYgWh6C/7oRTFerpZru3qFoVS6wnL1rWxrrGMdyplnKuWL9UK8EwiHIgT1v2pMrToYuXMqUUXLnFOtrNC4AoK/vwBvxVhLvNulnqVb2R35R7fYUKmoJ35ENb8zE+y8GYBAjr1zH76ZJ81ScfJbAsWHFnxI7Vfgz4T6ad+BSRs40NzS3RpSQu5tJagPclFN3EDP6jyDNnrEpBLwOJHPA38uOlE+C58ntgGD3jbb7vKduQHjpKl0IsEPuTzCBzfw1fyPsVXjzOvs4WwmXvuufsrYqCnYgavg9Y9PL6JUXnxxVMx8DdStwK/VKAQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0pBg2Zvhy3lLlv0pJ3JysI/SLTC+HlufjfVrN+eNtaY=;
+ b=CgzVsmcAEZUT8jRY8JYgUkoxjK42axn/oRcFYYJ1ztQXr5ZNf/w45Pmyp2Um3/v7EQlHL8u1ejQ2QInfpzS2u53f4DwQFUCBc+WcTvCLa9d0gnP+3D3jrr7zPJ3W1bZxrDt+wvsef38Vb738+2D3H20gpZPf4QfOj5ytPjhqUZU45NB/HCaAJJZc8L/Ar9F/P9xx/vVca3drp4JNsUXSZpgx/c9DV3XMOsWq4f+kVWyrR2WSi4MiYs3kSLnPrp6SN1LRTRux+13vjqNIInxUsX8GaFAhmwvQ1+jHCZjisAEu/41dG1UpPPNpLdMx6v02JUSi9rzF9nN2GrNSMWYiYw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by SA0PR12MB7002.namprd12.prod.outlook.com (2603:10b6:806:2c0::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.19; Sun, 12 Jul
+ 2026 22:19:36 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0202.014; Sun, 12 Jul 2026
+ 22:19:36 +0000
+Date: Sun, 12 Jul 2026 19:19:34 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Ackerley Tng <ackerleytng@google.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
+	sumit.semwal@linaro.org, christian.koenig@amd.com,
+	pbonzini@redhat.com, seanjc@google.com, alex.williamson@redhat.com,
+	dan.j.williams@intel.com, aik@amd.com, linux-coco@lists.linux.dev,
+	dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+	linaro-mm-sig@lists.linaro.org, vivek.kasireddy@intel.com,
+	yilun.xu@intel.com, linux-kernel@vger.kernel.org, lukas@wunner.de,
+	yan.y.zhao@intel.com, daniel.vetter@ffwll.ch, leon@kernel.org,
+	baolu.lu@linux.intel.com, zhenzhong.duan@intel.com,
+	tao1.su@intel.com, linux-pci@vger.kernel.org, zhiw@nvidia.com,
+	simona.vetter@ffwll.ch, shameerali.kolothum.thodi@huawei.com,
+	aneesh.kumar@kernel.org, iommu@lists.linux.dev,
+	kevin.tian@intel.com
+Subject: Re: [RFC PATCH 10/30] vfio/pci: Export vfio dma-buf specific info
+ for importers
+Message-ID: <20260712221934.GF674038@nvidia.com>
+References: <20250529053513.1592088-1-yilun.xu@linux.intel.com>
+ <20250529053513.1592088-11-yilun.xu@linux.intel.com>
+ <20250602133009.GC233377@nvidia.com>
+ <CAEvNRgFpJWQ5M5sQhGpQUV3GbBq9N+MQhhaxdxa=D8ky94SCsw@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEvNRgFpJWQ5M5sQhGpQUV3GbBq9N+MQhhaxdxa=D8ky94SCsw@mail.gmail.com>
+X-ClientProxiedBy: YT4PR01CA0464.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:d6::21) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA0PR12MB7002:EE_
+X-MS-Office365-Filtering-Correlation-Id: c652ef0a-4174-4e03-917c-08dee063a7c7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|23010399003|7416014|376014|22082099003|18002099003|4143699003|11063799006|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	+0BoDsQdCifYoL5unJB6kmCzcnjPsx78Sh4VsfABrl8txWgnRZQfl2o0elPbodbP1Pyk3qZoQngUV6ivi2VsX1DHaPjFNXuouc+6rBqKf6gSLXhNCOwmSnwIwMAYfCK2LRv0HDI3D/hdsObPllthiqPT+EKoShiUA2x/RFS3QVZLjNXrZ7PHKSfThgEWdmmnmD6BV8qSFrXArYf8fIc5qb9dkHNahOo50P0Xf/kGuOGdRSQWVJ3I5ULZbFnNIBHGm1+/eD5MPejRQIzn1kHJ7iuEoAWBvCIzcU7rbY654J3YBtCWMZn4F9VgbhIYxISrEKBL/3AZmKvVYoakxeANw9na76lULQ7PIa8lIUySFVAOXnJyQm/0rQgbSKjYf88/efmtwc8aWRKHTqUBLwejb+/Tb76D9KTapJMWyTibVQP/MDwyghHPBIrIoUC0+/qjVtwYrG97m8q28/v3DFhgeQxn9J7doI6fX1uB+N7OHQUmluiwaNd1Y/7SSRDKj6h5tL/K+sscWmyRrgVT2uKqPpKwm5VSfAOtb55J/lAvDaOdIOEjpHtJWpVJnq2+b4fCnukPy4qj0Ki6wYAUmm6fCGeKQfrcWNlaSv1+BCd3A4H9ExlQEnh4pEUTZP5nkYOiKAA6b0QJ5ySLMYLzqm9S4g==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(7416014)(376014)(22082099003)(18002099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?PP/6uM3A7aRgjy5635Ioe8Fy4Uk04JmBb1B7yp16xRVpSVSrca5isDQA0EZa?=
+ =?us-ascii?Q?yP8odGKGEl4L0b+NbgH9/tXw7j4P3Pc7mSvNyXXWkm0dYuV4dHwlQ7ysksWy?=
+ =?us-ascii?Q?mcC/B2O9VR4Cg/j8U86DlEucdd3hDX0+aKS89bGOsBJXnY43IMp1R7XtGtL/?=
+ =?us-ascii?Q?D12m+FQ0kWQaA1n15OlYBJpCQRpQB1IW3ejW1T7hqQuuN4PnWCrmdtS1KRNh?=
+ =?us-ascii?Q?4jY8Qox11ErJCDlIKjjRYxjYo6D5AssMbqGEfNsJt5yVZQCPP5p4dcLeRe+v?=
+ =?us-ascii?Q?2UJSJFG6qy5VynthH0qZcu7wrdwj7dMRyMKtFLBhkYyNsXFhodVrcMTOYcGL?=
+ =?us-ascii?Q?AJmwx5QG9foCZjztUrklb0YeQgHcqB+BSMcb9dY/r2pChCjyKs664hTMit1L?=
+ =?us-ascii?Q?GTest/BuszkMip3DzRiq/QethmWK01RaCcGldQyzsbo169xaLgb7HB/LA2eS?=
+ =?us-ascii?Q?xp1NMOZuWwD4iWpTvgV49ltKskhUl+sOnKZVMbLxZtYPWcuUGxki56JuYtrG?=
+ =?us-ascii?Q?T+Oj8UcRb5sHO/AAlupDXRvZ2g7CrI72Pe7BoH45KOIZnKVYFzDa0g97w3pS?=
+ =?us-ascii?Q?SoK1Of3JO6x5Vb+XuCw3SAu99WFNIO3MTTJ0b8lQqkRwWaQtXaW1Czorbr40?=
+ =?us-ascii?Q?s0J1ZBLZjwA6nn7MadMzGL4iKIrqoTzfs7drET1fcCxWx2p6l6fRtdF3CO2l?=
+ =?us-ascii?Q?MFJa0+QrtpBgtmsnu9Ms1Y4bOeNGY5BnD9AAXHBmvaXmabySm9yXtVkbR04n?=
+ =?us-ascii?Q?jPH8AmF3B7pjgsQj02W4jWOKdVpv6ndKCLJkrDRg2NZ8knNwZjVJNR5B/wCi?=
+ =?us-ascii?Q?ZGARIU3lNKqKTiJWBrmKmqrLEb2BJkQ4B7UQo3cwOh4405p9ADyoTP+Epco4?=
+ =?us-ascii?Q?oXeB5OXD3n5MlkZ+DPe/1ZXTDneaIMkPClm4A63T0EAic/alaMcKub2WM5Te?=
+ =?us-ascii?Q?T0WcMrPxgF1rE0G6l1e74ROFHiXQU0kXM3yBufQqCRQrYlvGmvg4WWdZt0eE?=
+ =?us-ascii?Q?ELO+tObx775FtAMgYrvM2rDyGVM2HIVORPyziPN4kPZdVG0X8v83LseSlnzz?=
+ =?us-ascii?Q?KM4G++qOc83QmiyYhli9UU7fMFoPr1uQomQsWFJMDYqkcrcXFQPzVUQoODz4?=
+ =?us-ascii?Q?JONyfxNMLCKeY5Ls3jWYihn/snpIkxtaqBuNPIHfuG8t6SxKaeM21TcwKOps?=
+ =?us-ascii?Q?I9a75hTn6gNHr5C41iEFcbtRc641FA1ctfft6cI2FXevbimotkuViGgx21YO?=
+ =?us-ascii?Q?zJr8I62/iI99kGIBC7rxeW7U5poVyW22wLaXCd3ihHdzTBOyb+x+X6hESW0J?=
+ =?us-ascii?Q?Ashe4IERR02ehIzeLgo7uS6u3vP7tWHNgwoaifihrY+F5AwDuNzIA1D86HqL?=
+ =?us-ascii?Q?tr3/sc7zJX6JFsMqCODt5OingKVSsOPTxkuymGQeV3UxBlsXdAeQtm0eFSiq?=
+ =?us-ascii?Q?knz4fosr8UdsLDxnkB8+CjqC7nAT/JgwfBGUXzFtatCe81JLLvP2zvlS8rdw?=
+ =?us-ascii?Q?gbsfGhlgVC88GrfV5nuNWyEs4LDETur/O51gqmfQSY7vSnHW773yfwcyRDqB?=
+ =?us-ascii?Q?Fb+Lok/5dmpprts22q+H2E7dbGDmx3E/iwoolCFVyiV7QQlrNB6ODZezLgut?=
+ =?us-ascii?Q?gYLpq2f3dWDu5u435JGCarg0wlo6u6oa8hHonlqIMh2tPg9MuFEWcrqFFTDo?=
+ =?us-ascii?Q?9QaAQz6p1cIpkCYBjfsURHM2GiAbUsXHQmhcmzuV7vxFO0+D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c652ef0a-4174-4e03-917c-08dee063a7c7
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jul 2026 22:19:35.6936
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5vCmbWngIZj3sQddl8ImYB+v0kJNuT3fM9CizR2Yk0OoCtju6dYYgOiPy1yIfPd4
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB7002
 
-> From: Liz Fong-Jones <lizf@honeycomb.io>
->=20
-> pci_do_resource_release_and_resize() releases the device BARs that
-> share a bridge window with the BAR being resized, but when the device
-> sits directly on a root bus (pdev->bus->self =3D=3D NULL) it then skips
-> resource assignment entirely and returns success, leaving the BARs it
-> just released unassigned (IORESOURCE_UNSET).
->=20
-> Skipping pbus_reassign_bridge_resources() is correct in that case --
-> there is no bridge window to adjust -- but the device BARs still have
-> to be reassigned. Before the BAR release was consolidated into the PCI
-> core, this case worked for amdgpu because the driver released the BARs
-> itself and then called pci_assign_unassigned_bus_resources()
-> unconditionally after the resize, which assigns unassigned device BARs
-> also on a root bus. Commit db92e3fef53e ("drm/amdgpu: Remove driver
-> [ ... ]
-> Cc: stable@vger.kernel.org
-> Link: https://bugs.launchpad.net/ubuntu/+source/linux-hwe-7.0/+bug/2159596
-> Assisted-by: Claude:claude-fable-5 checkpatch
-> Assisted-by: Claude:claude-sonnet-5
-> Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+On Sat, Jul 11, 2026 at 06:01:31PM -0700, Ackerley Tng wrote:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+> In the course of a CoCo guest's operation, will the guest need to
+> convert between private/shared MMIO? Will the guest need some pages
+> shared and others private? If these are required operations, guest_memfd
+> already provides the tracking and is going to have a conversion ioctl
+> very soon. Instead of further extending dmabuf to track more things, how
+> about letting guest_memfd track it?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260712-pci-rebar-=
-root-bus-v2-1-a1b9107a82dc@honeycomb.io?part=3D1
+Use another FD type was sort of my fallback if we couldn't get DMABUF
+into something workable. I'm kind of surprised to see guestmemfd
+proposed as the other FD, but I don't know much about its insides.
 
+If VFIO can create one and fill it with MMIO physical addresses then
+maybe it is OK?
+
+Jason
