@@ -1,17 +1,17 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214FA82866;
-	Sun, 12 Jul 2026 10:18:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97868175A81;
+	Sun, 12 Jul 2026 10:33:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783851520; cv=none; b=Z5m2p7wKiUIFLs3W0FGmOEigZwoi3DSWGItBLfGoexMSfrB0WvUutqigur5tfNlIbh6Lr6CmWMyiLrOZGWEfiYuBiFureSKY0vt1arAw9Yuv0+ErysXAka7R6LWZozbsFqvTpKV63Dk6wDnC0mEBw3XTPcwL52roWxcNAbpoiSg=
+	t=1783852422; cv=none; b=cFqSfVk+M0zXUcj7plWNOfRTJe/WN7VUuBoPd6CkF1rFcaL4ZysSHfrrTma46hM5g9fUUwf/LWOhucTha67HoIV8RkKBFO625fxKtrqAxLqqQTndYzTMnlZ6EL5h6cePtMJ7Pzh7eoP/NpzAfwWAAUlBagjdVOdGj910+zPD818=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783851520; c=relaxed/simple;
-	bh=4JWOZ7Z+VjTcuBiaoR/tbLu40SPXwQ0lNF5iqY/PCzU=;
+	s=arc-20240116; t=1783852422; c=relaxed/simple;
+	bh=2/yr9kdJUEX2gmmhuMz8bHDLGaZtA3GOxmjVbPv6avA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AFha2M2sFS9X/zm4BJhx82v6Pq/BrGlKgJTsW9eGYdPvEf3xPQ+cPwEbhFO0L4jhSwb6kszENgfR6xDCr5DSbzMIDvMLDtiV6s7czyRzqp8qKu4klNu7eUQtA5EnZdBgMhGdhhqfYkT8ukk0ASvxJnnzFnKx5jKxwgV+Hxt9RNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+	 Content-Type:Content-Disposition:In-Reply-To; b=AnwkGd3GpzfgYUSq06E8KQVAq2Cnw/qz7l+9hBThPHiqeyNis67yGN0zb7qBH6aIJNDAo2ATKaO73YbSnsVFjPgGFquyGYILQdDwaaAQDoZBDTe/4Ljg/g6BOpdqj3H/M8V4F2mwoky/mKPOwh6rU7U9kPUh2bTwt8ES/4ALC8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
 Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
@@ -19,11 +19,11 @@ Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
 	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 38F72C12;
-	Sun, 12 Jul 2026 12:18:28 +0200 (CEST)
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id D83104F9;
+	Sun, 12 Jul 2026 12:33:36 +0200 (CEST)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 085F760211BE; Sun, 12 Jul 2026 12:18:28 +0200 (CEST)
-Date: Sun, 12 Jul 2026 12:18:28 +0200
+	id BAA7460211BE; Sun, 12 Jul 2026 12:33:36 +0200 (CEST)
+Date: Sun, 12 Jul 2026 12:33:36 +0200
 From: Lukas Wunner <lukas@wunner.de>
 To: Rosen Penev <rosenp@gmail.com>
 Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
@@ -35,9 +35,10 @@ Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH 2/8] x86/pci: move Intel chipset quirks to
  arch/x86/pci/fixup.c
-Message-ID: <alNp9GFvMDN7yDQ3@wunner.de>
+Message-ID: <alNtgEIG1b-bdyFF@wunner.de>
 References: <20260707221800.920270-1-rosenp@gmail.com>
  <20260707221800.920270-3-rosenp@gmail.com>
+ <alNp9GFvMDN7yDQ3@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,46 +47,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260707221800.920270-3-rosenp@gmail.com>
+In-Reply-To: <alNp9GFvMDN7yDQ3@wunner.de>
 
-On Tue, Jul 07, 2026 at 03:17:54PM -0700, Rosen Penev wrote:
-> Move Intel-specific PCI quirk handlers from drivers/pci/quirks.c to
-> arch/x86/pci/fixup.c, where they logically belong as x86 platform code.
-> The affected categories are:
-> 
-> - I82371FB PIIX3 passive release (quirk_passive_release)
-> - 82437/82439 Triton PCI/PCI transfer limit (quirk_triton)
-> - 82441/82443 Natoma PCI/PCI transfer limit (quirk_natoma)
-> - PIIX4 ACPI/SMB IO region decode (quirk_piix4_acpi)
-> - ICH4/ICH5 LPC ACPI & GPIO decode (quirk_ich4_lpc_acpi)
-> - ICH6 LPC ACPI/GPIO & generic IO decode (quirk_ich6_lpc, ich6_lpc_acpi_gpio,
->   ich6_lpc_generic_decode)
+On Sun, Jul 12, 2026 at 12:18:28PM +0200, Lukas Wunner wrote:
+> However, I vaguely remember that some Intel chipsets of that day were
+> paired with DEC Alpha.  Triton maybe?
 
-These are all 32-bit chipsets.  We don't need to compile them into
-modern 64-bit kernels.  They should be #ifdef'ed to CONFIG_X86_32,
-or better yet, moved to a separate fixup_32.c file to reduce clutter
-and make it easier to deprecate and remove 32-bit support one day.
+Okay it was AMD Irongate (751/761) which was compatible with both
+Athlon and Alpha 21264 because they shared the EV6 bus protocol:
 
-However, I vaguely remember that some Intel chipsets of that day were
-paired with DEC Alpha.  Triton maybe?
+https://en.wikipedia.org/wiki/Socket_A#Chipsets
 
-E.g. The Retro Web has some grainy Alpha motherboard pictures
-and there are Intel chips soldered to those boards:
+But Irongate was paired with a VIA VT82C686B southbridge according
+to Wikipedia, and in patch [3/8] of this series you're moving
+quirk_vt82c686_acpi() to arch/x86.  That doesn't look right.
 
-https://theretroweb.com/motherboards?itemsPerPage=24&chipsetIds[]=1886
-
-I wouldn't be surprised if Intel PCI bridges such as 82380FB were
-used on non-x86 boards like these.
-
-And I'm definitely not surprised that LLMs think these are x86 only.
-You'd have to train them with old data sheets, manuals, magazines,
-otherwise they're just as clueless as anyone who hasn't lived through
-that era.
-
-> - ICH7-10 LPC generic IO decode (quirk_ich7_lpc, ich7_lpc_generic_decode)
-
-ICH7 was used with Core Duo from 2006, I believe that was the first
-southbridge to be paired with a 64-bit CPU.
+Moral of the story is, I'd be very cautious about assumptions
+that these chipsets were all x86-only.
 
 Thanks,
 
