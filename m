@@ -1,146 +1,299 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010009.outbound.protection.outlook.com [52.101.201.9])
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013047.outbound.protection.outlook.com [40.107.159.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A828D30ACFB;
-	Mon, 13 Jul 2026 18:33:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37AE335BB4;
+	Mon, 13 Jul 2026 18:34:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.47
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783967585; cv=fail; b=GRCftTXV1C843BqLYE1Dd8fe1NSrQfEDxII9Mkjf5NO+9Z+QchkuLXOlilOh0Zt/05RJlWg/81ajsF4/3esyTgRcMuP+QyLoFhxI6V5MrPVAJ0/wkZNfNC7Hpgk1iTORJYCDwYS5WKc2jKmI6JZG/pe96kAOwrLTn71b/snGgKw=
+	t=1783967680; cv=fail; b=GpfSMbtv7S+qRz1pbtrSi9dyO9MJHkk1lzSHnMwWU474GYcdAHiNXu4v1qUngZJEKDBrms9O/s5uEJ7hMjBthdu0tsFYeXukZtJDulEyG0HeYGQBx8HCgpFUYsXYzIWQjAVudCAjHm0VrVbJXh6Ms5MN7dd7la3R0BOiPEHo40U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783967585; c=relaxed/simple;
-	bh=X6Popnr3OTSsfB1HRbMYKZKS2Kbk11x0aklf49we+Cs=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E7j4NeUcEvZZvvbUp5LvzMBfCIl5zOyV1aIqnWN0oMzTaP3ErJ70EqaGbfg6tYTxu9EaJIlXyeXArjr6GT6sHRCWicIPacEbImKU8BrBko0rDe76+wo0A8j+Q9ZgAbSMEBRr9KMJhQ7CBx+ZGlEsPu/NptE7stjjDZRH1dKQej4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sjq5QdoC; arc=fail smtp.client-ip=52.101.201.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1783967680; c=relaxed/simple;
+	bh=rvLZrHpVRZXpLSaAGtguar4Frla52jZfGltOzRfLC00=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=qtj++oiP362nCGVsEkYGzt/EONJwermJoI+1OJFyHQivsTFUoRF5uKaC7ykG926Gx/QfWp+HRJkb655PvM7GwOZS5PdMi0k6SIvQZZioeGQRGzuL0TkGypA9t/Mx+mTZBROLXj5veGTUDJuZEL0Nygx9t8v/1fEN7eRhPbeIhh4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=fail (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=wbUyqxU1 reason="signature verification failed"; arc=fail smtp.client-ip=40.107.159.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sjq5QdoC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="wbUyqxU1"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ujzdVFnS/1h34195MmVbsxxv2ud3YUDtijjC8sK3mbz82+TdEQnjTCyNcBxJyA2w5CFXA55Qp5v0MQpfQD3QdHUINBV5ee8QhlbN7voytzgVWn7aQFL5O7XO7lsU6geL4Jv041sw88idWC0KUDWD8pTrlS7T8K30tdbBJMzbLuBhd6Yq/yrat4qaJattdBsGBjDc3SQ6SxTKt1M3DqlAbt8Y/pazAj5DMylNTpudXSxAKBaHQrCJRQtaBGxyUUngO4+ibbosN+1HicDqq6TQ7P2BlW/Xs74PxGj17FIlK8Pq84TbHkQFyg3LISobnykbRcdUZmuE+rMahS1GJthYIw==
+ b=Er64UC7Myu9MM3imnATbKVYfm++hnICcyqrbc2pCQciIiFyyr72j6Tb7B3fPujE9iUVo+KA3PFRV7rvj8Fqm7b/mm2GmvoTE2BYXti1jIeec+ZKKE22m+zAe2/Y5fMauTf1Ki0UOKAC1yb2A4Gxbku9Gjb1VS3aXriE43JmctxCgJgfujBYlvwlZAYaSw+C77IH1/IQ0DNK+CAM4wCHzw+ycfqQaFCOx/sEDV3XLucR4w8fdxqBElgo5QBWbv/vu5zqG9BRFxR2BG95z9L7jS/g791DI50njpdk6zwtq21422l+Tj8ovDR4KG8x44QaMrXO1q0wusg4dmATiS28xCQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gUqXhUeTAqWDkZBRLyaY+scKg7wDVjBfHNOGNhA0gl0=;
- b=nMxjps2DntCXWHsx38Fj+p7NZ72KL20ccoDXrEu3bJVKl1Gs21n38eeAvT2uWgsGtHMl6AitnhCZPQAkmWO4PSaZS1cD9Qhb7u2YqF6HLDy/ui913cfwI8CqBuZmqGtNHcA9GNGQ34S7Exg+wORTGE09wyV7Y4OJL+RfxM25NTeqUVjTurr0y4nBY/9FIf4bWJ/hImk2N9q/NulflUok9E1ZqSvYd1A5lHHYPMM7n0NKNugX0aeBkMqxrpFphDj69Gyo2QViGPFEc2xY8TJmVuJh9VOzTaG7mfiKcnlyMp+AqXi/4+AEUdrSNzUNqftIwr6wGFUGyLeG4QAqzUM14w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=linux.intel.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=5CY3ie17rf458mYTu5llwHNK+PvgX6aIV91Dbmp3rNY=;
+ b=SLWq8rBn6Z4V7f0gVpsvW039zz/waRghNMe0YsOjcESZDgylQ0hiMOpHbYyIR5YyRViCs13D98Dumx+mkt68lIqsq76HBztEZ2Y/4+usKG+AzdurkID5Nww6gWwPEh/GPu85Sn1VaJkQhMyLnvyxTfUcZOJTRD+FFFlyxoOy3TVCuiLHz4GfYLSjU+M47ZgkUApvdLxOGWmRsuTObOdGh0aa2OHe6emKgQCcktsizgBNppKFH2R+9JsJefUzjEtEcXpCiueENWZYLUIXttiBi8qLZFc2Ee/iARZsX4JD66+mUPJiNG4yTBcXVGm/ALjW77BCJcvOEodx6VJKtjZCug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gUqXhUeTAqWDkZBRLyaY+scKg7wDVjBfHNOGNhA0gl0=;
- b=sjq5QdoCVbOfUTCMAECQuvXFzXHULDxbAjVnUxIEU9BFb71M+CFd9Cpta0LRnnqkyNcWWTfI0Gr9xW+FvqpjPGvwHAEfrNQ3+i1DmIBNHKIFh1HXJxgwJuOa33tmn9wbmTIba3VE8OUAm67rZYZL8IIn8Qu8p0MlCXUc4skRN4qEhYoN8BKL3nrqDq63wYOng9agC+xjYtVBuNp/LcsRQeVhFItXRU0WOl4hImwZT3dVh/JKOmOE3wMJDeQCnmPNZ7ghvG5xuWkRtnRZtw480GW5Wd8PqDxzozUlfSoWmSSimI9tKnFzXXXqPjOvgQvUWKd12arxKaGhu2J+o117xg==
-Received: from CH5PR03CA0012.namprd03.prod.outlook.com (2603:10b6:610:1f1::9)
- by BY5PR12MB4145.namprd12.prod.outlook.com (2603:10b6:a03:212::11) with
+ bh=5CY3ie17rf458mYTu5llwHNK+PvgX6aIV91Dbmp3rNY=;
+ b=wbUyqxU1zxsKImxz8OvschtaqaHc4uObhoIeP4Rav7xBONlOhD201f3TfAnzWVrO7VhaHsmQEqG4SJL/U/CGTmJJGoZAAAofUbmyRVTUN5nWrGQYXXldj+bj6flq/p2wXfaXCwmIx5dEBPXQWTua+2z78VgctYpw7DQscjpEsPQY92GKxV0SRo33E7yBkRYaWiP973wRt1aOrQVBVYV4IVk9gRYDx4mXsSk42pGL/03/MLDriQWLBCfXWdt2nJ1CjgEWpMwF6vcvI+8KfxqAbNZ9x8vKAp7Z3qklQ7/LBNuOVHMXrB+oI25bf+stmSpXgrCo6xdCRMWED7MOT9xYeg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by GV1PR04MB9197.eurprd04.prod.outlook.com (2603:10a6:150:28::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.19; Mon, 13 Jul
- 2026 18:32:58 +0000
-Received: from DM2PEPF00003FC6.namprd04.prod.outlook.com
- (2603:10b6:610:1f1:cafe::62) by CH5PR03CA0012.outlook.office365.com
- (2603:10b6:610:1f1::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.202.19 via Frontend Transport; Mon,
- 13 Jul 2026 18:32:58 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- DM2PEPF00003FC6.mail.protection.outlook.com (10.167.23.25) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.223.9 via Frontend Transport; Mon, 13 Jul 2026 18:32:57 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Mon, 13 Jul
- 2026 11:32:35 -0700
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 13 Jul 2026 11:32:34 -0700
-Received: from nvidia.com (10.127.8.10) by mail.nvidia.com (10.126.190.180)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Mon, 13 Jul 2026 11:32:32 -0700
-Date: Mon, 13 Jul 2026 11:32:30 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Baolu Lu <baolu.lu@linux.intel.com>
-CC: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
- Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Jason
- Gunthorpe" <jgg@nvidia.com>, "Rafael J . Wysocki" <rafael@kernel.org>, "Len
- Brown" <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>, "Mostafa
- Saleh" <smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
-	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
-	<xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v5 05/18] iommu: Pass in reset result to
- pci_dev_reset_iommu_done()
-Message-ID: <alUvPl/NtmqLMsoY@nvidia.com>
-References: <cover.1783044582.git.nicolinc@nvidia.com>
- <9306670b5bd647e477e36156b124557917baead3.1783044582.git.nicolinc@nvidia.com>
- <a24597bc-28ff-4b23-818c-f9126be3bbf9@linux.intel.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Mon, 13 Jul
+ 2026 18:34:34 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0181.019; Mon, 13 Jul 2026
+ 18:34:34 +0000
+Date: Mon, 13 Jul 2026 13:34:26 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org,
+	Frank.Li@kernel.org, imx@lists.linux.dev
+Subject: Re: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk
+Message-ID: <alUvso-oXS6faY0g@SMW015318>
+References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
+ <20260713-edma_ll-v7-10-6fb7498c901e@nxp.com>
+ <20260713172202.70E6C1F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260713172202.70E6C1F000E9@smtp.kernel.org>
+X-ClientProxiedBy: SA9PR03CA0026.namprd03.prod.outlook.com
+ (2603:10b6:806:20::31) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <a24597bc-28ff-4b23-818c-f9126be3bbf9@linux.intel.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC6:EE_|BY5PR12MB4145:EE_
-X-MS-Office365-Filtering-Correlation-Id: d9e197e4-f70a-4879-d160-08dee10d2908
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV1PR04MB9197:EE_
+X-MS-Office365-Filtering-Correlation-Id: 05719738-3c8b-4683-e15c-08dee10d62eb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|36860700016|1800799024|376014|82310400026|23010399003|22082099003|18002099003|56012099006|11063799006|4143699003;
+	BCL:0;ARA:13230040|376014|23010399003|1800799024|19092799006|366016|11063799006|4143699003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	zb6YxX+eLtQ1F+OhCWYWb96WVGiTS/0fPlDlG+Pe2z5HEVbgFCsNgx84wgodrwMVfAg7LA1Q/3UW41rSsvQ73/pgk/i48Pq9Gmpp9dfmk6x4wvbYyj1sk4MXHJQyqW/w9OhZhVaHUyKVIt+ZBj1JUyngmX74OK7FVGoy62Is3F/9JYt253QkfyKOi6M1xaH6PYoLsNU6BLjAgijp2/fNXoTfTVTsW8TMFLIjXh3zP/Ju0uMaCnvmWxEhZs/mzflA53s9XZMnq4xzxpHOjvKY34aT0oGhIDvNEC5qSG70EK/ppHtjBDEG+RyQgIWQzDScZjG7j8mKXh/+37C3dbYBQOtqv94Vy0HEH4CRF5H76MkXqNyoiaC4Pdke1qaFzjYsIUeVg5HeDhtc2a3FF23TG8NHUIUsCORFGR2yVbRcue/iZktcDFr9DBNUNenRqHWtT5BVFX91ICXg6//NlCGURigTLrZoatAbbqAY8ZlTL33++fuN0eAVGVBmiXNwyIsYPaF/IJa/xjWKetpEikjWuRYkMdmiPHJNP8dogeMFjSceJ6dc/aeNDJTINGr3qBcvJK/II7uO0EqBosMt0aS6F45JNEbrpICbWHYuUwtlkVMuyKMWnuC6rgq3Y4kmrFGd24mdTXlLJmr2EQ02YSrFF4UrHvtJ45mPBKOquo77khrLjMYjCxc6KKIIkQe07XrhWZn00Ac2Qwvqre+ueQMHFw==
+	lrIFx2RBuKBKmcbyppTNqel6ggianyrwClr8Lq9XyuTjd++ixZTkHXMB/xYAMocbpGMQyfN+xMYdBg+1kYlEnnhLJ550iv94hhzgy61bBH52inLvBZKcf1NGtmisqK/lsBZmbXe3yQdF9dFd6QTrCLysNsgLuPXh+dx5YEXQ4Q+We+j+0qFmSyWuamYQWtaEZts9N2jK6PzDLMWZjd/YmU5K3aW1wz7/AJ2reijceiHsq13TOC9fM5YtjCIoEy4C8IUxvW4JSv0EC1zc2Ba1BXrTbcOHSgY1etpURDm9Yh9Ng+0mGWyjqqZK0m3eFO7bFMRhKzIqyMb1WI4crZCxV5d/NMzywclQfkGwBsraSUKyBg51SDlHYsQ4RRJBwLCVKfl95MT212nHM45XlLZc/9eDLtzO6ke8q3nPeEfEi2q+NoU7+6CDqHxGz6WmoD+pc6c5D9LmHLUYvr0rq8l/fQ5qmErh1YSrjOMQiuM8azxSG8t6mXVmiS63bdsMm34HV+Rk2WDuGY7w8skWv9Osg5WimdCTwj1bmLfJFsqNAVcQV9z6FZ1AQIFQmMt5t1TDaLNFweR1hiffgJ7JR3yjv9IIgSeyja+aq0C6rC3bK/o=
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(36860700016)(1800799024)(376014)(82310400026)(23010399003)(22082099003)(18002099003)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(19092799006)(366016)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	mJFX9EMVAdiaH28HZQi/nhqXbPDWTFduAdZZnlrQdeG5/ehCvIACzhqBUe/zQwC2u8OgzOjDPbtyLemNB+1a/zAX1uTMwSKC6Sr00oKIxkVG4uxXws08Z3+aVRZV4bOyNyQgz9X3rwHWfT7YWZIpSjjwjhKpjGoRZ3g3gO02XDVlQTWlS6W0AwXlXRVILKaj6Ig0qRkFGsYv85VbcSL0JOj4LK4zJfumYnYvTEq8e9E3WR6nCPD3mAvwcphHUlfRuImiU9d6f5RVtxf3g+3om60lu8Jh6JfKl2ayGJpIPcxgreiWa1+TLAKP7rWM8OZEtn8izM2f0ZwUmWOG6TY4rTqjvqvX32gdN29sVwlK3JdZ/5ZY5i9LDlwuFczV1mMmjHo+G7eJFDDx2zBlMSWquiC6zxTQbyo752CMgMU40Tz+A4DG6c29u5P9PDY8ZbUr
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:32:57.0987
+	=?iso-8859-1?Q?zQ+t5ozWPS8dtuFTqtMj9M9PPS+zomzcUh8mX1tvMkTUK7DbpvbfhJB6Vm?=
+ =?iso-8859-1?Q?TD77pDecjW9SvW6ST/LbJBJ08PD2KtnGHSZNpe/b2rHqJMY4zOJNzGgANm?=
+ =?iso-8859-1?Q?mMadJ/jPZ0bTC+3Rb6hKwQvX835g0BFBow2paO3u2OUjkRToMQe+GOp/5m?=
+ =?iso-8859-1?Q?YDdG0mf/gbx1lZIhGRDxYWmftnMePEkUUn0cZuV5xV+fohaiedPcSMKmoe?=
+ =?iso-8859-1?Q?gLp6B/jL/UL39QEOHKScgKo/sjTTCYXWv4RS4vQNu+GcyMBx2/bQSnO9gh?=
+ =?iso-8859-1?Q?yYor0Bn6DYYLtub0CFkZYxurhOdPWuZfa2ttqVambjuxfEDLdIytY4O+/a?=
+ =?iso-8859-1?Q?QZtGxUVUD2EK8PhZNWcBTr9tz0096Iq+HjzTuyZO7hydQkoOR4kgAxmoQ1?=
+ =?iso-8859-1?Q?WWA1dwrlKqfTrJaLU9GmCYLM8DkZWvdSpKwSisbr8u3jQ5kiG3uh6c2i2H?=
+ =?iso-8859-1?Q?afMaxDcjilnhXOoUnwA5sJzu0yyeXF3v9Tli/IGHHbKp5C7tLhjgRMjoRI?=
+ =?iso-8859-1?Q?xuWMluBOZaKDcijv2BQdKVP5jnhmjZPYsU2W6JH04FTPm0GIx2tp+Hgmlg?=
+ =?iso-8859-1?Q?XdR0Jw9IaOgjgvJco4yWAqDvgxMrIl0Qoep0ufDecsKmzslcQV9HGmywcn?=
+ =?iso-8859-1?Q?EyIlI/JRngpQU1K3wZeZFTl4xrhDJGLrSRz8rnOB9pF39RwHyb/PgXl+Np?=
+ =?iso-8859-1?Q?69RdUyqUU0vKw35P+iOJw9h2bGosTTQ95RutS1klMPZzqdGrSsRwSaY/sA?=
+ =?iso-8859-1?Q?h22korGzGfNSU/9C6EPrj6+8uNkZBvgHYX858gqfvu39SGHdPT0kwTNCxu?=
+ =?iso-8859-1?Q?xkpo9Evw1u73RJaOC6kj35tVpBHLxCJvYkh0LQaXEmYw0PRN7kPNML41XR?=
+ =?iso-8859-1?Q?oZ28P1L1PjV6tMgwMK+C9EeLWa9Cjt4sO5v6AZtUyhlgBeFKPufBJYT56y?=
+ =?iso-8859-1?Q?/omG9D6MSr+BYIT23tHJ9aM8AXPYE4XbZnqxkQ60G2M6tlGoC9ezYrwQQR?=
+ =?iso-8859-1?Q?2qAwRJzAY6EgJrPVfjkLiFy4Vsi1NYjpu2BTTj9Pj5ovwXN6FoMsoLMMgv?=
+ =?iso-8859-1?Q?w71HkY0f5MzXixB+CS/QA0utdP6/Z6qC4TOWvqQNKpDX0TEbT9UtBTV9ak?=
+ =?iso-8859-1?Q?z7RsMQs9NvXrLyJ050CGS6dd4vUBQRGLQwoVDsOTJDumBZTXsmekS1DQlK?=
+ =?iso-8859-1?Q?nNIhtCrnsJHHnS4d+3dIRcB14V3y7e5Zzyx+U+UDxF22Z4OSgHxU3f6wnx?=
+ =?iso-8859-1?Q?4qTxQDIUe2QFa7O3Fnz502jaHMUWqYlCH64+SWUDeNXjXHfxUTNYJsfqpR?=
+ =?iso-8859-1?Q?GPCnMI+3QIprXxo4pFbH8JD9GQ7W6xSOVp31vznkioX7mkNFYLGB8KMsvx?=
+ =?iso-8859-1?Q?f2I63WdRahKkGbm+hce+ur9GZnBf3OKgFlhT8Zl+MO9YVTImPW06BMAViw?=
+ =?iso-8859-1?Q?rtebHgpvNoGKZ5SmnLUWSxJXwu8HjuKhl0bajrGDRkdaBx/sh1H7Pir1qs?=
+ =?iso-8859-1?Q?jfR3OSyCnLARrd7PDzjVcOlsXcU84FozUzVgPAW+ajsZJoebNtOFtG9sG4?=
+ =?iso-8859-1?Q?726yBcJcx9l/oNBuiherD7PgKEmBx5iq3MBxnkkHQwzvQqw33M+1gOs8Ga?=
+ =?iso-8859-1?Q?A7w0y3hrqmD25tfX4KZ48pZcdEA/kXibbLy3A0CW2miiTN5yXbS4TRviEt?=
+ =?iso-8859-1?Q?iFwF3fniBdE+GilIzFZFFzQu6XCs4vo7pboOOyCDrJ9TFbM2xQVr300Vhz?=
+ =?iso-8859-1?Q?98vUoxY4MDaUARhuJQDIdMADLGs8rctxf+I3qq6k3BwXJ/vhl5mLrcyzjp?=
+ =?iso-8859-1?Q?uC9cARc/30RfUnVFvJTbDc/Hxfasa4pIDRsTo5b6DGvZRGO7g/Qq?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05719738-3c8b-4683-e15c-08dee10d62eb
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:34:34.6560
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d9e197e4-f70a-4879-d160-08dee10d2908
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DM2PEPF00003FC6.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4145
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: q/cfrpjihQu18E+P+dAgZPSKh9Z2IuDeU9gcAqP6MNkmMYhSIb8RH/jzpzk7P2J+ofkc9n01wbBv0JNcw8wlIXkYMAyR1o1t18x0aJvG3LU2ECDKlpuPcElYYpnUbQwQ
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB9197
 
-On Mon, Jul 13, 2026 at 07:48:53PM +0800, Baolu Lu wrote:
-> On 7/3/2026 12:06 PM, Nicolin Chen wrote:
-> > @@ -762,6 +763,9 @@ static void __iommu_group_remove_device(struct device *dev)
-> >   		if (device->dev != dev)
-> >   			continue;
-> > +		/* Must drop the recovery_cnt when removing a blocked device */
-> > +		if (device->blocked && !WARN_ON(group->recovery_cnt == 0))
-> > +			group->recovery_cnt--;
-> 
-> I feel that the change above is unrelated to the purpose of this patch.
-> It looks like an independent fix that belongs to a separate patch.
+On Mon, Jul 13, 2026 at 05:22:02PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+>
+> New issues:
+> - [High] Replacing bounded chunk descriptors with a single contiguous GFP_NOWAIT allocation breaks large DMA transfers due to memory fragmentation.
 
-It's actually related; I had this in the commit message:
-"
-This introduces a new situation where a blocked device is being unplugged.
-Decrement the group->recovery_cnt accordingly.
-"
+It should be never happen, not such long list happen.
 
-So, it was not needed prior to this patch: it wouldn't fix anything
-if applied before, and it would be a bit odd to apply/fix after.
+> - [High] Resuming a paused DMA channel causes an out-of-bounds array read if the active descriptor was fully completed at the time it was paused.
 
-It's a small three-line change, so I think folding it in is okay?
+Pause problem, need more work
 
-Thanks
-Nicolin
+https://lore.kernel.org/dmaengine/20260710080903.2392888-5-den@valinux.co.jp/
+
+> - [Medium] Uninitialized trailing DMA bursts are submitted to hardware if SG iteration breaks early.
+
+Never happen, pre-alloc enough list.
+
+> - [Medium] Stale DMA residue is reported during a channel pause because `desc->done_burst` lags by one batch.
+
+about pause /resume existing code have problem. need fix later.
+
+Frank
+
+>
+> Pre-existing issues:
+> - [High] Missing `chan->vc.lock` acquisition in `dw_edma_device_resume` and `dw_edma_device_pause` leads to data races and virt-dma list corruption.
+> --
+>
+> --- Patch [10]: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk ---
+> commit ac4e11776f7ec8bd87ba4484bd079463058cc76d
+> Author: Frank Li <Frank.Li@nxp.com>
+>
+> dmaengine: dw-edma: Remove struct dw_edma_chunk
+>
+> This patch flattens the DMA descriptor layout by moving the burst array
+> directly into struct dw_edma_desc and removing the linked-list chunk layer.
+> It uses start_burst and done_burst to track current hardware submissions.
+>
+> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > index c028011cc61ca..30eeb7bffad80 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+>
+> [ ... ]
+>
+> > @@ -40,82 +40,54 @@ u64 dw_edma_get_pci_address(struct dw_edma_chan *chan, phys_addr_t cpu_addr)
+> > -static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
+> > +static struct dw_edma_desc *
+> > +dw_edma_alloc_desc(struct dw_edma_chan *chan, size_t nburst)
+> >  {
+> >  	struct dw_edma_desc *desc;
+> >
+> > -	desc = kzalloc_obj(*desc, GFP_NOWAIT);
+> > +	desc = kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
+>
+> [Severity: High]
+> Does allocating this unbounded descriptor array at once with GFP_NOWAIT
+> introduce a risk of memory fragmentation failures?
+>
+> Large DMA transfers previously used bounded chunk allocations. With this
+> change, could a large scatter-gather or interleaved transfer spuriously fail
+> with -ENOMEM since GFP_NOWAIT cannot sleep or perform direct reclaim?
+>
+> >  	if (unlikely(!desc))
+> >  		return NULL;
+>
+> [ ... ]
+>
+> > @@ -107,18 +79,27 @@ static void dw_edma_core_start(struct dw_edma_desc *desc, bool first)
+> > -	for (i = 0; i < chunk->nburst; i++)
+> > -		dw_edma_core_ll_data(chan, &chunk->burst[i], i, chunk->cb,
+> > -				     i == chunk->nburst - 1);
+> > +	for (i = 0; i + desc->start_burst < desc->nburst; i++) {
+> > +		u32 idx = i + desc->start_burst;
+> >
+> > -	dw_edma_core_ll_link(chan, i, chunk->cb, chan->ll_region.paddr);
+> > +		if (i == chan->ll_max)
+> > +			break;
+> > +
+> > +		dw_edma_core_ll_data(chan, &desc->burst[idx],
+> > +				     i, desc->cb,
+> > +				     idx == desc->nburst - 1 || i == chan->ll_max - 1);
+> > +	}
+> > +
+> > +	desc->done_burst = desc->start_burst;
+> > +	desc->start_burst += i;
+>
+> [Severity: Medium]
+> Will this cause stale residue to be reported during a channel pause?
+>
+> Because desc->done_burst is updated to match start_burst only when the next
+> batch starts, it appears to lag behind the actual completion if the channel
+> is paused immediately after an interrupt. This lagging index is then used by
+> dw_edma_device_tx_status() for residue calculation.
+>
+> >
+> >  	if (first)
+> >  		dw_edma_core_ch_enable(chan);
+>
+> [ ... ]
+>
+> > @@ -355,13 +321,11 @@ static struct dma_async_tx_descriptor *
+> >  		fsz = xfer->xfer.il->frame_size;
+> >  	}
+> >
+> > +	desc = dw_edma_alloc_desc(chan, cnt);
+> > +	if (unlikely(!desc))
+> > +		return NULL;
+> > +
+> >  	for (i = 0; i < cnt; i++) {
+> >  		if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
+> >  			break;
+> >
+> > -		if (!(i % bursts_max)) {
+> > -			u32 n = min(cnt - i, bursts_max);
+> > -
+> > -			chunk = dw_edma_alloc_chunk(desc, n);
+> > -			if (unlikely(!chunk))
+> > -				goto err_alloc;
+> > -		}
+> > -
+> > -		burst = chunk->burst + (i % bursts_max);
+> > +		burst = desc->burst + i;
+>
+> [Severity: Medium]
+> If this loop breaks early due to !sg, is desc->nburst left un-updated?
+>
+> If desc->nburst retains the originally overestimated count,
+> dw_edma_core_start() will loop up to the original nburst. Does this risk
+> submitting uninitialized (zeroed) DMA bursts to hardware, potentially
+> leading to IOMMU faults or hardware hangs?
+>
+> >
+> >  		if (xfer->type == EDMA_XFER_CYCLIC)
+> >  			burst->sz = xfer->xfer.cyclic.len;
+>
+> [ ... ]
+>
+> > @@ -625,7 +574,7 @@ static void dw_edma_done_interrupt(struct dw_edma_chan *chan)
+> >  		case EDMA_REQ_PAUSE:
+> >  			chan->request = EDMA_REQ_NONE;
+> >  			chan->status = EDMA_ST_PAUSE;
+> >  			break;
+>
+> [Severity: High]
+> If a descriptor completes exactly when the channel is paused, could this
+> lead to an out-of-bounds array read upon resuming?
+>
+> If the PAUSE handler breaks out here without checking whether
+> desc->start_burst >= desc->nburst, a fully completed descriptor remains on
+> the list. When dw_edma_device_resume() is later called,
+> dw_edma_start_transfer() would unconditionally fetch it and pass it to
+> dw_edma_core_start(), which will access desc->burst[desc->start_burst].
+> Since start_burst == nburst in this scenario, would this read past the end
+> of the flexible array?
+>
+> [Severity: High]
+> This is a pre-existing issue, but is it safe that dw_edma_device_pause()
+> and dw_edma_device_resume() modify chan->request and traverse virt-dma
+> descriptors without acquiring chan->vc.lock?
+>
+> Concurrent calls to dmaengine_pause() or dmaengine_resume() alongside the
+> DMA completion interrupt could lead to data races and virt-dma descriptor
+> list corruption.
+>
+> >
+> >  		default:
+> >  			break;
+> >  		}
+> >  	}
+> >  	spin_unlock_irqrestore(&chan->vc.lock, flags);
+> >  }
+>
+> --
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260713-edma_ll-v7-0-6fb7498c901e@nxp.com?part=10
