@@ -1,167 +1,193 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A273D3338
-	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 08:57:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783933076; cv=pass; b=P8JkTXZYThjBRK3g2bIdD0MH7dYHRVLdwbnTbSoNSMJSyGSfvt87NeZBwDWai5lW2eSFzr8b1+bg+r5xM9xwv1ykIWwnYB0rhb5NV83X8xZyibs+0jwdqk6jFpmdfoodU4DK2+2NoV3rW6sEdMMNq9xracNFTH4wjPuPskZl6kw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783933076; c=relaxed/simple;
-	bh=zGXlgemVtM/fd1QacjWZsPwmu1tJ8IeGxyTqkvyGisI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=k5LtOBHXRYvQd69ZjVETYMgTpFQtIkVuhMyC6HR8IW6fTbghRm0rEt1Bl/mN0sPsHhNVOQP1UhSopC/QqRyEELu9WimL+Phb6OqbVCocYjsqEk2cOk9h6S4tmKmNvl7ID2zoDORBt14bajIbDm2ycFV2HyNxUV5nfs5F3Sv2zzg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bhZpWy9p; arc=pass smtp.client-ip=209.85.221.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21675368D4B
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 09:16:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783934187; cv=none; b=aGsSE81Qro5YWdZ9B3CS9Hz5lZLgJ46/D/dZ8ORJDTSM8ChtD7KwN/FjhSx0ah8jFYj8zn6b3KMkB9gZ9ec7opedXHTToZERO5DxNkP+PFcee6FfYMg/4q0siZ8ldb9URctMZZcCj8XgTcat9JtvAWbRzipTcSNb8C409Hn09UQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783934187; c=relaxed/simple;
+	bh=+IKt7HkKvvuZndazkU87cKD2wlXL3ZMBBm/eMI38q4Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=LlGC6BiGkbHve04eRXpbPZlgF4X+j76cHZsYqEPBvETv+80szOsvhaqjFnr3cMX43G7E6GQZ/eBoLAbnhC89NnE1d9UHG7/rW3LH+5pfDzctNPpm830U1bTdmMGDed1gVjewnLDsYdjwrhobEdRDih6++J+sLzTno3cR8GWx80w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=afDUukYQ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Thh7j4M7; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bhZpWy9p"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-475417f010dso1308082f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 01:57:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783933071; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ASpnZcm+UMfSQntAPdZkkzSsnwxPPwdDqvf3VRMFb52lFZaM6e3Q6/j6bRqRpFh+pc
-         gfCkcbAWwe2Q0L9Krs8TOtKO3fmAfheRkzaRzHa7eqMXx519G7Nj1CRkx51LME5nwXFs
-         vemqjRmPFtM8tCfvoCF772XIlwloEaXSFcpJHxjI/WoBV1TVAI6U4poR3n2rnpkb1Ltu
-         qb9hk52+B3y/e9eTF5q2FUoRVZVR67mLjDSJMkMfw4lgiEPEtQl2Kc7T8rcH3xf/dAQn
-         WztSOALD08XYh/nTRBWmVMCUmzwt7p9lN3y/kLQV78i7zgJYg5E9H+vHODHMnOrKfsk3
-         Cfqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Niw6ma3uSQo4Oag5BSyj5O/UfANxhnZNo3KLkxIFV/I=;
-        fh=48fzTTag2+rkT8VtT8EDSFjygnYH9IN1HJiFRXQQgmM=;
-        b=iGzdOg4lx72okRGn/Pn10TaIrgFsIpdDoJTu3B6lM4qQKBHRN7p+u+kJTPxP1gM0zk
-         6ik0PZ3qbxI82jzI4nSZwPInv5928LRPW9EaZ3O/CWDWeemNBdlKQ4jL3SecKwOYPf+5
-         s3xuNe8UmitEWUdCgdq7sc3/Lw5YXfogqPQKS3ANNAWXOPiI2M6JpWyDqa8xV7ROcxTy
-         D/qW3to+BF8Wn+F1B1cFGTq1MkCsAGYYYOukt3JoyQSzD8uoaI8zDhOiomnnmGhZsvYN
-         vlY6zjoAmNs8U43+lUSDADU2C/I/b5GeQge/Mc58UX6ox5FDw288Z3NlwM0i9U5PyaBI
-         zzmw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="afDUukYQ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Thh7j4M7"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66D6NvwQ568097
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 09:16:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=u7OzcwJPgZs
+	QHVGY+2aqMLjEMoYse2TWQIvIkQHyER0=; b=afDUukYQ78MH83XCkauFs+vMTZ/
+	xOyNWDf6WL/CM9LJdHEGic30lGUYZvRGJJ3Kyz2T1y0HCT22luB0e23N+z/EUIzf
+	5khm/3SMHkGQsQh6bHyhITolyRnyFm7C5wpjQj1WtRuYZyHwr9+wC+alJ611tsG0
+	8AtNzdrndDhk8XAcPDSte+5v6N95Rkf6HreGQNdT/W5+VQb5VQU06CIz2Z8+c6WY
+	vPVgd01tsrDfzhhr3ZCXUeybPw+3CepMYtgJyNezCPSuObTlbCwOYjCepvjcsx1L
+	QJxpnVywme8ybMu9ADH9VwNZet/eFzd4szu7a1EkvXJUMTHpC9cs2HiJPFw==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fbe915cjh-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 09:16:25 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-382befb9555so896671a91.1
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 02:16:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783933071; x=1784537871; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Niw6ma3uSQo4Oag5BSyj5O/UfANxhnZNo3KLkxIFV/I=;
-        b=bhZpWy9p92MsHXolXEEEzyqO6a8taUshJqNTLDakidqvhciCwPleXpZnFFjlWiYgu2
-         PD4KtR4wi8mFviwOMoQsSLwoiUrgbFxzrfMzPSO3Sybm9n1+9I9aGIKm/8G9v52bT/Dy
-         /ECgJDqbQXnj9gc2kOfy3eG3Oyas3PdEqt32qqoJCGj+tlRe2CTAPATVLVaT2ZBSLmFE
-         6NLrPC6nlM9BaqCBTXA2N+qswyb64G3vtCx9kHyfA9GDzZl//f+Oby1N7yx4QVQbPtoh
-         MUkxAek+4XmOD/fokqGCzy3ZmMRVg9nKjm32kMvJgFt/LiXZSc+ZvzDDjsD9s3OVP1/l
-         B5sg==
+        d=oss.qualcomm.com; s=google; t=1783934184; x=1784538984; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=u7OzcwJPgZsQHVGY+2aqMLjEMoYse2TWQIvIkQHyER0=;
+        b=Thh7j4M78vejxkyH8T5Yml/dsm5WAUCL+cFT6Nui8nr1IKKJUjtNvyhbed3rGOj2z0
+         ZijxFVne8/2ygOjcXnA/jqwhYKdA1x59oUr9pp1liSHj9xX79YZsqa/hX7ksXbyhKLPB
+         zLNZgiegfuZU8YWZBDggsbxX2zQ2+fqZueeOswy0TLU7cyRu1DumbkQ7UQ+N4oObPQmO
+         J57oGCugElKA4CD5yx1MnOo3I6nF/VuI7tKOfLFo15FGW0qsIA7/W7OUZn47erVJNcAJ
+         1ej6tdYokRG7WdRHZDKhCNG2OZP5xyyR63VT/VojiP3zAjF3tL5nVDvvAnk1b8K+CF5B
+         ixEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783933071; x=1784537871;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Niw6ma3uSQo4Oag5BSyj5O/UfANxhnZNo3KLkxIFV/I=;
-        b=ri6kJFd1XIOFRlSCT6sLgonGvi1iIqakh7xCw/FjQ6mWTIgKeWsokQ7TszOsR+kEpj
-         zK+F5lO53uVXOLa3quI6cVip2sLnlrBYXh/IDAyTtbDRcFupi4zbIdriqJW2Mk3SjkLd
-         7G5QFRQZ7gQu0W/grdf2UwGnE7D8GUSn+jHP6trcwikv+una4G80yPWwDX0ICfAOxtTn
-         29Y4EFPmnI5Yh3baimyFSDXUc1EHZ+oZEta8x+H5vhA20hCvlhP8R0+CW1YtLjvHlWHA
-         Ar4BIEq3I9R0i0YmlSDJEW6bPJIUWi4AO4/0qP341cwhb7lvZgSLXSYB6EsGz4Hg3eXT
-         3fxg==
-X-Forwarded-Encrypted: i=1; AHgh+RrOUZCsi08XRpMCbsxBUsvs5lt8dfetJhWxQPs4cqygK+3ekugqoYOnzxq5W1CcIkDBMz0G5aECV7s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQIA7BoHX1tqJ98Bms8h/SaqPncorc6wCfFjo30blLAmURqwmV
-	pD3zeXgqGhJ/LJzWAnx0simQOryjGPoWffvCWsGqOYEiFQEpaC7tuM6jIir74RhPgQJYe/lxaJA
-	XhF9nOggklOZoW9TpuuB45YfOclG10FBsMgjQWeHV
-X-Gm-Gg: AfdE7ckEn9/lzoORZVvI1W8vVhToWGGI2dPdqjMGBsxOkmkZN+p47r1cawFgJD0DaYP
-	BK6nXCh62bqy0eB1qztXFQh2YatduC/oUJkDbBbaKrYRpZAV4kkcLS4sufisjJhWM8HnlVi1eAu
-	wLs0S751dd8YGSuLFPz60PsfyRfaN3YVw/ctGJj2CSScm2tvdiET3iMuK7ge6+84R/6mpALUMKL
-	7hO7AZS4ZID0NHdPG+kSUZuwAkwthxnh6IJUq8qnAovSs6fGHsTTef9OpcCCJq30OwQ87UV+h1R
-	QoE3epZjS1oEdLtwGsZc4+ngaSx0Czhhv6OHxb/SJqR0bnKAypD8eHfO+TLLhzwncw3rHg==
-X-Received: by 2002:a5d:5850:0:b0:472:55a:ef9b with SMTP id
- ffacd0b85a97d-47f2dcac418mr8602513f8f.8.1783933070140; Mon, 13 Jul 2026
- 01:57:50 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1783934184; x=1784538984;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=u7OzcwJPgZsQHVGY+2aqMLjEMoYse2TWQIvIkQHyER0=;
+        b=OSF9jKPSWjBUeFGiUqv+aLZbslQh5vRgbM8gUG8IUDyk1feOIf1eeFsSQPT4ie/uEN
+         7+oEgHKJfRGr8ZTiwEgo4uOdPQOxvhx07RX/JcFvP/rWbyJB7ndXk1HnbguSWMaObnNX
+         E7ESvCylpK7d5SiGQNunkUvzKcTX9Zp+q62ETFtLmskxvsETQPjwyzzNJYkcakwudP5X
+         a5RpDrg2Kc0vQHJZ82mJPc5LoFuKXXM0gDmZ+rBsr++WL+m6r9R+4EcvlgdtX0LBgBW6
+         vmD4UTp3dnf98RS7khRNB0vpW8+Z4oIXH9kiSKnaaVQH2kyRq1fc421IXg7ZaMv9+PP/
+         G1jw==
+X-Forwarded-Encrypted: i=1; AHgh+Rr8BR8diX9ePve4/eooK9pgONkvjL6cwzp2OZL4hSS3iQiTCX8kLkMxPHYq4GXo4y6Bkxj4CVSD52w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxmwzgqQChesPFPHVB3oB0fvRrspFcs8EwQFgO5zT6Mt8Dc63yO
+	eCryKcw2el2RbzXd1LQuRV5zUNGlfLcaxXUl9/frXzdgkfuf3Tgv0r54FbQXb4kOzM9bF/IRSNO
+	Ea/4SY81xKBhzlw4sb1hQSnH8sYjzmsW/YJbZvELIUYQIcJoFtXdL4nZcWLBuepk=
+X-Gm-Gg: AfdE7cm8OAZLkBupzpwTiAA79pM/MInujBxOLoUL9b/VirrLXizm3F4P9LhzhpyuG5x
+	r2s594Py5qypQYhvL0OsiBXyh1AeFP5ljkPXvJGm5P8Ia3Mymie7pNLSLmy9GxHEMeWgbKMfNlm
+	E3QQGt9DykwWA5MXIUElJN3ZQrg+RPnEmNao4mjcfBKfK9TbEIfU8Doo4Q9RGqTVyJ0sMqF4jm6
+	nFU1Fh0a5rL5e7Rw0Qm+0Yf1DYp3VeR8Oxc0P3V4aUvs9r5fGvPNihPHf4gAkSsyRvTirSkDvpj
+	4gLNxnefqSwPu47Rd1JYP3LVRffI8WYdPPpK5l4vi4ZeE4BtMb4eNI9sf/NSvzq7Dyzi0eX4pSK
+	GWybiewkwVV6a47CeODBHPKALOWcfVXPyeFc+1bN5+fX6BLbXK//S8Z6M2i2ULQ==
+X-Received: by 2002:a17:90b:2dc1:b0:37f:e7e7:ad1 with SMTP id 98e67ed59e1d1-38dc7c0eb95mr6154259a91.5.1783934184107;
+        Mon, 13 Jul 2026 02:16:24 -0700 (PDT)
+X-Received: by 2002:a17:90b:2dc1:b0:37f:e7e7:ad1 with SMTP id 98e67ed59e1d1-38dc7c0eb95mr6154211a91.5.1783934183550;
+        Mon, 13 Jul 2026 02:16:23 -0700 (PDT)
+Received: from hu-weiden-sha.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-313b9ca880fsm26496089eec.23.2026.07.13.02.16.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2026 02:16:23 -0700 (PDT)
+From: Wei Deng <wei.deng@oss.qualcomm.com>
+To: Wei Deng <wei.deng@oss.qualcomm.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Chen-Yu Tsai <wenst@chromium.org>, mengshi.wu@oss.qualcomm.com,
+        quic_chezhou@quicinc.com, cheng.jiang@oss.qualcomm.com,
+        shuai.zhang@oss.qualcomm.com, jinwang.li@oss.qualcomm.com,
+        xiuzhuo.shang@oss.qualcomm.com
+Subject: Re: [PATCH 3/3] power: sequencing: pcie-m2: Deassert W_DISABLE2# when no UART serdev is created
+Date: Mon, 13 Jul 2026 14:46:16 +0530
+Message-Id: <20260713091616.4092086-1-wei.deng@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <gatls7n4xes7mrnhgxwsjof7owpocdmjrvuxazedznwa3zeb22@q3mtufc5dzkv>
+References: <gatls7n4xes7mrnhgxwsjof7owpocdmjrvuxazedznwa3zeb22@q3mtufc5dzkv>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
- <20260713-fix-fops-owner-v8-10-2495cfa82d47@linux.dev> <alSe6PsvdrSYP_Z0@google.com>
- <d7c1607f-ea74-442a-9700-7fc4f0c64b76@linux.dev>
-In-Reply-To: <d7c1607f-ea74-442a-9700-7fc4f0c64b76@linux.dev>
-From: Alice Ryhl <aliceryhl@google.com>
-Date: Mon, 13 Jul 2026 10:57:37 +0200
-X-Gm-Features: AUfX_mw1uUYgV4eMXkVflbUYoDKpPh-OOQHMx0yAVcG6yUMQsdEhmzk4SLg_fQ0
-Message-ID: <CAH5fLggszOnUm7Rykt41V91de8h9YVaZt49wr52i3t5-QV84Xg@mail.gmail.com>
-Subject: Re: [PATCH v8 10/10] rust: module: update MAINTAINERS to cover module.rs
-To: Alvin Sun <alvin.sun@linux.dev>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
-	Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
-	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
-	Aaron Tomlin <atomlin@atomlin.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Brendan Higgins <brendan.higgins@linux.dev>, David Gow <david@davidgow.net>, 
-	Rae Moar <raemoar63@gmail.com>, Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
-	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
-	Igor Korotin <igor.korotin@linux.dev>, FUJITA Tomonori <fujita.tomonori@gmail.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, 
-	Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
-	Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org, 
-	linux-modules@vger.kernel.org, driver-core@lists.linux.dev, 
-	dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev, 
-	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=TbymcxQh c=1 sm=1 tr=0 ts=6a54ace9 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
+ a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
+ a=cm27Pg_UAAAA:8 a=EUspDBNiAAAA:8 a=M_wy9YA4QbPrr36y3cgA:9
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDA5NiBTYWx0ZWRfXxpjDLGBLAE5X
+ 7IwGvENKr//laMXlrYxAraHcbDHFy8Lol/VPJc7Kkj/yjnul0WKQWtIJKOesr32ZXYh0bn8Eg3m
+ cu7xq7vVL2k0vKIf+RaUlVEo2euwco0=
+X-Proofpoint-GUID: hF-mQOia3l6CY0ZnQX0xC6BAuLea-ZcF
+X-Proofpoint-ORIG-GUID: hF-mQOia3l6CY0ZnQX0xC6BAuLea-ZcF
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDA5NiBTYWx0ZWRfX778pxCks+6/w
+ NYwHsfEARMaw9rSFByHUL4QOEYHjcbvHDLDFjoQ7a840FGeajT6NNMmN4rgE/AMf5Db5TNq7Zc9
+ 5s/nRtarNtsDiReG0a5xK68WaKiuIEfCSAXEZ5aQgQffFFzUJRzgCi6T0Ud3w+E3cAVXF8tVOtB
+ i91BqIEoPYE3eo5oE4kAkvbhKPrNFl3kuAgCRtA2yQlwBLiuC9TutT85ScLupUA240y5Om6CfjZ
+ nPgktwk3RzIUh5f9Ux73cgC2lSKNJCaXCMYd3AswHMBjcJmZBAihucBznSZsSXOQcCf71kzNA0t
+ 2UWQf7LIWNSQrcE3uRkwiu6H6YATRNuxKeNrgsWRr03+bMJ05+x6iA2DdPAzM9L4QXX8aDgolA8
+ uVDaOPnL7ZWlLIwqS8L7zCgfhvVRbEBpjS0V5UcIHDLVvNN4wDShsxYfp9WSa25vXVOueDoZKbD
+ P1H67c2WO45yuhsxryA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-13_02,2026-07-10_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 bulkscore=0 priorityscore=1501 suspectscore=0 impostorscore=0
+ adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607130096
 
-On Mon, Jul 13, 2026 at 10:48=E2=80=AFAM Alvin Sun <alvin.sun@linux.dev> wr=
-ote:
->
->
-> On 7/13/26 16:16, Alice Ryhl wrote:
-> > On Mon, Jul 13, 2026 at 02:45:31PM +0800, Alvin Sun wrote:
-> >> Module types now live in `rust/kernel/module.rs` alongside
-> >> `rust/kernel/module_param.rs`. Update the MODULE SUPPORT file pattern
-> >> from `rust/kernel/module_param.rs` to `rust/kernel/module*.rs` so both
-> >> files are covered.
-> >>
-> >> Cc: Petr Pavlu <petr.pavlu@suse.com>
-> >> Assisted-by: opencode:glm-5.2
-> >> Link: https://lore.kernel.org/rust-for-linux/8ea21b29-9baf-4926-a16f-7=
-d21c5a1a1b8@suse.com
-> >> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
-> >> ---
-> >>   MAINTAINERS | 2 +-
-> >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/MAINTAINERS b/MAINTAINERS
-> >> index e035a3be797c4..74733de3e41ee 100644
-> >> --- a/MAINTAINERS
-> >> +++ b/MAINTAINERS
-> >> @@ -17984,7 +17984,7 @@ F:   include/linux/module*.h
-> >>   F: kernel/module/
-> >>   F: lib/test_kmod.c
-> >>   F: lib/tests/module/
-> >> -F:  rust/kernel/module_param.rs
-> >> +F:  rust/kernel/module*.rs
-> >>   F: rust/macros/module.rs
-> >>   F: scripts/module*
-> >>   F: tools/testing/selftests/kmod/
-> > Is there a reason why this is a separate commit from the commit that
-> > introduces rust/kernel/module.rs file?
->
-> Gary asked the same on v6; `git log` shows MAINTAINERS changes are
-> conventionally
-> standalone commits with a `MAINTAINERS: ` prefix, so I kept it separate.
-> Gary agreed [1].
->
-> [1]:
-> https://lore.kernel.org/rust-for-linux/DJJ26195JBS9.D3DNLZPRJYO4@garyguo.=
-net/
+On Thu, 9 Jul 2026, Dmitry Baryshkov wrote:
+> On Thu, Jul 09, 2026 at 12:59:42PM +0530, Wei Deng wrote:
+> > The pwrseq_m2_pci_ids[] table lists PCIe BT devices that use UART as the
+> > BT transport and need a UART serdev created by the driver. When a PCIe
+> > device under the M.2 connector does not match any entry in this table,
+> > no UART serdev is created.
+> > 
+> > However, the BT subsystem of such a device may still require W_DISABLE2#
+> > to be deasserted to power up. Rather than adding every possible non-UART
+> > BT device ID to the table, add an else branch that deasserts W_DISABLE2#
+> > whenever a PCIe device is detected under the connector but does not match
+> > a UART BT entry. This allows any BT interface on the card (USB or other)
+> > to enumerate without requiring explicit knowledge of its device ID.
+> > 
+> > The primary use case is USB BT variants of combo chips that share the
+> > same PCIe device ID as their UART counterpart (e.g. WCN7851 NCM865 USB,
+> > sub 0x3378, vs NCM865A UART, sub 0x337c): no UART serdev is needed, but
+> > W_DISABLE2# must be deasserted so the USB BT device can enumerate.
+> 
+> Instead of forcibly toggling it, would it be more sensible to tie pwrseq
+> into the USB too? The onboard-usb-dev implements the same idea (of
+> powering up the USB device), but it predates pwrseq.
+> 
+> > Reassert W_DISABLE2# symmetrically when the PCIe device is removed.
+> > 
+> > Validated on Hamoa EVK (IQ-X7181-EVK) with WCN7851 NCM865 USB card
+> > (sub 0x3378): without this change GPIO116 (W_DISABLE2#) stays low and
+> > no BT interface appears; with this change GPIO116 is driven high and the
+> > USB BT device enumerates and comes up via btusb.
+> > 
+> > Signed-off-by: Wei Deng <wei.deng@oss.qualcomm.com>
+> > ---
+> >  drivers/power/sequencing/pwrseq-pcie-m2.c | 33 +++++++++++++++++++++----------
+> >  1 file changed, 23 insertions(+), 10 deletions(-)
+> > 
+> 
+> -- 
+> With best wishes
+> Dmitry
+> 
 
-Ok, that's fine then.
+Hi Dmitry,
 
-Alice
+There is a patch series from Chen-Yu Tsai that appears to implement what
+you suggested:
+
+  [PATCH v4 00/14] arm64: mediatek: Add M.2 E-key slot on Chromebooks
+  https://lore.kernel.org/all/20260709095726.704448-1-wenst@chromium.org/
+
+We have been testing this on the Qualcomm Hamoa IoT EVK with both UART BT
+and USB BT M.2 cards.  Is this the direction you had in mind?
+
+Thanks,
+Wei Deng
+
+-- 
+Best Regards,
+Wei Deng
