@@ -1,116 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6C139021F
-	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 07:51:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B44513FCC;
+	Mon, 13 Jul 2026 08:04:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783929064; cv=none; b=mN+mrBk0VRFo3SlNdpXkRiXyJhwhtHLTzwQRcID1S5x3CG81xHSCdRgtVuJ3dt+9ijRLn9xrYbxTkPjOyoAR+NGXlfQ0Vf05SP0UeqCSanCpWV7G6DUz4lPrO20XctARltOUQCo8+U1ef8rArOFRsldxzHAJV+LVgXaaF3whLDQ=
+	t=1783929887; cv=none; b=LMhN7/vflCP3Us4H2wFzti8BSQ//eZgJi1jdUMN4mEN5njoDgv7dq6xibquuZxb49Yrhe7vpD1sIgC7oE8fCBUIllfaEXtzpAq2ZdGpy+p+yiYpaUribUnXJ+pWnwlBawu3OY9b9wencKMy7iwpXmv05JFZCh/ZJTp8fZFSPzbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783929064; c=relaxed/simple;
-	bh=9w+DcjQA4fIrB4vsrZQyqT8ZkCk1PSG8KZ2LcO9Mh1o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rGXKFMthkCfIACjZdjT3q92K4FIcO1+GYd9kOYG70O6s1RCJotvUScsLBy4PsKgIjJBQmpIaJIgZDUpUZTa6zfRMBU/s7uJTt7Kf5H2cK01CWxS1sL0EYA7590kNWKWm3DD6oK658zILTtYENrlA42QtajhkLeaeir/rxJab8eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yc+I1BJg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783929887; c=relaxed/simple;
+	bh=bXoyzfoSCt9kIATo7jm0kbbtpFCqQGChcRNGlqrS0YM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=J17KTwzMi8o3TZ+D9/6c5ewuf0CHqJJAIv6VECFjZSLToMNGXjvAS0EfoKSy+EwQH2iSLS1IoZC417Bp2P0sDfyyOFvFjPa0at7MpBFMUcxVeQg4AKfiSC0BFhUlNoHolN5t3Ify5XMKf2fSdOlkQjALE9PRT3rMmuMDMbLQF+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QslwnYl2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yc+I1BJg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35C5D1F000E9;
-	Mon, 13 Jul 2026 07:51:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QslwnYl2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42D761F000E9;
+	Mon, 13 Jul 2026 08:04:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783929063;
-	bh=+q7UHaxwODOV/6HmzLyDJnBcF2NCWmfVG9jFYaBqV3Q=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Yc+I1BJgcl+NbtHNpcsD5B5Wwzmsi5gQ3bQlhGLtweFWdpxThbt6d8sEE27NgjbgT
-	 teK5N0fjwStS1MVtL5lXT1VPhouWOnU4p55i8i7k7OpR4U0V4T2RJdYoFpjli/2GMd
-	 tdtLsCJ9z6IHgRkNoHbNpLdE0bjD2r4fMeyfxbxcNpDA6BU3p1U24qzxKk++UqRZJn
-	 yPZUyoV/XPYhAdaUzwYC1SMZhegCxsKYK8BZNKf+YU3qfSTqsJgDUtojaVKG7VxzjM
-	 q8eiQzB48DdUkXiGXKAPEku6ymu2JDFM7mrm9fikYPhQRZem+hOliADqYmc4tA/wpv
-	 PBt38lIb7/A9w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: qcom: Clear Attention Button Present in
- Slot Capabilities
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Qiang Yu" <qiang.yu@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260713-b4-clear_abp_0713-v2-2-4f0333a98d4e@oss.qualcomm.com>
-References: <20260713-b4-clear_abp_0713-v2-0-4f0333a98d4e@oss.qualcomm.com>
- <20260713-b4-clear_abp_0713-v2-2-4f0333a98d4e@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 07:51:02 +0000
-Message-Id: <20260713075103.35C5D1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783929886;
+	bh=fI49FtD57qiHiCZVpYxggqFypFJ+NAs6da3bEfHEoDk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=QslwnYl23mS0eqE3qOl8BJpWreOFc0wvAiBVbiHWL7pnyo40FO9pxuRpvgPgoX1+0
+	 SHUFfd6dUkwBZhET9D9KT/PFFq8aNUsD1xQyyIlofaez13WgwKg4vdKm+FuC3dE8M3
+	 UXSEZ4Aw4nxuNjzjuW2YUvuhFNkDGPNOIw2H8b4hDpa0jY72aYjFhLWt8OA+2dXf40
+	 UPGEwmMD/O25SWKf4W5JLCneaUHbsfTzlcey4iKZ79nqFjlem3UapvXuoAhr+clWtI
+	 LOTmZOm9bY4Ipi6gg7ha+iv15ZhJuni0a/QuwZ7lV7GzL07jRrdHHI4tJk9pBQh/7I
+	 qMkktBafHUTTw==
+Date: Mon, 13 Jul 2026 11:04:39 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Michael Guralnik <michaelgur@nvidia.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Christian Konig <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v11 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+Message-ID: <20260713080439.GH33197@unreal>
+References: <20260702181025.2694961-1-zhipingz@meta.com>
+ <20260709132602.6a3fb084@shazbot.org>
+ <CAH3zFs3OwPyTrWk7oaMYETq7sBEQ7VRfDtzWWamhiE3AJzVShw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAH3zFs3OwPyTrWk7oaMYETq7sBEQ7VRfDtzWWamhiE3AJzVShw@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Fri, Jul 10, 2026 at 02:13:31PM -0700, Zhiping Zhang wrote:
+> On Thu, Jul 9, 2026 at 12:26 PM Alex Williamson <alex@shazbot.org> wrote:
+> >
+> > >
+> > On Thu, 2 Jul 2026 11:10:13 -0700
+> > Zhiping Zhang <zhipingz@meta.com> wrote:
+> >
+> > > Changes since v10:
+> > >   Patch 2 (dma-buf): Per Christian König, document that the ST/PH
+> > >   returned by dma_buf_get_pci_tph() is only valid until the exporter
+> > >   invalidates the current mapping and must be re-queried afterwards;
+> > >   note added to the wrapper kernel-doc and referenced from the callback
+> > >   kernel-doc. Also add dma_buf_get_pci_tph() and dma_buf_ops.get_pci_tph()
+> > >   to the central dma-buf locking convention.
+> > >
+> > >   Patch 3 (vfio/pci): Per Alex Williamson, update the vfio_pci_dma_buf
+> > >   comment to note that @revoked is additionally protected by memory_lock,
+> > >   and describe the READ_ONCE() rationale in the commit log. No behavior
+> > >   change.
+> >
+> > Sashiko has valid comments[1] across most of the series.
+> >
+> >  - Passing through 0b10 seems mis-categorized as High in patch 1, but
+> >    is valid hardening if tph_req_type can ever hold an invalid value.
+> >
+> 
+> agreed, not High and pre-existing: get_rp_completer_type() is from the
+> original TPH
+> support and untouched here. I can send the hardening change in a separate patch.
+> 
+> >  - The documentation error in patch 2 is real.
+> >
+> 
+> will fix!
+> 
+> >  - Patch 4 ironically fails to re-validate according to the lifecycle
+> >    requirements that patch 2 specifies.  This is a significant gap in
+> >    the implementation proof for a real requester.
+> >
+> 
+> Got it, I'll re-query ma_buf_get_pci_tph() there and reprogram the
+> mkey's steering tag,
+> so the lifecycle is honored.
+> 
+> >  - The broadened scope of the existing memory leak in patch 4 is
+> >    already addressed in [2], ok.  Maybe should be folded into this
+> >    series if mlx5 isn't going to pick it up separately.
+> >
+> 
+>  [2] is already accepted and landing through the mlx5/RDMA tree.
 
-Pre-existing issues:
-- [High] Incomplete fix for broken hot-plug detection on certain Qcom PCIe =
-IP revisions.
---
+It is not; the patch is intended for net and has still not been
+accepted.
 
---- Patch [2]: [PATCH v2 2/2] PCI: qcom: Clear Attention Button Present in =
-Slot Capabilities ---
-commit 2d72cd4fa9f71ba9a26ad4415df596d93e7bf902
-Author: Qiang Yu <qiang.yu@oss.qualcomm.com>
+https://lore.kernel.org/linux-rdma/20260702222507.1234467-1-zhipingz@meta.com/
 
-PCI: qcom: Clear Attention Button Present in Slot Capabilities
+Thanks
 
-This patch clears the Attention Button Present (ABP) bit in the Slot
-Capabilities register for Qcom PCIe Root Ports, as the slots do not actually
-have an attention button. This allows surprise hot-plug detection to
-function properly by ensuring the Presence Detect Changed interrupt is not
-disabled by pciehp.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index 465c940109a7d..0a826ba632772 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -372,6 +372,12 @@ static void qcom_pcie_set_slot_cap(struct dw_pcie *p=
-ci)
->  	 */
->  	val =3D readl(pci->dbi_base + offset + PCI_EXP_SLTCAP);
->  	val |=3D PCI_EXP_SLTCAP_NCCS;
-> +
-> +	/*
-> +	 * Qcom PCIe Root Ports do not support Attention Button, so clear
-> +	 * Attention Button Present in Slot Capabilities.
-> +	 */
-> +	val &=3D ~PCI_EXP_SLTCAP_ABP;
-
-[Severity: High]
-This is a pre-existing issue, but does this change fully resolve the problem
-for all Qcom PCIe IP revisions?
-
-Looking at PCIE_CAP_SLOT_VAL in drivers/pci/controller/dwc/pcie-qcom.c, it
-explicitly includes the PCI_EXP_SLTCAP_ABP bit:
-
-#define PCIE_CAP_SLOT_VAL   (PCI_EXP_SLTCAP_ABP | \
-                             ...)
-
-Functions like qcom_pcie_post_init_2_3_3() and qcom_pcie_post_init_2_9_0()
-do not appear to call qcom_pcie_set_slot_cap(). Instead, they directly write
-PCIE_CAP_SLOT_VAL to the capability register:
-
-qcom_pcie_post_init_2_3_3() {
-    ...
-    writel(PCIE_CAP_SLOT_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
-    ...
-}
-
-Since PCIE_CAP_SLOT_VAL explicitly includes PCI_EXP_SLTCAP_ABP, won't the
-Attention Button Present bit remain set for platforms using revisions 2.3.3
-and 2.9.0, leaving surprise hot-plug detection broken on those platforms?
-
->  	writel(val, pci->dbi_base + offset + PCI_EXP_SLTCAP);
-> =20
->  	dw_pcie_dbi_ro_wr_dis(pci);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713-b4-clear_a=
-bp_0713-v2-0-4f0333a98d4e@oss.qualcomm.com?part=3D2
+> 
+> I plan to keep it as a standalone dependency.
+> 
+> > Thanks,
+> > Alex
+> >
+> > [1]https://urldefense.com/v3/__https://sashiko.dev/*/patchset/20260702181025.2694961-1-zhipingz@meta.com__;Iw!!Bt8RZUm9aw!5x8TPHfbpTXQJ872nmZaHsPIXH7HsL9ICbZR3G37yKkHgB-RukCDOy3XiLIOhfhP-yTczTyWQmud$
+> > [2]https://lore.kernel.org/linux-rdma/20260612170406.3339093-1-zhipingz@meta.com
+> 
+> Thanks,
+> Zhiping
