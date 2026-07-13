@@ -1,34 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2C236EAB1;
-	Mon, 13 Jul 2026 06:48:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE17138E8C6
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 07:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783925319; cv=none; b=KqbYz9KnYd+2eGGNUp+zMR2t9xLVzF68f1FcwnmE5OVhY/a1ikCXU+Kr4JQ4hxNFpJgTDDxb21ITRU+FhZhcxrINVNmvZV9tOVLhFwAjNzu3jOBtUi4I1RLfOcb6pmB5lF5t7OrbPy7+/6/SYmbgcb+K/z+m5jRBc+YpGUu3HKU=
+	t=1783928582; cv=none; b=fJd7SZv7+QMMQtS+B6zRBNbzjKlfoshtN8MPA4OLoJPa0aiUfFJAuEWRX564OsoshDYTmLKNVDeUmZQAeP2vhA1IH5jFslsGwDNdBdC1KejiB1dk8Ozkr1cY9j2OJ2WaSX14OJoXs6WMPHHE01HVDnTGmEGREyc7dcZUt+UyuOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783925319; c=relaxed/simple;
-	bh=DgPxSWJm3yP+ocMCPSZPYulAvRJygW/tBHfG7di1GFE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=cFHhkiN44YkgE+gPQLi+Ttdw+4hS+fImss19HUxsQ60fowvE+mjL02AgwaCgkMHTJNPzk0z2VJrxg8hDTjn3w9eIMkHTApGo+w5MSiGT2ETbIoQmNRL4Op9qpgC6CxlCcDvpIR36VjHt+smK0rPJ8oKflT+CaN1NpK4UmCVKcoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Zk0zQkO8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1783928582; c=relaxed/simple;
+	bh=w0/1CPAj9OEmpYXqh1rya4kF5yYb0G3adRXi+35w65w=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=oYuFvb8cgS7LuCp+HQPdKjLorXotUuEZlI0bdzBPnXr8zMMz579ahxngKlpIQi613uzIN81LdHShRRkSSWe/LVDYbCb8Q9QK/fMaXq3GFp0e+6ACwiTNUOE5fqR4LYDTlw5ZQ0hoBgLFWp7kWOAQ80iciILH8xRIyaumBqRbsRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=GMwKisLO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Ynp4KWEi; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Zk0zQkO8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F1E39C4AF0C;
-	Mon, 13 Jul 2026 06:48:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux.dev; s=korg;
-	t=1783925319; bh=DgPxSWJm3yP+ocMCPSZPYulAvRJygW/tBHfG7di1GFE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Zk0zQkO8N3gbKJh5tvrFS9kZDOyVmA77DvUWiEDGtB/y7uMEjXGBdTrvfm5xgIUw9
-	 pLe2zPc/shwdxyRVRIsYvnGbGhA1ztRM4tI9Z5RZtwb5bmmA3Nqp9IYmOxVNwNxUQk
-	 RjT2o887E3fqiCnZalcPFZn2QjWBCQk3fWaL2+IQ=
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFD9C44501;
-	Mon, 13 Jul 2026 06:48:38 +0000 (UTC)
-From: Alvin Sun <alvin.sun@linux.dev>
-Date: Mon, 13 Jul 2026 14:45:30 +0800
-Subject: [PATCH v8 09/10] rust: macros: remove `THIS_MODULE` static from
- `module!`
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="GMwKisLO";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Ynp4KWEi"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66D6Nmpl507318
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 07:43:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=50PhvAGrAdZr+Emnp4Nz9+
+	Kfj+hnrAtMN8ZqiEDpg4g=; b=GMwKisLOSyAdclz/N6eHyd4QShVw8CJDYwa1ai
+	yyznPt7YKHIn1vChkWfg/LKu5j4tosoqSZCkC3nWmDLjSAJCF9AzsbnSQRrAs2bC
+	mu8O9m1Dcar8XjJgghY9HyeSiaaMMBH0ijptWW3IcSyAB4j7xIo3ZT1Nk+6SMyQz
+	0ObIOdFfiKRbthmUeh3sKwX1OPImjam7UG1cw4Oboe7SG1wP9QJj0P1ounVtF6Dd
+	zH3m0HN21xqBYlKKizqdjkYlJRh4no9J7/gDRJzl/scc2vOcYq43UKSbxpT1xW24
+	L+LfUO2FcB8P5AtbZ/H0QAmnKT+t7dIJyC1ZYRXcwr3CFgaA==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fctc8geay-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 07:43:00 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c892143db7fso2698841a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 00:42:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1783928579; x=1784533379; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=50PhvAGrAdZr+Emnp4Nz9+Kfj+hnrAtMN8ZqiEDpg4g=;
+        b=Ynp4KWEiqcCiQp+2+39bSVyOPCr6zSkM8jhrrVGqikoMH/APT/c3ylbLl+hSL9x2tB
+         WbPFMWOBnmNAE5660/XMIxNCygYiT6J6A0dricV4EWK224XtcznV5kz9UVyLRL4+Feii
+         acciwCGbqP3mF/jJuzeKs2lmObLKWjXbfwvELQdyaTPy/ZUSVW0yH7Tj82EDSEYtC2d1
+         vfRvbTtZzduVZDIyCieg0WQArTKrhF6OY8+w3HcsYDdDSYblLlCP75c5Jn3nl7HBiYAb
+         3NOKkmnP4Roll7Xn/ThM0xxCMdVVe6e2sSPqg3KxrSUkMN38o8YVjU9VPYCR6OTY3PJ+
+         gWDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783928579; x=1784533379;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=50PhvAGrAdZr+Emnp4Nz9+Kfj+hnrAtMN8ZqiEDpg4g=;
+        b=TdZ9CQsqHg618rxyX0wEbYXq51eWUqA6DiGn6W8x/X5TuqmfmmFoQ4zzxaCBXXUCwH
+         1VEU9o4qf6fOGchUUnNp534p4BCSNJ8ZVmn2NlihYtlFekjE6QZDbjEMF7CidxXpi6NB
+         FOOh4EIbhwBqjKAU/+uaHKY7tw2KSuOaz7AmhIXjUJEUbH9sI5ETPGCY0QrtPIEjwdCa
+         uhwjMISYYsMkFsB3qcfIPv07bDK9Cj2s5aRR7w6DR+SgCmKyTHD6smxWnFShb6yf9zmW
+         qiDNDiH52X5Hm1E9yVMuv5l94j550NvJ8lNUo6S37yX9ACZo5BDPMoDJcDZ0NU0DBlUu
+         vmxw==
+X-Forwarded-Encrypted: i=1; AHgh+Roaou0CGkGk5edMO55pAfXF0cU9Q/7wktFwkiRo/SDQRmfORAeLSecjes5ara2C76zXLFA0qn6YXQU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx58NjZ8dotMWIHxuKNjoxhuSi8yVFoBCyY+CpXdGn9TmnfiVHp
+	KZS7jEurqyAUj1mlvmK/E5U1tdbNEeRo0TQ5buvaZxHKoJQwvOcN9b3nitFTt1szTLx+wwS8pxt
+	Z1/7iBxpGACZ/TgjY1SHFHn1N5+8zMc3fS2/1t1vOQ9CK/O0cMI070MW5rOYS8G7KC7ednYc0yg
+	==
+X-Gm-Gg: AfdE7ckiybzgE57mK5hcDngAEfD6UsDqso9s/6mYUNOHjPcyo0uK1oBt+h1CYBBHQQd
+	9hibEllWhVV4iLdiuS+PfTieRMqX4s5WCtUchB3uLv9rIrsdNahctFcitzYCaMwIOR5WT8ACKK1
+	qF4T9mriHxEpo/vat1v6GLRyAZtV1vrSAv9oSAshZyCElf+RUSUuv7kGoh4Rs1GQwcff/A6Yzjf
+	n6aXutQ4llsuJkzCB1G5Xopp/pTNnwcZ6N9r0PEpqoeeRWWfDorqgAmYK8+hvp4Zq7eBzxBkHLr
+	GcrvIveLAwXCf/Yyw+QIK4wwhbBpaoqYI/3QN+gidWsrYivxIoKh8c5q8pIcaYTuUs4czrve7uw
+	WVmIgZ9lQG5nSCg/hO86cVcf9mqetF/VX0A8u2vZTx3fA8idysEkrWlyrGg==
+X-Received: by 2002:a05:6a20:1455:b0:3bf:6c07:b2f6 with SMTP id adf61e73a8af0-3c110adf3e1mr8816666637.57.1783928579472;
+        Mon, 13 Jul 2026 00:42:59 -0700 (PDT)
+X-Received: by 2002:a05:6a20:1455:b0:3bf:6c07:b2f6 with SMTP id adf61e73a8af0-3c110adf3e1mr8816645637.57.1783928579031;
+        Mon, 13 Jul 2026 00:42:59 -0700 (PDT)
+Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13b659d87a2sm61329797c88.13.2026.07.13.00.42.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2026 00:42:58 -0700 (PDT)
+From: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Subject: [PATCH v2 0/2] PCI: qcom: Clear Attention Button Present in Slot
+ Capabilities
+Date: Mon, 13 Jul 2026 00:42:49 -0700
+Message-Id: <20260713-b4-clear_abp_0713-v2-0-4f0333a98d4e@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -36,94 +89,94 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260713-fix-fops-owner-v8-9-2495cfa82d47@linux.dev>
-References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
-In-Reply-To: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
-To: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
- Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>, 
- Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Arnd Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, 
- David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>, 
- Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
- Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
- Igor Korotin <igor.korotin@linux.dev>, 
- FUJITA Tomonori <fujita.tomonori@gmail.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, 
- Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>, 
- Carlos Llamas <cmllamas@google.com>
-Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org, 
- driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org, 
- nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org, 
- kunit-dev@googlegroups.com, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, netdev@vger.kernel.org, 
- linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783925315; l=1808;
- i=alvin.sun@linux.dev; s=20260317; h=from:subject:message-id;
- bh=DgPxSWJm3yP+ocMCPSZPYulAvRJygW/tBHfG7di1GFE=;
- b=0bMb7aggACd9FRq5WcroeqBFFGecghQ54SD2IERllW9OS+qB6EeO+kiF962Fq39UNSAHmtmww
- 8MfJNW4P3nqD0RWVk6IMZZy7B1O4J5zB0OmnzD/F5/hMmDz8UHag7jY
-X-Developer-Key: i=alvin.sun@linux.dev; a=ed25519;
- pk=CHcwQp8GSoj25V/L1ZWNSQjWp9eSIb0s9LKr0Nm3WuE=
-X-Endpoint-Received: by B4 Relay for alvin.sun@linux.dev/20260317 with
- auth_id=684
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAPmWVGoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyjHQUlJIzE
+ vPSU3UzU4B8JSMDIzMDc0Mj3SQT3eSc1MSi+MSkgnigiLFuiomRSUoiEKUYJysB9RUUpaZlVoD
+ NjI6F8ItLk7JSk0tABinV1gIAZlejTHUAAAA=
+X-Change-ID: 20260712-b4-clear_abp_0713-d424da4dad3c
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Qiang Yu <qiang.yu@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783928578; l=1734;
+ i=qiang.yu@oss.qualcomm.com; s=20250513; h=from:subject:message-id;
+ bh=w0/1CPAj9OEmpYXqh1rya4kF5yYb0G3adRXi+35w65w=;
+ b=Anjm05j+qaCVr2AxpQcVJDrKMxuQK4k/b/+IC1/o2/D1TRet7lr2yLnpD8/iqL5obpOixAARK
+ +jx2UpiY6NeA2PrIT52eZdDwNI51PUZA+tXYRjuC4CkEwtaQZtrFiWF
+X-Developer-Key: i=qiang.yu@oss.qualcomm.com; a=ed25519;
+ pk=Rr94t+fykoieF1ngg/bXxEfr5KoQxeXPtYxM8fBQTAI=
+X-Proofpoint-GUID: YUXkiMNoHAT06wgvoUK8poWcYb3JfX5c
+X-Proofpoint-ORIG-GUID: YUXkiMNoHAT06wgvoUK8poWcYb3JfX5c
+X-Authority-Analysis: v=2.4 cv=UtRT8ewB c=1 sm=1 tr=0 ts=6a549704 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=1XWaLZrsAAAA:8 a=pNDaM0vVNsJultrfONsA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDA3OSBTYWx0ZWRfX+SuHgzPHcf8A
+ ppnrI/2CP9rPJVXdiVjNIU9n91LQPkBSuwun70VTCEj7h8Zz1EcV05gLiby6+eDjMy7OdplruMT
+ gUmtR0om/QvBOahHO6HwWiQOLugsyUc=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDA3OSBTYWx0ZWRfX7vgN2XPY9yQG
+ /7Hsxf+cz6SKmGBxl0MdCQ1WNneGUohJDt2lO4PXU+ugOmTeelK+kFFUw2GSXhdYs3md+bwjq7D
+ O54w4YUpfhPfOJHcc/MSrtY2+l2oH3QnmF0nhzC9iUhXtdJJi2Fk2C//xYOYxdiu0n/55FEuKqA
+ kIwIjTKoAc+apKjgdJSqbdBJII6lghNxWE4P09dlthE2VJ7H0/qlKX2cHtotKSYFMcYU601jifJ
+ rfYRUl1IPj/Bu5Dt60XAt05k8HtL9a8MWU9MQr9Uxl3hGB6VUUe43DpqoGr5iDdpQavRA9lD7u+
+ OMLclBMLeLr8eSimQcfQxoB7umeBpNuL7MxHv/Vuz81yRcF5aJ7rOk6Hzc2Td9aPQghszhduJFF
+ 0KiLfDWSA9R61+MwmgZv1VNR3zOKnUxCcGnkZ8Ct0GZU2PtkoULgwoKyeLRBAALSfPhqTYQVzlc
+ LBOi3+Q1FB4BvaroNcA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-13_02,2026-07-10_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 suspectscore=0 bulkscore=0 clxscore=1015
+ impostorscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607130079
 
-All users have been migrated to `ModuleMetadata::THIS_MODULE` const or
-`this_module::<LocalModule>()` helper. The `static THIS_MODULE`
-generated by the `module!` macro is no longer referenced anywhere,
-so remove it to avoid having two sources of the same `ThisModule`
-pointer.
+Qcom PCIe Root Ports advertise the Attention Button Present (ABP) bit in
+the Slot Capabilities register, but the slots have no attention button.
+This causes pciehp's pcie_enable_notification() to enable the Attention
+Button Pressed interrupt instead of the Presence Detect Changed
+interrupt, so presence detect changes are never reported and surprise
+hot-plug detection does not work.
 
-Assisted-by: opencode:glm-5.2
-Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
-Reviewed-by: Gary Guo <gary@garyguo.net>
-Acked-by: Danilo Krummrich <dakr@kernel.org>
-Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
+Patch 1 renames qcom_pcie_set_slot_nccs() to qcom_pcie_set_slot_cap() as
+a preparatory, no-functional-change step, split out per Bjorn's review
+comment. Patch 2 clears the ABP bit.
+
 ---
- rust/macros/module.rs | 16 ----------------
- 1 file changed, 16 deletions(-)
+Changes in v2:
+- Split into two patches (rename as prep patch, ABP clear as the fix)
+- Added a blank line before the new comment block
+- Kept Konrad's Reviewed-by/Tested-by only on the functional (ABP) patch
+- Link to v1: https://lore.kernel.org/all/20260710-clear_abp_0710-v1-1-efd63ebdaa09@oss.qualcomm.com/
 
-diff --git a/rust/macros/module.rs b/rust/macros/module.rs
-index aa9a618d5d19e..23b6a1b456b80 100644
---- a/rust/macros/module.rs
-+++ b/rust/macros/module.rs
-@@ -497,22 +497,6 @@ pub(crate) fn module(info: ModuleInfo) -> Result<TokenStream> {
-         /// Used by the printing macros, e.g. [`info!`].
-         const __LOG_PREFIX: &[u8] = #name_cstr.to_bytes_with_nul();
- 
--        // SAFETY: `__this_module` is constructed by the kernel at load time and will not be
--        // freed until the module is unloaded.
--        #[cfg(MODULE)]
--        static THIS_MODULE: ::kernel::ThisModule = unsafe {
--            extern "C" {
--                static __this_module: ::kernel::types::Opaque<::kernel::bindings::module>;
--            };
--
--            ::kernel::ThisModule::from_ptr(__this_module.get())
--        };
--
--        #[cfg(not(MODULE))]
--        static THIS_MODULE: ::kernel::ThisModule = unsafe {
--            ::kernel::ThisModule::from_ptr(::core::ptr::null_mut())
--        };
--
-         /// The `LocalModule` type is the type of the module created by `module!`,
-         /// `module_pci_driver!`, `module_platform_driver!`, etc.
-         type LocalModule = #type_;
+To: Manivannan Sadhasivam <mani@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Krzysztof Wilczyński <kwilczynski@kernel.org>
+To: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-msm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
 
--- 
-2.43.0
+---
+Qiang Yu (2):
+      PCI: qcom: Rename qcom_pcie_set_slot_nccs() to qcom_pcie_set_slot_cap()
+      PCI: qcom: Clear Attention Button Present in Slot Capabilities
 
+ drivers/pci/controller/dwc/pcie-qcom.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+---
+base-commit: 3edb3a038d423480efeb204dbc6ddc9a292f8ecb
+change-id: 20260712-b4-clear_abp_0713-d424da4dad3c
+
+Best regards,
+--  
+Qiang Yu <qiang.yu@oss.qualcomm.com>
 
