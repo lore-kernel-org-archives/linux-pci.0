@@ -1,218 +1,129 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3341D376481
-	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 22:40:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783982425; cv=pass; b=XEokpdMVr0L/IU4EKDavJ/XtHUmL4TY4BMC6Ehkq5/I2F/Dc7B5Uaq7b5wzhRWeY2mNw2NAu7aPefhJh5WbMaL2rb/Okgd6OOGifjUBAiXoFn70lPZiizCzWGNdn1V5jSjNPZVANRRXq8/pc9IQUFwIM+tHGygqxMZd6WzTFRUM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783982425; c=relaxed/simple;
-	bh=7LkfD6aXl9dK90wHStXoX1dSfuVb2Ck7kctZehI6Xxk=;
-	h=From:In-Reply-To:References:MIME-Version:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=E9LN8RLSnz5IE4xlhlD6uXZSIYKP2EZRAIFySGpAQGJt7x3B9AY7ozjBZvcGZ+e3sWxHtojE/XwM3VAwFLGjlR/jNG8BcQjhxaQgAdkkH6S+PdnG5j3rXgo7RDZsnTWZdXKBpPB5igjofSveUGgqhdJH6Dbsvq2ne6xmaglRERo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MET43OUc; arc=pass smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8D435C19F;
+	Mon, 13 Jul 2026 22:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783982793; cv=none; b=tEAa3sX1WvpiqZT4ITtGieByjBRl/z2fJ4fDV1A4onRDFfW/x3uDmG+LPLfL6ULFfLe+Jk0cTN7Sk3Gu/U/0HRtXy2qQ2LNZOD5/nk6JVhLKmOYy1XpCjD5iMc9q/+sCnqEVpVDsjgwn3mm0AsUp5A0IFhLP9HqIuK8vO2EusUY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783982793; c=relaxed/simple;
+	bh=ki0rf5KXacbCrzLLJ68G/ZKvopgBN+PE/LQidwi3tPE=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:To:From:Subject:
+	 References:In-Reply-To; b=Tc4gaUhL6M1kp2U6ACbV4Y3rphs/c9jtCnpvfN0cdhFreR57bY10nFLUBO3gPA08kBhMz8LSaGOIWqZl5LybbfV2dZ9tvqCGaJGGN2uXuw3m08MhPixes+t+61JOX00z6WpqGDgyhoZtGBSkgOKQ0kTAGpzaAqeoLjkgBdlhzzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IDPceOJt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MET43OUc"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c15d47266baso52896166b.3
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 15:40:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783982421; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pxznO0ZYdHFtcPpbq4/LHvHFrpty0lsBWXVsTogbS3T5NzAfA/OU+PGveNpSCFB8Mt
-         DzTbqgn41oWvW+EjZjFUHw2AFfyaL+m8F2kJ2uuW70TkW0EF171pVn05YXHtvng2ZYSd
-         A2tCj7SLt4d9aFYd+krKkG76jsnwhXpxaMIYNckU2Xze4wcqXf4Q+6+JoqR3zcCjHfOJ
-         85gPB3KZIceNcNGSgKdoG4+jexznwN/NSMlIUZT6Zx9znTWC4XkzsRUduMZxI4IyHEOW
-         cyernVxUmW7gR3sawiMR5P3Nh2Y6RG5UslT7XAwvVy2JLfcPeO1tZyIlnqqMr37EBqqG
-         hD4w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:mime-version:references:in-reply-to
-         :from:dkim-signature;
-        bh=7LkfD6aXl9dK90wHStXoX1dSfuVb2Ck7kctZehI6Xxk=;
-        fh=THm+kr4KEFZ1n+toDayrPDp4vsEHhlWNJ6z5rF7LyoA=;
-        b=q4smV3N9MoTqUa5vCXi806UGiwYsTYFUrEizmCf1gJUK0Wu79jkC6lyZQ/ocoP+ezz
-         SwGM+tdbsv8z35GBcFL/8c2XZ5b+iFdK0ujvnUbCXHfB4UoyC3DPToP2FM048p92UXXK
-         nIU4TIgq/SZIERBC6JAqvbXQd/dlmRd4x7IQ5QPSt0t5kPb/UxLy5GoO1ZUXfQfaAdrQ
-         qeHkPtGB1knY/7C+lT+vaR+k4eAvCI2UsErPbcoD28VOxXo99GBt4ybaURVBJ35FRkp9
-         Hgh2FtfeUZaHqvMQlj3j4w58yriqhcjOqTMH3hcADqn4kUisII0hjRceWcZGX4jiT9OU
-         GIjQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783982421; x=1784587221; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:mime-version:references
-         :in-reply-to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7LkfD6aXl9dK90wHStXoX1dSfuVb2Ck7kctZehI6Xxk=;
-        b=MET43OUcURM8pFPrJQDWyENy3H19795XEqQCyrqsduHYio7M5nTQXLYG/OmO9cp7pu
-         NSSIOdLDvXWVZ9I0oqHIPHx2CUMjFjdXlMjUOYtxQRcEe+Dvyq3MDcJYRF4IZqwcNW2Z
-         1hfEhawPHBmOGGjG5SGkQ5i2ptqFmy8aS9H0YzRMa+i6hYP7EPL5lZkT/Eo5A9f2ZEIF
-         xZcjgdxAwdiRI8yIW1fMgK8wsKugVNDr7Cl3XaNqvTN64quYFZc3g5Rxu1pspm/jay9b
-         GeMTQKsBFEdtQKWr0fqjg8EB0f2b9eodHg8CqAhpyh5mMy+THoxXrrWrVf7r1k2OZbPh
-         uuag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783982421; x=1784587221;
-        h=content-type:cc:to:subject:message-id:date:mime-version:references
-         :in-reply-to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7LkfD6aXl9dK90wHStXoX1dSfuVb2Ck7kctZehI6Xxk=;
-        b=ijjfRaVhsAKdMXOGzpDoV5wsPoJIi7FB8ObSqunoRuR7WUFMkNPBGhJ9pRQLsbYyNg
-         9kf5rCRqlKTAwLeriGNqDWWDZT1keMvYxMcnpgLHi4wV2P0cx5h38JNsTmYdKY26j0bl
-         CwjiIJGLOnBKIAQtTiypPzo50fgC3VnKvAiDf1XN7mumSpYEd74v9wKklgOrl+dN+tTz
-         p4BqkGsBnnWRhY9OSX4RND92XE3SPjeJez5yXkc7XBwu7eYnZj2RRhjQYTpNG196YKal
-         zJV/gdTkC3OX5zNXfLZU5zU2eI3dto4v91huINr191BSngJ2fxSi6LeOyllociXXAZJS
-         uxQw==
-X-Forwarded-Encrypted: i=1; AHgh+Rpheq1xErPwpRGzNuJLy6UoyP3xhrYPIJWFc+Vt18FwhhxS2QtiHJyoISMTa54MCEKIepJd7PqV9ro=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQnpF7jRLsiqsBSf5G3H54tEUx50MFEiiwHHwMt1ZyEvO7w1Ns
-	r1tKLWQF/VOPDVohMAgIwxx3pUolM/rJK52hi+ALtCnUpiCpfLGlP89M+bwI/mZk4YvMu+2T+yS
-	utoUGhePT+8SmZlGXsUHyst7d8tCmqHi4+j2K27lx
-X-Gm-Gg: AfdE7cmsci4gtun95z5syfjfmAt66y1WTTH2qTjqM9wo+4awV5voVHDROZrSxBLS80w
-	905O2YStu1EATLQtpxydz3PTOKygU9a/TxRyyMaqecXn1e7NjDWtn4dbGlqW4sTgF8nMd09ZlOH
-	/8V4QwM26Ikn4bBlqhj9XD3gy1Jrlxbnvz0zmiwgcVKkmALxUOgeVnKJF/82ALR6Yzpv6cy4IfY
-	2eToRYuuLwi8rCrhpqv1l9h9BQ3aYsIyLSIzAHhGcOK0g8D55HcxybXBjIaqn7Ucm9M9R9swnTG
-	NSgf0t74SpYsLX/mo4h5i4T6BdOWju8n5dgIWil07+zjWs/+Qzs+QkhANLM=
-X-Received: by 2002:a17:907:398c:b0:c16:13e7:fd63 with SMTP id
- a640c23a62f3a-c161de05ceemr462764166b.0.1783982420699; Mon, 13 Jul 2026
- 15:40:20 -0700 (PDT)
-Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 13 Jul 2026 15:40:18 -0700
-Received: from 176938342045 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 13 Jul 2026 15:40:18 -0700
-From: Ackerley Tng <ackerleytng@google.com>
-In-Reply-To: <20260713191727.GH674038@nvidia.com>
-References: <20250529053513.1592088-1-yilun.xu@linux.intel.com>
- <20250529053513.1592088-11-yilun.xu@linux.intel.com> <20250602133009.GC233377@nvidia.com>
- <CAEvNRgFpJWQ5M5sQhGpQUV3GbBq9N+MQhhaxdxa=D8ky94SCsw@mail.gmail.com>
- <CA+EHjTwd9uku-ZV5y8xcK8VWdOfhcchyW=_fzjpCf5Vk2wQoGQ@mail.gmail.com> <20260713191727.GH674038@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IDPceOJt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3EFD1F000E9;
+	Mon, 13 Jul 2026 22:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783982791;
+	bh=v/c9cJvLiRUh0chD13eoJnb/QVSK0PEeoY/ZOsgieZg=;
+	h=Date:Cc:To:From:Subject:References:In-Reply-To;
+	b=IDPceOJti8yjJTBHFR/PJstHcpy5h9nOpUFSwcTgPBT3+IeSs0qigOxd/Utj7ob/r
+	 616LSjIgzvakV7IRTDokAowfnRuKuyFD2ARi0jsLG1Qaq3QlQcsYqRUp1TRom5MIWz
+	 2znZQMzmZ3oZvtG1loeTGp57R4o6Dk1VQUFK9xP636/aeuem84FHzqwVc55gucAUeL
+	 hk/hgly4VxBVThEtB2B8QpRaq/PijFbG5KVzNtd/zfEAYm16zQC927QhbxsrIfVtXF
+	 1D/Y7O854UGxSn5pgCyRYMF5CMn6owa2l/GSTrDG+2QQNlKfJ60UtpqQPVprgTm363
+	 KQoips+yb76pw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Date: Mon, 13 Jul 2026 15:40:18 -0700
-X-Gm-Features: AVVi8CeLrPp9U0h6s0bW1dfkDuvwNQDlx835UcZJGSgXNK2eLWnyQH0juXRBY34
-Message-ID: <CAEvNRgEvGmOK3dXD4qdw5uXYD2sXNEVGT9NV2Zz-4H8VPb+KUw@mail.gmail.com>
-Subject: Re: [RFC PATCH 10/30] vfio/pci: Export vfio dma-buf specific info for importers
-To: Jason Gunthorpe <jgg@nvidia.com>, Fuad Tabba <fuad.tabba@linux.dev>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org, sumit.semwal@linaro.org, 
-	christian.koenig@amd.com, pbonzini@redhat.com, seanjc@google.com, 
-	alex.williamson@redhat.com, dan.j.williams@intel.com, aik@amd.com, 
-	linux-coco@lists.linux.dev, dri-devel@lists.freedesktop.org, 
-	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org, 
-	vivek.kasireddy@intel.com, yilun.xu@intel.com, linux-kernel@vger.kernel.org, 
-	lukas@wunner.de, yan.y.zhao@intel.com, daniel.vetter@ffwll.ch, 
-	leon@kernel.org, baolu.lu@linux.intel.com, zhenzhong.duan@intel.com, 
-	tao1.su@intel.com, linux-pci@vger.kernel.org, zhiw@nvidia.com, 
-	simona.vetter@ffwll.ch, shameerali.kolothum.thodi@huawei.com, 
-	aneesh.kumar@kernel.org, iommu@lists.linux.dev, kevin.tian@intel.com, 
-	fvdl@google.com
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 14 Jul 2026 00:46:22 +0200
+Message-Id: <DJXT48G5GZAJ.346BAPDEQ53FT@kernel.org>
+Cc: "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
+ "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
+ <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Michal Wilczynski" <m.wilczynski@samsung.com>,
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pwm@vger.kernel.org>, "Laura Nao" <laura.nao@collabora.com>, "Eliot
+ Courtney" <ecourtney@nvidia.com>, "John Hubbard" <jhubbard@nvidia.com>,
+ "Alistair Popple" <apopple@nvidia.com>, "Zhi Wang" <zhiw@nvidia.com>
+To: "Gary Guo" <gary@garyguo.net>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v6 00/20] rust: I/O type generalization and projection
+References: <20260706-io_projection-v6-0-72cd5d055d54@garyguo.net>
+ <20260711161035.370023-2-dakr@kernel.org>
+In-Reply-To: <20260711161035.370023-2-dakr@kernel.org>
 
-Jason Gunthorpe <jgg@nvidia.com> writes:
-
-> On Mon, Jul 13, 2026 at 08:08:14PM +0100, Fuad Tabba wrote:
->> On Sun, 12 Jul 2026 at 02:02, Ackerley Tng <ackerleytng@google.com> wrote:
->> >
->> > Jason Gunthorpe <jgg@nvidia.com> writes:
->> >
->> > > On Thu, May 29, 2025 at 01:34:53PM +0800, Xu Yilun wrote:
->> > >> Export vfio dma-buf specific info by attaching vfio_dma_buf_data in
->> > >> struct dma_buf::priv. Provide a helper vfio_dma_buf_get_data() for
->> > >> importers to fetch these data. Exporters identify VFIO dma-buf by
->> > >> successfully getting these data.
->> > >>
->> > >> VFIO dma-buf supports disabling host access to these exported MMIO
->> > >> regions when the device is converted to private. Exporters like KVM
->> > >> need to identify this type of dma-buf to decide if it is good to use.
->> > >> KVM only allows host unaccessible MMIO regions been mapped in private
->> > >> roots.
->> > >>
->> > >> Export struct kvm * handler attached to the vfio device. This
->> > >> allows KVM to do another sanity check. MMIO should only be assigned to
->> > >> a CoCo VM if its owner device is already assigned to the same VM.
->> > >
->> > > This doesn't seem right, it should be encapsulated into the standard
->> > > DMABUF API in some way.
->> > >
->> >
->> > I'd like to propose an alternative. I've been working on guest_memfd and
->> > new to the world of IO, please help me along! :)
->> >
->> > It seems like using dmabufs are used a little awkwardly here. IIUC
->> > dmabufs were originally meant to expose memory of one device to another
->> > device, mostly meant to share memory. Dmabufs do expose MMIO too, for
->> > device to device communications. Without virtualization, userspace MMIO
->> > would be done by mmap()-ing a VFIO fd and having the userspace program
->> > write to the userspace addresses.
->> >
->> > Before CoCo, device passthrough (MMIO) is mostly handled by mmap()-ing a
->> > VFIO fd and setting up the userspace address in a KVM memslot for the
->> > guest.
->> >
->> > With CoCo, is the problem we're solving that we want KVM to know what
->> > pfns to set up in stage 2 page tables, but not via userspace addresses?
->> >
->> > guest_memfd already does that for regular host memory, tracks the
->> > private/shared-ness of the memory, tracks which struct kvm the memory
->> > belongs to.
->> >
->> > guest_memfd functions as KVM's bridge to host memory. KVM already can
->> > ask guest_memfd for the pfn to map into stage 2 page tables, and already
->> > asks guest_memfd for the shared/private state of the memory. guest_memfd
->> > already also blocks the host from faulting guest private memory
->> > (mmap()-ing is always allowed).
->> >
->> >
->> > Instead of using dmabuf as the intermediary between the MMIO PFNs and
->> > KVM, why not use guest_memfd?
->> >
->> > What if we make guest_memfd accept a VFIO fd, or a dmabuf fd?
->>
->> This is interesting for pKVM too, provided it covers more than MMIO.
->>
->> We need guest_memfd to be backable by a dmabuf for ordinary guest memory, not
->> only for device MMIO. There is mobile hardware that doesn't tolerate scattered
->> private memory (DMA engines that can't gather, IOMMU page-table size
->> constraints), and a CMA-backed dmabuf heap is the practical way to get
->> contiguous memory at runtime.
+On Sat Jul 11, 2026 at 6:10 PM CEST, Danilo Krummrich wrote:
+> On Mon, 06 Jul 2026 13:44:13 +0100, Gary Guo wrote:
+>> [PATCH v6 00/20] rust: I/O type generalization and projection
 >
-> Why can't guestmemfd allocate directly from CMA? Allocating struct
-> page memory through dmabuf just to put it back in a guestmemfd sounds
-> very ugly to me.
+> Applied, thanks!
 >
-
-I'd like to understand this use case better too, is using CMA through
-dmabuf basically because CMA doesn't really have a direct userspace
-interface? As in, for HugeTLB there's fd = memfd_create(HUGETLB) and
-HugeTLBfs fds, but not CMA?
-
-I did hope for this API shape to extend beyong VFIO and HugeTLB to
-anything that has an fd today, but Frank did bring up the counter point
-that not all memory has an fd.
-
->> HugeTLB doesn't help, it wants boot-time
->> reservation. Those pages are struct-page backed, so it's a different problem
->> from the non-struct-page MMIO case, and the shared parts still need to be
->> GUP-able.
+>   Branch: topic/rust_io-7.2-rc1
+>   Tree:   git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/drive=
+r-core.git
 >
-> Isn't dmabuf pretty allergic to mmaping refcounted struct page backed
-> memory since that wrecks its lifetime model?
+> [1/20] rust: io: add dynamically-sized `Region` type
+>       commit: 426c92ca1bdd
 >
->> More important for the API shape: conversions have to work on subsets of such a
->> region, at page granularity. A pKVM guest doesn't know what backs its memory, so
->> it will issue share/unshare hypercalls over arbitrary ranges of whatever it was
->> given.
+>       [ Add brief explanation on MIN_ALIGN. - Danilo ]
+>
+> [2/20] rust: io: add missing safety requirement in `IoCapable` methods
+>       commit: 65f6abf9fa81
+> [3/20] rust: io: restrict untyped IO access and `register!` to `Region`
+>       commit: 6461c5776bf0
+> [4/20] rust: io: implement `Io` on reference types instead
+>       commit: 46b1b54139c3
+> [5/20] rust: io: generalize `MmioRaw` to pointer to arbitrary type
+>       commit: 9734e905119c
+> [6/20] rust: io: rename `Mmio` to `MmioOwned`
+>       commit: 691c75967d44
+> [7/20] rust: io: implement `Mmio` as view type
+>       commit: 9f64c84af008
+> [8/20] rust: pci: io: make `ConfigSpace` a view
+>       commit: 6e5f28968d7b
+> [9/20] rust: io: use view types instead of addresses for `Io`
+>       commit: e0454ec1220c
+> [10/20] pwm: th1520: remove unnecessary `deref`
+>       commit: 0adc93b85374
+> [11/20] rust: io: remove `MmioOwned`
+>       commit: bed01ca9e9cf
+> [12/20] rust: io: move `Io` methods to extension trait
+>       commit: 9b36c13cbd4f
+>
+>       [ Add comment explaining the purpose of the Io blanket implementati=
+on.
+>         - Danilo ]
+>
+> [13/20] rust: io: add projection macro and methods
+>       commit: 1f989555fe5c
+> [14/20] rust: io: add I/O backend for system memory with volatile access
+>       commit: 2fabff780785
+> [15/20] rust: io: implement a view type for `Coherent`
+>       commit: 1d409d1e7a87
+> [16/20] rust: io: add `read_val` and `write_val` functions on `Io`
+>       commit: 89814c42c19e
+> [17/20] gpu: nova-core: use I/O projection for cleaner encapsulation
+>       commit: 0722567f5085
+> [18/20] rust: dma: drop `dma_read!` and `dma_write!` API
+>       commit: 6ff7d69b7e6e
+> [19/20] rust: io: add copying methods
+>       commit: e7219e53c525
+> [20/20] rust: io: implement `IoSysMap`
+>       commit: 11a4784f902e
+>
+> The patches are in the topic/rust_io-7.2-rc1 topic branch and will be mer=
+ged
+> into the corresponding target branch soon.
 
-For my future reference, does this mean for the CMA case, some page
-splitting on conversion to shared (so each page can have its own
-refcount to track users) will be necessary? (and merging)
-
->> If a dmabuf-backed guest_memfd can only be converted as a whole, we can't
->> use it for memory, and the guest can't be taught to care.
->
-> More reasons not to involve DMABUF since guestmemfd already does all
-> of this...
->
-> Jason
+Now in driver-core-next and drm-rust-next, thanks!
