@@ -1,113 +1,230 @@
-Received: from mail-wr2-f2.google.com (mail-wr2-f2.google.com [74.125.225.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B897427A1A
-	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 14:52:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A694313543
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 15:03:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783954328; cv=none; b=HT1XQWF+6bxaYRzl+TmKfdFuii+88NcUOhHPLSlMfNhGpDEtu+c0lAJCzX0eaCPw2wtFE3bmpq1hh9oS8SZDjGAx1yl85RbdsgFCXeUR40ny65PlMjhLOu7D9VYLUlhPPRdvF572rzNXIjGTXbKPlYX3gReclv70hOvAHxdQtrg=
+	t=1783955028; cv=none; b=hIksAWRwswyWqXVaxbZDD6CLSEcbYGuUP33t8lZt60T9Iqo53/myLeNMWbcQp5p5qrvbXNZfHPhkHLF3VyIdvbD6TIa1RUWYA0RtFzlEd819pyG+daB3vlfBEF815FkNU2F7LM568BqXFcBRpuClVA+Vl5VBnoN0AbnCGUj9XbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783954328; c=relaxed/simple;
-	bh=79YO/wfHgd/0O6mQKwHAioRHxkqGkaQ4vgsQuubKFP0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uKIyNWVKMGEgSSg7NvPyzREWd5ssUIbHTS1X8ibcJYIW12U0Ns26EiG7OfUuQUwy52v2kqifzffINGJomlcRsVaYRHzZkWs8b6mftYzOB1O93If2OA4gGoGAkq672pAEDCJwEIXnWG4pXE8gkMnam/6lB6ifkq1vALcbhnPhmO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ID3tsAc1; arc=none smtp.client-ip=74.125.225.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783955028; c=relaxed/simple;
+	bh=DkjWNv6PxAkfZDIfhFkw5cybhxapB2yvP8aad88fs5k=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=OO+A0/Q4YVBI1TFF68kCj/M8//3HQBLrouaU8g96JqtDDYZHhPUhZgfp/lnPa+c12cnRmGVPuIMRocPaWiE49j1LG4RWSIgS1991NpK6fIVCSOIOIjLNNE+sQo3HRIBZCgVjmKj6aHlKRUnBqxvAhixKCfAI4g/7zKma1AAHzc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ReUJEg5d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ID3tsAc1"
-Received: by mail-wr2-f2.google.com with SMTP id ffacd0b85a97d-473ba029526so377566f8f.0
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 07:52:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783954325; x=1784559125; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=YNR4lJereWmoqdda1rZEj7eFGTOnLHHANTTIU33C4F8=;
-        b=ID3tsAc1bqsTf8l/JtUoeQvF7OFA8xXHT2l6z1yTmg7FX3+K4wjRZ2YnDf+bkWjni1
-         MKAlucpidjPuXFs+AuDQkNf/2hGuK2qyPQri8EpyWpRLq4x9XtGCFKQ0E8w9hn2X+geP
-         FKxuOplICsKhRB9R3JCTgKSMocdx0PRnDS5/QY5e7/+N08CkDYD7RE/ikMpIVgRz+cIx
-         gelAFL1aRuRmcUWGTuE9U03xP5HzpWf4UWDaWguioIYRYEaXOUeJYW1dBjEVh9xSeOL0
-         Y/XjPiO8Xo7BlpB8fJKqr9HU9jyIYZaabNrLNjPm8ReEU+2BgtEMO1yLhIvFLWFP0bWy
-         lT2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783954325; x=1784559125;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=YNR4lJereWmoqdda1rZEj7eFGTOnLHHANTTIU33C4F8=;
-        b=QHkTL8I50lC1vO6qPwD4QH2jqddHluagF7lv3Cnld2MU9QK5+QkgVupInv3RUHZmGS
-         yRs9FmbY7oE/mdzh1UTBS5C7RkJ47K0MsxNn9p7g4WNJ4E9q5TtjBruTzYRmshgoMYKV
-         IxFsCD+xRkX+lTbS7CuAiMb5Osnp6u/YAqqHwFSJOYJvWMJfQXZgK2GPtwLexwwRYzDr
-         cn6RAD5oEzu+rFGW6m2MEKgPDzIbyGRiF9SeLeXjyP6dMWtWa8TG0r8A9iitXCTc564W
-         L4MFW2i+o+BY1Hg4OLyBxfoQI8E29GtFXCLPtsMmQa0XX9lrdO1IIE+FhuOiLu71riWy
-         XkCA==
-X-Forwarded-Encrypted: i=1; AHgh+RoM3rAfafUsFxxH/ahpi+UtLklcEmBm4d3DU/2tlouwlIPVDrzUizvPLHAWZ8TFPMAuoOWoedh8MyE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwY+R/qdmzmAx2vZn6yybXliwQhS6ztzt8ggy8b1NsuoZlyMFiO
-	OUCQ/gGpJxI6mErVhZSdR9mFld/dCeEs1YakrRzzPLU/JEUKpR2HMZP9
-X-Gm-Gg: AfdE7cmOP7Qz15sGm7M8Ls3TwI0eTDL0e4JRcfBHj3ms6Td6yldS/kS9GD3pVtTEl9o
-	acUIQVoAi2IHSOqyssRtZ+2gdzQbXLNUbfROV4QLUjbagB0Q981w1avdWHNTQrFnJ2iigcE3MdA
-	GxTp7AmJO10E4zl4p7K53HRE72QrH8nUM4WotH5YR2mKJZrHTMObTOQf/NAGwtTgVaGS+Fgyrn4
-	GQs+d1sKc99dojLSI70Gr4BM2m5dVaBvEHc/Tz/XLR2phGsrIyZ6IN9P/oXs7qQ8QaoJiFdcVNW
-	Rn+dmFmZVSjduDYYWEGxCm/ujOYp5WcVrWsoQS0R8cWB0e7yUAQERoWVxm3bdXjfOWNAgvzylAz
-	kJnXeE8+zZeHS2rosZ/CSpJej5ZiQ+UIFJxaiwHFKgkyAosks7tPbzqIK4KyTIuc/3gfKl2rdJt
-	CL4WrtLdZLLC77zTQ2Ew==
-X-Received: by 2002:a05:6000:250d:b0:473:fc10:f675 with SMTP id ffacd0b85a97d-47f2dcc0fe2mr9317908f8f.18.1783954324427;
-        Mon, 13 Jul 2026 07:52:04 -0700 (PDT)
-Received: from workstation.. ([110.93.227.81])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f25b23b7esm30983183f8f.18.2026.07.13.07.52.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2026 07:52:03 -0700 (PDT)
-From: Ali Tariq <alitariq45892@gmail.com>
-To: Kevin Xie <kevin.xie@starfivetech.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ali Tariq <alitariq45892@gmail.com>
-Subject: [PATCH] PCI: starfive: Fix Runtime PM handling and teardown ordering
-Date: Mon, 13 Jul 2026 19:50:14 +0500
-Message-Id: <20260713145014.740898-1-alitariq45892@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ReUJEg5d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B57F11F000E9;
+	Mon, 13 Jul 2026 15:03:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783955026;
+	bh=n9vB0jUnG655kQfJPZDRIunsWpJSIGNCo/9mchANznw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ReUJEg5dgKVaN5dxGNt/UGbKwWqm7VA87t2R3tq2RgnwhRxt+FYGsodcEaten/MjF
+	 56uRfjm9PDwy7w+OdXXP3OvYWM46c/pexSNXRw+/P56KXVdXb3qQKgfWArEdSJ7JvN
+	 TtebErD9ej7loXhSLRcxGMuLzpWzAeTRJMMTFw0szv/p1PQZ5l0BP5ylMwL0VjuLsE
+	 Ppc6PckxYkUi2+sp4VlHLlW8YhNYZKbirEGOl6lXWLnQr5DKW2xYK0/iDiCbyfcpey
+	 7jGXeZkDlKEhsUNmySSlfZE92TL0zhFlrnqfy8Lhf4HJxio/g5Ce0zG/geUFJzk372
+	 DJUkLpClPV10A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: starfive: Fix Runtime PM handling and teardown
+ ordering
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ali Tariq" <alitariq45892@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260713145014.740898-1-alitariq45892@gmail.com>
+References: <20260713145014.740898-1-alitariq45892@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 13 Jul 2026 15:03:46 +0000
+Message-Id: <20260713150346.B57F11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] The driver fails to check the return value of `pm_runtime_get_sync=
+()` during probe, risking a kernel panic.
+- [High] `starfive_pcie_host_init()` leaks PHY resources and completely ign=
+ores `regulator_enable()` failures.
+- [High] Unsynchronized teardown of chained IRQ handlers risks a race condi=
+tion and kernel panic.
+- [Medium] IRQ domains created in `plda_pcie_init_irq_domains()` are perman=
+ently leaked on probe failure.
+- [Medium] IRQ domains are removed without first disposing of their active =
+IRQ mappings, triggering a kernel warning.
+- [Medium] `starfive_pcie_hide_rc_bar()` incorrectly relies on exact equali=
+ty checks, allowing its protection to be bypassed via unaligned accesses.
+--
+
+--- Patch [1]: [PATCH] PCI: starfive: Fix Runtime PM handling and teardown =
+ordering ---
+commit 179d6c49f89a16ca3a07a0fadbdedce7703762df
+Author: Ali Tariq <alitariq45892@gmail.com>
+
+PCI: starfive: Fix Runtime PM handling and teardown ordering
 
 The starfive_pcie_remove() path incorrectly disabled runtime PM
 before executing plda_pcie_host_deinit(),
 which can cause unmanaged hardware register access
 while power domains or clocks are disabled.
 
-Fix this by restructuring starfive_pcie_remove() to deinitialize
-the host hardware first while runtime PM is active,
-followed by a synchronous pm_runtime_put_sync() and pm_runtime_disable().
+> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/co=
+ntroller/plda/pcie-starfive.c
+> index 298036c3e7f94..6b439378e82eb 100644
+> --- a/drivers/pci/controller/plda/pcie-starfive.c
+> +++ b/drivers/pci/controller/plda/pcie-starfive.c
+> @@ -436,9 +436,9 @@ static void starfive_pcie_remove(struct platform_devi=
+ce *pdev)
+>  {
+>  	struct starfive_jh7110_pcie *pcie =3D platform_get_drvdata(pdev);
+> =20
+> -	pm_runtime_put(&pdev->dev);
+> -	pm_runtime_disable(&pdev->dev);
+>  	plda_pcie_host_deinit(&pcie->plda);
+> +	pm_runtime_put_sync(&pdev->dev);
+> +	pm_runtime_disable(&pdev->dev);
+>  	platform_set_drvdata(pdev, NULL);
+>  }
 
-Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
----
- drivers/pci/controller/plda/pcie-starfive.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[Severity: High]
+This isn't a bug introduced by this patch, but doesn't starfive_pcie_probe()
+ignore the return value of pm_runtime_get_sync()?
 
-diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
-index e9a472985b8a..ba8ef7842e35 100644
---- a/drivers/pci/controller/plda/pcie-starfive.c
-+++ b/drivers/pci/controller/plda/pcie-starfive.c
-@@ -440,9 +440,9 @@ static void starfive_pcie_remove(struct platform_device *pdev)
- {
- 	struct starfive_jh7110_pcie *pcie = platform_get_drvdata(pdev);
- 
--	pm_runtime_put(&pdev->dev);
--	pm_runtime_disable(&pdev->dev);
- 	plda_pcie_host_deinit(&pcie->plda);
-+	pm_runtime_put_sync(&pdev->dev);
-+	pm_runtime_disable(&pdev->dev);
- 	platform_set_drvdata(pdev, NULL);
- }
- 
--- 
-2.34.1
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_probe() {
+    ...
+	pm_runtime_enable(&pdev->dev);
+	pm_runtime_get_sync(&pdev->dev);
 
+	plda->host_ops =3D &sf_host_ops;
+    ...
+}
+
+If pm_runtime_get_sync() fails, won't it return a negative error code but l=
+eave
+the device suspended?  Since the usage counter is still incremented on fail=
+ure,
+does the lack of error handling cause a PM usage count leak and risk hardwa=
+re
+access on powered-off devices during the subsequent plda_pcie_host_init()?
+
+[Severity: High]
+This is a pre-existing issue, but does starfive_pcie_host_init() leak PHY
+resources and ignore regulator enable failures?
+
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_host_init() {
+    ...
+	ret =3D starfive_pcie_clk_rst_init(pcie);
+	if (ret)
+		return ret;
+
+	if (pcie->vpcie3v3) {
+		ret =3D regulator_enable(pcie->vpcie3v3);
+		if (ret)
+			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
+	}
+    ...
+}
+
+If starfive_pcie_clk_rst_init() fails, doesn't it return immediately without
+calling starfive_pcie_disable_phy(), permanently leaving the PHY powered on?
+
+Also, if regulator_enable() fails, shouldn't there be a return statement af=
+ter
+the dev_err_probe() call to prevent initializing the controller without pow=
+er?
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but are IRQ domains permanently
+leaked on probe failure?
+
+drivers/pci/controller/plda/pcie-plda-host.c:plda_init_interrupts() {
+    ...
+	port->irq =3D platform_get_irq(pdev, 0);
+	if (port->irq < 0)
+		return -ENODEV;
+    ...
+}
+
+If this returns an error, its caller plda_pcie_host_init() handles it here:
+
+drivers/pci/controller/plda/pcie-plda-host.c:plda_pcie_host_init() {
+    ...
+err_host:
+	if (port->host_ops && port->host_ops->host_deinit)
+		port->host_ops->host_deinit(port);
+
+	return ret;
+}
+
+Doesn't this err_host cleanup path omit the required call to
+plda_pcie_irq_domain_deinit(), permanently leaking the IRQ domains and their
+memory?
+
+[Severity: High]
+This is a pre-existing issue, but is there an unsynchronized teardown of
+chained IRQ handlers here?
+
+drivers/pci/controller/plda/pcie-plda-host.c:plda_pcie_irq_domain_deinit() {
+    ...
+	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+	irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
+	irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
+
+	irq_domain_remove(pcie->msi.dev_domain);
+    ...
+}
+
+Since irq_set_chained_handler_and_data() doesn't wait for executing handlers
+to finish, could an interrupt fire on another CPU and execute concurrently
+with the teardown process?
+
+If the hardware clocks are disabled in host_deinit(), could this trigger a
+fatal bus fault when the executing handler reads un-clocked PCIe registers?
+Should synchronize_irq() be called here?
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but are IRQ domains removed with=
+out
+disposing of their active mappings?
+
+drivers/pci/controller/plda/pcie-plda-host.c:plda_pcie_irq_domain_deinit() {
+    ...
+	irq_domain_remove(pcie->msi.dev_domain);
+
+	irq_domain_remove(pcie->intx_domain);
+	irq_domain_remove(pcie->event_domain);
+    ...
+}
+
+Since hardware interrupts were mapped using irq_create_mapping() during
+initialization, doesn't directly removing the domains without calling
+irq_dispose_mapping() trigger a warning in the core IRQ subsystem?
+
+[Severity: Medium]
+This is a pre-existing issue, but can the protection in
+starfive_pcie_hide_rc_bar() be bypassed?
+
+drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_hide_rc_bar() {
+    ...
+	if (pci_is_root_bus(bus) && !devfn &&
+	    (offset =3D=3D PCI_BASE_ADDRESS_0 || offset =3D=3D PCI_BASE_ADDRESS_1))
+		return true;
+
+	return false;
+}
+
+Because this uses an exact equality check, what happens if there is a 1-byte
+or 2-byte access at an unaligned offset (e.g., offset =3D 0x11)?
+
+Does this evaluate to false and pass the access through, bypassing the
+hardware protection boundary?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713145014.7408=
+98-1-alitariq45892@gmail.com?part=3D1
