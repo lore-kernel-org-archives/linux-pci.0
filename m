@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2777B241CB7;
-	Mon, 13 Jul 2026 02:45:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 111B11D89EF;
+	Mon, 13 Jul 2026 02:47:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783910752; cv=none; b=J4t9HBZbvSWM8okFAsfIgfT1fVSfizVLIv4K5d9XZGASgtJd7Su3/61oA1dS4njBPwBudnBOhz2KIWe2rM0F5taBezvaD6xcpfbhSbqK6hV6bdnOmHHS6hIKZQ4PhF3Yn1o37iCmGcs1eE6GYKBDdmtdxc4ipm0VI/4RK/cRb3s=
+	t=1783910849; cv=none; b=Exdjv1rZ5DClwJ+QjKRCiXEpPJfFoFdz/hyUxKlfPopj52YX52NoLOJgLuZkymPE2YxLYJ1uGI2GTgW6B6brqoZlVQiyMujloJYDgXDuxhwUJzPwkKnmriUG37f5tKpNKLELkaA2I6q9PwtKNOd8yk0Qq1WusQryIKvzEdMSwYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783910752; c=relaxed/simple;
-	bh=oJkrTq9AktOEedVhVoQ6CSiYgb98OoAzTiYTc+2AB9w=;
+	s=arc-20240116; t=1783910849; c=relaxed/simple;
+	bh=BAUQ6r4R5DOKRofTA390A+7dCpO8yh8bBvFqVyJSkOc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B62DYwTMacG2KAwRk1fBkE1lr1oiGgmkl0bmbJpDjnRm0kyE7Rj9f0UAsz9pmDoIChwJMSsa32LXpcaLqmrEstSbivKUraUpZM0Ped15rnI5k3n58V8SmqZ5+1SxD06kHXJt9GLXxeQyCDOtdpZzG/QsxmpCEyiStXWMqtbG4T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KvoQFMbe; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bJgcIKLZnsMrtk4xaAUdfhuFL0NHPLME7N444OTr4hA3f4RE8B+7BAfxPWC6BByGINx8UTyo5jqXJ7tBmAmkJ3jOe314lJKuAK1LKivZ6QfX68pa6f1bGipJz75jBbFD9FesMdeD4k61rTFMXXiZSnT63aiqcU8r/XvWYdrGPts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VcPd46Sb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KvoQFMbe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C2C61F000E9;
-	Mon, 13 Jul 2026 02:45:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VcPd46Sb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E202D1F000E9;
+	Mon, 13 Jul 2026 02:47:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783910750;
-	bh=Kiqb5G19ULFtghyMZbx1g+TqnvvfEdVW7jtvsSm06yg=;
+	s=k20260515; t=1783910848;
+	bh=YC2TrYx1nkj0ciYkMUu+1BFe+T8B1yrLZ+Dbt2cU0vA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KvoQFMbeZKWaiU3pY3Do9i6YTZ20XeZa+PsSByEqtjI1zX4krbDxXaUs8YTc6uIu1
-	 y2VCmwQ8NAOriTM8iLGNQvXbyKcN2V9XNcc2iSN65iVGgx4gjS9BqUnUTgO1LDTlQK
-	 ngaMZtW5y+G+M0ycDK48WjpgrijaaVIaoPbL8EEjIwz6LiJJwJ0RD1wljhQciPZjti
-	 vSqrpKjqw7SIcWMlmqiwg3IMG89PfW5u1fOk9wFB0OKwuL2x/LDG47qHZqAxK3CyAZ
-	 CUEgFKhv0cJbonGWmCrRlMvMNvIf9Bcp+uS78v6Iey4u4+IPgiNnS6F75zSt9pkR4r
-	 dziHfdwG5Cxug==
+	b=VcPd46SbfFYiZoXpJViUKv0I8xJxvRvNlt7wk42yUnTvGqhx/y0fwlQCNHmiUZsc3
+	 eh/kKJZi62mNHphP1yeUCmiCBd0fAR7+RhIDYbRpEYtuPIoQfCGUXGYsckoH4mSltp
+	 l59tiR2a0PTXk42Q23lvIS6RzkFe3xVtBPuxpvNEw6bCgguZWFi71HSNpbxha5SX4g
+	 ehxhcL4Cb4jx6kOWWvgfNIPnEpR/Vw+oyqvWTK/yU+k6wn02UqxLPiIV3kcC8BqDZr
+	 IzyDdbb35fhdaIYoi/CL4kYYVWYS+hF4MA8djEbR+BMWY4rsxEiQFRs95uDJ1utKUp
+	 i9fdPrPjNaxYw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V6 2/4] PCI: imx6: Add skip_pwrctrl_off flag support
+Subject: Re: [PATCH V6 1/4] PCI: imx6: Move pci_pwrctrl_create_devices() to
+ imx_pcie_probe()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?U2hlcnJ5IFN1biAoT1NTKQ==?= <sherry.sun@oss.nxp.com>
-Cc: robh@kernel.org, devicetree@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260713023435.235765-3-sherry.sun@oss.nxp.com>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org, Frank.Li@kernel.org, robh@kernel.org
+In-Reply-To: <20260713023435.235765-2-sherry.sun@oss.nxp.com>
 References: <20260713023435.235765-1-sherry.sun@oss.nxp.com>
- <20260713023435.235765-3-sherry.sun@oss.nxp.com>
+ <20260713023435.235765-2-sherry.sun@oss.nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 02:45:49 +0000
-Message-Id: <20260713024550.6C2C61F000E9@smtp.kernel.org>
+Date: Mon, 13 Jul 2026 02:47:26 +0000
+Message-Id: <20260713024726.E202D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,75 +49,74 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Hardware initialization failure is ignored in `imx_add_pcie_ep()`,=
- likely leading to a system crash.
+- [High] The return value of `imx_pcie_host_init()` is ignored in `imx_add_=
+pcie_ep()`, leading to potential kernel crashes on unpowered hardware acces=
+s.
 --
 
---- Patch [2]: [PATCH V6 2/4] PCI: imx6: Add skip_pwrctrl_off flag support =
----
-commit 6bc8a94c274f464b53bad3ac0ac1a464c280f05e
+--- Patch [1]: [PATCH V6 1/4] PCI: imx6: Move pci_pwrctrl_create_devices() =
+to imx_pcie_probe() ---
+commit 4f9f6d6edaa61a5318865464b5da909ac26cfe6a
 Author: Sherry Sun <sherry.sun@nxp.com>
 
-PCI: imx6: Add skip_pwrctrl_off flag support
+PCI: imx6: Move pci_pwrctrl_create_devices() to imx_pcie_probe()
 
-Use dw_pcie_rp::skip_pwrctrl_off to avoid powering off devices during
-suspend to preserve wakeup capability of the devices and also not to
-power on the devices in the init path.
+Previously, pci_pwrctrl_create_devices() was placed in imx_pcie_host_init(),
+which caused it to be called multiple times across suspend/resume cycles.
+This patch moves pci_pwrctrl_create_devices() to imx_pcie_probe() so that it
+is only called once during probe.
 
 > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
 er/dwc/pci-imx6.c
-> index 92f8e4a299e88..afcf3b6bf3cd7 100644
+> index f55a68f60eea9..92f8e4a299e88 100644
 > --- a/drivers/pci/controller/dwc/pci-imx6.c
 > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1382,10 +1382,12 @@ static int imx_pcie_host_init(struct dw_pcie_rp *=
-pp)
->  		}
->  	}
+[ ... ]
+> @@ -1954,11 +1945,15 @@ static int imx_pcie_probe(struct platform_device =
+*pdev)
+>  	if (ret)
+>  		return ret;
 > =20
-> -	ret =3D pci_pwrctrl_power_on_devices(dev);
-> -	if (ret) {
-> -		dev_err(dev, "failed to power on pwrctrl devices\n");
-> -		goto err_reg_disable;
-> +	if (!pp->skip_pwrctrl_off) {
-> +		ret =3D pci_pwrctrl_power_on_devices(dev);
-> +		if (ret) {
-> +			dev_err(dev, "failed to power on pwrctrl devices\n");
-> +			goto err_reg_disable;
-> +		}
->  	}
-> =20
->  	ret =3D imx_pcie_clk_enable(imx_pcie);
+> +	ret =3D pci_pwrctrl_create_devices(dev);
+> +	if (ret)
+> +		return dev_err_probe(dev, ret, "failed to create pwrctrl devices\n");
+> +
+>  	pci->use_parent_dt_ranges =3D true;
+>  	if (imx_pcie->drvdata->mode =3D=3D DW_PCIE_EP_TYPE) {
+>  		ret =3D imx_add_pcie_ep(imx_pcie, pdev);
+>  		if (ret < 0)
+> -			return ret;
+> +			goto err_pwrctrl_destroy;
 
 [Severity: High]
-This is a pre-existing issue, but since this patch modifies
-imx_pcie_host_init(), I noticed an issue with how its return value is handl=
-ed.
+This is a pre-existing issue, but does imx_add_pcie_ep() need to check the
+return value of imx_pcie_host_init() here?
 
-Looking at imx_add_pcie_ep() which calls this function:
+Looking at imx_add_pcie_ep(), it calls imx_pcie_host_init(pp) but ignores
+the integer error code it returns:
 
 drivers/pci/controller/dwc/pci-imx6.c:imx_add_pcie_ep() {
-	...
-	imx_pcie_host_init(pp);
-	ep =3D &pci->ep;
-	ep->ops =3D &pcie_ep_ops;
-	...
+    ...
+    imx_pcie_host_init(pp);
+    ep =3D &pci->ep;
+    ep->ops =3D &pcie_ep_ops;
+    ...
+    ret =3D dw_pcie_ep_init(ep);
+    if (ret) {
+        dev_err(dev, "failed to initialize endpoint\n");
+        return ret;
+    }
+    ...
 }
 
-The return value of imx_pcie_host_init() is entirely ignored here. If hardw=
-are
-initialization fails (e.g., clocks fail to enable or PHY fails to power on),
-imx_pcie_host_init() returns a negative error code but leaves the hardware
-unclocked or unpowered.
+If imx_pcie_host_init() fails to enable a clock or regulator, the hardware
+is left unpowered and unclocked.
 
-The code then proceeds to call dw_pcie_ep_init_registers(), which accesses
-unclocked DBI memory-mapped registers (e.g., PCI_HEADER_TYPE).
-
-Can this lead to a synchronous external abort and kernel panic when accessi=
-ng
-these unclocked peripheral registers?
-
-[ ... ]
+Since the function proceeds to call dw_pcie_ep_init() which reads and writes
+to the controller's DBI registers, could this lead to a synchronous external
+abort (bus error) and crash the entire system when it accesses the unclocked
+peripheral registers?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713023435.2357=
-65-1-sherry.sun@oss.nxp.com?part=3D2
+65-1-sherry.sun@oss.nxp.com?part=3D1
