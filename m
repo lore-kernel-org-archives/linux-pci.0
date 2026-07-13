@@ -1,126 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2C4C30EF77;
-	Mon, 13 Jul 2026 15:18:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BAA2325B0AA;
+	Mon, 13 Jul 2026 16:13:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783955939; cv=none; b=R6YM64IAJkXDbh+ghGHlNL7VXazTk5PDZnGMIaf/9tXIgbtbwAQUTkw4pwnORzWdoPLzup1aVmzbh1K50wsJkKhnLmWjous8UyItTd3z1mp6LWMvg+Fvt2cM5d/tP0NMLXqyBAIgEKzoMbsUTiaU7VCj58ZrYySpksGpWmj44CE=
+	t=1783959209; cv=none; b=ApyZ1Zuz6Aj07gAnHKfXBV1T7eyRbDPRAGjpPO5ya7VeUJ0BJ8+S83dWtzUv0gUoeOQpFrYLZk1x79/2KnLrsnVQ2oVLzqYBku/1fKhgYA0laYuT9NnWSP0dmu5Upla+ogf65Q5L43IBRffyRD2zYx5C8pVCoTqyLzq+9ewJ6C0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783955939; c=relaxed/simple;
-	bh=Q92+vm/2vUfD7BvMv6itjSyYoLq4GSIt9f0Z3LqR9/A=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IV3q1LSpEiCvMamMXZZzEPMZ71Zy5elVcnkEJ+Rkb+M8zqNMYJeaqwyRCjTDRu70cbAby/GsHy+97E7HMQ+SS4qWhVMIDcNJx+7wuJ0KsiPgJITorkMb+EdmruFfr5YdhJBlu+j36P3B1+WeCNDRF2XMIeE2GvDy7Qd5h1rBLz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DjkyuPnQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783959209; c=relaxed/simple;
+	bh=87+DyGXvAKm5IXJiKbRVm11dCASshYHur0HdtyBZK18=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UoGrscXX/fTdHG+F1G+arMORYtBuvBoBHuNOGXYjJiqQ15ye7RGf4PUnxT9xiT/21nphXYm1FwXm+zujMdz1C2jQ3B1fC5MaAPZmmsLH3hEUR8dbZYVX8jp51MGhairHiFJzb7sUzt7Azq1DkI83zAKXTyp3C3nRotrStAvwkqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=XZeBtsqO; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DjkyuPnQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E321F000E9;
-	Mon, 13 Jul 2026 15:18:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783955938;
-	bh=ciq/I2+BL5j+uB+AABX0XLHmc/WSjoaA1RcZmJWFnaQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=DjkyuPnQfstUUzWkidFDDVxGMprS4Et5vhWSDhkPCeRuWSjmhG6Km5kARaCsw/Y+v
-	 EQqZ6DGLbRd3fKpYjPw1huYb83BENbYrx8bs2WT4QditMiCeAJo2ZKD8gwwtzEiO7l
-	 rw/TH4KEOVL10wu4/aeXCa3uRo4kqr0TKxyZb5wSjWCjv8yHaIhPTpEBN/fBC/dLO5
-	 VtkmH49gPUkWjn/EiCa5HfU4GAPRwuJHtQ/ohoCLpDXqvquhmP0ipQHZFCeHXmiMuV
-	 O4F7670dgEeQMnimChpI4eux+NbII+5b7Fa+BK9vRxEnMg7ufPCknKLIsoiAoYSTlr
-	 vD8xxud9rr3Lg==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=lobster-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wjIQq-00000004Xo1-1iIy;
-	Mon, 13 Jul 2026 15:18:56 +0000
-Date: Mon, 13 Jul 2026 16:20:45 +0100
-Message-ID: <87fr1m6hma.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: linux-pci@vger.kernel.org,	kernel test robot <lkp@intel.com>,	Krzysztof
- =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,	Bjorn Helgaas
- <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,	Conor
- Dooley <conor+dt@kernel.org>,	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,	Lorenzo Pieralisi
- <lpieralisi@kernel.org>,	Manivannan Sadhasivam <mani@kernel.org>,	Rob
- Herring <robh@kernel.org>,	Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>,	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-In-Reply-To: <2cb03029-0957-4ed8-98bd-9b3e0e0bce2d@mailbox.org>
-References: <20260709201103.90162-1-marek.vasut+renesas@mailbox.org>
-	<87qzlb5jsl.wl-maz@kernel.org>
-	<2cb03029-0957-4ed8-98bd-9b3e0e0bce2d@mailbox.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="XZeBtsqO"
+Received: from localhost (unknown [20.236.11.42])
+	by linux.microsoft.com (Postfix) with ESMTPSA id DEA4520B716F;
+	Mon, 13 Jul 2026 09:13:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com DEA4520B716F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1783959199;
+	bh=eeKOrgOt+xXm+V5IRef1lDOmRNhHqtuxeaF/QYex0Kk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=XZeBtsqOdJFY4BYYsLd+wm1yi+LZ8NbE8VsdAstHLGM5iSE3p7geCt0pHWkLfZOXI
+	 DMBuxTymJLCT1F5m8zAUPQOJ5YsfC1h79HtjvhjMM7+Kf0Lwx9KCdlWDfKJW/W8voN
+	 HSbtdm71FNrpf0fRvLi11OcwBg0H17iZziutadVw=
+Date: Mon, 13 Jul 2026 09:13:28 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: Yu Zhang <zhangyu1@linux.microsoft.com>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org"
+ <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev"
+ <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
+ <linux-arch@vger.kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>,
+ "kys@microsoft.com" <kys@microsoft.com>, "haiyangz@microsoft.com"
+ <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>,
+ "longli@microsoft.com" <longli@microsoft.com>, "joro@8bytes.org"
+ <joro@8bytes.org>, "will@kernel.org" <will@kernel.org>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org"
+ <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de"
+ <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
+ "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
+ "easwar.hariharan@linux.microsoft.com"
+ <easwar.hariharan@linux.microsoft.com>, "mrathor@linux.microsoft.com"
+ <mrathor@linux.microsoft.com>, jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v2 3/4] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <20260713091328.00004fc9@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB4157805F23ACA85A668FA065D4FC2@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260702160518.311234-1-zhangyu1@linux.microsoft.com>
+	<20260702160518.311234-4-zhangyu1@linux.microsoft.com>
+	<SN6PR02MB4157253E030D477FD91B7E26D4FE2@SN6PR02MB4157.namprd02.prod.outlook.com>
+	<enpkphavwmqrkded73c43vprczslvei4755lkxuedof4z2k3kk@y2jtklbk4efz>
+	<SN6PR02MB4157805F23ACA85A668FA065D4FC2@SN6PR02MB4157.namprd02.prod.outlook.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: marek.vasut@mailbox.org, linux-pci@vger.kernel.org, lkp@intel.com, kwilczynski@kernel.org, bhelgaas@google.com, catalin.marinas@arm.com, conor+dt@kernel.org, geert+renesas@glider.be, krzk+dt@kernel.org, lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, yoshihiro.shimoda.uh@renesas.com, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, 10 Jul 2026 14:35:10 +0100,
-Marek Vasut <marek.vasut@mailbox.org> wrote:
->=20
-> On 7/10/26 10:30 AM, Marc Zyngier wrote:
-> > On Thu, 09 Jul 2026 21:10:03 +0100,
-> > Marek Vasut <marek.vasut+renesas@mailbox.org> wrote:
-> >>=20
-> >> Instead of pulling in the whole linux/irqchip/arm-gic-v3.h , copy the
-> >> one GITS_TRANSLATER register offset macro directly into the driver.
-> >> This repairs the ability to build the driver on non-ARM non-GIC targets
-> >> the way it was possible until now, which retains good build test cover=
-age.
-> >>=20
-> >> Reported-by: kernel test robot <lkp@intel.com>
-> >> Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lk=
-p@intel.com/
-> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> >> ---
-> >> Cc: "Krzysztof Wilczy=C5=84ski" <kwilczynski@kernel.org>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> >> Cc: Conor Dooley <conor+dt@kernel.org>
-> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-> >> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> >> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> >> Cc: Marc Zyngier <maz@kernel.org>
-> >> Cc: Rob Herring <robh@kernel.org>
-> >> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> >> Cc: devicetree@vger.kernel.org
-> >> Cc: linux-arm-kernel@lists.infradead.org
-> >> Cc: linux-doc@vger.kernel.org
-> >> Cc: linux-kernel@vger.kernel.org
-> >> Cc: linux-pci@vger.kernel.org
-> >> Cc: linux-renesas-soc@vger.kernel.org
-> >> ---
-> >> Note: The alternative I could think of would be ifdeffery which
-> >>        is not nice and thwarts the build coverage, or limit the
-> >>        driver to ARM/ARM64 in Kconfig which also thwarts the build
-> >>        coverage. I could also split off the register macros in
-> >>        linux/irqchip/arm-gic-v3.h into some separate header
-> >>        linux/irqchip/arm-gic-v3-regs.h and include that which
-> >>        might be OKish and avoids duplication. Thoughts ?
-> >=20
-> > No, I'm not hacking something that is purely architecture specific for
-> > the purpose of a bizarre integration quirk that should be handled by
-> > the boot firmware, and not Linux.
->=20
-> The PCIe controller is fully controlled by Linux.
+Hi Michael,
 
-And it shouldn't. Why can't your favourite boot-loader use it, like on
-any reasonable machine?
+On Sat, 11 Jul 2026 18:31:15 +0000
+Michael Kelley <mhklinux@outlook.com> wrote:
 
-	M.
+> One new thought:  Have you considered the hibernate/resume
+> cycle? Does anything need to be done with the pvIOMMU to
+> make it functional again after resume? I see that the Intel and
+> AMD IOMMU drivers have suspend and resume functions. I
+> don't know enough about the Hyper-V pvIOMMU to know if it
+> might also need suspend and resume functions.
 
---=20
-Jazz isn't dead. It just smells funny.
+I don't think the Hyper-V pvIOMMU guest driver needs the same kind of
+suspend/resume handling as a hardware IOMMU driver. Unlike VT-d or AMD
+IOMMU, the guest driver does not own physical IOMMU registers, root
+tables, command queues, or translation enable state that must be saved
+and reprogrammed on resume.
+
+For nested translation, the guest does own the stage-1 I/O page tables,
+but those are normal guest memory. They survive S3 as system RAM. The
+guest driver still needs to issue the normal pvIOMMU invalidations when
+it changes S1 mappings, but suspend/resume by itself does not modify
+the S1 page tables and should not require a special flush.
+
+The important contract is on the Hyper-V side: Hyper-V owns translation
+enable/disable and must prevent device DMA while translation state is
+not valid.
+
+Thanks,
+
+Jacob
