@@ -1,154 +1,161 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013071.outbound.protection.outlook.com [40.93.196.71])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E863B1B4138;
-	Mon, 13 Jul 2026 18:51:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.71
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783968662; cv=fail; b=Xw4Q25fg/KeCO11O1w25WZOR6mEidfsi6wrpbZgB5CIqf1qKevMWMvNRUMsk7yqZltWeK9E/VsOkzjQ27wmTXgBw8XCndnokc5q8hQzLsRynFJSx15f2DGgyWF3FmpO5d47yXqqAmGsLYx0Bhl0lTiXMWGlx8NdDdRdfnR4vTSk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783968662; c=relaxed/simple;
-	bh=UcC2o2B0rZl3M8hNiGZxTh7tmSF+ENJA1ZCuhNJGtJ0=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TaSlWEN4vN3P4QvGC2eoSsUkIIyUwAHmx9NINHds61aoaryE6pEraPXqkyccBm3F7XYmP7vak9iq9Y/gitbLjKinQ2tPee4RSMpKqndWhU63uU2BMne/EroF5X72a9qE6gSG2Tq50/G0cOOHvuyGK5CYaEfIp6Uy/RjIzP6mAbk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=oETTL/mn; arc=fail smtp.client-ip=40.93.196.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEC3C328611;
+	Mon, 13 Jul 2026 18:52:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783968758; cv=none; b=G3NK+eLSJAtgNzAdI2urByWb0q/K3VMuMTAXugxG4w+rUpThF5DnF6eb7/P4eSNy/GK/B7zADVtM4IHWKIDHpmhbCNPi+lH3vuZkdPOxDi2DU/XHZOs8R7bn15zbglMJV7hicNpqOiDEbROU2s14BVMxGazbXQhEnvymmZe8IWo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783968758; c=relaxed/simple;
+	bh=aP2avos0ApLO0vmoOOsh4n4R4ISILP3Q5Gbc1IF85zQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AzYNvtDJ06OgUfA5WGmeSXjQ96FdX/VqUa/9L/anNVkL/76xuWrLioxPZGTUGvm5f7+EjiuJmGTdwCx6H1ezmhP1cNPWqjxSvkU8O0lXJsGWALNLvJl+YKcp2BhvvsCsA2hbbltaNCBT1DKdNPP3TpWXLrtT+Ydc7UIaE3A4I6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LLScAaj0; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="oETTL/mn"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r5qD45F9BwKJ2BbYHE9hi/rb8VzrDlCnR/wj50NVFBe9DCuojKRIi3ewP9y3h2HoRgCoWx15z7T8Ka8PI/74TyWXkQ4b+LyW7EGB2VPSpBOO0IW+WmAma6VxcHQPJGKWpufSrmbfcKxP981XJ3aL1ESLtS/h+ALx5zo3e9vezItsTg+Y1CFDns8DFdDQciPXSapcLamO5dM6t1FmjRD2M8PGN5k7+S7kv0I0cIicXfD+LnkW0iWGThI5cp9bRorDzFKa+ZJEZ5Y2GTn3nvPCrn1fKPALu+47OeEqBZUBCWlC+SQwqtv3L5fuRDIA9RUeWvy4qwgCy0J1rua/2gXkKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9xCUAaF3E+q9DGG0d5+j0bvgDxHGS+6lEf8jecnHXHw=;
- b=g1rvG+KKlgwJ1XYB7FbUIDDaX8zGet5WX3GBIWG3qOijiuEs14mxOrUi1YfCI1/lGupC4povrQmVAgACFtFaIIlvZHBjyfT7Hu+wGKaFMInLLIa1zrl/DRlBhuFQXDu3mg76wRD2MtMp57fT5POZchCi/Iob1I45+y0qKbpBHFnfqf5MKPU4S3zXUwWpm4jAgfXN8eE47WdLbgahACuQsXOHx10wiApNQOf4cdLY7jcH0uw7AKii2hkkHcxvaoupC9HVg8zpJhyPMON4iwvnyHx2YNO86za4eyUh4Je/os5WaLnfqxyKX7Tm1xiAtLCdD+/P4Sy3+SbPAXWPFwXPJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=linux.intel.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9xCUAaF3E+q9DGG0d5+j0bvgDxHGS+6lEf8jecnHXHw=;
- b=oETTL/mn1khXGHHdQEX10Mr0AR+Rl7ZBhdFAPSjX9PiGwmC5dSRKtMRObrc4sIlhQzMPfUQ1d+HqULH28IdWT6TC3NSNdILi6vZk6lRzQRgB4SBEZYZIEtVNSoI5at5ZE2MpXgJ3U41+eeGVuxNz6E+r5YsPbuEddJ28hDCs5ttXT4Vdv/EJo/T7x5TjDoHetGpw272qwcv03Qc86d4mbg4pg260OiIP2S5gJEsFUBxfWhzGw6tzqG1Jf2s5btQfg5+PuciDJ945TFIpBkeXGOyg6YuSBBdW7I6G/G9oqGrctsxvGEXhSI3SCZDYioLFpE559ZOHaOZJMhlDWfbHbw==
-Received: from DS7PR05CA0083.namprd05.prod.outlook.com (2603:10b6:8:57::29) by
- PH7PR12MB6635.namprd12.prod.outlook.com (2603:10b6:510:210::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Mon, 13 Jul
- 2026 18:50:55 +0000
-Received: from DS1PEPF0001708E.namprd03.prod.outlook.com
- (2603:10b6:8:57:cafe::8b) by DS7PR05CA0083.outlook.office365.com
- (2603:10b6:8:57::29) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.223.9 via Frontend Transport; Mon, 13
- Jul 2026 18:50:55 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- DS1PEPF0001708E.mail.protection.outlook.com (10.167.17.134) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.223.9 via Frontend Transport; Mon, 13 Jul 2026 18:50:54 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Mon, 13 Jul
- 2026 11:50:40 -0700
-Received: from drhqmail202.nvidia.com (10.126.190.181) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 13 Jul 2026 11:50:39 -0700
-Received: from nvidia.com (10.127.8.10) by mail.nvidia.com (10.126.190.181)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Mon, 13 Jul 2026 11:50:37 -0700
-Date: Mon, 13 Jul 2026 11:50:35 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Baolu Lu <baolu.lu@linux.intel.com>
-CC: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
- Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Jason
- Gunthorpe" <jgg@nvidia.com>, "Rafael J . Wysocki" <rafael@kernel.org>, "Len
- Brown" <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>, "Mostafa
- Saleh" <smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
-	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
-	<xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v5 18/18] iommu/arm-smmu-v3: Block ATS for a master upon
- an ATC invalidation timeout
-Message-ID: <alUzeyRh5FnzMiQ4@nvidia.com>
-References: <cover.1783044582.git.nicolinc@nvidia.com>
- <939885143f3064811685b3f31f6f30f8a713c89e.1783044582.git.nicolinc@nvidia.com>
- <9a85cccd-29ed-4c51-b9cb-140631966d20@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LLScAaj0"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66DFEVup2836331;
+	Mon, 13 Jul 2026 18:52:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=aM2rq1
+	+JPcTw7o7h8Yr8quaLAa2SfKE8NZOq+/HuKII=; b=LLScAaj0QFFuIgB4X3DaIs
+	Ej75gXHjqn08e9CboL6Ds6uqKPxGaSCtA9xC6aRMzIOJKfo+GzIJbFYGH0/FEz2o
+	JooBtIzM8AFC+qznFSM9WC/iPGmuC/M8FFT+CqtMjvNPQbByvvqJrCtl3YYXvPdk
+	xGOticK17Gv2/6aH1l5j/9DTFTtfioeSiztyiU5xvcp5ABDuuzmgDOi9PRq1n4d0
+	7ZPuq3xOCV/ZO8lDXjkofW8l6wZC45FpxDPRzjD9PkYaZJyU4u5gwGA7QK5O8uwk
+	iZkuVQQm9YQMKsmHv/jol1JLdv5HduA0QKnSL9OBsgWQr2rfSXvHZoZWEj/ZBXVQ
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fbepxa9y3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 13 Jul 2026 18:52:33 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66DIniZ2030009;
+	Mon, 13 Jul 2026 18:52:32 GMT
+Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fc1nh72qv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 13 Jul 2026 18:52:32 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66DIqVAl49938804
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 13 Jul 2026 18:52:31 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E612C58054;
+	Mon, 13 Jul 2026 18:52:30 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2DF275804E;
+	Mon, 13 Jul 2026 18:52:30 +0000 (GMT)
+Received: from [9.61.242.131] (unknown [9.61.242.131])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 13 Jul 2026 18:52:30 +0000 (GMT)
+Message-ID: <c1d28b60-7976-4659-a967-248bea238cc6@linux.ibm.com>
+Date: Mon, 13 Jul 2026 11:52:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <9a85cccd-29ed-4c51-b9cb-140631966d20@linux.intel.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS1PEPF0001708E:EE_|PH7PR12MB6635:EE_
-X-MS-Office365-Filtering-Correlation-Id: 07f400e3-6169-4edb-0c08-08dee10fab34
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|23010399003|376014|82310400026|1800799024|36860700016|18002099003|56012099006|4143699003|11063799006|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	ASxgbWdqTuZobAGV7J22zT4aQdD9OCzmimID3DtlttfZQxrtkMT0x6pSTaMs1s8O2sC++lJCxbhTsWOif/TH047sdr6Q3rUGwZR5d8mERUTvyc+5GcdD9QjVqMpcmWPUjrOgPkEcNwNysdU4u9cjX2NMGAwXUCaFuyMiuKLUyu/tlx4iQa/abUzlmjL2iGNfbg1+CG2E85FSYhqyfCCr1gtEPYJzpZ99es0HKt67fXw+tou/W1Rqpv6NSeU5Stp59wxeL993xBnCdrzZsUmcRnAAnlW/xtKsmLJO9HDsT8flybLxw4fPnmJtf6B6kXSozNTP+Em9R09AuIVQ7lDOuSaJUDZSWhdHmpNHwUnyebdb7uj68k+X+l8o/Mj28OlovaS5C3ownAAewwgCPMWAxRE5yCcfe7/ZpzJM30vErwwqHsSiuk/4pg64ficiXsyw1jTt7KRuL27eHuqDyqri6uWxqXCNsTodx9Whi6dh+0WHADJs0kzNbkiyFrDAWOhGe8KTF5BSaq/GmlWCvNHiPHv4FHdopUoLlkMXRKVTcteZJSS0O9uq+mQDskKeqlOb7afPJy1+o4Qboj9X5kTkbwmgLzcTFRJKyZOpuB2RIjAQdLUSRK/OxUzNvf5Ahx1H7REMG/iZYF8+FcdvDuakdF1NqXay0Yo3fxpjAiHHTZcBleMpMhoAGaZSG+Vwabyp+f3jHV1/6v74awktKNGcmg==
-X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(82310400026)(1800799024)(36860700016)(18002099003)(56012099006)(4143699003)(11063799006)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	O0bZ6NkaOvW7NvRp4oJwjvIrggbpn3epr8qkauqprYP2XF2iaDsqQbL07UGxtZFCXGuWUhGmxht7yTOJHV2ZeQiO1JQqAC94+b/GvL3vmLTMvnVXybdatCvUAZFs+NTtz0eId0UKnwCl7yJnMM9+54UwYqju0tvL9mZCCObaVjbLaKVchvAzo7Vzn+KRgpsQ03K5+FjLcaZ3WY7rst7PRuePZS/1gh+O2I8Z/dsh1Jjd9pXicCtTaiNfU2l8sffFTmhipMWEFBHFCi0sukpCiUWseOyBVE6xgiN6xUxG7VaUmLz7xXYmwFxZcaIMBlHbvNitYpVHfh4Ed3ry54BUWQaOjsLHBLi1L60iY+n7NZv1utOg06xMRS/pJP9zFMBVondDWE9tLlXKltV+qgzZ1jgcptwY6cOatfr8HUeHbTeUm8Jdwm2Gux14jCmvhiij
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:50:54.4921
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 07f400e3-6169-4edb-0c08-08dee10fab34
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS1PEPF0001708E.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6635
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v20 0/3] [VFIO] Error recovery for vfio-pci devices on
+ s390x
+To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+        mjrosato@linux.ibm.com
+References: <20260630165553.725-1-alifm@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260630165553.725-1-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: o5_HBqG-QjaQ3udskuomfbkglZljehHe
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDE5NCBTYWx0ZWRfX32pSs4h9DqAw
+ 9LAryaIC6ANfOgLboZif1FhSF4oCB0IJveD6tInGqeHTPO2mRT5cSxxFMETihB5ZNhH9pots/wA
+ 32ntMssOujGobh6apdqJ9KT79cRXyK4=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDE5NCBTYWx0ZWRfXwx3TgBqFybT+
+ hZrMOMIdAmiKyd2xoa/J/lm0iDvD/Hd11SUQfq/vPjyrREpEK9kw0hxwHRStF/rqvw7BfN4dBKb
+ veR+ErYZ98ojB8YG4YqcMVRCYGpRmia3nrQ08f4lDXX3VV9cscyURrfTAA+ct44SeWIs4e0r5EA
+ 6zKME8+nuA5KSrGhiQQ3NJV4YSBEJ5sfZnBLmsNkRAkXBJWwh2t5iN/csipMwaxhb058RyGIJ7/
+ LiTgtQPlVfHOSZd3fQhK9MBxfwAURHGvTFMLAjR9oPxDmSfvzEJB2yGsNfu1c2+BvHpEbY+9/U9
+ l2B5QvbwluKZceCBlywmpCNJIlCF5HrHzbRibnhsvZEP8Qds8eagzumA1m+p7J9FkxswM9Nb5Yp
+ txeWDG4tI6Pog/PRvTuNrazOhluvwBQxy/LdX6xHzMRVMecQxIGMd7+JGGk9dwn/DQ+NKvjkDXR
+ f8NBG6HGK2Ph/vvFwhw==
+X-Authority-Analysis: v=2.4 cv=XbS5Co55 c=1 sm=1 tr=0 ts=6a5533f1 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=r1p2_3pzAAAA:8 a=29iEHxvmWTY-H69hz_cA:9 a=QEXdDO2ut3YA:10
+ a=r_pkcD-q9-ctt7trBg_g:22
+X-Proofpoint-ORIG-GUID: o5_HBqG-QjaQ3udskuomfbkglZljehHe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-13_04,2026-07-10_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 suspectscore=0 spamscore=0 phishscore=0 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 malwarescore=0 impostorscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607130194
 
-On Mon, Jul 13, 2026 at 08:20:29PM +0800, Baolu Lu wrote:
-> My understanding of the sequence to quarantine a faulty ATS device is
-> to:
-> 
-> 1. Identify the devices that encountered an ATC invalidation timeout
->    failure.
-> 2. Have hardware block incoming DMA transfers and translation requests
->    by clearing the corresponding bits in the device's context/
->    translation table entries.
-> 3. Have software prevent the driver from submitting new invalidation
->    requests or re-attaching a new domain to the device.
-> 
-> If this understanding is correct, then while steps 1 and 2 are hardware-
-> and driver-specific, step 3 seems completely generic.
+Polite ping for the series.
 
-Step 3 is kinda driver-specific too for a few reasons:
-a. This is in the iommu_unmap() context; called right before that
-   function puts the kernel page. So, all the steps must be done
-   before kernel reclaims the page (potentially to a new ATS for
-   the same device whose ATC is stale).
-b. Invalidation can be an IRQ context. So, can't use group->mutex,
-   which a generic helper would likely need.
-c. Given (a) and (b), extra driver-level spinlocks are required:
-   streams_lock and master_domains_lock in this patch.
-d. Step 3 actually has two small steps: disable ATS at the driver
-   level; disable ATS entries in the invalidation array, either of
-   which are currently driver-specific.
+Thanks
 
-Jason has a view of moving the arm_smmu_invs to the core. So, maybe
-step 3.2 (disabling it in the invalidation array) can be generic in
-the future.
+Farhan
 
-Nicolin
+On 6/30/2026 9:55 AM, Farhan Ali wrote:
+> Hi Alex,
+>
+> This patch set includes only the VFIO patches of the original series for
+> error recovery for vfio-pci devices on s390x [1]. Breaking up the patch
+> series into PCI and VFIO only patches to make merging easier based on our
+> discussion [2].
+>
+> Thanks
+> Farhan
+>
+> [1] https://lore.kernel.org/all/20260520171113.1111-1-alifm@linux.ibm.com/
+> [2] https://lore.kernel.org/all/20260602163344.1eda12d2@shazbot.org/
+>
+> ChangeLog
+> ---------
+> v19 https://lore.kernel.org/all/20260615183616.2902-1-alifm@linux.ibm.com/
+> v19 -> v20
+>   - Change device feature uapi to pass the error data as opaque to
+>   userspace (patch 2).
+>   - Rebase on 7.2-rc1
+>
+> v18 https://lore.kernel.org/all/20260603182415.2324-1-alifm@linux.ibm.com/
+> v18 -> v19
+>   - Fix hole in struct vfio_device_feature_zpci_err.
+>   - Remove reset_done() callback for vfio-pci driver.
+>   - Rebase on 7.1-rc7
+>
+> v17 -> v18
+>   - Print a warn with dev_warn_ratelimited() for copy_to_user failure.
+>   - Rebase on 7.1-rc6.
+>   - Break patch series into VFIO patch set.
+>
+>
+> Farhan Ali (3):
+>    s390/pci: Store PCI error information for passthrough devices
+>    vfio-pci/zdev: Add a device feature for error information
+>    vfio/pci: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
+>
+>   arch/s390/include/asm/pci.h       |  32 +++++++
+>   arch/s390/pci/pci.c               |   1 +
+>   arch/s390/pci/pci_event.c         | 137 +++++++++++++++++++-----------
+>   drivers/vfio/pci/vfio_pci_core.c  |  10 +--
+>   drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
+>   drivers/vfio/pci/vfio_pci_priv.h  |   9 ++
+>   drivers/vfio/pci/vfio_pci_zdev.c  |  63 ++++++++++++--
+>   include/uapi/linux/vfio.h         |  23 +++++
+>   include/uapi/linux/vfio_zdev.h    |   2 +
+>   9 files changed, 216 insertions(+), 64 deletions(-)
+>
