@@ -1,219 +1,190 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3B233C182;
-	Mon, 13 Jul 2026 17:22:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD8C1E1E12;
+	Mon, 13 Jul 2026 17:25:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783963324; cv=none; b=qPx0dSWFDg07dP68p2MV/+tv1aJ8R+UDer4rk35vtoMyCSbmjRL7aj4VPG6fALONBPe1NRuU5rSdc2LiFf+/HDtnXkbHMX5N9LLilsVS3qTvldiSXuo8O3Ph/hX8pMDPjA2piluR83yzTqSnXxP47LdNF4UBWMOZHqPQZQmDMOs=
+	t=1783963524; cv=none; b=isMZ3ztvQ9kD9ktbVT7gOzF3EVfWjE2x6Nv2ju24GIAw6kuP7TUkeBnoAZhMpUIBT8XzRyEAYgvr7/IawyVWBcMV6hlcD/0rEMZKer8mUic1bwtfLpIgI8ZlUuunk1+nkEHtHd3FxX5fKKg7nk+L5aWOf9UilVzIuOPAZmvlpo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783963324; c=relaxed/simple;
-	bh=WS4X36LUEb259/X0wCCpQ0W1Z1rRI3d2IVkHfZwsMKs=;
+	s=arc-20240116; t=1783963524; c=relaxed/simple;
+	bh=PR+cxLj73+fjanKV1NKzCtcMQE/BpTFkVaimgkXvc1Y=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DwXBJ9fzngFo6sS2CdWKreBiZQ7uLOUUFsf+dkoGV9Rolawz5OdoisogCPD/w+ewpCyXxwpbhAljO/T7MDOn1eW3kqkb/0niHE7Rw9SISHGCmVDPjXAvTE6eGOzdLv1/53ZRFAc9KhTs7uPFmn+g/jsfPXAf6JU15oRBvFOL3nU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1QJtE1F; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SpjLPsyr9zb4ZBqnMmz4p7AsXXwsGdnG8aOCPqmC4RLeiNm5p7EKGXHo9ax/FjT5J+e6OO3ZTwePIXNRQCr2mp4iju8Qbq3/7QO7N/gVirpCCsRLCDUwotM/f7/gf1Wae++wp9KCQs/S7oGBzkG6i2HXFh3JFfHwt/BGTJqXnm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFRSbDy/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1QJtE1F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70E6C1F000E9;
-	Mon, 13 Jul 2026 17:22:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFRSbDy/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3571F1F000E9;
+	Mon, 13 Jul 2026 17:25:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783963322;
-	bh=FoLkTBYmT+b/hHCu2OkpYr/PNHJrAiJcCFPF/mCoIYA=;
+	s=k20260515; t=1783963522;
+	bh=6PvRjjv5Ke6VW5MwcuvoC+CkH/D2yP8rRnpwMBC1Uko=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=G1QJtE1F67RKq4bzEvaJAGsOpL+TiMDJKbnPESK+RMmrhn4MkU/2qpC9HtfGPkTt2
-	 h4RC7F/fbY35CRN7gjfxPOb2Mq2ALsxg1AKEDwIwP6sgtmOnHPbR8oGevOtnU30kcY
-	 9HBF/V2jk1c0QlMk0vsDZ4dEx44GEH8vsk6Xn04g2ygHKDiTykGeg+RL26m9ah+tWt
-	 9+K0rUodB9RrDr/lGKde0zJdwCMG51djKLcZNFO+wAnrl0bfvqU3CLdyFD43O5/H3Y
-	 PD0ilL7Z50VtafEd1ZMAsjmpDbbSSQ2oZM70z0fj3h9soSejCi3p/5SOw3VCXXkwXp
-	 823kfoiDxYoGw==
+	b=jFRSbDy/GsbA2nqk9jeAvsdy79jOSii0jgXxep/Kl/m8VyR5YRzuFP5Eyr00LXAbi
+	 bgR4JwclyFoQ0B+nXlB6P4lk4nh2BT3nCvmCalUjtOSIpeEm3qurpKRjh1Nr3AG8eK
+	 Q8xREB05EKjDSHry7Pz7OOrBPMK8zhscPpliHnyOib3/LWqIjimtXuY5gUj4Vq36Eb
+	 a1954xV5yRF8T9jQQ3RVy4NkMKGO7fQPbq2SwKMDpgwtbhzr8bxXW0W/rjmI0QhPjP
+	 +AtxAIlISyZTA/EeqjMR0yCsxENZPHJjl2wvdim63mlmNQqkjQSK1sy+rFnyFBE/Vg
+	 irrk8tcpUs4Kw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct
- dw_edma_chunk
+Subject: Re: [PATCH v7 09/10] dmaengine: dw-edma: Use burst array instead of
+ linked list
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Frank.Li@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
-In-Reply-To: <20260713-edma_ll-v7-10-6fb7498c901e@nxp.com>
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
+In-Reply-To: <20260713-edma_ll-v7-9-6fb7498c901e@nxp.com>
 References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
- <20260713-edma_ll-v7-10-6fb7498c901e@nxp.com>
+ <20260713-edma_ll-v7-9-6fb7498c901e@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 17:22:02 +0000
-Message-Id: <20260713172202.70E6C1F000E9@smtp.kernel.org>
+Date: Mon, 13 Jul 2026 17:25:21 +0000
+Message-Id: <20260713172522.3571F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Replacing bounded chunk descriptors with a single contiguous GFP_N=
-OWAIT allocation breaks large DMA transfers due to memory fragmentation.
-- [High] Resuming a paused DMA channel causes an out-of-bounds array read i=
-f the active descriptor was fully completed at the time it was paused.
-- [Medium] Uninitialized trailing DMA bursts are submitted to hardware if S=
-G iteration breaks early.
-- [Medium] Stale DMA residue is reported during a channel pause because `de=
-sc->done_burst` lags by one batch.
+- [High] Early break in scatter-gather loop leaves `chunk->nburst` incorrec=
+tly sized, causing uninitialized descriptors to be submitted to the hardwar=
+e.
+- [Medium] A zero value for `bursts_max` due to small linked-list region si=
+zes causes a fatal divide-by-zero exception.
+- [Medium] Replacing multiple small slab allocations with a single large fl=
+exible array allocation in atomic context risks memory allocation failures.
 
 Pre-existing issues:
-- [High] Missing `chan->vc.lock` acquisition in `dw_edma_device_resume` and=
- `dw_edma_device_pause` leads to data races and virt-dma list corruption.
+- [High] `dw_edma_device_resume` calls `dw_edma_start_transfer` without hol=
+ding the channel lock, causing list corruption.
 --
 
---- Patch [10]: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct dw_edma_=
-chunk ---
-commit ac4e11776f7ec8bd87ba4484bd079463058cc76d
+--- Patch [9]: [PATCH v7 09/10] dmaengine: dw-edma: Use burst array instead=
+ of linked list ---
+commit 7aeaeaa1123dc1b005fda28afac5f4dff692b62b
 Author: Frank Li <Frank.Li@nxp.com>
 
-dmaengine: dw-edma: Remove struct dw_edma_chunk
+dmaengine: dw-edma: Use burst array instead of linked list
 
-This patch flattens the DMA descriptor layout by moving the burst array
-directly into struct dw_edma_desc and removing the linked-list chunk layer.
-It uses start_burst and done_burst to track current hardware submissions.
+Creating a DMA descriptor requires at least three kzalloc() calls because
+each burst is allocated as a linked-list node. Since the number of bursts
+is already known when the descriptor is created, a linked list is not
+necessary. Allocate a burst array when creating each chunk to simplify the
+code and eliminate one kzalloc() call.
+
+Tested-by: Koichiro Den <den@valinux.co.jp>
+Tested-By: Devendra Verma <devendra.verma@amd.com>
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
 
 > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
 edma-core.c
-> index c028011cc61ca..30eeb7bffad80 100644
+> index f52d9fd18e573..c028011cc61ca 100644
 > --- a/drivers/dma/dw-edma/dw-edma-core.c
 > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-
 [ ... ]
-
-> @@ -40,82 +40,54 @@ u64 dw_edma_get_pci_address(struct dw_edma_chan *chan=
-, phys_addr_t cpu_addr)
-> -static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
-> +static struct dw_edma_desc *
-> +dw_edma_alloc_desc(struct dw_edma_chan *chan, size_t nburst)
+> -static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *de=
+sc)
+> +static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *de=
+sc, u32 nburst)
 >  {
->  	struct dw_edma_desc *desc;
+>  	struct dw_edma_chan *chan =3D desc->chan;
+>  	struct dw_edma_chunk *chunk;
 > =20
-> -	desc =3D kzalloc_obj(*desc, GFP_NOWAIT);
-> +	desc =3D kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
-
-[Severity: High]
-Does allocating this unbounded descriptor array at once with GFP_NOWAIT
-introduce a risk of memory fragmentation failures?
-
-Large DMA transfers previously used bounded chunk allocations. With this
-change, could a large scatter-gather or interleaved transfer spuriously fail
-with -ENOMEM since GFP_NOWAIT cannot sleep or perform direct reclaim?
-
->  	if (unlikely(!desc))
->  		return NULL;
-
-[ ... ]
-
-> @@ -107,18 +79,27 @@ static void dw_edma_core_start(struct dw_edma_desc *=
-desc, bool first)
-> -	for (i =3D 0; i < chunk->nburst; i++)
-> -		dw_edma_core_ll_data(chan, &chunk->burst[i], i, chunk->cb,
-> -				     i =3D=3D chunk->nburst - 1);
-> +	for (i =3D 0; i + desc->start_burst < desc->nburst; i++) {
-> +		u32 idx =3D i + desc->start_burst;
-> =20
-> -	dw_edma_core_ll_link(chan, i, chunk->cb, chan->ll_region.paddr);
-> +		if (i =3D=3D chan->ll_max)
-> +			break;
-> +
-> +		dw_edma_core_ll_data(chan, &desc->burst[idx],
-> +				     i, desc->cb,
-> +				     idx =3D=3D desc->nburst - 1 || i =3D=3D chan->ll_max - 1);
-> +	}
-> +
-> +	desc->done_burst =3D desc->start_burst;
-> +	desc->start_burst +=3D i;
+> -	chunk =3D kzalloc_obj(*chunk, GFP_NOWAIT);
+> +	chunk =3D kzalloc_flex(*chunk, burst, nburst, GFP_NOWAIT);
 
 [Severity: Medium]
-Will this cause stale residue to be reported during a channel pause?
+Does this single large flexible array allocation risk failing under memory
+pressure?
 
-Because desc->done_burst is updated to match start_burst only when the next
-batch starts, it appears to lag behind the actual completion if the channel
-is paused immediately after an interrupt. This lagging index is then used by
-dw_edma_device_tx_status() for residue calculation.
-
-> =20
->  	if (first)
->  		dw_edma_core_ch_enable(chan);
+If the hardware configuration results in a large linked-list region,
+bursts_max can exceed 2700. This turns what used to be many small 24-byte
+allocations into a high-order contiguous allocation in an atomic context
+with GFP_NOWAIT, which is highly likely to fail if memory is fragmented.
 
 [ ... ]
+> @@ -166,23 +103,17 @@ static void vchan_free_desc(struct virt_dma_desc *v=
+desc)
+>  static void dw_edma_core_start(struct dw_edma_chunk *chunk, bool first)
+>  {
+>  	struct dw_edma_chan *chan =3D chunk->chan;
+[ ... ]
+> -	j =3D chunk->bursts_alloc;
+> -	list_for_each_entry(child, &chunk->burst->list, list) {
+> -		j--;
+> -		dw_edma_core_ll_data(chan, child, i++, chunk->cb, !j);
+> -	}
+> +	for (i =3D 0; i < chunk->nburst; i++)
+> +		dw_edma_core_ll_data(chan, &chunk->burst[i], i, chunk->cb,
+> +				     i =3D=3D chunk->nburst - 1);
 
-> @@ -355,13 +321,11 @@ static struct dma_async_tx_descriptor *
->  		fsz =3D xfer->xfer.il->frame_size;
->  	}
+[Severity: High]
+Can this loop submit uninitialized trailing descriptors to the hardware if
+the scatter-gather loop breaks early?
+
+In dw_edma_device_transfer(), if the SG list is exhausted before reaching
+cnt (which can happen if the original length was passed instead of the
+mapped length), the loop breaks out early.
+
+Since chunk->nburst is pre-allocated and not reduced to the actual number
+of prepared elements, this dw_edma_core_start() loop will process the
+remaining zero-initialized elements.
+
+Because the completion interrupt flag is only set when
+i =3D=3D chunk->nburst - 1, the valid elements won't trigger an interrupt,
+and the zero-initialized elements might cause a hardware hang.
+
+[ ... ]
+> @@ -206,14 +137,13 @@ static int dw_edma_start_transfer(struct dw_edma_ch=
+an *chan)
+>  	if (!desc)
+>  		return 0;
 > =20
-> +	desc =3D dw_edma_alloc_desc(chan, cnt);
-> +	if (unlikely(!desc))
-> +		return NULL;
-> +
->  	for (i =3D 0; i < cnt; i++) {
+> -	child =3D list_first_entry_or_null(&desc->chunk->list,
+> +	child =3D list_first_entry_or_null(&desc->chunk_list,
+>  					 struct dw_edma_chunk, list);
+
+[Severity: High]
+This is a pre-existing issue, but does dw_edma_device_resume() call
+dw_edma_start_transfer() without holding the channel lock?
+
+When the dmaengine core invokes device_resume() without holding the
+virtual channel lock, dw_edma_device_resume() modifies the channel state
+and calls dw_edma_start_transfer().
+
+Because dw_edma_start_transfer() calls vchan_next_desc() and reads the
+chunk lists locklessly, this can race with concurrent interrupts
+(dw_edma_done_interrupt) or software calls (dw_edma_device_issue_pending)
+that legitimately take chan->vc.lock to modify these same lists.
+
+Can this lead to list corruption or a use-after-free?
+
+[ ... ]
+> @@ -530,15 +456,15 @@ dw_edma_device_transfer(struct dw_edma_transfer *xf=
+er,
 >  		if (xfer->type =3D=3D EDMA_XFER_SCATTER_GATHER && !sg)
 >  			break;
 > =20
-> -		if (!(i % bursts_max)) {
-> -			u32 n =3D min(cnt - i, bursts_max);
-> -
-> -			chunk =3D dw_edma_alloc_chunk(desc, n);
-> -			if (unlikely(!chunk))
-> -				goto err_alloc;
-> -		}
-> -
-> -		burst =3D chunk->burst + (i % bursts_max);
-> +		burst =3D desc->burst + i;
+> -		if (chunk->bursts_alloc =3D=3D bursts_max) {
+> -			chunk =3D dw_edma_alloc_chunk(desc);
+> +		if (!(i % bursts_max)) {
+> +			u32 n =3D min(cnt - i, bursts_max);
+> +
+> +			chunk =3D dw_edma_alloc_chunk(desc, n);
 
 [Severity: Medium]
-If this loop breaks early due to !sg, is desc->nburst left un-updated?
+Does this modulo operation risk a divide-by-zero exception if bursts_max
+is zero?
 
-If desc->nburst retains the originally overestimated count,
-dw_edma_core_start() will loop up to the original nburst. Does this risk
-submitting uninitialized (zeroed) DMA bursts to hardware, potentially
-leading to IOMMU faults or hardware hangs?
+If the hardware or device tree configures a linked-list region size
+between 24 and 47 bytes, ll_max will evaluate to 0.
 
-> =20
->  		if (xfer->type =3D=3D EDMA_XFER_CYCLIC)
->  			burst->sz =3D xfer->xfer.cyclic.len;
-
-[ ... ]
-
-> @@ -625,7 +574,7 @@ static void dw_edma_done_interrupt(struct dw_edma_cha=
-n *chan)
->  		case EDMA_REQ_PAUSE:
->  			chan->request =3D EDMA_REQ_NONE;
->  			chan->status =3D EDMA_ST_PAUSE;
->  			break;
-
-[Severity: High]
-If a descriptor completes exactly when the channel is paused, could this
-lead to an out-of-bounds array read upon resuming?
-
-If the PAUSE handler breaks out here without checking whether
-desc->start_burst >=3D desc->nburst, a fully completed descriptor remains on
-the list. When dw_edma_device_resume() is later called,
-dw_edma_start_transfer() would unconditionally fetch it and pass it to
-dw_edma_core_start(), which will access desc->burst[desc->start_burst].
-Since start_burst =3D=3D nburst in this scenario, would this read past the =
-end
-of the flexible array?
-
-[Severity: High]
-This is a pre-existing issue, but is it safe that dw_edma_device_pause()
-and dw_edma_device_resume() modify chan->request and traverse virt-dma
-descriptors without acquiring chan->vc.lock?
-
-Concurrent calls to dmaengine_pause() or dmaengine_resume() alongside the
-DMA completion interrupt could lead to data races and virt-dma descriptor
-list corruption.
-
-> =20
->  		default:
->  			break;
->  		}
->  	}
->  	spin_unlock_irqrestore(&chan->vc.lock, flags);
->  }
+This leaves bursts_max at 0, which would cause the kernel to panic when
+evaluating this modulo operation.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713-edma_ll-v7=
--0-6fb7498c901e@nxp.com?part=3D10
+-0-6fb7498c901e@nxp.com?part=3D9
