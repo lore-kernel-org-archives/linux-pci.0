@@ -1,161 +1,102 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C21493A4F5B;
-	Mon, 13 Jul 2026 08:08:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB7D03A63F2
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 08:13:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783930102; cv=none; b=V/cXBWk6pkfx8GDFnAQwBRtVUBlcSLUfQ9Ki3V1dO1wWvSi5SbhdvU1Ln5b857TlKROV2vJ2Ac0h0G1jY87r7awDWFprR4/1Y8qhyrr6IgaBKguDptlqC8srDaZPQoxi5K0L0OOXovbVCQU3PB4gaYmQsR2/dwG09r7JyY9zJ4U=
+	t=1783930442; cv=none; b=F7YUXd5+cXNLnNxF6UuGhFvA9kUiIE7SOkCVLqMV0bQeycJYQRP0nIFqla+e/y9BDZHsurjvW1ERW2hL3zemCbQXQdQG/rkbnER5wnihQDK/gqPHbrABalvjKICupN7gcJCA1s11vbi/fn2KV2n2PHzfluvUykomoMJrreRtz+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783930102; c=relaxed/simple;
-	bh=UZApS2edS3SSOM+33WEWbFeln7ja49nPlyAsMIHUXp0=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=L8DhA0yurOKZ8+XUoBib5TroODtPzs5DUG0hhjQPoFsmjspOhXfdQczfImt+ZL05Z072pv07ginq+hp9VSWjds8xwM/HrAkyriM9m51pZmGYVl8JE76EaJxcxzQi+xWGdOZfikJt/AosKHtmg9PZwuiYc8I7KtD8CwzkyVi2840=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=ISb09sNl; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1783930442; c=relaxed/simple;
+	bh=IE62m8iSP+rZUY8t9Usf2nywYiJ3//tW/RHG7c6stSw=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=EOl+8bTlVxZzwtMpMZg2DMwVNDKfumL+XVDoALxoTUmZCcY6vgOKPv6yce+QtB+CEIDatuz9Z8AHl1x5AxmAJR39NA6iJ19cJqLbros+uKCGSb2/2w2YiNoh4m0XcnHBpkKS+M9bsZIjU5Rqz1kpl3/4XQOVPYUpJwGkaSQZiY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=dMpPHE7o; arc=none smtp.client-ip=209.85.128.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="ISb09sNl"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="dMpPHE7o"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-49244130073so29365465e9.1
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 01:13:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=5HSRZYpzw686Gi3jE+bqow4FMeu78S17L
-	wEmfrBMKi0=; b=ISb09sNlFehG1pO+ZyPh3jmBO/qRH03wQaIrEGoTYHsyyiz8w
-	tT8oYcXpF6iEGU5kmKc6nTFmv3YyzJk4z0AIJXM/ZVpPC0xEwp64fS24Udz5WPjh
-	japzfcathctHDxcMMgl7QhL+lfoFPQzZb8Lfj64kCoomF0lx4B0ipqC+IU=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwDXEEIKnVRqNYYQAA--.16652S2;
-	Mon, 13 Jul 2026 16:08:43 +0800 (CST)
+        d=google.com; s=20251104; t=1783930438; x=1784535238; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=CzA7AdLdyanHGDYnO7UeyFW4jvO3vgqbYi0TkaDMqeo=;
+        b=dMpPHE7od2YOc7JyBd9MJbNSdEtZzgfKVioldewuTPjyvB03ym4gRs8/wL7lQ1Cetm
+         ueXamYpq7WBcSbWz/S8mzE3/fiv0R54Q0kKksTDr6QJhAf1NJmXUyGLeX+T46ji881xP
+         mfQXi4Ijj64GnfVlRf5mmP9bD2boxI2euSNoNrGrTm2rrHSnQ2NfBC/iNnVc+B4TOXKh
+         f4ZcT7JXjLqHtGEUc1I+6D+sImN7adruv4GRxAvz7w8HfefFJvsrgD8u7g+iVmt3arev
+         sCVDm7PxuMsEfegYPaKmN81lpQkQsnFBpdVyZQZRmWrSUxgS+GL/xQKfYXvMr5/wWvGe
+         3ItA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783930438; x=1784535238;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CzA7AdLdyanHGDYnO7UeyFW4jvO3vgqbYi0TkaDMqeo=;
+        b=ojw0YJGXIj1IAa5K/GLnJC56dRNfDDcNcPrcqXVdKXd5uFoQJFZvo8IrlrhrPeq/1W
+         cURzIjVgdPVYXgHl3rf+7LDk1ipdKKj3pKJ95WihB8lXhy9XrsCV39qpdTqJJ3dmLKZ2
+         HKSJmU0alLLGhVdxzvmX47gM+1Kv0yV2uYaW73kBXLCLlSi+u/lpsGvGqJOorBpR8Iqz
+         u3M+WAhn0zlSDL84GxanDnlqNGG3v5I9eeSeIk5dJxJ9PIW/W1il6jhCwlfOfY1AuB6S
+         GoOvNADGYoYihTXBr/iYwy3xeyD7ECvba58Dj7+PjMpcl7FoAwe1CCwDnNYH+8jzQmWm
+         bXlw==
+X-Forwarded-Encrypted: i=1; AHgh+Rook5idrRPgTDdf7Xke67oyKmniIshS0ambQnspVEgx/CFtgoGUmwhKNH0WA6uXprkOwPIt18yx7Qk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdSv2llHAkLak/ZpN8lPF1KHmjRNDpz+B5WPjwqEnsmnfcA1rC
+	nD7bB5NjOLpKGwsnQY7pk1hj+ZIRuWiyMoRZ9JcJYUDM67MTXfnF6x/QHYKLHfnLRKamzOvMdAv
+	uu7C2f7N9BrwThYeyAA==
+X-Received: from wmbje14.prod.google.com ([2002:a05:600c:1f8e:b0:493:beda:c864])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:8710:b0:493:e81c:fc9 with SMTP id 5b1f17b1804b1-493f87e5198mr88665935e9.15.1783930437954;
+ Mon, 13 Jul 2026 01:13:57 -0700 (PDT)
+Date: Mon, 13 Jul 2026 08:13:56 +0000
+In-Reply-To: <20260713-fix-fops-owner-v8-8-2495cfa82d47@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev> <20260713-fix-fops-owner-v8-8-2495cfa82d47@linux.dev>
+Message-ID: <alSeRIaps6QSqxJE@google.com>
+Subject: Re: [PATCH v8 08/10] rust: binder: use `LocalModule` for `THIS_MODULE`
+From: Alice Ryhl <aliceryhl@google.com>
+To: Alvin Sun <alvin.sun@linux.dev>
+Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
+	Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
+	Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
+	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
+	Aaron Tomlin <atomlin@atomlin.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Brendan Higgins <brendan.higgins@linux.dev>, David Gow <david@davidgow.net>, 
+	Rae Moar <raemoar63@gmail.com>, Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, 
+	Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+	Igor Korotin <igor.korotin@linux.dev>, FUJITA Tomonori <fujita.tomonori@gmail.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, 
+	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, 
+	"Arve =?utf-8?B?SGrDuG5uZXbDpWc=?=" <arve@android.com>, Todd Kjos <tkjos@android.com>, 
+	Christian Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org, 
+	linux-modules@vger.kernel.org, driver-core@lists.linux.dev, 
+	dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev, 
+	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v2 2/3] PCI: ultrarisc: get and enable DP1000 PCIe
- clocks
-From: Jia Wang <wangjia@ultrarisc.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: Jia Wang <wangjia@ultrarisc.com>, linux-pci@vger.kernel.org, 
- conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260706101114.129681F000E9@smtp.kernel.org>
-References: <20260706-ultrarisc-pci-clk-v2-0-2f3fb6fba66b@ultrarisc.com>
- <20260706-ultrarisc-pci-clk-v2-2-2f3fb6fba66b@ultrarisc.com>
- <20260706101114.129681F000E9@smtp.kernel.org>
-Date: Mon, 13 Jul 2026 16:08:11 +0800
-Message-Id: <178393009191.2317413.11810474348602616541.b4-reply@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783930092; l=3045;
- i=wangjia@ultrarisc.com; s=20260515; h=from:subject:message-id;
- bh=UZApS2edS3SSOM+33WEWbFeln7ja49nPlyAsMIHUXp0=;
- b=HY+p46CO4RmVZUfgUsP5pOE9FpfH/FO8Itkx/yzvGOikh7pZJPmPek+3CUUqaDIcbFrgbSNd3
- H5OACgbvAhWC/i1KSV6jAeWT/vxTnP8YoO6zTRnktJgF8aF9gKV/LOa
-X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
- pk=wGVm18siRScehKOkOz0WKxgxDy7IezHEszhnN4/TUCY=
-X-CM-TRANSID:AQAAfwDXEEIKnVRqNYYQAA--.16652S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxurykZFW3tFyxZryxGFyfWFg_yoW5AFWxp3
-	yUKayFkF4DJryY9rsIvw18ZF1YvrnIkry3Aa97Kr12vw1a9rykGrWrW34aq3Wvkr4j9wnF
-	kF4UC3WxCw1j9FDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUva14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
-	6r4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4UJV
-	WxJr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
-	JF0_Jw1lc2xSY4AK6svPMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI
-	8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AK
-	xVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI
-	8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280
-	aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyT
-	uYvjfU8miiUUUUU
-X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAHEWpUYNAAJgACs9
 
-On 2026-07-06 10:11 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Unconditional register access in suspend after a prior resume failure causes kernel panic.
-> --
+On Mon, Jul 13, 2026 at 02:45:29PM +0800, Alvin Sun wrote:
+> Replace the `THIS_MODULE` static reference in the binder fops with
+> `this_module::<LocalModule>()`, consistent with the move of
+> `THIS_MODULE` into the `ModuleMetadata` trait.
 > 
-> commit 91b0a79d0e5b5b1e0d3c9731fd011273f668f0a9
-> Author: Jia Wang <wangjia@ultrarisc.com>
-> 
-> PCI: ultrarisc: get and enable DP1000 PCIe clocks
-> 
-> Add the required core, dbi, and aux clocks for the DP1000 PCIe
-> controller and enable them before initializing the DesignWare host.
-> Also manage the clocks across system suspend and resume.
-> 
-> > diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> > index 6ee661ceff67a..6ed244770d538 100644
-> > --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> > +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> [ ... ]
-> > @@ -135,14 +174,31 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
-> >  
-> >  static int ultrarisc_pcie_suspend_noirq(struct device *dev)
-> >  {
-> > -	struct dw_pcie *pci = dev_get_drvdata(dev);
-> > +	struct ultrarisc_pcie *ultra = dev_get_drvdata(dev);
-> > +	struct dw_pcie *pci = &ultra->pci;
-> > +	int ret;
-> > +
-> > +	ret = dw_pcie_suspend_noirq(pci);
-> 
-> [Severity: High]
-> What happens here if a previous resume attempt failed to enable the clocks?
-> 
-> Looking at ultrarisc_pcie_resume_noirq() below, if clk_bulk_prepare_enable()
-> fails, the function returns an error while the clocks remain disabled and
-> pci->suspended remains true.
-> 
-> If the system then undergoes another suspend cycle, this function will call
-> dw_pcie_suspend_noirq(), which accesses hardware registers via
-> dw_pcie_link_up().
-> 
-> Since the clocks are disabled, could this register access cause a bus error
-> and subsequent kernel panic?
-> 
-> Should we check if the device is already suspended (or if the clocks are
-> already off) before calling dw_pcie_suspend_noirq()?
-> 
+> Assisted-by: opencode:glm-5.2
+> Reviewed-by: Gary Guo <gary@garyguo.net>
+> Acked-by: Danilo Krummrich <dakr@kernel.org>
+> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 
-Thanks.
+Most other Rust Binder commits use 'rust_binder:' prefix rather than
+'rust: binder:'.
 
-This will be fixed in the next version by handling the already-suspended
-case before calling dw_pcie_suspend_noirq(), so no register access is made
-with the clocks disabled.
-
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	if (pci->suspended)
-> > +		clk_bulk_disable_unprepare(ARRAY_SIZE(ultra->clks), ultra->clks);
-> >  
-> > -	return dw_pcie_suspend_noirq(pci);
-> > +	return 0;
-> >  }
-> >  
-> >  static int ultrarisc_pcie_resume_noirq(struct device *dev)
-> >  {
-> > -	struct dw_pcie *pci = dev_get_drvdata(dev);
-> > +	struct ultrarisc_pcie *ultra = dev_get_drvdata(dev);
-> > +	struct dw_pcie *pci = &ultra->pci;
-> > +	int ret;
-> > +
-> > +	if (pci->suspended) {
-> > +		ret = clk_bulk_prepare_enable(ARRAY_SIZE(ultra->clks), ultra->clks);
-> > +		if (ret)
-> > +			return ret;
-> > +	}
-> >  
-> >  	return dw_pcie_resume_noirq(pci);
-> >  }
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260706-ultrarisc-pci-clk-v2-0-2f3fb6fba66b@ultrarisc.com?part=2
->
-
-Best regards,
-Jia Wang 
-
-
+Alice
