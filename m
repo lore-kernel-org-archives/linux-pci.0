@@ -1,173 +1,397 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021086.outbound.protection.outlook.com [52.101.100.86])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF154028F9;
-	Mon, 13 Jul 2026 12:07:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783944450; cv=fail; b=iV9YnLP9vlTr8nkvM3YpSvniZfz1U6uphBnb6+byjkiC4ohhzFUdZ8ZUw/cfJ1yCDQF4oLOpWho3Ci6HBV5nlW25eoTjcOBC9GZHxdbmZ2Sh5h+MZ1yKwmWLvBz48FHJqa48ioGT6n7qghfOHtYNN0jjIkOnT+pyKpLb1FtlRFQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783944450; c=relaxed/simple;
-	bh=EeyTyLNifURwcN/tRH3j/7EDGOnFDum9wss0Y68BVFg=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=G6bEoTRa5MgO5Jarqyakf2+b6sdheKOXp6qkGq4WXWRrrXJMJPD1oCjbtS9pDnjJErLQJWQFyXrlv5pMQid0PEb7niiOV5Rn+CQQeslSzW/jiZCsxdqgPGExnigp34sPby0p20KhpLheb/Q7AydHYY+WLl98/P3PMwHW8sWbkv0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=EvkqveAU; arc=fail smtp.client-ip=52.101.100.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB3D33EAC8B;
+	Mon, 13 Jul 2026 12:20:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783945239; cv=none; b=sUG5dc5fnYGcnmPMgqsw9ZCqufbOlN3NiEwEYYKa4yjMgPHpEtJBAYE8jfdnSvV7cDWnns+EEz8Nz3PhiBEb2EJCX3HS/B7XWi3plwJuSt+2jZaWImGHUTI7//wf4jNDHF85ml864XTXlV9+B7d9O6qlmiVvHHMTQmKCqgSt/kU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783945239; c=relaxed/simple;
+	bh=Wa3p4pJ1O3+kXOjLpmt1FfceI8MC9N80+kPasW7crM0=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=NG7h4me7BRQcnNnWfKNdlJfBz8/9XOWU+nuqpFlIlO8y+FkZBaSx6JIb/Vsai87mDALPJ/bX61Xpc0YC+5aGo8xdf/xAG5NAdc7Y1BxAtgmPkbOlQeKMfoHKDNVl3oB8i6u+yU78JXl6Ee4WeEmhfvbD/bVJzwrdcwvgQy8fuFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RSUPRyc1; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="EvkqveAU"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Pxx3vf3iWRGRxk273JbXcDK4MB9JgIWtA8yElwQ545z82OG+WtzC1z5YgbFKJ2iynlA3ix0HXf6uNM9GXgYCE2plnBcAkzKAKQTkV3mwRUMhAs/qdW/Ag6yqRh0418jyt7NvUtvahOT6IGBNoNoPAL7xInlWdav8zTcwSw0oIJyOa6o5M0jUtUpNSVTzy7DBxK2rkwEgCZx9r/oAb3U7RZDFQH3mbs9D397I+SqdOuOntFIGZGM8H7T7tD2JKPRdoj+uMKk9WgvlLGFkdiE3CLL98fEtYtFAaiQBW+cVH3yyUkQopS04yi+2Ts1w0VmKTC2aM+4cwbQqwJGzfYvQRg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3qirLLX/ZhQD3j7TnLcMoexVuF2EazNr5u8vL+5VLNE=;
- b=iZUX5ORQFjYztha8b/vMcd1W68I68u092vtDiIIisfeGhcZr7ETFkNo51apA+KyNr4H66ftCXdpGu2NZSPRVyvn/Lg6hzy7laL3IMgrogBxo+O33tnjQiP5BVgd3czJMtB4TNqDG12DwnProeOJkV/qh2lboBOJ+6R/O91Zhda6GrFcAXYjRgFFkHyI5m+1NEdpL+bM+Lu3LYbJ+nAUWsTPiQcqe1U17+4fMAn//+0zrm5lJK76U7SdzB4/wwemSEHkvmulPv3HuzjONSTX9BpcFvE6czMpQRx05jCneFNbyJyz7Qm+Hi44yAm6y+JAzB3y6WKPYFwkjCG6KV9VQDg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3qirLLX/ZhQD3j7TnLcMoexVuF2EazNr5u8vL+5VLNE=;
- b=EvkqveAU2zWjkyYiaLcVSzSg2gtdPgO9VZrfOR2jHOLDXfMR0pjoum+Ywea1sCJx1qAULBfC6LbHOJmXAnhLCSVzZiZjnYl7k4keD2EK+jJo7q/zAAAnakxPUhdAQlU8g2V8qGvsj/aEKA/+lYYTx30qTk/ehNTgdNTosTwX4dc=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:27c::13)
- by LO0P265MB6995.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ec::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.19; Mon, 13 Jul
- 2026 12:07:25 +0000
-Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- ([fe80::6c9e:93c8:10db:e995]) by CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- ([fe80::6c9e:93c8:10db:e995%3]) with mapi id 15.21.0202.014; Mon, 13 Jul 2026
- 12:07:25 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 13 Jul 2026 13:07:24 +0100
-Message-Id: <DJXFJ00EOKDK.CNXCIN7TMZU3@garyguo.net>
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alvin Sun" <alvin.sun@linux.dev>, "Miguel Ojeda" <ojeda@kernel.org>,
- "Boqun Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Danilo
- Krummrich" <dakr@kernel.org>, "Luis Chamberlain" <mcgrof@kernel.org>, "Petr
- Pavlu" <petr.pavlu@suse.com>, "Daniel Gomez" <da.gomez@kernel.org>, "Sami
- Tolvanen" <samitolvanen@google.com>, "Aaron Tomlin" <atomlin@atomlin.com>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Daniel Almeida" <daniel.almeida@collabora.com>, "Arnd
- Bergmann" <arnd@arndb.de>, "Brendan Higgins" <brendan.higgins@linux.dev>,
- "David Gow" <david@davidgow.net>, "Rae Moar" <raemoar63@gmail.com>, "Breno
- Leitao" <leitao@debian.org>, "Jens Axboe" <axboe@kernel.dk>, "Dave Ertman"
- <david.m.ertman@intel.com>, "Leon Romanovsky" <leon@kernel.org>, "Igor
- Korotin" <igor.korotin@linux.dev>, "FUJITA Tomonori"
- <fujita.tomonori@gmail.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, "Todd Kjos"
- <tkjos@android.com>, "Christian Brauner" <brauner@kernel.org>, "Carlos
- Llamas" <cmllamas@google.com>
-Cc: <rust-for-linux@vger.kernel.org>, <linux-modules@vger.kernel.org>,
- <driver-core@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <nova-gpu@lists.linux.dev>, <linux-kselftest@vger.kernel.org>,
- <kunit-dev@googlegroups.com>, <linux-block@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v8 07/10] rust: configfs: use `LocalModule` for
- `THIS_MODULE`
-X-Mailer: aerc 0.21.0
-References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
- <20260713-fix-fops-owner-v8-7-2495cfa82d47@linux.dev>
-In-Reply-To: <20260713-fix-fops-owner-v8-7-2495cfa82d47@linux.dev>
-X-ClientProxiedBy: LO3P265CA0016.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:bb::21) To CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:400:27c::13)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RSUPRyc1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783945238; x=1815481238;
+  h=message-id:date:mime-version:cc:subject:to:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Wa3p4pJ1O3+kXOjLpmt1FfceI8MC9N80+kPasW7crM0=;
+  b=RSUPRyc11StF5mA/vH3o2P/u18WG2ORhlOcabs5DMHEWSLTs09zaBtaD
+   Dlg4CPS6osx3zUhrmWtQAkc3NBXTFwbAGw4xiQA/kklR57XtZu7F0p+5R
+   ey8eeK5skxmL+mlv07cGAyuKXxyr4myeBboJunNmh7VIFM59qwf2UzzOf
+   YXTBH6nmHtn5XRI/tqQF8LUwFiPq8Xah0nveKn0oazLy3psTn6OyiCD3Y
+   UgG6vYi9nOX0FLZ0LY3Kc5VGomI5sXC7OV2E2eHtjY+9wQL6B00DtlXpI
+   tDAUXmtM3jiHztVv261l3hN+P0Q4TeHtM5I6aBgP9pbcSe+WrTgvBDbRk
+   w==;
+X-CSE-ConnectionGUID: 4YkmbFYiR86s37WfRQ/IeQ==
+X-CSE-MsgGUID: bIQvI4i4RAqsfCQZJbk98g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="102101388"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="102101388"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2026 05:20:37 -0700
+X-CSE-ConnectionGUID: i+FYRzvwR9Sut71d63+hiw==
+X-CSE-MsgGUID: PLNBBH1XTLqng9296cDVdA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="251114037"
+Received: from blu2-mobl.ccr.corp.intel.com (HELO [10.124.248.249]) ([10.124.248.249])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2026 05:20:32 -0700
+Message-ID: <9a85cccd-29ed-4c51-b9cb-140631966d20@linux.intel.com>
+Date: Mon, 13 Jul 2026 20:20:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CW1P265MB8877:EE_|LO0P265MB6995:EE_
-X-MS-Office365-Filtering-Correlation-Id: 962ce0e8-cd1a-400e-47af-08dee0d74d81
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|10070799003|23010399003|921020|18002099003|22082099003|56012099006|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	PwJe6ZszOhIvyq8wDahoMSzBsEiSw7nZB8jX8hPmfFA05i8jCrVlhnUJ0sLp2Di1Z7Jtx0qBwQVcf/M43ObaXllEv4VrqbWGLVj72cuTg9qxPgPq/9q73A8cc8f69Cqg3/JR5TM0XBICNxU9s5m4kpwHBHws4U61VneB2UB19zVv+BqMTWwCN1/aGppLY5z6NCPAhfN6ZHhAsNmfVyeyW8vHEUXUlVSze3oBAwhO6qZ0oLsFrAQ2N8rz1/bH6xN8Il+z82DrX4ttcWjJv2j94xP7LBbVI2L5qNUReoRbK4HHC0NGzH7IyqhaHLsUmEwntw2tfb3FQJDijJR94ej+sLqqKLsI+EmCLK6VL3mSaIdB1mMmE+naRoI89xa386OQj354IRYs2W70fOw6BWolY0Des599JUuGbUzHN/7zRIj+X+6bQ2/RTiGpzxwewjGqQDHMn4wyk0rSiVEVqmyI9a0C6nSDYkf1ThiW3KASpK5kA25Dbv7wL2X1CN77sQqT4JVoNsaWp55V5IUCrFV5Rj+hD3SafaonNvTFU5x36U9ptHmm7NqkYHfOrxZwFJTKYSBUcedi9qRX3BywTCLZpdIUwxuk1xuSWu+O+s2d36LIKW77UHGqH92QTUy1kF+FSNahCsFRI7WxGbhlygHtZ1Qs+WyHuuCs/TdxmpuEg4bcmQI0rCYel4zKHZquZd3m
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(10070799003)(23010399003)(921020)(18002099003)(22082099003)(56012099006)(4143699003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZjRSTWJYWlRmbk05WUlUOCtDemFJbC9lWkZEakxQc0ZWUlRqeUc5aWpKWUxQ?=
- =?utf-8?B?dFlad3JaVEkrWDU2VnE1Q1UvaXI4bm8vNGdtZDZuUzdDNEo0WXYvVFh3Nno0?=
- =?utf-8?B?MUUwNlhUQmU1UEN6QjVXbUR0NW5hNm15LzNxTmdVK25RNVBacTZQcFdUdHlu?=
- =?utf-8?B?bno0YjNoaEUzVURSSWJoNkdGcXJ3UmNLZEwySkdqaFQxUExnR0RibkJuQXYr?=
- =?utf-8?B?dWN6bU9FUFN5dXpvTnZkUWRZZTIvVkFkTkRWN0RldzNocUdhc012YkdsTU9h?=
- =?utf-8?B?Q2JvREZmd3VIYnlJQzlGN3BySXpnczVLNTNCZXNRc0p0cllvT2Y1NlgvamhR?=
- =?utf-8?B?UDlleGxranNnWEdKSEZLbWdMQzFMTSs2UEpLRWh1S3IySkNNb3Byb1RkaU84?=
- =?utf-8?B?dXlXcHp0UzZlbVlIL2E1MlYzUUJYUWZtWGVYb1BETjJoWW4zaEhEdWZCZVBF?=
- =?utf-8?B?bGE0NzhOd1VnQWtUcTFVeWdSeEpiOUZWNXNmZ1dTNWx1Rit1a2E0dlcwajh0?=
- =?utf-8?B?SjB2dytrM0xKN1cwMTJIUEM5WkZmU1BMYndDbmpLb3dIcEludHZoMkQrNGZv?=
- =?utf-8?B?dXJqNUJtQXhzbHNPaE9QTDUxWXU0VlR4UVpuSlBabEMyeTBWK2M1UlZmSlVF?=
- =?utf-8?B?eGZiRkNxOGV5aTRkZU9BK0JTYnU1M1VYWVQ5K0F5MEh5Y2NGbzd0TUR4L2h4?=
- =?utf-8?B?Uk5YWno3TE1yV2JHYlRuZldqbHFtVGdlRmF2dW9wSnNVaVY3ZzJMVW51UWZJ?=
- =?utf-8?B?VTFFTGNsdkxWYTJaMm5VbjNQc3l3RnBZcXRjbjhVTm53SXNQQXhpeWhjM0s3?=
- =?utf-8?B?UXpsemZqSmdROGJzR2E0TTV6MmZNL1FXVDlQNmErYUpUR0JwR29ndGxRTjBh?=
- =?utf-8?B?bGxBaCtWOUVRc0lianc1K2lBeUp0L2tFUWl4WExXSUdBaFVvRnhDTis1dXNy?=
- =?utf-8?B?SnRnbzRVb1l5Yjd1SUh5dXpDU3crUVYxenUyckhRYjZOODl6K3NjQ2c1Vlk4?=
- =?utf-8?B?VVhZQzY0aG9ZditzdWFWMXFNZXJCNVJNMTVhM3R6WmpEYU84ZVpZODFuNVdE?=
- =?utf-8?B?N0s0NXh0aWYvWFkydXA2WjdXdU12dHYvbFEzSE1hRDRjbUhSTW44TjErQ2l1?=
- =?utf-8?B?Z0R0aVhQaEdnK0lVQ0R5VFFETSthY1VQTFpOODN4V3A4bFRoZzkxcll0TUZN?=
- =?utf-8?B?MXpZZ3F1ZzAxWittWGZXeTNnaEIxRTk0VS9iZGNqaTVETUVPY3YzWW15dmtP?=
- =?utf-8?B?d3ZXVXdPdm9BOUFDL3pWU244dWpuQXNpY2thRVMydTNRMjh4R2hIY0hvS2FB?=
- =?utf-8?B?Z2YxOG1Nb0J4U0ZyTVJPQkRxVjhxY21zTVgvSzZVRHE0bHgyYm43dFh2ZExG?=
- =?utf-8?B?Qlo3bUkwYmlqbEJicGtUelBUMTFOUjBWOFlFUElueVJYWTJybWFqQWRtK2pH?=
- =?utf-8?B?em1hZEZDSFZuT2VZU0lRdkluOW5BVEEzQlNMT3BkYk1rZGlpT3JnUWcxS21H?=
- =?utf-8?B?VEx4cElUZjE2d3hNUXNkYmRCNUhwK2dJNnNwbWkxT29DNlZyV1NRdE4vcGgw?=
- =?utf-8?B?NXpSOWNoQTJGMjRpRS9yN1lMdHF5UjNQbDhZVzV3SzBXVTlJRmNNVGxZbE5K?=
- =?utf-8?B?cEM4WGZXZGY3U0FOMHhOOXdKRHliS1IyTWJaYTdZd1N2TWNmMkZ6blBPcytu?=
- =?utf-8?B?azl5WlZBb2Z6eG9icmFqUlUybzBZbE5WQ0V4NXdlUkExaTU2NXRFOGFFMVlv?=
- =?utf-8?B?MXEwL1dEcUI3cEwzTmw4QlZWeFE5eE1QTGNpSW9TVlJzSWs2OWNySFY1MnpU?=
- =?utf-8?B?NXhzTWtGSm1WTnpDSWkvM0VXY3hqN1RPaWpQdWQ1OXNHUnExbjFnNGxRaktN?=
- =?utf-8?B?SGpHQkdZY25DR0lKR3U5QVF0RGJ2WXhsVmtyOWYydlBaVExLR2FWVkNYUmNH?=
- =?utf-8?B?VDM1NnRZR2dFVEhzZUtJRjZONk96Q1lZM3hxUk5Ba0FTYkFVOW96emxIV1E2?=
- =?utf-8?B?a0tpdDdBMldrY1pHK3dYdTdpaHhnYmVmQ00ybjhPVXMwWDhGSTRKdkY2R2k1?=
- =?utf-8?B?R3FsemJOVzIzTU12QzQyOVp0RWk3WSs0Q2JWU3lnZVZsQk12eTZoUTBybUpo?=
- =?utf-8?B?ZG95VlBFS1Bna2pSVE9IS2l3T1YzVlJZWW0rTWJiR1BENHV2UXB1L2h0QmVn?=
- =?utf-8?B?cnpyOUNZVnUvSXdvZkxpWldYVGlvUVM1Tnk5cWhsaWxGR3FXRk91NVN4QjFB?=
- =?utf-8?B?MTd5eXcxWkdDRVhRMHVFeG1SY3k4T1d4N2lnTnFiUnBYQmx4a1F6MEZjZDd6?=
- =?utf-8?B?bXR6RERUVUhIYkc1K1pnOVZaRTlqcXA0c3k3TklnVzczMndvVEg4Zz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 962ce0e8-cd1a-400e-47af-08dee0d74d81
-X-MS-Exchange-CrossTenant-AuthSource: CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 12:07:25.7333
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: l9vU4FMqa6vZWMbev4hqWyBPSLty0QuHXD/Lc1QATdjQDB2VLyVSZMxxoLXCyPy1JR8bTfRv3mapYfUwTDPPbg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB6995
+User-Agent: Mozilla Thunderbird
+Cc: baolu.lu@linux.intel.com, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Len Brown <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>,
+ Mostafa Saleh <smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, vsethi@nvidia.com,
+ Shuai Xue <xueshuai@linux.alibaba.com>
+Subject: Re: [PATCH v5 18/18] iommu/arm-smmu-v3: Block ATS for a master upon
+ an ATC invalidation timeout
+To: Nicolin Chen <nicolinc@nvidia.com>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@nvidia.com>
+References: <cover.1783044582.git.nicolinc@nvidia.com>
+ <939885143f3064811685b3f31f6f30f8a713c89e.1783044582.git.nicolinc@nvidia.com>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <939885143f3064811685b3f31f6f30f8a713c89e.1783044582.git.nicolinc@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon Jul 13, 2026 at 7:45 AM BST, Alvin Sun wrote:
-> Replace the `THIS_MODULE` static reference in the `configfs_attrs!`
-> macro with `this_module::<LocalModule>()`, and update
-> rnull to import `LocalModule` instead of `THIS_MODULE`, consistent
-> with the move of `THIS_MODULE` into the `ModuleMetadata` trait.
->=20
-> Assisted-by: opencode:glm-5.2
-> Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> Acked-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
-
-Reviewed-by: Gary Guo <gary@garyguo.net>
-
+On 7/3/2026 12:06 PM, Nicolin Chen wrote:
+> When a CMD_ATC_INV times out, the SMMU stalls at the trailing CMD_SYNC and
+> arm_smmu_cmdq_issue_cmdlist() returns -EIO. The CMDQ HW reports the timeout
+> on the CMD_SYNC, not the failing CMD_ATC_INV, so the master that caused it
+> cannot be identified from the error alone.
+> 
+> cmds->cmds is sorted by SID, so arm_smmu_cmdq_batch_retry() walks the batch
+> and re-issues one CMD_ATC_INV per unique ATS SID; a second -EIO can confirm
+> which master is broken. arm_smmu_quarantine_ats() then quarantines it:
+>   - clear STE.EATS on every SID it owns
+>   - walk master->master_domains marking its INV_TYPE_ATS/_ATS_FULL entries
+>     in every domain's invs as INV_TYPE_ATS_BROKEN so later walks skip them
+> 
+> When a batch carries only one unique Stream ID, the timed-out CMD_SYNC by
+> itself identifies the target, in which case quarantine it directly and skip
+> the re-issue probes. This is the common case, since it is uncommon for an
+> ATS-capable PCI device to have multiple Stream IDs.
+> 
+> The marking spans every domain because a master may be attached at the RID
+> and at multiple PASIDs; marking only the invs that hit the timeout would
+> leave its other invs issuing CMD_ATC_INV that keep timing out. Clearing
+> STE.EATS makes the SMMU reject the device's ATS but does not by itself
+> stop the driver from issuing CMD_ATC_INV, so the marking is what suppresses
+> the recurring timeouts.
+> 
+> The marking is gated on the STE.EATS clear: it runs only after the CFGI_STE
+> batch completes successfully. If that batch fails the entries are left as
+> ATS/ATS_FULL, so invalidations keep issuing CMD_ATC_INV and re-quarantine
+> until the clear is confirmed, rather than suppressing ATC_INV while ATS may
+> still be enabled.
+> 
+> The flip to INV_TYPE_ATS_BROKEN is a WRITE_ONCE on inv->type, paired with
+> the READ_ONCE in arm_smmu_inv_type(). The invs->rwlock is not taken here:
+> the caller holds the read side for the timed-out batch, so taking a write
+> side would ABBA-deadlock against a concurrent timeout. It is safe unlocked
+> because STE.EATS is cleared first, so a racing CMD_ATC_INV forms no ATC
+> entry and at worst times out again.
+> 
+> The STE.EATS clear uses try_cmpxchg64() to avoid losing a concurrent
+> arm_smmu_write_ste() update to data[1]. try_cmpxchg64() would be UB on the
+> Non-Cacheable stream table of a non-coherent SMMU, and a non-atomic
+> fallback could revert such a concurrent update (e.g. an S1DSS change). So
+> leave a non-coherent SMMU unquarantined, keeping the pre-existing behavior
+> of reporting every ATC_INV timeout.
+> 
+> Also force a CMD_SYNC on every sub-batch flush carrying an ATC_INV so the
+> timeout is observed at the call site that issued the commands.
+> 
+> Identification is synchronous: each master that keeps timing out adds one
+> more CMD_SYNC poll, capped at the ARM_SMMU_POLL_TIMEOUT_US software limit.
+> That cap is rarely reached: a non-responding ATC_INV is completed in error
+> when the device's PCIe Completion Timeout expires, which defaults to a
+> short interval.
+> 
+> Assisted-by: Claude:claude-fable-5
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 > ---
->  drivers/block/rnull/configfs.rs | 5 +----
->  rust/kernel/configfs.rs         | 9 ++++++---
->  2 files changed, 7 insertions(+), 7 deletions(-)
+>   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 201 +++++++++++++++++++-
+>   1 file changed, 198 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> index fd9a095154c72..528d816479d7f 100644
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> @@ -109,6 +109,10 @@ static const char * const event_class_str[] = {
+>   
+>   static int arm_smmu_alloc_cd_tables(struct arm_smmu_master *master);
+>   static bool arm_smmu_ats_supported(struct arm_smmu_master *master);
+> +static struct arm_smmu_ste *
+> +arm_smmu_get_step_for_sid(struct arm_smmu_device *smmu, u32 sid);
+> +static struct arm_smmu_domain *
+> +to_smmu_domain_devices(struct iommu_domain *domain);
+>   
+>   static void parse_driver_options(struct arm_smmu_device *smmu)
+>   {
+> @@ -920,12 +924,25 @@ static void arm_smmu_cmdq_batch_init_cmd(struct arm_smmu_device *smmu,
+>   	cmds->has_ats = false;
+>   }
+>   
+> +static void arm_smmu_cmdq_batch_retry(struct arm_smmu_device *smmu,
+> +				      struct arm_smmu_cmdq_batch *cmds);
+> +
+>   static int arm_smmu_cmdq_batch_issue(struct arm_smmu_device *smmu,
+>   				     struct arm_smmu_cmdq_batch *cmds,
+>   				     bool sync)
+>   {
+> -	return arm_smmu_cmdq_issue_cmdlist(smmu, cmds->cmdq, cmds->cmds,
+> -					   cmds->num, sync);
+> +	int ret = arm_smmu_cmdq_issue_cmdlist(smmu, cmds->cmdq, cmds->cmds,
+> +					      cmds->num, sync);
+> +
+> +	/*
+> +	 * The CMDQ HW reports an ATC invalidation timeout at the trailing
+> +	 * CMD_SYNC, not at the failing CMD_ATC_INV. Re-issue each unique ATS
+> +	 * SID in the batch to identify the unresponsive master and block its
+> +	 * ATS so subsequent invalidations make forward progress.
+> +	 */
+> +	if (ret == -EIO && cmds->has_ats)
+> +		arm_smmu_cmdq_batch_retry(smmu, cmds);
+> +	return ret;
+>   }
+>   
+>   static bool arm_smmu_cmdq_batch_force_sync(struct arm_smmu_device *smmu,
+> @@ -941,6 +958,10 @@ static bool arm_smmu_cmdq_batch_force_sync(struct arm_smmu_device *smmu,
+>   	    (smmu->options & ARM_SMMU_OPT_CMDQ_FORCE_SYNC))
+>   		return true;
+>   
+> +	/* ATC_INV timeout is reported to CMD_SYNC; catch at the call site */
+> +	if (cmds->num == CMDQ_BATCH_ENTRIES && cmds->has_ats)
+> +		return true;
+> +
+>   	return false;
+>   }
+>   
+> @@ -1014,7 +1035,11 @@ static inline struct arm_smmu_inv *
+>   arm_smmu_invs_iter_next(struct arm_smmu_invs *invs, size_t next, size_t *idx)
+>   {
+>   	while (true) {
+> -		if (next >= invs->num_invs) {
+> +		/*
+> +		 * Lockless readers (arm_smmu_invs_set_ats_broken) pair with the
+> +		 * WRITE_ONCE() in arm_smmu_invs_unref(); num_invs only shrinks.
+> +		 */
+> +		if (next >= READ_ONCE(invs->num_invs)) {
+>   			*idx = next;
+>   			return NULL;
+>   		}
+> @@ -2505,6 +2530,176 @@ static int arm_smmu_atc_inv_master(struct arm_smmu_master *master,
+>   	return arm_smmu_cmdq_batch_submit(master->smmu, &cmds);
+>   }
+>   
+> +static void arm_smmu_invs_set_ats_broken(struct arm_smmu_invs *invs,
+> +					 struct arm_smmu_device *smmu, u32 sid)
+> +{
+> +	struct arm_smmu_inv *inv;
+> +	size_t i;
+> +
+> +	/* arm_smmu_atc_inv_master() submits batches with invs=NULL */
+> +	if (!invs)
+> +		return;
+> +
+> +	/*
+> +	 * invs->rwlock is deliberately not taken: the caller holds one domain's
+> +	 * read side for the timed-out batch, then taking another domain's write
+> +	 * side while a concurrent timeout does the reverse would ABBA-deadlock.
+> +	 *
+> +	 * This indicates some potential races, but they are harmless since EATS
+> +	 * was already cleared:
+> +	 *  - WRITE_ONCE() may hit a stale invs copy if an attach just installed
+> +	 *    a new invs, which might result in another ATC_INV timeout.
+> +	 *  - a concurrent invalidation may still issue an ATC_INV that may time
+> +	 *    out again.
+> +	 */
+> +	arm_smmu_invs_for_each_entry(invs, i, inv) {
+> +		u8 type = arm_smmu_inv_type(inv);
+> +
+> +		if (inv->smmu == smmu && inv->id == sid &&
+> +		    (type == INV_TYPE_ATS || type == INV_TYPE_ATS_FULL))
+> +			WRITE_ONCE(inv->type, INV_TYPE_ATS_BROKEN);
+> +	}
+> +}
+> +
+> +/* Find the master by SID and block its ATS at the SMMU */
+> +static void arm_smmu_quarantine_ats(struct arm_smmu_device *smmu, u32 stream_id)
+> +{
+> +	struct arm_smmu_cmd cmd = arm_smmu_make_cmd_op(CMDQ_OP_CFGI_STE);
+> +	struct arm_smmu_master_domain *md;
+> +	struct arm_smmu_cmdq_batch cmds;
+> +	struct arm_smmu_master *master;
+> +	struct arm_smmu_invs *invs;
+> +	unsigned long flags;
+> +	int i;
+> +
+> +	/*
+> +	 * The in-place STE.EATS clear relies on try_cmpxchg64(), which is UB
+> +	 * on Non-Cacheable memory. Leave a non-coherent SMMU unquarantined:
+> +	 * its invalidations keep issuing ATC_INV and reporting the timeouts.
+> +	 */
+> +	if (!(smmu->features & ARM_SMMU_FEAT_COHERENCY))
+> +		return;
+> +
+> +	guard(spinlock_irqsave)(&smmu->streams_lock);
+> +	master = arm_smmu_find_master(smmu, stream_id);
+> +	/*
+> +	 * A concurrent hot-unplug can release the master while a stale ATS
+> +	 * entry for it still lingers in the invs snapshot being walked here.
+> +	 */
+> +	if (!master)
+> +		return;
+> +
+> +	/* Clear STE.EATS for every SID and sync to the SMMU */
+> +	arm_smmu_cmdq_batch_init_cmd(smmu, &cmds, &cmd);
+> +
+> +	for (i = 0; i < master->num_streams; i++) {
+> +		u32 sid = master->streams[i].id;
+> +		struct arm_smmu_ste *ste = arm_smmu_get_step_for_sid(smmu, sid);
+> +		__le64 old, new;
+> +
+> +		/*
+> +		 * A concurrent arm_smmu_write_ste() of a domain attachment may
+> +		 * overwrite the data[1] and set EATS, which is recoverable by
+> +		 * another ATC_INV issued by its arm_smmu_attach_commit().
+> +		 */
+> +		old = READ_ONCE(ste->data[1]);
+> +		do {
+> +			new = old & ~cpu_to_le64(STRTAB_STE_1_EATS);
+> +		} while (!try_cmpxchg64(&ste->data[1], &old, new));
+> +
+> +		arm_smmu_cmdq_batch_add_cmd(
+> +			smmu, &cmds, arm_smmu_make_cmd_cfgi_ste(sid, true));
+> +	}
+> +
+> +	/*
+> +	 * Only proceed to mark the entries broken if the STE.EATS clear above
+> +	 * is confirmed; otherwise return so invalidations keep issuing ATC_INV
+> +	 * (and re-quarantine) until ATS is actually disabled.
+> +	 */
+> +	if (arm_smmu_cmdq_batch_submit(smmu, &cmds)) {
+> +		dev_err_ratelimited(smmu->dev,
+> +				    "failed to disable ATS for master\n");
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * Mark this master's ATS entries broken in every domain it is attached,
+> +	 * so later invalidations skip the ATC_INV that would time out again.
+> +	 */
+> +	rcu_read_lock();
+> +	spin_lock_irqsave(&master->master_domains_lock, flags);
+> +	list_for_each_entry(md, &master->master_domains, master_elm) {
+> +		struct arm_smmu_domain *smmu_domain =
+> +			to_smmu_domain_devices(md->domain);
+> +
+> +		if (!smmu_domain)
+> +			continue;
+> +		invs = rcu_dereference(smmu_domain->invs);
+> +		for (i = 0; i < master->num_streams; i++)
+> +			arm_smmu_invs_set_ats_broken(invs, smmu,
+> +						     master->streams[i].id);
+> +	}
+> +	spin_unlock_irqrestore(&master->master_domains_lock, flags);
+> +	rcu_read_unlock();
+> +}
+> +
+> +/* Re-issue every unique ATS SID in @cmds to identify and quarantine masters. */
+> +static void arm_smmu_cmdq_batch_retry(struct arm_smmu_device *smmu,
+> +				      struct arm_smmu_cmdq_batch *cmds)
+> +{
+> +	struct arm_smmu_cmd atc = {};
+> +	u32 last_sid = 0;
+> +	int nr_sids = 0;
+> +	int i;
+> +
+> +	/*
+> +	 * Count unique Stream IDs, taking advantage of the sorted commands. An
+> +	 * ATS-capable PCI device rarely has multiple SIDs, so a batch commonly
+> +	 * carries a single SID, where a re-issue probe would be pointless.
+> +	 */
+> +	for (i = 0; i < cmds->num; i++) {
+> +		u32 sid;
+> +
+> +		/* Only ATC_INV commands can time out */
+> +		if (FIELD_GET(CMDQ_0_OP, cmds->cmds[i].data[0]) !=
+> +		    CMDQ_OP_ATC_INV)
+> +			continue;
+> +		sid = FIELD_GET(CMDQ_ATC_0_SID, cmds->cmds[i].data[0]);
+> +		if (!nr_sids || sid != last_sid) {
+> +			nr_sids++;
+> +			last_sid = sid;
+> +		}
+> +	}
+> +
+> +	/* The timed-out CMD_SYNC already identifies the lone Stream ID */
+> +	if (nr_sids == 1) {
+> +		arm_smmu_quarantine_ats(smmu, last_sid);
+> +		return;
+> +	}
+> +
+> +	for (i = 0; i < cmds->num; i++) {
+> +		u32 sid;
+> +
+> +		if (FIELD_GET(CMDQ_0_OP, cmds->cmds[i].data[0]) !=
+> +		    CMDQ_OP_ATC_INV)
+> +			continue;
+> +
+> +		/*
+> +		 * One retry per Stream ID. So, only try the first command since
+> +		 * commands are sorted. And each dead master costs one CMD_SYNC,
+> +		 * bounded by its PCIe Completion Timeout (usually <= 250ms).
+> +		 */
+> +		sid = FIELD_GET(CMDQ_ATC_0_SID, cmds->cmds[i].data[0]);
+> +		if (atc.data[0] &&
+> +		    sid == FIELD_GET(CMDQ_ATC_0_SID, atc.data[0]))
+> +			continue;
+> +
+> +		atc = cmds->cmds[i];
+> +		if (arm_smmu_cmdq_issue_cmd_p(smmu, &atc, true) == -EIO)
+> +			arm_smmu_quarantine_ats(smmu, sid);
+> +	}
+> +}
+> +
+>   /* IO_PGTABLE API */
+>   static void arm_smmu_tlb_inv_context(void *cookie)
+>   {
 
+My understanding of the sequence to quarantine a faulty ATS device is
+to:
+
+1. Identify the devices that encountered an ATC invalidation timeout
+    failure.
+2. Have hardware block incoming DMA transfers and translation requests
+    by clearing the corresponding bits in the device's context/
+    translation table entries.
+3. Have software prevent the driver from submitting new invalidation
+    requests or re-attaching a new domain to the device.
+
+If this understanding is correct, then while steps 1 and 2 are hardware-
+and driver-specific, step 3 seems completely generic. Could it be
+consolidated in the core or any helper library so that other drivers can
+reuse it?
+
+Thanks,
+baolu
