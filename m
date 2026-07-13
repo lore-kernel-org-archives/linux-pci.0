@@ -1,299 +1,154 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013047.outbound.protection.outlook.com [40.107.159.47])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013071.outbound.protection.outlook.com [40.93.196.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37AE335BB4;
-	Mon, 13 Jul 2026 18:34:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E863B1B4138;
+	Mon, 13 Jul 2026 18:51:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.71
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783967680; cv=fail; b=GpfSMbtv7S+qRz1pbtrSi9dyO9MJHkk1lzSHnMwWU474GYcdAHiNXu4v1qUngZJEKDBrms9O/s5uEJ7hMjBthdu0tsFYeXukZtJDulEyG0HeYGQBx8HCgpFUYsXYzIWQjAVudCAjHm0VrVbJXh6Ms5MN7dd7la3R0BOiPEHo40U=
+	t=1783968662; cv=fail; b=Xw4Q25fg/KeCO11O1w25WZOR6mEidfsi6wrpbZgB5CIqf1qKevMWMvNRUMsk7yqZltWeK9E/VsOkzjQ27wmTXgBw8XCndnokc5q8hQzLsRynFJSx15f2DGgyWF3FmpO5d47yXqqAmGsLYx0Bhl0lTiXMWGlx8NdDdRdfnR4vTSk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783967680; c=relaxed/simple;
-	bh=rvLZrHpVRZXpLSaAGtguar4Frla52jZfGltOzRfLC00=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=qtj++oiP362nCGVsEkYGzt/EONJwermJoI+1OJFyHQivsTFUoRF5uKaC7ykG926Gx/QfWp+HRJkb655PvM7GwOZS5PdMi0k6SIvQZZioeGQRGzuL0TkGypA9t/Mx+mTZBROLXj5veGTUDJuZEL0Nygx9t8v/1fEN7eRhPbeIhh4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=fail (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=wbUyqxU1 reason="signature verification failed"; arc=fail smtp.client-ip=40.107.159.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1783968662; c=relaxed/simple;
+	bh=UcC2o2B0rZl3M8hNiGZxTh7tmSF+ENJA1ZCuhNJGtJ0=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TaSlWEN4vN3P4QvGC2eoSsUkIIyUwAHmx9NINHds61aoaryE6pEraPXqkyccBm3F7XYmP7vak9iq9Y/gitbLjKinQ2tPee4RSMpKqndWhU63uU2BMne/EroF5X72a9qE6gSG2Tq50/G0cOOHvuyGK5CYaEfIp6Uy/RjIzP6mAbk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=oETTL/mn; arc=fail smtp.client-ip=40.93.196.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="wbUyqxU1"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="oETTL/mn"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Er64UC7Myu9MM3imnATbKVYfm++hnICcyqrbc2pCQciIiFyyr72j6Tb7B3fPujE9iUVo+KA3PFRV7rvj8Fqm7b/mm2GmvoTE2BYXti1jIeec+ZKKE22m+zAe2/Y5fMauTf1Ki0UOKAC1yb2A4Gxbku9Gjb1VS3aXriE43JmctxCgJgfujBYlvwlZAYaSw+C77IH1/IQ0DNK+CAM4wCHzw+ycfqQaFCOx/sEDV3XLucR4w8fdxqBElgo5QBWbv/vu5zqG9BRFxR2BG95z9L7jS/g791DI50njpdk6zwtq21422l+Tj8ovDR4KG8x44QaMrXO1q0wusg4dmATiS28xCQ==
+ b=r5qD45F9BwKJ2BbYHE9hi/rb8VzrDlCnR/wj50NVFBe9DCuojKRIi3ewP9y3h2HoRgCoWx15z7T8Ka8PI/74TyWXkQ4b+LyW7EGB2VPSpBOO0IW+WmAma6VxcHQPJGKWpufSrmbfcKxP981XJ3aL1ESLtS/h+ALx5zo3e9vezItsTg+Y1CFDns8DFdDQciPXSapcLamO5dM6t1FmjRD2M8PGN5k7+S7kv0I0cIicXfD+LnkW0iWGThI5cp9bRorDzFKa+ZJEZ5Y2GTn3nvPCrn1fKPALu+47OeEqBZUBCWlC+SQwqtv3L5fuRDIA9RUeWvy4qwgCy0J1rua/2gXkKQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5CY3ie17rf458mYTu5llwHNK+PvgX6aIV91Dbmp3rNY=;
- b=SLWq8rBn6Z4V7f0gVpsvW039zz/waRghNMe0YsOjcESZDgylQ0hiMOpHbYyIR5YyRViCs13D98Dumx+mkt68lIqsq76HBztEZ2Y/4+usKG+AzdurkID5Nww6gWwPEh/GPu85Sn1VaJkQhMyLnvyxTfUcZOJTRD+FFFlyxoOy3TVCuiLHz4GfYLSjU+M47ZgkUApvdLxOGWmRsuTObOdGh0aa2OHe6emKgQCcktsizgBNppKFH2R+9JsJefUzjEtEcXpCiueENWZYLUIXttiBi8qLZFc2Ee/iARZsX4JD66+mUPJiNG4yTBcXVGm/ALjW77BCJcvOEodx6VJKtjZCug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
+ bh=9xCUAaF3E+q9DGG0d5+j0bvgDxHGS+6lEf8jecnHXHw=;
+ b=g1rvG+KKlgwJ1XYB7FbUIDDaX8zGet5WX3GBIWG3qOijiuEs14mxOrUi1YfCI1/lGupC4povrQmVAgACFtFaIIlvZHBjyfT7Hu+wGKaFMInLLIa1zrl/DRlBhuFQXDu3mg76wRD2MtMp57fT5POZchCi/Iob1I45+y0qKbpBHFnfqf5MKPU4S3zXUwWpm4jAgfXN8eE47WdLbgahACuQsXOHx10wiApNQOf4cdLY7jcH0uw7AKii2hkkHcxvaoupC9HVg8zpJhyPMON4iwvnyHx2YNO86za4eyUh4Je/os5WaLnfqxyKX7Tm1xiAtLCdD+/P4Sy3+SbPAXWPFwXPJg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=linux.intel.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5CY3ie17rf458mYTu5llwHNK+PvgX6aIV91Dbmp3rNY=;
- b=wbUyqxU1zxsKImxz8OvschtaqaHc4uObhoIeP4Rav7xBONlOhD201f3TfAnzWVrO7VhaHsmQEqG4SJL/U/CGTmJJGoZAAAofUbmyRVTUN5nWrGQYXXldj+bj6flq/p2wXfaXCwmIx5dEBPXQWTua+2z78VgctYpw7DQscjpEsPQY92GKxV0SRo33E7yBkRYaWiP973wRt1aOrQVBVYV4IVk9gRYDx4mXsSk42pGL/03/MLDriQWLBCfXWdt2nJ1CjgEWpMwF6vcvI+8KfxqAbNZ9x8vKAp7Z3qklQ7/LBNuOVHMXrB+oI25bf+stmSpXgrCo6xdCRMWED7MOT9xYeg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by GV1PR04MB9197.eurprd04.prod.outlook.com (2603:10a6:150:28::11) with
+ bh=9xCUAaF3E+q9DGG0d5+j0bvgDxHGS+6lEf8jecnHXHw=;
+ b=oETTL/mn1khXGHHdQEX10Mr0AR+Rl7ZBhdFAPSjX9PiGwmC5dSRKtMRObrc4sIlhQzMPfUQ1d+HqULH28IdWT6TC3NSNdILi6vZk6lRzQRgB4SBEZYZIEtVNSoI5at5ZE2MpXgJ3U41+eeGVuxNz6E+r5YsPbuEddJ28hDCs5ttXT4Vdv/EJo/T7x5TjDoHetGpw272qwcv03Qc86d4mbg4pg260OiIP2S5gJEsFUBxfWhzGw6tzqG1Jf2s5btQfg5+PuciDJ945TFIpBkeXGOyg6YuSBBdW7I6G/G9oqGrctsxvGEXhSI3SCZDYioLFpE559ZOHaOZJMhlDWfbHbw==
+Received: from DS7PR05CA0083.namprd05.prod.outlook.com (2603:10b6:8:57::29) by
+ PH7PR12MB6635.namprd12.prod.outlook.com (2603:10b6:510:210::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Mon, 13 Jul
- 2026 18:34:34 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0181.019; Mon, 13 Jul 2026
- 18:34:34 +0000
-Date: Mon, 13 Jul 2026 13:34:26 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org,
-	Frank.Li@kernel.org, imx@lists.linux.dev
-Subject: Re: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk
-Message-ID: <alUvso-oXS6faY0g@SMW015318>
-References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
- <20260713-edma_ll-v7-10-6fb7498c901e@nxp.com>
- <20260713172202.70E6C1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260713172202.70E6C1F000E9@smtp.kernel.org>
-X-ClientProxiedBy: SA9PR03CA0026.namprd03.prod.outlook.com
- (2603:10b6:806:20::31) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ 2026 18:50:55 +0000
+Received: from DS1PEPF0001708E.namprd03.prod.outlook.com
+ (2603:10b6:8:57:cafe::8b) by DS7PR05CA0083.outlook.office365.com
+ (2603:10b6:8:57::29) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.223.9 via Frontend Transport; Mon, 13
+ Jul 2026 18:50:55 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ DS1PEPF0001708E.mail.protection.outlook.com (10.167.17.134) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.223.9 via Frontend Transport; Mon, 13 Jul 2026 18:50:54 +0000
+Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Mon, 13 Jul
+ 2026 11:50:40 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 13 Jul 2026 11:50:39 -0700
+Received: from nvidia.com (10.127.8.10) by mail.nvidia.com (10.126.190.181)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Mon, 13 Jul 2026 11:50:37 -0700
+Date: Mon, 13 Jul 2026 11:50:35 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Baolu Lu <baolu.lu@linux.intel.com>
+CC: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
+ Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Jason
+ Gunthorpe" <jgg@nvidia.com>, "Rafael J . Wysocki" <rafael@kernel.org>, "Len
+ Brown" <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>, "Mostafa
+ Saleh" <smostafa@google.com>, Kevin Tian <kevin.tian@intel.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
+	<xueshuai@linux.alibaba.com>
+Subject: Re: [PATCH v5 18/18] iommu/arm-smmu-v3: Block ATS for a master upon
+ an ATC invalidation timeout
+Message-ID: <alUzeyRh5FnzMiQ4@nvidia.com>
+References: <cover.1783044582.git.nicolinc@nvidia.com>
+ <939885143f3064811685b3f31f6f30f8a713c89e.1783044582.git.nicolinc@nvidia.com>
+ <9a85cccd-29ed-4c51-b9cb-140631966d20@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <9a85cccd-29ed-4c51-b9cb-140631966d20@linux.intel.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV1PR04MB9197:EE_
-X-MS-Office365-Filtering-Correlation-Id: 05719738-3c8b-4683-e15c-08dee10d62eb
+X-MS-TrafficTypeDiagnostic: DS1PEPF0001708E:EE_|PH7PR12MB6635:EE_
+X-MS-Office365-Filtering-Correlation-Id: 07f400e3-6169-4edb-0c08-08dee10fab34
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|1800799024|19092799006|366016|11063799006|4143699003|56012099006|22082099003|18002099003;
+	BCL:0;ARA:13230040|7416014|23010399003|376014|82310400026|1800799024|36860700016|18002099003|56012099006|4143699003|11063799006|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	lrIFx2RBuKBKmcbyppTNqel6ggianyrwClr8Lq9XyuTjd++ixZTkHXMB/xYAMocbpGMQyfN+xMYdBg+1kYlEnnhLJ550iv94hhzgy61bBH52inLvBZKcf1NGtmisqK/lsBZmbXe3yQdF9dFd6QTrCLysNsgLuPXh+dx5YEXQ4Q+We+j+0qFmSyWuamYQWtaEZts9N2jK6PzDLMWZjd/YmU5K3aW1wz7/AJ2reijceiHsq13TOC9fM5YtjCIoEy4C8IUxvW4JSv0EC1zc2Ba1BXrTbcOHSgY1etpURDm9Yh9Ng+0mGWyjqqZK0m3eFO7bFMRhKzIqyMb1WI4crZCxV5d/NMzywclQfkGwBsraSUKyBg51SDlHYsQ4RRJBwLCVKfl95MT212nHM45XlLZc/9eDLtzO6ke8q3nPeEfEi2q+NoU7+6CDqHxGz6WmoD+pc6c5D9LmHLUYvr0rq8l/fQ5qmErh1YSrjOMQiuM8azxSG8t6mXVmiS63bdsMm34HV+Rk2WDuGY7w8skWv9Osg5WimdCTwj1bmLfJFsqNAVcQV9z6FZ1AQIFQmMt5t1TDaLNFweR1hiffgJ7JR3yjv9IIgSeyja+aq0C6rC3bK/o=
+	ASxgbWdqTuZobAGV7J22zT4aQdD9OCzmimID3DtlttfZQxrtkMT0x6pSTaMs1s8O2sC++lJCxbhTsWOif/TH047sdr6Q3rUGwZR5d8mERUTvyc+5GcdD9QjVqMpcmWPUjrOgPkEcNwNysdU4u9cjX2NMGAwXUCaFuyMiuKLUyu/tlx4iQa/abUzlmjL2iGNfbg1+CG2E85FSYhqyfCCr1gtEPYJzpZ99es0HKt67fXw+tou/W1Rqpv6NSeU5Stp59wxeL993xBnCdrzZsUmcRnAAnlW/xtKsmLJO9HDsT8flybLxw4fPnmJtf6B6kXSozNTP+Em9R09AuIVQ7lDOuSaJUDZSWhdHmpNHwUnyebdb7uj68k+X+l8o/Mj28OlovaS5C3ownAAewwgCPMWAxRE5yCcfe7/ZpzJM30vErwwqHsSiuk/4pg64ficiXsyw1jTt7KRuL27eHuqDyqri6uWxqXCNsTodx9Whi6dh+0WHADJs0kzNbkiyFrDAWOhGe8KTF5BSaq/GmlWCvNHiPHv4FHdopUoLlkMXRKVTcteZJSS0O9uq+mQDskKeqlOb7afPJy1+o4Qboj9X5kTkbwmgLzcTFRJKyZOpuB2RIjAQdLUSRK/OxUzNvf5Ahx1H7REMG/iZYF8+FcdvDuakdF1NqXay0Yo3fxpjAiHHTZcBleMpMhoAGaZSG+Vwabyp+f3jHV1/6v74awktKNGcmg==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(19092799006)(366016)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(82310400026)(1800799024)(36860700016)(18002099003)(56012099006)(4143699003)(11063799006)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?iso-8859-1?Q?zQ+t5ozWPS8dtuFTqtMj9M9PPS+zomzcUh8mX1tvMkTUK7DbpvbfhJB6Vm?=
- =?iso-8859-1?Q?TD77pDecjW9SvW6ST/LbJBJ08PD2KtnGHSZNpe/b2rHqJMY4zOJNzGgANm?=
- =?iso-8859-1?Q?mMadJ/jPZ0bTC+3Rb6hKwQvX835g0BFBow2paO3u2OUjkRToMQe+GOp/5m?=
- =?iso-8859-1?Q?YDdG0mf/gbx1lZIhGRDxYWmftnMePEkUUn0cZuV5xV+fohaiedPcSMKmoe?=
- =?iso-8859-1?Q?gLp6B/jL/UL39QEOHKScgKo/sjTTCYXWv4RS4vQNu+GcyMBx2/bQSnO9gh?=
- =?iso-8859-1?Q?yYor0Bn6DYYLtub0CFkZYxurhOdPWuZfa2ttqVambjuxfEDLdIytY4O+/a?=
- =?iso-8859-1?Q?QZtGxUVUD2EK8PhZNWcBTr9tz0096Iq+HjzTuyZO7hydQkoOR4kgAxmoQ1?=
- =?iso-8859-1?Q?WWA1dwrlKqfTrJaLU9GmCYLM8DkZWvdSpKwSisbr8u3jQ5kiG3uh6c2i2H?=
- =?iso-8859-1?Q?afMaxDcjilnhXOoUnwA5sJzu0yyeXF3v9Tli/IGHHbKp5C7tLhjgRMjoRI?=
- =?iso-8859-1?Q?xuWMluBOZaKDcijv2BQdKVP5jnhmjZPYsU2W6JH04FTPm0GIx2tp+Hgmlg?=
- =?iso-8859-1?Q?XdR0Jw9IaOgjgvJco4yWAqDvgxMrIl0Qoep0ufDecsKmzslcQV9HGmywcn?=
- =?iso-8859-1?Q?EyIlI/JRngpQU1K3wZeZFTl4xrhDJGLrSRz8rnOB9pF39RwHyb/PgXl+Np?=
- =?iso-8859-1?Q?69RdUyqUU0vKw35P+iOJw9h2bGosTTQ95RutS1klMPZzqdGrSsRwSaY/sA?=
- =?iso-8859-1?Q?h22korGzGfNSU/9C6EPrj6+8uNkZBvgHYX858gqfvu39SGHdPT0kwTNCxu?=
- =?iso-8859-1?Q?xkpo9Evw1u73RJaOC6kj35tVpBHLxCJvYkh0LQaXEmYw0PRN7kPNML41XR?=
- =?iso-8859-1?Q?oZ28P1L1PjV6tMgwMK+C9EeLWa9Cjt4sO5v6AZtUyhlgBeFKPufBJYT56y?=
- =?iso-8859-1?Q?/omG9D6MSr+BYIT23tHJ9aM8AXPYE4XbZnqxkQ60G2M6tlGoC9ezYrwQQR?=
- =?iso-8859-1?Q?2qAwRJzAY6EgJrPVfjkLiFy4Vsi1NYjpu2BTTj9Pj5ovwXN6FoMsoLMMgv?=
- =?iso-8859-1?Q?w71HkY0f5MzXixB+CS/QA0utdP6/Z6qC4TOWvqQNKpDX0TEbT9UtBTV9ak?=
- =?iso-8859-1?Q?z7RsMQs9NvXrLyJ050CGS6dd4vUBQRGLQwoVDsOTJDumBZTXsmekS1DQlK?=
- =?iso-8859-1?Q?nNIhtCrnsJHHnS4d+3dIRcB14V3y7e5Zzyx+U+UDxF22Z4OSgHxU3f6wnx?=
- =?iso-8859-1?Q?4qTxQDIUe2QFa7O3Fnz502jaHMUWqYlCH64+SWUDeNXjXHfxUTNYJsfqpR?=
- =?iso-8859-1?Q?GPCnMI+3QIprXxo4pFbH8JD9GQ7W6xSOVp31vznkioX7mkNFYLGB8KMsvx?=
- =?iso-8859-1?Q?f2I63WdRahKkGbm+hce+ur9GZnBf3OKgFlhT8Zl+MO9YVTImPW06BMAViw?=
- =?iso-8859-1?Q?rtebHgpvNoGKZ5SmnLUWSxJXwu8HjuKhl0bajrGDRkdaBx/sh1H7Pir1qs?=
- =?iso-8859-1?Q?jfR3OSyCnLARrd7PDzjVcOlsXcU84FozUzVgPAW+ajsZJoebNtOFtG9sG4?=
- =?iso-8859-1?Q?726yBcJcx9l/oNBuiherD7PgKEmBx5iq3MBxnkkHQwzvQqw33M+1gOs8Ga?=
- =?iso-8859-1?Q?A7w0y3hrqmD25tfX4KZ48pZcdEA/kXibbLy3A0CW2miiTN5yXbS4TRviEt?=
- =?iso-8859-1?Q?iFwF3fniBdE+GilIzFZFFzQu6XCs4vo7pboOOyCDrJ9TFbM2xQVr300Vhz?=
- =?iso-8859-1?Q?98vUoxY4MDaUARhuJQDIdMADLGs8rctxf+I3qq6k3BwXJ/vhl5mLrcyzjp?=
- =?iso-8859-1?Q?uC9cARc/30RfUnVFvJTbDc/Hxfasa4pIDRsTo5b6DGvZRGO7g/Qq?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 05719738-3c8b-4683-e15c-08dee10d62eb
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:34:34.6560
+	O0bZ6NkaOvW7NvRp4oJwjvIrggbpn3epr8qkauqprYP2XF2iaDsqQbL07UGxtZFCXGuWUhGmxht7yTOJHV2ZeQiO1JQqAC94+b/GvL3vmLTMvnVXybdatCvUAZFs+NTtz0eId0UKnwCl7yJnMM9+54UwYqju0tvL9mZCCObaVjbLaKVchvAzo7Vzn+KRgpsQ03K5+FjLcaZ3WY7rst7PRuePZS/1gh+O2I8Z/dsh1Jjd9pXicCtTaiNfU2l8sffFTmhipMWEFBHFCi0sukpCiUWseOyBVE6xgiN6xUxG7VaUmLz7xXYmwFxZcaIMBlHbvNitYpVHfh4Ed3ry54BUWQaOjsLHBLi1L60iY+n7NZv1utOg06xMRS/pJP9zFMBVondDWE9tLlXKltV+qgzZ1jgcptwY6cOatfr8HUeHbTeUm8Jdwm2Gux14jCmvhiij
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:50:54.4921
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: q/cfrpjihQu18E+P+dAgZPSKh9Z2IuDeU9gcAqP6MNkmMYhSIb8RH/jzpzk7P2J+ofkc9n01wbBv0JNcw8wlIXkYMAyR1o1t18x0aJvG3LU2ECDKlpuPcElYYpnUbQwQ
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB9197
+X-MS-Exchange-CrossTenant-Network-Message-Id: 07f400e3-6169-4edb-0c08-08dee10fab34
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS1PEPF0001708E.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6635
 
-On Mon, Jul 13, 2026 at 05:22:02PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
->
-> New issues:
-> - [High] Replacing bounded chunk descriptors with a single contiguous GFP_NOWAIT allocation breaks large DMA transfers due to memory fragmentation.
+On Mon, Jul 13, 2026 at 08:20:29PM +0800, Baolu Lu wrote:
+> My understanding of the sequence to quarantine a faulty ATS device is
+> to:
+> 
+> 1. Identify the devices that encountered an ATC invalidation timeout
+>    failure.
+> 2. Have hardware block incoming DMA transfers and translation requests
+>    by clearing the corresponding bits in the device's context/
+>    translation table entries.
+> 3. Have software prevent the driver from submitting new invalidation
+>    requests or re-attaching a new domain to the device.
+> 
+> If this understanding is correct, then while steps 1 and 2 are hardware-
+> and driver-specific, step 3 seems completely generic.
 
-It should be never happen, not such long list happen.
+Step 3 is kinda driver-specific too for a few reasons:
+a. This is in the iommu_unmap() context; called right before that
+   function puts the kernel page. So, all the steps must be done
+   before kernel reclaims the page (potentially to a new ATS for
+   the same device whose ATC is stale).
+b. Invalidation can be an IRQ context. So, can't use group->mutex,
+   which a generic helper would likely need.
+c. Given (a) and (b), extra driver-level spinlocks are required:
+   streams_lock and master_domains_lock in this patch.
+d. Step 3 actually has two small steps: disable ATS at the driver
+   level; disable ATS entries in the invalidation array, either of
+   which are currently driver-specific.
 
-> - [High] Resuming a paused DMA channel causes an out-of-bounds array read if the active descriptor was fully completed at the time it was paused.
+Jason has a view of moving the arm_smmu_invs to the core. So, maybe
+step 3.2 (disabling it in the invalidation array) can be generic in
+the future.
 
-Pause problem, need more work
-
-https://lore.kernel.org/dmaengine/20260710080903.2392888-5-den@valinux.co.jp/
-
-> - [Medium] Uninitialized trailing DMA bursts are submitted to hardware if SG iteration breaks early.
-
-Never happen, pre-alloc enough list.
-
-> - [Medium] Stale DMA residue is reported during a channel pause because `desc->done_burst` lags by one batch.
-
-about pause /resume existing code have problem. need fix later.
-
-Frank
-
->
-> Pre-existing issues:
-> - [High] Missing `chan->vc.lock` acquisition in `dw_edma_device_resume` and `dw_edma_device_pause` leads to data races and virt-dma list corruption.
-> --
->
-> --- Patch [10]: [PATCH v7 10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk ---
-> commit ac4e11776f7ec8bd87ba4484bd079463058cc76d
-> Author: Frank Li <Frank.Li@nxp.com>
->
-> dmaengine: dw-edma: Remove struct dw_edma_chunk
->
-> This patch flattens the DMA descriptor layout by moving the burst array
-> directly into struct dw_edma_desc and removing the linked-list chunk layer.
-> It uses start_burst and done_burst to track current hardware submissions.
->
-> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > index c028011cc61ca..30eeb7bffad80 100644
-> > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
->
-> [ ... ]
->
-> > @@ -40,82 +40,54 @@ u64 dw_edma_get_pci_address(struct dw_edma_chan *chan, phys_addr_t cpu_addr)
-> > -static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
-> > +static struct dw_edma_desc *
-> > +dw_edma_alloc_desc(struct dw_edma_chan *chan, size_t nburst)
-> >  {
-> >  	struct dw_edma_desc *desc;
-> >
-> > -	desc = kzalloc_obj(*desc, GFP_NOWAIT);
-> > +	desc = kzalloc_flex(*desc, burst, nburst, GFP_NOWAIT);
->
-> [Severity: High]
-> Does allocating this unbounded descriptor array at once with GFP_NOWAIT
-> introduce a risk of memory fragmentation failures?
->
-> Large DMA transfers previously used bounded chunk allocations. With this
-> change, could a large scatter-gather or interleaved transfer spuriously fail
-> with -ENOMEM since GFP_NOWAIT cannot sleep or perform direct reclaim?
->
-> >  	if (unlikely(!desc))
-> >  		return NULL;
->
-> [ ... ]
->
-> > @@ -107,18 +79,27 @@ static void dw_edma_core_start(struct dw_edma_desc *desc, bool first)
-> > -	for (i = 0; i < chunk->nburst; i++)
-> > -		dw_edma_core_ll_data(chan, &chunk->burst[i], i, chunk->cb,
-> > -				     i == chunk->nburst - 1);
-> > +	for (i = 0; i + desc->start_burst < desc->nburst; i++) {
-> > +		u32 idx = i + desc->start_burst;
-> >
-> > -	dw_edma_core_ll_link(chan, i, chunk->cb, chan->ll_region.paddr);
-> > +		if (i == chan->ll_max)
-> > +			break;
-> > +
-> > +		dw_edma_core_ll_data(chan, &desc->burst[idx],
-> > +				     i, desc->cb,
-> > +				     idx == desc->nburst - 1 || i == chan->ll_max - 1);
-> > +	}
-> > +
-> > +	desc->done_burst = desc->start_burst;
-> > +	desc->start_burst += i;
->
-> [Severity: Medium]
-> Will this cause stale residue to be reported during a channel pause?
->
-> Because desc->done_burst is updated to match start_burst only when the next
-> batch starts, it appears to lag behind the actual completion if the channel
-> is paused immediately after an interrupt. This lagging index is then used by
-> dw_edma_device_tx_status() for residue calculation.
->
-> >
-> >  	if (first)
-> >  		dw_edma_core_ch_enable(chan);
->
-> [ ... ]
->
-> > @@ -355,13 +321,11 @@ static struct dma_async_tx_descriptor *
-> >  		fsz = xfer->xfer.il->frame_size;
-> >  	}
-> >
-> > +	desc = dw_edma_alloc_desc(chan, cnt);
-> > +	if (unlikely(!desc))
-> > +		return NULL;
-> > +
-> >  	for (i = 0; i < cnt; i++) {
-> >  		if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
-> >  			break;
-> >
-> > -		if (!(i % bursts_max)) {
-> > -			u32 n = min(cnt - i, bursts_max);
-> > -
-> > -			chunk = dw_edma_alloc_chunk(desc, n);
-> > -			if (unlikely(!chunk))
-> > -				goto err_alloc;
-> > -		}
-> > -
-> > -		burst = chunk->burst + (i % bursts_max);
-> > +		burst = desc->burst + i;
->
-> [Severity: Medium]
-> If this loop breaks early due to !sg, is desc->nburst left un-updated?
->
-> If desc->nburst retains the originally overestimated count,
-> dw_edma_core_start() will loop up to the original nburst. Does this risk
-> submitting uninitialized (zeroed) DMA bursts to hardware, potentially
-> leading to IOMMU faults or hardware hangs?
->
-> >
-> >  		if (xfer->type == EDMA_XFER_CYCLIC)
-> >  			burst->sz = xfer->xfer.cyclic.len;
->
-> [ ... ]
->
-> > @@ -625,7 +574,7 @@ static void dw_edma_done_interrupt(struct dw_edma_chan *chan)
-> >  		case EDMA_REQ_PAUSE:
-> >  			chan->request = EDMA_REQ_NONE;
-> >  			chan->status = EDMA_ST_PAUSE;
-> >  			break;
->
-> [Severity: High]
-> If a descriptor completes exactly when the channel is paused, could this
-> lead to an out-of-bounds array read upon resuming?
->
-> If the PAUSE handler breaks out here without checking whether
-> desc->start_burst >= desc->nburst, a fully completed descriptor remains on
-> the list. When dw_edma_device_resume() is later called,
-> dw_edma_start_transfer() would unconditionally fetch it and pass it to
-> dw_edma_core_start(), which will access desc->burst[desc->start_burst].
-> Since start_burst == nburst in this scenario, would this read past the end
-> of the flexible array?
->
-> [Severity: High]
-> This is a pre-existing issue, but is it safe that dw_edma_device_pause()
-> and dw_edma_device_resume() modify chan->request and traverse virt-dma
-> descriptors without acquiring chan->vc.lock?
->
-> Concurrent calls to dmaengine_pause() or dmaengine_resume() alongside the
-> DMA completion interrupt could lead to data races and virt-dma descriptor
-> list corruption.
->
-> >
-> >  		default:
-> >  			break;
-> >  		}
-> >  	}
-> >  	spin_unlock_irqrestore(&chan->vc.lock, flags);
-> >  }
->
-> --
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260713-edma_ll-v7-0-6fb7498c901e@nxp.com?part=10
+Nicolin
