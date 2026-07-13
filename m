@@ -1,177 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D87E224F3;
-	Mon, 13 Jul 2026 17:12:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783962773; cv=none; b=UwF/VRMe1QBMTga2UC8gIdzNpX5piEEmyPK7qjFMUw5x6+5LYqR4agXKYpwF/zb0Up/SbFQ9CLrOUS7BXBDgymnwu+KOF1R+smUqgmhe7Bq2mYE4eBWnsUiQaYBo6jCeTEpmnKbq4DR44abYqUzZNLsfIKv8mP4GkUs6dU6tyvc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783962773; c=relaxed/simple;
-	bh=3Bxbw09lBOMGqpVJ5A0mqVJfoyU7ZsVNsp3hiuyvGhE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HJNQUFR/CHExiQ4HA5Cv8eu1Ta12o6hJfUozs0KhYvnLMVTnLd94o/OuHGbJKTdl+3EvvgJ8A4PktViUpi1fLZmB02z5QRtgtI/QmB2MMUmZlAPZTkyDKcTI8jSr+MNU4HtGqDqCrlGjkwUKYwDpQpLTifTdlqQB7jMdyqX5s1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZJM+BDV; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2298626F2B0
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 17:16:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783963003; cv=pass; b=eoY/AAIGIJ11ho28OuOacDZDnOgpgP6NmbbHlXkuJHA5IIBzyurrWHdO1gONOvvMEIWbYran4oww3fVTB3rT4pP10MWUtl8X3z/MfGQi8nzRVMsCzucB56awP/D9lMxRBjCi/mTKIF9BatgX9KY5yndG6iqH/qmW6wLH3rAD4cU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783963003; c=relaxed/simple;
+	bh=wOUZWaGczu1/9uaxYEVARYEnkKkoCC4ryISp2FSTVAQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Z8bX4MNPBLRUdBOq3vC1+ii2KpYH6M2Zp3LXxkgx5ft8ra8y/6+ns18Pn9M7UroGejpuiSwU5ijyGy7KazER167EMHM08vBDNb8dU7t87JM7EbnHnfeyb6Mq9QisCQHG71EG1xbA856TbtdTsdS8+gu3pMKFcjeIxL/eYALIXaY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oY944fAD; arc=pass smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZJM+BDV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03DA81F000E9;
-	Mon, 13 Jul 2026 17:12:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783962772;
-	bh=KhUce3y2u7XvTvhcfPLaAWpcIkOKc/hs25FmMFBCwoI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RZJM+BDVZ65kuyCzbDwLrdPffxbWWPQXHxj9eUT3Jg+4nRTLYit9dLVDmeh75Ji73
-	 ImEUnW8zX4P+F8Ngbz86rbB7xF1q/AmQA2V5bQvShus2Gn4nHFqYqgdeYTEbQDdX67
-	 14wfvyP1kEUcIG6v8I+DhAWjh5fNvhkbezZvdaD2jrTEeyLbINh/m8AcEh5PMn2jaO
-	 19Y36wKo7n1rc9cKUgIz0T7Owp4buZFisCtHw+Poh6dW81X/siGZtS7nM/sepwrJfc
-	 rtRsjBbTOO51c8OMwaATSFN0sHxPEP5ZVpmYiV6IYEXoz7u/h+XI2lcV1ZK0vuES4b
-	 7ddngTQ8VdzyA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 01/10] dmaengine: dw-edma: Move control field update
- of DMA link to the last step
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Frank.Li@oss.nxp.com
-Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
-In-Reply-To: <20260713-edma_ll-v7-1-6fb7498c901e@nxp.com>
-References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
- <20260713-edma_ll-v7-1-6fb7498c901e@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 17:12:51 +0000
-Message-Id: <20260713171252.03DA81F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oY944fAD"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-697564cb69eso197398a12.0
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 10:16:41 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783963000; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Q5onrbSjnklBAhFr5iHOD3VLoJV4jsFFtKZazvXTCideEqocCy/4fmQIUqFnU3J2Rc
+         Qfr/eHWnOhp1PTABT9HHKfj+GAZ/IHknc/QD2y9g2X5wsZKftBuwwAgvZXFnNc8YeEac
+         K0Chtx5mMH3OfNaeTxwVv0/6HlmQ167TkuhxgXSerOQW/4P9L8uM0vAWW27uqbXTrhCp
+         W7xYpJSSC+uyaFYj2oXMa4FrzUWnttW6rfqPq80KRAJoiEInbayVdVYAlnzzpsef5xsR
+         g+qTP9EydY2bPY2zHqLIj9rCuxm6PlVUP4l6l+h8IMxB5q7gtds8LUBzRvETMPz8Ttoq
+         9hHg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=wOUZWaGczu1/9uaxYEVARYEnkKkoCC4ryISp2FSTVAQ=;
+        fh=3cRWA6/0UJByWeqil7/IxuY8MDagsLfC47FmjRdE08o=;
+        b=hauXswKe3MnGiHzjkIwTmeQ776Ja73J/kNHAP0xKltbnLK4WMYNPGrexuQ64mHB/vM
+         lt8Pm5BlAIypXH4hX7TmadimfBgi66qphHW/yq24bEVQBqeD92TWkxrtw6KCvBb4f2Ru
+         pbJoP32VCHo5QXD0kPvX9mJ9iejJnNXzn+CLA1nZmfwDSzsySFs+DMxAgTToEqhAppej
+         C/oa4cwrAGtx7kIoehk18ZJU2h9o2mKdNvAYaSAxuCWGszztwmrLaMLAcq5DC2+rp7rQ
+         QC4TDfonWld1U/MaRrKjHBm7CN5YdPoC5hjP8y4a56WFqRNB1cqaVM2SoLNsOB2FlICh
+         bZyQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783963000; x=1784567800; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wOUZWaGczu1/9uaxYEVARYEnkKkoCC4ryISp2FSTVAQ=;
+        b=oY944fAD7e4lRnypFCcgcgdTlMC2VWL46NrRnFV1IbIERMCH9V64/QKV2POyY+Jjxc
+         qAmbxEUMfm2HDQx5pGByD5je5Bvwxz30gaYbrTmbgRRH0HoosisSN1RpzbHoFAGbMbEg
+         6lM4FP8IpVIeco4JhGH36LMI5PBYJJ6h7nawC9YbufUbmndrrbrbN8kStmb3Ww9H7ysW
+         TAO1dTaFM3bazsH/Y3/5o9DIiYaeAT3WuNa8fCUARw6Omi5sN5kp7hCZBcDa19kuuZNj
+         GxxoOMKYhtYbTHQCnx4HEad7AXjrU/N1ZWxbJsV5uXIjdSR7auuYPJ+UybI2pM+XCrJg
+         iG5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783963000; x=1784567800;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=wOUZWaGczu1/9uaxYEVARYEnkKkoCC4ryISp2FSTVAQ=;
+        b=Q9fvOBVHmU4cLMssWpS78dKXOJA58p7WURjyg9IcGzCh+3aYtFk3El2QrL7J9Z+gv1
+         pvrPAAMvQ+JWMWWPCmkRrEomHnvqUmxK+M1bGaN+chkdSHliPF8ezBj9hqwslnKJc+cG
+         JbRBvPyMeOe4HED53TkdGLlkEQ/k7uMVuuH530qEZxpAL6HXY/gdcHKv9Pt4B6wwgQbL
+         PqkiOWa6aEYYU4VQlBwbTZSPJrjRIk2OdA89bPSSQx4NTdw8NeFy4yVeujY9P3ChrYHt
+         m1g63d90lzZPOCGokYMWW2AjV0W5t3k7DbVH9O102o8a0rGwYNqDUrEr1ub2Axy8+Pug
+         gvHg==
+X-Gm-Message-State: AOJu0Yzqs3ELIOu4idrqA1HZO0aRYeOkGfYQDsTLF7V84IEugwkrjyOe
+	0N4zm3wPQzse3XXoppEQsHQ4Q+V9jA7huKEzWNLn9gJGGd4gE7B9AHosKzOX2Q7Y2MfPZJJI20X
+	16sEvtBr3aNiQ7ESzsCkceFzRCPe4GqS6Bq/TjKo=
+X-Gm-Gg: AfdE7cnJ61LPDFVIUSK48SCUuvy+79zlaIgIJ/kSmNXFVk81fCo4gxXhTzvv0dJEkPh
+	5fk4K3z5msVf++TlWmEM13af/QSWUPE0Wot2MJpLAWjqCmOi8jn2DZ2A0Sx3O9ImBLuwkArhLxv
+	VnBIrPO/Pz+RZLS7DlApLPIP/lfFNGxtUyqDSYhuCQXsMrhjC6jq94O/gE2KpTMoze216WPwgcV
+	e+mG7mtFPIZUQcGk3gx68V5CoY0WGXRkR1CWcikV7+5Cqyzg+czWAEees/HLv+ydeH6WPB+wDW8
+	MfV0kPBlRL2Hf0+T1Q==
+X-Received: by 2002:a17:907:3e85:b0:c15:8fb4:e600 with SMTP id
+ a640c23a62f3a-c161e96176bmr379296966b.20.1783963000503; Mon, 13 Jul 2026
+ 10:16:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260604214051.11132-1-ali.alaei.tabatabaei@gmail.com> <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
+In-Reply-To: <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
+From: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+Date: Mon, 13 Jul 2026 19:16:29 +0200
+X-Gm-Features: AUfX_mzSrrwuzSJw5f-07CfXrgUp81Kg961q75bMC4copPLIVvT_S-r1jDR0p4Y
+Message-ID: <CAAc=8H_TFPdnPpfkix4K4kKKwy30VAB8oYnuBBifuyzymAr3Ew@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, nirmal.patel@linux.intel.com, 
+	jonathan.derrick@linux.dev, kwilczynski@kernel.org, mani@kernel.org, 
+	robh@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Non-atomic update of the DMA descriptor trigger field (`control`=
-) due to `__packed` struct layout and lack of `WRITE_ONCE()`, which undermi=
-nes the safe concurrent DMA updates intended by the patch.
---
-
---- Patch [1]: [PATCH v7 01/10] dmaengine: dw-edma: Move control field upda=
-te of DMA link to the last step ---
-commit bd1de63f1d8dc07b26abcdf63111eb18b82af133
-Author: Frank Li <Frank.Li@nxp.com>
-
-dmaengine: dw-edma: Move control field update of DMA link to the last step
-
-This patch reorders the initialization of the DMA link list entries to write
-the control field last, followed by a dma_wmb() barrier. This is intended
-to safely signal readiness to the hardware and prepare the driver for updat=
-ing
-descriptors while the DMA is actively running.
-
-> diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/=
-dw-edma-v0-core.c
-> index cfdd6463252e6..ee5c3c317557b 100644
-> --- a/drivers/dma/dw-edma/dw-edma-v0-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-> @@ -284,17 +284,18 @@ static void dw_edma_v0_write_ll_data(struct dw_edma=
-_chunk *chunk, int i,
->  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
->  		struct dw_edma_v0_lli *lli =3D chunk->ll_region.vaddr.mem + ofs;
-> =20
-> -		lli->control =3D control;
->  		lli->transfer_size =3D size;
->  		lli->sar.reg =3D sar;
->  		lli->dar.reg =3D dar;
-> +		dma_wmb();
-> +		lli->control =3D control;
-
-[Severity: Medium]
-Will this assignment safely guarantee an atomic update for the hardware?
-
-Since struct dw_edma_v0_lli is defined as __packed, the compiler might emit
-byte-wise stores or tear the write instead of doing a single 32-bit store.
-Without WRITE_ONCE(), the compiler could also potentially reorder or split
-the store.
-
-If the goal is to safely update descriptors while the DMA is running, does
-this need to use WRITE_ONCE() (along with ensuring proper alignment) so the
-hardware doesn't observe a partially updated control field?
-
->  	} else {
->  		struct dw_edma_v0_lli __iomem *lli =3D chunk->ll_region.vaddr.io + ofs;
-> =20
-> -		writel(control, &lli->control);
->  		writel(size, &lli->transfer_size);
->  		writeq(sar, &lli->sar.reg);
->  		writeq(dar, &lli->dar.reg);
-> +		writel(control, &lli->control);
->  	}
->  }
-
-[ ... ]
-
-> @@ -306,13 +307,14 @@ static void dw_edma_v0_write_ll_link(struct dw_edma=
-_chunk *chunk,
->  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
->  		struct dw_edma_v0_llp *llp =3D chunk->ll_region.vaddr.mem + ofs;
-> =20
-> -		llp->control =3D control;
->  		llp->llp.reg =3D pointer;
-> +		dma_wmb();
-> +		llp->control =3D control;
-
-[Severity: Medium]
-Would this also need WRITE_ONCE() since struct dw_edma_v0_llp is a __packed
-struct?
-
-[ ... ]
-
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/=
-dw-hdma-v0-core.c
-> index 632abb8b481cf..1201f1ab5f359 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> @@ -160,17 +160,18 @@ static void dw_hdma_v0_write_ll_data(struct dw_edma=
-_chunk *chunk, int i,
->  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
->  		struct dw_hdma_v0_lli *lli =3D chunk->ll_region.vaddr.mem + ofs;
-> =20
-> -		lli->control =3D control;
->  		lli->transfer_size =3D size;
->  		lli->sar.reg =3D sar;
->  		lli->dar.reg =3D dar;
-> +		dma_wmb();
-> +		lli->control =3D control;
-
-[Severity: Medium]
-Similar to the v0_lli struct above, dw_hdma_v0_lli is also __packed. Could =
-this
-store tear and cause the DMA hardware to observe an incomplete control fiel=
-d?
-
->  	} else {
->  		struct dw_hdma_v0_lli __iomem *lli =3D chunk->ll_region.vaddr.io + ofs;
-> =20
-> -		writel(control, &lli->control);
->  		writel(size, &lli->transfer_size);
->  		writeq(sar, &lli->sar.reg);
->  		writeq(dar, &lli->dar.reg);
-> +		writel(control, &lli->control);
->  	}
->  }
-
-[ ... ]
-
-> @@ -182,13 +183,14 @@ static void dw_hdma_v0_write_ll_link(struct dw_edma=
-_chunk *chunk,
->  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
->  		struct dw_hdma_v0_llp *llp =3D chunk->ll_region.vaddr.mem + ofs;
-> =20
-> -		llp->control =3D control;
->  		llp->llp.reg =3D pointer;
-> +		dma_wmb();
-> +		llp->control =3D control;
-
-[Severity: Medium]
-Could this assignment to the __packed dw_hdma_v0_llp struct tear as well?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713-edma_ll-v7=
--0-6fb7498c901e@nxp.com?part=3D1
+Ping. Any feedback on this patch?
