@@ -1,100 +1,108 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFAB03D0929;
-	Mon, 13 Jul 2026 08:49:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1C13BFAC8
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 08:52:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783932579; cv=none; b=QjVNnqKfUfr8OwJVClOQfsnqowB91uPbWYYRR9K3zsF1gwgoYRE9qDny6et2aaVSDwj1LnB6RonJ+UESaJZ6v5h9LAth5gfk28lmmaPbXjmw1O/nk8DtUTGMhWmRfzsdPmuzOXzeynotAV7T0De8EAhjOGXU3WqLq0qNNJcp8/M=
+	t=1783932765; cv=none; b=D2a40XYa6AtMDnKv6CQ5A/85f/pZGMHPD7XoyrC08yiUpFJRJU0E2uJh+ThIDiMJSDUC++21M9SFWWzOQLGNUxkQ+mw1rP3EXoBlxAz3q+fbuhWHMZrdVxmnlkZkXWjRD977WaSWuDUTxGQKDHyh9wwB2VEXeHsyn+4iLB5bUho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783932579; c=relaxed/simple;
-	bh=sxfQflYPeFYevVQ6mFcMjDr1xqwFE6A3HME7QH4zMog=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=hqZNf8xWY5lMljwBR/kBNQvTdkRpZWr8GMOJ16ptNq7EjZhF9W2f1Q00QFLjPgtOjW5FFd3TzdfG2oPXp8Tpx4PH6Lca0J2lalFrlrEFWbPMSKCP4rK6HTxUUoGhSiz+7dz2GcdO8A1IG1FGT6kIeYD3puRVuMMsOvT26uH5LjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=KSh4RwCd; arc=none smtp.client-ip=113.46.200.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1783932765; c=relaxed/simple;
+	bh=j3u6ZVOegncLBhyB7QqeGqwENQdMo2jsFVdKa1ooIAM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=nBomplFkcJRwQva27KHWF0E7bDHKKW3Pp7Jcx8gZriJXOickWKRSkfYIr6BthTkqyg2mGfO0wJqJDzjjvqVCbJwAe3fnvlATyQYDltSO3/1IH0v4K3FoGnvX03k0mFsEAFzFOP0wCY2KQmwcMosJZWRoWRcX6/OWxBTpOj3nKsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F8vxxfbo; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="KSh4RwCd"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=SKHdSP5nQMb3Q5XWdhIYg9uoiKMFPcMO13oydIAbY+o=;
-	b=KSh4RwCd+h82LOgcgRmZXF7gdYP9e08nV6f71vL3l33c84A+9euuNH4rLmjDm/PhH8NDRt9si
-	/dQZ9KWfpNU798pmW5gwYWXPV7JafoIpQt0zBR9W5gHw1qQvG6IShKd7YPVvXghJ3Ujy1gzecbk
-	Aje445tgq5oqm9psoX5+zjo=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4gzG8S6N0bz12LDx;
-	Mon, 13 Jul 2026 16:39:52 +0800 (CST)
-Received: from whupemo200004.china.huawei.com (unknown [7.152.184.18])
-	by mail.maildlp.com (Postfix) with ESMTPS id C97E940561;
-	Mon, 13 Jul 2026 16:49:31 +0800 (CST)
-Received: from [10.67.120.233] (10.67.120.233) by
- whupemo200004.china.huawei.com (7.152.184.18) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 13 Jul 2026 16:49:31 +0800
-Message-ID: <9b944a92-c83d-4388-bdda-b633948f27e5@huawei.com>
-Date: Mon, 13 Jul 2026 16:49:30 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F8vxxfbo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783932762;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j3u6ZVOegncLBhyB7QqeGqwENQdMo2jsFVdKa1ooIAM=;
+	b=F8vxxfbo3DgPUQ9/shM0U4EgEZVz0d3sGRVVmIH3fE4LHye0+KvQaqAIk2MHvsi1Zhkwl9
+	wyWv2F2XxFb8cmA/ZDBb1FnTL1EZTdF17N1rsftTeoD0WsRFEOixcjkd+mhbCaCy8h8NCt
+	15rEdV8DW2tDbNvoZBunRLgQOzpLVOo=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-42-EhByDjCIMD-IhsC4tuxANw-1; Mon,
+ 13 Jul 2026 04:52:37 -0400
+X-MC-Unique: EhByDjCIMD-IhsC4tuxANw-1
+X-Mimecast-MFC-AGG-ID: EhByDjCIMD-IhsC4tuxANw_1783932756
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 27D371805A10;
+	Mon, 13 Jul 2026 08:52:36 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.81])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9228E195604B;
+	Mon, 13 Jul 2026 08:52:34 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: sashiko-bot@kernel.org
+Cc: jtornosm@redhat.com,
+	linux-pci@vger.kernel.org,
+	sashiko-reviews@lists.linux.dev
+Subject: Re: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
+Date: Mon, 13 Jul 2026 10:52:32 +0200
+Message-ID: <20260713085233.411519-1-jtornosm@redhat.com>
+In-Reply-To: <20260630070914.3B5E61F000E9@smtp.kernel.org>
+References: <20260630070914.3B5E61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/10] perf hisi-ptt: Add decoder version compatibility
-To: <sashiko-reviews@lists.linux.dev>
-CC: <linux-perf-users@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20260604075005.2219785-11-liusizhe5@huawei.com>
- <20260604080356.9F8761F00893@smtp.kernel.org>
-From: Sizhe Liu <liusizhe5@huawei.com>
-In-Reply-To: <20260604080356.9F8761F00893@smtp.kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- whupemo200004.china.huawei.com (7.152.184.18)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-
-On 2026/6/4 16:03, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] The code silently accepts unknown future decoder versions without warning the user, contradicting the commit message.
-> --
->
-> commit 81956f61abf20a5e88b7e9d82765dace1fbc899f
-> Author: Sizhe Liu <liusizhe5@huawei.com>
->
-> perf hisi-ptt: Add decoder version compatibility
->
-> This commit introduces a version field to the hisi_ptt auxtrace info record
-> to distinguish between legacy and detailed packet parsing formats. It updates
-> the recording and decoding logic to process the data accurately based on the
-> detected version.
->
->> diff --git a/tools/perf/util/hisi-ptt.c b/tools/perf/util/hisi-ptt.c
->> index e321f393601b8..4f52cfb4e1903 100644
->> --- a/tools/perf/util/hisi-ptt.c
->> +++ b/tools/perf/util/hisi-ptt.c
-> [ ... ]
->> @@ -159,10 +166,13 @@ int hisi_ptt_process_auxtrace_info(union perf_event *event,
->>   {
-> [ ... ]
->>   	ptt->machine = &session->machines.host; /* No kvm support */
->>   	ptt->auxtrace_type = auxtrace_info->type;
->>   	ptt->pmu_type = auxtrace_info->priv[0];
->> -
->> +	ptt->version = priv_size >= HISI_PTT_AUXTRACE_PRIV_SIZE_V2 ?
->> +		       (u32)auxtrace_info->priv[1] : HISI_PTT_DECODER_V1;
 > [Severity: Medium]
-> The commit message explicitly states: "If version is unknown (future), warn
-> and decode auxtrace as v2."
+> If the device is hung or the link is temporarily unresponsive, could the
+> initial ioread32() return PCI_ERROR_RESPONSE (0xFFFFFFFF)?
 >
-> Does hisi_ptt_process_auxtrace_info() implement this promised warning?
+> If it does, this read-modify-write operation would write 0xFFFFFFFF (and
+> later 0xFFFFFFFE) back to the device. Could writing these values trigger
+> unintended resets across the SoC or leave the hardware in an invalid state?
 >
-> It appears to silently assign the future version directly from
-> auxtrace_info->priv[1] without bounds checking or notifying the user. Could a
-> warning be added here to match the stated design intent and prevent potential
-> compatibility issues from being masked?
-Yes, a warning should be added here.
+> Would it be safer to verify !PCI_POSSIBLE_ERROR(val) before modifying
+> and writing it back?
+
+The read-modify-write on the SOC_GLOBAL_RESET register replicates
+the existing ath11k/ath12k driver reset sequence
+(ath11k_pci_soc_global_reset()). If the device already returns
+0xFFFFFFFF at this point, it is unresponsive and writing to it
+will not make things worse - the purpose of this function is
+precisely to reset a device in a bad state. The link recovery
+loop below already handles the case where the device remains
+unresponsive after the reset attempt.
+
+> [Severity: Medium]
+> Is this polling loop vulnerable to false timeouts due to scheduling delays?
 >
->>   	ptt->auxtrace.process_event = hisi_ptt_process_event;
->>   	ptt->auxtrace.process_auxtrace_event = hisi_ptt_process_auxtrace_event;
+> If the thread is preempted during msleep(20) and delayed for more than 5
+> seconds, time_before(jiffies, timeout) will evaluate to false upon waking
+> up. The loop will exit without a final check of the register, returning
+> -ETIMEDOUT even if the link successfully recovered during the delay.
+>
+> Should there be a final condition check after the loop, or perhaps use
+> read_poll_timeout() instead to handle preemption robustly?
+
+The time_before()/msleep() polling pattern replicates the existing
+driver recovery logic and is standard kernel practice, used
+throughout drivers/pci/quirks.c and PCI core. A scheduling delay
+exceeding 5 seconds would indicate a severe system issue beyond
+the scope of this reset function. The 5-second timeout is generous
+for what typically recovers in under 1 second.
+
+
+
+Since the implementation replicates existing driver behavior,
+both points were already discussed during review with the
+subsystem maintainer, and are handled in the code, no changes
+are needed.
+
