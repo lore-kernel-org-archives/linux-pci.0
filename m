@@ -1,108 +1,100 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1C13BFAC8
-	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 08:52:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675B03D3D11
+	for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 08:53:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783932765; cv=none; b=D2a40XYa6AtMDnKv6CQ5A/85f/pZGMHPD7XoyrC08yiUpFJRJU0E2uJh+ThIDiMJSDUC++21M9SFWWzOQLGNUxkQ+mw1rP3EXoBlxAz3q+fbuhWHMZrdVxmnlkZkXWjRD977WaSWuDUTxGQKDHyh9wwB2VEXeHsyn+4iLB5bUho=
+	t=1783932841; cv=none; b=Z2z/nptIRtulJ1d5tOK08KJjIYxf07Bpf/x/An/TJhT7m0p3CAAz6lvDpN/d6+ElNF1wCyPJLBMLXUefwiNSXnLzt4XOJbw+oq8VO17dFfXxzi0giijdIEQTHdfzjlwhSBWgu2QVjuEPqkli+Pooet53RUXNBq2yq4xhqay9Hek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783932765; c=relaxed/simple;
-	bh=j3u6ZVOegncLBhyB7QqeGqwENQdMo2jsFVdKa1ooIAM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nBomplFkcJRwQva27KHWF0E7bDHKKW3Pp7Jcx8gZriJXOickWKRSkfYIr6BthTkqyg2mGfO0wJqJDzjjvqVCbJwAe3fnvlATyQYDltSO3/1IH0v4K3FoGnvX03k0mFsEAFzFOP0wCY2KQmwcMosJZWRoWRcX6/OWxBTpOj3nKsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F8vxxfbo; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1783932841; c=relaxed/simple;
+	bh=JOa6K++P6fYRskwoWz6GdiFHuS+l3STV0JKn4weWjIs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SjK9o5XNLYNcugTLQmB+aeg/GX4tnx0IcWfaPUX5iU14AXQzgKsc/9Cw1+pUxENExM98yN+t3EE/7WoNupH1UiDlXTXes8nfgJqlfiFM6Mpxq1IFJomN0UQApnJApjIL/ddE46Mo0e1nJlmzX5o4clmOSzNnszYh3YUFrY7SCOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RUIqvmAD; arc=none smtp.client-ip=95.215.58.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F8vxxfbo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783932762;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RUIqvmAD"
+Message-ID: <0d439442-19b5-43b7-b4a2-1db31c5b4ebc@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1783932835;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=j3u6ZVOegncLBhyB7QqeGqwENQdMo2jsFVdKa1ooIAM=;
-	b=F8vxxfbo3DgPUQ9/shM0U4EgEZVz0d3sGRVVmIH3fE4LHye0+KvQaqAIk2MHvsi1Zhkwl9
-	wyWv2F2XxFb8cmA/ZDBb1FnTL1EZTdF17N1rsftTeoD0WsRFEOixcjkd+mhbCaCy8h8NCt
-	15rEdV8DW2tDbNvoZBunRLgQOzpLVOo=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-42-EhByDjCIMD-IhsC4tuxANw-1; Mon,
- 13 Jul 2026 04:52:37 -0400
-X-MC-Unique: EhByDjCIMD-IhsC4tuxANw-1
-X-Mimecast-MFC-AGG-ID: EhByDjCIMD-IhsC4tuxANw_1783932756
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 27D371805A10;
-	Mon, 13 Jul 2026 08:52:36 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.81])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9228E195604B;
-	Mon, 13 Jul 2026 08:52:34 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: sashiko-bot@kernel.org
-Cc: jtornosm@redhat.com,
-	linux-pci@vger.kernel.org,
-	sashiko-reviews@lists.linux.dev
-Subject: Re: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
-Date: Mon, 13 Jul 2026 10:52:32 +0200
-Message-ID: <20260713085233.411519-1-jtornosm@redhat.com>
-In-Reply-To: <20260630070914.3B5E61F000E9@smtp.kernel.org>
-References: <20260630070914.3B5E61F000E9@smtp.kernel.org>
+	bh=zvIp+NR3qYt0PrZhDL/f2qxIy2gEc52ljxfHQCXyhr4=;
+	b=RUIqvmADdYkety6SJEMUvPmUVl1FlTSnH4pfZO2icxTa5w3TBNYqcfBM4n1KYGDarXxqYl
+	u40sg7a6WvMKynquAjKrvQ9QgIkjuf6AOJ80ap/o5+Tit35evljxX52dy3jOnhg65mJCLL
+	kpz1hvGHzfnvtIiYRs5Pa0CvbZs3mMw=
+Date: Mon, 13 Jul 2026 16:53:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Subject: Re: [PATCH v8 08/10] rust: binder: use `LocalModule` for
+ `THIS_MODULE`
+To: Alice Ryhl <aliceryhl@google.com>
+Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
+ Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>,
+ Danilo Krummrich <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+ Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>,
+ Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann
+ <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>,
+ David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>,
+ Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>,
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>,
+ Igor Korotin <igor.korotin@linux.dev>,
+ FUJITA Tomonori <fujita.tomonori@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ =?UTF-8?Q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>,
+ Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>,
+ Carlos Llamas <cmllamas@google.com>, rust-for-linux@vger.kernel.org,
+ linux-modules@vger.kernel.org, driver-core@lists.linux.dev,
+ dri-devel@lists.freedesktop.org, nova-gpu@lists.linux.dev,
+ linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
+ <20260713-fix-fops-owner-v8-8-2495cfa82d47@linux.dev>
+ <alSeRIaps6QSqxJE@google.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Alvin Sun <alvin.sun@linux.dev>
+In-Reply-To: <alSeRIaps6QSqxJE@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+X-Migadu-Flow: FLOW_OUT
 
-> [Severity: Medium]
-> If the device is hung or the link is temporarily unresponsive, could the
-> initial ioread32() return PCI_ERROR_RESPONSE (0xFFFFFFFF)?
+
+On 7/13/26 16:13, Alice Ryhl wrote:
+> On Mon, Jul 13, 2026 at 02:45:29PM +0800, Alvin Sun wrote:
+>> Replace the `THIS_MODULE` static reference in the binder fops with
+>> `this_module::<LocalModule>()`, consistent with the move of
+>> `THIS_MODULE` into the `ModuleMetadata` trait.
+>>
+>> Assisted-by: opencode:glm-5.2
+>> Reviewed-by: Gary Guo <gary@garyguo.net>
+>> Acked-by: Danilo Krummrich <dakr@kernel.org>
+>> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
+> Most other Rust Binder commits use 'rust_binder:' prefix rather than
+> 'rust: binder:'.
+
+I missed this prefix convention — thanks for catching it.
+
+I'll fix it in the next revision, along with any other feedback that 
+comes in.
+
+Best regards,
+Alvin
+
 >
-> If it does, this read-modify-write operation would write 0xFFFFFFFF (and
-> later 0xFFFFFFFE) back to the device. Could writing these values trigger
-> unintended resets across the SoC or leave the hardware in an invalid state?
->
-> Would it be safer to verify !PCI_POSSIBLE_ERROR(val) before modifying
-> and writing it back?
-
-The read-modify-write on the SOC_GLOBAL_RESET register replicates
-the existing ath11k/ath12k driver reset sequence
-(ath11k_pci_soc_global_reset()). If the device already returns
-0xFFFFFFFF at this point, it is unresponsive and writing to it
-will not make things worse - the purpose of this function is
-precisely to reset a device in a bad state. The link recovery
-loop below already handles the case where the device remains
-unresponsive after the reset attempt.
-
-> [Severity: Medium]
-> Is this polling loop vulnerable to false timeouts due to scheduling delays?
->
-> If the thread is preempted during msleep(20) and delayed for more than 5
-> seconds, time_before(jiffies, timeout) will evaluate to false upon waking
-> up. The loop will exit without a final check of the register, returning
-> -ETIMEDOUT even if the link successfully recovered during the delay.
->
-> Should there be a final condition check after the loop, or perhaps use
-> read_poll_timeout() instead to handle preemption robustly?
-
-The time_before()/msleep() polling pattern replicates the existing
-driver recovery logic and is standard kernel practice, used
-throughout drivers/pci/quirks.c and PCI core. A scheduling delay
-exceeding 5 seconds would indicate a severe system issue beyond
-the scope of this reset function. The 5-second timeout is generous
-for what typically recovers in under 1 second.
-
-
-
-Since the implementation replicates existing driver behavior,
-both points were already discussed during review with the
-subsystem maintainer, and are handled in the code, no changes
-are needed.
-
+> Alice
