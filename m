@@ -1,163 +1,246 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010010.outbound.protection.outlook.com [52.101.69.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C773F353A85;
-	Mon, 13 Jul 2026 18:21:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783966902; cv=none; b=qlBJhvo0fdhjuCCw2SkN2DCYr3B7ERyCoDhtsaT814uiqnqBj47QkTVC26iBOp780OfWaAYMpz2Bkdtga1Xh5Uq89R+4ZrxDvlWnukdvHNZHvpHPnMfV7Pd8A276J+Z3hLurkYOzf8968plFs/lxokgJFk9c2F2/ExElt3ugz6U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783966902; c=relaxed/simple;
-	bh=/wtvZXQk8dHl7nx+WqHqBTN6NjaZl9MwBV5LpHyjSbU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iV2jUcVMeHlF72PLi+o7fufSAxey9p8Ncjkgg92p0j3QDc7jpsu4rpvNQANH9vSXXy823qU+bGbEvoEXbjzPPUe+WZPN6vhqop7/mnKTsFL6UvLArrGdTyugKIWrkmT0eBzsqj+Uk5jw7JlV0+PWa8dHnRdq//sMOYSrL5WZyCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Wri4PbOh; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DA4E34D915;
+	Mon, 13 Jul 2026 18:22:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.10
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783966966; cv=fail; b=BwopoeOYqPo7YNB3okfAf7YLdKijdXo2A7roeNvJ1dsbEuGOs/FnwrakHKgdw1KchOMVuh9qWnmfyt0/bwzMojpvsS34yHl5bCqNArQPCsmYfpNW+UOGXurNjmana5lUZi3jhqDC6e24ZJg8tvPMokOqu4gVMk1BFHshHPlHwJk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783966966; c=relaxed/simple;
+	bh=ZBTakGzLoUAf9bYD4ocpxAIDgzxwxER5luN2nO6ebd0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=dZ6kl/D9p3ZtY4rDJZTikh+7A4/d50w4h0Z/uk5mYq7Mj3VT7vgC2LYlSL2J4+05BLBzX0XzK7KrfQXSO2xzNXjDQ3CpqHe78DDpeNRuGo+kCg3BSZ34eFCPvLGPM0iGgdIC7nj/k/rUehya/tknwGy1mfunqEqewAmEl7uFkPc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=fail (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=gZYZV24e reason="signature verification failed"; arc=fail smtp.client-ip=52.101.69.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Wri4PbOh"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66DFEZpD2833178;
-	Mon, 13 Jul 2026 18:21:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=2KowTR
-	FgB52ZiLjBHaKUQY4xVTvQlighuuY235chHCQ=; b=Wri4PbOhVEa3+b8bM4Sn/w
-	MAD99CmWHxTsiKdvSt/3KtJxULzzL15ksPhDDTPemeH3kD4ZW7fBoyqp/1V3nyzh
-	6HtVzrEoDs4oR7BoxP43EzAl/mBKvMSnemyI6IrSHcAK3u4DAc9FGs22N19sVW1w
-	2LYVHxBls/XifhSK2KnPKk2HPMlvzpU524407awggDuAeCfcY+aIMv0Xl1wz+aJM
-	pRf+CYgEYtuyYR4z9q/pplnqiAfh21TIoVfo5wJMc2nRdKIGJm8ocwAbWzWLfru1
-	eHo9JutYuuB/fmUGylvvEQxgZHO4hERcfeDf/NCeVLNWp9wyAfwBt9NNCyGqdCOw
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fbegbhuqh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jul 2026 18:21:36 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66DIJgYp014367;
-	Mon, 13 Jul 2026 18:21:35 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fc05py8he-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jul 2026 18:21:35 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66DILXJn59506982
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 13 Jul 2026 18:21:34 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DC7955805A;
-	Mon, 13 Jul 2026 18:21:33 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 09AC558054;
-	Mon, 13 Jul 2026 18:21:33 +0000 (GMT)
-Received: from [9.61.249.24] (unknown [9.61.249.24])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 13 Jul 2026 18:21:32 +0000 (GMT)
-Message-ID: <030005d7-d87b-4eed-966c-5bb48ff31997@linux.ibm.com>
-Date: Mon, 13 Jul 2026 11:21:32 -0700
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="gZYZV24e"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=QxeF4AyyjFI/fCwKC/H6ZxcOiLUzwagHS+3T0/N+FXTQHTN6drg9iLJ4MhzqlbYGwNUPZfm/+ar/NIxLkmIUMT6Ybd6/XJk6dvvu2aBmFy+fgNSLKdGm+19eGm3tbYH7xVkm4M1r+QnOk8rTt9tAAKrgMGgbduXHqPHpcALc28KUic7Yj/+2LuDqmkcR0/0HNhYXBGPU01Wz6dh74MMkAe1R98W2Rcx00QBeA2vMdoMZmUfW0abBNfM7n/cbk6kFQoMbApEcR2ZYaJMHsTtW7HspL01FVkiMtu25y3JT+53REv0UhPqSpwWiCXvvz4JNP979NzXe6Ngk2o11vEPDQA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=rx6wbK2YEAnQoyUq/Z2S8HR+2UOhbfY3BKMGChyDMpA=;
+ b=rGQ+kNCCPllv6s4Lncd97p6AqhBX2jys+v/ZMwVW6axDTH/Fyon2B/0b9Ikm58CzYVdsFR7cNv9kJ5ZY7LsYMDOcmIavVygPn1zmPpLZx4z8yHnf8IO+FMPx8T8S3MaTRq6tzqpOb8LRQYgWBqAQn09z8y5SmCosm8vCknhjaNkwK2BNgaqgl5t+qybrCkzzF7P1ADRLQzOGTBc/1LKC1dgzzJbIZZxp8Wv4eRcMuX6FqsY3BQQ3p0+J3WGY65YXhPyv5chnuTqxileQpgsv9zY7gV+/86Xz32FM4cJqYY/WEXXf1E0Yu8xPMwhsJUsp4RzFq+LSYCJtr/ecycS8Eg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=rx6wbK2YEAnQoyUq/Z2S8HR+2UOhbfY3BKMGChyDMpA=;
+ b=gZYZV24eN0QkSxK08ctV8nFuw1evkyDFvkgRgPi2Q2/tPIwf5DGXCe9cVsi1illBk5trb6kLpxtGioGgGw78WimvsuqUB7QNC008m98QD/GOKf7pWuuTwq20uK/4kHt03+af8Aj5PbKxCmUD5EqP1qDc+7vDZwwpAv2EMYHJONCcsPUzbdnWYHysOZjeK0Uj56EktIQqFmRxemwENRMOJBDwWVITPUtjxZ/V85/i02YolzmdjJDyi/ikLL6POs9brPA+qxTM9kbhkN56/ADdn4vK0lJhsgYfzmjhGdqddatDletMEkihZ65op+XAgbClJ2t2i0gbgqAdHHjNh3mntw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by PA4PR04MB7646.eurprd04.prod.outlook.com (2603:10a6:102:f3::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Mon, 13 Jul
+ 2026 18:22:41 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0181.019; Mon, 13 Jul 2026
+ 18:22:41 +0000
+Date: Mon, 13 Jul 2026 13:22:33 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+	imx@lists.linux.dev, Frank.Li@kernel.org
+Subject: Re: [PATCH v7 01/10] dmaengine: dw-edma: Move control field update
+ of DMA link to the last step
+Message-ID: <alUs6X2OnZjzE4dF@SMW015318>
+References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
+ <20260713-edma_ll-v7-1-6fb7498c901e@nxp.com>
+ <20260713171252.03DA81F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260713171252.03DA81F000E9@smtp.kernel.org>
+X-ClientProxiedBy: SA0PR11CA0200.namprd11.prod.outlook.com
+ (2603:10b6:806:1bc::25) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v21 0/4] [PCI] Error recovery for vfio-pci devices on
- s390x
-To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-References: <20260630164807.643-1-alifm@linux.ibm.com>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260630164807.643-1-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=fOcJG5ae c=1 sm=1 tr=0 ts=6a552cb0 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=r1p2_3pzAAAA:8 a=29iEHxvmWTY-H69hz_cA:9 a=QEXdDO2ut3YA:10
- a=O8hF6Hzn-FEA:10 a=r_pkcD-q9-ctt7trBg_g:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDE4OSBTYWx0ZWRfX2TJ2lYc4Y6PI
- KfL+r1cLKOQlfH6ag7OMkp/t4bo3/CtIfQFCWbayYq9Bm4kyGr5pUPMR1SgN20zh27dwxBni2nW
- d0nU3Uc1tGl9on76XA19xPFZkw3LVilSdcTzmJWgN2gRrgW50ZM49lSPwFEKFp7vlS1M91ASaYY
- ywiagG+JrBjjPdl2nWE6iDMImzPLnN2sCwHQNpq44qMbZ+47S3ivWCxCWZrac30QPMIukBQrm0/
- J/uVDHnqgT+9yaarbjt1zDj2+NYeMtF4yBN5K299nhTz/6ndo/cDTKYyKuV9KFyn9AjfVfr2DvT
- 0tZpq8vx/Qni089p7e7nQmLKX9ufYWYGXOtUejYAK7W0006XGQz3F5R05JfAfM7MfbaJhHnUEOa
- wJSO/BB4Oa7+lFm/GEfyKQ3dtRGdOTmey+Ny6dtwGkdsds5erHUNK6J+q8unyS4fclsq7bb3+Mm
- lp9KqDYNpIRSLRvWoYA==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDE4OSBTYWx0ZWRfX8tiMEbFElmSd
- /9DjGp3o6shVYO7mscmnty8f42s9T+k44QVXTXzBfEpYSGrLb0pi/XtP1JTbxiI0bqNzXLgQvB/
- zGwKV4B9p9/EECbVToCIPzzk9770dGg=
-X-Proofpoint-GUID: DJ_XcHPg9W_54-WhCaqfAxr0JK0NrPb3
-X-Proofpoint-ORIG-GUID: DJ_XcHPg9W_54-WhCaqfAxr0JK0NrPb3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-13_04,2026-07-10_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 impostorscore=0 suspectscore=0 adultscore=0
- priorityscore=1501 malwarescore=0 clxscore=1015 phishscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607130189
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PA4PR04MB7646:EE_
+X-MS-Office365-Filtering-Correlation-Id: 35c79370-0b92-4f81-f38f-08dee10bb9c4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|19092799006|366016|1800799024|376014|22082099003|18002099003|6133799003|4143699003|11063799006|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	RIHhQ3zzBw8bmHm2AV78wTTF7xKRrwVdm+HkxnRvGbKbuGGQQB6QjKOtvYIcrKNVlg5UaNsMwngV17h8me0VebRnc2cA6KUUAIBMyeD/RrmrN0WEP4OdJK4ElbI4h7GE+8apZH3BvLb3j37zz+gz+ckC1aI6HA2FVuNHdPO9jDil4QWXgeL7YO+K1EcKWC3FkMsStKL3s9LtAMGIyVBaVBxDAxfXRj2/beFmDXNlrfGKU4hD/sUGKxH9lR7w/6Jo8/18a9PjV05AzA5+9dE5736gmHoQopqkbLYsN3w4lJBI/2NPfXELKVyOJNltXiMNu7Vodun9T+SU4G+X1xnSiAkBjZ/DLqsQJryavmbsn1wEJGUZo3ZcwhvkMNhW2bf4tTq9EGRj4p04iEYZM1b6aQwVqDnORsMYSUsegiU4wSjTm0p1qVxiEkArzSE2O+ovUlwphAA7uD+NA65UT4OtTAnnkF+Q0U0669S+y2RlheyOif7dpBhB554IVHfTL70j5JNymiA73vPeDT/PBBHeg3+knqVslyt2vOhmy0Tt2MKAMsfb9PQt+c2WAaqPwkrZuaLKZqvkX/S/HbUv9ni4h/JyqayS9qmBs+Tbo86fBvI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(19092799006)(366016)(1800799024)(376014)(22082099003)(18002099003)(6133799003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?iso-8859-1?Q?03dvk2u8LMZzxeuyaZLaYklySi5YNGU4o0nU69AhFZG8bjxnvqUxPQ9KRb?=
+ =?iso-8859-1?Q?n3atiRhNgdM5B+mI/RZw7xuc11OFo7fqkeUtHkiMSeGfGOENz6tjq1jrYC?=
+ =?iso-8859-1?Q?+9ho+FSy3PYwb6hAZ1z55uvQFUb01tl711tLd79x7BG+8DQiL5kuc87O0B?=
+ =?iso-8859-1?Q?SQTKQPmgMX//aoBv9pNr3g/2Ml0n+QlNn3kTCNj1WL1Ji38iyArPe8uqKr?=
+ =?iso-8859-1?Q?BBiKpwNa3aVhuW/AAzsu591hTVmw5f96Wmmcxz6X7RUfg1TKKtgv9I1Hl8?=
+ =?iso-8859-1?Q?X6n3QWJFujteMRtt8xpuWdaDNDPLl7bDNg+/+4Ia88WFaSJCHzIS0NNtwY?=
+ =?iso-8859-1?Q?VTU+zh8Qm3OxG52/sjaLcPyFFExdhyY5m1bJHaOQx5psAcMrP2oIrL1d6j?=
+ =?iso-8859-1?Q?ErciNx3NVOCV50SEBGnwYLWI+3RGrgyppy9/2fzRu1MFWeOa9qc2wRvA43?=
+ =?iso-8859-1?Q?1eyOtrBiweQJlS+0ofaegB9eIlHOaNEz8Q0YubEKWCfPUCkKxdln/LJoDG?=
+ =?iso-8859-1?Q?2bflC2zt4FtTSZxeqG+Kh47jMmZbQMYuNa+56MOrcsQ8DKpXqAMSndoFyD?=
+ =?iso-8859-1?Q?RqRppFfkjQ/bsayDMgj11LneCtFWYjS9fy3jRtBOk4eYyliw9L+R6gs4wx?=
+ =?iso-8859-1?Q?VYE3uTbs1mFE5esUJi7B8XM/QMztq8WACd/N8s6PcLiQxnw8qJ9c7S4bhf?=
+ =?iso-8859-1?Q?jRRj7JVMGa20AVEEg6momrxP46lWkGn1wl1Ak5cF6Q9PJTlLtQJWrSdK+E?=
+ =?iso-8859-1?Q?vF2Zu4JEicvSmiLZliKUwWJge49QbC5zISm1BeFIqhMO1w25IMVS4V9hVR?=
+ =?iso-8859-1?Q?nnqC2zy9bu5KUqtSQHDyOevWc+g9Xj67yvtunOXWM+mVM5htgDiWx0R2up?=
+ =?iso-8859-1?Q?VGKcaCP/VPiqFOYjPbypeatLeXA/iLcXQ5S1os8G3wAbmkTvH/W6OxKtZ3?=
+ =?iso-8859-1?Q?LOv1qMPtoWWru74McxhhfhHN4r0iNxVytsjqusV5oAzNopmBjdQDufwyXg?=
+ =?iso-8859-1?Q?+4EURRVLWOe3XuQyFaricC1AmB/VKMRXo76Y1srVfstnJVHTq1ALZ9ohtY?=
+ =?iso-8859-1?Q?xh+eH4efEPlCsma+UuPDL1EfYi5VYaXQLA58W5cAAQ33Fynu2hc2/7KJZp?=
+ =?iso-8859-1?Q?VaVf+pfe2dR06ssi2Dty2xBxRxO8yk32330n4m00y6Vb7bwnRUaieTH+YH?=
+ =?iso-8859-1?Q?pJccazO5FfACTiZU3xpLwSrkg5mWSVZtNA9b3ah+hOaJtdN4kjSvsuqoXy?=
+ =?iso-8859-1?Q?zycXwMEeATl9CCd/5wkHGTieI5dmnjPbVfqfNqDg2GIj9pINouiDljrc68?=
+ =?iso-8859-1?Q?pm6bsiJqI8C1Jhpaj1lIeEzivWhnXYyDdC+3/SaB9Kt6C4i2iMjr62xVZ8?=
+ =?iso-8859-1?Q?2zda6iT+TvAsx9oDiI2KO+WxjxE7zY5YOwp7JDxQg3XejgQz+GViNuZ75i?=
+ =?iso-8859-1?Q?OqfpPM4D4n6fwlHnLGn4S07DxKMd8EDxPivP/QmvD246FaBgKWMBxaehY6?=
+ =?iso-8859-1?Q?iAIqC8Ry5m6Xs0iJ8lOuZq4JYqDVZT7whT65cbIYdHjX40h9WsB3bSWs9v?=
+ =?iso-8859-1?Q?Yy6DiW2uHPJDRTWTgZPR4S7rxj+F5992eLaeRw850X/NW4NcJt9ASKMpfv?=
+ =?iso-8859-1?Q?WLMNPqU/MqivuljKuVoHYBVEMMgLTd1y6KM3pCGqH/lRUELhbwc/GyU1i9?=
+ =?iso-8859-1?Q?J7ocwM7MxXw/VBKm9Mjk74Th/VRqoHG0eyk8McMxUUrXOBVvaeo30xiCtd?=
+ =?iso-8859-1?Q?DflPXLjamPeM5hjT4XH/Rg9BhAp58jpJBJ/Ok81XuZysyGa7Qrc5EuhNha?=
+ =?iso-8859-1?Q?pj7sw+ZoSisMYxYR7/njEUneeOHWtx3XwS4oosKRK7BmRiXUn7qF?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 35c79370-0b92-4f81-f38f-08dee10bb9c4
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2026 18:22:41.3562
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6NkRjhMuFZ6BBe7j6WtdSqXe28ZVputtwFDLXZeU+TXR1OqGWigIKA1NO78pk6/1drWHrqS7sAqjPoSbVD4o3v34hdIWvRGZDK/cNeGU7ZdKrgt9J4yWsCckl05vDWn8
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7646
 
-Polite ping for this series.
+On Mon, Jul 13, 2026 at 05:12:51PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] Non-atomic update of the DMA descriptor trigger field (`control`) due to `__packed` struct layout and lack of `WRITE_ONCE()`, which undermines the safe concurrent DMA updates intended by the patch.
+> --
+>
+> --- Patch [1]: [PATCH v7 01/10] dmaengine: dw-edma: Move control field update of DMA link to the last step ---
+> commit bd1de63f1d8dc07b26abcdf63111eb18b82af133
+> Author: Frank Li <Frank.Li@nxp.com>
+>
+> dmaengine: dw-edma: Move control field update of DMA link to the last step
+>
+> This patch reorders the initialization of the DMA link list entries to write
+> the control field last, followed by a dma_wmb() barrier. This is intended
+> to safely signal readiness to the hardware and prepare the driver for updating
+> descriptors while the DMA is actively running.
+>
+> > diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+> > index cfdd6463252e6..ee5c3c317557b 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-v0-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+> > @@ -284,17 +284,18 @@ static void dw_edma_v0_write_ll_data(struct dw_edma_chunk *chunk, int i,
+> >  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> >  		struct dw_edma_v0_lli *lli = chunk->ll_region.vaddr.mem + ofs;
+> >
+> > -		lli->control = control;
+> >  		lli->transfer_size = size;
+> >  		lli->sar.reg = sar;
+> >  		lli->dar.reg = dar;
+> > +		dma_wmb();
+> > +		lli->control = control;
+>
+> [Severity: Medium]
+> Will this assignment safely guarantee an atomic update for the hardware?
+>
+> Since struct dw_edma_v0_lli is defined as __packed, the compiler might emit
+> byte-wise stores or tear the write instead of doing a single 32-bit store.
+> Without WRITE_ONCE(), the compiler could also potentially reorder or split
+> the store.
 
-Thanks
+This problem is not existing because each field is 32bit aligned.
 
-Farhan
+Frank
 
-On 6/30/2026 9:48 AM, Farhan Ali wrote:
-> Hi Bjorn,
 >
-> This patch set includes only the PCI patches of the original series for
-> error recovery for vfio-pci devices on s390x [1]. Breaking up the patch
-> series into PCI and VFIO only patches to make merging easier based on
-> discussion with Alex [2].
+> If the goal is to safely update descriptors while the DMA is running, does
+> this need to use WRITE_ONCE() (along with ensuring proper alignment) so the
+> hardware doesn't observe a partially updated control field?
 >
-> Thanks
-> Farhan
+> >  	} else {
+> >  		struct dw_edma_v0_lli __iomem *lli = chunk->ll_region.vaddr.io + ofs;
+> >
+> > -		writel(control, &lli->control);
+> >  		writel(size, &lli->transfer_size);
+> >  		writeq(sar, &lli->sar.reg);
+> >  		writeq(dar, &lli->dar.reg);
+> > +		writel(control, &lli->control);
+> >  	}
+> >  }
 >
-> [1] https://lore.kernel.org/all/20260520171113.1111-1-alifm@linux.ibm.com/
-> [2] https://lore.kernel.org/all/20260602163344.1eda12d2@shazbot.org/
+> [ ... ]
 >
-> ChangeLog
-> ---------
-> v20 https://lore.kernel.org/all/20260622171840.1618-1-alifm@linux.ibm.com/
-> v20 -> v21
->    - Amend commit message to include Fixes tag and cc stable (patch 4).
->    - Rebase on 7.2-rc1.
+> > @@ -306,13 +307,14 @@ static void dw_edma_v0_write_ll_link(struct dw_edma_chunk *chunk,
+> >  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> >  		struct dw_edma_v0_llp *llp = chunk->ll_region.vaddr.mem + ofs;
+> >
+> > -		llp->control = control;
+> >  		llp->llp.reg = pointer;
+> > +		dma_wmb();
+> > +		llp->control = control;
 >
-> v19 https://lore.kernel.org/all/20260615183524.2880-1-alifm@linux.ibm.com/
-> v19 -> v20
->    - Unconditionally enable Memory bit while restoring MSI-X (patch 4).
->    Fixes an issue found with sashiko.
+> [Severity: Medium]
+> Would this also need WRITE_ONCE() since struct dw_edma_v0_llp is a __packed
+> struct?
 >
-> v18 https://lore.kernel.org/all/20260603181647.2215-1-alifm@linux.ibm.com/
-> v18 -> v19
->    - Move config space accessible check to pcie_flr() function (based on
->    discussion of Sashiko review)
+> [ ... ]
 >
->    - Fix a gap in MSI-X restoration (patch 4).
+> > diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/dw-hdma-v0-core.c
+> > index 632abb8b481cf..1201f1ab5f359 100644
+> > --- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
+> > +++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
+> > @@ -160,17 +160,18 @@ static void dw_hdma_v0_write_ll_data(struct dw_edma_chunk *chunk, int i,
+> >  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> >  		struct dw_hdma_v0_lli *lli = chunk->ll_region.vaddr.mem + ofs;
+> >
+> > -		lli->control = control;
+> >  		lli->transfer_size = size;
+> >  		lli->sar.reg = sar;
+> >  		lli->dar.reg = dar;
+> > +		dma_wmb();
+> > +		lli->control = control;
 >
->    - Rebase on 7.1-rc7
+> [Severity: Medium]
+> Similar to the v0_lli struct above, dw_hdma_v0_lli is also __packed. Could this
+> store tear and cause the DMA hardware to observe an incomplete control field?
 >
-> v17 -> v18
->    - Rebase on 7.1-rc6.
+> >  	} else {
+> >  		struct dw_hdma_v0_lli __iomem *lli = chunk->ll_region.vaddr.io + ofs;
+> >
+> > -		writel(control, &lli->control);
+> >  		writel(size, &lli->transfer_size);
+> >  		writeq(sar, &lli->sar.reg);
+> >  		writeq(dar, &lli->dar.reg);
+> > +		writel(control, &lli->control);
+> >  	}
+> >  }
 >
-> Farhan Ali (4):
->    PCI: Allow per function PCI slots to fix slot reset on s390
->    PCI: Avoid saving config space state if inaccessible
->    PCI: Fail FLR when config space is inaccessible
->    PCI/MSI: Enable memory decoding before restoring MSI-X messages
+> [ ... ]
 >
->   drivers/pci/hotplug/rpaphp_slot.c |  2 +-
->   drivers/pci/msi/msi.c             | 10 ++++++++++
->   drivers/pci/pci.c                 | 32 ++++++++++++++++++++++++++++--
->   drivers/pci/slot.c                | 33 +++++++++++++++++++++++--------
->   include/linux/pci.h               |  8 ++++++--
->   5 files changed, 72 insertions(+), 13 deletions(-)
+> > @@ -182,13 +183,14 @@ static void dw_hdma_v0_write_ll_link(struct dw_edma_chunk *chunk,
+> >  	if (chunk->chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> >  		struct dw_hdma_v0_llp *llp = chunk->ll_region.vaddr.mem + ofs;
+> >
+> > -		llp->control = control;
+> >  		llp->llp.reg = pointer;
+> > +		dma_wmb();
+> > +		llp->control = control;
 >
+> [Severity: Medium]
+> Could this assignment to the __packed dw_hdma_v0_llp struct tear as well?
+>
+> --
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260713-edma_ll-v7-0-6fb7498c901e@nxp.com?part=1
