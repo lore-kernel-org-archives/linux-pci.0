@@ -1,227 +1,212 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1790B2D0C92;
-	Tue, 14 Jul 2026 17:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784050397; cv=none; b=qh16Lh6Sy3fePh6PjGd6aWC2fIUtHr0ELB50Rn6G547Kj4wtKSzlHU2xghNgi2jGc5noKaaachl6ggY2YMozdyhTPX7whqYUea6wCPJVb/1loIi2mvQzV5XPgJRYetoMa+xa0lXpcDeMBFPYMDHb435P/P42Y5s8Gf8Hv2UVKjU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784050397; c=relaxed/simple;
-	bh=KxAtcBTq6Q7LICGaMbA9miPeB2LC0QoPItQufKyIsK4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PsN4dkCPHzWz0zD31VW0WKWU3k9yP6CPXPPO5I3GhcTfkwTB8c5M94rHGYetkPlRkVyivL71wF1W7zFBrXHUUsLJQNEXavG5X4GVZHe3TYoukf67AVi+bJya6ei15YNUxxT0aIFnqyHqQDTcf+JcIpZ9xcXHYFFgx3T3dT6TIMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rmai+x3I; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1945C2FD69A;
+	Tue, 14 Jul 2026 17:33:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784050409; cv=fail; b=Av5SqZopTbuL9PgQCK/Bi5TenxKldbprnZELGuABYdvzQrwWL8kRgLNJtB/Y/zXMT20FiuI8YJvGGJBlkrndDT692j42vOuE9PaAUJRYVswob7AJizmFWz44kWAEjlD+i3uOkFO/caA6Aw9h8mjkSBELc6IPQChoHyr5LzmX2tc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784050409; c=relaxed/simple;
+	bh=6N75w8KslXg94doSw+tUujYMSRh8zi5MTtvDHND0Pqs=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ix1ep4ydc7xPWTUmk5bZrnd7Heaxo8aQUFpeSoTVRnpStLiRKGL7Jt+jCa7e0WrpZ/vUawsbVSjFYMYqHeBXmhLQR+3CumkpoxecK2iYcpCOJMqFNHGPPjPuBKzrjdVDf+Rn6vUS8QK+poloG8nP/wuKEgDoUBh8GdiuSJn29QI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nDl1pzGJ; arc=fail smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rmai+x3I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C24681F000E9;
-	Tue, 14 Jul 2026 17:33:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784050396;
-	bh=0/2Vbem4uUKn0p3ksAMM3bG5ETqwG60Y4I0HBdf6+4c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Rmai+x3I1QMlpO9dVhhmod4zVfFwmljwbEWEUgT1EClhdNQCaLmHKSCEJ1b7yFsq4
-	 VhdaPcEqLFwAi3zHZiMEXnPV7mQ6cBS1Vg91zUIinNxk7TV1xQisUXyDAq0cL1x3Zh
-	 jK1ur5PzG0bYUSc0WKIOdI01zzJyZxWq8dOLt+BfTVrE3zafDhL7EBd2pEFC8ZhKaF
-	 kYSqohgwfjZkkZxtfR761qpARxdpnccTXwMP6fHUHBbPqVFqaukLHu+vRm7sUSzLUm
-	 qWFr52i5UTo3JaBNAQrZxMu9vrLif2R4BhKZfuYE6KV9I0jPEEH9Dl1kTCbtWxtc6c
-	 0fEfXWoDLltcg==
-Date: Tue, 14 Jul 2026 12:33:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rowan Cramer <rowan.cramer@gmail.com>
-Cc: linux-pci@vger.kernel.org, Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Nam Cao <namcao@linutronix.de>, Zide Chen <zide.chen@intel.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Christian Loehle <christian.loehle@arm.com>,
-	linux-pm@vger.kernel.org
-Subject: Re: NVMe MSI-X completions lost behind VMD across package C-state
- exit (even PC2) on Arrow Lake client VMD [8086:7d0b]
-Message-ID: <20260714173314.GA1365789@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nDl1pzGJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784050408; x=1815586408;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=6N75w8KslXg94doSw+tUujYMSRh8zi5MTtvDHND0Pqs=;
+  b=nDl1pzGJ2ipKZU47OfsEwa1PhXwdpcuaDrBku+AT849AdHBV6mbr0mHk
+   fvppfrhuqmkKGNdXva89vgZu7MAaZzn1M3n6aejbnyPPfodNPS9T06vX9
+   hgftbR34S1sALL0ogXiJyDh7LBbTSXQo6/i7bwgaW74a53DZwuyZ2m53x
+   NJsYLM97JqL7VgiV1V4CpP+bASnsqs0sFJ2dWx+2hpAR05LLwHcqlRGAz
+   bsl4yOacva58Mr/rvCpeKEUWCCztmGOvKaOkza+H29RaCroKm5LS3Fy39
+   2LM+J4g8aJ+8lIL0bnQ0DXP7leYqlpXJhOVjjrVXMdJ8ZLmlKk3uohhsU
+   A==;
+X-CSE-ConnectionGUID: FX7dTWP1RaC3gdPAI78oMQ==
+X-CSE-MsgGUID: HUNwbmExQFmtguG2FtX+oA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="110226486"
+X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
+   d="scan'208";a="110226486"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 10:33:27 -0700
+X-CSE-ConnectionGUID: SRE9yiMtQNODCySXu1wKQg==
+X-CSE-MsgGUID: SJigcQYDSJuWpQOpqimcbg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
+   d="scan'208";a="280346283"
+Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
+  by fmviesa001.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 10:33:26 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 14 Jul 2026 10:33:26 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43 via Frontend Transport; Tue, 14 Jul 2026 10:33:26 -0700
+Received: from CY3PR05CU001.outbound.protection.outlook.com (40.93.201.69) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 14 Jul 2026 10:33:23 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=W9OH7hePkpZEJnDeJrRkNm1L4vEfPFHd8C0/5QmNle6INIgvA1opsPGcZxTIcdvAhLoKEv56aMNO5UYCUJBOfcia8/Rxv2rP0PWhiLYZhzbZQw9NVHAGGdNopDQ1rFtPjU/8q8P0/FMhOXxCFawfhIpc6hFhBh4xaj75egDciOK0UqP9joDg4xJFQll9CFARtL4jllEl0luFIOm0hz/wdlqAPAQ+qQ9jGunzRNEF5iLpQTfGLNz9R1nmiK2XIazoRPqHZrJJ7tRKmzOpkXqVK8V/UTjoEWV29LmHMYpdeCpGg8d53Ecu27xg03A4Zj0EFrgbKmtWQpwAejnv57j9Og==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NyFjH9pbj4qEw5r84X6oHo9fGBQXHkz39hJhqEHpYb0=;
+ b=kS+TeeROxK/f5wtATbs2eEwLiga1KSK3Js9GEZzcq/eej1ga315yPxuxg5Fnzu6VuhHX81n1IAiWp/GGQSPWJUKn6X/QLQSMaBfZvsRFJqmLdoVi11POIxwFwib5QV1x0hhsOOugAfDDQxqgZApP5/WnpHXQ4dteKJjH4YJeOrd5fGQzSU80stDtaBm7/PTn0ll3l7bJ7Ew74EOK09XKL1XH54MDu7yfUqTR2YzkP7NBM/x89TExdwWWUipWuKrlHFBdvj9gVBT0kEiY+DXCrJkMH9VNXUmgRNplof/giKfOcYCc2DrodXl0av7/qqQoIZzzT/tGrRHPQEhcCIo2wg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com (2603:10b6:f:fc02::9)
+ by CY8PR11MB6842.namprd11.prod.outlook.com (2603:10b6:930:61::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Tue, 14 Jul
+ 2026 17:33:19 +0000
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891]) by DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891%4]) with mapi id 15.21.0223.008; Tue, 14 Jul 2026
+ 17:33:19 +0000
+Date: Tue, 14 Jul 2026 10:33:06 -0700
+From: Alison Schofield <alison.schofield@intel.com>
+To: Ahmed Tiba <ahmed.tiba@arm.com>
+CC: "Rafael J. Wysocki" <rafael@kernel.org>, Tony Luck <tony.luck@intel.com>,
+	Borislav Petkov <bp@alien8.de>, Hanjun Guo <guohanjun@huawei.com>, "Mauro
+ Carvalho Chehab" <mchehab@kernel.org>, Shuai Xue
+	<xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>, Saket Dumbre
+	<saket.dumbre@intel.com>, "Davidlohr Bueso" <dave@stgolabs.net>, Jonathan
+ Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, Ira Weiny
+	<iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar
+	<mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, "Rob Herring" <robh@kernel.org>, Krzysztof Kozlowski
+	<krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>, Jonathan Corbet
+	<corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<acpica-devel@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-edac@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <Dmitry.Lamerov@arm.com>
+Subject: Re: [PATCH v7 06/10] ACPI: APEI: GHES: move CXL CPER helpers
+Message-ID: <alZy0nxgM1kekZiG@aschofie-mobl2.lan>
+References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
+ <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-6-8b3a85216cef@arm.com>
+ <alWi5hvXYT0-ZPyV@aschofie-mobl2.lan>
+ <e77d0367-ab24-4b6d-beaa-034dd793cef6@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <e77d0367-ab24-4b6d-beaa-034dd793cef6@arm.com>
+X-ClientProxiedBy: SJ0PR03CA0161.namprd03.prod.outlook.com
+ (2603:10b6:a03:338::16) To DS4PPF0BAC23327.namprd11.prod.outlook.com
+ (2603:10b6:f:fc02::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPew1NKKWf7rr6eZXp=KooN43CKaTbcc-U9ZkKrBhcXaARTKUQ@mail.gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPF0BAC23327:EE_|CY8PR11MB6842:EE_
+X-MS-Office365-Filtering-Correlation-Id: 70e765b7-76e3-4a25-bd0e-08dee1cdfeaf
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|56012099006|18002099003|22082099003|5023799004|4143699003|11063799006;
+X-Microsoft-Antispam-Message-Info: fZ/owh1fLzkB3u9aGe/4Cw0WklFdr7uhOgIle2aT1nnC3/R8IhuMKoC5j4vrBe7PzeVAPZb2A3C/xqP0o1g0ESt+zuYYa5QMnbYHFW4AEgb9+0ShOqKgjLOQ4HxvmADIbnbUjilkbtwwCM2KRmmiQ8Cbr1ETjFvUl0XNm7aCI9w2q18yG9O4bVvijv/ixNHqA3xDUXl6ovzjftwYtP9GCsic4XW+/S8COzPKT9QSMNlsiH5CyRc6ycBlb1OOJkU0sjuTh2g5RYTIDzECxdWM/Dhw2HtFYtevleMsMsQ0BDxTBDXCHKYvVvTed9XZgnFce1AoWZRU/QmhY1EsWdRr4XTXIGSBRk7jd0HJJs3keAMbqEucNhgtpRkj5XdNTQkPtCUZSIwmEDYo6BqNtan88SWr/HCGUHlMplFlH6yrXWS+MU//fTOUSbqkuxWfLil9mETGdkY4wBycwXmV9Wi491jpc2h4BTbJgBVXw7Z/YbXilOgcOlHf+jIB3164YquyL0A5I0fqpQ50f1yosz21H79dVIiq73bIBiMWvxQii1exlqZr9oDMqrRLEy89TnbiQRuAFBgA5PqeTlm4xXAXtgGhkeuaA6FpGFTEnWT00/rwwYoMrjp6dLEfePbpJr7aHT8kh/6SAMTkBQFouIrD1pLIYJ6qAm06+o+Ni+Xn14M=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF0BAC23327.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(56012099006)(18002099003)(22082099003)(5023799004)(4143699003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9Qax60OOdABYTSGDJy86EfJdZiB76qcRBIR2tIBGr2yLCG9L1/4pcr7bt0dk?=
+ =?us-ascii?Q?/RmOan5JBpWedFTGStlbCwmxdCxisls5a0e1oDJcKJ2+iCC7mo7IOpSLwORD?=
+ =?us-ascii?Q?MVwn4hj8zYeNb7SNpFLpdDmiaTv1ZhlrvySyhhMRsS8ZRtvICxC3g8iAH0CS?=
+ =?us-ascii?Q?EwGLg6GxMDqGLkDwG7cdquuiyAgQTbNQMxrTdWqv0UQlsajGESc+S1UL/sVJ?=
+ =?us-ascii?Q?6hnKKhWZwua7/S9ZUZalS1yFNTIcxwDE6V+fJrKImHi5VAyFybxLOzvco3FU?=
+ =?us-ascii?Q?0A5NZsctg8JJqHztQjyWBdjARheL8NvvOvZQm92ziZ+ZilfYnySAy2aOYKOP?=
+ =?us-ascii?Q?ZlixHbGwU76Jo99pmwD0AoRefWF6JyMf93oVAF7Fd8D5nwxVNMRROqydQia8?=
+ =?us-ascii?Q?L7mYg/lnHpBjkO442Z6pEAr7QuuncATqvBGB5RTScYMqCwcrt3utX7/x0+/P?=
+ =?us-ascii?Q?ZcN1rWNgFjcULmlAAWmUS1qW/lXKfHerciSiZQ5urBHm+NXBD7HMzaZUQWSn?=
+ =?us-ascii?Q?kqrA+vrOoPDNDisJ89CIa1oi3kSy2zfzNEMDr7hOLOkQo1RSRzBQXV1nEAFl?=
+ =?us-ascii?Q?GYx86uY0CGZSMmFj30e7zs3QndMPo1uLlbWm/i3xzZaiWaesISdnZg/0+7iH?=
+ =?us-ascii?Q?EBQjDveUTgaE/dz89ssoB7fcmljN/Vn+BwW03r/wSw+I2gmJzVxMZZd2hVw1?=
+ =?us-ascii?Q?9yLtTAEnVD/N0gtXdFl8ja9N5TLrsDtKG6PWRVOsjGnq3oGZS0Mo61Mg4BBv?=
+ =?us-ascii?Q?IraDJkul3KTZ+2e3CAhLIX6J1I1gipHHxPelRBabZSRYdO/PHnzjW1VDQuQF?=
+ =?us-ascii?Q?P3vwrbOqrVk6mlzqOsdd10/j80ShKlBRrKow2GLj/7dCu6meOdOg6gVRTqQM?=
+ =?us-ascii?Q?eol/aT2P2BHrtYR0B4+Z9gZMKA1JD9kTdUUzbQ0B6gAVe+ifoSC/pY/9YLOK?=
+ =?us-ascii?Q?X0MTu14hzk0V/FehFvW6p2x9rSWPdC+lpN7u3jK/qhT8cn4L36hNB5WO4LZZ?=
+ =?us-ascii?Q?nMRNybbaOzRtpgXyTpmwgLF33vwokaFib7uER29TbCafIGSkbulJjRDXQRw/?=
+ =?us-ascii?Q?qbcc1wUBt3CiOKzgdJOxLdDlS5GRZGJdjxAI518YPS3/Iv7xeTb4UaFBaAbr?=
+ =?us-ascii?Q?9BuNAMw3ySBSfqp9WA7sgo1FrdIUgLGan2bFYwQiSURkbo9bg6/kUrzEHVpc?=
+ =?us-ascii?Q?jvcVgJQhO/Ew93xBRwiHuqwtO7O/y+6jwx/FGzBZNgitA/n0uIT0JXNkzSIM?=
+ =?us-ascii?Q?9tY9wdbdcc2Oqgv6b3jxgIq/iRTuVvaH75O9NLb4DO2LFOy+I7KDv562E2Ja?=
+ =?us-ascii?Q?oQzvO+MTB+oEKHxnNfpJsgKrK7r4MkS0R0Ucatn5Mbf6E2zPRBBVdAfujWH8?=
+ =?us-ascii?Q?ZrwzaM9mfyf+486H2OlZa9rpwS1WMz+yL0WTUQkJRAkjqHHVMXvKcpvS4NQ8?=
+ =?us-ascii?Q?blhRXK1yXIB7IWP19p1CZFWplXdb2DBVgpKCuLtRaoMLXquYGjWz6dogwXoX?=
+ =?us-ascii?Q?ynQE3+KW+YFl9SXvE3M64EKXH+/gXNcWCdic1K2PFuWtja0RSu5nQ0YBrXQK?=
+ =?us-ascii?Q?ytSMQ7/C5jgPBQH2U1Xzpeo9g2C0pPh3WuxsACUDR2hNF+kxWoUREcjTg54p?=
+ =?us-ascii?Q?zpUR9LqH1gognt0y2FcrNcZ66NfDOJTaOq/SKTbAmLlfvD3KgjriU+cwsq3L?=
+ =?us-ascii?Q?HMJqsWB7aleXl8Le+3vn5MUBZOUE3eHsk37wKl7U+OwDha8foEbeXFcThqCR?=
+ =?us-ascii?Q?Oi+6dqbZIJuMAwq9sAAq96FOXNThB+E=3D?=
+X-Exchange-RoutingPolicyChecked: os+fQqIL1vu+vPaCMaqEiSv+fhCdQCiumRKNKhCfDx8FLfy13YQoMViG/hvlAhsFPimqYyBa44kFUU3bXCS+C1n2yeEwxkXyhN4TKjaqz54/ckFv3Ptx0wHV4CwTEamZgyORZICKQEvyd8dZzI6rsdoSbGQ1DwTR3w3RzPXWZlbYQ7u14NmbU/wHcLNthW8ddqPLOG5DUCha5uu4rlFuug0+6mOxNvWFM1AAD24HD0Kqk+Uzr+zCw8kvIOSqiKwsd3GAMQ1c9+HfMnV5U31G6yeirsL6XaVAzpNdj4A73usse2zNZDt4BGpAlML67f/Q3+LKSFkFJZvJChZXe9G+og==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 70e765b7-76e3-4a25-bd0e-08dee1cdfeaf
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPF0BAC23327.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2026 17:33:19.2598
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: b7m3YrmM5CsXlLCHcgr8Z1fghFkBP9H1g6BEonJxcnPPYaH2exyUo2cB+V2kBczZVuT1QtRwcncZm71ryBbKwEonYd4AttEX2V32PSXs0Z8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR11MB6842
+X-OriginatorOrg: intel.com
 
-[+cc VMD, cpuidle folks]
+On Tue, Jul 14, 2026 at 10:27:01AM +0100, Ahmed Tiba wrote:
+> On 14/07/2026 03:45, Alison Schofield wrote:
+> > On Wed, Jul 08, 2026 at 02:59:05PM +0100, Ahmed Tiba wrote:
+> > > Move the CXL CPER handling paths out of ghes.c and into ghes_cper.c so the
+> > > helpers can be reused. The code is moved as-is, with the public
+> > > prototypes updated so GHES keeps calling into the new translation unit.
+> > > 
+> > > While moving this code, also add CXL CPER section length checks and use
+> > > spinlock_irqsave() in CXL register/unregister paths for locking
+> > > consistency.
+> > 
+> > NAK on moving and changing in the same patch, and esp in a patch
+> > whose subject only says MOVE.
+> Hi Alison,
+> 
+> I understand the concern.
+> 
+> I kept those changes in 06/10 because they address pre-existing issues
+> reported specifically against this patch by Sashiko, and I wanted to avoid
+> carrying known defects forward in the series. I did this following Boris'
+> feedback to address review-reported issues in-series rather than carry them
+> forward unchanged.
+> 
+> I can also add a dedicated "Sashiko findings addressed" section and update
+> the commit description to state clearly that this patch is not pure move.
+> 
+> Please advise your preferred way to address Sashiko findings per patch in
+> this series.
 
-On Tue, Jul 14, 2026 at 08:57:17AM -0400, Rowan Cramer wrote:
-> Hi,
-> 
-> I have what looks like a platform/VMD interrupt-delivery bug on a
-> new Arrow Lake laptop, isolated with a reliable reproducer and a
-> three-arm test matrix. Reporting here because the fault sits below
-> the NVMe driver, in the VMD interrupt path, and is invisible unless
-> the package is allowed to idle. Happy to test patches or run any
-> further diagnostics.
-> 
-> Summary
-> -------
-> NVMe MSI-X completion interrupts are intermittently lost when they
-> arrive through VMD's interrupt remapper while the CPU package is in
-> (or exiting) ANY idle state deeper than C1 — including plain PC2.
-> The drive completes the I/O correctly (the kernel's timeout handler
-> always finds the completion already in the queue: "timeout,
-> completion polled"); only the interrupt vanishes. Holding PM-QoS
-> /dev/cpu_dma_latency at 100 us (C1-only idle) eliminates the fault
-> completely; nothing else does.
-> 
-> System
-> ------
-> - Dell 14 Premium / XPS 14 (DA14250), BIOS 1.11.0 (latest; Dell
->   ships VMD force-enabled, no BIOS toggle on this model)
-> - Intel Arrow Lake; VMD controller 8086:7d0b at 0000:00:0e.0
->   (client SKU -> VMD_FEATS_CLIENT, so MSI remapping is always on;
->   no VMD_FEAT_CAN_BYPASS_MSI_REMAP, no module parameter)
-> - NVMe: Micron 2650 1TB (DRAM-less/HMB), FW 26500101, at
->   10000:e1:00.0; all queues route via VMD-PCI-MSIX per
->   /proc/interrupts
-> - Fault is kernel-independent: reproduced identically on 6.18.33
->   (LTS), 7.0.9 and 7.0.10 (Arch builds, clean cmdline)
-> - intel_idle in ACPI mode; exposed states POLL / C1_ACPI (1 us) /
->   C2_ACPI (127 us) / C3_ACPI (1048 us)
-> 
-> Symptom
-> -------
->   nvme nvme0: I/O tag N QID Q timeout, completion polled
-> 
-> Present since the machine's very first boot (3 events in the first
-> 90 s of its life). Baseline ~125 events/day idle; 60-190/hr under
-> gaming I/O. Each event stalls the waiting I/O for io_timeout
-> seconds (we run nvme_core.io_timeout=10 as mitigation), which
-> manifests as multi-second system freezes. SMART is immaculate: 0
-> media errors, 0 controller error-log entries against >500 host-side
-> timeouts — the device completes the I/O; the notification is lost.
-> 
-> Key evidence
-> ------------
-> 1. Load is NOT the trigger. ~4 TB of worst-case saturating stress
->    (random reads at 2+ GiB/s, plus CPU, memory-bandwidth, GPU and
->    fsync-write pressure, combined) produced ZERO events. Saturating
->    I/O never lets the platform idle.
-> 
-> 2. Idle->active transitions ARE the trigger. A trivial reproducer
->    (bursty random reads separated by 1-8 s idle gaps, script below)
->    produces 13-16 lost interrupts per 15 min, every run.
-> 
-> 3. PM-QoS bisection puts the loss boundary exactly at C1|C2:
->      /dev/cpu_dma_latency hold   idle allowed        events/15min
->      none (stock)                C1+C2+C3            13-16
->      200 us                      C1+C2               19
->      100 us                      C1 only             0
->      0 us                        none (poll)         0
-> 
-> 4. Ruled out: drive APST (nvme set-feature 0x0c=0: no change), link
->    ASPM (runtime-disabled via sysfs on the VMD-domain link: no
->    change; note cmdline pcie_aspm=off does not govern VMD-managed
->    links, the vmd driver enables L1.1/L1.2 itself per
->    VMD_FEAT_BIOS_PM_QUIRK), kernel version, drive health, firmware
->    updates (none available).
-> 
-> 5. turbostat correlation (5 s intervals alongside the reproducer):
->    the package NEVER enters PC8/PC10 on this platform under bursty
->    I/O — deepest observed is PC6 — and every lost interrupt falls
->    in intervals showing only PC2/PC3/PC6 residency:
-> 
->      arm (900 s each)        Pkg%pc2/pc3/pc6/pc8/pc10   events
->      stock                   13.2 / 0.3 / 4.8 / 0 / 0     13
->      endpoint LTR clamped    19.8 /  0  /  0  / 0 / 0     14
->        to 102.4 us
->      cpu_dma_latency=100us    ~0  /  0  /  0  / 0 / 0      0
-> 
-> 6. LTR is irrelevant. Firmware sets the endpoint LTR to 15.7 ms
->    (0x100f100f — nonzero, so vmd's BIOS PM quirk never touches it).
->    Clamping it to 102.4 us via setpci was demonstrably honored by
->    the platform (PC3/PC6 residency dropped to zero) yet the loss
->    rate was unchanged (14 vs 13). The fault does not need deep
->    package states — losses occur with nothing deeper than PC2, with
->    cores in C6/C7.
-> 
-> Current mitigation
-> ------------------
-> A systemd unit holding /dev/cpu_dma_latency at 100 us. Fully
-> effective (a full day of gaming: 1 event vs the prior 60-190/hr),
-> but it costs ~2.5-4 W package power versus letting the machine
-> idle properly, since it must forbid core C6/C7 and PC2 everywhere.
-> 
-> Questions
-> ---------
-> 1. Is this a known Arrow Lake (or MTL-family) VMD erratum? The
->    machine shipped this way; Windows presumably masks it via its
->    own idle policy or is equally affected but silent.
-> 
-> 2. The client feature set forces MSI remapping on 8086:7d0b. Is the
->    VMCONFIG_MSI_REMAP bypass (as used for 28C0) architecturally
->    possible on client VMD? I am happy to test a patch enabling
->    bypass on 7d0b, or any other diagnostic/experimental patch —
->    the reproducer gives a decisive answer in 15 minutes.
-> 
-> 3. If the hardware genuinely cannot deliver remapped MSIs across
->    package C-state exit, should vmd.c be constraining PM (PM-QoS /
->    LTR / DMI-quirk) on affected platforms? As it stands, every
->    affected laptop loses NVMe interrupts silently at its default
->    idle settings.
-> 
-> Full journals since the machine's first boot, lspci -vvv, SMART
-> dumps, raw turbostat logs and the complete phase-by-phase test
-> history are preserved and available on request.
+I think you can address the Sashiko pre-exists in series without
+them being hidden in a move patch.
 
-Can you make these available somewhere and include a URL?
+To be strictly like Boris seems to be asking (fixes first), do:
 
-> Reproducer
-> ----------
-> Point ROOT at any directory with a few multi-hundred-MB files on
-> the VMD-attached NVMe, run for 900 s, and count kernel "completion
-> polled" events (nvme_core.io_timeout=10 makes them visible within
-> 10 s):
-> 
->   #!/usr/bin/env python3
->   # bursty-I/O reproducer: idle gaps let the platform enter package
->   # idle; the first read of each burst rides the wake-up.
->   import os, sys, random, time
-> 
->   ROOT = os.path.expanduser("~/BG3_Game")   # adjust
->   CHUNK = 65536
->   MIN_SIZE = 200 * 1024 * 1024
-> 
->   files = []
->   for dirpath, _, names in os.walk(ROOT, followlinks=True):
->       for n in names:
->           p = os.path.join(dirpath, n)
->           try:
->               s = os.path.getsize(p)
->               if s >= MIN_SIZE:
->                   files.append((p, s))
->           except OSError:
->               pass
->   if not files:
->       sys.exit("no large files under " + ROOT)
-> 
->   deadline = time.time() + int(sys.argv[1])
->   bursts = 0
->   fds = {}
->   while time.time() < deadline:
->       time.sleep(random.uniform(1.0, 8.0))
->       for _ in range(random.randint(4, 40)):
->           path, size = random.choice(files)
->           fd = fds.get(path)
->           if fd is None:
->               fd = fds[path] = os.open(path, os.O_RDONLY)
->           off = random.randrange(0, max(1, size - CHUNK)) & ~4095
->           os.pread(fd, CHUNK, off)
->       bursts += 1
->   print(f"bursts={bursts}")
-> 
-> (Drop page caches before each run — echo 3 >
-> /proc/sys/vm/drop_caches — or cached reads will suppress the rate.)
+	add CXL CPER section length checks
+	use spinlock_irqsave() in CXL (un-)register paths
+	move CXL CPER helpers
+
+-- Alison
+
+
 > 
 > Thanks,
-> Rowan Cramer
+> Ahmed
