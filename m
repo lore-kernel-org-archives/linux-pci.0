@@ -1,49 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B0C3FBED8;
-	Tue, 14 Jul 2026 18:59:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91AA64446FF;
+	Tue, 14 Jul 2026 18:59:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784055573; cv=none; b=WEsGD4fI0sIyUErmMDXZkwTGzWIwwXQmsGlh3rYWmKyu6pqS58wQWrNKqyPcwWa9dE8wYLIgJw5pQ6oCsPwc2AXJ51LrBoYO9e5fqig3kSvSpkZfq9uO+17Kgk5/Cg4xvCPjjejozu71xFJ2x9glrltXGJo0A4pQDc1za3ZjIbs=
+	t=1784055575; cv=none; b=PFNcj8fjQr6S7iNW2NtyXX/6jBLxQOGjlArQsLczB7cMlni46fqljKJsQjkv+yg9dAU1G4ZHc8lKGU6v3IEsvpi+WR+wY1orDiWlRnLCxpKwGBHa/2sd5wOp65iMydeNeaJnFp/txHdBxAs4XGiTR6Q9DZ/k2UOcSFI9VddBiFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784055573; c=relaxed/simple;
-	bh=KZMl1lzhgIz5jdnsnl0i8rjhyHUMPpb1SvaP14ZQYEA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bjoccQkrWL9JEVuB7F6OfgEkLyilsUxvW6XGuFrlWyv8ARtg2tYgLsQySXBgNxQUfhLhqS9pCDvXSlbpRNoYfEQFo638sh4GMtJYCto2td03cwiF6qOdONT57KcbEg1bxhNrJ/REBsUIa23XjJy6UeVFy8SKsZI3mtt8UW7IZ3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E06SQRHM; arc=none smtp.client-ip=198.175.65.15
+	s=arc-20240116; t=1784055575; c=relaxed/simple;
+	bh=727ZPA//Fapfq2AT7ttErR8hsE7h5RN7AlQzXcqJes8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KxXmxp80q+MRf/x1CNfNGFMRurHz2cxJnzHsVraF59ghqsGStp9tG0Pyvs5f7xCLCNUy/GSP7KsFKJpgCbq6KEGb/NcDZEjre3wZn0p4JHn2iGTbYVjwfru0dzUYJhsor7FAvknjZ5R6c6RPSbFz6HvO7c8ZWhfntMEhIq98MbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q8coaWIF; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E06SQRHM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q8coaWIF"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784055572; x=1815591572;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=KZMl1lzhgIz5jdnsnl0i8rjhyHUMPpb1SvaP14ZQYEA=;
-  b=E06SQRHM0qtxtartfxnFQqWRG3eGwksfRUD3L/+JlSwVAkiJGNx7fZXK
-   3ut++kFoK0bObjSs+T/wnmx6JPJVc2AE3XMEKs5A0WTfEa0/i5RO1N/8b
-   la5AuMMbzZ+qxbENnaHaSBd56lyObPDJnRnJajsqNJuxvkELR+UeAkW7A
-   WrXDVH9VWOjuj83Jbnkc9F2wLf5CvzSu16SM+DtMi8zJURT3JSiKjASVe
-   3tQGfwyUjs5hgDCCyboqTna04vYnYXmk7j6hXarTY2up7+8clszW8jG0n
-   r9NOgnLii3FB46gVpupdq8RL+PYYBl4CUmi3ZiDrA2w8VN1tVLyag5IWs
-   g==;
-X-CSE-ConnectionGUID: HjyjiXTvTJOFMTjktQDycA==
-X-CSE-MsgGUID: WwWZMz3ZQlizEGSvlN7DwA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="88364950"
+  t=1784055574; x=1815591574;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=727ZPA//Fapfq2AT7ttErR8hsE7h5RN7AlQzXcqJes8=;
+  b=Q8coaWIFLmUNXMOuSMfRnfC9OehuF4wrjH9UkJzj//L1naCOKPeqDbml
+   r3auPOdbvQUPeDwJW0Fsvl04jQPlM/TmEm8JRQOOH3CtbbM1WMur22Zne
+   7wiLVSGEARCq9FPIHZMhkMwHfMqO1meVGmp7WmsCN1GhngJ4h3EWcG6wg
+   GMgmJDXJ2YNoI58gHG8xyQQYBPt2q4mNNC1NziBXrd1Pxybkkz5dhULiv
+   t//XJBo9NMy2aXc6IOWfMhiWTcjUex9hlcXHhKiZtWsNRU6uqsqB4gwqU
+   UMfbNO2jEeYS1UQQjhSrm8ZXKj+zjqASQDfhJDaIeB8LyjLBCgM811uz6
+   w==;
+X-CSE-ConnectionGUID: uoJyTYwaQQSoXxrRkYW0wg==
+X-CSE-MsgGUID: XeNQTwXHTBOEWKkTkVO2Ng==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="84730521"
 X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
-   d="scan'208";a="88364950"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 11:59:29 -0700
-X-CSE-ConnectionGUID: qfEpvWg+QFajPfhzgsUznQ==
-X-CSE-MsgGUID: OHkihgUlQ4a3/s0xf/j4qQ==
+   d="scan'208";a="84730521"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 11:59:33 -0700
+X-CSE-ConnectionGUID: zssdyRyCSSCjCMeEX1aToA==
+X-CSE-MsgGUID: JdsV2X5KSMCTxKQsFBVD3w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
-   d="scan'208";a="256597166"
+   d="scan'208";a="255442725"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa009.jf.intel.com with ESMTP; 14 Jul 2026 11:59:25 -0700
+  by orviesa008.jf.intel.com with ESMTP; 14 Jul 2026 11:59:29 -0700
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id F314F95; Tue, 14 Jul 2026 20:59:23 +0200 (CEST)
+	id 19872A1; Tue, 14 Jul 2026 20:59:24 +0200 (CEST)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
@@ -64,10 +65,12 @@ Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
 	Mark Pearson <mpearson-lenovo@squebb.ca>,
 	"Derek J. Clark" <derekjohn.clark@gmail.com>,
 	Hans de Goede <hansg@kernel.org>
-Subject: [PATCH v2 0/6] ACPI: Introduce and use acpi_dev_is_video_device() helper
-Date: Tue, 14 Jul 2026 20:53:39 +0200
-Message-ID: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 6/6] platform/x86: thinkpad_acpi: Convert to use acpi_dev_is_video_device() helper
+Date: Tue, 14 Jul 2026 20:53:45 +0200
+Message-ID: <20260714185915.865396-7-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
+References: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -76,39 +79,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are a few users that open code functionality of matching
-a given device against ACPI video device IDs. The current approach
-duplicates ID table along with the matching code. Consolidate it
-under the acpi_dev_is_video_device() helper's hood.
+Replace open coded variant of acpi_dev_is_video_device() helper.
 
-Supposed to go via ACPI tree, please ack.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/platform/x86/lenovo/thinkpad_acpi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changelog v2:
-- rebased on top of the latest code base
-- renamed helper and changed its prototype (Rafael, Mika)
-- added tag (Wolfram)
-- added patch to change scan.c as well
-
-v1: 20220630212819.42958-1-andriy.shevchenko@linux.intel.com
-
-Andy Shevchenko (6):
-  ACPI: utils: Introduce acpi_dev_is_video_device() helper
-  ACPI: scan: Convert to use acpi_dev_is_video_device() helper
-  ACPI: video: Convert to use acpi_dev_is_video_device() helper
-  i2c: acpi: Convert to use acpi_dev_is_video_device() helper
-  PCI/VGA: Convert to use acpi_dev_is_video_device() helper
-  platform/x86: thinkpad_acpi: Convert to use acpi_dev_is_video_device()
-    helper
-
- drivers/acpi/scan.c                         |  4 +++-
- drivers/acpi/utils.c                        | 17 +++++++++++++++++
- drivers/acpi/video_detect.c                 |  7 +------
- drivers/i2c/i2c-core-acpi.c                 | 15 +++++----------
- drivers/pci/vgaarb.c                        |  4 +---
- drivers/platform/x86/lenovo/thinkpad_acpi.c |  2 +-
- include/linux/acpi.h                        |  1 +
- 7 files changed, 29 insertions(+), 21 deletions(-)
-
+diff --git a/drivers/platform/x86/lenovo/thinkpad_acpi.c b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+index 6dd7c28fc0db..aaeada46a0e7 100644
+--- a/drivers/platform/x86/lenovo/thinkpad_acpi.c
++++ b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+@@ -774,7 +774,7 @@ static acpi_status __init tpacpi_acpi_handle_locate_callback(acpi_handle handle,
+ 	if (!strcmp(context, "video")) {
+ 		struct acpi_device *dev = acpi_fetch_acpi_dev(handle);
+ 
+-		if (!dev || strcmp(ACPI_VIDEO_HID, acpi_device_hid(dev)))
++		if (!acpi_dev_is_video_device(dev))
+ 			return AE_OK;
+ 	}
+ 
 -- 
 2.50.1
 
