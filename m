@@ -1,85 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458FC294A10;
-	Tue, 14 Jul 2026 11:00:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B2336A02F;
+	Tue, 14 Jul 2026 11:00:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784026844; cv=none; b=V+JVNIQOtEIZKFjOaGLX4cpfK+ddvltEPJWOAi7r/sP9AdwCITiYjaV3egofxb3+CMkzkLd6rsji5MdPUp0G0dEqcuZ5j8YUaJW3ePet8nZ0T9PbPdv5k7hJk3FRdcDXkZBhA/Twi0qwvaABS82EVh0xJKZimqFMxkKWSVzOR9o=
+	t=1784026857; cv=none; b=XRNK1rJ82mRG5UUtHXnwSF6wjNTO3zVm+Zjm3JnqMhobVhtuV8U5LYe5Dqqt5FNW4h4+xqKdIFwwHd7cEpt/RphOE8CkggOQ4KXumwDWEhCQhQEaZ3jZbY2xJqibmHHshw624M+4oBQ8HvlY0FOTpebeHQkDG7A/HqGu4G2cSPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784026844; c=relaxed/simple;
-	bh=+b9h4x58nuRHFx18jbDfzoMRPyuPXoZCHsaPqr9H68M=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=k6fBUpdSXuWd2qrvOJ1dihzMHw8mgDCLnrFXsPlg20eUSJ/rGoWMTNA0tQSaxgp/0JKcmArQNkMILqqJV/Za8zJdvzORLQTSyPrtDhMi50Om3mAt6snMxcJ10Mx3A84GoE/+QbWHDgFYWcur0KIOeu2yaRmBD0rnDuCCBkCRnFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MIFe8qeJ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784026857; c=relaxed/simple;
+	bh=0qhDchg6rQk91lgeLzwHrDfd8BAxgZg11LSKCFxThzs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=mg99bSqUk66Sign089BOz75F8N90zOGgSgc1DjPzMoqzXz6zZ/CcghnYHu4cYen7w3q6vBbeRQSus7kqU6syvH37CFf2dMMXcfqaSiYXA8fvDR5yldZMScqAtylEJnqP5h+H2UyzC0iuNT5bbIso2Gvxp22QiGq0cUYv3GQuZrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWgHD2oL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MIFe8qeJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B31851F000E9;
-	Tue, 14 Jul 2026 11:00:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWgHD2oL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D598A1F00A3A;
+	Tue, 14 Jul 2026 11:00:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784026842;
-	bh=/iv2AyieqD+wQwL0gejSGdtTP/mLifcPc9iiJuDu94M=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=MIFe8qeJETo7Wq9A8nBgLwOqwjMW62COVF1AfM5tzJUUaMLdanyCyL88ks4ZEPNml
-	 LLK73UZff5LTqb5R0Q3Tdgf5JMYuxXe6sAlpC4Yc/qUUpK6B6xGdhvWffKD+sjP3C3
-	 U5KY06jrIot3FN/VphtEX+vZm0IxOAwAoNLXCRu7Nt2rtixKpXsnSNFrZAQn8OwgVw
-	 HtsAiNbMUpDSmXHPF6q0O03vDHcoX8uHAx8nQlz+2T7g475d+faW5QtxymwWLjZGc/
-	 FDVU2CkfkI/iL4M11yP7wJ2jF4xMxFFFAcwxZtFmdOKSs2QI82QBQnhR25Tl5LsQ4S
-	 3pqgkiUe1PEJg==
-Date: Tue, 14 Jul 2026 06:00:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
-	kernel test robot <lkp@intel.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-Message-ID: <20260714110041.GA1349622@bhelgaas>
+	s=k20260515; t=1784026856;
+	bh=0qhDchg6rQk91lgeLzwHrDfd8BAxgZg11LSKCFxThzs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=TWgHD2oL8VeaK346zkTlo5sv/Xy6eBVE+sCbKJkoIEskbro+5DwAuSKoDotmTYUql
+	 d3TDo2iLYw8Xv1bsLvr7fHnaC8pDvD2BuyR7lzLq1hFNPH/qBViZFinC7+6TME+gv/
+	 YEVroiMX4RsH1aSdxqV2+2z29+ZMBx4YiqjityZ5DBsXdVQIL8x7bFliiRO0xeewi1
+	 LQGM1NOv1ZCzHAxHMW7RXX000KuqCvWBR6ekQ/8OGtKQttbNthm5gReGlP1CoVLBNk
+	 RzqOBlOy5tH/lEnpgRRv7kaVyHKyEfADga+lNZSl84fYcGFEmqfUjjvSCnN4/c/zet
+	 7d4KzenY1qOyQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v20 05/16] PCI/TPH: Fix tph_enabled concurrent update
+ race by bitfield packing
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260714104325.54444-6-fengchengwen@huawei.com>
+References: <20260714104325.54444-1-fengchengwen@huawei.com>
+ <20260714104325.54444-6-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 11:00:55 +0000
+Message-Id: <20260714110055.D598A1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2013cac8-d887-4a09-b1c5-6dc9606f16f0@mailbox.org>
 
-On Mon, Jul 13, 2026 at 08:05:38PM +0200, Marek Vasut wrote:
-> On 7/13/26 7:54 PM, Bjorn Helgaas wrote:
-> > On Fri, Jul 10, 2026 at 03:35:10PM +0200, Marek Vasut wrote:
-> > > On 7/10/26 10:30 AM, Marc Zyngier wrote:
-> > > > On Thu, 09 Jul 2026 21:10:03 +0100,
-> > > > Marek Vasut <marek.vasut+renesas@mailbox.org> wrote:
-> > > > > 
-> > > > > Instead of pulling in the whole linux/irqchip/arm-gic-v3.h ,
-> > > > > copy the one GITS_TRANSLATER register offset macro directly into
-> > > > > the driver.  This repairs the ability to build the driver on
-> > > > > non-ARM non-GIC targets the way it was possible until now, which
-> > > > > retains good build test coverage.
-> > > ...
-> > 
-> > > So in the end, it is either this patch or limit the build to
-> > > arm/arm64 . At least this patch still allows building this driver
-> > > with more compilers on the various build bots, so I would opt for
-> > > this patch here.
-> > 
-> > I like the build coverage, but duplicating the #define doesn't really
-> > seem good to me.  It makes readability worse because cscope/tags now
-> > sees two definitions without an obvious reason.
-> 
-> I can rename the macro, or ... sigh ... I can reduce the driver to build
-> only on ARM/ARM64. Which one do you prefer ?
+> Split tph_enabled from shared pci_dev bitfield into spare bit of tph_cap's
+> u16: tph_cap is immutable post-enumeration (15 bits for offset), remaining
+> 1 bit stores tph_enabled. Removes cross-bitfield concurrent write hazards
+> highlighted by Sashiko after VFIO TPH exposure. No functional changes.
+>=20
+> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 
-I think a dependency on ARM/ARM64 is preferable.
+Sashiko has reviewed this patch and found no issues. It looks great!
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714104325.5444=
+4-1-fengchengwen@huawei.com?part=3D5
+
