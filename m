@@ -1,57 +1,46 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC0B436F419;
-	Tue, 14 Jul 2026 10:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1915617A300;
+	Tue, 14 Jul 2026 10:43:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784025835; cv=none; b=p3Rc5zubmj1BeUNaGjCPZvzids/yJ+LRCtesibNtv6gt9EMQ90rv5Gdwp5IuSw9nmc8DV16lBaAdWGQrq/pcz1P5Eh/2goExICy+1ZWXaWei0n0UGuZTbZu0K8aKdVuWUDA20OJLuUSaoLzv98GAhQERmY6k9bQCGCOdRkiN2LY=
+	t=1784025835; cv=none; b=fhwyfBahNBVikZX5R4biqBc/5rAAnfDXom2YQ8NjCGInPdt0MlCtd4BcOX+EyrgIZH4zWRoK7PODZlHdsHt4yABNyRGlP874kUg20bqlqrURyW0+G0XbHMICVASzGj6G9VQqrhUqOBJ3WcIO3jwyukut3hui+0Tb+GZGcy3jo7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784025835; c=relaxed/simple;
-	bh=jv16ygj9H3uuqh7MMgQ5U4c9fqqT0oyQbxBno59GCgw=;
+	bh=YhNtrBQoAPd5mvx2ArrXGrv6cQZLzvQjauoQSrAnG6o=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F/RCs9PjsendxK5PvW0L2aAbW6YElRTsbRtcI0S7CnfOfeRLe+voYGClXNedfjK1/dshgf7s3Qc318MFPJdBUENDByY+ZBAGw81kvOxDVqJ3sRto4JdYGFJUOxIB0qTYDYWJ8h+ur5OB9WLTZW/k7Ght5BCBX94HVCb9uDdl/Iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=HL7QpwZb; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=HL7QpwZb; arc=none smtp.client-ip=45.249.212.190
+	 MIME-Version:Content-Type; b=ZDI7UmDOfiaQBM38X+GirJFsmFRYJxgDcYvS6dzHlvZGaqlVe00ETlX2IICNw9LaHoRvFmq6XpoCsd8dhF345XLVHH0aLBniAap7M4aSJjHn+eLLXkzU7IUlQkBAQKMtiVVRp201RXSV+FLfJMnoh2+u4ToYKTigGLhoZg86+2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=t5k1ohu1; arc=none smtp.client-ip=113.46.200.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="HL7QpwZb";
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="HL7QpwZb"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="t5k1ohu1"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=lM8lpB/I5Yf6GRgeD6ZGDXm60DYZeJDrGrGUNkzOzrw=;
-	b=HL7QpwZbgVPGP7BbK48DezRU7d3IfxfmQbuMlw94S/PmRC1hMG4WYKvof1L3YO858BbZsUbVu
-	leNdpZ+cTm/NFhxXLOjJqPWEoObQ/qtMy3AhMQgJ2ZizjxhgJ59kr0vZJbQDGH9oY2TldzAI4+P
-	T8oq7OddY84s4LBCYjIuXv4=
-Received: from canpmsgout02.his.huawei.com (unknown [172.19.92.185])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTPS id 4gzwrJ6yKXz126M0Y;
-	Tue, 14 Jul 2026 18:43:12 +0800 (CST)
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=lM8lpB/I5Yf6GRgeD6ZGDXm60DYZeJDrGrGUNkzOzrw=;
-	b=HL7QpwZbgVPGP7BbK48DezRU7d3IfxfmQbuMlw94S/PmRC1hMG4WYKvof1L3YO858BbZsUbVu
-	leNdpZ+cTm/NFhxXLOjJqPWEoObQ/qtMy3AhMQgJ2ZizjxhgJ59kr0vZJbQDGH9oY2TldzAI4+P
-	T8oq7OddY84s4LBCYjIuXv4=
-Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gzwf30xPFzcb0f;
-	Tue, 14 Jul 2026 18:34:19 +0800 (CST)
+	bh=DePpkOs+mVnROQ/Hx1iMrUrod6Oa4k5wroOzkN6Jn20=;
+	b=t5k1ohu1adBK26GdkxMJWccDgSkuVoNcRcj6WsXXV3sfYKbClVr4tk0twvw/kBJ5mnTq+pKXp
+	ZpY8MGlnqmEOjS9kSJJYSxOslBgn84m2f0K80mNx3f8YGWR+6exzBugsinK3MuOA2aNqgzLVjq8
+	H2/gGi4iC2AwSDoikMzj9as=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gzwf50vPVz1K96b;
+	Tue, 14 Jul 2026 18:34:21 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5FFCA203B8;
-	Tue, 14 Jul 2026 18:43:33 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id A47884048B;
+	Tue, 14 Jul 2026 18:43:37 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 14 Jul 2026 18:43:32 +0800
+ 15.2.1544.36; Tue, 14 Jul 2026 18:43:37 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v20 03/16] vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-Date: Tue, 14 Jul 2026 18:43:12 +0800
-Message-ID: <20260714104325.54444-4-fengchengwen@huawei.com>
+Subject: [PATCH v20 12/16] vfio/pci: Add basic NO-ST TPH VFIO device feature support
+Date: Tue, 14 Jul 2026 18:43:21 +0800
+Message-ID: <20260714104325.54444-13-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260714104325.54444-1-fengchengwen@huawei.com>
 References: <20260714104325.54444-1-fengchengwen@huawei.com>
@@ -65,286 +54,524 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-From: Zhiping Zhang <zhipingz@meta.com>
+Implement basic PCIe TPH support in NO-ST mode:
+- Add tph_policy module parameter, currently locked to NO-ST mode
+  * Return DMABUF TPH PH value via VFIO resolve interface only
+  * Virtualize TPH capability register to only advertise NO-ST capabilities
+  * Allow TPH control register writes to enable NO-ST TPH mode
+- Add tph_opt_in guard: all TPH operations require prior opt-in via
+  VFIO_DEVICE_FEATURE_TPH SET ioctl
+- Add VFIO_DEVICE_FEATURE_TPH (opt-in + capability query)
+- Add VFIO_DEVICE_FEATURE_TPH_RESOLVE (DMABUF processing hint resolve only)
+- Add TPH extended capability virtual read/write handlers, hide raw ST
+  fields, ST table reads return zero by default
 
-Implement dma-buf get_pci_tph for vfio-pci exported dma-bufs and add
-VFIO_DEVICE_FEATURE_DMA_BUF_TPH so userspace can publish TPH metadata
-for a VFIO-owned device.
-
-8-bit ST and 16-bit Extended ST are distinct PCIe TPH namespaces; the
-uAPI carries both with explicit validity flags, and get_pci_tph()
-returns the value matching the importer's requested namespace or
--EOPNOTSUPP.
-
-Publish and read the TPH descriptor under dmabuf->resv, matching the
-locking used for other importer-visible dma-buf state. The SET ioctl
-takes dma_resv_lock_interruptible(), while the callback runs under
-DMA-buf's asserted resv lock.
-
-The attach path reads @revoked without holding memory_lock. Annotate it
-with READ_ONCE() to document this intentional lockless access: the read
-is a benign early-out, and a racing revocation is re-checked under
-dmabuf->resv in vfio_pci_dma_buf_map() before any mapping is handed out.
-The annotation only needs to keep the access well-formed against the
-memory_lock-protected writers.
-
-Reject requests the device cannot consume as a completer:
-pcie_tph_completer_type() must report at least
-PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY, and Extended ST requires
-PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH. Make PROBE follow the same hardware
-gate so the feature only probes as supported when the device can really
-consume it.
-
-Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c   |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c | 102 ++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h   |  12 ++++
- include/uapi/linux/vfio.h          |  43 ++++++++++++
- 4 files changed, 158 insertions(+), 2 deletions(-)
+ drivers/vfio/pci/vfio_pci.c        |  19 ++++
+ drivers/vfio/pci/vfio_pci_config.c | 158 +++++++++++++++++++++++++----
+ drivers/vfio/pci/vfio_pci_core.c   | 126 +++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_priv.h   |   4 +
+ include/linux/vfio_pci_core.h      |   3 +
+ include/uapi/linux/vfio.h          |  54 ++++++++++
+ 6 files changed, 347 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 3f11a9624b9c..4e5e34a77b76 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1625,6 +1625,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
-+		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
-+							 argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-index c16f460c01d6..5351839c1338 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/dma-buf-mapping.h>
- #include <linux/pci-p2pdma.h>
-+#include <linux/pci-tph.h>
- #include <linux/dma-resv.h>
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 830369ff878d..1612b109a30a 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -60,6 +60,22 @@ static bool disable_denylist;
+ module_param(disable_denylist, bool, 0444);
+ MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
  
- #include "vfio_pci_priv.h"
-@@ -19,7 +20,17 @@ struct vfio_pci_dma_buf {
- 	u32 nr_ranges;
- 	struct kref kref;
- 	struct completion comp;
--	u8 revoked : 1;
++static unsigned int tph_policy;
++static int tph_policy_set(const char *val, const struct kernel_param *kp)
++{
++	return param_set_uint_minmax(val, kp, VFIO_PCI_TPH_POLICY_NO_ST,
++				     VFIO_PCI_TPH_POLICY_NO_ST);
++}
++static const struct kernel_param_ops tph_param_ops = {
++	.set = tph_policy_set,
++	.get = param_get_uint,
++};
++module_param_cb(tph_policy, &tph_param_ops, &tph_policy, 0644);
++MODULE_PARM_DESC(tph_policy,
++	"Global TPH policy level (0=default No-ST):\n"
++	"0 = No-ST mode: RESOLVE only returns PH for DMABUF source;\n"
++	"                ST programming unavailable\n");
 +
-+	/*
-+	 * Updates protected by dmabuf->resv, @revoked additionally
-+	 * protected by memory_lock.
-+	 */
-+	u16 tph_st_ext;
-+	u8 tph_st;
-+	bool revoked;
-+	u8 tph_st_valid:1;
-+	u8 tph_st_ext_valid:1;
-+	u8 tph_ph:2;
- };
+ static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
+ {
+ 	switch (pdev->vendor) {
+@@ -142,6 +158,9 @@ static int vfio_pci_init_dev(struct vfio_device *core_vdev)
+ #ifdef CONFIG_VFIO_PCI_VGA
+ 	vdev->disable_vga = disable_vga;
+ #endif
++#ifdef CONFIG_PCIE_TPH
++	vdev->tph_policy = tph_policy;
++#endif
  
- static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
-@@ -30,7 +41,7 @@ static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
- 	if (!attachment->peer2peer)
- 		return -EOPNOTSUPP;
+ 	return vfio_pci_core_init_dev(core_vdev);
+ }
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index a10ed733f0e3..8bdac647397c 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -22,6 +22,7 @@
  
--	if (priv->revoked)
-+	if (READ_ONCE(priv->revoked))
- 		return -ENODEV;
- 
- 	if (!dma_buf_attach_revocable(attachment))
-@@ -69,6 +80,26 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
- 	return ret;
+ #include <linux/fs.h>
+ #include <linux/pci.h>
++#include <linux/pci-tph.h>
+ #include <linux/uaccess.h>
+ #include <linux/vfio.h>
+ #include <linux/slab.h>
+@@ -1085,6 +1086,140 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
+ 	return 0;
  }
  
-+static int vfio_pci_dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool extended,
-+					u16 *steering_tag, u8 *ph)
++static int vfio_find_cap_start(struct vfio_pci_core_device *vdev, int pos)
 +{
-+	struct vfio_pci_dma_buf *priv = dmabuf->priv;
++	u8 cap;
++	int base = (pos >= PCI_CFG_SPACE_SIZE) ? PCI_CFG_SPACE_SIZE :
++						 PCI_STD_HEADER_SIZEOF;
++	cap = vdev->pci_config_map[pos];
 +
-+	dma_resv_assert_held(dmabuf->resv);
++	if (cap == PCI_CAP_ID_BASIC)
++		return 0;
 +
-+	if (extended) {
-+		if (!priv->tph_st_ext_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag = priv->tph_st_ext;
-+	} else {
-+		if (!priv->tph_st_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag = priv->tph_st;
++	/* XXX Can we have to abutting capabilities of the same type? */
++	while (pos - 1 >= base && vdev->pci_config_map[pos - 1] == cap)
++		pos--;
++
++	return pos;
++}
++
++static void vfio_update_tph_vconfig_bytes(struct vfio_pci_core_device *vdev,
++					  int pos)
++{
++	__le32 *vptr = (__le32 *)&vdev->vconfig[pos + PCI_TPH_CAP];
++	struct pci_dev *pdev = vdev->pdev;
++	u32 val = le32_to_cpu(*vptr);
++
++	if (!pcie_ext_tph_supported(pdev)) {
++		/* Remove extended TPH if root-port doesn't support */
++		val &= ~PCI_TPH_CAP_EXT_TPH;
 +	}
-+	*ph = priv->tph_ph;
++
++	if (vdev->tph_policy == VFIO_PCI_TPH_POLICY_NO_ST) {
++		/* Report only No-ST mode supported */
++		val &= ~(PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS |
++			 PCI_TPH_CAP_LOC_MASK | PCI_TPH_CAP_ST_MASK);
++	}
++
++	*vptr = cpu_to_le32(val);
++
++	/* Backup updated capability register value */
++	vdev->tph_cap_virt = val;
++}
++
++/* Permissions for TPH extended capability */
++static int __init init_pci_ext_cap_tph_perm(struct perm_bits *perm)
++{
++	/*
++	 * We only virtualize the TPH header (excluding the ST table).
++	 * For the ST table (if any), the read operation returns 0 by
++	 * default, and the write operation is discarded by default.
++	 */
++	if (alloc_perm_bits(perm, PCI_TPH_BASE_SIZEOF))
++		return -ENOMEM;
++
++	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
++	p_setd(perm, PCI_TPH_CAP, ALL_VIRT, NO_WRITE);
++
++	p_setd(perm, PCI_TPH_CTRL, ALL_VIRT,
++	       PCI_TPH_CTRL_MODE_SEL_MASK | PCI_TPH_CTRL_REQ_EN_MASK);
++
 +	return 0;
 +}
 +
- static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
- 				   struct sg_table *sgt,
- 				   enum dma_data_direction dir)
-@@ -101,6 +132,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
++static int vfio_tph_config_read(struct vfio_pci_core_device *vdev, int pos,
++				int count, struct perm_bits *perm,
++				int offset, __le32 *val)
++{
++	if (offset >= PCI_TPH_BASE_SIZEOF) {
++		*val = cpu_to_le32(0);
++		return count;
++	}
++
++	if (offset >= PCI_TPH_CAP && !vdev->tph_opt_in) {
++		*val = cpu_to_le32(0);
++		return count;
++	}
++
++	return vfio_default_config_read(vdev, pos, count, perm, offset, val);
++}
++
++static int vfio_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
++				 int count, struct perm_bits *perm,
++				 int offset, __le32 val)
++{
++	u16 start = vfio_find_cap_start(vdev, pos);
++	struct pci_dev *pdev = vdev->pdev;
++	u32 org_ctrl, new_ctrl, cap;
++	u8 mode, req, org_req;
++	__le32 org_val = 0;
++	u16 cmd;
++	int ret;
++
++	if (!vdev->tph_opt_in || offset >= PCI_TPH_BASE_SIZEOF)
++		return count;
++
++	cmd = vfio_pci_memory_lock_and_enable(vdev);
++
++	org_ctrl = le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CTRL]);
++	vfio_default_config_read(vdev, pos, count, perm, offset, &org_val);
++
++	ret = vfio_default_config_write(vdev, pos, count, perm, offset, val);
++	if (ret != count)
++		goto out;
++
++	new_ctrl = le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CTRL]);
++	if (new_ctrl == org_ctrl)
++		goto out; /* Only care about changes in TPH_CTRL. */
++
++	cap = le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CAP]);
++	mode = FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, new_ctrl);
++	req = FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, new_ctrl);
++	if (mode != PCI_TPH_ST_NS_MODE || !(cap & (1u << mode)) || req == 0x2 ||
++		(req == PCI_TPH_REQ_EXT_TPH && !(cap & PCI_TPH_CAP_EXT_TPH)))
++		goto restore; /* Drop invalid or unsupported write value */
++
++	org_req = FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, org_ctrl);
++	if (req == org_req)
++		goto restore; /* Only care about requester enable */
++
++	if (req == PCI_TPH_REQ_TPH_ONLY || req == PCI_TPH_REQ_EXT_TPH) {
++		ret = pcie_enable_tph_ext(pdev, mode, req);
++		if (ret)
++			goto restore;
++	} else if (req == PCI_TPH_REQ_DISABLE) {
++		pcie_disable_tph(vdev->pdev);
++	}
++
++	goto out;
++
++restore:
++	vfio_default_config_write(vdev, pos, count, perm, offset, org_val);
++out:
++	vfio_pci_memory_unlock_and_restore(vdev, cmd);
++	return count;
++}
++
+ /*
+  * Initialize the shared permission tables
+  */
+@@ -1100,6 +1235,7 @@ void vfio_pci_uninit_perm_bits(void)
  
- static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
- 	.attach = vfio_pci_dma_buf_attach,
-+	.get_pci_tph = vfio_pci_dma_buf_get_pci_tph,
- 	.map_dma_buf = vfio_pci_dma_buf_map,
- 	.unmap_dma_buf = vfio_pci_dma_buf_unmap,
- 	.release = vfio_pci_dma_buf_release,
-@@ -333,6 +365,72 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+ 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
++	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
+ }
+ 
+ int __init vfio_pci_init_perm_bits(void)
+@@ -1120,6 +1256,9 @@ int __init vfio_pci_init_perm_bits(void)
+ 	/* Extended capabilities */
+ 	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
+ 	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
++	ret |= init_pci_ext_cap_tph_perm(&ecap_perms[PCI_EXT_CAP_ID_TPH]);
++	ecap_perms[PCI_EXT_CAP_ID_TPH].readfn = vfio_tph_config_read;
++	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_tph_config_write;
+ 	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
+ 	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
+ 
+@@ -1129,23 +1268,6 @@ int __init vfio_pci_init_perm_bits(void)
  	return ret;
  }
  
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz)
+-static int vfio_find_cap_start(struct vfio_pci_core_device *vdev, int pos)
+-{
+-	u8 cap;
+-	int base = (pos >= PCI_CFG_SPACE_SIZE) ? PCI_CFG_SPACE_SIZE :
+-						 PCI_STD_HEADER_SIZEOF;
+-	cap = vdev->pci_config_map[pos];
+-
+-	if (cap == PCI_CAP_ID_BASIC)
+-		return 0;
+-
+-	/* XXX Can we have to abutting capabilities of the same type? */
+-	while (pos - 1 >= base && vdev->pci_config_map[pos - 1] == cap)
+-		pos--;
+-
+-	return pos;
+-}
+-
+ static int vfio_msi_config_read(struct vfio_pci_core_device *vdev, int pos,
+ 				int count, struct perm_bits *perm,
+ 				int offset, __le32 *val)
+@@ -1701,6 +1823,8 @@ static int vfio_ecap_init(struct vfio_pci_core_device *vdev)
+ 		ret = vfio_fill_vconfig_bytes(vdev, epos, len);
+ 		if (ret)
+ 			return ret;
++		if (ecap == PCI_EXT_CAP_ID_TPH)
++			vfio_update_tph_vconfig_bytes(vdev, epos);
+ 
+ 		/*
+ 		 * If we're just using this capability to anchor the list,
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 4e5e34a77b76..82582c8ef69d 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -13,6 +13,8 @@
+ #include <linux/aperture.h>
+ #include <linux/debugfs.h>
+ #include <linux/device.h>
++#include <linux/dma-buf.h>
++#include <linux/dma-resv.h>
+ #include <linux/eventfd.h>
+ #include <linux/file.h>
+ #include <linux/interrupt.h>
+@@ -30,6 +32,7 @@
+ #include <linux/sched/mm.h>
+ #include <linux/iommufd.h>
+ #include <linux/pci-p2pdma.h>
++#include <linux/pci-tph.h>
+ #include <linux/seq_file.h>
+ #if IS_ENABLED(CONFIG_EEH)
+ #include <asm/eeh.h>
+@@ -610,6 +613,7 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+ 		goto out_disable_device;
+ 
+ 	vdev->reset_works = !ret;
++	vdev->tph_opt_in = false;
+ 	pci_save_state(pdev);
+ 	vdev->pci_saved_state = pci_store_saved_state(pdev);
+ 	if (!vdev->pci_saved_state)
+@@ -1607,6 +1611,123 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
+ 	return 0;
+ }
+ 
++static u32 vfio_pci_get_tph_capability(struct vfio_pci_core_device *vdev)
 +{
-+	struct vfio_device_feature_dma_buf_tph set_tph;
-+	struct vfio_pci_dma_buf *priv;
-+	struct dma_buf *dmabuf;
-+	u8 comp;
++	return VFIO_DEVICE_TPH_CAP_RESOLVE_DMABUF_PH;
++}
++
++static int vfio_pci_core_feature_tph(struct vfio_pci_core_device *vdev,
++				     u32 flags,
++				     struct vfio_device_feature_tph __user *arg,
++				     size_t argsz)
++{
++	struct vfio_device_feature_tph tph;
 +	int ret;
 +
-+	comp = pcie_tph_completer_type(vdev->pdev);
-+	if (comp == PCI_EXP_DEVCAP2_TPH_COMP_NONE)
++	if (!pcie_std_tph_supported(vdev->pdev))
 +		return -EOPNOTSUPP;
 +
-+	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(set_tph));
++	ret = vfio_check_feature(flags, argsz,
++			VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_SET,
++			sizeof(tph));
 +	if (ret != 1)
 +		return ret;
 +
-+	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
++	if (copy_from_user(&tph, arg, sizeof(tph)))
 +		return -EFAULT;
 +
-+	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
++	if (flags & VFIO_DEVICE_FEATURE_SET) {
++		if (tph.flags != 0)
++			return -EINVAL;
++		vdev->tph_opt_in = 1;
++		return 0;
++	}
++
++	if (!vdev->tph_opt_in)
 +		return -EINVAL;
 +
-+	if (set_tph.ph & ~0x3)
-+		return -EINVAL;
++	tph.flags = vfio_pci_get_tph_capability(vdev);
 +
-+	if ((set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT) &&
-+	    comp != PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
-+		return -EOPNOTSUPP;
++	return copy_to_user(arg, &tph, sizeof(tph)) ? -EFAULT : 0;
++}
 +
-+	dmabuf = dma_buf_get(set_tph.dmabuf_fd);
++static u32 vfio_pci_get_tph_resolve_allow_src(struct vfio_pci_core_device *vdev)
++{
++	u32 flags = vfio_pci_get_tph_capability(vdev);
++	u32 allow_src = 0;
++
++	if (flags & VFIO_DEVICE_TPH_CAP_RESOLVE_DMABUF_PH)
++		allow_src |= VFIO_DEVICE_TPH_SRC_DMABUF;
++
++	return allow_src;
++}
++
++static int vfio_pci_get_dmabuf_tph(int fd, bool extended, u16 *st, u8 *ph)
++{
++	struct dma_buf *dmabuf;
++	int ret;
++
++	dmabuf = dma_buf_get(fd);
 +	if (IS_ERR(dmabuf))
 +		return PTR_ERR(dmabuf);
 +
-+	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
-+		ret = -EINVAL;
-+		goto out_put;
-+	}
-+
-+	priv = dmabuf->priv;
-+	if (priv->vdev != vdev) {
-+		ret = -EINVAL;
-+		goto out_put;
-+	}
-+
 +	ret = dma_resv_lock_interruptible(dmabuf->resv, NULL);
-+	if (ret)
-+		goto out_put;
-+
-+	priv->tph_st         = set_tph.steering_tag;
-+	priv->tph_st_ext     = set_tph.steering_tag_ext;
-+	priv->tph_ph         = set_tph.ph;
-+	priv->tph_st_valid   = !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
-+	priv->tph_st_ext_valid =
-+		!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
++	if (ret == 0)
++		ret = dma_buf_get_pci_tph(dmabuf, extended, st, ph);
 +	dma_resv_unlock(dmabuf->resv);
-+	ret = 0;
 +
-+out_put:
 +	dma_buf_put(dmabuf);
 +	return ret;
 +}
 +
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
++static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device *vdev,
++			u32 flags,
++			struct vfio_device_feature_tph_resolve __user *arg,
++			size_t argsz)
++{
++	struct vfio_device_feature_tph_resolve resolve;
++	u32 user_flags, allow_src;
++	bool extended;
++	u16 tag = 0;
++	u8 ph = 0;
++	int ret;
++
++	if (!vdev->tph_opt_in)
++		return -EOPNOTSUPP;
++
++	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
++				 sizeof(resolve));
++	if (ret != 1)
++		return ret;
++
++	if (copy_from_user(&resolve, arg, sizeof(resolve)))
++		return -EFAULT;
++
++	user_flags = resolve.flags;
++	extended = !!(user_flags & VFIO_DEVICE_TPH_EXTENDED);
++	if (extended && !pcie_ext_tph_supported(vdev->pdev))
++		return -EOPNOTSUPP;
++	user_flags &= ~VFIO_DEVICE_TPH_EXTENDED;
++
++	allow_src = vfio_pci_get_tph_resolve_allow_src(vdev);
++	if (user_flags & ~allow_src || !is_power_of_2(user_flags))
++		return -EINVAL;
++
++	resolve.valid = 0;
++	resolve.ph = 0;
++
++	if (user_flags & VFIO_DEVICE_TPH_SRC_DMABUF) {
++		ret = vfio_pci_get_dmabuf_tph(resolve.src, extended,
++					      &tag, &ph);
++		if (ret)
++			return ret;
++		resolve.ph = ph;
++		resolve.valid = VFIO_DEVICE_TPH_VALID_PH;
++	}
++
++	return copy_to_user(arg, &resolve, sizeof(resolve)) ? -EFAULT : 0;
++}
++
+ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+ 				void __user *arg, size_t argsz)
  {
- 	struct vfio_pci_dma_buf *priv;
+@@ -1628,6 +1749,11 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+ 	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+ 		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+ 							 argsz);
++	case VFIO_DEVICE_FEATURE_TPH:
++		return vfio_pci_core_feature_tph(vdev, flags, arg, argsz);
++	case VFIO_DEVICE_FEATURE_TPH_RESOLVE:
++		return vfio_pci_core_feature_tph_resolve(vdev, flags,
++							 arg, argsz);
+ 	default:
+ 		return -ENOTTY;
+ 	}
 diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index fca9d0dfac90..c58f369be4b3 100644
+index c58f369be4b3..7fbf938f69e1 100644
 --- a/drivers/vfio/pci/vfio_pci_priv.h
 +++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
- int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- 				  struct vfio_device_feature_dma_buf __user *arg,
- 				  size_t argsz);
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz);
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
- #else
-@@ -128,6 +132,14 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- {
- 	return -ENOTTY;
- }
+@@ -11,6 +11,10 @@
+ /* Cap maximum number of ioeventfds per device (arbitrary) */
+ #define VFIO_PCI_IOEVENTFD_MAX		1000
+ 
++enum vfio_pci_tph_policy {
++	VFIO_PCI_TPH_POLICY_NO_ST = 0,
++};
 +
-+static inline int
-+vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u32 flags,
-+				  struct vfio_device_feature_dma_buf_tph __user *arg,
-+				  size_t argsz)
-+{
-+	return -ENOTTY;
-+}
- static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
- {
- }
+ struct vfio_pci_ioeventfd {
+ 	struct list_head	next;
+ 	struct vfio_pci_core_device	*vdev;
+diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+index 9a1674c152aa..d6064fa9e80a 100644
+--- a/include/linux/vfio_pci_core.h
++++ b/include/linux/vfio_pci_core.h
+@@ -149,6 +149,9 @@ struct vfio_pci_core_device {
+ 	struct notifier_block	nb;
+ 	struct rw_semaphore	memory_lock;
+ 	struct list_head	dmabufs;
++	u8			tph_opt_in;
++	u8			tph_policy;
++	u32			tph_cap_virt;
+ };
+ 
+ enum vfio_pci_io_width {
 diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..4c1c70aac150 100644
+index 4c1c70aac150..ae7a2f083cd5 100644
 --- a/include/uapi/linux/vfio.h
 +++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,49 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+@@ -1577,6 +1577,60 @@ struct vfio_device_feature_dma_buf_tph {
+ 	__u8	ph;
+ };
  
-+/**
-+ * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
-+ * with a vfio-exported dma-buf. The dma-buf must have been created by
-+ * VFIO_DEVICE_FEATURE_DMA_BUF on this device, and the device must report
-+ * TPH Completer support in Device Capabilities 2 (bits 13:12); requests
-+ * carrying VFIO_DMA_BUF_TPH_ST_EXT additionally require the device to
-+ * report the Extended TPH Completer encoding. Otherwise the ioctl
-+ * returns -EOPNOTSUPP.
++/* PCIe TPH device feature definitions for VFIO_DEVICE_FEATURE ioctl */
++#define VFIO_DEVICE_FEATURE_TPH		14
++#define VFIO_DEVICE_FEATURE_TPH_RESOLVE	15
++
++/*
++ * VFIO_DEVICE_FEATURE_TPH - Control and query PCI TPH capabilities
 + *
-+ * @dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
++ * SET: Opt-in to TPH feature for the device; flags must be zero.
++ * GET: Return supported TPH capability bits (see VFIO_DEVICE_TPH_CAP_*)
++ *      in flags. Returns error if SET has not been invoked first.
 + *
-+ * 8-bit ST (@steering_tag) and 16-bit Extended ST (@steering_tag_ext) are
-+ * distinct namespaces. @flags is the authoritative validity mask for the
-+ * two namespaces: VFIO_DMA_BUF_TPH_ST marks @steering_tag valid and
-+ * VFIO_DMA_BUF_TPH_ST_EXT marks @steering_tag_ext valid. An importer
-+ * requests one namespace and receives the matching value.
-+ *
-+ * Each SET fully replaces the dma-buf's TPH state for future queries
-+ * only. A namespace whose flag bit is clear is reported as unsupported
-+ * to future importers; an importer that has already retrieved a value
-+ * is unaffected. @flags == 0 leaves both namespaces unsupported for
-+ * future importers.
-+ *
-+ * @ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
-+ *
-+ * Undefined @flags and @ph bits must always be zero.
-+ *
-+ * Userspace must configure TPH before handing the dma-buf fd to an
-+ * importer.
++ * Userspace must first invoke SET on this feature to enable TPH support,
++ * receive valid capability bits via GET, gain permission for using
++ * VFIO_DEVICE_FEATURE_TPH_RESOLVE, and access the virtualized TPH
++ * capability registers via VFIO config space accesses.
 + */
-+#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
-+
-+#define VFIO_DMA_BUF_TPH_ST		(1 << 0)
-+#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)
-+
-+struct vfio_device_feature_dma_buf_tph {
-+	__s32	dmabuf_fd;
-+	__u32	flags;
-+	__u16	steering_tag_ext;
-+	__u8	steering_tag;
-+	__u8	ph;
++struct vfio_device_feature_tph {
++	__u32 flags;
 +};
++
++/* DMABUF source resolve processing hint supported */
++#define VFIO_DEVICE_TPH_CAP_RESOLVE_DMABUF_PH	(1u << 0)
++
++/*
++ * VFIO_DEVICE_FEATURE_TPH_RESOLVE - Resolve TPH attributes from given source
++ *
++ * GET only
++ *
++ * Requires prior successful SET on VFIO_DEVICE_FEATURE_TPH, otherwise
++ * this feature will return error.
++ *
++ * @flags: IN - source type selector (see VFIO_DEVICE_TPH_SRC_*)
++ *         and steering tag namespace selector (see VFIO_DEVICE_TPH_EXTENDED)
++ * @src:   IN - source identifier, e.g. dmabuf fd when SRC_DMABUF is set in
++ *         flags
++ * @valid: OUT - bitmap indicating valid output fields, see
++ *         VFIO_DEVICE_TPH_VALID_*
++ * @ph:    OUT - TPH processing hint (valid when VALID_PH is set in valid)
++ * @rsv:   Must be zero, reserved for future extensions
++ */
++struct vfio_device_feature_tph_resolve {
++	__u32 flags;
++	__u32 src;
++	__u8  valid;
++#define VFIO_DEVICE_TPH_VALID_PH (1u << 0) /* ph holds valid processing hint */
++	__u8  ph;
++	__u16 rsv;
++};
++
++/* Source holds dma-buf fd */
++#define VFIO_DEVICE_TPH_SRC_DMABUF      (1u << 0)
++/* Use extended 16-bit steering tag namespace */
++#define VFIO_DEVICE_TPH_EXTENDED	(1u << 1)
 +
  /* -------- API for Type1 VFIO IOMMU -------- */
  
