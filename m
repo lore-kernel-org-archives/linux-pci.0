@@ -1,86 +1,65 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C944012CDA5;
-	Tue, 14 Jul 2026 13:20:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC18F46AED1;
+	Tue, 14 Jul 2026 13:37:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784035218; cv=none; b=mCGvLza7Vi9LR/h0s1gZY3hGop4kce5NpKXPHVhmI8cY+ISfhr3TZlhEIE1h52h5SXiTTV5HRqnNXfssKGYJTI4UDj1/k8r1OtIA+bfZDPnPiBsd48KH9wqkNQaX975Y/56T20S/UvNvIMqPHNNVrbzN0Rp4moSFAW2Y2VYI6os=
+	t=1784036267; cv=none; b=OvMdXrx5C1EFQ0gBsDOBYr5chYp3lgQbIadzE49GOYleNmXS/2EB6GpeogVJ+50UKexlQNL7tRDUW/iwBvacLsKSK31sMULDoZ1158ThsoQixXn4JlPzf1/5qsfwXF+hWlAu0r56OWxuyvThEOtnLdW/hvCWttcstUhFeUZjMFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784035218; c=relaxed/simple;
-	bh=2Zh6GCPD45Curzc6XxF95qB5OvTuXdsfKjQmHEiMzGU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=nbwbSwA2Di28StkodqZ26/3UZDaQWE0gg27i73eh76O+t4Zs48Am/99waJxz7Lmpo/xJCrG+bviFxGkD0ESI2dAV5unafBzd12pYbuALBWejNTDoNZjAdUrpW1jbN4Yj9MJyWnXIyI2zg0Zg8sKfHyoEuq+tkrIUXaN6+vQZ8to=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=GKhLiPB4; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=J+lyE4Sy; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1784036267; c=relaxed/simple;
+	bh=Vks6p+Wt/0K1/SXbSBGlKT4hNpjD4Fg6SncklLe+XQQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=J/KnNJ8KOEo53A/Krz8fXV8dnzRLzPQuu0JfwstyLWVsQ0io37WYqFYoQ/FVWMPwsmTGNxnZjSlIgfrL82MxEDjAgVJRvs4pdNgBe/VseMbh0Fp0W3TLdc9kimZLyMDIa8KkRJLUPOL5NtrVq+5l+F3XzwXFVJcLdUApUiA1M1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MkdtxJz+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="GKhLiPB4";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="J+lyE4Sy"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4h00KS5WqtzKtxQ;
-	Tue, 14 Jul 2026 15:20:12 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784035212;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Uy1v136JBd/TwWAL0fK29hOy7EN7PDxODRCjp0URlHY=;
-	b=GKhLiPB4F8rXiuNGBhXLvKHsOaLYz6d3kdCfUFv+yXCbuMMWT+5aQZOQk05Gs1OVqsS9tA
-	v2etbJItXbnOlF3psG3wcpPJPys5uIx12eXo2CDP0SxmUVIuLtiqqFFUcEDsHRcN/OJPzB
-	ERYpiKOi61HIr9XvGwS9gSy0cuWdIEbYpjG0EhqiUK5ppi11St44A1tDk6LYCCtBPJAsAY
-	DcKreRrTdxO9wB5/8QW5NyGXZJL1vrhvBR3odJrhjz1dANbU5jOMS812TkiKtqrvOQDIgX
-	bcLoLkdZToek0aCo9oiqGVZGdQv21+XamWaeoYHIxcHvxCnkJlDXTrhSkDTwGQ==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=J+lyE4Sy;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784035207;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Uy1v136JBd/TwWAL0fK29hOy7EN7PDxODRCjp0URlHY=;
-	b=J+lyE4SysZUHi0CMVloGo6OKODciXi7fLmIRM+Cmwx/60T8VC7eMJZ41BTH7Y4hMd7gUUT
-	NMCP0HU4oUJb2j6WjWvoi5wDvWNrF1LPxJnbPK97H1Avxk+sR9AVtRuw86ZzYA6aX3hARX
-	x7ORYNx8OfoTx1nbmYH8rNHiRvvXgrHTug6HBUHSfUjK+QgktnekWKbJD1/IaupbRoEkZ8
-	8kqtvgx5lNSnxjw6Yy42sTtnMpgMEvEyU8KhZq7vDIXHpWpdJ0pKu21NLosPBVE8c9qps9
-	zej6gZYXzdzyR7USjxYUH8V/ig5lnD+8GCQ71lGYQrC9YNgDTaytZ3zlkFmkAQ==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	kernel test robot <lkp@intel.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Zyngier <maz@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64
-Date: Tue, 14 Jul 2026 15:19:27 +0200
-Message-ID: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MkdtxJz+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0394F1F000E9;
+	Tue, 14 Jul 2026 13:37:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784036266;
+	bh=MRUxZmD7tUa8RV4aJ0FH1IXo7TRn2t4zqK4O1Y0A1CY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MkdtxJz+G7iwGq3xnYkjgbVTM2oD6KUjxOQ+3Aj+tCjKIwxi0PXH8ck/8SnKNIbVn
+	 35NTJiDMCThgTuhJwy4EV3B7mvs7vjGet6EroD2X/f9pjF0k9jnXFDA9KD5A52fTNH
+	 2S2nctq846H+2HGDRhx3duCXSC17DgzRifhFVS3HksHngESZUFyTPTYEKXvyYj0Fc1
+	 PTZBiATyX9IGwM/j1l8zxkBHNxMJuetA94prM4dEn4mPPVvozs5YmBZ4aJSKJzSaUb
+	 W+iDf9d7YpBneaODyWSUasppP/cZ2OlPxygzyfsC28jx8RZ0SXghR9ogwgw9QoC1ej
+	 WYbnUz0jND3gQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
+Cc: devicetree@vger.kernel.org, wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
+References: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 13:37:45 +0000
+Message-Id: <20260714133746.0394F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 31c95b1302611529b56
-X-MBO-RS-META: fexm4t6jjueq3oy4dg3s7beno87arnjf
-X-Rspamd-Queue-Id: 4h00KS5WqtzKtxQ
+
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+
+New issues:
+- [Medium] Unjustified COMPILE_TEST restriction due to incorrect commit mes=
+sage claim.
+
+Pre-existing issues:
+- [High] Missing return in error handling path leads to endpoint notificati=
+on on a de-initialized endpoint.
+--
+
+--- Patch [1]: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64 ---
+commit 9fa6f24cbaf3124b832a16ce500ea61d355eb4f5
+Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
+
+PCI: rcar-gen4: Isolate driver to ARM64
 
 The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
 which are available only on ARM and ARM64, on other architectures the
@@ -88,58 +67,70 @@ headers are not present and the driver fails to build. This driver is
 used only on ARM64 hardware, isolate its build only to ARM64 to avoid
 build failures on other architectures.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel.com/
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: This is a rework of PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-    which isolates the driver build to ARM64 via Kconfig instead:
-    https://lore.kernel.org/linux-pci/CAMuHMdVvWE7YZgKvreSn_vJLOVD4eMmn3TCGOyqSXksqjBCwvg@mail.gmail.com/
-    https://lore.kernel.org/linux-pci/20260714110041.GA1349622@bhelgaas/
----
- drivers/pci/controller/dwc/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Link: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel=
+.com/
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 49a7a2c50ca15..3260d916110b2 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -346,7 +346,7 @@ config PCIE_RCAR_GEN4
- 
- config PCIE_RCAR_GEN4_HOST
- 	tristate "Renesas R-Car Gen4 PCIe controller (host mode)"
--	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
- 	depends on PCI_MSI
- 	select PCIE_DW_HOST
- 	select PCIE_RCAR_GEN4
-@@ -357,7 +357,7 @@ config PCIE_RCAR_GEN4_HOST
- 
- config PCIE_RCAR_GEN4_EP
- 	tristate "Renesas R-Car Gen4 PCIe controller (endpoint mode)"
--	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
- 	depends on PCI_ENDPOINT
- 	select PCIE_DW_EP
- 	select PCIE_RCAR_GEN4
--- 
-2.53.0
+> The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
+> which are available only on ARM and ARM64, on other architectures the
+> headers are not present and the driver fails to build.
 
+[Severity: Medium]
+Is this description accurate for the current tree?
+
+A review of drivers/pci/controller/dwc/pcie-rcar-gen4.c confirms it does not
+actually include linux/irqchip/arm-gic-v3.h or use GIC-specific macros. Does
+restricting COMPILE_TEST strictly to ARM64 needlessly degrade cross-archite=
+cture
+build testing coverage?
+
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/=
+dwc/Kconfig
+> index aa0b784c85b47..0d4bf8d4cf565 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -344,7 +344,7 @@ config PCIE_RCAR_GEN4
+> =20
+>  config PCIE_RCAR_GEN4_HOST
+>  	tristate "Renesas R-Car Gen4 PCIe controller (host mode)"
+> -	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
+>  	depends on PCI_MSI
+>  	select PCIE_DW_HOST
+>  	select PCIE_RCAR_GEN4
+> @@ -355,7 +355,7 @@ config PCIE_RCAR_GEN4_HOST
+> =20
+>  config PCIE_RCAR_GEN4_EP
+>  	tristate "Renesas R-Car Gen4 PCIe controller (endpoint mode)"
+> -	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
+>  	depends on PCI_ENDPOINT
+>  	select PCIE_DW_EP
+>  	select PCIE_RCAR_GEN4
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is it intentional that the e=
+rror
+path in rcar_gen4_add_dw_pcie_ep() falls through without returning?
+
+drivers/pci/controller/dwc/pcie-rcar-gen4.c:rcar_gen4_add_dw_pcie_ep() {
+    ...
+	ret =3D dw_pcie_ep_init_registers(ep);
+	if (ret) {
+		dev_err(dev, "Failed to initialize DWC endpoint registers\n");
+		dw_pcie_ep_deinit(ep);
+		rcar_gen4_pcie_ep_deinit(rcar);
+	}
+
+	pci_epc_init_notify(ep->epc);
+    ...
+}
+
+If dw_pcie_ep_init_registers() fails, execution incorrectly falls through to
+pci_epc_init_notify(), notifying any bound EPF devices that the endpoint is
+ready. Since the hardware has just been de-initialized, could an EPF driver
+attempting to interact with the EPC cause bus faults or use-after-free
+conditions?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714131957.3806=
+7-1-marek.vasut+renesas@mailbox.org?part=3D1
