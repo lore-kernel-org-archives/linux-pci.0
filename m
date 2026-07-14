@@ -1,178 +1,185 @@
-Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336E83DB300
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 06:38:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A38B308F0A;
+	Tue, 14 Jul 2026 07:48:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784011131; cv=none; b=IaKDNN0UCxGe/rA9GxuW6/kNBG+rpomESeP6nHRXQN/XbLP4S0O+GpHufeprHdY1fHFa4jhiW+5DGGcSvfFfNyJtPykzGbJhPKSdIE6Jeg2p+5Zw3Yh93YsbrMStNbtSfrEJ4Se2/gQIMewwbzFcCVV4SzXqwNPGKvJprubkBUk=
+	t=1784015338; cv=none; b=eCamhvl7WdbFTj7+b38bcYAxOCvaiH7eenYUflATSeGSTDcTJKbdCwZ40V8/ZoPAZ7Ycctsb7LeH1dcNt+ru4yCs1BJFmg7aNHMJgiEQN6le9lf3hzBg4wQ6GWu0TO07H+jhY3befDPNrS+YmBnI3pmgtDgw31p0xcRjnMK4X/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784011131; c=relaxed/simple;
-	bh=BwXrIUkjii1ll+DVDzD6pSQxEm1jWrnB4GfLjhOhNmE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ChqVNddAa1vs7pna2+6nUqmpjEJaRTWgxd4dv1jlPPRGICq/ZiwTsAYZZcwbu4ZkzcHC/OLvsw2YuUAknusAtlnMppV1LqhYaP1CunAob47G+oQR+i0LQYDVXZmAtS7rfxOKflorXjCaEosWq8orw2N3ZXhj9H3btWr/AaCVwB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RHmZwykV; arc=none smtp.client-ip=95.215.58.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784015338; c=relaxed/simple;
+	bh=OzE33GcltAjDW5tcXG9BRYvtFttzRWQQ0noGuMNwYt8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G9ox51miozR+jcFM1m5P9fvLQk0tX0G8psHSV7YtjvDLPIEAAr3jgbZQFWXEPmXd894KK0YwxUXpKlsNQqaWRkA+NZIJvZqYlqcgwyvJTIvZzo5eRco2XWWf0UOlE5E3i5jubSnz1BbJjMilfnz7RjPqYYkGZvUjhtIz1yhcgjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mP6wINOx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RHmZwykV"
-X-Forwarded-Encrypted: i=1; AHgh+Rq4+Sl9Hh3CdOcGcV68SoWtxetxQ4OAKS5K3XsRCJOydJLKflXCdFrlfGVE6Vszca7ErcxdO6OVDU4=@vger.kernel.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784011128;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BwXrIUkjii1ll+DVDzD6pSQxEm1jWrnB4GfLjhOhNmE=;
-	b=RHmZwykV/rYi9SnR1M833hUcYmyby2m93R+IgnDn9Ou1fB4AjSd1uLEP6yG8TWODNJ+LRy
-	aTdre6YxPUQEdDKTWoiLhr1SRsLRIvpzeyDqWJP5byv/9kkTaCvLHSV2N0tdDrNUXpODbO
-	ilQ48MpvtENyq6WDa1tVV+JoCJrKaSg=
-X-Gm-Message-State: AOJu0YxrkMTAr9RSIWHRJ25ZhP6Tzayk7r9LW3MkDec52AooapznuXjU
-	BJIpVo8Mr9UDdcmooZp5lEvTmUIDScvxjHOIMm2b1q7jgaUgCo4mf1pLdoHp6Jn4QrhtfB2H56x
-	K6zMj3pZV1gzbmEJKYubL2CERzvCEDMgujSx7Gwqb
-X-Received: by 2002:ac8:5d56:0:b0:516:ccc0:ee38 with SMTP id
- d75a77b69052e-51d7bcd4bb1mr10963351cf.9.1784011118743; Mon, 13 Jul 2026
- 23:38:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mP6wINOx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 711981F000E9;
+	Tue, 14 Jul 2026 07:48:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784015336;
+	bh=VQ6gzOozAQGk1FXpGVGaPrA/5KbS2tcHpdPlcbzeLl0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=mP6wINOxIeFgFZrQH8Iu6SkRjKy5vO/wP2I5GaNxw2Tzv7t4erJrtyh1Gymeb9OrX
+	 4qAEW0o3lkSWfW5iXcaq0Hx/zzmDcR5gJDCpclvXyGmAf/NBUgx3XyXIxnv1mITGtR
+	 VzsFqsLblUVQOpQ2joHJ+J/2hzKeZsuCoVrNfyKp8kghZ2ZbRIA5GmZJLVNtt1K1Gl
+	 QfrhhLByCxd5sTvtkM/Rnf9qT00M2ZAtQu5od9txx3Lw8X/nMaMs2Oyt197gHt8d73
+	 UurX7TJWJpozp9uS07D1QNZssFv3YIZrdqk24EKA4aZ72/q08scQD1bPitVhHgxUQ9
+	 jBI4rDo/tRwqg==
+Date: Tue, 14 Jul 2026 09:48:50 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: 
+	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, 
+	vkoul@kernel.org, Frank.Li@kernel.org
+Subject: Re: [PATCH 1/3] dmaengine: dw-edma: Implement device_synchronize()
+ callback
+Message-ID: <moxonhzmvp6mofmaabywhfe6xucxut6fgjjlfg73uadanghwx5@mhisbkzznlar>
+References: <20260629-mhi-ep-flush-v1-0-714e0d56e87c@oss.qualcomm.com>
+ <20260629-mhi-ep-flush-v1-1-714e0d56e87c@oss.qualcomm.com>
+ <20260629085716.D203C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250529053513.1592088-1-yilun.xu@linux.intel.com>
- <20250529053513.1592088-11-yilun.xu@linux.intel.com> <20250602133009.GC233377@nvidia.com>
- <CAEvNRgFpJWQ5M5sQhGpQUV3GbBq9N+MQhhaxdxa=D8ky94SCsw@mail.gmail.com>
- <CA+EHjTwd9uku-ZV5y8xcK8VWdOfhcchyW=_fzjpCf5Vk2wQoGQ@mail.gmail.com> <20260713191727.GH674038@nvidia.com>
-In-Reply-To: <20260713191727.GH674038@nvidia.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Fuad Tabba <fuad.tabba@linux.dev>
-Date: Tue, 14 Jul 2026 07:38:01 +0100
-X-Gmail-Original-Message-ID: <CA+EHjTxZ0N3Tfnid404B4tkb_E+Z8mODTHTgBPiF6=bwZp7Hjw@mail.gmail.com>
-X-Gm-Features: AUfX_mxAW6jRYwmHaZyFKiL0Q4hnn-XRmxgnYdjCPArDIPvmYwpLrjGWtt2STE0
-Message-ID: <CA+EHjTxZ0N3Tfnid404B4tkb_E+Z8mODTHTgBPiF6=bwZp7Hjw@mail.gmail.com>
-Subject: Re: [RFC PATCH 10/30] vfio/pci: Export vfio dma-buf specific info for importers
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Ackerley Tng <ackerleytng@google.com>, Xu Yilun <yilun.xu@linux.intel.com>, 
-	kvm@vger.kernel.org, sumit.semwal@linaro.org, christian.koenig@amd.com, 
-	pbonzini@redhat.com, seanjc@google.com, alex.williamson@redhat.com, 
-	dan.j.williams@intel.com, aik@amd.com, linux-coco@lists.linux.dev, 
-	dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org, 
-	linaro-mm-sig@lists.linaro.org, vivek.kasireddy@intel.com, yilun.xu@intel.com, 
-	linux-kernel@vger.kernel.org, lukas@wunner.de, yan.y.zhao@intel.com, 
-	daniel.vetter@ffwll.ch, leon@kernel.org, baolu.lu@linux.intel.com, 
-	zhenzhong.duan@intel.com, tao1.su@intel.com, linux-pci@vger.kernel.org, 
-	zhiw@nvidia.com, simona.vetter@ffwll.ch, shameerali.kolothum.thodi@huawei.com, 
-	aneesh.kumar@kernel.org, iommu@lists.linux.dev, kevin.tian@intel.com
-Content-Type: text/plain; charset="UTF-8"
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260629085716.D203C1F000E9@smtp.kernel.org>
 
-On Mon, 13 Jul 2026 at 20:17, Jason Gunthorpe <jgg@nvidia.com> wrote:
->
-> On Mon, Jul 13, 2026 at 08:08:14PM +0100, Fuad Tabba wrote:
-> > On Sun, 12 Jul 2026 at 02:02, Ackerley Tng <ackerleytng@google.com> wrote:
-> > >
-> > > Jason Gunthorpe <jgg@nvidia.com> writes:
-> > >
-> > > > On Thu, May 29, 2025 at 01:34:53PM +0800, Xu Yilun wrote:
-> > > >> Export vfio dma-buf specific info by attaching vfio_dma_buf_data in
-> > > >> struct dma_buf::priv. Provide a helper vfio_dma_buf_get_data() for
-> > > >> importers to fetch these data. Exporters identify VFIO dma-buf by
-> > > >> successfully getting these data.
-> > > >>
-> > > >> VFIO dma-buf supports disabling host access to these exported MMIO
-> > > >> regions when the device is converted to private. Exporters like KVM
-> > > >> need to identify this type of dma-buf to decide if it is good to use.
-> > > >> KVM only allows host unaccessible MMIO regions been mapped in private
-> > > >> roots.
-> > > >>
-> > > >> Export struct kvm * handler attached to the vfio device. This
-> > > >> allows KVM to do another sanity check. MMIO should only be assigned to
-> > > >> a CoCo VM if its owner device is already assigned to the same VM.
-> > > >
-> > > > This doesn't seem right, it should be encapsulated into the standard
-> > > > DMABUF API in some way.
-> > > >
-> > >
-> > > I'd like to propose an alternative. I've been working on guest_memfd and
-> > > new to the world of IO, please help me along! :)
-> > >
-> > > It seems like using dmabufs are used a little awkwardly here. IIUC
-> > > dmabufs were originally meant to expose memory of one device to another
-> > > device, mostly meant to share memory. Dmabufs do expose MMIO too, for
-> > > device to device communications. Without virtualization, userspace MMIO
-> > > would be done by mmap()-ing a VFIO fd and having the userspace program
-> > > write to the userspace addresses.
-> > >
-> > > Before CoCo, device passthrough (MMIO) is mostly handled by mmap()-ing a
-> > > VFIO fd and setting up the userspace address in a KVM memslot for the
-> > > guest.
-> > >
-> > > With CoCo, is the problem we're solving that we want KVM to know what
-> > > pfns to set up in stage 2 page tables, but not via userspace addresses?
-> > >
-> > > guest_memfd already does that for regular host memory, tracks the
-> > > private/shared-ness of the memory, tracks which struct kvm the memory
-> > > belongs to.
-> > >
-> > > guest_memfd functions as KVM's bridge to host memory. KVM already can
-> > > ask guest_memfd for the pfn to map into stage 2 page tables, and already
-> > > asks guest_memfd for the shared/private state of the memory. guest_memfd
-> > > already also blocks the host from faulting guest private memory
-> > > (mmap()-ing is always allowed).
-> > >
-> > >
-> > > Instead of using dmabuf as the intermediary between the MMIO PFNs and
-> > > KVM, why not use guest_memfd?
-> > >
-> > > What if we make guest_memfd accept a VFIO fd, or a dmabuf fd?
-> >
-> > This is interesting for pKVM too, provided it covers more than MMIO.
-> >
-> > We need guest_memfd to be backable by a dmabuf for ordinary guest memory, not
-> > only for device MMIO. There is mobile hardware that doesn't tolerate scattered
-> > private memory (DMA engines that can't gather, IOMMU page-table size
-> > constraints), and a CMA-backed dmabuf heap is the practical way to get
-> > contiguous memory at runtime.
->
-> Why can't guestmemfd allocate directly from CMA? Allocating struct
-> page memory through dmabuf just to put it back in a guestmemfd sounds
-> very ugly to me.
+On Mon, Jun 29, 2026 at 08:57:16AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
+> 
+> New issues:
+> - [Critical] dw_edma_device_synchronize() silently fails if the timeout is reached, returning to the caller while the hardware channel is still active.
+> - [High] dw_edma_device_synchronize() implements a 5000ms busy-wait loop using cpu_relax() in a sleepable context.
+> - [Medium] Lockless read of chan->status without READ_ONCE() or memory barriers in dw_edma_device_synchronize().
+> 
+> Pre-existing issues:
+> - [High] dw_edma_device_terminate_all() fails to flush pending virt-dma descriptor queues, causing memory leaks and the risk of stale transfers resuming.
+> - [High] Virt-DMA descriptors are permanently leaked during channel teardown because vchan_free_chan_resources() is not called.
+> - [High] dw_edma_device_terminate_all() modifies channel state without holding the required spinlock.
+> --
+> 
+> commit dde223ef8e9950c9d18889da8638ba0fd963f5d8
+> Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> dmaengine: dw-edma: Implement device_synchronize() callback
+> 
+> device_synchronize() callback is required by the client drivers to ensure
+> all the DMA operations are completed so that they can free the memory
+> associated with the complete callbacks.
+> 
+> So implement this callback by first making sure that all the in-flight DMA
+> operations are completed and then call vchan_synchronize() to drain the
+> DMA tasklet.
+> 
+> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > index c2feb3adc79fa..7b12dfe8cfd3e 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> > @@ -331,6 +331,21 @@ static int dw_edma_device_terminate_all(struct dma_chan *dchan)
+> 
+> [Severity: High]
+> This is a pre-existing issue, but looking at dw_edma_device_terminate_all(),
+> it seems to lack the necessary virt-dma calls (like vchan_get_all_descriptors)
+> to extract and free pending descriptors:
+> 
+>     } else {
+>         chan->request = EDMA_REQ_STOP;
+>     }
+> 
+> Since dmaengine_terminate_all() requires all active and pending descriptors
+> to be aborted and removed from the channel's queues, could setting this
+> software flag without flushing the virt-dma descriptor lists cause queued
+> descriptors to remain in vc->desc_issued and vc->desc_submitted?
+> 
+> If a client later submits new transfers, might the hardware unintentionally
+> resume processing the old, supposedly terminated descriptors?
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does dw_edma_device_terminate_all()
+> modify channel state without holding the required spinlock?
+> 
+>     } else if (chan->status == EDMA_ST_PAUSE) {
+>         chan->status = EDMA_ST_IDLE;
+>         chan->configured = false;
+> 
+> Since chan->status, chan->request, and chan->configured are concurrently
+> accessed and updated by the interrupt handler and issue pending paths under
+> chan->vc.lock, does modifying them unlocked introduce a race condition?
+> 
+> Could this corrupt the channel's internal state machine when a client
+> calls dmaengine_terminate_all() during interrupt processing?
+> 
+> >  	return err;
+> >  }
+> >  
+> > +static void dw_edma_device_synchronize(struct dma_chan *dchan)
+> > +{
+> > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> > +	unsigned long timeout = jiffies + msecs_to_jiffies(5000);
+> > +
+> > +	/*
+> > +	 * Make sure all the in-flight DMA operations are completed before
+> > +	 * draining the tasklet using vchan_synchronize().
+> > +	 */
+> > +	while (chan->status == EDMA_ST_BUSY && time_before(jiffies, timeout))
+> 
+> [Severity: Medium]
+> Since chan->status is concurrently mutated by the interrupt handler under
+> vc->lock, does reading it locklessly in this while loop without READ_ONCE()
+> or memory barriers constitute a data race?
+> 
 
-Fair, and I think you're right. If guest_memfd can allocate from CMA directly
-that covers what we need for contiguous guest memory, and it's cleaner than
-routing it through a dmabuf. It also keeps the shared pages struct-page backed
-and GUP-able, which the CMA heap's own mmap doesn't, since it sets VM_PFNMAP.
-So going through a dmabuf for plain guest RAM would have cost us the thing we
-need on the shared side anyway.
+Using READ_ONCE() for 'chan->status' makes sense.
 
-Consider the request to be for guest_memfd to be able to give us physically
-contiguous memory. dmabuf was the mechanism I assumed, not the requirement.
+> Could this cause synchronization bypass if the state update is observed out
+> of order relative to the tasklet scheduling?
+> 
+> > +		cpu_relax();
+> 
+> [Severity: High]
+> Is it safe to implement a 5000ms busy-wait loop using cpu_relax() in a
+> sleepable context like dw_edma_device_synchronize()?
+> 
 
+I was just following the existing pattern which uses the busy-wait loop in
+dw_edma_free_chan_resources().
 
-> > HugeTLB doesn't help, it wants boot-time
-> > reservation. Those pages are struct-page backed, so it's a different problem
-> > from the non-struct-page MMIO case, and the shared parts still need to be
-> > GUP-able.
->
-> Isn't dmabuf pretty allergic to mmaping refcounted struct page backed
-> memory since that wrecks its lifetime model?
+> Since busy-waiting for up to 5 seconds blocks a CPU core entirely, could
+> this starve other tasks and trigger soft lockups when a client driver calls
+> dmaengine_synchronize() to wait for DMA completion? Since this callback is
+> explicitly allowed to sleep, should a sleeping wait like wait_event_timeout()
+> or msleep() be used instead?
+> 
+> > +
+> > +	vchan_synchronize(&chan->vc);
+> 
+> [Severity: Critical]
+> Does dw_edma_device_synchronize() silently fail if the timeout is reached?
+> 
+> If the 5-second timeout expires while the channel is still busy, the loop
+> exits and the function returns to the caller without stopping the ongoing
+> hardware transfer or warning the client.
+> 
+> Since the client relies on device_synchronize() to ensure all active DMA
+> operations have fully completed before unmapping and freeing memory, could
+> this lead to silent data corruption and a use-after-free if the hardware
+> is still actively transferring data?
+> 
+> Should the function either wait indefinitely or forcefully abort the hardware
+> and emit a warning on timeout?
+> 
 
-Yes, and that's the same point. Agreed.
+Forcefully aboring the transfer will impact other channels also. So may be the
+safe bet would be to wait indefinitely.
 
-> > More important for the API shape: conversions have to work on subsets of such a
-> > region, at page granularity. A pKVM guest doesn't know what backs its memory, so
-> > it will issue share/unshare hypercalls over arbitrary ranges of whatever it was
-> > given. If a dmabuf-backed guest_memfd can only be converted as a whole, we can't
-> > use it for memory, and the guest can't be taught to care.
->
-> More reasons not to involve DMABUF since guestmemfd already does all
-> of this...
+For the loop, I'll use read_poll_timeout() with timeout of 0.
 
-Also agreed for guest RAM.
+- Mani
 
-Where I do still think a dmabuf is involved is the case where the buffer isn't
-guest_memfd's to allocate: it already belongs to another exporter, and the guest
-needs to see that same buffer. That's structurally what you're already handling
-for device memory rather than a separate guest_memfd-over-dmabuf path, so I
-don't think it argues for backing ordinary guest memory with a dmabuf.
-
-> Jason
+-- 
+மணிவண்ணன் சதாசிவம்
