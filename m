@@ -1,106 +1,63 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECD1417BC3;
-	Tue, 14 Jul 2026 18:59:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD58477E2E
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 19:11:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784055575; cv=none; b=pzg4+qQTKVhYvGKSTb5J7QHjhptA83rhq3oRAM7d58v2UeLqhpsUXW8FwG2PSWq5GUMPHQzgpu6SKck9qbFKyWRO5Mbci+wgMW8bD4cMYKONhUT7NLJuRHJaHVnbSawBD30KmPr1OurqlJS4ygCHIlrBcXDRrZ5EHK4Xci8UFMA=
+	t=1784056274; cv=none; b=W04DQ9PJyt/qHyGvQ0Vh2Ey+x6pNU1PhHiqbsr8xPNSAP50yo2RSHmJArU+iExJg8Z+0lpl30aDYvOxmBzGi+LJPUshaR2kyxm+dLGyARa0Vt2ZY2cKjNY2ydXLPJYSlHiBdYc6BZ/ZfUQ44HZzHWL3OwqhnCrWD5XS8LKNlq2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784055575; c=relaxed/simple;
-	bh=TNlTj//NIMpflYGIzQSPMAJhiNVdgNLM6YBeijAZQz4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lKvTFlD5xyKgQasI+xJmRPkpfV05dScanJ41c33leTBI4YwtFrTSvGl/iYwufRmC4jiqk3g+XfoB1/boWxEYbK5pV/1wqK55AB98cG3dMJEfR3nTjB0DK/O40Ti+Xuqy3mPbLZdHvpbGgEc86IErgwqtC8/rjtUabTAMjPM7xsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NgXs5/CK; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784056274; c=relaxed/simple;
+	bh=EVhsxws7IhXnDlG1j7BN4bNbxpTeyMNHvIxipdyjIgk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Z+JiQU2YJMkvGmQ/CH0B4bZeQyVdH2DCJjULHqBcebxLttkv17vXd3jR8NBNZ30sCcaVGoiyR2do09eIVO4KWSdN9Su+e2AaLoYmmqUxFn0TVNhWe0EAMePi9f+yw7omH+rQXO/efpvUbc3ugpClCzwXRwFHFQPLLz17O7HZGRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KVbAzrWy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NgXs5/CK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784055574; x=1815591574;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=TNlTj//NIMpflYGIzQSPMAJhiNVdgNLM6YBeijAZQz4=;
-  b=NgXs5/CKkHuEhIKpZoTazj/p9lT6JT7yAurKZH6lVDBWaI/hWUywy+75
-   VZXhQLhCeDNWE5d5a15Xv3Whs8Ewak/Z6PfsqMo80DPH5wX0yR9uhNL5L
-   VkjFqMFWGUZT2gya6UUYwFPvR3Uqzb5lsD87o9ytJDkVorDBo+DesRtqf
-   RXbyRj7wLS1ZIYytUKrfWS58LTRJDbaXoTQ7bqYSpLE/QYmyojmtaMBdI
-   TvzH/8kgxNa1QLOKfDjBlGdr8dQMdtzQFh57qEAo94ymjpsAJkhg6bpKn
-   ALD1F1lr24vpKJohZFPYn21XnALIor4ZyfR4pFn5pbSUD6iNDfMzq2WLq
-   w==;
-X-CSE-ConnectionGUID: Lx9dPJ+yQye397OVWjJuLA==
-X-CSE-MsgGUID: yfshb9YASyiaB36BNZpqsw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="88364961"
-X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
-   d="scan'208";a="88364961"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 11:59:33 -0700
-X-CSE-ConnectionGUID: nYgkZIYlRISwlO15WMs79w==
-X-CSE-MsgGUID: oaEfJaAOQgiaJrBYaa9/qQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
-   d="scan'208";a="256597178"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa009.jf.intel.com with ESMTP; 14 Jul 2026 11:59:29 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 14F1C9E; Tue, 14 Jul 2026 20:59:24 +0200 (CEST)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Mario Limonciello (AMD)" <superm1@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-i2c@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	ibm-acpi-devel@lists.sourceforge.net
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Mika Westerberg <westeri@kernel.org>,
-	Andi Shyti <andi.shyti@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	"Derek J. Clark" <derekjohn.clark@gmail.com>,
-	Hans de Goede <hansg@kernel.org>
-Subject: [PATCH v2 5/6] PCI/VGA: Convert to use acpi_dev_is_video_device() helper
-Date: Tue, 14 Jul 2026 20:53:44 +0200
-Message-ID: <20260714185915.865396-6-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
-References: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KVbAzrWy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A96C1F000E9;
+	Tue, 14 Jul 2026 19:11:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784056271;
+	bh=EVhsxws7IhXnDlG1j7BN4bNbxpTeyMNHvIxipdyjIgk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=KVbAzrWyOx/5TZTIkZLTzutN1/Nhu4Ay1dwT1MnRW0o7npdgzD3XIoANY58aTc5yz
+	 aR8gsOrl8W/7XvYBhVU14NlIGN4d2bDnJmDfN9PcVFtvWBeZBu4yEvYJROZJeaphgp
+	 PTc9Xp0JiFkgg5at8XmhMAqFAG+KmS55uDkUUtrlPzBoK5f32L5vlNxLmDMOmxUD4S
+	 hT7tDxv7iEtpB9u1Z0BCdRBjZ6w4l5+QJXEa0K/3AJpDuZE1jt2ZaEbeVN250EKA1A
+	 4i8GjQm9SIL6tkDlPqDTwzBlDIfN0A5IEUUmfRGLK2qhFoClnpMn6Hp8IMRdB+qjpK
+	 oWws+DwMPEIpw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/5] PCI/portdrv: Group PCI Exp Cap services into a
+ single mask
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yazen Ghannam" <yazen.ghannam@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260714183950.1620016-2-yazen.ghannam@amd.com>
+References: <20260714183950.1620016-1-yazen.ghannam@amd.com>
+ <20260714183950.1620016-2-yazen.ghannam@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 19:11:10 +0000
+Message-Id: <20260714191111.3A96C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Replace open coded variant of acpi_dev_is_video_device() helper.
+> PME, hotplug, and bandwidth notification are all services of the PCI
+> Express Capability and share a single MSI/MSI-X interrupt vector. The
+> set of these services is open-coded as a bitmask in more than one place,
+> which is repetitive and easy to get out of sync as services are added.
+>=20
+> Define a single PCIE_PORT_SERVICE_EXPCAP mask and use it in place of the
+> open-coded expressions. No functional change intended.
+>=20
+> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/pci/vgaarb.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index c360eee11dd9..3de05aee7859 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -575,9 +575,7 @@ static bool vga_is_firmware_default(struct pci_dev *pdev)
- static bool vga_arb_integrated_gpu(struct device *dev)
- {
- #if defined(CONFIG_ACPI)
--	struct acpi_device *adev = ACPI_COMPANION(dev);
--
--	return adev && !strcmp(acpi_device_hid(adev), ACPI_VIDEO_HID);
-+	return acpi_dev_is_video_device(ACPI_COMPANION(dev));
- #else
- 	return false;
- #endif
--- 
-2.50.1
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714183950.1620=
+016-1-yazen.ghannam@amd.com?part=3D1
 
