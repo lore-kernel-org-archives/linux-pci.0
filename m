@@ -1,45 +1,46 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011022.outbound.protection.outlook.com [40.107.208.22])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011033.outbound.protection.outlook.com [52.101.57.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B79361FFC59;
-	Tue, 14 Jul 2026 18:40:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDFA7377AA6;
+	Tue, 14 Jul 2026 18:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784054421; cv=fail; b=M+Q24qtAyJDQ1CiPU2wTi3gH3RfUsS35eWanDbFywwuwaudF0UlbxaSAJLBKGNz8dWjw95FrgwYt2GaxxyE+kmxQ2eZ4yNSa6pEn6/MEYo11dj8blH5BXaGA0i/qlIDhqiowV0MVw06QGA1MxQwdlKFPwny46D47NUMmz/nqris=
+	t=1784054426; cv=fail; b=MeXmqPzqC5GXSzwMHkPiFudTaZUUU9E+AiSvd5kZXmDp39yEdZGOx7F9mm6MFFSynphmyqvqcZBpP60CoXZAZd8381kjYV4LG+zutXyFAQmGLdzDxDRik3JreS/yLcbEwlER9qeHF34Xvg0mCJHnhievd6uGoj64PcpIh1UAPh8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784054421; c=relaxed/simple;
-	bh=C0R7PZ1mR9hNXvtPJxLbIKFK5Ube/yk3OEM9BWt3FFw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=B6hvgl074HGaoWet7icTfobTKk3E+2fXzmfd5ujSBo3yyciNZDGzH1sMNAQ1OOJzB2kRboL9MeMG9NDf0nKIRh9D+R8AzFmK48NU9er4vwuCPRY/dvFwWtfXAhYiyASLL5/8soLya8bXRvXUNxqRY3ke9X06yCz49gd++Zlboig=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=vphWWu2V; arc=fail smtp.client-ip=40.107.208.22
+	s=arc-20240116; t=1784054426; c=relaxed/simple;
+	bh=DWlKiEuBb45H5WAsReEsrVutfyquYJG9N9WExzA8B4E=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Fc7C3fNKgCn+Aia43fU8kwzr9TWYaDBM4scZcqDVKaTxPJafSDEA7pCQJLDF8k8E3m5oNMWv/vN2tx7k4/QeUwilvNOiaLr8iVJWDQH4pxy7K18vjyO/HuC55iQCB1ZGJaq3BTu/g759c75hBhyCUgzFdIF4MLHL6ME8ghbjtn4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=gf1fnr9c; arc=fail smtp.client-ip=52.101.57.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="vphWWu2V"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="gf1fnr9c"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=i1y6czLxVznQxWTpWlWvqUPSeSLMKUslUH7qUl65y8ppiwr3FlYjRjPGfGeifRBUGe12sTjXBf38XaOTKHcNg/m5QZ2VxHtCT1nG52RGKn1FAXYCak7+uow1ht0GqAbCIZWvs0b46yXi2aY/SMAb1W10P29MsoPS7KEvjkcHQZ3UKZ7IRwUIYIPJM2vrhhfuAIQ8O9PhvrTYf1tgizYIgP08My/EkoMhUoEOmTrg9VuHTBWuftJH7fgiLoZ/Cc1Wsnv58GLoCD39sjd3PR+VSZ+Hcpuf4z/dyvwXYdfmG3Hv/woFRe0TH3nJtX4PGTsElQXpgd8rzmKN8kIdlmdI7w==
+ b=g3PF3oL0RlGiE5+1f2dfEm9XBO+F7pjEz94NaKwR+35dc8vameAVTeF+F0Ano6qT7Tl3tWdqfvtgMgexupaGZyxifHunWQYQq9hGZn7jIm8iDrXEDU373a+Qd+XBo0BcCRHyp321eVrMgI9B1pcCMejJ80FGhyPPnkqFLPADxzURtJrU0B3cue68CrOHWmVmgu9M40Ot5zOrWj8piEFrOzGnFqBHSGlVqgjW/EuII5GxzK0bB7PVo2TddxVmQTuBvMQRLno5dxZ//PusyW2ekl20XUD7P+EFSLWBIT6T+8aR32NjKtgzsRvPBqBlcO+OiZfDLXI/6D85UQHIcLzDBA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Is+PRyluZ8sny/UfXbytOYWtHPsOGzkMMYctwSPBatY=;
- b=KFXSe/UJd03aiPDKm5LNWhxfvDykIcKQUu4yzIYIYEaDxyHhbVclK6yEqdp7lVr0E786po3jczhZEs09YEWbWcrXdMIx7MEFvdmeRP5AiHRZDxdQKdxqap4kScsnBHudamL4oRXqBybgqP5URf7Dhe4RF/bHCn0othVrV39STttetiYUSc+e5ESoYISjAq9KgcQeG+R9n6D4YruhkbjcBTg8z2vNvx8d/koHFSEyKWVDHYZJPcALuclTLpTB372GXnqilZBeBeCneeAhEC7sPQ893klsbuCOw0X8XnJ0R5pm5UeacAuaPxFXBjdw79e1gO9fVLNkhmY6zhVsC8M8qg==
+ bh=1Z2A8YKwIaWHz9gLRVYhz/34O9oFxpr1gXFu0NbpiS4=;
+ b=iCn59rvPxS1OHqpzzBI5Ps3zCy1JQlZMsBn4EzrJ4hliAJrY7hXKQF0SazogahfsB8sE+fVbpQ/apsojbp1vVvrU1kbjhgdcxZgCWd+UKUNPn2NnqEw2we6xYUVK8F9dos15A9tzorrXqkn7aodZHGpAMpsgJpvlES1hO5bNd72Unv9mcmMzZkod6OoDw0CN2lvZjbTaiufLS44f7JvXGy10XBm/81a6XG15kMaKfjlUmR3iFmEd2oPTAg8pqmTGPtOmKzU2olaJRBhKULcZzegjS3VX2rqeDqAgQrricK/LeE5FZR8FRxWqHqrvw9qYglpEsMHR0XF0vzv1SXLAoQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Is+PRyluZ8sny/UfXbytOYWtHPsOGzkMMYctwSPBatY=;
- b=vphWWu2V2Ylbxw3wj3C+9sUd3JP7YcL2arFfMozKmts0jJZ0hdF8DNEL09Xslmh5PG3NEwfHNmakpE6FnsQnp5EA+9iC910JDoKMYUEwCH1Jx5F9t60jD2407w1Rb2+j9nFr9p6l7eee2ESFdHKH0f/OaeQY8TLkRQLHwV93oW0=
-Received: from LV3P220CA0018.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:234::19)
- by SA0PR12MB7462.namprd12.prod.outlook.com (2603:10b6:806:24b::5) with
+ bh=1Z2A8YKwIaWHz9gLRVYhz/34O9oFxpr1gXFu0NbpiS4=;
+ b=gf1fnr9cLKpi3cdfMxkRPMvBm8aPffx36SyD2ha70GE0xd7uXrnJkL6pylOfAgJRuAj5A6JOvXPLEuilBuWXYNkQ1bnwKP3C66PblkF9MZbmsqbxzWUyFQknAYkVxMJGdnpR0kzagERxQOtU80PKLqVDwMsM+pg/5GgIwVA8VmI=
+Received: from BN0PR04CA0147.namprd04.prod.outlook.com (2603:10b6:408:ed::32)
+ by CH3PR12MB7545.namprd12.prod.outlook.com (2603:10b6:610:146::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Tue, 14 Jul
- 2026 18:40:04 +0000
-Received: from BN1PEPF00006001.namprd05.prod.outlook.com
- (2603:10b6:408:234:cafe::ab) by LV3P220CA0018.outlook.office365.com
- (2603:10b6:408:234::19) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 18:40:06 +0000
+Received: from BN1PEPF00006000.namprd05.prod.outlook.com
+ (2603:10b6:408:ed:cafe::94) by BN0PR04CA0147.outlook.office365.com
+ (2603:10b6:408:ed::32) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.223.10 via Frontend Transport; Tue,
- 14 Jul 2026 18:40:03 +0000
+ 14 Jul 2026 18:40:06 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -47,118 +48,165 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- BN1PEPF00006001.mail.protection.outlook.com (10.167.243.233) with Microsoft
+ BN1PEPF00006000.mail.protection.outlook.com (10.167.243.232) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.223.9 via Frontend Transport; Tue, 14 Jul 2026 18:40:03 +0000
+ 15.21.223.9 via Frontend Transport; Tue, 14 Jul 2026 18:40:06 +0000
 Received: from yaz-khff4.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 14 Jul
- 2026 13:40:02 -0500
+ 2026 13:40:06 -0500
 From: Yazen Ghannam <yazen.ghannam@amd.com>
 To: <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <bhelgaas@google.com>
-Subject: [PATCH 0/5] PCIe Flit Logging Ext Capability Support
-Date: Tue, 14 Jul 2026 14:39:45 -0400
-Message-ID: <20260714183950.1620016-1-yazen.ghannam@amd.com>
+CC: <linux-kernel@vger.kernel.org>, <bhelgaas@google.com>, Yazen Ghannam
+	<yazen.ghannam@amd.com>
+Subject: [PATCH 4/5] PCI/FLIT: Add trace event for flit errors
+Date: Tue, 14 Jul 2026 14:39:49 -0400
+Message-ID: <20260714183950.1620016-5-yazen.ghannam@amd.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260714183950.1620016-1-yazen.ghannam@amd.com>
+References: <20260714183950.1620016-1-yazen.ghannam@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00006001:EE_|SA0PR12MB7462:EE_
-X-MS-Office365-Filtering-Correlation-Id: 62a4ee0f-4a17-4be4-ab4a-08dee1d751a2
+X-MS-TrafficTypeDiagnostic: BN1PEPF00006000:EE_|CH3PR12MB7545:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6da5afd6-af2e-4299-ad52-08dee1d75380
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|36860700016|82310400026|23010399003|18002099003|11063799006|56012099006;
+	BCL:0;ARA:13230040|23010399003|376014|1800799024|82310400026|36860700016|22082099003|18002099003|56012099006|11063799006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	Ye93tJTV5g0Xj4MqjK+4Qkt4/fsecOAqmi1abE5WkpEVjObzLjjBVITWGrh1DSC36BszeMC8x19ZQwWXKnGbk1w1YeihUdTT6ZAXa72KC2TSCSy9b2LTB1qXcYR4AWyOQSPOIQ05D/0U9Or9Ui4xoh4OZTBCthnJQGBVVrgOh/o09zD+L6nvI3KsmtD+DqM+BDlFZs6azv7Xb80JEzJHwFG5Y6/Z66elWJNs/9n43mGoaB6tdWH3bNBNw2vp8CoWvhm7c2aoGxHnOzA5bF08z4+UWogeOt/+ze9MxxFFk4yIaJVCYo8YPbZ2rb/rCYIRdLxET861GgKOco49vzytUsEMJhtZUAqcP3T5yBkMndQFWrA9e49l2w2HHoXx41Nf1WZdI4TfWm0yxSZ51EPqfVG8IfeX+Sj00xxrFoMo+o4SJJgpnuQ/viDIqjONOXK5UUd4PurjNC0VuzHcJGmeZW6f4zn6ZrGvYMzS0JYOiUpRHdC/CGqNeZ4bkVt8zQDe5dw/5Ikm91bFaCWol8Z9QaXFCBwOSqwQfiiPDur6IRwUOEi/SM3bA7/SgSGvfG5DUau6JQZdENV2UupwEKOvxXKhc4UdLlZOeAMcyMcxiaqoAwyvumPBTWP1HZ2CagPjRMT1OG/yBDwTiSxWk2R2YE6MPCz+6f4bJnNGOl8APG9p5R79RnTyuCWwASA+uRVdoXbH86/phaA0gyZtXZF0Zg==
+	mPvg+ZB/qxPzeC60pDpRfHRpZbG/21rp8XNn6FzKExqQad3yyU0Tbo6Gf1iy0CCHMN9y2rnUzPPepNqaja8uDOnDJDEO2bwyqoZ++hkRgGRZTrvXjU038KMxVb+00JZ0cJHB8qcnqcNzhK1I5v8wB1ycuzIw7Sh+OdXRAsDL9x+wOIj3PJOVZU/dGq8dkJ+Yy7cMimBquT8fKtbIQ8KMMCMxhQWaCrQ3IYsS6tzsfprfH5Ab4mBZ+jltGvy5W5W/sLPPElhoNoEc+JDum09h2NfBarGdQatafNbvpAPJjlaScILdnsutJoWilYOF5ypPLE38Bj4hcYF8g++3FfL3DciZAZ0Q/RLHhHplnZdpaEuubFNSsYcV6tR9pWlB38KO6H+wN6obB+hFS3l3Acri7T6ZSPo/LJRTM38ywbH6NPBafd11NAkUqHDxYtbbdxhOo38Hviwv0cmUU+48i57ZolGHvaop0yh2DRFnhFg2lGfr6C+povqa/AZuN8RTzfT6cbaJyiBMnX7qhxljjYYCRpETVESCQ6cw7QAjmhujGWh2/k9MZ4pfxrpjp5iV7UyLHSkWa+mU2HOvFqPSbQZPllLHojDYdNL8Y2gGbB2gaM1+cn5G0sA1giTeDRET18QaYbl3/lj2+0XSY4DYZsQ+/VdDen9qvoBb8uFkNxfeqkZ1eJksC3Fp1vCW2+WsSmuzxgASAfqHGPm7uYrnUWAO8A==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(36860700016)(82310400026)(23010399003)(18002099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(82310400026)(36860700016)(22082099003)(18002099003)(56012099006)(11063799006)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	eD1U6HGzXGZhNUnClLboEfQ8sJmwBl6rcdp8hKfiDRADGWBG+j3EfZR6VcGlVK020elimxYOEGDIwT9uXW9AAzf8KG+ngcOp+634ECZniTuTJHtWezDMjXbMhGYHrmRFt5rGt56QratQIwEoKLgpB2VWEotTiLEndJKDRpMozpurSDROEeE9tSkEGn14qMCHHuPoiLJUih4wORmBIKA9tPeK+tolLRTiuLxSnScPYA4cR6PoXRVLm9FQu0bus0QcFBUw8+BQrKqfCo8UT+DkXrIhZtmvQ0udx9kueGzr5anZC8jcymcReSfvDxkunvElTQd8+grJ0Z4vIRrtTQ+o9y6d9SpI33t9xOYURR4xd+V5+Kys/dpajK8Eg4InMMHczSiSPnzjPPC31/wFhFz5cKL9x4F7xTmeEHn02L0lVHeGVRLX+kyLdMbdYMiT78JL
+	slpAWOv+xVOa5pikeNHcDF3vP/0JTkMFyn21RRZ1PHadnRwQqbjTF1Uv0T5RrYqK8cO0gyvpkjwoaPkLh7cthZiCRo5uB3ExbkpuUJP7CoPJSGod7qnfDGMMUJEfvwuRQIITcYOfPq5hRevMmCQvWm/M6fWYCt9hfO73va2w9nPPIss9oecAUY5DHIq05apH1Xot9mxiZN/dtke1EcwvkLit1G2M+4f6M4XZGq1tBCwVh0k96HWH98R7xQdNzOXVuB1bRhlMMEn3a/xJeGk0Jd56fiOZH2tNpIwpzwA1mxR7bBqzfHQLOoO5KbN3x2u2rrcfIqYWN+qaQYw2T7NIPTUARGNO6WMHJwuVYkDD6HGTH79AngxyrCmZvUPWCWaAGdtxqrdauM+clXrgbXOzCPCBhKtK8feiWexM5TKFBOhK62Ll7/kas9xyBPdQ50VY
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2026 18:40:03.6589
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2026 18:40:06.7937
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 62a4ee0f-4a17-4be4-ab4a-08dee1d751a2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6da5afd6-af2e-4299-ad52-08dee1d75380
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00006001.namprd05.prod.outlook.com
+	BN1PEPF00006000.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB7462
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7545
 
-Hi all,
+Emit a trace event for each erroneous flit logged by the Flit Error
+Counter, capturing the counter control/status and both Error Log
+registers. This provides a structured, low-overhead record of flit
+errors that userspace RAS tooling can consume without parsing the
+kernel log.
 
-This set adds basic support for using the Flit Logging capability
-introduced in PCIe v6.0.
+Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
+Assisted-by: Claude:claude-opus-4-8
+---
+ drivers/pci/pcie/Kconfig |  1 +
+ drivers/pci/pcie/flit.c  |  2 ++
+ include/ras/ras_event.h  | 48 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+)
 
-The work was started by Avadhut, and I took over after he left AMD.
-
-Design Notes and Limitations:
-* Only enabled for ports using a service driver.
- * Other device types can and do support this capability.
- * The interrupt is managed per-device. So each driver would need to add
-   their own support. In other words, there isn't a centralized handling
-   flow as currently described in the spec.
- * A future Flit Logging capability revision will use a centralized flow
-   similar to AER. But that is not covered in this set.
-* Included ratelimiting for messages.
- * Initial thought was to do "interrupt storm handling" similar to MCA.
- * It's not clear to me if that's necessary, so I went with a similar
-   solution to AER.
-* Flit logging CPER decoding is not covered.
- * There is a proposed change to include DPC and Flit data in the PCIe
-   CPER section format. This would be used in FW-First handling.
- * IIRC, the format still isn't settled, so I left it out of this set.
-
-AI Assistance Notes:
-* Patch 2 was originally written by Avadhut, and I made a few fixups.
-* The code in patch 3 was originally written by me.
-* Patches 1, 4, and 5 were written with AI assistance.
-* AI assistance was used for squashing, splitting, refactoring, and
-  reviewing the patches.
-
-Thanks,
-Yazen
-
-Avadhut Naik (1):
-  PCI/FLIT: Add support for Flit Logging Extended Capability
-
-Yazen Ghannam (4):
-  PCI/portdrv: Group PCI Exp Cap services into a single mask
-  PCI/FLIT: Negotiate _OSC control for Flit Error Logging
-  PCI/FLIT: Add trace event for flit errors
-  PCI/FLIT: Ratelimit flit error logging
-
- drivers/acpi/pci_root.c       |   6 +
- drivers/pci/pci-sysfs.c       |   3 +
- drivers/pci/pci.h             |   7 +
- drivers/pci/pcie/Kconfig      |  11 ++
- drivers/pci/pcie/Makefile     |   1 +
- drivers/pci/pcie/flit.c       | 283 ++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.c    |  23 ++-
- drivers/pci/pcie/portdrv.h    |  10 +-
- drivers/pci/probe.c           |   2 +
- include/linux/acpi.h          |   1 +
- include/linux/pci.h           |   7 +
- include/ras/ras_event.h       |  48 ++++++
- include/uapi/linux/pci_regs.h |  14 +-
- 13 files changed, 409 insertions(+), 7 deletions(-)
- create mode 100644 drivers/pci/pcie/flit.c
-
-
-base-commit: 5d9f1dd3b3e7bd64ac7ddedf28fcb7db81053819
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 1ee3c85e63c1..6a0f3abfbfe7 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -150,6 +150,7 @@ config PCIE_EDR
+ config PCIE_FLIT
+ 	bool "PCI Express Flit Mode Error Logging support"
+ 	depends on PCIEPORTBUS
++	select RAS
+ 	help
+ 	  This enables support for the PCI Express Flit Logging Extended
+ 	  Capability, which logs errors encountered by a port operating
+diff --git a/drivers/pci/pcie/flit.c b/drivers/pci/pcie/flit.c
+index 12f2b6fbf1de..83cf53f39291 100644
+--- a/drivers/pci/pcie/flit.c
++++ b/drivers/pci/pcie/flit.c
+@@ -15,6 +15,7 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/pci.h>
++#include <ras/ras_event.h>
+ #include "portdrv.h"
+ #include "../pci.h"
+ 
+@@ -84,6 +85,7 @@ static irqreturn_t flit_isr(int irq, void *context)
+ 
+ 		pci_read_config_dword(pdev, flit + PCI_FLIT_ERR_LOG2, &err_log2);
+ 		pci_info(pdev, HW_ERR "  Error Log1: 0x%08x Error Log2: 0x%08x\n", err_log1, err_log2);
++		trace_flit_event(pci_name(pdev), cntr_ctrl, cntr_sta, err_log1, err_log2);
+ 
+ 		pci_write_config_dword(pdev, flit + PCI_FLIT_ERR_LOG1, err_log1);
+ 	} while (err_log1 & PCI_FLIT_ERR_LOG_MORE);
+diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+index fdb785fa4613..0f02928b5cda 100644
+--- a/include/ras/ras_event.h
++++ b/include/ras/ras_event.h
+@@ -381,6 +381,54 @@ TRACE_EVENT(aer_event,
+ 			"Not available")
+ );
+ #endif /* CONFIG_PCIEAER */
++
++/*
++ * PCIe Flit Error Logging trace event
++ *
++ * These events are generated when the Flit Error Counter of a PCIe Gen6
++ * Flit Mode port records one or more erroneous flits.
++ *
++ * char * dev_name -	The name of the slot where the device resides
++ *			([domain:]bus:device.function).
++ * u16 cntr_ctrl -	Flit Error Counter Control register value.
++ * u16 cntr_sta -	Flit Error Counter Status register value.
++ * u32 err_log1 -	Flit Error Log 1 register value.
++ * u32 err_log2 -	Flit Error Log 2 register value.
++ */
++#ifdef CONFIG_PCIE_FLIT
++TRACE_EVENT(flit_event,
++	TP_PROTO(const char *dev_name,
++		 const u16 cntr_ctrl,
++		 const u16 cntr_sta,
++		 const u32 err_log1,
++		 const u32 err_log2),
++
++	TP_ARGS(dev_name, cntr_ctrl, cntr_sta, err_log1, err_log2),
++
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u16,		cntr_ctrl	)
++		__field(	u16,		cntr_sta	)
++		__field(	u32,		err_log1	)
++		__field(	u32,		err_log2	)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name);
++		__entry->cntr_ctrl	= cntr_ctrl;
++		__entry->cntr_sta	= cntr_sta;
++		__entry->err_log1	= err_log1;
++		__entry->err_log2	= err_log2;
++	),
++
++	TP_printk("%s cntr_ctrl:0x%04x cntr_sta:0x%04x err_log1:0x%08x err_log2:0x%08x",
++		__get_str(dev_name),
++		__entry->cntr_ctrl,
++		__entry->cntr_sta,
++		__entry->err_log1,
++		__entry->err_log2)
++);
++#endif /* CONFIG_PCIE_FLIT */
+ #endif /* _TRACE_HW_EVENT_MC_H */
+ 
+ /* This part must be outside protection */
 -- 
 2.53.0
 
