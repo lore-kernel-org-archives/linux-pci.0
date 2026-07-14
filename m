@@ -1,465 +1,205 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-qk2-f0.google.com (mail-qk2-f0.google.com [74.125.230.192])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8165F4483BA
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 12:57:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784033851; cv=pass; b=AbvU6Gdv4YoHvveuGUQgJWoX/NO43Ve8Fblx6juFs548JfpjO5p9yV8tIxBJV0C4prtwQyR+pf1YUBBcGKagwAfl342kt7ZXhKJ3idJvclXLOAex+as+HliUrvVSnKTcksJjUgKJG/53ZtCvYASSGgb3xjDdKhoBIpIfJ60X9z4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784033851; c=relaxed/simple;
-	bh=paq3CGgULgMVb7YetXuUAWmLKLQxlCFztC+eRmgK9+0=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=RTzn6qova8tkz5fd94Hz+IYeILZJaQD93076XjjziPW2tQpemyWUXIWs4DKPKHAv+c28ieteZEoqAeacB1gjxzrCAfZFMErULsM7IzjmTPZif6HC53MP4ESYjnDN4+8MxWj/GugbMWYdGK6XY4Cv+RML4oCoAFpsGNwRF1dyRPU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fi4Je1A6; arc=pass smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 047C943FD0E
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 13:03:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.192
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784034206; cv=none; b=Q9oXuVNkpgpJxfsn9f97WmxCyoaV6WjP/QtW/qeNdvEjD8JcYN733Xr6AOtpxU3C3ODguSczHeBhjZP0SQXa9hI3TcNnvHGBLe2IlrHtZPmLp01Eb+2owtGVKrwtkc1n0ceXU8+URpRql6Y96i6gUL7YScyI9eOhP/1V41ONOuw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784034206; c=relaxed/simple;
+	bh=rC2Kqe+sU5PqXGlFedUh2OqBv9Iid7OTb3etgq6VA5I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WEQbwKOAAaD9UHpi9CToRllGxf8UZBdVTAtmDD9RriOZTG6KDJcRa1IcHfRHxHP7Q6ICV3YdxOK4fuE6dcgFGW8sNdiUN2F90U2ChZzZkvXA7mrfqFunxELIF8buxODkcDdPGZ6q3sKXE28yj5qUI1ipM0yVA3fpUa8J0YmxmdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C5nO1cBW; arc=none smtp.client-ip=74.125.230.192
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fi4Je1A6"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-38dcbade417so2626141a91.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 05:57:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784033849; cv=none;
-        d=google.com; s=arc-20260327;
-        b=sbvDtPAjtqSmXcHDBqAZPXovjaldr8u8Q5Z0wR39usDI+oUOtpM7FC02ChRpbRjiC1
-         6pZzqGkNehSY1Lwv6EtN7jklLsyH9nStUCJQ/nH+/Pz0PfVbOa82nITd5S7+9o7CFgXN
-         BN0swJtXT1Q5jwnG0BdgYnyFpUvF41EvkAy/1y9zVkf+7RR6mBuj0sYlLykfNAXMuv60
-         6A+XfcSoK+bHfLGyNFMRtsfcVJ6vY8p/cRtCjqrXr1mLnbuD4NqefBf/YO+GGpvVJY/F
-         j3FC5wvS62q5AdoH3PV6aBGarpbek6uk6xeXsLqH6pPnEVue3uqXC/LEcuKEOoD1p5qk
-         4EEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:dkim-signature;
-        bh=AmIgJ3zXzmoQHp/Chr0+VyJhqwRqs2n4l50G9zrXZ0w=;
-        fh=EfujMstWYmdFvPeCBAhLBiPi7yWFoNM15oJi8Rh/J0k=;
-        b=MP3BBgG177ClnVUJ6h4JMsOnfFNfC08cdS8ig7bk07vF3k+AxfwFVGXqD8FslHP/4g
-         qCfh3LH7g3w9K7AfkxXfT+z2yHVH5svzlXGPBjr16xL6sBtN1mVZt55Pmy7TaCxCCcPR
-         JDDKj7gLDoIbElyu50SxYK+xLadk5CiUUlui3Ic+YAkU14n0zPjyEftt7pCeZ9Bt2iVC
-         6vT87sW55REQ4iOBkf5DvFv1bpZDEO3v1UFtZHtTKw5LFZjdZpd2r5LSz/O+/PIq0QBb
-         zxGuo/DU2y8ojuOBW7Tes27YVfvDXTLo7LWjbZyuW86qeUGuF7iRpo7S0LqRHJRsNEM1
-         4qgQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C5nO1cBW"
+Received: by mail-qk2-f0.google.com with SMTP id af79cd13be357-91d4455ff18so39777685a.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 06:03:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784033849; x=1784638649; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:to:subject:message-id:date
-         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1784034204; x=1784639004; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=AmIgJ3zXzmoQHp/Chr0+VyJhqwRqs2n4l50G9zrXZ0w=;
-        b=fi4Je1A6qUlK/YZ4jLMYinrvRudIwKmZnT7Qo/fh6/TYZkekGxyV2UuXq/ud+RemvH
-         ryrJkFpzh39SBthFue9Aq8Lvy2se0QHLLRr+sLibOo0vDE8OTMyE4m4jKlpK1zerXZ1Z
-         +h8IK0r2clsCGKdco5OS/hVb2hAnRkd30kgF2I4Km6oSFlQsOHf6vMyCEfzXT4MQNN/v
-         piWG9srbz70IWCy6txJ3t1MK7EZqtmhgSg5I4vZItkVNG3d8HbP9aQF77fU/Xr1x+Ru/
-         cNyKq/oxTRtUvqpjkg1dpMkuCyhW7pw4RM2Bs+ugMyvvJtZNmOqBitt5RVM/BQbesE4A
-         1eFQ==
+        bh=CfSJmEAZPFbCA1isHeIkUteGlC+Qb4lvv34SMSUfW2g=;
+        b=C5nO1cBWSQyr97QPStTj+iSNGp8a4mXZ3x0U0lPw/CakKEPR5izHEL1N71TjCuBbcS
+         92r2E11z75GsKn0+T0pWrB6eRGrN2Bz7KQJseqII7EoTDSrdRX0HKNx4uu+4hjn2fExt
+         0HZycZ4kgvDK4vm+dC8Z60t7Qjq9AzqL/EvqMOBuFV8Zbfm/YOLyaa6F13FzIRvpGhOW
+         QOelQVkyQeFBrgpzO9BczNJAI+tyhnlEMZ9bSNXkAEw+Tm5nRsI7vrQn1vHTb6+XU5Om
+         WhPX+tUn+ls4s6j/XKDvSXgEFEfOfTHqqTVr/0ujtea5uid5RauC160BTyusoTZNxroW
+         UPQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784033849; x=1784638649;
-        h=content-transfer-encoding:content-type:to:subject:message-id:date
-         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=AmIgJ3zXzmoQHp/Chr0+VyJhqwRqs2n4l50G9zrXZ0w=;
-        b=pmA6r/xtsb+pbK9Bl+PBlf9NK20y4dqQIT5t/s9edDx8NAVNQmAaqRbTdQBFHp5Mrn
-         ePhbtcaWObzvFeSFBZqNXOAJuTtTRxivE1sj8Wpa7Q9KPnK5wLRjkWyBojn2F4HvMN6P
-         5E1csN5AuJW6fZ47t7MUd6sausBWpQawYkcNIhyYTgm348bVLi7IrM8V8xeVjjwpqTq1
-         zagcOl3ezKlADWDW0/2JNoKAnfWzMrvwrT6kpMqEEGdJepFxWTs3eLKhlmvSeEb4frMu
-         xaiQ5TVkekupt+FTBw1IG5BYdP+4ikdJ1ZCMdmUWmzoZMY0T/Z37ewSM9bfBAqr+Inte
-         0YsA==
-X-Gm-Message-State: AOJu0Yzn01kJ4wItEJlCu2JnrhRTfsv5Y4fKY1brk757VNwSq4dtevGy
-	v8B3uCygHP9y6/p17Sv+RW1X0EVg5S6QjTDq+PiSGmCbSRd/CS6eoSsZREmvTtSGsXZNjMx1tMC
-	oDT0DvbBuoHV+xykXvmW0Nu/H4BNPikhxDkk5iKg=
-X-Gm-Gg: AfdE7cn0ucSPkfByP5UptoBOYSAMU3U8Hixvecc2Rs3ICMDg4hJ4Uoo0TWtFpaJWyaN
-	BD9wEYZFJmjC96LBtCD5g3qnGF3Z39ry3lPM2wNh49lTXs0vswTFftb0xjAsPkKnRTIa3V/bmdD
-	lNTysh/uHDi+/ako8SE39EEKxYEA3CNl2FyNbss2s6h/pKpKYX/f4IrojXxRNmNsMKLiPxZ8wFP
-	ceqKt+xkNAmyz+lrM5Tz4OVTSXbZKKlZnHgKPjt812O273Dyanx+NLheYGqjK64QfF5yGslHtV0
-	vfiT8ALnzsnMKdPTAZmTxt/AM5hgOGZZKogWBe+FlQJd8m0EvwzAGLzy+JwBxEVpt/ka/WrkcBo
-	tjCpD1Y0KKkwMmMfj8jBZRXZY
-X-Received: by 2002:a17:90b:2dc1:b0:387:e0cb:7f0 with SMTP id
- 98e67ed59e1d1-38e17ea3eb7mr3222458a91.36.1784033848643; Tue, 14 Jul 2026
- 05:57:28 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1784034204; x=1784639004;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CfSJmEAZPFbCA1isHeIkUteGlC+Qb4lvv34SMSUfW2g=;
+        b=EzLd5iMK/rJqHCBZZ7m95w0n8509sm+hDdMMvVkpuHr7zZGkXedBZDWpe+Jrq3OPFh
+         GWoT+ufm92xa928HqFYE4O23s1ZuZtTsUBu82tABYC0nlr9wHuIq70GIHFjj6Dj78YXK
+         hqXw+DfK00hg8DHGUunY5mbZbVsPSbiUCGwqnXeP8pNTEzqvncXcCmcwO5xDwav3bw1A
+         hIvpOlNWZCd5FZadJqJQ+4L9CtuNycR2eWC9zm3oTAoKmC0FbBRPOvbnYhNlQ8vQnAh9
+         iV+r75a7vYKGyl78+ZBu+fABnrjgrymuXYqEi89pcDnIr0ocOlMlX9QTnUlCkEfRZJcX
+         c4AA==
+X-Gm-Message-State: AOJu0YycRyNTH9LNS2Fy6lH0otUjG51tyrXMqTq46Kqf+Hlzs5KUYbf+
+	uLvvDHoGDV7HrlW0ACjHQQxb6caRCrn0w2WjE2wiATQeN9RSLPfPXZXkTrK2lyUTLqk=
+X-Gm-Gg: AfdE7cmDLoQ8iaOS5P9xAjuEVe31AQOuBlmWBFVV3+QI04NJBSblv0NjxAXnfIx3Fk8
+	v1eVwE9OT/+EZt/MTIE3ENNRkdzayq4KQHGLnqOZdHUT/cVbS31hr8xzpHw/KxZw56Rih47XLcE
+	Fwd74M8MRNwm45BrdXwToetw/TUeYYQV20EAtiFc310ZViPlyJURmWvQVt96ZU2SfdgLefj62Zy
+	lmk1LfTbRtGXXtfmyhJTvoutWlAu7aJCrgyTeZtbkBr76KRvcolshH8BRK+dX2EdcmQL20basGO
+	4tLSRUaDhGwICuNe+fH0EvrIeZbyRgjXdnOAi+hwS9nVNoxi9iCbs1rSTi0V8hEObEeTPXlB2aZ
+	OtRFp8LkWc2vrRKGbHj8WLPabaVehyVL3JWUg2EvJddyBZITMJQJJbHapxHz0Tae5FWQ98Us4dE
+	E7AdH/jHUTzqd999x2ncerUg==
+X-Received: by 2002:a05:622a:1f8f:b0:51c:7b12:5ff1 with SMTP id d75a77b69052e-51cbf3e12bcmr115593901cf.77.1784034121716;
+        Tue, 14 Jul 2026 06:02:01 -0700 (PDT)
+Received: from [192.168.101.113] ([45.249.9.114])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51caacad0cfsm117138491cf.8.2026.07.14.06.01.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jul 2026 06:02:01 -0700 (PDT)
+Message-ID: <4f0c1daa-dbc5-4a3c-8914-253372deec8b@gmail.com>
+Date: Tue, 14 Jul 2026 18:01:53 +0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Rowan Cramer <rowan.cramer@gmail.com>
-Date: Tue, 14 Jul 2026 08:57:17 -0400
-X-Gm-Features: AUfX_myO5Pa4DwjUBdEa5lvq2lmvZSVtbnzNY6SRoMy3hJ-zPxES9TaQKVDF0RQ
-Message-ID: <CAPew1NKKWf7rr6eZXp=KooN43CKaTbcc-U9ZkKrBhcXaARTKUQ@mail.gmail.com>
-Subject: NVMe MSI-X completions lost behind VMD across package C-state exit
- (even PC2) on Arrow Lake client VMD [8086:7d0b]
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() in
+ probe
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+References: <20260712175427.232234-1-alitariq45892@gmail.com>
+ <20260712180440.423421F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Ali Tariq <alitariq45892@gmail.com>
+In-Reply-To: <20260712180440.423421F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi,
 
-I have what looks like a platform/VMD interrupt-delivery bug on a
-new Arrow Lake laptop, isolated with a reliable reproducer and a
-three-arm test matrix. Reporting here because the fault sits below
-the NVMe driver, in the VMD interrupt path, and is invisible unless
-the package is allowed to idle. Happy to test patches or run any
-further diagnostics.
 
-Summary
--------
-NVMe MSI-X completion interrupts are intermittently lost when they
-arrive through VMD's interrupt remapper while the CPU package is in
-(or exiting) ANY idle state deeper than C1 =E2=80=94 including plain PC2.
-The drive completes the I/O correctly (the kernel's timeout handler
-always finds the completion already in the queue: "timeout,
-completion polled"); only the interrupt vanishes. Holding PM-QoS
-/dev/cpu_dma_latency at 100 us (C1-only idle) eliminates the fault
-completely; nothing else does.
+On 7/12/26 11:04 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] The driver's removal path incorrectly calls asynchronous pm_runtime_put() before pm_runtime_disable(), and tears down PM references before disabling the hardware.
+> - [High] Failure in starfive_pcie_clk_rst_init() returns directly without powering off the PHY, causing a resource leak.
+> - [High] Missing return statement after regulator_enable() failure causes a silent fallthrough, later leading to an unbalanced regulator_disable().
+> --
+> 
+> --- Patch [1]: [PATCH] PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe ---
+> commit 83a329f8aee98c4aec071468fc96ecc89497124e
+> Author: Ali Tariq <alitariq45892@gmail.com>
+> 
+> PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
+> 
+> This patch replaces pm_runtime_get_sync() with pm_runtime_resume_and_get()
+> in starfive_pcie_probe() to properly handle runtime resume failures. It
+> adds error handling to disable runtime PM and bail out of the probe
+> function if the device fails to resume, preventing unbalanced usage
+> counters and hardware configuration on an unpowered device.
+> 
+>> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+>> index 298036c3e7f94..e9a472985b8ac 100644
+>> --- a/drivers/pci/controller/plda/pcie-starfive.c
+>> +++ b/drivers/pci/controller/plda/pcie-starfive.c
+>> @@ -410,7 +410,11 @@ static int starfive_pcie_probe(struct platform_device *pdev)
+>>   		return ret;
+>>   
+>>   	pm_runtime_enable(&pdev->dev);
+>> -	pm_runtime_get_sync(&pdev->dev);
+>> +	ret = pm_runtime_resume_and_get(&pdev->dev);
+>> +	if (ret < 0) {
+>> +		pm_runtime_disable(&pdev->dev);
+>> +		return dev_err_probe(dev, ret, "failed to resume device\n");
+>> +	}
+>>   
+>>   	plda->host_ops = &sf_host_ops;
+>>   	plda->num_events = PLDA_MAX_EVENT_NUM;
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but looking at starfive_pcie_remove():
+> 
+> drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_remove() {
+>      ...
+> 	pm_runtime_put(&pdev->dev);
+> 	pm_runtime_disable(&pdev->dev);
+> 	plda_pcie_host_deinit(&pcie->plda);
+>      ...
+> }
+> 
+> Does this leave the hardware in an active power state upon module unload?
+> 
+> Since pm_runtime_put() is asynchronous, wouldn't calling pm_runtime_disable()
+> immediately afterward risk canceling the idle/suspend work?
+> 
+> Also, does tearing down the PM reference before stopping the PCIe host
+> controller via plda_pcie_host_deinit() reverse the proper teardown order?
+> Could this cause the device to power off while still being actively accessed
+> by the core?
 
-System
-------
-- Dell 14 Premium / XPS 14 (DA14250), BIOS 1.11.0 (latest; Dell
-  ships VMD force-enabled, no BIOS toggle on this model)
-- Intel Arrow Lake; VMD controller 8086:7d0b at 0000:00:0e.0
-  (client SKU -> VMD_FEATS_CLIENT, so MSI remapping is always on;
-  no VMD_FEAT_CAN_BYPASS_MSI_REMAP, no module parameter)
-- NVMe: Micron 2650 1TB (DRAM-less/HMB), FW 26500101, at
-  10000:e1:00.0; all queues route via VMD-PCI-MSIX per
-  /proc/interrupts
-- Fault is kernel-independent: reproduced identically on 6.18.33
-  (LTS), 7.0.9 and 7.0.10 (Arch builds, clean cmdline)
-- intel_idle in ACPI mode; exposed states POLL / C1_ACPI (1 us) /
-  C2_ACPI (127 us) / C3_ACPI (1048 us)
+This is fixed in a separate patch [1].
 
-Symptom
--------
-  nvme nvme0: I/O tag N QID Q timeout, completion polled
+> [Severity: High]
+> This is a pre-existing issue, but I noticed a potential resource leak in
+> starfive_pcie_host_init():
+> 
+> drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_host_init() {
+>      ...
+> 	ret = starfive_pcie_enable_phy(dev, pcie);
+> 	if (ret)
+> 		return ret;
 
-Present since the machine's very first boot (3 events in the first
-90 s of its life). Baseline ~125 events/day idle; 60-190/hr under
-gaming I/O. Each event stalls the waiting I/O for io_timeout
-seconds (we run nvme_core.io_timeout=3D10 as mitigation), which
-manifests as multi-second system freezes. SMART is immaculate: 0
-media errors, 0 controller error-log entries against >500 host-side
-timeouts =E2=80=94 the device completes the I/O; the notification is lost.
+I do not think we need to call starfive_pcie_disable_phy() here inside
+the error handling. If starfive_pcie_enable_phy() fails, its internal 
+error path already cleans up by calling phy_exit() via the 'err_phy_on' 
+label. Calling starfive_pcie_disable_phy() here would cause a redundant, 
+unbalanced phy_exit() call.
 
-Key evidence
-------------
-1. Load is NOT the trigger. ~4 TB of worst-case saturating stress
-   (random reads at 2+ GiB/s, plus CPU, memory-bandwidth, GPU and
-   fsync-write pressure, combined) produced ZERO events. Saturating
-   I/O never lets the platform idle.
+>      ...
+> 	ret = starfive_pcie_clk_rst_init(pcie);
+> 	if (ret)
+> 		return ret;
+>      ...
+> }
+> 
+> If starfive_pcie_clk_rst_init() fails, it returns the error code directly.
+> Does this fail to clean up the successfully initialized PHY?
+> 
 
-2. Idle->active transitions ARE the trigger. A trivial reproducer
-   (bursty random reads separated by 1-8 s idle gaps, script below)
-   produces 13-16 lost interrupts per 15 min, every run.
+This is fixed in a separate patch [2].
 
-3. PM-QoS bisection puts the loss boundary exactly at C1|C2:
-     /dev/cpu_dma_latency hold   idle allowed        events/15min
-     none (stock)                C1+C2+C3            13-16
-     200 us                      C1+C2               19
-     100 us                      C1 only             0
-     0 us                        none (poll)         0
+> [Severity: High]
+> This is a pre-existing issue, but does this code swallow the regulator error?
+> 
+> drivers/pci/controller/plda/pcie-starfive.c:starfive_pcie_host_init() {
+>      ...
+> 	if (pcie->vpcie3v3) {
+> 		ret = regulator_enable(pcie->vpcie3v3);
+> 		if (ret)
+> 			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
+> 	}
+>      ...
+> }
+> 
+> Because there is no return statement after dev_err_probe(), the function
+> proceeds and eventually returns success at the end. Could this cause the
+> driver to continue operating with unpowered hardware?
+> 
+> Later on, starfive_pcie_host_deinit() unconditionally calls
+> regulator_disable(). Since the regulator was not successfully enabled,
+> would this trigger an unbalanced disable warning in the regulator core and
+> corrupt regulator use counts?
+> 
 
-4. Ruled out: drive APST (nvme set-feature 0x0c=3D0: no change), link
-   ASPM (runtime-disabled via sysfs on the VMD-domain link: no
-   change; note cmdline pcie_aspm=3Doff does not govern VMD-managed
-   links, the vmd driver enables L1.1/L1.2 itself per
-   VMD_FEAT_BIOS_PM_QUIRK), kernel version, drive health, firmware
-   updates (none available).
+This is also fixed in a separate patch [2].
 
-5. turbostat correlation (5 s intervals alongside the reproducer):
-   the package NEVER enters PC8/PC10 on this platform under bursty
-   I/O =E2=80=94 deepest observed is PC6 =E2=80=94 and every lost interrupt=
- falls
-   in intervals showing only PC2/PC3/PC6 residency:
+[1] 
+https://lore.kernel.org/linux-pci/20260713145014.740898-1-alitariq45892@gmail.com/T/#u
+[2] 
+https://lore.kernel.org/linux-pci/20260714113029.326207-1-alitariq45892@gmail.com/T/#u
 
-     arm (900 s each)        Pkg%pc2/pc3/pc6/pc8/pc10   events
-     stock                   13.2 / 0.3 / 4.8 / 0 / 0     13
-     endpoint LTR clamped    19.8 /  0  /  0  / 0 / 0     14
-       to 102.4 us
-     cpu_dma_latency=3D100us    ~0  /  0  /  0  / 0 / 0      0
-
-6. LTR is irrelevant. Firmware sets the endpoint LTR to 15.7 ms
-   (0x100f100f =E2=80=94 nonzero, so vmd's BIOS PM quirk never touches it).
-   Clamping it to 102.4 us via setpci was demonstrably honored by
-   the platform (PC3/PC6 residency dropped to zero) yet the loss
-   rate was unchanged (14 vs 13). The fault does not need deep
-   package states =E2=80=94 losses occur with nothing deeper than PC2, with
-   cores in C6/C7.
-
-Current mitigation
-------------------
-A systemd unit holding /dev/cpu_dma_latency at 100 us. Fully
-effective (a full day of gaming: 1 event vs the prior 60-190/hr),
-but it costs ~2.5-4 W package power versus letting the machine
-idle properly, since it must forbid core C6/C7 and PC2 everywhere.
-
-Questions
----------
-1. Is this a known Arrow Lake (or MTL-family) VMD erratum? The
-   machine shipped this way; Windows presumably masks it via its
-   own idle policy or is equally affected but silent.
-
-2. The client feature set forces MSI remapping on 8086:7d0b. Is the
-   VMCONFIG_MSI_REMAP bypass (as used for 28C0) architecturally
-   possible on client VMD? I am happy to test a patch enabling
-   bypass on 7d0b, or any other diagnostic/experimental patch =E2=80=94
-   the reproducer gives a decisive answer in 15 minutes.
-
-3. If the hardware genuinely cannot deliver remapped MSIs across
-   package C-state exit, should vmd.c be constraining PM (PM-QoS /
-   LTR / DMI-quirk) on affected platforms? As it stands, every
-   affected laptop loses NVMe interrupts silently at its default
-   idle settings.
-
-Full journals since the machine's first boot, lspci -vvv, SMART
-dumps, raw turbostat logs and the complete phase-by-phase test
-history are preserved and available on request.
-
-Reproducer
-----------
-Point ROOT at any directory with a few multi-hundred-MB files on
-the VMD-attached NVMe, run for 900 s, and count kernel "completion
-polled" events (nvme_core.io_timeout=3D10 makes them visible within
-10 s):
-
-  #!/usr/bin/env python3
-  # bursty-I/O reproducer: idle gaps let the platform enter package
-  # idle; the first read of each burst rides the wake-up.
-  import os, sys, random, time
-
-  ROOT =3D os.path.expanduser("~/BG3_Game")   # adjust
-  CHUNK =3D 65536
-  MIN_SIZE =3D 200 * 1024 * 1024
-
-  files =3D []
-  for dirpath, _, names in os.walk(ROOT, followlinks=3DTrue):
-      for n in names:
-          p =3D os.path.join(dirpath, n)
-          try:
-              s =3D os.path.getsize(p)
-              if s >=3D MIN_SIZE:
-                  files.append((p, s))
-          except OSError:
-              pass
-  if not files:
-      sys.exit("no large files under " + ROOT)
-
-  deadline =3D time.time() + int(sys.argv[1])
-  bursts =3D 0
-  fds =3D {}
-  while time.time() < deadline:
-      time.sleep(random.uniform(1.0, 8.0))
-      for _ in range(random.randint(4, 40)):
-          path, size =3D random.choice(files)
-          fd =3D fds.get(path)
-          if fd is None:
-              fd =3D fds[path] =3D os.open(path, os.O_RDONLY)
-          off =3D random.randrange(0, max(1, size - CHUNK)) & ~4095
-          os.pread(fd, CHUNK, off)
-      bursts +=3D 1
-  print(f"bursts=3D{bursts}")
-
-(Drop page caches before each run =E2=80=94 echo 3 >
-/proc/sys/vm/drop_caches =E2=80=94 or cached reads will suppress the rate.)
-
-Thanks,
-Rowan Cramer
-
-On Tue, Jul 14, 2026 at 8:13=E2=80=AFAM <linux-pci+owner@vger.kernel.org> w=
-rote:
->
-> Greetings!
->
-> This is the mlmmj program managing the <linux-pci@vger.kernel.org> mailin=
-g
-> list.
->
-> Your message to <linux-pci@vger.kernel.org> was not delivered to the list
-> because it contained a HTML part. Only text/plain messages are allowed on
-> this list.
->
-> Please configure your mail client to only send plain text mail.
->
-> For your reference, the rejected message follows below.
->
->
->
-> ---------- Forwarded message ----------
-> From: Rowan Cramer <rowan.cramer@gmail.com>
-> To: linux-pci@vger.kernel.org, nirmal.patel@linux.intel.com, jonathan.der=
-rick@linux.dev, bhelgaas@google.com
-> Cc:
-> Bcc:
-> Date: Tue, 14 Jul 2026 07:55:43 -0400
-> Subject: NVMe MSI-X completions lost behind VMD across package C-state ex=
-it (even PC2) on Arrow Lake client VMD [8086:7d0b]
-> Hi,
->
-> I have what looks like a platform/VMD interrupt-delivery bug on a
-> new Arrow Lake laptop, isolated with a reliable reproducer and a
-> three-arm test matrix. Reporting here because the fault sits below
-> the NVMe driver, in the VMD interrupt path, and is invisible unless
-> the package is allowed to idle. Happy to test patches or run any
-> further diagnostics.
->
-> Summary
-> -------
-> NVMe MSI-X completion interrupts are intermittently lost when they
-> arrive through VMD's interrupt remapper while the CPU package is in
-> (or exiting) ANY idle state deeper than C1 =E2=80=94 including plain PC2.
-> The drive completes the I/O correctly (the kernel's timeout handler
-> always finds the completion already in the queue: "timeout,
-> completion polled"); only the interrupt vanishes. Holding PM-QoS
-> /dev/cpu_dma_latency at 100 us (C1-only idle) eliminates the fault
-> completely; nothing else does.
->
-> System
-> ------
-> - Dell 14 Premium / XPS 14 (DA14250), BIOS 1.11.0 (latest; Dell
->   ships VMD force-enabled, no BIOS toggle on this model)
-> - Intel Arrow Lake; VMD controller 8086:7d0b at 0000:00:0e.0
->   (client SKU -> VMD_FEATS_CLIENT, so MSI remapping is always on;
->   no VMD_FEAT_CAN_BYPASS_MSI_REMAP, no module parameter)
-> - NVMe: Micron 2650 1TB (DRAM-less/HMB), FW 26500101, at
->   10000:e1:00.0; all queues route via VMD-PCI-MSIX per
->   /proc/interrupts
-> - Fault is kernel-independent: reproduced identically on 6.18.33
->   (LTS), 7.0.9 and 7.0.10 (Arch builds, clean cmdline)
-> - intel_idle in ACPI mode; exposed states POLL / C1_ACPI (1 us) /
->   C2_ACPI (127 us) / C3_ACPI (1048 us)
->
-> Symptom
-> -------
->   nvme nvme0: I/O tag N QID Q timeout, completion polled
->
-> Present since the machine's very first boot (3 events in the first
-> 90 s of its life). Baseline ~125 events/day idle; 60-190/hr under
-> gaming I/O. Each event stalls the waiting I/O for io_timeout
-> seconds (we run nvme_core.io_timeout=3D10 as mitigation), which
-> manifests as multi-second system freezes. SMART is immaculate: 0
-> media errors, 0 controller error-log entries against >500 host-side
-> timeouts =E2=80=94 the device completes the I/O; the notification is lost=
-.
->
-> Key evidence
-> ------------
-> 1. Load is NOT the trigger. ~4 TB of worst-case saturating stress
->    (random reads at 2+ GiB/s, plus CPU, memory-bandwidth, GPU and
->    fsync-write pressure, combined) produced ZERO events. Saturating
->    I/O never lets the platform idle.
->
-> 2. Idle->active transitions ARE the trigger. A trivial reproducer
->    (bursty random reads separated by 1-8 s idle gaps, script below)
->    produces 13-16 lost interrupts per 15 min, every run.
->
-> 3. PM-QoS bisection puts the loss boundary exactly at C1|C2:
->      /dev/cpu_dma_latency hold   idle allowed        events/15min
->      none (stock)                C1+C2+C3            13-16
->      200 us                      C1+C2               19
->      100 us                      C1 only             0
->      0 us                        none (poll)         0
->
-> 4. Ruled out: drive APST (nvme set-feature 0x0c=3D0: no change), link
->    ASPM (runtime-disabled via sysfs on the VMD-domain link: no
->    change; note cmdline pcie_aspm=3Doff does not govern VMD-managed
->    links, the vmd driver enables L1.1/L1.2 itself per
->    VMD_FEAT_BIOS_PM_QUIRK), kernel version, drive health, firmware
->    updates (none available).
->
-> 5. turbostat correlation (5 s intervals alongside the reproducer):
->    the package NEVER enters PC8/PC10 on this platform under bursty
->    I/O =E2=80=94 deepest observed is PC6 =E2=80=94 and every lost interru=
-pt falls
->    in intervals showing only PC2/PC3/PC6 residency:
->
->      arm (900 s each)        Pkg%pc2/pc3/pc6/pc8/pc10   events
->      stock                   13.2 / 0.3 / 4.8 / 0 / 0     13
->      endpoint LTR clamped    19.8 /  0  /  0  / 0 / 0     14
->        to 102.4 us
->      cpu_dma_latency=3D100us    ~0  /  0  /  0  / 0 / 0      0
->
-> 6. LTR is irrelevant. Firmware sets the endpoint LTR to 15.7 ms
->    (0x100f100f =E2=80=94 nonzero, so vmd's BIOS PM quirk never touches it=
-).
->    Clamping it to 102.4 us via setpci was demonstrably honored by
->    the platform (PC3/PC6 residency dropped to zero) yet the loss
->    rate was unchanged (14 vs 13). The fault does not need deep
->    package states =E2=80=94 losses occur with nothing deeper than PC2, wi=
-th
->    cores in C6/C7.
->
-> Current mitigation
-> ------------------
-> A systemd unit holding /dev/cpu_dma_latency at 100 us. Fully
-> effective (a full day of gaming: 1 event vs the prior 60-190/hr),
-> but it costs ~2.5-4 W package power versus letting the machine
-> idle properly, since it must forbid core C6/C7 and PC2 everywhere.
->
-> Questions
-> ---------
-> 1. Is this a known Arrow Lake (or MTL-family) VMD erratum? The
->    machine shipped this way; Windows presumably masks it via its
->    own idle policy or is equally affected but silent.
->
-> 2. The client feature set forces MSI remapping on 8086:7d0b. Is the
->    VMCONFIG_MSI_REMAP bypass (as used for 28C0) architecturally
->    possible on client VMD? I am happy to test a patch enabling
->    bypass on 7d0b, or any other diagnostic/experimental patch =E2=80=94
->    the reproducer gives a decisive answer in 15 minutes.
->
-> 3. If the hardware genuinely cannot deliver remapped MSIs across
->    package C-state exit, should vmd.c be constraining PM (PM-QoS /
->    LTR / DMI-quirk) on affected platforms? As it stands, every
->    affected laptop loses NVMe interrupts silently at its default
->    idle settings.
->
-> Full journals since the machine's first boot, lspci -vvv, SMART
-> dumps, raw turbostat logs and the complete phase-by-phase test
-> history are preserved and available on request.
->
-> Reproducer
-> ----------
-> Point ROOT at any directory with a few multi-hundred-MB files on
-> the VMD-attached NVMe, run for 900 s, and count kernel "completion
-> polled" events (nvme_core.io_timeout=3D10 makes them visible within
-> 10 s):
->
->   #!/usr/bin/env python3
->   # bursty-I/O reproducer: idle gaps let the platform enter package
->   # idle; the first read of each burst rides the wake-up.
->   import os, sys, random, time
->
->   ROOT =3D os.path.expanduser("~/BG3_Game")   # adjust
->   CHUNK =3D 65536
->   MIN_SIZE =3D 200 * 1024 * 1024
->
->   files =3D []
->   for dirpath, _, names in os.walk(ROOT, followlinks=3DTrue):
->       for n in names:
->           p =3D os.path.join(dirpath, n)
->           try:
->               s =3D os.path.getsize(p)
->               if s >=3D MIN_SIZE:
->                   files.append((p, s))
->           except OSError:
->               pass
->   if not files:
->       sys.exit("no large files under " + ROOT)
->
->   deadline =3D time.time() + int(sys.argv[1])
->   bursts =3D 0
->   fds =3D {}
->   while time.time() < deadline:
->       time.sleep(random.uniform(1.0, 8.0))
->       for _ in range(random.randint(4, 40)):
->           path, size =3D random.choice(files)
->           fd =3D fds.get(path)
->           if fd is None:
->               fd =3D fds[path] =3D os.open(path, os.O_RDONLY)
->           off =3D random.randrange(0, max(1, size - CHUNK)) & ~4095
->           os.pread(fd, CHUNK, off)
->       bursts +=3D 1
->   print(f"bursts=3D{bursts}")
->
-> (Drop page caches before each run =E2=80=94 echo 3 >
-> /proc/sys/vm/drop_caches =E2=80=94 or cached reads will suppress the rate=
-.)
->
-> Thanks,
-> Rowan Cramer
