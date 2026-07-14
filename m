@@ -1,46 +1,49 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C80CE36F419;
-	Tue, 14 Jul 2026 10:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99A26363C60;
+	Tue, 14 Jul 2026 10:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784025819; cv=none; b=omO8M7jQETaayJcU0EwIJ7b/AiG8H55Afegd0gf6kSOczwMVDm/mCzIoNWArGewhE86m7/TLIJ4p3y5GucUKseKtV82/UGRACYnPZKFvI2iM2bwFMLCJllVM7jfp7TN+dEHindOUq8dRNNe9kUHCDU3epagUuUaEaa//VFhFcDY=
+	t=1784025819; cv=none; b=eevm8UpH59MiJGv2YaxosA5rPEh/1eHsnb12c09dwBvYxwZxD3xtq+UtBmMjq4YgWTiXTEevbwLcYSF+hjSNaoe6/qzJfaTASZBVNYiQXYEYhAbI1WnDg03ogthIpCvvS4omR5+Rl0U5t4tcv5zZmtW7FJurCu1c7RHiXAS1qvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784025819; c=relaxed/simple;
-	bh=epahLDyQsz/tAJ4k/xd7headGLS2WRYATzGyf6xNxVI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MVtXmkdXT2PxlHvhIqJx2EosFrHvP1QgFDHaDplQO8ClgwT5sIFfRUnDT3/YAmCJxF4Ghx+CtEgpvozkM/25UJGwoA1AXcEgo/NzLAzWs41ENR4b0NIMAUxRg+8/MMunXaEeRN+PLD5xiPgQju3SbWUr9P/z5Gj/CrTMYm7ZiMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2SgpRN/n; arc=none smtp.client-ip=113.46.200.222
+	bh=musq/lKzoEctB+Kyr6riXQrt1/pN9DZw0glpr9dAP7A=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VRGSMfXmI0Y50NbMS40VPptQlKF/JEK/SfBJgLto4KvS/2FmaIZx7jdbhaB5OlRVq9GtdynpRDYl9JsLSBwjjprAwxoXmNfM9P0F+ssFyGvt8IT1jD2Mpvy5EC55CjgjybQ7FpEBaOI7BPxp9PqIIiiHYhW4TpxvCDQr8TAuX8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=tX0/3Fj/; arc=none smtp.client-ip=113.46.200.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2SgpRN/n"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="tX0/3Fj/"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=wXsq1iPHhMb7w/8o0UmRx1HAAIKZniLBNFjGH84Zle4=;
-	b=2SgpRN/nS2oSLxXmtA2nIJXy3k1gAT9IMmKiP6GaEEK92vJyvHLwKCR8PqjFEe5kzUtX0T5Uj
-	kdKN3nY2hlhK5f+C9RzNTI7FadrZ6X69+2QlvvM3FpuMPPdoVuSbvmuFMh4p1G1S1w1l6Hyd1Su
-	eGecJTTza7rKtm9/Nz103wQ=
-Received: from mail.maildlp.com (unknown [172.19.163.163])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4gzwdy1xNvzLlTk;
-	Tue, 14 Jul 2026 18:34:14 +0800 (CST)
+	bh=VzokQ3EOLc+1zJjYjYQHrT0TdNSJ4gX4CUd6SvdD5wU=;
+	b=tX0/3Fj/1N9oru7OfgYVQMymmH51Hb/sLN7fAo64oMNdsbaUdPegMUyp9C2X4chgZX1hP6L2L
+	kBU8i3yIuuxXwFe2D7ez76xAHolNrFeDokME6I9X21bibWjjqHfMnEVfIuruY59MA9EWPrU4+YY
+	atR39jGkxp39VrEbbzTzQLA=
+Received: from mail.maildlp.com (unknown [172.19.163.214])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gzwdz3lV8zKm9N;
+	Tue, 14 Jul 2026 18:34:15 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 059DD4048B;
-	Tue, 14 Jul 2026 18:43:32 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id C38924057C;
+	Tue, 14 Jul 2026 18:43:35 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 14 Jul 2026 18:43:31 +0800
+ 15.2.1544.36; Tue, 14 Jul 2026 18:43:35 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v20 00/16] vfio/pci: Add PCIe TPH support
-Date: Tue, 14 Jul 2026 18:43:09 +0800
-Message-ID: <20260714104325.54444-1-fengchengwen@huawei.com>
+Subject: [PATCH v20 08/16] PCI/TPH: Refactor pcie_tph_get_cpu_st & add requester variant
+Date: Tue, 14 Jul 2026 18:43:17 +0800
+Message-ID: <20260714104325.54444-9-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260714104325.54444-1-fengchengwen@huawei.com>
+References: <20260714104325.54444-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,110 +54,141 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-This patchset enables full userspace configurable PCIe TPH support for
-VFIO, which brings performance benefits for userspace workloads such as
-DPDK and SPDK.
+Refactor pcie_tph_get_cpu_st() and add pcie_tph_get_cpu_st_ext() extended
+variant with explicit requester type parameter.
 
-Currently VFIO only exposes read-only TPH capability registers to
-userspace, while all write operations are silently discarded. This
-prevents userspace from enabling and configuring TPH, limiting performance
-optimization opportunities.
+- Preserve original pcie_tph_get_cpu_st() as a compatibility wrapper,
+  using the default negotiated tph_max_type automatically, so existing
+  callers require no modification.
+- Add exported pcie_tph_get_cpu_st_ext() to accept an explicit requester
+  type argument for ST namespace selection, used by upcoming VFIO TPH
+  support.
+- Add requester type validation to reject invalid values and enforce the
+  hardware negotiated tph_max_type capability limit.
 
-Per PCIe spec 7.5.3.15: TPH Completer support is applicable to Root Ports
-and Endpoints, allowing Steering Tags to target host CPUs or peer devices
-for P2P transactions.
+Update pci-tph.h header and CONFIG_PCIE_TPH stub inline definitions
+to match the new function signatures.
 
-TPH usage model can be divided into three fundamental parts:
-1. Retrieve Steering Tag:
-   - Tags targeting host CPUs are obtained via platform methods (ACPI _DSM)
-     wrapped in pcie_tph_get_cpu_st(). Userspace requires a generic
-     interface to query these CPU-associated ST values.
-   - Tags targeting peer devices are managed by userspace drivers, and set
-     to kernel by dmabuf ioctl which address by zhiping's patchset.
-2. Program Steering Tag table:
-   - For devices with standard ST table structures (in capability space or
-     MSI-X table), userspace needs a unified interface to configure ST
-     entries.
-   - Devices without standard ST tables are handled by userspace itself.
-3. Toggle device TPH Requester enable/disable state.
-
-The patchset builds a complete, secure, staged TPH feature stack with core
-design objectives:
-1. Refactor & fix upstream PCI/TPH core implementation to provide clean,
-   safe, extendable helper APIs for VFIO consumption;
-2. Introduce configurable per-device TPH policy for staged feature
-   enablement, supporting progressive enabling of No-ST/IV/DS/LITERAL
-   modes;
-3. Fully virtualize PCIe TPH config space: read-only capability header,
-   virtually writable TPH_CTRL, silent discard invalid writes;
-4. Implement unified VFIO user feature uAPI (TPH / TPH_RESOLVE / TPH_ST)
-   for TPH enablement, tag resolution and batch ST table programming;
-
-The patchset is split into three logical parts:
-1. The first three patches is Zhiping's patchset of add TPH support for
-   p2p access (based on v11), because this patchset support query dmabuf's
-   ST/PH
-2. The second eight patches fix and refactor core PCI/TPH kernel code to
-   export required helper interfaces
-3. The last five patches implement corresponding VFIO TPH virtualization
-   and uAPI step by step.
-
-Based on earlier RFC work by Wathsala Vithanage
-
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
-v20:
-- Address almost all comments from Alex about v19, not within Alex's
-  scope:
-  - Drop LITERAL policy support
-  - uAPI changes: cap have been split into fine-grained
-  - TPH config access: still based on perm mechanism, but restrict the
-    readable and writable length
-  - Debugfs add more fields
-v19:
-- Address all comments from Alex
-  - Drop CPU-to-ST translation of PCI/TPH
-  - Re-implement vfio part, please refer:
-    https://lore.kernel.org/linux-pci/20260626092232.53ed3a7c@shazbot.org/
-- Add expose tph_policy via debugfs
+ drivers/pci/tph.c       | 45 ++++++++++++++++++++++++++++++++---------
+ include/linux/pci-tph.h | 10 +++++++--
+ 2 files changed, 44 insertions(+), 11 deletions(-)
 
-Chengwen Feng (13):
-  PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
-  PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
-  PCI/TPH: Cache negotiated max requester type at probe time
-  PCI/TPH: Refactor pcie_enable_tph and add requester variant
-  PCI/TPH: Refactor pcie_tph_get_cpu_st & add requester variant
-  PCI/TPH: Add macros to check standard and extended TPH support
-  PCI/TPH: Add pcie_tph_set_st_entries() batch ST entry programming
-    helper
-  PCI/TPH: Add pci_tph_dsm_supported() helper to detect device TPH ST
-    _DSM
-  vfio/pci: Add basic NO-ST TPH VFIO device feature support
-  vfio/pci: Add IV-ST TPH policy and VFIO TPH_ST batch programming
-    support
-  vfio/pci: Add DS-ST TPH policy and extend TPH_RESOLVE capabilities
-  vfio/pci: Sync core PCI TPH software state across device lifecycle and
-    resets
-  vfio/pci: Expose per-device TPH state via debugfs
-
-Zhiping Zhang (3):
-  PCI/TPH: Add requester/completer type helpers
-  dma-buf: add optional get_pci_tph() callback
-  vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-
- drivers/dma-buf/dma-buf.c          |  32 +++
- drivers/pci/tph.c                  | 282 ++++++++++++++++++------
- drivers/vfio/pci/vfio_pci.c        |  23 ++
- drivers/vfio/pci/vfio_pci_config.c | 164 ++++++++++++--
- drivers/vfio/pci/vfio_pci_core.c   | 341 ++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_dmabuf.c | 102 ++++++++-
- drivers/vfio/pci/vfio_pci_priv.h   |  18 ++
- include/linux/dma-buf.h            |  25 +++
- include/linux/pci-tph.h            |  53 ++++-
- include/linux/pci.h                |   6 +-
- include/linux/vfio_pci_core.h      |   3 +
- include/uapi/linux/vfio.h          | 144 ++++++++++++
- 12 files changed, 1090 insertions(+), 103 deletions(-)
-
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 1239a919b9a4..633dc6308b68 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -276,20 +276,22 @@ static int write_tag_to_st_table(struct pci_dev *pdev, int index, u16 tag)
+ }
+ 
+ /**
+- * pcie_tph_get_cpu_st() - Retrieve Steering Tag for a target memory associated
+- * with a specific CPU
++ * pcie_tph_get_cpu_st_ext() - Retrieve Steering Tag for a target memory
++ * associated with a specific CPU, with explicit requester type selection
+  * @pdev: PCI device
+  * @mem_type: target memory type (volatile or persistent RAM)
++ * @req_type: TPH requester type to select ST namespace
+  * @cpu: associated CPU id
+  * @tag: Steering Tag to be returned
+  *
+- * Return the Steering Tag for a target memory that is associated with a
+- * specific CPU as indicated by cpu.
++ * Return the Steering Tag for a target memory associated with a specific CPU,
++ * using the specified TPH requester type to select the correct ST namespace.
++ * Validates requester type against hardware negotiated capability limits.
+  *
+  * Return: 0 if success, otherwise negative value (-errno)
+  */
+-int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+-			unsigned int cpu, u16 *tag)
++int pcie_tph_get_cpu_st_ext(struct pci_dev *pdev, enum tph_mem_type mem_type,
++			    u8 req_type, unsigned int cpu, u16 *tag)
+ {
+ #ifdef CONFIG_ACPI
+ 	struct pci_dev *rp;
+@@ -298,6 +300,10 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+ 	u32 cpu_uid;
+ 	int ret;
+ 
++	if (req_type == PCI_TPH_REQ_DISABLE || req_type == 2 ||
++		req_type > pdev->tph_max_type)
++		return -EINVAL;
++
+ 	ret = acpi_get_cpu_uid(cpu, &cpu_uid);
+ 	if (ret != 0)
+ 		return ret;
+@@ -313,17 +319,38 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+ 		return -EINVAL;
+ 	}
+ 
+-	*tag = tph_extract_tag(mem_type, pdev->tph_req_type, &info);
++	*tag = tph_extract_tag(mem_type, req_type, &info);
+ 
+-	pci_dbg(pdev, "get steering tag: mem_type=%s, cpu=%d, tag=%#04x\n",
++	pci_dbg(pdev, "get steering tag: mem_type=%s, req_type=%u, cpu=%d, tag=%#04x\n",
+ 		(mem_type == TPH_MEM_TYPE_VM) ? "volatile" : "persistent",
+-		cpu, *tag);
++		req_type, cpu, *tag);
+ 
+ 	return 0;
+ #else
+ 	return -ENODEV;
+ #endif
+ }
++EXPORT_SYMBOL(pcie_tph_get_cpu_st_ext);
++
++/**
++ * pcie_tph_get_cpu_st() - Retrieve Steering Tag for a target memory associated
++ * with a specific CPU
++ * @pdev: PCI device
++ * @mem_type: target memory type (volatile or persistent RAM)
++ * @cpu: associated CPU id
++ * @tag: Steering Tag to be returned
++ *
++ * Return the Steering Tag for a target memory associated with a specific CPU,
++ * using the default negotiated TPH requester type.
++ *
++ * Return: 0 if success, otherwise negative value (-errno)
++ */
++int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
++			unsigned int cpu, u16 *tag)
++{
++	return pcie_tph_get_cpu_st_ext(pdev, mem_type, pdev->tph_max_type,
++				       cpu, tag);
++}
+ EXPORT_SYMBOL(pcie_tph_get_cpu_st);
+ 
+ /**
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index 3055776495c1..6901f6e2f8c7 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -25,8 +25,9 @@ enum tph_mem_type {
+ #ifdef CONFIG_PCIE_TPH
+ int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ 			  unsigned int index, u16 tag);
+-int pcie_tph_get_cpu_st(struct pci_dev *dev,
+-			enum tph_mem_type mem_type,
++int pcie_tph_get_cpu_st_ext(struct pci_dev *dev, enum tph_mem_type mem_type,
++			    u8 req_type, unsigned int cpu, u16 *tag);
++int pcie_tph_get_cpu_st(struct pci_dev *dev, enum tph_mem_type mem_type,
+ 			unsigned int cpu, u16 *tag);
+ void pcie_disable_tph(struct pci_dev *pdev);
+ int pcie_enable_tph_ext(struct pci_dev *pdev, u8 mode, u8 req_type);
+@@ -39,6 +40,11 @@ u8 pcie_tph_completer_type(struct pci_dev *pdev);
+ static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ 					unsigned int index, u16 tag)
+ { return -EINVAL; }
++static inline int pcie_tph_get_cpu_st_ext(struct pci_dev *dev,
++					  enum tph_mem_type mem_type,
++					  u8 req_type, unsigned int cpu,
++					  u16 *tag)
++{ return -EINVAL; }
+ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
+ 				      enum tph_mem_type mem_type,
+ 				      unsigned int cpu, u16 *tag)
 -- 
 2.17.1
 
