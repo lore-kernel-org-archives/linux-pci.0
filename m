@@ -1,98 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEC4448CF7;
-	Tue, 14 Jul 2026 12:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F803C196B;
+	Tue, 14 Jul 2026 12:51:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784032590; cv=none; b=nb+ESBqYiG/pBblSx/Lq1SoBsEm7j/RpcnyDqEin/4JZlGXL6rtjSyi0jvcqk24sEpbrDkchaGo9STiTy7Vzxz8PHWkW7LMvaLreYnqKnSvusDD9kOhH78nt8iiedNYDlEAtqSNiCvn5vkZYxuf8nJJ1wMukwh5cLya1J+8/DYY=
+	t=1784033496; cv=none; b=cofPToPfsgCW/nJjI97NGochxQsRVSdpOiHoBeA1HLempOlCXxUqt3fC6PbgklLdccGa27Y6ayVLBk0Pm9owN8Vi1HeRYiMIYTI2FzQxDoBwg4sOTguLW89RC2RGdNdR7vozLfIGyQco+t3ZSwp9qX3/oQJu3R/dPrEnUK+zMRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784032590; c=relaxed/simple;
-	bh=BkLijEV27x3cqmPtkeIbS8HAe4OmMjmXmE23E8oTnkw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=JJ/z32chT1UR/VaFP6zEwiWpElZRK0TUBPPboWsQXDes0F3pM+pg+T9zNcCkhKglyVVx5OrbkQsC9iPOffUKj1wU5Nt5+6aOX5nVbrc4RLE/UsHJcIQhBAFdEdfO2Wx5R1YfHekW5MAx7cFQhVYJNJ0b+EQQKdy7pDfqKaPc1jk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b1Ka+0m5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784033496; c=relaxed/simple;
+	bh=nQ+ncU7UGKu21UK4lHgqEVayZNUyoVYM/np/HNDLGmM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AfoDKPnCrO2lU8qGGkJYB0MVHsCLABTdWrWe2AeCdiLyuBfNuI2eSsA3A8kFZGq08Zbn5rv/PKsA3SS/+BvYyTQmdwW9s894BIu9nBj/b6dcUMybcMDagpF84Q9YCCkPUbkeIZdzoMXpgsvkhBEigqxZZJQDUtVl7q5KaAF1kMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=LetjRNiA; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b1Ka+0m5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8909D1F00A3D;
-	Tue, 14 Jul 2026 12:36:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784032585;
-	bh=M5kNHTeVQeP6GA90VID8S6a+DIOg6r1Qlofc1FKuYhY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=b1Ka+0m5IhiNMZQrGOdYPQHY7nnbXwbJ0JQdG7Pe9UJsXA/9unW1haAOfURKukdYB
-	 2PMXMxCo2FV/rdg8wjYEvcuQePofbEqZmJ0UXsdNi93xRqua8mDhsOVkUUorZz46Xh
-	 mX31ACfz4CwYHQs60UQltFIZebLZ8mWoQiw03tV34OEX3n45Z78UXqD9zP8/eaG9oW
-	 Rtg1g9Wrp35vS+jmARlVwXRwPnOsQR/HSWZA7sd/O+RG4j335Eqsm7qEixAqJESrgt
-	 MlQi0LNpWCjOXk3yCvQTbi2/uGNbR9E1yxCS8mUCNi3MIR+B7LpJmEu1lRjdpulPge
-	 JmBBgyXfcsYtw==
-From: Vinod Koul <vkoul@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>, 
- Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, 
- Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
- Niklas Cassel <cassel@kernel.org>, Frank.Li@oss.nxp.com
-Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-nvme@lists.infradead.org, Koichiro Den <den@valinux.co.jp>, 
- imx@lists.linux.dev, "Verma, Devendra" <devverma@amd.com>, 
- Frank Li <Frank.Li@nxp.com>, Devendra Verma <devendra.verma@amd.com>
-In-Reply-To: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
-References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
-Subject: Re: [PATCH v7 00/10] dmaengine: dw-edma: flatten desc structions
- and simplify code
-Message-Id: <178403257915.822807.4369626855004661951.b4-ty@kernel.org>
-Date: Tue, 14 Jul 2026 18:06:19 +0530
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="LetjRNiA"
+Received: from francesco-nb (248.201.173.83.static.wline.lns.sme.cust.swisscom.ch [83.173.201.248])
+	by mail11.truemail.it (Postfix) with ESMTPA id 627F01FF9F;
+	Tue, 14 Jul 2026 14:51:30 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784033490;
+	bh=F+IqgTtLqmU06ykzHWgWeMa4tUKRNkCPwK4lvVGqOqU=; h=From:To:Subject;
+	b=LetjRNiAcPEps21BsKobVJxmo29ova7pxzA5T2h/MQphr4TZv3QvAK3ixEWinBPN5
+	 jGlJ1muMpa3CSRWcKeP61tWn5jb3lz7ASa8j8geoYhY2w5DYeakKcKwo5kqIlSD+nS
+	 VDQ/kfMZR/k8gZqIZ9A3InAadDL0WVa7OfebuMq7zItC7o5+fP4d8+PGePI/8FBUz2
+	 9f183Hx1MzhU1t9iLAdE928d62/0Pz6cEmE4wFbV2Vu39y7HadnEiwHSOFdWcRPvfx
+	 xQ1f4OVlDgqnVpelthMVZG1S4qdBQUXarV9NuytG6ga+EnM9sx7vG6oF0H8raPUMvk
+	 TvwUMH6mRThDw==
+Date: Tue, 14 Jul 2026 14:51:26 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: bhelgaas@google.com, hongxing.zhu@oss.nxp.com,
+	linux-pci@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, regressions@lists.linux.dev
+Subject: Re: [PATCH v2] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
+ power and reference clock control
+Message-ID: <20260714125126.GA84291@francesco-nb>
+References: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
+ <20260708035928.580236-2-hongxing.zhu@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.13.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260708035928.580236-2-hongxing.zhu@oss.nxp.com>
 
+Hello,
 
-On Mon, 13 Jul 2026 13:03:18 -0400, Frank.Li@oss.nxp.com wrote:
-> Basic change
+On Wed, Jul 08, 2026 at 11:59:27AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
 > 
-> struct dw_edma_desc *desc
->        └─ chunk list
->             └─ burst list
+> Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> introduced a boot hang on i.MX6Q/DL variants by changing the initialization
+> sequence.
 > 
-> To
+> The issue stems from coupling PHY power (TEST_PD) and reference clock
+> (REF_CLK_EN) control in imx6q_pcie_enable_ref_clk(). When these are
+> managed together, the timing between PHY power-up and reference clock
+> enablement cannot be properly controlled, leading to initialization
+> failures.
 > 
-> [...]
+> Fix this by separating the two concerns:
+> 
+> - Move PHY power control (TEST_PD) to imx6q_pcie_core_reset() where it
+>   logically belongs with reset operations. This ensures PHY power state
+>   is managed as part of the core reset sequence.
+> 
+> - Update imx6qp_pcie_core_reset() to call imx6q_pcie_core_reset() for
+>   shared PHY power management, avoiding code duplication.
+> 
+> - Make imx6q_pcie_enable_ref_clk() responsible only for reference clock
+>   (REF_CLK_EN) control, simplifying its purpose.
+> 
+> - Remove the 10us delay workaround from imx6q_pcie_enable_ref_clk() as
+>   proper sequencing is now handled by the core_reset functions.
+> 
+> This refactoring ensures PHY power is controlled during reset
+> operations, fixing the boot hang while improving code maintainability.
+> 
+> Fixes: 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 
-Applied, thanks!
+What's the plan with this? 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+introduces a severe regression with boards not booting at all.
 
-[01/10] dmaengine: dw-edma: Move control field update of DMA link to the last step
-        commit: 99c46385edb155cfd2919b4a44d97f9ea811639e
-[02/10] dmaengine: dw-edma: Add xfer_sz field to struct dw_edma_chunk
-        commit: 07680003068a8008b4585423d533ab9e86a8a4d3
-[03/10] dmaengine: dw-edma: Move ll_region from struct dw_edma_chunk to struct dw_edma_chan
-        commit: 956028c5dde9fd1a8a462db53609c1c547cafb5c
-[04/10] dmaengine: dw-edma: Pass down dw_edma_chan to reduce one level of indirection
-        commit: be35502a14726e916ac41545840c5d682c5d54e6
-[05/10] dmaengine: dw-edma: Add helper dw_(edma|hdma)_v0_core_ch_enable()
-        commit: df9c5515501c8860a228ade47b93aff5b66544ee
-[06/10] dmaengine: dw-edma: Add callbacks to fill link list entries
-        commit: 2cc7ba6b168f2d0bd79f47ccc14168352a3c6cd2
-[07/10] dmaengine: dw-edma: Add non_ll_start() callback
-        commit: de60121a08799c4db503d44a9028856976f1cfff
-[08/10] dmaengine: dw-edma: Use common dw_edma_core_start() for both eDMA and HDMA
-        commit: 0d7a2719d85f9940b05eeed18e5f398b0b3219b1
-[09/10] dmaengine: dw-edma: Use burst array instead of linked list
-        commit: 3f3fa81cd2ace2c95a0368f2c6e6d1a1d983281a
-[10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk
-        commit: bed94a469f2ce783f17ac0699f26277bc3c74118
+As of now we are not able to test anything, and our CI is completely
+blind on any other issue that linux 7.2 might have introduced.
 
-Best regards,
--- 
-~Vinod
+Is the plan to merge this, or to revert the commit? Any timeline?
+
+Francesco
 
 
