@@ -1,71 +1,111 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010037.outbound.protection.outlook.com [52.101.84.37])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93CC0381B05;
-	Tue, 14 Jul 2026 02:37:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB4939FCCD;
+	Tue, 14 Jul 2026 02:46:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.9
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783996677; cv=fail; b=mZbJPktjcXOcl+9IqiySKkAv0xgTxqi/ZtMvLnBPfMmWW2G1BEkfI+ZZgegeiIjd/xyt/zV6f1JgLTgioLL9hl43unY+c8DKt4XxDOgex9fat/n0BXvnBULVqN5grTTdgHi2+p0ZmLN79ad8FuyGFyRNZDFHakSR4AG4uP6q0Lk=
+	t=1783997186; cv=fail; b=SyA2UOu0vhcQLfC2DJwEYv+zUtIiOtp4pxDQrNCEbQ4C+wsdH34e3Jebxhx4FWoBIXlR88FO2I+JKn0Xbai5HqRpv6YN1BAp2YJ5CN4AyxyTFQErKCv3U3wgScQAKPqo3Aila7S4jkcCSq2e+nzItydRKOy8VMJ1TvTWXaYdheY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783996677; c=relaxed/simple;
-	bh=LezNb1hSe71mZ3I88VQ+KTmHxwE2uXcBdctRqMyfAV8=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=Mn7YD7599XFr8boPnl+QKsqkQogkKBnVx4gITGYQnaTJLZEqkJs8bqgPg8iyB2dLE+QCsi+xMLTrjvsyYAXh7h84Pk+dpI24ziHPMlJRdnJJQxQ2YAKMIjNo6bcQQ10X4mpciw+HP/m5t6IFSeVCcRuFDDv62leo3PhMjbzDp5w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=J4juwapV; arc=fail smtp.client-ip=52.101.84.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	s=arc-20240116; t=1783997186; c=relaxed/simple;
+	bh=xpTuT8XRb6/yyGQE0xiOlX2GrXaX9mT2pg5aIEwPFQs=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=C7+5OAlfsIuNecSbQDkOXSeSZmnEHXtYtFYH9bXZjW/PDbkp7WIvcBdlJVKRWXxXYIU2miu40h/T9i7w5kY6ONcIkVjbs0FxORUKYiNn4y8AVBCa5MqkJ7oK5j52bchxPTiYxlNoLcbzuTruiT7OgqvU1o05pzibj7dZ86Y5qp4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lZyLspws; arc=fail smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="J4juwapV"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lZyLspws"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783997183; x=1815533183;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=xpTuT8XRb6/yyGQE0xiOlX2GrXaX9mT2pg5aIEwPFQs=;
+  b=lZyLspwsJM+WRMdbo02xh+ZxahGKYe2risReO1HEoojY6ZC8ZifTV1k2
+   sZnUhQG2oDZ1NsCGSpZlokRptT3OAAr62gfK6wGqUGoIDfTWpYHM2EDP5
+   5K4uBYaT3B132X2EgixbN3NfO2VfhfSlAgW9IIisM+h4zgDW4/LWrZFMO
+   eu0yOS0oYwUvmCZYEhykbolRv0ZhzBDWVm3rujTuq0FjVH980i5hbBA42
+   ThAV9gkFwtCgu7gjnhlaOiqNXgQ1MT3ggG1AKxQNZYQLRxT+EjPABOk9A
+   RbmM365vUBTRjHMqCZZldjKCFzG/a1L/JCrBQv1ID9mF9RS7wA7e8Xdkf
+   Q==;
+X-CSE-ConnectionGUID: DV1G9dr/R0GGY3IPHD7VGA==
+X-CSE-MsgGUID: stIkBknGR0+7e9zVDOf+Aw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11841"; a="95259672"
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="95259672"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2026 19:46:20 -0700
+X-CSE-ConnectionGUID: ZNLsEf6bTk2vZHuXVcSS8g==
+X-CSE-MsgGUID: VKaUUhx+Te2kmNMYtYVYHg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,154,1779174000"; 
+   d="scan'208";a="259299724"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by orviesa003.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2026 19:46:20 -0700
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Mon, 13 Jul 2026 19:46:18 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43 via Frontend Transport; Mon, 13 Jul 2026 19:46:18 -0700
+Received: from CO1PR03CU002.outbound.protection.outlook.com (52.101.46.43) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Mon, 13 Jul 2026 19:46:18 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=o4+CvYe8nI6vsZin8GV/GW2EG/Weem39Skhur1EghYJyFUgixR5IMVIJVenudOx9ops1ztd0brbX2YSXpbpfHeddvQ9wmi0sV8uLPjbQJSM+XSnkD5YZSNVfZcgGd8OcKXDjRoEfT3Fdtl11Vp1TwdISe0B+75R7RQdb8TV9pMSuzVrv5B/6+TFzFz9cHHK609J1q0w+w79cIsqMzbRvJ6zSBFMscVwkj/borP4suO2z8wHYLgP0leAM6pSwghoMJxS6qD6TZIxk6T9JApC8ETMxgDrl/u+uIhuLrrq3Bc0emEotSBbYDx1vsRsWUF+ZSVppxb+A7VbXQaas+mQi0g==
+ b=ftgxS10Yq8AFqk/1xwZBION0H3MxmjAQq94zBu2Y6cv5t6sSky0NL0ob/rWF8ugMHyl8R9+zB4zYJhLapaNMMLBY90ZNCvqOJkAzX8Ea4Retahm14MBV71vuWLAWsowE5TlStnJg5eq9rodGNwgA9W72LyfJpgar0wPj0rUP3WHD/7+O1pEpzrmnF+XbUGg53z5mTd/E3uHH94Qnn6067Img2Rl/RuVeY1vghw3w1cKO1moKbTb8sKgIoeCGa5qwgITNBX10NBvpv9axlxQMnn4EndTsMe5VFW2//tNRlyzOOpOJU4rgu9Vt0DV9+0iAvrDJhGKS8QPT+1TxLoA7pA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SwZ7LltCIY8e5UxbY5SgVpgSCjUGrptJYNUGClMBKGQ=;
- b=fdnF9hqJgraPKI3QKuMSJ1g0d5nmfqy7izXj/TQgrDaQzzSbc99rwmiDnnZNJ1B25Eia/+susW9tX2v8d5RzF+xJeeVoasXihN8EUDXA9RrxbkiU3mqkbxltHCvartDAr/BKh5966xOgzXVJZ2jx8QImE58/lE6KHkUK/mFG5FRE7UmMytJu5M5GWQ4dHq4eAv8qNG7iMNDpoJUV8aQSbeYMlb2bC9pSkjyRBaSu5tW0R3LdF6yXt4zPcE2HTv/0yibwv5+tkI+iCnGgDyp7DdlCNSZABIalA9Oo9cu6bXTc5A1Qb39wZ5lFuiDsMVj3bsnq7eojyJynLCbOT3zcHw==
+ bh=un7ZYzh1i+G6hP9TI+HMat2toh4xZkSUW7LpwBibRgo=;
+ b=xSLIg6meR+f3siZkvzPp+JScYCWpj32JwbeAe19xmbLKqt7yCFl8k05kJD7OUTGZj7ZSl+kgPLCzEC84zY/RTVabMbsehH6jLHZLL813DUABXDflwz3BOgzfZJ6dyylDzP4UwIZzGlaBIQNVnNc3I1KN0PhjfIaxr32c8P24/+ybyl89CHw0eba7YWpw4A3h0sahr85qOKZ3MFLFgbCuNCHHiIt83no915tKiam+4KwA+ZwchWVnRS2NviKdSyuMF18+WNckCVloUSTcQFDHjbsqX8FyTjcuL6yKxjYWJ7x2xkmAyXNTKVAFhBfcBuKQx3UNYsfGrz3vBTIVSYNR6Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SwZ7LltCIY8e5UxbY5SgVpgSCjUGrptJYNUGClMBKGQ=;
- b=J4juwapVRjL+/IlOVvofKKi/slxZ0ThtnEM8ONYWGVsfsX+GQQeXrekOOe2VH7VIulYkYsmcwWp6xBHoZE64IIItRBQpsoTEjCL5Xi+U9WT4uRJ2REnU6F+s/RBuMx1AfQRThQnGMj2kUwcnHROdlh9VcaerQHWzIOGsPPNURpNWquB0C04TLP9yP32D3YP22WPqQ5eE5ImyKjUA06RD1OF1vgvRaJmr0TCyKih+2NsJMrWTSBj7idjQ0ruDIiOSQwxEJKdvmLKCnSp/UcZdZYaopDaWJ90cxqufxma0Umk23TbtN192tgvZES+M9wkpJPjDO+w1XfuZXAhrcQwwQg==
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from AM9PR04MB8083.eurprd04.prod.outlook.com (2603:10a6:20b:3b5::15)
- by GVXPR04MB11543.eurprd04.prod.outlook.com (2603:10a6:150:2c1::17) with
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com (2603:10b6:f:fc02::9)
+ by PH7PR11MB8527.namprd11.prod.outlook.com (2603:10b6:510:2ff::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.17; Tue, 14 Jul
- 2026 02:37:52 +0000
-Received: from AM9PR04MB8083.eurprd04.prod.outlook.com
- ([fe80::44f5:bd7a:e05b:9a41]) by AM9PR04MB8083.eurprd04.prod.outlook.com
- ([fe80::44f5:bd7a:e05b:9a41%6]) with mapi id 15.21.0202.014; Tue, 14 Jul 2026
- 02:37:51 +0000
-From: hongxing.zhu@oss.nxp.com
-To: frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v3] PCI: imx6: Update MPLLB bandwidth to improve i.MX95 Gen3 PCIe stability
-Date: Tue, 14 Jul 2026 10:41:07 +0800
-Message-Id: <20260714024107.4113926-1-hongxing.zhu@oss.nxp.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MA5PR01CA0118.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1a7::8) To AM9PR04MB8083.eurprd04.prod.outlook.com
- (2603:10a6:20b:3b5::15)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Tue, 14 Jul
+ 2026 02:46:10 +0000
+Received: from DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891]) by DS4PPF0BAC23327.namprd11.prod.outlook.com
+ ([fe80::a195:49d4:38c5:3891%4]) with mapi id 15.21.0223.008; Tue, 14 Jul 2026
+ 02:46:10 +0000
+Date: Mon, 13 Jul 2026 19:45:58 -0700
+From: Alison Schofield <alison.schofield@intel.com>
+To: Ahmed Tiba <ahmed.tiba@arm.com>
+CC: "Rafael J. Wysocki" <rafael@kernel.org>, Tony Luck <tony.luck@intel.com>,
+	Borislav Petkov <bp@alien8.de>, Hanjun Guo <guohanjun@huawei.com>, "Mauro
+ Carvalho Chehab" <mchehab@kernel.org>, Shuai Xue
+	<xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>, Saket Dumbre
+	<saket.dumbre@intel.com>, "Davidlohr Bueso" <dave@stgolabs.net>, Jonathan
+ Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, Ira Weiny
+	<iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar
+	<mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, "Rob Herring" <robh@kernel.org>, Krzysztof Kozlowski
+	<krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>, Jonathan Corbet
+	<corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<acpica-devel@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-edac@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <Dmitry.Lamerov@arm.com>
+Subject: Re: [PATCH v7 06/10] ACPI: APEI: GHES: move CXL CPER helpers
+Message-ID: <alWi5hvXYT0-ZPyV@aschofie-mobl2.lan>
+References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
+ <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-6-8b3a85216cef@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-6-8b3a85216cef@arm.com>
+X-ClientProxiedBy: BY5PR03CA0001.namprd03.prod.outlook.com
+ (2603:10b6:a03:1e0::11) To DS4PPF0BAC23327.namprd11.prod.outlook.com
+ (2603:10b6:f:fc02::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,141 +113,481 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8083:EE_|GVXPR04MB11543:EE_
-X-MS-Office365-Filtering-Correlation-Id: b2095f11-5ce8-48d8-6028-08dee150e664
+X-MS-TrafficTypeDiagnostic: DS4PPF0BAC23327:EE_|PH7PR11MB8527:EE_
+X-MS-Office365-Filtering-Correlation-Id: 65ee00e8-f266-4f81-f174-08dee1520f63
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|19092799006|1800799024|23010399003|366016|921020|3023799007|56012099006|11063799006|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	z2rMWBmhIrHkPKBa9e8VWm1Q46TlzOfO4bgqasDbVUPS4n3lcFc7/L9VqtakD0Y+b1CcQQlFpH4NJHh4hmVOj8g2LYUJGyj4jeGktkcceA0GP71wMiQYIludAn+gHcvrlvi8MHdoJTU6WKL4st528a1JlDeGBlH7Mfor2KSmzCBz5Z3xMzXp9hkqCrX8/kWSvqimTEeSLa66lATXRUtQuGDeefB7NLZOajtJue8x4U2n5E++puh9nFbMtchPmRFNwAzJZLLSXbe1/ijpDp2sVuPr87ukFuZulvjTQ8SUgMUjBQhp/c2bp8CJbvnxKF6tfPNahoAPs9uWbDP/0w4fCSYXmNBol40j7VhqZriyLH2H4o/Mcd758Q6eI1OzCQ2EEBm78Cw2yh5e7B+hBT+EXAHRuQnGcB4ynavTZcNFcUUFiHmeCF7doSixjVCXx9JMnW1hrhw9FpFGfvgcOv63Bu2FdFPVXxLC+hAgWN1sNgf1a/hl/3t+04M9U1mhbO71xv2XYsmTw6VtwLbb+tG1BkwZ2YLiaEVvkIRN7I8Z70dEzSw24nl/QI/gFnTlhjs5FqkFODx6LlKvJQn2yZUCNcbEOM+zCWyYjf14mw+LuwsFQ9Alc6+dQr94v+0Z0B/RbBzzQdDq9WirmBMrLap4c286PdjaujB/Ow2cJE5ej7/rLBnK8Rg0fe2URZsVOFZA/0JR8ihnIQXXX5D/DAyvzg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8083.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(19092799006)(1800799024)(23010399003)(366016)(921020)(3023799007)(56012099006)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024|23010399003|4143699003|11063799006|56012099006|3023799007|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info: fZ5jYHi/JddAaRCridCku+UK4XiWo4Vrwo2hYoEAIR5yUiMSX59xU+JIlhZMjoOFAaqKNWPqA9Ni5v4+sLHAVNKKoypiNm4lihlrRrlD9ncyl+W2GFCkotSBFBrEAMjISsLfCS90rP1h0ra8R+iwe8nTXl5ymD+RzCc+8/EJLoIVcKdBbxrZcROz5ALf+S59j0l3X3RLPuVWh7QFE9Jebfc2GQ0oHJFbn+Q6jZqnVrd/OSG7hzRfL5nHH6cDIxaSywMWzTumVJ342dGCoTRFCKyoVa15+enN5Rgt8ApaagD1GBmA7L2gr9tDUjRKxFiVmK6dO1YMWOZpcKkASPWlhq9Dl3hJ6RDRXRdZkjPgmmp+xqtKup/YjFsUYsu/BqotZgBGmOW0UY/TSMzbMt/Bj795kF8QzfYLSQwNN4CtYQX8ERQQrzfFpvyuNc+ZKk37dTv26r9KA8b9rzK2RXwAmqXz610S825UZibLMQyW8kP9cCUvMklbZskW1j9UH0mdNXXpur+6isTaHR/p/C+wX4bb5HrzIFHKMqaN7/5Kr/SIi2jyex5WlyJvt8vWDbXxCJQHP7LWshL/atEWi5Xb4No/O2sJTVyJ2PkH4B3D373wBqBruJ2NtFq2/BRt5dH4QrYvoXEF4+Adk7rbrdbjyz7eadHdv8Mqvr13890NXgo=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPF0BAC23327.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(23010399003)(4143699003)(11063799006)(56012099006)(3023799007)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?T+abAwtHo9QxGPUMQCURTZ37CSLoOt3oZZFLU4O+SQ50INd4/tmNY+enAwV/?=
- =?us-ascii?Q?PZtGf8h0lPnzcvnIWchMvVrOb/HThfC4/nijU+9646JXgEsC3R9YMj3crU2i?=
- =?us-ascii?Q?Kb4S6RFsnIs3jmWg7csR/gp2wrsH7CTXXHppKf2GYqF8SEp7CVcUAsd85xNe?=
- =?us-ascii?Q?VdAkyjhYq3wEYqezzz9GYCE7e/3uSuUXIgcwD5TsxCRU2wymxnhS3j3bpCap?=
- =?us-ascii?Q?oJYWGSM74mzDeCVipNt9LaC7+21SjYyVU6RY7EzSi3meWhIttidllFXS8g6U?=
- =?us-ascii?Q?OKNmO+OEUVZQxfb0tT/1rx/PE0NVFWLf6l4KB/R8eU9Uh6L3785tuqwDMMO5?=
- =?us-ascii?Q?r/n4XfC/r2kFRv28sLCMtpsb40/dM+4P1jBNb3BdkZ2GVF33xWWzt85MY8dW?=
- =?us-ascii?Q?VdaFvTyEBav3pqvT2t2kftDtjZ02SSOcuBEBpCom7daOwTHGDaPdyaO5eW1N?=
- =?us-ascii?Q?ulfJfDvhDXdGQkm2NrOn1l+NPxdRxAcj8P5qObo3kewSeXkuQo5fVLvbv6Jh?=
- =?us-ascii?Q?tvJhMc+soyTfsk8yC8v5GDxYcpTuVKnFn7SrR8SP6YWC39jFu9Cvn0+FgBQy?=
- =?us-ascii?Q?tKhNDHhC/vWR8jzKKCQXp2GaokvF1/6lr9FpM+q8laHgNLM4izrZh+I79ab/?=
- =?us-ascii?Q?ZWG9nBwZN0rQoCmad7OFedKljuiRnPvVGUMzfEz9Ik4qLr+AiIm2vWUGLs4a?=
- =?us-ascii?Q?+4vxO0K8jneSJDKu7qCLkE3IlHJ4bShlUuvyLRhiGu6m0EEMaZAZ+lPsSawr?=
- =?us-ascii?Q?O/m1YZSpvc98Wd9BK5DED23+KbCQHvJlY3skFqCWpnrBBBMXp8NlpU6MDh17?=
- =?us-ascii?Q?Q1tFkWAPHign2J5zO8JeuuRYDednRLQcUeTd86aP4nAmJEohqfQu0vHRew5j?=
- =?us-ascii?Q?VoweNDtJl7ZtLd3LWdU3cABjy5F7iUOepqBeCDNuEvliBW+92Ktc5XCMmEn/?=
- =?us-ascii?Q?HMu89RqjHIuQQ3q+2mDzuZibrl6WIa4B6L4/Zez0P7cwp98X6XoxqD49Q720?=
- =?us-ascii?Q?2X+3iNIDqp2ryxlBBqcLSvf3uiZSLz79mzarUmuDJRD5zMr3onemE+hQBI4A?=
- =?us-ascii?Q?n/+UM4YGpFnr9FCor0rNUxX55QpaVQMXeREWB/8khXIaiJN6A5Itms7VJpQH?=
- =?us-ascii?Q?6oDGO2K+NzYpXbPmPRQcVD+vUqg2JipTQ7FkrQxxYuxv2VfC967iUhgbQdD1?=
- =?us-ascii?Q?z8ks9aiP0UMdxuBgPNZVK+idMJKI49JG7gGM0raaN3OdLtAoIUjlX2+9ckBG?=
- =?us-ascii?Q?vfGwK16PhsoklRWxR+485DlBFC3Uxsyy5xVvYMJYnDGBhCe1tfr6g2fYrEKL?=
- =?us-ascii?Q?SKsXH7/L/E7L7FS1zXpCM4NN9J37MbsQXaaFdup6owvDXF4wSCJwrHHf293A?=
- =?us-ascii?Q?SAP3cTFZfhWqAmSho1f+8XfWwEkXxHFm1aJRTTC+NHcoZvazve0/mtAmhpag?=
- =?us-ascii?Q?9KUTXaStjTJgcJLcqt+yTUpV1RJE5ozYU1HstGi7rXU4kyMaCUgfe+loCpUp?=
- =?us-ascii?Q?Ehigm9ZQ18AG9fGrVGU72V8l4uWUI7u96TQyYpN+o0sTVa+tPESR1MVHjGaS?=
- =?us-ascii?Q?l+a7wG6rtsQF4gUwvVXzzzfg6vZEfeZOCY5AAX4NRV2gMZxVE5eeUZDh+j5V?=
- =?us-ascii?Q?Vm2hg7u3RlClmhTuu130TTFXDQo/8xTAyE9jzgCCgXSzr9z+HU2IaizWwuHD?=
- =?us-ascii?Q?9u6EQ6eDSt1YacwUGXsw7mV6HGdJaAeJYtNgawLIFxZr3UhY/8CbLKwBjyHa?=
- =?us-ascii?Q?U5aa3OBURQ415SLnDYzH/7mdYv4SUg179RTOf9WQLMi2CJ2QavAZ?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2095f11-5ce8-48d8-6028-08dee150e664
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8083.eurprd04.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?6l23LwfO0TYeDPANReGZYjHSukkB8Ddqwjihq1QdKt2rXY2+jopEp6vgNUnh?=
+ =?us-ascii?Q?E7ZNrNtdTgbow7hzWW7RMvl0vU+NHFaO2PslFvgFVEL0n36xtJybFvYwC+oa?=
+ =?us-ascii?Q?BprgEvRIq76Ec3lgKMUo1KV7lWacPXuI6Kxx7UIR+C8RdSV5DeYK+NF6vjym?=
+ =?us-ascii?Q?mG7qwiOcE+4PXmBbbqdTgoX6MuZTq0QN03wETMQO+X4IeAtf3hvRxs+b7hvd?=
+ =?us-ascii?Q?+Bq70c6LmCvazXVcrx1OOSBJO83wnihIm3KOXn3BoRlIpwUXzTrFMbuUguRw?=
+ =?us-ascii?Q?y9uJDwxNEibCgb/LuxNPnCFzVsknPnR2vPlu+2DRX1ypcIcB3Zv2atDIgark?=
+ =?us-ascii?Q?vu6J76wEXqjiaSH0DMnuJiK6/DhZPusfdzZFv/HrztmdzQp0hJ5EBrgEmS+2?=
+ =?us-ascii?Q?/fBOVbr1WCpDDQevmHiKCO8CYt0SNz3/UT0KOa4LgUwHzHji6fVtIeVOrizB?=
+ =?us-ascii?Q?3gKoEdCgBCbWMOI6LxtmRBGFPBp/s1YYCxcUrsFrqRlOL+cSoART7lqfsRxW?=
+ =?us-ascii?Q?/9CSz9hivoixjwe+FRZiY1+jRQdxL+Ynv6uuA3ErT4SrV+/2cu1O96/gZqVG?=
+ =?us-ascii?Q?pINIJ9yNOU0rNa47v5xPSVNNKejN0e2ZVnf9ZOkplj9yBbUHqH1nX497qgWS?=
+ =?us-ascii?Q?ey6OIRK0adYez9fLiiaEZsNab4LiLPdlz9nnsQbSNth8HKVC8UzKBu8qtx/p?=
+ =?us-ascii?Q?fveffSLhcOdgxa9MKbMa2GLfmvSQLXFXDX7lhdadYgdb0Inf3kQBQAa3ks76?=
+ =?us-ascii?Q?JHBkSwvEk1kgDCk9TEr2LcUZ1mHGDHiqfia7ur0a+1HMAybV/y1AIDKDVPS0?=
+ =?us-ascii?Q?/RNK8J8UkjXsYQodapVbnbKxlQPAO48x3YtGnZ6TX8ezGmpr0xEldeni2uMs?=
+ =?us-ascii?Q?bT+Vr4Htog/7v1fTWr9Sajm1a8x+O9j4edc2lZrpI5qqV+woikzN6AEkVMbd?=
+ =?us-ascii?Q?Gjq/dMTV18XX35VxbED8dj5HD2QM7P6AawRDFLRkwZiKJCY9iFM+UVny4BGX?=
+ =?us-ascii?Q?VLJv4eff+84wXDNnurBey3804vXnhIlHa5godW6CJbR93o+gaAXWI+U1TSqe?=
+ =?us-ascii?Q?/WS9n00T4y/GB0BM/BnskJOU2AK1P4LDEcVuYCEvt+ngaZinArsT0ytfDhGf?=
+ =?us-ascii?Q?Dju3beO3ZqBkhLmUbjKyekj8EEJeKOjoDIJN80oRk88nhEC0qXmd3X7DQKnO?=
+ =?us-ascii?Q?N+ojjbR8uNAoQMQvwt17SzweU08Kgvv9Et0cjkfRuZEi2ofy58/HWQF5Wogr?=
+ =?us-ascii?Q?P1xgJ1xbc+jaBOvsmrpxQeb/zvKh11OQICKOawBeIjqdrtlnZz/RTn+lZvJJ?=
+ =?us-ascii?Q?OroFNmGVytOfmg8ZeyuTSlPl58Prn6UJIUgcK0ilGZ6fIPB4udOs4h3oq5sj?=
+ =?us-ascii?Q?11SyGLqnNCKWRIZLaksT2kBS3avRj/89vtguJ/hitNv4lhv2m6HA9zhbayT4?=
+ =?us-ascii?Q?ODyoBOeIGaOBBveRvnr8YwZOpgbPf+goFWOuQKsaOUyOUVDEL0vdn6hJE6Pv?=
+ =?us-ascii?Q?yk+ma12+zODXw6L2vqSkZKg3ZL/+K9c4mo43z5IDL9b4UB1vHs2bd9ps4iWw?=
+ =?us-ascii?Q?mmSerwlUk+biDaeNtlfnIs6fKru3MC5B2f625AYpe2wu5mV/Y9t7SvooHzA7?=
+ =?us-ascii?Q?eCw1ot2szGA1Qs1YRUYvaovsHDSyWbM6//D9ZeKdjFT089egLWS9YqRU+uFp?=
+ =?us-ascii?Q?ValViRP0j+DT11eO3CJRgts9VhKMYvOvVQc/RDYdJtXouMZSsqg7lYrSWXiI?=
+ =?us-ascii?Q?PZq3YgQL2BEm1zUHlFQjWI/USeX815w=3D?=
+X-Exchange-RoutingPolicyChecked: o4FgiaD5ZDXo4l6YluG4Wb/7L6C6u09Rt1bKUZjDX2avbd2xtEid7D3tsO5D/S7nGoXZYlV3/wctaaAEyQDmDFIqVBDCU/oHo0nhYO54QTub5ukmh1uQ4dmfC0kKgVyQX/qpKsC24OsWjsIdrGOeWW8K3pzqy1MJjPJM9Km5Q97BC+HrI+GIapBNPMrXgfoTkdopinLHkMin8RO8HNHPw7yb2k6OAkKEGt+1EBWxXFkSnhojAaZfLAXa/e8ly4c03Nt+1fHK/bBX95FuUU9eRAUYyBra4Wz8+bX3Txso0e2/uzy5hBHczEPWWiwhKfmK5NjJxCB+l95/MZBSskNbRQ==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 65ee00e8-f266-4f81-f174-08dee1520f63
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPF0BAC23327.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2026 02:37:51.5899
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2026 02:46:09.9270
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 03mLOMqaFa7vPp23zwfanGGtY6XjDztxPlDur1hF+8U6Eyb+sinajyqLMv/R/p85ZbxiXC40lZ3OsySpUjyCnVblduMGCvKAZLo18PtwMQPcRcHxlmHfkHmdWiKGNO2i
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB11543
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4hVBg/WXxDvuaEorvxHAxXD2+5b7d2H6oHb7/e2Ir/guDlUsDo3c50u53tywZ7IvuMwZc91TRpcQ7PooDZQ66FvtL/uduZTDfkC/gH+XbOs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB8527
+X-OriginatorOrg: intel.com
 
-From: Richard Zhu <hongxing.zhu@nxp.com>
+On Wed, Jul 08, 2026 at 02:59:05PM +0100, Ahmed Tiba wrote:
+> Move the CXL CPER handling paths out of ghes.c and into ghes_cper.c so the
+> helpers can be reused. The code is moved as-is, with the public
+> prototypes updated so GHES keeps calling into the new translation unit.
+> 
+> While moving this code, also add CXL CPER section length checks and use
+> spinlock_irqsave() in CXL register/unregister paths for locking
+> consistency.
 
-Bandwidth marginality was observed during i.MX95 Gen3 PCIe tests with
-the default MPLLB_BANDWIDTH value. This margin degradation worsens
-across voltage and temperature (VT) variations and different test
-matrices, potentially causing link stability issues.
+NAK on moving and changing in the same patch, and esp in a patch
+whose subject only says MOVE.
 
-Testing with MPLLB_BANDWIDTH value of 140 (0x8c) shows significant
-improvement in bandwidth margins across all VT conditions and test
-scenarios.
 
-Implement PHY register write helper function and configure:
-- MPLLB_BW_OVRD_IN = 140 (0x8c) for improved bandwidth margin
-- MPLLB_BW_OVRD_EN to enable the override
-
-This ensures robust PCIe Gen3 performance across all operating
-conditions.
-
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
-Changes in v3:
-Regarding Frank's comments, refine naming consistency and clarity.
-
-Changes in v2:
-Update the register name and bit definitions.
-Don't move IMX95_PCIE_PHY_CR_PARA_SEL settings.
----
- drivers/pci/controller/dwc/pci-imx6.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 53f3da6ab30d5..fadf14de10f7c 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -80,6 +80,17 @@
- #define IMX95_SID_MASK				GENMASK(5, 0)
- #define IMX95_MAX_LUT				32
- 
-+#define IMX95_PCIE_PHY_REG_ADDR			0x3008
-+#define IMX95_PCIE_PHY_REG_EN			BIT(31)
-+#define IMX95_PCIE_PHY_REG_ADDR_MASK		GENMASK(15, 0)
-+#define IMX95_PCIE_PHY_REG_DATA			0x300c
-+#define IMX95_PCIE_PHY_MPLLB_OVRD_IN		0x2004
-+/* BIT(10): Override enable for mpllb_bandwidth[15:0] */
-+#define IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN		0x400
-+/* Register offset: Override value for mpllb_bandwidth[15:0] */
-+#define IMX95_PCIE_PHY_MPLLB_BW_IN		0x2005
-+#define IMX95_PCIE_PHY_MPLLB_BW_VAL		0x8c
-+
- #define IMX95_PCIE_RST_CTRL			0x3010
- #define IMX95_PCIE_COLD_RST			BIT(0)
- 
-@@ -269,6 +280,16 @@ static int imx95_pcie_select_ref_clk_src(struct imx_pcie *imx_pcie)
- 	return 0;
- }
- 
-+static void imx95_pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
-+{
-+	udelay(200);
-+	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
-+			   IMX95_PCIE_PHY_REG_EN, IMX95_PCIE_PHY_REG_EN);
-+	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_ADDR,
-+			   IMX95_PCIE_PHY_REG_ADDR_MASK, addr);
-+	regmap_write(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_REG_DATA, data);
-+}
-+
- static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
- {
- 	/*
-@@ -289,6 +310,11 @@ static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
- 			IMX95_PCIE_PHY_CR_PARA_SEL,
- 			IMX95_PCIE_PHY_CR_PARA_SEL);
- 
-+	imx95_pcie_phy_write(imx_pcie, IMX95_PCIE_PHY_MPLLB_BW_IN,
-+			     IMX95_PCIE_PHY_MPLLB_BW_VAL);
-+	imx95_pcie_phy_write(imx_pcie, IMX95_PCIE_PHY_MPLLB_OVRD_IN,
-+			     IMX95_PCIE_PHY_MPLLB_OVRD_BW_EN);
-+
- 	return 0;
- }
- 
--- 
-2.34.1
-
+> 
+> Reviewed-by: Jonathan Cameron <jic23@kernel.org>
+> Signed-off-by: Ahmed Tiba <ahmed.tiba@arm.com>
+> ---
+>  drivers/acpi/apei/ghes.c      | 180 +++++++++++-------------------------------
+>  drivers/acpi/apei/ghes_cper.c | 135 +++++++++++++++++++++++++++++++
+>  include/acpi/ghes_cper.h      |  11 +++
+>  3 files changed, 194 insertions(+), 132 deletions(-)
+> 
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 07e4001ea8d7..2a83d326e692 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -383,138 +383,6 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+>  #endif
+>  }
+>  
+> -/* Room for 8 entries */
+> -#define CXL_CPER_PROT_ERR_FIFO_DEPTH 8
+> -static DEFINE_KFIFO(cxl_cper_prot_err_fifo, struct cxl_cper_prot_err_work_data,
+> -		    CXL_CPER_PROT_ERR_FIFO_DEPTH);
+> -
+> -/* Synchronize schedule_work() with cxl_cper_prot_err_work changes */
+> -static DEFINE_SPINLOCK(cxl_cper_prot_err_work_lock);
+> -struct work_struct *cxl_cper_prot_err_work;
+> -
+> -static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+> -				   int severity)
+> -{
+> -#ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	struct cxl_cper_prot_err_work_data wd;
+> -
+> -	if (cxl_cper_sec_prot_err_valid(prot_err))
+> -		return;
+> -
+> -	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+> -
+> -	if (!cxl_cper_prot_err_work)
+> -		return;
+> -
+> -	if (cxl_cper_setup_prot_err_work_data(&wd, prot_err, severity))
+> -		return;
+> -
+> -	if (!kfifo_put(&cxl_cper_prot_err_fifo, wd)) {
+> -		pr_err_ratelimited("CXL CPER kfifo overflow\n");
+> -		return;
+> -	}
+> -
+> -	schedule_work(cxl_cper_prot_err_work);
+> -#endif
+> -}
+> -
+> -int cxl_cper_register_prot_err_work(struct work_struct *work)
+> -{
+> -	if (cxl_cper_prot_err_work)
+> -		return -EINVAL;
+> -
+> -	guard(spinlock)(&cxl_cper_prot_err_work_lock);
+> -	cxl_cper_prot_err_work = work;
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_register_prot_err_work, "CXL");
+> -
+> -int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+> -{
+> -	if (cxl_cper_prot_err_work != work)
+> -		return -EINVAL;
+> -
+> -	guard(spinlock)(&cxl_cper_prot_err_work_lock);
+> -	cxl_cper_prot_err_work = NULL;
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
+> -
+> -int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd)
+> -{
+> -	return kfifo_get(&cxl_cper_prot_err_fifo, wd);
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_prot_err_kfifo_get, "CXL");
+> -
+> -/* Room for 8 entries for each of the 4 event log queues */
+> -#define CXL_CPER_FIFO_DEPTH 32
+> -DEFINE_KFIFO(cxl_cper_fifo, struct cxl_cper_work_data, CXL_CPER_FIFO_DEPTH);
+> -
+> -/* Synchronize schedule_work() with cxl_cper_work changes */
+> -static DEFINE_SPINLOCK(cxl_cper_work_lock);
+> -struct work_struct *cxl_cper_work;
+> -
+> -static void cxl_cper_post_event(enum cxl_event_type event_type,
+> -				struct cxl_cper_event_rec *rec)
+> -{
+> -	struct cxl_cper_work_data wd;
+> -
+> -	if (rec->hdr.length <= sizeof(rec->hdr) ||
+> -	    rec->hdr.length > sizeof(*rec)) {
+> -		pr_err(FW_WARN "CXL CPER Invalid section length (%u)\n",
+> -		       rec->hdr.length);
+> -		return;
+> -	}
+> -
+> -	if (!(rec->hdr.validation_bits & CPER_CXL_COMP_EVENT_LOG_VALID)) {
+> -		pr_err(FW_WARN "CXL CPER invalid event\n");
+> -		return;
+> -	}
+> -
+> -	guard(spinlock_irqsave)(&cxl_cper_work_lock);
+> -
+> -	if (!cxl_cper_work)
+> -		return;
+> -
+> -	wd.event_type = event_type;
+> -	memcpy(&wd.rec, rec, sizeof(wd.rec));
+> -
+> -	if (!kfifo_put(&cxl_cper_fifo, wd)) {
+> -		pr_err_ratelimited("CXL CPER kfifo overflow\n");
+> -		return;
+> -	}
+> -
+> -	schedule_work(cxl_cper_work);
+> -}
+> -
+> -int cxl_cper_register_work(struct work_struct *work)
+> -{
+> -	if (cxl_cper_work)
+> -		return -EINVAL;
+> -
+> -	guard(spinlock)(&cxl_cper_work_lock);
+> -	cxl_cper_work = work;
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_register_work, "CXL");
+> -
+> -int cxl_cper_unregister_work(struct work_struct *work)
+> -{
+> -	if (cxl_cper_work != work)
+> -		return -EINVAL;
+> -
+> -	guard(spinlock)(&cxl_cper_work_lock);
+> -	cxl_cper_work = NULL;
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_work, "CXL");
+> -
+> -int cxl_cper_kfifo_get(struct cxl_cper_work_data *wd)
+> -{
+> -	return kfifo_get(&cxl_cper_fifo, wd);
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cper_kfifo_get, "CXL");
+> -
+>  static void ghes_log_hwerr(int sev, guid_t *sec_type)
+>  {
+>  	if (sev != CPER_SEV_RECOVERABLE)
+> @@ -549,6 +417,42 @@ static void ghes_log_hwerr(int sev, guid_t *sec_type)
+>  	hwerr_log_error_type(HWERR_RECOV_OTHERS);
+>  }
+>  
+> +static bool ghes_cxl_event_len_valid(struct acpi_hest_generic_data *gdata,
+> +				     struct cxl_cper_event_rec *rec)
+> +{
+> +	if (gdata->error_data_length < sizeof(*rec) ||
+> +	    rec->hdr.length <= sizeof(rec->hdr) ||
+> +	    rec->hdr.length > gdata->error_data_length ||
+> +	    rec->hdr.length > sizeof(*rec)) {
+> +		pr_err(FW_WARN "CXL CPER Invalid section length (%u)\n",
+> +		       rec->hdr.length);
+> +		return false;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+> +static bool ghes_cxl_prot_err_len_valid(struct acpi_hest_generic_data *gdata,
+> +					struct cxl_cper_sec_prot_err *prot_err)
+> +{
+> +	if (gdata->error_data_length < sizeof(*prot_err) +
+> +	    sizeof(struct cxl_ras_capability_regs)) {
+> +		pr_err(FW_WARN "CXL CPER Invalid protocol error length (%u)\n",
+> +		       gdata->error_data_length);
+> +		return false;
+> +	}
+> +
+> +	if (prot_err->dvsec_len >
+> +	    gdata->error_data_length - sizeof(*prot_err) -
+> +	    sizeof(struct cxl_ras_capability_regs)) {
+> +		pr_err(FW_WARN "CXL CPER invalid DVSEC length (%u)\n",
+> +		       prot_err->dvsec_len);
+> +		return false;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+>  static void ghes_do_proc(struct ghes *ghes,
+>  			 const struct acpi_hest_generic_status *estatus)
+>  {
+> @@ -585,18 +489,30 @@ static void ghes_do_proc(struct ghes *ghes,
+>  		} else if (guid_equal(sec_type, &CPER_SEC_CXL_PROT_ERR)) {
+>  			struct cxl_cper_sec_prot_err *prot_err = acpi_hest_get_payload(gdata);
+>  
+> +			if (!ghes_cxl_prot_err_len_valid(gdata, prot_err))
+> +				continue;
+> +
+>  			cxl_cper_post_prot_err(prot_err, gdata->error_severity);
+>  		} else if (guid_equal(sec_type, &CPER_SEC_CXL_GEN_MEDIA_GUID)) {
+>  			struct cxl_cper_event_rec *rec = acpi_hest_get_payload(gdata);
+>  
+> +			if (!ghes_cxl_event_len_valid(gdata, rec))
+> +				continue;
+> +
+>  			cxl_cper_post_event(CXL_CPER_EVENT_GEN_MEDIA, rec);
+>  		} else if (guid_equal(sec_type, &CPER_SEC_CXL_DRAM_GUID)) {
+>  			struct cxl_cper_event_rec *rec = acpi_hest_get_payload(gdata);
+>  
+> +			if (!ghes_cxl_event_len_valid(gdata, rec))
+> +				continue;
+> +
+>  			cxl_cper_post_event(CXL_CPER_EVENT_DRAM, rec);
+>  		} else if (guid_equal(sec_type, &CPER_SEC_CXL_MEM_MODULE_GUID)) {
+>  			struct cxl_cper_event_rec *rec = acpi_hest_get_payload(gdata);
+>  
+> +			if (!ghes_cxl_event_len_valid(gdata, rec))
+> +				continue;
+> +
+>  			cxl_cper_post_event(CXL_CPER_EVENT_MEM_MODULE, rec);
+>  		} else {
+>  			void *err = acpi_hest_get_payload(gdata);
+> diff --git a/drivers/acpi/apei/ghes_cper.c b/drivers/acpi/apei/ghes_cper.c
+> index 7e4a66b788b8..b59e3ed3eab3 100644
+> --- a/drivers/acpi/apei/ghes_cper.c
+> +++ b/drivers/acpi/apei/ghes_cper.c
+> @@ -12,9 +12,12 @@
+>   *   Author: Huang Ying <ying.huang@intel.com>
+>   */
+>  
+> +#include <linux/aer.h>
+> +#include <linux/cleanup.h>
+>  #include <linux/err.h>
+>  #include <linux/genalloc.h>
+>  #include <linux/io.h>
+> +#include <linux/kfifo.h>
+>  #include <linux/kernel.h>
+>  #include <linux/math64.h>
+>  #include <linux/mm.h>
+> @@ -350,6 +353,138 @@ void ghes_defer_non_standard_event(struct acpi_hest_generic_data *gdata,
+>  	schedule_work(&entry->work);
+>  }
+>  
+> +/* Room for 8 entries */
+> +#define CXL_CPER_PROT_ERR_FIFO_DEPTH 8
+> +static DEFINE_KFIFO(cxl_cper_prot_err_fifo, struct cxl_cper_prot_err_work_data,
+> +		    CXL_CPER_PROT_ERR_FIFO_DEPTH);
+> +
+> +/* Synchronize schedule_work() with cxl_cper_prot_err_work changes */
+> +static DEFINE_SPINLOCK(cxl_cper_prot_err_work_lock);
+> +struct work_struct *cxl_cper_prot_err_work;
+> +
+> +void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+> +			    int severity)
+> +{
+> +#ifdef CONFIG_ACPI_APEI_PCIEAER
+> +	struct cxl_cper_prot_err_work_data wd;
+> +
+> +	if (cxl_cper_sec_prot_err_valid(prot_err))
+> +		return;
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+> +
+> +	if (!cxl_cper_prot_err_work)
+> +		return;
+> +
+> +	if (cxl_cper_setup_prot_err_work_data(&wd, prot_err, severity))
+> +		return;
+> +
+> +	if (!kfifo_put(&cxl_cper_prot_err_fifo, wd)) {
+> +		pr_err_ratelimited("CXL CPER kfifo overflow\n");
+> +		return;
+> +	}
+> +
+> +	schedule_work(cxl_cper_prot_err_work);
+> +#endif
+> +}
+> +
+> +int cxl_cper_register_prot_err_work(struct work_struct *work)
+> +{
+> +	if (cxl_cper_prot_err_work)
+> +		return -EINVAL;
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+> +	cxl_cper_prot_err_work = work;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_register_prot_err_work, "CXL");
+> +
+> +int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+> +{
+> +	if (cxl_cper_prot_err_work != work)
+> +		return -EINVAL;
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+> +	cxl_cper_prot_err_work = NULL;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
+> +
+> +int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd)
+> +{
+> +	return kfifo_get(&cxl_cper_prot_err_fifo, wd);
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_prot_err_kfifo_get, "CXL");
+> +
+> +/* Room for 8 entries for each of the 4 event log queues */
+> +#define CXL_CPER_FIFO_DEPTH 32
+> +static DEFINE_KFIFO(cxl_cper_fifo, struct cxl_cper_work_data, CXL_CPER_FIFO_DEPTH);
+> +
+> +/* Synchronize schedule_work() with cxl_cper_work changes */
+> +static DEFINE_SPINLOCK(cxl_cper_work_lock);
+> +struct work_struct *cxl_cper_work;
+> +
+> +void cxl_cper_post_event(enum cxl_event_type event_type,
+> +			 struct cxl_cper_event_rec *rec)
+> +{
+> +	struct cxl_cper_work_data wd;
+> +
+> +	if (rec->hdr.length <= sizeof(rec->hdr) ||
+> +	    rec->hdr.length > sizeof(*rec)) {
+> +		pr_err(FW_WARN "CXL CPER Invalid section length (%u)\n",
+> +		       rec->hdr.length);
+> +		return;
+> +	}
+> +
+> +	if (!(rec->hdr.validation_bits & CPER_CXL_COMP_EVENT_LOG_VALID)) {
+> +		pr_err(FW_WARN "CXL CPER invalid event\n");
+> +		return;
+> +	}
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_work_lock);
+> +
+> +	if (!cxl_cper_work)
+> +		return;
+> +
+> +	wd.event_type = event_type;
+> +	memcpy(&wd.rec, rec, sizeof(wd.rec));
+> +
+> +	if (!kfifo_put(&cxl_cper_fifo, wd)) {
+> +		pr_err_ratelimited("CXL CPER kfifo overflow\n");
+> +		return;
+> +	}
+> +
+> +	schedule_work(cxl_cper_work);
+> +}
+> +
+> +int cxl_cper_register_work(struct work_struct *work)
+> +{
+> +	if (cxl_cper_work)
+> +		return -EINVAL;
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_work_lock);
+> +	cxl_cper_work = work;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_register_work, "CXL");
+> +
+> +int cxl_cper_unregister_work(struct work_struct *work)
+> +{
+> +	if (cxl_cper_work != work)
+> +		return -EINVAL;
+> +
+> +	guard(spinlock_irqsave)(&cxl_cper_work_lock);
+> +	cxl_cper_work = NULL;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_work, "CXL");
+> +
+> +int cxl_cper_kfifo_get(struct cxl_cper_work_data *wd)
+> +{
+> +	return kfifo_get(&cxl_cper_fifo, wd);
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_cper_kfifo_get, "CXL");
+> +
+>  /*
+>   * GHES error status reporting throttle, to report more kinds of
+>   * errors, instead of just most frequently occurred errors.
+> diff --git a/include/acpi/ghes_cper.h b/include/acpi/ghes_cper.h
+> index d9f9253d8de9..a853a5996cdf 100644
+> --- a/include/acpi/ghes_cper.h
+> +++ b/include/acpi/ghes_cper.h
+> @@ -20,6 +20,7 @@
+>  
+>  #include <acpi/ghes.h>
+>  #include <asm/fixmap.h>
+> +#include <cxl/event.h>
+>  
+>  #define GHES_PFX	"GHES: "
+>  
+> @@ -106,5 +107,15 @@ void ghes_estatus_cache_add(struct acpi_hest_generic *generic,
+>  			    struct acpi_hest_generic_status *estatus);
+>  void ghes_defer_non_standard_event(struct acpi_hest_generic_data *gdata,
+>  				   int sev);
+> +void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+> +			    int severity);
+> +int cxl_cper_register_prot_err_work(struct work_struct *work);
+> +int cxl_cper_unregister_prot_err_work(struct work_struct *work);
+> +int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd);
+> +void cxl_cper_post_event(enum cxl_event_type event_type,
+> +			 struct cxl_cper_event_rec *rec);
+> +int cxl_cper_register_work(struct work_struct *work);
+> +int cxl_cper_unregister_work(struct work_struct *work);
+> +int cxl_cper_kfifo_get(struct cxl_cper_work_data *wd);
+>  
+>  #endif /* ACPI_APEI_GHES_CPER_H */
+> 
+> -- 
+> 2.43.0
+> 
