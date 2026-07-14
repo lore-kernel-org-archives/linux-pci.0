@@ -1,136 +1,265 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC18F46AED1;
-	Tue, 14 Jul 2026 13:37:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2C8247AF4D;
+	Tue, 14 Jul 2026 13:53:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784036267; cv=none; b=OvMdXrx5C1EFQ0gBsDOBYr5chYp3lgQbIadzE49GOYleNmXS/2EB6GpeogVJ+50UKexlQNL7tRDUW/iwBvacLsKSK31sMULDoZ1158ThsoQixXn4JlPzf1/5qsfwXF+hWlAu0r56OWxuyvThEOtnLdW/hvCWttcstUhFeUZjMFY=
+	t=1784037207; cv=none; b=UlxVVFPWYXzAcQpxkoB04ecGCP73CQ+0t0eQv5F6GvTwr1DFujiX0MC9ErSod+b7WNxbQT3O6lhT3MhREqrPIrYUepfHhhIWNipiCozn3K7BjLiFWbHFvWV0LJfIjga66N9gF/qZExAZ+B9OfhFTM5Narhaf8uNuh703VmHINpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784036267; c=relaxed/simple;
-	bh=Vks6p+Wt/0K1/SXbSBGlKT4hNpjD4Fg6SncklLe+XQQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=J/KnNJ8KOEo53A/Krz8fXV8dnzRLzPQuu0JfwstyLWVsQ0io37WYqFYoQ/FVWMPwsmTGNxnZjSlIgfrL82MxEDjAgVJRvs4pdNgBe/VseMbh0Fp0W3TLdc9kimZLyMDIa8KkRJLUPOL5NtrVq+5l+F3XzwXFVJcLdUApUiA1M1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MkdtxJz+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784037207; c=relaxed/simple;
+	bh=vXMwitJgtYXSlDnw38YkQK3Q/5dx2k+2wNuvAumhJi8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BV760DoQPGBVugJFS5rz1AtHug17sN+pgitsqQoqgK+ruJxETXTXYKJEIkPN/MPXiheQNIFATsfJvheS2UfjsUcS2+7EFq7xrg397yK44w5Qhb9ToFqMo8PZSX7D9ralGDoboAozJsdBM8yR//TH/9gX72dvXqpEBhh8lC1ZBLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NlrPtVpf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MkdtxJz+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0394F1F000E9;
-	Tue, 14 Jul 2026 13:37:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NlrPtVpf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 454791F000E9;
+	Tue, 14 Jul 2026 13:53:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784036266;
-	bh=MRUxZmD7tUa8RV4aJ0FH1IXo7TRn2t4zqK4O1Y0A1CY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MkdtxJz+G7iwGq3xnYkjgbVTM2oD6KUjxOQ+3Aj+tCjKIwxi0PXH8ck/8SnKNIbVn
-	 35NTJiDMCThgTuhJwy4EV3B7mvs7vjGet6EroD2X/f9pjF0k9jnXFDA9KD5A52fTNH
-	 2S2nctq846H+2HGDRhx3duCXSC17DgzRifhFVS3HksHngESZUFyTPTYEKXvyYj0Fc1
-	 PTZBiATyX9IGwM/j1l8zxkBHNxMJuetA94prM4dEn4mPPVvozs5YmBZ4aJSKJzSaUb
-	 W+iDf9d7YpBneaODyWSUasppP/cZ2OlPxygzyfsC28jx8RZ0SXghR9ogwgw9QoC1ej
-	 WYbnUz0jND3gQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
-Cc: devicetree@vger.kernel.org, wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
-References: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 13:37:45 +0000
-Message-Id: <20260714133746.0394F1F000E9@smtp.kernel.org>
+	s=k20260515; t=1784037203;
+	bh=QaaBGqZH0Ys6NC7fb6XgsKHiHb+sRdLLVPO1+TCjC4Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NlrPtVpfj0ahfbKwLQ06xzmp66N5lylhdM7f73FY/uGNXxTIfGJjenOCBwWpoCOSD
+	 sZQZKhWk554O5nBbbRjvh2kee4PPkBTiHPmnS8mrpNeMnJFx4klhwu/3RS2OQwSL37
+	 P4WpKzFFy8zFXJcNSLdD8BflOUxdExOumQXuXT8FyEb2m+3xJYsdKR8pyF1oetA7vw
+	 Pz7sCSu2g1KqOXjCD421enQzKOC4JDtRsfTPdkWPtrRBOsdTM7MIeCvg46kyOV4wL3
+	 OwLdx5VtsUVwqCQUEF0R2vVE0iN2yNWFo72o4HAemzfpAzFBrQiGMez25YoIxCoy8F
+	 FGmbOngi7Ko5Q==
+Date: Tue, 14 Jul 2026 15:53:14 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Wei Deng <wei.deng@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	mengshi.wu@oss.qualcomm.com
+Subject: Re: [PATCH 1/3] arm64: dts: qcom: hamoa-iot-evk: Describe the PCIe
+ M.2 Key E connector
+Message-ID: <yjdklxiwhpnpzkuuqfz7slggewnputddyx2sehoajk4qjfhmu3@5kw3r22cbmkx>
+References: <20260709-fix-hamoa-m2-w-disable2-v1-0-5e725091266a@oss.qualcomm.com>
+ <20260709-fix-hamoa-m2-w-disable2-v1-1-5e725091266a@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260709-fix-hamoa-m2-w-disable2-v1-1-5e725091266a@oss.qualcomm.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Thu, Jul 09, 2026 at 12:59:40PM +0530, Wei Deng wrote:
+> The hamoa IoT EVK has the PCIe M.2 Mechanical Key E connector to
+> connect wireless connectivity cards over PCIe and UART interfaces.
+> Hence, describe the connector node, link it with the PCIe 4 Root Port
+> node and replace the static BT serdev under UART14 and the
+> chip-specific wifi@0 child node with graph port/endpoints, allowing
+> the pwrseq-pcie-m2 driver to power the card and dynamically create
+> the BT serdev device.
+> 
+> The M.2 Key E connector is powered by vreg_wcn_3p3. WLAN enable is
+> controlled via W_DISABLE1# (GPIO117) and BT enable via W_DISABLE2#
+> (GPIO116), both described as active-low GPIOs on the connector node.
+> 
+> Remove the chip-specific wcn7850-pmu node as the M.2 connector
+> approach replaces the WCN7850-specific power sequencing with a
+> chip-agnostic one managed by the pwrseq-pcie-m2 driver.
+> 
+> Also add 'compatible = "pciclass,0604"' to pcie4_port0 in hamoa.dtsi
+> to allow the PCI subsystem to associate the DT node with the
+> PCI-to-PCI bridge device.
+> 
+> Signed-off-by: Wei Deng <wei.deng@oss.qualcomm.com>
 
-New issues:
-- [Medium] Unjustified COMPILE_TEST restriction due to incorrect commit mes=
-sage claim.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-Pre-existing issues:
-- [High] Missing return in error handling path leads to endpoint notificati=
-on on a de-initialized endpoint.
---
+- Mani
 
---- Patch [1]: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64 ---
-commit 9fa6f24cbaf3124b832a16ce500ea61d355eb4f5
-Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> ---
+>  arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts | 129 ++++++++++-------------------
+>  arch/arm64/boot/dts/qcom/hamoa.dtsi        |   1 +
+>  2 files changed, 47 insertions(+), 83 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts b/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
+> index 9fa86bb6438e..41c2004f0ef6 100644
+> --- a/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
+> +++ b/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
+> @@ -68,6 +68,44 @@ chosen {
+>  		stdout-path = "serial0:115200n8";
+>  	};
+>  
+> +	connector {
+> +		compatible = "pcie-m2-e-connector";
+> +		vpcie3v3-supply = <&vreg_wcn_3p3>;
+> +
+> +		w-disable1-gpios = <&tlmm 117 GPIO_ACTIVE_LOW>;
+> +		w-disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
+> +
+> +		pinctrl-0 = <&wcn_wlan_en>, <&wcn_bt_en>;
+> +		pinctrl-names = "default";
+> +
+> +		ports {
+> +			#address-cells = <1>;
+> +			#size-cells = <0>;
+> +
+> +			port@0 {
+> +				reg = <0>;
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +
+> +				m2_e_pcie_ep: endpoint@0 {
+> +					reg = <0>;
+> +					remote-endpoint = <&pcie4port0_ep>;
+> +				};
+> +			};
+> +
+> +			port@3 {
+> +				reg = <3>;
+> +				#address-cells = <1>;
+> +				#size-cells = <0>;
+> +
+> +				m2_e_uart_ep: endpoint@0 {
+> +					reg = <0>;
+> +					remote-endpoint = <&uart14_ep>;
+> +				};
+> +			};
+> +		};
+> +	};
+> +
+>  	connector3 {
+>  		compatible = "usb-a-connector";
+>  		label = "USB-3-Type-A";
+> @@ -676,65 +714,6 @@ usb_1_ss0_sbu_mux: endpoint {
+>  			};
+>  		};
+>  	};
+> -
+> -	wcn7850-pmu {
+> -		compatible = "qcom,wcn7850-pmu";
+> -
+> -		vdd-supply = <&vreg_wcn_0p95>;
+> -		vddio-supply = <&vreg_l15b_1p8>;
+> -		vddaon-supply = <&vreg_wcn_0p95>;
+> -		vdddig-supply = <&vreg_wcn_0p95>;
+> -		vddrfa1p2-supply = <&vreg_wcn_1p9>;
+> -		vddrfa1p8-supply = <&vreg_wcn_1p9>;
+> -
+> -		bt-enable-gpios = <&tlmm 116 GPIO_ACTIVE_HIGH>;
+> -		wlan-enable-gpios = <&tlmm 117 GPIO_ACTIVE_HIGH>;
+> -
+> -		pinctrl-0 = <&wcn_bt_en>, <&wcn_wlan_en>;
+> -		pinctrl-names = "default";
+> -
+> -		regulators {
+> -			vreg_pmu_rfa_cmn: ldo0 {
+> -				regulator-name = "vreg_pmu_rfa_cmn";
+> -			};
+> -
+> -			vreg_pmu_aon_0p59: ldo1 {
+> -				regulator-name = "vreg_pmu_aon_0p59";
+> -			};
+> -
+> -			vreg_pmu_wlcx_0p8: ldo2 {
+> -				regulator-name = "vreg_pmu_wlcx_0p8";
+> -			};
+> -
+> -			vreg_pmu_wlmx_0p85: ldo3 {
+> -				regulator-name = "vreg_pmu_wlmx_0p85";
+> -			};
+> -
+> -			vreg_pmu_btcmx_0p85: ldo4 {
+> -				regulator-name = "vreg_pmu_btcmx_0p85";
+> -			};
+> -
+> -			vreg_pmu_rfa_0p8: ldo5 {
+> -				regulator-name = "vreg_pmu_rfa_0p8";
+> -			};
+> -
+> -			vreg_pmu_rfa_1p2: ldo6 {
+> -				regulator-name = "vreg_pmu_rfa_1p2";
+> -			};
+> -
+> -			vreg_pmu_rfa_1p8: ldo7 {
+> -				regulator-name = "vreg_pmu_rfa_1p8";
+> -			};
+> -
+> -			vreg_pmu_pcie_0p9: ldo8 {
+> -				regulator-name = "vreg_pmu_pcie_0p9";
+> -			};
+> -
+> -			vreg_pmu_pcie_1p8: ldo9 {
+> -				regulator-name = "vreg_pmu_pcie_1p8";
+> -			};
+> -		};
+> -	};
+>  };
+>  
+>  &i2c1 {
+> @@ -1025,19 +1004,10 @@ &pcie4_port0 {
+>  	reset-gpios = <&tlmm 146 GPIO_ACTIVE_LOW>;
+>  	wake-gpios = <&tlmm 148 GPIO_ACTIVE_LOW>;
+>  
+> -	wifi@0 {
+> -		compatible = "pci17cb,1107";
+> -		reg = <0x10000 0x0 0x0 0x0 0x0>;
+> -
+> -		vddaon-supply = <&vreg_pmu_aon_0p59>;
+> -		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
+> -		vddwlmx-supply = <&vreg_pmu_wlmx_0p85>;
+> -		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
+> -		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
+> -		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
+> -		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
+> -		vddpcie0p9-supply = <&vreg_pmu_pcie_0p9>;
+> -		vddpcie1p8-supply = <&vreg_pmu_pcie_1p8>;
+> +	port {
+> +		pcie4port0_ep: endpoint {
+> +			remote-endpoint = <&m2_e_pcie_ep>;
+> +		};
+>  	};
+>  };
+>  
+> @@ -1531,17 +1501,10 @@ wcn_usb_sw_n: wcn-usb-sw-n-state {
+>  &uart14 {
+>  	status = "okay";
+>  
+> -	bluetooth {
+> -		compatible = "qcom,wcn7850-bt";
+> -		max-speed = <3200000>;
+> -
+> -		vddaon-supply = <&vreg_pmu_aon_0p59>;
+> -		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
+> -		vddwlmx-supply = <&vreg_pmu_wlmx_0p85>;
+> -		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
+> -		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
+> -		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
+> -		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
+> +	port {
+> +		uart14_ep: endpoint {
+> +			remote-endpoint = <&m2_e_uart_ep>;
+> +		};
+>  	};
+>  };
+>  
+> diff --git a/arch/arm64/boot/dts/qcom/hamoa.dtsi b/arch/arm64/boot/dts/qcom/hamoa.dtsi
+> index 60f485a4892e..566a6b4c6208 100644
+> --- a/arch/arm64/boot/dts/qcom/hamoa.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/hamoa.dtsi
+> @@ -3776,6 +3776,7 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>  
+>  			pcie4_port0: pcie@0 {
+>  				device_type = "pci";
+> +				compatible = "pciclass,0604";
+>  				reg = <0x0 0x0 0x0 0x0 0x0>;
+>  				bus-range = <0x01 0xff>;
+>  
+> 
+> -- 
+> 2.34.1
+> 
 
-PCI: rcar-gen4: Isolate driver to ARM64
-
-The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
-which are available only on ARM and ARM64, on other architectures the
-headers are not present and the driver fails to build. This driver is
-used only on ARM64 hardware, isolate its build only to ARM64 to avoid
-build failures on other architectures.
-
-Link: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel=
-.com/
-
-> The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
-> which are available only on ARM and ARM64, on other architectures the
-> headers are not present and the driver fails to build.
-
-[Severity: Medium]
-Is this description accurate for the current tree?
-
-A review of drivers/pci/controller/dwc/pcie-rcar-gen4.c confirms it does not
-actually include linux/irqchip/arm-gic-v3.h or use GIC-specific macros. Does
-restricting COMPILE_TEST strictly to ARM64 needlessly degrade cross-archite=
-cture
-build testing coverage?
-
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/=
-dwc/Kconfig
-> index aa0b784c85b47..0d4bf8d4cf565 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -344,7 +344,7 @@ config PCIE_RCAR_GEN4
-> =20
->  config PCIE_RCAR_GEN4_HOST
->  	tristate "Renesas R-Car Gen4 PCIe controller (host mode)"
-> -	depends on ARCH_RENESAS || COMPILE_TEST
-> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
->  	depends on PCI_MSI
->  	select PCIE_DW_HOST
->  	select PCIE_RCAR_GEN4
-> @@ -355,7 +355,7 @@ config PCIE_RCAR_GEN4_HOST
-> =20
->  config PCIE_RCAR_GEN4_EP
->  	tristate "Renesas R-Car Gen4 PCIe controller (endpoint mode)"
-> -	depends on ARCH_RENESAS || COMPILE_TEST
-> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
->  	depends on PCI_ENDPOINT
->  	select PCIE_DW_EP
->  	select PCIE_RCAR_GEN4
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is it intentional that the e=
-rror
-path in rcar_gen4_add_dw_pcie_ep() falls through without returning?
-
-drivers/pci/controller/dwc/pcie-rcar-gen4.c:rcar_gen4_add_dw_pcie_ep() {
-    ...
-	ret =3D dw_pcie_ep_init_registers(ep);
-	if (ret) {
-		dev_err(dev, "Failed to initialize DWC endpoint registers\n");
-		dw_pcie_ep_deinit(ep);
-		rcar_gen4_pcie_ep_deinit(rcar);
-	}
-
-	pci_epc_init_notify(ep->epc);
-    ...
-}
-
-If dw_pcie_ep_init_registers() fails, execution incorrectly falls through to
-pci_epc_init_notify(), notifying any bound EPF devices that the endpoint is
-ready. Since the hardware has just been de-initialized, could an EPF driver
-attempting to interact with the EPC cause bus faults or use-after-free
-conditions?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714131957.3806=
-7-1-marek.vasut+renesas@mailbox.org?part=3D1
+-- 
+மணிவண்ணன் சதாசிவம்
