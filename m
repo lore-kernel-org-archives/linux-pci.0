@@ -1,158 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f0.google.com (mail-pz2-f0.google.com [74.125.228.0])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3131C34B1B0;
-	Tue, 14 Jul 2026 11:28:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41E236165F
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 11:32:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.0
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784028516; cv=none; b=GGjTsRcs8jnfiiA+XmzG18cl0/Xq+3qKDvAKgsjcwx3mbbrMx8We9SbbMm0MCTdgea220r/W2NgtPtR2PrvOAvduskhUNHNGBAC08y7Wf7p4xX6Dxy9Ei0GQqHKP4uG9cNKl4K1HZ5T9d1vSpmO7bCoyAc+uAn0kkzE7KRDIBcE=
+	t=1784028771; cv=none; b=G1QxlygJZt6k2OeHi9LlJ3izd109Ofh4aSoQ6pTNfL/UxiXY47BVHT4ObkGJTeQwTnxy2esy4GJSDIhofgwAyslP/eARYtpEYD+AHAPm7HFoHuU1cLls+1JQCgcixtYdK2lf+iPuya/+Pmwusefx+XWI8f96fQ3x87i+P2+eK6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784028516; c=relaxed/simple;
-	bh=bsKYA+ZJEgs+Lrd4GJzOD6g+/9a9SeUqzwhlf2eTMuQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pgHh6WZbma98LBuB5bRImgCZbFWC20JQB3+GycfLFbo/txKAm74xtgAFpoDfmWSj0CnJeuvS2dEiJSt0eRfAGqRu1vyvJFO1CMGaAZIPoHxEFzt4+MsLt0JCt2AFMJvtFUVoU3XhIFQTdz4zJFLqS6cm/TDyZb1Rd+6e3zqV8bw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jb54BuZP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784028771; c=relaxed/simple;
+	bh=nk6ij8m7Zpi2wCCb+1Qocqv0IWRRM/FTiNUiT4mA4+4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VUzzwlTyfGqWy0yJXl95aS1lvf3MGg+TrGgVUTYhEWPNSpdeWurtGgNTxtqfdvdSaJm4E6+D0FiHm4lS17+LwlhEAnhs+hSB8XraCk25m0+XEBwkVxUhfTT26/Gfh1sbzEwNE0M5tycf5LVy+vZwTFfBu/Bgn2TAwtHaRMTqmb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qj/eBqtJ; arc=none smtp.client-ip=74.125.228.0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jb54BuZP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFB681F000E9;
-	Tue, 14 Jul 2026 11:28:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784028514;
-	bh=xXT7+gGXn6VMW/79KjmsIjoohbdeCmfHyrS0kjNq528=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jb54BuZPuTtLHpHFKRAmQChZKaI4zvDSpQ5spgjpp6lSte09NJV2Boezi9sVfqO/N
-	 mle2laB04StOf/v9UzCIZ0I97DukJLWppZZkL1uzt8rnSGg+42fEh9yRlggmKbUfSu
-	 zpnINMtml5otbHLbCaSzXg1TxQy5Jq0LEy4Dz+UfATeHVoRofSuAKAWlTtFUvW1j3b
-	 2feBoNZGdfE7cL0e/TgYhvLm8qgv719fDv/iasTXh95fMwMJbgdDdjCkJy11c3TrbW
-	 JC02xUJW1ZH8L78KUR9CwTZo6JX0NVm1PdCwxQ+7OGl/gl1T/yWLaJuTu3YRKagGa3
-	 1RSzO01Plsx5A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v20 15/16] vfio/pci: Sync core PCI TPH software state
- across device lifecycle and resets
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260714104325.54444-16-fengchengwen@huawei.com>
-References: <20260714104325.54444-1-fengchengwen@huawei.com>
- <20260714104325.54444-16-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 11:28:34 +0000
-Message-Id: <20260714112834.AFB681F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qj/eBqtJ"
+Received: by mail-pz2-f0.google.com with SMTP id 41be03b00d2f7-ca7fcfe1669so2287068a12.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 04:32:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784028769; x=1784633569; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=lZ7+kvUeHIUnK6IkwGO8eHuMPv0cKv2pkPNX/MO8DzI=;
+        b=Qj/eBqtJxIOgntDmTM6tFVyNjya9Y/x2fNuhj2giXBU2WPBAJxX3AbSpWkwpvEZ7qz
+         VhCiY8YjQkG3tO8lH9EeKE5L/cVMK04eEML3Ox8/6kItkhWg1LqJk/LkSWKdjHUgO5H7
+         be30koElmKAKmyAqBYGfmqoZDDtbkGtvivJ20KA8jcVrk/DWvAnev4D4+j5N72NywLt4
+         2LVU3tJ/GCujDwsKCkThZ6bNTHYVTh3/M8A18cvh+yzqmDlk2iwrM4kWA0i6Z8RvCnFg
+         SIU+0SAiCb7Kds2JCyf0n90xN9Auavj3fNkBTuX3kaZIySpy4zOPaxwgOBNrF4tIi5JF
+         lcaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784028769; x=1784633569;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=lZ7+kvUeHIUnK6IkwGO8eHuMPv0cKv2pkPNX/MO8DzI=;
+        b=JKojVOa6nptKZMv1gefx5wr+3h6OYespGu/kTrcVZX8w1kBEiEs9/DRqdreO9z/5KP
+         1Pc6lfU7BOcxSJs9jTN4BX8TXa8KmQPxFol22lpjHluiNd9Xv+lgqjRXcljGXdeJrGeW
+         IFcCXEZixFJd3jdW6B+kw7tnTzIsFKde5ERsigxAFhwQDOFs8TbS0/2UduWm3BXveLqd
+         n7ZfhSSGGzQG1SCXrWtF5zzzJDZt0GWnBqY/5PuKm/1c7i5/GllN8Nkt1D86Mhcobl3i
+         wA8AuaPJhSlGrtK1X4tUvaPady6FO21fLU+nFADiUOoatxzvj90mkCf5FwQEAMj0RLk/
+         C6yA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr2PUgW+QsXmWdt/KfmVIsvxlx/0AaqahEEMNwmJEUmJg+dMPHIKokdKITe7CwXsEIzZhemP+vXb50=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxh0YTGfBnPJEqqK7o0RhjBBTJhHLR5H9JVCObwas6iywD8uw8B
+	fqACghLSM5/3Gf0bh5SPisHSALPAtxvsLakbh+LnPig9oXaU37SeOWdeMIj0fzw6
+X-Gm-Gg: AfdE7ckxsPbDB/2komsuirAc/OhVyjasEJmXUDxjCMK4lA3NhxKMM1ZdGo7G+c1x7OF
+	0ZhJqiDQ7dGBMQN+YLFs9hSjvxXdD9DEW0FMhwIcN8Z6G2fHSILptTNGq4rb088JgrxilM7bZHo
+	HrZZ88mb5pcUnmLe8P7zJ1SOemkF5LVCDgXcuMFtxTQpsQJss7VFD3Sz2iISRB6RTeZcqIBRy91
+	g0fJmzFhlRY4f9DNJAH0yP8A6WigBcgFCYyuJ4FV+vximYCjV62eXDxv6Ds3KB2PTUL7VZJZgXL
+	yoaZZoYDcahjt5f09Sol/Ej7/Ep7SbZARhXizUpWTFiUQDLSKckO94AT2dPColXLH95yvtWWuoP
+	qipMG57I2v7Yu/shkZ9FHYr8aojFFPK2ZP0XiA1lm97CnMvFeDY/X2LiaKK551VKvrDiG+JS2wE
+	sC2XWy9krc/zEKXqPctA==
+X-Received: by 2002:a05:6a00:855:b0:848:4ff5:5311 with SMTP id d2e1a72fcca58-84a51467aedmr3389711b3a.28.1784028769162;
+        Tue, 14 Jul 2026 04:32:49 -0700 (PDT)
+Received: from workstation.. ([110.93.227.81])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5b3b251eesm9508600a12.31.2026.07.14.04.32.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2026 04:32:48 -0700 (PDT)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: Kevin Xie <kevin.xie@starfivetech.com>
+Cc: Ali Tariq <alitariq45892@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org (open list:PCIE DRIVER FOR STARFIVE JH71x0),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: starfive: Fix resource leaks on error paths in host_init()
+Date: Tue, 14 Jul 2026 16:30:29 +0500
+Message-Id: <20260714113029.326207-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] VFIO_DEVICE_PCI_HOT_RESET fails to synchronize software TPH state =
-for all devices in the affected reset group.
-- [High] Unlocked calls to `pcie_disable_tph()` in VFIO ioctl reset paths c=
-ause TOCTOU data races with concurrent TPH configuration.
-- [High] TPH virtual configuration space (`vconfig`) remains stale after re=
-set ioctls, permanently breaking future TPH enablement.
-- [High] pcie_disable_tph() accesses PCI configuration space without holdin=
-g a runtime PM reference, which can race with device suspension.
---
+starfive_pcie_host_init() acquires the PHY, clocks/resets, and an
+optional regulator in sequence, but does not correctly unwind these
+resources when a later step fails.
 
---- Patch [15]: [PATCH v20 15/16] vfio/pci: Sync core PCI TPH software stat=
-e across device lifecycle and resets ---
-commit 0b983b3e1196f13bb26ca2c1d7517ec00ad08a77
-Author: Chengwen Feng <fengchengwen@huawei.com>
+If starfive_pcie_clk_rst_init() fails after the PHY has already been
+successfully enabled, the function returns directly without disabling
+the PHY, leaking it and leaving it powered.
 
-vfio/pci: Sync core PCI TPH software state across device lifecycle and rese=
-ts
+If regulator_enable() fails for the optional vpcie3v3 regulator, the
+failure is only logged; the function falls through and returns
+success, leaving the driver believing the regulator is enabled while
+continuing to configure PCIe hardware that may be unpowered. This
+also leaves the clocks and PHY enabled with nothing to clean them up.
 
-Hardware resets clear PCI TPH registers, but core PCI driver software TPH
-state can become stale across device open/close and reset paths. This patch
-calls pcie_disable_tph() during device enable/disable and after reset ioctls
-to synchronize the software tracking state with the hardware.
+Disable the PHY on the clk/reset failure path, and disable the
+clocks/resets and PHY, then return the error, if the regulator fails
+to enable.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index ae2e0e2252a1e..c509adb76955d 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-[ ... ]
-> @@ -1573,9 +1579,15 @@ long vfio_pci_core_ioctl(struct vfio_device *core_=
-vdev, unsigned int cmd,
->  	case VFIO_DEVICE_IOEVENTFD:
->  		return vfio_pci_ioctl_ioeventfd(vdev, uarg);
->  	case VFIO_DEVICE_PCI_HOT_RESET:
-> -		return vfio_pci_ioctl_pci_hot_reset(vdev, uarg);
-> +		ret =3D vfio_pci_ioctl_pci_hot_reset(vdev, uarg);
-> +		if (!ret)
-> +			pcie_disable_tph(vdev->pdev);
+Build-tested and boot-tested on StarFive VisionFive 2 v1.2A
 
-[Severity: High]
-Does this successfully clear the software state for all devices in the reset
-group?
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+---
+ drivers/pci/controller/plda/pcie-starfive.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-When userspace invokes VFIO_DEVICE_PCI_HOT_RESET, the hardware TPH state
-is cleared for all devices in the reset group. However, only the targeted
-vdev has pcie_disable_tph() called.
+diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+index ba8ef7842e35..156b31eef868 100644
+--- a/drivers/pci/controller/plda/pcie-starfive.c
++++ b/drivers/pci/controller/plda/pcie-starfive.c
+@@ -303,13 +303,19 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
+ 			   STG_SYSCON_CLKREQ, STG_SYSCON_CLKREQ);
+ 
+ 	ret = starfive_pcie_clk_rst_init(pcie);
+-	if (ret)
++	if (ret) {
++		starfive_pcie_disable_phy(pcie);
+ 		return ret;
++	}
+ 
+ 	if (pcie->vpcie3v3) {
+ 		ret = regulator_enable(pcie->vpcie3v3);
+-		if (ret)
++		if (ret) {
+ 			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
++			starfive_pcie_clk_rst_deinit(pcie);
++			starfive_pcie_disable_phy(pcie);
++			return ret;
++		}
+ 	}
+ 
+ 	if (pcie->reset_gpio)
+-- 
+2.34.1
 
-Will other devices in the reset group retain pdev->tph_enabled =3D=3D 1,
-causing pcie_enable_tph_ext() to fail with -EBUSY when userspace attempts
-to re-enable TPH later?
-
-
-[Severity: High]
-Can pcie_disable_tph() race with device suspension here?
-
-vfio_pci_ioctl_pci_hot_reset() acquires PM runtime references for all devic=
-es
-but drops them via pm_runtime_put() before returning. If the device is
-configured for runtime PM, it may immediately begin suspending.
-
-Since pcie_disable_tph() performs an unlocked pci_write_config_dword(),
-does it risk accessing the PCI configuration space of a suspended device,
-potentially leading to PCIe Completion Timeouts or dropped writes?
-
-> +		return ret;
->  	case VFIO_DEVICE_RESET:
-> -		return vfio_pci_ioctl_reset(vdev, uarg);
-> +		ret =3D vfio_pci_ioctl_reset(vdev, uarg);
-> +		if (!ret)
-> +			pcie_disable_tph(vdev->pdev);
-
-[Severity: High]
-Is there a data race with concurrent TPH configuration?
-
-The reset handlers drop dev_set->lock and vdev->memory_lock before
-returning, allowing pcie_disable_tph() to run locklessly.
-
-If a concurrent userspace thread writes to the TPH virtual config space, it
-takes memory_lock and calls pcie_enable_tph_ext(). Can these two threads
-concurrently modify PCI_TPH_CTRL and pdev->tph_enabled, corrupting the
-tracking state?
-
-
-[Severity: High]
-Does this leave the virtual configuration space (vconfig) stale?
-
-While pcie_disable_tph() clears the hardware state and pdev->tph_enabled,
-it doesn't update vdev->vconfig.
-
-If the guest OS later rewrites the config space to re-enable TPH,
-vfio_tph_config_write() will see:
-
-    new_ctrl =3D le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CTRL=
-]);
-    if (new_ctrl =3D=3D org_ctrl)
-        goto out;
-
-Since vconfig still contains the enabled state from before the reset, won't
-this treat the write as a no-op, leaving TPH permanently disabled in hardwa=
-re?
-
-> +		return ret;
->  	case VFIO_DEVICE_SET_IRQS:
->  		return vfio_pci_ioctl_set_irqs(vdev, uarg);
->  	default:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714104325.5444=
-4-1-fengchengwen@huawei.com?part=3D15
