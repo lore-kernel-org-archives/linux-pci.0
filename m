@@ -1,168 +1,158 @@
-Received: from mail-pj2-f4.google.com (mail-pj2-f4.google.com [74.125.227.132])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.cyberchaos.dev (mail.cyberchaos.dev [195.39.247.168])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1B583A4F36
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 15:49:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.132
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD09B4DD6DB;
+	Tue, 14 Jul 2026 16:57:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.39.247.168
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784044183; cv=none; b=AmaT1/wCn6rfbZg2AvoWX5PRGpbRIonXlRxagyQBs8viKo76VBGA4Qmd2qxflJuiVhh3Hw0dYDmo4hS9IaSKaAAdcXQFiIV+14W56xWeOBjPnO6XdvuqIIz7V5X0Nr+LQA4EoiS3uhi76GI91iCHocPIUamqB8Ilur1EUeiyxWw=
+	t=1784048242; cv=none; b=CVUPvvSTiYSlJOQvGW8WkWKY94+iObWX3agZIcESKifwBmk0ZWY6/PImo5AYjBG6NESJ0N4DJAYOFH/9phi2LKzz9jdD/xdYDs/0H4/CIMna3fIVeWEd4BTSa5ElMhgwpA04OioWp/kIxdP6IrWjEmJtlvGBihBOJMToPNip3g0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784044183; c=relaxed/simple;
-	bh=y4A4B/6MB53D0FTs1YY8wyTfSg8Z3B4fABc9uvx/R3A=;
+	s=arc-20240116; t=1784048242; c=relaxed/simple;
+	bh=sY2tl84JejcmJYBseZy3zgZ0sNWjGsiO/e6ANhpg3go=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ciq0cUkXg413XITEKwIPDPZ41MNEHWmB3UxHMQ9NyC4mbofC+cGmewXP8BgnRKf1nk4YITXnvHQJceCSHD4cbHBtHT1GnfUlLh4aczK11aFL8KrgJcrChit633V5JteRGYinKxU1zDaV6Xd9UHrrpIzANB0SHQEuFE1C/w7H04M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ebusP8eh; arc=none smtp.client-ip=74.125.227.132
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=XFK9KuLb1Rhd3/7P+aeGmDmhDFIxcnP13EntUtcv53Ej15D4LX17ss308g/7WUE7nAogSLAp/hpn+MxjOEUVhKSZVPe3SpAgE1WJJv/qywV/R+Z3dt9CARZ9+HsDQsyeCK7OfKFB1yycrhZd5Htreby123mt3jFLTpUYPMuOrqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cyberchaos.dev; spf=pass smtp.mailfrom=cyberchaos.dev; dkim=pass (1024-bit key) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.b=wXD8NEDs; arc=none smtp.client-ip=195.39.247.168
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cyberchaos.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cyberchaos.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ebusP8eh"
-Received: by mail-pj2-f4.google.com with SMTP id 98e67ed59e1d1-381191ea2adso2871224a91.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 08:49:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784044180; x=1784648980; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ZHg6oFBwAWkW2KyyNW/CKB7svJXrY+dklfdjqSj+/fQ=;
-        b=ebusP8ehPd8tDoLM00S6/i0CLehD29uI8y0WS4UNvDzcZtBTQVLE+jXA+BfLB7Du96
-         MmZyLHLLZHk+KldlUrRqTVRvWC6mY3njRRC1mtDZE+e1OenzglxFlQtYRmJV1giIP79w
-         39BVsT+LBWA0iU5p5Yg03NBX85ps4ofY53x2HyFWBiCWwxlknoSyaDdjSHyUpjoGY6BB
-         BWSonAeeBzQ2mnWflYVemaMFJ/NTGsF+nK/QAFxzd7DRYJTu5gc4/HKUeFCsiQSGSAd7
-         j2zzne/oVYQ8jEmTBAFJtH3ngdIjaLDrpBaJglpkfLLdvitQ1WHHukBaKEphQP+egjS6
-         DVPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784044180; x=1784648980;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ZHg6oFBwAWkW2KyyNW/CKB7svJXrY+dklfdjqSj+/fQ=;
-        b=OLGFqHfjcUXJJuJJ6X75ucDrzlyXeCG3r9iLAD+EBadwuae/IWbChevYbwsje8HcRU
-         rH43lmqkfGz7O8eTwRBxWmm4dqUnxwplqgREtQE/Nlspi5gCvEZRnmsVvKt+5A4iNiCv
-         Yq2DYXdlA1FNRpcasVJ0M2vNaCbjZcVdbdZvBwhKPcEfeDTTAwHJV9mRo0x87wcK4otj
-         VAhfm8aqD2cTHbHw+EBij5XMDZpqkafLP4p7HctgEG5nJVcBIoPwSNLRZeMl6bhIhGe1
-         lwGaaRMFNicVaTw1MxHEgjC4U+K0MJPgglbOAot3I76mxKVWgO6DC3s4TgMmJEbEJFEX
-         ARvg==
-X-Gm-Message-State: AOJu0Yz9NvCH5tbS6O+D+5R10bGGQsnkAL8h8MUW+eBLP9yqZV+gC4cX
-	4FAt8pM7ki3CV+ZinXyqxtG3audT1iuqd6RIB7flMMLmPq2Wmj8wXWzrkqllDltk
-X-Gm-Gg: AfdE7cl6cRYx+DX9Ul5EJNozujfTS5OX4eA3ej59qWLaLjthSfAtypeCI3VWwgKvfMt
-	0cotscksYy8lNBNXhsOrxno4TNM9sSoqCa/BXtvxjk+HYY0o6JP0PJU7nzZx/5ZabSXGJ6F8xX4
-	tcdnKgQsm7BUlbFMM/OszE1M2ApRyUihmRmN37vCCGHihCYhfzNp+WhWG7SMq/dqesfuwfqeqEk
-	YMJd5n4pzxSvr4GyPvlz5zFQJ6wO21IV0tYZIYCrGQJcdj2HakJV7kRp5o+sDJaFWnxZuenIneg
-	f2lThKnGWklazvBJcv9RzzL43LzDQ2rhM4Eq88rv/0xslhEuKAiezFZwtwulO06reGQqXbKRBl+
-	iwwpb41mIGAEhQpezeC4gVS2lWvs+RE9oUgMTfjJ5AuUi0IVUcF9ygA0wceJz+5Mwf5dSF+nPnF
-	du1Hnwk+xliaDXZHiIu8jNAdyL
-X-Received: by 2002:a17:90b:3951:b0:37e:b6a:6cdf with SMTP id 98e67ed59e1d1-38e17e44414mr3677898a91.20.1784044180273;
-        Tue, 14 Jul 2026 08:49:40 -0700 (PDT)
-Received: from [192.168.101.113] ([182.180.105.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38e174440edsm1731165a91.12.2026.07.14.08.49.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jul 2026 08:49:39 -0700 (PDT)
-Message-ID: <4502b089-3625-445a-84a0-bee74735f7ac@gmail.com>
-Date: Tue, 14 Jul 2026 20:49:34 +0500
+	dkim=pass (1024-bit key) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.b="wXD8NEDs"
+Message-ID: <76243051-e391-45d2-b47a-d4a904f0a36f@cyberchaos.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cyberchaos.dev;
+	s=mail; t=1784048232;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ElhmPfVqBToQ9P063X0Nq/IxRb7L6/7x/Xi/WmPp8q8=;
+	b=wXD8NEDs6UrKZDXX4nd5fYxC/7tBzufTuVhWqv8zYjnFqy5Q2LeX1zJB0H/vQ1BiRrWQDV
+	9PIla8gaoYKbb2W9MT+o0bAUg+tQ7ia6DaIjgLVCqBn9vmYuM8tmpu6jioeEVzSsyVxH2x
+	UYU6EfIakwLmTnKBtexaM7af2+KxcCc=
+Date: Tue, 14 Jul 2026 18:57:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: starfive: Fix resource leaks on error paths in
- host_init()
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260714113029.326207-1-alitariq45892@gmail.com>
- <20260714115343.4D49E1F000E9@smtp.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: apple: Integrate pwrctrl API
+To: Manivannan Sadhasivam <mani@kernel.org>, Marc Zyngier <maz@kernel.org>
+Cc: Yureka Lilian <yureka@cyberchaos.dev>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Sven Peter <sven@kernel.org>, Janne Grunau <j@jannau.net>,
+ Neal Gompa <neal@gompa.dev>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, asahi@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+References: <20260707-apple-pcie-pwren-v1-0-5a281b182fe2@cyberchaos.dev>
+ <20260707-apple-pcie-pwren-v1-1-5a281b182fe2@cyberchaos.dev>
+ <86a4s3p2vy.wl-maz@kernel.org>
+ <8a80a170-a508-4a9e-8090-27cfcedb1cd4@cyberchaos.dev>
+ <865x2qq4ts.wl-maz@kernel.org>
+ <jqaxvdaxfpm5g3tdwdqpuk2ubkwim6ckmlblocvakloqishvmm@c5ofbdbdj7lf>
 Content-Language: en-US
-From: Ali Tariq <alitariq45892@gmail.com>
-In-Reply-To: <20260714115343.4D49E1F000E9@smtp.kernel.org>
+From: Yureka Lilian <yureka@cyberchaos.dev>
+In-Reply-To: <jqaxvdaxfpm5g3tdwdqpuk2ubkwim6ckmlblocvakloqishvmm@c5ofbdbdj7lf>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-This is a separate, unrelated issue from the submitted patch. I will 
-work on this and will submit a separate patch.
 
-On 7/14/26 4:53 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> 
-> Pre-existing issues:
-> - [High] Use-after-free of IRQ domains during driver unbind or when probe fails after interrupt initialization.
-> --
-> 
-> --- Patch [1]: [PATCH] PCI: starfive: Fix resource leaks on error paths in host_init() ---
-> commit 64603196409722c49e238cd53d9d6a6b7efd0b22
-> Author: Ali Tariq <alitariq45892@gmail.com>
-> 
-> PCI: starfive: Fix resource leaks on error paths in host_init()
-> 
-> This commit unwinds previously acquired PHY and clock/reset resources in
-> starfive_pcie_host_init() when subsequent initialization steps or regulator
-> enablement fails.
-> 
->> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
->> index 298036c3e7f94..86b248a1ea758 100644
->> --- a/drivers/pci/controller/plda/pcie-starfive.c
->> +++ b/drivers/pci/controller/plda/pcie-starfive.c
-> [ ... ]
->> @@ -303,13 +303,19 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
->>   			   STG_SYSCON_CLKREQ, STG_SYSCON_CLKREQ);
->>   
->>   	ret = starfive_pcie_clk_rst_init(pcie);
->> -	if (ret)
->> +	if (ret) {
->> +		starfive_pcie_disable_phy(pcie);
->>   		return ret;
->> +	}
->>   
->>   	if (pcie->vpcie3v3) {
->>   		ret = regulator_enable(pcie->vpcie3v3);
->> -		if (ret)
->> +		if (ret) {
->>   			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
->> +			starfive_pcie_clk_rst_deinit(pcie);
->> +			starfive_pcie_disable_phy(pcie);
->> +			return ret;
->> +		}
->>   	}
-> 
-> [Severity: High]
-> This is a pre-existing issue, but since we are fixing error paths in the
-> host initialization, I noticed a potential use-after-free in the related
-> PLDA host initialization code.
-> 
-> In drivers/pci/controller/plda/pcie-plda-host.c, plda_init_interrupts()
-> allocates the interrupt using devm_request_irq():
-> 
-> plda_init_interrupts() {
->      ...
->      ret = devm_request_irq(dev, event_irq,
->                             plda_event_handler,
->                             0, NULL, port);
->      ...
-> }
-> 
-> However, on device removal or if probe fails, plda_pcie_host_init() calls
-> plda_pcie_irq_domain_deinit(), which explicitly removes and frees the event
-> domain:
-> 
-> plda_pcie_host_init() {
->      ...
-> err_probe:
->      plda_pcie_irq_domain_deinit(port);
->      ...
-> }
-> 
-> plda_pcie_irq_domain_deinit() {
->      ...
->      irq_domain_remove(pcie->event_domain);
->      ...
-> }
-> 
-> Because the IRQs are devm-managed, their cleanup is deferred until after the
-> driver's probe or remove function returns.
-> 
-> When devres eventually calls free_irq(), will the IRQ core attempt to
-> deactivate the interrupt using the now-freed irq_data->domain pointer?
-> 
+On 7/9/26 14:29, Manivannan Sadhasivam wrote:
+> On Tue, Jul 07, 2026 at 02:58:39PM +0100, Marc Zyngier wrote:
+>> On Tue, 07 Jul 2026 13:04:21 +0100,
+>> Yureka Lilian <yureka@cyberchaos.dev> wrote:
+>>> On 7/7/26 11:25, Marc Zyngier wrote:
+>>>> On Mon, 06 Jul 2026 23:38:27 +0100,
+>>>> Yureka Lilian <yureka@cyberchaos.dev> wrote:
+>>>>> Integrate the PCI pwrctrl framework into the Apple PCIe host driver to
+>>>>> provide standardized power management for PCI devices.
+>>>>>
+>>>>> Notably, this allows enabling powering on the WiFi, SD card reader on
+>>>>> various Macs by means of the pwrctrl framework before probing the ports.
+>>>>>
+>>>>> Previously, a custom solution for powering on the WiFi and SD card
+>>>>> reader was proposed[1], but we can now use the new pci-pwrctrl-generic
+>>>>> driver for this purpose.
+>>>>>
+>>>>> Link[1]: https://lore.kernel.org/lkml/20220502093832.32778-4-marcan@marcan.st/
+>>>>>
+>>>> nit: this paragraph and the accompanying link don't belong in the
+>>>> commit message and should be moved below the --- mark or even better,
+>>>> to the cover letter.
+>>> ack, will leave it out of the commit message of the individual commit in v2
+>>>>> Signed-off-by: Yureka Lilian <yureka@cyberchaos.dev>
+>>>>> ---
+>>>>>    drivers/pci/controller/Kconfig      |  1 +
+>>>>>    drivers/pci/controller/pcie-apple.c | 16 ++++++++++++++++
+>>>>>    2 files changed, 17 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+>>>>> index 2247709ef6d6..af64630d28fa 100644
+>>>>> --- a/drivers/pci/controller/Kconfig
+>>>>> +++ b/drivers/pci/controller/Kconfig
+>>>>> @@ -46,6 +46,7 @@ config PCIE_APPLE
+>>>>>    	depends on OF
+>>>>>    	depends on PCI_MSI
+>>>>>    	select PCI_HOST_COMMON
+>>>>> +	select PCI_PWRCTRL_GENERIC
+>>>>>    	select IRQ_MSI_LIB
+>>>>>    	help
+>>>>>    	  Say Y here if you want to enable PCIe controller support on Apple
+>>>>> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+>>>>> index c2cffc0659f4..db038a9d4831 100644
+>>>>> --- a/drivers/pci/controller/pcie-apple.c
+>>>>> +++ b/drivers/pci/controller/pcie-apple.c
+>>>>> @@ -30,6 +30,7 @@
+>>>>>    #include <linux/msi.h>
+>>>>>    #include <linux/of_irq.h>
+>>>>>    #include <linux/pci-ecam.h>
+>>>>> +#include <linux/pci-pwrctrl.h>
+>>>>>      #include "pci-host-common.h"
+>>>>>    @@ -825,6 +826,21 @@ static int apple_pcie_init(struct
+>>>>> pci_config_window *cfg)
+>>>>>    	if (WARN_ON(!pcie))
+>>>>>    		return -ENOENT;
+>>>>>    +	ret = pci_pwrctrl_create_devices(pcie->dev);
+>>>>> +	if (ret) {
+>>>>> +		dev_err(pcie->dev, "Failed to create pwrctrl devices: %pe\n", ret);
+>>>>> +		return ret;
+>>>>> +	}
+>>>>> +
+>>>>> +	ret = pci_pwrctrl_power_on_devices(pcie->dev);
+>>>>> +	if (ret) {
+>>>>> +		if (ret != -EPROBE_DEFER) {
+>>>>> +			dev_err(pcie->dev, "Failed to power on devices: %pe\n", ret);
+>>>>> +			pci_pwrctrl_destroy_devices(pcie->dev);
+>>>>> +		}
+>>>>> +		return ret;
+>>>>> +	}
+>>>>> +
+>>>> Why is this done globally while the whole driver works on a per-port
+>>>> basis, and that the proposed DT updates are also per port?
+>>> pci_pwrctrl_power_on_devices takes a struct device as parameter, but
+>>> pcie-apple does not allocate device structs for the individual ports.
+>>> This could be changed of course. But since pci_pwrctrl_* operate on
+>>> the subnodes recursively, it works just fine this way.
+>> Works fine is one thing. Being consistent with the way the rest of the
+>> driver works is another. pci_pwrctrl_create_device() and
+>> pci_pwrctrl_power_on_device() appear to do exactly what would be
+>> required for a single port. They just needs to be exported made
+>> global/exported.
+>>
+> I'm fine with exporting pci_pwrctrl_create_device() and
+> pci_pwrctrl_power_on_device() and calling them with per-port np.
+>
+> - Mani
+
+In theory I do agree this would work to power on the slots, and I can 
+send a v2 of the patch doing it that way, but I don't quite understand 
+yet how this fits better with the existing driver code: If this is the 
+case, what is the difference between pcie-apple and pcie-qcom and why 
+should pcie-qcom use the recursive function but pcie-apple not?
+
+
+Thanks,
+
+— Yureka
 
