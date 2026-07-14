@@ -1,122 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02BB739A047;
-	Tue, 14 Jul 2026 12:32:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEC4448CF7;
+	Tue, 14 Jul 2026 12:36:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784032348; cv=none; b=d6g92iVehoim7LunbSgnwdCY35FnJPAKjgUYaD+kTJ6wQEZvgv09ABM/onIrKiJrmwyoHk2ZX2WtidUQoLBwvulTfeH7CRO9MkY/j9c8O6ibS9TwCWNmRXAtn/JtLvOu11DLF9OveeyPQSA4a9TpxHpwCicijIkj24ySFMmJ4es=
+	t=1784032590; cv=none; b=nb+ESBqYiG/pBblSx/Lq1SoBsEm7j/RpcnyDqEin/4JZlGXL6rtjSyi0jvcqk24sEpbrDkchaGo9STiTy7Vzxz8PHWkW7LMvaLreYnqKnSvusDD9kOhH78nt8iiedNYDlEAtqSNiCvn5vkZYxuf8nJJ1wMukwh5cLya1J+8/DYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784032348; c=relaxed/simple;
-	bh=DSENbsWlW/QzAXnqDYZWi9BO5ezJVxAgtnB/XGNyqsk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B7e/MhsfuwnamuK1QMjmzsozIZ7CIcje5FkyaquzX5j8l6NbKL5lqJ8WrxwAA7N0thi1JNIfKMWaumi85rl89lpNHug7U+RsGNeQrXJc1tnG2uL6l9Md/seCx8APPA27XqYO94Txz7qwS0f8GPOHG8CH0Mm5n5vE+j6x1VJp52c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yz0KFj7s; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784032590; c=relaxed/simple;
+	bh=BkLijEV27x3cqmPtkeIbS8HAe4OmMjmXmE23E8oTnkw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=JJ/z32chT1UR/VaFP6zEwiWpElZRK0TUBPPboWsQXDes0F3pM+pg+T9zNcCkhKglyVVx5OrbkQsC9iPOffUKj1wU5Nt5+6aOX5nVbrc4RLE/UsHJcIQhBAFdEdfO2Wx5R1YfHekW5MAx7cFQhVYJNJ0b+EQQKdy7pDfqKaPc1jk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b1Ka+0m5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yz0KFj7s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB8201F000E9;
-	Tue, 14 Jul 2026 12:32:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b1Ka+0m5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8909D1F00A3D;
+	Tue, 14 Jul 2026 12:36:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784032336;
-	bh=iFRbmSU8P9+eMc7PXGWfTOOwr/3NGqJfOlOm1ioxEbM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Yz0KFj7svJkfBWdtnjieP3L3HRJR082cNmBCsDSko2om0410lYE/upkFcpZf0N5dl
-	 mo1NfkCJIiz9Mr5A7PPOGHhxlLVjOcgCAyoVBoH+nqn9svvNVJ9HRGVJvkZ/F5nNEI
-	 Dx9yaHDBUqzckIlgrGnX4ddpg5ICtoVGcppDQE8IAfpA14F86XgtW3BKRbvrd9r1U1
-	 4iO2XyzVqkhYqjMDWm9nc/uuWwaKHOYYX9Ymk1VWicxqRE/2gNFSIoCQdwkhZ6g4b6
-	 n71jjanOD3etDq/bKARfIqbtpY1FvcVzke406gah1WHwgqM4d394koMMbAlrQjYz8Z
-	 +nSwop6ixHIgA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] PCI: epf-mhi: Implement mhi_cntrl->flush_async()
- to flush DMA read/write
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260714-mhi-ep-flush-v2-3-b6a9db011e85@oss.qualcomm.com>
-References: <20260714-mhi-ep-flush-v2-0-b6a9db011e85@oss.qualcomm.com>
- <20260714-mhi-ep-flush-v2-3-b6a9db011e85@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 12:32:15 +0000
-Message-Id: <20260714123215.AB8201F000E9@smtp.kernel.org>
+	s=k20260515; t=1784032585;
+	bh=M5kNHTeVQeP6GA90VID8S6a+DIOg6r1Qlofc1FKuYhY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=b1Ka+0m5IhiNMZQrGOdYPQHY7nnbXwbJ0JQdG7Pe9UJsXA/9unW1haAOfURKukdYB
+	 2PMXMxCo2FV/rdg8wjYEvcuQePofbEqZmJ0UXsdNi93xRqua8mDhsOVkUUorZz46Xh
+	 mX31ACfz4CwYHQs60UQltFIZebLZ8mWoQiw03tV34OEX3n45Z78UXqD9zP8/eaG9oW
+	 Rtg1g9Wrp35vS+jmARlVwXRwPnOsQR/HSWZA7sd/O+RG4j335Eqsm7qEixAqJESrgt
+	 MlQi0LNpWCjOXk3yCvQTbi2/uGNbR9E1yxCS8mUCNi3MIR+B7LpJmEu1lRjdpulPge
+	 JmBBgyXfcsYtw==
+From: Vinod Koul <vkoul@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>, 
+ Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
+ Niklas Cassel <cassel@kernel.org>, Frank.Li@oss.nxp.com
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-nvme@lists.infradead.org, Koichiro Den <den@valinux.co.jp>, 
+ imx@lists.linux.dev, "Verma, Devendra" <devverma@amd.com>, 
+ Frank Li <Frank.Li@nxp.com>, Devendra Verma <devendra.verma@amd.com>
+In-Reply-To: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
+References: <20260713-edma_ll-v7-0-6fb7498c901e@nxp.com>
+Subject: Re: [PATCH v7 00/10] dmaengine: dw-edma: flatten desc structions
+ and simplify code
+Message-Id: <178403257915.822807.4369626855004661951.b4-ty@kernel.org>
+Date: Tue, 14 Jul 2026 18:06:19 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.13.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
 
-New issues:
-- [High] Deadlock / Infinite wait in pci_epf_mhi_edma_flush_async() when sy=
-nchronizing globally shared DMA channels.
+On Mon, 13 Jul 2026 13:03:18 -0400, Frank.Li@oss.nxp.com wrote:
+> Basic change
+> 
+> struct dw_edma_desc *desc
+>        └─ chunk list
+>             └─ burst list
+> 
+> To
+> 
+> [...]
 
-Pre-existing issues:
-- [High] Pre-existing NULL pointer dereference on PCI link flap exacerbated=
- by unconditional cleanup dereference.
---
+Applied, thanks!
 
---- Patch [3]: [PATCH v2 3/3] PCI: epf-mhi: Implement mhi_cntrl->flush_asyn=
-c() to flush DMA read/write ---
-commit c83c3a93b470add22e521d4fb56e38b2a49dd98b
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+[01/10] dmaengine: dw-edma: Move control field update of DMA link to the last step
+        commit: 99c46385edb155cfd2919b4a44d97f9ea811639e
+[02/10] dmaengine: dw-edma: Add xfer_sz field to struct dw_edma_chunk
+        commit: 07680003068a8008b4585423d533ab9e86a8a4d3
+[03/10] dmaengine: dw-edma: Move ll_region from struct dw_edma_chunk to struct dw_edma_chan
+        commit: 956028c5dde9fd1a8a462db53609c1c547cafb5c
+[04/10] dmaengine: dw-edma: Pass down dw_edma_chan to reduce one level of indirection
+        commit: be35502a14726e916ac41545840c5d682c5d54e6
+[05/10] dmaengine: dw-edma: Add helper dw_(edma|hdma)_v0_core_ch_enable()
+        commit: df9c5515501c8860a228ade47b93aff5b66544ee
+[06/10] dmaengine: dw-edma: Add callbacks to fill link list entries
+        commit: 2cc7ba6b168f2d0bd79f47ccc14168352a3c6cd2
+[07/10] dmaengine: dw-edma: Add non_ll_start() callback
+        commit: de60121a08799c4db503d44a9028856976f1cfff
+[08/10] dmaengine: dw-edma: Use common dw_edma_core_start() for both eDMA and HDMA
+        commit: 0d7a2719d85f9940b05eeed18e5f398b0b3219b1
+[09/10] dmaengine: dw-edma: Use burst array instead of linked list
+        commit: 3f3fa81cd2ace2c95a0368f2c6e6d1a1d983281a
+[10/10] dmaengine: dw-edma: Remove struct dw_edma_chunk
+        commit: bed94a469f2ce783f17ac0699f26277bc3c74118
 
-PCI: epf-mhi: Implement mhi_cntrl->flush_async() to flush DMA read/write
+Best regards,
+-- 
+~Vinod
 
-The MHI core needs to make sure that all the current DMA transactions are
-completed before removing the channels. So implement the
-mhi_cntrl->flush_async() callback by first making sure all the in-flight
-DMA operations are completed and then flushing the DMA workqueue.
 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/e=
-ndpoint/functions/pci-epf-mhi.c
-> --- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-[ ... ]
-> @@ -644,6 +644,15 @@ static int pci_epf_mhi_edma_write_async(struct mhi_e=
-p_cntrl *mhi_cntrl,
->  	return ret;
->  }
-> =20
-> +static void pci_epf_mhi_edma_flush_async(struct mhi_ep_cntrl *mhi_cntrl)
-> +{
-> +	struct pci_epf_mhi *epf_mhi =3D to_epf_mhi(mhi_cntrl);
-> +
-> +	dmaengine_synchronize(epf_mhi->dma_chan_rx);
-> +	dmaengine_synchronize(epf_mhi->dma_chan_tx);
-> +	flush_workqueue(epf_mhi->dma_wq);
-
-[Severity: High]
-Can this cause an indefinite hang if other channels on the same controller
-are active?
-
-If a user unloads an MHI client module (invoking mhi_ep_remove), it calls
-this function to drain the DMA channel. However, because
-epf_mhi->dma_chan_rx and dma_chan_tx are globally shared across the entire
-PCI endpoint, and dmaengine_synchronize() polls until the channel is no
-longer busy, continuous data traffic from a different independent MHI
-client might prevent this from ever returning.
-
-[Severity: High]
-This is a pre-existing issue, but could this also lead to a NULL pointer
-dereference after a PCI link flap?
-
-When the PCI link goes down, pci_epf_mhi_link_down() calls
-pci_epf_mhi_dma_deinit(), which frees the DMA channels and workqueue and
-sets them to NULL.
-
-When the link comes back up, pci_epf_mhi_link_up() unconditionally assigns
-these EDMA callbacks but fails to call pci_epf_mhi_dma_init() to reallocate
-the resources.
-
-If the link goes down again (or a client device is removed), invoking this
-new flush_async() callback will pass NULL pointers to
-dmaengine_synchronize() and flush_workqueue(), causing a crash.
-
-> +}
-> +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714-mhi-ep-flu=
-sh-v2-0-b6a9db011e85@oss.qualcomm.com?part=3D3
