@@ -1,123 +1,190 @@
-Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02C63F39EA
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 07:54:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8387D372B45;
+	Tue, 14 Jul 2026 08:02:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784015658; cv=none; b=f7teR1huPD047U3wN0bufLvcPJrahRynVkggADJlwFmCSiqdb9qgxJOUkeoY1N2zthajidZVYPmZmEbfHbBj9h7E6r4yFRdgRQwAK+2d9xzhzZVpEJUg9UDGuHun4bKvaB1ZzfYd8sQd2QrOjXeiZHdqCRbLdYntgc26nJyaMLs=
+	t=1784016138; cv=none; b=Dn+StMtKXsWUaTmW6w479qmUhP1KrRuemTX0NHfoTq6Z646oym2gBn1YoNvxjPqWrL3V+AgsCS3Rydr9jFkmDSWAu4qbLN9TGeoUEbabY/ICTPQi+6gWLBtCyv9lPvBJ3FJYizNUeuybBxrAXwmupAZx+HFGjEri7s/K4AZyWAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784015658; c=relaxed/simple;
-	bh=THxugq6t+PDXlFGTMulIef3VfnF0pxoHGHT4/GfoOOI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ONs9WukvZ0cHd6R/kf6F5AkWCl6vHpPWHntWqFi5j6VoxwhQp0yk4y8NY5alEIruuh2mpJJXUk/kRUxDnSO32oA2E0yxGFoZJFmttWSA7p/aHVXkvbZ0MYhsBJ6YHL9Tq5zUENhkEAuVl4M514crB6I05c5D50pK2FPOBOwjoFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-5bdb162ee53so324163e0c.2
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 00:54:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784015655; x=1784620455;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=BgRx/9A4mxiDsRVEDvyTiz/IgVDal/aTcWb8tkjr7jw=;
-        b=T8fhRtXc3gSrp6/eznMUBqcg8Okm+LS5zmFmDXxt/p92s0Y93qX/FMe+qay2o4d63s
-         oQt58PzHJFgUdvfd1D0BttyrhS8cFOqibPObdXUYyA+XPAs3L02yZSkv/rK5JTmzOiho
-         tLmqIR6iFKDE/Jf5u/SQPZrvTsI9xZzvoJNdZwsGnRsvIUrnwe5qsLWQbAV9R94P2Lxg
-         kgZbrVcwpUNeT0Hr7fJ50NJ0q27GsgjwdBnEqZfdH0txSC9fAK4+WTq/d019+Zx2ZVii
-         FOwB53+SE6TtsibDGO0tijDR1UIOouD7134gP9OIg3+Hv2m6sjdChEaBKEXoMJmd8BCV
-         g4RA==
-X-Forwarded-Encrypted: i=1; AHgh+RpbayZRRus3ZtvcOhaO+S28VUXuMHFQbj0nKHxD4pwiFYPrgl4NgxbNcm9b3jPZPudR60i58tvfgWk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw2lpM9XqblYkr0qHZqzY5rsGl6sLCunx/o39Lv8gPagi25HgpO
-	cNkh9caQ1tVL0ZAJSGDiovir0DIc5yYqvR8KBsuipjvq7puXL2GZuJ4d5AJHBDEqTlw=
-X-Gm-Gg: AfdE7ckLR0CD+8eRr7Nu4u8G56tXB6evXMTu9wiXFMYqtURlY3vSD/ZsZ7M30OTVINS
-	nWVHzDkEKzyOEVFAx3nfihtTua9WAMAIC2t3OStv4kjqdFdTqvQsDAVGgUz2EFj6rytpfqB6fQ4
-	C2EYqj19aTSUuM9JNfrmSeTCzLXlqfRlpsQ+NH5ps3h2uK0EPKILaYjr1G+U7xiLPx6Ugq4zH4H
-	N0yPSPPRW00GSgDITC9WZhIc1LavCA+Ed4c+smaEQOiFJDGE6ju6f6VJOdNJkCIK5c3W59hcKwi
-	/kvw4kcWltWnGz5a+cdHz+65yLGXyWy8yjc/JoUk9lmD/wJichRM/J3Pm+mTRCJTfrv392m48Ga
-	rtWYZXiTuYyZfjGHE8U37FBBMJtSUDJ+6ORMee3kUUNQhpNw/lP6I+7LKxG7txa8jKnR7lHN7X3
-	uRHyB5HAWb0bAnaJt/yoKeQbVIvmqZnZDjWmCphVIptrmyTok2X4CUmw==
-X-Received: by 2002:a05:6122:62a2:b0:55b:d85:5073 with SMTP id 71dfb90a1353d-5bfbf123feamr7065790e0c.4.1784015655252;
-        Tue, 14 Jul 2026 00:54:15 -0700 (PDT)
-Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com. [209.85.221.176])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5bf6f68d099sm11134897e0c.8.2026.07.14.00.54.13
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jul 2026 00:54:14 -0700 (PDT)
-Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-5bf959b820cso375411e0c.3
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 00:54:13 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RrZZ1xRKL+hl/x9uUFSWoTOB2TpDFbyWj3UWiIJAew0+XQ0eAg5HALWuy3MW8X8Yfuv4mWZgwFxb6A=@vger.kernel.org
-X-Received: by 2002:a05:6122:83f2:b0:5bd:ecad:8f9c with SMTP id
- 71dfb90a1353d-5bfbf172175mr7212570e0c.6.1784015653328; Tue, 14 Jul 2026
- 00:54:13 -0700 (PDT)
+	s=arc-20240116; t=1784016138; c=relaxed/simple;
+	bh=Lcf4nKR26voolH2pfIkoDtL1N08ZRtyep7I475jkkXo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X1ulCl74wvOALz39PwDbgmC/yKVPCfVCSk9v3vhge/0Vk9FywcQgzd++E5PJ56KzEoHje49p+EBVgzaPMQPnoKPfQh0ArzkzORszSknm/xPRzAZn64I/kS1EmfRCG6TOWjUt1deH4SIC5cc+KHBuaFSVeaGvc+LCFDCH6g83/Yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vd3Tpbkr; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vd3Tpbkr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED48E1F000E9;
+	Tue, 14 Jul 2026 08:02:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784016137;
+	bh=TrIeJmVXMyc9vJtT76XLafOEKO7HH8hJhTX0Einc3GE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Vd3Tpbkrp7xoeJE2wnGMrsPG9DytBnCImQpTEpa970Cm09wK91/Z0Li+4MEj5twyV
+	 GfxLsdjO9wMaMlGVpMNVPrO4INwH9uX5v+tD4cYdJfFeRtwUmPbEXL0F1QIa1umcWt
+	 gHX9JG39Kj8Y8DBeOEeGsu2Kso5XUuoPRekl6XT65PxeqNCMlrccIW5D7up7GVAmp6
+	 O7BE7m8NPhOu0iV7d9K8TnKjjRHMT0mPD7GDhMLLt2K2JGlSX8D+VpkxQhz97OU6BY
+	 04aztGwuA+g223Auj/938ojj64nat8n74JwevXf9EtIylorkVtEi2e4x4hViiM22G1
+	 2xKELEYO414Pw==
+Date: Tue, 14 Jul 2026 10:02:10 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: 
+	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, vkoul@kernel.org, linux-pci@vger.kernel.org, 
+	dmaengine@vger.kernel.org, Frank.Li@kernel.org
+Subject: Re: [PATCH 2/3] bus: mhi: ep: Add mhi_cntrl->flush_async() callback
+ to flush the async read/write
+Message-ID: <dbjdfjrpci2wwpf7lcyqhwbkm6amdsxfbirrb5metqau4keui6@o33fswugtxjp>
+References: <20260629-mhi-ep-flush-v1-0-714e0d56e87c@oss.qualcomm.com>
+ <20260629-mhi-ep-flush-v1-2-714e0d56e87c@oss.qualcomm.com>
+ <20260629085917.350211F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260713175400.GA1258926@bhelgaas> <2013cac8-d887-4a09-b1c5-6dc9606f16f0@mailbox.org>
-In-Reply-To: <2013cac8-d887-4a09-b1c5-6dc9606f16f0@mailbox.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 14 Jul 2026 09:54:01 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVvWE7YZgKvreSn_vJLOVD4eMmn3TCGOyqSXksqjBCwvg@mail.gmail.com>
-X-Gm-Features: AUfX_mzs8lWdOW-5Jg3BgK8EeDUWxqE-PpZFEV2XQkTM46SmNqGtsnsDEZCmeKI
-Message-ID: <CAMuHMdVvWE7YZgKvreSn_vJLOVD4eMmn3TCGOyqSXksqjBCwvg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org, 
-	kernel test robot <lkp@intel.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260629085917.350211F000E9@smtp.kernel.org>
 
-Hi Marek,
+On Mon, Jun 29, 2026 at 08:59:16AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+> 
+> New issues:
+> - [High] Incorrect ordering of channel teardown, disconnect notification, and DMA flushing in mhi_ep_remove() causes data delivery after disconnect.
+> - [High] The newly introduced flush_async() callback lacks channel context, forcing a controller-wide flush that aborts DMA operations for all active channels.
+> - [High] Dropping the channel lock during flush_async exposes a window for worker threads to process disconnected channels, defeating the fix and re-introducing the UAF.
+> 
+> Pre-existing issues:
+> - [Critical] In-flight asynchronous DMA operations are not flushed before mhi_ep_ring_reset() frees ring->ring_cache.
+> - [High] Lockless access to mhi_chan->xfer_cb in completion handlers causes a TOCTOU data race with mhi_ep_remove().
+> --
+> 
+> commit 191c1d6e4eab8c4a6ee949c2b5b9499a56060800
+> Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> bus: mhi: ep: Add mhi_cntrl->flush_async() callback to flush the async read/write
+> 
+> This commit introduces a flush_async() callback in the MHI endpoint
+> controller. It is called during device removal to ensure any in-flight
+> asynchronous DMA operations are completed before continuing teardown.
+> This aims to prevent use-after-free issues caused by delayed DMA callbacks.
+> 
+> > diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
+> > --- a/drivers/bus/mhi/ep/main.c
+> > +++ b/drivers/bus/mhi/ep/main.c
+> [ ... ]
+> > @@ -1636,6 +1637,12 @@ static void mhi_ep_remove(struct device *dev)
+> >  		}
+> >  
+> >  		mhi_chan->state = MHI_CH_STATE_DISABLED;
+> > +		mutex_unlock(&mhi_chan->lock);
+> 
+> [Severity: High]
+> Does dropping the channel lock here leave a window for worker threads to
+> process disconnected channels?
+> 
+> If mhi_ep_ch_ring_worker wakes up while the lock is dropped, it sees
+> ring->started is still true. For Downlink channels, mhi_ep_process_ch_ring()
+> skips the state check and fires xfer_cb() directly:
+> 
+> drivers/bus/mhi/ep/main.c:mhi_ep_process_ch_ring() {
+>     if (ring->ch_id % 2) {
+>         /* DL channel */
+>         result.dir = mhi_chan->dir;
+>         mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
+>     } else {
+>     ...
+> }
+> 
+> Could this execute xfer_cb() mid-teardown and cause a use-after-free?
+> 
 
-On Tue, 14 Jul 2026 at 01:27, Marek Vasut <marek.vasut@mailbox.org> wrote:
-> On 7/13/26 7:54 PM, Bjorn Helgaas wrote:
-> > On Fri, Jul 10, 2026 at 03:35:10PM +0200, Marek Vasut wrote:
-> >> On 7/10/26 10:30 AM, Marc Zyngier wrote:
-> >>> On Thu, 09 Jul 2026 21:10:03 +0100,
-> >>> Marek Vasut <marek.vasut+renesas@mailbox.org> wrote:
-> >>>>
-> >>>> Instead of pulling in the whole linux/irqchip/arm-gic-v3.h ,
-> >>>> copy the one GITS_TRANSLATER register offset macro directly into
-> >>>> the driver.  This repairs the ability to build the driver on
-> >>>> non-ARM non-GIC targets the way it was possible until now, which
-> >>>> retains good build test coverage.
-> >> ...
-> >
-> >> So in the end, it is either this patch or limit the build to
-> >> arm/arm64 . At least this patch still allows building this driver
-> >> with more compilers on the various build bots, so I would opt for
-> >> this patch here.
-> >
-> > I like the build coverage, but duplicating the #define doesn't really
-> > seem good to me.  It makes readability worse because cscope/tags now
-> > sees two definitions without an obvious reason.
->
-> I can rename the macro, or ... sigh ... I can reduce the driver to build
+AI slop:
 
-That would obfuscate the code?
+Even if xfer_cb() is fired, it won't cause any UAF as all the resources are
+freed in the client driver remove() callback which gets called last.
 
-> only on ARM/ARM64. Which one do you prefer ?
+> > +
+> > +		if (mhi_cntrl->flush_async)
+> > +			mhi_cntrl->flush_async(mhi_cntrl);
+> 
+> [Severity: High]
+> Does this order of operations allow successful data delivery callbacks after
+> disconnecting the client?
+> 
+> Since the channel lock is dropped, completing in-flight DMA operations during
+> flush_async() will invoke their completion handlers. Those handlers find
+> xfer_cb still populated and call it with a success status.
+> 
+> Should flush_async() be called before sending the -ENOTCONN disconnect
+> status to avoid notifying the client after it may have freed its contexts?
+> 
 
-Just add the dependency for compile-testing, just like
-PCIE_IPROC_PLATFORM does.
+Not strictly required. Client drivers won't free the context until their
+remove() callbacks are called.
 
-Gr{oetje,eeting}s,
 
-                        Geert
+> > +
+> > +		mutex_lock(&mhi_chan->lock);
+> >  		mhi_chan->xfer_cb = NULL;
+> 
+> [Severity: High]
+> This is a pre-existing issue, but is there a data race when clearing xfer_cb
+> concurrently with completion handlers?
+> 
+> In mhi_ep_read_completion(), the callback is checked locklessly:
+> 
+> drivers/bus/mhi/ep/main.c:mhi_ep_read_completion() {
+>     if (mhi_chan->xfer_cb) {
+>         ...
+>         mhi_chan->xfer_cb(mhi_dev, &result);
+>     }
+> }
+> 
+> If mhi_ep_remove() clears mhi_chan->xfer_cb to NULL after the lockless check
+> but before execution, could this result in a NULL pointer dereference or
+> execution of freed memory?
+> 
+> >  		mutex_unlock(&mhi_chan->lock);
+> >  	}
+> > diff --git a/include/linux/mhi_ep.h b/include/linux/mhi_ep.h
+> > --- a/include/linux/mhi_ep.h
+> > +++ b/include/linux/mhi_ep.h
+> [ ... ]
+> > @@ -164,6 +165,7 @@ struct mhi_ep_cntrl {
+> >  	int (*write_sync)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+> >  	int (*read_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+> >  	int (*write_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+> > +	void (*flush_async)(struct mhi_ep_cntrl *mhi_cntrl);
+> 
+> [Severity: High]
+> Does the flush_async callback need a channel argument to avoid flushing
+> all channels on the controller?
+> 
+> When mhi_ep_remove() calls this without specifying a channel, an
+> implementation like pci_epf_mhi_edma_flush_async() terminates the shared
+> DMA channels indiscriminately:
+> 
+> drivers/pci/endpoint/functions/pci-epf-mhi.c:pci_epf_mhi_edma_flush_async() {
+>     dmaengine_terminate_sync(epf_mhi->dma_chan_rx);
+>     dmaengine_terminate_sync(epf_mhi->dma_chan_tx);
+> }
+> 
+> Will this abruptly discard in-flight operations and cause data loss for all
+> other active MHI clients sharing the controller?
+> 
+
+While it is true that flush_async() implementation will affect shared channels
+also, there is no use in passing the channel argument to it. Because, there is
+no way we can selectively flush DMA for a single MHI channel. If multiple MHI
+channels are sharing the same DMA channels, and a single client is going away,
+then there is not much to do. But this is not very common or may not happen at
+all.
+
+- Mani
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+மணிவண்ணன் சதாசிவம்
