@@ -1,110 +1,131 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD7E37A856;
-	Tue, 14 Jul 2026 11:07:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F73936A02F;
+	Tue, 14 Jul 2026 11:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784027228; cv=none; b=SHkL9vTy4zRL0zNyv3MYuLvG0jVDJPkBFiI/v2VJ8aSP6xWAJzHZOaxyeHPacxMEbNw6t5/mlBxmtleUCEqJNY2EZ2ZUuNsDw9yGiUkSBkHgJrLWCsRqR/DHtO5PDrdEiQW/3KJns8uFJOCauxj6v3M/yH7b3LTwDe+g5MdjHHc=
+	t=1784027242; cv=none; b=aEUXVm2UIdurvOQW+gmmnVhV7FXCeecGOKB26XCxpfIrfoGCExUvajX8w/6/e6fPySZA4Ww+jHxHJQVzvJMozuDQGDC6RgxapQ3ulCCZK2PTvxIrCItezfQf81DtLUbnnuCBhAiG1LgVhR1t5VHgV/IH/iOV2PtaXpij3pW2bAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784027228; c=relaxed/simple;
-	bh=cbMd0m+UuZgOYF4KB0Fkt2usHzWLtArTGxt0b+hFjAk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jfZXu+NBW3XfYIGJizWoyteE4hro1a43wH9ZrbruXU8DysgXg/xtt4hVlqCW9dPrj6A3e2cyvj8CconNvZBTrMGP57jvwW3f3yIL4V3MuL6oCgylHe/d6CwZi/M8HdFeApsDRuuX4jDzMrP6HwSH0/TftZL3P6f+ejtQDqoXChk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZG/28Z9Y; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1784027242; c=relaxed/simple;
+	bh=Bkhd5hYJ2rlPBkP1eNtLR24wCwKi27eFdQOmhc71M8c=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZmUcRrDVtjD+WGGl/zUlb7uTWhUTx3DdmqQyICzh0kPNf+hnID7PNRrP/OEkc5sLZjv5lXg5eerEhEXRhURoOEPioeKM/0cxqtJgV1fFn3Z1JJ35bToBDXGVacbVjaw9YYCFq7l8jjiRXpiRyRP0Ut+mZJ4gTCCT1y3IbisiX7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oUv+E5pR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZG/28Z9Y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=S323XPQAVbXMMiJRm+Dg+pgQry7Wic4cXHZLSGEJw+0=;
-	b=ZG/28Z9YW8+8O+S7agcsiaFV1MwoBUU+msb83Q9py4oWPZgTpjLvhYUhaQLaC7
-	BXqhypUV8U2IPJ0lkxgb6mWSThzlCykBtyKXpKjOUYmn3nyX32EKhxlC1kehCh8Q
-	UJJlhIMZSEiy9uGsFcTK2R8wxpOGY+4MEN9GGkYZesuEc=
-Received: from [10.111.8.51] (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDXna8fGFZqlFnYJQ--.22967S2;
-	Tue, 14 Jul 2026 19:06:08 +0800 (CST)
-Message-ID: <72a058fd-5781-43bc-9148-180140929ecd@163.com>
-Date: Tue, 14 Jul 2026 19:06:07 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oUv+E5pR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E85261F000E9;
+	Tue, 14 Jul 2026 11:07:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784027241;
+	bh=V19QlAkowsVItiqm9ZPr6JVQbhOE86XS6KP9UxwiigM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=oUv+E5pRlNgKzKdUzFwxzkYNYTdKJ3ZgS+Yd3ZWUFIMVneSflvuxqspLniBJ7xeGO
+	 hGPLF5p/ucfo4v4AGZEvHpxO/sW/cw9W5loiNR56ODoQfigtAD6rMiW1eAuZNR42/R
+	 UeKvlU0duwlx/BwMla4k1+WrteoE9KdVgPzH60R2ejKrBDZ95RS3JNAfFqP6iIaIsh
+	 YPgva1fTdHetRTVnJn2vHZ6R4bE2ymXBAGFPCWqN6QI++pc/uhXvlYGXyNk9sYg66D
+	 /go8Lh1sKlms44y6Sw9ti+cvTVMTwQvd2RK4jKEtlutN2oxawAqAHYXLpw1ke/JGL2
+	 yf5DIO2+cxPPQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v20 09/16] PCI/TPH: Add macros to check standard and
+ extended TPH support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260714104325.54444-10-fengchengwen@huawei.com>
+References: <20260714104325.54444-1-fengchengwen@huawei.com>
+ <20260714104325.54444-10-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 11:07:20 +0000
+Message-Id: <20260714110720.E85261F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 0/2] PCI: Configure Root Port MPS during host probing
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, Manivannan Sadhasivam <mani@kernel.org>,
- lpieralisi@kernel.org, kwilczynski@kernel.org, heiko@sntech.de,
- yue.wang@amlogic.com, pali@kernel.org, neil.armstrong@linaro.org,
- robh@kernel.org, jingoohan1@gmail.com, khilman@baylibre.com,
- jbrunet@baylibre.com, martin.blumenstingl@googlemail.com, cassel@kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org,
- linux-rockchip@lists.infradead.org
-References: <20260622171448.GA678675@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260622171448.GA678675@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDXna8fGFZqlFnYJQ--.22967S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CFWUZryDtF43XF4kJFW7CFg_yoW8CFWkpF
-	W5XanayF4xKFyfCF4qqwsYkryYqa48ta43Xr1DtryayFn09rn8XFWjgws5Gwn7Xr1xCr1S
-	9r1qqa4xXwn0vaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U4UDXUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AA+4WpWGCAV3gAA38
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The macro `pcie_std_tph_supported()` erroneously returns true if=
+ `tph_max_type` is set to the reserved TPH requester type value 2.
+- [Low] The helper macros `pcie_std_tph_supported` and `pcie_ext_tph_suppor=
+ted` are implemented as macros rather than static inline functions, causing=
+ the !CONFIG_PCIE_TPH stubs to silently drop the pdev argument.
+--
 
+--- Patch [9]: [PATCH v20 09/16] PCI/TPH: Add macros to check standard and =
+extended TPH support ---
+commit 62018f833ad520cae3d9509aa5138e780c6df62a
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-On 6/23/26 01:14, Bjorn Helgaas wrote:
-> On Fri, Jun 19, 2026 at 11:29:39PM +0800, Hans Zhang wrote:
->> On 5/6/26 22:00, Manivannan Sadhasivam wrote:
->>> On Fri, Nov 28, 2025 at 01:09:06AM +0800, Hans Zhang wrote:
->>>> Current PCIe initialization exhibits a key optimization gap: Root Ports
->>>> may operate with non-optimal Maximum Payload Size (MPS) settings. While
->>>> downstream device configuration is handled during bus enumeration, Root
->>>> Port MPS values inherited from firmware or hardware defaults often fail
->>>> to utilize the full capabilities supported by controller hardware. This
->>>> results in suboptimal data transfer efficiency throughout the PCIe
->>>> hierarchy.
->>>>
->>>> This patch series addresses this by:
->>>>
->>>> 1. Core PCI enhancement (Patch 1):
->>>> - Proactively configures Root Port MPS during host controller probing
->>>> - Sets initial MPS to hardware maximum (128 << dev->pcie_mpss)
->>>> - Conditional on PCIe bus tuning being enabled (PCIE_BUS_TUNE_OFF unset)
->>>>     and not in PCIE_BUS_PEER2PEER mode (which requires default 128 bytes)
->>>> - Maintains backward compatibility via PCIE_BUS_TUNE_OFF check
->>>> - Preserves standard MPS negotiation during downstream enumeration
->>>>
->>>> 2. Driver cleanup (Patch 2):
->>>> - Removes redundant MPS configuration from Meson PCIe controller driver
->>>> - Functionality is now centralized in PCI core
->>>> - Simplifies driver maintenance long-term
->>>>
->>>
->>> For the series,
->>>
->>> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
->>>
->>> Bjorn: Could you please take a look? This series has been floating for a
->>> while...
->>
->> Hello Bjorn,
->>
->> Any chance for this series to be applied?
-> 
-> It's too late for v7.2; we're already more than halfway through the
-> merge window.  We can look again for v7.3 after v7.2-rc1.
+PCI/TPH: Add macros to check standard and extended TPH support
 
-Hello Bjorn,
+This commit adds helper macros pcie_std_tph_supported() and
+pcie_ext_tph_supported() for checking TPH capabilities. It relies on the
+cached tph_max_type value and provides stub definitions for when
+CONFIG_PCIE_TPH is disabled.
 
-Gentle ping on this series.
+> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+> index 6901f6e2f8c7a..04b521b7c2c7c 100644
+> --- a/include/linux/pci-tph.h
+> +++ b/include/linux/pci-tph.h
 
-Best regards,
-Hans
+[ ... ]
 
+> @@ -23,6 +23,18 @@ enum tph_mem_type {
+>  };
+> =20
+>  #ifdef CONFIG_PCIE_TPH
+> +/**
+> + * pcie_std_tph_supported - check standard TPH requester support
+> + * @pdev: PCI device
+> + */
+> +#define pcie_std_tph_supported(pdev) \
+> +	((pdev)->tph_max_type >=3D PCI_TPH_REQ_TPH_ONLY)
+
+[Severity: Medium]
+Will this macro falsely return true if the hardware advertises the reserved
+value 2?=20
+
+If a PCIe Root Port incorrectly advertises the reserved value 10b (2) for i=
+ts
+TPH Completer Supported field, pci_tph_init() caches 2 into pdev->tph_max_t=
+ype.
+Since 2 >=3D PCI_TPH_REQ_TPH_ONLY (which is 1), this evaluates to true. How=
+ever,
+core functions like pcie_enable_tph_ext() explicitly reject req_type =3D=3D=
+ 2 with
+-EINVAL.
+
+> +/**
+> + * pcie_ext_tph_supported - check extended TPH requester support
+> + * @pdev: PCI device
+> + */
+> +#define pcie_ext_tph_supported(pdev) \
+> +	((pdev)->tph_max_type =3D=3D PCI_TPH_REQ_EXT_TPH)
+
+[ ... ]
+
+> @@ -37,6 +49,8 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
+>  u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
+>  u8 pcie_tph_completer_type(struct pci_dev *pdev);
+>  #else
+> +#define pcie_std_tph_supported(pdev) false
+> +#define pcie_ext_tph_supported(pdev) false
+
+[Severity: Low]
+Could these stub macros cause unused variable build warnings when
+CONFIG_PCIE_TPH is disabled, since they silently drop the pdev argument?
+
+Would it be better to implement these as static inline functions to guarant=
+ee
+consistent type checking and evaluation semantics across all configurations?
+
+>  static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+>  					unsigned int index, u16 tag)
+>  { return -EINVAL; }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714104325.5444=
+4-1-fengchengwen@huawei.com?part=3D9
