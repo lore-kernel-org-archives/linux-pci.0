@@ -1,102 +1,123 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE37F44C649;
-	Tue, 14 Jul 2026 19:35:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B8944C655
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 19:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784057713; cv=none; b=ZUEmZVPDfGwDmvQZhNiXT5OUaQ0e2VyhiBFhbEBkOzFJ+8s84RMwcmKT8v3qJIiKp5HYmgYsu+otEWCH135ESDS/zzd2YSkitvdYpexlPG8hZCumXL+i0aV3s0Rwzi56kkykeJ4P5z8wZHZqkV7ZEtEHIhQHIOqcBmDrLn1+Fwk=
+	t=1784057766; cv=none; b=YBjoqatSex7hycMnJAWv1cEN4NRy1Xa1tD8UbIqp96ILoKOdHfQ4xRQ25truu+bo4CXRFRIwfcC6heIaMOnLb+4rBnxlsF3xm9h8DXPM5gjoyxW6HjMaNgNAHOln6wcw0rtSCCu9xzGH7KQWouFGYcqyfWPBzD7m663wN++bgHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784057713; c=relaxed/simple;
-	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=WW1KUWvd8iyw700xcQvqrM8o582jn6iEup9HEsR9bupK/b5lrfRBFYDGGWBCAEVsU3Faw2oQ4i9Da4Z/QzW1bMCUDTKGNA5NVFkE/hTWHcAlMO6F9bkbuzxnJTuxsPhUw5Cx3Q8rh+8Xgor0Q+NrNXZR2yyknnhCEXkMdQo37MU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=QuMdaAUm; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=lucqK6n8; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1784057766; c=relaxed/simple;
+	bh=pbQE8WwG0j1ZjlvvQzrgN5kpElh1X+ynmrYzmjSaxr8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=X9YKl+GmLu9WfV2RKUTafpRIo1sPXvwnHmBfYbdNENCsTboQKETJyLZrG8MWUK2LnHjzYLaJq2PT90eESxmdzY39gjmbbZh9NlXByNMS9GAfIT6kuVbqkfLcUdEJzAbYID8ypwUSpC9LGFU8uFO23kaQAV95oifAVXAC+6JtafM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JL1Jp+Sg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="QuMdaAUm";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="lucqK6n8"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h08f41257zMlGN;
-	Tue, 14 Jul 2026 21:35:08 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784057708;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
-	b=QuMdaAUmzBQNS2NVKgfWWqTT7THLOeBAvDNUU+v/k26L7jVqNPyWAgwjLisRzYB8kFltiB
-	6yfXjdnENmfZ5qR/2jjl3ngZCY/pw65d20MopbgI2mh5qIfPCqk+B2TtKUBa6yqFa0HCdq
-	rdLd7Ye6DQFAsRxd+QGVf83/A6ZsXhzF6IYA0whTbP+2yvMAFMGioq/QzzAnpnWD34/Oon
-	R307E7+1eb/jGOJsTIJGw4MkpwmeJ+tYrNi+ICRyw91pvchm9pPdFspmF4KDV8m1TV3Cyo
-	UX6blVrjnIOCmNcQHaAyv65u4kKOqmTypE7oLyDblYVoo4nqA57K7wKRFEtZBA==
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JL1Jp+Sg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C0C1F000E9;
+	Tue, 14 Jul 2026 19:36:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784057765;
+	bh=aCNDDY88xXaBamOPkM4U8lCaeSno4CkhAfOtjV6/f2c=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JL1Jp+SgSoWbvz3ZcvXvb620Cfx9KLOckE3gT4rVLxmU4ACgbIcQyRLOKK2BXTac/
+	 zYiK7lrAnIMUlFSDXt+RmcfI1FN1blS032ejGGiFcaxgCwR0j2Mj0ocP9lju0pVLLp
+	 ozFw2TxNob050n7FfD3Hlmy8wxFqzEWBwT/5I49r127B7g1C7DTrizgL11jFUzbTZ4
+	 liw4xtWBFRsAXZnzmiqYeGA3OT+zFu+dcFzNaauRbkDxzWu+U7rtVySQ1wLe1YHo3/
+	 w8wNQYlEe3shn3vdYkS/rBqW9Kek3OJTHltT+nj0mSFeaqyFCfXAv1TxT6G+2X1I0g
+	 AkeEVKBZJnBdQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/5] PCI/FLIT: Negotiate _OSC control for Flit Error
+ Logging
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yazen Ghannam" <yazen.ghannam@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260714183950.1620016-4-yazen.ghannam@amd.com>
+References: <20260714183950.1620016-1-yazen.ghannam@amd.com>
+ <20260714183950.1620016-4-yazen.ghannam@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 19:36:04 +0000
+Message-Id: <20260714193604.E6C0C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784057706;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
-	b=lucqK6n8CkEfQ2vEfaJphbDANeuwE56/Z++FuFpnf7NvxqqxEM8R75w+XFselNZruYeSyJ
-	2E++E1qBxf5JGQvP0er/p+FKtbJ6/Zfd0A62onSLk2QZNX6bfuQ68awTmvzoOf91NdKqKn
-	rmPopbtKyRAosGiZ5enfDTyZ0VcU/TVUwgKFe4LM1OEx3QDhYqh2+LbSErwQWPbctj0n9S
-	/M8PZ4YA1tvmLgQ4wNx3waZFxF2GfJY6NIiTj2Bo2gwmywYyKI6SUK1XHSZ6s8JSIfL+e7
-	MNqas209UnyFOokBUeKxFf8e81pZvBIEV8Qlh1uZGkc5mDxdO7Jhqd7K1FxUPQ==
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 14 Jul 2026 21:34:56 +0200
-Message-Id: <DJYJO745N6HZ.23EJ5DJ7I0BP5@mailbox.org>
-Cc: "Edward Cree" <ecree.xilinx@gmail.com>, "Andrew Lunn"
- <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
- Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
- Abeni" <pabeni@redhat.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Justin
- Tee" <justin.tee@broadcom.com>, "Paul Ely" <paul.ely@broadcom.com>, "James
- E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>, "Juergen Gross" <jgross@suse.com>,
- "Stefano Stabellini" <sstabellini@kernel.org>, "Oleksandr Tyshchenko"
- <oleksandr_tyshchenko@epam.com>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
- Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Daniel
- Almeida" <daniel.almeida@collabora.com>, "Tamir Duberstein"
- <tamird@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Borislav Petkov"
- <bp@alien8.de>, "Tony Luck" <tony.luck@intel.com>, "Danilo Krummrich"
- <dakr@kernel.org>, <rust-for-linux@vger.kernel.org>,
- <netdev@vger.kernel.org>, <linux-net-drivers@amd.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-scsi@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
- <linux-edac@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: Replace pci_dev->is_busmaster with accessors
-From: "Maurice Hieronymus" <mhi@mailbox.org>
-To: "Lukas Wunner" <lukas@wunner.de>, "Maurice Hieronymus" <mhi@mailbox.org>
-References: <20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.org>
- <20260711-pci-dev-flags-v1-1-2fcf2811138c@mailbox.org>
- <alOkgrK7Fm6opB4r@wunner.de>
-In-Reply-To: <alOkgrK7Fm6opB4r@wunner.de>
-X-MBO-RS-ID: 26cc25a0ec5af51ece5
-X-MBO-RS-META: nfsfy951dumk6mo6odtrggnyqgfwzm9r
 
-On Sun Jul 12, 2026 at 4:28 PM CEST, Lukas Wunner wrote:
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The `pcie_ports=3Dnative` command line override is ignored for F=
+LIT error logging.
+- [Medium] Missing PCI error recovery callback (`slot_reset`) in `flitdrive=
+r`.
+--
 
-> We already have the priv_flags member in struct pci_dev,
-> please use that instead of adding another one for the same purpose.
->
-v2 moves the bit into priv_flags and exposes accessor functions
-for those drivers which needs to access the flags.
+--- Patch [3]: [PATCH 3/5] PCI/FLIT: Negotiate _OSC control for Flit Error =
+Logging ---
+commit 45b0bbc04c567497a5e02247081509663ead4f63
+Author: Yazen Ghannam <yazen.ghannam@amd.com>
 
-Best,
+PCI/FLIT: Negotiate _OSC control for Flit Error Logging
 
-Maurice
+The Flit Logging Extended Capability may be managed by the platform firmwar=
+e.
+This patch negotiates ownership through _OSC before the OS enables the Flit
+Error Counter and registers the port service only when the OS is granted
+native control.
+
+[ ... ]
+
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index 1a649d6f4ab8a..ef224e7243f38 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -286,7 +286,7 @@ static int get_port_device_capability(struct pci_dev =
+*dev)
+>  	}
+> =20
+>  #ifdef CONFIG_PCIE_FLIT
+> -	if (dev->flit_cap)
+> +	if (dev->flit_cap && host->native_flit)
+
+[Severity: Medium]
+Does this check need to include the pcie_ports_native override condition?
+
+Other port services like AER and PME check for pcie_ports_native or their
+respective native control flag. Without this, the pcie_ports=3Dnative comma=
+nd
+line parameter will be ignored for FLIT error logging if the platform
+firmware did not grant native control.
+
+>  		services |=3D PCIE_PORT_SERVICE_FLIT;
+>  #endif
+> =20
+
+[ ... ]
+
+Additionally, looking at the port service driver definition:
+
+drivers/pci/pcie/flit.c:flitdriver
+    static struct pcie_port_service_driver flitdriver =3D {
+    	.name		=3D "flit",
+    	.port_type	=3D PCIE_ANY_PORT,
+    	.service	=3D PCIE_PORT_SERVICE_FLIT,
+    	.probe		=3D flit_probe,
+    	.suspend	=3D flit_cntr_suspend,
+    	.resume		=3D flit_cntr_resume,
+    	.remove		=3D flit_cntr_remove,
+    };
+
+[Severity: Medium]
+Is a .slot_reset callback needed here to re-enable FLIT logging following
+a slot reset?
+
+After a PCI error recovery (e.g., AER or DPC) triggers a slot reset, the FL=
+IT
+error counter configuration is cleared by the hardware. Because the FLIT
+capability is not saved and restored by the generic PCI core during reset,
+error logging could remain permanently disabled for that port.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714183950.1620=
+016-1-yazen.ghannam@amd.com?part=3D3
