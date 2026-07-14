@@ -1,107 +1,290 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f73.google.com (mail-ej1-f73.google.com [209.85.218.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0612E35F193;
-	Tue, 14 Jul 2026 01:24:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D86B98634C
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 01:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783992296; cv=none; b=kBB4C6CtC9CwSLRjciOPjXaxOz3nLLhtoFcwanxvcaPvpbClRRdsUFCIUIHK2lIdiC8C0BPeORfWoUwz1DU+c0aFuMEql3EA8jAvEHrkItuj6pbmGtIleLbkBrVdpixLpUkNYOtuaKDviWwe4KYU24OhSul/4IfCzesGGhj/ZmQ=
+	t=1783992621; cv=none; b=LEOQz84U/Im6FtgW8NnXa/G9fYCavX6Misw0W3Bs6X+ihtaeUMEKyHu78IaYm7ZaI7Cr2mAAMAcrPZ5u/EzteZc5xViX4C2QbSy7vAMb5Osn6zzKnW/Q5tizZRa1KxlkbGuSfwqHF1wKIarnUWqTzSwj6616NZcoAhG5DUueIK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783992296; c=relaxed/simple;
-	bh=+3CjGrzNfGi7D7HdRPZFQSdt4JuVA5AZSOA0yxhdMns=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D0LhK09GMX5BsvM/0Kiu+S+SMm01cmvsANLToi/Rg4Rw0UHs6NtGZ7vMK4rzjtHl8zocIdapXURb/qadgKkN6gq/JGK6XwRdlcWTOg6ABGgfePEzuC7dMZwve3cU+BAo495R939DgPNvTqS1Y//TAkB9Xqpcqp/SKqY/uIeJFXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KRu4CpqY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783992621; c=relaxed/simple;
+	bh=a9DWazs9/MC5PYLQ/mCaTV4MuuSwH8woy8xm/jWnw8c=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=dJ2UPwEr9Vym9U8i8P3kmo78ZB/AIjSNgqBvWApsU1WWThfYHmKim7yEJLS5S3WN4Rr5A0nEq10kE+GlWiKpPDtBSd7H5aBQLfFBRtiMtDo2Q/sCO7I/D0NCxPAYlkQEhDtuvIE8kaEu/5FxSJL9sAL1U4UKWsWAPpGwSMdXfjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aA645a01; arc=none smtp.client-ip=209.85.218.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KRu4CpqY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55D1B1F00A3A;
-	Tue, 14 Jul 2026 01:24:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783992294;
-	bh=6F1a4emDdCxMFhN8jLfPD22diUhuH+XjVSblcnLaZ4w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KRu4CpqYMVGRrGsDkO58ZcRtMHV37SSJVjzMXpernE/pE2+tLS/VNAxf59xV3etid
-	 TgSGS0lsUZBYdg26Genoa3s3Mjk6wkbX8254T8QpL5nO+iwvknQnHxbjE5XI0LkptS
-	 f5c+RfcU/r2S0XZIlQZ5DRook9A8M46d4CXkYbhRj8S67yUeceZzzQO/9zqDc5lENL
-	 3Ixt6dk13Hy6QCN7xPp3cZghiFIxjpZhiwJZWdDrAp5BtLgqcSyaRwM5AcVLbO5sZG
-	 zNdlONrjHdIeNoIwf+KVZJMHhAJ9OIAVqcbpAxCHXvyGq3OUsYeTHkPAwENmc2U3o5
-	 vsJ0GmsQYA1hA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/3] dt-bindings: pci: ultrarisc: add required DP1000
- PCIe clocks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jia Wang" <wangjia@ultrarisc.com>
-Cc: conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260714-ultrarisc-pci-clk-v3-1-e72723fc0ef1@ultrarisc.com>
-References: <20260714-ultrarisc-pci-clk-v3-0-e72723fc0ef1@ultrarisc.com>
- <20260714-ultrarisc-pci-clk-v3-1-e72723fc0ef1@ultrarisc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 01:24:53 +0000
-Message-Id: <20260714012454.55D1B1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aA645a01"
+Received: by mail-ej1-f73.google.com with SMTP id a640c23a62f3a-c15dfd34e4cso324707866b.0
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2026 18:30:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783992618; x=1784597418; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=YKrB3Ft0I68hztrro83NH+VbLgEvLq/HYPor88aI49c=;
+        b=aA645a01nIFZh6HAdB3GWVC99WODS4DXkCJ58ebS5fd0sniWOwNr8bjhusHwcx8SNp
+         zDZ18aAeK6guiKpLBxP5Wu3TtXsLST1xVzc0QDXp08uyxFB+9zHsm/zDMvfUlgklzffS
+         UCEWSwnsAgbAT6U+KVPXKUkwvwgHLaEh/UTnlqTJBIeDuhCZxRIDLe8M8r0/0OWGqnTT
+         H54utC5kZSdSTeTAVh2bP8iw6ESMkX0/x4KNH46z4ePgFCh+3QtPCA4Ln0LPSerowxjb
+         8Seoojs0qlHEec6pGfXnKfSWUbK+FxuxWdsNDrUddIHIPX3LitKqbwoA1DxOUFij9YHQ
+         PohQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783992618; x=1784597418;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YKrB3Ft0I68hztrro83NH+VbLgEvLq/HYPor88aI49c=;
+        b=CqzA72/FS9v0LG0jQYTdPp9xkE83NeCcto4XdrVMScV1FNWlZIGCp0KTvhUwjW2+t3
+         U+EnwVtDCFZHfMK27qL9MbnNAuOy/x9+spgHzCw0XkN/ywC+DQPePMRd6QHC/Tnlsp9T
+         AGl4GtAYs4cpfUQRo9LwQ4Fc6FFxLM9kBaCIFH9XnY2NJwPr/N1RV7MqVUCwLtQZWQT+
+         k3Ly2H4+B5g/Iurla6I2ykeBeOzAy6YNT7JLhtKFWprSJusB9j6NH25/WgAZm8UlDr8k
+         mNlO+8K25rBwn+gvM2YUkAISyJZ1Wm6CCGTBqim+DpKKXjW93fD+dTP6t6S/qkKgmM03
+         knvQ==
+X-Gm-Message-State: AOJu0YwWJHYfEowWAkbwE4aglZ4AoE62MkchJlP6ZVWFj4kb77X728K9
+	q3jTAcHMChFrvnKI/xTvRKklqGQ11FIBYEntWmQgb3hCFXOEO5kaLo9elBlcxGJz4WSr5GTvt94
+	63dsBLc/lVigRnsEmOg==
+X-Received: from ede14-n1.prod.google.com ([2002:a05:6402:20ce:10b0:698:572e:ccfe])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:907:940f:b0:c16:242a:4722 with SMTP id a640c23a62f3a-c16679ee252mr12031666b.22.1783992617943;
+ Mon, 13 Jul 2026 18:30:17 -0700 (PDT)
+Date: Tue, 14 Jul 2026 01:30:16 +0000
+In-Reply-To: <20260701141145.52A611F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+References: <20260701135015.81937-1-djeffery@redhat.com> <20260701135015.81937-4-djeffery@redhat.com>
+ <20260701141145.52A611F000E9@smtp.kernel.org>
+Message-ID: <9huzech6xsrb.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
+From: tarunsahu@google.com
+To: sashiko-reviews@lists.linux.dev, David Jeffery <djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [High] Missing driver clock management. The DP1000 PCIe driver fails to i=
-mplement support for the newly mandated `core`, `dbi`, and `aux` clocks, le=
-ading to unclocked hardware register accesses.
---
+Hello,
 
---- Patch [1]: [PATCH v3 1/3] dt-bindings: pci: ultrarisc: add required DP1=
-000 PCIe clocks ---
-commit 04ce10fff5fc6c7c7dc6e7380ab1ae6a1209bb14
-Author: Jia Wang <wangjia@ultrarisc.com>
+These most of the errors are due to the device_add concurrently can add
+the device and device_shutdown can access it. One of the reason I think
+a device_add will be triggered while being shutdown is inserting the
+physical PCI device or USB stick etc.
 
-dt-bindings: pci: ultrarisc: add required DP1000 PCIe clocks
+But During shutdown, addition of a new device is not valid. So we can
+add a check something like
 
-This commit mandates that DP1000 PCIe controller nodes provide the standard
-DesignWare clock names "core", "dbi", and "aux" in the device tree bindings.
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 76ba02c26aa5..c3795fa1cc26 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3650,6 +3650,13 @@ int device_add(struct device *dev)
+        if (!dev)
+                goto done;
 
-> diff --git a/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.=
-yaml b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
-> --- a/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
-> @@ -43,6 +43,18 @@ properties:
-[ ... ]
-> +  clocks:
-> +    items:
-> +      - description: PCIe core clock
-> +      - description: Data Bus Interface (DBI) clock
-> +      - description: Auxiliary clock
-> +
-> +  clock-names:
-> +    items:
-> +      - const: core
-> +      - const: dbi
-> +      - const: aux
++       if (unlikely(system_state =3D=3D SYSTEM_HALT ||
++                    system_state =3D=3D SYSTEM_POWER_OFF ||
++                    system_state =3D=3D SYSTEM_RESTART)) {
++               error =3D -ESHUTDOWN;
++               goto done;
++       }
++
+        if (!dev->p) {
+                error =3D device_private_init(dev);
+                if (error)
 
-[Severity: High]
-This is a pre-existing issue, but since these clocks are now formally requi=
-red
-by the binding, does the pcie-ultrarisc driver also need to be updated to
-manage them?
+We can also partially resolve the races partially by removing the manual
+kfree(dev->p) from device_add() error path. As put_device free it
+anyway when reference to devices reaches to 0. So if device_shutdown
+path takes reference, dev->p will not be released. And few races will be
+taken care of. But this will not resolve the deadlock and other races
+like the above change.
 
-Looking at drivers/pci/controller/dwc/pcie-ultrarisc.c, ultrarisc_pcie_prob=
-e()
-does not appear to fetch or enable these clocks. Because of this, hardware
-registers are accessed before clocks are explicitly enabled by the driver:
+removing the kfree(dev->p) from device_add can be a independent patch.
+like:
 
-drivers/pci/controller/dwc/pcie-ultrarisc.c:ultrarisc_pcie_host_init() {
-    ...
-    val =3D dw_pcie_readl_dbi(pci, PCIE_CUS_CORE);
-    ...
-}
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 4d026682944f..76ba02c26aa5 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2614,6 +2614,7 @@ static void device_release(struct kobject *kobj)
+        struct device *dev =3D kobj_to_dev(kobj);
+        struct device_private *p =3D dev->p;
 
-Will this unclocked hardware register access trigger a synchronous bus error
-and kernel panic during the device probe path on boot?
++       dev->p =3D NULL;
+        /*
+         * Some platform devices are driven without driver attached
+         * and managed resources may have been acquired.  Make sure
+@@ -3824,8 +3825,6 @@ int device_add(struct device *dev)
+ parent_error:
+        put_device(parent);
+ name_error:
+-       kfree(dev->p);
+-       dev->p =3D NULL;
+        goto done;
+ }
+ EXPORT_SYMBOL_GPL(device_add);
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714-ultrarisc-=
-pci-clk-v3-0-e72723fc0ef1@ultrarisc.com?part=3D1
+
+~Tarun
+
+
+sashiko-bot@kernel.org writes:
+
+> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+e(s) to consider:
+> - [High] Modifying the core.async_shutdown module parameter during shutdo=
+wn causes synchronous suppliers to skip waiting for asynchronous consumers.
+> - [High] Unregistered consumer devices will cause a NULL pointer derefere=
+nce during async shutdown dependency waiting.
+> - [High] Adding a new device with async shutdown enabled while its synchr=
+onous supplier is being processed leads to an unresolvable deadlock.
+> - [High] Dereferencing `dev->p->dead` without NULL checks causes a crash =
+if a concurrent `device_add()` fails.
+> --
+>
+> commit cf98cdf76df805443cc885868cb3d9e13da5501c
+> Author: David Jeffery <djeffery@redhat.com>
+>
+> driver core: async device shutdown infrastructure
+>
+> This commit allows devices to opt into asynchronous shutdown, executing i=
+n
+> parallel with unrelated devices after their dependencies shut down. Synch=
+ronous
+> shutdown devices will wait for their asynchronous dependencies. The featu=
+re is
+> enabled by default and can be toggled via the core.async_shutdown paramet=
+er.
+>
+>> diff --git a/drivers/base/core.c b/drivers/base/core.c
+>> --- a/drivers/base/core.c
+>> +++ b/drivers/base/core.c
+> [ ... ]
+>> +static bool wants_async_shutdown(struct device *dev)
+>> +{
+>> +	return async_shutdown && dev_async_shutdown(dev);
+>> +}
+>> +
+>> +static int wait_for_device_shutdown(struct device *dev, void *data)
+>> +{
+>> +	bool async =3D *(bool *)data;
+>> +
+>> +	if (async || wants_async_shutdown(dev))
+>> +		wait_for_completion(&dev->p->complete);
+>> +
+>> +	return 0;
+>> +}
+>
+> [Severity: High]
+> If a user-space process toggles the 0644 core.async_shutdown sysfs parame=
+ter
+> from 1 to 0 during shutdown, could this cause synchronous suppliers to sk=
+ip
+> waiting for their asynchronous consumers?
+>
+> If start_async_shutdown_devices() schedules an async consumer, and then t=
+he
+> parameter is toggled before the sync loop processes its supplier, the cal=
+l to
+> wants_async_shutdown(dev) here would evaluate to false.=20
+>
+> This would skip the wait_for_completion(), potentially causing the suppli=
+er
+> (e.g., a PCI bus) to shut down while its consumer is still active.
+>
+> [Severity: High]
+> Could this result in a NULL pointer dereference if the consumer is not ye=
+t
+> registered?
+>
+> The device_link_add() function allows creating links to consumer devices =
+that
+> haven't been registered yet, meaning their dev->p is NULL because
+> device_private_init() hasn't run.
+>
+> If wait_for_shutdown_dependencies() is called from the async pool, where =
+the
+> async argument is forced to true, the wait_for_completion() will
+> unconditionally evaluate &dev->p->complete, crashing on the NULL pointer.
+>
+> [ ... ]
+>> +static void __shutdown_one_device(struct device *dev)
+>>  {
+>>  	if (dev->p->dead)
+>>  		return;
+>
+> [Severity: High]
+> Could this cause a NULL pointer dereference if a concurrent device_add() =
+fails?
+>
+> If a concurrent device_add() fails after calling kobject_add(), its error=
+ path
+> calls kobject_del() and then frees and nullifies dev->p. Evaluating
+> dev->p->dead without checking if dev->p is valid could crash here.
+>
+> [ ... ]
+>> +static void start_async_shutdown_devices(void)
+>> +{
+>> +	struct device *dev, *next, *ndev, *needs_put =3D NULL;
+> [ ... ]
+>> +			needs_put =3D ndev;
+>> +			spin_lock(&devices_kset->list_lock);
+>> +			/*
+>> +			 * If the next device has been marked dead while the
+>> +			 * spinlock was released, it may no longer be on the
+>> +			 * devices_kset list. Restart the list walk to be safe
+>> +			 */
+>> +			if (ndev && ndev->p->dead)
+>> +				goto restart;
+>
+> [Severity: High]
+> Could ndev->p be NULL if a concurrent device_add() fails?
+>
+> If start_async_shutdown_devices() obtains a reference to next via
+> get_device(), and concurrently device_add() fails and clears dev->p,
+> reacquiring the lock and evaluating ndev->p->dead here could result in a =
+NULL
+> pointer dereference.
+>
+> [ ... ]
+>>  void device_shutdown(void)
+>>  {
+> [ ... ]
+>> -		shutdown_one_device(dev);
+>> +		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
+>> +			wait_for_shutdown_dependencies(dev, false);
+>> +			shutdown_one_device(dev);
+>> +		}
+>> =20
+>>  		spin_lock(&devices_kset->list_lock);
+>>  	}
+>>  	spin_unlock(&devices_kset->list_lock);
+>
+> [Severity: High]
+> Can this sequence lead to an unresolvable deadlock if a new device is add=
+ed
+> concurrently?
+>
+> If a new device 'C' with DEV_FLAG_ASYNC_SHUTDOWN is added via hotplug
+> after its synchronous supplier 'S' has already been popped from
+> devices_kset by this loop, 'C' is appended to devices_kset.
+>
+> 'S' will call wait_for_shutdown_dependencies() and find 'C', blocking on
+> wait_for_completion(&C->p->complete) because wants_async_shutdown(C) is t=
+rue.
+>
+> Since 'C' was added after start_async_shutdown_devices() ran, it is not
+> running in the async pool. Because the sync loop is blocked on 'S', it wi=
+ll
+> never reach 'C' to start it, deadlocking the shutdown process permanently=
+.
+>
+> --=20
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701135015.81=
+937-1-djeffery@redhat.com?part=3D3
