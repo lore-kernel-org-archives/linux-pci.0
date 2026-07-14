@@ -1,57 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56BD141B8D6
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2026 19:47:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F012701CB;
+	Tue, 14 Jul 2026 21:10:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784058463; cv=none; b=oHdz+qj06V0gxDhyMo+fdyvuFM0TgtpKIWzpiHrnK++2K4gQezYxLWWwDms4nlXkBhL4Y6sbL3dCIhCmMtz94pBiP7icmCIHMmBofb86AKE00nAxPR4v4caFfcgpfQNAphfxIRutez+ZnjxHw/KdCD00CxRCY6ItSUo0KUVsg9A=
+	t=1784063433; cv=none; b=Y16xE8CS004UuhHTXOOm/wcxCTpCUv6af+6tXdvW5cjL7CFgyNUxuz9b06OfN4cLu8EE78HuYZPP2C5lpP09o/4e7J50cmnCpEblT+5L9uzDOLVL2t06SyrwLlhEtiRfTcfKjEblvAwN0BvXcZ8FJd8vHIA9c75v7VQYKFv/EIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784058463; c=relaxed/simple;
-	bh=HhUQ6H43J6+jaZTnnyqzXeFvQvPjTxOBeDMMFNdU87g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Kt2fYY0yxL7BAg5GJTjvFGapAHgBg+wvR3QW9F0vg1/OqM96O9wYAhYQW4W0EyZgdOQaCPerNS8NoPB3kRa+40LmEBcZGPMgpkb5in4R+nSIZoSYl84k/TKYS1PKEIAJJcadRM/pJF0+mPyQH91RjKscQYGyLT1IE+KT/pwe5Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jljUeRo6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784063433; c=relaxed/simple;
+	bh=Zwua/YQ4l8Nyl0vkpbk/VkIxgU8Cf7PAi2z/oCG57JQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=L5gBpZ76nUErLUKeArekZoMPfg4Y2sHDWSRq89y/v8Qxb5VsXd3FFNmxg7O6AqQ59dXftTPFbiRzSkDTNzg/J3HvDj4AUbvm+BJL7w5zpaBHyy4l7Hgtkn+Y3KSsyWGNiDSMgCuewLZmGF/ZbjuqiHCockjTupm6LGTt7Xt2Cp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B/T2Abrf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jljUeRo6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDB91F000E9;
-	Tue, 14 Jul 2026 19:47:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B/T2Abrf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 847131F00A3D;
+	Tue, 14 Jul 2026 21:10:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784058462;
-	bh=HhUQ6H43J6+jaZTnnyqzXeFvQvPjTxOBeDMMFNdU87g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jljUeRo6YfkCyHCLIUrib7ftgOi/l5xmbtI8qztHRzfnOY8tbCSduI4j/Pb8pcvud
-	 cQCHZcO/G40sTXO7NAZwVnM5MqgRIqot5Si/4ZwF/3I92goxlDcbesHc3rB/mEIKoF
-	 kYo8L0drOgKucRAgvLlTf9SVPQfPM/0ry9f7TQdIC7902cmbxqlCuDdpTB7Lqj7TMc
-	 Pj/Tdu+zMda04skQIvyzEIiG+R6l7YFLBd9Ob8e9Pl2jhRUslUULIV+GT6MgXrIt6+
-	 Ci5vok9AjA+FWwYIjhb30R/78qR1nk5p16O5KV+6uIRyZkQmzwcouICbVayEwgd0pf
-	 W24FYgKItokRQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 6/6] platform/x86: thinkpad_acpi: Convert to use
- acpi_dev_is_video_device() helper
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260714185915.865396-7-andriy.shevchenko@linux.intel.com>
-References: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com>
- <20260714185915.865396-7-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 19:47:41 +0000
-Message-Id: <20260714194741.BEDB91F000E9@smtp.kernel.org>
+	s=k20260515; t=1784063431;
+	bh=FYLD+NQ3yFPrFtbxnnlrRNCjugvsXj89g6HloVaglxs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=B/T2AbrfLUNgebIFoIO2AxPaQSi4huO5+GJE3Q2Y57ZrNwR6HS5N9Ki45t/1UAC3/
+	 rV9DLAcJHzYu/VGNAl6PQrOV+ThGzBEgkp3M/C6pbpA9JHGkuItAMZCCmz/r7T5Zqp
+	 olo9UA0Q24xvVJGF5bfKipii+3YDgfQnYAAvHRRSPJQjwYtxk1JMeBAWqi+0ssa0ev
+	 GmbXseZzB25y9ke//Gy6ri1XbJtoo2wpRL0twmxk9yfe+EkZpiZzhq+XJxC1byaBgx
+	 w/HGLdj7IlQCAIC9uzTQ44N3BIK+hoWHKdLBUnqIXG//hqa6bRsWePVCP54hkrL89x
+	 e1EWRrFgEuSfQ==
+Date: Tue, 14 Jul 2026 16:10:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, kernel test robot <lkp@intel.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64
+Message-ID: <20260714211030.GA1412991@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
 
-> Replace open coded variant of acpi_dev_is_video_device() helper.
->=20
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+On Tue, Jul 14, 2026 at 03:19:27PM +0200, Marek Vasut wrote:
+> The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
+> which are available only on ARM and ARM64, on other architectures the
+> headers are not present and the driver fails to build. This driver is
+> used only on ARM64 hardware, isolate its build only to ARM64 to avoid
+> build failures on other architectures.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel.com/
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Mani, I assume you'll squash this into 89bded511a66 ("PCI: rcar-gen4:
+Configure AXIINTC if iMSI-RX is not used") so it's connected to the
+addition of the linux/irqchip/arm-gic-v3.h include and there's no
+bisection hole?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714185915.8653=
-96-1-andriy.shevchenko@linux.intel.com?part=3D6
-
+> ---
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Conor Dooley <conor+dt@kernel.org>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Marc Zyngier <maz@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+> V2: This is a rework of PCI: rcar-gen4: Inline GIC_TRANSLATER offset macro
+>     which isolates the driver build to ARM64 via Kconfig instead:
+>     https://lore.kernel.org/linux-pci/CAMuHMdVvWE7YZgKvreSn_vJLOVD4eMmn3TCGOyqSXksqjBCwvg@mail.gmail.com/
+>     https://lore.kernel.org/linux-pci/20260714110041.GA1349622@bhelgaas/
+> ---
+>  drivers/pci/controller/dwc/Kconfig | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 49a7a2c50ca15..3260d916110b2 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -346,7 +346,7 @@ config PCIE_RCAR_GEN4
+>  
+>  config PCIE_RCAR_GEN4_HOST
+>  	tristate "Renesas R-Car Gen4 PCIe controller (host mode)"
+> -	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
+>  	depends on PCI_MSI
+>  	select PCIE_DW_HOST
+>  	select PCIE_RCAR_GEN4
+> @@ -357,7 +357,7 @@ config PCIE_RCAR_GEN4_HOST
+>  
+>  config PCIE_RCAR_GEN4_EP
+>  	tristate "Renesas R-Car Gen4 PCIe controller (endpoint mode)"
+> -	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on ARM64 && (ARCH_RENESAS || COMPILE_TEST)
+>  	depends on PCI_ENDPOINT
+>  	select PCIE_DW_EP
+>  	select PCIE_RCAR_GEN4
+> -- 
+> 2.53.0
+> 
