@@ -1,158 +1,106 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF511372EF5;
-	Tue, 14 Jul 2026 10:46:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E35834A3D6;
+	Tue, 14 Jul 2026 10:50:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784026017; cv=none; b=gzpLJA+UkC6yp+JH5JzjOXt4BsdoKaR0oJZw4diraENXQGIoG9pdRUZwxmQGauiBXvplpYqzoFu1QKljFPzPwifBNcfOtqB4C0R6spzRciEUAGGY2NVHrxijt+OVR5+t2GuyluretV+v/nQJS/671Ky8HJBU7PoeXBhL+nRHARo=
+	t=1784026221; cv=none; b=OHOZTk5xN7TZGEwiTb8W6675tdIFBqGRlOZHjR+mAM0Qy9LxY2bhQmtdHsTbZgQ3MbTE7YhuYCyx3ErfYVQPCkakoGKmJSaQjY0SqIxlZoH1JzIzSnimk1fZSBG9qH5tlSpfj84IA4ytG8cj79m8c6isyDOZLLEw8iX20Hp2+98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784026017; c=relaxed/simple;
-	bh=TSNtqqT4JCWwZcHTBsf+r9HR3sTRkBLTyVtFrHybw6M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ifsgK2xJWeP8eyakLx8n7aaAYmUFooE9Ie8aS1RYHAgzqeM7QZc//DzncPEQGqUVgcUbrjU0Ja6GNGOE6eZNJMPfFVmY9kVNFgh3WAAyfyGL2ApB4eQuYpr0WSKfH+OXtDDj/iKjxk1fEmd3dWF5+nEokvdlZIQ3Bxtk8VHDOoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=fEA1miYH; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1784026221; c=relaxed/simple;
+	bh=JH1s3+2fTTFYpfkiPKDzClX4xe4rRo1wxP3z+YbAhSg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Nn1l54vrlsEUOlFDSvHLtYg58YIP5nWTu2G4k6MSRb55QfgsQwS9Alkd34aX5UVcrAdGFVhneL8Yb0fw55AFzZwrMfPbfxDta9ZPKIlh8nPBr5G5gkMn+vbSTNnd7YyUE/XbS8ymRdYte+eW6RLiK7FtIIODvA5p50iFVy9HqBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cDsS1pZm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="fEA1miYH"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=+QF7hLk7DP6Hy5cJYYIWwFzMhn4vHAGwM1AzCisx5jw=;
-	b=fEA1miYHH1xTG1HjTEQQ/R6Qf83YT6e31Osp79B/tnsTv/JLNCatChC2EmAS04L1AK5dU+W0L
-	YMpDwpibrpNx2lxB8c9I4YEMZo/BuOawKttZxA7ave61k3qz0lOXlFmOzmyrDhJcwh9lA7rkODI
-	OxEItA2mg2eDrvb1WZp4X8E=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gzwjp4Y6wzmV7C;
-	Tue, 14 Jul 2026 18:37:34 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9141840563;
-	Tue, 14 Jul 2026 18:46:52 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 14 Jul 2026 18:46:51 +0800
-Message-ID: <0768658f-de72-4ddb-a44b-e91a7e294b20@huawei.com>
-Date: Tue, 14 Jul 2026 18:46:51 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cDsS1pZm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 765521F000E9;
+	Tue, 14 Jul 2026 10:50:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784026219;
+	bh=rivpYrwIXe+BHfVoVyjRB3FTMfYuUvgKIZmVK9H6SGA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cDsS1pZmmA0lSeR7mAw9bXc5SS1anMuC/4yDltBQWclFDiuY0bGYH/94mE8cUhP72
+	 MjotUJ/2q32iotJrZD4ttdnrI7zsVF/8SH7yh0Gaj10bQWTtr+qytPzsDV/fadKfS5
+	 VrdbEiDLVYXBTgimwkAVODJwmQ0Tm2b2Okfuq20uq7KcadzSOe6khMHLPhHDc2kw7E
+	 IsC9SZCJ0PunHX0mC4FSmsRam/8YelDFghxA6okTYONd2JlAA1gkW7xRBBSZvEnBR+
+	 Sj7bwkg1qHk5GirH73NiHtaSUO6qVVf+ZWzNpzZlccWlhoPGXRxDrr5h5dieUEC5dD
+	 c/B5V5Czkm2oQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v20 02/16] dma-buf: add optional get_pci_tph() callback
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260714104325.54444-3-fengchengwen@huawei.com>
+References: <20260714104325.54444-1-fengchengwen@huawei.com>
+ <20260714104325.54444-3-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 10:50:19 +0000
+Message-Id: <20260714105019.765521F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v19 12/18] vfio/pci: Add dmabuf TPH metadata storage and
- fd query helper
-To: Alex Williamson <alex@shazbot.org>
-CC: <jgg@ziepe.ca>, <helgaas@kernel.org>, <wathsala.vithanage@arm.com>,
-	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
-	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-References: <20260702124224.57168-1-fengchengwen@huawei.com>
- <20260702124224.57168-13-fengchengwen@huawei.com>
- <20260708173117.3e399c4b@shazbot.org>
- <bb0e583e-501f-4356-b554-784482b35331@huawei.com>
- <20260709125012.21784d0a@shazbot.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260709125012.21784d0a@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemo500009.china.huawei.com (7.202.194.199)
 
-Hi Alex,
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] The kernel-doc comment references a non-existent callback `move_not=
+ify` in `struct dma_buf_attach_ops`.
+--
 
-On 7/10/2026 2:50 AM, Alex Williamson wrote:
-> On Thu, 9 Jul 2026 19:49:24 +0800
-> fengchengwen <fengchengwen@huawei.com> wrote:
-> 
->> Hi Alex,
->>
->> On 7/9/2026 7:31 AM, Alex Williamson wrote:
->>> On Thu, 2 Jul 2026 20:42:18 +0800
->>> Chengwen Feng <fengchengwen@huawei.com> wrote:
->>>>
->>>> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
->>>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->>>> ---
->>>>  drivers/vfio/pci/vfio_pci_dmabuf.c | 49 +++++++++++++++++++++++++++++-
->>>>  drivers/vfio/pci/vfio_pci_priv.h   |  6 ++++
->>>>  2 files changed, 54 insertions(+), 1 deletion(-)  
->>>
->>> Please don't send competing patches, just indicate the series is based
->>> on Zhiping's series v#.  This makes all the naming changes that Zhiping
->>> declined yet you still included their sign-off.  Thanks,  
->>
->> Thanks for the feedback on overlapping dmabuf TPH patches with Zhiping’s series.
->> There are code conflicts between the two series on PCI TPH and VFIO dmabuf logic,
->> and I also have concerns that Sashiko may not properly parse and track cross-series
->> Depends-on tags for reliable automated review.
->>
->> My current design idea is to retain this foundational metadata patch in my
->> series. This patch only implements basic storage and query helpers for TPH tags
->> on dma_buf objects, providing the underlying infrastructure. Zhiping can then
->> build the corresponding VFIO device feature ioctl layer on top of these commits
->> in his follow-up series. I will fully sync all his latest code revisions into
->> this patch to align implementation details and minimize future merge conflicts
-> 
-> If your concern is sashiko being able to apply and review your series
-> on top of another, then I would suggest leading the series with the
-> unmodified patches clearly noted in the cover letter and commit logs.
-> 
-> As provided here, this patch initially appears as excerpts of Zhiping
-> series, again including sign-off without permission, but it introduces
-> this massive gap that was previously overlooked as a result:
-> 
->>>>  
->>>> +int vfio_pci_dma_buf_get_tph_by_fd(int fd, bool extended, u16 *tag, u8 *ph)
->>>> +{
->>>> +	struct dma_buf *dmabuf;
->>>> +	int ret = 0;
->>>> +
->>>> +	dmabuf = dma_buf_get(fd);
->>>> +	if (IS_ERR(dmabuf))
->>>> +		return PTR_ERR(dmabuf);
->>>> +
->>>> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
->>>> +		ret = -EINVAL;
->>>> +		goto out;
->>>> +	}
->>>> +
->>>> +	ret = vfio_pci_dma_buf_get_pci_tph(dmabuf, extended, tag, ph);
->>>> +out:
->>>> +	dma_buf_put(dmabuf);
->>>> +	return ret;
->>>> +}
-> 
-> .get_pci_tph() is proposed as a generic feature of dmabufs.  We cannot
-> require that only vfio-pci provided dmabufs are supported, nor can we
-> bypass the default interfaces and lifecycles.  This needs to use
-> dma_buf_get_pci_tph(), rather than punch through to the vfio-pci
-> implementation of .get_pci_tph(), and it needs to honor the calling
-> conventions of that interface.  That's what makes this series dependent
-> on Zhiping's implementation of TPH as a vfio-pci completer feature.
-> 
-> Already, within this patch, the caller violates the lockdep assertion
-> that the dma reservation lock is held.
+--- Patch [2]: [PATCH v20 02/16] dma-buf: add optional get_pci_tph() callba=
+ck ---
+commit 799bc3a75b6c6b1dc555780b54878e41e3161d8b
+Author: Zhiping Zhang <zhipingz@meta.com>
 
-V20 has sent with above bugfix and based on Zhiping's v11 patchset
+dma-buf: add optional get_pci_tph() callback
 
-> 
-> Additionally, dma_buf_get_pci_tph() defines that the provided values
-> are only valid until invalidate_mappings, but this series has no
-> plumbing to honor that requirement.
-> 
-> This needs significant work if we need to track the lifecycle of every
-> dmabuf related TPH value.  Thanks,
+This commit adds an optional get_pci_tph callback to dma_buf_ops and a
+corresponding wrapper function dma_buf_get_pci_tph() for importers. It
+allows importers to query the exporter for PCIe TLP Processing Hint
+namespaces and matching ST/PH tuples.
 
-Is it possible to use this as a risk warning? After all, even if the
-invalid mapping is performed, the ST only causes performance loss to
-the system, and there will be no function problems.
+> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+> index d504c636dc294..e8314ed240d33 100644
+> --- a/drivers/dma-buf/dma-buf.c
+> +++ b/drivers/dma-buf/dma-buf.c
+[ ... ]
+> @@ -1144,6 +1146,36 @@ void dma_buf_unpin(struct dma_buf_attachment *atta=
+ch)
+>  }
+>  EXPORT_SYMBOL_NS_GPL(dma_buf_unpin, "DMA_BUF");
+> =20
+> +/**
+> + * dma_buf_get_pci_tph - Retrieve PCIe TLP Processing Hint (TPH) metadata
+> + * @dmabuf: DMA buffer to query
+> + * @extended: false for 8-bit ST, true for 16-bit Extended ST
+> + * @steering_tag: returns the raw steering tag for the requested namespa=
+ce
+> + * @ph: returns the TPH processing hint
+> + *
+> + * Wrapper for the optional &dma_buf_ops.get_pci_tph callback.
+> + *
+> + * Must be called with &dma_buf.resv held. Returns -EOPNOTSUPP if the
+> + * exporter does not implement the callback or has no metadata for the
+> + * requested namespace.
+> + *
+> + * The returned steering tag and processing hint are only valid until the
+> + * exporter invalidates the current mapping (signalled to the importer v=
+ia
+> + * &dma_buf_attach_ops.move_notify). Importers must re-query after a new
 
-Thanks
+[Severity: Low]
+This isn't a bug, but there is no move_notify callback in
+struct dma_buf_attach_ops. Should this reference the invalidate_mappings
+callback instead?
 
-> 
-> Alex
+> + * mapping is established following invalidation.
+> + */
+> +int dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool extended,
+> +			u16 *steering_tag, u8 *ph)
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714104325.5444=
+4-1-fengchengwen@huawei.com?part=3D2
