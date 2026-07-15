@@ -1,109 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93C823507B;
-	Wed, 15 Jul 2026 13:35:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ED7D2989B0;
+	Wed, 15 Jul 2026 13:37:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784122516; cv=none; b=ugV6axTOMrOoQoiQ8A5D+cbMy0uHSZRwZ3geRSxWWGSXemyJZ5oiDRPXCgMSblvIHUOdRxwZITZY/VhA6b8ggPNlFkdxBrDs5jQleTJucGpsVJDnwLsuyeogTvWyuVZA3TRO0Dn3OwWfjBKoNJsU6liF2wSQ+vm3BHbZ2GKGfTE=
+	t=1784122650; cv=none; b=IuUJ7EryJ+6hw9lo7UNC5g27z6yLl+K6VZ9vsxhULbxWAVAEUSayIgBQepU0uIkq2S16PpZzXICLAfSoMBWy8G9mVfIECh/nhXBpzk1xUvVlnO4VTCftjcKk+k4Pas+mGKXW/Z7msDGFU6mryux2JA+e+xYPIpYm2BEecutR0Is=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784122516; c=relaxed/simple;
-	bh=TgLdUmwDmzGPgi23G0G4GIx/b/V5izieQpWr+IlBbNE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EezMB3MJtnAYHwnbeuFfKoi3JF/oKiTq9neTCHWz1CNCVUwZ/tOsduZPdGtOeNspyY70hs+XFG7nUJKJbUQ1vQqJJFzjo6HoWuCqbqEORXQ5WKfwtsQdSVQ4IWdeUztaITHFMx8X/uu6fW8K0Y5rsefvrQYz+eQcr0sAdNyGmbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGTYVIse; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784122650; c=relaxed/simple;
+	bh=C8qL6bot7qQj89yjqrUqfibJA625H6Bwp6pXWCvXhb8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=cQUUjys+BEnICD1+WOfZRzDGKEzw0gLif0w/seCoSCgRfQ6c7MjpxzGdcCIH4z1KhLt+Re1rGb9caf9myvEZxbAj4uu5KtivQC9gat+0NbtrWj2hDJHzZPSuYT/MBj3ZAnS2FbdtE0E6Rr6rxUvG9APmnUmwPD7hfwkCrP+CCVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIXB3t4x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGTYVIse"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 609AE1F00A3E;
-	Wed, 15 Jul 2026 13:35:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIXB3t4x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D73CC1F000E9;
+	Wed, 15 Jul 2026 13:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784122515;
-	bh=F5IP7CBxQw7aJmKHnYNo9T0f4+G5JzG/un29+KPX9po=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hGTYVIseNleRsBf9JsqVrcLshYjtLgyxGM4DU1iyW54hgsY2J4ryLY8wUGyXeMztl
-	 6T8bEVLmRc8htGaoxZNp5BRn3t8eemwpu4y5qqu7Agv/ZVGmUukvfZhDe04FiyTCtn
-	 ZnU4WOQ0fKaASt/z7vWag1eGbGgElJw6q0XupbbCVJZHM9taRpk0HXtQBuyxv8S6CG
-	 A+AYvDeYUipZwEFMhujbnY8mmkxzI4EIWYMjSw+kVCwrFWyy6ywjF9rYa/nW67OV6R
-	 88dxMO5vJNC5ta5iXKVHMujWdqD1N/jOdif4hAUs3IlAlI94GSlnuuPH4mBbgD4mIZ
-	 O7hGfxSdDljtQ==
-Date: Wed, 15 Jul 2026 15:35:08 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	s-vadapalli@ti.com, a-garg7@ti.com, robh@kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/16] PCI: dwc: Cache PCIe capability offset and
- simplify drivers
-Message-ID: <4xnbhjohkww2v5qdq4uehjsev6nx23nr4ss5lreos3adx5sgfp@s6465oz7og4j>
-References: <20260530153101.695580-1-18255117159@163.com>
+	s=k20260515; t=1784122648;
+	bh=yckDuS97heWYk7WOhp8ZperAys9yhtGo+sXu4RbSfh0=;
+	h=Date:Subject:To:References:From:In-Reply-To;
+	b=eIXB3t4x+OvL+vU6yYVyNP1hyQtkrBdEWti484RF85k/6GEdK0uk8lVJQ+WARYQFB
+	 pHAJqVQZL4LYvk2ANawR0VEmMmoL5ZPylQ0jzEXfCZo1hI5qKaGAGTgtFyNfBpPlpD
+	 OKbdrZL1ShTn0TONJBZczzIsP2GZ5pC3DxWeAuYdDbxsMHhqE6nqiujEiQkMKQNJbI
+	 4x3lBYEtbBROY6z2VbbXRvCpVexxJK3eW0lzeNlMEGN0ZuQ2pWNsH1C/0f1Ou/dH7f
+	 kItua5Y4j8BA2PlBalhXiLHKKfw6LaZ9JGMF20kNBsfpZSyWghL7hBWJh28dw5oIUl
+	 1NXUPkwHkCx9g==
+Message-ID: <b000fdcb-37ca-4a53-a45e-ea74589f7d63@kernel.org>
+Date: Wed, 15 Jul 2026 08:37:26 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260530153101.695580-1-18255117159@163.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC][PATCH] thunderbolt: Quiesce AMD NHI during suspend
+Content-Language: en-US
+To: "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>,
+ Andreas Noever <andreas.noever@gmail.com>,
+ Mika Westerberg <westeri@kernel.org>, Yehezkel Bernat
+ <YehezkelShB@gmail.com>, Yo-Jung Leo Lin <Leo.Lin@amd.com>,
+ linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+ "S, Sanath" <sanath.s@amd.com>,
+ "Natikar, Basavaraj" <basavaraj.natikar@amd.com>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+References: <20260706023422.3647320-1-acelan.kao@canonical.com>
+ <2ff2d9b9-12fb-4908-8738-2498b2927571@kernel.org>
+ <albapl82ioSBPbp6@acelan-Precision-5480>
+ <e78152a9-c6d3-47d9-8657-f5efc2fe69f7@kernel.org>
+ <alccavxbVnZGtVU5@acelan-Precision-5480>
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <alccavxbVnZGtVU5@acelan-Precision-5480>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sat, May 30, 2026 at 11:30:45PM +0800, Hans Zhang wrote:
-> Hi,
-> 
-> The DWC PCIe core and its many platform drivers repeatedly call
-> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to obtain the offset of the
-> PCI Express Capability structure. This is wasteful and makes the code
-> verbose. Some drivers even search for the offset in suspend/resume paths.
-> 
-> Add a cached pcie_cap field in struct dw_pcie and a helper
-> dw_pcie_get_pcie_cap() to initialize it once at the point when the
-> hardware is ready. Then replace all explicit capability searches with
-> the cached value across the entire dwc subtree.
-> 
-> **Safety analysis: DBI access timing**
-> The PCIe Capability offset is read from DBI configuration space. DBI
-> registers are only accessible after the controller's clocks, resets, and
-> power are enabled. The following call graph demonstrates that all
-> dw_pcie_find_capability() replacements occur only after hardware is ready:
-> 
-> - For Root Complex mode:
->   dw_pcie_host_init()
->     ...
->     if (pp->ops->init)
->       pp->ops->init   [enables clocks/resets]
->     dw_pcie_get_pcie_cap()   [caches offset]
->     ...
->     dw_pcie_link_up
->       pci->ops->link_up
->     ...
->     dw_pcie_start_link
->       pci->ops->start_link
->     ...
->     pci_host_probe
->     if (pp->ops->post_init)
->       pp->ops->post_init
->     ...
-> 
-> - For Endpoint mode:
->   dw_pcie_ep_init()
->     ep->ops->pre_init()    [enables clocks/resets]
->     dw_pcie_get_pcie_cap()   [caches offset]
->     dw_pcie_ep_init_non_sticky_registers() etc.
-> 
-> - Some platform drivers (e.g., layerscape-ep, tegra194) need the offset
->   before calling dw_pcie_ep_init() / dw_pcie_host_init(). They already
->   enable hardware themselves and explicitly call dw_pcie_get_pcie_cap()
->   before the core caches it. This is safe and ensures the cached value is
->   available for all later users.
-> 
-> Thus, no DBI access occurs before hardware is operational.
-> 
+On 7/15/26 00:42, Chia-Lin Kao (AceLan) wrote:
 
-Not true. As Sashiko pointed out, EP platforms like Qcom, Tegra, enable
-resources like clocks only after PERST# deassert. So any DBI access before that
-will cause sync abort.
+>> Thanks for checking.  That code ended up not helping the original issue it
+>> was for, a different solution for that issue is being provided.
+>>
+>> But I'm wondering, is this issue you're working on something to do with
+>> pm_async?  Could you turn that off and see if it improves anything?
+> 1. echo 0 | sudo /sys/power/pm_async
+> 2. sudo systemctl suspend
+> 3. plug in the tbt dock
+> 4. power indicator shows 3A5W lights and hard hang
 
-- Mani
+I'm not sure what 3A5W lights means.  You'll probably need to check with 
+ODM if that's a post code or what it is.  It certainly sounds useful to 
+someone.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Are you sure the hang is during resume?  It /sounds/ like it's during 
+suspend.
+
+> 
+>>
+>> Any chance you can get UART output from the system using a debug board over
+>> suspend/resume in case there is a panic happening that doesn't flush to
+>> NVME?
+> No, there is no UART port on the machine for debugging.
+> 
+Can you please check with ODM about this?  For pre-production systems 
+there should be a debug card that can provide UART output so we can 
+cross reference that.
+
+Also; does this only happen on this system or you can reproduce on a 
+reference system?  If you can reproduce on a reference system UART is 
+very easily accessible which would make this easier to debug.
