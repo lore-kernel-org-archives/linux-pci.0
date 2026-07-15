@@ -1,200 +1,182 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA4A3D565D
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 22:30:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98B03BD653
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 22:39:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784154629; cv=none; b=hw4+09Evkqq/P4fyZNNZNZNFLun7s7VJ+ySSKOjcVHxe8mW0vUSrHS6k/ChTTUjcGIgAxHx62cDiUadYYgzBkwn7uE6/y/XYh45jBQKPVE7/fvEz+WphXA2P2ZCxUz3e2ByhKAzMADN+FnqU3V2F1W9TahD91xsEYjRAV40ZF7o=
+	t=1784155199; cv=none; b=KjkLgwu5yhe4nXeVuCBiKAgF09NyCYBML2XdphhniWDtXjYgrgS95MTGcgkHY5U/yvHSioFLVe75YJvJMeKSWDb9tomiD4IAhloeEFsRimxiptUAewpeSvWEv+A1Ac6Yh0FWVDqoazAH0HhnP9D70g393V0LoWL3E7t8ad21YKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784154629; c=relaxed/simple;
-	bh=iG8DxBgPeFTS2wD34Yri/ahbMlagck2D5bkaD14Nv00=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VkS8Dqz8OF73JnepRWzakushQ9pPh0xeAXjpAWa1hhy3yCkf1QMjhtd9xhhBUwGwjh7roqVdEsQk1AOWBP0/v3M5y5wrrZJY04oRzL3W/P08VzS5GFvH9vTrlblW4WG7jlTPTE2Ys7PF2I0JYs+2F6dAxaQ4W+ZfpwoRix7aaFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BGSczuAz; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784155199; c=relaxed/simple;
+	bh=JNs0TVrTZGyTOoBIu2d/eQYEbREThikOuBeI0ykXQGU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=UJKxWMWIok3DD5x1jk2Fpejmxloz7ckr5laE1nRlWRJw1ma/ZgSrz0WcWN9qVkgE8EmsFKNrwDYuhl6TgwiGvyuCMuDT3QPg0T7mJ0/qQ+0+EmDP3sTK4qQMVPoL6e/Add2O+Byuqaho7TXjr6EkNxoguAO5GFZZ/RzfoqWGzwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7fzIrPd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BGSczuAz"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4921eed3fa2so50055655e9.0
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 15:30:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784154626; x=1784759426; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6z5e6ZRDnBIxpo0diHIfK/ZsB3aIEtSkbb+xJwPFfww=;
-        b=BGSczuAzLxnKTwETEr+ztgpd+WHtgkeTzKMRtydSQA/2KfC24VwXNZj9MAOyA22r/4
-         Rsk7HXUjDJggdcMDiTKmXQcFXRimSAZmnAB/+ghDaONfxKXAE3aiwuClcBQR6ZQVHu6O
-         GjQxWekXehyOzV4anp6kixg1lwu1PL2BaUWa3Is9GImkoHcnk2WP2jc460HgIAFs4Uj+
-         yO0GFaO22+y5fPykEYq6ffnW8W60hYho425S+VepTfKyZlUKIEUtvpPem6gKQdvUeDYx
-         HqBgTrldZRfZUiwvxThWoZ8ST4RJhbwPRokv2+sNQP6gaBJZ5LPFfnCEyKo3fOVJuK8m
-         0CqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784154626; x=1784759426;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6z5e6ZRDnBIxpo0diHIfK/ZsB3aIEtSkbb+xJwPFfww=;
-        b=tPfr4SIDna9WBPJPWhYZx9qwfVI8m1mtvxttp/ogEj5oc8umGPMue4cyguhlhV0R9n
-         cSwIXRgeo7zQ5J/C6vLzrx6G/iSx0j7c1LQAD20pWxOkxX3mgMVNhHjmjjSXOcpFmvi9
-         G4AIeKKu994NQSbYEaQNdwmEEWEPTG6twKj0fMHuS+VudFp662eE3hqE711YHtoVGnTt
-         XCiIzPVUXkc1DlcSJVXxw5Wp9gTy716+9CNfgi1R7RmfGvZ+UTusssG49sjxb2ztq9cT
-         b+LbrQSOiWsokIVXJn0QYMVPwaSPJTHZXv6jn7pxRpNjCHCGPXAXH8AMCRhfYH1K7NPr
-         Fxxg==
-X-Gm-Message-State: AOJu0YwTKbI2aDuqw+q6Czy7cpznC2muvklZGqk90IOPCYMNRFZGUF5g
-	7xlOAZO7LFqES68Nj3XN4dI0lqkbna+OyW6+HilLKT6Pm3bo/T2ylaUE
-X-Gm-Gg: AfdE7ck0muuVkP8wv7tJ8Lmui1cw+5rVluRQq1+UNbmnLjJYUlDv4Jis+6J6UmSq4c8
-	O5j1MIgIo84lZhbCQJG5KHGxlpXosiEOiU82zKLJ0EFu84MVFY0eZyKOpfqW8YHhKa8rEJwNBp2
-	CPIrgoYZyf3VHhODP+MiUu3JCIswfBuB38cEcVpU6u5M0nhW3iQLkAJn/5T8XmhXeuoQ4KT+25i
-	goyan7CJgQ/rGZ5+asWL6EEtkIbzN8D+3srlG28rcJGIYrMojmkaLB8Zr6NMSkwFLCpfHIi36WP
-	yrS/T348n/9ULoAO7XKE+FeH7qRAbfsKyF+sHK3+6/Q2Ue8+NJmU34fUIEYnwdXIPXGB9yE6/hG
-	E0zypJvFXcpOdmnO2ebBKq3o14auf++2ErWA7hbiXsz8TBgl61flN/kinPDBcjCMTX2erIGOZXF
-	WpEyuR+dfHDuRhSVKrLZf+4J64FZzQmZseuzfwtqFMvOlz74VUxVheymdvKRN4VkxXOcYxHUdCv
-	H1pp8fVeZHh/Owu
-X-Received: by 2002:a05:600c:1d1d:b0:495:3b66:580e with SMTP id 5b1f17b1804b1-49541c5dfc0mr6927505e9.32.1784154625853;
-        Wed, 15 Jul 2026 15:30:25 -0700 (PDT)
-Received: from iku.Home ([2a06:5906:61b:2d00:6d4f:b160:7aea:9d1b])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49541e9ee07sm14791025e9.15.2026.07.15.15.30.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jul 2026 15:30:25 -0700 (PDT)
-From: Prabhakar <prabhakar.csengg@gmail.com>
-X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Prabhakar <prabhakar.csengg+renesas@gmail.com>,
-	Biju Das <biju.das.jz@bp.renesas.com>,
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error handling
-Date: Wed, 15 Jul 2026 23:30:19 +0100
-Message-ID: <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260715223019.3002237-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7fzIrPd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56EDD1F00A3A;
+	Wed, 15 Jul 2026 22:39:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784155197;
+	bh=Y18u+FcDbyFzGQ8faIcBNX94uJqsLREad/76/8tPQuQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=F7fzIrPd7KF9A+6WwLJ7Bwupeq93CF6l6vZLWNhtTR4Ac4mGzlQYyW7z8Uc1H3Dr3
+	 RMUGTxkBpCZT9q3uBur4P7bIYAhJmBkYBQ9V9Cks05R+1qtV+JiyxqpIYk1WEHHXmU
+	 3H4Z7ttLMr7fXaQ5UulTCIi/Ho2JWX2+ZviEnUcA1EoE6NZc7hVkkCspnyxRR7yoL0
+	 saCTZ1Nq459+ddO3nylqD+1Mm/Hd8WxTVkZPCH/uBcqc4JY4a0uNTYuorD2DfKqO77
+	 kyPGYAjemveRA/HTaUAoNsnGTWPzZymKe7WU2OxgQ+o3++7oS5hWbVLrJ7WFl0ovD+
+	 nfHOw1nMgpSjg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error
+ handling
+Reply-To: sashiko-reviews@lists.linux.dev
+To: Prabhakar <prabhakar.csengg@gmail.com>
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20260715223019.3002237-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 15 Jul 2026 22:39:56 +0000
+Message-Id: <20260715223957.56EDD1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-rzg3s_pcie_init_irqdomain() installs chained handlers for the INTx
-parent interrupts before creating the INTx irqdomain and initializing
-MSI support.
+Pre-existing issues:
+- [High] Use-After-Free window in INTx IRQ domain error handling path.
+- [High] Chained INTx handlers are registered before their dependent IRQ do=
+main is created.
+- [High] Unsafe contiguous virtual IRQ assumption leads to incorrect hardwa=
+re IRQ index calculation.
+- [High] Read-Modify-Write operations corrupt Write-1-to-Clear (W1C) interr=
+upt status registers.
+--
 
-If any subsequent step fails, such as obtaining an INTx IRQ,
-creating the irqdomain, or initializing MSI, the error path returns
-without removing any chained handlers that were already installed.
-This leaves stale handler and data pointers attached to the parent
-interrupts.
+--- Patch [3]: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error =
+handling ---
+commit 7daa41537d847b29b2790ef6fee098277445112b
+Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+PCI: rzg3s: Fix IRQ domain initialization error handling
 
-Fix the error path by unwinding the chained handler registration before
-returning. Also clear the chained handlers during
-rzg3s_pcie_teardown_irqdomain() so that teardown fully mirrors the
-initialization sequence.
+This commit attempts to fix the error path during IRQ domain initialization
+by ensuring chained handlers are unregistered if subsequent steps fail. It
+also updates the teardown path to clear INTx handlers.
 
-Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
----
- drivers/pci/controller/pcie-rzg3s-host.c | 37 +++++++++++++++++-------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
+oller/pcie-rzg3s-host.c
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+[ ... ]
+>  static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
+>  {
+[ ... ]
+>  	for (i =3D 0; i < PCI_NUM_INTX; i++) {
+[ ... ]
+>  		host->intx_irqs[i] =3D irq;
+>  		irq_set_chained_handler_and_data(irq,
+>  						 rzg3s_pcie_intx_irq_handler,
+>  						 host);
+>  	}
+> =20
+>  	host->intx_domain =3D irq_domain_create_linear(dev_fwnode(dev),
+>  						     PCI_NUM_INTX,
+>  						     &rzg3s_pcie_intx_domain_ops,
+>  						     host);
 
-diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index f51b5d7c1998..5aeb030d43c8 100644
---- a/drivers/pci/controller/pcie-rzg3s-host.c
-+++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1006,22 +1006,30 @@ static const struct irq_domain_ops rzg3s_pcie_intx_domain_ops = {
- 	.xlate = irq_domain_xlate_onetwocell,
- };
- 
-+static void rzg3s_pcie_clear_intx_handlers(struct rzg3s_pcie_host *host, int count)
-+{
-+	while (--count >= 0)
-+		irq_set_chained_handler_and_data(host->intx_irqs[count], NULL, NULL);
-+}
-+
- static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
- {
- 	struct device *dev = host->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-+	int i, ret;
- 
--	for (int i = 0; i < PCI_NUM_INTX; i++) {
-+	for (i = 0; i < PCI_NUM_INTX; i++) {
- 		char irq_name[5] = {0};
- 		int irq;
- 
- 		scnprintf(irq_name, ARRAY_SIZE(irq_name), "int%c", 'a' + i);
- 
- 		irq = platform_get_irq_byname(pdev, irq_name);
--		if (irq < 0)
--			return dev_err_probe(dev, irq,
--					     "Failed to parse and map INT%c IRQ\n",
--					     'A' + i);
-+		if (irq < 0) {
-+			ret = irq;
-+			dev_err_probe(dev, ret, "Failed to parse and map INT%c IRQ\n", 'A' + i);
-+			goto err_cleanup_intx;
-+		}
- 
- 		host->intx_irqs[i] = irq;
- 		irq_set_chained_handler_and_data(irq,
-@@ -1033,21 +1041,28 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
- 						     PCI_NUM_INTX,
- 						     &rzg3s_pcie_intx_domain_ops,
- 						     host);
--	if (!host->intx_domain)
--		return dev_err_probe(dev, -EINVAL,
--				     "Failed to add irq domain for INTx IRQs\n");
-+	if (!host->intx_domain) {
-+		ret = -EINVAL;
-+		dev_err_probe(dev, ret, "Failed to add irq domain for INTx IRQs\n");
-+		goto err_cleanup_intx;
-+	}
- 	irq_domain_update_bus_token(host->intx_domain, DOMAIN_BUS_WIRED);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		int ret = rzg3s_pcie_init_msi(host);
-+		ret = rzg3s_pcie_init_msi(host);
- 
- 		if (ret) {
- 			irq_domain_remove(host->intx_domain);
--			return ret;
-+			goto err_cleanup_intx;
- 		}
- 	}
- 
- 	return 0;
-+
-+err_cleanup_intx:
-+	rzg3s_pcie_clear_intx_handlers(host, i);
-+
-+	return ret;
- }
- 
- static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
-@@ -1055,6 +1070,8 @@ static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		rzg3s_pcie_teardown_msi(host);
- 
-+	rzg3s_pcie_clear_intx_handlers(host, PCI_NUM_INTX);
-+
- 	irq_domain_remove(host->intx_domain);
- }
- 
--- 
-2.54.0
+[Severity: High]
+This is a pre-existing issue, but does this sequence leave a window where
+interrupts can be misrouted?
 
+If a hardware INTx interrupt fires immediately after unmasking via
+irq_set_chained_handler_and_data(), rzg3s_pcie_intx_irq_handler() will exec=
+ute
+while host->intx_domain is still NULL.
+
+Passing a NULL domain to generic_handle_domain_irq() causes the IRQ core to
+fall back to the system's irq_default_domain, which might route spurious
+interrupts to unrelated devices.
+
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		int ret =3D rzg3s_pcie_init_msi(host);
+> +		ret =3D rzg3s_pcie_init_msi(host);
+> =20
+>  		if (ret) {
+>  			irq_domain_remove(host->intx_domain);
+> -			return ret;
+> +			goto err_cleanup_intx;
+>  		}
+>  	}
+> =20
+>  	return 0;
+> +
+> +err_cleanup_intx:
+> +	rzg3s_pcie_clear_intx_handlers(host, i);
+> +
+> +	return ret;
+>  }
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the error cleanup order
+create a use-after-free window?
+
+If rzg3s_pcie_init_msi() fails, the code calls
+irq_domain_remove(host->intx_domain) and then jumps to err_cleanup_intx to
+clear the handlers.
+
+If a hardware INTx interrupt fires between the domain removal and unregiste=
+ring
+the handler, rzg3s_pcie_intx_irq_handler() could dereference the already fr=
+eed
+host->intx_domain pointer.
+
+[Severity: High]
+This is a pre-existing issue in the handler itself. Is it safe to assume
+platform IRQs are strictly contiguous?
+
+rzg3s_pcie_intx_irq_handler() calculates the hardware index by subtracting
+virtual Linux IRQ numbers:
+
+rzg3s_pcie_intx_irq_handler() {
+        ...
+        unsigned int irq =3D irq_desc_get_irq(desc);
+        u32 intx =3D irq - host->intx_irqs[0];
+        ...
+}
+
+Since platform_get_irq_byname() dynamically requests platform IRQs, they are
+not guaranteed to be contiguous. If they are disjoint, this subtraction wou=
+ld
+produce an out-of-bounds index for generic_handle_domain_irq().
+
+[Severity: High]
+This is another pre-existing issue regarding interrupt acknowledgment. Will
+using a read-modify-write operation on a Write-1-to-Clear (W1C) register
+silently drop concurrently pending interrupts?
+
+For example, in rzg3s_pcie_msi_irq():
+
+rzg3s_pcie_msi_irq() {
+        ...
+        /* Clear the MSI */
+        rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIS,
+                               RZG3S_PCI_PINTRCVIS_MSI,
+                               RZG3S_PCI_PINTRCVIS_MSI);
+        ...
+}
+
+If RZG3S_PCI_PINTRCVIS is a W1C register, reading the current state and
+writing it back means any concurrently pending interrupts (read as 1) will =
+be
+written back as 1, inadvertently clearing them before they can be handled.
+
+A similar operation happens in rzg3s_pcie_intx_irq_ack().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715223019.3002=
+237-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D3
