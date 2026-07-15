@@ -1,44 +1,44 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AADB3CC300
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 086FC3CB919
 	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 20:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784148674; cv=none; b=n85rrGf1kVKenV8F7FyeQ/GvyHZAtXHcVB6YrYF7z6q2MNFCjCNw0BsfB6+Fp4+kR+ZKYK24N9tth7IZrbLEhd+FiawZHfhaLh+SLiSPfTFhbqXuk676jwIUSYHDWGQ2bFcFIUMfcFDxa8oHjpDkseO/rdRzzOIcSQa+iHYYChs=
+	t=1784148674; cv=none; b=gZbOuPSxtBxIxVbXWUvDEV/MxRO68D2GLP+wqDPlV3CRKJzNJb7lQXoaSTBi8jZvHHhe8NO3w7OqQKeL2baJCeUGV3u7YAQZ8EbJJuj65aJC3idGJKGZgO7KasTdh7zT+uH726C2uvLbPPUcAxQ917/TJcPAITTZ8E9QjmSPz50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784148674; c=relaxed/simple;
-	bh=ET+RihnOwCiLGm8HVoDYJBPB344Nl3jcMAfux/pMTEU=;
+	bh=Xwc2mb2oISVV5/DyAYk1dQl0+O04MP/yGMy37+d9YNc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ed9cGg/bCCII7v1Kl85IzYsHi8etXYlIC/tHspyvIxDatjhhS3wtkcZ0wNu+Fhh/642g7nwydv8hVrCVlWoWdxzeUh9x3Z1C3hO7jYJIbDJAdE5gGZzm/Zs0ddkaxJw/E3Wbn/wrEH/k8nEQzBwxO04L32sYy04Kv2KDKa0Bx4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=PVH6mwFt; arc=none smtp.client-ip=67.231.145.42
+	 MIME-Version:Content-Type; b=m5HDvoTzXQw0ZTstXnmAR9QQmS1VQfi08uMpz93tuG4/8TqprCuPpd9egG8dHGiwwm3jiCQPAgfjkOhVvwqjQBeZOViTYFNFkKy51/V7tHnKbhPPO/6Z+u8mpaByFQ6ziwOJMa8URrqybGtyDmhhFiCY3o9vl+0ebD358Dw19RI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=s4GNEmg7; arc=none smtp.client-ip=67.231.153.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="PVH6mwFt"
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66FKQg4q943339
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="s4GNEmg7"
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66FKPsRA1082404
 	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 13:51:09 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=7YiqQdnniWevXoO8/n4Dj4e9MIf/UItPFP3U5fRYzK4=; b=PVH6mwFtDh+8
-	9gXs4K1tSPAd48583Pz8Cp/fLvi6/IkuO8WZABQGpTFPvVzAoRP4iaFkj1qhThBI
-	G8pg3ef3p+msjiCnMaIrTSYYz0fThGx33Slfg+vgIUbkRE9G3uMY6nLpYXtT+TjC
-	3wQ9KlTs/R514oL3LdDtnkltUK7w4gc9nOkMKZtd/vv+Mud1LcfBMFbYqQl5ZEZP
-	ptfcJzJQpEoQhHbjGgzBFhJBatcjOaUvpBmH21SH9Pb1ct+caro+64QtC/du1otR
-	66f7YNSmmPXWLLdKb9yFBufCyAB6/PH8xqmsE2sGj8byyAc3xExRCJ3dyoHMscMx
-	s5snPjgtmA==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4feamkk1k8-5
+	 bh=SRerVsjFZQo0Jm80gmOoJFgaIOfsj+PyflVzjvsJyC4=; b=s4GNEmg724F5
+	RL6CbuWVBk08o9nWyfAw3Fya6O+1TP+8aKpW7RX8y8+NUu1au3nbJOav5HLaWVrA
+	AOqf2pnRQW5spLD1lGzfRmFeJ3eiPgj4v3FjuXsUwLwpuPidSyzBd+c5Wnv/fJq2
+	02P1MVtREa4gDP48AlGMmljSEEIRmoMuIFQEWvRMYfALJoVEzazy8Z2H/J41rWKQ
+	oQSgwLKoiI4XBFApqhNCCRN2EzSkalvOBeUJMe6b7Mc3jWAHpf14ruSbqC7VBGkE
+	Vcez/FM1bhhjX7N7FxqJXVqhDdTSt1dRfMrAOJWV5fiQUeiXpC0CuaNCV+5CUG6u
+	JuXJhE8SpA==
+Received: from mail.thefacebook.com ([163.114.134.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4fdqss9rb6-6
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 13:51:09 -0700 (PDT)
-Received: from twshared4170.04.frc1.facebook.com (2620:10d:c0a8:1c::1b) by
- mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 13:51:08 -0700 (PDT)
+Received: from twshared10463.03.snb2.facebook.com (2620:10d:c085:108::150d) by
+ mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.2.2562.41; Wed, 15 Jul 2026 20:51:04 +0000
 Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 07CB4423AA096; Wed, 15 Jul 2026 13:40:12 -0700 (PDT)
+	id B95BC423AA09C; Wed, 15 Jul 2026 13:40:13 -0700 (PDT)
 From: Zhiping Zhang <zhipingz@meta.com>
 To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
         Michael
@@ -52,9 +52,9 @@ CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
         Zhiping Zhang
 	<zhipingz@meta.com>
-Subject: [PATCH v12 3/4] vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
-Date: Wed, 15 Jul 2026 13:39:58 -0700
-Message-ID: <20260715204008.3911275-4-zhipingz@meta.com>
+Subject: [PATCH v12 4/4] RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+Date: Wed, 15 Jul 2026 13:39:59 -0700
+Message-ID: <20260715204008.3911275-5-zhipingz@meta.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260715204008.3911275-1-zhipingz@meta.com>
 References: <20260715204008.3911275-1-zhipingz@meta.com>
@@ -67,372 +67,554 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE1MDIwNyBTYWx0ZWRfX85GXzYgxYf1O
- HKm5pcRzhKm3b/0J/Kcu0T7bTw724wh2G7iMoZ1WwIICdmKy6mns8rp1wRvbei4mRwGX/IHg/af
- 3gbOIQ8WTqKo6fkNZCI6WeKMoV4UAn0=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE1MDIwNyBTYWx0ZWRfX1j17yboa7J0b
- l8h5oyiTiw/PbidCFst7bsPhzVokLbxDebc9JYQ/GN1Un1lzJc0nhvraVI4uGwGW2bqMBcfiCBZ
- ZVb4CEsFDW7bzzWyxiZ/c2xyQv6WchcBNq+4sewqU9BjxagIuBT4Zgojr/ZIpGRCVdnRIhgtBN4
- UPOipUgeiUvWXmX/IkLEGcKc1Cxmpmk6wKgVykroLjI5iaqP0foo+DKxIUX9hxcJFpNayCSaQT1
- 0D1CqwHONXb80GpWGagJP2sBoatTglEFvFvtgKjlw9Gj8mA9Uyt3aykYoe/kE2NK5OyfdpW8LLI
- xc+bwJyWXVW4B2GlA/uc8dFkDbe+H13ODjAXphWkkGzYG6/4gzA9LOanZAE3V6NN/hJ9Tx+6fYL
- NrpOgjB96vBfR8YFeTNshYqAP7psWjLLjrp8rbd4LIaY7Mdfg2YNMSZ77EV/dNolRUdAmNUaR9k
- jWa5fOPtLJbSxuRfweA==
-X-Proofpoint-ORIG-GUID: 5Ln0tcPlaiq8GNK2x7ydjJLxYhWFYMyn
-X-Authority-Analysis: v=2.4 cv=bJEm5v+Z c=1 sm=1 tr=0 ts=6a57f2bd cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+X-Authority-Analysis: v=2.4 cv=evnvCIpX c=1 sm=1 tr=0 ts=6a57f2bc cx=c_pps
+ a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=8elwO82fXORLTBIkMd32:22 a=VabnemYjAAAA:8 a=pTDmpHESbC-hH2JOtYYA:9
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: 5Ln0tcPlaiq8GNK2x7ydjJLxYhWFYMyn
+ a=xtH7KyWI9dI7BmFOsl-x:22 a=VabnemYjAAAA:8 a=CbDCq_QkAAAA:8
+ a=1stQPSrnH06VPgbTlAkA:9 a=gKebqoRLp9LExxC7YDUY:22 a=1qrBK16LubpBFNPVNq2M:22
+X-Proofpoint-ORIG-GUID: 1uXUqGvIHTNsDZgpkxJHgwu38eRnJ_-j
+X-Proofpoint-GUID: 1uXUqGvIHTNsDZgpkxJHgwu38eRnJ_-j
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE1MDIwNyBTYWx0ZWRfXxEyEP5+NO+f2
+ opBn+GFEBIhRYc8QnQme+HWJV7MDhuKuOiagl1euMhCSNdirggURg2X+SatCa5tzJcX/zejwzkl
+ O5aP1mxteksfC77ciCU00uE9+ki+P0I=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE1MDIwNyBTYWx0ZWRfXz7X3IIPMCjD5
+ HKzf7jYnnZuiLWCCLY1V8KPOLZWRV8LeueOKjrMRoirFogPsXhrinuAPoMWAyLXpbHM4qkjaNtx
+ +Kge32x3M8yc4zicu/ytQjjtBgDX33JheHA+Oo9PJujl4VzwrbhtXVBrDk8M1H6e9M1FwaFI/EK
+ MynKkeWwaT6JIi+iB/Wa67TjtDX4v0HyWTkaQW0WOY0lR6PGAykfvbuwM+74eUkTxww924aX+/R
+ +XJXzCp0dO1hXhZzjjFWBSmL9r5dJUyhJAGlPbctJKq7lXQzTFkPzGWXWmPo5s5TCbc4+UDYZ8x
+ lWqQr3FG9mgWqXvXTbhcuOn77KPlKsZMEZtrWhVjW2WKUcqcLIvOz+XILITCOhLrwxLhc7MP6t9
+ IyP35NFRZxd8/7OB+BitFzYzpMqIf3gM6HbKPWED0pOXFQkeQmxprFodQhErR2YeLCYTsRuYNrC
+ brDdHfvlch6BAda6YYQ==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-15_05,2026-07-15_02,2025-10-01_01
 
-Implement dma-buf get_pci_tph for vfio-pci exported dma-bufs and add
-VFIO_DEVICE_FEATURE_DMA_BUF_TPH so userspace can publish TPH metadata
-for a VFIO-owned device.
+Peer-to-peer DMA between a mlx5 NIC and a foreign PCIe endpoint
+(typically a GPU or a vfio-pci passthrough device) traverses the host
+PCIe fabric. The endpoint exporting the dma-buf knows which PCIe TLP
+Processing Hint (TPH) Steering Tag yields the best placement for the
+traffic it will sink: per-endpoint hint selection lets the root complex
+or switch direct DMA to a specific cache slice / NUMA node, cutting
+cross-socket snoop traffic and DRAM pressure under sustained p2p
+workloads.
 
-8-bit ST and 16-bit Extended ST are distinct PCIe TPH namespaces; the
-uAPI carries both with explicit validity flags, and get_pci_tph()
-returns the value matching the importer's requested namespace or
--EOPNOTSUPP.
+Until now the mlx5 importer had no way to learn the exporter's chosen
+ST tag, so dma-buf MRs were registered without TPH and ran with the
+default (no-hint) routing. With dma_buf_get_pci_tph() in place this
+patch wires up mlx5_ib to query that metadata at MR registration time
+for p2p access and use it to program requester-side TPH on the outbound
+mkey. If the exporter has no metadata, fall back to the existing
+no-TPH path so behavior for non-TPH-aware exporters is unchanged.
 
-Publish and read the TPH descriptor under dmabuf->resv, matching the
-locking used for other importer-visible dma-buf state. The SET ioctl
-takes dma_resv_lock_interruptible(), while the callback runs under
-DMA-buf's asserted resv lock.
+Use mlx5_st_alloc_index_by_tag() to translate exporter-provided
+steering tags into local ST entries when table mode is active, and add
+mlx5_st_get_index() for DMAH-backed flows that already carry an ST
+index.
 
-Hold memory_lock in the SET path while checking that the dma-buf still
-belongs to this vfio-pci device and while publishing the descriptor.
-Cleanup clears the dma-buf/vdev association under memory_lock; taking the
-same lock prevents publishing into a dma-buf that has already been
-detached from @vdev, and preserves the memory_lock -> dmabuf->resv order
-used by the move path.
+For TPH-backed FRMRs, keep the extra ST-table reference tied to MR
+lifetime rather than pooled mkey lifetime. Acquire the ref before MR
+creation and release it again when the MR is returned to the pool or
+the backing mkey is destroyed, while leaving the generic FRMR pool
+core unchanged.
 
-The attach path reads @revoked without holding memory_lock. Use
-READ_ONCE() for that lockless attach-path test and WRITE_ONCE() for the
-revoke/unrevoke writers to document this intentional lockless access: the
-read is a benign early-out, and a racing revocation is re-checked under
-dmabuf->resv in vfio_pci_dma_buf_map() before any mapping is handed out.
-The annotation only needs to keep the access well-formed against the
-memory_lock-protected writers.
+The exporter's steering tag is only valid for the mapping it was queried
+against (see dma_buf_get_pci_tph()). The mkey's TPH fields cannot be
+reprogrammed in place: they are create-time fields with no UMR update
+mask, and rebuilding the mkey would change the rkey/lkey, which must stay
+stable across invalidate/refault.
 
-Reject requests the device cannot consume as a completer:
-pcie_tph_completer_type() must report at least
-PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY, and Extended ST requires
-PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH. Make PROBE follow the same hardware
-gate so the feature only probes as supported when the device can really
-consume it.
+Keep the registration-time TPH tuple in the MR and re-query the exporter
+after each dma-buf mapping is established under dmabuf->resv. If the
+tuple is unchanged, continue using the existing mkey. If the tuple change=
+d
+or disappeared, unmap the pages and return -EFAULT rather than continue
+with a stale mkey hint; userspace must create a new MR to get a mkey
+programmed with the new tuple. For vfio-pci BAR dma-bufs this validation
+is expected to be a no-op because invalidation is revoke/quiesce of BAR
+access, not movement to a different backing placement, and the
+userspace-provided TPH tuple is not changed by the revoke/un-revoke path.
+
+Import the DMA_BUF namespace for the new dma_buf_get_pci_tph() call so
+modular mlx5_ib builds link cleanly.
 
 Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c   |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c | 117 ++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h   |  13 ++++
- include/uapi/linux/vfio.h          |  43 +++++++++++
- 4 files changed, 172 insertions(+), 4 deletions(-)
+ drivers/infiniband/hw/mlx5/main.c             |   1 +
+ drivers/infiniband/hw/mlx5/mlx5_ib.h          |  11 ++
+ drivers/infiniband/hw/mlx5/mr.c               | 151 +++++++++++++++++-
+ drivers/infiniband/hw/mlx5/odp.c              |   7 +
+ .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  49 +++++-
+ include/linux/mlx5/driver.h                   |  15 ++
+ 6 files changed, 220 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-index 3f11a9624b9c..4e5e34a77b76 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1625,6 +1625,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device =
-*device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
-+		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
-+							 argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
-ci_dmabuf.c
-index c16f460c01d6..7db84d27dfec 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/dma-buf-mapping.h>
- #include <linux/pci-p2pdma.h>
-+#include <linux/pci-tph.h>
- #include <linux/dma-resv.h>
+diff --git a/drivers/infiniband/hw/mlx5/main.c b/drivers/infiniband/hw/ml=
+x5/main.c
+index 02809114fc79..a2b497f6b16b 100644
+--- a/drivers/infiniband/hw/mlx5/main.c
++++ b/drivers/infiniband/hw/mlx5/main.c
+@@ -60,6 +60,7 @@
+ MODULE_AUTHOR("Eli Cohen <eli@mellanox.com>");
+ MODULE_DESCRIPTION("Mellanox 5th generation network adapters (ConnectX s=
+eries) IB driver");
+ MODULE_LICENSE("Dual BSD/GPL");
++MODULE_IMPORT_NS("DMA_BUF");
 =20
- #include "vfio_pci_priv.h"
-@@ -19,7 +20,17 @@ struct vfio_pci_dma_buf {
- 	u32 nr_ranges;
- 	struct kref kref;
- 	struct completion comp;
--	u8 revoked : 1;
+ struct mlx5_ib_event_work {
+ 	struct work_struct	work;
+diff --git a/drivers/infiniband/hw/mlx5/mlx5_ib.h b/drivers/infiniband/hw=
+/mlx5/mlx5_ib.h
+index 522984d958bb..c6a956b2ee87 100644
+--- a/drivers/infiniband/hw/mlx5/mlx5_ib.h
++++ b/drivers/infiniband/hw/mlx5/mlx5_ib.h
+@@ -646,6 +646,15 @@ enum mlx5_mkey_type {
+ /* Used for non-existent ph value */
+ #define MLX5_IB_NO_PH 0xff
+=20
++struct dma_buf;
 +
-+	/*
-+	 * Updates protected by dmabuf->resv, @revoked additionally
-+	 * protected by memory_lock.
-+	 */
-+	u16 tph_st_ext;
-+	u8 tph_st;
-+	bool revoked;
-+	u8 tph_st_valid:1;
-+	u8 tph_st_ext_valid:1;
-+	u8 tph_ph:2;
- };
++struct mlx5_ib_dmabuf_tph {
++	u16 steering_tag;
++	u8 ph;
++	bool extended;
++	bool valid;
++};
++
+ struct mlx5_ib_mkey {
+ 	u32 key;
+ 	enum mlx5_mkey_type type;
+@@ -726,6 +735,7 @@ struct mlx5_ib_mr {
+ 			u8 revoked :1;
+ 			/* Indicates previous dmabuf page fault occurred */
+ 			u8 dmabuf_faulted:1;
++			struct mlx5_ib_dmabuf_tph dmabuf_tph;
+ 			struct mlx5_ib_mkey null_mmkey;
+ 		};
+ 	};
+@@ -1341,6 +1351,7 @@ struct ib_mr *mlx5_ib_rereg_user_mr(struct ib_mr *i=
+b_mr, int flags, u64 start,
+ 				    u64 length, u64 virt_addr, int access_flags,
+ 				    struct ib_pd *pd, struct ib_udata *udata);
+ int mlx5_ib_dereg_mr(struct ib_mr *ibmr, struct ib_udata *udata);
++int mlx5_ib_validate_dmabuf_tph(struct mlx5_ib_mr *mr, struct dma_buf *d=
+mabuf);
+ struct ib_mr *mlx5_ib_alloc_mr(struct ib_pd *pd, enum ib_mr_type mr_type=
+,
+ 			       u32 max_num_sg);
+ struct ib_mr *mlx5_ib_alloc_mr_integrity(struct ib_pd *pd,
+diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
+/mr.c
+index e6b74955d95d..404c5d081b8a 100644
+--- a/drivers/infiniband/hw/mlx5/mr.c
++++ b/drivers/infiniband/hw/mlx5/mr.c
+@@ -39,6 +39,7 @@
+ #include <linux/delay.h>
+ #include <linux/dma-buf.h>
+ #include <linux/dma-resv.h>
++#include <linux/pci-tph.h>
+ #include <rdma/frmr_pools.h>
+ #include <rdma/ib_umem_odp.h>
+ #include "dm.h"
+@@ -167,6 +168,61 @@ static int get_unchangeable_access_flags(struct mlx5=
+_ib_dev *dev,
+ #define MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK GENMASK_ULL(23, 16)
+ #define MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK GENMASK_ULL(15, 0)
 =20
- static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
-@@ -30,7 +41,7 @@ static int vfio_pci_dma_buf_attach(struct dma_buf *dmab=
-uf,
- 	if (!attachment->peer2peer)
- 		return -EOPNOTSUPP;
-=20
--	if (priv->revoked)
-+	if (READ_ONCE(priv->revoked))
- 		return -ENODEV;
-=20
- 	if (!dma_buf_attach_revocable(attachment))
-@@ -69,6 +80,26 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attach=
-ment,
- 	return ret;
- }
-=20
-+static int vfio_pci_dma_buf_get_pci_tph(struct dma_buf *dmabuf, bool ext=
-ended,
-+					u16 *steering_tag, u8 *ph)
++static u8 mlx5_ib_tph_key_ph(u8 ph)
 +{
-+	struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
++	if (ph =3D=3D MLX5_IB_NO_PH || ph =3D=3D 0)
++		ph ^=3D MLX5_IB_NO_PH;
++
++	return ph;
++}
++
++static int mlx5_ib_get_st_handle_ref(struct mlx5_ib_dev *dev, u16 st_ind=
+ex)
++{
++	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
++		return 0;
++
++	return mlx5_st_get_index(dev->mdev, st_index);
++}
++
++static void mlx5_ib_put_st_index_ref(struct mlx5_ib_dev *dev, u16 st_ind=
+ex)
++{
++	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
++		return;
++
++	mlx5_st_dealloc_index(dev->mdev, st_index);
++}
++
++static void mlx5_ib_put_st_handle_ref(struct mlx5_ib_dev *dev,
++				      u64 kernel_vendor_key)
++{
++	u16 st_index =3D FIELD_GET(MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK,
++				 kernel_vendor_key);
++
++	mlx5_ib_put_st_index_ref(dev, st_index);
++}
++
++int mlx5_ib_validate_dmabuf_tph(struct mlx5_ib_mr *mr, struct dma_buf *d=
+mabuf)
++{
++	struct mlx5_ib_dmabuf_tph *tph =3D &mr->dmabuf_tph;
++	u16 steering_tag;
++	u8 ph;
++	int ret;
++
++	if (!tph->valid)
++		return 0;
 +
 +	dma_resv_assert_held(dmabuf->resv);
 +
-+	if (extended) {
-+		if (!priv->tph_st_ext_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag =3D priv->tph_st_ext;
-+	} else {
-+		if (!priv->tph_st_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag =3D priv->tph_st;
-+	}
-+	*ph =3D priv->tph_ph;
++	ret =3D dma_buf_get_pci_tph(dmabuf, tph->extended, &steering_tag, &ph);
++	if (ret)
++		return -EFAULT;
++
++	if (steering_tag !=3D tph->steering_tag || ph !=3D tph->ph)
++		return -EFAULT;
++
 +	return 0;
 +}
 +
- static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment=
-,
- 				   struct sg_table *sgt,
- 				   enum dma_data_direction dir)
-@@ -101,6 +132,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *=
-dmabuf)
+ static struct mlx5_ib_mr *
+ _mlx5_frmr_pool_alloc(struct mlx5_ib_dev *dev, struct ib_umem *umem,
+ 		      int access_flags, int access_mode,
+@@ -189,13 +245,10 @@ _mlx5_frmr_pool_alloc(struct mlx5_ib_dev *dev, stru=
+ct ib_umem *umem,
+ 			MLX5_FRMR_POOLS_KEY_ACCESS_MODE_KSM_MASK :
+ 			0;
 =20
- static const struct dma_buf_ops vfio_pci_dmabuf_ops =3D {
- 	.attach =3D vfio_pci_dma_buf_attach,
-+	.get_pci_tph =3D vfio_pci_dma_buf_get_pci_tph,
- 	.map_dma_buf =3D vfio_pci_dma_buf_map,
- 	.unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
- 	.release =3D vfio_pci_dma_buf_release,
-@@ -333,6 +365,83 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
-re_device *vdev, u32 flags,
+-	/* Normalize ph: swap 0 and MLX5_IB_NO_PH */
+-	if (ph =3D=3D MLX5_IB_NO_PH || ph =3D=3D 0)
+-		ph ^=3D MLX5_IB_NO_PH;
+-
+ 	mr->ibmr.frmr.key.kernel_vendor_key =3D
+ 		FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK, st_index) |
+-		FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK, ph);
++		FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK,
++			   mlx5_ib_tph_key_ph(ph));
+ 	err =3D ib_frmr_pool_pop(&dev->ib_dev, &mr->ibmr);
+ 	if (err) {
+ 		kfree(mr);
+@@ -218,7 +271,9 @@ struct mlx5_ib_mr *mlx5_mr_cache_alloc(struct mlx5_ib=
+_dev *dev,
+ 				      0 :
+ 				      MLX5_FRMR_POOLS_KEY_ACCESS_MODE_KSM_MASK,
+ 		.num_dma_blocks =3D ndescs,
+-		.kernel_vendor_key =3D 0, /* no PH and no ST index */
++		.kernel_vendor_key =3D
++			FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK,
++				   MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX),
+ 	};
+ 	struct mlx5_ib_mr *mr;
+ 	int ret;
+@@ -557,6 +612,10 @@ static struct mlx5_ib_mr *reg_create(struct ib_pd *p=
+d, struct ib_umem *umem,
+ 	mr->ibmr.pd =3D pd;
+ 	mr->access_flags =3D access_flags;
+ 	mr->page_shift =3D order_base_2(page_size);
++	mr->ibmr.frmr.key.kernel_vendor_key =3D
++		FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK, st_index) |
++		FIELD_PREP(MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK,
++			   mlx5_ib_tph_key_ph(ph));
+=20
+ 	inlen =3D MLX5_ST_SZ_BYTES(create_mkey_in);
+ 	if (populate)
+@@ -753,6 +812,12 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd=
+, struct ib_umem *umem,
+ 			st_index =3D mdmah->st_index;
+ 	}
+=20
++	err =3D mlx5_ib_get_st_handle_ref(dev, st_index);
++	if (err) {
++		ib_umem_release(umem);
++		return ERR_PTR(err);
++	}
++
+ 	xlt_with_umr =3D mlx5r_umr_can_load_pas(dev, umem->length);
+ 	if (xlt_with_umr) {
+ 		mr =3D alloc_cacheable_mr(pd, umem, iova, access_flags,
+@@ -769,6 +834,7 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd,=
+ struct ib_umem *umem,
+ 		mutex_unlock(&dev->slow_path_mutex);
+ 	}
+ 	if (IS_ERR(mr)) {
++		mlx5_ib_put_st_index_ref(dev, st_index);
+ 		ib_umem_release(umem);
+ 		return ERR_CAST(mr);
+ 	}
+@@ -903,6 +969,63 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_atta=
+ch_ops =3D {
+ 	.invalidate_mappings =3D mlx5_ib_dmabuf_invalidate_cb,
+ };
+=20
++static void get_pci_tph_mr_dmabuf(struct mlx5_ib_dev *dev, struct dma_bu=
+f *dmabuf,
++				  struct mlx5_ib_dmabuf_tph *tph,
++				  u16 *st_index, u8 *ph)
++{
++	u16 local_st_index;
++	u16 steering_tag;
++	u8 local_ph;
++	bool extended;
++	int ret;
++
++	switch (pcie_tph_enabled_req_type(dev->mdev->pdev)) {
++	case PCI_TPH_REQ_TPH_ONLY:
++		extended =3D false;
++		break;
++	case PCI_TPH_REQ_EXT_TPH:
++		extended =3D true;
++		break;
++	default:
++		return;
++	}
++
++	/*
++	 * dma_buf_get_pci_tph() must run under dmabuf->resv, but drop the lock
++	 * before mlx5_st_alloc_index_by_tag(): that allocates with GFP_KERNEL,
++	 * which must not run under dmabuf->resv since reclaim can re-enter the
++	 * same reservation object through a dynamic exporter's move_notify pat=
+h.
++	 */
++	dma_resv_lock(dmabuf->resv, NULL);
++	ret =3D dma_buf_get_pci_tph(dmabuf, extended, &steering_tag, &local_ph)=
+;
++	dma_resv_unlock(dmabuf->resv);
++	if (ret) {
++		if (ret !=3D -EOPNOTSUPP)
++			mlx5_ib_dbg(dev, "get_pci_tph failed (%d)\n", ret);
++		return;
++	}
++
++	ret =3D mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag,
++					 &local_st_index);
++	if (ret) {
++		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
++		return;
++	}
++
++	*st_index =3D local_st_index;
++	*ph =3D local_ph;
++	tph->steering_tag =3D steering_tag;
++	tph->ph =3D local_ph;
++	tph->extended =3D extended;
++	tph->valid =3D true;
++}
++
++static void mlx5_ib_mr_put_st_handle_ref(struct mlx5_ib_mr *mr)
++{
++	mlx5_ib_put_st_handle_ref(mr_to_mdev(mr),
++				  mr->ibmr.frmr.key.kernel_vendor_key);
++}
++
+ static struct ib_mr *
+ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+ 		   u64 offset, u64 length, u64 virt_addr,
+@@ -913,6 +1036,7 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *=
+dma_device,
+ 	struct mlx5_ib_dev *dev =3D to_mdev(pd->device);
+ 	struct mlx5_ib_mr *mr =3D NULL;
+ 	struct ib_umem_dmabuf *umem_dmabuf;
++	struct mlx5_ib_dmabuf_tph tph =3D {};
+ 	u16 st_index =3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX;
+ 	u8 ph =3D MLX5_IB_NO_PH;
+ 	int err;
+@@ -945,18 +1069,29 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device=
+ *dma_device,
+ 		ph =3D dmah->ph;
+ 		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
+ 			st_index =3D mdmah->st_index;
++
++		err =3D mlx5_ib_get_st_handle_ref(dev, st_index);
++		if (err) {
++			ib_umem_release(&umem_dmabuf->umem);
++			return ERR_PTR(err);
++		}
++	} else {
++		get_pci_tph_mr_dmabuf(dev, umem_dmabuf->attach->dmabuf,
++				      &tph, &st_index, &ph);
+ 	}
+=20
+ 	mr =3D alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
+ 				access_flags, access_mode,
+ 				st_index, ph);
+ 	if (IS_ERR(mr)) {
++		mlx5_ib_put_st_index_ref(dev, st_index);
+ 		ib_umem_release(&umem_dmabuf->umem);
+ 		return ERR_CAST(mr);
+ 	}
+=20
+ 	mlx5_ib_dbg(dev, "mkey 0x%x\n", mr->mmkey.key);
+=20
++	mr->dmabuf_tph =3D tph;
+ 	atomic_add(ib_umem_num_pages(mr->umem), &dev->mdev->priv.reg_pages);
+ 	umem_dmabuf->private =3D mr;
+ 	if (!pinned_mode) {
+@@ -1405,6 +1540,7 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib=
+_mr *mr)
+ 	if (mr->ibmr.frmr.pool) {
+ 		if (!mlx5_umr_revoke_mr_with_lock(mr)) {
+ 			ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr);
++			mlx5_ib_mr_put_st_handle_ref(mr);
+ 			return 0;
+ 		}
+ 	}
+@@ -1432,6 +1568,9 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib=
+_mr *mr)
+ 	if (mr->ibmr.frmr.pool && !ret)
+ 		ib_frmr_pool_drop(&mr->ibmr);
+=20
++	if (!ret)
++		mlx5_ib_mr_put_st_handle_ref(mr);
++
  	return ret;
  }
 =20
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz)
+diff --git a/drivers/infiniband/hw/mlx5/odp.c b/drivers/infiniband/hw/mlx=
+5/odp.c
+index 1badec9bf527..7c1731aa3dd9 100644
+--- a/drivers/infiniband/hw/mlx5/odp.c
++++ b/drivers/infiniband/hw/mlx5/odp.c
+@@ -857,6 +857,13 @@ static int pagefault_dmabuf_mr(struct mlx5_ib_mr *mr=
+, size_t bcnt,
+ 		return err;
+ 	}
+=20
++	err =3D mlx5_ib_validate_dmabuf_tph(mr, umem_dmabuf->attach->dmabuf);
++	if (err) {
++		ib_umem_dmabuf_unmap_pages(umem_dmabuf);
++		dma_resv_unlock(umem_dmabuf->attach->dmabuf->resv);
++		return err;
++	}
++
+ 	page_size =3D mlx5_umem_dmabuf_find_best_pgsz(umem_dmabuf, access_mode)=
+;
+ 	if (!page_size) {
+ 		ib_umem_dmabuf_unmap_pages(umem_dmabuf);
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
+et/ethernet/mellanox/mlx5/core/lib/st.c
+index 7cedc348790d..877b37b4e639 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+@@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
+ 	kfree(st);
+ }
+=20
+-int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+-			unsigned int cpu_uid, u16 *st_index)
++int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
++			       u16 *st_index)
+ {
+ 	struct mlx5_st_idx_data *idx_data;
+ 	struct mlx5_st *st =3D dev->st;
+ 	unsigned long index;
+ 	u32 xa_id;
+-	u16 tag;
+-	int ret;
++	int ret =3D 0;
+=20
+ 	if (!st)
+ 		return -EOPNOTSUPP;
+=20
+-	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+-	if (ret)
+-		return ret;
+-
+ 	if (st->direct_mode) {
+ 		*st_index =3D tag;
+ 		return 0;
+@@ -152,8 +147,46 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, e=
+num tph_mem_type mem_type,
+ 	mutex_unlock(&st->lock);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
++
++int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
++			unsigned int cpu_uid, u16 *st_index)
 +{
-+	struct vfio_device_feature_dma_buf_tph set_tph;
-+	struct vfio_pci_dma_buf *priv;
-+	struct dma_buf *dmabuf;
-+	u8 comp;
++	u16 tag;
 +	int ret;
 +
-+	comp =3D pcie_tph_completer_type(vdev->pdev);
-+	if (comp =3D=3D PCI_EXP_DEVCAP2_TPH_COMP_NONE)
-+		return -EOPNOTSUPP;
-+
-+	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(set_tph));
-+	if (ret !=3D 1)
++	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
++	if (ret)
 +		return ret;
 +
-+	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-+		return -EFAULT;
++	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
++}
+ EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
+=20
++int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_index)
++{
++	struct mlx5_st_idx_data *idx_data;
++	struct mlx5_st *st =3D dev->st;
++	int ret =3D 0;
 +
-+	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
-+		return -EINVAL;
-+
-+	if (set_tph.ph & ~0x3)
-+		return -EINVAL;
-+
-+	if ((set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT) &&
-+	    comp !=3D PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
++	if (!st)
 +		return -EOPNOTSUPP;
 +
-+	dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
-+	if (IS_ERR(dmabuf))
-+		return PTR_ERR(dmabuf);
++	if (st->direct_mode)
++		return 0;
 +
-+	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
++	mutex_lock(&st->lock);
++	idx_data =3D xa_load(&st->idx_xa, st_index);
++	if (WARN_ON_ONCE(!idx_data))
 +		ret =3D -EINVAL;
-+		goto out_put;
-+	}
++	else
++		refcount_inc(&idx_data->usecount);
++	mutex_unlock(&st->lock);
 +
-+	priv =3D dmabuf->priv;
-+
-+	/*
-+	 * @revoked and the dma-buf/vdev association are torn down under
-+	 * memory_lock by vfio_pci_dma_buf_cleanup(); hold it while validating
-+	 * ownership and publishing so the dma-buf cannot be disassociated from
-+	 * @vdev underneath us. Lock order memory_lock -> dmabuf->resv matches
-+	 * vfio_pci_dma_buf_move().
-+	 */
-+	down_read(&vdev->memory_lock);
-+	if (priv->vdev !=3D vdev) {
-+		ret =3D -EINVAL;
-+		goto out_unlock_mem;
-+	}
-+
-+	ret =3D dma_resv_lock_interruptible(dmabuf->resv, NULL);
-+	if (ret)
-+		goto out_unlock_mem;
-+
-+	priv->tph_st         =3D set_tph.steering_tag;
-+	priv->tph_st_ext     =3D set_tph.steering_tag_ext;
-+	priv->tph_ph         =3D set_tph.ph;
-+	priv->tph_st_valid   =3D !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
-+	priv->tph_st_ext_valid =3D
-+		!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
-+	dma_resv_unlock(dmabuf->resv);
-+	ret =3D 0;
-+
-+out_unlock_mem:
-+	up_read(&vdev->memory_lock);
-+out_put:
-+	dma_buf_put(dmabuf);
 +	return ret;
 +}
++EXPORT_SYMBOL_GPL(mlx5_st_get_index);
 +
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revok=
-ed)
+ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
  {
- 	struct vfio_pci_dma_buf *priv;
-@@ -347,7 +456,7 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_devic=
-e *vdev, bool revoked)
- 		if (priv->revoked !=3D revoked) {
- 			dma_resv_lock(priv->dmabuf->resv, NULL);
- 			if (revoked)
--				priv->revoked =3D true;
-+				WRITE_ONCE(priv->revoked, true);
- 			dma_buf_invalidate_mappings(priv->dmabuf);
- 			dma_resv_wait_timeout(priv->dmabuf->resv,
- 					      DMA_RESV_USAGE_BOOKKEEP, false,
-@@ -369,7 +478,7 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_devic=
-e *vdev, bool revoked)
- 				reinit_completion(&priv->comp);
- 			} else {
- 				dma_resv_lock(priv->dmabuf->resv, NULL);
--				priv->revoked =3D false;
-+				WRITE_ONCE(priv->revoked, false);
- 				dma_resv_unlock(priv->dmabuf->resv);
- 			}
- 		}
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci=
-_priv.h
-index fca9d0dfac90..063f3748478a 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev *p=
-dev)
- int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32=
- flags,
- 				  struct vfio_device_feature_dma_buf __user *arg,
- 				  size_t argsz);
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz);
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revok=
-ed);
+ 	struct mlx5_st_idx_data *idx_data;
+diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
+index b1871c0821d0..d26e5744c843 100644
+--- a/include/linux/mlx5/driver.h
++++ b/include/linux/mlx5/driver.h
+@@ -1182,16 +1182,31 @@ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *=
+dev, enum mlx5_sw_icm_type type
+ 			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
+=20
+ #ifdef CONFIG_PCIE_TPH
++int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
++			       u16 *st_index);
++int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_index);
+ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+ 			unsigned int cpu_uid, u16 *st_index);
+ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index);
  #else
-@@ -128,6 +132,15 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_d=
-evice *vdev, u32 flags,
- {
- 	return -ENOTTY;
- }
-+
-+static inline int
-+vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u32=
- flags,
-+				  struct vfio_device_feature_dma_buf_tph __user *arg,
-+				  size_t argsz)
++static inline int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev,
++					     u16 tag, u16 *st_index)
 +{
-+	return -ENOTTY;
++	return -EOPNOTSUPP;
 +}
 +
- static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device =
-*vdev)
++static inline int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_in=
+dex)
++{
++	return -EOPNOTSUPP;
++}
++
+ static inline int mlx5_st_alloc_index(struct mlx5_core_dev *dev,
+ 				      enum tph_mem_type mem_type,
+ 				      unsigned int cpu_uid, u16 *st_index)
  {
+ 	return -EOPNOTSUPP;
  }
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..4c1c70aac150 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,49 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
-=20
-+/**
-+ * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) met=
-adata
-+ * with a vfio-exported dma-buf. The dma-buf must have been created by
-+ * VFIO_DEVICE_FEATURE_DMA_BUF on this device, and the device must repor=
-t
-+ * TPH Completer support in Device Capabilities 2 (bits 13:12); requests
-+ * carrying VFIO_DMA_BUF_TPH_ST_EXT additionally require the device to
-+ * report the Extended TPH Completer encoding. Otherwise the ioctl
-+ * returns -EOPNOTSUPP.
-+ *
-+ * @dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA=
-_BUF.
-+ *
-+ * 8-bit ST (@steering_tag) and 16-bit Extended ST (@steering_tag_ext) a=
-re
-+ * distinct namespaces. @flags is the authoritative validity mask for th=
-e
-+ * two namespaces: VFIO_DMA_BUF_TPH_ST marks @steering_tag valid and
-+ * VFIO_DMA_BUF_TPH_ST_EXT marks @steering_tag_ext valid. An importer
-+ * requests one namespace and receives the matching value.
-+ *
-+ * Each SET fully replaces the dma-buf's TPH state for future queries
-+ * only. A namespace whose flag bit is clear is reported as unsupported
-+ * to future importers; an importer that has already retrieved a value
-+ * is unaffected. @flags =3D=3D 0 leaves both namespaces unsupported for
-+ * future importers.
-+ *
-+ * @ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
-+ *
-+ * Undefined @flags and @ph bits must always be zero.
-+ *
-+ * Userspace must configure TPH before handing the dma-buf fd to an
-+ * importer.
-+ */
-+#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
 +
-+#define VFIO_DMA_BUF_TPH_ST		(1 << 0)
-+#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)
-+
-+struct vfio_device_feature_dma_buf_tph {
-+	__s32	dmabuf_fd;
-+	__u32	flags;
-+	__u16	steering_tag_ext;
-+	__u8	steering_tag;
-+	__u8	ph;
-+};
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
-=20
- /**
+ static inline int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 s=
+t_index)
+ {
+ 	return -EOPNOTSUPP;
 --=20
 2.53.0-Meta
 
