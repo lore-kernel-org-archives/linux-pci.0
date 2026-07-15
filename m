@@ -1,283 +1,271 @@
-Received: from mx0a-0002e601.pphosted.com (mx0a-0002e601.pphosted.com [148.163.150.75])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010055.outbound.protection.outlook.com [52.101.56.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756D93CBE7C;
-	Wed, 15 Jul 2026 08:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.150.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99492335064
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 09:04:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.55
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784103384; cv=fail; b=PfaWjryf1UaGq3N3YGWnb+6UxZCj98lKV/gPf9e+dgSyRfNWMTZyGkbqoEkC3S9eblr74y3RElVe+5apYvZBzkxo4NONkKpJRshTlmLr0ilx6nMRqfVtx7NFxSlT9ypRckhF09nADVU/8hAmlaS7AzsoSyQE4ilvqNtCb0I2ca4=
+	t=1784106298; cv=fail; b=GnY10rzBmSOOvorxb+WEeiuUNzHqRdtu+k2PkKR2nMmaB77dCOUPrQYSmLk6yHLGTdZ3EnH98nUeS3KXIZVR1F8fULa7bS42ZCBHRG5u6bxD9IsvdRifKup3V180E1pxGy5GMFa5kg5X/efCSUJECGeMjLbp5N0qlIsPkdUeLnQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784103384; c=relaxed/simple;
-	bh=5JgdZlFvOQ+QkRObJChuAti5DqGbpctNGzBTm8phk30=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=CVdONAdqSJkjb2kSs27pmX4cUIr4lgVBvRvB58Bnnqukx4AGyQlWcZYg3+mcNdcKmJGcGRZmDtGjHd0F00FXfsjNaRYqf9YlD/jbHSbzYRR2j5CvLe2t3necACK+WYgO58toDDNpsOiGIMNxp+X9SMCgQsniuYsy8s1CVoIDMok=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=ejmxH8NY; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Cqb3KgoZ; arc=fail smtp.client-ip=148.163.150.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1784106298; c=relaxed/simple;
+	bh=1hpfV5XcVcT8oC2a3wdc1IGVB2Qit9aiblxeuub/Jcc=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=ZTAN3wKi6QwQTp/ryVIsUmpysdMYkafAIQh4FhP6cMBQc61hMoAI6dKfE0iFgRtm9GphiITelRBhH6wguNU9qaPa2X6GYkFJq8i+F7yoh3hXZj0jMU3uJHJ45X/d7vmuBZ7VVhaZzs8aDsX5T/Jwm4PJix7pb7oKdrBE8kSKHDE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=t5NVh0S3; arc=fail smtp.client-ip=52.101.56.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="ejmxH8NY";
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Cqb3KgoZ"
-Received: from pps.filterd (m0384305.ppops.net [127.0.0.1])
-	by m0384305.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 66F3jXkx2575349;
-	Wed, 15 Jul 2026 03:15:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	proofpoint-05-2026; bh=yQlqwBfc65FH+2HxRqwcBbEnVVowm37MJ277WssqS
-	VQ=; b=ejmxH8NYSRSCejNDqtE2y5Q2vGDCanccvvLm7Jo6gzzWkaBKAYD1b3H4H
-	BNAuRM+pHCJiR+8gLb9/pbOWduZgVAzBJTCUYP0HIEqflViv67d/aaZ0U6FyRM/o
-	mUmiTQy3R92CXYN3dt56mW1wKNVFSEeMX7xO4kMmTOPSyPxrrQFXFtkcLrXW5Hxo
-	P815WlCFVNSHKhFA8zrw0HEMkfsyZVzzGopCT87WMw5yJ8jLGVIaNZ8EHLgZvHlw
-	2lBhY5CoCeBIruKvKzSP4LPft1Jn7460wQ2qTK2Z7Gateijmjj1gLgA7bxjyC39d
-	5tVPZpup4vkBKKLfqZC6ji+qxnGWw==
-Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011064.outbound.protection.outlook.com [52.101.62.64])
-	by m0384305.ppops.net (PPS) with ESMTPS id 4fe0501sth-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 15 Jul 2026 03:15:54 -0500 (CDT)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="t5NVh0S3"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PlZ861rLNlOJRQ7qAW4xb6H3Zg+haEjZCDikyooajIflfJ5G4W28nJUQpHgqT6wD/h7Al487WV4Z3aqeSlFn64qii0RZLDmv3F97p0J/YPzyq0Np+7lxseV1p9g1i2J1qw9pfK1+/uHKcq1CsgBJgCioO51q2uPQe6XT9VQVRQofZWEquFIInpKVjHyCJnjET3+WfBrzeqJ0wb8D2bXrVSFTTZXbcgPONszv1YXAhep0sxqb02Txz9nbQbdENiYNokJPynzYU1ZVoBh2UdZEBB7kkuVfoCKwiCmrWcBGwCLCLbkXGZAVFuNCW0qsPIP8/ECJ2XBhwUERH+5tFmYQ5A==
+ b=xxbLo8WtpxQkYpdFMH2nXrz/Iude5OjU+abbqBJheeP0bwLSPt/dHPpJAt3CNZ/JZdBopU03CfESRf3u70nn3cFFp0H05yq2FFZH5AlMlYgdk8iwbbqOeWfev9G3tKn+WJ5NSoPTGLsmLu//hopq7bakXGE/e5JH+QcFpedyzNPodmg1j+qk9YMUogLhggRMLKPdgwDCjze9c5g7p0bxB5eXjNrGlDTNeaoG8JH5LOpMJpAVklu3xj3Sv/2XdOfuMSup62+1X+5DxbldJEsNdm7eqhLdxn+EsGtx2+4/FTnuV+lFqcGjiIBLep+7K96IltAE0ANgAdZ5X/5JzSmapg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yQlqwBfc65FH+2HxRqwcBbEnVVowm37MJ277WssqSVQ=;
- b=UBaac9kdDJ91HKmAEPZ4LYe8ADnSlpCvNxmY8RIAnq4P0gzlnd0wleg85r3wRqTQi+X9ReqCLXecTCw4xg4QPs8p9BGfHwkL0TfUiNl/HO2S35ipym7XtE9IvUJEPRk3XWZkM4Gw9E/nfK0QDMpe8wD/uX6FcrTOiNmPIqdmSjE5RxImTjCU3BMU5w8M4Pby1PiNbibDDfGu6ooLmflO4Wf7v419HcQ+5Lm/QRz+THZpHtzp5cpztVODVfroyulxqsHeNRtprSVLgPh2n7UEEkNaxC0eHC2nDky+OiWV42/AGUn2V/HBsMbl9Q0IoJoIHq3YDVPvv1nK0QjXsX87qw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ bh=jPHHpAziTS0HMIm1cnPUXH7B+7vy8UN1kIcjWXtz2V0=;
+ b=uBOICatd2sbfoolZGstbH3p8wtXnc1tbVveLHg3vYYahs4QRTxUCB09+905TEljCxpOXIUERWNiKPbsjlfXv5hF9rap04rCEFdTJ/09HbhIXomX+NRuAKifBzt6iC+Kr8+1HLMd+h3hm+QAFba131B2FmFigEf3wUAlhyECyZjXlMr4sIn/xXU4JBjLusXRTiOnhr8ocIR/cq5MqogXmpoXLGJv9Ylm06/f2cs7oc5L8OIkAQBZQrLiW+ngYzj2JVv9vQCDZUaOOXlAGq2QyWwsZBKv3fFbtcrBqbOXW1hJVB+PUVvGJaBTQizNwQ9/il4mO4WNrxhSHjoeDtRQNCg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yQlqwBfc65FH+2HxRqwcBbEnVVowm37MJ277WssqSVQ=;
- b=Cqb3KgoZkwoo3WbuVHhNxhgLhjcTfiU0FZuiCDVxQcLXo55QvLoJMmOpqaYTOfEomyKobaIKBPBEgzVsHJHAp7BWTnQQVzeV6ZYuLUjCs8NXAj7YN9jexY+Rm43LbBSIbt9S41YqPaI2/IkWkgrhkDOG5ytFlsrVgEK9orUoyC4=
-Received: from BY5PR03CA0028.namprd03.prod.outlook.com (2603:10b6:a03:1e0::38)
- by CH0PR10MB5113.namprd10.prod.outlook.com (2603:10b6:610:c9::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.202.18; Wed, 15 Jul
- 2026 08:15:50 +0000
-Received: from MWH0EPF000A6733.namprd04.prod.outlook.com
- (2603:10b6:a03:1e0:cafe::9d) by BY5PR03CA0028.outlook.office365.com
- (2603:10b6:a03:1e0::38) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.223.11 via Frontend Transport; Wed,
- 15 Jul 2026 08:15:49 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
-Received: from flwvzet201.ext.ti.com (198.47.21.195) by
- MWH0EPF000A6733.mail.protection.outlook.com (10.167.249.25) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.223.9 via Frontend Transport; Wed, 15 Jul 2026 08:15:48 +0000
-Received: from DFLE206.ent.ti.com (10.64.6.64) by flwvzet201.ext.ti.com
- (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Wed, 15 Jul
- 2026 03:15:38 -0500
-Received: from DFLE212.ent.ti.com (10.64.6.70) by DFLE206.ent.ti.com
- (10.64.6.64) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Wed, 15 Jul
- 2026 03:15:38 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE212.ent.ti.com
- (10.64.6.70) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Wed, 15 Jul 2026 03:15:38 -0500
-Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 66F8FXMw2011891;
-	Wed, 15 Jul 2026 03:15:34 -0500
-Message-ID: <178d9f0c-2ac4-40bb-9214-30948389d306@ti.com>
-Date: Wed, 15 Jul 2026 13:45:33 +0530
+ bh=jPHHpAziTS0HMIm1cnPUXH7B+7vy8UN1kIcjWXtz2V0=;
+ b=t5NVh0S366D/CeJGeVJ7EJrTQy5xilLxdDSQyn8TK5FvNK+o9KWScF6fI1jxPdxvCLf8cBSZEEE3neJ9u2MZWIzlmkCrdCYmB+f25K7HtdIuxhYa3mFCioFXNk0lIDKctGVviuUq3Zsf1taKgIwainfSPWzdkFZXo8MAJRPj4D4=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SA1PR12MB999228.namprd12.prod.outlook.com
+ (2603:10b6:806:4db::10) by MW6PR12MB8951.namprd12.prod.outlook.com
+ (2603:10b6:303:244::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.18; Wed, 15 Jul
+ 2026 09:04:53 +0000
+Received: from SA1PR12MB999228.namprd12.prod.outlook.com
+ ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
+ ([fe80::4dba:119e:8e7c:37b3%4]) with mapi id 15.21.0223.008; Wed, 15 Jul 2026
+ 09:04:52 +0000
+Message-ID: <0cc44c9e-fc2a-4c95-a574-de833117f6dc@amd.com>
+Date: Wed, 15 Jul 2026 19:04:44 +1000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security Protocol
+ (TDISP)
+To: Jason Gunthorpe <jgg@ziepe.ca>, "Dan Williams (nvidia)" <djbw@kernel.org>
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+ driver-core@lists.linux.dev, ankita@nvidia.com,
+ Aaron Tomlin <atomlin@atomlin.com>,
+ Alistair Francis <alistair.francis@wdc.com>,
+ "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Bjorn Helgaas <bhelgaas@google.com>, Daniel Gomez <da.gomez@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+ Donald Hunter <donald.hunter@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Jakub Kicinski <kuba@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+ Lukas Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Robin Murphy
+ <robin.murphy@arm.com>, Sami Tolvanen <samitolvanen@google.com>,
+ Samuel Ortiz <sameo@rivosinc.com>, Saravana Kannan <saravanak@google.com>,
+ Will Deacon <will@kernel.org>, Xu Yilun <yilun.xu@linux.intel.com>
+References: <20260705220819.2472765-1-djbw@kernel.org>
+ <20260706125140.GB107792@ziepe.ca>
+ <6a4c163072c60_174db6100c4@djbw-dev.notmuch>
+ <20260707124321.GF118978@ziepe.ca>
+ <6a4d95fcc92c2_2f05d5100f7@djbw-dev.notmuch>
+ <20260708143153.GH118978@ziepe.ca>
+ <6a4f0b35683b4_353c8910011@djbw-dev.notmuch>
+ <20260709133601.GJ118978@ziepe.ca>
+Content-Language: en-US
+From: Alexey Kardashevskiy <aik@amd.com>
+In-Reply-To: <20260709133601.GJ118978@ziepe.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SY5P300CA0069.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:247::7) To SA1PR12MB999228.namprd12.prod.outlook.com
+ (2603:10b6:806:4db::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: cadence: skip the link polling when endpoint not
- connected
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <vigneshr@ti.com>, <s-vadapalli@ti.com>,
-        <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <mpillai@cadence.com>,
-        <unicorn_wang@outlook.com>, <me@ziyao.cc>, <18255117159@163.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <danishanwar@ti.com>
-References: <20260623095148.721206-1-a-garg7@ti.com>
- <bwaho225txqny2p24nyhezmnc4r3yv3yckurvz2gtzxpbeqs5l@tx4mwgblp65n>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <bwaho225txqny2p24nyhezmnc4r3yv3yckurvz2gtzxpbeqs5l@tx4mwgblp65n>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000A6733:EE_|CH0PR10MB5113:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8ade7e5d-ee61-42bf-9650-08dee2494701
+X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|MW6PR12MB8951:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0c50ec3b-782e-4dba-fabe-08dee25021ef
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|82310400026|1800799024|32650700020|36860700016|23010399003|18002099003|22082099003|4143699003|56012099006|13003099007;
+	BCL:0;ARA:13230040|23010399003|376014|366016|7416014|1800799024|6133799003|21046099003|11063799006|56012099006|18002099003|3023799007|22082099003|4143699003;
 X-Microsoft-Antispam-Message-Info:
-	WtBLqeJSobImNgkJwiqTHF5+pvMnamPKApVHBXW4GQYkG4Vd9tNmx1zCgSbBFs3u7zg9sMSPPnItpUmNgmZfgOOnYxbJQ0sVCSaaKb9gOlgRD4wqoyyAzmBbYQ3lYQGSXjq1Lo92G5HrDaBT1PaFlWrn5iV7rcXv4XDXwKEMQU3qos9aMsXlHmrz/HO/pL4/Or+knAMOKmoqrOWOHmmwCIkZ67E8gDR4FgL/ND9COkTG7LdLP0JBxlmLJa0ccVoaRm6r//kfOsObebooteVFnimSHpJaDYr/uF560CZXpy2hvq/YY96wE0aEcjG7/dOpDah9g0WV+Uw4LndtKrtIPWd3L1hjrDRdAj5kqWpVcltDiwjTGjKxcYOcjzqmyhBbKpMY/DbhAH4I39B1mbY5EkLtE8vnSD9gSol7T1fEYljWw8SU9ATdV/4B8Zw4hMCVTC/Q644L93PVIoCeFwRGChkY6Z1N9p2hOZBQZ4PsR3ijYSIyZNE8fDsVKJFnau0IjEaYTwea3wAyosiGe9s1ueTpv8fOS6qeNUzJzidgCGkn9A3RM65uhKLgxrEsKrdsPdFJelbVm5AdVgWlDOihxTHB1pv3r5plXJZ1qiBzOpIFT1BR3MYh1BiEqtlqZo3U+691d8WJzdgJYWgY11PQWSIqJvdZKs93PuxXEkEFr3Z3MxhjF+icVJr2odKnXGfJtcnuwHaAThPYkZME+ry/jg==
+	8l4jFKksxr+Pl20e0NqFnQADVAZ4I17j/0cd1yj9j7XOmZ6QeTFdcTLv/AFB/48FX5My/Mx21BkVv+iaDnjIVUYSejPYP5Jw7TuTu4u4dgS8FRu2YHpXEtmZfer/sVltnmZUs0znZZORDqujQ116VWzeikdYXDymZb4O/+8ra0Y6elJBm4JsuRUN8jGnCIvUlnc1NBtAITM9jv1OtY1VUoMBMfQ6AULvu0+hFoCbJBg5oPahvAqoTvjEVsbV1B8SdtOJaDEY3sudvEb/PZoY//h68S6ZFjyE610bWfyj5Wbbz5dRYogYahrF8OVPseoQyg7JZeVTeraPzGUnQOkiTsV0NZ7Q2c3lM36cpykNeNuehWLf2bFPaxM1IgxUpc9YG4JLn/oN703+zKUkZFZGtFJnDeDrHtqV+UF6iZ0uL82PdWz07DD0EQPUOHVGY4aoc+XFs8tB8rF2E5wkF6EcmPr/NOELTfgETGI/0sPB8R/A72PU9MgKnOxZHSXTkHYdTVW/xvzUFc3M3rwtL6NA6oy7lsR0CoQmdhyaYuyTYOnWRRdiHPyfSVAFXwX1ytywuIga/0tB3tQwrIIXQgZSxEsF0Ul/v8GnWLR1K6F1JBSrbBkANl+51HHtQMPvMyrtCvRgMwltBrODP5RkqC61Aj8Z8HEooShKP/HS2stm9W0=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(7416014)(376014)(82310400026)(1800799024)(32650700020)(36860700016)(23010399003)(18002099003)(22082099003)(4143699003)(56012099006)(13003099007);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(366016)(7416014)(1800799024)(6133799003)(21046099003)(11063799006)(56012099006)(18002099003)(3023799007)(22082099003)(4143699003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	e2mUh5sSeJaugSLJe3xvHZu14tbIQQFJZEEVbulWYMS6QJ4ZU4u8J4bJHnSs6SO5ZHisXUYllKdGfXVg+pDXYrB+ZWiFrkVG7unr2Ek5UAQCnMKq71fadWHi/9ajP+k/gV9naO68lUZKl1Gt766424NEp5dAa4zXvRp4Uxw7Y4MM+M6HMMYemqyrVcy//ZoquEOwzXqhCsCpeIQkoAW4w3wnvHVePgj89ZyH1xaLgHQx3rkng+OSfT9kpHfhxvgsdAYe90MyEJNCxQHCq+Wjf6O+De91hl5MoJ0iWZlFqnknFlF0n3s5VZROYaXWpIl199mMXBvxEw7l/kuboUOquhri0R3ajwUYbLh1TcP8nXfOKw3QDh+Gr3DWv6ajuqEfaRkk2ZmJrlbJ8+5Zyo6Yuuw7dSZBIcJKaEv7LWYaxhavlVJAciQuplzYazfYlSbV
-X-Exchange-RoutingPolicyChecked:
-	GvjWb6LrvHO4yF1wVDjx8b+rWrYGLAh+dTh6gxCBIqJwEsVKIJ9ePyPdh96/wo9BkGF3fUILWl/Xwyq8tJKO5qvttE5u1ZGKJIbDEfsO6/EC4oh7c8Pt7fzueYBhzuQk/YmqxLXMRbonoSEmroSV/4jOFZFrNCEcPBTGpgcWw1ouw0S7kuCWmMdTI6ebNfsE3HtR382SOhUD0N5oC6dY2s2t8aa852yYcLaxs7/cA/uFts6GsAlwHs+QSu5M1Z7OgMzoMXUjMFyktqdWllVYOj2LYMr1nHTJI9os/gWQgQV6cDbMgzoBOhm0vHSCKxpfPYGqq1YD41rtDChzOkV9nQ==
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jul 2026 08:15:48.3599
+	=?utf-8?B?RnZXbVlEV2sxUmJGZllRNVBVckg2UG82ajNxTUI2Tll0TmQvK0NrOWhZc3l4?=
+ =?utf-8?B?REhhaUZCSlpoUmgxV2pyOGo3Yzd4TEJhRFZiZExXZGplZkVabEhnaUtncEow?=
+ =?utf-8?B?aG9ENWNVOEhFa3VOVG1rWEg2bWxpekhJclZXdm5BV0pUZmFjdUdWY1JWOG1R?=
+ =?utf-8?B?NFlxdWN2clN4MjRNZWVLWlI2dWxmUDZ0YSt0MGNpUXB4TzdQVzhYT3pRcDJp?=
+ =?utf-8?B?TWZQdEFPL0oyeHIxRjB3aWRGckNPQ2loSWRxcjR0clE4N0drMVkzcXY5dDJO?=
+ =?utf-8?B?UE1vTkJ0VGxXV2tNQVFqTE5xV3Ywak5Qb1dhd1RycDloZEhnSXNkb29xNUdo?=
+ =?utf-8?B?bXNOcWpqOVErcFo2NVlPTWFhWjNxcEw5eVdDRXNPMmFmaVgyZW0wYm1EQmpz?=
+ =?utf-8?B?U2ZJUEhpODVrd3h1M1pVaTc1UHRSYnl2bzZXWE9mckp0THY2OEtVZTFNdzc1?=
+ =?utf-8?B?cS9DcGpiZ1FEbmIvbTJpKy9nUnVta1Bvd2VjQlVBTDFhQVlSdC9FRGduUHVl?=
+ =?utf-8?B?T2JPL2hDdWJwQTVRVS9XZWI2YkVEUDZrcnNtR01FS2V0dWJpb2hqZ1VHa204?=
+ =?utf-8?B?RGM1TWNBTTExTEZDWFdKV3dMQjdlZ0ZNMy9Ta01lOVFZOVZGcHZ5MEVoS1NJ?=
+ =?utf-8?B?ZzN5Z2RidlQwRVBXOWFtYU5ScGE5V2drVzVocjBhVllxL09yZm9ITWwrOWk1?=
+ =?utf-8?B?TDVKNVo2WHlLSW1JQjczU1RCdjEwWGF5OWh5MjFoVDJncjRSQnZsc280QkZU?=
+ =?utf-8?B?aXo3a3c3ekhSMi9YNk40OVd1VzNhS3pTMzVROWw2UFlxRy9GUjdQUExmTmw1?=
+ =?utf-8?B?VmVJRFFBVXhDNENLTTFpQlBzTGZRc0dRb0JMWDNDVTU0aHU5K3NRdnJFTGJ1?=
+ =?utf-8?B?eDFhOS85V1k4UmEyczVDZ0kvNVJscXY5QmxXbFNpQ0hJM0l0a3VQaUNEL1dV?=
+ =?utf-8?B?U3g2TlhxRWYwVEpVZ1hhS21xMDlKUjJ6ZmhIcVVMbzg0Wi9na3BmU2Q5NXJn?=
+ =?utf-8?B?RTVRWCtUS1YzTUd2ZGozcmU0Snl3NENPQ2R2WFhVUzlJUXZlVkszMVN2Rm1r?=
+ =?utf-8?B?YzJQN0RiSThhR3dPaXJTUXdZUGo1OGNHVEtSRFlRVTl2cHRqYXFXM0xRMDVK?=
+ =?utf-8?B?Q1J4eFgwdEhCdHc1UVZITTdyY25PemM1NFFqL3dTbVo5VFc0VGRPUDIrejNU?=
+ =?utf-8?B?VU41RmJQOEIwM04yWlY1R3d2QWJNN2h6NVFrS2JzVE12c0xFWnBON1lFUmNp?=
+ =?utf-8?B?a295TnZFbmttMkdCSE52ekNMSnMxSEo1Y1djMURBUjlwVDA1TVFlWmVmbjVD?=
+ =?utf-8?B?NEVzcDFjS0FmczYwTzNrb1I2SVRpaFVpcDk1cHVESXhMaWhEcTk4cm5namxR?=
+ =?utf-8?B?WWFXMENFSXN6NmFIM0hHVWd2d3J4eWd0OUMzTG9DUHR5aFQ5TTV5SkNEbmc5?=
+ =?utf-8?B?ZHZYU3dwTWlHZVJTVW1VbVNwcDVPOWx0cTJ1T0dhd0huNERCL1JVemc2SitW?=
+ =?utf-8?B?NUpxNXVoZExZZXlxYzMxMWRjNzFGdWJsUXpUME5UUXYxdlpkeHhRdlpPQkVl?=
+ =?utf-8?B?SmhQaUpnL0pBVmt3aUQ0S2ZqM0ZwZGZ6TW9JaVF4dGhlVzNVTlFQZ2tsTnRS?=
+ =?utf-8?B?Q2lXeWI3NG5GbVdhd2lGZ1VuVFlPNDNMakx2eWJLOFBHOEZOQTQ5cXRhS3Vl?=
+ =?utf-8?B?Nk90b3NDWGhBV0dCeVlrNWYwdGJhVVh5SEVvWStlZGdiVjRhRUFJREhsYzZh?=
+ =?utf-8?B?SldJbVJoUGlzQUlyYXVDRy9GNkpidmMycTRHMCtzdEoxTDFGNnRLWThzY28z?=
+ =?utf-8?B?K0JMUXBIU3U5SkowakRaYlZLK1U5NUYrUm44cUp1OC9PVUVEdzk2bmNBSG4w?=
+ =?utf-8?B?NzFDMkhNS3UyUzV4TXUvaklsZUk2c3BwemVBYXZud09UTW52VjdKZGh6c3Rt?=
+ =?utf-8?B?a2llRDNwR2pWOVZRRUt4OUZNNVNVc3EvWTM5Sk44TnFWTWVhRGxGV1RFU0g5?=
+ =?utf-8?B?S3dBUDdIdWxLQmQ4eHJvQStUUzlwekZWQzFMMnBvejA1NmFlb0xlaXh0blFz?=
+ =?utf-8?B?TCtpTjZkRW4zbjVpYk11WVBxc2h4SjBjWDJvYnJCUTdRQnVqcEZoVkN1OWxH?=
+ =?utf-8?B?WkY3ZVZkb2hndzE0N0sxV2YwaDY2OENwRFRYTWJCdVlrZmw2Y2xaN1RZenRy?=
+ =?utf-8?B?eVp6emxGQ08wMTBTQ3dqalZSamZadnVHL2xLMExOek5jOTJFeHVnaTVyQ0k4?=
+ =?utf-8?B?ZHJnV2lWeGV1eklhQmNiMWszcGluYVY2NW5xblBmZXlMTEhZcGNQUW1RWHBa?=
+ =?utf-8?B?Tlg5eTZLNTdiUTFicXY3Y0lnZGlNcmhIcXVmU3d1SmFMeDg1RVVYUT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0c50ec3b-782e-4dba-fabe-08dee25021ef
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jul 2026 09:04:52.8537
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ade7e5d-ee61-42bf-9650-08dee2494701
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MWH0EPF000A6733.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5113
-X-Proofpoint-ORIG-GUID: OChCm1Nn8qr2Eprwx4OH8pTjZF98kzZh
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE1MDA3OSBTYWx0ZWRfX5DuuBeTPagKf
- tJwPnPT3ig3Z06cRJ45saO/TvrMu1BeqM39rC0rsiLczQG+ecTkw8c/xnc5hRZCw3CI6VUgzbQM
- /MQ3yhOYFk/ha83iLFqxVvE004nhJxg=
-X-Authority-Analysis: v=2.4 cv=KfLidwYD c=1 sm=1 tr=0 ts=6a5741ba cx=c_pps
- a=ImwGUT2bfrWU7DBu6bNfJw==:117 a=tJyPKKxUohctrY4NYmUjkA==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=V5UXEbMT0ywA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Z8NIEmU8O1QQgoT56wFK:22
- a=taLDd7a_hP9WKsMzeGRc:22 a=VwQbUJbxAAAA:8 a=sozttTNsAAAA:8 a=UqCG9HQmAAAA:8
- a=m7-Bn73eetEpg8y05zkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE1MDA3OSBTYWx0ZWRfXxTI3VcE1QpZn
- GSmvE6WpAGdJIdWFA8XZMUI3iBz1sbDmYRb3Ah0aJip/XGjcpClqPCKu5vRGMoUjIZfJN9AN5IT
- e+NN1wi9NLS19QN6QSV8xy8SDnbIzI9+QJt7pgx+jzh5QI1TIfSgxJCtqL6TsUp8prLB3mh4Q4n
- 2ZhpHDAOnZI2p+fP4NBl2PDEAglCN3tXYVrNC9vv37Yafhuqtn5OvafOdGTVBM1brvz+HNOtnAi
- V22HEvWmDXDs3lxpszsr/wgmLjdQkZ0tPb8dWmRMzXlMqw4vwZ4mYw1qmA7EFrPSp5EX5GeHmBi
- lVSnnrdEqXJgpsS9CDKqTc6QdFSffwS5zzCdKiE8dlH+mbR+1sTlGf3sKwMek5B+Wh49818EgfJ
- T+9mfMEGxLibedj9FlihwKax00PsQdT86C3EoJimmwJoeDUYXcr0imFXrheU0/KiNv8YLWCuY8c
- 4DQF0rfF1aSa0yAaJVQ==
-X-Proofpoint-GUID: OChCm1Nn8qr2Eprwx4OH8pTjZF98kzZh
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-15_02,2026-07-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 adultscore=0 suspectscore=0 clxscore=1015 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607150079
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TgtFVSBZl3jNStv8gC7vNBt01lbqkW6ba6x2Ek0nKPxK/aODzKYD+sf3R7q2tM5ZTPzSF12mOwAMQQb3AFL2cw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR12MB8951
 
-
-
-On 15/07/26 11:31, Manivannan Sadhasivam wrote:
-> On Tue, Jun 23, 2026 at 03:21:48PM +0530, Aksh Garg wrote:
->> cdns_pcie_host_wait_for_link() polls on link-up for 10 retries with a
->> delay of 90-100ms each (~1 second). A call to cdns_pcie_host_link_setup()
->> during the resume operation blocks the resume operation unnecessarily for
->> ~1s even when no endpoint device is connected.
+On 9/7/26 23:36, Jason Gunthorpe wrote:
+> On Wed, Jul 08, 2026 at 07:45:09PM -0700, Dan Williams (nvidia) wrote:
+>>> force_dma_unencrypted() does not *prevent* device access to private
+>>> memory and provides no security properties on its own. It's only
+>>> purpose is to inform the DMA API what the HW restrictions are for
+>>> doing DMA.
 >>
->> Add link_down_no_hotplug flag to track link state across suspend/resume
->> cycles (for the platforms that do not support hotplug). If link was
->> down before suspend in such platforms, skip the expensive polling in
->> resume since no endpoint was present.
->>
->> Reviewed-by: Chen Wang <unicorn_wang@outlook.com>
->> Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->> Signed-off-by: Aksh Garg <a-garg7@ti.com>
->> ---
->>
->> Changes from v1 to v2:
->> - Updated the flag name from 'skip_link_polling' to 'link_down_no_hotplug'
->>
->> v1: https://lore.kernel.org/all/20260605071922.1724499-1-a-garg7@ti.com/
->>
->>   drivers/pci/controller/cadence/pci-j721e.c             | 5 +++++
->>   drivers/pci/controller/cadence/pcie-cadence-host-hpa.c | 3 +++
->>   drivers/pci/controller/cadence/pcie-cadence-host.c     | 3 +++
->>   drivers/pci/controller/cadence/pcie-cadence.h          | 3 +++
->>   4 files changed, 14 insertions(+)
->>
->> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
->> index bfdfe98d5aba..48db7a6cf754 100644
->> --- a/drivers/pci/controller/cadence/pci-j721e.c
->> +++ b/drivers/pci/controller/cadence/pci-j721e.c
->> @@ -686,6 +686,11 @@ static int j721e_pcie_suspend_noirq(struct device *dev)
->>   	struct j721e_pcie *pcie = dev_get_drvdata(dev);
->>   
->>   	if (pcie->mode == PCI_MODE_RC) {
->> +		struct cdns_pcie_rc *rc = cdns_pcie_to_rc(pcie->cdns_pcie);
->> +
->> +		/* If link is down before suspend, skip polling in resume */
->> +		rc->link_down_no_hotplug = !j721e_pcie_link_up(pcie->cdns_pcie);
->> +
->>   		gpiod_set_value_cansleep(pcie->reset_gpio, 0);
->>   		clk_disable_unprepare(pcie->refclk);
->>   	}
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> index 0f540bed58e8..31cf50cff8f8 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> @@ -301,6 +301,9 @@ int cdns_pcie_hpa_host_link_setup(struct cdns_pcie_rc *rc)
->>   		return ret;
->>   	}
->>   
->> +	if (rc->link_down_no_hotplug)
->> +		return 0;
->> +
->>   	ret = cdns_pcie_host_wait_for_link(pcie, cdns_pcie_hpa_link_up);
->>   	if (ret)
->>   		dev_dbg(dev, "PCIe link never came up\n");
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> index 0bc9e6e90e0e..50abc657a871 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> @@ -352,6 +352,9 @@ int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
->>   		return ret;
->>   	}
->>   
->> +	if (rc->link_down_no_hotplug)
->> +		return 0;
->> +
->>   	ret = cdns_pcie_host_start_link(rc, cdns_pcie_link_up);
->>   	if (ret)
->>   		dev_dbg(dev, "PCIe link never came up\n");
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
->> index 574e9cf4d003..1561022c1a8b 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence.h
->> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
->> @@ -117,6 +117,8 @@ struct cdns_pcie {
->>    * @no_inbound_map: Whether inbound mapping is supported
->>    * @quirk_broken_aspm_l0s: Disable ASPM L0s support as quirk
->>    * @quirk_broken_aspm_l1: Disable ASPM L1 support as quirk
->> + * @link_down_no_hotplug: Skip link polling during resume on no-hotplug
->> + *			  platforms when link was down before suspend
->>    */
->>   struct cdns_pcie_rc {
->>   	struct cdns_pcie	pcie;
->> @@ -131,6 +133,7 @@ struct cdns_pcie_rc {
->>   	unsigned int            no_inbound_map:1;
->>   	unsigned int            quirk_broken_aspm_l0s:1;
->>   	unsigned int            quirk_broken_aspm_l1:1;
->> +	unsigned int		link_down_no_hotplug:1;
+>> Right, to be clear, this mode's security properties come from never
+>> asking the TSM to enable private DMA while the device is in RUN.
 > 
-> If the goal of this flag is to convey the information that the platform doesn't
-> support hotplug, then it should be called 'no_hotplug'. Skipping the polling
-> during LDn is the usecase.
+> Ok, that's a twist I hadn't thought about. I don't see a reason to
+> support a driver probed with RUN but T=1 DMA disabled by the TSM.
 
-Hi Mani,
+afaik you cannot have RUN and T=0 DMA at the same time. You can though have C=0 (i.e. IOMMU <-> memory in the plain).
 
-The goal of the flag "link_down_no_hotplug" is to convey both: the
-platform doesn't support hotplug, as well as the link is down (as both
-of these conditions must be true to skip the polling). Hence, I chose to
-name the flag this way.
 
-If we choose to name the flag "no_hotplug", then we would need to add
-another flag "link_down", and then skip the polling
-"if (rc->link_down && rc->no_hotplug)".
-
-Regards,
-Aksh Garg
-
+> Still, if we do this, I think having the TSM deal with it is probably
+> better than making a cross product of the trust level, something like:
 > 
-> - Mani
+>   echo only-shared-dma > $pdev/tsm/accept
 > 
+> So maybe accept should be tweaked:
+> 
+>   echo full > $pdev/tsm/accept
+> 
+> ? It doesn't matter much
+
+I configure my hw to allow "accept" (== T=1 for DMA and MMIO) but still only allow unencrypted guest memory for DMA (set vTOM to 0 to say "all unencrypted) if the driver was loaded with "trust" other than "full" (and this series does not call the enable_dma() hook if not "full", Dan is changing it though) so the module parameter works...
+
+>>>> echo 1 > $pdev/tsm/accept
+>>>
+>>> And now it is RUN. So I don't see the issue with enabling DMA at the
+>>> same time as gonig to RUN? (though defering it to driver probe would
+>>> be a very nice touch as well)
+>>
+>> It requires "accept" to consider the trust level. E.g. what does it mean
+>> to do something like change requirements after accept?
+> 
+>> echo full $pdev/trust
+>> echo 1 > $pdev/tsm/accept
+>> echo adversary > $pdev/trust
+> 
+>> In that scenario this now adversary device may have been allowed to
+>> operate without an enforcing vIOMMU, and needs to unlock the device to
+>> correct that.
+> 
+> If accept enables DMA then it is up to userspace to ensure all policy
+> objectives are met before accepting, not after.
+> 
+> I think the statement kernel makes to userspace is the moment it
+> writes trust or accept the kernel is free to take action on it. ie
+> don't write a trust or accept until you mean it.
+> 
+>>>> There are also buses and paravisors that may know that private-DMA is
+>>>> enabled for a device by construction. In that case it is also a "trusted
+>>>> to access" signal, and not a "required to access" signal.
+>>>
+>>> In this case they wire force_dma_unencrypted()=false.
+>>
+>> Yeah, I just need a scheme where modular bus providers do not end up
+>> compromising the private / unexported method of changing the flag that
+>> force_dma_unencrypted() consumes.
+> 
+> Yeah, the bus and TSM really have to control this property, it is like
+> the other DMA attributes (eg dma seg boundary, etc)
+> 
+>>> At least if we omit the double check it can be fairly easy to add in
+>>> later if it really was needed for some time of use reason.
+>>
+>> As long as IOMMU presence can be enumerated prior to acceptance, T=1
+>> always includes private DMA, and the T=1 status is tracked independent
+>> of the trust level then yes, the cross product can be avoided.
+> 
+> Ok. iommu has to be setup the moment the struct device is created, it
+> can't add on later. I *think* the iommu related sysfs ordering is done
+> properly before any uevents, but I haven't validated that.
+> 
+>> 'struct device' grows some "request" policy for trust and T=1 that can
+>> be changed by modules etc. 'struct device_private' grows the operational
+>> trust level stable under device_lock() and a new flag to reflect T=1.
+> 
+> I guess
+>   - The active trust level should be RO visible to the driver, iommu, etc
+>     It should be stable under a bound driver
+> 
+>   - The "dma require unencrypted" property needs to RO visible to the
+>     DMA API and stable under a bound driver. This would input where
+>     force_dma_unecrpyted() is in the flow [the name should align with
+>     all the other per-device DMA API specific properties like seg
+>     limit, boundary, mask, etc]
+> 
+>   - The requested trust policy should be internal to the driver core and
+>     be converted to the active trust level right before probe
+> 
+>   - We should have ways to enable/disable all DMA before/after probe,
+
+"echo 1 > unlock" should do that (but also stops encrypted MMIO) or we want a finer knob?
+
+>     including both TSM and IOMMU approaches
+> Broadly all busses get some way to convert the requested trust policy
+> to the active trust level (eg by mixing in ACPI, etc, etc)
+> 
+> All busses get some way to set the "dma require unencrypted" property
+> 
+> IOMMU and drivers should be sensitive to the trust level
+> 
+> TSM is sensitive to accept, not the trust level
+
+This makes the module's "trust" parameter useless, right?
+
+
+> Userspace must ensure any security policy is met before accepting or
+> binding.
+> 
+> ??
+> 
+> Jason
+
+-- 
+Alexey
 
