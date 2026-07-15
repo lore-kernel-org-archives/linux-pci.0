@@ -1,69 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0590399D0B
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 15:35:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B3E2F83A2;
+	Wed, 15 Jul 2026 15:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784129759; cv=none; b=jgOAtTllL5e6VoZ4AYTz0HHG6IbswzX8zGG6TO1OH3DIEEPdlmXKiNwc5Pl1kaccvCWjB80+fCrfkbD34f3zv61/4d051+dr8xs5UkPFKozl/kXPzySDI5ghcs67viQ94nBM8l0Bk7YPjC1sz8/UzRxTT2y9gZAn34csrp0FZOo=
+	t=1784130786; cv=none; b=BnQdnrI57NOKjd+L2FYbjfYPteZ8f0NheDlVsbKXrssHKMv6yZ0H7EgnvBrtZhaXPflr6cs1guKPJqgt8zre7mIaSIC97GXQfZbrf4JetY1LW3MrwUqxDqit9gL9psiBPo4Eg6NYe9rKqbqOIubS2Z3versjX3cm135dqdvRhjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784129759; c=relaxed/simple;
-	bh=FxweUznUlnzG50zpjlOCovYgZojDKd3loW6xQkOCXAE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=n0ayvVflvm6G8CHORUIK39E3ei1Z+rE0q9b3zCmKOocmALw8Dvt2c6VQ7b0ythSMw9teJHq1ukqj/nrKgTCRK7Bt0unbkJUeQfjKmtmM4OxrmIBRey3M38uQThkOCLc1t1dPTZviXwVG9rNWldLI8eM4vQvWr58gc5QCjz8rjY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YbipKQ1m; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784130786; c=relaxed/simple;
+	bh=4L+0zwVkhqHN4iP7P1uMvG360zTk3aseXj0feS5u8CU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TYrbxbSy6AdGI/6QwVyXZedF+5dIlqslU++p/q46XzG0yjhCiaaBkYa4bHxNKUl+1nLXZ6Fc02GvWEu+QoOiR1mR4rOeVurcK+KhbYcmHJlsR1lfJHQUY/Ah2qFyYgowFCq7Z99I24bKasn3iJL9JsRc4YiigjHObXdzXGCfzN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E525pRL5; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbipKQ1m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CA3B1F000E9;
-	Wed, 15 Jul 2026 15:35:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784129758;
-	bh=FxweUznUlnzG50zpjlOCovYgZojDKd3loW6xQkOCXAE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YbipKQ1mF6XqvSV6orY6lwN+r+dPgvAir7OO+08jKxkRMS76UrQ95142kbfgh8f/a
-	 XQPwR+VqhN6kSx8timkPAF/HVyWDCwaqevL9pEO1smBp3DuvhsNO8z6MGrVffCqY8E
-	 9yz1aNCkr+4+lv7+1wZoAdI7oInYq7TcPi8iEJTwRsDOtSz0faAi+XqIaiiwkkyVnq
-	 RZFgYU4YDPj0dCM7L/LYAiFS8QjDitLA8EGZDxNOwDgCbGKiIvt75II0tQuslDzMNB
-	 EKD1vEpCILp9ghnKg35IrDca4etQlWHtsPMOd7m6QNuURpeF2a6bfytSI4+h1lFuXm
-	 lJcneCDjVYYVg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 4/4] ACPI: video: Use acpi_dev_get_pci_dev() instead
- of acpi_get_pci_dev()
-Reply-To: sashiko-reviews@lists.linux.dev
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E525pRL5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784130785; x=1815666785;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=4L+0zwVkhqHN4iP7P1uMvG360zTk3aseXj0feS5u8CU=;
+  b=E525pRL5yIkyCKbdkET0uVYc4PC9fC1l1UFme1rFPqUlP0OwPRGx1rz0
+   P+9IZo14O1hkVeMFb5C9Yp2UtD+oda9ppvfxwXjUShPJkw7p8WAdix/Wb
+   WIdLNCG1FklWNlrSW1TNtSMzqQO8XNxPRh/LYizaDlYptDw2R8Z99YR2p
+   VI7DFg2MlhYlflyo+ZtM1n780cZasbz4ylFOQK+4+8Y1BRwgsO/niPfFD
+   sdMCj4MNrZRJbViwerCNcsFEri7aNuA3BgXKDcd5kEv/NTqkGHfdoYsdq
+   7dmK3Kdjn86KvFLm0S8b7ha5Lv9NVdSz+vE+yAiC18bfAH5gAaVIR0ifi
+   w==;
+X-CSE-ConnectionGUID: KnbFP1WdRMOIUK7zkINKEg==
+X-CSE-MsgGUID: 3fv9Jn9OQT6Ed6jEBIi4oA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="95127082"
+X-IronPort-AV: E=Sophos;i="6.25,165,1779174000"; 
+   d="scan'208";a="95127082"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 08:53:04 -0700
+X-CSE-ConnectionGUID: PiqTB6kERnihDp7csf+c2Q==
+X-CSE-MsgGUID: 6LPFk/ZUS/yFwZ+WEGlQdg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,165,1779174000"; 
+   d="scan'208";a="286298867"
+Received: from mkosciow-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.129])
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 08:53:02 -0700
+Date: Wed, 15 Jul 2026 18:52:59 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <8706171.T7Z3S40VBb@rafael.j.wysocki>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Hans de Goede <hansg@kernel.org>
+Subject: Re: [PATCH v1 1/4] ACPI: PCI: Use a mutex guard to simplify
+ acpi_get_pci_dev()
+Message-ID: <ales2zV0uFJy5sOw@ashevche-desk.local>
 References: <5115219.31r3eYUQgx@rafael.j.wysocki>
- <8706171.T7Z3S40VBb@rafael.j.wysocki>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 15:35:57 +0000
-Message-Id: <20260715153558.1CA3B1F000E9@smtp.kernel.org>
+ <2417350.ElGaqSPkdT@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2417350.ElGaqSPkdT@rafael.j.wysocki>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
->=20
-> In acpi_video_bus_check() and find_video(), simply replace
-> acpi_get_pci_dev() with acpi_dev_get_pci_dev() that can be used
-> in both places because the ACPI device needed to do the lookup is
-> available.
->=20
-> In acpi_video_dev_register_backlight(), instead of doing a parent ACPI
-> handle lookup based on the handle of an ACPI device that is already
-> available, pass that ACPI device to acpi_dev_parent() which is much
-> more straightforward and pass the return value of the latter directly
-> to acpi_dev_get_pci_dev() to get the PCI device associated with it.
-> That allows local variable acpi_parent to be eliminated.
->=20
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jul 15, 2026 at 05:15:02PM +0200, Rafael J. Wysocki wrote:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+> Use a mutex guard in acpi_get_pci_dev() for the physical_node_lock
+> locking and drop local variable pci_dev that becomes redundant after
+> that change.
+> 
+> No intentional functional impact.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/5115219.31r3eYUQgx@=
-rafael.j.wysocki?part=3D4
+...
+
+> -	mutex_lock(&adev->physical_node_lock);
+> +	guard(mutex)(&adev->physical_node_lock);
+
+This needs a cleanup.h to be included (yes, I see the current inclusion block
+and it's a mess :-( ).
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
 
