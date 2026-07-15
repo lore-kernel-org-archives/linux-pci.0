@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC33373BF1
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 05:51:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A56E3B992C
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 05:57:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784094690; cv=none; b=FYSWT+fPNb+nyDRXznPaBrJxs2DbRQski+CJdgN7c1MtMr+zV96obHq1pFdG5M/PCp4yMZtiPmWZHmln2EtTh9Wm+UG11/V/6Mpr8QQQzoIwyGTS9HeynC8Syd4ovX5tzapHAcwj+atxwq/GiVHOcAPcB55ZoRF+8GtLkq9QXdM=
+	t=1784095025; cv=none; b=bfuMWbv24uAMHh1UfRYVGN9/GFnAfgxZHPBwuRN9RbdVPdTIfjIxoH2wTh9RZhX7au1BhQGHyWELuPzuT6MAGNiCx2gGaBQQulcMLKbyGqALFl2j+izDf3awvD/eX+pCTej/DIP/Zx2QrynrEbErXAAUcqCCKFxBH9fahcByYtA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784094690; c=relaxed/simple;
-	bh=COP3RcVpimUBaLNclyHG7gOKMd96z+/zK3uR1/9aUIY=;
+	s=arc-20240116; t=1784095025; c=relaxed/simple;
+	bh=vB/O1qhMGuTBJHey0Pw87Qwukyv/9aQbpGs1Z5O+AEE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=bXnRKqRyPDb5uAbbezeWSscDfxZlqDj0a3MGhpYOcgmVN2sOI10mpoHyIv4kFIU91MphMzwXPF7ySIBqTZDe0b1TU9oewidBz0jbCg/M5daY7tei5D/Qf+I8Z+71VojdMD6YJnTy7Md4KDsDzHIafUVsso19zCcBa4UyEwPSJ5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H7QjIU2b; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=eHl41SxN6VMWRbon3WnNP7eSBB2Km7GxqXSHACDgsYpqU7p9/S6RMoEaqSbdHwvMDAoiBDIuAhdvg3CY5fDZ8CzSL46vypO+HXDgu2R3PuMiLil9HFDUDmCmk78M/wlKsrcfbp5+ypjuVDEPkLwgbkQs81H/O/rEva4bcIwJ1+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PkZyKyeQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H7QjIU2b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BDE31F000E9;
-	Wed, 15 Jul 2026 05:51:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PkZyKyeQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 693A41F000E9;
+	Wed, 15 Jul 2026 05:56:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784094689;
-	bh=D5VMkLb2UMNfovVmuvx9AtoSOthrmURXwaVmfRjm6pY=;
+	s=k20260515; t=1784095021;
+	bh=a8xSbZZLfGeRS/b7b/8vJT2mxEq4N9ZZJpfquelYFcs=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=H7QjIU2bYFIftm9EnAu/P6U3v9Q1IUwPC3l7sFcBsb9WcBxUvie3WaGZDhw4Kz8qR
-	 343dmEk+j6XrHz1zSUNA5nmbzOdp6EQqG+GNt+hNpBZPXG2a5kyL8TLnC8L1foGQ34
-	 FJ0rwikudY7GDKd5Oq3SBjBeuutur7gdIgpLCplzCx63T3FBA3gJS4tj7PrbbsYZBu
-	 0xirinuMTzPPUwvctY8kLc7m/YVItLdhCcKd57Y+FgSGIG2thfJRMbOK4e/xFxLZ65
-	 66yv9rICX6Oupjtpj8g9gg6FYPwHcm8WidUQ12O8p8P/g0aa1qPXYCJB2dysKNIlJ5
-	 yD21vbsEEdO3g==
+	b=PkZyKyeQAKUqyA7OK9Cyd9Bun6gI14OYEfoSgvuOVIZkcQZDgw9fh+D+mr1vAss/y
+	 vrFHh3y9pb7+yqKQQvyCUP73LyCy8EKHrtJ+yTgMnoPqERy64ZOawP4cdUAGy0ZQha
+	 /jEzGA+EUSk2gC+Nz+/KakyTiqLpzReUygjzkOlDfh/hxFKrtaaIXTa+WUpsFN2UAs
+	 pQ8gwDnvyS7UKxwAfz5AXakEEmZS2HSayEOvdhpIb1dNvaVKyWc6nzXratW99DQPaL
+	 sLPCyHL0ucdwak965LB6JrdtHcQbftDGBDBy+aMVqunJw5LB3K8Y6gBQhbJrO8I+IC
+	 z0cUiUHu4kktQ==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: nirmal.patel@intel.com, linux-pci@vger.kernel.org, 
- Nirmal Patel <nirmal.patel@linux.intel.com>
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, robh@kernel.org, 
- lpieralisi@kernel.org
-In-Reply-To: <20260629165025.268836-1-nirmal.patel@linux.intel.com>
-References: <20260629165025.268836-1-nirmal.patel@linux.intel.com>
-Subject: Re: [PATCH v7] PCI: vmd: Add feature to scan BIOS enumerated
- devices.
-Message-Id: <178409468707.34530.3133044948921508871.b4-ty@b4>
-Date: Wed, 15 Jul 2026 07:51:27 +0200
+To: linux-pci@vger.kernel.org, Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, 
+ nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev, 
+ kwilczynski@kernel.org, robh@kernel.org
+In-Reply-To: <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
+References: <20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com>
+Subject: Re: [PATCH v3] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow
+ Lake-HX
+Message-Id: <178409501805.37475.683537046498875265.b4-ty@b4>
+Date: Wed, 15 Jul 2026 07:56:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,22 +48,20 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Mon, 29 Jun 2026 16:50:25 +0000, Nirmal Patel wrote:
-> Newer VMD  with device ID 0x28c1 has unique settings compared to its
-> predecessor where BIOS enumerates the entire VMD device tree and
-> assigns respective configurations.
-> 
-> VMD configuration BAR0 carries over from GNR legacy VMD as the mechanism
-> to access the configuration space of the devices owned by VMD. The size
-> of this window is fixed at 256 MB, where each function consumes 4 KB and
-> every bus consumes 1 MB.
+On Sun, 28 Jun 2026 16:34:50 +0200, Ali Alaei wrote:
+> On Intel Arrow Lake-HX systems (e.g. Core Ultra 9 275HX on Acer Predator
+> PH16-73), the VMD controller reports BUS_RESTRICT_CFG = 3 in the VMCONFIG
+> register. The existing switch statement only handled values 0, 1, and 2,
+> causing vmd_get_bus_number_start() to return -ENODEV and aborting the
+> entire VMD probe. This leaves NVMe drives behind the VMD controller
+> invisible to the kernel.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: vmd: Add feature to scan BIOS enumerated devices.
-      commit: 328e7435e5f95c65f176e922668bfbd4a482d805
+[1/1] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
+      commit: 22b47bd49e45c2f8288ee6b760a6b23508d9d799
 
 Best regards,
 -- 
