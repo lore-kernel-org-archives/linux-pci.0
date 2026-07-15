@@ -1,116 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ACD5443E3F;
-	Wed, 15 Jul 2026 18:12:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784139150; cv=none; b=j7U7xf9ZpLMyACdy5fNyI7knmoupr0LRYsvOqIrLvAy4/sYNqKkbB8q2VD/Rs+IjxkuOhbGUrJ/s0pnbRttuAYC2tdywBS2eJ1SFjQq5oCqia8gN9nTitfB7TGGJIKE9uJ4qRvP0hlLoM2ZvazAIzXkervk0FeSpdyk8Lr/CVnU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784139150; c=relaxed/simple;
-	bh=lDU099XlB0soKgRZsLw0ZoH5d5cv7bcVoQ8k+IRJzSw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iGEJ/JywWELaswu4plPg4KjMRC3X4QZnawn9whuuF2M8PFSAU1FqfeZX8jqAzw8hG1Aj+/xwWBhSxZpuvmLmNBo4shraXrnA2yuMR42qK1VoWlbU2ls2rzpgOnQUKL6+NzM67B7OtGaRlEAl/Gructhdxkbchl7AQ8vkuB+IrMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jysgfjE9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F036E443E40
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 18:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.179
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784139198; cv=pass; b=CkYRRuRRHmzeexIeREQQFkSIi6KdAgM6XGSLPlcrde27ASXfI9NG67QU4MXI+8Xd5HbzqbjTdXqJt+3r4JZqiHnsvzCOLBYLRRBJFGEmeiMayk1w3m6RzdlyO53AkVLAHvlSNKiLTFF60Zgt6XKHYcHePSRlqohpCGgMIpq3Vkw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784139198; c=relaxed/simple;
+	bh=6lt2EBngzvD4m9jAx7MuFhujRmAqHqzLhBgtSohJdm4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=WbUEXdZJeBpKRqoFEDlaVWJW5+mGXhPe1/8IfZn0c0MAh2MqgcaxBbeYiifHm32sZ4kqyzvLIkP54ZD7++DPFsj16jdUzZEYTAlWMjaTOtixlTa5PkzYfV9VlpRFEWfRQ4fNY5mUwcD80r2FKGrmOmgHCqua7tgqIYkmKAsSK3I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TTIWm3VZ; arc=pass smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jysgfjE9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1AD81F000E9;
-	Wed, 15 Jul 2026 18:12:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784139149;
-	bh=AyLvbPnD6vvkc0DU5Cso7RJBdGRUiEC2i1WT040e7oQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jysgfjE95vS0O7Ol1RAlJ8yUFtMkNNXnHkgEoqyCVuSAHuJR8pMRGqDrzuuivENs4
-	 64RyU+fU8er+43aowBWde5IyorWe82qUHLpn95lyhmqyg82/8z6Hs9XxLAfcVxtUY9
-	 LZ6keT28/Wu3gFFj59YkRSQvwlxrwhyjQuMdxFMVIzw6JAYkWZknAYvm8fHss/HSHl
-	 T3/3BMFpaRzFOyztBZ0mfHth4U8rCMuOUdx3L4J6MnjmM51vXe2HZbFU7ebkAtwjnN
-	 1wFCxGbkxwnsrkb4Y7tGye+ykkqz/7eATnkfxZN0dCFoEfshSpPQeXx2/5u55pRkSm
-	 iD3tS52X6qvww==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/9] vfio/pci: Add a helper to create a DMABUF for a
- BAR-map VMA
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Matt Evans" <matt@ozlabs.org>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
-In-Reply-To: <20260715174737.15287-5-matt@ozlabs.org>
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-5-matt@ozlabs.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 18:12:28 +0000
-Message-Id: <20260715181228.D1AD81F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TTIWm3VZ"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2cac59f8b64so66629595ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 11:13:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784139194; cv=none;
+        d=google.com; s=arc-20260327;
+        b=EsINRbS8jrOlf+tgsP9F9rUDHHgapRuxRqd9DWkuhm8IExn3ZBF4OLRdCOO4cw0veK
+         RIy3PhLgWhLBIV0nXxi+cwRbj7f0IrOi5XtRtOKrVdn35K4216kk3ERL7it+S9ifzGHJ
+         lS0ykiVhsBH6FoHPlYrZNR8KXVHY5pzB5/BAjnFloSSs84lZihCiQUNyzvO0ycvFb6WS
+         CDWOVtk8+lrC7rWL4Kb4Qo67KEDK5hohUJk2WDUPYTsfCUYFP7yCFGVeno/89QNPNaoj
+         3rV/SoFiqtpPsD9eZiNItXwMC33wSwmaC2wGVxSF0ND6LTu5Cs9kKbiWOmiF5ECCNgsV
+         4iow==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=6lt2EBngzvD4m9jAx7MuFhujRmAqHqzLhBgtSohJdm4=;
+        fh=xLsCp//65jpG41/F7ppwnAWpYcjRq4cwl9/osrJz1k0=;
+        b=VY1MqMrtKqQgZakIOmWad/9GC0b8L8Q9IKZ2raO8fvX6qVP++yTL3/G6ZJycOMEEo7
+         gAYBrE0NJ+1AqTaEUpbRyxSa55kvW5EU4+oiAQKqNLR4WJ0S6KpYGArdUIi6SQiC4X7q
+         UwcJhoQUwzTo6lT3aYMPxWTWPoYrFIt8YoR6LBR+S0XFM8QKjX0WboJEOGKybjMfoCHn
+         dZae4i+xZVgaQQe5M9irMeQB7127XDR+8b6hXYvn2rFh1WtLa8L7QJfwv3EcvC8wOaMi
+         llMjNJS8U1I3YJiFs7YboqoLVydamPxM6jfEoo6ZZzFJhiWwhneS0pjQnAnsiGVZLGGr
+         3sMA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784139194; x=1784743994; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6lt2EBngzvD4m9jAx7MuFhujRmAqHqzLhBgtSohJdm4=;
+        b=TTIWm3VZdzcMxAM9YAR8kvHU7kjJ9hewXfAK/SIgTMmt/kcEc+e1rD7LqwTvhTJ7Fn
+         OjkhXCNMSbZXl05Tug95wXA3cTRyOeiFiqZ8UH/tpA0rgGpdU0eH2f8HTIqVp14d2Lwk
+         3YSwLSAjM4245pDu+6q8T2L7MHVxld5IlGXDiGpJlenNtgtsGY0lNCcBtiDBQkiLXHT9
+         8f/4jTdPJmr2uy8DhaFSEtWzNyZxkmS9phbDNRBKixKpDORN9mWxZyYlTeF52X7W4bfP
+         Ss8Vj8saSLLV71afVr6giPOrvgUz/UYuc1EVrXL7lPcTu/0b2lqvOR0i1YgGweJO5+Ms
+         szZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784139194; x=1784743994;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6lt2EBngzvD4m9jAx7MuFhujRmAqHqzLhBgtSohJdm4=;
+        b=sKKk8EVVXECR/wIpWp3JHLo3Xpx9mabXXuGAAh3X1x3WloNlUaSdLWVk4aXtR74yW0
+         civEEOLL4D0YZgDCN1o/BcgFlD0keDVMwT6kj0E3yYK8cc2js3gTwKQqp8nGr+e6K8zY
+         eqIy2XxhUccBjXD+xw4kjQqS8PYSA2S11xHy5Qj88eYzN9rGbbs1wxrqab6yZpYCVbC9
+         Bk0tVKynUFfBJpVQRMW34MSSUF7bXoD4PeBsAq0GEfssUnt+ZfEimk6Bx+awEIFjqV0k
+         IEgOXNtHtbU6MVH0rPyx2ULsk648H+2q73UGaqOnq5QEnJRsMjk4vZPN1gnbH1R140En
+         JPPA==
+X-Forwarded-Encrypted: i=1; AHgh+RpjTw4khjQEwwe7XoU0dT2H4F5T9SVrCAGfIUepWEOTBvWcSTOsZ9Z381IBfZSmyuuTpO0L+hxWU7s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwssSYgpTFWEMOek0wD079g2EOTvE/6E+ZQJ8rGpTQSyuHYzq0r
+	vcu+cyNxKvrpEVa7yM2GeFs4jLByP1Ffp34MDa2tk9CLn8WQfv5HQ1F8rPJZmvxizbuTol6V6cU
+	G1JoMPRgZa6jBCzIWqV4/+2TPtDyhm32B70/ulbt5
+X-Gm-Gg: AfdE7ckxBqwa4G+YKo0QDnCq8vZ6g6HaaY4ypfqzLGuq9u36JMEo+1j8OWab87RijAm
+	Uo9EXHohYqN+i4waO2Q+kr6AedDGCZ9IomMxFspQ581akwfeVafi35w4wO+K5kwVZobIfVW9rFK
+	hHfqR/yQT5YLIpHJCxqR2Dq3zm7x2uTVFpCvDi2/5t0O3s2f5A6vA+3mJ0n9U/uqz/BTf8lg1u9
+	9Kd1SBLq+9d+EShbtBLQoBfohfd6myD/CmXjAOdPWS9EmUpaI3AF8/ZkezeUrhS7cJzBkJD
+X-Received: by 2002:a05:6a20:4308:b0:3ba:cd5b:3dc8 with SMTP id
+ adf61e73a8af0-3c36c1f1e9dmr3992057637.31.1784139193430; Wed, 15 Jul 2026
+ 11:13:13 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260715174737.15287-1-matt@ozlabs.org>
+In-Reply-To: <20260715174737.15287-1-matt@ozlabs.org>
+From: David Matlack <dmatlack@google.com>
+Date: Wed, 15 Jul 2026 11:12:46 -0700
+X-Gm-Features: AUfX_myjzByVJrMRsslJCPDuFhCRYahAX-J5d0Fnwjil213_UwTGXzV50T-Uvqc
+Message-ID: <CALzav=fH7N+ionUnELqw5ZaGrPmgp_w6kxoCtoY8fMmZY_S4zw@mail.gmail.com>
+Subject: Re: [PATCH v5 0/9] vfio/pci: Add mmap() for DMABUFs
+To: Matt Evans <matt@ozlabs.org>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, 
+	Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>, 
+	Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>, 
+	Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>, 
+	=?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>, 
+	Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, 
+	Alistair Popple <apopple@nvidia.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, 
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Missing bounds check on `res_index` before calling `pcim_p2pdma_=
-provider()` leads to out-of-bounds array access.
---
+On Wed, Jul 15, 2026 at 10:47=E2=80=AFAM Matt Evans <matt@ozlabs.org> wrote=
+:
 
---- Patch [4]: [PATCH v5 4/9] vfio/pci: Add a helper to create a DMABUF for=
- a BAR-map VMA ---
-commit 733300e7a6e7bd6d5e79581e31e2eac09e4e5c22
-Author: Matt Evans <matt@ozlabs.org>
+> This is based on v7.2-rc3.
+>
+> These commits are on GitHub for easier browsing, along with
+> "[RFC ONLY] selftests: vfio: Add standalone vfio_dmabuf_mmap_test":
+>
+> https://github.com/metamev/linux/compare/v7.2-rc3...dev/mev/vfio-dmabuf-m=
+map-v5
 
-vfio/pci: Add a helper to create a DMABUF for a BAR-map VMA
-
-This commit adds a helper function, vfio_pci_core_mmap_prep_dmabuf(), to
-create a single-range DMABUF for mapping a PCI BAR. It also refactors the
-existing vfio_pci_core_feature_dma_buf() to extract common export logic.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
-ci_dmabuf.c
-> index 7c047400dfd16..74c02794bfe28 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-
-[ ... ]
-
-> @@ -460,6 +473,75 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
-re_device *vdev, u32 flags,
->  	return ret;
->  }
-> =20
-> +int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
-> +				   struct vm_area_struct *vma,
-> +				   u64 phys_start, u64 req_len,
-> +				   unsigned int res_index)
-> +{
-> +	struct vfio_pci_dma_buf *priv;
-
-[ ... ]
-
-> +	priv->vdev =3D vdev;
-> +	priv->size =3D req_len;
-> +	priv->nr_ranges =3D 1;
-> +	priv->vma_pgoff_adjust =3D vma_pgoff;
-> +	priv->provider =3D pcim_p2pdma_provider(vdev->pdev, res_index);
-
-[Severity: Medium]
-Is a bounds check needed on res_index before calling pcim_p2pdma_provider()?
-
-If a caller passes an index like VFIO_PCI_ROM_REGION_INDEX (6) or higher,=20
-pcim_p2pdma_provider() will index the mem[PCI_STD_NUM_BARS] array out of
-bounds, returning an invalid pointer.=20
-
-This invalid pointer could later be dereferenced by pci_p2pdma_map_type()=20
-in dma_buf_phys_vec_to_sgt(), which might lead to memory corruption or cras=
-hes.
-
-> +	if (!priv->provider) {
-> +		ret =3D -EINVAL;
-> +		goto err_free_phys;
-> +	}
-> +
-> +	priv->phys_vec[0].paddr =3D phys_start + ((u64)vma_pgoff << PAGE_SHIFT);
-> +	priv->phys_vec[0].len =3D priv->size;
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715174737.1528=
-7-1-matt@ozlabs.org?part=3D4
+It'd be great to have this test upstream. I'm happy to review it when
+you're ready. Looks like it just needs to be redone to use the VFIO
+selftests library and kselftests harness. AI could probably do the
+conversion pretty quick :)
