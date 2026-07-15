@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD883C1412;
-	Wed, 15 Jul 2026 23:15:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92E37377A91;
+	Wed, 15 Jul 2026 23:34:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784157329; cv=none; b=KCDabs76kiXm5ftGuVpO82Ag0tTmD/+M7jk+7hS+4H91xEkHtlPPyiRlS/SCyxvrT4EYvy/S+raYmtavHNSS8YfEb+/y2q7c/VSOGBkfcJB18Gv90Ru5S7Pwn3gGGTBI6I/aBbb6J5X4zOLHlZaZSftNN4Meu/oAW2G3lM3mPMI=
+	t=1784158451; cv=none; b=W95Shi3ULDEjhFx5qoHeuEEC6Ptcy4vJHJsdXB8b8I+MW5I8GRjasqTZiQLrtha0A8kA99D1YXJJTfRoWWFU0x4xUszz58rajRLFvzIS2KgR5uQlreaeLEMq65FaqPrKFLzuaSKtYfLqQd0OdMsDIc08kBuLwtAgruzueuOLswU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784157329; c=relaxed/simple;
-	bh=PmTwD1bjwJ3TllWid4EEApDHP5hvv9bAdEyzGe4zx68=;
+	s=arc-20240116; t=1784158451; c=relaxed/simple;
+	bh=pH8F5UGT9+IdC3oKIzzOSQfEgtEphC5O/midW2/D99U=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=pf+nOpPf6S6lYl9fwFeh7wEWQheTPh+rOH/1y3qSEBMh5aWx9u/7tBsuj/QNqvWtDgIMvt1HRfUgs0lx/geymzByWAXoGStiJWJOTs6bwK6XUpxGx37RRrd375aT51p9iAtbpe4Zo3zqVJDSjRasPkmHqitLaGyDZl40OgMcWJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U8K6ikjx; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Rkoc1SxLObtpJvuSAvqRenOJyRfbqeK0mDpDUCrV6x0EZoQtmkevL+JYaDb+mtit18bdXnE/i+JRU6rhyOgRXMFs8HxGX8S7pLsN9oJlHbbJ2tJGc/jiZkFJ0N/aDEgjnwr9GSLmckVi0VTBnvDltLvLw0R6k8iV6MpUxtwRjN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9GhMDmu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U8K6ikjx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4284B1F000E9;
-	Wed, 15 Jul 2026 23:15:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9GhMDmu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E9941F000E9;
+	Wed, 15 Jul 2026 23:34:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784157326;
-	bh=ECH83PK1Wwf85pLfYuYV5e298FOUyNFzZ/xvIdhME60=;
+	s=k20260515; t=1784158450;
+	bh=OpP+uwcYv5bpmQu1ogpSKpC+BhFXw0j7AREQxpNPVZM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=U8K6ikjxsT/p30EwxKQaL4R1VEF1Pb05++oR9f4HZsQd1W+9pbAEtziKRK1rOnsu0
-	 a/Jk3BU3cy8Zv9PzbHOx5aeQHTr0AHB0DfKX4Gyfz3OxBSAEil8iFX/9E2pVX0g11d
-	 TneyaP7Cv/UPgZ9OQ9fdbKDYsykY1mBZUtf+lQGp7i0MAmU6vklrjhGSkZodGBqXI2
-	 u4j+hYm3BIR+ZEWlqlYNCxTDk26nW3MHdbO2MWQL1vjwnqgDZfriB5UpPvbMwGcI3z
-	 IBY4E60NhePNxsIrC39H1N6B0Mn2coJ4u+g1s4NGmLwE9LN5NylALqh+Gk4O6m+T8n
-	 tWPzAJQPGDqIQ==
-Date: Wed, 15 Jul 2026 18:15:25 -0500
+	b=l9GhMDmugVihR/0TMBYro0l+NcdUjmP8JSlnh89oSR4yz3uDxCfrNyoNkfrPD8+jz
+	 Kc/dw7iKlJJ3JowLAJ0TjIBsTg4XdG/O/8EKL7NPh1fRKiMoQiaaYrfRXD8Gs4z9rI
+	 Tkx2MJVDH0tAXk3//OTNUQQ8ZXXXTOOxr82JEi4m3d62e2tUF4B9jSRSHgsFB9Hahx
+	 /9gd7nO03kMo4yA1HqsA7x6fgq3QLPt612dng9fhe+4gRH7NHlkPW01TLIRfE0arHa
+	 60HYAmX/eHtOFw45Ka0qWheMuYbsYyDy1wRnN/VOYV2icwk9+M/apaY2A2gyR5yqus
+	 iSYjCEbCiMqhQ==
+Date: Wed, 15 Jul 2026 18:34:08 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Christian Konig <christian.koenig@amd.com>,
-	Alex Williamson <alex@shazbot.org>, linux-rdma@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Wei Huang <wei.huang2@amd.com>
-Subject: Re: [PATCH v2] PCI/TPH: fold reserved completer encoding in
- get_rp_completer_type()
-Message-ID: <20260715231525.GA224907@bhelgaas>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+	mjrosato@linux.ibm.com, stable@vger.kernel.org
+Subject: Re: [PATCH v21 1/4] PCI: Allow per function PCI slots to fix slot
+ reset on s390
+Message-ID: <20260715233408.GA271741@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,75 +43,197 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260715202409.3767494-1-zhipingz@meta.com>
+In-Reply-To: <20260630164807.643-2-alifm@linux.ibm.com>
 
-[+cc Wei, author of f69767a1ada3]
+On Tue, Jun 30, 2026 at 09:48:04AM -0700, Farhan Ali wrote:
+> On s390 systems, which use a machine level hypervisor, PCI devices are
+> always accessed through a form of PCI pass-through which fundamentally
+> operates on a per PCI function granularity. This is also reflected in the
+> s390 PCI hotplug driver which creates hotplug slots for individual PCI
+> functions. Its reset_slot() function, which is a wrapper for
+> zpci_hot_reset_device(), thus also resets individual functions.
+> 
+> Currently, the kernel's PCI_SLOT() macro assigns the same pci_slot object
+> to multifunction devices.
 
-On Wed, Jul 15, 2026 at 01:24:00PM -0700, Zhiping Zhang wrote:
-> get_rp_completer_type() returns the Root Port's "TPH Completer
-> Supported" field (bits 13:12 of Device Capabilities 2) verbatim. The
-> 0b10 encoding is reserved, but pcie_enable_tph() feeds the raw value
-> into the requester type:
+PCI_SLOT() doesn't assign pci_slot objects; I guess they're assigned
+by some code that *uses* PCI_SLOT().  Since this says "currently," I
+assume you're changing that code, so we should mention where it is to
+help readers out.
+
+I see some Sashiko comments; those also need to be addressed or
+explained away.
+
+> This approach worked fine on s390 systems that
+> only exposed virtual functions as individual PCI domains to the operating
+> system.  Since commit 44510d6fa0c0 ("s390/pci: Handling multifunctions")
+> s390 supports exposing the topology of multifunction PCI devices by
+> grouping them in a shared PCI domain. This creates a problem when resetting
+> a function through the hotplug driver's slot_reset() interface.
 > 
-> 	pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
+> When attempting to reset a function through the hotplug driver, the shared
+> slot assignment causes the wrong function to be reset instead of the
+> intended one. It also leaks memory as we do create a pci_slot object for
+> the function, but don't correctly free it in pci_slot_release().
 > 
-> and later writes tph_req_type to the TPH Requester Enable field, which
-> only defines 0b00 (disable), 0b01 (TPH only) and 0b11 (extended TPH).
-> If a Root Port ever presents the reserved 0b10, that value could be
-> written back to hardware, risking undefined behavior.
+> Add a flag for struct pci_slot to allow per function PCI slots for
+> functions managed through a hypervisor, which exposes individual PCI
+> functions while retaining the topology. Since we can use all 8 bits
+> for slot 'number' (for ARI devices), change slot 'number' u16 to
+> account for special values -1 and PCI_SLOT_ALL_DEVICES.
 > 
-> Fold the reserved encoding into "not supported" so only the three
-> defined values can propagate.
-> 
-> Fixes: f69767a1ada3 ("PCI: Add TLP Processing Hints (TPH) support")
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> Fixes: 44510d6fa0c0 ("s390/pci: Handling multifunctions")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
 > ---
->  drivers/pci/tph.c | 18 +++++++++++++++++-
->  1 file changed, 17 insertions(+), 1 deletion(-)
+>  drivers/pci/hotplug/rpaphp_slot.c |  2 +-
+>  drivers/pci/pci.c                 |  5 +++--
+>  drivers/pci/slot.c                | 33 +++++++++++++++++++++++--------
+>  include/linux/pci.h               |  8 ++++++--
+>  4 files changed, 35 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 655ffd60e62f..ebe1aa5ba5eb 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-> @@ -196,6 +196,21 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
->  }
->  EXPORT_SYMBOL(pcie_tph_get_st_table_size);
+> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+> index 67362e5b9971..92eabf5f61b9 100644
+> --- a/drivers/pci/hotplug/rpaphp_slot.c
+> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+> @@ -84,7 +84,7 @@ int rpaphp_register_slot(struct slot *slot)
+>  	struct hotplug_slot *php_slot = &slot->hotplug_slot;
+>  	u32 my_index;
+>  	int retval;
+> -	int slotno = -1;
+> +	int slotno = PCI_SLOT_PLACEHOLDER;
 >  
-> +/*
-> + * Fold the reserved 0b10 "TPH Completer Supported" encoding into
-> + * "not supported" so only the three defined values propagate.
-> + */
-> +static u8 tph_completer_type_fold(u8 comp)
+>  	dbg("%s registering slot:path[%pOF] index[%x], name[%s] pdomain[%x] type[%d]\n",
+>  		__func__, slot->dn, slot->index, slot->name,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 77b17b13ee61..350bae907ebf 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4897,8 +4897,9 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, bool probe)
+>  
+>  static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
+>  {
+> -	if (dev->multifunction || dev->subordinate || !dev->slot ||
+> -	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+> +	if (dev->subordinate || !dev->slot ||
+> +	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
+> +	    (dev->multifunction && !dev->slot->per_func_slot))
+>  		return -ENOTTY;
+>  
+>  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+> index 6d5cd37bfb1e..894d6213ed30 100644
+> --- a/drivers/pci/slot.c
+> +++ b/drivers/pci/slot.c
+> @@ -37,7 +37,7 @@ static const struct sysfs_ops pci_slot_sysfs_ops = {
+>  
+>  static ssize_t address_read_file(struct pci_slot *slot, char *buf)
+>  {
+> -	if (slot->number == 0xff)
+> +	if (slot->number == (u16)PCI_SLOT_PLACEHOLDER)
+>  		return sysfs_emit(buf, "%04x:%02x\n",
+>  				  pci_domain_nr(slot->bus),
+>  				  slot->bus->number);
+> @@ -72,6 +72,23 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
+>  	return bus_speed_read(slot->bus->cur_bus_speed, buf);
+>  }
+>  
+> +static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *slot)
 > +{
-> +	switch (comp) {
-> +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
-> +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
-> +		return comp;
-> +	default:
-> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
-> +	}
+> +	if (slot->per_func_slot)
+> +		return dev->devfn == slot->number;
+> +
+> +	return slot->number == PCI_SLOT_ALL_DEVICES ||
+> +		PCI_SLOT(dev->devfn) == slot->number;
 > +}
 > +
->  /* Return device's Root Port completer capability */
->  static u8 get_rp_completer_type(struct pci_dev *pdev)
+> +static bool pci_slot_enabled_per_func(void)
+> +{
+> +	if (IS_ENABLED(CONFIG_S390))
+> +		return true;
+> +
+> +	return false;
+> +}
+> +
+>  static void pci_slot_release(struct kobject *kobj)
 >  {
-> @@ -211,7 +226,8 @@ static u8 get_rp_completer_type(struct pci_dev *pdev)
->  	if (ret)
->  		return 0;
+>  	struct pci_dev *dev;
+> @@ -82,8 +99,7 @@ static void pci_slot_release(struct kobject *kobj)
 >  
-> -	return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
-> +	return tph_completer_type_fold(FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK,
-> +						 reg));
-
-Is this just defensive programming, or is there some hardware out
-there that uses this reserved value?  It's kind of an ugly wart to add
-just for theoretical spec conformance testing.
-
-If we really need it, I'd rather read something like this:
-
-    tph_comp = FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
-    if (tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY ||
-	tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
-	    return tph_comp;
-
-    return 0;
+>  	down_read(&pci_bus_sem);
+>  	list_for_each_entry(dev, &slot->bus->devices, bus_list)
+> -		if (slot->number == PCI_SLOT_ALL_DEVICES ||
+> -		    PCI_SLOT(dev->devfn) == slot->number)
+> +		if (pci_dev_matches_slot(dev, slot))
+>  			dev->slot = NULL;
+>  	up_read(&pci_bus_sem);
+>  
+> @@ -187,8 +203,7 @@ void pci_dev_assign_slot(struct pci_dev *dev)
+>  
+>  	mutex_lock(&pci_slot_mutex);
+>  	list_for_each_entry(slot, &dev->bus->slots, list)
+> -		if (slot->number == PCI_SLOT_ALL_DEVICES ||
+> -		    PCI_SLOT(dev->devfn) == slot->number)
+> +		if (pci_dev_matches_slot(dev, slot))
+>  			dev->slot = slot;
+>  	mutex_unlock(&pci_slot_mutex);
+>  }
+> @@ -267,7 +282,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>  
+>  	mutex_lock(&pci_slot_mutex);
+>  
+> -	if (slot_nr == -1)
+> +	if (slot_nr == PCI_SLOT_PLACEHOLDER)
+>  		goto placeholder;
+>  
+>  	/*
+> @@ -298,6 +313,9 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>  	slot->bus = pci_bus_get(parent);
+>  	slot->number = slot_nr;
+>  
+> +	if (pci_slot_enabled_per_func())
+> +		slot->per_func_slot = 1;
+> +
+>  	slot->kobj.kset = pci_slots_kset;
+>  
+>  	slot_name = make_slot_name(name);
+> @@ -318,8 +336,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>  
+>  	down_read(&pci_bus_sem);
+>  	list_for_each_entry(dev, &parent->devices, bus_list)
+> -		if (slot_nr == PCI_SLOT_ALL_DEVICES ||
+> -		    PCI_SLOT(dev->devfn) == slot_nr)
+> +		if (pci_dev_matches_slot(dev, slot))
+>  			dev->slot = slot;
+>  	up_read(&pci_bus_sem);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index ebb5b9d76360..b6e20616e17f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -79,14 +79,18 @@
+>   * and, if ARI Forwarding is enabled, functions may appear to be on multiple
+>   * devices.
+>   */
+> -#define PCI_SLOT_ALL_DEVICES	0xfe
+> +#define PCI_SLOT_ALL_DEVICES	0xfeff
+> +
+> +/* Used to identify a slot as a placeholder */
+> +#define PCI_SLOT_PLACEHOLDER	-1
+>  
+>  /* pci_slot represents a physical slot */
+>  struct pci_slot {
+>  	struct pci_bus		*bus;		/* Bus this slot is on */
+>  	struct list_head	list;		/* Node in list of slots */
+>  	struct hotplug_slot	*hotplug;	/* Hotplug info (move here) */
+> -	unsigned char		number;		/* Device nr, or PCI_SLOT_ALL_DEVICES */
+> +	u16			number;		/* Device nr, or PCI_SLOT_ALL_DEVICES */
+> +	unsigned int		per_func_slot:1; /* Allow per function slot */
+>  	struct kobject		kobj;
+>  };
+>  
+> -- 
+> 2.43.0
+> 
