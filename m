@@ -1,182 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98B03BD653
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 22:39:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E6CF397329
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 22:43:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784155199; cv=none; b=KjkLgwu5yhe4nXeVuCBiKAgF09NyCYBML2XdphhniWDtXjYgrgS95MTGcgkHY5U/yvHSioFLVe75YJvJMeKSWDb9tomiD4IAhloeEFsRimxiptUAewpeSvWEv+A1Ac6Yh0FWVDqoazAH0HhnP9D70g393V0LoWL3E7t8ad21YKs=
+	t=1784155430; cv=none; b=cRANnVortULMiDXQ1wWSpu3yJFjRJblZTwf7d353nwZ0fbCSMNHeaDaoVhK3ryriI6WRxluVtgpqMmZ/aaFdsNIshig5dh2MMueo5U836KBedP6zdgmN8T3o25vaYlVxSPVvjNzWIxhi2XiRzJ0kqiW9qOcDugoMOT0fmLq7Pcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784155199; c=relaxed/simple;
-	bh=JNs0TVrTZGyTOoBIu2d/eQYEbREThikOuBeI0ykXQGU=;
+	s=arc-20240116; t=1784155430; c=relaxed/simple;
+	bh=JwUDyTt08Fi6P6gDON3AmZTLN8zsGIolYgt7RlDscWw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UJKxWMWIok3DD5x1jk2Fpejmxloz7ckr5laE1nRlWRJw1ma/ZgSrz0WcWN9qVkgE8EmsFKNrwDYuhl6TgwiGvyuCMuDT3QPg0T7mJ0/qQ+0+EmDP3sTK4qQMVPoL6e/Add2O+Byuqaho7TXjr6EkNxoguAO5GFZZ/RzfoqWGzwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7fzIrPd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QIuEsM3lz/qOHA6+oD82h1mQtyGlhGitQBu1sJG67RwbAFdjdfkc7jJPFZEK8RtnGwiFy+Qkzbc0PYa+6picq7fXfqgpNYpe9UKZ+27zkeiZAVTqFxCc1b9WEM0BStohgS/Q5UWEWqY52HNhvoH+pw+hxZNpCBZGeyo9WUP8HCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eWbElRh0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7fzIrPd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56EDD1F00A3A;
-	Wed, 15 Jul 2026 22:39:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eWbElRh0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 134DF1F000E9;
+	Wed, 15 Jul 2026 22:43:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784155197;
-	bh=Y18u+FcDbyFzGQ8faIcBNX94uJqsLREad/76/8tPQuQ=;
+	s=k20260515; t=1784155429;
+	bh=9OaDAY7b3Np0J58uJHImIG1So0Zy0MyIe5MA12Zgtqs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F7fzIrPd7KF9A+6WwLJ7Bwupeq93CF6l6vZLWNhtTR4Ac4mGzlQYyW7z8Uc1H3Dr3
-	 RMUGTxkBpCZT9q3uBur4P7bIYAhJmBkYBQ9V9Cks05R+1qtV+JiyxqpIYk1WEHHXmU
-	 3H4Z7ttLMr7fXaQ5UulTCIi/Ho2JWX2+ZviEnUcA1EoE6NZc7hVkkCspnyxRR7yoL0
-	 saCTZ1Nq459+ddO3nylqD+1Mm/Hd8WxTVkZPCH/uBcqc4JY4a0uNTYuorD2DfKqO77
-	 kyPGYAjemveRA/HTaUAoNsnGTWPzZymKe7WU2OxgQ+o3++7oS5hWbVLrJ7WFl0ovD+
-	 nfHOw1nMgpSjg==
+	b=eWbElRh0hrtiroqw++zmObq/z5izETlParMUrbGikWKMc2VoXu0GaOM6+dHJaRxhM
+	 GMkTFObMrOnKPUjyJWDDeLyLC5jou2c0vNsCblMdZoWZiwOxPHEApR7YzalN/lPpQm
+	 uBoAgCsj6v2cPR6QfgTtygFsDMsJgBWHGqlLKqEWfiBpMwnfzx76Mo69O1UPLHYCIs
+	 jwbkPBwY+qU0VkCx0vnd4UO4Zqk67D1PDzIASN0SzdOgFIhtNFTnFNC7NvwGfLR/8H
+	 TjqdXXmAycNDRWdlt/3zYtWhi9Awr89+DBuZry5UzJdMdvDgCIdNOaCxFBrN921mF0
+	 Id9+hhpDbSvBA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error
- handling
+Subject: Re: [PATCH 1/3] PCI: rzg3s: Disable refclk on probe failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260715223019.3002237-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20260715223019.3002237-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260715223019.3002237-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 22:39:56 +0000
-Message-Id: <20260715223957.56EDD1F00A3A@smtp.kernel.org>
+Date: Wed, 15 Jul 2026 22:43:48 +0000
+Message-Id: <20260715224349.134DF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
+New issues:
+- [Medium] The patch violates hardware teardown order by disabling the PCIe=
+ reference clock before asserting controller resets.
+
 Pre-existing issues:
-- [High] Use-After-Free window in INTx IRQ domain error handling path.
-- [High] Chained INTx handlers are registered before their dependent IRQ do=
-main is created.
-- [High] Unsafe contiguous virtual IRQ assumption leads to incorrect hardwa=
-re IRQ index calculation.
-- [High] Read-Modify-Write operations corrupt Write-1-to-Clear (W1C) interr=
-upt status registers.
+- [Critical] Missing IRQ cleanup for chained INTx handlers on probe failure=
+ leads to use-after-free.
+- [High] MMIO register access after PM runtime clock gating in suspend path=
+ causes system hang.
 --
 
---- Patch [3]: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error =
-handling ---
-commit 7daa41537d847b29b2790ef6fee098277445112b
+--- Patch [1]: [PATCH 1/3] PCI: rzg3s: Disable refclk on probe failure ---
+commit 0d4ef239e6084c21b4710c1db03e3a6365363533
 Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-PCI: rzg3s: Fix IRQ domain initialization error handling
+Subject: PCI: rzg3s: Disable refclk on probe failure
 
-This commit attempts to fix the error path during IRQ domain initialization
-by ensuring chained handlers are unregistered if subsequent steps fail. It
-also updates the teardown path to clear INTx handlers.
+This commit disables the PCIe reference clock when the probe function fails.
+It adds a call to clk_disable_unprepare in the error path, ensuring the
+clock is balanced if initialization fails.
+
+Cc: stable@vger.kernel.org
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
+> index 66f687304c1cb..bd6471a7fb7a1 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-[ ... ]
->  static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
->  {
-[ ... ]
->  	for (i =3D 0; i < PCI_NUM_INTX; i++) {
-[ ... ]
->  		host->intx_irqs[i] =3D irq;
->  		irq_set_chained_handler_and_data(irq,
->  						 rzg3s_pcie_intx_irq_handler,
->  						 host);
->  	}
-> =20
->  	host->intx_domain =3D irq_domain_create_linear(dev_fwnode(dev),
->  						     PCI_NUM_INTX,
->  						     &rzg3s_pcie_intx_domain_ops,
->  						     host);
-
-[Severity: High]
-This is a pre-existing issue, but does this sequence leave a window where
-interrupts can be misrouted?
-
-If a hardware INTx interrupt fires immediately after unmasking via
-irq_set_chained_handler_and_data(), rzg3s_pcie_intx_irq_handler() will exec=
-ute
-while host->intx_domain is still NULL.
-
-Passing a NULL domain to generic_handle_domain_irq() causes the IRQ core to
-fall back to the system's irq_default_domain, which might route spurious
-interrupts to unrelated devices.
-
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		int ret =3D rzg3s_pcie_init_msi(host);
-> +		ret =3D rzg3s_pcie_init_msi(host);
-> =20
->  		if (ret) {
->  			irq_domain_remove(host->intx_domain);
-> -			return ret;
-> +			goto err_cleanup_intx;
->  		}
->  	}
-> =20
+> @@ -1762,6 +1762,7 @@ static int rzg3s_pcie_probe(struct platform_device =
+*pdev)
 >  	return 0;
-> +
-> +err_cleanup_intx:
-> +	rzg3s_pcie_clear_intx_handlers(host, i);
-> +
-> +	return ret;
->  }
+> =20
+>  host_probe_teardown:
+> +	clk_disable_unprepare(host->port.refclk);
+
+[Severity: Medium]
+Does this new addition violate the hardware teardown order by disabling the
+reference clock before asserting controller resets?
+
+During setup, the reference clock is enabled prior to calling
+config_post_init() which deasserts resets. In this new error path,
+clk_disable_unprepare() is called before host->data->config_deinit(host).
+
+Could disabling the clock while the core is out of reset leave the state
+machine hanging or undefined? Should the clock disable be moved after the
+config_deinit() call to maintain strict LIFO initialization order?
+
+>  	rzg3s_pcie_teardown_irqdomain(host);
+
+[Severity: Critical]
+This is a pre-existing issue, but does the teardown function fail to clean
+up chained handlers on probe failure?
+
+Looking at rzg3s_pcie_teardown_irqdomain(), it removes the IRQ domain but
+does not unregister the chained INTx hardware handlers:
+
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_teardown_irqdomain() {
+        if (IS_ENABLED(CONFIG_PCI_MSI))
+                rzg3s_pcie_teardown_msi(host);
+
+        irq_domain_remove(host->intx_domain);
+}
+
+If pci_host_probe() fails and the devres mechanism frees the host structure,
+could a shared or spurious INTx interrupt firing later cause
+rzg3s_pcie_intx_irq_handler() to dereference the freed host pointer? Should
+this call irq_set_chained_handler_and_data(irq, NULL, NULL) to prevent a
+use-after-free?
+
+>  	host->data->config_deinit(host);
+>  rpm_put:
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does the error cleanup order
-create a use-after-free window?
+This is a pre-existing issue, but can the suspend path cause a system hang
+due to MMIO access after PM runtime clock gating?
 
-If rzg3s_pcie_init_msi() fails, the code calls
-irq_domain_remove(host->intx_domain) and then jumps to err_cleanup_intx to
-clear the handlers.
+In rzg3s_pcie_suspend_noirq(), the driver disables the device PM domain
+clocks before calling the hardware de-initialization routine:
 
-If a hardware INTx interrupt fires between the domain removal and unregiste=
-ring
-the handler, rzg3s_pcie_intx_irq_handler() could dereference the already fr=
-eed
-host->intx_domain pointer.
-
-[Severity: High]
-This is a pre-existing issue in the handler itself. Is it safe to assume
-platform IRQs are strictly contiguous?
-
-rzg3s_pcie_intx_irq_handler() calculates the hardware index by subtracting
-virtual Linux IRQ numbers:
-
-rzg3s_pcie_intx_irq_handler() {
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_suspend_noirq() {
         ...
-        unsigned int irq =3D irq_desc_get_irq(desc);
-        u32 intx =3D irq - host->intx_irqs[0];
+        ret =3D pm_runtime_put_sync(dev);
+        if (ret)
+                return ret;
+
+        clk_disable_unprepare(port->refclk);
+
+        /* SoC-specific de-initialization */
+        ret =3D data->config_deinit(host);
         ...
 }
 
-Since platform_get_irq_byname() dynamically requests platform IRQs, they are
-not guaranteed to be contiguous. If they are disjoint, this subtraction wou=
-ld
-produce an out-of-bounds index for generic_handle_domain_irq().
+For the RZ/G3E SoC, the de-initialization callback performs an MMIO write:
 
-[Severity: High]
-This is another pre-existing issue regarding interrupt acknowledgment. Will
-using a read-modify-write operation on a Write-1-to-Clear (W1C) register
-silently drop concurrently pending interrupts?
-
-For example, in rzg3s_pcie_msi_irq():
-
-rzg3s_pcie_msi_irq() {
-        ...
-        /* Clear the MSI */
-        rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIS,
-                               RZG3S_PCI_PINTRCVIS_MSI,
-                               RZG3S_PCI_PINTRCVIS_MSI);
-        ...
+drivers/pci/controller/pcie-rzg3s-host.c:rzg3e_pcie_config_deinit() {
+        writel_relaxed(0, host->axi + RZG3S_PCI_RESET);
+        return 0;
 }
 
-If RZG3S_PCI_PINTRCVIS is a W1C register, reading the current state and
-writing it back means any concurrently pending interrupts (read as 1) will =
-be
-written back as 1, inadvertently clearing them before they can be handled.
-
-A similar operation happens in rzg3s_pcie_intx_irq_ack().
+Will accessing this MMIO region while the bus clock is gated trigger a fatal
+bus fault on ARM64 during system suspend? Should the de-initialization
+happen before pm_runtime_put_sync() is called?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715223019.3002=
-237-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D3
+237-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D1
