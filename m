@@ -1,155 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E62C35E1B1;
-	Wed, 15 Jul 2026 14:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA8137DEBB;
+	Wed, 15 Jul 2026 14:10:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784124571; cv=none; b=TiiagYfWdxCrIRoFnlUL8wHpL1UOz5eeFpqgyeM+7F0Sp9bsn4nCr0FwEgxST7+abxVbUIsfYqgLBcwKsZKTs1dNXqLjkEucTS7rwYHIEjjkVQQczag/YrZV7OX1IJFu9buTsU6gQhfpv473MFZcSRacoaW6dZiI/Mptr4RZ1o4=
+	t=1784124661; cv=none; b=bDlPCXiEbh5uGMsaDrVlQCq+jV51XFBrt/UXYUpLcAeNs9/Z+TXOwcVRTbSejw+PXLw4+H+rTrtzkaII1lXO/FA7yN5yYg4jXgT7TINhVqsL8VVdHu0l47PNFvuWJ2vCnvm+zlkNzyvjVhQI7YNlLzC/HPu8lbrt9tnJySxW+U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784124571; c=relaxed/simple;
-	bh=M4Jem1LZ25shuyCknWPEWFS9wuoe0XDyY9ZFE1Ag6Bs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rCEPIJrdLAluYktkYUoVKDB7bEOuwpwSkz0PasssyeNqGIbzIBWZqacRBNQuLSGFBjliNVqZpPEpuTa5AZaPuQhtnqgwgCHsZlsUM/bt0zWq1Ol8NGMZGdhcJcULbvfBJUEwGkZFF6859RPyFrLynNEMvLmR7zcS5c2cg5j5LqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K6GfIdNi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784124661; c=relaxed/simple;
+	bh=mjO1eLJTzvr5we4SILqTlLNZXZyPr7noZAruO5jj37s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=flVugeGgDhWEt38BydIImQzVemrbDVFCP3f8ZU6BATPdPUrfxAVEDpfScjgIcFd/zUBpWU58xbEeaaxuZHaM/XYzxFxz6QvKQ3KUU3XQCKu5YsdgdZ+e3Y3T82uuUG9uQsH5/Lct6HM0fV38F5Pcc2ePt8SrrU9jzEm5pqWKtqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=F/V3v9ut; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=N6c52Re9; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K6GfIdNi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A08B1F000E9;
-	Wed, 15 Jul 2026 14:09:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784124569;
-	bh=FBD/7eQnjK8rzn8PSfUS5k0D+AJUQRdOEewTAalPnWU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K6GfIdNiZ4ebU8dgVFsgAZSR5DdsIOUVs+mgg+QRsiWQnSsQReSsETw1uTvXebIZu
-	 EyZzq8S7y/VuBtdCSEQfjYeeik+TfqOktpwOsJUi4yN11pCgl8W5MaWCBv7p5T7rzg
-	 g3DLTzDA7KmYUpWPIcLrPe9ssSCzPksYG9KAc2dMyEDkUWPy7n3sMy0zgPC0/Xd/aU
-	 GbfYiRt7jzxIoE4cm7DpVsJxlimZyThKa2+owBDZoLvE8zELtdV+cZcg/XsqdChTec
-	 MG+bWv3qtWKr6ZzJninzt+wseZXBKqnmGBMaINyC3Yidl1KIg1vH246i3gXh8BvgpJ
-	 XNjWhTDkg6eew==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] ACPI: PCI: Clear driver_data on all paths that free
- the acpi_pci_root
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen Pei" <cp0613@linux.alibaba.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260715135048.3278-1-cp0613@linux.alibaba.com>
-References: <20260715135048.3278-1-cp0613@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 14:09:29 +0000
-Message-Id: <20260715140929.9A08B1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="F/V3v9ut";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="N6c52Re9"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4h0dPX65yPzMlH0;
+	Wed, 15 Jul 2026 16:10:56 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1784124656;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sWcJy8AVXvzucJnbuxsBlK4QMspmeRMnc/T8cZju6zI=;
+	b=F/V3v9ut4Fa/W0qdgPuLDMrZa8vo+KfIr+ksNlDIBXglbUylOvdCqFz0FStzmwuriUxZAG
+	Hoe7+6MfFp2vhIIpPVjjCDl3ywqoEh+R6qSN3eu2UVANZz4CIWOjjkB/SYDmqA8gt8at5M
+	pl/tOi9uoNnxrrOCeLOAloBJmufOwr+29yU40MP3FIjnZmFRmjTKvAHNBzpTONxHh2xlmL
+	XalExZfLK2g9fdLWw5W4lOOZsdOB9PHxM5vMwz15mqjXlMPnHqoR7TAeJcSGRc5xPcqhOG
+	PJgyOuu9WmN29nXzzM94drty95cmLylGRWwhz7xDCf3bgr1Dj2RXxyK814P8kQ==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=N6c52Re9;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut@mailbox.org designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=marek.vasut@mailbox.org
+Message-ID: <e0e9e2c7-b125-4200-884b-933cc1ea6b2a@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1784124655;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sWcJy8AVXvzucJnbuxsBlK4QMspmeRMnc/T8cZju6zI=;
+	b=N6c52Re9g/S8W0C50YNI/VnO25lBmCiT3pzg7Arg9HRNCRZ7a/iF2/BWvohnI0kGjpm6nT
+	mor+P2e80rkyO67xNEJBMc54VDsQDonKo/0FJM3BW8GjTdBXQgltedDzhRl8DOZuUbGqK+
+	rUt1Ex5jW59dICVYrgPXzLgP2EtrOpaS3KevmBYpiI6OGYWW37ojfcq/4y5t6nj/KWzytD
+	vtlEx3wskXPWB7TZg6a+Phpsvbo4IBenxpoOQ+Q/B0yoaEng7pFk+j83YGTcOzYo/Qj32S
+	ZuttVNnxNUwRYKfH4L1HVF1anPYScQTipghFKUUPpLS+Yyh96Aric0SBiiWrzw==
+Date: Wed, 15 Jul 2026 16:10:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Isolate driver to ARM64
+To: Manivannan Sadhasivam <mani@kernel.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, linux-pci@vger.kernel.org,
+ kernel test robot <lkp@intel.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley
+ <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260714131957.38067-1-marek.vasut+renesas@mailbox.org>
+ <20260714211030.GA1412991@bhelgaas>
+ <jipy4hvsmksv6fy352y23sjdnutpkqoi2577qp5vymqqggiscz@cnx2vijnhvh4>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <jipy4hvsmksv6fy352y23sjdnutpkqoi2577qp5vymqqggiscz@cnx2vijnhvh4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: 431aabb15f8d3f0014e
+X-MBO-RS-META: 3nwked576sj6tfybptqfskq4fgtauqm4
+X-Rspamd-Queue-Id: 4h0dPX65yPzMlH0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Clearing `device->driver_data =3D NULL` followed immediately by `k=
-free(root)` leaves a Use-After-Free race window for concurrent lockless rea=
-ders.
-- [High] Publishing `root` to `device->driver_data` before full initializat=
-ion and without memory barriers allows readers to see uninitialized fields.
---
-
---- Patch [1]: [PATCH v2] ACPI: PCI: Clear driver_data on all paths that fr=
-ee the acpi_pci_root ---
-commit df0768c14918e7decb436f5ec80561fb6dbd2aed
-Author: Chen Pei <cp0613@linux.alibaba.com>
-
-ACPI: PCI: Clear driver_data on all paths that free the acpi_pci_root
-
-This commit fixes dangling pointers in the ACPI PCI root code by ensuring
-device->driver_data is cleared to NULL before the root bridge structure
-is freed in both error and removal paths.
-
-Link: https://sashiko.dev/#/patchset/20260526025118.38935-1-cp0613@linux.al=
-ibaba.com
-Link: https://sashiko.dev/#/patchset/20260707121258.11640-1-cp0613@linux.al=
-ibaba.com
-
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 4c06c3ffd0cbb..408ba12362a79 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -725,7 +725,6 @@ static int acpi_pci_root_add(struct acpi_device *devi=
-ce,
->  		dev_err(&device->dev,
->  			"Bus %04x:%02x not present in PCI namespace\n",
->  			root->segment, (unsigned int)root->secondary.start);
-> -		device->driver_data =3D NULL;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the earlier assignment
-of device->driver_data =3D root allow readers to see uninitialized fields?
-
-Earlier in acpi_pci_root_add(), the pointer is published to
-device->driver_data before critical fields like root->bus are initialized
-later in the function:
-
-acpi_pci_root_add() {
-    ...
-    device->driver_data =3D root;
-    ...
-    root->bus =3D pci_acpi_scan_root(root);
-    ...
-}
-
-If a concurrent caller (such as bus_for_each_dev iteration in
-cxl_acpi_probe()) fetches the root object, could it observe a NULL root->bus
-and dereference it before initialization is complete?
-
-Furthermore, without memory barriers, could the CPU reorder the
-initialization such that readers observe partially written state?
-
->  		result =3D -ENODEV;
->  		goto remove_dmar;
->  	}
-
-[ ... ]
-
-> @@ -765,6 +764,7 @@ static int acpi_pci_root_add(struct acpi_device *devi=
-ce,
->  	if (hotadd)
->  		dmar_device_remove(handle);
->  end:
-> +	device->driver_data =3D NULL;
->  	kfree(root);
->  	return result;
->  }
-
-[Severity: High]
-This is a pre-existing issue, but does clearing device->driver_data
-immediately before kfree(root) leave a use-after-free window for concurrent
-lockless readers?
-
-If a lockless reader like hisi_pcie_handle_error() or add_host_bridge_uport=
-()
-calls acpi_pci_find_root(), it reads device->driver_data without taking a
-lock:
-
-acpi_pci_find_root() {
-    ...
-    root =3D acpi_driver_data(device);
-    ...
-}
-
-If the reader fetches the pointer just before device->driver_data is set
-to NULL, and then this code proceeds to kfree(root), wouldn't the concurrent
-reader dereference freed memory?
-
-> @@ -788,6 +788,7 @@ static void acpi_pci_root_remove(struct acpi_device *=
-device)
-> =20
->  	pci_unlock_rescan_remove();
-> =20
-> +	device->driver_data =3D NULL;
->  	kfree(root);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715135048.3278=
--1-cp0613@linux.alibaba.com?part=3D1
+On 7/15/26 4:03 PM, Manivannan Sadhasivam wrote:
+> On Tue, Jul 14, 2026 at 04:10:30PM -0500, Bjorn Helgaas wrote:
+>> On Tue, Jul 14, 2026 at 03:19:27PM +0200, Marek Vasut wrote:
+>>> The driver includes linux/irqchip/arm-gic-v3.h which pulls in headers
+>>> which are available only on ARM and ARM64, on other architectures the
+>>> headers are not present and the driver fails to build. This driver is
+>>> used only on ARM64 hardware, isolate its build only to ARM64 to avoid
+>>> build failures on other architectures.
+>>>
+>>> Reported-by: kernel test robot <lkp@intel.com>
+>>> Closes: https://lore.kernel.org/oe-kbuild-all/202607100310.iQw5m9Uo-lkp@intel.com/
+>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+>>
+>> Mani, I assume you'll squash this into 89bded511a66 ("PCI: rcar-gen4:
+>> Configure AXIINTC if iMSI-RX is not used") so it's connected to the
+>> addition of the linux/irqchip/arm-gic-v3.h include and there's no
+>> bisection hole?
+>>
+> 
+> Yes, squashed now!
+Thank you both.
