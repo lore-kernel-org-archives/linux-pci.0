@@ -1,88 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f193.google.com (mail-pf1-f193.google.com [209.85.210.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5D72BDC26;
-	Wed, 15 Jul 2026 13:44:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B502BDC26
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 13:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784123048; cv=none; b=D+tj6fNPwxcebzsxnyexvgcGrkpI2M8Mcl+YpbmPVxTtMVAjJ1x79AWGJdOL/PX4rtben3n+6cdfnJtyJelR3vM01dCIQ3eRIqBv89oAsjaPXgVZ2wl7TYHKrE1tCFSZn+QiI4oudPMaMu23pt9OedXEfvP+1QD2RoZji3pbfgQ=
+	t=1784123222; cv=none; b=YWm143wN+n/ATTuf62MMxrN5j5AhDqkeU9jqdAyR2Exssv9o49Dy3dPf1fCEbYAvpkgkIdY5aEMWRP6esbanV8XgnbCU7EHRLj+JY89QtqPFmzM+zmSSfZ3VrVBNFZ+bwRHE8iHETxbzVKhh/lurlSENNXC4i4yoTkHmXoJgmzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784123048; c=relaxed/simple;
-	bh=Wg0meqnxFEw5G6Qv4ImeIjhEtokpu+yPkFFD059nYzc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FvS2ZxUwdsFyEbBc+3f5zmKhr/mlKGFsA5NQTpP5MNF63eto3177Xlw0ILDfGdskPg/NGphPFYKm1CpEYj/d7LZuv/mQ915p/pb6MigDxiiuwPz1s//UBu/FHXL4UM/hKwBHn7/tOmTQNYuVgsf42u1W/lucMbiGQXjUmCoo7ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kIOZpu60; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784123222; c=relaxed/simple;
+	bh=CMuNYaGnRzSq6CZHFO9VntX54RIhTsLJI3gd5H3i0ow=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Tindt3KbtvDi5gg7VmkyvY459PfjCQX8/TrfahAvxCQm84dxpQaXWZSAVr5bSaw1RpHZzf3FsEJeHRabzP2F8C8ZOYRAWCfBRDQVTRCR4+UPqiDYem4VCdmPCODfdwYP2EEWaj3ylfSjh7OJu7QTzrZHqQGIIU/yC3h2+jzuqzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Fwh9Ay1z; arc=none smtp.client-ip=209.85.210.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kIOZpu60"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F134D1F000E9;
-	Wed, 15 Jul 2026 13:44:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784123047;
-	bh=4+q/j/V21cQRy9vbrN2Mm3epRMoSLUUDJoDy9ogPtVo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kIOZpu60fp3mLf+G1d/8d1x3ilVytTlKveYgAkbs18wUqX0HiidkvF3TNGkWGQ/Iu
-	 FlY+6zVIl5NKyHNX/Dut+zgNEvWwRsNrxa0mN1YBh/1RfcS/MEGpAeQfVDs1fl0xz3
-	 ETFojbxVqJgntL8d3UEXLSXEA4XLXXgdlz3oPFeW/LupCYVwaaSNVGDrkSaiTXFwNI
-	 UsmjdkiupmJS5PGVimVJpx1tI8aVGyJ1e/AzvsvZQoJyg05zYT4IxhBRqhu0q/jA6O
-	 y2FpiVQBF3izk85UwrXYHczRcxpKPtk1uM2lc/SOJM4IDsLB8vTKVll6XG6i412Pxw
-	 sQPrVuZaWhLQA==
-Date: Wed, 15 Jul 2026 15:44:01 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/VPD: Add Realtek 8126 to VPD blacklist
-Message-ID: <lfml4kmr4r3l44hcx7vfrcks2z355ri5emr5umynnzoncyopjl@5to6f3e67owz>
-References: <20260522114135.2104890-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fwh9Ay1z"
+Received: by mail-pf1-f193.google.com with SMTP id d2e1a72fcca58-84a2c90e383so488777b3a.0
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 06:47:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784123220; x=1784728020; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Bxz//7/e5HTtWCDRAkC6j3Yh9BkeNsmi3Lm7ODOArD4=;
+        b=Fwh9Ay1z1EWz+JyWpXDhllwKYL+k/tAMBXQMoYax6OCAJCoA5Xi3vVuoakuY6N/aad
+         TYDPqSs9Kb1TXW25wZy0OZB8RsEq6NNkB3LWTNHIN88HF9uHcd8hXPvimjUkhFZdm1J3
+         leTd7GXWVly5XnKmFBue0oXwB2sDiDnhPBDmhDXs2a/eVyioQ6HdD5MfZ0qtLIiw5LUM
+         JrPueFa59QIErj9U3YGPPVv7BVrU9tbUfmZvrDmIworGrmUU/Wln66Y1Xys6Ss90t1on
+         zAcFPIq5fO9dMqczwIITfY29DwWhYLoG2YJEeTXxuvI0WTFoi/9ehXMlOu2oF/0Y6DJF
+         c2/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784123220; x=1784728020;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Bxz//7/e5HTtWCDRAkC6j3Yh9BkeNsmi3Lm7ODOArD4=;
+        b=LUOX/N44MGtAPTVRW91WQd3FUZ/oCRepCBJVQ+xKP9u0SgifeJQUzQq2PCswldb45a
+         qkUGoUZWwf1gobY/1uIFN6VIXJ+D+fPBQPI4u564thM+R5dso7ThbrQrEUU9J9qBboqj
+         ay8hNr2gjMa4MBt5iMj/439x2ZSoTZTyjoEqsAgP8Mq3s+cilaWIRUXrvl3uN80SD4Pm
+         ABXATxcEWaFwrEBYl3mDHbpL8BSzSGBdltqJ+sKd6nX4CQtOvrOkhBis63krlTRdVdCB
+         31ISE48SHwRrHsVsoeK3DUMeHf27YKHXlHqBS7/SffQsQZpl5CvEoz0J5TCmNhFym0/V
+         AntQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqfrYEHZvj5k604goECC819PYcr2tmBERBq7CZthFDeS99PsrlitoNU+yfuXLQhjQC6JnbRHTzD7aI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzCC/HBvcrbF52eMeNQas+Ci//uQg38o7iNO1xz+oFNOnYprswn
+	Xig78OUc2bMBooXuS31HPXBSRDDsa9e/r36YIE4kwTP72LEIPJlJKZqGJ7z5StR9
+X-Gm-Gg: AfdE7cls1Ro0RpBPH4oK2t9WuyD6xtgGcrXJcAdy8iPP4q3tYUXjWCOfITle3Jp2mxh
+	CNbpjz7ytVNoAUA8NkHMcRODwPC5B3CPMce0gEE1cGCPe84WKHWHSpzsRa2UypxsZ8sTuQ+vW8N
+	T0Tk4LKQ/UxfMI3IOP7D/28Fbo1iB+gheYpWVhHIFm21pR5FJGBUuJpZUS84aijDF60M28lnhwo
+	OBhdaEMYPyAj/TCDuZB+heyg2h6jANduudmTsqRtG6n/FQz3M6GCd4nBrFK51xiMRFHWSImikEl
+	1IfofAqSZIv2CEsSioSfi2ebiy/ntjhYbkznXqZXO8fqcjO4Uh/KRVuDXXTYIqz4ak7DkVR/TYC
+	UcdukmB4wHkOSb6vUz44HUTbDVh8Lu206X+KMILNQk7piy3HTchMMUE1uAJ/6JtN3Je8cvou+yE
+	YLm+h7AhwvP9WWTWxVDbNr9i8bAoHIsw==
+X-Received: by 2002:a05:6a21:458f:b0:3b5:6b5a:4f31 with SMTP id adf61e73a8af0-3c0f0b726cdmr25977715637.27.1784123219895;
+        Wed, 15 Jul 2026 06:46:59 -0700 (PDT)
+Received: from workstation.. ([182.180.105.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e4fc28dsm1954487eec.2.2026.07.15.06.46.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jul 2026 06:46:59 -0700 (PDT)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: kevin.xie@starfivetech.com
+Cc: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	Markus.Elfring@web.de,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ali Tariq <alitariq45892@gmail.com>
+Subject: [PATCH v2] PCI: starfive: Fix resource leaks on error paths in host_init()
+Date: Wed, 15 Jul 2026 18:45:32 +0500
+Message-Id: <20260715134532.619566-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260714113029.326207-1-alitariq45892@gmail.com>
+References: <20260714113029.326207-1-alitariq45892@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260522114135.2104890-1-18255117159@163.com>
 
-On Fri, May 22, 2026 at 07:41:34PM +0800, Hans Zhang wrote:
-> The Realtek 8126 Ethernet controller advertises VPD capability but
-> returns invalid data when VPD is read, leading to kernel messages
-> like:
-> 
->   r8169 ... invalid VPD tag 0x00 (size 0) at offset 0; assume
->   missing optional EEPROM
-> 
-> and pcilib reporting "sysfs_read_vpd: read failed: No such device".
-> 
-> Add the device to the VPD blacklist to suppress these errors.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
+starfive_pcie_host_init() acquires the PHY, clocks/resets, and an
+optional regulator in sequence, but does not correctly unwind these
+resources when a later step fails.
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+If starfive_pcie_clk_rst_init() fails after the PHY has already been
+successfully enabled, the function returns directly without disabling
+the PHY, leaking it and leaving it powered.
 
-- Mani
+If regulator_enable() fails for the optional vpcie3v3 regulator, the
+failure is only logged; the function falls through and returns
+success, leaving the driver believing the regulator is enabled while
+continuing to configure PCIe hardware that may be unpowered. This
+also leaves the clocks and PHY enabled with nothing to clean them up.
 
-> ---
->  drivers/pci/vpd.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-> index 153394a652d3..fbc34cd842ac 100644
-> --- a/drivers/pci/vpd.c
-> +++ b/drivers/pci/vpd.c
-> @@ -590,6 +590,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8126, quirk_blacklist_vpd);
->  /*
->   * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
->   * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
-> -- 
-> 2.43.0
-> 
-> 
+Disable the PHY on the clk/reset failure path, and disable the
+clocks/resets and PHY, then return the error, if the regulator fails
+to enable.
 
+Build-tested and boot-tested on StarFive VisionFive 2 v1.2A
+
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+---
+Changes in v2:
+- Use a shared error-handling label instead of duplicating cleanup code
+---
+ drivers/pci/controller/plda/pcie-starfive.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+index ba8ef7842e35..fab44054a5de 100644
+--- a/drivers/pci/controller/plda/pcie-starfive.c
++++ b/drivers/pci/controller/plda/pcie-starfive.c
+@@ -304,12 +304,14 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
+ 
+ 	ret = starfive_pcie_clk_rst_init(pcie);
+ 	if (ret)
+-		return ret;
++		goto err_disable_phy;
+ 
+ 	if (pcie->vpcie3v3) {
+ 		ret = regulator_enable(pcie->vpcie3v3);
+-		if (ret)
++		if (ret) {
+ 			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
++			goto err_clk_rst;
++		}
+ 	}
+ 
+ 	if (pcie->reset_gpio)
+@@ -379,6 +381,13 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
+ 		dev_info(dev, "port link down\n");
+ 
+ 	return 0;
++
++err_clk_rst:
++	starfive_pcie_clk_rst_deinit(pcie);
++err_disable_phy:
++	starfive_pcie_disable_phy(pcie);
++
++	return ret;
+ }
+ 
+ static const struct plda_pcie_host_ops sf_host_ops = {
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
+
