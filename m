@@ -1,157 +1,199 @@
-Received: from mout.web.de (mout.web.de [212.227.15.3])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 591F543FD3C;
-	Wed, 15 Jul 2026 10:26:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2542843A7FB
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 11:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784111217; cv=none; b=GhCV1ysEmrK6SfLWoYTeLREmuT5MaHRpP3M9CzPeZHCU0LHa4DRhOWKwr46nBmVy5BliaF++Epw6HPMyYptYuH6N3i7QQ82UwS1wwUCGVpH46m6ZYjwDLgTGzSmRB/yYAyescu5zgorEhxC81QVfOL0wItFp2p3xJvcLM1lcKTs=
+	t=1784114194; cv=none; b=jeYrNBFmkjrqf7LbsPIbgZu6BuXCQ43YS4OsUj0bfTUCwNMwsuh4uDXm8IPSqBIYuYg06yzdaCqgED0gqpLevA3d/On8j23xbm0xPprGv1GxaaBOexecAEharSxqFiWMufSzD+67y+7i4REvPlr+OgGunyn228QmBn1GsUjX2Ek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784111217; c=relaxed/simple;
-	bh=hsrq+08CrRXrK09liT/g0gZvWQOQO/nsZUXdV9HMsHM=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=TkcfoIlk3BEYUxZXf2OkCa4oR8Knd9phT6uzaTiV5GG+gZOd1605MfCfO5upO0c98y3vlDFNWOUlIsD7W0nhUDzC1niU0FehBQGg2M2EQB0tPvcvrzCvidQXg/SJVJvCiYEaActTjvTgmz+IuqgjNk1frmv5vlxQGzDXQhEMg4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=KECelIvB; arc=none smtp.client-ip=212.227.15.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1784114194; c=relaxed/simple;
+	bh=b8R7PMKX/mJOnKSAzw+WBIj3ErqOG2azS+7mDTf24aA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BvMBnWHFirBQ4+boI11rWy3ksqKHn3DK4StlADT1Dh2IGUAARs3HY+uCeESdgrO4O8i0ZG1MRvZ8HN8HTUVMh6GS4XLld6pkBUvqQVM55FvBwc/1wVsTKaxv1ErOs1NM5lxfh653chOgMCzIpRB41wxopECLI9HqH/SKZieY/kA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=C6T+UMfp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=QXHjiXwZ; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="KECelIvB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1784111213; x=1784716013; i=markus.elfring@web.de;
-	bh=hsrq+08CrRXrK09liT/g0gZvWQOQO/nsZUXdV9HMsHM=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=KECelIvBpUDMHw3R4XvBKJ3MLzL67kE8Cb9Ftit1sbKpm+qsRvi5RxBdOyKTDpAQ
-	 hJVV9lAr25naV1SqFZGbvFSYQXd4y7j2B1PGBv6bsOFX5LcKgyVQEzH/6QpYKgtUe
-	 6KJEMnK2rVQQ4EUBD7TuhglCyO1oep7OkBiZXE//B5rjOeyQIPgCWWbKtkoDXjlVO
-	 7ykp/lH4i3qLwI+s6pQV90wj3YbNbhQH/OFmQ7qXTXEP2v0w7irRn4Hvy6zI6EOYH
-	 xmC228fclv70qh0pdhWFKU1KV7adXZYiaM5IC3FBURutN8NrR9KBMbgwMmYWdH+t+
-	 xP5kbrVhQqxw1ybLSA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MSZI5-1wcyma0nF3-00No39; Wed, 15
- Jul 2026 12:26:53 +0200
-Message-ID: <e9b0d5f8-baae-45bb-a8da-7ab88856dddb@web.de>
-Date: Wed, 15 Jul 2026 12:26:49 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="C6T+UMfp";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="QXHjiXwZ"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66FB9DHN3512208
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 11:16:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=nhogDVqJuu8
+	4Y9umWIh3a+QOZfhAgQxd/7sF5vPE2l0=; b=C6T+UMfpT8BjG6k2aEz9pwfcRRs
+	z7wofVtgxCGoTVn0Lfy7lfR7V8Pm7l/A5E/Ce7Z5GRsIvED0zN8TquZRfnI1c9ER
+	jBmmR8KnmmM8m0LoAfvQ1yzTZJ8CRKp15+uc+IOfE1iBlK7nqe4yR4Kx7nqGYTdy
+	zXK5QBjadiIenICy8Cm1PQPNuQjBLQg+GAx98EuHht6PLVZuPxxNNCuJn3aZEMJf
+	+clcOHyUB5QQHqecG5SOqKPK+RHMZVeWQCtiv3I6pOCigqFBWjO+hG9byvd69XPu
+	nP2Cl7oM1yoON2GeAvi1jqpE5sm8RW2vIcrEVWoN2pmzw6vcFxLCkUYDp1Q==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fdwk32h9n-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 11:16:31 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2caea278af8so19265195ad.2
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 04:16:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784114191; x=1784718991; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nhogDVqJuu84Y9umWIh3a+QOZfhAgQxd/7sF5vPE2l0=;
+        b=QXHjiXwZ1f50787ReGmLoov/LE/Wy4+JsdKDK5fTs3Yo2OAfVpqiEMNuicovAoi+xY
+         tJma54Jvs6I9VOmFf/bBJUM/WJx7qCJdU+PLJfaeO5jh4mGARtaOCldGlkjep2QCGAup
+         dv1+7S0y5K1HrP6cmX4udQ5pC+0RBZM1f7LnRJADg1KefFNC34p7ikRZ1ppw/TSj9CWl
+         JnKllidnarh3n9i3W1smL+ao1jjp1f1hl1MEMQyZPPwmHNZlyD97mCE8ZGwEJMvG98Kp
+         kWPj98/iRUoeXKbk3O2PgK79oASRcU7uJ4BQLNPdInV/QXubZo/LlSs5GxHaJ3cRTLyN
+         m1Cg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784114191; x=1784718991;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=nhogDVqJuu84Y9umWIh3a+QOZfhAgQxd/7sF5vPE2l0=;
+        b=M4YcVkMGKgTS5fEXYhqeA7uiBaG90Mu4yAdIzSpxtXEectk6ZqW7whoUEec5JkFZMA
+         4yQVKyB+zMt+gD4oPU2ihRI7w/q1W7LhqhdntqGHRf20sRyp99fthHnzA0OVOIDkaKqV
+         cP5mGbgssWwhaykypE250sLZSbZA52jNOr1NpH45D0sIkuKEE0CaSluV6/JHxXq8ASv0
+         h3dPxfTdwAnUGlnYOUJ/8TDvIq+t9Yq8i6LBgImUXvn/RZZaRojA3ENvSF5uB3tMWnhK
+         EewliNNecJN2KHSzkmPPZXoe6TdcotYo73PTSlFPuKOultlmcC/xSynKECafHSLp/i8A
+         ErPQ==
+X-Forwarded-Encrypted: i=1; AHgh+RosjMGlPQ+WnHVm3Zva91ke+K96RDxNzfGCBf8X+QXJ2/0lV5iQWjFOkEUlvM35gfIP+j5u9m0Qx1A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeGjb+4RZRiq4/JMCAzsYjpmLXUJlR19UTUy++nvobxIH1FU2W
+	ryvRMbiKbxd2WJ26Do2rFjnTslp2OMUmWXdYoVMxsTuZ42JMcgt/vcojFTH/krMfASjNC4GfOMU
+	frWPTrvTqp1iZ9bYA2ohxp87ESPJz1ugTFkZn5O/sucvk50FK1xR6FVDWJyTjVPw=
+X-Gm-Gg: AfdE7cnzg7fmQCnoxZhykXtAEBo84wY7hwgzt04TPIpvhqEURzK2RaVi3PjQmeZpZUU
+	UQYXMeSVHEKl9wYZTIIOl+PeHc6uDxR/XpO/SPT7Wp62GCOCPDtOlOcNjpkhkWCwgR4+PiPOx6g
+	Em3nxMFynyJexszk/Y5XZIHfOqDsiytnVzKhMmO/YvIH5Y6pYNv3EgQRUMSyIN1WiJW2T/2hGrK
+	ZCA0CNlbp+xN2Mz3iLV5idxutqeY8onWMtiev+3b9M0dylMdlBwN7CrgpfyE9wdmTcQqjbNb1Ir
+	Ewy9ih02U0KGp8R+cJl58mdxBibVcTDNf1mnKmg8hG4CtlBeSbbCSKOe09fp3fetzL7QcSaneu8
+	Snm9XrsvmBaaQILhseDuucOQIb9XSeEk4Sv2NICp9/BWsdmlIhHil34Z/20F4DQ==
+X-Received: by 2002:a17:903:2442:b0:2ce:aea4:5e80 with SMTP id d9443c01a7336-2ceaea45f9bmr114310895ad.6.1784114190795;
+        Wed, 15 Jul 2026 04:16:30 -0700 (PDT)
+X-Received: by 2002:a17:903:2442:b0:2ce:aea4:5e80 with SMTP id d9443c01a7336-2ceaea45f9bmr114310655ad.6.1784114190341;
+        Wed, 15 Jul 2026 04:16:30 -0700 (PDT)
+Received: from hu-weiden-sha.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13cd42b2c0bsm471669c88.8.2026.07.15.04.16.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jul 2026 04:16:29 -0700 (PDT)
+From: Wei Deng <wei.deng@oss.qualcomm.com>
+To: mani@kernel.org
+Cc: dmitry.baryshkov@oss.qualcomm.com, andersson@kernel.org,
+        konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, brgl@kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        wenst@chromium.org, mengshi.wu@oss.qualcomm.com,
+        quic_chezhou@quicinc.com, cheng.jiang@oss.qualcomm.com,
+        shuai.zhang@oss.qualcomm.com, jinwang.li@oss.qualcomm.com,
+        xiuzhuo.shang@oss.qualcomm.com
+Subject: Re: [PATCH 3/3] power: sequencing: pcie-m2: Deassert W_DISABLE2# when no UART serdev is created
+Date: Wed, 15 Jul 2026 16:46:22 +0530
+Message-Id: <20260715111622.2561730-1-wei.deng@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <bjcmn2euhpik54ytc7falqgcezvy2loimudm6v2ibzxx6autki@rex5cjq2o755>
+References: <bjcmn2euhpik54ytc7falqgcezvy2loimudm6v2ibzxx6autki@rex5cjq2o755>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Ali Tariq <alitariq45892@gmail.com>, linux-pci@vger.kernel.org,
- Kevin Xie <kevin.xie@starfivetech.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>
-References: <20260714113029.326207-1-alitariq45892@gmail.com>
-Subject: Re: [PATCH] PCI: starfive: Fix resource leaks on error paths in
- host_init()
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260714113029.326207-1-alitariq45892@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:/PB5cxfvGpEG1TyyR1ZrSTkGT6iYZFtw30Eoo4umV5f0wBr0zpm
- 4Q8nEuKfrGO8OZtXxeb6rUbWHJ/h2eeSFWRpubS5eLEgrmHiVK9dVwXPxjiVMD6+cWxLaOA
- 857C5OLTbbpw3v017Rn7GZFltZa34XSHsWty6t9uRW3OYfZZGo2zfpdG9C6a9K9LoFSJF8r
- X6oIekjmeXOjdK7BVY4QQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:ZIFYztrg2FU=;PMy0LMvqvE7yPM+9SSQIBKfZVn2
- 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
- nOwRgMIoAq7RsTIVc5Svc578oweAnQ
+Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=Yc6NIQRf c=1 sm=1 tr=0 ts=6a576c0f cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
+ a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
+ a=cm27Pg_UAAAA:8 a=RcxsvD7BqTzStQuQcmYA:9 a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-ORIG-GUID: _BS074SNdfF5_xPcNNNDJ4QeqZi0SF25
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE1MDExMCBTYWx0ZWRfXzOgUQqIavCfq
+ w1jgbm3gKMh9P++BGcmsf7j+Z0y2ALOaELQevjvQgWT5Kii4zSI2maJV0iF0A99URIW30piLruX
+ sOHUoB88fZG8LmleE+rzzVKJKui/ZCtxgHZpIOltlDREsVvdAtrUmqgYeeRGEKyb0qfNHfXyroz
+ ilbl6/7rQ3ArBSWbE3MtidqCX/3iAyIlcq2jvRFY+vhyZQ4kUWaDpzFVWEXPsFSOd3k3SZbV+a+
+ AqOlXYW4Ku+JNm2qAvT0ArJvvh25X21mavkmC3xNwXB1+kBGN3H1QWAZrUYJEmep4yQx1VouI3x
+ 7fgMPmJFm2KklCKDSHwOa9GXXIAxNODCpRr5R9C/SDefF42bOcOgVO6ttZg1JJInasEF0pX2AlW
+ acLixmeDmk4P/LaBmUhR5/AAwrxEtNP46ukFPDY2t7a8X9KH9uJyROXa8jjDPuksoU5KwcZZs5M
+ WWc0RpabA7Xvyij9+AQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE1MDExMCBTYWx0ZWRfXzdZibQcrJi+b
+ N99ULnaZFAepZUkhS/dIT+budRQVWfdUXHp+9GXYt7IoLKfZ60unv/yCLtCJ0gnaNgoEnam1zJM
+ rhQHWrbDRbt2oTL4Bu3712Q5tR4wrBk=
+X-Proofpoint-GUID: _BS074SNdfF5_xPcNNNDJ4QeqZi0SF25
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-15_02,2026-07-15_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=0
+ impostorscore=0 adultscore=0 clxscore=1015 phishscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607150110
 
-=E2=80=A6
-> Disable the PHY on the clk/reset failure path, and disable the
-> clocks/resets and PHY, then return the error, if the regulator fails
-> to enable.
-=E2=80=A6
+On Tue, 14 Jul 2026, Manivannan Sadhasivam wrote:
+> On Mon, Jul 13, 2026 at 02:46:16PM +0530, Wei Deng wrote:
+> > On Thu, 9 Jul 2026, Dmitry Baryshkov wrote:
+> > > On Thu, Jul 09, 2026 at 12:59:42PM +0530, Wei Deng wrote:
+> > > > The pwrseq_m2_pci_ids[] table lists PCIe BT devices that use UART as the
+> > > > BT transport and need a UART serdev created by the driver. When a PCIe
+> > > > device under the M.2 connector does not match any entry in this table,
+> > > > no UART serdev is created.
+> > > > 
+> > > > However, the BT subsystem of such a device may still require W_DISABLE2#
+> > > > to be deasserted to power up. Rather than adding every possible non-UART
+> > > > BT device ID to the table, add an else branch that deasserts W_DISABLE2#
+> > > > whenever a PCIe device is detected under the connector but does not match
+> > > > a UART BT entry. This allows any BT interface on the card (USB or other)
+> > > > to enumerate without requiring explicit knowledge of its device ID.
+> > > > 
+> > > > The primary use case is USB BT variants of combo chips that share the
+> > > > same PCIe device ID as their UART counterpart (e.g. WCN7851 NCM865 USB,
+> > > > sub 0x3378, vs NCM865A UART, sub 0x337c): no UART serdev is needed, but
+> > > > W_DISABLE2# must be deasserted so the USB BT device can enumerate.
+> > > 
+> > > Instead of forcibly toggling it, would it be more sensible to tie pwrseq
+> > > into the USB too? The onboard-usb-dev implements the same idea (of
+> > > powering up the USB device), but it predates pwrseq.
+> > > 
+> > > -- 
+> > > With best wishes
+> > > Dmitry
+> > > 
+> > 
+> > Hi Dmitry,
+> > 
+> > There is a patch series from Chen-Yu Tsai that appears to implement what
+> > you suggested:
+> > 
+> >   [PATCH v4 00/14] arm64: mediatek: Add M.2 E-key slot on Chromebooks
+> >   https://lore.kernel.org/all/20260709095726.704448-1-wenst@chromium.org/
+> > 
+> > We have been testing this on the Qualcomm Hamoa IoT EVK with both UART BT
+> > and USB BT M.2 cards.  Is this the direction you had in mind?
+> > 
+> 
+> IMO, we should move towards Chen's series.
+> 
+> - Mani
 
-Please avoid a bit of duplicate source code by using an additional label.
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/coding-style.rst?h=3Dv7.2-rc3#n526
+Agreed.
 
-Regards,
-Markus
+While testing Chen-Yu's v4 on the Qualcomm Hamoa IoT EVK with a board
+that needs to support both USB and UART BT cards, we found that the USB
+hub holds a reference to the "usb" pwrseq target permanently (acquired
+in hub_activate() and never released). When the UART BT driver later
+calls pwrseq_power_off(), the bt_unit enable_count only drops to 1 and
+bt_disable() is never invoked, leaving W_DISABLE2# deasserted. This
+prevents the BT chip from being properly reset, causing the next
+btmgmt power on to fail.
+
+This issue is addressed in v5 Patch 14 by splitting the Bluetooth
+pwrseq unit into independent uart and usb units, each with their own
+reference count:
+
+  [PATCH v5 00/16] arm64: mediatek: Add M.2 E-key slot on Chromebooks
+  https://lore.kernel.org/all/20260715085348.3457359-1-wenst@chromium.org/
+
+The series still needs review from you and other maintainers.
+
+-- 
+Best Regards,
+Wei Deng
