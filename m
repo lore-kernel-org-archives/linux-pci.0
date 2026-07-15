@@ -1,75 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C00D3314C3
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 13:53:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA202AE8D;
+	Wed, 15 Jul 2026 13:54:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784123632; cv=none; b=GaC7k3vVMBgqT5u29aYC9pqhKXg2TCmWTMntqY85lOq0xb24E7bJWxAfBb/zbEPIey1zqf8aLwxRMCYNEQ416bGfmHYUZz4tSK5LHm8U7xobjaVHtBKup70Wne9EgdwW2JQvVPYyTJte7ktCzmkWOXVHNkC2Qhgs9ts0WK+zSAY=
+	t=1784123648; cv=none; b=tY6loeVbV5LHG+XDwJoyn2weBSf1z3353/SFp4AOX5QHZpcEqME/6ZidXlZlotY4ggTaoBlrmYxR+6mexq7j0g5Q+ZeVna0iqmN/C0nbZJZR+mrZX9rRIJMHlrbaUBiAwhVzNs/2Ub7Sf3nOvuM8wi8+g62VxNKS2y6vmmQCFVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784123632; c=relaxed/simple;
-	bh=HFdWGK0W3zT0UiRNe9a4c1Gglk7cr9+dgM4tym3Efxs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nnONhwn8/xklVYRxZSBTwsNRIHNFFAS28d3HHwBAx53QL7cCncouUGA1nntXfjQB/y0ieMQy3uSr96mk9YIkwUgUJudOZkJf54sLFB2Qx6FmokT4/37UPqfqWqwp3GIrFHrBnqcnIp1v/U1eyr37PFz3pxJs1RMnkr8q7uf6COA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QAy2m+ee; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784123648; c=relaxed/simple;
+	bh=jyj+UbPksfGgBUnQgBauuaK2etX6isx+ML2+Wbpbx/A=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=MhHfuaKRYYWiXwD8F6DDZy0jWHjRb1bDiclhFQ71V2S346kxpBcaZqhNsKx9lA8LUUgJ7V7PTL+uUmMQZKqRbILZ2cG6Y4YsulKwGIc70uuJTZbVJ1AAg/tr5Fn5I9nIlAM+FR3bcH/37zh58GXsHn+9MRiJUn6vmpfTuClcY6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOuoMKTi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QAy2m+ee"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A5221F00A3A;
-	Wed, 15 Jul 2026 13:53:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOuoMKTi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 260871F000E9;
+	Wed, 15 Jul 2026 13:54:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784123631;
-	bh=HFdWGK0W3zT0UiRNe9a4c1Gglk7cr9+dgM4tym3Efxs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QAy2m+eevDNsAq/ZHF0lzQYDpjtDYRebCmIVW4KqrUtIYSXoqfuQrt84Ix5i67qzg
-	 JW/7PGxO78fU6buN1JsrLdZeJocZ5vrzbb6jf1k2TdVX9NYpI9DPfxX1M675hApsrs
-	 4TAxzGVKtGsBHSGuT3qcl7kRosNfiGPZ7tDbapbz8X4fCR1g5hrPHZg06HG3iKEqc9
-	 vDrK4Pe1uL7akrTCqUG8cP0QtWG1o18keCD9r/xwIgEMMCHgXDkS2ZsX4B2pyhbZWq
-	 91/vZfmCT2dM2oEeGot86BUwEH5CUzw4WnTF70IM949q2LbSjzB77wDQ7zAc2B82Mh
-	 TCp1ybZbec2jA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: starfive: Fix resource leaks on error paths in
- host_init()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ali Tariq" <alitariq45892@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260715134532.619566-1-alitariq45892@gmail.com>
-References: <20260714113029.326207-1-alitariq45892@gmail.com>
- <20260715134532.619566-1-alitariq45892@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 13:53:50 +0000
-Message-Id: <20260715135351.0A5221F00A3A@smtp.kernel.org>
+	s=k20260515; t=1784123647;
+	bh=PZ8WB5K9zOpz8B7RVsBRvJMu8rjP/XfcLsCdxGxT4Qg=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=TOuoMKTi69l7MXLyrzm6JPIkVSMBxS6BsLzPWHT2TLhANOTbMtnK4Qca+EMMywJ7Q
+	 FCg254trVDbgZcbjWDu3T/DsC0Zt+UI46tTiF1t84hbod+lagjJ+w8N6W4vC46Lhw6
+	 aFB6D6YTTU3Rz/+m/wLjWUqimbwTms99C03NAQatt2jMmMz6m9raFbp2ZWSiB0DRZz
+	 RuYbGpj1FbJCOQ8syk0o/es650gids9Iqklb7I0+GFBIr7/qpP7h2RZyWVxB5C4nnO
+	 JAGWG6sZi5X1ENvxRAd5o6/Lij2TBldZRdtbMcFHBPBJSwFgT8+NgdQc7Ov8ad32jH
+	 krE70R6dCBxQw==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: linux-pci@vger.kernel.org, Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-mips@vger.kernel.org, naseefkm@gmail.com, ryder.lee@mediatek.com, 
+ helgaas@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+ matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+ ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260702150704.265282-1-cjd@cjdns.fr>
+References: <20260702150704.265282-1-cjd@cjdns.fr>
+Subject: Re: [PATCH v11] PCI: mediatek: Add support for EcoNet EN7528 SoC
+Message-Id: <178412364176.146277.15805522323299213700.b4-ty@b4>
+Date: Wed, 15 Jul 2026 15:54:01 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
 
-> starfive_pcie_host_init() acquires the PHY, clocks/resets, and an
-> optional regulator in sequence, but does not correctly unwind these
-> resources when a later step fails.
->=20
-> If starfive_pcie_clk_rst_init() fails after the PHY has already been
-> successfully enabled, the function returns directly without disabling
-> the PHY, leaking it and leaving it powered.
->=20
-> If regulator_enable() fails for the optional vpcie3v3 regulator, the
-> failure is only logged; the function falls through and returns
-> success, leaving the driver believing the regulator is enabled while
-> continuing to configure PCIe hardware that may be unpowered. This
-> also leaves the clocks and PHY enabled with nothing to clean them up.
->=20
-> Disable the PHY on the clk/reset failure path, and disable the
-> clocks/resets and PHY, then return the error, if the regulator fails
-> to enable.
->=20
-> Build-tested and boot-tested on StarFive VisionFive 2 v1.2A
->=20
-> Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Thu, 02 Jul 2026 15:07:04 +0000, Caleb James DeLisle wrote:
+> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+> 
+> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+> require re-training after startup.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715134532.6195=
-66-1-alitariq45892@gmail.com?part=3D1
+Applied, thanks!
+
+[1/1] PCI: mediatek: Add support for EcoNet EN7528 SoC
+      commit: 2077ccb9baa2cbbbccf5f0d8c2196dd9d5e43399
+
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
 
