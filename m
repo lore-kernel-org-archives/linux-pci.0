@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5668C40EBA9;
-	Wed, 15 Jul 2026 15:22:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD69480DEA;
+	Wed, 15 Jul 2026 15:22:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784128925; cv=none; b=DBzY+QM1wUx77LYVyTD8NaOw6GZoe3w4gTjMc2w/9U3zgLgy4VB4FK7qAGQAreKM073ENnFyDw43oR4pgM8CF4J7Qgc5j6bBrcBv/64RdIbZUZYS+UANJence6qBN5zXz6M3ZWBK3ajDc80eChUruL3akFXte/uQhL3yO0vE/Qw=
+	t=1784128930; cv=none; b=MHtYHr3E78YZdoykhz+Of87whqQhDVVrgG67Qk1hDu0nid1tjdFRMVfSAj+OpBB0d0GZ23/D3xLX5oOOSfmdrbgZTI3/Uv1MMRr0bidmKV470QVae8SLFJzO2GMWptGWAtT02NnVZLcrEzCkuIk1EdPxaDX2yAu+1FI36WO5uTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784128925; c=relaxed/simple;
-	bh=jm1yCrsLvBaRMPeKGtagOtNxLYscLBgr7paRV7Mqbps=;
+	s=arc-20240116; t=1784128930; c=relaxed/simple;
+	bh=NJwngsj2BfQ9Ix2pHh54/q2ByY9XfKwTz+ab5tsBCuI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CoVUAYBvLc/uhmqMEkiBqCHn+QjeZZv5QuKvaQ/xP8JCBXAJqGNFkpTakGO7gP1d5xXIi7pziopZ/8yE5TjXcj+uEI8zfcznKJv6QnLzcJ485XP4D1RaC5LH5kE+5cZHHl7lpdslnoXtzhgVJcHXCYgk9DmZkbRy9U8C+w/obXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nresTu2F; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=TmV45PB+8QUorsvfhX/RY+E/vRNlkfqjmrIR0xW2GPVOg95ZKAy0csBkJXK3fj+Y3UvBjjGrM0P7Tq8rfBXcHLZRlHOPOfmQ9wwbhZC1tWj27wXKHL/SnJfF2fgzzc6ynUcyz7an87QBSr5wE3+SCA+xwsZsSX0Licl1FJ6wU8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SOjgOfCD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nresTu2F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF95F1F00A3A;
-	Wed, 15 Jul 2026 15:22:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SOjgOfCD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1ADA11F00A3A;
+	Wed, 15 Jul 2026 15:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784128923;
-	bh=qAFKoc8VBeYH5evWWoVFgDTqDzDGUM8zZbPAwX9yeQk=;
+	s=k20260515; t=1784128929;
+	bh=9ZXuSwwi8Q8hBGWu3awGYkOUS7/xJRkJwC+I+CXvTYc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=nresTu2F5MHBRIPdl7GnD12DQFdi0qo0JvM7w/WQpBOnygvqSv/54BCINXAcHKXwK
-	 TYfkVQNZ9MdehQ+kvNhfSCq9N2IB4s1YBMddwwtXzOGHv47mXxQKGaz2uFPBrbxzSM
-	 0VIFKbY0pid9GtqAmol4UJhp1xMRGrRhNlSHxRKQl8uoPKWiJPFJ1FtE7gWwEMFb91
-	 6jvqRgiJ8/uujud56hizwiIBBylOpzByY4KCkuK5fHz0Jxjr2YB5z6GUDWKYLZAzE3
-	 Sn7R9AdLwruLuA89b7yFasvNRnoL+Wq24yn7bUI7lHW/KTKNBdYLMEbeugWRv+S+zC
-	 8GXq3zup4LXyg==
+	b=SOjgOfCDXTvGEKwmy6waNqwpIWLwhZpE+IcRYLnXDSIDpz2TJFQL8ZDmZXt2kGeph
+	 tQTk8099WzyhCC8JFnJEc+7cHQujbiPyk8lMANknfancBFgUjQQyv50qzW6n/PEG1D
+	 Gf+q2mVxR2JjyYV1rlIO3Q+SohYe4TDxskfPlyPMvhDG7Nfyq15ZLN5i2XSbtaawwC
+	 epvr1JpOaVF2BJ7FKEoehjvSbYqe5qrgezPJS8xC4IfcSYpbQOdQtdgITsxdqFNaPm
+	 ab4BvFRYC9WgNS7EEHjSwu/43mEbLW0OQ/cbl/RZqdKk7A1RiYB2UHRJ5mvF8342Xd
+	 ZWgJMWRgw73bA==
 From: "Rafael J. Wysocki" <rafael@kernel.org>
 To: Linux ACPI <linux-acpi@vger.kernel.org>
 Cc: Linux PCI <linux-pci@vger.kernel.org>,
@@ -33,10 +33,9 @@ Cc: Linux PCI <linux-pci@vger.kernel.org>,
  Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
  Hans de Goede <hansg@kernel.org>
 Subject:
- [PATCH v1 4/4] ACPI: video: Use acpi_dev_get_pci_dev() instead of
- acpi_get_pci_dev()
-Date: Wed, 15 Jul 2026 17:21:23 +0200
-Message-ID: <8706171.T7Z3S40VBb@rafael.j.wysocki>
+ [PATCH v1 3/4] ACPI: video: Drop backlight parent device reference later
+Date: Wed, 15 Jul 2026 17:19:08 +0200
+Message-ID: <3052896.e9J7NaK4W3@rafael.j.wysocki>
 Organization: Linux Kernel Development - Intel
 In-Reply-To: <5115219.31r3eYUQgx@rafael.j.wysocki>
 References: <5115219.31r3eYUQgx@rafael.j.wysocki>
@@ -51,69 +50,38 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-In acpi_video_bus_check() and find_video(), simply replace
-acpi_get_pci_dev() with acpi_dev_get_pci_dev() that can be used
-in both places because the ACPI device needed to do the lookup is
-available.
-
-In acpi_video_dev_register_backlight(), instead of doing a parent ACPI
-handle lookup based on the handle of an ACPI device that is already
-available, pass that ACPI device to acpi_dev_parent() which is much
-more straightforward and pass the return value of the latter directly
-to acpi_dev_get_pci_dev() to get the PCI device associated with it.
-That allows local variable acpi_parent to be eliminated.
+Update acpi_video_dev_register_backlight() to put the parent device after
+registering the backlight class device under it instead of attempting to
+register the backlight class device under a parent that (theoretically)
+may be gone at that point.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/acpi_video.c   |   11 ++++-------
- drivers/acpi/video_detect.c |    2 +-
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/acpi/acpi_video.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 --- a/drivers/acpi/acpi_video.c
 +++ b/drivers/acpi/acpi_video.c
-@@ -1048,7 +1048,7 @@ static int acpi_video_bus_check(struct a
- 	if (!video)
- 		return -EINVAL;
+@@ -1719,10 +1719,8 @@ static void acpi_video_dev_register_back
  
--	dev = acpi_get_pci_dev(video->device->handle);
-+	dev = acpi_dev_get_pci_dev(video->device);
- 	if (!dev)
- 		return -ENODEV;
- 	pci_dev_put(dev);
-@@ -1702,7 +1702,6 @@ static void acpi_video_dev_register_back
- {
- 	struct backlight_properties props;
- 	struct pci_dev *pdev;
--	acpi_handle acpi_parent;
- 	struct device *parent = NULL;
- 	int result;
- 	static int count;
-@@ -1717,11 +1716,9 @@ static void acpi_video_dev_register_back
- 		return;
- 	count++;
- 
--	if (ACPI_SUCCESS(acpi_get_parent(device->dev->handle, &acpi_parent))) {
--		pdev = acpi_get_pci_dev(acpi_parent);
--		if (pdev)
--			parent = &pdev->dev;
--	}
-+	pdev = acpi_dev_get_pci_dev(acpi_dev_parent(device->dev));
-+	if (pdev)
-+		parent = &pdev->dev;
+ 	if (ACPI_SUCCESS(acpi_get_parent(device->dev->handle, &acpi_parent))) {
+ 		pdev = acpi_get_pci_dev(acpi_parent);
+-		if (pdev) {
++		if (pdev)
+ 			parent = &pdev->dev;
+-			pci_dev_put(pdev);
+-		}
+ 	}
  
  	memset(&props, 0, sizeof(struct backlight_properties));
- 	props.type = BACKLIGHT_FIRMWARE;
---- a/drivers/acpi/video_detect.c
-+++ b/drivers/acpi/video_detect.c
-@@ -73,7 +73,7 @@ find_video(acpi_handle handle, u32 lvl,
- 	};
- 
- 	if (acpi_dev && !acpi_match_device_ids(acpi_dev, video_ids)) {
--		dev = acpi_get_pci_dev(handle);
-+		dev = acpi_dev_get_pci_dev(acpi_dev);
- 		if (!dev)
- 			return AE_OK;
- 		pci_dev_put(dev);
+@@ -1734,6 +1732,7 @@ static void acpi_video_dev_register_back
+ 						      device,
+ 						      &acpi_backlight_ops,
+ 						      &props);
++	put_device(parent);
+ 	kfree(name);
+ 	if (IS_ERR(device->backlight)) {
+ 		device->backlight = NULL;
 
 
 
