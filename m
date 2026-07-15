@@ -1,98 +1,109 @@
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD3E23507B;
-	Wed, 15 Jul 2026 13:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93C823507B;
+	Wed, 15 Jul 2026 13:35:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784122413; cv=none; b=QVs6tDkoCAvSOdW+2klEcyDXwIHI4TYfFvxLmvVQH97V4dj1urx8do3jUn3G1GJVkabvDHtgcHonFzKJDDgFEdy+CGqeaS0/TcSktdHNGtl26O71LUG0kyY1zuUP5vFuAqyMeEJgAWfvL51wVU9LOz9jkEFofq8BP/44EULOVac=
+	t=1784122516; cv=none; b=ugV6axTOMrOoQoiQ8A5D+cbMy0uHSZRwZ3geRSxWWGSXemyJZ5oiDRPXCgMSblvIHUOdRxwZITZY/VhA6b8ggPNlFkdxBrDs5jQleTJucGpsVJDnwLsuyeogTvWyuVZA3TRO0Dn3OwWfjBKoNJsU6liF2wSQ+vm3BHbZ2GKGfTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784122413; c=relaxed/simple;
-	bh=yhK+gWds0kqmJMK8oYokhqCx2haI6WBmsi0ir4zS+eM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fTCwi6lbZSQC3Ul0XpbdjZ3Y/6Slh2P5U5Wnw2QwZ1zVceuKQ0cH+C+nP10cjp/5ENuZm9wXNks6OEXpdRi9CgxSTbNf68GPYrcbLGqUZ2ZbtPQL+MtmyKhRAktU3RktKOK3ezAFXPG2k/WTJ4RwSyEPRhiWXRq32xR00x3jKGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=UkUElBTc; arc=none smtp.client-ip=115.124.30.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1784122516; c=relaxed/simple;
+	bh=TgLdUmwDmzGPgi23G0G4GIx/b/V5izieQpWr+IlBbNE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EezMB3MJtnAYHwnbeuFfKoi3JF/oKiTq9neTCHWz1CNCVUwZ/tOsduZPdGtOeNspyY70hs+XFG7nUJKJbUQ1vQqJJFzjo6HoWuCqbqEORXQ5WKfwtsQdSVQ4IWdeUztaITHFMx8X/uu6fW8K0Y5rsefvrQYz+eQcr0sAdNyGmbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGTYVIse; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="UkUElBTc"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1784122404; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=JCr+B/B1w1jArutjB0fuPO9lz1kJ/HqQv993yIGFPyE=;
-	b=UkUElBTcTugk4OcYWdQ+ZxD5zVrSQ8dmRO6wTvR8NGtAKvg6qFSxp5N0MFOsi09xKg85cinwFtm7NCMgfwbKX+U5nyBTDLEIzMTa8PHlDLzexPlZX96pODEUqhpw5fZoGzI875Oi31qbBG1BQR5SzZTlkB8J5L+x/o1otBNTHb4=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R561e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=cp0613@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0X79XPtG_1784122400;
-Received: from DESKTOP-S9E58SO.localdomain(mailfrom:cp0613@linux.alibaba.com fp:SMTPD_---0X79XPtG_1784122400 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 15 Jul 2026 21:33:23 +0800
-From: Chen Pei <cp0613@linux.alibaba.com>
-To: dave.jiang@intel.com,
-	alison.schofield@intel.com,
-	bhelgaas@google.com,
-	rafael@kernel.org,
-	lenb@kernel.org,
-	guoren@kernel.org,
-	sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGTYVIse"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 609AE1F00A3E;
+	Wed, 15 Jul 2026 13:35:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784122515;
+	bh=F5IP7CBxQw7aJmKHnYNo9T0f4+G5JzG/un29+KPX9po=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hGTYVIseNleRsBf9JsqVrcLshYjtLgyxGM4DU1iyW54hgsY2J4ryLY8wUGyXeMztl
+	 6T8bEVLmRc8htGaoxZNp5BRn3t8eemwpu4y5qqu7Agv/ZVGmUukvfZhDe04FiyTCtn
+	 ZnU4WOQ0fKaASt/z7vWag1eGbGgElJw6q0XupbbCVJZHM9taRpk0HXtQBuyxv8S6CG
+	 A+AYvDeYUipZwEFMhujbnY8mmkxzI4EIWYMjSw+kVCwrFWyy6ywjF9rYa/nW67OV6R
+	 88dxMO5vJNC5ta5iXKVHMujWdqD1N/jOdif4hAUs3IlAlI94GSlnuuPH4mBbgD4mIZ
+	 O7hGfxSdDljtQ==
+Date: Wed, 15 Jul 2026 15:35:08 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	s-vadapalli@ti.com, a-garg7@ti.com, robh@kernel.org, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ACPI: PCI: Clear driver_data on all error paths in acpi_pci_root_add()
-Date: Wed, 15 Jul 2026 21:33:10 +0800
-Message-ID: <20260715133020.3282712-1-cp0613@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260707122549.C01DC1F00A3A@smtp.kernel.org>
-References: <20260707121258.11640-1-cp0613@linux.alibaba.com> <20260707122549.C01DC1F00A3A@smtp.kernel.org>
+Subject: Re: [PATCH v2 00/16] PCI: dwc: Cache PCIe capability offset and
+ simplify drivers
+Message-ID: <4xnbhjohkww2v5qdq4uehjsev6nx23nr4ss5lreos3adx5sgfp@s6465oz7og4j>
+References: <20260530153101.695580-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260530153101.695580-1-18255117159@163.com>
 
-Thanks for the review.=0D
-=0D
-> Pre-existing issues:=0D
-> - [High] The acpi_pci_root_remove() function frees the acpi_pci_root=0D
->   object but fails to clear device->driver_data, leaving a dangling=0D
->   pointer.=0D
-=0D
-Agreed. acpi_pci_root_remove() calls kfree(root) without resetting=0D
-device->driver_data, which leaves exactly the same dangling pointer=0D
-this patch removes from the add() error paths. I'll fix it in v2 by=0D
-also clearing device->driver_data in acpi_pci_root_remove(), so the=0D
-add and remove paths leave driver_data consistent.=0D
-=0D
-> - [High] Lockless access to `device->driver_data` causes a TOCTOU=0D
->   Use-After-Free race during hot-add failure and hot-remove.=0D
-=0D
-I don't think this is reachable, so I'll leave the locking model=0D
-unchanged:=0D
-=0D
-- driver_data is published early (device->driver_data =3D root), but the=0D
-  PCI hierarchy below this root bridge is not created until=0D
-  pci_acpi_scan_root() and pci_bus_add_devices(), both of which run=0D
-  only on the success path, after the dmar_device_add() error goto.=0D
-  During the error window there are no child PCI devices yet, so an AER=0D
-  or CXL consumer under this bridge has no way to obtain the handle and=0D
-  call acpi_pci_find_root() against a half-initialized root.=0D
-=0D
-- The early publish of driver_data is pre-existing; this patch does not=0D
-  change it, it only makes the error-path cleanup consistent.=0D
-=0D
-- ACPI .add and .remove are serialized by acpi_scan_lock, so add cannot=0D
-  race remove.=0D
-=0D
-If there is a concrete caller that can reach acpi_pci_find_root() for=0D
-this handle during the add-failure window, I'm happy to revisit. Adding=0D
-RCU or locking to the find_root() fast path otherwise seems unwarranted=0D
-for this fix.=0D
-=0D
-I'll send a v2 with the acpi_pci_root_remove() fix.=0D
-=0D
-Thanks,=0D
-Pei=0D
-=0D
-=0D
+On Sat, May 30, 2026 at 11:30:45PM +0800, Hans Zhang wrote:
+> Hi,
+> 
+> The DWC PCIe core and its many platform drivers repeatedly call
+> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to obtain the offset of the
+> PCI Express Capability structure. This is wasteful and makes the code
+> verbose. Some drivers even search for the offset in suspend/resume paths.
+> 
+> Add a cached pcie_cap field in struct dw_pcie and a helper
+> dw_pcie_get_pcie_cap() to initialize it once at the point when the
+> hardware is ready. Then replace all explicit capability searches with
+> the cached value across the entire dwc subtree.
+> 
+> **Safety analysis: DBI access timing**
+> The PCIe Capability offset is read from DBI configuration space. DBI
+> registers are only accessible after the controller's clocks, resets, and
+> power are enabled. The following call graph demonstrates that all
+> dw_pcie_find_capability() replacements occur only after hardware is ready:
+> 
+> - For Root Complex mode:
+>   dw_pcie_host_init()
+>     ...
+>     if (pp->ops->init)
+>       pp->ops->init   [enables clocks/resets]
+>     dw_pcie_get_pcie_cap()   [caches offset]
+>     ...
+>     dw_pcie_link_up
+>       pci->ops->link_up
+>     ...
+>     dw_pcie_start_link
+>       pci->ops->start_link
+>     ...
+>     pci_host_probe
+>     if (pp->ops->post_init)
+>       pp->ops->post_init
+>     ...
+> 
+> - For Endpoint mode:
+>   dw_pcie_ep_init()
+>     ep->ops->pre_init()    [enables clocks/resets]
+>     dw_pcie_get_pcie_cap()   [caches offset]
+>     dw_pcie_ep_init_non_sticky_registers() etc.
+> 
+> - Some platform drivers (e.g., layerscape-ep, tegra194) need the offset
+>   before calling dw_pcie_ep_init() / dw_pcie_host_init(). They already
+>   enable hardware themselves and explicitly call dw_pcie_get_pcie_cap()
+>   before the core caches it. This is safe and ensures the cached value is
+>   available for all later users.
+> 
+> Thus, no DBI access occurs before hardware is operational.
+> 
+
+Not true. As Sashiko pointed out, EP platforms like Qcom, Tegra, enable
+resources like clocks only after PERST# deassert. So any DBI access before that
+will cause sync abort.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
