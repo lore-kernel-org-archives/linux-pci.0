@@ -1,156 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3543D2DF136
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 22:45:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD883C1412;
+	Wed, 15 Jul 2026 23:15:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784155518; cv=none; b=KKyYoOMPoJY9dpkUNBXbINlMXQqE3X41YInR3cvvGSWkO6pVzn/6gAy3yen0mrBidHyJMJoItl5hwKlzfdpkLCzUZvtjuk5e7v4+JuwDiweuCL0dN61qWoorPcVPPst/9DWgx89Z0jJ1WltaS4vsCm9Q24K7qH38Ro1BXRIKFIE=
+	t=1784157329; cv=none; b=KCDabs76kiXm5ftGuVpO82Ag0tTmD/+M7jk+7hS+4H91xEkHtlPPyiRlS/SCyxvrT4EYvy/S+raYmtavHNSS8YfEb+/y2q7c/VSOGBkfcJB18Gv90Ru5S7Pwn3gGGTBI6I/aBbb6J5X4zOLHlZaZSftNN4Meu/oAW2G3lM3mPMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784155518; c=relaxed/simple;
-	bh=+yp4p2WaZej+SxMDgF/usEfmZw3+ck7Xzyiuh83+2PM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dV+B+AfpWS4m23XGdrDMZ/HbNpVghJMWzXp02GlBLLaO4v0DkQJ9Ws+YpLqP6GiCxXkAyX3lkRnkAD9tN2hlrNceE7IMUovDpVNAVCJX1YQFwsx5DiBFpu+A3LP6GLMmd2biIzNNWrLqhg6NKdZBloVuGeqsJ+njhde3ok0crjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dn2E7HQP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784157329; c=relaxed/simple;
+	bh=PmTwD1bjwJ3TllWid4EEApDHP5hvv9bAdEyzGe4zx68=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pf+nOpPf6S6lYl9fwFeh7wEWQheTPh+rOH/1y3qSEBMh5aWx9u/7tBsuj/QNqvWtDgIMvt1HRfUgs0lx/geymzByWAXoGStiJWJOTs6bwK6XUpxGx37RRrd375aT51p9iAtbpe4Zo3zqVJDSjRasPkmHqitLaGyDZl40OgMcWJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U8K6ikjx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dn2E7HQP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9061C1F000E9;
-	Wed, 15 Jul 2026 22:45:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U8K6ikjx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4284B1F000E9;
+	Wed, 15 Jul 2026 23:15:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784155516;
-	bh=e8xf0S6i+rKGuUIUH8cVArjbsjFNV39S/fPow8sIGJc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dn2E7HQP0L9LxJbZq2ILTIhAEVSznQG9u1+GFIKlUR9SxX/9Ht/+CdKjJCg0IxhGz
-	 IEsylWagacjDHo942od9QQUpBKGl8i9If4o7/Ossz62xVH7yUXPLmfjEGn/GysUzZe
-	 rjDmLJCBHzUGIPRxJTsX34wPriqimLmqPfC0fsQ5PJqsZAXoSs17T67EHkp1543Y4G
-	 bQOPbqJTyhh7xIG9YUFqvtCjyMS45dt2h6pwDy9TTWUq+OadfldcMoAtfvYoV7YZJq
-	 ss2LD7oW6EEJy+A8kr/lGBf/XjdHAHE+VWz9Yl5yBCAMdRVRtsvg6ywW/ZtmpI9bMP
-	 f43ThJr1aLXfw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] PCI: rzg3s: Propagate platform_get_irq_byname()
- errors
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260715223019.3002237-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20260715223019.3002237-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260715223019.3002237-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 22:45:16 +0000
-Message-Id: <20260715224516.9061C1F000E9@smtp.kernel.org>
+	s=k20260515; t=1784157326;
+	bh=ECH83PK1Wwf85pLfYuYV5e298FOUyNFzZ/xvIdhME60=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=U8K6ikjxsT/p30EwxKQaL4R1VEF1Pb05++oR9f4HZsQd1W+9pbAEtziKRK1rOnsu0
+	 a/Jk3BU3cy8Zv9PzbHOx5aeQHTr0AHB0DfKX4Gyfz3OxBSAEil8iFX/9E2pVX0g11d
+	 TneyaP7Cv/UPgZ9OQ9fdbKDYsykY1mBZUtf+lQGp7i0MAmU6vklrjhGSkZodGBqXI2
+	 u4j+hYm3BIR+ZEWlqlYNCxTDk26nW3MHdbO2MWQL1vjwnqgDZfriB5UpPvbMwGcI3z
+	 IBY4E60NhePNxsIrC39H1N6B0Mn2coJ4u+g1s4NGmLwE9LN5NylALqh+Gk4O6m+T8n
+	 tWPzAJQPGDqIQ==
+Date: Wed, 15 Jul 2026 18:15:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Christian Konig <christian.koenig@amd.com>,
+	Alex Williamson <alex@shazbot.org>, linux-rdma@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Wei Huang <wei.huang2@amd.com>
+Subject: Re: [PATCH v2] PCI/TPH: fold reserved completer encoding in
+ get_rp_completer_type()
+Message-ID: <20260715231525.GA224907@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260715202409.3767494-1-zhipingz@meta.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+[+cc Wei, author of f69767a1ada3]
 
-Pre-existing issues:
-- [High] Failure to clear chained INTx IRQ handlers on error paths and duri=
-ng teardown leads to a use-after-free on probe failure.
-- [High] System suspend path accesses AXI registers after disabling the PM =
-domain, causing an asynchronous external abort.
-- [High] INTx handler calculates hardware IRQ index assuming virtual IRQs a=
-re contiguous, which can lead to IRQ storms and lockups.
---
+On Wed, Jul 15, 2026 at 01:24:00PM -0700, Zhiping Zhang wrote:
+> get_rp_completer_type() returns the Root Port's "TPH Completer
+> Supported" field (bits 13:12 of Device Capabilities 2) verbatim. The
+> 0b10 encoding is reserved, but pcie_enable_tph() feeds the raw value
+> into the requester type:
+> 
+> 	pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
+> 
+> and later writes tph_req_type to the TPH Requester Enable field, which
+> only defines 0b00 (disable), 0b01 (TPH only) and 0b11 (extended TPH).
+> If a Root Port ever presents the reserved 0b10, that value could be
+> written back to hardware, risking undefined behavior.
+> 
+> Fold the reserved encoding into "not supported" so only the three
+> defined values can propagate.
+> 
+> Fixes: f69767a1ada3 ("PCI: Add TLP Processing Hints (TPH) support")
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> ---
+>  drivers/pci/tph.c | 18 +++++++++++++++++-
+>  1 file changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 655ffd60e62f..ebe1aa5ba5eb 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -196,6 +196,21 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+>  }
+>  EXPORT_SYMBOL(pcie_tph_get_st_table_size);
+>  
+> +/*
+> + * Fold the reserved 0b10 "TPH Completer Supported" encoding into
+> + * "not supported" so only the three defined values propagate.
+> + */
+> +static u8 tph_completer_type_fold(u8 comp)
+> +{
+> +	switch (comp) {
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
+> +		return comp;
+> +	default:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> +	}
+> +}
+> +
+>  /* Return device's Root Port completer capability */
+>  static u8 get_rp_completer_type(struct pci_dev *pdev)
+>  {
+> @@ -211,7 +226,8 @@ static u8 get_rp_completer_type(struct pci_dev *pdev)
+>  	if (ret)
+>  		return 0;
+>  
+> -	return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
+> +	return tph_completer_type_fold(FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK,
+> +						 reg));
 
---- Patch [2]: [PATCH 2/3] PCI: rzg3s: Propagate platform_get_irq_byname() =
-errors ---
-commit 24fb1c19eb92c4744be36d3ec0690bbefc19cef4
-Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Is this just defensive programming, or is there some hardware out
+there that uses this reserved value?  It's kind of an ugly wart to add
+just for theoretical spec conformance testing.
 
-PCI: rzg3s: Propagate platform_get_irq_byname() errors
+If we really need it, I'd rather read something like this:
 
-This commit modifies rzg3s_pcie_init_irqdomain() to propagate the specific
-error code returned by platform_get_irq_byname() instead of overriding it
-with -EINVAL. This ensures probe deferral works correctly if the interrupt
-provider is not yet available.
+    tph_comp = FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
+    if (tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY ||
+	tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
+	    return tph_comp;
 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
-oller/pcie-rzg3s-host.c
-> index bd6471a7fb7a1..92371310d313b 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -975,7 +975,7 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pci=
-e_host *host)
-> =20
->  		irq =3D platform_get_irq_byname(pdev, irq_name);
->  		if (irq < 0)
-> -			return dev_err_probe(dev, -EINVAL,
-> +			return dev_err_probe(dev, irq,
->  					     "Failed to parse and map INT%c IRQ\n",
->  					     'A' + i);
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but returning directly from this loop on
-error without cleaning up chained INTx handlers leads to a use-after-free.
-
-If platform_get_irq_byname() fails for i > 0 (for example, by returning
--EPROBE_DEFER), does the driver leave chained handlers registered for the
-previous iterations?
-
-When the probe fails, the host structure is freed by devm.
-
-If the parent interrupt fires during the probe deferral waiting period,
-could the kernel execute rzg3s_pcie_intx_irq_handler() with a dangling
-pointer?
-
-Similarly, should rzg3s_pcie_teardown_irqdomain() clear these handlers?
-
-It currently removes the IRQ domain but completely omits cleaning up the
-INTx chained handlers, which might leave them dangling on unbind.
-
-
-[Severity: High]
-This is a pre-existing issue, but does the system suspend path access AXI
-registers after disabling the PM domain?
-
-In drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_suspend_noirq():
-
-	ret =3D pm_runtime_put_sync(dev);
-	if (ret)
-		return ret;
-=09
-	clk_disable_unprepare(port->refclk);
-=09
-	/* SoC-specific de-initialization */
-	ret =3D data->config_deinit(host);
-
-This disables the power domain before executing SoC-specific
-de-initialization.
-
-For RZ/G3E, rzg3e_pcie_config_deinit() performs a writel_relaxed() to
-host->axi + RZG3S_PCI_RESET.
-
-Can accessing the AXI register space without clocks trigger a hardware faul=
-t?
-
-
-[Severity: High]
-This is a pre-existing issue, but does the INTx handler incorrectly assume
-virtual IRQs are strictly contiguous?
-
-In drivers/pci/controller/pcie-rzg3s-host.c:rzg3s_pcie_intx_irq_handler():
-
-	unsigned int irq =3D irq_desc_get_irq(desc);
-	u32 intx =3D irq - host->intx_irqs[0];
-
-This calculates the hardware interrupt index assuming dynamically allocated
-virtual IRQ numbers from platform_get_irq_byname() are contiguous.
-
-Because this driver opts into PROBE_PREFER_ASYNCHRONOUS, concurrent IRQ
-allocations by other drivers could mean virqs are not sequential.
-
-If intx evaluates to an out-of-bounds index, generic_handle_domain_irq()
-will fail to find the mapping.
-
-Could this leave the level-triggered INTx line asserted but unserviced,
-resulting in an IRQ storm?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715223019.3002=
-237-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D2
+    return 0;
