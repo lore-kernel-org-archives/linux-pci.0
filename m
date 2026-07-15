@@ -1,55 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0F753AE6E6
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 16:34:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2549C385D96
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 16:34:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784133247; cv=none; b=eniaLYeKVD/D+aYpQoJjd4IMfp1Ou/30IaEb5Zk2GoGGU+bbzKtPxwUOqPUb61VOW/jm08K/efOYHs74caP+IByEMYYG1f29T3lCnhIE6qV6ryqw/nq7jkwF+eFH5End9gIXJ0DjEanCcGJNph6+jI47nmqq5nN1LB1ejm4dxDk=
+	t=1784133297; cv=none; b=eCfpdnxJr8wMlsntUjaxlBXnwvkVqI6JlSUevg9lMba4/ZTdl6I3q4cFihVkeUFcUXZ/ddF9kiBUwPwKO3YQ8dzc049vBDTw0P1HLdKtaNtSKhsktYFpQGVZ1PznarxKrWmiChWVjzcG4k3vg6yRJjQI4z1scIylHVZvYUq93hE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784133247; c=relaxed/simple;
-	bh=NpYmbrmfdrmPUFKsPZmLJwfRC+dUO5fG60UVVcO1A04=;
+	s=arc-20240116; t=1784133297; c=relaxed/simple;
+	bh=xklFY7jiNfxbOwm2afgigwLDyXAIDQlKwreNetLZm28=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZixbG13fZdN8nFknmo428RqtRwIB3MfbTQ0NPqg5yyXwV3b8/SGDBDs7Jp5NYWhsLLau/JmwMPWaCbZMpdmLiS6998/TyTJz4FxqnwB4M2AeAVnDwst47afiCQZjMq/Fiicpp6/omUzTAYee7gT7qtafiUfvbq4o9zZgtRcUcR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MFr03Yg3; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=HgfAyIxOd/GYppr4C+lkAd06sV8229DCiuRa4Jtr7Zw1dbTCYi+i7XlhNXJpUNQArrXa4UsgtqUYUOIb0YH6fceqyGxHuHqPpz8IggfMgCgZVHOWU5H0vdxT6nTCxNCoZQnTzvrLdWO2Yk17eRJxnBTGQaA+RTgnhN/mN6KUKzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d/YcQ+bu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MFr03Yg3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC0A31F00A3E
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 16:34:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d/YcQ+bu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B375A1F00A3F
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 16:34:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784133245;
-	bh=N7fxcLRSwAxJq3vMIXHgQRExbA5AtPqLuC8UuRkLZAw=;
+	s=k20260515; t=1784133295;
+	bh=aUR6TK12zOwCpmFN2mBE5VaKFv6paOL9Pd091+0pRI0=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=MFr03Yg3mcm/edAwncChryyMtWEO/eQbtply2K8lE+iNRKT7pHUPsrfayKoKaGBwf
-	 /GqlWIaMz73+HUwEYHjovKP85p57p7la174ktn3FCB1RkoWUoIel42oEIEsFs28QXN
-	 W7ZX9k7d0ZwtqXg0sovTeVpgLs0gZF2lt3mWZqH4QYOdLybqGEbRXyqrPdGuGNYulH
-	 EtAY84+aeoWF3/Re38F/v8EtPWjOQ8eVkvkd9q62hM8VX/fgOQbqePyLutY3rZ9IBh
-	 AdGjKQwWJ0n58FnqMlP7Nww1PQ+NZdoM+Cx17JTdFZTCmenzah20dLdoGJzj/5vEYh
-	 tiF85zMeJ1NcA==
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5aec139da7eso2312119e87.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 09:34:05 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RrVRcAGKKb+Ef7+SDsW2wx/b0fTlqlli4X2in+t0nZHgREN69djutONULf/mSrLvrpmAaB4t+ZZ75I=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLyN63vZxhft7VXfusnQsqMsoZkz7nIlikHwmgQJmAJ7cvytsK
-	hlXClgAu2ngdgFNmGIA+v0GvEuRi2YE0WTag1ievzPaH9yJpjFhwtdARDmSJhyGu9/4j4gRqe4Y
-	F3QNPixUMNEWyaecyOK6gUwhugYp3pFA=
-X-Received: by 2002:a05:6512:24d1:b0:5b0:227d:cef9 with SMTP id
- 2adb3069b0e04-5b1c0f78eacmr12879e87.3.1784133244080; Wed, 15 Jul 2026
- 09:34:04 -0700 (PDT)
+	b=d/YcQ+bu7P0gomP52oEFaFLOTjrRwM61otTaaPh9EhLtrOtwGqsz5TinXOBXSRnMf
+	 Ev2M/63PiRyyJC1+xaoY22/MufwHffw/2giRmBTyDk5QB9q4voEEo1xOWB84/g8GiF
+	 UesbEkpGRb6dysXtff5w9D0lYOcbdO6OPqCx0EBvfHkwbnMERtfPkqZwPHh3J5ulid
+	 m/cutH9StehdEaXxItDF6abZUj7dxEpqolcRrm7ON/n7JkuBwUrBJ59AfzWax7PpIQ
+	 xk8QjjVxAuVV8y3ACvpFOJmS8noDeWg+f6wzCi0/2X1vYn8dm4BHz4PahJC4UGlq+M
+	 aLCv3sXJ9kLog==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5b01910b499so2115866e87.0
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 09:34:55 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RqWwsc+XCcg5bkkNUXuKBOB93flUQmq5mMv4xupur2WCScgmAa2c4sNAVRKk0Qy9rH2PKee56qXGPk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzM9FsSeOMXmJqp3hK01W5OvNH619VEtHCw8RaPKUtJExU+63P4
+	T8S8Joj3TX8Ls/dGjY2L0v304xHuyEuf69a77MFY2LSrp1mNqucNzXuV3AAv6cvewbCPe6B4y4g
+	eoCi7UqsY5mPY/4gsRRQ4GYardjdeULQ=
+X-Received: by 2002:a05:6512:3089:b0:5ae:bf5d:5c54 with SMTP id
+ 2adb3069b0e04-5b1c0f9251emr31531e87.27.1784133294165; Wed, 15 Jul 2026
+ 09:34:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5115219.31r3eYUQgx@rafael.j.wysocki> <1961532.tdWV9SEqCh@rafael.j.wysocki>
- <aletkRwD7QKDJE5y@ashevche-desk.local>
-In-Reply-To: <aletkRwD7QKDJE5y@ashevche-desk.local>
+References: <5115219.31r3eYUQgx@rafael.j.wysocki> <8706171.T7Z3S40VBb@rafael.j.wysocki>
+ <aleucS8bSeEveCDZ@ashevche-desk.local>
+In-Reply-To: <aleucS8bSeEveCDZ@ashevche-desk.local>
 From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Wed, 15 Jul 2026 18:33:51 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0iAJZ6zAexDiF8bGbTwuxQFPRV0+k820DQK62UN1J2Nsg@mail.gmail.com>
-X-Gm-Features: AUfX_mz58pU9e7d40LYELHmc12cYAdeCWxuMe3Vae59FKIlCSNMgxynGyoVckn0
-Message-ID: <CAJZ5v0iAJZ6zAexDiF8bGbTwuxQFPRV0+k820DQK62UN1J2Nsg@mail.gmail.com>
-Subject: Re: [PATCH v1 2/4] ACPI: PCI: Introduce acpi_dev_get_pci_dev()
+Date: Wed, 15 Jul 2026 18:34:42 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0gSJYkHhKrA=gDFnovarB9kHdPi9ZTc=iXDRvsdCQRvGA@mail.gmail.com>
+X-Gm-Features: AUfX_mxI6tZx2IuUjgrzQQUi9YVdmUEpmXs8MyJd16QA-mgvRUa1TZhoRxwvDdg
+Message-ID: <CAJZ5v0gSJYkHhKrA=gDFnovarB9kHdPi9ZTc=iXDRvsdCQRvGA@mail.gmail.com>
+Subject: Re: [PATCH v1 4/4] ACPI: video: Use acpi_dev_get_pci_dev() instead of acpi_get_pci_dev()
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, 
 	Linux PCI <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, 
@@ -57,60 +57,35 @@ Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 15, 2026 at 5:56=E2=80=AFPM Andy Shevchenko
+On Wed, Jul 15, 2026 at 5:59=E2=80=AFPM Andy Shevchenko
 <andriy.shevchenko@linux.intel.com> wrote:
 >
-> On Wed, Jul 15, 2026 at 05:16:19PM +0200, Rafael J. Wysocki wrote:
+> On Wed, Jul 15, 2026 at 05:21:23PM +0200, Rafael J. Wysocki wrote:
 >
-> > Some acpi_get_pci_dev() callers already have a struct ACPI device for
-> > which they want to get the struct pci_dev pointer of the associated
-> > PCI device, so they don't need to look for one.
+> > In acpi_video_bus_check() and find_video(), simply replace
+> > acpi_get_pci_dev() with acpi_dev_get_pci_dev() that can be used
+> > in both places because the ACPI device needed to do the lookup is
+> > available.
 > >
-> > For this reason, add acpi_dev_get_pci_dev() that will get a PCI device
-> > for a given ACPI one (if possible) and turn acpi_get_pci_dev() into
-> > a static inline helper passing the acpi_fetch_acpi_dev() return value
-> > directly to acpi_dev_get_pci_dev().
+> > In acpi_video_dev_register_backlight(), instead of doing a parent ACPI
+> > handle lookup based on the handle of an ACPI device that is already
+> > available, pass that ACPI device to acpi_dev_parent() which is much
+> > more straightforward and pass the return value of the latter directly
+> > to acpi_dev_get_pci_dev() to get the PCI device associated with it.
+> > That allows local variable acpi_parent to be eliminated.
 >
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Thanks!
+
 > ...
 >
-> >  /**
-> > - * acpi_get_pci_dev - convert ACPI CA handle to struct pci_dev
-> > - * @handle: the handle in question
-> > + * acpi_dev_get_pci_dev - Get a struct pci_dev for a given ACPI device
-> > + * @adev: Target ACPI device.
-> >   *
-> > - * Given an ACPI CA handle, the desired PCI device is located in the
-> > - * list of PCI devices.
-> > + * Get the first PCI device associated with @adev, if present, and bum=
-p up its
+> > +++ b/drivers/acpi/video_detect.c
 >
-> What is the meaning of the "first PCI device" in terms of ACPI specificat=
-ion (and
-> implementation in the Linux kernel)? I think it's impossible case to have=
- more
-> than one object to be a companion to a PCI device. Am I wrong?
-
-The ACPI specification is kind of agnostic to that.
-
-In the kernel, there can be multiple physical devices associated with
-one ACPI device object, but I agree that every PCI device has at most
-one ACPI companion.
-
-I'll drop the word "first" from this comment.
-
-> > + * reference counter.
-> >   *
-> > - * If the device is found, its reference count is increased and this
-> > - * function returns a pointer to its data structure.  The caller must
-> > - * decrement the reference count by calling pci_dev_put().
-> > - * If no device is found, %NULL is returned.
-> > + * Callers are responsible for dropping the PCI device reference obtai=
-ned by
-> > + * this function.
-> > + *
-> > + * Return: The struct pci_dev pointer of a reference-counted PCI devic=
-e on
-> > + * success or NULL on failure.
-> >   */
+> >       if (acpi_dev && !acpi_match_device_ids(acpi_dev, video_ids)) {
+> > -             dev =3D acpi_get_pci_dev(handle);
+> > +             dev =3D acpi_dev_get_pci_dev(acpi_dev);
 >
-> --
+> This likely needs to be rebased on top of the series I sent?
+
+Probably.
