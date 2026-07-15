@@ -1,71 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A10E742048C;
-	Wed, 15 Jul 2026 13:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD3E23507B;
+	Wed, 15 Jul 2026 13:33:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784121327; cv=none; b=kjDT9Ofayk/A8fDOV+DAsw9mouxin1QAFR1RhwIO1H+YlSaqFhRps+XIjz8pVUYlURSiILlXFqcHMYlHr0TQwL6PZ9K+vRPeKSiu/H5qHqMyTnIF8f48bAbbvQpJAItOUZwQXFr1gRIlDMuBcJXfI+6MCsX5rGf8V+pjNHmiPm4=
+	t=1784122413; cv=none; b=QVs6tDkoCAvSOdW+2klEcyDXwIHI4TYfFvxLmvVQH97V4dj1urx8do3jUn3G1GJVkabvDHtgcHonFzKJDDgFEdy+CGqeaS0/TcSktdHNGtl26O71LUG0kyY1zuUP5vFuAqyMeEJgAWfvL51wVU9LOz9jkEFofq8BP/44EULOVac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784121327; c=relaxed/simple;
-	bh=2glUP3knC/CF6SP8XVDlb+DJ7gTstChwo1Bzs2KPR5U=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=jU767G9mFrQQ5ML3kKNUD9XHnmflRmEsE/SOnxvnFB8m3MMJXJ9sC6aM/3iimxVyWiH4srgaFcF9cbZQEyKrt9nLvsYQXlQ3V4UiwUxBKosCZ3XliN21Q45gEX/P31Gu4vr2AXUbzP4J2DBWMwuOttHhztQ6PzCrjzzl0UGiqxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOwNLdKa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784122413; c=relaxed/simple;
+	bh=yhK+gWds0kqmJMK8oYokhqCx2haI6WBmsi0ir4zS+eM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fTCwi6lbZSQC3Ul0XpbdjZ3Y/6Slh2P5U5Wnw2QwZ1zVceuKQ0cH+C+nP10cjp/5ENuZm9wXNks6OEXpdRi9CgxSTbNf68GPYrcbLGqUZ2ZbtPQL+MtmyKhRAktU3RktKOK3ezAFXPG2k/WTJ4RwSyEPRhiWXRq32xR00x3jKGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=UkUElBTc; arc=none smtp.client-ip=115.124.30.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOwNLdKa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 904301F000E9;
-	Wed, 15 Jul 2026 13:15:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784121326;
-	bh=4DeSXaNxTofIURv81kLYLATjIHT5Tg6o0Xfm/3fMQpE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=TOwNLdKabKVy0xa1zK1yCloIo1mvONjB+E2Uu07gwdO5q1FfuvhFQGwDROwLVoTfx
-	 g9F8vWub3HeMLfXBS2j1sgK+fRvfKElhU6UDSv9BfYVIAy26erRpZ876yA6xWYzajr
-	 ktt4UwtRFAcDbdBSjpRafqxoLd68lgb518vi6bxbXN7FKPrgT8aL1vLnySenS1LkrL
-	 4lEx7olpV9hUD5EVr6nT3PilwPv9vXF+OHj/xAmIfjIjrrd5MUaT4KjbSeqODjjYiG
-	 Qb32XSj2gbtRdsvUCC5EcESMQblxRFttrp9ReMVvhKcpB634rqnuJPis+u+cy3M7SC
-	 j64weKgzJ7v2g==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
- ilpo.jarvinen@linux.intel.com, jingoohan1@gmail.com, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Hans Zhang <18255117159@163.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-In-Reply-To: <20260407130450.1489318-1-18255117159@163.com>
-References: <20260407130450.1489318-1-18255117159@163.com>
-Subject: Re: [PATCH v7 0/3] PCI: Refactor PCIe speed validation and
- conversion functions
-Message-Id: <178412132320.142387.10139960720570684973.b4-ty@b4>
-Date: Wed, 15 Jul 2026 15:15:23 +0200
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="UkUElBTc"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1784122404; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=JCr+B/B1w1jArutjB0fuPO9lz1kJ/HqQv993yIGFPyE=;
+	b=UkUElBTcTugk4OcYWdQ+ZxD5zVrSQ8dmRO6wTvR8NGtAKvg6qFSxp5N0MFOsi09xKg85cinwFtm7NCMgfwbKX+U5nyBTDLEIzMTa8PHlDLzexPlZX96pODEUqhpw5fZoGzI875Oi31qbBG1BQR5SzZTlkB8J5L+x/o1otBNTHb4=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R561e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=cp0613@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0X79XPtG_1784122400;
+Received: from DESKTOP-S9E58SO.localdomain(mailfrom:cp0613@linux.alibaba.com fp:SMTPD_---0X79XPtG_1784122400 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 15 Jul 2026 21:33:23 +0800
+From: Chen Pei <cp0613@linux.alibaba.com>
+To: dave.jiang@intel.com,
+	alison.schofield@intel.com,
+	bhelgaas@google.com,
+	rafael@kernel.org,
+	lenb@kernel.org,
+	guoren@kernel.org,
+	sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ACPI: PCI: Clear driver_data on all error paths in acpi_pci_root_add()
+Date: Wed, 15 Jul 2026 21:33:10 +0800
+Message-ID: <20260715133020.3282712-1-cp0613@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260707122549.C01DC1F00A3A@smtp.kernel.org>
+References: <20260707121258.11640-1-cp0613@linux.alibaba.com> <20260707122549.C01DC1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-
-On Tue, 07 Apr 2026 21:04:47 +0800, Hans Zhang wrote:
-> This series refactors PCIe speed validation and conversion logic to
-> shared functions in the public header, eliminating code duplication
-> and ensuring consistency across drivers.
-
-Applied, thanks!
-
-[1/3] PCI: Add public pcie_valid_speed() for shared validation
-      commit: e1c1eb1d8912bd209845f1e7fc99925412fc5af8
-[2/3] PCI: Move pci_bus_speed2lnkctl2() to public header
-      commit: a03c77abaa802433210f193617000a3c1edd20be
-[3/3] PCI: dwc: Use common speed conversion function
-      commit: 6fc5fcd8ec1bdba3123b8a662410cf70bffc40f0
-
-Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
-
-
+Thanks for the review.=0D
+=0D
+> Pre-existing issues:=0D
+> - [High] The acpi_pci_root_remove() function frees the acpi_pci_root=0D
+>   object but fails to clear device->driver_data, leaving a dangling=0D
+>   pointer.=0D
+=0D
+Agreed. acpi_pci_root_remove() calls kfree(root) without resetting=0D
+device->driver_data, which leaves exactly the same dangling pointer=0D
+this patch removes from the add() error paths. I'll fix it in v2 by=0D
+also clearing device->driver_data in acpi_pci_root_remove(), so the=0D
+add and remove paths leave driver_data consistent.=0D
+=0D
+> - [High] Lockless access to `device->driver_data` causes a TOCTOU=0D
+>   Use-After-Free race during hot-add failure and hot-remove.=0D
+=0D
+I don't think this is reachable, so I'll leave the locking model=0D
+unchanged:=0D
+=0D
+- driver_data is published early (device->driver_data =3D root), but the=0D
+  PCI hierarchy below this root bridge is not created until=0D
+  pci_acpi_scan_root() and pci_bus_add_devices(), both of which run=0D
+  only on the success path, after the dmar_device_add() error goto.=0D
+  During the error window there are no child PCI devices yet, so an AER=0D
+  or CXL consumer under this bridge has no way to obtain the handle and=0D
+  call acpi_pci_find_root() against a half-initialized root.=0D
+=0D
+- The early publish of driver_data is pre-existing; this patch does not=0D
+  change it, it only makes the error-path cleanup consistent.=0D
+=0D
+- ACPI .add and .remove are serialized by acpi_scan_lock, so add cannot=0D
+  race remove.=0D
+=0D
+If there is a concrete caller that can reach acpi_pci_find_root() for=0D
+this handle during the add-failure window, I'm happy to revisit. Adding=0D
+RCU or locking to the find_root() fast path otherwise seems unwarranted=0D
+for this fix.=0D
+=0D
+I'll send a v2 with the acpi_pci_root_remove() fix.=0D
+=0D
+Thanks,=0D
+Pei=0D
+=0D
+=0D
