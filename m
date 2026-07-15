@@ -1,73 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 462183A1DB;
-	Wed, 15 Jul 2026 06:15:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368DD3128D7;
+	Wed, 15 Jul 2026 06:47:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784096110; cv=none; b=UEz/vYnhHAm5+E4Eix6Yz3JkjTYTLk+Q/HYiaprHgaXlycBZGvLUCZfq07PEuwdP1wd3vh2fuhtZpC9vSFQ3fgN+Fkbmn8ediZ4Gr6UmfLNh2+FMiA54FdThTM50wLYY24VePoYxjy5H1ZY1vmFw2N3Db9B1LdDNDZ4nJ1Noo5I=
+	t=1784098070; cv=none; b=Igpo6EBranfc+o1EvjcqtTSeKAtIT4ElMlm0j4fsRlWo5RqZbsou4Nx6IMmFuHfn2IOnnSl7PU3mwgaLLzsnX7qBmTHZ93EHDBeXvx/MWE9wLC4TtaVHpOiGaYnyNaslHj+e1UkmFMgsoHPZvSq6wa9Dl8JvngIGZC6Sp6RK+Yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784096110; c=relaxed/simple;
-	bh=JKCeXmh7VeN1JYSCE6/2jvCU1r9shc5KTVqZNGX6Y7Y=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=fMVPGUBu5N4ENNc7SRlXKQyueq6/FP4qjHlzBI5QHZvQ11mhSRWXKj1DsmWifS3qAy9R+KrtrMHWwW5ch7z24fclNIYiiyoJXHlVFqPH2moLieCeqGeraHrnjCq2z9bKww4EN2td0gNi2HPH+SV9eMMJ8+xIx6y3VRI7B756FcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SNOhnyhy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784098070; c=relaxed/simple;
+	bh=Kspjd676zvs0DkYjbeRjHFL+eRleqOy5TmzjeLfcgxg=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=PSzx5UyQQgmi+8J/y2QtgSOaOy8KhmPJgWkiDlTRd4TvH3jxvjndaMhXKCshghO8HOOcOfxyNSX8YJzbD4sP26we+Bvhd6WS4GIE/jgnyve0FyUeFGX7WrSptMUtU1Gaj/LIulZyNMjPPxWBNL4vfuRsdaAfCu0p26jOhFI8Aa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rxe5BH0x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SNOhnyhy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 600191F000E9;
-	Wed, 15 Jul 2026 06:15:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rxe5BH0x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B7291F000E9;
+	Wed, 15 Jul 2026 06:47:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784096108;
-	bh=W+dqPQxRGWdV0aqof+K2sH4x/e6xuMc6x5QqaDn4I2A=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=SNOhnyhyDic4MU3m2KnNMoCbstA2QMgcSUMzrPh9xxF8jh/0QdUEmqstrwPvs8bFB
-	 fvh+qzeqp8MLP9DEL3+lX+ldPdjheqJCM8ziBiE9O3OnsVvQ/SkON0SZnVOZRBCSLJ
-	 XGvpxA4MJQ0Vtt37Cn1MjBVtXgl49pkewomLgZk1L594BwBnwl92hP1PzYMXJsxZn4
-	 /Rmxdcd8K/wYI9vEwMW7QiW+PhpkAt/M6N2HnIeunQbOSZzo5xeDttY4YhqOwoXvPZ
-	 eVN5/zGSOuK7ewwGmgVIwYJaRNoO4I/YhFWQEHqB8NI07LHaAFsaWCGPc0mWFcLlIV
-	 TzMfjH4KTbYFQ==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Yuho Choi <dbgh9129@gmail.com>
-Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>, 
- Siddharth Vadapalli <s-vadapalli@ti.com>, Niklas Cassel <cassel@kernel.org>, 
- Frank Li <Frank.Li@nxp.com>, Qianfeng Rong <rongqianfeng@vivo.com>, 
- Koichiro Den <den@valinux.co.jp>, linux-kernel@vger.kernel.org
-In-Reply-To: <20260630202938.1877632-1-dbgh9129@gmail.com>
-References: <20260630202938.1877632-1-dbgh9129@gmail.com>
-Subject: Re: [PATCH v1] PCI: keystone: Fix OF node reference leak in init
-Message-Id: <178409610501.40073.11991008723591047408.b4-ty@b4>
-Date: Wed, 15 Jul 2026 08:15:05 +0200
+	s=k20260515; t=1784098068;
+	bh=Kspjd676zvs0DkYjbeRjHFL+eRleqOy5TmzjeLfcgxg=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=Rxe5BH0xxS8Vh4oYbl/NJWNcYGvgJM17Umbc51sM7xu1SMeV4cV515HpEvcKV4FMP
+	 TGJ8PNvDRgCYG01V10/2gn5Q6f5ZuvzRtp9u8pLjXDAxuYDZUmjxg0UxhJR2UstyQm
+	 QQk0Exe4Ex7DMTCVrb5jDz0CQlyGwXtccd3Fv5EUvYKRyPrOtJ7wl03qR7SDDiSixz
+	 Vvx+lW4UtYvtbN14sNTyGLAY454TSkUZoEZ8NdAShabcq7GngGNDKCIne4gq9uY0XD
+	 W8mnw/OD5Qm36U8Ti0gXvCupfR0ODtgPQgMa4APmfNia4h6YM6yxGVLzQBjGW5yoyE
+	 ryb4o97GKAkIg==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Alvin Sun <alvin.sun@linux.dev>, Miguel Ojeda <ojeda@kernel.org>, Boqun
+ Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6r?=
+ =?utf-8?Q?n?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Alice Ryhl
+ <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo Krummrich
+ <dakr@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu
+ <petr.pavlu@suse.com>, Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen
+ <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter
+ <simona@ffwll.ch>, Daniel Almeida <daniel.almeida@collabora.com>, Arnd
+ Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>,
+ David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>, Breno
+ Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>, Dave Ertman
+ <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, Igor
+ Korotin <igor.korotin@linux.dev>, FUJITA Tomonori
+ <fujita.tomonori@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Arve
+ =?utf-8?B?SGrDuG5uZXbDpWc=?=
+ <arve@android.com>, Todd Kjos <tkjos@android.com>, Christian Brauner
+ <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>
+Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
+ driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org,
+ nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org,
+ kunit-dev@googlegroups.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org, Alvin Sun <alvin.sun@linux.dev>
+Subject: Re: [PATCH v8 07/10] rust: configfs: use `LocalModule` for
+ `THIS_MODULE`
+In-Reply-To: <20260713-fix-fops-owner-v8-7-2495cfa82d47@linux.dev>
+References: <20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev>
+ <20260713-fix-fops-owner-v8-7-2495cfa82d47@linux.dev>
+Date: Wed, 15 Jul 2026 08:46:42 +0200
+Message-ID: <87ldbchhrh.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+Content-Type: text/plain
+
+Alvin Sun <alvin.sun@linux.dev> writes:
+
+> Replace the `THIS_MODULE` static reference in the `configfs_attrs!`
+> macro with `this_module::<LocalModule>()`, and update
+> rnull to import `LocalModule` instead of `THIS_MODULE`, consistent
+> with the move of `THIS_MODULE` into the `ModuleMetadata` trait.
+>
+> Assisted-by: opencode:glm-5.2
+> Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
+> Acked-by: Danilo Krummrich <dakr@kernel.org>
+> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 
 
-On Tue, 30 Jun 2026 16:29:38 -0400, Yuho Choi wrote:
-> of_find_matching_node() returns a device node with its reference count
-> incremented. ks_pcie_init() only uses the returned node to decide whether
-> to register the ARM external abort fault handler, but never drops the
-> reference.
-> 
-> Store the lookup result in a temporary variable and release it with
-> of_node_put() once the existence check has been made.
-> 
-> [...]
-
-Applied, thanks!
-
-[1/1] PCI: keystone: Fix OF node reference leak in init
-      commit: 3260336defeb292a91de29e4d1d93469e3cec663
+Acked-by: Andreas Hindborg <a.hindborg@kernel.org>
 
 Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
+Andreas Hindborg
 
 
