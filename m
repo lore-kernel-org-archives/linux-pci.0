@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDF2F28505E;
-	Thu, 16 Jul 2026 14:22:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B2EE42A7AF;
+	Thu, 16 Jul 2026 14:27:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784211773; cv=none; b=Mg/01JoiDjLItpRWdj3FcwoLXIBrMOw6/ftoe8OlrrRqzojspI0T8Rh+veYmO6mL7f+nWsf60h5aaAa/Voe9YuPnv+yEgTUhcta9EDsqMlCAl8bgHmEzh9ZiYlYs3tZeA5fg6ouIqJXCZBB1sBohcVoJznVlW+wnT5X4jPe31EM=
+	t=1784212059; cv=none; b=ENJhVh0Y8mQdymOFz3d1oI/Vva+my0PO+lQZB07bqED3ZEEJbcLDa0EEVv8MOUMUm35P1eMHawkWvPUPR4s22vF8o6TFHVeHe0w1kAjWn0+LyjJshqnEN/AnYhjahB7eMKSgTQ9bLvj5WkocECbcrz81eOh5EpE4pMzbDpy3MGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784211773; c=relaxed/simple;
-	bh=/rxFCHiIu4BymJ9k7FwUsZBizafix6bETAM21VjXyQ4=;
+	s=arc-20240116; t=1784212059; c=relaxed/simple;
+	bh=1kJPsUhjqQy7HL6f355QrtUA/EB1oBtabhfwUM3eI2M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KpTJi+Bbh5DGuVfVqo79ON/kxlYSiw2fU4SYhLcnP/FU1zcXdLkvoOuXdVLmIdOyvd/lB/fmlXbUfq2fQHHzYLgyHlwFBAKtFgX8LHgni84smtrejROWsBwhRV9pypEsIXd/JH+rBh7qdJwU8aCt0obDEE5XwIaxl+uhmJR9xpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fYguP7bL; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=X/OS9a1mBRRwh8sOE/C86YfU+nSMtQnn9lqJBvJoyzfn05qeM+kRfZ1mj8EkdI8FGRi86FTqMGkG42kF4vQ/Xwxt9gx3uIwdM+LADkrwRkL7S98yXVxwZP89Hfne9z6ydGEGUNU1HB4OLE10iG68n5BooSNWDUd0/TQFuUeqcjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XFAa2WZJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fYguP7bL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADB871F00A3D;
-	Thu, 16 Jul 2026 14:22:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XFAa2WZJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59F511F00A3A;
+	Thu, 16 Jul 2026 14:27:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784211771;
-	bh=0i50oMqMo7EK4tKCQkAZLW1pM6qYZ5tZD+YzTRBl4vw=;
+	s=k20260515; t=1784212058;
+	bh=wDjHvX2K3HpCs9NBajlM2JHwmELJGRbPoXUJ7ZuL9TY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fYguP7bLjJbvVfprFBF/wlTNW5FU9py3NCBTOISr+ekP0fhWKDYl69Z5n4uHKR9SI
-	 8I3YRlE0LlTE2nTyRBPKf37N6f1VqZm9Sc4XpL1+FK4GlzEERIhb9gWN2nrcyYbyID
-	 XgJL1SiB9cjocFrP88+4Eh8tyokpiUaRpPynvYslcQBPYJSUBs/KbqWAbjfLGKAaeK
-	 Gs6lqHtNrGKxaIvx4WVjGas5o8RiOv0057V+91cvQfcpr36PjvLMT9ztmfWf7Gkx1y
-	 nqNuxMdV+nGiPD1IaV6ob+LbsJXYr0TYromMgQrk7oymdZuArCtBYmfGKC83FCuEt/
-	 DD+10XYS8E4Tw==
-Date: Thu, 16 Jul 2026 16:22:37 +0200
+	b=XFAa2WZJSAYIoiLx2V6HfT894RE7MeN/DxcfjTJ7kUaL1TdDsPqdU7HPdWpQF8TgB
+	 xIiS0TIpgD2n0y+AgkYhDwW2gdYaCFEf5Te7UolGHT3CwBr2K6HwAYx4i5tO6h7o47
+	 kyRvcYVxu3cqj8kU16aLYjmJY3muB6vi+MQ+HXU10zKiMsCJxs/HTJj6OM5E3QTi2R
+	 hVNCy1zt9j/ZFKVhFfkTf0bP3DAJsmBTJHtJ/Ha9hmmb+3H0Ranqscz3Uc9tXKfBRC
+	 PoC/d8ojQO/0qv5+hGvj7s9NrqXQj400RSiggupkZ7dUpN/+bXjb7HBH20v5I7Zy7J
+	 l9o+BqcqzOgzg==
+Date: Thu, 16 Jul 2026 16:27:19 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bartosz Golaszewski <brgl@kernel.org>
-Cc: Loic Poulain <loic.poulain@oss.qualcomm.com>, 
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
-Subject: Re: [PATCH v3 03/11] power: sequencing: Add
- pwrseq_power_is_controllable() API
-Message-ID: <di2rdanp4hgmflhcrenjbohr3rzzmk6v7m3w7tjffe3it2mjla@46vkm2qat27c>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	devicetree@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v3 04/11] power: sequencing: pcie-m2: Report power
+ controllability
+Message-ID: <txl2wo47ftsaqwh32x63kmhqwqjx5xpszoazccyeqdqmjzh2rv@ocev6u7vzdiq>
 References: <20260710-monza-wireless-v3-0-46253587af64@oss.qualcomm.com>
- <20260710-monza-wireless-v3-3-46253587af64@oss.qualcomm.com>
- <CAMRc=MckiTUBCF+UvmFi-ceLpjWW71LXTTHDiY+s5Qn7NCbD6Q@mail.gmail.com>
+ <20260710-monza-wireless-v3-4-46253587af64@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,119 +50,90 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMRc=MckiTUBCF+UvmFi-ceLpjWW71LXTTHDiY+s5Qn7NCbD6Q@mail.gmail.com>
+In-Reply-To: <20260710-monza-wireless-v3-4-46253587af64@oss.qualcomm.com>
 
-On Fri, Jul 10, 2026 at 06:13:55AM -0700, Bartosz Golaszewski wrote:
-> On Fri, 10 Jul 2026 11:57:29 +0200, Loic Poulain
-> <loic.poulain@oss.qualcomm.com> said:
-> > On some boards a power sequencing target has no host-controllable enable
-> > for its function, for instance when the enable line is not wired up to a
-> > GPIO and is hardwired to an always-on level. The pcie-m2 "uart" target is
-> > one such example: when the M.2 connector does not route the W_DISABLE2#
-> > signal to a host GPIO, its enable/disable are no-ops and the host cannot
-> > gate the Bluetooth function at all or exclusively.
-> >
-> > Add a generic pwrseq_power_is_controllable() helper. It reports whether the
-> > target's final unit provides a host-controllable dedicated power actuator.
-> > The unit can implement a new optional per-unit is_controllable() callback,
-> > reporting whether that actuator is effective on this instance (for example
-> > depending on GPIO presence). If the unit does not provide the callback, it
-> > is assumed to be controllable.
-> >
-> > Note this only describes the target's own enable actuator. It does not
-> > imply that a power-off reaches an electrical OFF state as a target may
-> > have multiple consumers. Also, this does not restrict consumers from
-> > calling pwrseq_power_off() either, which remains valid to drop a vote
-> > on shared unit resources/dependencies.
-> >
-> 
-> Thanks. In general it looks good, though I would extend the last paragraph by
-> mentioning that the fact that the target's final unit doesn't guarantee power
-> control for the host, doesn't mean that the power is not controlled for its
-> dependencies. This is what you basically said but it may not be clear to
-> someone new to this API what a "vote on shared unit resources" exactly means.
-> 
-> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
-> > ---
-> >  drivers/power/sequencing/core.c | 39 +++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pwrseq/consumer.h |  7 +++++++
-> >  include/linux/pwrseq/provider.h |  9 +++++++++
-> >  3 files changed, 55 insertions(+)
-> >
-> > diff --git a/drivers/power/sequencing/core.c b/drivers/power/sequencing/core.c
-> > index 02f42da915985339d3de507fc36dd158b0035a99..35df55312a71e9dfd3f24a8199b539746466af36 100644
-> > --- a/drivers/power/sequencing/core.c
-> > +++ b/drivers/power/sequencing/core.c
-> > @@ -72,6 +72,8 @@ static DECLARE_RWSEM(pwrseq_sem);
-> >   *          this unit.
-> >   * @disable: Callback running the part of the power-off sequence provided
-> >   *           by this unit.
-> > + * @is_controllable: Optional callback reporting whether this unit's
-> > + *                   enable/disable actually control power.
-> >   * @enable_count: Current number of users that enabled this unit. May be the
-> >   *                consumer of the power sequencer or other units that depend
-> >   *                on this one.
-> > @@ -83,6 +85,7 @@ struct pwrseq_unit {
-> >  	struct list_head deps;
-> >  	pwrseq_power_state_func enable;
-> >  	pwrseq_power_state_func disable;
-> > +	pwrseq_is_controllable_func is_controllable;
-> 
-> Is there any reason not to put it in struct pwrseq_target? That would avoid
-> needless duplication of NULL pointers across all units, right?
-> 
-> >  	unsigned int enable_count;
-> >  };
-> >
-> > @@ -104,6 +107,7 @@ static struct pwrseq_unit *pwrseq_unit_new(const struct pwrseq_unit_data *data)
-> >  	INIT_LIST_HEAD(&unit->deps);
-> >  	unit->enable = data->enable;
-> >  	unit->disable = data->disable;
-> > +	unit->is_controllable = data->is_controllable;
-> >
-> >  	return unit;
-> >  }
-> > @@ -991,6 +995,41 @@ struct device *pwrseq_to_device(struct pwrseq_desc *desc)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pwrseq_to_device);
-> >
-> > +/**
-> > + * pwrseq_power_is_controllable() - Check whether the target provides a
-> > + *                                  host-controllable power actuator.
-> > + * @desc: Descriptor referencing the power sequencer.
-> > + *
-> > + * Some power sequencing targets provide no host-controllable enable for their
-> > + * function on a given board, for instance when the enable line is not wired up
-> > + * and is instead hardwired to an always-on level. For such targets a call to
-> > + * pwrseq_power_off() is still allowed, so that the consumer can drop its vote
-> > + * on the (possibly shared) resources, but the host cannot gate the function
-> > + * on its own.
-> > + *
-> > + * Returns:
-> > + * True if the target provides a host-controllable power actuator, false
-> > + * otherwise. Also returns false if @desc is NULL.
-> > + */
-> > +bool pwrseq_power_is_controllable(struct pwrseq_desc *desc)
-> 
-> I think, we should call it simply pwrseq_is_controllable(). I was thinking
-> about pwrseq_target_is_controllable() but it's redundant: a pwrseq handle is
-> already associated with a concrete target. When you say "power" it suggests
-> a concrete thing that's "controllable" but it may be a ragulator, it may be
-> a GPIO or reset. I'd just go with pwrseq_is_controllable().
+On Fri, Jul 10, 2026 at 11:57:30AM +0200, Loic Poulain wrote:
+> The M.2 Key E connector gates its functions through the W_DISABLE1#
+> (PCIe/WiFi) and W_DISABLE2# (Bluetooth) signals. When a signal is not
+> routed to a host GPIO, the corresponding enable/disable callbacks are
+> no-ops, so the host cannot gate that function's power on its own.
 > 
 
-But what does pwrseq_is_controllable() mean to the clients? What is
-controllable? pwrseq itself is controllable? If so, then what does
-pwrseq_power_{on/off} provide?
-
-pwrseq_power_is_controllable() also suffers from the same ambiguity. The goal
-of this API is to tell the clients whether a specific GPIO or some signal is
-available that enables/disables the radio on the device. But that is not same as
-controlling power to the sequencer, which is controlled by the regulator.
-
-But TBH, I don't have any suggestion for the generic API name :/
+I think it is misleading to say that if W_DISABLE{1/2}# signals are not
+available then we cannot control the function's power. Power to the function
+only comes from the core 3.3v regulator, and these signals only enable/disable
+the radio (WLAN/BT) as per the spec.
 
 - Mani
+
+> Implement the per-unit .is_controllable() callback on the "uart-enable"
+> and "pcie-enable" units so that consumers can query this per instance
+> (based on the runtime presence of the W_DISABLE2#/W_DISABLE1# GPIOs) via
+> pwrseq_power_is_controllable().
+> 
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> ---
+>  drivers/power/sequencing/pwrseq-pcie-m2.c | 26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+> 
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> index e3ba9169144dabbf0c553c0a4302c3b511fcaaa1..4bcd5078609da1be966ab30c73cffae5e578934f 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -84,11 +84,24 @@ static int pwrseq_pci_m2_e_uart_disable(struct pwrseq_device *pwrseq)
+>  	return gpiod_set_value_cansleep(ctx->w_disable2_gpio, 1);
+>  }
+>  
+> +static bool pwrseq_pci_m2_e_uart_is_controllable(struct pwrseq_device *pwrseq)
+> +{
+> +	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
+> +
+> +	/*
+> +	 * The UART enable is driven through the W_DISABLE2# line. When it is not
+> +	 * wired up on this connector the enable/disable callbacks are no-ops, so
+> +	 * the host cannot gate the Bluetooth function on its own.
+> +	 */
+> +	return !!ctx->w_disable2_gpio;
+> +}
+> +
+>  static const struct pwrseq_unit_data pwrseq_pcie_m2_e_uart_unit_data = {
+>  	.name = "uart-enable",
+>  	.deps = pwrseq_pcie_m2_unit_deps,
+>  	.enable = pwrseq_pci_m2_e_uart_enable,
+>  	.disable = pwrseq_pci_m2_e_uart_disable,
+> +	.is_controllable = pwrseq_pci_m2_e_uart_is_controllable,
+>  };
+>  
+>  static int pwrseq_pci_m2_e_pcie_enable(struct pwrseq_device *pwrseq)
+> @@ -105,11 +118,24 @@ static int pwrseq_pci_m2_e_pcie_disable(struct pwrseq_device *pwrseq)
+>  	return gpiod_set_value_cansleep(ctx->w_disable1_gpio, 1);
+>  }
+>  
+> +static bool pwrseq_pci_m2_e_pcie_is_controllable(struct pwrseq_device *pwrseq)
+> +{
+> +	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
+> +
+> +	/*
+> +	 * The PCIe/WiFi enable is driven through the W_DISABLE1# line. When it
+> +	 * is not wired up on this connector the enable/disable callbacks are
+> +	 * no-ops, so the host cannot gate the PCIe/WiFi function on its own.
+> +	 */
+> +	return !!ctx->w_disable1_gpio;
+> +}
+> +
+>  static const struct pwrseq_unit_data pwrseq_pcie_m2_e_pcie_unit_data = {
+>  	.name = "pcie-enable",
+>  	.deps = pwrseq_pcie_m2_unit_deps,
+>  	.enable = pwrseq_pci_m2_e_pcie_enable,
+>  	.disable = pwrseq_pci_m2_e_pcie_disable,
+> +	.is_controllable = pwrseq_pci_m2_e_pcie_is_controllable,
+>  };
+>  
+>  static const struct pwrseq_unit_data pwrseq_pcie_m2_m_pcie_unit_data = {
+> 
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
