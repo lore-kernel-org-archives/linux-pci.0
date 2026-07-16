@@ -1,67 +1,66 @@
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25A030D40F
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 03:22:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9813330B32
+	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 03:22:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784172141; cv=none; b=HKuZ7YXCVKMb3wM2bNdOKzpPDBy7vXBVj7ghjUQMxwBpINOwnfKWdVcOPMhdvz1eLLfa2J4ubJ4qal2aGPMqQqB0HDUgCD9Z16mkddYndPTtBjA1OYVl0q9UA/rzMvGOEN3p41VfLWQCRIGE2ghM7anYkgtTYJZ80/SxuvGGGc8=
+	t=1784172142; cv=none; b=sIPUgD1hOgZ24/JBJDtFsmHst3U2Fac+5gHau9DvR9zZmfFlGdD5M6oqXw9KQYyCJQMQTaqsiC1aN2X2xVkRfuh/ElM2+I1tB4jW+b5hx8LgMLSedngvFwu1ocbE+nEhILcSU8P5mHCOkbOlDhslICbk2wSpaE938qDJfsjZ8jY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784172141; c=relaxed/simple;
-	bh=elJNDpCx9A/ond//LPRjsJyfG8dwc8CRwQsb3uFhM1g=;
+	s=arc-20240116; t=1784172142; c=relaxed/simple;
+	bh=5D1qVSBbWfn7Tpv6gHBIf1HEIkdpFl8pWYg+EmhZk/o=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=OQjN94fg+NNa3Upm4QPRI847R/bmEdrh5dDwVRkEYR3Ef4PvmCklGHQ7a8+UVkucLZyXnaG/OijNJnzo/YEoD1JMx1x0VcTmoSbJsEOP/gJt6syih+YUwha8eGOh7PC9VZlSW7Ohcv+O3mqZ7cYpgfoOrmn8FBrzSgVUMdYIQW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=J6Ik8eSu; arc=none smtp.client-ip=209.85.128.173
+	 In-Reply-To:To:Cc; b=OgCUWASrmBANZIST/cn9tyqehZ/+rMxpmFBtHCCEtqiI4Q9i/XNoFbUYmskD/hp75iPn6qQrNbscVNuozj4Jt/BM91n6FRm3kiE8SIoDky26zHyMkXE0t9QEmzFE3jj1dXl6aJCPT0xF+1hReQj6EueEOXk3QELsQ0e5zX6M0Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=APx6jKgy; arc=none smtp.client-ip=209.85.128.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tenstorrent.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="J6Ik8eSu"
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-81ee2c048acso1910617b3.3
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 20:22:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="APx6jKgy"
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-81ed2a00f12so24446877b3.2
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 20:22:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tenstorrent.com; s=google; t=1784172139; x=1784776939; darn=vger.kernel.org;
+        d=tenstorrent.com; s=google; t=1784172140; x=1784776940; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KmLTscAEY1O1j8tiZ/+N1t1kAFbbT11AKs1SQQgixyU=;
-        b=J6Ik8eSuFh/1cZpGV9JPf7sYDwmS4U6P47jPX3VKNdcP2ylT6VNr/HMsNsaglt/Q0E
-         QH2jU+RdLFcN0TZPQm9JY9U1BBpNLoJKJHCmmn5WbpP4f0D3xF1DT37MioeeVg9m7LTf
-         4FlMgvIY5h18rQAyotTR/Q9tDoPOA98/rp/gXVwX68pvK6mRVKXDlMMd6LkIv+DPa43H
-         ghS2uuhX9T10WJWUbRIIAU/5oYNdiMD7NOiTDLDQqmmSggk9oCMVcYgPIsPOE3iTPvju
-         BoyX8kilw5I2qQjbNVL1/yAkJrXVDQMAwZujaDCI0UA1zePNAc3PtkTmoc8CgnGG5FAx
-         Kk/Q==
+        bh=48efBL+/zgjdRX5eeYvPyEwynq80yeCCfHgWW6gkRZI=;
+        b=APx6jKgy3e3irQbP7akXPxudNatD3FbH8rTwQY1L/YzoFVygepfHdKg/wqPdaqfmCi
+         zN1ETIo9hWn7pteW4wWRp4zosDU4GlBe5oIX1LnX/su/HzCSOlME+x6exnuhGhVsD5ER
+         vxLudYLeGPOQvPVVkI13tdZOpTho+aVGpNsJpBLx++997HaD+Yl27Re5VbqdXIWecVlV
+         UmI2ixb7+wYYcRg6QMiAS7Kaw3dJWkrUalHWlPsVL7p310zEk6oLv4A4i0R/xV0754cU
+         Ivs5EYGtMA0IqNNj6bTGOm0EjuF4coy8r8mPT51FIjmgojD+3Na6qOzdCJ9YULe7WbTa
+         /F+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784172139; x=1784776939;
+        d=1e100.net; s=20251104; t=1784172140; x=1784776940;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=KmLTscAEY1O1j8tiZ/+N1t1kAFbbT11AKs1SQQgixyU=;
-        b=Xd7rJCIGTXRWYO6HnTk6icPV8H0HUUiv1a5cCFKaAOE06E07QBGHBIy2JjKoF1Tx1F
-         pErF5t3hUw2CqQV+F4VmxSmiMxqLr3TxjsxGdZJy4ttaABxNImugaPp/MtIgd+73ZL3M
-         zYf3ZJ5Ka6A1iMmMXvbYs+ADfWNnwrlqAZB8pMEMIZt8YYvXnai7beqtnSPlLq6HiXhj
-         VYY+3DUWog1DnlqZM/vPzVU9EGosIAUA9TTQNGBBSQm10nuQfhq+3XmAGyUqnH24vOdf
-         Xl47ByktQ/yhJINcm1pE758S0ii+GFWOwSfn6TcSPpac4OgRFsVT53Fw9ZnOV8uYyE1g
-         7NiQ==
-X-Gm-Message-State: AOJu0YzcZAqlABncx9Pt3jHLOiM141iHrn3NfPo/yklqHc40fe7LwoNd
-	hHk1kZQSSECZKiZcaXyScQU8P6NZcOXXZQrizlx2wGmH6rcFZhZSmISyey3FoXPlxf0=
-X-Gm-Gg: AfdE7cky8iThjatOI9hzYQkJL73KJc526+76R5+d1O8LqHcJxq9CGtkeN6oRSBgD467
-	MPZSmErDtf6cSGGx/IAPPe8sZnff6gw++/92kmwqM4jYBzc2Umg8NCUyzjh3x5z7+oMYABt+Pnd
-	KJ0DqaglH+zjCdDGVAl5odfbHWJbGrmN0VYm/wMI0BztvDAUqCaQwai+RZn0MG+sH1vXhYBuNgY
-	QEG4yUHUQUwC/f0ot8z+I+/41p1cbyU+T0uNZjUzuM26aIwvmwFJgEo/l0P6dJWWEtMjsknm4Wf
-	8BDJUaOlE2EPdMmOoUwLNstSUruGTB1w6CVpO0PV57Hev8c8moJG7zlumzKfLrSGIohQL+QEknq
-	+7BGjkA8sDPRa6ZNlmfasI97aeiCce5s75Zq4hcp+Qlcy3qi+AHPaBJMxcEIdMAdd1XAHLmZT07
-	2rgKdIlbzd3/YP4OBaAo9VzNd5KfdQERbgAIMx++KsbA30T2Zev0TlPo+TLA==
-X-Received: by 2002:a05:690c:c86:b0:7f5:87d3:c38c with SMTP id 00721157ae682-81ebb136b12mr83075437b3.21.1784172138727;
-        Wed, 15 Jul 2026 20:22:18 -0700 (PDT)
+        bh=48efBL+/zgjdRX5eeYvPyEwynq80yeCCfHgWW6gkRZI=;
+        b=JgY9UHMulC6wbrD3WH4ihG6zv+3E2wqZlhp34icFlxjS6pxTAXSTrc+Mow8R6bQQft
+         zh/XiDhM/jfCKc1zStk2kUUwWhByx/Y4buQ+MHXSAgkQQeBJpy3pYRxP/oRpEpY4R0Sl
+         Ej+iKBCHmAl5MjmX8AGGZOulbWsz8OZmGboku6BBlB8V3rCyWNgi6RTziIpprjzThFkr
+         RHVhvU6OZxCHeKTxeQNZktRS2JvPfsxHFGYZaEBKARITYFnGEAev0ZUn8+riJxMKnl15
+         RKukVqvl0Z8MVLDlH/t3BdesEW0TNM8E/QxUxEi9zph/PmVMeMNTvy3t2UbkiK4LO3RD
+         oXbQ==
+X-Gm-Message-State: AOJu0YwwIPOlCbbYyIhBcjNbcZKGIPmQJ+ho02sI6MFfA33SdYrHxXXw
+	h2DbqScnHEDULlHfJj/50UvGae2dQXwD7M/HDuvI2KLFJQBpAEDCEfsh0E2+hKSkTzI=
+X-Gm-Gg: AfdE7clWZM5VxZJIwmqQlph3Ry/F9F4lzVPCkqic3STsqlvxSDtrh4jXU0Hz4m6G7u/
+	LQ+dTIWpaljzqmjKpR4jFtBRM5AznRAmFFJLbBp5uv9sliQP4heTIPmNT+VVcl57+OwqE9OhjIK
+	TUP2kUp98tbTw3E0cvTOm2rdk2zCuM8eqrCql6tzQEXg2RRCXzYDpgofLAIMMwLyUvAsKsOmANz
+	pTyel0UaTeXWTkOiZ8EpjLl3XLuLlErgVuSot+ve5UZYEgfV920Qp9nD6/ffnuqgu/ZYF2fQojm
+	B+McxFEMApm9C3lZ+ooFtg2hHQNh0n2CfUGxU9uzavKSd1LUikgKck3OQ8CcwleHREJRfLlD3qN
+	sq4GbCnKfvLnyXJqHVkmIQGSfUDjhUBr2KVloHYrk+WAMpyS5PpYQFgGQXt29RNjgz4GVRdx7eC
+	8ookQiME8YmgERZ6cWR6FwcviiHE84viiJGI5CYAnGLFmK4zHS+YFc4Cc1ug==
+X-Received: by 2002:a05:690c:9313:b0:81e:d300:f427 with SMTP id 00721157ae682-81ed300f4f5mr29106957b3.5.1784172139650;
+        Wed, 15 Jul 2026 20:22:19 -0700 (PDT)
 Received: from [192.168.2.129] ([2600:1700:220:59e0:56e1:f9cd:8869:2218])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-81e6befb688sm185039127b3.14.2026.07.15.20.22.17
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-81e6befb688sm185039127b3.14.2026.07.15.20.22.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jul 2026 20:22:18 -0700 (PDT)
+        Wed, 15 Jul 2026 20:22:19 -0700 (PDT)
 From: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Date: Wed, 15 Jul 2026 22:21:54 -0500
-Subject: [PATCH 1/2] PCI: Move Spacemit vendor and device ID to
- linux/pci_Ids.h
+Date: Wed, 15 Jul 2026 22:21:55 -0500
+Subject: [PATCH 2/2] wifi: rtw89: pci: enable 36-bit DMA on spacemit K3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,7 +69,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260715-rtw89-spacemit-k3-v1-1-e577bc63706b@oss.tenstorrent.com>
+Message-Id: <20260715-rtw89-spacemit-k3-v1-2-e577bc63706b@oss.tenstorrent.com>
 References: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
 In-Reply-To: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, 
@@ -85,45 +84,32 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
 X-Mailer: b4 0.15.1
 
-Move the vendor and device IDs for Spacemit PCIe Root Complexes to
-include/linux/pci_ids.h so that they can be referenced elsewhere.
+The Spacemit K3 Pico ITX Board has a RTL8852BE pcie card behind a PCIe
+root port, but the SoC doesn't have any 32 DMA addreseses which the
+rtw89 seems to use by default. Enable 36 bit DMA ability that the driver
+has when this particular root port is detected so that the driver can
+probe on this SoC.
 
 Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
 ---
- drivers/pci/controller/dwc/pcie-spacemit-k1.c | 4 ----
- include/linux/pci_ids.h                       | 4 ++++
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/pci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-index 680acc93f5395..7b0bc1802954a 100644
---- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-+++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-@@ -21,10 +21,6 @@
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 102bae4881805..c5b82fc46d063 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -3326,6 +3326,10 @@ static bool rtw89_pci_is_dac_compatible_bridge(struct rtw89_dev *rtwdev)
+ 		if (bridge->device == 0x2806)
+ 			return true;
+ 		break;
++	case PCI_VENDOR_ID_SPACEMIT:
++		if (bridge->device == PCI_DEVICE_ID_SPACEMIT_K3)
++			return true;
++		break;
+ 	}
  
- #include "pcie-designware.h"
- 
--#define PCI_VENDOR_ID_SPACEMIT		0x201f
--#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
--#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
--
- /* Offsets and field definitions for link management registers */
- #define K1_PHY_AHB_IRQ_EN			0x0000
- #define PCIE_INTERRUPT_EN		BIT(0)
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1c9d40e09107d..d6f26cacc8e35 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2640,6 +2640,10 @@
- #define PCI_VENDOR_ID_SUNIX		0x1fd4
- #define PCI_DEVICE_ID_SUNIX_1999	0x1999
- 
-+#define PCI_VENDOR_ID_SPACEMIT		0x201f
-+#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
-+#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
-+
- #define PCI_VENDOR_ID_HINT             0x3388
- #define PCI_DEVICE_ID_HINT_VXPROII_IDE 0x8013
- 
+ 	return false;
 
 -- 
 2.43.0
