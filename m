@@ -1,105 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9096A4302E1;
-	Thu, 16 Jul 2026 16:43:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AC83383328;
+	Thu, 16 Jul 2026 16:44:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784220227; cv=none; b=EWCgNrwpcSe0D1PtDG7W2esGiZLRzB0erEw9GAKFVgDV/m7WmOr2F+vxx5m7Z+JysrPP3NIUOZOFs9n/RGZhOcy4hMUTBIcmfE0V19ZK2E6zVOnZDyjM9J+Xn0P9klyLOtxEK2XRVz5NRR52PKoh3jlzlnnXgJvi5u2tIPm3UVc=
+	t=1784220258; cv=none; b=sDR/ETRkpSPVqh4eeFb91VJ6QoFH7YnQSrU36ifSWfDe2mDllYGAeoJHt1Y6sWcUsAYr+oAS1bkVlcpfH7V5wrAoH2uUa80FNx5bEgdPR9oboF1+I1uOH66YU7KkXh3hqhDw35N0qTquedzrD2c6EmuSM/IrtqcQF0oFRth1uTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784220227; c=relaxed/simple;
-	bh=SnP8QQIUdNZrOqvASHOtouNYTYwfv/BR4v1iwdm4dEA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=lvKUPrM6d0/jr5B0h2UN2Sn6GqLStx/wEDLSYiUYe7GtcZXUAFj3NM7BpikHwxl2b05mzWo+SNqiB7ahxSp8IK4N5MN350sd17a4dEJJdmTKnwP7ubJwbitZ1ZI0ncFoQkcEv4V8T6BuaYj9sanfeLPJj5qy1ftERw3jq/GNbf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kGu44Drr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784220258; c=relaxed/simple;
+	bh=U92FztNr8d9j3me6XSOeGW9RVf958zGBdqW3sqV4cJI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qReiPTT37TSaDjix0yDSZfqlk8Pv1MxbjL31sGJbK1M7bKJ38qEnm8beyMt9XHcxHW28DQ7t6TWf6LGDRXnz+v4OB1G+ZOhWJ495lD/idkPdQBTlQUwKZbPKFaktQos9VIsZ9LjEKrTA1QwrtSifzMwon2tLqkvqUAsg6/IUG8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bSVWybz7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kGu44Drr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9CF91F000E9;
-	Thu, 16 Jul 2026 16:43:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bSVWybz7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E59961F000E9;
+	Thu, 16 Jul 2026 16:44:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784220217;
-	bh=uqfDMBky8ltos50nXdtqbBp/S+h2mdqQ130ynwz+gXE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=kGu44DrrjOKxlgbOcTiOuR1I/XNU2QiBR684H1vljQJXdas5Tzoj8WFgGq18y8Mlb
-	 FTAtzUdlbr/OsvG55DWfX3M0V/K678nWbV4pH4Xcu0NY10xioGPGfxM3yFVRXieYbd
-	 9Jtb68tARNAkX2cHgedXpUU9r44uDsW48K6q38H6hhxDbxfjbL+iqTar6vahWDD/hA
-	 URrFDmx/r7ROje1vVzSFPhRpYQoYQYCKFAjzmbQmO4bplQzKYnuFT96LwM9a0N6Y1n
-	 UcmE0g19yVWfd0PcPbKERL1iST9NijbSaMtQuf5KkQy6h5/ZRBn164en3PGbxv0oiX
-	 A87mCkzrLrSbg==
-Date: Thu, 16 Jul 2026 11:43:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: Move Spacemit vendor and device ID to
- linux/pci_Ids.h
-Message-ID: <20260716164336.GA40813@bhelgaas>
+	s=k20260515; t=1784220247;
+	bh=KRQXasdSjh/IVyj+LLVVvuKUHT3n1CA/5KP9qz5vin8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bSVWybz7hoRT6SwmRrOHtV4PdMzz02I7aAxH9ydTXI3xq2ij/ySjxL7NobDNDmx/Q
+	 l6Ckz+/LD6fkpfqrSabZew2DjAM4oDQZ2FC11ziHvNXI9uCZQ/4k63fEK2pBmgpLeM
+	 7Qervo37/1gwY7R18JunzNEJfvtzWKEgzctHXQ6wkphF+N0UHmRki/A0UUNkvtAX1r
+	 mJEMhXsuCbcgXqi8JScXu9dxnNx+S18xanJWKwOUNFjRVN8wLfceYfYgV47j5lE1Nn
+	 Zuz6yeztWML3Udeycwve/w68HrGv4fL/zA6MgtJd7iMzjxrTJkGTRndNZJ1m+EcZ1a
+	 MJiRKzNIsdDAg==
+Date: Thu, 16 Jul 2026 18:43:48 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, s.hauer@pengutronix.de, 
+	kernel@pengutronix.de, festevam@gmail.com, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v2] PCI: imx6: Add runtime PM support for i.MX95
+Message-ID: <aprkipjl3lpdn37dlcdv7wx6piepbbqjsd6ljfgpa5pmua2axu@etxjfuahtg3u>
+References: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260715-rtw89-spacemit-k3-v1-1-e577bc63706b@oss.tenstorrent.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
 
-On Wed, Jul 15, 2026 at 10:21:54PM -0500, Anirudh Srinivasan wrote:
-> Move the vendor and device IDs for Spacemit PCIe Root Complexes to
-> include/linux/pci_ids.h so that they can be referenced elsewhere.
+On Wed, Jul 08, 2026 at 11:59:26AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
 > 
-> Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+> Enable runtime PM support for i.MX95 PCIe Root Complex to allow dynamic
+> power management when the PCIe link is idle.
+> 
+> The i.MX95 PCIe controller supports entering D3hot state when PCIe
+> devices are not actively in use. This implementation uses
+> pm_runtime_no_callbacks() to leverage the PCI core's generic runtime PM
+> handling. The PCI core automatically manages D-state transitions based
+> on the runtime PM state of connected endpoint devices.
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Please resend this patch separately. Currently, you've sent other patches as a
+reply to this patch which just messes up the order.
 
-To help motivate this patch, it would be nice to say specifically
-where PCI_VENDOR_ID_SPACEMIT will be used.
-
-In subject line, s/pci_Ids.h/pci_ids.h/
+- Mani
 
 > ---
->  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 4 ----
->  include/linux/pci_ids.h                       | 4 ++++
->  2 files changed, 4 insertions(+), 4 deletions(-)
+> Changes in v2:
+> Use devm_pm_runtime_set_active_enabled() simplify the codes and error
+> path.
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> index 680acc93f5395..7b0bc1802954a 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -21,10 +21,6 @@
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index eae495a1b7990..578410f262aed 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -130,6 +130,7 @@ enum imx_pcie_variants {
+>  #define IMX_PCIE_FLAG_SKIP_L23_READY		BIT(12)
+>  /* Preserve MSI capability for platforms that require it */
+>  #define IMX_PCIE_FLAG_KEEP_MSI_CAP		BIT(13)
+> +#define IMX_PCIE_FLAG_PM_RUNTIME		BIT(14)
 >  
->  #include "pcie-designware.h"
+>  #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
 >  
-> -#define PCI_VENDOR_ID_SPACEMIT		0x201f
-> -#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
-> -#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
-> -
->  /* Offsets and field definitions for link management registers */
->  #define K1_PHY_AHB_IRQ_EN			0x0000
->  #define PCIE_INTERRUPT_EN		BIT(0)
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 1c9d40e09107d..d6f26cacc8e35 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2640,6 +2640,10 @@
->  #define PCI_VENDOR_ID_SUNIX		0x1fd4
->  #define PCI_DEVICE_ID_SUNIX_1999	0x1999
->  
-> +#define PCI_VENDOR_ID_SPACEMIT		0x201f
-> +#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
-> +#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
+> @@ -1973,6 +1974,13 @@ static int imx_pcie_probe(struct platform_device *pdev)
+>  		 */
+>  		imx_pcie_add_lut_by_rid(imx_pcie, 0);
+>  	} else {
+> +		if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_PM_RUNTIME) {
+> +			pm_runtime_no_callbacks(dev);
+> +			ret = devm_pm_runtime_set_active_enabled(dev);
+> +			if (ret < 0)
+> +				return ret;
+> +		}
 > +
->  #define PCI_VENDOR_ID_HINT             0x3388
->  #define PCI_DEVICE_ID_HINT_VXPROII_IDE 0x8013
->  
-> 
+>  		/*
+>  		 * i.MX RC is powered off during suspend, force L2 entry to
+>  		 * ensure proper endpoint notification before power loss.
+> @@ -2121,6 +2129,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_HAS_SERDES |
+>  			 IMX_PCIE_FLAG_HAS_LUT |
+>  			 IMX_PCIE_FLAG_8GT_ECN_ERR051586 |
+> +			 IMX_PCIE_FLAG_PM_RUNTIME |
+>  			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.ltssm_off = IMX95_PE0_GEN_CTRL_3,
+>  		.ltssm_mask = IMX95_PCIE_LTSSM_EN,
 > -- 
-> 2.43.0
+> 2.34.1
 > 
+
+-- 
+மணிவண்ணன் சதாசிவம்
