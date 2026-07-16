@@ -1,177 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66ABE38AC6E;
-	Thu, 16 Jul 2026 18:21:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF0E33A70E;
+	Thu, 16 Jul 2026 18:36:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784226109; cv=none; b=TQaCOgTGJwx8JA6AT3Aqfdjd75ZPS7rTdVw/Hhpf37B/NIpNVQCru0qDPgIyw//FD0aBPJkDjHJ1BNfWXBzwLDdsoDtws4MI2wIAFULSe5PtqgG/ztuT0s+qUYt91PzfWPn+5sp+w1B72E61Myhig4DR135mAt1vW6bxixo22Yk=
+	t=1784227014; cv=none; b=puLSNBr31zCsTlqeRaAPnDxA8tlSK9yeQddvdnv9NxcbsD6YS4z8uOFgoT2VbItB52jzt+XNLti2GK6Mvf2PSasEjGTXmD/VDfeDF9S9tm62Vwe1AgXSDlnSdZzuGweNmOiSaI+6Zypl0KCiHt7h20tRLtrGXighxaoK0HZxspo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784226109; c=relaxed/simple;
-	bh=NagWJFz2vbQl1gPqkazisMumiIEyyzwyAk7xB/mapN0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ll0pgkeH6w8EdfVMvjzD1jC/8MjfN3cJIetSTlNqWReOwUEyBleCXvFNyKNwm5HEFFveYXIFz34ZSQRPho+eZsioGCaENEvwSjeZhYCWM50a+bi8CCGxF5Y3l2HrqkZy74mejguAMzUEil0VP+H+1VnjrmzgYEt6FJ3J5KzpEy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NAAg8BB8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784227014; c=relaxed/simple;
+	bh=BchtDMMKp+TIsPTrVl+PvcLDOZOFvhR42RmqjR0SZf0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jpN24dA/F4s2Yex1u7s+zQXlzeXvz8146UF2phKDgJd/9sDnIR4BNORnvhHAF5Zfq+BW2nh3sZP7rdXUElkwjLx8i082E7sfckLH1HaN7TijJIJVjqymKHQEj4LM2uGooFCz0tapegLbz95l0WVX/8PmF7jAEiTwRfavdN02R6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O09A3qDh; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NAAg8BB8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2E8E1F000E9;
-	Thu, 16 Jul 2026 18:21:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784226100;
-	bh=8r6tmW3e8KLhwoexnYedDNzR/NqE8tVr9iptKW3MkLk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NAAg8BB8Bp7dnWFsF3rCN7J8w8ebwndq4v8RKXloOyO0pRZbIVYbVXq3Qnz+aTdJe
-	 LkhfkwZLFBmRNEJo/oFSzEXE/2v2okRYL0mIol0DflbInlw1ecJFGe8rYFZbmK+PQD
-	 ZTa0BKb7lX88hNtUpdd60xhIQ5OXA88ykSEcqK1mE/0YdodbxzPlCQkfGfF+tCODQQ
-	 llWqvFawP74CtaP6hNvcve+02AStAb+8snDDwlymA/rH8MpbJKIhFh+AOrjvvCzPVX
-	 5jfn5mGpjfSOC5F51hSY74q8RGGeNfFU1QX1L4OMHLe0e9CPWL0jYfpaVZrjz4qeJM
-	 YhpBEajW2rR2g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v23 3/3] rust: leds: add multicolor classdev
- abstractions
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: ojeda@kernel.org, linux-leds@vger.kernel.org, lee@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260716-rust_leds-v23-3-e91f5b608b56@posteo.de>
-References: <20260716-rust_leds-v23-0-e91f5b608b56@posteo.de>
- <20260716-rust_leds-v23-3-e91f5b608b56@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 16 Jul 2026 18:21:39 +0000
-Message-Id: <20260716182139.E2E8E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O09A3qDh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784227012; x=1815763012;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=BchtDMMKp+TIsPTrVl+PvcLDOZOFvhR42RmqjR0SZf0=;
+  b=O09A3qDhf4fDI8eJZiLUymqiOtuu+m7dVI+eIpyXCsUFn6OW++NHj00w
+   lfUZQ8LqyT8DiOfZp/QAD9lc8QLT/Ay+mxIxX6Lb06HAzksBn2ZNr7yJV
+   gMltuur3yrSfqn2PrOWYkmztAIWdoxdP1UtqCbRR3pFNrQj/oUjKZjjW0
+   FghGiTddeQu0RGtXxBwjd9N3o92ZdT+B6E1usEMNcgmcTmLfi6iF6ao7M
+   DCc0Vr9VIy5SSbK2jAqGKC7BYOC9dTBGBCjKglxojLz/zM7bNnBZMMAoc
+   1i7npfTLJS3g8YG66oVnCBpgEFIYn7PAuQO8BKTRfg/bJoqiBBP+aDzBX
+   Q==;
+X-CSE-ConnectionGUID: PhC2l1wpT7GguzNQ1vh23w==
+X-CSE-MsgGUID: PJBW33RUSUWJmU/2nXt4TQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="84674869"
+X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
+   d="scan'208";a="84674869"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 11:36:51 -0700
+X-CSE-ConnectionGUID: NLhMM2KLRSa+IAHR8Qe9RQ==
+X-CSE-MsgGUID: e7zl5Y0IT/acSWvpLiU8Tg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
+   d="scan'208";a="281018681"
+Received: from conormcd-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.245.26])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 11:36:49 -0700
+Date: Thu, 16 Jul 2026 21:36:47 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Hans de Goede <hansg@kernel.org>
+Subject: Re: [PATCH v2 2/4] ACPI: PCI: Introduce acpi_dev_get_pci_dev()
+Message-ID: <alkkv0dkx4lhuzC4@ashevche-desk.local>
+References: <12935400.O9o76ZdvQC@rafael.j.wysocki>
+ <3430928.44csPzL39Z@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3430928.44csPzL39Z@rafael.j.wysocki>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Safe methods `brightness()` and `intensity()` in `MultiColorSubLed=
-` perform non-synchronized plain reads of an `UnsafeCell`, causing Undefine=
-d Behavior due to data races with concurrent C subsystem modifications.
-- [High] Fragile `fwnode` reference management in `DeviceBuilder::build_mul=
-ticolor` and `MultiColorDevice::drop` causes `ARef<FwNode>` leaks or invali=
-d refcount decrements.
---
+On Thu, Jul 16, 2026 at 04:04:53PM +0200, Rafael J. Wysocki wrote:
 
---- Patch [3]: [PATCH v23 3/3] rust: leds: add multicolor classdev abstract=
-ions ---
-commit 6c4e554be24453ed9f19eef4d69cdcd8cacfc0d1
-Author: Markus Probst <markus.probst@posteo.de>
+> Some acpi_get_pci_dev() callers already have a struct ACPI device for
+> which they want to get the struct pci_dev pointer of the associated
+> PCI device, so they don't need to look for one.
+> 
+> For this reason, add acpi_dev_get_pci_dev() that will get a PCI device
+> for a given ACPI one (if possible) and turn acpi_get_pci_dev() into
+> a static inline helper passing the acpi_fetch_acpi_dev() return value
+> directly to acpi_dev_get_pci_dev().
+> 
+> No intentional functional impact.
 
-rust: leds: add multicolor classdev abstractions
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Implement the abstractions needed for multicolor led class devices,
-including MultiColor, MultiColorSubLed, MultiColorDevice, and=20
-DeviceBuilder::build_multicolor to register new class devices.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-> diff --git a/rust/kernel/led/multicolor.rs b/rust/kernel/led/multicolor.rs
-> new file mode 100644
-> index 0000000000000..82fe96fd5273b
-> --- /dev/null
-> +++ b/rust/kernel/led/multicolor.rs
 
-[ ... ]
-
-> +    /// The intensity of the sub led.
-> +    #[inline]
-> +    pub const fn intensity(&self) -> u32 {
-> +        // SAFETY:
-> +        // - self.intensity.get() is a valid pointer to u32.
-> +        // - We don't have exclusive or immutable access to self.intensi=
-ty,
-> +        //   but the alignment should prevent "load tearing".
-> +        unsafe { *self.intensity.get() }
-
-[Severity: High]
-Does this unsynchronized plain load introduce a data race? If a driver calls
-this safe method from an interrupt handler or background thread while the C
-subsystem concurrently updates the value via sysfs (which holds a C mutex
-the Rust side does not take), could this trigger undefined behavior?
-
-> +    }
-> +
-> +    /// The brightness of the sub led.
-> +    #[inline]
-> +    pub const fn brightness(&self) -> u32 {
-> +        // SAFETY:
-> +        // - self.brightness.get() is a valid pointer to u32.
-> +        // - We don't have exclusive or immutable access to self.brightn=
-ess,
-> +        //   but the alignment should prevent "load tearing".
-> +        unsafe { *self.brightness.get() }
-
-[Severity: High]
-Similarly, could reading brightness() here cause undefined behavior due to
-concurrent sysfs modifications?
-
-[ ... ]
-
-> +                // SAFETY:
-> +                // - parent.as_ref().as_raw() is guaranteed to be a poin=
-ter to a valid
-> +                //    device.
-> +                // - ptr is guaranteed to be a pointer to an initialized=
- led_classdev_mc.
-> +                to_result(unsafe {
-> +                    bindings::led_classdev_multicolor_register_ext(
-> +                        parent.as_ref().as_raw(),
-> +                        ptr,
-> +                        if self.name.is_none() {
-> +                            &raw mut init_data
-> +                        } else {
-> +                            core::ptr::null_mut()
-> +                        },
-> +                    )
-> +                })?;
-> +
-> +                subled_guard.dismiss();
-> +
-> +                core::mem::forget(self.fwnode); // keep the reference co=
-unt incremented
-
-[Severity: High]
-Does this unconditionally leak the fwnode reference when self.name is set?
-
-If self.name is Some, the C registration function is passed a NULL pointer =
-for
-init_data, meaning the device fwnode is never set. By calling forget()
-unconditionally here, the reference count is incremented but the fwnode is
-not stored in the C device, which might permanently leak the reference.
-
-[ ... ]
-
-> +#[pinned_drop]
-> +impl<'bound, T: LedOps<Mode =3D MultiColor> + 'bound> PinnedDrop for Mul=
-tiColorDevice<'bound, T> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        let raw =3D self.classdev.get();
-> +        // SAFETY: The existence of self guarantees that self.classdev.g=
-et() is a pointer to a
-> +        // valid led_classdev_mc.
-> +        let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).led_cdev.dev) };
-> +
-> +        let _fwnode =3D dev
-> +            .fwnode()
-> +            // SAFETY: the reference count of fwnode has previously been
-> +            // incremented in led::DeviceBuilder::build_multicolor.
-> +            .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
- });
-
-[Severity: High]
-Can this cause a use-after-free or double-free on an unrelated fwnode?
-
-If self.fwnode was None during builder initialization, but the C subsystem
-later assigns an unrelated fwnode to the device, it seems this code would
-incorrectly wrap it in an ARef and decrement its refcount.
-
-Alternatively, if dev.fwnode() returns None because init_data was NULL earl=
-ier,
-the previously forgotten fwnode refcount is never decremented, leaking it.
-It appears this same pattern may also affect normal device builders.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260716-rust_leds-=
-v23-0-e91f5b608b56@posteo.de?part=3D3
