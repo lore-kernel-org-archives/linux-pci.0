@@ -1,107 +1,102 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E53433B6CC
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 18:48:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83CB0443ABC
+	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 18:51:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784227724; cv=none; b=Y3s4WdxazheziePaFWap9+jQKmrOAfSOvcN4gaI/73JbGsJYAv1hkcpDh5Y3umMeSLfdU3pio1kUER7ILP+yFuVdwRjDEqDLcYwhve1Y/cD/lzFvAoSnu/kLUL4n7sXptQX62hLx63xOmcVBIXwr9zVEXVW5G8JvIRUbBflTNxs=
+	t=1784227912; cv=none; b=Q2OSDvq/W5ru+JNnoIkH/jZKYq0Ufi7Coz9Nk9Oig+T+lSiYGvNqGazL7I6apUeZyIZ5vBsiVb92jg6f23Wq79ih4z4yb5jLqZXiDZxAGJIEtdWJvqOCw62XDWy2UH6aPhDw2OIQ39fcRGiFCLMRCYsU+qulYYLMUb5Ls9+Be18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784227724; c=relaxed/simple;
-	bh=L/BFaFjssLtfgT7Z6AREhZSZs1c1XSrP+hsDtu4wwFg=;
+	s=arc-20240116; t=1784227912; c=relaxed/simple;
+	bh=4bJIgiE3HonejqKK7Vjawe+q2GD14loCayvk2h1zWhc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N6eUElanDP7RtgUtxQrtWq0mkowABI0e7FXfGFHtXY/qYmqSh4iMLFZD8h49Tk1+FbWcYcNissSphK4E8FMAPq6iP7q8LcXeZeODX7+nUrg0K6gThKZGs/8CXUAwsaBByfkB2UJmg4KoWNifVQLYK4Ug+Vy09M+3SaWsi2lFeWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WxuWjJ0G; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=jmnPF8RN; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=MrA3Q9QBhvH1sfed/7VJXG355vQyKCOgTBM97NKx7mQnTcxOocd1n5j/jawipDxqoM98ZrtAC9tLewmmzE7bzQs+02ZU86tDFaMjSy+Oji01gDOg50s1ZHIHSfTYVdQWOgMOKVhP1V1iU0wn4AEu533DUy1VZFb9K9V8qu5WaoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=BoTTokez; arc=none smtp.client-ip=209.85.222.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WxuWjJ0G";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="jmnPF8RN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784227722;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
-	b=WxuWjJ0G4EKXtHEM0S5925dJEeneFsNy/EEreYYwAQGpXRbQURY6V7kpBMk/8Ya6KbBSo2
-	ZS3L7snwivR8vadnHX3BZkIiCyEVFBLyGQA9UTnqrC3NkbcV2kKcpzqHeyknQYAaLNtSm7
-	uRqTfPggtBLRjXylHgCjZ2g27+BQlfQ=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-230-KM6ovJ-tNw-qVXEp6IXteA-1; Thu, 16 Jul 2026 14:48:40 -0400
-X-MC-Unique: KM6ovJ-tNw-qVXEp6IXteA-1
-X-Mimecast-MFC-AGG-ID: KM6ovJ-tNw-qVXEp6IXteA_1784227720
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-92e53b8a302so1108411085a.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:48:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="BoTTokez"
+Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-92e54f8c051so515941685a.3
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:51:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1784227720; x=1784832520; darn=vger.kernel.org;
-        h=user-agent:in-reply-to:content-disposition:content-type
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
-        b=jmnPF8RNupTwFZxnyNAHc6Syulr2ACziGHuSnaCI1P04CZTuAkNGuWTo3d/lmVL1tt
-         SyCXfvNillap2wrMndV9JQu39YE1rr5tB1A+UIJ+GzAz4Xd+HdmuV1hCM2XtUVkMQqLY
-         0DYP2N7LwUN52bo/lOrRI+FMD+3EQTeu0Zxmxhcc936eTScONJ/sB2ATYhTtzU0c6+0Y
-         0n2mfV65QFQIJMfzRpP7WVYjvrxDvT5AuwfJRne1oPFjpOhtZd+t2AP93wh7C3pp6/e5
-         6c7J8m7pN6v/0TltIm/2Acr3m+qxAZ20axfSPU8rkn1KfpMRD00p/EqblZfPVD0DH5qN
-         w5bg==
+        d=ziepe.ca; s=google; t=1784227909; x=1784832709; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=OAkrfDnB3prGpVSnx0B1oizbRH8N6Nto1hj4Nx1zHR0=;
+        b=BoTTokezwunwtVWZQ53gguoyV3JopHX0uXcA/w/T5u7R0aOAGpLZp52wF2bTxaoZAH
+         SYXNIsy4Oid21JR5P63CacaWf2jYKLIJzbEc1CCtVx9MKAAE46RJgjd75SaTpAV9eK0W
+         CmdZZjOWF2sVDAFFoBwXauljgJD0bK98JpxhTSY/dKmlHtAtBH/y3397Mr0bsquQYvlK
+         ecqrSaXMuKA4jX1Papr6GQMHGFzthvT6XSrz05D2hEt7f+pA4F6c5fKpyBQr85pi5HIe
+         CwYjOT+Kwv3jUC0+CM+vkZt0dWnPlKNSBFhoVg6foZNQurKGsfQ+vdBTyUE2CZP5I5aI
+         eDgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784227720; x=1784832520;
-        h=user-agent:in-reply-to:content-disposition:content-type
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1784227909; x=1784832709;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
-        b=cZRCKBPj06cWd3uJ9D0/8xtnpaD4agEvdFk4JMaEGdP2g2uCUYfdJWp8tm1olbAGs+
-         J/o+qe3l5szalCH3jo9KRIaTNVjoLjnyKOeJH0rVRqMdrXVdq6HvjEQ5ibvCna0BGW7O
-         D8tlJJoXzF83eVftgL4E/V87BOsi8XhP9WCdRtIAcr40jl8Y6TlzTmXOCvgMq0N7aj3Q
-         TtjQZGCWXzpcipyA6InNrigQ6Tzy08WTOpC/ElTv/Z4q56JSQh1PWKagM+1tVb3BqMsO
-         0KO1i9SCq1gJTeCXwEKEHns7kvL7aSGIjUdunJIUrZyiQbf1DS6HMblFlcYbqMdQ+I8i
-         kJdw==
-X-Forwarded-Encrypted: i=1; AHgh+RpH2V51KDSZo9qEIK7FauwSVBOBPBl9GMoF9uc28OL9J+rHl8L1FGmw6Pun7rGZ/Cb+lJIcwl9pooE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8yKX8n0KDcbJwtXX7Al5r9DS9nfVGI6tjRfZ1rcBiEu1pR7pW
-	tsA38Bnp4RgjKKXf4FhiVSL7LR0gUFRRLcUCM2q2BNzoUq/v6BZe9MVEry5bNnW5HRexZF2OjGJ
-	YL46mjoXRMbCmlRrzdrfuLPWtaPL60ID+oTJSyThuxuJpEVwt76nnB5f4jHiiIA==
-X-Gm-Gg: AfdE7ckJMo8buDsHmmR/E2fEIlQLY0XJJsegW2sknQzjTUSCWagWEYyhtbuNn4azBjn
-	3MbMt3QTXrkD7TNKPAeSUkmuF1zkbYoUZpawsCtCA00KOYNPaNNoxhKzOtnBPIgWhGX1PgG8h2U
-	tYay/BttuYfOVGTkei26nCkamegoOyR/PtuYk1Z5CY4usSEAlC9B6PNKzaGpff3sJdfomCKPfQL
-	DjWF16MVB88bceVgNg3x0Ih/jzSzUQ4oCVdxefIxubgd2xa6exqb9erJ6352hgn/4uBQe+85LRF
-	w7eZHnjHI8iF2P+LsSwZfTCOb/RfoUMRQwDE4csBjqzN6hZiyc3blmQCaEBBm17Xd9cy1aod6eK
-	vcn9dpBfNoDtn4sOjJItln/Q5E9rj9yXs2HE=
-X-Received: by 2002:a05:620a:1a14:b0:92e:e569:dc20 with SMTP id af79cd13be357-930962abddbmr924060385a.78.1784227720182;
-        Thu, 16 Jul 2026 11:48:40 -0700 (PDT)
-X-Received: by 2002:a05:620a:1a14:b0:92e:e569:dc20 with SMTP id af79cd13be357-930962abddbmr924057085a.78.1784227719524;
-        Thu, 16 Jul 2026 11:48:39 -0700 (PDT)
-Received: from redhat.com (c-73-183-53-213.hsd1.pa.comcast.net. [73.183.53.213])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-92ee5cf9d9bsm2074490485a.28.2026.07.16.11.48.36
+        bh=OAkrfDnB3prGpVSnx0B1oizbRH8N6Nto1hj4Nx1zHR0=;
+        b=WAsU7huYBm3oW+r3cpndkoXsjqwTl6jW2HZL4ebq4vFdUPWkix8arHz6p6NwojxI0c
+         0SeNcr24a8lLg3b89dc2Mdp5Qilg98Mj0YBpQXQNUtdr1J+sDrjn3ZsVhExBzDlSCxdj
+         i7i1owuirBBaDZE23CEtKIQu3hx7qzZh1Gqbke8LPtTP0GCorih7XguS+tMDyeOWroTE
+         7i+sdu3ZqWm2LZDiO5LiAA2tGQP4hn5Aw14x90xJSD7WNfee7pLeTTJwuYVqzGdkUz0s
+         UpdR0ZYVRQApODWxffdwJoUEKmyBEsXEft/FwgYSEioRDWhl82MZlfN+fdmRajvUISFN
+         THag==
+X-Forwarded-Encrypted: i=1; AHgh+RqrQ27lhpgA7QW2vLkqUMGIAMWFGAQUS2SwQBSrtkqlzGwdnPoglizdEHZx7Jj+2mF9FMYQq2Ha3E8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzSJ3PT+r/J588Ete7ZtDto1w5OADbi3jBb5peELMwsrpttCHrm
+	79o1xmHEthlOkP0figu4ak7z6RjaWwm4ZvSJyjTw1dk+cWHVnBpFzl2jnZOhSwF5gM8=
+X-Gm-Gg: AfdE7cnQST/kRJz2zyB76UA0VkiUAeP1NwTeEQuOQdGRvL5KmQAuXPUj30kMpfrfjTB
+	I1lPpzSUyucBuul4IolfAweQdf293XzyvVDmLdbOOaINlXlW2UdWkpHU2FVmtBf88enpi0t4wFy
+	k7P1GxEbUmX11uPnuy5X/qm2WlnY5W7XKWwhC+v6S3ouOPLhHjIfY8Po2QJkA+xYmbuKPbi/Bv8
+	1EyFDiLvX4T2PG0EPdrIpd7eRdoV/YuSujHBfbfpBhT3sya9kCdxRH4Dvlw/kggZskZ7mt/PvL8
+	DrErKuSEoB8/Y/acrL7Mc/4tCns57sp7e+ryuli6YLlTuEaEGc+f7JnnFAYVdRU+x+Wg4o2apQV
+	wBstNezq+acfZg+uS//OvHoDwhw/xXOdtTIL8vUOdlgMI6RJv9RubKB3S6+ie
+X-Received: by 2002:a05:620a:4456:b0:92e:c117:5ee6 with SMTP id af79cd13be357-93086c5518bmr1250174485a.82.1784227909170;
+        Thu, 16 Jul 2026 11:51:49 -0700 (PDT)
+Received: from ziepe.ca ([159.2.72.92])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-92ee5b93387sm2219740985a.16.2026.07.16.11.51.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jul 2026 11:48:38 -0700 (PDT)
-Date: Thu, 16 Jul 2026 14:48:35 -0400
-From: Brian Masney <bmasney@redhat.com>
-To: Christian Marangi <ansuelsmth@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org, linux-clk@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 2/4] clk: en7523: add support for dedicated PCIe
- PERSTOUT reset
-Message-ID: <alkng6IIkInZjxqA@redhat.com>
-References: <20260714115848.8537-1-ansuelsmth@gmail.com>
- <20260714115848.8537-3-ansuelsmth@gmail.com>
+        Thu, 16 Jul 2026 11:51:47 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wkRBT-00000002uUu-0oRt;
+	Thu, 16 Jul 2026 15:51:47 -0300
+Date: Thu, 16 Jul 2026 15:51:47 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: "Dan Williams (nvidia)" <djbw@kernel.org>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+	ankita@nvidia.com, Aaron Tomlin <atomlin@atomlin.com>,
+	Alistair Francis <alistair.francis@wdc.com>,
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Daniel Gomez <da.gomez@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Donald Hunter <donald.hunter@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, Petr Pavlu <petr.pavlu@suse.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Saravana Kannan <saravanak@google.com>,
+	Will Deacon <will@kernel.org>, Xu Yilun <yilun.xu@linux.intel.com>
+Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security
+ Protocol (TDISP)
+Message-ID: <20260716185147.GA643346@ziepe.ca>
+References: <20260705220819.2472765-1-djbw@kernel.org>
+ <20260706125140.GB107792@ziepe.ca>
+ <6a4c163072c60_174db6100c4@djbw-dev.notmuch>
+ <20260707124321.GF118978@ziepe.ca>
+ <6a4d95fcc92c2_2f05d5100f7@djbw-dev.notmuch>
+ <20260708143153.GH118978@ziepe.ca>
+ <6a4f0b35683b4_353c8910011@djbw-dev.notmuch>
+ <20260709133601.GJ118978@ziepe.ca>
+ <0cc44c9e-fc2a-4c95-a574-de833117f6dc@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -110,129 +105,70 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260714115848.8537-3-ansuelsmth@gmail.com>
-User-Agent: Mutt/2.4.0 (2026-06-19)
+In-Reply-To: <0cc44c9e-fc2a-4c95-a574-de833117f6dc@amd.com>
 
-Hi Christian,
-
-On Tue, Jul 14, 2026 at 01:58:44PM +0200, Christian Marangi wrote:
-> Add support for resetting the PCIe lines with the PERSTOUT reset. These
-> special reset are controlled by the PCIC register and are specific to each
-> of the 3 PCIe lines.
+On Wed, Jul 15, 2026 at 07:04:44PM +1000, Alexey Kardashevskiy wrote:
+> On 9/7/26 23:36, Jason Gunthorpe wrote:
+> > On Wed, Jul 08, 2026 at 07:45:09PM -0700, Dan Williams (nvidia) wrote:
+> > > > force_dma_unencrypted() does not *prevent* device access to private
+> > > > memory and provides no security properties on its own. It's only
+> > > > purpose is to inform the DMA API what the HW restrictions are for
+> > > > doing DMA.
+> > > 
+> > > Right, to be clear, this mode's security properties come from never
+> > > asking the TSM to enable private DMA while the device is in RUN.
+> > 
+> > Ok, that's a twist I hadn't thought about. I don't see a reason to
+> > support a driver probed with RUN but T=1 DMA disabled by the TSM.
 > 
-> Notice that reset logic is inverted for these bit where 0 is assert and 1
-> deassert. This is intenrally handled in the reset function.
+> afaik you cannot have RUN and T=0 DMA at the same time.
 
-s/intenrally/internally/
+Right, that's a great point. The devices we are making simply won't
+do T=0 DMA once they are in RUN, I expect that to be the norm.
 
-The "these bit" above is awkward as well. Sorry I don't have a
-suggestion offhand, but I see what you mean below based on the code.
+So if you disable T=1 DMA at the TSM then the device doesn't work
+anymore because there was no standard way to tell the device it
+shouldn't do T=1.
 
+> I configure my hw to allow "accept" (== T=1 for DMA and MMIO) but
+> still only allow unencrypted guest memory for DMA (set vTOM to 0 to
+> say "all unencrypted) if the driver was loaded with "trust" other
+> than "full" (and this series does not call the enable_dma() hook if
+> not "full", Dan is changing it though) so the module parameter
+> works...
+
+Yeah, this would be an interesting configuration from the TSM -
+support T=1 but change the T=1 translation so that only shared memory
+is mapped. vTOM on AMD and other tricks on other arches.
+
+But AFIAK this isn't generally supported so I'd just leave it out for
+now.
+
+> > I guess
+> >   - The active trust level should be RO visible to the driver, iommu, etc
+> >     It should be stable under a bound driver
+> > 
+> >   - The "dma require unencrypted" property needs to RO visible to the
+> >     DMA API and stable under a bound driver. This would input where
+> >     force_dma_unecrpyted() is in the flow [the name should align with
+> >     all the other per-device DMA API specific properties like seg
+> >     limit, boundary, mask, etc]
+> > 
+> >   - The requested trust policy should be internal to the driver core and
+> >     be converted to the active trust level right before probe
+> > 
+> >   - We should have ways to enable/disable all DMA before/after probe,
 > 
-> PCI enable/disable are updated to drop PERSTOUT bits in favor dedicated
-> reset handling.
+> "echo 1 > unlock" should do that (but also stops encrypted MMIO) or we want a finer knob?
+
+You shouldn't be able to unlock while a driver is bind. I'm aruging we
+should also be able to keep the device in run and block all DMA
+through the TSM.
+
+> > TSM is sensitive to accept, not the trust level
 > 
-> Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
-> ---
->  drivers/clk/clk-en7523.c | 39 ++++++++++++++++++++++++++++-----------
->  1 file changed, 28 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/clk/clk-en7523.c b/drivers/clk/clk-en7523.c
-> index 1ab0e2eca5d3..c9b21d9bf2f3 100644
-> --- a/drivers/clk/clk-en7523.c
-> +++ b/drivers/clk/clk-en7523.c
-> @@ -338,6 +338,7 @@ static const struct en_clk_desc en7581_base_clks[] = {
->  static const u16 en7581_rst_ofs[] = {
->  	REG_RST_CTRL2,
->  	REG_RST_CTRL1,
-> +	REG_NP_SCU_PCIC,
->  };
->  
->  static const u16 en751221_rst_ofs[] = {
-> @@ -450,6 +451,11 @@ static const u16 en7581_rst_map[] = {
->  	[EN7581_CPU_TIMER_RST]		= RST_NR_PER_BANK + 28,
->  	[EN7581_PCIE_HB_RST]		= RST_NR_PER_BANK + 29,
->  	[EN7581_XPON_MAC_RST]		= RST_NR_PER_BANK + 31,
-> +
-> +	/* RST_PCIC */
-> +	[EN7581_PCIC_PERSTOUT0_RST]	= 2 * RST_NR_PER_BANK + 29,
-> +	[EN7581_PCIC_PERSTOUT1_RST]	= 2 * RST_NR_PER_BANK + 26,
-> +	[EN7581_PCIC_PERSTOUT2_RST]	= 2 * RST_NR_PER_BANK + 16,
->  };
->  
->  static const u16 en751221_rst_map[] = {
-> @@ -635,9 +641,7 @@ static int en7581_pci_enable(struct clk_hw *hw)
->  	void __iomem *np_base = cg->base;
->  	u32 val, mask;
->  
-> -	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1 |
-> -	       REG_PCI_CONTROL_PERSTOUT1 | REG_PCI_CONTROL_PERSTOUT2 |
-> -	       REG_PCI_CONTROL_PERSTOUT;
-> +	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1;
->  	val = readl(np_base + REG_PCI_CONTROL);
->  	writel(val | mask, np_base + REG_PCI_CONTROL);
->  
-> @@ -650,9 +654,7 @@ static void en7581_pci_disable(struct clk_hw *hw)
->  	void __iomem *np_base = cg->base;
->  	u32 val, mask;
->  
-> -	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1 |
-> -	       REG_PCI_CONTROL_PERSTOUT1 | REG_PCI_CONTROL_PERSTOUT2 |
-> -	       REG_PCI_CONTROL_PERSTOUT;
-> +	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1;
->  	val = readl(np_base + REG_PCI_CONTROL);
->  	writel(val & ~mask, np_base + REG_PCI_CONTROL);
->  	usleep_range(1000, 2000);
-> @@ -754,14 +756,21 @@ static int en7523_reset_update(struct reset_controller_dev *rcdev,
->  			       unsigned long id, bool assert)
->  {
->  	struct en_rst_data *rst_data = container_of(rcdev, struct en_rst_data, rcdev);
-> -	void __iomem *addr = rst_data->base + rst_data->bank_ofs[id / RST_NR_PER_BANK];
-> +	u32 offset = rst_data->bank_ofs[id / RST_NR_PER_BANK];
-> +	void __iomem *addr = rst_data->base + offset;
-> +	bool inverted = false;
->  	u32 val;
->  
-> +	/* For PCIC reset logic is inverted, 0:assert 1:deassert*/
+> This makes the module's "trust" parameter useless, right?
 
-Add space before end of comment.
+Yes, ideally it should act based on callbacks I think
 
-> +	if (offset == REG_NP_SCU_PCIC)
-> +		inverted = true;
-> +
->  	val = readl(addr);
-> +	val &= ~BIT(id % RST_NR_PER_BANK);
->  	if (assert)
-> -		val |= BIT(id % RST_NR_PER_BANK);
-> +		val |= inverted ? 0 : BIT(id % RST_NR_PER_BANK);
->  	else
-> -		val &= ~BIT(id % RST_NR_PER_BANK);
-> +		val |= inverted ? BIT(id % RST_NR_PER_BANK) : 0;
-
-Could you do:
-
-    if (assert ^ inverted)
-
-Then keep the existing logic for val inside the if/else?
-
-
-
->  	writel(val, addr);
->  
->  	return 0;
-> @@ -783,9 +792,17 @@ static int en7523_reset_status(struct reset_controller_dev *rcdev,
->  			       unsigned long id)
->  {
->  	struct en_rst_data *rst_data = container_of(rcdev, struct en_rst_data, rcdev);
-> -	void __iomem *addr = rst_data->base + rst_data->bank_ofs[id / RST_NR_PER_BANK];
-> +	u32 offset = rst_data->bank_ofs[id / RST_NR_PER_BANK];
-> +	void __iomem *addr = rst_data->base + offset;
-> +	bool inverted = false;
-> +	u32 val;
-> +
-> +	/* For PCIC reset logic is inverted, 0:assert 1:deassert*/
-
-Add space before */
-
-Brian
-
+Jason
