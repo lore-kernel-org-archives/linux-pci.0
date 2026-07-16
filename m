@@ -1,56 +1,56 @@
-Received: from mail-ej1-f74.google.com (mail-ej1-f74.google.com [209.85.218.74])
+Received: from mail-ej1-f73.google.com (mail-ej1-f73.google.com [209.85.218.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4751340A57
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 02:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D444234676F
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 02:41:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784256113; cv=none; b=rZDKwBGqXFwHcRpYH2nnDf/xMHkxDCuuB0Sbxq3AnrwBaAbunbNtHzwqOPn1xmO6coN5sp1evMt5WPOrgSI1sNXFQ7Rg5jLui4cB5HwlouVeD3D7FH/8iw0YZDh7eyMvFNjRokhNbw+ccChZWA5oGPQRu2PkkRCI1EOkkUFPf58=
+	t=1784256113; cv=none; b=a4RH2rGX0zlUDShnzXjCPhtdqyUa+FtPLplk+eH3J4FXXdRcGvjPs4Q31rbReRApYqJ7e6AumKqt0d+QwrICdIog+XtdU3V8kSRqNzhaMmRClP4tGsBNC/N1jU6LqjxmivcXZrQYeiD8ON7CKLcPxFYPmAE4EmG69aiu6EuxX/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784256113; c=relaxed/simple;
-	bh=vtM/iS4dqfQrB9RkKv94sd0lDNxuzz1siA09RPr39Tc=;
+	bh=DDh2GgbdI5RQMq7gxZncAkacOeotdu9Fzy33SzeLtQY=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=u0oTirHn1eUuTw4H3LZeoYcx8a0fDR7bFwuCl/r8KUXOaqP24/CDASnG3bb3fm7a6uVp0oFbSJdQuyLxaSF0RwozpkJ92Hol7FGhD1xXGw8ARhTNOZFC0FNwo4yktU60nXG9hKk2/ZU53ZD/8PJPS5DtCBmrxa2hMTb3mz6tC7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XkVABHwx; arc=none smtp.client-ip=209.85.218.74
+	 To:Cc:Content-Type; b=j/wVkDVFVelU39olWG4bER+RQiB9x/+lnwCSbVFJZDRgMQ5tHkG81rawEYZd++kBgGWe9fbknNzACg3w+ZTql/iPdWTUtyCJAom0Wot/On9Anmf3KzoafFxAzkTVFI58muAukdAa7Y6XooJWIztDb7ouMj3e7Bpwugfb7J6yMK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=orv+ecfv; arc=none smtp.client-ip=209.85.218.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XkVABHwx"
-Received: by mail-ej1-f74.google.com with SMTP id a640c23a62f3a-c15ff68c858so819782566b.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 19:41:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="orv+ecfv"
+Received: by mail-ej1-f73.google.com with SMTP id a640c23a62f3a-c15c6a68406so331678866b.3
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 19:41:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784256108; x=1784860908; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784256109; x=1784860909; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xttAFdPKvha9rdtsgqnJxKaba7YH7uAmltDFNffmYC0=;
-        b=XkVABHwxSucrUXIg/csVgZDF5wKQAmvdkSF5r3ectuvufF624aJAqH54aGm2sd1U+m
-         SeUk3NFJ/Tzoz59a4ufKX8njP+zMbzhUe1ET6K4LS6O1/LfXwgpcfYIqUPOli4q1KJO/
-         yqra2yY4ewWmdD/61aDPnZLzJr3Ye8rmQ3ok1iyKarT5kaSSbvMT94JA0szF9jicz8EG
-         w2VRcQnIrkdCxrgyH6V6YsZwJx9nLGhnwSc+xUa5Dj/MSqytfeof1k3ynGFVuz/r6pP+
-         xXCMrzuW+CKi6yzg9Tp2h+oU2Vujp5P5TqnUPkm4DR5KuRbBUc6yuKYM9tG0MNk5J6F4
-         tJBA==
+        bh=j3nhX204PbzOZptNzEwfrJ1tihihmuj8AGndCLVcQhw=;
+        b=orv+ecfvKYOj/yUJ9oD4U8h51O7yL9kYoEFD77GjnYHcrC7r1TX+pEyEgIjl/W1uc8
+         ypb7qUSt3+iIF3/wK7fNZnYYyhJH8i6q+LtNOx5XnM3RGFbWPdwlSZmaO7bJx3QJY5yz
+         wsMW3wukE8obNz901dtKRSneP+3WIsg6OtooP9O0Dxru+VfNgu5tERuzWp+bRVjNl2eN
+         7aoepUmCqPU6qUNXGZIrup5xpUyWsqMYEvcd++EkZRwxSb7sAhyLcx801cRrRzhf+KLI
+         H6UG7CR8j+raBCBpuuylPQTpZebyvbXQ40JUSFzPgG4iuw1e4XNdnl3OQScgIR/xikKU
+         nWgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784256108; x=1784860908;
+        d=1e100.net; s=20251104; t=1784256109; x=1784860909;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=xttAFdPKvha9rdtsgqnJxKaba7YH7uAmltDFNffmYC0=;
-        b=hSg/rGTOhyNXdMqnTDQS5MAXfz9R+YOX9O7lomk7NJqg++8NSUqJJMonM4jLSTIMxd
-         K9/Xguj1jjg1sgBOGoZYq0h5hFuwn+SVlBXtwBvl626Z+XK9wAEB9Jz6kFqWxqShsP5m
-         pxC6OC0+WgNKdFUY+TQD43SrVpXo9kMcE0/mZ/rmsN7fi1kMW2wCuoAxC3rMtrawLpoM
-         bkiSfx3oVKAyhGtVq9R3Q/7CRX3OxRVkM55aXbzkshQPo3G8IE0kvI9NFjTrg0Ykk8CV
-         AHuwPeSK2FI0voykNGKWEOuWxATbY3qEemSxsRAGZ78typ8mREHg7/roB19VH8QKFjfL
-         NwvQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rrhxo7f+Ox1YRR3dLj4jeV1XGM7h6ogON0yxHqjYGeNQ71vA26o9jd/wg7U9N5nJL9POnQKUbWPBqk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBHJwGU00TKmy3JBGFW2DAB/fKKFOjuFBu0cI6YKg7pYF8ky02
-	p97v9SOHfRmuXdMHqa0eMmMGnti3V8OSVqmqQXrrQClyUGWrBCqdOItnL9kY1mjQNu9Wg/GExxe
-	APJtSDsgYo65YokiI5w==
-X-Received: from ejbga4.prod.google.com ([2002:a17:906:b844:b0:c12:583d:cdca])
+        bh=j3nhX204PbzOZptNzEwfrJ1tihihmuj8AGndCLVcQhw=;
+        b=MOKJnTnNhmzy34vz5pxnR7tbiAGcZ5NZoKaOUSKEj6De0qBmSbb3qPKGnVyvVh6gdR
+         lcN8QzgoL+yNwhna9yj76pay01qsgqFgehJ4acFkZhEcq1IOLv9Mg+xaLT4dxVfTzSab
+         ILxYKRAhyOKN7iGblZDBcrrZtel3xvggsy4L39R2fgcOFcmqnJwavuDLk6aL3FIPsTDT
+         KXT9znlfN1g2BP4WsmmhhtcoDoGMOLYg+yDKFNemaPav2Pqaoit+eb90xwIo6Bih0JIR
+         RbQbXu1eRCSprZy5VpS4lWXw9Krqo/I7aLOh0HU4Nq34KB1usRtJuHOTEmUsf7kyM/7V
+         QZMg==
+X-Forwarded-Encrypted: i=1; AHgh+RoVbcNABXieY2DXwUAVuwdO8XzjOMVNStRu6pOoelrt5yxA0MQCsUE9iXK933mENeqEus2mPZAngvs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz/QWLWk5XDKQf3v/We5VfogUwSZYGTAARa596FeBSnhjA5CiT2
+	3WL1sIZ49FiSAqfHUVtfnb+GcO/HUlqx/UDxZYXp8yu0nsPHDmUMUPM9Wynoq5atUNDmq1ANhr2
+	Cy6KJztdpBwh5jI1DFw==
+X-Received: from ejfr10.prod.google.com ([2002:a17:906:3d6a:b0:c12:5875:9cda])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:907:724b:b0:c15:a06c:2bc6 with SMTP id a640c23a62f3a-c16b4834e99mr15780066b.47.1784256107376;
- Thu, 16 Jul 2026 19:41:47 -0700 (PDT)
-Date: Thu, 16 Jul 2026 23:04:09 +0000
+ 2002:a17:907:7203:b0:bed:19af:f89a with SMTP id a640c23a62f3a-c16b46caa65mr21546866b.7.1784256108367;
+ Thu, 16 Jul 2026 19:41:48 -0700 (PDT)
+Date: Thu, 16 Jul 2026 23:04:10 +0000
 In-Reply-To: <20260716230411.2767394-1-tarunsahu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260716230411.2767394-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
-Message-ID: <20260716230411.2767394-6-tarunsahu@google.com>
-Subject: [PATCH v19 5/7] driver core: async device shutdown infrastructure
+Message-ID: <20260716230411.2767394-7-tarunsahu@google.com>
+Subject: [PATCH v19 6/7] PCI: Enable async shutdown support
 From: Tarun Sahu <tarunsahu@google.com>
 To: Shuah Khan <skhan@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
 	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -74,306 +74,44 @@ Cc: bvanassche@acm.org, john.g.garry@oracle.com, mlombard@redhat.com,
 	Pasha Tatashin <pasha.tatashin@soleen.com>, jordanrichards@google.com, souravsgl@google.com, 
 	stuart.w.hayes@gmail.com, linux-kernel@vger.kernel.org, 
 	linux-doc@vger.kernel.org, emilne@redhat.com, jmeneghi@redhat.com, 
-	linux-scsi@vger.kernel.org, David Jeffery <djeffery@redhat.com>, 
-	Tarun Sahu <tarunsahu@google.com>
+	linux-scsi@vger.kernel.org, David Jeffery <djeffery@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 
 From: David Jeffery <djeffery@redhat.com>
 
-Patterned after async suspend, allow devices to mark themselves as wanting
-to perform async shutdown. Devices using async shutdown wait only for their
-dependencies to shutdown before executing their shutdown routine.
-
-Sync shutdown devices are shut down one at a time and will only wait for an
-async shutdown device if the async device is a dependency.
-
-Enabled by default, async shutdown can be explicitly enabled or disabled
-by using the kernel parameter "core.async_shutdown=<bool>"
+Like its async suspend support, allow PCI device shutdown to be performed
+asynchronously to reduce shutdown time.
 
 Signed-off-by: David Jeffery <djeffery@redhat.com>
 Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../admin-guide/kernel-parameters.txt         |  10 ++
- drivers/base/base.h                           |   2 +
- drivers/base/core.c                           | 141 +++++++++++++++++-
- include/linux/device.h                        |   2 +
- 4 files changed, 154 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index b5493a7f8f22..f0de215963c6 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -989,6 +989,16 @@ Kernel parameters
- 			seconds. A value of 0 disables the blank timer.
- 			Defaults to 0.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dd0abbc63e18..af2381446406 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1046,6 +1046,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
  
-+	core.async_shutdown=
-+			[KNL]
-+			Format: <bool>
-+			Enable or disable asynchronous shutdown support. When
-+			enabled, on system shutdown unrelated devices flagged
-+			as async shutdown compatible may be shut down in
-+			parallel and asynchronously. When disabled, device
-+			shutdown is performed serially and synchronously.
-+			Enabled by default.
-+
- 	coredump_filter=
- 			[KNL] Change the default value for
- 			/proc/<pid>/coredump_filter.
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index a5b7abc10ff0..40dbf588a5d6 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -103,6 +103,7 @@ struct driver_private {
-  *			   dev_err_probe() for later retrieval via debugfs
-  * @device: pointer back to the struct device that this structure is
-  *	    associated with.
-+ * @complete: completion for device shutdown ordering
-  * @dead: This device is currently either in the process of or has been
-  *	  removed from the system. Any asynchronous events scheduled for this
-  *	  device should exit without taking any action.
-@@ -119,6 +120,7 @@ struct device_private {
- 	const struct device_driver *async_driver;
- 	char *deferred_probe_reason;
- 	struct device *device;
-+	struct completion complete;
- 	u8 dead:1;
- };
- #define to_device_private_parent(obj)	\
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 31f95e86856e..55287f13b8d1 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -9,6 +9,7 @@
-  */
+ 	bus->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(bus->bridge);
++	dev_set_async_shutdown(bus->bridge);
+ 	pci_set_bus_of_node(bus);
+ 	pci_set_bus_msi_domain(bus);
+ 	if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
+@@ -2748,6 +2749,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	pci_reassigndev_resource_alignment(dev);
  
- #include <linux/acpi.h>
-+#include <linux/async.h>
- #include <linux/blkdev.h>
- #include <linux/cleanup.h>
- #include <linux/cpufreq.h>
-@@ -37,6 +38,11 @@
- #include "physical_location.h"
- #include "power/power.h"
+ 	pci_init_capabilities(dev);
++	dev_set_async_shutdown(&dev->dev);
  
-+static bool async_shutdown = true;
-+module_param(async_shutdown, bool, 0644);
-+MODULE_PARM_DESC(async_shutdown, "Enable asynchronous device shutdown support");
-+static bool async_shutdown_enabled;
-+
- /* Device links support. */
- static LIST_HEAD(deferred_sync);
- static unsigned int defer_sync_state_count = 1;
-@@ -3623,6 +3629,7 @@ static int device_private_init(struct device *dev)
- 	klist_init(&dev->p->klist_children, klist_children_get,
- 		   klist_children_put);
- 	INIT_LIST_HEAD(&dev->p->deferred_probe);
-+	init_completion(&dev->p->complete);
- 	return 0;
- }
- 
-@@ -3928,6 +3935,7 @@ bool kill_device(struct device *dev)
- 	if (dev->p->dead)
- 		return false;
- 	dev->p->dead = true;
-+	complete_all(&dev->p->complete);
- 	return true;
- }
- EXPORT_SYMBOL_GPL(kill_device);
-@@ -4898,6 +4906,40 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
- 	return error;
- }
- 
-+static bool wants_async_shutdown(struct device *dev)
-+{
-+	return async_shutdown_enabled && dev_async_shutdown(dev);
-+}
-+
-+static int wait_for_device_shutdown(struct device *dev, void *data)
-+{
-+	bool async = *(bool *)data;
-+
-+	if (!dev->p || !device_is_registered(dev))
-+		return 0;
-+
-+	if (async || wants_async_shutdown(dev))
-+		wait_for_completion(&dev->p->complete);
-+
-+	return 0;
-+}
-+
-+static void wait_for_shutdown_dependencies(struct device *dev, bool async)
-+{
-+	struct device_link *link;
-+	int idx;
-+
-+	device_for_each_child(dev, &async, wait_for_device_shutdown);
-+
-+	idx = device_links_read_lock();
-+
-+	dev_for_each_link_to_consumer(link, dev)
-+		if (!device_link_flag_is_sync_state_only(link->flags))
-+			wait_for_device_shutdown(link->consumer, &async);
-+
-+	device_links_read_unlock(idx);
-+}
-+
- static void __shutdown_one_device(struct device *dev)
- {
- 	if (!dev->p || dev->p->dead)
-@@ -4921,6 +4963,8 @@ static void __shutdown_one_device(struct device *dev)
- 			dev_info(dev, "shutdown\n");
- 		dev->driver->shutdown(dev);
- 	}
-+
-+	complete_all(&dev->p->complete);
- }
- 
- static void shutdown_one_device(struct device *dev)
-@@ -4950,6 +4994,88 @@ static void shutdown_one_device(struct device *dev)
- 	put_device(dev);
- }
- 
-+static void async_shutdown_handler(void *data, async_cookie_t cookie)
-+{
-+	struct device *dev = data;
-+
-+	wait_for_shutdown_dependencies(dev, true);
-+	shutdown_one_device(dev);
-+}
-+
-+static bool shutdown_device_async(struct device *dev)
-+{
-+	if (async_schedule_dev_nocall(async_shutdown_handler, dev))
-+		return true;
-+
-+	dev_clear_async_shutdown(dev);
-+	return false;
-+}
-+
-+
-+static void start_async_shutdown_devices(void)
-+{
-+	struct device *dev, *next, *ndev, *needs_put = NULL;
-+	bool clear_async = false;
-+
-+	if (!async_shutdown_enabled)
-+		return;
-+
-+	spin_lock(&devices_kset->list_lock);
-+restart:
-+	list_for_each_entry_safe_reverse(dev, next, &devices_kset->list,
-+					 kobj.entry) {
-+		if (wants_async_shutdown(dev)) {
-+			if (clear_async) {
-+				dev_clear_async_shutdown(dev);
-+				continue;
-+			}
-+			/* one device reference for this function */
-+			get_device(dev);
-+			/* another to pass to the async task */
-+			get_device(dev);
-+
-+			if (!list_entry_is_head(next, &devices_kset->list,
-+						kobj.entry))
-+				ndev = get_device(next);
-+			else
-+				ndev = NULL;
-+			spin_unlock(&devices_kset->list_lock);
-+
-+			if (shutdown_device_async(dev)) {
-+				spin_lock(&devices_kset->list_lock);
-+				list_del_init(&dev->kobj.entry);
-+				spin_unlock(&devices_kset->list_lock);
-+			} else {
-+				/*
-+				 * async failed, clean up extra reference
-+				 * and run shutdown from the sync shutdown loop
-+				 */
-+				clear_async = true;
-+				put_device(dev);
-+			}
-+			put_device(dev);
-+
-+			if (needs_put)
-+				put_device(needs_put);
-+			needs_put = ndev;
-+			spin_lock(&devices_kset->list_lock);
-+			/*
-+			 * If the next device has been marked dead while the
-+			 * spinlock was released, or if it has been unlinked
-+			 * from the list, it may no longer be on the
-+			 * devices_kset list. Restart the list walk to be safe.
-+			 */
-+			if (ndev && (ndev->p->dead || list_empty(&ndev->kobj.entry)))
-+				goto restart;
-+		}
-+	}
-+
-+	spin_unlock(&devices_kset->list_lock);
-+
-+	if (needs_put)
-+		put_device(needs_put);
-+}
-+
- /**
-  * device_shutdown - call ->shutdown() on each device to shutdown.
-  */
-@@ -4962,6 +5088,14 @@ void device_shutdown(void)
- 
- 	cpufreq_suspend();
- 
-+	async_shutdown_enabled = async_shutdown;
-+
-+	/*
-+	 * Start async device threads where possible to maximize potential
-+	 * parallelism and minimize false dependency on unrelated sync devices
-+	 */
-+	start_async_shutdown_devices();
-+
- 	spin_lock(&devices_kset->list_lock);
  	/*
- 	 * Walk the devices list backward, shutting down each in turn.
-@@ -4980,11 +5114,16 @@ void device_shutdown(void)
- 		list_del_init(&dev->kobj.entry);
- 		spin_unlock(&devices_kset->list_lock);
- 
--		shutdown_one_device(dev);
-+		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
-+			wait_for_shutdown_dependencies(dev, false);
-+			shutdown_one_device(dev);
-+		}
- 
- 		spin_lock(&devices_kset->list_lock);
- 	}
- 	spin_unlock(&devices_kset->list_lock);
-+
-+	async_synchronize_full();
- }
- 
- /*
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 7b2baffdd2f5..f913d72218f8 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -610,6 +610,7 @@ enum struct_device_flags {
- 	DEV_FLAG_OF_NODE_REUSED = 7,
- 	DEV_FLAG_OFFLINE_DISABLED = 8,
- 	DEV_FLAG_OFFLINE = 9,
-+	DEV_FLAG_ASYNC_SHUTDOWN = 10,
- 
- 	DEV_FLAG_COUNT
- };
-@@ -827,6 +828,7 @@ __create_dev_flag_accessors(dma_coherent, DEV_FLAG_DMA_COHERENT);
- __create_dev_flag_accessors(of_node_reused, DEV_FLAG_OF_NODE_REUSED);
- __create_dev_flag_accessors(offline_disabled, DEV_FLAG_OFFLINE_DISABLED);
- __create_dev_flag_accessors(offline, DEV_FLAG_OFFLINE);
-+__create_dev_flag_accessors(async_shutdown, DEV_FLAG_ASYNC_SHUTDOWN);
- 
- #undef __create_dev_flag_accessors
- 
+ 	 * Add the device to our list of discovered devices
 -- 
 2.55.0.229.g6434b31f56-goog
 
