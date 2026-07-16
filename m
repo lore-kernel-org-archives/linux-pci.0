@@ -1,94 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB3C438468;
-	Thu, 16 Jul 2026 17:28:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77871443AAB;
+	Thu, 16 Jul 2026 17:34:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784222941; cv=none; b=YWOg7oF9OwHLWfUERJRowwBIJcpIjTPUOO+bKhyvvhGiCXx3YHoOAa0pimzV3Vqj9XmjZrj3zvosHqBvkZnq6BGvtBqDzuabKiv9OMZM5HiLKQPWJhQ4mTGFl5b2ikRJNgIG5EUNDEHP5RibDbxN/BthPSdlZJWk0E1XNJP0uqU=
+	t=1784223241; cv=none; b=Fsqi9pDx+MjfdgLEDXgSjOoh1xxkWrYv1ThPY5/0vuqV638a0quOKhoRId/nF8suiK3Pfm1uCc8loTFNQaXM74tpUyDKANLoycqU5SYs2GIm/6MoldYWYFew4BkwXtaKjd2WJaLcQM4RIbscskvIfEDmN69uaZ2W4exIJI4t+KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784222941; c=relaxed/simple;
-	bh=I/TzkBfeAxM+lITwY/O8nsMP46+tzv3HAYIn803AHK0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=V6jHCukqKZ0qQw4sERw77BVIsXNUeLCUrkGn1Al73tjCmIe9+CqSZ2U6h9LskJ/4Xw0J1aotj6JYs/AUCEcYslvb1th0NRBryguY5++yD4pNIqZ0sXN+MhIRFnsN7SuDHbjfJLXCICP2fXa/2xPnO8Buvmw6pp7hpRqQ0BtWDCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aEitLXbM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784223241; c=relaxed/simple;
+	bh=X3GV4AiZV+W+pFo2WiI0Op1tOYU9RX+hA0pNH+I/Ud4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=MLMwaAFvA8i2opIhy/R1lQG3y7HquX70DTwh2irHtdsA0Ta1vaFF7PaMubHsEt11TaXnLFuzINSO8E8fAWqrNrxIolB9I7ffxRL8B9zHhclnFqgP7JM9iVpLweCVdZoL+TnVm3vgQaGaBDfPXV//+JdXvt5ZovCz/ZS3pRnJ/ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KCMJ+gJ0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aEitLXbM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85F411F000E9;
-	Thu, 16 Jul 2026 17:28:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KCMJ+gJ0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D43221F00A3A;
+	Thu, 16 Jul 2026 17:33:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784222939;
-	bh=DfTFlvTuJ9NehD+xuHhlkvJ5W5X3RAJvY9aSf5a6Rik=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=aEitLXbMPF+ZDmNzgzoeO2ISIaNS2tPrWwnLNqK8ednlZh1BFUnWStIW8u4B0nKBj
-	 5DudZuSLRPdkENxkGz99NrkGQp/tgvpXWlOqP4HT2p0dHQr9xABISKJdOrfKWjgPN3
-	 lh2/GE38DWMY7oVEtIknNPklQTVqmZf2DFvoqjwY2yJbqtKPNJEz6oWV8KWY8Z/LDP
-	 5d0vO7bLRd7pGsSlzxHtcig3H+Bk5PxNnfYtudQR1J1Z4pj3LQ2qv03vf14m6d95lJ
-	 rC53fTeCKYe5utGbr6GKS76/cdxmGjUKSIU814FPBcsVINFDSYVaZz2KPyBArCglEh
-	 +dAxPGR80lyvg==
-Date: Thu, 16 Jul 2026 12:28:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thorsten Leemhuis <regressions@leemhuis.info>
-Cc: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>,
-	Leonardo Costa <leoreis.costa@gmail.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>,
-	Frank Li <frank.li@nxp.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"leonardo.costa@toradex.com" <leonardo.costa@toradex.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-	Sherry Sun <sherry.sun@nxp.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Hongxing Zhu <hongxing.zhu@nxp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [REGRESSION] mainline/master: Apalis iMX6 no longer boots
-Message-ID: <20260716172858.GA111215@bhelgaas>
+	s=k20260515; t=1784223240;
+	bh=HcrrA1szM2krCv1NQmmOx1FQnJPguN48pUQs778ezNM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=KCMJ+gJ0a9Q2eNSS5J3mo3DdYZkLBwbP7EvmGh32/zJDlKU8yE0ZW3aSybpFbWe0E
+	 QIRIni+AN7PjdJ9+WzN1AfapZNDocScTX6GIVpa1YS7u0J8QjQJoh6rpGU0LIv1KXS
+	 Wr7J6HLq5BOc+oK1d+W4A7jP4Q/sJcTOisc56VMplblkOxnn0aCpV6JL9VlOpzMZkT
+	 pm3aortUH2GWgOd9ED/wF3qHyybCjAF7oc6rDsjWejDZD6NRBVWoxI7XbhUzzyOk/O
+	 gBa5ETpRbdrI1wSO0vFJowUERsGwh7YIt00hVlEyU8zVogkyCIasHGZIowzPS4AII/
+	 24s28w5dPjSkw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 3/6] PCI: Use standard wait times for PCIe link
+ monitoring
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Thierry Reding" <thierry.reding@kernel.org>
+Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260716-tegra264-pcie-v8-3-23e51589229b@nvidia.com>
+References: <20260716-tegra264-pcie-v8-0-23e51589229b@nvidia.com>
+ <20260716-tegra264-pcie-v8-3-23e51589229b@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 16 Jul 2026 17:33:59 +0000
+Message-Id: <20260716173359.D43221F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <eb92c269-efa2-4f39-bd47-4d1ee36169ee@leemhuis.info>
 
-On Thu, Jul 16, 2026 at 07:16:31PM +0200, Thorsten Leemhuis wrote:
-> On 7/16/26 18:40, Bjorn Helgaas wrote:
-> > On Thu, Jul 16, 2026 at 02:15:42AM +0000, Hongxing Zhu (OSS) wrote:
-> >>> On Mon, Jun 29, 2026 at 11:34:32AM -0300, Leonardo Costa wrote:
-> >>>> We are seeing a regression on Apalis iMX6 where the kernel
-> >>>> doesn't boot in the newest v7.2-rc1 (it was working before, in
-> >>>> v7.1). The device tree being used is the imx6q-apalis-eval.dtb.
-> >>>> The kernel configuration
-> >>>> used is the one shown below:
-> >> ...
-> > 
-> >>> Can somebody confirm that reverting 610fa91d9863 fixes this
-> >>> regression, or at least that 610fa91d9863^ works and 610fa91d9863
-> >>> fails?
-> >>
-> >> Sorry for this severe regression. I have posted a fix that has been
-> >> tested on my i.MX6Q SabreSD board:
-> >>
-> >> https://lore.kernel.org/imx/20260708035928.580236-2-hongxing.zhu@oss.nxp.com/
-> > 
-> > My question was whether somebody had actually bisected to 610fa91d9863
-> > ("PCI: imx6: Assert PERST# before enabling regulators").  I don't see
-> > anything specific on the mailing list, so I don't know how
-> > 610fa91d9863 got blamed for the regression.
-> 
-> That was me and might have been a stupid idea. I normally wouldn't have
-> added this, but a earlier message from Hongxing Zhu sounded a pretty
-> convincingly like something along the lines of  "this is the problem I
-> already have a fix for there" -- and then I took the commit-id from there.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Ah, ok, that explains it, thanks!  Hopefully we can get some clear
-connection in the patch that eventually gets merged.
+Pre-existing issues:
+- [High] readl_relaxed_poll_timeout() has an extremely short 100ms timeout =
+due to incorrectly mapped arguments, breaking standard PCIe link up expecta=
+tions.
+- [High] PCIe Configuration Request 100ms timing constraint is violated if =
+the link trains quickly after a fundamental reset.
+--
+
+--- Patch [3]: [PATCH v8 3/6] PCI: Use standard wait times for PCIe link mo=
+nitoring ---
+commit dd424bc144818153a04d4fe26f753cd9432c9695
+Author: Thierry Reding <treding@nvidia.com>
+
+PCI: Use standard wait times for PCIe link monitoring
+
+Instead of defining the wait values for each driver, use common values
+defined in the core pci.h header file. Note that while most drivers use
+the usleep_range(), it looks like these were mostly cargo culted and
+msleep() is a better choice given the fixed delay that the specification
+calls for. Convert all drivers to msleep() and use the existing
+definition.
+
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controll=
+er/pci-aardvark.c
+> index fd9c7d53e8a78..272c5c8fc1e5c 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+[ ... ]
+> @@ -350,13 +347,13 @@ static int advk_pcie_wait_for_link(struct advk_pcie=
+ *pcie)
+>  	int retries;
+> =20
+>  	/* check if the link is up or not */
+> -	for (retries =3D 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> +	for (retries =3D 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
+>  		if (advk_pcie_link_up(pcie)) {
+>  			pci_host_common_link_train_delay(pcie->link_gen);
+>  			return 0;
+>  		}
+> =20
+> -		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+> +		msleep(PCIE_LINK_WAIT_SLEEP_MS);
+>  	}
+> =20
+>  	return -ETIMEDOUT;
+
+[Severity: High]
+This is a pre-existing issue, but does this violate the 100ms PCIe
+configuration request delay specification?
+
+In advk_pcie_setup_hw(), advk_pcie_issue_perst() is called to deassert
+PERST#, followed immediately by advk_pcie_wait_for_link():
+
+advk_pcie_setup_hw() {
+    advk_pcie_issue_perst(pcie);
+    ...
+    ret =3D advk_pcie_wait_for_link(pcie);
+}
+
+If the link trains instantly, advk_pcie_link_up() will return true before
+any sleep occurs.
+
+For PCIe Gen 1 or 2, pci_host_common_link_train_delay() adds no delay,
+causing the function to return immediately. Doesn't this cause Configuration
+Requests to be sent before the mandatory 100ms window has elapsed after
+a fundamental reset?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but since this series cleans up
+cargo-culted delay values across drivers, should visconti_pcie_start_link()
+in drivers/pci/controller/dwc/pcie-visconti.c also be addressed?
+
+It currently uses readl_relaxed_poll_timeout() with the same 90000 and 1000=
+00
+values:
+
+visconti_pcie_start_link() {
+    ...
+    ret =3D readl_relaxed_poll_timeout(addr + PCIE_UL_REG_V_PHY_ST_02,
+                                     val, (val & PCIE_UL_S_L0),
+                                     90000, 100000);
+}
+
+Because the delay interval is 90ms and the total timeout is 100ms, doesn't
+this allow at most two polling attempts before timing out? Could this break
+enumeration for devices that take longer than 100ms to train their link?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260716-tegra264-p=
+cie-v8-0-23e51589229b@nvidia.com?part=3D3
