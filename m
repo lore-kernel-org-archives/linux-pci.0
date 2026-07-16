@@ -1,89 +1,167 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF0E33A70E;
-	Thu, 16 Jul 2026 18:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F8B22D0606;
+	Thu, 16 Jul 2026 18:40:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784227014; cv=none; b=puLSNBr31zCsTlqeRaAPnDxA8tlSK9yeQddvdnv9NxcbsD6YS4z8uOFgoT2VbItB52jzt+XNLti2GK6Mvf2PSasEjGTXmD/VDfeDF9S9tm62Vwe1AgXSDlnSdZzuGweNmOiSaI+6Zypl0KCiHt7h20tRLtrGXighxaoK0HZxspo=
+	t=1784227217; cv=none; b=aSG49sV+5hbMg7rUd9UJf7bEgIla7bR1qDHL+SQhONbigXBcgYGmYXIZGM3Mw6tBx0XtmAG3hHH0IwxmTQii9JpKLXrowXwOYNh6+x7KL15BVAlptjWk7icoAtSMmib3eo7fg1ViG1KlOn81mIwPVOwC9WgebMocSiqWyPTWdwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784227014; c=relaxed/simple;
-	bh=BchtDMMKp+TIsPTrVl+PvcLDOZOFvhR42RmqjR0SZf0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jpN24dA/F4s2Yex1u7s+zQXlzeXvz8146UF2phKDgJd/9sDnIR4BNORnvhHAF5Zfq+BW2nh3sZP7rdXUElkwjLx8i082E7sfckLH1HaN7TijJIJVjqymKHQEj4LM2uGooFCz0tapegLbz95l0WVX/8PmF7jAEiTwRfavdN02R6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O09A3qDh; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784227217; c=relaxed/simple;
+	bh=nNajq5Uz/R7hdFpuRja9k4T86FzE0trcFMQlGcJUFMQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Q31nKwldCwRGMCGb/7hBfNgoKMjydwJMOwvw4sxAMke+mw3AEtee+vdnajee/zD56B8eV4uesne5xQBitV8LNikE2exc/rDHqoRF0r5Zl83cs1SH2lwHgClNoZdW4x9CyyD3UIDGx4/kJiyUPVytXcVblQ1nlKsaecjwYA8x6VU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S10jf+6M; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O09A3qDh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784227012; x=1815763012;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=BchtDMMKp+TIsPTrVl+PvcLDOZOFvhR42RmqjR0SZf0=;
-  b=O09A3qDhf4fDI8eJZiLUymqiOtuu+m7dVI+eIpyXCsUFn6OW++NHj00w
-   lfUZQ8LqyT8DiOfZp/QAD9lc8QLT/Ay+mxIxX6Lb06HAzksBn2ZNr7yJV
-   gMltuur3yrSfqn2PrOWYkmztAIWdoxdP1UtqCbRR3pFNrQj/oUjKZjjW0
-   FghGiTddeQu0RGtXxBwjd9N3o92ZdT+B6E1usEMNcgmcTmLfi6iF6ao7M
-   DCc0Vr9VIy5SSbK2jAqGKC7BYOC9dTBGBCjKglxojLz/zM7bNnBZMMAoc
-   1i7npfTLJS3g8YG66oVnCBpgEFIYn7PAuQO8BKTRfg/bJoqiBBP+aDzBX
-   Q==;
-X-CSE-ConnectionGUID: PhC2l1wpT7GguzNQ1vh23w==
-X-CSE-MsgGUID: PJBW33RUSUWJmU/2nXt4TQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="84674869"
-X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
-   d="scan'208";a="84674869"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 11:36:51 -0700
-X-CSE-ConnectionGUID: NLhMM2KLRSa+IAHR8Qe9RQ==
-X-CSE-MsgGUID: e7zl5Y0IT/acSWvpLiU8Tg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
-   d="scan'208";a="281018681"
-Received: from conormcd-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.245.26])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 11:36:49 -0700
-Date: Thu, 16 Jul 2026 21:36:47 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Hans de Goede <hansg@kernel.org>
-Subject: Re: [PATCH v2 2/4] ACPI: PCI: Introduce acpi_dev_get_pci_dev()
-Message-ID: <alkkv0dkx4lhuzC4@ashevche-desk.local>
-References: <12935400.O9o76ZdvQC@rafael.j.wysocki>
- <3430928.44csPzL39Z@rafael.j.wysocki>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S10jf+6M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAB0C1F000E9;
+	Thu, 16 Jul 2026 18:40:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784227216;
+	bh=eFaZ00LK8u59YWFyd/Z/PmLBIlOS84pfDO+bupcq6qg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=S10jf+6MKQjT8kcKOojuPwsB35nDZnw2TZI9GRam/pvXkTNwi2lZh1yeJ2C9TYZSU
+	 dSvSgQSY8Ga5/zWPalSR+oCI0kivGE4jcywN0iS35pqkqqfGegOekuWyMeXkQyxYv0
+	 IoStQL+wxVtZ+ph63LNXqsP0xBh3ZVaN7PxycLmWHvKwD9wE2QePsUnwuj1AJ9i5aq
+	 97kSkzQ/pVFFmI/w4t/2obrIjqfU6gHYVfSQjuOq0pdswaiBSBoEDBV+B/i6qVJsTN
+	 dqFXD9m/oAV3q7AI+wb9GMzKVwBrvtOC3Xgz3wLq5nY+QLtVPzK/OYuCKI5OAWXDH8
+	 1tVEMGZGaUgvg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v23 1/3] rust: leds: add basic led classdev abstractions
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Markus Probst" <markus.probst@posteo.de>
+Cc: linux-leds@vger.kernel.org, linux-pci@vger.kernel.org, lee@kernel.org, ojeda@kernel.org
+In-Reply-To: <20260716-rust_leds-v23-1-e91f5b608b56@posteo.de>
+References: <20260716-rust_leds-v23-0-e91f5b608b56@posteo.de>
+ <20260716-rust_leds-v23-1-e91f5b608b56@posteo.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 16 Jul 2026 18:40:15 +0000
+Message-Id: <20260716184015.CAB0C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3430928.44csPzL39Z@rafael.j.wysocki>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Jul 16, 2026 at 04:04:53PM +0200, Rafael J. Wysocki wrote:
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] Incorrect lifecycle management of the `FwNode` reference count in =
+`Device::drop` leads to reference count underflow and Use-After-Free.
+- [Medium] Lifetime erasure in `DeviceBuilder::build` allows a short-lived =
+`CStr` to be used for the LED device name, resulting in a dangling pointer.
+- [Low] Commit message format and naming convention violation for the LED s=
+ubsystem.
+--
 
-> Some acpi_get_pci_dev() callers already have a struct ACPI device for
-> which they want to get the struct pci_dev pointer of the associated
-> PCI device, so they don't need to look for one.
-> 
-> For this reason, add acpi_dev_get_pci_dev() that will get a PCI device
-> for a given ACPI one (if possible) and turn acpi_get_pci_dev() into
-> a static inline helper passing the acpi_fetch_acpi_dev() return value
-> directly to acpi_dev_get_pci_dev().
-> 
-> No intentional functional impact.
+--- Patch [1]: [PATCH v23 1/3] rust: leds: add basic led classdev abstracti=
+ons ---
+commit e26d9a00db56264a527df58257bc8e40409dcdca
+Author: Markus Probst <markus.probst@posteo.de>
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+rust: leds: add basic led classdev abstractions
+   =20
+Implement the core abstractions needed for led class devices, including
+LedOps, DeviceBuilder, and Device.
 
--- 
-With Best Regards,
-Andy Shevchenko
+> rust: leds: add basic led classdev abstractions
 
+[Severity: Low]
+This isn't a bug, but the commit message violates the mandated subsystem
+format. Should it be capitalized after the subsystem prefix and ordered
+as "leds: rust: Add basic led classdev abstractions"?
 
+> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+> new file mode 100644
+> index 0000000000000..816db7c576894
+> --- /dev/null
+> +++ b/rust/kernel/led/normal.rs
+
+[ ... ]
+
+> @@ -33,26 +33,26 @@ impl<'init, S: DeviceBuilderState> DeviceBuilder<'ini=
+t, S> {
+>                  unsafe {
+>                      ptr.write(bindings::led_classdev {
+>                          brightness_set: (!T::BLOCKING)
+>                              .then_some(Adapter::<T>::brightness_set_call=
+back),
+>                          brightness_set_blocking: T::BLOCKING
+>                              .then_some(Adapter::<T>::brightness_set_bloc=
+king_callback),
+>                          brightness_get: T::HAS_BRIGHTNESS_GET
+>                              .then_some(Adapter::<T>::brightness_get_call=
+back),
+>                          blink_set: T::HAS_BLINK_SET.then_some(Adapter::<=
+T>::blink_set_callback),
+>                          max_brightness: T::MAX_BRIGHTNESS,
+>                          brightness: self.initial_brightness,
+>                          color: self.color as u32,
+>                          name: self.name.map_or(core::ptr::null(), CStrEx=
+t::as_char_ptr),
+
+[Severity: Medium]
+Does this code introduce a dangling pointer by erasing the lifetime of the
+name field?
+
+The short-lived 'init lifetime on CStr is converted to a raw pointer and
+permanently stored in the led_classdev structure. The returned
+Device<'bound, T> entirely erases the 'init lifetime constraint.
+
+This permits safe Rust code to pass a temporary CString, build the device,
+and drop the CString while the Device remains registered, leaving a
+dangling pointer in led_classdev.name.
+
+>                          ..bindings::led_classdev::default()
+>                      })
+>                  };
+
+[ ... ]
+
+> @@ -211,20 +211,20 @@ impl<T: LedOps> Adapter<T> {
+>  #[pinned_drop]
+>  impl<'bound, T: LedOps + 'bound> PinnedDrop for Device<'bound, T> {
+>      fn drop(self: Pin<&mut Self>) {
+>          let raw =3D self.classdev.get();
+>          // SAFETY: The existence of `self` guarantees that `self.classde=
+v.get()` is a pointer to a
+>          // valid `led_classdev`.
+>          let dev: &device::Device =3D unsafe { device::Device::from_raw((=
+*raw).dev) };
+> =20
+>          let _fwnode =3D dev
+>              .fwnode()
+>              // SAFETY: the reference count of `fwnode` has previously be=
+en
+>              // incremented in `led::DeviceBuilder::build`.
+>              .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
+ });
+
+[Severity: High]
+Does this lifecycle management of the FwNode reference count lead to an
+underflow and use-after-free?
+
+If an LED device is built without explicitly providing a firmware node,
+self.fwnode is None. The device is then registered, and the kernel driver
+core invokes platform notifiers which can dynamically discover and bind a
+firmware node to the device.
+
+Later, when the Rust Device is dropped, it unconditionally fetches the node
+via dev.fwnode(), converts it to an ARef, and drops it. Because Rust never
+incremented the refcount for this dynamically attached node, dropping the
+ARef performs an unbalanced decrement.
+
+Would it be safer for the Device struct to explicitly store its own
+Option<ARef<FwNode>> instead of blindly trusting dev.fwnode()?
+
+> =20
+>          // SAFETY: The existence of `self` guarantees that `self.classde=
+v` has previously been
+>          // successfully registered with `led_classdev_register_ext`.
+>          unsafe { bindings::led_classdev_unregister(raw) };
+>      }
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260716-rust_leds-=
+v23-0-e91f5b608b56@posteo.de?part=3D1
