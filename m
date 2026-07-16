@@ -1,63 +1,50 @@
-Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D370222590;
-	Thu, 16 Jul 2026 21:34:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30119222590;
+	Thu, 16 Jul 2026 21:38:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784237656; cv=none; b=AHjNR4uv9v85Z4NVeDbEWzqxg31vro8ihOXIa+SoCidJgjJHQhMfE4dL+RkBds220yR5GpG5qOWC3RQu3U0wdthoa9IQ017d7EoY1D8FnAnOPWpxN+hgkgmfI6t778w6eN82z/fQD6/De0gqgOGSyjLYKqRXkUWe8fFj0rHXOUs=
+	t=1784237882; cv=none; b=mnDxhNhrrn7bIxyRwtJr2FV8LH9jSYU7JL78Fv6gvS5Z0tsKikXQvglphKqw+h6sbNG5Uv1QgHqbA7pD7IDpH942NvoCLiB1ZX5TnE/NjFNIyZo0g9Zxna0R3o1TECBhBpEPPMhmESRgWvK10sC7x3KHZCqBx/WlH10eoMinOzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784237656; c=relaxed/simple;
-	bh=LAk2iHu6QOoA9QS6Y2VvYmVIZSpjNqwyrc354PfzJpk=;
+	s=arc-20240116; t=1784237882; c=relaxed/simple;
+	bh=IAeKlN/Imrk+rFbCRknx36m3JcXZLzrx4MCYGF078FU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=umNRCeB794fM2s+xfzp6WoCS5zncDuHU/f2/DHI6zC6JMeUeviVaypah/HYhGKDH6/fu0Jtddc2NyFDmEuMV4mio/Lyd9JoIKQ+ZIo4IvTv9mvgrak01PrzmxoVlEO8ilDnvjyJxKhJKgR/AC8s4Sd6Bk//nhT67afEw7gBKliU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=SBxrP0q5; arc=none smtp.client-ip=195.154.119.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
+	 Content-Type:Content-Disposition:In-Reply-To; b=VbyZ0Deh1JUhja1BUU1LDv0VZp5j+Sj1vEDIGQyJhjcbNLw3p+gcTCYmo2PDuBsLlmmkzbs1i7FxzBFNRlui+0/mETMgAc9hIoADLd1XmFON5Jq4whu+3+issvaDvn+nqxFr5cc2qLOA5bEBXWEXsx4wOPwIY+PL663Lkmp15KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCRJStND; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="SBxrP0q5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
-	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
-	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
-	bh=YfuBW0J2fn5ZiwXHo1KSEOKKeic0LKpEnanL6byFMyo=; b=SBxrP0q5LPnJRGpMhswU/BWGFv
-	l0WRrSpbbmR/2jTVF+z9SV25CG+4dL/iKFSKq8h3sWEWUxpi33IPuFxOUMf5RDwhiOTDe2+arjYw0
-	yN18tnx1MpTuUH+C7WOdcvatPv9VTUMYo2O1MMw5NryfRm8iTkb6hHR/ImDMaPzJ0CBHoWsPijxUC
-	mmh6v8vhBMHIIJRa+F7roJzy4gVqo2h9XHrpBVboIxD3WeUlZGKeBeZE5ZkpX9GkpTST9YdFiWb3n
-	4IOw6o1X27xzvlAJ36JVDWW2cPejT5Rzrrzy0k0EHXa48M3IpiPNE+v0qtizv4Ml4FOR4/YOuIdKH
-	evEKcKpw==;
-Received: from authenticated user
-	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <aurelien@aurel32.net>)
-	id 1wkTid-00000003GcB-3Ces;
-	Thu, 16 Jul 2026 23:34:11 +0200
-Date: Thu, 16 Jul 2026 23:34:11 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCRJStND"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3A0D1F000E9;
+	Thu, 16 Jul 2026 21:38:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784237880;
+	bh=EJr436MNWU4FHf0Qya4qCGFup/W4Zr7kdLcK7Wvawhs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=nCRJStNDbJR4neX+mwEQgrUPfcgx8XRMSPTjJCOD09jm2uX+VTtGrJoSZFA1Gw+7l
+	 ZC+AKoab13Hglb+GWzkJt3wQbWTqx+qeXy/FuklJHxOqskivfQbEL5BPhwIMlxbUIM
+	 EkKVHcENsqzR827c9WnHB8mbjhjer7kwwQn2tCvpZBioS6MGA0cUFrcBDu3+Ln0D1D
+	 EtE/tNqLqWr+zwbvaWLbMUeiGckbnNWQGg/ikw7j1ffr+GCgTxkPfoaTMuY7ZCpGKg
+	 pWa5fYKVDQPsbHIfZqb46Um4w4NJR5Ls5tJxSk6VCEAdK/wmdTdxTvg5zC9c1HdRQ9
+	 3kT1EvldR+xPQ==
+Date: Thu, 16 Jul 2026 16:38:00 -0500
+From: Rob Herring <robh@kernel.org>
+To: Christian Marangi <ansuelsmth@gmail.com>
+Cc: Ryder Lee <ryder.lee@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] wifi: rtw89: pci: enable 36-bit DMA on spacemit K3
-Message-ID: <allOU8-v6WviIJ_Y@aurel32.net>
-Mail-Followup-To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-wireless@vger.kernel.org
-References: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
- <20260715-rtw89-spacemit-k3-v1-2-e577bc63706b@oss.tenstorrent.com>
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/2] dt-bindings: PCI: mediatek: Add support for optional
+ perstout reset
+Message-ID: <20260716213800.GA1472290-robh@kernel.org>
+References: <20260708090533.19734-1-ansuelsmth@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,27 +53,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260715-rtw89-spacemit-k3-v1-2-e577bc63706b@oss.tenstorrent.com>
-User-Agent: Mutt/2.2.13 (2024-03-09)
+In-Reply-To: <20260708090533.19734-1-ansuelsmth@gmail.com>
 
-On 2026-07-15 22:21, Anirudh Srinivasan wrote:
-> The Spacemit K3 Pico ITX Board has a RTL8852BE pcie card behind a PCIe
-> root port, but the SoC doesn't have any 32 DMA addreseses which the
-> rtw89 seems to use by default. Enable 36 bit DMA ability that the driver
-> has when this particular root port is detected so that the driver can
-> probe on this SoC.
-> 
-> Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-> ---
->  drivers/net/wireless/realtek/rtw89/pci.c | 4 ++++
->  1 file changed, 4 insertions(+)
+On Wed, Jul 08, 2026 at 11:05:28AM +0200, Christian Marangi wrote:
+> Airoha AN7583 have a dedicated reset for PCIe PERSTOUT. Add optional
+> support for it in schema.
 
-Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+This is just the standard PCIe PERST# signal? Then it should be in the 
+device that gets it or at least the RP node if the downstream device is 
+not described. That is how we're handling perst-gpios in anything new.
 
-Note that you probably want the following patch to get the controller to 
-connect to a WiFi network:
-https://lore.kernel.org/spacemit/20260716213314.3027969-5-aurelien@aurel32.net 
-
--- 
-Aurelien Jarno                          GPG: 4096R/1DDD8C9B
-aurelien@aurel32.net                     http://aurel32.net
+Rob
