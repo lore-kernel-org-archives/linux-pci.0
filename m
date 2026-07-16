@@ -1,212 +1,215 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013051.outbound.protection.outlook.com [40.93.201.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A477C1F2B88
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 03:23:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784172234; cv=none; b=e4IhhgoqMpqdV2uspmUga3w2qUUG38K2Gut+e6AEsbMnPqaYBarH1U27fZEqA9klfDW7zE8/zJBKLRiPReHU+t3AlqJ5wgoDIY8bbq/7HoPSCwHLwGz5H+VwHxm28pBW6e2gcilH6XExEm86JqR6i88EFng0wt+3jLoiPciUwMw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784172234; c=relaxed/simple;
-	bh=cfQNj47gsqBWhh3kHDFRWKBkTljJyS5hU7VtAVdom+Q=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=KjW6AlbUNu+t6QGJuXSKgH1pYaH2QHS2RoUgN4WeV1pI36vmOGsbiFWgfxO0DKfoibnmRdd20QsCUBvUNWr7Z0NTQvOhzyBjFhosS0tDwRS8wiSX7ckTlA6Dbqec3owgFNV29PTI6QvYO6HzvY/rCGgcq4r/FbkevqDf0zpgdq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=j8BAF2N1; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F426379C2F;
+	Thu, 16 Jul 2026 03:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784173816; cv=fail; b=DRbo6luaFKSKMRV8gR5AufctSem9q3CPwgK9xR7V84ILM7XPAGvDvrAyDxPmZgcYr70BWkabZ6dUBzxD9jI+vRpB3jVIxSFJs7ki5aZkTFf8YP7siCRB6VNqwPntapycb+3jpB/Did5ZER+ctayzLjkyhZZz4jW2Vl+DaGDQC9c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784173816; c=relaxed/simple;
+	bh=ivgSGOWkRivFOQ9U6QYzIxue0PcH0S2Fg8thKBEbSSc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=l+uCeHSMb+4yRUorCAD2kmGddWnWzJmrBtlgm97yb1mTGNVWbKLwGdrICY+ip+XEoVkS1KRvakg1mvpoxvOPgOLWWAf3IalNKtPwZ9YrNbuspLTgNs4c60SBaQ5JoyU6YjPNvzDJfI+uIDPjrzqxCyXFdtYYw4p4cRe+FIGw658=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=DL4HGkZy; arc=fail smtp.client-ip=40.93.201.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="j8BAF2N1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784172231; x=1815708231;
-  h=date:from:to:cc:subject:message-id;
-  bh=cfQNj47gsqBWhh3kHDFRWKBkTljJyS5hU7VtAVdom+Q=;
-  b=j8BAF2N1tViNBvFBYKqi7rsbrTv54kw0wrx3v8rpBix5xCT3Z2niyzXO
-   6PxbRC1xDkepmbX36rpLSI4/ipcctgjXEyzemMfOF9PybhV9eot+0goUU
-   xIPRJ/Gi9pMWW6EEaJsEXm5JkvHea1ETkIWEnVH2Fs9IvwREp5hv1pU+X
-   aOJCZ8YgHkS4b+5so0txzeOGMksicMPRYs2ZQAUl80PX7ToxxiJX1k16n
-   RhlbXdbvnjvv9MhEtmCwNjHHqRRFs2nPV3xNhzqfuFRD9Q7p4S8zD1RXY
-   eK6111JUPuWoqD6H5lZ7T7DYGBQw6WvOGP7mxAMnbgDBgB79KKD2f+F7r
-   Q==;
-X-CSE-ConnectionGUID: GUmmShQJQtim6PLQgYVI2A==
-X-CSE-MsgGUID: fYdsJ160QF6gEIK79KtCtg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="84784814"
-X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="84784814"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 20:23:51 -0700
-X-CSE-ConnectionGUID: 6gZS9zS6RhilKoZ+6Ca89Q==
-X-CSE-MsgGUID: uGs+pOHfQ1CcFH14+lASdw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="252402289"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa010.fm.intel.com with ESMTP; 15 Jul 2026 20:23:50 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wkChP-00000000OH1-29xS;
-	Thu, 16 Jul 2026 03:23:47 +0000
-Date: Thu, 16 Jul 2026 11:21:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-spacemit-k1] BUILD SUCCESS
- 46a1b74f2cafaa0152a4c994c60034f14119570b
-Message-ID: <202607161144.0PBNqfG0-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="DL4HGkZy"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bQ7q4QqPc4j0OKVoz+4VLYDgTN0a0Vtg8swV/b2ecGfD9h1SxJzH7demkmIX6HHP1BmjSuV6UhxvXxAejWilSswgwQ4sX2qMcMYzUv3m1Twm4SWi35PHX58DfEhH4y9Km3TpZzuf7fSj1Z9K+B9r8RPTSiECl3AXMXjWYKgV4RX8TNXMg/DNa45LEhSE6E+A9ZAmvvfFnBgZIHqo0Zo57MJrKf/54TOxKCktY4u1pCoDknAnFSDejHCqh+EeU93AxL1ISNNkS3qyasPpYD1ltBFhlxvdcsrquOq80IxZXU0lx26/QuTDA+Oi66EsgSdR5M9dkbqWeWPJBmCHB76+/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hrvQfb7xDKycJGFgY8pOB7p9mCKwmob4IWITAXsnP+o=;
+ b=pPKdMznuG7c8TW0RB7uz69JOIi+hYeI3onxrAUts+06O+nmaS569HnRKwP5m43w+8uhLFDCz7imaQUu1jh/5urNTKQo1fRerItCu8xbOUkhMGNXL1bNg+t/Tkii7Foe7QZhdfPj5bKFOwmn7/ZPN6K56Kj0MAc7HqAcSH/yOJFrhzL76ChLMGEsbIbgJzZbKJlnj6BzA6V0pp7kW8Rscc2bMxFvMJusYaY7+7ALmN3PX8/GZG94TPtoSfD4zqi/9TyUH672fN30SyuMPqzfLXBotEUw1Ws0+F5YbJ7/zOiMXtwSszMiiDaRgPgY1ZxoSP7XA5GcWwt3vaw1gClRoAQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hrvQfb7xDKycJGFgY8pOB7p9mCKwmob4IWITAXsnP+o=;
+ b=DL4HGkZySWcjOVs2iJsbkUfWw+gtitE9kQxcL9didbXnu9WkqaRGMiPVSxij0ZrbaVhKXWRTJHVixEa98f2aK4XBW+nMU1NpxGroFMEwj+crSzJAzaKrJ0XZ9REV4Kb/1CvZM76/xs6dD+yHoaomYc1AXnII/V3X2aSQVji02p8=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DM4PR12MB6302.namprd12.prod.outlook.com (2603:10b6:8:a4::21) by
+ LV2PR12MB5725.namprd12.prod.outlook.com (2603:10b6:408:14c::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.10; Thu, 16 Jul
+ 2026 03:50:10 +0000
+Received: from DM4PR12MB6302.namprd12.prod.outlook.com
+ ([fe80::32ee:badd:60da:3db9]) by DM4PR12MB6302.namprd12.prod.outlook.com
+ ([fe80::32ee:badd:60da:3db9%4]) with mapi id 15.21.0223.008; Thu, 16 Jul 2026
+ 03:50:10 +0000
+Date: Wed, 15 Jul 2026 22:50:06 -0500
+From: Wei Huang <wei.huang2@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Christian Konig <christian.koenig@amd.com>,
+	Alex Williamson <alex@shazbot.org>, linux-rdma@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/TPH: fold reserved completer encoding in
+ get_rp_completer_type()
+Message-ID: <alhU7lktqNxAPB4E@weiserver>
+References: <20260715202409.3767494-1-zhipingz@meta.com>
+ <20260715231525.GA224907@bhelgaas>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260715231525.GA224907@bhelgaas>
+X-ClientProxiedBy: CH0PR03CA0368.namprd03.prod.outlook.com
+ (2603:10b6:610:119::17) To DM4PR12MB6302.namprd12.prod.outlook.com
+ (2603:10b6:8:a4::21)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM4PR12MB6302:EE_|LV2PR12MB5725:EE_
+X-MS-Office365-Filtering-Correlation-Id: ada08f5d-7c42-4165-5a99-08dee2ed553c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|1800799024|376014|366016|4143699003|3023799007|6133799003|10067099003|56012099006|18002099003|22082099003|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	FC+J02NXJtHiKwpQlONNBI9Kc2DhOn8B4NQUeYAT4uTbcfm6ha9gE8TKnK2MVS4xOiGDRz6XkXhmbR+E17yfPtDdRGo901NVwIdhZDzcsJtKvc/9af2QzR83ShugyyVxgff1cZ9MpBMmeZqjGgqjTYy5PgEGegC5+XiUqHzPKwfw9ur7oE7mms7adEDTHXktuhxwp4uOXP50puEtmeEQfC3paDf6CELXZHp3TA/dbyhefr3Kdm+Vj9L3VEH2lfM1lgP5RNNEIYpNGAmcFy8w339XxfHG+PhxsdFz8sOmuJWPkwkjb0CtBZIEuZ4+kmER/PZqayK9oiUZI7vd1unRXt45JhGEUbOcA0AU5v7To/ZfVvLssQdFmiV1whHKXLfPuDH65wR+Q+chgqoXPLN5MD6TPNJ6Z9h2/ad+QISoM+MTiaASTgSrmCAicvADwZzqtkFwWMJHPZeQ04eg6ELlVIxwCHJ+Amg/dnojNH2dvQWMNUXsKuDvC5aG/J9nGXiKDj/XKx1nyZL/K8nkVSx4G/b8qJj20K504CT9/o33tqSHrK8wsbOMQdCdpdsFuLLUQZ+Y2e46Mw4J5XvBonu0jAHEr2cgMyvaYhYUf5r5Vq+hCj859hRfo+Dj+ntTcuv9IOKJdmj1KhjrZFAgIfe4V5N3iEHHVOVx6tnEw9S/KtQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB6302.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(366016)(4143699003)(3023799007)(6133799003)(10067099003)(56012099006)(18002099003)(22082099003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?bW9QYm5XVFdncXM4YmZGNmtRK1VJc2k2aWlKOUl5K0tUT2UvM2pOWmdOTEMy?=
+ =?utf-8?B?c3VicHRGTEpXaDF3N3duR2xhTkdYc0ZpN2tydjgzZUZpdUN6YitZOVFyaHh6?=
+ =?utf-8?B?NmtEVnJ6c0hPczE1YXhzQkNTSHp3TWNQTEtpYjl4TEhsRjBUTTM4akM4OVg3?=
+ =?utf-8?B?Lzh1c3pkNmpDSHZ1TW9kQ1NjeVVtVG9NREY4UjV4WWc2czdOWHFUV2YydU54?=
+ =?utf-8?B?ZWRBQ2s2b0toamhwZzJqR0NFdVExckdCcUxObGZKRVpuWUxSa0JHc2c3dCtq?=
+ =?utf-8?B?ZklyZlJ0WHZmbTdPOE9DMTZWOEJUVERnU3djYmNBT1JCYTRYanEreVAzUldw?=
+ =?utf-8?B?N051dVFyUzFBcGVNZHU5ZGQ4elBtZjFSZS9XcUszclNsYVpwMWRIUmNsbnFE?=
+ =?utf-8?B?cUZYUE9IcG1yeDgrL1dSTnExS2VMTFBmb3ZtMFpsYlhtZVNZelloZDBvcUxL?=
+ =?utf-8?B?UEVUc1NWNmIrcWZMQjg0d0hkN3hxa250V0JpMERIQmFFZkliUFhJL0pkQ1p6?=
+ =?utf-8?B?T1RDQWQ2MTNnUU9paGd4eE5kdWFrbVE4UEx0OVpkdmdUanNLT2RUcmxFbWhN?=
+ =?utf-8?B?eDBWMWdNVERLbWxYZkJUaSs2N1JVVjBLYmliSTFPWVBMbjBDaW8zeTQ2bzlp?=
+ =?utf-8?B?YmpIY2p5WG9SOGtqVktQR1U4WEJnZ1hGZDlPWk5XRzJJcVl4ekdPcUFLMEw1?=
+ =?utf-8?B?NWpyenlucWI1ZUdoSDgrZFllYXJHdW9HS2Ura1lxdFRERlg1OGFZQmJxLzl5?=
+ =?utf-8?B?eHdnVWgzUkZCRmdsSzZOS1FodjQ2d3M0Q3BoNk93YWRVK05ISDRXdWxlSDJu?=
+ =?utf-8?B?SWhNbytwZXNUU1YySi9kNG1WZzQxYnJGOFhMcjdJNk81TG95a001WWRub3l5?=
+ =?utf-8?B?V291K1RySlBEUWEvYnZPaU1oVGtDZlpqWGNHbUJKOVBjV1c4QU9sdk9pWElR?=
+ =?utf-8?B?a2ZZUTk5UFV1TGZCZTRGZVFpVzAyRkNBMHBEd1NlK2Rxb3p2T1VXdVkwM3Iz?=
+ =?utf-8?B?TXJyU3JvRGMwQlJ2bGNhSDZlSjdLTTNRVm5RTHUxZ3FXMkcrTE5xR2VNdHFr?=
+ =?utf-8?B?Wno1aUI5ZGxhMmMxZEgzZGRDZUJ6ZzVpaDRWNEt6dktkWmFyQURNT1J1bVRr?=
+ =?utf-8?B?ZzdMQVpyTE1rMm13cXd3RWw3SDBsSmUzT2lVQjljdXJsUy81QWZJMnJlZFpG?=
+ =?utf-8?B?RWwwMjAzcFBUZVVCRkEzU2RNVms0eFZDSS94aE1GQXQ0M2kzdmhUYi9UMkQx?=
+ =?utf-8?B?SDFDWFRqT3ErQVBSenJHQ3JTZGc5RGlwYjhFanpUKytFRk4zQWNzdXl1Zmhk?=
+ =?utf-8?B?NDVqd2NBRFBpWmhsbWRjMko5R2R5aTFDNmljeGVsRDBtZ256Ri9DTXgzS0Rs?=
+ =?utf-8?B?SkkvOWlaaUZXbEw1SlQ2WDd2MVFIZHRmTDIzN2NabDcyd3F2U00zOHVnaFFk?=
+ =?utf-8?B?RjF6dEk2TmVGd2w1Um9DK3diWWlMckV4a21IY0ZBR29aSHV5RW5IcStZTHhI?=
+ =?utf-8?B?RXBwY3B6RXIrd2h5ZEdEbWI0QmpQS2lqT0E4dGo1OEQvN2ZWWkczMGVZNGRO?=
+ =?utf-8?B?ay9DYU91ZjRpWnRHQ3FmMnU5Q09SV1A4QU1ZNU93VlBUOWtrU0x5ZUk4b29j?=
+ =?utf-8?B?YkRLamcxYzhMUCtGbHdza25MRG5UcEdmSEJiTGxEUHBFMlF4cXRPdWRIMUN2?=
+ =?utf-8?B?YjdxZnpaNURRanhXamJodDZ5aGc2Wk5mUDhkOUo4QlJGSG1JZUp4cDFpQVMy?=
+ =?utf-8?B?bG5wRnRpY29HL3p1Mi9tc1FZMi9QcHBEVmJyLzVHSHl1djdMdlRwaFhQc1Bk?=
+ =?utf-8?B?T1R0UXBESHZkaVplK0xHdFBHQXJVMG04T2VkSTE3cXhCUDRyekpQOGJlMnM4?=
+ =?utf-8?B?UmlhOG4rVFI0dkI1Nll2VGt3UU91T1hPTmxPRGhJMUl2YjU3WGZRdXZWTFRy?=
+ =?utf-8?B?OFJvbEZ5SXpyaHNFWmNSeTd6WWpXS3BNcU1tVWo1ald2RTBXYnJLcUxNa2Uy?=
+ =?utf-8?B?bTZta2FYSVB1dTIrV0JBbExXVGhSREpuR29HTWpySjB6cHlGZWFsWndRTnky?=
+ =?utf-8?B?Nm5LLzNRR3lUUm0vY2RjSFlhWG11K2RsTE9lSXd2b2dUU3RqNjhlUVl2TUht?=
+ =?utf-8?B?VFp5a0lYN0VIdDNBeDAxU0p5QzlBVUI3UjFPWklyclRtTjBwT2FTaTZiMzVy?=
+ =?utf-8?B?dnFvZDhxRVJiS0RWY3pWL1lDaXRBWGVreGhzK29NSnVOL0F6TVo2WlZtM2Nv?=
+ =?utf-8?B?Mk1SdXg0TFJhTXRETStBWGhYNFNZdXZnNlViYS9GNU9EcURWbVY3UkgxQWd0?=
+ =?utf-8?Q?G9ZYqHKzJJ2BW8dpWJ?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ada08f5d-7c42-4165-5a99-08dee2ed553c
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB6302.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2026 03:50:09.9851
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9ciTU3iyvHXuUOx4kqPXhi+mT1RsFOih11RZO1EzYoWxCusdiaDeIYZmPO9pBO1V
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5725
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-spacemit-k1
-branch HEAD: 46a1b74f2cafaa0152a4c994c60034f14119570b  PCI: dwc: spacemit: Add missing MODULE_DEVICE_TABLE()
+On Wed, Jul 15, 2026 at 06:15:25PM -0500, Bjorn Helgaas wrote:
+> [+cc Wei, author of f69767a1ada3]
+> 
+> On Wed, Jul 15, 2026 at 01:24:00PM -0700, Zhiping Zhang wrote:
+> > get_rp_completer_type() returns the Root Port's "TPH Completer
+> > Supported" field (bits 13:12 of Device Capabilities 2) verbatim. The
+> > 0b10 encoding is reserved, but pcie_enable_tph() feeds the raw value
+> > into the requester type:
+> > 
+> > 	pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
+> > 
+> > and later writes tph_req_type to the TPH Requester Enable field, which
+> > only defines 0b00 (disable), 0b01 (TPH only) and 0b11 (extended TPH).
+> > If a Root Port ever presents the reserved 0b10, that value could be
+> > written back to hardware, risking undefined behavior.
+> > 
+> > Fold the reserved encoding into "not supported" so only the three
+> > defined values can propagate.
+> > 
+> > Fixes: f69767a1ada3 ("PCI: Add TLP Processing Hints (TPH) support")
+> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> > ---
+> >  drivers/pci/tph.c | 18 +++++++++++++++++-
+> >  1 file changed, 17 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> > index 655ffd60e62f..ebe1aa5ba5eb 100644
+> > --- a/drivers/pci/tph.c
+> > +++ b/drivers/pci/tph.c
+> > @@ -196,6 +196,21 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+> >  }
+> >  EXPORT_SYMBOL(pcie_tph_get_st_table_size);
+> >  
+> > +/*
+> > + * Fold the reserved 0b10 "TPH Completer Supported" encoding into
+> > + * "not supported" so only the three defined values propagate.
+> > + */
+> > +static u8 tph_completer_type_fold(u8 comp)
+> > +{
+> > +	switch (comp) {
+> > +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
+> > +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
+> > +		return comp;
+> > +	default:
+> > +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> > +	}
+> > +}
+> > +
+> >  /* Return device's Root Port completer capability */
+> >  static u8 get_rp_completer_type(struct pci_dev *pdev)
+> >  {
+> > @@ -211,7 +226,8 @@ static u8 get_rp_completer_type(struct pci_dev *pdev)
+> >  	if (ret)
+> >  		return 0;
+> >  
+> > -	return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
+> > +	return tph_completer_type_fold(FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK,
+> > +						 reg));
+> 
+> Is this just defensive programming, or is there some hardware out
+> there that uses this reserved value?  It's kind of an ugly wart to add
+> just for theoretical spec conformance testing.
 
-elapsed time: 732m
+I’m not aware of any hardware that actually uses this reserved value. While
+being cautious is great, my view is that such RP is bad — arguably to the
+point where writing 0b10 straight to the device might be a right response
+(kidding).
 
-configs tested: 135
-configs skipped: 16
+> 
+> If we really need it, I'd rather read something like this:
+> 
+>     tph_comp = FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+This looks reasonable to me. It might help to add a one-line comment
+explaining why tph_comp is sanitized here?
 
-tested configs:
-alpha                             allnoconfig    gcc-16.1.0
-alpha                            allyesconfig    gcc-16.1.0
-alpha                               defconfig    gcc-16.1.0
-arc                              alldefconfig    gcc-16.1.0
-arc                              allmodconfig    gcc-16.1.0
-arc                               allnoconfig    gcc-16.1.0
-arc                              allyesconfig    gcc-16.1.0
-arc                                 defconfig    gcc-16.1.0
-arc                   randconfig-001-20260716    gcc-14.3.0
-arc                   randconfig-002-20260716    gcc-16.1.0
-arm                              allyesconfig    gcc-16.1.0
-arm                                 defconfig    clang-23
-arm                   randconfig-001-20260716    gcc-8.5.0
-arm                   randconfig-003-20260716    gcc-12.5.0
-arm                   randconfig-004-20260716    clang-23
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-16.1.0
-arm64                               defconfig    gcc-16.1.0
-csky                             allmodconfig    gcc-16.1.0
-csky                              allnoconfig    gcc-16.1.0
-csky                                defconfig    gcc-16.1.0
-hexagon                          allmodconfig    clang-23
-hexagon                           allnoconfig    clang-23
-hexagon                             defconfig    clang-24
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260716    clang-22
-i386        buildonly-randconfig-002-20260716    clang-22
-i386        buildonly-randconfig-003-20260716    clang-22
-i386        buildonly-randconfig-004-20260716    clang-22
-i386        buildonly-randconfig-005-20260716    clang-22
-i386        buildonly-randconfig-006-20260716    clang-22
-i386                                defconfig    clang-22
-i386                  randconfig-001-20260716    clang-22
-i386                  randconfig-002-20260716    clang-22
-i386                  randconfig-003-20260716    gcc-14
-i386                  randconfig-004-20260716    gcc-14
-i386                  randconfig-005-20260716    clang-22
-i386                  randconfig-006-20260716    clang-22
-i386                  randconfig-011-20260716    clang-22
-i386                  randconfig-012-20260716    gcc-12
-i386                  randconfig-013-20260716    clang-22
-i386                  randconfig-014-20260716    gcc-12
-i386                  randconfig-015-20260716    clang-22
-i386                  randconfig-016-20260716    gcc-14
-i386                  randconfig-017-20260716    clang-22
-loongarch                        allmodconfig    clang-19
-m68k                             allmodconfig    gcc-16.1.0
-m68k                              allnoconfig    gcc-16.1.0
-m68k                             allyesconfig    gcc-16.1.0
-m68k                                defconfig    gcc-16.1.0
-microblaze                        allnoconfig    gcc-16.1.0
-microblaze                       allyesconfig    gcc-16.1.0
-microblaze                          defconfig    gcc-16.1.0
-mips                             allmodconfig    gcc-16.1.0
-mips                              allnoconfig    gcc-16.1.0
-mips                             allyesconfig    gcc-16.1.0
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    gcc-11.5.0
-nios2                 randconfig-001-20260716    gcc-8.5.0
-nios2                 randconfig-002-20260716    gcc-8.5.0
-openrisc                         allmodconfig    gcc-16.1.0
-openrisc                          allnoconfig    gcc-16.1.0
-openrisc                            defconfig    gcc-16.1.0
-parisc                           allmodconfig    gcc-16.1.0
-parisc                            allnoconfig    gcc-16.1.0
-parisc                           allyesconfig    gcc-16.1.0
-parisc                              defconfig    gcc-16.1.0
-parisc                randconfig-001-20260716    gcc-15.2.0
-parisc                randconfig-002-20260716    gcc-8.5.0
-parisc64                            defconfig    gcc-16.1.0
-powerpc                          allmodconfig    gcc-16.1.0
-powerpc                           allnoconfig    gcc-16.1.0
-powerpc64             randconfig-001-20260716    clang-22
-powerpc64             randconfig-002-20260716    clang-23
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    gcc-16.1.0
-riscv                            allyesconfig    clang-23
-riscv                               defconfig    clang-23
-riscv                 randconfig-001-20260716    gcc-14.3.0
-riscv                 randconfig-002-20260716    clang-17
-s390                             allmodconfig    clang-23
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-16.1.0
-s390                                defconfig    clang-18
-s390                  randconfig-001-20260716    clang-23
-s390                  randconfig-002-20260716    gcc-9.5.0
-sh                               allmodconfig    gcc-16.1.0
-sh                                allnoconfig    gcc-16.1.0
-sh                               allyesconfig    gcc-16.1.0
-sh                                  defconfig    gcc-16.1.0
-sh                    randconfig-001-20260716    gcc-16.1.0
-sh                    randconfig-002-20260716    gcc-16.1.0
-sparc                             allnoconfig    gcc-16.1.0
-sparc                               defconfig    gcc-16.1.0
-sparc                 randconfig-001-20260716    gcc-13.4.0
-sparc                 randconfig-002-20260716    gcc-11.5.0
-sparc64                          allmodconfig    clang-20
-sparc64                             defconfig    clang-23
-um                               allmodconfig    clang-17
-um                                allnoconfig    clang-17
-um                               allyesconfig    gcc-14
-um                                  defconfig    clang-23
-um                             i386_defconfig    gcc-14
-um                    randconfig-002-20260716    gcc-14
-um                           x86_64_defconfig    clang-23
-x86_64                           allmodconfig    clang-22
-x86_64                            allnoconfig    clang-22
-x86_64                           allyesconfig    clang-22
-x86_64      buildonly-randconfig-001-20260716    clang-22
-x86_64      buildonly-randconfig-002-20260716    gcc-14
-x86_64      buildonly-randconfig-003-20260716    gcc-14
-x86_64      buildonly-randconfig-004-20260716    gcc-14
-x86_64      buildonly-randconfig-005-20260716    gcc-14
-x86_64      buildonly-randconfig-006-20260716    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                         randconfig-071    gcc-14
-x86_64                randconfig-071-20260716    clang-22
-x86_64                         randconfig-072    gcc-14
-x86_64                randconfig-072-20260716    clang-22
-x86_64                         randconfig-073    clang-22
-x86_64                randconfig-073-20260716    clang-22
-x86_64                         randconfig-074    gcc-14
-x86_64                randconfig-074-20260716    gcc-14
-x86_64                         randconfig-075    gcc-13
-x86_64                randconfig-075-20260716    clang-22
-x86_64                         randconfig-076    clang-22
-x86_64                randconfig-076-20260716    gcc-14
-x86_64                          rhel-9.4-rust    clang-22
-xtensa                            allnoconfig    gcc-16.1.0
-xtensa                           allyesconfig    gcc-16.1.0
-xtensa                randconfig-001-20260716    gcc-9.5.0
-xtensa                randconfig-002-20260716    gcc-8.5.0
+>     if (tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY ||
+> 	tph_comp == PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
+> 	    return tph_comp;
+> 
+>     return 0;
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
