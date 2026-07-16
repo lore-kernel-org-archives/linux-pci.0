@@ -1,69 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6967242D759
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 14:28:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A22430CE6;
+	Thu, 16 Jul 2026 14:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784212111; cv=none; b=XvjkWSPupbE/qQdREJyEvXxLY3cshB8jB8XnIisccBzdh07IXkuusUd8OS6pekFChHN+8Ld6hKywczkat/1nFqQSAosCHWcgGco2XfngHidqgOyVSXVzERVkatu8DV/KKF1Bfby4jRZvwhlcNs9xdlMsGMJ0nPk6vQ2VUjg/miI=
+	t=1784212202; cv=none; b=Dot8R0LJdqX1boL0kZQwqmveXvVgePZv5NGGECtXCsa4T8H43H2z81UlmghZgts+gJE2U2flRz/0UVhx1n25r5XfjUvbAsWJGBU0tbUv+4L5CYFdBFesaluvFjUwDz2GtOP2jpjlYRyoMOMLKSq61ee7LkQfMlg7AIdixYf5t90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784212111; c=relaxed/simple;
-	bh=zgDD4DuCCan5bGwzJdVxxQvXlnwodwa7pmeyQceckgQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZnU4e8HJ0nRcGhttX9BJ5rkR80KqhSvaip/NjqWyVJJQZ3BEXmBNwSNZD8ZjNMIfnKBg+fZ0Uv0NnTfwcl3RAbVCNidD+BwNoO791LrC2RCb8CVVQjCCYzu3OhypMSSm/jlmEjG50ztK3KANxhBRRa21KcuJ1kyEjMZjyVv4clg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bM3xV4lU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784212202; c=relaxed/simple;
+	bh=m9HKZHymJrqVArQ0SZzxQXEQYPqYOXi02i6SzPQKYyk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cBXk946VRUU5c2pe51ZbAN28tqjNbb/oWXCKf8NbtUfSkD0o2ZxDtBeB1kgi4D454VL3WIOb3rL7wFu8ceqHHQSHJhVnOVZ7iAGxmXrgmkKFmJtmwLKbO05Ca5TFIc1Vcg3++rzkdXH4Nwt/8mdwbj70rt5ws1B9Xb9phqSbtWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cqcf7QwO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bM3xV4lU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DD791F00A3D;
-	Thu, 16 Jul 2026 14:28:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cqcf7QwO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21C9B1F000E9;
+	Thu, 16 Jul 2026 14:29:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784212110;
-	bh=zgDD4DuCCan5bGwzJdVxxQvXlnwodwa7pmeyQceckgQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bM3xV4lUN9aul+t2i0qoBmt77SpBMi8n7d/htqb6WF4mwTy5UW3bApGfC+422LZyz
-	 ZPmYlVONZVs8kTiZu8TaLrpVFk2OPoiApinS/r15KBbaMDmR7zhKBjOAWI7pv8gZ8l
-	 T1sXGwo9SKWkBdMKwpmTkB2Aql7W98jssljh6i0bApR05Ed99KxzmE4lCrOktRYhS/
-	 R1zvpZJehGeJ1ahHfVPSzIAQs0gsMNFVg4/qy6RtTR0xoivKroKy6b6ccWSBQ/Jorx
-	 CSiNoS/OudGKnK2K5N5Xl3J6An1TQsDwOD/82vsUBGTRKhaRwlhUJqWqmoDMcZvFPH
-	 FyBeL6UMrEl5A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/4] ACPI: video: Use acpi_dev_get_pci_dev() instead
- of acpi_get_pci_dev()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <2047771.PYKUYFuaPT@rafael.j.wysocki>
-References: <12935400.O9o76ZdvQC@rafael.j.wysocki>
- <2047771.PYKUYFuaPT@rafael.j.wysocki>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 16 Jul 2026 14:28:28 +0000
-Message-Id: <20260716142830.0DD791F00A3D@smtp.kernel.org>
+	s=k20260515; t=1784212201;
+	bh=gyJzjFhg0VkpjwNAQWiEbEueO7hNBshnqS6x7ogCitY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Cqcf7QwOadvuVsIshM1nZD9aWba6/HkgVsuPOVaYkoNsEXCgXsPdQDN3zoodCKRW4
+	 Bkn3KF478toRyhpf7YHs1qMwVGVziyhhlemsbjBBxZvvr5BL+0LyroyAJYJWLMokIK
+	 3AlfIHRr5WBb1e767lHM5NeKOB0RcCZwkxKXE1VrBnEV0cicVt5fZcoyJEUTi+x8Pm
+	 R1nw+fTKTtqRG5erNRhsTshBcGSkKZcfE4HkxEYdHiWfJEL7mQRtUX/U/2ZTaby/rt
+	 Q8FE9yVm17tCgDBsf8xExHZ3Bt1x0VX0kzmi3/LeM18VYGbRd5x6Q/sk4x3OH41s75
+	 5/qKMThYMlQww==
+Date: Thu, 16 Jul 2026 16:29:42 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	devicetree@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: Re: [PATCH v3 09/11] dt-bindings: connector: pcie-m2-e: Add vendor
+ LGA connector compatible
+Message-ID: <6txwszoqlx5msqhspafk2t66hpdf67tfvc6qejeave3gg4fuby@rosphqguupiz>
+References: <20260710-monza-wireless-v3-0-46253587af64@oss.qualcomm.com>
+ <20260710-monza-wireless-v3-9-46253587af64@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260710-monza-wireless-v3-9-46253587af64@oss.qualcomm.com>
 
-> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
->=20
-> In acpi_video_bus_check() and find_video(), simply replace
-> acpi_get_pci_dev() with acpi_dev_get_pci_dev() that can be used
-> in both places because the ACPI device needed to do the lookup is
-> available.
->=20
-> In acpi_video_dev_register_backlight(), instead of doing a parent ACPI
-> handle lookup based on the handle of an ACPI device that is already
-> available, pass that ACPI device to acpi_dev_parent() which is much
-> more straightforward and pass the return value of the latter directly
-> to acpi_dev_get_pci_dev() to get the PCI device associated with it.
-> That allows local variable acpi_parent to be eliminated.
->=20
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Jul 10, 2026 at 11:57:35AM +0200, Loic Poulain wrote:
+> Some modules (e.g. the Qualcomm QCA2066/QCNFA765) expose the same M.2
+> Key E interface signals but are physically soldered as an LGA package
+> rather than plugged into a real M.2 Key E connector socket. Such designs
+> are not actual M.2 Key E connectors, so describe them with a dedicated
+> vendor-specific compatible while keeping "pcie-m2-e-connector" as a
+> fallback for the shared signal semantics.
+> 
+> Add "qcom,pcie-m2-1418-lga-connector" for the M.2 LGA 1418 module.
+> 
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Could you please also add "qcom,pcie-m2-1620-lga-connector"? It is
+functionally compatible with the Key E connector. Otherwise, I have to wait for
+this series to get merged and send one more patch to add this compatible :)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/12935400.O9o76ZdvQC=
-@rafael.j.wysocki?part=3D4
+- Mani
 
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> ---
+>  .../devicetree/bindings/connector/pcie-m2-e-connector.yaml         | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> index f7859aa9b63469cb43919c0b5719c18694c5364d..0282c6ee9272446064a99ec6314a5ceb1721e0c4 100644
+> --- a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> +++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+> @@ -17,7 +17,12 @@ description:
+>  
+>  properties:
+>    compatible:
+> -    const: pcie-m2-e-connector
+> +    oneOf:
+> +      - const: pcie-m2-e-connector
+> +      - items:
+> +          - enum:
+> +              - qcom,pcie-m2-1418-lga-connector
+> +          - const: pcie-m2-e-connector
+>  
+>    vpcie3v3-supply:
+>      description: A phandle to the regulator for 3.3v supply.
+> 
+> -- 
+> 2.34.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
