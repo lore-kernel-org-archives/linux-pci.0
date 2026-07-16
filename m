@@ -1,289 +1,243 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECEC4800
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 00:08:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 296F030D411;
+	Thu, 16 Jul 2026 01:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784160488; cv=none; b=utU4bPYB1EKaNh5h7gX1DUBmvSLPmahOrSanGn4C1kS6KE2qIdwYjMsveB7b+zAiVvkLNyx3TH9q/n5/nItf5BaQigHzunJDXu0h/gCKrS67vyoqq5O543IzgV945YLSE3JdxMW/9RhdaBfb4oBugVYAzzRrcuSRbYzD8waVY7c=
+	t=1784164064; cv=none; b=o1pntPcW7GL/4ieBDEFm5m8JSt9gS52QwC2GIxtw5h+Q/gz6hqNZ3zAuKye+Tjrpxw3T5V+I0ghbxZqkHSKGamjJvpXio0oLxpBlLu24qZNoqU3khDCnkmOEZFGY8fonYiz3qUqjgkIT6Yj6SdhCME/XHdgJVZOK5OURiG/zDug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784160488; c=relaxed/simple;
-	bh=41XlKymodw/i8GxhvzSY4pn6MfBwBZUWZYOBLOYhlio=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=euR6bN2ScUVOb8Ity0Q1iT27Cyt+6QWSw4AxgdJ6HFYxkpJ6+TJeRThhSp33MshpovV9G3gtiuYOdRV+uNqCANey8tS5K+kslQMDRKfE/gfvlcpSwYW6v2ajuEZUbWeQ9fv8CrBJ2ZXBmskdsxwHKcDE6oTbzakN5loSsoOTOJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=bEFqi0f8; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1784164064; c=relaxed/simple;
+	bh=5mGPqdBzgZCU76/AXTHqb90cph8IhAIk4vJhe8ZEpn0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=M60z6JerwzYfyxFrYe1CG3er6Y4BimREn/PCRr4aRDJDVpw7xPbeAv926WD24sFOKwESl/ZugBGwp19To5+v/inUnssmhyAU+vpcas5d73cCWl6WiUE2+kJaqYn2jVXzsCO0MAq7u13e2zTgBZKogai4kuk4Wj/tAxWW8AwNuCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=yR6iu4+m; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="bEFqi0f8"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-c9d1fff21edso3880263a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2026 17:08:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1784160486; x=1784765286; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=NcNyVzUPrsACHYb5qivhq4OOQaF/bi1jwcrfJkx833I=;
-        b=bEFqi0f83pgHyjBAOeEn0vPalJZMHwZbvt91umYPC1T+omqE0topLn08dFhBoXYOLn
-         VVt4PNM+j4VcMUDzoqrcktMNVf/NGSVgK5cAmcrKAH80ZP8cgv6baWnp4KQGMiGP2FPk
-         K+0RBPlVnSMgnAKaG71gDuuJnkn1d6rjvnztY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784160486; x=1784765286;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=NcNyVzUPrsACHYb5qivhq4OOQaF/bi1jwcrfJkx833I=;
-        b=A0KKUynVHKzLlva6HJrgLFJxlCymBDDiiRlMSVK8vRDRQzSxkkRT08gT+5nokOa2Av
-         eL+LRldYRvXY9Z9rb1oEmHHlkfGO7iTUXkAdsAt9Liep2jr1884OtD1orgGL0654a9Uv
-         QYdDBD/hWiahZsoh+iyMGnvlvLH+t3zvMiSfbicXgHY/ByCTdhMFa+/8BgGKfeW5R146
-         GKqzzfVL2OlKJkdzS+7E0We1pv2EXzvGaSHuLmQrjR8C2S8Xz7oYvq4tWIkkoA95cYHG
-         wq4n63FgjEhHUXRmtia8/rLiBT2GkZndbO/oKFwSxF4w1S+8U6o1z5H6qZ4IXqWAT4pH
-         d9PA==
-X-Forwarded-Encrypted: i=1; AHgh+RoYqaqOCDZQLAviuapaNUWd/SuePWNSPFR4i8GZ8jzSPi7IRo7c/AGJ6UoGng2pffRhGEGx7+QSdfU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVFLe8WdfjGV22kZNocpDBVA45v9udBZIabCCFDie2JJgUjK8E
-	GG34UO8OiOh7gUQDlbhtlPczVdg1DTR+Ald3TvsNvVpDstMah63x7464MhfVPs390A==
-X-Gm-Gg: AfdE7cmADeVwH1ansbrukW7MvRrXSg8BmJdK16e6czMYpzxuDc2HKEddieuM1jHx/BP
-	la+08JUeAgd5HBKyr3J7DPWqMVaaRT5bER/LjNj7FMnWzsUCACTTPmATf+0pnDkPg6RcZQ9zE1D
-	YuHxHloBSjO4mUhFu05OMudIlF8YrTzTiaJhbI3GX48TipB8gL2Klz+BpSWCjC6p7tgrEEJCyrP
-	j+2375uW7OU7+jmTlVyDVE0dAQ4DZ7dxZQqdZyup/d2ceWOONyh4wZ8oU+IEeSeh/66nXK7mTQS
-	Yp3YqVce2Fh1WQ4sZrQnuEFj1zaXUvWeBkCKKlIOmpvIfRk3XxehCQ3MfOQGEy4l16zdZ4QPRdu
-	ZXhRC64mdYN5hmc4fxpS6Ttfl9/dhQLFIR/QuZ6jlZALfFcsjlLTJ3+hA39hwUYbMfSere6pfEU
-	DBVPrPCjcDVT5WMdGI23LnUmqHnhURsotbXxcBd+kLem/KAoKeXxc=
-X-Received: by 2002:a05:6a21:320b:b0:3c1:d78:6450 with SMTP id adf61e73a8af0-3c34d8bc7ccmr11995899637.66.1784160486218;
-        Wed, 15 Jul 2026 17:08:06 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e7c:8:6749:92c4:a95f:a937])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-3140e538368sm8158635eec.12.2026.07.15.17.08.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jul 2026 17:08:05 -0700 (PDT)
-Date: Wed, 15 Jul 2026 17:08:02 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: sashiko@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-	David Matlack <dmatlack@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v3] PCI/portdrv: Allow probing even without child services
-Message-ID: <algg4sOk0YM1TpXa@google.com>
-References: <af574zaysKnXjx15@google.com>
- <20260715221526.GA117606@bhelgaas>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="yR6iu4+m"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=u3hQkWIKM9rLk74FG4EzV/OU5cfjkjl4u73zLaFEaew=;
+	b=yR6iu4+m0jMMxlXtzIE64e3SQGhOy7b0OXPc3EROVeSAetdOJW1Ez4f1Yky9iTxCpPHDn3jMy
+	MYc/BTrazH8jDTO5q7Ch0H7/mqR1HiC929kYLr0AvvmMxcFl9J5Gws2ihLLpJSZ/PifIi6VfS8J
+	LjcGst1AhoMzV6H1djNFEuA=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4h0vm74C2kz12LCc;
+	Thu, 16 Jul 2026 08:57:59 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id EBA3440575;
+	Thu, 16 Jul 2026 09:07:36 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 16 Jul 2026 09:07:36 +0800
+Message-ID: <7dd5c995-a23c-4d3a-9ba0-7fc77972339f@huawei.com>
+Date: Thu, 16 Jul 2026 09:07:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260715221526.GA117606@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+To: Zhiping Zhang <zhipingz@meta.com>, Jason Gunthorpe <jgg@ziepe.ca>, Leon
+ Romanovsky <leon@kernel.org>, Michael Guralnik <michaelgur@nvidia.com>, Sumit
+ Semwal <sumit.semwal@linaro.org>, Christian Konig <christian.koenig@amd.com>,
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>
+References: <20260715204008.3911275-1-zhipingz@meta.com>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260715204008.3911275-1-zhipingz@meta.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-Hi Bjorn,
+Hi Zhiping,
 
-On Wed, Jul 15, 2026 at 05:15:26PM -0500, Bjorn Helgaas wrote:
-> [+cc David, Mani]
+One concern I'd like to raise is the implicit topology constraint of the
+TPH P2P path. TPH Steering Tag only works reliably when both importer and
+exporter devices sit under the same Root Port (or same TPH-aware switch).
+
+For cross-Root-Port P2P traffic (e.g. P2P devices located in different
+RC or even socket), most server-grade Root Complexes do not forward TPH
+prefixes through their internal routing. The ST field gets silently
+stripped before reaching the target device, so all TPH setup becomes
+ineffective with no error reported to user.
+
+Because cross-Root-Port P2P traffic with ST does not affect the host, but
+merely the completer may experience some performance degradation because
+it lacks the TPH hint. In this case, I suggest adding restrictions in the
+uAPI.
+
+A further step is to check whether the importer and exporter are under
+the same root port. However, this verification will cause the P2P TPH
+to be unsupported in the case of multi-host or multi-root PCIe switch.
+
+Thanks
+
+On 7/16/2026 4:39 AM, Zhiping Zhang wrote:
+> This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
+> export path, allowing importing drivers (e.g. mlx5) to use the
+> exporter's steering tag when performing peer-to-peer DMA into a
+> VFIO-owned device.
 > 
-> On Fri, May 08, 2026 at 05:12:19PM -0700, Brian Norris wrote:
-> > On Fri, May 08, 2026 at 11:30:22PM +0000, sashiko-bot@kernel.org wrote:
-> > > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> > > - [High] Moving `pci_set_master()` after child device registration causes child drivers to probe with Bus Mastering disabled, risking permanently lost MSI/MSI-X interrupts.
-> > > --
-> > > 
-> > > commit 9b851bf8faf271ab0b2daad51bfd51f89a1e87d4
-> > > Author: Brian Norris <briannorris@chromium.org>
-> > > 
-> > > PCI/portdrv: Allow probing even without child services
-> > > 
-> > > This commit modifies the PCIe port driver to allow probe to succeed even
-> > > if no child services are available. This ensures the port can still be
-> > > configured for runtime PM and low power modes on systems that only have
-> > > certain port services available or lack legacy INTx interrupts.
-> > > 
-> > > Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
-> > > 
-> > > > --- a/drivers/pci/pcie/portdrv.c
-> > > > +++ b/drivers/pci/pcie/portdrv.c
-> > > > @@ -343,7 +343,6 @@ static int pcie_port_device_register(struct pci_dev *dev)
-> > > >  	if (!capabilities)
-> > > >  		return 0;
-> > > >  
-> > > > -	pci_set_master(dev);
-> > > >  	/*
-> > > >  	 * Initialize service irqs. Don't use service devices that
-> > > >  	 * require interrupts if there is no way to generate them.
-> > > 
-> > > [ ... ]
-> > > 
-> > > >  	/* Allocate child services if any */
-> > > > -	status = -ENODEV;
-> > > > -	nr_service = 0;
-> > > >  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-> > > >  		int service = 1 << i;
-> > > >  		if (!(capabilities & service))
-> > > >  			continue;
-> > > > -		if (!pcie_device_init(dev, service, irqs[i]))
-> > > > -			nr_service++;
-> > > > +		pcie_device_init(dev, service, irqs[i]);
-> > > >  	}
-> > > > -	if (!nr_service)
-> > > > -		goto error_cleanup_irqs;
-> > > >  
-> > > > -	return 0;
-> > > > +	pci_set_master(dev);
-> > > 
-> > > Does moving pci_set_master() after the pcie_device_init() loop
-> > > risk dropping MSI/MSI-X interrupts during child driver probes?
-> > > 
-> > > The pcie_device_init() function calls device_register(), which
-> > > synchronously invokes the probe routines of child service drivers
-> > > like pciehp or aer.  During probe, these child drivers configure
-> > > the hardware and enable their interrupts.
-> > > 
-> > > Because PCIe MSI and MSI-X interrupts are memory write
-> > > transactions, they require the Bus Master Enable (BME) bit to be
-> > > set in the PCI Command Register.
-> > > 
-> > > If a hardware event occurs immediately after the child driver
-> > > unmasks the interrupt but before pci_set_master(dev) is called,
-> > > will the hardware attempt to send an MSI and drop the memory write
-> > > because BME is 0?
-> > > 
-> > > Since PCIe interrupts are edge-triggered messages, could these
-> > > dropped interrupts result in permanently missed hotplug events or
-> > > cause hardware error handling regressions?
-> > 
-> > Ha, that's funny. It's all a great question I think, and that's
-> > pretty much what I asked Bjorn here when he suggested moving this:
-> > 
-> > https://lore.kernel.org/all/aZfIfn9viQRj4uy4@google.com/
-> > 
-> > He seems to think it's not a problem:
-> > 
-> > https://lore.kernel.org/all/20260220164046.GA3528004@bhelgaas/
-> > 
-> > but I'm frankly not very convinced. I think it's perfectly possible
-> > that a child service will try to enable MSI, the device will try to
-> > write, and those writes will be dropped, producing a missing
-> > interrupt.
+> There is no separate in-tree vendor kernel driver for the target device:
+> vfio-pci is the in-tree driver and the targeted device is managed
+> from userspace via VFIO passthrough. That is why the ST has to flow
+> through a uAPI: userspace owns the device and its ST table, so it is the
+> entity that can configure a meaningful value for a given dma-buf. The
+> kernel-visible participants are still in-tree: vfio-pci exports the
+> dma-buf and mlx5 imports it.
 > 
-> I think you're right that if we move the pci_set_master() after
-> pcie_device_init(), there is a window where MSIs could be dropped.
+> On the effect: the endpoint's PCIe ingress block uses the ST as
+> an in-band instruction for the incoming P2P TLP -- selecting a target
+> cache partition and, on writes, an in-flight operation on the data
+> before it lands. The dma-buf callback keeps this opaque to the
+> framework -- only the producer (userspace owner of the VFIO device)
+> and the consumer (endpoint block) need to interpret the value. The
+> dma-buf get_pci_tph callback itself is optional, but workloads that
+> depend on the endpoint's in-flight operation need it because fallback
+> does not produce the same result.
 > 
-> If pcie_portdrv_probe() is called after pcie_portdrv_init() registers
-> service drivers (which would certainly happen if a port is hot-added)
-> the service .probe() will be called inside pcie_device_init(), so BME
-> must be set before that.
+> The dma-buf hook is intentionally generic and discoverable rather than
+> a private side channel. The exporter owns the completing address
+> space for the dma-buf and decides whether it can provide a meaningful
+> ST/PH tuple for that completer; the dma-buf core keeps the tuple opaque,
+> and importers merely request the namespace they support and place the
+> returned value on generated TLPs. Exporters that cannot derive a
+> meaningful tuple simply return -EOPNOTSUPP.
 > 
->   pcie_portdrv_init                   # device_initcall
->     pcie_init_services
->       pcie_aer_init
->         pcie_port_service_register
->           driver_register
+> Patch 1 adds small PCI/TPH type helpers so drivers can query the enabled
+> TPH requester mode and the device's TPH Completer Supported field
+> without reaching into pci_dev internals (and so callers in
+> CONFIG_PCIE_TPH=n builds get a clean fallback). pcie_tph_completer_type()
+> reuses the reserved-encoding fold introduced by the separately-submitted
+> folding patch rather than duplicating the completer decode.
+> Patch 2 adds the optional dma_buf_ops::get_pci_tph callback plus the
+> dma_buf_get_pci_tph() importer wrapper so importers can fetch TPH
+> metadata from an exporter under dmabuf->resv.
+> Patch 3 implements get_pci_tph in vfio-pci and adds the new uAPI
+> (VFIO_DEVICE_FEATURE_DMA_BUF_TPH) for userspace to attach the metadata.
+> Patch 4 wires up the mlx5 RDMA driver as a consumer. It also enforces the
+> dma_buf_get_pci_tph() steering-tag lifetime: the tag is only valid for the
+> mapping it was queried against, and the mkey's TPH fields cannot be
+> reprogrammed in place. mlx5 therefore records the registration-time tuple
+> and re-queries after each dma-buf mapping is established under dmabuf->resv;
+> unchanged tuples continue with the existing mkey, while changed or missing
+> tuples fail the remap rather than continue with a stale hint. For vfio-pci
+> BAR dma-bufs this is expected to be a no-op because invalidation is
+> revoke/quiesce, not movement to a new backing placement, and the
+> userspace-provided tuple is not changed by the revoke/un-revoke path.
 > 
->   pcie_portdrv_probe
->     pcie_port_device_register
->       pci_set_master                  # current location
->       pcie_init_service_irqs
->         # set generic PCI_MSI_FLAGS_ENABLE
->       for (i = 0; ...)
->         pcie_device_init
->           device_register
->             aer_probe
->               # set PCI_ERR_ROOT_CMD_COR_EN interrupt enable
+> Build-tested with both CONFIG_PCIE_TPH=y and CONFIG_PCIE_TPH=n.
+> Functional validation on the target topology: PCIe analyzer captures
+> on the P2P TLPs confirm the ST emitted by mlx5 matches the value
+> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, and the end-to-end
+> P2P workload only produces results consistent with the endpoint's
+> ST-selected in-flight operation. For example, with userspace
+> configuring 8-bit ST=0xf0 and PH=2, an analyzer capture of a peer-to-
+> peer MWr64 shows "STP MWr64 TC=0 OHC=2 ..." followed by "OHC-B
+> ST=F0h PH=2 HV=1":
+> (TLP Captures)
+> 08000260 -> STP MWr64 TC=0 OHC=2 TS=0 Attr=0 L=8
+> F0000004 -> RID=4h:0h.0h EP- Tag=F0h
+> E0200000 -> AddrH=000020E0h
+> 00080006 -> AddrL=06000800h
+> 90F00000 -> OHC-B ST=F0h PH=2 HV=1 AMA=0 AV-
 > 
-> > Bjorn, what do you think? Personally, I'd go back to something
-> > closer to v2, where we enable mastering before initializing
-> > children.
+> The dma-buf get_pci_tph interface has also been exercised by a second,
+> independent importer: a different vendor's NIC whose driver is not yet
+> upstream, locally taught to call dma_buf_get_pci_tph(). A PCIe analyzer
+> confirmed the ST it placed on outbound P2P TLPs matches the value
+> configured through VFIO_DEVICE_FEATURE_DMA_BUF_TPH, the same result as
+> with mlx5. Two unrelated importer drivers exercising the callback
+> end-to-end shows the interface is not tied to a single consumer. That
+> importer change is out-of-tree and not part of this series. For that
+> second importer, with userspace configuring 8-bit ST=0xe0 and PH=0,
+> an analyzer capture shows:
+> (TLP Captures)
+> 08200260 -> STP MWr64 TC=0 OHC=2 TS=1 Attr=0 L=8
+> 4E00004C -> RID=4Ch:0h.0h EP- Tag=4Eh
+> 00170000 -> AddrH=00001700h
+> 00200006 -> AddrL=06002000h
+> 10E00000 -> OHC-B ST=E0h PH=0 HV=1 AMA=0 AV-
 > 
-> Yes, I agree.  What do you think of the patch below?  It's fairly
-> similar to your v2.
+> Depends on (submitted separately):
+>   net/mlx5: free mlx5_st_idx_data on final dealloc
+>     https://lore.kernel.org/linux-rdma/20260612170406.3339093-1-zhipingz@meta.com
+>   PCI/TPH: fold reserved completer encoding in get_rp_completer_type()
+>     https://lore.kernel.org/linux-pci/20260715202409.3767494-1-zhipingz@meta.com
+> 
+> Changes since v11:
+>   Patch 1 (PCI/TPH): add pcie_tph_completer_type() and
+>   pcie_tph_enabled_req_type(); pcie_tph_completer_type() reuses the
+>   reserved-encoding fold from the separately-submitted folding patch
+>   rather than duplicating the completer decode.
+> 
+>   Patch 2 (dma-buf): fix the kernel-doc to reference
+>   &dma_buf_attach_ops.invalidate_mappings instead of the non-existent
+>   move_notify callback (reported by Sashiko and Alex Williamson).
+> 
+>   Patch 3 (vfio/pci): hold memory_lock while validating dma-buf ownership
+>   and publishing TPH metadata, so cleanup cannot disassociate the dma-buf
+>   from the VFIO device under the SET path. Also use WRITE_ONCE() for
+>   revoked-state writers to pair with the lockless attach-path READ_ONCE().
+> 
+>   Patch 4 (mlx5): enforce the steering-tag lifetime documented in patch 2
+>   (addresses the lifecycle gap Sashiko and Alex noted on v11). mlx5 now
+>   stores the registration-time TPH tuple and re-queries the exporter after
+>   each dma-buf mapping is established under dmabuf->resv. If the tuple is
+>   unchanged, the existing mkey continues to be used. If it changed or
+>   disappeared, mlx5 unmaps the pages and returns -EFAULT because the
+>   existing mkey cannot be updated in place (no UMR update mask for TPH
+>   fields, and rebuilding the mkey would change the rkey/lkey). The exporter
+>   query runs under dmabuf->resv, but the ST-index allocation is done
+>   outside it so no GFP_KERNEL allocation is held under dmabuf->resv. For
+>   vfio-pci BAR dma-bufs this validation is expected to be a no-op because
+>   the tuple is stable across revoke/un-revoke.
+> 
+> Previous link:
+> v11: https://lore.kernel.org/linux-pci/20260702181025.2694961-1-zhipingz@meta.com/
+> v10: https://lore.kernel.org/linux-pci/20260630224328.3218796-1-zhipingz@meta.com/
+> v9: https://lore.kernel.org/dri-devel/20260622184211.2229399-1-zhipingz@meta.com/
+> v8: https://lore.kernel.org/dri-devel/20260615065912.2177918-1-zhipingz@meta.com/
+> v7: https://lore.kernel.org/dri-devel/20260611161546.4075580-1-zhipingz@meta.com/
+> v6: https://lore.kernel.org/dri-devel/20260608185646.4085127-1-zhipingz@meta.com/
+> v5: https://lore.kernel.org/dri-devel/20260526144401.1485788-1-zhipingz@meta.com/
+> v4: https://lore.kernel.org/linux-pci/20260519201401.1558410-1-zhipingz@meta.com/
+> v3: https://lore.kernel.org/linux-pci/20260512184755.4137227-1-zhipingz@meta.com/
+> v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipingz@meta.com/
+> 
+> Zhiping Zhang (4):
+>   PCI/TPH: Add requester/completer type helpers
+>   dma-buf: add optional get_pci_tph() callback
+>   vfio/pci: implement get_pci_tph and DMA_BUF_TPH feature
+>   RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+> 
+>  drivers/dma-buf/dma-buf.c                     |  32 ++++
+>  drivers/infiniband/hw/mlx5/main.c             |   1 +
+>  drivers/infiniband/hw/mlx5/mlx5_ib.h          |  11 ++
+>  drivers/infiniband/hw/mlx5/mr.c               | 151 +++++++++++++++++--
+>  drivers/infiniband/hw/mlx5/odp.c              |   7 +
+>  .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  49 +++++-
+>  drivers/pci/tph.c                             |  39 ++++++
+>  drivers/vfio/pci/vfio_pci_core.c              |   3 +
+>  drivers/vfio/pci/vfio_pci_dmabuf.c            | 117 ++++++++++++-
+>  drivers/vfio/pci/vfio_pci_priv.h              |  13 ++
+>  include/linux/dma-buf.h                       |  25 +++
+>  include/linux/mlx5/driver.h                   |  15 ++
+>  include/linux/pci-tph.h                       |   8 +
+>  include/uapi/linux/vfio.h                     |  43 +++++
+>  14 files changed, 496 insertions(+), 18 deletions(-)
+> 
+> --
+> 2.53.0-Meta
+> 
 
-Thanks for looking! Can you describe what your goals are here vs my v2?
-I'm curious what you're aiming for.
-
-I also think there are a few problems, notes below.
-
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index 69283cd04a78..6912743df767 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -328,7 +328,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->   * Allocate the port extension structure and register services associated with
->   * the port.
->   */
-> -static int pcie_port_device_register(struct pci_dev *dev)
-> +static void pcie_port_device_register(struct pci_dev *dev)
->  {
->  	int status, capabilities, i, nr_service;
->  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
-> @@ -336,12 +336,12 @@ static int pcie_port_device_register(struct pci_dev *dev)
->  	/* Enable PCI Express port device */
->  	status = pci_enable_device(dev);
->  	if (status)
-> -		return status;
-> +		return;
-
-Are you purposely ignoring pci_enable_state() failures now too? That
-wasn't part of my original proposal. This also means you have a
-potential underflow in remove(), because now a port might get through
-probe() with an enable_cnt of 0 -- then we still call
-pci_disable_device() in remove().
-
->  
->  	/* Get and check PCI Express port services */
->  	capabilities = get_port_device_capability(dev);
->  	if (!capabilities)
-> -		return 0;
-> +		return;
->  
->  	pci_set_master(dev);
->  	/*
-> @@ -359,7 +359,6 @@ static int pcie_port_device_register(struct pci_dev *dev)
->  	}
->  
->  	/* Allocate child services if any */
-> -	status = -ENODEV;
->  	nr_service = 0;
->  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
->  		int service = 1 << i;
-> @@ -368,16 +367,16 @@ static int pcie_port_device_register(struct pci_dev *dev)
->  		if (!pcie_device_init(dev, service, irqs[i]))
->  			nr_service++;
->  	}
-> +
->  	if (!nr_service)
->  		goto error_cleanup_irqs;
->  
-> -	return 0;
-> +	return;
->  
->  error_cleanup_irqs:
->  	pci_free_irq_vectors(dev);
-
-I didn't look at all the implications, but now we might run
-pci_free_irq_vectors() twice in a row -- here, and in remove(). I think
-it might be safe, but it's not trivial to ensure that.
-
->  error_disable:
->  	pci_disable_device(dev);
-
-By unwinding this here, we have another potential case of inducing
-underflow in remove(), similar to the pci_enable_device() failure case I
-described above.
-
-Brian
-
-> -	return status;
->  }
->  
->  typedef int (*pcie_callback_t)(struct pcie_device *);
-> @@ -698,9 +697,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  	if (type == PCI_EXP_TYPE_RC_EC)
->  		pcie_link_rcec(dev);
->  
-> -	status = pcie_port_device_register(dev);
-> -	if (status)
-> -		return status;
-> +	pcie_port_device_register(dev);
->  
->  	pci_save_state(dev);
->  
