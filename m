@@ -1,163 +1,238 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD2035E1A6
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 18:44:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=67.231.145.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784227447; cv=pass; b=ppch45vsielvL+ClS8KZmOO/npfw6RfqiV31laowhNKOVv475gOqR21qOxDswVlf+CcBkW4XYoHj2+bDM+c5L4axOm1r6NOm1Z4uLUz5G1V20qldjl78GgKk7+w4upwi8W2zmhBCDQV2hO5oLZaryZ/MkUk5PTmaP9jgCCqYYpg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784227447; c=relaxed/simple;
-	bh=B2lAv0Kke/zaTF5v6Dg4abddoHPxXuacOTWspld/Aos=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dCyAE+VdIAernL0zd2mn8Kew+wP+OpiWm/gDx9mstvqkCihx0fwdUPQRMJ9qmBFQzXT3wAp8SH41nrqycQB2iytdEgSrjUXHNcd52G7tO7mGuXj9YISGMG3DMGWn9RUIfZxDCJztTvfXfTI4Ub6OonVe9tts70+3hTu/FHTDKRk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=n0Of2kn8; arc=pass smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E53433B6CC
+	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 18:48:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784227724; cv=none; b=Y3s4WdxazheziePaFWap9+jQKmrOAfSOvcN4gaI/73JbGsJYAv1hkcpDh5Y3umMeSLfdU3pio1kUER7ILP+yFuVdwRjDEqDLcYwhve1Y/cD/lzFvAoSnu/kLUL4n7sXptQX62hLx63xOmcVBIXwr9zVEXVW5G8JvIRUbBflTNxs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784227724; c=relaxed/simple;
+	bh=L/BFaFjssLtfgT7Z6AREhZSZs1c1XSrP+hsDtu4wwFg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N6eUElanDP7RtgUtxQrtWq0mkowABI0e7FXfGFHtXY/qYmqSh4iMLFZD8h49Tk1+FbWcYcNissSphK4E8FMAPq6iP7q8LcXeZeODX7+nUrg0K6gThKZGs/8CXUAwsaBByfkB2UJmg4KoWNifVQLYK4Ug+Vy09M+3SaWsi2lFeWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WxuWjJ0G; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=jmnPF8RN; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="n0Of2kn8"
-Received: from pps.filterd (m0528007.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66GGUHUU3587403
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:44:05 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=tro2yUuohTej5GDynd1Qf3SmBPGMdcgG3ju1GffyhJ4=; b=n0Of2kn8kyXL
-	4ODtaxekKt2V1jiqoP1wAYtYHiSFzPrRtxIXrNkgJ3JFUPd2F9bYVglDFCRg2vKt
-	uHRh0j2ChOXBcYkrxPwS0c5XkQLYwskVTx8Z67DxOzdweLG2kVLFwWVfGSspYqu1
-	8kJZE7tdRtTQ2b1k33QeEzyIFSJxlAIXKs24iNxEy3fQeFalZZtmyb6ciBZgZhxB
-	bsMiq2//waTzd0k1CyrJUUQxy7H0EESCYz1yBMxtLRR3gBjys9HSOswkcnxKq7WX
-	+q4vHE2spOqxvt/oLc57kNjmQW8HOMesed6hCSzGKRP1tfHAxqI7kJ+445iep1vb
-	QfiIpbsSuw==
-Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4fex3cjp2y-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:44:04 -0700 (PDT)
-Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7e7624e584dso5728499a34.2
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:44:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784227444; cv=none;
-        d=google.com; s=arc-20260327;
-        b=nngd6xow6O61mPdv90cNvyqRh0Jjg1NIaLAJ1XPX0vSf8YagqxCczzyTEaA0k7dAt2
-         DHUVUWC9eC+pW1cBoQmHbWLmTLAK7bXnRqs2Tt1R2cQr/+Xpt/54zS5M/x+RD9g/kWPa
-         0mSoqdDKZj/RQ7+Ga5mAzk1FNK6+reO7NRFdgKbNO6vQHjS93oQ3xJ++YcOiYnk5jEDp
-         sI9kw2K5088kgF8P8Pyh2jxOIknZsRryOSvp5oPih0RTjZU3X+lXKI3YzoFX09CitzV/
-         Iz6qKfiPN0s5R8MFt9u/Sdg45x2LJJLCVL+9VAWlnxV6PyXgAZKVrizDEu6rsCfI1766
-         LFDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=tro2yUuohTej5GDynd1Qf3SmBPGMdcgG3ju1GffyhJ4=;
-        fh=BY7eYBJA9TcVOY54k9NB9SWZLa3NWqUVibmrOP7dmBQ=;
-        b=gf/HUH65H3OonMOGdEbnkSF/2s8gOdQ8zzgwpkYZ7zLplyyFUhc5Cqy/GDzAr8dPYZ
-         vrVhbVeY8D4X2Zkw6GNmE1NXW6atx7CgtUzf5ijpWrIq5fOn/oI/NPlYv+GnNBx3Lbiq
-         EZg8mXTGQdJCUhMbA/pm+c9VfLmQ4sPQQndUAWytUkS1SvZDS9Hl64/jAwfKlYc6QGF/
-         4FbKFhPxhcJSvqr2qPBK/5YVtcH4/+BInfeahlsX1FSEcwxwE1ZMNbjlq6hzMTRTbaXS
-         kxTmn+Wqe1L1or4GkoZDW5NqBkH1e2+2ILRvZKDvLDTRmpUNUM9/gAyIck9rR0FaCGwF
-         98GQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WxuWjJ0G";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="jmnPF8RN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784227722;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
+	b=WxuWjJ0G4EKXtHEM0S5925dJEeneFsNy/EEreYYwAQGpXRbQURY6V7kpBMk/8Ya6KbBSo2
+	ZS3L7snwivR8vadnHX3BZkIiCyEVFBLyGQA9UTnqrC3NkbcV2kKcpzqHeyknQYAaLNtSm7
+	uRqTfPggtBLRjXylHgCjZ2g27+BQlfQ=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-230-KM6ovJ-tNw-qVXEp6IXteA-1; Thu, 16 Jul 2026 14:48:40 -0400
+X-MC-Unique: KM6ovJ-tNw-qVXEp6IXteA-1
+X-Mimecast-MFC-AGG-ID: KM6ovJ-tNw-qVXEp6IXteA_1784227720
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-92e53b8a302so1108411085a.1
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 11:48:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1784227720; x=1784832520; darn=vger.kernel.org;
+        h=user-agent:in-reply-to:content-disposition:content-type
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
+        b=jmnPF8RNupTwFZxnyNAHc6Syulr2ACziGHuSnaCI1P04CZTuAkNGuWTo3d/lmVL1tt
+         SyCXfvNillap2wrMndV9JQu39YE1rr5tB1A+UIJ+GzAz4Xd+HdmuV1hCM2XtUVkMQqLY
+         0DYP2N7LwUN52bo/lOrRI+FMD+3EQTeu0Zxmxhcc936eTScONJ/sB2ATYhTtzU0c6+0Y
+         0n2mfV65QFQIJMfzRpP7WVYjvrxDvT5AuwfJRne1oPFjpOhtZd+t2AP93wh7C3pp6/e5
+         6c7J8m7pN6v/0TltIm/2Acr3m+qxAZ20axfSPU8rkn1KfpMRD00p/EqblZfPVD0DH5qN
+         w5bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784227444; x=1784832244;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1784227720; x=1784832520;
+        h=user-agent:in-reply-to:content-disposition:content-type
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tro2yUuohTej5GDynd1Qf3SmBPGMdcgG3ju1GffyhJ4=;
-        b=qM4o+DSLwhAsz5h5dDWdq3zctGMbn8VvMbvwGunjzm8vvxefh2/YkjEyJQ4nt+W0Lf
-         X8DIThAgbvgpkPoBK8frrvCHG73cTMhd0xOYdA46GWZp6kGhsj33BgM1SL+rp66UQM6l
-         NtkQ+fBsRb7lIURR8Owdi2ED9UPqULYh/IKO2iNdsx439wHdlWeahwG/7+H68j0fJ7kd
-         C2jCaaFyl3wJKYsSAOR6FF+qg1VRDuh6tLu0C90DKbfsPFk1kNspYr6DO58usp9wVmag
-         22E1h8k1WewVtMw5J2jW1hEe6olFa8NTjXMl8Fz0JRAE05XeizMPztJvuOW032MyZUw7
-         sFiw==
-X-Forwarded-Encrypted: i=1; AHgh+RpcQLyPGlG8l/rxKpOY4vslFog/BZMgjTo+sbFDFgFS94jLQm9qrX87jdmFOgn4LGIqJObybjvVtrc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy47ElWpyaYPFlSEfoWE3SayAgpm5O8bnbl1dOkeU/iWG5AiC82
-	NnmSt/obU0esq+7fm4U0m34G/UCGBXGtyad7hZJlrgzPH2CZsztRMGM3/CbtoXLtYs0fdHHfDgT
-	DLNrn5tLZo24H9OceGI9USAbaU+4DcVJDdTBSLA5iu030XJrRWRI0JJoLeBRLzT6803XNy6qBxG
-	sOMsjYKTarMEeRSpho/iAiEVDe6K8fUpCBg6A=
-X-Gm-Gg: AfdE7cny3CrfGsZNUOkOCxDmBOJLAFSmHhJuh/8Te0Gxppr8hkES/K6+JEmaw7TtLro
-	AHS7S0unwsu8G1+9GeG3wo+ocVOhIjnS/+j6qjalP41tFyKYc8aCioViJTpg61zLSsCeFt8ZRNz
-	ZUQm2bAAjF5t+Sh/R3zu1y18NGlnZZrzpfFX1wvpc5WC2OiKxul/xygoDT8UptjcYAxL/D/EQc
-X-Received: by 2002:a05:6830:6c12:b0:7e3:d199:3164 with SMTP id 46e09a7af769-7ec9fc13f9emr564036a34.11.1784227443995;
-        Thu, 16 Jul 2026 11:44:03 -0700 (PDT)
-X-Received: by 2002:a05:6830:6c12:b0:7e3:d199:3164 with SMTP id
- 46e09a7af769-7ec9fc13f9emr564008a34.11.1784227443523; Thu, 16 Jul 2026
- 11:44:03 -0700 (PDT)
+        bh=k90VREcyUMcR/OGuKj3U3g7OaZ/zXu0WG1tLumtRQ8E=;
+        b=cZRCKBPj06cWd3uJ9D0/8xtnpaD4agEvdFk4JMaEGdP2g2uCUYfdJWp8tm1olbAGs+
+         J/o+qe3l5szalCH3jo9KRIaTNVjoLjnyKOeJH0rVRqMdrXVdq6HvjEQ5ibvCna0BGW7O
+         D8tlJJoXzF83eVftgL4E/V87BOsi8XhP9WCdRtIAcr40jl8Y6TlzTmXOCvgMq0N7aj3Q
+         TtjQZGCWXzpcipyA6InNrigQ6Tzy08WTOpC/ElTv/Z4q56JSQh1PWKagM+1tVb3BqMsO
+         0KO1i9SCq1gJTeCXwEKEHns7kvL7aSGIjUdunJIUrZyiQbf1DS6HMblFlcYbqMdQ+I8i
+         kJdw==
+X-Forwarded-Encrypted: i=1; AHgh+RpH2V51KDSZo9qEIK7FauwSVBOBPBl9GMoF9uc28OL9J+rHl8L1FGmw6Pun7rGZ/Cb+lJIcwl9pooE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy8yKX8n0KDcbJwtXX7Al5r9DS9nfVGI6tjRfZ1rcBiEu1pR7pW
+	tsA38Bnp4RgjKKXf4FhiVSL7LR0gUFRRLcUCM2q2BNzoUq/v6BZe9MVEry5bNnW5HRexZF2OjGJ
+	YL46mjoXRMbCmlRrzdrfuLPWtaPL60ID+oTJSyThuxuJpEVwt76nnB5f4jHiiIA==
+X-Gm-Gg: AfdE7ckJMo8buDsHmmR/E2fEIlQLY0XJJsegW2sknQzjTUSCWagWEYyhtbuNn4azBjn
+	3MbMt3QTXrkD7TNKPAeSUkmuF1zkbYoUZpawsCtCA00KOYNPaNNoxhKzOtnBPIgWhGX1PgG8h2U
+	tYay/BttuYfOVGTkei26nCkamegoOyR/PtuYk1Z5CY4usSEAlC9B6PNKzaGpff3sJdfomCKPfQL
+	DjWF16MVB88bceVgNg3x0Ih/jzSzUQ4oCVdxefIxubgd2xa6exqb9erJ6352hgn/4uBQe+85LRF
+	w7eZHnjHI8iF2P+LsSwZfTCOb/RfoUMRQwDE4csBjqzN6hZiyc3blmQCaEBBm17Xd9cy1aod6eK
+	vcn9dpBfNoDtn4sOjJItln/Q5E9rj9yXs2HE=
+X-Received: by 2002:a05:620a:1a14:b0:92e:e569:dc20 with SMTP id af79cd13be357-930962abddbmr924060385a.78.1784227720182;
+        Thu, 16 Jul 2026 11:48:40 -0700 (PDT)
+X-Received: by 2002:a05:620a:1a14:b0:92e:e569:dc20 with SMTP id af79cd13be357-930962abddbmr924057085a.78.1784227719524;
+        Thu, 16 Jul 2026 11:48:39 -0700 (PDT)
+Received: from redhat.com (c-73-183-53-213.hsd1.pa.comcast.net. [73.183.53.213])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-92ee5cf9d9bsm2074490485a.28.2026.07.16.11.48.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Jul 2026 11:48:38 -0700 (PDT)
+Date: Thu, 16 Jul 2026 14:48:35 -0400
+From: Brian Masney <bmasney@redhat.com>
+To: Christian Marangi <ansuelsmth@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Jianjun Wang <jianjun.wang@mediatek.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org, linux-clk@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v4 2/4] clk: en7523: add support for dedicated PCIe
+ PERSTOUT reset
+Message-ID: <alkng6IIkInZjxqA@redhat.com>
+References: <20260714115848.8537-1-ansuelsmth@gmail.com>
+ <20260714115848.8537-3-ansuelsmth@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715202409.3767494-1-zhipingz@meta.com> <20260715231525.GA224907@bhelgaas>
- <alhU7lktqNxAPB4E@weiserver>
-In-Reply-To: <alhU7lktqNxAPB4E@weiserver>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Thu, 16 Jul 2026 11:43:52 -0700
-X-Gm-Features: AUfX_mzvgf0dz1HdxSS1kkTD-1brO-RbEuUYhiitRfY9lELwvz4jPCPOlSizCr0
-Message-ID: <CAH3zFs2pGMHE8xg_hqVCwp4tPEKQ3B8Ldu85kU=bsguK_MgdmA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/TPH: fold reserved completer encoding in get_rp_completer_type()
-To: Wei Huang <wei.huang2@amd.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Christian Konig <christian.koenig@amd.com>,
-        Alex Williamson <alex@shazbot.org>, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE2MDE5MiBTYWx0ZWRfX5oXiRLjyRnX9
- k07nL1Tljnsd2YLinKc5FItv+20G79BkgWZ0LZLnHhItK2q23ZrZIO+IUPTXmtrssOe4Nl8iAx5
- ygsWsyodAyIYNy/twWCaDRK6VK+BJuyzlhbPlZahwpY+8hg99M3mFu2s8LUM2vIyoTm55BdwvrC
- KD/qvHaOxTSPy/1iS6Ctw0YugSAZbakJzzoeNd8jnFJf7KCHBZfXiZD3lvHR3/tCBgSETeQZRSx
- 9ULOFI22x1X/0QrTtGVCIbKL7B0udy0LsspcDMooQG5BBLZ7Ulr+FQHWp+8Q2M3uJsKsDaWtaqC
- vgyGUdVXa1OyZ6TFouOtduIn9Ks0QCiXATva66Dc/XBV4km3nr/1bNUoAOayT5nBuyxXmafHdP+
- 9tGWczUknj2Zh9TGYSJ4EiDzHezCC3mSrW2VnwmH8UgwC0FS8b0t9dGieNjRDNobngFZ2kydl+5
- QJBN+9FxkyjEeQS+asA==
-X-Authority-Analysis: v=2.4 cv=ar+CzyZV c=1 sm=1 tr=0 ts=6a592674 cx=c_pps
- a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=4h92JMTCafKA-fb_NiOh:22
- a=aoCffaJH-pVtSq24NWgA:9 a=QEXdDO2ut3YA:10 a=eYe2g0i6gJ5uXG_o6N4q:22
-X-Proofpoint-ORIG-GUID: -7uMngLMvWM257gbw49daM_mgX4r8Nqy
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE2MDE5MiBTYWx0ZWRfX062FGaRT+kAj
- L9GLrkSeSqmeLAE5WHK+2dihKOQgQYM/aWcVZcy4U+Q0aTo2P7Dp7IZ7HchC21t43bYvIVq/vNX
- J4FdoCOOrUt4xcW1r1QiVn6GPnjdhEk=
-X-Proofpoint-GUID: -7uMngLMvWM257gbw49daM_mgX4r8Nqy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-16_06,2026-07-15_02,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260714115848.8537-3-ansuelsmth@gmail.com>
+User-Agent: Mutt/2.4.0 (2026-06-19)
 
-> > > -   return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
-> > > +   return tph_completer_type_fold(FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP=
-_MASK,
-> > > +                                            reg));
-> >
-> > Is this just defensive programming, or is there some hardware out
-> > there that uses this reserved value?  It's kind of an ugly wart to add
-> > just for theoretical spec conformance testing.
->
-> I=E2=80=99m not aware of any hardware that actually uses this reserved va=
-lue. While
-> being cautious is great, my view is that such RP is bad =E2=80=94 arguabl=
-y to the
-> point where writing 0b10 straight to the device might be a right response
-> (kidding).
->
+Hi Christian,
 
-Thanks for confirming -- I'll frame the changelog as defensive hardening.
+On Tue, Jul 14, 2026 at 01:58:44PM +0200, Christian Marangi wrote:
+> Add support for resetting the PCIe lines with the PERSTOUT reset. These
+> special reset are controlled by the PCIC register and are specific to each
+> of the 3 PCIe lines.
+> 
+> Notice that reset logic is inverted for these bit where 0 is assert and 1
+> deassert. This is intenrally handled in the reset function.
 
-> >
-> > If we really need it, I'd rather read something like this:
-> >
-> >     tph_comp =3D FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
->
-> This looks reasonable to me. It might help to add a one-line comment
-> explaining why tph_comp is sanitized here?
->
+s/intenrally/internally/
 
-Yes -- v3 switches to Bjorn's inline form with:
+The "these bit" above is awkward as well. Sorry I don't have a
+suggestion offhand, but I see what you mean below based on the code.
 
-        /*
-         * 0b10 is reserved; treat it as "not supported" so only the
-         * architected encodings reach the Requester Enable field.
-         */
+> 
+> PCI enable/disable are updated to drop PERSTOUT bits in favor dedicated
+> reset handling.
+> 
+> Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+> ---
+>  drivers/clk/clk-en7523.c | 39 ++++++++++++++++++++++++++++-----------
+>  1 file changed, 28 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/clk/clk-en7523.c b/drivers/clk/clk-en7523.c
+> index 1ab0e2eca5d3..c9b21d9bf2f3 100644
+> --- a/drivers/clk/clk-en7523.c
+> +++ b/drivers/clk/clk-en7523.c
+> @@ -338,6 +338,7 @@ static const struct en_clk_desc en7581_base_clks[] = {
+>  static const u16 en7581_rst_ofs[] = {
+>  	REG_RST_CTRL2,
+>  	REG_RST_CTRL1,
+> +	REG_NP_SCU_PCIC,
+>  };
+>  
+>  static const u16 en751221_rst_ofs[] = {
+> @@ -450,6 +451,11 @@ static const u16 en7581_rst_map[] = {
+>  	[EN7581_CPU_TIMER_RST]		= RST_NR_PER_BANK + 28,
+>  	[EN7581_PCIE_HB_RST]		= RST_NR_PER_BANK + 29,
+>  	[EN7581_XPON_MAC_RST]		= RST_NR_PER_BANK + 31,
+> +
+> +	/* RST_PCIC */
+> +	[EN7581_PCIC_PERSTOUT0_RST]	= 2 * RST_NR_PER_BANK + 29,
+> +	[EN7581_PCIC_PERSTOUT1_RST]	= 2 * RST_NR_PER_BANK + 26,
+> +	[EN7581_PCIC_PERSTOUT2_RST]	= 2 * RST_NR_PER_BANK + 16,
+>  };
+>  
+>  static const u16 en751221_rst_map[] = {
+> @@ -635,9 +641,7 @@ static int en7581_pci_enable(struct clk_hw *hw)
+>  	void __iomem *np_base = cg->base;
+>  	u32 val, mask;
+>  
+> -	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1 |
+> -	       REG_PCI_CONTROL_PERSTOUT1 | REG_PCI_CONTROL_PERSTOUT2 |
+> -	       REG_PCI_CONTROL_PERSTOUT;
+> +	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1;
+>  	val = readl(np_base + REG_PCI_CONTROL);
+>  	writel(val | mask, np_base + REG_PCI_CONTROL);
+>  
+> @@ -650,9 +654,7 @@ static void en7581_pci_disable(struct clk_hw *hw)
+>  	void __iomem *np_base = cg->base;
+>  	u32 val, mask;
+>  
+> -	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1 |
+> -	       REG_PCI_CONTROL_PERSTOUT1 | REG_PCI_CONTROL_PERSTOUT2 |
+> -	       REG_PCI_CONTROL_PERSTOUT;
+> +	mask = REG_PCI_CONTROL_REFCLK_EN0 | REG_PCI_CONTROL_REFCLK_EN1;
+>  	val = readl(np_base + REG_PCI_CONTROL);
+>  	writel(val & ~mask, np_base + REG_PCI_CONTROL);
+>  	usleep_range(1000, 2000);
+> @@ -754,14 +756,21 @@ static int en7523_reset_update(struct reset_controller_dev *rcdev,
+>  			       unsigned long id, bool assert)
+>  {
+>  	struct en_rst_data *rst_data = container_of(rcdev, struct en_rst_data, rcdev);
+> -	void __iomem *addr = rst_data->base + rst_data->bank_ofs[id / RST_NR_PER_BANK];
+> +	u32 offset = rst_data->bank_ofs[id / RST_NR_PER_BANK];
+> +	void __iomem *addr = rst_data->base + offset;
+> +	bool inverted = false;
+>  	u32 val;
+>  
+> +	/* For PCIC reset logic is inverted, 0:assert 1:deassert*/
 
-Thanks for the review,
-Zhiping
+Add space before end of comment.
+
+> +	if (offset == REG_NP_SCU_PCIC)
+> +		inverted = true;
+> +
+>  	val = readl(addr);
+> +	val &= ~BIT(id % RST_NR_PER_BANK);
+>  	if (assert)
+> -		val |= BIT(id % RST_NR_PER_BANK);
+> +		val |= inverted ? 0 : BIT(id % RST_NR_PER_BANK);
+>  	else
+> -		val &= ~BIT(id % RST_NR_PER_BANK);
+> +		val |= inverted ? BIT(id % RST_NR_PER_BANK) : 0;
+
+Could you do:
+
+    if (assert ^ inverted)
+
+Then keep the existing logic for val inside the if/else?
+
+
+
+>  	writel(val, addr);
+>  
+>  	return 0;
+> @@ -783,9 +792,17 @@ static int en7523_reset_status(struct reset_controller_dev *rcdev,
+>  			       unsigned long id)
+>  {
+>  	struct en_rst_data *rst_data = container_of(rcdev, struct en_rst_data, rcdev);
+> -	void __iomem *addr = rst_data->base + rst_data->bank_ofs[id / RST_NR_PER_BANK];
+> +	u32 offset = rst_data->bank_ofs[id / RST_NR_PER_BANK];
+> +	void __iomem *addr = rst_data->base + offset;
+> +	bool inverted = false;
+> +	u32 val;
+> +
+> +	/* For PCIC reset logic is inverted, 0:assert 1:deassert*/
+
+Add space before */
+
+Brian
+
