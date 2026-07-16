@@ -1,284 +1,230 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3180E389471
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 15:46:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0902E091B;
+	Thu, 16 Jul 2026 16:12:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784216768; cv=pass; b=FMqTZjXuzhIzxhQsh6zmey6WmaDCs5gBzN/JzyTmDpnuagIvBCP/bozSFceYki6+MouruWKoVB8GmXNE63PiBfMHyBEAXHuiGVinp5uBvtJ9co2GjUNT8BZlHRIKZRUEE9LZ/1sLzXy1Ny0K9l+5rMedPGgVYP8q4+ot4rFmOyE=
+	t=1784218359; cv=fail; b=fMcVwnqZmI1kpbZe0vxBamd97NH5W8hUFNMKR786HXyGiVnRj5OixLfmXoTNIedS+mZ1NEKs4FKuQDDPmL8XdOOqCRmNpizQ0dR0a9AZm/0oUoP/7FwNTpzycYlnI8rPvMjTGyadifV2dfwGJEYfT1viJBGwYDE448nvcbwmz7A=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784216768; c=relaxed/simple;
-	bh=OZGEF2emtiuHK15ItQmuCRN8wNze8eKQC2CdaVRwh64=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UXAXbIkLAtOBvu0UtUGtmEV+BzhG1dAebq7CtPx9mzoec2wjqUaFTVIflbuADbqfA0RzoB4kJhPJ7YRzZ/EhCz8d0oybHOQhIH+0oKj/uuBTd94H0bTHIacGzQDSn6GCWEiQTUkjMfJrE2fkTq8NRkoTO0LUHJs7glInIIja4SM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FUIZhSGN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WRvQ2WxC; arc=pass smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1784218359; c=relaxed/simple;
+	bh=0VUcLLKqvI5hTmvoQ+iL7Cd7OuF/jZWzs+ulPJIdlQ8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=UMyQYicNQk4mV14WaAZiZssRP3vqP28tyVsb4xoZjlFbbxNad35PQyimUY7VqtXQpIbcPR4fk1a4OnZCqdGv/1sgtcSwAZjJhV4UbZ3A+YaOq9YBH+9DFa/hzPGfORSVTmu1CvgfhXmnOxVGM9JNYp0TQNsdKGr9KXX1eiD9OrY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DqOwxQmt; arc=fail smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FUIZhSGN";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WRvQ2WxC"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66GDJjsK3988152
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 15:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	DaKMG7bPmKzijn8fMJPZ5Vh5EOk51mz9rGu26Crb5wY=; b=FUIZhSGNkDxiCWaM
-	EJ4RUB+hfB3tOgb+1kGgQVAJciKke+hEDM0FAnLlSi604B7ccKMnjFzupW5BCQab
-	kstEbZHlMgNve9ly7m0kJnB4BpvgGOM4/sy12A/WqD0p10vinVPTIKFpY0vIOTC2
-	NNdR+61+OvOMn3+QBoT+H9BINQVb0XamqAC34pdHE3AFahRMBiFirPNEkorHQTV5
-	gxev50CWP3yN6TgIe9P7K8TSx/UQJtxxmRNsTnsUN2LDvbAwck4pMrCVQ39uouUs
-	HdKktWI4LE4c//gRH1ZfLunyhw5hJoIsfomNKXLpqjXRddb4OgTOjnMxMdiRCv2s
-	CnENJw==
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4feq3pk2bf-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 15:46:05 +0000 (GMT)
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-51c1852a86fso76931821cf.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 08:46:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784216764; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XZQwxDNC6iA9C7te3YOL7gCYYM1N8Jxra5mQkZbBOjr/5G7o2lhbw3RFdeSpJUZQg0
-         gpHV6VYggDTP5qGjRn1CjaYRpFujKgrcfl+FtvnUpN+VrfnKTGlQAG2xROYdRTfj+Cn3
-         8Nl52vOdd+ms1t4SFKHxa80iKr4b2aCCNcKcxL2iIYGui/kwOkBqaxNUei15yZLRTxCi
-         /XR7p2BsGLRU/Z7/fwFauo6m3QfTsii21bK4bQrLHVRai/cFyVQg1+4Zc1qdbltAV44h
-         vzYyapvcGWUsCfkz+lyx/wPmr6UV8eq2FD0J2exdg6nFBx5UBb1f1fZYsskfzCe63cfO
-         E98Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=DaKMG7bPmKzijn8fMJPZ5Vh5EOk51mz9rGu26Crb5wY=;
-        fh=jlYfBfDdjgSVGQG5eqNWhqkIc1F1OHyUNwQ0007quQ8=;
-        b=Em8YVqh51L7/ikCNIozSSF1SWfkA6Wcoc6owmGkNrusWCome+95j6Ljpdwao2k2/Od
-         HQom9KnkZh61jT2R+wDAQ+tSgJnohgPVJI/FQ99XpT++/Rbws6FCsDu3lw4AFgUromQD
-         Jd9k1tVYuXLqMpmUy35TYLZaaI4/O2KefPeZGMY0UG/R1OWpr4V4Y1kySKmDZezdtzCq
-         Hxh8j9MhkiaKVLx48do5yCx/TSDAb0XJAuchuBqHflboy9qfSISpaZ6t7BjHOitmz+kj
-         6MB8+hoW9vPjOJ2/R1C1DI6eCf6BGQEKzVZ31YDxVHJ2W5RpZ9ny/WX9txno7Gdhd/6j
-         zbRA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784216764; x=1784821564; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=DaKMG7bPmKzijn8fMJPZ5Vh5EOk51mz9rGu26Crb5wY=;
-        b=WRvQ2WxCnJYcQTKl8IUdBrcKrMQZ03DOrh2vYolxHatvLVU82Ww/qqfsBRjVD0CLr2
-         hu7MU5mwPEHU6/iky/XU282otJ3zC5wIIbWll4hzNTlTWo4mC/D2zPsooRboADRww04S
-         WutMdqy1RaAgZRqj2QxPLWtBL990ZCGcvi3PzY7Q0BGR/sYEt2MRudvoKndKIJa2KsEs
-         Q5841MTw/ctwiyxUb+Gd5drUA6qmfr+Yfhc/vfRYwjnYx21Mcw3uZbEuX1FVzcFF9K6x
-         koQ/V7PGt0N5UvRrl8IVUWGKCmWB5olS37avSyZ3dS2D8siUSXN3zkwwcQMV6gdJQ+FV
-         uyFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784216764; x=1784821564;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DaKMG7bPmKzijn8fMJPZ5Vh5EOk51mz9rGu26Crb5wY=;
-        b=S+ad1V3BNtpfbVkK/Lu8Ehikfekdg0X4wL9QK7akc7mwgBcRdCuw2hOUZgT7SuN035
-         BkonU0xAUsDBdz/0wgTHc/m/h2TskXrUaEoi26IEz1AdMVtTPMjbZ+uAW/a0yR1klpIE
-         pCUhNTPBiTSTCE+rSEtL4CQgKQrKeB0jfZenghJ1qrMqwij8aNsruAZz+yJHd0isYqT7
-         loowmnSHKArZC57Hv55PEJM2d5IX+vFab405Tu8a00r5YNxBg5uCENa4dNHxVmxxOTo5
-         x+0M/7gBpxazDd4GFIVDHx3NM2kD2WEaFSkT2Yo4i+4iVN2tC8pTnx2ekpbG1NOq3gWc
-         gAHA==
-X-Forwarded-Encrypted: i=1; AHgh+RqfB9lOEOpriMHdl9W2WNdbmPXxOTkvhLP9q9B29BxtSd7evUhHiNEKvBIeJBfVlDMqZqgs1Wsi+GE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yww5rWXgRMM1iTXS89xqmPlLlvZXNSNoZN8jgVmGmRQOMLhnQGK
-	DTLCXDK9bgZqIU+Azv0skvidMx2m+6buYdM8zfaIFgJPssg6FC8+E1+I3nN76N9yoFU2Tr5/I90
-	o588abeN/kA6IDrAEd9WVDsAlZYyBW4ornIfh9wv2w2JQ3T++eBCubKPD7n2XVWAMtwOX1pVPFA
-	rpcEkKjCHViRo85d2Aj+IdGAIng+0OAEIv7GKfWA==
-X-Gm-Gg: AfdE7cksSrpsxU8E5tYp4kvM3fz++Ds2JpzvamlEN5t27EBoaxNewiXSj8lTX8X2ztK
-	s6ZC+4P/UZSlncVUT7u66fHJKwmw7Qc+wBr0avawHU9KP64nyfNaX8UrJG7tIS6fb5FtoRobEq2
-	ibz4r5rZ2eq3uS0T0yqT30gKs02jVFtjZ7GTf1QxmEnyCZPQ73//9k8/qTye5ruK2H59vtkfpRb
-	nJ8v1t5yCPe7LAndXbZpSYvMDajhSjUVEuJClbH6lnPG9rxmjDReQhgeyJp4RjiHP5N64ZB5YD/
-X-Received: by 2002:ac8:574c:0:b0:51b:f549:c706 with SMTP id d75a77b69052e-51e423528d7mr115571001cf.16.1784216764100;
-        Thu, 16 Jul 2026 08:46:04 -0700 (PDT)
-X-Received: by 2002:ac8:574c:0:b0:51b:f549:c706 with SMTP id
- d75a77b69052e-51e423528d7mr115570511cf.16.1784216763565; Thu, 16 Jul 2026
- 08:46:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DqOwxQmt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784218353; x=1815754353;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=0VUcLLKqvI5hTmvoQ+iL7Cd7OuF/jZWzs+ulPJIdlQ8=;
+  b=DqOwxQmt2qpzHt6y6ej+e9OKY/WjRZqNEde+f/W4H62Ax2Ap4psdu5Ut
+   A3R2ZfZwk16cAP991VMwcYiEgAzGERqPpixnbURjrUgruT+ejeFhfhDPP
+   D9heS3O6eCzKKXGi+jkWm8BmyuFlUdS7JO9sgoFK99VSq4QKXxgtz2rbJ
+   eLjssaWlBFFo9C0dXE2KR98ufSVhQph4tgsfxNl1MZVHoSc0lipulc7Xr
+   DzRYLdt/gm8XfT4Ud6o+Breo0LBYQ8C4DkpTBRfyuc3c+PXU+2LI1CBl2
+   QuUxUMtN/jRIpWR7ntZwB9Llmp9PO73BuN2ZY6zQhQtJpCsFPkmfi8mki
+   A==;
+X-CSE-ConnectionGUID: PRsqof/1Q3+DunbQ+3CrFw==
+X-CSE-MsgGUID: 8VexRlHDTRiSBj2DTBq7NQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="72416599"
+X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
+   d="scan'208";a="72416599"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 09:12:32 -0700
+X-CSE-ConnectionGUID: QYQ4wENNSy+QGUmdz1QBQw==
+X-CSE-MsgGUID: VxDtXJvzQf2dIp/FH6WlYQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
+   d="scan'208";a="252112291"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 09:12:32 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Thu, 16 Jul 2026 09:12:31 -0700
+Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43 via Frontend Transport; Thu, 16 Jul 2026 09:12:31 -0700
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (40.93.194.36)
+ by edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Thu, 16 Jul 2026 09:12:31 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cqOJF3rzVlcIozwEI0adieAmz91SODk20n8I5Aom8TVkwL7yQErkHHNx3zJsn0zRvueOTETmM2LldEktC1Li6WdZYYwkRyHGSNCVsFJ9TY0/k8g4rtTPuxXnkFXIWVi2bQPHEbhGJsy3lc9UDF8zUohULnAM3iLoS4p3otGrPWpGlpqxEiaj+rkVHZDZ8MOawfbsOTOxQXOIyV+ByGkCE5BD2C2Wj9Ob+DkrmsyBBAApCSArF7QbwBxPESzABYDQucXe6XJvciylZ60psibMZzbpNL93a0oSkqaMoz7ri0RXJg4OJfEkv/4jggcLPkZdhVZuxGC4tCc/Ohfg1sPPMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0VUcLLKqvI5hTmvoQ+iL7Cd7OuF/jZWzs+ulPJIdlQ8=;
+ b=awqC5JoFei41MDGZMWi3HH/0jyJxu7KsRLpLLVcsd6RkIp1cA/+Xqzwld8sp0AMaae+j1eRPCuPW6u+/LamkHnxNt3QXq/kwgf6kqDXpwgdF7+lEsHI4czOUu20Rqhzef54yYq+TdVvhlfJbMEqgSRZRbJK/1khUWNeGGDAdhMcdqVp+XmbcJFfIzxmJ82X1m8i98JoYmIKYJXjQggfD+jiebSRzczauzJGyRFxVO3TnBSsVa5oN0zbDmw6oJOmLQLDaqWZ9+o6+3sgGjHio/+4q6ZiorguXfriyWsB5hQIeCvToic6ejekNk2Ce72UIHemX6KKJAnIYJ6W43u4JfA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from SJ1PR11MB6297.namprd11.prod.outlook.com (2603:10b6:a03:458::8)
+ by SJ2PR11MB7647.namprd11.prod.outlook.com (2603:10b6:a03:4c3::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.10; Thu, 16 Jul
+ 2026 16:12:21 +0000
+Received: from SJ1PR11MB6297.namprd11.prod.outlook.com
+ ([fe80::6f05:5b37:2440:556e]) by SJ1PR11MB6297.namprd11.prod.outlook.com
+ ([fe80::6f05:5b37:2440:556e%3]) with mapi id 15.21.0202.014; Thu, 16 Jul 2026
+ 16:12:21 +0000
+From: "Salin, Samuel" <samuel.salin@intel.com>
+To: "Tantilov, Emil S" <emil.s.tantilov@intel.com>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "Kitszel, Przemyslaw"
+	<przemyslaw.kitszel@intel.com>, "Bhat, Jay" <jay.bhat@intel.com>, "Barrera,
+ Ivan D" <ivan.d.barrera@intel.com>, "Loktionov, Aleksandr"
+	<aleksandr.loktionov@intel.com>, "Zaremba, Larysa"
+	<larysa.zaremba@intel.com>, "Nguyen, Anthony L" <anthony.l.nguyen@intel.com>,
+	"andrew+netdev@lunn.ch" <andrew+netdev@lunn.ch>, "davem@davemloft.net"
+	<davem@davemloft.net>, "edumazet@google.com" <edumazet@google.com>,
+	"kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com" <pabeni@redhat.com>,
+	"Lobakin, Aleksander" <aleksander.lobakin@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Chittim, Madhu"
+	<madhu.chittim@intel.com>, "decot@google.com" <decot@google.com>,
+	"willemb@google.com" <willemb@google.com>, "sheenamo@google.com"
+	<sheenamo@google.com>, "lukas@wunner.de" <lukas@wunner.de>
+Subject: RE: [Intel-wired-lan] [PATCH iwl-next v3 2/2] idpf: implement pci
+ error handlers
+Thread-Topic: [Intel-wired-lan] [PATCH iwl-next v3 2/2] idpf: implement pci
+ error handlers
+Thread-Index: AQHdCObdb3dnfohhNUqHdGr/i8It8rZwaP0A
+Date: Thu, 16 Jul 2026 16:12:20 +0000
+Message-ID: <SJ1PR11MB62970F5BDCF78402EA8EDF9D9BC72@SJ1PR11MB6297.namprd11.prod.outlook.com>
+References: <20260630231854.11536-1-emil.s.tantilov@intel.com>
+ <20260630231854.11536-3-emil.s.tantilov@intel.com>
+In-Reply-To: <20260630231854.11536-3-emil.s.tantilov@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SJ1PR11MB6297:EE_|SJ2PR11MB7647:EE_
+x-ms-office365-filtering-correlation-id: 5eca9f8a-e185-45fa-89f6-08dee35503d3
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014|23010399003|18002099003|4143699003|56012099006|11063799006|22082099003|10067099003|38070700021;
+x-microsoft-antispam-message-info: djc430ZKn92IrlbtFyPxOTgMdjqUeOnkOQ5nIMk6VxD6it5ztu3KDkI0SoVs99jFVi/UbgIZirrGCPgF8PJxducFHUbvewszok2bx03uTYzra6Of7HW5YCy8maqcJkxtX42N8HNKNPA5pxwTvE6pxcoIb9DRGmUiHITzh6PQb4qv8s2CKukThwWS5sfsmNeDjxm3EDpdo86RQ0ccae5WWuo3FNSlDkMRKPd4iq0Fm8qiLm2+CryyGT9tDmYADelTIxh2cR44VYGbLtdtslX+LFCIGBVggAUybU+LxDMxPehIoDhYy1Ke0uJPXlutg2qkETHZ4sGw1KyG8biUlSY0dBD9rSIQ6+yyWg9t12E7Q0QX8ybXqdS15U5OfQ9BQiznXJYJlxtkYh9EM01QrK8+N1dW4aLhSDA5TZ9hicFIyeCBXa2ZYpc9gq5U0TL2rfg2Hl98JKLbkuDfjeXnHymUzXzOtKd3iNXVGIvTWszkGlX00rKPEYND3XqkZIy035dw0Fis6IQPci+KvzcjlbFhPq5PBJ4V2oj4akLBwkUhEW7OHgTnRVgC8tVs8Jh+vrsfs8+LGBFumQiMopq0y9Ry3W+d/BFMg0fmi5MEq3YRLmwHhPyHvfuzDMluEW7a5v8hVc0hJNKZI1qJYIiOhnvKxEUI8GYajwI0aaAQHz0DVhLF4LnooG46+TqjCyAG8etPL9q6qAIuZy23YaJwF4RCGpw4e3IpsTbVB3ZXLrBETuU=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ1PR11MB6297.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(23010399003)(18002099003)(4143699003)(56012099006)(11063799006)(22082099003)(10067099003)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?ZedGx4EBoOsThrAK0vzQNPcBKa7ur+9CTHj2CbVeQT+tux4c+3gvZ+183ZrE?=
+ =?us-ascii?Q?Fu5zxHGwAzyhX7ZjKONtFUGqvisrmv3O9OE+RCKOXIqq7QZwi3GuybQr22dI?=
+ =?us-ascii?Q?AH4fC7ZjLxf96WvQY0CX7wtX8mvab/nhIahsLVxLC2oBWiryAWYr4GH3LzCm?=
+ =?us-ascii?Q?0QPiOuMr9FuhDamYn1gWvqLDC1s0WCDU9SIEnN6Ixq9nnyWJZ2cLTpnpg0Ef?=
+ =?us-ascii?Q?RhA3KV41dVK51mDzJjnydgujPxiKIYj051+IlafwbXZaaox4t8eKMty9DIkX?=
+ =?us-ascii?Q?QalFDznArZsQ/2UNdMM5MUhLagu93gyG5VeJ+PsVy3enZb1uKwuMQMiEDQot?=
+ =?us-ascii?Q?ROxXqVUmL06z8+bwXW6zSOb9eiEHYcg8pwbNGVzP4SQcHMNtFicsLHHX1gxa?=
+ =?us-ascii?Q?o6oqDvbgxgO0YVaM256r+cmMh8/YqnJQlTcnObXb5DLDgPsaZwr75WMSGCQ4?=
+ =?us-ascii?Q?YsF/9aBambxYEV+mV/2vuZMH/S0w8ZIny0wicap+twqP5uV30D0FdwUxooGl?=
+ =?us-ascii?Q?Mj4dWDetK3rQRTKIg3NdcbUR93IzlLO9rD6As4KxY2IQ+ue4F9gd4fMKTfSH?=
+ =?us-ascii?Q?0zp25xiX71vELK/dfH1+XUO8i+WSq4f4cpvaWut2kHwqR2D04vv7iV+wVbDd?=
+ =?us-ascii?Q?UlIHyA7ldnrHtT9MjcJTMHPx+H67ysfxVAijh72SyRmTEdjzPOwv5srEQ25u?=
+ =?us-ascii?Q?aEvMr04vYl8tat6aDdyMWFMbIJ7+gS8IEedRdvMo4VITnJirG5zrA7wNP7wZ?=
+ =?us-ascii?Q?yHgkhVxTkgMsqz0aX2ucCK/7Fh2NZc3LblwjbMVq2CO37xpzBthK78wnENX5?=
+ =?us-ascii?Q?Z6WSljeM+UHofqzhVBdK3ms2YEimn0CJsgwIt0kF+Ba/uwvXkBMEhd58DMSq?=
+ =?us-ascii?Q?79DAp6OeCbd01lyBPhy6K23wVrUUnMWQkdRArvawoH0qkt4VNwzA2yzpYg8b?=
+ =?us-ascii?Q?BNAs9sXa4JcsLdn0Dv/vsqcm0lz4DoWvYJznXijEl5d9GjlnH+hUM31T6iHK?=
+ =?us-ascii?Q?ZVhzOcX755KLNmwNEdHz9adp4FOT92PM42+uT4ygvXtXzCS2afaXCbMW7a5l?=
+ =?us-ascii?Q?PCARR8/knHLWU0206/94aUAkxUIzi8aCH/NIjwpB/FTJWDW6Rwgxxisjpk9A?=
+ =?us-ascii?Q?r6tYK5/u43az+mK3b/AD4z73eH3EQGFJK1HLCGs5yLFVpLr289ZftvzqvBI1?=
+ =?us-ascii?Q?2IFmUdNFp76l15IYYLC71T4NejsUfpExh2KKvis2XTQvp3S9uR8fxlvp+bNa?=
+ =?us-ascii?Q?rNmWo9iaFyv/b0RQzE2iODFStKJ/xWVb/Om/6MACvaOufeH5qePWH7jxLA2r?=
+ =?us-ascii?Q?vfdH4477ARAb3oQe4SEXuFYSIzcv/XfdFtut0wHMtVy12dtHjUr9YDaAHiB7?=
+ =?us-ascii?Q?aiAieuLNQzMC2rcI/MJFSNe2ufYwlVKT5hguo1EHnAqQeMwhiyrMITnNUjFO?=
+ =?us-ascii?Q?GDCtfgKk0Lg9X1hVH91kDLhIxBtO6xAntRi7rEN46YAemi4ZXZMzroOBJVua?=
+ =?us-ascii?Q?GR6I5CFBgYX+rXPd1mjnXIUG4AQZSImKowz68jWYHD6YSVlReECjTMYQkkgr?=
+ =?us-ascii?Q?xkLHN3GcI9BiXaIvLiJtdLLSLo6N8qyxX7RjtL5Ay2300qjp2LBkk2ZMZY9T?=
+ =?us-ascii?Q?cIQeRMKl6li9vIFOpJEzhptkUAsvDj/FTKo5YbqgpGCdHCo0vR5Mu6UbhetJ?=
+ =?us-ascii?Q?FxFN5owz/VlLODKAoEhUqORQ2YsxUZUhx85yfavpRk4DO+SQ?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260710-monza-wireless-v3-0-46253587af64@oss.qualcomm.com>
- <20260710-monza-wireless-v3-4-46253587af64@oss.qualcomm.com> <txl2wo47ftsaqwh32x63kmhqwqjx5xpszoazccyeqdqmjzh2rv@ocev6u7vzdiq>
-In-Reply-To: <txl2wo47ftsaqwh32x63kmhqwqjx5xpszoazccyeqdqmjzh2rv@ocev6u7vzdiq>
-From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Thu, 16 Jul 2026 17:45:51 +0200
-X-Gm-Features: AUfX_mz-fKvzynmtc1c_-d4E51SyY4cnAP-WK134FPMEMzbs42O_5YCHtKpJhKI
-Message-ID: <CAFEp6-02kqoDvvGSYy+2uM-gzvhrH3OTUGaxu32pEfj=kOVHPg@mail.gmail.com>
-Subject: Re: [PATCH v3 04/11] power: sequencing: pcie-m2: Report power controllability
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-ORIG-GUID: EazgdYc_-qXzJpOvRRf9kmyCBp8XBdRl
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE2MDE2MSBTYWx0ZWRfXyIZSiAecsHcA
- UvW6tZVhfYhjnW2qc2GFXkIFnHzFqR8OZUvjxnzKx/q31q6qcoBJ0TyHjoaNKNRUfDmmdhjzhAo
- apPEufc4MTWOmqcZjPdqdybzXqFWZ3A=
-X-Proofpoint-GUID: EazgdYc_-qXzJpOvRRf9kmyCBp8XBdRl
-X-Authority-Analysis: v=2.4 cv=PN8/P/qC c=1 sm=1 tr=0 ts=6a58fcbd cx=c_pps
- a=JbAStetqSzwMeJznSMzCyw==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=eoimf2acIAo5FJnRuUoq:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=4upAz5BH4U1jwP5PTYsA:9 a=QEXdDO2ut3YA:10 a=uxP6HrT_eTzRwkO_Te1X:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE2MDE2MSBTYWx0ZWRfX03/j0n35pgAk
- HZgryPv7hsM+7HmWufK7EvrFgDMKCrvPWyXMMbQqF2eOp6wCDaWTf1XPvwZzhrNnBPr1LYIpj5U
- A+oMn0rlaWQ7JCEew6AvJFrojPDDhgwsAPawvBtLY3LSxxK2WpVyY4BblBveoAXR+jcEFwjy9AX
- jL8/2sutNgHCkijUyNpy4GE3qtW7vcXpvPLm8jID43Y5amYP5+IgQP21u9kbQGXxy6Aar2ZvHRj
- IoAdtFhu0/QgBXALL0QJ947FjFNK4ghuWpfWSwh/GWOrytHYYjf8NaIlflQni2zFpKSG64whjCK
- ySelYeHFMSi2BqHE3nbYW0ukv7Lsym5l6r29sr/JvEnbkBad8TRy0kCvyom8hxvfgvYgChN7YDo
- ZWCb4KgU4X+r/2MqtVSgD9MwLOdGZjyLFf8rbwa+WkrdIENhzKnOR1LhG/jGaa3tXVQbrJlMqLg
- Z4ZwLstnx1LN6e4DMjw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-16_05,2026-07-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 malwarescore=0 lowpriorityscore=0 phishscore=0 adultscore=0
- priorityscore=1501 impostorscore=0 clxscore=1015 suspectscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607160161
-
-On Thu, Jul 16, 2026 at 4:27=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
-org> wrote:
->
-> On Fri, Jul 10, 2026 at 11:57:30AM +0200, Loic Poulain wrote:
-> > The M.2 Key E connector gates its functions through the W_DISABLE1#
-> > (PCIe/WiFi) and W_DISABLE2# (Bluetooth) signals. When a signal is not
-> > routed to a host GPIO, the corresponding enable/disable callbacks are
-> > no-ops, so the host cannot gate that function's power on its own.
-> >
->
-> I think it is misleading to say that if W_DISABLE{1/2}# signals are not
-> available then we cannot control the function's power. Power to the funct=
-ion
-> only comes from the core 3.3v regulator, and these signals only enable/di=
-sable
-> the radio (WLAN/BT) as per the spec.
-
-Yes, though in reality vendors often use it as a reset/power-enable
-for the functions, not only for their RF part, effectively powering
-off the Bluetooth or WiFi subsystem (and the spec says that when the
-Bluetooth radio is disabled it may reset the Bluetooth feature). I
-guess that is why it's part of pwrseq in the first place. But right,
-here the control isn't fine-grained enough to gate the Bluetooth and
-WiFi functions independently, but power/3v3 can still be powered-off
-as a whole when controllable.
-
-Also, in pwrseq the targets are named 'pcie' and 'uart', but per spec
-I think they should really be 'wifi' and 'bluetooth', especially as
-Bluetooth can also be connected over USB while still controlled via
-the same W_DISABLE2# pin, though we don't handle that case yet. But
-that's another story.
-
-Regards,
-Loic
+X-Exchange-RoutingPolicyChecked: cF4agDFubStrn1STi9/bxcVwSr5dSCk0hKIiHrAak1GVXmJ62cLfKEnJ1ReQLX2p/wF3Sfw/UYk21zDUB3T+VwHMEZaQGuZ1DQRyiBijorzRNP/TkB/bLVAPF9y0CEw+gJ/8u+5PKri6xvg0Ydcz5MpwynpkQbsHCWbDNs77QhcKdO2giaPYnzqiv1qUn9fAC0smMQo/R5gGxzBy6iOO3PdkILWzZxWWUGGr0NH0ofRUHERUTVw6DAUm2jkeYYrMjGRwS97i2bl+LlToavIGmSKmNpZxzebmCjKcXgCWn0CqxnZZgLQMZ2W2qHGw+wfpy7ho5GwnzwLMUKBVPsqc5A==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ1PR11MB6297.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5eca9f8a-e185-45fa-89f6-08dee35503d3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jul 2026 16:12:20.8986
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: UQeHdXb855heJA5MyKR+Tyqt/lYrdfqKffaHELgSmR34OcPyCaaM3OD77EQfQxIdoahaWCmemnfrJpwrpA0R/g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR11MB7647
+X-OriginatorOrg: intel.com
 
 
 
->
-> - Mani
->
-> > Implement the per-unit .is_controllable() callback on the "uart-enable"
-> > and "pcie-enable" units so that consumers can query this per instance
-> > (based on the runtime presence of the W_DISABLE2#/W_DISABLE1# GPIOs) vi=
-a
-> > pwrseq_power_is_controllable().
-> >
-> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
-> > ---
-> >  drivers/power/sequencing/pwrseq-pcie-m2.c | 26 +++++++++++++++++++++++=
-+++
-> >  1 file changed, 26 insertions(+)
-> >
-> > diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/=
-sequencing/pwrseq-pcie-m2.c
-> > index e3ba9169144dabbf0c553c0a4302c3b511fcaaa1..4bcd5078609da1be966ab30=
-c73cffae5e578934f 100644
-> > --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> > +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> > @@ -84,11 +84,24 @@ static int pwrseq_pci_m2_e_uart_disable(struct pwrs=
-eq_device *pwrseq)
-> >       return gpiod_set_value_cansleep(ctx->w_disable2_gpio, 1);
-> >  }
-> >
-> > +static bool pwrseq_pci_m2_e_uart_is_controllable(struct pwrseq_device =
-*pwrseq)
-> > +{
-> > +     struct pwrseq_pcie_m2_ctx *ctx =3D pwrseq_device_get_drvdata(pwrs=
-eq);
-> > +
-> > +     /*
-> > +      * The UART enable is driven through the W_DISABLE2# line. When i=
-t is not
-> > +      * wired up on this connector the enable/disable callbacks are no=
--ops, so
-> > +      * the host cannot gate the Bluetooth function on its own.
-> > +      */
-> > +     return !!ctx->w_disable2_gpio;
-> > +}
-> > +
-> >  static const struct pwrseq_unit_data pwrseq_pcie_m2_e_uart_unit_data =
-=3D {
-> >       .name =3D "uart-enable",
-> >       .deps =3D pwrseq_pcie_m2_unit_deps,
-> >       .enable =3D pwrseq_pci_m2_e_uart_enable,
-> >       .disable =3D pwrseq_pci_m2_e_uart_disable,
-> > +     .is_controllable =3D pwrseq_pci_m2_e_uart_is_controllable,
-> >  };
-> >
-> >  static int pwrseq_pci_m2_e_pcie_enable(struct pwrseq_device *pwrseq)
-> > @@ -105,11 +118,24 @@ static int pwrseq_pci_m2_e_pcie_disable(struct pw=
-rseq_device *pwrseq)
-> >       return gpiod_set_value_cansleep(ctx->w_disable1_gpio, 1);
-> >  }
-> >
-> > +static bool pwrseq_pci_m2_e_pcie_is_controllable(struct pwrseq_device =
-*pwrseq)
-> > +{
-> > +     struct pwrseq_pcie_m2_ctx *ctx =3D pwrseq_device_get_drvdata(pwrs=
-eq);
-> > +
-> > +     /*
-> > +      * The PCIe/WiFi enable is driven through the W_DISABLE1# line. W=
-hen it
-> > +      * is not wired up on this connector the enable/disable callbacks=
- are
-> > +      * no-ops, so the host cannot gate the PCIe/WiFi function on its =
-own.
-> > +      */
-> > +     return !!ctx->w_disable1_gpio;
-> > +}
-> > +
-> >  static const struct pwrseq_unit_data pwrseq_pcie_m2_e_pcie_unit_data =
-=3D {
-> >       .name =3D "pcie-enable",
-> >       .deps =3D pwrseq_pcie_m2_unit_deps,
-> >       .enable =3D pwrseq_pci_m2_e_pcie_enable,
-> >       .disable =3D pwrseq_pci_m2_e_pcie_disable,
-> > +     .is_controllable =3D pwrseq_pci_m2_e_pcie_is_controllable,
-> >  };
-> >
-> >  static const struct pwrseq_unit_data pwrseq_pcie_m2_m_pcie_unit_data =
-=3D {
-> >
-> > --
-> > 2.34.1
-> >
->
-> --
-> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
-=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
-=E0=AF=8D
+> -----Original Message-----
+> From: Intel-wired-lan <intel-wired-lan-bounces@osuosl.org> On Behalf Of
+> Emil Tantilov
+> Sent: Tuesday, June 30, 2026 4:19 PM
+> To: intel-wired-lan@lists.osuosl.org
+> Cc: netdev@vger.kernel.org; Kitszel, Przemyslaw
+> <przemyslaw.kitszel@intel.com>; Bhat, Jay <jay.bhat@intel.com>; Barrera,
+> Ivan D <ivan.d.barrera@intel.com>; Loktionov, Aleksandr
+> <aleksandr.loktionov@intel.com>; Zaremba, Larysa
+> <larysa.zaremba@intel.com>; Nguyen, Anthony L
+> <anthony.l.nguyen@intel.com>; andrew+netdev@lunn.ch;
+> davem@davemloft.net; edumazet@google.com; kuba@kernel.org;
+> pabeni@redhat.com; Lobakin, Aleksander <aleksander.lobakin@intel.com>;
+> linux-pci@vger.kernel.org; Chittim, Madhu <madhu.chittim@intel.com>;
+> decot@google.com; willemb@google.com; sheenamo@google.com;
+> lukas@wunner.de
+> Subject: [Intel-wired-lan] [PATCH iwl-next v3 2/2] idpf: implement pci er=
+ror
+> handlers
+>=20
+> Add callbacks to handle PCI errors and FLR reset. When preparing to handl=
+e
+> reset on the bus, the driver must stop all operations that can lead to MM=
+IO
+> access in order to prevent HW errors. To accomplish this, introduce helpe=
+r
+> idpf_reset_prepare() that gets called prior to FLR or when PCI error is
+> detected. Upon resume the recovery is done through the existing reset pat=
+h
+> by starting the event task.
+>=20
+> The following callbacks are implemented:
+> .reset_prepare runs the first portion of the generic reset path leading u=
+p to the
+> part where we wait for the reset to complete.
+> .reset_done/resume runs the recovery part of the reset handling.
+> .error_detected is the callback dealing with PCI errors, similar to the p=
+repare
+> call, we stop all operations, prior to attempting a recovery.
+> .slot_reset is the callback attempting to restore the device, provided a =
+PCI reset
+> was initiated due to an error on the bus.
+>=20
+> Whereas previously the init logic guaranteed netdevs during reset, the
+> addition of idpf_detach_and_close() to the PCI callbacks flow makes it po=
+ssible
+> for the function to be called without netdevs. Add check to avoid NULL po=
+inter
+> dereference in that case.
+>=20
+> Co-developed-by: Alan Brady <alan.brady@intel.com>
+> Signed-off-by: Alan Brady <alan.brady@intel.com>
+> Signed-off-by: Emil Tantilov <emil.s.tantilov@intel.com>
+> Reviewed-by: Jay Bhat <jay.bhat@intel.com>
+> Reviewed-by: Madhu Chittim <madhu.chittim@intel.com>
+> Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
+> ---
+> 2.37.3
+
+Tested-by: Samuel Salin <Samuel.salin@intel.com>
+
