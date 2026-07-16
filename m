@@ -1,63 +1,67 @@
-Received: from mail-ed1-f74.google.com (mail-ed1-f74.google.com [209.85.208.74])
+Received: from mail-ej1-f73.google.com (mail-ej1-f73.google.com [209.85.218.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A04330315
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 02:41:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160FE3382DE
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 02:41:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784256107; cv=none; b=b3DEykSykKYV+90P1UIC6EUDzpv5ua5uEfJPmSXmmsG0blWdWS0Y5H4fMdqdDqKCP4oO1M2k6h/r6GW+pOq1zb76PmQiQQ1CmTUSu9HdzYSRQTq0xeA/O9BtJwHVTALQ8K7A3/uBhAV5i0ce0XOLIbxLPSPMI1w20drMzGX/IjM=
+	t=1784256107; cv=none; b=RkGVtz8O+oPt+Yq3en3mdtwUqbzWeIedvO7RH7hztDXhFPU4PiaSBZ2bOxji6MJPVXvU2HPqnDYh9jkNiQUAf/x4LZ5PBYr8IzY/tDsWiucfWMD4bMbKcZcvMhA3LEsrEOud5DyW7fguyi06zIDNUB9ERyVjQ+ZZk8q9NDN6mCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784256107; c=relaxed/simple;
-	bh=lJv4IRI5XiZYUh3IyUwsclAolkzA5BnMYwS9GoPeusU=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=PTWrFmXj3bAVygnK7TAX2zzo5g8r/XA7hb/jZnHQHNr17EcoQ19+J4qb3uewxlM6IUHin5kOn44ClDWiDtMGoCQAM7+m0B2F/Ys/BLl/aLFrQ4iufKHo9Kx4a0K+0xgvWnsYcHC5n6vh1OM3jvwLCwARWqp8CQwrph9/ZuPp+HU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UH1d6Rij; arc=none smtp.client-ip=209.85.208.74
+	bh=O/Swl4p41vnXyf3QyhUiXUdXKMg+dvofMUMHqzzQhEI=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=eCVvhn21neHGNPIFEzq4/wM07yP/VV8eQRkAppRlzbEJSKkQIS1knlmGJDNa9uH1qNX4nYrW6Mpzd3ULd7b+Wcr//OZ8ZyVtnj/f3rcC3RdvVkUZRIka1HURqMB2agHRwSIzUqaaVns71D6zkxMEsj0JXRrNIkRmfILVmIV66vk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=m61VX7HW; arc=none smtp.client-ip=209.85.218.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UH1d6Rij"
-Received: by mail-ed1-f74.google.com with SMTP id 4fb4d7f45d1cf-69c6057f3a3so6654368a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 19:41:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="m61VX7HW"
+Received: by mail-ej1-f73.google.com with SMTP id a640c23a62f3a-c15ceb17a28so373389966b.3
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 19:41:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784256102; x=1784860902; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=u7CTWM7sdjLtp6WbHOEsIPC/O4fOD6uj/vimbKs1R/U=;
-        b=UH1d6Rij+IXO+vqzKYvUW3uYDe1zIp6pA/X8tYknSy9rX78pZwLlaWxAsFaVqiX47c
-         Zs7cJINo9L9rAvvOEYHslRnJOM10ZF6rcuuJ+iJ/DBa4JatrKNszNI4RObFW/2gxvOZx
-         k/KWGJDwc6QKRkFaaHicTNiOCNEjVu422NrpaU+c0Vptq61rsdjnam2+xUtfUOqe2D0p
-         R8zjS8qkmhmgvsho7/TGHHsFB8LwGQM1SPCOMph2gOY0inuLvFAP6nSA4J93p4OHwk35
-         /TnbakS0RSNkA6zv93jwG2oEwBvjkbMvb3UPkirJQD7s9jWHEQMC8yKGGNAAmDezCLJX
-         YXEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784256102; x=1784860902;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1784256103; x=1784860903; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=u7CTWM7sdjLtp6WbHOEsIPC/O4fOD6uj/vimbKs1R/U=;
-        b=qJLRxUTMAAOnkam8RaLnvihesA8q1FVQjaCbpVjx4SxYkcf2LGSLLmiiTcIlgm/lup
-         IIYHTSlyQ9wo6iywP32A02sHY98JfYg/VGf5cME0zn0BJ3b0/hIJoau5YBcrShgebaXu
-         zJInpbfUhFqW93/X7p7agXgby12G3DmJm7Qsy/vJ+atift0Zco/smWL8wj7R4BgLWB4X
-         2w6tGyLkGwcCZkr/KrVpyFBOfhhYMR/wc7Fw8gyvtH2FhjQyZxZyp28rLtr/lbDoTqMO
-         DZvtOtXuiRiGpHeslP69jBSHT2u8gdt/nboNeYY1HWZdbounwAQMPswvD6f48c2bhR4a
-         SaAw==
-X-Forwarded-Encrypted: i=1; AHgh+Ro2KuOMjnEhtmx5tRpzzZVqK7QWuOnZZHibU6DPZ/ecBPLogbespE+XRimE53zr/Tr1CcBckE28JxI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqAiQhi65BDKWjyRkYa28j06+nccMPkk58x83hI1O9+50fZrIJ
-	dVH5HcoF/C1lA9pMOJwxJWNVqzuLs6VH6Y5QTj9xsWwawBWDBgTcbc8wTHcZ0urlqlRXnfY0c62
-	wVlWZvUdngevIByzxHg==
-X-Received: from edyn5.prod.google.com ([2002:a05:6402:6c5:b0:69c:7a06:8c86])
+        bh=DbIYBGDrxSWIIJNYURi+rPKwz3J+f2cnmzz2JP395M0=;
+        b=m61VX7HWp/9Ncnpbc1SVBIMJGvlGvQFk0Fo/6xQswCj83wbh/dWYBTlyATyDQMBx/U
+         Txs5u/v3E1e/qz81nGq+011hOe8lZF0ED9nD2+M/+SXqnhGxHHZ4LpmKtsUaFVFLwWAF
+         /bJIuvdCDV0zqhgPiG/U6jOQiwWsqMxm7maTcJO0hUxo3w3VtouP05KgH+Nw25/bAJtR
+         JvwvHMgVivuM+FOUbGzBuXuqt0vjsaomUcNNErp7QEmyNpzQSDoc85AkYAgIhvcUPrZt
+         vBiwRJs0tYY/Bg//dFrcn/koL+NIBzWNLe9eFaaUXdG2IMx/vHyIn549rE4GueWCdO3h
+         HxXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784256103; x=1784860903;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DbIYBGDrxSWIIJNYURi+rPKwz3J+f2cnmzz2JP395M0=;
+        b=DtOPikxE9gXoPdHB0zmz9ajgWsy/ZWwhhYK3klqaYBVzpc7e4aiYVYbcnru+4QoZ3B
+         MHPCw+H2VwSSriJck+3GKznHyqWj+pkytck40rWJz+myh2NP4AOV6x0oURxqRROBXpel
+         f2yBKZWkSrU9Z4ILNXAv8Ah2ER4/htQpBk71Szz6s61C8zP8QF+B8TBZP8S7VhJDXD+k
+         Qzdi6iSoII7q6X4qvOuSqD3j3/h2cGYSMMI+Uww5i1qJnEcjpsWuKFn1mswfqdQYmBeU
+         rBaPAZLKbkRfLcYFCMNSuyxOL8vA2nj23vcUkeoZeAnZsixPkHamj9QwbZnz0nb691AU
+         G/FA==
+X-Forwarded-Encrypted: i=1; AHgh+RrPkYr6pz3UM3581tm7F4KRQFy556efKh0Lg1EHvqxACv//SWfNPp7Mqgsc9VPMhZ6zLFj1/2+rQeE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZWgeSe7KN7ALQjb8vwiBt1oTNqrYqyEVH6/3N0MmuOGm7YB93
+	fje1RvV8rKvVTsTxjgFWOYhdSf/JNKZ8Cg0NoaOsSFJw9Akrv8KB8Ny2nOSiI6evQv6PySYOG/D
+	ZpUEit9tHxgTioJC8ow==
+X-Received: from ejbse11.prod.google.com ([2002:a17:906:ce4b:b0:c12:6d92:3b02])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:5288:b0:69a:f82:ccdc with SMTP id 4fb4d7f45d1cf-69e652ed727mr118048a12.19.1784256101944;
- Thu, 16 Jul 2026 19:41:41 -0700 (PDT)
-Date: Thu, 16 Jul 2026 23:04:04 +0000
+ 2002:a17:907:1b0d:b0:c12:67e9:bf2b with SMTP id a640c23a62f3a-c16b4799b95mr19191766b.40.1784256102996;
+ Thu, 16 Jul 2026 19:41:42 -0700 (PDT)
+Date: Thu, 16 Jul 2026 23:04:05 +0000
+In-Reply-To: <20260716230411.2767394-1-tarunsahu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20260716230411.2767394-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
-Message-ID: <20260716230411.2767394-1-tarunsahu@google.com>
-Subject: [PATCH v19 0/7] shut down devices asynchronously
+Message-ID: <20260716230411.2767394-2-tarunsahu@google.com>
+Subject: [PATCH v19 1/7] device_core: rely on put_device to free dev->p
 From: Tarun Sahu <tarunsahu@google.com>
 To: Shuah Khan <skhan@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
 	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -70,170 +74,52 @@ Cc: bvanassche@acm.org, john.g.garry@oracle.com, mlombard@redhat.com,
 	Pasha Tatashin <pasha.tatashin@soleen.com>, jordanrichards@google.com, souravsgl@google.com, 
 	stuart.w.hayes@gmail.com, linux-kernel@vger.kernel.org, 
 	linux-doc@vger.kernel.org, emilne@redhat.com, jmeneghi@redhat.com, 
-	linux-scsi@vger.kernel.org, Tarun Sahu <tarunsahu@google.com>
+	linux-scsi@vger.kernel.org, Tarun Sahu <tarunsahu@google.com>, 
+	David Jeffery <djeffery@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 
-This is rebased on top of device-core/driver-core-next. And can also
-be applied easily against linux-next/master
+device_add allocate private_data for device and assigns to
+dev->p. If device_add fails in later steps of the function,
+it cleans up this dev->p which is not necessary because In
+the next call, put_device free it anyway (if reference to
+the device is 0 which will be unless someone concurrently
+get the reference to this device).
 
-This patchset allows the kernel to shutdown devices asynchronously and
-unrelated async devices to be shut down in parallel to each other.
+This avoids unnecessary races introduced in system. After device
+is added in device_kset->list by device_add and later steps in the
+device_add function failures occur, it will free dev->p manually,
+while in between there might be a user of device_kset->list will
+take reference to the device just added by device_add. and might
+try to access dev->p. So relying on put_device to free dev->p
+prevents such problem.
 
-Only devices which explicitly enable it are shut down asynchronously. The
-default is for a device to be shut down from the synchronous shutdown loop.
+Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+---
+ drivers/base/core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-This can dramatically reduce system shutdown/reboot time on systems that
-have multiple devices that take many seconds to shut down (like certain
-NVMe drives). On one system tested, the shutdown time went from 11 minutes
-without this patch to 55 seconds with the patch. And on another system from
-80 seconds to 11.
-
-And thank you to everyone who has spent some of their valuable time
-providing reviews, suggestions, criticisms, or tests on the various
-iterations of this patchset.
-
-Changes from V18:
-- Fix deadlock and race condition on concurrent device_add
-- Use local variable to device_shutdown for caching async_shutdown
-- Added dev->p check to avoid NULL pointer deference and tell if the
-  device is not registered so no need to be shutdown. This is to handle
-  the cases when devices consumers list might have devices that are not
-  yet registered.
-
-Changes from V17:
-
-Fix mangled text in kernel parameter description
-Re-protect the list removal with the spinlock
-  * Hold a device reference to ensure the device cannot be freed before
-    attempting list removal
-
-Changes from V16:
-
-Drop spinlock before async subsystem call which uses GFP_KERNEL
-Handle that async shutdown can widen races between device shutdown and deletion
-  * __shutdown_one_device will immediately return if a device is dead
-  * Set shutdown device completion to complete when marking a device dead to
-      prevent waiting on a dead device
-  * Only late-access a parent pointer if device is in a non-dead state to
-      ensure the pointer is still valid
-
-Changes from V15:
-
-The async_shutdown bit field is converted to a device flags bit
-Convert all patches to use the flag bit accessor macros to set or check if
-  async shutdown should be used
-Added documentation on the kernel parameter to control use of async shutdown
-
-Changes from V14:
-
-Remove unneeded use of '!!' with boolean type
-
-Changes from V13:
-
-Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
-
-Changes from V12:
-
-Only acquire a parent reference if acquiring the parent's lock
-device_enable_async_shutdown should return void
-Minor comment and description cleanups
-
-Changes from V11:
-
-  * Swap the order of the first two patches
-  * Rework conditional parent locking so that lock and unlock no longer use
-    separate conditional checks
-  * Remove an used variable
-  * Comment and description text cleanups
-
-Changes from V10:
-
-Reworked to more closely match the design used for async suspend
-  * No longer uses async subsystem cookies for synchronization
-  * Minimized changes to struct device
-  * Enable async shutdown for pci and scsi devices which support async suspend
-
-Changes from V9:
-
-Address resource and timing issues when spawning a unique async thread
-for every device during shutdown:
-  * Make the asynchronous threads able to shut down multiple devices,
-    instead of spawning a unique thread for every device.
-  * Modify core kernel async code with a custom wake function so it
-    doesn't wake up a thread waiting to synchronize on a cookie until
-    the cookie has reached the desired value, instead of waking up
-    every waiting thread to check the cookie every time an async thread
-    ends.
-
-Changes from V8:
-
-Deal with shutdown hangs resulting when a parent/supplier device is
-  later in the devices_kset list than its children/consumers:
-  * Ignore sync_state_only devlinks for shutdown dependencies
-  * Ignore shutdown_after for devices that don't want async shutdown
-  * Add a sanity check to revert to sync shutdown for any device that
-    would otherwise wait for a child/consumer shutdown that hasn't
-    already been scheduled
-
-Changes from V7:
-
-Do not expose driver async_shutdown_enable in sysfs.
-Wrapped a long line.
-
-Changes from V6:
-
-Removed a sysfs attribute that allowed the async device shutdown to be
-"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
-previously "safe" is now the only behavior, so drivers now only need to
-have the option to enable or disable async shutdown.
-
-Changes from V5:
-
-Separated into multiple patches to make review easier.
-Reworked some code to make it more readable
-Made devices wait for consumers to shut down, not just children
-  (suggested by David Jeffery)
-
-Changes from V4:
-
-Change code to use cookies for synchronization rather than async domains
-Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
-  opt-out of async shutdown (when not disabled), with ability to control
-  driver opt-in/opt-out via sysfs
-
-Changes from V3:
-
-Bug fix (used "parent" not "dev->parent" in device_shutdown)
-
-Changes from V2:
-
-Removed recursive functions to schedule children to be shutdown before
-  parents, since existing device_shutdown loop will already do this
-
-Changes from V1:
-
-Rewritten using kernel async code (suggested by Lukas Wunner)
-
-David Jeffery (5):
-  driver core: separate function to shutdown one device
-  driver core: do not always lock parent in shutdown
-  driver core: async device shutdown infrastructure
-  PCI: Enable async shutdown support
-  scsi: Enable async shutdown support
-
-Tarun Sahu (2):
-  device_core: rely on put_device to free dev->p
-  driver core: Prevent device_add() during system shutdown
-
- .../admin-guide/kernel-parameters.txt         |  10 +
- drivers/base/base.h                           |   2 +
- drivers/base/core.c                           | 265 +++++++++++++++---
- drivers/pci/probe.c                           |   2 +
- drivers/scsi/hosts.c                          |   2 +
- drivers/scsi/scsi_sysfs.c                     |   3 +
- include/linux/device.h                        |   2 +
- 7 files changed, 248 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 4d026682944f..76ba02c26aa5 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2614,6 +2614,7 @@ static void device_release(struct kobject *kobj)
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct device_private *p = dev->p;
+ 
++	dev->p = NULL;
+ 	/*
+ 	 * Some platform devices are driven without driver attached
+ 	 * and managed resources may have been acquired.  Make sure
+@@ -3824,8 +3825,6 @@ int device_add(struct device *dev)
+ parent_error:
+ 	put_device(parent);
+ name_error:
+-	kfree(dev->p);
+-	dev->p = NULL;
+ 	goto done;
+ }
+ EXPORT_SYMBOL_GPL(device_add);
 -- 
 2.55.0.229.g6434b31f56-goog
 
