@@ -1,131 +1,128 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76104314B5;
-	Thu, 16 Jul 2026 14:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B973241F34F;
+	Thu, 16 Jul 2026 14:55:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784213531; cv=none; b=PhpiCMb9WSmIm/mENJitj5yb8Q24susK50OYKgNZZ54cNdcNB6g6sKRlWdaMjQU2ZJ5yeZplkpqrmniPeXZRb+cYsUkGSvHecoGl3TaWavK/5H0KR9wPlA9P6pX0p07TuEDXXJI70JX2bhUYuhkgdJXRPetLL6CxrYJXovJYSUQ=
+	t=1784213708; cv=none; b=BOy6+H5a1kfhxHQy19V8tLTB7NmIDz4WzoYO9QbchQV6ESxJhop06mb1gSF+3jlm0aXlFRsOxHhn7b70aUyxJFE+FgHmVC280OVQRvJT4VfFmS/MhDbB9tZhOb2aOdnhsi7EDYBdmr2VU4ldXieDHgfpUNmKYrRmoTdnQ0spaos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784213531; c=relaxed/simple;
-	bh=TuTsjPN31M25u8PLzlelAkIFQsYrdWbAw1dIZXt13wg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rBr0ARJ1rI2MI1OLLzcQEI8duE6L5XtAC+z9WZpA5nzWABBjvCRZlSi6RgbX1mHRG97kX3lnavs59evIZAUuisnR+U3T3qysr6EaP0YtbfrYoFWbqUnWw7QfQDd31EWz8lNEVZCgpkJbY8p0jY8Ue2xW6QCzFk3rmwu5gSGvxpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=VCkdAHd/; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1784213708; c=relaxed/simple;
+	bh=QPXzYC7aJAyMZ8qXkdMg9nSOu5NR+C5dX2ObE+xHvO0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ObFkJCKBL1jpOsOXGjMX2XgJxdnXsXH/PX/wKBNlMLNwcZ1aNLuA9RAqr+r/SX7TjqfdamO6PDwuu9FHnYFivLyyQ1XyQ5/UFtqPYCwmmt2EAYXxC9OjQtVOtHPiJ0Oa8NgOLEc27e+GLQ0dDu7N8srqRdq2qf9+OZ+gWLwXYhw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKDGu3UK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="VCkdAHd/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1784213526;
-	bh=7ZOJgefRM+KEbe4ZB1Q8iqDP2JY0QDQGCT3PXzWU564=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=VCkdAHd//w7wW7x5Ce9IH1CrZjj405bCnWx9Rk4XZpJdqj7MGvcHMZQ7u5nzwXH7+
-	 k0Q7lL0a1tQGWqZ1smwin8CkwTGaev6Ee7uMVmEgfp42wQvzQyfUKF6nDdsLKn+QRZ
-	 wcSjLHk+VeV4+xMMxd1SvI44hvxKx8KG2ZvahSFY8HjOuFQnlsSId7BCsxkc2lP+GH
-	 hKqf74vRVv43f+lI45LGNpJZeaIPXXrNfZxA1c+Zi9n8ZW9E2M9s+D+0UC0CKgB6o+
-	 LHiE8HcGD1OZAO0re5ZzQn66TgMSLRLVBKRTsM4E0BJmpglmQjNUls6kcS8LS4YLe9
-	 5NXLKI7Ay9GCw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h1GGN6Cy8z4wCH;
-	Fri, 17 Jul 2026 00:51:56 +1000 (AEST)
-Message-ID: <65ba06e7-4c54-437d-9fbd-632c0468f66d@ozlabs.org>
-Date: Thu, 16 Jul 2026 15:51:52 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKDGu3UK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B2401F000E9;
+	Thu, 16 Jul 2026 14:55:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784213707;
+	bh=tDnuHx/uNNAtdx+Sscmk413tjK8ehUVkgPcFHppaN1s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=SKDGu3UKR4eExL3dtV0ymdJf8+SDK6QSCpo3b8PvVcSpGHLx636Jf7WYZbT+EJ1wr
+	 bd7JEI00HTkLjY/COx4e+IVN3nBMOXgaYsYHKeRsfMadUD5yhlXKwJoksU5vYHrZSZ
+	 +PEmz8sYoGz0xlGIICwMhRYTYIOvOrrcMqpmxPX5FxNBqkj2kFB4ru/F6SP7NniHqD
+	 LP111RltO9GD9zOrSxotWCk0yTp+Zt/Ko1HisJrjJzLXX5V/OZCMrsuHyW+6PCQT2o
+	 pk1oAfp9jhcJGF4Cwm9SoyUmmrYRhIZ2mnqP1cMkUiJOGDxeQb9U8pO0F0562dHrAd
+	 fYZ3bRFjZrw8g==
+Date: Thu, 16 Jul 2026 16:54:47 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Wei Deng <wei.deng@oss.qualcomm.com>
+Cc: dmitry.baryshkov@oss.qualcomm.com, andersson@kernel.org, 
+	konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	brgl@kernel.org, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	wenst@chromium.org, mengshi.wu@oss.qualcomm.com, quic_chezhou@quicinc.com, 
+	cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com, jinwang.li@oss.qualcomm.com, 
+	xiuzhuo.shang@oss.qualcomm.com
+Subject: Re: [PATCH 3/3] power: sequencing: pcie-m2: Deassert W_DISABLE2#
+ when no UART serdev is created
+Message-ID: <s4c45lwdka6zebpttyljjla57sqyb7xaogndjeygyrqlvtthfd@t4q7n4wjsfly>
+References: <bjcmn2euhpik54ytc7falqgcezvy2loimudm6v2ibzxx6autki@rex5cjq2o755>
+ <20260715111622.2561730-1-wei.deng@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/9] vfio/pci: Add mmap() for DMABUFs
-Content-Language: en-GB
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
- Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
- =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
- Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
- Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <CALzav=fH7N+ionUnELqw5ZaGrPmgp_w6kxoCtoY8fMmZY_S4zw@mail.gmail.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <CALzav=fH7N+ionUnELqw5ZaGrPmgp_w6kxoCtoY8fMmZY_S4zw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260715111622.2561730-1-wei.deng@oss.qualcomm.com>
 
-Hi David,
-
-On 15/07/2026 19:12, David Matlack wrote:
-> On Wed, Jul 15, 2026 at 10:47 AM Matt Evans <matt@ozlabs.org> wrote:
+On Wed, Jul 15, 2026 at 04:46:22PM +0530, Wei Deng wrote:
+> On Tue, 14 Jul 2026, Manivannan Sadhasivam wrote:
+> > On Mon, Jul 13, 2026 at 02:46:16PM +0530, Wei Deng wrote:
+> > > On Thu, 9 Jul 2026, Dmitry Baryshkov wrote:
+> > > > On Thu, Jul 09, 2026 at 12:59:42PM +0530, Wei Deng wrote:
+> > > > > The pwrseq_m2_pci_ids[] table lists PCIe BT devices that use UART as the
+> > > > > BT transport and need a UART serdev created by the driver. When a PCIe
+> > > > > device under the M.2 connector does not match any entry in this table,
+> > > > > no UART serdev is created.
+> > > > > 
+> > > > > However, the BT subsystem of such a device may still require W_DISABLE2#
+> > > > > to be deasserted to power up. Rather than adding every possible non-UART
+> > > > > BT device ID to the table, add an else branch that deasserts W_DISABLE2#
+> > > > > whenever a PCIe device is detected under the connector but does not match
+> > > > > a UART BT entry. This allows any BT interface on the card (USB or other)
+> > > > > to enumerate without requiring explicit knowledge of its device ID.
+> > > > > 
+> > > > > The primary use case is USB BT variants of combo chips that share the
+> > > > > same PCIe device ID as their UART counterpart (e.g. WCN7851 NCM865 USB,
+> > > > > sub 0x3378, vs NCM865A UART, sub 0x337c): no UART serdev is needed, but
+> > > > > W_DISABLE2# must be deasserted so the USB BT device can enumerate.
+> > > > 
+> > > > Instead of forcibly toggling it, would it be more sensible to tie pwrseq
+> > > > into the USB too? The onboard-usb-dev implements the same idea (of
+> > > > powering up the USB device), but it predates pwrseq.
+> > > > 
+> > > > -- 
+> > > > With best wishes
+> > > > Dmitry
+> > > > 
+> > > 
+> > > Hi Dmitry,
+> > > 
+> > > There is a patch series from Chen-Yu Tsai that appears to implement what
+> > > you suggested:
+> > > 
+> > >   [PATCH v4 00/14] arm64: mediatek: Add M.2 E-key slot on Chromebooks
+> > >   https://lore.kernel.org/all/20260709095726.704448-1-wenst@chromium.org/
+> > > 
+> > > We have been testing this on the Qualcomm Hamoa IoT EVK with both UART BT
+> > > and USB BT M.2 cards.  Is this the direction you had in mind?
+> > > 
+> > 
+> > IMO, we should move towards Chen's series.
+> > 
+> > - Mani
 > 
->> This is based on v7.2-rc3.
->>
->> These commits are on GitHub for easier browsing, along with
->> "[RFC ONLY] selftests: vfio: Add standalone vfio_dmabuf_mmap_test":
->>
->> https://github.com/metamev/linux/compare/v7.2-rc3...dev/mev/vfio-dmabuf-mmap-v5
+> Agreed.
 > 
-> It'd be great to have this test upstream. I'm happy to review it when
-> you're ready. Looks like it just needs to be redone to use the VFIO
-> selftests library and kselftests harness. AI could probably do the
-> conversion pretty quick :)
+> While testing Chen-Yu's v4 on the Qualcomm Hamoa IoT EVK with a board
+> that needs to support both USB and UART BT cards, we found that the USB
+> hub holds a reference to the "usb" pwrseq target permanently (acquired
+> in hub_activate() and never released). When the UART BT driver later
+> calls pwrseq_power_off(), the bt_unit enable_count only drops to 1 and
+> bt_disable() is never invoked, leaving W_DISABLE2# deasserted. This
+> prevents the BT chip from being properly reset, causing the next
+> btmgmt power on to fail.
+> 
+> This issue is addressed in v5 Patch 14 by splitting the Bluetooth
+> pwrseq unit into independent uart and usb units, each with their own
+> reference count:
+> 
+>   [PATCH v5 00/16] arm64: mediatek: Add M.2 E-key slot on Chromebooks
+>   https://lore.kernel.org/all/20260715085348.3457359-1-wenst@chromium.org/
+> 
+> The series still needs review from you and other maintainers.
+> 
 
-For sure, I'd intended to catch up with you on best approach here. :)
+Cool, thanks for staying on top.
 
-Aside from the organic structure of the test (the open-coded VFIO
-device/group setup/init needs to go), the main issue is that it relies
-on a hacked/out of tree QEMU "EDU++" device with a second larger BAR
-(containing freely read-writable memory).  A subset of tests run with
-the in-tree EDU device, but coverage is too low.
+- Mani
 
-The desirable properties are:
-
- - Having a BAR that is pure memory (all locations present, writable
-without disruptive side-effects) so that mapping aliases can be
-constructed and detected.  This is good to test things like non-zero
-vm_pgoffs and VA space presentation of physically-discontiguous DMABUFs.
-
- - BAR >> hugepage size so we can eyeball huge mappings work (or better,
- mechanically test for them).  At least 32MB would tick this box for 4K,
-16K page systems.
-
- - Something QEMU supports*, so one can run the test in a VM/TCG system.
-
-There were some real device models in QEMU that could be used this way,
-but needed a fair bit of setup;  I didn't want to rathole
-vfio_dmabuf_mmap_test on including a ton of device-specific code for
-some video card or similar.
-
-I'll dig more for a simple target that provides these properties --
-obviously it would be better to point this test at an off-the-shelf
-device (including silicon!).  And, proposing EDU extensions to the QEMU
-folks may be useful (there're uses for a better EDU in other contexts too).
-
-Since this test uses MMIO for a specific [class of] function, my first
-thought is it should be another VFIO driver-type test sibling of
-vfio_pci_driver_test.  For example, we could extend the driver-type
-tests' backend struct vfio_pci_driver_ops for functions capable of
-providing a Big Memory BAR, like QEMU EDU++.  EDU can also memcpy, so
-could also support vfio_pci_driver_test.
-
-The spirit of the device backends hiding setup of a complex device is
-handy, and it's plausible that several backends could provide this "big
-memory BAR" service.  What do you think, any concerns with extending
-vfio_pci_driver_ops like that?
-
-
-Thanks,
-
-
-Matt
+-- 
+மணிவண்ணன் சதாசிவம்
