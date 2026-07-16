@@ -1,159 +1,206 @@
-Received: from mail-pj2-f9.google.com (mail-pj2-f9.google.com [74.125.227.137])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED08400985
-	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 10:21:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9333FF8A7
+	for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 10:22:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784197281; cv=none; b=MCqTkqLt5nHIJYVv6MSk/5/dykeL6H2zJRo6tQnwJagpLyYYw8OvC1JSqFk3Y9zAIg2nuv1Er1pmicQs8vqvFvpG6yVN4SUNu1oMInD1+1SRLlOHH/HAcht5U8QrJp5SPdsUMWSd0NfmA91yEqy+K+DyOzA7KmeklG9H3oyfFuY=
+	t=1784197361; cv=none; b=guJL9JLUi6JOU1TsGRaW+yaIXJsFJvtjtneIWDfOWRRgnvUoPdBHg/F3k/bwMXNtFJ24phuM5Xb3/rxrKVbu341Q33vZHG0LrZfwHK3sXvxCxct7Je64YxkrODy38n5eyc7nHIQqdFdfTLLtecDkwrNErswU6A8KQZ75OZV/52A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784197281; c=relaxed/simple;
-	bh=hY65Q8DL8UNfZVFsi0xMC3qLRY+v4k3EZLpVlcQ75ks=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q+DCaaQbZKWDeADSxFEpiyXDDEwN2J65RPzfMcvS1pyj2ixJbz0i5M+Ag4qsP2t48kEkisVC1Wb5Rq13aOF3/scAGgD6IyW+Koh6jLFCGqfiR/OavCvPvpHfQqWglfXAVFpZCgEvgE8HR6frZBdZ7pe2iT3w5dRciySjAUTk+M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QgQ6FmV0; arc=none smtp.client-ip=74.125.227.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784197361; c=relaxed/simple;
+	bh=7Ulpr/0C7px+6+xkvSLo9YWFzJlpcrpY/4+42y1UDzs=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=PcPyh/odHumyhPj+oqmJ/SdZWPZhHj+5p7c++iRCnIcvtOnfrEXkvW1Yb4xt1lKyS6OhxYmOBw6JcUit4fkjFjW1dsziv6HwNPF2/RbyXNiVSg4i6HD5FqXLoqjx844KOxadTGpmlhVTzSDWH+AOz3U32iMNjmoGvNbzN8YpR0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fJEMKXN0; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QgQ6FmV0"
-Received: by mail-pj2-f9.google.com with SMTP id 98e67ed59e1d1-38dc7618a1dso2292417a91.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2026 03:21:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784197278; x=1784802078; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=cFSo7gayLvsIlyLfjq185Phbk4IPPO2uTWuq5Wwy6eg=;
-        b=QgQ6FmV0+eXlDrF8KE4QaM5L9xxIu90VSkWgXNTNfnHBdegsrdvvD8rE2g93lB9xhh
-         aBS6N6WH5zlI0nSGSUzvuEjMmeVFh3VgzOuLaZjUqa5Oo2oBQ3nW1+JJfhMmD065gq7e
-         xcIJmnKBGu49avtnXkvTlV/CgF41dZ0yOHeplGLhkA2MSBNqiI0QbFYGXydyPM0/6T5l
-         L4JsLXSDayJhAhxClKGQWOphMDzDPsumfqaC3MEb9DYrBVIzoogVlp1XRmu6ByBcI7Z5
-         2+11dDYgUR/EuT9CoZMOYeJwsKXkgZ0ecJ+sKE1S7Wym/b4IZSg/tOKaiXXzfwbmNczg
-         jg2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784197278; x=1784802078;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cFSo7gayLvsIlyLfjq185Phbk4IPPO2uTWuq5Wwy6eg=;
-        b=J3I3SwBF4BNc05HATy8MKhfeiN/7U154xtDD56ePszGHqe1/euis3QaVUu90n6vz7L
-         zxAbVESPhmrLeHviyhO8tihW3DcqJDIXXShgiog6qp7wttIToF6cIIvUeGFQshqca5AN
-         yhjjUGplqaxcNEhs01dVN+r8+dCnW3AyZqZcfqwZeppOmqFDUfCVhoEM/4HLkkNSKjbl
-         gZPkdTS3PHyjkrupEa17YQG+zGLAr3tUkGdUJsqLUT+gKaEd6dEMHSt8MAUdQiq7Qt6I
-         6YfrqiapQ4LqE4d1C8W3lIsNy6v20IeNMt0Gq2pHBJytmPuHMqG//8V2/m9JRcDnm/ht
-         RQTA==
-X-Forwarded-Encrypted: i=1; AHgh+Rr22KxoXUGh2CjpssRspJerxq+DW+MOFkMujBpkNPPrFA/oKHGX3O2QI+5OETPr8Cpy+tU4Bvg12BA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyH718tvGqdCwTjqN2QJ4JnVE1rs7UwqAcW47UBMPNo/qJEN9yW
-	5igEmo9JgxpyclrSVeA8/8qcubx2+pthnLMYoTj/EUnPsT76QwbQnHqX
-X-Gm-Gg: AfdE7cnVcnysVWErDYDo5LlG28tu+fszQR0ju2fYIDPZyHe6irxgQ6SpoES5ZCZ5t1I
-	6eRo8b1JsjcNo3hxKlx09uH48WTY3X4NrhG8fNdwUadUw3ZVG+9GTEwwLScQu0i3mRttVYOYMqR
-	YgQn78fYfxytE+KjF3AI90vO9KTDgUpe8ncFmdyUM5ut9f7jSmJodtHeyy1iNbOp1d63PRJFIJ1
-	QC8gYxUYWT7b+bNoVpIpMwkpY8ZPHyPNZ4hdlr1Mw6KOJwdB+I7WSd31WWiccphw/PucFThS9Ei
-	2ojnHHJAlxMxKiN/pydJeV3su1dTVfp+gH79tv8T1Iiny/0uqyvex15pGzxqbQ57dUr+Rp0+21W
-	TG0PyMkucTQMR0BJxDbzP3LgyhKyeOMbeazTv2/Wjjr6anoR7vZ64RtGPEy8y5mRw+fXADB73MY
-	yPzMdi/53/
-X-Received: by 2002:a17:90b:5863:b0:36d:b424:4f17 with SMTP id 98e67ed59e1d1-38dc73bcfdfmr19331163a91.1.1784197277956;
-        Thu, 16 Jul 2026 03:21:17 -0700 (PDT)
-Received: from workstation.. ([182.180.105.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e500e8fsm11626180eec.6.2026.07.16.03.21.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jul 2026 03:21:17 -0700 (PDT)
-From: Ali Tariq <alitariq45892@gmail.com>
-To: Kevin Xie <kevin.xie@starfivetech.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Markus Elfring <Markus.Elfring@web.de>,
-	Ali Tariq <alitariq45892@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v3] PCI: starfive: Fix resource leaks on error paths in host_init()
-Date: Thu, 16 Jul 2026 15:20:53 +0500
-Message-Id: <20260716102053.185276-1-alitariq45892@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260714113029.326207-1-alitariq45892@gmail.com>
-References: <20260714113029.326207-1-alitariq45892@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fJEMKXN0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784197360; x=1815733360;
+  h=date:from:to:cc:subject:message-id;
+  bh=7Ulpr/0C7px+6+xkvSLo9YWFzJlpcrpY/4+42y1UDzs=;
+  b=fJEMKXN0U4nId/paulMsg7hEZFdwm5UefIUWOWdXu2fhS9jPaNUJ3OtC
+   +H7WadVgKDLAtu9JkdzNMEOOopiRB35J186JRBvdBMlYcx4yYs/vggOGZ
+   0S093mGuFJJG/Ei7xTK+2MOL5hV8JK70UMNzlFqZloryelzj2n3GsVrL+
+   I9LlISGA1cwoKZhAGIQRd1WcIqxKs+9xWRbtSE1c+xMGVr/Z2SNe/xGzt
+   27SRTCAAp9qghXlhz/S11aIENqtBdzl8YXyyqfRaEvgRMmox5ViX9Ul6q
+   Az1wHPIdOYsGS93Mf5Gm+waN18Zd078n7DoQGfl595Km2EXYXiC3eB+ZW
+   Q==;
+X-CSE-ConnectionGUID: yM2/EqlcTCKvx4+3kDjxBg==
+X-CSE-MsgGUID: P5vR78/6RHyMwlhhSuay6g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96367853"
+X-IronPort-AV: E=Sophos;i="6.25,167,1779174000"; 
+   d="scan'208";a="96367853"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 03:22:39 -0700
+X-CSE-ConnectionGUID: kF2a9CWkTDeEfpHmfB1bkA==
+X-CSE-MsgGUID: XwFyN6NkTn6PzBDm9UaAUw==
+X-ExtLoop1: 1
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa003.fm.intel.com with ESMTP; 16 Jul 2026 03:22:38 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wkJEe-00000000Og8-3T64;
+	Thu, 16 Jul 2026 10:22:33 +0000
+Date: Thu, 16 Jul 2026 18:22:11 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:dt-binding] BUILD SUCCESS
+ 068601b547da091d9f56131cbb25e40ad40f4825
+Message-ID: <202607161800.Za2aHkvx-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-starfive_pcie_host_init() acquires the PHY, clocks/resets, and an
-optional regulator in sequence, but does not correctly unwind these
-resources when a later step fails.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git dt-binding
+branch HEAD: 068601b547da091d9f56131cbb25e40ad40f4825  dt-bindings: PCI: mediatek-gen3: Add support for MT8189 SoC
 
-If starfive_pcie_clk_rst_init() fails after the PHY has already been
-successfully enabled, the function returns directly without disabling
-the PHY, leaking it and leaving it powered.
+elapsed time: 1139m
 
-If regulator_enable() fails for the optional vpcie3v3 regulator, the
-failure is only logged; the function falls through and returns
-success, leaving the driver believing the regulator is enabled while
-continuing to configure PCIe hardware that may be unpowered. This
-also leaves the clocks and PHY enabled with nothing to clean them up.
+configs tested: 131
+configs skipped: 2
 
-Disable the PHY on the clk/reset failure path, and disable the
-clocks/resets and PHY, then return the error, if the regulator fails
-to enable.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Build-tested and boot-tested on StarFive VisionFive 2 v1.2A
+tested configs:
+alpha                   allnoconfig    gcc-16.1.0
+alpha                  allyesconfig    gcc-16.1.0
+alpha                     defconfig    gcc-16.1.0
+arc                    allmodconfig    gcc-16.1.0
+arc                     allnoconfig    gcc-16.1.0
+arc                    allyesconfig    gcc-16.1.0
+arc                       defconfig    gcc-16.1.0
+arc         randconfig-001-20260716    gcc-14.3.0
+arc         randconfig-002-20260716    gcc-16.1.0
+arm                     allnoconfig    clang-17
+arm                    allyesconfig    gcc-16.1.0
+arm                       defconfig    clang-23
+arm         randconfig-001-20260716    gcc-8.5.0
+arm         randconfig-002-20260716    clang-17
+arm         randconfig-003-20260716    gcc-12.5.0
+arm         randconfig-004-20260716    clang-23
+arm64                  allmodconfig    clang-23
+arm64                   allnoconfig    gcc-16.1.0
+arm64                     defconfig    gcc-16.1.0
+arm64       randconfig-001-20260716    clang-23
+arm64       randconfig-002-20260716    clang-22
+arm64       randconfig-003-20260716    clang-23
+arm64       randconfig-004-20260716    gcc-12.5.0
+csky                   allmodconfig    gcc-16.1.0
+csky                    allnoconfig    gcc-16.1.0
+csky                      defconfig    gcc-16.1.0
+csky        randconfig-001-20260716    gcc-12.5.0
+csky        randconfig-002-20260716    gcc-14.3.0
+hexagon                allmodconfig    clang-23
+hexagon                 allnoconfig    clang-23
+hexagon                   defconfig    clang-24
+i386                   allmodconfig    gcc-14
+i386                    allnoconfig    gcc-14
+i386                   allyesconfig    gcc-14
+i386                      defconfig    clang-22
+i386                 randconfig-001    clang-22
+i386        randconfig-001-20260716    clang-22
+i386                 randconfig-002    gcc-14
+i386        randconfig-002-20260716    clang-22
+i386                 randconfig-003    gcc-14
+i386        randconfig-003-20260716    gcc-14
+i386                 randconfig-004    clang-22
+i386        randconfig-004-20260716    gcc-14
+i386                 randconfig-005    gcc-14
+i386        randconfig-005-20260716    clang-22
+i386                 randconfig-006    gcc-14
+i386        randconfig-006-20260716    clang-22
+i386                 randconfig-007    gcc-14
+i386        randconfig-007-20260716    clang-22
+i386        randconfig-011-20260716    clang-22
+i386        randconfig-012-20260716    gcc-12
+i386        randconfig-013-20260716    clang-22
+i386        randconfig-014-20260716    gcc-12
+i386        randconfig-015-20260716    clang-22
+i386        randconfig-016-20260716    gcc-14
+i386        randconfig-017-20260716    clang-22
+loongarch              allmodconfig    clang-19
+loongarch               allnoconfig    clang-20
+loongarch                 defconfig    clang-23
+m68k                   allmodconfig    gcc-16.1.0
+m68k                    allnoconfig    gcc-16.1.0
+m68k                   allyesconfig    gcc-16.1.0
+m68k                      defconfig    gcc-16.1.0
+microblaze              allnoconfig    gcc-16.1.0
+microblaze             allyesconfig    gcc-16.1.0
+microblaze                defconfig    gcc-16.1.0
+mips                   allmodconfig    gcc-16.1.0
+mips                    allnoconfig    gcc-16.1.0
+mips                   allyesconfig    gcc-16.1.0
+nios2                  allmodconfig    gcc-11.5.0
+nios2                   allnoconfig    gcc-11.5.0
+nios2                     defconfig    gcc-11.5.0
+openrisc               allmodconfig    gcc-16.1.0
+openrisc                allnoconfig    gcc-16.1.0
+openrisc                  defconfig    gcc-16.1.0
+parisc                 allmodconfig    gcc-16.1.0
+parisc                  allnoconfig    gcc-16.1.0
+parisc                 allyesconfig    gcc-16.1.0
+parisc                    defconfig    gcc-16.1.0
+parisc      randconfig-001-20260716    gcc-15.2.0
+parisc      randconfig-002-20260716    gcc-8.5.0
+parisc64                  defconfig    gcc-16.1.0
+powerpc                allmodconfig    gcc-16.1.0
+powerpc                 allnoconfig    gcc-16.1.0
+powerpc     randconfig-001-20260716    clang-21
+powerpc     randconfig-002-20260716    clang-19
+powerpc64   randconfig-001-20260716    clang-22
+powerpc64   randconfig-002-20260716    clang-23
+riscv                  allmodconfig    clang-23
+riscv                   allnoconfig    gcc-16.1.0
+riscv                  allyesconfig    clang-23
+riscv                     defconfig    clang-23
+s390                   allmodconfig    clang-23
+s390                    allnoconfig    clang-23
+s390                   allyesconfig    gcc-16.1.0
+s390                      defconfig    clang-18
+sh                     allmodconfig    gcc-16.1.0
+sh                      allnoconfig    gcc-16.1.0
+sh                     allyesconfig    gcc-16.1.0
+sh                        defconfig    gcc-16.1.0
+sparc                   allnoconfig    gcc-16.1.0
+sparc                     defconfig    gcc-16.1.0
+sparc       randconfig-001-20260716    gcc-13.4.0
+sparc       randconfig-002-20260716    gcc-11.5.0
+sparc64                allmodconfig    clang-20
+sparc64                   defconfig    clang-23
+sparc64     randconfig-001-20260716    clang-23
+sparc64     randconfig-002-20260716    clang-23
+um                     allmodconfig    clang-17
+um                      allnoconfig    clang-17
+um                     allyesconfig    gcc-14
+um                        defconfig    clang-23
+um                   i386_defconfig    gcc-14
+um          randconfig-001-20260716    clang-23
+um          randconfig-002-20260716    gcc-14
+um                 x86_64_defconfig    clang-23
+x86_64                 allmodconfig    clang-22
+x86_64                  allnoconfig    clang-22
+x86_64                 allyesconfig    clang-22
+x86_64                    defconfig    gcc-14
+x86_64      randconfig-011-20260716    clang-22
+x86_64      randconfig-012-20260716    clang-22
+x86_64      randconfig-013-20260716    gcc-14
+x86_64      randconfig-014-20260716    clang-22
+x86_64      randconfig-015-20260716    clang-22
+x86_64      randconfig-016-20260716    gcc-14
+x86_64                rhel-9.4-rust    clang-22
+xtensa                  allnoconfig    gcc-16.1.0
+xtensa                 allyesconfig    gcc-16.1.0
+xtensa      randconfig-001-20260716    gcc-9.5.0
+xtensa      randconfig-002-20260716    gcc-8.5.0
 
-Fixes: 05a75df4182e ("PCI: starfive: Use regulator APIs to control the 3v3 power supply of PCIe slots")
-Fixes: 39b91eb40c6a ("PCI: starfive: Add JH7110 PCIe controller")
-Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
-Cc: stable@vger.kernel.org
----
-Changes in v3:
-- Add Fixes: tags for both introducing commits
-- Add Cc: stable@vger.kernel.org
-
-Changes in v2:
-- Use a shared error-handling label instead of duplicating cleanup code
----
- drivers/pci/controller/plda/pcie-starfive.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
-index ba8ef7842e35..fab44054a5de 100644
---- a/drivers/pci/controller/plda/pcie-starfive.c
-+++ b/drivers/pci/controller/plda/pcie-starfive.c
-@@ -304,12 +304,14 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
- 
- 	ret = starfive_pcie_clk_rst_init(pcie);
- 	if (ret)
--		return ret;
-+		goto err_disable_phy;
- 
- 	if (pcie->vpcie3v3) {
- 		ret = regulator_enable(pcie->vpcie3v3);
--		if (ret)
-+		if (ret) {
- 			dev_err_probe(dev, ret, "failed to enable vpcie3v3 regulator\n");
-+			goto err_clk_rst;
-+		}
- 	}
- 
- 	if (pcie->reset_gpio)
-@@ -379,6 +381,13 @@ static int starfive_pcie_host_init(struct plda_pcie_rp *plda)
- 		dev_info(dev, "port link down\n");
- 
- 	return 0;
-+
-+err_clk_rst:
-+	starfive_pcie_clk_rst_deinit(pcie);
-+err_disable_phy:
-+	starfive_pcie_disable_phy(pcie);
-+
-+	return ret;
- }
- 
- static const struct plda_pcie_host_ops sf_host_ops = {
--- 
-2.34.1
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
