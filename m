@@ -1,114 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C011332B118;
-	Fri, 17 Jul 2026 09:40:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB0A3C8716;
+	Fri, 17 Jul 2026 09:51:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784281251; cv=none; b=p57Uzqe3Uc+1yTotFkHDyTKp0BJsNpqAywEt2+eG5Sj5EfNYHKDi7rjBzqp5I2DFEdPV502Cvk1wHXcEhubG+ErEGKcd7iMIncpL1DHd+4V/VfzecxNX8YhxfWOYOZBxdBnHOjoFqjux1O8zHqpPLDFTFH7+dCDZdWmu/wmBgts=
+	t=1784281901; cv=none; b=qT0bn/MsMYfaEsO4nOfeVMAjxMxha2E0P8a/3h88KEOnXWOAtIbazInqtk3OoNQi/MheowdIVDyUDow5LDIohbQ6keijafsTkLkOsjKU25xWwL4/KXRgbllGxuvU92YGoC/a8qbDQjJLnGmK5tTgyiyVd2ZLeUUmuWkiuNBwcu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784281251; c=relaxed/simple;
-	bh=hUpneCRR7Zmjp4VPifSOXOk31FmdExZfNBPPZiGR7jM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eVYCHDbB3xJYD2el0Ri0DMI1NdZqeTSRHHm9c4CX1UrXXVVcTqDpMjiwgIyjf0TjLVQMNXjQyaIOm5IbhA5qvrgGQxQUJa5+st3L1PjuggH26jEH99hHF227iY4eVRSYddNohZQtnAFhZ7WAKM28uq+rLz8ZnM/wh0GwnkjXIWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=aLeyQQNr; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="aLeyQQNr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBBEC1F000E9;
-	Fri, 17 Jul 2026 09:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1784281249;
-	bh=24bith6PvfIO9Yx7/KB0oXppD1JzRw+O/DItVYf4buE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=aLeyQQNrRfbgdQ4/h6LxqcCsHSGfz+UFqnSOwOMm9gI8ToOd7/q8UCRwaAllUHBgn
-	 SxiNTh2QVQe7br/lIiUXMAZlGYsru88LlYofd2aCWXhk68MF0SOibT5V2nerFZNiY5
-	 3ymZ+2dmzAxhTJ/Er6HdtlOdKc0G6Y40UMdhsvyw=
-Date: Fri, 17 Jul 2026 11:40:42 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: Gary Guo <gary@garyguo.net>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>,
-	Michal Wilczynski <m.wilczynski@samsung.com>,
-	Igor Korotin <igor.korotin@linux.dev>,
-	Rob Herring <robh@kernel.org>, Miguel Ojeda <ojeda@kernel.org>,
-	Boqun Feng <boqun@kernel.org>,
-	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Tamir Duberstein <tamird@kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Onur =?iso-8859-1?Q?=D6zkan?= <work@onurozkan.dev>,
-	FUJITA Tomonori <fujita.tomonori@gmail.com>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	s=arc-20240116; t=1784281901; c=relaxed/simple;
+	bh=FRKOW5qlUmIS/8mUlgbPDLIACCHewyeZoycB3AfFFR4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cx3Xt6CW23BIaVBALr8aRb8WyP7msd+Dif5AJ/OzqzB51SG6FxtURTb+lq3YVBdErWtd4qNXhbjZYW4Ma9mevr1BVKpxtdy13qltKl9H6oKVf7IyrJgvMukUBypZ1yz1mw0piVXQH4hgkegmEF//wfrDqnBk+6cXLYxhAmCd9cU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 1645996281c511f1aa26b74ffac11d73-20260717
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:f02f1134-a8e6-48ca-bb68-a070a8cd5ccd,IP:0,U
+	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:25
+X-CID-META: VersionHash:e7bac3a,CLOUDID:cb1c03edffc0eab13c4d4818ad587cf9,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|865|898,TC:nil,Content:0|15|50,EDM:5
+	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
+	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 1645996281c511f1aa26b74ffac11d73-20260717
+X-User: leixiang@kylinos.cn
+Received: from ninol.. [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <leixiang@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 929762574; Fri, 17 Jul 2026 17:51:30 +0800
+From: leixiang <leixiang@kylinos.cn>
+To: 
+Cc: leixiang <leixiang@kylinos.cn>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <iweiny@kernel.org>, Leon Romanovsky <leon@kernel.org>,
-	Len Brown <lenb@kernel.org>, Saravana Kannan <saravanak@kernel.org>,
-	Drew Fustini <fustini@kernel.org>, Guo Ren <guoren@kernel.org>,
-	Fu Wei <wefu@redhat.com>, driver-core@lists.linux.dev,
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, nova-gpu@lists.linux.dev,
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-pwm@vger.kernel.org,
-	linux-usb@vger.kernel.org
-Subject: Re: [PATCH v2 00/11] rust: driver: use pointers instead of indices
- for ID info
-Message-ID: <2026071729-scored-ogle-430c@gregkh>
-References: <20260629-id_info-v2-0-56fccbe9c5ef@garyguo.net>
- <DK08KE2A3M7K.3OQDFZB94SMFC@kernel.org>
+	Logan Gunthorpe <logang@deltatee.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI/P2PDMA: Fix use-after-free in pci_p2pdma_add_resource() error path
+Date: Fri, 17 Jul 2026 17:51:17 +0800
+Message-ID: <20260717095120.51111-1-leixiang@kylinos.cn>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DK08KE2A3M7K.3OQDFZB94SMFC@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 16, 2026 at 09:18:05PM +0200, Danilo Krummrich wrote:
-> On Mon Jun 29, 2026 at 2:39 PM CEST, Gary Guo wrote:
-> >  MAINTAINERS                           |   1 -
-> >  drivers/acpi/bus.c                    |   6 +-
-> >  drivers/cpufreq/rcpufreq_dt.rs        |   1 -
-> >  drivers/gpu/drm/nova/driver.rs        |   1 -
-> >  drivers/gpu/drm/tyr/driver.rs         |   1 -
-> >  drivers/gpu/nova-core/driver.rs       |   3 +-
-> >  drivers/pwm/pwm_th1520.rs             |   1 -
-> >  include/acpi/acpi_bus.h               |  11 --
-> >  rust/helpers/acpi.c                   |  16 ---
-> >  rust/helpers/helpers.c                |   1 -
-> >  rust/kernel/acpi.rs                   |  14 +--
-> >  rust/kernel/auxiliary.rs              |  18 +--
-> >  rust/kernel/device_id.rs              | 207 +++++++++++++++++++---------------
-> >  rust/kernel/driver.rs                 | 137 ++--------------------
-> >  rust/kernel/i2c.rs                    |  26 ++---
-> >  rust/kernel/net/phy.rs                |  66 +----------
-> >  rust/kernel/of.rs                     |  14 +--
-> >  rust/kernel/pci.rs                    |  25 ++--
-> >  rust/kernel/platform.rs               |   5 +-
-> >  rust/kernel/usb.rs                    |  24 ++--
-> >  samples/rust/rust_debugfs.rs          |   1 -
-> >  samples/rust/rust_dma.rs              |   3 +-
-> >  samples/rust/rust_driver_auxiliary.rs |   4 +-
-> >  samples/rust/rust_driver_i2c.rs       |   3 -
-> >  samples/rust/rust_driver_pci.rs       |  11 +-
-> >  samples/rust/rust_driver_platform.rs  |   2 -
-> >  samples/rust/rust_driver_usb.rs       |   3 +-
-> >  samples/rust/rust_i2c_client.rs       |   2 -
-> >  samples/rust/rust_soc.rs              |   2 -
-> >  29 files changed, 178 insertions(+), 431 deletions(-)
-> 
-> I plan to pick this up soon. Please let me know in case there are any concerns
-> from the acpi, i2c, of, net or usb side of things.
+In pci_p2pdma_add_resource(), a devm action is registered to call
+pci_p2pdma_unmap_mappings() with the 'p2p_pgmap' context. If the subsequent
+call to gen_pool_add_owner() fails, the code jumps to the 'pages_free'
+error path.
 
-No objection from me fo rthe USB stuff:
+In this error path, 'p2p_pgmap' is explicitly freed via devm_kfree().
+However, the previously registered devm action is never removed. This
+leaves a dangling pointer in the device's devres list. When the device
+is unbound and devres is cleaning up resources, the unmap action will be
+called with the already-freed 'p2p_pgmap', resulting in a use-after-free
+bug.
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Fix this by properly calling devm_remove_action() in the error path before
+freeing 'p2p_pgmap'.
+
+Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
+Assisted-by: Antigravity:Gemini [tools]
+Signed-off-by: leixiang <leixiang@kylinos.cn>
+---
+ drivers/pci/p2pdma.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index b2d5266f8653..7f54532932ab 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -451,13 +451,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			range_len(&pgmap->range), dev_to_node(&pdev->dev),
+ 			&pgmap->ref);
+ 	if (error)
+-		goto pages_free;
++		goto unmap_mappings;
+ 
+ 	pci_info(pdev, "added peer-to-peer DMA memory %#llx-%#llx\n",
+ 		 pgmap->range.start, pgmap->range.end);
+ 
+ 	return 0;
+ 
++unmap_mappings:
++	devm_remove_action(&pdev->dev, pci_p2pdma_unmap_mappings, p2p_pgmap);
+ pages_free:
+ 	devm_memunmap_pages(&pdev->dev, pgmap);
+ pgmap_free:
+-- 
+2.43.0
