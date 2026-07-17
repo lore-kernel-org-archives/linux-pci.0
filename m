@@ -1,169 +1,142 @@
-Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D96175A60;
-	Fri, 17 Jul 2026 21:26:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1957339858
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 21:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784323618; cv=none; b=K8yijzrQhO4zIcufk6cTM+DSlV6K+efXPCxzwV76HhY7w+w/+VytZmMqQjbrl3Sc3bQDMvF0Wmjqm1kK5bVCH2EDVyHq64SYa3/l7RVaINOZ/5e/SDsg/z5H+qxAgR1LaHPoKmPz4k+xj60yX2SnonDHQbgndcRNXdurbsLfNG4=
+	t=1784324822; cv=none; b=l+1CqzFyfg5nHS57jREkW6i2XstYroj01hOH/kiKhpV0KsOVo6vDvTFI6ANr2wUGtENnsw+smSyNK7GUjGOuHRiZ+rWrjFJW1YMqn5XRlbbSiQdh+ZgPTaHa4HI/y5aFNlFyGFZ5/HDAe7qhY8ON/SQ2q0/ZPQ5SYBPeHtZzyls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784323618; c=relaxed/simple;
-	bh=WRo21tuBs4OXgxJUolfMP/gyj8Tnu3aUwH7kLghZHzU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eizmWPevydp7fhQOnlG1VVzS7ujGNRzdw4ZYHSpVyMeKPlJX2CxtXy+zUqylbfRuHa5MJjop4RNLZzTReccpPAXYfwKBHKgu5RJksSs98dsN+qFpnLhff4zgqRCdgukuHlRSVYF9LtxDf3rGWnEtu6NaoOgVrcgOn6jATMWEsrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=C3Czv3yx; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=rEDi52Bu; arc=none smtp.client-ip=202.12.124.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1784324822; c=relaxed/simple;
+	bh=ahWVhQAgslIBwnfpmx5X48jHe/0a44QV3IQwRfGz+iU=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=srxDzGmBxhRatg+ChOPIBR5OgfruAdKbLH9k60nfZMYVbciuasfRTewhlq3vNR3QRcrdReHQ9u7nIovNwCt2Jzmp/nYYzeeX+EvOIhfNar/xQNChLhpSc3kK8y6IXRmw5+GQEHW4CuzN/QMJuVXhfoGfis3Hu+7EO9Mbjkg8ONU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=MNUHQ6uX; arc=none smtp.client-ip=209.85.160.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="C3Czv3yx";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="rEDi52Bu"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 1D31E7A010C;
-	Fri, 17 Jul 2026 17:26:54 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Fri, 17 Jul 2026 17:26:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1784323613;
-	 x=1784410013; bh=eeWHQD2AYFBFSMjRiK1uv2wR0q7xPl1Xc5RCGX4uxCw=; b=
-	C3Czv3yxLvt077+WMxsq6tcvKLwrXOPtoMUW9vD4ixC0uyNNKT3OPnXCOahH/Vxo
-	ewLMA41q9cGWynnAa5VO0vbLILCWRsNnmKrdJoM/EY6p5wDAzBnPlAgc3wFH61cW
-	Sr55DhjZ9HCgQdwhX3qmN48EaO/3Qs7kMF60pe5vw05jynr+lbzwQ3YqczLIgZD/
-	k7A1ZHqkkwKA1XrXIqxEDc1MC3z0XuDWmsOa5mUfZdkBk39OBnwFZsbfdafAvgF7
-	eqzQzDgEmhAiFDDbgM2R66R+xM+PFK1pXKamEVRmV5EEZ7qko67ZC0lgvsn8tALV
-	Yiiv8XWzrFPx9hZksHyc5w==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1784323613; x=
-	1784410013; bh=eeWHQD2AYFBFSMjRiK1uv2wR0q7xPl1Xc5RCGX4uxCw=; b=r
-	EDi52Buc6VN4BDg6+7fX5tQfD+J0olwYqHi3SfqCjPnh53A8tGVd8DVIM394saMx
-	V1MGjCzuaBQ/IhgGRDBFV094RkZSIfcnIeuRbwghlLtOrJeDz76mO9Amf7x0ZvKE
-	hvJvEGnKEkU+s/qonn3sSEgLw1URUy/Q9h9uK3yZnkTp1PaqmyIxUr+zwtgF2jzU
-	BtVaS93IetlsDzKmfLCA4tLhvhJISx3cqdbTM9DtUa2vmHBif+FuQtK4gc5hdIlT
-	A40JCqcm+ngiPyXtZzn25LPzIPVU3MlEu8ZZeDJ7FmPedIpx6jFHUL7aNeMm2wtr
-	JwU88kIx68cuISW3fscLA==
-X-ME-Sender: <xms:HZ5aaoTPJt15R01iZzHHWjATMJL-j1rQm1iFbe43z2xtu38LqgxQYw>
-    <xme:HZ5aanXvrZbiu-lU0bj9xUQVifHspqgWm2b6bn-A8QjBCBsgV6KoM54_mXMUsrmuW
-    g4F3c4pguLhSU-wr_iTgv7t3CkAAlfiq0pnnFMK1k_5RCl6lGNnqg>
-X-ME-Received: <xmr:HZ5aasL52RoP8EyqLjCXMJi-4p8rMCIJa0mxHqIACrLChBy35B27eq9Tjs0>
-X-ME-Proxy-Cause: dmFkZTEz7pjAUecrHvE1kyqQzWT7rGXWfz7Q5pmVw05qIT18Seci3DhxhvPovL3SMkYD2i
-    AA4YkNncWtmZoIciVTSogFqHGSuHn5a0+qZcCRuHL95YDu+DTtlG5tR4/VXSTThiSUfCtG
-    HRuH6yZHADv7x58sNbKEtc1ZoeHe3SRYGDMNpCRoxyAWDm76RPDMA20nP7v4vd3HQP/6Bh
-    8H1A3e2E93jaqIZmeIrZ1kd/UenrILW1bOuCTEyUouRzgTg3fYoq35DTR7tD8jOK9InWxi
-    kvV9+zczKyvjEZ3maXxDKEcibGGuapfFQ6qYZUBUIWIO45bMDccRNOkc81AyS9st0vmbBB
-    hSOGZub7SNGdn3SXOo4Nk9psvV+i3WzCTl4I6bmtR1AWtA8tWD8pvjgTQDij1CTNeqhK76
-    iOAFqCgqpw6DOAqmAH2Ox+PEfc4delJzXgVN+ci89oiwPQNJ8a4by1RtScN+VAcWPS7KzK
-    5KzLXeq0EYo7ryNRrzJN9GNWt+NpXIx//fg5kgQU2OparMCvNFj0JjrVzMktbhgUWt5wLy
-    KVQ0rqlEqPi+OyK9dy5pSKBM8XrPHuu1gwOhhvO4bZmJjw4UC8qMskSrdqQ5qZnk7K/aw1
-    XBq64XjaBn6NtDk06Y2m/dbP6+UswpuOcP0YZnvPOg++WKnRJiIAaF5btLjg
-X-ME-Proxy: <xmx:HZ5aan3csTPecHmlsrkLjvLNq0hYMepyql7VFlOxPmTAvLdZ0P4OhA>
-    <xmx:HZ5aapIwhKhogXJTe_RBFES7Xsdff67wf8yypQhmzagBTUQnYZLNXw>
-    <xmx:HZ5aaiiyoULVEI43eOd9DHhRz6ZMPjRPyWM2mzQNz6EImwrSOnDLOg>
-    <xmx:HZ5aapBCy2r-gBek-gif3r1nD1nj7hZSQjIRj47tNNynSEP8fJFmJQ>
-    <xmx:HZ5aapY3hCDjxUe39PLVx_CpBVdA81dqmwW0FRueweP3Pv0MYJqK0rVW>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 17 Jul 2026 17:26:52 -0400 (EDT)
-Date: Fri, 17 Jul 2026 15:26:50 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v20 2/3] vfio-pci/zdev: Add a device feature for error
- information
-Message-ID: <20260717152650.3cfc2d10@shazbot.org>
-In-Reply-To: <20260630165553.725-3-alifm@linux.ibm.com>
-References: <20260630165553.725-1-alifm@linux.ibm.com>
-	<20260630165553.725-3-alifm@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="MNUHQ6uX"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-52192509869so6833821cf.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 14:47:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1784324819; x=1784929619; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=AgfKPfkfc4jyNoAXQ924zrK3vmVWU/VwnFCFChfwVj0=;
+        b=MNUHQ6uXyAu/5hZqvQhxUjA9gAsaSUkDLtHs9SBhoYzax+b/lnpiChdpccm77YPmzt
+         SZU33e6UkkvQEGU05ml5CmnTkmOJwh2gnKlx0wFVW2iMpyK1NK5QeMYAabd9ZPCoDBKW
+         8gpfW8ER8ijvXWGJ4QFLhibpVg5MwTq9Yz3Z1o2sjYg2UlYS+6XvEoHgFj7T1k1TRv7d
+         QgKWG0Ug4w+QR4yshnq2scoE9AA8YNNY9Fe1h4L4o3XRuU/Z6HkZ1yL6vq2GBbhtZs1u
+         /hYEHAERta3W3rEeP+o5Zy6koITetobWCKi3WyBZewYuBqrCgnhZKNDIQQOhUo+caNjE
+         yfKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784324819; x=1784929619;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=AgfKPfkfc4jyNoAXQ924zrK3vmVWU/VwnFCFChfwVj0=;
+        b=rRJm0th6otPCE51BFRCVJq4OG7wLTmfFOjPAJgt06G7nQAs90a+gf7SQGjuXC5huB3
+         Hbv7ymnHecR6tcgGXsoa4nOvtxnSmJ0qco6TM87AAoBsvpN0bXkEIimkQXSuWmW5HRvU
+         UmBypFAIOfpr+om4cBNEltfum6Wi78GIkqJSxyU7YokyghTmoOJybYc4uW1bBMNIMpg/
+         vCJXjOWAsCvqC6z5MgUOHyHx6EtEBYcCafEXToFf7vLn9BMvWUEjYKsltTBAOWknGPqp
+         wuVrGiYwZ1uIOUy8soXdbPYmJU7mtuxp+OxEYpAi4e3lBcmakXqEwf8pK4kPA4xCCYd+
+         MaxA==
+X-Forwarded-Encrypted: i=1; AHgh+Rri8E5Yr6t4jaDKMWhNxHgy+EKKK6jprZD+uQ8Zb3nveTyOv8NGLuxYB64B2sbcXvG438aGQ5Un26k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwxOm+UrZbN6i1PhnTPg9HWQPR8uQgbBWc1KIiozi364xabWb52
+	QjnWKqSCzBFJOF+aYwW548O7SBys7HyYVw9F5t9B84DF91mbgsDqLEwpg0Wc9CXHdgc=
+X-Gm-Gg: AfdE7cnWnEWism4pLt9lqA6LbYtk/s6W/DmBMXpQgypKGq7wK/38dHlzMdqLwhmOhx/
+	r6If5mDwPokJlL1vp/5CWO0+8xzRK2Pod2abS/P7qsQ3tbwZCFygLO49r97Lh1IPQ35ZoYulzlc
+	cjzVlbaLSlfplWlGc2Afsza6z0LU2W++/qasbUGybpCYFOmXNurCi7/HFrMa3SOzg6CXeGJ3xsB
+	DcdL3u0tbjtcT5GEw3ZZtPZN+VFIbN53l21KWAhp5duKH/tqpsnt5Fh8o9v5Ewq+Vh4/hxrL00Q
+	gCGqiJYfIP1hnKbunWHB37f7A4DWcPmRjaW84N5eAPXr4YmsFE/XjqyD4AN6g2jQwpIdlnsB3dr
+	JemSkPHIUw5aszz3/S5D64TIzycRbhOjrq0KDqkEy7zcvpjokGDBEeDaOL36iS05kGZm8iOgR8/
+	OGqx5fnCevoZbQhAUQ+gBAtHlQuCW6mCa3KY7JJWepV5mps+zmHA==
+X-Received: by 2002:ac8:5acc:0:b0:51a:8c97:fb93 with SMTP id d75a77b69052e-5213fc54d44mr43814441cf.60.1784324819586;
+        Fri, 17 Jul 2026 14:46:59 -0700 (PDT)
+Received: from [127.0.1.1] ([71.181.43.54])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5214c5cc8d5sm21955091cf.6.2026.07.17.14.46.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jul 2026 14:46:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI
+ devices
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+ Adithya Jayachandran <ajayachandra@nvidia.com>, 
+ Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+ David Rientjes <rientjes@google.com>, 
+ Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+ Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
+ Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+ Pasha Tatashin <pasha.tatashin@soleen.com>, 
+ Pranjal Shrivastava <praan@google.com>, 
+ Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
+ Samiullah Khawaja <skhawaja@google.com>, 
+ Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
+ William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+In-Reply-To: <20260710212616.1351130-4-dmatlack@google.com>
+References: <20260710212616.1351130-1-dmatlack@google.com>
+ <20260710212616.1351130-4-dmatlack@google.com>
+Date: Fri, 17 Jul 2026 21:46:52 +0000
+Message-Id: <178432481253.189683.3297727348836286619.b4-review@b4>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1380;
+ i=pasha.tatashin@soleen.com; h=from:subject:message-id;
+ bh=ahWVhQAgslIBwnfpmx5X48jHe/0a44QV3IQwRfGz+iU=;
+ b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWqLRRsSwqC6u4RSv76ETLMmVCyhdUsVHiqEBy
+ IzSCQuBMK+JAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalqi0QAKCRC7dyhM23N6
+ 3vK4D/4oivNUuZbxrdZZJAOMVjLNn7oaWYDk2Y4dxn2IVLciov4pX+4V8SBAYA4KhEpyZKQ2mzg
+ B03dHNIKdFOpoPbLkuTRk9ZGugmK2ChP6tAHjBDG3RkOkva5OLSR6JBKmrLBG2GEATEY/EOLIZ6
+ eY/PqU+3F+O6j7iFegvOLxHq4AGPuXSVacvDtCjafit/axJj9LIZ8kF409sq6qgcKO5JKSa8Jea
+ R0CHNLN/rrFF9+PoaDcZ3B9yBydtITA6U5LOFg19G95jV2FYfsILSxxBbZrxUBXAadtzCS2F9wc
+ ojlbkyeQfKGhVsMnUf0jafSZJy8tlQ5ygLO7zUxGMxHU0yDSH9+T6zwkWpBoVu1DzV6CaJNE61t
+ UznWIUm+HsrUwRRGxWKvQ4wAZb7dT86JZoYl//i+SFOHLjV+15QOw7niAqqrMwWfQasB4V2Hxwt
+ eXCZu13O9+xov9pJgVNEtvYTQmPpi6xZlCFh5C0RT0QzDoNbZ/WnJZuT0M8/c8BHxvB3E/domK/
+ fmKpXprZCKUC0ZMdFx+RiHls3kZs/ypakbVXPUHyzfXsnIT6DxIFfXMfg5kTylkBxQPg2GwLoaZ
+ CRH5LGmNRRTuTgY1EFBAo8as9+ZfD4j3ydB1vBG6faS20lFZ3r8fycLqRoy2hUgcnWVKGbkEtVC
+ YOLWzX1kCSM2bCw==
+X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
+ fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
 
-On Tue, 30 Jun 2026 09:55:52 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
+On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.com> wrote:
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index 03075ce06ac9..df6a02240aa4 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> [ ... skip 76 lines ... ]
+> +	/*
+> +	 * Hold the ref on the incoming FLB until pci_liveupdate_finish() so
+> +	 * that dev->liveupdate.incoming cannot get freed while the PCI core
+> +	 * has a pointer to it. It's better to leak the incoming FLB than do a
+> +	 * use-after-free if driver does not call pci_liveupdate_finish().
+> +	 */
 
-> For zPCI devices, we have platform specific error information. The platform
-> firmware provides this error information to the operating system in an
-> architecture specific mechanism. To enable recovery from userspace for
-> these devices, we want to expose this error information to userspace. Add a
-> new device feature to expose this information.
-> 
-> Userspace needs to be provide a buffer of fixed size. This size is provided
-> to userspace via the VFIO_DEVICE_INFO_CAP_ZPCI_BASE capability.
-> 
-> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> ---
->  arch/s390/include/asm/pci.h      |  2 ++
->  arch/s390/pci/pci_event.c        | 19 ++++++++++++++
->  drivers/vfio/pci/vfio_pci_core.c |  2 ++
->  drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++
->  drivers/vfio/pci/vfio_pci_zdev.c | 45 ++++++++++++++++++++++++++++++--
->  include/uapi/linux/vfio.h        | 23 ++++++++++++++++
->  include/uapi/linux/vfio_zdev.h   |  2 ++
->  7 files changed, 100 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-> index 016386f7ef4a..88a125b92bdd 100644
-> --- a/arch/s390/include/asm/pci.h
-> +++ b/arch/s390/include/asm/pci.h
-> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
->  int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev);
->  void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf);
->  
->  #ifdef CONFIG_NUMA
->  
-> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> index 8934b640a095..3ad16038e005 100644
-> --- a/arch/s390/pci/pci_event.c
-> +++ b/arch/s390/pci/pci_event.c
-> @@ -77,6 +77,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
->  	return 0;
->  }
->  
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf)
-> +{
-> +	int head = 0;
+I am confused by this. Each preserved PCI device must have an associated 
+FD preserved with it via LUO. I.e., vfiofd would need to be preserved. If 
+the vfiofd was not reclaimed, and finish is not possible, that vfiofd 
+would still be owned by LUO, and therefore PCI FLB refcount would stay 
+positive.
 
-Nit, unnecessary initialization.
+However, if finish is possible, and this is the last vfiofd that is 
+finished, FLB will be freed as soon as the reference count reaches zero, 
+which I would think is the expected behavior.
 
-Otherwise LGTM and I can drop the initialization on commit if there's
-no other reason for respin.  I think we just need a branch from Bjorn
-to base this on once he's happy with the PCI series.  Thanks,
+What is the point of holding a reference here, instead of only for the 
+duration of FLB access, i.e. to make sure we are accessing a valid data?
 
-Alex
-
-> +
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +
-> +	if (!zdev->pending_errs.count)
-> +		return -ENOMSG;
-> +
-> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> +	memcpy(ccdf, &zdev->pending_errs.err[head],
-> +	       sizeof(struct zpci_ccdf_err));
-> +	zdev->pending_errs.head++;
-> +	zdev->pending_errs.count--;
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
-> +
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev)
->  {
->  	guard(mutex)(&zdev->pending_errs_lock);
+-- 
+Pasha Tatashin <pasha.tatashin@soleen.com>
