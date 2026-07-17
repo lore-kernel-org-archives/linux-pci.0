@@ -1,200 +1,234 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mout.web.de (mout.web.de [217.72.192.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0803DEADC;
-	Fri, 17 Jul 2026 08:04:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784275442; cv=fail; b=cU7kLxhJY0RPlgY/0JAeFsP1menFgHcNZXJcW8ZlvCdJ19Zy3JzCh0jpEW2X5kOj9OusWmsaKIqPHS+0Oz3n/29Eo2/svtJA726B4NgW5qp4t+bJd/FHOBm7eXZJFCOOX5vw1w9+NfeyuZ+vaTdz8ke50tqKjSIgCPBgIAGBy3w=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784275442; c=relaxed/simple;
-	bh=ME0CAYOqvEXYHnM+0dgRSewJjDicpg9ED+Khfhmv9Ho=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=rGnSdqnn8pfi47KgFvk97TQwQ5loksT73R8XDciQttBo/cnfGdLY2UtlTT6xut0uwsFxL//ZKGMJDV+WhkPfYNhXG8HSOzCuSf+HFIaOVbcHpUf4mT5rT+jo/rY6F5kaUMXKQCG3zrazFIB8PHTiykWOcVwsG+Dr2olS5/sIOso=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EAoBLfKC; arc=fail smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE4BE3002DC;
+	Fri, 17 Jul 2026 08:15:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784276149; cv=none; b=e8TaQJejCNCVIROy/8hcOZqEfXN1aA/wUbzNrOvmX7YCqovF2jtz2u+jWGZ3FNGzClQ0hr3sgP9BZs5JoDMk5UypS4cQNg0iEHkXFMoP9EU8W7nfQuHC9ydx+ZLKk7mGbcAxXrAMpLj+PhtHWIvWfzUcr0P4wmdy0Ges8tkJWUc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784276149; c=relaxed/simple;
+	bh=GbB/VKmKrO0bVvKbM+2E6G5qtiIuFuhguFIXPM5nHJ8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LmME9tnO8EY6MoWRgArtvnpNfFAdYy58FH+37gh95khIZsrnsK7D2eQvngPSHCWBR5ymZjQSvPHAaqTX55cAbhy8/Gcure2DZHJK7Z0iXONYYK1Ugg5nYeqS7oVbhEt2zjfM01GEtcHsfjoauF3e9DB8zdMkHYnd41j1v6nfBOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b=MDsGvZ+z; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EAoBLfKC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784275441; x=1815811441;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ME0CAYOqvEXYHnM+0dgRSewJjDicpg9ED+Khfhmv9Ho=;
-  b=EAoBLfKCDqOjlIX1TSrsRBjnv3/b2CDdnJ7ooALj/s6sjIEjkEVQInRM
-   qg6QMwLxzc/GIAd8U0cUtdpu7U2Y8hL1mcDq3NLoRBQR5VZad7kAWNcju
-   w+IVHKqd/39cFy4eftCIdjbn/AkbXy5ljHtYi7sIGqImA1eu5KBSOo7Xo
-   TA322SXB8T0LfN7nfqQNhlO+urUt9cdsJzPUZjSiu94qWPibEiKOmIsWr
-   q8akd5+Kyc25gLVUtvfk4h84glUfmtYOGlQGc+Oz9wQdslIuZcgZBk1e6
-   mU3fUzFFNLTu7TS3zuzqDISY4/Qo2p9JBwJiFmAH7FBueTmY8raedL6jK
-   A==;
-X-CSE-ConnectionGUID: 0MFQ7WW4Tzy5LkDVa6vTBQ==
-X-CSE-MsgGUID: AsML7ba6Tuu9KUTTqcMXpw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="110494758"
-X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="110494758"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 01:04:00 -0700
-X-CSE-ConnectionGUID: KtjyyWz3TfGz79yuB4Fr4w==
-X-CSE-MsgGUID: j6hldSiaSj6strRp+9rYbA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="260543513"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 01:04:00 -0700
-Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 17 Jul 2026 01:03:59 -0700
-Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43 via Frontend Transport; Fri, 17 Jul 2026 01:03:59 -0700
-Received: from CY7PR03CU001.outbound.protection.outlook.com (40.93.198.38) by
- edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 17 Jul 2026 01:03:59 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=gwg34s25wURjb8NxTYv6P6twSy+Q+KLOrZtfa941W12tFc2uryvkwHemVtIOOs6ru586Aepq1EcT8V3kakKFnzsMv5iS5E8HW8ubvWZmhiOQGxCNQ+u1pwMPhAcbn229oCMqOWicTlIoaA+zE1CoB/zx/k3nUdsbvlPaE2lj7q0/wa/UNLfdAtHJOlOufs4pNiIHeIqGh53W/+S11dO1cxjfERDtWseaqmDS69KYANaTxxR3Hq14QhArHLai1dBYqiqaFGoajxCkVd11W8Fq7CCac29K5ax7H+7yun2JmySCPSbsQ2Hut/LljqeZg7PJ/7KTlkPK3iq6L/NAnd1ZHA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1UZ96yd0fa52TfxwD8LEOcQZqlCZibA8a4PlFEAoXj4=;
- b=xbRSBqg/V9M1DpC1rNBQ4YUeMdYk/t0ozHkr5H14KTEPidv3TbgenhztDvfOajv82arRRj1vTjRjfv5iG0qXhfhTkJ80gRrwrMEd1kUbfz1cOF2yTCreJePnaNhWSPSDmtskKt+fEPRFDyqPi+l0IYQBd9n/OInS/Q90s49nJW+WtcrOiF+DUH6lqOM0bD2aVkgyzvV1sIyG+geDyhl2Y5I02Iv0yJPGkwLH5jOnWoU2qxoJtMxUs+76oCzIMorKRkWRwxSn2TEWCqD5x5z81QxfeQ2kckyo3fctjCwFO0VIi4AZZdjI3nDBdUfiY+rMqNtxdsWOMu8XBYccsasjLg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from SA2PR11MB4844.namprd11.prod.outlook.com (2603:10b6:806:f9::6)
- by SJ1PR11MB6108.namprd11.prod.outlook.com (2603:10b6:a03:489::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.13; Fri, 17 Jul
- 2026 08:03:57 +0000
-Received: from SA2PR11MB4844.namprd11.prod.outlook.com
- ([fe80::61e5:7b38:b8a4:1abb]) by SA2PR11MB4844.namprd11.prod.outlook.com
- ([fe80::61e5:7b38:b8a4:1abb%4]) with mapi id 15.21.0223.008; Fri, 17 Jul 2026
- 08:03:56 +0000
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>, "Leon
- Romanovsky" <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro
-	<amastro@fb.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
-	<christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, "Logan
- Gunthorpe" <logang@deltatee.com>, Pranjal Shrivastava <praan@google.com>,
-	Longfang Liu <liulongfang@huawei.com>
-CC: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>, Sumit Semwal
-	<sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, Alistair Popple
-	<apopple@nvidia.com>, "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Thread-Topic: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Thread-Index: AQHdFII1dp0ZUEYvfESPfxWrjTOS/LZxXI9w
-Date: Fri, 17 Jul 2026 08:03:56 +0000
-Message-ID: <SA2PR11MB484467256B90A1500F0FC1D18CC62@SA2PR11MB4844.namprd11.prod.outlook.com>
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-10-matt@ozlabs.org>
-In-Reply-To: <20260715174737.15287-10-matt@ozlabs.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA2PR11MB4844:EE_|SJ1PR11MB6108:EE_
-x-ms-office365-filtering-correlation-id: d05933b6-292d-473a-b326-08dee3d9f39c
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|23010399003|7416014|10067099003|4143699003|11063799006|56012099006|18002099003|22082099003|38070700021|921020;
-x-microsoft-antispam-message-info: g5UrOiAu3pU8GssiHUl9cPIiiPbiAi5jho1iMe2oOKzh0VlkaNwTnqZtbtEQ17F0AsLdSqoZWFIoSH8KRl5UD2Cr3qX52a9hEEC4GBGz3V96Eu5pzm12tqpz9SuznAbUWJadl1Bw77qAlFW/ItRe/Oue//lHSLerKlIfnWuL1+CLgz8K2V40Xy/kHP7lJfX+bKn8KfmYp8sznxmx7KB72csIMGH5LcJzuRp55t9AtAeUe372Ge6h5yLum6oFQZbkHveHaJ6Nx/2UOnhMNOiFiA7MY2pcrUKuCtREyWYrbq1xLWbu2fjc/Gv1FSzyRR6neBBv5VNGEL6Z/YM479MWHrQjHh2Ai/KeJwY+syFoTWPceQVj6f+AFr1081/1gFYBI0aQvDAGvud3+0ngjPFnZoURGNVOIHfLM2hjP0X6UwAee+4t/iMcxv6SPyZWOTJPykgazLPDrrrurFDx/VVUC0KTFaXxH4Iybem0oIeMrV0BHXfLEDPraJKu6g6rt+jkoqq3mAZn6AW8yWxbhFHJu7iHhcEw0xoW7D323QDesRy1GaD5rQfyyLVc1HoXEMXFcBWcv/pOjLMfqwq2G1sJNaatUDK2xMHu6Hwl3GSvEXCK9Yg1kkf14KKc+/4xk1rN1S/o8EojC1KFRSszI4y8sgJZxeVAcGB0SLr5EwoaMSPzKQXikf4AMsnO8wkauSX1y0g5EdqNxX61urTHWvmSP0SRREeXdFmMnF1oZCSGrUDxRrinGyveT/l0fFtvZj1e
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR11MB4844.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(23010399003)(7416014)(10067099003)(4143699003)(11063799006)(56012099006)(18002099003)(22082099003)(38070700021)(921020);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?u+ARB4/bbYoO3Oey64Ev1S4m3nFbbu8orHcSQlIZ6rnfzX2i/wZitBIM4Z?=
- =?iso-8859-1?Q?r1Xe/+OqEu955Ds+VVy+wmqZoovhHbO87DzLA3p7uyYWmP+unKR1kXhD+Q?=
- =?iso-8859-1?Q?VyNCpbayI26Uyc4Pwty3fNlpPdwkDjJ9V6Ff63Hu+qGudafn8w5Wuzsx1a?=
- =?iso-8859-1?Q?UOtHmYgbXv9HpwHIz56tlzOBsrrEyrcPPtrwaAA6QlJBxZ09Pg9u2DN+Fc?=
- =?iso-8859-1?Q?S02cbPSdlk7e+xX9eQe+0b0wNPM90PXAGzjJ+0xAvhKrYr62hw9PR44LFs?=
- =?iso-8859-1?Q?+EjtnPx/A5HmWUQTqsVIlK0XbviujX8gQYdtMjM7WnSkSMCdaXW1c0Ox5A?=
- =?iso-8859-1?Q?2+QVrZL3p5I0sNdykuX0V0iDwoxc3OosdpckFrxsKstCiUR1aNaa1gmY4n?=
- =?iso-8859-1?Q?8NOOUXOWnFN9a01ZtUS9sXZqs43TGI50g8Z6pJED2kOyb0Wd7vaJXWN6S0?=
- =?iso-8859-1?Q?a4VhfFXXspsnchRdUglVHaseYWPA2zteJZidOpgitMvWzDNrBVA2K/kGgu?=
- =?iso-8859-1?Q?aMJf5F+/XEVKh9WQ0oghGqpBLSpDW2El1t87Z7kAXVLvUbCs71vVRA5ejP?=
- =?iso-8859-1?Q?NebJPnhenMyXle/G7izCDqOZUmw6DtJuWuZX/Z7NYdOXyJdl6VicZXAPUf?=
- =?iso-8859-1?Q?6X3YdkySamcH8JYC1DwVJ6rNLU+7TztXpiFwWihfJhF2uQRKb6ss4N5Lec?=
- =?iso-8859-1?Q?dFl5WkQI3KXyR2zGzHuoanHwM86DU32+st/QC+TXVkkRlQ4lLza8hiwOBM?=
- =?iso-8859-1?Q?fDWJHnumIzirxpsfK4/zhr8FwKpzGRIxLs7o0wA8dQufWOBghZZuzZ5KJG?=
- =?iso-8859-1?Q?+spC0h1aqsqNr1J9Jgcl2pOQMbek+1gyxG5Jw9zIIdGMNjhJ+YhPj+d/XI?=
- =?iso-8859-1?Q?H1Tqn7xGQMA4tu8SFolO97w2wufYmve0hNHMp62dW+ewTNRMNDE3CR0gDC?=
- =?iso-8859-1?Q?GBHgoGFRYxD3UFnijUSka9GOZL34o9+iNuD8uzKYRsVSyepY6vN9/aDdwM?=
- =?iso-8859-1?Q?BTT/5jpb2WqC/9bCaFf8rr/UKb5AAf0FRmSpDxhIs0RBiHS7HyT+EZ5YST?=
- =?iso-8859-1?Q?ODEoxjD0SRAMcGvC9DxD+k75+L6b1uvJuA5dWaNksA6yjVTurUjLf9gV9f?=
- =?iso-8859-1?Q?eyvEbxMdczEeORWNWwH1vf1hYf07eYwzE8Yh1PQQkE7tQLdPqahjQXaT5j?=
- =?iso-8859-1?Q?53oFUEUflYX54I9q+jdMQfJHfKEmZYEOGZM5UYDaqq4OYD+lwO6KqRtagU?=
- =?iso-8859-1?Q?UOlWOKZ265CxHcpL3K1tq2k5Xw5eZ627zodj5gndaAJdNx0U8M85jWPVOM?=
- =?iso-8859-1?Q?uauf/5QM7qkzMe/0B4s678P2ifgHy2PwCLfenC17pUuaz45QWzlE0dCFV1?=
- =?iso-8859-1?Q?mxS31LzMrI+8mMV/cQ4oUBuW+il3Nrhiq0eDA9NwF1UgaAfa6YR7BmgFa4?=
- =?iso-8859-1?Q?srIge613lmsPVbpAlPra2hw7p6Rf13KVFMssznfUTVV7mHBrTv2Dvf+/yF?=
- =?iso-8859-1?Q?kJvzAqyoCfHc/3W0keNaOwvDwWBbnLqi5+9ggmHqu6mu8RiJAikp/g0dwb?=
- =?iso-8859-1?Q?JLv6hY6MpxSLoYMioD+oQt75id1BS78aChAOzpYxVlO3GrVuB5ZgPXCCpq?=
- =?iso-8859-1?Q?e6GXdjpX80NQtxzJAS+31TGkv5F05/iw6YPTB8vpPFtL5347Y7GjaLjPKp?=
- =?iso-8859-1?Q?C5anpbJ/0bsng1hCqVH36MYfc4WmJLz0+l27pbitlbr9PKqQBuPnJaNR9B?=
- =?iso-8859-1?Q?kkkc4bydHqIIMnry3NHzJjtRiFVH8fzHsQnkgXRWntIUMg?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=web.de header.i=smoch@web.de header.b="MDsGvZ+z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1784276135; x=1784880935; i=smoch@web.de;
+	bh=CLuw4SqcZi1lEKlD9DTjJE+cjzVv2f5SqYtEO7/zL04=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=MDsGvZ+zgs6uYZlEuuxwI9xfavxxXdx53BjOjweyl3ouh7+prT1UR8Okm4Uqul24
+	 M8uGQFQrr+6N8IigMPM5bQTyYC3J7f31NS+VsTuOHO2HitkmDeVs/iXChrhuxBDXb
+	 PTrhxiFRTHK8iUiHhBtBsYDqo6A0hU0aexgmvjdRGisM1d76Ctr4Iva8HpqHY/f/I
+	 3p+Pv3Y36zOWYOaINcPhXJEVJoIZ4gvm4mfFOiAnVgwxclEMYuaQzK1ruLcHJvJxk
+	 bFFEf5/hzDnM2glrhxZPgkidVinrIXkWsnwT7IJc3RBeWY6d/aFkTWiqUooYS6nmX
+	 3uURABqwhFGWY+Eqww==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from client.hidden.invalid by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MFJnX-1wmYbW10gL-00566c; Fri, 17
+ Jul 2026 10:15:35 +0200
+Message-ID: <8cb386d1-32b4-486f-a2b9-86cf9d46a3e8@web.de>
+Date: Fri, 17 Jul 2026 10:15:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: ha02s+5XGkCavwLuyP47ZsndoLOVVXIAFrjI/uPtVx5sBh9pm7jhgfIEkwcsEZ9tJRd+x6NyGq2eZEMDuh3sjGYAtk0XPUpaNLI2RvJlXawkH4vh178w6BpezAwfkciJCtSpz9DXjL+geG0gCQl3Pvz6iqXwyf42UDEKncfpsRNRXkJVmKCBaNxmLcm2D49AXum2ww9jCHDfzetWRwf5XYP4ofFflRgOa7XXzvq7+s7aMuQIqWuX0kIMbHkzWw+BjxXbkE1c7qMhRIsVTNtbWReAN+1WUdQGuancUNCbHrP/m9ffl9lvUGo/Q9fCRa9Ip/H0fGb73opD3ITzKo0M4g==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR11MB4844.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d05933b6-292d-473a-b326-08dee3d9f39c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jul 2026 08:03:56.7445
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: X9yqODtgVGQyDmJeDhgcyAd5V7qRah84ErEl5iOALOV1okH0JHYw/QzlkmOFwkEbdS+NCEnfjCjGfxCLbR3VfA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR11MB6108
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] PCI: imx6: Keep i.MX6Q Root Port MSI capability with
+ iMSI-RX to work around hardware bug
+To: hongxing.zhu@oss.nxp.com, frank.li@nxp.com, l.stach@pengutronix.de,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, s.hauer@pengutronix.de,
+ kernel@pengutronix.de, festevam@gmail.com
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ Richard Zhu <hongxing.zhu@nxp.com>
+References: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
+Content-Language: en-US, de-DE
+From: Soeren Moch <smoch@web.de>
+In-Reply-To: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:LUKVP4XMMHrPv8SLWRbxJn+jn8rRVrD7hIU2qpLlUwnarsij/Yh
+ /ARg8XGPf+r5aNfHWYSUtfvgJNAWPYinoF/CmqXeauR0+sU5mVWbnFDJiXV2+OAvOumeyV0
+ yt/6bhRyPeV2yQR1SiERvQmwxoMF0Xt7FcesstI9NNDcQFtIMy+24bHUeaTMlXL06mePENw
+ CRpbim0gTxCmq9pvVW6cg==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:XStvjyGwY0k=;wut3CobyPf5ogBZFdd9+n2EqSMv
+ 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
+ 3Fw
 
-> From: Matt Evans <matt@ozlabs.org>
-> Sent: Thursday, July 16, 2026 1:48 AM
->=20
-> Expand the VFIO DMABUF revocation state to three states:
-> Not revoked, temporarily revoked, and permanently revoked.
->=20
-> The first two are for existing transient revocation, e.g. across a
-> function reset, and the DMABUF is put into the last in response to a
-> new VFIO feature VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE.
->=20
-> VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE passes a DMABUF by fd and
-> requests
-> that the DMABUF is permanently revoked.  On success, it's guaranteed
-> that the buffer can never be imported/attached/mmap()ed in future,
-> that dynamic imports have been cleanly detached, and that all mappings
-> have been made inaccessible/PTEs zapped.
->=20
-> This is useful for lifecycle management, to reclaim VFIO PCI BAR
-> ranges previously delegated to a subordinate client process: by
-> revoking, the driver process can ensure that the loaned resources are
-> made inaccessible when the client is deemed "done".  The original
-> DMABUF is defunct, and BAR resources can then be safely re-exported
-> for use by new clients.
->=20
-> Refactor the revocation code out of vfio_pci_dma_buf_move() to a
-> function common to move and the new feature request path.  Note: this
-> now only calls dma_buf_invalidate_mappings()/dma_resv_wait_timeout()
-> on the revoke path, whereas vfio_pci_dma_buf_move() originally called
-> them for both revoke and (unnecessarily) un-revoke.
->=20
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+On 17.07.26 05:32, hongxing.zhu@oss.nxp.com wrote:
+> From: Soeren Moch <smoch@web.de>
+>
+> On some NXP chipsets, disabling Root Port MSI/MSI-X Capabilities blocks
+> MSIs originating from Endpoints from reaching the iMSI-RX controller.
+>
+> To address this hardware bug, commit 3a4e8302e72f ("PCI: imx6: Keep Root
+> Port MSI capability with iMSI-RX to work around hardware bug") preserves
+> Root Port MSI and MSI-X Capabilities on i.MX7D, i.MX8MM, and i.MX8MQ
+> when iMSI-RX is in use.
+>
+> The same applies to i.MX6Q, i.MX6QP and i.MX6SX. So preserve Root Port
+> MSI/MSI-X Capabilities there as well.
+>
+> Note that preserving these Capabilities means Root Port-originated MSIs
+> such as AER and PME won't be received due to separate hardware limitatio=
+ns.
+> Users may need to use workarounds such as passing the 'pcie_pme=3Dnomsi'
+> command-line parameter.
+>
+> Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Por=
+t if iMSI-RX is used as MSI controller")
+> Cc: <stable@vger.kernel.org> # 7.0+
+> Signed-off-by: Soeren Moch <smoch@web.de>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> ---
+> changes in v3:
+> - Extend the fix to i.MX6QP and i.MX6SX variants as well.
+> - Update the commit descriptions suggested by Bjorn.
+Thanks Richard for checking 6QP and 6SX platforms and extending the fix=20
+for them.
 
-Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Soeren
+>
+> changes in v2:
+> - collect a-b and r-b tags
+> - use correct fixes tag (Manivannan)
+>    (reference commit that introduced the bug, not the incomplete fix)
+> ---
+>   drivers/pci/controller/dwc/pci-imx6.c | 9 ++++++---
+>   1 file changed, 6 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/control=
+ler/dwc/pci-imx6.c
+> index 98e1db751132a..dba27eac6bff6 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1995,7 +1995,8 @@ static const struct imx_pcie_drvdata drvdata[] =3D=
+ {
+>   		.flags =3D IMX_PCIE_FLAG_IMX_PHY |
+>   			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>   			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>   		.dbi_length =3D 0x200,
+>   		.gpr =3D "fsl,imx6q-iomuxc-gpr",
+>   		.ltssm_off =3D IOMUXC_GPR12,
+> @@ -2011,7 +2012,8 @@ static const struct imx_pcie_drvdata drvdata[] =3D=
+ {
+>   		.flags =3D IMX_PCIE_FLAG_IMX_PHY |
+>   			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>   			 IMX_PCIE_FLAG_SKIP_L23_READY |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>   		.gpr =3D "fsl,imx6q-iomuxc-gpr",
+>   		.ltssm_off =3D IOMUXC_GPR12,
+>   		.ltssm_mask =3D IMX6Q_GPR12_PCIE_CTL_2,
+> @@ -2026,7 +2028,8 @@ static const struct imx_pcie_drvdata drvdata[] =3D=
+ {
+>   		.flags =3D IMX_PCIE_FLAG_IMX_PHY |
+>   			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>   			 IMX_PCIE_FLAG_SKIP_L23_READY |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>   		.dbi_length =3D 0x200,
+>   		.gpr =3D "fsl,imx6q-iomuxc-gpr",
+>   		.ltssm_off =3D IOMUXC_GPR12,
+
