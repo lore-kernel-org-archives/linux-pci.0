@@ -1,129 +1,131 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F4C175A5
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 22:08:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8480A3D955B;
+	Fri, 17 Jul 2026 22:10:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784326094; cv=none; b=kmXfI7lFN+HKNUZMZnU6tvgGvsraHnUbIyasNjmxzMIkfDPAMTBlmLWqJtOMXAgx95qL8i1MCcZuJXKFa1pjKY2LQGF9+7P99VFd49JVNm1ICuNgr5kaOdtk742Ncc3BMWqMKOZYD+UMU+jPihGFnKjLCHBzbY6+VIVlJC+TZkA=
+	t=1784326219; cv=none; b=KAE9DTHzIaVkf2DTojuQSPlcIyCg9CVHFkPesg+W2/RY+bH1zh04604sz7YE7+qXa5bVTdUkPBBuOO7FsGbZHpVTGHJ4cZqrn+DDmQcqBtoEpAfQ1sna6bBDk0AxMGRZZWPIG16Vj5dyqMxM8rF8RQyxsuDj2VR8I2N1E7P4DQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784326094; c=relaxed/simple;
-	bh=JvD6d52JVF0dw9KaC8NTS7eMJsBpt7DQsADyzRVcQlc=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=JDB+pBmJ1AK2xYIs9hwC+9JV9xu6gaRpzIOaDHMWSjpQiQP7/fIswoIoqUMxJLeCkWwMKYiSLmNVMvqbxOynkVZoo4taBBEZFSVXGkWpzgWQdRCtIac4yuUIj3hPr0E5ZGjLvCcaKu/4xblb/b5/TWu9CoM4Bwf04hAzc0xCFR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=D7exEhhy; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1784326219; c=relaxed/simple;
+	bh=boazSQKaoz1Y5heBQp7szsJqCij2Wr04g3mlrBLNMks=;
+	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 Subject; b=aDmAHwPpi3jwd2A/ZCTtvIHzBDpS1syTfXIh2ClAJtpzD0vA+XYNWsRpSGwGNRrTvJ17wMFqnGqFwJUb57QYeK/LCypoR+u7QI/eU4sKZoR2UgH0qgBLbyqt8cQi2jgNFahPSroJhVy5E/muJfOyKbjZxjgESBFcfSqKkHT1MAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=LO7yGZms; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="D7exEhhy"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92e7c6ec9dbso400280885a.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 15:08:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1784326090; x=1784930890; darn=vger.kernel.org;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=fK1sV5PaPmcS6UhZ86Rm4HrquxZKQdzLRmcBNyv2BwA=;
-        b=D7exEhhy4gPsN2+FvvWgQ+I8DsUUwXTlce02oSoRmBxasw3iJ1SIPJsprH6WCL+449
-         QUKYY+Jc0CKv3oxYNnvKn9kMd+KBeq5RgpzV/ZIc8aVyEPGOly4nWcRX3AjrcPcBhrG9
-         M+MKFICZJ0+yDJuSLS/DZSlGcj45pGH0qvGhvfREtAPZtRuSs/bQ+/4Fq7350uinjwiZ
-         C3hQsUluynmewk7nW/kzA06oz3XISk2aid6/RVhgfkP9GA59ux2hi9d1indVRs/kqugs
-         ZxCp5vvC4I5OGKrK+hKpvyp14AmEBXWEgWdaqjki/kYZxd8RFojBPhUT0+oyDGJ0mQgA
-         lgig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784326090; x=1784930890;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fK1sV5PaPmcS6UhZ86Rm4HrquxZKQdzLRmcBNyv2BwA=;
-        b=N0578KqcmMxSiIee9HgYNMs04vuEvneVW/zn0CUdTNN0TPd4Wt9bA0mn+EIK5Jo2lq
-         48FRHLG5jSgIEQSVJO7GmdUx/cbV42qVlhEww7UyRLbQrqp7tuX3pX25r4/Ok3fE/61h
-         PlKdbZLR88yMNm/1CwPZOS2e1574/p+hm30AdecQSSyfX+WOL+HQCd0b5CXaQK0u0YLr
-         WW38s8Jh9kjjKSupnieuR/rkTwXp9Wx79FVLHIJQEOJCTlf3dfWoWFcecV+kPU/0kMDj
-         ZSJXHHk2RkflB4D/6cd8jCEzSK4xdXKuofty1D9rOxqqZzC5wVJljzbfHjaulevuGuty
-         sLSQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpkGBj4SuRu8on/gVt1oCr1qjvBEc0Jq64HzG0xINtatgnXvbK6cb5uQUWn9byD0bmiEiwA4w/yaKQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6JKuAMVMpDchujJWMZzpVZ0zT6duPy9rfz3J9GAU20CfqFEH/
-	bw/jcQ0SCut5yM7OGd3IthVuZnueG/LEsRnANd3Nc4W8DqaLo2y7R/GIYW+RyAUqgHA=
-X-Gm-Gg: AfdE7cmIFCNL25pCMtV6noDVJZn2ZyxVnsaLyqC4WX53POOvqPN2dbe+jEa4I4OdYKa
-	9jeC9PQX9Z13Sq8+m7l9pxM+6zsvyRburTW3rvj4zSPhHoyjT0jFE8G17LhGPlP1SRWRX754o9x
-	69sKw6I6zP+/dzwQXHH0wBAdOcrhoZxioPodgJFAapiU6B3Bt+KNfZ6OgrRZDrrNLrapcPf49cy
-	vJeOON4dVh0v2nfjIvBgcINVULbsSEauXROXaBbnCYGVSQvd2LutTdU4LUA1WtBRJCqQxazRbaf
-	a8z7Go28Gh0KcfwWGz0saHfpMdfDF1qlsYbci1gG23+bJf+Yd6C8jnHf2imJnEQA86653U61PFh
-	TE48Dz1rKCIaWU8VpGbhl37fKDgHP95UmPy2TyOhy4b/agmlpA0jOuBb8X6/EDOM8/Q8V5/TRDP
-	OfyS2i5E9D1LPDctzqzeqH/SvofCbgCih+ZHTPkU8=
-X-Received: by 2002:a05:620a:27c8:b0:92e:fe10:333b with SMTP id af79cd13be357-930b41f9901mr535269585a.65.1784326089627;
-        Fri, 17 Jul 2026 15:08:09 -0700 (PDT)
-Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-930b52e0f87sm257411385a.7.2026.07.17.15.08.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 15:08:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="LO7yGZms"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Cc:To:From:content-disposition;
+	bh=koyBdE/JNh7nnWKhy5pv5nbe/haHHnakVIxzfBN56ag=; b=LO7yGZmshPgE9l9KIEu+jtOR45
+	K9c0IECUhzATJtcj+vXuQRPI1wV1NikExjNhUqhSckQvMnw5yGU6E7c9DLKgaze8Klx3i/TMP335i
+	7U13l9+v4DtnRX+jUfTvEL/cKuo4wQWRggLvngEbZzk5eMwv2NNcfFZRYQJhoUaIajbDLGR/kX9D1
+	uRmvp3Jr2LiXs88AbCmr4c47xZZYf1pe8fxYGi/Osv7fFsvXXa2KR29Xwg0pMJEzmer6Iw+Q6we1W
+	WefVyYPNwXoqgqApy89fV9mtzIWsK7TUCS4iJ/5c11O5hVkSozh0O1U8JVQSXW/QALKiwgbbrUCmO
+	hAa36WgQ==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wkqkz-00000008wEp-3hEw;
+	Fri, 17 Jul 2026 16:10:10 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wkqkv-00000001W23-0WA3;
+	Fri, 17 Jul 2026 16:10:05 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org,
+	Vinod Koul <vkoul@kernel.org>
+Cc: Frank Li <Frank.li@nxp.com>,
+	Kelvin Cao <kelvin.cao@microchip.com>,
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Dave Jiang <dave.jiang@intel.com>,
+	George Ge <george.ge@microchip.com>,
+	Jaeyoung Chung <jjy600901@snu.ac.kr>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Sashiko <sashiko-bot@kernel.org>
+Date: Fri, 17 Jul 2026 16:09:59 -0600
+Message-ID: <20260717221001.361421-5-logang@deltatee.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260717221001.361421-1-logang@deltatee.com>
+References: <20260717221001.361421-1-logang@deltatee.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 08/12] PCI: liveupdate: Inherit ACS flags in
- incoming preserved devices
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
- Adithya Jayachandran <ajayachandra@nvidia.com>, 
- Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
- David Rientjes <rientjes@google.com>, 
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
- Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
- Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
- Pasha Tatashin <pasha.tatashin@soleen.com>, 
- Pranjal Shrivastava <praan@google.com>, 
- Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
- Samiullah Khawaja <skhawaja@google.com>, 
- Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <20260710212616.1351130-9-dmatlack@google.com>
-References: <20260710212616.1351130-1-dmatlack@google.com>
- <20260710212616.1351130-9-dmatlack@google.com>
-Date: Fri, 17 Jul 2026 22:08:05 +0000
-Message-Id: <178432608536.189683.17937493816735356455.b4-review@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=669;
- i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=JvD6d52JVF0dw9KaC8NTS7eMJsBpt7DQsADyzRVcQlc=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWqfHpXPLQRJGmFv5A4z6Gn3ZGKfCiLrGZFJYE
- 58dLVR/0DiJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalqnxwAKCRC7dyhM23N6
- 3nFoEACAMT3npwEDLawBzNMz5alv6oFvn/SKvY0p3N9N7lfY9rerg7LRUYRvEVf+TYGrtjTjgKC
- XpMxGn6W9G3uCTaWP5/B5bUX9iOkHNBgeZ6CphGCWTNjgxntOYpHpXDUfUe5vPEuaB21BCKb00H
- /boplL+neL6/tFYPnWk3feYN28FvkiXpJa1w4bpLVUJaV81/l8du0RTTTendMCT/iM8CsQZFdKg
- XXIz6uulPu+EUEn6yHi0dt37WyEhuB2i4QzJS7uIqv0vtEHW9bjIe+yE1X5rEFCk6hEkUnkdHur
- woH+mrGI2xscTu2d4ymvl8mB7IRj8Tvl5mo8nEk7zAitJ0JSk6lRaDJGAY+C/PTartb0wpNvWUS
- Gm2Q/v//Ntjm1RUidQSBijxhimUnnhQ9SBzGFES2gijkXQBcf5d1679whVMjGNvppPHjwZsUXIk
- 3RrGudA10XpLugTQr9B1GBQ5s2vwBRInivaoons7l4QpXJIUGxpApVRvlWVOEVrWZQbvPeMdtie
- +m7b7s30saS2X/yoNfNTf047Kms/LVNpUJrlS9iMDqANRGlM6iW4RW9XBPfzzcGXbKG9WkwuKQi
- BE/iu4Slr8z89z2CsULzwaGdgTjJivJg7eBPhDcDQQRw22q+lpeFRl5CGf/7I69oEYVuQ6o4QG5
- jAh5AuDVak+U7JQ==
-X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
- fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+X-Spam-Level: 
+Subject: [PATCH v1 4/6] dmaengine: ioat: disable relaxed ordering before registering the device
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Fri, 10 Jul 2026 21:26:11 +0000, David Matlack <dmatlack@google.com> wrote:
-> Inherit Access Control Services (ACS) flags on all incoming preserved
-> devices (endpoints and upstream bridges) during a Live Update.
-> 
-> Inheriting ACS flags avoids changing routing rules while memory
-> transactions are in flight from preserved devices. This is also strictly
-> necessary to ensure that IOMMU group assignments do not change across
-> a Live Update for preserved devices, as changing ACS configurations can
-> split or merge IOMMU groups.
-> 
-> [...]
+ioat3_dma_probe() disabled PCIe relaxed ordering after calling
+dma_async_device_register(), so if an error occurs and the code jumps
+to err_disable_interrupts, the function returns with the device still
+registered in the core's dma_device_list while the caller frees the
+ioatdma_device struct, leaving a dangling registration that anything
+walking the device list can dereference after it's been freed.
 
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+Move the capability read/write ahead of dma_async_device_register()
+instead. Nothing after registration depends on relaxed ordering
+already being disabled, and nothing before it depends on the device
+being registered, so this is a plain reordering. It also means every
+remaining step after registration can't fail, so there's no need to
+ever have to unregister the device once registered.
 
+Fixes: 511deae0261c ("dmaengine: ioatdma: disable relaxed ordering for ioatdma")
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.kernel.org/T/#u
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/dma/ioat/init.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
+index 737496391109..a57024c4b066 100644
+--- a/drivers/dma/ioat/init.c
++++ b/drivers/dma/ioat/init.c
+@@ -1170,15 +1170,6 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
+ 		       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
+ 	}
+ 
+-	err = dma_async_device_register(&ioat_dma->dma_dev);
+-	if (err)
+-		goto err_disable_interrupts;
+-
+-	ioat_kobject_add(ioat_dma, &ioat_ktype);
+-
+-	if (dca)
+-		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
+-
+ 	/* disable relaxed ordering */
+ 	err = pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
+ 	if (err) {
+@@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
+ 		goto err_disable_interrupts;
+ 	}
+ 
++	err = dma_async_device_register(&ioat_dma->dma_dev);
++	if (err)
++		goto err_disable_interrupts;
++
++	ioat_kobject_add(ioat_dma, &ioat_ktype);
++
++	if (dca)
++		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
++
+ 	if (ioat_dma->cap & IOAT_CAP_DPS)
+ 		writeb(ioat_pending_level + 1,
+ 		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
 -- 
-Pasha Tatashin <pasha.tatashin@soleen.com>
+2.47.3
+
