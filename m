@@ -1,64 +1,64 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF6E299A84
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 22:02:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F4C175A5
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 22:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784325763; cv=none; b=M7u5X4+tXjx9tujydom9ofUdd85b6wCvYSi9l62H9GsAFs8E6Ww1pLWzWjSIC88rXdEfxf2w6bTt9uzwVfMPh6snbWDuaD6tM8I6ymUWN42UQ5BLa6F0rfPrU2s7C81N3FoLNeGUEQGIwt16NT9H0c29GYcNVgg2c7xlsM+NpaQ=
+	t=1784326094; cv=none; b=kmXfI7lFN+HKNUZMZnU6tvgGvsraHnUbIyasNjmxzMIkfDPAMTBlmLWqJtOMXAgx95qL8i1MCcZuJXKFa1pjKY2LQGF9+7P99VFd49JVNm1ICuNgr5kaOdtk742Ncc3BMWqMKOZYD+UMU+jPihGFnKjLCHBzbY6+VIVlJC+TZkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784325763; c=relaxed/simple;
-	bh=LxcbZe7BgnncPWKoPk5gxZGS/pQMdASC0LgCixjRw3Q=;
+	s=arc-20240116; t=1784326094; c=relaxed/simple;
+	bh=JvD6d52JVF0dw9KaC8NTS7eMJsBpt7DQsADyzRVcQlc=;
 	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=e9IiQhB2fCKHaiujwBTvsrziO16OVag2mLaSkgceKwWhX9DYRLrf830yFuPg4dUk0y06Vxpof0BOm//h7yG0bABeEY1AqiJa+Q+3xMUydQtSsyPycXyJUPOvkZFV8T08NMKPCZ4ij690CczUTAXrYsD2q3cUyGFtzORHuolkXKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=ROU/9jFB; arc=none smtp.client-ip=209.85.160.178
+	 References:Date:Message-Id; b=JDB+pBmJ1AK2xYIs9hwC+9JV9xu6gaRpzIOaDHMWSjpQiQP7/fIswoIoqUMxJLeCkWwMKYiSLmNVMvqbxOynkVZoo4taBBEZFSVXGkWpzgWQdRCtIac4yuUIj3hPr0E5ZGjLvCcaKu/4xblb/b5/TWu9CoM4Bwf04hAzc0xCFR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=D7exEhhy; arc=none smtp.client-ip=209.85.222.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="ROU/9jFB"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-51c2cce930cso48421091cf.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 15:02:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="D7exEhhy"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92e7c6ec9dbso400280885a.0
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 15:08:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1784325760; x=1784930560; darn=vger.kernel.org;
+        d=soleen.com; s=google; t=1784326090; x=1784930890; darn=vger.kernel.org;
         h=message-id:date:references:in-reply-to:cc:to:from:subject
          :content-transfer-encoding:content-type:mime-version:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=HlCwb+1ZnQlT8KXH+VzgKgpVkzFEV+OYr4Ev43BkCgI=;
-        b=ROU/9jFBhTKMed4ivYwVLd4Fj3zpN8w7Q0sedEggcUepLZwu73KbZETPQhoGQOjaKP
-         +Ez7sh0ys+CRONjZ9La7yrZrkrT9xHjxVQqRZQXtKn/YMUY8KnTJc6YRO1IUsLdr/PzQ
-         dIHSGfBY0dKhmZfoIGIxKc90boJLgSuSbndwVmB0sKMVE13fq6U2dzL2Kg5YMZ3CoC/C
-         LaDuDxoHLWA0hcUySyFTY3f/zEjg9PnxndM1vm2VEXDHZNARWbQHkW+N+bdt/nRyjd+T
-         TfeD0SQc/TU1WIUVISGAFmie8pacIBkEE09hlKRbl1gMrkw9r7ynNZ+S5K15TFouB/zv
-         zSRg==
+        bh=fK1sV5PaPmcS6UhZ86Rm4HrquxZKQdzLRmcBNyv2BwA=;
+        b=D7exEhhy4gPsN2+FvvWgQ+I8DsUUwXTlce02oSoRmBxasw3iJ1SIPJsprH6WCL+449
+         QUKYY+Jc0CKv3oxYNnvKn9kMd+KBeq5RgpzV/ZIc8aVyEPGOly4nWcRX3AjrcPcBhrG9
+         M+MKFICZJ0+yDJuSLS/DZSlGcj45pGH0qvGhvfREtAPZtRuSs/bQ+/4Fq7350uinjwiZ
+         C3hQsUluynmewk7nW/kzA06oz3XISk2aid6/RVhgfkP9GA59ux2hi9d1indVRs/kqugs
+         ZxCp5vvC4I5OGKrK+hKpvyp14AmEBXWEgWdaqjki/kYZxd8RFojBPhUT0+oyDGJ0mQgA
+         lgig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784325760; x=1784930560;
+        d=1e100.net; s=20251104; t=1784326090; x=1784930890;
         h=message-id:date:references:in-reply-to:cc:to:from:subject
          :content-transfer-encoding:content-type:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=HlCwb+1ZnQlT8KXH+VzgKgpVkzFEV+OYr4Ev43BkCgI=;
-        b=dh94VV2XQVKlNUw1uo4islSWKlKeiw7uc/9oSCy2GNx4hOSBTyHTsohN7lsgtS93hN
-         13lhg2rjCC1s/5DJY/dzoJdBP6Zg2c082Me3ScqayDOu0P/Tb5iAjQiZsDpygPXw5Go5
-         iQrorRYperV4q1StaJlSWFncw7zW04HzlB3/yvpIdGhM0WA6M8UxtT+V3PaIvqfBL6Yh
-         UBwlOMK44F+CmFpYk8lKOVRVcr8dkRDZc4VjPcMjGrMvlogqyZx/gEmpRtx8+mC9jIuq
-         lSSSiiRyUdHlPrGAMByfRZQdJQgB632TBPTaQMedW23ou7DZ1sTHcL/v3mSffK9FjBrU
-         lNJg==
-X-Forwarded-Encrypted: i=1; AHgh+RpUFfGsksgeZ3uX8mmkGol4XfqSm64YARg6VbWFOf6DvYmXYuFWFvP0EgHCVGECaDTfxm/Dm+ZEKB0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YztFeNAzG/GREGXdpyhLadV+R/O89P7+43C/nlx2X67NvcUynmO
-	XXN/j+tKWw6yRX2z2T6BEoRwaqfdyJ6DsXxdJdTNjMB34EOSsk7VZuyMwVSAknsx2s4=
-X-Gm-Gg: AfdE7ckfdyOBERBcCxyzweYewfJhpW6XO83rId0GsGiOs9TKkus1yS0DjoJgSvtUWQM
-	SzRstQ3JUT8J/VF8m6zBRTdbf7Cpka+99F1e6c3W4QhSjZitcukqreaqNipMF8t/1L+RySoc9xs
-	CYulRlrYkwN9g8ciOF+BMwXArbt6+rALPCH09wlGBmXt7JpOM+re3R+Fh3A2lCD7oXNDpqsTVqO
-	10sBmnSr50LWS/Nwd7fzBDS0m4/CKEA/srt9o7VMUOl+hSH4rvK4oIkhFqvmhy4+lKaZ1NcRZ6N
-	BlHria/oDpWSgz43q3+vKSRZNCSZlLfEz0rnwFMRIH85dhJmKXIqGYHWPGEBCSVTvQosvWwfS7r
-	HseGvW5c8RSCfxJkX+AF20A3qNkUlAKn0/3Jnz5D06xlgOQfxXMLDhlgThpYQxTbxxKoBlythKn
-	rsQ7aidUJ/c1NJlYdEQeentdQfJRc2zAL0FxBlT0o=
-X-Received: by 2002:ac8:5f06:0:b0:519:51af:febd with SMTP id d75a77b69052e-5213f668ee9mr42987041cf.46.1784325759954;
-        Fri, 17 Jul 2026 15:02:39 -0700 (PDT)
+        bh=fK1sV5PaPmcS6UhZ86Rm4HrquxZKQdzLRmcBNyv2BwA=;
+        b=N0578KqcmMxSiIee9HgYNMs04vuEvneVW/zn0CUdTNN0TPd4Wt9bA0mn+EIK5Jo2lq
+         48FRHLG5jSgIEQSVJO7GmdUx/cbV42qVlhEww7UyRLbQrqp7tuX3pX25r4/Ok3fE/61h
+         PlKdbZLR88yMNm/1CwPZOS2e1574/p+hm30AdecQSSyfX+WOL+HQCd0b5CXaQK0u0YLr
+         WW38s8Jh9kjjKSupnieuR/rkTwXp9Wx79FVLHIJQEOJCTlf3dfWoWFcecV+kPU/0kMDj
+         ZSJXHHk2RkflB4D/6cd8jCEzSK4xdXKuofty1D9rOxqqZzC5wVJljzbfHjaulevuGuty
+         sLSQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpkGBj4SuRu8on/gVt1oCr1qjvBEc0Jq64HzG0xINtatgnXvbK6cb5uQUWn9byD0bmiEiwA4w/yaKQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6JKuAMVMpDchujJWMZzpVZ0zT6duPy9rfz3J9GAU20CfqFEH/
+	bw/jcQ0SCut5yM7OGd3IthVuZnueG/LEsRnANd3Nc4W8DqaLo2y7R/GIYW+RyAUqgHA=
+X-Gm-Gg: AfdE7cmIFCNL25pCMtV6noDVJZn2ZyxVnsaLyqC4WX53POOvqPN2dbe+jEa4I4OdYKa
+	9jeC9PQX9Z13Sq8+m7l9pxM+6zsvyRburTW3rvj4zSPhHoyjT0jFE8G17LhGPlP1SRWRX754o9x
+	69sKw6I6zP+/dzwQXHH0wBAdOcrhoZxioPodgJFAapiU6B3Bt+KNfZ6OgrRZDrrNLrapcPf49cy
+	vJeOON4dVh0v2nfjIvBgcINVULbsSEauXROXaBbnCYGVSQvd2LutTdU4LUA1WtBRJCqQxazRbaf
+	a8z7Go28Gh0KcfwWGz0saHfpMdfDF1qlsYbci1gG23+bJf+Yd6C8jnHf2imJnEQA86653U61PFh
+	TE48Dz1rKCIaWU8VpGbhl37fKDgHP95UmPy2TyOhy4b/agmlpA0jOuBb8X6/EDOM8/Q8V5/TRDP
+	OfyS2i5E9D1LPDctzqzeqH/SvofCbgCih+ZHTPkU8=
+X-Received: by 2002:a05:620a:27c8:b0:92e:fe10:333b with SMTP id af79cd13be357-930b41f9901mr535269585a.65.1784326089627;
+        Fri, 17 Jul 2026 15:08:09 -0700 (PDT)
 Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5214f016aa5sm21849151cf.17.2026.07.17.15.02.38
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-930b52e0f87sm257411385a.7.2026.07.17.15.08.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 15:02:39 -0700 (PDT)
+        Fri, 17 Jul 2026 15:08:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,8 +67,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 07/12] PCI: Refactor matching logic for
- pci_dev_acs_ops
+Subject: Re: [PATCH v7 08/12] PCI: liveupdate: Inherit ACS flags in
+ incoming preserved devices
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
@@ -87,37 +87,39 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
  Samiullah Khawaja <skhawaja@google.com>, 
  Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
  William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <20260710212616.1351130-8-dmatlack@google.com>
+In-Reply-To: <20260710212616.1351130-9-dmatlack@google.com>
 References: <20260710212616.1351130-1-dmatlack@google.com>
- <20260710212616.1351130-8-dmatlack@google.com>
-Date: Fri, 17 Jul 2026 22:02:35 +0000
-Message-Id: <178432575544.189683.9290455764634301119.b4-review@b4>
+ <20260710212616.1351130-9-dmatlack@google.com>
+Date: Fri, 17 Jul 2026 22:08:05 +0000
+Message-Id: <178432608536.189683.17937493816735356455.b4-review@b4>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=586;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=669;
  i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=LxcbZe7BgnncPWKoPk5gxZGS/pQMdASC0LgCixjRw3Q=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWqZ+Wxzq3jD2mMABNI1669A+3RszfBn3ErJXV
- Y50TeZzWEGJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalqmfgAKCRC7dyhM23N6
- 3sVSEACDLPUH2+MHEoWyXAsDxYRkVARIRC+B2caZvvSgXaiLKmKi7pEnnql+8FPdsbwKkqRf9Jo
- dQ2qaVmpxf3l7ARpfkVXvpF8obibHQVOtxBKAkqoFNEHzWZzOBT2vYoywdcdcaiRGpZ8X12q8Tl
- TZ6s50Ini0rYTCvZ6zZ0zyslIqeoYN/w21C1mnmLJA5l/oSdh8oF+nocO9jyy1UkYfclKEmsVfS
- aASn9AyStUUOLNMQvuee3N/W+Er5iAx44Oxg/HGGBmN+ofL/MrxdUAodAIg6NbpN0q5+5fKvDvD
- 3KJcKOTnhHwhzxV3DvLnf1mAjYQ/jx4J4sTJYd8zPRCFQzvZ6IDSdiVzymUbhQvcVC66zvWuSgM
- zuzoedeSeAq72CoyoWiZ8xLA3hfJyhDVh4pzPcDA46ZJ0AgW7nAoqHiYNPJVCbtB2qPsQSNgU4G
- 1APtHXn0r5wICS6gPX7ZNcb7gNjnMcy6DZnrtpb/EgW7mEZr3zXxyuTeJrA6i3CogY5HCwl3avb
- k6g3LAvAnL5AhxIdAkfMb/JyCoo7fbWVvu3QdRJZoo4BTMU36Y41oNHHfuKo4IvKo+GpHaqe6jl
- t0fLRciM4UeB0Huvqd6ER6xDzWL/FjnnKjzHSJX4hp19xMTADl+jaeSlOdLUWzkPxqF+6X+8KBF
- zC29UAmi2lxznvA==
+ bh=JvD6d52JVF0dw9KaC8NTS7eMJsBpt7DQsADyzRVcQlc=;
+ b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWqfHpXPLQRJGmFv5A4z6Gn3ZGKfCiLrGZFJYE
+ 58dLVR/0DiJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalqnxwAKCRC7dyhM23N6
+ 3nFoEACAMT3npwEDLawBzNMz5alv6oFvn/SKvY0p3N9N7lfY9rerg7LRUYRvEVf+TYGrtjTjgKC
+ XpMxGn6W9G3uCTaWP5/B5bUX9iOkHNBgeZ6CphGCWTNjgxntOYpHpXDUfUe5vPEuaB21BCKb00H
+ /boplL+neL6/tFYPnWk3feYN28FvkiXpJa1w4bpLVUJaV81/l8du0RTTTendMCT/iM8CsQZFdKg
+ XXIz6uulPu+EUEn6yHi0dt37WyEhuB2i4QzJS7uIqv0vtEHW9bjIe+yE1X5rEFCk6hEkUnkdHur
+ woH+mrGI2xscTu2d4ymvl8mB7IRj8Tvl5mo8nEk7zAitJ0JSk6lRaDJGAY+C/PTartb0wpNvWUS
+ Gm2Q/v//Ntjm1RUidQSBijxhimUnnhQ9SBzGFES2gijkXQBcf5d1679whVMjGNvppPHjwZsUXIk
+ 3RrGudA10XpLugTQr9B1GBQ5s2vwBRInivaoons7l4QpXJIUGxpApVRvlWVOEVrWZQbvPeMdtie
+ +m7b7s30saS2X/yoNfNTf047Kms/LVNpUJrlS9iMDqANRGlM6iW4RW9XBPfzzcGXbKG9WkwuKQi
+ BE/iu4Slr8z89z2CsULzwaGdgTjJivJg7eBPhDcDQQRw22q+lpeFRl5CGf/7I69oEYVuQ6o4QG5
+ jAh5AuDVak+U7JQ==
 X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
  fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
 
-On Fri, 10 Jul 2026 21:26:10 +0000, David Matlack <dmatlack@google.com> wrote:
-> Refactor the logic to match devices to pci_dev_acs_ops by factoring out
-> the loop and device matching into its own routine. This eliminates some
-> duplicate code between pci_dev_specific_enable_acs() and
-> pci_dev_specific_disable_acs_redir(), and will also be used in a
-> subsequent commit to check if a device requires device-specific
-> enable_acs() during a Live Update.
+On Fri, 10 Jul 2026 21:26:11 +0000, David Matlack <dmatlack@google.com> wrote:
+> Inherit Access Control Services (ACS) flags on all incoming preserved
+> devices (endpoints and upstream bridges) during a Live Update.
+> 
+> Inheriting ACS flags avoids changing routing rules while memory
+> transactions are in flight from preserved devices. This is also strictly
+> necessary to ensure that IOMMU group assignments do not change across
+> a Live Update for preserved devices, as changing ACS configurations can
+> split or merge IOMMU groups.
 > 
 > [...]
 
