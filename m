@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE9C43F08A;
-	Fri, 17 Jul 2026 22:43:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98855390C81;
+	Fri, 17 Jul 2026 22:43:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784328187; cv=none; b=Bd10vZEo7JvmTn4T4UmvXz8aM14hSDcA/qIh+Zoy/n/apLY58Zpk5JSg71a29vnoiIuMK8iO0XrxJLU88OVMBsaBUjpefjV6xGi0X1xDRTxDbtZjgrQbZ4a+OJf58n3FyRY/6rKwD0NLd/H6aOoDMuYSpUyKFWjaSXKABrjffj4=
+	t=1784328202; cv=none; b=u/4IvLQ892/l4YyaXbnPomoUoUAdyf/oQ/DBHcL5wUqnKwTx4w82k/ra/iAG1RJIeH30HbwnRzgxrz+7nHdliQLxpRNOA42N7DtX9rx2BZzJ8HF5shhedL/+o/Tq4/8LWlrlCGog7WERFZTT3U+KOAetLRKjuIF6w6TfjEvKKvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784328187; c=relaxed/simple;
-	bh=gzA6Nz87+KpQB9JpmQNImkmKNmU55kuWv2/6j5OPkxc=;
+	s=arc-20240116; t=1784328202; c=relaxed/simple;
+	bh=LP1cmgylChfLeH+hzSQjao/+HApzN4A6laF+6cHHqH0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FAMVtXOVMRnsucVFiFcornQ67xOi19n3VJPCqGDzCOGtBtaceNCHJbdaHHZjwR+GNZMs+cfVGG1K/Pw+86RbnEkUVvMZ5dKiTVO3qeDWoxB/p+YppiSYgBeWP3D+H2i+2JPDQDXFhCZu0xlVbVrYHoO9wEaALULi388uFhK0GaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RT20Tw8X; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VTxEeQuNL1MSeOqXHMZ+96tFw2biBf3Ja4u70cVvsLr1bCQFaFkMqb4cwMUp3JWbguhfJ8I6q3GdcAD8OxIFvJy3jWofnrWMJ9M7u5MZV0MGXyPa0GzZ21ET95FaPNAlLwp22cgt7MqXd9PomLp4iWm1rexhfkgZG2KaEYXdbXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q6dGDCFN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RT20Tw8X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EEE61F000E9;
-	Fri, 17 Jul 2026 22:43:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q6dGDCFN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BB411F000E9;
+	Fri, 17 Jul 2026 22:43:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784328185;
-	bh=oT0R4YF6S5jMBE7cPOn63KOHWRjQeyGr73qJiW2RDaE=;
+	s=k20260515; t=1784328201;
+	bh=fEeCHcvf19CXLglBDf4SYFTIKpPaaa0NRU+pT9kgz04=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RT20Tw8XzBcJ0fm1XnkuqxXGK8zzJUT3jUm99HycTaL5NEHBYiRxSP6+BejHV/BBS
-	 ezdXhaugqxm8vSyNSWbeOj7njAmeLou0bKF9PxRRv/r8HwlbkmURNz9QxB3RaJ+fTI
-	 kCBAmAYASjTVWdOpzsghb+fNyw3MvtEYeFAeXprAGscAn7HiNHuQG9qBCZEOCZ96C3
-	 NfWzr0JzKmcHeETBDN4tm7fOCK1ASXPCnww/dwQ5Y4CHGj4tzXgcvUr25MBD8NLM9+
-	 DhrrGR0nFRS4VhK2rA/rtQPDgR8j2BFAAAm+2br7rMeqdEU7C0IfwxKnl2y/5UQ/x4
-	 RmOPeN87FwBpA==
+	b=Q6dGDCFNoep7cf6w8Mz3gkYjuaEILFBikH2HRU/5pLTalNptL5L2SvgautAJsUKt5
+	 qIpOVmTNIqy0X29SLPKfSWgCh+MkKglmR9hsXUrNH9VHJ6n9c0jUFwCgyWoHUccQ0Z
+	 dUYdZvlTdistdFa9vOb3hntI9pTfm8MSKkdmp/mdeh5YBd4QlsmvIRgBotPhNat/KM
+	 f27GSsysutDs2qj3UWQrYBKwRbpiz1UBgRyUVhlbDB43rVuZlGrDTTq3EyjHWGuvib
+	 xaj+yyZBhz6f5GUauFULsy4D5KaiYNig+fGy81T1cTJQnmmN+rQ3e1jDAYYqJhGf7y
+	 9wZXw0WvDJzpw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 01/13] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
- severity register
+Subject: Re: [PATCH v18 07/13] PCI/CXL: Add RCH support to CXL handlers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Terry Bowman" <terry.bowman@amd.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260717222706.3540281-2-terry.bowman@amd.com>
+In-Reply-To: <20260717222706.3540281-8-terry.bowman@amd.com>
 References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-2-terry.bowman@amd.com>
+ <20260717222706.3540281-8-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 22:43:04 +0000
-Message-Id: <20260717224305.3EEE61F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 22:43:20 +0000
+Message-Id: <20260717224321.1BB411F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,93 +47,128 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Removal of explicit PCI error handler forwarding for RCH devices l=
+eaves RCDs bound after a fatal PCI error.
+
 Pre-existing issues:
-- [High] cxl_rch_get_aer_info() uses sizeof(struct aer_capability_regs) to =
-perform a linear MMIO read block copy, but the struct contains software-def=
-ined fields that break physical hardware layout parity, causing out-of-boun=
-ds MMIO reads and a stack data leak.
-- [Medium] Correctable errors are silently dropped and permanently lost if =
-uncorrectable errors are simultaneously present.
+- [High] Preexisting lockless dereference of `dport` returned by `cxl_pci_f=
+ind_port()` and `cxl_mem_find_port()` leading to Use-After-Free.
 --
 
---- Patch [1]: [PATCH v18 01/13] cxl/ras: Fix cxl_rch_get_aer_severity() wr=
-ong severity register ---
-commit 900d8b615c2219573e44e775aca2f70550afbe9a
+--- Patch [7]: [PATCH v18 07/13] PCI/CXL: Add RCH support to CXL handlers -=
+--
+commit 6a99c70b18865d01d350aa367342e701ebe6dde2
 Author: Terry Bowman <terry.bowman@amd.com>
-cxl/ras: Fix cxl_rch_get_aer_severity() wrong severity register
 
-This commit fixes the AER severity classification for RCH Downstream
-Port uncorrectable errors by correctly checking the unmasked uncor_status
-against uncor_severity.
+PCI/CXL: Add RCH support to CXL handlers
 
-Cc: stable@vger.kernel.org
+Restricted CXL Host (RCH) error handling is folded into the new CXL Port
+error handling flow. RCH protocol errors are forwarded through the AER-CXL
+kfifo, and the manual CXL.mem error handler invocation is removed.
 
 > diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
-> index 0a8b3b9b63884..44b335d560708 100644
 > --- a/drivers/cxl/core/ras_rch.c
 > +++ b/drivers/cxl/core/ras_rch.c
-> @@ -80,7 +80,8 @@ static bool cxl_rch_get_aer_severity(struct aer_capabil=
-ity_regs *aer_regs,
->  				     int *severity)
+> @@ -96,18 +95,21 @@ static bool cxl_rch_get_aer_severity(struct aer_capab=
+ility_regs *aer_regs,
+>  	return false;
+>  }
+> =20
+> -void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds)
+> +void cxl_handle_rdport_errors(struct pci_dev *pdev)
 >  {
->  	if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
-> -		if (aer_regs->uncor_status & PCI_ERR_ROOT_FATAL_RCV)
-> +		if ((aer_regs->uncor_status & ~aer_regs->uncor_mask) &
-> +		    aer_regs->uncor_severity)
->  			*severity =3D AER_FATAL;
->  		else
->  			*severity =3D AER_NONFATAL;
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but does this logic permanently
-lose correctable errors if both types are logged simultaneously?
-
-Looking at cxl_rch_get_aer_info(), it reads the entire AER capability and
-clears both error types in hardware:
-
-drivers/cxl/core/ras_rch.c:cxl_rch_get_aer_info() {
-    ...
-    writel(aer_regs->uncor_status, aer_base + PCI_ERR_UNCOR_STATUS);
-    writel(aer_regs->cor_status, aer_base + PCI_ERR_COR_STATUS);
-    ...
-}
-
-Then here in cxl_rch_get_aer_severity(), it evaluates the uncorrectable
-error, assigns the severity, and returns early without checking for
-correctable errors:
-
-drivers/cxl/core/ras_rch.c:cxl_rch_get_aer_severity() {
-    if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
-        ...
-        return true;
-    }
-    ...
-}
-
-Returning true immediately bypasses the correctable error check, preventing
-cxl_handle_cor_ras() from being called on the same pass.
+> -	struct pci_dev *pdev =3D to_pci_dev(cxlds->dev);
+>  	struct aer_capability_regs aer_regs;
+>  	struct cxl_dport *dport;
+>  	int severity;
+> =20
+> -	struct cxl_port *port __free(put_cxl_port) =3D
+> -		cxl_pci_find_port(pdev, &dport);
+> +	struct cxl_port *port __free(put_cxl_port) =3D cxl_pci_find_port(pdev, =
+NULL);
+>  	if (!port)
+>  		return;
+> =20
+> +	guard(device)(&port->dev);
+> +	dport =3D cxl_find_dport_by_dev(port, pdev->dev.parent);
 
 [Severity: High]
-This is a pre-existing issue, but do the MMIO reads in the related
-cxl_rch_get_aer_info() perform out-of-bounds hardware access?
+This is a pre-existing issue, but while this change correctly closes a
+lockless Use-After-Free window for dport here, does the same vulnerability
+still exist in cxl_pci_setup_regs() and rcd_pcie_cap_emit()?
 
-drivers/cxl/core/ras_rch.c:cxl_rch_get_aer_info() {
-    int read_cnt =3D sizeof(struct aer_capability_regs) / sizeof(u32);
-    ...
-    for (n =3D 0; n < read_cnt; n++)
-        aer_regs_buf[n] =3D readl(aer_base + n * sizeof(u32));
-}
+In cxl_pci_setup_regs(), cxl_rcrb_get_comp_regs() dereferences the dport
+returned by cxl_pci_find_port() before any lock is taken.
 
-Since struct aer_capability_regs includes struct pcie_tlp_log, recent
-additions to struct pcie_tlp_log (such as header_len and flit) increase
-the size of the software struct well beyond the standard physical AER
-capability size.
+Similarly, in rcd_pcie_cap_emit(), dport->regs.rcd_pcie_cap is dereferenced
+entirely locklessly, and then the function takes guard(device)(root_dev)
+instead of the required &root->dev lock.
 
-Would this loop copy unmapped PCIe config space (typically returning
-0xFFFFFFFF) into software fields like header_len, leading
-pcie_print_tlp_log() to later loop over an inflated log->header_len value
-and trigger an out-of-bounds read on the kernel stack?
+Since rcd_pcie_cap_emit() is reachable via sysfs attributes, could an
+unprivileged local user trigger a Use-After-Free by reading sysfs during a
+concurrent device hot-unplug?
+
+[ ... ]
+
+> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rc=
+h.c
+> --- a/drivers/pci/pcie/aer_cxl_rch.c
+> +++ b/drivers/pci/pcie/aer_cxl_rch.c
+> @@ -34,42 +34,37 @@ static bool cxl_error_is_native(struct pci_dev *dev)
+>  	return (pcie_ports_native || host->native_aer);
+>  }
+> =20
+> +struct cxl_rch_error_ctx {
+> +	struct aer_err_info *info;
+> +	bool enqueued;
+> +};
+> +
+>  static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
+>  {
+> -	struct aer_err_info *info =3D (struct aer_err_info *)data;
+> -	const struct pci_error_handlers *err_handler;
+> +	struct cxl_rch_error_ctx *ctx =3D data;
+> =20
+>  	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
+>  		return 0;
+> =20
+> -	guard(device)(&dev->dev);
+> -
+> -	err_handler =3D dev->driver ? dev->driver->err_handler : NULL;
+> -	if (!err_handler)
+> -		return 0;
+> -
+> -	if (info->severity =3D=3D AER_CORRECTABLE) {
+> -		if (err_handler->cor_error_detected)
+> -			err_handler->cor_error_detected(dev);
+> -	} else if (err_handler->error_detected) {
+> -		if (info->severity =3D=3D AER_NONFATAL)
+> -			err_handler->error_detected(dev, pci_channel_io_normal);
+> -		else if (info->severity =3D=3D AER_FATAL)
+> -			err_handler->error_detected(dev, pci_channel_io_frozen);
+> -	}
+> +	if (cxl_forward_error(dev, ctx->info))
+> +		ctx->enqueued =3D true;
+
+[Severity: High]
+Does removing the explicit invocation of the err_handler leave RCDs bound
+after a fatal PCI error?
+
+The standard pcie_do_recovery() on an RCEC does not iterate over its
+associated RC_END (RCD) devices, so this manual invocation used to handle t=
+he
+CXL.mem driver fallback. Now that errors are routed solely through the CXL
+protocol error work queue (__cxl_proto_err_work_fn()), the work queue only
+panics on uncorrectable cachemem errors.
+
+Does the work queue replicate the PCI recovery state machine's fallback
+behavior, such as calling device_release_driver() to unbind the CXL.mem
+driver on frozen channel states?
+
+>  	return 0;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717222706.3540=
-281-1-terry.bowman@amd.com?part=3D1
+281-1-terry.bowman@amd.com?part=3D7
