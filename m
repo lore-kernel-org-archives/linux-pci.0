@@ -1,75 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 301F92F7EE4;
-	Fri, 17 Jul 2026 17:08:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FDB4349CD7;
+	Fri, 17 Jul 2026 17:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784308108; cv=none; b=VhLmZPL2xSGQ02omC15IrKJpRiJF5986dr7YIXHVS6uhBor6XM/Ye3hfsBGThZcHYOkhyTDzwdw9Kx1R3c/fLiYOZ/PCjDIXfWZYTQsR/8sexv4HAqeXeSOUWgz8OogEkEKQqO6C/kN6FqfRPJovsSf1JiWO2y6Wr5TjOxla2KI=
+	t=1784308199; cv=none; b=JD6xDc5h8Vn4O7ZVnDldVSiV10KPFCKUf96S5DqOm//CMoQITqWpO3zH2Z74LrJTU44NFBYPpzLR3dDFoX5LERXV+j2BCjD0NPfZgCngM/mJDj1HRmB9M/yFKuEOdfHtORE5cF9ceKwJ2tJul2+Dg1LGOaOnMk9gJlTUTsGpz8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784308108; c=relaxed/simple;
-	bh=LWTa0N9zI+WlpfHp5wwjE4sSSTbeeWltjSywixwG+eE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e22Bm0j1H0vcyfR6q5I80re6dXdNy7KQBl8Gh0IV7K53Z77i7TteKjSKGUpoveJX2USSHsKu7mceXFMkrDFgjedXkEzsVTCKHx7UdBvyucSdeDyT8lxu/jXV3PVlhwwEtk5EHTo0eiQzFBycMg8M7Sm5lbGPt5t+TU880EEgbco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QT3mFXlA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784308199; c=relaxed/simple;
+	bh=ym2v4YmYfJCHRs2bjR8+AYF/V8og/2Ps/38jlnEn5mE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=avNxDOv866cphhX8jaw5z2UynkQV0TkU7Nk1jZUcaw5tteRqwzJNdKbzGMz7bVdPY/bMBIvMiqQuHOM8pE8NetQkS3JgRAy5uim8bUYna7kr2ng8y92qY5f0C7B8t8NJYM2cuERhjJjSPKEvdmEna24bRO3/YB65Hw3mf6AskcY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i5TbUhyE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QT3mFXlA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B02361F000E9;
-	Fri, 17 Jul 2026 17:08:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i5TbUhyE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D3E11F000E9;
+	Fri, 17 Jul 2026 17:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784308106;
-	bh=pNLGrFix6W248z666S+Ykq+P+PkJT+5J5ewxlxte0Tc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QT3mFXlARDGeE5fJR0O7/YcYRL4XUYDTY4JfE5qW78UTR8YazDmW7eNCC107QLzec
-	 dwPrMw3S6Kyb5LgT+7K2goIYM4rZgf+fBl4LDX043Q0t4jpFQbkQNeOEdKksBtJScM
-	 HtmAz40JVBHpraJXOf6HbVL6xZz9PYn/PUf3wQ+5bIvtLr+J2gqa13E+xDbkUynFbZ
-	 oOKuqUJK3sNMAHTE+L91RMQUIM1m0WTeME8qmhBgara/gOKRkgETpMU9ho9/bRwtgh
-	 GxMEENAZlH3BH2SHFkXvpCuaxS2jvODSRqQtqD+P/rL66cmZs3FtJM7fGTrnZq0kor
-	 SypXjrZ+vV4jA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 09/10] PCI: of: Remove fwnode_dev_initialized() call
- for a PCI root bridge node
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Herve Codina" <herve.codina@bootlin.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260717145147.823749-10-herve.codina@bootlin.com>
-References: <20260717145147.823749-1-herve.codina@bootlin.com>
- <20260717145147.823749-10-herve.codina@bootlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 17:08:26 +0000
-Message-Id: <20260717170826.B02361F000E9@smtp.kernel.org>
+	s=k20260515; t=1784308197;
+	bh=vrIIp5vvuim1vMqA0JaquYGqHqFXlC/x9tIPiRIrp0w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=i5TbUhyEKURDYC//pmORMnyZIHNvtflLPqTTUQgKjllucYKinkcQl+ssuKZrzA7nW
+	 0n1w6zhI7AJ8gx3SWYRLm94qclZsGIEQ9CYPDjQfTiGpHLt9Ff7ggdTTeowCJZyvZT
+	 mmNL9TJt8Z4HGsobH3Avb+VLWn2yNV9cWWxBd8b16diMtjrchCYgSJTlEAAgI4EMtR
+	 aiifL/uiUt/WVKnSRKSEfa6fDxMc1TzQVBaCh2F+csc0OP+bVjd9+fe4qH0b2/tfHr
+	 XdbQCSQJDcpGeFjTha6ceq7sFcmk0kmVqlPIxSwi/mMCo0mGgQBP0XzDJPuvtj9nIW
+	 X6fVJCtnhYTmQ==
+Date: Fri, 17 Jul 2026 12:09:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Soeren Moch <smoch@web.de>,
+	stable@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v3] PCI: imx6: Keep i.MX6Q Root Port MSI capability with
+ iMSI-RX to work around hardware bug
+Message-ID: <20260717170956.GC11343@bhelgaas>
+References: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
 
-> During the instantiation of devices described by a device-tree overlay
-> applied on a PCI device, devlink displays the following kind of debug
-> messages instead of creating the expected links:
->    'Not linking xxxx - might never become dev'
->=20
-> Without those expected links, the device removal order cannot be
-> correct.
->=20
-> Those debug traces are printed by fw_devlink_create_devlink(). In our
-> use case, they are all printed because the supplier of the link has at
-> least one of its ancestor with its fwnode flag FWNODE_FLAG_INITIALIZED
-> set.
->=20
-> The culprit ancestor is the PCI root bridge.
->=20
-> [ ... ]
-> are correctly created.
->=20
-> Fixes: 1f340724419e ("PCI: of: Create device tree PCI host bridge node")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+On Fri, Jul 17, 2026 at 11:32:03AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Soeren Moch <smoch@web.de>
+> 
+> On some NXP chipsets, disabling Root Port MSI/MSI-X Capabilities blocks
+> MSIs originating from Endpoints from reaching the iMSI-RX controller.
+> 
+> To address this hardware bug, commit 3a4e8302e72f ("PCI: imx6: Keep Root
+> Port MSI capability with iMSI-RX to work around hardware bug") preserves
+> Root Port MSI and MSI-X Capabilities on i.MX7D, i.MX8MM, and i.MX8MQ
+> when iMSI-RX is in use.
+> 
+> The same applies to i.MX6Q, i.MX6QP and i.MX6SX. So preserve Root Port
+> MSI/MSI-X Capabilities there as well.
+> 
+> Note that preserving these Capabilities means Root Port-originated MSIs
+> such as AER and PME won't be received due to separate hardware limitations.
+> Users may need to use workarounds such as passing the 'pcie_pme=nomsi'
+> command-line parameter.
+> 
+> Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
+> Cc: <stable@vger.kernel.org> # 7.0+
+> Signed-off-by: Soeren Moch <smoch@web.de>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Applied to pci/for-linus for v7.2, thank you!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717145147.8237=
-49-1-herve.codina@bootlin.com?part=3D9
-
+> ---
+> changes in v3:
+> - Extend the fix to i.MX6QP and i.MX6SX variants as well.
+> - Update the commit descriptions suggested by Bjorn.
+> 
+> changes in v2:
+> - collect a-b and r-b tags
+> - use correct fixes tag (Manivannan)
+>   (reference commit that introduced the bug, not the incomplete fix)
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 98e1db751132a..dba27eac6bff6 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1995,7 +1995,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>  		.ltssm_off = IOMUXC_GPR12,
+> @@ -2011,7 +2012,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>  			 IMX_PCIE_FLAG_SKIP_L23_READY |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>  		.ltssm_off = IOMUXC_GPR12,
+>  		.ltssm_mask = IMX6Q_GPR12_PCIE_CTL_2,
+> @@ -2026,7 +2028,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+>  			 IMX_PCIE_FLAG_SKIP_L23_READY |
+> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+>  		.ltssm_off = IOMUXC_GPR12,
+> -- 
+> 2.34.1
+> 
