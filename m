@@ -1,166 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DA233AFCE6;
-	Fri, 17 Jul 2026 22:49:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB38F3B71B6;
+	Fri, 17 Jul 2026 22:53:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784328563; cv=none; b=jfyqc2I7EWFrgZ4+OzP82DXfGcuVvoS9C20CcFL4xebC6CgemfFqyywZ4xJfyG5PnTDEcdkiHKZ6cQZO+F3tGl8Jvf/U1Jdpc2FBhQeMtlcF2XiHbBJmDVW9qhUufvAYTqb8rJNO/g9jjsz3i7g8YrLkX8NkM/Lo3xUnoB1ydfM=
+	t=1784328807; cv=none; b=eFJ+E0C8RPNHnDS6WyohJZ/tM/Kw8YRHPAfEOT6Q9pj7IsjU/yfffsWad92yZrRO7GSEZbMXyoMAvJdI9UcuDDdMU69pLEvbOVVoDCYi7ZZFDrH6tEyKtSh6JtThC3pw1tu2ABbFsY6H08kItONgTuRBx3u2kY3xhtVaulN1L9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784328563; c=relaxed/simple;
-	bh=0zX6OjndRwjWmaPjtDOZXzvBrYSwf2Nbut174NhKfMw=;
+	s=arc-20240116; t=1784328807; c=relaxed/simple;
+	bh=eTRzHl/o4sudDm73m21OEXMaQyrTCLUIiIkznFIrm9I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=i5PeCz4xidEhK7WZjFrtn2kJBuxvvxeX3En+Q9sf+HrcrncL4bGI0GmkPvky1EvvcF6l9mTnPhUkbgTDquB2fTIcthnPmdue3qXJhyI9L1qWh8+/+3pZkoPXE7I+zqUt16Z1BvC2O1X/MIWaqVwWqFgz+Q0iNayvHhwtVxjfiPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vwidc+1i; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lJblYj5ItHM9Il0O9fqVFSUBvLOvvYX2zPtvYFFOMaM9mrDMR0TgS0Kg6h9Te/272OmWMVJpGZXYpkTJ/uxEzeOkheRh+Xiknu5DTUPCFM+lp+fJiLDtNQiEDz/7z7VyFKopYC5jPCDbGMMjDODfXGTsZKY2eLmBhbZnzH8U+QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYy50muc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vwidc+1i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F80E1F000E9;
-	Fri, 17 Jul 2026 22:49:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYy50muc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02D321F000E9;
+	Fri, 17 Jul 2026 22:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784328559;
-	bh=5ITxKwozjUA8fiHKe2g0+otGlLvixu4Xvel3MNKRdfg=;
+	s=k20260515; t=1784328796;
+	bh=CxnAtG+rK/UTCLdP5k4ky7hfls8i+dMqWsJq5SEb/JQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Vwidc+1i3XJLMDwDjzIeB/lh21F2HzKXL0T/iI2r2Hplvga6Nv7v6u3hHNa/ZgYb+
-	 5QR+OrajbxWRqYxlONI7h20cIpkSfjrq22fBUzAFn63/6uGE/0gwTwoJHELjFuhlyk
-	 UYR2vGt2JKCYeQiwVQ0TwkWczHZDr4DQ0/wHqGRRz7HXpU0t3hbvlks8lG2UnCz+kQ
-	 IDo2EVLRNgtAb+z9/P2ILjXkweI9JftzSALTmiDUiX/BFGZoQ8zrhe7d7oVoi5vtoC
-	 D0hIJ2m6WaLrlsf3Jk4y+YZJ8HviyBPzJEOKObZQhvtgwvoA1r8csD7/3eXyYp8Mir
-	 fPLMb0k8HySXw==
+	b=AYy50mucLrF3DXrctyemkajic+h//f/Qfg9QGhLif2P87ax596zAyDZT7yAK1ZAEu
+	 5E8o6lYMuinirAfsELRXADoz8OCt13Y6k4GhgltOa7IGGPCtsZ8ZM907NQRi50vEt1
+	 1BpmBBGJSZ20nYXsc95x3UXqYE4sPzz0i8YlMcFtl0V38CXp3QA2kSqbLzLOeY0yvv
+	 jLcJYqYuF8QBdi5elz5wjFNV/Z58zDWv3LO1UJZq7gVlPqTcoAzzwVXhZAvDlLaD2q
+	 xwyvCCqECPaz9g9/1K7DKbW5vNsyOJyddpzFPEpMOix+ZlYBS3ofxkzle147/QYrFV
+	 fWvx3RJVIDfYA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 02/13] acpi/apei/ghes: Use raw_spinlock_t for CXL
- CPER work locks
+Subject: Re: [PATCH v18 10/13] cxl: Add port and dport identifiers to CXL
+ AER trace events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Terry Bowman" <terry.bowman@amd.com>
 Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260717222706.3540281-3-terry.bowman@amd.com>
+In-Reply-To: <20260717222706.3540281-11-terry.bowman@amd.com>
 References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-3-terry.bowman@amd.com>
+ <20260717222706.3540281-11-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 22:49:19 +0000
-Message-Id: <20260717224919.9F80E1F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 22:53:15 +0000
+Message-Id: <20260717225316.02D321F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [Low] The patch adds internal cancellation to both unregister functions b=
-ut misses removing the redundant `cancel_work_sync()` for the protocol erro=
-r work in `cxl_ras_exit()`.
-
-Pre-existing issues:
-- [High] Fixed-size memcpy in cxl_cper_post_event causes an out-of-bounds r=
-ead if the provided GHES CPER payload is smaller than sizeof(*rec).
-- [High] Missing bounds check on untrusted dvsec_len in cxl_cper_setup_prot=
-_err_work_data leads to an out-of-bounds read.
+- [High] Asynchronous CPER error handling races with ACPI driver unbind, ca=
+using Use-After-Free of cxl_dport.
+- [High] Live PCI configuration space reads on a potentially frozen or dead=
+ link during AER recovery.
 --
 
---- Patch [2]: [PATCH v18 02/13] acpi/apei/ghes: Use raw_spinlock_t for CXL=
- CPER work locks ---
-commit 70fa064ce36bd35723148aab9a91c80d0fbef760
-Author: Terry Bowman <terry.bowman@amd.com>
+--- Patch [10]: [PATCH v18 10/13] cxl: Add port and dport identifiers to CX=
+L AER trace events ---
+commit 069c60a58d08507582ec548c08666c5374faa22d
+Author: Dan Williams <djbw@kernel.org>
+Subject: cxl: Add port and dport identifiers to CXL AER trace events
 
-acpi/apei/ghes: Use raw_spinlock_t for CXL CPER work locks
+This commit updates the CXL AER trace events to include port and dport
+identifiers instead of deriving a plain device pointer at the caller. It
+replaces the separate uncorrectable and correctable trace events with
+unified cxl_aer_* events. CPER handling is also reworked to use
+find_cxl_port_by_dev() and the unified trace helpers.
 
-This commit converts cxl_cper_work_lock and cxl_cper_prot_err_work_lock from
-spinlock_t to raw_spinlock_t to prevent a deadlock between IRQ and process
-contexts. It also restructures registration functions to warn on double
-registration and clear work pointers before cancelling them. Redundant
-cancel_work_sync() calls are removed since quiescing is handled internally.
-
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index 3236a3ce79d6b..ca7a138c1ff2e 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-[ ... ]
-> @@ -761,7 +761,7 @@ static void cxl_cper_post_prot_err(struct cxl_cper_se=
-c_prot_err *prot_err,
->  	if (cxl_cper_sec_prot_err_valid(prot_err))
->  		return;
-> =20
-> -	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
-> +	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
-> =20
->  	if (!cxl_cper_prot_err_work)
->  		return;
+> The serial number is retrieved via pci_get_dsn() which performs live
+> PCI configuration space reads. A following patch ("PCI: Cache PCI
+> DSN into pci_dev->dsn during probe") replaces these with a cached
+> serial number to avoid config space access in error handlers and panic
+> paths.
 
 [Severity: High]
-This is a pre-existing issue, but does cxl_cper_setup_prot_err_work_data()
-lack bounds checking on the untrusted dvsec_len?
+Does calling pci_get_dsn() before the follow-up patch is applied risk
+causing a lockup?
 
-If firmware provides a CXL protocol error record with a maliciously large
-dvsec_len, could this lead to an out-of-bounds read when calculating
-cap_start?
+cxl_pci_error_detected() is called during AER recovery, where the link may
+be in the pci_channel_io_frozen state. pci_get_dsn() executes live
+configuration reads (pci_read_config_dword()) to traverse PCIe extended
+capabilities.
 
-drivers/acpi/apei/ghes_helpers.c:cxl_cper_setup_prot_err_work_data() {
-    ...
-    dvsec_start =3D (u8 *)(prot_err + 1);
-    cap_start =3D dvsec_start + prot_err->dvsec_len;
+Accessing a frozen link can cause the host bridge to lock up or trigger a
+secondary master abort. Will this cause completion timeouts and prevent
+recovery during the window between this patch and the subsequent caching
+patch?
 
-    memcpy(&wd->ras_cap, cap_start, sizeof(wd->ras_cap));
-    ...
-}
-
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index d5dc2c22565da..acf40b2396c3b 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
 [ ... ]
-> @@ -831,7 +839,7 @@ static void cxl_cper_post_event(enum cxl_event_type e=
-vent_type,
->  		return;
->  	}
+> @@ -109,47 +77,34 @@ static struct cxl_port *find_cxl_port_by_dev(struct =
+device *dev, struct cxl_dpor
 > =20
-> -	guard(spinlock_irqsave)(&cxl_cper_work_lock);
-> +	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
-> =20
->  	if (!cxl_cper_work)
->  		return;
-
-[Severity: High]
-This is a pre-existing issue, but does cxl_cper_post_event() have an
-out-of-bounds read if the provided GHES CPER payload is smaller than
-sizeof(*rec)?
-
-If firmware provides a CXL event record where gdata->error_data_length is
-smaller than sizeof(struct cxl_cper_event_rec), this fixed-size memcpy
-could exceed the bounds of the error status block:
-
-drivers/acpi/apei/ghes.c:cxl_cper_post_event() {
-    ...
-    wd.event_type =3D event_type;
-    memcpy(&wd.rec, rec, sizeof(wd.rec));
-    ...
-}
-
-[ ... ]
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index 267c679b0b3c2..7c6faee7f85ed 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -1083,7 +1083,6 @@ static int __init cxl_pci_driver_init(void)
->  static void __exit cxl_pci_driver_exit(void)
+>  void cxl_cper_handle_prot_err(struct cxl_cper_prot_err_work_data *data)
 >  {
->  	cxl_cper_unregister_work(&cxl_cper_work);
-> -	cancel_work_sync(&cxl_cper_work);
->  	pci_unregister_driver(&cxl_pci_driver);
->  }
+[ ... ]
+> +	guard(device)(&port->dev);
+> +
+> +	/* dport is NULL for Endpoint and Upstream Port devices */
+> +	dport =3D cxl_find_dport_by_dev(port, &pdev->dev);
 
-[Severity: Low]
-Is there a missed redundant cancel_work_sync() call in cxl_ras_exit()
-that should also be removed?
+[Severity: High]
+Is it possible for the dport to be freed concurrently here, leading to a
+use-after-free regression?
 
-Since internal cancellation was added to the unregister functions,
-cxl_ras_exit() now has redundant synchronization:
+While cxl_cper_handle_prot_err() holds the port's device lock, cxl_dport
+structures for root ports are tied to the parent ACPI device's devres
+lifecycle.
 
-drivers/cxl/core/ras.c:cxl_ras_exit() {
-    ...
-    cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
-    cancel_work_sync(&cxl_cper_prot_err_work);
+If the parent driver unbinds (e.g., during ACPI hot-remove), it executes
+devres_release_all() under the parent's lock, which frees the dport
+directly via cxl_dport_remove() and free_dport().
+
+Could cxl_find_dport_by_dev() load this freed pointer, which is then
+dereferenced in the trace event?
+
+drivers/cxl/core/trace.c:cxl_trace_dport_name() {
+    if (dport)
+        return dev_name(dport->dport_dev);
     ...
 }
+
+> -	cxlmd =3D to_cxl_memdev(mem_dev);
+>  	if (data->severity =3D=3D AER_CORRECTABLE)
+> -		cxl_cper_trace_corr_prot_err(cxlmd, data->ras_cap);
+> +		cxl_cper_trace_corr_prot_err(port, dport, pci_get_dsn(pdev),
+> +					     &data->ras_cap);
+>  	else
+> -		cxl_cper_trace_uncorr_prot_err(cxlmd, data->ras_cap);
+> +		cxl_cper_trace_uncorr_prot_err(port, dport, pci_get_dsn(pdev),
+> +					       &data->ras_cap);
+>  }
+[ ... ]
+> @@ -360,7 +306,8 @@ pci_ers_result_t cxl_pci_error_detected(struct pci_de=
+v *pdev,
+>  		 * cases below handle AER recovery for devices without active
+>  		 * CXL.mem traffic.
+>  		 */
+> -		ue =3D cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
+> +		ue =3D cxl_handle_ras(port, NULL, to_ras_base(port, NULL),
+> +				    pci_get_dsn(pdev));
+>  	}
+
+[Severity: High]
+Does this live config read trigger the lockups mentioned in the commit
+message? Since cxl_pci_error_detected() executes when the link state is
+potentially pci_channel_io_frozen, the pci_get_dsn() call will traverse
+PCIe extended capabilities on a dead link.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717222706.3540=
-281-1-terry.bowman@amd.com?part=3D2
+281-1-terry.bowman@amd.com?part=3D10
