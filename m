@@ -1,147 +1,115 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164DA883F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 00:06:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE2B16DEB1;
+	Fri, 17 Jul 2026 00:16:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784246815; cv=none; b=FkQX6InvWINKzjVa+rFEMY1u5E86VYg4cx7dVeqFJDzhiyPbYYCTjrqYX1PA/cusJ7c0x1+eUkdijRG2fhjyo1fm/UuXFn2LX8n6LqfqhQl4yCzUIlanIZ+ZFhCjCyabOhEdVjyCJNUpIhKRRval5pyaDvqUDuJjIm8p0y02M+8=
+	t=1784247404; cv=none; b=GeJbzyCxn3vTq11CaTXDgvs0exCiRXhIci4S7VIu8LkM85pUsfQr69k4AyjLRCXd6g+8fnVRWqVYBZAh+LDgOKCfspp4FduouGLNML8LSqyw4cuTnHkhxDRx2PocRAAvI/mPYGS4My3clQTZg97hICXCW+vLpY5cp+4NFsv+G7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784246815; c=relaxed/simple;
-	bh=CsCio1naoYOdT0MNaxaGipRfsQFcwbmztQPBjZmxvck=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=MWn/DgVKHX4o63IjeHg5zgTkWCsaFJiB5zvJidMaA3v93ToJdTv4h18F/KtF9TznUgHTUD4U8iBjJIxMTEOxZNDg8zOwiJojqu/HUvhmPUE5Fhk5JCTVxe8gF9kC+PvtVA4tW6HTx1CEyNCfDj0HeyF/DmaggqORryWmQ60231Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QEGZ6P4Q; arc=none smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1784247404; c=relaxed/simple;
+	bh=dDkeumXBcxxpV+nysA0bxBOdPtfCfPkslKv643IhY80=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=IrKDhCLWT6FUdWMzbq8TgzIIw0LkhrUFdZNKbkfzFXN7HYZMZpy9A1HMXizuzaSP6sc3FTH+hyceeVo6mK35iBvQJK82PCCI/8G5JNc+t7JEaRAEPq3P6utbB3Q/PzwKqhmmNOXtImiHuX1jM9qbSKOv7x5QJX/WRjJx7r0K3BI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=AvWpgteR; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QEGZ6P4Q"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784246813; x=1815782813;
-  h=date:from:to:cc:subject:message-id;
-  bh=CsCio1naoYOdT0MNaxaGipRfsQFcwbmztQPBjZmxvck=;
-  b=QEGZ6P4QWrSV4oWJilBdoQfuvQf8fod0r9PW//B/1lDpQ8WAAsuAoqyD
-   uGcl4tiiS6E40VXyraD7lQ8fouKXxbDlmyjC5BDLPAFdxgDXG6WjIm1m+
-   LP2WGAStO8oxwdhR2jBswfmfMN4zeQMZtuU8VigZfaMV316DmV1xvA4OD
-   k5rcjOfHP9TExGxwXXd4KRUfIk5MbImEIgno+kMQpGnMm934Vb6LK4o0J
-   5J91dS/PA9q+6eTfTiTmIW//RNtIjhveVeQtzqTkcMZc4ptfS5HWqq6Bn
-   5uQSTPnNpVfFeTnyvJV/0w8jH60BM0YR8ZoVIpcEIvV3OU1P87ufdWlRJ
-   A==;
-X-CSE-ConnectionGUID: yRdu8aKcQZyvstByvOchSA==
-X-CSE-MsgGUID: o9yPxYF7SDSe0dqXtmzQbg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="85114739"
-X-IronPort-AV: E=Sophos;i="6.25,168,1779174000"; 
-   d="scan'208";a="85114739"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2026 17:06:52 -0700
-X-CSE-ConnectionGUID: JnpQ1AE0TEG0pgFxNCJ/zg==
-X-CSE-MsgGUID: mK5/+17wSAqbddkrDn9DZA==
-X-ExtLoop1: 1
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa003.fm.intel.com with ESMTP; 16 Jul 2026 17:06:51 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wkW6L-00000000RZY-0NzT;
-	Fri, 17 Jul 2026 00:06:49 +0000
-Date: Fri, 17 Jul 2026 08:06:21 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/vmd] BUILD SUCCESS
- c654f3ee611506fadac84f4354995dc5259ecfa9
-Message-ID: <202607170810.T7Eq8LhU-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="AvWpgteR"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=SYwy6QobYtfLX+TFA3XAHC6CKwVcv5/eHXjCp5polzo=;
+	b=AvWpgteRLh7Ai4tN3A9nHSUkPydX2mLUe2z2zpVVLaUx5yc4C9x0rCidbQmHPcMnz2puAedBQ
+	oMijff9E3RIGFU6YWhyhDXAbDMcxlwX9mohFxxfX7zmi8yfmIX6GnsEVyOxbNtfNRiD8H2z8QfC
+	KrxmpFGDKkc7NUvBhT47PNk=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4h1VbB6yjCz1K96b;
+	Fri, 17 Jul 2026 08:07:18 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 18D4540572;
+	Fri, 17 Jul 2026 08:16:37 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Fri, 17 Jul 2026 08:16:36 +0800
+Message-ID: <a855b8da-5ec5-433b-b5cf-177034ae5392@huawei.com>
+Date: Fri, 17 Jul 2026 08:16:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+To: Zhiping Zhang <zhipingz@meta.com>
+CC: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Michael
+ Guralnik <michaelgur@nvidia.com>, Sumit Semwal <sumit.semwal@linaro.org>,
+	Christian Konig <christian.koenig@amd.com>, Alex Williamson
+	<alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>
+References: <20260715204008.3911275-1-zhipingz@meta.com>
+ <7dd5c995-a23c-4d3a-9ba0-7fc77972339f@huawei.com>
+ <CAH3zFs0Wbz5EYUMQArmUtT-jdAtisafw6e89RWKZJrJpipYQoA@mail.gmail.com>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <CAH3zFs0Wbz5EYUMQArmUtT-jdAtisafw6e89RWKZJrJpipYQoA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/vmd
-branch HEAD: c654f3ee611506fadac84f4354995dc5259ecfa9  PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
+On 7/17/2026 4:08 AM, Zhiping Zhang wrote:
+> On Wed, Jul 15, 2026 at 6:07 PM fengchengwen <fengchengwen@huawei.com> wrote:
+>>
+>>>
+>> Hi Zhiping,
+>>
+>> One concern I'd like to raise is the implicit topology constraint of the
+>> TPH P2P path. TPH Steering Tag only works reliably when both importer and
+>> exporter devices sit under the same Root Port (or same TPH-aware switch).
+>>
+>> For cross-Root-Port P2P traffic (e.g. P2P devices located in different
+>> RC or even socket), most server-grade Root Complexes do not forward TPH
+>> prefixes through their internal routing. The ST field gets silently
+>> stripped before reaching the target device, so all TPH setup becomes
+>> ineffective with no error reported to user.
+>>
+>> Because cross-Root-Port P2P traffic with ST does not affect the host, but
+>> merely the completer may experience some performance degradation because
+>> it lacks the TPH hint. In this case, I suggest adding restrictions in the
+>> uAPI.
+>>
+>> A further step is to check whether the importer and exporter are under
+>> the same root port. However, this verification will cause the P2P TPH
+>> to be unsupported in the case of multi-host or multi-root PCIe switch.
+>>
+>> Thanks
+> 
+> Hi Fengcheng,
+> 
+> Agreed the RC may not preserve TPH across Root Ports (PCIe Base Spec
+> r6.4 §6.17.4 requires all intermediate routing elements to support
+> TPH, and cross-RP forwarding is optional/implementation-dependent, cf.
+> §2.2.10.4.2). But the uAPI can't gate it: there's no discoverable "TPH
+> routing" capability -- DevCap2[13:12] (r6.4 §7.5.3.15) describes the
+> completer, not P2P forwarding -- and a same-Root-Port check would
+> wrongly reject switch and multi-root topologies where ST does forward.
+> 
+> And it's harmless anyway: per r6.4 §2.2.7.1 an element without TPH
+> support ignores the TH bit and completes as if unhinted, so a stripped
+> ST just degrades to the non-TPH baseline.
 
-elapsed time: 1834m
+Thank you for your detailed explanation. I agree to maintain the current
+implementation.
 
-configs tested: 72
-configs skipped: 3
+Thanks
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> 
+> Thanks,
+> Zhiping
+> 
 
-tested configs:
-alpha                   allnoconfig    gcc-16.1.0
-alpha                  allyesconfig    gcc-16.1.0
-arc                    allmodconfig    gcc-16.1.0
-arc                     allnoconfig    gcc-16.1.0
-arc                    allyesconfig    gcc-16.1.0
-arc         randconfig-001-20260717    gcc-11.5.0
-arc         randconfig-002-20260717    gcc-13.4.0
-arm                     allnoconfig    clang-17
-arm                    allyesconfig    gcc-16.1.0
-arm         randconfig-003-20260717    gcc-8.5.0
-arm         randconfig-004-20260717    gcc-11.5.0
-arm64                  allmodconfig    clang-24
-arm64                   allnoconfig    gcc-16.1.0
-csky                   allmodconfig    gcc-16.1.0
-csky                    allnoconfig    gcc-16.1.0
-hexagon                 allnoconfig    clang-24
-i386                   allmodconfig    gcc-14
-i386                    allnoconfig    gcc-14
-i386                   allyesconfig    gcc-14
-loongarch              allmodconfig    clang-19
-loongarch               allnoconfig    clang-20
-loongarch                 defconfig    clang-24
-m68k                   allmodconfig    gcc-16.1.0
-m68k                    allnoconfig    gcc-16.1.0
-m68k                   allyesconfig    gcc-16.1.0
-microblaze              allnoconfig    gcc-16.1.0
-microblaze             allyesconfig    gcc-16.1.0
-mips                   allmodconfig    gcc-16.1.0
-mips                    allnoconfig    gcc-16.1.0
-mips                   allyesconfig    gcc-16.1.0
-nios2                  allmodconfig    gcc-11.5.0
-nios2                   allnoconfig    gcc-11.5.0
-openrisc               allmodconfig    gcc-16.1.0
-openrisc                allnoconfig    gcc-16.1.0
-parisc                 allmodconfig    gcc-16.1.0
-parisc                  allnoconfig    gcc-16.1.0
-parisc                 allyesconfig    gcc-16.1.0
-parisc                    defconfig    gcc-16.1.0
-parisc      randconfig-001-20260717    gcc-10.5.0
-parisc      randconfig-002-20260717    gcc-16.1.0
-powerpc                allmodconfig    gcc-16.1.0
-powerpc                 allnoconfig    gcc-16.1.0
-powerpc     randconfig-001-20260717    gcc-13.4.0
-powerpc     randconfig-002-20260717    gcc-11.5.0
-powerpc64   randconfig-001-20260717    gcc-15.2.0
-powerpc64   randconfig-002-20260717    gcc-8.5.0
-riscv                  allmodconfig    clang-24
-riscv                   allnoconfig    gcc-16.1.0
-riscv                  allyesconfig    clang-24
-riscv       randconfig-001-20260717    clang-17
-riscv       randconfig-002-20260717    clang-24
-s390                   allmodconfig    clang-24
-s390                    allnoconfig    clang-23
-s390                   allyesconfig    gcc-16.1.0
-s390        randconfig-001-20260717    clang-24
-s390        randconfig-002-20260717    clang-20
-sh                     allmodconfig    gcc-16.1.0
-sh                      allnoconfig    gcc-16.1.0
-sh                     allyesconfig    gcc-16.1.0
-sh          randconfig-001-20260717    gcc-9.5.0
-sh          randconfig-002-20260717    gcc-16.1.0
-sparc                   allnoconfig    gcc-16.1.0
-sparc64                allmodconfig    clang-20
-um                     allmodconfig    clang-17
-um                      allnoconfig    clang-17
-um                     allyesconfig    gcc-14
-x86_64                 allmodconfig    clang-22
-x86_64                  allnoconfig    clang-22
-x86_64                 allyesconfig    clang-22
-x86_64                rhel-9.4-rust    clang-22
-xtensa                  allnoconfig    gcc-16.1.0
-xtensa                 allyesconfig    gcc-16.1.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
