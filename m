@@ -1,131 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FDB4349CD7;
-	Fri, 17 Jul 2026 17:09:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AB44355814;
+	Fri, 17 Jul 2026 17:12:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784308199; cv=none; b=JD6xDc5h8Vn4O7ZVnDldVSiV10KPFCKUf96S5DqOm//CMoQITqWpO3zH2Z74LrJTU44NFBYPpzLR3dDFoX5LERXV+j2BCjD0NPfZgCngM/mJDj1HRmB9M/yFKuEOdfHtORE5cF9ceKwJ2tJul2+Dg1LGOaOnMk9gJlTUTsGpz8o=
+	t=1784308371; cv=none; b=mW4Mhua4VetOUiC0LzlrHmVm+kyTv63EsZaScHl7H9nLAE619gMMIJ4yhW7nbz0ryOIWxY+Dafwy3h/OcewNTm7sIKAuMMQAx3sT/QQ71wbKl3rSGG932tofuutm2D3vmHviCHEZ7M5YLQUrePTEY+CFB9F4goebkdHi7dB3oZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784308199; c=relaxed/simple;
-	bh=ym2v4YmYfJCHRs2bjR8+AYF/V8og/2Ps/38jlnEn5mE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=avNxDOv866cphhX8jaw5z2UynkQV0TkU7Nk1jZUcaw5tteRqwzJNdKbzGMz7bVdPY/bMBIvMiqQuHOM8pE8NetQkS3JgRAy5uim8bUYna7kr2ng8y92qY5f0C7B8t8NJYM2cuERhjJjSPKEvdmEna24bRO3/YB65Hw3mf6AskcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i5TbUhyE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784308371; c=relaxed/simple;
+	bh=aS7id/eBCMoARautj4ypXq6wb5YcFfvkkMDAecW8hkw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mTive1rWrnIbFVeV5ik3hsDX0XkkN4Q1nHP/O8H+O854cW/st36XdEa0lDTtlW2xnHilirxCu0vE86WRStVN7QmYllof7vBCAfyhVk/bkAaytU0vL7KT6YBvs3YmppmyR6K0GljmOgKjLqx+ieYSnDKYM+AoEEsjGuzVgBYPNPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=grMfq6z5; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i5TbUhyE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D3E11F000E9;
-	Fri, 17 Jul 2026 17:09:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784308197;
-	bh=vrIIp5vvuim1vMqA0JaquYGqHqFXlC/x9tIPiRIrp0w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=i5TbUhyEKURDYC//pmORMnyZIHNvtflLPqTTUQgKjllucYKinkcQl+ssuKZrzA7nW
-	 0n1w6zhI7AJ8gx3SWYRLm94qclZsGIEQ9CYPDjQfTiGpHLt9Ff7ggdTTeowCJZyvZT
-	 mmNL9TJt8Z4HGsobH3Avb+VLWn2yNV9cWWxBd8b16diMtjrchCYgSJTlEAAgI4EMtR
-	 aiifL/uiUt/WVKnSRKSEfa6fDxMc1TzQVBaCh2F+csc0OP+bVjd9+fe4qH0b2/tfHr
-	 XdbQCSQJDcpGeFjTha6ceq7sFcmk0kmVqlPIxSwi/mMCo0mGgQBP0XzDJPuvtj9nIW
-	 X6fVJCtnhYTmQ==
-Date: Fri, 17 Jul 2026 12:09:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: hongxing.zhu@oss.nxp.com
-Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
-	festevam@gmail.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org, Soeren Moch <smoch@web.de>,
-	stable@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v3] PCI: imx6: Keep i.MX6Q Root Port MSI capability with
- iMSI-RX to work around hardware bug
-Message-ID: <20260717170956.GC11343@bhelgaas>
-References: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="grMfq6z5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1784308357;
+	bh=nyQdVDt2H7mP+A7V2At5qUwCiDU5WOHl96LejnRVOxc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=grMfq6z5BYS50WBYtl+dz/vvrBLXOBxSXV+F4f/DrXEUpHr8WGgc7jUDHqI3f8P2C
+	 4G1so0MlfCytQcKSy8ChQG3ba6hIDYyhmfCHK95mUS/vXauDvOwMZL12DAW3T9BeRs
+	 obatIMcVKW92Dz+aiJSCAQa+iaYqjIUZ0C3hvtORC5YObf+jvaG8WSbrKSYzoVq53p
+	 KGw4vABqDVjuLwO+VgGrtWPaT+2Y6HY+rjUDyfhZV8Bk42IuGNOErRfYOPLfR3O2wo
+	 B7OozPpY0To3P3I4NUzVRG8NkWKu/f5/6JCPq3+WFF5VC/v/V7EkYyRht//Zlu0Wax
+	 R1uvk0dGQ3z7Q==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h1xL415l5z4wB7;
+	Sat, 18 Jul 2026 03:12:27 +1000 (AEST)
+Message-ID: <cc59a80f-afcc-4b2d-8e78-20f74c6b6871@ozlabs.org>
+Date: Fri, 17 Jul 2026 18:12:22 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260717033203.2965045-1-hongxing.zhu@oss.nxp.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 0/9] vfio/pci: Add mmap() for DMABUFs
+Content-Language: en-GB
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
+ Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260715174737.15287-1-matt@ozlabs.org>
+ <CALzav=fH7N+ionUnELqw5ZaGrPmgp_w6kxoCtoY8fMmZY_S4zw@mail.gmail.com>
+ <65ba06e7-4c54-437d-9fbd-632c0468f66d@ozlabs.org>
+ <allLypOmtbnPrgbw@google.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <allLypOmtbnPrgbw@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 17, 2026 at 11:32:03AM +0800, hongxing.zhu@oss.nxp.com wrote:
-> From: Soeren Moch <smoch@web.de>
-> 
-> On some NXP chipsets, disabling Root Port MSI/MSI-X Capabilities blocks
-> MSIs originating from Endpoints from reaching the iMSI-RX controller.
-> 
-> To address this hardware bug, commit 3a4e8302e72f ("PCI: imx6: Keep Root
-> Port MSI capability with iMSI-RX to work around hardware bug") preserves
-> Root Port MSI and MSI-X Capabilities on i.MX7D, i.MX8MM, and i.MX8MQ
-> when iMSI-RX is in use.
-> 
-> The same applies to i.MX6Q, i.MX6QP and i.MX6SX. So preserve Root Port
-> MSI/MSI-X Capabilities there as well.
-> 
-> Note that preserving these Capabilities means Root Port-originated MSIs
-> such as AER and PME won't be received due to separate hardware limitations.
-> Users may need to use workarounds such as passing the 'pcie_pme=nomsi'
-> command-line parameter.
-> 
-> Fixes: f5cd8a929c825 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
-> Cc: <stable@vger.kernel.org> # 7.0+
-> Signed-off-by: Soeren Moch <smoch@web.de>
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Hi David,
 
-Applied to pci/for-linus for v7.2, thank you!
+On 16/07/2026 22:23, David Matlack wrote:
+> On 2026-07-16 03:51 PM, Matt Evans wrote:
+>> Hi David,
+>>
+>> On 15/07/2026 19:12, David Matlack wrote:
+>>> On Wed, Jul 15, 2026 at 10:47 AM Matt Evans <matt@ozlabs.org> wrote:
+>>>
+>>>> This is based on v7.2-rc3.
+>>>>
+>>>> These commits are on GitHub for easier browsing, along with
+>>>> "[RFC ONLY] selftests: vfio: Add standalone vfio_dmabuf_mmap_test":
+>>>>
+>>>> https://github.com/metamev/linux/compare/v7.2-rc3...dev/mev/vfio-dmabuf-mmap-v5
+>>>
+>>> It'd be great to have this test upstream. I'm happy to review it when
+>>> you're ready. Looks like it just needs to be redone to use the VFIO
+>>> selftests library and kselftests harness. AI could probably do the
+>>> conversion pretty quick :)
+>>
+>> For sure, I'd intended to catch up with you on best approach here. :)
+>>
+>> Aside from the organic structure of the test (the open-coded VFIO
+>> device/group setup/init needs to go), the main issue is that it relies
+>> on a hacked/out of tree QEMU "EDU++" device with a second larger BAR
+>> (containing freely read-writable memory).  A subset of tests run with
+>> the in-tree EDU device, but coverage is too low.
+>>
+>> The desirable properties are:
+>>
+>>  - Having a BAR that is pure memory (all locations present, writable
+>> without disruptive side-effects) so that mapping aliases can be
+>> constructed and detected.  This is good to test things like non-zero
+>> vm_pgoffs and VA space presentation of physically-discontiguous DMABUFs.
+>>
+>>  - BAR >> hugepage size so we can eyeball huge mappings work (or better,
+>>  mechanically test for them).  At least 32MB would tick this box for 4K,
+>> 16K page systems.
+>>
+>>  - Something QEMU supports*, so one can run the test in a VM/TCG system.
+>>
+>> There were some real device models in QEMU that could be used this way,
+>> but needed a fair bit of setup;  I didn't want to rathole
+>> vfio_dmabuf_mmap_test on including a ton of device-specific code for
+>> some video card or similar.
+>>
+>> I'll dig more for a simple target that provides these properties --
+>> obviously it would be better to point this test at an off-the-shelf
+>> device (including silicon!).  And, proposing EDU extensions to the QEMU
+>> folks may be useful (there're uses for a better EDU in other contexts too).
+>>
+>> Since this test uses MMIO for a specific [class of] function, my first
+>> thought is it should be another VFIO driver-type test sibling of
+>> vfio_pci_driver_test.  For example, we could extend the driver-type
+>> tests' backend struct vfio_pci_driver_ops for functions capable of
+>> providing a Big Memory BAR, like QEMU EDU++.  EDU can also memcpy, so
+>> could also support vfio_pci_driver_test.
+>>
+>> The spirit of the device backends hiding setup of a complex device is
+>> handy, and it's plausible that several backends could provide this "big
+>> memory BAR" service.  What do you think, any concerns with extending
+>> vfio_pci_driver_ops like that?
+> 
+> I wouldn't recommend leveraging the driver framework unless absolutely
+> necessary. It makes the test harder to run.
+> 
+> The biggest issue I see with the proposed properties is being able to
+> treat the BAR as memory. That obviously will depend on the device and
+> may require device-specific setup. If we decide that treating the BAR as
+> memory is truly required then using the driver framework is the way to
+> go. But I'm hoping we can avoid that requirement.
+> 
+> Instead, I think you can get pretty far by inspecting /proc/pid/pagemap
+> to determine if the mmap() set things up correctly, without actually
+> accessing the BAR. You can use /proc/pid/pagemap to look up the PFN and
+> PAGEMAP_SCAN to detect huge pages.
 
-> ---
-> changes in v3:
-> - Extend the fix to i.MX6QP and i.MX6SX variants as well.
-> - Update the commit descriptions suggested by Bjorn.
+Hmm, possible, although that's quite a different test at that point.  I
+agree never touching the device has advantages, but it's harder to test
+certain things if we _never_ do MMIO.  The mitigation effort to get
+coverage may not be the right tradeoff vs easier running.  I can think
+of some "easy" VFIO bugs that would be challenging to properly verify in
+userspace (e.g. PFNs all having some undesired offset).  The current
+test method is harder to fool per unit effort in writing it.
+
+Though, I will have a think about this no-touch flavour of test.
+
+What were you picturing regarding populating the VMA PTEs in order to
+inspect the result via /proc/pid/pagemap, whilst still upholding the
+principle of not touching the device?  For example,
+madvise(MADV_POPULATE_WRITE) won't work on the VFIO BAR regions because
+they're VM_PFNMAP/VM_IO.
+
+> With that requirement gone, then all you really need is a device with a
+> large enough BAR. And even that it not a hard requirement. I'm sure
+> there are plenty of test cases that could work with smaller BARs. The
+> few tests that want to exercise huge mappings can inspect the device BAR
+> sizes first, and if they're all too small, SKIP() the test.
 > 
-> changes in v2:
-> - collect a-b and r-b tags
-> - use correct fixes tag (Manivannan)
->   (reference commit that introduced the bug, not the incomplete fix)
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+> If you structure the test this way, then it's easy for the test to be
+> used. It can be run against any device for the basic functional
+> coverage, and can be run against a device with a larger BAR for full
+> coverage of huge mappings.
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 98e1db751132a..dba27eac6bff6 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1995,7 +1995,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
->  		.flags = IMX_PCIE_FLAG_IMX_PHY |
->  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
->  			 IMX_PCIE_FLAG_BROKEN_SUSPEND |
-> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
->  		.dbi_length = 0x200,
->  		.gpr = "fsl,imx6q-iomuxc-gpr",
->  		.ltssm_off = IOMUXC_GPR12,
-> @@ -2011,7 +2012,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
->  		.flags = IMX_PCIE_FLAG_IMX_PHY |
->  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
->  			 IMX_PCIE_FLAG_SKIP_L23_READY |
-> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
->  		.gpr = "fsl,imx6q-iomuxc-gpr",
->  		.ltssm_off = IOMUXC_GPR12,
->  		.ltssm_mask = IMX6Q_GPR12_PCIE_CTL_2,
-> @@ -2026,7 +2028,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
->  		.flags = IMX_PCIE_FLAG_IMX_PHY |
->  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
->  			 IMX_PCIE_FLAG_SKIP_L23_READY |
-> -			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
-> +			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
-> +			 IMX_PCIE_FLAG_KEEP_MSI_CAP,
->  		.dbi_length = 0x200,
->  		.gpr = "fsl,imx6q-iomuxc-gpr",
->  		.ltssm_off = IOMUXC_GPR12,
-> -- 
-> 2.34.1
-> 
+> Does QEMU emulate any devices that have 32MB or larger BARs?
+
+Yep, looks like `-device pci-testdev,membar=64M,membar-backed=on` or
+even `-device bochs-display,vgamem=64M` would be suitable.
+
+So I'll also try moving the existing test over to one of these to at
+least remove the EDU++ device dependency.  (bochs-display has >1 BAR,
+and some MMIO regs which are nice for a quick kick-the-tyres access test.)
+
+
+Cheers,
+
+
+Matt
+
