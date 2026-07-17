@@ -1,297 +1,141 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5843B27D6;
-	Fri, 17 Jul 2026 23:14:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE273BD63A
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 23:29:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784330072; cv=none; b=nfeVo0D4UNG3A0OzzXSomULWK3iGR8ALMUO1Sz5UTH3MmVjiT/nDfZ98Xwjre9oIZ+FDh43RynN1QGyojC9GBqWF9QdqbS+BWGnCxzZkjAMlfcyj3d0dI/R0PHCF3jGeDV9szrpQqb1DX+djsSrrtiS85kRZX++0hHItyG9iD84=
+	t=1784330993; cv=none; b=Rcouks14jzwTOsQhW61JN9QvGWWIT5JxlLem31zP47g7A4HA8VILI4sUaVECGdirIWe9RqzbvbxUrQECzWlyzt5PjarIS+FcInjbAf5HcZfZqqiHrSHjU+ZVSDOXE8Fao39xgj+FB9hKPSXu+KTuHniStD58rjFCg5v9O8o/WyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784330072; c=relaxed/simple;
-	bh=MklLmxRS+GKW/l81U9ybGNMaPLLNwwQE7wX2/yYK4GQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QYjidmgG5HIjKu/mKkAkacO6W21MuAlKHPkJA5EITz4FMMqfWruDYkIDVvpVesaW3cBh2IrFpSeF8NiRfBhYJhmYvcra7H/pBjvHzBS8SH2q8jGpNqymDbK/TzBWAHemwDQ/x2hKoX9S3uVNbv/Qe62zQPAXidBaI4jBixT2LQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiqLFsVG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784330993; c=relaxed/simple;
+	bh=6J2VFoOheObNIbZ6/cGmHoej1PdGKGdAP4cvYQKgG9k=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=p7Iceof8T0Kbh0cOqyjhymCOWxSyGQMJS4Z5gIXzIj6KY5qp5DjUgQlifG4MGcTiZIq2W+PZ0twaEpo3sQDT/5K79IssYnHx5+aJt2+Q2bIpO9d/QwOucWsfITE1393xjEd6k/wh0voLy/RCDAsneXQw1S6KGTbTyKu8loS+Jig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=OSLXgBtA; arc=none smtp.client-ip=209.85.219.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiqLFsVG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA5861F000E9;
-	Fri, 17 Jul 2026 23:14:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784330068;
-	bh=GBCPJgCnONoIe6VMGY5j1Fmy+0F7iJBPVsm978p2XD4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=QiqLFsVGeRC4t1TL6NbvdldNt5+oM07JUShjNVwRj2TkyhqnglZViBhJrvdI+4oe4
-	 W0l3Ox4sk2AF1RfJ8LOQgmfTgt2Kuxjs1/z0LgLPDWrQb6AAGVHsoDzbLpUcTwP0pl
-	 NiHMNynxnDlEA0YwtsNrPs7DT7lZeKAiNEH9A0tcT4m3+nfSD6e0UEnY7BzE8D/BQj
-	 mIO2ifGZd1tF4w9edclbeyGox4XiYsWhACIxUKYB7l3YWFo1dYDCJN+eSV8MXFcy0r
-	 N9UL7bmQinwEVYzJXey83qHEmZL1vJheSebcauYzIY20b5XZ60TwNEB8qMhwxyAFED
-	 fUUvzjh4US5ow==
-Date: Fri, 17 Jul 2026 18:14:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <frank.li@nxp.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v2] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
- power and reference clock control
-Message-ID: <20260717231426.GA211988@bhelgaas>
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="OSLXgBtA"
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8ee43b3e5abso76901036d6.3
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 16:29:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1784330990; x=1784935790; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=1uFYFSRoCsiTT7zcdwujRzQUpLdsx92sk9iYHDH24xs=;
+        b=OSLXgBtAPc1fBN6D+TAlI3V2si/8u89m4Ss6h6TzBVQwndwZG1WrSuuVIj2IbeyT7R
+         T1YhXpxktUi+my932RxnpVn3QnpNzKFjfe+6ibMP155x1AGIsd4iKIrb7uL8nA1GAOFR
+         b2ipVS7ve8eHWKayQrbqDvYPrFnE/QOKPqeH1QZ5JHfOwe/WFbHeAqEnM139GCPGfHFr
+         e4ttlD9ttTr5x0oA7SBeCSe5j9bU5o8d7nOmtnlXuRcH0W2JcRAky/uCs76tsy1Kg6bA
+         FZ+IFDx9rYnbsHWpu7uHIqAdvBtp1BEpeDYlx4FE8By1a7HK0B6MoP1cmlPjJ57WECY5
+         R7Ww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784330990; x=1784935790;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1uFYFSRoCsiTT7zcdwujRzQUpLdsx92sk9iYHDH24xs=;
+        b=Bj35ytZBNnA3sMYBc0Zms4dCdf3AoPs5ZoZ/BkaMArqIGJy3h0dSi2B5GqyJYU5a+C
+         ALE3aQrqrnX/44nKm//Mj4IgDldSDTw3CqRQ3iGc++fr5QB96jroHgHAY/Ymq1tYR/Ns
+         7KayrT4bmAUcLoX35/3MsIo1QeajaWd6+jL5eFxU2KdGdYn6EPOqUUBkIcR8oRyjZ6Hm
+         FDMgAGr7iMoPWjxaybHtVbjpLq5fvFSJ7TorbHVVz0/6OAJZH/lH4kPkjdZYsr1YOlMw
+         j54hZ03rY5UoZ220BqBmhtrEs42exqK+D0YaQPy/oxbPJeR8gm0hqOEPAW4t7eYgieCj
+         AT+A==
+X-Forwarded-Encrypted: i=1; AHgh+Rosgb0kPOtGnhacqWYGKqLE7i+6vZonk5eDFDPFUpNl5tco1jCvJvbmOljqTmXXDufJfQs5hViEKpI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTe6pNg+6Cgx0O1Rvh+nc8uZwGqOExXWADUEdcuy/JgZgWK5CO
+	NnbP/kTFYNsSwjLQPJjxvhHwJ05Q86DVvZkyiJ66WxiZNi2PumjupkvNkeCYeiU4Wbc=
+X-Gm-Gg: AfdE7cl6rZToM1yqO+k+hUkWrqgUDCmhT37HF4S4lM/9s6Bi6BWSX9nw7qVwfRk3ZVA
+	cdt7u3wYpCtn/g0euDStaexEzgDMkhJTQ3Tz4qrct8aQJRdXzM0Rt4ccvR50r++1sXBGkeRzjXB
+	LDh6RLeBA0BYs0dxsM5uVzcBduK0GdW2qgjtI2tNeLhH+Ejp6QLBDMFPd7DJT5v7CjPyN96WSuE
+	jGNJia2sp+xd/HZZaqoTpKbSBELO0WXIeFPmiYb/B70JZ9ZPgtYC2UPcU7WpO6D7/5h7N0fh+Ug
+	FkZfiV5BUEE4w8API5yIwU5M5pYSriHItxxHGwTDAHTb8gE12Ucr+FNvXpmT2EJiJpUUHoXZade
+	HSdtUenoxrZ7XNdWxp2WLAB1n44Sn9SdF6FlFCNt58GThU0xSKUfsnBPirYQrdyVCiE53L4jWCL
+	/vimAnvSusTgcv09vOQYafW8sxegESImQNdYdiImy9Gm9iIpxn5g==
+X-Received: by 2002:a05:6214:5c49:b0:8fb:81c5:7997 with SMTP id 6a1803df08f44-9077850e2c1mr54008216d6.31.1784330990189;
+        Fri, 17 Jul 2026 16:29:50 -0700 (PDT)
+Received: from [127.0.1.1] ([71.181.43.54])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907787298b9sm28260406d6.48.2026.07.17.16.29.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jul 2026 16:29:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <GV2PR04MB1201914A80BB2BF78A10465748CC62@GV2PR04MB12019.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v7 09/12] PCI: liveupdate: Inherit ARI Forwarding
+ Enable on preserved bridges
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+ Adithya Jayachandran <ajayachandra@nvidia.com>, 
+ Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+ David Rientjes <rientjes@google.com>, 
+ Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+ Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
+ Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+ Pasha Tatashin <pasha.tatashin@soleen.com>, 
+ Pranjal Shrivastava <praan@google.com>, 
+ Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
+ Samiullah Khawaja <skhawaja@google.com>, 
+ Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
+ William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+In-Reply-To: <20260710212616.1351130-10-dmatlack@google.com>
+References: <20260710212616.1351130-1-dmatlack@google.com>
+ <20260710212616.1351130-10-dmatlack@google.com>
+Date: Fri, 17 Jul 2026 23:29:45 +0000
+Message-Id: <178433098576.189683.2364970585754668266.b4-review@b4>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=888;
+ i=pasha.tatashin@soleen.com; h=from:subject:message-id;
+ bh=6J2VFoOheObNIbZ6/cGmHoej1PdGKGdAP4cvYQKgG9k=;
+ b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWrrshWLAQfvPS4hCFjntJqjX0KdHUleGb+svS
+ eNoqDsCDGKJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalq67AAKCRC7dyhM23N6
+ 3n6BD/93+EXV7xpXf2NVyjjavXthNzeAZsOjnEaI/9CTjGZpZezuLCaFWFkZbkDaJEae3J38p4g
+ juh65pYyMlwdowYBLYitqy4Ier6vbyyxoTsXaj3h/5m7FYus2rP1L70rvxqIWUKVDa7ae4mcHP8
+ jx4t1Y7WnDY7cDIIBbDBOVWz/TUe4B/nhCyh923/V+f3mvMwSMrkjpeg0snqGfcXX1/MgSHzSXx
+ JxlP4a0WAMxKCYZJErzZ2J4BDcRpMPVf0Wogx/PmJlJ44HAR0obpH/l7e/l8mlIfJyTBnC0BOcd
+ CRxdwB4gQwt8tYXq6ojekcZQGo5tkLGjVU/FRP9nzKbGUoIwwajPcQw2k9Wy0QrUHOHr0YepxNa
+ PDOxIex+hWFFkDdyz0K+A6aSa1S8Wbkc78gHQcx++rNOheuVA4I1tNb2mW0+CmOfdK2W+Xq7qzU
+ 8H4RB21Ijq3rJnHjvcfH9Y7rNyN0XbXdraIJKmVcg3iQiykYkN033FyDlHK3Xxs7+VkXpfehQU7
+ HVwPoEC6LyiXUZuPvqNPlP9IBcUFEKJtHRGZQvO84eyZvv0IyG2a4olE3gptNO3xeHXM5rLoij7
+ +UQOk3YJ0MWvmomRHmA6P0cgqW7ejMNyEJU2GfTch92NagNbGdNLnxWPd3YVdcov/hPE9GI6NTE
+ y4FR9mOBy865agA==
+X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
+ fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
 
-On Fri, Jul 17, 2026 at 08:57:04AM +0000, Hongxing Zhu (OSS) wrote:
-> > -----Original Message-----
-> > From: Manivannan Sadhasivam <mani@kernel.org>
-> ...
-> > On Wed, Jul 08, 2026 at 11:59:27AM +0800, hongxing.zhu@oss.nxp.com wrote:
-> > > From: Richard Zhu <hongxing.zhu@nxp.com>
-> > >
-> > > Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
-> > > regulators") introduced a boot hang on i.MX6Q/DL variants by changing
-> > > the initialization sequence.
-> > >
-> > > The issue stems from coupling PHY power (TEST_PD) and reference clock
-> > > (REF_CLK_EN) control in imx6q_pcie_enable_ref_clk(). When these are
-> > > managed together, the timing between PHY power-up and reference clock
-> > > enablement cannot be properly controlled, leading to initialization
-> > > failures.
+On Fri, 10 Jul 2026 21:26:12 +0000, David Matlack <dmatlack@google.com> wrote:
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index a95bfe5eff77..74a11e520f0d 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -816,6 +820,20 @@ int pci_liveupdate_enable_acs(struct pci_dev *dev)
+>  	return 0;
+>  }
+>  
+> +int pci_liveupdate_configure_ari(struct pci_dev *dev)
+> +{
+> +	u16 val;
+> +
+> +	guard(rwsem_read)(&pci_liveupdate.rwsem);
+> +
+> +	if (!dev->liveupdate.incoming)
+> +		return -EINVAL;
+> +
+> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &val);
+> +	dev->ari_enabled = !!(val & PCI_EXP_DEVCTL2_ARI);
 
-This is kind of a hand-wavy description that doesn't explain exactly
-what 610fa91d9863 changed that broke the boot.
+unsigned int    ari_enabled:1;
 
-I don't understand what you're saying about timing between PHY
-power-up and REFCLK enable because it looks like you enable REFCLK
-*first*, then power up the PHY.  There's a 200us delay in
-imx_pcie_clk_enable() after enabling REFCLK, but that was already
-there in 610fa91d9863.
+Sashiko asks a valid question, what protects other bits in this word 
+during modication?  At a very list a comment is needed.
 
-> > What is the timing requirement here?
->
-> The timing requirement is that TEST_PD must be deasserted (cleared) before
-> link training starts.
-
-Is there any delay required between deasserting TEST_PD and link
-training?
-
-Prior to this patch, imx_pcie_deassert_core_reset() didn't touch
-TEST_PD on imx6qp, but it did delay 200us in imx6qp_pcie_core_reset().
-Now it will clear TEST_PD and still delay 200us.
-
-On imx6q, it didn't touch TEST_PD or delay.  Now it will clear TEST_PD
-but still won't delay.
-
-I don't see any other delay enforced between PHY power up (in
-imx_pcie_deassert_core_reset()) and link training.  So after this
-patch, it looks like the chipset-specific behavior in
-imx_pcie_deassert_core_reset() is:
-
-  imx6sx:  clear TEST_POWERDOWN, no delay
-  imx6q:   clear TEST_PD, no delay
-  imx6qp:  clear TEST_PD, usleep(200)
-  imx7d:   wait for PHY PLL lock
-  imx95:   nothing
-
-Here's the path I see after this patch is applied:
-
-  imx_pcie_probe
-    dw_pcie_host_init
-      imx_pcie_host_init
-        imx_pcie_clk_enable
-          imx6q_pcie_enable_ref_clk(enable=true)
-            regmap_set_bits(IMX6Q_GPR1_PCIE_REF_CLK_EN)   # REFCLK enable
-          usleep(200)                                     # <-- delay
-        imx_pcie_assert_core_reset
-          imx6q_pcie_core_reset(assert=true)
-            regmap_set_bits(IMX6Q_GPR1_PCIE_TEST_PD)      # PHY power off
-        imx_pcie_ltssm_disable
-        imx_pcie_deassert_core_reset
-
-          imx6q_pcie_core_reset(assert=false)
-            regmap_clear_bits(IMX6Q_GPR1_PCIE_TEST_PD)    # PHY power on
-       -- or --
-          imx6qp_pcie_core_reset(assert=false)
-            regmap_clear_bits(IMX6Q_GPR1_PCIE_TEST_PD)    # PHY power on
-            regmap_update_bits(IMX6Q_GPR1_PCIE_SW_RST)
-            usleep(200)                                   # <-- delay
-
-      dw_pcie_start_link
-        imx_pcie_start_link
-
-> Before commit 610fa91d9863:
-> - imx_pcie_assert_core_reset(): Assert TEST_PD and REF_CLK_EN
-> - imx_pcie_clk_enable(): Deassert TEST_PD and assert REF_CLK_EN
-> - Link training starts with TEST_PD properly cleared
-> 
-> After commit 610fa91d9863:
-> - imx_pcie_clk_enable(): Deassert TEST_PD and assert REF_CLK_EN
-> - imx_pcie_assert_core_reset(): Assert TEST_PD and assert REF_CLK_EN again
-> - Link training starts with TEST_PD still asserted (never cleared again)
-> 
-> This commit corrects the sequence, and makes sure the TEST_PD is cleared
-> before link training starts.
-
-
-> > > Fix this by separating the two concerns:
-> > >
-> > > - Move PHY power control (TEST_PD) to imx6q_pcie_core_reset() where it
-> > >   logically belongs with reset operations. This ensures PHY power state
-> > >   is managed as part of the core reset sequence.
-> > >
-> > > - Update imx6qp_pcie_core_reset() to call imx6q_pcie_core_reset() for
-> > >   shared PHY power management, avoiding code duplication.
-> > >
-> > > - Make imx6q_pcie_enable_ref_clk() responsible only for reference clock
-> > >   (REF_CLK_EN) control, simplifying its purpose.
-> > >
-> > > - Remove the 10us delay workaround from imx6q_pcie_enable_ref_clk() as
-> > >   proper sequencing is now handled by the core_reset functions.
-> > >
-> > > This refactoring ensures PHY power is controlled during reset
-> > > operations, fixing the boot hang while improving code maintainability.
-> > >
-> > 
-> > This patch does too many things at once. Can't you split it and
-> > keep the minimal fix in one patch?
->
-> Okay, I'll split this into a patch series in v3.
-
-The "invoke imx_pcie_assert_core_reset() explicitly in error path of
-imx_pcie_host_init() and imx_pcie_host_exit()" part seems unrelated to
-the boot hang.
-
-> > > Fixes: 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
-> > > regulators")
-> > > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> > > ---
-> > > Changes in v2:
-> > > Regarding sashiko's reivew, invoke imx_pcie_assert_core_reset()
-> > > explicitly in error path of imx_pcie_host_init() and imx_pcie_host_exit().
-> > > ---
-> > >  drivers/pci/controller/dwc/pci-imx6.c | 45
-> > > ++++++++++++---------------
-> > >  1 file changed, 20 insertions(+), 25 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pci-imx6.c
-> > > b/drivers/pci/controller/dwc/pci-imx6.c
-> > > index 9406bba36953f..53f3da6ab30d5 100644
-> > > --- a/drivers/pci/controller/dwc/pci-imx6.c
-> > > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> > > @@ -680,21 +680,12 @@ static int imx_pcie_attach_pd(struct device
-> > > *dev)
-> > >
-> > >  static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool
-> > > enable)  {
-> > > -	if (enable) {
-> > > -		/* power up core phy and enable ref clock */
-> > > -		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_TEST_PD);
-> > > -		/*
-> > > -		 * The async reset input need ref clock to sync internally,
-> > > -		 * when the ref clock comes after reset, internal synced
-> > > -		 * reset time is too short, cannot meet the requirement.
-> > > -		 * Add a ~10us delay here.
-> > > -		 */
-> > > -		usleep_range(10, 100);
-> > > -		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_REF_CLK_EN);
-> > > -	} else {
-> > > -		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_REF_CLK_EN);
-> > > -		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_TEST_PD);
-> > > -	}
-> > > +	if (enable)
-> > > +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > +				IMX6Q_GPR1_PCIE_REF_CLK_EN);
-> > > +	else
-> > > +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > +				  IMX6Q_GPR1_PCIE_REF_CLK_EN);
-> > >
-> > >  	return 0;
-> > >  }
-> > > @@ -823,23 +814,25 @@ static int imx6sx_pcie_core_reset(struct imx_pcie
-> > *imx_pcie, bool assert)
-> > >  	return 0;
-> > >  }
-> > >
-> > > -static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool
-> > > assert)
-> > > +static int imx6q_pcie_core_reset(struct imx_pcie *imx_pcie, bool
-> > > +assert)
-> > >  {
-> > > -	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_SW_RST,
-> > > -			   assert ? IMX6Q_GPR1_PCIE_SW_RST : 0);
-> > > -	if (!assert)
-> > > -		usleep_range(200, 500);
-> > > +	if (assert)
-> > > +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > +				IMX6Q_GPR1_PCIE_TEST_PD);
-> > > +	else
-> > > +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > > +				  IMX6Q_GPR1_PCIE_TEST_PD);
-> > >
-> > >  	return 0;
-> > >  }
-> > >
-> > > -static int imx6q_pcie_core_reset(struct imx_pcie *imx_pcie, bool
-> > > assert)
-> > > +static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool
-> > > +assert)
-> > >  {
-> > > +	imx6q_pcie_core_reset(imx_pcie, assert);
-> > > +	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_SW_RST,
-> > > +			   assert ? IMX6Q_GPR1_PCIE_SW_RST : 0);
-> > >  	if (!assert)
-> > > -		return 0;
-> > > -
-> > > -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_TEST_PD);
-> > > -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> > IMX6Q_GPR1_PCIE_REF_CLK_EN);
-> > > +		usleep_range(200, 500);
-> > >
-> > >  	return 0;
-> > >  }
-> > > @@ -1445,6 +1438,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
-> > >  	return 0;
-> > >
-> > >  err_phy_off:
-> > > +	imx_pcie_assert_core_reset(imx_pcie);
-> > >  	phy_power_off(imx_pcie->phy);
-> > >  err_phy_exit:
-> > >  	phy_exit(imx_pcie->phy);
-> > > @@ -1471,6 +1465,7 @@ static void imx_pcie_host_exit(struct dw_pcie_rp
-> > *pp)
-> > >  			dev_err(pci->dev, "unable to power off PHY\n");
-> > >  		phy_exit(imx_pcie->phy);
-> > >  	}
-> > > +	imx_pcie_assert_core_reset(imx_pcie);
-> > >  	imx_pcie_clk_disable(imx_pcie);
-> > >
-> > >  	pci_pwrctrl_power_off_devices(pci->dev);
-> > > --
-> > > 2.34.1
-> > >
-> > 
-> > --
-> > மணிவண்ணன் சதாசிவம்
+-- 
+Pasha Tatashin <pasha.tatashin@soleen.com>
