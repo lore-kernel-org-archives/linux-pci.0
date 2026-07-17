@@ -1,97 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6066035E1B8;
-	Fri, 17 Jul 2026 22:35:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C87943F08A;
+	Fri, 17 Jul 2026 22:35:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784327712; cv=none; b=G5qfmeKGaIId+2CIYCuVxA3GJlstByRzPWUg/xXQcd6ppnIf4AQdnk3PiJt0oZQu0Kng1KZk7qN1pBLLNGQrEGyh8Oa4lAqA7zQcMPzjJdpgmr68ZeAv5JdnTvcsFWRcxOh1UwzRw1FXaFvYqE5lzbwniLr+7aZ0WC4pKfG5PdY=
+	t=1784327728; cv=none; b=XIX8fvCtmf6FNQ6GuSoRqjes1bZ+hETikncMlS04MCYiHi+vx9m+BJx12LtQxZdqpUWa9yJg5S2SJlWOXzDUP7QF5gXf7CMWheZ8wtjfREmMAhuIabR9jaXclzMaenjnuj7mQAiq+8VDAv9v7m2W5ZbHLaGUWm9IpNKnnAzFaC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784327712; c=relaxed/simple;
-	bh=CTDMyaO0UFRm6Tk93rldwsTy21lX6xtZs6n7J1JOre0=;
+	s=arc-20240116; t=1784327728; c=relaxed/simple;
+	bh=juqaL3eaaRXK79+lHkOL3AwxXKWixjs+O3054ej3fcI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aC3jgaV7yM1Bsge/E3DWdbmSaSAsJBKUS5PRX51CTSVRFodsPfjuCc87NbfGUIPQpeuVB4gpAhZlsZTgUTXyx1Y8m35jARdZOg6rvfevEY5J044BAO/U1dzioEZeKG7Izcbkvca5vF9vljQ9HfFciGXkuu6DpvYOuRSLRa3Z7aM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZubLR9Mu; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jIOaSR9EXWPImJhIr5i3YUuBOOGyZ3kIUyBJzmveHK5nxzcK9UkzT1fIBrfz78absiCEisa1SZn0XsRsOiXtRkz0DMoi2UPg5UDeuRdZRs2EW9nh5j7gvp9CFyqPnNR6ioKOo/sc+MwymDIfhPwcQOKhz/iR0AkmYt/rynf1/ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m5w3ERP9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZubLR9Mu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 030751F000E9;
-	Fri, 17 Jul 2026 22:35:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m5w3ERP9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC58C1F000E9;
+	Fri, 17 Jul 2026 22:35:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784327711;
-	bh=n9s9nFWYwfUjr8ZsDMB1zApupe/nMtqeXxexvtYNlwA=;
+	s=k20260515; t=1784327727;
+	bh=juqaL3eaaRXK79+lHkOL3AwxXKWixjs+O3054ej3fcI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZubLR9MufAfzMqYd/7hbcwQ1TpDILcOg3wX++uIGKdLzbKeNhDIp0mYzjXNMbfcdN
-	 uLc6Ob1er9nPbsU0Rfo8Pca/0hUmTRIvZm1a/O8qI5BO/0be/sQjM0J2EDyMEJ5RG5
-	 AVyHQKf3J1abkwnUymCsZmJYP74KALcs9hISIK4+vS4H0V0oKpkaBdgf3kL3DaNS10
-	 M+bPXPA8dJIO6wJltlIcMEgnByDDZnIJGlOsVrnr7DT1DkWVAhqtdGtS/ZByHf+NFA
-	 o8NZpKfB88PtznAvDX264Ovs6AK/Pj9yNPO+kqhrF5CiOnL9FHziUfmruJz6yeOtSv
-	 sg+NMay+tPQ4Q==
+	b=m5w3ERP97U2POSMx0ukH5c11/bvgJzxDPl+ns+zBjMhl6XTzlj6/eN1SaVeJ03zbX
+	 oEASx/SdD4dzkKMxDsYVEM7Yj78EMd78QQu77k4MbLyAm2D0mGdBZaO40xwSZfF3aR
+	 nyEQChwZ9AZfctOlo7jVoY9mTioI3E/Tt2fvOYR5eWcaXz9Ff2sqjjwt7ow52RWeRz
+	 0y4QXXhcUdRyXC8AOBaQXnNcbXqnHan/YnxTe6o//4gsVMjhHgxUnwkgxEUKmTbMbP
+	 vdCcZCMFeYlZr9NkwHsuetyoa0B5W1quFpSnPRXDofvLy8XxLT+NwodxaQB91o5kRD
+	 8oWRZoHlaq7hA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 5/6] dmaengine: ioat: use sysfs_emit() in per-channel
- sysfs show()
+Subject: Re: [PATCH v18 05/13] PCI/AER: Introduce AER-CXL protocol error
+ kfifo
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org
-In-Reply-To: <20260717221001.361421-6-logang@deltatee.com>
-References: <20260717221001.361421-1-logang@deltatee.com>
- <20260717221001.361421-6-logang@deltatee.com>
+To: "Terry Bowman" <terry.bowman@amd.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20260717222706.3540281-6-terry.bowman@amd.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+ <20260717222706.3540281-6-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 22:35:10 +0000
-Message-Id: <20260717223511.030751F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 22:35:26 +0000
+Message-Id: <20260717223526.DC58C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+> CXL VH RAS handling requires a path for the AER driver to hand off
+> CXL protocol errors to cxl_core for logging and recovery before PCIe
+> AER recovery tears down the device. Add
+> drivers/pci/pcie/aer_cxl_vh.c to implement this handoff via a kfifo-backed
+> work item.
+>=20
+> Introduce is_aer_internal_error() to identify CXL protocol errors
+> from AER internal error status bits across both correctable and
+> uncorrectable severities.
+>=20
+> Introduce is_cxl_error() to gate the VH kfifo path.
+>=20
+> Introduce struct cxl_proto_err_work_data to carry the error source
+> PCI device and severity through the kfifo. Encapsulate the kfifo,
+> per-producer spinlock, registration rwsem, and work pointer in struct
+> [ ... ]
+> bridging code.
+>=20
+> Co-developed-by: Dan Williams <djbw@kernel.org>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 
-Pre-existing issues:
-- [High] Missing `.release` callback in `ioat_ktype` leads to Use-After-Fre=
-e during device teardown.
---
-
---- Patch [5]: [PATCH v1 5/6] dmaengine: ioat: use sysfs_emit() in per-chan=
-nel sysfs show() ---
-commit 92c0d5a2427ebf1a54399ad0e602ee20f0d12130
-Author: Logan Gunthorpe <logang@deltatee.com>
-
-dmaengine: ioat: use sysfs_emit() in per-channel sysfs show()
-
-Convert the sprintf() calls in the per-channel sysfs attribute show()
-functions to sysfs_emit().
-
-> diff --git a/drivers/dma/ioat/sysfs.c b/drivers/dma/ioat/sysfs.c
-> index e796ddb5383f8..976134df81084 100644
-> --- a/drivers/dma/ioat/sysfs.c
-> +++ b/drivers/dma/ioat/sysfs.c
-
-[ ... ]
-
-[Severity: High]
-This is a pre-existing issue, but does ioat_ktype need a .release callback?
-
-Looking at drivers/dma/ioat/sysfs.c:ioat_ktype:
-
-const struct kobj_type ioat_ktype =3D {
-	.sysfs_ops =3D &ioat_sysfs_ops,
-	.default_groups =3D ioat_groups,
-};
-
-Without a .release callback, doesn't this break the kobject reference count=
-ing
-lifecycle?  If a user space process keeps a sysfs file open (like ring_size)
-while the device is hot-unplugged or the driver is unbound, release_ioatdma=
-()
-frees the ioatdma_chan structures directly.
-
-When the user space process later closes the sysfs file and the kobject
-reference count drops to zero, the kernel will attempt to access the kobject
-embedded in the already-freed ioatdma_chan memory.  Can this cause a
-use-after-free during device teardown?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717221001.3614=
-21-1-logang@deltatee.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717222706.3540=
+281-1-terry.bowman@amd.com?part=3D5
+
