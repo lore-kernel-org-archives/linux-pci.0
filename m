@@ -1,66 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6F0442A7A5
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 14:59:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17120277029;
+	Fri, 17 Jul 2026 15:03:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784300357; cv=none; b=mJEU4rkfXgdvNK+b7h+Af9B9wzBhgDb9NPeY759YR7mBFAWAOoAzEZK3H/rgl41LrXAbllcjx+RnYGi0Z30hs3fGGrgBmaESX5CWPRklGEFqMNbNpiIZLoVB7ZED6/B/62g3LWLKKG2kO1zlGFT9Ay9Kc+81aNAm4CJxnYqGLiw=
+	t=1784300596; cv=none; b=gaOfU7YFPtvB3qdTjZTlDM6IZio3zkVUC3086yQBkzJRdQGfPPW4KFIrPplfK6/Q2GwlLb8BCOioUIvx9w5Wy709ZGtdmPaw9PzRhFO58/XsvaMS9odiib0zJA478VBjVFwZtLJnBKmI4Kkg+SCVmsKpD6/MLwDwU0HslkSdB6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784300357; c=relaxed/simple;
-	bh=kcQOr0qddCUs6325u7gtQCRT+GO/ZB9+/I9oKPRKJJI=;
+	s=arc-20240116; t=1784300596; c=relaxed/simple;
+	bh=iObE2kwV/RRYvT8Tyql+/IF52uIldebvnfCD7AV1/OU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kSuBbApqDKa8zJeEondCmBuLsKhE4AvEomoWY41Km0TX2uKM/OIsMi4crMGkmBw6KfpTEooAen3+IusyuaMsE7SN86cpHJ3msqCj3bre3s9Ch3kNTTpM+rPwV+tZuJyMpg+GHb+udQppVu0nJC5Vn9HTuHz+Knjd06KrAnV+5JE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WK3czwrT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=B2BU2qrFu3dVulctf1qARZ5eM4s1yPBAO0k52vQACP/CjCIcEqHpDQGEan18Hs1x+WI/oWUy9Jo4YQZJGSNJFy3J/wfWyTQV28aaYrHqoU5LPkbZSB5T41Fnjj00Z/78el1v3ny0B6LV4f9jqpGCtVLnScsDi/zZpoHBkvIdyBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S6Q6hzrD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WK3czwrT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C02D81F000E9;
-	Fri, 17 Jul 2026 14:59:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S6Q6hzrD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CB221F000E9;
+	Fri, 17 Jul 2026 15:03:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784300351;
-	bh=N+dxitr22xx4KUXP6w6lh0tgqp/wMjv0FSb8hh989bQ=;
+	s=k20260515; t=1784300594;
+	bh=iObE2kwV/RRYvT8Tyql+/IF52uIldebvnfCD7AV1/OU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WK3czwrTRGt4AcW626spdvzrZTr2uxzP6ewzx9jkf4RxJLJtj5/zjNa4L/Em3R8a3
-	 n/2vrAFXnK2k+1RiW1uo7v0JeurNS48FBVJIItAC4xDvx9XkHF2JhnVbf5HCxST1wk
-	 oC+6bST/HUEdHntXcbqVuPHjJxS2j1F6884P36erMLTjBCt/y0W1oGl1wvLNsd2AMS
-	 NCbvB9Fx85WUqbilvW/HDXz7OW4VP4uRilUi3QOX6OersW6BrwSg8LMAKaxoXV0bwx
-	 L2HAI/96fptNANWFEKSKP+1ZtT0KdhIBSL8dPGniGt4CkWVIL0pSC1WaJ/JLHbNI2E
-	 4Il3rICPdamcA==
+	b=S6Q6hzrDF1BTP22Q0EX7PzLTJ4ZLYd36MQgaDjSs3fFMZLhbkwdryLIvq7gNK5FTB
+	 Fu1FGPnKI/4BXiupdsYNK067QfAGTwc0M5x64ZBr03vPhroNArL27ioPH3Uo/usqek
+	 4+jH+i46Z1ZoTU9W05N+KS0RALOfuLuGKLPURY13VdC/gdqMrpF0c9xOsBijboGdiP
+	 eJepP0Ht1uEOy2S8pQiVUurvBU7uH6ek888h7Nlxqqqwa4A8Hta6I2SQgjifogNd/v
+	 Yrw1EnZXhZIiG6/2sRB7Vx5YryoV9lLmYbGteXjU+W3F7oIpc27Q6nXxSLzKNfofyq
+	 sJFfxZxq8GYfQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 12/12] misc: Unify code style for various *_device_id
- arrays
+Subject: Re: [PATCH v10 06/10] PCI: of: Use fw_devlink_set_device()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?VXdlIEtsZWluZS1Lw7ZuaWcgKFRoZSBDYXBhYmxlIEh1Yik=?= <u.kleine-koenig@baylibre.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
-References: <cover.1784299069.git.u.kleine-koenig@baylibre.com>
- <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
+To: "Herve Codina" <herve.codina@bootlin.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260717145147.823749-7-herve.codina@bootlin.com>
+References: <20260717145147.823749-1-herve.codina@bootlin.com>
+ <20260717145147.823749-7-herve.codina@bootlin.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 14:59:11 +0000
-Message-Id: <20260717145911.C02D81F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 15:03:14 +0000
+Message-Id: <20260717150314.7CB221F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
->  - Add a trailing comma for initializers unless the closing brace is on
->    the same line and for the list terminator;
->  - Use a single space in the list terminator;
->  - A space after an opening { and before a closing };
->  - Use the PCI_DEVICE* macro in two drivers for pci_device_id entry
->    which is usual for these arrays
->  - No explicit zeros in the list terminator;
+> The code set directly fwnode.dev field.
 >=20
-> None of these changes introduces changes to the compiled result.
+> Use the dedicated fw_devlink_set_device() helper to perform this
+> operation.
 >=20
-> Signed-off-by: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@b=
-aylibre.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1784299069.gi=
-t.u.kleine-koenig@baylibre.com?part=3D12
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717145147.8237=
+49-1-herve.codina@bootlin.com?part=3D6
 
