@@ -1,149 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CD73F823F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 12:41:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 323C63A7F60
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 12:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784292093; cv=none; b=QzOX5UDWgG3bYckpyVPMkGOoK72NdEO2Q5D4Hq09Vyb24/+NfizTvuL5f2kNQ0GNpQmoVJgukL5hk1GRUQL9EK+fkm5EimQK5sXEjcZaxB+IC2qcjhAc7q/mgX2E0Yu4Ia0plbOA7P7uhOzT7fzoJb1x9rggNw5gS3FhHz/jNKA=
+	t=1784292291; cv=none; b=jX9nNAUHxsygH4mu8AwfCvjX4Q/ChaF3iDPHcj/8JkGRWE25TilmZZtZxRijOsRukAO1p8LtvespjzrPQGBHgBJCg6M3bqv64G9MScPDum/qCAKlxZOlROd1BhDIJjSKriViJXKgTEhPfba35xHh++nm7L3xtQotIeNIpQcj3iY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784292093; c=relaxed/simple;
-	bh=ad7ujwsfWBYlBrp+APexI3QPW2pYIsMMi5ey2r7FrDs=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gJaQN+bg41uoek4NRVtzmisnJSm/ri7VgmqS0K29JFrLLIR5KLKV2gy6/jCmH5tBn3FbT9mhde6xQTKrQDQJtdpppJ5Ui8WhStfY6IsJm4yaL9ZmXb5hfJYwpBn4TNAOcIen1sNeINkv02xRZxBkijET3I2u+0e7aEPtItUDgBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5JKUawp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784292291; c=relaxed/simple;
+	bh=YUhhqapHpYHZgybLFx9nk5ieQ+nspWQvhvvE00yGu6s=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=X8m/Fj2cjW7GmPpZeO4RM2bXfXECPuNqZOJSCWXOC9noMIJ7mf66QUX4ad3sFvI6FJ8td56Qm4isu5RHb3cdFgCQoJYhxJijQjHx1koDiyGF+lf5OYxGtAHILG75Y4pNHQQzyYBKLmn9FOb6JITeAiJ1Uw58O9SDp1Cjf9yUzrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=bbkub3Yi; arc=none smtp.client-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5JKUawp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0389C1F00AC4
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 12:41:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784292092;
-	bh=m+axLXnaKJEGHNFMBEGT4Zy3Q/EEwboTj2mFiNNj1t8=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=P5JKUawpVnBajyTslMgPIqsB/u9snuQGu2uU9xp9L1kK0MokZuGgHazXGGk2u22HN
-	 hbzS7ZPx3cFkxH39c8lmdGIcnZ7q79Po9KVHDqhzLweRthuAR9d6ql13EJVIEnNQtG
-	 33rPY5Xujv3b8Kho68WWv0SKksWxvSdaWJDEdXx2gvP3RGM+6DaTGMOmSPbg9/6iKp
-	 0yVKKk9lbwnZhNdDN44W4Fib8dQD68EBxT65AylDkDTc/2Swf2EciT+Z1LuSgpbAuw
-	 iioiWhtafNswud8HZDEJkDVrOHEuMpbYUP1tZdfa0RgMZsohhGCMdgg8aXIZMr/Dwt
-	 /xsNyWE/dWo+A==
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b0231a3e86so7189167e87.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 05:41:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqgNlEwOv0ZjrxS87EBAA/ze1ey+DOTcH8K8mkWTMiAWGtkMdqTvXX3/IZLtkMww/S1u67sPJx0qDQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzwx/HGdEw4/rTNkmTMHwHPhjQNg+n22ND+EC2jwEWGLsUe0kRw
-	/LQ0c/CSjIVX4OdtgK0U4z11+Z0SVjEADpEdtFrN0V8KVUlwyqCs2JojJXBH2hC1j1h5LJqSTXv
-	gyCql3P17XGzgN4osYypU9ygh7JpO8m9SoVQgKdzamA==
-X-Received: by 2002:a05:6512:8054:b0:5b0:f9d:f7af with SMTP id
- 2adb3069b0e04-5b28f85e66emr449360e87.4.1784292090707; Fri, 17 Jul 2026
- 05:41:30 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 17 Jul 2026 05:41:29 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 17 Jul 2026 05:41:29 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <CAFEp6-0HnYOboVWc3GUG5qMN_phP4ryJp=T=LgZs2ujyX1isMg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="bbkub3Yi"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-02.galae.net (Postfix) with ESMTPS id 93FDF1A1058;
+	Fri, 17 Jul 2026 12:44:47 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 6041160361;
+	Fri, 17 Jul 2026 12:44:47 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id D187D11BD0007;
+	Fri, 17 Jul 2026 14:44:45 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1784292286; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=orntfb4ISJKu7Ltagz9jCqSpoh61GtFdaSyCjwLXfhI=;
+	b=bbkub3YiYCNb/0uCckh0Dp3s88IanSu4PonyJka37XKL2VO99fjEx0GH/FAZMcsiaEoDdL
+	e7iOiXWyh3R41YfGz6Q1Ye38i1PMYJgSTOG94OwEUOzRZqEMeiC0Fik9QZOiHtd4diUvLq
+	mJLQBu5oTkHIy/bV8T7a6dH0VQMllqc+l4rBqahUD3mcdqa6Vip48yiQUO3Qijl1uo1r5a
+	1XEKxzIZzvh7PiUujcqJBaOrjEO6DNpDSsgLa2vgBKtpffI6Btnl3cG0uh2EQejj8Srlkr
+	LWCVX5djLAmx3X19qbzvKLF/1dZSsk9TIllz0wbIgsR88iIDAPAu/IOgoPtQuQ==
+Date: Fri, 17 Jul 2026 14:44:44 +0200
+From: Herve Codina <herve.codina@bootlin.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org
+Subject: Re: [PATCH v9 6/9] PCI: of: Use fw_devlink_set_device()
+Message-ID: <20260717144444.72c8e73f@bootlin.com>
+In-Reply-To: <20260708102921.BDBD31F000E9@smtp.kernel.org>
+References: <20260708100302.517792-1-herve.codina@bootlin.com>
+	<20260708100302.517792-7-herve.codina@bootlin.com>
+	<20260708102921.BDBD31F000E9@smtp.kernel.org>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260716-monza-wireless-v4-0-9b02e6f549d7@oss.qualcomm.com>
- <20260716-monza-wireless-v4-8-9b02e6f549d7@oss.qualcomm.com>
- <CAMRc=Mc3gt_uruVmUmqsOsvKX=52V4TBVC0hbo69KgjEGhch3A@mail.gmail.com> <CAFEp6-0HnYOboVWc3GUG5qMN_phP4ryJp=T=LgZs2ujyX1isMg@mail.gmail.com>
-Date: Fri, 17 Jul 2026 05:41:29 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MdhNJEkSOCnz9tnT=wYgseZdFkUs-7VbLgBJhWWjU_cig@mail.gmail.com>
-X-Gm-Features: AUfX_mxPH67iV8-drcRF8TjP1xX1r4zX-SMyz8sadg86rCJAZgfpcbCWPTxNlVQ
-Message-ID: <CAMRc=MdhNJEkSOCnz9tnT=wYgseZdFkUs-7VbLgBJhWWjU_cig@mail.gmail.com>
-Subject: Re: [PATCH v4 08/11] Bluetooth: hci_qca: Support QCA2066 on M.2
- connector via pwrseq
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Fri, 17 Jul 2026 14:32:27 +0200, Loic Poulain
-<loic.poulain@oss.qualcomm.com> said:
-> Hi Bartosz,
->
-> On Fri, Jul 17, 2026 at 11:35=E2=80=AFAM Bartosz Golaszewski <brgl@kernel=
-.org> wrote:
->>
->> On Thu, 16 Jul 2026 18:18:25 +0200, Loic Poulain
->> <loic.poulain@oss.qualcomm.com> said:
->> > For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable i=
-s
->> > controlled by the W_DISABLE2# signal managed by the pcie-m2 power sequ=
-encer
->> > rather than a dedicated BT enable GPIO.
->> >
->> > When the serdev controller has an OF graph (indicating it is connected=
- to
->> > an M.2 connector), acquire the 'uart' pwrseq target from the connector=
-'s
->> > power sequencer and use it to control BT power instead of the bt-enabl=
-e
->> > GPIO. This is factored out into qca_serdev_get_m2_pwrseq().
->> >
->> > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
->> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
->> > ---
->> >  drivers/bluetooth/hci_qca.c | 41 +++++++++++++++++++++++++++++++-----=
------
->> >  1 file changed, 31 insertions(+), 10 deletions(-)
->> >
->> > diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
->> > index 25c4387136245fca25e375951f960d7240116781..22f6185a946ef04c45e41b=
-2b34126e3f58d603ca 100644
->> > --- a/drivers/bluetooth/hci_qca.c
->> > +++ b/drivers/bluetooth/hci_qca.c
->> > @@ -1872,6 +1872,9 @@ static int qca_power_on(struct hci_dev *hdev)
->> >                       /* Controller needs time to bootup. */
->> >                       msleep(150);
->> >               }
->> > +
->> > +             if (qcadev->bt_power.pwrseq)
->> > +                     pwrseq_power_on(qcadev->bt_power.pwrseq);
->> >       }
->> >
->> >       clear_bit(QCA_BT_OFF, &qca->flags);
->> > @@ -2387,6 +2390,28 @@ static int qca_init_regulators(struct qca_power=
- *qca,
->> >       return 0;
->> >  }
->> >
->> > +static void qca_serdev_put_pwrseq(void *data)
->> > +{
->> > +     pwrseq_put(data);
->> > +}
->> > +
->> > +static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcadev)
->> > +{
->> > +     struct serdev_device *serdev =3D qcadev->serdev_hu.serdev;
->> > +     struct pwrseq_desc *pwrseq;
->> > +
->> > +     if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))
->> > +             return 0;
->> > +
->> > +     pwrseq =3D pwrseq_get(&serdev->ctrl->dev, "uart");
->>
->> There's devm_pwrseq_get() you can use instead of scheduling your own act=
-ion.
->
-> The reason is discussed here:
-> https://lore.kernel.org/all/20260716083141.GA4101439@google.com/
->
-> We want the lifetime of the pwrseq descriptor to be tied to the serdev
-> consumer device rather than the underlying serdev controller.
-> Maybe a short comment explaining this relationship would be helpful.
->
+Hi,
 
-Ah, subtle. Yeah a comment would be helpful.
+On Wed, 08 Jul 2026 10:29:21 +0000
+sashiko-bot@kernel.org wrote:
 
-Bart
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] Dangling pointer in `np->fwnode.dev` on error paths and during bridge removal, leading to a potential use-after-free.
+> --
+> 
+> --- Patch [6]: [PATCH v9 6/9] PCI: of: Use fw_devlink_set_device() ---
+> commit e05d94ee3b1f4fa9d5ff1b29db6b40e43eca7313
+> Author: Herve Codina <herve.codina@bootlin.com>
+> 
+> PCI: of: Use fw_devlink_set_device()
+> 
+> The code directly set the fwnode.dev field. This commit updates the code
+> to use the dedicated fw_devlink_set_device() helper to perform this
+> operation.
+> 
+> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> > index 8b18c4ba845cf..ee9eb384b377a 100644
+> > --- a/drivers/pci/of.c
+> > +++ b/drivers/pci/of.c
+> > @@ -803,7 +803,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
+> >  	 * bus. Avoid any new device creation.
+> >  	 */
+> >  	of_node_set_flag(np, OF_POPULATED);
+> > -	np->fwnode.dev = &bridge->dev;
+> > +	fw_devlink_set_device(&np->fwnode, &bridge->dev);  
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but could this lead to a
+> use-after-free on error paths?
+> 
+> In of_pci_make_host_bridge_node(), if an error occurs after setting up the
+> fwnode (such as of_changeset_apply() or device_add_of_node() failing), the
+> error path removes the node from the tree and releases its reference, but
+> fails to clear the np->fwnode.dev pointer:
+> 
+> out_revert_cset:
+> 	np->data = NULL;
+> 	of_changeset_revert(cset);
+> out_free_node:
+> 	of_node_put(np);
+> 
+> Because device_remove_of_node() only clears the forward pointer
+> (dev->fwnode) and not the backpointer, np->fwnode.dev remains dangling. If
+> another thread holds a reference to np, the node outlives the function.
+> When the bridge is later freed, any concurrent access via
+> get_dev_from_fwnode(&np->fwnode) could dereference freed memory.
+> 
+> The same dangling pointer issue appears to exist in
+> of_pci_remove_host_bridge_node() during teardown:
+> 
+> void of_pci_remove_host_bridge_node(struct pci_host_bridge *bridge)
+> {
+> ...
+> 	device_remove_of_node(&bridge->bus->dev);
+> 	device_remove_of_node(&bridge->dev);
+> 	of_changeset_revert(np->data);
+> 	of_changeset_destroy(np->data);
+> 	of_node_put(np);
+> }
+
+This issue is relevant and clearing np->fwnode.dev in the error path will
+be take into account in the next iteration.
+
+Hervé
