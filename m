@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF843B995D;
-	Fri, 17 Jul 2026 15:12:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1CE2F12CE;
+	Fri, 17 Jul 2026 15:19:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784301122; cv=none; b=TNUgj108cWmqkM5q0YiKWTWXfzwTamTJJ/O03+O+Yl3THltcHFmw+Q/yJNYBCqId4dr5oTyZr3Pi4NMYq97jox7+0NwMJotcFfcUqLiy7xlrElx3Egkq2vT3FHJ5e1jYYqgLN2q6zDMmmg14bBHoKOyoxvmKfYhjtKLnbqeJFiM=
+	t=1784301566; cv=none; b=hFeJzzs35IvIkU29Pumz4bNSLZ4b65bit0VxF848NYz72Dbc1lOx+A0cqJBbpywgu+dolbIC3FNVBFFRY7p/H0E0jSoDGH0yBHew+/Ph3st6hDvIoELuzuBuSbtoNgzlZ4me/ALpt+Zgt3y8Ovir/LkmDIcf7d+m5BOAVPV5STI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784301122; c=relaxed/simple;
-	bh=9NDUP8+pQ2YpUgVrK8xJAlqPc1/M2oMYfr2wVIznAXg=;
+	s=arc-20240116; t=1784301566; c=relaxed/simple;
+	bh=6nGCmrXhFOVqAcm7A1Ay7RO0vqe4L883h6UEb/W1ixU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=E4kGfM9BD8FLVvVKjm0t8jca6WLZ61ERF9aXbQ4GVTQO4+ywNWSHHjrL+gcX3PJBCDqNW1TjBtVLICl2AeODlxYNvyJfd+68bh2BFEcoZcjL9wjMGiab0ia3DcySfRlIXfHDq20AHD/SiA1PIeDsfaA7cUsR0pOT6XoEIA1zGjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJpB+aH5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=mHU8VVXIlCH7NVmwRyMem5uxRrYWSQEF3cwur+wTQSTtIHre7eU8IjRojxRq2txicG2D2cym5f4duQx6L2gTJHJzzmDzC/KtEOmplSBYfuFPf6oN/8S36d0b/HtFHnQR+sBsLE0UXtyj2E8nEFVR3fzWidC41rlvXN3OMpx2kuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RG0V4XgU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJpB+aH5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 854341F000E9;
-	Fri, 17 Jul 2026 15:12:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RG0V4XgU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38C991F000E9;
+	Fri, 17 Jul 2026 15:19:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784301120;
-	bh=xarq2I7Bzjzek5e33kdGfmSmVlLRIlnOfmHk5ZK1tKQ=;
+	s=k20260515; t=1784301564;
+	bh=FNm7BjOn5buSAIRfppowkHnyCHe4l0vf8qiel8Bf0+c=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gJpB+aH5NJ83aFaRv4/ajd7l0D9RxcBzuiwa+xdOpgOMn1S20a4TRc0vzo4LRkUcD
-	 LYFs4eKNSOJSYz3JpJK+c5iB1aWns/m1eM0lZ3Gbs2kSJH98UyGFMpIMluzCm28Ax7
-	 wJ5jvj52Fqfjnpng+6DgF9gN1DIfC8Weczv8JO1DHWGVqnriUwhJyPhmehq0VinWvK
-	 iNzoo1X5oY6tjp0ziSKs3a2B3vCzHGLQjTPmChtfIHDJ56Oh9sw5CEeRDW9aHqIbbb
-	 Vr35C1oOSl9MR9OkA2F45OhM17bAv4WtixwWILzNiNop4kEn0TmygDiTcPeC4zZt0Z
-	 /w/uCzMrmla1Q==
+	b=RG0V4XgUS9uOhUsG1XeI32sXXYNbo65IQ4P1/DDlDED5aAop9EGDwT4xGo8YlKxnW
+	 iBRYnwuPRT30Td6rbW/yhhESITUK2CaXptP63vnx1HSfQcnglMFLU5ewDHSW6VWw5Q
+	 gxSfBLKMlcsm9GP6A8nDtKP+W+CQcBRHoQ7FRlxU4F+sqqqiP4+SyDgR8/9Jj4W6h0
+	 Hdr09Sll6MykXYbav+NqH2mXKgWYbLn74zxZAX8zO/gl7NJ755q0MQuB68Z8cagPsG
+	 H/jNe9JmirR4okyupata0NgcJMelrp87dlvR01jsk+OcRmsyEHbRMuvV0D0W9O9uUc
+	 bjhJMIql7NiKQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 02/10] drivers: core: Use fw_devlink_set_device()
+Subject: Re: [PATCH v10 10/10] PCI: of: Guard against node removal with
+ incorrect np->data
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Herve Codina" <herve.codina@bootlin.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260717145147.823749-3-herve.codina@bootlin.com>
+In-Reply-To: <20260717145147.823749-11-herve.codina@bootlin.com>
 References: <20260717145147.823749-1-herve.codina@bootlin.com>
- <20260717145147.823749-3-herve.codina@bootlin.com>
+ <20260717145147.823749-11-herve.codina@bootlin.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 15:12:00 +0000
-Message-Id: <20260717151200.854341F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 15:19:23 +0000
+Message-Id: <20260717151924.38C991F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,68 +49,83 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Lockless read of `fwnode->dev` can lead to Use-After-Free and NULL=
- pointer dereferences.
+- [High] Unsafe cast of `np->data` to `struct of_changeset *` without type =
+validation, leading to type confusion and potential memory corruption.
 --
 
---- Patch [2]: [PATCH v10 02/10] drivers: core: Use fw_devlink_set_device()=
- ---
-commit 80a2fb2740f34981de6ee4d63b13800473b38e85
+--- Patch [10]: [PATCH v10 10/10] PCI: of: Guard against node removal with =
+incorrect np->data ---
+commit 3c2e9ae91c2c8b16b99779200dfab12179834af1
 Author: Herve Codina <herve.codina@bootlin.com>
 
-drivers: core: Use fw_devlink_set_device()
+PCI: of: Guard against node removal with incorrect np->data
 
-This patch updates the driver core to use the dedicated
-fw_devlink_set_device() helper instead of assigning the fwnode->dev field
-directly.
+This commit adds a check for !np->data in of_pci_remove_node() and
+of_pci_remove_host_bridge_node() to prevent NULL pointer dereferences. It
+protects against dynamic nodes created by device-tree overlays that do not
+populate np->data.
 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 4d026682944f2..c205125344cf3 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-[ ... ]
-> @@ -3925,7 +3925,7 @@ void device_del(struct device *dev)
->  	device_unlock(dev);
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 28896f748e8d3..9f35e1e07cdcd 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -654,7 +654,7 @@ void of_pci_remove_node(struct pci_dev *pdev)
+>  	struct device_node *np;
 > =20
->  	if (dev->fwnode && dev->fwnode->dev =3D=3D dev)
-> -		dev->fwnode->dev =3D NULL;
-> +		fw_devlink_set_device(dev->fwnode, NULL);
+>  	np =3D pci_device_to_OF_node(pdev);
+> -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
+> +	if (!np || !of_node_check_flag(np, OF_DYNAMIC) || !np->data)
+>  		return;
 > =20
->  	/* Notify clients of device removal.  This call must come
->  	 * before dpm_sysfs_remove().
+>  	fw_devlink_set_device(&np->fwnode, NULL);
 
 [Severity: High]
-This is a pre-existing issue, but does this lockless assignment expose a ra=
-ce
-condition with concurrent readers?
+This isn't a bug introduced by this patch, but does this still leave a type
+confusion issue if np->data is populated by another subsystem?
 
-In device_del(), fwnode->dev is cleared locklessly via
-fw_devlink_set_device(). Concurrently, other operations holding
-fwnode_link_lock (which doesn't serialize with device_del()) read fwnode->d=
-ev.
+While this patch prevents a NULL pointer dereference, it doesn't verify tha=
+t a
+non-NULL np->data actually points to a struct of_changeset. On some platfor=
+ms
+like PowerPC, the OF_RECONFIG_ATTACH_NODE notifier (e.g., in
+pci_dn_reconfig_notifier()) intercepts node additions and populates np->data
+with its own structure, such as a struct pci_dn.
 
-For example, if get_dev_from_fwnode() is called concurrently:
+If that happens, and the device is later removed, of_pci_remove_node() will
+see a non-NULL np->data, proceed past this check, and pass the foreign poin=
+ter
+to of_changeset_revert() and of_changeset_destroy() lower down in the funct=
+ion:
 
-drivers/base/core.c:get_dev_from_fwnode() {
-    ...
-    return get_device((fwnode)->dev);
-}
+	fw_devlink_set_device(&np->fwnode, NULL);
+	device_remove_of_node(&pdev->dev);
+	of_changeset_revert(np->data);
+	of_changeset_destroy(np->data);
 
-If the thread is preempted between reading fwnode->dev and dereferencing it
-in get_device(), and device_del() finishes allowing the device to be freed,
-could this result in a use-after-free?
+Could this result in memory corruption or a kernel panic when the wrong type
+is cast and dereferenced?
 
-Similarly, in __fw_devlink_pickup_dangling_consumers():
+[ ... ]
 
-drivers/base/core.c:__fw_devlink_pickup_dangling_consumers() {
-    ...
-    if (fwnode->dev && fwnode->dev->bus)
-    ...
-}
+> @@ -750,7 +750,7 @@ void of_pci_remove_host_bridge_node(struct pci_host_b=
+ridge *bridge)
+>  	struct device_node *np;
+> =20
+>  	np =3D pci_bus_to_OF_node(bridge->bus);
+> -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
+> +	if (!np || !of_node_check_flag(np, OF_DYNAMIC) || !np->data)
+>  		return;
+> =20
+>  	fw_devlink_set_device(&np->fwnode, NULL);
 
-Could the compiler reload fwnode->dev between the NULL check and the
-dereference, leading to a NULL pointer dereference?
+[Severity: High]
+This isn't a bug introduced by this patch, but the same type confusion issue
+seems to apply here in of_pci_remove_host_bridge_node().=20
+
+If the host bridge node's np->data is populated by another subsystem with a
+different structure, will passing it to of_changeset_revert() and
+of_changeset_destroy() cause memory corruption?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717145147.8237=
-49-1-herve.codina@bootlin.com?part=3D2
+49-1-herve.codina@bootlin.com?part=3D10
