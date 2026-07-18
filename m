@@ -1,156 +1,277 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36AB83E022A
-	for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 15:49:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327AA3E008A
+	for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 16:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784389784; cv=none; b=aL4CzUkiRf25UVvtu9VH8sC3ZUhPKFDZ9Cui90yVQFj+GQAnsew8098DMRuMupBSDb/kcwMnXOEa8QzC8cmC7FSD14B8anCKvNVAHwQeWmXGkr2YochuHBAL4FXgpSSQcx4dQxpyx+wWk10/jERYHpCnI1QUGCBdsl49K0gJNgg=
+	t=1784391973; cv=none; b=p6awNiASwEGzjc60jZgFOM+4hIwFJTRFPyGNq9Ztd7ANh0P8YYU/fJZTtAZJzil/dOkTbdktcqkQunpq22Cmd5xigvEACCRfnw4AyE6s3LoewCSVg0TAbUV0ohm8l+SrB4OyRMg2HHioMaTX5n5+6GBVrdX3vmJ4AAdq7M7P/Tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784389784; c=relaxed/simple;
-	bh=hnI6h+7GPgq3GBz7CZ1Hb1L+QkcYVYX7UnNOd15NV+M=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TgaQdd+r77LmLTHEtLbITqjq3N2aok+phkbTpZjbtg6j/YM+AgdlZ7+8xL8GkGwK/uqyvLRDbTNiZQdQ1hUSLST7LlVGhoqlgiyuIETFnwaSLBAiSChAJUD9KvzSx5kRE4saceJiY18DViGTiPB4YIqb5jXv3j6IcDKN29juv4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DCOd0nO5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784391973; c=relaxed/simple;
+	bh=/wrEo4YWigAqPnRzsjCDNVJKg3ikbinhpF6/RVSf8iM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VvqCVHvE+E23dkrQ9nOV8+Gd9svGAH5j/Aob0rFlIiNHKdapvJiqFn7uPy/sr5yo5HBR8vWHfPor6CHsj2AtcLeSgCyYqBRcsa4OU+qFSCKW9xU2N9OKAjhvaTNl2wHKbDDIFxna0e6P32wS1QNP42WYgONE/u5DvGbnKlV3vZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=mGTUeygg; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DCOd0nO5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C38A1F000E9;
-	Sat, 18 Jul 2026 15:49:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784389775;
-	bh=QAi4t8U8JykULRif8S3umfAB8OxpxH0cgBJiSRi52fU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DCOd0nO54SP2Y4RK/qP6zcyTjTd9DmDvxvDalluMFoL8g78y0rKaaFjYO/WKSCUwU
-	 Y3VqY92AL1m7mZiJFxINemuVTDO+zpwqiLDq/XI5bY57Qu+VfSlLF80wlrVPAey/iy
-	 6qPqGfpsNTZL1s+uLjuCdQkz9IlmL7jcM70DePOWQRy3fWOBzX2m1AaveV0KaakgE/
-	 31vnmou95McHazqfDop5YjaUnRlWHux6o9SqM0Bn3uhhs5lOAZDJvR6Tn65GzPofd0
-	 u06BkX6n0p2uayluv9m5UTGju3MWAg/UonCJ/0GPkdsiQR5VhOhWtnaFSerYPsl9Ep
-	 a6G4nVS+SmVNQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: starfive: Fix unchecked pm_runtime_get_sync()
- in probe
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ali Tariq" <alitariq45892@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260718153352.661930-1-alitariq45892@gmail.com>
-References: <20260712175427.232234-1-alitariq45892@gmail.com>
- <20260718153352.661930-1-alitariq45892@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 18 Jul 2026 15:49:34 +0000
-Message-Id: <20260718154935.4C38A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="mGTUeygg"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4954c9f380bso9472705e9.0
+        for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 09:26:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=meshstor.io; s=google; t=1784391969; x=1784996769; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=a8Jq9eO0xjd27F980TmF9dGRWY9vCqzHlM8dGdXc/lA=;
+        b=mGTUeyggv5/y0eHX+bPKQaNu6ZSa6dHiNPfWlR/J3T+WMhsNjNTCTTHc398W0AoZJ0
+         DwOoAMgb41qsR2DuUJF6sdXvZBuKJEGuOwzDqJbYgQs4pc+4KI3dhS92k+KkscTGb+hn
+         IJ6/rcJq4Q6CYysZ/hZgT/tT4dJFVi0piVOB6cijlIGYxJthpPUUgV5RCK92etiBQ2Db
+         tuTU8R/SnA/ol545IFk2+keCehvw56H8Zf91jltT63Y8c1dofUsmgDr2yscYeJ/PcaYF
+         slI4RGVWc/q1B5CAp7zCKricaCu91nc2MDLDGDigrDLTQXcNZtxS0kSOQ1krt696JDu7
+         wf4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784391969; x=1784996769;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=a8Jq9eO0xjd27F980TmF9dGRWY9vCqzHlM8dGdXc/lA=;
+        b=YAn+rXk7bnNYFX1nGBPv190OG/wRwqjl0iozwBHGqXDEBRxKkRZTgOefO5bBMgGTbF
+         x0R2hgToTGm2YgiPfXySFjboWYzI6UO7zy1J/xX3e81nYBdc3HLvApzYvBLoDSUJcdNy
+         b5qO/mS+Wa4hOP93I97BKrkchrASghh2VDF6Fk1dLM2ERU341syaV6orxdlO+dfZZaZL
+         oBYzKjG8lBwN1EjVt66ixrG2rqU9wNmsIkuJ3sLgAQrbzki2wTaSTXvHmTDgUmuxhDAg
+         MmOpkkUK6vG/pYSiV5JITmw3DujUiZAKGeEiqrgedvLoaNG5f2dJm2+cg3ZEOokscyM5
+         TloQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqhZovZ7n9dwVsVkacA9BC39kQ/IiFOURn0jZypnxZistrDSYprC9rUUApVBpElgPoDIIhZmEyXUgY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMo3xJImpoETiudlrw7iQ3FYhpLiBtXWtpB9OmJrs7efm+tT5C
+	ea6Pv9+zXD0l0sW3qETwIExkklywyGw71IIO8zQpwsFwUPhM2M9rkb7mZ8NLRj6BSQ==
+X-Gm-Gg: AfdE7cnr1yg2tQ53RhoM6fErWgZP3XgDBeyT+WSt4RbFzJqxsgN9zISwPC1no6nPN52
+	FXdP1961LZslbmekxFn1JYN8WcnguktPUPBVRYrBYy9Jh5+Vi+V9Vu+jT0BKjeaf2r+q/uzQv+X
+	kduhDhGTK8NCqkKLkB34/Dycunn7MMjaUxCGOMBAmIGQoEZiIGfOVCViJNG/jG1ZbEVKgaRxb8G
+	8r3wCLedrHraG9x+7Df6VM0Su4Un/H9BOyh/sqCJjb2l/p3zKE6nh24k201EZUvT8G/MfER6nav
+	iL6U+OOFnqHjqFZeTnp9gNCbWRH3EgpPwaaF9ff/5hSSBnlfr/hDnmP6xG8jZXTQLd1ojFjTPQI
+	cOiC45jxEXKbBYSotzGJ6KQE4RhStUzC6RhM682Upvkv/5NU+9vzOUALXBKjszEKwv6DIMY2d
+X-Received: by 2002:a05:600c:21da:b0:495:3e08:ad24 with SMTP id 5b1f17b1804b1-4954a51b524mr56949825e9.33.1784391968873;
+        Sat, 18 Jul 2026 09:26:08 -0700 (PDT)
+Received: from mf-00-01.. ([194.220.239.180])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4954a2eddb8sm266444085e9.14.2026.07.18.09.26.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Jul 2026 09:26:08 -0700 (PDT)
+From: Mykola Marzhan <mykola@meshstor.io>
+To: Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Henrique Carvalho <henrique.carvalho@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 0/6] block,md,nvme: correct handling of unsupported P2PDMA transfers
+Date: Sat, 18 Jul 2026 16:25:41 +0000
+Message-ID: <20260718162547.448892-1-mykola@meshstor.io>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Driving peer-to-peer I/O (NVMe CMB source) through md arrays and
+nvme-rdma legs on asymmetric PCIe topologies -- where the peer device
+reaches some members/paths but not others -- turns up two failures on
+v7.2-rc, both rooted in how an unsupported-P2PDMA mapping failure is
+reported. On md: silent data loss -- an unreachable-leg P2PDMA write
+counts as written, mirrors silently diverge, and where no member is
+reachable the write reports success with zero copies on stable
+storage; reads picked to an unreachable leg fail with EIO and are
+never retried on the mirror that holds the data. On nvme-rdma: the
+transport swallows the DMA layer's mapping errno into a path error,
+which under the default multipath configuration livelocks the I/O (a
+stacked md mirror hangs) and with nvme_core.multipath=N surfaces as
+retryable BLK_STS_TRANSPORT.
 
-Pre-existing issues:
-- [High] Runtime PM is disabled asynchronously and prematurely during drive=
-r removal, leading to an incorrect power state and violating PM guidelines.
-- [High] IRQ domains are destroyed during host deinit while their associate=
-d interrupts are still mapped and active.
+The root cause is a block-layer status-code regression, not an md or
+nvme bug. Commit 91fb2b6052f7 ("nvme-pci: convert to using
+dma_map_sgtable()") deliberately mapped unsupported P2PDMA transfers
+to BLK_STS_TARGET ("... return BLK_STS_TARGET so the request isn't
+retried"). Commit 858299dc6160 ("block: add scatterlist-less DMA
+mapping helpers") silently changed that to BLK_STS_INVAL, and since
+commit 7ce3c1dd78fc ("nvme-pci: convert the data mapping to
+blk_rq_dma_map") in v6.17 the failure surfaces to direct NVMe
+consumers as EINVAL instead of the documented -EREMOTEIO, with
+blk_path_error() now classifying it as retryable. md/raid1,raid10
+ignore BLK_STS_INVAL leg failures per commit f7b24c7b41f2
+("md/raid1,raid10: don't fail devices for invalid IO errors"), where
+it means a request-shaped error that fails identically on every
+member -- hence the silent divergence. The md leg of the regression
+became reachable when md started advertising BLK_FEAT_PCI_P2PDMA in
+v7.2-rc1 (commit 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA
+from member devices to RAID device")).
+
+Patch 1 restores BLK_STS_TARGET at the source. md then handles an
+unreachable leg like any other per-device error: badblocks on the
+affected member, the master bio succeeds while an In_sync leg holds
+the data, and reads are redirected to the other mirror.
+
+Patches 2-4 fix independent md-side P2PDMA bugs of the same vintage:
+md_submit_bio() strips REQ_NOMERGE (the only request-level protection
+against merging P2PDMA segments across pgmaps); raid1 write-behind
+CPU-copies device BAR memory via bio_copy_data(); and
+narrow_write_error()'s retry clones reset bi_opf, dropping the
+REQ_NOMERGE protection exactly on the error-retry path.
+
+Patch 5 stops the restored device-error machinery from misfiring
+where its medium-error assumptions don't hold. A mapping failure is a
+property of the peer/member pairing: retrying the same peer pages
+against the same member cannot succeed, and there is nothing on the
+medium to repair. Without it, narrow_write_error() serializes dozens
+of guaranteed-to-fail chunk retries per failed write; on reads each
+unreachable-leg pick costs a full freeze_array() quiesce plus a tick
+of the read-error budget -- measured below, a mixed host/P2P read
+workload on an asymmetric topology kicks the perfectly healthy far
+leg after ~20 failed picks, in under a second; and on FailFast
+members a single unroutable I/O evicts a healthy mirror outright.
+Because BLK_STS_TARGET is also produced for transient device
+conditions md cannot distinguish from bi_status alone, writes probe
+the whole range once instead of predicting futility: a real mapping
+failure is recorded in one call, a cleared transient recovers with
+nothing recorded. Patches 1 and 5 belong in the same release: with
+patch 1 alone, restoring the error surfaces the retry storms and
+read-path evictions above on 7.2's newly reachable md path.
+
+Patch 6 closes the same hole in the rdma transport. nvme-rdma maps
+the data scatterlist with ib_dma_map_sg(), which returns 0 on a
+peer-unreachable failure, discarding the -EREMOTEIO that
+dma_map_sgtable() documents for exactly this case; the driver reports
+it as a path error. Because the multipath head node advertises
+BLK_FEAT_PCI_P2PDMA (commit fb0eeeed91f3 ("nvme-multipath: enable PCI
+P2PDMA for multipath devices"), v7.2-rc1) and the mapping failure is
+deterministic, nvme_failover_req() requeues the bios with a fresh
+retry budget every cycle and the I/O never completes -- a hot requeue
+livelock that hangs a stacked md mirror instead of failing over; with
+nvme_core.multipath=N it burns nvme_max_retries requeues and
+completes as retryable BLK_STS_TRANSPORT. Patch 6 maps with
+ib_dma_map_sgtable_attrs() to preserve the errno and returns
+BLK_STS_TARGET, matching nvme-pci so patch 5's handling covers rdma
+legs too, and starts the request only after the map succeeds so
+nvme_mpath_start_request() accounting cannot leak on the direct
+blk-mq completion. nvme-rdma stays on the scatterlist DMA API: its
+fast-reg MR path (ib_map_mr_sg()) consumes scatterlists, so a
+blk_rq_dma_map conversion is separate modernization, out of scope for
+a fix.
+
+Behavior on v7.2-rc2, QEMU rig (one CMB provider, two NVMe members,
+q35 PCIe topologies), 90 8KiB peer-memory reads under concurrent
+host reads for the read rows:
+
+  topology     op          v7.2-rc2                patched (1-5)
+  symmetric    write+read  ok                      ok
+  asymmetric   write       "ok", silent diverge    ok + badblocks on
+                                                   far leg (1 probe)
+  asymmetric   read        41/90 EIO, no mirror    90/90 ok, no
+               under load  retry, no eviction      eviction
+  unreachable  write       "ok", NO data copied    EIO + badblocks
+  unreachable  read        EIO                     EIO, no members
+                                                   kicked
+
+Also verified on the same rig: a transient injected TARGET recovers
+through the single probe with nothing recorded; P2P MEDIUM keeps the
+chunked path; host-page TARGET/INVAL handling is unchanged; FailFast
+survives mapping failures but still evicts on genuine errors;
+write-mostly legs are written directly (no write-behind CPU copy); a
+degraded array whose only leg is unreachable gets plain EIO -- no
+budget charge, no eviction; an exhausted badblocks table fails the
+member as described below. The write/read/injection rows repeat
+identically on raid10.
+
+Validation of patch 6: the mechanism -- ib_dma_map_sg() returning 0
+where ib_dma_map_sgtable_attrs() preserves -EREMOTEIO -- was
+confirmed on a real mlx5 HCA with a map-only probe. The
+start-after-map reorder ran over an rxe nvmet-rdma loopback under fio
+with crc32c verification; multipath inflight and nr_active accounting
+drain to zero, matching the pre-reorder kernel. rxe cannot produce
+-EREMOTEIO, so the failure paths were driven by injecting that exact
+mechanism at the map call site: unpatched, one 4KiB write livelocked
+(132 failover requeues in 8s, a stacked raid1 hung; multipath=N:
+retryable BLK_STS_TRANSPORT); patched, it failed immediately as
+BLK_STS_TARGET with zero requeues, and the stacked raid1 badblocked
+the leg without evicting it.
+
+Known trade-offs of routing through the stock md write machinery:
+an unroutable P2P write records badblocks and sets WriteErrorSeen
+and WantReplacement, so later writes overlapping those ranges skip
+the member -- host writes do not clear the entries and repair skips
+known-bad ranges -- leaving them single-copy until re-add or
+replacement recovery (host memory, so it succeeds) rewrites and
+clears them; a member whose badblocks table is exhausted or disabled
+is failed on the first unroutable P2P write, as with any write error
+md cannot record. FailFast members are exempted from md_error() for
+mapping failures only (nothing reached the wire, so the error says
+nothing about device health); genuine I/O errors keep their
+immediate-eviction semantics. raid10 additionally fails a
+replacement device outright on a P2P write mapping failure (its
+stock replacement-write policy), and an IO_BLOCKED slot excludes
+that slot's replacement from the read retry -- both pre-existing
+raid10 behaviors with a new trigger. On reads, read_balance() keeps
+no memory of unreachability, so each far-leg pick still costs one
+failed submission before the redirect; a sticky per-rdev
+reachability hint would be md-next follow-up material, as would a
+distinct block status naming the mapping failure exactly.
+
+Routing: patch 1 is block-tree material and fixes a v6.17-rc1 status
+regression (hence its Cc: stable); patches 2-5 are md and address
+exposure that only became reachable with v7.2-rc1; patch 6 is
+nvme-rdma and also carries Cc: stable -- the transport misreport
+predates the head-node change (Fixes: 23528aa3320a, v7.1) and is
+reachable on v7.1 with multipath=N. Patch 6 sources the errno from
+dma_map_sgtable() in rdma.c and does not depend on patch 1, which
+fixes the separate blk_rq_dma_map path. Patches 1 (block) and 6 (nvme) are
+independently applicable bug fixes: each fixes a user-visible defect
+on its own and neither depends on the md patches, while 2-5 are
+md-side hardening built on patch 1 -- a maintainer can take 1 and 6
+even if the md discussion runs longer. Single-cycle routing through
+the relevant trees with acks works for us: patch 1 block, 2-5 md,
+6 nvme.
+
+Per Documentation/process/coding-assistants.rst: the patches were
+developed with AI assistance (see the Assisted-by trailers); all code
+was human-reviewed and tested as described above.
+
+Series is against v7.2-rc2.
+
+Mykola Marzhan (6):
+  blk-mq-dma: restore BLK_STS_TARGET for unsupported P2P transfers
+  md: ensure REQ_NOMERGE is set on P2PDMA bios
+  md/raid1: don't use write-behind for P2PDMA bios
+  md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
+  md/raid1,raid10: skip futile retries on P2PDMA mapping failures
+  nvme-rdma: return BLK_STS_TARGET for unsupported P2P transfers
+
+ block/blk-mq-dma.c       | 10 ++++++-
+ drivers/md/md.c          | 14 ++++++++--
+ drivers/md/md.h          | 31 +++++++++++++++++++++
+ drivers/md/raid1.c       | 56 +++++++++++++++++++++++++++++++------
+ drivers/md/raid10.c      | 60 ++++++++++++++++++++++++++++++++++------
+ drivers/nvme/host/rdma.c | 26 +++++++++++------
+ 6 files changed, 168 insertions(+), 29 deletions(-)
+
+
+base-commit: 8cdeaa50eae8dad34885515f62559ee83e7e8dda
 --
+2.43.0
 
---- Patch [1]: [PATCH v2] PCI: starfive: Fix unchecked pm_runtime_get_sync(=
-) in probe ---
-commit e9cae95ac8bfa924ebc45ae6433e2c2961f70890
-Author: Ali Tariq <alitariq45892@gmail.com>
-
-    PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
-
-    pm_runtime_get_sync() is called in starfive_pcie_probe() without
-    checking its return value. If runtime resume fails, the driver
-    proceeds to configure PCIe hardware through regmap_update_bits(),
-    enable clocks and resets, and power on the PHY, even though the
-    device may not actually be powered.
-
-> diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/co=
-ntroller/plda/pcie-starfive.c
-> index 298036c3e7f94..e9a472985b8ac 100644
-> --- a/drivers/pci/controller/plda/pcie-starfive.c
-> +++ b/drivers/pci/controller/plda/pcie-starfive.c
-> @@ -410,7 +410,11 @@ static int starfive_pcie_probe(struct platform_devic=
-e *pdev)
->  		return ret;
-> =20
->  	pm_runtime_enable(&pdev->dev);
-> -	pm_runtime_get_sync(&pdev->dev);
-> +	ret =3D pm_runtime_resume_and_get(&pdev->dev);
-> +	if (ret < 0) {
-> +		pm_runtime_disable(&pdev->dev);
-> +		return dev_err_probe(dev, ret, "failed to resume device\n");
-> +	}
-> =20
->  	plda->host_ops =3D &sf_host_ops;
->  	plda->num_events =3D PLDA_MAX_EVENT_NUM;
-
-While reviewing this patch, I noticed a couple of pre-existing issues in
-related code:
-
-> static void starfive_pcie_remove(struct platform_device *pdev)
-> {
-> 	struct starfive_jh7110_pcie *pcie =3D platform_get_drvdata(pdev);
->=20
-> 	pm_runtime_put(&pdev->dev);
-> 	pm_runtime_disable(&pdev->dev);
-> 	plda_pcie_host_deinit(&pcie->plda);
-> 	platform_set_drvdata(pdev, NULL);
-> }
-
-[Severity: High]
-This isn't a bug introduced by this patch, but should this use=20
-pm_runtime_put_sync() instead?
-
-In starfive_pcie_remove(), pm_runtime_put() queues an asynchronous idle
-request, but pm_runtime_disable() is called immediately after. This cancels
-the pending request, leaving the device in an active power state indefinite=
-ly.
-
-Additionally, this teardown happens before plda_pcie_host_deinit(). If
-pm_runtime_put_sync() were used, the hardware would drop power immediately,
-causing plda_pcie_host_deinit() to access unpowered registers and potential=
-ly
-crash the system.
-
-Should the host bridge be torn down first, and only then synchronously power
-off the device?
-
-
-Also in drivers/pci/controller/plda/pcie-plda-host.c:
-
-> static void plda_pcie_irq_domain_deinit(struct plda_pcie_rp *pcie)
-> {
-> 	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-> 	irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
-> 	irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
->=20
-> 	irq_domain_remove(pcie->msi.dev_domain);
->=20
-> 	irq_domain_remove(pcie->intx_domain);
-> 	irq_domain_remove(pcie->event_domain);
-> }
-
-[Severity: High]
-This is a pre-existing issue, but are we destroying the IRQ domains while
-their associated interrupts are still mapped and active?
-
-During driver removal, starfive_pcie_remove() calls plda_pcie_host_deinit(),
-which synchronously removes the event and INTx IRQ domains via
-plda_pcie_irq_domain_deinit().
-
-However, the interrupts mapped from these domains are never unmapped via
-irq_dispose_mapping(). The actual interrupt handlers requested via
-devm_request_irq() in plda_init_interrupts() haven't been freed yet, because
-devm teardown occurs strictly after the driver remove() callback returns.
-
-Is it safe to destroy these domains with active mappings and bound interrup=
-ts,
-or could this lead to issues during subsequent devm teardown?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718153352.6619=
-30-1-alitariq45892@gmail.com?part=3D1
