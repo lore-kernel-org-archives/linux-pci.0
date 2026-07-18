@@ -1,148 +1,180 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 651E03BB669
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 23:39:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 227FA1A9FBD;
+	Sat, 18 Jul 2026 02:20:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784331550; cv=none; b=A+EUnoBsxH1JZUYnWprNcfXwcf3XqwUr9Mf9hoSPKW0U/YPdrYs5MS9wF5XMCvjgktpvSm+m04uxfEASz39InVfakD7jk4zwzoxQ09UncvCHBNtzEZ6D9G6TB8P/WTDN9V2uI+d8u4shm+7IGWOFYA0pQqatSXiWBI9QQ88O7WU=
+	t=1784341206; cv=none; b=gphbyNQxZPBxonxz4hZyKXYDUzW+m9ElTQ05JpZdxt20h12UYL/BPahawuP2tnwFS183g2g8uM91fSA6Wb0uR2ZGawlBYUkYpNqy3EcYI1Dd5I5lfLOMRdPQ08EAevlJpoBaJC/fXNihcrlGU/mCBJZDQFqKB8jIisI+IXYT/Tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784331550; c=relaxed/simple;
-	bh=vSoFj0hBTT5p/CFJP12khF+A/hWJ+rXJdU4yKcto9Gs=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=EqBxvp8RJwRK2bnCOKB6MIN8aDOLLhgiRg2PLb4NFh0rBeS//2hqOJr72/0Mz4kbBihRvROd+de36cHBCxIN3yF/dRPyVfdPvjjkHc4+OhDpqpWf8r3/HuO21xiZOkxxx28jYQA5ReUzx5g2OM/6cem8DBXzRb1ZeKJXjCn9GJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=UVmMpKhP; arc=none smtp.client-ip=209.85.219.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1784341206; c=relaxed/simple;
+	bh=Mmx0CBcgIJaT5eFEHHi/ufL2NxYrTmdRYBBb36i7vv0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SbWsmqpnilNlqhdW93Tzosr+7VS3G9xie0PmYZOirwDvhy6o0wwY5E4xn5zN61NJjkwdivvMY5Wc6OFmj5X8pnHs2bFqT6SNyy+I5fvgDYBEWszu8/1MwcO57mDCDK/0CcP0+Tl/P5YpO+cuK6jep7wV5SLylPA23ewcmLJWT1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Bo1iPmoz; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="UVmMpKhP"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-90004d2f7b7so107926676d6.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2026 16:39:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1784331540; x=1784936340; darn=vger.kernel.org;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=jOQMW/VMMZhI1OvT3xpmRY3tlZwPV7fJgB6bntOIi38=;
-        b=UVmMpKhPE7+0eIuWONcVoDM/c3k0TXLDTIkx41vcl9j0vEr6oGAGOnYuXQBHvylm4V
-         qp+h8891y/otRXPPak4AXYWJuiK4L66+jdLgTFYeClWLQ+EUxUjssD5lYaISkb9EaMnP
-         y2AZfeHgJBSuwLuBxxWJuOpuUpk3rTHwe7p+sEFV6elGRKbCskCH0bUWhZYp9TQRjXjW
-         yQA4rN+LNbQ70I0WReDDNWJz5d8ruAxQl9X2wFPfdD1aZbHW6ltWMLPbCZ60xwV/3RLC
-         YdfdwnIwN8mntNrDIOUveLsAdFAovG69mAVqogREHjZVsauugOx8FOgJ2PVjeylLwKhJ
-         D+Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784331540; x=1784936340;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jOQMW/VMMZhI1OvT3xpmRY3tlZwPV7fJgB6bntOIi38=;
-        b=an5nibf6rVng6HnbQXintr7f8pGJ3KzfUihZMuiRHYLvhBZcBfOrDZEkk724xcYXL0
-         D1+ZOd57Lxu8Slm29Cqge5l2iXTvR/R54PNJB0ODc6AeMcIQ+BqMIkcPSSryQAfTlW4J
-         K7Nq955jYXaRmUYty0z3mBY+K5hSXeULJZs84bmOUHL7H/7eBwf75YMDM6v7PXhRJXXn
-         NxIM5R2TxSDBquoN8S5ynOdWT3j6tMmcvozuOuyKYCqSjrPEZ3cwnRb+L5PrqUuSA+CL
-         yQ/Uui6+CaG+AR+CvrHSWjqd9Howha4syICc9iDELSiAPPaUjrbsiPmvJz5ayU71jK04
-         OQAA==
-X-Forwarded-Encrypted: i=1; AHgh+Rquo0wqKdpES0K4dROVsIyxD3Du2UeH+DiVAs7kWY0bVtW8JWGoceTkvOGxeQ+7LyoiwEy6wjSP1sw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxb1V2dbtQlsF7FtiIVW6vo94VByWWuvqRPvWMh2qnl3aI4BH+f
-	poi1ZY1lrBCrNRLKUzqJ+umbVuofnWmgK5iXaIS2hNST3Ho4GklgBs9jE2RV4+Ses/o=
-X-Gm-Gg: AfdE7ckMXRmIASmqJuQprHBX3JdNbH65tAx/SpC7it1dl1KEXa3Ef4DBz1WbdNqrts4
-	L+0hzUB6Vt05iQyULaN80P/EUc1taIr6gHmKbUJ8/he6jh77HoR7VfX6PbgWoTSNzz6BkRYNRag
-	KXsaJ+D5lippdpMO4l+lu46bSnRpCS7GFm6WlXLKJJu/0zXXm85ST7SPjgYN0LH3oV0NYUeIPko
-	o1oudq6tQtwvhc0ce+1u3kID6ZA4hjSCeRTXbXz+oAYlk8rikDTYiPf/UcLTUWDOoQhHa9EqvDU
-	Ds1XSJoio8lrnSsBuhgXA2u6PxIQ1Vl33pApAu0V9sLv+YoqUVf/6YeBBQCr9Vk4I7JFxmnthJY
-	GMysmPxFixovJKmEsWnWoEAy9Dbe+pM5himN6QgYTqFQe+LZcRSw/aTx94IlNMcK5nIejL+K0nX
-	vM56/GVhW+5iSbsA0SnWjxjr0N0VkrYG68DRAIQns=
-X-Received: by 2002:a05:6214:5d08:b0:8f2:df9c:3322 with SMTP id 6a1803df08f44-9077832dd0emr59277606d6.14.1784331540051;
-        Fri, 17 Jul 2026 16:39:00 -0700 (PDT)
-Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907786f79e1sm28353026d6.38.2026.07.17.16.38.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 16:38:59 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Bo1iPmoz"
+Received: from mrdev.corp.microsoft.com (unknown [40.86.181.13])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 2663420B7169;
+	Fri, 17 Jul 2026 19:19:53 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2663420B7169
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1784341194;
+	bh=POVLPRyxFM5PtT/8dZGCKuA6gfIpp8GPB2GIOmG2iTQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Bo1iPmozPGKoiXdo+IWL1xwa3Ksd2jTaN1tHEMjkKZwyNe7eMokMjpijJ5e/F6WWb
+	 f+NmdUQd/GgxuABUZreBdFyrNlARbT8XyeDNeUCwLOrsG4sktXFw7VceF8mjaP01zl
+	 PosWrR1UYrrboU5d6Xuqd35qYqMaKOskzXNaP5V0=
+From: Mukesh R <mrathor@linux.microsoft.com>
+To: hpa@zytor.com,
+	robin.murphy@arm.com,
+	robh@kernel.org,
+	wei.liu@kernel.org,
+	mrathor@linux.microsoft.com,
+	mhklinux@outlook.com,
+	muislam@microsoft.com,
+	namjain@linux.microsoft.com,
+	magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com,
+	linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Cc: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	tglx@kernel.org,
+	mingo@redhat.com,
+	bp@alien8.de,
+	dave.hansen@linux.intel.com,
+	x86@kernel.org,
+	joro@8bytes.org,
+	will@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com,
+	arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: [PATCH V4 0/9] PCI passthru on Hyper-V 
+Date: Fri, 17 Jul 2026 19:19:40 -0700
+Message-ID: <20260718021949.926306-1-mrathor@linux.microsoft.com>
+X-Mailer: git-send-email 2.51.2.vfs.0.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 12/12] Documentation: PCI: Add documentation for
- Live Update
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
- Adithya Jayachandran <ajayachandra@nvidia.com>, 
- Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
- David Rientjes <rientjes@google.com>, 
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
- Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
- Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
- Pasha Tatashin <pasha.tatashin@soleen.com>, 
- Pranjal Shrivastava <praan@google.com>, 
- Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
- Samiullah Khawaja <skhawaja@google.com>, 
- Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <20260710212616.1351130-13-dmatlack@google.com>
-References: <20260710212616.1351130-1-dmatlack@google.com>
- <20260710212616.1351130-13-dmatlack@google.com>
-Date: Fri, 17 Jul 2026 23:38:56 +0000
-Message-Id: <178433153669.189683.2878214157071313722.b4-review@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=873;
- i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=vSoFj0hBTT5p/CFJP12khF+A/hWJ+rXJdU4yKcto9Gs=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqWr0SpjC+L15xuM1whuQrxtevTro4lUduG+wQx
- gZjJKCgnxeJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCalq9EgAKCRC7dyhM23N6
- 3hr1D/9oIctf3jZFaNFf/Pf9J2Q7CfddVWZ2nNZ2arIAM0OUwhaxiAs+LtuvHStvp4Lzy79OaPC
- MNsK4RZArZ79NaLPOR9S5E6dP8SihdNKm23FpYWS8kmNKUvlpnvUn96H2Bo1thrOScdtHk8KXo2
- 7hSeP/+8USMLy/ZHr2ShtiB+g1UAd176dG+ifwhSmAAgPmd16B83riVzBB/kFOwP0PXrnOHWCVg
- NoyCSnhFa7Oj1iHgWlBLPNUv1deka5wHUy7CtHqHc73wIsD+RDeq2t9Dnauotw051GQYm18pWKa
- Ro4mNfaV4/bgXOl+EindmOYLeL4vmRfgF/9ZiKkyjLjZcj7FGt7HsIhCwwbT/u2+A8OkOyGoZYi
- r1Iwow+abKmLmqHeqRIFjne6kQTJb22jxEEb/ezTHqlg26zjd2K/Z1L1frMnEuyd/6lmTpda2my
- KRnfdxmtZtL9QDtYOyUNtLuaOuwzNTTdod6HZcSVYGSUrQl+jbcegXb4vAnwsS3vURMyxjiGKME
- rn/hi18xZaZXcMv99T6EuayIMn8QHlfKaxv/XQG2mzCxdePpLOJp5QQlK322veGWDifJAyrkoRP
- XWQu7Llfgoiq2whZiWSbBSEkh55X60dfTNM06+VWWl86F4nrUoLaQGJti/70J124jfGNFISbW/A
- zR5q4Zf8lKCRE6g==
-X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
- fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
+Content-Transfer-Encoding: 8bit
 
-On Fri, 10 Jul 2026 21:26:15 +0000, David Matlack <dmatlack@google.com> wrote:
-> diff --git a/Documentation/PCI/liveupdate.rst b/Documentation/PCI/liveupdate.rst
-> new file mode 100644
-> index 000000000000..eba55f8a92ae
-> --- /dev/null
-> +++ b/Documentation/PCI/liveupdate.rst
-> @@ -0,0 +1,29 @@
-> +.. SPDX-License-Identifier: GPL-2.0-or-later
-> +
-> +===========================
-> +PCI Support for Live Update
-> +===========================
-> +
-> +.. kernel-doc:: drivers/pci/liveupdate.c
-> +   :doc: PCI Live Update
-> +
-> +Driver API
-> +==========
-> +
-> +.. kernel-doc:: drivers/pci/liveupdate.c
-> +   :export:
+Implement passthru of PCI devices to unprivileged virtual machines
+(VMs) when Linux is running as a privileged VM on Microsoft Hyper-V
+hypervisor. This support is made to fit within the workings of VFIO
+framework. This supports both full device passthru and SR-IOV based VFs.
 
-I think you need:
+At a high level, the hypervisor supports traditional paging iommu domains
+that use explicit map and unmap hypercalls for mapping and unmapping
+guest RAM into the iommu subsystem. Hyper-V also has a concept of direct
+attach devices (DDA) whereby the iommu subsystem simply uses the guest
+HW page table (ept/npt/..). This series adds support for the former.
 
-+Internal API
-+============
-+
-+.. kernel-doc:: drivers/pci/liveupdate.c
-+   :internal:
-+
+This series rebased to: a4ffc59238be (origin/hyperv-next)
 
-In order to include docs for structs such as pci_flb_outgoing, etc.
+Testing:
+ o Most testing done on hyperv-next:a4ffc59238be using Cloud Hypervisor (51).
+ o All tests involved passthru of devices using MSIx.
+ o Tested on Baremetal dom0/root: 
+       test 1: Mellanox ConnectX-6 Lx passthru
+       test 2: NVIDIA Tesla Tesla T4 GPU.
+       test 3: Both of above simultaneous passthru
+ o VF: Mellanox ConnectX-6 Lx passthru 
+
+This series strives to establish a base line. Some pending work items:
+ o arm64 : some delta to make this work on arm64 (in progress).
+ o Qemu and OpenVMM support (in progress).
+ o device sleep/wakeup.
+ o More stress testing with high end GPUs
+
+Changes in V4:
+ o Completely remove direct device attach (DDA) support 
+ o Remove first two patches that were submitted separately and are
+   already merged.
+ o Change hv_iommu_unmap_pages() to unmap in batches of HV_REP_COUNT_MAX,
+   otherwise if a physical range happens to be larger than that, there would 
+   be errors from the hypercall.
+ o Use large page (2M) flag for mmio mappings as internal testing found
+   that to speed things up greatly.
+ o rename hv_no_movbl_pgs to hv_memreg in last patch.
+
+Changes in V3:
+ o patch #8: fix compiler issues incase of !CONFIG_HYPERV. Also, do forward
+   declaration of struct pci_dev instead of including pci.h.
+ o patch #9: minor changes to comments. Pass hv_domain instead of 
+   iommu_domain to hv_iommu_detach_dev() since that's what it needs. Set
+   device private to null if attach fails. Clam down number of PFNs passed
+   to hv_iommu_map_pgs().
+
+Changes in V2:
+ o rebase to 5170a82e8921
+ o minor fixes for arm64 build
+ o drop patch 03: "x86/hyperv: add insufficient memory support in irqdomain.c" 
+     as it that path is no longer used
+ o drop patch 08: "PCI: hv: rename hv_compose_msi_msg .. " and do it separately
+   outside this series.
+ o minor updates to commit messages
+
+Changes in V1:
+ o patch 1: Don't tie hyperv-irq.c to CONFIG_HYPERV_IOMMU.
+ o patch 4: Redesigned to address security vulnerability found by copilot 
+            with passing tgid as a parameter.  Also, do tgid setting right 
+            after setting pt_id.
+ o patch 5: Remove unused type parameter from mshv_device_ops.device_create
+ o patch 7: mshv_partition_ioctl_create_device cleanup on copy_to_user.
+ o patch 10: Add export of hv_build_devid_type_pci here to get rid of 
+             patch 11.
+ o patch 12: Move functions to build device ids from patch 11 here for
+             the benefit of arm64. Rename file to: hyperv-iommu-root.c.
+ o patch 13: removed to be made part of interrupt part II of this support.
+ o patch 14: get rid of fast path to reduce review noise.
+ o New (last) patch to pin ram regions if device passthru to a VM.
+
+Thanks,
+-Mukesh
+
+Mukesh R (9):
+  mshv: Provide a way to get partition ID if running in a VMM process
+  mshv: Add declarations and definitions for VFIO-MSHV bridge device
+  mshv: Introduce basic mshv bridge device for VFIO to build upon
+  mshv: Add ioctl support for MSHV-VFIO bridge device
+  mshv: Import data structs around device passthru from hyperv headers
+  PCI: hv: Export hv_build_devid_type_pci() and change return type
+  x86/hyperv: Implement Hyper-V virtual IOMMU
+  mshv: Populate mmio mappings for PCI passthru
+  mshv: Disable movable regions upfront if device passthru
+
+ arch/x86/hyperv/irqdomain.c          |   9 +-
+ arch/x86/include/asm/mshyperv.h      |   6 +
+ arch/x86/kernel/pci-dma.c            |   2 +
+ drivers/hv/Makefile                  |   3 +-
+ drivers/hv/mshv_root.h               |  24 +-
+ drivers/hv/mshv_root_hv_call.c       | 101 +++-
+ drivers/hv/mshv_root_main.c          | 259 +++++++++-
+ drivers/hv/mshv_vfio.c               | 211 ++++++++
+ drivers/iommu/Kconfig                |   1 +
+ drivers/iommu/hyperv/Kconfig         |  15 +
+ drivers/iommu/hyperv/Makefile        |   1 +
+ drivers/iommu/hyperv/hv-iommu-root.c | 704 +++++++++++++++++++++++++++
+ include/asm-generic/mshyperv.h       |   8 +
+ include/hyperv/hvgdk_mini.h          |   8 +
+ include/hyperv/hvhdk_mini.h          |  67 +++
+ include/linux/hyperv.h               |   6 +
+ include/uapi/linux/mshv.h            |  31 ++
+ 17 files changed, 1408 insertions(+), 48 deletions(-)
+ create mode 100644 drivers/hv/mshv_vfio.c
+ create mode 100644 drivers/iommu/hyperv/Kconfig
+ create mode 100644 drivers/iommu/hyperv/hv-iommu-root.c
 
 -- 
-Pasha Tatashin <pasha.tatashin@soleen.com>
+2.51.2.vfs.0.1
+
