@@ -1,228 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f10.google.com (mail-wm2-f10.google.com [74.125.225.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEDD38239C
-	for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 12:07:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A8D6386C1C
+	for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 13:40:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784376425; cv=none; b=tSwNS0cGp7REbXrSwhFVLPL2b0UZQX85mULYm3+bz9qyMzt5F3Hlq7KiV9OzszZKmKbqpzscj8Fz/Bd4wQn5RUDeV0Zj2hiMWM+h3biqXnTBiyKTPGzLacB3ZmMu498xMVTYQVsfpAhMeRGIkaIdG64mXvUZSm3v64vXMlQIJ1E=
+	t=1784382018; cv=none; b=QTUNZEp9Q3RCKh04TtLBHOLTIqzZzD7TBAkhxQeJIeDQsj/k4DaiC/OTmlsT0U2oe5nn3RVCKcfCHL9FKlMJcCOHg7B/RzHbNWfdxBig9kNfmJyeiqb2mijSJpWZ0xLxgQO9W6pamxqb+A2126msWt7YZNMcpbN23tHZcqF/CuA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784376425; c=relaxed/simple;
-	bh=h6BIzkEP0QVugnxz01tSHmEHq/kLwdHWfta7T4nrT+4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=L0OvSKTD3CdU1NG/FG1sq7sdgMidfEHaLz9pt2PjxSXU/S2nLySO5PfViB3sPO5A3PX3szHDDN0CegplHbSTFAfVxSbVrGtchJoJwCgecDtHBWOBiWJuRDQn2K+bvOuPGb8Wz3NHymTkadT/os15GQhvr1m2PanHXvyUmmIBPiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SHpoDptN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784382018; c=relaxed/simple;
+	bh=Vr70OKF73HRcxxONsAAc5wyRqN8OnzNDUibnMbNiOYU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Ok+NEOSeVX6VLwDB2g3SgmnGr86XCgR2YfvY05QiHKndJVZ3xe/posPvoP0QsSYBKAdA0w+MMsWzhUcNw41HxYVq9H+sA6TQ3vlYQ1W/hmyEN4ciSpW+6mH20Bs9JnGV/egFFy6/txrCu5XTTe96I0ViujC3DPKaAjODohbNgho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sSl7bQk7; arc=none smtp.client-ip=74.125.225.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SHpoDptN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF4111F000E9;
-	Sat, 18 Jul 2026 12:07:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784376422;
-	bh=oG0xeVDbNMOlMqHZTqkNT63tQzpTLyNHD4AU+kZ8zGo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SHpoDptNR4+RDj/CskIpaKxJuzZt1wQMRylSZDhGksBXHsGqqa7Vvble2a/IHjmKk
-	 xDeP2n6vDOcPfDnekQJJFB9F9NZC68QhEL/wHEuzbD39IJW1Uwx2ogb3NabYcAsE7o
-	 5OUUW+63Byo78/JudafRQxO1Gu5Zxl+rauv6DkOpQrSkz4Xeg+ue6e5YKq24syBvY6
-	 wiHJ2fOQnDKUlAQ446rO4toJ36pB6dUjoQXeoKbxfEAZc1mlik90woNzkc5eoFZpP7
-	 6b6af7x0yiV6leWbxNe2e/qYKbQR9brF1dqy8oZdvNJWSXlTWPMwNM0IBpOTYQCwcr
-	 UsGBzlVtfJ/EA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: plda: Fix use-after-free of event IRQs during
- teardown
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ali Tariq" <alitariq45892@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260718115022.231990-1-alitariq45892@gmail.com>
-References: <20260718115022.231990-1-alitariq45892@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 18 Jul 2026 12:07:01 +0000
-Message-Id: <20260718120701.DF4111F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sSl7bQk7"
+Received: by mail-wm2-f10.google.com with SMTP id 5b1f17b1804b1-495459712d2so6425685e9.1
+        for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 06:40:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784382016; x=1784986816; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Ew/Mri6rzDrFehp5hGcw5HQsP8kSiZwlWHmbV5SwxfE=;
+        b=sSl7bQk7XHrZPpM0EoxfQDejrd5cY7tNwvbCS0UJRCz7a6CQ5B0U1HKFlauHC0QqV5
+         9qQbr+xgKCcoj90Mn+7zIhUymk+CYQjiocXDLyu74+zLVkgv6ewoZqbv43z44Asgb5mN
+         nMuDOSpcT3e7dV+F7yH3Bx/sJQRyalcND6BI2xxbkxTjWO33K7k0qjDk3Iq7MbMXz2qy
+         sqx0Tp6dYZWKeeekwP/fWqQ3GOjgTF52XYrFUqGndusA7/IjxjK1bgbSSl+uoREmgluT
+         ft3VrtdgjmkIfJv7YL0DkPyJyIE4jbl4SSf+Sv69vdGLMAXoyr3tVAtaF3Ur9DatGieY
+         LRig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784382016; x=1784986816;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Ew/Mri6rzDrFehp5hGcw5HQsP8kSiZwlWHmbV5SwxfE=;
+        b=kBCQWeuQqLfwllu4oWwUXOEPFGUNUWpHNMnfYqbUtsM2QCxXbWr5X7ZJ0gdELXZZfa
+         wvy7vn43c08NkPh29POLA0uJY8vnlOwTWn1w/xZODTl+U3QBj13+FR+9rl5/WJ3iLGVH
+         VMMemp5jjSg8Oj75ceLkX/WOus3dIE7INLHBgmPyVnw8AwcG1rWU9x4ehXLx5smzQwhm
+         4PtaNLkoPRL3Q0czbn4Yx8wpu1f4psfHUhWfFCygpo+9EE+GSCEU3LCEifn1FP7jIgZQ
+         w1lyQgLp9DBjsY32Veh+mDcZPMbtfjb7lGiCsSmwTy5fmcO5RL5GIGiJL4Y8Qyg06w1G
+         ikfg==
+X-Forwarded-Encrypted: i=1; AHgh+Ro5PLTK6Dn3A36CJxEIv9zNGAV8cpwIwJptuTG5Xu6kVpdxvWE633srHTa/3gKhZ704+fomZDVpxTM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5mU19gtUUn1p427mKobRyAqj+65EVh8Ox4m7QIyfJBj1Q0hXl
+	PTEL5fC3UWcpfAcUHd9AdvWlUs4W7nM2nzdi81UiE29RSPg48xUzjsjv
+X-Gm-Gg: AfdE7ckgWwNkPFk4Ii8jgzOoegaT8K3uSKYAjJNHqo27NOXKqyGeAor17GF5o6pI959
+	2r0T0X8baXzf3Vo+ksSgg8KO8lzRpfLF1eyH2b4hvp182Hvod/Km7+jCG/cdbsxkQQceD7bwIar
+	CphmpZRi0yKyG8NwSCyk09BTC6cPI50LQKOO+W84eSP/lPGS7rAmM0AKtDU40dAkg4vYqkpJANB
+	UdI67TnfJnMJJxyzTiK8L0/wGairbyi/TntV7nIXbT7+gbn2YLv3A2zzOKCw6SvSG3d4tR16x8J
+	rRNQg4OM9JGY4Rgn9kQKeyiWJRld1xFtUM6/T0qcQGucdPyv3gY6ebXX4mnXSPlUKrtqE5DnPpa
+	SJ0rMZ1KBC7NP1YWLikp4k2SfoL6bX3L64g3CVwXyk52T9EmpztvOLoygvlnaRX4imtlDsJjD74
+	gpmXLsGG1K
+X-Received: by 2002:a05:600d:6454:10b0:493:bfbf:1da4 with SMTP id 5b1f17b1804b1-4954a403910mr58891185e9.22.1784382015328;
+        Sat, 18 Jul 2026 06:40:15 -0700 (PDT)
+Received: from workstation.. ([202.163.123.30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4954aa1a231sm72913345e9.1.2026.07.18.06.40.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Jul 2026 06:40:14 -0700 (PDT)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: Kevin Xie <kevin.xie@starfivetech.com>
+Cc: Ali Tariq <alitariq45892@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Minda Chen <minda.chen@starfivetech.com>,
+	Mason Huo <mason.huo@starfivetech.com>,
+	linux-pci@vger.kernel.org (open list:PCIE DRIVER FOR STARFIVE JH71x0),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2] PCI: starfive: Fix Runtime PM handling and teardown ordering
+Date: Sat, 18 Jul 2026 18:38:25 +0500
+Message-Id: <20260718133825.445041-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260713145014.740898-1-alitariq45892@gmail.com>
+References: <20260713145014.740898-1-alitariq45892@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+The starfive_pcie_remove() path incorrectly disabled runtime PM
+before executing plda_pcie_host_deinit(),
+which can cause unmanaged hardware register access
+while power domains or clocks are disabled.
 
-Pre-existing issues:
-- [High] Missing `irq_dispose_mapping()` before removing IRQ domains causes=
- descriptor leaks and triggers `WARN_ON`.
-- [High] IRQ domains and mappings are permanently leaked if initialization =
-fails in `plda_init_interrupts()`.
-- [High] Partial domain creation failure leaks previously allocated domains=
- in `plda_pcie_init_irq_domains()`.
-- [High] Unregistering chained interrupt handlers without synchronization l=
-eads to Use-After-Free of IRQ domains.
-- [Medium] Double registration of IRQ handlers for INTx and MSI events orph=
-ans devres actions.
---
+Fix this by restructuring starfive_pcie_remove() to deinitialize
+the host hardware first while runtime PM is active,
+followed by a synchronous pm_runtime_put_sync() and pm_runtime_disable().
 
---- Patch [1]: [PATCH] PCI: plda: Fix use-after-free of event IRQs during t=
-eardown ---
-commit 9f5cef697b1d53b10380f6d82145d7cc265b3fb6
-Author: Ali Tariq <alitariq45892@gmail.com>
+This bug was found in automated AI review by sashiko-bot.
 
-PCI: plda: Fix use-after-free of event IRQs during teardown
+Fixes: 39b91eb40c6a ("PCI: starfive: Add JH7110 PCIe controller")
+Link: https://lore.kernel.org/linux-pci/20260712180440.423421F000E9@smtp.kernel.org/
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+---
+Changes in v2:
+- Added Fixes tag to commit message
+- Added reference link to the bug found by sashiko-bot
+---
+ drivers/pci/controller/plda/pcie-starfive.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-plda_pcie_irq_domain_deinit() removes pcie->event_domain via
-irq_domain_remove(), but the per-event IRQs mapped from that domain
-are requested with devm_request_irq() in plda_init_interrupts(). The
-actual free_irq() for a devm-managed IRQ is deferred by devres until
-after the calling probe()/remove() function returns.
-   =20
-This means irq_domain_remove() can free the domain's internal data
-before the deferred free_irq() for IRQs still mapped into it has run.
-When devres later processes that deferred cleanup, it can end up
-dereferencing the already-freed domain.
+diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+index e9a472985b8a..ba8ef7842e35 100644
+--- a/drivers/pci/controller/plda/pcie-starfive.c
++++ b/drivers/pci/controller/plda/pcie-starfive.c
+@@ -440,9 +440,9 @@ static void starfive_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct starfive_jh7110_pcie *pcie = platform_get_drvdata(pdev);
+ 
+-	pm_runtime_put(&pdev->dev);
+-	pm_runtime_disable(&pdev->dev);
+ 	plda_pcie_host_deinit(&pcie->plda);
++	pm_runtime_put_sync(&pdev->dev);
++	pm_runtime_disable(&pdev->dev);
+ 	platform_set_drvdata(pdev, NULL);
+ }
+ 
+-- 
+2.34.1
 
-Free each event IRQ explicitly with devm_free_irq() before removing
-the domain. This triggers the free immediately and removes the IRQ
-from the devres tracking list, so devres will not attempt to free it
-a second time later.
-
-Link: https://lore.kernel.org/linux-pci/20260714115343.4D49E1F000E9@smtp.ke=
-rnel.org/
-
-> diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/c=
-ontroller/plda/pcie-plda-host.c
-> index f9a34f323ad8c..cda8fdb088fd6 100644
-> --- a/drivers/pci/controller/plda/pcie-plda-host.c
-> +++ b/drivers/pci/controller/plda/pcie-plda-host.c
-> @@ -559,10 +559,18 @@ EXPORT_SYMBOL_GPL(plda_pcie_setup_iomems);
-> =20
->  static void plda_pcie_irq_domain_deinit(struct plda_pcie_rp *pcie)
->  {
-> +	u32 i, event_irq;
-> +
->  	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
->  	irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
->  	irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does clearing the chained
-handlers without synchronization leave us exposed to a use-after-free?
-
-Calling irq_set_chained_handler_and_data with NULL updates the flow
-handler but doesn't wait for actively executing instances to complete.
-Without an explicit synchronize_irq, a concurrent handler like
-plda_handle_event could still be executing on another CPU.=20
-
-If we then proceed to destroy the domains with irq_domain_remove below,
-the concurrent handler might dereference the freed domains. Should there
-be a synchronize_irq call here?
-
-> +	for_each_set_bit(i, &pcie->events_bitmap, pcie->num_events) {
-> +		event_irq =3D irq_find_mapping(pcie->event_domain, i);
-> +		if (event_irq)
-> +			devm_free_irq(pcie->dev, event_irq, pcie);
-> +	}
-> +
->  	irq_domain_remove(pcie->msi.dev_domain);
-> =20
->  	irq_domain_remove(pcie->intx_domain);
->  	irq_domain_remove(pcie->event_domain);
-
-[Severity: High]
-This is a pre-existing issue, but does removing these IRQ domains without
-disposing their mappings cause descriptor leaks?
-
-While this patch explicitly frees the IRQs via devm_free_irq, the
-underlying virtual IRQs were created using irq_create_mapping but are
-never disposed via irq_dispose_mapping.
-
-Removing an IRQ domain with active mappings triggers a warning in the core
-IRQ code. This permanently leaks the underlying Linux IRQ descriptors and
-radix tree nodes. Should the mappings be disposed before removing the
-domains?
-
->  }
-
-[ ... ]
-
-Additional pre-existing issues were found in the same file:
-
-[Severity: High]
-This is a pre-existing issue, but does an error in plda_init_interrupts
-leak the IRQ domains and mappings?
-
-In plda_pcie_host_init:
-
-	ret =3D plda_init_interrupts(pdev, port, plda_event);
-	if (ret)
-		goto err_host;
-...
-err_probe:
-	plda_pcie_irq_domain_deinit(port);
-err_host:
-	if (port->host_ops && port->host_ops->host_deinit)
-		port->host_ops->host_deinit(port);
-
-	return ret;
-
-If plda_init_interrupts fails partway through, the goto err_host path
-bypasses plda_pcie_irq_domain_deinit. Since the domains and mappings
-allocated up to the failure point are never cleaned up, does this result
-in a permanent resource leak?
-
-
-[Severity: High]
-This is a pre-existing issue, but does a partial allocation failure during
-domain creation leak previously created domains?
-
-In plda_pcie_init_irq_domains:
-
-	port->event_domain =3D irq_domain_create_linear( ... );
-	if (!port->event_domain) { ... }
-
-	...
-
-	port->intx_domain =3D irq_domain_create_linear( ... );
-	if (!port->intx_domain) {
-		dev_err(dev, "failed to get an INTx IRQ domain\n");
-		of_node_put(pcie_intc_node);
-		return -ENOMEM;
-	}
-
-If the intx_domain allocation fails, the function returns -ENOMEM without
-destroying the successfully created port->event_domain. Similarly, if
-plda_allocate_msi_domains fails later, neither domain is freed.=20
-Should this error path clean up the already-allocated domains?
-
-
-[Severity: Medium]
-This is a pre-existing issue, but does overwriting the flow handlers orphan
-the previously registered actions?
-
-In plda_init_interrupts:
-
-	for_each_set_bit(i, &port->events_bitmap, port->num_events) {
-		event_irq =3D irq_create_mapping(port->event_domain, i);
-		...
-			ret =3D devm_request_irq(dev, event_irq,
-					       plda_event_handler,
-					       0, NULL, port);
-		...
-	}
-
-	port->intx_irq =3D irq_create_mapping(port->event_domain,
-					    event->intx_event);
-	...
-	/* Plug the INTx chained handler */
-	irq_set_chained_handler_and_data(port->intx_irq, plda_handle_intx, port);
-
-The events_bitmap typically includes intx_event and msi_event. The loop
-registers a threaded irqaction via devm_request_irq for these events.
-Immediately after, irq_set_chained_handler_and_data overwrites the flow
-handler for the exact same virtual IRQs.
-
-By replacing the generic flow handler with a custom chained handler, the
-original action registered by devm_request_irq is permanently bypassed
-and orphaned. Does this needlessly consume memory and leave inactive actions
-until teardown?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718115022.2319=
-90-1-alitariq45892@gmail.com?part=3D1
