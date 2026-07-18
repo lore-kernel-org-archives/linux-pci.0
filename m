@@ -1,90 +1,138 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f0.google.com (mail-wr2-f0.google.com [74.125.225.64])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 991EA2264B0;
-	Sat, 18 Jul 2026 07:02:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8732DB794
+	for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 11:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784358143; cv=none; b=SokvBIlCY4jnODTXAixgCMPKN6zTP13LzgSOI09hkbTyko8F5z8f1LLNP3FGuY0havq5Cz9RDCQ94Xrg3uyI9U0Kpk9OXy1ymNRgtG0XvFC3EHgp7WbdOTXBIerUDb9cxfeANiNKXXiySoa0ip7IQffQmNiwmDsYK1vfD8fmAbU=
+	t=1784375495; cv=none; b=g8hug+x2Iu5RMqdcIrv6Z3ons+dSazk/U+MMmDtMUZE8CWYCcIN1nTG2xZvHreTlnUW8eaWevHzN+9GItQUdfs+xPZmoepjQCzV6Q9jmX1latLvk619aC/ABx89NFEIUIxUrPMVKnbDoaB+j3CzxlAjAcqdbRDK9ZJ8JUNAHfXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784358143; c=relaxed/simple;
-	bh=B2fgP4J5oWNRfT3014dYB6jAcg+N25xq0O5Js7k4How=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DxiO2Fa2mDAMrAyrRlMngDwl3+mhKiKxgoJFMR3YWj/8EuwTqjICLwgqikg8qlAanLnVIH/+grGpFRg+tB2+a5IBKwIGSRZDEGiOJgVWtjxfiUNkuHFYCILDwXQYdPAhkqBFdWNe8IajiflMqEMqG4AcRwuWKQiv2DMPSaMZ2vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id B53A5378;
-	Sat, 18 Jul 2026 09:02:15 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id A23CC603E05C; Sat, 18 Jul 2026 09:02:15 +0200 (CEST)
-Date: Sat, 18 Jul 2026 09:02:15 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>,
-	Jonathan Cameron <jic23@kernel.org>, Len Brown <lenb@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Robert Richter <rrichter@amd.com>, linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Alejandro Lucero <alucerop@amd.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>,
-	Ben Cheatham <Benjamin.Cheatham@amd.com>,
-	Borislav Petkov <bp@alien8.de>, Breno Leitao <leitao@debian.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	"Fabio M . De Francesco" <fabio.m.de.francesco@linux.intel.com>,
-	Gregory Price <gourry@gourry.net>,
-	Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet <corbet@lwn.net>,
-	Kees Cook <kees@kernel.org>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Li Ming <ming.li@zohomail.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Shiju Jose <shiju.jose@huawei.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Shuai Xue <xueshuai@linux.alibaba.com>,
-	Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v18 11/13] PCI: Cache PCI DSN into pci_dev->dsn during
- probe
-Message-ID: <alsk97jVqw9jbRdQ@wunner.de>
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-12-terry.bowman@amd.com>
+	s=arc-20240116; t=1784375495; c=relaxed/simple;
+	bh=puskvRfJAlqS2JQQP5Fdxyq7utIPHjlRxpbqCYyxiNU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=p/iq9LZwtPn9sDcr18Wx+/bjTw3NIwHG5D3X5me/K+r4bC1J6MNbOVm7dWNT/gcM6sJwz4u1dMs/WBRS9s5kvsG6q8aeVY4wInSM+yf0XtTOBM/g05bYdzTXORQo//L76+DqxdDXzMeit7x86O7mMCN0nZODVm+WG24oNitcWA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I40V3pyr; arc=none smtp.client-ip=74.125.225.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I40V3pyr"
+Received: by mail-wr2-f0.google.com with SMTP id ffacd0b85a97d-47f6c54e841so155083f8f.0
+        for <linux-pci@vger.kernel.org>; Sat, 18 Jul 2026 04:51:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784375492; x=1784980292; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=G/wgnKWNJl2PQ3MHBb+pT75nTWY+yYJVOgbAOO2hiXw=;
+        b=I40V3pyrna5j2VApqP12vVUq3pjwE0Jo2eM8Rnge/vQw6fyy5YMpz/JU919kbibO9y
+         SoQMu2qjLR9QEEPuDrwFI0Zi4+LS7w171vpi5utIFnThzwEmMgrlxW6gRyPxf1yt+W5L
+         NiPkWDGB+CukQrcfK1EgO1VaYgSQ9bhxVTgu7tufAfqGTYq9d+N+nSn+oY1cNZUiY2N5
+         fKKulnX43cCgzWG0zNTVqgAoP1RJOfe0dYTcwrLlibDsHb3WmKPSSn1OmkkgkkkEZPqz
+         0S+gAg93nfTIhAdwhl1NF52MfU9Co0MMQHfGQKra1xwRfbjicWaV+kTDhMRq2/BsC3rl
+         p6iw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784375492; x=1784980292;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=G/wgnKWNJl2PQ3MHBb+pT75nTWY+yYJVOgbAOO2hiXw=;
+        b=XndxxUFI5WUs3b/EC4sHxuyfD1r5gjyQSfzo8TZd1OCilfzeaXhwBTH6XAPnZegvZp
+         BkG20jzKIMQTcN3oFYs7usqzexVXeQurZTzL2O/cQc1kkhc69jKcD7RyZeIABaG2P0y5
+         4D8+cL3Tlx45WAZagRGWILAjbgapCHfK93jM1pjat1I4ucp1ttmqfufNs50CUuaEEWEx
+         1bE9UpajmyxtagtdSdzpBSxCCiQyT9VtOsMFT/ihoDTyuBJGbcgBoxQ4sfvDww1IH+e6
+         LUaCvVi/TBR6kSW/4nMLHiUksMgHq5biqd+XEUtYnUiyI1dnuxFEI7yjmffn1wQcijw3
+         0OWA==
+X-Forwarded-Encrypted: i=1; AHgh+RoIa2mnOGOR5FmFLYiSrlQ8NI8ys2yKZD9ssj6U9wtXgRKGaGYqNw5QpS59+dl7in+nk/5nWNXdr2M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTaUVERcIyYyc+MExseM/f4xZaOuKp4q/9WXxGqKjzT5h8qlpy
+	i1DeV4JjFRbLL1/SiJpUDSPmIGzXax/vIBBg40qK7SIF9GjKFK6zi0lm
+X-Gm-Gg: AfdE7cnG9PCn1kzNqrcKN7YCOIKSZNaAtmGUD5eGM83MsTuAapYoBDJoVUGbxRaaIHc
+	LSOxSAterqN+/tLj8hkgkv+DZRehx2+Z7UezEM9ogGJOADvF9aRmOfQTyn9IaTkT1l3kMtgTUVJ
+	fxTqAhAAUsDx/W3gflHMea45SgyeTppfnedoHATtOF8ksL4ESCmAkOwhN1p6tHz/ZEI209n/Sn5
+	XDfrk0uy+VIiV7RqT8+mL9JTdNiiR1Xt7kIQiPQd7g1TatDYC3EkmiKgqCR0QJO0IVHJv26oDkq
+	lDwyVs5JkjmGtZMkhGm9EWgfoS/cvRdI+3+xLlU/1cyxgrNFXUO45YEFe2QJl+hXBf2/n28N2NU
+	2G8BZ5R7pB8zTs3mvJYN4g832rXp8ufctHv/SwEgHmxqTauQwucWJO4F4lPNG8TdrQLoDuHnyjM
+	3YJI74y2l0BLiwa0ScwsI=
+X-Received: by 2002:a05:600c:3590:b0:490:e5c1:b8b9 with SMTP id 5b1f17b1804b1-4954a8e3616mr72865385e9.0.1784375491599;
+        Sat, 18 Jul 2026 04:51:31 -0700 (PDT)
+Received: from workstation.. ([202.163.123.30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-495499f3f99sm112545925e9.0.2026.07.18.04.51.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Jul 2026 04:51:31 -0700 (PDT)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: Daire McNamara <daire.mcnamara@microchip.com>
+Cc: Ali Tariq <alitariq45892@gmail.com>,
+	stable@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Minda Chen <minda.chen@starfivetech.com>,
+	Mason Huo <mason.huo@starfivetech.com>,
+	linux-pci@vger.kernel.org (open list:PCI DRIVER FOR PLDA PCIE IP),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: plda: Fix use-after-free of event IRQs during teardown
+Date: Sat, 18 Jul 2026 16:50:22 +0500
+Message-Id: <20260718115022.231990-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260717222706.3540281-12-terry.bowman@amd.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 17, 2026 at 05:27:04PM -0500, Terry Bowman wrote:
-> Add a u64 dsn field to struct pci_dev and populate it from pci_get_dsn()
-> during pci_init_capabilities() at probe time via pci_dsn_init(). Only
-> write dev->dsn when the read succeeds. The zero initial value from
-> pci_dev allocation already represents 'no DSN available.'
+plda_pcie_irq_domain_deinit() removes pcie->event_domain via
+irq_domain_remove(), but the per-event IRQs mapped from that domain
+are requested with devm_request_irq() in plda_init_interrupts(). The
+actual free_irq() for a devm-managed IRQ is deferred by devres until
+after the calling probe()/remove() function returns.
 
-The DSN is already cached on (natively handled) PCIe hotplug ports
-to detect device replacement during system sleep, see struct controller
-in drivers/pci/hotplug/pciehp.h.
+This means irq_domain_remove() can free the domain's internal data
+before the deferred free_irq() for IRQs still mapped into it has run.
+When devres later processes that deferred cleanup, it can end up
+dereferencing the already-freed domain.
 
-Please remove that member from struct controller, remove the two
-assignments to the member in pciehp_configure_device() and pcie_init()
-and change the comparison in pciehp_device_replaced() to use the new
-member in struct pci_dev.  You can do this either as part of this patch
-or in a separate patch.
+Free each event IRQ explicitly with devm_free_irq() before removing
+the domain. This triggers the free immediately and removes the IRQ
+from the devres tracking list, so devres will not attempt to free it
+a second time later.
 
-Thanks,
+This is a pre-existing issue, flagged by automated review during work
+on an earlier, unrelated patch to this driver.
 
-Lukas
+Build-tested and boot-tested on StarFive VisionFive v1.2A board
+
+Fixes: 76c911396807 ("PCI: plda: Add host init/deinit and map bus functions")
+Link: https://lore.kernel.org/linux-pci/20260714115343.4D49E1F000E9@smtp.kernel.org/
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/controller/plda/pcie-plda-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/controller/plda/pcie-plda-host.c
+index f9a34f323ad8..cda8fdb088fd 100644
+--- a/drivers/pci/controller/plda/pcie-plda-host.c
++++ b/drivers/pci/controller/plda/pcie-plda-host.c
+@@ -559,10 +559,18 @@ EXPORT_SYMBOL_GPL(plda_pcie_setup_iomems);
+ 
+ static void plda_pcie_irq_domain_deinit(struct plda_pcie_rp *pcie)
+ {
++	u32 i, event_irq;
++
+ 	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+ 	irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
+ 	irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
+ 
++	for_each_set_bit(i, &pcie->events_bitmap, pcie->num_events) {
++		event_irq = irq_find_mapping(pcie->event_domain, i);
++		if (event_irq)
++			devm_free_irq(pcie->dev, event_irq, pcie);
++	}
++
+ 	irq_domain_remove(pcie->msi.dev_domain);
+ 
+ 	irq_domain_remove(pcie->intx_domain);
+-- 
+2.34.1
+
