@@ -1,131 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B252C3AFCEB
-	for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2026 18:14:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F92A37E5CD
+	for <linux-pci@vger.kernel.org>; Sun, 19 Jul 2026 23:25:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784484893; cv=none; b=t/G5SRyEX9fkGBMPLLU7pyyddBPKd4jk9wfJgbQ3QIVcCKgGeeNaS00FokbA1OQ9MPZRhjU2xuadmZM02eHp2tf0+5Lzz/00F19fa9UaTgzgGUU6P0cVCC/8/4/1ejbGoIhlNmaE2qjoC+vMbXmlVz8V+HUy9q8mfw5ftSE2dVs=
+	t=1784503558; cv=none; b=m3sgbWXlOBdSJD4xnrJpVaVL/1a3TmPIvVlJ21AM0SgAUZvvJk6VkGgOIuywM7HeG7LHxUbMA91OGtjQ3F5mp/OAyxWd4ynKNKXQ9mHAkojRXsFToKkO/7B628a9aSUNVzPKRj8CzVLTGvadW8eEjjuiWff4M9k84H8Y+MCffjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784484893; c=relaxed/simple;
-	bh=u93wNS3AwLSER9gM0mSpUq3f6JnDlgVkvigftychwm0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=I6dsKLdKWlOqfkT3Lb2KFhlMW6D/AKyVs+fxSeRdb7S+hUpezO3nBh5uzhSyM8Ii3HJzsrVrf9yrJS/nvxKVEqgRlurODrNOXTlXL2ow5V2ngTY+p+6YF5URqmy0UTA2pkH+3c7tLgtan0DQiAZJAZQb/V8/3GMgD+G24y1Af5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GlfAel2p; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784503558; c=relaxed/simple;
+	bh=yFcOzrO8sud7bjVeb/rt33QjMiwXVMCEtunlL9b1pMY=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=YVyIXZbzGx+hXFWqBQQEBpAXssMqmnE8pxjh7GGEfiP6fM5F1/iP91/kEZOR0ORpMqu1vw41zn8z3/NGuzfp/RFNCk3xPe1jfZLmenW5FNFnDHFMbR3QdINGi6LNCMem2eYCoBe40siEuCPr+US+hsP9tYPRBTKSNK/bqn6EcSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kL8VhI/j; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GlfAel2p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55A5D1F000E9;
-	Sun, 19 Jul 2026 18:14:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784484888;
-	bh=rT+xWX8HebXhr2XQK4Pkq5JxWq+B5pbzGgPjKWTOsV4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GlfAel2pWbBvZDl/Aar2ufHEMv0UKpieGL57VUlpM7NckFS1Do5LU4jib6SDCZlkv
-	 imlcMXT1LK3PfaDATd+BAayXrP4mCyfPsDTAb5wOD/m6NyJXBvjfuoS7qRBnHCy9qc
-	 msYZez6jD7Hsv4nPNs6vTNgeSj4GohfaAGs6KwoRP6SwAv487CDEC1tQ4Mqxmzxc5v
-	 loh4GxiGCQZ/zxlKk/EHVIDz6NwhKcBdZSy3ow9JiPJFuCbwexhuYCZ8dYolJSHD/z
-	 QR4ParEMq27q1AfdQV2HnCufzGmsh2ljWZGHG1u2BI+KJzIm37Dk3VQfeTFqu7ltG2
-	 qIJPU/wkYiVpA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] treewide: Add a flag to detect the Apple T2 chip
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kL8VhI/j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784503555; x=1816039555;
+  h=date:from:to:cc:subject:message-id;
+  bh=yFcOzrO8sud7bjVeb/rt33QjMiwXVMCEtunlL9b1pMY=;
+  b=kL8VhI/jovEx2S+BDv2OmPJ5/TkUjiFk8wOWG1gSpDynA09EJ3pPWAfq
+   hiyFgxMo3b+u90xBETnmaZPKlK6mNlN1i8Oc6XkkGlm/fKaKjRAMt2IqG
+   QJMOtS8PUYkTEJpMNSR2YExX3Gv+6Ka+FSem30dwOMZRv+LYbVNynd095
+   nQByc8+hznIXhI2wV+f+Mvh8aH0Qh2OBmea6RTjv1h7dh4I5CTFjFKJeE
+   BNfFehf1B3OWY1x34vMpOGMorsxvvvBCi3kIh467JG9OKstxK4pgAf7kH
+   L1m55AD+BVcxPVhBQG24GqQpKlHUh6DHpI2Wo8BHVAWT4H3zUHpo0AxUB
+   Q==;
+X-CSE-ConnectionGUID: pij6tOJCTNyO4uL4kgkp0Q==
+X-CSE-MsgGUID: Kfln38n2TJeg+nzdU6xUlA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11851"; a="107873412"
+X-IronPort-AV: E=Sophos;i="6.25,173,1779174000"; 
+   d="scan'208";a="107873412"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2026 16:25:55 -0700
+X-CSE-ConnectionGUID: Tvl959RQTtS5GbwRrcQLdw==
+X-CSE-MsgGUID: olD5nXJxTeaxuBhzN/YHjg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,173,1779174000"; 
+   d="scan'208";a="261586726"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by orviesa005.jf.intel.com with ESMTP; 19 Jul 2026 16:25:54 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wlatL-00000000Vmv-1SAZ;
+	Sun, 19 Jul 2026 23:25:51 +0000
+Date: Mon, 20 Jul 2026 07:25:33 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260719180308.1398-2-atharvatiwarilinuxdev@gmail.com>
-References: <20260719180308.1398-1-atharvatiwarilinuxdev@gmail.com>
- <20260719180308.1398-2-atharvatiwarilinuxdev@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 19 Jul 2026 18:14:47 +0000
-Message-Id: <20260719181448.55A5D1F000E9@smtp.kernel.org>
+Subject: [pci:portdrv] BUILD SUCCESS
+ de7048f2e2c20697cb9e567ed93ea123e6464b96
+Message-ID: <202607200722.mK0oicuf-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] Spoofable PCI device check allows local attackers to bypass UEFI S=
-ecure Boot revocations.
-- [Medium] T2 Macs will suffer an EFI firmware crash if PCI enumeration is =
-bypassed or disabled.
-- [Low] Linking fails with an undefined reference to `has_t2_chip` on x86 a=
-rchitectures when `CONFIG_PCI` is disabled.
-- [Low] The globally exported variable `has_t2_chip` uses a dangerously gen=
-eric name.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git portdrv
+branch HEAD: de7048f2e2c20697cb9e567ed93ea123e6464b96  PCI/portdrv: Allow probing even without child services
+
+elapsed time: 2916m
+
+configs tested: 89
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260718    gcc-12.5.0
+arc                  randconfig-002-20260718    gcc-10.5.0
+arm                  randconfig-001-20260718    clang-17
+arm                  randconfig-002-20260718    clang-17
+arm                  randconfig-003-20260718    gcc-10.5.0
+arm                  randconfig-004-20260718    gcc-8.5.0
+arm64                randconfig-001-20260718    clang-17
+arm64                randconfig-002-20260718    clang-17
+arm64                randconfig-003-20260718    clang-17
+arm64                randconfig-004-20260718    clang-21
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260718    gcc-14.3.0
+csky                 randconfig-002-20260718    gcc-16.1.0
+hexagon              randconfig-001-20260718    clang-17
+i386                            allmodconfig    gcc-14
+i386       buildonly-randconfig-001-20260718    gcc-14
+i386       buildonly-randconfig-002-20260718    gcc-14
+i386       buildonly-randconfig-003-20260718    gcc-14
+i386       buildonly-randconfig-004-20260718    clang-22
+i386       buildonly-randconfig-005-20260718    clang-22
+i386       buildonly-randconfig-006-20260718    clang-22
+i386                 randconfig-011-20260718    gcc-12
+i386                 randconfig-012-20260718    clang-22
+i386                 randconfig-013-20260718    clang-22
+i386                 randconfig-014-20260718    gcc-14
+i386                 randconfig-015-20260718    gcc-14
+i386                 randconfig-016-20260718    gcc-14
+i386                 randconfig-017-20260718    gcc-14
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260718    clang-18
+loongarch            randconfig-002-20260718    clang-24
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260718    gcc-11.5.0
+nios2                randconfig-002-20260718    gcc-8.5.0
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc               randconfig-001-20260718    gcc-9.5.0
+parisc               randconfig-002-20260718    gcc-11.5.0
+powerpc              randconfig-001-20260718    clang-24
+powerpc              randconfig-002-20260718    gcc-16.1.0
+powerpc64            randconfig-001-20260718    clang-24
+powerpc64            randconfig-002-20260718    clang-17
+riscv                randconfig-001-20260718    gcc-16.1.0
+riscv                randconfig-002-20260718    clang-24
+s390                 randconfig-001-20260718    gcc-13.4.0
+s390                 randconfig-002-20260718    gcc-15.2.0
+sh                                 defconfig    gcc-16.1.0
+sh                   randconfig-001-20260718    gcc-16.1.0
+sh                   randconfig-002-20260718    gcc-16.1.0
+sparc                randconfig-001-20260718    gcc-11.5.0
+sparc                randconfig-002-20260718    gcc-8.5.0
+sparc64              randconfig-001-20260718    gcc-8.5.0
+sparc64              randconfig-002-20260718    gcc-13.4.0
+um                   randconfig-001-20260718    gcc-14
+um                   randconfig-002-20260718    gcc-14
+x86_64     buildonly-randconfig-001-20260718    clang-22
+x86_64     buildonly-randconfig-002-20260718    clang-22
+x86_64     buildonly-randconfig-003-20260718    clang-22
+x86_64     buildonly-randconfig-004-20260718    clang-22
+x86_64     buildonly-randconfig-005-20260718    clang-22
+x86_64     buildonly-randconfig-006-20260718    clang-22
+x86_64               randconfig-001-20260718    clang-22
+x86_64               randconfig-002-20260718    clang-22
+x86_64               randconfig-003-20260718    gcc-14
+x86_64               randconfig-004-20260718    gcc-14
+x86_64               randconfig-005-20260718    clang-22
+x86_64               randconfig-006-20260718    gcc-12
+x86_64                        randconfig-011    gcc-14
+x86_64               randconfig-011-20260718    gcc-14
+x86_64               randconfig-012-20260718    clang-22
+x86_64               randconfig-013-20260718    clang-22
+x86_64               randconfig-014-20260718    gcc-14
+x86_64               randconfig-015-20260718    clang-22
+x86_64               randconfig-016-20260718    gcc-13
+x86_64               randconfig-071-20260718    gcc-14
+x86_64               randconfig-072-20260718    gcc-14
+x86_64               randconfig-073-20260718    gcc-13
+x86_64               randconfig-074-20260718    clang-22
+x86_64               randconfig-075-20260718    clang-22
+x86_64               randconfig-076-20260718    clang-22
+xtensa               randconfig-001-20260718    gcc-11.5.0
+xtensa               randconfig-002-20260718    gcc-8.5.0
+
 --
-
---- Patch [1]: [PATCH 1/2] treewide: Add a flag to detect the Apple T2 chip=
- ---
-commit 371f6a2037c381d85697cd4a6b5cede313505414
-Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-
-treewide: Add a flag to detect the Apple T2 chip
-
-This patch adds a flag to detect Apple T2 chips using a PCI early fixup.
-It caches the result and replaces the existing DMI-based quirk in the EFI
-certificate loading code to avoid repeated checks.
-
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-
-[ ... ]
-
-> @@ -995,6 +996,15 @@ static void asus_disable_nvme_d3cold(struct pci_dev =
-*pdev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9a09, asus_disable_nvme_d=
-3cold);
-> =20
-> +bool has_t2_chip;
-> +EXPORT_SYMBOL(has_t2_chip);
-
-[Severity: Low]
-Since arch/x86/pci/fixup.c is only compiled when CONFIG_PCI is enabled, will
-this cause a link-time build failure on x86 if a kernel is configured with
-CONFIG_PCI=3Dn and CONFIG_LOAD_UEFI_KEYS=3Dy?
-
-The declaration in include/linux/platform_data/x86/apple.h is active for all
-x86 builds, so the missing definition would only be caught at link time.
-
-[Severity: Low]
-Is has_t2_chip too generic of a name for a globally exported symbol?
-
-Exporting such a generic name to the global namespace might increase the ri=
-sk
-of symbol collisions with other components or out-of-tree modules.
-
-> +
-> +static void apple_has_t2_chip(struct pci_dev *pdev)
-> +{
-> +	has_t2_chip =3D true;
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_APPLE, 0x1801, apple_has_t2_chip);
-
-[Severity: High]
-Can this unconditional PCI fixup be spoofed by an external hotplug device?
-
-If an attacker connects a malicious PCIe device (such as via Thunderbolt)
-that spoofs this Vendor and Device ID before boot, has_t2_chip will be set
-globally.
-
-This would cause load_uefi_certs() to skip loading the dbx revocation list,
-potentially allowing revoked, malicious kexec payloads or modules to bypass
-Secure Boot.
-
-[Severity: Medium]
-What happens to actual T2 Macs if the kernel is booted with pci=3Doff or if
-PCI enumeration fails?
-
-If the PCI subsystem does not initialize, this fixup will never run and
-has_t2_chip will remain false.
-
-This would cause load_uefi_certs() to attempt reading the db and dbx UEFI
-variables, triggering a page fault in Apple's firmware and crashing EFI
-runtime services on these machines.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260719180308.1398=
--1-atharvatiwarilinuxdev@gmail.com?part=3D1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
