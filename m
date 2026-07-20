@@ -1,164 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF6430C17D;
-	Mon, 20 Jul 2026 15:27:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AF1306749
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:28:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784561273; cv=none; b=bXreD49zmaL+Ra1nIaE1oq4ihx12JVBbBBkVVPt5ccyWt1iYsY8dmxDqeP6ZxKKY8/8hLYfG8a66YVc1RjRAb80DYFhbUCi1q36OHGq7ZfJ96U/wmzAmynDQddPiiOKdkjUBdeYUagbTFYltmXp/PwChBKr5Mu2VSlb1F5MgXnU=
+	t=1784561294; cv=none; b=gC1SB0uzG6tF+A/DBPamaTobnmx53e8COuyudG6+G+VkcoAs5PuLIV9nw7mSSRXcJH9zPGuABextMm2MfGC3PlQr3xzuRw0AoGZauodrL624ExslybhZUGg3G9jEde0AIW9FsYeH7c1ZVhX96ZiFEfF3O6ll46hxpRz2VeKQYHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784561273; c=relaxed/simple;
-	bh=DKdiVPSpjb1VbfNrHPCDg6po1oYPd6Y798uYG5fR92U=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tzgg01RyfjGSnW2oKEIMiIbpd0S4lnxsbh21llLWK9ybIz/pUL5g6e1WjG3MkPEYn7f7eWXnxUZ3rpeMgiyLIr0D6ia5ebDX3Dx8hB41TfoVKk6e7W+DUY0yq1NOMU+24Ptu32+0czE8atqgm/sKfuIljeyI5Ug5W4S2w223vVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WNQCV1mw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784561294; c=relaxed/simple;
+	bh=jreQu3izKdVk4O8ukNsef/vgS1gc0C06TEXby33qvVE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Af+dY32X86BX7fhFI51zELRMUU9YTmaEe0F43Sf4I6zHK37+NhHXA23Mw9KPsfQ59+GiciG9y/okUfIWlYY1HkniBtj/XvWB0KbJoR+XfI3XO/hz6yjcYTc9JjOQx4qrz/sNsI3USTaOfvpY3FpQ1BonwEeZxnPJiWr5uiBqfYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oozf8t22; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WNQCV1mw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A88AC1F00A3A;
-	Mon, 20 Jul 2026 15:27:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784561272;
-	bh=JjQaLdF/6J1Cr39wdv1yjoSfvOqAtBuzbF59nsWBkD8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WNQCV1mwPps170gjMiiDw2R1riBhwYGMfuAKL7TBoXn+1OFfehyMQPYydWpVmiRKu
-	 2dUy5LDZ3v/7zEOhQ+IHaqFyxBnCs2UbnkkKFSuanB00SvoCw4E8Yrg/srhlQ55Djr
-	 7Pr2BA/naCutWgJdL6wXDXnr0nl1Bp38sGt8aS5RFZJlwqWOTnsbG+adGms4usgeq8
-	 LzNjQ1Fm99HgFDXb0GoH7II33i9TkKeR+4S+5r7Lo4n7bP1+qWUoX5vjkBsMsKcH7L
-	 LwrOsDH+8E7427Zok2baacMSy2S2aJ0xfzJ+P+XoJNQLbXXFCUuFbtvsW+MNwNQHke
-	 L8pFdYizLPwDQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 14/16] PCI: dwc: spear13xx: Use cached PCIe
- capability offset
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org, neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, imx@lists.linux.dev, Frank.Li@kernel.org
-In-Reply-To: <20260720150619.24733-15-18255117159@163.com>
-References: <20260720150619.24733-1-18255117159@163.com>
- <20260720150619.24733-15-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 15:27:51 +0000
-Message-Id: <20260720152751.A88AC1F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oozf8t22"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=qcO4Jx5AKS6Igcf3/JaMxYeNZarJWUVQHogxhHenLsQ=;
+	b=oozf8t223x6rPeIKh3fmOHRTrFfQEJHXO5I1LTSkPyUvi/v8oNl9euSwX9hk7I
+	7ChfbVtq4Tabfm7+2t+8vO2eg3/K57yr/35p3O6QNrVqgqRe5NgCzUppEu/soTNh
+	tHyP1Aeb9EwpaW0sBzrazvG0R3Qsk5QBmpK21+/Za7DRU=
+Received: from [IPV6:240e:b8f:91b3:d000:f138:f837:e143:4264] (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD31y5hPl5qiykBKQ--.65457S2;
+	Mon, 20 Jul 2026 23:27:30 +0800 (CST)
+Message-ID: <7b76cdd1-1001-4d2d-a221-33988261faf9@163.com>
+Date: Mon, 20 Jul 2026 23:27:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 01/16] PCI: dwc: Add pcie_cap field and helper in
+ designware header
+To: sashiko-reviews@lists.linux.dev
+Cc: Frank.Li@kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev,
+ neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org
+References: <20260720150619.24733-1-18255117159@163.com>
+ <20260720150619.24733-2-18255117159@163.com>
+ <20260720151732.7B9A41F00A3A@smtp.kernel.org>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260720151732.7B9A41F00A3A@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wD31y5hPl5qiykBKQ--.65457S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KFW5WF1UurW5ZFyUXFWfuFg_yoW8Kr1Upa
+	9xJFyayF48JF43ZF97Aa15WF1akF9IyFy3G3y3G34fZFya9F17Ka1FyrWrKF17GrZ7Kr1Y
+	kr4UtF9xCrn5JFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U4BTOUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7APZfWpePmPkIQAA3n
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [High] Mandatory API contract violation: ignored return value of `phy_ini=
-t()`.
-- [High] Unconditional `IRQ_HANDLED` in a shared IRQ handler.
-- [High] Shared IRQ is requested before the hardware base address is initia=
-lized, leading to a potential NULL pointer dereference.
---
 
---- Patch [14]: [PATCH v3 14/16] PCI: dwc: spear13xx: Use cached PCIe capab=
-ility offset ---
-commit c41d49bf9e94ac238049768122148b7abb564665
-Author: Hans Zhang <18255117159@163.com>
+On 7/20/26 23:17, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] Data race and logically flawed caching in dw_pcie_get_pcie_cap() due to unprotected read-modify-write and failure to cache 'not found' state.
+> --
+> 
+> --- Patch [1]: [PATCH v3 01/16] PCI: dwc: Add pcie_cap field and helper in designware header ---
+> commit ab22dc6f534d77b34df13c99dd929771547f5ff1
+> Author: Hans Zhang <18255117159@163.com>
+> 
+> PCI: dwc: Add pcie_cap field and helper in designware header
+> 
+> This commit adds a pcie_cap field to struct dw_pcie to cache the offset of
+> the PCI Express Capability structure. It introduces dw_pcie_get_pcie_cap()
+> to perform the capability search on the first call and cache the result.
+> 
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> [ ... ]
+>> @@ -829,6 +831,21 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+>>   	dw_pcie_writel_dbi(pci, reg, val);
+>>   }
+>>   
+>> +/**
+>> + * dw_pcie_get_pcie_cap() - Return cached PCIe Capability offset
+>> + * @pci: DWC instance
+>> + *
+>> + * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
+>> + * Returns 0 if the capability is not present.
+>> + */
+>> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
+>> +{
+>> +	if (!pci->pcie_cap)
+>> +		pci->pcie_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> 
+> [Severity: Medium]
+> Will this repeatedly search the configuration space if the capability is
+> not found? If dw_pcie_find_capability() returns 0 when the capability is
+> missing, pci->pcie_cap will remain 0, causing the search to be repeated
+> on every subsequent call instead of being cached.
+> 
+> Also, since this helper might be called concurrently by different threads,
+> could the unprotected read and write to pci->pcie_cap cause a data race?
+> 
 
-PCI: dwc: spear13xx: Use cached PCIe capability offset
+Hi,
 
-Inside .init we must call dw_pcie_get_pcie_cap() to obtain the offset,
-because the core has not yet cached it. The hardware is already enabled
-by the driver's own initialization before this point.
+As mentioned in the previous reply, there is no need for us to worry 
+about this.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/co=
-ntroller/dwc/pcie-spear13xx.c
-> index 01794a9d3ad29..6e4c11b497d45 100644
-> --- a/drivers/pci/controller/dwc/pcie-spear13xx.c
-> +++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
-> @@ -122,7 +122,7 @@ static int spear13xx_pcie_host_init(struct dw_pcie_rp=
- *pp)
->  {
->  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
->  	struct spear13xx_pcie *spear13xx_pcie =3D to_spear13xx_pcie(pci);
-> -	u32 exp_cap_off =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	u8 exp_cap_off =3D dw_pcie_get_pcie_cap(pci);
->  	u32 val;
-> =20
->  	spear13xx_pcie->app_base =3D pci->dbi_base + 0x2000;
+https://lore.kernel.org/linux-pci/5cc6fbcc-98eb-4da5-b123-2c04c4d39326@163.com/
 
-[Severity: High]
-This isn't a bug introduced by this patch, but I noticed a potential
-NULL pointer dereference involving app_base here.
 
-In spear13xx_add_pcie_port(), devm_request_irq() is called with IRQF_SHARED
-before dw_pcie_host_init() sets spear13xx_pcie->app_base:
+Best regards,
+Hans
 
-spear13xx_add_pcie_port() {
-    ...
-    ret =3D devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
-                           IRQF_SHARED | IRQF_NO_THREAD,
-                           "spear1340-pcie", spear13xx_pcie);
-    ...
-    ret =3D dw_pcie_host_init(pp);
-    ...
-}
 
-If another device on the shared IRQ line triggers an interrupt before
-spear13xx_pcie_host_init() is called, spear13xx_pcie_irq_handler() will run
-and dereference the still-NULL app_base:
+>> +
+>> +	return pci->pcie_cap;
+>> +}
+> 
 
-spear13xx_pcie_irq_handler() {
-    ...
-    struct pcie_app_reg __iomem *app_reg =3D spear13xx_pcie->app_base;
-    ...
-    status =3D readl(&app_reg->int_sts);
-    ...
-}
-
-Could the IRQ request be moved until after the base address is initialized?
-
-[ ... ]
-
-I also noticed a few other pre-existing issues in this file.
-
-[Severity: High]
-This is a pre-existing issue, but the integer return value of
-phy_init() is completely ignored in spear13xx_pcie_probe():
-
-spear13xx_pcie_probe() {
-    ...
-    phy_init(spear13xx_pcie->phy);
-
-    spear13xx_pcie->clk =3D devm_clk_get(dev, NULL);
-    ...
-}
-
-If phy_init() fails, the driver blindly proceeds to configure clocks and
-initialize the PCIe host controller. Accessing an uninitialized or
-unpowered PHY can lead to hardware lockups or synchronous external aborts.
-Should the return value of phy_init() be checked here?
-
-[Severity: High]
-This is a pre-existing issue, but the shared IRQ handler unconditionally
-returns IRQ_HANDLED:
-
-spear13xx_pcie_irq_handler() {
-    ...
-    status =3D readl(&app_reg->int_sts);
-
-    if (status & MSI_CTRL_INT) {
-        BUG_ON(!IS_ENABLED(CONFIG_PCI_MSI));
-        dw_handle_msi_irq(pp);
-    }
-
-    writel(status, &app_reg->int_clr);
-
-    return IRQ_HANDLED;
-}
-
-Returning IRQ_HANDLED unconditionally in a shared IRQ handler breaks the
-kernel's spurious interrupt detection and can swallow interrupts. If the
-shared IRQ line screams, the kernel will not disable the line because it
-thinks this driver is successfully handling the interrupts, which can lead
-to CPU stalls. Should this return IRQ_NONE when status is 0?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720150619.2473=
-3-1-18255117159@163.com?part=3D14
