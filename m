@@ -1,74 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D620E419FAC;
-	Mon, 20 Jul 2026 12:47:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A4941A79A;
+	Mon, 20 Jul 2026 12:51:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784551674; cv=none; b=Q4GDRlraZY8FVZlibID6AX0odS2Uds/09mJCfYJcn3a2DksSKx8MBMv37h5/5qz3Eb46qo1gjWs9MwuBb5H1Qe2otkSc/gCKQ3ES52h22k/0jOlGHomEvjMjKUfN56M+970OzQOpXLao3KsOVcAms2NqFQ5PiQAIeXWysvAzH28=
+	t=1784551921; cv=none; b=OOdtWZF+9mZaH4chPHTMmWDyqhhN2mBFl4LDDINqJi8y1cDBBdhmIJ/PDAUJ1JEw92jQfgTjda9mV5mGNZOwAl1pXvLjR8pNIQFL+P3NuwswitBT1QyJSggPiKklUrf6+ikRBFfIRRGGrgZqbGrH2KPx/kPEhWftkSmxck8saDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784551674; c=relaxed/simple;
-	bh=/tRP9dKRDg5T0dFJ+56y2diT+nUgMjq6OiIf4j29wJw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=kL2KFMsWc5kJcKB8vRRwQKkrS9ea3PXhK3mu2qhmDpQjTZWo6jJ9h7+2CRWSeqw1nXVy0WTYakcY/fyHTptNDoutFcOvkwWuM/9EQa0w+dC4l9KDFkqINaT6NrO7zv06fbnF4QNAalVYVpaciBZKA1cCsUKJNOXrLVlhXTVtjPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+oYlfKa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784551921; c=relaxed/simple;
+	bh=Bgzh53U3Rt5UCb4ptqiO1YYJQPUQliBmMCElL0H/Yis=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pNiTkzRSZvlL+TjNoWDNWpfMDsPBZqWX89HxWEXVtlDCx7OKG94i0cOfVPcZvQwK+QNuPHgQewmlMbetwvAio+QGadbHtMrMu0sh26BAecGpcxH/XQYP3SwEiN7tmtAM40rgKEFuMiVJZo/Dvl9ty5DhPXG/pYvCO96eQHknadE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FTX3EbeH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+oYlfKa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 632BB1F000E9;
-	Mon, 20 Jul 2026 12:47:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FTX3EbeH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A8381F00A3A;
+	Mon, 20 Jul 2026 12:51:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784551673;
-	bh=GF3I0FN9NaDCRvNKAGKjBQscJbimvB5IvicxLWR9+EA=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=T+oYlfKaz12OFo9mI5spxNIhMZ91plK9R8yMAVwFB+AjuVwTVIwcrYA9589+St3XK
-	 xyC0Z27KiAI+B/chFeeVDVUkesYMbJesoRaNdjhQNkrT4dSPR9tWv2u9yBb6RlyvB/
-	 6kIPGyib3LZDb8xeZwoB07OtAFKOAIQgfBds8vF5NwxBo7Zlo37EaJvoWtBCbX0YCb
-	 bSnfxyOZ6KLXSnE403Punoqsfce0dEKZHzSj6+PLEcFCRMZzT19/uPLVkgZc9x4pvW
-	 70aqRhvRe0mW+Tyw9Tpif3Vt+Cl/hgyXO+p2yhunOhPD7rcH3dkqgxEEDF2vbjriFX
-	 Jev1F7aGLIADg==
+	s=k20260515; t=1784551919;
+	bh=7NbFmGRL+DFWpJhLrxNldLv/oXQ0zjLejhLY/pDKR2U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=FTX3EbeHXY2kGexsywwF78WG7NqBTfzKJqMqDKHVVjZnH1EexAo7I4eDQG86iOrAX
+	 mz5KzDBOBHms3gwIwzER4Z5y2Mi6h/65ywmrL55Ue6nZbxixoK8HSQE6dSbRyQfhA5
+	 U8kV+t1MtkTjWiMC512cc4AeaBPaFOtfJKNEOxAIDQi6/8jAR1EIpmBAVFYKOGrF96
+	 HSrTp3mrd+krZlCoIue4CKbKJDKyBSlh9GcbGNHDr0anjjKV8Z4q1O1p+ce8/MYxuk
+	 faLdaSxd54O+cvOvc34RNu0jAdnF6sVmGA79YtkGC2izi9fVWtlou6YowFRUofOQkc
+	 gEvSrnY1VbaXQ==
+Date: Mon, 20 Jul 2026 14:51:52 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
- kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
- s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com, 
- hongxing.zhu@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
- Richard Zhu <hongxing.zhu@nxp.com>
-In-Reply-To: <20260715073024.1377228-1-hongxing.zhu@oss.nxp.com>
-References: <20260715073024.1377228-1-hongxing.zhu@oss.nxp.com>
-Subject: Re: [RESEND PATCH v2] PCI: imx6: Add runtime PM support for i.MX95
-Message-Id: <178455166894.22240.7222803146225421685.b4-ty@b4>
-Date: Mon, 20 Jul 2026 14:47:48 +0200
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>
+Subject: Re: [PATCH RESEND] dt-bindings: PCI: mediatek-gen3: Allow
+ memory-region for restricted DMA buffer
+Message-ID: <fgnu3itbp5wpnh23i3qafvku64ny33rwrncpjwd3cuwh6ipvt6@vujjmoikotht>
+References: <20260720092116.1823562-1-wenst@chromium.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+In-Reply-To: <20260720092116.1823562-1-wenst@chromium.org>
 
-
-On Wed, 15 Jul 2026 15:30:24 +0800, hongxing.zhu@oss.nxp.com wrote:
-> Enable runtime PM support for i.MX95 PCIe Root Complex to allow dynamic
-> power management when the PCIe link is idle.
+On Mon, Jul 20, 2026 at 05:21:15PM +0800, Chen-Yu Tsai wrote:
+> On some SoCs without an IOMMU behind the PCIe controller, the PCIe
+> controller memory access could be limited to a small region by the
+> firmware configuring a memory protection unit. This memory region
+> must be assigned to the PCIe controller so that the OS knows to
+> use that region. Otherwise PCIe devices would not work properly.
 > 
-> The i.MX95 PCIe controller supports entering D3hot state when PCIe
-> devices are not actively in use. This implementation uses
-> pm_runtime_no_callbacks() to leverage the PCI core's generic runtime PM
-> handling. The PCI core automatically manages D-state transitions based
-> on the runtime PM state of connected endpoint devices.
+> Allow the memory-region property with one item pointing to a
+> restricted DMA buffer.
 > 
-> [...]
+> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+> Acked-by: Rob Herring (Arm) <robh@kernel.org>
+> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> ---
+> Can we get this merged for v7.2? A matching device tree change was
+> already merged in v7.2-rc1.
+> 
 
-Applied, thanks!
+This is not a bug fix, so not sure if this patch can be applied for 7.2. But DTS
+change getting applied before the binding change was a mistake first of all.
 
-[1/1] PCI: imx6: Add runtime PM support for i.MX95
-      commit: c2b9620359b759d2c73be47689b3a344cb4e091b
+- Mani
 
-Best regards,
+> 
+>  Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> index fbc0378392d4..b88717dec1fa 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> @@ -116,6 +116,10 @@ properties:
+>    power-domains:
+>      maxItems: 1
+>  
+> +  memory-region:
+> +    maxItems: 1
+> +    description: phandle to restricted DMA buffer
+> +
+>    mediatek,pbus-csr:
+>      $ref: /schemas/types.yaml#/definitions/phandle-array
+>      items:
+> -- 
+> 2.55.0.229.g6434b31f56-goog
+> 
+
 -- 
 மணிவண்ணன் சதாசிவம்
-
-
