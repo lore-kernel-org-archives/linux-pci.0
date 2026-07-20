@@ -1,115 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from rere.qmqm.pl (rere.qmqm.pl [91.227.64.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94DD0136358;
-	Mon, 20 Jul 2026 12:31:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8A3A417D71;
+	Mon, 20 Jul 2026 12:31:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.227.64.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784550668; cv=none; b=bHfoc9A/T3V0+BMNBjCGS/46YWl+stIa41Kah1/YBCfA4eUNc0kJ94yom6AMccbU24hT8i+GY/6qYZwiaGeCY6Yvbn6PpIugzRAErhNo3iDvqOrkMitdfbVXa7fUXccUSeB/jdmSnItYrbGnaGawcW3kdy7qOGGAjquRiM58bJw=
+	t=1784550718; cv=none; b=ekNK/KWNg8Il/uVfZX28hDB+PgxlLyUE0kzgKNezhYBV6hadIrt1/PGvtyvH7x3bvv3K7RbHoNtIwMseOZ3heOw7gexRL50QmLtTeFcLRvkznpf78SOdLgqwzVZNsLZLWFEfn6QYxiL3jo3VConqUtJ5WYQATSPuDJeXjlj/YK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784550668; c=relaxed/simple;
-	bh=QeULvMY3aAZTOlq87YsF7f+aZ+lAeuqQsCHij5e5S58=;
+	s=arc-20240116; t=1784550718; c=relaxed/simple;
+	bh=mpzeQFeBiZtBhhEHtYlPNFCKYBTEvp7YO2yAx1Er92o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Auz9q/TzKk0J5F6Jm1DknwPhUYWX084do005g9ve0I9LOCSkHJilemLJ552E3vZf9xxVqzAlmfhd47mIQQ3aBYniDu02ZVUV8/sSsug/J96BfJMbxWn3gqeHZYu4E5V4LmWO65Oasn1iGUuZGtXzfnV1z5qa4JSIuPe3I2bazio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MEKuY0rI; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PBRgUft0IDGjfSCdcOONkEMe1oIPb+0fXxgAN4rcAbWnbGdNBQ6B7mIIF8gcRhNrCZztG+tCNNuilh5KvKS5aDpfjM20SzuLyJeSidoCUHznvCCNOCdr28ND8UVWVjmxEU/KcqRxY+DSwSzwUno9+3FwoetVrkO9uC3lULlcL1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rere.qmqm.pl; spf=pass smtp.mailfrom=rere.qmqm.pl; dkim=pass (2048-bit key) header.d=rere.qmqm.pl header.i=@rere.qmqm.pl header.b=rOiZ/TDN; arc=none smtp.client-ip=91.227.64.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rere.qmqm.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rere.qmqm.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MEKuY0rI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 595771F00A3A;
-	Mon, 20 Jul 2026 12:31:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784550667;
-	bh=DMlN1youUMPy6J4fwS9F2+VJ/1xkblWtnWO8k1SbWdE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MEKuY0rI94HRZebnBjw9DMp2eKl8WeLyWpQgVpJYxkRJxjj7rtEW6DIOQBC+kDeLg
-	 zSTdl2RbBVsI7Pk8c5zUTVX7Cj3D7mNvom2uvEjM7ROirnDE5Lrl+MeM6KZE2lP1vN
-	 9wmd/mG6v57MaaoQ36fZOsiEs/NkhvXelnVwcAXlaBuJ5rvkTxo3DLpaKXGbTzpwah
-	 k/VKU70AaOsrGAeoPBs04Kx4LrcjnnLjM3SF64FpXc06D2h6TF8JJZCUJx+nODT+Wc
-	 fwn5B278ovqKiGv+7KRjWJ9KzbgIEQDDmuIKgD7K+cm/QLyhkRmZJE6xRC2QA766b6
-	 QDlOcI7znN5jQ==
-Date: Mon, 20 Jul 2026 14:31:00 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Braden Zhang <braden_zhang@lecomputing.com>
-Cc: Brett Zhou <brett_zhou@lecomputing.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 v3] PCI: dwc: Add pci id for LECARC pcie pmu
-Message-ID: <sixmkaddyeeucylq7yjbn32lxkv35sph7n6kfsjy25a3odltu6@e4u4tl72ilp5>
-References: <20260713-pcie-pmu-v3-1-5e4a8d82248d@lecomputing.com>
- <aik4muvixggxmphxjlpsr4kbfw3sxuh5pj5u7g3olhlg65shfp@kaqahgep3kdu>
- <al3Rk_bPzfEpFTnc@arm01>
+	dkim=pass (2048-bit key) header.d=rere.qmqm.pl header.i=@rere.qmqm.pl header.b="rOiZ/TDN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rere.qmqm.pl; s=1;
+	t=1784550093; bh=mpzeQFeBiZtBhhEHtYlPNFCKYBTEvp7YO2yAx1Er92o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rOiZ/TDNVYhrYWlHPrF4vSoQjuhgrl8oQCOhNZSl/8jcZyMJSJYa+irgnfSe/G2d9
+	 K0KssMuPsJtQHjl3muCZi3beTLlP600jcWK89EtM8k1svtVJGpUIYPf0siKsMeRpo3
+	 ae96Id6W9cEOn3Z+6MCMOTuxeM/XrhjZCb9sjN48tkyp2F+aSFyKJJ/pwzJz/34Xs3
+	 +TYnMljB8pAgRmY7z/O5i3pehQvoDmUQHonI8wLwWHPgCHg6KbXZL3VyT2STE2XvAu
+	 aB+9UFWdtSBrBnqvMj+JzTLfZzzxhfHKocZaenXaUVgtu91NQC1wqyCulC5+k6t2/h
+	 ApXF3UxNlgudA==
+Received: from remote.user (localhost [127.0.0.1])
+	by rere.qmqm.pl (Postfix) with ESMTPSA id 4h3fkz14Dpz3C;
+	Mon, 20 Jul 2026 14:21:31 +0200 (CEST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 1.4.3 at mail
+Date: Mon, 20 Jul 2026 14:21:29 +0200
+From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To: Uwe =?iso-8859-2?Q?Kleine-K=F6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Scott Branden <scott.branden@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Keng-Yu Lin <keng-yu.lin@hpe.com>,
+	"Vaibhaav Ram T.L" <vaibhaavram.tl@microchip.com>,
+	Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>,
+	Alexander Usyskin <alexander.usyskin@intel.com>,
+	Vamsi Attunuru <vattunuru@marvell.com>,
+	Alexander Graf <graf@amazon.com>,
+	The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Andrew Donnellan <andrew+kernel@donnellan.id.au>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?iso-8859-2?Q?Wilczy=F1ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Jiri Slaby <jirislaby@kernel.org>,
+	Andrea della Porta <andrea.porta@suse.com>,
+	Bryan Tan <bryan-bt.tan@broadcom.com>,
+	Vishnu Dasa <vishnu.dasa@broadcom.com>,
+	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
+	Akshay Gupta <Akshay.Gupta@amd.com>, Kees Cook <kees@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 12/12] misc: Unify code style for various *_device_id
+ arrays
+Message-ID: <al4SyY2G8eD5O9Ms@qmqm.qmqm.pl>
+References: <cover.1784299069.git.u.kleine-koenig@baylibre.com>
+ <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-2
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <al3Rk_bPzfEpFTnc@arm01>
+In-Reply-To: <583653bc7b9ae19707bc28be69a20e66b8c3720a.1784299069.git.u.kleine-koenig@baylibre.com>
 
-On Mon, Jul 20, 2026 at 03:43:15PM +0800, Braden Zhang wrote:
-> On Mon, Jul 13, 2026 at 07:14:25AM +0200, Manivannan Sadhasivam wrote:
-> > Date: Mon, 13 Jul 2026 07:14:25 +0200
-> > From: Manivannan Sadhasivam <mani@kernel.org>
-> > To: Braden Zhang <braden_zhang@lecomputing.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
-> >  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Brett Zhou
-> >  <brett_zhou@lecomputing.com>, Bjorn Helgaas <helgaas@kernel.org>
-> > Subject: Re: [PATCH v3 v3] PCI: dwc: Add pci id for LECARC pcie pmu
-> > 
-> > On Mon, Jul 13, 2026 at 10:10:13AM +0800, Braden Zhang wrote:
-> > > From: Brett Zhou <brett_zhou@lecomputing.com>
-> > > 
-> > > This patch adds support for the PCIe PMU found
-> > > on LECARC SoCs, which utilize the DesignWare PCIe Controller IP
-> > > 
-> > 
-> > LECARC looks like a ACPI based platform. I'm wondering how you are able to make
-> > use of this patch without adding the ACPI ID support to enumerate the DWC
-> > driver.
-> > 
-> > - Mani
-> > 
-> > > Signed-off-by: Brett Zhou <brett_zhou@lecomputing.com>
-> > > Reviewed-by: Bjorn Helgaas <helgaas@kernel.org>
-> > > Signed-off-by: Braden Zhang <braden_zhang@lecomputing.com>
-> > > ---
-> > > 
-> > > ---
-> > > base-commit: a635d6748234582ea287c5ffeae28b9b23f91c7e
-> > > change-id: 20260710-pcie-pmu-5ef78c56c3b6
-> > > 
-> > > Best regards,
-> > > --  
-> > > Braden Zhang <braden_zhang@lecomputing.com>
-> > > 
-> > 
-> > -- 
-> Hi Mani,
+On Fri, Jul 17, 2026 at 04:50:58PM +0200, Uwe Kleine-K�nig (The Capable Hub) wrote:
+>  - Add a trailing comma for initializers unless the closing brace is on
+>    the same line and for the list terminator;
+>  - Use a single space in the list terminator;
+>  - A space after an opening { and before a closing };
+>  - Use the PCI_DEVICE* macro in two drivers for pci_device_id entry
+>    which is usual for these arrays
+>  - No explicit zeros in the list terminator;
 > 
-> Thanks for the review.
+> None of these changes introduces changes to the compiled result.
 > 
-> LECARC platforms use the standard DesignWare PCIe Controller, and the
-> existing DWC driver already handles the enumeration and basic
-> functionality through the generic PCIe core.
-> This patch only adds the
-> PCI vendor ID to the vendor-specific capability (VSEC) list, which
-> enables the standard DWC RAS/DES feature detection.
-> 
-> We don't require a separate PMU driver or additional ACPI ID support
-> because the PMU functionality is already covered by the generic DWC
-> PMU framework. The existing driver infrastructure handles the PMU
-> features transparently once the vendor ID is recognized in the VSEC
-> table.
-> 
+> Signed-off-by: Uwe Kleine-K�nig (The Capable Hub) <u.kleine-koenig@baylibre.com>
+> ---
+...
+>  drivers/misc/cb710/core.c                     |   5 +-
 
-Ah, makes sense now. It didn't occur to me that 'dwc_pcie_rasdes_vsec_ids'
-struct array is used by the PMU driver also.
-
-Please incorporate comments from Bjorn and resend.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Acked-by: Micha� Miros�aw <mirq-linux@rere.qmqm.pl>
