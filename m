@@ -1,88 +1,112 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E3DF2D0602;
-	Mon, 20 Jul 2026 16:32:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C93143F4AE
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 16:40:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784565150; cv=none; b=EXyUYd+gPAPwQFG+8+JnfmxglMDLVgKgS2fkugQm/mPgMm63TUUWfTuu7yF/a6vfWk4+w0Y/lA2CjN1KO1bz5Kl5MZkqabCX1F0xBN5rv6tfrBAKIpa2pOYmrCsjepQVnJ3i6YyL9rMLAV7nREaqdOlGcJRBLJOv0m6lGw4bJX4=
+	t=1784565614; cv=none; b=h7b99lXXHKbrECrEYYWQPFZ/JJHgExA5TYD5qXJ1d3CZX8g0Vf37ik0GBIR+YQtvS43X4WZkT2VKOd74PGR7FlhRcDP1zaUFllyl4YW89dWkV9Y7HNBjiiwEptJqlCroTAGq5/bbndwRvtiuUD6bnMzLfaNCJt+xy+jK7R70ALA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784565150; c=relaxed/simple;
-	bh=7WxZH/aP0Plov8+NXa3GcdVoiew72vfYFylVtuzHZaQ=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=uWjXlRvOLJ8aS0jOptwWTK5rxIKFgoSLgMLLotA8wj6yKepTXGIbEy2HFFEdD/NzOJaBWI2/ae4cBbEPxIs6zTjj2SmIVVIVrNERS+oIdHMd+mnwsmDYXX/GisHteL2OqS7S87vTgwTZM1Iuo7XWLcTlYwIwqEjegu/A+4xEbd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=XfEJilhz; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784565614; c=relaxed/simple;
+	bh=jX2MIj2XWbYUM2Wd8ms9NBmBYrFU09BPXCHp40Yh2tg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=MiTKiOIvDPu0dqp4+EXoM3FkRwJ9c3tBAotrm5SwTdhGs46o3D+kWgWLJ7EM5r342BlXBi0TxY7MsmWg6ZIcWW9A49QDYUTQ27cvBQH2zeLsxRDgO0EZ0/OuTWJ1yJHy8zz4PPLjMZ7L5zOM7zIVmma1/5EiYncuVyaBqp0tGBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n2ZNoAZd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="XfEJilhz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=UejnvKJ6g9gMJanunWLrrKhYBZB1/JIBg8RLC+bnqec=; b=XfEJilhz7K3/u1syeao1OiBuv7
-	cPb46Ie3iKQCESnfHFjcSvEiS51mxQmcWQHidb5UeslC/dPkvy6x5rsSd69D5FYW4CzGWS+soUzm3
-	qG+YSRRP3+YlDlsvF6eiuALUNxqhRts/xTm6JhYu2C4XJIZD19Aqi9ZItYNeGLBh0aNNBmZAQMXR0
-	IqaAdBGQGwJpUDTA1ouAkyK0aqkGW/S+VFhHWLeEbOo4yvlMrgXt6G83ACdLa5rv5FPXqOcGXgo7z
-	CKbU8WGpdp07CWbVn/17UUeJA9cq/ZIBxJlNVzThwKgJX/Zv7qWjjAQsGRll2EO7jlMUv9D0leJMj
-	Fx2gI0Lw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wlquk-0000000B6S8-0KRQ;
-	Mon, 20 Jul 2026 10:32:22 -0600
-Message-ID: <8e34f60f-c45b-4455-9486-7c1eba60c0a2@deltatee.com>
-Date: Mon, 20 Jul 2026 10:32:21 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n2ZNoAZd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E86C1F000E9;
+	Mon, 20 Jul 2026 16:40:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784565606;
+	bh=PMKN5w9AytSsx7sHQLy1Yf23NKCKzHCc/IzfFpjSWGs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=n2ZNoAZd3+1YELvnz0sWRDMKisFWCCOEdDLG9tMxVHeznym4Jbv8E6QgE/4k9Gp+z
+	 3iuAeaXTKgt/2SAVXec+kEOEF3Vv0/9Huie4Ag6HGaTH9BgXI2pjtxEYGFRmMT9UJV
+	 JAY52vMvqL2H0M8u7i72Ufpc+F38KK+ORhAIGL2DpzT8DmHGoGSalJYI2flNUs20Wu
+	 7SXthqalio2SFW8zvlsdEDVzQsfwmb5gpAx3l+tQ6Lb8XfnMeNlrBRNw7rKbedSgFz
+	 y/zu9bHQYRRpF+SDb1LhF30q0DbQWq5AHegBANhK2JY1sdxq28oVgqIb13z8szGS3P
+	 ftN54ORJk+7VA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/1] PCI: Do not add hotplug reservation multiple times
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260720162416.5771-1-ilpo.jarvinen@linux.intel.com>
+References: <20260720162416.5771-1-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 20 Jul 2026 16:40:06 +0000
+Message-Id: <20260720164006.8E86C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260719105327.864949-1-mykola@meshstor.io>
- <20260719105327.864949-6-mykola@meshstor.io>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260719105327.864949-6-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v2 5/7] md/raid1,raid10: keep REQ_NOMERGE on
- narrow_write_error() retry clones
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
+Pre-existing issues:
+- [High] The patch fixes nested hotplug reservation accumulation for memory=
+ windows in `calculate_memsize()`, but misses the identical buggy logic in =
+`calculate_iosize()`, leading to I/O space exhaustion.
+--
 
-On 2026-07-19 04:53, Mykola Marzhan wrote:
-> narrow_write_error() re-issues a failed write in badblock-granularity
-> chunks, cloning from the master bio and resetting bi_opf to a bare
-> REQ_OP_WRITE. For a P2PDMA bio that reset drops REQ_NOMERGE, which is
-> the only request-level protection against the member queue merging
-> P2PDMA segments across pgmaps or with host memory (see the preceding
-> md_submit_bio() fix): the retry path would quietly reopen the hole
-> the submission path closes. Restore the flag on P2PDMA retry clones.
-> 
-> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
-> Assisted-by: Claude:claude-opus-4-8
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-Looks correct, thanks.
+--- Patch [1]: [PATCH 1/1] PCI: Do not add hotplug reservation multiple tim=
+es ---
+commit 3c4b4a62adcb92793a7c17214021e8b637be1016
+Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+PCI: Do not add hotplug reservation multiple times
+
+In nested topologies, hotplug reservations gets added multiple times
+into the bridge window higher up in the hierarchy. Adding reservation
+for intermediate level bridges does not seem very useful because the
+hotplug is going to add device at a leaf.
+
+Link: https://lore.kernel.org/linux-pci/f23946f2-06ac-4607-8f2c-3ffbc52b627=
+a@redhat.com/
+
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index c0a949f2c9956..e8c94aa1d3c12 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1021,7 +1021,7 @@ static resource_size_t calculate_memsize(resource_s=
+ize_t size,
+>  					 resource_size_t children_add_size,
+>  					 resource_size_t align)
+>  {
+> -	size =3D max(size, min_size) + children_add_size;
+> +	size =3D max(size + children_add_size, min_size);
+>  	return ALIGN(size, align);
+>  }
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does calculate_iosize() need=
+ a
+similar fix to avoid I/O space exhaustion in nested topologies?
+
+Just above calculate_memsize(), calculate_iosize() retains the identical
+logic for I/O windows:
+
+drivers/pci/setup-bus.c:calculate_iosize() {
+    ...
+    size =3D max(size, add_size) + children_add_size;
+    return ALIGN(max(size, old_size), align);
+}
+
+When allocating I/O windows for nested hotplug bridges, pbus_size_io() pass=
+es
+both the accumulated children I/O sizes (children_add_size) and the hotplug
+reservation (add_size) to calculate_iosize().
+
+Because the logic is exactly the same as the unpatched calculate_memsize(),
+this appears to still unconditionally add an extra 4KB (due to bridge window
+alignment) at each nested bridge level. Can this linearly inflate the requi=
+red
+space and quickly exhaust the limited 64KB I/O address space on systems with
+deeply nested hotplug PCIe bridges (like Thunderbolt docks)?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720162416.5771=
+-1-ilpo.jarvinen@linux.intel.com?part=3D1
