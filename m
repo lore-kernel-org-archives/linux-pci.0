@@ -1,104 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE37B2FD1A5;
-	Mon, 20 Jul 2026 19:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CACD25B0B7;
+	Mon, 20 Jul 2026 20:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784577087; cv=none; b=FJNEVcCN3nqk9F5BA0eFNLWiBuz/VwWQ9IUoxABdFm4XSGwGm0Ycczja9k9CeLPY1WPI2+Yg2MQrNnVfMoO9PElYNFodPCePchSFd9yDVkTB5Y061dJmzRD04jPHQ/vWo4MBO0Tuji1K7bPAck2O0GjXQmlO8miGBrLGzV3LRAU=
+	t=1784578156; cv=none; b=JnNUIfECObB2zQjXawb5G4ybYfyQYM6Kk007HUNDq3k54f3+rWBwRPZ273OhH8OHmHmwm27bpDKJdKaNMTL1jNemqU+cPC647VO3l74JIclj+xrAouKl8RNcvesvfuTFRjQD1YIktVUFeVBG7hpezeyQcSw9kPGLorTHv/LsjKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784577087; c=relaxed/simple;
-	bh=mRQD2ilIaoiJgVbgQKyvaJX7PaaCPyDR+3vZMrdF0ms=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TgFv9xSYEHN9Ex7cI28s003U2WBr1QFZx0afsuiQpkxGCkc9uCGa3Rb1UCHIo4qX+Bbsj5MwoLuva6ZNtncUgI/zbcUTqqdNgk7qzJRw1LEtxTWRSTIwLdOOCta7TSSRYGdaANi8RPLdNsYfuKVMnOGy5/RHApkFvVLGah/ajxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eMTmnD9M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784578156; c=relaxed/simple;
+	bh=sFOpv2kA+FwJCaEso+qENIiQ1hBBWw24vR/Se27HPGs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iS3YmaX9o7HD+Ctt8qGOY/3fzK+Ik42QCzggcs62oO1B74AKE6v93tsokD/JwGhxbOChvt3xl6kvGDP9YEZqnFjz8m/Xhk8s4vWLHck2tiFmr6+8Uh0+EDjnI6j/41QRb7Gb5Bk1SL29/IlZcU8t7+CRTYJlseShSIr4kP6J7N8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z5n7Yifc; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eMTmnD9M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CA111F000E9;
-	Mon, 20 Jul 2026 19:51:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784577086;
-	bh=HLElwFdaX4a0kqgk3x8uXi0e+3KoNI0RU4wDxHPkg+g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eMTmnD9M2/JT9jZsPfksolzM1XMwtS6MrwzxOvy7wJPIricZNlnlCm8OB3ncF1Dw+
-	 dwGDmstGa8RUOaILO8RiR6ekqo+0ayZEsozrBkHxAgx2PgbiMFpc5oCSE/SZwTVYGd
-	 OIi4t0TL7nVAAT/4o7agel7Cf4S6s16qcH/oyJYagDq+SzMSALLlAZ+zAMi/JMDcmY
-	 ovfCV1dxPRFExlsRX6+zzLCefLl95QyzX81mONR+Gg7jnSSGHGOLxCALyTw8mw576O
-	 r2u+41UzBYr4M+9JqGgwGOJWAMaIYLeC7rO6EsgaOj8M4Q3vwpCv5cJrH6xYO3Q7bE
-	 BtJovWbAYh0Mg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v22 4/4] PCI/MSI: Enable memory decoding before
- restoring MSI-X messages
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>
-In-Reply-To: <20260720192505.2957-5-alifm@linux.ibm.com>
-References: <20260720192505.2957-1-alifm@linux.ibm.com>
- <20260720192505.2957-5-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 19:51:25 +0000
-Message-Id: <20260720195126.0CA111F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z5n7Yifc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784578154; x=1816114154;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=sFOpv2kA+FwJCaEso+qENIiQ1hBBWw24vR/Se27HPGs=;
+  b=Z5n7Yifc9MRSJfCaf4KJFBbPnSpcSJVx9Sm4jON3xqXHfXLddvpIHyzl
+   zaPLy4s3Sa95PzpFzfBn1I0Lle/VQKsvVyA4Hnv7yXWo1MZGG1cgbCh0M
+   wxbIt2VSLev3LHuD9eTDNHDJ9R5NTr3v/2uBbSEVubvDvOhf61bkP5vAd
+   3gc6z1gHJgiRz31BRVrODHPWXF1C7lsCHanM6SRRSw+/pcm2NCW78EwtT
+   oIcfB+xAUqUAXBonjMsW8Ebalb9YubnTTxvbOco6HA/ly9btrn1xE+q7Z
+   aBmO850bYORJxJ3GM0jo5oRXqRz1lHfb7e7llQsItkmi2ukZdu7R5GinV
+   w==;
+X-CSE-ConnectionGUID: WlBnzJB5SF6IcrzSWwILgg==
+X-CSE-MsgGUID: xVhOcZtiSdqafzyXiHFYFQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="84298313"
+X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
+   d="scan'208";a="84298313"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:09:13 -0700
+X-CSE-ConnectionGUID: H4x5cj83RbqFt5QQqpUxGA==
+X-CSE-MsgGUID: pA3maaPWTcelrKWA5o3qPg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
+   d="scan'208";a="256365696"
+Received: from cooperst-gp83.amr.corp.intel.com (HELO [10.125.109.176]) ([10.125.109.176])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:09:10 -0700
+Message-ID: <9c371c59-c871-4988-83d7-2aa780d8e6c4@intel.com>
+Date: Mon, 20 Jul 2026 13:09:09 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 01/13] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
+ severity register
+To: Terry Bowman <terry.bowman@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
+ Jonathan Cameron <jic23@kernel.org>, Len Brown <lenb@kernel.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Robert Richter <rrichter@amd.com>
+Cc: linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ Alejandro Lucero <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Ankit Agrawal <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Ben Cheatham <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>,
+ Breno Leitao <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>,
+ "Fabio M . De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+ Gregory Price <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>,
+ Jonathan Corbet <corbet@lwn.net>, Kees Cook <kees@kernel.org>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Oliver O'Halloran <oohall@gmail.com>, Shiju Jose <shiju.jose@huawei.com>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>,
+ Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
+ Tony Luck <tony.luck@intel.com>, Vishal Verma <vishal.l.verma@intel.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+ <20260717222706.3540281-2-terry.bowman@amd.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260717222706.3540281-2-terry.bowman@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Missing flush of posted MMIO writes to MSI-X vector control before=
- disabling memory decoding.
---
 
---- Patch [4]: [PATCH v22 4/4] PCI/MSI: Enable memory decoding before resto=
-ring MSI-X messages ---
-commit 42ede3312753d558e00e2b7331687e3440f9c013
-Author: Farhan Ali <alifm@linux.ibm.com>
 
-PCI/MSI: Enable memory decoding before restoring MSI-X messages
+On 7/17/26 3:26 PM, Terry Bowman wrote:
+> cxl_rch_get_aer_severity() classifies RCH Downstream Port uncorrectable
+> errors as fatal or non-fatal by ANDing uncorrectable status with
+> PCI_ERR_ROOT_FATAL_RCV. This is wrong because PCI_ERR_ROOT_FATAL_RCV is a
+> Root Error Status register bit (bit 6), not a severity bit. ANDing it
+> against uncorrectable status tests a reserved bit and produces incorrect
+> severity classification.
+> 
+> Fix by ANDing the unmasked uncor_status against uncor_severity. Per
+> PCIe Base Spec r6.0 Section 7.8.4.4, each bit in the Uncorrectable
+> Error Severity register indicates whether the corresponding error is
+> fatal (1) or non-fatal (0).
+> 
+> Fixes: 6ac07883dbb5 ("cxl/pci: Add RCH downstream port error logging")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 
-This commit temporarily enables the memory decoding bit in the PCI command
-register while restoring MSI-X state, as the device's saved state may not
-have it enabled. It restores the original command register state after
-the MSI-X table updates are complete.
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 209373c92e9e1..79c7e84d314b7 100644
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
+This can be picked up ahead looks like?
 
-[ ... ]
+> 
+> ---
+> 
+> Changes in v17 -> v18:
+> - New patch.
+> ---
+>  drivers/cxl/core/ras_rch.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+> index 0a8b3b9b63884..44b335d560708 100644
+> --- a/drivers/cxl/core/ras_rch.c
+> +++ b/drivers/cxl/core/ras_rch.c
+> @@ -80,7 +80,8 @@ static bool cxl_rch_get_aer_severity(struct aer_capability_regs *aer_regs,
+>  				     int *severity)
+>  {
+>  	if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
+> -		if (aer_regs->uncor_status & PCI_ERR_ROOT_FATAL_RCV)
+> +		if ((aer_regs->uncor_status & ~aer_regs->uncor_mask) &
+> +		    aer_regs->uncor_severity)
+>  			*severity = AER_FATAL;
+>  		else
+>  			*severity = AER_NONFATAL;
 
-> @@ -889,6 +898,7 @@ void __pci_restore_msix_state(struct pci_dev *dev)
->  			pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
->  		}
->  	}
-> =20
-> +	pci_write_config_word(dev, PCI_COMMAND, cmd);
-
-[Severity: High]
-Could this cause a regression where the configuration write arrives before
-the posted memory writes to the MSI-X table have completed?
-
-During __pci_restore_msix_state(), the loop updates the MSI-X table using
-pci_msix_write_vector_ctrl(), which issues posted memory writes.
-
-Because PCIe ordering rules allow configuration writes to pass posted memory
-writes, this configuration write might arrive at the endpoint first.
-
-If the restored cmd value disables memory decoding, the earlier posted
-memory writes might be dropped as unsupported requests by the endpoint. This
-could leave MSI-X interrupts broken after resume, and might trigger advanced
-error reporting faults.
-
-Does the MSI-X table need a read flush before the command register is
-restored?
-
->  	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720192505.2957=
--1-alifm@linux.ibm.com?part=3D4
