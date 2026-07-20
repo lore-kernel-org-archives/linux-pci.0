@@ -1,263 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220A7395AD9;
-	Mon, 20 Jul 2026 23:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784589471; cv=none; b=uPWLrxXQPgbn1Xclm7lq6AdQBSN7ra8autFNa29siZYKbaCvsWmRq2P3GcdgAEf82bzWMKTKv/x/ilAc/RApKe21KQqFc7BGLulOKeFvRpgL/iHe7uz5LdKN84wMHHIp+63vx3qz1mU/G+H+LynaV5FLkpt+3C7Kpy8YkNqs0Gg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784589471; c=relaxed/simple;
-	bh=f/NhFGs6yfBW4llxQM68EL/Vmc0CQEbABJFlBLvaNVM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U8lw+sPpCcAlycOxIiRyAQ8JuSSVa7hAdXoRqiwCJAzUJxfJ//9DRtWOx7e6tBvaoFOlkc227Z0mjoyYsG46XhHbjR0XBq3m0kIqmr7aL45SCMqyblMdplP3jR5MlMOQN+bIGEmGw8ETCYZtDeQsSL2zjoVy/mz+ZhpVL1kP2vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hf8UuIZq; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB2CF3E8337
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 23:19:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784589571; cv=pass; b=m2o6nX3VrG6elrJ9AzJuAaPUXxNInnfhz/SQ6qIKwbXJJB0ogAli9Jt9noynssp7hEXmMpAj17hfoSRxHHpBIcLZEWS/xNTcyTouoUcBw/gsCPrENGHsdMr5rwssGQAUe2ttSSow8fUh3ydAQOUOCi3IQ+BlI78mNJw8IW4yV/s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784589571; c=relaxed/simple;
+	bh=VD3HIlbzEb7dewmVIFSfcvhuEGHcgLIWaCYKVXgS20o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=K2YwIsGgzVPIzcaPNFf0fakMLAKBqb5SFd/rMV4bKB0dXwgOZa5pw3s6IVQVWg6g8oGSeemKcIr8xxNAtXPM3B84zDDtti65bnl0Uu/sEQPRzlEaszV9Gf49h6Mh4DEOuN9UiSrr3mZfpUrfHe8i5RXUvww6qUCl03kqLib2e68=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=s6vDnXlJ; arc=pass smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hf8UuIZq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B43111F000E9;
-	Mon, 20 Jul 2026 23:17:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784589467;
-	bh=3XCLYK0QohuRCjujR60Iq/Ht3BdWK1ezj3XOJ6GgNV8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=hf8UuIZqwcqiLSJ1FGcCiXru+vX6T0gOX+VgIgvLKpxG0mvG0crCOjMz3xaWqgd6I
-	 bRQBXFGI8u/xxIxQzh7dYv9i8z1w0B8b5mGd9wecqqzobaoww6Y5dujSRWCfbAE4F0
-	 YazPucp6M9/5wDZvgzs8zlDfLCX/u2x8mQPryVrMcYD2UPxzeUJPak2RQJVmRKDGYs
-	 WkWG1S2sg8CmYyBG6I1w97cpdQd0OAtecWyKV/w8E7lQ+Faq5Cm2Mi5JFwgkQ9lPSH
-	 4OgL5nvbom05gGugr7nwXyS+TlOIn3xD5ABY6U8yUpHVqQN2x2WJ6OYtgLD3QI1YNM
-	 zDIDrOlWXmazQ==
-Date: Tue, 21 Jul 2026 00:17:37 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
- "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
- Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
- Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
- Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
- <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
- <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
- <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
- Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
- <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
- <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
- <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
- <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
- Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
- Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
- <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v18 08/13] cxl/pci: Thread port and dport through RAS
- handling helpers
-Message-ID: <20260721001737.143d17e7@jic23-huawei>
-In-Reply-To: <20260717222706.3540281-9-terry.bowman@amd.com>
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
-	<20260717222706.3540281-9-terry.bowman@amd.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s6vDnXlJ"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-38e071ed6aeso6711303a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 16:19:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784589568; cv=none;
+        d=google.com; s=arc-20260327;
+        b=IutyUowB5pXZXu7Fl5B0sIJM5DtnnyRZgrseTx8biHRxbdhhycohIR8g2Xvy536XV7
+         gAzS92RC8oMl7Y4oASnRn7Gt1zqSSoBGSJifx4MHdFuBhhjoWoNCQFgSDJAwM/17sWmC
+         67NlFHKADzESuwLqKltRIRcfi8zLZumt/pIxUlJj3s8BTPhYn5cNzmG+GUZ7pgfOIaUK
+         TIbqQELmI/CMJ1udX0bQZpec32v+NYtXzcFfLMpFNC+1BOAp4329xXNfzvGrD71Zg+Mh
+         Ngzga95fKO7cAFXM2PCzfNX5UmXlwWYvlmd7c8S8La5fiTRzuHbkOEg0Je3k/Ya2vrm1
+         L7Xw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
+        fh=tMSkIgpZYKogwkO+7CzXgp9J+tDVBwvWbuJdNytCULQ=;
+        b=g6xiPnFzXZDKMJuYUmagQad4LDKq0w+ea0LFNI5PnNLpcbNNhgVwjxXV9tr/ThRdcB
+         XGfqhqX7yY7hipnF4+1CzY+AkRF8VJnZcaDoMvPM+SU9VYjThcXNsJI9hzmNs7lLzkD8
+         fpXDwWEsR2MPtZQDZ17T/HGf9/3Y/gNb0+WoozR2G60hBQYcThxCFu++4nIAEC6xwQo+
+         yLK65Ayg0CWTiiI1vdu7uDeiskpzYmE+S5uVcdrI+y+Hs7tc7oYEdGYbCBAfNdxolFhN
+         xQDjq0PCc/pBWa6lR+zvcxtGseO8l/p6RcEWhZovbmf8C2UKub6nY4ax27fskB2aeJrS
+         Hzjg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784589568; x=1785194368; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
+        b=s6vDnXlJ9z6NtpY49USEaFFyzDZGDp/vEPjToHrnv6bTvXKZ46obqIS+jfPx26/GB/
+         fdHybSFsTRU/EBqaEZTJ1Q0SRXj6U+FG4F4efVXl+9woIAzVa7Nz3MBYSUVk6cEylAMt
+         uFb8Gjxb6QpbfBWgcVWYMIpRALkPzuvfCcSRcUxLfCjzIfRpgv+nXJRbmxHdaGf4sjwX
+         VPtDITY3b9/6bSdUyPBA9S1QuTvV23YrkJ2/lXP/0OHtIoiY6pdjZEw7Chf7KDFA9m+U
+         0FL+c4alVP+/ag8KHbxkXAPn4JVv7ogGNkBtzbbXv8ZSaMj7EU63IdiTOcfRlaWoKX13
+         odgA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784589568; x=1785194368;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
+        b=bOfs/QwfVP1fgMQbtFDCPWmZB6orKK8Es4/dKzQJPuHjMubiKAbywx1vs5SuBaL26y
+         A+tluGaEuyriZJI9AJD7f6ubHp2PqJq31kY3PYgNBambS7mLem6PbEwhu4xVOS51OSak
+         EnTgxFOr5wSjHhnFTKTxiGslFjIMXEVF40ZojctVY6ruKDtXzOt4Lng1PcnEbj2cjur3
+         HainbW76wIXHBXUD/P+e/dNdCZ8nRDdp9+OdP+/NsVVhi7uG6szj4Y33vi1Jz0TZ/Ljl
+         mKChspin9xLcIFIHJei4VOV3zZ6NJvxHF4aY2tO6BCSGRzx2qBrljWT240X1asV/ASvh
+         /oIQ==
+X-Forwarded-Encrypted: i=1; AHgh+RreJub+4qSV8OioXq193AtIXyg/0ZcRc9Taje5Ntui/qnFRSwIl0qqUFDnjBibTZbyYBsw6yJEQjMs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZfUXQ9Opkcd2hBmULEhrGeMX1QnMeWZ+KTTB63ra+pL9ixAcQ
+	OYlwEh2y63aww3vEdiYtNQWsg4utZ5Wps8TNERfrZ7KPtnFLrAbK41512LZ9mdyHHSYpAKupt3x
+	eS1SGhI/lWKQfELEIUjVjLL0NNVfoi1UsyKHGRb1w
+X-Gm-Gg: AR+sD12x35PaSqrkUNgWOJuHrwe0FM6uQ/iTdQt2dN9T4uRdOZfDf1W0XuYJS3m9hpp
+	DSWOoCJa3xuUpgvEcyPsLi6G4tgRoUNJI3D0jY/HH3Qc2YaRFq0VR1RJoka9VfMTED6+QF0jaXP
+	jPyFn8YByeyH7re6EtuWVCcaFz/OIUw44KdsfaYooCjcFOnYC/RWg+7JKaW+GledKbvl4LLLMFK
+	r/uuuIlrvn7fOzcvklJHpVtS/4V19xe68G38k7TMza0dlBcDoaTCg5qiOLKPQ==
+X-Received: by 2002:a17:90b:5905:b0:381:23d5:693f with SMTP id
+ 98e67ed59e1d1-38e4b534bedmr15548062a91.28.1784589567330; Mon, 20 Jul 2026
+ 16:19:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-10-dmatlack@google.com>
+ <178433098576.189683.2364970585754668266.b4-review@b4>
+In-Reply-To: <178433098576.189683.2364970585754668266.b4-review@b4>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 20 Jul 2026 16:19:00 -0700
+X-Gm-Features: AUfX_mzMp9DAjORlO4Z9lJDkbL8nPaOLaXiKeGO1DzMTd_1FqdXSUAFnXR38zlo
+Message-ID: <CALzav=eZYfYYKAGEzk4TsGFLp1TPb2iFePNmqGsjX4jEZNJ9XA@mail.gmail.com>
+Subject: Re: [PATCH v7 09/12] PCI: liveupdate: Inherit ARI Forwarding Enable
+ on preserved bridges
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
+	Parav Pandit <parav@nvidia.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 17 Jul 2026 17:27:01 -0500
-Terry Bowman <terry.bowman@amd.com> wrote:
+On Fri, Jul 17, 2026 at 4:29=E2=80=AFPM Pasha Tatashin
+<pasha.tatashin@soleen.com> wrote:
+>
+> On Fri, 10 Jul 2026 21:26:12 +0000, David Matlack <dmatlack@google.com> w=
+rote:
+> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> > index a95bfe5eff77..74a11e520f0d 100644
+> > --- a/drivers/pci/liveupdate.c
+> > +++ b/drivers/pci/liveupdate.c
+> > @@ -816,6 +820,20 @@ int pci_liveupdate_enable_acs(struct pci_dev *dev)
+> >       return 0;
+> >  }
+> >
+> > +int pci_liveupdate_configure_ari(struct pci_dev *dev)
+> > +{
+> > +     u16 val;
+> > +
+> > +     guard(rwsem_read)(&pci_liveupdate.rwsem);
+> > +
+> > +     if (!dev->liveupdate.incoming)
+> > +             return -EINVAL;
+> > +
+> > +     pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &val);
+> > +     dev->ari_enabled =3D !!(val & PCI_EXP_DEVCTL2_ARI);
+>
+> unsigned int    ari_enabled:1;
+>
+> Sashiko asks a valid question, what protects other bits in this word
+> during modication?  At a very list a comment is needed.
 
-> From: Dan Williams <djbw@kernel.org>
-> 
-> The callers of cxl_handle_ras() and cxl_handle_cor_ras() already hold
-> a struct cxl_port * and struct cxl_dport * for the device being
-> handled.
+This was my reply to Sashiko, not sure if you saw it:
 
-It seems unlikely that all have both of them given you have handling
-in the code for dport == NULL.  Perhaps reword.
+.  pci_liveupdate_configure_ari() is called from pci_configure_ari()
+.  which also sets dev->ari_enabled=3D1 and is pre-existing code.
+.
+.  If writing to dev->ari_enabled in this path is indeed unsafe then that
+.  is a pre-existing bug.
 
-> Passing a generic struct device * requires is_cxl_memdev()
-> to distinguish Endpoints from ports at trace emission time. Threading
-> port and dport directly enables is_cxl_endpoint(port) and explicit
-> dport/port branching for cleaner trace dispatch.
-> 
-> Refactor cxl_handle_ras() and cxl_handle_cor_ras() to accept struct
-> cxl_port * and struct cxl_dport * directly. The CXL RAS trace event
-> emission logic is split into three branches: Endpoint events are
-> identified via is_cxl_endpoint(port) and emit with the memdev, dport
-> events emit with dport->dport_dev, and Upstream Port events fall back
-> to port->uport_dev.
-> 
-> Update cxl_handle_rdport_errors() in ras_rch.c and
-> cxl_handle_proto_error() in ras.c to pass port and dport to the
-> refactored functions.
+I figured that a comment wouldn't be needed for continuing an
+established precedent (it's ok to write to ari_enabled during this
+path).
 
-Definitely no need to say which files they are in. If we care we can
-look at the patch.
-
-> 
-> RCH Downstream Port correctable trace events now report the dport
-> device (dport->dport_dev) as a consequence of threading port and dport
-> through the RAS helpers. The following trace event rework ("cxl: Add
-> port and dport identifiers to CXL AER trace events") adds explicit
-> memdev, port, dport, and host fields that provide full context for
-> all device types.
-> 
-> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> Signed-off-by: Dan Williams <djbw@kernel.org>
-> 
-> ---
-> 
-> Changes in v17 -> v18:
-> - New patch.
-> ---
->  drivers/cxl/core/core.h    | 12 ++++++++----
->  drivers/cxl/core/ras.c     | 29 +++++++++++++++--------------
->  drivers/cxl/core/ras_rch.c |  2 +-
->  3 files changed, 24 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index 272634ff2615b..5ca1275fd8f35 100644
-> --- a/drivers/cxl/core/core.h
-> +++ b/drivers/cxl/core/core.h
-> @@ -185,10 +185,12 @@ static inline struct device *dport_to_host(struct cxl_dport *dport)
->  #ifdef CONFIG_CXL_RAS
->  void cxl_ras_init(void);
->  void cxl_ras_exit(void);
-> -bool cxl_handle_ras(struct device *dev, void __iomem *ras_base);
-> +bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
-> +		    void __iomem *ras_base);
->  void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
->  		     struct cxl_dport *dport);
-> -void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base);
-> +void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
-> +			void __iomem *ras_base);
->  void cxl_dport_map_rch_aer(struct cxl_dport *dport);
->  void cxl_disable_rch_root_ints(struct cxl_dport *dport);
->  void cxl_handle_rdport_errors(struct pci_dev *pdev);
-> @@ -197,13 +199,15 @@ void devm_cxl_dport_ras_setup(struct cxl_dport *dport);
->  #else
->  static inline void cxl_ras_init(void) { }
->  static inline void cxl_ras_exit(void) { }
-> -static inline bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
-> +static inline bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
-> +				  void __iomem *ras_base)
->  {
->  	return false;
->  }
->  static inline void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
->  				   struct cxl_dport *dport) { }
-> -static inline void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base) { }
-> +static inline void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
-> +				      void __iomem *ras_base) { }
->  static inline void cxl_dport_map_rch_aer(struct cxl_dport *dport) { }
->  static inline void cxl_disable_rch_root_ints(struct cxl_dport *dport) { }
->  static inline void cxl_handle_rdport_errors(struct pci_dev *pdev) { }
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 9a142abcf4f8b..6f4a3c1b0bb85 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -232,7 +232,6 @@ void __iomem *to_ras_base(struct cxl_port *port, struct cxl_dport *dport)
->  
->  void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port, struct cxl_dport *dport)
->  {
-> -	struct device *dev = dport ? dport->dport_dev : port->uport_dev;
->  	void __iomem *ras_base = to_ras_base(port, dport);
->  
->  	if (!ras_base) {
-> @@ -241,14 +240,14 @@ void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port, struct cxl_dpo
->  		return;
->  	}
->  
-> -	if (cxl_handle_ras(dev, ras_base))
-> +	if (cxl_handle_ras(port, dport, ras_base))
->  		panic("CXL cachemem error");
->  
->  	dev_dbg(&pdev->dev,
->  		"CXL UCE signaled but no CXL RAS status bits set\n");
->  }
->  
-> -void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base)
-> +void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
->  {
->  	u32 status;
->  	void __iomem *addr;
-> @@ -260,10 +259,12 @@ void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base)
->  	status = readl(addr);
->  	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
->  		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
-> -		if (is_cxl_memdev(dev))
-> -			trace_cxl_aer_correctable_error(to_cxl_memdev(dev), status);
-> +		if (is_cxl_endpoint(port))
-> +			trace_cxl_aer_correctable_error(to_cxl_memdev(port->uport_dev), status);
-> +		else if (dport)
-> +			trace_cxl_port_aer_correctable_error(dport->dport_dev, status);
->  		else
-> -			trace_cxl_port_aer_correctable_error(dev, status);
-> +			trace_cxl_port_aer_correctable_error(port->uport_dev, status);
->  	}
->  }
->  
-> @@ -288,7 +289,7 @@ static void header_log_copy(void __iomem *ras_base, u32 *log)
->   * Log the state of the RAS status registers and prepare them to log the
->   * next error status. Return 1 if reset needed.
->   */
-> -bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
-> +bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
->  {
->  	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
->  	void __iomem *addr;
-> @@ -315,10 +316,12 @@ bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
->  	}
->  
->  	header_log_copy(ras_base, hl);
-> -	if (is_cxl_memdev(dev))
-> -		trace_cxl_aer_uncorrectable_error(to_cxl_memdev(dev), status, fe, hl);
-> +	if (is_cxl_endpoint(port))
-> +		trace_cxl_aer_uncorrectable_error(to_cxl_memdev(port->uport_dev), status, fe, hl);
-> +	else if (dport)
-> +		trace_cxl_port_aer_uncorrectable_error(dport->dport_dev, status, fe, hl);
->  	else
-> -		trace_cxl_port_aer_uncorrectable_error(dev, status, fe, hl);
-> +		trace_cxl_port_aer_uncorrectable_error(port->uport_dev, status, fe, hl);
->  
->  	writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
->  
-> @@ -351,7 +354,7 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  		 * chance the situation is recoverable dump the status of the RAS
->  		 * capability registers and bounce the active state of the memdev.
->  		 */
-> -		ue = cxl_handle_ras(port->uport_dev, to_ras_base(port, NULL));
-> +		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
->  	}
->  
->  	/*
-> @@ -382,10 +385,8 @@ EXPORT_SYMBOL_NS_GPL(cxl_error_detected, "CXL");
->  static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
->  				   struct cxl_dport *dport, int severity)
->  {
-> -	struct device *dev = dport ? dport->dport_dev : port->uport_dev;
-> -
->  	if (severity == AER_CORRECTABLE)
-> -		cxl_handle_cor_ras(dev, to_ras_base(port, dport));
-> +		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport));
->  	else
->  		cxl_do_recovery(pdev, port, dport);
->  }
-> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
-> index f2d2fb83758b9..f4b98f2c11a1c 100644
-> --- a/drivers/cxl/core/ras_rch.c
-> +++ b/drivers/cxl/core/ras_rch.c
-> @@ -118,7 +118,7 @@ void cxl_handle_rdport_errors(struct pci_dev *pdev)
->  
->  	pci_print_aer(pdev, severity, &aer_regs);
->  	if (severity == AER_CORRECTABLE)
-> -		cxl_handle_cor_ras(&pdev->dev, to_ras_base(port, dport));
-> +		cxl_handle_cor_ras(dport->port, dport, to_ras_base(port, dport));
->  	else
->  		cxl_do_recovery(pdev, dport->port, dport);
->  }
-
+>
+> --
+> Pasha Tatashin <pasha.tatashin@soleen.com>
