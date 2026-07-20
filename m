@@ -1,202 +1,705 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C0943F08A
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 22:44:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7E68426690;
+	Mon, 20 Jul 2026 22:44:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784587450; cv=none; b=clfmTZYGu1QCv3JjWV3gFIim5ZXEfnLy0OB9qOCYOQiN4BA/qGuwkrfwiyhk1zVMKgBA2ARWeOZtCoW3PZKQkwMz6LqrYxLRsE2NueW9QSHA5OiHKl67z4kBmj9TcBIhrdAdY3DVo20bvEj9ghKlfXLXAHo8u+m/T7/Pi00Hl88=
+	t=1784587485; cv=none; b=O0y47OUmY/fI+h6M0AN8LDh5m8qsbTZ1raEd4u/6w6QDL4auLGpEWTOiThWI8vPiFHIKw7DhnoqP1Pi7l622nWy1+Rqa8w4mqlbhlvni+ALtv6HTI11bi6VGg6kO9TPXctWLQipmpOtdETniiSc1CWggFYVs/8IWiYpo0O412co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784587450; c=relaxed/simple;
-	bh=ebC5xGcTEOi4wVqJ6ncnnXXiXaqDe2gAf8jcsdg4FFI=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=OW8aD6Qisdude28gvAMNdgxqce070NtwVw6HOb57hYpNJFHCBUYLQmsPs57hD4JG4h30nG+X71MSM/zVph2ydnRrdZNrm457sVPKTOxgBKi8xKmEk7D40SXHjLhnu/Uq/9k95I7VuF9XWkTMFVcOVSruh+2brygCjMNUi3whaqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=EedyyXxN; arc=none smtp.client-ip=209.85.222.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1784587485; c=relaxed/simple;
+	bh=hN3QLclt/wA7p1TWUWcesju1Am7yODcgDg8piiTGwAc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nGwW37A0DqLtS3sCt6JC0v8mBnz03C5nhwOtuLqgwemy62kj2Xap2lynrJ50zD7GisScGXSPfjLw3XoGv3pEF1cRcMfGHnjQAfylJK2gb9+wM7Lj5QbKTeyXqHhw3OQDpXM6opihHBYmyqrbaUY+okUd2aKHL7TCrKr1Q3dLLt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LEmBBa4m; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="EedyyXxN"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-92c7a0a701aso829975285a.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:44:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1784587448; x=1785192248; darn=vger.kernel.org;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=sZotz6DMr/KESNQHMebtxodvrKo450DHNTkidmosnVY=;
-        b=EedyyXxNKf3NXikNSiVE6saygt+U32sEAdwe58eH6afAqVyC/I625/bBtvJM19ByfR
-         vKpQbTv2nFsVBP+f3cZmC06d5tSSm5tBqZF9D8WCJQqHRTo2K2BxNR5aVMOMVSg1Rbww
-         qbZXIJCPWQOLcvZFWlRAiYnF+8mbEgc+G97m2YA7Ttk9ceKvsHwb06c31A1+Kv1pSdNp
-         RPfmw8nk7TZYyPpmAMzi8j9y0OpPzrrTu/w/elICZ+5iPP8wCelavbp5ziNuLbH1V6TE
-         lEsi4/DyGLCTdBaFxhnrjz9eUqr7Wr3Z/NimFlDA09a45yDcHyQzbJCay9IbuLK6Z1+5
-         MsMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784587448; x=1785192248;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:content-type:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sZotz6DMr/KESNQHMebtxodvrKo450DHNTkidmosnVY=;
-        b=FFjwYK5Slm9pePhvlVZKFpGlw+vLlm/LKnKFitmPB/Ujw9p5f7pnta9j2JYHCeV8Q/
-         nepcQ9z7K+FEzkwwwj2+P903fwCu86ELYM24zM4Ww+Mwrm47UhpcB2acgoQa+yx0G0jM
-         10HXngKn8pRkq0QNFW+KnxFS6QggD/ZtkqJhPNZKqUoiGpaz97Z+r+edaiPPNXaL0iPL
-         CGMVfT9CQbJEJ+RssiEMJVRVLg4Dz07x0lv+X0E6wyepWMXd9/Lr6k8GskJw5YpLzi8j
-         ciStDm8colYi7y1Idgimiu7GSfrYNvT2B3RIZgcqT1nXdGFY2c5Osmeg/7uowU0r+Jom
-         llsA==
-X-Forwarded-Encrypted: i=1; AHgh+Rpvqiw5OVFRfH+1hHA8HKDUTxWnfUG46zBkMosZHbnRNjwuAMu6tTnbuohy89AxUoKQ/mj3U+Ovy+c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YySqC2u3fgqY+izG4Yxu9FVxQDhwBzMR484m2pF0w5sVEga4nhM
-	JvuVS8z+7UAwrIw9T9OqtJ8BRNg9L4Y5VcHzhXDdNe5COAl/oQfIIHDHVfV+mItsoC0=
-X-Gm-Gg: AfdE7cmobXdy3NntExWAQgaM+o/L6wc8T+NazVOPsZ8tRjMKaPmMbgCoJw8w0rsPcsb
-	P/4xySJmjJAc3M425wX90vCbTh27GPd+MKWNOKUxFxW2TuayMdUjT1DiA94bIOWm0JHzFTzunKt
-	jdkbWJToFEFfKap6rSlds89VjoJ09Dw1Ue5r9RljVri9VVqe9KnunRfjEJE95pMzC4pasVXIqN1
-	O/ckm5sX3IGObsIBcc21k+hcbOgKw+FDCfuBvwA3qMAd+gkMvkiPpig7+kOVBkskCCB4KxKKWp3
-	2AMlU5vs3qOSJc3sNrPNJkFZdxNG8VtpK07P0ugiIjy5cffyWSbZV6w/ek3Mf5HG2Sdy4dmE9Ej
-	Xp0a2nPo4nhwQ96A+fT8/51cPifhUqmWoITpfG4N8WkCZZAsPN5180G7ouVqXs2kkDxdGwOKSsb
-	cFqYKQROxI4xBtiQCVTytZppIoUp4eCsSKOsblZp4=
-X-Received: by 2002:a05:620a:1b8c:b0:92e:d677:45c8 with SMTP id af79cd13be357-930b3f10083mr1694446385a.25.1784587447916;
-        Mon, 20 Jul 2026 15:44:07 -0700 (PDT)
-Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-930b5491329sm966366685a.44.2026.07.20.15.44.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 15:44:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LEmBBa4m"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784587483; x=1816123483;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=hN3QLclt/wA7p1TWUWcesju1Am7yODcgDg8piiTGwAc=;
+  b=LEmBBa4mCI9xPI4+efAIFQAGKjZ4cb9hv7+NtOngnzHngfOLVsarWkyY
+   yyRVJwwS0SCRRVj8nUCYLaDZV4JJIlDVibaCXt9m1Ic90wSElEeR+iTP6
+   UOl5KciX/yeJ1BTJDhZhC1VxOnbB3OB2Wq1ddF9WsHCEIr6upKBLM0Yor
+   ePhgHBp+a9t+l0FJQswkHeQbxzTndzhV4yAoodA34m0N0uoli/OD6kipI
+   uYlJlr21ERmU8PS1Urd6HPlkQMpp/9PXp/LLKnHDvXWBjkQfPQewfZsqL
+   UuAcRKvGK27fL2LUd5siBq+QdNk3eP7MXLHFLNOO31W1szsHHSxgKDjso
+   A==;
+X-CSE-ConnectionGUID: IGOERGz8RsCRkmB4gnrsEQ==
+X-CSE-MsgGUID: cSr+pSDoT+2GprXUNX8ahg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="87719379"
+X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
+   d="scan'208";a="87719379"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 15:44:41 -0700
+X-CSE-ConnectionGUID: xV61v8kBT0K1qdA7Rghk3Q==
+X-CSE-MsgGUID: nBhCtkolRYO3Vvuzwg6txA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
+   d="scan'208";a="254175385"
+Received: from cooperst-gp83.amr.corp.intel.com (HELO [10.125.109.176]) ([10.125.109.176])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 15:44:38 -0700
+Message-ID: <bcb2bbdf-59d4-4ca2-bcb3-7e7be71c691c@intel.com>
+Date: Mon, 20 Jul 2026 15:44:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, kexec@lists.infradead.org, 
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
- linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
- Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
- David Rientjes <rientjes@google.com>, 
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
- Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
- Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
- Pranjal Shrivastava <praan@google.com>, 
- Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
- Samiullah Khawaja <skhawaja@google.com>, 
- Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
-References: <20260710212616.1351130-1-dmatlack@google.com>
- <20260710212616.1351130-4-dmatlack@google.com>
- <178432481253.189683.3297727348836286619.b4-review@b4>
- <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
-Date: Mon, 20 Jul 2026 22:44:05 +0000
-Message-Id: <178458744511.332171.13770778781241262180.b4-reply@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3475;
- i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=ebC5xGcTEOi4wVqJ6ncnnXXiXaqDe2gAf8jcsdg4FFI=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqXqS1187zj8JXRe5lB5izbKlBKLqvYbVVBleoX
- 4T2/h8BcwaJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCal6ktQAKCRC7dyhM23N6
- 3t1OD/9Y1PR1oUKi0SDKwGc07m5QU9YJW4ylOoJhQmKBciDPc56xSO13GmZAfrbnoRNuEHy0WfZ
- T6WL+ngFtThbo8xKTV3r0pcKUNB0fuwCnI3x9Zw8CUDvHFEK6vS7Udecjo7dR9a1JLz761f7bM+
- 12ImK0lfNaicDnArmbfqVQUZNpMPgdmK+CZXn7ps8uDGxF0IsSEhyuYhYJkhdoy94yjcRRrt2Zj
- g69n+kkIpTaDMvonbwXST5HwZTAjyIYDhQIP9IDt2Vnyd2+TWMrzNM9qVhyZjjrSwQ1GgV1MvOa
- jvy/0LcvwvUkcNGBNveq1/SrKCeS2+jijiLh/QmzloLFwyKAUOl98M9KaAaPMF6v1fHwAJhAY9m
- rilvw4STMhIk2+9yVSYSbxN1kBuPIwnwPodx6yjpYXsRdwr8TWEq3MAQ/07q7gArC8vtVFeZNIl
- GaAHAlFaMKl515UiO1uoW6JQxduFrwo/D1DtNaBca10N7bziwpVRj6pHXUMajydMBMoeJWOfrPz
- XOTLQBQYk9q+oZZPSV/fHFWIHlF1e3cocmdYNdnUwDNyZf+Mets1iR0Su9j7rbe1zSW1tgSuLgX
- nE8RRMA+RyH7M6lkvSgFkzdIBtfu1B1URfbD+EDaIzeqVHJAwYbjo7sEfPI46GMBtnmVSeum85X
- aSNOxJOHr7j1oBA==
-X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
- fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 10/13] cxl: Add port and dport identifiers to CXL AER
+ trace events
+To: Terry Bowman <terry.bowman@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
+ Jonathan Cameron <jic23@kernel.org>, Len Brown <lenb@kernel.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Robert Richter <rrichter@amd.com>
+Cc: linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ Alejandro Lucero <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Ankit Agrawal <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Ben Cheatham <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>,
+ Breno Leitao <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>,
+ "Fabio M . De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+ Gregory Price <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>,
+ Jonathan Corbet <corbet@lwn.net>, Kees Cook <kees@kernel.org>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Oliver O'Halloran <oohall@gmail.com>, Shiju Jose <shiju.jose@huawei.com>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>,
+ Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
+ Tony Luck <tony.luck@intel.com>, Vishal Verma <vishal.l.verma@intel.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+ <20260717222706.3540281-11-terry.bowman@amd.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260717222706.3540281-11-terry.bowman@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2026-07-20 14:54:51-07:00, David Matlack wrote:
-> On Fri, Jul 17, 2026 at 2:47 PM Pasha Tatashin
-> <pasha.tatashin@soleen.com> wrote:
+
+
+On 7/17/26 3:27 PM, Terry Bowman wrote:
+> From: Dan Williams <djbw@kernel.org>
 > 
-> > On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.com> wrote:
-> >
-> > I am confused by this. Each preserved PCI device must have an associated
-> > FD preserved with it via LUO. I.e., vfiofd would need to be preserved. If
-> > the vfiofd was not reclaimed, and finish is not possible, that vfiofd
-> > would still be owned by LUO, and therefore PCI FLB refcount would stay
-> > positive.
-> >
-> > However, if finish is possible, and this is the last vfiofd that is
-> > finished, FLB will be freed as soon as the reference count reaches zero,
-> > which I would think is the expected behavior.
-> >
-> > What is the point of holding a reference here, instead of only for the
-> > duration of FLB access, i.e. to make sure we are accessing a valid data?
+> Pass struct cxl_port * and struct cxl_dport * to the cxl_aer_*
+> trace events instead of a plain struct device * derived at the
+> caller. The trace event helpers then derive the right strings for
+> endpoints, switch ports, root ports, and RCH downstream ports
+> consistently across the CPER and native AER paths.
 > 
-> The duration of the access is from here until pci_liveupdate_finish()
-> because that it when the pointer (dev->liveupdate.incoming) is
-> cleared. So that is why the PCI core holds the reference from here
-> until pci_liveupdate_finish().
+> The unified cxl_aer_* events keep "memdev" as the legacy field
+> (endpoint events populate it with the memdev name; non-endpoint
+> events emit memdev="") and add new "port" and "dport" string fields
+> populated for all CXL device classes. Updated userspace can key
+> off "port" and "dport" without a parallel set of events.
 > 
-> We could avoid this by deleteing dev->liveupdate.incoming and,
-> instead, fetching the incoming FLB and doing the xarray lookup every
-> atime the PCI core needs to access the device's incoming ser struct,
-> but that would be inefficient.
+> Remove the separate cxl_port_aer_uncorrectable_error and
+> cxl_port_aer_correctable_error trace events. All CXL AER events now
+> use the unified cxl_aer_* events with port and dport fields.
+> 
+> Rework cxl_cper_handle_prot_err() to use find_cxl_port_by_dev() and
+> the unified trace helpers, replacing the per-port-type branching and
+> bus_find_device() memdev lookup.
+> 
+> The TP_printk format string places "port=%s dport=%s" between
+> "memdev=%s" and "host=%s", changing the text-mode field order from
+> the pre-patch output. This does not affect consumers such as
+> rasdaemon that use libtraceevent to parse fields by name rather than
+> by fixed text position.
+> 
+> For non-endpoint events (switch port, root port, RCH dport),
+> "memdev" is empty and "port"/"dport" carry the topology information.
+> 
+> The serial number is retrieved via pci_get_dsn() which performs live
+> PCI configuration space reads. A following patch ("PCI: Cache PCI
+> DSN into pci_dev->dsn during probe") replaces these with a cached
+> serial number to avoid config space access in error handlers and panic
+> paths.
+> 
+> Below are examples of the different CXL devices' error trace logs
+> after this patch:
+> 
+>      ---------------------
+>      | CXL RP - 0C:00.0  |
+>      ---------------------
+>                |
+>      ---------------------
+>      | CXL USP - 0D:00.0 |
+>      ---------------------
+>                |
+>      --------------------
+>      | CXL DSP - 0E:00.0 |
+>      --------------------
+>                |
+>      ---------------------
+>      | CXL EP - 0F:00.0  |
+>      ---------------------
+> 
+> Root Port:
+> cxl_aer_correctable_error: memdev= port=port1 dport=0000:0c:00.0 \
+>    host=pci0000:0c serial=0: status: 'Memory Data ECC Error'
+> 
+> cxl_aer_uncorrectable_error: memdev= port=port1 dport=0000:0c:00.0 \
+>    host=pci0000:0c serial=0: status: 'Cache Address Parity Error'  \
+>    first_error: 'Cache Address Parity Error'
+> 
+> Upstream Switch Port:
+> cxl_aer_correctable_error: memdev= port=port2 dport= host=0000:0d:00.0 \
+>    serial=0: status: 'Memory Data ECC Error'
+> 
+> UCE NA - Upstream Switch Port UCE's are handled in the portdrv driver's
+> PCI AER callbacks that are not CXL aware.
+> 
+> Downstream Switch Port:
+> cxl_aer_correctable_error: memdev= port=port2 dport=0000:0e:00.0 \
+>    host=0000:0d:00.0 serial=0: status: 'Memory Data ECC Error'
+> 
+> cxl_aer_uncorrectable_error: memdev= port=port2 dport=0000:0e:00.0 \
+>    host=0000:0d:00.0 serial=0: status: 'Cache Address Parity Error' \
+>    first_error: 'Cache Address Parity Error'
+> 
+> Endpoint:
+> cxl_aer_uncorrectable_error: memdev=mem1 port=endpoint4 dport= \
+>    host=0000:0f:00.0 serial=0: status: 'Cache Address Parity Error' \
+>    first_error: 'Cache Address Parity Error'
+> 
+> cxl_aer_correctable_error: memdev=mem1 port=endpoint4 dport= host=0000:0f:00.0 \
+>    serial=0: status: 'Memory Data ECC Error'
+> 
+> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
 
-Thanks for the explanation. As I understand, the most straightforward 
-way to avoid holding the permanent reference is indeed to delete 
-dev->liveupdate.incoming entirely and perform an xarray lookup on every 
-access, like this:
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-bool pci_liveupdate_is_incoming(struct pci_dev *dev)
-{
-	...
-	incoming = pci_liveupdate_flb_get_incoming();
-	...
-	dev_ser = xa_load(&incoming->xa, key);
-	...
-	pci_liveupdate_flb_put_incoming();
-	return dev_ser && dev_ser->refcount > 0;
-}
-
-However, as you note, this is inefficient because it affects every 
-single device and adds lookup overhead to every access (not sure about 
-the actual cost though, xarray access is pretty fast!).
-
-We can, however, still avoid tinkering with the lifecycle of the FLB, 
-and instead treat dev->liveupdate.incoming as a "hint" that we validate 
-on access with a fast, liveness check:
-
-1. At Setup: In pci_liveupdate_setup_device(), we do the xarray lookup 
-once, cache the pointer in dev->liveupdate.incoming, and immediately 
-call pci_liveupdate_flb_put_incoming(). We do not hold a permanent 
-reference.
-
-2. On Access: When an accessor runs, instead of doing a full xarray 
-lookup, it just validates the cached pointer's liveness by temporarily 
-securing the FLB:
-
-static struct pci_flb_incoming *pci_liveupdate_get_incoming(struct pci_dev *dev)
-{
-	struct pci_flb_incoming *incoming;
-
-	incoming = pci_liveupdate_flb_get_incoming();
-	if (!incoming)
-		return NULL;
-
-	if (dev->liveupdate.incoming)
-		return incoming;
-
-	pci_liveupdate_flb_put_incoming();
-	return NULL;
-}
-
-* If get_incoming() returns NULL (the FLB has already finished/freed), 
-  the hint is invalid and the device is no longer incoming.
-
-* If it returns a valid pointer, the FLB is guaranteed to be alive, so 
-  we can immediately use the cached dev->liveupdate.incoming pointer 
-  without xarray lookups. The accessor then puts the transient 
-  reference when done.
-
-3. In Finish/Cleanup: We can simply clear dev->liveupdate.incoming,
-and decrement ser->nr_devices.
+> 
+> ---
+> Changes in v17->v18:
+> - Consolidate double find_cxl_port_by_dev() in cxl_cper_handle_prot_err()
+> - Add comment noting dport is NULL for Endpoint and Upstream Port devices
+> - Add cxl_trace_* helpers
+> - Add CPER refactor
+> 
+> Changes in v16->v17:
+> - Replace cxlds->serial with pci_get_dsn()
+> - Change 'memdev' to 'device' (Dan)
+> - Updated Commit message
+> 
+> Changes in v15->v16:
+> - Add Dan's review-by
+> - Incorporate Dan's comment into commit message:
+> "Add the serial number at the end to preserve compatibility with
+> libtraceevent parsing of the parameters."
+> 
+> Changes in v14->v15:
+> - Update commit message.
+> - Moved cxl_handle_ras/cxl_handle_cor_ras() changes to future patch (terry)
+> 
+> Changes in v13->v14:
+> - Update commit headline (Bjorn)
+> 
+> Changes in v12->v13:
+> - Added Dave Jiang's review-by
+> 
+> Changes in v11 -> v12:
+> - Correct parameters to call trace_cxl_aer_correctable_error()
+> - Add reviewed-by for Jonathan and Shiju
+> 
+> Changes in v10->v11:
+> - Updated CE and UCE trace routines to maintain consistent TP_Struct ABI
+> and unchanged TP_printk() logging.
+> ---
+>  drivers/cxl/core/core.h    |   8 +--
+>  drivers/cxl/core/ras.c     | 131 +++++++++++--------------------------
+>  drivers/cxl/core/ras_rch.c |   3 +-
+>  drivers/cxl/core/trace.c   |  35 ++++++++++
+>  drivers/cxl/core/trace.h   |  91 ++++++++------------------
+>  drivers/cxl/cxlmem.h       |   7 ++
+>  6 files changed, 113 insertions(+), 162 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> index 5ca1275fd8f35..a55a4e409feda 100644
+> --- a/drivers/cxl/core/core.h
+> +++ b/drivers/cxl/core/core.h
+> @@ -186,11 +186,11 @@ static inline struct device *dport_to_host(struct cxl_dport *dport)
+>  void cxl_ras_init(void);
+>  void cxl_ras_exit(void);
+>  bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
+> -		    void __iomem *ras_base);
+> +		    void __iomem *ras_base, u64 serial);
+>  void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
+>  		     struct cxl_dport *dport);
+>  void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
+> -			void __iomem *ras_base);
+> +			void __iomem *ras_base, u64 serial);
+>  void cxl_dport_map_rch_aer(struct cxl_dport *dport);
+>  void cxl_disable_rch_root_ints(struct cxl_dport *dport);
+>  void cxl_handle_rdport_errors(struct pci_dev *pdev);
+> @@ -200,14 +200,14 @@ void devm_cxl_dport_ras_setup(struct cxl_dport *dport);
+>  static inline void cxl_ras_init(void) { }
+>  static inline void cxl_ras_exit(void) { }
+>  static inline bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
+> -				  void __iomem *ras_base)
+> +				  void __iomem *ras_base, u64 serial)
+>  {
+>  	return false;
+>  }
+>  static inline void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
+>  				   struct cxl_dport *dport) { }
+>  static inline void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport,
+> -				      void __iomem *ras_base) { }
+> +				      void __iomem *ras_base, u64 serial) { }
+>  static inline void cxl_dport_map_rch_aer(struct cxl_dport *dport) { }
+>  static inline void cxl_disable_rch_root_ints(struct cxl_dport *dport) { }
+>  static inline void cxl_handle_rdport_errors(struct pci_dev *pdev) { }
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index d5dc2c22565da..acf40b2396c3b 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
+> @@ -12,69 +12,37 @@
+>  static_assert(CXL_HEADERLOG_TRACE_SIZE_U32 == 128,
+>  	      "rasdaemon ABI requires exactly 128 u32s");
+>  
+> -static void cxl_cper_trace_corr_port_prot_err(struct pci_dev *pdev,
+> -					      struct cxl_ras_capability_regs ras_cap)
+> -{
+> -	u32 status = ras_cap.cor_status & ~ras_cap.cor_mask;
+> -
+> -	trace_cxl_port_aer_correctable_error(&pdev->dev, status);
+> -}
+> -
+> -static void cxl_cper_trace_uncorr_port_prot_err(struct pci_dev *pdev,
+> -						struct cxl_ras_capability_regs ras_cap)
+> +static void cxl_cper_trace_uncorr_prot_err(struct cxl_port *port, struct cxl_dport *dport,
+> +					   u64 serial, struct cxl_ras_capability_regs *ras_cap)
+>  {
+>  	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
+> -	u32 status = ras_cap.uncor_status & ~ras_cap.uncor_mask;
+> +	u32 status = ras_cap->uncor_status & ~ras_cap->uncor_mask;
+>  	u32 fe;
+>  
+>  	if (hweight32(status) > 1)
+>  		fe = BIT(FIELD_GET(CXL_RAS_CAP_CONTROL_FE_MASK,
+> -				   ras_cap.cap_control));
+> -	else
+> -		fe = status;
+> -
+> -	memcpy(hl, ras_cap.header_log, CXL_HEADERLOG_SIZE);
+> -	trace_cxl_port_aer_uncorrectable_error(&pdev->dev, status, fe, hl);
+> -}
+> -
+> -static void cxl_cper_trace_corr_prot_err(struct cxl_memdev *cxlmd,
+> -					 struct cxl_ras_capability_regs ras_cap)
+> -{
+> -	u32 status = ras_cap.cor_status & ~ras_cap.cor_mask;
+> -
+> -	trace_cxl_aer_correctable_error(cxlmd, status);
+> -}
+> -
+> -static void
+> -cxl_cper_trace_uncorr_prot_err(struct cxl_memdev *cxlmd,
+> -			       struct cxl_ras_capability_regs ras_cap)
+> -{
+> -	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
+> -	u32 status = ras_cap.uncor_status & ~ras_cap.uncor_mask;
+> -	u32 fe;
+> -
+> -	if (hweight32(status) > 1)
+> -		fe = BIT(FIELD_GET(CXL_RAS_CAP_CONTROL_FE_MASK,
+> -				   ras_cap.cap_control));
+> +				   ras_cap->cap_control));
+>  	else
+>  		fe = status;
+>  
+>  	/*
+> -	 * ras_cap.header_log[] holds CXL_HEADERLOG_SIZE_U32 (16) hardware
+> +	 * ras_cap->header_log[] holds CXL_HEADERLOG_SIZE_U32 (16) hardware
+>  	 * dwords.  Copy them into the front of a zero-filled
+>  	 * CXL_HEADERLOG_TRACE_SIZE_U32 (128) u32 staging buffer so the trace
+>  	 * event memcpy sees a full 512-byte source and the userspace ABI
+>  	 * (rasdaemon) is preserved.
+>  	 */
+> -	memcpy(hl, ras_cap.header_log, CXL_HEADERLOG_SIZE);
+> -	trace_cxl_aer_uncorrectable_error(cxlmd, status, fe, hl);
+> +	memcpy(hl, ras_cap->header_log, CXL_HEADERLOG_SIZE);
+> +	trace_cxl_aer_uncorrectable_error(port, dport, status, fe,
+> +					  hl, serial);
+>  }
+>  
+> -static int match_memdev_by_parent(struct device *dev, const void *uport)
+> +static void cxl_cper_trace_corr_prot_err(struct cxl_port *port, struct cxl_dport *dport,
+> +					 u64 serial, struct cxl_ras_capability_regs *ras_cap)
+>  {
+> -	if (is_cxl_memdev(dev) && dev->parent == uport)
+> -		return 1;
+> -	return 0;
+> +	u32 status = ras_cap->cor_status & ~ras_cap->cor_mask;
+> +
+> +	trace_cxl_aer_correctable_error(port, dport, status, serial);
+>  }
+>  
+>  
+> @@ -109,47 +77,34 @@ static struct cxl_port *find_cxl_port_by_dev(struct device *dev, struct cxl_dpor
+>  
+>  void cxl_cper_handle_prot_err(struct cxl_cper_prot_err_work_data *data)
+>  {
+> +	struct cxl_dport *dport;
+>  	unsigned int devfn = PCI_DEVFN(data->prot_err.agent_addr.device,
+>  				       data->prot_err.agent_addr.function);
+> -	struct pci_dev *pdev __free(pci_dev_put) =
+> -		pci_get_domain_bus_and_slot(data->prot_err.agent_addr.segment,
+> -					    data->prot_err.agent_addr.bus,
+> -					    devfn);
+> -	struct cxl_memdev *cxlmd;
+> -	int port_type;
+> -
+> -	if (!pdev)
+> -		return;
+> -
+> -	port_type = pci_pcie_type(pdev);
+> -	if (port_type == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    port_type == PCI_EXP_TYPE_DOWNSTREAM ||
+> -	    port_type == PCI_EXP_TYPE_UPSTREAM) {
+> -		if (data->severity == AER_CORRECTABLE)
+> -			cxl_cper_trace_corr_port_prot_err(pdev, data->ras_cap);
+> -		else
+> -			cxl_cper_trace_uncorr_port_prot_err(pdev, data->ras_cap);
+> -
+> +	struct pci_dev *pdev __free(pci_dev_put) = pci_get_domain_bus_and_slot(
+> +		data->prot_err.agent_addr.segment, data->prot_err.agent_addr.bus, devfn);
+> +	if (!pdev) {
+> +		pr_err_ratelimited("Failed to find CPER device in CXL topology\n");
+>  		return;
+>  	}
+>  
+> -	guard(device)(&pdev->dev);
+> -	if (!pdev->dev.driver) {
+> -		dev_warn_ratelimited(&pdev->dev,
+> -				     "Device is unbound, abort CPER error handling\n");
+> +	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_dev(&pdev->dev, NULL);
+> +	if (!port) {
+> +		dev_err_ratelimited(&pdev->dev,
+> +				    "Failed to find parent port device in CXL topology\n");
+>  		return;
+>  	}
+>  
+> -	struct device *mem_dev __free(put_device) = bus_find_device(
+> -		&cxl_bus_type, NULL, pdev, match_memdev_by_parent);
+> -	if (!mem_dev)
+> -		return;
+> +	guard(device)(&port->dev);
+> +
+> +	/* dport is NULL for Endpoint and Upstream Port devices */
+> +	dport = cxl_find_dport_by_dev(port, &pdev->dev);
+>  
+> -	cxlmd = to_cxl_memdev(mem_dev);
+>  	if (data->severity == AER_CORRECTABLE)
+> -		cxl_cper_trace_corr_prot_err(cxlmd, data->ras_cap);
+> +		cxl_cper_trace_corr_prot_err(port, dport, pci_get_dsn(pdev),
+> +					     &data->ras_cap);
+>  	else
+> -		cxl_cper_trace_uncorr_prot_err(cxlmd, data->ras_cap);
+> +		cxl_cper_trace_uncorr_prot_err(port, dport, pci_get_dsn(pdev),
+> +					       &data->ras_cap);
+>  }
+>  EXPORT_SYMBOL_GPL(cxl_cper_handle_prot_err);
+>  
+> @@ -240,14 +195,14 @@ void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port, struct cxl_dpo
+>  		return;
+>  	}
+>  
+> -	if (cxl_handle_ras(port, dport, ras_base))
+> +	if (cxl_handle_ras(port, dport, ras_base, pci_get_dsn(pdev)))
+>  		panic("CXL cachemem error");
+>  
+>  	dev_dbg(&pdev->dev,
+>  		"CXL UCE signaled but no CXL RAS status bits set\n");
+>  }
+>  
+> -void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
+> +void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base, u64 serial)
+>  {
+>  	u32 status;
+>  	void __iomem *addr;
+> @@ -259,12 +214,7 @@ void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __i
+>  	status = readl(addr);
+>  	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
+>  		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
+> -		if (is_cxl_endpoint(port))
+> -			trace_cxl_aer_correctable_error(to_cxl_memdev(port->uport_dev), status);
+> -		else if (dport)
+> -			trace_cxl_port_aer_correctable_error(dport->dport_dev, status);
+> -		else
+> -			trace_cxl_port_aer_correctable_error(port->uport_dev, status);
+> +		trace_cxl_aer_correctable_error(port, dport, status, serial);
+>  	}
+>  }
+>  
+> @@ -289,7 +239,8 @@ static void header_log_copy(void __iomem *ras_base, u32 *log)
+>   * Log the state of the RAS status registers and prepare them to log the
+>   * next error status. Return 1 if reset needed.
+>   */
+> -bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
+> +bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport,
+> +		    void __iomem *ras_base, u64 serial)
+>  {
+>  	u32 hl[CXL_HEADERLOG_TRACE_SIZE_U32] = {};
+>  	void __iomem *addr;
+> @@ -316,12 +267,7 @@ bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem
+>  	}
+>  
+>  	header_log_copy(ras_base, hl);
+> -	if (is_cxl_endpoint(port))
+> -		trace_cxl_aer_uncorrectable_error(to_cxl_memdev(port->uport_dev), status, fe, hl);
+> -	else if (dport)
+> -		trace_cxl_port_aer_uncorrectable_error(dport->dport_dev, status, fe, hl);
+> -	else
+> -		trace_cxl_port_aer_uncorrectable_error(port->uport_dev, status, fe, hl);
+> +	trace_cxl_aer_uncorrectable_error(port, dport, status, fe, hl, serial);
+>  
+>  	writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
+>  
+> @@ -360,7 +306,8 @@ pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+>  		 * cases below handle AER recovery for devices without active
+>  		 * CXL.mem traffic.
+>  		 */
+> -		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
+> +		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL),
+> +				    pci_get_dsn(pdev));
+>  	}
+>  
+>  	/*
+> @@ -392,7 +339,7 @@ static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
+>  				   struct cxl_dport *dport, int severity)
+>  {
+>  	if (severity == AER_CORRECTABLE)
+> -		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport));
+> +		cxl_handle_cor_ras(port, dport, to_ras_base(port, dport), pci_get_dsn(pdev));
+>  	else
+>  		cxl_do_recovery(pdev, port, dport);
+>  }
+> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+> index f4b98f2c11a1c..0385d2f4a2f66 100644
+> --- a/drivers/cxl/core/ras_rch.c
+> +++ b/drivers/cxl/core/ras_rch.c
+> @@ -118,7 +118,8 @@ void cxl_handle_rdport_errors(struct pci_dev *pdev)
+>  
+>  	pci_print_aer(pdev, severity, &aer_regs);
+>  	if (severity == AER_CORRECTABLE)
+> -		cxl_handle_cor_ras(dport->port, dport, to_ras_base(port, dport));
+> +		cxl_handle_cor_ras(dport->port, dport, to_ras_base(port, dport),
+> +				   pci_get_dsn(pdev));
+>  	else
+>  		cxl_do_recovery(pdev, dport->port, dport);
+>  }
+> diff --git a/drivers/cxl/core/trace.c b/drivers/cxl/core/trace.c
+> index 7f2a9dd0d0e3f..df42d119c53dd 100644
+> --- a/drivers/cxl/core/trace.c
+> +++ b/drivers/cxl/core/trace.c
+> @@ -2,7 +2,42 @@
+>  /* Copyright(c) 2022 Intel Corporation. All rights reserved. */
+>  
+>  #include <cxl.h>
+> +#include <cxlmem.h>
+>  #include "core.h"
+>  
+> +const char *cxl_trace_memdev_name(struct cxl_port *port)
+> +{
+> +	if (is_cxl_endpoint(port)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
+> +
+> +		return dev_name(&cxlmd->dev);
+> +	}
+> +
+> +	return "";
+> +}
+> +
+> +const char *cxl_trace_host_name(struct cxl_port *port)
+> +{
+> +	if (is_cxl_endpoint(port)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
+> +
+> +		return dev_name(cxlmd->dev.parent);
+> +	}
+> +
+> +	return dev_name(port->uport_dev);
+> +}
+> +
+> +const char *cxl_trace_port_name(struct cxl_port *port)
+> +{
+> +	return dev_name(&port->dev);
+> +}
+> +
+> +const char *cxl_trace_dport_name(struct cxl_dport *dport)
+> +{
+> +	if (dport)
+> +		return dev_name(dport->dport_dev);
+> +	return "";
+> +}
+> +
+>  #define CREATE_TRACE_POINTS
+>  #include "trace.h"
+> diff --git a/drivers/cxl/core/trace.h b/drivers/cxl/core/trace.h
+> index d37876096dd7c..910aceb2ca3ab 100644
+> --- a/drivers/cxl/core/trace.h
+> +++ b/drivers/cxl/core/trace.h
+> @@ -48,44 +48,15 @@
+>  	{ CXL_RAS_UC_IDE_RX_ERR, "IDE Rx Error" }			  \
+>  )
+>  
+> -TRACE_EVENT(cxl_port_aer_uncorrectable_error,
+> -	TP_PROTO(struct device *dev, u32 status, u32 fe, u32 *hl),
+> -	TP_ARGS(dev, status, fe, hl),
+> -	TP_STRUCT__entry(
+> -		__string(device, dev_name(dev))
+> -		__string(host, dev_name(dev->parent))
+> -		__field(u32, status)
+> -		__field(u32, first_error)
+> -		__array(u32, header_log, CXL_HEADERLOG_TRACE_SIZE_U32)
+> -	),
+> -	TP_fast_assign(
+> -		__assign_str(device);
+> -		__assign_str(host);
+> -		__entry->status = status;
+> -		__entry->first_error = fe;
+> -		/*
+> -		 * Embed headerlog data for user app retrieval and parsing,
+> -		 * but no need to print in the trace buffer. Only
+> -		 * CXL_HEADERLOG_SIZE_U32 (16) dwords are hardware data;
+> -		 * the remaining entries preserve the 512-byte ABI layout
+> -		 * rasdaemon depends on and are zero-filled by the caller.
+> -		 */
+> -		memcpy(__entry->header_log, hl,
+> -			CXL_HEADERLOG_TRACE_SIZE_U32 * sizeof(u32));
+> -	),
+> -	TP_printk("device=%s host=%s status: '%s' first_error: '%s'",
+> -		  __get_str(device), __get_str(host),
+> -		  show_uc_errs(__entry->status),
+> -		  show_uc_errs(__entry->first_error)
+> -	)
+> -);
+> -
+>  TRACE_EVENT(cxl_aer_uncorrectable_error,
+> -	TP_PROTO(const struct cxl_memdev *cxlmd, u32 status, u32 fe, u32 *hl),
+> -	TP_ARGS(cxlmd, status, fe, hl),
+> +	TP_PROTO(struct cxl_port *port, struct cxl_dport *dport,
+> +		 u32 status, u32 fe, u32 *hl, u64 serial),
+> +	TP_ARGS(port, dport, status, fe, hl, serial),
+>  	TP_STRUCT__entry(
+> -		__string(memdev, dev_name(&cxlmd->dev))
+> -		__string(host, dev_name(cxlmd->dev.parent))
+> +		__string(memdev, cxl_trace_memdev_name(port))
+> +		__string(port, cxl_trace_port_name(port))
+> +		__string(dport, cxl_trace_dport_name(dport))
+> +		__string(host, cxl_trace_host_name(port))
+>  		__field(u64, serial)
+>  		__field(u32, status)
+>  		__field(u32, first_error)
+> @@ -93,8 +64,10 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
+>  	),
+>  	TP_fast_assign(
+>  		__assign_str(memdev);
+> +		__assign_str(port);
+> +		__assign_str(dport);
+>  		__assign_str(host);
+> -		__entry->serial = cxlmd->cxlds->serial;
+> +		__entry->serial = serial;
+>  		__entry->status = status;
+>  		__entry->first_error = fe;
+>  		/*
+> @@ -107,8 +80,9 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
+>  		memcpy(__entry->header_log, hl,
+>  			CXL_HEADERLOG_TRACE_SIZE_U32 * sizeof(u32));
+>  	),
+> -	TP_printk("memdev=%s host=%s serial=%lld: status: '%s' first_error: '%s'",
+> -		  __get_str(memdev), __get_str(host), __entry->serial,
+> +	TP_printk("memdev=%s port=%s dport=%s host=%s serial=%lld: status: '%s' first_error: '%s'",
+> +		  __get_str(memdev), __get_str(port), __get_str(dport),
+> +		  __get_str(host), __entry->serial,
+>  		  show_uc_errs(__entry->status),
+>  		  show_uc_errs(__entry->first_error)
+>  	)
+> @@ -132,42 +106,29 @@ TRACE_EVENT(cxl_aer_uncorrectable_error,
+>  	{ CXL_RAS_CE_PHYS_LAYER_ERR, "Received Error From Physical Layer" }	\
+>  )
+>  
+> -TRACE_EVENT(cxl_port_aer_correctable_error,
+> -	TP_PROTO(struct device *dev, u32 status),
+> -	TP_ARGS(dev, status),
+> -	TP_STRUCT__entry(
+> -		__string(device, dev_name(dev))
+> -		__string(host, dev_name(dev->parent))
+> -		__field(u32, status)
+> -	),
+> -	TP_fast_assign(
+> -		__assign_str(device);
+> -		__assign_str(host);
+> -		__entry->status = status;
+> -	),
+> -	TP_printk("device=%s host=%s status='%s'",
+> -		  __get_str(device), __get_str(host),
+> -		  show_ce_errs(__entry->status)
+> -	)
+> -);
+> -
+>  TRACE_EVENT(cxl_aer_correctable_error,
+> -	TP_PROTO(const struct cxl_memdev *cxlmd, u32 status),
+> -	TP_ARGS(cxlmd, status),
+> +	TP_PROTO(struct cxl_port *port, struct cxl_dport *dport,
+> +		 u32 status, u64 serial),
+> +	TP_ARGS(port, dport, status, serial),
+>  	TP_STRUCT__entry(
+> -		__string(memdev, dev_name(&cxlmd->dev))
+> -		__string(host, dev_name(cxlmd->dev.parent))
+> +		__string(memdev, cxl_trace_memdev_name(port))
+> +		__string(port, cxl_trace_port_name(port))
+> +		__string(dport, cxl_trace_dport_name(dport))
+> +		__string(host, cxl_trace_host_name(port))
+>  		__field(u64, serial)
+>  		__field(u32, status)
+>  	),
+>  	TP_fast_assign(
+>  		__assign_str(memdev);
+> +		__assign_str(port);
+> +		__assign_str(dport);
+>  		__assign_str(host);
+> -		__entry->serial = cxlmd->cxlds->serial;
+> +		__entry->serial = serial;
+>  		__entry->status = status;
+>  	),
+> -	TP_printk("memdev=%s host=%s serial=%lld: status: '%s'",
+> -		  __get_str(memdev), __get_str(host), __entry->serial,
+> +	TP_printk("memdev=%s port=%s dport=%s host=%s serial=%lld: status: '%s'",
+> +		  __get_str(memdev), __get_str(port), __get_str(dport),
+> +		  __get_str(host), __entry->serial,
+>  		  show_ce_errs(__entry->status)
+>  	)
+>  );
+> diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+> index ed419d0c59f2f..f1ef8b78db18a 100644
+> --- a/drivers/cxl/cxlmem.h
+> +++ b/drivers/cxl/cxlmem.h
+> @@ -125,6 +125,13 @@ static inline int cxl_memdev_attach_region(struct cxl_memdev *cxlmd)
+>  #endif
+>  
+>  struct cxl_memdev *devm_cxl_add_classdev(struct cxl_dev_state *cxlds);
+> +
+> +/* trace-event helpers */
+> +const char *cxl_trace_memdev_name(struct cxl_port *port);
+> +const char *cxl_trace_host_name(struct cxl_port *port);
+> +const char *cxl_trace_port_name(struct cxl_port *port);
+> +const char *cxl_trace_dport_name(struct cxl_dport *dport);
+> +
+>  struct cxl_memdev *__devm_cxl_add_memdev(struct cxl_dev_state *cxlds,
+>  					 const struct cxl_memdev_attach *attach);
+>  int devm_cxl_sanitize_setup_notifier(struct device *host,
 
