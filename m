@@ -1,200 +1,160 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2033F2D739B
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 22:00:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784584852; cv=pass; b=RspiP3PCVV5WNUfw7C9EoVRRXz3CFwKWQHMGGIYLeqlRWoZHOSSgvYaj/crEchIDsUxWroD7A4TPJmPwosxrubf8VeP4fwlSpf+6cazTizkSNljZ/D40r9WK1xgLQiTGMWnJiE1w+Dm0jCi+Q5x+d6xlkxZmdCJSiHfGALNFZWI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784584852; c=relaxed/simple;
-	bh=qeXXYXXoXBC9W4dpH975rfhTdv1IzKjF3KbKsLbRmhY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eB/ZXp79Pn9VghQoPEcaxzL8TC4yhIIPQV/jjncDvqm/7jeAcRymg++lNthaFwnieJIxN6pgvni6dK26+2w2GaJ8QAtjfgbM8ECjns1YSKBXWc/gQQFvTJ6X4LWD5DDmJNAz2RWd/OV0eHQ5j8V98Nd3l0Irrj+6f75LGPMS2DE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Q3bgXtky; arc=pass smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E6D839D6DA;
+	Mon, 20 Jul 2026 22:02:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784584949; cv=none; b=K9oiteYf90I7TyhmIrFFSmaSpCOYecapjP1MazsOiCN2qGw430iCH5T0HOhFwySsUEhaFJIusjFuyIRZRPO5G5Vf2I/9ncMSynb19K/nVRYCisZQtkedxlmhMWrtU+IDd8IuDCKr/aynSv+vXka7ouC9d+sYW/Fth1fAajcMgi8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784584949; c=relaxed/simple;
+	bh=ElidOuKi/lhVoMHuisWulB2Ej7l5oNTcYCEHGdMRC/4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Sq6vg7SiziXTwletvG8t23xWYYCUJgULqYFzqzX9uH8TFAFYth2HwKe/hEV6unluHwzj8AhpWBInbpa50RYfni3UMfUAI6HOq9ZaAHQnI5Ayf1ZJIhkjHSyWFIrm3ZKJAmiAAh0RBjwOOLU2gaUdmhI9vkBLFmdouTQpkTgCY4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+2U5CnU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Q3bgXtky"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-38125cebfdaso8294999a91.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:00:49 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784584849; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XVhPiDapC43Xij4xSPV4SYfEfovE/43VXDxQxqAyc36+jwzFQwt01ffKwxvhUGYmMv
-         06uEgY46VJNSkxShEr4e+QLj4n7Km6hB82QOp77+N69LZNG8kTszNOGfd/CnyPz9zdlC
-         RrxJ5Ihr5JUhMF2MagUFtWleno8s1ep0dTblvXqZmQ9Q2uJfGYtCiJMc9oG6b3yMZFtG
-         x7mRi24T/O2CFN6MNl7rG4a7aPNS7BicvwJFlXmgTpg6gdI+q6XZKozlGckthm/AwX8J
-         7+o+8LLFffOTSy392xEVYVtfwkkd0YgttUYiCkHQloExie/yTA5i06H3zc3vKkztj6W6
-         cw1w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=gj82UvWIC9kB06K4+/XSzH6MrQ6ehsQ00zZOFqHM1MQ=;
-        fh=s2yzvzsHRNI2rYHZcComlAf26mhIiE2fgh9jzLdb+oM=;
-        b=OWWY+mPcqfvvRz2hGqxEGxIJ0h645F8dK6RQhstpD1zUJY0H9gYZHCyHSVAVK7KFf6
-         wd11Wgfiu2GliPZRwbhbFZTntpkazus2kLth1Uf86P0nn3u9p5ArQ8aE5s2RdDxMCCT+
-         e1d5qY8eCEQ78dTmSvMkGPPCs5dO714rJw8U5UsY8nKOg8KoFnktEggykHgvzeZ5jnQ5
-         C9nCt0ALPzhKzbL7//wYKrpoJz2gpUJVvXlE2FnwjKewr99z+4ioupA22jCNGrhkTOdv
-         IkmRJ1ahYOMkKg3xN3B5jzp/Td85s9Ap+13zvK0JdHMA/mzWx5Iwts2H0QQwppQhg4AY
-         c9jQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784584849; x=1785189649; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=gj82UvWIC9kB06K4+/XSzH6MrQ6ehsQ00zZOFqHM1MQ=;
-        b=Q3bgXtkyzflaUSwFiUtY6GhqD8Pgb9NCzdLPnbs6mdWr7CPzFcNFwi0rTnvbn6PGLy
-         sMuhWZoxHQEuBRAQfYe2+Ba6J2lcwlSDIZUDY6SJwako+hSXlC5Umcpwj3bJkaSstKIo
-         HOgQNnxXcj0sp73aSCT43pxrvcNybpKVGVs80gzosfwyyWGFLhAf+uvKEkdhNGR+iJSb
-         aRFKRavFsdZCrk8gMc5WXlhZJksddF/Lbwu9ZB6v8ERwar/WevMtbOddQav1bAtxx0cG
-         Xps0R+7o5qi3UKpq4IWG0Cgu+3o+KejGI8typMDidiK8XCpy/YnYp9YqD1zqMyPtjfXs
-         UJlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784584849; x=1785189649;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gj82UvWIC9kB06K4+/XSzH6MrQ6ehsQ00zZOFqHM1MQ=;
-        b=VFDbUX+XTJQrOf984AR5aEl+XTKnD+3FrRd9P99CYZlW0ptBkAzRSLzD2mUqbqrtcN
-         8WYIhO3DbIhv11Vo024ehCSm7VN0XE14RKHDv2KTZ3BE1vEp0jduqi66mhbrftJSR1dz
-         7HgcOnyhK4dReLWnHakvNgNXl6BiQOtyLsxu+x82CqeUMzSiArZFGnCTLWQnd8u5nYBu
-         KSBYE4TPdahywKRc0DXH2XYTrnsnlXZ4cd1w6V2jZ+cT3p/4qAuM/CfCQ/sgGDF3IwaY
-         ssovoQjL9HpUFVmZmsEkRm/2KimXYvggRPGvqBsOswat1ZKNg0TM1FDgoEmEH1HPk6ZK
-         IJew==
-X-Forwarded-Encrypted: i=1; AHgh+Rp9vaoHwtwvrByfGeEIbhJLEFXaeVk7t2W8XNp7fBlmB3Z+jbmG+KiSKIOoLLcrWOrBlj1eJmivt+k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwG6OBrQMa/VA6q72V0oFosOIStTBRzrfbINi9U2AuZ5W1oi1VW
-	MqQb/rGxTYkFuQtFoTELZysjX/b19lD5TnkHZUAr2teN/fqyVuq829Dc2JxqnrN/dRGfiqttHpE
-	3tNVh9x/rseq0bv6iJT8UFq9Mtt7o42Hu3xGZ4pJw
-X-Gm-Gg: AR+sD13vZf+PxK2x7ZekDSHqgCSGxHcgvXaTSfDf/hXe8CQDqzNT+a9QLYwSdi0coh9
-	zRg037vO+gYWGsJszReh1i8OobcqrA6iJSa+1qKD5rTns+gtX6XllGNQgvoo0LeppZicIzQA3mU
-	+a8ZGsZeb6uy0QpKVTfVXg3tyLvRMyFi6J3KlA7c++75YKy943in6yN1MT0W78hgMDWoazcQMKn
-	b6iigTLhz0WiOhY1/IbS/fHMc6Px4OFG27RihC1g6o4jSJYzGX5a4EOzgZ/ng==
-X-Received: by 2002:a17:90b:1dca:b0:38d:ef48:b04 with SMTP id
- 98e67ed59e1d1-38e4b454d1cmr17323817a91.10.1784584848356; Mon, 20 Jul 2026
- 15:00:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+2U5CnU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47AB61F000E9;
+	Mon, 20 Jul 2026 22:02:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784584947;
+	bh=6cs7LhaOrHnB/OaGU/+xy3diNyVqHofixZTfSSyjrGs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=a+2U5CnUbrj+JzvFAXU+vwi4g6TkNykWxDqU1QodrcuosBXdGMdV5IKvLI5ADTTEB
+	 ZAXpIVMzHuvIc4ET6+IHyKMbJjYdZFXC/LdVSBIBFTi9ngKoaPF6fyecRUAjO80NHk
+	 vv4lQ098TM28m5u8iZzmAy0x/xDaZAO7pvPS0eZnkTnSYFkjOwkYI+JlvoswH0OXSZ
+	 pgbNN2KlkFoALigw4h1AbtEpE1WIL8Y0nFBMJUk0w8TEMj4UxvdN+NtSiHRKCWx3Pg
+	 TmycMTeyZM1RZEbIULPT/XeBndPmudjGkE5d8RV9gC9oPQQ59hPbdlstiUXLbjK5b6
+	 94RCWGg8Vyi9A==
+Date: Mon, 20 Jul 2026 23:02:19 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
+ Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
+ Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
+ <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
+ <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
+ <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
+ Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
+ <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
+ <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
+ <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
+ <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
+ Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
+ Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
+ <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v18 04/13] cxl: Rename find_cxl_port() to
+ find_cxl_port_by_dport()
+Message-ID: <20260720230219.632420c1@jic23-huawei>
+In-Reply-To: <20260717222706.3540281-5-terry.bowman@amd.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+	<20260717222706.3540281-5-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-4-dmatlack@google.com>
- <20260717163820.6bc8c13b@shazbot.org>
-In-Reply-To: <20260717163820.6bc8c13b@shazbot.org>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 20 Jul 2026 15:00:21 -0700
-X-Gm-Features: AUfX_mzNR0w-MD4Mb6dfdU632NpNdotxFCmghB3mJDm5NOOEi_E54XencSYW9rk
-Message-ID: <CALzav=eQ-0rbxh6Eekbt4zUoNGNZc_THmSCvVWVwE3om1BPtdw@mail.gmail.com>
-Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI devices
-To: Alex Williamson <alex@shazbot.org>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 17, 2026 at 3:38=E2=80=AFPM Alex Williamson <alex@shazbot.org> =
-wrote:
->
-> On Fri, 10 Jul 2026 21:26:06 +0000
-> David Matlack <dmatlack@google.com> wrote:
->
-> > @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev=
-)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
-> >
-> > +static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
-> > +{
-> > +     struct pci_flb_incoming *incoming =3D NULL;
-> > +     int ret;
-> > +
-> > +     ret =3D liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **=
-)&incoming);
-> > +
-> > +     /* Live Update is not enabled. */
-> > +     if (ret =3D=3D -EOPNOTSUPP)
-> > +             return NULL;
-> > +
-> > +     /* Live Update is enabled, but there is no incoming FLB data. */
-> > +     if (ret =3D=3D -ENODATA)
-> > +             return NULL;
-> > +
-> > +     /*
-> > +      * Live Update is enabled and there is incoming FLB data, but non=
-e of it
-> > +      * matches pci_liveupdate_flb.compatible.
-> > +      *
-> > +      * This could mean that no PCI FLB data was passed by the previou=
-s
-> > +      * kernel, but it could also mean the previous kernel used a diff=
-erent
-> > +      * compatibility string (i.e. a different ABI).
-> > +      */
-> > +     if (ret =3D=3D -ENOENT) {
-> > +             pr_info_once("No incoming FLB matched %s\n", pci_liveupda=
-te_flb.compatible);
-> > +             return NULL;
-> > +     }
-> > +
-> > +     /*
-> > +      * There is incoming FLB data that matches pci_liveupdate_flb.com=
-patible
-> > +      * but it cannot be retrieved.
-> > +      */
-> > +     if (ret)
-> > +             panic("Failed to retrieve incoming FLB data (%d)\n", ret)=
-;
-> > +
-> > +     return incoming;
-> > +}
->
-> I'm having trouble following the error escalation here.  What's
-> fundamentally the difference between FLB data being provided and not
-> compatible (subtle log message) versus FLB data being provided and
-> compatible but we cannot access it (panic!)?
+On Fri, 17 Jul 2026 17:26:57 -0500
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-There is no fundamental difference IMO and I think we should handle
-them the same way (panic). The problem is the PCI core cannot actually
-distinguish between "PCI FLB provided and not compatible" (should
-panic) and "no PCI FLB provided" (should log). I would like to propose
-changes to LUO so that the FLB handlers can detect the former
-situation but that requires some non-trivial work that I didn't want
-to block on.
+> From: Dan Williams <djbw@kernel.org>
+> 
+> find_cxl_port() and find_cxl_port_by_uport() are internal port lookup
+> functions that search the CXL bus by dport and uport respectively, but
+> their names do not make the lookup method clear.
+> 
+> Rename find_cxl_port() to find_cxl_port_by_dport() to make the lookup
+> method explicit and consistent with find_cxl_port_by_uport(). Both
+> functions remain static to port.c; the upcoming patch that adds the
+> first cross-file caller will widen their scope.
 
-For now, I guess you could say it is up to the user to not perform
-Live Update between incompatible versions. I can update the
-documentation.
+Could have mentioned the __ one, but it is fairly obvious why you did
+that even without saying it.
 
->
-> Don't both suggest devices are running but we can't get their FLB data
-> to continue letting them run?
->
-> The errno interpretation is also slightly different than the comment
-> above liveupdate_flb_get_incoming():
->
->  * Return: 0 on success, or a negative errno on failure. -ENODATA means n=
-o
->  * incoming FLB data, -ENOENT means specific flb not found in the incomin=
-g
->  * data, -ENODEV if the FLB's module is unloading, and -EOPNOTSUPP when
->  * live update is disabled or not configured.
+Nice improvement
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
-I think the only disagreement is the lack of specific -ENODEV
-handling. Is that what you are referring to?
+> 
+> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
+> 
+> ---
+> 
+> Changes in v17 -> v18:
+> - New commit
+> ---
+>  drivers/cxl/core/port.c | 20 ++++++++++++++------
+>  1 file changed, 14 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index f90f899c31d07..cadb51f70f854 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -1379,7 +1379,7 @@ static int match_port_by_dport(struct device *dev, const void *data)
+>  	return dport != NULL;
+>  }
+>  
+> -static struct cxl_port *__find_cxl_port(struct cxl_find_port_ctx *ctx)
+> +static struct cxl_port *__find_cxl_port_by_dport(struct cxl_find_port_ctx *ctx)
+>  {
+>  	struct device *dev;
+>  
+> @@ -1392,8 +1392,16 @@ static struct cxl_port *__find_cxl_port(struct cxl_find_port_ctx *ctx)
+>  	return NULL;
+>  }
+>  
+> -static struct cxl_port *find_cxl_port(struct device *dport_dev,
+> -				      struct cxl_dport **dport)
+> +/**
+> + * find_cxl_port_by_dport - find a cxl_port by one of its targets
+> + * @dport_dev: device representing the dport target
+> + * @dport: optional output of the 'struct cxl_dport' companion of the @dport_dev
+> + *
+> + * Return a 'struct cxl_port' with an elevated reference if found. Use
+> + * __free(put_cxl_port) to release.
+> + */
+> +static struct cxl_port *find_cxl_port_by_dport(struct device *dport_dev,
+> +					       struct cxl_dport **dport)
+>  {
+>  	struct cxl_find_port_ctx ctx = {
+>  		.dport_dev = dport_dev,
+> @@ -1401,7 +1409,7 @@ static struct cxl_port *find_cxl_port(struct device *dport_dev,
+>  	};
+>  	struct cxl_port *port;
+>  
+> -	port = __find_cxl_port(&ctx);
+> +	port = __find_cxl_port_by_dport(&ctx);
+>  	return port;
+>  }
+>  
+> @@ -1895,14 +1903,14 @@ EXPORT_SYMBOL_NS_GPL(devm_cxl_enumerate_ports, "CXL");
+>  struct cxl_port *cxl_pci_find_port(struct pci_dev *pdev,
+>  				   struct cxl_dport **dport)
+>  {
+> -	return find_cxl_port(pdev->dev.parent, dport);
+> +	return find_cxl_port_by_dport(pdev->dev.parent, dport);
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_pci_find_port, "CXL");
+>  
+>  struct cxl_port *cxl_mem_find_port(struct cxl_memdev *cxlmd,
+>  				   struct cxl_dport **dport)
+>  {
+> -	return find_cxl_port(grandparent(&cxlmd->dev), dport);
+> +	return find_cxl_port_by_dport(grandparent(&cxlmd->dev), dport);
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_mem_find_port, "CXL");
+>  
 
->
-> Thanks,
-> Alex
