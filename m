@@ -1,311 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 543D62ECE91;
-	Mon, 20 Jul 2026 23:05:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784588729; cv=none; b=JJID82zsAMegXU1Q69twXAyLfdX29sPlXU4dtEZaW/JMZ2z/Rr3Fk+vGJYMMTf7QmJz6CTeyUjHkvN+uDgkVKzbCVLVbDmY5EnmyEnMtqymCqc9FU0kKN6R0wBW7cuUGkNK3W5X8/bDDtS0qd4mQjn1/l5CjYrzBbqUJuCC2Sbk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784588729; c=relaxed/simple;
-	bh=8ww8aQhPpDoaqU/Qov5sc08O31g1RZF1Tr58KvZE1Pk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KeGHRRu4nALIOOMa3CkvyHeZlbEE9fllbnV0JYM06oZID1mx6uURO8I+DrdZZ2a/aOUt4S9lif5WPeLhyCkuq2HBZjdl9rmyJau66vqH/8TahMsqtbgJVNNkrvFqXULMBfvoQjOd16t7SYI5jxKrbvfxhfSrD4ydKrf8/L7DgXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGbbjpW6; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB617431A4E
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 23:08:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784588897; cv=pass; b=go0y3TykoKaX+8x8+p5MTelwDRrWbY8k69osUBxNqNltaa3T2iAZie/rYkrcWmGhLrX9Mhspsim/BwU2ZbA6q/s0HyBnyUu2MMCxcbHbojgQRDOLhTF+AiLGKeH47VEBWDi3XdvCNWnCo0Vrlp5K86Uz9yCZmdbH/n5j2SNS7/o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784588897; c=relaxed/simple;
+	bh=RJckoFrJ/AFTsMTnla+l6jc1ydOdgDCm7q2LZm4mL/A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FvZRu3fruz5+TJFJA9bbdA7ZYUILEPGtrqv2BtpIf7qcfaDR1kGJxhpjDknn26jpkWhz99Ytt7KYGNuWagf8iNl3lu+VXFSUfaJIQE4M1QD4XzHDBbRXp36QYpkNrWsA6x902f/ASjYhTtgAvhExR03RJkCGUmxuXRzwz+9w/mY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aDo7dqBB; arc=pass smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGbbjpW6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80F791F00A3A;
-	Mon, 20 Jul 2026 23:05:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784588727;
-	bh=Xckd9LlJcGnoo5QPMrsdi207dxXBfcdM5AJKhzN03vU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=QGbbjpW67WmAg0euoY5rBVXDrKHaFF+B5cMM+1l6kDrgsX2uR6t5EFa+5AFpBBjKV
-	 Px5rdf/tGZKQFRcJBMzrkgZE1n1gLrACRVvngV07tv//BcxSO47qduEQPIhltVoNI6
-	 XjisgSP/UgzEkCtZJ+YepHWCVmx00ZlhKn7XSbISIMsqAyoFrcxqmvHPeFVX2Ps/u3
-	 cZ2G4QdSEc+yOLWZj5H3aQDHfT3JBD6gVmmxAzZSmdPZMcydaEMB8w5LjD1GqH7mT9
-	 q39tpJL5OdaaKGVpYhpOIPH3lpymdxW4IbpWxOBmaqIymedawW/Vrae35/BvIA4g5D
-	 V8yfdXIXxLJOQ==
-Date: Tue, 21 Jul 2026 00:05:20 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
- "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
- Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
- Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
- Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
- <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
- <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
- <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
- Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
- <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
- <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
- <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
- <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
- Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
- Shuah Khan <skhan@linuxfoundation.org>, Shuai Xue
- <xueshuai@linux.alibaba.com>, Smita Koralahalli
- <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v18 06/13] PCI: Establish common CXL Port protocol error
- flow
-Message-ID: <20260721000520.00339b52@jic23-huawei>
-In-Reply-To: <20260717222706.3540281-7-terry.bowman@amd.com>
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
-	<20260717222706.3540281-7-terry.bowman@amd.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aDo7dqBB"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-38dcbade417so8833009a91.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 16:08:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784588895; cv=none;
+        d=google.com; s=arc-20260327;
+        b=bLLeFjNwG0Lg0rPL7oD21QIzx06kXGNgJkw4ealXLdgjDgWhadtuZ6zUjJCjm8hEtN
+         EmIPSu4WEt+cEPnSUn6ggssusN//8YtAO8gKCbfYrFBw6/jrhkb/45lUVe+Tm+ByTWs5
+         lgDYG/Tacu1o0jNuDNvDfKZzFrHZr4y9jnxbl+EodeHkTAYMOv8XTx4RKuwWgtpXId85
+         1MnDw5kmWBoafmJ7uFbisSVbzk0XK8nOykamwwghMw4ENNXo1uMVEHVXsTWwZ6vjFigv
+         x6DWUMEZzyrdyQw4ptkNQuTgaxR4JDRmZlpxMXwVUgbqyd577JJ+VU6UL8QzaC27WUhZ
+         EH+A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=mSz2hdMIpgZEgySIqZijvekD49+PJVVZ/pNOTGmHIyg=;
+        fh=WBxs8b7OeuXKpPxwgTqF6iAm/KmhyWXlgQxFeFbV6to=;
+        b=CxO2Ke3/cJ8qWe33dYf31jgDyfLzej8MSqOnedeHbk6RYSlSPv5PwpYUq2qWDOGSOR
+         o93gNjDp4EANwgAduixalt71JAn3oWr6G5xRJnZuQcHC5Z9hXG1wpeh4hfP1neyROeqe
+         MM2eSnRgmHRRWMp2g6x8QQ+ZgxquXTRrem9ESskVDBEMptBQSG86By5ScuyVITeCL1+T
+         02nZeh3b0GBq3IRZ8LXRgJEe4TY/RbJaWLFeDu7m7Jex1hd8T/HUG/MHVQ9W4V5vqbil
+         1lEbaW+BTVpZUNq8NSiSLY/gkMVKf54rfSj9RkNCjEfhsVm7b2HPfOFwZ5BNA3E2kamQ
+         OPKw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784588895; x=1785193695; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=mSz2hdMIpgZEgySIqZijvekD49+PJVVZ/pNOTGmHIyg=;
+        b=aDo7dqBB6S9M+oIR8b6iQLzFv6bIKQregAEY/2oOZRrCaipIJbPmGz5ey9ViC8ucyS
+         Is5qZvwxshFtzZSX5Ji5R5o7x0CF8E0qWjL7pW7leKs2DXy5zPSC+WRNE6w9PJBjCbuj
+         uqUH3I7N0VimMPqvZxHuqab7vsOxBYUaOVaTOqFZ0/YrEXeOUrRh5MerQPLOZnw2u4Mm
+         QccIicXjmbzdmu/aam9saE6zFVp1XAbIFBxzSjLYJENIwHEn/1MaVSgSfdWQ9th6E8dQ
+         m1GMvI99cZLigaKCaAtP4lPr6gTcIyyEy7ie0ErjndTZcme8rRQCJIe91ifxewDjlwD9
+         RQkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784588895; x=1785193695;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mSz2hdMIpgZEgySIqZijvekD49+PJVVZ/pNOTGmHIyg=;
+        b=naiBQli2WG3YtzUZjbM1byi6OgVBbFedOZfSNIZXw6X9xCduW9GSwUPrj1ItyuA/kI
+         pd04BdiMWnJZRswSl88V1z+zo4lgDFwqde1pyI3R7zjbCqocRAC1vRBVfGbWeXLEfKPP
+         FwFbHM4Xa9Z2fttSq6JqdzngXy3+ARH+pd3EWHXRtt8ZgefNh797ixI9S0xdL40D4Ff0
+         jlWzZtHcG5RmVyXldPczxULjSUuC4KQmi0MmHhahGGG2pb2Y1huVLEBAukGbywVAV4Fl
+         A7Fb6sE3e7wgUMzIQCi12Bw1E9NY8xTbO2jzRLYQBWCG1rdiOpIwyXsugmp41ga3Wtto
+         /WXw==
+X-Forwarded-Encrypted: i=1; AHgh+RpWrOCQArK46m4D//yKl3XmIhj/idvU59Kxh/yVOofaOBwLLHwUuFgI4MgSlJ5SLAIRSu1VefC1CVo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyH9VelzLm3JIFLr68qy+gMYOkMsHuP/ts+2Ard9TiDwekJFZc+
+	enCbUnabwXDNPhCQig79vhKu7YI+cqQKmFTqFzzbptI243XoaLJ9qlh2F9Yde7NhY9skZNKnK9w
+	S4WvvoxP8gm1vcRbuRJCmx93EbOHAxx206vTGlZxI
+X-Gm-Gg: AR+sD10/MbHqa52W+yO2Wgv366o9YbYdgY5umX5EKmodt5y+JGnamWE59l8cHKAthy8
+	sujFDgMlk4eZ2QJsfy/YWEbgHy88w1Jv3+dYf2z85vkemLhHmi3vuvpDeBm4m0qxqi92tcAK93X
+	6foNJgUiCOeOLrVjJ2OxFgKVss/JoqroLTatG7cQa1XJpPimk3kCAHwJ4pv63szmNTt7NpI6cYF
+	hvNxVXE7teROBe+xRVjUXUxlLMvD2X8F13aL6k+khtkXzsAdtMp5XjDOv5Urg==
+X-Received: by 2002:a17:90b:2703:b0:37f:9cdf:f0ab with SMTP id
+ 98e67ed59e1d1-38e4b53898fmr16254011a91.26.1784588894581; Mon, 20 Jul 2026
+ 16:08:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-4-dmatlack@google.com>
+ <178432481253.189683.3297727348836286619.b4-review@b4> <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
+ <178458744511.332171.13770778781241262180.b4-reply@b4>
+In-Reply-To: <178458744511.332171.13770778781241262180.b4-reply@b4>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 20 Jul 2026 16:07:47 -0700
+X-Gm-Features: AUfX_mw2b0MAZqdoOYi7muREPJHZr01uIkETTrQ-nKl4vTsYC1YtP48BRUt3g1Y
+Message-ID: <CALzav=fjTOnyg2++GFFe5B17rHqNCWW=afjsD0A=EEjycPW7Sg@mail.gmail.com>
+Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI devices
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
+	Parav Pandit <parav@nvidia.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 17 Jul 2026 17:26:59 -0500
-Terry Bowman <terry.bowman@amd.com> wrote:
+On Mon, Jul 20, 2026 at 3:44=E2=80=AFPM Pasha Tatashin
+<pasha.tatashin@soleen.com> wrote:
+>
+> On 2026-07-20 14:54:51-07:00, David Matlack wrote:
+> > On Fri, Jul 17, 2026 at 2:47=E2=80=AFPM Pasha Tatashin
+> > <pasha.tatashin@soleen.com> wrote:
+> >
+> > > On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.co=
+m> wrote:
+> > >
+> > > I am confused by this. Each preserved PCI device must have an associa=
+ted
+> > > FD preserved with it via LUO. I.e., vfiofd would need to be preserved=
+. If
+> > > the vfiofd was not reclaimed, and finish is not possible, that vfiofd
+> > > would still be owned by LUO, and therefore PCI FLB refcount would sta=
+y
+> > > positive.
+> > >
+> > > However, if finish is possible, and this is the last vfiofd that is
+> > > finished, FLB will be freed as soon as the reference count reaches ze=
+ro,
+> > > which I would think is the expected behavior.
+> > >
+> > > What is the point of holding a reference here, instead of only for th=
+e
+> > > duration of FLB access, i.e. to make sure we are accessing a valid da=
+ta?
+> >
+> > The duration of the access is from here until pci_liveupdate_finish()
+> > because that it when the pointer (dev->liveupdate.incoming) is
+> > cleared. So that is why the PCI core holds the reference from here
+> > until pci_liveupdate_finish().
+> >
+> > We could avoid this by deleteing dev->liveupdate.incoming and,
+> > instead, fetching the incoming FLB and doing the xarray lookup every
+> > atime the PCI core needs to access the device's incoming ser struct,
+> > but that would be inefficient.
+>
+> Thanks for the explanation. As I understand, the most straightforward
+> way to avoid holding the permanent reference is indeed to delete
+> dev->liveupdate.incoming entirely and perform an xarray lookup on every
+> access, like this:
+>
+> bool pci_liveupdate_is_incoming(struct pci_dev *dev)
+> {
+>         ...
+>         incoming =3D pci_liveupdate_flb_get_incoming();
+>         ...
+>         dev_ser =3D xa_load(&incoming->xa, key);
+>         ...
+>         pci_liveupdate_flb_put_incoming();
+>         return dev_ser && dev_ser->refcount > 0;
+> }
+>
+> However, as you note, this is inefficient because it affects every
+> single device and adds lookup overhead to every access (not sure about
+> the actual cost though, xarray access is pretty fast!).
+>
+> We can, however, still avoid tinkering with the lifecycle of the FLB,
+> and instead treat dev->liveupdate.incoming as a "hint" that we validate
+> on access with a fast, liveness check:
 
-> Add CXL protocol error dispatch in handle_error_source() using
-> is_cxl_error() and cxl_forward_error() to route errors through the
-> AER-CXL kfifo. Expand is_cxl_error() from Endpoint-only to include
-> Root Port, Upstream Port, and Downstream Port device types. The
-> producer and consumer go live in the same commit to avoid silently
-> dropping CXL errors during bisect.
+Can you tell me more about your concern about FLB lifetime?
 
-Take a stab at making this description a lot more concise. I'd like
-to just be seeing a very brief summary of flow + clearly highlighting
-of potentially controversial choices.
+The lifetime of the FLB will not be affected by this reference unless
+there is a bug in the driver where it fails to call
+pci_liveupdate_finish() during it's file handler finish callback.
 
-> 
-> For uncorrectable events, call cxl_proto_err_flush() to ensure CXL RAS
-> registers are read, panic policy is applied, and CXL state is cleared
-> before pci_aer_handle_error() drives PCIe recovery. Without the flush,
-> AER recovery can tear down drivers and unmap the CXL RAS iomaps while
-> the kfifo consumer is still reading them. Correctable events do not
-> need the flush and run asynchronously. RCH kfifo support is added in
-> the following patch ("PCI/CXL: Add RCH support to CXL handlers").
-> 
-> Add cxl_handle_proto_error() to dispatch correctable and uncorrectable
-> errors through the CXL RAS helpers. Add cxl_do_recovery() to coordinate
-> uncorrectable recovery. Panic when a UCE is confirmed by a successful
-> CXL RAS status register read. If the RAS registers cannot be read the
-> UCE cannot be confirmed and panic is not triggered. Gate error handling
-> on the port driver being bound to avoid processing errors on disabled
-> devices.
-> 
-> The kfifo consumer holds guard(device)(&port->dev) and checks
-> port->dev.driver before accessing RAS registers, serializing against
-> driver unbind and devm iomap teardown. For UCE, cxl_proto_err_flush()
-> runs the worker synchronously before AER recovery, ensuring the device
-> is present during RAS register access.
-> 
-> Add to_ras_base() to centralize RAS base lookup: dport->regs.ras for
-> Root/Downstream Ports, port->regs.ras for Upstream Ports and Endpoints.
-> Use to_ras_base() to access the CXL devices' RAS registers as it will
-> provide an avenue to inject status simulation during testing.
-> 
-> Add CXL RAS logging in cxl_handle_cor_ras() and cxl_handle_ras(). The
-> existing cxl_cor_error_detected() and cxl_error_detected() AER
-> callbacks remain for all Endpoints and are reworked to use
-> find_cxl_port_by_uport() and to_ras_base(), with UCE now triggering
-> panic unconditionally. These callbacks are further updated in the
-> following patch ("PCI/CXL: Add RCH support to CXL handlers").
-> 
-> Fix a pre-existing race for cxlds between cxl_handle_rdport_errors() and
-> cxl_memdev_shutdown() by holding a cxlmd device scoped_guard() around
-> the rdport call. Release the lock before taking the Port lock to avoid
-> the lock inversion.
-> 
-> Co-developed-by: Dan Williams <djbw@kernel.org>
-> Signed-off-by: Dan Williams <djbw@kernel.org>
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> 
-A few minor things about the code inline.
+>
+> 1. At Setup: In pci_liveupdate_setup_device(), we do the xarray lookup
+> once, cache the pointer in dev->liveupdate.incoming, and immediately
+> call pci_liveupdate_flb_put_incoming(). We do not hold a permanent
+> reference.
+>
+> 2. On Access: When an accessor runs, instead of doing a full xarray
+> lookup, it just validates the cached pointer's liveness by temporarily
+> securing the FLB:
+>
+> static struct pci_flb_incoming *pci_liveupdate_get_incoming(struct pci_de=
+v *dev)
+> {
+>         struct pci_flb_incoming *incoming;
+>
+>         incoming =3D pci_liveupdate_flb_get_incoming();
+>         if (!incoming)
+>                 return NULL;
+>
+>         if (dev->liveupdate.incoming)
+>                 return incoming;
+>
+>         pci_liveupdate_flb_put_incoming();
+>         return NULL;
+> }
+>
+> * If get_incoming() returns NULL (the FLB has already finished/freed),
+>   the hint is invalid and the device is no longer incoming.
 
-Thanks,
+This avoids the xarray lookup but still requires taking the incoming
+FLB mutex twice (once for get and once for put) on every access. And
+if there's no incoming PCI FLB, the LUO will iterate over all incoming
+FLBs under the mutex to find it.
 
-Jonathan
-
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 135f1997e6f4f..b190e69c2d415 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -77,6 +77,36 @@ static int match_memdev_by_parent(struct device *dev, const void *uport)
->  	return 0;
->  }
->  
-> +
-> +/**
-> + * find_cxl_port_by_dev - Use @dev as hint to do a _by_dport or _by_uport lookup
-> + * @dev: generic device that may either be a companion of port or target dport
-> + * @dport: output parameter; set to the matched dport for dport-class
-
-I'd state this is optional.
-
-> + * lookups (Root Port, Downstream Port), NULL otherwise.
-> + *
-> + * Return a 'struct cxl_port' with an elevated reference if found. Use
-> + * __free(put_cxl_port) to release.
-> + */
-> +static struct cxl_port *find_cxl_port_by_dev(struct device *dev, struct cxl_dport **dport)
-> +{
-> +	if (dport)
-> +		*dport = NULL;
-> +	if (!dev_is_pci(dev))
-> +		return NULL;
-> +
-> +	switch (pci_pcie_type(to_pci_dev(dev))) {
-> +	case PCI_EXP_TYPE_ROOT_PORT:
-> +	case PCI_EXP_TYPE_DOWNSTREAM:
-> +		return find_cxl_port_by_dport(dev, dport);
-> +	case PCI_EXP_TYPE_UPSTREAM:
-> +	case PCI_EXP_TYPE_ENDPOINT:
-> +	case PCI_EXP_TYPE_RC_END:
-> +		return find_cxl_port_by_uport(dev);
-> +	}
-> +
-> +	return NULL;
-> +}
-
-
-...
-
-> @@ -270,22 +326,32 @@ bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
->  
->  void cxl_cor_error_detected(struct pci_dev *pdev)
->  {
-> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> -	struct device *dev = &cxlds->cxlmd->dev;
-> +	guard(device)(&pdev->dev);
-> +	if (!pdev->dev.driver)
-> +		return;
-> +
-> +	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
-> +	if (!port)
-> +		return;
-> +
-> +	if (is_cxl_restricted(pdev)) {
-> +		struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> +		struct cxl_memdev *cxlmd = cxlds->cxlmd;
->  
-> -	scoped_guard(device, dev) {
-> -		if (!dev->driver) {
-> +		scoped_guard(device, &cxlmd->dev) {
-> +			cxl_handle_rdport_errors(cxlds);
-> +		}
-
-Unless this gets more complex later you can just use a guard() as exits
-scope here anyway.
-
-> +	}
-> +
-> +	scoped_guard(device, &port->dev) {
-
-Similar here. I haven't read on though for this one so if it's needed
-later just ignore me.
-
-> +		if (!port->dev.driver) {
->  			dev_warn(&pdev->dev,
-> -				 "%s: memdev disabled, abort error handling\n",
-> -				 dev_name(dev));
-> +				 "%s: port disabled, abort error handling\n",
-> +				 dev_name(&port->dev));
->  			return;
->  		}
->  
-> -		if (cxlds->rcd)
-> -			cxl_handle_rdport_errors(cxlds);
-> -
-> -		cxl_handle_cor_ras(&cxlds->cxlmd->dev, cxlmd->endpoint->regs.ras);
-> +		cxl_handle_cor_ras(port->uport_dev, to_ras_base(port, NULL));
->  	}
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
-> @@ -293,42 +359,53 @@ EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
->  pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  				    pci_channel_state_t state)
->  {
-> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-...
->  
-> +	/*
-> +	 * CXL.mem UCE means cache coherency is lost. Continuing risks
-> +	 * silent data corruption across interleaved HDM regions.
-
-It is a problem whether interleave or not.  So maybe just stop
-at corruption.
-
-> +	 */
-> +	if (ue)
-> +		panic("CXL cachemem error");
-
-...
-
-> @@ -338,3 +415,67 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-
-...
-
-> +static void __cxl_proto_err_work_fn(struct cxl_proto_err_work_data *wd)
-> +{
-> +	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_dev(&wd->pdev->dev, NULL);
-> +	if (!port) {
-> +		dev_err_ratelimited(&wd->pdev->dev,
-> +				    "Failed to find parent port device in CXL topology\n");
-> +		return;
-> +	}
-
-I'd put a blank line here.
-
-> +	guard(device)(&port->dev);
-> +	if (!port->dev.driver) {
-> +		dev_err_ratelimited(&port->dev,
-> +				    "Port device is unbound, abort error handling\n");
-> +		return;
-> +	}
-> +
-> +	struct cxl_dport *dport = cxl_find_dport_by_dev(port, &wd->pdev->dev);
-> +	if (!dport && (pci_pcie_type(wd->pdev) == PCI_EXP_TYPE_ROOT_PORT ||
-> +		       pci_pcie_type(wd->pdev) == PCI_EXP_TYPE_DOWNSTREAM)) {
-> +		dev_err_ratelimited(&wd->pdev->dev,
-> +				    "Failed to find dport device in CXL topology\n");
-> +		return;
-> +	}
-> +
-> +	cxl_handle_proto_error(wd->pdev, port, dport, wd->severity);
-> +}
-
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index c5bce25df51cb..2d9d40528e709 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1185,7 +1185,20 @@ static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
->  
->  static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
->  {
-> +	bool cxl_pending = false;
-> +
->  	cxl_rch_handle_error(dev, info);
-> +
-> +	if (is_cxl_error(dev, info))
-> +		cxl_pending |= cxl_forward_error(dev, info);
-
-> +
-> +	/*
-> +	 * Wait for UCE CXL work to complete before AER recovery
-> +	 * tears down the device. CE can run asynchronously.
-> +	 */
-> +	if (cxl_pending && info->severity != AER_CORRECTABLE)
-> +		cxl_proto_err_flush();
-This kind of makes me wonder if the naming of _flush() is clear.
-Normally I'd kind of expect that to be dumping any queued up errors.
-
-Perhaps cxl_proto_err_wait_for_empty() or something like that?
-
-I guess flush_work() set the precedent so I'm too later on this one!
-
-Jonathan
+>
+> * If it returns a valid pointer, the FLB is guaranteed to be alive, so
+>   we can immediately use the cached dev->liveupdate.incoming pointer
+>   without xarray lookups. The accessor then puts the transient
+>   reference when done.
+>
+> 3. In Finish/Cleanup: We can simply clear dev->liveupdate.incoming,
+> and decrement ser->nr_devices.
+>
