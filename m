@@ -1,151 +1,161 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ABC34248A0
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 21:55:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784584520; cv=pass; b=MZrBL3Hy9AO2WjCrhoiVUROylsBk4rMWMa+08B1qk8l43e4/RNsUVrVWBvAqsrNzGPJz8/WmSdIxxjoZjYYAQw1iYcZMHTFXJRco/YswCm61xj/+ky59EDalqYwN4mmBBXX8dX2C0jzFWadbd630dtbwgWSD6TQbigGIL2akW5s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784584520; c=relaxed/simple;
-	bh=D/j1C6kmseQgrsCTCw4oe5cpvUdlEQPiJRprWhYCNGY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jKWsQ8ZIFQ07sXK+V4AWsNCX0Tg37dB70EpZZeK26PmlRa5sCioSD80Ics4YIo33QIC1ycRdpSZVj99FQO45/xjcxlIJbxKG+eItpNvmYPH4fj/MT6rIcwGZESx6hhKG/Vy6xD2LxyVp2ELUUQZ3tES1r+CvWOsflwLFKa7jHMk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HyBpl3yM; arc=pass smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBD342CB1E;
+	Mon, 20 Jul 2026 21:59:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784584793; cv=none; b=JDyd3w3KmurwM5PWWM6itfOe8lbAgOdWg47lHqI52YFWc+FvGQdHu0csyrq7F87kph9nehHLau812XL3IYFJPiGH+anUqCwNrtSFwKhgnnRuG7LixH3MXIWyp2f2mVd5KWbrrgSL7qMFXRKWqrsw+vbZpPKGoKgrVr2zgj3HY0M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784584793; c=relaxed/simple;
+	bh=D0ckuBsCZ74OC823vK3qxIRyTeNiJP9v8oSt51s2Hgk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AiN3FpWWnOSCqcWrwKQRpEqkxQEqPE4IDnm4+/gUzxfvzB72bAj9/mDQxyXL44QJw4zv9Jos/295gEral48j8/X4NIkq7FI069+MsoZLdXQFKkMdgfef8+Ys8ku/euvYXNuIUq/QOhSaVe5jnoRfwYCMP3kqIRdSh1Um1KUMjGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HovYPW6f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HyBpl3yM"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-38dd55ad76cso3369198a91.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 14:55:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784584518; cv=none;
-        d=google.com; s=arc-20260327;
-        b=EtBqIzCdE0I3C0lHmjjfVF+B0GvZOQhn+qmSWBcYQZG8yVUACLDzMDsfaQVbSM1co+
-         V3UrfZmijsbI8CIw/3jWnPmXj2SNnd2qWRf9jMRh3I2Tnj6j2LTlO+mBO5pi7UYaqOBe
-         xk8LsEhWRi2cN8WYbEMPb0ezjh3CE3ABMLQMnJhSskxjkb3hKT/ZygjspuIDAZWDRn/K
-         rEDNdDPllmdfumorDvc5r0OG5tMnSEnFpgAXbNykJG/3czsOF5dlP4bCLHB4r6slVsQH
-         nIt9YdW2bqjw2G9MB6g9yFMEXGA/XR7VWYTm0PevtSkx8OhTZDZwhkJQnSnDNihUNAC7
-         2yxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9mE0sfVA6cta9/M5CvPkkpA0kKt/DbFANSsjRo5aapo=;
-        fh=NCgIJubrFuv+EwvHIXLkRKrmBgXfYLtiRQXT+R4SY70=;
-        b=RcX0n5u9BPysIvSVSzn4jhQIHCGWoDEnPXJWDYwo9lkFvjMkxprmkcOMghCI/e/Ips
-         MAQ6wbGTFE1Horb9paaccw3fvJ8500CwdvH4ZwqWGNqplBpCRHGb/Ok5xNuzTXwHI/Ls
-         YCy8dCZSAo3MhP7AKif0Mohp5BGkqJSWoxezVe8FLNJPvkqPvrG3hQDxj3tD1UNxUEwp
-         JrdeqmxVUN23dAjCV6+DKB48PNOL9Auut4OFMjVS28XQ5/BB5Uzn3q/9OcGEHUF/mxUs
-         wVN82cUJ2t0VMc3h/ThYabYO2Mfa/o1Qw+VvAqlOyDvov4zgLoLFbRoHAnjTJ+TQKWYd
-         2noA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784584518; x=1785189318; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9mE0sfVA6cta9/M5CvPkkpA0kKt/DbFANSsjRo5aapo=;
-        b=HyBpl3yM61QnFkKtCw8LP2AtzFWYKLyLtX9iwY0cdcwHN//wXoZ9CFrKQ3CKsW7Mch
-         UQDLFShbpbST00elNCg296D7gtwMkWqlykU5tYPomdU7qTcuDFI05E2JBpLPqd36imMF
-         v2zbuWKwwsy49/ccoiBayIDxSYL+ps76X+RQrCf5GpZ63gav80UswM9opZ5bJPuj2k0L
-         uO4jbgVf3lpLrkgtaO2TzmUPIPDXFcTPHcCkuu745ItUXVh1+ExuYy9lWyLZ+b486nMc
-         aDeu5sk60qg7hVSFaRMm9pZAGvBSGCdvOTbAwNce3VD6aOCLf27KjKMETSpnsc7QYqyb
-         J8ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784584518; x=1785189318;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9mE0sfVA6cta9/M5CvPkkpA0kKt/DbFANSsjRo5aapo=;
-        b=lzWS32Uyj7CeydylkGVzNayu0F+DmoJHEDRRJtdf69fnE5bapMP+u7b64bzKyaW1c0
-         zfsYp+ji4p/sCQKZ8sIe+tZQqtvvWEHVFGdeNEDtcAT57UiqUwCtCszAZI1qSt86wWS4
-         +vEp5NUaDgY9britFYOwcQa7BV9EfQeb2BwXJXfrU+mD3QK2049f+xM396wEVNlrIIad
-         hKeqo/Atfv6jga2BDHMPqBOfE7lMHKyDtFup0xUYM6EKtCPgH8fY9n0G37lXaNkY3QgO
-         dGC1vKPdki7kA6zsbnb9aY/WPub/6rwMoKR9nUaC0MDZwMnxSK9W21SNPeaVtXl6cOad
-         xnyw==
-X-Forwarded-Encrypted: i=1; AHgh+RoJpviFiX8vHAuy++z3e9Pf8N0lv3lteg/r+h4DNQWIBJJ4KTNgnuzLKN3jCbG3uGyWtzTrgJpEDfA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHiKSWtNjK5xkjkW5B0pjHYtCnhlBqoMVyTSVXx80PDE9i376Z
-	DxD9vvIFRxUsJcUmW0phC27x3UbPakQupGJcukCG920QBrvmw/Hy7h3QbjrFFFR1ORVXCJEQntt
-	FsOAXKcY2eaANFX4u+53On+olgAlWIjac7BzfyXyb
-X-Gm-Gg: AR+sD12Aph+o2n/N/GLDH/IVoBsgVv6UXzNgqo1WV3J0GQwkRAdEqtFdU5D1X3JNUO8
-	fvJ+xpAGN679IWRlwWZ/WVw0+cXroDHjw27ocEeUOsvDIHh6GQAWNHvelqC2TjR7kZScIU+bLwn
-	IvsJcjeipuc+W7/WHZusgju10dTLqvmFvV4z5XUjpBjrGARJUXqpaRxrwNXtEhnXWMl2uABzFt+
-	yuaTbJgrn3UaRSHFx4tj4x4PUV0YcAVO7DMku3jI9Q0kb+iPtQf9aGTYDWmEuvVKT7x659m
-X-Received: by 2002:a17:90b:1d01:b0:380:8bb9:aba9 with SMTP id
- 98e67ed59e1d1-38e3d13426cmr20701271a91.3.1784584518042; Mon, 20 Jul 2026
- 14:55:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HovYPW6f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54BDE1F000E9;
+	Mon, 20 Jul 2026 21:59:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784584792;
+	bh=a6WrH1AIy+EK4Fw2+FOXO+vq75HdWci5vwL+qT5Ta4Y=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=HovYPW6fiGWU66tFqNtu10vR52vWnoSaRI54L1LrC4I0aVd0QRg+vUmQ6KiDtwjvZ
+	 TO0PAWlZsD7CMYmkyByMojv4kkBywjFyKfnIFf6XjlHTQL3slD56ml8qapzjClmrYB
+	 YzG2nKCgab0hIvV9d/PMc1TW867aJRarEZvrWwC5lFJzXZ7JxejAoRn+vBYRzT70lW
+	 9OegIrsEsQVmSHl/qYhSIrqpBfs0u9tKN4DQsAHY/BpMukSI5G59QOS13hx3b8KcvK
+	 buuADXN5TGdAsb0lWmfcBDqebyBB+EegeKhn8uQTzYZNR/Uox5nVmN9jCI2nimSKmQ
+	 kfmWnzUy9zPQg==
+Date: Mon, 20 Jul 2026 22:59:43 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
+ Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
+ Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
+ <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
+ <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
+ <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
+ Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
+ <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
+ <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
+ <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
+ <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
+ Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
+ Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
+ <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v18 03/13] cxl: Tighten CPER kfifo registration API and
+ symbol visibility
+Message-ID: <20260720225943.0415d43c@jic23-huawei>
+In-Reply-To: <20260717222706.3540281-4-terry.bowman@amd.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+	<20260717222706.3540281-4-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-4-dmatlack@google.com>
- <178432481253.189683.3297727348836286619.b4-review@b4>
-In-Reply-To: <178432481253.189683.3297727348836286619.b4-review@b4>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 20 Jul 2026 14:54:51 -0700
-X-Gm-Features: AUfX_mzVY7YuVDoFqhrPV6EULV5udJxArm79VLoT9W377bOVTdCDKuzAWRnUCOk
-Message-ID: <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
-Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI devices
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 17, 2026 at 2:47=E2=80=AFPM Pasha Tatashin
-<pasha.tatashin@soleen.com> wrote:
->
-> On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.com> w=
-rote:
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index 03075ce06ac9..df6a02240aa4 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
-> > @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev=
-)
-> > [ ... skip 76 lines ... ]
-> > +     /*
-> > +      * Hold the ref on the incoming FLB until pci_liveupdate_finish()=
- so
-> > +      * that dev->liveupdate.incoming cannot get freed while the PCI c=
-ore
-> > +      * has a pointer to it. It's better to leak the incoming FLB than=
- do a
-> > +      * use-after-free if driver does not call pci_liveupdate_finish()=
-.
-> > +      */
->
-> I am confused by this. Each preserved PCI device must have an associated
-> FD preserved with it via LUO. I.e., vfiofd would need to be preserved. If
-> the vfiofd was not reclaimed, and finish is not possible, that vfiofd
-> would still be owned by LUO, and therefore PCI FLB refcount would stay
-> positive.
->
-> However, if finish is possible, and this is the last vfiofd that is
-> finished, FLB will be freed as soon as the reference count reaches zero,
-> which I would think is the expected behavior.
->
-> What is the point of holding a reference here, instead of only for the
-> duration of FLB access, i.e. to make sure we are accessing a valid data?
+On Fri, 17 Jul 2026 17:26:56 -0500
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-The duration of the access is from here until pci_liveupdate_finish()
-because that it when the pointer (dev->liveupdate.incoming) is
-cleared. So that is why the PCI core holds the reference from here
-until pci_liveupdate_finish().
+> From: Dan Williams <djbw@kernel.org>
+> 
+Hi Terry, Dan,
 
-We could avoid this by deleteing dev->liveupdate.incoming and,
-instead, fetching the incoming FLB and doing the xarray lookup every
-atime the PCI core needs to access the device's incoming ser struct,
-but that would be inefficient.
+There are a few different things in here. Having them all together
+may make it a little harder to keep track of the different changes.
+
+> Tighten the CPER protocol error kfifo registration API and symbol
+> visibility.
+> 
+> Use EXPORT_SYMBOL_FOR_MODULES() instead of EXPORT_SYMBOL_NS_GPL() for
+> the CPER kfifo registration symbols. This names the consuming module
+> explicitly and gives compile-time enforcement.
+To me this is one patch.
+> 
+> Drop the work_struct argument from the unregister path. Change the
+> WARN_ONCE condition to a NULL check since there is no caller pointer
+> to compare against anymore.
+
+This is one.
+
+> 
+> Change register/unregister return types to void. Flag double registration
+> with WARN_ONCE() inside the lock instead of returning an error.
+Another change.
+
+That covers why for the register, for unregister maybe mention it was
+unchecked anyway.
+
+> 
+> Change cxl_ras_init() to void because there is one consumer and one producer
+> so the error return was unnecessary. Remove the now-dead error check in
+> cxl_core_init().
+This is change
+
+> 
+> Add a diagnostic log when the driver is not bound in
+> cxl_cper_handle_prot_err().
+Unrelated really to all the rest. 
+
+All nice changes and maybe a few of them can be combined but to me this
+is too many in one.  Anyhow I might be letting perfect be enemy of
+good and all that so if others think it should go in as one then
+I'm fine with that.
+
+Trivial thing inline todo with formatting consistency.
+
+> 
+> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
+> 
+> ---
+> 
+> Changes in v17 -> v18:
+> - New patch.
+> ---
+>  drivers/acpi/apei/ghes.c | 32 +++++++++++++++-----------------
+>  drivers/cxl/core/core.h  |  7 ++-----
+>  drivers/cxl/core/port.c  |  6 +-----
+>  drivers/cxl/core/ras.c   | 12 +++++++-----
+>  include/cxl/event.h      | 17 ++++++-----------
+>  5 files changed, 31 insertions(+), 43 deletions(-)
+> 
+> diff --git a/include/cxl/event.h b/include/cxl/event.h
+> index ff97fea718d2c..3471d4f75c025 100644
+> --- a/include/cxl/event.h
+> +++ b/include/cxl/event.h
+> @@ -287,10 +287,10 @@ struct cxl_cper_prot_err_work_data {
+
+> -static inline int cxl_cper_register_prot_err_work(struct work_struct *work)
+> +static inline void cxl_cper_register_prot_err_work(struct work_struct *work)
+>  {
+> -	return 0;
+>  }
+
+I'd go a bit long and move { } up.  Compact stubs are always nice!
+
+
+> -static inline int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+> +static inline void cxl_cper_unregister_prot_err_work(void)
+
+This one is shorter than the one you did it for above!
+
+>  {
+> -	return 0;
+>  }
+>  static inline int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd)
+>  {
+
