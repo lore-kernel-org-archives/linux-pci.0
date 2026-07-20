@@ -1,109 +1,89 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96E0B3CF661;
-	Mon, 20 Jul 2026 10:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214773F076D;
+	Mon, 20 Jul 2026 11:04:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784543593; cv=none; b=fwWiO82ef8S3IIy6WWJnGKYGceBG32PuZesOm+SLqebsFKkjzA4KI1Aa54rhLrOWOZ2sAMvXkEt04Ig8BEdLUOQSTC4EvSjfiPwuU0srXwdnDZzQ+VgA9IggrEAQnN+nxUkiIrL0xNZVzARvvluRpV0ISw+EQVPiFE5diYWnmZA=
+	t=1784545461; cv=none; b=eHio1+GsqesMAHWlXROdFxPxUx6TI4jqHdVbVtkh2T0aa4vCD8mbHNr6IvErljzP9xQ5oOIVdEGxS+QdG181MQaO/ONF88wXXDRS2yxO25UDW06k+E9WV5rmJHwCofeyp01EbXTTxgQoKMgacmwIRL6PDbboxIDHpf2TRerrvdE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784543593; c=relaxed/simple;
-	bh=iW8segSJAzxLXvY6MGkdyredDaE/r0nEVFBkwIAH9tI=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=hR7KYXi/bHvUjkGUHfx5Br9TqUhhEPjYDihh0DfRuploXH/n5mDvWL3G/yoimEd38jXEn30pvqJkHL7jpuwaJ4DbcvqcxbhfJndYtsSq8FA1Pff6haYEdT04UWNV0h5dLlP1ZNSjo1Td6wLIaSlyRzRK06BnS5S85/SO3kwu0lI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FpLlUTdy; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784545461; c=relaxed/simple;
+	bh=JPBfqQMUomalHJ9gmcBo7nD5KT00bTi3ymlGWqXDA+E=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=SoVwplH0vmzdZxmKJf6AVU38OWk5RNeZR6iZvhIlMMCqdgiFC7YPYVeCl0K9WRDeTHDrJHYRBQbQx5oo0GG5W8mSH8rGhBEtHVLH83n2qT2nr6jvPkwQpqdN0lpGnfaWQmRp2HepUczgC0CV494i+arN0qXybItbxd0rX+cV3Ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WuJZWerW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FpLlUTdy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784543592; x=1816079592;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=iW8segSJAzxLXvY6MGkdyredDaE/r0nEVFBkwIAH9tI=;
-  b=FpLlUTdyPV53M7HyCilnslVKlwFR3oRxaGQTANXmHwwJpLU7LDu6Z2L0
-   yuFXojOjhs8FLO7qvingI0PM0JL9BaTw9DOrqEad2MbTxBKFDwNSj3k5N
-   OstrgCwucoa8GO2xXKQNaZ/WUICuPHTUNgU4W/G1av/oa2cz5JsWMKULL
-   i+MMg0tcEfd+nP4eFWupN+eq7h3Iafjt1iiqK2s7bwBQF2xAcIvDhEql8
-   JVq2WTnOIi4ccrMP4NLxa7xNPw/FLVuttz2ppay3aMK/XzKy1ke6aD/uN
-   Uqlt543QkYFiA2Lll1nv4ribHStOuQoDmUY9D0UZ6jyXhpBt3jGunabN8
-   w==;
-X-CSE-ConnectionGUID: O66C4lK+R4e1QmGQX0HyYw==
-X-CSE-MsgGUID: ceMzmQajTfW2gkB59jpQlw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11851"; a="87660202"
-X-IronPort-AV: E=Sophos;i="6.25,174,1779174000"; 
-   d="scan'208";a="87660202"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 03:33:10 -0700
-X-CSE-ConnectionGUID: lhQ0kntZR/SdiZIn8yAIeg==
-X-CSE-MsgGUID: oHhk29h/RJKQaX1WyjaaHQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,174,1779174000"; 
-   d="scan'208";a="253475503"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.144])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 03:33:04 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 20 Jul 2026 13:33:01 +0300 (EEST)
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
-    "Mario Limonciello (AMD)" <superm1@kernel.org>, linux-acpi@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-i2c@vger.kernel.org, 
-    linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, 
-    "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-    Mika Westerberg <westeri@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
-    Bjorn Helgaas <bhelgaas@google.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Mark Pearson <mpearson-lenovo@squebb.ca>, 
-    "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-    Hans de Goede <hansg@kernel.org>
-Subject: Re: [PATCH v2 6/6] platform/x86: thinkpad_acpi: Convert to use
- acpi_dev_is_video_device() helper
-In-Reply-To: <20260714185915.865396-7-andriy.shevchenko@linux.intel.com>
-Message-ID: <d45b8ac1-d05c-7797-efaf-d0ff67cde80b@linux.intel.com>
-References: <20260714185915.865396-1-andriy.shevchenko@linux.intel.com> <20260714185915.865396-7-andriy.shevchenko@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WuJZWerW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B503E1F00A3A;
+	Mon, 20 Jul 2026 11:04:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784545458;
+	bh=0unQyipuPJ3aGBPKLnhRJ2e2d2GldgCfTJEWvdatTnM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=WuJZWerWmr7AEddANj8j3T+wfm71SqZPK0tSG7LkKCuSZ4u9tfNXbnLFK4AS9S0Mh
+	 d3oWSyJ7xt/j134vBZFg6frk5j3WUaQzUxx0B2pPWjb6kwWdq/ahiR8Qs24Z9PUoE6
+	 oMe+RldvhXs7ntPD/19QSni6kgJDEZ39o2oGJNctnRz4A8OkOjyIAZGuml1wWIZKw8
+	 +GDk+sAIdoyVepvacfD358VF07Ju4oBAKo/GS9RcFSLufcfN34bfEcx5TTrP+JlpD0
+	 UBSRR99+nYXmmoStj63wL17qXHc6j3O90WEoG0oibwdjsmEe9QqSjJWIZrXnpmjpi5
+	 kW8tBVa9ZAjSQ==
+Date: Mon, 20 Jul 2026 06:04:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Johan Hovold <johan@kernel.org>
+Cc: Bartosz Golaszewski <brgl@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/pwrctrl: tc9563: take i2c adapter module reference
+Message-ID: <20260720110417.GA321880@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1215956946-1784543581=:1163"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <al30lyKsG3ywkiJu@hovoldconsulting.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, Jul 20, 2026 at 12:12:39PM +0200, Johan Hovold wrote:
+> On Fri, Jul 17, 2026 at 11:58:41AM -0500, Bjorn Helgaas wrote:
+> > On Thu, Jul 16, 2026 at 03:25:32PM +0200, Johan Hovold wrote:
+> > > The i2c subsystem currently blocks during adapter deregistration
+> > > whenever there are consumers holding a reference.
+> > > 
+> > > Switch to using of_get_i2c_adapter_by_node() which also takes a
+> > > reference to the adapter module so that an attempt to unload the module
+> > > while in use fails gracefully instead of blocking uninterruptibly.
+> > > 
+> > > Signed-off-by: Johan Hovold <johan@kernel.org>
+> > 
+> > Applied to pci/pwrctrl for v7.3, thanks!
+> > 
+> > Gemini suggested minor commit log rewording, let me know if it makes it
+> > worse.  I do like the impact being mentioned in the subject:
+> > 
+> >   PCI/pwrctrl: tc9563: Avoid uninterruptible hang on in-use I2C module unload
+> > 
+> >   The I2C subsystem blocks during adapter deregistration if there are
+> >   consumers actively holding a reference.
+> > 
+> >   Switch to of_get_i2c_adapter_by_node(), which also takes a reference to the
+> >   adapter module, so an attempt to unload the module while in use will fail
+> >   gracefully instead of blocking uninterruptibly.
+> 
+> No, please don't rewrite my commit messages (and especially not without
+> clearly documenting that you've done).
+> 
+> If you have any concerns about the wording, I can try to accommodate
+> those in a v2.
+> 
+> If I had considered this to be a fix (the line is admittedly blurry) I
+> would also have tried to be more explicit about the impact in the
+> summary. But here I think the existing summary is sufficient.
+> 
+> Note that I've sent similar changes for other subsystems and there is
+> some value in using the same patch summary (modulo subsystem preferences
+> for capitalisation, etc).
 
---8323328-1215956946-1784543581=:1163
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Tue, 14 Jul 2026, Andy Shevchenko wrote:
-
-> Replace open coded variant of acpi_dev_is_video_device() helper.
->=20
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/platform/x86/lenovo/thinkpad_acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/platform/x86/lenovo/thinkpad_acpi.c b/drivers/platfo=
-rm/x86/lenovo/thinkpad_acpi.c
-> index 6dd7c28fc0db..aaeada46a0e7 100644
-> --- a/drivers/platform/x86/lenovo/thinkpad_acpi.c
-> +++ b/drivers/platform/x86/lenovo/thinkpad_acpi.c
-> @@ -774,7 +774,7 @@ static acpi_status __init tpacpi_acpi_handle_locate_c=
-allback(acpi_handle handle,
->  =09if (!strcmp(context, "video")) {
->  =09=09struct acpi_device *dev =3D acpi_fetch_acpi_dev(handle);
-> =20
-> -=09=09if (!dev || strcmp(ACPI_VIDEO_HID, acpi_device_hid(dev)))
-> +=09=09if (!acpi_dev_is_video_device(dev))
->  =09=09=09return AE_OK;
-
-Acked-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-
---=20
- i.
-
---8323328-1215956946-1784543581=:1163--
+You're right, I'm sorry.  I used your original commit message.  I
+assumed this was for v7.3, but let me know if it should be for v7.2.
