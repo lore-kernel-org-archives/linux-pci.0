@@ -1,152 +1,164 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB2CF3E8337
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 23:19:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784589571; cv=pass; b=m2o6nX3VrG6elrJ9AzJuAaPUXxNInnfhz/SQ6qIKwbXJJB0ogAli9Jt9noynssp7hEXmMpAj17hfoSRxHHpBIcLZEWS/xNTcyTouoUcBw/gsCPrENGHsdMr5rwssGQAUe2ttSSow8fUh3ydAQOUOCi3IQ+BlI78mNJw8IW4yV/s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784589571; c=relaxed/simple;
-	bh=VD3HIlbzEb7dewmVIFSfcvhuEGHcgLIWaCYKVXgS20o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=K2YwIsGgzVPIzcaPNFf0fakMLAKBqb5SFd/rMV4bKB0dXwgOZa5pw3s6IVQVWg6g8oGSeemKcIr8xxNAtXPM3B84zDDtti65bnl0Uu/sEQPRzlEaszV9Gf49h6Mh4DEOuN9UiSrr3mZfpUrfHe8i5RXUvww6qUCl03kqLib2e68=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=s6vDnXlJ; arc=pass smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1304E384250;
+	Mon, 20 Jul 2026 23:29:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784590161; cv=none; b=L3+4+J5q1oKFncKQZn7NYe9w3MnQABCfYbGcZnznrgjVCwoPMAFHnCGZJByamUrlgZOV8WAkagce/xngkHCnkAoFCq73mpBARzy4RTPKKkxww8iDqwAJp97HL3lCp9pE4pDY8w5iCLeLYE9fiD9eRrdde+/ZSSNJYJ36ubtfk5c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784590161; c=relaxed/simple;
+	bh=AWwlpoxTG7ZeXZVuevac7B7PDaA6wUeR7oQ+RfGQ7h8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Sn8UmEAAmFJKsjzB+XsY7Hz1FtKN0Ep2n7gVad/Bvx0HandNQdp3RagQKvBggFyOif4wWQ5lJO3p199hMtN34RAvORYU+2yY0jy+y8b5og8UnVH3XDOq4PzKnyx+UOO62Bbvi+RRJ83oHyOccEPf/ViBfE4/aIL2wHsKJrnCAGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fSPDNGVY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s6vDnXlJ"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-38e071ed6aeso6711303a91.0
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 16:19:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784589568; cv=none;
-        d=google.com; s=arc-20260327;
-        b=IutyUowB5pXZXu7Fl5B0sIJM5DtnnyRZgrseTx8biHRxbdhhycohIR8g2Xvy536XV7
-         gAzS92RC8oMl7Y4oASnRn7Gt1zqSSoBGSJifx4MHdFuBhhjoWoNCQFgSDJAwM/17sWmC
-         67NlFHKADzESuwLqKltRIRcfi8zLZumt/pIxUlJj3s8BTPhYn5cNzmG+GUZ7pgfOIaUK
-         TIbqQELmI/CMJ1udX0bQZpec32v+NYtXzcFfLMpFNC+1BOAp4329xXNfzvGrD71Zg+Mh
-         Ngzga95fKO7cAFXM2PCzfNX5UmXlwWYvlmd7c8S8La5fiTRzuHbkOEg0Je3k/Ya2vrm1
-         L7Xw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
-        fh=tMSkIgpZYKogwkO+7CzXgp9J+tDVBwvWbuJdNytCULQ=;
-        b=g6xiPnFzXZDKMJuYUmagQad4LDKq0w+ea0LFNI5PnNLpcbNNhgVwjxXV9tr/ThRdcB
-         XGfqhqX7yY7hipnF4+1CzY+AkRF8VJnZcaDoMvPM+SU9VYjThcXNsJI9hzmNs7lLzkD8
-         fpXDwWEsR2MPtZQDZ17T/HGf9/3Y/gNb0+WoozR2G60hBQYcThxCFu++4nIAEC6xwQo+
-         yLK65Ayg0CWTiiI1vdu7uDeiskpzYmE+S5uVcdrI+y+Hs7tc7oYEdGYbCBAfNdxolFhN
-         xQDjq0PCc/pBWa6lR+zvcxtGseO8l/p6RcEWhZovbmf8C2UKub6nY4ax27fskB2aeJrS
-         Hzjg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784589568; x=1785194368; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
-        b=s6vDnXlJ9z6NtpY49USEaFFyzDZGDp/vEPjToHrnv6bTvXKZ46obqIS+jfPx26/GB/
-         fdHybSFsTRU/EBqaEZTJ1Q0SRXj6U+FG4F4efVXl+9woIAzVa7Nz3MBYSUVk6cEylAMt
-         uFb8Gjxb6QpbfBWgcVWYMIpRALkPzuvfCcSRcUxLfCjzIfRpgv+nXJRbmxHdaGf4sjwX
-         VPtDITY3b9/6bSdUyPBA9S1QuTvV23YrkJ2/lXP/0OHtIoiY6pdjZEw7Chf7KDFA9m+U
-         0FL+c4alVP+/ag8KHbxkXAPn4JVv7ogGNkBtzbbXv8ZSaMj7EU63IdiTOcfRlaWoKX13
-         odgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784589568; x=1785194368;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PYpxNurdbA4XJ/6Vuk5WIdVnSVbgksTgEkNwHBXbZV0=;
-        b=bOfs/QwfVP1fgMQbtFDCPWmZB6orKK8Es4/dKzQJPuHjMubiKAbywx1vs5SuBaL26y
-         A+tluGaEuyriZJI9AJD7f6ubHp2PqJq31kY3PYgNBambS7mLem6PbEwhu4xVOS51OSak
-         EnTgxFOr5wSjHhnFTKTxiGslFjIMXEVF40ZojctVY6ruKDtXzOt4Lng1PcnEbj2cjur3
-         HainbW76wIXHBXUD/P+e/dNdCZ8nRDdp9+OdP+/NsVVhi7uG6szj4Y33vi1Jz0TZ/Ljl
-         mKChspin9xLcIFIHJei4VOV3zZ6NJvxHF4aY2tO6BCSGRzx2qBrljWT240X1asV/ASvh
-         /oIQ==
-X-Forwarded-Encrypted: i=1; AHgh+RreJub+4qSV8OioXq193AtIXyg/0ZcRc9Taje5Ntui/qnFRSwIl0qqUFDnjBibTZbyYBsw6yJEQjMs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZfUXQ9Opkcd2hBmULEhrGeMX1QnMeWZ+KTTB63ra+pL9ixAcQ
-	OYlwEh2y63aww3vEdiYtNQWsg4utZ5Wps8TNERfrZ7KPtnFLrAbK41512LZ9mdyHHSYpAKupt3x
-	eS1SGhI/lWKQfELEIUjVjLL0NNVfoi1UsyKHGRb1w
-X-Gm-Gg: AR+sD12x35PaSqrkUNgWOJuHrwe0FM6uQ/iTdQt2dN9T4uRdOZfDf1W0XuYJS3m9hpp
-	DSWOoCJa3xuUpgvEcyPsLi6G4tgRoUNJI3D0jY/HH3Qc2YaRFq0VR1RJoka9VfMTED6+QF0jaXP
-	jPyFn8YByeyH7re6EtuWVCcaFz/OIUw44KdsfaYooCjcFOnYC/RWg+7JKaW+GledKbvl4LLLMFK
-	r/uuuIlrvn7fOzcvklJHpVtS/4V19xe68G38k7TMza0dlBcDoaTCg5qiOLKPQ==
-X-Received: by 2002:a17:90b:5905:b0:381:23d5:693f with SMTP id
- 98e67ed59e1d1-38e4b534bedmr15548062a91.28.1784589567330; Mon, 20 Jul 2026
- 16:19:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fSPDNGVY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 878EF1F000E9;
+	Mon, 20 Jul 2026 23:29:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784590159;
+	bh=dp6ANPOYAdsA1dUjByrInv/hyQ5xs3rfp8+0xMO3IXI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=fSPDNGVY3fnMfjzzHYSeUM7uxpLnUYS2sRb8d2D3UeGWs92N4j/s5zvARrdAUEkBA
+	 EBH3YKoqTxqbX+sPuiG6tS4u9QJuJRQ1GSi8SdS5XLGTD9XmdmYikXZuv+Qe2cxT6V
+	 vxZ7rp6AEHY0UB1UQTPmOHUwXa+4hqKhsopjVSH7g0LPLYSqL9p22em6x2LfDDlT0w
+	 2nDMRnoegS5B4lEKF9YXmwWnzV7suICFuEou6TgRJXM3jl/oqdPmosVs7EViby3Dpp
+	 KB73sddqvNiNz8T8dqKCR5HQttu47PdXIizHzVH6Rx3Vr4xLiNNKf3EIqcVqU22fLL
+	 UCqhF1vmf+bOw==
+Date: Tue, 21 Jul 2026 00:29:11 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
+ Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
+ Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
+ <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
+ <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
+ <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
+ Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
+ <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
+ <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
+ <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
+ <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
+ Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
+ Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
+ <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v18 09/13] cxl: Update CXL Endpoint AER handler
+Message-ID: <20260721002911.580c822d@jic23-huawei>
+In-Reply-To: <20260717222706.3540281-10-terry.bowman@amd.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+	<20260717222706.3540281-10-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-10-dmatlack@google.com>
- <178433098576.189683.2364970585754668266.b4-review@b4>
-In-Reply-To: <178433098576.189683.2364970585754668266.b4-review@b4>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 20 Jul 2026 16:19:00 -0700
-X-Gm-Features: AUfX_mzMp9DAjORlO4Z9lJDkbL8nPaOLaXiKeGO1DzMTd_1FqdXSUAFnXR38zlo
-Message-ID: <CALzav=eZYfYYKAGEzk4TsGFLp1TPb2iFePNmqGsjX4jEZNJ9XA@mail.gmail.com>
-Subject: Re: [PATCH v7 09/12] PCI: liveupdate: Inherit ARI Forwarding Enable
- on preserved bridges
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 17, 2026 at 4:29=E2=80=AFPM Pasha Tatashin
-<pasha.tatashin@soleen.com> wrote:
->
-> On Fri, 10 Jul 2026 21:26:12 +0000, David Matlack <dmatlack@google.com> w=
-rote:
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index a95bfe5eff77..74a11e520f0d 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
-> > @@ -816,6 +820,20 @@ int pci_liveupdate_enable_acs(struct pci_dev *dev)
-> >       return 0;
-> >  }
-> >
-> > +int pci_liveupdate_configure_ari(struct pci_dev *dev)
-> > +{
-> > +     u16 val;
-> > +
-> > +     guard(rwsem_read)(&pci_liveupdate.rwsem);
-> > +
-> > +     if (!dev->liveupdate.incoming)
-> > +             return -EINVAL;
-> > +
-> > +     pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &val);
-> > +     dev->ari_enabled =3D !!(val & PCI_EXP_DEVCTL2_ARI);
->
-> unsigned int    ari_enabled:1;
->
-> Sashiko asks a valid question, what protects other bits in this word
-> during modication?  At a very list a comment is needed.
+On Fri, 17 Jul 2026 17:27:02 -0500
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-This was my reply to Sashiko, not sure if you saw it:
+> Rename cxl_error_detected() to cxl_pci_error_detected() and rename
+> the struct pci_error_handlers instance to cxl_pci_error_handlers to
+> avoid shadowing the struct type tag.
+> 
+> Document the unconditional CXL RAS read policy: on a dead link,
+> readl() returns 0xFFFFFFFF which is interpreted as UCE bits set and
+> triggers a panic. If RAS registers are not mapped the read is
+> skipped and the frozen/perm_failure switch cases defer to AER
+> recovery for devices without active CXL.mem traffic.
+> 
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> 
+A couple of trivial things inline.
 
-.  pci_liveupdate_configure_ari() is called from pci_configure_ari()
-.  which also sets dev->ari_enabled=3D1 and is pre-existing code.
-.
-.  If writing to dev->ari_enabled in this path is indeed unsafe then that
-.  is a pre-existing bug.
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
-I figured that a comment wouldn't be needed for continuing an
-established precedent (it's ok to write to ari_enabled during this
-path).
+>  drivers/cxl/core/ras.c | 24 +++++++++++++++---------
+>  drivers/cxl/cxlpci.h   |  8 ++++----
+>  drivers/cxl/pci.c      | 12 ++++++------
+>  3 files changed, 25 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index 6f4a3c1b0bb85..d5dc2c22565da 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
+> @@ -328,10 +328,8 @@ bool cxl_handle_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem
+>  	return true;
+>  }
+>  
+> -
+> -
 
->
-> --
-> Pasha Tatashin <pasha.tatashin@soleen.com>
+This white space removal should be in patch 7 I think.
+
+> -pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
+> -				    pci_channel_state_t state)
+> +pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+> +					pci_channel_state_t state)
+>  {
+>  	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
+>  	bool ue = false;
+> @@ -349,10 +347,18 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
+>  		}
+>  
+>  		/*
+> -		 * A frozen channel indicates an impending reset which is fatal to
+> -		 * CXL.mem operation, and will likely crash the system. On the off
+> -		 * chance the situation is recoverable dump the status of the RAS
+> -		 * capability registers and bounce the active state of the memdev.
+> +		 * The CXL RAS read is unconditional regardless of channel
+
+Keep the 80 char wrap for comments. Also local style is single space after .
+(I'm terrible at not following style on that stuff but do as I say not as
+I do!)
+
+> +		 * state.  Any uncorrectable error bit set in the CXL RAS
+> +		 * status register triggers a panic because CXL.mem cache
+> +		 * coherency is already lost; continuing risks silent data
+> +		 * corruption across interleaved HDM regions.
+> +		 *
+> +		 * On a dead link readl() returns 0xFFFFFFFF which sets all
+> +		 * UCE bits and also triggers the panic - this is intentional.
+> +		 * If RAS registers are not mapped the read is skipped, the
+> +		 * panic is not reached, and the frozen/perm_failure switch
+> +		 * cases below handle AER recovery for devices without active
+> +		 * CXL.mem traffic.
+
+Now this comment I like. Good and clear and explaining the non obvious decision.
+
+>  		 */
+>  		ue = cxl_handle_ras(port, NULL, to_ras_base(port, NULL));
+
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index 5c21db36073fe..6cf1db7b85020 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -1000,18 +1000,18 @@ static void cxl_reset_done(struct pci_dev *pdev)
+>  	}
+>  }
+>  
+> -static const struct pci_error_handlers cxl_error_handlers = {
+> -	.error_detected	= cxl_error_detected,
+> -	.slot_reset	= cxl_slot_reset,
+> -	.resume		= cxl_error_resume,
+> -	.reset_done	= cxl_reset_done,
+> +static const struct pci_error_handlers cxl_pci_error_handlers = {
+> +	.error_detected		= cxl_pci_error_detected,
+> +	.slot_reset		= cxl_slot_reset,
+> +	.resume			= cxl_error_resume,
+> +	.reset_done		= cxl_reset_done,
+
+Do we need the re-indent?  Nice to make it more obvious what didn't change.
+
+>  };
