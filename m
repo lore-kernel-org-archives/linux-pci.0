@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983F541CB5D;
-	Mon, 20 Jul 2026 13:04:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECEDB41A905;
+	Mon, 20 Jul 2026 13:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784552663; cv=none; b=NhDSIXbn/qlfVqrCdhoBYE9HcN0XU0HClH3IWp81rb/kvaySu+NyNqK+443rmYvnlGAkbXOzBd4u3tY9C8ufY4IhTEdTjApXdTPnkCG2IF0NcEuXuTdxdaFB4TRW3UF781wvxq2A8NA03TTfO+26ad8Y8NMwJyk5tvfBMdPsdHU=
+	t=1784553439; cv=none; b=EXuTrb3AibbBVRQ6xGDAGNIcGRqLlbc3b43HU3JlFgKf1R6Xjz0inZV5N7+WVizgz3BY/PshcICkyMux7wtQWOmcv5ELES6iEA9rGgdj5RtN00QKXUhrkpNUfyoNBASsY1fIw9BurKulSTvJRQMg6n55zc1CuE3LSlzVIuWE74g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784552663; c=relaxed/simple;
-	bh=E+eSRnrW+NZvOpY9qVlKZl4QXonZmy3TyjCHW0pH0xg=;
+	s=arc-20240116; t=1784553439; c=relaxed/simple;
+	bh=jX+mX67ZxrgkeJkqeNe8okks+Eglkhx80+ayUHc/KfQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=UdddVgU07cMkAnH2UojcRlzQfFz+VF4sMM8M4XfNTqM5IPmDHw5hwkXkT/IIqp1P20wbeqxflVmK6DetCu0LxLlJ6jw87lx+59/McO+Gf7S6UMYbSTDdKz/qg24AMrT1hp93U16E9psapEdIvNc5Ka/cUUY7Rau7C7SJF3o367U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JyLoXd//; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Ly218eizzbr3U8S2O4qdOc8tgdVoYPaoOHystP4NdZ4SYuEzAvKz5VEbcdNREzz6GDKkPscKNgayQvCiz0d4CBCRNkdEoHEAjpQt/CM2sdomC2b6bBUOQURy28G0M5XWDi+p3LUcTNZYy8LfLKqBzBLHewESsg3BBpXtCYQeD7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ekx0qK/S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JyLoXd//"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7201F00A3A;
-	Mon, 20 Jul 2026 13:04:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ekx0qK/S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00AE71F000E9;
+	Mon, 20 Jul 2026 13:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784552660;
-	bh=2oMscjj0OQ6r+QkQqnuEcryEB20ua4iBrqQS5thIYHw=;
+	s=k20260515; t=1784553437;
+	bh=QhC99x7vdLxugeCtGkIpVFaFlhQmyHyfood4QTosfNY=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=JyLoXd//Gv3nB8Q3RutCXxOJnNAFesU4ch11Fti8s5nAlDIl38uOjTV2GjL0KEiJ/
-	 MsrRNN6LlKXP7h+OgvY6GdAvQDhMiSHfeIIg4f9+1n0uZoWszfXwbYnotxkgcls+uy
-	 X2cj7FKn1/ClxCr9Nlz+Dw/+f03vaJFLiMFskNN3RxlTS2tOyvh3q+CPXVODT7whfN
-	 9pVBGdhJIcJaf78O9CIeRYrrSqmKVYAl/kVKF5yvzYlIFwNEeDN5bA4aWRZIlsuXrk
-	 ahIPMh/wA/6z7rMYWpO2Gd+chmXeto4eX7SQx5T4hWDRqYtn3Y+MaE6fQabKwzPqhG
-	 mL8Tu8NXFDSQg==
+	b=Ekx0qK/Srb8oSP2eKbdTYsBPRyxMt/d9O3yjxos43A26fm14PVGfA99xc1oFaUNRH
+	 t33/CXj4ytIGGRt26MnPn2GM3yH32lCmh3J0EUkGbmryEjN4mrgRsZ1tpDtOEQz8Hy
+	 4QxR55IuxVkS02SgFKDZ0WSYhYKgc5DcDIqZdxqSMJFZQdRInsuvu+Bgit/wx0OEby
+	 YB/2d3xzxjXnYSDAahvKQRQ3ewu3NupVczdRvQXI6TDe7ApQsF5top5L4+CsQ8icyg
+	 SD8vyge5RQ40E6ems95LfxdFijgsxt98ytN7q+tX8TcxRtqAt0KzwtjH+5GJDO/VvS
+	 85f/TrAelG57A==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Will Deacon <will@kernel.org>, 
+To: bhelgaas@google.com, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@kernel.org>, 
+ Jacky Chou <jacky_chou@aspeedtech.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Steffen Persvold <spersvold@gmail.com>
-Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-In-Reply-To: <20260709122446.3151899-1-spersvold@gmail.com>
-References: <20260709122446.3151899-1-spersvold@gmail.com>
-Subject: Re: [PATCH] PCI: host-generic: Fix NULL pointer dereference on
- 32-bit CAM systems
-Message-Id: <178455265741.24429.4069285286269225213.b4-ty@b4>
-Date: Mon, 20 Jul 2026 15:04:17 +0200
+ Rob Herring <robh@kernel.org>, Joel Stanley <joel@jms.id.au>, 
+ Andrew Jeffery <andrew@codeconstruct.com.au>, linux-aspeed@lists.ozlabs.org, 
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+In-Reply-To: <20260708095814.385480-1-jirislaby@kernel.org>
+References: <20260708095814.385480-1-jirislaby@kernel.org>
+Subject: Re: [PATCH] PCI: aspeed: Switch to irq_domain_create_linear()
+Message-Id: <178455343360.25926.10984869704341739230.b4-ty@b4>
+Date: Mon, 20 Jul 2026 15:17:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,25 +51,24 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Thu, 09 Jul 2026 14:24:46 +0200, Steffen Persvold wrote:
-> On 32-bit systems the config space is too large to ioremap in one go, so
-> pci_ecam_create() maps each bus segment separately and relies on the
-> ->add_bus callback (pci_ecam_add_bus) to populate the per-bus mapping in
-> cfg->winp[]. pci_ecam_map_bus() then uses that mapping as the base for
-> every config access.
+On Wed, 08 Jul 2026 11:58:14 +0200, Jiri Slaby (SUSE) wrote:
+> irq_domain_add_linear() is going away as being obsolete now. Switch to
+> the preferred irq_domain_create_linear(). That differs in the first
+> parameter: It takes more generic struct fwnode_handle instead of struct
+> device_node. Therefore, of_fwnode_handle() is added around the
+> parameter.
 > 
-> The generic ECAM ops (pci_generic_ecam_ops) already provide the ->add_bus
-> and ->remove_bus callbacks, but the CAM (legacy) ops in pci-host-generic.c
-> do not. As a result, on a 32-bit host using "pci-host-cam-generic" the
-> per-bus mapping is never set up and the first config read dereferences a
-> NULL base, crashing during bus enumeration:
+> Note some of the users can likely use dev->fwnode directly instead of
+> indirect of_fwnode_handle(dev->of_node). But dev->fwnode is not
+> guaranteed to be set for all, so this has to be investigated on case to
+> case basis (by people who can actually test with the HW).
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: host-generic: Fix NULL pointer dereference on 32-bit CAM systems
-      commit: 008cb88edb41f3c7c8e0ed763ff9f26719830984
+[1/1] PCI: aspeed: Switch to irq_domain_create_linear()
+      commit: f944349dcbaeaa9d6e1c8f2f8182f5560ba79581
 
 Best regards,
 -- 
