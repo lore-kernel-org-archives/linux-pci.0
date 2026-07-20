@@ -1,157 +1,155 @@
-Received: from fout-b4-smtp.messagingengine.com (fout-b4-smtp.messagingengine.com [202.12.124.147])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3FA282F35
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 18:53:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4C2238E5FE;
+	Mon, 20 Jul 2026 19:25:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784573603; cv=none; b=a0OJ9k3KFmWfzxBCcgWNEDxYdQ1+c84lNUBBTfcHufDvHp7gBErxtkP+F49dIwNWBK6QEITnqLkYRejI0gIpmM1mgxecL93YJAO5Fb4yJBcsqZ9WKQoS7WI32Vfgf/rbxUENk5kd7tixZ0Lq1OrZYDoOiOGkBMieknJ8Gri+GDU=
+	t=1784575515; cv=none; b=VZThbib2+AW/aZkZejBYqgPXQxfTTkyt5+E/I5UgPm/bIuprnRdl+ilR82g5KpV8oLCFLNLApfRtcHcjE6Lb8no08vfd39oodRYjgkEh76lwKjolQVA6dGHaYI7MrudW1iNGKxsJNDfa7j1cvzpcSLht4uN6dBtKl66zycBu9rQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784573603; c=relaxed/simple;
-	bh=nl+8dHevbr8d+1I2hyQuYMgYkBnX7YsQIPS5nKx9j/I=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k79JN3oaThK43A8/SypZK7VmWfF7bSXYRUOhiKhTfTuK4wKdYAv9DFL8Y6+tx2fWSgqH+OSNVpJt12pQXoj9upNqM+5PBT1pO7EXMQJbqIDLAc6HhL9R0cuuzhQ74S5a1xjy2/C4X6zRnkr2Nb6baQiLN9k70JIH/Y8moPGamfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=EMZGG+It; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=UseNxZtF; arc=none smtp.client-ip=202.12.124.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1784575515; c=relaxed/simple;
+	bh=/KuxQCQymQoIRNq9iJ1JDsV4+O3aPA4c+7w8DtPch7w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r1FD9qZ5wmpP/rbai+OASDdjsCbCTiWbJtVTSacyqISZDS2bs2auFgbTemfDSc98opRFZCcHQp8yMmMaKipUO0LIfkXNx6DSliNkQNUHgooVTj9uFtbFbBo8LDLwaffO0r4ryf/INcJQ7Q44toxE76xwPlM5B5Bwg4xX41l9lcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=spVFV1JQ; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="EMZGG+It";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="UseNxZtF"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id 6536F1D0006F;
-	Mon, 20 Jul 2026 14:53:20 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Mon, 20 Jul 2026 14:53:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1784573600;
-	 x=1784660000; bh=wvZZt0bZcJBD9/7ZFG0CaLB3tlgmwWBvdTXc4eefsis=; b=
-	EMZGG+It/Dyv3Qli+TdWOZy0120rmkzebU8AOZb424R07D/k3RIIIwGPtJf03XF/
-	W0ZNFY+d/6e6oOOeJjcTwlCZnfQIjIUddfKnMFgaXpf2gNHsBQRNjCX+Gw8w61Xn
-	SvXA77Y6mcuIMAShPgufhFnWrGPuKoKxcvcW0kO50hVO5EP7NUX18QDWKMT0sWq9
-	zRjPG1GNfV4GipWOhfksH4qMVRbRToMhbr5lsf3tQAlk3O7f70rhuNHrgQrPmkEk
-	CH27zNiDnbnbBlD9igQw4xNZWyAw3XnuE4tOIgwO9vJW9WcUgS2nbXw/JkxTZeeQ
-	DwifqaYlT+AuXO5QkpMCQw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1784573600; x=
-	1784660000; bh=wvZZt0bZcJBD9/7ZFG0CaLB3tlgmwWBvdTXc4eefsis=; b=U
-	seNxZtFjrtaeEgWZNXhOyEocsGt7kqY3+P1BPnjMVekOwQ+PgviLIr3zvcf85GNc
-	50QHZ3n3fMxtGx1rx1uhlzEc4hOeele+Pi7AoegJw6gL6Vz9ENu6xQ8UvAupcuYl
-	ujy8WoVDUtHxKD1zOcDFTquvIg4zMXFVtlRXH9GtFBsGwiTdY9cc4HfPewmTQ4Z5
-	kxyn+YzodewvTM+suxrWURU/+WH3S7BghF4mcgow0ZjgvKZ7E+dOIoL7TkDUfSHt
-	e1WgNul15v/klr7/Z6LTxLHW1pnTxx3os3fw8AJ15MMKnYgXIyG01ykg81VVpzm+
-	E44aRP0RR3xjkstHoWydw==
-X-ME-Sender: <xms:oG5ealY_MtE1YjVHjwoUyR3uL2GpLAjlLqMd9JWunCAB_wV5Qhrsjg>
-    <xme:oG5eat5lNbQRNLAGp_7LwN-Vgy74ui5WaVgJvct70TYuqgmgiO_LTJTv3cC0hsW0Z
-    EgA7S4lmQLRxSdPNf3IAVHKE-Vt2LoT3WaqkfrPgzsNdcZrCPJk>
-X-ME-Received: <xmr:oG5eaoCQ_1VxL9zAUjj-hLydyMeO8-7XRTjKKjpaGZDH2Sqc3vANOAFCrHY>
-X-ME-Proxy-Cause: dmFkZTEIyLKp7UcLOG6Izn0piZ0DTPsGZpK/1SdimrQiWBiimGFht+qe7LRmm3PrMo+QTY
-    Uu84SA4NZWoIVtY/kJbcmILPww6JT61WYG7WSXC1yws26EpwFXTY5EM4EzwB5PQB2W4haw
-    asYQUPrlbg7jHzwslNB/WZsysbXEIxDEOh5wUXx3/n0sxTjTl4A4xClIsV338y7FZb+umc
-    fjhrRN4C7/MsmeL1BLdk83rpCcNMe8wl4J6wOaxULnx4oxKvH9QGXP4Y0WbRxAlFTPyNkR
-    o8yEDk10JzpkoRBnAkcy38uYkF966iLbgLIpaATQvQZ3Je3nH0fiagVvPj0wOsD1jrcte2
-    3ggDv9o3cx87vv0mOXpWNoz0Uw+d9n5ahdE+WlHzPV1Kxi+0SybrHinKUM/KWw6eejyZCB
-    oQ+xzpkHB8+A/9YcsoAVvHn0jxuPHTh/iouF74TVrVme6uLl+hlPUUov6DJ5uenpgRSrF2
-    rcmezzT7T8hlrlYoEOyoUnF5456rxiD7MHnG122tl7jYyVVgfgkE24v143Fr/HHUBdgeIu
-    +dymFU3MEGQDJrjKGybOotS6Bp2WCQGsgukiD3yLOIWeABK972zObe5YgO+4YfOiVY2+5l
-    OGBPpBU/EW7Ypg5JTy4/62UC2nWfj23IBkv31DNt1d3h+tC3NZ3ftn6XDsEw
-X-ME-Proxy: <xmx:oG5eajfgn3OAusG_6zVx61CrG2ld70kd1MPKtSr6maMJDQEW-uSrrQ>
-    <xmx:oG5eanIpcZkWKf7QQvbQWxDZYiA5pBfCqdLtVp4_llxyqn-oFAzQlw>
-    <xmx:oG5eau1S9AhuQ1vWX3WGPnf74-EDpL7jTMaSw_sg5afCdm-dfOQ9zg>
-    <xmx:oG5eapiXx5NCXdbDcII86WYLwijMSZ07dVo1vUZI7RfS72zyrPGxhQ>
-    <xmx:oG5eakujNG3Fpv3zri3UJnBVZ3k6-PRhY0rU4ikoMSvYTRFJ_NVA8mYu>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 20 Jul 2026 14:53:19 -0400 (EDT)
-Date: Mon, 20 Jul 2026 12:53:18 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: sashiko-bot@kernel.org, linux-pci@vger.kernel.org,
- sashiko-reviews@lists.linux.dev, alex@shazbot.org
-Subject: Re: [PATCH v12] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260720125318.15508343@shazbot.org>
-In-Reply-To: <20260713085233.411519-1-jtornosm@redhat.com>
-References: <20260630070914.3B5E61F000E9@smtp.kernel.org>
-	<20260713085233.411519-1-jtornosm@redhat.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="spVFV1JQ"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66KHBtZI2713694;
+	Mon, 20 Jul 2026 19:25:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=vxo1gr9j3rNVIPeG0Gh7PR3XHS/1P1MFJpWiBXCn9
+	7s=; b=spVFV1JQJnS3BTEf6kWJwFgnn/kHJyKCanLlV0mICZ3k9ocVGqxbdN1aJ
+	GYXFhYePPwEfy2CgGg7wMpzudRIBq9MI5i7tGt855EOtkeatpzxI07/bynS47jtK
+	/oURgokFV63ULQmp+e2cNvqEM23xdo9xoigUqgvChn/ysMKUi1CvMS9Ijh3rn9xy
+	5WKUszlEGmh60pTN/dFcEKRuBEzCZRmd37eMMVyNqFT8xMBzhVBYR3pvBjOP/aDZ
+	zZOBiDP1+SDx3DYskTDOpYMCzV9BTVMqIwrcSzqGPeGTSIX2tAqmbec3iyMnamL5
+	fmogK/0dCMlUMSq5dHuGSpryrIN0A==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fg78g0u12-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Jul 2026 19:25:09 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66KJJbqm030887;
+	Mon, 20 Jul 2026 19:25:08 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fgktpy6kv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Jul 2026 19:25:08 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66KJP6mX11731580
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 20 Jul 2026 19:25:06 GMT
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 97B015805D;
+	Mon, 20 Jul 2026 19:25:06 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B4CD85805B;
+	Mon, 20 Jul 2026 19:25:05 +0000 (GMT)
+Received: from IBM-D32RQW3.ibm.com (unknown [9.61.255.209])
+	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 20 Jul 2026 19:25:05 +0000 (GMT)
+From: Farhan Ali <alifm@linux.ibm.com>
+To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, alifm@linux.ibm.com,
+        schnelle@linux.ibm.com, mjrosato@linux.ibm.com
+Subject: [PATCH v22 0/4] [PCI] Error recovery for vfio-pci devices on s390x
+Date: Mon, 20 Jul 2026 12:25:01 -0700
+Message-ID: <20260720192505.2957-1-alifm@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIwMDIwOSBTYWx0ZWRfXxRX/VYVo7pwY
+ cQF2Vp+uOpUCILJUleutPFNEFyJbXSvuD+V4hL/liHnZjCRePNzBtfqv5x7nAUGL2Ukpmkm6EYu
+ kAiZp10rwq4WEmuujd6sTREqbqw5+AWfIDLvnpkMfvvYygIXhomdObXJ3GbsvSGYcDROSyz9wD5
+ uwY+wFpwuz63uVLrwpYuiAL+Qw5sD6X/G4EVIno0qAzYSohtI5DASHeNBkmFSk2azy3gKPk49Q0
+ 9hh0wYi9SIG4giPFrPi6yVnjzoOhfPlrg3+hIMI2sWwhb9T9Q034AuksMcSsbagT/TySwVKkvDC
+ 6T55sIqgXzjxDBR+v7mSo02mpinMDFlGMaeWQa0fQVJK693oyryyC0HHjG7pPkUkhkxPEXN7yte
+ g4De45uCFjC+OIse3OQL730YaupJe6GGi+x50r3qLiGC4za6PWHVy6EyYP+6Bg/JNobSQQr0RQx
+ TlDQDoWw1pM3/LJHHOQ==
+X-Proofpoint-GUID: t7redkN4azQwop5noa20GTYTr82fJXIF
+X-Authority-Analysis: v=2.4 cv=MelcfZ/f c=1 sm=1 tr=0 ts=6a5e7615 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=r1p2_3pzAAAA:8
+ a=ztKUdEHD2T5e-c5t2tQA:9 a=O8hF6Hzn-FEA:10 a=r_pkcD-q9-ctt7trBg_g:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIwMDIwOSBTYWx0ZWRfX7DMCbl4UROXT
+ cYKQYaKTVR1UhY/vreUWso2d/lrhGOIdHQJCz83ebz3mrqyZLExFA55X4E90etHEVAiCqSYqldV
+ VNNS0L5w2vny9rI8l16BCr29d+PT7FE=
+X-Proofpoint-ORIG-GUID: t7redkN4azQwop5noa20GTYTr82fJXIF
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-20_04,2026-07-20_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0
+ clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607200209
 
-On Mon, 13 Jul 2026 10:52:32 +0200
-Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
+Hi Bjorn,
 
-> > [Severity: Medium]
-> > If the device is hung or the link is temporarily unresponsive, could the
-> > initial ioread32() return PCI_ERROR_RESPONSE (0xFFFFFFFF)?
-> >
-> > If it does, this read-modify-write operation would write 0xFFFFFFFF (and
-> > later 0xFFFFFFFE) back to the device. Could writing these values trigger
-> > unintended resets across the SoC or leave the hardware in an invalid state?
-> >
-> > Would it be safer to verify !PCI_POSSIBLE_ERROR(val) before modifying
-> > and writing it back?  
-> 
-> The read-modify-write on the SOC_GLOBAL_RESET register replicates
-> the existing ath11k/ath12k driver reset sequence
-> (ath11k_pci_soc_global_reset()). If the device already returns
-> 0xFFFFFFFF at this point, it is unresponsive and writing to it
-> will not make things worse - the purpose of this function is
-> precisely to reset a device in a bad state. The link recovery
-> loop below already handles the case where the device remains
-> unresponsive after the reset attempt.
+This patch set includes only the PCI patches of the original series for
+error recovery for vfio-pci devices on s390x [1]. Breaking up the patch
+series into PCI and VFIO only patches to make merging easier based on
+discussion with Alex [2].
 
-The "will not make things worse" claim is really the best case
-scenario, there are platforms that won't silently swallow the write
-error and could escalate this to a platform level APEI/GHES error.
-Testing the initial ioread() value is a valid improvement in robustness.
+Thanks
+Farhan
 
-> > [Severity: Medium]
-> > Is this polling loop vulnerable to false timeouts due to scheduling delays?
-> >
-> > If the thread is preempted during msleep(20) and delayed for more than 5
-> > seconds, time_before(jiffies, timeout) will evaluate to false upon waking
-> > up. The loop will exit without a final check of the register, returning
-> > -ETIMEDOUT even if the link successfully recovered during the delay.
-> >
-> > Should there be a final condition check after the loop, or perhaps use
-> > read_poll_timeout() instead to handle preemption robustly?  
-> 
-> The time_before()/msleep() polling pattern replicates the existing
-> driver recovery logic and is standard kernel practice, used
-> throughout drivers/pci/quirks.c and PCI core. A scheduling delay
-> exceeding 5 seconds would indicate a severe system issue beyond
-> the scope of this reset function. The 5-second timeout is generous
-> for what typically recovers in under 1 second.
+[1] https://lore.kernel.org/all/20260520171113.1111-1-alifm@linux.ibm.com/
+[2] https://lore.kernel.org/all/20260602163344.1eda12d2@shazbot.org/
 
-IMO, this is also a valid finding and the suggestion to use
-read_poll_timeout() actually simplifies the code.  The entire loop just
-becomes something like:
+ChangeLog
+---------
+v21: https://lore.kernel.org/all/20260630164807.643-1-alifm@linux.ibm.com/
+v21 -> v22
+  - Ammend commit message for patch 1.
+  - Rebase on 7.2-rc4
 
-	ret = read_poll_timeout(ioread32, val, !PCI_POSSIBLE_ERROR(val),
-				20 * USEC_PER_MSEC, 5 * USEC_PER_SEC, false,
-				bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
+v20 https://lore.kernel.org/all/20260622171840.1618-1-alifm@linux.ibm.com/
+v20 -> v21
+  - Amend commit message to include Fixes tag and cc stable (patch 4).
+  - Rebase on 7.2-rc1.
 
-It might indeed only be a pathological case that behaves exactly as
-sashiko identifies, but in fact any exit from the loop due to timeout
-returns with a stale value in val.  The similar use cases in quirks.c
-might well be improved in the same way.
+v19 https://lore.kernel.org/all/20260615183524.2880-1-alifm@linux.ibm.com/
+v19 -> v20
+  - Unconditionally enable Memory bit while restoring MSI-X (patch 4).
+  Fixes an issue found with sashiko. 
 
-> Since the implementation replicates existing driver behavior,
-> both points were already discussed during review with the
-> subsystem maintainer, and are handled in the code, no changes
-> are needed.
+v18 https://lore.kernel.org/all/20260603181647.2215-1-alifm@linux.ibm.com/
+v18 -> v19
+  - Move config space accessible check to pcie_flr() function (based on
+  discussion of Sashiko review)
 
-Likewise, maybe an opportunity to improve the driver code.  Thanks,
+  - Fix a gap in MSI-X restoration (patch 4).
 
-Alex
+  - Rebase on 7.1-rc7
+
+v17 -> v18
+  - Rebase on 7.1-rc6.
+
+Farhan Ali (4):
+  PCI: Allow per function PCI slots to fix slot reset on s390
+  PCI: Avoid saving config space state if inaccessible
+  PCI: Fail FLR when config space is inaccessible
+  PCI/MSI: Enable memory decoding before restoring MSI-X messages
+
+ drivers/pci/hotplug/rpaphp_slot.c |  2 +-
+ drivers/pci/msi/msi.c             | 10 ++++++++++
+ drivers/pci/pci.c                 | 32 ++++++++++++++++++++++++++++--
+ drivers/pci/slot.c                | 33 +++++++++++++++++++++++--------
+ include/linux/pci.h               |  8 ++++++--
+ 5 files changed, 72 insertions(+), 13 deletions(-)
+
+-- 
+2.43.0
+
