@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3EF129BDBF;
-	Mon, 20 Jul 2026 15:19:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A863B2BE7B6;
+	Mon, 20 Jul 2026 15:20:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784560794; cv=none; b=Ba0miQCHITsSGhSJRW3dSs3JJbu19Vbo7+j0LBey4doyMTf3UNb9FzMgjRg6uSZ2Q2tiUdLKottfb4e33fWUr7rhsMzMqFjaP8STn8zXyIjwSLrknZ7O/3r3kAKb02KooRmCqhnth1ezw6TGMPrYHJWQHvl9QFFCw7bkKe4XA6o=
+	t=1784560815; cv=none; b=SwGY85Ajl/JXRTuhB/Rimyk2fenTLtoB/k9GACOQsoCzQ6aaHf2LuiL4DMTfVErN3dYGQrLc4Xn2RN8xu2HsFHKFAMA6vTbxEGRoRA4RPOYB+lLrJW5JQ/DA1V73mzy8e1mJN81igrrky1N6F5iMLgpnGiNaJkFz9gqO0MY11Zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784560794; c=relaxed/simple;
-	bh=kyB7NVODiWaRCg2lYTNpUSRXz7RC9zgrYyYCmcI/xo4=;
+	s=arc-20240116; t=1784560815; c=relaxed/simple;
+	bh=mtpZkPly4do1/oEOk5Z427UFpCunKnrEdUlu7UwyVuk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=U9VQxLvxsRqCtPlEoXJda69niVws3hgl09mKdjv3R9fWHqKFkhhflwCnsVDP5szN1saYyCd1Qaep+ys4iNgbMQ/fusiaNdbtGxpfk8fXm/8F6RA7krMIy/wMaXyH605hqUFRQ+5RLRzdmhBY97X1FkPwO8saQAqD10P5sAWMdEI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GFd++oL3; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rybOiOj6Y2TZJHIkbiRbZ1G8uTVTnIFBW7++T31eY6UIZxoyfq/YtgLf+4WQbhvXIz4M2XPAn+1Xj/CZ53aDOGhh1/qJClSCD+Mb1Vn1CnKH3IPVfp/Puo24b1W1hSOZM6b4A6CyPTL7LmGu6Q3ONToh0s4X09abkyWNthPloL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1IxprBi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GFd++oL3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B2BF1F00A3A;
-	Mon, 20 Jul 2026 15:19:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1IxprBi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E56B41F000E9;
+	Mon, 20 Jul 2026 15:20:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784560793;
-	bh=sQmSXD0739fsNdmNYjSP3MawCSiQllwIQnGyyfhhTv8=;
+	s=k20260515; t=1784560814;
+	bh=SwfpXQPoaTcvlBYIYTlkGGyq666sRXZI2K4qaGD2QME=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GFd++oL3rilWcDeFxUH0TGprXPkkTKlFjixJDEiHmC7+nYH2l+LV1xAH3RG+sQS9U
-	 Ctu5qR/qIjLaRq9/I8fX7DGwKVKJIgpfO09vpUsKCtdglkxOtU1xXjJ934m49VbwSo
-	 x6oeltyZUuTGBkAl1ha4/bY1sVviHrHV6Ta8p/g1Dawu0VsBRCdZBxoyF5PDYXPPcN
-	 BE0+YRnLZEElSsbX2YUpD4WAYfzP8jI3w28hPWs/oGbvu2bBOkBhMdEbX+KZPtMgYU
-	 W6ni6hsV66nrcag2ABO3wal+yYT2jniZZ3ULh+U9W2guwRA/feM8nKN6zK1O/Z5zkh
-	 mNP+adlqOzZkw==
+	b=V1IxprBiKXixwIXV5CEchwkIUFEWibywh+d4ePFGmlpUGuUC6CWYymRQz6aLdwY21
+	 NZdVXj3uE4b3jbHesxXKwg2hq4q/aEsPxFInCtTB3+1OGYC13SHUu8biilKnhVYDrb
+	 TyLJtRg553RG/mD+Z9YazdWtbcmGjrMn3snqDVGKzKWUeN6h6hm9NlS6JnqXYVYJ7U
+	 hJlTma59UzoWSOX+8v4a8T9LfED07Apb/Kh+sIkQ1ThzVRNFCifIBs8GLTPdJ0ncYW
+	 rtG7PFdtdp0WQhGiHQ8Gbg4zRGJWEALJBf3Cwfwy24nE+SP89KJBaC0PulkUsPka0c
+	 bda9pY+to0FUw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 11/16] PCI: dwc: qcom: Use cached PCIe capability
+Subject: Re: [PATCH v3 12/16] PCI: dwc: sophgo: Use cached PCIe capability
  offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-amlogic@lists.infradead.org, Frank.Li@kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org, neil.armstrong@linaro.org
-In-Reply-To: <20260720150619.24733-12-18255117159@163.com>
+Cc: linux-pci@vger.kernel.org, imx@lists.linux.dev, linux-amlogic@lists.infradead.org, Frank.Li@kernel.org, neil.armstrong@linaro.org
+In-Reply-To: <20260720150619.24733-13-18255117159@163.com>
 References: <20260720150619.24733-1-18255117159@163.com>
- <20260720150619.24733-12-18255117159@163.com>
+ <20260720150619.24733-13-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 15:19:52 +0000
-Message-Id: <20260720151953.0B2BF1F00A3A@smtp.kernel.org>
+Date: Mon, 20 Jul 2026 15:20:13 +0000
+Message-Id: <20260720152013.E56B41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,108 +47,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The `pci->pcie_cap` field remains uninitialized (0) when used in `=
-.post_init` callbacks, leading to corruption of the standard PCI configurat=
-ion header.
+
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the INTx IRQ dom=
+ain and chained handler are leaked on probe failure, which leaves a danglin=
+g pointer in the active IRQ handler and leads to a use-after-free if the in=
+terrupt fires.
 --
 
---- Patch [11]: [PATCH v3 11/16] PCI: dwc: qcom: Use cached PCIe capability=
- offset ---
-commit ddf8caa0039918520481c1cff7b9e80cbf8ee212
+--- Patch [12]: [PATCH v3 12/16] PCI: dwc: sophgo: Use cached PCIe capabili=
+ty offset ---
+commit 2e86ab7dbd69d3bcfaa3d7b4f601df27c48317f3
 Author: Hans Zhang <18255117159@163.com>
+PCI: dwc: sophgo: Use cached PCIe capability offset
 
-PCI: dwc: qcom: Use cached PCIe capability offset
-   =20
-This commit updates the Qualcomm PCIe driver to use the cached PCIe capabil=
-ity
-offset (pci->pcie_cap) instead of repeatedly calling dw_pcie_find_capabilit=
-y().
-It aims to optimize capability lookups during initialization and link updat=
-es.
+This commit modifies sophgo_pcie_disable_l0s_l1() to use the cached PCIe
+capability offset rather than searching for it again. The offset is fetched
+via dw_pcie_get_pcie_cap() inside the .init callback.
 
-> dw_pcie_host_init() caches the offset after .init, so .post_init callbacks
-> and later functions (.link_up, icc_opp_update) can use pci->pcie_cap
-> directly. For .init itself, we must call dw_pcie_get_pcie_cap() inside
-> qcom_pcie_host_init() to obtain the offset (hardware is already enabled).
-
-Is there a confusion here between dw_pcie_host_ops->post_init and
-qcom_pcie_ops->post_init?
-
-The commit message correctly notes that dw_pcie_host_init() caches the offs=
-et
-after dw_pcie_host_ops->init returns. However, the .post_init callbacks
-modified in this patch belong to struct qcom_pcie_ops.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index d8eb52857f69c..bd383d7cb02b1 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -360,7 +360,6 @@ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *=
-pci)
-> =20
->  static void qcom_pcie_set_slot_nccs(struct dw_pcie *pci)
+> diff --git a/drivers/pci/controller/dwc/pcie-sophgo.c b/drivers/pci/contr=
+oller/dwc/pcie-sophgo.c
+> index 044088898819e..39703d2b7b5f2 100644
+> --- a/drivers/pci/controller/dwc/pcie-sophgo.c
+> +++ b/drivers/pci/controller/dwc/pcie-sophgo.c
+> @@ -164,9 +164,10 @@ static void sophgo_pcie_msi_enable(struct dw_pcie_rp=
+ *pp)
+>  static void sophgo_pcie_disable_l0s_l1(struct dw_pcie_rp *pp)
 >  {
-> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->  	u32 val;
+>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+> -	u32 offset, val;
+> +	u8 offset;
+> +	u32 val;
 > =20
->  	dw_pcie_dbi_ro_wr_en(pci);
-> @@ -370,9 +369,9 @@ static void qcom_pcie_set_slot_nccs(struct dw_pcie *p=
-ci)
->  	 * notifications for the Hot-Plug commands. So set the NCCS field to
->  	 * avoid waiting for the completions.
->  	 */
-> -	val =3D readl(pci->dbi_base + offset + PCI_EXP_SLTCAP);
-> +	val =3D readl(pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
+> -	offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	offset =3D dw_pcie_get_pcie_cap(pci);
 
 [Severity: High]
-Is pci->pcie_cap initialized when this is called?
+This isn't a bug introduced by this patch, but while looking at the call
+chain from sophgo_pcie_host_init() to sophgo_pcie_disable_l0s_l1(), I
+noticed a potential issue with how the INTx IRQ domain is handled during
+probe failures.
 
-Looking at qcom_pcie_host_init(), it calls pcie->cfg->ops->post_init(pcie)
-before it calls qcom_pcie_clear_aspm_l0s() where dw_pcie_get_pcie_cap() is
-finally executed:
+In sophgo_pcie_host_init(), the IRQ domain and chained handler are set up:
 
-qcom_pcie_host_init()
-  pcie->cfg->ops->post_init(pcie)=20
-    qcom_pcie_set_slot_nccs(pcie->pci)
-      val =3D readl(pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
-  ...
-  qcom_pcie_clear_aspm_l0s(pcie->pci)
-    offset =3D dw_pcie_get_pcie_cap(pci);
+        irq =3D sophgo_pcie_init_irq_domain(pp);
+        if (irq < 0)
+                return irq;
 
-Since pci->pcie_cap is 0 during qcom_pcie_ops->post_init, won't this access
-standard PCI configuration space (like offset 0x14 for PCI_EXP_SLTCAP, which
-is BAR1) instead of the PCIe capability registers?
+        irq_set_chained_handler_and_data(irq, sophgo_pcie_intx_handler, pp);
 
->  	val |=3D PCI_EXP_SLTCAP_NCCS;
-> -	writel(val, pci->dbi_base + offset + PCI_EXP_SLTCAP);
-> +	writel(val, pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
-> =20
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  }
+If dw_pcie_host_init() subsequently fails during sophgo_pcie_probe(), devres
+will free the struct sophgo_pcie structure, including the pp pointer.
+
+However, there is no .deinit callback in sophgo_pcie_host_ops to call
+irq_domain_remove() and irq_set_chained_handler_and_data(irq, NULL, NULL).
+
+Could this leave a dangling pointer in the active IRQ handler, leading to
+a use-after-free if the interrupt fires?
 
 [ ... ]
 
-> @@ -935,7 +934,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pci=
-e)
->  static int qcom_pcie_post_init_2_3_3(struct qcom_pcie *pcie)
->  {
->  	struct dw_pcie *pci =3D pcie->pci;
-> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	u8 offset =3D pci->pcie_cap;
->  	u32 val;
-
-[Severity: High]
-Does this also suffer from the same initialization ordering issue?
-
-Since qcom_pcie_post_init_2_3_3() is called by qcom_pcie_host_init() before
-pci->pcie_cap is populated, offset will be 0 here, causing the subsequent
-writes to PCIE_CAP_SLOT_VAL and PCI_EXP_LNKCAP to overwrite standard PCI
-header fields.
-
-> =20
->  	/* Force PHY out of lowest power state */
-
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720150619.2473=
-3-1-18255117159@163.com?part=3D11
+3-1-18255117159@163.com?part=3D12
