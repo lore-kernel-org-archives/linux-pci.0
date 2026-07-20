@@ -1,106 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3E238D407
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 18:35:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E20D421F18;
+	Mon, 20 Jul 2026 18:43:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784572557; cv=none; b=jvjKs7ptoH0eD3zQrW9ISe5uZH6Jj8AQ/HdqdnHijfFbKo5zKWsx8mIDjQTYOBMfHcgqEJzqWcvTnFQ1wazyP3Y5hjQMR09gZS/nZ86MMVPP3CG94k3wNaYFQiDraty3cXWUUn+Hjcd2KKV58oMhTmPypv1zS9id6f8sHD4OGPw=
+	t=1784573002; cv=none; b=Ij4yUu4ToI5M2ZjlrFaMbqQfTb1obvk6agKJxQLfTSNTh8tEbrZAPh9JrF00ELZHiNomcJQUgH7syXKNNu7j70L15QtMf+lfwZDmG/SvI5QQ99zu80Hh2ZQgmuAXGmziBvCLaIMSK24fhWMX5iFbVrMB8KQSieKcrrkApiRj2xE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784572557; c=relaxed/simple;
-	bh=VImTsfhTcCBBrO+ShwAWdY3sEBLt3AziDXIzDQZeQhY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=f/AFBPRTfq3ibxd1eyNPvxtbIdkvEnDzqVJR18b8mLYr2UHDV2yD2iEmY0d+xZ2LzHIEqtyCsMZSttnBKXWQY5FP45Fw4VbqX/QRHUiV0ksnCvw/Opa31LMJaVcJBT6dr6siegrp+cMHhezY4wqvg+DoSvhOo8/FXAfO8Z2G3Yo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TxKa4w7j; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784573002; c=relaxed/simple;
+	bh=ayzPU5TcsMBPQf3X2iyqylXARKQQmJBw8aj1nHxUJ8A=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=Q5vttzd7fqLDn3Yjrz8ZNp8pGcRccgtWNuoya3nDBu9T+bzzFgFZ+WSVUxs6mfktXotoIEMhaRHRg4eN9ATAqp6Hc5AXQ8YK2nKunLaSJflqtgrJrM6T4qDndA+27SwA8hzg87MMMkFS9Y/3B2QKvDJo+KX/fSfAy+ck4xVfxfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=G78R0G4A; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TxKa4w7j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E5C1F000E9;
-	Mon, 20 Jul 2026 18:35:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784572556;
-	bh=Q+s6XxxwAZkgJEdIh6ckySnrVs9ZCcBP2otXdk8EAYg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=TxKa4w7jn0JkpYCeNG3UrF1Lzp3JC+GoIV1RW9fI2PFCmlKI0/NoCqKd+sYb6Wrfi
-	 icrf+51jlz/oUhofOIouIuiTGXO71/qxfDhf+nxzOPf40aacrYJTIx5BuVwPZQobW6
-	 SIlfqsT9hvbUbEbWD64WuYXaAm/G3rbsFHYr8AYHLSswJtmsIdxAFhv4wI+Zr05W74
-	 KMHBhZgHuX5iimhkmp4vMOn62lpw97eVfUh6lZNCsdpLy3GGVoUQSKEwApCyHIr6zb
-	 4rJubi73gQ/qq/6eqcJFHRuoRRgXPMDOCewjKOztxJYCVehUzJKZUBVBWLfJFRx+t7
-	 bqMSuLbUuj7PQ==
-Date: Mon, 20 Jul 2026 13:35:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nirmal Patel <nirmal.patel@linux.intel.com>
-Cc: nirmal.patel@intel.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	lpieralisi@kernel.org
-Subject: Re: [PATCH v7] PCI: vmd: Add feature to scan BIOS enumerated devices.
-Message-ID: <20260720183555.GA354351@bhelgaas>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="G78R0G4A"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=YELh0b3QajkSD4msD1qE3xlvEfmbrtR4vMSO8zUFNP4=; b=G78R0G4ApJYfZi/9vAbiWuWhBT
+	yw/nzVk23WLIDxAxG4p8fgkx8rE8TaNly1j1YYzp9MmCQmD6/RWuWBzYbnqTsTMtJzGYBKOoGWby+
+	4SiaXgSFbifrGrkVFDWWqFSYfoLAAhIniOb3YLTfQ/mhFupBe+ASo7FyWIIN8AlHr4OljXgP6eDLZ
+	ZzplaghNrp6Xw9vS7ZQUgHAAgVWAwO7MFIEoOSECgJEQk5WcUbXOJQlnQeIrPHt2hGm5+JRpqg28C
+	ugA/Edsoo0QLXysrw65j4Sfe39CWGmpmmtuRxwM8liCCK6a4Qnt0KZy6m3GUjPmjP0+dB8Jxld5FH
+	XAKLxcJg==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wlsxK-0000000B7jc-1nFA;
+	Mon, 20 Jul 2026 12:43:11 -0600
+Message-ID: <b2c37f4f-79dd-428f-915a-2a862d20924c@deltatee.com>
+Date: Mon, 20 Jul 2026 12:42:50 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260629165025.268836-1-nirmal.patel@linux.intel.com>
+User-Agent: Mozilla Thunderbird
+To: Mykola Marzhan <mykola@meshstor.io>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai@fygo.io>, Keith Busch <kbusch@kernel.org>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
+ <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
+ linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260719105327.864949-1-mykola@meshstor.io>
+ <20260719105327.864949-2-mykola@meshstor.io> <20260720144943.GA17375@lst.de>
+ <CAPzsNDv6hUV3gHdaxuwjRcr4couUKq_M5DKObFNaYqCHnm7ZMw@mail.gmail.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <CAPzsNDv6hUV3gHdaxuwjRcr4couUKq_M5DKObFNaYqCHnm7ZMw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: mykola@meshstor.io, hch@lst.de, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v2 1/7] blk-mq-dma: restore BLK_STS_TARGET for unsupported
+ P2P transfers
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Mon, Jun 29, 2026 at 04:50:25PM +0000, Nirmal Patel wrote:
-> Newer VMD  with device ID 0x28c1 has unique settings compared to its
-> predecessor where BIOS enumerates the entire VMD device tree and
-> assigns respective configurations.
-> 
-> VMD configuration BAR0 carries over from GNR legacy VMD as the mechanism
-> to access the configuration space of the devices owned by VMD. The size
-> of this window is fixed at 256 MB, where each function consumes 4 KB and
-> every bus consumes 1 MB.
-> 
-> The shadow and scratchpad registers have been relocated from the VMD
-> configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
-> refers to as MEMBAR2 or MSI-X bar.
-> 
-> VMD MSI-X remapping enable/disable is no longer supported.
-> 
-> All the VMD driver code needs to do is to obtain bus hide range along
-> with shadow register values set by BIOS and perform a bus scan.
-> 
-> The commit also involves small refactoring of vmd_enable_domain function.
-> ...
 
-> +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-> +					unsigned long features,
-> +					resource_size_t *membar2_offset,
-> +					resource_size_t *offset1,
-> +					resource_size_t *offset2)
-> +{
-> +	int ret;
-> +
-> +	/*
-> +	 * Shadow registers may exist in certain VMD device ids which allow
-> +	 * guests to correctly assign host physical addresses to the root ports
-> +	 * and child devices. These registers will either return the host value
-> +	 * or 0, depending on an enable bit in the VMD device.
-> +	 *
-> +	 * For certain VMD devices (i.e. 0x28C1), BIOS places device info
-> +	 * in BAR4 shadow registers to determine the base bus number and memory
-> +	 * offsets.
-> +	 */
-> +	if (features & VMD_FEAT_USE_BIOS_INFO) {
-> +		*membar2_offset = MEMBAR2_OFFSET_28C1;
-> +		ret = vmd_get_bus_info_from_bar4(vmd, offset1, offset2);
 
-Is it guaranteed that for device 0x28C1, BIOS will *always* do the
-enumeration?  Sounds like a rev-lock between this device and the BIOS,
-i.e., this device can't be used at all with an old BIOS that doesn't
-know how to do that enumeration?
+On 2026-07-20 11:30, Mykola Marzhan wrote:
+> On Mon, Jul 20, 2026 at 4:49 PM Christoph Hellwig <hch@lst.de
+>> This is a really weird writing style, and suggested to me you neither
+>> understand the code nor the problem.  Please actually think yourself,
+>> write the patches and commit logs yourself instdad of this garbage.
+>> 
+>> And please also explain how you even generate the I/O that fails this
+>> way.
+> - md mirrors the write: the copy to member 1 succeeds, the copy to far
+> member fails as BLK_STS_INVAL.
+> - md deliberately ignores BLK_STS_INVAL, so the write is counted as
+> written and the mirror silently diverges.
 
-> @@ -1114,6 +1228,10 @@ static const struct pci_device_id vmd_ids[] = {
->  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
->  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
->  				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
-> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
-> +		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-> +				VMD_FEAT_CAN_BYPASS_MSI_REMAP |
-> +				VMD_FEAT_USE_BIOS_INFO,},
->  	{PCI_VDEVICE(INTEL, 0x467f),
->  		.driver_data = VMD_FEATS_CLIENT,},
->  	{PCI_VDEVICE(INTEL, 0x4c3d),
+Seeing I just reviewed this and answered it for myself I'll expand on
+what's going on here:
+
+The switch statement will take the default branch when
+pci_p2pdma_state() returns PCI_P2PDMA_MAP_NOT_SUPPORTED. This indicates
+the memory that's trying to be mapped in this way will not succeed
+because it's going through an unsupported host bridge (or if the device
+isn't a PCI device, etc, but this is rarer or perhaps not possible).
+Returning BLK_STS_INVAL doesn't seem correct here, to me. (Arguably it
+might have been clearer if the switch case explicitly stated
+PCI_P2PDMA_MAP_NOT_SUPPORTED instead of relying on the default).
+
+Returning -EREMOTEIO/BLK_STS_TARGET was the convention for this I had
+originally set when I wrote some of this and differentiating the error
+does seem important in Patch 6 in this series.
+
+Logan
