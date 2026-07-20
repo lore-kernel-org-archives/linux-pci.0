@@ -1,221 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9524420C029;
-	Mon, 20 Jul 2026 02:18:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D433A28CF5D;
+	Mon, 20 Jul 2026 02:18:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784513890; cv=none; b=FjTalQphETdl0JN3hY4kjLQ/0qpTzqKbriwM0JPpX1i5kRPoxBOz4HJr268DXXDtGprj4nqHznU+362cNRQMWbwaLDWJUoU5xIOHpc7zj5e8FwCC1mGMDcPqH6npYE4hScBKDSz9BLE0xHydx+s9RjWRDsodWeFYyhuKhXFJLv0=
+	t=1784513939; cv=none; b=eg7Qc6iXJU6WVhXA/5T10G8yU4dC0sgL39uRO9TKfI7UOq8h8ya0Rce/86nn3edbYEX8VvjtDhDBwVbXvIDg55V2GFei5X17FpFpzl18LpVyHIvwyVEiYWhR9JGzf8nhhU2SmYeEgMGQdtFJX+jTeNvMF5o6MvzUNLktNYHRM1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784513890; c=relaxed/simple;
-	bh=Q8R6voTVEs2i0t0tq9FOBHYciobkHo6MLg3YH6ZLdf4=;
+	s=arc-20240116; t=1784513939; c=relaxed/simple;
+	bh=Ck6yGmwo3w3lBtH8uDQYvfnS3jJuxBJH3ULAfbzP/qA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ts1S7k6H2HpmeS0t9ohNYO/RAkzbe++cY6/Pchl9SkjEpPguKTDHd3IbaYWWXjm77PoUi/tv8HhORTm+POpCI5/kCmTxzg6bqO9rmd9X+F6hOesSt3XM6UWEJFESfDM6Xw02K2eSAVW644a5Yiqj7QONecus1YAQ/GPTSwNhra8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIYobOzT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=te0MgfeB8+Zxq8h7MipKt8aeftLjz9J2p68rz8XWenzDeB5wTsKfnCznPNSAPXaYZDOfI7TlR3aD5/QGrTt8xKF4ZIoXPVRwpRrmS9wp9P4C/hMNf7izX3FA/kBs1dAnlTW84/07J37RHKDVSs4ze3bP1ljepU78WIEJSFIuxr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E3fKiIvL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIYobOzT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C26921F000E9;
-	Mon, 20 Jul 2026 02:18:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E3fKiIvL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21EB61F000E9;
+	Mon, 20 Jul 2026 02:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784513889;
-	bh=zNnH5MFGFZPr3emnyh8izYMrHBKBiTOTAV9kPXNgNpw=;
+	s=k20260515; t=1784513937;
+	bh=Ck6yGmwo3w3lBtH8uDQYvfnS3jJuxBJH3ULAfbzP/qA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JIYobOzT7KYyJZd5vrHrFdrrPGN6ksXWxabfhOFYDo2z8BQ6DSB9PVhNiE+tCFURg
-	 ihBhvolGmM795mjKajDpPy394df91kRN9MZLqENFg0pEeEZDzVLJAMTgWA581bPjGi
-	 OdFIemvywk3qsJeuwKVs63s9+X7IdQr6VXf2o/qnT3s9G7leY13T1g70OFeOacEb3u
-	 6fCmlq18AIDY41Qfd7EIJhyNXIi0ch9josDb0K66l210D1claxqGuQeJi1f4yYR84w
-	 3GbXnMzHCwT3L5BoQVg4mKCMxa6HyTdiYXUkcdz0F6yD9shcpYTknEsVreNQ1sSxFe
-	 ao8cdNjYrnrxg==
+	b=E3fKiIvLEFgAfEVefNkNr29LGQmz76j0lVzQI2fVwZevoytxG5j21HF+EAeRjPkiD
+	 fxh/PnogrgVAcAW+2BYrm7L8WiKZ8wALHSu4ViWiZOoi0OpV7w/WT66kjw780V+Srw
+	 v57NH4z5FHmKrZic3EmFDnVEDZsiW7vG2O6Iw8Sc1qFpFsUkdk2W4wAjhK6zmISJlj
+	 u6GukRbTzeIzQ2qRvaglwDh73Tz2Owe8eMigKhY/VEWXdpzIg8fbzkHzyyosmAMrj9
+	 1xIj6lEM2ow1IBrc++NMX8CvUL8jEW1gAhLI+nkgHmzFMQ3l2dHCTOO6Rj8Dx9/Cay
+	 lVyUZ1HeYHTvQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/5] PCI: dwc: rcar-gen4: Add support for R-Car X5H
- PCIe4
+Subject: Re: [PATCH v2 1/5] dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car
+ X5H PCIe4 compatible
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
-Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org
-In-Reply-To: <20260720020505.315335-6-marek.vasut+renesas@mailbox.org>
+Cc: wsa+renesas@sang-engineering.com, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260720020505.315335-2-marek.vasut+renesas@mailbox.org>
 References: <20260720020505.315335-1-marek.vasut+renesas@mailbox.org>
- <20260720020505.315335-6-marek.vasut+renesas@mailbox.org>
+ <20260720020505.315335-2-marek.vasut+renesas@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 02:18:07 +0000
-Message-Id: <20260720021808.C26921F000E9@smtp.kernel.org>
+Date: Mon, 20 Jul 2026 02:18:56 +0000
+Message-Id: <20260720021857.21EB61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [High] Missing `phy_exit()` call on error paths and driver teardown cause=
-s a leak of PHY resources.
-- [High] Missing cleanup of core clocks and reset states when `phy_init()` =
-fails in `rcar_gen5_pcie_init()`.
-- [High] Incorrect initialization sequence in `rcar_gen5_pcie_ltssm_control=
-()` and ignored error check for `phy_power_on()`.
-- [High] A 32-bit read-modify-write of `PCI_EXP_LNKCTL` inadvertently clear=
-s Write-1-to-Clear (W1C) bits in the adjacent `PCI_EXP_LNKSTA` register.
-- [High] Dereference of `ERR_PTR` in `rcar->phy_base` on Gen4 code paths if=
- a malformed Device Tree is provided.
---
+> Document bindings for R-Car X5H (R8A78000) PCIe4 host module.
+>=20
+> The binding document is deliberately using "renesas,rcar-gen5-pcie4"
+> DT compatible string to discern R-Car X5H PCIe4 controller supported
+> by this binding, from R-Car X5H PCIe6 controller which will use a
+> separate binding.
+>=20
+> The R-Car X5H PCIe4 controller does no longer include PHY register
+> range, the PHY is now a separate IP and referenced via the 'phy' DT
+> property. The 'reg' and 'reg-names' DT properties therefore differ
+> between R-Car Gen4 PCIe and R-Car X5H PCIe4, and the difference is
+> handled in the allOf section.
+>=20
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
---- Patch [5]: [PATCH v2 5/5] PCI: dwc: rcar-gen4: Add support for R-Car X5=
-H PCIe4 ---
-commit cab5ad82173a65768d51a17315ea45161e805bdf
-Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
-
-PCI: dwc: rcar-gen4: Add support for R-Car X5H PCIe4
-
-Add support for R8A78000 (R-Car X5H) PCIe4. The controller initialization
-sequence is factored out into controller-specific callbacks. Endpoint mode
-is currently not implemented for R-Car Gen5 PCIe4.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> index f88168f2df195..794c42c53380d 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-
-[ ... ]
-
-> @@ -169,6 +177,35 @@ static int rcar_gen4_pcie_speed_control(struct rcar_=
-gen4_pcie *rcar)
-> +static int rcar_gen5_pcie_speed_control(struct rcar_gen4_pcie *rcar)
-> +{
-> +	struct dw_pcie *dw =3D &rcar->dw;
-> +	u32 lnkcap =3D dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCAP));
-> +	u32 lnksta =3D dw_pcie_readw_dbi(dw, EXPCAP(PCI_EXP_LNKSTA));
-> +	u32 val, retries;
-> +
-> +	if ((lnksta & PCI_EXP_LNKSTA_CLS) =3D=3D (lnkcap & PCI_EXP_LNKCAP_SLS))
-> +		return 0;
-> +
-> +	/* Retrain link */
-> +	val =3D dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCTL));
-> +	val |=3D PCI_EXP_LNKCTL_RL;
-> +	dw_pcie_writel_dbi(dw, EXPCAP(PCI_EXP_LNKCTL), val);
-
-[Severity: High]
-Will this 32-bit read-modify-write access unintentionally clear Write-1-to-=
-Clear
-(W1C) bits in the adjacent PCI_EXP_LNKSTA register?
-
-Since PCI_EXP_LNKCTL (offset 0x10) and PCI_EXP_LNKSTA (offset 0x12) share t=
-he
-same 32-bit Dword, any W1C bits set in the Link Status register will be rea=
-d as
-1 and written back as 1, clearing them. Could a 16-bit accessor be used ins=
-tead?
-
-> +
-> +	/* Wait for link retrain */
-
-[ ... ]
-
-> @@ -284,6 +321,44 @@ static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_g=
-en4_pcie *rcar)
-> +static int rcar_gen5_pcie_init(struct rcar_gen4_pcie *rcar)
-> +{
-> +	struct dw_pcie *dw =3D &rcar->dw;
-> +	int ret;
-> +	u32 val;
-> +
-> +	/* R-Car Gen4 and Gen5 common initialization. */
-> +	ret =3D rcar_gen4_pcie_common_init(rcar);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* R-Car Gen5 specific additional initialization. */
-> +	ret =3D phy_init(rcar->phy);
-> +	if (ret)
-> +		return ret;
-
-[Severity: High]
-If this fails, do we need to clean up the resources just initialized by
-rcar_gen4_pcie_common_init()? It looks like returning the error directly le=
-aves
-core clocks enabled and resets unhandled.
-
-[Severity: High]
-Since phy_init() is called on the successful initialization path, shouldn't
-there be a matching phy_exit() in the deinitialization paths (such as
-rcar_gen4_pcie_common_deinit) to prevent leaking PHY resources when the dev=
-ice
-is unbound?
-
-> +
-> +	dw_pcie_dbi_ro_wr_en(dw);
-
-[ ... ]
-
-> @@ -321,8 +396,11 @@ static int rcar_gen4_pcie_get_resources(struct rcar_=
-gen4_pcie *rcar)
->  	struct device_node *root_port;
-> =20
->  	rcar->phy_base =3D devm_platform_ioremap_resource_byname(rcar->pdev, "p=
-hy");
-> -	if (IS_ERR(rcar->phy_base))
-> -		return PTR_ERR(rcar->phy_base);
-> +	if (IS_ERR(rcar->phy_base)) {
-> +		rcar->phy =3D devm_phy_get(dev, NULL);
-> +		if (IS_ERR(rcar->phy))
-> +			return PTR_ERR(rcar->phy);
-> +	}
-
-[Severity: High]
-If the device tree lacks the phy memory region but provides a phys node,
-the fallback devm_phy_get() succeeds, leaving rcar->phy_base containing an
-error pointer.
-
-Later on, if Gen4 code paths like rcar_gen4_pcie_ltssm_control() execute,
-they unconditionally call rcar_gen4_pcie_phy_reg_update_bits():
-
-rcar_gen4_pcie_phy_reg_update_bits()
-	tmp =3D readl(rcar->phy_base + offset);
-
-Can this dereference the error pointer and crash? Should rcar->phy_base be =
-set
-to NULL after falling back to devm_phy_get()?
-
-> =20
->  	root_port =3D of_get_next_available_child(dev->of_node, NULL);
-
-[ ... ]
-
-> @@ -743,6 +821,28 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_g=
-en4_pcie *rcar, bool enable)
-> +static int rcar_gen5_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, boo=
-l enable)
-> +{
-> +	u32 val;
-> +
-> +	val =3D readl(rcar->base + PCIERSTCTRL1);
-> +	if (enable) {
-> +		val |=3D APP_LTSSM_ENABLE;
-> +		val &=3D ~APP_HOLD_PHY_RST;
-> +	} else {
-> +		val &=3D ~APP_LTSSM_ENABLE;
-> +		val |=3D APP_HOLD_PHY_RST;
-> +	}
-> +	writel(val, rcar->base + PCIERSTCTRL1);
-> +
-> +	if (enable)
-> +		phy_power_on(rcar->phy);
-> +	else
-> +		phy_power_off(rcar->phy);
-> +
-> +	return 0;
-> +}
-
-[Severity: High]
-Is it expected to enable the LTSSM and drop the PHY reset before calling
-phy_power_on()?  Normally, wouldn't the PHY need to be powered and stabiliz=
-ed
-before activating the MAC's LTSSM?
-
-Also, if phy_power_on() fails, shouldn't we handle the error instead of
-unconditionally returning 0?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720020505.3153=
-35-1-marek.vasut+renesas@mailbox.org?part=3D5
+35-1-marek.vasut+renesas@mailbox.org?part=3D1
+
