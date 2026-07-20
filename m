@@ -1,179 +1,94 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7585241DEF8;
-	Mon, 20 Jul 2026 13:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B79F3C3F5A
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 13:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784553708; cv=none; b=GDB6IsdjUM5Qubwhtd9rL4bMxYerW9cZcaODFM4DBR0w1UuX+Kkd2N0L76cnzOIoeCaZAdQHJ/yA+dpFm/iQNVGc7xIC2l3OddXrrltsizgeGb9njHRx5sgsqht85s/uURl2eK8motT5BvZuiGZA/gPf2CcSEGsp4o3IAuhA7jc=
+	t=1784555552; cv=none; b=Wshzd56h/G+Bok38bwu1biSelJDXc+lEEZbn3X0nDEY+7OnJWsuOpZWeouh5Rec+4AdVcVIUVR+Wy5X03L+/WSQzK40cC4f/N1dYS6kmWsPpdDnATZGDw0LXjGq2NkOIoQ9IpGFkP/1dR9aGco0z8ueDoN1f1qCaa5gRSzj/X/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784553708; c=relaxed/simple;
-	bh=7qEOOjI2PDJPJ/qEWE3gxtYhnRJRwbdUyG270bI4+dE=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=RNUi2rjKVsvlsUCp+45apBn8fczJxTF2bMVfohppQV+akDQj+635SX1wVtas3CdR3fSfNMmmm39SZTdT798cubgDMO3Jnrl3/xt9Syq19eERHe69h+W+3YLqQzDv85ifX7YBdeltwjQfI/7WBXP4Gc/q/rZkCIUl5OTfWF+FZ48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=N39nCFjf; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784555552; c=relaxed/simple;
+	bh=8NPcPX4VGMeFf788LoU11J1w5DXTi+oJnAW8j3ghSEk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vmm1gaQH7QC7dYpRd62iuc3L1dWj+myIAmZiaim5IyCFManWWJT2h980Bav1yXJC8ywmX606Y9ArGw+XEU0jHF2nGKTwyJcMuug/GgkyDC1W4kD0PKi/9FfPcs31w0r0IsnZ++i1p+9DrA2TIa2SqrzHFfyozi2exYyk5IfDyHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YcLOK6ed; arc=none smtp.client-ip=209.85.160.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="N39nCFjf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784553706; x=1816089706;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=7qEOOjI2PDJPJ/qEWE3gxtYhnRJRwbdUyG270bI4+dE=;
-  b=N39nCFjfHlTc1GE+WWzCECycURsMROgBCaklxhEVE/eujzQCS3FoY+Kj
-   6fwCFZ3lNzz8k5Fc3k+w68fdviWMOVxUb03XCQ4ag/nA7D/Nj3AVjYc8x
-   UZmJcODdO1frzi632yasMdgn0VzpIkuNNthBSr0buqJ1MnoiN9OLe6EKN
-   Vo899MW3s9DYu4BVGqouy0Rm95oUBNtKALQH60hsNbrlZEdrQHpsMJ7ci
-   iMFSO1oq0H2m/DJvh/753j1+Mf9B9VpO1veCYwdRCOt/Owpq/PSFwbTlb
-   IBYO53B09AcTgIoRSpzh7pbBPFMsuBj1TQn4YI2NWc9C95Ul03sgHJZNw
-   g==;
-X-CSE-ConnectionGUID: O4N9KAorT+eQ30WKF9XwVw==
-X-CSE-MsgGUID: sBGAsODhR6CGsd4dyTPQfg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="85082870"
-X-IronPort-AV: E=Sophos;i="6.25,174,1779174000"; 
-   d="scan'208";a="85082870"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 06:21:46 -0700
-X-CSE-ConnectionGUID: X3GYMe4iTAa2P/2h8WNSqg==
-X-CSE-MsgGUID: rBpj0s2hRQiAJCzrRuHTZQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,174,1779174000"; 
-   d="scan'208";a="256278476"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.144])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 06:21:44 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 20 Jul 2026 16:21:40 +0300 (EEST)
-To: Anthony Pighin <anthony.pighin@nokia.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Don't report fully optional resources as assignment
- failures
-In-Reply-To: <20260717180029.1829888-1-anthony.pighin@nokia.com>
-Message-ID: <0d249665-2d76-7609-f78b-71ec1a94b507@linux.intel.com>
-References: <20260717180029.1829888-1-anthony.pighin@nokia.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YcLOK6ed"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-51c01c79467so714401cf.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 06:52:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784555550; x=1785160350; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=UgD9bXXwSeM0164tZRI/2maKOOM1j5/MTHlzcI24yvE=;
+        b=YcLOK6edcDgDMraLEk2hRLTiWx9CcMO5wHhz4ltS/LgHi41Xr/q+dlsdVzLZ7hGTiA
+         Z5HrIwzXykoqMd/33zoKExEE6EFzC4Jpo/nww/MGH+Juv1ivE0CviYLbFV64jNLAFIhA
+         +dv7Ww57RGCrhVd8iB7eJAWOeygd+alTWVMdOnaQaILl7IXfwYLlNQOnZOWFpe2v3i4r
+         Yqd0BvzS4gLhaEc35XNnTnerjAwyW9hPJKm/lpelRa6ppJWohSwVpYHA8PEX8IERwz0a
+         qAB5eQsY8faGzZXJCh+EkmUHx0b6iEVvRDVv7+DIVpA8Eg4GzuSoy0ln8/HtSQF0kjp2
+         tpDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784555550; x=1785160350;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=UgD9bXXwSeM0164tZRI/2maKOOM1j5/MTHlzcI24yvE=;
+        b=W6r4V86AKEPfVLwr8rKXsKz/6J3Wcbx1t1SlzJvjz3BZyOQUV3Q274em17cW07C71j
+         MTloWbHvfM9ZQnpwnoJs91YmKmbmMNQQP61KG1HPNlmWdywYNye6PnAtARBf4H5D/fPA
+         tJ4FvwqSfFCRWaNswGffzNnDDUUnrvYleSasDpsbgwr909S+GsvkdvGg+MT4/BBGsKLJ
+         faIexO7lBJOUNkr70FakBV5b2kmGSKKTXVQWaUf2rBm6dEUqVjQ0HdAH0wuN/a94H8+m
+         3LFZSi8WGrwHBGMQLpN51TR949Os6BEZVfPO5ictbCAbDW9MVSUdvlvvMW4g6WV6c8j1
+         /KRg==
+X-Forwarded-Encrypted: i=1; AHgh+RpPTLWC4I0MgWcdonckCB6jqIvSR9I8Q3tMHLmFtqao9259PQvhtkTjdvfwcZLlUSeUimmbOv+0YnU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTCph3xVTIGredCLbTS60aXTF4sIAhew+poa3DRGMPZKUMNQ4J
+	QuL4LeDsicQTPdRmrsWJH+CpLz5CKXAc4kvS14bh9Ft4O/BKuYXsIVJbMQ/mYK7WLg==
+X-Gm-Gg: AfdE7cm9biFGx5/sjM//8oIpp9hkKm/59jjMfFdsku0kY0uDsFJst4kelVQoBwXioTl
+	9r/yMKO+gCvjD0NYdvFnJyDpZUk4ktTtEN0FWO/713u6h/QrflOXU9NoOyDsD1twrJESG3++T7v
+	PoKJMjAnJVXUsUYcusZQokVJsrSuqT3PLOQ9fd6QpUxzlu+hkISFGS76P3YVFSTS6XeUrN+vMOK
+	XZXkmk/HgUb8afVsbmmal/T9E8bRh5tfJui0x5Ju6MyueSztSw+KbL/WpQJFWDp/+ZXQjyChAp/
+	tOqjl72oMXj73AKiAimXre4Mr4ae6/JxqbdvjGFrll2j52tyA9o+8uBDKQl+kWLE31c+i3XOtvl
+	WkZe043sBbTxTOBjEXEJVqayLldfmz/C6sVQw2fFWz0EH+hGeEOfrmHmlfjnvtRXw5+W7nkwa9o
+	hhW4IeWQVbNBuDpaoi8voFBdhWLe4imxNmHqNz
+X-Received: by 2002:a05:622a:5e88:b0:517:5e32:2d14 with SMTP id d75a77b69052e-52600a85199mr1590141cf.10.1784555549780;
+        Mon, 20 Jul 2026 06:52:29 -0700 (PDT)
+Received: from google.com (10.129.124.34.bc.googleusercontent.com. [34.124.129.10])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-81ef42acf2esm50683247b3.33.2026.07.20.06.52.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 06:52:29 -0700 (PDT)
+Date: Mon, 20 Jul 2026 13:52:22 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
+	linux-nfs@vger.kernel.org, Chuck Lever <cel@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
+	linux-rdma@vger.kernel.org, Shivaji Kant <shivajikant@google.com>
+Subject: Re: [PATCH v3 1/5] nfs: make nfs_page pin-aware
+Message-ID: <al4oFjOLaF3LDeyB@google.com>
+References: <20260715143540.3597616-1-praan@google.com>
+ <20260715143540.3597616-2-praan@google.com>
+ <20260720091322.GA24298@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720091322.GA24298@lst.de>
 
-On Fri, 17 Jul 2026, Anthony Pighin wrote:
-
-> A hotplug bridge may request a window with required size 0 plus
-> add_size headroom.  For example, the PCI core speculatively requests
-> a non-prefetchable MMIO reserve for a hotplug bridge even when no
-> downstream BAR currently requires that space.
+On Mon, Jul 20, 2026 at 11:13:22AM +0200, Christoph Hellwig wrote:
+> It would be nice to avoid the overly long lines, but otherwise this
+> looks good.
 > 
-> reassign_resources_sorted() temporarily grows an unassigned resource
-> from its required size to the required size plus add_size.  If
-> pci_assign_resource() fails, the failure is ignored because the
-> additional space is optional, but the resource is left unassigned at
-> the enlarged size.
-> 
-> Since commit 96336ec70264 ("PCI: Perform reset_resource() and build
-> fail list in sync") and commit 2499f5348431 ("PCI: Rework optional
-> resource handling"), the __assign_resources_sorted() out path
-> unconditionally adds every remaining unassigned resource to fail_head.
-> The headroom-enlarged window is therefore reported as though a required
-> resource failed.
-> 
-> pci_assign_unassigned_bridge_resources() interprets the non-empty
-> fail_head as grounds for another assignment round and releases bridge
-> windows with whole_subtree.  On a system whose < 4GB root-bus MMIO
-> aperture was already fully allocated, hotplugging an endpoint that
-> required only a 64-bit prefetchable BAR produced:
-> 
->   pcieport 0000:00:03.3: bridge window [mem size 0x00000000] add_size 200000
->   pcieport 0000:00:03.3: bridge window [mem size 0x00200000]: failed to assign
->   PCI: No. 2 try to assign unassigned res
->   pcieport 0000:00:01.3: bridge window [mem 0xe6800000-0xe68fffff]: releasing
->   igb 0000:02:00.0 mgmt: PCIe link lost
-> 
-> The endpoint's required prefetchable BAR had already been assigned; only
-> the non-prefetchable hotplug reserve had failed.  Releasing the sibling
-> bridge window removed MMIO from the active igb device.
-> 
-> Save the required size before attempting the optional allocation and
-> restore it when that allocation fails.  A fully optional bridge window
-> is then left at size 0.  In the __assign_resources_sorted() out path,
-> only report unassigned resources that have non-zero size and are not
-> otherwise optional.  A zero-sized resource has no required part and
-> does not represent a required failure.
->
-> This leaves the speculative reserve unassigned without triggering
-> another assignment round.  Required resource failures continue to be
-> reported and retried as before.
-> 
-> Fixes: 96336ec70264 ("PCI: Perform reset_resource() and build fail list in sync")
-> Fixes: 2499f5348431 ("PCI: Rework optional resource handling")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Anthony Pighin <anthony.pighin@nokia.com>
-> ---
->  drivers/pci/setup-bus.c | 19 ++++++++++++++++---
->  1 file changed, 16 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index c0a949f2c995..c16f0a5f9456 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -450,12 +450,19 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
->  		add_size = add_res->add_size;
->  		align = add_res->min_align;
->  		if (!resource_assigned(res)) {
-> -			resource_set_range(res, align,
-> -					   resource_size(res) + add_size);
-> +			resource_size_t req_size = resource_size(res);
-> +
-> +			resource_set_range(res, align, req_size + add_size);
->  			if (pci_assign_resource(dev, idx)) {
->  				pci_dbg(dev,
->  					"%s %pR: ignoring failure in optional allocation\n",
->  					res_name, res);
-> +				/*
-> +				 * Restore the required size so a fully optional
-> +				 * resource is left zero-sized and not later
-> +				 * mistaken for a required failure.
-> +				 */
-> +				resource_set_range(res, align, req_size);
 
-This part seems valid, the resource should not be left into enlarged 
-state if the assignment fails.
+Ack, I'll trim the long lines and post a v4 quickly.
 
->  			}
->  		} else if (add_size > 0 || !IS_ALIGNED(res->start, align)) {
->  			res->flags |= add_res->flags &
-> @@ -743,7 +750,13 @@ static void __assign_resources_sorted(struct list_head *head,
->  		if (resource_assigned(res))
->  			continue;
->  
-> -		if (fail_head) {
-> +		/*
-> +		 * Report only required failures.  Skip optional and
-> +		 * zero-sized resources; reporting them would trigger
-> +		 * another release/retry round.
-> +		 */
-> +		if (fail_head && resource_size(res) &&
-> +		    !pci_resource_is_optional(dev, pci_resource_num(dev, res))) {
-
-This, however, will break some cases I think.
-
-We first want to try fitting also optional resources, if those optional 
-resources never go into fail_head, there won't be new pass and not enough 
-upstream bridge windows will be released so the algorithm won't really end 
-up even trying to fit the optional resources after this change if FW left 
-some bridge window too small.
-
-Only after that has been tried, it should try to fallback into fitting 
-only required resources.
-
-So, I think some other solution should be created to solve your issue.
-I don't even know what that issue is since you don't show what happens 
-with the extra pass after release and why it fails.
-
--- 
- i.
-
+Thanks!
+Praan
