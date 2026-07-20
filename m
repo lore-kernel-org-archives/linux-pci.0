@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4282439336;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C85DA439337;
 	Mon, 20 Jul 2026 15:08:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784560124; cv=none; b=S6JVJqhqsTv6lQ6CeZA3TsrwIEbM8sD7nOxCy65nFVnxOgJLSQySf9mzfJZHTLoVWfhLFtWiGUc290qN2Un3Yap9e4kuyEbm1D/edtg5fkjZAowumnI+jWc3MRxUVxyXmfmwPm54U9fxQQTIrClbWWqHPHtcydBijolm/K+kNWk=
+	t=1784560125; cv=none; b=dQyD7nVcXGBSbIr5JS0WojcBMc6pEFD7eVKRl3ihXN4ofo9YmLOsBPxT7x4+DG7d1qcMNElLTIFotV0YxTZABRbjST7Wy2T4RsHQfFwxi008BmwyuCMxPfrxmqkX9nRZ+nBruKHNfjXk4Jkb2stW4VbdH5qsRwpR1hD68OlN35U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784560124; c=relaxed/simple;
-	bh=Aif5jRlv7FbAEr+ujojpAGSKgOIGUwI6prHdmq3qkhQ=;
+	s=arc-20240116; t=1784560125; c=relaxed/simple;
+	bh=66IBhF1pQmHCc5Bn86cYjQ39VKbzO0j4snPG+BTKAT0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GWTwRL2TKiMSGPjngcpWHwBB7UEl2Qzv1CE7UvypnT8C6B6AYphKPgIazR3VZW70R8sfjkERcOC0dfuaf4XIfBS9DhphGlWNEUXO019QfQ8NS6PYACyVDyrWeom8y9Liy3E1RwcLobfZWHoH2TGJx2986Jm8hhDi66HxH3BvZ34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P7co5Xrj; arc=none smtp.client-ip=117.135.210.3
+	 MIME-Version; b=g9Z0cSKX99xu2m6LzfsA5sx0V5XvKkNNRZfy0wOCPUZejTjOJse/iGGe2XNQXfVVtC52m9AP3swJIbem2/lsshKmZn/SCYkyR/vG+moTsUl3PvX1ZeuE4CXBJPYDvA9lmTBjRMokVCViY9TWB84Bon4EgW3/D1qL0MXoE2N8KKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PL56MJC6; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P7co5Xrj"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PL56MJC6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=e2
-	nYu9u3Jutd+nElU90XXHobR87pV+uv8qFn8mq8pVQ=; b=P7co5XrjYMyTZkVAHt
-	/cKwUjkvIhjJZ13ufrkXHk5vM5fgZrivLl6avaptV5bMUovq4jhXCIXZtygS/sZR
-	+JL7x8K/M6DAAQjnRDkZdy7NaHhN1mmKSkHIMUfKsECCiFfOhpsrgmMKlhUTM4b5
-	w7hQcCHbDNxtAcEn3lZ7fPc2E=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=VX
+	L2XKRY5F3qPW2VboJTa9SPw1RX8rEnzJV3c1g8W44=; b=PL56MJC6Mw2Dm3beJw
+	EGXf2JsTShEbMBOlljS+EgYO6qacNN2UjIkc8WYsI3Z3k7cA6sDekfjYsxzQ//WC
+	ct1DT3oLvPkTGbHh3jinH59RtwXi3SySdmeiigJq4uG8QntqeP+JmCy4vww5lACu
+	u6uUmyYQXJwiJIDj086urjZ4o=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD3b1rIOV5qyHOjKQ--.35310S3;
-	Mon, 20 Jul 2026 23:07:56 +0800 (CST)
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDX5ybVOV5q0OGYJQ--.29751S2;
+	Mon, 20 Jul 2026 23:08:06 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -43,9 +43,9 @@ Cc: imx@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 09/16] PCI: dwc: intel-gw: Use cached PCIe capability offset
-Date: Mon, 20 Jul 2026 23:06:12 +0800
-Message-Id: <20260720150619.24733-10-18255117159@163.com>
+Subject: [PATCH v3 16/16] PCI: dwc: ultrarisc: Use cached PCIe capability offset
+Date: Mon, 20 Jul 2026 23:06:19 +0800
+Message-Id: <20260720150619.24733-17-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260720150619.24733-1-18255117159@163.com>
 References: <20260720150619.24733-1-18255117159@163.com>
@@ -56,45 +56,43 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3b1rIOV5qyHOjKQ--.35310S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7GF1xWrW8JrykKFy3Cr1fCrg_yoW8JF17pa
-	y5Xr1jyFn5XF429F17A3Z8XF1Yy3ZxA3s3Ga97Gr1SvF9rCryDK3yqkryFkF9rGFW0vw1a
-	kw1Utw17Grn8JrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pig_-QUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AyzV2peOcx2MwAA3A
+X-CM-TRANSID:_____wDX5ybVOV5q0OGYJQ--.29751S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFy7CF43CF1xGry8JFy7KFg_yoW8Grykpa
+	y3WryjyF1Dtr4YvFs2v3WDXF13tFnxAr9xJanrGrnIvF1akrWUJ390k34rtFn7GFWUKryY
+	kr1YyFy5Ga4rtwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pi0tCwUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBa1WWpeOdYHFAAA32
 
-dw_pcie_host_init() calls .init before caching the offset, so inside
-.init we must call dw_pcie_get_pcie_cap() to obtain the offset (hardware
-is already enabled). The helper will cache the result for later use.
+Inside .init we call dw_pcie_get_pcie_cap() to obtain the offset, because
+the core has not yet cached it. Hardware is already enabled by the driver
+before this point.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-In pcie-intel-gw, the call chain is:
+In pcie-ultrarisc, the call chain is:
 
-  static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
-    .init = intel_pcie_rc_init,
+  static const struct dw_pcie_host_ops ultrarisc_pcie_host_ops = {
+    .init = ultrarisc_pcie_host_init,
   };
-  intel_pcie_rc_init()
-    -> intel_pcie_host_setup()
-      -> intel_pcie_link_setup()
-        -> dw_pcie_find_capability()
+  ultrarisc_pcie_host_init()
+    -> dw_pcie_find_capability()
 ---
- drivers/pci/controller/dwc/pcie-intel-gw.c | 2 +-
+ drivers/pci/controller/dwc/pcie-ultrarisc.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-index 348e579e683f..a891c3f8eb01 100644
---- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-+++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-@@ -119,7 +119,7 @@ static void intel_pcie_ltssm_disable(struct intel_pcie *pcie)
- static void intel_pcie_link_setup(struct intel_pcie *pcie)
- {
- 	u32 val;
--	u8 offset = dw_pcie_find_capability(&pcie->pci, PCI_CAP_ID_EXP);
-+	u8 offset = dw_pcie_get_pcie_cap(&pcie->pci);
+diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+index 6ee661ceff67..3f6e3ab0aa69 100644
+--- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
++++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+@@ -49,7 +49,7 @@ static int ultrarisc_pcie_host_init(struct dw_pcie_rp *pp)
+ 	FIELD_MODIFY(PORT_FLT_SF_MASK, &val, PORT_FLT_SF_VAL_64);
+ 	dw_pcie_writel_dbi(pci, PCIE_TIMER_CTRL_MAX_FUNC_NUM, val);
  
- 	val = pcie_rc_cfg_rd(pcie, offset + PCI_EXP_LNKCTL);
- 
+-	cap_exp = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	cap_exp = dw_pcie_get_pcie_cap(pci);
+ 	val = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_LNKCTL2);
+ 	FIELD_MODIFY(PCI_EXP_LNKCTL2_TLS, &val, PCI_EXP_LNKCTL2_TLS_16_0GT);
+ 	dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCTL2, val);
 -- 
 2.34.1
 
