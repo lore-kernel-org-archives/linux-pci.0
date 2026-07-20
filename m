@@ -1,138 +1,79 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DEEE3B14D0
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 21:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C97F93D1AB7
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 21:25:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784582523; cv=none; b=cGxSAc4nOXPsUl3MElF8GOvUnP6Q36iQvmhH+OF6hlpcMtCdn/SMnrtoowwi7a7M3IhYQGTG+ElH6mmiW1DvdYznujX2L6uOWBLwl8TO2V2q5THkAlnQ7CNwuG3k6UT45EPLV+qrrTMgeJ71iinH0ZXMiAEDgR3QeQIUPDIKnGk=
+	t=1784582724; cv=none; b=txQaqB4RJcJSY88dRp8j754nvUEcza0SH7orG5w1dmsFNZEKCOGuDbXkr/UOwie20jxBIJbGKki6dTvtIaQMqBgD96Du90qpPusMB/hTc2sJXdnRYbHlkIMdC8EY9aUmK+NrO1tlYIE5SeW6ad9LoYlI4j5LKYVs1hOaHstkVn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784582523; c=relaxed/simple;
-	bh=0U/8/cLO3rYLGqboY2xO60YXkhtK4fBdVmPj+Mq8yAo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VXcmnDw4LhkaDXhO1pJn7Bm0dEQEHjkRIo76c8ISbL6M8w1hd7d+WPyCX4I4o0HBcBQ90IUlC3cAwfR0GGKNj3wtCJmROS5uB6kQZAdrDALXPZ0TuBwXKI25nv+OznBpj3r5ZSBjwUY+pa4Kqn57cwLdeYbNiclKu6BilGdey6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kxXAad66; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784582724; c=relaxed/simple;
+	bh=LsSD6ymqMn/Jn2l2kSZVjS8fkb7Km+qi71LrLK6Nx2A=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hm9jHG/xlvjxe9piucAN6crojey7S3A2icW8jfpjcU/Lt3jVT4ao6BqLHkFrUscuqF6S1joo/u5HhNN6QuC1+e8k0nob+VkUiISQ97F8rTCAzfv86Ei459Zz/nqE3d7e3x0D63oY4l2UF0cnZh/hQEP1MQl4xeSi+FngOafN+x8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jNOzObot; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kxXAad66"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784582521; x=1816118521;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=0U/8/cLO3rYLGqboY2xO60YXkhtK4fBdVmPj+Mq8yAo=;
-  b=kxXAad66aJ3qooMrjucM3N0iXbNWghFzq+1kDAK7pzmM6r1kGwlnmesd
-   A/N2IbN+M0MHSwrUsBZ6v+29YBa+O5oUP67QZjp89Y9t0DjEkpGq7wa/z
-   gs/1Fio6pKNWR2zyJbAiaiB9zS/NlWJjPNxD9b5zzraK59dKA45g79ajD
-   h3m2xktPEtSpFmMP6tWydquqI+wCODIX3AgbygQn7pfBuinZd0K9PwXVG
-   +fcM2rvOpyPe6NnH5hrUwSuU3oJwrHUVDwVfawachdN3ckyuobKliUb2T
-   +uU7rGv2IiJ3VPa2CmdqWJL8inB8Xlpfz2AdMuXHgq13renW7gQ3Zm7Hj
-   Q==;
-X-CSE-ConnectionGUID: PA05SsGyTWCjUJ5Qvfk0Bw==
-X-CSE-MsgGUID: 6IdHM+0FSmKtRHVdVAGH4w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="85196320"
-X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="85196320"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 14:22:01 -0700
-X-CSE-ConnectionGUID: p27A16y6SxCVahq3T/dseA==
-X-CSE-MsgGUID: QW/l5j/cQEy4NHXOkQu+VQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="287623413"
-Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 14:22:01 -0700
-Date: Mon, 20 Jul 2026 14:22:00 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: Nirmal Patel <nirmal.patel@intel.com>
-Cc: <linux-pci@vger.kernel.org>, bhelgaas@google.com,
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
- lpieralisi@kernel.org, Andy Shevchenko <andriy.shevchenko@intel.com>
-Subject: Re: [PATCH v3] PCI: vmd: Only assign OSC features in bare metal OS
-Message-ID: <20260720142200.00004842@linux.intel.com>
-In-Reply-To: <20260713220844.561357-1-nirmal.patel@intel.com>
-References: <20260713220844.561357-1-nirmal.patel@intel.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jNOzObot"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 425EC1F000E9;
+	Mon, 20 Jul 2026 21:25:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784582723;
+	bh=LsSD6ymqMn/Jn2l2kSZVjS8fkb7Km+qi71LrLK6Nx2A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jNOzObotCRkMG9vZoq7mWlas8mEk/ULkdPtZAQBz4Djo5JCxdNFMnaaLQhWHUzv//
+	 ZGNBnmOO4556NkXnt0foiIj0F2+eZbpsxFCTu42oX/wUoE7AH2ID4LNWXiJKPZ58sT
+	 Nkhk6faby6b8CBCHqz47ndPmIP+fllRRlDQkvZNwmx8iUUkmhXjZrJa8HgHqdnBC72
+	 O3G6Sqc2YgALr2Zyzch8fAzCtQiGx3DweKOFo2p9WwtWQHbsYdBFCMwb5HjQ251eNL
+	 rM1cFwHVPL9QHBcy1JCLsxONTb4d+hpH+B7h1dnvy4w/KkvB02nW93n7yN4NmplCEC
+	 ilB4WiYUvZTmw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/sysfs: Add lockdown checks to legacy I/O and memory
+ handlers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260720211541.1509744-1-kwilczynski@kernel.org>
+References: <20260720211541.1509744-1-kwilczynski@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 20 Jul 2026 21:25:22 +0000
+Message-Id: <20260720212523.425EC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Mon, 13 Jul 2026 22:08:44 +0000
-Nirmal Patel <nirmal.patel@intel.com> wrote:
+> Currently, the legacy I/O and memory sysfs handlers do not
+> check security_locked_down(LOCKDOWN_PCI_ACCESS), leaving the
+> legacy_io and legacy_mem files unprotected when the kernel is
+> locked down.
+>=20
+> Commit eb627e17727e ("PCI: Lock down BAR access when the
+> kernel is locked down") added the check to pci_write_config(),
+> pci_mmap_resource(), and pci_write_resource_io() to prevent
+> userspace from programming DMA-capable hardware that could be
+> used to modify kernel code, but did not cover the legacy
+> handlers.
+>=20
+> As a result, root can still write arbitrary I/O ports and map
+> the legacy I/O and memory spaces while the kernel is locked
+> down, which is the same capability the lockdown is meant to
+> remove.
+>=20
+> Thus, add the same check to pci_write_legacy_io(),
+> pci_mmap_legacy_mem(), and pci_mmap_legacy_io().
+>=20
+> These generic handlers cover both architectures that
+> define HAVE_PCI_LEGACY (such as Alpha and PowerPC).
+>=20
+> Fixes: eb627e17727e ("PCI: Lock down BAR access when the kernel is locked=
+ down")
+> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
 
-> Copy valid OSC flags from root bridge only when OS can provide correct
-> values. In virtual machine, all of the control features are disabled
-> as hypervisor will not passthrough root bridge information to VM.
-> 
-> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-> Reviewed-by:  Andy Shevchenko <andriy.shevchenko@intel.com>
-> ---
-> v3 : Removed period from commit and added a black line.
-> v2 : Added descriptive boolean and removed period from commit message.
-> ---
-> ---
->  drivers/pci/controller/vmd.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/vmd.c
-> b/drivers/pci/controller/vmd.c index d4ae250d4bc6..7c7d110290d6 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -782,6 +782,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd,
-> unsigned long features) resource_size_t membar2_offset = 0x2000;
->  	struct pci_bus *child;
->  	struct pci_dev *dev;
-> +	bool vmd_in_guest;
->  	int ret;
->  
->  	/*
-> @@ -862,14 +863,16 @@ static int vmd_enable_domain(struct vmd_dev
-> *vmd, unsigned long features) .parent = res,
->  	};
->  
-> +	/* Non-zero offset means guest/direct assign view. */
-> +	vmd_in_guest = offset[0] || offset[1];
-> +
->  	/*
->  	 * Currently MSI remapping must be enabled in guest
-> passthrough mode
->  	 * due to some missing interrupt remapping plumbing. This is
-> probably
->  	 * acceptable because the guest is usually CPU-limited and
-> MSI
->  	 * remapping doesn't become a performance bottleneck.
->  	 */
-> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> -	    offset[0] || offset[1]) {
-> +	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> vmd_in_guest) { ret = vmd_alloc_irqs(vmd);
->  		if (ret)
->  			return ret;
-> @@ -910,8 +913,10 @@ static int vmd_enable_domain(struct vmd_dev
-> *vmd, unsigned long features) return -ENODEV;
->  	}
->  
-> -
-> vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> -
-> to_pci_host_bridge(vmd->bus->bridge));
-> +	/* Don't copy _OSC control flags in VM, it disables
-> features. */
-> +	if (!vmd_in_guest)
-> +
-> vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
-> +
-> to_pci_host_bridge(vmd->bus->bridge)); 
->  	vmd_attach_resources(vmd);
->  	if (vmd->irq_domain)
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Gentle reminder. 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720211541.1509=
+744-1-kwilczynski@kernel.org?part=3D1
 
-Thanks
-nirmal
