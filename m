@@ -1,66 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2B33D45C3;
-	Mon, 20 Jul 2026 09:26:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C8493B7B99
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 09:38:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784539581; cv=none; b=b58GRz2zkaIvzbSen7qfHy+91mlFBTnCGCYNnmFyUHoEAOcYFzgr4i+3vpSVXDEGU8IF/6ckF6Jjt5nUL75hxc0EppLG+D9kIJsrI6uojzRnRaGEXy+pZQ/B3XagNSqZMoSvohCt79D7knwI6hBI0D6yCok4STclBSwY3f8lan4=
+	t=1784540317; cv=none; b=j/RBZ/+Wn7Tc5NIAXO9t3MnNy33qUrvr0V1t2XDT8YPsO9NLxFz+S79MLqxJByWG2QBSpcTtn8C9EOfUXC/Ulokg8RfYtk25ubj+nv3rG2tQ2eTQYfkqwQ3fepSsGnpDHhQplEhMc4cIw5Jucif+TaQKzsqdcOwM3ftqJJWrYVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784539581; c=relaxed/simple;
-	bh=JXks02qoIOvp/lrU+nsg/E65QdRy8lBiUdgEo8oHmDw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Vx4W2e7yPhxAGQf7hGULZXFdzHBZUlWnmogVndj/v75Lbg8No3rDL/yapUQ5GdBmIRVWOr2a7WDHa6l7tOaM64OqCYM0WLrkRV17a/CXehXzmcFAUX6W8rDJKmMV5QwpVC5617oajwi9WnwWAZ5xqk8g80z8zJvmAraDfaoc4x4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oz27oyJm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784540317; c=relaxed/simple;
+	bh=v38iQbgsNt7hDFHMMkKsfiz8SsfUHUu7tFnOq62fOB0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UbNODoxnfRYOnfvWFfeRgnNnXxqsqeSBak3REFRceg7lNlEmxqNQqPpADJkfgf+1ahKcAUTw4/N7p2bicsgRHsdzvD15CauMG60T+nP1c0esaRMIn9aY7xHwLB/gnp6TkzMSyf7scnrWFrD/sEY5beov+5NgfdwpW0kqvKpeueE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=FzYq3Awa; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oz27oyJm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B05C51F000E9;
-	Mon, 20 Jul 2026 09:26:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784539580;
-	bh=JXks02qoIOvp/lrU+nsg/E65QdRy8lBiUdgEo8oHmDw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oz27oyJmQCIqmrA7/EKXeCzfmsDXCZsPcdJDjGiqBNYWMFzDSiJaGXdsI2Ecn+Ofl
-	 ikBx4DUkScJXdWC/cw69V6VAhaQskkO4KJ0nV3DuG8WyXTyLPdJzQo/DPrEgwwpXGE
-	 fHqcHQ1xr70fKw8hSABTMkf7RhEsmPQvWKNgHKkkoTGxQiULh+DPw8uJUnV55Nzr4S
-	 ug/VWrorYP+V7xvAWqgZKJmkBx5ue70xN7nSdigEBaXbEVYYVxL+AVQp53T4muVSiK
-	 Dbt5rEuKvHmbtj3/FaVAfaMQS6bFpxFSJgMzT9D+JxlqSBFW8UaOsNahShIKQE60ur
-	 bAI/1/Vj0rJvg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND] dt-bindings: PCI: mediatek-gen3: Allow
- memory-region for restricted DMA buffer
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen-Yu Tsai" <wenst@chromium.org>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260720092116.1823562-1-wenst@chromium.org>
-References: <20260720092116.1823562-1-wenst@chromium.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 09:26:19 +0000
-Message-Id: <20260720092619.B05C51F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="FzYq3Awa"
+Received: from francesco-nb (248.201.173.83.static.wline.lns.sme.cust.swisscom.ch [83.173.201.248])
+	by mail11.truemail.it (Postfix) with ESMTPA id 1E4F01FA7B;
+	Mon, 20 Jul 2026 11:38:33 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784540313;
+	bh=21QhDt52brqt4bzEgkFI24rtnM5CeN4Skc2OnscvgoM=; h=From:To:Subject;
+	b=FzYq3Awa6o7RMbxbEYxeo1qUcQWIW/VYtRyWfKpoAwJ+tN3B0PhyU+EVgDzdcJP3o
+	 IEO4STYbtu8L26NXI0rvblTgi+DyLsWmrWghq4OH+jeZRqZBM0Ww1ky/ryTpUOuPqG
+	 CyRLSPf6oMTH23MSSE6i8FuU2dcy3sdkJVScSQFaNYw3pYci4KzTH1NEskmEeYJ/H3
+	 M9oeKUNZrDQSfhLy9rvVyx9U70N60uQdIos162MQ6y6XR2ev7Kk7PLfXkPBF92UEwx
+	 zoxFa9Kzn7Vtb6fKM5Piccmad7WqSNeKn7pqL4RUc6iJFq/y597yMCTAlySmWhODi4
+	 UkdtxHHv7zmQg==
+Date: Mon, 20 Jul 2026 11:38:31 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc: Francesco Dolcini <francesco@dolcini.it>, Frank Li <frank.li@nxp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>
+Subject: Re: Non systematic PCIe error on resume on i.MX8QP on Linux 7.2
+Message-ID: <20260720093831.GC52182@francesco-nb>
+References: <20260720052742.GA6753@francesco-nb>
+ <GV2PR04MB1201926DADEFA97128E7C8CA68CC32@GV2PR04MB12019.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <GV2PR04MB1201926DADEFA97128E7C8CA68CC32@GV2PR04MB12019.eurprd04.prod.outlook.com>
 
-> On some SoCs without an IOMMU behind the PCIe controller, the PCIe
-> controller memory access could be limited to a small region by the
-> firmware configuring a memory protection unit. This memory region
-> must be assigned to the PCIe controller so that the OS knows to
-> use that region. Otherwise PCIe devices would not work properly.
->=20
-> Allow the memory-region property with one item pointing to a
-> restricted DMA buffer.
->=20
-> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collab=
-ora.com>
-> Acked-by: Rob Herring (Arm) <robh@kernel.org>
-> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+On Mon, Jul 20, 2026 at 09:16:27AM +0000, Hongxing Zhu wrote:
+> > -----Original Message-----
+> > From: Francesco Dolcini <francesco@dolcini.it>
+> > Sent: Monday, July 20, 2026 1:28 PM
+> > To: Hongxing Zhu <hongxing.zhu@nxp.com>; Frank Li <frank.li@nxp.com>; linux-
+> > pci@vger.kernel.org; imx@lists.linux.dev
+> > Cc: l.stach@pengutronix.de; lpieralisi@kernel.org; kwilczynski@kernel.org;
+> > mani@kernel.org; robh@kernel.org; bhelgaas@google.com;
+> > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com; linux-
+> > pci@vger.kernel.org
+> > Subject: Non systematic PCIe error on resume on i.MX8QP on Linux 7.2
+> > 
+> > Hello,
+> > our CI spotted this error on resume. It is not systematic, and it is possible that this
+> > is not a new issue from 7.2.
+> > 
+> > Does it rings any bell?
+> > 
+> > [  745.849237] imx8qm-hsio-phy 5f180000.phy: HSIO_PM_REQ_CORE_RST is set
+> > [  745.855800] phy phy-5f180000.phy.1: phy poweron failed --> -110
+> Based on the log, the PHY initialization is failing during resume.  I'll set
+> up a platform on my end to see if I can reproduce this issue consistently.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Thanks for the support, appreciated.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720092116.1823=
-562-1-wenst@chromium.org?part=3D1
+> BTW, is this occurring on the i.MX8QM MEK board?
+The issue is on apalis-imx8 (you can find the DT in the usual place in
+the linux kernel tree).
+
+> What's the frequency of occurrence in CI (failure rate)?
+The last batch was 3 failure in 10 executions, so 30%.
+
+Francesco
+
 
