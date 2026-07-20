@@ -1,250 +1,140 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012059.outbound.protection.outlook.com [40.107.209.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413333E009B;
-	Mon, 20 Jul 2026 15:02:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.59
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784559732; cv=fail; b=nbdmTALmVqb8UNMBBt/p/YmttkzG912Ar1iObm4pm+yXZ5thYNO/lCyiNi679HSG/Drq9P819ciavvDPnM/jDeyj3AJ5dJ1P5g0xNlFVtKfM4FILjojvG5QywxjcCs93HTlfGRgL8QuaE/9WrxEG7MKsguPvHLjBhouuGGvi1p4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784559732; c=relaxed/simple;
-	bh=+J8d8lOgaywum5D7CVqdLC6y+hnlin0mDySFTNcPW1Q=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=vBsEQPOH7ZtfMPo/7Nx+apcZEfZ/ql7Z9csh8eWewu4ggmoYFOZcPVYVsiWdgay99Z7y0g3djCti0VyGPXAMgSJpVnd5OD0fL8VsgwfjrVY3HpXTERC2hQ5rvOLU0tUUeQNuV+KRDoSZx3lCsMwgox9IgFnZnfbkM0Q9LUV2Ajs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=gT5As9+l; arc=fail smtp.client-ip=40.107.209.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB0B42B31C
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:03:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784559824; cv=none; b=okduRmKzUaUGi0eW+0TC7+3C1P/CdRTuyGCed16XGt15bC6laE3bHhq/LkYCxIf1BX68dVNhln/MJ4M3iroo6/7rPCBRpHm6NpqBxEGPDOKeB2rc14lqLnFFYf9IwKXXtFWGkjU7By7IX8pPcK/NH7wBlp6NLZJW/7lzG/WZH8A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784559824; c=relaxed/simple;
+	bh=kHyVi1X3653L6/E5eJCh0+Evt8DBGh0gAuSqsbK/2lM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EtICNczwrTCA/mggqya0PXnDFzxiMOBA2SidAY1mB3DaOlko3YsZst9aLmZurnTgh4VrP1ndrJzNK+cj1ky/GkGsir/R8RYz0AU//tVSdFst6gvUFfnl4yOtuco16lDYCAvgroYrtHpi+zj1i9fq1LXVH+ppUQf6IjA9dEKPj8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PEM647CG; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="gT5As9+l"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VcidUobwNv99KdhOB8IxVBCCt3vQm8isoyQbL21Iw+HtWPLbqMLMQgQJ3IAvg2jX3rEqa9Hp9+utT/NlRDZPmrHMjRDfL3WgxvwXJlZDA1IBtxFaU9jloDxg66rWIBH90M0e7M6l6VMYr8R4jzm5JApFHcKjYNB+EHWl5mxGyZwQwphwieR7UsxYYH/D1bdriu7yWz7Zw/FGCtwiPEpG9nTZOvUZkCqv7Cc4BHdeH7JfqX8OYtwRg+/aRdqa/t71dnTfrI4tXFQConnWV5573wsW9alkeAgilJvzQA226tYGzNGB7IpUZqVlx2cd5e70IQDcGgrTpA3lijmYXToxcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FCXOS53iIBaPABN0gvwdJdTyd7c1N9zNW5hQj1r/Z78=;
- b=eL+B2+zpp/D+5izDeGSqH9jE4vT5pQV/J48lcAZu9/reYsSd2w4Qvwge7xNLq62pgiY3+Vx+s/J/d5hJsF8LUuP4XDBfmCjEe7voVbefaDCyyw/Oi1BkG2/ZP64tp97aJ8A5c2ryqhnHDhi3pnMgJryz4NgaeC31YCN8ev4SSZMFZYWWFYqqFt8Jza0Q5jK7LoZDhn1BDVpTJMofNYLkSRr9nx+9LVsxb8xnCNW2YPROAlDGGu+DSH9YLYe/FP6fayW5nlNGEVzij5c5UvZsUxbQ3TtwOcAlpjyrxK8t1Oat17yskHl0ovZuSB1CB2WfmzZecFU2gErhA56cdLpDGA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FCXOS53iIBaPABN0gvwdJdTyd7c1N9zNW5hQj1r/Z78=;
- b=gT5As9+lQBUwaNPxA8OVkKXp2LlW8ZVmyGJ84pu75aQjGmAt0/60/TV7HCC5Lur/FY8BTFI0zac+WbITxOhg/xL3EtUrKo3T25wemclTsaQnVuskftz8aQAoflZ1v7bSVFrUegopm4AZ44tBIbuDlf7NU3O+xm1sN/0lSwJUCgA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com (2603:10b6:610:2b6::10)
- by CH1PPF0B4A257F6.namprd12.prod.outlook.com (2603:10b6:61f:fc00::605) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.18; Mon, 20 Jul
- 2026 15:02:08 +0000
-Received: from CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9]) by CH8PR12MB9766.namprd12.prod.outlook.com
- ([fe80::be0f:431f:5f27:96d9%3]) with mapi id 15.21.0223.017; Mon, 20 Jul 2026
- 15:02:08 +0000
-Message-ID: <e4e1bb5b-2cc3-452c-9499-d74aa41965e6@amd.com>
-Date: Mon, 20 Jul 2026 10:02:05 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v18 02/13] acpi/apei/ghes: Use raw_spinlock_t for CXL CPER
- work locks
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-3-terry.bowman@amd.com>
- <20260717224919.9F80E1F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: "Bowman, Terry" <terry.bowman@amd.com>
-In-Reply-To: <20260717224919.9F80E1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SA0PR11CA0200.namprd11.prod.outlook.com
- (2603:10b6:806:1bc::25) To CH8PR12MB9766.namprd12.prod.outlook.com
- (2603:10b6:610:2b6::10)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PEM647CG"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cacef7d299so360285ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:03:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784559822; x=1785164622; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=CoUBDaPFGXQM1OhLmt0HKzfSrSapevvomHz56sEIB6c=;
+        b=PEM647CGKL1mRY3ScZQwZW1X5F2nBgzE3PExjIFZ6zxF6O00y9E3AzqHicWHoXrSMz
+         Ee76rcHFHKKz/dnTnN1Un0TkxEUPWB1Sm30D70W0pfjl81fUsWxK8flCLK0IaGjiylRT
+         c8IHrlemAiSEL9C2MfcEcdi+0Dtwvs0r/nGjDNjKTPyTtNpp775pUghSokFioB0kvNKr
+         FFQqJW0wRcNknsszMDpRepmsMl0GSD23P7z3c0l1vm8aNLk89aHH6oeQPJgqUM0RGrKE
+         29fSLdrN5/8qQNAMvPyrOB6zq9HwBthPWefC2TPJIPw8YGV+GIdRR/VdVYMoNzq2ltKx
+         wBhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784559822; x=1785164622;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=CoUBDaPFGXQM1OhLmt0HKzfSrSapevvomHz56sEIB6c=;
+        b=JErDnnjSLFak+sojJcJXFvwLl5lVRT5NF1l40UqbpiMFQZBVZlo547yjtNbcwBXaTl
+         zfBZa6t6E7W4Y7GTp6nzzdVtV4g0/ANb6ED+UQ4ZGeL0erCwr+56kJlaVFax2y39kfz3
+         qazQKmnAwipRniStHl6L0KOuQ0JDC3ku50sct0gcM1FTzfyk1/6G5ZHXrPqTDbD2hK3w
+         1eYYkzIL3yxXWsrQJjAklE5vkDXk1aMKHxWpoRdHni1v6UMd+YOluh87ojTcl2qGh1hF
+         WuZXcIsubt5PAnDwxUTWBge2q2r349tICcZccu8FNr8W1cdLMe7WjfNY67lS26tqJubb
+         02xQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoVtO12zpdtGRcupyQMx03ZYWAQm4wam0l7mQfkfTyq4DzGLf1TcrYttlLXOgcUNCMAN/JhV30iGJE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxuD124Yn3+QxnW9AvtyPg7lpAeay33e6Tf6WQBo56U7JBtJKZJ
+	hNEawsmtm5lfnORhto6SajYoCMeaZnckBM+CVYvIhU/r6OHbn7ZYw0RPSBVFNIGOxg==
+X-Gm-Gg: AR+sD11KGfHbdBtgxw7d77HkKPOiRpAe8a2Ww09n7Hox59vnvaUnL37/Tu+JQ5mmNVK
+	wo1V/JdCD3VbuOUGbaNseTdP3ZLZgLBCy4RAVQCusyWhrePueEcvEmiTo0I7LiLEnaKm2kuhLGk
+	A8iJjoHWFmsFYY7IiqSotsoi7nhBVdp1l1zpiukLORtnK3w5mZWMBGp8rN15ht909RzLOH+mrQe
+	3VYJIMJW8PtbLuFCF4KadayugNBFAcRvvhJeFBpyahjy47Vvh2tYJon8wh6SQh6+tck48tDrbHN
+	Bmjqg9U5MiDaa+Je10Sys8w/HQctt9s95J/LhYFe9QQj74FIo+UW34e+NWamGDumokRYI8iJA3e
+	t19zNGV0OsTitFGhxVDNKDzUvNIZ8vS7leUAJy11OsRTf+cgf3fgrMy5cbZB2GdI46Zmj//8aWQ
+	6IlJLztzeV2dHFo8F8261DGLg3N1d9Q3qGk2nx
+X-Received: by 2002:a17:903:41ce:b0:2b7:b03d:9dce with SMTP id d9443c01a7336-2cf7b68e33amr1005485ad.18.1784559822071;
+        Mon, 20 Jul 2026 08:03:42 -0700 (PDT)
+Received: from google.com (10.129.124.34.bc.googleusercontent.com. [34.124.129.10])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84c2adfdfd0sm5823209b3a.25.2026.07.20.08.03.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 08:03:41 -0700 (PDT)
+Date: Mon, 20 Jul 2026 15:03:35 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Shivaji Kant <shivajikant@google.com>
+Cc: Christoph Hellwig <hch@lst.de>, Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>, linux-nfs@vger.kernel.org,
+	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	linux-kernel@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
+	linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v3 3/5] nfs: Introduce nfs_release_request_list helper
+Message-ID: <al44x6w0rr7yd8J3@google.com>
+References: <20260715143540.3597616-1-praan@google.com>
+ <20260715143540.3597616-4-praan@google.com>
+ <20260720091505.GC24298@lst.de>
+ <CAMEhMp=eHz105-t+pDLbX+6uWOPAGHWfkjd4PqTdeXmXf0tPGw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB9766:EE_|CH1PPF0B4A257F6:EE_
-X-MS-Office365-Filtering-Correlation-Id: e51d2dd6-5953-4025-e4bf-08dee66fde5c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|18002099003|22082099003|4143699003|3023799007|10067099003|56012099006|11063799006|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	ShSJGqsB0c4dXjwtF4stSaIXwd2cIxYxoNt9QihmkAS4Tr2rqQ5tdg9aWV7dj4OYd/mux12ea05XuA4lgRggC5TLIvokwDxFrbGKXCMFyGhPsXQMuC4PiIOLTSlAgIJhDbBJbHTalAmMpUkcCkKV1DmJM/8dLor0kTvlAybC2SoQ6envg4cxl3WY3jqIRXXR+NTtjww0mGazLkct2SMliss3XWQkCbJN+euZleBVbyCrwBA9FaTZ+tRDfXJjHSKZVEeiIWBSGKq6k/5K0lzYjALR50v+N4FxHAa9V0+WbpIRUa5nrpaFDavFT8xiDDpl0iSd8PyCRw3jhww68dgT8FF4CdVKGweYRs5gDQsv4CMPbcU45vd9Gz90ch7DpdfXVvXfE8B0G2FWJeuJW9LQPS8UUStYkxbyJR/jLxX4S7tM4ZrYAuYK3f8nDV7lWUpuwfIg032Rq+GcWYBKCeXYJcIzu9Jw3sK4im553EEbYpu5osNICq80DV+I0HoJ6FfBCFanTMGX86heV+08x/WhY5X+q7vVnEmdkl58hMsKSUHqAVx4+pPF7RkTFrODZ3OJ5sv7XAiGBkJMy9KEZracOOzvQ8nAPTlg2C6uca+TUtDfarwVicZiKn6ppiA8TWW251a4u/PiJALhyuuf+04IpM/aFhRshDnrzvSriF46ClQ=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB9766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(18002099003)(22082099003)(4143699003)(3023799007)(10067099003)(56012099006)(11063799006)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YU93blcvOGdmSHMvZG5DN2FpMEl6OTlBYWZVeElpWGx4ZDQwMGF3VzhabGRJ?=
- =?utf-8?B?M1NEVUl5cERuK2R5Qzl6NklCMHRJYzJuaEZVdjN5U21STFo4akM4eTNCc1pn?=
- =?utf-8?B?bEYyT2lsZWxtUzdQMFZYNUhTdEdBS2p4ZVUxaTAvUlc1QTErVFhzTDFLU2h3?=
- =?utf-8?B?U3lQck55MHpOQnRmVmNzOFNVUThuMm5kK1ZNVGlLRUR2UGNXYTVXUUJrV1A3?=
- =?utf-8?B?L1hYR0VkdWtLU3A3RFplTHZMODRtYytuZ0Z4L21vc3lPV2Zubml6TVdNQjFp?=
- =?utf-8?B?OTRCYW84dm5ZRlZHeStuYkVLb21TakdiNTZ3UndMNWhGZ3l4RDZZTkQxL0Vp?=
- =?utf-8?B?dEdGbUxsNHZtc0ZkZmt4UzNIMk8zR0NBV1UySmFtRjhTZ2w5dDBYMnk2NU1C?=
- =?utf-8?B?KzgxV09CUWZWMkhjTCtiTTdRQWdvT2E3UnoyTlhaRXk4dHpZWGtRMko0Y0dl?=
- =?utf-8?B?bjJxY2dibHRWSUNQK21wRzczRzl2M0VpdURORit3Zzc1aGRpUHdScGZMTUYw?=
- =?utf-8?B?bytncmtjUjlkbjBQT2RkMjZQTHZodHEwR3dLWDVpdmhlT1BzbTB4WXViYzVw?=
- =?utf-8?B?WmFoUjlnQXJmRFVTRzFHeUQrT2dqcHl2d2ViVStwSVJPWWJrN3RlczZRcVpQ?=
- =?utf-8?B?RTZMUHhCb3YvOUQzMk1PRTlzZEYxbWlmTk50dFY2Z2IweENaa2M1OVNZZkcz?=
- =?utf-8?B?NG5yTzcwbS9iV01md0J1b0pqVnFLeE5tc05QZkVTVTA3THoxZTVUS2ozVDU2?=
- =?utf-8?B?UjBMRldNSFdadlF4U3VzR2d1K1RoRnpEODJ4N2lvNjZ3eklsaWdWRzcvQmwx?=
- =?utf-8?B?SGY3bEM4aXpTeU5qbGk5YmszSUc4ZG52MDc3NHZEN2ZuMnA1SXJiSmV6RlVj?=
- =?utf-8?B?WGFuUitqOVhnaE5lc0F3QWlKT1lKUWxEcWhlN0lmQlpEMzZldGJrQnJIc2lK?=
- =?utf-8?B?ak5ZZ0ZuQmdidk9pSWJQR2lQa1ZTWVBKaVZYbkFiUGtRT2lEZU4xUlAxL1l3?=
- =?utf-8?B?WW5XVHQzZ1lIek5TamhMMWd1ZkIySlRaODY0MTB5K0lBRW93djQ5T0V4ei9v?=
- =?utf-8?B?b3FZVDE5ZS9MMnVKa2xtNHFHQmRNck94S25rc2JlcjcrbzVzMlhoSGJUSDFi?=
- =?utf-8?B?elhKeTE3emZ4Mm5EOEJ0dC9nK1habTMzMFFYOThpVEZMeGkwVGxmZHI0Tmd2?=
- =?utf-8?B?bzFPRUMvMEhsczNTMDJQWjdnWWJURU5RSWdPd2JZN2tMQ0FNbjRsVE8xYUtx?=
- =?utf-8?B?OTNwRGxxN3FmUEp6aUx3VVdWb2wyQ1dmcnNYdEg2S29KQkszNUxQU0k1Nlhx?=
- =?utf-8?B?Qmc0eDAzT3lEMnRSWGUxVE95N3FMZmE4dXpkSDgxVW5WVEtLV0pRYnppeW9t?=
- =?utf-8?B?LzZZazFyNS85NURkbldjd1ppcjBGa0p3RmdxYTFMS1psbDVEV2ZjNENuTDVO?=
- =?utf-8?B?UTYyYlBrUDNTVDVHZlE2QzJkcmVjbGZiN3FuRnJaTW1PYWphNTc3OWRJTnJj?=
- =?utf-8?B?Z1hpNC9oMjd5STVCTTNjMWtSZjZzY2U0UmxGVUdJVHZIYlRkVjZyNE5obmtH?=
- =?utf-8?B?Sk1KbWdCSnhZTmZtaXVJTW41eGo1MVZFeHdQT09sYXlrdXR2ZzQrK0hHVUR3?=
- =?utf-8?B?ZDdYSCtXL1ZmTCs0ODVGdmtWUkI4WWxVTjR4Y0tSK1RKMGpvZkgxcWtXSTYw?=
- =?utf-8?B?dnpjREZRT2R1VGxVZlFkNC9UZ0oxbVpFQlBXQUloOFFvZFlNNGovelNTRDNH?=
- =?utf-8?B?Qlo0aWd5N1IydUU2eVp6NHdpSXdUb25GR21FaGtOL094L2pacGlMU1kvenhX?=
- =?utf-8?B?bVlHbVdzZGtxRlREUkwrYzVaUkpmK1E2QmZxVVZ1VkxTelNrWUYrR285L01w?=
- =?utf-8?B?WnJ5UmN2L25DUVJlRDE1YlExWWpBVWZTYk4vbXhUU2o0L3BkVU5qWHZ5eDZM?=
- =?utf-8?B?YndBUXNaNGhENk9UU3FuT2Y3bGpEamYxWFd0UUp5OGQzc2orL2p4eUszU0Nj?=
- =?utf-8?B?bU5EUGZVdzFSRG5JZHhPNGVoK2FLRkg2Nnk0UmgwcUxVUjhKeEt5UzNablpF?=
- =?utf-8?B?SVFaVmlBZEIySkpya292TlJpS3ZxQktMUmNqV3BvbUN5b1N1MkgzMk5FanhX?=
- =?utf-8?B?YmZvZVVvYUpVcXRxako0eDZRQSswVjRjZ0RXanRWZW13YXpQc2NpcVVmblV3?=
- =?utf-8?B?c245dGZlcGMvRkhQeUJuSzMrQTFsQzM0M05iS0ZKS0krUGpMRGtrbyt1MUpj?=
- =?utf-8?B?NGxpalVZSjBsR2ZTN1VYSUYvYW5mOXZxcjlSbXE5dmNtUk5mV0JvK0pNWG5Z?=
- =?utf-8?Q?vaeZHe4ldn6G5Y4ZP5?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e51d2dd6-5953-4025-e4bf-08dee66fde5c
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB9766.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 15:02:08.1442
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lkZceIDZ3KA9Mk3H0kKb3+C6XCumlEzibiSHuVeWul++36+4tyreoIfZP479HpFUtwNzN4stBfl84rRzBgajBQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPF0B4A257F6
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMEhMp=eHz105-t+pDLbX+6uWOPAGHWfkjd4PqTdeXmXf0tPGw@mail.gmail.com>
 
-
-The LOW issue is valid and the extra cancel_work_sync() needs to be 
-removed. I propose we fix if a series respin is necessary or otherwise 
-fix in future. 
-
-The preexisting HIGH issues are GHES area and to be fixed by owners.
-
-Terry 
-
-On 7/17/2026 5:49 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+On Mon, Jul 20, 2026 at 03:28:09PM +0530, Shivaji Kant wrote:
+> On Mon, Jul 20, 2026 at 2:45 PM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > On Wed, Jul 15, 2026 at 02:35:38PM +0000, Pranjal Shrivastava wrote:
+> > > Introduce a centralized helper, nfs_release_request_list, to handle
+> > > the bulk release of nfs_page requests from a list.
+> > >
+> > > This serves as a preparatory step for two upcoming improvements:
+> > >
+> > >    1. Pin-Aware Cleanup: As we migrate to iov_iter_extract_* API,
+> > >       requests will hold pins (GUP) instead of standard references. The
+> > >       helper ensures that the correct unpinning logic gets applied
+> > >       consistently across all requests in a list.
+> > >
+> > >    2. Folio Support: In subsequent patches where nfs_page structures
+> > >       will cover multi-page folios, this helper provides a clean
+> > >       infrastructure to unlock these larger units of I/O in bulk during
+> > >       completion, similat to the pattern in bio_release_pages.
 > 
-> New issues:
-> - [Low] The patch adds internal cancellation to both unregister functions but misses removing the redundant `cancel_work_sync()` for the protocol error work in `cxl_ras_exit()`.
-> 
-> Pre-existing issues:
-> - [High] Fixed-size memcpy in cxl_cper_post_event causes an out-of-bounds read if the provided GHES CPER payload is smaller than sizeof(*rec).
-> - [High] Missing bounds check on untrusted dvsec_len in cxl_cper_setup_prot_err_work_data leads to an out-of-bounds read.
-> --
-> 
-> --- Patch [2]: [PATCH v18 02/13] acpi/apei/ghes: Use raw_spinlock_t for CXL CPER work locks ---
-> commit 70fa064ce36bd35723148aab9a91c80d0fbef760
-> Author: Terry Bowman <terry.bowman@amd.com>
-> 
-> acpi/apei/ghes: Use raw_spinlock_t for CXL CPER work locks
-> 
-> This commit converts cxl_cper_work_lock and cxl_cper_prot_err_work_lock from
-> spinlock_t to raw_spinlock_t to prevent a deadlock between IRQ and process
-> contexts. It also restructures registration functions to warn on double
-> registration and clear work pointers before cancelling them. Redundant
-> cancel_work_sync() calls are removed since quiescing is handled internally.
-> 
->> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
->> index 3236a3ce79d6b..ca7a138c1ff2e 100644
->> --- a/drivers/acpi/apei/ghes.c
->> +++ b/drivers/acpi/apei/ghes.c
-> [ ... ]
->> @@ -761,7 +761,7 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
->>  	if (cxl_cper_sec_prot_err_valid(prot_err))
->>  		return;
->>  
->> -	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
->> +	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
->>  
->>  	if (!cxl_cper_prot_err_work)
->>  		return;
-> 
-> [Severity: High]
-> This is a pre-existing issue, but does cxl_cper_setup_prot_err_work_data()
-> lack bounds checking on the untrusted dvsec_len?
-> 
-> If firmware provides a CXL protocol error record with a maliciously large
-> dvsec_len, could this lead to an out-of-bounds read when calculating
-> cap_start?
-> 
-> drivers/acpi/apei/ghes_helpers.c:cxl_cper_setup_prot_err_work_data() {
->     ...
->     dvsec_start = (u8 *)(prot_err + 1);
->     cap_start = dvsec_start + prot_err->dvsec_len;
-> 
->     memcpy(&wd->ras_cap, cap_start, sizeof(wd->ras_cap));
->     ...
-> }
-> 
-> [ ... ]
->> @@ -831,7 +839,7 @@ static void cxl_cper_post_event(enum cxl_event_type event_type,
->>  		return;
->>  	}
->>  
->> -	guard(spinlock_irqsave)(&cxl_cper_work_lock);
->> +	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
->>  
->>  	if (!cxl_cper_work)
->>  		return;
-> 
-> [Severity: High]
-> This is a pre-existing issue, but does cxl_cper_post_event() have an
-> out-of-bounds read if the provided GHES CPER payload is smaller than
-> sizeof(*rec)?
-> 
-> If firmware provides a CXL event record where gdata->error_data_length is
-> smaller than sizeof(struct cxl_cper_event_rec), this fixed-size memcpy
-> could exceed the bounds of the error status block:
-> 
-> drivers/acpi/apei/ghes.c:cxl_cper_post_event() {
->     ...
->     wd.event_type = event_type;
->     memcpy(&wd.rec, rec, sizeof(wd.rec));
->     ...
-> }
-> 
-> [ ... ]
->> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
->> index 267c679b0b3c2..7c6faee7f85ed 100644
->> --- a/drivers/cxl/pci.c
->> +++ b/drivers/cxl/pci.c
->> @@ -1083,7 +1083,6 @@ static int __init cxl_pci_driver_init(void)
->>  static void __exit cxl_pci_driver_exit(void)
->>  {
->>  	cxl_cper_unregister_work(&cxl_cper_work);
->> -	cancel_work_sync(&cxl_cper_work);
->>  	pci_unregister_driver(&cxl_pci_driver);
->>  }
-> 
-> [Severity: Low]
-> Is there a missed redundant cancel_work_sync() call in cxl_ras_exit()
-> that should also be removed?
-> 
-> Since internal cancellation was added to the unregister functions,
-> cxl_ras_exit() now has redundant synchronization:
-> 
-> drivers/cxl/core/ras.c:cxl_ras_exit() {
->     ...
->     cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
->     cancel_work_sync(&cxl_cper_prot_err_work);
->     ...
-> }
+> nit: similar -> similar
 > 
 
+Ack. Fixing it,
+
+> > > +/*
+> > > + * nfs_release_request_list - Release a list of NFS read/write requests
+> > > + * @head: list of requests to release
+> > > + *
+> > > + * Removes each request from the list and drops it's refcount.
+> > > + */
+> > > +void nfs_release_request_list(struct list_head *head)
+> > > +{
+> > > +     struct nfs_page *req;
+> > > +
+> > > +     while (!list_empty(head)) {
+> > > +             req = nfs_list_entry(head->next);
+> >
+> > req could/should be local here.  Or you switch to list_first_or_null,
+> > which some folks prefer.
+> >
+> > > +extern void nfs_release_request(struct nfs_page *req);
+> > > +extern void nfs_release_request_list(struct list_head *head);
+> >
+> > Please drop the superflous externs for new code.
+> >
+> 
+> Small nit + fix christoph's comment,
+> else looks ok
+> 
+> Reviewed-by: Shivaji Kant <shivajikant@google.com>
+
+Thanks,
+Praan
