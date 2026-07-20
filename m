@@ -1,120 +1,131 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AF1306749
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:28:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F5C730B51A;
+	Mon, 20 Jul 2026 15:28:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784561294; cv=none; b=gC1SB0uzG6tF+A/DBPamaTobnmx53e8COuyudG6+G+VkcoAs5PuLIV9nw7mSSRXcJH9zPGuABextMm2MfGC3PlQr3xzuRw0AoGZauodrL624ExslybhZUGg3G9jEde0AIW9FsYeH7c1ZVhX96ZiFEfF3O6ll46hxpRz2VeKQYHg=
+	t=1784561314; cv=none; b=Sxk24EUm1SjEkzivf3U3Sv5uCZ7t13yGMjCzKx5kMvaQXERSniF5td873YWlicc7d597YfBG2lJQbWfHLeAt/fD6xFWqTcr7+zPCbT+rx142rWf/KzbhHdkLbHu3fItv25vXehjFG/nR8qzH/lTpTyugAhtX2N2vEw9PL8+oJXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784561294; c=relaxed/simple;
-	bh=jreQu3izKdVk4O8ukNsef/vgS1gc0C06TEXby33qvVE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Af+dY32X86BX7fhFI51zELRMUU9YTmaEe0F43Sf4I6zHK37+NhHXA23Mw9KPsfQ59+GiciG9y/okUfIWlYY1HkniBtj/XvWB0KbJoR+XfI3XO/hz6yjcYTc9JjOQx4qrz/sNsI3USTaOfvpY3FpQ1BonwEeZxnPJiWr5uiBqfYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oozf8t22; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1784561314; c=relaxed/simple;
+	bh=xjl9auaPDoiiPOTDY2VMBVC1FdcKxXSErJOkyNR+Tfg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Y9PSYl9KQR/KdLzQyy7ugQmeSTTYqFU5xjgQNc9Fc3f+8fTe8ks3X1q/fEQ7FFbvl+Sb/VFaKYnndrJW2XVZZKrAx34VTR+rrbmEMckvwTdaESuGg0xa5eizG/wnJVLtRQS4Y/k+R+k0omac9u5IaFxXZIbUJfyuMODmzrggDUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b9uId99Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oozf8t22"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=qcO4Jx5AKS6Igcf3/JaMxYeNZarJWUVQHogxhHenLsQ=;
-	b=oozf8t223x6rPeIKh3fmOHRTrFfQEJHXO5I1LTSkPyUvi/v8oNl9euSwX9hk7I
-	7ChfbVtq4Tabfm7+2t+8vO2eg3/K57yr/35p3O6QNrVqgqRe5NgCzUppEu/soTNh
-	tHyP1Aeb9EwpaW0sBzrazvG0R3Qsk5QBmpK21+/Za7DRU=
-Received: from [IPV6:240e:b8f:91b3:d000:f138:f837:e143:4264] (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD31y5hPl5qiykBKQ--.65457S2;
-	Mon, 20 Jul 2026 23:27:30 +0800 (CST)
-Message-ID: <7b76cdd1-1001-4d2d-a221-33988261faf9@163.com>
-Date: Mon, 20 Jul 2026 23:27:29 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b9uId99Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CA951F000E9;
+	Mon, 20 Jul 2026 15:28:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784561313;
+	bh=BABJFnYN3Mt7fhT/xNkof710NDy+wmhVX0gnBjBP8K0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=b9uId99ZI+8OOUjbLR97IZGmcrkAwPmwah1uPoFYD1D5DTbq7Gx9VKd2MpKHffP/W
+	 AU1hdDN6PjSqM3JstdvpM0WXL/4jnC0teRuq3Hc1Gu9DNCEWdI+LlJA55QGJPEZK6b
+	 TcJb3qpzbGihsGXVDrgarWn1s4oVsAWpGPOjGeGTep/dBy63SaNh/4cdzpb+uI9ZbQ
+	 4V4U1Wow0yR4tfBT2pZRo2gHJBPUmK2OjuV9T+HnsbYej55mqc/13kd9qLZdHHpgKx
+	 7tQzNFUE7Sjh2vLlJ63c5L9PkOrr+DCfgvvT0xkeQBpBUt8m4zMvJl6mbSz8kEOqtD
+	 Elo72hboNkzxw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 03/16] PCI: dwc: imx6: Use cached PCIe capability
+ offset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org, imx@lists.linux.dev, neil.armstrong@linaro.org, Frank.Li@kernel.org
+In-Reply-To: <20260720150619.24733-4-18255117159@163.com>
+References: <20260720150619.24733-1-18255117159@163.com>
+ <20260720150619.24733-4-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 20 Jul 2026 15:28:32 +0000
+Message-Id: <20260720152833.1CA951F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 01/16] PCI: dwc: Add pcie_cap field and helper in
- designware header
-To: sashiko-reviews@lists.linux.dev
-Cc: Frank.Li@kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev,
- neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org
-References: <20260720150619.24733-1-18255117159@163.com>
- <20260720150619.24733-2-18255117159@163.com>
- <20260720151732.7B9A41F00A3A@smtp.kernel.org>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260720151732.7B9A41F00A3A@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD31y5hPl5qiykBKQ--.65457S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KFW5WF1UurW5ZFyUXFWfuFg_yoW8Kr1Upa
-	9xJFyayF48JF43ZF97Aa15WF1akF9IyFy3G3y3G34fZFya9F17Ka1FyrWrKF17GrZ7Kr1Y
-	kr4UtF9xCrn5JFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U4BTOUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7APZfWpePmPkIQAA3n
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] In Endpoint (EP) mode, the cached `pci->pcie_cap` offset is uninit=
+ialized and defaults to 0, causing `imx_pcie_start_link` and `imx_pcie_ltss=
+m_enable` to read and corrupt the standard PCI configuration space header i=
+nstead of the PCIe Link Capabilities register.
+--
 
+--- Patch [3]: [PATCH v3 03/16] PCI: dwc: imx6: Use cached PCIe capability =
+offset ---
+commit e88cd77b027a125e9713fc310c612c5158a23be1
+Author: Hans Zhang <18255117159@163.com>
 
-On 7/20/26 23:17, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] Data race and logically flawed caching in dw_pcie_get_pcie_cap() due to unprotected read-modify-write and failure to cache 'not found' state.
-> --
-> 
-> --- Patch [1]: [PATCH v3 01/16] PCI: dwc: Add pcie_cap field and helper in designware header ---
-> commit ab22dc6f534d77b34df13c99dd929771547f5ff1
-> Author: Hans Zhang <18255117159@163.com>
-> 
-> PCI: dwc: Add pcie_cap field and helper in designware header
-> 
-> This commit adds a pcie_cap field to struct dw_pcie to cache the offset of
-> the PCI Express Capability structure. It introduces dw_pcie_get_pcie_cap()
-> to perform the capability search on the first call and cache the result.
-> 
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
->> --- a/drivers/pci/controller/dwc/pcie-designware.h
->> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> [ ... ]
->> @@ -829,6 +831,21 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
->>   	dw_pcie_writel_dbi(pci, reg, val);
->>   }
->>   
->> +/**
->> + * dw_pcie_get_pcie_cap() - Return cached PCIe Capability offset
->> + * @pci: DWC instance
->> + *
->> + * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
->> + * Returns 0 if the capability is not present.
->> + */
->> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
->> +{
->> +	if (!pci->pcie_cap)
->> +		pci->pcie_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> 
-> [Severity: Medium]
-> Will this repeatedly search the configuration space if the capability is
-> not found? If dw_pcie_find_capability() returns 0 when the capability is
-> missing, pci->pcie_cap will remain 0, causing the search to be repeated
-> on every subsequent call instead of being cached.
-> 
-> Also, since this helper might be called concurrently by different threads,
-> could the unprotected read and write to pci->pcie_cap cause a data race?
-> 
+PCI: dwc: imx6: Use cached PCIe capability offset
 
-Hi,
+This commit updates the i.MX6 PCIe driver to use the cached pcie_cap
+offset instead of dynamically finding the PCI_CAP_ID_EXP capability
+during link start and LTSSM enablement.
 
-As mentioned in the previous reply, there is no need for us to worry 
-about this.
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
+er/dwc/pci-imx6.c
+> index 98e1db751132a..74b28b4df4846 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -966,10 +966,10 @@ static void imx_pcie_ltssm_enable(struct device *de=
+v)
+>  {
+>  	struct imx_pcie *imx_pcie =3D dev_get_drvdata(dev);
+>  	const struct imx_pcie_drvdata *drvdata =3D imx_pcie->drvdata;
+> -	u8 offset =3D dw_pcie_find_capability(imx_pcie->pci, PCI_CAP_ID_EXP);
+> +	struct dw_pcie *pci =3D imx_pcie->pci;
+>  	u32 tmp;
+> =20
+> -	tmp =3D dw_pcie_readl_dbi(imx_pcie->pci, offset + PCI_EXP_LNKCAP);
+> +	tmp =3D dw_pcie_readl_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP);
 
-https://lore.kernel.org/linux-pci/5cc6fbcc-98eb-4da5-b123-2c04c4d39326@163.com/
+[Severity: High]
+Is pci->pcie_cap guaranteed to be initialized here in Endpoint (EP) mode?
 
+It looks like imx_add_pcie_ep() does not call dw_pcie_get_pcie_cap() after
+the hardware is enabled. If pci->pcie_cap evaluates to 0 in EP mode, wouldn=
+'t
+this read from offset 0x0C (Cache Line Size, Latency Timer, etc.) in the
+standard PCI configuration space instead of the PCIe Link Capabilities regi=
+ster?
 
-Best regards,
-Hans
+>  	phy_set_speed(imx_pcie->phy, FIELD_GET(PCI_EXP_LNKCAP_SLS, tmp));
+>  	if (drvdata->ltssm_mask)
 
+[ ... ]
 
->> +
->> +	return pci->pcie_cap;
->> +}
-> 
+> @@ -995,7 +995,7 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
+>  {
+>  	struct imx_pcie *imx_pcie =3D to_imx_pcie(pci);
+>  	struct device *dev =3D pci->dev;
+> -	u8 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	u8 offset =3D pci->pcie_cap;
+>  	u32 tmp;
+>  	int ret;
 
+[ ... ]
+
+>  	dw_pcie_dbi_ro_wr_en(pci);
+>  	tmp =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+>  	tmp &=3D ~PCI_EXP_LNKCAP_SLS;
+>  	tmp |=3D PCI_EXP_LNKCAP_SLS_2_5GB;
+>  	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
+
+[Severity: High]
+Can this corrupt the standard PCI configuration space header in EP mode?
+
+Since offset is derived from pci->pcie_cap, if it remains uninitialized
+(0) for endpoints, this write would target offset 0x0C in the standard PCI
+header. This could corrupt the Cache Line Size, Latency Timer, Header Type,
+and BIST registers.
+
+Does the endpoint initialization path need a call to dw_pcie_get_pcie_cap()
+before the link is started via dw_pcie_ep_start()?
+
+>  	dw_pcie_dbi_ro_wr_dis(pci);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720150619.2473=
+3-1-18255117159@163.com?part=3D3
