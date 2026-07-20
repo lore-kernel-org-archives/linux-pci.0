@@ -1,56 +1,56 @@
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78990432BEF
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2290431489
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:06:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784559990; cv=none; b=uJhQwilKyee44aahbecv2g8nlAOE4MB1ntxtnXyX+01OIbw9ZCHXrvIxeilnUBmYJpnceO/UN1wuC9jg0l/EWYYY+tGwslh7w1mavGWGanp33+pEVTTyGsrqzRf1xZmLCjqMbwNePWSdv4BWXn7QD25goESXk3QBihchWmG+kPE=
+	t=1784559996; cv=none; b=UvpDwujNzsZOC7QSyTWKPQ5Of546hxIzA58tpPJIsKYKavoHGXn8kyyAms+doBkxhCYE+5AQLKIEKCnE2mbYv/9YxLnJmRjnIjnlaOlZ9WmQMgMZuR7mN+nnJFwkkBBRCWD5J5JYPhD7mMb64rHZD5u2TG/7OzAFNsleVuHmxK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784559990; c=relaxed/simple;
-	bh=F1hdAv1BVXhW0ib5eW8/6E+coJBZg/4PK1kV/+S8BiY=;
+	s=arc-20240116; t=1784559996; c=relaxed/simple;
+	bh=uHl1U9uqrn0K6pJWxrCywcw/LqoTgBI8N0t/dHCfA0w=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=ewjHPmHBNw9365EwH/mBb2+DDdPiSrfiIQSv4z8jOs9K8Lha3rmuRBLyt/L+X/3h+DNgZeismkFP22WkSLpfACcklNRA0iBAPEP8B63AyLzuwY2hRhC0llvXHStviDlDzl0K/vwSeubC4YHOlDgYJGG2ynmxkpROL+jzhoU/gZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=V1spRhOk; arc=none smtp.client-ip=209.85.210.198
+	 To:Cc:Content-Type; b=YAlDaJJQOfpNT288ASBRyLx/rg93yoxlG7fAtdEaR+EBVuFZdvODL0nondWMI8vurgj8S4tz8BbAtlkTpAqpeT8YkLRc6BRv5AYzTq59sjU09BDkdWu0Uprn74yztUfQBbFJqEndSgUQ/YukWcoy30lFx6PVT6e+yTfttq+Oyok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IOxUjVPo; arc=none smtp.client-ip=209.85.214.198
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="V1spRhOk"
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-848452dd146so14997865b3a.2
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:06:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IOxUjVPo"
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cae455cf6dso145445415ad.2
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:06:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784559988; x=1785164788; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784559994; x=1785164794; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=d1yAJMK6cD/e1kuyT9ZxFpud0sasrBE5xVp8jVQmGx4=;
-        b=V1spRhOkVNnPITHCk5k6qtQ5NkYYcU/YPdLXvuZyDE0JqBoewWzm3DK9CCaZhCWu4e
-         iLKlaLGjLbYOV4fRwoX5qhkHYbe7yDnQVli00l62Cz98i327LiQw6mvzHl90TazyUdtn
-         g6Stnbe/kcvEdomRK+4q2vA4r3Ev9w0MepqGXbYclo6mu+7W8Uyr6/Phs1yBjAxN9sMN
-         IyFaPQPJzpbO+KiuF67pYhZg5Uhqe9Vpkz1DuyKrBwQcHdVM5HvjomPT4Mc4EfTUYlNd
-         2oHUGZvQilqZD2lMqf9xJYPrhgdTiKe3rg7DM602SU9wiJyBbtW9N4nnFgwGA1zyBc+P
-         DhBw==
+        bh=iEr3VNvmBkqEprXTi3pXlF49HoF9BORq25oSTaK+MZQ=;
+        b=IOxUjVPoR4z3ZzWeLtENBcF3FDNb21BqoZg/JjOW32uWsKIC4avYISG1sRgvhDN5BB
+         QaGinyrmzOUg3oc2/1kzkEbzNWn4q2RYlnz7A2b62tYXURn5/Xb+3VGVY0QdZYtM0574
+         QuybZtx+9t57FCGCVjwRWKELNS8nsf2D5LxyFPJdRZ7zWkK4Yxf1ZcYsXVVe5KX5TYg8
+         XQ2AyIUosZKeD6HT7LOTdVSfQru+5Dmdk9v9aX87DfBECtyRA4eCR7YDcKhZOhpHBh8f
+         cZWc9ujpPMXzHua2iwx1q5mOmFAkuUz2aux2DlT1SNMwbU8YnS8+AQ1KU5hvfauIEWE4
+         TGpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784559988; x=1785164788;
+        d=1e100.net; s=20251104; t=1784559994; x=1785164794;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=d1yAJMK6cD/e1kuyT9ZxFpud0sasrBE5xVp8jVQmGx4=;
-        b=IjGGJuDz/lYEuC0q9GlEwTxZBz6bpFxk/iLxb3dBGnSY3C4csW8edQjFtd2dSwzjVE
-         fhgKe4XnbJHq9TC26sNfP+Wr1O+Hb9lk9htSXUUnZOlZqW9OT+bm9BLCZxT+kVL/HWDX
-         Tfrl87rwkJyK0xTpTcXWbCEstL/8u2gTC6Jriyw8zCRXOttSbK7jkV1pLqTlGWfuwPFR
-         8sOmGwGWHGypz9CXBBptwF0pjrJPTS82V4a8R5Gzt5ZJAqaqoWB8X52/dSA4iV662/4V
-         7fTfzrQ0qS1p7W0vk8jm1ZikybG6qg2k8dF8prkbHSK0GvkOIJRXYZw2GdMUEM8zv4GB
-         xyXA==
-X-Forwarded-Encrypted: i=1; AHgh+RoM4eHzx9ha5vsLeAzoFxJ5EBfEivV+jvwcsKOa3CX845lUMbejjaCYlw9rWGzD8cxM7XpBC5xqNWM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxit5fba+Kfw/C0gBBIMFJRcfXDYBPuI0dsBpsbsNO7/yO8ZoJk
-	joDEEE5FWDU+lQde1MSPdspm+R2rOzdG5L6W+/jsmrVWPEyBNy49KMrjCJB4wqa6V2tqcsRHiED
-	Hjg==
-X-Received: from pgfu18.prod.google.com ([2002:a65:6712:0:b0:c9b:f0c9:631a])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:c88:b0:848:2f77:e2d9
- with SMTP id d2e1a72fcca58-84c29528adfmr14649468b3a.66.1784559987318; Mon, 20
- Jul 2026 08:06:27 -0700 (PDT)
-Date: Mon, 20 Jul 2026 15:05:58 +0000
+        bh=iEr3VNvmBkqEprXTi3pXlF49HoF9BORq25oSTaK+MZQ=;
+        b=Z8ES74uS6yFMexyyFxyEGvog52fKtsCYvFTN91eOSPfffHS3nlnEv9Tv/yswgKL0xV
+         OHGQjz2eHXaPECPBbcLj8o8GcI0NIAjGQMaDeY+z7s565TFqtDLAvgAm0UuleFqLlZEM
+         G6072B+ElZxP/vFd6iKnavG2eTnxAJbXIJo5FftIXO56W7xM7PGJOpSQBVmlUw4YkNJY
+         YDnEPrfwoKR5RoryqnSS+naU07NOO2pfLRvjbp9ZW04KgIovBPiP1mcnNf6szEzvXbw1
+         WEBqVyMYW4CdrFmLsnMzOjraG6pPp1qLnyf/aS+IDG+r4Fm1ZGSA2DUUn8DeoXqBKYuu
+         ALWA==
+X-Forwarded-Encrypted: i=1; AHgh+RrYFKQFN9BEnhU2kY50JjWLRcLT4M0R/ouG3IBSilqhvA5IP94WPsghpbdDz7zAE+Ez1prqiw2QI2Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzgbrotDX/xE/V+68AT/DhH/PO6ziGgt0ylCK16jQfOEtlSp5hb
+	dxgbOfgv/1+/5wri51jqzX/8oIdgCmb+gVePEKAh4WB6+jZU1tczbm7bccY4VRpfXICp81GjSTx
+	Djw==
+X-Received: from plot12.prod.google.com ([2002:a17:902:8c8c:b0:2ce:9c0d:171f])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:dad0:b0:2c9:97a8:afe5
+ with SMTP id d9443c01a7336-2cf349eee08mr154630795ad.40.1784559993879; Mon, 20
+ Jul 2026 08:06:33 -0700 (PDT)
+Date: Mon, 20 Jul 2026 15:05:59 +0000
 In-Reply-To: <20260720150601.2702700-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260720150601.2702700-1-praan@google.com>
 X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
-Message-ID: <20260720150601.2702700-3-praan@google.com>
-Subject: [PATCH v4 2/5] nfs: track number of pinned pages in nfs_page
+Message-ID: <20260720150601.2702700-4-praan@google.com>
+Subject: [PATCH v4 3/5] nfs: introduce nfs_release_request_list helper
 From: Pranjal Shrivastava <praan@google.com>
 To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
 	Anna Schumaker <anna@kernel.org>
@@ -71,75 +71,94 @@ Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel
 	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Track the number of pinned pages in nfs_page to handle unpinning
-correctly, ensuring that only primary requests perform the final
-unpinning operation, preventing subrequests from incorrectly
-performing unpinning on behalf of their parent requests.
+Introduce a centralized helper, nfs_release_request_list, to handle
+the bulk release of nfs_page requests from a list.
 
-Add wb_nr_pinned to struct nfs_page to store the count of pinned pages
-owned by the request. Update request creation and cleanup helpers to
-initialize and use wb_nr_pinned for primary requests. Use the
-nfs_page_array_len() helper to calculate the number of pages spanned
-by a request's offset and length.
+This serves as a preparatory step for two upcoming improvements:
+
+   1. Pin-Aware Cleanup: As we migrate to iov_iter_extract_* API,
+      requests will hold pins (GUP) instead of standard references. The
+      helper ensures that the correct unpinning logic gets applied
+      consistently across all requests in a list.
+
+   2. Folio Support: In subsequent patches where nfs_page structures
+      will cover multi-page folios, this helper provides a clean
+      infrastructure to unlock these larger units of I/O in bulk during
+      completion, similar to the pattern in bio_release_pages.
+
+Additionally, refactor nfs_read_sync_pgio_error() to utilize this new
+helper.
 
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
+Reviewed-by: Shivaji Kant <shivajikant@google.com>
 ---
- fs/nfs/pagelist.c        | 9 +++++++--
- include/linux/nfs_page.h | 1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ fs/nfs/direct.c          |  8 +-------
+ fs/nfs/pagelist.c        | 17 +++++++++++++++++
+ include/linux/nfs_page.h |  4 ++--
+ 3 files changed, 20 insertions(+), 9 deletions(-)
 
+diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+index 19792a38c924..96995736fac2 100644
+--- a/fs/nfs/direct.c
++++ b/fs/nfs/direct.c
+@@ -314,13 +314,7 @@ static void nfs_direct_read_completion(struct nfs_pgio_header *hdr)
+ 
+ static void nfs_read_sync_pgio_error(struct list_head *head, int error)
+ {
+-	struct nfs_page *req;
+-
+-	while (!list_empty(head)) {
+-		req = nfs_list_entry(head->next);
+-		nfs_list_remove_request(req);
+-		nfs_release_request(req);
+-	}
++	nfs_release_request_list(head);
+ }
+ 
+ static void nfs_direct_pgio_init(struct nfs_pgio_header *hdr)
 diff --git a/fs/nfs/pagelist.c b/fs/nfs/pagelist.c
-index 606b518fa204..c307daf5f68d 100644
+index c307daf5f68d..80fb553528d9 100644
 --- a/fs/nfs/pagelist.c
 +++ b/fs/nfs/pagelist.c
-@@ -457,6 +457,8 @@ struct nfs_page *nfs_page_create_from_page(struct nfs_open_context *ctx,
- 			      offset_in_page(offset), count);
- 	if (!IS_ERR(ret)) {
- 		nfs_page_assign_page(ret, page, pinned);
-+		if (pinned)
-+			ret->wb_nr_pinned = 1;
- 		nfs_page_group_init(ret, NULL);
- 	}
- 	nfs_put_lock_context(l_ctx);
-@@ -489,6 +491,9 @@ struct nfs_page *nfs_page_create_from_folio(struct nfs_open_context *ctx,
- 	ret = nfs_page_create(l_ctx, offset, folio->index, offset, count);
- 	if (!IS_ERR(ret)) {
- 		nfs_page_assign_folio(ret, folio, pinned);
-+		if (pinned)
-+			ret->wb_nr_pinned = nfs_page_array_len(offset_in_page(offset),
-+							      count);
- 		nfs_page_group_init(ret, NULL);
- 	}
- 	nfs_put_lock_context(l_ctx);
-@@ -567,14 +572,14 @@ static void nfs_clear_request(struct nfs_page *req)
+@@ -624,6 +624,23 @@ void nfs_release_request(struct nfs_page *req)
+ }
+ EXPORT_SYMBOL_GPL(nfs_release_request);
  
- 	if (folio != NULL) {
- 		if (test_and_clear_bit(PG_PINNED, &req->wb_flags))
--			unpin_user_folio(folio, 1);
-+			unpin_user_folio(folio, req->wb_nr_pinned);
- 		else
- 			folio_put(folio);
- 		req->wb_folio = NULL;
- 		clear_bit(PG_FOLIO, &req->wb_flags);
- 	} else if (page != NULL) {
- 		if (test_and_clear_bit(PG_PINNED, &req->wb_flags))
--			unpin_user_page(page);
-+			unpin_user_pages(&page, req->wb_nr_pinned);
- 		else
- 			put_page(page);
- 		req->wb_page = NULL;
++/*
++ * nfs_release_request_list - Release a list of NFS read/write requests
++ * @head: list of requests to release
++ *
++ * Removes each request from the list and drops it's refcount.
++ */
++void nfs_release_request_list(struct list_head *head)
++{
++	while (!list_empty(head)) {
++		struct nfs_page *req = nfs_list_entry(head->next);
++
++		nfs_list_remove_request(req);
++		nfs_release_request(req);
++	}
++}
++EXPORT_SYMBOL_GPL(nfs_release_request_list);
++
+ /*
+  * nfs_generic_pg_test - determine if requests can be coalesced
+  * @desc: pointer to descriptor
 diff --git a/include/linux/nfs_page.h b/include/linux/nfs_page.h
-index fd7aafe7cb54..080fa3e23580 100644
+index 080fa3e23580..c38e4b380be5 100644
 --- a/include/linux/nfs_page.h
 +++ b/include/linux/nfs_page.h
-@@ -59,6 +59,7 @@ struct nfs_page {
- 	struct nfs_page		*wb_this_page;  /* list of reqs for this page */
- 	struct nfs_page		*wb_head;       /* head pointer for req list */
- 	unsigned short		wb_nio;		/* Number of I/O attempts */
-+	unsigned int		wb_nr_pinned;	/* Number of pinned pages */
- };
+@@ -136,8 +136,8 @@ extern struct nfs_page *nfs_page_create_from_folio(struct nfs_open_context *ctx,
+ 						   bool pinned,
+ 						   unsigned int offset,
+ 						   unsigned int count);
+-extern	void nfs_release_request(struct nfs_page *);
+-
++void nfs_release_request(struct nfs_page *req);
++void nfs_release_request_list(struct list_head *head);
  
- struct nfs_pgio_mirror;
+ extern	void nfs_pageio_init(struct nfs_pageio_descriptor *desc,
+ 			     struct inode *inode,
 -- 
 2.55.0.229.g6434b31f56-goog
 
