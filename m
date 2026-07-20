@@ -1,293 +1,115 @@
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9F8F434E3A
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:06:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A718A435ABB;
+	Mon, 20 Jul 2026 15:08:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784560011; cv=none; b=f9qx9cF467qBcgVFiRgoil60XNrZN5jE4DU+dEkQZ1Z/ZMQLoRTMZq1ms1iHm/Xids2+dCJm6hZTP0wnmRMeTS+DSRZGTIN0T+pwxxrxvWIj5qpotvGX1M+tiR0p/hogX6cesyGoCUvCwGSAiaw+G6xScUbUICFpUIEg69o7uNg=
+	t=1784560116; cv=none; b=hIbBDtoHdjtjidKnuwOgSqVoPtEH+m3ltWI4JUfRov2+f01WvlBAHdczUKNXpmZ86MklhUMixmo26S8mLcu86G8cLjz83PXqym/daD5JaHUiRcArbDWbm6SaSg3TwAU8+CTRYwbwIXkhtwVMZXlj7fn07Dhko/C4FZzgEU39wzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784560011; c=relaxed/simple;
-	bh=cE1N3bryysgtK03efhJdxm+fcOXxenlTYhZMIyr54Dk=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=QFVKzbBGmeKUnRSMmNrjDMDkvr1QF8hkwbqgHV2qP2cnFy10318QBP4VlB4juvPlTyYJNsUWtPjqvd7BiWQNQ2snWxLVnHOVEUDsmjtwhPOqYyEDZGJ4tEkc1T0pSSOXPr0iqxsOTs2RCgoorWBbMYVHuNrggcjqAfEl+ZejzoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Uve1xiiD; arc=none smtp.client-ip=209.85.214.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
+	s=arc-20240116; t=1784560116; c=relaxed/simple;
+	bh=ThaktiGAe/yfRYpI9orDOAKwzNP7ZavcpetdONWm9nI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=hcQbcJ6pboYa5/WHlczjSrq1JlNdgTMVRwv2PA2PSYQsaTF0XAzNz9WE7Eks78Umgp+nmiJ0teFKdacUIjg02js5aR54KEobjhu/JfM2PHDkblRQ00HjZtD55xTMcaVmN8Xh7jxcS8zOpFD0C+Nuzdjo1ErUmgtfe0N/fhAWbdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=KVDwbKop; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Uve1xiiD"
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ccafc5e82cso92606575ad.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:06:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784560009; x=1785164809; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=HitDsJbfPqYQGRXR79WqQVN0Cxm+fM5TpLS0CnFvhac=;
-        b=Uve1xiiDBQ0/NtDEbd4Wi1CaexiBB+UlfIMrwI9pXUG9K+9ZBqh7Vil2miIuu+NyvZ
-         KKzVCmdRSmgLiOAP2dvyTTesA8EDy7CZ0CScFuWvJfZHW4UpNH31UIQcoXh1bpBkVReL
-         rPAtt92Wepw2VOfFR/GVNtAYE0igx526ZFX9vMRA1o9UX5mCax/1GZeRgQHA51TWhKPT
-         OZy20TBBWndH6WTMLsKRMnkCsCa98MEzhP8HeJbuHL/QVe/G2ZkVJ9dSMJMa3RFkBYzJ
-         m+4TFJkP4dvf2jgcQNiFfrXzZe0pDX22K1LGvXf/LyRX42nEjmY9lu4riCQI4fqPWpfH
-         8Jmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784560009; x=1785164809;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=HitDsJbfPqYQGRXR79WqQVN0Cxm+fM5TpLS0CnFvhac=;
-        b=L4dwYZn4TiX8zp8D3Vd8DgJGylYjHPjQk04hsh0UjNMfDJL7pwHxAuFBDsQoSl2WWt
-         3OxhJ+BxYB8csmeycfyU3EZS2piA4E1OMP9yVlGvX/qex6FD3vXD8wlzhVZbFPVh+inr
-         i3jMGK3rcBoo7FW0LKCF7xH7FcSYgd2gQyXLEY1BwJV4IlxkYPz2saoEY8+Gb2EWaLbj
-         P2okvFmk8rqFNMDrRRL+03jFTWvYilI9FaBxrPQXJ/vl4i9QdGIw9peU/ghH/jx8SlOm
-         D94X5r3M4kZpOSamhVOxIzx4ULxRVySVhbNGmnnSYY8DtM5B4uYK6VcvHxOIpvu+KEoF
-         0mCw==
-X-Forwarded-Encrypted: i=1; AHgh+Rot2vwTdTPtFUtpZI1xYlUgt4G3GaKsmVT3duNKPGV81+3FkIGvr5vxgysMhWKoUlG0SUGx8cgPFiM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxRspQs5n8xSuBxtGIv3oucQkf/HxXN7602RNAjrvD7lu9pAz2x
-	BazgxWZgkA2Mnq98Qy8EZCBvLDFoLurk4H9Rk+VJaznk81o3lX+wEB/s247U1RLrKlaSWeAhwk+
-	NvQ==
-X-Received: from plbbh1.prod.google.com ([2002:a17:902:a981:b0:2ce:fa1a:2684])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:2383:b0:2c9:97a7:f544
- with SMTP id d9443c01a7336-2cf34a18cefmr161701915ad.42.1784560008838; Mon, 20
- Jul 2026 08:06:48 -0700 (PDT)
-Date: Mon, 20 Jul 2026 15:06:01 +0000
-In-Reply-To: <20260720150601.2702700-1-praan@google.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="KVDwbKop"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=kb
+	4jWdBr7fAMGhV7hOxhuVJo6c1gLcmiTbqibBA1sDU=; b=KVDwbKopKysaucMRs9
+	vwQ9KpV2FqhFGITqoRCFnxIIT3GIlaUaBJzVA8i3oQFykeCl1NZvYQ1ThBbUJZH6
+	LjTGBYx/tXd3O4YFTwKg3BKzcQxZM8p+JH/ucFPH0scL5NIuJtGrrCvbAaqIfmdw
+	w6QcjRo88fO7gfeCHyFzYbVtI=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDX+mO9OV5q8LEOKg--.8910S3;
+	Mon, 20 Jul 2026 23:07:44 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	jingoohan1@gmail.com
+Cc: imx@lists.linux.dev,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	sophgo@lists.linux.dev,
+	linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v3 01/16] PCI: dwc: Add pcie_cap field and helper in designware header
+Date: Mon, 20 Jul 2026 23:06:04 +0800
+Message-Id: <20260720150619.24733-2-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260720150619.24733-1-18255117159@163.com>
+References: <20260720150619.24733-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260720150601.2702700-1-praan@google.com>
-X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
-Message-ID: <20260720150601.2702700-6-praan@google.com>
-Subject: [PATCH v4 5/5] nfs: introduce nfs_direct_extract_pages helper
-From: Pranjal Shrivastava <praan@google.com>
-To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
-	Anna Schumaker <anna@kernel.org>
-Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, 
-	Christoph Hellwig <hch@lst.de>, Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDX+mO9OV5q8LEOKg--.8910S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KFWxCF4kArWUWw4fGr1fXrb_yoW8Ww45pa
+	y3JF1Skr48AFWavF43AanxZr15tF93ArW7Ga93Kw1SqFyaka4UGa10yryYyF17KrWIkrya
+	kw45t34rCFn8JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zEv388UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxACwVGpeOcAFAAAA3o
 
-Introduce nfs_direct_extract_pages() in direct.c to centralize page
-extraction and request creation for the Direct I/O path. The helper
-manages extraction from the iters and builds a list of nfs_page requests
+Add a pcie_cap field to struct dw_pcie to store the offset of the
+PCI Express Capability structure. Provide a helper dw_pcie_get_pcie_cap()
+which performs the capability search on first call and caches the result.
 
-Refactor nfs_direct_read_schedule_iovec() and
-nfs_direct_write_schedule_iovec() to utilize the new helper, unifying
-the extraction logic on both paths.
+This is a preparatory step for replacing repetitive capability searches
+in both core and platform drivers.
 
-Signed-off-by: Pranjal Shrivastava <praan@google.com>
-Reviewed-by: Shivaji Kant <shivajikant@google.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- fs/nfs/direct.c | 127 ++++++++++++++++++++++++------------------------
- 1 file changed, 64 insertions(+), 63 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
-index b9ac0a67693c..d31e4720ffff 100644
---- a/fs/nfs/direct.c
-+++ b/fs/nfs/direct.c
-@@ -178,6 +178,50 @@ static void nfs_direct_release_pages(struct page **pages, unsigned int npages,
- 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index de4b245b1758..8113efd33a24 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -591,6 +591,8 @@ struct dw_pcie {
+ 	 * use_parent_dt_ranges to true to avoid this warning.
+ 	 */
+ 	bool			use_parent_dt_ranges;
++
++	u8			pcie_cap;	/* PCIe capability offset */
+ };
+ 
+ #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+@@ -829,6 +831,21 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+ 	dw_pcie_writel_dbi(pci, reg, val);
  }
  
-+static ssize_t nfs_direct_extract_pages(struct nfs_direct_req *dreq,
-+					 struct iov_iter *iter,
-+					 size_t size, loff_t *pos,
-+					 struct list_head *list)
++/**
++ * dw_pcie_get_pcie_cap() - Return cached PCIe Capability offset
++ * @pci: DWC instance
++ *
++ * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
++ * Returns 0 if the capability is not present.
++ */
++static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
 +{
-+	bool pinned = iov_iter_extract_will_pin(iter);
-+	struct page **pagevec = NULL;
-+	ssize_t result, bytes = 0;
-+	unsigned int npages, i;
-+	size_t pgbase;
++	if (!pci->pcie_cap)
++		pci->pcie_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
 +
-+	result = iov_iter_extract_pages(iter, &pagevec, size, ~0U, 0, &pgbase);
-+	if (result <= 0)
-+		return result;
-+
-+	npages = (result + pgbase + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	for (i = 0; i < npages; i++) {
-+		struct nfs_page *req;
-+		unsigned int req_len = min_t(size_t, result - bytes, PAGE_SIZE - pgbase);
-+
-+		req = nfs_page_create_from_page(dreq->ctx, pagevec[i],
-+						pinned, pgbase, *pos,
-+						req_len);
-+		if (IS_ERR(req)) {
-+			if (!bytes)
-+				bytes = PTR_ERR(req);
-+			break;
-+		}
-+
-+		list_add_tail(&req->wb_list, list);
-+		pgbase = 0;
-+		bytes += req_len;
-+		*pos += req_len;
-+	}
-+
-+	if (i < npages) {
-+		iov_iter_revert(iter, result - bytes);
-+		nfs_direct_release_pages(pagevec + i, npages - i, pinned);
-+	}
-+
-+	kvfree(pagevec);
-+	return bytes;
++	return pci->pcie_cap;
 +}
 +
- void nfs_init_cinfo_from_dreq(struct nfs_commit_info *cinfo,
- 			      struct nfs_direct_req *dreq)
+ static inline int dw_pcie_start_link(struct dw_pcie *pci)
  {
-@@ -346,6 +390,7 @@ static ssize_t nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
- 	ssize_t result = -EINVAL;
- 	size_t requested_bytes = 0;
- 	size_t rsize = max_t(size_t, NFS_SERVER(inode)->rsize, PAGE_SIZE);
-+	LIST_HEAD(nfs_page_list);
- 
- 	nfs_pageio_init_read(&desc, dreq->inode, false,
- 			     &nfs_direct_read_completion_ops);
-@@ -354,43 +399,23 @@ static ssize_t nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
- 	inode_dio_begin(inode);
- 
- 	while (iov_iter_count(iter)) {
--		struct page **pagevec = NULL;
--		size_t bytes;
--		size_t pgbase;
--		unsigned npages, i;
--		bool pinned = iov_iter_extract_will_pin(iter);
--
--		result = iov_iter_extract_pages(iter, &pagevec,
--						rsize, ~0U, 0, &pgbase);
-+		result = nfs_direct_extract_pages(dreq, iter, rsize, &pos, &nfs_page_list);
- 		if (result < 0)
- 			break;
- 
--		bytes = result;
--		npages = (result + pgbase + PAGE_SIZE - 1) / PAGE_SIZE;
--		for (i = 0; i < npages; i++) {
--			struct nfs_page *req;
--			unsigned int req_len = min_t(size_t, bytes, PAGE_SIZE - pgbase);
--			/* XXX do we need to do the eof zeroing found in async_filler? */
--			req = nfs_page_create_from_page(dreq->ctx, pagevec[i],
--							pinned, pgbase, pos,
--							req_len);
--			if (IS_ERR(req)) {
--				result = PTR_ERR(req);
--				break;
--			}
-+		while (!list_empty(&nfs_page_list)) {
-+			struct nfs_page *req = nfs_list_entry(nfs_page_list.next);
-+			size_t req_len = req->wb_bytes;
-+
-+			nfs_list_remove_request(req);
- 			if (!nfs_pageio_add_request(&desc, req)) {
- 				result = desc.pg_error;
- 				nfs_release_request(req);
-+				nfs_release_request_list(&nfs_page_list);
- 				break;
- 			}
--			pgbase = 0;
--			bytes -= req_len;
- 			requested_bytes += req_len;
--			pos += req_len;
- 		}
--		if (i < npages)
--			nfs_direct_release_pages(pagevec + i, npages - i, pinned);
--		kvfree(pagevec);
- 		if (result < 0)
- 			break;
- 	}
-@@ -881,6 +906,7 @@ static ssize_t nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
- 	ssize_t result = 0;
- 	size_t requested_bytes = 0;
- 	size_t wsize = max_t(size_t, NFS_SERVER(inode)->wsize, PAGE_SIZE);
-+	LIST_HEAD(nfs_page_list);
- 	bool defer = false;
- 
- 	trace_nfs_direct_write_schedule_iovec(dreq);
-@@ -893,55 +919,32 @@ static ssize_t nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
- 
- 	NFS_I(inode)->write_io += iov_iter_count(iter);
- 	while (iov_iter_count(iter)) {
--		struct page **pagevec = NULL;
--		size_t bytes;
--		size_t pgbase;
--		unsigned npages, i;
--		bool pinned = iov_iter_extract_will_pin(iter);
--
--		result = iov_iter_extract_pages(iter, &pagevec,
--						wsize, ~0U, 0, &pgbase);
-+		result = nfs_direct_extract_pages(dreq, iter, wsize, &pos, &nfs_page_list);
- 		if (result < 0)
- 			break;
- 
--		bytes = result;
--		npages = (result + pgbase + PAGE_SIZE - 1) / PAGE_SIZE;
--		for (i = 0; i < npages; i++) {
--			struct nfs_page *req;
--			unsigned int req_len = min_t(size_t, bytes, PAGE_SIZE - pgbase);
--
--			req = nfs_page_create_from_page(dreq->ctx, pagevec[i],
--							pinned, pgbase, pos,
--							req_len);
--			if (IS_ERR(req)) {
--				result = PTR_ERR(req);
--				break;
--			}
--
--			if (desc.pg_error < 0) {
--				nfs_free_request(req);
--				result = desc.pg_error;
--				break;
--			}
--
--			pgbase = 0;
--			bytes -= req_len;
--			requested_bytes += req_len;
--			pos += req_len;
-+		while (!list_empty(&nfs_page_list)) {
-+			struct nfs_page *req = nfs_list_entry(nfs_page_list.next);
-+			size_t req_len = req->wb_bytes;
- 
-+			nfs_list_remove_request(req);
- 			if (defer) {
- 				nfs_mark_request_commit(req, NULL, &cinfo, 0);
-+				requested_bytes += req_len;
- 				continue;
- 			}
- 
- 			nfs_lock_request(req);
--			if (nfs_pageio_add_request(&desc, req))
-+			if (nfs_pageio_add_request(&desc, req)) {
-+				requested_bytes += req_len;
- 				continue;
-+			}
- 
- 			/* Exit on hard errors */
- 			if (desc.pg_error < 0 && desc.pg_error != -EAGAIN) {
- 				result = desc.pg_error;
- 				nfs_unlock_and_release_request(req);
-+				nfs_release_request_list(&nfs_page_list);
- 				break;
- 			}
- 
-@@ -952,12 +955,10 @@ static ssize_t nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
- 			spin_unlock(&dreq->lock);
- 			nfs_unlock_request(req);
- 			nfs_mark_request_commit(req, NULL, &cinfo, 0);
-+			requested_bytes += req_len;
- 			desc.pg_error = 0;
- 			defer = true;
- 		}
--		if (i < npages)
--			nfs_direct_release_pages(pagevec + i, npages - i, pinned);
--		kvfree(pagevec);
- 		if (result < 0)
- 			break;
- 	}
+ 	if (pci->ops && pci->ops->start_link)
 -- 
-2.55.0.229.g6434b31f56-goog
+2.34.1
 
