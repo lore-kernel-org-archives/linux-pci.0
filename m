@@ -1,164 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DDB530DD11;
-	Mon, 20 Jul 2026 15:29:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2A0A30F94D;
+	Mon, 20 Jul 2026 15:29:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784561342; cv=none; b=S2cn+SrPyjpuH95xE1J/EWc9wzAM0Inh6EB011HsbIQfSTK/Pj9kBlxtI0ZATadHOTgH/KHlwFjxA6yWNi9ZU8MM8IQnp4s1BvcgDYQyOA8KmKN/KhqyEYmrudZABgRC18eCW7aCrcVAiP+XBOe47lOcG/uREJcg7KqQ+sLMd1E=
+	t=1784561343; cv=none; b=kVlD1k6cZ+tsXBm4X8XU6AOgvStH1dIfJlSO2rQPfnwo6BJrMOPE9BkPawyCviZmOvJCjA+ym19uwgHsx/UT2NXqCTw2fnAwhw8Age7r6my7e7CHmbYRqpwhxHv9GCtXiEdACi7aDl97APkMoRwWJEr3NxXyCJcrrQvgHbRxZe4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784561342; c=relaxed/simple;
-	bh=bS59bsexk7Y1qcyfUhrTvgTV4NITiDxL0etcJ7UUTj8=;
+	s=arc-20240116; t=1784561343; c=relaxed/simple;
+	bh=7O0vC6/yqYA0BI4cZmKbu1kjJIMuCL0aau+hjeo2LCA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QtYK4d0Yi8pinZsvnSIx00WbS3KvuzVRXKduI8s31TVmQ62WOg2eRc/x6XpJoCdg5fxP1Vijyzg7VAHXoERXr0Gqd6x8wiXT2v8sr/7e/wimWFtOD8EIDvQIAvF8JCCRLYBRQerP4ufVLloJ4vM0tplTzawGCJ1xxVVCSQbbxHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CxhpIzmx; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WY1CoxxkmqockXnwPSsIh6hSiScm+q6Sbnt310WKunJSgwyGBCBxSvApSNoIkyGQ+w6llEdaieAerFWd/+ICM2YA6Am1Xu7gb9Xh01NtzWdelebCevuPJtRECHRXAFA+HbfSTi+Y/l+s78OmRg4UqxmTIg9qk9IbvXud9zm21Os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cWqsMtpy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CxhpIzmx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B149B1F000E9;
-	Mon, 20 Jul 2026 15:28:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cWqsMtpy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1D8B1F00A3D;
+	Mon, 20 Jul 2026 15:29:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784561339;
-	bh=k4tfXZpVPdc5h7uRxAV7A3+7LziVLeKXHPXqV3dcWDo=;
+	s=k20260515; t=1784561341;
+	bh=dWPGGLsF2G/6ezyrvFhnGo/wg7YMOtfz7V0dnxZgbtA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CxhpIzmxHWNPVzq0yogacdMFXSQH+EfpAfV0yeIuofIORk94cDmfgImC0MTUlN3mN
-	 jaTE7MXxCbOC2jUV+Qxw0eFZhBLtAMRRkD5h+V76PeZdrp5x23LVZysyMseASGlWU8
-	 6cQOqx5oBT6zJapgP9HNUCFKjc09YJjPACid1JlrpPLcTKyQDdJJbaxq6r7hfkEpM7
-	 GGcDT69tPYPZo8B81Cx1S19vAeDIS0jEOwXLDLqeurDQ9D8hapMTgaZ0oUcLkmlne5
-	 WkgzrYNHLxXMiHBejCvfxrqiYoKGVau1vN+FBJomWzDgKgpS3CpxbcAQbuxWvytS/J
-	 vLT8hy2/OiV0w==
+	b=cWqsMtpydBlML83AsA+ikPeWf7b22QD++F4XPMvZRe2Qz4eOHwMQ2u9LXL1sjC39k
+	 qKFGMcAjldB5Pdr328XAPBDnL9qol6ffXYSNuRVEzXwlI7KKHDOKEVnM796DoCOOxt
+	 NpOk7+CprQRS84R16g1BoHeVGlYHk4yrEm4vzSOPH3ZCBjBC0ony/x6r7qRs/Yeiyn
+	 u1PwgDbgp8jPKW+jZUDVo8/iXuj81udUAxK6IghMOiENM3vLEuJV0H5P7ajF2966TV
+	 +cB8ayydU1sV4XCoQex3ZqGjC/wqdcNDIbix5TronbPlXTdsN/QSGJc9Mv71K5kiIY
+	 EBOM5tJhZ9aKA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 02/16] PCI: dwc: Use cached PCIe capability offset in
- core
+Subject: Re: [PATCH v3 10/16] PCI: dwc: qcom-ep: Use cached PCIe capability
+ offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-amlogic@lists.infradead.org, imx@lists.linux.dev, linux-pci@vger.kernel.org, neil.armstrong@linaro.org, Frank.Li@kernel.org
-In-Reply-To: <20260720150619.24733-3-18255117159@163.com>
+Cc: linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org, Frank.Li@kernel.org, imx@lists.linux.dev, neil.armstrong@linaro.org
+In-Reply-To: <20260720150619.24733-11-18255117159@163.com>
 References: <20260720150619.24733-1-18255117159@163.com>
- <20260720150619.24733-3-18255117159@163.com>
+ <20260720150619.24733-11-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 15:28:59 +0000
-Message-Id: <20260720152859.B149B1F000E9@smtp.kernel.org>
+Date: Mon, 20 Jul 2026 15:29:00 +0000
+Message-Id: <20260720152900.B1D8B1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Uninitialized `pci->pcie_cap` used in Endpoint mode causes severe =
-PCIe configuration space corruption.
-- [Low] Unnecessary PCIe capability search and unused variable left intact.
+
+New issues:
+- [High] `pci->pcie_cap` is used uninitialized (as 0) in `qcom_pcie_ep_icc_=
+update()` if the global IRQ triggers before `perst_irq` completes.
+
+Pre-existing issues:
+- [High] Lost interrupt events due to mutually exclusive `if-else if` chain=
+ dropping concurrently pending status bits.
+- [High] Concurrent execution of global IRQ and PERST IRQ leads to unclocke=
+d MMIO accesses and system crash.
 --
 
---- Patch [2]: [PATCH v3 02/16] PCI: dwc: Use cached PCIe capability offset=
- in core ---
-commit 1e2ce6ece477d5f9c179f2ac4c13cd06cf764f59
+--- Patch [10]: [PATCH v3 10/16] PCI: dwc: qcom-ep: Use cached PCIe capabil=
+ity offset ---
+commit 66f17f8dee9121b185f046f6247725965823798a
 Author: Hans Zhang <18255117159@163.com>
 
-PCI: dwc: Use cached PCIe capability offset in core
+PCI: dwc: qcom-ep: Use cached PCIe capability offset
    =20
-Modify the DWC core functions to use the cached pcie_cap offset instead
-of calling dw_pcie_find_capability() each time.
+dw_pcie_ep_init() no longer caches the offset automatically. For qcom-ep,
+hardware (clocks, PHY) is enabled only after PERST# deassert. Therefore,
+we must call dw_pcie_get_pcie_cap() in qcom_pcie_perst_deassert() after
+the resources are enabled, before any DBI access. This ensures the cached
+offset is valid for subsequent uses in interrupt handlers and ICC updates.
 
-[ ... ]
-
-> dw_pcie_ep_init_non_sticky_registers() now assumes pci->pcie_cap is
-> valid. if not, it prints a warning and skips the operation. The other
-> functions run after probe, so pci->pcie_cap is already valid and can
-> be used directly.
-
-[Severity: High]
-The commit message mentions adding a warning and skipping the operation if
-pci->pcie_cap is not valid, but this check appears to be missing in the
-code below.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pc=
-i/controller/dwc/pcie-designware-ep.c
-> index 7d2794945704e..14228be8bbce7 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -1246,7 +1246,7 @@ static void dw_pcie_ep_init_non_sticky_registers(st=
-ruct dw_pcie *pci)
->  	 * to all other functions as well.
->  	 */
->  	if (funcs > 1) {
-> -		offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +		offset =3D pci->pcie_cap;
-
-[Severity: High]
-Without the validation check mentioned in the commit message, if
-pci->pcie_cap is uninitialized (0), will this lead to corrupting the
-standard PCI configuration space header registers instead of the intended
-capability registers?
-
-[ ... ]
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
-ontroller/dwc/pcie-designware.c
-> index ec4722ed93032..810729b918928 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -806,8 +806,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/cont=
+roller/dwc/pcie-qcom-ep.c
+> index 56184e6ca6e69..16b0891f95713 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> @@ -307,15 +307,13 @@ static void qcom_pcie_ep_icc_update(struct qcom_pci=
+e_ep *pcie_ep)
+>  {
+>  	struct dw_pcie *pci =3D &pcie_ep->pci;
+> -	u32 offset, status;
+> -	int speed, width;
+> -	int ret;
+> +	int speed, width, ret;
+> +	u32 status;
 > =20
->  	pci_host_common_link_train_delay(pci->max_link_speed);
+>  	if (!pcie_ep->icc_mem)
+>  		return;
 > =20
 > -	offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> -	val =3D dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
-> +	val =3D dw_pcie_readw_dbi(pci, pci->pcie_cap + PCI_EXP_LNKSTA);
+> -	status =3D readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+> +	status =3D readw(pci->dbi_base + pci->pcie_cap + PCI_EXP_LNKSTA);
 
 [Severity: High]
-If pci->pcie_cap is 0, this will read from 0 + PCI_EXP_LNKSTA (0x12) instead
-of the actual capability offset. Could this lead to failed link status
-checks?
+Does this read from an uninitialized offset if the global IRQ triggers
+before the PERST IRQ completes?
+
+qcom_pcie_ep_enable_irq_resources() requests the global IRQ without
+IRQ_NOAUTOEN, making it active immediately. If the PCIe link is already
+established (e.g., by the bootloader or firmware), the IRQ can trigger
+before pci_epc_start() enables the PERST IRQ and qcom_pcie_perst_deassert()
+caches the offset.
+
+If this happens, pci->pcie_cap would be 0, causing the function to read
+from DBI offset 0x12 instead of PCI_EXP_LNKSTA. This would compute arbitrary
+speed and width values to pass to icc_set_bw(), which could misconfigure the
+system interconnect bandwidth.
+
+> =20
+>  	speed =3D FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
+>  	width =3D FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
 
 [ ... ]
 
-> @@ -890,7 +889,7 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie=
- *pci)
->  int dw_pcie_link_get_max_link_width(struct dw_pcie *pci)
->  {
->  	u8 cap =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> -	u32 lnkcap =3D dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-> +	u32 lnkcap =3D dw_pcie_readl_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP);
-
-[Severity: Low]
-Is the cap variable still needed here? It looks like it is now unused, which
-might cause an unnecessary MMIO read during the capability search and trigg=
-er
-a compiler warning.
-
->  	return FIELD_GET(PCI_EXP_LNKCAP_MLW, lnkcap);
->  }
-> @@ -898,7 +897,6 @@ int dw_pcie_link_get_max_link_width(struct dw_pcie *p=
-ci)
->  static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num=
-_lanes)
->  {
->  	u32 lnkcap, lwsc, plc;
-> -	u8 cap;
+> @@ -491,14 +489,15 @@ static int qcom_pcie_perst_deassert(struct dw_pcie =
+*pci)
 > =20
->  	if (!num_lanes)
->  		return;
-> @@ -935,10 +933,9 @@ static void dw_pcie_link_set_max_link_width(struct d=
-w_pcie *pci, u32 num_lanes)
->  	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
->  	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
+>  	dw_pcie_dbi_ro_wr_en(pci);
 > =20
-> -	cap =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> -	lnkcap =3D dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-> +	lnkcap =3D dw_pcie_readl_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP);
->  	FIELD_MODIFY(PCI_EXP_LNKCAP_MLW, &lnkcap, num_lanes);
-> -	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
-> +	dw_pcie_writel_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP, lnkcap);
->  }
+> +	dw_pcie_get_pcie_cap(pci);
+> +
+>  	/* Set the L0s Exit Latency to 2us-4us =3D 0x6 */
+> -	offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	offset =3D pci->pcie_cap;
+>  	val =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+
+[ ... ]
+
+
+drivers/pci/controller/dwc/pcie-qcom-ep.c:qcom_pcie_ep_global_irq_thread() {
+...
+	writel_relaxed(status, pcie_ep->parf + PARF_INT_ALL_CLEAR);
+
+	if (FIELD_GET(PARF_INT_ALL_LINK_DOWN, status)) {
+...
+	} else if (FIELD_GET(PARF_INT_ALL_BME, status)) {
+...
+}
 
 [Severity: High]
-If pci->pcie_cap happens to be 0 here, this will perform a read-modify-write
-at offset 0 + PCI_EXP_LNKCAP (0x0C). Could this destroy the standard
-PCI Header Type and BIST registers?
+This is a pre-existing issue, but does this if-else chain lose concurrent
+interrupt events?
+
+qcom_pcie_ep_global_irq_thread() clears all pending events simultaneously in
+hardware. If the host sends multiple events in close succession (e.g., both
+Bus Master Enable and Link Up are set in PARF_INT_ALL_STATUS), the else-if
+logic will process the first matching event and discard the others.
+
+Since the discarded events are already cleared from the register, they would
+be permanently lost, potentially leaving the endpoint in an incorrect logic=
+al
+state.
+
+
+drivers/pci/controller/dwc/pcie-qcom-ep.c:qcom_pcie_ep_global_irq_thread() {
+...
+	u32 status =3D readl_relaxed(pcie_ep->parf + PARF_INT_ALL_STATUS);
+...
+}
+
+drivers/pci/controller/dwc/pcie-qcom-ep.c:qcom_pcie_disable_resources() {
+...
+	clk_bulk_disable_unprepare(pcie_ep->num_clks, pcie_ep->clks);
+...
+}
+
+[Severity: High]
+This is a pre-existing issue, but can the global IRQ thread race with
+PERST deassertion/assertion and cause an unclocked MMIO access?
+
+Both the global and PERST IRQs are requested as threaded IRQs without mutual
+exclusion. If the host toggles PERST, qcom_pcie_ep_perst_irq_thread() calls
+qcom_pcie_perst_assert(), which unconditionally disables the PCIe clocks via
+clk_bulk_disable_unprepare().
+
+If a simultaneous link state change triggers qcom_pcie_ep_global_irq_thread=
+()
+and it reads from PARF_INT_ALL_STATUS after the clocks are disabled, this
+would cause a synchronous external abort (SError) and crash the system.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720150619.2473=
-3-1-18255117159@163.com?part=3D2
+3-1-18255117159@163.com?part=3D10
