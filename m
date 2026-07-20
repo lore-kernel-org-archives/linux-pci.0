@@ -1,50 +1,50 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CACD25B0B7;
-	Mon, 20 Jul 2026 20:09:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13BB4305667;
+	Mon, 20 Jul 2026 20:13:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784578156; cv=none; b=JnNUIfECObB2zQjXawb5G4ybYfyQYM6Kk007HUNDq3k54f3+rWBwRPZ273OhH8OHmHmwm27bpDKJdKaNMTL1jNemqU+cPC647VO3l74JIclj+xrAouKl8RNcvesvfuTFRjQD1YIktVUFeVBG7hpezeyQcSw9kPGLorTHv/LsjKI=
+	t=1784578386; cv=none; b=Qoj+KlCF+nrbCGq26x2UJ0vaDOdVl8GgSEXWDbiw7FCGa7OG3oFTHBsRHn5pYpp8KqHRKQwiPwvsVE/A7bGnnq6MmGWcyoHRS05dlmB7SXSfk8rCxiWa/QMd/Y8tY1VVwWt/GX5oy/1k+nuFuKgF7O9N4Lz8wIRs1wMjsy/SYFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784578156; c=relaxed/simple;
-	bh=sFOpv2kA+FwJCaEso+qENIiQ1hBBWw24vR/Se27HPGs=;
+	s=arc-20240116; t=1784578386; c=relaxed/simple;
+	bh=xcAVPct/+9KlKdvAyc/SOsyTjNWB9w0sRxwTOwAnYEs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iS3YmaX9o7HD+Ctt8qGOY/3fzK+Ik42QCzggcs62oO1B74AKE6v93tsokD/JwGhxbOChvt3xl6kvGDP9YEZqnFjz8m/Xhk8s4vWLHck2tiFmr6+8Uh0+EDjnI6j/41QRb7Gb5Bk1SL29/IlZcU8t7+CRTYJlseShSIr4kP6J7N8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z5n7Yifc; arc=none smtp.client-ip=192.198.163.18
+	 In-Reply-To:Content-Type; b=XGuhq/Bs5LijefmGMdRyRrX+wejOzsKIvVGHu4HuajkVzGZYBHZadUlBHVztArBodlcB6USL0Z2vxb+6vnMuyWYAPP7ESSImrmD5VgoALH6VZm5/ITh8OVM/uCWYXAU9XSgYJ89+0UPws2QJLJLaNy3ZvXGcnqauR19nFrqaIPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ifz8h9+P; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z5n7Yifc"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ifz8h9+P"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784578154; x=1816114154;
+  t=1784578384; x=1816114384;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=sFOpv2kA+FwJCaEso+qENIiQ1hBBWw24vR/Se27HPGs=;
-  b=Z5n7Yifc9MRSJfCaf4KJFBbPnSpcSJVx9Sm4jON3xqXHfXLddvpIHyzl
-   zaPLy4s3Sa95PzpFzfBn1I0Lle/VQKsvVyA4Hnv7yXWo1MZGG1cgbCh0M
-   wxbIt2VSLev3LHuD9eTDNHDJ9R5NTr3v/2uBbSEVubvDvOhf61bkP5vAd
-   3gc6z1gHJgiRz31BRVrODHPWXF1C7lsCHanM6SRRSw+/pcm2NCW78EwtT
-   oIcfB+xAUqUAXBonjMsW8Ebalb9YubnTTxvbOco6HA/ly9btrn1xE+q7Z
-   aBmO850bYORJxJ3GM0jo5oRXqRz1lHfb7e7llQsItkmi2ukZdu7R5GinV
-   w==;
-X-CSE-ConnectionGUID: WlBnzJB5SF6IcrzSWwILgg==
-X-CSE-MsgGUID: xVhOcZtiSdqafzyXiHFYFQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="84298313"
+  bh=xcAVPct/+9KlKdvAyc/SOsyTjNWB9w0sRxwTOwAnYEs=;
+  b=ifz8h9+PwZC9XC13l8bnxr3XwpfLgRXx0VjGiQz3WHhdV/QMGpa2JDJw
+   +cfcU7Enf9U3mHvSx3jBUR6nZCiPRApwVxLTACCryoNWT2Ba1FoZwpI62
+   naE3kZTLkpohIG6e1dGPpOcoMjaBIabMnTyXz9buyckSP+MEkJVKCblDw
+   AZWPlCZa5mIAoALM9/JkxsSABFi9OmyWBfZOmwZofx+rCyWCg9LeinPf8
+   lVoHGUUGMhwjAGKvLnI1C9bRVc09Z5M/JYRnQobMo0pxGv6py2nobbRiE
+   Ly9cbqCZiwpkrrtonh6ycCmVZCFLJ9eu2CNjsl/A4cLYWiDA3norf0dr4
+   A==;
+X-CSE-ConnectionGUID: ZRWKjjxaSiyKOGG4qn/M2A==
+X-CSE-MsgGUID: C52V4lGoRPyNyu5W9sI/Jw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="84298644"
 X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="84298313"
+   d="scan'208";a="84298644"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:09:13 -0700
-X-CSE-ConnectionGUID: H4x5cj83RbqFt5QQqpUxGA==
-X-CSE-MsgGUID: pA3maaPWTcelrKWA5o3qPg==
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:13:03 -0700
+X-CSE-ConnectionGUID: eIOvwnw6Qo6qnGLyFscaXg==
+X-CSE-MsgGUID: 54+EvrjdRqiaaHZWUh0Pcg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="256365696"
+   d="scan'208";a="256366066"
 Received: from cooperst-gp83.amr.corp.intel.com (HELO [10.125.109.176]) ([10.125.109.176])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:09:10 -0700
-Message-ID: <9c371c59-c871-4988-83d7-2aa780d8e6c4@intel.com>
-Date: Mon, 20 Jul 2026 13:09:09 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 13:13:01 -0700
+Message-ID: <e66c4a00-53e4-4f5a-bc07-edd9c92beb96@intel.com>
+Date: Mon, 20 Jul 2026 13:12:59 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,8 +52,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v18 01/13] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
- severity register
+Subject: Re: [PATCH v18 02/13] acpi/apei/ghes: Use raw_spinlock_t for CXL CPER
+ work locks
 To: Terry Bowman <terry.bowman@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
  Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
  Jonathan Cameron <jic23@kernel.org>, Len Brown <lenb@kernel.org>,
@@ -78,35 +78,64 @@ Cc: linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
  Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
  Tony Luck <tony.luck@intel.com>, Vishal Verma <vishal.l.verma@intel.com>
 References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-2-terry.bowman@amd.com>
+ <20260717222706.3540281-3-terry.bowman@amd.com>
 Content-Language: en-US
 From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260717222706.3540281-2-terry.bowman@amd.com>
+In-Reply-To: <20260717222706.3540281-3-terry.bowman@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
 On 7/17/26 3:26 PM, Terry Bowman wrote:
-> cxl_rch_get_aer_severity() classifies RCH Downstream Port uncorrectable
-> errors as fatal or non-fatal by ANDing uncorrectable status with
-> PCI_ERR_ROOT_FATAL_RCV. This is wrong because PCI_ERR_ROOT_FATAL_RCV is a
-> Root Error Status register bit (bit 6), not a severity bit. ANDing it
-> against uncorrectable status tests a reserved bit and produces incorrect
-> severity classification.
+> The CXL CPER work registration and unregistration helpers in
+> drivers/acpi/apei/ghes.c acquire cxl_cper_work_lock and
+> cxl_cper_prot_err_work_lock with guard(spinlock), which leaves local
+> interrupts enabled. The corresponding post paths
+> (cxl_cper_post_event(), cxl_cper_post_prot_err()) execute in hard IRQ
+> context (they are called from the GHES error notification path) and
+> acquire the same locks via guard(spinlock_irqsave).
 > 
-> Fix by ANDing the unmasked uncor_status against uncor_severity. Per
-> PCIe Base Spec r6.0 Section 7.8.4.4, each bit in the Uncorrectable
-> Error Severity register indicates whether the corresponding error is
-> fatal (1) or non-fatal (0).
+> If a CPU is holding one of these locks via guard(spinlock) when a
+> GHES interrupt arrives on the same CPU, the IRQ handler spins on the
+> held lock waiting for it to release, while the lock holder is
+> preempted by the IRQ. The result is a deadlock.
 > 
-> Fixes: 6ac07883dbb5 ("cxl/pci: Add RCH downstream port error logging")
-> Cc: stable@vger.kernel.org
+> Convert both locks from spinlock_t to raw_spinlock_t and use
+> guard(raw_spinlock_irqsave) at all call sites. On PREEMPT_RT kernels
+> spinlock_t is backed by rt_mutex and sleeping from hard IRQ context is
+> not permitted; raw_spinlock_t is safe in both contexts.
+> 
+> Add WARN_ONCE to both register functions to surface double-registration
+> bugs at runtime.
+> 
+> Restructure both unregister functions to clear the global work pointer
+> under the lock before calling cancel_work_sync(), closing the window
+> where a CPER interrupt could schedule work on a pointer about to be
+> freed. Add kfifo_reset() after cancel_work_sync() so stale entries
+> are not replayed on next module load.
+> 
+> Both kfifos are single-consumer: only one work_struct is registered at
+> a time, enforced by the WARN_ONCE guard in the register functions.
+> kfifo_reset() is safe outside the lock because cancel_work_sync() has
+> already quiesced the consumer, and no new consumer can register until
+> the current module exit completes and a fresh module init runs.
+> 
+> Remove the now-redundant cancel_work_sync() call from
+> cxl_pci_driver_exit() - cxl_cper_unregister_work() handles quiescing
+> internally.
+> 
+> Reported-by: Sashiko <sashiko@linuxfoundation.org>
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Fixes: 5e4a264bf8b5 ("acpi/ghes: Process CXL Component Events")
+> Fixes: 36f257e3b0ba ("acpi/ghes, cxl/pci: Process CXL CPER Protocol Errors")
+> Cc: stable@vger.kernel.org
 
+With the minor sashiko issue addressed,
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-This can be picked up ahead looks like?
+This can probably be picked up ahead of the series.
+
 
 > 
 > ---
@@ -114,21 +143,135 @@ This can be picked up ahead looks like?
 > Changes in v17 -> v18:
 > - New patch.
 > ---
->  drivers/cxl/core/ras_rch.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/acpi/apei/ghes.c | 50 ++++++++++++++++++++++++++--------------
+>  drivers/cxl/pci.c        |  1 -
+>  2 files changed, 33 insertions(+), 18 deletions(-)
 > 
-> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
-> index 0a8b3b9b63884..44b335d560708 100644
-> --- a/drivers/cxl/core/ras_rch.c
-> +++ b/drivers/cxl/core/ras_rch.c
-> @@ -80,7 +80,8 @@ static bool cxl_rch_get_aer_severity(struct aer_capability_regs *aer_regs,
->  				     int *severity)
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 3236a3ce79d6b..ca7a138c1ff2e 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -749,7 +749,7 @@ static DEFINE_KFIFO(cxl_cper_prot_err_fifo, struct cxl_cper_prot_err_work_data,
+>  		    CXL_CPER_PROT_ERR_FIFO_DEPTH);
+>  
+>  /* Synchronize schedule_work() with cxl_cper_prot_err_work changes */
+> -static DEFINE_SPINLOCK(cxl_cper_prot_err_work_lock);
+> +static DEFINE_RAW_SPINLOCK(cxl_cper_prot_err_work_lock);
+>  struct work_struct *cxl_cper_prot_err_work;
+>  
+>  static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+> @@ -761,7 +761,7 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+>  	if (cxl_cper_sec_prot_err_valid(prot_err))
+>  		return;
+>  
+> -	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+> +	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+>  
+>  	if (!cxl_cper_prot_err_work)
+>  		return;
+> @@ -780,10 +780,11 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+>  
+>  int cxl_cper_register_prot_err_work(struct work_struct *work)
 >  {
->  	if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
-> -		if (aer_regs->uncor_status & PCI_ERR_ROOT_FATAL_RCV)
-> +		if ((aer_regs->uncor_status & ~aer_regs->uncor_mask) &
-> +		    aer_regs->uncor_severity)
->  			*severity = AER_FATAL;
->  		else
->  			*severity = AER_NONFATAL;
+> -	if (cxl_cper_prot_err_work)
+> -		return -EINVAL;
+> +	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+>  
+> -	guard(spinlock)(&cxl_cper_prot_err_work_lock);
+> +	if (WARN_ONCE(cxl_cper_prot_err_work,
+> +		      "CPER-CXL kfifo consumer already registered\n"))
+> +		return -EINVAL;
+>  	cxl_cper_prot_err_work = work;
+>  	return 0;
+>  }
+> @@ -791,11 +792,18 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_register_prot_err_work, "CXL");
+>  
+>  int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+>  {
+> -	if (cxl_cper_prot_err_work != work)
+> -		return -EINVAL;
+> +	scoped_guard(raw_spinlock_irqsave, &cxl_cper_prot_err_work_lock) {
+> +		if (WARN_ONCE(cxl_cper_prot_err_work != work,
+> +			      "CPER-CXL kfifo consumer mismatch on unregister\n"))
+> +			return -EINVAL;
+> +		cxl_cper_prot_err_work = NULL;
+> +	}
+> +
+> +	cancel_work_sync(work);
+> +
+> +	/* Discard stale entries so they are not replayed on next module load */
+> +	kfifo_reset(&cxl_cper_prot_err_fifo);
+>  
+> -	guard(spinlock)(&cxl_cper_prot_err_work_lock);
+> -	cxl_cper_prot_err_work = NULL;
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
+> @@ -811,7 +819,7 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_prot_err_kfifo_get, "CXL");
+>  DEFINE_KFIFO(cxl_cper_fifo, struct cxl_cper_work_data, CXL_CPER_FIFO_DEPTH);
+>  
+>  /* Synchronize schedule_work() with cxl_cper_work changes */
+> -static DEFINE_SPINLOCK(cxl_cper_work_lock);
+> +static DEFINE_RAW_SPINLOCK(cxl_cper_work_lock);
+>  struct work_struct *cxl_cper_work;
+>  
+>  static void cxl_cper_post_event(enum cxl_event_type event_type,
+> @@ -831,7 +839,7 @@ static void cxl_cper_post_event(enum cxl_event_type event_type,
+>  		return;
+>  	}
+>  
+> -	guard(spinlock_irqsave)(&cxl_cper_work_lock);
+> +	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
+>  
+>  	if (!cxl_cper_work)
+>  		return;
+> @@ -849,10 +857,11 @@ static void cxl_cper_post_event(enum cxl_event_type event_type,
+>  
+>  int cxl_cper_register_work(struct work_struct *work)
+>  {
+> -	if (cxl_cper_work)
+> +	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
+> +	if (WARN_ONCE(cxl_cper_work,
+> +		      "CXL CPER kfifo consumer already registered\n"))
+>  		return -EINVAL;
+>  
+> -	guard(spinlock)(&cxl_cper_work_lock);
+>  	cxl_cper_work = work;
+>  	return 0;
+>  }
+> @@ -860,11 +869,18 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_register_work, "CXL");
+>  
+>  int cxl_cper_unregister_work(struct work_struct *work)
+>  {
+> -	if (cxl_cper_work != work)
+> -		return -EINVAL;
+> +	scoped_guard(raw_spinlock_irqsave, &cxl_cper_work_lock) {
+> +		if (WARN_ONCE(cxl_cper_work != work,
+> +			      "CXL CPER kfifo consumer mismatch on unregister\n"))
+> +			return -EINVAL;
+> +		cxl_cper_work = NULL;
+> +	}
+> +
+> +	cancel_work_sync(work);
+> +
+> +	/* Discard stale entries so they are not replayed on next module load */
+> +	kfifo_reset(&cxl_cper_fifo);
+>  
+> -	guard(spinlock)(&cxl_cper_work_lock);
+> -	cxl_cper_work = NULL;
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_work, "CXL");
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index 267c679b0b3c2..7c6faee7f85ed 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -1083,7 +1083,6 @@ static int __init cxl_pci_driver_init(void)
+>  static void __exit cxl_pci_driver_exit(void)
+>  {
+>  	cxl_cper_unregister_work(&cxl_cper_work);
+> -	cancel_work_sync(&cxl_cper_work);
+>  	pci_unregister_driver(&cxl_pci_driver);
+>  }
+>  
 
