@@ -1,140 +1,218 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB0B42B31C
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:03:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 659C7432BDB
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 15:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784559824; cv=none; b=okduRmKzUaUGi0eW+0TC7+3C1P/CdRTuyGCed16XGt15bC6laE3bHhq/LkYCxIf1BX68dVNhln/MJ4M3iroo6/7rPCBRpHm6NpqBxEGPDOKeB2rc14lqLnFFYf9IwKXXtFWGkjU7By7IX8pPcK/NH7wBlp6NLZJW/7lzG/WZH8A=
+	t=1784559974; cv=none; b=LbhNqL2DCi6Jyapq0dYSpI5AYedR/2VOJKjTzq67ItdtF8nahBAC5Bh7uOURt1JJ+78puEzQb+pv2nwofTtIfAXaS16SeULiNTY8hcO9g9gvWh90aEiG+csoLCIo5nYOGfUqlx+VDRzVfoqKIf/JJDnV90jCRxOay1pGOe32NQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784559824; c=relaxed/simple;
-	bh=kHyVi1X3653L6/E5eJCh0+Evt8DBGh0gAuSqsbK/2lM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EtICNczwrTCA/mggqya0PXnDFzxiMOBA2SidAY1mB3DaOlko3YsZst9aLmZurnTgh4VrP1ndrJzNK+cj1ky/GkGsir/R8RYz0AU//tVSdFst6gvUFfnl4yOtuco16lDYCAvgroYrtHpi+zj1i9fq1LXVH+ppUQf6IjA9dEKPj8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PEM647CG; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1784559974; c=relaxed/simple;
+	bh=F1EHaoYJQ650p5KGpCXZKVjiIi5a38caSRNmMXgWBLc=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GPN2V3mEeGZilGu1sMYlL2HYEJS+MQhxjT9SXTh8e3tWD1M2MpDZqKireAEw61PDfPv+TkoNBgCC8jfFNseTmxwpzDTAfY/K0wdWgCmD3LDtiy5kthJVAgfImEnEyYGSuI96R2z7Xxppid92Zw3IcamLGQTMZ+4AFyWE16Db50Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=gNNP6p6q; arc=none smtp.client-ip=209.85.214.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PEM647CG"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cacef7d299so360285ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:03:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gNNP6p6q"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cee1ec30f2so93955085ad.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 08:06:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784559822; x=1785164622; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=CoUBDaPFGXQM1OhLmt0HKzfSrSapevvomHz56sEIB6c=;
-        b=PEM647CGKL1mRY3ScZQwZW1X5F2nBgzE3PExjIFZ6zxF6O00y9E3AzqHicWHoXrSMz
-         Ee76rcHFHKKz/dnTnN1Un0TkxEUPWB1Sm30D70W0pfjl81fUsWxK8flCLK0IaGjiylRT
-         c8IHrlemAiSEL9C2MfcEcdi+0Dtwvs0r/nGjDNjKTPyTtNpp775pUghSokFioB0kvNKr
-         FFQqJW0wRcNknsszMDpRepmsMl0GSD23P7z3c0l1vm8aNLk89aHH6oeQPJgqUM0RGrKE
-         29fSLdrN5/8qQNAMvPyrOB6zq9HwBthPWefC2TPJIPw8YGV+GIdRR/VdVYMoNzq2ltKx
-         wBhw==
+        d=google.com; s=20251104; t=1784559971; x=1785164771; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=k+6cTr1jCJ8/nUqKf9ILuxOaSMXLbUb8f8DhcRcxvFc=;
+        b=gNNP6p6qbmvdiXBJLc7OIpzBoUx145+ucsjbQIal1zoY9mJPOsijTC+JjMz9E4HhP1
+         HEOZ+ixLbVaUBCEYWf5WNaalxWrZUuEkgPfUNLaTunjiqaiqpVkX+zlhxciTiGS6et4C
+         M8WtXHFC+pWBfad0hqIOBuGOj0D85A0AY8ac+UQMDIDM5VT6egvEbjEeFg5jhXFBjDXX
+         p/SxXl1LoD2T+Hv5wAGu5jETGNs3v3qg4/eajxD9aQqUselIfDCnotFroGONKH64+gsQ
+         OBNh4ws3KlWpfonp8+eNWzb0iM8ne5KMYV5l80RZx0OZPuxISEpgn7o49Lt47TnRDqyb
+         sycw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784559822; x=1785164622;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=CoUBDaPFGXQM1OhLmt0HKzfSrSapevvomHz56sEIB6c=;
-        b=JErDnnjSLFak+sojJcJXFvwLl5lVRT5NF1l40UqbpiMFQZBVZlo547yjtNbcwBXaTl
-         zfBZa6t6E7W4Y7GTp6nzzdVtV4g0/ANb6ED+UQ4ZGeL0erCwr+56kJlaVFax2y39kfz3
-         qazQKmnAwipRniStHl6L0KOuQ0JDC3ku50sct0gcM1FTzfyk1/6G5ZHXrPqTDbD2hK3w
-         1eYYkzIL3yxXWsrQJjAklE5vkDXk1aMKHxWpoRdHni1v6UMd+YOluh87ojTcl2qGh1hF
-         WuZXcIsubt5PAnDwxUTWBge2q2r349tICcZccu8FNr8W1cdLMe7WjfNY67lS26tqJubb
-         02xQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoVtO12zpdtGRcupyQMx03ZYWAQm4wam0l7mQfkfTyq4DzGLf1TcrYttlLXOgcUNCMAN/JhV30iGJE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxuD124Yn3+QxnW9AvtyPg7lpAeay33e6Tf6WQBo56U7JBtJKZJ
-	hNEawsmtm5lfnORhto6SajYoCMeaZnckBM+CVYvIhU/r6OHbn7ZYw0RPSBVFNIGOxg==
-X-Gm-Gg: AR+sD11KGfHbdBtgxw7d77HkKPOiRpAe8a2Ww09n7Hox59vnvaUnL37/Tu+JQ5mmNVK
-	wo1V/JdCD3VbuOUGbaNseTdP3ZLZgLBCy4RAVQCusyWhrePueEcvEmiTo0I7LiLEnaKm2kuhLGk
-	A8iJjoHWFmsFYY7IiqSotsoi7nhBVdp1l1zpiukLORtnK3w5mZWMBGp8rN15ht909RzLOH+mrQe
-	3VYJIMJW8PtbLuFCF4KadayugNBFAcRvvhJeFBpyahjy47Vvh2tYJon8wh6SQh6+tck48tDrbHN
-	Bmjqg9U5MiDaa+Je10Sys8w/HQctt9s95J/LhYFe9QQj74FIo+UW34e+NWamGDumokRYI8iJA3e
-	t19zNGV0OsTitFGhxVDNKDzUvNIZ8vS7leUAJy11OsRTf+cgf3fgrMy5cbZB2GdI46Zmj//8aWQ
-	6IlJLztzeV2dHFo8F8261DGLg3N1d9Q3qGk2nx
-X-Received: by 2002:a17:903:41ce:b0:2b7:b03d:9dce with SMTP id d9443c01a7336-2cf7b68e33amr1005485ad.18.1784559822071;
-        Mon, 20 Jul 2026 08:03:42 -0700 (PDT)
-Received: from google.com (10.129.124.34.bc.googleusercontent.com. [34.124.129.10])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84c2adfdfd0sm5823209b3a.25.2026.07.20.08.03.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 08:03:41 -0700 (PDT)
-Date: Mon, 20 Jul 2026 15:03:35 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Shivaji Kant <shivajikant@google.com>
-Cc: Christoph Hellwig <hch@lst.de>, Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>, linux-nfs@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
-	linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v3 3/5] nfs: Introduce nfs_release_request_list helper
-Message-ID: <al44x6w0rr7yd8J3@google.com>
-References: <20260715143540.3597616-1-praan@google.com>
- <20260715143540.3597616-4-praan@google.com>
- <20260720091505.GC24298@lst.de>
- <CAMEhMp=eHz105-t+pDLbX+6uWOPAGHWfkjd4PqTdeXmXf0tPGw@mail.gmail.com>
+        d=1e100.net; s=20251104; t=1784559971; x=1785164771;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=k+6cTr1jCJ8/nUqKf9ILuxOaSMXLbUb8f8DhcRcxvFc=;
+        b=dPDVku1uj46ee0MFKsf7+sFR3+RzoBpDnF5nWqWuqrLEvQLG92S0eUISiirx9Phq2w
+         hD5a3Se/9wFoZ72rbYCw92heiBaGySYY0/lLS89+rr2FWaUtijmxaRRg1Yg5S9Ct8jKG
+         PZipEsMuZQj+Vg276VgmMaUeevOlMTPuSn6b+ZmXGUiW8Crs4rM1CbKnKrDim5WVbSfj
+         I8D5dLX0D1rd0Nuv6dunLWjrkD0VR/B9HMDN2bQZhkRp5nGT4BiPfQoDbWacgKrrDcnG
+         YbkakszxrPO16aydO0V6bSbcrgQNDGum9Lbs0JqZZhdUAoFrbfS/AxX1wbdha9qh03lq
+         vRpw==
+X-Forwarded-Encrypted: i=1; AHgh+RpRFVlIIo3zNFHoA4pF8BH7D5n4cWdXnq57YWSmm3BazcgnAhINPWb+7cw+ZtgX1XIM5wJ9v3SGWIc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yws+uMs8HwqdehmaIPyy9KDfegEtxy563KSAdvOQIL7OHpT2Hr3
+	DmB1JH4KCXzUx1dobTRl040reUdvhojvki2GOzVnV0dhyl3K4q76dBP2vn33jUZe4faYYiU9eEO
+	ISQ==
+X-Received: from plcx22.prod.google.com ([2002:a17:903:d6:b0:2ce:d12d:d6f5])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:ccd1:b0:2ca:1bbe:c3d0
+ with SMTP id d9443c01a7336-2cf34a07b66mr161083065ad.43.1784559970295; Mon, 20
+ Jul 2026 08:06:10 -0700 (PDT)
+Date: Mon, 20 Jul 2026 15:05:56 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMEhMp=eHz105-t+pDLbX+6uWOPAGHWfkjd4PqTdeXmXf0tPGw@mail.gmail.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
+Message-ID: <20260720150601.2702700-1-praan@google.com>
+Subject: [PATCH v4 0/5] nfs: modernize direct I/O path
+From: Pranjal Shrivastava <praan@google.com>
+To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>
+Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, 
+	Christoph Hellwig <hch@lst.de>, Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jul 20, 2026 at 03:28:09PM +0530, Shivaji Kant wrote:
-> On Mon, Jul 20, 2026 at 2:45 PM Christoph Hellwig <hch@lst.de> wrote:
-> >
-> > On Wed, Jul 15, 2026 at 02:35:38PM +0000, Pranjal Shrivastava wrote:
-> > > Introduce a centralized helper, nfs_release_request_list, to handle
-> > > the bulk release of nfs_page requests from a list.
-> > >
-> > > This serves as a preparatory step for two upcoming improvements:
-> > >
-> > >    1. Pin-Aware Cleanup: As we migrate to iov_iter_extract_* API,
-> > >       requests will hold pins (GUP) instead of standard references. The
-> > >       helper ensures that the correct unpinning logic gets applied
-> > >       consistently across all requests in a list.
-> > >
-> > >    2. Folio Support: In subsequent patches where nfs_page structures
-> > >       will cover multi-page folios, this helper provides a clean
-> > >       infrastructure to unlock these larger units of I/O in bulk during
-> > >       completion, similat to the pattern in bio_release_pages.
-> 
-> nit: similar -> similar
-> 
+Modernize the NFS Direct I/O path as a preparatory step to enable PCI
+Peer-to-Peer DMA (P2PDMA) support. Following feedback on the initial
+RFC [1], the modernization and architectural changes are split into
+different series. Additionally, based on the discussion in the v2 [2]
+of this series, the migration of NFS Direct I/O to folios would be
+handled in a separate follow-up series.
 
-Ack. Fixing it,
+Currently, NFS O_DIRECT relies on the legacy iov_iter_get_pages_alloc2()
+API which does not support the pinning requirements for P2P memory.
+The implementation moves NFS to the modern iov_iter_extract_pages() API.
 
-> > > +/*
-> > > + * nfs_release_request_list - Release a list of NFS read/write requests
-> > > + * @head: list of requests to release
-> > > + *
-> > > + * Removes each request from the list and drops it's refcount.
-> > > + */
-> > > +void nfs_release_request_list(struct list_head *head)
-> > > +{
-> > > +     struct nfs_page *req;
-> > > +
-> > > +     while (!list_empty(head)) {
-> > > +             req = nfs_list_entry(head->next);
-> >
-> > req could/should be local here.  Or you switch to list_first_or_null,
-> > which some folks prefer.
-> >
-> > > +extern void nfs_release_request(struct nfs_page *req);
-> > > +extern void nfs_release_request_list(struct list_head *head);
-> >
-> > Please drop the superflous externs for new code.
-> >
-> 
-> Small nit + fix christoph's comment,
-> else looks ok
-> 
-> Reviewed-by: Shivaji Kant <shivajikant@google.com>
+Design
+======
+
+1. Pin-Awareness
+Standard NFS requests use get_page() and put_page() for memory
+management. However, memory extracted via iov_iter_extract_pages()
+requires explicit pinning.
+
+Introduce a PG_PINNED flag and a wb_nr_pinned count to struct nfs_page.
+This allows the request lifecycle to track ownership of physical pins
+and ensure that unpinning is performed only when the I/O is complete.
+
+2. API Migration
+Migrate the Direct I/O path to the modern iov_iter_extract_pages()
+API. This aligns NFS with the modern extraction model and serves as
+the foundation for passing ITER_ALLOW_P2PDMA in a follow-up series.
+
+Upcoming Work / Roadmap
+================================
+
+As decided in the RFC [1] & v2 [2], there will be separate series for
+P2PDMA Enablement and Migrating NFS Direct I/O to use folios.
+
+This series lays the necessary groundwork for the upcoming work.
+Following this, two additional series are planned:
+
+1. Migrating NFS Direct I/O to Folios
+A series that introduces and exports helper from iov_iter.c to allow
+the nfs_direct_extract_pages() helper introduced here to aggregate
+multiple pages into a single large folio-based request, aiming to reduce
+the RPC overhead for hugepage I/O.
+
+2. P2PDMA Enablement for NFS
+Enabling ITER_ALLOW_P2PDMA for the Direct I/O path and introducing transport-level
+negotiation (discovery of P2P-capable RDMA/NVMe devices). This will build
+upon the PG_PINNED infrastructure introduced by this series.
+
+Testing
+=======
+This series has been tested with xfstests [3] on RDMA & TCP transports
+by running the quick test suite for each transport vs. version combo:
+
+./check -g quick -s rdma3 -s rdma40 -s rdma41 -s rdma42 -s tcp3 -s tcp40 -s tcp41 -s tcp42
+
+The tests were run before & after applying the series. No regressions were observed. 
+
+The following summary was tabulated via a custom script [4] (on github)
+to depict that the tests failing in v1 [5] are now passing.
+
+python3 display.py results/*/check.log
+
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| testcase     | rdma-sys-3   | rdma-sys-4.0 | rdma-sys-4.1 | rdma-sys-4.2 | tcp-sys-3    | tcp-sys-4.0  | tcp-sys-4.1  | tcp-sys-4.2  |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| generic/091  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/130  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/139  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/143  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/154  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/155  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/183  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/188  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/190  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/196  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/198  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/203  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/214  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/240  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/263  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/287  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/290  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/292  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/330  | skipped      | skipped      | skipped      | pass         | skipped      | skipped      | skipped      | pass         |
+| generic/444  | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      | skipped      |
+| generic/450  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/451  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/586  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/647  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/708  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/729  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
+| generic/760  | pass         | pass         | pass         | pass         | pass         | pass         | pass         | pass         |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
 
 Thanks,
 Praan
+
+[1] https://lore.kernel.org/all/20260401194501.2269200-1-praan@google.com/
+[2] https://lore.kernel.org/all/ak8-NMsNPOB3zpF-@infradead.org/
+[3] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+[4] https://github.com/pran005/tools/blob/main/display.py
+[5] https://lore.kernel.org/all/29a0511d-5216-46f2-a7e4-9c04ae9b1890@app.fastmail.com/
+
+[v4]
+ - Dropped superfluous externs in include/linux/nfs_page.h
+ - Scoped `req` locally inside the loop in nfs_release_request_list()
+ - Wrapped >80 character lines in Patch 1 to adhere to coding style.
+ - Fixed typos and capitalization convention in the commit msgs
+ - Collected Reviewed-by tags from Christoph and Shivaji
+ - Rebased on fs-next
+
+[v3]
+ - https://lore.kernel.org/all/20260715143540.3597616-1-praan@google.com/
+ - Dropped patches that added folio support for NFS Direct I/O
+ - Folded requested_bytes accounting in patch 5 due to dropped folio support
+ - Rebased on fs-next
+
+[v2] 
+ - https://lore.kernel.org/all/20260616134000.2733403-1-praan@google.com/
+ - Fix data corruption in nfs_direct_extract_pages() by correctly
+   calculating intra-page offsets using offset_in_page().
+ - Fix requested_bytes accounting in direct read/write paths to only
+   increment after successful RPC scheduling.
+ - Add missing kernel-doc descriptions for the @pinned parameter in
+   nfs_page_create_from_page() and nfs_page_create_from_folio().
+ - Rebase on fs-next/
+
+[v1] https://lore.kernel.org/all/20260603053033.3300318-1-praan@google.com/
+
+
+Pranjal Shrivastava (5):
+  nfs: make nfs_page pin-aware
+  nfs: track number of pinned pages in nfs_page
+  nfs: introduce nfs_release_request_list helper
+  nfs: migrate direct I/O to iov_iter_extract_pages
+  nfs: introduce nfs_direct_extract_pages helper
+
+ fs/nfs/direct.c          | 143 ++++++++++++++++++++-------------------
+ fs/nfs/pagelist.c        |  62 ++++++++++++++---
+ fs/nfs/read.c            |   2 +-
+ fs/nfs/write.c           |   2 +-
+ include/linux/nfs_page.h |   8 ++-
+ 5 files changed, 135 insertions(+), 82 deletions(-)
+
+
+base-commit: 070f41f072722437b7edda13037a400459630a5e
+-- 
+2.55.0.229.g6434b31f56-goog
+
