@@ -1,79 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C97F93D1AB7
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 21:25:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0ADD2D8379;
+	Mon, 20 Jul 2026 21:26:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784582724; cv=none; b=txQaqB4RJcJSY88dRp8j754nvUEcza0SH7orG5w1dmsFNZEKCOGuDbXkr/UOwie20jxBIJbGKki6dTvtIaQMqBgD96Du90qpPusMB/hTc2sJXdnRYbHlkIMdC8EY9aUmK+NrO1tlYIE5SeW6ad9LoYlI4j5LKYVs1hOaHstkVn4=
+	t=1784582786; cv=none; b=jSPTjyIQoUo+tso/hOhGew3C4hzbdVFTB+wl+a6CKwEV9WMLbuCbJDIN6Z3ox/374fqv11NUuzGWByHbLeOA6amBrQh5J9LjLQAEZ7tky2dNLRG9jXW5oBKCrA46J/RvdfJfsvvNROkPSQu29u+Y6amPwXfqgLx1b7tDQHvMznU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784582724; c=relaxed/simple;
-	bh=LsSD6ymqMn/Jn2l2kSZVjS8fkb7Km+qi71LrLK6Nx2A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hm9jHG/xlvjxe9piucAN6crojey7S3A2icW8jfpjcU/Lt3jVT4ao6BqLHkFrUscuqF6S1joo/u5HhNN6QuC1+e8k0nob+VkUiISQ97F8rTCAzfv86Ei459Zz/nqE3d7e3x0D63oY4l2UF0cnZh/hQEP1MQl4xeSi+FngOafN+x8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jNOzObot; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784582786; c=relaxed/simple;
+	bh=VwBOnFkIHuj1oja64Y6Me7RM7wIS0U1e83LuPKLzueo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KacD35mTJoy3yhXoLx1ZZJ+/eETbSaqhNG2I5M7UTWkxNEpoKPWgYdI7QIvXy42cHn5brOWPngHWBE32Lijvf43OiZOJEQqQcUbKirwDaKXZvQHlTFYL7pCe4BsDBZTdfp7MJ0JezDP1dCRcp3klZtRLd/Lsn6G8jtKY8bFgFBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=knv+WWyz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jNOzObot"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 425EC1F000E9;
-	Mon, 20 Jul 2026 21:25:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="knv+WWyz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56A221F000E9;
+	Mon, 20 Jul 2026 21:26:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784582723;
-	bh=LsSD6ymqMn/Jn2l2kSZVjS8fkb7Km+qi71LrLK6Nx2A=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jNOzObotCRkMG9vZoq7mWlas8mEk/ULkdPtZAQBz4Djo5JCxdNFMnaaLQhWHUzv//
-	 ZGNBnmOO4556NkXnt0foiIj0F2+eZbpsxFCTu42oX/wUoE7AH2ID4LNWXiJKPZ58sT
-	 Nkhk6faby6b8CBCHqz47ndPmIP+fllRRlDQkvZNwmx8iUUkmhXjZrJa8HgHqdnBC72
-	 O3G6Sqc2YgALr2Zyzch8fAzCtQiGx3DweKOFo2p9WwtWQHbsYdBFCMwb5HjQ251eNL
-	 rM1cFwHVPL9QHBcy1JCLsxONTb4d+hpH+B7h1dnvy4w/KkvB02nW93n7yN4NmplCEC
-	 ilB4WiYUvZTmw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/sysfs: Add lockdown checks to legacy I/O and memory
- handlers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260720211541.1509744-1-kwilczynski@kernel.org>
-References: <20260720211541.1509744-1-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 21:25:22 +0000
-Message-Id: <20260720212523.425EC1F000E9@smtp.kernel.org>
+	s=k20260515; t=1784582784;
+	bh=hgzEzv8KzgA973IVv/uKk4z9kYIa69UBaICYLVX6RMg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=knv+WWyzLr/C2po5DrcJFrX9FdjRP9H+TlZLo1CLUoIgIpyhO82mKxuQdkEmibVlz
+	 jX6p05F1rxsZFJd4bkrUl4RnpeVF2D6iJkvChjuJDDxsw6DxVmXkb1WN1iS4FZJ4E4
+	 yFRdFayH9GnyH9dlNK2ROKWXjkRS9klUCMYl2Qjio8Xiq6eZ9wogLMx/jboQKLWWN4
+	 kgAZDqRiP2JyGH2uvgQrV6wWsNQWxkkonhwHfFdYV8mTUkG6k/Og/vd/22Z1Gblm+p
+	 V7b81n6qwDfZYdZsx64YW+aUgqrb7XeoEggT/vHCrrTiUPoyNKop5lfX9Q6Mq5MMHU
+	 eaYv04sBAePUA==
+Date: Mon, 20 Jul 2026 22:26:17 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
+ Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
+ Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
+ <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
+ <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
+ <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
+ Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
+ <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
+ <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
+ <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
+ <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
+ Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
+ Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
+ <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v18 01/13] cxl/ras: Fix cxl_rch_get_aer_severity() wrong
+ severity register
+Message-ID: <20260720222617.29d5676c@jic23-huawei>
+In-Reply-To: <20260717222706.3540281-2-terry.bowman@amd.com>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+	<20260717222706.3540281-2-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-> Currently, the legacy I/O and memory sysfs handlers do not
-> check security_locked_down(LOCKDOWN_PCI_ACCESS), leaving the
-> legacy_io and legacy_mem files unprotected when the kernel is
-> locked down.
->=20
-> Commit eb627e17727e ("PCI: Lock down BAR access when the
-> kernel is locked down") added the check to pci_write_config(),
-> pci_mmap_resource(), and pci_write_resource_io() to prevent
-> userspace from programming DMA-capable hardware that could be
-> used to modify kernel code, but did not cover the legacy
-> handlers.
->=20
-> As a result, root can still write arbitrary I/O ports and map
-> the legacy I/O and memory spaces while the kernel is locked
-> down, which is the same capability the lockdown is meant to
-> remove.
->=20
-> Thus, add the same check to pci_write_legacy_io(),
-> pci_mmap_legacy_mem(), and pci_mmap_legacy_io().
->=20
-> These generic handlers cover both architectures that
-> define HAVE_PCI_LEGACY (such as Alpha and PowerPC).
->=20
-> Fixes: eb627e17727e ("PCI: Lock down BAR access when the kernel is locked=
- down")
-> Signed-off-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+On Fri, 17 Jul 2026 17:26:54 -0500
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+> cxl_rch_get_aer_severity() classifies RCH Downstream Port uncorrectable
+> errors as fatal or non-fatal by ANDing uncorrectable status with
+> PCI_ERR_ROOT_FATAL_RCV. This is wrong because PCI_ERR_ROOT_FATAL_RCV is a
+> Root Error Status register bit (bit 6), not a severity bit. ANDing it
+> against uncorrectable status tests a reserved bit and produces incorrect
+> severity classification.
+> 
+> Fix by ANDing the unmasked uncor_status against uncor_severity. Per
+> PCIe Base Spec r6.0 Section 7.8.4.4, each bit in the Uncorrectable
+> Error Severity register indicates whether the corresponding error is
+> fatal (1) or non-fatal (0).
+> 
+> Fixes: 6ac07883dbb5 ("cxl/pci: Add RCH downstream port error logging")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> 
+One trivial thing below, otherwise LGTM
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720211541.1509=
-744-1-kwilczynski@kernel.org?part=3D1
+Either way
+
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+
+> ---
+> 
+> Changes in v17 -> v18:
+> - New patch.
+> ---
+>  drivers/cxl/core/ras_rch.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+> index 0a8b3b9b63884..44b335d560708 100644
+> --- a/drivers/cxl/core/ras_rch.c
+> +++ b/drivers/cxl/core/ras_rch.c
+> @@ -80,7 +80,8 @@ static bool cxl_rch_get_aer_severity(struct aer_capability_regs *aer_regs,
+>  				     int *severity)
+>  {
+>  	if (aer_regs->uncor_status & ~aer_regs->uncor_mask) {
+> -		if (aer_regs->uncor_status & PCI_ERR_ROOT_FATAL_RCV)
+> +		if ((aer_regs->uncor_status & ~aer_regs->uncor_mask) &
+
+This bit looks familiar (see line above!)  Worth a local variable maybe?
+
+
+> +		    aer_regs->uncor_severity)
+>  			*severity = AER_FATAL;
+>  		else
+>  			*severity = AER_NONFATAL;
 
