@@ -1,118 +1,59 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1375143F08E;
-	Mon, 20 Jul 2026 01:55:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1941A23A4;
+	Mon, 20 Jul 2026 02:01:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784512518; cv=none; b=FW97Ld1gmqaV5OZRaPBWvGqokLZnytmukFb02KE8LerHzpU8CGzws/91iSI1HHc5q1ivqB8r3k4eYN/CYwSamuFTuZAyKwapxfmcoGWZRdXT+oPIymEeyRmSqMymRNT5csqoN21do2QvZmlsrkYSHfCBUaCsq2XzUej9/TxSC+M=
+	t=1784512878; cv=none; b=l5IMDuhT/GQVg27O982lcp2LhAvXy01l+Xz3+Bu0dgehuvXjH6GcUCbDuhKcG2AhXt8COobsfAskfIuekzuGLLzNqeQMTJSEp0rnCappum7RSQE80ynaGwVHBiHs4LracHSEK8MgVK/GlWUH8Ra6pL8N6RL1ERcTYsd7zcaRQBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784512518; c=relaxed/simple;
-	bh=Xb29uNU2XZsPhe9bg1OWDVHOrSr1L98u98F74cgEUwQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BIBW35Qft9It9Vre+bQNW+OJF/a4IDCc03G7U21bW0aHEdMB+CEz1zd1QZNh0wwO/ng9ASjLethb2sut3cPCK9/xMCmvF09tqs5k3dcRdUzSFm6ix4wUGJ9r/d8NIWvxwU6Ama6GXUEM0K7haE4T7YT/BGWOCUSTRsxYo1g5Q9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=apjqbCa0; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=hOGeZAZk; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1784512878; c=relaxed/simple;
+	bh=vBKTW4aIL0J30W7MfXvoaDvcqWhEGAa2Ua+3rqSNSt8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=PeFsRCIq16ZON0rjlIci2a7EzLjUQqEKmPXEqZTrhiIICZgBEDfpvvCw84wNXtG7PcLReGJC8CSM7Rs0URUs5cBVGiJyi0w2hRO7XyO87wNaF/LNhkDKQa6LH48Bp/xKccS3ygN4C7zKT5U6b1iw02NXrjYUwRyitt5KIy0hXnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GCinUDQk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="apjqbCa0";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="hOGeZAZk"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h3NrK1Lx9zMlFf;
-	Mon, 20 Jul 2026 03:55:13 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784512513;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=yyO7p+74bbeYVSKJrWpJ70ESCwZS0XJxbtUZ29wAJLU=;
-	b=apjqbCa0jxBziXFnpRGV8h0zNz6/evpbz+5y5Gkg8TX2CjNPr38LP3HRMcKWI0rRq5EcHz
-	u33kHG1OSnCJ7yhqatvciyOgH1K9kKj2PPbA4v+UEQ2g2BgiBJyYSvcG2rbUnOymqKkh3w
-	XCj78Jpe5FbdO07p0XFYIdWECHLD5GBl7rrXTJJJNw/6zndes9k4+Wmz/hg2Hl6aY2f1mp
-	PTNInD0r60YCvE1GoAjHACucDdruLxINWVYLMiRx9hnmkoO+6kezfIfhiWx4W2oh5tXeIb
-	VUjF1bL8wAwBjsnNyVfMoX9V+xXnz94lhqfwFOe8W6R6BvXxLVObT8sWkEI57w==
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784512511;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=yyO7p+74bbeYVSKJrWpJ70ESCwZS0XJxbtUZ29wAJLU=;
-	b=hOGeZAZkLNGeY7k5SLHX4hCUWQA6KEuE0cbKUjFuO3YPuzu9DgKKh3zCcrkBYjZ8cTWtGn
-	gzZ7zJPDaUmqdBm1gg3Dtfpejmj6zZuqhSLpP+YOmxPZj6mdG6/dbGavFSxiPb5PA0pWiI
-	XUDNGXw612GRxCWRVWpObxu0fIPOehqrbuBdxQSox+7w1Ko9PvNwiLVB8N5jnrsjvzwRDa
-	ffiCdwh8hQTCoVmRXfPZsRLfR4DwmVLcFpihUV2Mrv2yW253nnwjMfSde5UuxNExDF7CtP
-	i4A69LtSU1iL4qrkOMQBmecepVPqOCprolLvVxYxP10csVyspxMrLnjzzk0qRA==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Koichiro Den <den@valinux.co.jp>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] dt-bindings: PCI: rcar-gen4-pci-host: Document optional msi-parent
-Date: Mon, 20 Jul 2026 03:54:41 +0200
-Message-ID: <20260720015505.314957-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GCinUDQk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AAE81F000E9;
+	Mon, 20 Jul 2026 02:01:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784512877;
+	bh=vBKTW4aIL0J30W7MfXvoaDvcqWhEGAa2Ua+3rqSNSt8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GCinUDQkPVTO1KBcg/4EWE+x9Hvkz2yWe8nzPOxqf8RQ7oA8CLUM3W2VLh9623JSa
+	 2VpzDrH4fjVHpu0UdHs66y6WRXtrNkUqeNvKq/BOMdYmesk701mTxc1XTMBzoJiZQD
+	 0HoVAk7RttpfOWePcVZXG/K8mmyWiYSl8QhM1ylTDeRVLtrvJwKZn1Sd/kcWcUo7Q1
+	 lW28woKbWXjHf0sq5puX8FaNr0HwSx2GGCZ9sRQ1vGcOedw3IrFOjEAdUc3aIvYqkO
+	 d0Mxmxov7ei8vwu+aJXdGmbcRiDEJpIK1YObM+YdOPIcsdUgaUQG4HY1EC1FupCz4G
+	 n2KQa9quUT8KA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: rcar-gen4-pci-host: Document optional
+ msi-parent
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260720015505.314957-1-marek.vasut+renesas@mailbox.org>
+References: <20260720015505.314957-1-marek.vasut+renesas@mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 20 Jul 2026 02:01:15 +0000
+Message-Id: <20260720020116.6AAE81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 52bbf083aa738f1cddd
-X-MBO-RS-META: mj4a71upqbrsneboo33mpx59w784p1kb
 
-The R-Car Gen4 PCIe controller can optionally use GIC ITS as an
-MSI controller. This configuration is described in DT by setting
-msi-parent DT property in the PCIe controller node. Document this
-configuration.
+> The R-Car Gen4 PCIe controller can optionally use GIC ITS as an
+> MSI controller. This configuration is described in DT by setting
+> msi-parent DT property in the PCIe controller node. Document this
+> configuration.
+>=20
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Conor Dooley <conor+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Koichiro Den <den@valinux.co.jp>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
- Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-index bb3f843c59d91..64f456c6a75a1 100644
---- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-@@ -66,6 +66,9 @@ properties:
-   max-link-speed:
-     maximum: 4
- 
-+  msi-parent:
-+    maxItems: 1
-+
-   num-lanes:
-     maximum: 4
- 
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720015505.3149=
+57-1-marek.vasut+renesas@mailbox.org?part=3D1
 
