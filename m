@@ -1,121 +1,94 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B9043F8C3;
-	Mon, 20 Jul 2026 16:24:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7533FBB5E;
+	Mon, 20 Jul 2026 16:32:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784564675; cv=none; b=YoeYyh1jHiGvvxIZkWwW/1W0buT1wEMb4gZ/MPwbQQnq+D8SJpnEAFzgN8grZZ0F0XeP+qgcchcpLvnLQ0ZfSUsDkSRkr+OfzWq55n1XnW5LmWEP7+Y9QuAMtkXAD0VvMzrefX5NMmV+O8fTDbm+8LNualTqmSMVXgygr2AuL8w=
+	t=1784565125; cv=none; b=ahJY/wzSW2e48EEEtoaIZpUIn77cpBIRL4891dcdcbjSDjz1Tdb7hxDQalexRoW8Kab2a41HEz46Y4+9PobcvOr9pSVV7Bzflv5qwlma/3NdSRe5K5BhtIEHHePh4gyNWlV+un3aZNgI2qv4XMbb1kV/8KhBy0a8UikoLc7KxPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784564675; c=relaxed/simple;
-	bh=G6sc3RDJgZGN7rJGrMGGB9BtIYtPdxlnGpAqfFLOx9s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=LTJrwz6qdFViU5umtfhTNGoaVDBHTRohPcox5G8E87x5wXAytQEaD9X7py/ggfk4dejXApUE1DpQkaNfRBubyYS6avcRZi4chfKV9PLVsT1NjOkWPnEoWV8Lp8UtTkHYIr7186bL+Orz5XQpn8pKjuuZxrglFmojjv6/faSNRAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QM8YFpwu; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784565125; c=relaxed/simple;
+	bh=1IUOQUOJNB7Oft+0Vo0FUIFqnEx2Z5XRWO74Zl7SwFQ=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=fZgJaZjElbKWUBJQOdMAcyksW0CXWF3wgvUAdp5Mm2ZllQTNsuoTIKUZUX70LP1AtC1NV1/By3b4V/aY4BFN/lF0jJO3XBcXuB5wFBC/yn2YZtHhpmZvFS85V3hIow2ywH8D8hSBGUz8rsg1y6LLaP66iqLcN9kWGVIu/kc/KCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=lu6ScZze; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QM8YFpwu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784564671; x=1816100671;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=G6sc3RDJgZGN7rJGrMGGB9BtIYtPdxlnGpAqfFLOx9s=;
-  b=QM8YFpwuFGLBWJUWxhDR1HejhPT7tWyrbGXaye3DWCFsMl9j+p7Nnui1
-   Qn6dDXV4ECNPfIRwZJ4sBViCe5x20WNWLgCU8aQJ2J57SwpgisKtfOhju
-   /c+g2+i97F9Rpl68okdbAvbN0iwnl/ogo7BOE0Bm5Q4V/yTHcI91WzD7q
-   nFCtmApWqUvLmS1SywjL9FWSugzJyb5tDHwtxPosHMb+0nXNjMubDfXv6
-   RbfTHycj9WYViI0dFhuZW06NHoF2KCyAMJUNkc2v8HRCx+ft/ByOF2wG4
-   Og4izFyEEY+k+9Xq1b1NLFTDMNEZaMROSm7meX3HKJZ6T3YPris0UJxzs
-   Q==;
-X-CSE-ConnectionGUID: Ra41K/cuQrun1WFQkwcKfA==
-X-CSE-MsgGUID: P8L4i/nxTMKs4BNpL7lTKA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="85189797"
-X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="85189797"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 09:24:25 -0700
-X-CSE-ConnectionGUID: txsL/dfJS9uRyB4PJzCi0g==
-X-CSE-MsgGUID: 4ayk+hYXR3+fmEmKFD1unw==
-X-ExtLoop1: 1
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.144])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 09:24:23 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Eric Auger <eauger@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 1/1] PCI: Do not add hotplug reservation multiple times
-Date: Mon, 20 Jul 2026 19:24:15 +0300
-Message-ID: <20260720162416.5771-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="lu6ScZze"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=zRXSsjetSNYmOmOpH4xZfFcfMKaYN7wbn4FF3fVhydY=; b=lu6ScZzex9t767shyeadjkHcFD
+	jIqOWVpDXLzH+x+Mxens/YQbWgwnbTdrItugJiyyQ6s5a0eoVQO5pv5Fw6m7/ZqjaC/AsU+8agptk
+	dxyBdIWv6+aOEcZ1V9TCQvVOAwQHWxCW+522D8Ub0p810QnoT2jAiWPhagI0ntygCSuHN/4t1vQWE
+	rxV9WdalxfZcqnRe3d1Hm3UwixD+t7sIrnp7+NF7jfVcArBN/XIwcYuemobzZOoicHIwRzUWEvaXy
+	Zh0QKgCHSo+BYE2Loz8uVv9nj0w+nW/oQdz3w04MRD43RSbz+0WbaYCp5+aLZIgU/YdJc+L9Oqr1q
+	bizf4Ong==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wlquI-0000000B6Re-11GA;
+	Mon, 20 Jul 2026 10:31:55 -0600
+Message-ID: <66e72dfa-cb03-49ea-ac52-cb171edef6e4@deltatee.com>
+Date: Mon, 20 Jul 2026 10:31:45 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
+ Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
+ <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
+ linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260719105327.864949-1-mykola@meshstor.io>
+ <20260719105327.864949-5-mykola@meshstor.io>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260719105327.864949-5-mykola@meshstor.io>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v2 4/7] md/raid1: don't use write-behind for P2PDMA bios
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-In nested topologies, hotplug reservations gets added multiple times
-into the bridge window higher up in the hierarchy. Adding reservation
-for intermediate level bridges does not seem very useful because the
-hotplug is going to add device at a leaf.
 
-Accounting the hoptlug reservation multiple times results in larger
-than expected bridge window size that may lead to assignment failures
-as show in this log:
 
-pci_bus 0000:0a: root bus resource [mem 0x10a00000-0x10c00fff window]
-pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]
-pci 0000:0a:00.0:   bridge window [mem 0x10a00000-0x10bfffff]
-pci 0000:0b:00.0:   bridge window [mem 0x10a00000-0x10bfffff]
-pci 0000:0c:02.0:   bridge window [mem 0x10a00000-0x10bfffff]
-pci 0000:0c:02.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 0d] add_size 200000 add_align 100000
-pci 0000:0c:02.0: bridge window [mem 0x00100000-0x000fffff] to [bus 0d] add_size 200000 add_align 100000
-pci 0000:0b:00.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 0c-0d] add_size 200000 add_align 100000
-pci 0000:0b:00.0: bridge window [mem 0x00100000-0x000fffff] to [bus 0c-0d] add_size 200000 add_align 100000
-pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 0b-0d] add_size 400000 add_align 100000
-pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff] to [bus 0b-0d] add_size 400000 add_align 100000
-pci 0000:0a:00.0: bridge window [mem size 0x00400000]: can't assign; no space
-pci 0000:0a:00.0: bridge window [mem size 0x00400000]: failed to assign
-pci 0000:0a:00.0: bridge window [mem size 0x00400000 64bit pref]: can't assign; no space
-pci 0000:0a:00.0: bridge window [mem size 0x00400000 64bit pref]: failed to assign
+On 2026-07-19 04:53, Mykola Marzhan wrote:
+> alloc_behind_master_bio() copies the bio's data with bio_copy_data(),
+> a CPU copy. P2PDMA pages are peer device (BAR) memory; generic code
+> must not assume CPU load/store access to them is safe or fast on
+> every architecture, and bouncing peer memory through the CPU defeats
+> the point of a peer-to-peer transfer.
+> 
+> Skip write-behind for P2PDMA bios: they are written directly to all
+> members, including write-mostly ones.  Ordering against write-behind
+> I/O in flight to overlapping sectors is preserved: the non-behind
+> clone path serializes on CollisionCheck rdevs (see the preceding
+> fix), which covers these bios like any other write that bypasses
+> write-behind.
+> 
+> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
+> Assisted-by: Claude:claude-opus-4-8
+> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
-The problem stems from calculate_memsize() that calculates size first
-and then adds childen size:
-	size = max(0, 2M) + 2M
+Looks correct to me.
 
-Alter the logic to first account for the children size before applying
-the hotplug reservation to not add hotplug reservation multiple times
-on different levels of a nested topology. As a result, the size
-calculation becomes:
-	size = max(0 + 2M, 2M)
-
-Reported-by: Eric Auger <eauger@redhat.com>
-Link: https://lore.kernel.org/linux-pci/f23946f2-06ac-4607-8f2c-3ffbc52b627a@redhat.com/
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c0a949f2c995..e8c94aa1d3c1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1021,7 +1021,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 					 resource_size_t children_add_size,
- 					 resource_size_t align)
- {
--	size = max(size, min_size) + children_add_size;
-+	size = max(size + children_add_size, min_size);
- 	return ALIGN(size, align);
- }
- 
-
-base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
--- 
-2.47.3
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
