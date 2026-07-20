@@ -1,474 +1,252 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5A042E00A;
-	Mon, 20 Jul 2026 21:47:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784584045; cv=none; b=txwFx56bOTdcwu9Zg5Wp2qQ6hYELPepUOvc1RHyh4Q+s+oK0th/IrNh1UtsrX8IEIxhCxxuklkRNbB/2URUvBtaeW9ovpnkqM9k+DjzWtytbo5cLIIM8vhpyNv54wa2ebp50qyBFz1gUPB6z4oB2wG6JNatjYxvKkE5+ar3/aU4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784584045; c=relaxed/simple;
-	bh=QIzYrMKcdySuEhSJdqjHin2gRJCSE1MpXqRAuEKSTQo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DevUQHN/OUTe2LwKG91pUgLlp+raAq7cK/iERxTgqmFyrXt18Er1mu4Vct6EMauWzuVIidzlxBIiXxjVIgF0cLfA5oxn/4MlJhSwumTPwgKpICQJyTUN8AFHEx0oy9M5LYX+WneLMs+RW8JsCVk8q0XZMzlqRGEdtdcfh8QoYWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kgEMfxKW; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C1D3409272
+	for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 21:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.179
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784584271; cv=pass; b=X7IVp2COespzH7anNHdz7MM2kq0TKOKqfCfvVhR1HLCENNxoVcfpm16vmI2DUrDqbZg1SeG8jmw4id3e1v7MAQi0CL5iU3M1EFngBnOpEti/v9YyhkU0OvsfpaiKWnOaM2uWcBGFK045VxYDtSxpJwkZjAgqxQuiSZVEvi7W30U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784584271; c=relaxed/simple;
+	bh=FWetYHTKU3plFs91yFZPvyCfOh01CzXliAvG6YxxB2Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oa5ydVKSC0iuQ/xDrO1t0MwpXYoW7Yt/WH0+cLqxLrGwhiQSvbYJbyJb+AaEftUszXoZR5CwJk69pX/nmH5dYNP9+9aP8+Vr+hiEM4BE0vpviWahJ/FwXrNkXrwjwnh7o1L7bgYQvPgGgiSS9Vc0rlVUsaWo5Am9BxO2CP+ip+c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WjawJNAd; arc=pass smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kgEMfxKW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784584040; x=1816120040;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=QIzYrMKcdySuEhSJdqjHin2gRJCSE1MpXqRAuEKSTQo=;
-  b=kgEMfxKWUjEuX5kfu2Hpn3S79nOCmx4ebM28TT20X8iJFTKUm7I0y7AA
-   UXjb8kOBNvsHhI+D4jPGclZGYqIV/i1d+XFbWda5MdgCcK8Vv/PhgVCV+
-   WjVuCRs9GUol/6ITK9BtfnA+lCnjTn0noCKd7qkfQIfD7HTAv4oV+4gPX
-   hDP9a05tasoX60IgyyeMj/kPnpm0+VyBUQkyq+U1Y33oylmwM0fpd3cEW
-   c1WBiMk9Xlm4xE9wlWvqJwbcATe5L2ayMcEJ0pvTW44fA0OA2QTPBpbTT
-   QNYTSZijCwS0xofzgQGbbbvDz6Ad3N2dJrD7oZVk/oocX4ixISU7kRdyJ
-   A==;
-X-CSE-ConnectionGUID: NJNi2cLjS9G+2QFnIA+IPA==
-X-CSE-MsgGUID: idI58/t+R1+FxUr5WgS4CA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="110727412"
-X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="110727412"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 14:47:17 -0700
-X-CSE-ConnectionGUID: mL6X8Ah1RX2Byg87k1sPBg==
-X-CSE-MsgGUID: 8dYlYmpESzikuMWT5/WD/w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,175,1779174000"; 
-   d="scan'208";a="282058132"
-Received: from cooperst-gp83.amr.corp.intel.com (HELO [10.125.109.176]) ([10.125.109.176])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2026 14:47:14 -0700
-Message-ID: <af763e03-578a-45d3-82e3-7222de3db6ac@intel.com>
-Date: Mon, 20 Jul 2026 14:47:13 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WjawJNAd"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-848882fdb18so7886192b3a.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 14:51:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784584269; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AA7hK5Ko2OU7NJ0+rC9Cxs8nQEuFwCHyskV05GQnZ/ZnoMDCRrgr399rxAAzatR1qO
+         pFDz/ercB6R5wc5oJcFH02RY/PY/glnIuG7XBseOpDwiMl4bWtLhpM9JGc67oWtn7fuG
+         6xEb1FSW47ex9FxISr3H41CcRI540ZoD/wsq40h71TsbAUVxV2WaC2RvelnnzrNtUiFz
+         mzsQ0qtpRbQuBMq+Z3gwo8h2NfFExEiCSDZQR7NrqOD5DMkISt2PEZDqQCx45XuFR2rD
+         TNUsGc5yVnDtdvoSJrU8Fxgmvud2QmkiaMVD6U1K6PEPdZGz44a/ldlEH1m0GTdlEG0+
+         ZO6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=bdKI9817I2WeOtdz9Fsw1SXm2Wjzy1v2qUyVdVHNzDU=;
+        fh=cw3/xDU5jvNch3WrETw5vc+OIN+ZdHoMsWCfJEnRw2o=;
+        b=Og48eOZvAIVzW0ASL+gFSDdLCKnf6R63bJm97gMHSqw6jLpXCKdHmSDRa7/WsIDtQW
+         diPHDdZw0IYHfv6r54qf6KSCZe86VhYYNNR0LSLtVXoFFCDC6yDqKZ1IMjrksa2zvjCv
+         3a5so6uieDzTouZOq8F6Y7esuRd1G1ExTZLvHHspYtqISIXSWlrK6ahAdCS4MKbec4QM
+         aPC5NFS+ukkb8JpMF3YLaoC3eAvuxCekC+faNvBR4Vg7zT8DB7O/bg0feU3dqtp/KgAK
+         XmjIo90Y2U5jFAahn4wO83HMSdM//g+ZKPqgBpyUQ7ZKhsGhSvm7Uzhxj+zvjm/4ULUm
+         n+yg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784584269; x=1785189069; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=bdKI9817I2WeOtdz9Fsw1SXm2Wjzy1v2qUyVdVHNzDU=;
+        b=WjawJNAdqcugnTKwxXUZ4ACIjQmP9/n0gIYP2U5eYHlWacJ6VaKb0aUxFhK/tGVaDQ
+         Y+H78c8sMN++nrKOAHjLUhrtUFaFmZEZ0MGuTI+oL2/Dsq7d3SFT77wWuXgc2rU2vrLL
+         ah05hnV9JF8EK8nSkI7ouqCVV1n1JbKWrsVh/U77bg0D+Px8row5+Oxd03HwB3XzHRkD
+         73FmukO26nC/8PiSMALnHzkWMRANUK1tZnalvla6czJSQPbbdftaIx+8jFwsxNt1vwtJ
+         mqGAFTykrGCDrPEwepdi6lE86WsLtmF6ygxQrG0f743qTlr+GyVbEu3YJ9/lKO4jpAP/
+         mhxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784584269; x=1785189069;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bdKI9817I2WeOtdz9Fsw1SXm2Wjzy1v2qUyVdVHNzDU=;
+        b=iv2A1Pe2Ss6gazem1jkweI2ReFwxwOjT66CM10/MMaxo+PMY+QBwJtra2uh9eDzVrf
+         N4uefsJoECG6KzNWBsKlVmKGPzPQ7x2yARy7TRhulwkHput1NZiNiHdI1SR6qWFduYKI
+         +ygs11ooNNZ69ZnHdnrFgQZFx5aktW7Tr2BBnXhDhpEx/HGlC35ztrycC2st0agQy+T9
+         Fz7TbbrWDpG+ytDr7Af6kBzzaFFG2m3E8GiX7HUAvA1IUlOzXrR1UvdIHS0zzCthSoyr
+         5rtdZW7nmp0A2cZKvSHkALUUVgEMswGj5X7nKZ44tYqj8KW2aa4J6W/wrMt4ZYnuwaZc
+         ZTWA==
+X-Forwarded-Encrypted: i=1; AHgh+RocjmlxPlufx1jVNM9AtUvu4W+/zUKB5jhppwyY2vAFt0vPaDNlHmP7RTuh48cgTMLw2wVQtk/XREo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxTqedSUdq2nNy8BKD+JyXf9vfMh2v589hVb1biJ+tlEIxkSvpR
+	VJviIKEdEI2qnu8NcVaTGIphTFC7sc1DU6aWuAzsThpc6dGllasxVooyXvM+RgmcbxMvKgaEIGp
+	96b283Y2ZhWt1ucrwW4oKGj43waIXySCfK5Q+P9di
+X-Gm-Gg: AfdE7ckjSVVNh7sCX6VJLQ+nQBIrPF8yFox9GQNoavqULAp8fxJ0FbzMz0z/JCwn44w
+	SyTgtjF7vuWE92L+DQ1sh7/WKgME8w6VeK8X1fDH4vhmDO5cuuDlKZN6DY7ZsATnZISBn9Ahpwc
+	0Ox/whZJxt8eEySR0xusyAdJNb/XqmPRPkNbCpmQQtvgs5THHTYbGozynd8QfyPdZs1XKODzlvD
+	dgtcaLIJmfBbsm0egSA84tZymU4TU1WdKyIuwZELn3EzwzQtBnif00qAF5ZFJgXLBhjE+2qKZWM
+	gTULmRo=
+X-Received: by 2002:a05:6a21:b94:b0:3bc:5284:5445 with SMTP id
+ adf61e73a8af0-3c3ad7d7fc8mr17622851637.21.1784584268526; Mon, 20 Jul 2026
+ 14:51:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v18 07/13] PCI/CXL: Add RCH support to CXL handlers
-To: Terry Bowman <terry.bowman@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
- Jonathan Cameron <jic23@kernel.org>, Len Brown <lenb@kernel.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Robert Richter <rrichter@amd.com>
-Cc: linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- Alejandro Lucero <alucerop@amd.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Ankit Agrawal <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>,
- Ben Cheatham <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>,
- Breno Leitao <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>,
- "Fabio M . De Francesco" <fabio.m.de.francesco@linux.intel.com>,
- Gregory Price <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>,
- Jonathan Corbet <corbet@lwn.net>, Kees Cook <kees@kernel.org>,
- Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Oliver O'Halloran <oohall@gmail.com>, Shiju Jose <shiju.jose@huawei.com>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>,
- Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
- Tony Luck <tony.luck@intel.com>, Vishal Verma <vishal.l.verma@intel.com>
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
- <20260717222706.3540281-8-terry.bowman@amd.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260717222706.3540281-8-terry.bowman@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260715174737.15287-1-matt@ozlabs.org> <CALzav=fH7N+ionUnELqw5ZaGrPmgp_w6kxoCtoY8fMmZY_S4zw@mail.gmail.com>
+ <65ba06e7-4c54-437d-9fbd-632c0468f66d@ozlabs.org> <allLypOmtbnPrgbw@google.com>
+ <cc59a80f-afcc-4b2d-8e78-20f74c6b6871@ozlabs.org>
+In-Reply-To: <cc59a80f-afcc-4b2d-8e78-20f74c6b6871@ozlabs.org>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 20 Jul 2026 14:50:41 -0700
+X-Gm-Features: AUfX_mwkLBrmrzOblowqnnWuP3v7QICLsI9pjWJDYOH2ogP4CV4E0O_pKuQFz1Y
+Message-ID: <CALzav=cGtmkBBpfUA8nP7AQ3azB_Hn7_8jJL=J+E+h61CpOFrw@mail.gmail.com>
+Subject: Re: [PATCH v5 0/9] vfio/pci: Add mmap() for DMABUFs
+To: Matt Evans <matt@ozlabs.org>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, 
+	Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>, 
+	Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>, 
+	Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>, 
+	=?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>, 
+	Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, 
+	Alistair Popple <apopple@nvidia.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, 
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, Jul 17, 2026 at 10:12=E2=80=AFAM Matt Evans <matt@ozlabs.org> wrote=
+:
+>
+> Hi David,
+>
+> On 16/07/2026 22:23, David Matlack wrote:
+> > On 2026-07-16 03:51 PM, Matt Evans wrote:
+> >> Hi David,
+> >>
+> >> On 15/07/2026 19:12, David Matlack wrote:
+> >>> On Wed, Jul 15, 2026 at 10:47=E2=80=AFAM Matt Evans <matt@ozlabs.org>=
+ wrote:
+> >>>
+> >>>> This is based on v7.2-rc3.
+> >>>>
+> >>>> These commits are on GitHub for easier browsing, along with
+> >>>> "[RFC ONLY] selftests: vfio: Add standalone vfio_dmabuf_mmap_test":
+> >>>>
+> >>>> https://github.com/metamev/linux/compare/v7.2-rc3...dev/mev/vfio-dma=
+buf-mmap-v5
+> >>>
+> >>> It'd be great to have this test upstream. I'm happy to review it when
+> >>> you're ready. Looks like it just needs to be redone to use the VFIO
+> >>> selftests library and kselftests harness. AI could probably do the
+> >>> conversion pretty quick :)
+> >>
+> >> For sure, I'd intended to catch up with you on best approach here. :)
+> >>
+> >> Aside from the organic structure of the test (the open-coded VFIO
+> >> device/group setup/init needs to go), the main issue is that it relies
+> >> on a hacked/out of tree QEMU "EDU++" device with a second larger BAR
+> >> (containing freely read-writable memory).  A subset of tests run with
+> >> the in-tree EDU device, but coverage is too low.
+> >>
+> >> The desirable properties are:
+> >>
+> >>  - Having a BAR that is pure memory (all locations present, writable
+> >> without disruptive side-effects) so that mapping aliases can be
+> >> constructed and detected.  This is good to test things like non-zero
+> >> vm_pgoffs and VA space presentation of physically-discontiguous DMABUF=
+s.
+> >>
+> >>  - BAR >> hugepage size so we can eyeball huge mappings work (or bette=
+r,
+> >>  mechanically test for them).  At least 32MB would tick this box for 4=
+K,
+> >> 16K page systems.
+> >>
+> >>  - Something QEMU supports*, so one can run the test in a VM/TCG syste=
+m.
+> >>
+> >> There were some real device models in QEMU that could be used this way=
+,
+> >> but needed a fair bit of setup;  I didn't want to rathole
+> >> vfio_dmabuf_mmap_test on including a ton of device-specific code for
+> >> some video card or similar.
+> >>
+> >> I'll dig more for a simple target that provides these properties --
+> >> obviously it would be better to point this test at an off-the-shelf
+> >> device (including silicon!).  And, proposing EDU extensions to the QEM=
+U
+> >> folks may be useful (there're uses for a better EDU in other contexts =
+too).
+> >>
+> >> Since this test uses MMIO for a specific [class of] function, my first
+> >> thought is it should be another VFIO driver-type test sibling of
+> >> vfio_pci_driver_test.  For example, we could extend the driver-type
+> >> tests' backend struct vfio_pci_driver_ops for functions capable of
+> >> providing a Big Memory BAR, like QEMU EDU++.  EDU can also memcpy, so
+> >> could also support vfio_pci_driver_test.
+> >>
+> >> The spirit of the device backends hiding setup of a complex device is
+> >> handy, and it's plausible that several backends could provide this "bi=
+g
+> >> memory BAR" service.  What do you think, any concerns with extending
+> >> vfio_pci_driver_ops like that?
+> >
+> > I wouldn't recommend leveraging the driver framework unless absolutely
+> > necessary. It makes the test harder to run.
+> >
+> > The biggest issue I see with the proposed properties is being able to
+> > treat the BAR as memory. That obviously will depend on the device and
+> > may require device-specific setup. If we decide that treating the BAR a=
+s
+> > memory is truly required then using the driver framework is the way to
+> > go. But I'm hoping we can avoid that requirement.
+> >
+> > Instead, I think you can get pretty far by inspecting /proc/pid/pagemap
+> > to determine if the mmap() set things up correctly, without actually
+> > accessing the BAR. You can use /proc/pid/pagemap to look up the PFN and
+> > PAGEMAP_SCAN to detect huge pages.
+>
+> Hmm, possible, although that's quite a different test at that point.  I
+> agree never touching the device has advantages, but it's harder to test
+> certain things if we _never_ do MMIO.  The mitigation effort to get
+> coverage may not be the right tradeoff vs easier running.  I can think
+> of some "easy" VFIO bugs that would be challenging to properly verify in
+> userspace (e.g. PFNs all having some undesired offset).  The current
+> test method is harder to fool per unit effort in writing it.
+>
+> Though, I will have a think about this no-touch flavour of test.
+>
+> What were you picturing regarding populating the VMA PTEs in order to
+> inspect the result via /proc/pid/pagemap, whilst still upholding the
+> principle of not touching the device?  For example,
+> madvise(MADV_POPULATE_WRITE) won't work on the VFIO BAR regions because
+> they're VM_PFNMAP/VM_IO.
 
+You're right it looks like it's not possible to fault in the VMA
+without reading or writing to the mapping. We could use reads, but I'm
+not sure that's safe for all devices.
 
-On 7/17/26 3:27 PM, Terry Bowman wrote:
-> Restricted CXL Host (RCH) error handling is a separate path from the
-> new CXL Port error handling flow. Fold RCH error handling into the
-> Port flow so both share a common entry point.
-> 
-> Update cxl_rch_handle_error_iter() to forward RCH protocol errors
-> through the AER-CXL kfifo. Change cxl_rch_handle_error() return type
-> from void to bool so handle_error_source() can determine whether work
-> was enqueued and call cxl_proto_err_flush() before AER recovery
-> proceeds.
-> 
-> For RC_END devices, __cxl_proto_err_work_fn() calls
-> cxl_handle_rdport_errors() to process RCH Downstream Port errors,
-> then falls through to the VH path for RC_END Endpoint handling.
-> 
-> An RCD uncorrectable CXL RAS error now panics via cxl_do_recovery().
-> Before this patch the RCH Downstream Port UCE path called
-> cxl_handle_ras() but ignored its return value - no panic. After this
-> patch the same condition calls cxl_do_recovery() which panics on
-> confirmed UCE. The Endpoint UCE path already panicked at the parent
-> commit. This matches the panic policy added in the common CXL Port
-> protocol error flow.
-> 
-> Remove cxl_cor_error_detected() and its .cor_error_detected
-> registration in cxl_error_handlers. Correctable Endpoint errors are
-> now routed through the AER-CXL kfifo like all other CXL protocol
-> errors.
-> 
-> Drop the cxlds->rcd / cxl_handle_rdport_errors(cxlds) branches from
-> cxl_error_detected(). RCH downstream port error handling is now
-> performed by __cxl_proto_err_work_fn() via the kfifo path, which
-> calls cxl_handle_rdport_errors(pdev) before the common dispatch.
-> 
-> Change cxl_handle_rdport_errors() to take a struct pci_dev * instead
-> of a struct cxl_dev_state *, matching the new caller context. Re-fetch
-> dport under guard() to close the TOCTOU window between
-> cxl_pci_find_port()'s lockless xa_load() and the first dereference of
-> the returned pointer.
-> 
-> Change find_cxl_port_by_dev() RC_END lookup from
-> find_cxl_port_by_dport(dev->parent) to find_cxl_port_by_uport(dev),
-> matching the Endpoint lookup path. RC_END Endpoint port resolution
-> uses the uport (the RC_END device itself), while the separate RCH
-> Downstream Port lookup is handled by cxl_handle_rdport_errors().
-> 
-> The RCH Downstream Port and the RCD Endpoint (RC_END) are separate
-> devices with independent RAS register blocks. cxl_handle_rdport_errors()
-> handles the RCH Downstream Port RAS. RCD Endpoint (RC_END) is handled in
-> cxl_handle_proto_error().
-> 
-> Use to_ras_base() in cxl_handle_rdport_errors() instead of referencing
-> dport->regs.ras directly. Make to_ras_base() non-static in ras.c and
-> declare it in core.h so ras_rch.c can access it. Route all RAS base address lookups
-> through a single helper to prepare for CXL RAS error injection testing
-> that follows this series.
-> 
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> > With that requirement gone, then all you really need is a device with a
+> > large enough BAR. And even that it not a hard requirement. I'm sure
+> > there are plenty of test cases that could work with smaller BARs. The
+> > few tests that want to exercise huge mappings can inspect the device BA=
+R
+> > sizes first, and if they're all too small, SKIP() the test.
+> >
+> > If you structure the test this way, then it's easy for the test to be
+> > used. It can be run against any device for the basic functional
+> > coverage, and can be run against a device with a larger BAR for full
+> > coverage of huge mappings.
+> >
+> > Does QEMU emulate any devices that have 32MB or larger BARs?
+>
+> Yep, looks like `-device pci-testdev,membar=3D64M,membar-backed=3Don` or
+> even `-device bochs-display,vgamem=3D64M` would be suitable.
+>
+> So I'll also try moving the existing test over to one of these to at
+> least remove the EDU++ device dependency.  (bochs-display has >1 BAR,
+> and some MMIO regs which are nice for a quick kick-the-tyres access test.=
+)
 
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+This seems like a good compromise.
 
-
-> 
-> ---
-> 
-> Changes in v17->v18:
-> - Pass &pdev->dev instead of dport->port->uport_dev in
->   cxl_handle_rdport_errors() to avoid dropping RCH trace events.
-> - Document trace event attribution change.
-> - Document removal of cxl_cor_error_detected() and cxlds->rcd branches.
-> - Capitalize Endpoint per PCI spec convention.
-> - Use to_ras_base() in cxl_handle_rdport_errors() to centralize RAS base
->   address lookup in preparation for error injection testing.
-> 
-> Changes in v16->v17:
-> - Drop now-dead cxlds->rcd branches from cxl_{cor_,}error_detected().
-> - Drop duplicate subject line from commit body.
-> - Document panic-on-uncorrectable behavior change for RCD path.
-> - Document trace event device-name change (memN -> PCI BDF) for RCH path.
-> - Rewrite cxl_handle_proto_error() RC_END comment to clarify RCD/RCH shared
->   interrupt relationship
-> - Rewrite commit message
-> 
-> Changes in v16:
-> - New commit
-> ---
->  drivers/cxl/core/core.h        | 10 +++++--
->  drivers/cxl/core/ras.c         | 50 ++++++++--------------------------
->  drivers/cxl/core/ras_rch.c     | 16 ++++++-----
->  drivers/cxl/cxlpci.h           |  3 --
->  drivers/cxl/pci.c              |  1 -
->  drivers/pci/pcie/aer.c         |  4 +--
->  drivers/pci/pcie/aer_cxl_rch.c | 39 ++++++++++++--------------
->  drivers/pci/pcie/portdrv.h     |  4 +--
->  8 files changed, 48 insertions(+), 79 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index 7c70bea06c2db..272634ff2615b 100644
-> --- a/drivers/cxl/core/core.h
-> +++ b/drivers/cxl/core/core.h
-> @@ -191,7 +191,8 @@ void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
->  void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base);
->  void cxl_dport_map_rch_aer(struct cxl_dport *dport);
->  void cxl_disable_rch_root_ints(struct cxl_dport *dport);
-> -void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds);
-> +void cxl_handle_rdport_errors(struct pci_dev *pdev);
-> +void __iomem *to_ras_base(struct cxl_port *port, struct cxl_dport *dport);
->  void devm_cxl_dport_ras_setup(struct cxl_dport *dport);
->  #else
->  static inline void cxl_ras_init(void) { }
-> @@ -205,7 +206,12 @@ static inline void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port,
->  static inline void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base) { }
->  static inline void cxl_dport_map_rch_aer(struct cxl_dport *dport) { }
->  static inline void cxl_disable_rch_root_ints(struct cxl_dport *dport) { }
-> -static inline void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds) { }
-> +static inline void cxl_handle_rdport_errors(struct pci_dev *pdev) { }
-> +static inline void __iomem *to_ras_base(struct cxl_port *port,
-> +					 struct cxl_dport *dport)
-> +{
-> +	return NULL;
-> +}
->  static inline void devm_cxl_dport_ras_setup(struct cxl_dport *dport) { }
->  #endif /* CONFIG_CXL_RAS */
->  
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index b190e69c2d415..9a142abcf4f8b 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -218,7 +218,8 @@ void devm_cxl_port_ras_setup(struct cxl_port *port)
->  }
->  EXPORT_SYMBOL_NS_GPL(devm_cxl_port_ras_setup, "CXL");
->  
-> -static void __iomem *to_ras_base(struct cxl_port *port, struct cxl_dport *dport)
-> +
-> +void __iomem *to_ras_base(struct cxl_port *port, struct cxl_dport *dport)
->  {
->  	if (!port)
->  		return NULL;
-> @@ -324,37 +325,7 @@ bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
->  	return true;
->  }
->  
-> -void cxl_cor_error_detected(struct pci_dev *pdev)
-> -{
-> -	guard(device)(&pdev->dev);
-> -	if (!pdev->dev.driver)
-> -		return;
-> -
-> -	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
-> -	if (!port)
-> -		return;
-> -
-> -	if (is_cxl_restricted(pdev)) {
-> -		struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> -		struct cxl_memdev *cxlmd = cxlds->cxlmd;
->  
-> -		scoped_guard(device, &cxlmd->dev) {
-> -			cxl_handle_rdport_errors(cxlds);
-> -		}
-> -	}
-> -
-> -	scoped_guard(device, &port->dev) {
-> -		if (!port->dev.driver) {
-> -			dev_warn(&pdev->dev,
-> -				 "%s: port disabled, abort error handling\n",
-> -				 dev_name(&port->dev));
-> -			return;
-> -		}
-> -
-> -		cxl_handle_cor_ras(port->uport_dev, to_ras_base(port, NULL));
-> -	}
-> -}
-> -EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
->  
->  pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  				    pci_channel_state_t state)
-> @@ -365,14 +336,6 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  	if (!port)
->  		return PCI_ERS_RESULT_DISCONNECT;
->  
-> -	if (is_cxl_restricted(pdev)) {
-> -		struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> -		struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> -
-> -		scoped_guard(device, &cxlmd->dev) {
-> -			cxl_handle_rdport_errors(cxlds);
-> -		}
-> -	}
->  
->  	scoped_guard(device, &port->dev) {
->  		if (!port->dev.driver) {
-> @@ -429,6 +392,15 @@ static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
->  
->  static void __cxl_proto_err_work_fn(struct cxl_proto_err_work_data *wd)
->  {
-> +	/*
-> +	 * For RC_END (RCD) devices, handle RCH Downstream Port errors
-> +	 * first.  cxl_handle_rdport_errors() does its own port lookup
-> +	 * and locking, keeping the Downstream Port lock separate from the
-> +	 * Endpoint Port lock taken below.
-> +	 */
-> +	if (is_cxl_restricted(wd->pdev))
-> +		cxl_handle_rdport_errors(wd->pdev);
-> +
->  	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_dev(&wd->pdev->dev, NULL);
->  	if (!port) {
->  		dev_err_ratelimited(&wd->pdev->dev,
-> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
-> index 44b335d560708..f2d2fb83758b9 100644
-> --- a/drivers/cxl/core/ras_rch.c
-> +++ b/drivers/cxl/core/ras_rch.c
-> @@ -1,7 +1,6 @@
->  // SPDX-License-Identifier: GPL-2.0-only
->  /* Copyright(c) 2025 AMD Corporation. All rights reserved. */
->  
-> -#include <linux/types.h>
->  #include <linux/aer.h>
->  #include "cxl.h"
->  #include "core.h"
-> @@ -96,18 +95,21 @@ static bool cxl_rch_get_aer_severity(struct aer_capability_regs *aer_regs,
->  	return false;
->  }
->  
-> -void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds)
-> +void cxl_handle_rdport_errors(struct pci_dev *pdev)
->  {
-> -	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
->  	struct aer_capability_regs aer_regs;
->  	struct cxl_dport *dport;
->  	int severity;
->  
-> -	struct cxl_port *port __free(put_cxl_port) =
-> -		cxl_pci_find_port(pdev, &dport);
-> +	struct cxl_port *port __free(put_cxl_port) = cxl_pci_find_port(pdev, NULL);
->  	if (!port)
->  		return;
->  
-> +	guard(device)(&port->dev);
-> +	dport = cxl_find_dport_by_dev(port, pdev->dev.parent);
-> +	if (!dport)
-> +		return;
-> +
->  	if (!cxl_rch_get_aer_info(dport->regs.dport_aer, &aer_regs))
->  		return;
->  
-> @@ -116,7 +118,7 @@ void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds)
->  
->  	pci_print_aer(pdev, severity, &aer_regs);
->  	if (severity == AER_CORRECTABLE)
-> -		cxl_handle_cor_ras(&cxlds->cxlmd->dev, dport->regs.ras);
-> +		cxl_handle_cor_ras(&pdev->dev, to_ras_base(port, dport));
->  	else
-> -		cxl_handle_ras(&cxlds->cxlmd->dev, dport->regs.ras);
-> +		cxl_do_recovery(pdev, dport->port, dport);
->  }
-> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-> index b826eb53cf7ba..06c46adcf0f6c 100644
-> --- a/drivers/cxl/cxlpci.h
-> +++ b/drivers/cxl/cxlpci.h
-> @@ -89,14 +89,11 @@ struct cxl_dev_state;
->  void read_cdat_data(struct cxl_port *port);
->  
->  #ifdef CONFIG_CXL_RAS
-> -void cxl_cor_error_detected(struct pci_dev *pdev);
->  pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  				    pci_channel_state_t state);
->  void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
->  void devm_cxl_port_ras_setup(struct cxl_port *port);
->  #else
-> -static inline void cxl_cor_error_detected(struct pci_dev *pdev) { }
-> -
->  static inline pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  						  pci_channel_state_t state)
->  {
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index 7c6faee7f85ed..5c21db36073fe 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -1004,7 +1004,6 @@ static const struct pci_error_handlers cxl_error_handlers = {
->  	.error_detected	= cxl_error_detected,
->  	.slot_reset	= cxl_slot_reset,
->  	.resume		= cxl_error_resume,
-> -	.cor_error_detected	= cxl_cor_error_detected,
->  	.reset_done	= cxl_reset_done,
->  };
->  
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 2d9d40528e709..0bd23a65e7ebc 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1185,9 +1185,7 @@ static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
->  
->  static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
->  {
-> -	bool cxl_pending = false;
-> -
-> -	cxl_rch_handle_error(dev, info);
-> +	bool cxl_pending = cxl_rch_handle_error(dev, info);
->  
->  	if (is_cxl_error(dev, info))
->  		cxl_pending |= cxl_forward_error(dev, info);
-> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
-> index e471eefec9c40..683712fc965ff 100644
-> --- a/drivers/pci/pcie/aer_cxl_rch.c
-> +++ b/drivers/pci/pcie/aer_cxl_rch.c
-> @@ -34,42 +34,37 @@ static bool cxl_error_is_native(struct pci_dev *dev)
->  	return (pcie_ports_native || host->native_aer);
->  }
->  
-> +struct cxl_rch_error_ctx {
-> +	struct aer_err_info *info;
-> +	bool enqueued;
-> +};
-> +
->  static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
->  {
-> -	struct aer_err_info *info = (struct aer_err_info *)data;
-> -	const struct pci_error_handlers *err_handler;
-> +	struct cxl_rch_error_ctx *ctx = data;
->  
->  	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
->  		return 0;
->  
-> -	guard(device)(&dev->dev);
-> -
-> -	err_handler = dev->driver ? dev->driver->err_handler : NULL;
-> -	if (!err_handler)
-> -		return 0;
-> -
-> -	if (info->severity == AER_CORRECTABLE) {
-> -		if (err_handler->cor_error_detected)
-> -			err_handler->cor_error_detected(dev);
-> -	} else if (err_handler->error_detected) {
-> -		if (info->severity == AER_NONFATAL)
-> -			err_handler->error_detected(dev, pci_channel_io_normal);
-> -		else if (info->severity == AER_FATAL)
-> -			err_handler->error_detected(dev, pci_channel_io_frozen);
-> -	}
-> +	if (cxl_forward_error(dev, ctx->info))
-> +		ctx->enqueued = true;
->  	return 0;
->  }
->  
-> -void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
-> +bool cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
->  {
-> +	struct cxl_rch_error_ctx ctx = { .info = info };
-> +
->  	/*
-> -	 * Internal errors of an RCEC indicate an AER error in an
-> -	 * RCH's downstream port. Check and handle them in the CXL.mem
-> -	 * device driver.
-> +	 * An RCEC AER internal error indicates an error in an
-> +	 * associated RCH Downstream Port or RC_END device or both.
-> +	 * Forward to the cxl_core module for handling.
->  	 */
->  	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
->  	    is_aer_internal_error(info))
-> -		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
-> +		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, &ctx);
-> +
-> +	return ctx.enqueued;
->  }
->  
->  static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index fd203010877bf..807bca90dee0e 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -128,14 +128,14 @@ struct aer_err_info;
->  
->  #ifdef CONFIG_CXL_RAS
->  bool is_aer_internal_error(struct aer_err_info *info);
-> -void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info);
-> +bool cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info);
->  void cxl_rch_enable_rcec(struct pci_dev *rcec);
->  bool is_cxl_error(struct pci_dev *pdev, struct aer_err_info *info);
->  bool cxl_forward_error(struct pci_dev *pdev, struct aer_err_info *info);
->  void cxl_proto_err_flush(void);
->  #else
->  static inline bool is_aer_internal_error(struct aer_err_info *info) { return false; }
-> -static inline void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info) { }
-> +static inline bool cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info) { return false; }
->  static inline void cxl_rch_enable_rcec(struct pci_dev *rcec) { }
->  static inline bool is_cxl_error(struct pci_dev *pdev, struct aer_err_info *info) { return false; }
->  static inline bool cxl_forward_error(struct pci_dev *pdev, struct aer_err_info *info) { return false; }
-
+I would suggest making the test as device-agnostic as possible so
+other devices can be more easily added in the future. For example, add
+a helper function to detect known "pure memory" BARs, so all
+device-specific detection and setup logic can live there. We can put
+that in the test .c file for now and move it to the library
+if-and-when another test wants to use it. It probably makes sense to
+merge this with the driver framework but I think I need to see more of
+what's involved to really make a call.
