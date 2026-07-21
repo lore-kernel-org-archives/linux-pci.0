@@ -1,65 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 073E83793D2
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 16:05:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6080646C4AE;
+	Tue, 21 Jul 2026 16:10:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784649949; cv=none; b=TAZt0hChyLlIP6T8PRPmkSr8Yv5iGuaM0CKAZyK1ScxvUN6+GSzXqiC3NoqTP2ahS+U+31xPnv0ivBN+v/BSh0LMwHEo/PDb5JC3aXkj9HPhuQcCrtNNEMjRTcvXIMRjU7Hd+eWt1VHOfkTNR+4YlESp+k6jCjNTHuP1n9R7yfs=
+	t=1784650204; cv=none; b=AvhhgXthUgJUEGfyULehOC8zolGxTvTfmWAgGXZMDiFcSx1TH1SiCiujb23kb9oqVgKmXPgwCT0mPbc+SqHmXf4GaoIbUlmBmysomnufW4CJW4l9Sppw5PZy+vTeL49IGAgUAhRCZcSYfDMLXH0JNP58Or6YRIvO64u0Opa0W7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784649949; c=relaxed/simple;
-	bh=hLFVHa8izh3gSNNNHBzIYfap8mfSK+MVWoM5kJtYtuM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oWBz7u6tyytwHCTkvYA1mBeV1uoSgi30+5fm2gvzakz+tNra+RIzgnG7k2BnYdlOBcE2XbUrn+kjqehxZc5LdNmKYFfM2eEv2L4r4iGZcKecbjDcWn8aXM+8Thnj01n6MPsUXXDp5W6GhXglhLvTTJ0agAvRW/WRMC7jU/PBGtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cCRfuru/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784650204; c=relaxed/simple;
+	bh=tfBqgRwo5lSxjdc+tWvb4JILEyOEQw+AekmxGo4B3W0=;
+	h=From:To:Cc:Date:Message-ID:MIME-Version:Subject; b=XPbL5CQKyICORmboGTMkE4EuesZ/1Fxlo3dqbe+N1S2StSDZQ76wzY71hBpr7oEeIxetxKoHcgJmTiG8f4M8lDc9VmRv86kZjOHDCfLhe/wKX3LgDHidEHhLsXPn0NTJIzxS5N7wH7bbtjclPbmWyTxsGDvfvjxu20itKbE+vBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=VkQoe+6z; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cCRfuru/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F4C51F00A3F;
-	Tue, 21 Jul 2026 16:05:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784649947;
-	bh=hLFVHa8izh3gSNNNHBzIYfap8mfSK+MVWoM5kJtYtuM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cCRfuru/Hb2mwU4vrRpEd6fOe1Bw6Nlr9qDuBUDI5tYSPOOhyRm3DhJhCVLyP4oNZ
-	 WHVa26lER0IJZHNph4LFvra34/sHjbyTqMBGK9/9L7rrqxOtwJIm69szcHYckiTKJW
-	 9M+0vC2NITttFRVhSTqVDWMmFZd+hnpxKB1FWLSTile4O8AkXlyax40Y6vXu4h+gHQ
-	 gLe6QzxkeJJ7H4Fz6N37rTQnnjxLMY4zTNzQ/L0IcFCdQhJrVYmU3a9d8SyeYwWD2l
-	 x1kGdoZ9vTOPge167sQ7ZlRL5F4eG8yiCEwIMYo0tupSo7xonbXoKB/6hLbq4LgNyd
-	 uPEqszsUfOdmQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: j721e: Fix incorrect max_lanes for J7200
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Takuma Fujiwara" <t-fujiwara1@ti.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260721155743.3347659-1-t-fujiwara1@ti.com>
-References: <20260721155743.3347659-1-t-fujiwara1@ti.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 16:05:47 +0000
-Message-Id: <20260721160547.7F4C51F00A3F@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="VkQoe+6z"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-ID:Date:Cc:To:From
+	:references:content-disposition:in-reply-to;
+	bh=v08H3BIshCvUiuEYOPd8JivvigUoNVfXU/KEqUKJ4rQ=; b=VkQoe+6z79uhhQfYh9mCcTrmdA
+	En6LP8JHMx9P2K4iHugxxB3Rh+aT0DKK0e0A3ScCB/e3QoFkv9BIUaxJTVCvtoGIZynGLWmRGS8Jh
+	Tc06GAG02eBWo5Sp8wuHq2vD85fhTJc+aTicvfHVssqO53uA81aKvJMoLxjIWDi37azOFuf0MDIJb
+	FGTQFGU4O1wKwpye1g7R/uYtplM7+Macx4sfEm9sc6AUVGQuwftcTHxJjxrVeBC9ewQSCcUvX3V4N
+	uEH1c2uKtNo9JqnM7um/iOLt7XhSu1mSjYBlWThgOBOl9h6cccuclu+tHggZeCkfccBhk7WaAC6Ck
+	tOFZSS2A==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wmD2Y-0000000BodJ-1fNC;
+	Tue, 21 Jul 2026 10:09:55 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wmD2T-00000000GBH-2FMF;
+	Tue, 21 Jul 2026 10:09:49 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org,
+	Vinod Koul <vkoul@kernel.org>
+Cc: Frank Li <Frank.li@nxp.com>,
+	Kelvin Cao <kelvin.cao@microchip.com>,
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Dave Jiang <dave.jiang@intel.com>,
+	George Ge <george.ge@microchip.com>,
+	Jaeyoung Chung <jjy600901@snu.ac.kr>,
+	Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 21 Jul 2026 09:57:27 -0600
+Message-ID: <20260721155739.62120-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+X-Spam-Level: 
+Subject: [PATCH v2 00/11] dmaengine: miscellaneous fixes for ioat, switchtec_dma and plx_dma
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-> The PCIe Controller in the J7200 SoC supports a 4-lane configuration.
-> However, j7200_pcie_rc_data and j7200_pcie_ep_data incorrectly set
-> .max_lanes =3D 2, limiting operation to fewer lanes than the hardware
-> supports.
->=20
-> Set .max_lanes =3D 4 for both j7200_pcie_rc_data and j7200_pcie_ep_data to
-> match the hardware capability.
->=20
-> See J7200 Technical Reference Manual (SPRUIU1D), section 12.2.3.1.1
-> for further details: https://www.ti.com/lit/pdf/spruiu1d
->=20
-> Fixes: 3ac7f14084f5 ("PCI: j721e: Add per platform maximum lane settings")
-> Signed-off-by: Takuma Fujiwara <t-fujiwara1@ti.com>
+When reviewing the recent switchtec patchset[1], the Sashiko bot noticed
+a handful of pre-existing problems in the ioat and switchtec drivers.
+I attempted to fix those plus an unrelated issue reported in plxdma but
+when I submitted those patches, Sashiko found even more issues[2]. (It is
+relentless!).
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+I've fixed the issues reported with v1 of this series and the ones for the
+switchtec driver. But the pre-existing issues in ioat, plxdma and the
+dmaengine itself I've punted until I can find some time to dig into them.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721155743.3347=
-659-1-t-fujiwara1@ti.com?part=3D1
+Hopefully, this is good enough for Sashiko this time and we can get
+it reviewed by real humans.
 
+The series is based off of v7.2-rc4.
+
+Thanks,
+
+Logan
+
+[1] https://lore.kernel.org/all/20260707162045.23910-1-logang@deltatee.com
+[2] https://sashiko.dev/#/patchset/20260717221001.361421-1-logang@deltatee.com
+
+Changes since v1:
+
+ * Added a fix for switchtec_dma_alloc_chan_resources()'s error path
+   calling disable_channel() instead of properly halting the channel
+   before freeing the descriptor rings. (Per Sashiko)
+ * Added a fix for switchtec-dma channel structs being freed without
+   being removed from dma_dev->channels on a registration failure,
+   while the channel status IRQ is still live. (Per Sashiko)
+ * Added a fix for switchtec_dma_remove() using swdma_dev after it may
+   already have been freed by dma_async_device_unregister(). (Per
+   Sashiko)
+ * Added a fix for chan_status_irq being freed with the wrong API, and
+   a valid vector index of 0 being incorrectly treated as unset.
+   (Per Sashiko)
+ * Made switchtec_dma_chans_release() void, since nothing checked its
+   return value. (Noticed while reviewing the code for these changes).
+
+Logan Gunthorpe (11):
+  dmaengine: switchtec-dma: fix double-free in switchtec_dma_free_desc()
+  dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
+  dmaengine: switchtec-dma: halt channel on alloc_chan_resources error
+  dmaengine: switchtec-dma: fix channel leak on registration failure
+  dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
+  dmaengine: switchtec-dma: unlink channels before freeing on
+    registration failure
+  dmaengine: switchtec-dma: fix use-after-free of swdma_dev in remove()
+  dmaengine: switchtec-dma: fix chan_status_irq cleanup on create()
+    error
+  dmaengine: ioat: disable relaxed ordering before registering the
+    device
+  dmaengine: ioat: use sysfs_emit() in per-channel sysfs show()
+  dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
+
+ drivers/dma/ioat/init.c     | 18 ++++-----
+ drivers/dma/ioat/sysfs.c    | 22 +++++------
+ drivers/dma/plx_dma.c       | 10 ++---
+ drivers/dma/switchtec_dma.c | 78 +++++++++++++++++++++++++++----------
+ 4 files changed, 82 insertions(+), 46 deletions(-)
+
+
+base-commit: 1590cf0329716306e948a8fc29f1d3ee87d3989f
+--
+2.47.3
