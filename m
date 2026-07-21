@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE817372EF7;
-	Tue, 21 Jul 2026 10:56:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD86371CE3;
+	Tue, 21 Jul 2026 10:57:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784631375; cv=none; b=ctX7eGqVhwLnm8LMOxFfGWfioyPgE9tOP8ghg3fhGZx3PZK6M58oq9acZYlzl+ZZ/TwUkJeHzD2rBCNPzx0mCcZhLYyAa+m/389jweBgVsq/7Y3oxywopqMSTW5TbnPVneJa15SLPj9x9k9VPf/y5qgp+bQhv2mwdCJ77sQjoqc=
+	t=1784631434; cv=none; b=c+zt8qGIArnNKxZf/ESx0t0FKcUXVmNMI0PdcMqK+cqdHiXfZI3NW3NSut8x1rK+fxyL7sdiS+wWYCeQgd5cBNt05c/0Zjs2vFFqdfyph+d3J/B3vPeHJP75LsZzG4N59n9S+DJ+CHEqQ0aRJ0k/2Yiq+09wU+Sn0AwLclB57dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784631375; c=relaxed/simple;
-	bh=KyIOxOoDdBAs4KSRu9aLmSWLfdIFzYZWetCKtt1vVgs=;
+	s=arc-20240116; t=1784631434; c=relaxed/simple;
+	bh=FrPiBeNYBrkEVNu7Obl5HagOybFy3R7DOwC8GCslr60=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BG2sBt8Lj68Whv04CBt991Pp7YsNnhEGhqa922JjPn+ehkey8wCVPgHav6cbJJfRPXr82kfnMZ7GS4aT5KUibOZ+PZRt1Muk9JpnNv5pEUYtvVfA/fHWhZa3iQA3KiG9J1sLZ4CcFtHvsbz4EZu+5+JqF2PxHn4ARwiVDQ2wFUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=liFrF1u8; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=rE+LJprHK+Dm71iCekkbKHC6zuaCv0LicPbIsDWtI5wQl+uCoJi5nAeNiwiGPqwBsNZa+9SAq98kcUjTviuU66qgly6gOPEvxGDkYvC0UymYSHnBGm+Wmi0n6+YfudeUprvSc+14SFmnjIZ2KgtLzjeBavmFxUaDJmTp35Se/As=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cIu0Kok7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="liFrF1u8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 78A561F000E9;
-	Tue, 21 Jul 2026 10:56:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cIu0Kok7"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AE0961F00A3A;
+	Tue, 21 Jul 2026 10:57:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784631371;
-	bh=okHY/JiU2kBs+oDZ4vo0gxjN3oGqMmtAuO7URmWs3A4=;
+	s=k20260515; t=1784631431;
+	bh=BpON3fOLh10v0vA+o9g1WN6Hs4y84zPqKDZ0G0n+GhQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=liFrF1u86Dgalf5E9CBRJDGuB9kEKRLieFGUGa0EGnMYfpjEyEaEVmfFpwG2J8tXM
-	 yFR6tfl6ss6fg+xtJqydG/eqvZAlavce33I+x6To1TsbwM8AGcxxKLV9QXAHIRwOGb
-	 6BuwBl1s8ZS+qdzL5fSZKggD2L/U3wkCaAJI+uuffCfPrqly4AO6psCPTmPnEeye9b
-	 /nOeyAPxKFUY1FXTkr6XxGHTkMfdmuuLuMz4xpL4kaCUBlLM+TqTwfJ212ccpFnH3Q
-	 PAlR1IfkuLEo3bKyRoYUFfuSBZdQmB2UDsGc7VhFrj7IrX2kvG395oGEaBbqryHjJE
-	 KYD0rm9W7db/Q==
-Date: Tue, 21 Jul 2026 13:56:07 +0300
+	b=cIu0Kok7j/8vi433JBME1hP3gaHPa/UcbZAdMEwPlafyiLduVpebVjFktRfo3EWc2
+	 lHDpLLYU+qMH1LH6jmYm6+j0KULxg5j7yejOAtY3iGk85+dsdbYWoz9akjKDqxGYnC
+	 iGjNqFk/DS27tJTbeWYaZJBKFoEqupKM9UOlW/vAMEomzn3qV+VWsAEdfPSdrC1YAN
+	 kzCFw4Xey9hK66RzBzzsPMbapfMSfGm/380oXH7KksBIK8xnX8hA/XY+2DjdciMYFt
+	 PWK2egWvLMYIRI/ThXWyd5cqPfuWJOar5GrpVhEOO2+iVr0S2O4gppojQaMLc4/xHt
+	 xjR0QpbEjnl+w==
+Date: Tue, 21 Jul 2026 13:57:07 +0300
 From: Jarkko Sakkinen <jarkko@kernel.org>
 To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
@@ -48,10 +48,10 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
 	platform-driver-x86@vger.kernel.org,
 	linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
 	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] treewide: Add a flag to detect the Apple T2 chip
-Message-ID: <al9QR4v0Z_jkS44N@kernel.org>
-References: <20260721054506.11871-1-atharvatiwarilinuxdev@gmail.com>
- <20260721054506.11871-2-atharvatiwarilinuxdev@gmail.com>
+Subject: Re: [PATCH v3 1/2] treewide: Add a flag to detect the Apple T2 chip
+Message-ID: <al9Qg-0o0XNlo_Z6@kernel.org>
+References: <20260721063412.11588-1-atharvatiwarilinuxdev@gmail.com>
+ <20260721063412.11588-2-atharvatiwarilinuxdev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,9 +60,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260721054506.11871-2-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20260721063412.11588-2-atharvatiwarilinuxdev@gmail.com>
 
-On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
+On Tue, Jul 21, 2026 at 02:34:06AM -0400, Atharva Tiwari wrote:
 > Add a flag to detect Apple T2 chips on Intel Macs.
 > Cache the result to avoid repeated checks. That will
 > be used in upcoming patches.
@@ -71,11 +71,12 @@ On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
 > ---
 >  arch/x86/kernel/quirks.c                      | 105 ++++++++++++++++++
 >  include/linux/platform_data/x86/apple.h       |   5 +
+>  .../platform_certs/keyring_handler.h          |   8 --
 >  security/integrity/platform_certs/load_uefi.c |  38 ++-----
->  3 files changed, 118 insertions(+), 30 deletions(-)
+>  4 files changed, 118 insertions(+), 38 deletions(-)
 > 
 > diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-> index a92f18db9610..74b29738d404 100644
+> index a92f18db9610..300d6436060d 100644
 > --- a/arch/x86/kernel/quirks.c
 > +++ b/arch/x86/kernel/quirks.c
 > @@ -664,8 +664,113 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2083, quirk_intel_purley_xeon_ras
@@ -85,7 +86,7 @@ On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
 > +bool has_apple_t2_chip;
 > +EXPORT_SYMBOL(has_apple_t2_chip);
 > +
-> +static const struct dmi_system_id apple_t2_devices[] = {
+> +static const struct dmi_system_id apple_t2_devices[] __initconst = {
 > +	{
 > +		.matches = {
 > +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
@@ -193,7 +194,7 @@ On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
 > +	has_apple_t2_chip = dmi_check_system(apple_t2_devices);
 >  }
 > diff --git a/include/linux/platform_data/x86/apple.h b/include/linux/platform_data/x86/apple.h
-> index 079e816c3c21..50bbcc5134fc 100644
+> index 079e816c3c21..47b27dceab18 100644
 > --- a/include/linux/platform_data/x86/apple.h
 > +++ b/include/linux/platform_data/x86/apple.h
 > @@ -6,8 +6,13 @@
@@ -206,10 +207,26 @@ On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
 > +extern bool has_apple_t2_chip;
 >  #else
 >  #define x86_apple_machine false
-> +#define has_t2_chip false
+> +#define has_apple_t2_chip false
 >  #endif
 >  
 >  #endif
+> diff --git a/security/integrity/platform_certs/keyring_handler.h b/security/integrity/platform_certs/keyring_handler.h
+> index f92895cc50f6..a355f4400179 100644
+> --- a/security/integrity/platform_certs/keyring_handler.h
+> +++ b/security/integrity/platform_certs/keyring_handler.h
+> @@ -45,11 +45,3 @@ efi_element_handler_t get_handler_for_code_signing_keys(const efi_guid_t *sig_ty
+>  efi_element_handler_t get_handler_for_dbx(const efi_guid_t *sig_type);
+>  
+>  #endif
+> -
+> -#ifndef UEFI_QUIRK_SKIP_CERT
+> -#define UEFI_QUIRK_SKIP_CERT(vendor, product) \
+> -		 .matches = { \
+> -			DMI_MATCH(DMI_BOARD_VENDOR, vendor), \
+> -			DMI_MATCH(DMI_PRODUCT_NAME, product), \
+> -		},
+> -#endif
 > diff --git a/security/integrity/platform_certs/load_uefi.c b/security/integrity/platform_certs/load_uefi.c
 > index c0d6948446c3..b4096d4c828d 100644
 > --- a/security/integrity/platform_certs/load_uefi.c
@@ -280,6 +297,7 @@ On Tue, Jul 21, 2026 at 01:45:01AM -0400, Atharva Tiwari wrote:
 > 2.43.0
 > 
 
-Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
+
+Acked-by: Jarkko Sakkinen <jarkko@kernel.org>
 
 BR, Jarkko
