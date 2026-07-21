@@ -1,136 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0173161BF
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 17:08:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71FA438399A
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 17:10:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784653711; cv=none; b=gxeTjyezdPzvtP3YT1PiIaGfn1N1QxL042Hyd6ek2dH4n/zQfrmQHqi6AK5XNLe9llCIjFGH5Qt2KGtGP6uiaxmsRCqYUmWrlVGDX/pk0DLGOiKQbjme59Ueh/Q50x0wlDk9b6nqgMEiADkyYWkWWmCVQZaNXYX72UwdHeePxmk=
+	t=1784653859; cv=none; b=GXwqc+Pp+4I/bjXxTIefdZHCS5iY6sx5DXhSeKoXF+0Gsfb7/nNvCEc3pe6c5LXdN8Rf/9DD8W0Su7IccvV86ELfGX0ECPz+gFiae/02CoQaHXvmFzKL90zLpzEsE1aj0cMMsSFHpP1IIj5F3BTUeyon2kSHGvTYYDjVUxLijPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784653711; c=relaxed/simple;
-	bh=d/+EEdUQ/PBAuChfq+XZo1cv5gxnTHthmNlL8RbATk8=;
+	s=arc-20240116; t=1784653859; c=relaxed/simple;
+	bh=5+8fySjW6WyzjiFIjm9Q+LadletycgYV5uwGfzDP6xg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CX+WlCt6qrWdPSpcsTn4Bnd70raAy7vDvTZKw7NjKhtpkE1ZIQ07uJFgM16BYsubZbvsJIazl4yQEww0zrUim7ZvtBHMPSJ/9szcagOGlOvM1WdxBczDzyonugmPDVxfBVDpmSYv+tuuYQn8MjcGdhKaEPJYBSlLjh9VJgyq/Sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWXpabdF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QL4yOOOmN9pJNHOoX/RuGST0MURfLn7SFbqJH9jyhS8PQxjZtN3pgBYU/d/YpunCOVrcPvuQC27fGUlbRMq6IKjlkaUlrnvoGHVzx+kUfDbR+kAGoojpy+0EDn0iA7C59sIQ7IYesOrV4vGTlVlNWv48dQrm+1gW2DFaa0xd+E0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dHf2daCU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWXpabdF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B381F000E9;
-	Tue, 21 Jul 2026 17:08:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dHf2daCU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC5D41F000E9;
+	Tue, 21 Jul 2026 17:10:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784653710;
-	bh=eejtYFSfYQrwyaH+yPZ3tVpj7lpIoZ7iAQC126jsg2Y=;
+	s=k20260515; t=1784653858;
+	bh=qJ1KOWwzv9XEFOtAFAj4aQZ54KKVw0y2EOtpksb+j10=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hWXpabdF1wTxp95W/qsHVR9TBEQ/n3fruaLQ0tib2zf+eOO9AtTkEFFZ3sXB2JgiR
-	 wNdCFOaFLDw1T7c9la5fypz1xMT7N/NC/Grz2+S0PcI7EeC1IfKqJDWshFPcdHkj6s
-	 3GrGIaQo/M13dqk7mjZFughlobdDP8eZA1WE8YqG7v+tE88O3MkdykvNeRpTEJt2Bo
-	 hq9J3GAeP6jSkjKV76RF/Mektq46Ztq8uLjbgwln+L5RHadN7pLFwBD/Xtr5QJRwnC
-	 gOzAuG4ijciFuRTn5/rdC+Xqm0R2qYfcBNSYdnkEjlIwH4qkkqMU4Ogryc3AGQnoRM
-	 LXkJsQlclCQXQ==
+	b=dHf2daCUixkYFVG6qoj1KofjttW+7JNZlIskKrPLW9+fON6j9dsjF/uTm7Uvg7zfZ
+	 LcYxV8jVzHo9YsaZqKVAxsG2CNy/wj4gkz+BWM4e7wTbU9JUbUocLSNjv1L3tyw6ct
+	 Pe+n29fBTVUFKAq9ZgqUc9gMnrO2MMbFkPSWh5dfx1Tliz9Ei9CMzhJFLWfuwUYxPN
+	 b0X6IkLDXPaHgpKEem3Y+GA2gM25Z5glypWRnIMLSNcEDZc4/Hr4yh+A83OLmL7t9t
+	 fHcpYh/WRS022W9LjoqXnyxO/HBjuqelGVu32g0bBH6/Bo7zvceKaBe2erdQZsK6mO
+	 rUrF218kmw9UA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 06/10] rust: io: add static `cast()` method for views
+Subject: Re: [PATCH 03/10] drm/tyr: specify base type for registers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, ojeda@kernel.org, linux-pci@vger.kernel.org, "Alexandre
- Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260721-typed_register-v1-6-452d72b60262@garyguo.net>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, ojeda@kernel.org, "Danilo
+ Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>
+In-Reply-To: <20260721-typed_register-v1-3-452d72b60262@garyguo.net>
 References: <20260721-typed_register-v1-0-452d72b60262@garyguo.net>
- <20260721-typed_register-v1-6-452d72b60262@garyguo.net>
+ <20260721-typed_register-v1-3-452d72b60262@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 17:08:29 +0000
-Message-Id: <20260721170830.23B381F000E9@smtp.kernel.org>
+Date: Tue, 21 Jul 2026 17:10:57 +0000
+Message-Id: <20260721171057.CC5D41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [Low] The rustdoc example for `cast<U>` contains a visible code snippet t=
-hat will fail to compile if uncommented and used, because it uses an unsize=
-d `Region`.
-
-Pre-existing issues:
-- [High] Clock prepare/enable state is leaked on error paths during probe.
+- [Medium] The `DOORBELL` register array exceeds the 2MB size of `TyrRegist=
+ers`, which will cause bounds-checking failures during access.
 --
 
---- Patch [6]: [PATCH 06/10] rust: io: add static `cast()` method for views=
- ---
-commit bc8b9f11b619bcfae6c2907cbb69af497e185e8b
+--- Patch [3]: [PATCH 03/10] drm/tyr: specify base type for registers ---
+commit 0835e2ca0e8718a373eb876a88da9c8e609d5b61
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: add static cast() method for views
+drm/tyr: specify base type for registers
 
-Add a compile-time checked variant of try_cast() using the minimum size
-and alignment information.
+This commit adds a base parameter to register definitions in the tyr drm
+driver, associating them with a new TyrRegisters type bounded to a 2MB size.
 
-Signed-off-by: Gary Guo <gary@garyguo.net>
-
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index c5f07c38e59e5..0f8b166a6d3bb 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
+> diff --git a/drivers/gpu/drm/tyr/driver.rs b/drivers/gpu/drm/tyr/driver.rs
+> index 8348c6cd39295..401a4b321eaf8 100644
+> --- a/drivers/gpu/drm/tyr/driver.rs
+> +++ b/drivers/gpu/drm/tyr/driver.rs
 
 [ ... ]
 
-> +    /// # Examples
-> +    ///
-> +    /// ```no_run
-> +    /// use kernel::io::{
-> +    ///     io_project,
-> +    ///     Mmio,
-> +    ///     Io,
-> +    ///     Region,
-> +    /// };
-> +    /// #[derive(FromBytes, IntoBytes)]
-> +    /// #[repr(C)]
-> +    /// struct MyStruct { field: u32, }
-> +    ///
-> +    /// # fn test(mmio: &Mmio<'_, Region<0x1000>>) {
-> +    /// // let mmio: Mmio<'_, Region>;
-
-[Severity: Low]
-Does this rustdoc example compile successfully? Using an unsized Region here
-might result in a compile-time assertion failure if a developer uncomments
-and tries to use it.
-
-> +    /// let whole: Mmio<'_, MyStruct> =3D mmio.cast();
-> +    /// # }
-> +    /// ```
-> +    #[inline]
-> +    fn cast<U>(self) -> <Self::Backend as IoBackend>::View<'a, U>
+> @@ -43,6 +43,7 @@
+>  };
+> =20
+>  pub(crate) type IoMem<'a> =3D kernel::io::mem::IoMem<'a, SZ_2M>;
+> +pub(crate) type TyrRegisters =3D kernel::io::Region<SZ_2M>;
+> =20
+>  pub(crate) struct TyrDrmDriver;
+> =20
 
 [ ... ]
 
-I also noticed a pre-existing issue in drivers/gpu/drm/tyr/driver.rs:
+> diff --git a/drivers/gpu/drm/tyr/regs.rs b/drivers/gpu/drm/tyr/regs.rs
+> index 831357a8ef87d..ef21d90dbbc41 100644
+> --- a/drivers/gpu/drm/tyr/regs.rs
+> +++ b/drivers/gpu/drm/tyr/regs.rs
 
-drivers/gpu/drm/tyr/driver.rs:TyrPlatformDriver::probe() {
 [ ... ]
-        core_clk.prepare_enable()?;
-        stacks_clk.prepare_enable()?;
-        coregroup_clk.prepare_enable()?;
 
-        let mali_regulator =3D Regulator::<regulator::Enabled>::get(pdev.as=
-_ref(), c"mali")?;
-        let sram_regulator =3D Regulator::<regulator::Enabled>::get(pdev.as=
-_ref(), c"sram")?;
-[ ... ]
-}
+> @@ -1637,6 +1677,8 @@ pub(crate) mod doorbell_block {
+>      const STRIDE: usize =3D 0x10000;
+> =20
+>      register! {
+> +        base: TyrRegisters;
+> +
+>          /// Doorbell request register. Write-only.
+>          pub(crate) DOORBELL(u32)[NUM_DOORBELLS, stride =3D STRIDE] @ 0x8=
+0000 {
 
-[Severity: High]
-This is a pre-existing issue, but does this leak the clock prepare/enable
-state on error paths?
+[Severity: Medium]
+Will this result in bounds-checking failures during access?
 
-If operations like Regulator::get() fail and return an error like
--EPROBE_DEFER, the function returns early. The Clk instances are dropped,
-but it doesn't seem to unprepare or disable the clocks before they are
-wrapped in the Clocks struct later in the function.
+The DOORBELL register array is defined with an offset of 0x80000, 64 elemen=
+ts,
+and a stride of 0x10000. The final element is located at
+0x80000 + (63 * 0x10000) =3D 0x470000, which is approximately 4.6MB.
 
-Could this permanently lock the hardware clocks in the enabled state?
+However, this patch explicitly associates the DOORBELL array with the
+TyrRegisters base type, which is constrained to SZ_2M (2MB).
+
+When accessing DOORBELL with an index >=3D 24 via the TyrRegisters I/O regi=
+on,
+it will cause a compile-time build_assert! failure for static indices or a
+failure for dynamic indices because the access is out of bounds.
+
+Could the driver's mapped MMIO size of SZ_2M be undersized, or is the DOORB=
+ELL
+register improperly modeled here?
+
+>              /// Doorbell set. Writing 1 triggers the doorbell.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721-typed_regi=
-ster-v1-0-452d72b60262@garyguo.net?part=3D6
+ster-v1-0-452d72b60262@garyguo.net?part=3D3
