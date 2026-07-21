@@ -1,140 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA4A46D099;
-	Tue, 21 Jul 2026 16:16:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F373E49FB;
+	Tue, 21 Jul 2026 16:24:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784650565; cv=none; b=j2iDqDwsg+UFLtwnobI7p/bftKpJm7cNl4dmsaBnUzTEmYt8EM1Eyd7ytkV2jKAR2mjXvXIG3MEr1XFM40B2v8I0bhsFOvF5A/shUQKV3T1OfNp2HaesgZyhFMOQro23HNusp+f3koRS2a4lw7Ja1pirc750OO/AZ+jUr+3I+xo=
+	t=1784651076; cv=none; b=JIyEJ3COPd2DNoo+YubXzcxOxr0oOyR2467YSu35EUZ34xbQ0eaTVinDa5bFGGFwxc2g4Hl9hQd7H0sMlAwthvsv6u0B2JPQ4CMAgeGYESsym/M5gOp4zy3pE6LJpMLl4ZkGvMseNTt4EIvh80JPjPI3sNxoV0rnJPG1xEVZ7J8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784650565; c=relaxed/simple;
-	bh=NF7m7sXWK3jL3IZA54OTtlWh2pEqFednJNV0MuYAN7Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ivuU7tJNsViXmOgSX6fx8Uvft3eM8oAIxtmvxhu9wtjPZwIU6/7NlEK195vMSR74UzKBWdwDmuJxIRrFZYrGklwxQEAu8QXDMKCTdwp2IUxdJeEu7gz44I/yiM6JxVcWho4JvzR8XFidAJUH3addWNBDAUOaza9u3EZWuGUDOUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FZizH9xc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784651076; c=relaxed/simple;
+	bh=dDwWFhC+tuu4+IvCWR8U30wpiIjBVURdmCzbh7FyhvM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=U5UBwjj4RT/SFyB2aLFXXN35vr5xNwEzc2aDor80QoL77mwWRF6A+GXlYUpOZ4mAzwwBiqrXpG/PgLAolhZRcytkpOqe/PvUHdEbydpRZA3mgTe/zPtooJySOuutxYYRrbmtKKcmovVZaC3x/8koVdPwRA6XSKuh1VJEvGzhLfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CIEDyUan; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FZizH9xc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29E0B1F00A3A;
-	Tue, 21 Jul 2026 16:16:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CIEDyUan"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 390941F00A3A;
+	Tue, 21 Jul 2026 16:24:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784650563;
-	bh=RyNxHg81ZggZzP40oRqyhJVqp6HHsIYQX+/3Qe7jgCg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FZizH9xcKfn6V6Iul8ouhjkepfiIO8F/nazHbFOwG2B5NB7iMN5Eir/+NEZaPlb5F
-	 FugNAgK1xgpL/Nesmu4Bvkny5BFM4aajKg50R9S5RzUubezGca50MbReDfaayOzQRG
-	 OD2gN5w93FiTys5tyKgTGcDAZKXsBKRYLOkrKPX6ssOzW+b6QUPo53ZwYlPAFKFjqf
-	 BctljMuUwJPszKKZK75p4kUp7+4Mp5mNpsMEbRKb7tGMNQWV8f7asno2KO4AaSmwBm
-	 KTHVLG50BUZnAFtSugqjlhl5Z7k0cwVftpuoxmwF4R8NqmnvJKIBfqAxWtxb5czBbm
-	 FaK1cxtGBzYxQ==
-Date: Tue, 21 Jul 2026 18:15:55 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] dmaengine: dw-edma: Implement
- device_synchronize() callback
-Message-ID: <wnfdmxsof5opa3ozxlwd6e2kbmnziekkacbsjb3tpiueqcjrit@y6f6hh2e4l3y>
-References: <20260714-mhi-ep-flush-v2-0-b6a9db011e85@oss.qualcomm.com>
- <20260714-mhi-ep-flush-v2-1-b6a9db011e85@oss.qualcomm.com>
- <20260714122431.72B951F000E9@smtp.kernel.org>
+	s=k20260515; t=1784651074;
+	bh=HEEuGVSMvoEAHjKPgkMA6ncQro32RtQ+quUxFpLI9aw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=CIEDyUanfO43WZHlVFddlp17z57tixIJx6LzbTZwOjh3LgHVYKHc1MCmeDwCNpAf8
+	 6De3htNuLExGr7CmkMSZnwxC0aLpQVWLSd/TLVILorwY1/nUdelA7VLyT+vggsQoO+
+	 VhqeG/5Qq8DOwXCoQiNeeHCmB5OuxMyLx0UoNv5qhxcjI4IBr2/FFDtPhjDm+Q76Q5
+	 y1smFXC5vGqZLaqp/CyhB5kYcWvy1fj2EjycejgumfV4oCYqidK2o6wiMd6V4ThK7b
+	 wtIqCgV2eY3LeYM3jilSEx/Au8sy62Kp1lUKvSXgysg059b/gVASUo2zIaWduneE61
+	 GQ6kopRlmdQtQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 05/11] dmaengine: switchtec-dma: make
+ switchtec_dma_chans_release() void
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Logan Gunthorpe" <logang@deltatee.com>
+Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260721155739.62120-6-logang@deltatee.com>
+References: <20260721155739.62120-1-logang@deltatee.com>
+ <20260721155739.62120-6-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 21 Jul 2026 16:24:33 +0000
+Message-Id: <20260721162434.390941F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260714122431.72B951F000E9@smtp.kernel.org>
 
-On Tue, Jul 14, 2026 at 12:24:31PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> 
-> New issues:
-> - [High] Misuse of the `read_poll_timeout` macro causes an unlocked read-modify-write data race on `chan->status`, which can overwrite the interrupt handler's state completion and lead to an infinite loop.
-> 
-> Pre-existing issues:
-> - [High] The `dw_edma_device_terminate_all()` function performs read and write access to the state machine variables `chan->status` and `chan->request` without acquiring the required `chan->vc.lock` spinlock.
-> --
-> 
-> --- Patch [1]: [PATCH v2 1/3] dmaengine: dw-edma: Implement device_synchronize() callback ---
-> commit dad772ddd69c60671b5bb40802d893826d2fa9c5
-> Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> 
-> dmaengine: dw-edma: Implement device_synchronize() callback
-> 
-> This commit implements the device_synchronize() callback for the dw-edma
-> driver. It uses read_poll_timeout() to wait for all in-flight DMA operations
-> to complete by polling the channel status. Once complete, it drains the
-> tasklet using vchan_synchronize().
-> 
-> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > index c2feb3adc79fa..df0d1a946ed06 100644
-> > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> [ ... ]
-> > @@ -331,6 +332,20 @@ static int dw_edma_device_terminate_all(struct dma_chan *dchan)
-> >  	return err;
-> >  }
-> 
-> [Severity: High]
-> This isn't a bug introduced by this patch, but does
-> dw_edma_device_terminate_all() perform read and write accesses to state
-> machine variables without acquiring the required chan->vc.lock spinlock?
-> 
-> Looking at dw_edma_device_terminate_all(), it modifies chan->status and
-> chan->request locklessly:
-> 
->     } else if (chan->request > EDMA_REQ_PAUSE) {
->         err = -EPERM;
->     } else {
->         chan->request = EDMA_REQ_STOP;
->     }
-> 
-> Since the DMA engine API allows asynchronous termination, could this race with
-> dw_edma_done_interrupt() or dw_edma_device_issue_pending(), both of which hold
-> the spinlock while modifying the same fields? If the interrupt handler reads
-> chan->request right before terminate_all writes it, it might mistakenly start
-> the next pending transfer instead of stopping it.
-> 
-> >  
-> > +static void dw_edma_device_synchronize(struct dma_chan *dchan)
-> > +{
-> > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> > +
-> > +	/*
-> > +	 * Make sure all the in-flight DMA operations are completed before
-> > +	 * draining the tasklet using vchan_synchronize().
-> > +	 */
-> > +	read_poll_timeout(READ_ONCE, chan->status, chan->status != EDMA_ST_BUSY,
-> > +			  10, 0, false, chan->status);
-> 
-> [Severity: High]
-> Could this read_poll_timeout() macro usage introduce a regression by causing
-> an unlocked read-modify-write data race on chan->status?
-> 
-> The read_poll_timeout() macro expands to (val) = op(args). By passing
-> chan->status as the val parameter, it expands to:
-> 
->     (chan->status) = READ_ONCE(chan->status)
-> 
-> This loop executes without the chan->vc.lock spinlock. If the hardware
-> interrupt handler dw_edma_done_interrupt() fires exactly after READ_ONCE()
-> reads EDMA_ST_BUSY but before the assignment back to chan->status, it will
-> cleanly set chan->status = EDMA_ST_IDLE. 
-> 
-> Would the polling thread then overwrite the newly set EDMA_ST_IDLE state with
-> its stale EDMA_ST_BUSY value? Because the timeout parameter is 0, if this
-> corrupted EDMA_ST_BUSY state is written back, no further interrupts will arrive
-> to clear it, which could result in a permanent hang.
-> 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-This is a valid concern. This should be fixed by using a local variable for
-holding the chan->status.
+Pre-existing issues:
+- [High] The return value of `ioremap()` is not checked for NULL in `switch=
+tec_dma_create`.
+--
 
-- Mani
+--- Patch [5]: [PATCH v2 05/11] dmaengine: switchtec-dma: make switchtec_dm=
+a_chans_release() void ---
+commit f0ba8482174958251130470e113a8f5fc0e207f1
+Author: Logan Gunthorpe <logang@deltatee.com>
 
--- 
-மணிவண்ணன் சதாசிவம்
+dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
+
+It always returned 0, and no caller checked it.
+
+> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+> index 13efd4189bbb4..c752a1b05871d 100644
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+> @@ -1165,15 +1165,13 @@ static int switchtec_dma_chan_free(struct pci_dev=
+ *pdev,
+>  	return 0;
+>  }
+> =20
+> -static int switchtec_dma_chans_release(struct pci_dev *pdev,
+> -				       struct switchtec_dma_dev *swdma_dev)
+> +static void switchtec_dma_chans_release(struct pci_dev *pdev,
+> +					struct switchtec_dma_dev *swdma_dev)
+>  {
+>  	int i;
+> =20
+>  	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
+>  		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
+> -
+> -	return 0;
+>  }
+> =20
+>  static void switchtec_dma_chans_free(struct switchtec_dma_dev *swdma_dev)
+
+[Severity: High]
+This isn't a bug introduced by this patch, but while reviewing I noticed a
+pre-existing issue in switchtec_dma_create():
+
+drivers/dma/switchtec_dma.c:switchtec_dma_create() {
+        ...
+        swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
+                                 pci_resource_len(pdev, 0));
+
+        RCU_INIT_POINTER(swdma_dev->pdev, pdev);
+
+        nr_vecs =3D pci_msix_vec_count(pdev);
+        rc =3D pci_alloc_irq_vectors(pdev, nr_vecs, nr_vecs, PCI_IRQ_MSIX);
+        if (rc < 0)
+                goto err_exit;
+
+        irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
+        ...
+}
+
+Does this code check if ioremap() returns NULL?
+
+If ioremap() fails due to memory pressure or physical address space
+exhaustion, swdma_dev->bar will be NULL.
+
+The readw() call will then dereference this NULL pointer, which causes
+a kernel oops on the device probe path.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721155739.6212=
+0-1-logang@deltatee.com?part=3D5
