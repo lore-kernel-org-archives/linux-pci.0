@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1676346D2BB;
-	Tue, 21 Jul 2026 16:31:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F21319B5A3;
+	Tue, 21 Jul 2026 16:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784651469; cv=none; b=MHSwa2Cf+GPoJmYOnUZPhL+05f8+e/LvzyJT89/wmoNYBDu411aHZJDlerSv7cYqL2Dx7TrtmDyvLRjCGj4ubGGFW6h+mP0NXL4uV9VVB+VVWWSr3q5/Hzab9ypOraXaGnK1eMTlnRkhPEDZf40waaWBLbwQc388XS50/vXZEbA=
+	t=1784651503; cv=none; b=LDt0CI/bhRcoO1Sd4WcBPc063DDillCD9JwpJddCxf5yyxWn0vslotr/RWsNg87vKammsiOTt+uEVDHNBgAFsEVP318IBiG25Z8AIYs3FIt4Qw/rvkKDvwddatGRZ+OUINwVvlklu4ox64NMzmBcKXocrwGzLK1JhDT12DmElmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784651469; c=relaxed/simple;
-	bh=0BEMgH7BeCBC9GIU91wYk5G+v7xPd6dq9KbwdX5MNZg=;
+	s=arc-20240116; t=1784651503; c=relaxed/simple;
+	bh=oSkqbYsT57Uhh47Nn43Ehxhf658vR74Vq2LBl+Zsxck=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g0ayAlaAFfIOgw2rTnFAc75Gd91iBvVqR0Xneok5UJtvrFcrWYBpeeA86xWcdkOFlU0qgDQoejAcZra6cvS3UbZjl98HKNzWxf/F1SJoSzxhT3yXHpaEu3meFFA+h93fEKjI6ddKpBfFa6xVcbXjF3S4vMbtP+iZpGJ0eqpmfxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MuaB1Z+w; arc=none smtp.client-ip=192.198.163.10
+	 In-Reply-To:Content-Type; b=BrZRUnVJrMPnw+ecsLejzupHdcBFTUbq3Gst8Lw0wAN5bk9BijoA9syDF+KuLZDhQ3tdmzu+yp8fTrxHHA4OnBuhqCIIQ9hiGjX18XqiKMmK1QkGhtVyIn5eNkkAYoLUdOyN6YKLTACVcAhFZmrHvJsM7ffnI96N/v/rWeUj9Us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YDYjODna; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MuaB1Z+w"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YDYjODna"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784651467; x=1816187467;
+  t=1784651501; x=1816187501;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=0BEMgH7BeCBC9GIU91wYk5G+v7xPd6dq9KbwdX5MNZg=;
-  b=MuaB1Z+w2OjoLEaFWvJoJLN3VwzKk8KoRm4fJ3Goy3nnOBNCHX/aXPM5
-   OaMnkbCeCH/e2/fjWVoGLQJcAo2Ie6HlJZX/3Litr5v+aB8vBLL7rlmg0
-   7z5RgEM4fAqyOsBV2bv+GO0G324cr+3F4+lmg0mbXPeEirwabCxjmQkbR
-   +3muNqdxNKGVHRYMi5W6lNpbp+QxT8VP5I5gfOXyHrzzpX92rYqnFTWcb
-   X3b35qRvFG/OF07MlCIiC3fJHuXmZxoCfrjv+AE/G6USR0H5fhoUVfiRL
-   Jw10WEpB1vztzvQNYoxJduPgmcAquRCi4y5i8n6gTsk7SHVOc+hYFnFRT
-   g==;
-X-CSE-ConnectionGUID: 8QgWhw/OQ7KOYiOEn+GCOg==
-X-CSE-MsgGUID: qZJRvitiTHqiztQMQVQ1Jg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11853"; a="96623997"
+  bh=oSkqbYsT57Uhh47Nn43Ehxhf658vR74Vq2LBl+Zsxck=;
+  b=YDYjODnaXaHdJL7GR9S5ABBuM/mRrH7xQlbfRDnuIs3MiVDPU5FcUi+O
+   Nth6iOuBrn3IBrEQjehrB/pPv+MEWtaXv8qLrHyGU070vw0UCCFFeQ4Je
+   5kxYwvQ5Am28ueIC1EViWKDvZKH3lt2uOdp9p/mE9As+DxcaM9wv26haQ
+   1VP0KpQQMEkWPLf32AmxfDVRbBMKA2ufwpRAsVF4bpqaxYInwdk+MgC+f
+   L6pXUIcJeUtbPj6OqM7+g9SIXk5Q+jbhNg4Vq1n0QTcoPMGfGCIT6N8Nh
+   5xg3xfdkfvjkTwr+2OL+8SREcHEAL3ZeKf1qyhAqgtwupqM/NYj9VroVC
+   w==;
+X-CSE-ConnectionGUID: 4Hh3gRoHRya017TgdkHsHg==
+X-CSE-MsgGUID: vurcD8+vQNKWm2w+2xD9jQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11853"; a="85297862"
 X-IronPort-AV: E=Sophos;i="6.25,177,1779174000"; 
-   d="scan'208";a="96623997"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 09:31:06 -0700
-X-CSE-ConnectionGUID: fk71XVOTR4izltGA2iR/mg==
-X-CSE-MsgGUID: bl/xLh03R6ylMqDnGyNRMg==
+   d="scan'208";a="85297862"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 09:31:41 -0700
+X-CSE-ConnectionGUID: g8booNh7QYaPY4NOqA3PPw==
+X-CSE-MsgGUID: muK8gKtuStm1POZdlw1TBQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,177,1779174000"; 
-   d="scan'208";a="261372468"
+   d="scan'208";a="281085855"
 Received: from bradocaj-mobl.ger.corp.intel.com (HELO [10.125.109.244]) ([10.125.109.244])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 09:31:06 -0700
-Message-ID: <c9e140e9-f962-453b-9e84-0b2e7148d93f@intel.com>
-Date: Tue, 21 Jul 2026 09:31:04 -0700
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 09:31:39 -0700
+Message-ID: <ec8a1857-df4a-45d4-9554-954116af5084@intel.com>
+Date: Tue, 21 Jul 2026 09:31:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,85 +52,95 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 09/11] dmaengine: ioat: disable relaxed ordering before
- registering the device
+Subject: Re: [PATCH v2 10/11] dmaengine: ioat: use sysfs_emit() in per-channel
+ sysfs show()
 To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
  Vinod Koul <vkoul@kernel.org>
 Cc: Frank Li <Frank.li@nxp.com>, Kelvin Cao <kelvin.cao@microchip.com>,
  =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- George Ge <george.ge@microchip.com>, Jaeyoung Chung <jjy600901@snu.ac.kr>,
- Sashiko <sashiko-bot@kernel.org>
+ George Ge <george.ge@microchip.com>, Jaeyoung Chung <jjy600901@snu.ac.kr>
 References: <20260721155739.62120-1-logang@deltatee.com>
- <20260721155739.62120-10-logang@deltatee.com>
+ <20260721155739.62120-11-logang@deltatee.com>
 Content-Language: en-US
 From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260721155739.62120-10-logang@deltatee.com>
+In-Reply-To: <20260721155739.62120-11-logang@deltatee.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
 On 7/21/26 8:57 AM, Logan Gunthorpe wrote:
-> ioat3_dma_probe() disabled PCIe relaxed ordering after calling
-> dma_async_device_register(), so if an error occurs and the code jumps
-> to err_disable_interrupts, the function returns with the device still
-> registered in the core's dma_device_list while the caller frees the
-> ioatdma_device struct, leaving a dangling registration that anything
-> walking the device list can dereference after it's been freed.
+> Convert the sprintf() calls in the per-channel sysfs attribute show()
+> functions to sysfs_emit().
 > 
-> Move the capability read/write ahead of dma_async_device_register()
-> instead. Nothing after registration depends on relaxed ordering
-> already being disabled, and nothing before it depends on the device
-> being registered, so this is a plain reordering. It also means every
-> remaining step after registration can't fail, so there's no need to
-> ever have to unregister the device once registered.
-> 
-> Fixes: 511deae0261c ("dmaengine: ioatdma: disable relaxed ordering for ioatdma")
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.kernel.org
 > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
 Acked-by: Dave Jiang <dave.jiang@intel.com>
 
 > ---
->  drivers/dma/ioat/init.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
+>  drivers/dma/ioat/sysfs.c | 22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
 > 
-> diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
-> index 737496391109..a57024c4b066 100644
-> --- a/drivers/dma/ioat/init.c
-> +++ b/drivers/dma/ioat/init.c
-> @@ -1170,15 +1170,6 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
->  		       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
->  	}
+> diff --git a/drivers/dma/ioat/sysfs.c b/drivers/dma/ioat/sysfs.c
+> index e796ddb5383f..976134df8108 100644
+> --- a/drivers/dma/ioat/sysfs.c
+> +++ b/drivers/dma/ioat/sysfs.c
+> @@ -24,12 +24,12 @@ static ssize_t cap_show(struct dma_chan *c, char *page)
+>  {
+>  	struct dma_device *dma = c->device;
 >  
-> -	err = dma_async_device_register(&ioat_dma->dma_dev);
-> -	if (err)
-> -		goto err_disable_interrupts;
-> -
-> -	ioat_kobject_add(ioat_dma, &ioat_ktype);
-> -
-> -	if (dca)
-> -		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
-> -
->  	/* disable relaxed ordering */
->  	err = pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
->  	if (err) {
-> @@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
->  		goto err_disable_interrupts;
->  	}
+> -	return sprintf(page, "copy%s%s%s%s%s\n",
+> -		       dma_has_cap(DMA_PQ, dma->cap_mask) ? " pq" : "",
+> -		       dma_has_cap(DMA_PQ_VAL, dma->cap_mask) ? " pq_val" : "",
+> -		       dma_has_cap(DMA_XOR, dma->cap_mask) ? " xor" : "",
+> -		       dma_has_cap(DMA_XOR_VAL, dma->cap_mask) ? " xor_val" : "",
+> -		       dma_has_cap(DMA_INTERRUPT, dma->cap_mask) ? " intr" : "");
+> +	return sysfs_emit(page, "copy%s%s%s%s%s\n",
+> +		dma_has_cap(DMA_PQ, dma->cap_mask) ? " pq" : "",
+> +		dma_has_cap(DMA_PQ_VAL, dma->cap_mask) ? " pq_val" : "",
+> +		dma_has_cap(DMA_XOR, dma->cap_mask) ? " xor" : "",
+> +		dma_has_cap(DMA_XOR_VAL, dma->cap_mask) ? " xor_val" : "",
+> +		dma_has_cap(DMA_INTERRUPT, dma->cap_mask) ? " intr" : "");
 >  
-> +	err = dma_async_device_register(&ioat_dma->dma_dev);
-> +	if (err)
-> +		goto err_disable_interrupts;
-> +
-> +	ioat_kobject_add(ioat_dma, &ioat_ktype);
-> +
-> +	if (dca)
-> +		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
-> +
->  	if (ioat_dma->cap & IOAT_CAP_DPS)
->  		writeb(ioat_pending_level + 1,
->  		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
+>  }
+>  static const struct ioat_sysfs_entry ioat_cap_attr = __ATTR_RO(cap);
+> @@ -39,8 +39,8 @@ static ssize_t version_show(struct dma_chan *c, char *page)
+>  	struct dma_device *dma = c->device;
+>  	struct ioatdma_device *ioat_dma = to_ioatdma_device(dma);
+>  
+> -	return sprintf(page, "%d.%d\n",
+> -		       ioat_dma->version >> 4, ioat_dma->version & 0xf);
+> +	return sysfs_emit(page, "%d.%d\n",
+> +			   ioat_dma->version >> 4, ioat_dma->version & 0xf);
+>  }
+>  static const struct ioat_sysfs_entry ioat_version_attr = __ATTR_RO(version);
+>  
+> @@ -118,7 +118,7 @@ static ssize_t ring_size_show(struct dma_chan *c, char *page)
+>  {
+>  	struct ioatdma_chan *ioat_chan = to_ioat_chan(c);
+>  
+> -	return sprintf(page, "%d\n", (1 << ioat_chan->alloc_order) & ~1);
+> +	return sysfs_emit(page, "%d\n", (1 << ioat_chan->alloc_order) & ~1);
+>  }
+>  static const struct ioat_sysfs_entry ring_size_attr = __ATTR_RO(ring_size);
+>  
+> @@ -127,7 +127,7 @@ static ssize_t ring_active_show(struct dma_chan *c, char *page)
+>  	struct ioatdma_chan *ioat_chan = to_ioat_chan(c);
+>  
+>  	/* ...taken outside the lock, no need to be precise */
+> -	return sprintf(page, "%d\n", ioat_ring_active(ioat_chan));
+> +	return sysfs_emit(page, "%d\n", ioat_ring_active(ioat_chan));
+>  }
+>  static const struct ioat_sysfs_entry ring_active_attr = __ATTR_RO(ring_active);
+>  
+> @@ -135,7 +135,7 @@ static ssize_t intr_coalesce_show(struct dma_chan *c, char *page)
+>  {
+>  	struct ioatdma_chan *ioat_chan = to_ioat_chan(c);
+>  
+> -	return sprintf(page, "%d\n", ioat_chan->intr_coalesce);
+> +	return sysfs_emit(page, "%d\n", ioat_chan->intr_coalesce);
+>  }
+>  
+>  static ssize_t intr_coalesce_store(struct dma_chan *c, const char *page,
 
