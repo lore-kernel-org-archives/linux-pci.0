@@ -1,181 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5743254BD;
-	Tue, 21 Jul 2026 16:36:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EBF33374F
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 16:42:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784651799; cv=none; b=ChtRqnLt/9U/aN3PrP83dr00pNokxR+IwakkcYYANetA07cHGIjscCcMh2GXYXjU1SLYv2o+WXlY0QiaN+FTeGqBfOG2pHV68rLsfbaEqCk9om/V21jyLU1PacC2SiSsdEOMgDSacS9na/MvT4xWBqKVVdAXg9hXWDdAAYm9DHg=
+	t=1784652154; cv=none; b=kCHjR9juRavsQ9GHZTooLAHSChyFWmxq7HS9TP/EJonEWs7/lOrQ4HuHyh1ZaxUGk47TuuwVL5U+zHDy9MJ+Ghtl1huSC8wo/eEhQ2a7Fj6zmdN9JoOA8NQZ2ds6YexNoukNvbrWppA4eukt9ukXqj8NcRXbH9gVvaTBd/Nm9vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784651799; c=relaxed/simple;
-	bh=dQBRuTQNIPTlB0snqosTGQWNXzuMTeePAkASfMwNGMg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZwpD5vZFzddX7b02CVJBkDEhHSYWNijzU0E+D+tev1KN9O0CjkJoHsSbyaSBqQfWLuizTwm3navpvC2vdXn4RiKCOzU8ink775CEILM0fgMZnymkWtW23ROzQLPLlOKqDIwUDUYjmx5DPFEnux94rI3g/pJqOEhrdLrNOgqwgPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XB2e9rXx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784652154; c=relaxed/simple;
+	bh=GIfGUuIU3pl2cgxwAJGa0+OOUyyDOpmxsESRPNmCKAE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Yq/aBx7VvVcGz4uN+6S1cLY/g3xGmvDPxOMNu/FYQonfkVREqYKXjfq0uY0/Lt72AGObLL6XWcZI62hun2mBhk7CW78PssxvH654JyC0A/KM0s4yp4iK9QL6qwj+cNLh/QaKh8Kuh1szdE6ILow2Ab8QDZIutduwGxo5mGH4hRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Asn22bNF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XB2e9rXx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 905601F000E9;
-	Tue, 21 Jul 2026 16:36:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Asn22bNF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 007951F000E9;
+	Tue, 21 Jul 2026 16:42:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784651797;
-	bh=dptWaGrz99xJ8FmC83NpagCyFHvs6A+N8YRLNh+gCw4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XB2e9rXxrBkC0ocmE1NrX8sSaBxsW1pFUx/SacVSMxNZEw4d0uH9jwr8zwdMd5Z/m
-	 tM3NXh1CHcVLg9AV4LX8e6x9PXWjPcm6NZAcb6UZc8giD/LZkIYDN3IiOg09RrUv47
-	 EJYM6X9xmU0CMMjVvgzdpadauSwnYcNE1kIMGcH2jFu8LgSnkJvjfEi4EEXtN+cMuy
-	 bewzj/M5DNwZhfIwKHFZcY09hy/BTIeo+BOW6EEH0yz50NiA9x3CfVUlfbT5ToTC3t
-	 hUvu13SBp9LPgXj4l73ky3+xTt2K3p44P+9AgsN4cATzDsaGdcpxq4Q81GUccK35VG
-	 3pAQ8TSrI2SEw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 07/11] dmaengine: switchtec-dma: fix use-after-free
- of swdma_dev in remove()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org
-In-Reply-To: <20260721155739.62120-8-logang@deltatee.com>
-References: <20260721155739.62120-1-logang@deltatee.com>
- <20260721155739.62120-8-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 16:36:37 +0000
-Message-Id: <20260721163637.905601F000E9@smtp.kernel.org>
+	s=k20260515; t=1784652153;
+	bh=1tuetcqW7dzuDB3i06URqN3k17bRRDhE4VNhGkDKEd4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=Asn22bNFuvM58d4tSVRyMdJx6NB1cFbe7RmLXALpg5qmqlicem+yRYb5ifhex9Qgv
+	 xUfiZ+6Pq1/o3uD6MiDnhnihZCxnkSwYNHngCgqjyvZrEq4lbwYdT0AVgoYBYUqKv/
+	 lWkCQqqY0mBHR69eQAKxgni/hboJH5Y0DCdNI6uSoAHcOA/go/5PZCxpp4a6XJyL0Y
+	 KWJTU0JSYb0n7gxepwVkSw639QS6kurjLp3h74UUuw9xAGeNGcITkMXnK8IYqXpvk/
+	 RtrPBBFpUGZsC50TxeYeFpZE8IRrU3/ab4kDtny1DQxTG9Ss//qebfHDbZXyVg8Lg8
+	 4cOTbLkuKxmVw==
+Date: Tue, 21 Jul 2026 11:42:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lin Mohan <linmhwork@outlook.com>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>
+Cc: Ali Alaei <ali.alaei.tabatabaei@gmail.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow
+ Lake-HX
+Message-ID: <20260721164231.GA621153@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <191EE983-DD30-4B14-9B63-93AA0BF750DB@outlook.com>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On Tue, Jul 21, 2026 at 12:47:07PM +0000, Lin Mohan wrote:
+> Hi Bjorn,
+> 
+> I am Lin Mohan, the reporter of
+> https://bugzilla.kernel.org/show_bug.cgi?id=221137.
+> 
+> Since commit 22b47bd49e45 ("PCI: vmd: Handle BUS_RESTRICT_CFG value 3
+> for Arrow Lake-HX") has already been merged, could you please add the
+> following tags in a follow-up fix?
+> 
+> Reported-by: Lin Mohan <linmhwork@outlook.com>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221137
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221136
+> 
+> This patch fixes the same Mode 3 / Dynamic Bus Offset issue I
+> reported on the 8086:09ab VMD device (Arrow Lake-S).
 
-Pre-existing issues:
-- [High] Incorrect IRQ cleanup in `switchtec_dma_create` error path using `=
-free_irq` with a hardware vector index instead of `pci_free_irq`.
-- [High] Pending DMA transactions are not aborted during device removal, po=
-tentially causing DMA clients to hang indefinitely.
-- [High] Missing bounds check on the hardware-provided channel count allows=
- out-of-bounds MMIO accesses.
-- [Medium] Missing `put_device(dma->dev)` in the `switchtec_dma_create` err=
-or path causes a reference count leak on the PCI device.
---
+Thanks very much for confirming this!
 
---- Patch [7]: [PATCH v2 07/11] dmaengine: switchtec-dma: fix use-after-fre=
-e of swdma_dev in remove() ---
-commit 0e37b79ac2f6503c0a4dc42c7b0cf19efff70cbd
-Author: Logan Gunthorpe <logang@deltatee.com>
+I added the tags to the commit on pci/controller/vmd.
 
-dmaengine: switchtec-dma: fix use-after-free of swdma_dev in remove()
-
-This patch fixes a use-after-free regression in switchtec_dma_remove() by
-caching the PCI BAR in a local variable before dma_async_device_unregister()
-is called, avoiding access to swdma_dev after it is freed.
-
-Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.ke=
-rnel.org
-
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index 2a1ae27bd1a69..a7e25cb7c0b9f 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
-[ ... ]
-> @@ -1388,7 +1389,7 @@ static void switchtec_dma_remove(struct pci_dev *pd=
-ev)
-> =20
->  	dma_async_device_unregister(&swdma_dev->dma_dev);
-> =20
-> -	iounmap(swdma_dev->bar);
-> +	iounmap(bar);
->  	pci_release_mem_regions(pdev);
->  	pci_disable_device(pdev);
->  }
-
-While reviewing this patch, I noticed a few pre-existing issues in the driv=
-er
-that might be worth addressing.
-
-drivers/dma/switchtec_dma.c:switchtec_dma_create() {
-    ...
-    chan_cnt =3D readl(swdma_dev->bar + SWITCHTEC_REG_CHAN_CNT);
-
-[Severity: High]
-This is a pre-existing issue, but is it safe to use this hardware-provided
-channel count without bounds checking?
-
-If the endpoint returns an unexpectedly large channel count, this value is
-later used in switchtec_dma_chan_init() to calculate MMIO offsets:
-
-    swdma_chan->mmio_chan_fw =3D
-        swdma_dev->bar + SWITCHTEC_DMAC_CHAN_CFG_STS_OFFSET +
-        i * SWITCHTEC_DMA_CHAN_FW_REGS_SIZE;
-
-Since chan_cnt is never validated against the mapped length of the PCI BAR,
-could this result in out-of-bounds MMIO accesses?
-
-    if (!chan_cnt) {
-        pci_err(pdev, "No channel configured.\n");
-        rc =3D -ENXIO;
-        goto err_exit;
-    }
-    ...
-err_chans_release_exit:
-    switchtec_dma_chans_unlist(swdma_dev);
-    switchtec_dma_chans_release(pdev, swdma_dev);
-    switchtec_dma_chans_free(swdma_dev);
-
-[Severity: Medium]
-This is another pre-existing issue, but does this error path leak the device
-reference count?
-
-If dma_async_device_register() fails earlier in this function, we jump here,
-but there is no call to put_device() to balance the get_device() called
-previously. This could leave the PCI device with an elevated reference count
-permanently.
-
-err_exit:
-    if (swdma_dev->chan_status_irq)
-        free_irq(swdma_dev->chan_status_irq, swdma_dev);
-
-[Severity: High]
-This is a pre-existing issue, but could this lead to a use-after-free
-if an interrupt fires?
-
-The code requests the IRQ using pci_request_irq() with a hardware vector
-index, but attempts to free it here with free_irq() using that same vector
-index instead of the global Linux IRQ number. Since free_irq() expects a
-global IRQ number, it may fail to free the interrupt. The handler would
-remain registered while swdma_dev is freed right after this.
-
-Also, if the hardware uses vector 0, the if statement skips cleanup entirel=
-y.
-Should this use pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev)
-instead?
-
-    iounmap(swdma_dev->bar);
-    kfree(swdma_dev);
-    return rc;
-}
-
-
-drivers/dma/switchtec_dma.c:switchtec_dma_chan_free() {
-    ...
-    pci_free_irq(pdev, swdma_chan->irq, swdma_chan);
-    tasklet_kill(&swdma_chan->desc_task);
-
-    switchtec_dma_chan_stop(swdma_chan);
-
-[Severity: High]
-This is a pre-existing issue, but does removing the device without aborting
-pending transactions cause DMA clients to hang indefinitely?
-
-If a client is blocking on a completion object (e.g., via
-wait_for_completion), and the device is removed, the IRQ is freed and the
-hardware is stopped here. However, active descriptor rings aren't traversed
-to report DMA_TRANS_ABORTED. Can this prevent the client from ever unbindin=
-g?
-
-    return 0;
-}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721155739.6212=
-0-1-logang@deltatee.com?part=3D7
+I do still question whether that commit includes sufficient support
+for this Mode 3 feature, so I'm hoping Nirmal or someone else from
+Intel will chime in.
