@@ -1,125 +1,209 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1573471257
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 19:28:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4891242DFEC
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 19:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784662135; cv=none; b=XoCbgT5ghHbsxKre2SyK4Swje6llrTLVB5V0fWOPsjX1zVm7LVNQCpCCCLpG12nhPzbii64fr9bhuBgXYbToC8HGxpbuem9IRRk9mOMWwlwmi71wpE2HQpYI+r/a09/RTfjOJ/GHWaFS01Umw3l944EWhUPCas10k+0+K6QYWWQ=
+	t=1784662403; cv=none; b=lAJCld53wynfFVXdXdazHAbALcC8bL6WAOG1Dy46d+kiabNxKdXcMWVtH04gooB4aHagKo6OlDs2Wu9jc6hlLDgxKfJ5mcdtzwjBBZD6JGo+BpoHfmaWG10nPW8BXgSjSUk82NUnx24m41pqxRjEIIvF5bDMblZaRobGo3xpykY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784662135; c=relaxed/simple;
-	bh=4jJ3jTrtW1xO+i0JbjUSsc5IfsO2P6Uz8IY2VWPs0bs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mNPWVb/lgn4/ft0b3T2aPW3qM/jd9bfeghii5x/vk6fr/nxxpaGgDxUGxT4pmeT5yiXJmib3cv0nwck475fp8cvVaBkyWInjwpYA6ZRIemisyY7Vnx0POkW/M6qC0sbK4JIZAHvbGhnjajbaH9S+mfev3lGuFpxqidKGxLHRo2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RoVETkDt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784662403; c=relaxed/simple;
+	bh=DOyzqGanUpt++cBhhu0vNvcfSNWl9oIRKU4Wm95lP78=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U9ptSsjUreKypgNgi5jKlKwyAj77aQiMTThVa2Smz2lMXrdQmjRw6+Lk3LtmLJIK4lnm9u4pLXzVgdxrrWuWqE1creFAIgckSndkTR+XJ3osfFPZI/LyLAdMl8EVg+r/eZ/EqhFghaxbFRZHcYTffAwB14qZzjquqbO58doXT1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YtOfXauu; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RoVETkDt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22A401F000E9;
-	Tue, 21 Jul 2026 19:28:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784662134;
-	bh=bcmXKE9WkfyDfoDSkMz409dA38nzMoRhrKM9S01PicU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RoVETkDtNMKVfq86O205jE+RhHu+4OorI9Ft4skvjD2c0nYqZoYLgVkx5RhL73xGO
-	 ZjuwjvnKMVcfnedT8oxEe+oCZl0tGAeXMxxlCA1z/BKoM9RgEj1QXDGr1Abjvy6lpR
-	 FJkjKOQ+vwmd21CgRAf/Fqulvr7yrIdiE0rrqE+/+cczuQKJzK8U39Xtao0wIxpxK2
-	 HjdhKAIFb7pHz82HIUi3raTTrj2P9LnTLf+al4xB4mMiEliaPK4akUqdsE9o2+Rw4C
-	 08v5Vh1tzyID6a10ZCd42eEqS5kTvz5vrDc+PYXF2oK+4MxUut55Brn4IvhymAEGlH
-	 yM5u9MARSdOIw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] mm: Add unmap_mapping_file() helper
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260721185252.1670958-2-kwilczynski@kernel.org>
-References: <20260721185252.1670958-1-kwilczynski@kernel.org>
- <20260721185252.1670958-2-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 19:28:53 +0000
-Message-Id: <20260721192854.22A401F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YtOfXauu"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954f5e8020so17614675e9.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 12:33:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784662400; x=1785267200; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=TedH6DZIw0iIku/jI16FhHpwD7ZfCo0oG7EAmvGAzsI=;
+        b=YtOfXauusHv+h2avYpD9+kUb3zmqfR4Uv30qGeTiXs5Jlr0O1rCQVZW789eZ0g0Lok
+         734FXtmZYA7l/HDaV60eeJ8B4ahsSJ594XINk0Cmiw9bNwJZ7XLlCFKzJHL4eMZ2sY1r
+         XP5be4boGENGXMsRm0efE7aHMniY/rtDlfUFhGmTNjbBMDtTHLV+0HekD1+xquFpxqe8
+         RbxRZlQEY1jAgxrSRiV1MI7Wi+6WMacIw8hqp6WO59JQGDijdtukaXmaNR7wFJXj1s05
+         uWUn9JM2xMgj6C5JIzcdMyCiviXnQxjXu3fjLwYfQ9QGptXwmC1bcKUZp8tbVCzXaBOU
+         JA2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784662400; x=1785267200;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=TedH6DZIw0iIku/jI16FhHpwD7ZfCo0oG7EAmvGAzsI=;
+        b=BUDoBS7J2Vx6kmcjiUQvGTNYpe28fvo3X5/tM2PdgSQKuqq0FprSAq761Mbt5k1HGo
+         5k5oNykw3vQAJWRD7Q/Uo4+i8lFv1mt6JSufztEZmzMikpBSxo51RfAv6AqgjkMz0N5r
+         0kLcXUfDFdy04HryY2FqFAK1Q4061YcZINmCH76X0SMPUHac1SXf8aBiQ1z2TsO6A0hk
+         jSnJblTR+CDnCF/oz01+NIIuv2mmb7FCSlSfqtUqH4ZU2YqkuKlUcevyblLBLFZzuBV/
+         XXczfeJMfpfl9WpQI3dkRomcvE0yzzeVF8VMhyNJ31Iw6aZJwgVRIIxsuYYdXKushIiS
+         AXAw==
+X-Gm-Message-State: AOJu0YykOsSzugykAH4H0facJ+0+/tVpiFZ9DGc402MkjPdDxbNFveCk
+	f43FvXAuJiGT5nDw1cKeTSOvaCgM/YD+owA3ZiZZukxDVhpbI5MxsC3I
+X-Gm-Gg: AfdE7ckW3B64vRSFu9jQ8jPt+fUVcMJXgbT0eeP/59evb1AN4BRjJTD+JUwrnGwIDUn
+	6BpZxyZnb9/PzPoqjMIDJyjTHniS3H3DnwXq6sspyytG5Fz2BayjLnFTsB12QV7cCbsMQVzwp5x
+	d53/1qK5ZEdxCdXZmMg5eL7IhF9A8YAVNDYywDYXELprdf5G3XDAXd7kGphkLuFdaDrWRdYnaIN
+	wSpdia1KO9muVs9so95eq929oyAnS/l2lQwEhQbLTXoCV1Lmwwz1HbXDJK1VQLVxOEMbL5XQ2h2
+	UBeDGfZFsaOs2ONcddLeWhH0wy5YIBo5PNJJnt55Pvgj3xnCRYVEcWbUxfnol2xhK0NpsdhoFaI
+	kkdHyE2ufMbNZoe8ndF3ydUh+DgnSSbs9CMfkLLDSeaYyinWxU2iWgebTm0kEemM60dE8NWcf12
+	XTPCGIklvEZUA5D7eQHUNbb+EfjdqK9Xyq0MvDDCPzDJBPFeZjuzl2ab7vVF7g9GJyBKOydQp5
+X-Received: by 2002:a05:600c:4755:b0:495:4a34:16e3 with SMTP id 5b1f17b1804b1-4954a3d0d04mr237398735e9.1.1784662400112;
+        Tue, 21 Jul 2026 12:33:20 -0700 (PDT)
+Received: from c64.fritz.box (p200301048f0fe900a0f9605663da8872.dip0.t-ipconnect.de. [2003:104:8f0f:e900:a0f9:6056:63da:8872])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f6fa848fcsm31159705f8f.0.2026.07.21.12.33.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jul 2026 12:33:19 -0700 (PDT)
+From: Saverio Miroddi <saverio.pub2@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Saverio Miroddi <saverio.pub2@gmail.com>
+Subject: [PATCH] PCI/DOE: Add debug messages for transaction failures
+Date: Tue, 21 Jul 2026 21:33:10 +0200
+Message-ID: <20260721193310.1179300-1-saverio.pub2@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Calling `unmap_mapping_file()` on a hugetlb file will cause a read=
--to-write deadlock on `i_mmap_rwsem`.
-- [Low] The macro `vma_interval_tree_foreach` does not exist in the kernel,=
- causing a build failure.
---
+DOE feature discovery reports only -EIO when several distinct mailbox
+status and response-validation failures occur. The abort used to recover
+the mailbox can then clear the status before it is captured, leaving the
+existing failed-to-cache-features message insufficient to identify the
+failing phase.
 
---- Patch [1]: [PATCH 1/2] mm: Add unmap_mapping_file() helper ---
-commit e0347448b942ec3ee37afc554cc84ed398530cd2
-Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+Add dynamic-debug messages immediately before the silent error returns.
+Log the transaction phase and raw status or response length, but do not
+change mailbox behavior or expose payload contents.
 
-mm: Add unmap_mapping_file() helper
+On a WD_BLACK SN8100 NVMe device (15b7:5050, firmware 830ZRR0A), whose
+mailbox creation fails on every boot, these messages identified the
+failure: the device accepts the Discovery request but never presents a
+response, and the transaction times out with the Busy bit still set:
 
-This commit adds a new helper function unmap_mapping_file() to unmap
-all VMAs associated with a specific file, regardless of the address
-space they are attached to. It iterates over the VMA interval tree under
-i_mmap_lock_read() and zaps matching VMAs.
+  pci 0000:05:00.0: DOE: [500] response timeout, status: 0x00000001
+  pci 0000:05:00.0: DOE: [500] failed to cache features : -5
+  pci 0000:05:00.0: DOE: [500] failed to create mailbox: -5
 
-> diff --git a/mm/memory.c b/mm/memory.c
-> index a620d425ec95e..ba3e3e35150ea 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
+Signed-off-by: Saverio Miroddi <saverio.pub2@gmail.com>
+---
+ drivers/pci/doe.c | 40 ++++++++++++++++++++++++++++++++++------
+ 1 file changed, 34 insertions(+), 6 deletions(-)
 
-[ ... ]
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 7b41da4ec11a..3c376add3293 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -282,8 +282,11 @@ static int pci_doe_abort(struct pci_doe_mb *doe_mb)
+ 
+ 		/* Abort success! */
+ 		if (!FIELD_GET(PCI_DOE_STATUS_ERROR, val) &&
+-		    !FIELD_GET(PCI_DOE_STATUS_BUSY, val))
++		    !FIELD_GET(PCI_DOE_STATUS_BUSY, val)) {
++			pci_dbg(pdev, "[%x] Abort completed, status: %#010x\n",
++				offset, val);
+ 			return 0;
++		}
+ 
+ 	} while (!time_after(jiffies, timeout_jiffies));
+ 
+@@ -323,13 +326,19 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
+ 	if (FIELD_GET(PCI_DOE_STATUS_BUSY, val))
+ 		return -EBUSY;
+ 
+-	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
++	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
++		pci_dbg(pdev, "[%x] status error before request: %#010x\n",
++			offset, val);
+ 		return -EIO;
++	}
+ 
+ 	/* Length is 2 DW of header + length of payload in DW */
+ 	length = 2 + DIV_ROUND_UP(task->request_pl_sz, sizeof(__le32));
+-	if (length > PCI_DOE_MAX_LENGTH)
++	if (length > PCI_DOE_MAX_LENGTH) {
++		pci_dbg(pdev, "[%x] request length %zu DW exceeds maximum\n",
++			offset, length);
+ 		return -EIO;
++	}
+ 	if (length == PCI_DOE_MAX_LENGTH)
+ 		length = 0;
+ 
+@@ -369,6 +378,10 @@ static bool pci_doe_data_obj_ready(struct pci_doe_mb *doe_mb)
+ 	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
+ 	if (FIELD_GET(PCI_DOE_STATUS_DATA_OBJECT_READY, val))
+ 		return true;
++
++	pci_dbg(pdev,
++		"[%x] Data Object Ready cleared prematurely, status: %#010x\n",
++		offset, val);
+ 	return false;
+ }
+ 
+@@ -400,8 +413,11 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
+ 	/* A value of 0x0 indicates max data object length */
+ 	if (!length)
+ 		length = PCI_DOE_MAX_LENGTH;
+-	if (length < 2)
++	if (length < 2) {
++		pci_dbg(pdev, "[%x] invalid response length: %zu\n",
++			offset, length);
+ 		return -EIO;
++	}
+ 
+ 	/* First 2 dwords have already been read */
+ 	length -= 2;
+@@ -447,8 +463,11 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
+ 
+ 	/* Final error check to pick up on any since Data Object Ready */
+ 	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
+-	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
++	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
++		pci_dbg(pdev, "[%x] status error after response: %#010x\n",
++			offset, val);
+ 		return -EIO;
++	}
+ 
+ 	return received;
+ }
+@@ -515,12 +534,17 @@ static void doe_statemachine_work(struct work_struct *work)
+ retry_resp:
+ 	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
+ 	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
++		pci_dbg(pdev,
++			"[%x] status error while waiting for response: %#010x\n",
++			offset, val);
+ 		signal_task_abort(task, -EIO);
+ 		return;
+ 	}
+ 
+ 	if (!FIELD_GET(PCI_DOE_STATUS_DATA_OBJECT_READY, val)) {
+ 		if (time_after(jiffies, timeout_jiffies)) {
++			pci_dbg(pdev, "[%x] response timeout, status: %#010x\n",
++				offset, val);
+ 			signal_task_abort(task, -EIO);
+ 			return;
+ 		}
+@@ -564,8 +588,12 @@ static int pci_doe_discovery(struct pci_doe_mb *doe_mb, u8 capver, u8 *index, u1
+ 	if (rc < 0)
+ 		return rc;
+ 
+-	if (rc != sizeof(response_pl_le))
++	if (rc != sizeof(response_pl_le)) {
++		pci_dbg(doe_mb->pdev,
++			"[%x] invalid Discovery response size: %d\n",
++			doe_mb->cap_offset, rc);
+ 		return -EIO;
++	}
+ 
+ 	response_pl = le32_to_cpu(response_pl_le);
+ 	*vid = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID, response_pl);
+-- 
+2.54.0
 
-> @@ -4555,6 +4555,32 @@ void unmap_mapping_pages(struct address_space *map=
-ping, pgoff_t start,
->  }
->  EXPORT_SYMBOL_GPL(unmap_mapping_pages);
-> =20
-> +/**
-> + * unmap_mapping_file() - Unmap all mmaps of an open file.
-> + * @file: The file to unmap.
-> + *
-> + * Unmap every VMA with vm_file set to @file, regardless of the address
-> + * space it is attached to.  This also covers files with f_mapping
-> + * swapped to a different address space at open time, since such VMAs
-> + * cannot be found through the file's own inode mapping.
-> + */
-> +void unmap_mapping_file(struct file *file)
-> +{
-> +	struct address_space *mapping =3D file->f_mapping;
-> +	struct vm_area_struct *vma;
-> +
-> +	i_mmap_lock_read(mapping);
-> +	if (unlikely(mapping_mapped(mapping))) {
-> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, 0, ULONG_MAX) {
-
-[Severity: Low]
-Does this compile? I couldn't find the macro vma_interval_tree_foreach()
-in the tree. Should this be mapping_rmap_tree_foreach() instead?
-
-> +			if (vma->vm_file !=3D file)
-> +				continue;
-> +			zap_vma(vma);
-
-[Severity: High]
-Can this cause a deadlock on hugetlb VMAs?
-
-If this is called on a hugetlb file, we hold mapping->i_mmap_rwsem for read
-via i_mmap_lock_read() from earlier in this function.
-
-When zap_vma() processes a hugetlb VMA, it eventually calls
-__hugetlb_zap_begin(), which attempts to acquire the exact same rw_semaphore
-for write via i_mmap_lock_write(vma->vm_file->f_mapping).
-
-Since we are already holding it for read, won't this result in an immediate
-read-to-write deadlock?
-
-> +		}
-> +	}
-> +	i_mmap_unlock_read(mapping);
-> +}
-> +EXPORT_SYMBOL_GPL(unmap_mapping_file);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721185252.1670=
-958-1-kwilczynski@kernel.org?part=3D1
