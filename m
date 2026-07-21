@@ -1,326 +1,200 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0002e601.pphosted.com (mx0a-0002e601.pphosted.com [148.163.150.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC4C367B60;
-	Tue, 21 Jul 2026 15:29:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784647769; cv=none; b=F0vmhPAAGOtDe+WLtcinpNv/JOkt/R77B0pvulpHRu4zAh6v96Zy3Wzbzi+0Luh4Ct/2kLDRvlmkZTgpShm6LIBSObQO72SSh+WtAfsxB9XPQrB5kloQw4weT434IUdiFc7k0h/5yYSFHrG5Otw8swB6o/aKcWZV/grVT+IwBVs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784647769; c=relaxed/simple;
-	bh=6YNNZIFpa1OsYiAePENW2CYKRSiDbIY4qh/xUvVrYXo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gzXhe0Wq7LxTmPVipYCxRbTNzTwEtxkygUwGEZHXft0UIBbBr7NhTiG5TQu1ONqihSjJmu5wXtmr86FzMXkZGt1Obt2R04ILVvxXJG91R3gOMegCwDTAhoZ5NOivn+a3M094t7zc3qLXOiH6XbTsy4UQAkz1xcES5s1JfQQmOeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5GtKRfC; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B422C46C4B1;
+	Tue, 21 Jul 2026 15:58:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.150.75
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784649492; cv=fail; b=GujR95fZ7RfmCfPtI/X8D7rDqCjaBccNX68jhX9kPhWUHHAG11NCl5d58pfRgmPm4uGn7tuLeblaut39qlpNiimYtbyy8EBsH41+l87/74AlE/orChGc790PcDA1owwRtdTwI56HvDVX3iQpaSTQ9OHH1TJgIItBkElU17LmF54=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784649492; c=relaxed/simple;
+	bh=HyMpFGOE40YfgZsemYJ3c+D5Uuf2Cao22ChH7UV10F8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZjcYYSiDvYHZgNJzpCVqzg3fkSDA6/juDAJtieiTLCadMXqjTCC81YKRoqEY8C9WeXt1bwHNbHd7DXbEoC7BZbJYNrQ/LTDNIWfCw3DFyD1U1pBdWUIJNb8jz73VJyvkSSpbb8oAB7uLPAIpTMIRnkEW8XNTJNTf39D8l4p+4Sk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=o4uyGkAI; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=QvN7EoKQ; arc=fail smtp.client-ip=148.163.150.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5GtKRfC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 642351F00A3A;
-	Tue, 21 Jul 2026 15:29:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784647768;
-	bh=vKR0zlu4bK2eye4JJSxzjC3UQbyoedFDIfb+cFpF7yI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=P5GtKRfCBc3xqCC+TlINJzdnXVxCjDemORr98LEM7iXwLwu4yz4RT8DrZSjAtEFoU
-	 3kA0E7mWKVBNs/9BurxF5ZwULBFcnTvqN6jR75eYS9VlJPFA8316RTtLVSvXT+Fcsc
-	 3QvzzKNYPzS/VCtbrXkbtrg0gmMfttl2OM4JhsNEWMdlkOAl6px66BrylVDE4esJlT
-	 qV46lU8gq9rhUGeWqnKL3yEQhPs5rkqnG85TzZKgTE2mpcT5zcR5UaUYISXXuhMv07
-	 WoNj0TAYsg6k2OMZnI5Qf8ZwIMqx6M+PUQjKKGD76fxuxgG/5rEiDZhTT98iHEPPfa
-	 lZs01SJgzeajQ==
-Message-ID: <e74d963c-8cf0-42ee-8b83-86e8c65dd0c7@kernel.org>
-Date: Tue, 21 Jul 2026 17:29:22 +0200
+	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="o4uyGkAI";
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="QvN7EoKQ"
+Received: from pps.filterd (m0384305.ppops.net [127.0.0.1])
+	by m0384305.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 66LDjKln3231775;
+	Tue, 21 Jul 2026 10:57:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=proofpoint-05-2026; bh=9ECexg9MHu9Wl
+	rjsn9DPeTTcyYXEi131txLVOLiFCmo=; b=o4uyGkAIecCz4JIP1i7NDFHzBmbKK
+	OzJuIlH7yS6Q50AKcboMRGQg/rbDs42nGcnKOctjmcGwZa9geHIsxbBvcG/Z5ZOD
+	pkDieB5plMHpUNHrYe4fk216Rq+KhQsfT1qHfiyscrofWPf42rWEX0BvIIfELDa3
+	WDkloTYExauHWG0nLR24j9G+GGlV/uvRjPfz94JuPwZ7Cvp9cfg/8MmH/VaaYL2+
+	Oo3Rb9V9S4MI9NtfY9ywA47q4cXHWbBhFlctqE/k1wFRKYsqHdgTV6xM7mS2Wolb
+	mwtQc9N6hahXLy09HUXSle88Lnecqr1Z1gd99pXoyLJD1cvO8n37O9siw==
+Received: from ph8pr06cu001.outbound.protection.outlook.com (mail-westus3azon11012070.outbound.protection.outlook.com [40.107.209.70])
+	by m0384305.ppops.net (PPS) with ESMTPS id 4fj869hj15-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 21 Jul 2026 10:57:55 -0500 (CDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=s5VonHyRfQJKEXKmcnz1cdCKIWGRD/eBbTEdzKFhNJCvI26yFHfCkN5DEKshqdQ+1JmLsFspwYSFoA9WJjAlKxZMKOowyDyIZcrPtqMcR8YBWyVC5bmTazHqIye2ez2YB+y9D7b1nn1lPMnNGSvvZawixg52ekEB3Ow6Dex+koG4khczD93liHQvu0UlEx/56x2yy+XEWpGZ5cLjYfdixx4aj0gh6eLVR4nOq72kqa1ES51wXoOqqXCyozx3UYEfwZGfpMXhZRcJgmeyjlhGCuh6g1ldh7+9G5Ly63zSRj/bH/3G/ZtSMUAojZFHrL6Y4hH6/3jo7TXDSR2PV0VdzQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9ECexg9MHu9Wlrjsn9DPeTTcyYXEi131txLVOLiFCmo=;
+ b=hZkd8CpU7X/+EpOiohHnK/taCQAeqFmshshFAns8kw+lVy55o1nvUFOJ+OG0knbqFFfEnMYCf6ETYbFU8u7S9cE+nKjfFB9HjkU4cc9zHkPqmRBFXYaZVMuXhDCDPe8OV9ppeHptvdkh16AhftF18ttJY7xF7r8OHfJgcd3ss04bCtnVs4jAyvaH6Fg3mHvyQasZNG+9fgiq9BZN0BUV9O7Dwyg1CI2w+1kf3IuO7NYD/yn9foF4Vx0ltnWlkPisXw807BC0mQlD8sBqE9lRONuesk8ijIGRIGg+/CKKTB4C+ylxOaenbmgr3fnWiPewnpfQhD+SIgk4rZB0zW+Rhg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9ECexg9MHu9Wlrjsn9DPeTTcyYXEi131txLVOLiFCmo=;
+ b=QvN7EoKQTswmTyKYwTIFePZD7eYyVij0Iuc8lbQsFoQpi1BVY1UcCLcG85AAv0cahc/n89mWhJhxyuJ2eyK6u2hid1hQm+gED5YVE7yEkA+szyEtZe9omjjmjitlOi1lk4JA6vFW5fYig6T9GhyNL2efUDA/HUWVhUXT9hsdfIE=
+Received: from CH0PR04CA0099.namprd04.prod.outlook.com (2603:10b6:610:75::14)
+ by PH3PPF1D715CB68.namprd10.prod.outlook.com (2603:10b6:518:1::78d) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.12; Tue, 21 Jul
+ 2026 15:57:44 +0000
+Received: from CH2PEPF0000009F.namprd02.prod.outlook.com
+ (2603:10b6:610:75:cafe::80) by CH0PR04CA0099.outlook.office365.com
+ (2603:10b6:610:75::14) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.245.10 via Frontend Transport; Tue,
+ 21 Jul 2026 15:57:44 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ CH2PEPF0000009F.mail.protection.outlook.com (10.167.244.21) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.245.5 via Frontend Transport; Tue, 21 Jul 2026 15:57:44 +0000
+Received: from DLEE200.ent.ti.com (157.170.170.75) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 21 Jul
+ 2026 10:57:43 -0500
+Received: from DLEE214.ent.ti.com (157.170.170.117) by DLEE200.ent.ti.com
+ (157.170.170.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 21 Jul
+ 2026 10:57:43 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE214.ent.ti.com
+ (157.170.170.117) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Tue, 21 Jul 2026 10:57:43 -0500
+Received: from udc0488417.dhcp.ti.com (udc0488417.dhcp.ti.com [128.247.81.71])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 66LFvhmr1075688;
+	Tue, 21 Jul 2026 10:57:43 -0500
+From: Takuma Fujiwara <t-fujiwara1@ti.com>
+To: <linux-pci@vger.kernel.org>
+CC: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
+        <mani@kernel.org>, <vigneshr@ti.com>, <s-vadapalli@ti.com>,
+        <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: j721e: Fix incorrect max_lanes for J7200
+Date: Tue, 21 Jul 2026 10:57:43 -0500
+Message-ID: <20260721155743.3347659-1-t-fujiwara1@ti.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] treewide: Add a flag to detect the Apple T2 chip
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
- "H. Peter Anvin" <hpa@zytor.com>, Andreas Noever <andreas.noever@gmail.com>,
- Mika Westerberg <westeri@kernel.org>, Yehezkel Bernat
- <YehezkelShB@gmail.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Jarkko Sakkinen <jarkko@kernel.org>,
- Mimi Zohar <zohar@linux.ibm.com>, Roberto Sassu <roberto.sassu@huawei.com>,
- Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
- Eric Snowberg <eric.snowberg@oracle.com>, Paul Moore <paul@paul-moore.com>,
- James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-usb@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
- linux-security-module@vger.kernel.org
-References: <20260721063412.11588-1-atharvatiwarilinuxdev@gmail.com>
- <20260721063412.11588-2-atharvatiwarilinuxdev@gmail.com>
-From: Hans de Goede <hansg@kernel.org>
-Content-Language: en-US, nl
-In-Reply-To: <20260721063412.11588-2-atharvatiwarilinuxdev@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PEPF0000009F:EE_|PH3PPF1D715CB68:EE_
+X-MS-Office365-Filtering-Correlation-Id: bf511526-0fc7-49e2-1721-08dee740cd48
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|23010399003|1800799024|36860700016|6133799003|10067099003|56012099006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	0YnLiJadx66MOPPx5uji+m5Yiyd1kJoZD3Tcy3Ys8uNbR/ezCtZwHjXrsWAAm/VmFuO6JbFHgDVKBuBfLzsJ+jVRQSJrfH5k+82uc5xKLJpxcr2KmsVblyAYOl5+huqckymZTBp2d4w9lO7lyZBXcDWtkv28a5W1qJnigk1xd8+CgWOPwUxNKF1FvluI/mPHvg1foyB18gCtW7isiNLwqLybPlVIqvp7C8girAe+Z1yJbi9F9XQUNttT8/yZ+emLGUBsUhEVCrOXt/dGenWmUanyojLt/t6gV/ZJTViRYZhKEf7ZSES1KLYh5+/ldsUrf5in8O4LMPHd5WwV1nawAGspWH4M+V0ofUn8iX1AwHxSd0wb4iK3vB96Cudb8BrvOxwC604vLqnkS2rQ2BkvEI5SVoRKN4QCcpJRhHvy2KH2tXPPKxfiFlHEeeg2Xml9ctlHRes3JKKT14YaT/XjQ6meimTmROYm/FQvQ98ygJ/OV9pu6bzzf6G1/rQBlQDwpSJYcuIFzx/tY9BpOaYK4GWmHtip4ADvl3qNHTNPh913v4CSQ9ZMgMYz/IICkzAGQWUSZ8y1P9qtifTh0RCIAPOl9rP9AZfTf4gqPemxem5FGUBr6NDkRXTeK3Y6ehp6/Oip5z42+qSJxH8CNuQRpBjtwJFFwfJMjv15BcUAW9IEonOHWd0KWYHPHOUdVJnqRYan7MDFZBqvBRVw2Dy+ew==
+X-Forefront-Antispam-Report:
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(23010399003)(1800799024)(36860700016)(6133799003)(10067099003)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	uLYmmKMhT/+THhENqk5csQhVpYHyYdvorSa9+9d0aBzbTeKY6vUhKktjgXnbmn6ArQpr5ulZTZ+/MT9852CIQzCkaFB61YZvMmi7qC3oCPOHVUaNRXIAwIhLp9QPihN1Ykw5sBUnGcJrzSg5NdJawr2PhT3xZ1XU8ygOoDX+tMHB0R46ROVvO8hUUoMiWYQc3Mx1eY+RREGKeydZQdwfBgWNclnBN9/OYT8FV2CZPaYnI0CrWJV9TfXN3U9zbxhYyfhaydZ1On9mnb2AzHuudfl+mu2VNbU3A7Zkqd4WDDXoEqyff0BynEWB3KCq/WCUn/gxLusDYqFPfU41UG0A2sHCuDp+AxS5BhdWPFEJzZ65rriSVtfy0ys5BDvBmS7b1LixDOAysFELZ7fcvlUJWuiw/AqOjojgSTacj9y3GyKDsLGzCb7/ipggi9FRB+eU
+X-Exchange-RoutingPolicyChecked:
+	irzxL1hzoB9J7uT9lR1FJuoV/8OCB64Q3NjxSM1Nf8ccInM6YKeyqwSgZIEXmvkYd787FWYTsbOqCmeJinJC4zoDz4k5FCnQUeCMyZbGAkx0kxX+HtDar/pgtcSgn5C5PNkDrpYaF3QmCwvYpeli7Oo6kdzNm7jUv/02sTl4SGrDtIBrg67mwMIfkIzeUrygbVqRCJAHGz9jYu+tqZnP2JaENmxC/NSLF8N0A1h9ZFrQaLBnfaa2bCyjIxVdkANIK5yhm8isG77SgvRfpOC+Q+GAm3ODZhJMM844r87n6IrbuTOoXORdiTt83oV84wKWIyqt4Wjqhl2+obWWZhgHQA==
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2026 15:57:44.0217
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf511526-0fc7-49e2-1721-08dee740cd48
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CH2PEPF0000009F.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF1D715CB68
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIxMDE2OCBTYWx0ZWRfX2c5r1VwgyUYk
+ vVlp0sPDHfMhwOJCQWx9TUSDJ4Q672LmQRvIDL0LZWsztJu/I1+LHVfyC+oF2+ZVbX0LJV3UWKP
+ ZCxBp+HM12UxV7w+jXez1+MwYMd6xOM7kRR5QOVRIBeBhnF9xZPAN1A6+dUA6+usRbMW5XI4lp+
+ l+lnHX8dnwpKl9ephEFNLwXRsvy9y6DkW8q03F60EW184V4As2Xg2xnHcrfWVD/C0IAakTMcsDi
+ 7gQz6kFGIuk/4As8HOCc0rYVKU8zY4oQmOpaSnCSvcKkLccYWU8iVU9YD8JuwhxITCbmbZDLDwt
+ MFf9Lxmt5MQsISy2sMpQND1u8j6cXXRkSAoNLo+MgPAX/vx0YXDGFT5ZjGxez5i1I/b4A5ugVj1
+ Oj1E7IlUyp00Jf+5Ucwqkt60AS9lDOgChKd63nlrT1EwLpV9tdVn52ClOFAAWAimD/xXruzdfXt
+ 1Ilf6S0l91cbjhoBGUA==
+X-Authority-Analysis: v=2.4 cv=WbI8rUhX c=1 sm=1 tr=0 ts=6a5f9703 cx=c_pps
+ a=c7CpAOS9Jb82g9OYW51qCA==:117 a=f+v6EHfkeJbVwR46tk4DMg==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=RAioF0-LDSMA:10 a=s63m1ICgrNkA:10
+ a=V5UXEbMT0ywA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Z8NIEmU8O1QQgoT56wFK:22
+ a=taLDd7a_hP9WKsMzeGRc:22 a=sozttTNsAAAA:8 a=qMGItftXEORy81xHaKgA:9
+X-Proofpoint-ORIG-GUID: syzOhcue8BZBvScaKYlqlzFdur78IvYV
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIxMDE2OCBTYWx0ZWRfX6/swKK1fcCRd
+ eXyAVaExAtCw/RB1X6jmKSIGp4Xn9Lpfvkb3RYhLPZT1OiT9p6r6geO/jCkh1SKTd0e786P2Hwy
+ hmyUT0gsAx6aEKIUGCDFmVjQ5H5e5C0=
+X-Proofpoint-GUID: syzOhcue8BZBvScaKYlqlzFdur78IvYV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-21_03,2026-07-20_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1011 impostorscore=0 malwarescore=0 phishscore=0
+ priorityscore=1501 lowpriorityscore=0 adultscore=0 suspectscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607210168
 
-Hi,
+The PCIe Controller in the J7200 SoC supports a 4-lane configuration.
+However, j7200_pcie_rc_data and j7200_pcie_ep_data incorrectly set
+.max_lanes = 2, limiting operation to fewer lanes than the hardware
+supports.
 
-On 21-Jul-26 08:34, Atharva Tiwari wrote:
-> Add a flag to detect Apple T2 chips on Intel Macs.
-> Cache the result to avoid repeated checks. That will
-> be used in upcoming patches.
-> 
-> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-> ---
->  arch/x86/kernel/quirks.c                      | 105 ++++++++++++++++++
->  include/linux/platform_data/x86/apple.h       |   5 +
->  .../platform_certs/keyring_handler.h          |   8 --
->  security/integrity/platform_certs/load_uefi.c |  38 ++-----
->  4 files changed, 118 insertions(+), 38 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-> index a92f18db9610..300d6436060d 100644
-> --- a/arch/x86/kernel/quirks.c
-> +++ b/arch/x86/kernel/quirks.c
-> @@ -664,8 +664,113 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2083, quirk_intel_purley_xeon_ras
->  bool x86_apple_machine;
->  EXPORT_SYMBOL(x86_apple_machine);
->  
-> +bool has_apple_t2_chip;
-> +EXPORT_SYMBOL(has_apple_t2_chip);
-> +
-> +static const struct dmi_system_id apple_t2_devices[] __initconst = {
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,2"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,3"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,4"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,2"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,3"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,4"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir8,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir8,2"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir9,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "Macmini8,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacPro7,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "iMac20,1"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "iMac20,2"),
-> +		},
-> +	},
-> +	{
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "iMacPro1,1"),
-> +		},
-> +	},
-> +	{ }
-> +};
-> +
+Set .max_lanes = 4 for both j7200_pcie_rc_data and j7200_pcie_ep_data to
+match the hardware capability.
 
-This takes quite a bit of storage, struct dmi_system_id is not
-very efficient.
+See J7200 Technical Reference Manual (SPRUIU1D), section 12.2.3.1.1
+for further details: https://www.ti.com/lit/pdf/spruiu1d
 
-How about making this a NULL terminated array of strings:
+Fixes: 3ac7f14084f5 ("PCI: j721e: Add per platform maximum lane settings")
+Signed-off-by: Takuma Fujiwara <t-fujiwara1@ti.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-const char *apple_t2_devices[] __initconst = {
-	"MacBookPro15,1",
-	...
-	"iMacPro1,1",
-	NULL
-};
-
->  void __init early_platform_quirks(void)
->  {
->  	x86_apple_machine = dmi_match(DMI_SYS_VENDOR, "Apple Inc.") ||
->  			    dmi_match(DMI_SYS_VENDOR, "Apple Computer, Inc.");
-> +
-> +	has_apple_t2_chip = dmi_check_system(apple_t2_devices);
-
-and then here:
-
-	for (int i = 0; x86_apple_machine && apple_t2_devices[i]; i++)
-		if (dmi_match(DMI_PRODUCT_NAME, apple_t2_devices[i])) {
-			has_apple_t2_chip = true;
-			break;
-		}
-
-This should save some space and IMHO just having a compact list of
-product-names is more readable too.
-
-Regards,
-
-Hans
-
-
->  }
-> diff --git a/include/linux/platform_data/x86/apple.h b/include/linux/platform_data/x86/apple.h
-> index 079e816c3c21..47b27dceab18 100644
-> --- a/include/linux/platform_data/x86/apple.h
-> +++ b/include/linux/platform_data/x86/apple.h
-> @@ -6,8 +6,13 @@
->   * x86_apple_machine - whether the machine is an x86 Apple Macintosh
->   */
->  extern bool x86_apple_machine;
-> +/**
-> + * has_apple_t2_chip - whether the machine has the Apple T2 chip
-> + */
-> +extern bool has_apple_t2_chip;
->  #else
->  #define x86_apple_machine false
-> +#define has_apple_t2_chip false
->  #endif
->  
->  #endif
-> diff --git a/security/integrity/platform_certs/keyring_handler.h b/security/integrity/platform_certs/keyring_handler.h
-> index f92895cc50f6..a355f4400179 100644
-> --- a/security/integrity/platform_certs/keyring_handler.h
-> +++ b/security/integrity/platform_certs/keyring_handler.h
-> @@ -45,11 +45,3 @@ efi_element_handler_t get_handler_for_code_signing_keys(const efi_guid_t *sig_ty
->  efi_element_handler_t get_handler_for_dbx(const efi_guid_t *sig_type);
->  
->  #endif
-> -
-> -#ifndef UEFI_QUIRK_SKIP_CERT
-> -#define UEFI_QUIRK_SKIP_CERT(vendor, product) \
-> -		 .matches = { \
-> -			DMI_MATCH(DMI_BOARD_VENDOR, vendor), \
-> -			DMI_MATCH(DMI_PRODUCT_NAME, product), \
-> -		},
-> -#endif
-> diff --git a/security/integrity/platform_certs/load_uefi.c b/security/integrity/platform_certs/load_uefi.c
-> index c0d6948446c3..b4096d4c828d 100644
-> --- a/security/integrity/platform_certs/load_uefi.c
-> +++ b/security/integrity/platform_certs/load_uefi.c
-> @@ -3,42 +3,16 @@
->  #include <linux/kernel.h>
->  #include <linux/sched.h>
->  #include <linux/cred.h>
-> -#include <linux/dmi.h>
->  #include <linux/err.h>
->  #include <linux/efi.h>
->  #include <linux/slab.h>
->  #include <linux/ima.h>
-> +#include <linux/platform_data/x86/apple.h>
->  #include <keys/asymmetric-type.h>
->  #include <keys/system_keyring.h>
->  #include "../integrity.h"
->  #include "keyring_handler.h"
->  
-> -/*
-> - * On T2 Macs reading the db and dbx efi variables to load UEFI Secure Boot
-> - * certificates causes occurrence of a page fault in Apple's firmware and
-> - * a crash disabling EFI runtime services. The following quirk skips reading
-> - * these variables.
-> - */
-> -static const struct dmi_system_id uefi_skip_cert[] = {
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,2") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,3") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,4") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,2") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,3") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,4") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir8,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir8,2") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir9,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "Macmini8,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacPro7,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMac20,1") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMac20,2") },
-> -	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMacPro1,1") },
-> -	{ }
-> -};
-> -
->  /*
->   * Look to see if a UEFI variable called MokIgnoreDB exists and return true if
->   * it does.
-> @@ -165,10 +139,14 @@ static int __init load_uefi_certs(void)
->  	unsigned long dbsize = 0, dbxsize = 0, mokxsize = 0;
->  	efi_status_t status;
->  	int rc = 0;
-> -	const struct dmi_system_id *dmi_id;
->  
-> -	dmi_id = dmi_first_match(uefi_skip_cert);
-> -	if (dmi_id) {
-> +	/*
-> +	 * On T2 Macs reading the db and dbx efi variables to load UEFI Secure Boot
-> +	 * certificates causes occurrence of a page fault in Apple's firmware and
-> +	 * a crash disabling EFI runtime services. The following quirk skips reading
-> +	 * these variables.
-> +	 */
-> +	if (has_apple_t2_chip) {
->  		pr_err("Reading UEFI Secure Boot Certs is not supported on T2 Macs.\n");
->  		return false;
->  	}
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index b29a35fbfb5f9..a029c4e9c05f6 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -381,7 +381,7 @@ static const struct j721e_pcie_data j7200_pcie_rc_data = {
+ 	.quirk_detect_quiet_flag = true,
+ 	.linkdown_irq_regfield = J7200_LINK_DOWN,
+ 	.byte_access_allowed = true,
+-	.max_lanes = 2,
++	.max_lanes = 4,
+ };
+ 
+ static const struct j721e_pcie_data j7200_pcie_ep_data = {
+@@ -389,7 +389,7 @@ static const struct j721e_pcie_data j7200_pcie_ep_data = {
+ 	.quirk_detect_quiet_flag = true,
+ 	.linkdown_irq_regfield = J7200_LINK_DOWN,
+ 	.quirk_disable_flr = true,
+-	.max_lanes = 2,
++	.max_lanes = 4,
+ };
+ 
+ static const struct j721e_pcie_data am64_pcie_rc_data = {
+-- 
+2.34.1
 
