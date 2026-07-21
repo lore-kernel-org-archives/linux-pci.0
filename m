@@ -1,116 +1,65 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4C0E415F32
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 17:52:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784656328; cv=pass; b=T1N9ZgzwUkeF5qILi3c+ogseiUPb5uk/fmj2qdb8TTbEjgKMZl65ufH/X6RanPhaVsYf79B72rFijNmWEnMTxxo7/vxyRXsm85VArGC2+wfKA435zOV2qVkXuDDAa60KjA1lAFinLBZ/peeeI0kQZztZQIb21CkESNqlx0lUez4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784656328; c=relaxed/simple;
-	bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WQ+psMrEzXAmK2PE+Ieh6g8JwuggY6ChyF5JHjrff6h3Kx2XdbyJBOFVPeHhY8DDeRCM1MplzoUm2N6wIeTW65Bns9/Q9xLk0ZDiVpJJ1xZdkii006KUDUNyYh69WccoiPNFN+GHHJQQZWz+NvMTe8ZNHA2oPn/2wAbROPsKBhI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=ciM98YPw; arc=pass smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20BDE47043F;
+	Tue, 21 Jul 2026 17:54:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784656470; cv=none; b=ar/Rob5dr2xXwGrkECWAMoeeA0qM1tE4VrRgIXW16b+37gY6JGPEzDus7gYYR4YjIytCa/FDCdhXZtMB+R+mO0K0Wsav1PNQqLdgyGCFyDTi3g54Wcak81yW2NbpZKH2uRJ9SOHQojY/C9lzO4xi2wMhdPAPkuFYLR/piw5z8K8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784656470; c=relaxed/simple;
+	bh=5M3JbevceqazJSdYYlKzF+406GVDuxn1u71qU5HMRZU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=upwN5HSzfORNUyIbrwwJdEDIEblKf7uEoG+Qe9tFShiVrBU9e7VYSn9eRwc6MSMils6vgFLIxcThplgP7gSSqIi/4LMJq8VZIRGscctnAl2+U3b6+9uk5q9OGSDQYL+uZMtiM5hCShklKsfnvWR5GpSZffQ8NkHXAzyaltVDdGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ihC3i7P1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="ciM98YPw"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-38dc4553f62so9965063a91.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 10:52:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784656326; cv=none;
-        d=google.com; s=arc-20260327;
-        b=c3QpmlxkCjB1l9TAITB9bs9dqu3kvitsvhpzf/zUv+z8CAGIFzqGmPMWU0ChiGolNo
-         5sYPTXhz3zRbyCajhsE7/uuTCzL/GqT9ewnvk+YNzI8x92BrtXavqoM+NhMpUmpteh/w
-         Ite9Axp3cmL/dJVu+6/xNA7U6YQfKPyasOty5fUcd22rpUPY1nrKIq4Wjp3gTsn7s3PK
-         FQWnSMBpHjcN/Iv94goV1qIZQIiPLdRfcLEfiZP8hfivyTsm+Y01R1jyc39MYv3UMmVx
-         cFrZhY9KXbDeF6jDZ8Dzeg6emXfZQ4NqTirsr5cs/Eks3PLH1RirfYD+AFm/hKOK/wnw
-         ql2A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
-        fh=2TZMSRHB2ARMNriTLL1oztS2DwqJpmmKXOzW+eVWG3Q=;
-        b=h/h9oWqskfFEqu90ZYZmu10Z8DVrpCtSam/4b+dx550BO9GYK4Au82oVAuKahSmMuv
-         Gaxfa2JPctGcluiAv7W9lKFHjkNDzKv+i0vMDsvgK8RN9MfBZoYf4rOM52djZDxfiCyM
-         iXY4isN6Jo1OXpnV2hTLSRFQn3DDTC8u649Xm0K37QH0oyizjZMu4KHerHu+eYIBa3qH
-         9gkpIFbGnNuiIB0mEUc8t2SmBu4+jKOVfVWgSttmMlmEBCaGcjeggyKy2nUWg1+V+Pev
-         RQk3RP93l+rhLloNVWFB4AkTvR0LHPicTL2gJ4N2QTkebqH+zzLNKeK8s9pP0yWr1ANf
-         Bo3A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784656326; x=1785261126; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
-        b=ciM98YPwwqhVDh39wBw+AH4bzjh7xU/N/H9aik3M5yBvwF1UCf4YAQy5msJ+4GYErU
-         GuzrwUMPXRtMbduUVSvtYyerXesojT+AKo6LuobEd3zGS3krQ0v3K3CiO0MoGDlvRR2d
-         YwQWsf92fTVscp0PI6EsFqtvArWWi6JlPi+0lXIbcva2+LjMWSheh2y+qebh1iwX6nlv
-         /zue2udrnV4TyGi1x/P02OjHk7AWixl7D0avY02fPtazPCrtdPjGHrczQoJgYws2T32j
-         ci6WxZ4oInTDjyHSWWDQIN0Y9wR5ZuXOLLouoEKSkL29s6p+QTsUV+pD5bCx2RTmybWX
-         MQow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784656326; x=1785261126;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
-        b=NFX4/ENx4PTgECHs8yNF1HlmkbdL1Ivf2HrP1D/R8JLFinske2iTmG20EWX9WfJNud
-         aD1IJv4iDLRHNDssN8EocOCVKx8J++m8AeXtf5Tlqweuq/zNeqFh1DKR9fNMHsAF/niR
-         hLstdpmeluAT1HpIxJsnw770woFQQKRcS9cU2zRT6lslFcprFxVp9d3OwQK19Hwswic/
-         arEe3Q1fFFecnnnz7NrCwsbA8p1c6+qFWDUZCmuknGudemktAcntUoEaCQCYOKfwQ+wU
-         tNtKPMMvUD/dItbZ05wsBfTghaumKsji4XWrVVTdULHcohiU0vWKcKQ+wIybYD2XGhYR
-         Yxvw==
-X-Forwarded-Encrypted: i=1; AHgh+Rom6NO1nDjjWX/EKTsapMPavfEdVLson4o1T3ZyUIWcKQsrg5KKfHNkmOfjMsojDVHfxPfUBRXMJ98=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyL74f4Wt91Oopnm0wGS+p5aKlAAOb4EX+X4TO0Ym/hDHxatX8G
-	0pUmQVO1cOjr4UGiQZt56v7thWPI9uuOfHADTIs0w/uyOWRHeQvElDjDW7ila5QzkhGb4DKVjBz
-	N591I0wenJSj7w4VPpUZD3TI9c3w7lRDrzEIw1rmQ
-X-Gm-Gg: AR+sD13Xwtnom4R0BSxsuEtmyLaL7Nppf4kxVD0+DQ5EPc283bMUh+HdwMpc9zPxWrx
-	CmeCBOPPI7anp4UMceWA1lAsMgKuOhPCAc4jbkfFUxftSH8+0YjIdN3xCusjD6//mR4Q6Ppd5pK
-	wJs09vu3AiFnm24Gqfk0mx6CKSTXh7oCSOhKoen7sD7HH6wXMLMadb4ozJXzeaW1ufuE34tyvey
-	i0BUUnImn5b6KTkJnbIuhyVm+Jp8yw9CiUAvThexSoAi5BcANGHGoFPSpd4rjaonqU43Gja/mv6
-	jQnFsbaEdpibKFct6kKXVtezJ5Oq2dlHJLMuGrQKbxw=
-X-Received: by 2002:a17:90a:d2cb:b0:37f:ad36:8fc5 with SMTP id
- 98e67ed59e1d1-38e4b515bfamr20269142a91.23.1784656326031; Tue, 21 Jul 2026
- 10:52:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ihC3i7P1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65C1B1F00A3A;
+	Tue, 21 Jul 2026 17:54:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784656468;
+	bh=zhgWQSsMN5TVqskMCy6IYVk9EOUz16oUnJ/UtEdUt7A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ihC3i7P13ZQFxR7Tso4qyaGsI9jE+2v17Md3VrqnSediOeDhoF57deY2XooZiUFqF
+	 u9injbFgnYq3Z7dRBVYbGgW+rShLM3dmSIacYXyKTljwEwTqQ5oOHhqxyfthGk0jMq
+	 G1JWHngTCFPyz3MfNdicQ1u5z10hD4cVTonsVeW7B2znrnSFE1esyXmSYTAVQxuKIk
+	 ZFSQaHtdybKV7r1C40DbFL+otxBX+AV1DSdtLeRaXYk3w1eQSS/5Npy25TfHsB2nqQ
+	 3N744YSsyzGqcNJXM8TakdCeE3KBLE4VcIAs9OTfDwSVsIE7dQUZYcFq8UfrE2NOCK
+	 wBay3SuG2xC4A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/8] md: ensure REQ_NOMERGE is set on P2PDMA bios
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mykola Marzhan" <mykola@meshstor.io>
+Cc: linux-pci@vger.kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260721174502.111503-3-mykola@meshstor.io>
+References: <20260721174502.111503-1-mykola@meshstor.io>
+ <20260721174502.111503-3-mykola@meshstor.io>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 21 Jul 2026 17:54:27 +0000
+Message-Id: <20260721175428.65C1B1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260718162547.448892-1-mykola@meshstor.io> <20260720124304.GE110966@unreal>
- <al5IJb-L0FpztnYz@kbusch-mbp> <20260721124944.GL110966@unreal>
-In-Reply-To: <20260721124944.GL110966@unreal>
-From: Mykola Marzhan <mykola@meshstor.io>
-Date: Tue, 21 Jul 2026 19:51:53 +0200
-X-Gm-Features: AUfX_mzytkhLoaPSiTn9RmB0hwu7xEFpMpTLbojjFKRzqIcqMRM-jx5SaIRHGbs
-Message-ID: <CAPzsNDuY9OB8FWb8aPTpxpVYC0u1ewCmFnvQXfSKQO6xqEJhBA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] block,md,nvme: correct handling of unsupported P2PDMA transfers
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, 
-	Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, Li Nan <magiclinan@didiglobal.com>, 
-	Xiao Ni <xiao@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Kiran Kumar Modukuri <kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
-	Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>, 
-	Henrique Carvalho <henrique.carvalho@suse.com>, linux-kernel@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Jul 21, 2026 at 03:49:44PM +0300, Leon Romanovsky wrote:
-> Yeah, too verbose and conveys almost no useful information.
->
-> Lately, I've started ignoring such submissions to prioritize commits
-> from people who put real effort into explaining what they are doing.
+> md_submit_bio() strips REQ_NOMERGE from every bio.  For P2PDMA bios
+> the flag is what keeps requests single-provider (see
+> __bio_add_page()): merging a P2PDMA bio with one over a different
+> pgmap, or over host memory, maps the merged request with the wrong
+> bus address.  Set the flag on P2PDMA bios -- bios built via
+> bio_iov_bvec_set() arrive without it -- and keep stripping it
+> otherwise.
+>=20
+> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devic=
+es to RAID device")
+> Assisted-by: Claude:claude-opus-4-8
+> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
-Point taken, thank you. Please check v3, I reworked descriptions.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-In any case, the problem is real, Leon, I would really appreciate if
-you could review the RDMA changes.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721174502.1115=
+03-1-mykola@meshstor.io?part=3D2
 
-Mykola
