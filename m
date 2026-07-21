@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79F292D8376;
-	Tue, 21 Jul 2026 18:53:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED003EEAE2;
+	Tue, 21 Jul 2026 18:53:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784659983; cv=none; b=UOo8ojaXe5KM0zusliNsdIt27DLqIr36LhMMkQUEiu5Z3nWnM7pzMHo7ZMy16ogd5rl/aS/0f+qQLMe64RrZHLur7joU0V5bOEDn2jEDNuys+asK4XVcET/GNBehyFsb16ClHF9/jAty7AzWNX7UUHOT8jF+x3hhgdheMk3ME7w=
+	t=1784659987; cv=none; b=DT5C1nsGfkoODwxqpujKiqyTRFV3rVnx13IU0fSlXp8p7UqpmwqnRT17mZl1R2I7XbQEXwKEIhluU3tbJ2sG8L5entiynoklC/F/KIGpM+VVGACXKxj+9M9pBi4wZ4odrit3U874Dl4FXRxF3ILvBfSseeX5gPbRdwBkbmYyvlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784659983; c=relaxed/simple;
-	bh=6xbdLVxdh4HQJrGchJAstx3Cq8704KSa6qKVBkpMYUw=;
+	s=arc-20240116; t=1784659987; c=relaxed/simple;
+	bh=Lk+trxXxqNkM9iwyGCiBRhejc42JJCWEwkBtqZeIwrc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D8DUkRXZg9udkWKu2keFfEOHyvaixVpIF3F//OZc7N3q52JS6l1FfhXws60eCyLYeX1qwCr0Cnaep7TqA+R2837smzg4IGmn8ZqVmAGq6nne+a7PXrTythYAsPgcTJ/B8Y2hMQgrJKZ5/tyN/++jzNT/DZ2qiXdLxlrNKnF4/7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RYWNVhqB; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=aiE3kRjHuCroVHmk1S/fRsgaSrg9rs9/qBd5x1ZySN59/K6dgqc9VxV4z2jR6FTYnyxAi916jCiBuUjTY+KxqDIcVuPwZKANTFOr0xXBYJ+g1FcNN9+/xk3Mq+zBiapBd0IE/wmAJMGPHeV47upyQkwltVrY/+y1FEm9jfW4a6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mO2MpO3I; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RYWNVhqB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 771671F00A3A;
-	Tue, 21 Jul 2026 18:52:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mO2MpO3I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A782A1F00A3F;
+	Tue, 21 Jul 2026 18:53:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784659982;
-	bh=jMLxNPT+alN3B9d358mO+K91kmoDqoyAF9P1cZ9RVr4=;
+	s=k20260515; t=1784659986;
+	bh=x2fxgWVfhVcDmmyCVbD7ycsWuJeu20Oz3iI8akrC0uw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RYWNVhqBZ/wCCKbxKgWojGthduYZlKb8YzS6t+6VwY1NE0XU530OA5B6pabktkVGe
-	 KAU5pbZSgUuU/D/pg2NXJqFxaAft/6e6MryY7P6SeFiFNlwTEaFPe3O7yv95I2cGNP
-	 8MCjywYcJ3HGaILSq/QUWXGsEbhRhXBDC3Z2O4xA+w18dVaEBLKj7cbynrzkrR4Fam
-	 +kYmipw2mLYTvu13onPE47RkqF+vU5mF7wnQWTbLgQsrnk5dVrZ6SmhE1HJqkLqZ68
-	 HE0kSxDIbfZEnJr7GGGBY6ILaTbyY8vlCjaPwVBpqUCgnEQ9B2LgA8ntbIW2k0Y11l
-	 IU22Zjjlj39fQ==
+	b=mO2MpO3I7S2kPQkzxpVqQA6FmRmQugz1QqsWE72UVlYDgo/AAZZ3OfXbH547dVQ+M
+	 Wu+6Js2Bk2J3tX4Po2gMlLLKtmQHJiPTQy+KW4s2ta2tRhd/V02Y/kMAVTz9ckWCzp
+	 wAZPjIooxlViBjlEK/b+a3zem4aIDpOHiBuWrmbxJlTjFQeyPMY8hHahAbAOPn/Qvi
+	 VGGZ3ELvNsvE4WaCL5pNc/Uv5SYZDZpsnHOAXMg5Q09j7Gzo2wpIO5hvL0Jl+iYN3o
+	 88LhGLhGkN98oPXcp+Kmww1kHLtrGZS9mLlqENmhsX3K2u1jxZju60+KG6T3fondS4
+	 WgF5NiFKPTplw==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	David Hildenbrand <david@kernel.org>,
@@ -46,9 +46,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-mm@kvack.org,
 	driver-core@lists.linux.dev
-Subject: [PATCH 1/2] mm: Add unmap_mapping_file() helper
-Date: Tue, 21 Jul 2026 18:52:51 +0000
-Message-ID: <20260721185252.1670958-2-kwilczynski@kernel.org>
+Subject: [PATCH 2/2] kernfs: Unmap mmaps of removed files via file->f_mapping
+Date: Tue, 21 Jul 2026 18:52:52 +0000
+Message-ID: <20260721185252.1670958-3-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260721185252.1670958-1-kwilczynski@kernel.org>
 References: <20260721185252.1670958-1-kwilczynski@kernel.org>
@@ -61,87 +61,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, unmap_mapping_pages() and unmap_mapping_range() unmap
-a page offset window of an address_space, and teardown paths such
-as kernfs_drain_open_files() rely on them to remove the mappings
-of a file that is going away.
+Currently, kernfs_drain_open_files() unmaps file_inode(of->file)->i_mapping
+when a node with mmapped open files is removed.  Since commit 636b21b50152
+("PCI: Revoke mappings like devmem"), PCI resource and legacy sysfs files
+swap their f_mapping to iomem_get_mapping() at open time, so their VMAs
+are attached to the shared iomem address space, and the drain walks the
+empty sysfs inode interval tree instead.
 
-Files with f_mapping swapped to a shared address space at open time,
-such as PCI resource files using iomem_get_mapping(), have their
-VMAs attached to the shared mapping instead of the file's own inode
-mapping, so a teardown that unmaps the inode's address space cannot
-reach them, and they stay live after the file is removed.  As such,
-the only correct discriminator for these VMAs is the originating
-struct file recorded in vma->vm_file.
+As a result, userspace mappings of PCI BARs survive device removal
+and BAR resize, keeping stale PTEs into physical address space that
+the kernel may have reassigned since.
 
-Add unmap_mapping_file(), which walks the VMA interval tree of the
-file's f_mapping under i_mmap_lock_read() and zaps every VMA with
-vm_file set to the given file, using the same per-VMA zap teardown
-as unmap_mapping_pages().
+Thus, use unmap_mapping_file() when the file's f_mapping no longer
+points at its own inode mapping, so the drain zaps exactly the VMAs
+created through the removed file, while unrelated mappings on the
+shared address space are left intact.  Files with an unmodified inode
+mapping keep the existing unmap_mapping_range() behaviour, and the
+driver-claim revocation through revoke_iomem() is unaffected because
+the VMAs stay on the shared mapping.
 
+This restores the teardown behaviour these files had before the
+f_mapping swap was introduced.  A read through a stale mapping
+after removal now raises SIGBUS instead of returning stale data.
+
+Fixes: 636b21b50152 ("PCI: Revoke mappings like devmem")
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- include/linux/mm.h |  2 ++
- mm/memory.c        | 26 ++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ fs/kernfs/file.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 485df9c2dbdd..e882a03eaddd 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -3183,6 +3183,7 @@ extern int fixup_user_fault(struct mm_struct *mm,
- 			    bool *unlocked);
- void unmap_mapping_pages(struct address_space *mapping,
- 		pgoff_t start, pgoff_t nr, bool even_cows);
-+void unmap_mapping_file(struct file *file);
- void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows);
- #else
-@@ -3203,6 +3204,7 @@ static inline int fixup_user_fault(struct mm_struct *mm, unsigned long address,
- }
- static inline void unmap_mapping_pages(struct address_space *mapping,
- 		pgoff_t start, pgoff_t nr, bool even_cows) { }
-+static inline void unmap_mapping_file(struct file *file) { }
- static inline void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows) { }
- #endif
-diff --git a/mm/memory.c b/mm/memory.c
-index ff338c2abe92..f9cfb88ac4f7 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4423,6 +4423,32 @@ void unmap_mapping_pages(struct address_space *mapping, pgoff_t start,
- }
- EXPORT_SYMBOL_GPL(unmap_mapping_pages);
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 8e0e90c93372..8d1e4acc6716 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -818,7 +818,10 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
+ 		struct inode *inode = file_inode(of->file);
  
-+/**
-+ * unmap_mapping_file() - Unmap all mmaps of an open file.
-+ * @file: The file to unmap.
-+ *
-+ * Unmap every VMA with vm_file set to @file, regardless of the address
-+ * space it is attached to.  This also covers files with f_mapping
-+ * swapped to a different address space at open time, since such VMAs
-+ * cannot be found through the file's own inode mapping.
-+ */
-+void unmap_mapping_file(struct file *file)
-+{
-+	struct address_space *mapping = file->f_mapping;
-+	struct vm_area_struct *vma;
-+
-+	i_mmap_lock_read(mapping);
-+	if (unlikely(mapping_mapped(mapping))) {
-+		vma_interval_tree_foreach(vma, &mapping->i_mmap, 0, ULONG_MAX) {
-+			if (vma->vm_file != file)
-+				continue;
-+			zap_vma(vma);
-+		}
-+	}
-+	i_mmap_unlock_read(mapping);
-+}
-+EXPORT_SYMBOL_GPL(unmap_mapping_file);
-+
- /**
-  * unmap_mapping_range - unmap the portion of all mmaps in the specified
-  * address_space corresponding to the specified byte range in the underlying
+ 		if (of->mmapped) {
+-			unmap_mapping_range(inode->i_mapping, 0, 0, 1);
++			if (of->file->f_mapping != inode->i_mapping)
++				unmap_mapping_file(of->file);
++			else
++				unmap_mapping_range(inode->i_mapping, 0, 0, 1);
+ 			of->mmapped = false;
+ 			on->nr_mmapped--;
+ 		}
 -- 
 2.55.0
 
