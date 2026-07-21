@@ -1,184 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16D2442CAEE;
-	Tue, 21 Jul 2026 09:46:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3367449999;
+	Tue, 21 Jul 2026 09:53:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784627222; cv=none; b=raK9p+pbzsyi5XnKPBpsTqMs1rdjpICN2sC1YbGkG8ENeXXeQJaXir298Ko9w+B9Pn4yFjclDjfLBh9BQ58aZEBH4+WAwUzml5Tm12v8TWw1RqvbrhDfUAOwGnw06js/gzz6787P4oESmLZKEMKj+lrfYlSBLyv2BnOxLxdY1uw=
+	t=1784627632; cv=none; b=KHbaotTswuqgqgEnCmLk8UB3QaWHZP3IvjBAHWIcD2OuLYxGvDV2KFnk03feQ03Wh+6N7G1QOu3zgrqZyQdVEQOJDKzTX/psPbW//UmBHaFbgnAnOA/5GaBOOyR7oO6wkbrS3WTqsyrqKqMkzcJegjVUaW7ftRVvbzr+nu7ymBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784627222; c=relaxed/simple;
-	bh=b6KeCr6JYxT3cA/0/gA0HXJmrhjVpLJmkgIOS3eAbg4=;
+	s=arc-20240116; t=1784627632; c=relaxed/simple;
+	bh=gd9LpzBhS7XS8RSDLiyquuDsoh18/p24mvBb3VGhQX0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tBBfBHaUmEfCbvyaj75uskdEkdV9Z0X7kE4qqOJFGlVKD69cZx9CrtrdPWDxLJbmPynnEzIAd0RNu3B1xDyRjHroy6bcMrw/u5oAmh3/cFlWFU0PkR8pLHrSVAxDtwlaJA+PKuFzSEWJIIZM/Kw2JN23N3QSoUzBUaNAi2qH3Z8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CShO6xjx; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Oi73ggIXDQKU/GikJqg6oCSgcSoPT2l2Yvv2i0v8TMlmyUsfkJPtL7/+Q4x/T5EiZIC2nRpwWH4ya2LEB8tlPhp/mjyu5rqPxni9e7HF7AEP+9ZjIARkqn4iIfJevga5SU3FFS1lKDSUVasan2dT0OEdVjH2m4fuLAhHGXmyk4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NNAfgGC/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CShO6xjx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50FB11F000E9;
-	Tue, 21 Jul 2026 09:46:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NNAfgGC/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D93A1F000E9;
+	Tue, 21 Jul 2026 09:53:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784627219;
-	bh=pfYEtN4DM3I5IFoTw7wMjioKegbcSGpo4cgs+bKRgho=;
+	s=k20260515; t=1784627630;
+	bh=t0L37vEtXlWkQ6+/Voui1GPXR9x6i3ICcddjR6byIzY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CShO6xjxpPtKYHBzmEbCGO9WctAA5XnEFxnZDpH4QGDEwuh5ym0Vc3NnIlLZOHHAT
-	 OLCEQcqbHyCNQsnmDeTaA6K25IPbSTsJ3QCVxWJ42sb4D92uisKF90FjscG8S7fp01
-	 sd4ghIEWzD0EOgey1VPsahhj5Hx39I8cjX/UTSDe6OEJjWkWZ9x12YNPIFkdc/t/Xi
-	 11GAp3H2acQxHG4YKURKJr1E338VWOHifiN4MtPy5n0vwLMcAEqHywaO+W12mErs23
-	 ozZ2F37jZymoWEhxA1NKABGNXahVJm7ctoN78hrOWGQx9uABmj34KIYtNCx9gj30Z6
-	 HbmzWn3wM3HSw==
+	b=NNAfgGC/OPOqlFKx9aeGdnHkRYubWW/jNwANElxTHCwWVm04xzPA0mJYiBV5zdNwH
+	 sRPzpJ7VsLd+yAr9Z0j0l61txiihhoXYDGy2pvEyfaiM+Dp5Q1Qfi1HwAt6OHTfXAh
+	 RdJDnY1f/A57ZoFrVh8CK/341GUvfi2xva+r+n1fRLMtKkVlok4uEZV5gDaOFAhQ3L
+	 dVFpQlnPic4z72r9Te9Q0+Q8YWUlCRSEo7Nb2DQstifa8UqDde9jnlgMY8Y1q7Zghr
+	 0zYwFjcn5zOU+ckQLdxU6jS+djfotOJZic/gBdBpAF2lA188/lIHZl8dFJ1dMSQpjw
+	 OiJ95uc0nXHHQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with
- TC9563 PCIe switch
+Subject: Re: [PATCH v3 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and
+ controller nodes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260721-eliza_evk-v3-3-92b10038f13d@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260721-eliza_evk-v3-1-92b10038f13d@oss.qualcomm.com>
 References: <20260721-eliza_evk-v3-0-92b10038f13d@oss.qualcomm.com>
- <20260721-eliza_evk-v3-3-92b10038f13d@oss.qualcomm.com>
+ <20260721-eliza_evk-v3-1-92b10038f13d@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 09:46:58 +0000
-Message-Id: <20260721094659.50FB11F000E9@smtp.kernel.org>
+Date: Tue, 21 Jul 2026 09:53:50 +0000
+Message-Id: <20260721095350.8D93A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [Medium] The downstream PCI-to-PCI bridge nodes specify overlapping and i=
-nvalid bus-range properties.
-- [Low] Missing `compatible =3D "pciclass,0604"` in the downstream PCI brid=
-ge nodes.
-
-Pre-existing issues:
-- [High] The addition of two child nodes (`pci@0,0` and `pci@0,1`) under th=
-e DSP3 port (`pcie@3,0`) triggers a deterministic out-of-bounds array acces=
-s in the existing `pci-pwrctrl-tc9563` driver, leading to memory corruption=
- and a kernel panic during probe.
+- [High] Gen3 operating points in PCIe OPP tables incorrectly require 'low_=
+svs' instead of 'nom'.
+- [High] The pcie0 and pcie1 nodes are missing the msi-map property.
 --
 
---- Patch [3]: [PATCH v3 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with T=
-C9563 PCIe switch ---
-commit 3a7dcae4b740553fda1daf6d1b08f87c99ab83eb
+--- Patch [1]: [PATCH v3 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and con=
+troller nodes ---
+commit be92db70e138e71a2f5b523e4b36113ca9171196
 Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
 
-arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+Eliza supports two PCIe instances: one 8GT/s x1 (PCIe0) and one 8GT/s x2
+(PCIe1). This commit adds PCIe controller and PHY nodes for both instances,
+and updates the GCC clock references to use the newly added PHY nodes.
 
-This patch adds the TC9563 PCIe switch to the Eliza EVK device tree on PCIe=
-1.
-It sets up the I2C management interface, overrides the base iommu-map, and
-configures the reset GPIO.
-
-> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
-s/qcom/eliza-evk.dtsi
-> index 6d76715ccffbe..fb44e7a349a5d 100644
-> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-
+> diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qc=
+om/eliza.dtsi
+> index 357e8066c1768..41a1203117681 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza.dtsi
 [ ... ]
-
-> @@ -99,6 +119,99 @@ pcieport0_ep: endpoint {
->  	};
->  };
-> =20
-
+> +		pcie0: pcie@1c00000 {
 [ ... ]
-
-> +&pcie1port0 {
-> +	wake-gpios =3D <&tlmm 53 GPIO_ACTIVE_LOW>;
-> +	/* Same GPIO is used for both PERST# and resx-gpio */
+> +			iommu-map =3D <0 &apps_smmu 0x1480 0x1>,
+> +				    <0x100 &apps_smmu 0x1481 0x1>;
 > +
-> +	tc9563: pcie@0,0 {
-> +		compatible =3D "pci1179,0623";
-> +		reg =3D <0x10000 0x0 0x0 0x0 0x0>;
-
-[ ... ]
-
-> +		resx-gpios =3D <&tlmm 54 GPIO_ACTIVE_LOW>;
-> +
-> +		pcie@1,0 {
-> +			reg =3D <0x20800 0x0 0x0 0x0 0x0>;
-> +			#address-cells =3D <3>;
-> +			#size-cells =3D <2>;
-> +
-
-[Severity: Low]
-Should these downstream PCI bridge nodes include the
-compatible =3D "pciclass,0604" string? The same patch adds it to the upstre=
-am
-port pcie1port0 to satisfy schema validation checks.
-
-> +			device_type =3D "pci";
-> +			ranges;
-> +			bus-range =3D <0x3 0xff>;
-
-[Severity: Medium]
-Do these sibling PCI-to-PCI bridge nodes specify overlapping bus-range
-properties? Since they are sibling bridges, they cannot route overlapping
-downstream bus ranges, but they all specify 0xff as the subordinate bus.
-
-> +		};
-> +
-> +		pcie@2,0 {
-> +			reg =3D <0x21000 0x0 0x0 0x0 0x0>;
-> +			#address-cells =3D <3>;
-> +			#size-cells =3D <2>;
-> +
-> +			device_type =3D "pci";
-> +			ranges;
-> +			bus-range =3D <0x4 0xff>;
-> +		};
-> +
-> +		pcie@3,0 {
-> +			reg =3D <0x21800 0x0 0x0 0x0 0x0>;
-> +			#address-cells =3D <3>;
-> +			#size-cells =3D <2>;
-> +			device_type =3D "pci";
-> +			ranges;
-> +			bus-range =3D <0x5 0xff>;
-> +
-> +			pci@0,0 {
-> +				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				device_type =3D "pci";
-> +				ranges;
-> +			};
-> +
-> +			pci@0,1 {
+> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>,
 
 [Severity: High]
-This is a pre-existing issue, but does adding these two child nodes under t=
-he
-DSP3 port trigger an out-of-bounds access in the pci-pwrctrl-tc9563 driver?
+Is the msi-map property missing from the pcie0 node?
 
-Looking at drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c in tc9563_pwrctrl_probe=
-(),
-the driver iterates over the child nodes:
+Without an msi-map property, the PCIe Requester ID cannot be translated to =
+the
+GIC ITS Device ID. Does this break MSI/MSI-X delivery for connected PCIe
+endpoints?
 
-	for_each_child_of_node_scoped(child, child1) {
-		port++;
-		ret =3D tc9563_pwrctrl_parse_device_dt(tc9563,
-						child1, port);
+> +					<0 0 0 2 &intc 0 0 0 565 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 3 &intc 0 0 0 566 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 4 &intc 0 0 0 567 IRQ_TYPE_LEVEL_HIGH>;
+[ ... ]
+> +			pcie0_opp_table: opp-table {
+[ ... ]
+> +				/* 8 GT/s x1 */
+> +				opp-8000000-3 {
+> +					opp-hz =3D /bits/ 64 <8000000>;
+> +					required-opps =3D <&rpmhpd_opp_low_svs>;
 
-Without checking bounds against the array size TC9563_MAX (5), will this
-increment port to 5 and access tc9563->cfg[5] out of bounds, overwriting
-adjacent structure members and causing a kernel panic during probe?
+[Severity: High]
+Are the voltage requirements correct for the 8 GT/s operating point?
 
-> +				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
-> +				#address-cells =3D <3>;
-> +				#size-cells =3D <2>;
-> +				device_type =3D "pci";
-> +				ranges;
+Voting for a lower voltage (low_svs) instead of the nominal voltage (nom) f=
+or
+Gen3 speeds might result in PCIe link instability or negotiation failures d=
+ue
+to insufficient PHY power. Should this require rpmhpd_opp_nom instead?
+
+> +					opp-peak-kBps =3D <984500 1>;
+> +					opp-level =3D <3>;
+> +				};
+> +
 > +			};
-> +		};
-> +	};
-> +};
+[ ... ]
+> +		pcie1: pcie@1c08000 {
+[ ... ]
+> +			iommu-map =3D <0 &apps_smmu 0x1400 0x1>,
+> +				    <0x100 &apps_smmu 0x1401 0x1>;
+> +
+> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>,
+
+[Severity: High]
+Is the msi-map property missing here in the pcie1 node as well?
+
+> +					<0 0 0 2 &intc 0 0 0 150 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>;
+[ ... ]
+> +			pcie1_opp_table: opp-table {
+[ ... ]
+> +				/* 8 GT/s x1 */
+> +				opp-8000000-3 {
+> +					opp-hz =3D /bits/ 64 <8000000>;
+> +					required-opps =3D <&rpmhpd_opp_low_svs>;
+
+[Severity: High]
+Should this Gen3 8 GT/s OPP also vote for the nominal voltage (nom) instead=
+ of
+low_svs to maintain signal integrity?
+
+> +					opp-peak-kBps =3D <984500 1>;
+> +					opp-level =3D <3>;
+> +				};
+> +
+> +				/* 8 GT/s x2 */
+> +				opp-16000000-3 {
+> +					opp-hz =3D /bits/ 64 <16000000>;
+> +					required-opps =3D <&rpmhpd_opp_low_svs>;
+
+[Severity: High]
+Does this 8 GT/s x2 OPP need to require rpmhpd_opp_nom similar to the other
+Gen3 operating points?
+
+> +					opp-peak-kBps =3D <1969000 1>;
+> +					opp-level =3D <3>;
+> +				};
+> +
+> +			};
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721-eliza_evk-=
-v3-0-92b10038f13d@oss.qualcomm.com?part=3D3
+v3-0-92b10038f13d@oss.qualcomm.com?part=3D1
