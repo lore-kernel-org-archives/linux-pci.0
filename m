@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90940449B32
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 02:04:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F2D3FE650
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 02:04:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784599471; cv=none; b=rY06fB0ij27pBnxAx46itqdWnxpxMjOSp/1gCn0XH0jvotN62bKLEJPeEFrdcfxgmnU/99h8ZQg9FJ8oXBmwi6rQhMO6itgDEAmqY/0MOzXEBg+pu6dv/ZWq5Unq0thL11DAYAlto0CsPnIY3CeufdiY6PYX5nFmiVFj93UvdXU=
+	t=1784599473; cv=none; b=g8WHZ1Z1EM72TrJz09uT2iw4l2lPFspjJpw+Q3aS9cO/NPGkPn3u/cziw7uYDg4MwC9DQ0M/K8UELXkBclt2KfTd+ssLH06uNdY6ABkGom33HQoR66Z9nJDfPDe9EZuyZ2NXpHK6Q/6TLQq8D+gGSAovEDrIoQtyoH5R4ea2HGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784599471; c=relaxed/simple;
-	bh=Rrm0hauarpsenYuAiXX2jDGD98xbOn9yjCMw9MnsvRk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Sb9e+AhUmvQZIX/77m2qn2eeCqz3OpA/vp91YFSvqFbjJLZszx6NYpJsrk3b2mrTYFygIkJXTw3tj4XadLPAO0sWY5qme8twmUOimtONo/sQZ5HfxSywllBf4gDuau17SHvm7mXzVQWk9lzKVs31aVLeWjAnJ8HpDDAuLjDHGCY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFkSjc/6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784599473; c=relaxed/simple;
+	bh=SxSDFbIc1gVeXEtLrm3H/BYq3Pmc9NfuuCdXijj/Vs8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ua9CnO46LRgNdP3XiMGcSjKBbyK+WyC9j5v1PK0xEkelSVsbC9wZ7iq54LNXP5DhD9QX5n3Rs6HHQ5Vkiuk6pLdz1QmjoiV8q3oftuMVm21QXWK+UzYUpC6r852JZhJQlxLZis9XMtWGyZptgOBLBxdWtS7ixzwj3+Dcb4Yoctc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RqvErgY9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFkSjc/6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 030E51F00A3A;
-	Tue, 21 Jul 2026 02:04:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RqvErgY9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90DBB1F000E9;
+	Tue, 21 Jul 2026 02:04:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784599470;
-	bh=DeoT5wtS4o57XeZ3xt57AGyGtUT1NIv9EA4J7VhvoYg=;
-	h=From:To:Cc:Subject:Date;
-	b=jFkSjc/6F+ZW15ri1wUJ0yMVVyv/O3N0+1ondlOPFAxsDF6B+t7SvnE/7XpRaZUYA
-	 sWvqdLJNogbDwIkG0Zwxa3gJxP85YTs4rEjLCModizfV+P8xT5Xgvb9dAT4tL+lm1V
-	 OlwPD2K4lS6hhzHO1I/4Gc1EtaNyl2WoGL1ynu+dugsv8ieZGmO8Yky/9jFpCV0mGF
-	 lCpEY9lvNE75r1QnIjwyTaiB3DgsbTzXp+OSvaeHvjMdRxT3IVZ92BVDu5SCjH76xq
-	 lZ66uVGha/TYnHvOspofP4wwPVD1VXjKuYVt+hX5rXt33HSFi20CFzxFOmslTs9ctz
-	 lOukZ76fqm1qQ==
+	s=k20260515; t=1784599471;
+	bh=/mRxMG4tPmh2PZi21HfgNLK73ENIMPLiI1ES1J8oi84=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=RqvErgY9n2MqKq5typhZ2MY288jWV7AeDhTECnFMMU1iIE01kUm5tE/oVX7N3/Jyy
+	 mYchup2HdOhVfyM6vNQif+pcNxrFchJMsBeuVe2GGMaWFzGZdf3l1So+o57Mc2nlk2
+	 WmS8H2QZJWTUTIBM25uIKw+GjYOXAqc4erE1X9ybMCOlWAzsW2wry45LdU0eyyveM4
+	 bSlycbDKrWJgV7YTm0ZsH0YNojIF2lFOrW0MONNiVoYMfp+jn1ZwAtBsAxItK4VBvD
+	 iNdht+/rXAPxe68mWe3PFKxJwc/14iKXr6rFpOcu6JGPOQDic+hbRY5XzqdI8qUa6e
+	 /d3EY30a01oIw==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 0/3] PCI/sysfs: Follow-up to the static attribute conversion
-Date: Tue, 21 Jul 2026 02:04:23 +0000
-Message-ID: <20260721020427.1541197-1-kwilczynski@kernel.org>
+Subject: [PATCH 1/3] PCI/sysfs: Add pci_ prefix to static PCI resource attribute names
+Date: Tue, 21 Jul 2026 02:04:24 +0000
+Message-ID: <20260721020427.1541197-2-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260721020427.1541197-1-kwilczynski@kernel.org>
+References: <20260721020427.1541197-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,47 +47,135 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hello,
+Currently, the static binary attributes for the PCI resource files are
+generated with the names dev_resource<N>_io_attr, dev_resource<N>_uc_attr
+and dev_resource<N>_wc_attr.
 
-This series is a follow-up to the PCI sysfs static attribute
-conversion [1], carrying the clean-up changes from its v8 revision.
+The macros that generate these attributes and the arrays that collect
+them already carry the pci_ prefix, as do the sibling legacy I/O and
+memory attributes, such as pci_legacy_io_attr.  Only the generated
+variable names lack it.
 
-The v7 revision of the series was applied and went out with the PCI
-pull request for 7.2 [2], so the changes from v8 did not land in time
-to make the 7.2 release.
+Thus, rename the generated variables to pci_dev_resource<N>_io_attr,
+pci_dev_resource<N>_uc_attr and pci_dev_resource<N>_wc_attr, and update
+the attribute pointer arrays to match.
 
-The series consists of three clean-ups:
-
-  - Add the pci_ prefix to the generated PCI resource attribute names
-    dev_resourceN_{io,uc,wc}_attr, for consistency with the macros
-    that generate them and the arrays that collect them.
-
-  - Make the attribute name suffix the first parameter of Alpha's
-    __pci_dev_resource_attr() macro, resolving a checkpatch.pl
-    complaint about two consecutive commas.
-
-  - Add the pci_legacy_resource_{io,mem}_attr() macros, and use them
-    for the legacy I/O and memory attribute definitions instead of
-    open-coding each struct bin_attribute.
-
-These correspond to the items listed under "Changes in v8" in the v8
-cover letter [1].
+While at it, re-align the continuation backslashes in the resource
+attribute macros to match.
 
 No functional changes intended.
 
-1. https://lore.kernel.org/linux-pci/20260619085200.3729431-1-kwilczynski@kernel.org/
-2. https://lore.kernel.org/linux-pci/20260624110021.GA996382@bhelgaas/
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+---
+ drivers/pci/pci-sysfs.c | 60 ++++++++++++++++++++---------------------
+ 1 file changed, 30 insertions(+), 30 deletions(-)
 
-Krzysztof Wilczyński (3):
-  PCI/sysfs: Add pci_ prefix to static PCI resource attribute names
-  alpha/PCI: Make the suffix the first __pci_dev_resource_attr()
-    parameter
-  PCI/sysfs: Add legacy I/O and memory attribute macros
-
- arch/alpha/kernel/pci-sysfs.c |  26 ++++----
- drivers/pci/pci-sysfs.c       | 119 ++++++++++++++++------------------
- 2 files changed, 68 insertions(+), 77 deletions(-)
-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5ec0b245a69b..cb7a121e5988 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1239,16 +1239,16 @@ static loff_t pci_llseek_resource(struct file *filep,
+  * attribute, it's not going to work, so override it as well.
+  */
+ #if arch_can_pci_mmap_io()
+-# define __PCI_RESOURCE_IO_MMAP_ATTRS		\
+-	.f_mapping = iomem_get_mapping,		\
+-	.llseek = pci_llseek_resource,		\
++# define __PCI_RESOURCE_IO_MMAP_ATTRS	\
++	.f_mapping = iomem_get_mapping,	\
++	.llseek = pci_llseek_resource,	\
+ 	.mmap = pci_mmap_resource_uc,
+ #else
+ # define __PCI_RESOURCE_IO_MMAP_ATTRS
+ #endif
+ 
+ #define pci_dev_resource_io_attr(_bar)					\
+-static const struct bin_attribute dev_resource##_bar##_io_attr = {	\
++static const struct bin_attribute pci_dev_resource##_bar##_io_attr = {	\
+ 	.attr = { .name = "resource" __stringify(_bar), .mode = 0600 },	\
+ 	.private = (void *)(unsigned long)(_bar),			\
+ 	.read = pci_read_resource,					\
+@@ -1257,7 +1257,7 @@ static const struct bin_attribute dev_resource##_bar##_io_attr = {	\
+ }
+ 
+ #define pci_dev_resource_uc_attr(_bar)					\
+-static const struct bin_attribute dev_resource##_bar##_uc_attr = {	\
++static const struct bin_attribute pci_dev_resource##_bar##_uc_attr = {	\
+ 	.attr = { .name = "resource" __stringify(_bar), .mode = 0600 },	\
+ 	.private = (void *)(unsigned long)(_bar),			\
+ 	.f_mapping = iomem_get_mapping,					\
+@@ -1265,13 +1265,13 @@ static const struct bin_attribute dev_resource##_bar##_uc_attr = {	\
+ 	.mmap = pci_mmap_resource_uc,					\
+ }
+ 
+-#define pci_dev_resource_wc_attr(_bar)					      \
+-static const struct bin_attribute dev_resource##_bar##_wc_attr = {	      \
+-	.attr = { .name = "resource" __stringify(_bar) "_wc", .mode = 0600 }, \
+-	.private = (void *)(unsigned long)(_bar),			      \
+-	.f_mapping = iomem_get_mapping,					      \
+-	.llseek = pci_llseek_resource,					      \
+-	.mmap = pci_mmap_resource_wc,					      \
++#define pci_dev_resource_wc_attr(_bar)						\
++static const struct bin_attribute pci_dev_resource##_bar##_wc_attr = {		\
++	.attr = { .name = "resource" __stringify(_bar) "_wc", .mode = 0600 },	\
++	.private = (void *)(unsigned long)(_bar),				\
++	.f_mapping = iomem_get_mapping,						\
++	.llseek = pci_llseek_resource,						\
++	.mmap = pci_mmap_resource_wc,						\
+ }
+ 
+ static inline umode_t
+@@ -1352,32 +1352,32 @@ pci_dev_resource_wc_attr(4);
+ pci_dev_resource_wc_attr(5);
+ 
+ static const struct bin_attribute *const pci_dev_resource_io_attrs[] = {
+-	&dev_resource0_io_attr,
+-	&dev_resource1_io_attr,
+-	&dev_resource2_io_attr,
+-	&dev_resource3_io_attr,
+-	&dev_resource4_io_attr,
+-	&dev_resource5_io_attr,
++	&pci_dev_resource0_io_attr,
++	&pci_dev_resource1_io_attr,
++	&pci_dev_resource2_io_attr,
++	&pci_dev_resource3_io_attr,
++	&pci_dev_resource4_io_attr,
++	&pci_dev_resource5_io_attr,
+ 	NULL,
+ };
+ 
+ static const struct bin_attribute *const pci_dev_resource_uc_attrs[] = {
+-	&dev_resource0_uc_attr,
+-	&dev_resource1_uc_attr,
+-	&dev_resource2_uc_attr,
+-	&dev_resource3_uc_attr,
+-	&dev_resource4_uc_attr,
+-	&dev_resource5_uc_attr,
++	&pci_dev_resource0_uc_attr,
++	&pci_dev_resource1_uc_attr,
++	&pci_dev_resource2_uc_attr,
++	&pci_dev_resource3_uc_attr,
++	&pci_dev_resource4_uc_attr,
++	&pci_dev_resource5_uc_attr,
+ 	NULL,
+ };
+ 
+ static const struct bin_attribute *const pci_dev_resource_wc_attrs[] = {
+-	&dev_resource0_wc_attr,
+-	&dev_resource1_wc_attr,
+-	&dev_resource2_wc_attr,
+-	&dev_resource3_wc_attr,
+-	&dev_resource4_wc_attr,
+-	&dev_resource5_wc_attr,
++	&pci_dev_resource0_wc_attr,
++	&pci_dev_resource1_wc_attr,
++	&pci_dev_resource2_wc_attr,
++	&pci_dev_resource3_wc_attr,
++	&pci_dev_resource4_wc_attr,
++	&pci_dev_resource5_wc_attr,
+ 	NULL,
+ };
+ 
 -- 
 2.55.0
 
