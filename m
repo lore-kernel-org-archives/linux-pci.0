@@ -1,65 +1,65 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7B6472559
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 20:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1061D7E5C
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 20:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784665525; cv=none; b=VYcc73Zbf8nPJJ0T0buc8Q5UXVaP40zmKZ04TczvZsD/X01mw+5mxwNm3/DchvCC2ZOJH64nWowRSdHrMgzLVcSqVGLqZs17hb6Vue5JCrQ3uvIa+l9hFWu1Hfyy1s1gnWbMZHkg3hB7mLk/hFNmZmS0sM/CBjoXdER3eAU3/7o=
+	t=1784665617; cv=none; b=gwtJxPKP9cTb9KJ+p3uRwV6lA963Zea1FggMxwKCjI0hxEZy8fEzAvHcxKs/gPFUMTueqP1AB9GhGxZmY4N5nHav49yVTpoN5PJi8mCwDBLEk9ojXfIQNoGNrDrJHF2LSZ8KWu3q8/cZfcss1FhHRStnlnq3FVuOCkhYyT4bk9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784665525; c=relaxed/simple;
-	bh=JWkoXRoccFwTy/vIl+0vMHedc09XwWgCov7XLX16Gus=;
+	s=arc-20240116; t=1784665617; c=relaxed/simple;
+	bh=/H8dJRCH5zM9HYfg/wUUk8/wg39GT4PZntRlJNqT4U0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o0y45XVqmFPqhThmfGWxPetfkkEZyuuezw59c+gqM+lTEa6finQGcSQNwAhHK/45nOiUKiuRJGKgiYuhmgwEFNqm+12IFvwl6hS4dJXZSD9fJkW/MkWWXO8b+0l+CFsLDTpRCR00B12jpgMBltqil3VHRGkSalUZyUqLqEVZsdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nF/+WVfh; arc=none smtp.client-ip=209.85.214.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=jdlgF04q02p1MIjKuATHDTrwLx/xoOF+4gxN2XsEPRQ1Rao043Cnsh8Hr9/hEhzg8p3XsyTZ16zWMm8a59UIZ1wJFI/1yskPkQrM9nfqN0dosghhqJ7NJL/UKB/XMxV+zcYmQZUcyer288WiVIFvi05tLB7hux5AQTnAdXUw9EY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=m+DoC/yp; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nF/+WVfh"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2caf228a910so93423705ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 13:25:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="m+DoC/yp"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2cc891373e0so148124465ad.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 13:26:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784665523; x=1785270323; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784665615; x=1785270415; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :content-type:mime-version:references:message-id:subject:cc:to:from
          :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vbz1iYT6k9l+H6Z3FTtCF6cLZIfTcAcJKlDT5dYK2AI=;
-        b=nF/+WVfhWA6n+4V2wrxKruKWtTOwHpOZ5w68k+wDMvwoKyRy1v1SUNf1uo1DZOtjiM
-         MMkJ8TKn7KruEol3fupXsyokvmnmoBch0rS8XMCrvB0cPkP0KEVTSgHFTHwlydKfnZ4/
-         CqbVmyzMGKnxJLCSgxVZ7EegZi4qus36LYXISy16RV8opixRPZqBor5TUSJMwjzhbGg3
-         ggFZDCy6yJcD58g5qpRHwvjB5giQVG75Xs6Amsrin0u5I52gq9dOYsWQQYxiCLwA6YAO
-         WmqlqXeRq+YX2QEEE81PF3y+/lHpL26yrX3KwyqDbxqlmp3PbkBrIHxAjL19rQPrhq+m
-         uDSw==
+        bh=bht7YFPW2nLJyME+XdIc/6Xfh+QtNInRSN0Il3SMOm4=;
+        b=m+DoC/ypG33bi5gLgB+FpNvfgN/3tj7LmmPCDZmkQXuoGhpqlhuC3+XwW5Xhe1ShZW
+         7rfKZx+37q5tSOiwFjfr6NlfuF6AEg0hw96SM/Yc+LP+UqWaJDw6ZkZnmkr6lwrtE2up
+         MHo13g794QyzFc0hY0uxfGJ0hY2YpXyx6/1O5AsS6J/tRxhmSGaUFP+mnygUTcojB+JR
+         6AHquuplaeRTvIK1sF6fCcxSciUle6xiNhQCMAH2wPNV/tC4U88VeiCZacrU3X9iR5KA
+         70pgwYahckzw/sP1JtuHuXYgSV1/x/+Bc/+qOD/1n+5I45XWR0rlUxira8YpNZrqvXtX
+         wjzA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784665523; x=1785270323;
+        d=1e100.net; s=20251104; t=1784665615; x=1785270415;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :content-type:mime-version:references:message-id:subject:cc:to:from
          :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=vbz1iYT6k9l+H6Z3FTtCF6cLZIfTcAcJKlDT5dYK2AI=;
-        b=Iveh7Htqqhz8gM92GAkGATFAhxDJ0jFbPQPDUlt4f3voA36dL6QDt/NF36xNXThCig
-         CMVhGcKQK3gsag6cLZdhw5a0lVmKJ9XgSTlr2AUCnw+CSrGzpKNchDNeAZ7isEp7nUyE
-         Bmsm7B38snaIulAO3v37wnHJ2QqitTOdWk8eyewJ7ZL39G8WJTiH8TSPD2yg038Lsy1R
-         X+omBWm2iKMn7ZYaEYmW5ahjrkABmx/t3GYX/2v5gKXHEjplh8QtUZwD3HxApm3dGNcm
-         dBi9nClXhRfyhabx10bmvhffc2gnBH5gzQJH3ZCCu6BQsO/6OVkF0kNYM0it0aAA1jnP
-         Bn+g==
-X-Forwarded-Encrypted: i=1; AHgh+RrHuO2l6LXVOY/AG8ORYS7Q8tzlDKCxbbQWkG1LQP6t81NrBvj3BCshPg6ZHfdNHiagOslqeqEpXng=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6p07Tbxjh4Jco3XKCW39ezxzWzYMv9jmUDaB4hH8XGXnyEs2b
-	0evIZUUNR6y5mYOuBnyqag9EFSUkcgQazNUZVcDzHz++nyXwM1C4fNuBWKwjVWFtFg==
-X-Gm-Gg: AR+sD12CTgsHdkxRGZUUtaVGjiAISsiHVVmpQ0wEI3KOPCueL0Gue7Vo4gXAKGs4qkN
-	1AfJTVofzk8vBqSKmShESEW3HvJUKnY8SGj0zgwX1R94ROMTZkEpvwbO+rFplxCJ4r2YjoPZ6F5
-	N/a+qkTzmjByhwSusRz2yU33ERMlpTvotpmo438bB5bKbjbgZo6NZCZhZ8yNGfYIoOwgnr39FJu
-	fHE88zcrAb959mCQ+UUszG2bom1XKskTeohKVQm1fWwnraVB2J7mVm/2SD3URxMhE2hGA1sGggF
-	OiLVLtgwGthS5u1BpTlZFoHzjKCzYTjQFlE1NTK3zqR5io1rlWAIo3SRxL+Jn4N+gUPM0Gqkvky
-	ShmzwKLboZobHybv1Wdbv3XefDymJuBMoJXvBnfIP4yj6MwRq/uTD/hDW3se7HlcXQxez6TnpK/
-	Hl95IZrHmJsXo3BeWb/Qckd5iGMVmjQqZcR0GawZLI
-X-Received: by 2002:a17:903:b08:b0:2c6:90ec:f601 with SMTP id d9443c01a7336-2cf34835859mr235453285ad.8.1784665522497;
-        Tue, 21 Jul 2026 13:25:22 -0700 (PDT)
+        bh=bht7YFPW2nLJyME+XdIc/6Xfh+QtNInRSN0Il3SMOm4=;
+        b=FAN4CK8XycYJKfPXcKD+0V6XOs29odjVaZrx9RnOVS6rZVMT06mWBkWIBfRm5IRq3+
+         JinCEPuvulfH6RvTYAmSxGnFvxLXJdOAFmTQX+RCt3I8Qf8dD1KBQ4BoxFDzrApZuo2x
+         WBcmP4shnDbuN7AzURWqevV5A2psS84ZeV0vLQFuu5OCuRqOcq9KQHKe14qwMGzGl1Z9
+         rrbCwYfVSyQCp6qLKUzobG3ngeYwn7gQIWNwn84DVqo+fgXoHRcU5k/Fc+khkVsRrYjt
+         k+6MuKmtnbjWmU77BvC0UkQUJMPuB69jDy3pEJl/cCK0IDUA14UgzKJ7lPHHJt8PCmIb
+         ReQw==
+X-Forwarded-Encrypted: i=1; AHgh+RrR/dXasTsnCDkIn6uxYyWZoiC8Bt/1OC3c7xET30hzfXN06s7M6w1ddXILTg4C9UYUtYWC1xVgO4U=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzHVwAPb/dMhnuvKVmF37BJgg6fZf3lzdMdzGZqrlyYMZGuVI40
+	jhngoQ3dUkcEfmeNDFS5hn0AyISCNY94gY9po42OG/CB9+a30+OX0UhUzx3AOideQg==
+X-Gm-Gg: AR+sD10KeEy5RJRUABwuPHgljx6Bzz/DVPjaWN9+7wM0+qv2FJIANY97KH5TxecxlEo
+	KYV0dqJmR3DQRSQsQLaJqOePK1HiiltOPYna6J1/zS6rnZOVDk+rL6S87lk6VplNBBkDwAGr2Zm
+	sW92yK4Gx8XOj287o7DofRG7kvURfXY8O/q5B/qprmUZGlr1KvtO3h7WaKtiOP3AOfAJrYk5DMe
+	cyRa69exQjKG+/tR+4DnCe/Jw+5ZXYKhgJRqPrjel4T6IZjxOE+L0W67+qI5IwEFG8+meuk/Y7l
+	Qny9GHaRVQ3Uffj1DRioogtll788ZA9kupO583GBQ0Q3LABGol0tIhIrjCrZWEwjT4wBraBZi6l
+	GfnGql3gZf759CCiZSYZoxuyeNkfGdKJMMHCT/lS5Z8GpJQI9o+sAexwqLjwITtoBd/q+lt8jsD
+	mC8PufcM64lUY3AMvEYs4anL1N5FAzYV9R6f33tuHH
+X-Received: by 2002:a17:903:4b43:b0:2c0:a555:80d6 with SMTP id d9443c01a7336-2cf3481d1b6mr200020005ad.2.1784665614286;
+        Tue, 21 Jul 2026 13:26:54 -0700 (PDT)
 Received: from google.com (79.217.168.34.bc.googleusercontent.com. [34.168.217.79])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8f3b7c9dsm2391865ad.83.2026.07.21.13.25.21
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8efde5cfsm2738235ad.31.2026.07.21.13.26.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2026 13:25:21 -0700 (PDT)
-Date: Tue, 21 Jul 2026 20:25:18 +0000
+        Tue, 21 Jul 2026 13:26:53 -0700 (PDT)
+Date: Tue, 21 Jul 2026 20:26:50 +0000
 From: David Matlack <dmatlack@google.com>
 To: Pasha Tatashin <pasha.tatashin@soleen.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -82,16 +82,14 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <al_VrpvPE-RLCF5X@google.com>
+Subject: Re: [PATCH v7 09/12] PCI: liveupdate: Inherit ARI Forwarding Enable
+ on preserved bridges
+Message-ID: <al_WCh-G-H1kDU1h@google.com>
 References: <20260710212616.1351130-1-dmatlack@google.com>
- <20260710212616.1351130-4-dmatlack@google.com>
- <178432481253.189683.3297727348836286619.b4-review@b4>
- <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
- <178458744511.332171.13770778781241262180.b4-reply@b4>
- <CALzav=fjTOnyg2++GFFe5B17rHqNCWW=afjsD0A=EEjycPW7Sg@mail.gmail.com>
- <178465652971.412167.17838319728990505256.b4-reply@b4>
+ <20260710212616.1351130-10-dmatlack@google.com>
+ <178433098576.189683.2364970585754668266.b4-review@b4>
+ <CALzav=eZYfYYKAGEzk4TsGFLp1TPb2iFePNmqGsjX4jEZNJ9XA@mail.gmail.com>
+ <178465783370.437204.17382376546970842455.b4-reply@b4>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -101,138 +99,53 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <178465652971.412167.17838319728990505256.b4-reply@b4>
+In-Reply-To: <178465783370.437204.17382376546970842455.b4-reply@b4>
 
-On 2026-07-21 05:55 PM, Pasha Tatashin wrote:
-> On 2026-07-20 16:07:47-07:00, David Matlack wrote:
-> > On Mon, Jul 20, 2026 at 3:44 PM Pasha Tatashin
+On 2026-07-21 06:17 PM, Pasha Tatashin wrote:
+> On 2026-07-20 16:19:00-07:00, David Matlack wrote:
+> > On Fri, Jul 17, 2026 at 4:29 PM Pasha Tatashin
 > > <pasha.tatashin@soleen.com> wrote:
 > > 
-> > > On 2026-07-20 14:54:51-07:00, David Matlack wrote:
+> > > On Fri, 10 Jul 2026 21:26:12 +0000, David Matlack <dmatlack@google.com> wrote:
 > > >
-> > > Thanks for the explanation. As I understand, the most straightforward
-> > > way to avoid holding the permanent reference is indeed to delete
-> > > dev->liveupdate.incoming entirely and perform an xarray lookup on every
-> > > access, like this:
+> > > unsigned int    ari_enabled:1;
 > > >
-> > > bool pci_liveupdate_is_incoming(struct pci_dev *dev)
-> > > {
-> > >         ...
-> > >         incoming = pci_liveupdate_flb_get_incoming();
-> > >         ...
-> > >         dev_ser = xa_load(&incoming->xa, key);
-> > >         ...
-> > >         pci_liveupdate_flb_put_incoming();
-> > >         return dev_ser && dev_ser->refcount > 0;
-> > > }
-> > >
-> > > However, as you note, this is inefficient because it affects every
-> > > single device and adds lookup overhead to every access (not sure about
-> > > the actual cost though, xarray access is pretty fast!).
-> > >
-> > > We can, however, still avoid tinkering with the lifecycle of the FLB,
-> > > and instead treat dev->liveupdate.incoming as a "hint" that we validate
-> > > on access with a fast, liveness check:
+> > > Sashiko asks a valid question, what protects other bits in this word
+> > > during modication?  At a very list a comment is needed.
 > > 
-> > Can you tell me more about your concern about FLB lifetime?
+> > This was my reply to Sashiko, not sure if you saw it:
 > > 
-> > The lifetime of the FLB will not be affected by this reference unless
-> > there is a bug in the driver where it fails to call
-> > pci_liveupdate_finish() during it's file handler finish callback.
-> 
-> From a design perspective, liveupdate_flb_get/put_incoming() is a 
-> logical read-lock/unlock pair on the FLB data. We use a refcount for 
-> optimization and sharing, but holding a get over a long asynchronous gap 
-> (from boot-time device setup to driver probe) is essentially holding an 
-> unbound lock.
-> 
-> Unbound locks make it difficult to trace refcount leaks or debug 
-> lifecycle issues.
-
-It's very standard for refcounts to be held for a long time, e.g. file
-refcounts and device refcounts. LUO FLBs themselves already have
-long-lived refcounts taken by each file that depends on themm, which
-aren't released until that file handler's finish callback runs. The PCI
-core is just doing the same thing.
-
-> 
+> > .  pci_liveupdate_configure_ari() is called from pci_configure_ari()
+> > .  which also sets dev->ari_enabled=1 and is pre-existing code.
+> > .
+> > .  If writing to dev->ari_enabled in this path is indeed unsafe then that
+> > .  is a pre-existing bug.
 > > 
-> > > 1. At Setup: In pci_liveupdate_setup_device(), we do the xarray lookup
-> > > once, cache the pointer in dev->liveupdate.incoming, and immediately
-> > > call pci_liveupdate_flb_put_incoming(). We do not hold a permanent
-> > > reference.
-> > >
-> > > 2. On Access: When an accessor runs, instead of doing a full xarray
-> > > lookup, it just validates the cached pointer's liveness by temporarily
-> > > securing the FLB:
-> > >
-> > > static struct pci_flb_incoming *pci_liveupdate_get_incoming(struct pci_dev *dev)
-> > > {
-> > >         struct pci_flb_incoming *incoming;
-> > >
-> > >         incoming = pci_liveupdate_flb_get_incoming();
-> > >         if (!incoming)
-> > >                 return NULL;
-> > >
-> > >         if (dev->liveupdate.incoming)
-> > >                 return incoming;
-> > >
-> > >         pci_liveupdate_flb_put_incoming();
-> > >         return NULL;
-> > > }
-> > >
-> > > * If get_incoming() returns NULL (the FLB has already finished/freed),
-> > >   the hint is invalid and the device is no longer incoming.
-> > 
-> > This avoids the xarray lookup but still requires taking the incoming
-> > FLB mutex twice (once for get and once for put) on every access. And
-> > if there's no incoming PCI FLB, the LUO will iterate over all incoming
-> > FLBs under the mutex to find it.
+> > I figured that a comment wouldn't be needed for continuing an
+> > established precedent (it's ok to write to ari_enabled during this
+> > path).
 > 
-> Can we do a fast-path check first?
+> Overall, I agree that if there is a bug it is pre-existing. But we 
+> should also take opportunities to improve existing code and make it 
+> safer. In my opinion, Sashiko raises a valid concern that is not 
+> obvious, since there is no comment explaining the access of non-atomic 
+> bitfields in the header before the struct pci_dev definition.
 > 
-> static struct pci_flb_incoming *pci_liveupdate_get_incoming(struct pci_dev *dev)
-> {
-> 	struct pci_flb_incoming *incoming;
+> In this path, it is safe because we run inside pci_device_add(), where 
+> dev is brand new and has not yet been added to the public devices list.
 > 
-> 	/* Fast-path to avoid unnecessary FLB querying */
-> 	if (!dev->liveupdate.incoming)
-> 		return NULL;
+> However, it would be great to:
 > 
-> 	incoming = pci_liveupdate_flb_get_incoming();
-> 	if (!incoming)
-> 		return NULL;
-> 
-> 	/* Check again, now that FLB is acquired */
-> 	if (dev->liveupdate.incoming)
-> 		return incoming;
-> 
-> 	pci_liveupdate_flb_put_incoming();
-> 	return NULL;
-> }
-> 
-> This seems to gives us the best of both worlds: robust refcount hygiene 
-> and a sane fast path.
-> 
-> What do you think?
+> 1. Review the access patterns to ensure there are no concurrent writers 
+>    on any other paths.
+> 2. Add a brief comment in this patch right before setting ari:
+> /* Safe to write without locking; device is not yet publicly visible */
 
-It still seems like an overall worse approach to me.
+Ack, will do this one in v8.
 
- * From a performance perspective, the PCI core would still have to
-   acquire the FLB mutex twice every time it needs to use the device's
-   serialized state (once to acquire a new reference and once to release
-   it).
-
- * From a locking perspective, the refcount doesn't actually protect
-   against the device itself going through finish. So we still need the
-   pci_liveupdate.rwsem.
-
- * From a hygiene perspective, each reference is held for less time yes,
-   but there will more places in the code that need to acquire and
-   release a refcount.  That is more room for bugs to leak a refcount.
-   So I'm not sure taking more small refcounts is an improvement.
-
-With the current approach there is just one refcount with a very clear
-lifetime (that aligns with the device file's refcount) and no extra LUO
-mutexes required to use the device's serialized state during device
-enumeration & setup.
+> 
+> or:
+> 
+> 3. Create a new separate patch that adds a comment before the struct 
+> pci_dev definition explaining the bitfield access pattern, and how 
+> concurrent writes are avoided.
