@@ -1,80 +1,80 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 580B74582C4
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 23:17:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9FB63E49EF
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 23:18:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.54
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784675835; cv=pass; b=UYBRQn2cVlLabN6tXOjFo3gLmSElfq/9h3lfMOs8P+zsRd6fknIbGKhPmR3SsGxdWZ7+JmB92cFUese79XUxA7/MHWpEMelZG07iZAHLPDqbyIWcvQUVZMxLkg6i74Kyc1vEqSGJc1MdFjD+FwErLEbhDHWKvvTK5u9KsmkyvtI=
+	t=1784675935; cv=pass; b=XLJdfKcuAjYI2okOQZQbLrdDWwgrk/zS0m/tJxg0XVjKEW7UhIQpIaNle78AHQKyf81vUxk+eUNuRtEXYP1PZGcq24DaLefdQuu5XP9SSkml1zXhXDKA4pXoI82MJFqr8h806weZi0TDM0senGhKeI2O9a+wm1tZaDfcQEPMxs8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784675835; c=relaxed/simple;
-	bh=ixJiEIB3IFCdgmVozwXQ5lsPDefOeoRv/OC6Bg1emsQ=;
+	s=arc-20240116; t=1784675935; c=relaxed/simple;
+	bh=BFd5p9md0SulO7r0XdkZg4DHAs3kRKCtgQkW3CzSCDI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rFhjudB0f8WhMHMJ0Relhfk9D8W12iBnsmcC9eY7cSs4sPbwRmr/BSu89M+N5NwYDVOTs/9OlNHivIAOBsgPLIH6bSy8yMgH/vA2tUsna0yKtHI4f117kBM/Cz4oWYOPssJ8p/7Eb12Zpfu4V7QYPFghP9CDyso3oCi6lZNj6HI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tYHqs2Vj; arc=pass smtp.client-ip=209.85.215.172
+	 To:Cc:Content-Type; b=oXFRHHohIVEYNwaQNM3/D8vqIlwlMZTX/OWr7mhwcfxzZdxQfwRGcljw1+Xf3IcHTE2/9qsAx2OLTYh9TbVIxMxLk/rudNb3k97k4PPrCUJsSf6j652ckM2q0xP2gf3nXVkhPs5OfGGzEVphxTF3AqFVzm67JZgU1b7g73SbfLM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mMw6WaiS; arc=pass smtp.client-ip=209.85.216.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tYHqs2Vj"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c9b373d5af0so9010155a12.2
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 16:17:12 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784675832; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mMw6WaiS"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-38dcbade417so10161538a91.1
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 16:18:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784675932; cv=none;
         d=google.com; s=arc-20260327;
-        b=qwVCWLOMTWS9GYxxA5bX52Fx3eOSlILfJhvXumOcUlav5DamkrFqDg1MryjapgRyAC
-         M29OeqCpUGwujHN9QvCB6r76F5ywRB3bT5CnKGiC5BvjnmeqNwxN12mcDLa0HsE2ZVlt
-         GkqyicAnppvvgLKlDqrx54CsWmIMgXpa0j4vj2a4nUnkJ1fHati3tFZYOTVoAWH2a2Uv
-         EptkB5NHXPyzfQ1sKIU2srjU9MqN3w50uwonVthHgMPwGKLrIxq+81tnD6qTww/onT9I
-         n8iPK0nqml+uziqynU7i6AZww9TA0aPR7FFeG5iUWPzukTZ99QD/IgFLt6Po1hdKljeS
-         b90g==
+        b=c6iZ+InGMIEbyB73CZpKbRMUqmVoqZyRPST6nr1p0OwquXL9bt22OHzkp/jZIISxOs
+         d3u2bP56zDN29u7etkboMOPr4iGoYDVFoTx0pacDZlK5HGzkCp1fpL5pFLQ4O/Zgn1TD
+         LWpfzOP+V9bjTdpEexWjNQ8j4y2fNmFhFs7e5q0Utl+6ih5K3OAfFrR9+gAdbgmYTNRW
+         4svxqbcy3lIFC9xGRnBEFkywcxTe01UTHQvUZtNeQxoiAiUU+r1YUlpK6T/YoiWqDaQV
+         rQsjRi4ZNtTDLAFnMRFvbU0aPSyx2/AIHul2Re9at+/8lnbmpCCA3OHRNNVRYT4zwmBu
+         gGMQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=XZ7qRUkeVcw09Vx52wAPeyyp7zrSxjZkAHO4XaqMzD4=;
-        fh=2RQvfdxeSEoEcrbk8tHQ3WoE0XMg2+ytgq76zWnqp4o=;
-        b=GdxTIjg64k1zQK2GENkZKcq7VdIrFAigXMdNVm8PO25a4jWVpk9E5beggEQKVvJzc7
-         EYdEJmvbkDyOj1IElsDO0mfcM5ZwIRRACSyT+oP9F2OOGHWo5Vjp4I3zYZBM4PAtNOtY
-         dY1ZfhSOCZDTMUv+PnWr0shjsadrnwKAwNLuOUmT+h7PE1pyci59ZA8MmMmkAdSkly32
-         33kuF8QWF0x3YlHAd/f2vSszgbdXhQt9ndsODmSOIsp0uscx7ZnIxcawHBVq6nmqedgS
-         wSn10CPjxvrpZx7728qD8aVWXuVrqDrs4OaduENkt1onvaGy37Qk17CFC5N3y18djavx
-         CoeQ==;
+        bh=SWaHQpsMmrxTrkWgIFegEM8fU8LCXLhjFNzfjSgjkGU=;
+        fh=9eylaCGoL6g0PEL2lmPxlrUNTZHM72YEZgxTPyDnZ9I=;
+        b=fx512QfnxKBbALkYS8vKk1k3GBmxltXNv0unegTdBIwphTKQSENElWcW8NBpJVAOIc
+         iIdn078KYxKFwSoHEny5J2ZUOzjecpuABvanSPyFAdFWiyhyELtzNlq7V2W7ZwG8M5+A
+         M3yhwPJRHCcTKjXbkNtM3wU6n4dr8x/1q6OCSJ/uIPly2pAS/MDflTLgJ4pqNma6Sknh
+         +0i1oSPNnHXXBcKMQifbRZiQWmtzUCP7srkbyvK/kY4Wsx30iSXduwRgDxmM30Xr7OQG
+         cxnSYfggYNwrcWdHt/RBwrdXORSH/IygJQhCWI4vvPckvl3bvdMXbYG2f5Fxms7f3RWc
+         pHEQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784675832; x=1785280632; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784675932; x=1785280732; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=XZ7qRUkeVcw09Vx52wAPeyyp7zrSxjZkAHO4XaqMzD4=;
-        b=tYHqs2VjcpDzUVPn3ZYnf9NvsMr45MZoprS6JSOUBCtUxTvWOu42atJVl/cqH5knRl
-         ZLMwHTYoJPc46Pb3FuZxvyG57aLmB9Sr6tCSzlCe8p/xJR2BXgfsCQhU5WNlwSJegFzc
-         fWaIMLEzDkPSoJRhq4WRmZ8x6b+ObRMUd69bids2GmHDB4DEZOaFEwJbPutY5PAD+XJ1
-         BMNjOyb6scfc9pVy/9kE4B+3dro4S+MWaugAyUSNq1hSCG0/Hy6jur7XTYi/4ZGw/taY
-         xcQs00LVabzjB/B/g09vI6kMSj61tmVQUx+lLJE1tdCqvbtbhGC83SWAgzVEtJXVsnW7
-         NjiA==
+        bh=SWaHQpsMmrxTrkWgIFegEM8fU8LCXLhjFNzfjSgjkGU=;
+        b=mMw6WaiSbEFRRHD3EV8o9PRpwfucd/Qt4VWb+bMg0KnZq3qYTkiui7r9oigT7ehRhA
+         bdSPyNHVCUrl7y+8TdbpLlURTtoAMWjNUAmMGE4SoTx7cTSYwausBLxoGjMk5jP0pH73
+         6yHhrygOyzpg5wqKxRq4MfLGWs0/g/amRSEBFJiTXOMcISJVN8/GcoHrOIo9I/4i5Qma
+         3l/QHBClq7qRX8OW621WxgxHBNUeDDqNCcsvGNoHT3Lm0Mjan/gw95GNs/oucc9rOMde
+         pcJKPyxcphfpPPQEixPToUrAoXs6IGU7KWFn2dwCGJ4OuUg3t1v6ffAJrsJwCcdHXe4T
+         Zd/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784675832; x=1785280632;
+        d=1e100.net; s=20251104; t=1784675932; x=1785280732;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XZ7qRUkeVcw09Vx52wAPeyyp7zrSxjZkAHO4XaqMzD4=;
-        b=SkZwtgynJuWE8+O3NKEqI0KomUE8rvImQQ5o6Ih3QDSboN3Wh7kX4AtmcIt7gDlTwz
-         cMDSrNkZ0HTrnBPgHnlRldvfHrk4xBaWy1QTJszMXRGNuDWBfbSypKtdxGL1lxdDcXY1
-         K/9DSKOjhaPFMzw99kZsiulU1J3KhQPhZD3SzVNUmlJ0bPCGJo5Dkjux/ow8RgSHJFGu
-         7eDVXIFzM2LrhD2YZNnycZZaDuCFmZRb12retyF3RESRaIkxV0yupj0wWifcDQ8t2iDi
-         SGcBvtewVgK6lJyopbTfxT+I8pkXxdah2si1lyH+lzYFPLqdlrgZbzLFyCHvuvXkeKp8
-         4eKA==
-X-Forwarded-Encrypted: i=1; AHgh+RoBMrU2m6wudgI12hfFl49aV5/tuGiLRoAM0LYj/tRF7LvLG7BuTwHlI2JqYjDGmICTCzgrjpZXLwE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBP2Pa/KmSciKkHDoVRfz1ObIX/CmCA4C3OUaCGiJEj0HnTWP4
-	Vc6thQ+znOjpivvJJCnFGCSYKImkTUOVY6F7lNbU9nk87WGd2KSkvVIGbE9lpgrPAh5d5WYzsOU
-	w1LS6IoE9cN2GzaEE+6Py4KD2HzFGgmxc8oq68uoX
-X-Gm-Gg: AR+sD11M/tHZt6B/iGojH1Ejy55BYQucYSJcL82syqcYuRU3oaK58eg1H9Zezlt/X7k
-	xtvPxfU9z638OXBkkZfSt2PyCubMAUCu+vhmzXJgmScRe0QA9cd4+nvKeixtsOSkSszgf9kp6gf
-	RykHk/g4GFBh5KaikSIx5c5SvwlKadIIIp7xZ1APtp/L05h3fT3vacN6xN4YAsdCug8KKCigNjm
-	6ADotKE4Xq/+kT+z9NLPK9hXIv2/T/QdALcQcU2tAansFWRrKD4M5i8R9lk6w==
-X-Received: by 2002:a05:6a20:1446:b0:3b1:cce5:9140 with SMTP id
- adf61e73a8af0-3c3ad8537d2mr21934058637.33.1784675831570; Tue, 21 Jul 2026
- 16:17:11 -0700 (PDT)
+        bh=SWaHQpsMmrxTrkWgIFegEM8fU8LCXLhjFNzfjSgjkGU=;
+        b=VTyNoMGUq68wS5e7H7Y4YQwmj2eiz5Yi1ntitgiWgFRwf3ADbCIK1NFLAK4eaTIDSJ
+         4GqDJhew3o0EH1c8+bsjfdGniSOo6/4FWcZKRpXSjdNgsGOkfedvFFOmKcyJLfriqBeL
+         SDfCIGN4iDE7bmo70vLNU0tiNh/a/0pSq3jD1QgUwAJpGnmT4+jagkqu/KmHGcreqSNm
+         YSJrvr5jk7HwHIYeuuNhqKzkPqk25Me0hAK9ZAUcSuweY4gof2SHZfjFvS1EILu6lN13
+         71l6c++YoBUO6IkWokoXeQ+odogUVyLAkD7HKSpMTujU8ngL7zeNYanDVWBLPZMgn2xr
+         rYRQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoQxXaWSp63l/7oXAe+vA9rLY8wXDNktbQSKo2TqrFqtvdz6Vdi6vrh2GbrDmsO5XDUV1mnpeWEvbo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw03Ns04vcNcDbxs3cDnZ81QX7Y8C9246B6Z/RlUt1zQ+84B0SG
+	0aNRR/WzwmBAOjQsaW0/F1dN8Qgqjown4yaqzU+Z5WSONbSb+YkRnhMmniqtgkS1LuTHVRIK4eP
+	7vCptHiFimNdR5lN5XBj5/Ya+5kKFyRi9Qc71Y1NK
+X-Gm-Gg: AR+sD13ZSTHhvQv43fmRwDwKuvpCEvQ+rOuohpU464XtsPq5dpqd6xlSf7d+JchJJjB
+	hs6FDsjtIzSVL5xlk4Z/XaXPdP9h9Q7zIkLtwbDPO3ioyeMlWeb/Bbw82bQIjdiI6HUZOcY79kk
+	6nrBWJc2Wmhtoue2IQFchYgQOvTt4Ut0Ha2MbnVLi6zvsTyGo37ZGrF/124Ph0GA1cVNeMYZh2X
+	2z6RsPe242TbEdaOxjzhLnQLjWsA9qzzADCCuN3jsNTevGIF1tJTers3CQuAK2+i6AfIl5J
+X-Received: by 2002:a17:90a:f94e:b0:38e:500:3975 with SMTP id
+ 98e67ed59e1d1-38e4b476b7bmr20562050a91.18.1784675931394; Tue, 21 Jul 2026
+ 16:18:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,12 +83,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260710212616.1351130-1-dmatlack@google.com> <20260710212616.1351130-4-dmatlack@google.com>
  <178432481253.189683.3297727348836286619.b4-review@b4> <CALzav=e1Gcu-9TD7F--41cYqKBrStKOE4VqQ4K3PKdNuYnNmcQ@mail.gmail.com>
- <al_3nOssZoa6RoCq@google.com>
-In-Reply-To: <al_3nOssZoa6RoCq@google.com>
+ <al_3nOssZoa6RoCq@google.com> <CALzav=dvc_bdmFtV1U2APfs1FM-6Zi5=VShcAYQjZ0wwNRfC-Q@mail.gmail.com>
+In-Reply-To: <CALzav=dvc_bdmFtV1U2APfs1FM-6Zi5=VShcAYQjZ0wwNRfC-Q@mail.gmail.com>
 From: David Matlack <dmatlack@google.com>
-Date: Tue, 21 Jul 2026 16:16:44 -0700
-X-Gm-Features: AUfX_mxmcKg9wEWL8G2cbUIPdoOXypA3DIQHnJ26Qr2Bjm3tZvSdzwlvs3nabeo
-Message-ID: <CALzav=dvc_bdmFtV1U2APfs1FM-6Zi5=VShcAYQjZ0wwNRfC-Q@mail.gmail.com>
+Date: Tue, 21 Jul 2026 16:18:24 -0700
+X-Gm-Features: AUfX_mw8WVTULDGM5fg02urMXenJj0foOmNcG_--0euC3EYm6G6QAbnPcLHsH0I
+Message-ID: <CALzav=fYx7R7c6FTQ5bC4bbQ+_KNaC3gopcPihOtKmHGaB6s1Q@mail.gmail.com>
 Subject: Re: [PATCH v7 03/12] PCI: liveupdate: Track incoming preserved PCI devices
 To: Samiullah Khawaja <skhawaja@google.com>
 Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, kexec@lists.infradead.org, 
@@ -105,74 +105,88 @@ Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, kexec@lists.infradead.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 21, 2026 at 4:02=E2=80=AFPM Samiullah Khawaja <skhawaja@google.=
-com> wrote:
+On Tue, Jul 21, 2026 at 4:16=E2=80=AFPM David Matlack <dmatlack@google.com>=
+ wrote:
 >
-> On Mon, Jul 20, 2026 at 02:54:51PM -0700, David Matlack wrote:
-> >On Fri, Jul 17, 2026 at 2:47=E2=80=AFPM Pasha Tatashin
-> ><pasha.tatashin@soleen.com> wrote:
-> >>
-> >> On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.com=
-> wrote:
-> >> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> >> > index 03075ce06ac9..df6a02240aa4 100644
-> >> > --- a/drivers/pci/liveupdate.c
-> >> > +++ b/drivers/pci/liveupdate.c
-> >> > @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev *=
-dev)
-> >> > [ ... skip 76 lines ... ]
-> >> > +     /*
-> >> > +      * Hold the ref on the incoming FLB until pci_liveupdate_finis=
-h() so
-> >> > +      * that dev->liveupdate.incoming cannot get freed while the PC=
-I core
-> >> > +      * has a pointer to it. It's better to leak the incoming FLB t=
-han do a
-> >> > +      * use-after-free if driver does not call pci_liveupdate_finis=
-h().
-> >> > +      */
-> >>
-> >> I am confused by this. Each preserved PCI device must have an associat=
-ed
-> >> FD preserved with it via LUO. I.e., vfiofd would need to be preserved.=
- If
-> >> the vfiofd was not reclaimed, and finish is not possible, that vfiofd
-> >> would still be owned by LUO, and therefore PCI FLB refcount would stay
-> >> positive.
-> >>
-> >> However, if finish is possible, and this is the last vfiofd that is
-> >> finished, FLB will be freed as soon as the reference count reaches zer=
-o,
-> >> which I would think is the expected behavior.
-> >>
-> >> What is the point of holding a reference here, instead of only for the
-> >> duration of FLB access, i.e. to make sure we are accessing a valid dat=
-a?
+> On Tue, Jul 21, 2026 at 4:02=E2=80=AFPM Samiullah Khawaja <skhawaja@googl=
+e.com> wrote:
 > >
-> >The duration of the access is from here until pci_liveupdate_finish()
-> >because that it when the pointer (dev->liveupdate.incoming) is
-> >cleared. So that is why the PCI core holds the reference from here
-> >until pci_liveupdate_finish().
+> > On Mon, Jul 20, 2026 at 02:54:51PM -0700, David Matlack wrote:
+> > >On Fri, Jul 17, 2026 at 2:47=E2=80=AFPM Pasha Tatashin
+> > ><pasha.tatashin@soleen.com> wrote:
+> > >>
+> > >> On Fri, 10 Jul 2026 21:26:06 +0000, David Matlack <dmatlack@google.c=
+om> wrote:
+> > >> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> > >> > index 03075ce06ac9..df6a02240aa4 100644
+> > >> > --- a/drivers/pci/liveupdate.c
+> > >> > +++ b/drivers/pci/liveupdate.c
+> > >> > @@ -298,6 +377,87 @@ void pci_liveupdate_unpreserve(struct pci_dev=
+ *dev)
+> > >> > [ ... skip 76 lines ... ]
+> > >> > +     /*
+> > >> > +      * Hold the ref on the incoming FLB until pci_liveupdate_fin=
+ish() so
+> > >> > +      * that dev->liveupdate.incoming cannot get freed while the =
+PCI core
+> > >> > +      * has a pointer to it. It's better to leak the incoming FLB=
+ than do a
+> > >> > +      * use-after-free if driver does not call pci_liveupdate_fin=
+ish().
+> > >> > +      */
+> > >>
+> > >> I am confused by this. Each preserved PCI device must have an associ=
+ated
+> > >> FD preserved with it via LUO. I.e., vfiofd would need to be preserve=
+d. If
+> > >> the vfiofd was not reclaimed, and finish is not possible, that vfiof=
+d
+> > >> would still be owned by LUO, and therefore PCI FLB refcount would st=
+ay
+> > >> positive.
+> > >>
+> > >> However, if finish is possible, and this is the last vfiofd that is
+> > >> finished, FLB will be freed as soon as the reference count reaches z=
+ero,
+> > >> which I would think is the expected behavior.
+> > >>
+> > >> What is the point of holding a reference here, instead of only for t=
+he
+> > >> duration of FLB access, i.e. to make sure we are accessing a valid d=
+ata?
+> > >
+> > >The duration of the access is from here until pci_liveupdate_finish()
+> > >because that it when the pointer (dev->liveupdate.incoming) is
+> > >cleared. So that is why the PCI core holds the reference from here
+> > >until pci_liveupdate_finish().
+> >
+> > I think LUO gives you guarantee that this pointer remains valid until
+> > the FLB finish(), because all the vfiofd that were preserved have not
+> > finished. And when all vfiofd have finished, LUO lets you know that the
+> > pointer is becoming invalid so you can unset these in the finish()
+> > callback from LUO?
+> >
+> > If I understand this correctly, I think by keeping long references unti=
+l
+> > finish you are replicating the vfiofd bound lifecycle that LUO already
+> > gives you.
 >
-> I think LUO gives you guarantee that this pointer remains valid until
-> the FLB finish(), because all the vfiofd that were preserved have not
-> finished. And when all vfiofd have finished, LUO lets you know that the
-> pointer is becoming invalid so you can unset these in the finish()
-> callback from LUO?
+> Yes that's right. I am taking the approach of not trusting drivers
+> (i.e. VFIO) and having the PCI core maintain it's own references so
+> that FLB finish() is guaranteed to never be called while a device has
+> device->liveupdate.incoming set.
 >
-> If I understand this correctly, I think by keeping long references until
-> finish you are replicating the vfiofd bound lifecycle that LUO already
-> gives you.
+> Alternatively, the PCI core could avoid taking a reference and instead
+> check for driver bugs in FLB finish(). I previously explored that
+> approach and ran into a circular lock dependency between the FLB mutex
+> and pci_liveupdate.rwsem. But I can look into that again, or just do a
+> lockless walk of all PCI devices and panic if any still has
+> dev->liveupdate.incoming set. It will only happen if the driver is
+> completely broken so panicking seems fine.
 
-Yes that's right. I am taking the approach of not trusting drivers
-(i.e. VFIO) and having the PCI core maintain it's own references so
-that FLB finish() is guaranteed to never be called while a device has
-device->liveupdate.incoming set.
+Pasha what do you think of this approach?
 
-Alternatively, the PCI core could avoid taking a reference and instead
-check for driver bugs in FLB finish(). I previously explored that
-approach and ran into a circular lock dependency between the FLB mutex
-and pci_liveupdate.rwsem. But I can look into that again, or just do a
-lockless walk of all PCI devices and panic if any still has
-dev->liveupdate.incoming set. It will only happen if the driver is
-completely broken so panicking seems fine.
+It avoids the PCI core taking a long reference (your conern) and also
+avoids the PCI core needing to take lots of short references to access
+dev->liveupdate.incoming (my concern). So seems like a good
+compromise.
