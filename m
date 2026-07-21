@@ -1,50 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1BB353EE0;
-	Tue, 21 Jul 2026 06:16:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77B92FF669;
+	Tue, 21 Jul 2026 06:22:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784614597; cv=none; b=hz3ShifxQwj11xOMB9lgaPlILJTKbC0QJEhAf6KyPJaL94fEwjIy7iRyKUNJD/bjdOJbVSbLleqilyKi9k1GW6ScFa/WO+IXkFeAGhzRcSaYoWAlaRIXm0OAE91TGP7iqO9EF5NBYtVfhkjjEwMUvd16j3oqUV/rr8ERNzOgB/8=
+	t=1784614970; cv=none; b=n9TU3DBdgi2UwUsxlKsUYVM9PJm7YhSOWoKdApTLVzyCtk1ZmDYxP38HW6Cq/MOJbdSncPmNfvkfdsCH4G184gofSWgpjsrL1bNv4ltCBxQTNhLgGfIy6dzj7Bcl2GaQTfEjOiIZzMvgteW44nqgAhNqrtNwSVf2vQwoaYa6RYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784614597; c=relaxed/simple;
-	bh=4sY465NWSwzqiWTdW7X0mX4+rz2Abo/1QgfDXYFtMGY=;
+	s=arc-20240116; t=1784614970; c=relaxed/simple;
+	bh=ODTYBgX+jlUQruU0hAmr2ToaVlytLSDAW3uSvlZEu5w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OaAqMYfQrwABWaSp5WX7L09VKPe7+7s3z8JIiOaW8DKyjCpOWsc0xfaHg+Y1YD/XoOLLr1FszLQ38M3qpxvK9KfFz7ExfBlqj+4qqlAZTnwVipJUZzvM6oCJHwc/OgK1oLKO9Ff9xXAjQByRa8Ms0OuywJ8x+zy2SipFKAX8DXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfuNRcYX; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=amixjbOGaF7T8DzdplM1LsABwaCPwfNTvjJ5dkleyiddjXMA0cPp+EPLAwXfx8ZpL3hRkZbQNMBOcFDgvJ/kGGSvuAP+xeryrNstBn/no1+dmJJTR57FmWFniBZy5lZGJzzWdQv7WIDKlr42WIdRpzaLO1PmSQ7XwswOItbR+6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4dOmKZ4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfuNRcYX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D191E1F000E9;
-	Tue, 21 Jul 2026 06:16:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4dOmKZ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B38671F000E9;
+	Tue, 21 Jul 2026 06:22:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784614595;
-	bh=PTn588y+YtF/kkI2+86cN1oYQblIbgof5q8GqN2Q5Tc=;
+	s=k20260515; t=1784614968;
+	bh=rKeTPI5jqiUqG0TfM9U3+ay3JocBwanqGc8pIY1Ls6A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hfuNRcYXY4vav7TsUn2QWb6Za1LbY9rNzNTBS/3l8hFDFNNVWXTRvGhcJzlrRtL8K
-	 HXYWVjPu3kk0s2yKiTcbABNNo08j5M62SscJsSWMv/YQX7RmqHaeFIXup9P6hlrgFp
-	 FuDflMHOexe8Xxf+/usZsHs0/j0TK2emGxvNUUpb18cy8M77ztGAurdx+M+s3Gtd+t
-	 teHKobGXbJ2eFmCtefpJtcpw93Lct6WW6oAFxvzMzZqf46YR1DPJKS4ZZTSrWSqEkg
-	 mRPNQ/fmDrjhjJEK/Lli/CGdrf9lZK0QRva8RQos/0tUXFn/O04SzKflOJmfkpzMHn
-	 invJ9sr43p89Q==
-Date: Tue, 21 Jul 2026 08:16:24 +0200
+	b=D4dOmKZ40dY8rZvYJL5JGA0y0gudPIyswlU5MOLj6cHewkZRGT/SMvN5FNmqXGRFh
+	 nZpJH8qkN71rdHH6y9T/f4BuxwSaBJVYq4YSHHwnLXKtZfzahb5uOwuJDCAKIuVC9I
+	 aPALpsHCtW/COz/cFjXoct6t1UK2StIoyI6LbSVhpXuw0OaFXnQbbYU9xuOV2DnkGH
+	 UIxLJNKPAOimQ/US/HGoCnrMoiNkb/kdjN4JIAEZ8tYM8wF+spOqVb89nulKtYER3U
+	 UwFTLay1vaarF9zEMT8QPpE3aaCeSPJcAMb7xgROR95nsSkUt1rPFPmMXNmMigkYYE
+	 fWk/KN2rS0U2g==
+Date: Tue, 21 Jul 2026 08:22:40 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-Cc: Frank Li <frank.li@nxp.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, 
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com" <festevam@gmail.com>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v2] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
- power and reference clock control
-Message-ID: <6oooulhpzzvmgdzwniwhmhrbhthernnbc2jy4j3x5yj5axj3qe@plst6pzx767f>
-References: <20260708035928.580236-1-hongxing.zhu@oss.nxp.com>
- <20260708035928.580236-2-hongxing.zhu@oss.nxp.com>
- <afwyhy7npuvtecdbuzaytazbifu2ytb6admq4xbzbmxwx47vpq@wrc5dp62mtng>
- <GV2PR04MB1201914A80BB2BF78A10465748CC62@GV2PR04MB12019.eurprd04.prod.outlook.com>
- <GV2PR04MB12019C0F0554EC9A598512ABD8CC32@GV2PR04MB12019.eurprd04.prod.outlook.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] arm64: dts: qcom: eliza-evk: Add PCIe1 with
+ TC9563 PCIe switch
+Message-ID: <2xz7madb3jkifwjwziozuudx3s57g25my3j6ucwjzbguacpgyn@btyrkbzqzh4a>
+References: <20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com>
+ <20260708-eliza_evk-v2-2-c599246ceba1@oss.qualcomm.com>
+ <n4s25nftmn3ginddls4u3tpzabkgiotwzh4kws5s4jfppup36s@ccbfrrrqxihq>
+ <76288f31-57ea-4a42-ad50-8504d8eccfa0@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,126 +50,96 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <GV2PR04MB12019C0F0554EC9A598512ABD8CC32@GV2PR04MB12019.eurprd04.prod.outlook.com>
+In-Reply-To: <76288f31-57ea-4a42-ad50-8504d8eccfa0@oss.qualcomm.com>
 
-On Mon, Jul 20, 2026 at 08:32:31AM +0000, Hongxing Zhu (OSS) wrote:
-> > -----Original Message-----
-> > From: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> > Sent: Friday, July 17, 2026 4:57 PM
-> > To: Manivannan Sadhasivam <mani@kernel.org>; Hongxing Zhu (OSS)
-> > <hongxing.zhu@oss.nxp.com>
-> > Cc: Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de; lpieralisi@kernel.org;
-> > kwilczynski@kernel.org; robh@kernel.org; bhelgaas@google.com;
-> > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com; linux-
-> > pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; imx@lists.linux.dev;
-> > linux-kernel@vger.kernel.org; Hongxing Zhu <hongxing.zhu@nxp.com>
-> > Subject: RE: [PATCH v2] PCI: imx6: Fix i.MX6Q/DL boot hang by separating PHY
-> > power and reference clock control
-> > 
-> > > -----Original Message-----
-> > > From: Manivannan Sadhasivam <mani@kernel.org>
-> > > Sent: Friday, July 17, 2026 12:35 AM
-> > > To: Hongxing Zhu (OSS) <hongxing.zhu@oss.nxp.com>
-> > > Cc: Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de;
-> > > lpieralisi@kernel.org; kwilczynski@kernel.org; robh@kernel.org;
-> > > bhelgaas@google.com; s.hauer@pengutronix.de; kernel@pengutronix.de;
-> > > festevam@gmail.com; linux- pci@vger.kernel.org;
-> > > linux-arm-kernel@lists.infradead.org; imx@lists.linux.dev;
-> > > linux-kernel@vger.kernel.org; Hongxing Zhu <hongxing.zhu@nxp.com>
-> > > Subject: Re: [PATCH v2] PCI: imx6: Fix i.MX6Q/DL boot hang by
-> > > separating PHY power and reference clock control
-> > >
-> > > On Wed, Jul 08, 2026 at 11:59:27AM +0800, hongxing.zhu@oss.nxp.com wrote:
-> > > > From: Richard Zhu <hongxing.zhu@nxp.com>
-> > > >
-> > > > Commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling
-> > > > regulators") introduced a boot hang on i.MX6Q/DL variants by
-> > > > changing the initialization sequence.
-> > > >
-> > > > The issue stems from coupling PHY power (TEST_PD) and reference
-> > > > clock
-> > > > (REF_CLK_EN) control in imx6q_pcie_enable_ref_clk(). When these are
-> > > > managed together, the timing between PHY power-up and reference
-> > > > clock enablement cannot be properly controlled, leading to
-> > > > initialization failures.
-> > > >
-> > >
-> > > What is the timing requirement here?
-> > The timing requirement is that TEST_PD must be deasserted (cleared) before link
-> > training starts.
-> > 
-> > Before commit 610fa91d9863:
-> > - imx_pcie_assert_core_reset(): Assert TEST_PD and REF_CLK_EN
-> > - imx_pcie_clk_enable(): Deassert TEST_PD and assert REF_CLK_EN
-> > - Link training starts with TEST_PD properly cleared
-> > 
-> > After commit 610fa91d9863:
-> > - imx_pcie_clk_enable(): Deassert TEST_PD and assert REF_CLK_EN
-> > - imx_pcie_assert_core_reset(): Assert TEST_PD and assert REF_CLK_EN again
-> > - Link training starts with TEST_PD still asserted (never cleared again)
-> > 
-> > This commit corrects the sequence, and makes sure the TEST_PD is cleared
-> > before link training starts.
-> > >
-> > > > Fix this by separating the two concerns:
-> > > >
-> > > > - Move PHY power control (TEST_PD) to imx6q_pcie_core_reset() where it
-> > > >   logically belongs with reset operations. This ensures PHY power state
-> > > >   is managed as part of the core reset sequence.
-> > > >
-> > > > - Update imx6qp_pcie_core_reset() to call imx6q_pcie_core_reset() for
-> > > >   shared PHY power management, avoiding code duplication.
-> > > >
-> > > > - Make imx6q_pcie_enable_ref_clk() responsible only for reference clock
-> > > >   (REF_CLK_EN) control, simplifying its purpose.
-> > > >
-> > > > - Remove the 10us delay workaround from imx6q_pcie_enable_ref_clk() as
-> > > >   proper sequencing is now handled by the core_reset functions.
-> > > >
-> > > > This refactoring ensures PHY power is controlled during reset
-> > > > operations, fixing the boot hang while improving code maintainability.
-> > > >
-> > >
-> > > This patch does too many things at once. Can't you split it and keep
-> > > the minimal fix in one patch?
-> > Okay, I'll split this into a patch series in v3.
-> > Thanks.
-> Hi Mani:
-> I've attempted to split the changes as below:
-> 1. Set/Clear TEST_PD in assert_core_reset()/deassert_core_reset()
-> 2. Clean up imx6q_pcie_enable_ref_clk() to only manipulate the REF_CLK_EN bit
+On Tue, Jul 21, 2026 at 10:56:20AM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> However, I found that patch 1 alone doesn't work correctly. Here's what happens:
 > 
-> With only patch 1 applied:
-> - The board boots successfully, but fails to detect the remote endpoint device
-> - Problem sequence:
->   Begin (TEST_PD asserted by default) 
->   → TEST_PD cleared + REF_CLK_EN asserted in clk_enable()
->   → TEST_PD asserted again in assert_core_reset()
->   → TEST_PD cleared in deassert_core_reset()
-> 
-> With both patches applied:
-> - The board boots and detects the remote endpoint device successfully
-> - Correct sequence:
->   Begin (TEST_PD asserted by default)
->   → REF_CLK_EN asserted in clk_enable() (TEST_PD remains untouched)
->   → TEST_PD asserted in assert_core_reset()
->   → TEST_PD cleared in deassert_core_reset()
-> 
-> The issue is that patch 1 relies on patch 2 to avoid prematurely clearing TEST_PD 
-> in clk_enable(). Both changes are mandatory for the fix to work.
-> 
-> Given this dependency, would you prefer:
-> - A two-patch series with the dependency clearly documented, or
-> - A single combined patch since they cannot function independently.
+> On 7/9/2026 6:37 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Jul 08, 2026 at 11:47:17AM +0530, Krishna Chaitanya Chundru wrote:
+> >> The Eliza EVK board connects PCIe1 (8GT/s x2) to a Toshiba TC9563
+> >> PCIe switch. Enable PCIe1 and its QMP PHY nodes.
+> >>
+> >> TC9563 uses I2C (at address 0x77 on I2C4) for its management interface.
+> >>
+> >> Override the base iommu-map with the expanded set covering all the
+> >> switch's downstream ports (0x1400-0x1408 SID range).
+> >>
+> >> The TC9563 RESX# and PERST# are OR-ed internally to assert reset on the
+> >> switch. Use TC9563 RESX# pin via a TLMM GPIO and skip wiring PERST#
+> >> from the PCIe controller.
+> >>
+> >> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> >> ---
+> >>  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 112 ++++++++++++++++++++++++++++++++
+> >>  arch/arm64/boot/dts/qcom/eliza.dtsi     |   1 +
+> >>  2 files changed, 113 insertions(+)
+> >>
+> >> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> >> index 6d76715ccffb..e099b7c8c371 100644
+> >> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> >> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> >> @@ -12,6 +12,26 @@ chosen {
+> >>  		stdout-path = "serial0:115200n8";
+> >>  	};
+> >>  
+> >> +	vreg_0p9: regulator-0v9 {
+> >> +		compatible = "regulator-fixed";
+> >> +		regulator-name = "VREG_0P9";
+> >> +
+> >> +		regulator-min-microvolt = <900000>;
+> >> +		regulator-max-microvolt = <900000>;
+> >> +		regulator-always-on;
+> >> +		regulator-boot-on;
+> >> +	};
+> >> +
+> >> +	vreg_1p8: regulator-1v8 {
+> >> +		compatible = "regulator-fixed";
+> >> +		regulator-name = "VREG_1P8";
+> >> +
+> >> +		regulator-min-microvolt = <1800000>;
+> >> +		regulator-max-microvolt = <1800000>;
+> >> +		regulator-always-on;
+> >> +		regulator-boot-on;
+> >> +	};
+> >> +
+> >>  	vreg_pcie_m_3p3: regulator-3p3 {
+> >>  		compatible = "regulator-fixed";
+> >>  
+> >> @@ -99,6 +119,98 @@ pcieport0_ep: endpoint {
+> >>  	};
+> >>  };
+> >>  
+> >> +&pcie1 {
+> >> +	iommu-map = <0x0 &apps_smmu 0x1400 0x1>,
+> >> +		    <0x100 &apps_smmu 0x1401 0x1>,
+> >> +		    <0x208 &apps_smmu 0x1402 0x1>,
+> >> +		    <0x210 &apps_smmu 0x1403 0x1>,
+> >> +		    <0x218 &apps_smmu 0x1404 0x1>,
+> >> +		    <0x300 &apps_smmu 0x1405 0x1>,
+> >> +		    <0x400 &apps_smmu 0x1406 0x1>,
+> >> +		    <0x500 &apps_smmu 0x1407 0x1>,
+> >> +		    <0x501 &apps_smmu 0x1408 0x1>;
+> >> +
+> >> +	status = "okay";
+> >> +};
+> >> +
+> >> +&pcie1_phy {
+> >> +	vdda-phy-supply = <&vreg_l1k>;
+> >> +	vdda-pll-supply = <&vreg_l3k>;
+> >> +
+> >> +	status = "okay";
+> >> +};
+> >> +
+> >> +&pcie1port0 {
+> >> +	wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
+> > No reset-gpios?
+> RESX & PERST are ORed in this platform, as we can declare at only
+> one place we declared it in the tc9563 node as resx-gpios
 > 
 
-Hmm, then you should combine both in a single patch. But the commit message
-should be accurate and properly describe what was causing issue, and why both
-changes are necessary.
-
-You should justify the delay removal also.
+So this means, if both are defined, the assert/deassert sequence causes issue?
+If so, this should be mentioned in the comment here.
 
 - Mani
 
