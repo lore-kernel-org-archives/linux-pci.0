@@ -1,117 +1,140 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74EB9367291;
-	Tue, 21 Jul 2026 16:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA4A46D099;
+	Tue, 21 Jul 2026 16:16:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784650477; cv=none; b=sLJVO4WVYvUuQfnAGgM0N6+rfj2TIy1ZWJ1dLKxoae9evW4a6QBbxvF8EsPWyLUtP3rhen2SLAgLjyP6fmB9vuZ55rZaYjhE4JsACo60FfL0IW4eeU5MVRpPQKL50Qw8T+0pejNkeSMTBtAUvHjXHaiePN+WUkpTkPEgeItU7uk=
+	t=1784650565; cv=none; b=j2iDqDwsg+UFLtwnobI7p/bftKpJm7cNl4dmsaBnUzTEmYt8EM1Eyd7ytkV2jKAR2mjXvXIG3MEr1XFM40B2v8I0bhsFOvF5A/shUQKV3T1OfNp2HaesgZyhFMOQro23HNusp+f3koRS2a4lw7Ja1pirc750OO/AZ+jUr+3I+xo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784650477; c=relaxed/simple;
-	bh=wZh5b9j3IN1dfBMeY4gWUWFxKNS4ygY0JRmIlnf8Bks=;
-	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=SiEJBY6Va++d8UiLsaCM7s5IAShfbwYNe67LT5D4xQHwITO8oiqIyl2QeVl90PZrAyN7UXUjn4edg3glJUpLoHu0wBvyOxFV0fk3A7LSGFGi4s1dvFRc8Z2Ar6FE4+G+nKD+LP3a2txmXT7TBnXfUimoD8qacNVOkjZskf2mw/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=TW7tG9Qc; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784650565; c=relaxed/simple;
+	bh=NF7m7sXWK3jL3IZA54OTtlWh2pEqFednJNV0MuYAN7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ivuU7tJNsViXmOgSX6fx8Uvft3eM8oAIxtmvxhu9wtjPZwIU6/7NlEK195vMSR74UzKBWdwDmuJxIRrFZYrGklwxQEAu8QXDMKCTdwp2IUxdJeEu7gz44I/yiM6JxVcWho4JvzR8XFidAJUH3addWNBDAUOaza9u3EZWuGUDOUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FZizH9xc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="TW7tG9Qc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=5XTMOt9qO2Z6D+4H00P13TLfSI2zmt4qEt9F81f4Mw0=; b=TW7tG9Qc+bb4TysMJT+Ad/IrYJ
-	wzx8kweYuHsiIPeQ4aQOKtR7ykhqD/IEbhhraPeSC2966DOO1tccRwvsMiEnCWx61hyTjHdyYR4ZJ
-	U48c7djwC9k3aOsFUGVnlqU+5hl09a1Qj7aUOtGTVrrFN3BsyRK2w3bf9TCChm3h4BgyIATK81C6+
-	zqMQqjDhvkss6/vxInqcHMcSvvsFqk/1m7wWg8GPJFhLA+hPu0LbcUaiWjyPd5b0O94S7X34i4jHS
-	CABxuIG1zJpxxrlQF2HxDHZ82Hh6DOAVjiUfTb2gnLo9TTpwl1tG2o7qY7PDhshf3aqgpMkr2NwoV
-	yzb/rcHA==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1wmD74-0000000Bogv-0Xmx;
-	Tue, 21 Jul 2026 10:14:34 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1wmD2V-00000000GC3-1jmi;
-	Tue, 21 Jul 2026 10:09:51 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	Vinod Koul <vkoul@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>,
-	Kelvin Cao <kelvin.cao@microchip.com>,
-	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Dave Jiang <dave.jiang@intel.com>,
-	George Ge <george.ge@microchip.com>,
-	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Sangyun Kim <sangyun.kim@snu.ac.kr>,
-	Kyungwook Boo <bookyungwook@gmail.com>
-Date: Tue, 21 Jul 2026 09:57:38 -0600
-Message-ID: <20260721155739.62120-12-logang@deltatee.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260721155739.62120-1-logang@deltatee.com>
-References: <20260721155739.62120-1-logang@deltatee.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FZizH9xc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29E0B1F00A3A;
+	Tue, 21 Jul 2026 16:16:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784650563;
+	bh=RyNxHg81ZggZzP40oRqyhJVqp6HHsIYQX+/3Qe7jgCg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=FZizH9xcKfn6V6Iul8ouhjkepfiIO8F/nazHbFOwG2B5NB7iMN5Eir/+NEZaPlb5F
+	 FugNAgK1xgpL/Nesmu4Bvkny5BFM4aajKg50R9S5RzUubezGca50MbReDfaayOzQRG
+	 OD2gN5w93FiTys5tyKgTGcDAZKXsBKRYLOkrKPX6ssOzW+b6QUPo53ZwYlPAFKFjqf
+	 BctljMuUwJPszKKZK75p4kUp7+4Mp5mNpsMEbRKb7tGMNQWV8f7asno2KO4AaSmwBm
+	 KTHVLG50BUZnAFtSugqjlhl5Z7k0cwVftpuoxmwF4R8NqmnvJKIBfqAxWtxb5czBbm
+	 FaK1cxtGBzYxQ==
+Date: Tue, 21 Jul 2026 18:15:55 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] dmaengine: dw-edma: Implement
+ device_synchronize() callback
+Message-ID: <wnfdmxsof5opa3ozxlwd6e2kbmnziekkacbsjb3tpiueqcjrit@y6f6hh2e4l3y>
+References: <20260714-mhi-ep-flush-v2-0-b6a9db011e85@oss.qualcomm.com>
+ <20260714-mhi-ep-flush-v2-1-b6a9db011e85@oss.qualcomm.com>
+ <20260714122431.72B951F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, logang@deltatee.com, jjy600901@snu.ac.kr, sangyun.kim@snu.ac.kr, bookyungwook@gmail.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-X-Spam-Level: 
-Subject: [PATCH v2 11/11] dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+In-Reply-To: <20260714122431.72B951F000E9@smtp.kernel.org>
 
-plx_dma_create() registered the interrupt handler with request_irq()
-before initializing plxdev->bar. If the device raised an interrupt in
-that window, plx_dma_isr() would dereference the still-NULL bar.
+On Tue, Jul 14, 2026 at 12:24:31PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> New issues:
+> - [High] Misuse of the `read_poll_timeout` macro causes an unlocked read-modify-write data race on `chan->status`, which can overwrite the interrupt handler's state completion and lead to an infinite loop.
+> 
+> Pre-existing issues:
+> - [High] The `dw_edma_device_terminate_all()` function performs read and write access to the state machine variables `chan->status` and `chan->request` without acquiring the required `chan->vc.lock` spinlock.
+> --
+> 
+> --- Patch [1]: [PATCH v2 1/3] dmaengine: dw-edma: Implement device_synchronize() callback ---
+> commit dad772ddd69c60671b5bb40802d893826d2fa9c5
+> Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> dmaengine: dw-edma: Implement device_synchronize() callback
+> 
+> This commit implements the device_synchronize() callback for the dw-edma
+> driver. It uses read_poll_timeout() to wait for all in-flight DMA operations
+> to complete by polling the channel status. Once complete, it drains the
+> tasklet using vchan_synchronize().
+> 
+> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > index c2feb3adc79fa..df0d1a946ed06 100644
+> > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> [ ... ]
+> > @@ -331,6 +332,20 @@ static int dw_edma_device_terminate_all(struct dma_chan *dchan)
+> >  	return err;
+> >  }
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but does
+> dw_edma_device_terminate_all() perform read and write accesses to state
+> machine variables without acquiring the required chan->vc.lock spinlock?
+> 
+> Looking at dw_edma_device_terminate_all(), it modifies chan->status and
+> chan->request locklessly:
+> 
+>     } else if (chan->request > EDMA_REQ_PAUSE) {
+>         err = -EPERM;
+>     } else {
+>         chan->request = EDMA_REQ_STOP;
+>     }
+> 
+> Since the DMA engine API allows asynchronous termination, could this race with
+> dw_edma_done_interrupt() or dw_edma_device_issue_pending(), both of which hold
+> the spinlock while modifying the same fields? If the interrupt handler reads
+> chan->request right before terminate_all writes it, it might mistakenly start
+> the next pending transfer instead of stopping it.
+> 
+> >  
+> > +static void dw_edma_device_synchronize(struct dma_chan *dchan)
+> > +{
+> > +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> > +
+> > +	/*
+> > +	 * Make sure all the in-flight DMA operations are completed before
+> > +	 * draining the tasklet using vchan_synchronize().
+> > +	 */
+> > +	read_poll_timeout(READ_ONCE, chan->status, chan->status != EDMA_ST_BUSY,
+> > +			  10, 0, false, chan->status);
+> 
+> [Severity: High]
+> Could this read_poll_timeout() macro usage introduce a regression by causing
+> an unlocked read-modify-write data race on chan->status?
+> 
+> The read_poll_timeout() macro expands to (val) = op(args). By passing
+> chan->status as the val parameter, it expands to:
+> 
+>     (chan->status) = READ_ONCE(chan->status)
+> 
+> This loop executes without the chan->vc.lock spinlock. If the hardware
+> interrupt handler dw_edma_done_interrupt() fires exactly after READ_ONCE()
+> reads EDMA_ST_BUSY but before the assignment back to chan->status, it will
+> cleanly set chan->status = EDMA_ST_IDLE. 
+> 
+> Would the polling thread then overwrite the newly set EDMA_ST_IDLE state with
+> its stale EDMA_ST_BUSY value? Because the timeout parameter is 0, if this
+> corrupted EDMA_ST_BUSY state is written back, no further interrupts will arrive
+> to clear it, which could result in a permanent hang.
+> 
 
-Move the bar assignment ahead of request_irq() so everything the
-handler can touch is initialized before it can run.
+This is a valid concern. This should be fixed by using a local variable for
+holding the chan->status.
 
-Reported-by: Sangyun Kim <sangyun.kim@snu.ac.kr>
-Reported-by: Kyungwook Boo <bookyungwook@gmail.com>
-Link: https://lore.kernel.org/all/20260610112121.676561-1-jjy600901@snu.ac.kr
-Fixes: c2dbcaa8c672 ("dmaengine: plx-dma: Implement hardware initialization and cleanup")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/dma/plx_dma.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+- Mani
 
-diff --git a/drivers/dma/plx_dma.c b/drivers/dma/plx_dma.c
-index 84941a918b01..409898e92c32 100644
---- a/drivers/dma/plx_dma.c
-+++ b/drivers/dma/plx_dma.c
-@@ -504,17 +504,17 @@ static int plx_dma_create(struct pci_dev *pdev)
- 	if (!plxdev)
- 		return -ENOMEM;
- 
--	rc = request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
--			 KBUILD_MODNAME, plxdev);
--	if (rc)
--		goto free_plx;
--
- 	spin_lock_init(&plxdev->ring_lock);
- 	tasklet_setup(&plxdev->desc_task, plx_dma_desc_task);
- 
- 	RCU_INIT_POINTER(plxdev->pdev, pdev);
- 	plxdev->bar = pcim_iomap_table(pdev)[0];
- 
-+	rc = request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
-+			 KBUILD_MODNAME, plxdev);
-+	if (rc)
-+		goto free_plx;
-+
- 	dma = &plxdev->dma_dev;
- 	INIT_LIST_HEAD(&dma->channels);
- 	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
 -- 
-2.47.3
-
+மணிவண்ணன் சதாசிவம்
