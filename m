@@ -1,66 +1,67 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F44243B3FB
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 06:34:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB04430305
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 06:34:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784615682; cv=none; b=IBK5WjkpqrVrH/460lS7DJluO/MF7wIBq78O9ZzFb3Ktvfxe3Nfc5WNJykrzKvWXRazB0PDYKFdH7aooItBLTVJKj5MLzISykAKm46Q4/4yRuhocLXjIquihDGAM+ltj4AlAIMwKQXc02iK/APMeHMwZ+Vkp9ca1deisthW9WRw=
+	t=1784615693; cv=none; b=XhzvrpskjT7jkOMZ3qa7BH7uXl/OZi85C174MX/auVMa8o7zMIG2ohqWAi624KrllNwhxPZIhGh7WaSeiyrsl87C8vQULLZQl8xMmS4OkQcj84nmSWz1Fz9pGQdlFZ+uTtvlKtoAEmy1/bahv8tV+xwGk9ZCLephzrhzzA87iBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784615682; c=relaxed/simple;
-	bh=lYb8VTA7dyXYnvC29QCF8zmahSse2c5Vi9RrCPxO17c=;
+	s=arc-20240116; t=1784615693; c=relaxed/simple;
+	bh=s8XvH2OvdBsp7yjHd0Wbx0kldfTM1MtLmx4xWW/Tb+c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LHHsmEQaG/forCyqzi4eO9OCWdBE1tk3/IxiBzLhCPn6DZTw+rH/WcAivAb8GXHWQOF6BJSR9IkDkCQPdUgAMndKhOrToa5vdqC75jL/oafYuy7sD9Mjh1OCdT/A98HBjiL7gtL0usSfIcqA2ixSv2awJQp2DUkOP578OV9rtqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=civ3COHW; arc=none smtp.client-ip=209.85.215.180
+	 MIME-Version; b=iZAqo4U02bncdTdMPj6I/qrQSJatupvxnJKKbQZ1Exn5V1KpWNt90/O+rB+FQG5qUs6K3yOgMP0y5dle62zQZ7xPxF4xJG4L8+eM5YzPrVb67l5GVtoRKeEgLiJQA2aJsADscsjK3zNvKfJlIv8QxkzLWO0D5+P7DBtA44Anq4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L2mXv6bR; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="civ3COHW"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c9d1fc053e0so6564206a12.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 23:34:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L2mXv6bR"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c9e30214d8fso7768486a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 23:34:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784615677; x=1785220477; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784615691; x=1785220491; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=5XRztbLmcuPy/Wt6k3rvOT1pVonrNsLgqGorm1WPv3g=;
-        b=civ3COHW5VZDDI0jp9TQhiq2QIKPxAG2oLI0LoSV45GHgrp4BbGhfgxf2ivvr8hwaM
-         D6VB2hxd9teCqftcO7aEW5IcFikA+MSeCB49W6amR7gXPN9MpAKSqlxif85VEaBvtjuZ
-         +kQxRhaWaurcktxFuc8daIFiyaY+nOtH+F1mfO9HfvSmXk06ivcjOiOVnvHlsL4T5iSb
-         aIRxwxqmmo//rEkAJviN+9aFAzGPYIbCmT5BEuN70VHgYZUNmK8Vp5Wvo+w7d/phUn9V
-         eVdziZtTwoL3e/2IgiKe3jHAzpsfWZ/5zjRlCTkeEBZ6L8Uxwn1msbM+WAj7VUvR8Vf2
-         ICqA==
+        bh=mOwtl82qHyXYWFtXlT6nPpOxkBi8L7STB5ydQzlpO6c=;
+        b=L2mXv6bRLFkCqA1afDLqG6juI2t4+/xXmGUHZELFANYgtJa1GiEAWdO+vH5yRlZ5GT
+         tSpSmY2tvadIv+3/REpgXc3m5GaML5pyfQ2Tr1QOn/q+ufH4W73+aKlds5x3dXqcrah8
+         /M9jQ806DU9ZOP8IGoBFnDf0bZQdvNp79T1/QaNfWnSpm6+g/2r8gHbg16GH8dLo1ML2
+         Qj+0y3yas7qEsD2XkBkQkpFEs+5B5E+4oWh9CtSInaVn7AIQqxVzFoxmIJbaai2Dcf0E
+         HJkokg4Z7XrvjrZScQ7wQwv/oha23JJ5y3v3uqV/zGNFcnuGnq5to5Ero3OhK0Tqm3tr
+         OMSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784615677; x=1785220477;
+        d=1e100.net; s=20251104; t=1784615691; x=1785220491;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5XRztbLmcuPy/Wt6k3rvOT1pVonrNsLgqGorm1WPv3g=;
-        b=LLresJsZLwpLTu0zCwAyNz3IP97JceU4Upr/ZeE+hOtASRtTrSVE5xVC9K7X76WgKd
-         d076kjgJfSvezwB3d3O6IVCmWSatOVwpmex7N1hWs2cGH1G9xBA6ktdh49fWWH2orzRS
-         WkAo1WSp/LQDflBTz4nzuFCjcoVL8xH6BEZKKXBBJ5Mz6DFlPe5rVSvlcxyLSiy+YNIG
-         TtAn1xBLA1FnEH4BSGYB9ShtT1gXjtPApfrGrRAB+dkxsnt+6Z98dil8VrIciyAOvIfP
-         nNQBoDSB7wOn9E9K9Bx0VCnsqvwL8FLIxsrlVLlyB0PWeHLzhPHIa3Jr/D5xzBuVNspd
-         5UNQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrXFRmCrBbhdNaAHEzX0ILtumFtkNzaZyYZby4RLwwyqPnJr65dn8UQn1LE3v6YUQsTdYlVrqYaasg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzOKZ5d7lQAnAm39zu3BebL5A2sP0EcaTkT2rmw3ynSBb+9vPeN
-	zidpwS1EgA1AKCk9jC7JadCpGZITJeDSEA45D3k7SmksAxTwrb0lkok=
-X-Gm-Gg: AfdE7cmmUoSymA/A13ORg378QjChb6vEjy2k9/q9HZtaUpoG6hnM2nu3zJ+5G3/wPcR
-	61oGwmH6Z6bEzatsJTZq+f0ZoF/tTzJ+ywRec5fNGWmlwNvzUcqfHiSYPX5DGbLT5Y9PPbP5CYn
-	+kOAm35yeChhVwN7Q8XgbWBGhryRP2kDhfz31QVAdlEPHMOpvbNjxh16Qow6GGOCaEw3CFu3Sx4
-	OfKhZ50mjptA/kSDzjRvq84erUkUOW7NraOBbMtYjuqCV2jiOs1AYn2kBLeoj5L3g/rpZuPyRug
-	vHpFrlAp0IXA6veAKr67321nb+0BUgR7RhE4zchXn4uBOHGD9TeVG2+aFxiZi6SYnC6G1wyh7hb
-	nBWxhhcahiEJJqufRURiI178A0T4PKxcQzSD/Mbx5HTet1eQbaMY8A/QndV2SROJtNRL90TnckS
-	mjqRkzbXykBtTpNXSp+fYVMUZm6vkEvPodAkZEnA==
-X-Received: by 2002:a05:6a21:7008:b0:3c0:9c1b:d0b5 with SMTP id adf61e73a8af0-3c3ad9a4de9mr19674997637.64.1784615677552;
-        Mon, 20 Jul 2026 23:34:37 -0700 (PDT)
+        bh=mOwtl82qHyXYWFtXlT6nPpOxkBi8L7STB5ydQzlpO6c=;
+        b=dtbAi+9x5ieSoDtQ75WAJ67BnKapUJTfVVqjsqGknpdvloRVJDOI459/H5wmR7R+qs
+         vfX/EMVpppEFIHTG6l7gZ86VtiTQ+4JjuKWvK63DYKoiZLnAl9f0J3ZKr3dqsUWfhTQ2
+         I4SBDNcMocx6Xk5xUuR/go3ljQGN8VFnrEwtaeZEp9NWN0LzeAWM38GLXtN5XM4cAnLs
+         lmIImvXg4YQ3eqmpwAWygndFyDmB5q30BpFpepOaT/Nl1VwN09vztxYPf6RcPFjiAv83
+         7wVepUhUUTtW+RUs8prVA7yfRGdUbENI33IT/wK0VHq48siyqlKccaGiURx5rJ+rT9Pd
+         7KBw==
+X-Forwarded-Encrypted: i=1; AHgh+RrLfOaClp9GBI+1dOJqbWBVwTM01Sfa48a7nzp1rRsy38cMktqp7uOPQd9mXQiPLVsoRkvDWKX5e8E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrfJLfBZWd1RYYUaB51/jlptXdngof5wyfetsErWcl+kH6OIx9
+	i9OtNyb8iOS31YC2WORuMv/CRSTSV9xhZMTYgB8a+o6yLoC1afCqUxQ=
+X-Gm-Gg: AfdE7cmz5Wj5OAqii2fUgZvDlN18pTDAve9sTpfAtXvFSoHh9j9JCD6SJbuOE1cNdxQ
+	jhBboH0clk/yNV6l9H6GXOVr15gVDCW2EGK3eNQle+GjSscrwN8IkVIJaIkhgrL92pa6azMOSgI
+	iTCvUwznUEdc+c3EJrJ0Rdk/yvzICtlzk7OzWY4xNuwkwZCyb7Cov7yCnOg6NDZcbsA5Bk8IiS3
+	4DvHcsbHaN9/zwgNnHN2NuCk684far8cxUUWdHTkfydnMqtqFGkSakU2xSda4KZjDBVLNv+iKkH
+	dYIElR0xpZD/sAZV0o9AwUl2v/0rP5MUN7vqpAlJJ3J3cpnMnye9yJsWxvhoM+GwLQuzyP+0run
+	5QJxaqB2SP7EHwjJSMzwHVdLpvQW2eqc61x9lqp3THPVWij6fkzBeKukbaiOdEw42LQWbnDZhPe
+	AM6svTPgLr/p59M5RbyNQ6ydH/Kit10BYjx+Vxmg==
+X-Received: by 2002:a05:6a20:9c8c:b0:3bf:6c08:fb8e with SMTP id adf61e73a8af0-3c3ad9d5b8fmr19136988637.48.1784615690794;
+        Mon, 20 Jul 2026 23:34:50 -0700 (PDT)
 Received: from at-Standard-PC-Q35-ICH9-2009.. ([27.60.20.188])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1dde81sm73608386eec.21.2026.07.20.23.34.27
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1dde81sm73608386eec.21.2026.07.20.23.34.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 23:34:37 -0700 (PDT)
+        Mon, 20 Jul 2026 23:34:50 -0700 (PDT)
 From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 To: 
 Cc: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
+	Andre Eikmeyer <andre@negmaster.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@kernel.org>,
 	Ingo Molnar <mingo@redhat.com>,
@@ -88,9 +89,9 @@ Cc: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
 	linux-integrity@vger.kernel.org,
 	keyrings@vger.kernel.org,
 	linux-security-module@vger.kernel.org
-Subject: [PATCH v3 1/2] treewide: Add a flag to detect the Apple T2 chip
-Date: Tue, 21 Jul 2026 02:34:06 -0400
-Message-ID: <20260721063412.11588-2-atharvatiwarilinuxdev@gmail.com>
+Subject: [PATCH v3 2/2] thunderbolt: Add device links for Apple T2 NHI
+Date: Tue, 21 Jul 2026 02:34:07 -0400
+Message-ID: <20260721063412.11588-3-atharvatiwarilinuxdev@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260721063412.11588-1-atharvatiwarilinuxdev@gmail.com>
 References: <20260721063412.11588-1-atharvatiwarilinuxdev@gmail.com>
@@ -102,236 +103,95 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a flag to detect Apple T2 chips on Intel Macs.
-Cache the result to avoid repeated checks. That will
-be used in upcoming patches.
+From: Andre Eikmeyer <andre@negmaster.com>
 
+Thunderbolt NHI on T2 Macs (2018-2020). The NHI and its
+associated PCIe root ports all sit directly on the root complex
+with no upstream port. Apple's ACPI tables name Thunderbolt root
+ports as TRP0, TRP1, etc. Find them and create device links back
+to the NHI so that PCIe tunnels can be re-established after sleep.
+
+Co-developed-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
----
- arch/x86/kernel/quirks.c                      | 105 ++++++++++++++++++
- include/linux/platform_data/x86/apple.h       |   5 +
- .../platform_certs/keyring_handler.h          |   8 --
- security/integrity/platform_certs/load_uefi.c |  38 ++-----
- 4 files changed, 118 insertions(+), 38 deletions(-)
 
-diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-index a92f18db9610..300d6436060d 100644
---- a/arch/x86/kernel/quirks.c
-+++ b/arch/x86/kernel/quirks.c
-@@ -664,8 +664,113 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2083, quirk_intel_purley_xeon_ras
- bool x86_apple_machine;
- EXPORT_SYMBOL(x86_apple_machine);
- 
-+bool has_apple_t2_chip;
-+EXPORT_SYMBOL(has_apple_t2_chip);
-+
-+static const struct dmi_system_id apple_t2_devices[] __initconst = {
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,2"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,3"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,4"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,2"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,3"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,4"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir8,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir8,2"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir9,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "Macmini8,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacPro7,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "iMac20,1"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "iMac20,2"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "iMacPro1,1"),
-+		},
-+	},
-+	{ }
-+};
-+
- void __init early_platform_quirks(void)
- {
- 	x86_apple_machine = dmi_match(DMI_SYS_VENDOR, "Apple Inc.") ||
- 			    dmi_match(DMI_SYS_VENDOR, "Apple Computer, Inc.");
-+
-+	has_apple_t2_chip = dmi_check_system(apple_t2_devices);
- }
-diff --git a/include/linux/platform_data/x86/apple.h b/include/linux/platform_data/x86/apple.h
-index 079e816c3c21..47b27dceab18 100644
---- a/include/linux/platform_data/x86/apple.h
-+++ b/include/linux/platform_data/x86/apple.h
-@@ -6,8 +6,13 @@
-  * x86_apple_machine - whether the machine is an x86 Apple Macintosh
+Signed-off-by: Andre Eikmeyer <andre@negmaster.com>
+---
+ drivers/thunderbolt/tb.c | 51 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 50 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index c69c323e6952..0cdffcf577cd 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -6,6 +6,7 @@
+  * Copyright (C) 2019, Intel Corporation
   */
- extern bool x86_apple_machine;
-+/**
-+ * has_apple_t2_chip - whether the machine has the Apple T2 chip
-+ */
-+extern bool has_apple_t2_chip;
- #else
- #define x86_apple_machine false
-+#define has_apple_t2_chip false
- #endif
  
- #endif
-diff --git a/security/integrity/platform_certs/keyring_handler.h b/security/integrity/platform_certs/keyring_handler.h
-index f92895cc50f6..a355f4400179 100644
---- a/security/integrity/platform_certs/keyring_handler.h
-+++ b/security/integrity/platform_certs/keyring_handler.h
-@@ -45,11 +45,3 @@ efi_element_handler_t get_handler_for_code_signing_keys(const efi_guid_t *sig_ty
- efi_element_handler_t get_handler_for_dbx(const efi_guid_t *sig_type);
- 
- #endif
--
--#ifndef UEFI_QUIRK_SKIP_CERT
--#define UEFI_QUIRK_SKIP_CERT(vendor, product) \
--		 .matches = { \
--			DMI_MATCH(DMI_BOARD_VENDOR, vendor), \
--			DMI_MATCH(DMI_PRODUCT_NAME, product), \
--		},
--#endif
-diff --git a/security/integrity/platform_certs/load_uefi.c b/security/integrity/platform_certs/load_uefi.c
-index c0d6948446c3..b4096d4c828d 100644
---- a/security/integrity/platform_certs/load_uefi.c
-+++ b/security/integrity/platform_certs/load_uefi.c
-@@ -3,42 +3,16 @@
- #include <linux/kernel.h>
- #include <linux/sched.h>
- #include <linux/cred.h>
--#include <linux/dmi.h>
- #include <linux/err.h>
- #include <linux/efi.h>
++#include <linux/acpi.h>
  #include <linux/slab.h>
- #include <linux/ima.h>
-+#include <linux/platform_data/x86/apple.h>
- #include <keys/asymmetric-type.h>
- #include <keys/system_keyring.h>
- #include "../integrity.h"
- #include "keyring_handler.h"
+ #include <linux/errno.h>
+ #include <linux/delay.h>
+@@ -3305,11 +3306,59 @@ static const struct tb_cm_ops tb_cm_ops = {
+ static bool tb_apple_add_links(struct tb_nhi *nhi)
+ {
+ 	struct pci_dev *upstream, *pdev;
+-	bool ret;
++	bool ret = false;
  
--/*
-- * On T2 Macs reading the db and dbx efi variables to load UEFI Secure Boot
-- * certificates causes occurrence of a page fault in Apple's firmware and
-- * a crash disabling EFI runtime services. The following quirk skips reading
-- * these variables.
-- */
--static const struct dmi_system_id uefi_skip_cert[] = {
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,2") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,3") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro15,4") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,2") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,3") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookPro16,4") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir8,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir8,2") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacBookAir9,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "Macmini8,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "MacPro7,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMac20,1") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMac20,2") },
--	{ UEFI_QUIRK_SKIP_CERT("Apple Inc.", "iMacPro1,1") },
--	{ }
--};
--
- /*
-  * Look to see if a UEFI variable called MokIgnoreDB exists and return true if
-  * it does.
-@@ -165,10 +139,14 @@ static int __init load_uefi_certs(void)
- 	unsigned long dbsize = 0, dbxsize = 0, mokxsize = 0;
- 	efi_status_t status;
- 	int rc = 0;
--	const struct dmi_system_id *dmi_id;
- 
--	dmi_id = dmi_first_match(uefi_skip_cert);
--	if (dmi_id) {
-+	/*
-+	 * On T2 Macs reading the db and dbx efi variables to load UEFI Secure Boot
-+	 * certificates causes occurrence of a page fault in Apple's firmware and
-+	 * a crash disabling EFI runtime services. The following quirk skips reading
-+	 * these variables.
-+	 */
-+	if (has_apple_t2_chip) {
- 		pr_err("Reading UEFI Secure Boot Certs is not supported on T2 Macs.\n");
+ 	if (!x86_apple_machine)
  		return false;
- 	}
+ 
++	/* On T2 Macs. the root ports are stored in ACPI as TRP0,
++	 * TRP1, etc. Find them and create device links
++	 * so that PCIe tunnels can be re-established after
++	 * sleep.
++	 */
++	if (has_apple_t2_chip && IS_ENABLED(CONFIG_ACPI)) {
++		struct acpi_device *adev;
++		unsigned int slot, func;
++		const struct device_link *link;
++		const char *bid;
++
++		for (slot = 0; slot < 32; slot++) {
++			for (func = 0; func < 8; func++) {
++				pdev = pci_get_slot(nhi->pdev->bus, PCI_DEVFN(slot, func));
++				if (!pdev)
++					continue;
++
++				if (!pci_is_pcie(pdev) || pci_pcie_type(pdev) !=
++						PCI_EXP_TYPE_ROOT_PORT)
++					goto put_pdev;
++
++				adev = ACPI_COMPANION(&pdev->dev);
++				if (!adev)
++					goto put_pdev;
++
++				bid = acpi_device_bid(adev);
++				if (strncmp(bid, "TRP", 3) != 0)
++					goto put_pdev;
++
++				link = device_link_add(&pdev->dev, &nhi->pdev->dev,
++						DL_FLAG_AUTOREMOVE_SUPPLIER |
++						DL_FLAG_PM_RUNTIME);
++				if (link) {
++					dev_dbg(&nhi->pdev->dev, "created link from %s\n",
++						dev_name(&pdev->dev));
++					ret = true;
++				} else
++					dev_warn(&nhi->pdev->dev,
++						"device link creation from %s failed\n",
++						dev_name(&pdev->dev));
++
++put_pdev:
++	pci_dev_put(pdev);
++			}
++		}
++		return ret;
++	}
++
+ 	switch (nhi->pdev->device) {
+ 	case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
+ 	case PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C:
 -- 
 2.43.0
 
