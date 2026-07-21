@@ -1,117 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE2C3DC4C2
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 17:05:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC403E1729
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 17:08:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784653519; cv=none; b=q7zWnLIYR4Fd/CtJSAqfNFcjDXWLaMRrotIcwjDBkyfGzqk7teFznAw9swojLX1oBFGJODwwbiHxYnnmTRmYtEtjIfMP0rMyh0xWFfSRqUARXBGmZop/SiFaPAt4abZUxR+GOcAl5REY6ptzwbKsiW2YnTqnuxXAjIXv/IxEw4k=
+	t=1784653702; cv=none; b=shwiQFeocVYZmZWCMXKi13lPde+JhTT3r6FpiutQtfzUHTXJPo2XydqdzphHs21xT2a9rs2WHCFTR+XyvTZujeUdobuDKGqiTwqg01o81L2rpsmIh6XU2K90XYC9ldNXCUMr9uzySEghKVGwBd8pmbgKzIM0a9gqxrX4yFKqVv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784653519; c=relaxed/simple;
-	bh=lk/JEhNalfsuaoEcufK/i4a/l0emUC86BJm7SpSwdBE=;
+	s=arc-20240116; t=1784653702; c=relaxed/simple;
+	bh=+bY2ApLUqDdmCc2wd7AHrjw72f4OjWesYX/26duxKUE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sdp2EnrJjVp9rQF2cP3X0qJJ1bJFNYWnwOIBaPiRfL0H25UDQrCKRc8yVJuq46U1C1XzbneMGrtU+krWcdHfT/zzEHvvgfcxWtya0ZQWNW1rXIxircNzp32nlJ5gUoNBkiST6CDjOZ+kxf1mSlk/yrE5LR3GY7hgRMP4shP0JoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7Pv6cBA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fnMHlyXfZQYVaQ0ooWCTZrL3zBrlkYqjd91LZQcY5IfDmtwOdX5/CSIWGdWnaoh2nYt4Lz5oE6vPCFLwWInyDdWP5d0mhsyUpe37tDg/mgPI2y9flRp9ejM/EdQvkaMMfU8xBs4AjNF7ASH0TKHaa5ZcBI0TX8cCu0YqJRqEe2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ll28XigN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7Pv6cBA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A74BF1F00A3A;
-	Tue, 21 Jul 2026 17:05:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ll28XigN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5549E1F00AC4;
+	Tue, 21 Jul 2026 17:08:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784653518;
-	bh=N+bxkTJ7tT9DCrGv6gt/O/lLk6W86SN0pJH5Ldnv4yo=;
+	s=k20260515; t=1784653699;
+	bh=j6ZzlgGKGZcub9UYCbEX3rIU6JVbMn7XKVo6dJ9ogYw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F7Pv6cBAaio/wG6CT4sZ3nSGxPVu/S7z/q1SAv2Lt9a+RM9UASi/7Ek8w/9eLKDaL
-	 QUBfHznP9WTvIXiCuJNp1cYtEFv/K6NJQvve8gGY/5HW4ROD40EIzwbpdQ2A0MeAYh
-	 fr73XNB7CvJCVRUELtpRu/SQdlyt55Lf5ZWhDKaL/CgXfEDavFisD+1CDAs1f1JyV4
-	 2EDxp9xjP/31/zXU0GqD6RYyNTUGHzpkdO4+mVp+kLWBh44EoMVfIvqDHXx18jznlK
-	 SaNKmJ2G6nJedB3ByyhmCCsQ74TmL+aCaYFyx7oHeKhNG6/Pk4M8dXP6D/TADC56yL
-	 AaB/ChmATUPFg==
+	b=ll28XigNkSCEbQJxyTaz8ZAGH78OYnH3rlz5ibdH+XzpfVJwIaxY5QyU93RRqsqom
+	 T0KFNhUjwxISFB/N5B6//mIU8UaMu8Y8hB5dJOWrug24ud0YyOHMAuj7JkrmebC/sl
+	 qqCbNyul0RSz7BubvaBa8v0NtDB/JHrMLDCMlLGk7gaCZLmxm05HCYZuAk1alYcr4O
+	 U+aAX25gDWbXf/FbmpBoiwspQBeANz4alIJESuue++cL81ysydreOPNpxooyAb45eO
+	 WsLP9pJahcBWqHRxf6RQx8euVPf9ao1Z7bBARnEfvSxt3an+3rUrjmoTFCdCrFuay6
+	 dgC8WJrWw5xTw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/10] rust: io: add subregion method with compile-time
- check
+Subject: Re: [PATCH 10/10] rust: io: register: remove relative registers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-pci@vger.kernel.org, "Danilo Krummrich" <dakr@kernel.org>, dri-devel@lists.freedesktop.org, ojeda@kernel.org, "Alexandre
- Courbot" <acourbot@nvidia.com>
-In-Reply-To: <20260721-typed_register-v1-7-452d72b60262@garyguo.net>
+Cc: dri-devel@lists.freedesktop.org, "Alexandre Courbot" <acourbot@nvidia.com>, ojeda@kernel.org, linux-pci@vger.kernel.org, "Danilo
+ Krummrich" <dakr@kernel.org>
+In-Reply-To: <20260721-typed_register-v1-10-452d72b60262@garyguo.net>
 References: <20260721-typed_register-v1-0-452d72b60262@garyguo.net>
- <20260721-typed_register-v1-7-452d72b60262@garyguo.net>
+ <20260721-typed_register-v1-10-452d72b60262@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 17:05:17 +0000
-Message-Id: <20260721170517.A74BF1F00A3A@smtp.kernel.org>
+Date: Tue, 21 Jul 2026 17:08:18 +0000
+Message-Id: <20260721170819.5549E1F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `subregion` method incorrectly initializes the new subregion's=
- runtime size using `ptr.len() - OFFSET` instead of `NEW_SIZE`, defeating e=
-ncapsulation and enabling out-of-bounds MMIO accesses.
+- [Low] Broken intra-doc link for `WithBase` in module documentation.
+- [Low] Leftover macro syntax for relative register aliases (`+ $alias_offs=
+et`) causes confusing internal macro errors.
 --
 
---- Patch [7]: [PATCH 07/10] rust: io: add subregion method with compile-ti=
-me check ---
-commit 3d97a4ac48567402f60659310de26681110a1c61
+--- Patch [10]: [PATCH 10/10] rust: io: register: remove relative registers=
+ ---
+commit 9b1276cccc7f1b5ecb5c4e81e0c27d5b7d2f2492
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: add subregion method with compile-time check
+rust: io: register: remove relative registers
 
-This commit adds a compile-time checked subregion helper function to Region.
-This allows drivers to obtain a safely constrained subregion for relative
-register access.
+Relative registers can be better served by projection to subregion instead
+of ad-hoc handling in register macro. Projection composes better (e.g. it
+natively allows relative registers of relative registers without needing
+additional support).
 
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 0f8b166a6d3bb..f31d37c8a3d58 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
+> diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+> index df47c28ba4f40..88ead1c1874fb 100644
+> --- a/rust/kernel/io/register.rs
+> +++ b/rust/kernel/io/register.rs
+> @@ -191,78 +191,6 @@ fn offset(self) -> usize {
+>      }
+>  }
+> =20
+> -/// Trait providing a base address to be added to the offset of a relati=
+ve register to obtain
+> -/// its actual offset.
+[ ... ]
+> -/// Trait implemented by all registers that are relative to a base.
+> -pub trait WithBase {
+
+[Severity: Low]
+With WithBase removed here, does the register.rs module documentation need
+to be updated? The module doc still references it in its intra-doc links:
+
+//! items you might want to import from this module are [`WithBase`] and [`=
+Array`].
+
+Since kernel rustdoc compilation is strict about broken intra-doc links, co=
+uld
+this cause the rustdoc build to fail?
 
 [ ... ]
 
-> +    /// Create a subregion with provided offset and size.
-> +    #[inline]
-> +    pub fn subregion<'a, const OFFSET: usize, const NEW_SIZE: usize, IO>(
-> +        io: IO,
-> +    ) -> <IO::Backend as IoBackend>::View<'a, Region<NEW_SIZE>>
-> +    where
-> +        IO: IoBase<'a, Target =3D Self>,
-> +    {
-> +        const_assert!(
-> +            OFFSET + NEW_SIZE <=3D SIZE && OFFSET.is_multiple_of(4) && N=
-EW_SIZE.is_multiple_of(4)
-> +        );
-> +
-> +        let view =3D io.as_view();
-> +        let ptr =3D IO::Backend::as_ptr(view) as *mut [u8];
-> +        let new_ptr =3D Region::ptr_from_raw_parts_mut(
-> +            ptr.cast::<u8>().wrapping_add(OFFSET),
-> +            ptr.len() - OFFSET,
+> @@ -847,7 +479,7 @@ macro_rules! register {
+>          $(
+>              $(#[$attr:meta])* $vis:vis $name:ident ($storage:ty)
+>                  $([ $size:expr $(, stride =3D $stride:expr)? ])?
+> -                $(@ $($base:ident +)? $offset:literal)?
+> +                $(@ $offset:literal)?
+>                  $(=3D> $alias:ident $(+ $alias_offset:ident)? $([$alias_=
+idx:expr])? )?
+>              { $($fields:tt)* }
+>          )*
+> @@ -855,7 +487,7 @@ macro_rules! register {
+>          $(
+>          $crate::register!(
+>              @reg [$reg_base] $(#[$attr])* $vis $name ($storage) $([$size=
+ $(, stride =3D $stride)?])?
+> -                $(@ $($base +)? $offset)?
+> +                $(@ $offset)?
+>                  $(=3D> $alias $(+ $alias_offset)? $([$alias_idx])? )?
 
-[Severity: High]
-Does this improperly initialize the new subregion's runtime size using
-ptr.len() - OFFSET instead of NEW_SIZE?
+[Severity: Low]
+Does the macro entry point still need to parse $(+ $alias_offset:ident)? and
+forward $(+ $alias_offset)? now that the internal @reg macro arms handling
+relative alias syntax have been removed?
 
-If a parent driver creates a localized subregion specifying a NEW_SIZE and
-delegates it to a sub-device driver, the sub-device could mistakenly execute
-fallible MMIO operations beyond the intended NEW_SIZE.
-
-Because the runtime dynamic bounds checking will evaluate against
-ptr.len() - OFFSET instead of the constrained size, out-of-bounds accesses
-would improperly succeed and could corrupt adjacent registers.
-
-Should this be updated to pass NEW_SIZE to ptr_from_raw_parts_mut?
-
-> +        );
-> +
-> +        // SAFETY: We have checked that the new region is a subregion an=
-d it is aligned, hence it is
-> +        // a valid projection.
-> +        unsafe { IO::Backend::project_view(view, new_ptr) }
-> +    }
+If someone accidentally defines a register using the removed relative alias
+syntax (e.g., =3D> Base + Alias), could this cause a confusing internal mac=
+ro
+matching error instead of a clean rejection?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721-typed_regi=
-ster-v1-0-452d72b60262@garyguo.net?part=3D7
+ster-v1-0-452d72b60262@garyguo.net?part=3D10
