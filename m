@@ -1,187 +1,209 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F3F03C13F2;
-	Tue, 21 Jul 2026 09:03:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6299E445AF3
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 09:32:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784624640; cv=none; b=gDbcQVtjwBojrZ5saXI/yUnPTbw42qmQdxHkhmMSp3WNCnQkKALi8ZR77bQtvtKAw1nJyIemAB4diK6HkAdE59xTjPxsqSR1UU8qRS7BpBu0qXCO668wSMOzpzhm1HHyHg/kcgQyzjIPEKkxNad15DRLyR2qHzRpW/y27Jn+1wc=
+	t=1784626342; cv=none; b=Ta7AQOdLbKa4MAkrdgj7zb+m7htrxMBqnaizmJqLoQnCUYH1/ZV+X9ptB9yCQPqmHXnSN9KJR/RtfsKctWcUTf1bi++ZxUnPQ2Flm4tSIIwDoWGALpazViVr/3r3v4OXV1UTsb/pQK2zjH5aOLfUyD57bx295q31k9Le+bYdG0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784624640; c=relaxed/simple;
-	bh=eu23ebjcIur2cA0SO+mhe3VXUBG3ctpCWPkoCbA6vfQ=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=H24p7R7q8LeVlc69EZ1tdZg3yYQeZkXNoIi9BZzt3vX5TEUHXevG0XFGXUSjAuXY44QPQ/RD7Lq2bQLDZGMkeF1o8Q69IP4l7STXdE4DgTjIQ8xLV9/b4ad+SXdmQZPBXA4n0hB6PmhRYbmRIiibvCxQWrFDxHAOzwWrX7aAaGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F7J0cryg; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784626342; c=relaxed/simple;
+	bh=frRZ0tu6AqPX/0VbOa0cA1iFkH71llk8yLCIG3tFrN0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JIKwnhYosMaO9pLLDMBSGR7wRs/Lq5XbVoyzrEABjnnSpMKlKhWUxDwWlrCXji2wjl7Dffen7ML3fUnzvdhZOXDMFJUWDavZrRM9JY2DOui8akLV+AgjKK3CcJ2HYGjh1TagtqPqBj3aAniTMa02+N03oA62ZxJltEqhfycH/Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KcECY40t; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=S6b6W6y4; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F7J0cryg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784624638; x=1816160638;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=eu23ebjcIur2cA0SO+mhe3VXUBG3ctpCWPkoCbA6vfQ=;
-  b=F7J0crygNSRqoIsZV5ETp7I1RwG5OZUQ9PMQ0dXPIVbW9tjLjnjXgW7i
-   /uCA6t6dnb98U939qIBVi06zyar9wYGamoWBhSqpul3XDwWxH97tzQBVu
-   4Vd/pNhRxJO7Dyu8lKkAMnDnhpog0ZtUpsJkE6u0OVMd79A7B9v+IZC56
-   vgWQerX2UWdZTy28yZFu69d4PpnqLkMO4Ec21OiyRJ33GqYVNrnsANnYj
-   0sZRa1VjzPNZdtdlN8LQTm5jckPN8QmTIjz1VkWPAQktelSanCi6f+Svv
-   mg4BQX4tLheg3ROo+mT2sppLVUTKkdlZDOMX0HC1NdQInlQi2gBdN7xNQ
-   Q==;
-X-CSE-ConnectionGUID: /RPPt2v4SrGEpI4L5EVA2w==
-X-CSE-MsgGUID: UzKMkreXTmWHZSNSiuR3vQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="96577996"
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="96577996"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 02:03:57 -0700
-X-CSE-ConnectionGUID: ReH9/eo/Qy6y3ccYx0//kQ==
-X-CSE-MsgGUID: IuNPDpkOQnuPL3+jbPVqCA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="261484237"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.47])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 02:03:48 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 21 Jul 2026 12:03:45 +0300 (EEST)
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-cc: Andre Eikmeyer <andre@negmaster.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
-    x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
-    Andreas Noever <andreas.noever@gmail.com>, 
-    Mika Westerberg <westeri@kernel.org>, 
-    Yehezkel Bernat <YehezkelShB@gmail.com>, Hans de Goede <hansg@kernel.org>, 
-    Jarkko Sakkinen <jarkko@kernel.org>, Mimi Zohar <zohar@linux.ibm.com>, 
-    Roberto Sassu <roberto.sassu@huawei.com>, 
-    Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, 
-    Eric Snowberg <eric.snowberg@oracle.com>, Paul Moore <paul@paul-moore.com>, 
-    James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
-    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    linux-usb@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-    linux-integrity@vger.kernel.org, keyrings@vger.kernel.org, 
-    linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] thunderbolt: Add device links for Apple T2 NHI
-In-Reply-To: <20260721063412.11588-3-atharvatiwarilinuxdev@gmail.com>
-Message-ID: <08b02889-82b7-048b-760b-cc84a778545f@linux.intel.com>
-References: <20260721063412.11588-1-atharvatiwarilinuxdev@gmail.com> <20260721063412.11588-3-atharvatiwarilinuxdev@gmail.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KcECY40t";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="S6b6W6y4"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66L6AQQA3978967
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 09:32:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=2hrPn+kSJ9X1wZ8n8IswgR
+	vPdGLpuJP7iOmwY3fILyc=; b=KcECY40tVdoKFFvIT996fiJY61h4tJBPiyzgSd
+	7F1yune6DANVNF4HC+oKVOgvQJVXe04n/b9gBjhHr7sVIAnWIEflaFGnxuw0IQE9
+	TefC5hUmzxEpHJIjlbFcn9UgRdU16WR+6oyufg1e9WeK1f0dMNMyjPl1XOW8PyGj
+	+gWFDGOJxCUgbL6hV6CiTEspbSPQsvV0toJPJvwdAJTLz5GmbiTRuPt6Qr899Ox9
+	OcpDS7SARnYdj2Nx9YVPGSsfGKwHEf9GOUJeqNV7twMONwLlAtv55JYaVQGTUgGq
+	sz4aVPBPYMex7fPMdPiGwPFxkPL05MBNaNDK1EWw8uTHuYjg==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fhqv43r41-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 09:32:20 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cc5faecf01so219774615ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 02:32:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784626339; x=1785231139; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=2hrPn+kSJ9X1wZ8n8IswgRvPdGLpuJP7iOmwY3fILyc=;
+        b=S6b6W6y4E6thCwwvpne6q7baG86S9KTtriJimwyVjcLvwrqjLn40HsGUMyZ2AlZ6yc
+         OcIY186dNe8fJDgS2wOX8d82R0cWF8+QVh3LOE9n1i7OtAauHYwvP9PkWIeJABdpkJgc
+         3De5XBc0vpB2ntcibuHBYtcy36VttpJTnFEzvJUflrWpEYtRo7BVA4TCSPDyDGr0vCNk
+         huF7n66OF19MUgNuSHoHUm2/Rd66XuyUs5DNT2ABmTqvQbcly3000oDWIPR6wpjscaLF
+         Iyf8Msckr77Rvcl4zG/we9AEfwnhxQdPwuPOYZfQxVhn0pvOz3YJ5OBUSdoJTZQe8cn0
+         MCSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784626339; x=1785231139;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=2hrPn+kSJ9X1wZ8n8IswgRvPdGLpuJP7iOmwY3fILyc=;
+        b=CNf2K9S2qEmw0RUTRQcnlT04L1UYrnk+zVFI10T1ftxnzmBGWaxa5T2FivK2d84Cdj
+         tbh783K5vHTmUujZazP4DlwC3yvA28bJeAJkeCdOn3Ll4RvKTN+XGHzoFmqWitLAj17Y
+         y+L7ho3XskQVW0r0lVA+Vts12DporUEr3cr3LAsfNs64AJk8DpFthhIUBzNUCEpqFC6B
+         Iv8rnCfASiIwn1yR1OypSp8XAjVfVmbzAm6EJyDg8LKytMf/KzyuriTWBH6JBLbOpwga
+         Tuzmev0zXQJEpkQmFW7ssJODoUk3QbKKHD+BHRasOVK10InUdAe/PiPd1stEmQ+vRcyg
+         JIFw==
+X-Forwarded-Encrypted: i=1; AHgh+RqT7t58152XBjUATLCXONOyyLEXNuwX6d77xr0GJeDwaO4bYrHUl2Rxz+HoEulX0EF0a+vJXkYpaiU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyBQyfmpAct17KoFpsvGTKzzW2c1ryoYrWns3EGRPA8S953NOsF
+	/eQfzgBUEOEeW2IVwZhoLosh26X94ppB64GNTWms6iO5rUegkBkPDeFA2RHEVGohgNcB1lE3+OF
+	zni/b3OnphTVtlpM4ZzpZSB+T6tTSZJf34npsIGNXAPR5OqIaLSVFU8s6kdQD3cE=
+X-Gm-Gg: AfdE7cm4oG470IA/2OlaYX+7XrrJYhVJBJbBrInrKE+ZpulKx+U3A7iBPynhxDbMAQm
+	xcdtnezWMMQz1VKELBxlLPxA63GSrzLVc6w3RP6IHXppbHmPowU2sFVH+BSRitd7r4AG0697iY1
+	IZn53hefat/7Ywki9MAaxwYM1dyhzIiMHTdcm0H4F0LKoPcVEY9x+vDa7aLbARqoL91MM3CziZM
+	QpnVfJdtrEZJhGFZJGsdBGBMEI0CHdyW9ceP4uupcvsrh4mIk2U1xc0Dm9ojaUEqsH3agYz1Zs9
+	Xvlpakgo3rIuxHfF1mjZxopTJMHUJaztzg4GQFy1pfPdMVtD8LqQfHsKUQN1+ybiHgLvEKqpvM3
+	ZKpGUO9tKvMyfw5WMrYzPfPUyqTthHuITXK0=
+X-Received: by 2002:a05:6a20:7487:b0:3bf:6c05:ab with SMTP id adf61e73a8af0-3c3ad9d632bmr19205527637.58.1784626339125;
+        Tue, 21 Jul 2026 02:32:19 -0700 (PDT)
+X-Received: by 2002:a05:6a20:7487:b0:3bf:6c05:ab with SMTP id adf61e73a8af0-3c3ad9d632bmr19205493637.58.1784626338650;
+        Tue, 21 Jul 2026 02:32:18 -0700 (PDT)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1bb8a4sm49420949eec.14.2026.07.21.02.32.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jul 2026 02:32:18 -0700 (PDT)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v3 0/3] arm64: dts: qcom: eliza-evk: Enable PCIe0 and PCIe1
+ with M.2 and TC9563 switch
+Date: Tue, 21 Jul 2026 15:02:01 +0530
+Message-Id: <20260721-eliza_evk-v3-0-92b10038f13d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAJI8X2oC/22R207DMBBEfyXKM0brS5y4Qoj/QAjZu2tqaGgbp
+ xEX9d9xEoSK4MXSWDtn7NnPOvOQONeb6rMeeEo57V+L0FdVjVv/+sQiUdG1AmXBKid4lz78I08
+ vwkYNtrNBWhnrMn8YOKa3hXX/sOp8Cs+M4wz4nhj4eCoh4zpWH/yI2xKxqRxLoBhYW3BGInkED
+ eB9lFZL49qmcY2Kbk36cUVGZJAt6EYGHwEwcBdt0KBIEkdDzoUQ8bfLtUgWg3FNJJKuGIjbkm0
+ ajlqx8VZ3jG5x9ZyzX2rYVDdrCxoEjVkccd+vdYh+PIi5Ek8kDn3CLCYppIim4CC22HXhbp/z9
+ fHkd8XVX5fjdqYHn1nMN2ncVISNYxPZO+rqucFtyuN+eF+WM8mlsOUF5bsXeyhRIFqrjDEQqLX
+ 0J2qBTeoS0F0CVAGUbKeMRQ5e/gM4n89fNONYhywCAAA=
+X-Change-ID: 20260629-eliza_evk-6f30686b161f
+To: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784626333; l=3073;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=frRZ0tu6AqPX/0VbOa0cA1iFkH71llk8yLCIG3tFrN0=;
+ b=BuhS7dwlwhM6jlIekOWi4Hr4hb3RnKnmL0yCeAWScHF4nJSYGXDH1NeeoLSZb1lM14t7mt7+x
+ d9Y1LL0oHX1AS9GDTu+F1tVz3rMKFiGcQbPXC8pCH99vbJRqSmfUa/z
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Proofpoint-ORIG-GUID: JIdi1cqGIANFndSc2Pp9dm2ZP8qu9s7Y
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIxMDEwMCBTYWx0ZWRfX5SU0OluCkIEo
+ gON9BkL2Xa5hpytD5CzNPDv1lk+XltreMmPtmXsQLJ3jEq0mDGGKX4niLfRJW1G/Fk9j++3AHQZ
+ GK+lg+N+fCqIwTt9EdRUsnaP5UjUPSiMUdSOBZ8dGIY5C7au5QOh8/Kphhcxlr51dl6jMQ4K+MI
+ rSxOLV2VMNBKxoNpdQUwP7Zio0Fkdc6PTUpea1m37l5CkxGqQHF2kSicFz4dh6jdmfej7EJZ7g3
+ /f1M/IDcb1D0lReaV7bAYsXPtZ5n2inqxGJMgqJ74QWaLUzLf+WiNa2RQ+HKoP5SwdbRQi51RgY
+ Povs392dne5dRfZO8OsEdP4P+Zlf+p1Cb82TfK4LCb/TJfj65rdXvFcKXsMfnNwYzPAb4X+J8wQ
+ 6iKFxzCJDeT7dKsESSSuxuJXymMC2ICQ1r32nI3I0wBt2OpuOKdktA2gljxEggxURfkNThpQaUk
+ Kbc2iwjMv/543t4ho9Q==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIxMDEwMCBTYWx0ZWRfX1r3BhzEXefPa
+ Ps2sWFKdPWvDjMDPd33LAoGmbtQRE8ebuz3DVcVCBuomYCka9ZV7LW+dY6Y81pL3hGi4CwFCc45
+ la6mojMkrEuSMATOa8yvdIOOgvW/aOc=
+X-Authority-Analysis: v=2.4 cv=daawG3Xe c=1 sm=1 tr=0 ts=6a5f3ca4 cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=bC-a23v3AAAA:8 a=UUeChs24tHZU6zr2FsUA:9
+ a=QEXdDO2ut3YA:10 a=GvdueXVYPmCkWapjIL-Q:22 a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-GUID: JIdi1cqGIANFndSc2Pp9dm2ZP8qu9s7Y
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-20_06,2026-07-20_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 impostorscore=0 priorityscore=1501 suspectscore=0 malwarescore=0
+ clxscore=1015 adultscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607210100
 
-On Tue, 21 Jul 2026, Atharva Tiwari wrote:
+This series enables PCIe for the Eliza EVK board (CQS SoM on EVK carrier).
 
-> From: Andre Eikmeyer <andre@negmaster.com>
-> 
-> Thunderbolt NHI on T2 Macs (2018-2020). The NHI and its
-> associated PCIe root ports all sit directly on the root complex
-> with no upstream port. Apple's ACPI tables name Thunderbolt root
-> ports as TRP0, TRP1, etc. Find them and create device links back
-> to the NHI so that PCIe tunnels can be re-established after sleep.
-> 
-> Co-developed-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-> 
-> Signed-off-by: Andre Eikmeyer <andre@negmaster.com>
-> ---
->  drivers/thunderbolt/tb.c | 51 +++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 50 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-> index c69c323e6952..0cdffcf577cd 100644
-> --- a/drivers/thunderbolt/tb.c
-> +++ b/drivers/thunderbolt/tb.c
-> @@ -6,6 +6,7 @@
->   * Copyright (C) 2019, Intel Corporation
->   */
->  
-> +#include <linux/acpi.h>
->  #include <linux/slab.h>
->  #include <linux/errno.h>
->  #include <linux/delay.h>
-> @@ -3305,11 +3306,59 @@ static const struct tb_cm_ops tb_cm_ops = {
->  static bool tb_apple_add_links(struct tb_nhi *nhi)
->  {
->  	struct pci_dev *upstream, *pdev;
+The Eliza EVK exposes two PCIe ports:
 
-This file seems to have a pre-existing lack of pci.h include, please add 
-it now when doing pci related code.
+- PCIe0 drives an M.2 E key connector. The 3.3V supply is GPIO-controlled
+  via a TCA9538 I/O expander on I2C4. The slot hosts a WLAN module
+  (connected over PCIe) and a Bluetooth device (connected over UART5),
+  modelled with the pcie-m2-e-connector binding.
 
-> -	bool ret;
-> +	bool ret = false;
->  
->  	if (!x86_apple_machine)
->  		return false;
->  
-> +	/* On T2 Macs. the root ports are stored in ACPI as TRP0,
-> +	 * TRP1, etc. Find them and create device links
-> +	 * so that PCIe tunnels can be re-established after
-> +	 * sleep.
-> +	 */
-> +	if (has_apple_t2_chip && IS_ENABLED(CONFIG_ACPI)) {
-> +		struct acpi_device *adev;
-> +		unsigned int slot, func;
-> +		const struct device_link *link;
-> +		const char *bid;
-> +
-> +		for (slot = 0; slot < 32; slot++) {
-> +			for (func = 0; func < 8; func++) {
-> +				pdev = pci_get_slot(nhi->pdev->bus, PCI_DEVFN(slot, func));
-> +				if (!pdev)
-> +					continue;
-> +
-> +				if (!pci_is_pcie(pdev) || pci_pcie_type(pdev) !=
-> +						PCI_EXP_TYPE_ROOT_PORT)
-> +					goto put_pdev;
-> +
-> +				adev = ACPI_COMPANION(&pdev->dev);
-> +				if (!adev)
-> +					goto put_pdev;
-> +
-> +				bid = acpi_device_bid(adev);
-> +				if (strncmp(bid, "TRP", 3) != 0)
-> +					goto put_pdev;
-> +
-> +				link = device_link_add(&pdev->dev, &nhi->pdev->dev,
-> +						DL_FLAG_AUTOREMOVE_SUPPLIER |
-> +						DL_FLAG_PM_RUNTIME);
-> +				if (link) {
-> +					dev_dbg(&nhi->pdev->dev, "created link from %s\n",
-> +						dev_name(&pdev->dev));
-> +					ret = true;
-> +				} else
-> +					dev_warn(&nhi->pdev->dev,
-> +						"device link creation from %s failed\n",
-> +						dev_name(&pdev->dev));
+- PCIe1 (8GT/s x2) connects to a Toshiba TC9563 PCIe switch, whose
+  management interface sits on I2C4 (address 0x77). The TC9563 RESX# and
+  PERST# lines are OR-ed internally; reset is driven via a TLMM GPIO on
+  the RESX# pin. The iommu-map covers all downstream switch ports
+  (SID range 0x1400-0x1408).
 
-Please only use balanced braces.
+The M.2 WLAN module carries a Qualcomm QCC2072 Bluetooth chip. A device-ID
+entry is added to the M.2 power sequencer so the serdev node for the BT
+UART interface is created on PCI enumeration.
 
-> +
-> +put_pdev:
-> +	pci_dev_put(pdev);
+Bluetooth is enabled with this patch https://lore.kernel.org/all/20260529175822.3366535-1-yepuri.siddu@oss.qualcomm.com/
 
-I think you can use __free() with it and avoid the label. You cannot then 
-reuse the existing pdev variable for it but declare it in this block while 
-you assign to it.
+This seris Depends-on:
+  https://lore.kernel.org/all/20260630-eliza-dts-qcs-evk-v4-3-18cbbdba6e7e@oss.qualcomm.com/
+  https://lore.kernel.org/all/20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com/
 
-This line would be misaligned anyway but better get rid of goto logic 
-anyway.
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v3:
+- Clubbed pcie nodes to this series (Bjorn A)
+  (https://lore.kernel.org/all/20260708-eliza_dt-v2-1-e6281da26408@oss.qualcomm.com/)
+- Added comment for PERST (Mani).
+- Extended ranges property for pcie1 (Konrad).
+- Link to v2: https://patch.msgid.link/20260708-eliza_evk-v2-0-c599246ceba1@oss.qualcomm.com
 
-> +			}
-> +		}
-> +		return ret;
-> +	}
-> +
->  	switch (nhi->pdev->device) {
->  	case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
->  	case PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C:
-> 
+Changes in v2:
+- Drop patch 3, as this is already applied
+- Rebase on top of https://lore.kernel.org/all/20260708055017.A90C91F000E9@smtp.kernel.org/
+  and remove pincntrl as pincntrl is added in the eliza.dtsi patch and also remove
+  pinctrl for resx as this is covered in pcie1_default_state as perst gpio.
+- Link to v1: https://patch.msgid.link/20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com
 
--- 
- i.
+---
+Krishna Chaitanya Chundru (3):
+      arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
+      arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
+      arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+
+ arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 229 ++++++++++++++++++
+ arch/arm64/boot/dts/qcom/eliza.dtsi     | 414 +++++++++++++++++++++++++++++++-
+ 2 files changed, 641 insertions(+), 2 deletions(-)
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260629-eliza_evk-6f30686b161f
+prerequisite-patch-id: 9e10dfbe360941cdac0300aaf163149755952f9f
+prerequisite-patch-id: fecce0170351baf00cbe8f6b302d1def4d99bbfc
+prerequisite-patch-id: 97cd6cb495fdd198f6de7fbe45ef32e4a638ec9c
+prerequisite-message-id: <20260630-dts-qcom-eliza-mtp-evk-add-pmics-v1-1-f4f320f7c88b@oss.qualcomm.com>
+prerequisite-patch-id: f3615b5c1e2222a2491f862a7fba3994058ecc53
+
+Best regards,
+--  
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
