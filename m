@@ -1,199 +1,166 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA3531AF2D;
-	Tue, 21 Jul 2026 16:35:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D6A25392A;
+	Tue, 21 Jul 2026 16:35:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784651721; cv=none; b=V2qMdHN4r3HKSPeZfUYTOJtNiavkcJX/qru0T4OkVtyCGImySroJreH9FR5ffzwlrr4iJxCtWQ0DgOaOwHWNh3v5Cx3aYnM33edGmZU3jGEPornbNHbss2qTSVcu5asHQwhzGcwSKgkTLDQI2hnWOUCOnIL/bTu6KJf6CEwcvoI=
+	t=1784651732; cv=none; b=YwiG65OMhLwAQFYcjw9u/B9tdTNJ6ZDEMISMKp7l1HGXmKTIDj2zMybZ8rtFCumKgCPwo44/OIiAuER8o9WYH8wdnjLm1z+x7t/bNJdTgM1Euer3+Pf1JAEKqRIoAgtR2BacjEdS1iCTeD+UJ1/J98s1KxjEO3qLpSqSC5ker9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784651721; c=relaxed/simple;
-	bh=+KZSjNPt/1kWi094Mh+9hEuSBOE5JfIOMbc/56OP3gY=;
+	s=arc-20240116; t=1784651732; c=relaxed/simple;
+	bh=xdjZO9f8ZzjGLf1fH2fYAwbHdf5sRimwUGjFZJW3OXY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lF1IwrpvRFB0ePpAmj+Vq4Qxat9O6Qf0mJ0ZebdgkyzciCBp19LbK8sE1FyC7DmCj7bEWbYjPSZTnoYpijT00H7vFG5FTfKNSUX/ay6YDaAeLAVYwemxzl65r5dbDPso0+pyXYVWABcIkvWsFnC8uZvppQ22hVo1U+U0eNnD4TA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OrLwnM8x; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=e4DTthqHSU2NLZT6piNqSQp9o5CIG+/tlBqMxqIf0xJrfTijko21ubPa9uQpfRQgv60iYONcu8DS8Xjz1XLZ+BGNSAsYdAGctgr26+NZYJbTDf6Yr4dLj2R2N/deDizq686HqoY1tMms5QcEIK5kAckC4P+buErCCmkF4zgKpzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GGdvIfJo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OrLwnM8x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1F151F00A3A;
-	Tue, 21 Jul 2026 16:35:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GGdvIfJo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 955891F00A3A;
+	Tue, 21 Jul 2026 16:35:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784651720;
-	bh=J7ISZrXmh9xdNQ57F4vycXxEdHSoP2KSWwUq7fQh+Jc=;
+	s=k20260515; t=1784651730;
+	bh=874nwZ4mVNwt2lQB6+iP6PqGXhQIGZZLp7w9QXmJ14M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OrLwnM8xA6VNALfVIGXqCDI+dWDm7ZKBjik66mDfgV9fodrlQSnkWaDKKOnh01A4z
-	 2Yf2xGyzTyDr9Y/8IyhISkYU6PkWNnCNBjKNagNPcZlqnA/C46bIpKZxD3WYmFtvcg
-	 ByAXCrShop+qkqKrdcYvk1LEBp0C83mPqx13msh1IjsviiKdb6VLDkW/jFrcbIf3Mc
-	 g7syA658TAZ3iquH7KvWUCVSFsnlYZhPzS70mXDF5SmmSasb3tileA9tLXhKNcpwvd
-	 kq/psVurj0hBSvCPtioSxqvbqYndTSWQhgqCI9dU1auFm8R5htGS1FUrvt7qouM2Hw
-	 ljcyd0p/5XQew==
+	b=GGdvIfJoyc8yYiktQ6jqLxkA+nCnUt739ilej03GgtLBkq+1iUIZvCr5rvW559biz
+	 h9BbfvqZO+GlQN5YMYNHETHQVFn/O9HWyQvt3pwrPGy/xO+/tNV6Mmp5/lGms+RPAB
+	 VaN+E+DtK/znYduCxuJLFah51H8kbVldDTnxIYtoqd/YmI1Ex/MFX9s5tJ1tnch6oO
+	 vcAh3ubtWJaQZt96gQ8fiMGLEqJ8mrLFcTKTJjkS14rsn8YcKOZxcm97X8lW4xz4cS
+	 MTz3fOlie+NdLTGLdPJLHzQd3ueF2rL35824syfQdL8aFa+wVBU6Lk73VwHneGqUFd
+	 Mnn9bAlt+1mDA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 09/11] dmaengine: ioat: disable relaxed ordering
- before registering the device
+Subject: Re: [PATCH v2 11/11] dmaengine: plx_dma: fix NULL pointer deref in
+ plx_dma_isr()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
-In-Reply-To: <20260721155739.62120-10-logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
+In-Reply-To: <20260721155739.62120-12-logang@deltatee.com>
 References: <20260721155739.62120-1-logang@deltatee.com>
- <20260721155739.62120-10-logang@deltatee.com>
+ <20260721155739.62120-12-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 21 Jul 2026 16:35:19 +0000
-Message-Id: <20260721163519.D1F151F00A3A@smtp.kernel.org>
+Date: Tue, 21 Jul 2026 16:35:30 +0000
+Message-Id: <20260721163530.955891F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Use-After-Free in interrupt handler due to devres and manual memor=
-y management mismatch on probe error path.
-- [High] PCI MSI/MSI-X vectors are leaked on probe failure and device remov=
-al.
-- [High] IDA allocation nodes are permanently leaked in the dmaengine core =
-when `dma_async_device_register` partially fails.
+- [High] Deadlock in `plx_dma_process_desc()` because it uses `spin_lock()`=
+ instead of `spin_lock_bh()`, allowing preemption by softirqs/tasklets.
+- [High] Recursive deadlock in `plx_dma_process_desc()` and `plx_dma_abort_=
+desc()` due to invoking client callbacks while holding `ring_lock`.
 --
 
---- Patch [9]: [PATCH v2 09/11] dmaengine: ioat: disable relaxed ordering b=
-efore registering the device ---
-commit 0ad76783c9aa39fb6b36953c767e2a29d68490df
+--- Patch [11]: [PATCH v2 11/11] dmaengine: plx_dma: fix NULL pointer deref=
+ in plx_dma_isr() ---
+commit eb45a79e5c7876e25dd34346cbd03538a3ed67e0
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: ioat: disable relaxed ordering before registering the device
+dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
 
-ioat3_dma_probe() disabled PCIe relaxed ordering after calling
-dma_async_device_register(), so if an error occurs and the code jumps
-to err_disable_interrupts, the function returns with the device still
-registered. Move the capability read/write ahead of
-dma_async_device_register() instead.
+This commit moves the plxdev->bar initialization before calling
+request_irq(). This prevents a NULL pointer dereference that could occur if
+an interrupt fires immediately and plx_dma_isr() attempts to access the
+uninitialized bar.
 
-Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.ke=
-rnel.org
+Link: https://lore.kernel.org/all/20260610112121.676561-1-jjy600901@snu.ac.=
+kr
 
-> diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
-> index 737496391109e..a57024c4b066e 100644
-> --- a/drivers/dma/ioat/init.c
-> +++ b/drivers/dma/ioat/init.c
-> @@ -1170,15 +1170,6 @@ static int ioat3_dma_probe(struct ioatdma_device *=
-ioat_dma, int dca)
-[ ... ]
->  	/* disable relaxed ordering */
->  	err =3D pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
->  	if (err) {
-> @@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *=
-ioat_dma, int dca)
->  		goto err_disable_interrupts;
->  	}
+> diff --git a/drivers/dma/plx_dma.c b/drivers/dma/plx_dma.c
+> index 84941a918b01f..409898e92c320 100644
+> --- a/drivers/dma/plx_dma.c
+> +++ b/drivers/dma/plx_dma.c
+> @@ -504,17 +504,17 @@ static int plx_dma_create(struct pci_dev *pdev)
+>  	if (!plxdev)
+>  		return -ENOMEM;
+> =20
+> -	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
+> -			 KBUILD_MODNAME, plxdev);
+> -	if (rc)
+> -		goto free_plx;
+> -
+>  	spin_lock_init(&plxdev->ring_lock);
+>  	tasklet_setup(&plxdev->desc_task, plx_dma_desc_task);
+> =20
+>  	RCU_INIT_POINTER(plxdev->pdev, pdev);
+>  	plxdev->bar =3D pcim_iomap_table(pdev)[0];
+> =20
+> +	rc =3D request_irq(pci_irq_vector(pdev, 0), plx_dma_isr, 0,
+> +			 KBUILD_MODNAME, plxdev);
+> +	if (rc)
+> +		goto free_plx;
+> +
 
 [Severity: High]
-This is a pre-existing issue, but can we hit a use-after-free if this error
-path is taken?
+This is a pre-existing issue, but can this code cause a deadlock?
 
-If ioat3_dma_probe() fails here and jumps to err_disable_interrupts, the
-driver returns an error to ioat_pci_probe(). ioat_pci_probe() then manually
-frees the device and its channels:
+When plx_dma_tx_status() is called from process context with softirqs enabl=
+ed,
+it invokes plx_dma_process_desc() which acquires ring_lock using spin_lock(=
+):
 
-drivers/dma/ioat/init.c:ioat_pci_probe() {
+drivers/dma/plx_dma.c:plx_dma_tx_status() {
     ...
-		for (i =3D 0; i < IOAT_MAX_CHANS; i++)
-			kfree(device->idx[i]);
-		kfree(device);
+    plx_dma_process_desc(plxdev);
     ...
 }
 
-However, the interrupt handler was registered with devm_request_irq()
-earlier in ioat_dma_setup_interrupts():
-
-    err =3D devm_request_irq(dev, pdev->irq, ioat_dma_do_interrupt,
-			   IRQF_SHARED, "ioat-intx", ioat_dma);
-
-Since devres callbacks only execute after ioat_pci_probe() completes, the
-shared IRQ remains active while the memory is freed.
-
-If another device triggers a shared interrupt during this window, wouldn't
-ioat_dma_do_interrupt() dereference the freed device pointer?
-
-drivers/dma/ioat/dma.c:ioat_dma_do_interrupt() {
-    struct ioatdma_device *instance =3D data;
+drivers/dma/plx_dma.c:plx_dma_process_desc() {
     ...
-    intrctrl =3D readb(instance->reg_base + IOAT_INTRCTRL_OFFSET);
+    spin_lock(&plxdev->ring_lock);
     ...
 }
+
+If a hardware interrupt occurs on the same CPU while the lock is held, the =
+IRQ
+handler schedules the desc_task tasklet. When the IRQ returns, the softirq
+handler executes the tasklet on the same CPU, which also calls
+plx_dma_process_desc() and attempts to acquire the already-held lock.
+
+Should plx_dma_process_desc() use spin_lock_bh() instead to disable softirq=
+s?
 
 [Severity: High]
-This is another pre-existing issue, but does this probe error path leak
-PCI MSI/MSI-X vectors?
+This is a pre-existing issue, but does invoking the client callback while
+holding ring_lock cause a recursive deadlock?
 
-The driver allocates vectors using pci_enable_msix_exact() or
-pci_enable_msi() in ioat_dma_setup_interrupts(), but it doesn't appear
-that either err_disable_interrupts or the device unbind function
-ioat_dma_remove() ever calls pci_disable_msi() or pci_disable_msix() to
-release them:
+Looking at plx_dma_process_desc(), the client callback is invoked via
+dmaengine_desc_get_callback_invoke() while the lock is still held:
 
-drivers/dma/ioat/init.c:ioat_dma_remove() {
-	struct dma_device *dma =3D &ioat_dma->dma_dev;
-
-	ioat_disable_interrupts(ioat_dma);
-	ioat_kobject_del(ioat_dma);
-	dma_async_device_unregister(dma);
-}
-
-Could this lead to resource exhaustion if the device is repeatedly unbound
-or fails probe?
-
-> +	err =3D dma_async_device_register(&ioat_dma->dma_dev);
-> +	if (err)
-> +		goto err_disable_interrupts;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the dmaengine core leak
-IDA allocation nodes when dma_async_device_register() partially fails?
-
-If channel registration succeeds for at least one channel but fails later,
-the code jumps to the err_out label. Because device->chancnt is non-zero,
-it skips freeing the global dma_ida:
-
-drivers/dma/dmaengine.c:dma_async_device_register() {
+drivers/dma/plx_dma.c:plx_dma_process_desc() {
     ...
-err_out:
-	/* if we never registered a channel just release the idr */
-	if (!device->chancnt) {
-		ida_free(&dma_ida, device->dev_id);
-		return rc;
-	}
+    spin_lock(&plxdev->ring_lock);
+    ...
+    dmaengine_desc_get_callback_invoke(&desc->txd, &res);
     ...
 }
 
-It then loops over the channels to unregister them, but fails to call
-ida_free() to release the individual channel IDs allocated from
-device->chan_ida:
+This also happens during abort:
 
-	list_for_each_entry(chan, &device->channels, device_node) {
-		if (chan->local =3D=3D NULL)
-			continue;
-		mutex_lock(&dma_list_mutex);
-		chan->dev->chan =3D NULL;
-		mutex_unlock(&dma_list_mutex);
-		device_unregister(&chan->dev->device);
-		free_percpu(chan->local);
-	}
+drivers/dma/plx_dma.c:plx_dma_abort_desc() {
+    ...
+    dmaengine_desc_get_callback_invoke(&desc->txd, &res);
+    ...
+}
 
-Would this permanently leak IDA structures and IDs for any DMA driver
-failing partially during registration?
+If the DMA client's completion callback prepares and submits chained DMA
+transactions by calling dmaengine_prep_dma_memcpy(), it re-enters the drive=
+r:
 
-> +
-> +	ioat_kobject_add(ioat_dma, &ioat_ktype);
-> +
-> +	if (dca)
-> +		ioat_dma->dca =3D ioat_dca_init(pdev, ioat_dma->reg_base);
-> +
->  	if (ioat_dma->cap & IOAT_CAP_DPS)
->  		writeb(ioat_pending_level + 1,
->  		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
+drivers/dma/plx_dma.c:plx_dma_prep_memcpy() {
+    ...
+    spin_lock_bh(&plxdev->ring_lock);
+    ...
+}
+
+Could this attempt to re-acquire the non-recursive ring_lock on the same CPU
+cause a hard lockup? Should the lock be dropped before invoking the callbac=
+k?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721155739.6212=
-0-1-logang@deltatee.com?part=3D9
+0-1-logang@deltatee.com?part=3D11
