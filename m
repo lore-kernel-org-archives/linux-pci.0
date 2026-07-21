@@ -1,225 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD65A2AEE4;
-	Tue, 21 Jul 2026 00:19:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5523318EC7
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 00:25:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784593151; cv=none; b=KDVJk3kq3KMogcflv0uD4SesHjED8vXqxBQd6O6MQbjRy9lna1HFXJft/Mut1TktgjHFyjN0kD99vTDd+QenqluB+mGEFpREgwGnMtHrJCLmltP1MNZ6Nxtmer/SyzDxh/SNA5v8d0aSXl388ShCZ+QCpu7OQs+eU1HN2uRVVzM=
+	t=1784593561; cv=none; b=eveymEkLdDhbIxEWfyYmQ4BbQwsbHCXv+zbxvTIcKd7t1bh9HiPWbr1/s093ZDzXmN0RqgBzck+ji5NcQ6oNQ3uP6TxFeAEQiXeczEhKaHU58IKiTJHlFjDnTG+yEjVOTYQAZNHcUIjhzkBDAj0xIIW1Jtti9ClqzEQrnVBTW9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784593151; c=relaxed/simple;
-	bh=2qMl910BJFt0Lw11Zr9MfYs7NAOKMTQWr82xCgXmBxg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dfn1FE7DT436xQq0Nxvd3O7uSl6Zxp4PfxV3zrFuAshbIsrZjOQuTmGciPEcd5YcTVve0GZY0EnNIMj3N2oNM3+RtHFckOekIFLyJfmsRISnJHXR3gingslS6ek76pNY4gInHRY31RJAzFMD9BpN/Bpa1LVORLAU9pjn9YwsLmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+xaV714; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784593561; c=relaxed/simple;
+	bh=CYgDBxPuC4qNR3XqiMuwPaYin0WeDtqHmpltDaqdng8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZXrJxaXgoIMy7JVcYYblbFSIslfJU5/P6xqUVKc/XRaWXMmwnF1ZEZ4XHfpE+BGa1ha2hdz9F5bGPtV5gHqlCOOLMuSR8OGw46jy+TeeE+GZejDsscZ6vmDhpTvNHFkmZI3BgCnGfSTMb5vrLetvStMheySEXAS+Sghj56Y6HbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=XJV/E/7u; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+xaV714"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A856B1F000E9;
-	Tue, 21 Jul 2026 00:19:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784593150;
-	bh=AFoF5hI+TyonHgFrZiKmtrN1ti4k0VjnSpnUvsJ8h/A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=a+xaV714k0eHw8rUI7q1qTfijKgxRQ55rJXLUXJV5tiqYUp9mFNwYfDo5yCIs92XJ
-	 9cKUZ6WSbtixHdiBNa3tfHIgCpRpSPgNxKtCYTYhCAZ3s57qRUwM2UhAqkub1zl3gv
-	 v1Q2HorUH2vmYIh59cS2ON7m56FcZUVOTLlZaHAYeybX92bmOkiVYuSkRGkXHFZZHJ
-	 +ONVwY2lra+naEsQ8nxIUIPF4pSuZ3oGXu3q1xXaH7r3eXxlO3VlqQOKT7BxbLTlE2
-	 DLcnLtmOnvlC3uZvjq81uYtPH9ZFZDaTUFoi2v/sZtoxn983OV9rqUu7bE79n1EMrW
-	 Od3dcqVbVo/+w==
-Date: Tue, 21 Jul 2026 01:19:02 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Terry Bowman <terry.bowman@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
- "Dave Jiang" <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>, Len
- Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, Robert
- Richter <rrichter@amd.com>, <linux-acpi@vger.kernel.org>,
- <linux-cxl@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linuxppc-dev@lists.ozlabs.org>, "Alejandro Lucero" <alucerop@amd.com>,
- Alison Schofield <alison.schofield@intel.com>, Ankit Agrawal
- <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>, "Ben Cheatham"
- <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>, "Breno Leitao"
- <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>, "Fabio M . De
- Francesco" <fabio.m.de.francesco@linux.intel.com>, Gregory Price
- <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>, Jonathan Corbet
- <corbet@lwn.net>, Kees Cook <kees@kernel.org>, Kuppuswamy Sathyanarayanan
- <sathyanarayanan.kuppuswamy@linux.intel.com>, Li Ming
- <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mauro
- Carvalho Chehab <mchehab@kernel.org>, Oliver O'Halloran <oohall@gmail.com>,
- Shiju Jose <shiju.jose@huawei.com>, Shuah Khan <skhan@linuxfoundation.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>, Smita Koralahalli
- <Smita.KoralahalliChannabasappa@amd.com>, Tony Luck <tony.luck@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v18 13/13] Documentation: cxl: Document CXL protocol
- error handling
-Message-ID: <20260721011902.0a93da2d@jic23-huawei>
-In-Reply-To: <20260717222706.3540281-14-terry.bowman@amd.com>
-References: <20260717222706.3540281-1-terry.bowman@amd.com>
-	<20260717222706.3540281-14-terry.bowman@amd.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="XJV/E/7u"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2ce98cb8165so46055895ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2026 17:25:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1784593559; x=1785198359; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=g1X0juR/1GVeoaU+GRv2SCzxSp9V5eSXjGqtRs69cqg=;
+        b=XJV/E/7unVbmruqw+bBZgKLmcgksLyxMGhJs+nBzPEFKsX7rYyAqokD8OYpVRuNOCV
+         TeYsALa1l9jwiWNQp9aKKne0nsWhyYSm3hdu/YH1wTqgqtfCT6/jwZsQxUYUGclFyRg+
+         yyAD/z8jTQEzQkIQR/7guUvp1ftOq9fufCuek=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784593559; x=1785198359;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=g1X0juR/1GVeoaU+GRv2SCzxSp9V5eSXjGqtRs69cqg=;
+        b=BrnGLJ3J1q6z7L/v9M1hlWRv2GrCwTdhM+f4Hm/3J0umj3zbc58Uh+VxOcsTEbNuuL
+         NuhXVVJ7iHvdGwYH42RT7/uHt7qS3uhEdTbOOqw2FjLZ1Z/czkxazWSjGL73MKAebtO7
+         7B+PP8OIsNQhJBZ5A1aZ3J23Xp57+5DZRM4EfOs4hfll7DteZXL0Gri16Vdf0CmsaxIG
+         nhqw6FeZ+sZSN2ohEw6WU3gCVRLPt6WuiEwQWzZnnorzdPhW+n5hGwIi2UVPtMgXoerH
+         CyPisIWUF/mBcv1WhdYH+gD6IIOvThAHbFGLkHn+hhRhH6Pj4nv5uGB8BgrdBAjrtOAX
+         O09g==
+X-Forwarded-Encrypted: i=1; AHgh+RoZ9A7EI/pDWYG7+T1jvMOYGe/gC3NLYiisaJWtgz4FszV5n6iJjVNpQkVgjq4ORdPTRhdKen4UiTU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyU4EbYdUzJKspQexVt6xPOetOepD7hLwzJRtq2+dqHgYdXTAyS
+	R7+FtG/5RbXjCfRq0BluDghNDakf1SG14KyflcCGsA9ZJ0XJDa1w0oW62fTQAoAFdQ==
+X-Gm-Gg: AR+sD13v7I6sLfLMacsisDwWBdFgRAml3qCnN+1wF+LV2H/u/AwwVDvJ0cxNBVsFhgJ
+	nTJSbe/R6+f+rgqWA7pnU3N3S8sUMTaLixEdF2mAWd4AGg9byh6QFBhD76CHgj6Hg3vu9KyM0Uh
+	A4c6/xGHqdVx4Ula2qYdhha6Myf1AV8lL/pKTE5CAf0+/A4HtTfqFTk5eyueGnQC3GKgBG5EEeq
+	lsxoJsn0n8P/i0yPe2MsxGsoYOfhdpmU/ViOH0PP/SZ/z8u7oBnkAXo7+B1V12XrePztnNc3aNB
+	YRGq32Tp016I2Q96wa3ThGvMOQLP6CZyo9YfKcZVVKECgHyR267ZRLRQpLdiI8xPixjsKd6uVUi
+	JXRl+JX4oNYtwqfwZNbYG5svskFUVbzOnLXCqkvZyr1/e4x9Sxbv1dvmbMioEWAyncwQhKGONJ2
+	o6+thYArfDylD3icXO2ef8BZdmOy6eRI/Ia6CE7ykj
+X-Received: by 2002:a17:902:e5cd:b0:2cf:7de1:4a00 with SMTP id d9443c01a7336-2cf7de14d09mr22857195ad.1.1784593559123;
+        Mon, 20 Jul 2026 17:25:59 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:c6dc:f5fa:8751:3ac2])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-31429fe1014sm40231058eec.7.2026.07.20.17.25.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Jul 2026 17:25:58 -0700 (PDT)
+Date: Mon, 20 Jul 2026 17:25:56 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	David Matlack <dmatlack@google.com>
+Subject: Re: [PATCH v2] PCI/portdrv: Allow probing even without child services
+Message-ID: <al68lFtbq_Q4RCL2@google.com>
+References: <alnnTRldy-deNIFM@wunner.de>
+ <20260720204419.GA426578@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720204419.GA426578@bhelgaas>
 
-On Fri, 17 Jul 2026 17:27:06 -0500
-Terry Bowman <terry.bowman@amd.com> wrote:
+On Mon, Jul 20, 2026 at 03:44:19PM -0500, Bjorn Helgaas wrote:
+> On Fri, Jul 17, 2026 at 10:26:53AM +0200, Lukas Wunner wrote:
+> > On Thu, Jul 16, 2026 at 12:26:41PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Feb 09, 2026 at 05:15:35PM -0800, Brian Norris wrote:
+> > > > The PCIe port driver fails to probe if it finds no child services,
+> > > > presumably under the assumption that the driver is not useful in that
+> > > > case. However, the driver *can* still be useful for power management
+> > > > support -- namely, it still configures the port for runtime PM / D3,
+> > > > which may be important for allowing a bridge to enter low power modes.
+> > > > 
+> > > > Thus, allow probe to succeed even if no IRQs and no child services are
+> > > > available. This also mirrors existing behavior for ports that have no
+> > > > PCIe capabilities, where we'd also probe successfully.
+> > > > 
+> > > > This change is a bit more important after commit f5cd8a929c82 ("PCI:
+> > > > dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+> > > > controller"), because it's common for some DWC-based systems to:
+> > > > 
+> > > > 1. have only have the "aer" and "pcie_pme" port services available and
+> > > > 2. not define legacy INTx interrupts properly in their device tree.
+> > > > 
+> > > > After commit f5cd8a929c82, such systems may fail
+> > > > pcie_init_service_irqs() and so exit with -ENODEV.
+> > > > 
+> > > > Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+> > > > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > > 
+> > > Applied to pci/portdrv for v7.3, thank you!
+> > 
+> > Some thoughts on the version now applied to pci/portdrv:
+> > 
+> > * After this patch, the return value of pcie_device_init() is no longer
+> >   evaluated, so that function should be changed to return void as part
+> >   of this patch.
 
-> Add Documentation/driver-api/cxl/linux/protocol-error-handling.rst
-> describing the end-to-end CXL protocol error path: AER ingress, the
-> AER-CXL kfifo handoff, the cxl_core consumer worker, RCD/RCH special
-> cases, severity policy, trace events, and a source code map.
+Yes, seems reasonable.
+
+But then, possibly negated below.
+
+> > * If no port services are initalized, e.g. because pcie_device_init()
+> >   failed for all of them, the allocated IRQ vectors are not freed.
+> >   They're hogged, which may be a problem on systems which only support
+> >   very few IRQ vectors such as Sophgo SG2042:
+> > 
+> >   https://lore.kernel.org/r/0f42afefd9322779af5463b696c55b08d2296ea8.camel@iscas.ac.cn
 > 
-> This documents the architecture introduced by the preceding patches in
-> this series.
+> Seems like a good idea to free IRQ vectors we don't use.  It *looks*
+> like it should be safe to call pci_free_irq_vectors() here and then
+> again in pcie_port_device_remove() if a port is removed, but Brian
+> wasn't sure, and I didn't look any deeper than pci_disable_msix() and
+> pci_disable_msi().
+
+I think everything in pci_free_irq_vectors() is written such that it can
+safely be called twice. I'll see if I can verify that better and submit
+an update. I was just unsure at the moment of review, especially
+considering you had other real double-cleanup bugs in your proposal.
+
+> I guess if we did this we'd need to retain the pcie_device_init().
+
+Ack.
+
+> > * It might be clearer to call pci_clear_master() directly in the
+> >   if-block which is amended to "goto out".  Then the "goto out"
+> >   can be changed to a "return 0".  It seems "if (!capabilities)"
+> >   cannot happen through any other code path, so it's unclear why
+> >   the "out" label is necessary.
 > 
-> Assisted-by: Claude:claude-opus-4.7
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-A couple of trivial things inline to tidy up. Actual text seems good
-to me.
+> It does look nicer that way.
 
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+Hmm, yes. I may have rewritten it enough times that it was never clear
+how many error paths we were going to have. As soon as you get more than
+1 error path, it gets tricky to do this.
 
+I'll revisit this one along with the previous suggestions.
+
+> > * There's a duplicate "have" in the commit message ("have only have").
 > 
-> ---
-> Changes in v17->v18:
-> - Simplify document for readability (Jonathan)
-> - Drop historical context that goes stale (Jonathan)
-> - Shorten ASCII flow diagram (Jonathan)
-> - Drop manual backtick markup, use automarkup (Jonathan)
-> - Clarify USP/DSP as single switch component (Dave)
-> - Fix line wrapping to 80 chars (Jonathan)
-> ---
->  Documentation/driver-api/cxl/index.rst        |   1 +
->  .../cxl/linux/protocol-error-handling.rst     | 222 ++++++++++++++++++
->  2 files changed, 223 insertions(+)
->  create mode 100644 Documentation/driver-api/cxl/linux/protocol-error-handling.rst
-> 
-> diff --git a/Documentation/driver-api/cxl/index.rst b/Documentation/driver-api/cxl/index.rst
-> index 3dfae1d310ca5..6861b2e5726a3 100644
-> --- a/Documentation/driver-api/cxl/index.rst
-> +++ b/Documentation/driver-api/cxl/index.rst
-> @@ -42,6 +42,7 @@ that have impacts on each other.  The docs here break up configurations steps.
->     linux/dax-driver
->     linux/memory-hotplug
->     linux/access-coordinates
-> +   linux/protocol-error-handling
->  
->  .. toctree::
->     :maxdepth: 2
-> diff --git a/Documentation/driver-api/cxl/linux/protocol-error-handling.rst b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
-> new file mode 100644
-> index 0000000000000..67f0492e56702
-> --- /dev/null
-> +++ b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
-> @@ -0,0 +1,222 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +==============================
-> +CXL Protocol Error Handling
-> +==============================
-> +
-> +CXL devices report protocol-layer failures (CXL.cachemem RAS) as PCIe
+> I fixed this on pci/portdrv.
 
-Why short wrap?  Docs are 80 chars I think.
+Commit message looks good, thanks.
 
-> +AER Internal Errors: PCI_ERR_COR_INTERNAL for correctable events and
-> +PCI_ERR_UNC_INTN for uncorrectable events.  The actual fault
-> +information lives in CXL RAS capability registers, not in the PCIe AER
-> +status registers.
+> What do you think, Brian?
 
-> +Error flow
-> +==========
-> +
-> +.. code-block:: text
-> +
-> +   CXL device raises AER Internal Error
-> +   (PCI_ERR_COR_INTERNAL or PCI_ERR_UNC_INTN)
-> +                   |
-> +                   v
-> +   +--------------------------------------+
-> +   | AER core (aer.c)                     |
-> +   |  aer_irq() -> aer_isr()             |
-> +   |  -> find_source_device()             |
-> +   |  -> handle_error_source(dev, info)   |
-> +   +--------------------------------------+
-> +                   |
-> +                   v
-> +   +--------------------------------------+
-> +   | handle_error_source() dispatch       |
-> +   |                                      |
-> +   |  1. cxl_rch_handle_error()           |
-> +   |     [always; filters internally]     |
-> +   |                                      |
-> +   |  2. if is_cxl_error():              |
+I'll give the above a shot. I suppose that would work best as a v4
+(pretending your pci/portdrv is only a reference, and not a patch-basis
+target).
 
-Smells like a missing space.
-
-> +   |       cxl_forward_error()            |
-> +   |       [enqueue to kfifo]             |
-> +   |                                      |
-> +   |  3. if cxl_pending && non-CE:        |
-> +   |       cxl_proto_err_flush()          |
-> +   |       [sync drain before recovery]   |
-> +   |                                      |
-> +   |  4. pci_aer_handle_error() [always]  |
-> +   +--------------------------------------+
-> +                   |
-> +          (kfifo -> workqueue)
-> +                   |
-> +                   v
-> +   +--------------------------------------+
-> +   | __cxl_proto_err_work_fn() consumer   |
-> +   |                                      |
-> +   |  if is_cxl_restricted(pdev):         |
-> +   |    cxl_handle_rdport_errors()        |
-> +   |    [RCH dport RAS first]             |
-> +   |                                      |
-> +   |  port = find_cxl_port_by_dev(        |
-> +   |           &pdev->dev, NULL)           |
-> +   |  dport = cxl_find_dport_by_dev(      |
-> +   |           port, &pdev->dev)           |
-> +   |  [dport NULL for EP/USP; set RP/DSP] |
-
-check the alignment here as well.  A couple of extra spaces in the
-lines above I think.
-
-> +   |                                      |
-> +   |  cxl_handle_proto_error()            |
-> +   +--------------------------------------+
-> +            |                |
-> +            v                v
-> +   +-----------------+  +--------------------+
-> +   | CE              |  | UCE                |
-> +   | cxl_handle_     |  | cxl_do_recovery()  |
-> +   |   cor_ras()     |  |  read RAS status   |
-> +   | trace + clear   |  |  trace + panic     |
-> +   +-----------------+  +--------------------+
-> +
-> +cxl_do_recovery() reads the CXL RAS uncorrectable status register.
-> +If UE bits are set, it emits the trace event and panics.  If no bits
-> +are set (e.g. RAS mapped but error already cleared), it logs a
-> +diagnostic and defers to AER recovery.
-> +
-> +
-> +Severity policy
-> +===============
-> +
-> +**CE** - cxl_handle_cor_ras() reads the CXL RAS correctable status
-> +register, clears set bits, and emits a cxl_aer_correctable_error
-> +trace event.  No recovery action.
-> +
-> +**UCE (non-fatal, and fatal on Root Port/Downstream Port)** - cxl_do_recovery() reads the CXL RAS
-
-Wrap needs an update here.
-
-> +uncorrectable status register.  If UE bits are set, the kernel panics.
-> +CXL.cachemem traffic cannot be safely recovered once an uncorrectable
-> +error is signaled; continuing risks silent data corruption across
-> +interleaved HDM regions.  This panic policy applies to the native AER
-> +path.  On firmware-first (CPER/GHES) platforms the CPER handler emits
-> +trace events only and does not call cxl_do_recovery().
+Brian
