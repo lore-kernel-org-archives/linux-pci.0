@@ -1,154 +1,118 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F29444343F6
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 07:43:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE1C843635E
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 07:50:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784619794; cv=none; b=FGmhNYGKBDNc0lVZeJKnhYrg3I6PftLdAEXCfuDXk4ElPgCHcdHrSetKsuyEHvO21G9wZM12ug3qDhLMbYlEatr4YLeeM2ReR1vA21r10JBkeMUq5toC2Gdh6jMvFxQxUqyewuBMv3gjemcoU43ojmgdhxaneH2KSNGlNhfRy0k=
+	t=1784620238; cv=none; b=Vv5H+2+1znx7jG5ZXVZiLSoqI21gxpe33/pboSFSZ+T4eXhZRsxQ/l4QJ+ZSa+xF/A2CBeNDD8Z4faa6V3qcpTZME4EsCaWqSZnJUScsZIyNkWuspamlq1mkEZS9IyJ9z+ZKdzDyv3TFE1QfNTXihponf6z2+U9Nwm0ZYV9+GUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784619794; c=relaxed/simple;
-	bh=jyYYK6uRMOM3jtowtv1VThVfh61cDZUuuumhoQyBNoY=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=ARzf2Nn7C+I7DXFmeF7Xo+rD9BXqxmNVMPhVCkYv67RSO/JVDQibdt/YOTh9j7NSifJomAm9Cbq2gbotYbMrjl7V+WQV6ydZu//L8k0So+NukNd20+UZ84goutILsBvQcE67UFmd4/EfVRBWt46+CMIxvewQXxlXp+ZnOUdtQIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n04ai4Fj; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784620238; c=relaxed/simple;
+	bh=v1HyQ9w4CQ9GtjNjR+yGGPjV+zdr+mSawSgmUOS7+QY=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=QNid0F02gOoBK/XJZGZAT3xZIRxdjazkvg5OErAvbpGFP1vvN/aB8R+ZRN+1+MFBwfP+EDu5uWCzvSTdG/9v33bw6qcm86ObqVIx20Xe/cVBkZyzng5yEuIwsPhcBuQywAWtdaNzE5sioCs8MvswEzTaw1SQgbWCiLX5mt1Rq2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uusYuBLc; arc=none smtp.client-ip=209.85.128.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n04ai4Fj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784619793; x=1816155793;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=jyYYK6uRMOM3jtowtv1VThVfh61cDZUuuumhoQyBNoY=;
-  b=n04ai4FjNh42Y3TiX7fkFHBVnLhysaLhYrYG+xrJUfDjmI2+e0ZdIrML
-   4g3LhLUyQTxHw6RtYhKX5GK6qphh/Z+CLeslPL7h5lImDiZ87yauVp912
-   sFRA0sxW277KUdXV9XJXO0qvDBIymZN+UAAOAG9kywthlwiA7kmZnqxGH
-   CmR3dqkdyoIVJOZGf8P+QVRgKXoT6C8OeW3F59qNGZFLdq270XfcPRBLa
-   Q8snnw92RFUW+CcjOGKX9ks09ZdukMyBzCgx/honxu0rdBYSWMwBoX+WI
-   VOXioxO+QY/rOl1M31NYAcL0SPOiWQrqk0qjP0AHyh2HpnI4A/soYgJlI
-   w==;
-X-CSE-ConnectionGUID: skLW0eP9TemIUmmPftCIog==
-X-CSE-MsgGUID: sefWG1wgTeSlXIN3ED/H9Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="72745910"
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="72745910"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 00:43:12 -0700
-X-CSE-ConnectionGUID: m8ITfQRES8aDT42wkGavsg==
-X-CSE-MsgGUID: jYQH+7T/S/KEnH0jrf0qZA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="255048745"
-Received: from abityuts-desk.ger.corp.intel.com (HELO localhost) ([10.245.245.47])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 00:43:11 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 21 Jul 2026 10:43:08 +0300 (EEST)
-To: sashiko-reviews@lists.linux.dev
-cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI: Do not add hotplug reservation multiple times
-In-Reply-To: <20260720164006.8E86C1F000E9@smtp.kernel.org>
-Message-ID: <e3cbbf52-a78c-c370-dcb7-da64b54fe8dd@linux.intel.com>
-References: <20260720162416.5771-1-ilpo.jarvinen@linux.intel.com> <20260720164006.8E86C1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uusYuBLc"
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-492488f8583so146543815e9.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2026 00:50:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784620235; x=1785225035; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jZN0cXKJfka9i5ge5e0ezdkYWG8Vmfnfz35ybXd+mtU=;
+        b=uusYuBLcah4tK4MNxCg1ZCyK/edOcwoSm0eps5P3xbRoCdCMhQAq/juWwIIajri/r8
+         ktUmODgWzrGWoP+7KhMT3iZ7lMsJe2RFnjwkbNT8Z/i2HkwU2/S3zOjnawpRCWc4dUkC
+         1qdQp5cBGJbIG8If2h8Mjz48YUlJnEh2TVmW4Q3P2cpoHZ01csnc6LZjU59R+uHDJ9/6
+         uBX/uB0cUeTOwUbeQtJTrZBOPAqrmPA/qr2ahVRKdB1gAaM4vPXYQgVKYvqmzWr9nVx3
+         PSjUl2CTz2uiiRBXmYKqmec73t+Vv3WHTuHc2V7XibGtm2vCcioKVDa3Dtq+UrFJfr56
+         nMFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784620235; x=1785225035;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=jZN0cXKJfka9i5ge5e0ezdkYWG8Vmfnfz35ybXd+mtU=;
+        b=oI6jHZ7jqSdmnyfAzZ/84eH2omXDDIU7vMq3j+dc+CLBEnlC95ZsR9II0bvjT+iWcZ
+         WWD//upHOSOoKkMrhPAsR1nU4onvAt22DPzHIDhDa5J0dPogihbd49kcf8foyhljtNFf
+         dxxNYenAaqgPrZXBBph+p05RHFBYLK7CxySPkKSrSunylmX+HBdv+gtfqt2dr/YpJdyn
+         JedYS9k8ITOnpCMmqpIvV7s8Xzdqg9txi1v8imqSilZzNjuxuixzbVtTaPHJ+yVNt0Sf
+         s51ilWafp6oWtXdZIApTdfITv1Vcnr0vRvUTqeUeE72x2x6UMbLcK7OTdEO4bYUKUQle
+         VsHg==
+X-Forwarded-Encrypted: i=1; AHgh+RoJuMYGAfkyfjA7NZUxPFqm4X0tOf27NuNUBzGS2s1ID0RCtAZ7GdQXg5U3+eor8xZpJdK+40GE5MA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2f6rhSznYFFYqul+mlNvBoKczRV0ba6IyTytDdGK6rXiH4iKs
+	4CZuolGZq/iq4R67JAOD9scTHM61ybln5BwW8AYXfcFDm2ODY1ZTReSpf+fnhAASlbQZXe38J2z
+	vvZDSZTmhryd8GpcHWg==
+X-Received: from wrny4.prod.google.com ([2002:adf:ee04:0:b0:47f:4fe5:ede6])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:3b26:b0:495:6274:56c2 with SMTP id 5b1f17b1804b1-495627459e1mr65586805e9.2.1784620234926;
+ Tue, 21 Jul 2026 00:50:34 -0700 (PDT)
+Date: Tue, 21 Jul 2026 07:50:33 +0000
+In-Reply-To: <20260719153631.559341-1-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1499174521-1784619788=:1265"
+Mime-Version: 1.0
+References: <20260719153631.559341-1-dakr@kernel.org>
+Message-ID: <al8kyaXILj4oepq7@google.com>
+Subject: Re: [PATCH v2] rust: irq: make Registration compatible with
+ lifetime-bound drivers
+From: Alice Ryhl <aliceryhl@google.com>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: daniel.almeida@collabora.com, ojeda@kernel.org, boqun@kernel.org, 
+	gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org, 
+	a.hindborg@kernel.org, tmgross@umich.edu, tamird@kernel.org, 
+	acourbot@nvidia.com, work@onurozkan.dev, bhelgaas@google.com, 
+	kwilczynski@kernel.org, gregkh@linuxfoundation.org, rafael@kernel.org, 
+	mhi@mailbox.org, driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Sun, Jul 19, 2026 at 05:36:05PM +0200, Danilo Krummrich wrote:
+> Adapt the IRQ registration to work with the Higher-Ranked Lifetime Types
+> (HRT) device driver architecture introduced in commit 2c7c65933600
+> ("Merge patch series "rust: device: Higher-Ranked Lifetime Types for
+> device drivers"").
+> 
+> With HRT, driver structs carry a lifetime parameter tied to the device
+> binding scope, allowing device resources such as pci::Bar<'bar> to be
+> held directly rather than through Devres indirection. However, the IRQ
+> abstraction required Handler: Sync + 'static, preventing handlers from
+> embedding lifetime-parameterized resources.
+> 
+> Remove the 'static bound from Handler and ThreadedHandler and replace
+> the Devres<RegistrationInner> indirection with direct request_irq() /
+> free_irq() calls in the constructor and PinnedDrop.  Registration<'a, T>
+> stores the IrqRequest<'a>, which structurally ties it to the device
+> binding scope.
+> 
+> Also remove the &Device<Bound> parameter from the handler callbacks,
+> since handlers that need device access can embed it in their own type.
+> 
+> IRQ handlers can now directly own device resources:
+> 
+> 	struct IrqHandler<'irq> {
+> 	    bar: pci::Bar<'irq, BAR_SIZE>,
+> 	}
+> 
+> 	impl irq::Handler for IrqHandler<'_> {
+> 	    fn handle(&self) -> IrqReturn {
+> 	        let stat = self.bar.read(regs::STAT);
+> 	        ...
+> 	    }
+> 	}
+> 
+> This eliminates the indirection previously required for IRQ handlers to
+> access device resources and aligns with the broader goal of expressing
+> every registration scoped to a driver binding through compile-time
+> lifetime bounds.
+> 
+> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 
---8323328-1499174521-1784619788=:1265
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Mon, 20 Jul 2026, sashiko-bot@kernel.org wrote:
-
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
->=20
-> Pre-existing issues:
-> - [High] The patch fixes nested hotplug reservation accumulation for memo=
-ry windows in `calculate_memsize()`, but misses the identical buggy logic i=
-n `calculate_iosize()`, leading to I/O space exhaustion.
-> --
->=20
-> --- Patch [1]: [PATCH 1/1] PCI: Do not add hotplug reservation multiple t=
-imes ---
-> commit 3c4b4a62adcb92793a7c17214021e8b637be1016
-> Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
->=20
-> PCI: Do not add hotplug reservation multiple times
->=20
-> In nested topologies, hotplug reservations gets added multiple times
-> into the bridge window higher up in the hierarchy. Adding reservation
-> for intermediate level bridges does not seem very useful because the
-> hotplug is going to add device at a leaf.
->=20
-> Link: https://lore.kernel.org/linux-pci/f23946f2-06ac-4607-8f2c-3ffbc52b6=
-27a@redhat.com/
->=20
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index c0a949f2c9956..e8c94aa1d3c12 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -1021,7 +1021,7 @@ static resource_size_t calculate_memsize(resource=
-_size_t size,
-> >  =09=09=09=09=09 resource_size_t children_add_size,
-> >  =09=09=09=09=09 resource_size_t align)
-> >  {
-> > -=09size =3D max(size, min_size) + children_add_size;
-> > +=09size =3D max(size + children_add_size, min_size);
-> >  =09return ALIGN(size, align);
-> >  }
->=20
-> [Severity: High]
-> This isn't a bug introduced by this patch, but does calculate_iosize() ne=
-ed a
-> similar fix to avoid I/O space exhaustion in nested topologies?
->=20
-> Just above calculate_memsize(), calculate_iosize() retains the identical
-> logic for I/O windows:
->
-> drivers/pci/setup-bus.c:calculate_iosize() {
->     ...
->     size =3D max(size, add_size) + children_add_size;
->     return ALIGN(max(size, old_size), align);
-> }
->=20
-> When allocating I/O windows for nested hotplug bridges, pbus_size_io() pa=
-sses
-> both the accumulated children I/O sizes (children_add_size) and the hotpl=
-ug
-> reservation (add_size) to calculate_iosize().
->=20
-> Because the logic is exactly the same as the unpatched calculate_memsize(=
-),
-> this appears to still unconditionally add an extra 4KB (due to bridge win=
-dow
-> alignment) at each nested bridge level. Can this linearly inflate the req=
-uired
-> space and quickly exhaust the limited 64KB I/O address space on systems w=
-ith
-> deeply nested hotplug PCIe bridges (like Thunderbolt docks)?
-
-For the record, I intentionally left the io side untouched.
-
-If somebody feels I should make the same change there, I can of course add=
-=20
-it there.
-
-IMO io side would be better served with defaulting hotplug allocation to=20
-zero, big systems keep running out of io space because of gazillions empty=
-=20
-reservations even when nesting is not in the picture.
-
-
---=20
- i.
-
---8323328-1499174521-1784619788=:1265--
+Reviewed-by: Alice Ryhl <aliceryhl@google.com>
