@@ -1,71 +1,89 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020095.outbound.protection.outlook.com [52.101.196.95])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012015.outbound.protection.outlook.com [40.93.195.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE219397E80;
-	Tue, 21 Jul 2026 20:47:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C87043FD34;
+	Tue, 21 Jul 2026 20:59:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784666844; cv=fail; b=tJjUNkl+Yskrh9dniIviHHtlr4FCKas+ws/0U3Pc3wYJ6KKN0zISVHbLTHRuCcgTyvBFFOrFShmv14GubY9xRB9PdbwzAngh9uPqyQGfJJWIWxiJx9oQWMVeTZPU7pKqlavEIXhuQiMfC5htNO9zvBg9HEulXKHxuuRDG7ZtJ9E=
+	t=1784667583; cv=fail; b=gMA+e6tD994rjvBQn7WZEKMmmdSAJeupJtkbZ7gZ2B2zSrZ7GdhtPcK36tziqMhvMLywSmbalccbhj5FniSLwc4N1JBdHAUl29O77FI3Lyo3HEm1nOZuj86J2EbIwksssgfNWemdbRTAUO+yQkFETy11oYBGx7XjU91YdNFic4w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784666844; c=relaxed/simple;
-	bh=jIFJacByfeowkNg98n+xNPH0mDGvHpyxsG7qGPFgflE=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=copyvuHbFUUpGNCCZp7F4PQGDcGvESGeYNgJNAGtDfi37dUtcHTHtH8AOSA+KqpUkfdGm8MkgTryEtpJZzToOSGgtUgWH/Ple6CZRHjZTP3YXziT5KYlyl3KDx7XJpYWFpLEOAIeORyGD/TsBXUeDy+tCkz9lw+jmoGAoWFyLo4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=BkWVEXbh; arc=fail smtp.client-ip=52.101.196.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1784667583; c=relaxed/simple;
+	bh=TXUmmRQfelzIL+ILbR5TxNb4pxrXSXqqQGzHccTarJA=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=OXqDcmakV9QdbqrAMvc/y++Ne1r98+IuUuAIS7MZJLZRweNs3KE7T5n95ho0w8hYbYlDybXOjrxvk9kFTBt5ViZUuHrAy5BTBpkerAzJwaiIoJ586MNUC/OPqWXJHK68l4HgKBJwsBe9Qk8mucLWxHNbP3Ryf0EW//3hJsDcNp4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=xkaiAZ4M; arc=fail smtp.client-ip=40.93.195.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="BkWVEXbh"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="xkaiAZ4M"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UhPRk9Ml8xcOuuai7ttR9v9n+YEP3VW7LpfRozt2JU/OD5Lv6kk2i0veY9AtxuNKWRpjI7MpdayYKAzymGQ9L5VJ9kQgMSXHtCup6+vPKoMUVJZU1nc0007M11Ig3RT62TCf2ztiMNtaymei+iJGnMUBD0svX7WLTiJGE7V1Bg3OzFf0aNfCqldzFYXqLpbhxnUKff4u+vZTh8wIarlJPDzgmwOjNf6cIKmNU+OIEwk7Oq7qqjcFZU4tZE1un/7G5FZIriLaG/lwO/VT1NzvCTtu8wWvoLfcZCV1VtG1yy3rNGy68YnONhL8fS+OBb5A+L9X5SSvmVJGwAbgZ6UI6A==
+ b=jvf65H8acdmx6b67UQwNQY3ZIJJyx+5YYmAoOmdy8/C5n3szi5dOAx3V66cF6cGpzW2v9gqVWLXtnM6F054xJExO+gEocQBWnBbdnbSiJaUOtv/LjW+f45RIiAc0LfwgYW5RK6Wi5xRFIM3t8GRH7nE3Wx5Ncem5UhZ5IV4Fi0QhEwVjEcJ56TfyOLTtRw4z2M+sPaYEXwvDLT1W+DzIaXbSuYC91mH2m3KXiJiR6ubgcTPPzrbFjsswSBaWPCGVNviDRmN0XL0v4kJgkLpgP21b3C14AZT1mXQYdyM0kkqwio6VFZdcR0JvGMseZsxgK6oZH71K//6KQOeTOMtJtg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IH9Rsjrm+WBDG/R9OCNHbwwCQuYPNN+so0mjjrxIOY8=;
- b=ZMmUPJ8L9vToU6fsVa3RbTiLB80hlCdtX3OCFzR2cXNfJgU1H7JTlVYAN9jrdUSGtrjAdmZ74pCNjrcIjB/y/htiLJs8VX4S+GUhipElsZAUIiiIT3+g0Ey4JFlToSiHJ1OBnkt1MgEeVou68Nwch6psj7ZKXRtd69JonYnq/FLDguLI/XKjClpQQZ8OBYagkmY06Ia2yjmmVBUmTpcJqIPm8AY3lXT6VhxIggEygMgOAPNYC2ifTPLWKxnp8hClwCLKO5urPgcfC07CKQPdEK5ENXQz4r06TWK0LzOKfyRWReQIoyC5cggSUskT0uvuCk3p03g5h3/zl7rJhGZ83Q==
+ bh=wB53e5x2wgeqj9sBbbnGjtfJi2sYLQhdyQHwQjlNJDo=;
+ b=bV94U9StCpU/39QcAILKU27CKhMV+NChLKnxiGFJH09g2LhJj83ikzmIpkFeq9NaQSnZoyRjCWhoOv2t/K14IvSp9fbaJ0kuKxCnJv33UcYRcuLHg4LN/gCJTi+i/1THQ/6nh38tn5yADaLQQfYoLIk4Ixc7h4sL8E5fuV7Yl03zWKxJmFYY8UKt8BwBpzcmWBZw/ibo8yyvTBtIndLcO4QNZcpRsUQFROZWAPhNHpLVlOWhddYxkywCPLuL2HHoH/Iplo8mzlHVI7HP9b2HTfXYTkypSIZxt3HjaWu0l/aoBG3/sTqX+HuWZyaBo3W3WHyyF0rqIMRLZ1vz7vZlKA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IH9Rsjrm+WBDG/R9OCNHbwwCQuYPNN+so0mjjrxIOY8=;
- b=BkWVEXbhLn0JZppIqUsp9zmsVUkvuYGc6y7s8ezLUX75vPt/r0Y1Ktc+SmHpoec1hYheriILlecM+itw8NFVrPbByBvd3w9j1lMP6R5psP9mpcSTxjEburx0Ppoy+/u9h0fGY/HiGKCnmtknb6N0fZGnxxYu1RJ+wvZpebXmoEc=
+ bh=wB53e5x2wgeqj9sBbbnGjtfJi2sYLQhdyQHwQjlNJDo=;
+ b=xkaiAZ4MytmHVxpk5bPjvfkm5Y63YxzEl7ICWv38MwG5vcyxwX1GIWy1EqzrbAEVy8J2j+Xb3m9H0VxUZepWB71klP31XqzxHqtaLC/U7BJDMeBn5MWqdsRqMltu/PdlFRPWLvYBpx02Ncmx6W/4BWWIDEomb45a/Odb2eeqT2Y=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO4P265MB6429.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2e1::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Tue, 21 Jul
- 2026 20:47:19 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0223.017; Tue, 21 Jul 2026
- 20:47:19 +0000
-Content-Transfer-Encoding: quoted-printable
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DS2PR12MB9749.namprd12.prod.outlook.com (2603:10b6:8:2b9::14)
+ by DS0PR12MB6485.namprd12.prod.outlook.com (2603:10b6:8:c6::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.223.18; Tue, 21 Jul 2026 20:59:35 +0000
+Received: from DS2PR12MB9749.namprd12.prod.outlook.com
+ ([fe80::ad8d:e59a:e61:4e9e]) by DS2PR12MB9749.namprd12.prod.outlook.com
+ ([fe80::ad8d:e59a:e61:4e9e%5]) with mapi id 15.21.0245.009; Tue, 21 Jul 2026
+ 20:59:33 +0000
+Message-ID: <d68019bc-dbd7-4990-9fee-d12276bee531@amd.com>
+Date: Tue, 21 Jul 2026 15:59:28 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 10/13] cxl: Add port and dport identifiers to CXL AER
+ trace events
+To: Jonathan Cameron <jic23@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>,
+ Dave Jiang <dave.jiang@intel.com>, Ira Weiny <iweiny@kernel.org>,
+ Len Brown <lenb@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Robert Richter <rrichter@amd.com>, linux-acpi@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, Alejandro Lucero <alucerop@amd.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Ankit Agrawal <ankita@nvidia.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Ben Cheatham <Benjamin.Cheatham@amd.com>, Borislav Petkov <bp@alien8.de>,
+ Breno Leitao <leitao@debian.org>, Davidlohr Bueso <dave@stgolabs.net>,
+ "Fabio M . De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+ Gregory Price <gourry@gourry.net>, Hanjun Guo <guohanjun@huawei.com>,
+ Jonathan Corbet <corbet@lwn.net>, Kees Cook <kees@kernel.org>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Li Ming <ming.li@zohomail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Oliver O'Halloran <oohall@gmail.com>, Shiju Jose <shiju.jose@huawei.com>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Shuai Xue <xueshuai@linux.alibaba.com>,
+ Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
+ Tony Luck <tony.luck@intel.com>, Vishal Verma <vishal.l.verma@intel.com>,
+ linux-acpi@vger.kernel.org,
+ "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
+ linux-doc@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20260717222706.3540281-1-terry.bowman@amd.com>
+ <20260717222706.3540281-11-terry.bowman@amd.com>
+ <20260721010050.7b5654fb@jic23-huawei>
+Content-Language: en-US
+From: "Bowman, Terry" <terry.bowman@amd.com>
+In-Reply-To: <20260721010050.7b5654fb@jic23-huawei>
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 21 Jul 2026 21:47:18 +0100
-Message-Id: <DK4JLF37634O.8XPVFOVD80TP@garyguo.net>
-Cc: <aliceryhl@google.com>, <daniel.almeida@collabora.com>,
- <ojeda@kernel.org>, <boqun@kernel.org>, <gary@garyguo.net>,
- <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
- <tmgross@umich.edu>, <tamird@kernel.org>, <work@onurozkan.dev>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <gregkh@linuxfoundation.org>, <rafael@kernel.org>, <mhi@mailbox.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] rust: irq: make Registration compatible with
- lifetime-bound drivers
-From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo Krummrich"
- <dakr@kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260719153631.559341-1-dakr@kernel.org>
- <DK4C5GHMXU5G.287NUJIM67T6O@nvidia.com>
-In-Reply-To: <DK4C5GHMXU5G.287NUJIM67T6O@nvidia.com>
-X-ClientProxiedBy: LO4P265CA0119.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2c6::6) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH5PR02CA0004.namprd02.prod.outlook.com
+ (2603:10b6:610:1ed::21) To DS2PR12MB9749.namprd12.prod.outlook.com
+ (2603:10b6:8:2b9::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,257 +91,266 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO4P265MB6429:EE_
-X-MS-Office365-Filtering-Correlation-Id: ae09c33f-8a94-4cad-1779-08dee7694176
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9749:EE_|DS0PR12MB6485:EE_
+X-MS-Office365-Filtering-Correlation-Id: c6c70a75-7630-4aa8-d6c8-08dee76af73d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|10070799003|23010399003|366016|6133799003|18002099003|22082099003|3023799007|56012099006|4143699003|10067099003;
+	BCL:0;ARA:13230040|366016|1800799024|7416014|23010399003|376014|22082099003|18002099003|4143699003|3023799007|11063799006|56012099006|10067099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	LFfdo3HkCqQOd+ZKyT3c4SiBH9DG/mC+NQ45/qG0VxcPb1y73LvqYX9NDBd/JUVpxPJ5+to+GM0fVy+vr751bqUM5m0dw585lQ+m8P5rTZm/+CHemJdfLMCOB92OWVlQ+M5LpMYqN0aiyDWOcfnOPi13GMk6hcbXwvoJt5kISDHSbokHqv6Cp/PhuamZbTWT1r7eDceG1C+DTJfxFqMlNN+ZnDl2nvff38Prq9gKP5remZGG2IDZN12ipqvC9AfnOmzuc9xf1bGdN727wRPyWGi6uvpBTqxPNSF1F5SFd6akA1i/FVkScvWfnPd2tTXNHfyyATesaZZ/6qmXSjS9cXsAlD5vbvWPt86Jzz0mBI3yQzBNak5R4hek63RsAnrix2vnFV21qofXpeEvCRzp5aocDpvpjSw4GKlySbGXOCMdgUztHKWZqUGY1W5dqQ4SNgZpb6LpQiATAprCfJDbiODfFYj511b/73qjOFNRqXVQBKRdBtq9UHS8cynLOOM1tC+P0KtsEC0u1++6egCdF5n35AxYaumHrfppbui2devG09uE9HUumaAKB2Ne1Bc0eH7mGG67mY1n+ARrAE8OSQWMrN4W9NSgEV0JKmheq/O7VJx7U+RRh1KzKccrzbIkxjbpWKO7g1wzto0C5/8T7MBf+Tl0xp46fe11vNyyzsc=
+	eZO2NDZAJ0+jUlWGgKyTYfr5NH+g8+Np5gzOtzSI4rMCV7I0d0PyGwbEGLJrp7QYHCgzm85VJXxaJxHSUzsiZI0CB4+0sGr3gI3O8Up88UNSnLMmtTd3ZVY7CcogBrAgpfGGzml9hxagEcQ10Dy5dvQRIHTTf2iDVj16+IQlZ08U7HaIiAC5aON2o8FHH9eIfmfyaBeFWFjJU47k81+1eKdwSz23BA6gQn+WPoM0ndrcAB/wsCnrZ9UYcFWTFCjSdIwyLsdoYZKZ8sv2GKhDxQ42L3jpy+TM5bqHOp9znGOPcFHTKHQgoroXSUTgwJVs+5oDFYzV6yqruuSAtf1mN7V7rA3P01JFX87OgYpUdKHDu9oti7RkYk6zqYwfDRNIqgClOprcbppsSa/NQ4doGYRhKTnmyKZgihteDb75yBRspPx0LrzPFPNttVFEVhK5MRytAASP2xnX43RD2p3Kz/Eb2ch2DAKA+sVFwUQbKGDiC2zdGaGIHbJRSHSJNx1T9zq0ANaVG9JPisbwITYT0VDdHT26hy9sALLFVqEIcU2M7kf8NEdTPUqvuvLYe6QzfYXIbwXX7DXUwDf7EaeFynSn2eVS7mQDlmZiePbgzMFUFIMA4C8yPxrdjbvfhf9mmLJhZ7YLDefnm4YxJlQqN8kO4F08o28GIcdmAjFvCEg=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(10070799003)(23010399003)(366016)(6133799003)(18002099003)(22082099003)(3023799007)(56012099006)(4143699003)(10067099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9749.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(23010399003)(376014)(22082099003)(18002099003)(4143699003)(3023799007)(11063799006)(56012099006)(10067099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?R3pnV05Ja1ZQZ3FJUTk1R2YwT292OTg0WkVFdFNyMm9XRlo0bUFUVGJBUHls?=
- =?utf-8?B?UzJIWUltUXgyaHo5blpoNkoyVjRURXZhOGlKcDloVXFxVmRBdnA5QktyeTY4?=
- =?utf-8?B?R1Vsczcrd1Z5eHpnT3V6SGFUeUFtdGxsNmhHQTkwK2p0WTZGaVd5MG42eW51?=
- =?utf-8?B?UmI3VDhQNWxDUzJobmZrNGo1aTZoTlBabjV6TFpkRU9kb01zdjZyUy9MSkVT?=
- =?utf-8?B?ZDJDa1kraU1qNUpnU0JlR3pCckRxSStzVzBDUGxRcUVCY1dRb2lHN0ZGMEZ2?=
- =?utf-8?B?MUNwVjhYRjNtc1VKZzcxaXQ2RWw1RWk1VTIxbHlsSVNOcHNqeVJ4RDVDM09j?=
- =?utf-8?B?cDEvZUl1TFQ5MDZQcEVEZUR3dG5VbUtWN3JKRE9ZWmxhYmtuMGFSV3JraFU4?=
- =?utf-8?B?TXZneit5RGRFc1QrS1dBK0NxVThmVmxQRjJjdURzdWJWMnhqQmxEQ2tBTW5k?=
- =?utf-8?B?Ym9XOW5oTFZ6Y2hhK0dZOFZERDhGVmlYbDY4MVV1UjZWaUFnRURqRHdMZGFB?=
- =?utf-8?B?TEV1YjB2MDRhWGZVN2hsUzZyVVUwc2l5UktZOTUrK21Xd0NRYk1JRzJrZG5X?=
- =?utf-8?B?YUZjZkkydktBTkpvd00xd0Z2TU1QMlVGSFBORTRzUmt4K2k1NWdVenNPeG5J?=
- =?utf-8?B?cHFHS09IZXlKSUxrcnNLTkJBLzAwYjdubS9va1g5U2t3enB2Nm93b0lRb3d3?=
- =?utf-8?B?WkFTSDFXSWRUejVRTU1Qc1dNVGdJcjdOZXhtWVBtR3ZIQ0JJRHNPOU5yRFZZ?=
- =?utf-8?B?M2IwWURBMVdQTEFSd1JNWWg2elJ4TStIYWFxQjBkOHYvb01RZFUxUWNzRlV0?=
- =?utf-8?B?a3NGR3ZsTndyZWpJa2N3dU4rVWVCaUFBRjIycENrWThXelRBMjR0eHNRYncz?=
- =?utf-8?B?ZGFFVm5BUHVJb1lhVHlIa01qYmFORGdOcVptQy9IRzQrUVo1S2tCaUtDaFZt?=
- =?utf-8?B?NTdBYlJ5VVE0ejl0djFtOEJiaGxwQVBCN3F5OXZvNHVHb2N0cVhqOGNtaEhv?=
- =?utf-8?B?b1huVzYwRnRMMVN4bldiQjJsb0pHaG9lQW85S3d5WXMyKzFKajJYYmphMXNT?=
- =?utf-8?B?TU5URHREMUtBNktzZXhvVTVZZkJxaHpqZG9CdWhWb2FhMU1vV0ZsY0RlVGJo?=
- =?utf-8?B?ZGxEM0ZIL3crQ3c4NjFTZ1FkaDlmTm05V3NUdjg1MTRjSHZaR3EyU0FBZ2U2?=
- =?utf-8?B?RUJ6Q1pGaHdDRWs2QzRaUyswMDBralVWajVxZis3R0ZuM0dpRG9IRGpnR3hv?=
- =?utf-8?B?YTlqS3JiUksvVGh6RTl0cmthaStrNVR6blVWdTdiQnRTSFI5eDlTTk9hK3Nt?=
- =?utf-8?B?clhHWDVWc0tBWU5VMkd1UGdQRzFNYlVTS2FDci9tdVZmdnh5WHl1VWl6cFpR?=
- =?utf-8?B?TUlWZ21zMjgzb0ZaREdVSjAxY081WWdTUXQ3M2NKbEV0bVo1N0Vkd0F3OFAz?=
- =?utf-8?B?alVEc1I1OGU2aEIrSkFuQWF6VFpnL0M0Nkt5d2VHazBrbnpwLzVjS3FlRjdM?=
- =?utf-8?B?RnlTU3FBUDBOZE54MnhBSzBKYmpzNkkxUmVrVlZ0Q1RSMzNqa01pdXk3eVJP?=
- =?utf-8?B?aWw1VXMwcE1ENGlsb1Y4L1RpL1U4ekZQcU9YS21FUkF6YVk0V09ZVk42ODh4?=
- =?utf-8?B?T1NoOFhSRVJ4Tkg2NTMyNnhoVGlyUXN1YTU5OWkwSWdKWFgyYzNuUWpZZ0xn?=
- =?utf-8?B?dXh6OVZVNHJZanVRYVRjOVJkajFoNndxOTkzZWloSTlCUDgvNFhuc0JBeTdw?=
- =?utf-8?B?c3Zqblo1YlFEN21TWVpnVjNBVlZzSDZpWC9qaEFHbEZ3UVlpWS9aa0F2OFVy?=
- =?utf-8?B?bXJ4OVd4S1UwczB2NTNHdkgrSHo4RmhSMSt5YnkwL25JRUNHcUtoL0NVUXFP?=
- =?utf-8?B?NGJGcWEyYzNiVmI5cjdoRjFjckJJSUtqVjR4NmgwOW14TEF0NE16Q3lyY09V?=
- =?utf-8?B?NlFZaGVwMFdhYlRhbUFmS05NK2t4VmtyWnJXZnpjTFhTalhvclYwbG1YWGd1?=
- =?utf-8?B?RkFWSjJLOStSTHU2eFF4K2RHcTlzdk91bldEcDJGNFpHTDRoaGpJaFJNTW5N?=
- =?utf-8?B?UWwreUhFTlMyc25ieVdJb1B2dG5vT1FvcnR3YXNuakZkdnJlTE9wNG0xR1pn?=
- =?utf-8?B?WXQ1ZDlvbmdUMnU2d2Q5b1ArY3BaK25TUWs3RHVLOHRSUTlFTkllck1YMG5V?=
- =?utf-8?B?TG1SdXhKK21QWCsxVjZGQzRWVDgrdXlPMDVMV1g3RTNLaS81WjBaTHlWMWxy?=
- =?utf-8?B?dGNqcVhIQzk3eTZ1UjNtSWRVcEIzQzRFNU45M2kxVDJmczZrM0ViOXZQUVhD?=
- =?utf-8?B?eDVTUU8yMGUzd3UzR3ZXWFp1TndNUU01SjlnSzZRNXE4VGhLMk45Zz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: ae09c33f-8a94-4cad-1779-08dee7694176
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?utf-8?B?R1ByYlBYbHpXV1RZc1E2UTdqWCtDVk9LR3UzaFFwMWRvN243N3BYTUg5bHhM?=
+ =?utf-8?B?VnMrSk1wVVplbTl6WHZwVVNKbTRja1hBZEZFaTBXaXY3Yjhzc3VtaGRsV2Vx?=
+ =?utf-8?B?cEZPQmVIQWlVSXladS9DMjhXWFZkMDRtR0g1UzFNWDVQT0k0RXBWSlhjc1dW?=
+ =?utf-8?B?UnFnblhVL2QxWHY5MWJyanpTSGJCb1k3dkxHZms0Ulg5ZVRmY2prWXRLMHdr?=
+ =?utf-8?B?WlhaTlB4cE5lSWNGYm5oc2VYMFNoajB0NXBVT2NKdW0xSnJjcTlTVEp6MWh0?=
+ =?utf-8?B?U1FYRzNabVJNQXFJdXNwd0M0NEhMNElqSFVBdEpzaWdSV0pzcEpZMVBORERa?=
+ =?utf-8?B?Uy9xRTBCWW5FMnhMYUhCdXRLRTVpWVF5eG14aFo2TithUlMrS1dmVHFGbmxC?=
+ =?utf-8?B?aGR0RmxlQjNyTGNNRm9yNy82LzR2WTdQVG41ckxsT0k5bXhWNzRVVE5OcVlT?=
+ =?utf-8?B?YkZkYzlqL01yQ3M2K3Bxb2hZejIySitjQXJoVGg0bG85RktWWG1YaG5mcEV4?=
+ =?utf-8?B?NnhHUFdMRTBOM0tNbGVLZWN5ZjNSNzZjZEJqM25YSFNvTU5RUXI2djlvQTFF?=
+ =?utf-8?B?eFVmSzF0SWdrazlIakdnMFhIZmk0UkRaWU1QbzJLSG1pVVJLN2RsL3dwZGJp?=
+ =?utf-8?B?RCtkNHo3V2prZFJzZGNEay90NmxCMWNUZDhwMmFtakl2RTVJNEwzZlFiRXZp?=
+ =?utf-8?B?VzlibWFuZGE5aFBnc0syYkdVSkFvaWJIaExjeXByRG9paHZmcHF5Mlcrd2hx?=
+ =?utf-8?B?K1ZOWVJrZDNaTFQrTHFpQnZIVDZUcVdhT3ZpVm96cXcyeHhKVm1nUFVXZWkx?=
+ =?utf-8?B?MGFreEVDMG9mT1A4bGM5Wk1ZbHJoRDFjZzNyQ0NjMkV2RW1uR2tGYnMyVnRQ?=
+ =?utf-8?B?dFcwUFZBUTNhTnRJRUVIZWVlbTFZU3hKaXorUmU5WU8vaUhyMVh0ajV6UHVR?=
+ =?utf-8?B?WlVGQkc3VVlhRlVHOHl3dnhxYUtWWkhtYVdQOEZibnMwSEp2S0FBQ213S0VH?=
+ =?utf-8?B?TjlLbHd0SHlkc2NXK29YWWhoNnpjNXlZNGxaTmtGQTg0eUpOcUg3ell0MGRK?=
+ =?utf-8?B?Sk5LdGFsenFoZzljZWtScHVBVnArTndpVlU5MTFaYitJZ0NEVUN2MHdmV2Qr?=
+ =?utf-8?B?Mm82ckZpb3JXWlh6ZUFtZTd3K2NleDM0V285S1NRMWY3aDc4b0RNbnUyLzg5?=
+ =?utf-8?B?M1VHTkhhcE1TeTZ4MHRlaGdUUmcvQmZIQXJSQ2J5K1ROTXlEdHpWa0I4N3Qy?=
+ =?utf-8?B?bGVZOStLQXRydStlWjc3blAxVzU5NUI3S0p2Vm16VUd6ZmhTM1Vadjd2N2t2?=
+ =?utf-8?B?U0hXNy80ZTBsYklKTithN1VMNDhvL29rRUoraEJpZE9SMEJ3UlJTVTh3UUVN?=
+ =?utf-8?B?M0FlOHVRalZLMzViWUJPTWw1MVlPaGVFYU0zSDRZbzRhY0RocmYwL0ZBeGt2?=
+ =?utf-8?B?dzZuUWNrejRyM1E1YkZuNThIa1ArRGVSZ1c3R3NFVytPY2RQdDNiM2tFWG5n?=
+ =?utf-8?B?MURYQmxIMWZERlMreWhYU3dLYmFaSkxpZ2F0UkI0emx2MmQvNWpZV3V0enhm?=
+ =?utf-8?B?eUowa1orUkRDeC91dmRLUnpVdytwd0xjNUtXWS9UZ2xxejVmWTZVNVkzRGVG?=
+ =?utf-8?B?Y0NSRnJ3MFoxbmdXZFJYbitGbklRMndVUElRVHBJbnRrZjVWZDFBd3pyVFdI?=
+ =?utf-8?B?VHRwUmg2SmVCMTNvVWpBZjNiYkVZczJjNTVlbklJOW03VHR3NUJVOHB2UGFZ?=
+ =?utf-8?B?UU4vUnlUYVZwQWRXem15NFhJRmdHd1gvbGpPUm1JaGpUR2ZUOUVoNFZKNEMr?=
+ =?utf-8?B?UHBSZ2JCNUhya2NoWkwxUlFGTDRoUjk1d1I0WnRSTzdMZHJ5SHpwWVliRG96?=
+ =?utf-8?B?Q3U5RlJCVkU4ei9sQ1Avd3BjL1lDVXh3RkdvUEJpbmZlUWgzN2xsSG5MN04v?=
+ =?utf-8?B?dEZldUpQNlVIa3Bwa3hVTXNBdytLd3RFYW1aNE9IY2taTUw2VExTL2I1QjBj?=
+ =?utf-8?B?ZWxYSDFLKzJYL3BNWWhmcGFjTEZ5RHNpUW5jRlcvY3R5emdjOXEyVVJuQ29m?=
+ =?utf-8?B?S2p1MnVJRjJScEk5TWc3bVByTXNQMVNvYWM4ZWtSRWhYODZGQzJFN3NLQ3RT?=
+ =?utf-8?B?TEFHdFpiOWllWFZ3RzFsdEpRY1U4aXV0VFhEUjVqZlhFUnpoTmNVY1Z2Vnd3?=
+ =?utf-8?B?S0h6MldKbFhFd3Y2V2E1dTVYb2d0ZzE1eUZxeHZYMjJzdGozQy9EVE1Vajd0?=
+ =?utf-8?B?S2N5dWpYVVYrb0tsV1ZpaVdLZGtOZ1BhS3dneG9IL0RGajRjdC8xWmY2MXdJ?=
+ =?utf-8?Q?7PkAZY/zIliwjWlMPI?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c6c70a75-7630-4aa8-d6c8-08dee76af73d
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9749.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2026 20:47:18.9712
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2026 20:59:33.5067
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +K0oha+rfmDAWAnS7cnlQlJEmziN5NH6pIrREGV/mTJ1snSDMNXMqhbEe7p+DY4E34mYUSF/zTu+8C09nngbtA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB6429
+X-MS-Exchange-CrossTenant-UserPrincipalName: US4SMnzXenJKUOE4D/ni4IznbEHNy0s+nj/NyGCKHkaviOM8qOxdCoHWMmQwuxKeDpMwsf1jIUb8W0S+Zq/PMg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6485
 
-On Tue Jul 21, 2026 at 3:57 PM BST, Alexandre Courbot wrote:
-> On Sun Jul 19, 2026 at 8:36 AM PDT, Danilo Krummrich wrote:
->> Adapt the IRQ registration to work with the Higher-Ranked Lifetime Types
->> (HRT) device driver architecture introduced in commit 2c7c65933600
->> ("Merge patch series "rust: device: Higher-Ranked Lifetime Types for
->> device drivers"").
+On 7/20/2026 7:00 PM, Jonathan Cameron wrote:
+> On Fri, 17 Jul 2026 17:27:03 -0500
+> Terry Bowman <terry.bowman@amd.com> wrote:
+> 
+>> From: Dan Williams <djbw@kernel.org>
 >>
->> With HRT, driver structs carry a lifetime parameter tied to the device
->> binding scope, allowing device resources such as pci::Bar<'bar> to be
->> held directly rather than through Devres indirection. However, the IRQ
->> abstraction required Handler: Sync + 'static, preventing handlers from
->> embedding lifetime-parameterized resources.
+>> Pass struct cxl_port * and struct cxl_dport * to the cxl_aer_*
+>> trace events instead of a plain struct device * derived at the
+>> caller. The trace event helpers then derive the right strings for
+>> endpoints, switch ports, root ports, and RCH downstream ports
+>> consistently across the CPER and native AER paths.
 >>
->> Remove the 'static bound from Handler and ThreadedHandler and replace
->> the Devres<RegistrationInner> indirection with direct request_irq() /
->> free_irq() calls in the constructor and PinnedDrop.  Registration<'a, T>
->> stores the IrqRequest<'a>, which structurally ties it to the device
->> binding scope.
+>> The unified cxl_aer_* events keep "memdev" as the legacy field
+>> (endpoint events populate it with the memdev name; non-endpoint
+>> events emit memdev="") and add new "port" and "dport" string fields
+>> populated for all CXL device classes. Updated userspace can key
+>> off "port" and "dport" without a parallel set of events.
 >>
->> Also remove the &Device<Bound> parameter from the handler callbacks,
->> since handlers that need device access can embed it in their own type.
+>> Remove the separate cxl_port_aer_uncorrectable_error and
+>> cxl_port_aer_correctable_error trace events. All CXL AER events now
+>> use the unified cxl_aer_* events with port and dport fields.
 >>
->> IRQ handlers can now directly own device resources:
+>> Rework cxl_cper_handle_prot_err() to use find_cxl_port_by_dev() and
+>> the unified trace helpers, replacing the per-port-type branching and
+>> bus_find_device() memdev lookup.
 >>
->> 	struct IrqHandler<'irq> {
->> 	    bar: pci::Bar<'irq, BAR_SIZE>,
->> 	}
+>> The TP_printk format string places "port=%s dport=%s" between
+>> "memdev=%s" and "host=%s", changing the text-mode field order from
+>> the pre-patch output. This does not affect consumers such as
+>> rasdaemon that use libtraceevent to parse fields by name rather than
+>> by fixed text position.
 >>
->> 	impl irq::Handler for IrqHandler<'_> {
->> 	    fn handle(&self) -> IrqReturn {
->> 	        let stat =3D self.bar.read(regs::STAT);
->> 	        ...
->> 	    }
->> 	}
+>> For non-endpoint events (switch port, root port, RCH dport),
+>> "memdev" is empty and "port"/"dport" carry the topology information.
 >>
->> This eliminates the indirection previously required for IRQ handlers to
->> access device resources and aligns with the broader goal of expressing
->> every registration scoped to a driver binding through compile-time
->> lifetime bounds.
+>> The serial number is retrieved via pci_get_dsn() which performs live
+>> PCI configuration space reads. A following patch ("PCI: Cache PCI
+>> DSN into pci_dev->dsn during probe") replaces these with a cached
+>> serial number to avoid config space access in error handlers and panic
+>> paths.
 >>
->> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
->> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
->> ---
->> Changes in v2:
->>   - Move request_irq() / request_threaded_irq() to _: blocks.
->>   - Add INVARIANT missing comments and missing #[inline] annotations.
->> ---
->>  rust/kernel/irq/request.rs | 432 ++++++++++++++++++-------------------
->>  rust/kernel/pci/irq.rs     |  26 ++-
->>  rust/kernel/platform.rs    |  48 +++--
->>  3 files changed, 255 insertions(+), 251 deletions(-)
+>> Below are examples of the different CXL devices' error trace logs
+>> after this patch:
 >>
->> diff --git a/rust/kernel/irq/request.rs b/rust/kernel/irq/request.rs
->> index f425fe12f7c8..c1c6525a676a 100644
->> --- a/rust/kernel/irq/request.rs
->> +++ b/rust/kernel/irq/request.rs
->> @@ -5,16 +5,21 @@
->>  //! [`ThreadedRegistration`], which allow users to register handlers fo=
-r a given
->>  //! IRQ line.
->> =20
->> -use core::marker::PhantomPinned;
+>>      ---------------------
+>>      | CXL RP - 0C:00.0  |
+>>      ---------------------
+>>                |
+>>      ---------------------
+>>      | CXL USP - 0D:00.0 |
+>>      ---------------------
+>>                |
+>>      --------------------
+>>      | CXL DSP - 0E:00.0 |
+>>      --------------------
+>>                |
+>>      ---------------------
+>>      | CXL EP - 0F:00.0  |
+>>      ---------------------
+>>
+>> Root Port:
+>> cxl_aer_correctable_error: memdev= port=port1 dport=0000:0c:00.0 \
+>>    host=pci0000:0c serial=0: status: 'Memory Data ECC Error'
+>>
+>> cxl_aer_uncorrectable_error: memdev= port=port1 dport=0000:0c:00.0 \
+>>    host=pci0000:0c serial=0: status: 'Cache Address Parity Error'  \
+>>    first_error: 'Cache Address Parity Error'
+>>
+>> Upstream Switch Port:
+>> cxl_aer_correctable_error: memdev= port=port2 dport= host=0000:0d:00.0 \
+>>    serial=0: status: 'Memory Data ECC Error'
+>>
+>> UCE NA - Upstream Switch Port UCE's are handled in the portdrv driver's
+>> PCI AER callbacks that are not CXL aware.
+>>
+>> Downstream Switch Port:
+>> cxl_aer_correctable_error: memdev= port=port2 dport=0000:0e:00.0 \
+>>    host=0000:0d:00.0 serial=0: status: 'Memory Data ECC Error'
+>>
+>> cxl_aer_uncorrectable_error: memdev= port=port2 dport=0000:0e:00.0 \
+>>    host=0000:0d:00.0 serial=0: status: 'Cache Address Parity Error' \
+>>    first_error: 'Cache Address Parity Error'
+>>
+>> Endpoint:
+>> cxl_aer_uncorrectable_error: memdev=mem1 port=endpoint4 dport= \
+>>    host=0000:0f:00.0 serial=0: status: 'Cache Address Parity Error' \
+>>    first_error: 'Cache Address Parity Error'
+>>
+>> cxl_aer_correctable_error: memdev=mem1 port=endpoint4 dport= host=0000:0f:00.0 \
+>>    serial=0: status: 'Memory Data ECC Error'
+>>
+>> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+>> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+>> Signed-off-by: Dan Williams <djbw@kernel.org>
+> 
+> One question inline about reference counts for the port.
+> 
+>>
+>> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+>> index d5dc2c22565da..acf40b2396c3b 100644
+>> --- a/drivers/cxl/core/ras.c
+>> +++ b/drivers/cxl/core/ras.c
+> ...
+>>  
+>> @@ -109,47 +77,34 @@ static struct cxl_port *find_cxl_port_by_dev(struct device *dev, struct cxl_dpor
+>>  
+>>  void cxl_cper_handle_prot_err(struct cxl_cper_prot_err_work_data *data)
+>>  {
+>> +	struct cxl_dport *dport;
+>>  	unsigned int devfn = PCI_DEVFN(data->prot_err.agent_addr.device,
+>>  				       data->prot_err.agent_addr.function);
+>> -	struct pci_dev *pdev __free(pci_dev_put) =
+>> -		pci_get_domain_bus_and_slot(data->prot_err.agent_addr.segment,
+>> -					    data->prot_err.agent_addr.bus,
+>> -					    devfn);
+>> -	struct cxl_memdev *cxlmd;
+>> -	int port_type;
 >> -
->> -use crate::alloc::Allocator;
->> -use crate::device::{Bound, Device};
->> -use crate::devres::Devres;
->> -use crate::error::to_result;
->> -use crate::irq::flags::Flags;
->> -use crate::prelude::*;
->> -use crate::str::CStr;
->> -use crate::sync::Arc;
->> +use core::marker::{
->> +    PhantomData,
->> +    PhantomPinned, //
->> +};
+>> -	if (!pdev)
+>> -		return;
+>> -
+>> -	port_type = pci_pcie_type(pdev);
+>> -	if (port_type == PCI_EXP_TYPE_ROOT_PORT ||
+>> -	    port_type == PCI_EXP_TYPE_DOWNSTREAM ||
+>> -	    port_type == PCI_EXP_TYPE_UPSTREAM) {
+>> -		if (data->severity == AER_CORRECTABLE)
+>> -			cxl_cper_trace_corr_port_prot_err(pdev, data->ras_cap);
+>> -		else
+>> -			cxl_cper_trace_uncorr_port_prot_err(pdev, data->ras_cap);
+>> -
+>> +	struct pci_dev *pdev __free(pci_dev_put) = pci_get_domain_bus_and_slot(
+>> +		data->prot_err.agent_addr.segment, data->prot_err.agent_addr.bus, devfn);
+>> +	if (!pdev) {
+>> +		pr_err_ratelimited("Failed to find CPER device in CXL topology\n");
+>>  		return;
+>>  	}
+>>  
+>> -	guard(device)(&pdev->dev);
+>> -	if (!pdev->dev.driver) {
+>> -		dev_warn_ratelimited(&pdev->dev,
+>> -				     "Device is unbound, abort CPER error handling\n");
+>> +	struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_dev(&pdev->dev, NULL);
+>> +	if (!port) {
+>> +		dev_err_ratelimited(&pdev->dev,
+>> +				    "Failed to find parent port device in CXL topology\n");
+>>  		return;
+>>  	}
+>>  
+>> -	struct device *mem_dev __free(put_device) = bus_find_device(
+>> -		&cxl_bus_type, NULL, pdev, match_memdev_by_parent);
+>> -	if (!mem_dev)
+>> -		return;
+>> +	guard(device)(&port->dev);
+> 
+> Don't we have a reference for this from find_cxl_port_by_dev()?
+> 
+> Superficially scope looks the same.
+> 
+> 
+
+I somehow missed this yesterday. Yes, find_cxl_port_by_dev() ref increments. 
+
 >> +
->> +use crate::{
->> +    device::{
->> +        Bound,
->> +        Device, //
->> +    },
->> +    error::to_result,
->> +    irq::flags::Flags,
->> +    prelude::*,
->> +    str::CStr,
->> +};
->> =20
->>  /// The value that can be returned from a [`Handler`] or a [`ThreadedHa=
-ndler`].
->>  #[repr(u32)]
->> @@ -27,7 +32,7 @@ pub enum IrqReturn {
+>> +	/* dport is NULL for Endpoint and Upstream Port devices */
+>> +	dport = cxl_find_dport_by_dev(port, &pdev->dev);
+>>  
+>> -	cxlmd = to_cxl_memdev(mem_dev);
+>>  	if (data->severity == AER_CORRECTABLE)
+>> -		cxl_cper_trace_corr_prot_err(cxlmd, data->ras_cap);
+>> +		cxl_cper_trace_corr_prot_err(port, dport, pci_get_dsn(pdev),
+>> +					     &data->ras_cap);
+>>  	else
+>> -		cxl_cper_trace_uncorr_prot_err(cxlmd, data->ras_cap);
+>> +		cxl_cper_trace_uncorr_prot_err(port, dport, pci_get_dsn(pdev),
+>> +					       &data->ras_cap);
 >>  }
->> =20
->>  /// Callbacks for an IRQ handler.
->> -pub trait Handler: Sync + 'static {
->> +pub trait Handler: Sync {
->>      /// The hard IRQ handler.
->>      ///
->>      /// This is executed in interrupt context, hence all corresponding
->> @@ -36,73 +41,20 @@ pub trait Handler: Sync + 'static {
->>      /// All work that does not necessarily need to be executed from
->>      /// interrupt context, should be deferred to a threaded handler.
->>      /// See also [`ThreadedRegistration`].
->> -    fn handle(&self, device: &Device<Bound>) -> IrqReturn;
->> -}
->> -
->> -impl<T: ?Sized + Handler + Send> Handler for Arc<T> {
->> -    fn handle(&self, device: &Device<Bound>) -> IrqReturn {
->> -        T::handle(self, device)
->> -    }
->> -}
->> -
->> -impl<T: ?Sized + Handler, A: Allocator + 'static> Handler for Box<T, A>=
- {
->> -    fn handle(&self, device: &Device<Bound>) -> IrqReturn {
->> -        T::handle(self, device)
->> -    }
->> +    fn handle(&self) -> IrqReturn;
+>>  EXPORT_SYMBOL_GPL(cxl_cper_handle_prot_err);
+>>  
+>> @@ -240,14 +195,14 @@ void cxl_do_recovery(struct pci_dev *pdev, struct cxl_port *port, struct cxl_dpo
+>>  		return;
+>>  	}
+>>  
+>> -	if (cxl_handle_ras(port, dport, ras_base))
+>> +	if (cxl_handle_ras(port, dport, ras_base, pci_get_dsn(pdev)))
+>>  		panic("CXL cachemem error");
+>>  
+>>  	dev_dbg(&pdev->dev,
+>>  		"CXL UCE signaled but no CXL RAS status bits set\n");
 >>  }
->> =20
->> -/// # Invariants
->> -///
->> -/// - `self.irq` is the same as the one passed to `request_{threaded}_i=
-rq`.
->> -/// - `cookie` was passed to `request_{threaded}_irq` as the cookie. It=
- is guaranteed to be unique
->> -///   by the type system, since each call to `new` will return a differ=
-ent instance of
->> -///   `Registration`.
->> -#[pin_data(PinnedDrop)]
->> -struct RegistrationInner {
->> -    irq: u32,
->> -    cookie: *mut c_void,
->> -}
->> -
->> -impl RegistrationInner {
->> -    fn synchronize(&self) {
->> -        // SAFETY: safe as per the invariants of `RegistrationInner`
->> -        unsafe { bindings::synchronize_irq(self.irq) };
->> -    }
->> -}
->> -
->> -#[pinned_drop]
->> -impl PinnedDrop for RegistrationInner {
->> -    fn drop(self: Pin<&mut Self>) {
->> -        // SAFETY:
->> -        //
->> -        // Safe as per the invariants of `RegistrationInner` and:
->> -        //
->> -        // - The containing struct is `!Unpin` and was initialized usin=
-g
->> -        // pin-init, so it occupied the same memory location for the en=
-tirety of
->> -        // its lifetime.
->> -        //
->> -        // Notice that this will block until all handlers finish execut=
-ing,
->> -        // i.e.: at no point will &self be invalid while the handler is=
- running.
->> -        unsafe { bindings::free_irq(self.irq, self.cookie) };
->
-> Not directly related to this patch, but I think it would help to add a
-> comment explaining why it is ok for `drop` to own what looks like a
-> mutable reference to `Self` (and thus `Self::handler`) while a handler
-> might be running holding a non-mutable reference to the latter.
->
-> My first reaction upon seeing this was that this breaks the Rust
-> aliasing rules, but looking at the feedback for the initial patch [1]
-> revealed that the issue has been discussed and dismissed.
->
-> Since this is quite subtle, and to avoid this being flagged again in the
-> future it would be nice to explain why this is safe (IIUC
-> `PhantomPinned` combined with the fact the destructor never forms a
-> `&mut handler`, but this needs to be vetted by someone more familiar
-> with these matters than I am).
+>>  
+>> -void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base)
+>> +void cxl_handle_cor_ras(struct cxl_port *port, struct cxl_dport *dport, void __iomem *ras_base, u64 serial)
+> That's over even the modern 100 char limit. Needs a line break.
+>>  {
+> 
 
-If we want to play safe, we could wrap this inside `UnsafePinned` (or `Opaq=
-ue`),
-but that's actually problematic because doing so will change the variance o=
-f `T`
-from covariance to invariance, and we actually want covariance here. There'=
-s no
-way to opt out, so it's not good. (`T` is never mutated here and we only pi=
-n it
-for self-reference purpose).
+Yup, I'll linewrap at 75-80. Thanks.
 
-I left a comment on the `UnsafePinned` tracking issue about this:
-https://github.com/rust-lang/rust/issues/125735#issuecomment-5038853925
+- Terry
 
-Best,
-Gary
