@@ -1,114 +1,135 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853A6415F13
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 20:02:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784750575; cv=pass; b=ut8hw18Z1O05PQ0TYBSxiNWxYHw+IyLTVY83h/qnYpn1SDgZW0WJ2FXSVjO4UEHvc808EsG76NvKyMWj39rR/clf6FN0+VU6p/PgrbBPHzi12Wl6hnHpALZe2I4cDVsxt8TqteR/MPyBps5WdcW4nMeAcMlHQXYq3O1SAmmcsis=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784750575; c=relaxed/simple;
-	bh=vu4r/k+6CRzm0HvAmjC2f8PLSYRb0q27NObpyU+llPc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=koKnGsqR+S2uf0d4UwGXZfUsbGkTYR/7j8t+2LFaPo9FgxucSj6+GKaiDJJv3BuxPIAftT2ehLAVQjCAQfJQ/y1xcs4Eh+oCuP16qJFIrUH6p/BAFDC9xXvPIW/AYBGY2tckt+uV8LSAGHHUir7jTiP7FpSDSu8jDykfXG4CpSI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=fVqSFWa8; arc=pass smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 316A135C6B4;
+	Wed, 22 Jul 2026 20:49:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784753374; cv=none; b=oHn0tnG4lciMeDoH/3FOyaazEf8Gvx74ug7P6frWWfP6xB5N9EWSPpAVLBXD0iaDU8ZvYOtnQVTlbrPRY+h3Ht7uG6+CwBXOiR2QLNLqfFHSdlOBq9a0Vp//q9JEzJZa2CjiCDmGJnQMdmcP2+sAqf0JMESk7qtGxMGj9elq8uo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784753374; c=relaxed/simple;
+	bh=KWgriz5QD02WosL/s5QlZ8sWm9x8jJ5uVfYTMQ0UNp0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=fcsG532DlyG8TGRzpWsRBpNx2eqSYKsDJ+OqNtHhZZc7HVHuoJJv7PqU441tzkDi76RA6yXJKPFj4+8PU5AkNCyl7oTzAMSCSewparug+Wukm9zIXRnRd3H7Ew6HXTNCMM6sw2SA845HTVVcfMlA1bxjvslnVBjtgtP8uBiHzKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QRXzSsVT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="fVqSFWa8"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-383cb94f742so12194777a91.3
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 13:02:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784750574; cv=none;
-        d=google.com; s=arc-20260327;
-        b=JkLJsL3TlLibpUZDdKaP8q67PVfbpbyAvvIXgwdOaCBmPeiEo8v8Tv23Py1mncHJqw
-         Q2rENxLCJOgEC3Ll9a3lcSO9Fq4lrulAu85kqfgcGWkR9m+aQoS4uiHa4b8ZL+zSFsv2
-         BKCCGbp+gUyYZHqzWIUyNXk5+Ppf7i70CR7BQSesvy+gPV08JhWZf4M03wa9alIjsexu
-         uAQiKo91uPkm0R6GrNmvwIpj2tLDGDOTdhy7B7W69KG48+yHrBWkQy7Yl8c0klarVUyv
-         zXq+bjBTN/RciWFPbQHS1ngjkZcqr+Dt6GanW1RnSKzncl9ACLnHQCArV1SVHBGOjXWZ
-         MEbQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=vu4r/k+6CRzm0HvAmjC2f8PLSYRb0q27NObpyU+llPc=;
-        fh=ruq23KFOTQljaiA2d06mAn2WQuV6RRxMSIUHBdhRNXY=;
-        b=VvksNzo5pTqCr9l3zPTUb5qgDyu3faCWAUXtQJUE466zrCPWTKKGqDEWmExj3UVMvo
-         60sbmzkCCfM/mMFjekHKQVwyx3Wj7vZad1gnM+nyyXHKduYc0MUslVnE26L9VnMJ9Htk
-         +JvX3xtKfLI5WkoiOiFuhA2C+eNZumUp8Dsht4TAOIZivWwTHF/+wVpWcs/Fkg7kECLR
-         tUMlv9bZAs9ZMHyjT+Gcj1gNu5tl1+e7rx7pURPN7LoG/7HABptd+Gs9bP9ZQlIQEfIs
-         TWFmO4tCyvppBkDMwGRKdBctR261JCBTpd4jcuh6OloasCzj5EV+ZcpM+r39YmbbhoBE
-         J/yQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784750574; x=1785355374; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vu4r/k+6CRzm0HvAmjC2f8PLSYRb0q27NObpyU+llPc=;
-        b=fVqSFWa8CR4WGP03THynVHBaqIQzRh1S9Vl7PP6rUAN/da1I02prdrIB2JF1bbV1L1
-         jHKk3cp7aLmOGxcp8y0PLLD7sZMFWl7a3pBjaCJUK3J71I5PCfocLuZiopCUpIXu+sxc
-         BqX6U5InP7Xn9YJ65cTQQJTHDnd3tuWpL3HpGZCceJkKdASxEA+FTIYKo03SN1HBJfms
-         CP8NrqIzfmwRbKqLu0AvRKYacacnwzJh1HiFGTm2kgQbtz7nNj1TKnS4wmGAaHF+t0tR
-         7Y4IFgR2kWg/Ef3Ej0Tcvd5EeTM+FiGokqFpY+964NguHyTc9n5FCXVcfXaAzqJ1xbnf
-         pRMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784750574; x=1785355374;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=vu4r/k+6CRzm0HvAmjC2f8PLSYRb0q27NObpyU+llPc=;
-        b=tHWXq040Crr55+kezZQDHEI3J4PXiLglb+yM5kidrwGzY0ovF0HBreZc4RGbgC7l+8
-         dE6RK1e5K48EiUJPxNKqFtuY+/EENLRm33yBD2OPdxmxSTMfPR8QbmJyyTGNWiDUyrLP
-         cRwt5mMvvTa/6DOZykFN4VxaSMCRgrQeV+hwNNKV1wTmY/y4JDOZKvWWi6kVj/U5LsIN
-         M3haq17tPfn2+j9JzfofgK3sMRnLI+6xQWGWyaTxkNSvsEnZU93VotqrrbfkPvTVWUSo
-         pvFcdingCohv1GXlw1/J8ie0FOzYfk+5Q0m+G1NtA5gZpCSLFuAJN0b7dFewySabALmR
-         tI1w==
-X-Forwarded-Encrypted: i=1; AHgh+RrRI3+F9qkuVKdb2KSo9NOzjCvs2c4ic31Xpfg24dQjEG6a8Q+5E8oadNh/T9gDSmicMqu7MxZIBCQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvKIOqjlWS3JXEuYrpqgAdQIYeOCORXgEn2z7KljvjJfzBbKjI
-	UKs0hJqfoYWUJcddraj1SIArAI2tlntJUGJZtvXAXEGJ5lVDb7NJO9qlemRIiFLrEklm/1qFVzD
-	cWFzNwiqiFVwSid8uAuNBGugPyOPxsnfxTrK25xAI
-X-Gm-Gg: AR+sD12+uOaCbAMUtFJVc+oTlBGRaYG3F6JLSJH7mt9zBfjleIFfZcjeAAQnHHZL9o5
-	SnGq9MyppQEdRquv/+QXA+mxE+Z44fq2OBHOETOGSxfrTHSDAzb2Eq7kmb7xan+EoqV1xnKRpVg
-	n7InEwTwfSkVWpBlU5ta8d0xjxqUk+1iSfSAztcGdmoMG4a7rw2Afvisdw0i7C4Q2I4k2/+yREF
-	7YoIbPYr4CzpPoA8T9/brXpxb1WfnuimsUGHyd5e5dNNitokrWXr+MgGRYfmTOmK7q+5iByDQ79
-	D2j31bUFHJ8gXkmqkzd69TZ4VwWb1oXzKZybypK9wM5BZsXG9vdpxVnPuuntEQJ7DWu0w5rDULl
-	9J9rjs/Yxd3qA7y1xSGVGzSbeXtEVUq/WgPO4leY=
-X-Received: by 2002:a17:90b:2d10:b0:38c:a59b:5189 with SMTP id
- 98e67ed59e1d1-38ec698af76mr113249a91.15.1784750573899; Wed, 22 Jul 2026
- 13:02:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QRXzSsVT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAA2F1F000E9;
+	Wed, 22 Jul 2026 20:49:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784753372;
+	bh=z1Px7wlSMvAtpTuhDzmSdxQ/s0+Uaq2GwqNMZQggC8M=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=QRXzSsVT5SjOc1MIxxlOGfscK9Zh0nMnPXdjwvIEjOncRNbT0BLhKgvDIMUjo7ho7
+	 STTBT5Skv6+2LAMXvNvVt40TyOH2ju2naUz9oj35nd8JSbDsePl8U8/shOcoMUN/bb
+	 X4/V29aNO66JiK9swV+v1lAQZdZ0ZmR3IuhFBj8v2xPToycQ415ZeMys7B24cBftPW
+	 jkA580SrQaCa/1kPCWxQbfBo1mM6Z+l9v/QSRsrnDmGO4ojb+nc+aI0TArXInG7kEj
+	 tU9vfvQyAJ3K/vsKD4dTiSfv/Ba6n7dKK490pnfIPUHQLOEK9mkMGlaIh094ieYAoU
+	 4iO6Mmuzgj1Eg==
+Date: Wed, 22 Jul 2026 15:49:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	David Matlack <dmatlack@google.com>
+Subject: Re: [PATCH v2] PCI/portdrv: Allow probing even without child services
+Message-ID: <20260722204931.GA779078@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260722185841.449934-1-mykola@meshstor.io> <20260722185841.449934-9-mykola@meshstor.io>
- <536428fd-9c23-45c3-be0a-5eaaf8f3939a@deltatee.com>
-In-Reply-To: <536428fd-9c23-45c3-be0a-5eaaf8f3939a@deltatee.com>
-From: Mykola Marzhan <mykola@meshstor.io>
-Date: Wed, 22 Jul 2026 22:02:41 +0200
-X-Gm-Features: AUfX_my0hGYZfb89FIks6uN6jtY1SapXkJQfTk3Dh1NK0AxygDAcUpRTP3iNF6Y
-Message-ID: <CAPzsNDscnb+fH0XZF3qBDgxkREmgh6F=rp0GO18Wy7gLc=4Ldw@mail.gmail.com>
-Subject: Re: [PATCH v4 8/9] md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, Li Nan <magiclinan@didiglobal.com>, 
-	Xiao Ni <xiao@kernel.org>, Guoqing Jiang <guoqing.jiang@linux.dev>, 
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Kiran Kumar Modukuri <kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Shivaji Kant <shivajikant@google.com>, 
-	Pranjal Shrivastava <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <al68lFtbq_Q4RCL2@google.com>
 
-> I think it would be better to
-> move the code more towards similarity with raid1 instead of diverging it
-> further.
+On Mon, Jul 20, 2026 at 05:25:56PM -0700, Brian Norris wrote:
+> On Mon, Jul 20, 2026 at 03:44:19PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Jul 17, 2026 at 10:26:53AM +0200, Lukas Wunner wrote:
+> > > On Thu, Jul 16, 2026 at 12:26:41PM -0500, Bjorn Helgaas wrote:
+> > > > On Mon, Feb 09, 2026 at 05:15:35PM -0800, Brian Norris wrote:
+> > > > > The PCIe port driver fails to probe if it finds no child services,
+> > > > > presumably under the assumption that the driver is not useful in that
+> > > > > case. However, the driver *can* still be useful for power management
+> > > > > support -- namely, it still configures the port for runtime PM / D3,
+> > > > > which may be important for allowing a bridge to enter low power modes.
+> > > > > 
+> > > > > Thus, allow probe to succeed even if no IRQs and no child services are
+> > > > > available. This also mirrors existing behavior for ports that have no
+> > > > > PCIe capabilities, where we'd also probe successfully.
+> > > > > 
+> > > > > This change is a bit more important after commit f5cd8a929c82 ("PCI:
+> > > > > dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+> > > > > controller"), because it's common for some DWC-based systems to:
+> > > > > 
+> > > > > 1. have only have the "aer" and "pcie_pme" port services available and
+> > > > > 2. not define legacy INTx interrupts properly in their device tree.
+> > > > > 
+> > > > > After commit f5cd8a929c82, such systems may fail
+> > > > > pcie_init_service_irqs() and so exit with -ENODEV.
+> > > > > 
+> > > > > Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+> > > > > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > > > 
+> > > > Applied to pci/portdrv for v7.3, thank you!
+> > > 
+> > > Some thoughts on the version now applied to pci/portdrv:
+> > > 
+> > > * After this patch, the return value of pcie_device_init() is no longer
+> > >   evaluated, so that function should be changed to return void as part
+> > >   of this patch.
+> 
+> Yes, seems reasonable.
+> 
+> But then, possibly negated below.
+> 
+> > > * If no port services are initalized, e.g. because pcie_device_init()
+> > >   failed for all of them, the allocated IRQ vectors are not freed.
+> > >   They're hogged, which may be a problem on systems which only support
+> > >   very few IRQ vectors such as Sophgo SG2042:
+> > > 
+> > >   https://lore.kernel.org/r/0f42afefd9322779af5463b696c55b08d2296ea8.camel@iscas.ac.cn
+> > 
+> > Seems like a good idea to free IRQ vectors we don't use.  It *looks*
+> > like it should be safe to call pci_free_irq_vectors() here and then
+> > again in pcie_port_device_remove() if a port is removed, but Brian
+> > wasn't sure, and I didn't look any deeper than pci_disable_msix() and
+> > pci_disable_msi().
+> 
+> I think everything in pci_free_irq_vectors() is written such that it can
+> safely be called twice. I'll see if I can verify that better and submit
+> an update. I was just unsure at the moment of review, especially
+> considering you had other real double-cleanup bugs in your proposal.
+> 
+> > I guess if we did this we'd need to retain the pcie_device_init().
+> 
+> Ack.
+> 
+> > > * It might be clearer to call pci_clear_master() directly in the
+> > >   if-block which is amended to "goto out".  Then the "goto out"
+> > >   can be changed to a "return 0".  It seems "if (!capabilities)"
+> > >   cannot happen through any other code path, so it's unclear why
+> > >   the "out" label is necessary.
+> > 
+> > It does look nicer that way.
+> 
+> Hmm, yes. I may have rewritten it enough times that it was never clear
+> how many error paths we were going to have. As soon as you get more than
+> 1 error path, it gets tricky to do this.
+> 
+> I'll revisit this one along with the previous suggestions.
+> 
+> > > * There's a duplicate "have" in the commit message ("have only have").
+> > 
+> > I fixed this on pci/portdrv.
+> 
+> Commit message looks good, thanks.
+> 
+> > What do you think, Brian?
+> 
+> I'll give the above a shot. I suppose that would work best as a v4
+> (pretending your pci/portdrv is only a reference, and not a patch-basis
+> target).
 
-I'll move bio = r10_bio->devs[slot].bio; up into the declaration so
-raid10 matches raid1 in v5.
-
-Thank you!
+Yep, sounds good, I'll watch for it.
