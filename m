@@ -1,81 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C94A5388890
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:20:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4AF73B635A
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:23:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784762432; cv=none; b=CmigTEIm2iC1sd4+lr4QJlDBQ5+8fD7dsjWUFTXIeCXoU9koAU0lwRZrYIvOpFUFVZckMUwRS0Q+6dkt57kkeujnoK7ANcBRSrIWVhZOf/z5j3SRp/XWYSBLo6MpfF9J+AcH7t98XjAZAsXY27TdBeAelHnnWP5/C7spoAQLtRA=
+	t=1784762584; cv=none; b=nOd55feZhftwZ0zt8IVQBPZZWOrzgYgHnGHwRQ0OWbkl4VhOyVMt0qLS+zPOCU5MGUfPsVDoXzuzWdiCSPN54H7aDHGK2gYWuJDl2nUjJXBp2Uc6hu67ktLHOnMHMvVqdV8bnBTmHf4RkjxMZLOoChzf82tr5F7oENt1hRUVL0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784762432; c=relaxed/simple;
-	bh=QA7xVg91K1PPVfERY29K5FKl4mvm4OpN55ecFOcPwQk=;
+	s=arc-20240116; t=1784762584; c=relaxed/simple;
+	bh=FzWBUD5xGyZ0IQP5Py7zW+UwOzEcFp485c33OqyJEyM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WhCMPMN7xSkVY9tqQrtR5SxioSPUsW2vly7xCha26rmtHDdgk7XOD1xFUfD783TQku1Adu2Nzh3wjeiaaANhoK22+/kQWvyifmu5LqEdsWoEhx2enUrfBRSyIlFaHT/5uX0ppZQpzbYQ0Q+JcC6PMuQNm65XCirrOl858fDLx34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ceCH7DKg; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DKb6u0974rRILrwR58TK/AttKKOM8iWbhXKeDLiI32TgDuOQfKYBLyhZ/rU6D2BRfeiBIeVsWsrrAmwemP7KAhv784/jlISStEmW8G85m1G4/M991zIMUKLmjum9wCyDsGaTcDyMetWUdGnu+KQpGxFVDA4Jo7U3KHZrOFVC8F8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FafM9sEA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ceCH7DKg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 544A31F000E9;
-	Wed, 22 Jul 2026 23:20:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FafM9sEA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2726E1F000E9;
+	Wed, 22 Jul 2026 23:23:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784762431;
-	bh=0Q4uitDAeIe6tbG15ZOHbWVwRj2tX5Y8moxczl/kb0Y=;
+	s=k20260515; t=1784762583;
+	bh=FzWBUD5xGyZ0IQP5Py7zW+UwOzEcFp485c33OqyJEyM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ceCH7DKgd/2IVdNnCC1eACpYG+uRBqHXOUKvw+9M5J1Ll0dMTcuPz+ksfucUquMPi
-	 faJ4i5ebRHQu8DH6J0MJJbZ914RI64/B1gBBLCKDnaNEykY8C0ZbIy9eJPM7UlUxH3
-	 f0mjtIZzACqoV0+oKlLj7dORUyiVFBEiCm1/zK6NDDEuEeSUoaHRyLccmBZ11eYH2e
-	 +NrmaX2nAC24KGFnof6553uSHl6JSaoWoY+Zqx7+qAp8fQhG5hfn/jYO+EYXjIdhoI
-	 +Utni15g+dzpAAa6BH06OWdcJiEAqk7hLoC8ccx0n8+kxNv0YLHeZC7neCNck66TDG
-	 r7iDvSP7QEnMw==
+	b=FafM9sEAhDKuUOPQooX/DFBBPlqDQlsI5gCsoY9OnSIyoO7M7H/qOQnYqnW1/QqGi
+	 3qNci/JVKPDXfKZR9uopkrxp8MGIA3q3SzlQUiMJLYLjfUDsXWxQWo81d+iGQWr6N2
+	 LqnG2Xd64oTe1mcK+AIwX/SdoZq0XNr+G7O0YulwhU0ROpFYWJggXlKWFUU9h5RArn
+	 ucUAY4c7+PCtCqHM0Cq9Kr36KzmtWYeuE6eoHniBwgxbUm3MmUSfk7kjp+h0MIa9+C
+	 pEz1pFAzjI3z1ao2Nzvw3QOkSqS5JASZfpCDPjKKCFpHpTqfRm4YW/92jL6XuMsa4Y
+	 O+KUpwpZ2OxNw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4] PCI/portdrv: Allow probing even without child
- services
+Subject: Re: [PATCHv2] PCI: dwc: uniphier: use fwnode API for
+ legacy-interrupt-controller
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Brian Norris" <briannorris@chromium.org>
+To: "Rosen Penev" <rosenp@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
-References: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+In-Reply-To: <20260722231532.872962-1-rosenp@gmail.com>
+References: <20260722231532.872962-1-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 23:20:30 +0000
-Message-Id: <20260722232031.544A31F000E9@smtp.kernel.org>
+Date: Wed, 22 Jul 2026 23:23:02 +0000
+Message-Id: <20260722232303.2726E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The PCIe port driver fails to probe if it finds no child services,
-> presumably under the assumption that the driver is not useful in that cas=
-e.
-> However, the driver *can* still be useful for power management support --
-> namely, it still configures the port for runtime PM / D3, which may be
-> important for allowing a bridge to enter low power modes.
+> Convert uniphier_pcie_config_intx_irq() from the OF-specific to the
+> generic firmware-node API: of_get_child_by_name() to
+> device_get_named_child_node(), irq_of_parse_and_map() to
+> fwnode_irq_get(), of_fwnode_handle() on the child node to passing the
+> fwnode directly, and of_node_put() to fwnode_handle_put().
 >=20
-> Thus, allow probe to succeed even if no IRQs and no child services are
-> available. This also mirrors existing behavior for ports that don't suppo=
-rt
-> any portdrv services (PCIe hotplug, AER, DPC, PME, bwctrl), where we'd al=
-so
-> probe successfully.
+> Unlike irq_of_parse_and_map(), fwnode_irq_get() returns a positive IRQ
+> or a negative errno and never 0 (it rewrites 0 to -EINVAL), so check
+> pp->irq < 0 and propagate the error. pp->irq is an int, so the negative
+> value is preserved. Drop the now-unused np / dev_fwnode() locals, since
+> device_get_named_child_node() operates on the device directly.
 >=20
-> This change is a bit more important after commit f5cd8a929c82 ("PCI: dwc:
-> Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
-> controller"), because it's common for some DWC-based systems to:
+> Built for arm64 (defconfig + CONFIG_PCIE_UNIPHIER) with LLVM=3D1;
+> drivers/pci/controller/dwc/pcie-uniphier.o compiles cleanly.
 >=20
->   1. have only the "aer" and "pcie_pme" port services available and
->=20
->   2. not define legacy INTx interrupts properly in their device tree.
->=20
-> After commit f5cd8a929c82, such systems may fail pcie_init_service_irqs()
-> and so exit with -ENODEV.
->=20
-> Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnq=
-dwb33xkcdwk@76vnrx45fsfd/
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Assisted-by: opencode:hy3-free
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722160942.v4.1=
-.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722231532.8729=
+62-1-rosenp@gmail.com?part=3D1
 
