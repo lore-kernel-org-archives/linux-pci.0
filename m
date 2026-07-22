@@ -1,155 +1,150 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013021.outbound.protection.outlook.com [52.101.72.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA4939BFFE
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 07:12:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.21
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784704348; cv=fail; b=dVxmPPFmXxuCohXUPRU1fr/vjSAtog069nW+Ld8tVyHu77OGLjnftkWT9GBWfxjEWW3GpLVf3TdRPf6Ec8SYbMieNzGSDFOepIighrwVVv4EvhfxMXB33GX4AO8prjGrFY/7Sr3M2yE58w2LhYVXQonKtCgSmgMBYN/YBDzUJbU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784704348; c=relaxed/simple;
-	bh=g/Pk/JMkKsiv4+CFLLxY0GObvS7NaspWEuNlnScSL+M=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=CLWs8tx/qJRKQtgjI1gSOmGICC9MVXjupT96Z/rPhuu56h4bOZ9VUmCfwK3KYFMS2y41axiQ34vw0FiW3O0iuA6C20QN17LZDKEaPAjn3QrsJGKX6kX58DNMJsl2TnPkmT+vhCx1Z4VYGzvPLH6qFBpZJ88734abRRnQYfso3Nc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nokia.com; spf=fail smtp.mailfrom=nokia.com; dkim=pass (2048-bit key) header.d=nokia.com header.i=@nokia.com header.b=CGgubfLx; arc=fail smtp.client-ip=52.101.72.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nokia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nokia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB02B338595;
+	Wed, 22 Jul 2026 07:17:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784704638; cv=none; b=U2VV2tYnZFRBhHTU8CdUt4O9Dr3Twy2tY7V7e/aDRtpLB7kh4G2nx2oTU4saT4PiKcUWP1vBv5aK5hdNpjDR8rVQtiOPpsT0qjRUybIlCayrb4ZLirk0tZ+DEnvJarH4bbWDHDC50nTWXm3woKfSp6UY1tbxnxUpv5cMzSMAqAI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784704638; c=relaxed/simple;
+	bh=0hfNCEf2G6/s7uZa9vpsL7QRR+QPZWgx0bgnOlsCClc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nsIhaEMaHsqL/2YcZGAEQVvwwhfiy+mBIFiKeFS21r3KrWlhkQRb2LzCO941ePvhk1s8+/JYZ8nw9XHIX1mrfKYsxZHlOmYI3AEv9sPaMD2sm+d97jzvjzjwRv9NvDSjaJD7nul7BjYb1b8No97c6KCmRxqMrOZjSu3XuP62Skw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cdUF7p2b; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nokia.com header.i=@nokia.com header.b="CGgubfLx"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HgAySJJVfKuVUaT7dZXJuF/urmqqNka3yDNWY59WxeVU5NrFRS8Q5szA0NYfj/391U8dHX/4YnA3lWdO9zTqNzMeSwoURBM38AZFazPyemSqkjFP24j9Ps924qNWxoyXdA1XR0uO5vMtgVKGFhcmwGQgPfEwLV1FT/h+Dlzy64xjAC2r1WAFd0VFQmNAg12l9z2RReKOD1it13VuSzY5J1KbjaoK6mt64RtoJh6QGp5MPBtUaDji6AhwS/W81yG3ZqWRV6rStmbLXy4rJIQpc4Tuc5oYp2V1FvtbvGOlictl6Gju6W5Tsxk972eSea5HMTS3t9/RzWqkZ3o/bRAGkA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=g/Pk/JMkKsiv4+CFLLxY0GObvS7NaspWEuNlnScSL+M=;
- b=Le9vt0JAeKByAt8bwSpSmjaZgt1hsaxlXQptYvVPjLs5Js9tGdOSNrQrCfQ54+qAScnc/Lzi8AXDfsSQZjZOF7iLxKCi3Uw5LIoMjn20kkI+T0YJWOnPksIAgKWQEZBBNd4Jt4/KyCfIC+C5O/vkL3JInCpxeRPCWiXWN58mKrswT8mKSE3NP05aEArxJcK0lfbWaFXBZi+gQdlYVYOeoFQ6rOzdBkmM5Xt9myP+4Wr1WtNs7KwmjgJMGUQIGw9A3C+Ay2QAxPBA6b2C3kUWqStWJ1gHmeUcP2bdztH5pDKLYmoltX+MYoyNStZuJgyNvVlUM600VtadrscR7FwbVA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nokia.com; dmarc=pass action=none header.from=nokia.com;
- dkim=pass header.d=nokia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nokia.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g/Pk/JMkKsiv4+CFLLxY0GObvS7NaspWEuNlnScSL+M=;
- b=CGgubfLxQy9fizN1UHB4ymQw/pKWPnAAvuZ4UDyJVtdSlqj8lzFFHCZjbbz/snNP667PYsSqwPGnlHFhEKkwgiochlP3ixb4Iv6tEXHbOV5zhYh1+bGJTsfRbZfTIGX79i2wehrsD4rgJESQaoOI6wJ/AwpSMgkQ7KYrt8f7alx5A9Iur2HnHD8HxUlapCOqHlqPUHrnjOqtMi8b6vA2e5XW9u5cjWklZlQS+FfCSzaC6OzaOwIHKH6pVsUp91b4ws0AAvqEpbJLfSGXTKnMYR+/2hlYriopyDPwO0hXw5lbivVguLnhL4BSecH4IwyXZ+8iltPCNqriZVAzerRxSg==
-Received: from AS4PR07MB8508.eurprd07.prod.outlook.com (2603:10a6:20b:4e8::10)
- by DB9PR07MB7260.eurprd07.prod.outlook.com (2603:10a6:10:21c::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Wed, 22 Jul
- 2026 07:12:24 +0000
-Received: from AS4PR07MB8508.eurprd07.prod.outlook.com
- ([fe80::b9c5:4dbe:525b:4722]) by AS4PR07MB8508.eurprd07.prod.outlook.com
- ([fe80::b9c5:4dbe:525b:4722%4]) with mapi id 15.21.0245.009; Wed, 22 Jul 2026
- 07:12:24 +0000
-From: "Jozef Matejcik (Nokia)" <jozef.matejcik@nokia.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "Peter Sys (Nokia)" <peter.sys@nokia.com>
-Subject: PCI driver - hotplug of multiple devices
-Thread-Topic: PCI driver - hotplug of multiple devices
-Thread-Index: Ad0ZqS8kL9B8s/EbRg+HUpj9A4DxGw==
-Date: Wed, 22 Jul 2026 07:12:24 +0000
-Message-ID:
- <AS4PR07MB85083609845930FF12F5C79593C12@AS4PR07MB8508.eurprd07.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nokia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: AS4PR07MB8508:EE_|DB9PR07MB7260:EE_
-x-ms-office365-filtering-correlation-id: 756f04ac-bbbd-42d5-f6dd-08dee7c09463
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|38070700021|56012099006|11063799006|10067099003|6133799003|18002099003;
-x-microsoft-antispam-message-info:
- pJ4wKSPaywjiMGnNH6kkuSrPyzNYZv3QrxJ0M7Ho2z1qLQeKB5GGq/cg9Z2vxtVuiTKi45gxB2PP7MWq8D5guptRMJYIgTwmslhM/3Q+fdlPxpd9lFzEbIlCSyYdPBjm6t7RGGDyt7vEHoJK4Clwv8/6R4RlwRrufCFXP8cTnVA+CuZMmp+g9aA4I6Q9pWoOYjSh+Uck/FLOUDxHwocP1BxUwXzGjNG2MenQ5Ogliik4Aew1GLmLbQGQ/DYekHUNXXD06sd//Vy889sU8hUSL0ijNTpeou00mXh/U5mIi9wcZplTwwIQttOfWskutQz6gAK6R+LHcHH53ZPeRbowcBHCiCdsayJoScatjUht1VzJ/7+zjRAH+RG3sCtzmecx2lv3f6QJOBOPAVtXSWVCa7OqE8xfWHBxAqRlVIXzHbCWtlat4eJWNsYk/8W38b0ebw9w/ZfIH5t2IpiU7vPzbu4aAX6XG6E2a2PmehPd1iAcIVqSkLEGJg8r//wHnDYx+Ghw3vDnDMVvnhGatHFEeABrqjkXBFgkjrPGLqNkZ7YhYp10h/7AakNMBUM9NXAMVAPXCYlJUWcqphs+57Pa0Wz7TISfRv0EJIpYr+uZjeKFtIAWn6zKrcD0AzUr5M8mpIsHLLaePhKYww1sVGJYpVpytjv1VlS95EzklhlaEd5guHVBp7OWNuYUfZthjRDmFttJqVqOy8yQ9X4hiO9RAEhVJESobWMcZanwcnKgS9c=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS4PR07MB8508.eurprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(38070700021)(56012099006)(11063799006)(10067099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?BIg8XKMK7it5JQUVQBKu8vUiT+8Ur/Q0gUPHwZ3m+HDvtup6QFXWdhW1gEcp?=
- =?us-ascii?Q?EWj46Qr2USxogbg9uYvErNrse9JuRMgS7TvKt45YVfKZ3PTrvJoRk9rfhx2b?=
- =?us-ascii?Q?B0ixREVb9jS70kyYYiC3tKOs9MMVXvbzUycCqjr1uVUdoH/D66VN2yuaoO74?=
- =?us-ascii?Q?w0bW0m7mJ2v/KEuNkAfwD7bPL7nVfwtrqhD4TIXFV/0aXwaJyQRhTLl8+zZm?=
- =?us-ascii?Q?eDziI+RXNpj0WYaLI2/o2E4azuT7IUPlfevayMM3tOoT3EQrQWhKqZY1HbqK?=
- =?us-ascii?Q?rcePHvcHionu0NFiVMVYVtuubH9KQf5NG3BoiMD3ZAIXkpjZVyim4SONzvKi?=
- =?us-ascii?Q?bV2DXJBZRvmNs9eRaNwdgoRHkgI1MwomfJhNxOteozLg1t3ov+YZJrlHmCEn?=
- =?us-ascii?Q?x3Yh+2JWES/ty7ohDDaVeBuH97R3NBuEnW8vikTvQkcfV2GcFedrULkLrxrU?=
- =?us-ascii?Q?fqZ6sASDnunBmRiSLsTHATcsI9dXOP3PYNybPAkeRqwX8GqkzcfuCVzqQgoo?=
- =?us-ascii?Q?ztp6p6wchg6hJ8sUHK8YKWbNM21+HKLbefzLjyN5DDnSsigVXOsHren/KZMc?=
- =?us-ascii?Q?K83r6D1koLyuiuG/+NHVSpiqYnUZ9rRZsybJXxlG/s0ByofAnV5H0pBipDk7?=
- =?us-ascii?Q?BHOY06jDLA7bEukpMWvT6N04pR+4+HQWPmCtg2pQaWvbv8P08+2IxXtGHTXG?=
- =?us-ascii?Q?gC/TgemPXSVeP9GdaFRfH47OU+jC7793zVYwkAlnvATaOcoHFqftRRpzbITy?=
- =?us-ascii?Q?Ne5k2MnY9umkIc4J92JUCvXhklF5VbpWUMR6jJMR3ugY4b3LJ1xFh8ljw9yo?=
- =?us-ascii?Q?iTPC+JjZ7VszotYBdFtylRYl+HASkavy7RPT64uUxSpWAehYKI6UMV+bTS2C?=
- =?us-ascii?Q?3ocTgPXft7Xor5QYXq6y94MScPzQJwmAHPF4TxIceSYe39zlJfr6JYAZatdY?=
- =?us-ascii?Q?FU7LBLlF1mDaVineqA0LGjDklR7goyLKazoJCpYYXt0m2CX6yOG+aBDSlfFK?=
- =?us-ascii?Q?ihh8VOfg/KZPimm+ZqVLhprQPACpRZxwe379aoo5T/vkt2JrDLcasr0AZxXj?=
- =?us-ascii?Q?tgR5EUZQ7ztBZKExI30h3JqGS41HtFO/cn/JSCVSJJHt8mPO/2mcz/cYNjA1?=
- =?us-ascii?Q?VqBz95eeo3JkDtVmujlP3yEo0CKsYcL9AeGc0daUmlNNKCuqbu5OvZHybp7m?=
- =?us-ascii?Q?IqFl/MiQGVBwMQqxk+pn797uGJeUhvJMQm++8+GB9ROL2BwZ8M0bpMPnycRo?=
- =?us-ascii?Q?j87fPMNBSzplKjnfc0T291G3UMj6BSVld7qYygbmW3E7bjd6+y50pzYdODu+?=
- =?us-ascii?Q?JwCVD4/l+dlnsblHO56irG7e0uOtRAiwWZrKiqdYg50sIeo6G86WuEI4FFWz?=
- =?us-ascii?Q?cjs609vwpeCDorcvMlRq6QW966iFQAKTRxnf7gkjx02ztEtMngm2K6Gkoclj?=
- =?us-ascii?Q?GdEkfnv6Z96Aw660Rf/c03MNEuVx0AjxID5dqaljgiGP27OF/yAgBz2nToi6?=
- =?us-ascii?Q?eXNI2gkj6so3wyxWHlzoyuPksbfZHdJ/pi9vYk+G6PJPtslJuMbGFCHFkmj5?=
- =?us-ascii?Q?GxIwSbXhiLIKtIwQzNcDW2vKc+Vbx67bmqebzmRoF6Vjpg0zCbZvD8shNltI?=
- =?us-ascii?Q?fkX8SrProann+UWgFvOsk/BD1IfDdunTHFB4PKqeK7fBW5edyR5tgmOFNj17?=
- =?us-ascii?Q?RACPVPULmpQi0Oh9/VG4vTyUT/JUCLmbQYOxr/PpbgmoaVM3oKqrfaKtrQm2?=
- =?us-ascii?Q?lMMUjlZrIA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cdUF7p2b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AAE11F000E9;
+	Wed, 22 Jul 2026 07:17:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784704636;
+	bh=ix1YWR89BoWirkzBwDzjoNDoHc/y1c7sNydBMgP5/eI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cdUF7p2bTiqcuPSXVQI4O5GGtP4ukhv3vLeL9n1TidqDpjTB1bLUVT0qbQw1Xmij5
+	 MX9swTAcweAxvvauJLl+tk/QlydH3lheu4eJLmvohONSkHuqt4tyMVk6bI5E9Ah33d
+	 7jtL9LgRa7MIvLeQ8dEBl59Q46KkI/tUIW2w1xfBzz/74k0CG1iTfnhTUG5RFiRklt
+	 GLSaK2JLzQN1oswrvEktoYMF0qzh7NzqYnaTHgX1J6JWQrEIDMUrqloK6nHX9hfG8d
+	 bDIc8a4p8vdoJaE/5l0DNNH76l6U/FFehnViYcIOkJ/Jgh6KOLQLggCl67I+Znr1x/
+	 PSAdmi2EWTkFg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4] PCI: imx6: Fix i.MX6Q/DL boot hang caused by
+ improper PHY power sequencing
+Reply-To: sashiko-reviews@lists.linux.dev
+To: hongxing.zhu@oss.nxp.com
+Cc: linux-pci@vger.kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org
+In-Reply-To: <20260722071030.2504711-1-hongxing.zhu@oss.nxp.com>
+References: <20260722071030.2504711-1-hongxing.zhu@oss.nxp.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
+Date: Wed, 22 Jul 2026 07:17:16 +0000
+Message-Id: <20260722071716.6AAE11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: nokia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS4PR07MB8508.eurprd07.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 756f04ac-bbbd-42d5-f6dd-08dee7c09463
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jul 2026 07:12:24.1874
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5d471751-9675-428d-917b-70f44f9630b0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rON4I2IKrai40VQ8ntUbnZbeEsgbJnME7FL35ZYPLHtLg0CfUSgnOUuN3bCYw9J83au78GnUSW2F9U24SWJ42zCDBnsFkXyOF1hMYLe63Sg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR07MB7260
 
-Hi,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-We are facing certain issues with the driver of PCI device.
+Pre-existing issues:
+- [High] Ignored return value and missing cleanup in endpoint initializatio=
+n (`imx_add_pcie_ep`).
+- [High] Calling a sleeping function (`usleep_range`) in a `noirq` system s=
+uspend/resume phase where local interrupts are disabled.
+--
 
-The driver is Broadcom's linux-kernel-bde.
+--- Patch [1]: [PATCH v4] PCI: imx6: Fix i.MX6Q/DL boot hang caused by impr=
+oper PHY power sequencing ---
+commit cdeb44e5cad8e8dc7dee3f092df4048d6cca6e75
+Author: Richard Zhu <hongxing.zhu@nxp.com>
 
-The device is a forwarding ASIC, acting as 2 PCI devices on one die. I'd li=
-ke to note it's acting as 2 separate PCI devices, not a device with 2 virtu=
-al functions:
+PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper PHY power sequencing
 
-[*****@***** ~]$ lspci |grep -i broad
-07:00.0 Ethernet controller: Broadcom Inc. and subsidiaries *****
-08:00.0 Ethernet controller: Broadcom Inc. and subsidiaries *****
+This commit fixes a boot hang on i.MX6Q/DL variants by reordering the PHY
+initialization sequence. It moves TEST_PD control into the reset functions
+and adds an explicit delay for the PHY power-up sequence.
 
-Both are managed by the driver mentioned above, linux-kernel-bde.
+Closes: https://lore.kernel.org/lkml/20260629143439.361560-1-leoreis.costa@=
+gmail.com/
 
-The issue:
- - kernel module is inserted
- - we de-assert reset of these PCI devices (previously in reset, i.e. effec=
-tively powered down)
- - sometimes, very infrequently, the box freezes for 1-3 minutes and the HW=
- triggers reboot
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
+er/dwc/pci-imx6.c
+> index 98e1db751132a..da9d4d6d7d46a 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
 
-When we removed the module before de-asserting the resets and then inserted=
- it later, the issue did not occur. So we suspect that the kernel driver is=
- accessing the device during probe too early and this is causing HW freeze.
+[ ... ]
 
-The question:
-Are PCI drivers expected to handle hotplug events of any number of their de=
-vices simultaneously? Can the issue I described above be considered a bug i=
-n vendor's implementation?
+> @@ -835,11 +832,15 @@ static int imx6qp_pcie_core_reset(struct imx_pcie *=
+imx_pcie, bool assert)
+> =20
+>  static int imx6q_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+>  {
+> -	if (!assert)
+> -		return 0;
+> +	if (assert)
+> +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_TEST_PD);
+> +	else
+> +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				  IMX6Q_GPR1_PCIE_TEST_PD);
+> =20
+> -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST=
+_PD);
+> -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_REF_=
+CLK_EN);
+> +	if (!assert)
+> +		usleep_range(200, 500);
 
-Please let me know if you need more information.
+[Severity: High]
+This is a pre-existing issue, but does calling usleep_range() here cause
+a scheduling while atomic bug during system resume?
 
-Thanks,
-Jozef
+During system resume, the noirq phase calls imx_pcie_resume_noirq() with
+local interrupts disabled across all CPUs. This eventually calls down to
+this function:
+
+imx_pcie_resume_noirq()
+   imx_pcie_deassert_core_reset()
+      imx6q_pcie_core_reset(assert=3Dfalse)
+         usleep_range(200, 500);
+
+Since usleep_range() sets the task state to TASK_UNINTERRUPTIBLE and calls
+schedule(), will this hard-lock or trigger a bug when timer interrupts
+cannot fire to wake the task?
+
+[ ... ]
+
+> @@ -1445,6 +1446,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+>  	return 0;
+> =20
+>  err_phy_off:
+> +	imx_pcie_assert_core_reset(imx_pcie);
+>  	phy_power_off(imx_pcie->phy);
+>  err_phy_exit:
+>  	phy_exit(imx_pcie->phy);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is it safe for
+imx_add_pcie_ep() to ignore the return value of imx_pcie_host_init()?
+
+If imx_pcie_host_init() fails, for example when enabling clocks or
+regulators, it seems imx_add_pcie_ep() will continue execution:
+
+imx_add_pcie_ep() {
+    ...
+    imx_pcie_host_init(pp);
+    ...
+    dw_pcie_ep_init(&imx_pcie->pci->ep);
+}
+
+Could this cause an external abort when dw_pcie_ep_init_registers()
+attempts to access unclocked or unpowered PCIe registers?
+
+Also, if dw_pcie_ep_init() subsequently fails, it looks like
+imx_pcie_host_exit() is never called to clean up resources.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722071030.2504=
+711-1-hongxing.zhu@oss.nxp.com?part=3D1
