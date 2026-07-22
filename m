@@ -1,157 +1,209 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7608F148850
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 06:11:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BC32CCC5
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 06:14:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784700710; cv=none; b=PcM8X2FsYU57u833DL/3w7bM2RiZCkFXYWbC6/z8edQsFLD+t1G5VWlOSFKo91RqiLqTZnHEMYdtZtA+bv34Y3w/X3CGh9OgkvUtxDYLRGq3+Z9JAyqQ/EdmuPBF6uJzhRZcv5kZecayOxXvPM+j4GtNV/ptLG0/FYqE6v8IIXo=
+	t=1784700858; cv=none; b=cJAYw/ZUDelUC62g3grXaAo1Xq1t0Widq1YKZbB6IVbZSySiw+3AOvioF25XPrRF7DaHSthGiZqjAJGvw26ufQI9AK/O9J0mkOTHZ7Y8oxvcnZaGP3VevM96F9WnU9bcnNV4jflb58QmIVSvU7GmwwYRT1l3vTPOpzF461tgm3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784700710; c=relaxed/simple;
-	bh=3GjirWQH1jEA4Y+bLg5SROyec/EZ99aUQ4TK86xyr1g=;
+	s=arc-20240116; t=1784700858; c=relaxed/simple;
+	bh=TANF1oL4P9dguaai1U0g7ciAYG1vuXbV4FHf1/9DDU0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VKRoA1QE5c3Yh1esEcZdoLEbPSdqEjcbVhwulj+9e/8BmvjRekKILLtabsE5TRyhlTPZthezlZdVHgQyOZgBL1640hUHIRrYH/z/i2YqJZ+m2Z7GKBSVBpuZYx16drBNFuvDCKGgdohR5n6/wg9gxNpm0yq9WbqZPI7OZs21z9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFUx/RIY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BiJQC1QFCEMtI/CarDgmuEESS8jVlUqkIbZ6u27I71JDeXCIrX7MZ3VSAt3xzkVjTNixyCBM/lU3EbQR71lN4Et0z0+egvJ1C7VLhxtRPECJ/hAv/H2VjlwK9CEWJN8Aw4Ft/SIfoJUAtmPvOaX8g9qrdAZf2oyHyC7U86fhpM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BesAd0T1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFUx/RIY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC7D61F000E9;
-	Wed, 22 Jul 2026 06:11:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BesAd0T1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FECE1F000E9;
+	Wed, 22 Jul 2026 06:14:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784700709;
-	bh=eIO15XX8CLs9EzsaWXoqsu75r+BA4zMdxeV77CJJnjA=;
+	s=k20260515; t=1784700856;
+	bh=yRr3+gKC8SotdP+jakqbpilGRdqdYElYIftTo6EVdb0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IFUx/RIYmhSZPxqIRXl1EMcf7dHIAsNFScC+DyhP5FFd3gNHYwjZVO1iwSoWD7I9a
-	 pWfeMdmap6DR4aV5J2ea40fac7klDLeK9cM1BZvLGb4lH2oaoSnOR3ywCw6zkqt9lu
-	 BBmG3kN/8KcD8cLAvqwdNeKVmyA5opuU6okV19AXSikO4WHpzyBSX/rDj+HbKhnn35
-	 hF0gLL+ADI9JVrDjYF2Za09HPWMmKHTdsQVCWHTNWcAJq1db/XhFvNPwL5IOnCEAIC
-	 ToV2Mh452q40JwFjzlqXbFJlkLeGzMwBv8H+yFHtwEazCfDfs4jxGIjToh0A0EmUpB
-	 j2SEhADLcQi2g==
+	b=BesAd0T1HRGt+HNzdEZY1dZZwIzZyqjRbvVV5qrBqPzb5k9vlfDhfoV82LExL2VkB
+	 nWa1RCafllvkxAOmFgXfC2nrybxbEX/G+I7I8I8Aa0CLqqTMPuRbXLwh3q9QNqnTiw
+	 ySHeaue3LGZ+csr7M7GnXrwCfUjkTN7aMvhbUxUkKzhnILa3ePxoyFdTyfYkyvRPxn
+	 kJAh05Q+5kkmPRctjwwUkpJjcNsP81sHOY+7KGFOjNbInXZhbr4pV9K8LDeuBQ5Jbq
+	 TzOs6pSUc+w5f85f3atnsdDc62KdiFm08OjB9fy/Y9HQMGUj/2ZkTFLAR8Dd+n90OA
+	 Ep+pO7XhxpT1g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: epf-mhi: Implement mhi_cntrl->flush_async()
- to flush DMA read/write
+Subject: Re: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async()
+ callback to flush the async read/write
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260722-mhi-ep-flush-v3-3-d855e715264e@oss.qualcomm.com>
+In-Reply-To: <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
 References: <20260722-mhi-ep-flush-v3-0-d855e715264e@oss.qualcomm.com>
- <20260722-mhi-ep-flush-v3-3-d855e715264e@oss.qualcomm.com>
+ <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 06:11:48 +0000
-Message-Id: <20260722061148.EC7D61F000E9@smtp.kernel.org>
+Date: Wed, 22 Jul 2026 06:14:16 +0000
+Message-Id: <20260722061416.7FECE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
 s) to consider:
 
 New issues:
-- [High] The newly introduced `pci_epf_mhi_edma_flush_async` callback uncon=
-ditionally accesses `dma_chan_rx` and `dma_chan_tx` without verification, l=
-eading to fatal crashes if DMA initialization fails or the PCIe link toggle=
-s.
-- [High] `pci_epf_mhi_edma_flush_async()` misuses `dmaengine_synchronize()`=
- by not terminating in-flight transfers, invoking undefined behavior and le=
-ading to Use-After-Free when hardware completes transfers after teardown.
+- [High] Lock gap in `mhi_ep_remove()` during `flush_async()` allows the ho=
+st to restart the channel and bypass teardown synchronization.
+- [High] Memory leak of TRE buffers and SKBs if `flush_async` cancels DMA o=
+perations.
 
 Pre-existing issues:
-- [High] Teardown paths in `pci_epf_mhi_unbind()`, `pci_epf_mhi_epc_deinit(=
-)`, and `pci_epf_mhi_link_down()` are vulnerable to a severe Use-After-Free=
- (UAF) and Double-Free due to dangling pointers.
+- [High] Missing `flush_async()` in `mhi_ep_abort_transfer()`, `STOP_CHAN`,=
+ and `RESET_CHAN` leaves UAF and introduces NULL pointer dereference.
+- [High] Inconsistent locking for `xfer_cb` leading to potential AB-BA dead=
+locks in client drivers.
+- [High] Use-Before-Initialization race condition due to early `xfer_cb` pu=
+blication in `probe()`.
+- [High] Invalid Memory Free (`kfree()` used on a `kmem_cache` object).
+- [Medium] Duplicate `-ENOTCONN` notifications sent to client driver.
 --
 
---- Patch [3]: [PATCH v3 3/3] PCI: epf-mhi: Implement mhi_cntrl->flush_asyn=
-c() to flush DMA read/write ---
-commit e8cb88746eba8db4d5212c60aa7ddf4b58afafd5
-Author: Manivannan Sadhasivam <mani@kernel.org>
+--- Patch [1]: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async() ca=
+llback to flush the async read/write ---
+commit 8e4fde6115727693f6dc8095e55dc40c2cd91987
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-PCI: epf-mhi: Implement mhi_cntrl->flush_async() to flush DMA read/write
+bus: mhi: ep: Add mhi_cntrl->flush_async() callback to flush the async read=
+/write
 
-The MHI core needs to make sure that all the current DMA transactions are
-completed before removing the channels. So implement the
-mhi_cntrl->flush_async() callback by first making sure all the in-flight
-DMA operations are completed and then flushing the DMA workqueue.
+This commit introduces a flush_async callback to the MHI endpoint controller
+and calls it during device removal. This ensures that any pending asynchron=
+ous
+DMA read or write operations are completed before disconnecting the channel=
+s.
+The change aims to prevent use-after-free issues that occur when DMA
+callbacks trigger after channel teardown.
 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/e=
-ndpoint/functions/pci-epf-mhi.c
-> --- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> @@ -644,6 +644,15 @@ static int pci_epf_mhi_edma_write_async(struct mhi_e=
-p_cntrl *mhi_cntrl,
->  	return ret;
->  }
+> diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
+> index 0277e1ab11988..b94c571f01d88 100644
+> --- a/drivers/bus/mhi/ep/main.c
+> +++ b/drivers/bus/mhi/ep/main.c
+> @@ -1620,6 +1621,22 @@ static void mhi_ep_remove(struct device *dev)
+>  	if (mhi_dev->dev_type =3D=3D MHI_DEVICE_CONTROLLER)
+>  		return;
 > =20
-> +static void pci_epf_mhi_edma_flush_async(struct mhi_ep_cntrl *mhi_cntrl)
-> +{
-> +	struct pci_epf_mhi *epf_mhi =3D to_epf_mhi(mhi_cntrl);
+> +	/* Disable the channels to prevent new transfers */
+> +	for (dir =3D 0; dir < 2; dir++) {
+> +		mhi_chan =3D dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
 > +
-> +	dmaengine_synchronize(epf_mhi->dma_chan_rx);
-> +	dmaengine_synchronize(epf_mhi->dma_chan_tx);
-
-[Severity: High]
-If pci_epf_mhi_dma_init() fails during epc_init(), the DMA channels are not
-initialized, but the flush_async callback is still registered later in
-pci_epf_mhi_link_up().  Will this unconditionally dereference dma_chan_rx
-and dma_chan_tx and cause a crash if the link goes down?
-
-Additionally, if the host toggles the PCIe link down then up,
-pci_epf_mhi_link_down() destroys the channels and sets them to NULL, but the
-subsequent link_up does not reinitialize them.  Does this also lead to a
-NULL pointer dereference here?
-
-[Severity: High]
-Does dmaengine_synchronize() safely stop the hardware or wait for pending
-descriptors to execute?
-
-The DMA Engine API states that dmaengine_synchronize() synchronizes only the
-termination of a channel and does not stop the hardware.
-
-If dmaengine_terminate_async() is never called, will this return while
-hardware DMA is still processing in the background?  When the active DMA
-transactions eventually finish, the hardware might write to unmapped or fre=
-ed
-memory, potentially causing memory corruption and enqueuing a freed transfer
-context to the dma_wq.
-
-> +	flush_workqueue(epf_mhi->dma_wq);
-> +}
+> +		if (!mhi_chan)
+> +			continue;
 > +
-[ ... ]
-> @@ -812,6 +821,7 @@ static int pci_epf_mhi_link_up(struct pci_epf *epf)
->  		mhi_cntrl->write_sync =3D pci_epf_mhi_edma_write;
->  		mhi_cntrl->read_async =3D pci_epf_mhi_edma_read_async;
->  		mhi_cntrl->write_async =3D pci_epf_mhi_edma_write_async;
-> +		mhi_cntrl->flush_async =3D pci_epf_mhi_edma_flush_async;
->  	}
-> =20
->  	/* Register the MHI EP controller */
+> +		mutex_lock(&mhi_chan->lock);
+> +		mhi_chan->state =3D MHI_CH_STATE_DISABLED;
+> +		mutex_unlock(&mhi_chan->lock);
+> +	}
+> +
+> +	/* Flush in-flight transfers before notifying disconnect */
+> +	if (mhi_cntrl->flush_async)
+> +		mhi_cntrl->flush_async(mhi_cntrl);
 
 [Severity: High]
-This is a pre-existing issue, but teardown paths appear vulnerable to a
-double-free or use-after-free.
+Does dropping the channel locks while calling the blocking flush_async
+callback leave a window where the host could restart the channel?
 
-If the endpoint is unbound via pci_epf_mhi_unbind() after a link down event,
-the teardown logic executes again:
+If a START_CHAN command is processed during this gap,
+mhi_ep_process_cmd_ring() could reacquire the lock and set the state back to
+MHI_CH_STATE_RUNNING. This would allow new DMA operations to be queued
+before the xfer_cb is cleared later in this function, potentially leading to
+a use-after-free.
 
-pci_epf_mhi_unbind() {
+[Severity: High]
+If the controller implements flush_async() by cancelling pending transfers
+(for example, via dmaengine_terminate_async()), could this cause a memory
+leak?
+
+Since the MHI EP core doesn't appear to track pending operations, abandoning
+the buffers allocated from tre_buf_cache without invoking their completion
+callbacks might leak both the TRE buffers and associated SKBs.
+
+[Severity: High]
+This is a pre-existing issue, but since flush_async() is being added here to
+handle pending transfers, should it also be called when the host resets or
+stops a channel?
+
+During host commands like RESET_CHAN or STOP_CHAN, or during power down via
+mhi_ep_abort_transfer(), channels are disabled without flushing pending DMA
+transfers. For instance, in mhi_ep_process_cmd_ring() handling a RESET_CHAN,
+mhi_ep_ring_reset() frees ring->ring_cache and sets it to NULL. If an
+in-flight async DMA read subsequently completes, mhi_ep_read_completion()
+will dereference this NULL ring_cache.
+
+>  	/* Disconnect the channels associated with the driver */
+>  	for (dir =3D 0; dir < 2; dir++) {
+>  		mhi_chan =3D dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
+> @@ -1635,7 +1652,6 @@ static void mhi_ep_remove(struct device *dev)
+>  			mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
+>  		}
+
+[Severity: Medium]
+This is a pre-existing issue, but does this lead to duplicate -ENOTCONN
+notifications being sent to the client driver during power down?
+
+When mhi_ep_abort_transfer() is called, it sends an initial -ENOTCONN via
+xfer_cb but leaves the callback set. Device destruction then synchronously
+invokes mhi_ep_remove(), which finds the callback still valid and sends a
+second -ENOTCONN notification.
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there an inconsistent
+locking expectation for xfer_cb that could lead to deadlocks in client
+drivers?
+
+The callback is invoked with mhi_chan->lock held in mhi_ep_process_ch_ring(=
+),
+but it is called locklessly from the workqueue in mhi_ep_skb_completion().
+If a client driver responds to a receive callback by queueing a new buffer
+via mhi_ep_queue_skb() (which acquires mhi_chan->lock), it could self-deadl=
+ock
+when called from the locked context.
+
+[Severity: High]
+This isn't a bug introduced by this patch, but could the xfer_cb be called
+before the client driver has finished initializing?
+
+In mhi_ep_probe(), xfer_cb is assigned to the channel before the client
+driver's probe function completes:
+
+mhi_ep_probe() {
     ...
-    if (mhi_cntrl->mhi_dev) {
-        mhi_ep_power_down(mhi_cntrl);
-        if (info->flags & MHI_EPF_USE_DMA)
-            pci_epf_mhi_dma_deinit(epf_mhi);
-        mhi_ep_unregister_controller(mhi_cntrl);
-    }
-    ...
+    ul_chan->xfer_cb =3D mhi_drv->ul_xfer_cb;
+    dl_chan->xfer_cb =3D mhi_drv->dl_xfer_cb;
+
+    return mhi_drv->probe(mhi_dev, mhi_dev->id);
 }
 
-Since mhi_ep_unregister_controller() and pci_epf_mhi_dma_deinit() do not set
-mhi_cntrl->mhi_dev to NULL or clear out the destroyed workqueues, will this
-conditional evaluate to true on a dangling pointer and run the teardown
-logic a second time, resulting in a double-free?
+If the host sends an early doorbell interrupt, mhi_ep_ch_ring_worker() could
+start processing the ring and invoke the callback on a client structure that
+is not fully initialized.
+
+[Severity: High]
+This is a pre-existing issue, but is kfree() being used incorrectly on an
+object allocated from a slab cache?
+
+In mhi_ep_ch_ring_worker(), if the ring is stopped concurrently, the iterat=
+or
+is freed using kfree():
+
+mhi_ep_ch_ring_worker() {
+    ...
+    if (!ring->started) {
+        mutex_unlock(&chan->lock);
+        kfree(itr);
+        continue;
+    }
+}
+
+However, the iterator was allocated from the mhi_cntrl->ring_item_cache via
+kmem_cache_zalloc(), so this might cause slab memory corruption.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722-mhi-ep-flu=
-sh-v3-0-d855e715264e@oss.qualcomm.com?part=3D3
+sh-v3-0-d855e715264e@oss.qualcomm.com?part=3D1
