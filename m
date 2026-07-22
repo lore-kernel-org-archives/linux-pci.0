@@ -1,63 +1,66 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013057.outbound.protection.outlook.com [40.107.162.57])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010059.outbound.protection.outlook.com [52.101.84.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC33254B03;
-	Wed, 22 Jul 2026 15:22:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.57
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E6443BDAF;
+	Wed, 22 Jul 2026 15:36:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.59
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784733748; cv=fail; b=jcbMoP5nnWpZmn8TzoYmMxL3r7OJeEAecAzjK/5lzWsSiJDbContCHr+j/sQD+WBjDoztHUf7wwdO8RrhL4L7A+meoqcOmZNVnoEYpTqWa6ThbcY+PTVvvBoiAGoXv6QrkOnAmzI6ZbEhH1XRyX67LUZKQyU+0TW1SsGCFBo1Qc=
+	t=1784734620; cv=fail; b=B7wDYTnnZySS7xkJaXuJdts6hJn4AXeGPn4u1+pNSGSv7Lik6pvcbI5tlUU51bKKEjg6Um8ZWFz1ugHzktC1DT+bKLOJSJBoJ2rBcH2Wdl+sTHZQVLE0Y0n/M1bK41s1qeg7B9aybB+KWOxlkfgrV9KGcs4wd9jauyRVrY7jZWM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784733748; c=relaxed/simple;
-	bh=dQ2Rmni/BxkGAYCiik8OljEu1+ofKgcJ7vBMgIVb+mg=;
+	s=arc-20240116; t=1784734620; c=relaxed/simple;
+	bh=dyAYfGo8eYC8ACZgfmtjNRCB56X7MrRxO9wItTJ0XHw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=qp4faDl34+71hgJs+rspnE5DcKr/iSubliPWfEs1R6UCtOeqwI50wbHpX50YyQ5vlvUEHCbvH4dUrcZfkcWJtSoGStKGAgMYhqNNt6u/P2jjfsf4aZtS6350/O+39Vod+uKL8eMOFlq27i3qRw0lRAe0n1iyHWFC0szLhg/ZJ+s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=J9ggi8cb; arc=fail smtp.client-ip=40.107.162.57
+	 Content-Disposition:In-Reply-To:MIME-Version; b=EsDAF5pf4U5f0TvDltBb7kLuIXmzb4NdDfBjhTTAbINUFIxKZmlaIegP3lBGXeTkL8mmZ8UEED+uqLd8e1Ge8gXAZsjfIKju0r7pzaxA2motcFUs1wMDfcHPnb9rVl1nxUuJ6kN89BjIa3k/AxxtvM7CY4Tr25RMUAtI5bKUwXI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=iWpOku4t; arc=fail smtp.client-ip=52.101.84.59
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="J9ggi8cb"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="iWpOku4t"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fyVAC+SjOYg+31u/pdBO/ZOFQ3MJxKPMDa6MhjLq94JPzgRnZPcslV51voAeAhZ9CGbJfe2cxF/BaUW3CjUYifoid9K8dZ1jzPH5Iu54Lv3ZvibSYZqWzaFx8G5hkZRYipjBJ5Jb8oQW0K9X9Vau49kQKvENjbXSIOLoqU4Ed76dxT7T5xED/pMAIbcEsQtsS/jjxgKjlsKexm4+6MgCZDGpK7p5DeUW7x0tikX3BMj11RX0EhEW8+IAdQDhTscwSS8v7gkq69MNwL0WBkYQRwP9cucelebFSyUQQsJeGc0iscIpZdSU9OA096Iqd2KwPmCEt2AQpQCqCx9Vk8chPA==
+ b=v7b7U+aVYKV8TtA9sXiDAGnvSL2szOYq6MgTVwbScG6LpC9IupItwvf4TfUs+cra9zLNjunA6WlQkEwdEO2lq1TMsurSpAPwf88OVDj5PQYWSBeYHXHgMUjo//6axP+bUh/QiZpDYuPRBbQB/2EE4uuMQKWp3YYcL1NqIgnzm9GrnxUZ6lHqsG7XYCELFrUznsg6imAGB8KYM5OkaadGpjma4iE68s8lQ9Ia7FDC21hHu459CPT8fuL8eV7NiTYNZEZocJUn23tP/TA/0UOmQiegRbPD5sYwqP0LNEE3Pn59k76HLVjwuGnvR9SsYPdvV+mqGnEladWkW2x463nfUw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=TPoH1RHGzfZ7k8jDruBCnxR5QrAzhYdS8XC0nr6KJy8=;
- b=XpglDFK2n2DMBCHiUpjWDACDjAEkYyWyBSm6R5wUNsvJCoINX2bJirlyNjtP+zzE4o2zK8RVkUhvImd6uvjsCo6FxhJ5CXyzBY6skdQNxTJqlKZzCpVdQqOy7T3GAi6AsqwyhX/A6xkmFC1vQKCY1AJAbzJdt/j26ZsdLMOQ6kW79AdaMdMRVtQlvRY30YDEW2sJPbmc2q+EcglxO2M9pqALV0t77TVR0AHx5IJ01eJxv1xjqEFCJ/OBXXiYEwvxpxr0ClbSKZOBHXIH4mC9zc8bBF5mtaEpMPYqZvz1MeubEv+bbXD39G7JuiKHgYqjmUT1xVVoRqscoKq/BOK3pw==
+ bh=Nrl8mbYkc8GncQ8aGaKUuiMS4We8xXjI9cI3oKPj+hs=;
+ b=y7PSPPrOqj91LoFkJFDhZ+M5TkTi4FSznkSY3J63s+TqY+wbLqjI4wZJDwqwe4tNn/1IV0bmRzzIIljy5ERP76TKU6xyUZmK9IE+nxUvhN8iYStA+RJL1e+ERNIboGFnUkIfN6xQZOb3UOEEzPqi0e1D5TDhciZBgDAsh4rGdLDYs+G1pXeWUsO91wktmjDvm3O5GY9t/3WvJOHMvuAKfXLsP3KUAdQz3/ryBZYqES2iuKrlV7nIrjxdbrgCecMqtoCLWQk0vfEl6ECeadJm61aJxMdKbCMwyxJMBDqs1IaK8FVxBMoflc+GTf9w8K2rJF7kK3cy/933mP3yw7pZ/A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TPoH1RHGzfZ7k8jDruBCnxR5QrAzhYdS8XC0nr6KJy8=;
- b=J9ggi8cbKePufHOFJf13i4AqqriRHGDa1jznDROr0oAaLhwv2I+dqVk0daZz3sCe64kzvXaz0n/LMg0Ki0GgjskiGX7BtrX7xyDk7GROXZ4fkbSk3hbPbmcPUdyqT3rroe1bccRwtGxjN+qyXL9Jq42V6Knr9JWnReX/rN4fkHAzBqiAfn4b90VEt+LokZ9ka3xxK9s234MZ/FJDr+KEK5Xl+oZ0eshklzUXVvaH2VNUpDJwJCfZUQ82LU4LIsX710GScIXEjX0I1JATrEUvHmIdqaljKjrldK83zXLsHJYH4xgCWOv17wH0L4iys9Hwh5EsT62jnWWcsjuUL2ZWDw==
+ bh=Nrl8mbYkc8GncQ8aGaKUuiMS4We8xXjI9cI3oKPj+hs=;
+ b=iWpOku4t9WC5+ATT2AAQcQ+FliSSi1r9Wh0lLJUg9N+Ms+SZVQl8ORaMFgXEM6xefBa/azoX0tMOEFGDZm8ibTvD6DRzU/cE8xuPg9CLGedp0JeZrQDomfKtsO374T8ZgzMl0WxQqCEN6VZ26iqV8MbYTycXBI3NTJMLsOHfE+ReHrLzvWs7/920INhBsukwbvPvreszOej0M6YGBFUTt/NsCYWCil7z5fiHiEPeWBrczHNKbm+ESQ8n3JcnRpMsZpWFQfpz5gKgSxz32b8e0/livTMRz9V+HjKZQTea3wm8NKM5OqRwlIPqRaFNBKmDzq8QFIoqXMZSYNLcxb+R8A==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by AM0PR04MB6850.eurprd04.prod.outlook.com (2603:10a6:208:180::18) with
+ by VI1PR04MB9980.eurprd04.prod.outlook.com (2603:10a6:800:1d0::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Wed, 22 Jul
- 2026 15:22:17 +0000
+ 2026 15:36:55 +0000
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0245.009; Wed, 22 Jul 2026
- 15:22:17 +0000
-Date: Wed, 22 Jul 2026 10:22:08 -0500
+ 15:36:55 +0000
+Date: Wed, 22 Jul 2026 10:36:46 -0500
 From: Frank Li <Frank.li@oss.nxp.com>
-To: Devendra K Verma <devverma@amd.com>, Koichiro Den <den@valinux.co.jp>
-Cc: mani@kernel.org, vkoul@kernel.org, frank.li@kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, michal.simek@amd.com
-Subject: Re: [PATCH v1 3/3] dmaengine: dw-edma: Add changes to support
- Channel Separation
-Message-ID: <amDgIC0ZNGnGibzK@SMW015318>
-References: <20260722111640.1146212-1-devverma@amd.com>
- <20260722111640.1146212-4-devverma@amd.com>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
+	linux-pci@vger.kernel.org, stable+noautosel@kernel.org
+Subject: Re: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async()
+ callback to flush the async read/write
+Message-ID: <amDjjgkVK1clO0l7@SMW015318>
+References: <20260722-mhi-ep-flush-v3-0-d855e715264e@oss.qualcomm.com>
+ <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260722111640.1146212-4-devverma@amd.com>
-X-ClientProxiedBy: SA9PR03CA0010.namprd03.prod.outlook.com
- (2603:10b6:806:20::15) To GV2PR04MB11799.eurprd04.prod.outlook.com
+In-Reply-To: <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
+X-ClientProxiedBy: SA9P221CA0028.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:806:25::33) To GV2PR04MB11799.eurprd04.prod.outlook.com
  (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -66,252 +69,163 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|AM0PR04MB6850:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8f016f79-62bc-4731-0010-08dee80503b6
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI1PR04MB9980:EE_
+X-MS-Office365-Filtering-Correlation-Id: aff292a4-8c30-458d-2dc5-08dee8070f56
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|376014|23010399003|19092799006|22082099003|18002099003|10067099003|56012099006|11063799006|4143699003|6133799003;
+	BCL:0;ARA:13230040|19092799006|376014|7416014|366016|1800799024|23010399003|6133799003|11063799006|10067099003|4143699003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	vyk/p3YM7RY2PFn0AmL03/8ruLJ2t2Go2xByLagmQaMLwm+YUdObOSlJnjsp2o+5c8mUa2GS+JW2iVG4HUHJ+P3lc1+gQUcjzBGerVIGTlAxTVD2uoK20K3VboMe52qOkQVrcJVDWrOTlFwwSm5c40WXkgxzH0ZT2WyXqQ51i8QuQbmjYJeaeStf0G1zK9butBUHQYy2scFz23CoEjH6TNclOUIb9rv3vWXj8gSczbu2CjidxuZJDTo6+yE9Zkcb80tQzxFTv4FIH7VSYHz8JUKwn/dddCq+RNP1pEgz3gdsiY0wSxtUXFnaJ8rXwtdcpQ7WXuL8W5xX4yQDSgt7oOC8SfE3vU1IR9MQ0TepQwsVRfpSVl7Y9hGOB+t8AREU40XtZezdkQ8Wr1JyQFUMY7gJE2J0OqO59uAmFI8CGbb+vg5q3tKWDCzFGYCLTmVhqqnRzpV76JL1jXBScIB2F4G2osuTS8agwEOIXWzljG+ChEuiihWFRvrvthsjwYgfjja+MwzP6W27QbzRYXStWIXLUVTiabnxe2WvCQ3oRuR+XOpqT/RgubJ82sCkam3xd6tIG4j/T5aOgj3vILima+NgouAKpEz/BWSDbP5x/NHGs5ep60vA6LPSA2u1ZFm8YnptFweZUEHLuS/FNiS9g2J08sbnVgBUs23NOwC/QVw=
+	iPyNGXaN90PN9T9nUiIlk16gmZEHBs7CWOBkRKCIC1hH9w31hKmitqDm++i/FwwB8Ud7q7geWG+IYvFmMbC3RY1zjRDBAielFj32BuWRsV6rXRxZqm/7gZQ4arqZ+f60KZE5Wb82H1c8gP9+YxC/8NWHVwZj1N8W2p45SjPe8ZaOkGyXy5mR3fidXV9vwu+7WBmQjm3urMGq19fkM7jQdpW/7mLscmQ59NM2o+R45QYNS+2sOX/DmquszdRUsbvLMRJyCX+mtr3uEIKN/+nbgZ7TWYFTnOQ03vfPuNF1VzNyKHb6hQk5rkC8CZxc08vvEtYtNv4sAk7SYUmU7TT0NDz6OlIoEl/BKyjEEYwPt2mnA4V/3YsRs6lumgVWL0JfY+SbUnHu/z3Ukw9O68lPADrYrhr7o1PAM3N+HP58gLxuvOEzAO8LYyn8Xockf2clyuHvyyxTpYpjxJrcedgK0stEaOrzr2mAl5V1C4vPI0fJB/OVs4IA+QYXqr4BFO4Yj7mzNV0U0Dy9VPeg+CCDTXmsrW8IkJe/RitQ6Dsitbm+yMA6tn2W18nKN831hBDlc4RJPRvrBET7ih6/GO352UMUpDV8aYXrVYZldup2L46CqgDCTpxKZeqOd8m4Ars7rlk3tKWwJy9XHs5TH92VCOBA8pD+wKA0pkp7YUffiAs=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(23010399003)(19092799006)(22082099003)(18002099003)(10067099003)(56012099006)(11063799006)(4143699003)(6133799003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(376014)(7416014)(366016)(1800799024)(23010399003)(6133799003)(11063799006)(10067099003)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?8cH4g/p6R6YpVq5sGPduSQo4V/JDHXBtctunD087sfAXWKCMFpOwtOVKkvKm?=
- =?us-ascii?Q?FEPwAkepAzO9GIfhAwy1yAKCGWHaC8lky3EsIXzWBKFFexbAOwD/Oe7KyZI6?=
- =?us-ascii?Q?8CSefNHoeKz42NwgdGuobHQYMDRG8oIHps7fh3ayt4LhtagZyJUOgh84Fq24?=
- =?us-ascii?Q?4ho8DNniKwkwXPfjp5lF/6ve6y8MsvLsvSB6eLWYwxAZ1HmEi/2+gigbIQYN?=
- =?us-ascii?Q?Cw5J54quddPMgteO4UFXJm1f7537vP5qF/vCuu7M/F4va8sfArUS1tzB28qk?=
- =?us-ascii?Q?Z8gWb98QdF437ImnH9KNFhVUCaCyzJhzco4cGkMeganHVRzBVQJ4rKW6Vp0k?=
- =?us-ascii?Q?QYlzC8DnIyYh3d+DokQ96sQ+P9ID3Ti3rYp0hiC+h/1ti1H+egMY5sO8XjDT?=
- =?us-ascii?Q?FBIGriZlzVfGQ/94xE8JeZ2nS55P7IJeCIlEBuR1QqTfxEOac8EWbIZQoexF?=
- =?us-ascii?Q?wAt+daSvSG2XAQDnuWrs06lJdmiZd/X4Eyl+fNz+9YWCBN6kDV4cVgTpK6Pn?=
- =?us-ascii?Q?oTZ1qeoWIKCBbNrFQOP4JnL2gThby4Zhq6lufXIds/qwdhhe+JWfWXjtqFNm?=
- =?us-ascii?Q?CA/Lbz7LT82vp3tZC5SIdZVUFH2jCsjxRQjJBprlS+G+/I3dRt3jCg6kchHf?=
- =?us-ascii?Q?ElGHv/ybFvSvbF53Cf3x0WePe8SMBVAiJ3ymFc9QzQBAwfRzGLV3km1mafO+?=
- =?us-ascii?Q?2AcQ53UQC5NM1mAqMZQQMQS7hVFPy8eolxcbTKxlDp6x4xGiu2vf14Nueog+?=
- =?us-ascii?Q?C8+k452wZAujQPOUSmbmza6Otpzubt1QQcuQOzaY4TTEgqiuTWwvBLA9onTX?=
- =?us-ascii?Q?ZMWrcXT5E/VqWh9jvSxALJBNRpJc7BQUw1fRCDRfxtU2TLUbmERDZ6bIdnT9?=
- =?us-ascii?Q?SwmZRaUs/GN4bW8iXtX92NKa85G/PYQMmVQ77dOK8ZtSj8Ua8+XA0JD9cx+6?=
- =?us-ascii?Q?MygUp7YbnRqJf2zfxGbUFzDC0NZ4H5PHZ70C2JDFvf85g4IrRqvQCyLAfBhy?=
- =?us-ascii?Q?DQFu4jt9pTT8/azmVuSfre1MFsMPPT2KPNt6FH9Q7p39fJIqijo3MuJ4jsni?=
- =?us-ascii?Q?+YvqBg3HLbxh5cTWGeJDiPMjxUkQ4/m7h7RgbdOX8tbBAnWyGxo1XkCbdgQZ?=
- =?us-ascii?Q?pz5Hi61Gs5WiMk0ZhGb3sSraoTpvwfgiu9Xik+gE7kG8qaqXyZ7xjnYzBOJd?=
- =?us-ascii?Q?jO3QSulx6faA6b2H3N1zLMnVdff7jASFjOh/T45Ut1A48uFfqbWgtVpc0tCH?=
- =?us-ascii?Q?8ub72WUtsdmSLIb/2Iei9ffDCb7RHLqakvKFo8RQKkzlKnLYubAw5R3/kUr3?=
- =?us-ascii?Q?bVZueKw2E2vI318xh+gGIJAsETk1rFeH81GdYbAqvPlAnUZOg5hoA7JVl/uR?=
- =?us-ascii?Q?o/0AMY9wS5nmg7+jg0AuOqEpUQnSWcA9SFuRI90ohDQwK4ko4QxPQeQ3R0Mi?=
- =?us-ascii?Q?OZPSJpKZ+lskyd11+/hUnxdUX4J2ZvxKzgQ5EaxXMgUxtEEVjT2Ad5KOBLPN?=
- =?us-ascii?Q?CLEG/KI4DBm0BGbRTQXwHlDPOc/QLKUC1/uOO4ZuoFjsHtgszrG+FuStbRSl?=
- =?us-ascii?Q?fbyouuwkmyob0dwTan0TQIjnP5qK5wPed97Ckbk+kYw23ymRXndRHva8urgD?=
- =?us-ascii?Q?8N4aVPOUoexjBicxN1W+0zXeQSt9o0XdgZP1LyZD4EvlzGAakPmq2BAOs9+7?=
- =?us-ascii?Q?BMAOMPDyhZMCb9jjhtAKtseQjdgRq1OjkIeGulx+NnWWkdFGLCI0vFnigmQD?=
- =?us-ascii?Q?qijAV68jNg1l0tSNo6WakhqcPnrPp69gBqC4jtE3oftZuNUOBNgh?=
+	=?us-ascii?Q?KZG2HC5g+0xOjBkCzd31/uRVDXTYE8m30xQHSZC2U1pdcfbTqIJuAzal0GSS?=
+ =?us-ascii?Q?dpTYTLtyE8CFmKxEUkojcdIo5L6pGv6Q2Z/ImHHNVots5RT1uxlZVG7jWn/I?=
+ =?us-ascii?Q?Ws3wKvuDqo9cgk7/z8z+7d1hTrImkJTYEAqGlfNGKyvdTI585s1Z3WZtzwqJ?=
+ =?us-ascii?Q?iljAp7GjXxy/ea3qzzXZk/Q0Fo1CfFH00yyvZIzhpw0FD0dPYHHZku5p+FtW?=
+ =?us-ascii?Q?v83VRt6dSGR+2TH9GMSLFH/KBCzjtHV/03aA+7NXaMxaT9buMQQO8GyLCeqM?=
+ =?us-ascii?Q?cFfZlmZv1c7La8QXD9XWGi5BMYtcnwQbJ0x1qyjuVtd/kQTblykzB5HHxD+z?=
+ =?us-ascii?Q?VepcqIkltoAecVNRIwuTTUcA4lPr8V2ldBJ66/YDMV6bpRJpgdlAOR8IF3WB?=
+ =?us-ascii?Q?UUw1Jhy8a/OnoCim0ITAxcvXyWUBlKciRyyAjXgJorLO1DVNTUgvQ59jM4QJ?=
+ =?us-ascii?Q?xEBMB2pqLGN2XFEfjHR00IizsXCcN/yFOUnMyZp0OIzo/4Fj7LkdfFxPgaTj?=
+ =?us-ascii?Q?QZHCbKbEtbJtlwsx2a17hzfW0oQbS3/zQSKZgVvgFS/QAciWoebkaQxntQ9+?=
+ =?us-ascii?Q?chdszA4hP4miGVpdTb7dQFZrXylbZTS9tYxn+xTEITRAOdWvN/2JLNGljzJ5?=
+ =?us-ascii?Q?5T4XUDnOz10FfetO5V8cxd1j7rCbmOX1G1QW2Q1Cw9Bw1qde9yW8q4/oyPwN?=
+ =?us-ascii?Q?561ffc3vLzI122gRQG1NTshjTGw7JStKW/dvGTHvpgAiae1LUt+Egsq7L1x5?=
+ =?us-ascii?Q?o9CyN8z7VYzcy6QJ32HF7U4uLpDhyPHHg1A8d5JAOZfVc0zbakNFu9uTwYSK?=
+ =?us-ascii?Q?caQ2WfbzOJ7V14Lf3kpRw2IWm3ja8Fz02xzCakNnCAFIIDfnMjfeLxQjRbqj?=
+ =?us-ascii?Q?qxXdZxEECHU+lvuNawQ5xCnkjmPUF4rxkgpkEhXay4e1mVjQH73vAvdgzILL?=
+ =?us-ascii?Q?2Dz6RvwJQAnaptb1i9Eq6M02Tqjnh3M6FNmuffnjOLcHgGcWD63dK+FThVO+?=
+ =?us-ascii?Q?GCIC/5rPOXycevvtMg043qnvNUoWeYf8qNPRlei+yhb8TCPauHHFUYTEEXP5?=
+ =?us-ascii?Q?L6kFxxvun4XUv12YUoEQ81wYc//afnCXcAXh71hL5Zbyakc0lQ4L5ZNvbtAP?=
+ =?us-ascii?Q?g8wzS/3scQ4vM6JWt3qdq6mb2dOJaikZCAH+bIkAd8SF6qxoKGyBSL9DSJKh?=
+ =?us-ascii?Q?rQLkp8+CSqUhDnkmTPW/eeBBXCSC7H8pIkXp+/h8B2N/uScTyFx6JTKlZshl?=
+ =?us-ascii?Q?l16/uvnHZX7K6+F6uJlANVpvOPNJc7btCvLpp0W9hkYCa2FNwZCNqDxzvNhg?=
+ =?us-ascii?Q?DhVSlB0/5B++wQgbk8C+Q2tUrRsP4D2Hzsrd4qhcIHCNG8LY+X//72xB5U5X?=
+ =?us-ascii?Q?PZZ74VTPp70JCp67pCcaKwIR2f50wKz0JGwaJq/9E5czu8dGsX7K/4GDrRw6?=
+ =?us-ascii?Q?2qXC3I8o8Ei2bwQBangnK+koyDrrMDfc3HAlXy7BSWbS9+pKZX8SCXFT1Zvo?=
+ =?us-ascii?Q?LIM09voMIoqMtKk71h5y6e+JaGo47An6Wq8KEBPbXTPthF9zOCFUWjiS700q?=
+ =?us-ascii?Q?EdoqeszAI7fKKNo0NunoW9SaqHYYx74T1fC63lYqj3pzU35IfdD750mHQ9He?=
+ =?us-ascii?Q?T1VzYwSPY+PXKFCqSt5waJi30SJVfbjyaioYKZATImaWeRQD5cWfIBR1FX80?=
+ =?us-ascii?Q?zNF00cb1qOulR1u9q8OrGmShi1Jgw+rFGxeWkeHaRMdCyTemg6drt9iMR96/?=
+ =?us-ascii?Q?3DyG8qObtWi4qh07aNuely1srLh2IZV8hMsvWeuIlsZH9q5d+f2X?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8f016f79-62bc-4731-0010-08dee80503b6
+X-MS-Exchange-CrossTenant-Network-Message-Id: aff292a4-8c30-458d-2dc5-08dee8070f56
 X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 15:22:16.9683
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 15:36:55.5681
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: eanOQHDAnkvHV8qucsE/Q8IACiVuhOaW+PsCJDmTaU1XknkhOBbQE+UclSnvLNFy7/NhiaUduv96ej6+CTawDlc0jPFCO9KOdwq3UhN9LE4h1UW3Ij4o+L59JJIDUAUY
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6850
+X-MS-Exchange-CrossTenant-UserPrincipalName: CMFjuQOgOgWD6ksvV3CyO1duxNge1TaI0mZjUAsSuQ3OTkDSQfFLT838esDEQVId8WfiYj4XpwPaca+exOlfnOv30wP+JKXWZo9mNGSMijcxBR8p6xwa9pIX6GxkRVUf
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB9980
 
-On Wed, Jul 22, 2026 at 04:46:40PM +0530, Devendra K Verma wrote:
-
-Add Koichiro Den, who did many work with this edma driver recently
-
-> Following changes are made:
-> o In 'struct dw_hdma_v0_ch_regs', it is assumed the channel
->   separation as 256-bytes which is default, but if an IP is
-
-channel register space size?
-
->   configured for a different size of channel separation then
->   user can retrieve it using the supported VSEC (0x6).
->   Modified the struct to work with the channel separation
->   supported by IP.
->   CPM6 supports channel separation, default is 512.
-
-
-> o Changes in macros / functions where address of the channel
->   is accessed based on channel index and direction. It enables
->   the calculation of the channel reg base address based on
->   the selected channel separation.
-> o Struct removed - dw_hdma_v0_ch, dw_hdma_v0_regs
-> o Functions removed - __dw_regs()
-
-Can you summary change and purpose? such as
-
-Support difference channel register space size for difference IP. Previous
-use fix default value 256, CMP6 support difference register space size,
-which default value is 512.
-
-Update channel register base address caluator method by use ch_space_sze
-and remove unused dw_hdma_v0_ch, dw_hdma_v0_regs.
-
-You can rephrase.
-
+On Wed, Jul 22, 2026 at 07:54:44AM +0200, Manivannan Sadhasivam via B4 Relay wrote:
+> [You don't often get email from devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
 >
-> Signed-off-by: Devendra K Verma <devverma@amd.com>
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+>
+> MHI EP stack makes use of the MHI controller drivers like MHI EPF to do
+> read/write to the host memory. And that driver is free to use mechanisms
+> like DMA to offload the read/write operations.
+>
+> So if DMA is used for offload, then there is no guarantee that those DMA
+> operations would be completed by the time mhi_ep_remove() gets called. This
+> can lead to UAF (Use-After-Free) issues as the DMA callback can trigger
+> xfer_cb() even after mhi_ep_remove() has returned.
+>
+> So to fix this issue, introduce the mhi_cntrl->flush_async() callback and
+> call it in mhi_ep_remove() to drain all the in-flight async transfers
+> before disconnecting the channels.
+>
+> The completion handlers keep triggering xfer_cb() as long as it is set. So
+> flushing the transfers after notifying the client about the disconnect
+> (-ENOTCONN) would still let a success callback slip through afterwards and
+> lead to the same UAF. So disable the channels first to prevent new
+> transfers, then flush the in-flight transfers so that their completions are
+> delivered while xfer_cb() is still valid and only then notify the
+> disconnect and clear xfer_cb().
+>
+> Cc: <stable+noautosel@kernel.org> # Needs dmaengine driver fix as well
+> Fixes: 2547beb00ddb ("bus: mhi: ep: Add support for async DMA read operation")
+> Fixes: ee08acb58fe4 ("bus: mhi: ep: Add support for async DMA write operation")
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  drivers/dma/dw-edma/dw-edma-pcie.c       |  4 ++++
->  drivers/dma/dw-edma/dw-hdma-v0-core.c    | 23 ++++++++++++++---------
->  drivers/dma/dw-edma/dw-hdma-v0-debugfs.c | 17 ++++++-----------
->  drivers/dma/dw-edma/dw-hdma-v0-regs.h    | 10 ----------
->  include/linux/dma/edma.h                 |  1 +
->  5 files changed, 25 insertions(+), 30 deletions(-)
->
-> diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-> index 6295d01ba2f7..ca2a4be2f3a5 100644
-> --- a/drivers/dma/dw-edma/dw-edma-pcie.c
-> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-> @@ -113,6 +113,7 @@ static const struct dw_edma_pcie_data snps_edda_data = {
->  	.irqs				= 1,
->  	.wr_ch_cnt			= 2,
->  	.rd_ch_cnt			= 2,
-> +	.ch_sep_sz			= 256,
->  };
->
->  static const struct dw_edma_pcie_data xilinx_mdb_data = {
-> @@ -126,6 +127,7 @@ static const struct dw_edma_pcie_data xilinx_mdb_data = {
->  	.irqs				= 1,
->  	.wr_ch_cnt			= 8,
->  	.rd_ch_cnt			= 8,
-> +	.ch_sep_sz			= 256,
->  };
->
->  static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
-> @@ -139,6 +141,7 @@ static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
->  	.irqs				= 1,
->  	.wr_ch_cnt			= 8,
->  	.rd_ch_cnt			= 8,
-> +	.ch_sep_sz			= 512,
->  };
->
->  static void dw_edma_set_chan_region_offset(struct dw_edma_pcie_data *pdata,
-> @@ -443,6 +446,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
->  	chip->nr_irqs = nr_irqs;
->  	chip->ops = &dw_edma_pcie_plat_ops;
->  	chip->cfg_non_ll = non_ll;
-> +	chip->ch_sep_sz = vsec_data->ch_sep_sz;
 
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
-This blocks PCI endpoint DMA, this driver is not only used by this.
-EPC controller will not set this value, so ch_sep_sz will be 0 for EPC
-controller.
-
-Frank
-
+>  drivers/bus/mhi/ep/main.c | 18 +++++++++++++++++-
+>  include/linux/mhi_ep.h    |  2 ++
+>  2 files changed, 19 insertions(+), 1 deletion(-)
 >
->  	chip->ll_wr_cnt = vsec_data->wr_ch_cnt;
->  	chip->ll_rd_cnt = vsec_data->rd_ch_cnt;
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> index 632abb8b481c..3f27a93c4d8c 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> @@ -23,18 +23,23 @@ enum dw_hdma_control {
->  	DW_HDMA_V0_LLE					= BIT(9),
->  };
->
-> -static inline struct dw_hdma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
-> -{
-> -	return dw->chip->reg_base;
-> -}
-> -
->  static inline struct dw_hdma_v0_ch_regs __iomem *
->  __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
+> diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
+> index 0277e1ab1198..b94c571f01d8 100644
+> --- a/drivers/bus/mhi/ep/main.c
+> +++ b/drivers/bus/mhi/ep/main.c
+> @@ -1612,6 +1612,7 @@ static void mhi_ep_remove(struct device *dev)
 >  {
-> -	if (dir == EDMA_DIR_WRITE)
-> -		return &(__dw_regs(dw)->ch[ch].wr);
-> -	else
-> -		return &(__dw_regs(dw)->ch[ch].rd);
-> +	u32 ch_base;
+>         struct mhi_ep_device *mhi_dev = to_mhi_ep_device(dev);
+>         struct mhi_ep_driver *mhi_drv = to_mhi_ep_driver(dev->driver);
+> +       struct mhi_ep_cntrl *mhi_cntrl = mhi_dev->mhi_cntrl;
+>         struct mhi_result result = {};
+>         struct mhi_ep_chan *mhi_chan;
+>         int dir;
+> @@ -1620,6 +1621,22 @@ static void mhi_ep_remove(struct device *dev)
+>         if (mhi_dev->dev_type == MHI_DEVICE_CONTROLLER)
+>                 return;
+>
+> +       /* Disable the channels to prevent new transfers */
+> +       for (dir = 0; dir < 2; dir++) {
+> +               mhi_chan = dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
 > +
-> +	/*
-> +	 * For Write, the channel register index starts at
-> +	 * wr_base(ch_idx) = (2 * ch_idx) * ch_sep_sz
-> +	 *
-> +	 * For Read channel,
-> +	 * rd_base(ch_idx) = (2 * ch_idx + 1) * ch_sep_sz
-> +	 */
-> +	ch_base = 2 * ch;
-> +	if (dir == EDMA_DIR_READ)
-> +		ch_base += 1;
+> +               if (!mhi_chan)
+> +                       continue;
 > +
-> +	return dw->chip->reg_base + (ch_base * dw->chip->ch_sep_sz);
->  }
+> +               mutex_lock(&mhi_chan->lock);
+> +               mhi_chan->state = MHI_CH_STATE_DISABLED;
+> +               mutex_unlock(&mhi_chan->lock);
+> +       }
+> +
+> +       /* Flush in-flight transfers before notifying disconnect */
+> +       if (mhi_cntrl->flush_async)
+> +               mhi_cntrl->flush_async(mhi_cntrl);
+> +
+>         /* Disconnect the channels associated with the driver */
+>         for (dir = 0; dir < 2; dir++) {
+>                 mhi_chan = dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
+> @@ -1635,7 +1652,6 @@ static void mhi_ep_remove(struct device *dev)
+>                         mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
+>                 }
 >
->  #define SET_CH_32(dw, dir, ch, name, value) \
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
-> index dcdc57fe976c..33128685bbd9 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
-> @@ -13,22 +13,17 @@
->  #include "dw-hdma-v0-regs.h"
->  #include "dw-edma-core.h"
+> -               mhi_chan->state = MHI_CH_STATE_DISABLED;
+>                 mhi_chan->xfer_cb = NULL;
+>                 mutex_unlock(&mhi_chan->lock);
+>         }
+> diff --git a/include/linux/mhi_ep.h b/include/linux/mhi_ep.h
+> index 7b40fc8cbe77..f6383a57a872 100644
+> --- a/include/linux/mhi_ep.h
+> +++ b/include/linux/mhi_ep.h
+> @@ -107,6 +107,7 @@ struct mhi_ep_buf_info {
+>   * @write_sync: CB function for writing to host memory synchronously
+>   * @read_async: CB function for reading from host memory asynchronously
+>   * @write_async: CB function for writing to host memory asynchronously
+> + * @flush_async: CB function for flushing asynchronous read/writes
+>   * @mhi_state: MHI Endpoint state
+>   * @max_chan: Maximum channels supported by the endpoint controller
+>   * @mru: MRU (Maximum Receive Unit) value of the endpoint controller
+> @@ -164,6 +165,7 @@ struct mhi_ep_cntrl {
+>         int (*write_sync)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+>         int (*read_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+>         int (*write_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
+> +       void (*flush_async)(struct mhi_ep_cntrl *mhi_cntrl);
 >
-> -#define REGS_ADDR(dw, name)						       \
-> -	({								       \
-> -		struct dw_hdma_v0_regs __iomem *__regs = (dw)->chip->reg_base; \
-> -									       \
-> -		(void __iomem *)&__regs->name;				       \
-> -	})
-> -
->  #define REGS_CH_ADDR(dw, name, _dir, _ch)				       \
->  	({								       \
-> -		struct dw_hdma_v0_ch_regs __iomem *__ch_regs;		       \
-> +		struct dw_hdma_v0_ch_regs __iomem *__ch_regs;                  \
-> +		off_t __off = (dw)->chip->ch_sep_sz;			       \
->  									       \
-> -		if (_dir == EDMA_DIR_READ)				       \
-> -			__ch_regs = REGS_ADDR(dw, ch[_ch].rd);		       \
-> +		if ((_dir) == EDMA_DIR_READ)				       \
-> +			__off *= (2 * (_ch) + 1);			       \
->  		else							       \
-> -			__ch_regs = REGS_ADDR(dw, ch[_ch].wr);		       \
-> +			__off *= (2 * (_ch));				       \
->  									       \
-> +		__ch_regs = ((dw)->chip->reg_base + __off);		       \
->  		(void __iomem *)&__ch_regs->name;			       \
->  	})
+>         enum mhi_state mhi_state;
 >
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> index 7759ba9b4850..2475b8d96133 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> @@ -84,16 +84,6 @@ struct dw_hdma_v0_ch_regs {
->  		};
->  	} msi_abort;
->  	u32 msi_msgdata;			/* 0x00a8 */
-> -	u32 padding_2[21];			/* 0x00ac..0x00fc */
-> -} __packed;
-> -
-> -struct dw_hdma_v0_ch {
-> -	struct dw_hdma_v0_ch_regs wr;		/* 0x0000 */
-> -	struct dw_hdma_v0_ch_regs rd;		/* 0x0100 */
-> -} __packed;
-> -
-> -struct dw_hdma_v0_regs {
-> -	struct dw_hdma_v0_ch ch[HDMA_V0_MAX_NR_CH];	/* 0x0000..0x0fa8 */
->  } __packed;
 >
->  struct dw_hdma_v0_lli {
-> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> index 1fafd5b0e315..a6c5728f03d3 100644
-> --- a/include/linux/dma/edma.h
-> +++ b/include/linux/dma/edma.h
-> @@ -104,6 +104,7 @@ struct dw_edma_chip {
->
->  	struct dw_edma		*dw;
->  	bool			cfg_non_ll;
-> +	u32			ch_sep_sz;
->  };
->
->  /* Export to the platform drivers */
 > --
 > 2.43.0
+>
 >
