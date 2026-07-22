@@ -1,48 +1,48 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010059.outbound.protection.outlook.com [52.101.84.59])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010030.outbound.protection.outlook.com [52.101.84.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E6443BDAF;
-	Wed, 22 Jul 2026 15:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6B763B6BF4;
+	Wed, 22 Jul 2026 15:38:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.30
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784734620; cv=fail; b=B7wDYTnnZySS7xkJaXuJdts6hJn4AXeGPn4u1+pNSGSv7Lik6pvcbI5tlUU51bKKEjg6Um8ZWFz1ugHzktC1DT+bKLOJSJBoJ2rBcH2Wdl+sTHZQVLE0Y0n/M1bK41s1qeg7B9aybB+KWOxlkfgrV9KGcs4wd9jauyRVrY7jZWM=
+	t=1784734721; cv=fail; b=YStwdmmNAmfvap4pHqBq3PCQ11lBPzcjPUV67/uDC447/2XRx4RtubHRTImtA3TjEXTvov5P5nv50cKoPVcd1dXTAkhq328E+1S4rbxGYUnkOK/W9YmUFrfrM4LCySUNBT9G7XdGKhXZynYOgS7irQHU0H3mglby4To83JbocwQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784734620; c=relaxed/simple;
-	bh=dyAYfGo8eYC8ACZgfmtjNRCB56X7MrRxO9wItTJ0XHw=;
+	s=arc-20240116; t=1784734721; c=relaxed/simple;
+	bh=We4oVEPiP27yZ0nscDq056BK1Pmgo/Z816qX+aU3NMU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=EsDAF5pf4U5f0TvDltBb7kLuIXmzb4NdDfBjhTTAbINUFIxKZmlaIegP3lBGXeTkL8mmZ8UEED+uqLd8e1Ge8gXAZsjfIKju0r7pzaxA2motcFUs1wMDfcHPnb9rVl1nxUuJ6kN89BjIa3k/AxxtvM7CY4Tr25RMUAtI5bKUwXI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=iWpOku4t; arc=fail smtp.client-ip=52.101.84.59
+	 Content-Disposition:In-Reply-To:MIME-Version; b=E4S0SFGnQzfzMTLrR1073ipAV/QyLXNa2iYosAWBvc+U/f7bllNVqE0Hs6raIDDO2oc+0p9/7Q1QgCF7DA+uBywWJRKhhXBO0So343m9N+BFQCgN6FmY8Iw5IVmNHChX/whGQWfpjp5h0OeawopzNuk5v8miqr5Y+ovXLxjTTUY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=VKfNxcYC; arc=fail smtp.client-ip=52.101.84.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="iWpOku4t"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="VKfNxcYC"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=v7b7U+aVYKV8TtA9sXiDAGnvSL2szOYq6MgTVwbScG6LpC9IupItwvf4TfUs+cra9zLNjunA6WlQkEwdEO2lq1TMsurSpAPwf88OVDj5PQYWSBeYHXHgMUjo//6axP+bUh/QiZpDYuPRBbQB/2EE4uuMQKWp3YYcL1NqIgnzm9GrnxUZ6lHqsG7XYCELFrUznsg6imAGB8KYM5OkaadGpjma4iE68s8lQ9Ia7FDC21hHu459CPT8fuL8eV7NiTYNZEZocJUn23tP/TA/0UOmQiegRbPD5sYwqP0LNEE3Pn59k76HLVjwuGnvR9SsYPdvV+mqGnEladWkW2x463nfUw==
+ b=p+z9ZCFRVBr6Ks+lNzLKYdqdD1R+2IBb5y+1OHqLQEtE/dGzhY0sav5osm6LOyouh+YILaMQjfBEkkDC7ZcGyKMzA2YxthrkLpFwQegAcdFCW+BcrHeb+8joF+T44CN7kpkDhhCIuGgOvgV211+2jIHI2X2sBQdSp3D+WRIu2NszlG/1QyL/jpd75HWD1+g67J6FGfxZAEsNF6N2YOifmS8Pw3BU8fuIxar7Q+sXXIlYjbSkKEcN5/YMqm3C/S5jrB72HZaIsdKvpSxGs+Ijxku59amkCWMl8wvSl7jmmiKDeeECV5Q8/KuXvE6cwj5n3LQa3l2ZNtav6KIMtD3OcA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Nrl8mbYkc8GncQ8aGaKUuiMS4We8xXjI9cI3oKPj+hs=;
- b=y7PSPPrOqj91LoFkJFDhZ+M5TkTi4FSznkSY3J63s+TqY+wbLqjI4wZJDwqwe4tNn/1IV0bmRzzIIljy5ERP76TKU6xyUZmK9IE+nxUvhN8iYStA+RJL1e+ERNIboGFnUkIfN6xQZOb3UOEEzPqi0e1D5TDhciZBgDAsh4rGdLDYs+G1pXeWUsO91wktmjDvm3O5GY9t/3WvJOHMvuAKfXLsP3KUAdQz3/ryBZYqES2iuKrlV7nIrjxdbrgCecMqtoCLWQk0vfEl6ECeadJm61aJxMdKbCMwyxJMBDqs1IaK8FVxBMoflc+GTf9w8K2rJF7kK3cy/933mP3yw7pZ/A==
+ bh=usU3UBdE4qZHU2qFpWHLnG5+J8xpyS+crCF7OeoPLJQ=;
+ b=aVG1PZuc6RX3D1jyowTXs5tIHNLx8eBEce6pIH6JAL16NnBZpxC9nBWsl3M12d1DKdcoyhmVb3xRUn8GjcP9FQBf0vuA3HGypo/5F8xh9RtHUr2UY3BhEn2vijiYaUg+2o4IvXqhvWB5XW6sSFQAWHXuZh44mhS2RBncvo57liMqTWzmZMI1XIfWeJJ9YKw0Uto+/uA3EJCEbxNnBNHBbSAbIwfR/Z4679YYynV6WjMimtrkt7v+9ez3ES/nuAM59S82dzVZuSxt3tWIcQs2A225ckzoEst9TaLuhvZrFk6cZVrHwpUbNrmtpi6oX+CiFcARWmzd++/iIj/AzuqKYg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Nrl8mbYkc8GncQ8aGaKUuiMS4We8xXjI9cI3oKPj+hs=;
- b=iWpOku4t9WC5+ATT2AAQcQ+FliSSi1r9Wh0lLJUg9N+Ms+SZVQl8ORaMFgXEM6xefBa/azoX0tMOEFGDZm8ibTvD6DRzU/cE8xuPg9CLGedp0JeZrQDomfKtsO374T8ZgzMl0WxQqCEN6VZ26iqV8MbYTycXBI3NTJMLsOHfE+ReHrLzvWs7/920INhBsukwbvPvreszOej0M6YGBFUTt/NsCYWCil7z5fiHiEPeWBrczHNKbm+ESQ8n3JcnRpMsZpWFQfpz5gKgSxz32b8e0/livTMRz9V+HjKZQTea3wm8NKM5OqRwlIPqRaFNBKmDzq8QFIoqXMZSYNLcxb+R8A==
+ bh=usU3UBdE4qZHU2qFpWHLnG5+J8xpyS+crCF7OeoPLJQ=;
+ b=VKfNxcYCnNli27HopeEeHxqUUKBb2F8Z4QWslzi/n5Nr9eG7OI1d+aZfnT6m7nzBIN5ouxRkF7pp1GDXqAFxP5i7hUc+642Ccr6UV1AFDPB3xUUyIOGNZSsK3K3c094jxUZI0oH74sbHggsxHnskz4lETLu9m1qUNFtBfZ3wg0iYHTj7K6LkpPllyo2/Q0uW/WqGRD73O2wclKDNCCnAuVm+s0+BZxB98tlt6JUIxYUXJlpwnQfjxwhvs4LpmtxChZopN6EuGo3ycPv0ei9tZigLqHj1cAxz6ILaWGPCKCq2oCpISYS/cA2oPD0Mi2GFwOIaOzLzp1jB/uOIYmwSmw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
  by VI1PR04MB9980.eurprd04.prod.outlook.com (2603:10a6:800:1d0::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Wed, 22 Jul
- 2026 15:36:55 +0000
+ 2026 15:38:34 +0000
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0245.009; Wed, 22 Jul 2026
- 15:36:55 +0000
-Date: Wed, 22 Jul 2026 10:36:46 -0500
+ 15:38:34 +0000
+Date: Wed, 22 Jul 2026 10:38:25 -0500
 From: Frank Li <Frank.li@oss.nxp.com>
 To: manivannan.sadhasivam@oss.qualcomm.com
 Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@kernel.org>,
@@ -50,17 +50,17 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@kernel.org>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
 	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-	linux-pci@vger.kernel.org, stable+noautosel@kernel.org
-Subject: Re: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async()
- callback to flush the async read/write
-Message-ID: <amDjjgkVK1clO0l7@SMW015318>
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 2/3] bus: mhi: ep: Flush async transfers before
+ notifying disconnect in mhi_ep_abort_transfer()
+Message-ID: <amDj8aKgZCh8j3wX@SMW015318>
 References: <20260722-mhi-ep-flush-v3-0-d855e715264e@oss.qualcomm.com>
- <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
+ <20260722-mhi-ep-flush-v3-2-d855e715264e@oss.qualcomm.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
-X-ClientProxiedBy: SA9P221CA0028.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:806:25::33) To GV2PR04MB11799.eurprd04.prod.outlook.com
+In-Reply-To: <20260722-mhi-ep-flush-v3-2-d855e715264e@oss.qualcomm.com>
+X-ClientProxiedBy: SA9PR13CA0028.namprd13.prod.outlook.com
+ (2603:10b6:806:21::33) To GV2PR04MB11799.eurprd04.prod.outlook.com
  (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -70,118 +70,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI1PR04MB9980:EE_
-X-MS-Office365-Filtering-Correlation-Id: aff292a4-8c30-458d-2dc5-08dee8070f56
+X-MS-Office365-Filtering-Correlation-Id: 1ae5be98-7bb8-4d0f-f83c-08dee8074a79
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|19092799006|376014|7416014|366016|1800799024|23010399003|6133799003|11063799006|10067099003|4143699003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	iPyNGXaN90PN9T9nUiIlk16gmZEHBs7CWOBkRKCIC1hH9w31hKmitqDm++i/FwwB8Ud7q7geWG+IYvFmMbC3RY1zjRDBAielFj32BuWRsV6rXRxZqm/7gZQ4arqZ+f60KZE5Wb82H1c8gP9+YxC/8NWHVwZj1N8W2p45SjPe8ZaOkGyXy5mR3fidXV9vwu+7WBmQjm3urMGq19fkM7jQdpW/7mLscmQ59NM2o+R45QYNS+2sOX/DmquszdRUsbvLMRJyCX+mtr3uEIKN/+nbgZ7TWYFTnOQ03vfPuNF1VzNyKHb6hQk5rkC8CZxc08vvEtYtNv4sAk7SYUmU7TT0NDz6OlIoEl/BKyjEEYwPt2mnA4V/3YsRs6lumgVWL0JfY+SbUnHu/z3Ukw9O68lPADrYrhr7o1PAM3N+HP58gLxuvOEzAO8LYyn8Xockf2clyuHvyyxTpYpjxJrcedgK0stEaOrzr2mAl5V1C4vPI0fJB/OVs4IA+QYXqr4BFO4Yj7mzNV0U0Dy9VPeg+CCDTXmsrW8IkJe/RitQ6Dsitbm+yMA6tn2W18nKN831hBDlc4RJPRvrBET7ih6/GO352UMUpDV8aYXrVYZldup2L46CqgDCTpxKZeqOd8m4Ars7rlk3tKWwJy9XHs5TH92VCOBA8pD+wKA0pkp7YUffiAs=
+	OiUht2/QldhHug7zNcYY7zkA4o2qRGTF9EmV0Tu8pLKn6+GVEhol4BkiDx8ZlRmEYLBu/2NNpng5SLcHO028FR7C0W2FxtqLLZbI+NwVvyrrdnw8tYHrcqoVNkr0g2VqNbyqNO1MK37zECplYxnuTmbc3tlsJ6bOaIpgRfY2JklqWaiO6MCit97Iho9wQMC7NK4K7EyHnoP5UYt1Prt/akbYYouOJgELwI2Unc8enGtKGh32/pSuxnp5f9i05l8KNWmw8pbYIyF03rDxVtkdE5z2gewhC84ezEs27/Bw6AXs9AnBs+6PlWbYEWYcTOQJ9UltG2On5LjCLIpVwUofqJ0JFBzvFghxEQCKJwB7KT+0gsEs8AJPAmONmWLoa2HpXfDv9ThgZ2YN4zPN/KpHFhvgI6UlpEDYBtAFt2+a+SzbO2qUjQDJ3wagXOGMuhM/yjfQ0bQAjPfvGE/pTJJcBawzQfXGgv2dIcZgraAju/O7k3+/7ZjHcQGHl67fk/DUtYA0O432oh9egok15rn+FR5wEe2D65MvHacKgCXBQ9GE6GADdKdqIuPdH/ukKzQ3lYhoDjPqVJozyLFLKcTsXu2ZuhY4ffcvKyLJsed41y9/RhnkJPB8Y4S4DRlGrsnEAMD/tOd0kzIdrZ/ADQIox1O84NEXSC0Vgsfp8UAab4k=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(376014)(7416014)(366016)(1800799024)(23010399003)(6133799003)(11063799006)(10067099003)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?KZG2HC5g+0xOjBkCzd31/uRVDXTYE8m30xQHSZC2U1pdcfbTqIJuAzal0GSS?=
- =?us-ascii?Q?dpTYTLtyE8CFmKxEUkojcdIo5L6pGv6Q2Z/ImHHNVots5RT1uxlZVG7jWn/I?=
- =?us-ascii?Q?Ws3wKvuDqo9cgk7/z8z+7d1hTrImkJTYEAqGlfNGKyvdTI585s1Z3WZtzwqJ?=
- =?us-ascii?Q?iljAp7GjXxy/ea3qzzXZk/Q0Fo1CfFH00yyvZIzhpw0FD0dPYHHZku5p+FtW?=
- =?us-ascii?Q?v83VRt6dSGR+2TH9GMSLFH/KBCzjtHV/03aA+7NXaMxaT9buMQQO8GyLCeqM?=
- =?us-ascii?Q?cFfZlmZv1c7La8QXD9XWGi5BMYtcnwQbJ0x1qyjuVtd/kQTblykzB5HHxD+z?=
- =?us-ascii?Q?VepcqIkltoAecVNRIwuTTUcA4lPr8V2ldBJ66/YDMV6bpRJpgdlAOR8IF3WB?=
- =?us-ascii?Q?UUw1Jhy8a/OnoCim0ITAxcvXyWUBlKciRyyAjXgJorLO1DVNTUgvQ59jM4QJ?=
- =?us-ascii?Q?xEBMB2pqLGN2XFEfjHR00IizsXCcN/yFOUnMyZp0OIzo/4Fj7LkdfFxPgaTj?=
- =?us-ascii?Q?QZHCbKbEtbJtlwsx2a17hzfW0oQbS3/zQSKZgVvgFS/QAciWoebkaQxntQ9+?=
- =?us-ascii?Q?chdszA4hP4miGVpdTb7dQFZrXylbZTS9tYxn+xTEITRAOdWvN/2JLNGljzJ5?=
- =?us-ascii?Q?5T4XUDnOz10FfetO5V8cxd1j7rCbmOX1G1QW2Q1Cw9Bw1qde9yW8q4/oyPwN?=
- =?us-ascii?Q?561ffc3vLzI122gRQG1NTshjTGw7JStKW/dvGTHvpgAiae1LUt+Egsq7L1x5?=
- =?us-ascii?Q?o9CyN8z7VYzcy6QJ32HF7U4uLpDhyPHHg1A8d5JAOZfVc0zbakNFu9uTwYSK?=
- =?us-ascii?Q?caQ2WfbzOJ7V14Lf3kpRw2IWm3ja8Fz02xzCakNnCAFIIDfnMjfeLxQjRbqj?=
- =?us-ascii?Q?qxXdZxEECHU+lvuNawQ5xCnkjmPUF4rxkgpkEhXay4e1mVjQH73vAvdgzILL?=
- =?us-ascii?Q?2Dz6RvwJQAnaptb1i9Eq6M02Tqjnh3M6FNmuffnjOLcHgGcWD63dK+FThVO+?=
- =?us-ascii?Q?GCIC/5rPOXycevvtMg043qnvNUoWeYf8qNPRlei+yhb8TCPauHHFUYTEEXP5?=
- =?us-ascii?Q?L6kFxxvun4XUv12YUoEQ81wYc//afnCXcAXh71hL5Zbyakc0lQ4L5ZNvbtAP?=
- =?us-ascii?Q?g8wzS/3scQ4vM6JWt3qdq6mb2dOJaikZCAH+bIkAd8SF6qxoKGyBSL9DSJKh?=
- =?us-ascii?Q?rQLkp8+CSqUhDnkmTPW/eeBBXCSC7H8pIkXp+/h8B2N/uScTyFx6JTKlZshl?=
- =?us-ascii?Q?l16/uvnHZX7K6+F6uJlANVpvOPNJc7btCvLpp0W9hkYCa2FNwZCNqDxzvNhg?=
- =?us-ascii?Q?DhVSlB0/5B++wQgbk8C+Q2tUrRsP4D2Hzsrd4qhcIHCNG8LY+X//72xB5U5X?=
- =?us-ascii?Q?PZZ74VTPp70JCp67pCcaKwIR2f50wKz0JGwaJq/9E5czu8dGsX7K/4GDrRw6?=
- =?us-ascii?Q?2qXC3I8o8Ei2bwQBangnK+koyDrrMDfc3HAlXy7BSWbS9+pKZX8SCXFT1Zvo?=
- =?us-ascii?Q?LIM09voMIoqMtKk71h5y6e+JaGo47An6Wq8KEBPbXTPthF9zOCFUWjiS700q?=
- =?us-ascii?Q?EdoqeszAI7fKKNo0NunoW9SaqHYYx74T1fC63lYqj3pzU35IfdD750mHQ9He?=
- =?us-ascii?Q?T1VzYwSPY+PXKFCqSt5waJi30SJVfbjyaioYKZATImaWeRQD5cWfIBR1FX80?=
- =?us-ascii?Q?zNF00cb1qOulR1u9q8OrGmShi1Jgw+rFGxeWkeHaRMdCyTemg6drt9iMR96/?=
- =?us-ascii?Q?3DyG8qObtWi4qh07aNuely1srLh2IZV8hMsvWeuIlsZH9q5d+f2X?=
+	=?us-ascii?Q?NUGHGJ7k31Y28vP/X9eMsY5flfHdMhTDOtVj6NvBGjytNoedFstWTO+QjqlG?=
+ =?us-ascii?Q?WHIMWZ2SAubCoadC5uTs9oDPgCW3pU6Th8PEa7iPc01O7xs3PSqNc/xCHKzs?=
+ =?us-ascii?Q?2J0460pK1EYEJlKFvp9OewG070gOfWQ/vfSPTX0ZczprzQ3ZBRKR89Cjf8Nz?=
+ =?us-ascii?Q?96OEKHk01+8fs+lB5fFaj/yqIhoy/opuMrMruhEA5aEdFKkc9PHEbI46EiC0?=
+ =?us-ascii?Q?OtGTRrCc9AlwnnTnEqqbkQ+kjDj+K6znny+ATpvRGH86tbaH/i6fra7wUsjN?=
+ =?us-ascii?Q?mhNbZzayjSCjTr8+lwNwiSurqHPksfidox3aUnaRipMJdb8EKN7x+iQPCmuQ?=
+ =?us-ascii?Q?8oKOqfB1JKS74o1yFlXrDYKTC9KIfju38y9WwVcBUgEVYmM3ia+nI7rR1iod?=
+ =?us-ascii?Q?kY0TAG+P1lmxCAzAY1CsRm+dxrdavUSEUI2ZCM98x5elg4SHrh0zgNQlTAG/?=
+ =?us-ascii?Q?g42R+W7lQikIHqku9lLuG2MDYK8Wgrw+H8i/mqZ41rN/Js2ELj3y/PBjBZch?=
+ =?us-ascii?Q?4/AHNGDR7RhsxutACoFOLQeRNKPXhh3u4Ve06QuxNRcS8hGYhV7CudR3F/5d?=
+ =?us-ascii?Q?pSMjRYgsoa8uOomXNbS+eqWsBTPj38+ZsUq51M/JUcqHfJGpbqXOcEho/h6A?=
+ =?us-ascii?Q?gVmW6WFh5NM+D+RJhXDRoe4jTCp0fLIthlb9KJZzdWJDYoBuEmKuMUt0uc0T?=
+ =?us-ascii?Q?ibmV9eEPn4I1NBzWYb2ogDmJ7YT7lnNBiObRlTTF0FLNe+vaJefiDAPmpWCg?=
+ =?us-ascii?Q?LAuTo8SLh8UO+mynhZZOPT2cJ299cxevZdRuQICW9vFjRg2REFG0/xA9m7Kb?=
+ =?us-ascii?Q?EbARPe9kze7LpBE/LfUrDIo21uSONYw6txZJOazR97yv6e/5zKU4ZyCXcHe+?=
+ =?us-ascii?Q?xteJmNKfR8zfFhSJmJYL++vmdL+FKd6iXLU/2kvcob21X0dCcr6JbjTNfqMv?=
+ =?us-ascii?Q?BAR3gRmUTdY78rPgEVYlq12cK5YF5gI5Yv2odZjP434LfS4i/B6CeKHkJSsQ?=
+ =?us-ascii?Q?FHgNKZUIitL4256J+8jBodPU7vLd1+rF45gyOYI8DYa/40EN1xFn8R8PLoaK?=
+ =?us-ascii?Q?zSC9JjakCk4H0fDxMiNr73VIdn0YHPettA0M6zuyzd05xeZyhgtWRnNVYsNQ?=
+ =?us-ascii?Q?X3S5FfU0b5TWKBuufs5Pr5L7rCWJC6f0ZQcIRzOdaakAiuASz9uH358X9cWr?=
+ =?us-ascii?Q?GKw8hBLNFcn63RJVhzcD7N2qmrcZuzB+SNFOoCtvwoNyJfucWIUEvqZlSFH5?=
+ =?us-ascii?Q?RQjj8lI1by531t1mSzcCiS4m7+FUZz8GwAMD/NQaui1Dx/VIouLPPBwGBBGG?=
+ =?us-ascii?Q?2xm5S5LlNoMZibtE5VyqHjDE94C88sEJoScx432sKQ98elGZKWPYLi2DHHrm?=
+ =?us-ascii?Q?XkJZzs1w8D+1xLJH1Flt/leqXz9R1mKALqHjSCSABu0KstnrYtjDEI6HTlzV?=
+ =?us-ascii?Q?D9HxNjIs0Frk9Ue+E9uGraZ+VZfQyG9bsOSs7q2SzfZUIWCg4yVWufeuOFKc?=
+ =?us-ascii?Q?Nl/YjWibX/8ERPGovcMFCrMximOHAg9SVO4t9DjrPdBcKx8Pe3eiOaRfA9Tm?=
+ =?us-ascii?Q?vXJZiipqdYW2Q1x3neQdW5Zw3OUyzso1ZnYLugYYYJIlJWgb1tQwjYaYBYF6?=
+ =?us-ascii?Q?4LIwO37bloyUtltH1ttIcBVpfYD5uuH0cSVzp4usR/Fs40OFWa5pIGfnvqqs?=
+ =?us-ascii?Q?nddvHCt07321R31PHSizj8vJnf0MhD6ivr0UdsfGH+7ol8MpCd0vPhGz/07O?=
+ =?us-ascii?Q?Nq8cnbEg5607chJtwqGZpBH8og7adKScOQ1uRBN3KPporFDBq7KW?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aff292a4-8c30-458d-2dc5-08dee8070f56
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1ae5be98-7bb8-4d0f-f83c-08dee8074a79
 X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 15:36:55.5681
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 15:38:34.7912
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CMFjuQOgOgWD6ksvV3CyO1duxNge1TaI0mZjUAsSuQ3OTkDSQfFLT838esDEQVId8WfiYj4XpwPaca+exOlfnOv30wP+JKXWZo9mNGSMijcxBR8p6xwa9pIX6GxkRVUf
+X-MS-Exchange-CrossTenant-UserPrincipalName: tTOXuQ7phIuh3LWuO4NC+TwsDnGTIXBgPnHoIbU6xmgo5xMC+g5sJe0DR/4irnfOuWaBXaPVem3tiHq31eT1IKvqSZUMtBMcRNZJ/C7KQNvo6m3pXE+487Cv3odETzx3
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB9980
 
-On Wed, Jul 22, 2026 at 07:54:44AM +0200, Manivannan Sadhasivam via B4 Relay wrote:
-> [You don't often get email from devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+On Wed, Jul 22, 2026 at 07:54:45AM +0200, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <mani@kernel.org>
 >
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> mhi_ep_abort_transfer() notifies the client drivers about the channel
+> disconnect using -ENOTCONN and only then flushes the ring workqueue to
+> drain the in-flight transfers. But the async DMA transfers issued by the
+> ring workers can still complete after the notification. And the completion
+> handlers trigger the client xfer_cb() as long as it is set.
 >
-> MHI EP stack makes use of the MHI controller drivers like MHI EPF to do
-> read/write to the host memory. And that driver is free to use mechanisms
-> like DMA to offload the read/write operations.
+> So a transfer completing during the flush can deliver a success callback to
+> the client even after it has been notified about the disconnect. This can
+> lead to UAF (Use-After-Free) issues as the client can free its per-transfer
+> resources in response to the -ENOTCONN notification and the trailing
+> success callback would then reference the freed resources.
 >
-> So if DMA is used for offload, then there is no guarantee that those DMA
-> operations would be completed by the time mhi_ep_remove() gets called. This
-> can lead to UAF (Use-After-Free) issues as the DMA callback can trigger
-> xfer_cb() even after mhi_ep_remove() has returned.
+> So to fix this issue, disable all the channels first to prevent new
+> transfers and then drain both the ring workqueue and the in-flight async
+> transfers before notifying the disconnect. The completion and queue paths
+> bail out once the channel state is not MHI_CH_STATE_RUNNING, so disabling
+> the channels upfront makes sure that no new transfer sneaks in during the
+> drain and all the pending completions are delivered while xfer_cb() is
+> still valid.
 >
-> So to fix this issue, introduce the mhi_cntrl->flush_async() callback and
-> call it in mhi_ep_remove() to drain all the in-flight async transfers
-> before disconnecting the channels.
->
-> The completion handlers keep triggering xfer_cb() as long as it is set. So
-> flushing the transfers after notifying the client about the disconnect
-> (-ENOTCONN) would still let a success callback slip through afterwards and
-> lead to the same UAF. So disable the channels first to prevent new
-> transfers, then flush the in-flight transfers so that their completions are
-> delivered while xfer_cb() is still valid and only then notify the
-> disconnect and clear xfer_cb().
->
-> Cc: <stable+noautosel@kernel.org> # Needs dmaengine driver fix as well
-> Fixes: 2547beb00ddb ("bus: mhi: ep: Add support for async DMA read operation")
-> Fixes: ee08acb58fe4 ("bus: mhi: ep: Add support for async DMA write operation")
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
 
 Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
->  drivers/bus/mhi/ep/main.c | 18 +++++++++++++++++-
->  include/linux/mhi_ep.h    |  2 ++
->  2 files changed, 19 insertions(+), 1 deletion(-)
+>  drivers/bus/mhi/ep/main.c | 23 +++++++++++++++++------
+>  1 file changed, 17 insertions(+), 6 deletions(-)
 >
 > diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
-> index 0277e1ab1198..b94c571f01d8 100644
+> index b94c571f01d8..51735f87017f 100644
 > --- a/drivers/bus/mhi/ep/main.c
 > +++ b/drivers/bus/mhi/ep/main.c
-> @@ -1612,6 +1612,7 @@ static void mhi_ep_remove(struct device *dev)
->  {
->         struct mhi_ep_device *mhi_dev = to_mhi_ep_device(dev);
->         struct mhi_ep_driver *mhi_drv = to_mhi_ep_driver(dev->driver);
-> +       struct mhi_ep_cntrl *mhi_cntrl = mhi_dev->mhi_cntrl;
->         struct mhi_result result = {};
+> @@ -1025,26 +1025,37 @@ static void mhi_ep_abort_transfer(struct mhi_ep_cntrl *mhi_cntrl)
 >         struct mhi_ep_chan *mhi_chan;
->         int dir;
-> @@ -1620,6 +1621,22 @@ static void mhi_ep_remove(struct device *dev)
->         if (mhi_dev->dev_type == MHI_DEVICE_CONTROLLER)
->                 return;
+>         int i;
 >
-> +       /* Disable the channels to prevent new transfers */
-> +       for (dir = 0; dir < 2; dir++) {
-> +               mhi_chan = dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
-> +
-> +               if (!mhi_chan)
+> -       /* Stop all the channels */
+> +       /* Disable all the channels to prevent new transfers */
+> +       for (i = 0; i < mhi_cntrl->max_chan; i++) {
+> +               mhi_chan = &mhi_cntrl->mhi_chan[i];
+> +               if (!mhi_chan->ring.started)
 > +                       continue;
 > +
 > +               mutex_lock(&mhi_chan->lock);
@@ -189,40 +174,33 @@ Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > +               mutex_unlock(&mhi_chan->lock);
 > +       }
 > +
-> +       /* Flush in-flight transfers before notifying disconnect */
+> +       /* Drain ring workers and in-flight transfers before notifying disconnect */
+> +       flush_workqueue(mhi_cntrl->wq);
 > +       if (mhi_cntrl->flush_async)
 > +               mhi_cntrl->flush_async(mhi_cntrl);
 > +
->         /* Disconnect the channels associated with the driver */
->         for (dir = 0; dir < 2; dir++) {
->                 mhi_chan = dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
-> @@ -1635,7 +1652,6 @@ static void mhi_ep_remove(struct device *dev)
+> +       /* Send channel disconnect status to client drivers */
+>         for (i = 0; i < mhi_cntrl->max_chan; i++) {
+>                 mhi_chan = &mhi_cntrl->mhi_chan[i];
+>                 if (!mhi_chan->ring.started)
+>                         continue;
+>
+>                 mutex_lock(&mhi_chan->lock);
+> -               /* Send channel disconnect status to client drivers */
+>                 if (mhi_chan->xfer_cb) {
+>                         result.transaction_status = -ENOTCONN;
+>                         result.bytes_xferd = 0;
 >                         mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
 >                 }
->
+> -
 > -               mhi_chan->state = MHI_CH_STATE_DISABLED;
->                 mhi_chan->xfer_cb = NULL;
 >                 mutex_unlock(&mhi_chan->lock);
 >         }
-> diff --git a/include/linux/mhi_ep.h b/include/linux/mhi_ep.h
-> index 7b40fc8cbe77..f6383a57a872 100644
-> --- a/include/linux/mhi_ep.h
-> +++ b/include/linux/mhi_ep.h
-> @@ -107,6 +107,7 @@ struct mhi_ep_buf_info {
->   * @write_sync: CB function for writing to host memory synchronously
->   * @read_async: CB function for reading from host memory asynchronously
->   * @write_async: CB function for writing to host memory asynchronously
-> + * @flush_async: CB function for flushing asynchronous read/writes
->   * @mhi_state: MHI Endpoint state
->   * @max_chan: Maximum channels supported by the endpoint controller
->   * @mru: MRU (Maximum Receive Unit) value of the endpoint controller
-> @@ -164,6 +165,7 @@ struct mhi_ep_cntrl {
->         int (*write_sync)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
->         int (*read_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
->         int (*write_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
-> +       void (*flush_async)(struct mhi_ep_cntrl *mhi_cntrl);
 >
->         enum mhi_state mhi_state;
+> -       flush_workqueue(mhi_cntrl->wq);
+> -
+>         /* Destroy devices associated with all channels */
+>         device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_ep_destroy_device);
 >
 >
 > --
