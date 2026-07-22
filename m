@@ -1,79 +1,71 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 961D94582CD
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBAFB3290BA
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:13:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784761939; cv=none; b=uwIjJ7YlGYrgClrrbXlMHRxfhPFeu/RBCtTU/CBN19ZUL9OEk0sKEx9tIAz2eh1w4UryXIoryqdO/X/zMDpMKHvBrK15AtljTGLNQLenXl4eToFnLPrVmQ+ugZBgYsYDz7zfENTIR8ZNloNckC76pjiPRXHwQBovPKPYRYUHhIs=
+	t=1784762020; cv=none; b=rnvN9LAkOVmqL/kq1iYnha64lwqguP/wgjUr8hzy/qA8hE0se2dNKb5+hxFU1bN3nFXzSgA5GMZ3wbyHGV5KkvoUL7+R8W7tNPCgfRBaRONAtqFFlmjhhNRODsj20F2M5GWj0F4RQ8SGYm8E6xwlpX43NVspm7DTaYt2ffXZ8bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784761939; c=relaxed/simple;
-	bh=8mJEiqWpJ3Uy4dQUJYF07RJY9w1WOi0WCyECqoz+Mms=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Jtx9NWvU3bGwDN9vwCL55kWHmi6BCa/XF3OepmSvYOKTZQziaWm4ywqcGMcX31k1CjVM15akwxVhe4VF/OmzOocZxGtL09Q7iw93Qw3uqw+oot7CwWL9e954cqQ4UKZFTyzMAuZQfxn8mOhXGNqmUuxk3M4QBdrF7ZfVRqkhOwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=roPvz2mQ; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784762020; c=relaxed/simple;
+	bh=UvZsCO1GmPNqzk7wzdyGpdQ11lkDL/idmR9vFBMt9ZI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c70+i7N8AvFEw/sEUbw5IQVugDJNTYRSkADzMt52HUatbjBz4xC3L1smRxLodFfwld8zVx6snyN7KNFKHWhveUit559zCyHsPRSm3U4L+I96FFuXD6gAYhp/CSKGwnQ+bmBtl93UA+NozqHhFsSF4nixSO4GRDOY4zFOJcolQxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=UcR4281s; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="roPvz2mQ"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-cbb973e6749so76517a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 16:12:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UcR4281s"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-38deea72eebso15901a91.1
+        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 16:13:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784761938; x=1785366738; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1784762017; x=1785366817; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zi7GSMqA7QuxsTCwMKttd2kWd+CObdR4i6iXZa5Nm8Q=;
-        b=roPvz2mQYG9nYiP1F4Tj862+S/Hjgz6IfQ69BNgujol3n7pcKLVVc8cnusqtXO6g9F
-         JP+K+vvIYSgwWWAsga1l+MlcsT8YQQpQX7Ns1ynekiJBP0Sui//Jfdbpj7lXMZt1e8iW
-         DN5loyexHpSM7f5Q/U7f1B+HdRbqPT6zmm0sutmw/cw5vDaq8DBLBjd4Zs6WW91e25a0
-         pWJYEYOYwmd45xES45If5MAoSOTSxwDhMtsLfAfk9Hyenp3MQm0o5I863zQ2XAH8GoZ2
-         FY4Qa8Dja4gFKkR5+idZs9lnBEBSbM+KxNVM88iI2i2btPpnfMA3tavfpM0BPpfKSdye
-         vrDA==
+        bh=T8SbK/NCKyIaBwC1Thbd7+4CLdIOgq9KZMPr78i26/Y=;
+        b=UcR4281swcGqQDX7RM8G0GiSweW0/XOWK5YE2HFboR66fIKXd1wx3cb4Dax1n/FXRh
+         Y54RmdROIrOMOzsqYUntIPxJmlXTAQwI/xaTc4yhj50W3lFcDOirTteBHNXDmPrbvkCX
+         9vKAj3ws1mpNaS21TlL3aG/wnil5EiYcTSPYg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784761938; x=1785366738;
+        d=1e100.net; s=20251104; t=1784762017; x=1785366817;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=zi7GSMqA7QuxsTCwMKttd2kWd+CObdR4i6iXZa5Nm8Q=;
-        b=MZbpVGS/sxOzM4UHnmDglpmsmABjinHSSUz8quY8gOQDmpMAGs+laW9/rD/CHyOMVf
-         rwikp9+WYx3k1i2gH/37hMpgeP8y4r2mj7vG/EggQYWImyrc6yYBwZjyWk4OjfPcjKoK
-         ynvAXBGyu4iu11VgRxRArKSfKn8q4P/kPuFqBo4cYP0C83nUaPao045I5UOerjRmeeSG
-         b6d8YPhvqnI7KNn6vgyYp2O4boYNpT5eEIxpoPMzgvfc1VHqGwJUI0AFjRIXngfc8GDh
-         /2rkOyfilTlL6GoaXgC/yohZVIhYP3GsDNMWymYMCiU/9zZsYpArnMUl94nGk8nrhLo4
-         SNOw==
-X-Gm-Message-State: AOJu0YxY/w5AQWDOlrZGPO+8HmciM822iK5vVca9oDPzc1geVwUzILLM
-	rOeymaKDDhxw0R0unZiKx4G2lj5OoPzcUECEMtqyk6332mVzSoVDhjmwDEc7MA==
-X-Gm-Gg: AR+sD1352Krtrmx6k/0LREyXrgI/3jakwhzWDnbgqA2JzaOAcCTyySWhACjxfRSw3dt
-	gmWbABXjW2iYf22uEAh/WbiV+HW4kXFBA2WeUbTzyCqn9jxvWRuDpqbj5RSllkEy5qYrfwrLftb
-	lTXGYUNP071E6rl0iOZZzYahIV5uAMvwpUdkHcnxbwvw0Fpve0CJ/F0lwTd8n6MS9M4Tnwv448p
-	4PWV4dkVrP9r+1hKJ+NyEm3sNfN5dsWlB/Jd3JF7CpVLfhpngmwDVlBzYiXmyTqkYf3z3KIL/Ve
-	ZdZIE/6A87AbGm8GvWy6iyNj4tKkSAgD4E2H5bV9XhKED7hism8fcCYo9cyi1sFa5BL74lzH1Ea
-	sgoHMFLvovSim/DCvgdq+YYOIZfzyUBGrqJFLhI2+8F5UrB0/ruNAtyYIwhISHkhY1wuQrDohtb
-	hoBCg4xlyh225m4ElFjLFhQxjQ/IQFSSlQNQ+ISWOqIK72NwaojxVLeZWyLR8SiE+UDlUpt2MCL
-	3XCvxWFLF28BbLMrhfPhQO4W/F4ikf2Xj1BlZhBux2NtH910Q6iXTE=
-X-Received: by 2002:a05:6a20:e290:b0:3b4:8f57:3205 with SMTP id adf61e73a8af0-3c44b18a0bfmr515631637.36.1784761937803;
-        Wed, 22 Jul 2026 16:12:17 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e35])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbb9656c076sm695300a12.19.2026.07.22.16.12.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jul 2026 16:12:16 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marc Zyngier <maz@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <ndesaulniers@google.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	linux-kernel@vger.kernel.org (open list),
-	llvm@lists.linux.dev (open list:CLANG/LLVM BUILD SUPPORT:Keyword:\b(?i:clang|llvm)\b)
-Subject: [PATCH] PCI: apple: use fwnode_irq_get() for port IRQ lookup
-Date: Wed, 22 Jul 2026 16:12:14 -0700
-Message-ID: <20260722231214.857760-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        bh=T8SbK/NCKyIaBwC1Thbd7+4CLdIOgq9KZMPr78i26/Y=;
+        b=dPTCq9ZtC0RwusNdiXvFn+pZpKaYzyWg5kt8FCdQrB7pEv+K3NBHvC4g3+vkXbiucj
+         rNKRh1p1S9nLrCqgaOpt+3TOEcd6wfosi+WKJyhonNPYIydZPrdaKvAwfn/kKlhUX+7K
+         v5CfE+xpEC6+NRdIxLE1fif4RPFg/T+7wSd2EQZUuKFDUhIK+7NxhR859u2dceVVFsx6
+         3Pdn5RdYbP3FlTrBD0LyCrQtEi8nldBQQIFDFk35vvMZQO8blntlPcTR51vL5Wf21Nne
+         k0aJsPBjUTlT5pc7XktNiODCNkCK0QaDdGMWRbUGiq6CpyaNuK5sb98Xp9O0WamjMprj
+         x72w==
+X-Forwarded-Encrypted: i=1; AHgh+RoUYaLLwC97va4SqCTWbUG3f6xc0+jUWzlFMIJMpxyi3nW7ccIvnHbItqJyPt3GDHjyNexPUxW1tm8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0NHBGmfK7kf9dOKt4vFVOTVo5Lkp1SyPlbeziuz8xT6F4qI79
+	TgfLfnlqqiV4y9EPDQceu5cwezQ02lPv9NzhY0CXN2OsN+jLz5nObkz75IPhlTWO/JfgpkN9H+d
+	H0l/gCQ==
+X-Gm-Gg: AR+sD11u0PWwyeMXibBeGug8N6PTAiz1rxdDXryawh55RYKQtn5dZZtt56sBMIZQao9
+	nQLsjirkZUWjfE8NJrfKNO+cSjSiFjNKCVWIkWeO4K7a52Z/C42PM7DMcTGdxdjkFdE0bmIOK8L
+	lLxafs7C3OejPjAf537Ck8/n1k2S5v4oCrO64tNz7GNkEe1+JsHCx5N9UMbKXvuKtaHaIRexWti
+	vCQgz4fH1hpiYs0MKHYDGvAkGU/rl0zfrJxLMdKN/QQsehVKeEp8eDyFfhBq+497+bL6On6e9a/
+	k45jdh4N5kZfTFn43Q0S1OFhor8mtlUmKEq1BfvowLQNnXPE4UFU99dVO4eN/jatz5O8dHHuGnv
+	H0LvrvgDsu7uFZpep5RUmEOtnTNUgfFjhAFpBSnHoKCdDbUvPK6dcdEVD2xROSXCuHOyKM9wFhc
+	YDrxKv9JjtybhYGy9+8nxjH+3geBgUQ8STTcvgaM+G7UW0kNa/91U=
+X-Received: by 2002:a05:6a21:7a96:b0:3c0:9c19:65b9 with SMTP id adf61e73a8af0-3c44b26f282mr511168637.65.1784762017184;
+        Wed, 22 Jul 2026 16:13:37 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:f3fd:a899:78ad:64d4])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-3147df09ac0sm11650219eec.16.2026.07.22.16.13.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jul 2026 16:13:36 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	linux-pci@vger.kernel.org,
+	David Matlack <dmatlack@google.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-kernel@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v4] PCI/portdrv: Allow probing even without child services
+Date: Wed, 22 Jul 2026 16:09:42 -0700
+Message-ID: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+X-Mailer: git-send-email 2.55.0.229.g6434b31f56-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,48 +74,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Replace irq_of_parse_and_map() with fwnode_irq_get() on the PCIe
-controller device's fwnode, indexed by port->idx. This is equivalent
-for an OF-backed fwnode but uses the generic firmware-node API.
+The PCIe port driver fails to probe if it finds no child services,
+presumably under the assumption that the driver is not useful in that case.
+However, the driver *can* still be useful for power management support --
+namely, it still configures the port for runtime PM / D3, which may be
+important for allowing a bridge to enter low power modes.
 
-Unlike irq_of_parse_and_map(), fwnode_irq_get() returns a positive IRQ
-or a negative errno and never 0 (it rewrites 0 to -EINVAL). So store
-the result in an int and check for irq < 0, propagating the error
-(including -EPROBE_DEFER) instead of the previous unsigned int with an
-`if (!irq)` check that could never catch a negative failure.
+Thus, allow probe to succeed even if no IRQs and no child services are
+available. This also mirrors existing behavior for ports that don't support
+any portdrv services (PCIe hotplug, AER, DPC, PME, bwctrl), where we'd also
+probe successfully.
 
-Built for arm64 (defconfig + CONFIG_PCIE_APPLE) with LLVM=1;
-drivers/pci/controller/pcie-apple.o compiles cleanly.
+This change is a bit more important after commit f5cd8a929c82 ("PCI: dwc:
+Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+controller"), because it's common for some DWC-based systems to:
 
-Assisted-by: opencode:hy3-free
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
+  1. have only the "aer" and "pcie_pme" port services available and
+
+  2. not define legacy INTx interrupts properly in their device tree.
+
+After commit f5cd8a929c82, such systems may fail pcie_init_service_irqs()
+and so exit with -ENODEV.
+
+Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/pci/controller/pcie-apple.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index c2cffc0659f4..535acf274b78 100644
---- a/drivers/pci/controller/pcie-apple.c
-+++ b/drivers/pci/controller/pcie-apple.c
-@@ -400,14 +400,13 @@ static int apple_pcie_port_setup_irq(struct apple_pcie_port *port)
+Changes in v4:
+ * Between sashiko-bot / Mani / me / Bjorn, we agreed that deferring
+   pci_set_master() may cause us to drop some MSIs:
+     https://lore.kernel.org/all/af574zaysKnXjx15@google.com/
+   So we revert to the v2 approach, with some small changes
+ * Address some of Lukas's review comments:
+     https://lore.kernel.org/all/al68lFtbq_Q4RCL2@google.com/
+   Specifically:
+     - ensure pcie_device_init() return code is checked
+     - release IRQs (pci_free_irq_vectors()) when no services registered
+       properly
+ * Borrow some of Bjorn's commit message tweaks
+
+Changes in v3:
+ * Defer pci_set_master() until we really know we have some child
+   service
+
+Changes in v2:
+ * Clear master when we have no child services
+
+ drivers/pci/pcie/portdrv.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+index 2d6aa488fe7b..18ee190acc6e 100644
+--- a/drivers/pci/pcie/portdrv.c
++++ b/drivers/pci/pcie/portdrv.c
+@@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+  */
+ static int pcie_port_device_register(struct pci_dev *dev)
  {
- 	struct fwnode_handle *fwnode = &port->np->fwnode;
- 	struct apple_pcie *pcie = port->pcie;
--	unsigned int irq;
-+	int irq;
- 	u32 val = 0;
+-	int status, capabilities, i, nr_service;
++	int status, capabilities, i;
+ 	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
  
- 	/* FIXME: consider moving each interrupt under each port */
--	irq = irq_of_parse_and_map(to_of_node(dev_fwnode(port->pcie->dev)),
--				   port->idx);
--	if (!irq)
--		return -ENXIO;
-+	irq = fwnode_irq_get(dev_fwnode(pcie->dev), port->idx);
-+	if (irq < 0)
-+		return irq;
+ 	/* Enable PCI Express port device */
+@@ -355,29 +355,29 @@ static int pcie_port_device_register(struct pci_dev *dev)
+ 	if (status) {
+ 		capabilities &= PCIE_PORT_SERVICE_HP;
+ 		if (!capabilities)
+-			goto error_disable;
++			goto out;
+ 	}
  
- 	port->domain = irq_domain_create_linear(fwnode, 32,
- 						&apple_port_irq_domain_ops,
+ 	/* Allocate child services if any */
+-	status = -ENODEV;
+-	nr_service = 0;
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+ 		int service = 1 << i;
+ 		if (!(capabilities & service))
+ 			continue;
+-		if (!pcie_device_init(dev, service, irqs[i]))
+-			nr_service++;
++		if (pcie_device_init(dev, service, irqs[i]))
++			capabilities &= ~service;
+ 	}
+-	if (!nr_service)
+-		goto error_cleanup_irqs;
+ 
+-	return 0;
++out:
++	/*
++	 * With no child services, we shouldn't need bus mastering or any IRQ
++	 * vectors we allocated.
++	 */
++	if (!capabilities) {
++		pci_free_irq_vectors(dev);
++		pci_clear_master(dev);
++	}
+ 
+-error_cleanup_irqs:
+-	pci_free_irq_vectors(dev);
+-error_disable:
+-	pci_disable_device(dev);
+-	return status;
++	return 0;
+ }
+ 
+ typedef int (*pcie_callback_t)(struct pcie_device *);
 -- 
-2.55.0
+2.55.0.229.g6434b31f56-goog
 
