@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2BD492525;
-	Wed, 22 Jul 2026 11:32:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3EB3E1713;
+	Wed, 22 Jul 2026 11:33:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784719938; cv=none; b=kO0GR6IbT9BMjx7xDPBC3mbCM6g7uxQKvT2PnPBDwJKtQciF5iDd8ISp5OkesPIZSupGm24XFtcDMQZ8WssgzselPnc2zLe429CWUzFW2Y8bsKN7XpYUDiZOCEBaHG43HXo5BSW53YkDXpBvT+XHRjXRORPtJfGRkPl6nrJFUdc=
+	t=1784719989; cv=none; b=Ifct3zYKdCY/+7Ey0wiPxB0Zd8fWJnB1m9vte3hfref70IcUqKk1Ta0/7aKVAZL95gYYSXfSww/0UWopgW7XWOyE4eM6CebB/adFbKryo7ZjveixfdEjfo3zWAUnWvg+5bbc62RAWbcNzuzjGwHnok/CBehlSF5Is0gI11n58Ck=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784719938; c=relaxed/simple;
-	bh=vKgumWp9yAjtd5tcvc9DpeM8gSByhObF3Pedm7wv7yk=;
+	s=arc-20240116; t=1784719989; c=relaxed/simple;
+	bh=vMc1+1V8K9TmCwlC8DDoCRfNt95/eXlB29jBwd21abM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MnEbWAzJtoMt9VS5ZHfCld9nO4RajAFdKQVz2GNUJ0Ldd6L88Dw4ItQDZ9ZbhPY9EUWPkwea0+O4QQ2rZJ0Ov23Wf7fQr3DhsPebTqZoHcnlyWjSDA8J6fFT/+4TNHzMYJY64UK2DmtROFYLoiglLnkShQ1bOHBlns8JtWP3FEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V52KTmgl; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=k2yNBDePgQFuAVDKlbfraxTnI4UuUwMZQYOP+vGDZvw3/r6EKT95S12K6NtN4YomxMYnHl3UZFaAfeFmYLfpX5sg5cfedOw/+kAt0hPgbTz1p6aK0ttkHCiirV7AxBfv7z5XnzsXZVabhuH2LAxKYvg88Hql880lX8xCfuz7T7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7Cs03wU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V52KTmgl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1E351F000E9;
-	Wed, 22 Jul 2026 11:32:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7Cs03wU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F1EA1F000E9;
+	Wed, 22 Jul 2026 11:33:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784719937;
-	bh=e3zvPEI26DcFxpNCD8KtIqReW3f+8xDc2fjUSMcpxs8=;
+	s=k20260515; t=1784719988;
+	bh=TxxsBLufSm++Cvz5kOkT33qzoU4aWSoS8KEmFIitGVQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V52KTmgl+GOxksDlaXm9QYv6tMwQxZ/mMeiMdRfnw3sSpcZd8bqgkbrnDaBT8y8sn
-	 798/irvPdmNwZw0KNOSdbGW0mlY5yU1hgS/csLsPaohq3xlDGRmUZPuvk76JuR417w
-	 t4N2blhBwhlYh21ef5f/4WiPt9sG5fDoaNag/4jsVdOyIlJF8gZU0/QN2TkKXE6Rgq
-	 Cm8gfnD1l1TBCm2vQZFw5aBwqNw3cZeSW2v9Gt8GTLFZfn3o4h1qg8XkU04s8P5Dfw
-	 7XEOmVBowmOKGxiOIrlDi6+KV/rR4HDojBSqR+zgt9qOncjRcjsRFK0eh69Ejk+9IY
-	 3vkF5qGAUW0Jg==
+	b=X7Cs03wUc26msWWm3Ejqk08TxEj5JCC7l88rjGwg0w+M10ri2OhoCgMO45a1zFvPV
+	 sE/e4WZjtkdXVMoy5ZNsKpFJsBppag5dN+56CF2NZKSl6JQdTXiHA23TdNzRhp6fwc
+	 EwuDYTuMJIHWAmy/SPmYaUHneoc3PjOoPQ+iddXmV1jDZBqRBykyYVudpcIaw8pFN1
+	 jig0/AqxW+gYzMIv5vTN+mplV/gkGzL3tG5VpGfkCMRkAqOVqECYLnn7pNsS1Urvzu
+	 T3Sr5HO9/H6+wRdVdUkfeMImL3WENqkrDRrWgFWZLOkBVMl1IwSXxIhDr2Ry9b6yTZ
+	 +WJ3UjAXjWrZQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 3/3] dmaengine: dw-edma: Add changes to support
- Channel Separation
+Subject: Re: [PATCH v1 2/3] dmaengine: dw-edma: Enable Chan Separation via
+ VSEC
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Devendra K Verma" <devverma@amd.com>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260722111640.1146212-4-devverma@amd.com>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260722111640.1146212-3-devverma@amd.com>
 References: <20260722111640.1146212-1-devverma@amd.com>
- <20260722111640.1146212-4-devverma@amd.com>
+ <20260722111640.1146212-3-devverma@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 11:32:16 +0000
-Message-Id: <20260722113216.C1E351F000E9@smtp.kernel.org>
+Date: Wed, 22 Jul 2026 11:33:07 +0000
+Message-Id: <20260722113308.1F1EA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,179 +47,99 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-New issues:
-- [High] The newly introduced `ch_sep_sz` field in `struct dw_edma_chip` is=
- uninitialized (defaults to 0) for platform drivers outside of `dw-edma-pci=
-e` that use HDMA natively, causing all channel register accesses to map to =
-identical offset 0.
-- [High] The driver trusts the device-provided VSEC configuration to calcul=
-ate DMA channel register offsets but never verifies if these offsets remain=
- within the mapped PCI BAR region.
-
-Pre-existing issues:
-- [High] Pre-existing double free of IRQ vectors in `dw_edma_pcie_remove()`=
- due to devres interference.
+- [High] The parsed channel separation size (`ch_sep_sz`) is a dead store; =
+it is never passed to the core DMA driver.
+- [Medium] dw_edma_get_ch_sep_sz() silently falls back to 256 bytes for uns=
+upported hardware channel separation values.
+- [Medium] The newly added `ch_sep_sz` field is left uninitialized (implici=
+tly 0) for statically defined devices.
 --
 
---- Patch [3]: [PATCH v1 3/3] dmaengine: dw-edma: Add changes to support Ch=
-annel Separation ---
-commit 2ad7c860cd4c4a1bef961b814db689f718e1407c
+--- Patch [2]: [PATCH v1 2/3] dmaengine: dw-edma: Enable Chan Separation vi=
+a VSEC ---
+commit 5d0ec977534da50b8d8937caafb8d91a21d54565
 Author: Devendra K Verma <devverma@amd.com>
 
-dmaengine: dw-edma: Add changes to support Channel Separation
+dmaengine: dw-edma: Enable Chan Separation via VSEC
 
-This patch modifies the dw-edma driver to support configurable channel
-separation sizes. It updates the register offset calculations to use a
-dynamic size provided by the hardware IP instead of assuming a default
-256-byte separation.
+This commit aims to enable channel separation via the VSEC capability for
+DEVICE INFORMATION. It parses the channel separation size from the hardware
+registers up to 4K.
 
 > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-=
 edma-pcie.c
-> index 6295d01ba2f71..ca2a4be2f3a50 100644
+> index ec5e057a0f11b..6295d01ba2f71 100644
 > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
 > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
 [ ... ]
-> @@ -443,6 +446,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
->  	chip->nr_irqs =3D nr_irqs;
->  	chip->ops =3D &dw_edma_pcie_plat_ops;
->  	chip->cfg_non_ll =3D non_ll;
-> +	chip->ch_sep_sz =3D vsec_data->ch_sep_sz;
-> =20
->  	chip->ll_wr_cnt =3D vsec_data->wr_ch_cnt;
->  	chip->ll_rd_cnt =3D vsec_data->rd_ch_cnt;
-
-[Severity: High]
-This is a pre-existing issue, but does dw_edma_pcie_remove() explicitly call
-pci_free_irq_vectors(pdev)?
-
-Since pcim_enable_device(pdev) is called during dw_edma_pcie_probe(), it
-automatically manages subsequent IRQ vectors via devres. When the driver is
-unbound, the devres cleanup routine will attempt to free the already-freed
-vectors, which could cause a double-free kernel panic on the device unbind
-or module unload path.
-
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/=
-dw-hdma-v0-core.c
-> index 632abb8b481cf..3f27a93c4d8c8 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-[ ... ]
-> @@ -23,18 +23,23 @@ enum dw_hdma_control {
->  	DW_HDMA_V0_LLE					=3D BIT(9),
+> @@ -73,6 +74,7 @@ struct dw_edma_pcie_data {
+>  	u16				wr_ch_cnt;
+>  	u16				rd_ch_cnt;
+>  	u64				devmem_phys_off;
+> +	u32				ch_sep_sz;
 >  };
 > =20
-> -static inline struct dw_hdma_v0_regs __iomem *__dw_regs(struct dw_edma *=
-dw)
-> -{
-> -	return dw->chip->reg_base;
-> -}
-> -
->  static inline struct dw_hdma_v0_ch_regs __iomem *
->  __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
->  {
-> -	if (dir =3D=3D EDMA_DIR_WRITE)
-> -		return &(__dw_regs(dw)->ch[ch].wr);
-> -	else
-> -		return &(__dw_regs(dw)->ch[ch].rd);
-> +	u32 ch_base;
-> +
-> +	/*
-> +	 * For Write, the channel register index starts at
-> +	 * wr_base(ch_idx) =3D (2 * ch_idx) * ch_sep_sz
-> +	 *
-> +	 * For Read channel,
-> +	 * rd_base(ch_idx) =3D (2 * ch_idx + 1) * ch_sep_sz
-> +	 */
-> +	ch_base =3D 2 * ch;
-> +	if (dir =3D=3D EDMA_DIR_READ)
-> +		ch_base +=3D 1;
-> +
-> +	return dw->chip->reg_base + (ch_base * dw->chip->ch_sep_sz);
+>  static const struct dw_edma_pcie_data snps_edda_data =3D {
 
-[Severity: High]
-Does this code verify that the computed channel register offset remains wit=
-hin
-the mapped PCI BAR region?
+[Severity: Medium]
+Does this leave the newly added ch_sep_sz field uninitialized (implicitly 0)
+for statically defined devices like snps_edda_data?=20
 
-If a malicious or misconfigured PCIe endpoint provides a large channel
-separation size, could this calculation result in out-of-bounds MMIO access=
-es?
+If the core driver begins relying on this field to space out channel regist=
+ers,=20
+will preexisting devices calculate an offset of 0 for all channels and brea=
+k=20
+DMA functionality?
 
-[Severity: High]
-If platform drivers outside of dw-edma-pcie use HDMA natively and allocate
-struct dw_edma_chip via devm_kzalloc without explicitly initializing
-ch_sep_sz, does ch_sep_sz default to 0?
-
-Could this cause all channel register accesses to map to offset 0, leading =
-to
-data corruption by incorrectly targeting Write Channel 0's registers?
-
+[ ... ]
+> @@ -189,6 +191,23 @@ static int dw_edma_pcie_irq_vector(struct device *de=
+v, unsigned int nr)
+>  	return pci_irq_vector(to_pci_dev(dev), nr);
 >  }
 > =20
-> diff --git a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c b/drivers/dma/dw-ed=
-ma/dw-hdma-v0-debugfs.c
-> index dcdc57fe976c1..33128685bbd90 100644
-> --- a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
-> +++ b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
+> +static u32 dw_edma_get_ch_sep_sz(u32 ch_sep_val)
+> +{
+> +	switch (ch_sep_val) {
+> +	default:
+> +	case 0:
+> +		return 256;
+
+[Severity: Medium]
+If a hardware device advertises a channel separation size greater than 4K
+(e.g., 8K/0x5, 16K/0x6, 32K/0x7 as mentioned in the commit message), will
+this switch statement silently hit the default case and return 256 bytes
+instead of the actual hardware size, leading to incorrect memory offsets?
+
+> +	case 1:
+> +		return 512;
+> +	case 2:
+> +		return 1024;
+> +	case 3:
+> +		return 2048;
+> +	case 4:
+> +		return 4096;
+> +	}
+> +}
 [ ... ]
-> @@ -13,22 +13,17 @@
->  #include "dw-hdma-v0-regs.h"
->  #include "dw-edma-core.h"
+> @@ -324,9 +345,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	struct dw_edma_pcie_data *pdata =3D (void *)pid->driver_data;
+>  	struct device *dev =3D &pdev->dev;
+>  	struct dw_edma_chip *chip;
+> +	bool non_ll =3D false;
+>  	int err, nr_irqs;
+>  	int i, mask;
+> -	bool non_ll =3D false;
 > =20
-> -#define REGS_ADDR(dw, name)						       \
-> -	({								       \
-> -		struct dw_hdma_v0_regs __iomem *__regs =3D (dw)->chip->reg_base; \
-> -									       \
-> -		(void __iomem *)&__regs->name;				       \
-> -	})
-> -
->  #define REGS_CH_ADDR(dw, name, _dir, _ch)				       \
->  	({								       \
-> -		struct dw_hdma_v0_ch_regs __iomem *__ch_regs;		       \
-> +		struct dw_hdma_v0_ch_regs __iomem *__ch_regs;                  \
-> +		off_t __off =3D (dw)->chip->ch_sep_sz;			       \
->  									       \
-> -		if (_dir =3D=3D EDMA_DIR_READ)				       \
-> -			__ch_regs =3D REGS_ADDR(dw, ch[_ch].rd);		       \
-> +		if ((_dir) =3D=3D EDMA_DIR_READ)				       \
-> +			__off *=3D (2 * (_ch) + 1);			       \
->  		else							       \
-> -			__ch_regs =3D REGS_ADDR(dw, ch[_ch].wr);		       \
-> +			__off *=3D (2 * (_ch));				       \
->  									       \
-> +		__ch_regs =3D ((dw)->chip->reg_base + __off);		       \
+>  	if (!pdata)
+>  		return -ENODEV;
 
 [Severity: High]
-Could this also lead to out-of-bounds MMIO accesses during debugfs reads?
+Is the parsed channel separation size actually used by the core driver?
 
-If the untrusted channel separation size is used to compute the offset, and
-userspace triggers a debugfs read, it seems this could be exploited if not
-validated against the BAR size.
-
->  		(void __iomem *)&__ch_regs->name;			       \
->  	})
-> =20
-> diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> index 1fafd5b0e3153..a6c5728f03d38 100644
-> --- a/include/linux/dma/edma.h
-> +++ b/include/linux/dma/edma.h
-> @@ -104,6 +104,7 @@ struct dw_edma_chip {
-> =20
->  	struct dw_edma		*dw;
->  	bool			cfg_non_ll;
-> +	u32			ch_sep_sz;
-
-[Severity: High]
-Does this new field need a fallback default for non-PCIe drivers?
-
-Other core drivers that instantiate struct dw_edma_chip for HDMA might not
-explicitly set this, leaving it uninitialized.
-
->  };
-> =20
->  /* Export to the platform drivers */
+The VSEC capability is parsed into pdata->ch_sep_sz in this patch, but it
+doesn't appear to be copied to the struct dw_edma_chip or used anywhere
+to calculate register offsets, leaving the feature non-functional.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722111640.1146=
-212-1-devverma@amd.com?part=3D3
+212-1-devverma@amd.com?part=3D2
