@@ -1,209 +1,217 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BC32CCC5
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 06:14:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 677F833BBCD
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 06:18:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784700858; cv=none; b=cJAYw/ZUDelUC62g3grXaAo1Xq1t0Widq1YKZbB6IVbZSySiw+3AOvioF25XPrRF7DaHSthGiZqjAJGvw26ufQI9AK/O9J0mkOTHZ7Y8oxvcnZaGP3VevM96F9WnU9bcnNV4jflb58QmIVSvU7GmwwYRT1l3vTPOpzF461tgm3s=
+	t=1784701133; cv=none; b=IXaMtJOJAqw9nrIpQ27KF9ohZHGh9GGGiOHtfhNgmyHjrS8NRtTJXcUB93TV6K/aXQI1RYtq7fmzoSL+HPzuqmzs92hJBGyqPUVkQeOASNECc16FxmAWTbFJ/uLo6QnnBTr3MUhK2V1LuO27/Ff0ffQvkIe7YrtjLEcx111Jbwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784700858; c=relaxed/simple;
-	bh=TANF1oL4P9dguaai1U0g7ciAYG1vuXbV4FHf1/9DDU0=;
+	s=arc-20240116; t=1784701133; c=relaxed/simple;
+	bh=HM2sCG/XQBVCOp1yUkAIM0mS0fzNhzz7CvZ0eEje4aU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BiJQC1QFCEMtI/CarDgmuEESS8jVlUqkIbZ6u27I71JDeXCIrX7MZ3VSAt3xzkVjTNixyCBM/lU3EbQR71lN4Et0z0+egvJ1C7VLhxtRPECJ/hAv/H2VjlwK9CEWJN8Aw4Ft/SIfoJUAtmPvOaX8g9qrdAZf2oyHyC7U86fhpM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BesAd0T1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=mFIZVCyf0XuhqSZTu1Td5wgBPjn+6kKiZZiqYkY6MfQoGjoWDIgdZ05gRw+ubUj3nEpiIlYWVZ0yvMcmBdsxBTPuj7Z4P6mdDQkYIoZ78KyRLNhmCrtqkbkf5b/TvNyB2RpW1HASH8YCvRqZVpAMPdhq/yMZb21SObSsu/VQLhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XOQ1x/EI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BesAd0T1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FECE1F000E9;
-	Wed, 22 Jul 2026 06:14:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XOQ1x/EI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8AC31F000E9;
+	Wed, 22 Jul 2026 06:18:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784700856;
-	bh=yRr3+gKC8SotdP+jakqbpilGRdqdYElYIftTo6EVdb0=;
+	s=k20260515; t=1784701130;
+	bh=2raFDeJdwxJTpHTQY5LhPj/vibLywdVIqPG6UbMg85U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BesAd0T1HRGt+HNzdEZY1dZZwIzZyqjRbvVV5qrBqPzb5k9vlfDhfoV82LExL2VkB
-	 nWa1RCafllvkxAOmFgXfC2nrybxbEX/G+I7I8I8Aa0CLqqTMPuRbXLwh3q9QNqnTiw
-	 ySHeaue3LGZ+csr7M7GnXrwCfUjkTN7aMvhbUxUkKzhnILa3ePxoyFdTyfYkyvRPxn
-	 kJAh05Q+5kkmPRctjwwUkpJjcNsP81sHOY+7KGFOjNbInXZhbr4pV9K8LDeuBQ5Jbq
-	 TzOs6pSUc+w5f85f3atnsdDc62KdiFm08OjB9fy/Y9HQMGUj/2ZkTFLAR8Dd+n90OA
-	 Ep+pO7XhxpT1g==
+	b=XOQ1x/EImEgshcHnYNTKiY6O+3Zsastgt59c3tls7NuXsinik1oUetGod81q//38A
+	 A6zcimweOdBaxYwhDiEcNZ8tsWsDR3aS+qhKfZY5hCQjsGt228Q6KEMcTeT6/z60sn
+	 TpfYtFJsgbrvSxK5e5oDY1jHqJHCeA+NMTbBGAREjolcp4qj8LLZTjIofSLXUXHcwS
+	 kHob63KU9WP63Kj5vcwcxvkAOwUuVoqzovGdoEV78JfKa1hxJBBPD1qNHGQ2nObvW5
+	 86oq+jzOvdXBJfXbkfC8eH5OlifV6qXgbLWmLCb48ea+jAWtC86YNm+xsFRTfMYYt2
+	 x5fBHVnUnDrOg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async()
- callback to flush the async read/write
+Subject: Re: [PATCH v3 2/3] bus: mhi: ep: Flush async transfers before
+ notifying disconnect in mhi_ep_abort_transfer()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
+In-Reply-To: <20260722-mhi-ep-flush-v3-2-d855e715264e@oss.qualcomm.com>
 References: <20260722-mhi-ep-flush-v3-0-d855e715264e@oss.qualcomm.com>
- <20260722-mhi-ep-flush-v3-1-d855e715264e@oss.qualcomm.com>
+ <20260722-mhi-ep-flush-v3-2-d855e715264e@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 06:14:16 +0000
-Message-Id: <20260722061416.7FECE1F000E9@smtp.kernel.org>
+Date: Wed, 22 Jul 2026 06:18:49 +0000
+Message-Id: <20260722061849.E8AC31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Lock gap in `mhi_ep_remove()` during `flush_async()` allows the ho=
-st to restart the channel and bypass teardown synchronization.
-- [High] Memory leak of TRE buffers and SKBs if `flush_async` cancels DMA o=
-perations.
+- [High] Race condition in split loop design leaves channel in RUNNING stat=
+e after disconnect notification.
 
 Pre-existing issues:
-- [High] Missing `flush_async()` in `mhi_ep_abort_transfer()`, `STOP_CHAN`,=
- and `RESET_CHAN` leaves UAF and introduces NULL pointer dereference.
-- [High] Inconsistent locking for `xfer_cb` leading to potential AB-BA dead=
-locks in client drivers.
-- [High] Use-Before-Initialization race condition due to early `xfer_cb` pu=
-blication in `probe()`.
-- [High] Invalid Memory Free (`kfree()` used on a `kmem_cache` object).
-- [Medium] Duplicate `-ENOTCONN` notifications sent to client driver.
+- [Critical] STOP and RESET handlers lack flush_async() leading to UAF and =
+deterministic NULL pointer dereference.
+- [High] Late IRQ re-queues ch_ring_work causing UAF and freed memory acces=
+s during DL channel processing.
+- [High] Double -ENOTCONN disconnect notification triggers potential double=
+-free in client drivers.
 --
 
---- Patch [1]: [PATCH v3 1/3] bus: mhi: ep: Add mhi_cntrl->flush_async() ca=
-llback to flush the async read/write ---
-commit 8e4fde6115727693f6dc8095e55dc40c2cd91987
+--- Patch [2]: [PATCH v3 2/3] bus: mhi: ep: Flush async transfers before no=
+tifying disconnect in mhi_ep_abort_transfer() ---
+commit f2f701565f9c8f759ea3acdcd7ee4b4c1972f847
 Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-bus: mhi: ep: Add mhi_cntrl->flush_async() callback to flush the async read=
-/write
+bus: mhi: ep: Flush async transfers before notifying disconnect in mhi_ep_a=
+bort_transfer()
 
-This commit introduces a flush_async callback to the MHI endpoint controller
-and calls it during device removal. This ensures that any pending asynchron=
-ous
-DMA read or write operations are completed before disconnecting the channel=
-s.
-The change aims to prevent use-after-free issues that occur when DMA
-callbacks trigger after channel teardown.
+mhi_ep_abort_transfer() modifies the abort process by first disabling
+channels, draining workqueues and async transfers, and then notifying
+clients. This aims to prevent UAFs caused by trailing completions.
 
 > diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
-> index 0277e1ab11988..b94c571f01d88 100644
+> index b94c571f01d88..51735f87017f0 100644
 > --- a/drivers/bus/mhi/ep/main.c
 > +++ b/drivers/bus/mhi/ep/main.c
-> @@ -1620,6 +1621,22 @@ static void mhi_ep_remove(struct device *dev)
->  	if (mhi_dev->dev_type =3D=3D MHI_DEVICE_CONTROLLER)
->  		return;
+> @@ -1025,26 +1025,37 @@ static void mhi_ep_abort_transfer(struct mhi_ep_c=
+ntrl *mhi_cntrl)
+>  	struct mhi_ep_chan *mhi_chan;
+>  	int i;
 > =20
-> +	/* Disable the channels to prevent new transfers */
-> +	for (dir =3D 0; dir < 2; dir++) {
-> +		mhi_chan =3D dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
-> +
-> +		if (!mhi_chan)
+> -	/* Stop all the channels */
+> +	/* Disable all the channels to prevent new transfers */
+> +	for (i =3D 0; i < mhi_cntrl->max_chan; i++) {
+> +		mhi_chan =3D &mhi_cntrl->mhi_chan[i];
+> +		if (!mhi_chan->ring.started)
 > +			continue;
+
+[Severity: High]
+Since this loop skips unstarted channels, is it possible for an unstarted
+channel to be started during the flush_workqueue() below?
+
+If cmd_ring_work processes a START_CHAN_CMD during the flush, it could
+start a previously unstarted channel and unconditionally set its state to
+MHI_CH_STATE_RUNNING. The second loop would then observe the channel as
+started, send the -ENOTCONN notification, but leave the channel in the
+RUNNING state since it was bypassed by the first loop. This could allow
+the channel to continue processing transfers and deliver trailing success
+callbacks after the client has freed its resources.
+
 > +
 > +		mutex_lock(&mhi_chan->lock);
 > +		mhi_chan->state =3D MHI_CH_STATE_DISABLED;
 > +		mutex_unlock(&mhi_chan->lock);
 > +	}
 > +
-> +	/* Flush in-flight transfers before notifying disconnect */
+> +	/* Drain ring workers and in-flight transfers before notifying disconne=
+ct */
+> +	flush_workqueue(mhi_cntrl->wq);
+
+[Severity: High]
+This is a pre-existing issue, but can late doorbell interrupts repopulate
+the workqueue after it is flushed?
+
+flush_workqueue() is called here, but hardware interrupts are not masked
+until mhi_ep_mmio_mask_interrupts() is called later in
+mhi_ep_abort_transfer(). A late interrupt could queue ch_ring_work again.
+
+When mhi_ep_process_ch_ring() executes for a DL channel, it lacks a
+MHI_CH_STATE_RUNNING check:
+
+drivers/bus/mhi/ep/main.c:mhi_ep_process_ch_ring() {
+    ...
+		/* DL channel */
+		result.dir =3D mhi_chan->dir;
+		mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
+    ...
+}
+
+This could unconditionally invoke xfer_cb() after the disconnect loop has
+notified the client with -ENOTCONN, potentially resulting in a
+Use-After-Free. Additionally, if ch_ring_work runs after
+mhi_ep_destroy_device() completes, mhi_chan->mhi_dev will be a dangling
+pointer.
+
 > +	if (mhi_cntrl->flush_async)
 > +		mhi_cntrl->flush_async(mhi_cntrl);
 
-[Severity: High]
-Does dropping the channel locks while calling the blocking flush_async
-callback leave a window where the host could restart the channel?
+[Severity: Critical]
+This is a pre-existing issue, but does mhi_ep_process_cmd_ring() also need
+to drain async transfers during STOP and RESET commands?
 
-If a START_CHAN command is processed during this gap,
-mhi_ep_process_cmd_ring() could reacquire the lock and set the state back to
-MHI_CH_STATE_RUNNING. This would allow new DMA operations to be queued
-before the xfer_cb is cleared later in this function, potentially leading to
-a use-after-free.
+While the global abort path drains in-flight transfers, the per-channel
+STOP and RESET command handlers in mhi_ep_process_cmd_ring() send
+-ENOTCONN disconnect notifications without calling flush_async().
 
-[Severity: High]
-If the controller implements flush_async() by cancelling pending transfers
-(for example, via dmaengine_terminate_async()), could this cause a memory
-leak?
+For example, during a RESET command, the handler calls mhi_ep_ring_reset()
+which immediately frees ring->ring_cache:
 
-Since the MHI EP core doesn't appear to track pending operations, abandoning
-the buffers allocated from tre_buf_cache without invoking their completion
-callbacks might leak both the TRE buffers and associated SKBs.
+drivers/bus/mhi/ep/ring.c:mhi_ep_ring_reset() {
+    ...
+	kfree(ring->ring_cache);
+	ring->ring_cache =3D NULL;
+    ...
+}
 
-[Severity: High]
-This is a pre-existing issue, but since flush_async() is being added here to
-handle pending transfers, should it also be called when the host resets or
-stops a channel?
+Trailing async DMA completions could then invoke mhi_ep_skb_completion() or
+mhi_ep_read_completion(), which dereference
+ring->ring_cache[ring->rd_offset], causing a NULL pointer dereference.
 
-During host commands like RESET_CHAN or STOP_CHAN, or during power down via
-mhi_ep_abort_transfer(), channels are disabled without flushing pending DMA
-transfers. For instance, in mhi_ep_process_cmd_ring() handling a RESET_CHAN,
-mhi_ep_ring_reset() frees ring->ring_cache and sets it to NULL. If an
-in-flight async DMA read subsequently completes, mhi_ep_read_completion()
-will dereference this NULL ring_cache.
-
->  	/* Disconnect the channels associated with the driver */
->  	for (dir =3D 0; dir < 2; dir++) {
->  		mhi_chan =3D dir ? mhi_dev->ul_chan : mhi_dev->dl_chan;
-> @@ -1635,7 +1652,6 @@ static void mhi_ep_remove(struct device *dev)
+> +
+> +	/* Send channel disconnect status to client drivers */
+>  	for (i =3D 0; i < mhi_cntrl->max_chan; i++) {
+>  		mhi_chan =3D &mhi_cntrl->mhi_chan[i];
+>  		if (!mhi_chan->ring.started)
+>  			continue;
+> =20
+>  		mutex_lock(&mhi_chan->lock);
+> -		/* Send channel disconnect status to client drivers */
+>  		if (mhi_chan->xfer_cb) {
+>  			result.transaction_status =3D -ENOTCONN;
+>  			result.bytes_xferd =3D 0;
 >  			mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
 >  		}
 
-[Severity: Medium]
-This is a pre-existing issue, but does this lead to duplicate -ENOTCONN
-notifications being sent to the client driver during power down?
-
-When mhi_ep_abort_transfer() is called, it sends an initial -ENOTCONN via
-xfer_cb but leaves the callback set. Device destruction then synchronously
-invokes mhi_ep_remove(), which finds the callback still valid and sends a
-second -ENOTCONN notification.
-
 [Severity: High]
-This isn't a bug introduced by this patch, but is there an inconsistent
-locking expectation for xfer_cb that could lead to deadlocks in client
-drivers?
+This is a pre-existing issue, but should mhi_chan->xfer_cb be set to NULL
+here to prevent double -ENOTCONN notifications?
 
-The callback is invoked with mhi_chan->lock held in mhi_ep_process_ch_ring(=
-),
-but it is called locklessly from the workqueue in mhi_ep_skb_completion().
-If a client driver responds to a receive callback by queueing a new buffer
-via mhi_ep_queue_skb() (which acquires mhi_chan->lock), it could self-deadl=
-ock
-when called from the locked context.
+The callback pointer is left populated, and immediately afterwards
+device_for_each_child() triggers device destruction. This unbinds the
+client driver and invokes its bus remove callback, mhi_ep_remove():
 
-[Severity: High]
-This isn't a bug introduced by this patch, but could the xfer_cb be called
-before the client driver has finished initializing?
-
-In mhi_ep_probe(), xfer_cb is assigned to the channel before the client
-driver's probe function completes:
-
-mhi_ep_probe() {
+drivers/bus/mhi/ep/main.c:mhi_ep_remove() {
     ...
-    ul_chan->xfer_cb =3D mhi_drv->ul_xfer_cb;
-    dl_chan->xfer_cb =3D mhi_drv->dl_xfer_cb;
+		if (mhi_chan->xfer_cb) {
+			result.transaction_status =3D -ENOTCONN;
+			result.bytes_xferd =3D 0;
+			mhi_chan->xfer_cb(mhi_chan->mhi_dev, &result);
+		}
 
-    return mhi_drv->probe(mhi_dev, mhi_dev->id);
+		mhi_chan->xfer_cb =3D NULL;
+    ...
 }
 
-If the host sends an early doorbell interrupt, mhi_ep_ch_ring_worker() could
-start processing the ring and invoke the callback on a client structure that
-is not fully initialized.
+Since the client driver may clean up its per-transfer resources on the
+first -ENOTCONN, could delivering the teardown event a second time risk
+double-free bugs in the client driver?
 
-[Severity: High]
-This is a pre-existing issue, but is kfree() being used incorrectly on an
-object allocated from a slab cache?
-
-In mhi_ep_ch_ring_worker(), if the ring is stopped concurrently, the iterat=
-or
-is freed using kfree():
-
-mhi_ep_ch_ring_worker() {
-    ...
-    if (!ring->started) {
-        mutex_unlock(&chan->lock);
-        kfree(itr);
-        continue;
-    }
-}
-
-However, the iterator was allocated from the mhi_cntrl->ring_item_cache via
-kmem_cache_zalloc(), so this might cause slab memory corruption.
+> -
+> -		mhi_chan->state =3D MHI_CH_STATE_DISABLED;
+>  		mutex_unlock(&mhi_chan->lock);
+>  	}
+> =20
+> -	flush_workqueue(mhi_cntrl->wq);
+> -
+>  	/* Destroy devices associated with all channels */
+>  	device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_ep_destroy_de=
+vice);
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722-mhi-ep-flu=
-sh-v3-0-d855e715264e@oss.qualcomm.com?part=3D1
+sh-v3-0-d855e715264e@oss.qualcomm.com?part=3D2
