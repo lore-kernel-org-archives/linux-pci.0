@@ -1,154 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 247801A6806;
-	Wed, 22 Jul 2026 12:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CC7C288AD
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 13:17:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784723660; cv=none; b=myX3UL6IpGok0Hj6Z0IlnsHmWqS/xP2/HrM8U2SwqHtXB+yWEh2h5fDa+KtW7RfYOBfSc8Lhu06R14d1mSgEoAwYbj3dpMXzkA2w7euCwuU528Vy89ZovyawOI+j6wFmvAgVxrOf8pffn6LhWU9UmCZzEInpI0LJd82zvZfNiUc=
+	t=1784726276; cv=none; b=Iub20F0oNzZMlXscIx6lSRYnjDLmbF6eTxciufFLl+9ecM+xkaARItVErePKu/u0kZCinJjU6h/5UoVi6+8ArRGpiv1C4VXjXEOLd/j/lV7rN5zWSANOuV1QZjG+1yBEhY9ka6jT67X232GbzJisostZExkRweAopsUK+tCZa28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784723660; c=relaxed/simple;
-	bh=VIqWzxU/8q1ij/hsSfSdRtpYkcojanLbxcX+rVj+lyQ=;
+	s=arc-20240116; t=1784726276; c=relaxed/simple;
+	bh=sh9ZU5Ncc8RUC8V42Rp9x8UPi3xY/aC/ruJVJxi2z8g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K+myZXNwbTESINYKLLzNyP3ySEeTZq+m3D9Jf0+kz3GXL6WFQBKE/tmsZSCYMkHo5KKX4SQBiPuJZOoykDacJAKuH1XLvzVx0j6x+7Ln286ZmwE7NxeuoeTtqHT+apQxT0nG4lvgt1gqrRZwCzSn+f/7eapTBd86pN/URyXzRlg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bzvHdx8L; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=LC2uGILGJFaWgdIPG3Tcf9vyt+OXH745vPPbD2m7vbyM4yrta8wxq+yHbZXVvKqcSUyU8glAXqWmBl1oS2yWKNjtVDUkvYs3cwtpAM0MYLsXEOtilc9kujaf0+Xvmpx1m6WfsmFlWzEMLJBcT6+wRB0AXcw0rQ0dVMwVYVFHIoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kqU5K5hl; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EOxhOYyz; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bzvHdx8L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D017C1F000E9;
-	Wed, 22 Jul 2026 12:34:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784723658;
-	bh=UnTZnEO1RmvpgW4LLUlogfu73djdSpGYvoqvHkTazF4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bzvHdx8LoV6t9yiZxpbzqhBsdprPK4HsXqvJ40GzizC08zdeQ6izK0Njcytxoqz/m
-	 qZ6os7sPm0i/jHQ4UkxtoU+RTGzMLVkV4DuBqCdX6SoSvik3b1tBTTgEZNKF9S6NSK
-	 ObP5a14FZxCSqlPzlXcBd0h1S9o4cXMlWKa1hSwDH4IC6ioTLLqhcY8+To9HiGHel/
-	 79ott/JeefLTFIsGvRVdU6VgheaTqwLovfBhYBNlGgPQBzu5rCVKgYk8dSpA079QRf
-	 ihhWOulVs7cjZ9DaZIrgz8o1dAX/rTQfFu8z8VtqSqeeoWNxnRTA6wlxfq0HU3qJYl
-	 tB+dIONxnwnmA==
-Date: Wed, 22 Jul 2026 14:34:07 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
-	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>, 
-	Brian Norris <briannorris@chromium.org>, Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
- a platform specific way
-Message-ID: <fij5nuydnb7d6o3i7mwq2nz64wnkicr6hgs4r6dpv6uca7cnyf@ujn4andla3iq>
-References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
- <abFMa6DCGGLUHddA@fedora>
- <dp2rem4gj7zhfgykvekmcrhq4ticm6m6ido6tbgflwzfcuuwkl@4wuxgle27eyx>
- <srdn3bspgwff7f7tnst7wzg4us4buifrv7o3ylo527hmuciyl3@6ioyrl6rfhaz>
- <abk3rU2EDKjkefUD@ryzen>
- <tgsh3cum6qxrqjzbdeqjsp6bf7cqedj7il77hww3oxecadndin@idjnwib7cz4z>
- <agybt3onTAJO2Dl9@ryzen>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kqU5K5hl";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EOxhOYyz"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66MD1pLH944760
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 13:17:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=f/z7Vf0CFs4vDGQLLJUD618C
+	7Uy9T9x3H6mGeOakJz4=; b=kqU5K5hl5hqAHl193dF9LYbBD1n6i+hH+eRENipq
+	F/kc+RwlgKLOjraw99yyeEPx/Nq5GbVaQfgg8WeWn/Ug+vXer9jq11xaazD8fMh9
+	KrbQGTT9vu8Vpfmjx9VnoC+6ESAjtY4YpZJIuUYUrvIYXk0Z1+zFuGhkOd0NIaTT
+	WxWXV+VmVxDCfvsbEjAshb4wjZyK6K5wIGIDRH00cRJDVQHrOnCtD2qHkXcx+xZf
+	UyAj/k//BodvU8oJUteC+8qGT2cQlXBv1zpZMmMnnsyL38ic7qZZ/RQe+bY+ra7W
+	1iVTlDKlrnF4vZKO+LJA6E/WgpzS4ULLZ73Ya4csiZdYWw==
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fjs929fsm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 13:17:53 +0000 (GMT)
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-51bfe3fa93bso256460161cf.2
+        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 06:17:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784726273; x=1785331073; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=f/z7Vf0CFs4vDGQLLJUD618C7Uy9T9x3H6mGeOakJz4=;
+        b=EOxhOYyz1uVQFkmKD9clAzuBAN47qnTHcZIl88swaDIh+AMUu9ov8ijk1J402apIBN
+         t7X5Vpk5CpQKdO7NrxOAa2f5H+bek4MYMOlsd2ouaKTgNtE/+dQQqWBl4WrT609E220e
+         cY8pzWizJ/UtUjBzBlpmvFl41nt9OJp1XOGkRg5SIFcyVrCxB7AQeO4FFc+ZvZEUve9g
+         +Mw+bZTZPUwa8gb8O57W//VAypph4ylbSNPtJrmfBQyeq/0/TzszKHl2Y+H+1bQzKono
+         hS0EldRhtr7EK7sl2RvtFMflqQKC6ZSvao67ROvNPFyWw8wRnNP4OVC0WH6HFazSCdMm
+         nL0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784726273; x=1785331073;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=f/z7Vf0CFs4vDGQLLJUD618C7Uy9T9x3H6mGeOakJz4=;
+        b=pmU8+tiOocW+fpFovM5Ke8X9X6z4bX0jUCqYsmp/nFXexuuLtOPVe2pdk8sSw01yhZ
+         C1fI+llpDZvWPHANfnR/mtVu4Q+fkCd4dNiDg+7CA1y7aauvyhsik28t7+uzwHCsBb+O
+         LkjeeT4/RS6Zz1XaWZSpg8fEPIYezbCxrAa5JrZ4yqPXHRaiyX6Zu5xuLZzo2VftlxDb
+         rk4n2L1Rt9lsgR04uXxjP3rnhrd9AyQJF4IpfGQIplJTEGIvicbYQE0MkZZGPRZdiyJ+
+         gN/BQG46cVC+WuKc5jYAVRQtA2IlyQ82kRzCLKTqRUunDdElm6EvinY+70h8o90K29A4
+         Rz8g==
+X-Forwarded-Encrypted: i=1; AHgh+Rqs1cj4bkjQd67rhNUop0hW86mmHK3KC9UFCZ/rLu1BC4LM3jsV1yYGmV0m8LHTZTVb0SZqivQAtR0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMqNSDJGukQtMP4mjR/VD+2gxzy0FxZ0oTWlN0pvphwXbCrg3P
+	kfrzz3Zmwxs7o/QKVqLrKIOikQFuXLR2vElHbILhYXDtUnEQvE4Nb2Gxr/szmeEGHOX0LnqM5bj
+	GmRmpVk8dfUuw3o3Rxylo76cknw4POceSncPaEMTFFk3WbffkeDU5/Sf+RP0ScZY=
+X-Gm-Gg: AR+sD113JeW7X0XDjx8f9T74J13kTaz10Al7wOwP4wCr3ZrS0MwW0LM5NwIxyyzGf4L
+	i9+yDce3TOia5NLEhXPazW/Dih1XF8yLPQljiDyGPsMtiOxcvxGEdxI9BxWbH0Mj9rgsbzjPjc5
+	7Y1jGx0dh7yukQ+Wkza0Klr4qBpEgqX9jLShM/TI33RWL1g7E9R3YaOwkA9jrmQwczNCb29zUi9
+	x78YTilQPDtjFOMqPDi0Squf+z+mdmFcqBNTYl3gmIf+7qJWkX33YFzeU3x0scZNN0XUEpjvarH
+	/BgFm2jSDubNFtx2umIzHGmaXtrIAFBHyfw+0Y/CAmmstR/lBfWXpYHIskwyZ5jxq/t7VKUky/j
+	H6nO15TvCTeLPboQxBMsLav3UiIj5izPhnZaprMin1s20I1fJZp4c59KFuPdnRjdqJpkHfjB7CR
+	ck8zaXujmC78Qe2w==
+X-Received: by 2002:a05:622a:351:b0:517:6b31:8058 with SMTP id d75a77b69052e-5213e0821f6mr207212741cf.40.1784726272608;
+        Wed, 22 Jul 2026 06:17:52 -0700 (PDT)
+X-Received: by 2002:a05:622a:351:b0:517:6b31:8058 with SMTP id d75a77b69052e-5213e0821f6mr207212221cf.40.1784726272083;
+        Wed, 22 Jul 2026 06:17:52 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2a9e4313fsm463602e87.60.2026.07.22.06.17.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 06:17:50 -0700 (PDT)
+Date: Wed, 22 Jul 2026 16:17:49 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v5 05/11] power: sequencing: qcom-wcn: Report power
+ controllability
+Message-ID: <6lxktlm5suakzub7gvlhianc65yeiqjbbodimsikvcicciag3q@ugcdr2gbg4ok>
+References: <20260720-monza-wireless-v5-0-69ec6743543c@oss.qualcomm.com>
+ <20260720-monza-wireless-v5-5-69ec6743543c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <agybt3onTAJO2Dl9@ryzen>
+In-Reply-To: <20260720-monza-wireless-v5-5-69ec6743543c@oss.qualcomm.com>
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIyMDEzMCBTYWx0ZWRfXztqNTw0N4Ahb
+ PntbzlOXikpYGaL2ZB7K+P0c1NrQ3ZsiM2DORmsCp6hAMR2WWUKtgBwdGE0B9P8dcG5ON2nZtSQ
+ tKdaVrQ1psapKqtw5DORPxJFeVfGLH0=
+X-Proofpoint-ORIG-GUID: NrpMh2S_XGB4yL3ehdo9inZtMYv34yfo
+X-Proofpoint-GUID: NrpMh2S_XGB4yL3ehdo9inZtMYv34yfo
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIyMDEzMCBTYWx0ZWRfX8BV7FRUiRQzm
+ d7HrLXgnb6TfXqukYYKTO4OblYWjtAmIOsOXyB+Bxk+/rhbF8tndGtLUrFwQOH6FZM56MOpTvl1
+ RPUPEW2dW2uiqwYKGb1mUoD5uJFJHlkOg8o8o8/wVNvjg2vljnKodikX24M7XH3DamHrO6TxGI5
+ +Byn+IkqK2npiJIOP4CNImvtJLd+f4fU5aTRxQCXGC4SqRuTUNFiSJw8e3i5iNLKUKtVp1sxgYS
+ Ex2X50d2h9687OwIN3ic2gqNuqhOTjv23W1lVbDV9jgBlU/THl/RkZjYU7YCyfkh98fMP3yW9Nd
+ Jmh3Rd88dVdj1RrY4Vhw4uIndDJujbNmuYD39rua2ATXrnNO4EyqrwZ8FBInmdJcdwOfBb+Suai
+ MpRpreS5SzNmDEUuKGPzwl0BW3b48KlafgtRQuaZWEcR/Ner5L+rtZW8bsj59XrPvLUMQaOKOw4
+ hobVe4tMIuWc+5kuCYw==
+X-Authority-Analysis: v=2.4 cv=QahWeMbv c=1 sm=1 tr=0 ts=6a60c301 cx=c_pps
+ a=WeENfcodrlLV9YRTxbY/uA==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22 a=EUspDBNiAAAA:8
+ a=dA91eB7zeV-DSUTtgBcA:9 a=CjuIK1q_8ugA:10 a=kacYvNCVWA4VmyqE58fU:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-22_04,2026-07-21_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 priorityscore=1501 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 clxscore=1015 adultscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607220130
 
-On Tue, May 19, 2026 at 07:19:51PM +0200, Niklas Cassel wrote:
-> Hello Mani,
+On Mon, Jul 20, 2026 at 10:04:07AM +0200, Loic Poulain wrote:
+> The "bluetooth" and "wlan" targets drive the BT_EN and WLAN_EN GPIOs to
+> gate the respective functions. These GPIOs are optional, on some boards
+> they are hardwired to an always-on pull-up and not routed to a host GPIO.
+> In that case the corresponding enable/disable callbacks are no-ops, so the
+> consumer cannot gate or reset that function on its own.
 > 
-> On Mon, May 18, 2026 at 11:51:56AM +0530, Manivannan Sadhasivam wrote:
-> > > 
-> > > With the patch above. There is zero difference before/after reset, and all
-> > > the BAR tests pass. However, MSI/MSI-X tests still fail with:
-> > > 
-> > > # pci_endpoint_test.c:143:MSI_TEST:Expected 0 (0) == ret (-110) 
-> > > # pci_endpoint_test.c:143:MSI_TEST:Test failed for MSI1
-> > > 
-> > > ETIMEDOUT.
-> > > 
-> > > This suggests that pci_endpoint_test on the host side did not receive an
-> > > interrupt.
-> > > 
-> > > I don't know why, but considering that lspci output is now (with the
-> > > save+restore) identical, I assume that the problem is not related to
-> > > the host. Unless somehow the host will use a new/different MSI address
-> > > after the root port has been reset, and we restore the old MSI address,
-> > > but looking at the code, dw_pcie_msi_init() is called by
-> > > dw_pcie_setup_rc(), so I would expect the MSI address to be the same.
-> > > 
-> > 
-> > Hi Niklas,
-> > 
-> > When I rebased this series on top of v7.1-rc1, I ended up seeing the issue what
-> > you described here (not sure why I didn't see it earlier). So after the Root
-> > Port reset, MSI tests fail, but BAR tests succeed. Also, I got IOMMU faults on
-> > the host after endpoint triggers MSI.
-> > 
-> > I investigated it and found that the MSI iATU mapping gets cleared in hw after
-> > LDn happens. But the host continues to use the same address/size for the
-> > endpoint MSI even after reset. Due to this, the existing checks in
-> > dw_pcie_ep_raise_msi_irq() don't pass and the stale MSI iATU mapping gets
-> > reused.
-> > 
-> > The fix would be to clear the mapping in dw_pcie_ep_cleanup(), which gets called
-> > as part of the PERST# assert/deassert sequence post LDn and also set
-> > msi_iatu_mapped flag to 'false'. This will force dw_pcie_ep_raise_msi_irq() to
-> > use fresh iATU mapping when it gets called for the first time:
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > index d4dc3b24da60..4ae0e1b55f39 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > @@ -1035,6 +1035,11 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
-> >  {
-> >         struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >  
-> > +       if (ep->msi_iatu_mapped) {
-> > +               dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
-> > +               ep->msi_iatu_mapped = false;
-> > +       }
-> > +
-> >         dwc_pcie_debugfs_deinit(pci);
-> >         dw_pcie_edma_remove(pci);
-> >  }
-> > 
-> > With this change, MSI works after Root Port reset without any issues on our Qcom
-> > endpoint/host setup.
-> > 
-> > Please test this change on your rockchip setup as well. You have to make sure
-> > that dw_pcie_ep_cleanup() is called during PERST# assert/deassert.
-> > 
-> > I'm going to respin the series with this fix. If you confirm it works for you,
-> > then we can merge your Rockchip Root Port change.
-
-Somehow, this reply fell into the cracks...
-
+> Implement the .is_controllable() callback on the "bluetooth" and "wlan"
+> targets so that consumers can query this via the pwrseq API.
 > 
-> I am happy to hear that you managed to find the root cause!
-> 
-> Hopefully your series can finally move forward :)
-> 
-> While e.g. RK3588 does have a PERST# input GPIO, so it could theoretically
-> add a perst_deassert()/assert() function. However, when the EPC support was
-> added, you did not want that, since I remember that you said that you only
-> wanted that for drivers that required an external refclock.
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> ---
+>  drivers/power/sequencing/pwrseq-qcom-wcn.c | 30 ++++++++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
 > 
 
-Hmm, I don't recall exactly that conversation, but if I said that then I was
-wrong. PERST# assert()/dessert() have nothing to do with REFCLK. Maybe I was too
-focused on doing things assuming that REFCLK won't be available.
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 
-But anyhow, feel free to add it now.
-
-- Mani
 
 -- 
-மணிவண்ணன் சதாசிவம்
+With best wishes
+Dmitry
