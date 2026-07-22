@@ -1,56 +1,56 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42439466AEC;
-	Wed, 22 Jul 2026 16:44:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E297403AF1;
+	Wed, 22 Jul 2026 16:52:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784738691; cv=none; b=pbtx7+kgI3Fk2iekdsSkDN96SwDMzWQEJWFp1aKbTOLtZGx6hjj6qNAxn5gF+dK9BgCsiAcSHLXLIeAndbEg7yn0GtGw7U1ZB6dr5NgAbPFXXDJsZz2lvZRsUU14VpcDbQfL91rFL68FyPg7kqFYoeqeze/xVwbgLALzbsrNZPY=
+	t=1784739148; cv=none; b=CtchD1PSbV6ETm40RUCa4+qcNoFVEiXWoxcSaEHD/s+PiCPRDvZ7k7gDbMVophKcrYM5cH/Hu2Bdh05iUjzrW1Jju3lcP4cJQd0NOGu9ikPHKrJhNLT2OS4dvDSz/lty2qr8/DYqm6a2SFVa74NRzsf9FQ6od6DskaS2H3gkDqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784738691; c=relaxed/simple;
-	bh=cD/qDXqn7t3SNaRLZcAKutYl+gV2fE2dSuv7RQVm/X0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=sONeM8G8oabaOkoeobFhfOHDjg6h2UUl+boINuSh+0dMR+BOUWPPpm2C7MF6Z+RX78YW54dJGn4yEuxN2zrCLSPEhD2ZeRntRdfV7JLB3BCuzboSCOWy0m+9REZ69XSjLumf1jN2R96Tf2igemQ48115P/anVdCYWf0itYtfRa8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVHw4FJ8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784739148; c=relaxed/simple;
+	bh=yIhRkRrh0sn1tTFaoOyW1vk1VDgHT9zFdkvuhLp0+dU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bsmgTNab+TxJC2KqxX2SJ4qelT5i1bDNJzacgYi1NXQoHT8ZMccXIyqAgSA1DkBIAV09J/FY/MPR/3HTFUYMt3pZROgFy2/bHktdJFSisa+8PYmjvR2VtCcWO+enEduLMIIim0fTyGXcDET2BU91cR6rVJ4u7v0QpO9UAiRmcxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DpFHoyV0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVHw4FJ8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5E91F000E9;
-	Wed, 22 Jul 2026 16:44:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DpFHoyV0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75D851F000E9;
+	Wed, 22 Jul 2026 16:52:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784738683;
-	bh=8G4blgcZphXiC5BXNXULNi1/KsmrDWO8yQMPeL7wdUQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=MVHw4FJ83+OxlV4XAR180oMC8CBNtKJgBX/aWLiOB4zHtUJsJAu6zosfPHl1+mJH7
-	 H2CEUBVtYHZqnygyNVKrWWYnQxMAgnfV3SSfi+EDntXv0YGiDmTVVZLf+w27tXfv72
-	 GadQfdXJCrKLBkCrMVHTYQlnU4DJyii6fZ4etmnc4kTiJ2T37y9gMRTp+btvC7z13P
-	 9AtV1GflF5xxk1NvFpcsrncULkBqr7gaJspKXWeI9zYluWuXjcQbs0LNLZGvrzLeeE
-	 2NhhBtEZzkBmbEfm20AxK5CstZ+YBHSsTedXcWl4dPdxZ7k7s0VF+JNN/xd107CGLb
-	 4/Sm1CDdP9aBQ==
-Date: Wed, 22 Jul 2026 11:44:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
+	s=k20260515; t=1784739141;
+	bh=GL2pSyfUqjuPmverPU2rNkWROn+3SQ8dGrBCAoNYays=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DpFHoyV0VFzABFLUPR7icr9hWT7ghJ6g3aNli0e/diFud0wL7Cm3kFotmEPSNYqHj
+	 4WmkKbR8kP0jQFRPjeO5JmcDEGYx08WsaNe55rJZ/lx/OlHO/4TAIH32OMch3eu0+r
+	 hEBY031rVJByEP4q9/pdc9MbqGiWu2j0dCeHvz7d1G6W76sT4KNnywdZUSc/kHDvRi
+	 IRmUVnCUp6x1vGfZv71ZPpQjS9FRzGlNsbOCwUAvmMs0urk3vjTxkoz6Umm1NG9EAI
+	 bS2umLIzRe5jJQx0+q784VYxhZON5JEwdkrw4Y4CE9ERy9LT+tZkN6uZfW4KAi/IpD
+	 I9OoC79v7RBZw==
+Date: Wed, 22 Jul 2026 11:52:19 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Christian Marangi <ansuelsmth@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jianjun Wang <jianjun.wang@mediatek.com>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-	Michal Simek <michal.simek@amd.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Turquette <mturquette@baylibre.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	linux-clk@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>,
+	linux-pci@vger.kernel.org, Brian Masney <bmasney@redhat.com>,
+	devicetree@vger.kernel.org, Stephen Boyd <sboyd@kernel.org>,
+	linux-mediatek@lists.infradead.org,
+	Ryder Lee <ryder.lee@mediatek.com>,
 	linux-arm-kernel@lists.infradead.org,
-	Thierry Reding <treding@nvidia.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: Re: [PATCH v8 4/6] PCI: tegra: Add Tegra264 support
-Message-ID: <20260722164442.GA742885@bhelgaas>
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: mediatek-gen3: Split Airoha
+ schema and document 2-lanes
+Message-ID: <178473913929.1097113.176772633054348550.robh@kernel.org>
+References: <20260714115848.8537-1-ansuelsmth@gmail.com>
+ <20260714115848.8537-4-ansuelsmth@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -59,32 +59,28 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260716-tegra264-pcie-v8-4-23e51589229b@nvidia.com>
+In-Reply-To: <20260714115848.8537-4-ansuelsmth@gmail.com>
 
-On Thu, Jul 16, 2026 at 07:07:15PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+
+On Tue, 14 Jul 2026 13:58:45 +0200, Christian Marangi wrote:
+> To permit proper documentation of required property to support PCIe
+> configured for 2-lanes mode, split the Airoha schema part from the
+> mediatek-gen3 schema to a dedicated schema.
 > 
-> Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
-> driver is very small, with its main purpose being to set up the address
-> translation registers and then creating a standard PCI host using ECAM.
-> ...
+> A PCIe configured for 2-lanes mode require an additional reg for the
+> secondary PCIe to be configured and the airoha,scu phandle to correctly
+> configure the PCIe MUX.
+> 
+> Rework the mediatek-gen3 schema to drop any redundant constraint previsouly
+> introduced for Airoha PCIe properties.
+> 
+> Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+> ---
+>  .../bindings/pci/airoha,en7581-pcie.yaml      | 244 ++++++++++++++++++
+>  .../bindings/pci/mediatek-pcie-gen3.yaml      |  77 +-----
+>  2 files changed, 249 insertions(+), 72 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/airoha,en7581-pcie.yaml
+> 
 
-> + * The various memory regions used by the controller (I/O, memory, ECAM) are
-> + * set up during early boot and have hardware-level protections in place. If
-> + * the DT ranges don't match what's been setup, the controller won't be able
-> + * to write the address endpoints properly, so make sure to validate that DT
-> + * and firmware programming agree on these ranges.
-> + */
-> +static bool tegra264_pcie_check_ranges(struct platform_device *pdev)
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-Drive-by comment: I have a bit of an aversion to boolean functions
-named "check" because "check" is not a predicate with a true/false or
-yes/no answer.
-
-"true" usually means success, which is the opposite of functions that
-return 0 for success.
-
-In this case, it looks like "if (tegra264_pcie_check_ranges())" means
-the DT ranges match the hardware configuration.  If it were named
-"tegra264_pcie_valid_ranges()" or similar, an "if" test like that
-would read better.
