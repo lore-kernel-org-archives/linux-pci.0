@@ -1,81 +1,82 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0BB138F947
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 18:59:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B431459AC1
+	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 19:00:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784746798; cv=pass; b=PcxPtqlQzZk2LLn0iTX2pLwNfMsI70Se7uXkgpGYHG78DlHAVd7a2XfPqDCAwmXqLdSU2W7PC8/dzDaL5vov5km4QfRFLwBj4TIfprCDA2SFX+dpsiHPOsCk4H3tWN+ANBO61tjoSJrSMi1JlL3TfnT3t/0ADuvqtNYqllEpoLo=
+	t=1784746830; cv=pass; b=PWiEtDvazZ3slAckBfaCAj8zR5nfLH75SVtr/g+VmoWTGinZqMq/Mx5JCsZBqgqVZSNAyURmoffQ5vTl/1WtqUk/23wFnRHg/0ZknLQDdFEVxLHM7299R2Tt+W8StZpqEOJlk6R+3BHLgmyizvR0xIyYi6TbNQ5CaHBxyxKMIcE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784746798; c=relaxed/simple;
-	bh=OR8lGDmhaAeDCR6cUrkUghEFDERBizZRwyMQlhX/9RA=;
+	s=arc-20240116; t=1784746830; c=relaxed/simple;
+	bh=XFNAerwWaEDD0qf52Zr8HyArocr5+58TcoObbHLHtE4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pf4/NOMdTjB+SXVzP0/ijrUHJyRVn78CM6mTQzelQG2ei8nMMnNoj3vSvgr3jORzvFe/DcSffO8vdUbLp/XvazaT1yn9qR2w19tIiOll2McLG01OBmpCt6KO0KrvFlLZlrvCOBSf51wtjZcoI9HUYpdVcpnR6T4bPlIytO8q4Ao=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=GZRDblSJ; arc=pass smtp.client-ip=209.85.214.180
+	 To:Cc:Content-Type; b=nb3QwZqq5gPMj7rjR648DW5RgJZwwlslgCI6oVuLtezQ9tKQGIaoRPQrx+IcGP8f59jg5kX2FgNdVspDOevi6VFHpSJUuEBwqITNFMDhJOiAAFm6lctgNiDZhctX9bFQUNkO4OSRuT21e9+nGc9On0VyBTk7A4QhPTDEcGgfiqI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=bmx8IWw8; arc=pass smtp.client-ip=209.85.216.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="GZRDblSJ"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cf6d65d8a7so47753105ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 11:59:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784746796; cv=none;
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="bmx8IWw8"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-38e3617ba36so7355602a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 12:00:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784746828; cv=none;
         d=google.com; s=arc-20260327;
-        b=mNXMgh8H5eLDTzBK+1MPQuN+KGqn8Dp6YaSfsxgH5YYfh3M8Lmj8EdKF71yVVORhsV
-         07zk9DuME25phh6aV0QIHkTT3HGF75ttZLo6LqUMQDlnXxFGV8OkD/NkEhJR3GsXAxlk
-         wnjDukP9FV7sJQYhMjgQADLA7T5y84XwlDw+amEhv5WB6ieDe34UB2vAHzDT9ijHDsDH
-         /my9g66hezw1ivRdAGP4KF0spyJsMdwCVIJRdbAm80xB9jdZvwoghPnWlRfE5U755zoo
-         GOeSojVL5JLUTDsM6wKXIZQ5E2f+ieWdEMrWznzoKcHRNP0YD8007GJc2vlfsevqNDu3
-         q9yA==
+        b=PrW9IKTaLvv9HebmcpctvxWJZrzP+aRm4bOHiFb4NZXJdiJ8rzFS1/a/flu7XWw1SD
+         u1OFhkvtUJPi14W2XMvti5ZzDHHHxgZsivn/+vj/W/8D95ZUcUueymUdQLBEU/FB9EpH
+         2AOVPA98CSZq+fi1lNPbgc+HjFlcAqvd3dBiujswQIH69GJlJKPVltPTuUSnDK3FPiCt
+         3fFA7B8cbQXk3AlSm8R5My9XKUOOOjPvoAWDhaSG9jYycmTiPIvfAAKbRk5i1CMmdEVc
+         UeqTXuk0U+KVAL4m3JpzXwlu0lrPezhPDHKAQFTabjtio493LnImxoC2qvEU/JX2mywj
+         I1CA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=bLuoWCiEv6axx8ZJ0eWPaRp1LKlXkm29GSKK+KBsJ/w=;
-        fh=M8H/RVLNJ/RwHv+eFZBfsBcIbzZvN7W/atp1IE3hs64=;
-        b=cyO9SbVwVPcFV/EWorAIXya2PLqJt2xXQpzq13Fr70GjDQ3N0DehF4E7W5kiXjSqaL
-         hlFNWALo8HO8MtN6N/JBUgDmrSa43WPNqDaTG34NXYO7yihVO7A4Rr4uj0fRr7VaM9rs
-         XfSaA9XpRK76Vh5obp5ZB6hX+wsFCHsH2Gdjm2d/iJAb4m0uS3fRUCKMS93tE/LDDNv1
-         sJgvoUkx9xUSrWrSgvR97LhMuxmyoKBdb8gPjagGCHk7HkuJ5YIKThEaFbrpL+aBN1u+
-         tWiSNuYeL5SUVp+/a/QgHyQS3/pJi4e3Dxi+p5qdvy7dAdDefVEV3Uiu77XgADr4BL+d
-         dH2Q==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=XFNAerwWaEDD0qf52Zr8HyArocr5+58TcoObbHLHtE4=;
+        fh=jlsCU+PVUaAGBy3/tt/RvVPP+i8jXf1IUyq7EVFuxDA=;
+        b=Jr5ufVtNh71UzgKJ3T5K5CL+O60weYHV2Ucb4Oy0hQcbpXeQzfiwSlYL7VU5L+Vhbn
+         az5KYlxXbB3eVhskEdqTV3NNUs6nGY0+bT9XW9l9OqIzQHz5ttxSfjvlVeP6wW5CFFLc
+         tLYVMIZ0HphN8LQFiHnFOQ5QIZytG2EFQg52N0Sp8WNwEXMXng0GMqmFetop6I8ZZiAi
+         UjlYjvv+R10+1/krOd+vAuWEkQuq/juhAd2oSumfHh80Bm7Lxwarktt3LWfb72SCwB4w
+         SHuHQXB7hu8GpqjvCKujleP4QSna9MQjKx44+e7SGe1HNQS2F8jqCBUu6jnNUEJYSQKX
+         Oc2g==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784746796; x=1785351596; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=bLuoWCiEv6axx8ZJ0eWPaRp1LKlXkm29GSKK+KBsJ/w=;
-        b=GZRDblSJxpfkVu9OGLvPcpIF+Kx0S/dsdjtNVu12StBiM7IsmYk0fqos/LFja1aYKI
-         tKYDIun9sCkcalPO1n1bkURwucUBbDwX883OP9/S5tABONs5MQanLk+jOr0Q9paXm2iS
-         nQi2t2d5DbK3i3t9+McpUf5NlC4diEkR7GQYVe6318h3OWfb8X4rHgEAr/Dt67rw6xQB
-         3d8YXlUNTab6GEEdyHMkfxiL03YARUCqOgU+QOuHHyMEeBSdGvwEPF0NeW0l9f8tVjCd
-         S2SkWby3p7TMdwgOgvbrjH0sxNwW/CKTnDRF+0yrt5ukgNkMTW+AX9/qX8ZybTy3srwx
-         zk/g==
+        d=meshstor.io; s=google; t=1784746828; x=1785351628; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=XFNAerwWaEDD0qf52Zr8HyArocr5+58TcoObbHLHtE4=;
+        b=bmx8IWw8EccXq4m0q2xSFHQsBaM7x6V5/xPOZKKKJ9H6I8O7Lq8jQnEF/cVXbC869H
+         jofO3O+ROTrCELauECzFq6zSVarnp5OCXBfAmSGShwoD/+ZXWAtnt77BtELaIqs1ex8s
+         JDEYbaQnaEt47S64G1iz43BPk+bRmqYGTERDiSpnKK5kpdneIOaS1REu18d15SGDbUJ+
+         V90ZfDlC02gHOefOOoSra+QBljTR4RXLcm1sIarf+EQ9uE5F21HDnFwC0gQWSR8lyQFV
+         ofZeMsCKBd/CMn1SA8HxJMgdEs1x/in/zXtjvOa5w8O/Ay6z8fMcIEQwFKzKRBBcajOF
+         dcrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784746796; x=1785351596;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=bLuoWCiEv6axx8ZJ0eWPaRp1LKlXkm29GSKK+KBsJ/w=;
-        b=FmXA6HiyLNXyKawv8pa5jnUiDtOvt/MU2NAERWs7l4djcea0Kie3tSWbeneZldWSrI
-         kTBHCymKMg//pykrWzb+9VY8fIQZ1fze1/69tlTcsPAPjXHoV8xVq9fGeRfHU2AA96D3
-         yH5MhJ8iM6uxP2gdIxrP6i8gZSls57bD0g4hpSCBGuUDB14elO9FFnIjaV4HChHWZrek
-         NXk2MMrlnuNt3jk4c/xK0o87nY3K8OqgMx2FIlRWZbOFNtEJ/OuRDlk5nfywLSMrIAit
-         mxYsgTXBPY43ih71lYcIGqJJskf1tu0qPMOiD4UXLRAcihQDeHhNFgWg20z9Pq3BSO/7
-         fWNg==
-X-Forwarded-Encrypted: i=1; AHgh+Rr/iE9zpFdWYagCIddNj4fxWQrvLgLAa3hURrS3BOZ0NS9v7N009RIg+pZa2NBh09GJJc5z7jXmzqw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHVIp05LZfMwLblbzwBE+bHJMFzaC+iaeJHueUUo+Y5K0GkM16
-	LUWb38HUy9CVzoLp3epFYf57BtVVAJyB48uXP5ZE1CFlIbcgK6f/an/uM5pn0lnghfNPbPRGIRy
-	ViHCosYfN9/pkTppFekZQgKzO/2iByZ3qxc8frk47
-X-Gm-Gg: AR+sD13ysGsbU6DC1MucbJG7Dm1Iqm0oKKPou6joYtHKRFAKDwtveUuNvUsHFd0wMXm
-	k9ViG2rbrXSELvvjj1RKa5JsbayVzYwPc0RRGtMBBDQFaEZqys4Vj138tm8pE85TESnfxgUOoEq
-	nEvWjAonQFiKztL/2YzizeUPV/ppjLPj4APp5It7Rq86WadUiyuZlr5u9r1A7EPefg8kwzITch3
-	K5DvSUfg1woenovrF1hVhh0aTa0DYYc8u2Y1ypYsPjwtRP2PhKwcKmTEvSnOdj1qUmdeFq+I6Xm
-	NOpUruqDlh31NjaPiwtaqCsoGOIvyQB914t6X4J0I3iYDoKG5ND85d/gYxyzy9Li5ZatH2Xr5l+
-	YZe1HJPWQLyKFh2w8JLMPbOHsOikA
-X-Received: by 2002:a05:6a20:c70b:b0:3c3:7427:5ed8 with SMTP id
- adf61e73a8af0-3c3ad5fc1cdmr27667795637.8.1784746796289; Wed, 22 Jul 2026
- 11:59:56 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1784746828; x=1785351628;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=XFNAerwWaEDD0qf52Zr8HyArocr5+58TcoObbHLHtE4=;
+        b=lsgKFhfpOc4kFixpDYSLrt5kkBc3ueW5fgQ22+hh86zqkHULCLehh67dvMExTb5aR2
+         FqVHwkpHFrdRYjosMlREPLtWvFuluqBkBLolgReqJGFW3fxicSLGvECZFsk067pwd/HQ
+         4RK09F3ZXVAj6agOfn/azodNWbqfRphvZIRZgIlXiMdqQHpIk9gpz1M2dxvyjzSOk8Fe
+         Gc4NyaQms+YjiB3ju+pEkn/sZUTjjfjpSenf6BR+AXFWlNu0qVRvYrs5I9Fe1vftDujV
+         JilJjuQrOY85BhushWR+PTjvedvDDWu1aUE7SgPJyvrz30+gQuQTa1tainviK3/ojpuJ
+         ZXsw==
+X-Forwarded-Encrypted: i=1; AHgh+RoUcb/aFwU69rzuj3dZ7sBe6dcuYDoAWrRroTLl0UsEj6vPrixzGYhZ2ARw2Xlk6gSUvUPXa61vzxo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzC/wW9g+toASSI2K3iaa8l8tp/0smwIBBgNoSoUjrVjRqzdWok
+	bxu/MxXZs8wugPNQMtZF/xhpNKXlwVEM0mZRc/arx2l0Suf6ZdTC3D5O9u7Jv00jj7hPGcPbLFX
+	I1qLtUbJFDD5Zg1x1dgZm7caka0crLmD1IJ8Kjc78
+X-Gm-Gg: AR+sD11dqzFu6vlBc+fxRTtCm3xNvZopPYfEE9A9tVwx18JE5WLavUAxI4Oq+m1zNUP
+	X+WxllCvlaFwwQzGZNBfiBsUOqcysiA+1Mdk7c3BADSdap3Fvy3GtydpUQyCNHGgMMvrjg9go3M
+	m9Z8k4kxspyF6wiBE96wZLHZD9wKViv9RHk9pJ7DHGIJMk1PhEQDox82+KOsGIp6yEOD2Y6XoGa
+	MVCNtKAvNQ0yJEANuaFbjCgoA1y7BEktwM8jYsRz/k73M5Jw0DGXBlhnlo4BrxT+mxm9J9K9sTL
+	4Q9ULwXdZji0QD1nylgowFD+eSSAIBs6PpHqGOHbxGCMXeEgtjcOoAsyE47QU/Srvl/nB77tZz7
+	NOsMiJn79xn8DSoP/CpOh2AljtZ33wwYDwZ4Udcc=
+X-Received: by 2002:a17:90a:d40f:b0:381:11eb:d78e with SMTP id
+ 98e67ed59e1d1-38e4b430c6emr27167946a91.14.1784746828497; Wed, 22 Jul 2026
+ 12:00:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,41 +85,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260719105327.864949-1-mykola@meshstor.io> <20260719105327.864949-7-mykola@meshstor.io>
  <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com> <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
- <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com>
-In-Reply-To: <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com>
+ <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com> <20260722083015.GU110966@unreal>
+In-Reply-To: <20260722083015.GU110966@unreal>
 From: Mykola Marzhan <mykola@meshstor.io>
-Date: Wed, 22 Jul 2026 20:59:44 +0200
-X-Gm-Features: AUfX_mwIJDNeayLFRjPiK4AAbt3mZyBzoLHgFDE5c__6SI0eByKP37ZQz-8Pukc
-Message-ID: <CAPzsNDvv9eavB73xZt+LxjqLkah4CfiCJsAq-4vxDrhW13z6uw@mail.gmail.com>
+Date: Wed, 22 Jul 2026 21:00:16 +0200
+X-Gm-Features: AUfX_mx6Cta37C8DCF1XHW6rVQfC4bnrtxly1T6dzUQd_16ovjA21XsyVTPdIOg
+Message-ID: <CAPzsNDuGfneEmx_nWqw5vYLyPyK8krfWChNRcsxO7icTEDDX5g@mail.gmail.com>
 Subject: Re: [PATCH v2 6/7] md/raid1,raid10: skip futile retries on P2PDMA
  mapping failures
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, 
+	Yu Kuai <yukuai@fygo.io>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
 	linux-nvme@lists.infradead.org, Li Nan <magiclinan@didiglobal.com>, 
 	Xiao Ni <xiao@kernel.org>, Guoqing Jiang <guoqing.jiang@linux.dev>, 
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Kiran Kumar Modukuri <kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
 	Bjorn Helgaas <bhelgaas@google.com>, Shivaji Kant <shivajikant@google.com>, 
 	Pranjal Shrivastava <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>, 
 	linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, 
 	linux-pci@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Instead, I think it makes more sense to introduce a new BLK_STS_P2PDMA
-> error and use that. ... simplifies patch 6 and 7 significantly.
-> https://github.com/lsgunth/linux blk-sts-p2p-err
-> Feel free to run with that.
+> I had thoughts about this series too. It seems best to avoid
+> the P2P path entirely unless all legs support P2P.
+>
+> Can the md/raid code determine P2P support in advance?
 
-Thank you, it is much cleaner now! v4 is built on your branch,
-your patches kept under your authorship.
+Yes, and it already does: the block layer ANDs the P2PDMA queue
+feature across all legs, so an array with a non-P2P member
+(e.g. an nvme-tcp leg) never advertises P2P at all.
 
-Two things I changed in them:
-1) read patch reads bio->bi_status after bio_put(); v4 moves it
-   above the put.
-2) for the narrow_write_error(): a P2PDMA failure is whole-range
-   and deterministic, so v4 records the whole range as a bad block
-   in the completion handler instead of retrying block by block.
+But that flag can only say "this driver can do P2P in general".
+md cannot see which HCA device does the DMA for a fabrics leg =E2=80=94
+and with multipath failover it can change at any time.
+
+So the up-front gate covers what is knowable up front.
+This series is about the remainder.
+In mixed case, one local P2P leg plus a remote replica, with it:
+1) a failed read just redirects to a capable mirror;
+2) a failed write records bad blocks instead of retrying forever.
 
 Mykola
