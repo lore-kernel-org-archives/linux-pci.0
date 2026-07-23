@@ -1,123 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C253859CB
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 06:25:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5422F37A856;
+	Thu, 23 Jul 2026 06:27:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784787932; cv=none; b=oVfWhtHuAfMwGeRoHeTlMh8ZZLWp1zOgRMyQa7n2It4nbiFcAIMZ+/2RvOckGjPCpnulhrEE8oNBbPOo2sesDW9Kk6/yH+4BzmUxX5aSGCX0+2L7fRDsEJd5qB8UPUT4ghWwxFBWVIVY4SBXghUtfiJ1CdHAk2Nu6ioFxnaOi7c=
+	t=1784788068; cv=none; b=Vm2ijDWlPQY5usxmOggpJL4WeE3GnPUqgKBu45T4/UtMEZFLO7HozTi17plfea7iL1oondRdxNROetWCPszFQ9Pa4FROpvOK0Ptbd2clzrE0PCUWCnyQtQSjsofSdTkqXuPN8tu+FueymeeVk8hEcmrND+Pd+jdHz3eFjzv53pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784787932; c=relaxed/simple;
-	bh=g6v8KunGx6zlQk8BRmGjPcsPho5sZBE0j8K11fGUrgo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OaeiJUb2LlYIsN0ADSBjryR4yWxfH2+tFBUtMx5ojp4KXi0fnzJou6q/5Qi8MAT+qCPZCuGsG8+HOUa5toqpeRt7UIAxNhEPoTWO2zpd6bh2mWTHMNc3qTedzugomqwcPh+rYP4zgGXD5d06rT6kXGgsbBCzhU+nPfHh3KEfGWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VWSM9Gnc; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VWSM9Gnc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68D591F000E9;
-	Thu, 23 Jul 2026 06:25:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784787931;
-	bh=ggN1p79uvZMnpBFzNTtq+epaV7zudZzqND4oOH94QOY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VWSM9Gncv7u5irRN+vAhgfMI6rhpNke46Qm42WIyyYOyXnLsHx6dySxr7q1dR2DrB
-	 uCv2pJtVPlWjYjOfSTsLdjZ2MSCfJlRWSAvs+6wkxmo9xhCsRSe/nZ/dfGA4dWtRUi
-	 hGhuPBENXuDPxtdjkBBVWkJXozRee/hGXnZpF/hC2tX44c5iOX+E5YFdbmLMKgEtUZ
-	 eByFTLUijCY+bXBWqC7gwTKCEujcvJFW3P+PNXvQPjEs+YhXe88wyVinQkKNPFybFG
-	 UJBKwRD9sfvw0MZW/w+5JtBUHHqDNy+1ybXFcaNVsqpTC5/dQV2oOldcpllhjMl0nN
-	 lBz0wYt1tmkEw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs
- only
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vasant Hegde" <vasant.hegde@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260723061548.10187-3-vasant.hegde@amd.com>
-References: <20260723061548.10187-1-vasant.hegde@amd.com>
- <20260723061548.10187-3-vasant.hegde@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 06:25:30 +0000
-Message-Id: <20260723062531.68D591F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1784788068; c=relaxed/simple;
+	bh=KYn1cK90jdEH0cZeFZiwiYA4xJrj+TmY9MAHd6M8Y8k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ga4GfhdM3XcYq8R3nkeXeYzPnlz7Q9yIS7jrHVLD72ucf11bPZ934x9jHRnvh8Cdkws3bwFmCAaGUxAvhV6/MXd6bwUYenJgovL4l5PO3t/aP47XQFt97PoH6Tu+H7pJgOMMMmhPCMx4kaX8HR8jlqQlo1yv5xpRzykOU1i5t94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id A4F3210DC8;
+	Thu, 23 Jul 2026 08:27:41 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 8E75A606F523; Thu, 23 Jul 2026 08:27:41 +0200 (CEST)
+Date: Thu, 23 Jul 2026 08:27:41 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	David Matlack <dmatlack@google.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI/portdrv: Allow probing even without child services
+Message-ID: <amG0XebAYI-4eDIN@wunner.de>
+References: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] quirks_force_identity_mapping() incorrectly identifies AMD discret=
-e GPUs (dGPUs) as APUs, inadvertently forcing them into IOMMU IDENTITY mapp=
-ing mode instead of the intended DMA mode.
---
+On Wed, Jul 22, 2026 at 04:09:42PM -0700, Brian Norris wrote:
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+>   */
+>  static int pcie_port_device_register(struct pci_dev *dev)
+>  {
+> -	int status, capabilities, i, nr_service;
+> +	int status, capabilities, i;
+>  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
 
---- Patch [2]: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs=
- only ---
-commit 43e3d4caff8faca1297d432e0146e34c6ec99227
-Author: Vasant Hegde <vasant.hegde@amd.com>
-Subject: iommu/amd: Force identity mode for selected GPUs only
+Nit:  Move the amended line below the irqs[] declaration to sustain
+inverse Christmas tree ordering.
 
-This commit attempts to enforce identity mapping mode specifically for APUs=
-=20
-while keeping discrete GPUs in DMA mode by checking the upstream bridge=20
-vendor ID.
+Otherwise this is
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
 
-> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-> index 1e76386e5eb11..a9c7209f1b587 100644
-> --- a/drivers/iommu/amd/iommu.c
-> +++ b/drivers/iommu/amd/iommu.c
-[ ... ]
-> @@ -3122,6 +3122,32 @@ static bool amd_iommu_is_attach_deferred(struct de=
-vice *dev)
->  	return dev_data->defer_attach;
->  }
-> =20
-> +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *root_port;
-> +	int class =3D pdev->class >> 8;
-> +
-> +	/* AMD GPU vendor ID */
-> +	if (pdev->vendor !=3D PCI_VENDOR_ID_ATI)
-> +		return false;
-> +
-> +	/* GPU class */
-> +	if (class !=3D PCI_CLASS_DISPLAY_VGA &&
-> +	    class !=3D PCI_CLASS_DISPLAY_OTHER)
-> +		return false;
-> +
-> +	root_port =3D pcie_find_root_port(pdev);
-> +	if (!root_port)
-> +		return false;
+One caveat, I note there is a pre-existing issue on Loongson LS7A,
+which (according to 62b6dee1b44a) suffers from a defect wherein
+disabling bus mastering prevents forwarding of MMIO requests downstream.
+This happens right now (and continues to happen after the present patch)
+if the error path in pcie_port_device_register() is taken.
 
-[Severity: High]
-If an APU is implemented as a Root Complex Integrated Endpoint (RCiEP),=20
-pcie_find_root_port() will return NULL. Does this cause the function=20
-to return false early and leave the APU in DMA mode, which seems to be the=
-=20
-opposite of the intended behavior?
+I also note that pci_enable_device() is only called because per
+1ce5e83063bf, it was necessary in 2009 for legacy interrupt initialization
+"on some architectures", which sounds fairly vague to me.  In any case,
+it seems to suggest that pci_disable_device() should be called if
+pcie_init_service_irqs() fails.  Right now that is done, after the patch
+it isn't.  I guess portdrv would have to remember on probe whether
+pci_enable_device() was called and only then call pci_disable_device()
+on remove.  I guess it would be possible to abuse dev_set_drvdata()
+to store this status bit (as a fake pointer).  Then again, I'm not
+sure pci_enable_device() is still necessary for legacy interrupt
+initalization today.  I guess "legacy interrupt" refers to INTx.
+A lot has changed in generic and PCI irq code since 2009.
+I assume we otherwise don't have a need to access BARs on PCIe ports
+currently, but perhaps new port services may come along which do?
 
-> +
-> +	/* If bridge vendor is not ATI then its APU and force IDENTITY mode */
-> +	if (root_port->vendor !=3D PCI_VENDOR_ID_ATI)
-> +		return true;
+Thanks,
 
-[Severity: High]
-Will this correctly distinguish between discrete GPUs and APUs?
-
-Since pcie_find_root_port() traces up to the host's root port, the
-vendor ID will typically match the system chipset (like AMD 0x1022 or
-Intel 0x8086) rather than ATI 0x1002. Doesn't this mean the condition
-root_port->vendor !=3D PCI_VENDOR_ID_ATI evaluates to true for discrete
-GPUs, forcing them into IDENTITY mode instead of the intended DMA mode?
-
-> +
-> +	/* Rest all are dGPUs and works fine with DMA mode */
-> +	return false;
-> +}
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723061548.1018=
-7-1-vasant.hegde@amd.com?part=3D2
+Lukas
