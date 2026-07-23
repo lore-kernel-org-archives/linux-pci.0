@@ -1,84 +1,110 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5422F37A856;
-	Thu, 23 Jul 2026 06:27:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D96D3CBE6E
+	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 06:43:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784788068; cv=none; b=Vm2ijDWlPQY5usxmOggpJL4WeE3GnPUqgKBu45T4/UtMEZFLO7HozTi17plfea7iL1oondRdxNROetWCPszFQ9Pa4FROpvOK0Ptbd2clzrE0PCUWCnyQtQSjsofSdTkqXuPN8tu+FueymeeVk8hEcmrND+Pd+jdHz3eFjzv53pU=
+	t=1784789001; cv=none; b=UBsk+q4JfGxNhgQXPfcBrcSWaJsgr+TAR5IetnhezGlVWUpMrrBX8p0vkBS5XkgKNNDpeDOmyL4gNLEiFjLC5vvQJrSwBrs31h965Ay2HZ6N1sNTwazwiLrLeCNcvh31XMRO6SPH8ns+k8FpJMHRNFXpxEboQqU6gJwU10GviYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784788068; c=relaxed/simple;
-	bh=KYn1cK90jdEH0cZeFZiwiYA4xJrj+TmY9MAHd6M8Y8k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ga4GfhdM3XcYq8R3nkeXeYzPnlz7Q9yIS7jrHVLD72ucf11bPZ934x9jHRnvh8Cdkws3bwFmCAaGUxAvhV6/MXd6bwUYenJgovL4l5PO3t/aP47XQFt97PoH6Tu+H7pJgOMMMmhPCMx4kaX8HR8jlqQlo1yv5xpRzykOU1i5t94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id A4F3210DC8;
-	Thu, 23 Jul 2026 08:27:41 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 8E75A606F523; Thu, 23 Jul 2026 08:27:41 +0200 (CEST)
-Date: Thu, 23 Jul 2026 08:27:41 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
-	David Matlack <dmatlack@google.com>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4] PCI/portdrv: Allow probing even without child services
-Message-ID: <amG0XebAYI-4eDIN@wunner.de>
-References: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+	s=arc-20240116; t=1784789001; c=relaxed/simple;
+	bh=DFKhnqtY0aNYV2eR9lPnEc+ekJprQ8SVzkvbIn6H5mA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ujMPELmOjil0WxWdsr2noLIpI+NxOS71DyYTqkY9c0086u+I4EryEINieYX+3PUeAHlc2hWHD/CbpLVxthqy5qcSnH5H+9YvG/CMfIcPBQzIPV0A1x4TRAjGsHgMdC7/oYt8Y8kaH2UcgdT0XihAiemZKCApdst9wycQCFnWXys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hLZg6/83; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hLZg6/83"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-38759bcd877so262722a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:43:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784788995; x=1785393795; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=iFJBH+l6Rr0QnYtUEX9bQo9WQo3rO+vvwx8dfmQ65rQ=;
+        b=hLZg6/83XChXZJb89ZE0Qyc9+LO0LKJnBUxencH/yrTZVvn12T7t2ikGF0MipBzdmB
+         AyZHH9mvvgRzLjHv04CAVfl3oAH164iRVBdIzEVyxYd4wE7F0pYsxmwJ2AAJR2zaj0YV
+         zrnScm+VzpAOT1EzuOnvgLS5mUOMzztQ8Xy9z8AlOD4TLzZLo0Bf/ng+FnKrsnLB0Nc8
+         ZndYS9M63pmlMV3Rrws+TiWhHFHsyNQJZn05MGgQnJftC/nykOnUvx8Zkj5oqDWNx36b
+         93crLnhXn6nwmmmlAMv0I2eC399uWh1WjL0lnqINc/EwxDGU5qc53cMUzQphG0pLVzKc
+         tJQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784788995; x=1785393795;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=iFJBH+l6Rr0QnYtUEX9bQo9WQo3rO+vvwx8dfmQ65rQ=;
+        b=oT+t+07PiuL7rFTQrxtW4/LQKgjXmpsFiGLOFwTo6LDZ4pCbGi6OOYHf++uMmjSUY9
+         H3Zvv/kf43mHxlPlro7cVBEhQduemwUtXECzx2/1ZHZw+AB2PY4u0w+4D7Qm9FrXyG5d
+         uX333N74HYMxcJspoV0gLQlnCV+ZtGCXe/+HgPPWekWgsIneyvFfe9una+1ZN6d+XVwg
+         mdQPs3Iv5r9sScw/6aYO4D5ew5ixQPJm+9FCWL93K8WXob5X54/Mq788wst4ddkfbUPe
+         HAXwLk8zcfxZkzZLjwa+t+WF6+ZWuc/F7vemoP6Qu1q2cLPRf4keA3iWEU9Td9e2zqAF
+         pXag==
+X-Forwarded-Encrypted: i=1; AHgh+RpLdFjkTSk/ESRy2OqbOIq7JI1u+z7eFuVDzmT3F4zCR2VB31Z4LEtXnT/9Ds9yTFJOIRKf2BW9nSY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyLLug86wxtbaIs1hvb75XEDpp0H73w4GwUdv0W1cmTXiCVSb0q
+	qfnQYewNjba5qOlUvjLDJxPrHaRMYnSSPji14tDYTadCKS3b3otfMI6p87wIvDaTZMU=
+X-Gm-Gg: AR+sD1105C/wm1/RaZJ2qBTFvVRIiUn6aFUqDfEZEkl9E2mY7E+J6oDIDT7vKRKFy9m
+	5YvtuHA1vFcgrPemdXlfk558R5uPeiMpQZ3AcHXbtuQaLM/O0yJMy9hHLdE9PyiE8r2esWIBu/G
+	E1Kjbk86F8W4YK3lNa6HzDux5epjOA+lG72FfCD7cwR0Bb9x6osfjB3C0x+HIC8yHJ7toc61rsb
+	xr0BdlSIccWvQxkV6Iw9N4mq1yJGUFSxfVBtEOHOf4ZNymnNLmVXIqHNFp7SkHUS6ZxBux1Ytv9
+	97nmT1Z1akvHZ1yyRvp46iGHpk7Ok7vZMeg5yJJKhNTb1nDlIGr/Sk8r/N3SHKvSpTVAzuIpdCC
+	DmifImsJM7sigNq3nVB7UfCfDSFvDScGlRLaYAJpi+7LQM2rDYOg8eHYBzqkl3h9RyYSEhrMPQL
+	b5L9XP8pbt6KYv0aiPam0=
+X-Received: by 2002:a17:90b:4d91:b0:38e:76f8:fcbf with SMTP id 98e67ed59e1d1-38ec6a842b9mr1661047a91.31.1784788995132;
+        Wed, 22 Jul 2026 23:43:15 -0700 (PDT)
+Received: from kernel ([45.251.35.26])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d130ce035sm12643420c88.13.2026.07.22.23.43.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 23:43:14 -0700 (PDT)
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: bhelgaas@google.com
+Cc: skhan@linuxfoundation.org,
+	jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Subject: [PATCH] PCI: Fix 32-bit config write in Intel RP MPC ACS quirk
+Date: Thu, 23 Jul 2026 12:13:00 +0530
+Message-ID: <20260723064300.8081-1-raizudeen.kerneldev@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jul 22, 2026 at 04:09:42PM -0700, Brian Norris wrote:
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->   */
->  static int pcie_port_device_register(struct pci_dev *dev)
->  {
-> -	int status, capabilities, i, nr_service;
-> +	int status, capabilities, i;
->  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
+The pci_quirk_enable_intel_rp_mpc_acs() reads a 32 bit DWORD from the
+MPC register, sets bit 26 (INTEL_MPC_REG_IRBNCE), but it writes it back
+using pci_write_config_word().
 
-Nit:  Move the amended line below the irqs[] declaration to sustain
-inverse Christmas tree ordering.
+Because bit 26 resides in the upper 16 bits of the 32 bit register, a 16
+bit write to offset 0xd8 completely drops the newly set bit. The quirk
+logs that it is enabling IRBNCE, but the hardware never actually
+receives the command.
 
-Otherwise this is
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Fix this by using pci_write_config_dword() to ensure the full 32 bit
+value is written back to the hardware.
 
-One caveat, I note there is a pre-existing issue on Loongson LS7A,
-which (according to 62b6dee1b44a) suffers from a defect wherein
-disabling bus mastering prevents forwarding of MMIO requests downstream.
-This happens right now (and continues to happen after the present patch)
-if the error path in pcie_port_device_register() is taken.
+Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+---
+ drivers/pci/quirks.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I also note that pci_enable_device() is only called because per
-1ce5e83063bf, it was necessary in 2009 for legacy interrupt initialization
-"on some architectures", which sounds fairly vague to me.  In any case,
-it seems to suggest that pci_disable_device() should be called if
-pcie_init_service_irqs() fails.  Right now that is done, after the patch
-it isn't.  I guess portdrv would have to remember on probe whether
-pci_enable_device() was called and only then call pci_disable_device()
-on remove.  I guess it would be possible to abuse dev_set_drvdata()
-to store this status bit (as a fake pointer).  Then again, I'm not
-sure pci_enable_device() is still necessary for legacy interrupt
-initalization today.  I guess "legacy interrupt" refers to INTx.
-A lot has changed in generic and PCI irq code since 2009.
-I assume we otherwise don't have a need to access BARs on PCIe ports
-currently, but perhaps new port services may come along which do?
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b09f27f7846f..0d0cf6f86173 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5361,7 +5361,7 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+ 	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
+ 		pci_info(dev, "Enabling MPC IRBNCE\n");
+ 		mpc |= INTEL_MPC_REG_IRBNCE;
+-		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
++		pci_write_config_dword(dev, INTEL_MPC_REG, mpc);
+ 	}
+ }
+ 
+-- 
+2.53.0
 
-Thanks,
-
-Lukas
