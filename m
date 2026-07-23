@@ -1,46 +1,46 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010045.outbound.protection.outlook.com [52.101.56.45])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010053.outbound.protection.outlook.com [52.101.193.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACF13B71CF
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 06:16:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6B0C38A29A
+	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 06:16:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784787391; cv=fail; b=RkUmDTTxXTGmQhcitcvje1YJAGDvRNIMu0Vh+KbqW9XGL3WPDSikylZ3yNRqNDRIkb859U/N1Bt01dat7YaMwVfjWVHJSILWc0PVimQZcyCePzphK0pyHdklP4Z5uI1BrPCvhU92+ZQPZYZhvPoB599FWxwvubERLnKUo0QDq98=
+	t=1784787408; cv=fail; b=jEGr8xfq///tbjqrUHrKo+chMIzxC5wVtZg2GRG/TkQmz27cs8dWS4R9obmVSMDxxJ7VyiPr0wmfF0o7FC/s1z4QE1327zIPt8T8kt9D9i8gDi1MLzFrqnpAuYkghkNAD/tsor+LE5XtCeW2ckHLIrSl17oLLBWb9E7VKCCl0qY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784787391; c=relaxed/simple;
-	bh=Q3WqbHOgHEOHXoPZzotKQOWdt+05buDKU5o215aFyI8=;
+	s=arc-20240116; t=1784787408; c=relaxed/simple;
+	bh=0ZpYzBsVZbR8vf7yK0oDvbwVQJ4ajYq6Dqhe24scB38=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=drGY7a+yNKg3DCM4UPfXXWOBnFJclNdsbqyJ7ClKGu5urlrl+ymv9LDog2vOXlwGgckZS0zpSMvywvXcwKNEhC591e/eLLpSD/c6WBx9gMgsYrafX8OKoaUvt7IHw4yMYO86nJzghPVPWtmK0c9TqS614/6wY1pqh/w37n/xdWs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=zB6qNBwH; arc=fail smtp.client-ip=52.101.56.45
+	 MIME-Version:Content-Type; b=Qmul6w67O3MqE3lyPf9RebGJRF42Jag6RM/BX5TaZ+aQwk8elv+hucPo+0V3XkAVofPhmGH1Dqb26jxrZfWxpCSm0MVJnNTDDncxQbh6yAUBzz2F5QcXFRKLXM023PP0MOizs6UZ1j3yF2/SXfGIQ/Dh7cquMXtWxYzkcoHV/Xc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=RdR7Yym0; arc=fail smtp.client-ip=52.101.193.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="zB6qNBwH"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="RdR7Yym0"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XJAv9oGcpvdWVMOsQN6RaBW62fQK6EoWxZQlSyaKYG68YHqLsqKEzrqOYh41+NLMVnqU4CAeXoWG528eML0VECQUs7AWAcUVt7j05xm/G68+gUbffTq9EkC7SsfMT05lwTUXA0Lf+pPDdotRJAfxciGYfXIfCDXdwrzyaXTX2cvJCA1MK61FS8WhcSb654S95onaC3FGytxO7f4jjA28Z8RS57wFvEs2tIs5bWNR6Xs/LNNcwGY+OJJ7xbSyQpM4yQKsrlN5YxLbwaBhH/pYbvc6E1vjp3eoBCnBZgpFz7S+p1opRyzu4yQdwkF9vszdfxPOKyjILtG5JiFY7dQ8WA==
+ b=YE/yxJtgm3IpBK5LPoANpN9fNtGJ+Adao2NDX4YN7zTTr7YN2iJb5e3vGl5hLg6Jv2RjH66qCUu5InlFfvx48cpMoP6/SA/AZVNZO5qlzMc6u+D0axvIJb6zYcMFPeV+w1/vyjyaW66CZaYp5Yav0yx5LNCijafzzzSClI4tsi7LATqU8QHaHOHc3OTHghpnOeyxJll9zwWQ/jBgEpPFYw6wgPk6J2Agvt7qTLzSHNTaeaaq0SBnw4fyl69N3bxM1rqy8LAceZecXaGvSGucGbBgi9ACbc9ym1U9hvF10nDe9UKyJmtxH8PmW6m8zywStN4am5rjtYzn8xU+YJt6UQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kfmOG9Vs6vAePgGsjVl5UzabZXMgaWwV6czRZ9FRlFk=;
- b=RJbShZPMTJ5CIFfo1sKCyBSRtGNlgO4JsiRl/7KD6JGJSoOfaI6r97lG3IULEfUaf+TZKYxsnImKk6pSe0/YXXIYXos95wiLHpTiLXlFOk9R+mVng5enb8ufoxkB9498FCfwUNR2DZ4GTA0rxfb7zwCTq1+AXUKlizHm4Nslfdm0rOmZ6OlTo9qSeEOINFhD4WL3bUtCPR+ksh9XcIF1Af2fsCoLnvSmKqCpkY0BnlVkU2r6t8eGJ1mqa75dCRRclipoE7clP8rYl7nvS1Ffzv7du/1c7/Op9wgtH5TWygPHl24xVC9eyEQkvQ191Kf6lbdMXXcTE824GcV57qpz7A==
+ bh=uy7FI4wW8MCJCntFGLpvpojzS0+j2n7yPGWymeQcndo=;
+ b=uRB+o9cQNqC01sUbotMTxwbIC7WdfpMDjth9AhuOWs3Pbnqq0fun2uRGE1P/hnRqx9jOLnOCpNWYrqwWEP4eypdy16LIyTFpnDlpHgf9nIimJnRixZCfF9Xb+MqA6RUZ0btqotlf5Kqt6br+k8mmigyqNUEqfNTrstF+w9bB9LuWSuq0oyKc9SjJNnPQ1AUqepbeYy2QsZBs41ctVnYhkeFri0wFIQRLATgaI+hyDLKaFd0eD03bOVj8a1RoUIM47kd2wCLKeNGLNRxTIQjdvvVR4iisDINx0k3OGGF7PflJNbPX9DMtvcBiTX+PB5jJtdpILXuOG0hdVjq3CavmfQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=lists.linux.dev smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kfmOG9Vs6vAePgGsjVl5UzabZXMgaWwV6czRZ9FRlFk=;
- b=zB6qNBwHiSeU7tzfz4WL8rvUOWGGOdEO6kScK7nC/FQbCOtZ/x4ijM7BEeNXVItVuowmHbDm9S71+91CuavSKWyCiEqhjkxwKYv8/XmpKnjiFuDpDluc33s+qXq5QdlDgD3QQpBiirtlSNGN2mtz1U3OWsmsbfCC0+lQ+JfNLOU=
-Received: from BN9PR03CA0610.namprd03.prod.outlook.com (2603:10b6:408:106::15)
- by PH7PR12MB9103.namprd12.prod.outlook.com (2603:10b6:510:2f5::18) with
+ bh=uy7FI4wW8MCJCntFGLpvpojzS0+j2n7yPGWymeQcndo=;
+ b=RdR7Yym0I3jjLAHq7DdGMuToKz1AQj6BbdtVX5D1+WYIYrGV8zX4nNMGEm+T30fuunC5dedn8vPBtC4Rz7lypLlGRpK/Y2qmlP9ER68QZM0BB6cvp07FteFzjRJqEwzRCqrDnNCwaDfFtBTXu41zsRQt+cNXkH/bxvS1J0OxDpY=
+Received: from BN9PR03CA0314.namprd03.prod.outlook.com (2603:10b6:408:112::19)
+ by MW3PR12MB4412.namprd12.prod.outlook.com (2603:10b6:303:58::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Thu, 23 Jul
- 2026 06:16:25 +0000
-Received: from BN1PEPF0000468C.namprd05.prod.outlook.com
- (2603:10b6:408:106:cafe::9e) by BN9PR03CA0610.outlook.office365.com
- (2603:10b6:408:106::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.245.11 via Frontend Transport; Thu,
- 23 Jul 2026 06:16:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.11; Thu, 23 Jul
+ 2026 06:16:41 +0000
+Received: from BN1PEPF0000468E.namprd05.prod.outlook.com
+ (2603:10b6:408:112:cafe::85) by BN9PR03CA0314.outlook.office365.com
+ (2603:10b6:408:112::19) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.245.10 via Frontend Transport; Thu,
+ 23 Jul 2026 06:16:41 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,22 +48,23 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- BN1PEPF0000468C.mail.protection.outlook.com (10.167.243.137) with Microsoft
+ BN1PEPF0000468E.mail.protection.outlook.com (10.167.243.139) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.270.5 via Frontend Transport; Thu, 23 Jul 2026 06:16:24 +0000
+ 15.21.270.5 via Frontend Transport; Thu, 23 Jul 2026 06:16:41 +0000
 Received: from kali.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Thu, 23 Jul
- 2026 01:16:21 -0500
+ 2026 01:16:37 -0500
 From: Vasant Hegde <vasant.hegde@amd.com>
 To: <iommu@lists.linux.dev>, <joro@8bytes.org>, <linux-pci@vger.kernel.org>
 CC: <will@kernel.org>, <robin.murphy@arm.com>,
 	<suravee.suthikulpanit@amd.com>, <bhelgaas@google.com>,
 	<alexander.deucher@amd.com>, <mario.limonciello@amd.com>, <jgg@ziepe.ca>,
-	Vasant Hegde <vasant.hegde@amd.com>
-Subject: [PATCH 1/2] PCI: Mark Radeon Pro WX 4100 ATS as broken
-Date: Thu, 23 Jul 2026 06:15:47 +0000
-Message-ID: <20260723061548.10187-2-vasant.hegde@amd.com>
+	Vasant Hegde <vasant.hegde@amd.com>, Amandeep Kaur Longia
+	<AmandeepKaur.Longia@amd.com>
+Subject: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
+Date: Thu, 23 Jul 2026 06:15:48 +0000
+Message-ID: <20260723061548.10187-3-vasant.hegde@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260723061548.10187-1-vasant.hegde@amd.com>
 References: <20260723061548.10187-1-vasant.hegde@amd.com>
@@ -79,56 +80,132 @@ X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF0000468C:EE_|PH7PR12MB9103:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8b67e988-69d6-45b9-b00e-08dee881ec73
+X-MS-TrafficTypeDiagnostic: BN1PEPF0000468E:EE_|MW3PR12MB4412:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3a39d995-83f8-4401-f3c1-08dee881f639
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|36860700016|82310400026|376014|22082099003|10067099003|56012099006|11063799006|18002099003;
+	BCL:0;ARA:13230040|23010399003|376014|36860700016|82310400026|1800799024|11063799006|5023799004|56012099006|10067099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	BVAiHhc9v9NA/mdfxMT1ZODCIiAqAmRa+3nHE+1bc1VMFFCxrYgaaeKwkNcPkpPbVGDZKJvj3fUTToRydaPZnYTJ6A4Z2MooRQaKzO20j2jFsW8WIo9rD1GjwsJd3Rhwutf8PlLU9EZMYXEyI0QcIGe+BNSoUYU0rJalsBrYmHtKUJ/GfZrFcpk3Thf+sVaM/dQ9lRcZ2VkEgsP8xbt/yPTXCrM4rTTEyhQRHgrlnyYe3SzV3zIBbV+NGI02d7cRsGw1Dhprv+MRvPwxiYHI5leJQjtgKKqDivzAgfMXkJGCWn5JIB5b/ENJwBulmkUPYX2N1aocJbnmDR0yAdPDdv9OcDVOAA9MBARBFA9GQ5E0CMCNo4lbtWtOzbVmBdBUmeePEFYiIL8sz3E5wZ25Wyj3rqXSnQRwlysNxH04+hOAx1Bxxua7vynlZ+BDCgDYegZTnMsSXv+c2xepP50S94dQPFRIRX15vSPILFKTemXXQcwWir7s71P+iLdRg2+DduuJehXWoMduLwel5DCh/J7c2mX2X5crOj9jKg9IVuPW34u9CQEY8qkc5UA2nWJ0lyraF6QwPFRdJ6QmywIkVslcbbyDH7AYt4eUILjtxaYjUR7ofvhv6bl71f8QzikGGK96y2HfuHI7uETHbR9OuDInsGoctNtxBK7nyUSRkNFD4ZzSWZUR9ADrTyAc7STw3etTZSrmNI+7E9sSujRuAQ==
+	FBE/ecvVymbnMlCuKPtDeLjAvdLN/cFkbBZ3c4eKwEiLH/OwTpYn500U18cMSFueRBMlAIo++VE5yt4YDyHAUvDhG9SA9nzYBD54icqUWpFiqfLot0N7c/JOJ0fqJSGV6JTlQU+iIn7UohOXgFczCo0QMoWKYCmpXqoxhJPYWT8wo7+jdMPCJ8iCmuUMHRNaSV9KLfH4Msh8jZ/i1OuC2WQTmu+vr/zz4T3Fo93fd25niG4d7LxfkVucvvexKrUwaKJl7Gm21t2Gwb+znLR6Ebi9cU913oE4BHNPL/pec2yYKathSv4181eiTrUhu35ymwZ6OHrt+KSLoaZrHKljfpy1CBCFabovZRcAXUu+uFVWcPpU7e5vAly7jNZcpjl5aimoWqMQnpUdJuHNNP6J+W0eghe0wGvL6Khecm1zczsSDlaN2IVQCxY4oyrTSyE2QDbFmPpBbnCLXU31Ngs/xVo6iY8P3oIzoRgEYBkj/x9g5CIkhz4opieyPhYG1In9m49fnGcitW7GYb9/ifCsfnlR4oyG1+mXd1PVB330djfbD4BEKVlxueNThgZhJ0IgXVsPilk2FUCmcX6cIdCQv+0rW/7ieJnd2ewgxZ4+j12mcwwhSJIbqO3DV2lnxPtd0+v2m6lPlXW3K0WUEq6n8k9Uoyj0jf1v/E9U49MhtCwOWQYMDPd7wa91MHkIX/wuFu5ur7CkeQIDRPqoQB8wNg==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(36860700016)(82310400026)(376014)(22082099003)(10067099003)(56012099006)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(376014)(36860700016)(82310400026)(1800799024)(11063799006)(5023799004)(56012099006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	Rd+0xmbrWVHnwyhislL9fdjxpYEEye+1V3cJj8CnHV/B9pFWupp+eKI1yXYySXavayOHQa3s5d1hRyDxSeN0K2UNMwfS5aryxDY33th/u5XizFylLPDghPUIA5gFcYqXoqrwjBIlG4EEK/tSQ2CinZuHg0lWmNfSqIaN/ux/PZyRDBLVLuQK57arYpeltRNs0xGFNuMXc/dwcCJKtlAybBqrQrWYu31+yQkul4BPtjplmsJblCIfZ4iplfxS+G9xE9IY/elL1g2S6lWbmlkaFnHhEprSvgNMNb1AcIW4l5JpjEdl/UiVaRmi3QTFrdOnGp4kkSodLP4J72eZ66zcAXiYDlmsBwb3mcW1b4bCDdrXPBS3rN8Dla8EjfOhkkGn/HBz72CU4kFK8eN81aX/5uqpVKQMsq1vRR/JgDSj+Z4KYfo17CoUShOykjGm6enx
+	QdPD2/7XXeEZEcCGAqSYf0u5iJ/ZxInsQlqgtqfCeLNV6L8BYo153rhxaEIz8Hp6NW1gnpQOaCgXUJKIbPHuRWWIVwjd+2TmJyOawh4SfovLjkMcGeMgaQV5CjLoMVS7zB49TLqY53QPzIGgcGR0MgP8L7i8U4G7EVb8AsnXnJBUsd4batIVTtG8NNrdXgLOsGLgLj12TyRJq6kCC/r/zGc/IbQQCHvhv6sCUcttD52URbV59/mF3Rf6Cdqs4fS2Fi3XBBTi76BBHgBfmlgZyTEdE/UUzGjqNvowV3AcKLuZoKaQ7rrmJgiZYsCXNsNolKooBnuG7s4PJwlu8FtSoQkyuEJD9Ar5QTy/E0wU4ucJyZv2Y9f5a0kzEoLVi+Dz9x/7LlZx0ytxxiQghT+kMhorW2v2nxYYJq+cuwNSL3etFUh0Kmoe3tsQx6g1QN3T
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 06:16:24.8090
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 06:16:41.2180
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8b67e988-69d6-45b9-b00e-08dee881ec73
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a39d995-83f8-4401-f3c1-08dee881f639
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF0000468C.namprd05.prod.outlook.com
+	BN1PEPF0000468E.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB9103
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4412
 
-If ATS is enabled then IOMMU logs below error and GPU fails to
-initialize.
+Certain AMD GPU's must always be in identity mode. Currently its enforced
+using PASID check. It worked fine as most GPU's has PASID feature. But
+this means, identity mode enforcement is done for all PASID capable devices.
 
-[  103.687137] iommu ivhd0: AMD-Vi: Event logged [IOTLB_INV_TIMEOUT device=0000:c4:00.0 address=0x1080006060]
+Previously it made sense as domain allocation API
+(iommu_ops->domain_alloc()) was just passing domain type. So it couldn't
+check device capability and decide best suited page table type (v1 or
+v2). With recent enhancement to driver code, it uses
+domain_alloc_paging_flags() ops for all paging mode domain allocation.
+This can check device/flags and allocate best suited page table (v1 or v2).
+Hence fix amd_iommu_def_domain_type() to force identity mapping for selected
+GPUs only.
 
-Suggested-by: Alex Deucher <alexander.deucher@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+With this change system booted with DMA translation mode will select:
+ * Guest (v2) page table for PASID capable device
+ * Host (v1) page table for non-PASID capable device
+
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Cc: Mario Limonciello <mario.limonciello@amd.com>
 Signed-off-by: Vasant Hegde <vasant.hegde@amd.com>
+Tested-by: Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
 ---
- drivers/pci/quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/iommu/amd/iommu.c | 56 +++++++++++++++++++++++++++++++--------
+ 1 file changed, 45 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f7846f..d55657347d88 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5686,6 +5686,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7340, quirk_amd_harvest_no_ats);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7341, quirk_amd_harvest_no_ats);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
-+/* Radeon Pro WX 4100 */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x67e3, quirk_amd_harvest_no_ats);
- /* AMD Raven platform iGPU */
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
+diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+index 563f9c2672d5..fe642e33c87d 100644
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3112,6 +3112,32 @@ static bool amd_iommu_is_attach_deferred(struct device *dev)
+ 	return dev_data->defer_attach;
+ }
+ 
++static bool quirks_force_identity_mapping(struct pci_dev *pdev)
++{
++	struct pci_dev *root_port;
++	int class = pdev->class >> 8;
++
++	/* AMD GPU vendor ID */
++	if (pdev->vendor != PCI_VENDOR_ID_ATI)
++		return false;
++
++	/* GPU class */
++	if (class != PCI_CLASS_DISPLAY_VGA &&
++	    class != PCI_CLASS_DISPLAY_OTHER)
++		return false;
++
++	root_port = pcie_find_root_port(pdev);
++	if (!root_port)
++		return false;
++
++	/* If bridge vendor is not ATI then its APU and force IDENTITY mode */
++	if (root_port->vendor != PCI_VENDOR_ID_ATI)
++		return true;
++
++	/* Rest all are dGPUs and works fine with DMA mode */
++	return false;
++}
++
+ static int amd_iommu_def_domain_type(struct device *dev)
+ {
+ 	struct iommu_dev_data *dev_data;
+@@ -3120,20 +3146,28 @@ static int amd_iommu_def_domain_type(struct device *dev)
+ 	if (!dev_data)
+ 		return 0;
+ 
++	if (!dev_is_pci(dev))
++		return 0;
++
+ 	/* Always use DMA domain for untrusted device */
+-	if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
++	if (to_pci_dev(dev)->untrusted)
+ 		return IOMMU_DOMAIN_DMA;
+ 
+-	/*
+-	 * Do not identity map IOMMUv2 capable devices when:
+-	 *  - memory encryption is active, because some of those devices
+-	 *    (AMD GPUs) don't have the encryption bit in their DMA-mask
+-	 *    and require remapping.
+-	 *  - SNP is enabled, because it prohibits DTE[Mode]=0.
+-	 */
+-	if (pdev_pasid_supported(dev_data) &&
+-	    !cc_platform_has(CC_ATTR_MEM_ENCRYPT) &&
+-	    !amd_iommu_snp_en) {
++	/* Apply device specific quirks */
++	if (quirks_force_identity_mapping(to_pci_dev(dev))) {
++
++		/*
++		 * When memory encryption is active, some of these devices
++		 * don't have the encryption bit in their DMA-mask and
++		 * require remapping.
++		 */
++		if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
++			return 0;
++
++		/* DTE[Mode]=0 is prohibited when SNP is enabled */
++		if (amd_iommu_snp_en)
++			return 0;
++
+ 		return IOMMU_DOMAIN_IDENTITY;
+ 	}
  
 -- 
 2.31.1
