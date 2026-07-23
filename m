@@ -1,205 +1,228 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012044.outbound.protection.outlook.com [40.107.209.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5994388E44
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 16:56:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784825776; cv=fail; b=JrZiWP/HzFfMhSlUpS9etu7C3Mm1gQotQUzuTK/MHuMoBOvegDSMCqZxS7ooBZAqIc3cpkkg9W1H0xL+dtIN0B0DNlfCo4WBGUAVUhedIWjE8oYxSqqUycka7giXAEfGeAlIkEU7AvPoybVOGWMHhjRmqb6lzOl4CQpV1ewB21U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784825776; c=relaxed/simple;
-	bh=NPpuMJnenCeSKDMmr8qdFgT/m8KQppOxYzMcWruzvOU=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Aq1ZaDxkuedulKFmLQvbyHNJTa+Kuz7qs/R+vVZgmI2wU46Yt4bkTcOFs7VXnAQQCBvwpcpxpcjb43+9nU8hTWd4GVo9HeYscxK0Og1m9BDPefg2IWAuWfmDiWjX1sy7xk/CsgHWjNgMNBuBHyhTyb+4W0qkCoS3iLoIkpU+4MM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Jujur2Q7; arc=fail smtp.client-ip=40.107.209.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97BC486BBC
+	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 17:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784826704; cv=none; b=f8BgyKsMHzA9UbCbf0+hHynOBLHSdUkYSXpjejSNdMzWltG3xuVMbKFe2gfdu2/J9gRMIoxC7xrBDHPlOqNFcOqlOJ8pgD14R2REf3cg5401hXGi5nJcI0NfuYpQmkg3y+xtSPqphKfuxuVTR88JaUGp4xAmcnsjj/mK50eYYWw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784826704; c=relaxed/simple;
+	bh=+n5na8LDo+sd4EuQWxfmEcNxJa7h+vmDd0fVSmtcHVI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VDYJd1GltghVYE8dvURsloPfXu+wh/Jpy4L8pufPg77JM7827O8NKvazwFPu6GGr332kjWBSRuit8heZtAkVo7UscvsI3pUAq1qedtrOm6GxoZIhCNIERpQgYg48H96DXzv4lATzd2qhrRQC7LYxLdAIZf5JMsYR7uZ4gt/xrTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=eMqRcX0p; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Jujur2Q7"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yvtnEX5YFCE3kJiHw3MbwGmD3C8/rR6gMVzw17y2RvzRVJiu1wtI6LqKHLev6Sk+PpLonafo/ZDC5pVcKLXfeMEGiZjYmIveR0uZ3FvBHQj16gu0okvXNCszn7JikP5cg0nnrPCkYz2n2oOfRDckBldjgfeC+Zme6C8ACzc4bYWsZTvxN/Fl4bPgFlSILHSq48v5ibsM37fM85Fl21HWsa8SP/8Xz1CG0T/VXEZuX6Monr3c7wgeGuymxgnNURdVkH4kR0dmpy3tmKa+kvfUXCVlEKcDn1pKkwtWMRaXY/H9JilBHicQyERjabfnLeQ2Z5ELlywHlsnIleoLLS7ZHg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=djdWSwwZlBwm9r0/NtP0CDR+0cSdtVrxrzh17gMvdVA=;
- b=joaBTA6MnZsPTPKpGI1rLu9+LHAnol+rJGFW50eCos5myDqxhrhhXXgumh0KxNe1VVHl9DMd60kXEopokuOL+9hD3kn8SP90dODT0KmfaKuWSTlEYFU0wGD2BQF8swcHWHfgxSSWq16U/WfhQqM4c2xEmGq6J26Siq8oZpkNXjl20DJhPdhcWCb/QgH3ZZafgYc4+5z91wnNfNh+BK2SF4CFc1VxR6tQ06HqcwmtRpkLW0m0MctQT4jVB/WdOsYqx7N6Xx2zkhBhl39Aek3GpyGe4f+vAiFQGe/DaLtmv0tJ62a72uN8ahGJpNNpyJ1CjAPyhvJpvCcT6z2NSjYUUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=djdWSwwZlBwm9r0/NtP0CDR+0cSdtVrxrzh17gMvdVA=;
- b=Jujur2Q7gakcF5W0d3wo5b/ihnZ2EssIH6CIKv6j+raDloD/hpTvLqfBASqAOvohPZqmPW3Ycee3hWGYiL2j0EFaIGKhg12jF4iuN5pl7bXWYO04B9UbpuN6sLx+fUvTdu0PiExXKNfnqC2sAUk+PjRQtSW3yEjm1drb2IehTSY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from DS7PR12MB5766.namprd12.prod.outlook.com (2603:10b6:8:75::12) by
- CY8PR12MB8299.namprd12.prod.outlook.com (2603:10b6:930:6c::21) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.245.11; Thu, 23 Jul 2026 16:56:07 +0000
-Received: from DS7PR12MB5766.namprd12.prod.outlook.com
- ([fe80::222:966a:d65d:d08e]) by DS7PR12MB5766.namprd12.prod.outlook.com
- ([fe80::222:966a:d65d:d08e%3]) with mapi id 15.21.0223.013; Thu, 23 Jul 2026
- 16:56:07 +0000
-Message-ID: <a3262d2c-394f-43f3-9956-24c9490626df@amd.com>
-Date: Thu, 23 Jul 2026 22:25:59 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
- will@kernel.org, robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
- bhelgaas@google.com, alexander.deucher@amd.com, jgg@ziepe.ca,
- Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
-References: <20260723061548.10187-1-vasant.hegde@amd.com>
- <20260723061548.10187-3-vasant.hegde@amd.com>
- <20260723155912.GB836122@bhelgaas>
- <f2242b3c-5d2e-41cf-9136-72a90e86d17b@amd.com>
- <69bea169-ac78-4b33-b9ed-0fe974e0248c@amd.com>
- <e9595d4f-419f-4d42-bd22-c3a8964c370b@amd.com>
-Content-Language: en-US
-From: Vasant Hegde <vasant.hegde@amd.com>
-In-Reply-To: <e9595d4f-419f-4d42-bd22-c3a8964c370b@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: MA5PR01CA0182.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1a9::8) To DS7PR12MB5766.namprd12.prod.outlook.com
- (2603:10b6:8:75::12)
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="eMqRcX0p"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-49548e01d02so5344945e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 10:11:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1784826695; x=1785431495; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vVCNrNhDnF6NVyRdEJkJESi77InGDYF+aNlCW0LpUZQ=;
+        b=eMqRcX0pGbrBEhTJmXe/QZIBeoxrMG8s2TDKziUL6Tc5DcS3EKkxkHcVDjuWwwDzZA
+         qTJHcIcy+fCnK2cKX/u3wzP9t3+pn8/CQk0Kgrd/SeKDwSO5gzC3PNcmlfgf/PQZtacv
+         BiKNoLExeftB+xoCSa37R5gObReBrTtCSY+DLYEUtKbNu/YzisU0vszYH/Buu827iOxz
+         TLWNP9Xva5THjOdXNBJl0ccfA5ktryQOjj1BopEI/dHsYPn+qWyvZFhBizS/mP4ukkaC
+         it4NreXjSUfZP1Mpwf7g2zAKSG3yD0MZiHFcb6LHFFxYe/NFaHrPnES4jlCAJardyQLW
+         9+qA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784826695; x=1785431495;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vVCNrNhDnF6NVyRdEJkJESi77InGDYF+aNlCW0LpUZQ=;
+        b=DUXFgG24bgtrl6Gop2a2no3RkEEzqA82lDWhNxmDPnXFAyfuIzNyR+93xqrz/fr5ax
+         efE21sXCe7inxck8uPwtDSJfPvIaoe7M8Yytu/5D5KmmA70Xh6ZGi2YZM9QC0A3EJ2ij
+         sX5B7fAMBz+PpEXGiaEaxGu8Rs2mUR8U6HAXIKQHuoppbkDglys2AIuXFYmLPyNc6TVc
+         Ba9JzUGxBJ3rGkS1mkLHDIueq+Y9RPcc4gPMLflApm3r/Fbj2pO5MJYAK7tYSrV3omkQ
+         XbWgn6T3W1NBK8V5Hc+xgidupFRdI64S9lMzamV79rIN6TZFJpgKZzmetjEfkIFCf1x6
+         NR+A==
+X-Gm-Message-State: AOJu0YwSgqEAe7gh4LFotevyVu22vi6QtPBB5wZvLVlNtNbFS1wNLXL1
+	bnr8tNQlxYnNr3RPwYJMZPFXl2hM16djztXQyZ+cwBbWYkokJYu/IG8sy4hSUakPCu8=
+X-Gm-Gg: AR+sD10uD9uzuKfL4ZwF07h85sTdgORy+4o5/hwu7d+J+lc0zNxH+fGD9UFFzzgDYsC
+	nPF4eYFAt8RqOB5V2yOwvSHTY95aAxS623I3ur+Eb7Q/FIJ2MrHcSBKLxAuHbk03vwj+7FiP9LT
+	ugnobeYT9L12pdGc/HU2F4vTqi5RFRso89cEFV4NFN8OqGATT9bXhVtzFXe3jo1EEW37CngAsh4
+	NddDdRdELim31ZAtJN/Dny4l26OA/wpodCmJ2EUwPttD3lrgkZi1wpBWftQvGfRabFXZL71N2m1
+	tkuvS7aSVPo849m79WmoeGkGSNif0rukQQ/8yO8s6/XA/Y6EKRGssiE6Apgf7hKCBJhSW5GF1nP
+	VYThiTNzwnf6jqx+lTHl+ocGH3FePaAxpfnAWd9ISwZ3ylK45T8MNeXn7y5HNev+TVyZaoUpDcV
+	yw7tXurjsrJiDnpWIkV1BwabCkrC7L1xCTcA58PtYDpa9E1q0eqc/U8MKtwg==
+X-Received: by 2002:a05:600c:4652:b0:495:4056:9473 with SMTP id 5b1f17b1804b1-49573d08826mr27213645e9.28.1784826694960;
+        Thu, 23 Jul 2026 10:11:34 -0700 (PDT)
+Received: from ?IPV6:2a02:2f04:6302:7700:4510:8c44:3b9e:61ae? ([2a02:2f04:6302:7700:4510:8c44:3b9e:61ae])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85b9a5a2sm18531060f8f.7.2026.07.23.10.11.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jul 2026 10:11:34 -0700 (PDT)
+Message-ID: <97f207cb-4ae5-4a48-a5da-fb4167f8d0d4@tuxon.dev>
+Date: Thu, 23 Jul 2026 20:11:30 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB5766:EE_|CY8PR12MB8299:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3793ff73-1c06-489a-e9bd-08dee8db49ce
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|376014|366016|56012099006|10067099003|22082099003|18002099003|4143699003|5023799004|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	zjLabd/YptNGhAYu3X67fkaTk+xf8ly2nIFN6YiGD3OnP/UXyCYsR0/Ap4R6/Bdpw/VMoTJ9v8pgCMhkSE3HBkf/j8NBLOjSEVZO/4C99FBXHFs32OU8Dngj2L8im/lx90ZQWxAhpNzS5GVqTsNdmE64+e+s3HCGYP2nYjcnTVMfCXJO7egA2Em7cSwzMViSEpOKwhaZRjW5XZsDEJevZlJ69ezv3yRqIOCWP8QWZ3aIRFiTi3fhO9xoJOPVK09Rbloa+f66aK4NeVvMmH1YQw2nVE9EQQVjLoxvtq5lJFgkUF32PHZQyC9idy0xdUTTHiKg2g8cHOcyqMHpiATBWCIzvbm2Vu7qJio2IJLsy1EUFtbTuVy06Akom5r2E75ukOgsT/aRMl/w+loBWSxDFyNtQyyJp6gauLXP2QrGJG8GG0TFnz1/VFrZTIpxYmxstNqp8t69QS+taPyMbBCzlVv68nO5RiXdGrbnNw9u94Dgt5fbOxT+m6/XqrxGDfDEWEk8rrvDseTfcmwZnYgXbphOmmiwHTPwMEC9gP30xqIOZDdK2wR/Xn9dBcgfKNcyeyRqtYnYCsJGBpqSBfI82/zY4YvId9WR0xVodwrREerpOe595V9MB7He6tsgTxqJfhZxNZTz9wQP/K3D+24FC05RcKkqgkdsY0I+DGoA0f8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB5766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(376014)(366016)(56012099006)(10067099003)(22082099003)(18002099003)(4143699003)(5023799004)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UG5GS3RVVlBYckx1WUI5emxrZ0hPcjRPNitIbURRbll2QVVRT2dyTlNETGQ3?=
- =?utf-8?B?TDJqOU5VMXJVaXFsK3dFR2ptV0NGenpJWGNQbDIwVlp0T3VzQ3RTejdyaUhI?=
- =?utf-8?B?RTdQQ3pveXpnMHlIQkNtdkpEVVk1dVpOaTJ4Q0dyT2FzT3JSYkxSQjBVWWU4?=
- =?utf-8?B?UHROR0pOZXVvSENRdm5Lc1hmZ2s5U0FUVVlxM1p3QTNQS25wY3BuTzMwZnF2?=
- =?utf-8?B?TlA2SWdJZE56bkFSa3hEeW5GY2RMS1ZUNUx3QWlHR2UrcXpFQjJhL2t0SWM5?=
- =?utf-8?B?UWtFelpMOEdwdGc2UmtIcG5NNXVHWEg1aUVCSTV4Y3hyd0d4RG5aUkpobUlS?=
- =?utf-8?B?ckcrRlBDV2djZVU0TXM5RlQ2b2oxbjZicDdSbGNsR0ZFZ3g1bXRBVkF4cWZI?=
- =?utf-8?B?Wm80Skw4YURGeTVvTkUvYmNhaVovUXFXZHdTSDhjQ3B2ZGNRcGdPUWhvOVda?=
- =?utf-8?B?MjdpcW1pVkVUSVFpTmdDaWx4Yzl1NGZKM3poeldtZ1BtWkl1cHhHZWpDbHVJ?=
- =?utf-8?B?c3RQMjhjUGQwUCtXR0loeXRPOEVvVkNqM05ZTldzeWxrdnZvWjlYalNydFB3?=
- =?utf-8?B?QlJCVDhYS09MVVF4Wkl3b1BobVA2S3U4aG9LQjFsY3o2NTU1dkluTlR0elV4?=
- =?utf-8?B?V3RnZTI1WjNMeHp2dTFMN1hnR0lOUVYrcnJyZnZ5d0JoaEhtdnd6RmFDWkVy?=
- =?utf-8?B?aUxvUkN0MEhYeHB0QTdXa0FuNG4wK3lNUjlZR2M5K3ZMODI2M2FPN3VBWmd6?=
- =?utf-8?B?ZEtkSUM2RUlSKyt6SW4xd2R2NXhwZXdqT25FNEp3QXh2WUhCSC8wMm5hMGc3?=
- =?utf-8?B?U01xR0NpaVRqQks1aHA5VTRFRStNNnJnL1hFaXNlUmMyN1BzRi9tb0F1Rk93?=
- =?utf-8?B?VzlYanp5MlVJVEFhanJTQkhHRE5kbkM2TzRISjJ4NG9vM2licnZ4V21uUTBB?=
- =?utf-8?B?NjYrSktlVkk4WWwyMHA4MUtTdktXaTYyQkxPRWhYR2JudUQxbzlqMVFVSmdK?=
- =?utf-8?B?d2UveFJ4c1ZjSmI3UXlRM1R5M2NOT0IwRG92UklBM2RrK0tXOHVDditFSnMx?=
- =?utf-8?B?TWsvVms3VHhKZk1CT3VjemR3VXRSdHlHT0dUS1FxNFBialdnQzAzOXVFT3Mv?=
- =?utf-8?B?TlQwZjdZdGEzS0pIdUxSZ29TZUhyU0h1YUhPWUpiLzA4RzZkZ2Vld3l3bHNo?=
- =?utf-8?B?RndvaUIvd0h2MFBXWFlWYVU0VnQwRlNxWEVnT3FZUUZiZUl0aTBEbVI1RlNW?=
- =?utf-8?B?a2UwSm1kSHhsSXYzSlF2bjQ2MDNDaTc1QUdyUVd2SXVjSDJKSUwrTWp3VkMv?=
- =?utf-8?B?dWcwQ1VZa1NiU0FrdHBlZkp1d1JlTzZ4dERiY2NuWnJUWTB1WDY4cmd5aWYz?=
- =?utf-8?B?Uy9DVHlld0hTcmNXbURwM1FOZ0FwMjBRczlJaVEwZFUwbFd1SDlXdjQ4Ry8r?=
- =?utf-8?B?RlllWVpwZXZjaUc1MzBidXZoV05IenB3aVlCenZKUnp1NGNtUzMxTGcyT2hk?=
- =?utf-8?B?Y3FBd2xoVmgyc25hU1FpZkhSQklTTHBMWHVHUHMyMEdFV2JrZnovaVNVaGNh?=
- =?utf-8?B?MzNUU0RtREFNTXA0TEpkM3VaTDhIT0NVTWIvSmtIYkcrYXErN2VCc2x1S2x2?=
- =?utf-8?B?ZzdidHcxTkdSVWF0cnVSaUFyR0pUUmVrQzJndGhndWhCaWExQmU1WlNyR2lX?=
- =?utf-8?B?VVlGTkYwaDJPYnV2cHFUdExCR3NkeFpmc3RFR21DaERrcnFtZXIycWE1cG1y?=
- =?utf-8?B?aktpSVpqYWpZQXQ1MTZFZDNTVExBQ3pNVTdhdTdKU1JqUnZ3Nkg4ZDVsajUy?=
- =?utf-8?B?encxZ2RFRkQ0cVFDblJoaUhVek1DS2VJOFRwVXdjaVlEazVaZ2Y2WWFIeDFj?=
- =?utf-8?B?SEtpekpYYmlDSEt1cDJrUUNWbUUxZ0NqMTlYalhGNEVsczRjUlhMV2RXNFdP?=
- =?utf-8?B?SkhEVS9IaWhuWGxqZDBKKzZJejJrZzErdUhjWWEyc2h6eFNDdkYyWElLSGVK?=
- =?utf-8?B?bkFtRGV3WjNBZXE0KzRnYW5XYXRmeC90UVB2aDU1SUFXcjJ4WWRTRVBvQTZq?=
- =?utf-8?B?ZXU1di9HM0RZVnMvM21jRDNxY0h6SVkyYkx4YXNkNWtQdlY3UkdJdWtIaFlK?=
- =?utf-8?B?cDVNY3N1anAwbkM4aUViSzFSbkJlSGZydlJKQ0FGUVNJSnF3OWFJRlhaa0JX?=
- =?utf-8?B?bnA2WjhJcC82TWNXNlFYQ2N3MjltdGpEV0xNNFN3bDBWRWxza2dBV1IxR1or?=
- =?utf-8?B?K1p2ZHAwQ1NmdXFjcG9hejhObWxoVXhQYjBDU0IwWmFJcHJ0UnFaN2FVR29U?=
- =?utf-8?B?QmhiOUR1M0FPT3UreXhybm5vb0VicEtaYllGMUhPOWFsSHVyRDRYQT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3793ff73-1c06-489a-e9bd-08dee8db49ce
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB5766.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 16:56:07.2165
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: RgAaCj3gVEDVifliMl//fXbcQGEYhQSG8wmNHBlc7zlsQA3SVXcx/AN+u1DL2clikUw90mWOZE1OMwIGiuOYWA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB8299
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] PCI: rzg3s: Fix IRQ domain initialization error
+ handling
+To: Prabhakar <prabhakar.csengg@gmail.com>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Prabhakar
+ <prabhakar.csengg+renesas@gmail.com>, Biju Das <biju.das.jz@bp.renesas.com>,
+ Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+ stable@vger.kernel.org
+References: <20260715223019.3002237-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Language: en-US
+From: claudiu beznea <claudiu.beznea@tuxon.dev>
+In-Reply-To: <20260715223019.3002237-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Mario,
+Hi, Prabhakar,
 
-
-On 7/23/2026 10:02 PM, Mario Limonciello wrote:
+On 7/16/26 01:30, Prabhakar wrote:
+> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > 
+> rzg3s_pcie_init_irqdomain() installs chained handlers for the INTx
+> parent interrupts before creating the INTx irqdomain and initializing
+> MSI support.
 > 
-> On 7/23/26 11:23, Vasant Hegde wrote:
->> Mario,
->>
->>
->> On 7/23/2026 9:41 PM, Mario Limonciello wrote:
->>>
->>>
->>> On 7/23/26 10:59, Bjorn Helgaas wrote:
->>>> On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
->>>>> Certain AMD GPU's must always be in identity mode. Currently its enforced
->>>>> using PASID check. It worked fine as most GPU's has PASID feature. But
->>>>> this means, identity mode enforcement is done for all PASID capable devices.
->>>>
->>>> I think it would be useful to know something about *why* these devices
->>>> require identity mode.  And what happens without identity mode, i.e., is
->>>> there a user-visible symptom that happens when the wrong mode is used?
->>>>
->>>> Since the code doesn't test any feature bits, I assume it's because these
->>>> devices have some hardware defect?
->>>>
->>>> s/GPU's/GPUs/ (twice)
-
-
-.../...
-
->>
->> +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
->> +{
->> +       struct pci_dev *root_port;
->> +       int class = pdev->class >> 8;
->> +
->> +       /* AMD GPU vendor ID */
->> +       if (pdev->vendor != PCI_VENDOR_ID_ATI)
->> +               return false;
->> +
->> +       /* GPU class */
->> +       if (class != PCI_CLASS_DISPLAY_VGA &&
->> +           class != PCI_CLASS_DISPLAY_OTHER)
->> +               return false;
->> +
->> +       if (pci_upstream_bridge(pdev) &&
+> If any subsequent step fails, such as obtaining an INTx IRQ,
+> creating the irqdomain, or initializing MSI, the error path returns
+> without removing any chained handlers that were already installed.
+> This leaves stale handler and data pointers attached to the parent
+> interrupts.
 > 
-> I don't think you need to check for pci_upstream_bridge() to be non-NULL.  You
-> already checked that it's an endpoint by looking at the class.  So an endpoint
-> will be connected to a bridge of some sort (either a switch internal to the dGPU
-> or to a root port).
-
-Ok will fix it .
-
+> Fix the error path by unwinding the chained handler registration before
+> returning. Also clear the chained handlers during
+> rzg3s_pcie_teardown_irqdomain() so that teardown fully mirrors the
+> initialization sequence.
 > 
->> +           pci_upstream_bridge(pdev)->vendor == PCI_VENDOR_ID_ATI)
->> +               return false;
->> +
+> Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> ---
+>   drivers/pci/controller/pcie-rzg3s-host.c | 37 +++++++++++++++++-------
+>   1 file changed, 27 insertions(+), 10 deletions(-)
 > 
-> Make sure you leave a comment here about what true means (/* it is the GPU in an
-> APU */) so that if we need to add more cases later it's obvious without having
-> to dig up this thread again.
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index f51b5d7c1998..5aeb030d43c8 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -1006,22 +1006,30 @@ static const struct irq_domain_ops rzg3s_pcie_intx_domain_ops = {
+>   	.xlate = irq_domain_xlate_onetwocell,
+>   };
+>   
+> +static void rzg3s_pcie_clear_intx_handlers(struct rzg3s_pcie_host *host, int count)
+> +{
+> +	while (--count >= 0)
+> +		irq_set_chained_handler_and_data(host->intx_irqs[count], NULL, NULL);
+> +}
 
-Sure.
+On PCI subsystem lines are still wrapped at 80 chars length. Could you please 
+update it, adding also {} around multi-line blocks as the rest of the code in 
+this file is doing, e.g.:
 
+static void rzg3s_pcie_clear_intx_handlers(struct rzg3s_pcie_host *host,
+					   int count)
+{
+	while (--count >= 0) {
+		irq_set_chained_handler_and_data(host->intx_irqs[count], NULL,
+						 NULL);
+	}
+}
 
--Vasant
+> +
+>   static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
+>   {
+>   	struct device *dev = host->dev;
+>   	struct platform_device *pdev = to_platform_device(dev);
+> +	int i, ret;
+>   
+> -	for (int i = 0; i < PCI_NUM_INTX; i++) {
+> +	for (i = 0; i < PCI_NUM_INTX; i++) {
+>   		char irq_name[5] = {0};
+>   		int irq;
+>   
+>   		scnprintf(irq_name, ARRAY_SIZE(irq_name), "int%c", 'a' + i);
+>   
+>   		irq = platform_get_irq_byname(pdev, irq_name);
+> -		if (irq < 0)
+> -			return dev_err_probe(dev, irq,
+> -					     "Failed to parse and map INT%c IRQ\n",
+> -					     'A' + i);
+> +		if (irq < 0) {
+> +			ret = irq;
+> +			dev_err_probe(dev, ret, "Failed to parse and map INT%c IRQ\n", 'A' + i);
+> +			goto err_cleanup_intx;
+> +		}
+>   
+>   		host->intx_irqs[i] = irq;
+>   		irq_set_chained_handler_and_data(irq,
+> @@ -1033,21 +1041,28 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
+>   						     PCI_NUM_INTX,
+>   						     &rzg3s_pcie_intx_domain_ops,
+>   						     host);
+> -	if (!host->intx_domain)
+> -		return dev_err_probe(dev, -EINVAL,
+> -				     "Failed to add irq domain for INTx IRQs\n");
+> +	if (!host->intx_domain) {
+> +		ret = -EINVAL;
+> +		dev_err_probe(dev, ret, "Failed to add irq domain for INTx IRQs\n");
+> +		goto err_cleanup_intx;
+> +	}
+>   	irq_domain_update_bus_token(host->intx_domain, DOMAIN_BUS_WIRED);
+>   
+>   	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		int ret = rzg3s_pcie_init_msi(host);
+> +		ret = rzg3s_pcie_init_msi(host);
+>   
+>   		if (ret) {
+>   			irq_domain_remove(host->intx_domain);
+
+Could you please drop this ^ from here and (see below)...
+
+> -			return ret;
+> +			goto err_cleanup_intx;
+>   		}
+>   	}
+>   
+>   	return 0;
+> +
+> +err_cleanup_intx:
+
+Add it here? To have everything grouped together. I am also working on fixing 
+the hotplug support and having it like this would be useful. I can do it myself 
+in a separate patch, but I think, logically, it belongs to this patch.
+
+Thank you,
+Claudiu
+
+> +	rzg3s_pcie_clear_intx_handlers(host, i);
+> +
+> +	return ret;
+>   }
+>   
+>   static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
+> @@ -1055,6 +1070,8 @@ static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
+>   	if (IS_ENABLED(CONFIG_PCI_MSI))
+>   		rzg3s_pcie_teardown_msi(host);
+>   
+> +	rzg3s_pcie_clear_intx_handlers(host, PCI_NUM_INTX);
+> +
+>   	irq_domain_remove(host->intx_domain);
+>   }
+>   
 
