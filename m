@@ -1,127 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01CF8308F32;
-	Thu, 23 Jul 2026 19:22:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B6C44C4EF;
+	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784834533; cv=none; b=aMLHCc3xwBZQ04rCYpb/UHQx8XP4BQxKaA2upXsTPNsuQlzzgmB8lkFSq0h/PU6yY2/Tf5gvPbSxru/ZcILXs5GNbC5HNHheYRXiSN/KBPF8enGeFs/ERGWpeVqYRC5nswHEBd/0sHBWmnte8ODXUKTr3FT4LCAakGD8yI7+22w=
+	t=1784835001; cv=none; b=TFP8qnAXV78gwF1BD4jlEw5Kdx1czmHtQFQqgkGcyqaU3zrO9wI7KBmMJooq5zqTrRbBH6TOiJN7tKa+GbkgKgALEd1obC5pJdidU51Y29Au5U7mdJvz7PHHhsLmu5VhGWA4lePtysdQmOzPZ0UrrRphXbMJQAA8WDlc1sGImMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784834533; c=relaxed/simple;
-	bh=+RpcCgv21DCM016Wz9/zOl4+4jh4NH6ChHCTXBLwl7o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Cy0ZL10wJ1ZDpUOS1VPcbk2UNOmm+7p5imfStNueK3eWkTUmN07FCZvWB1OhBNGx4azUfzwgizyMnouOemFZDyZXE/TnQcuQJkFszq/BFzBWCQ7BpjBkqJekrS3O/CtrAFOSS0IektpjXtrdSEwt72boXfTZIMm0mMANPaIfH1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XqJ1j51f; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784835001; c=relaxed/simple;
+	bh=TwWA1xCcEzuUuBFTE0AMItQB+YBiuWATuf/SC44C6OA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=am88LIu0U9+7tz1JPKfAky6CoQGTwl5dN+hm51DsCr+xBIuGiUci0M4CF74Jr4nY8/qMQyO+PoRAuPeBwglAmtF//QfVOX75fLjAIsUgcfBBglV9FUfTiRMPr2KkeDCjqGj3LyKcB/a1ZbNQBH0J1Q+3zbeSY0Wgj+UoSe5sfCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HpztF2W+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XqJ1j51f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18FEC1F000E9;
-	Thu, 23 Jul 2026 19:22:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HpztF2W+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0B281F000E9;
+	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784834531;
-	bh=+UVgw9SS39ORb8/aVu/+0NFZ+th3kWmIhwdefbORwmg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=XqJ1j51fRGHG8JRtpcnW6N5WjpOZD++glkmXO6uctnlpGOTeJi+bPUIi0eY1ju5uh
-	 q8lgNeicBe82DNIR7uZ697B0nsYI6Tk95LTvDg194D2/sTo3+azZnW1DmaUvius2zH
-	 sxtvIs7GmHpGSpDW97DgLlJ4ihrkZhBY/8VtZIBjwrM/LPZVhbOJe23xpGxIUZDJXb
-	 hxIHf0D9FcWSh8rIb2yq5CiaG7TITUhqWDM5G/4oLQtEGzQtu5TZhI2c9tiUdVh0ho
-	 VdWmpmK8NxLU9p6/WXgpB4zhJLYt17E7YbkC0omr7mgHwwwJljJjYpwjZM0qIJVr0q
-	 9wwWGi6FT5XqA==
-Message-ID: <9cc5af16-d95e-4f10-8b4a-5e29c136079c@kernel.org>
-Date: Thu, 23 Jul 2026 21:22:03 +0200
+	s=k20260515; t=1784834998;
+	bh=y5iomjCyRfRp3uujqn1eS42YOTWw+ABmMrptepvIZ7Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HpztF2W+jj+oPJBXBd5DBcqoA2Sm/XtLNAo7A3jLOwKkr8x9d2LlNJc5kOK87NXwV
+	 dPfvFf436Ag4QAWvE4hqB+0CIaIog+ggZsQ3mr/KoGuZeT7PauU3CUF+DKT/KQGiyw
+	 FLRRMPX6Juqw8TE9zKGvvEkK/N74UmZpHbG6YXAMajMDzSW4qR095hChwpIimswuz5
+	 FmKTpz2ndXcBDeMV9c1wUZAFhLPoXzpKXNHeFyf3bAsS8jduYzwuQq95Gtem2ReCoX
+	 4ZUVJbFHzbprLyxqinE64Imvapcq2pUpbKd09SDGjMeT0bBsnsCnQuBqAreyPWS7mS
+	 DJoSCkrUJGJnA==
+Date: Thu, 23 Jul 2026 14:29:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn ID
+ removal
+Message-ID: <20260723192957.GA839273@bhelgaas>
+References: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
+ <20260721223500.GA690676@bhelgaas>
+ <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] power: sequencing: pwrseq-pcie-m2: Add QCC2072 BT PCI
- device ID
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org
-References: <20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com>
- <20260703-eliza_evk-v1-3-7624440bd76d@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20260703-eliza_evk-v1-3-7624440bd76d@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
 
-On 03/07/2026 14:38, Krishna Chaitanya Chundru wrote:
-> Add the Qualcomm QCC2072 Bluetooth device (PCI ID 0x1112) to the
-> pwrseq_m2_pci_ids table so the M.2 power sequencer can create the
-> serdev node for its BT interface on enumeration.
+On Thu, Jul 23, 2026 at 07:57:58PM +0100, Gary Guo wrote:
+> On Tue Jul 21, 2026 at 11:35 PM BST, Bjorn Helgaas wrote:
+> > On Mon, Jul 06, 2026 at 03:11:21PM +0100, Gary Guo wrote:
+> >> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
+> >> as remove_id_store can free the node. Thus, make a copy in
+> >> pci_match_device. Also, clarify that the id parameter is only valid during
+> >> probe.
+> >> 
+> >> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> >> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
+> >> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
+> >> Signed-off-by: Gary Guo <gary@garyguo.net>
+> >> ---
+> >>  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
+> >>  include/linux/pci.h      |  1 +
+> >>  2 files changed, 16 insertions(+), 13 deletions(-)
+> >> 
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 64b308b6e61c..92c17c116de6 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -979,6 +979,7 @@ struct module;
+> >>   *		function returns zero when the driver chooses to
+> >>   *		take "ownership" of the device or an error code
+> >>   *		(negative number) otherwise.
+> >> + *		The pci_device_id parameter is only valid during probe.
+> >
+> > The probe function takes a pointer to a struct pci_device_id, so I
+> > think the requirement is that the struct pci_device_id only *needs* to
+> > be valid during .probe(), right, i.e., the PCI core probe path makes
+> > its own copy of the ID and doesn't retain the pointer after .probe()
+> > returns, right?
+> >
+> > I assume the caller determines the struct pci_device_id lifetime, and
+> > it could be forever.
+> >
+> > Could say something like:
+> >
+> >   The pci_device_id parameter only needs to be valid during probe.
 > 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/power/sequencing/pwrseq-pcie-m2.c | 2 ++
->  1 file changed, 2 insertions(+)
+> As a contract on function parameter, the caller needs to guarantee that it lives
+> at least as long as documented (i.e. during the whole probe) and the callee
+> cannot assume that it will be valid beyond what's guaranteed.
 > 
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> index b5ed80d03953..4aac52062fae 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -190,6 +190,8 @@ static const struct pci_device_id pwrseq_m2_pci_ids[] = {
->  	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
->  	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1112),
-> +	  .driver_data = (kernel_ulong_t)"qcom,qcc2072-bt" },
+> How about:
+> 
+>     The pci_device_id parameter is only guaranteed to be valid during probe.
 
+That's ok with me.  My only niggle is that this documentation is that the
+*consumer* end, and of course the consumer, i.e., the PCI core probe path,
+can't guarantee anything about the parameters it receives.  But I guess
+your point is that the *caller* must guarantee that the parameter remains
+valid during probe.
 
-Bartosz,
-Please push back on this. This is undocumented (indirect) compatible.
-This cannot get accepted to kernel in such form.
-
-Best regards,
-Krzysztof
+The only thing the consumer can guarantee is that it doesn't depend on the
+pci_device_id parameter after the probe returns.
