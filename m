@@ -1,71 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0CB73C872A;
-	Thu, 23 Jul 2026 21:01:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B385B3C1097;
+	Thu, 23 Jul 2026 21:02:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784840510; cv=none; b=A3F4S7XPIKwWdPVSmMIG5WTbhnj5SM196OWPaEtN3WYcTuTZmAqGykOF0Ynm7+WkYQTEBKgCVeT81OK9nI2boQTw9A3scce3dczDun3A57A1axic8ohEE3Q1zbgpIKWPyYXdcUkNA2hXyl0brrCblK/DVSzkiYMaUpDaMlG72CA=
+	t=1784840569; cv=none; b=tiFOQdwXJ0EGykBaGWEgV6uqDrdMtLHc/l5cXCFJ7P5sxoAJB2j+RQNKHk1znTyYbDfkiTktZQ1Q4/Z32LEMcO0KbSlrkugyfQvpGCUWiaXD+XEgFb4zN+ZS9SM2EP/TLGRByWQnDGbCdEiQePI1gEt6u8fdmi1Q77ApSORl4Ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784840510; c=relaxed/simple;
-	bh=ol9dBFBibD9sT6WbimjnkYLhGQU+LM1km9eXoG8ImyY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MWX1O/KEezCPP7zqCf5sLf5U+HQrDt9yWFqSZSg3qdxcTE2oVooXKNUskL3DioqQKIDqDOyam/Gzv4YCRBZ/g7R2HahKTAU+Xayp4hUe3KMgSc0t6GrAVckpZFyA3YTctQsb70uaCYH7B2cBnErUSNYFY80//aSDsRcEz5W4s6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8+fz/Hb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784840569; c=relaxed/simple;
+	bh=YjNRzJD2CRV1QZk0fZHE8UwrrZonxcGYW8gLmOB6pnA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=GKgpw1cbYVCafAPMxLAv9A5ZVC9ap1SpkBjQEzligN8sltBdI6Nu4aLNEUJbeYLSvw1ryp668bSKqmidjxUXDVlySIiruYggPHNRWmcWkHj2mlDJQdEWoJcPXMR6IfibBASOqpB1AQqPf6ZcleWCp1LlPBOrfD/jDVRvQSck9tg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O+GNuK1J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8+fz/Hb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 583331F000E9;
-	Thu, 23 Jul 2026 21:01:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O+GNuK1J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2966C1F000E9;
+	Thu, 23 Jul 2026 21:02:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784840509;
-	bh=XqWvKmVpTqNOqKtLvoCKaLR0PWTLFbCypxGBRKWTLS4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d8+fz/Hbpx0BYAPb9IeDrh+xLkx9ly8BrBysd0aJUuRP+O43w98rtEeYUvV1n+ci8
-	 gQ9Z2fZksYTWokRrrTff0IT4AdD27POnAHrCkqO8zqHubG8m8dGR+fCfU9cN4jQax/
-	 ALP2RoFwF6++9QV3DgR5wD431ua0xo1M5zaMqzRtBionrmUC81G5nEGYhkeKTmLWp1
-	 MCpHhKAButCm1gmTV6xNthT+VANNTP9PZeXJYUkSs3vfD3Y4dV6nnuLFN1rppGNfdJ
-	 HjggWKMN7cyI0N2uo9vf14aJZKXj7Q70/FnFhdB4auqexkbyKgsuKzEgPMyiiPT82W
-	 QX1F1KzNpGk4Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 04/10] md/raid1: don't use write-behind for P2PDMA
- bios
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: linux-pci@vger.kernel.org, linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260723204206.76930-5-mykola@meshstor.io>
-References: <20260723204206.76930-1-mykola@meshstor.io>
- <20260723204206.76930-5-mykola@meshstor.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 21:01:48 +0000
-Message-Id: <20260723210149.583331F000E9@smtp.kernel.org>
+	s=k20260515; t=1784840568;
+	bh=8Aq0VIIJ8LKClnnjnBMW8rUxAJy/+/z70CBPVRyzrLw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=O+GNuK1JbjE16BdqOXqI8IKCVj+MdNkhqVyqEb4qzBB4AH09EWLP83uZieUjayUPr
+	 rGMnTc3nG2DuHMEFQWs5jTM4Hne7LNYtnPmpeO0E3oJ1SSPvGYITVWwLL12zs4HJ59
+	 m5VE//wKqmA7hw/MzeBVd2YuUAFb6aKv2dJAQqGzoL4eXVGhA9NHgEeQ1N2KCP7I75
+	 0xHu5KtZoambog7Ju7R8yKcayHleu8WLHurc/ijKaStanCfIl8tMs70rP6SOwxCJUF
+	 9qthbt0O3H3JUglxSJuVDrt0bFfTZRDvsYoMrhrVAw7UnJyIrLIHTBl8jJHuKl3qYQ
+	 XkK04+eusd1kg==
+Date: Thu, 23 Jul 2026 16:02:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Vasant Hegde <vasant.hegde@amd.com>, iommu@lists.linux.dev,
+	joro@8bytes.org, linux-pci@vger.kernel.org, will@kernel.org,
+	robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
+	bhelgaas@google.com, alexander.deucher@amd.com, jgg@ziepe.ca,
+	Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>,
+	Gerd Bayer <gbayer@linux.ibm.com>,
+	Alex Williamson <alex@shazbot.org>
+Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
+Message-ID: <20260723210246.GA856455@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <70e6d40b-3e13-4efd-b1e7-62195ff66e91@amd.com>
 
-> alloc_behind_master_bio() copies the bio's data with bio_copy_data(),
-> a CPU copy. P2PDMA pages are peer device (BAR) memory; generic code
-> must not assume CPU load/store access to them is safe or fast on
-> every architecture, and bouncing peer memory through the CPU defeats
-> the point of a peer-to-peer transfer.
->=20
-> Skip write-behind for P2PDMA bios: they are written directly to all
-> members, including write-mostly ones.  Ordering against write-behind
-> I/O in flight to overlapping sectors is preserved: the non-behind
-> clone path serializes on CollisionCheck rdevs (see the preceding
-> fix), which covers these bios like any other write that bypasses
-> write-behind.
->=20
-> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devic=
-es to RAID device")
-> Assisted-by: Claude:claude-opus-4-8
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+[+cc Gerd, Alex]
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Thu, Jul 23, 2026 at 02:58:14PM -0500, Mario Limonciello wrote:
+> On 7/23/26 14:53, Bjorn Helgaas wrote:
+> > On Thu, Jul 23, 2026 at 11:32:49AM -0500, Mario Limonciello wrote:
+> > > On 7/23/26 11:23, Vasant Hegde wrote:
+> > > > On 7/23/2026 9:41 PM, Mario Limonciello wrote:
+> > > > > On 7/23/26 10:59, Bjorn Helgaas wrote:
+> > > > > > On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
+> > > > > > > Certain AMD GPU's must always be in identity mode. Currently its enforced
+> > > > > > > using PASID check. It worked fine as most GPU's has PASID feature. But
+> > > > > > > this means, identity mode enforcement is done for all PASID capable devices.
+> > > ...
+> > 
+> > > > +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
+> > > > +{
+> > > > +       struct pci_dev *root_port;
+> > > > +       int class = pdev->class >> 8;
+> > > > +
+> > > > +       /* AMD GPU vendor ID */
+> > > > +       if (pdev->vendor != PCI_VENDOR_ID_ATI)
+> > > > +               return false;
+> > > > +
+> > > > +       /* GPU class */
+> > > > +       if (class != PCI_CLASS_DISPLAY_VGA &&
+> > > > +           class != PCI_CLASS_DISPLAY_OTHER)
+> > > > +               return false;
+> > > > +
+> > > > +       if (pci_upstream_bridge(pdev) &&
+> > > 
+> > > I don't think you need to check for pci_upstream_bridge() to be
+> > > non-NULL.  You already checked that it's an endpoint by looking at
+> > > the class.  So an endpoint will be connected to a bridge of some
+> > > sort (either a switch internal to the dGPU or to a root port).
+> > 
+> > I think devices can be passed through to virtualized guests with
+> > no upstream bridge visible to the guest, can't they?
+> 
+> None of the GPUs in APUs support SRIOV, so there isn't a VF to be
+> passed in to a guest.  But I guess you could pass the whole endpoint
+> in.
+> 
+> When passed into a guest doesn't it end up associated behind a root
+> port in the guest though?
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723204206.7693=
-0-1-mykola@meshstor.io?part=3D4
+I don't think the Root Port is always passed into the guest.  From
+1ae8c4ce1570 ("PCI: Enable AtomicOps only if Root Port supports
+them"):
 
+  On s390 and many virtualized guests, the Endpoint is visible but the
+  Root Port is not.  In this case, pci_enable_atomic_ops_to_root()
+  previously enabled AtomicOps in the Endpoint even though it can't
+  tell whether the Root Port supports them as a completer.
+
+Maybe Alex will chime in and tell us more about non-s390 guests.
