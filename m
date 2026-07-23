@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A87318BA8;
-	Thu, 23 Jul 2026 21:56:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262743F8899;
+	Thu, 23 Jul 2026 21:58:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784843796; cv=none; b=c3UIkY19ExdukFMKAUfNG6tjwTzdLsV70wjs6SfWn/X9r7q69H1VfFGDhx1kMO11ryWJZqdtVEK/4MTR3W9ayviCyeeCmldV0Nqkaz5BFwaeJOO39ixzj+8EFD2pfvqrTlrVtqv1KXfasmXSSkYFR6nnqa1ENI2ZAg6fYTMslM0=
+	t=1784843926; cv=none; b=Iv4e7tcRnM02qnD4SMghWXYx14QEvlNro+0zLbGk8zqfq4g8322qEOLzf/0UHk62JfN8CiFYZJ+4HmGanu1c7voG3LdF6mnDaqfLPMkdGxjKqQE8QEcFq5+gCT2utlxQeOY1bMHzDGqfPYB1BuqKbsqTReFpy46K6Z9zdKIOk0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784843796; c=relaxed/simple;
-	bh=CQP5d1ako5uXL0GjcT1BYt76tu5Y/xB5dt9pRb609W0=;
+	s=arc-20240116; t=1784843926; c=relaxed/simple;
+	bh=4IyB0bS4utudoco73H4ceD3nM1xYTTHYC6ZgZAzJft4=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=B9icC86l1x8XA7cF9qgkZLK4IzhXKxphWfmg2r4n5swr6mV34+KG4VKUk4hz6stknLTMXcyDY+2zxQFURpzt2JuvtFsjWc34W8pLeAU4dY1UeEEihVt5pI0cKv65bR7fwNDbIvfJ/3SBxb7McabVvodQ4HqnYjEhJl9Omxqb4kA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KcUfY9Oy; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=PTQSRvOeGJmiUtoRSQJ5SvjSOARzThlZfHBsZ1G/iR4y2ITCnatfcgFLEwRuqbFigttf/R6k1CvKB3x91TfQsxnOrXAJWavmbPu8o0QvWRy46DOrzOJ2f43NQqZwjFFgB92iDpzNbHYjv7gMvJ+d2Ezim9K8fIcSHigpAldNKDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AWsqM7v2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KcUfY9Oy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0BBF1F000E9;
-	Thu, 23 Jul 2026 21:56:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AWsqM7v2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C11521F000E9;
+	Thu, 23 Jul 2026 21:58:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784843795;
-	bh=3QJrG1F4VwouXVhH+XAc7LBouqKtfdmJsZAfmGzChoI=;
+	s=k20260515; t=1784843923;
+	bh=hH7Xt1Rj/RtfLqU6Y/36IlAaqiMN8rWY+VuUOnAA+ck=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=KcUfY9Oy4kUwtw2Ry8LCof4ywzkYM1XRKYjQ+rjkdDrj3l2pbXKNcZYmTEBNlIey1
-	 rNSc5RhkhDIqQI+yzta914zyTLD7aJTrQSJZvS/6XeCPohe/+Bg1LyLcIM2c+xmpLN
-	 teNtekohVzjkC60G4jDJMB47w9c4PpWVtZKPxLUzPQlhLWqTQlNVCq6OHxuqOhPWpm
-	 S5T7UVPWdbPu9A6rp1tB3zROxhqEyRrAfQbDuZXEJ2P2ub8Q4fHN4w6magoRmqN2kg
-	 KBnCLVTJvPDlUs8HJXDAZh/4o5q9XVGkbx0t3SeYTgDAGw42aOdLRn2/pQiffe/Gxx
-	 uTJqcSiPXOuTg==
-Date: Thu, 23 Jul 2026 16:56:33 -0500
+	b=AWsqM7v2h5Q7XJSIORhcnRS+fYhNwPjJG2NmSb6O5vP0tPRXPslo6NFJ2eMW+0xEP
+	 6EEHdvqSEmUel97VS7dahbHBsWjsc1fCyEso/vAAVrxZUj2UaL93/q9eblwXkXXcPh
+	 c54zxCmnyDrD2uNuf5F7zxOZuy8Zfcbu3c0JLw9kcuKXQTYeeK7f592kT1rycr3Mup
+	 9vHuc+1x1GrgLJI11takQOBuvwCQkBjXzgBx1/oP5AnjhR4sKD6E34jjzZ2Dr/wAPp
+	 CF8hv5l2d+1xseSYDs9NhvcVqK8hHtNjWIh6I5yOp+yr8THpIvZtwUQkj9XEmlc6nx
+	 eOuREaDfTkuUA==
+Date: Thu, 23 Jul 2026 16:58:41 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Brian Norris <briannorris@chromium.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
-	David Matlack <dmatlack@google.com>, linux-kernel@vger.kernel.org
+	David Matlack <dmatlack@google.com>, Lukas Wunner <lukas@wunner.de>,
+	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v4] PCI/portdrv: Allow probing even without child services
-Message-ID: <20260723215633.GA864671@bhelgaas>
+Message-ID: <20260723215841.GA865570@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,47 +43,117 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <amG0XebAYI-4eDIN@wunner.de>
+In-Reply-To: <20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
 
-On Thu, Jul 23, 2026 at 08:27:41AM +0200, Lukas Wunner wrote:
-> On Wed, Jul 22, 2026 at 04:09:42PM -0700, Brian Norris wrote:
-> > +++ b/drivers/pci/pcie/portdrv.c
-> > @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
-> >   */
-> >  static int pcie_port_device_register(struct pci_dev *dev)
-> >  {
-> > -	int status, capabilities, i, nr_service;
-> > +	int status, capabilities, i;
-> >  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
+On Wed, Jul 22, 2026 at 04:09:42PM -0700, Brian Norris wrote:
+> The PCIe port driver fails to probe if it finds no child services,
+> presumably under the assumption that the driver is not useful in that case.
+> However, the driver *can* still be useful for power management support --
+> namely, it still configures the port for runtime PM / D3, which may be
+> important for allowing a bridge to enter low power modes.
 > 
-> Nit:  Move the amended line below the irqs[] declaration to sustain
-> inverse Christmas tree ordering.
-
-I moved this locally.
-
-> Otherwise this is
-> Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> Thus, allow probe to succeed even if no IRQs and no child services are
+> available. This also mirrors existing behavior for ports that don't support
+> any portdrv services (PCIe hotplug, AER, DPC, PME, bwctrl), where we'd also
+> probe successfully.
 > 
-> One caveat, I note there is a pre-existing issue on Loongson LS7A,
-> which (according to 62b6dee1b44a) suffers from a defect wherein
-> disabling bus mastering prevents forwarding of MMIO requests downstream.
-> This happens right now (and continues to happen after the present patch)
-> if the error path in pcie_port_device_register() is taken.
+> This change is a bit more important after commit f5cd8a929c82 ("PCI: dwc:
+> Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+> controller"), because it's common for some DWC-based systems to:
 > 
-> I also note that pci_enable_device() is only called because per
-> 1ce5e83063bf, it was necessary in 2009 for legacy interrupt initialization
-> "on some architectures", which sounds fairly vague to me.  In any case,
-> it seems to suggest that pci_disable_device() should be called if
-> pcie_init_service_irqs() fails.  Right now that is done, after the patch
-> it isn't.  I guess portdrv would have to remember on probe whether
-> pci_enable_device() was called and only then call pci_disable_device()
-> on remove.  I guess it would be possible to abuse dev_set_drvdata()
-> to store this status bit (as a fake pointer).  Then again, I'm not
-> sure pci_enable_device() is still necessary for legacy interrupt
-> initalization today.  I guess "legacy interrupt" refers to INTx.
-> A lot has changed in generic and PCI irq code since 2009.
-> I assume we otherwise don't have a need to access BARs on PCIe ports
-> currently, but perhaps new port services may come along which do?
+>   1. have only the "aer" and "pcie_pme" port services available and
+> 
+>   2. not define legacy INTx interrupts properly in their device tree.
+> 
+> After commit f5cd8a929c82, such systems may fail pcie_init_service_irqs()
+> and so exit with -ENODEV.
+> 
+> Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-I think we also need pci_enable_device() so MSI-X configuration can
-access the BAR.
+Applied to pci/portdrv for v7.3, thanks!
+
+> ---
+> 
+> Changes in v4:
+>  * Between sashiko-bot / Mani / me / Bjorn, we agreed that deferring
+>    pci_set_master() may cause us to drop some MSIs:
+>      https://lore.kernel.org/all/af574zaysKnXjx15@google.com/
+>    So we revert to the v2 approach, with some small changes
+>  * Address some of Lukas's review comments:
+>      https://lore.kernel.org/all/al68lFtbq_Q4RCL2@google.com/
+>    Specifically:
+>      - ensure pcie_device_init() return code is checked
+>      - release IRQs (pci_free_irq_vectors()) when no services registered
+>        properly
+>  * Borrow some of Bjorn's commit message tweaks
+> 
+> Changes in v3:
+>  * Defer pci_set_master() until we really know we have some child
+>    service
+> 
+> Changes in v2:
+>  * Clear master when we have no child services
+> 
+>  drivers/pci/pcie/portdrv.c | 28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index 2d6aa488fe7b..18ee190acc6e 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+>   */
+>  static int pcie_port_device_register(struct pci_dev *dev)
+>  {
+> -	int status, capabilities, i, nr_service;
+> +	int status, capabilities, i;
+>  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
+>  
+>  	/* Enable PCI Express port device */
+> @@ -355,29 +355,29 @@ static int pcie_port_device_register(struct pci_dev *dev)
+>  	if (status) {
+>  		capabilities &= PCIE_PORT_SERVICE_HP;
+>  		if (!capabilities)
+> -			goto error_disable;
+> +			goto out;
+>  	}
+>  
+>  	/* Allocate child services if any */
+> -	status = -ENODEV;
+> -	nr_service = 0;
+>  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+>  		int service = 1 << i;
+>  		if (!(capabilities & service))
+>  			continue;
+> -		if (!pcie_device_init(dev, service, irqs[i]))
+> -			nr_service++;
+> +		if (pcie_device_init(dev, service, irqs[i]))
+> +			capabilities &= ~service;
+>  	}
+> -	if (!nr_service)
+> -		goto error_cleanup_irqs;
+>  
+> -	return 0;
+> +out:
+> +	/*
+> +	 * With no child services, we shouldn't need bus mastering or any IRQ
+> +	 * vectors we allocated.
+> +	 */
+> +	if (!capabilities) {
+> +		pci_free_irq_vectors(dev);
+> +		pci_clear_master(dev);
+> +	}
+>  
+> -error_cleanup_irqs:
+> -	pci_free_irq_vectors(dev);
+> -error_disable:
+> -	pci_disable_device(dev);
+> -	return status;
+> +	return 0;
+>  }
+>  
+>  typedef int (*pcie_callback_t)(struct pcie_device *);
+> -- 
+> 2.55.0.229.g6434b31f56-goog
+> 
