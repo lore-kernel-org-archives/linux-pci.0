@@ -1,74 +1,41 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010030.outbound.protection.outlook.com [52.101.61.30])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327522D3739
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 15:54:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784822047; cv=fail; b=OI/SegEbEj8AVLYiIDPlRW0ojcfXVLA88W9sXKODqJ9SjTLhhWG9jD0XtCGPA5yP+q6Jn6AOCFAuT/DVx+qhtGhLshK3u2H8Agr8EjkrASR/hlSK7dQhNdJ/zcg4VKi1BqX5lym5Ycxf2cG63ihvhJw2XjbZlSBmpigOdwekiQY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784822047; c=relaxed/simple;
-	bh=yuKzIIweMdvONeFud8muNOVzetACHrCxuEuyR6wr4B8=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HGz2Q/pyJdHU8dVn8yf2ecxsthIwAmNI04qoeG7aivB5S85LzxSkzw7E0yHlA9OV8w/vW6inNScKTSzcz0S+1hEiVZaaRylf5Bt7VWsKi9JCZhKoa341mDVGbp1crgZZTyzmLnUdCYG/Y62dck/qNTFWjxZZka+84sK9zkROioY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=OnD9SSr0; arc=fail smtp.client-ip=52.101.61.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BC7B2D7DF1;
+	Thu, 23 Jul 2026 15:59:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784822355; cv=none; b=kNgYnWGs9n0qWpGsKvwl57uLRKoK5NnJFU2s5yPj5mgkWAXBmi33vwlHRtEwn5PapTazu//h6M3YMt3aKccGzHseYUw2ndQGuo6BGRub8r5F3TltlXJptFG8tj2Y2bRzZ5qP4tk3XBbfJgBJy6zSrMYujLK2MSnM8y7GjQQxK70=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784822355; c=relaxed/simple;
+	bh=vyz7bv/S+V5mFdMgM/ew5tn62gZ5RGRMqO0eG5n941s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fA5qNj86iBPEEb3etZ77eQVCDqwfyiOuwEEvt4hBCILtgQjDxnLz+UJWrwvSBX6z9OCxjl8/CTnTTEzGtGbULZ7F6PRCDr4i7MQuz+srLAubRC70UrJ7HaEuDb9ajr8H056AXWhSm3Ak6oZVSnMN7zxrEq27M80J1qJe7OvxRLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rif8zLxQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="OnD9SSr0"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JSAzHphjRTRqmA8RU843Zxulq5vWu6aM4GDpJgvu0V4c81/YDZN8rGrauNdUi1tYiamj6sn0Bm2DCdVTsDLtVHX5UypyWDm5nQkaCQbOU/zxxzv7OP4wpJ1KvgSkAqV1Usms+D/t3Xy/bE3Z+iy1J5srWSXe7nym81lFMyTvp0po5FaGhiWhRlsI3cv5nyDhktWefqorB2OMIL8PHbr53HfpbHkyO8mQzr2tII9JOWZcVHG7woPPXTBem4lsi0h8Vxr9iOzXIL+hp1MAcAyrnpuTZYhmNK9V5BLM8MiK99f2HL6VswMgyb/Gk7ernCypGgQPwuKkPsC2W/WFIvEOAw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=K5hy7VN9zs3FPQk4oJHMVZhSNcs3qckAseIOk18Y66c=;
- b=rV1fcDnbrtp6TqTqFDq2HWfjYVlqdPHGggKbDm0dMLngbyg8qDGe+ejbnr/2h9opHr/5r5fMzqn0WDXKqhplyjzxdIGGwQZ17IxczxcJ9b/V3RZFBzpVSr7SRvqRkL33WcL61EFhsUJLtYPFw/sKqR/qcHg4/Z8/9m3DfgLgaroiEtC6iewl36FxJ42FCXhOJp1Gizwr2qBhiUNsonFUhDAVyVAsVHNLI2JeonU1gloK7kkyEnObbd3NCiBFBIj+zKVuQblqCjSOtpM6fWchHO6tBUfVRE98321mo1y+jWWgARwuvHcU8K1TNjpndVfTAcgvjobWc9tbbWWRnLO3PQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=lists.linux.dev smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=K5hy7VN9zs3FPQk4oJHMVZhSNcs3qckAseIOk18Y66c=;
- b=OnD9SSr04sICc2fl5gNtfQpalG7H3PRAr3Jova6rPw46vLxpk2zFXT5XHAMApAYrQ3Ykjy4cU8EVYzl0Nm0697U6mPtZmD+baEKmMI0emTciFopwIwFUnRm4EIf69MrbviuLlPE4uesZYqkYpIbT8+euxb3FEArYrCHWudgxJyg=
-Received: from PH7P220CA0166.NAMP220.PROD.OUTLOOK.COM (2603:10b6:510:33b::13)
- by MN0PR12MB5977.namprd12.prod.outlook.com (2603:10b6:208:37c::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.11; Thu, 23 Jul
- 2026 15:54:01 +0000
-Received: from CY4PEPF0000E9D1.namprd03.prod.outlook.com
- (2603:10b6:510:33b:cafe::23) by PH7P220CA0166.outlook.office365.com
- (2603:10b6:510:33b::13) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.245.11 via Frontend Transport; Thu,
- 23 Jul 2026 15:54:00 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- CY4PEPF0000E9D1.mail.protection.outlook.com (10.167.241.136) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.270.5 via Frontend Transport; Thu, 23 Jul 2026 15:54:00 +0000
-Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Thu, 23 Jul
- 2026 10:53:59 -0500
-Received: from amd.com (10.180.168.240) by satlexmb07.amd.com (10.181.42.216)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41 via Frontend
- Transport; Thu, 23 Jul 2026 10:53:55 -0500
-Date: Thu, 23 Jul 2026 15:53:50 +0000
-From: Ankit Soni <Ankit.Soni@amd.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rif8zLxQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 133981F000E9;
+	Thu, 23 Jul 2026 15:59:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784822354;
+	bh=gGLVbBTZ/WqliFHvmKwagmiygNTRBXYlF3rnLkYpgRI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Rif8zLxQYMb/KlUrfmF1OQPjiG1O2yfZM+gIfI1g2gz5cXj/28Y3fBDga46/L5zHY
+	 SKOY4SdL+z2PJTgn0ef5d+mYjTf6e8NoxXP7QZNKxGJuO8SPiVoqj0GlvChXKBA0kK
+	 lzqZcpQrA9BJqpE0iMIxw/1Qt9ymY7UGjHL9Ni9T6B/pWO9XxuhkmLmh6pPM8ZCyly
+	 66qpH7kmlW0woWcin6p3t6Yx6zu5r6jgFhlG9tjY1/d+DRNvanRpqFp4NvdpuUuSgA
+	 VH5BaTnrk9s3X1EqGZEtYzB6R9der6vBNSBWF6BZkucnKsKOS5pKMet/d8BWoFdEHd
+	 EaMZDKdKYiorA==
+Date: Thu, 23 Jul 2026 10:59:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
 To: Vasant Hegde <vasant.hegde@amd.com>
-CC: <iommu@lists.linux.dev>, <joro@8bytes.org>, <linux-pci@vger.kernel.org>,
-	<will@kernel.org>, <robin.murphy@arm.com>, <suravee.suthikulpanit@amd.com>,
-	<bhelgaas@google.com>, <alexander.deucher@amd.com>,
-	<mario.limonciello@amd.com>, <jgg@ziepe.ca>, Amandeep Kaur Longia
-	<AmandeepKaur.Longia@amd.com>
+Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
+	will@kernel.org, robin.murphy@arm.com,
+	suravee.suthikulpanit@amd.com, bhelgaas@google.com,
+	alexander.deucher@amd.com, mario.limonciello@amd.com, jgg@ziepe.ca,
+	Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
 Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-Message-ID: <e6uoop5wg2ajfn26ot4re3cjz4iz5lhgmoq5epigf6nyerp5br@avxnfnuhh2hn>
+Message-ID: <20260723155912.GB836122@bhelgaas>
 References: <20260723061548.10187-1-vasant.hegde@amd.com>
  <20260723061548.10187-3-vasant.hegde@amd.com>
 Precedence: bulk
@@ -77,41 +44,26 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20260723061548.10187-3-vasant.hegde@amd.com>
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9D1:EE_|MN0PR12MB5977:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8569c53b-62b9-4159-d862-08dee8d29ca9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|23010399003|36860700016|376014|20046099003|4143699003|11063799006|56012099006|5023799004|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	b7croMSYaaBrops02aqpa/a4cUOUNEs8T5xWms+DTNlzYgfPrnq2FyFrTTI9jyzogbaUU2Rf0NqTFNMl8kaNuYhgJtNWtqa2vT2zKt8EjSx1o2i6xAfoys6WGhVxWRLP1O2NzWr9ETl4bhBjE9LMzOYh+w0IBJ0kqm7jlhfumXV/8/3ps+fZoL8rxXIYG7Na1uOGbDEMN3UwiTVazdSAUfZ1rt5azC7yOSkWq88rnayXukM5UhFlyV2bV8WyEQxIXRjkkI7mxxaqlnak1nP4NIGYct8cIcNhfwO+dCgmslGNila9JItEe3b8fRgdzbkl3PRlS9VpLSrgpCQHrDbof7bUCTodGEGSpzbxQkcyqNesT9KVN/rl2++lPmVt4vbvR0ueTkEvH47ZcYGOeHMlg5wJeMjzQFsIIwONb3rsXDtOmo24TW2AbNypXFg8OTa9pXFG3fBzT8t1E6w3B9ESz8tuUEDJsIcqL+j4cQXM0Zr32lcg84B2X2mIoVGw8D5r2EDfdmwt6HfjvPcB5SNg9/LjZzgv1Hypqrm43nACelaYCn3UAVSR1lVR9XuFHNSnvFl+yaFePC0ZXa0H5B/AwL4NlTOgB4KzWVYlpDM2DHLxYPBA9rShtu74yJJR2y9w44VMI3SyIvCZGVjuEPRy4Rf0AaG1KqQVCdEXXvsvozr8/7+y408odjTw/5PedLM1UgPduX71dE43h2GkdRBBMA==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(23010399003)(36860700016)(376014)(20046099003)(4143699003)(11063799006)(56012099006)(5023799004)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	SHrSG62JRyYodSoJTm0uEkgfkKtJF71DUDVsfQVd/NnbULzbHntJcXICCLfzpt53t6L67c+9TZMiEbR8yLqOsJm5ngFKegSkwoJgnHYG3qKwrs0MVLKMN8j1nAjoKw77Mc0AC+yftJNb8XdLAPzUf37T2G1LqWvNR8Ql/WGqPsnM/aKcjtcdGTR48cOXU7Fh85FjdaUW/BSaAfniSc80Csftpqd2S8jPlNIiqH7XmJrr//SC7d7qetdYo1bGSgxu06b+bG0bJbWI3UQO5tAKfnvUGGZnQPwlK1rGSKSUjxeyYM4K+pFrYnO2ZGuoXlGqWM8FTr9YnbDITW/7s1bP1gks1o3mInUzAzQsaKGHXbxzzpirZ+1VLDnTAfwAFqLoa/oYJW+Rjq32XW2tcpuPYJOSN2ZDLISq4xFKEP3Ykgdfk8RRyZ7AHmZOgCho1woR
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 15:54:00.1450
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8569c53b-62b9-4159-d862-08dee8d29ca9
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CY4PEPF0000E9D1.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5977
 
 On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
 > Certain AMD GPU's must always be in identity mode. Currently its enforced
 > using PASID check. It worked fine as most GPU's has PASID feature. But
 > this means, identity mode enforcement is done for all PASID capable devices.
-> 
+
+I think it would be useful to know something about *why* these devices
+require identity mode.  And what happens without identity mode, i.e., is
+there a user-visible symptom that happens when the wrong mode is used?
+
+Since the code doesn't test any feature bits, I assume it's because these
+devices have some hardware defect?
+
+s/GPU's/GPUs/ (twice)
+s/Currently its/Currently it's/
+s/has PASID/have PASID/
+
 > Previously it made sense as domain allocation API
 > (iommu_ops->domain_alloc()) was just passing domain type. So it couldn't
 > check device capability and decide best suited page table type (v1 or
@@ -160,18 +112,11 @@ On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
 > +		return false;
 > +
 > +	/* If bridge vendor is not ATI then its APU and force IDENTITY mode */
+
+s/its/it's/  "it's" == "it is"; "its" shows ownership
+
 > +	if (root_port->vendor != PCI_VENDOR_ID_ATI)
 > +		return true;
-
-Hi Vasant,
-
-For a discrete GPU, pcie_find_root_port() may walk up to the system root port. 
-On an AMD platform that root port is vendored PCI_VENDOR_ID_AMD, which is not ATI. 
-so this device will be forced to identity.
-Is that a valid scenario?
-
--Ankit
-
 > +
 > +	/* Rest all are dGPUs and works fine with DMA mode */
 > +	return false;
@@ -191,7 +136,12 @@ Is that a valid scenario?
 > -	if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
 > +	if (to_pci_dev(dev)->untrusted)
 >  		return IOMMU_DOMAIN_DMA;
->  
+
+This seems to apply a different rule to untrusted (e.g., removable) devices
+based on the topology, not the device itself.  What if one of these devices
+is used as an eGPU and thus uses IOMMU_DOMAIN_DMA when it really needs
+IOMMU_DOMAIN_IDENTITY?
+
 > -	/*
 > -	 * Do not identity map IOMMUv2 capable devices when:
 > -	 *  - memory encryption is active, because some of those devices
