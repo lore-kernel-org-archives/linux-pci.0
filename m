@@ -1,105 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B385B3C1097;
-	Thu, 23 Jul 2026 21:02:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F1B3EAC60;
+	Thu, 23 Jul 2026 21:04:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784840569; cv=none; b=tiFOQdwXJ0EGykBaGWEgV6uqDrdMtLHc/l5cXCFJ7P5sxoAJB2j+RQNKHk1znTyYbDfkiTktZQ1Q4/Z32LEMcO0KbSlrkugyfQvpGCUWiaXD+XEgFb4zN+ZS9SM2EP/TLGRByWQnDGbCdEiQePI1gEt6u8fdmi1Q77ApSORl4Ls=
+	t=1784840692; cv=none; b=I/l2lLLuEdWIcqs7vIhQJAQUPPFvdyDHoHnmWGgbg+JytlVA27RMOhVU4QkGCmAXg4sogGk1YejxgSQc9RFO+/988g1ZmXip8YJvu4kGw8GL0ytqkNDPkhMK6uK/KP6FJk+z+uSARBE5jnvmGoJ/Uo4csdb8cD6zuMyr0+bxyRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784840569; c=relaxed/simple;
-	bh=YjNRzJD2CRV1QZk0fZHE8UwrrZonxcGYW8gLmOB6pnA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=GKgpw1cbYVCafAPMxLAv9A5ZVC9ap1SpkBjQEzligN8sltBdI6Nu4aLNEUJbeYLSvw1ryp668bSKqmidjxUXDVlySIiruYggPHNRWmcWkHj2mlDJQdEWoJcPXMR6IfibBASOqpB1AQqPf6ZcleWCp1LlPBOrfD/jDVRvQSck9tg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O+GNuK1J; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784840692; c=relaxed/simple;
+	bh=SbUgXBaeETIL3kRVtGjIO68xME3MaBWJ/TamGG0NaL4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Auvdz91bTm/XOe71etu+CCIngyzig8oAv+DjVoDyt4l+Qtorcym9zsXVhMbPdG3Bvs9BY3ZLBKBK0/H7aHBRChYWjBLJSux6CojNY3vbAwT0GwHYUCgMgIs5JVWO3nz5ddYIacsuz6aVV98RrDX+lQdTzkXUU/CKocyhR/zn934=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VFcG6q47; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O+GNuK1J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2966C1F000E9;
-	Thu, 23 Jul 2026 21:02:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VFcG6q47"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 278EA1F000E9;
+	Thu, 23 Jul 2026 21:04:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784840568;
-	bh=8Aq0VIIJ8LKClnnjnBMW8rUxAJy/+/z70CBPVRyzrLw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=O+GNuK1JbjE16BdqOXqI8IKCVj+MdNkhqVyqEb4qzBB4AH09EWLP83uZieUjayUPr
-	 rGMnTc3nG2DuHMEFQWs5jTM4Hne7LNYtnPmpeO0E3oJ1SSPvGYITVWwLL12zs4HJ59
-	 m5VE//wKqmA7hw/MzeBVd2YuUAFb6aKv2dJAQqGzoL4eXVGhA9NHgEeQ1N2KCP7I75
-	 0xHu5KtZoambog7Ju7R8yKcayHleu8WLHurc/ijKaStanCfIl8tMs70rP6SOwxCJUF
-	 9qthbt0O3H3JUglxSJuVDrt0bFfTZRDvsYoMrhrVAw7UnJyIrLIHTBl8jJHuKl3qYQ
-	 XkK04+eusd1kg==
-Date: Thu, 23 Jul 2026 16:02:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Vasant Hegde <vasant.hegde@amd.com>, iommu@lists.linux.dev,
-	joro@8bytes.org, linux-pci@vger.kernel.org, will@kernel.org,
-	robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
-	bhelgaas@google.com, alexander.deucher@amd.com, jgg@ziepe.ca,
-	Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
-	Alex Williamson <alex@shazbot.org>
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-Message-ID: <20260723210246.GA856455@bhelgaas>
+	s=k20260515; t=1784840681;
+	bh=bmEW5YMfrwCWDNPR9cYoHo8wVg8j/QbeVnphV5sWjFY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=VFcG6q479q3W9Ftvvdyt3HYQA5/ScjJtRtYzRuSe8lE9y6Zbuds3kktL8/Bgm2FSS
+	 OCLWLdiPbr61NgkY99AcMfDaEMaLzETLxfu7FPG8w8DexKFE3wJEehBnvbEy3pR3Ht
+	 GZY8m1hsfvzWmKyEaO9BOsp/e1Xs/YGtHe+mOhC+4gNWTlEQ0tFTTJwB3p8enTsR4Q
+	 8XCi/Id257eL/3men/WgUF5zLY9S1lW3Fj3hXf7CT0SqPQkEglnHJ0PlgMw+Pw8n9q
+	 1sKeaUTGM2iaZEo7eizbVyve9o7ZRjmda6IMo5wy6i9ur/9/huEe8ZGuHQbEkMdEgR
+	 whntO/bfuRPRg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 03/10] md/raid1: serialize non-write-behind writes on
+ CollisionCheck rdevs
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mykola Marzhan" <mykola@meshstor.io>
+Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20260723204206.76930-4-mykola@meshstor.io>
+References: <20260723204206.76930-1-mykola@meshstor.io>
+ <20260723204206.76930-4-mykola@meshstor.io>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 23 Jul 2026 21:04:40 +0000
+Message-Id: <20260723210441.278EA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <70e6d40b-3e13-4efd-b1e7-62195ff66e91@amd.com>
 
-[+cc Gerd, Alex]
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-On Thu, Jul 23, 2026 at 02:58:14PM -0500, Mario Limonciello wrote:
-> On 7/23/26 14:53, Bjorn Helgaas wrote:
-> > On Thu, Jul 23, 2026 at 11:32:49AM -0500, Mario Limonciello wrote:
-> > > On 7/23/26 11:23, Vasant Hegde wrote:
-> > > > On 7/23/2026 9:41 PM, Mario Limonciello wrote:
-> > > > > On 7/23/26 10:59, Bjorn Helgaas wrote:
-> > > > > > On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
-> > > > > > > Certain AMD GPU's must always be in identity mode. Currently its enforced
-> > > > > > > using PASID check. It worked fine as most GPU's has PASID feature. But
-> > > > > > > this means, identity mode enforcement is done for all PASID capable devices.
-> > > ...
-> > 
-> > > > +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
-> > > > +{
-> > > > +       struct pci_dev *root_port;
-> > > > +       int class = pdev->class >> 8;
-> > > > +
-> > > > +       /* AMD GPU vendor ID */
-> > > > +       if (pdev->vendor != PCI_VENDOR_ID_ATI)
-> > > > +               return false;
-> > > > +
-> > > > +       /* GPU class */
-> > > > +       if (class != PCI_CLASS_DISPLAY_VGA &&
-> > > > +           class != PCI_CLASS_DISPLAY_OTHER)
-> > > > +               return false;
-> > > > +
-> > > > +       if (pci_upstream_bridge(pdev) &&
-> > > 
-> > > I don't think you need to check for pci_upstream_bridge() to be
-> > > non-NULL.  You already checked that it's an endpoint by looking at
-> > > the class.  So an endpoint will be connected to a bridge of some
-> > > sort (either a switch internal to the dGPU or to a root port).
-> > 
-> > I think devices can be passed through to virtualized guests with
-> > no upstream bridge visible to the guest, can't they?
-> 
-> None of the GPUs in APUs support SRIOV, so there isn't a VF to be
-> passed in to a guest.  But I guess you could pass the whole endpoint
-> in.
-> 
-> When passed into a guest doesn't it end up associated behind a root
-> port in the guest though?
+New issues:
+- [High] Hot-added devices silently bypass the array's `MD_SERIALIZE_POLICY=
+`, leaving them vulnerable to overlap write data corruption.
 
-I don't think the Root Port is always passed into the guest.  From
-1ae8c4ce1570 ("PCI: Enable AtomicOps only if Root Port supports
-them"):
+Pre-existing issues:
+- [High] Dynamic evaluation of `CollisionCheck` during write-behind I/O com=
+pletion races with sysfs state changes, leading to use-after-free and memor=
+y leaks.
+--
 
-  On s390 and many virtualized guests, the Endpoint is visible but the
-  Root Port is not.  In this case, pci_enable_atomic_ops_to_root()
-  previously enabled AtomicOps in the Endpoint even though it can't
-  tell whether the Root Port supports them as a completer.
+--- Patch [3]: [PATCH v5 03/10] md/raid1: serialize non-write-behind writes=
+ on CollisionCheck rdevs ---
+commit b12be35453573f37c0313dbe2cfc0eb2808cb133
+Author: Mykola Marzhan <mykola@meshstor.io>
+md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
 
-Maybe Alex will chime in and tell us more about non-s390 guests.
+This patch changes the serialization gate in raid1 to use CollisionCheck
+instead of MD_SERIALIZE_POLICY. It aims to correctly serialize on
+write-mostly members when write-behind is armed, and remove a latent NULL
+dereference.
+
+Cc: stable@vger.kernel.org
+
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index afe2ca96ad8c2..997f79c05db7b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -564,7 +564,7 @@ static void raid1_end_write_request(struct bio *bio)
+>  				call_bio_endio(r1_bio);
+>  			}
+>  		}
+> -	} else if (test_bit(MD_SERIALIZE_POLICY, &rdev->mddev->flags))
+> +	} else if (test_bit(CollisionCheck, &rdev->flags))
+
+[Severity: High]
+This is a pre-existing issue, but does this unlocked dynamic check of
+CollisionCheck create a time-of-check to time-of-use race against sysfs
+state changes?
+
+When -writemostly is echoed to sysfs, mddev_suspend() is called. For
+write-behind I/O, mddev->active_io is decremented early when non-writemostly
+clones finish, which allows mddev_suspend() to return while the write-mostly
+clone is still in flight.
+
+Then state_store() in drivers/md/md.c calls mddev_destroy_serial_pool()
+which frees rdev->serial and clears CollisionCheck:
+
+drivers/md/md.c:rdev_uninit_serial() {
+    if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
+        return;
+
+    kvfree(rdev->serial);
+    rdev->serial =3D NULL;
+}
+
+When the in-flight write-mostly clone subsequently completes here in
+raid1_end_write_request(), could it check CollisionCheck and either call
+remove_serial() on the freed pointer, or skip it and leak the serial_info
+elements?
+
+>  		remove_serial(rdev, lo, hi);
+>  	if (r1_bio->bios[mirror] =3D=3D NULL)
+>  		rdev_dec_pending(rdev, conf->mddev);
+
+[ ... ]
+
+> @@ -1677,7 +1677,11 @@ static bool raid1_write_request(struct mddev *mdde=
+v, struct bio *bio,
+>  			mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
+>  					       &mddev->bio_set);
+> =20
+> -			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+> +			/*
+> +			 * CollisionCheck marks every rdev with a serial
+> +			 * tree; order against in-flight write-behind I/O.
+> +			 */
+> +			if (test_bit(CollisionCheck, &rdev->flags))
+
+[Severity: High]
+By gating serialization exclusively on CollisionCheck, do hot-added devices
+now silently bypass serialization?
+
+When an array has MD_SERIALIZE_POLICY enabled and a new device is hot-added,
+mddev_create_serial_pool() skips initializing the device's serial tree
+because it doesn't check the global policy flag.
+
+Since CollisionCheck remains unset for the new device, this change masks
+the previous NULL pointer dereference crash by skipping serialization for
+the hot-added device entirely. Will this leave the array vulnerable to
+overlap write data corruption when stale data persists?
+
+>  				wait_for_serialization(rdev, r1_bio);
+>  		}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723204206.7693=
+0-1-mykola@meshstor.io?part=3D3
