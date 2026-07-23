@@ -1,155 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C640935C183
-	for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2026 23:24:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A6C2BCF46;
+	Thu, 23 Jul 2026 01:21:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784762686; cv=none; b=ZKwbPxkO9hjzk5G/lW+t8N7/Lt2vB1HtcogtMrr//Y3sGt1Rz5QdFumAA9xgiLHQg1/EEz2Nsxkq2FDP+3N5wsvS8NqeZnGGu2AYoq3/0WkRJiAAzIpVFsgHmWr/Fmj8ijN8sRtj3onEX++J+PmpQujWgbgRbih8jfUUdJSAjyU=
+	t=1784769674; cv=none; b=jK7QpTK2jbUl99oi1rG5R2dgTOQXHVZphwAT2pwMrg7xItl7ggwXOx9H+srKdHjpFMIaKd3QPOXK9Z8fuwhQo5iliryhSb+nFpTOcHuoHBMDynMn99vRGsTbrLLMoKiUOk5xYQyUK9CD/4LDMSHp5yiknqIspsoxtCrLLu8jI3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784762686; c=relaxed/simple;
-	bh=t9VJOuILX+LSnlxOX1wKYhRozG24/sqFcDqwO3K81Og=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jE99kOl4HCXZFtBQH3Tbfor0GWt/+Oa/U3xS4EpYTTX9eFxq+ggCW+Xp54yjxSE0sOIMbnaheQPWMf6hFT0t99/FN0a1EpAJ3YPhQTWZ2103Dva+aDqUzlDawbu7IWcvsSHKR7WnMZl3ZoM0Hkg7H1UfnYsKYytCQDZ7dxX8Jwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GZk1zuXI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784769674; c=relaxed/simple;
+	bh=l+BcWxEYxghnenlldtXOwu+zC99qYehVhMZWM49Kkzk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=On6T/Tt7LaKEjyhiWfgOQUb2DZYaD1Irof5mXfqyA33GRGZ3dcKxq501M6Xvd10UffSCRhzW9WzRoxmbEFmGzuz9jyQiRTFmuJoHsO8TdCsQmOnQaUhYAUi/jQR+fv4AZACE+ZMo8bPvr8xglU5uey9QXLNY77xbD0KLcR1N2cY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HV/hg6pu; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GZk1zuXI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CC101F000E9;
-	Wed, 22 Jul 2026 23:24:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784762685;
-	bh=Z/Cgp23g76Rgd17mBZtRKoTUyeFKNDZTJ9vOUYaY5ps=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GZk1zuXIcKIkJndNNSFFw23E8UKxln0bG5NAgMiBP2SkC9wSuqKcN4e4zuNqHzmrb
-	 qh724WPnhM8hViHylZgxPR3Pqa7m+TKNtndJ86NJNjaWNsG7BpLh/sKldodyTVzOzF
-	 x4i+JZsVT3Y5eNzg5tJ+IEmmB2saBf7JCeHYIlJJ2THTbO42hhNc/x3zxhG2aTvHbW
-	 moO7tfReRUKF0rjRla+CxJKunrpLrev3TF1C6qbo4qvMW6kQWlmO4im5aFrnE83Z8+
-	 ssmmFA2vxXhN68FYslM4AVdi/tlE/XsryT7lCEmwOHB7AJz4apsATjhCUSOme2mlER
-	 4uQuLhGAt4SVg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: apple: use fwnode_irq_get() for port IRQ lookup
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260722231214.857760-1-rosenp@gmail.com>
-References: <20260722231214.857760-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 23:24:44 +0000
-Message-Id: <20260722232445.4CC101F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HV/hg6pu"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66N1JmFU2096485, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1784769588; bh=l+BcWxEYxghnenlldtXOwu+zC99qYehVhMZWM49Kkzk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=HV/hg6puvpwQe9ORCUlxRgkV/B22MlLrGYspS1yYlv80QkBDjvjTBORNAWpBvckxP
+	 hcf3621kkn+yWd8jQiKIbCzljy1OpmY9yGZiGD7ZSk0rSovfktxcUKiJESd7162HCK
+	 OEZ4mmxIHg7iA9qXia99x9Rn82qU39ewR0CuGvRCJTPoAR+sa/jM026szBRPb0JQlY
+	 2R/0Ie1yW3L9pW/XMQuFefhditcPVTdUOmVH6bwcgynk17W89d9FAMBifc94kfxXPD
+	 HHi7dbOtXZ0aTBy1jlBcnoQFLk9u45FELFf4xMrlxUhxWy04AaWSv/n2T28NxMncSs
+	 I6WM2YNJz5DnA==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66N1JmFU2096485
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Thu, 23 Jul 2026 09:19:48 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, Lorenzo Pieralisi
+	<lpieralisi@kernel.org>, =?utf-8?B?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?=
+	<kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, "Rob
+ Herring" <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>, "Aurelien
+ Jarno" <aurelien@aurel32.net>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"spacemit@lists.linux.dev" <spacemit@lists.linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v2 1/2] PCI: Move Spacemit vendor and device IDs to
+ linux/pci_ids.h
+Thread-Topic: [PATCH v2 1/2] PCI: Move Spacemit vendor and device IDs to
+ linux/pci_ids.h
+Thread-Index: AQHdFXehTbmbDPtnB0KyE0vFNWAFDLZ6Vr7g
+Date: Thu, 23 Jul 2026 01:19:47 +0000
+Message-ID: <073fbf4b41804285b2df6fbb4efce0ed@realtek.com>
+References: <20260716-rtw89-spacemit-k3-v2-0-392b577ebf75@oss.tenstorrent.com>
+ <20260716-rtw89-spacemit-k3-v2-1-392b577ebf75@oss.tenstorrent.com>
+In-Reply-To: <20260716-rtw89-spacemit-k3-v2-1-392b577ebf75@oss.tenstorrent.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Missing teardown for partially initialized ports in `apple_pcie_in=
-it()` leaves dangling chained IRQ handlers and leaked IRQ domains, leading =
-to a Use-After-Free on probe error.
-- [High] MSI parent IRQ domain is leaked on probe failure, leading to Use-A=
-fter-Free on re-probe.
---
-
---- Patch [1]: [PATCH] PCI: apple: use fwnode_irq_get() for port IRQ lookup=
- ---
-commit eab8bdc8d6046daad9b1ca1595a1c3a4a1b10540
-Author: Rosen Penev <rosenp@gmail.com>
-
-PCI: apple: use fwnode_irq_get() for port IRQ lookup
-
-Replace irq_of_parse_and_map() with fwnode_irq_get() on the PCIe
-controller device's fwnode. Propagate the error instead of checking
-for zero, allowing negative errors like -EPROBE_DEFER to be handled.
-
-> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller=
-/pcie-apple.c
-> index c2cffc0659f44..535acf274b786 100644
-> --- a/drivers/pci/controller/pcie-apple.c
-> +++ b/drivers/pci/controller/pcie-apple.c
-> @@ -400,14 +400,13 @@ static int apple_pcie_port_setup_irq(struct apple_p=
-cie_port *port)
->  {
->  	struct fwnode_handle *fwnode =3D &port->np->fwnode;
->  	struct apple_pcie *pcie =3D port->pcie;
-> -	unsigned int irq;
-> +	int irq;
->  	u32 val =3D 0;
-> =20
->  	/* FIXME: consider moving each interrupt under each port */
-> -	irq =3D irq_of_parse_and_map(to_of_node(dev_fwnode(port->pcie->dev)),
-> -				   port->idx);
-> -	if (!irq)
-> -		return -ENXIO;
-> +	irq =3D fwnode_irq_get(dev_fwnode(pcie->dev), port->idx);
-> +	if (irq < 0)
-> +		return irq;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but returning the error here
-(which can now be -EPROBE_DEFER) exposes a missing teardown path in
-apple_pcie_init().
-
-When apple_pcie_port_setup_irq() returns an error, apple_pcie_setup_port()
-and then apple_pcie_init() abort without tearing down previously initialized
-ports:
-
-drivers/pci/controller/pcie-apple.c:apple_pcie_init() {
-    ...
-    for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-        ret =3D apple_pcie_setup_port(pcie, of_port);
-        if (ret) {
-            dev_err(dev, "Port %pOF setup fail: %d\n", of_port, ret);
-            return ret;
-        }
-    }
-    ...
-}
-
-Because the chained handlers (irq_set_chained_handler_and_data) and IRQ
-domains (irq_domain_create_linear) set up for previous ports are not managed
-by devres, they remain active.=20
-
-Devres will free the port structures, so if an interrupt fires or a re-probe
-occurs, won't apple_port_irq_handler() dereference a freed port pointer?
-
-[Severity: High]
-This is also a pre-existing issue, but propagating an error like
--EPROBE_DEFER here makes a leak in apple_pcie_probe() much more reachable.
-
-If this error propagates up and causes pci_host_common_init() to fail in
-apple_pcie_probe(), the MSI parent IRQ domain created earlier by
-apple_msi_init() is not removed:
-
-drivers/pci/controller/pcie-apple.c:apple_pcie_probe() {
-    ...
-    ret =3D apple_msi_init(pcie);
-    if (ret)
-        return ret;
-    ...
-    return pci_host_common_init(pdev, bridge, &apple_pcie_cfg_ecam_ops);
-}
-
-The domain created via msi_create_parent_irq_domain() is not devres-managed.
-Devres will free the pcie structure on error, leaving the leaked domain's
-host_data pointing to freed memory.=20
-
-On re-probe, IRQ lookups will match the leaked domain, and
-apple_msi_domain_alloc() will dereference the freed pcie pointer.=20
-
-Should there be manual cleanup for the MSI domain when pci_host_common_init=
-()
-fails?
-
-> =20
->  	port->domain =3D irq_domain_create_linear(fwnode, 32,
->  						&apple_port_irq_domain_ops,
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722231214.8577=
-60-1-rosenp@gmail.com?part=3D1
+SGkgUENJIG1haW50YWluZXJzLA0KDQpBbmlydWRoIFNyaW5pdmFzYW4gPGFzcmluaXZhc2FuQG9z
+cy50ZW5zdG9ycmVudC5jb20+IHdyb3RlOg0KPiBNb3ZlIHRoZSB2ZW5kb3IgYW5kIGRldmljZSBJ
+RCBmb3IgdGhlIGV4aXN0aW5nIFNwYWNlbWl0IEsxIFBDSWUgUm9vdA0KPiBDb21wbGV4IHRvIGlu
+Y2x1ZGUvbGludXgvcGNpX2lkcy5oLiBBbHNvIGFkZCBLMydzIFJvb3QgQ29tcGxleCBkZXZpY2Ug
+SUQNCj4gdG8gdGhpcyBoZWFkZXIuIFRoaXMgaXMgZG9uZSBzbyB0aGF0IHRoZXNlIHZhbHVlcyBj
+YW4gYmUgcmVmZXJlbmNlZCBpbg0KPiB0aGUgcnR3ODkgZHJpdmVyIHRvIGVuYWJsZSAzNi1iaXQg
+RE1BIGFiaWxpdHkgaW4gaXQgZm9yIFdpRmkgdG8gZnVuY3Rpb24NCj4gb24gdGhlIEszIFBpY28g
+SVRYIGJvYXJkLg0KPiANCj4gQWNrZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2ds
+ZS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEFuaXJ1ZGggU3Jpbml2YXNhbiA8YXNyaW5pdmFzYW5A
+b3NzLnRlbnN0b3JyZW50LmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3
+Yy9wY2llLXNwYWNlbWl0LWsxLmMgfCAzIC0tLQ0KPiAgaW5jbHVkZS9saW51eC9wY2lfaWRzLmgg
+ICAgICAgICAgICAgICAgICAgICAgIHwgNCArKysrDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDQgaW5z
+ZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
+aS9jb250cm9sbGVyL2R3Yy9wY2llLXNwYWNlbWl0LWsxLmMNCj4gYi9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL2R3Yy9wY2llLXNwYWNlbWl0LWsxLmMNCj4gaW5kZXggYmUyMGE1MjAyNTViNi4uZjg5
+YzZkNDZjNzY4NCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNp
+ZS1zcGFjZW1pdC1rMS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUt
+c3BhY2VtaXQtazEuYw0KPiBAQCAtMjEsOSArMjEsNiBAQA0KPiANCj4gICNpbmNsdWRlICJwY2ll
+LWRlc2lnbndhcmUuaCINCj4gDQo+IC0jZGVmaW5lIFBDSV9WRU5ET1JfSURfU1BBQ0VNSVQgICAg
+ICAgICAweDIwMWYNCj4gLSNkZWZpbmUgUENJX0RFVklDRV9JRF9TUEFDRU1JVF9LMSAgICAgIDB4
+MDAwMQ0KPiAtDQo+ICAvKiBPZmZzZXRzIGFuZCBmaWVsZCBkZWZpbml0aW9ucyBmb3IgbGluayBt
+YW5hZ2VtZW50IHJlZ2lzdGVycyAqLw0KPiAgI2RlZmluZSBLMV9QSFlfQUhCX0lSUV9FTiAgICAg
+ICAgICAgICAgICAgICAgICAweDAwMDANCj4gICNkZWZpbmUgUENJRV9JTlRFUlJVUFRfRU4gICAg
+ICAgICAgICAgIEJJVCgwKQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgg
+Yi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiBpbmRleCAxYzlkNDBlMDkxMDdkLi5kNmYyNmNh
+Y2M4ZTM1IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiArKysgYi9p
+bmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiBAQCAtMjY0MCw2ICsyNjQwLDEwIEBADQo+ICAjZGVm
+aW5lIFBDSV9WRU5ET1JfSURfU1VOSVggICAgICAgICAgICAweDFmZDQNCj4gICNkZWZpbmUgUENJ
+X0RFVklDRV9JRF9TVU5JWF8xOTk5ICAgICAgIDB4MTk5OQ0KPiANCj4gKyNkZWZpbmUgUENJX1ZF
+TkRPUl9JRF9TUEFDRU1JVCAgICAgICAgIDB4MjAxZg0KPiArI2RlZmluZSBQQ0lfREVWSUNFX0lE
+X1NQQUNFTUlUX0sxICAgICAgMHgwMDAxDQo+ICsjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU1BBQ0VN
+SVRfSzMgICAgICAweDAwMDINCj4gKw0KPiAgI2RlZmluZSBQQ0lfVkVORE9SX0lEX0hJTlQgICAg
+ICAgICAgICAgMHgzMzg4DQo+ICAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfSElOVF9WWFBST0lJX0lE
+RSAweDgwMTMNCg0KQXMgcGF0Y2ggMi8yIG9idmlvdXNseSBnb2VzIHRvIHdpcmVsZXNzLW5leHQg
+dHJlZSwgY2FuIEkgdGFrZSB0aGlzIA0KZGVwZW5kZW5jeSBwYXRjaCB0byBteSB0cmVlPyANCg0K
+UGluZy1LZQ0KDQoNCg==
