@@ -1,64 +1,64 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21A463B637F
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 20:43:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED813B47CC
+	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 20:43:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784839390; cv=none; b=IJbtzdgFHnLgeouImlPCJiRAErxHmKB7aqr1qgogU6MzeqRfS6MPXemsm/ye5FyuK9VXwLfb+mN5ULdPL3BSGlYUsCZExXX/urZDFkLLLMJgIyuAkhqUAxZN5fsd7SVuoOddCPy6KUnztqJFJ2O+Ubzh7JAou1sew1Aig1MEHSQ=
+	t=1784839393; cv=none; b=DX3pOt7dPxOn5A1jJVMxUvqwFZT2P8oYkOUA1/fCd7rxPniBuKGBYhXFrs/BBYTymL//3AfueWrhscv2ITV7eDEORIIdOR+iJuIHThKJkzA525kbVOYrlckH4mHQvyTTsfcAQgow6UV9MX68z4YtHFmAgplPU47ooA0sWXpQxmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784839390; c=relaxed/simple;
-	bh=IeQBFCH3bM4bVxRkUROK9805WYYXPr2VLMisCc8LPq4=;
+	s=arc-20240116; t=1784839393; c=relaxed/simple;
+	bh=B1aIegApdgScj51bEIGVKX+FENfztmE4q/fjJ31TwzI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kx0lc6Fu6X/RygDSi0XTEzTl5GgeMlGVHwqCULj+8dTL2Kgyq2HtBcL0nsJ7LBwpplXhPD74UBOBlpOlUdhU8Bkg1oUCxbThx2pkTwMZsWA6eQoMJ7hXfvEBuMR+GtzLRFCbiZRKq5yd2ST6Wvq4xbu7/IiF7lyhAUvFi2zBTPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=mF1+onUo; arc=none smtp.client-ip=209.85.221.51
+	 MIME-Version; b=ROsxHY4gCFSrreoSdVJUAk2UNZcXcJzd/Pyu4ZusdW/+z0t/SiCqenWvid3gZkMchPqgHRN0/NCnOkkXykK8LwKJuaWE4Mu54UG6IQpmC/7XLUjIrA8pnyRG6fBel4xS+Px2BRFf9n+nIA8bRwywuUjch856O6xlk6gsyf42Mmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=Vh+j2fYI; arc=none smtp.client-ip=209.85.221.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="mF1+onUo"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-4720f3bf164so588732f8f.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 13:43:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="Vh+j2fYI"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-47f7027ca11so691074f8f.3
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 13:43:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784839380; x=1785444180; darn=vger.kernel.org;
+        d=meshstor.io; s=google; t=1784839384; x=1785444184; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=xY1kaJm76bL7mULPuQYN6MgHSE4hk4KEujLtUR/lx4I=;
-        b=mF1+onUoH8g5krZlDyx9lcBqRTRrF8paWBw3zaSjWmlVE6WvKJ0hEWSwfUYbccpbQ1
-         t9YUnOrozr0YB0sILt9Ctur/Nz1zQ/+OXnwO4Yateq4zcnMQslQTbkXRAru/PCvt6s0v
-         oJii8kk5FyPuMEupv9MF29Mgc1Y5C6bhNWmwe7p0TOW3xEArB6PLHLZqPweAU+ntzo1B
-         ktrg4VEg0Gh8PWx+hQQgfsVKYPv7TvjDzrQV917gexA2Xy6m7/K6teAHHecYcbfbwQil
-         nTYInJ/HyX7DpgOhTOvw6luyy1O0Q+pApnsCG6gVUm6a/fJMfcX/7HCemMP8nZ376T66
-         QUmA==
+        bh=vP39KbYqkNNRmuPyaoPhdZlQ+sTmuJQGW6DJY4lSzaU=;
+        b=Vh+j2fYIAAlwbHOWPa/hK7YJWC5+OwIKFTcBSfP8hHCijIILORAWmxr+3P6EqtVgzQ
+         oACyPP5VymPVgFWCa/QsQudx1SiPEkxSbl4CZCkvael5lKoYxr44301de+BaY1DHKx1Y
+         6IPDD2uMr7JW+vQai4Y1xq+/OsXG253cfNngZ5segD6cZdlkvG7azAk6yykodkYdvWPK
+         RtLLvBOhOAh2gPOF3sYAwcELt5tsgEx5JZqh1Vr2AzLiV8UubU30Mj1mWCQYdLN27sgK
+         UmUfC/LqYccptvEscUmHWmKlPg5h8kr5V0GVmAssdlPsheM+DsAHMp5wdTObvg9HvfY9
+         BMHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784839380; x=1785444180;
+        d=1e100.net; s=20251104; t=1784839384; x=1785444184;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xY1kaJm76bL7mULPuQYN6MgHSE4hk4KEujLtUR/lx4I=;
-        b=oZoIePBj5LzpTmJfGH2j3ipP51ZT5d6hz7Y4NPaeOy7FYuL+bohGdYRlitDsgN77UP
-         c+IMr7izXTDAgkfUJ1uTkQXW4z3iA8jfL7oq3OJ4ks6tl0X6nxpszMG/Ou6J1ZQDOfUq
-         ZyIf7qO7bDh4IplImwtD4Pp9PUAXDaRK3+GYFeQzedsaKGwtGtlfg03bqCE9rnU1npRG
-         NKaHwa8P3vVrTEvWAxnK8jCboHeuz/zc2u8S1aCcMOxFGU1ESKa/pFwBYcAhgzczm3wZ
-         ruNSireHbi4nZ00y5GjPe+D1eaQGO2BlTWxlE0dNJ2/weUC/g/ieYAq+E9U2sT0PGa5E
-         VzeA==
-X-Forwarded-Encrypted: i=1; AHgh+RoYXJf4l7CfKGriKxxi0ZfsA/NSRCg5qjEcpHITI7ZFPcdb1YMAKxvFRtgHzvOO/GrHqYfwwd3G0rI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1pE3iwNtJ8qCi5spjrBD2nX8UNjNby2dTTHmoY4fbzTstjGiH
-	0FFSEEwAvMutYvP6YbSwg7mT8Gc//Igocw2p5q85pXs8CDgoMiYaSqmZIXg2TMPmdA==
-X-Gm-Gg: AR+sD10dpyp09QHe7U172pr1QpYw4npWzOEGtsUBD72MqUOTY0i3hp5GJUzHpQtyiIR
-	hMQNPWL55ljFruoHSpof5AD/DTVCSa0ROEHlz9X3KgKONJN3LrlSNINsmU00C1z03a8MQ5G66A/
-	rhMS0Wnb6y+yLI7VgZxcxwFj0lAeq49WMwhDjg+50L1jgzRK28wMdDg79CxHEx9HBRzkmfjf1rS
-	IIGSF8cr6SIid5Y/2dHDQvdXuPLgjcmmrDE6k2et5J+sgTsf9i86LF2ylhXvpVYOvr2kdw75XYw
-	hxp92kKkKZPVaoSnfdJs2A/b/lRQHUm7LYxthQNDM0fOQxeevAVgmO4AqwHtPFq5GNJy5LY6f2q
-	4dzj4VkUMNAullPxPDF5CNhYmL2zgmE/os5/jtj2Ns/nQbE0bbXnWsTuvqr3CCVKfxr9WkJ6Ro9
-	gLp2+MmvNHD9SEiJgQnXRQoUqeNjylAr7D/7RvFVW7H+1jyjnURufR55atlvvqRajJ35n4LFB3b
-	9pJoZ3jO0G8FyU/peMocY0ZtKWs3P2f/a4UHtiGwg==
-X-Received: by 2002:a05:6000:2309:b0:47f:9208:9e4 with SMTP id ffacd0b85a97d-47f92080a4cmr4670984f8f.31.1784839379605;
-        Thu, 23 Jul 2026 13:42:59 -0700 (PDT)
+        bh=vP39KbYqkNNRmuPyaoPhdZlQ+sTmuJQGW6DJY4lSzaU=;
+        b=RFRGJ/SmBwY6A3MBaAJMdYbwwcmupmVmVote/+qc9X1ZWNUWu6tlOmvH84KPj7FsPn
+         8hUt2jINAhNHMJXJ2qAx4vqacg/AYxJvqx7mYewYcxY1e5B6Or9B0QNehFkVw6YtMxdp
+         iRvTQKdnbUtg1kA96D2OCAQ0LTkptfE4VOrj6+HMT23HTa9Jm9nFR8UQFeEq1lHWMFj6
+         F5rgEZsGrqML7EVjbHjh17A4VgHAW9wcdtCtjXB31TP1gZFpP+q6gxx1EHVO4bqnkm7d
+         BnjMTIj8KzN1siGwD3D1Js3hE25H7Qq+gURojX6B8FRK6D6UZUNam82P8dyLn2MtkocQ
+         Y6Ig==
+X-Forwarded-Encrypted: i=1; AHgh+RoBn1KGiEVEdwrKkOzlUsA3Yku8ZQjIEM4P6jt6sa/bkxBIKpQ66hwjLbMVnmHXPXVtvXgTCwIvXg8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9SXw+9CYh3kJIityoE3KgQhOOLJ30EmVIM26usGziXRRT6FuH
+	ujA81JrwMMtpI43frXuaMwKgsGF7hBme6PPh0SvFMNQWoqUKZkPCyDiLf3QPi8mK+Q==
+X-Gm-Gg: AR+sD11xesd3PqZM3DnNuLvPPa/Fra+QO45dABzHmquwy0kQTVgmrEXWTBCiIdtErt6
+	IALuUHpUU7qQ5upnrZX7CL6Yh/dqOWzqh98gg975KOu24uvQfpvTmMeJcHiQcQoaI0TsqJDUhDK
+	1Jd8/S3Q/FLN+rzNhkrcshJvf1vteHD1bKt0Pc60Na6V3fP7M8iZH85AUSWv8UWvg2GbccgRaq+
+	3z4ZnKJ1+AH57HXGiDglhbq87IGagse5LYPaiJ93+R6lZu3r7Rcmkjmv5ukzMYIbChXOnmJY+Ut
+	oM0BpI2APRRy8zHDcRVFueyxJzN24TiEEXwS3F4m6sDXtf6nZiHwtCQ4LX5ykRMSBvwrUXMzc5v
+	AHc4qlfFg2s7aTglgCVYRcmo7pQbf+Er3zKi0qGNVTjMJ90ccQPDWiIFhZKxQxKN32+7OhHnjg+
+	G/OW8xWeHmlbroQb2IRDXyl/nkL1WFs/xjJgiZj8G6PMc9m8tce+n0A76zWwuSb1lQOb7wpNAEt
+	lc5id+fFdb5Bm/O3LAgRmOMYuFIPI9yDGWDB2kwTA==
+X-Received: by 2002:a05:6000:1ac5:b0:47f:28e2:d4c4 with SMTP id ffacd0b85a97d-47f8da6e5bcmr6028034f8f.2.1784839384106;
+        Thu, 23 Jul 2026 13:43:04 -0700 (PDT)
 Received: from meshstor-pc ([185.87.42.56])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c52fc0sm18268192f8f.23.2026.07.23.13.42.57
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c52fc0sm18268192f8f.23.2026.07.23.13.43.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 13:42:59 -0700 (PDT)
+        Thu, 23 Jul 2026 13:43:03 -0700 (PDT)
 From: Mykola Marzhan <mykola@meshstor.io>
 To: Jens Axboe <axboe@kernel.dk>,
 	Song Liu <song@kernel.org>,
@@ -85,9 +85,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	linux-kernel@vger.kernel.org,
 	linux-rdma@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v5 03/10] md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
-Date: Thu, 23 Jul 2026 22:41:59 +0200
-Message-ID: <20260723204206.76930-4-mykola@meshstor.io>
+Subject: [PATCH v5 05/10] md/raid1,raid10: factor out raid1_write_error() helper
+Date: Thu, 23 Jul 2026 22:42:01 +0200
+Message-ID: <20260723204206.76930-6-mykola@meshstor.io>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260723204206.76930-1-mykola@meshstor.io>
 References: <20260723204206.76930-1-mykola@meshstor.io>
@@ -99,53 +99,88 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A write that skips write-behind (full behind queue, a waiting
-reader, failed behind-bio allocation) races the in-flight behind
-write it overlaps: nothing orders the two on the write-mostly
-member, and if the older behind data lands last the member keeps
-stale data for sectors already acknowledged as rewritten.
+From: Logan Gunthorpe <logang@deltatee.com>
 
-Serialize on CollisionCheck, which marks exactly the rdevs owning a
-serial tree: serialize_policy rdevs plus write-mostly members when
-write-behind arms serialization -- the case the MD_SERIALIZE_POLICY
-test misses.  remove_serial() under the same condition.  This also
-avoids the old gate's latent NULL deref for rdevs hot-added under
-serialize_policy (they never get a serial tree).
+Factor out a common raid1_write_error() helper from raid1.c and
+raid10.c.
 
-Fixes: 69df9cfc7042 ("raid1: serialize the overlap write")
-Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-fable-5
+This will help reduce code duplication in subsequent patches.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 ---
- drivers/md/raid1.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/md/raid1-10.c | 13 +++++++++++++
+ drivers/md/raid1.c    | 13 ++-----------
+ drivers/md/raid10.c   | 10 +---------
+ 3 files changed, 16 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 56a56a4da4f8..cee21452e066 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -303,3 +303,16 @@ static inline bool raid1_should_handle_error(struct bio *bio)
+ 	return !(bio->bi_opf & (REQ_RAHEAD | REQ_NOWAIT)) &&
+ 		bio->bi_status != BLK_STS_INVAL;
+ }
++
++static inline void raid1_write_error(struct mddev *mddev, struct md_rdev *rdev,
++				     struct bio *bio, bool allow_failfast)
++{
++	set_bit(WriteErrorSeen, &rdev->flags);
++
++	if (!test_and_set_bit(WantReplacement, &rdev->flags))
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++
++	if (allow_failfast && test_bit(FailFast, &rdev->flags) &&
++	    (bio->bi_opf & MD_FAILFAST))
++		md_error(mddev, rdev);
++}
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index afe2ca96ad8c..997f79c05db7 100644
+index 7d769b6460ca..f07edeac6e5a 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -564,7 +564,7 @@ static void raid1_end_write_request(struct bio *bio)
- 				call_bio_endio(r1_bio);
- 			}
- 		}
--	} else if (test_bit(MD_SERIALIZE_POLICY, &rdev->mddev->flags))
-+	} else if (test_bit(CollisionCheck, &rdev->flags))
- 		remove_serial(rdev, lo, hi);
- 	if (r1_bio->bios[mirror] == NULL)
- 		rdev_dec_pending(rdev, conf->mddev);
-@@ -1677,7 +1677,11 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			mbio = bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
- 					       &mddev->bio_set);
+@@ -483,17 +483,8 @@ static void raid1_end_write_request(struct bio *bio)
+ 	 * 'one mirror IO has finished' event handler:
+ 	 */
+ 	if (bio->bi_status && !ignore_error) {
+-		set_bit(WriteErrorSeen,	&rdev->flags);
+-		if (!test_and_set_bit(WantReplacement, &rdev->flags))
+-			set_bit(MD_RECOVERY_NEEDED, &
+-				conf->mddev->recovery);
+-
+-		if (test_bit(FailFast, &rdev->flags) &&
+-		    (bio->bi_opf & MD_FAILFAST) &&
+-		    /* We never try FailFast to WriteMostly devices */
+-		    !test_bit(WriteMostly, &rdev->flags)) {
+-			md_error(r1_bio->mddev, rdev);
+-		}
++		raid1_write_error(conf->mddev, rdev, bio,
++				  !test_bit(WriteMostly, &rdev->flags));
  
--			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
-+			/*
-+			 * CollisionCheck marks every rdev with a serial
-+			 * tree; order against in-flight write-behind I/O.
-+			 */
-+			if (test_bit(CollisionCheck, &rdev->flags))
- 				wait_for_serialization(rdev, r1_bio);
- 		}
+ 		/*
+ 		 * When the device is faulty, it is not necessary to
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0a3cfdd3f5df..5b63175fb382 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -482,16 +482,8 @@ static void raid10_end_write_request(struct bio *bio)
+ 			 */
+ 			md_error(rdev->mddev, rdev);
+ 		else {
+-			set_bit(WriteErrorSeen,	&rdev->flags);
+-			if (!test_and_set_bit(WantReplacement, &rdev->flags))
+-				set_bit(MD_RECOVERY_NEEDED,
+-					&rdev->mddev->recovery);
+-
+ 			dec_rdev = 0;
+-			if (test_bit(FailFast, &rdev->flags) &&
+-			    (bio->bi_opf & MD_FAILFAST)) {
+-				md_error(rdev->mddev, rdev);
+-			}
++			raid1_write_error(rdev->mddev, rdev, bio, true);
  
+ 			/*
+ 			 * When the device is faulty, it is not necessary to
 -- 
 2.52.0
 
