@@ -1,63 +1,61 @@
-Received: from mail-pj2-f2.google.com (mail-pj2-f2.google.com [74.125.227.130])
+Received: from mail-pj2-f10.google.com (mail-pj2-f10.google.com [74.125.227.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB47C471D04
-	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 14:05:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713A842AFA8
+	for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 14:28:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784815528; cv=none; b=SdJ2Lp5bDvLQRW55pAHDdikn0gqgieoHSxZuLgh7zE+RcOl7sVZocHJxGC6MoX2TRQE/CEZ2jUYiEgjxnvIozxgHJ63mrh7BSO9Tv95hnsVnUaRyjgrMgcMehWATJ+HsqMpJwo0udJZ6U4otlH1Sq6eFDySLrd3fgWnPKJ+pr/Q=
+	t=1784816925; cv=none; b=da4BHWoRYimmSn9Hr+K+B4tMjIG4eJrK00E8HFeLzVD30m8Qw0rLHQc6WtxFKCJJE5XusFbor3Clw9xnlkeyEpQBATjW0E2Xm16BGmHSTaXlzdl5eoz/7pvn/f+NbhuHe0O4B+Tvr3rs3Q7GVlLa/QYrxKUDi1THTh3besr+CgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784815528; c=relaxed/simple;
-	bh=QNzhHSWXY0YVvLiHA9rtwSqhgx1pVfMQubvh670F2Ik=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=un38pDesEaGcwlZek3SzxHOz61GnDC1zhFdsE7TkaiSSHoZ/jQxtZoWMPD64KgCScENgzm4/BS5zmG7AjTYYLsx/rnJUypAI5WkhHWsr7a2lQyXc/pNIbvst9INCKntwszYrRHtzPjutqvwCBntiuYxumAyMcv3enj6OIBKAubM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bzLLMjMt; arc=none smtp.client-ip=74.125.227.130
+	s=arc-20240116; t=1784816925; c=relaxed/simple;
+	bh=PKDwq+x+NOmYN7QbKKAajaz0VL8NafGdsM2UBpgp1e4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=luVguGX+IHMoweM9jC9VDBEi7umDMBWOc6TVs5TlUBHbIqppDRm4d1Pg1eohvZXcQkkp0CmAGYYWJvC3B+1vjG+H0HQqkaldqDo2M2Iso2kNEBp2X0vMXg6eP19VMi/c5HTetxfoMoI1w018cp1nWZ2b5YZgdf4dP8N9XRZW968=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kTJIVpIv; arc=none smtp.client-ip=74.125.227.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bzLLMjMt"
-Received: by mail-pj2-f2.google.com with SMTP id 98e67ed59e1d1-37fb1883f59so212244a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 07:05:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kTJIVpIv"
+Received: by mail-pj2-f10.google.com with SMTP id d9443c01a7336-2cf5e516e67so4217025ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2026 07:28:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784815526; x=1785420326; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=wAXDge/wn1yAOWtnkmMfKUnDJVLhigwWE+vKoPWa8rQ=;
-        b=bzLLMjMtE6e4RR8S4W/XrTL5BTJPkBUEgDms6112hAd/wvj9WkSDo6dKOLdFmIkA0a
-         6pIfhgFS8NPP/C5tuJnHxZYVc56EUHgP2wCT01blrE/rp6u7HSzj5vOkWB/yrimad0YS
-         mj+0LSyCOSJdEB01sD4qUwfGGi2A2ebuPLvsk0wlCAV48+Y3Zh+y2CF2ciUsD/YUFeFI
-         w52jcysXphWz0xKgkNYWDULkz2cI6VyeJHeIkT1/YMeoNA7V3NPs/8HGtiWi5P8+z59M
-         TIp6ILGz54wlWPzP5WCdfvKhZgnWSgk6/baUwsg5aswhx2xt5bNPQ37bi3xxvrJkP6Xx
-         YiAA==
+        d=gmail.com; s=20251104; t=1784816921; x=1785421721; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=E0Yy60Buxa1oln1foYGDC/ST2/TxbKXJmmCBtwLn+QU=;
+        b=kTJIVpIv866zsA4I3x5WsvdGFv7IlGsb7zzeCT+9TTOP4PrsCnOL+ITwJor53qXv20
+         C5rX656QB99HuqttNDLTJqTcCn0gGeqITjxdQYPoQatFQ0q7RTe5AGh65CLESb7SjUfF
+         Dpq2qvheLhVQDrQHg7gekJ41OeT/JAstb0fSXpjbj7qLjmw2BkmPCv5D94Bh0S0Y+phJ
+         MaeEXBdTaqUlj9rLT0dVUwpJShQBEdbvQlcViFWF2V50ZysyGWAirXPrE9Jk5Yk/AZho
+         FblyzW7DTEJYTEf1SCTMsn9BlAwK1VgF6N+YaqlnS4maqH1Lvr8F63TlcQKY3XVBBkvN
+         xoAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784815526; x=1785420326;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=wAXDge/wn1yAOWtnkmMfKUnDJVLhigwWE+vKoPWa8rQ=;
-        b=SHK0pL2h0fBtMCWr6yPbuhbQl5VlxWs800C2KLukMsNJiLVpq8VVm7sKYvvREpN3Su
-         64/RhwOAY3DZUPp+xIU3C39OaTcvRfbhazpYjdDFuRpjFF+3E3XfvysJxlNhtWYuPDeq
-         m1wH/PzWwEs4SxNkF9HVZfY7JAq3+hrOLDNXDbgzk96ckZzjzr7fCG/PPBExhvCHMU4u
-         Agz/lMcHbr93mF5LoR8MnZNK6LvXNW6sqYLrmNZNBPTUyDc1A/udUM8zVyZ3P2Kcs6D+
-         WdIg4jJEHpuCZ30FqNzyUdjSvSEQuOfXS3RvHnh/8wxNssh38K7KJ0xwt07CgkDd7W16
-         5VIw==
-X-Forwarded-Encrypted: i=1; AHgh+RpLFiFxGDwUatMrSh/KkpvysL5SHwnNLS+Mcotbq9O4xwu6+UW5b6yK53iLnt5MYjc8QuRWKOQop4c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNHqYjRvdgUR8vXoZhbR59B3Lx4sMUcaO8IpEKlvYjRlj1Cmw6
-	nS3wSMDcGP3femuQsBb/Fioe3CpZHgW/BsHLVPm/gHDl4WIa7c+Vfiay
-X-Gm-Gg: AR+sD11NAe5dEQmvBcce9ZZt3Qy6iPODhY5w7FY7wqZFQkV4zGGE8gQNntcTVr0sZ0/
-	L1O0bJJ4sdGbRepNKpLej8HJaAnnnQ6ZYgikxzs7VdeD8/gmrjUX4Yb39PS0CJ4IxR6mTkPqfw9
-	tlacqgjc/w+knXWoCyfJNQud3YZYSdmN8l1DaSDcmT1Fd1zl9IW0i44Nbw+FAlNLn1no2aWMvdj
-	OVRx4FEyhNSpAi2gnwviETXIl3FzJwSjVOBWw2oNscqNaKYzSVP3GVjkk2YqJFNtAK+2XQISWMy
-	QSrw0pqG7zUfdoynVpBH1XrIWSji9WRTY7gAAnw3vqfB3oNCl7JOWiOPrJJPR6W19JfpnZ0UkQF
-	6xFIsVpV1ARFG7oNszFMUJ1HpwWYwnpWOa4KoTdA4CbMvKj6Pk26uWWs2g4YCj3w8ffEyYbIAj3
-	atGMip14+2H9cTeJFUEp4=
-X-Received: by 2002:a17:90a:d64c:b0:38e:11ba:992c with SMTP id 98e67ed59e1d1-38ec6989c62mr3111974a91.12.1784815525765;
-        Thu, 23 Jul 2026 07:05:25 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1784816921; x=1785421721;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=E0Yy60Buxa1oln1foYGDC/ST2/TxbKXJmmCBtwLn+QU=;
+        b=JQOEMIXA/9AXjzKXV00J/m3ez6zhpTwZI0IQmCQjsNWfcJF3M/RAaFRvfnHZnytY7l
+         tlvvYYGdfiIiW5tL5EAzgt1P8vR8JUdDh39IJlgJsb89IzFAgSMZ1hrl+smNV+264EU4
+         UOaJ+Og+D8i87pEVF434iARzEP1U/X0kxr/sqsROwK0ozL8Z8HXitaBB0NvczgU7SqsN
+         gE3AY6wqmC0pGccn8+MS5Yy7JpO5hjiI5D3omb0OIYHph7P1mVB1Q0CA8JeqqBUrRSvB
+         WjLbhM1jr/pJVZ5D+7J5kbgic2cJ+tS1Rh0mdjZq75Il7ZYBMAJljJm2hke+VBHdSzBK
+         xiuQ==
+X-Forwarded-Encrypted: i=1; AHgh+Roebww/K/8zLwQ9mfe6rhfJA9VX56EcHoHQN1fYxMv7Du8om3dLJTF2Z3BcS9uqwDc9yGs9KXvhGnQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyRyoEKWTO9j0iqk3uAEcPeGfTyqmxiaPkVd3T4YpdVdlZBRMws
+	qbfYvAx44koTILp1QwIrtyQDRqziEVIiuKMZrIdeLRRMDRbk78LZ+agI
+X-Gm-Gg: AR+sD13029u4xj+Ugrd1xYH7wxWMpYcPgsJ7/Se3RnDgJU+AiuKn5goTAU/PEwmoJXb
+	eP1IK4rJDIprtyj85wGOeXXtvN6GuGLL/HF+wjwiIP/JdApnTqjSjFelIRjEh7T07dU2QO+rH03
+	IOO4H12RxpfEtY67MlzfRwiGISWRpXYGV8qwSRuCdaY8OvRSYJrMPhW7Pyj1rila7pIb3AGhAUI
+	OQm7xkYpzCOHrOJ+FNJczOUmL5iIiZVcFVZf64tTNcFL1E41rnek3bO8NPiwZvvgzPAzb69MUeo
+	Vz2OipCONsNKHuNvBKb3sYkNVhoWZVwxOEJ1hGNzsXeynAlYDWJ6nUtLUaIoQOL+P9lc5fWZjLe
+	OKw2xklkL6Vlna091UNjXz36nASOBd9Qto+82SnOXu9kWeRjR8gLjPHq+ygSrCxb87uekeNoI4V
+	IoM21IXNMh
+X-Received: by 2002:a05:6a21:a394:b0:3b2:8685:118b with SMTP id adf61e73a8af0-3c44aff1d71mr3653312637.20.1784816921359;
+        Thu, 23 Jul 2026 07:28:41 -0700 (PDT)
 Received: from workstation.. ([182.180.105.19])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d130f42bbsm17870433c88.14.2026.07.23.07.05.16
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147dc9f2f0sm21575371eec.13.2026.07.23.07.28.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 07:05:25 -0700 (PDT)
+        Thu, 23 Jul 2026 07:28:41 -0700 (PDT)
 From: Ali Tariq <alitariq45892@gmail.com>
 To: daire.mcnamara@microchip.com
 Cc: lpieralisi@kernel.org,
@@ -72,12 +70,10 @@ Cc: lpieralisi@kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	alitariq45892@gmail.com
-Subject: [PATCH v3 1/2] PCI: plda: Fix use-after-free of event IRQs during teardown
-Date: Thu, 23 Jul 2026 19:04:33 +0500
-Message-Id: <20260723140434.675512-2-alitariq45892@gmail.com>
+Subject: [PATCH v3 2/2] PCI: plda: Fix resource leaks on error paths in plda_init_interrupts()
+Date: Thu, 23 Jul 2026 19:28:24 +0500
+Message-Id: <20260723142824.726655-1-alitariq45892@gmail.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260723140434.675512-1-alitariq45892@gmail.com>
-References: <20260723140434.675512-1-alitariq45892@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,86 +82,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-plda_pcie_irq_domain_deinit() removes pcie->event_domain via
-irq_domain_remove(), but the per-event IRQs mapped from that domain
-are requested with devm_request_irq() in plda_init_interrupts(). The
-actual free_irq() for a devm-managed IRQ is deferred by devres until
-after the calling probe()/remove() function returns.
+plda_init_interrupts() initializes IRQ domains and creates IRQ mapping but
+does not unwind them when later step fails.
 
-This means irq_domain_remove() can free the domain's internal data
-before the deferred free_irq() for IRQs still mapped into it has run.
-When devres later processes that deferred cleanup, it can end up
-dereferencing the already-freed domain.
+If platform_get_irq() or either irq_create_mapping() fails
+in plda_init_interrupts(), the domains are never deinitialized. If
+irq_create_mapping() fails, port->intx_irq stays initialized.
 
-Free each event IRQ explicitly with devm_free_irq() before removing
-the domain. This triggers the free immediately and removes the IRQ
-from the devres tracking list, so devres will not attempt to free it
-a second time later.
+plda_pcie_irq_domain_deinit() now disposes of the intx_irq and msi_irq
+mappings itself before removing their domains, so the msi_irq mapping
+failure path can go directly to err_irq_domain_deinit instead of
+disposing of port->intx_irq separately first. This removes the need
+for the err_dispose_irq_mapping label used in earlier versions of this
+patch.
 
-Also dispose of the event, INTx, and MSI IRQ mappings with
-irq_dispose_mapping() before their owning domains are removed.
+This issue was found by automated review of sashiko-bot
 
-Finally, guard the calls to irq_set_chained_handler_and_data() for
-pcie->irq, pcie->msi_irq, and pcie->intx_irq so they only run when
-those fields hold a valid (>0) IRQ number.
-
-This is a pre-existing issue, flagged by automated review during work
-on an earlier, unrelated patch to this driver.
-
-Build-tested and boot-tested on StarFive VisionFive v1.2A board
-
+Fixes: 4602c370bdf6 ("PCI: microchip: Move IRQ functions to pcie-plda-host.c")
 Fixes: 76c911396807 ("PCI: plda: Add host init/deinit and map bus functions")
-Link: https://lore.kernel.org/linux-pci/20260714115343.4D49E1F000E9@smtp.kernel.org/
+Link: https://lore.kernel.org/linux-pci/20260718120701.DF4111F000E9@smtp.kernel.org/
 Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
 Cc: stable@vger.kernel.org
 ---
 Changes in v3:
-- First posting of this patch was v1 (single patch, no version tag).
-  Jumping to v3 here to align versioning with patch 2/2, which has
-  already been through v1 and v2.
-- Guard irq_set_chained_handler_and_data() calls for pcie->irq,
-  pcie->msi_irq, pcie->intx_irq with an IRQ > 0 check
-- Dispose of event, INTx, and MSI IRQ mappings before their
-  domains are removed
-Link to v1: https://lore.kernel.org/linux-pci/20260718115022.231990-1-alitariq45892@gmail.com/
+- plda_pcie_irq_domain_deinit() now disposes of intx_irq/msi_irq
+  mappings itself (see patch 1/2 of this series), so drop the
+  separate err_dispose_irq_mapping label and go straight to
+  err_irq_domain_deinit on msi_irq mapping failure.
+Changes in v2:
+- Added PCI subsystem prefix to the subject line, no functional change.
+Link to v2: https://lore.kernel.org/linux-pci/20260721131522.594267-1-alitariq45892@gmail.com/
+Link to v1: https://lore.kernel.org/linux-pci/20260721130034.560632-1-alitariq45892@gmail.com/
 ---
- drivers/pci/controller/plda/pcie-plda-host.c | 24 +++++++++++++++++---
- 1 file changed, 21 insertions(+), 3 deletions(-)
+ drivers/pci/controller/plda/pcie-plda-host.c | 28 +++++++++++++++-----
+ 1 file changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/controller/plda/pcie-plda-host.c
-index f9a34f323ad8..791f5c1cce06 100644
+index 791f5c1cce06..fd1a11b4c8eb 100644
 --- a/drivers/pci/controller/plda/pcie-plda-host.c
 +++ b/drivers/pci/controller/plda/pcie-plda-host.c
-@@ -559,9 +559,27 @@ EXPORT_SYMBOL_GPL(plda_pcie_setup_iomems);
+@@ -419,6 +419,8 @@ static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port)
+ 	return plda_allocate_msi_domains(port);
+ }
  
- static void plda_pcie_irq_domain_deinit(struct plda_pcie_rp *pcie)
- {
--	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
--	irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
--	irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
-+	u32 i, event_irq;
++static void plda_pcie_irq_domain_deinit(struct plda_pcie_rp *pcie);
 +
-+	if (pcie->irq > 0)
-+		irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-+	if (pcie->msi_irq > 0)
-+		irq_set_chained_handler_and_data(pcie->msi_irq, NULL, NULL);
-+	if (pcie->intx_irq > 0)
-+		irq_set_chained_handler_and_data(pcie->intx_irq, NULL, NULL);
-+
-+	for_each_set_bit(i, &pcie->events_bitmap, pcie->num_events) {
-+		event_irq = irq_find_mapping(pcie->event_domain, i);
-+		if (event_irq) {
-+			devm_free_irq(pcie->dev, event_irq, pcie);
-+			irq_dispose_mapping(event_irq);
-+		}
+ int plda_init_interrupts(struct platform_device *pdev,
+ 			 struct plda_pcie_rp *port,
+ 			 const struct plda_event *event)
+@@ -440,14 +442,17 @@ int plda_init_interrupts(struct platform_device *pdev,
+ 	}
+ 
+ 	port->irq = platform_get_irq(pdev, 0);
+-	if (port->irq < 0)
+-		return -ENODEV;
++	if (port->irq < 0) {
++		ret = -ENODEV;
++		goto err_irq_domain_deinit;
 +	}
-+
-+	if (pcie->intx_irq)
-+		irq_dispose_mapping(pcie->intx_irq);
-+	if (pcie->msi_irq)
-+		irq_dispose_mapping(pcie->msi_irq);
  
- 	irq_domain_remove(pcie->msi.dev_domain);
+ 	for_each_set_bit(i, &port->events_bitmap, port->num_events) {
+ 		event_irq = irq_create_mapping(port->event_domain, i);
+ 		if (!event_irq) {
+ 			dev_err(dev, "failed to map hwirq %d\n", i);
+-			return -ENXIO;
++			ret = -ENXIO;
++			goto err_irq_domain_deinit;
+ 		}
+ 
+ 		if (event->request_event_irq)
+@@ -459,7 +464,7 @@ int plda_init_interrupts(struct platform_device *pdev,
+ 
+ 		if (ret) {
+ 			dev_err(dev, "failed to request IRQ %d\n", event_irq);
+-			return ret;
++			goto err_irq_domain_deinit;
+ 		}
+ 	}
+ 
+@@ -467,7 +472,8 @@ int plda_init_interrupts(struct platform_device *pdev,
+ 					    event->intx_event);
+ 	if (!port->intx_irq) {
+ 		dev_err(dev, "failed to map INTx interrupt\n");
+-		return -ENXIO;
++		ret = -ENXIO;
++		goto err_irq_domain_deinit;
+ 	}
+ 
+ 	/* Plug the INTx chained handler */
+@@ -475,8 +481,11 @@ int plda_init_interrupts(struct platform_device *pdev,
+ 
+ 	port->msi_irq = irq_create_mapping(port->event_domain,
+ 					   event->msi_event);
+-	if (!port->msi_irq)
+-		return -ENXIO;
++	if (!port->msi_irq) {
++		dev_err(dev, "failed to map MSI interrupt\n");
++		ret = -ENXIO;
++		goto err_irq_domain_deinit;
++	}
+ 
+ 	/* Plug the MSI chained handler */
+ 	irq_set_chained_handler_and_data(port->msi_irq, plda_handle_msi, port);
+@@ -485,6 +494,11 @@ int plda_init_interrupts(struct platform_device *pdev,
+ 	irq_set_chained_handler_and_data(port->irq, plda_handle_event, port);
+ 
+ 	return 0;
++
++err_irq_domain_deinit:
++	plda_pcie_irq_domain_deinit(port);
++
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(plda_init_interrupts);
  
 -- 
 2.34.1
