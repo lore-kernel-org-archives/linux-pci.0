@@ -1,81 +1,60 @@
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BD4D3446DE;
-	Thu, 23 Jul 2026 05:54:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD02C3191D6;
+	Thu, 23 Jul 2026 06:11:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784786081; cv=none; b=HTs87sm6eglZCR1nUEF94DsrbYMhBmsZDWHGetcuOeY+CHbnt3DIDGLFGDVCYHkvyl67JrboVCJrsFo2a6fEF0zKotmK08AJGdSisPKfwzvuX+V2sp1ZYg6bHywhF1lK5BFzQGN2Ila74HG7ARr09CZBk2CZiKil2K+JiM/CMho=
+	t=1784787085; cv=none; b=BnvpvhSdb+eAOoBNyoFjly0KMwg+rF11H+yI/7ejBIdL8dZphLu7rAPIIvpsUmbh9VjIi1I+qQuI8mjkKaeR9M8DvshrtwAp9dwSQyFYt56l7WcY0f1Uw8CpSeSo+K+3womS+LIUTeIwYlPLV337VWy9KonWup4sjWvZh0BVcoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784786081; c=relaxed/simple;
-	bh=Y2pBtQ+9A3cBdRiSUQdalqgZYCDhiL/r6VVLM+gRBfc=;
+	s=arc-20240116; t=1784787085; c=relaxed/simple;
+	bh=Qae+3iD0gUpcR0ak4mkDHhk+7oPwN70ONsdbSH40q5o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EF9QC+8G/8tXpiODu6DF88vadW/g/mGjBogdyGaF0Ya2NG3piAkDSutau9uMn3JQl4dB4s4C4JOn3E+WeNJPJdEr8fVc8pKOSAu9YOkGTz5mh8O1Lxr41eKAWBF/mMD+nv4/UJ3RvW6T3TNBhzufKLRmqftCJuXEwK7Z3wAUKLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=PGctRurX; arc=none smtp.client-ip=65.109.113.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=cI1iS3LmMja5Oz8/ygAVGHc9cbZvrAjzcRT2OabmsOr2yYGyJI+MLUHxvFgSUHkvgYf3JImR8LRp1tlxsObFZtHck7NnhnrdJIchxxo1DuqVF8z/LELhaBdriIH1gTxVtX06Ey0v7rTgWk/IApEGRlepeO6Yd1Dz6QOIA8Nebr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jQI35ZHF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="PGctRurX"
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 0DD8540E014C;
-	Thu, 23 Jul 2026 05:54:37 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
-	header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id IfZZW43a_hB5; Thu, 23 Jul 2026 05:54:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1784786065; bh=aXME5abyiM2FcxO7X1xQmBbHpKRCAC/9uxeBwGv3xMs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PGctRurXJKTEW2YvBriW7lCS7WhfSyajw1bnCuPeviUMT+0x6NagYuptYbij+f3qO
-	 UR7nNWjT60I55kQn8KVkEFT4CzS9rsz41VK0vb0OSHPlr1Q0IxxyzlU1dwnPjQ5WSq
-	 TFCmrM6hToC17Tyx1eq330KOAW7qrYTrljZ21VFrACkyQj+3wPNHq61G3o06Q4CuHd
-	 o0mu93GU04hrXUyF4Py56rx+pf903NOEPrzehmwHVXNQElwcT/L1NabQD4f2ffM5Ot
-	 xkHZCBagPv0iQgFYA08v5AVxAubbJSAjb9HudxedE7xjnymAJ2fgTnaXh09qqdkIzy
-	 FzVqHf7WtVm1/3pHyazyb4ucJT7tEbj7/5ing2oxJsy8evoc80J1h2KsOWShPwr5VU
-	 CwkSU0UMyyk/Z5wtaDe36hPdbpv5MEgIYo9MVCRInwhRspbYqgohoyeCy9nAl5OGL4
-	 gJ/bfUGhfZd5QjZZXgYnC+ZjoPQykUzpDqoldn99CrTGjEWIu1xs18IomT0tdKWQEF
-	 +KPSt/qEenYZ2ebfhemLbU/wyn9/1x8mZ2/QXFo06RpJvuYNlBlSGJ/+rgQWWiPE7s
-	 uLfT/7KPvIalk8nIK5sitbpSX25as+sElMn6NQWSp8lfHlXMJcIapikTjsrE3iEmEd
-	 ASmQxBa98HokJ59dcKrjsVE8=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::2b])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id DF04D40E00DC;
-	Thu, 23 Jul 2026 05:53:50 +0000 (UTC)
-Date: Wed, 22 Jul 2026 22:53:47 -0700
-From: Borislav Petkov <bp@alien8.de>
-To: Ahmed Tiba <ahmed.tiba@arm.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, Hanjun Guo <guohanjun@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Shuai Xue <xueshuai@linux.alibaba.com>, Len Brown <lenb@kernel.org>,
-	Saket Dumbre <saket.dumbre@intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
-	Li Ming <ming.li@zohomail.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	acpica-devel@lists.linux.dev, linux-cxl@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-doc@vger.kernel.org, Dmitry.Lamerov@arm.com
-Subject: Re: [PATCH v7 00/10] ACPI: APEI: share GHES CPER helpers and add DT
- FFH provider
-Message-ID: <20260723055347.GHamGsaxesLkMbSnfR@fat_crate.local>
-References: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jQI35ZHF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7994E1F000E9;
+	Thu, 23 Jul 2026 06:11:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784787084;
+	bh=VBdn2EWjCzaB/LsGvu5JNC2sbY5O5dhhwEkMKQrKz6Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jQI35ZHFBTChYjQ6kfiY3FIG5lc5U7yuTiFHA0MAJuCB5lQhyHKzfGFvMqu0Vg7oS
+	 wbmqZnrDUGLV+3FxAGADTsdviVKQKmKxL5b42UsWs1FHa/mxdTow2mrTa9oHPGfiFq
+	 7VcDodqNgInG29zaRfj9Q59DE3247biTYu4J02Ld6oUHDbnanBWeSf2IeYtx8nhSGh
+	 C4UgTQZqxfkmK2AoIZyCTBNAVlrVMRTOt7Unzfeklkfjs4POShPbXDmJPwwg+nCZOz
+	 P8UMjW2HY0eW3UKLb58b2RFEDv2qDkLqgPOUN6Ue6Zq6qTLfJTgAqH/sJ3VXsHAVsq
+	 IPE4/hdrctM0g==
+Date: Thu, 23 Jul 2026 09:11:18 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Mykola Marzhan <mykola@meshstor.io>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+	Guoqing Jiang <guoqing.jiang@linux.dev>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Henrique Carvalho <henrique.carvalho@suse.com>,
+	linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] md/raid1,raid10: skip futile retries on P2PDMA
+ mapping failures
+Message-ID: <20260723061118.GA110966@unreal>
+References: <20260719105327.864949-1-mykola@meshstor.io>
+ <20260719105327.864949-7-mykola@meshstor.io>
+ <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com>
+ <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
+ <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com>
+ <20260722083015.GU110966@unreal>
+ <CAPzsNDuGfneEmx_nWqw5vYLyPyK8krfWChNRcsxO7icTEDDX5g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,31 +63,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef@arm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPzsNDuGfneEmx_nWqw5vYLyPyK8krfWChNRcsxO7icTEDDX5g@mail.gmail.com>
 
-On Wed, Jul 08, 2026 at 02:58:59PM +0100, Ahmed Tiba wrote:
-> This is v7 of the GHES refactor series. Compared to v6, it addresses
-> the Sashiko-reported issues including pre-existing ones and fixes
-> the ACPI-disabled cper-x86 build break.
+On Wed, Jul 22, 2026 at 09:00:16PM +0200, Mykola Marzhan wrote:
+> > I had thoughts about this series too. It seems best to avoid
+> > the P2P path entirely unless all legs support P2P.
+> >
+> > Can the md/raid code determine P2P support in advance?
 > 
-> The DT firmware-first CPER provider is intended for the upstream zena-css
-> platform. Validation so far has been on FVP.
+> Yes, and it already does: the block layer ANDs the P2PDMA queue
+> feature across all legs, so an array with a non-P2P member
+> (e.g. an nvme-tcp leg) never advertises P2P at all.
 > 
-> Changes in v7:
-> - Address Sashiko-reported issues for this series, including pre-existing ones.
+> But that flag can only say "this driver can do P2P in general".
+> md cannot see which HCA device does the DMA for a fabrics leg —
+> and with multipath failover it can change at any time.
+> 
+> So the up-front gate covers what is knowable up front.
+> This series is about the remainder.
+> In mixed case, one local P2P leg plus a remote replica, with it:
+> 1) a failed read just redirects to a capable mirror;
+> 2) a failed write records bad blocks instead of retrying forever.
 
-And Sashiko flagged more:
+Thanks for the explanation.
 
-https://sashiko.dev/#/patchset/20260708-topics-ahmtib01-ras_ffh_arm_internal_review-v7-0-8b3a85216cef%40arm.com
-
-I'd leave this to Rafael to decide but I would fix them all first before we go
-and carve out things. Maybe we can share the effort and such. I see an EDAC
-one which I wanna take a look when I get a chance.
-
-Thx.
-
--- 
-Regards/Gruss,
-    Boris.
-
-https://people.kernel.org/tglx/notes-about-netiquette
+> 
+> Mykola
+> 
