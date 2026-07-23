@@ -1,43 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BC7B2D7DF1;
-	Thu, 23 Jul 2026 15:59:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EABB143BDD9;
+	Thu, 23 Jul 2026 16:06:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784822355; cv=none; b=kNgYnWGs9n0qWpGsKvwl57uLRKoK5NnJFU2s5yPj5mgkWAXBmi33vwlHRtEwn5PapTazu//h6M3YMt3aKccGzHseYUw2ndQGuo6BGRub8r5F3TltlXJptFG8tj2Y2bRzZ5qP4tk3XBbfJgBJy6zSrMYujLK2MSnM8y7GjQQxK70=
+	t=1784822810; cv=none; b=VylEMe/OoxRmaQAKBsULb49KeCqlW+z6RQtaN7NeGKmovCRcLdlbMgcZ7ceuDp2mMNfw9qBRfrDJhdQFonHmSZS0jqStqxf9kmhGB4d7qVAEHgYpgLSTz1FvtLRYKjfLYScgas9kpsfY6DTkif15ydCQovZjtdaW8xKSK0v/0LM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784822355; c=relaxed/simple;
-	bh=vyz7bv/S+V5mFdMgM/ew5tn62gZ5RGRMqO0eG5n941s=;
+	s=arc-20240116; t=1784822810; c=relaxed/simple;
+	bh=p6UKfM4cU8K7O/Ef9Nid8sCBmRypsZNsb+90tEB5RcM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fA5qNj86iBPEEb3etZ77eQVCDqwfyiOuwEEvt4hBCILtgQjDxnLz+UJWrwvSBX6z9OCxjl8/CTnTTEzGtGbULZ7F6PRCDr4i7MQuz+srLAubRC70UrJ7HaEuDb9ajr8H056AXWhSm3Ak6oZVSnMN7zxrEq27M80J1qJe7OvxRLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rif8zLxQ; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rif8zLxQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 133981F000E9;
-	Thu, 23 Jul 2026 15:59:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784822354;
-	bh=gGLVbBTZ/WqliFHvmKwagmiygNTRBXYlF3rnLkYpgRI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Rif8zLxQYMb/KlUrfmF1OQPjiG1O2yfZM+gIfI1g2gz5cXj/28Y3fBDga46/L5zHY
-	 SKOY4SdL+z2PJTgn0ef5d+mYjTf6e8NoxXP7QZNKxGJuO8SPiVoqj0GlvChXKBA0kK
-	 lzqZcpQrA9BJqpE0iMIxw/1Qt9ymY7UGjHL9Ni9T6B/pWO9XxuhkmLmh6pPM8ZCyly
-	 66qpH7kmlW0woWcin6p3t6Yx6zu5r6jgFhlG9tjY1/d+DRNvanRpqFp4NvdpuUuSgA
-	 VH5BaTnrk9s3X1EqGZEtYzB6R9der6vBNSBWF6BZkucnKsKOS5pKMet/d8BWoFdEHd
-	 EaMZDKdKYiorA==
-Date: Thu, 23 Jul 2026 10:59:12 -0500
+	 Content-Type:Content-Disposition:In-Reply-To; b=nIsfljY6HsF4/5fbUupjccl8TQQe1BPKWiFtzHM6ka/zVYwcWttyAsG6Wxgq8ecUAst/5rARjeQu0oDdn/qjVAOREpHwKt4XkDmqEX9EpqRt3ELf1MxYjMFLCgbUOyAeDpZe673JjmfovFxL+OeSOEdk4CV4+7Gvslr9rvQwuYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60AA61F000E9;
+	Thu, 23 Jul 2026 16:06:44 +0000 (UTC)
+Date: Thu, 23 Jul 2026 11:06:41 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vasant Hegde <vasant.hegde@amd.com>
-Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
-	will@kernel.org, robin.murphy@arm.com,
-	suravee.suthikulpanit@amd.com, bhelgaas@google.com,
-	alexander.deucher@amd.com, mario.limonciello@amd.com, jgg@ziepe.ca,
-	Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-Message-ID: <20260723155912.GB836122@bhelgaas>
-References: <20260723061548.10187-1-vasant.hegde@amd.com>
- <20260723061548.10187-3-vasant.hegde@amd.com>
+To: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Cc: bhelgaas@google.com, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex@shazbot.org>
+Subject: Re: [PATCH] PCI: Fix 32-bit config write in Intel RP MPC ACS quirk
+Message-ID: <20260723160641.GC836122@bhelgaas>
+References: <20260723064300.8081-1-raizudeen.kerneldev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,130 +31,48 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260723061548.10187-3-vasant.hegde@amd.com>
+In-Reply-To: <20260723064300.8081-1-raizudeen.kerneldev@gmail.com>
 
-On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
-> Certain AMD GPU's must always be in identity mode. Currently its enforced
-> using PASID check. It worked fine as most GPU's has PASID feature. But
-> this means, identity mode enforcement is done for all PASID capable devices.
+[+cc Alex, author of d99321b63b1f]
 
-I think it would be useful to know something about *why* these devices
-require identity mode.  And what happens without identity mode, i.e., is
-there a user-visible symptom that happens when the wrong mode is used?
-
-Since the code doesn't test any feature bits, I assume it's because these
-devices have some hardware defect?
-
-s/GPU's/GPUs/ (twice)
-s/Currently its/Currently it's/
-s/has PASID/have PASID/
-
-> Previously it made sense as domain allocation API
-> (iommu_ops->domain_alloc()) was just passing domain type. So it couldn't
-> check device capability and decide best suited page table type (v1 or
-> v2). With recent enhancement to driver code, it uses
-> domain_alloc_paging_flags() ops for all paging mode domain allocation.
-> This can check device/flags and allocate best suited page table (v1 or v2).
-> Hence fix amd_iommu_def_domain_type() to force identity mapping for selected
-> GPUs only.
+On Thu, Jul 23, 2026 at 12:13:00PM +0530, Mohamad Raizudeen wrote:
+> The pci_quirk_enable_intel_rp_mpc_acs() reads a 32 bit DWORD from the
+> MPC register, sets bit 26 (INTEL_MPC_REG_IRBNCE), but it writes it back
+> using pci_write_config_word().
 > 
-> With this change system booted with DMA translation mode will select:
->  * Guest (v2) page table for PASID capable device
->  * Host (v1) page table for non-PASID capable device
+> Because bit 26 resides in the upper 16 bits of the 32 bit register, a 16
+> bit write to offset 0xd8 completely drops the newly set bit. The quirk
+> logs that it is enabling IRBNCE, but the hardware never actually
+> receives the command.
 > 
-> Cc: Alex Deucher <alexander.deucher@amd.com>
-> Cc: Mario Limonciello <mario.limonciello@amd.com>
-> Signed-off-by: Vasant Hegde <vasant.hegde@amd.com>
-> Tested-by: Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
+> Fix this by using pci_write_config_dword() to ensure the full 32 bit
+> value is written back to the hardware.
+
+Needs a Fixes: tag, probably for d99321b63b1f ("PCI: Enable quirks for PCIe
+ACS on Intel PCH root ports")
+
+That's 12 years old, surprising this hasn't been noticed before :)
+Google does find several mentions of "Enabling MPC IRBNCE", so maybe there
+have been issues but not debugged.
+
+> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
 > ---
->  drivers/iommu/amd/iommu.c | 56 +++++++++++++++++++++++++++++++--------
->  1 file changed, 45 insertions(+), 11 deletions(-)
+>  drivers/pci/quirks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-> index 563f9c2672d5..fe642e33c87d 100644
-> --- a/drivers/iommu/amd/iommu.c
-> +++ b/drivers/iommu/amd/iommu.c
-> @@ -3112,6 +3112,32 @@ static bool amd_iommu_is_attach_deferred(struct device *dev)
->  	return dev_data->defer_attach;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b09f27f7846f..0d0cf6f86173 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5361,7 +5361,7 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+>  	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
+>  		pci_info(dev, "Enabling MPC IRBNCE\n");
+>  		mpc |= INTEL_MPC_REG_IRBNCE;
+> -		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
+> +		pci_write_config_dword(dev, INTEL_MPC_REG, mpc);
+>  	}
 >  }
 >  
-> +static bool quirks_force_identity_mapping(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *root_port;
-> +	int class = pdev->class >> 8;
-> +
-> +	/* AMD GPU vendor ID */
-> +	if (pdev->vendor != PCI_VENDOR_ID_ATI)
-> +		return false;
-> +
-> +	/* GPU class */
-> +	if (class != PCI_CLASS_DISPLAY_VGA &&
-> +	    class != PCI_CLASS_DISPLAY_OTHER)
-> +		return false;
-> +
-> +	root_port = pcie_find_root_port(pdev);
-> +	if (!root_port)
-> +		return false;
-> +
-> +	/* If bridge vendor is not ATI then its APU and force IDENTITY mode */
-
-s/its/it's/  "it's" == "it is"; "its" shows ownership
-
-> +	if (root_port->vendor != PCI_VENDOR_ID_ATI)
-> +		return true;
-> +
-> +	/* Rest all are dGPUs and works fine with DMA mode */
-> +	return false;
-> +}
-> +
->  static int amd_iommu_def_domain_type(struct device *dev)
->  {
->  	struct iommu_dev_data *dev_data;
-> @@ -3120,20 +3146,28 @@ static int amd_iommu_def_domain_type(struct device *dev)
->  	if (!dev_data)
->  		return 0;
->  
-> +	if (!dev_is_pci(dev))
-> +		return 0;
-> +
->  	/* Always use DMA domain for untrusted device */
-> -	if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
-> +	if (to_pci_dev(dev)->untrusted)
->  		return IOMMU_DOMAIN_DMA;
-
-This seems to apply a different rule to untrusted (e.g., removable) devices
-based on the topology, not the device itself.  What if one of these devices
-is used as an eGPU and thus uses IOMMU_DOMAIN_DMA when it really needs
-IOMMU_DOMAIN_IDENTITY?
-
-> -	/*
-> -	 * Do not identity map IOMMUv2 capable devices when:
-> -	 *  - memory encryption is active, because some of those devices
-> -	 *    (AMD GPUs) don't have the encryption bit in their DMA-mask
-> -	 *    and require remapping.
-> -	 *  - SNP is enabled, because it prohibits DTE[Mode]=0.
-> -	 */
-> -	if (pdev_pasid_supported(dev_data) &&
-> -	    !cc_platform_has(CC_ATTR_MEM_ENCRYPT) &&
-> -	    !amd_iommu_snp_en) {
-> +	/* Apply device specific quirks */
-> +	if (quirks_force_identity_mapping(to_pci_dev(dev))) {
-> +
-> +		/*
-> +		 * When memory encryption is active, some of these devices
-> +		 * don't have the encryption bit in their DMA-mask and
-> +		 * require remapping.
-> +		 */
-> +		if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
-> +			return 0;
-> +
-> +		/* DTE[Mode]=0 is prohibited when SNP is enabled */
-> +		if (amd_iommu_snp_en)
-> +			return 0;
-> +
->  		return IOMMU_DOMAIN_IDENTITY;
->  	}
->  
 > -- 
-> 2.31.1
+> 2.53.0
 > 
