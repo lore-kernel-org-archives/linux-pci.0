@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB5A431D366;
-	Fri, 24 Jul 2026 14:54:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3F2043B4AA;
+	Fri, 24 Jul 2026 15:02:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784904879; cv=none; b=nt1rUEWdYy2CPnJszr9D+M8Ufa3+TQcSj8iM5KtuVptIYIPfFh98z/HqNwmMbqfmSz3sNUbXzu8+yd22Rcm5y6CJr1BiAgu+x3R86ui9AyZ/NSKap9NcdFnzo5YN+Pug6YIJB5AffXSxX/Vi6HtUbUOMdvBagBAND68nTt6P0sg=
+	t=1784905330; cv=none; b=BrtA4jGdA7MOlGSnjIny1kHpJTpKzHGpv2rzWq196ZcTLPQPrEboxdj1HyN88e0mDQExd10cx7sMvvCv6D/GqpCXGTNwOqPfI3oMpTT9XQmDmenh8uChfpqL/hqUdWs+FCipG6uRlYgljdzu2RApyH0oU/hN9DhNr4qJSzMaInw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784904879; c=relaxed/simple;
-	bh=bvs374BYOrufsAD11iatUF1u/fIIPW4gb3wkuLye2m4=;
+	s=arc-20240116; t=1784905330; c=relaxed/simple;
+	bh=o66we11P5gChNne594fX9fgEFp6Z5SXk1WPkO+PAMic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bJVswjEUjo6gbV5KZaE4xUcNRh8/qOltwcOQGoheK/VaHfgjgr8n6mzi2E4caTDTUxfnnOAj+KCx10rsgZsrgqwOBsEjvNmulIAMp4j5k4F+qlp8afyXALag5wOm9f3U2l95A+0mE/FvOZxyQ7F7uuIOyPMWuCCFePJQ9DNaQOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OX4YalWp; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z7VGrw6xPy827NexV2zkZ7q2d8LKV2CH2tkxTskfkaB/EuFh8WIXAxwpPg5oEKiYXUrPtjKrrKqE6IyjYlRAkTBL/6Y2Y+B+U8TNFz/Tw04OI9+wwS3Z51cORO4xPUmrocgv6pidphnm/Xtnoi0GQ+xWhL+6tTMol/dEG7Rdtek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZvSvSxe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OX4YalWp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40DCE1F000E9;
-	Fri, 24 Jul 2026 14:54:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZvSvSxe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16D661F000E9;
+	Fri, 24 Jul 2026 15:02:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784904874;
-	bh=ULGXxvxs9ke/7Gl1iHnpY/tnoLFCsWGp38S1Uw+duI0=;
+	s=k20260515; t=1784905329;
+	bh=z/mggxsbNrpvroZn7mZ9QBDirWOmig2wFSQsn9S6HIQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OX4YalWpMmRQZu6EoBqPgBn2fGjJF9Qr3hfG7J4fIWIvBQPEyE76+AIP8UDjgfaJL
-	 sil5vKwr0tU1y9H6iTggOh0nHxlj4Y8U/LC9X8l5bpl7bJMFDWSDd579cWgtMRhpcS
-	 S2A0Us/XStxIB+rCnzVzqoqz6NdC7XVaVjzHm5JkcrsgVkE/OK2Pm4JjdKgZJ5PnC6
-	 frHNtSbklBabYhCKBQIHTwxJcjkoeQ1eGoHsqD7d2JLOeMaJSYzMTPlWb6r3OiTtWY
-	 IbN5/KOklqaIcL5iMnnh32Q5qFK1uG3gLQtabPoQIsD3QE9j4SExeWADW0MNgXse+2
-	 Z42cWL/abMOPg==
-Date: Fri, 24 Jul 2026 16:54:29 +0200
+	b=AZvSvSxeAOjerPg1OxVPnSyJcngvZYxKDPdUu43XJNruR1KSzsMktbCuod3qcq0F0
+	 wBo2FAaG03IdWPBXC1TMKb5EpE/AH3XBdUTiscgs01HdlV0W7R72JtDjo43AOkRnNS
+	 RBKCdkHcW1a8jzjKtFajPCM2Vh+bVKhR+yiMJt/O8jh8fR16DQegRIowO28mu5ulug
+	 81jLCwg7Z4lSAs97LnV+ExZtBH4p4s48kF5e3JXyXLifKkJ0rwhBCkpGp4Nr1Mb4f0
+	 dVJzlLOOc0nzirAQNkoJ+ckg1lcbdld2yHeXRv3enK8ZddeGQ9BbMJ9ftp9y86Ujhh
+	 E20zLs2LD2l+w==
+Date: Fri, 24 Jul 2026 17:02:03 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: sashiko-reviews@lists.linux.dev
 Cc: 
 	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v8 2/5] PCI/ERR: Add support for resetting the Root Ports
- in a platform specific way
-Message-ID: <4xejyx6zttyq55xz7xgvehh37wgnv7pajsc666a5ysoprwkanj@yu5wkwlqiisu>
-References: <20260518-pci-port-reset-v8-2-eb5a7d331dfc@oss.qualcomm.com>
- <20260518162739.D246EC2BCC6@smtp.kernel.org>
+Subject: Re: [PATCH v8 3/5] PCI: host-common: Add link down handling for Root
+ Ports
+Message-ID: <mcdce4u2alwsobdsapnnwjwxofhwrd6gypdu45m3i5wzswhp65@lhrv5tvsvjs7>
+References: <20260518-pci-port-reset-v8-3-eb5a7d331dfc@oss.qualcomm.com>
+ <20260518170537.357DDC2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,69 +45,92 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260518162739.D246EC2BCC6@smtp.kernel.org>
+In-Reply-To: <20260518170537.357DDC2BCB7@smtp.kernel.org>
 
-On Mon, May 18, 2026 at 04:27:39PM +0000, sashiko-bot@kernel.org wrote:
+On Mon, May 18, 2026 at 05:05:30PM +0000, sashiko-bot@kernel.org wrote:
 > Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] Missing pci_save_state() before the Root Port reset, leading to restoration of stale or uninitialized configuration space.
-> - [Medium] Silent failure and bypassed fallback when the platform-specific reset_root_port() fails.
+> - [High] Hardware state desynchronization when CONFIG_PCIEAER is disabled.
+> - [Medium] Commit message claims error_detected() callback is triggered for the bridge, but the implementation skips it.
 > --
 > 
-> commit b100b0c0e31e848c799fc6d648ef37421c08fb9f
+> commit f07cf37e729701c6c67b90c92f65dd76b53b9fec
 > Author: Manivannan Sadhasivam <mani@kernel.org>
 > 
-> PCI/ERR: Add support for resetting the Root Ports in a platform specific way
+> PCI: host-common: Add link down handling for Root Ports
 > 
-> This commit adds a reset_root_port callback to pci_host_bridge to allow
-> platform-specific root port resets during error recovery. It calls this
-> from pcibios_reset_secondary_bus() if available, attempting to save and
-> restore the configuration space across the reset.
+> This commit introduces a new API, pci_host_handle_link_down(), for host
+> bridge drivers to recover a specific Root Port when a link down event is
+> observed. It utilizes pcie_do_recovery() with AER handling if enabled, or
+> falls back to pci_bus_error_reset() otherwise.
 > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 8f7cfcc000901..651505b3bd60e 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -4809,6 +4809,19 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+> > First, the AER error_detected() callback will be triggered for the bridge and then for the downstream devices.
+> 
+> Is this description accurate regarding the bridge receiving the callback?
+> 
+> Looking at pcie_do_recovery(), it uses pci_walk_bridge() to trigger the
+> recovery callbacks. However, pci_walk_bridge() handles bridges with
+> subordinate buses by iterating over devices on the subordinate bus.
+> 
+> Consequently, the Root Port (the bridge itself) appears to be excluded from
+> the callback walk and might not receive the error_detected() callback.
+> 
+
+This seems to be a valid concern. portdrv registers the pci_error_handlers() as
+well. So we should be calling them.
+
+> > diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> > --- a/drivers/pci/controller/pci-host-common.c
+> > +++ b/drivers/pci/controller/pci-host-common.c
+> 
+> [ ... ]
+> 
+> > @@ -106,5 +108,38 @@ void pci_host_common_remove(struct platform_device *pdev)
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_host_common_remove);
 > >  
-> >  void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-> >  {
-> > +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> > +static pci_ers_result_t pci_host_reset_root_port(struct pci_dev *dev)
+> > +{
 > > +	int ret;
 > > +
-> > +	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
-> 
-> The commit message says "save the Root Port config space before reset and
-> restore it afterwards". Should there be a call to pci_save_state() here
-> before initiating the reset?
-> 
-> If the state is never saved immediately prior to the reset, won't
-> pci_restore_state() restore whatever state was last saved in
-> dev->saved_config_space (e.g. from probe or suspend)?
-> 
-
-False positive. PCI core now calls pci_save_state() for all devices.
-
-> > +		ret = host->reset_root_port(host, dev);
-> > +		if (ret)
-> > +			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
-> > +		else
-> > +			pci_restore_state(dev);
+> > +	pci_lock_rescan_remove();
+> > +	ret = pci_bus_error_reset(dev);
+> > +	pci_unlock_rescan_remove();
+> > +	if (ret) {
+> > +		pci_err(dev, "Failed to reset Root Port: %d\n", ret);
+> > +		return PCI_ERS_RESULT_DISCONNECT;
+> > +	}
 > > +
-> > +		return;
+> > +	pci_info(dev, "Root Port has been reset\n");
+> > +
+> > +	return PCI_ERS_RESULT_RECOVERED;
+> > +}
+> > +
+> > +static void pci_host_recover_root_port(struct pci_dev *port)
+> > +{
+> > +#if IS_ENABLED(CONFIG_PCIEAER)
+> > +	pcie_do_recovery(port, pci_channel_io_frozen, pci_host_reset_root_port);
+> > +#else
+> > +	pci_host_reset_root_port(port);
 > 
-> If host->reset_root_port() returns an error, the function returns early
-> without doing the standard reset or propagating the error (since the
-> function returns void).
+> If CONFIG_PCIEAER is disabled, this directly calls pci_host_reset_root_port()
+> which performs a bus reset using PCI_RESET_NO_RESTORE via
+> pci_bus_error_reset().
 > 
-> Will this cause callers to falsely assume the reset was successful?
+> Since pcie_do_recovery() is skipped, downstream device drivers are never
+> notified via their error_detected(), slot_reset(), or resume() callbacks.
 > 
-> Should this fall through to the standard pci_reset_secondary_bus() if the
-> platform-specific reset fails?
+> Does this leave the hardware configuration space of these devices wiped while
+> the bound drivers remain active and unaware?
+> 
+> If subsequent MMIO accesses by these drivers hit unmapped space and DMA
+> fails, could this lead to device lockups or data corruption? Would it be
+> safer to hot-remove and rescan the devices instead of blindly resetting the
+> bus when AER is unavailable?
 > 
 
-False positive. If the reset_root_port() callback fails, then there is no use of
-trying pci_reset_secondary_bus(). Also, the caller will catch the recovery issue
-in pci_bridge_wait_for_secondary_bus().
+That's a design limitation. If CONFIG_PCIEAER is not selected, then
+pcie_do_recovery() do not exist. We can call the individual err_handlers()
+though, but that will end up somewhat mimicking AER driver.
 
 - Mani
 
