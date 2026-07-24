@@ -1,94 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0202471D0B
-	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 22:39:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30C5C37C106;
+	Fri, 24 Jul 2026 23:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784932748; cv=none; b=Z32aXcKmQonXB+W5SAQ/y/HVqEbalBHsiwXkq1J33uCyQBUBztNNCPjIrwPdgN4n5rH5A2j2Ljoj3jjtbNV6RC7ttgO38Yw8YxtGEFzrThsrFmgYjbsSJl1bDpTg7D7vrSutHmg0mCVVHDK9+B2sk3nNWK83MbeRmxpXvbqxpdA=
+	t=1784934527; cv=none; b=OV4N3FUQR3uM6HCAvxLYDEUke27GpW6e0MmTjS29PF0lFBJeto/ThQyn73qfFL2gHwDvDDh9ZZwfyhi6/xXmNlbBmnyeAHYVyOxwhZcOdzHamGFdlMM4ME+Qp3kLvSUc79n/MWdy87AJPR7ugw1yXUHKMp+TxDLpOXkmuBv+mbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784932748; c=relaxed/simple;
-	bh=HVVLVDxA9qhoraaObo7lcYvWkf47Tf3wbghp9UR7Yu8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=GnxeYg13WFb3lEVTw+fRaYWnEygg4rvYfGuzrUiRuvo5K32BS4UCPuF4mU0f+hls+UxwPku2GaUA6G3eZ2v7B0HiVy84O6B4BFOSwO7mPh19gQod6YSyCb8n66geSESwJdX0uehqSACmiXrYOSl3RDKyEn6npwZKnvJy2kvvSKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTVJW/rh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784934527; c=relaxed/simple;
+	bh=TnWvimcTlhYF7SSYM1xqPNZuiAubEYLeYk8nISJIKCE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tMjPgH2ueJmMoSjkn19/an8OSyeVuoZi4V9FO8rZKjJaeFL15hbzP35w+HmiNlWzaXQ4mZYY5LWo2qwjVgi693cxkUBfwe3sBUHMBU1wEGCjE1ynewr3p51wvI8actqmN2Yqaoxw0Tvx676UMDat9abpNTumYkvJgjz3pC+s8z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GmIioJ9+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTVJW/rh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FBF21F000E9;
-	Fri, 24 Jul 2026 22:39:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GmIioJ9+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1F7A1F000E9;
+	Fri, 24 Jul 2026 23:08:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784932744;
-	bh=vd175WF07d9T5qMoFKENrd0CE8q6aweRvb1UJK8MvvE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=cTVJW/rhxjCJVFPOgownsdU+uecYUKAX5qv8pljZp+HZ4HIVB8X6jEvh8zABoecm+
-	 muk68Y9x4gmEHynyHn3qyyNqqGM7d6Ii+PAJbGp+YwzWCpFu7DBMf5PPJyL8vvpLbz
-	 P36SOMqcTeYrlvVGWwMoNzqwuc+PC2NUZ2TM3AwHC9gh8T+/mVmTQU+uPTzUoW+l2p
-	 ej0qht04ZUknI9H2I+ghIdEvnQ761iKHqNktxGN5H690gpEaX7UdeTmzL0BIHN9svB
-	 BIUJ1L1d2AXXegYicjKGH/hButgZTVM2MSCdRqO/DhhjLyioXA36rw8hfw5TwnbH8Z
-	 OOHbGsIWkgdPQ==
-Date: Fri, 24 Jul 2026 17:39:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Yury Murashka <yurypm@arista.com>,
-	Matthew W Carlis <mattc@purestorage.com>,
-	Zhenzhong Duan <zhenzhong.duan@intel.com>,
-	Qingshun Wang <qingshun.wang@linux.intel.com>,
-	Yicong Yang <yang.yicong@picoheart.com>, dio.sun@enflame-tech.com,
-	linux-pci@vger.kernel.org,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Terry Bowman <terry.bowman@amd.com>,
-	". Kuppuswamy Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Arjun Govindjee <agovindjee@purestorage.com>,
-	Ashish Karkare <ashishk@purestorage.com>,
-	Jasjeet Rangi <jrangi@purestorage.com>,
-	Meeta Saggi <msaggi@purestorage.com>, rhan@purestorage.com,
-	sconnor@purestorage.com, an.luo@enflame-tech.com,
-	fernando.hu@enflame-tech.com, bill.wu@enflame-tech.com,
-	xin.wang@enflame-tech.com
-Subject: Re: [PATCH 0/6] PCI/AER: Support Advisory Non-Fatal Errors
-Message-ID: <20260724223903.GA1073029@bhelgaas>
+	s=k20260515; t=1784934525;
+	bh=I1HMmgzF8qcQPAmOTAXHEHOtC3Y3UHiRKcK48Rnrgts=;
+	h=From:To:Cc:Subject:Date;
+	b=GmIioJ9+i0ijT0320OEcjTOTWhVY419aKtFrcDVlzpDJKOBgO/5IXT/J/nw55BBoO
+	 mIOzxs4UkcM3DquaUKIdZ5vW8+kLH4QPGsAtZhvSa/jI9Tqke6t+lGDJ0vg+I13Na6
+	 sGQ7MtWogIp8kOetmNTWgNMBv4IVND6NFl1+LSgG0Rfk3NAdXQ80UaZu+QrkCeffRl
+	 HO5bPgWnrcNI3CAvyjYbHFa9YaPiVDfsBjlOrUjcEiALYf1RWT5u0U9jcXZl36Gx+m
+	 pCFeRk5kPsv4WOzuU4CO9he4vI6n8jFsJ9pHO1tyEjxBwM4EHuGEjpjwmhCv+yeKYW
+	 cz3iKfCmx4yQw==
+From: wei.liu@kernel.org
+To: Linux on Hyper-V List <linux-hyperv@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Cc: Wei Liu <wei.liu@kernel.org>
+Subject: [PATCH RFC 0/2] Support Hyper-V vPCI controller reset method
+Date: Fri, 24 Jul 2026 16:08:41 -0700
+Message-ID: <20260724230844.3259741-1-wei.liu@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1784905909.git.lukas@wunner.de>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 24, 2026 at 05:24:00PM +0200, Lukas Wunner wrote:
-> PCIe r7.0 sec 6.2.4.3 specifies that certain Non-Fatal Errors may be
-> signaled with ERR_COR instead of ERR_NONFATAL.  These so-called Advisory
-> Non-Fatal Errors are masked by default and hence not reported by Linux.
-> 
-> This series seeks to change that.  The meat of it is in patch [6/6].
-> There have been several previous attempts to support Advisory Non-Fatal
-> Errors which are all linked in the patch.
-> 
-> The preceding patches contain prep work.  In particular, they ensure that
-> the detecting agent and layer is reported correctly for each error (patch
-> [1/6] and [2/6]), simplify logging of the error source (patch [3/6]),
-> fix reporting of the TLP Prefix/Header Log (patch [4/6]) and move code
-> around (patch [5/6]).
-> 
-> The patches have been tested internally, but further testing would be
-> appreciated to raise the confidence.  Thanks!
-> 
-> Lukas Wunner (6):
->   PCI/AER: Fix mapping of errors to agent & layer
->   PCI/AER: Log agent & layer for each individual error
->   PCI/AER: Deduplicate logging of Error Source Identification
->   PCI/AER: Emit TLP Log only for unmasked errors
->   PCI/AER: Move retrieval of FEP and TLP Log into helper
->   PCI/AER: Support Advisory Non-Fatal Errors
-> 
->  drivers/pci/pci.h      |   4 +
->  drivers/pci/pcie/aer.c | 250 ++++++++++++++++++++++++++++++++---------
->  2 files changed, 200 insertions(+), 54 deletions(-)
+From: Wei Liu <wei.liu@kernel.org>
 
-Applied to pci/aer with the intention of v7.3, thank you!
+Hi,
 
-I noticed a sashiko comment on 6/6 but haven't had time to look at it
-yet.  I left the series on pci/aer for build testing in the meantime.
+On Azure, there are devices that don't support function level or PM
+reset. They can only be reset by sending a VMBus message to the host.
+
+This series is RFC because I modelled the reset method at the controller
+level. If there is a better way to do it, I'm happy to change the code.
+
+Thanks,
+Wei
+
+Wei Liu (2):
+  PCI: Add controller reset method
+  PCI: hv: Add vPCI device reset support
+
+ Documentation/virt/hyperv/vpci.rst  |  2 +-
+ drivers/pci/controller/pci-hyperv.c | 61 +++++++++++++++++++++++++++++
+ drivers/pci/pci.c                   | 22 +++++++++++
+ include/linux/pci.h                 |  3 +-
+ 4 files changed, 86 insertions(+), 2 deletions(-)
+
+-- 
+2.53.0
+
