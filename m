@@ -1,94 +1,133 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C994457A1;
-	Fri, 24 Jul 2026 15:13:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EFC2349CC1
+	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 15:15:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784906011; cv=none; b=hTBxMcJcD/tGAniCqcEE1+tlAYr+NDiyu6EGGEXLzmBKYPye07mhKd8k3OUABDXTh6yTn6aoYwxzeV+snbA4owdApWxRUi/WChl5rVVarTOcae0dGcDWuc3vX/m7Ck86JOX3QlYDMmVOtugA8XfuddPXBgFTepgiXq4w9tkvVW8=
+	t=1784906132; cv=none; b=rgyalolSmK4qgmlVzmDtim5NdxXKu+FORUgAnUSuzaDJdPFJ4bz4nw/zU12cCRYgCRbel0s6iNYK99pq9B32qs2zJ5ulPH3FBy9dSGYCrPqYW5tcDefkEEPgEAeghFAaLmAoC18lNV+zyoQb1wYOBaplntjcEekl4Cw/Dh326XI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784906011; c=relaxed/simple;
-	bh=gvq61LPzryx7OIsJgT5KcTzegy2Z9MAjptSrQ3OG7hs=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=p4NbgLNf7Z4zwUEie99P27C0/vIO59Zils+6QC6Z6MKeJZ7Uz/5qJXC1U71Anb+I3ehPOPaVkcMviUXa3OLXDxxZ01UKNiVg/km4vbBc29qoCD3zYb5B0VJJkMaqCXKJGu2ZjidiMaSQN6en4AX9eh9RlZB+YbBnB6RmMmW1nw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=cWmRFP83; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784906132; c=relaxed/simple;
+	bh=QbMIzfT3pI/FCbKHeyTodh9O19gRKy/LqmADzHFm4aI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aW5KZmqcmYHHd1OYenp2xVxOZSOu3CWOtSEO6kYvCRSba7MxMexiqQyo4V59w7klRMgy2C5gnxkXDMSmFMmh8QoCv6q55u89yALdF6Sg2hx5W5xBekstZgue9FXwqyqlrhTNFG0XkjyUrWY724RWd9wCKrFRlFE3y0P0MDimpwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Yf+bxnoE; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="cWmRFP83"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=ZNQaYBhxmRPRp3MSD4orn4lVQITWPI7vJhQDea9WLWA=; b=cWmRFP83Y7oPZwBv2BLRKVl1HD
-	D8rIMDnGdgxr1yVtuC+jeiGi7dT25yeEYXLQa5VBnxPIjaaiyQD5kqefwtNR8JP5td2qaCWlapYtw
-	Vd2lB/XyAkRJ2ZYbDE31HdlR0rB9YHNMJYPHrxkeOOKcfuwUzhQbWPqu0eghgt2IWpDxyjsQs1s8d
-	EB2c2EoWjQB8/ZBKMgtiZt+tj/HCdbS3B8MSQR9XpzXaLeng7EChYiemPYUadTVebvcIttEkCRR1t
-	n1T4l23fiGPBBRgawhsx7Y5uaX/BZmHaiB575OBeptxUHZa0Y0Ysymx0XcHzwlA3gqqS1dl5ECFhz
-	VU6pA5+A==;
-Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([96.51.150.74] helo=[10.0.33.8])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wnHaC-0000000DzHJ-0tXv;
-	Fri, 24 Jul 2026 09:13:05 -0600
-Message-ID: <47954eca-63e6-401b-82d7-d5969207ded9@deltatee.com>
-Date: Fri, 24 Jul 2026 09:11:43 -0600
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Yf+bxnoE"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2cce6a0c9c3so6218185ad.1
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 08:15:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1784906130; x=1785510930; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=kHaoMw8Oj5RyClx0k/jfMkqxxF2MZw9lUe54lPVbmc0=;
+        b=Yf+bxnoEtQPsO6gpiMSWmoAzGDz5boTh1AdsaeQ4GFY7p5498JXLhHztvPgqQT4qyf
+         CohntmjEb5nTSLv3BkE1qN/PS/je5OjEHgQDsIEHpfiq+ubc+ojHOPR1m0NXtkOA+SXc
+         0tpAyl1LKUlQu0GIuAhTouzu/sqctBG7wV0MB4kSgDKiAjjQCGQVAdhMOSKknitNeh6P
+         aS+RKGzRMEsy49y0jqPOSyWIyuYKRi7nVGPQ6Dz1oQV3oyqRM6JUk/I6Vr6498bmY38Q
+         s70cMFQMTvtrk0KpAurBIhUA5Iw6UsIC/xblktr+JJpYKmsODv4VDtC0ueciM9BrTBZH
+         RwLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784906130; x=1785510930;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kHaoMw8Oj5RyClx0k/jfMkqxxF2MZw9lUe54lPVbmc0=;
+        b=G9pbti0wQ/mT0A67y+d2Ky0bGup/6c6RoN9CS1GPGztCYgw6CV6jitYDSFjdIAD0WX
+         PxDIevnS9H+JOBLwawe5dTTRU414gc7SURdp4pLYlg3WE7xa/p7pClD+RLa27Nu+SwXY
+         DOYILXgiAgK6w3c5fu1Uh9/qm+UGxcFYE8RCZb6ImHZpIxy+3stWTi42uUShpkAN95Qy
+         7So9jRwsjJKqdMTHRTirGnsZJNdxDr/jDAfqlObnQ5NrHuEy2e8LUuJpOikumRDydT33
+         uT4stFL4RMii5QaLSm1wD83oem8rq3JYDleJSrpVx438DdJcZuBRbNThtkEukWBdGKHU
+         qz9Q==
+X-Forwarded-Encrypted: i=1; AHgh+RomZZ1gWj8U7Ali7oIK85bnS6nB+uDhabtaONDLBXNHfLaBx2peCBLn8brXCHhg7sTY7g7ul9PNRCk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSeBz1tvi7HAA2lRWVhhwGzsT5sfnBYnfDGkNeqflpeDjkBYNC
+	F+Q8dYeQ1YmYvnFe+AUYCWvcEja/1j5mPyjbJRpMuLmhZsJcNuAGz4MuHNZkO7AWPGc=
+X-Gm-Gg: AR+sD12HrrVF1W70MDV66kYxJcv6vPMBLw1Siu0ngH3p1MQmmXZqMizxCbY+bMpAbRG
+	LP39LoDEELzOUfsIC0ljqxA3MZE+5zKRK8tEg5ewAx49x2m3d/Z5STUwak4i+XjQ9wcDMOUHiFf
+	QWQTB42712jt2raupco0lJlAVhAQ8mVubqh2B1RfkyqXSU3ItnMbF5aHu+Ns6exjwSCaBlAWn7J
+	bDkAGCH5nybOVpk7M7rtiBS0YURNyhtkcbf+UI5qScsIs0lVnaQsdJ2DyUpa7RTf0NGn6kiuc1E
+	lrYHUt1HjnK113QzWg3hcd0/VKlC7zjH4fZlmAwNtLBB0HXdnTbgfUs7ezwDYvDCkuHAKvlnrst
+	Bua2zbzrSPWJK+38FT41Km5jBccOxsdqwXG+blbpJt5uu1h9kzdZC
+X-Received: by 2002:a17:90b:54d0:b0:38e:5717:9cc8 with SMTP id 98e67ed59e1d1-38ec6617deemr7146863a91.31.1784906130395;
+        Fri, 24 Jul 2026 08:15:30 -0700 (PDT)
+Received: from ziepe.ca ([216.228.115.8])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d130ce035sm27005956c88.13.2026.07.24.08.15.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 08:15:29 -0700 (PDT)
+Received: from jgg by NV-9X0Z6D3.localdomain with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wnHcW-000000002mg-3wXH;
+	Fri, 24 Jul 2026 12:15:28 -0300
+Date: Fri, 24 Jul 2026 12:15:28 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Vasant Hegde <vasant.hegde@amd.com>
+Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
+	will@kernel.org, robin.murphy@arm.com,
+	suravee.suthikulpanit@amd.com, bhelgaas@google.com,
+	alexander.deucher@amd.com, mario.limonciello@amd.com,
+	Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
+Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
+Message-ID: <amOBkJ4BaZ4qnkpc@ziepe.ca>
+References: <20260723061548.10187-1-vasant.hegde@amd.com>
+ <20260723061548.10187-3-vasant.hegde@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- stable@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260723204206.76930-1-mykola@meshstor.io>
- <20260723204206.76930-8-mykola@meshstor.io>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260723204206.76930-8-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 96.51.150.74
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, stable@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v5 07/10] md/raid1,raid10: skip futile retries on P2PDMA
- mapping failures
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260723061548.10187-3-vasant.hegde@amd.com>
 
+On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
+> @@ -3120,20 +3146,28 @@ static int amd_iommu_def_domain_type(struct device *dev)
+>  	if (!dev_data)
+>  		return 0;
+>  
+> +	if (!dev_is_pci(dev))
+> +		return 0;
+> +
+>  	/* Always use DMA domain for untrusted device */
+> -	if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
+> +	if (to_pci_dev(dev)->untrusted)
+>  		return IOMMU_DOMAIN_DMA;
 
+The core code does this, it shouldn't be in a driver?
 
-On 2026-07-23 2:42 p.m., Mykola Marzhan wrote:
-> BLK_STS_P2PDMA reflects the peer/member pairing, not member health:
-> retrying the same pages on the same member cannot succeed.  Keep
-> WriteErrorSeen so the range stays fenced, but skip WantReplacement and
-> FailFast eviction, as commit f7b24c7b41f2 ("md/raid1,raid10: don't fail
-> devices for invalid IO errors") did for BLK_STS_INVAL.
-> 
-> The failure is whole-range and deterministic, so narrow_write_error()'s
-> block-by-block submit_bio_wait() retries are pointless.  Record the
-> whole range as a bad block in the completion handler instead.
-> 
-> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
-> Assisted-by: Claude:claude-fable-5
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+> -	/*
+> -	 * Do not identity map IOMMUv2 capable devices when:
+> -	 *  - memory encryption is active, because some of those devices
+> -	 *    (AMD GPUs) don't have the encryption bit in their DMA-mask
+> -	 *    and require remapping.
+> -	 *  - SNP is enabled, because it prohibits DTE[Mode]=0.
+> -	 */
+> -	if (pdev_pasid_supported(dev_data) &&
+> -	    !cc_platform_has(CC_ATTR_MEM_ENCRYPT) &&
+> -	    !amd_iommu_snp_en) {
+> +	/* Apply device specific quirks */
+> +	if (quirks_force_identity_mapping(to_pci_dev(dev))) {
+> +
+> +		/*
+> +		 * When memory encryption is active, some of these devices
+> +		 * don't have the encryption bit in their DMA-mask and
+> +		 * require remapping.
+> +		 */
+> +		if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
+> +			return 0;
 
-Change my no longer correct first Signed-off-by to:
+I think this can probably be dropped now? There is no intersection of
+this old broken embedded GPU and a CPU that supports CC right?
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> +
+> +		/* DTE[Mode]=0 is prohibited when SNP is enabled */
+> +		if (amd_iommu_snp_en)
+> +			return 0;
 
-Logan
+Ditto?
+
+Jason
