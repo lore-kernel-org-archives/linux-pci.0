@@ -1,72 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE16322749
-	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 16:10:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3A5348C63
+	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 16:12:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784909408; cv=none; b=iYLjoJ3moSdkPKXAInCfatOCzhRx65l20biCWllW7+5sptu7fhM+Idr/mwPg5Lu3kSXrZdzZGmoRxhCWC0Pd6GO237aUrdW3xV1RqAhYVArbzAzVOmJHDxw6nJhYRasF9baDCctLWJLzJwgQoIDWqSxz6CdnTGaGZk5v5oyouLc=
+	t=1784909553; cv=none; b=qLb0liw5o4Diovgseiw8I9bFXrJlQRhDt9rmpZPgzX08UIgKrfLhVk2m9iKwQI0YMXavk4dgjfWqZNTU98L+DvOG7u0kkytxc5z+C/+3rza5IdZeiiZCO0VGLHJdbTghabNrJo/IeSck97kbSvS4psSubn+Cd+lNyrJ7+88wICg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784909408; c=relaxed/simple;
-	bh=YiiOLLp2CnXXGm4HsGt0tCSCtEEPgptnSSOnGZErwyg=;
+	s=arc-20240116; t=1784909553; c=relaxed/simple;
+	bh=tnxTMvV3BILP7BBMIIH7aSpDSYpC/ZKfkaCSjHr2sxc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kgeYPHAaV76BFRvG6FtBA5VzVMPjUsQamuHGHWDae2otJezlE+uyVjuPaSUuWysT4CVZ8RLgESY3lJKdDAG0ULZ/79K5+seEI6td1OktdOc1ZyDmXthNQl53nGrI7A7exB4mJd/HSNw2InCJuKKZ5h1ICw9hi51suBn6zCclPIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GbpnJh8A; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=c61TaGSO4ROYV21u5Mbyz3vWH60LKzFBdm4g+TDMORRB2brbydZGqLNy+NioJlW+4SPO12xBoZjsPhAdIG02p12Y20th+gpF9LIuvaXHbdvw4mYFF3YjvLSXiJ6nwiFoBSSD+gXnOaUHYzD7QDaa7ICg3h3lBk7K1YQFCwbJu9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hy5lvrV7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GbpnJh8A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F092C1F000E9;
-	Fri, 24 Jul 2026 16:10:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hy5lvrV7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E89A1F000E9;
+	Fri, 24 Jul 2026 16:12:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784909407;
-	bh=AexwZo26tmh2h/gS7r+OtpWUAkYwVT+bPiDqPKL/P+A=;
+	s=k20260515; t=1784909548;
+	bh=jZWwAGfENJa9vbyYH4+qi7UgVOLagpAyXFeugfh+veE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GbpnJh8AhHGegVkFYipkYxE1M+AvmRmjJvTpedeRMb4FM+8GcWD09fCfeeBvhgsM1
-	 RvGdbzA7NTD0kC8Ac4MjgznHVF5OXcU2rCKqct6Zenu4y1SfUx/W3/zfw7Ahiz/rs6
-	 kf6dFJNhK2WbV8cI8YajY0eppXnrklnrJiD4j/PAtxIT3+RjvGtLJNr/+hbPfvGOMd
-	 VjXDwYjVryAhY3o5cqmD61k0w5yH2gJ/UpgDHbD45oLLJ3NqVH2R8L2XIIitDLxjM+
-	 DaflM4Z/CdoxB9LBw6dmbxmaRrtEaABVUXSKtVn0L6XHRdDJ3O6LYu5fls4ulL+1gq
-	 rDHUH9O7n1TOg==
+	b=Hy5lvrV7FK/dtRx383JMzu+u5FcX5KGM5hfpaVd+rGVaB9mUjqyv6XckLMZNKY07/
+	 r2VjoAVw3dtQOvpDAmt8973QvaKiibCwd1ThL+VgbC6lrAXFmL4eT6OVfwuqvnqMTT
+	 bFyL9xy1Tm6jDF6yRmzXm1+8blvXelZOATyXtxt20rpHPzl+44MtyXczFyRt3kOfU8
+	 EkLhXfRYNPAgsOIeAfw2Zh9OuygYqgqjsF8mNtauoQVe0azFiuWqSpGpZK/QOz5bdP
+	 BvQ6oJ9dC+GO3w6DqHdXiTrjJE20f0wrUavj+9Z3pCdqk8w4Yg54UWaK3tZ414Cmph
+	 dlMuHqL7KI0HA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/6] PCI/AER: Deduplicate logging of Error Source
- Identification
+Subject: Re: [PATCH 5/6] PCI/AER: Move retrieval of FEP and TLP Log into
+ helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lukas Wunner" <lukas@wunner.de>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <3a5d1624d6912db1bc8c4e89e7a6a72ac510f4dc.1784905909.git.lukas@wunner.de>
+In-Reply-To: <0f2f037c7ccf099f0c253cbc4ad9be526c68c5af.1784905909.git.lukas@wunner.de>
 References: <cover.1784905909.git.lukas@wunner.de>
- <3a5d1624d6912db1bc8c4e89e7a6a72ac510f4dc.1784905909.git.lukas@wunner.de>
+ <0f2f037c7ccf099f0c253cbc4ad9be526c68c5af.1784905909.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 16:10:06 +0000
-Message-Id: <20260724161006.F092C1F000E9@smtp.kernel.org>
+Date: Fri, 24 Jul 2026 16:12:27 +0000
+Message-Id: <20260724161228.0E89A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> aer_print_source() already logs the Error Source Identification Register:
+> When aer_get_device_error_info() gathers information on Uncorrectable
+> Errors from a device, it reads the First Error Pointer and TLP Prefix/
+> Header Log and caches them in struct aer_err_info.
 >=20
->   AER: Multiple Correctable error message received from 0000:b7:02.0
+> Those two fields will also need to be read for Advisory Non-Fatal Errors
+> (which are signaled as Correctable Errors).  Move their retrieval into a
+> new aer_get_uncor_info() helper for reuse by the imminent Advisory
+> Non-Fatal Error support.
 >=20
-> However aer_print_error() subsequently identifies the Error Source once
-> more by emitting an "Error of this Agent is reported first" message.
->=20
-> The additional message was introduced by commit 0d465f23502e ("PCI: pcie,
-> aer: fix report of multiple errors") because it deemed the message emitted
-> by aer_print_source() confusing:  When the Multiple ERR_COR Received or
-> Multiple ERR_FATAL/NONFATAL Received bit in the Root Error Status Register
-> is set, it doesn't mean that all errors originated from the device in the
-> Error Source Identification Register.  Rather, the errors may have come
-> from multiple distinct devices.  The commit sought to make that clearer.
->=20
-> Achieve the commit's objective by rephrasing the message emitted by
-> aer_print_source() and drop the additional message logged by
-> aer_print_error() to reduce dmesg noisiness and simplify the code.
->=20
-> While modifying the log message anyway, fix minor grammatical issues:
-> Append a plural "s" to "message", add a missing closing brace to "(no
-> details found" and capitalize "Error" to match the spec.
+> No functional change intended.
 >=20
 > Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
@@ -74,5 +62,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1784905909.gi=
-t.lukas@wunner.de?part=3D3
+t.lukas@wunner.de?part=3D5
 
