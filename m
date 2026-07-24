@@ -1,103 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3523F3B101C
-	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 07:38:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEC33ACF11
+	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 07:39:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784878737; cv=none; b=OXFM3nMZjaWm2WnLM2xm7RRVi5vOoLJTteKvOduRuFhEvsazDVjJ7B+rqRK5oGVRNzTrfvzSFwAzJ/44wUA04oBOhlzbPaiBte0sfAdBoFQcf6hOUeJaOg3M2TJswogjyXlqyivXNCHeyqjIoJ1cE3NngxPVJMl10Hu2Wfx7VRE=
+	t=1784878789; cv=none; b=gAaQc61iXW1j1aMW4IKridWWKNv+t0lp+reBk0m4ls2DOhjIg35P8UsXTh87fevhgrml+gadfCtq/C+14S8WQFd+z1kYuxkSEkMBJavCbXqfS0fxsEbi0//ORhPgSeF1V15oiynuhI08rNhb4r09wAbXwOrX8C8DcZzk7YR8jzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784878737; c=relaxed/simple;
-	bh=dwm84/SYi4rjp20Lcu/VCM0Z7zxbc7/3oYQtjSiW4uU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ComuP8j7NxMNGGcRAyBho+6/mdyQmmnympCYWAJO883eUkdeDuUUUj61MTSxUmR9cMAyWE1+L3s7QBk6+XOSXHZtRs7x6+qf+52cVS73pBYEUk3KwFjqTpqUZegeBY7ptbB1+0XCEqvAO6wpd2mbfWhze2nioVk/z5jUr50xgzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B3ANXHN/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784878789; c=relaxed/simple;
+	bh=LbE7q4H35PewJJSHAE0ANnvATUxdn8GQZ3PbtjFXs3s=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QZFn5x+B4t6MAKS3WFUozuBdQitgOD4c2OhKxXe2Pmx8hBZA0AS4HZaVObYlbaPE/7gkji7v3fQdICEa2YCbuGtLrPmyZuD1OvX/8HvpkMxFCKsYBQCojQgu74QuxpkP9KYc7ih+AP8sMW3rc0i+6dhP/9i++/UvEAm5YmYHS24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bfi4Cdnn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B3ANXHN/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB4471F00ACA
-	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 07:38:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bfi4Cdnn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 709471F00A3A
+	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 07:39:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784878735;
-	bh=ftWP9saioUia+KgaPooZI0PI5Yq7lJPf8F0MvvRDa4Y=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=B3ANXHN/tfgxCrA9Ehd/WbPNigx8L8PN4Fh3uayl8w2CZHUJ63un7UrbCBS207gsn
-	 SkLhtylnO/I8cFtZiYvvRLs7w44btRYQDSPRAQTxReOU33zln9H6xII8IEKYUzbJWC
-	 Huqwd0ZmMWlgGVBtLmaCJBI3QckFV58jK8ofKhVndhrCXRxv6yfdhaUJG5VwjFRTI/
-	 l2pgKR39oPKBiLrZf0HAYFcy2uv+nVNvjEVAVeaaFgxfwJCGjfkVjbbfF0UmeraQh6
-	 F2U+8ao0KNZ/HT0WEhY8VKLJO0OPGe3XEwbyodngx2JRd8C3mPY2hQH0HvBNmgNexb
-	 mkQjPhaM6N3fg==
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-39c7ac9b8c3so1178801fa.0
-        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 00:38:55 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqUhfV1FA3OGksGzQJ+yF6hEDLhKTJrPRGkuE8RCPcWNecjrkT2bfkf/GcOUFcyaXd+lzL7fyiAYZA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwV3tr/sd3rqOGTJpkO7tc1tiSdXeeR4t6u9SVPu3miLCVa4Ltz
-	2E65R6QeVgYRjO7sF1Kgjeb+s3OhMPLJPeN8VFO6Moi2/PlTy0dVcvPPSVxI/ezG4qNTTUX37DM
-	oE9HSGRSwW9KjUtp6ryqNp+1R/ak7LqQxVCUeu0uX/A==
-X-Received: by 2002:a2e:be8c:0:b0:39b:15b4:79ef with SMTP id
- 38308e7fff4ca-39f07c274camr11837191fa.17.1784878734609; Fri, 24 Jul 2026
- 00:38:54 -0700 (PDT)
+	s=k20260515; t=1784878788;
+	bh=VYguqbpDvSlIqI0hJfOO+KOvbUDc3j8E+Zo9hd9jUCE=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=Bfi4CdnnqxwWRMdWuLhLZGKEu3cxXU7omtnh3DEHkw6RR3Q0cv6XC/rx1VnwzLkmL
+	 DCpkIJcZn7I8Z3HCxsB+nBBzC9+d0nume0a/LPithvk06oN3byltt0Qve0ddjWrpQO
+	 hfumxNp8MgOUc/wcdCl+RAxRbg2K+dTIQCs8DKBHkm7/7uwECIv08cTtcN+P9s/m3z
+	 ccL7bLbetZDGVAHp3kyfIzdkXTMOYIDFUcekGhPKA79wsLDpDADS5qoxQmUJlySwAP
+	 3ZckyhVpNkoPlFOH2qqDrx77t+FrmGlTByXfGI3O40vDY80+GKGaBQzRg6+jS8/mTf
+	 RLB5NktInvpwg==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5aeb98460c6so132952e87.2
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 00:39:48 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RqI7C1GT4ZCvypaeLW+HMDSjDOql1ikTud4ZBd6FYFybrjE9z8OoqVCOrFDiLRw9d9I0Iej+UGiJ08=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBVToJHD2SrBi3Q7YW4EjWCc5CXMvKct+y3sAA2IXduQyQoNJ2
+	p0Yzwr+LDlguUk+RKQ+/6evD5DYONpvixzoi7fOuSShhbScNI0sUOlM5YxE+IrdUPHCAxr6epXl
+	2E8l5HPGdybHqXCoO56sSqUh/tRpwDHwXDbLiT8/SBw==
+X-Received: by 2002:ac2:5333:0:b0:5ae:bf45:e3be with SMTP id
+ 2adb3069b0e04-5b2b2e55892mr773986e87.21.1784878787207; Fri, 24 Jul 2026
+ 00:39:47 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 24 Jul 2026 00:39:45 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 24 Jul 2026 00:39:45 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260723193525.319826-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260703-eliza_evk-v1-0-7624440bd76d@oss.qualcomm.com>
- <20260703-eliza_evk-v1-3-7624440bd76d@oss.qualcomm.com> <9cc5af16-d95e-4f10-8b4a-5e29c136079c@kernel.org>
-In-Reply-To: <9cc5af16-d95e-4f10-8b4a-5e29c136079c@kernel.org>
-From: Bartosz Golaszewski <brgl@kernel.org>
-Date: Fri, 24 Jul 2026 09:38:43 +0200
-X-Gmail-Original-Message-ID: <CAMRc=MdoFB4H6u2hXJ81Wn+aOauS67yVS3TSUizTGD4DKvyuPA@mail.gmail.com>
-X-Gm-Features: AUfX_mxBqgF5Le9eKDik_3cSBDJSKKeK_0eibWW07zyi-I4VA4_6o-qnnzr1Yx8
-Message-ID: <CAMRc=MdoFB4H6u2hXJ81Wn+aOauS67yVS3TSUizTGD4DKvyuPA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] power: sequencing: pwrseq-pcie-m2: Add QCC2072 BT PCI
- device ID
-To: Krzysztof Kozlowski <krzk@kernel.org>
+References: <20260723193525.319826-2-krzysztof.kozlowski@oss.qualcomm.com>
+Date: Fri, 24 Jul 2026 00:39:45 -0700
+X-Gmail-Original-Message-ID: <CAMRc=Mc=4BkXsv2efKipwTq_qXx8m0tH2RPTF6vtZjpE_maaCg@mail.gmail.com>
+X-Gm-Features: AUfX_mwOEp66O8ug6OfHZfMwMZy1Fnr4FAEYBQ3jGvuHnhz0hqwS76VvgvGZhQo
+Message-ID: <CAMRc=Mc=4BkXsv2efKipwTq_qXx8m0tH2RPTF6vtZjpE_maaCg@mail.gmail.com>
+Subject: Re: [PATCH] power: sequencing: pwrseq-pcie-m2: Drop undocumented
+ QCC2072 compatible
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-pm@vger.kernel.org
+	Manivannan Sadhasivam <mani@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 23, 2026 at 9:22=E2=80=AFPM Krzysztof Kozlowski <krzk@kernel.or=
-g> wrote:
+On Thu, 23 Jul 2026 21:35:26 +0200, Krzysztof Kozlowski
+<krzysztof.kozlowski@oss.qualcomm.com> said:
+> There is no such compatible documented (thus allowed) as
+> qcom,qcc2072-bt, thus it should not be added even in driver match data,
+> which later is used for compatible matching.
 >
-> On 03/07/2026 14:38, Krishna Chaitanya Chundru wrote:
-> > Add the Qualcomm QCC2072 Bluetooth device (PCI ID 0x1112) to the
-> > pwrseq_m2_pci_ids table so the M.2 power sequencer can create the
-> > serdev node for its BT interface on enumeration.
-> >
-> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.=
-com>
-> > ---
-> >  drivers/power/sequencing/pwrseq-pcie-m2.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/=
-sequencing/pwrseq-pcie-m2.c
-> > index b5ed80d03953..4aac52062fae 100644
-> > --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> > +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> > @@ -190,6 +190,8 @@ static const struct pci_device_id pwrseq_m2_pci_ids=
-[] =3D {
-> >         .driver_data =3D (kernel_ulong_t)"qcom,wcn6855-bt" },
-> >       { PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
-> >         .driver_data =3D (kernel_ulong_t)"qcom,wcn7850-bt" },
-> > +     { PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1112),
-> > +       .driver_data =3D (kernel_ulong_t)"qcom,qcc2072-bt" },
+> Revert commit 162ea02941a9 ("power: sequencing: pwrseq-pcie-m2: Add
+> QCC2072 BT PCI device ID").
 >
+> Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> ---
+>  drivers/power/sequencing/pwrseq-pcie-m2.c | 2 --
+>  1 file changed, 2 deletions(-)
 >
-> Bartosz,
-> Please push back on this. This is undocumented (indirect) compatible.
-> This cannot get accepted to kernel in such form.
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> index 83fe6a1396bc..168e915f2c89 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -195,8 +195,6 @@ static const struct pci_device_id pwrseq_m2_pci_ids[] = {
+>  	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
+>  	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1112),
+> -	  .driver_data = (kernel_ulong_t)"qcom,qcc2072-bt" },
+>  	{ } /* Sentinel */
+>  };
+>
+> --
+> 2.53.0
+>
 >
 
-Hi!
-
-Sorry and thanks for bringing this up to my attention. I was not aware
-these PCI entries count as DT ABI. I'll queue your revert and will
-keep it in mind next time.
+This is the top commit in my queue so I just dropped it entirely, otherwise it
+would be an addition followed by a revert which could raise Linus' eyebrow.
 
 Bart
