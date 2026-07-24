@@ -1,182 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f79.google.com (mail-ot1-f79.google.com [209.85.210.79])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E93473C80;
-	Fri, 24 Jul 2026 22:30:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14F51470446
+	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 22:31:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.79
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784932239; cv=none; b=Dd6Lt5K/sUukAzrbFbsoTvkPrcZshwwKWgEGoqITeDzR00NYv89IeEdlTBCim9n1yPSTQopTc22hfdkXcq0YsMRKIxZYZoU/iQYFWWMFTJnvROtvgM8WK55Wkt3wA0zSekrbzJU6HfZgXmkT3Ktr7Wu6JYFdksARx/2YQrMT0fM=
+	t=1784932298; cv=none; b=e7g2heuDMwEn8jIIggcEXJ/qQenEToxOKeuHls5Rt9yR5T00KZjT3LgpOCOwisTQzF5xUHrnhM5+nZ4tPeg3roCtOvZNDKa0oogKyAQQtGFY+tvaVhcnCrWARCxpWRj6No6hgRjWyI6gLmWHteVcmQLW4LKBPdHc5XvxfkyXx18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784932239; c=relaxed/simple;
-	bh=Gmq7d7Jg9C0o7Jvo2rDo8fBZ5JsOa9IPQMlU3RrGn94=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aHVY+p7FLIJgOk5W2+/OyFzkJ5k8706AHohV9lw/vJpHfME4e8zYjP07EX6my8KZfACUAeZBwtFD/7LamOsE6IuVsgoDG9VW3Qou5CGpajuJYnkFv92h8fr7TcKimd2CkM9GALU1PW5kvnfzeJCmepVLvxj6aeU3L1aEckHGZNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg0rN4VN; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg0rN4VN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B40B1F00A3A;
-	Fri, 24 Jul 2026 22:30:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784932236;
-	bh=GS14DZQhW66q/6Q+X41QrQ1/gqGz9PBB64fXYqWc4+A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Kg0rN4VNZ6bV24H8SvNLXOhE+5jjor+DqTtJly6ByqD6Q0sM0vxfACb688tRlkE1q
-	 wjyKLglL9XwupGMR66ysdyTevHPvfSH+frGOISUTH4KavpyI0Lh/jPD+u7McPOXNmr
-	 cvRkSvmFUY2KGqROQSWSPngkxP/UbcDEzyMHHCWxHuDvS+ofDdvv6uC3OFDhFoxSsi
-	 mjfisqiO3UnipsNxl4hBMB2oOHn4243tNZpYLTGywhA86qUHF6rD9Jm97to+SU1ZwD
-	 zP7U+v/AqkntG2svYeCMp6iaxn+Tz4/MeoQWDbi+YyqcX/0VzDERrTXU6cl4ybbR03
-	 SnHpJDvqQGwGA==
-Date: Fri, 24 Jul 2026 17:30:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gary Guo <gary@garyguo.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	GOTO Masanori <gotom@debian.or.jp>,
-	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-	Jens Taprogge <jens.taprogge@taprogge.org>,
-	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
-Subject: Re: [PATCH v4 9/9] PCI: Fix UAF when probe runs concurrent to dyn ID
- removal
-Message-ID: <20260724223035.GA1068309@bhelgaas>
+	s=arc-20240116; t=1784932298; c=relaxed/simple;
+	bh=ZYq9dRUXPU97OYV9bQZfV/ys9GqUxznB9+mTBZ4KNZE=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=UHLJTD/Fx48PWeVwHTljpBcxjltDZRMFONOl8fZSOF37Ntn0jYlPoqnwV5LVdeMTisL9sgh7yuGI2ac/WG/qWlWDEW6h2doRojsrA9OBWwbcGL3PvMSnr1/bc61bqlsOlvp0Drbz/niQKqqFQ/gjfz/QljV1xuQcFxLCo+Pn28Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-ot1-f79.google.com with SMTP id 46e09a7af769-7e9fdc2870fso433955a34.2
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 15:31:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784932296; x=1785537096;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xOe/WW6uluWiRSXni0Zhqb6IuP/aDWEl8FcTelSXhf0=;
+        b=PjNHdxOTTqKNOcj07tfrdhSlzpNG7rEIHuc7eA4F0Qc9XRYSmMqQCdv9m4l8TkFteu
+         Fk3AoFK8RSeEi1c3lJ7/mpBYa59PC8dRbKsAkyxPDeuWo8hwbQWtK6AsXRpdG0CgMlfP
+         gxEDCLyPtD9iIg7QdDc8aoqD9GtOzqRpt7EoeTMc4DwBnC1DBUj4df7xUii4/3WwDhGm
+         ll22rWWU3v1HP8Qo43R8MqodcMQwaUzFm0O0SQ1NsEJSUjF+BAX18a/nbLQWZpOUaJXe
+         ONI7LkmXafJjjndIP/ZURas0z4n9f0T5B/k6J05YV0v4eJ/B74hzdB+EKr+LkrNzsJ7f
+         zmnQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rrg6GRrs2mCFHA6YCshr1y5kRc4gMusdqEJMD2+cMuBrwqb1vdU8JGHqW6lwk207aRXvio0PkEN1aY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcrmC64f5n68mbJth63S/aAB/eVXCqQ10UiT3cNMPcwipe0Efc
+	vkU+b/azkUCo//NiNYO71tbwT4Zm/x2GoM45hbBbN49sD/yhXrX0csi2rbYQCGN/aIz88R3RSPe
+	88ddmq/nBvythr6xK+2I0Vnlr0nsX/Nl2CubO9pf3o8kNkO1njjuBRTj/2Kc=
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723-pci_id_fix-v4-9-3580726844e1@garyguo.net>
+X-Received: by 2002:a05:6808:f0c:b0:49a:8f0d:cdbb with SMTP id
+ 5614622812f47-4ab6a223eebmr377982b6e.31.1784932295736; Fri, 24 Jul 2026
+ 15:31:35 -0700 (PDT)
+Date: Fri, 24 Jul 2026 15:31:35 -0700
+In-Reply-To: <697018fc.050a0220.706b.0003.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a63e7c7.70955b6c.323240.000b.GAE@google.com>
+Subject: Re: [syzbot] [pci?] WARNING in pci_scan_single_device (2)
+From: syzbot <syzbot+87bb32e345aa80c0554b@syzkaller.appspotmail.com>
+To: bhelgaas@google.com, kapoorarnav43@gmail.com, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jul 23, 2026 at 11:00:48PM +0100, Gary Guo wrote:
-> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-> as remove_id_store() can free the node. Thus, make a copy in
-> pci_match_device(). Also, clarify that the id parameter is only valid
-> during probe.
-> 
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+syzbot has found a reproducer for the following issue on:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+HEAD commit:    48a5a7ab8d6a Merge tag 'v7.2-rc4-smb3-client-fixes' of git..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11c02499580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=145fa60d73086782
+dashboard link: https://syzkaller.appspot.com/bug?extid=87bb32e345aa80c0554b
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1677d746580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=158932ea580000
 
-> ---
->  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
->  include/linux/pci.h      |  1 +
->  2 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index ab3bb756ce89..e16aa59dd7ac 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -180,6 +180,7 @@ static const struct pci_device_id pci_device_id_any = {
->   * pci_match_device - See if a device matches a driver's list of IDs
->   * @drv: the PCI driver to match against
->   * @dev: the PCI device structure to match against
-> + * @id_copy: place to store copy of pci_device_id for dynamic ID
->   *
->   * Used by a driver to check whether a PCI device is in its list of
->   * supported devices or in the dynids list, which may have been augmented
-> @@ -187,9 +188,9 @@ static const struct pci_device_id pci_device_id_any = {
->   * structure or %NULL if there is no match.
->   */
->  static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
-> -						    struct pci_dev *dev)
-> +						    struct pci_dev *dev,
-> +						    struct pci_device_id *id_copy)
->  {
-> -	struct pci_dynid *dynid;
->  	const struct pci_device_id *found_id = NULL;
->  	struct pci_device_id dev_id;
->  	int ret;
-> @@ -201,17 +202,16 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
->  
->  	dev_id = pci_id_from_device(dev);
->  	/* Look at the dynamic ids first, before the static ones */
-> -	spin_lock(&drv->dynids.lock);
-> -	list_for_each_entry(dynid, &drv->dynids.list, node) {
-> -		if (pci_match_one_id(&dynid->id, &dev_id)) {
-> -			found_id = &dynid->id;
-> -			break;
-> +	scoped_guard(spinlock, &drv->dynids.lock) {
-> +		struct pci_dynid *dynid;
-> +
-> +		list_for_each_entry(dynid, &drv->dynids.list, node) {
-> +			if (pci_match_one_id(&dynid->id, &dev_id)) {
-> +				*id_copy = dynid->id;
-> +				return id_copy;
-> +			}
->  		}
->  	}
-> -	spin_unlock(&drv->dynids.lock);
-> -
-> -	if (found_id)
-> -		return found_id;
->  
->  	found_id = do_pci_match_id(drv->id_table, &dev_id, ret > 0);
->  	if (found_id)
-> @@ -467,12 +467,13 @@ void pci_probe_flush_workqueue(void)
->  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
->  {
->  	const struct pci_device_id *id;
-> +	struct pci_device_id id_copy;
->  	int error = 0;
->  
->  	if (drv->probe) {
->  		error = -ENODEV;
->  
-> -		id = pci_match_device(drv, pci_dev);
-> +		id = pci_match_device(drv, pci_dev, &id_copy);
->  		if (id)
->  			error = pci_call_probe(drv, pci_dev, id);
->  	}
-> @@ -1560,12 +1561,13 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	struct pci_driver *pci_drv;
->  	const struct pci_device_id *found_id;
-> +	struct pci_device_id id_copy;
->  
->  	if (pci_dev_binding_disallowed(pci_dev))
->  		return 0;
->  
->  	pci_drv = (struct pci_driver *)to_pci_driver(drv);
-> -	found_id = pci_match_device(pci_drv, pci_dev);
-> +	found_id = pci_match_device(pci_drv, pci_dev, &id_copy);
->  	if (found_id)
->  		return 1;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..92c17c116de6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -979,6 +979,7 @@ struct module;
->   *		function returns zero when the driver chooses to
->   *		take "ownership" of the device or an error code
->   *		(negative number) otherwise.
-> + *		The pci_device_id parameter is only valid during probe.
->   *		The probe function always gets called from process
->   *		context, so it can sleep.
->   * @remove:	The remove() function gets called whenever a device
-> 
-> -- 
-> 2.54.0
-> 
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-48a5a7ab.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/8ed725bee82f/vmlinux-48a5a7ab.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/110c09c210d5/bzImage-48a5a7ab.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+87bb32e345aa80c0554b@syzkaller.appspotmail.com
+
+ </TASK>
+pci (null): [8086:2934] type 00 class 0x0c0300 conventional PCI endpoint
+pci (null): BAR 4 [io  0xc0e0-0xc0ff]
+------------[ cut here ]------------
+ret < 0
+WARNING: drivers/pci/probe.c:2768 at pci_device_add+0x133b/0x1810 drivers/pci/probe.c:2768, CPU#1: syz.0.17/5936
+Modules linked in:
+CPU: 1 UID: 0 PID: 5936 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:pci_device_add+0x133b/0x1810 drivers/pci/probe.c:2768
+Code: e5 04 83 e0 8f 09 e8 88 83 c8 00 00 00 e9 28 f4 ff ff e8 18 a3 ae fc 90 0f 0b 90 90 0f 0b 90 e9 0e f7 ff ff e8 06 a3 ae fc 90 <0f> 0b 90 e9 7e fa ff ff e8 f8 a2 ae fc 90 0f 0b 90 e9 11 fa ff ff
+RSP: 0018:ffffc900037a7928 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 00000000ffffffea RCX: ffffffff855bb419
+RDX: ffff888025a72540 RSI: ffffffff855bb99a RDI: ffff888025a72540
+RBP: ffff88801c2e9000 R08: 0000000000000005 R09: 0000000000000000
+R10: 00000000ffffffea R11: 0000000000000000 R12: ffff888022e6f028
+R13: ffff888022e6f000 R14: 0000000000000001 R15: ffff888022e92000
+FS:  0000555591741500(0000) GS:ffff8880d5ede000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055af1cf515a8 CR3: 000000003dca4000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ pci_scan_single_device drivers/pci/probe.c:2792 [inline]
+ pci_scan_single_device+0x1d0/0x240 drivers/pci/probe.c:2778
+ pci_scan_slot+0x1c9/0x7c0 drivers/pci/probe.c:2875
+ pci_scan_child_bus_extend+0x6b/0x7b0 drivers/pci/probe.c:3094
+ pci_scan_child_bus drivers/pci/probe.c:3207 [inline]
+ pci_rescan_bus+0x18/0x40 drivers/pci/probe.c:3498
+ rescan_store+0xfb/0x130 drivers/pci/pci-sysfs.c:473
+ bus_attr_store+0x74/0xb0 drivers/base/bus.c:172
+ sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+ kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x6ac/0x1050 fs/read_write.c:687
+ ksys_write+0x12a/0x250 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fe44799de99
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffce5639058 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007fe447c25fa0 RCX: 00007fe44799de99
+RDX: 0000000000000001 RSI: 0000200000000800 RDI: 0000000000000004
+RBP: 00007ffce56390c0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 00007fe447c25fac R14: 00007fe447c25fa0 R15: 00007fe447c25fa0
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
