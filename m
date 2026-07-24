@@ -1,161 +1,265 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3C434392C32;
-	Fri, 24 Jul 2026 22:08:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 091A246EC68;
+	Fri, 24 Jul 2026 22:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784930909; cv=none; b=Leq1ojCe5BgKRay0Lj3pXzIkwVAkx3/FrMopMQRIpT9cyJ3pRJSDIRF7TumKzHGrdt0MyrG0x4GbVHS7bpSJDIjpxmG3tYIJVXrOAl5DqOSqpK/xkJKrqd+eIzdqb04YcbHsngTGce26qWUPJkfya20PZIVy96lIl9PAFzbs0wU=
+	t=1784932185; cv=none; b=KtXVyxdGIxMA3PaS6i8nOS56+A1Rzn1huCrI4JET7oOkDDP4Qr+PRYy82ptht1rk+h/8ZcOEdoUC9PgWCKAvVORtcHfDKaCV+1PskWBVCOIdOSLEo7lDDoYGkpnHkc4qJiAI+1UHx1hj0Ux+mfeYE3BHLi/xecwvgcSJ4j/ZEwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784930909; c=relaxed/simple;
-	bh=l0U3dZ28LyDdd2d58YSyrNZlaRmSuLvYsNCrSGDqRY0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oWA52CDMavydFAWEIyYg2EWc9FpM9AUKWhWjrc7u8xc75SQEEyL21jCtO8XrsM5MwDfQnHIrkScQb1dRHSYwWDjsjE9UZRXb7GQJFc2a+nQYTB0S3g5AqH65UprAuujXLGp8n/zB6N16nvrxL+sxBM38tRTqPHCdL5Ua7JC4g9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=g9HnKJXw; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1784932185; c=relaxed/simple;
+	bh=tXwA/nFCbnLTZ8+Fc3YYg5pGiYN+m+zWRBst8KEzSVw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=B03L83sezKZ7fQL0JZDn0KqNndqL7MURgU+cktejY96x3EVPN35G0kPkjfqnUa+0vCkc3dHf83yYCAKJksD1PNw5HY5bO6pZh3jAIrG1MrixL3XkbTn9GdZUbC+x7wlL5M+cPilzLQIpmDa+hYYBrJP5zogY7dtExHv5NwicW34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MsxDWnfO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="g9HnKJXw"
-Received: from localhost (unknown [20.191.74.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 41AB220B7167;
-	Fri, 24 Jul 2026 15:08:11 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 41AB220B7167
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1784930892;
-	bh=PneHZPZl/NkHqkk5l4fHfLS0UqzueCtDxEOMC/7Vibs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=g9HnKJXwSrSFtOmYBvW27/+B+EVq1VupYBhB239eDqO48ckvjYjgKKMnuXOHmeOQ7
-	 nxuezF8GF4k+Svha8uP8GFtUa64ikLRIYIzvEneuQvObtP4OouSsKKLFEcCwFvCJsg
-	 uLxl/8bNNZmq+oq55HzeaLhVAmtReB6YpyTUl/hw=
-Date: Fri, 24 Jul 2026 15:08:24 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
- wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
- namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
- anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
- haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
- tglx@kernel.org, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, x86@kernel.org, joro@8bytes.org,
- will@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, arnd@arndb.de, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH V4 1/9] mshv: Provide a way to get partition ID if
- running in a VMM process
-Message-ID: <20260724150824.000075a7@linux.microsoft.com>
-In-Reply-To: <95a1bed4-dd5a-654b-9e7a-7d5a453e3966@linux.microsoft.com>
-References: <20260718021949.926306-1-mrathor@linux.microsoft.com>
-	<20260718021949.926306-2-mrathor@linux.microsoft.com>
-	<20260723152132.000033d0@linux.microsoft.com>
-	<95a1bed4-dd5a-654b-9e7a-7d5a453e3966@linux.microsoft.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MsxDWnfO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FB9F1F00A3D;
+	Fri, 24 Jul 2026 22:29:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784932180;
+	bh=6fL3VBsWrx8P26caK1wKalSHupqVUBAmzw8o73q9YrQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=MsxDWnfOFwk6CHZFptbTiXY/ZFlQsCqb6Zd2SpiyhXuCSyQRELxu3DvwMJGHHZjfT
+	 KYANa0dFConrSiJ5hG0dO8xKi8gXYzZpLPOICk+H4ehxw3lQxsijray7LOKB8U51zN
+	 T5g+VTRJiVTCDyG0cnygubYSYCMmXrCMDXmzetUogkRheS8AakB5Mx4J0r/0PQVVgT
+	 pLbPyicwL6jmLgQ3HadCTXPAL1QpjHTvA54ZFPjcWrODDCK1oenqgQYG8cLnLr5L2M
+	 U2iQtqwefKSPYtFNr5ilxeyhPTsezoaA9jjC9+fVbfXZcGydzc5hvEaDo25mG/2mk2
+	 cJPofqnpi6X9w==
+Date: Fri, 24 Jul 2026 17:29:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v4 7/9] PCI: Make pci_match_one_device() match on ID
+ instead of device
+Message-ID: <20260724222939.GA1065077@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260723-pci_id_fix-v4-7-3580726844e1@garyguo.net>
 
-Hi Mukesh,
+On Thu, Jul 23, 2026 at 11:00:46PM +0100, Gary Guo wrote:
+> PCI dynamic ID needs to match IDs against a new ID to see if it already
+> exists. Existing APIs can only match IDs against devices, causing the
+> dynamic ID insertion code to create a temporary device only for matching
+> purpose. Rename pci_match_one_device() to pci_match_one_id() so it can be
+> used for this purpose instead; add a pci_id_from_device() helper to make it
+> easy to convert users.
 
-On Fri, 24 Jul 2026 12:14:08 -0700
-Mukesh R <mrathor@linux.microsoft.com> wrote:
+s/causing the ... code to create/so the ... code creates/
+s/purpose/purposes/
 
-> On 7/23/26 15:21, Jacob Pan wrote:
-> > Hi Mukesh,  
+> Similarly, convert pci_match_id() to do_pci_match_id(). But keep the
+> existing API because there are many users.
 > 
-> Hey Jacob, pl see inline..
-> 
-> > On Fri, 17 Jul 2026 19:19:41 -0700
-> > Mukesh R <mrathor@linux.microsoft.com> wrote:  
-> 
->    ... snip...
-> 
-> >>   static int
-> >>   add_partition(struct mshv_partition *partition)
-> >>   {
-> >> @@ -2073,6 +2094,7 @@ mshv_ioctl_create_partition(void __user
-> >> *user_arg, struct device *module_dev) goto cleanup_irq_srcu;
-> >>   
-> >>   	partition->pt_id = pt_id;
-> >> +	partition->pt_vmm_tgid = current->tgid;  
-> > I wonder how robust this mechanism is to identify target partition
-> > via tgid.
-> > 1) what prevents a VMM process create more than one partition? in
-> > that case each partition would have the same tgid.  
-> 
-> Currently, none of the VMMs we support do that, and doesn't look like
-> there is much of a demand for it.
-> 
-My point is that from kernel UAPI pov, we cannot count on user behavior
-nor current VMM's implementation.
+> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-> > 2) IIUC, the lifetime of the partition is tied to FD, which is
-> > different than the lifetime of a PID. The partition FD can be
-> > inherited or passed to another process. The VMM tg can exit while
-> > the FDs can be alive. Then the tgid can be reused by another
-> > unrelated process, right?  
-> 
-> yeah, AI keeps telling me that, but not super accurate imo.
-> 
-> we are using tgid and not pid. tgid is process group id, and that will
-> stay around as long as there is at least one process in it. if we used
-> pid, then that would be the case.
-> 
-I understand it is tgid but don't think tgid makes difference in terms
-of FD lifetime.
-e.g. process A creates a partition, then passes the partition fd to
-process B over a Unix socket. Process A can then exit while process B
-still holds a reference to the partition file. At that point the tgid
-that was stored in pt_vmm_tgid can be reused by an unrelated process C,
-while the partition's file object remains alive.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> > Would it be more robust to based this on the partition FD instead of
-> > tgid?  
->   
-> it might be, but problem with that is we need pt-id in other cases
-> where that is not available: for example in
-> hv_iommu_domain_alloc_paging and in irq remapping paths for direct
-> attached devices. if we can sort that out somehow, then we can do
-> that. but i suspect, it would take some time to figure that out, so i
-> hope we can make that a future enhancement.
-> 
-> For now, i've been thinking of just putting a check and returning
-> ENOTSUPP if a vmm tries to create another partition.
-> 
-IMHO, that only solves the uniqueness issue of partition ID but not the
-lifetime issue.
-maybe EEXIST instead of ENOTSUPP?
+What's the merge strategy?  If these all need to be merged together,
+feel free to include the PCI patches whereever you merge the series.
 
-> Thanks,
-> -Mukesh
+> ---
+>  drivers/pci/pci-driver.c | 38 ++++++++++++++++++++++++++++----------
+>  drivers/pci/pci.h        | 43 +++++++++++++++++++++++++++++++------------
+>  drivers/pci/search.c     |  8 +++++---
+>  3 files changed, 64 insertions(+), 25 deletions(-)
 > 
-> >>   	ret = add_partition(partition);
-> >>   	if (ret)
-> >> diff --git a/include/asm-generic/mshyperv.h
-> >> b/include/asm-generic/mshyperv.h index bf601d67cecb..e8cbc4e3f7ad
-> >> 100644 --- a/include/asm-generic/mshyperv.h
-> >> +++ b/include/asm-generic/mshyperv.h
-> >> @@ -350,6 +350,7 @@ int hv_call_add_logical_proc(int node, u32
-> >> lp_index, u32 acpi_id); int
-> >> hv_call_notify_all_processors_started(void); bool hv_lp_exists(u32
-> >> lp_index); int hv_call_create_vp(int node, u64 partition_id, u32
-> >> vp_index, u32 flags); +u64 mshv_current_partid(void);
-> >>   
-> >>   #else /* CONFIG_MSHV_ROOT */
-> >>   static inline bool hv_root_partition(void) { return false; }
-> >> @@ -380,6 +381,10 @@ static inline int hv_call_create_vp(int node,
-> >> u64 partition_id, u32 vp_index, u3 {
-> >>   	return -EOPNOTSUPP;
-> >>   }
-> >> +static inline u64 mshv_current_partid(void)
-> >> +{
-> >> +	return HV_PARTITION_ID_INVALID;
-> >> +}
-> >>   #endif /* CONFIG_MSHV_ROOT */
-> >>   
-> >>   static inline int hv_deposit_memory(u64 partition_id, u64
-> >> status)  
-
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f36778e62ac1..c9424edb4548 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -90,6 +90,27 @@ static void pci_free_dynids(struct pci_driver *drv)
+>  	spin_unlock(&drv->dynids.lock);
+>  }
+>  
+> +/**
+> + * do_pci_match_id - See if a PCI ID matches a given pci_id table
+> + * @ids: array of PCI device ID structures to search in
+> + * @dev_id: the actual PCI device ID structure to match against.
+> + *
+> + * Return: the matching pci_device_id structure or %NULL if there is no match.
+> + */
+> +static const struct pci_device_id *
+> +do_pci_match_id(const struct pci_device_id *ids,
+> +		const struct pci_device_id *dev_id)
+> +{
+> +	if (ids) {
+> +		while (ids->vendor || ids->subvendor || ids->class_mask) {
+> +			if (pci_match_one_id(ids, dev_id))
+> +				return ids;
+> +			ids++;
+> +		}
+> +	}
+> +	return NULL;
+> +}
+> +
+>  /**
+>   * pci_match_id - See if a PCI device matches a given pci_id table
+>   * @ids: array of PCI device ID structures to search in
+> @@ -105,14 +126,9 @@ static void pci_free_dynids(struct pci_driver *drv)
+>  const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>  					 struct pci_dev *dev)
+>  {
+> -	if (ids) {
+> -		while (ids->vendor || ids->subvendor || ids->class_mask) {
+> -			if (pci_match_one_device(ids, dev))
+> -				return ids;
+> -			ids++;
+> -		}
+> -	}
+> -	return NULL;
+> +	struct pci_device_id dev_id = pci_id_from_device(dev);
+> +
+> +	return do_pci_match_id(ids, &dev_id);
+>  }
+>  EXPORT_SYMBOL(pci_match_id);
+>  
+> @@ -138,6 +154,7 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>  {
+>  	struct pci_dynid *dynid;
+>  	const struct pci_device_id *found_id = NULL, *ids;
+> +	struct pci_device_id dev_id;
+>  	int ret;
+>  
+>  	/* When driver_override is set, only bind to the matching driver */
+> @@ -145,10 +162,11 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>  	if (ret == 0)
+>  		return NULL;
+>  
+> +	dev_id = pci_id_from_device(dev);
+>  	/* Look at the dynamic ids first, before the static ones */
+>  	spin_lock(&drv->dynids.lock);
+>  	list_for_each_entry(dynid, &drv->dynids.list, node) {
+> -		if (pci_match_one_device(&dynid->id, dev)) {
+> +		if (pci_match_one_id(&dynid->id, &dev_id)) {
+>  			found_id = &dynid->id;
+>  			break;
+>  		}
+> @@ -158,7 +176,7 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>  	if (found_id)
+>  		return found_id;
+>  
+> -	for (ids = drv->id_table; (found_id = pci_match_id(ids, dev));
+> +	for (ids = drv->id_table; (found_id = do_pci_match_id(ids, &dev_id));
+>  	     ids = found_id + 1) {
+>  		/*
+>  		 * The match table is split based on driver_override.
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 93731242d314..71cda71f3bc9 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -443,21 +443,40 @@ static inline int pci_setup_cardbus(char *str) { return -ENOENT; }
+>  #endif /* CONFIG_CARDBUS */
+>  
+>  /**
+> - * pci_match_one_device - Tell if a PCI device structure has a matching
+> - *			  PCI device id structure
+> - * @id: single PCI device id structure to match
+> - * @dev: the PCI device structure to match against
+> + * pci_id_from_device - Obtain a pci_device_id from a PCI device
+> + * @dev: the PCI device
+>   *
+> - * Returns the matching pci_device_id structure or %NULL if there is no match.
+> + * Return: a pci_device_id filled.
+> + */
+> +static inline struct pci_device_id pci_id_from_device(const struct pci_dev *dev)
+> +{
+> +	return (struct pci_device_id) {
+> +		.vendor = dev->vendor,
+> +		.device = dev->device,
+> +		.subvendor = dev->subsystem_vendor,
+> +		.subdevice = dev->subsystem_device,
+> +		.class = dev->class,
+> +	};
+> +}
+> +
+> +/**
+> + * pci_match_one_id - Tell if a PCI device ID matches a needle PCI device ID
+> + * @id: single PCI device id structure to match against (needle)
+> + * @dev_id: the actual ID from the PCI device
+> + *
+> + * ID can be retrieved from device using pci_id_from_device().
+> + *
+> + * Return: the matching pci_device_id structure or %NULL if there is no match.
+>   */
+>  static inline const struct pci_device_id *
+> -pci_match_one_device(const struct pci_device_id *id, const struct pci_dev *dev)
+> -{
+> -	if ((id->vendor == PCI_ANY_ID || id->vendor == dev->vendor) &&
+> -	    (id->device == PCI_ANY_ID || id->device == dev->device) &&
+> -	    (id->subvendor == PCI_ANY_ID || id->subvendor == dev->subsystem_vendor) &&
+> -	    (id->subdevice == PCI_ANY_ID || id->subdevice == dev->subsystem_device) &&
+> -	    !((id->class ^ dev->class) & id->class_mask))
+> +pci_match_one_id(const struct pci_device_id *id,
+> +		 const struct pci_device_id *dev_id)
+> +{
+> +	if ((id->vendor == PCI_ANY_ID || id->vendor == dev_id->vendor) &&
+> +	    (id->device == PCI_ANY_ID || id->device == dev_id->device) &&
+> +	    (id->subvendor == PCI_ANY_ID || id->subvendor == dev_id->subvendor) &&
+> +	    (id->subdevice == PCI_ANY_ID || id->subdevice == dev_id->subdevice) &&
+> +	    !((id->class ^ dev_id->class) & id->class_mask))
+>  		return id;
+>  	return NULL;
+>  }
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index e3d3177fce54..34f8de551d58 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -245,8 +245,10 @@ static int match_pci_dev_by_id(struct device *dev, const void *data)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	const struct pci_device_id *id = data;
+> +	struct pci_device_id dev_id;
+>  
+> -	if (pci_match_one_device(id, pdev))
+> +	dev_id = pci_id_from_device(pdev);
+> +	if (pci_match_one_id(id, &dev_id))
+>  		return 1;
+>  	return 0;
+>  }
+> @@ -416,9 +418,9 @@ EXPORT_SYMBOL(pci_get_class);
+>   * @class: search for a PCI device with this base class code
+>   * @from: Previous PCI device found in search, or %NULL for new search.
+>   *
+> - * Iterates through the list of known PCI devices. If a PCI device is found
+> + * Iterate through the list of known PCI devices. If a PCI device is found
+>   * with a matching base class code, the reference count to the device is
+> - * incremented. See pci_match_one_device() to figure out how does this works.
+> + * incremented. See pci_match_one_id() to figure out how this works.
+>   * A new search is initiated by passing %NULL as the @from argument.
+>   * Otherwise if @from is not %NULL, searches continue from next device on the
+>   * global list. The reference count for @from is always decremented if it is
+> 
+> -- 
+> 2.54.0
+> 
