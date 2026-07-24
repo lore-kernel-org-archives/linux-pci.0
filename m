@@ -1,172 +1,109 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE255292B4B
-	for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 21:54:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784930081; cv=pass; b=RmKLK5kRd7/Lo9r2nt2ZwO8L0MCBvdBL/kd4G1GYalqiz3PdDhMV2CwkNG7n0LUbVNNMATj0CxtbhdFWJMHokEjFdBl7iM9PLJIQrCMiIe8c9qerdG3HMQAraO1YuKi90PvjMLvqlaYG0vZDC8LhfD+wc28PFQDxOPHtSA8jAa0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784930081; c=relaxed/simple;
-	bh=hxJm0/mYjdYZeSe/3mr1gzaZCNknObJa6noZfD0Qc50=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=t4iPVOue1O3OyOjn4N/D0LW+jkeTR63KIz8eezkgWMtsPQ/MMLJETslOI+c0id7THIavtibfir4W9Z2utyUOFugPOUl69byjSYlIQgDqcTdBsPWSkw6PDMVKK80YI0hEOshd4IVrPuX5riE9SxuCRMxJy7KZ6Ws2ReaHr2tXV5M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ocg9pKWX; arc=pass smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43684368D71;
+	Fri, 24 Jul 2026 22:02:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784930524; cv=none; b=Jq4WEc/dmce+t/0OUeWqDri681141MIV6gTUPqO4tboz+Z+E3W8lY0QA4J2FPi7o2bVU+9c0Y0/hme6Efb26mdUIyq5YbQWj7f49p+I0XghnhryUjWm2ID1LwoPrTGqiYjhzuPUKCGIXYCwmat0O1Bl4uyRtdcMJZJaAk9MlTFU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784930524; c=relaxed/simple;
+	bh=ywah8ER0vLY+C1/cK6YU1x2kevhPGJj1cJWLrEnreFI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eM4GMCOkF63vYPmiHDiAYOvqJM8dJcZA8L6A25TuthWVDZHY499+oJuOGwuBHfbHBY2on5PKQNzoAdH84Br7l7DSP0C7I0jux3YMLrIPkPwwGKVV44MoQDNCny/dSzgjekrNMK+R1JzRc/ZR65/Wk7KUzogmWxLz478lK1sWI9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BuwhY2zI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ocg9pKWX"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38e3617ba36so915558a91.3
-        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2026 14:54:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784930079; cv=none;
-        d=google.com; s=arc-20260327;
-        b=VGPoZgkwT8XHvq3OGZssuUraS1FjHCWhLfq6hV22qktvVrG+Bq3VFrDk3v6EIKsKwI
-         w8CfSZ5uVqnTN99DiPKXJ0g8pveEpuznrmBonNbGRDPtcksKiDIHy138nXlNUdWY4Jz+
-         hGffRrOaOo/rWtX/cBEbY2xR9p5ZNh3BPd0rpkKNn4SviZlZ/4065U+ChrMYbX0GkiXj
-         aG8p+oZKzadCRVCCNB7JiW3NNNAwXzSWO5oBxOTJuHkTfcBA6UZwsIvP1ef50BPoyG8k
-         Q8d+GAg7dD2QvFRyRmtdmwrnHSxj3Rkwa7PsoEuY8G/PIGqAAXze+eDyPPw4FqVDS3qg
-         mTVw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=/VuhMIt3y5/j6Le1Z4BNgwX3UBNQKNT5cbNU5pubERw=;
-        fh=vevrsBXZIT9M7By9o1WA4QuY+/oC0JL3sL9/XWl/ES0=;
-        b=UJw10UE9WK0eSY4AW5ONHyCAUA4x/E2KmafhHndXwxzqOYURah4a3Ouu6u/IlQmjlb
-         Zqa252nQ8ZKkocknIdmgPSoqgCJj1DvIcHCS3RRKLv6RMZjPrrGfMNptwGjMQnCGx64s
-         K3KjA4bVghWa5W+DlO/KSiaXPxtzifywqzC4jRagCvNAYnWmm1q5QIwls71czctNuDmc
-         AS3PC7W8DG1hw30IW4DiUcmJT75pG9s9doWFPAQV9olNeMCIutgT4ACcMr3IGxSM5plC
-         45miRvj9TJGRL6zplZzTissdpv/ZmxejCw6A/FnAZtw3uXltJJagBpOGvCLVH3QI2r4f
-         xo2g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784930079; x=1785534879; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=/VuhMIt3y5/j6Le1Z4BNgwX3UBNQKNT5cbNU5pubERw=;
-        b=ocg9pKWXVMQHAbsSAA2HkdWmKgc8nzy3z1lceBWhsxnQEdjpwcFAWCXoUoonedX6Vt
-         YBUrqMGb7uT0MOl8WJzKM5q+NS1kYPKu6ktrcHgNjQvYBd4RYBFsY8h+0MRcV1TAfsmF
-         GLKGVU2IxMmzpkRNQ95I32ORauKa2VWl0L5rdhEwDzidYfxn9TEzv14jZnFkWS02N/bi
-         P4IGlnthP6oLChgELfMG9lHKILhSk7TTM4at7PyL7/Pisjp7euOksLWIXqqIXCmMsAli
-         4CncAvCgyVHMWeQ0dgn08FuNrGbUdFRTl++h/BgWvxoxuGNKoHWTtnTD8nJlHuDD6xLc
-         Nkyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784930079; x=1785534879;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/VuhMIt3y5/j6Le1Z4BNgwX3UBNQKNT5cbNU5pubERw=;
-        b=qVZ4GC/0pg7VmatGWlq+XT6UOYCH+Qherp7fa2U4+b2WP9nkcsa5EUcPKIAWQD+O2l
-         MJfYgdGJZw6r52e1HXqS+/pOyKEnp6hkxQDylocUuRnuaXWXbSZfdh8lsiCVQ2+PrueG
-         PFQO0DMKlQWK8Uc4rDcj09VVzdt7o9QnVJR+OiqH65fKQikSoOGD4WUTqY3FBpcGoNwW
-         m/oYURcFXoXIqc3lKAYv36QSghH41sBoVzHGeVZUco89hAzPAaVmj8/6nEEo8PoW5BYO
-         zfnGdRocyNau7j5ZNm3dkza0ULupY5P+nOHdWmh530P85u6SUUsVhxdkT332RqlJ/hpN
-         Vtsg==
-X-Forwarded-Encrypted: i=1; AHgh+RqH4uUJkWNoXXDGH74263PLcO2GUJpf7slJNFOYQrdNQGx9yDWZpbOFjpMKXyT5CobdPj0+yMUhbrI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdzUqDL0I0MCusKDqAVh/K8gFZjPc4pofRiaC2L0VJ/QI6IJeM
-	PktED9R3VkOMbNmcje7U4U4KRGrZuy50ESb/J7qWLv3MQodkQOFI4jp5s/XqBGGAV6RrP1jhzMb
-	aJmJ6veNh/t3pkeAGu2Vf46BOhJvQ9Kv83S7EOltU
-X-Gm-Gg: AR+sD10bqmFGfqp3zkizUx/KxxiwdIdPI3m0JcGY2dpWm8m9BprdClTB40MtuQk8EzL
-	ol7YL1dhMfe5Db/LRYX7bnTAtGRjz7rRY4EVP1fCYM/q7vIem2alsCNU8jau2wwAGdaZYdLUL4M
-	RXYGnMGLGA/VHmXKm2+fZAiYc0ivFqYPeiye9Ks91wAbWhbhgoo/XySdVX+RFBjHB/uxkMswv04
-	7RZYbGlTDcljWVI8oKm7Unm3EnTw0PAsY688ee5sH2b9NGW73UZnBzMvR5dYQ==
-X-Received: by 2002:a17:90b:3f0c:b0:387:e0bb:57f1 with SMTP id
- 98e67ed59e1d1-38f2975d581mr178977a91.34.1784930078557; Fri, 24 Jul 2026
- 14:54:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BuwhY2zI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 731C51F000E9;
+	Fri, 24 Jul 2026 22:02:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784930522;
+	bh=19neDo4MQirpVjO0C6b65qm1NaBdKqFZ57sG6uJUNus=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BuwhY2zIWODQmYcPMT8oZOiyLSlKJbI820rZB1d/2wT4fAkJJorHMu/eyqO/iyPj1
+	 hHAsbFIaCB5vrAHyMcYDcCfh0BlD0LFh/X3rO0arC25oGm6G5lJRqp96oKxm305oGc
+	 QKsNESB+n7uEQ2Qn300X1fR9do4Iw7MdhgtiZ3LCc5bZz7pq0qAKctcdknUBzU9bhN
+	 Lg4vlz9VC+1Lzqr+vcL9KDA+Jl7wG8C7ACpxV6wGYO0EIao/alKqbmy2GKw5eC51Ei
+	 SxgSpTlqeG+H9EMDOGoIsuH/oL0CIk+S0fa1mZ/pjG6kvAcDJ/CGaXM9un1LFRTTmi
+	 FfXzeEX1S9d3w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 3/9] ipack: tpci200: don't store pci_device_id
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Gary Guo" <gary@garyguo.net>
+Cc: dri-devel@lists.freedesktop.org, dlemoal@kernel.org, linux-pci@vger.kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260723-pci_id_fix-v4-3-3580726844e1@garyguo.net>
+References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net>
+ <20260723-pci_id_fix-v4-3-3580726844e1@garyguo.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 24 Jul 2026 22:02:02 +0000
+Message-Id: <20260724220202.731C51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260710212616.1351130-7-dmatlack@google.com> <20260724205506.GA1012423@bhelgaas>
-In-Reply-To: <20260724205506.GA1012423@bhelgaas>
-From: David Matlack <dmatlack@google.com>
-Date: Fri, 24 Jul 2026 14:54:11 -0700
-X-Gm-Features: AUfX_myY_bxyw4-P1Rbrabgs4s-tLloBKDJhDTUU1nvReA0LfPMvmIQUGRTYqPg
-Message-ID: <CALzav=c8amq1hTRCwHbQOZvhNKtissagzzXX+RGeRgUiKPOcbw@mail.gmail.com>
-Subject: Re: [PATCH v7 06/12] PCI: liveupdate: Auto-preserve upstream bridges
- across Live Update
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 24, 2026 at 1:55=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Fri, Jul 10, 2026 at 09:26:09PM +0000, David Matlack wrote:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-> > -static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *out=
-going, struct pci_dev *dev)
-> > +static int pci_liveupdate_preserve_device_again(struct pci_dev *dev)
->
-> Could pci_liveupdate_preserve_device_again() be folded into
-> pci_liveupdate_preserve_device()?  That's the only caller, and having
-> so many *liveupdate_preserve*() functions gets to be a bit of a maze
-> of small functions:
->
->   __pci_liveupdate_preserve_device
->   pci_liveupdate_preserve_device_again
->   pci_liveupdate_preserve_device
->   pci_liveupdate_preserve_path
->   pci_liveupdate_preserve
->
-> Maybe even more could be squashed; pci_liveupdate_preserve() is the
-> only caller of pci_liveupdate_preserve_path(), which is itself the
-> only caller of pci_liveupdate_preserve_device().
->
-> As a reader, I think there's some advantage in collecting the whole
-> "preserve" flow in one place, but maybe nesting depth would be an
-> issue, especially for the unpreserve cleanup in the failure path.
-> Maybe a "goto" error path could mitigate part of that.
->
-> If there's any squashing, I guess the place to start would be in
-> earlier patches, e.g., "PCI: liveupdate: Track outgoing preserved PCI
-> devices" and "PCI: liveupdate: Track incoming preserved PCI devices".
+Pre-existing issues:
+- [High] MMIO configuration registers are mapped and accessed before callin=
+g pci_enable_device(), which can lead to dropped writes or master aborts.
+--
 
-I'll see what I can do in v8 to avoid splitting the
-preserve/unpreserve logic across so many functions. I suspect it can
-go from 5 to 2-3 while still having a reasonable amount of nesting.
+--- Patch [3]: [PATCH v4 3/9] ipack: tpci200: don't store pci_device_id ---
+commit eed0a798b7390c20259769af7ca3dfe410d112f0
+Author: Gary Guo <gary@garyguo.net>
+Subject: ipack: tpci200: don't store pci_device_id
 
-> > +#define for_each_pci_dev_in_path(_d, _start, _end) \
-> > +     for ((_d) =3D (_start); (_d) !=3D (_end); (_d) =3D (_d)->bus->sel=
-f)
->
-> I think you might want pci_upstream_bridge() instead of (_d)->bus->self;
-> see https://git.kernel.org/linus/c6bde215acfd ("PCI: Add
-> pci_upstream_bridge()").  I think VFs are currently out of scope, but
-> no harm in making this future-proof.
+This commit removes the stored pci_device_id from the tpci200_infos structu=
+re.
+Since dynamic IDs are not guaranteed to outlive the probe function, and the
+stored ID is unused, removing it prevents potential issues.
 
-Yes in fact I noticed pci_upstream_bridge() while working on other
-changes in v8 and already swapped to it :). It also makes the code
-more readable.
+> diff --git a/drivers/ipack/carriers/tpci200.c b/drivers/ipack/carriers/tp=
+ci200.c
+> index 05dcb6675cd66..1cf51f7632932 100644
+> --- a/drivers/ipack/carriers/tpci200.c
+> +++ b/drivers/ipack/carriers/tpci200.c
+> @@ -562,7 +562,6 @@ static int tpci200_pci_probe(struct pci_dev *pdev,
+> =20
+>  	/* Save struct pci_dev pointer */
+>  	tpci200->info->pdev =3D pdev;
+> -	tpci200->info->id_table =3D (struct pci_device_id *)id;
+> =20
+>  	/* register the device and initialize it */
+>  	ret =3D tpci200_install(tpci200);
 
-> Other than "_end", this looks fairly generic and might be a candidate
-> for putting in include/linux/pci.h.  I think there might be other
-> potential users, e.g., calc_map_type_and_dist(),
-> pci_enable_atomic_ops_to_root(), pcie_bandwidth_available(),
-> get_upstream_port(), pcie_find_root_port(),
-> pci_is_thunderbolt_attached().
->
-> The "_end" termination case could perhaps be done in the body instead
-> of the macro since it depends on the use case and several of the other
-> loops that iterate over the path already include terminations in the
-> body.
+[Severity: High]
+This is a pre-existing issue, but I noticed that MMIO configuration registe=
+rs
+are mapped and accessed before pci_enable_device() is called.
 
-Sounds good. I'll move it to include/linux/pci.h and and handle _end
-in the loop bodies. Then once this series lands I can send a follow up
-to convert those users to use the new iterator.
+Earlier in tpci200_pci_probe(), the driver maps the configuration memory bar
+and immediately accesses the registers to configure byte swapping:
+
+    reg32 =3D ioread32(tpci200->info->cfg_regs + LAS1_DESC);
+    reg32 |=3D 1 << LAS_BIT_BIGENDIAN;
+    iowrite32(reg32, tpci200->info->cfg_regs + LAS1_DESC);
+
+However, pci_enable_device() doesn't seem to be called until later in the
+probe sequence, when tpci200_install() eventually calls tpci200_register():
+
+    if (pci_enable_device(tpci200->info->pdev) < 0)
+        return -ENODEV;
+
+Since the memory enable bit in the PCI command register is not guaranteed to
+be set by the firmware before probe, accessing MMIO regions before
+pci_enable_device() can result in reads returning 0xFFFFFFFF and writes bei=
+ng
+dropped. On some architectures, this might even trigger a system-crashing
+PCI master abort.
+
+Should pci_enable_device() be called earlier in tpci200_pci_probe() before
+any MMIO access occurs?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723-pci_id_fix=
+-v4-0-3580726844e1@garyguo.net?part=3D3
