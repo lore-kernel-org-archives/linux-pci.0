@@ -1,145 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69EAE2E7365
-	for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2026 21:35:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F392882DE;
+	Sat, 25 Jul 2026 21:37:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785015322; cv=none; b=q0/VfdN8/Q2mnxzfdl/EitzVsC7TzvrtiTltEMNs7XFHZdTduvbH3YTaDtjaRPGcrIf91A8HtwX40hqdlF9p6E2+v/c6urEJCaxUOsCaIeD27D6zahsRFGs4o34Wj+l5fkeL/pk+QQjpHJsB0ZO4KqvAIIKEy1Vk6vzmDUZ0z38=
+	t=1785015460; cv=none; b=bYFn7NAWNw/3cg9WtJNUNQbwXEdrz4tJ1G620xFeD1zrJy1RDQ9gAWHVSzdYSdAfwfCm9DAHxXAh+5XnhJpq2jZctis74+DDjng42wIt43g1H7FUiLtQGwl8YamqRQVTUZQcGpVETz9Efm0vwNZ5/EIa2heCYe8VxP1ushSEZ5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785015322; c=relaxed/simple;
-	bh=3TmID8lxkttDQhmj1WeTZMEFff5Ccujyeb3WiqY6dpI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cUJdjQb4HJiK8OAg2tPIWqPBdaWbcUFJzJejz/oxfhSnUrUC3JGEEzURtzFRwqVmDDN6RsFjL3Baiu96KTGSWfYvNuVTKX0wLGSZ/ABsODyJ44Pl38JsjunR2fQukr/gIamHv43QomyzoxUSGe8tyTo55qJO2j+GGUnDsx/sVm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W4X6Mkkm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785015460; c=relaxed/simple;
+	bh=Bgf9WpomuPSb6sSHVIGtyG2FCkXLktxqUYNRjbKn/sQ=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=buK2dJQxbG5w/6wejAwVs2jnft0Xq0XQ1HG+YN1xYHwK1ZezbBrtm9y01BZDoK8uWgnUtbJq/3wjBI86nQDjIQL8IsmrS7dCcQeEA8VvHrdEi81yzpWuVJRlL6XyE6FUfC4SPRpOTrvyK0fc5jcC1W9DyNWrB+cUZY3B9s5K/po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=aeUZK1Ye; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W4X6Mkkm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C95581F000E9;
-	Sat, 25 Jul 2026 21:35:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785015321;
-	bh=DEEU5o80NIWDc7+p1rD76qVitBoj7c7tR0B1z2TyyPw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=W4X6MkkmJYCWvOvXRIymTB3djRAt3gR7I1/u6oQF0DA/R99pDNtjizJ0ZNDb+aQ58
-	 wEw5qIbU0n076BvQJcXeWpVYNHnJlGghjjFYyPLlihO6c3MWAqE4QPUzn0MaQ7/r13
-	 B1FqYi1OkfE1j7btLNI5QOr/eEpHV5u5UwCCsynZE9CJeNpWCOWJ0nBsaGx1WhVIrv
-	 1ZtuRpCchUyTXFjuTydFo0O+0Uje5F4Cc73b/Nq5r6Sd9LX7hBXuKtKp7g9ieYnXy3
-	 hTbFE6hkPZI6K0a/fw7lDJD6MYZN6hWffUm6Nqd9d/nc4jW6wf70UJGoW4zrbyiX4Q
-	 DCbpj3vF8hzBQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/3] mm: Add unmap_mapping_file() helper
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260725210549.3716546-2-kwilczynski@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="aeUZK1Ye"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FAD91F000E9;
+	Sat, 25 Jul 2026 21:37:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1785015459;
+	bh=VW4Itax4uaoOUozvRTGW+C9GkAjA2igtg5x/nUSArMo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=aeUZK1YeDV5CnqM+wNZjzhm24RcMioMzbLfMV/YltypRgeB+j417/pVDmBUIgRG1q
+	 +WmUeKXEas44pAsguF1wIvjbr+ffU9aQUbnHE/NfzNKzdpH2C1+0AWjA3eiu2KcPEG
+	 pyxSopA9mMB4fC6Ioy0JHbR2Ra8b8s8l32khIajc=
+Date: Sat, 25 Jul 2026 14:37:37 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>
+Cc: David Hildenbrand <david@kernel.org>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ "Liam R . Howlett" <liam@infradead.org>, Baoquan He <baoquan.he@linux.dev>,
+ Pratyush Yadav <pratyush@kernel.org>, Pasha Tatashin
+ <pasha.tatashin@soleen.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Lorenzo Stoakes <ljs@kernel.org>, Michal Hocko
+ <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>, Simona Vetter
+ <simona.vetter@ffwll.ch>, Suren Baghdasaryan <surenb@google.com>, Vlastimil
+ Babka <vbabka@kernel.org>, Dave Young <ruirui.yang@linux.dev>,
+ linux-mm@kvack.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ kexec@lists.infradead.org, driver-core@lists.linux.dev
+Subject: Re: [PATCH v2 0/3] mm,kernfs,proc: Unmap mmaps of removed files via
+ file->f_mapping
+Message-Id: <20260725143737.daa698b50289257fbaa9c6f1@linux-foundation.org>
+In-Reply-To: <20260725210549.3716546-1-kwilczynski@kernel.org>
 References: <20260725210549.3716546-1-kwilczynski@kernel.org>
- <20260725210549.3716546-2-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 25 Jul 2026 21:35:20 +0000
-Message-Id: <20260725213520.C95581F000E9@smtp.kernel.org>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] unmap_mapping_file() will inadvertently zap VMAs of all anonymous =
-files system-wide if called on a file utilizing the singleton anonymous ino=
-de.
-- [Low] The macro `vma_interval_tree_foreach` is not defined anywhere in th=
-e kernel, causing a fatal compilation error.
---
+On Sat, 25 Jul 2026 21:05:46 +0000 Krzysztof Wilczyński <kwilczynski@kernel.org> wrote:
 
---- Patch [1]: [PATCH v2 1/3] mm: Add unmap_mapping_file() helper ---
-commit 4d2549a11df2bbda156f67d12490793734715126
-Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
-Subject: mm: Add unmap_mapping_file() helper
+> Hello,
+> 
+> The PCI resource files in sysfs and the /proc/bus/pci device files swap
+> their f_mapping to the shared iomem address space at open time, so that
+> revoke_iomem() can unmap userspace mappings when a driver claims a
+> region, see commit 636b21b50152 ("PCI: Revoke mappings like devmem").
+> 
+> Their VMAs are therefore attached to the shared address space, which
+> neither removal path reaches: kernfs_drain_open_files() unmaps the
+> sysfs inode's own mapping, which contains none of them, and
+> proc_entry_rundown() does not unmap anything at all.
+> 
+> As a result, userspace mappings of PCI BARs survive device removal,
+> and also survive a BAR resize on the sysfs side, keeping stale PTEs
+> into physical address space that the kernel may have reassigned since.
+> A mapping made before the device is removed still returns the previous
+> register value after the device has been released, through both
+> interfaces.
 
-This commit introduces the unmap_mapping_file() helper to unmap the folios
-of a specific file from all processes that have mapped them. It is designed
-to handle both standard inode mappings and swapped mappings by checking the
-vm_file pointer when iterating the VMA interval tree.
+Thanks.  Can we please have full description of the userspace-visible
+effects of this?
 
-[ ... ]
+AI review might have found a few things:
+	https://sashiko.dev/#/patchset/20260725210549.3716546-1-kwilczynski@kernel.org
 
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -4555,6 +4555,54 @@ void unmap_mapping_pages(struct address_space *map=
-ping, pgoff_t start,
->  }
->  EXPORT_SYMBOL_GPL(unmap_mapping_pages);
-> =20
-> +static inline bool should_zap_file_vma(struct file *file,
-> +				       struct vm_area_struct *vma)
-> +{
-> +	/* On the file's own inode mapping, zap every VMA */
-> +	if (file->f_mapping =3D=3D file_inode(file)->i_mapping)
-> +		return true;
-
-[Severity: High]
-Could this inadvertently zap VMAs of all anonymous files system-wide if cal=
-led
-on a file utilizing the singleton anonymous inode? For any anonymous file
-(such as perf_event or bpf-map), file->f_mapping and
-file_inode(file)->i_mapping both point to the singleton
-anon_inode_inode->i_mapping. Consequently, should_zap_file_vma() would
-unconditionally return true, causing unmap_mapping_file() to zap every VMA
-in the global anon_inode_inode->i_mapping interval tree.
-
-> +
-> +	/* A swapped mapping also holds VMAs of unrelated files, zap only ours =
-*/
-> +	return vma->vm_file =3D=3D file;
-> +}
-> +
-> +/**
-> + * unmap_mapping_file() - Unmap folios from all mmaps of a file.
-> + * @file: The file to unmap.
-> + *
-> + * Unmap the folios of @file from every process that has them mapped.
-> + *
-> + * If f_mapping is the file's own inode mapping, they are unmapped
-> + * from every VMA on that mapping, as unmap_mapping_range() would do.
-> + *
-> + * However, if f_mapping was swapped to a different address space at
-> + * open time, only the VMAs with vm_file set to @file are considered,
-> + * since that address space also holds mappings of unrelated files.
-> + *
-> + * Must not be used on HugeTLB files.  HugeTLB VMAs are skipped with
-> + * a warning.
-> + */
-> +void unmap_mapping_file(struct file *file)
-> +{
-> +	struct address_space *mapping =3D file->f_mapping;
-> +	struct vm_area_struct *vma;
-> +
-> +	i_mmap_lock_read(mapping);
-> +	if (unlikely(mapping_mapped(mapping))) {
-> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, 0, ULONG_MAX) {
-
-[Severity: Low]
-Is this macro invocation correct? The vma_interval_tree_foreach macro
-does not appear to be defined anywhere in the kernel, which would cause a
-fatal compilation error in mm/memory.c. The file-backed VMA interval tree
-iterators are typically exposed via the mapping_rmap_tree_foreach macro
-instead.
-
-> +			cond_resched();
-> +
-> +			if (!should_zap_file_vma(file, vma))
-> +				continue;
-> +			/* Zapping HugeTLB VMAs needs i_mmap_rwsem held for write */
-> +			if (WARN_ON_ONCE(is_vm_hugetlb_page(vma)))
-> +				continue;
-> +			zap_vma(vma);
-> +		}
-> +	}
-> +	i_mmap_unlock_read(mapping);
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260725210549.3716=
-546-1-kwilczynski@kernel.org?part=3D1
