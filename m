@@ -1,94 +1,111 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C32246782
-	for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2026 12:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7810732B135;
+	Sat, 25 Jul 2026 15:40:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784982601; cv=none; b=mDkaOnxgCJJCZKP/SQKuAaoE5BgT6E0l00Kdx063TvZV86lhc6wOBQsxgOJbCXZy1q11RWiasT/hltf5yziAoBGxNNlOeMFeRFEqQ3FCd9lXoofu4AZd3JqUgyo1LuFRHqUztCkXwMom0nAqIHh0WLmbjcugZdFMkBlfFUqarlE=
+	t=1784994052; cv=none; b=R1N/yV6AiAiTbuXRE7g9+RBwEXEoz5o+R1ktiBXE8Kj5cYeyDqsaReSWFL20qYDF2/nII96tmkq5Ato3uhA16sZlg8ofswM7xb2kR2IsED/oU9KVmuVkrTgkPhz1tQ5jYrCD504o5Vq2BfUMKcldNN8oqj+zfCFPq86btVyf0RE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784982601; c=relaxed/simple;
-	bh=S7n41pOvYX+1Yhkwcm5Ywpght7bTGclmaljhJDz9syw=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=sd7AQHsFg5LthUjpVDQUGHuQM17qNRecy8yqYN5ReCiWOWb2nhlZCmUjVXZu3aUB1Jjvd5tbnHAQsjfgB9XOISV1iQx9eaM/xqJWoh3hy4ULqweV+0C5StU25JCiPN/WfvwqvrX0KNJ8iJAPO5UTSfA9CIu40TayDjr2lfBwC7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hs12EoTc; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1784994052; c=relaxed/simple;
+	bh=rbI7JfzH8/Z3rTxnubhC5UNZdAt9heHgiDgx8XRhTuE=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
+	 References:In-Reply-To; b=RCca/ML5h0OtN9LYtD01CYTm9KG7kt8ges9c/yFRiwvzxzTko2LDvIwmbLTjzLNldeddBpmDnZiznxWY5229CLu4gfDfxaNswFURLLQ+Rw1Rn+SiSsvdyiVNB16sCoi1Er5A4EN1YfOd5sd3zz0Z4e4Q00K0gDXZVlTJFsqQYfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJcyKBAm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hs12EoTc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784982598; x=1816518598;
-  h=date:from:to:cc:subject:message-id;
-  bh=S7n41pOvYX+1Yhkwcm5Ywpght7bTGclmaljhJDz9syw=;
-  b=hs12EoTc8ICEvcNr/x64e8y67v6b5R9eoKuZxh65XEXBBJsy25nhmjMp
-   pJo+M2BBeidLrsw0pG88c/YsoiuqgKJoAcKRSmh7v8GMkXwnIXmpyTR4x
-   Kl4Hx58369XCrHPeiZ8djdpEEOv5/KlLAeIOMWsj48jsKjH5y87k/9EH0
-   CkQEOXLwdiHJuoSETdjtS+Xa+iD7Au9k/LvnU++hODqt4wcd+bGVIo8St
-   9Yc63Di+aDhcz6KcviSSkNbAQZnoPLLZQlKsH9Bp7IjhNQsASFpT5meEj
-   Fts3jyFtyjEwl8Zll4FWswMQTnAaTANOHeFVarU5YYLbW4V5AWhNzNK1m
-   w==;
-X-CSE-ConnectionGUID: tvuJhp+ISKOAVpVc1mvbBw==
-X-CSE-MsgGUID: 8SE9GNS3Q4qFjfMm7WB69Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11855"; a="84752360"
-X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="84752360"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 05:29:57 -0700
-X-CSE-ConnectionGUID: B36Vbys9SEGw2qaDidg2aQ==
-X-CSE-MsgGUID: L3JXZSDRRX6lJDiueRUAtw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="252624789"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa009.fm.intel.com with ESMTP; 25 Jul 2026 05:29:57 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wnbVq-00000000bg6-1dd4;
-	Sat, 25 Jul 2026 12:29:54 +0000
-Date: Sat, 25 Jul 2026 20:28:53 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 90c4d88be15e11c1e922ef93e611b5e28103e37b
-Message-ID: <202607252029.w581Hl39-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJcyKBAm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E32731F000E9;
+	Sat, 25 Jul 2026 15:40:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784994047;
+	bh=AVKIqDLaRJbWnwleOfdrA62Ss8E5oUijw4SSgsugB30=;
+	h=Date:From:Subject:Cc:To:References:In-Reply-To;
+	b=WJcyKBAmndl0QTaMHgQzStmh2LqdjdYH5aHzLFotx1+w63A678Lq11jVOtTjr3Tyh
+	 CisBSahLmQ1zuxxBSee6AnUeOapTVkgILUhAB8mBrCEifApcKUVj34WRHVEYk/nksv
+	 Wek70ZJDAdkmqYol+w7lZigtGxUv4uy4TtKoE3LFBiZL2+KH0yyN7VRI8FgiByuq/V
+	 j/ngHgk/3+si8L4KyMos8lhTskEHhuhjWjGtAq2OijlFodWHmCgvosiaCqMSmBIOme
+	 PdEnAnb6KPBKHHCfBh96ODVo36Tf0JNT6ev9C475g7+3W4V/Ml8dUNcBotREqDS84P
+	 oEvdnYre7X4RA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sat, 25 Jul 2026 17:40:40 +0200
+Message-Id: <DK7RKTMA6TVC.11YQWH2H4VB74@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v4 7/9] PCI: Make pci_match_one_device() match on ID
+ instead of device
+Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, "Zhenzhong Duan" <zhenzhong.duan@gmail.com>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Damien Le Moal" <dlemoal@kernel.org>, "Niklas Cassel"
+ <cassel@kernel.org>, "GOTO Masanori" <gotom@debian.or.jp>, "YOKOTA Hiroshi"
+ <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley"
+ <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "Vaibhav Gupta" <vaibhavgupta40@gmail.com>,
+ "Jens Taprogge" <jens.taprogge@taprogge.org>, "Ido Schimmel"
+ <idosch@nvidia.com>, "Petr Machata" <petrm@nvidia.com>, "Andrew Lunn"
+ <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
+ Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
+ Abeni" <pabeni@redhat.com>, "David Airlie" <airlied@redhat.com>,
+ <linux-pci@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+ <linux-scsi@vger.kernel.org>, <industrypack-devel@lists.sourceforge.net>,
+ <netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>
+To: "Gary Guo" <gary@garyguo.net>
+References: <20260723-pci_id_fix-v4-7-3580726844e1@garyguo.net>
+ <20260724222939.GA1065077@bhelgaas>
+ <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
+In-Reply-To: <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 90c4d88be15e11c1e922ef93e611b5e28103e37b  Merge branch 'pci/misc'
+On Sat Jul 25, 2026 at 2:17 PM CEST, Gary Guo wrote:
+> On Fri Jul 24, 2026 at 11:29 PM BST, Bjorn Helgaas wrote:
+>> On Thu, Jul 23, 2026 at 11:00:46PM +0100, Gary Guo wrote:
+>>> PCI dynamic ID needs to match IDs against a new ID to see if it already
+>>> exists. Existing APIs can only match IDs against devices, causing the
+>>> dynamic ID insertion code to create a temporary device only for matchin=
+g
+>>> purpose. Rename pci_match_one_device() to pci_match_one_id() so it can =
+be
+>>> used for this purpose instead; add a pci_id_from_device() helper to mak=
+e it
+>>> easy to convert users.
+>>
+>> s/causing the ... code to create/so the ... code creates/
+>> s/purpose/purposes/
+>>
+>>> Similarly, convert pci_match_id() to do_pci_match_id(). But keep the
+>>> existing API because there are many users.
+>>>=20
+>>> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+>>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>>
+>> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> What's the merge strategy?  If these all need to be merged together,
+>> feel free to include the PCI patches whereever you merge the series.
+>
+> I think the series should be merged together, as I consider the driver ch=
+anges
+> included in this series being "fixing the users".
+>
+> The series should probably be taken via the PCI tree. I suppose one can a=
+lso
+> argue that the lifetime issue with device IDs isn't unique to PCI bus so =
+this
+> can also be considered driver-core material, but given that Greg has alre=
+ady
+> taken the USB fixes via the USB tree the only unfixed bus left is PCI.
+>
+> So unless Danilo thinks otherwise I'd suggest the series be taken as a wh=
+ole via
+> PCI.
 
-elapsed time: 1335m
-
-configs tested: 17
-configs skipped: 0
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha              allnoconfig    gcc-16.1.0
-alpha             allyesconfig    gcc-16.1.0
-alpha                defconfig    gcc-16.1.0
-arc               allmodconfig    gcc-16.1.0
-arc               allyesconfig    gcc-16.1.0
-csky              allmodconfig    gcc-16.1.0
-i386              allmodconfig    gcc-14
-loongarch            defconfig    clang-24
-nios2             allmodconfig    gcc-11.5.0
-nios2              allnoconfig    gcc-11.5.0
-parisc            allmodconfig    gcc-16.1.0
-parisc            allyesconfig    gcc-16.1.0
-parisc               defconfig    gcc-16.1.0
-sh                   defconfig    gcc-16.1.0
-sh         edosk7760_defconfig    gcc-16.1.0
-x86_64                   kexec    clang-22
-x86_64            rhel-9.4-bpf    gcc-14
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+I'm happy to take it through driver-core if it helps, but the PCI tree seem=
+s to
+be the natural fit. :)
