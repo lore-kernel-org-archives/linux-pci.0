@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EA6363C51;
-	Sat, 25 Jul 2026 21:05:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB021327BFB;
+	Sat, 25 Jul 2026 21:06:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785013559; cv=none; b=UKnaGHii/B4WUjzhvv2NgDOjF+8GQOYPF6vji2H54sY2e1QFyP8Gn9IACOGL4FUnhwWc0Fm2a+XVol9r+AbVIhfCuBMwyXw84Ai/+VtobLgppZ62g27V1mRpzL/TTTQeCoXbf4WHZHG/++hRkKa2gKAsyxjhGXVFZP0lSkXPRm8=
+	t=1785013564; cv=none; b=UqRTtDSWV9zajT7w0H1yIEdfRz2N7NYjrzJuASy0e5HwHfxQ/e0i8ohEMxmRC3Yzw5YOVXQwE44t6AmpJmoMdl+FyWthTwuvYuCL6pd/x+uDw69mwSFDFkc1IBrxw1Ny/6Q0VEn1eWh5DyHOG+dPkKEXPj6lYQ2xnHbjeSQoK8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785013559; c=relaxed/simple;
-	bh=KCZ71eFyhqdXsZYLGi8TRgrLuGEB7zdkr0KA/R9qL9g=;
+	s=arc-20240116; t=1785013564; c=relaxed/simple;
+	bh=B5Pq9++XsW99sXcMbfjY10sI4MpaEJaAIafiFz1a9Hg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SQsYeG9/SVSQg1Kg7Eej8Y48N9WLeld10js0+oi9WS3r7wW5XL2cFexupoG6Hs3UHidPZKrfiNShsf6a7DblAKpAeDhXjkzvkLcmccCCcH27laikKYzJjee6f7ZS7/dHgs96CvG2v7FAxyAfxCsMHqAsQ3Qb+U1Gn9ZRznx9QFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AhWkmOY/; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YkXxwy/g08WX8MZB5RLIfTJxHIbMkUz7oFHtRDB2kNn7bQOlM9bu0Et9EkCRMkSzPRMireeqXl0BA9lqMxxvqv7sCj+sbDEGfGLOtPqKk2GrNaOkLwM/OOjuO8XtvBvJQy+nFDbKF6adOR7JdDZdgyLLMBhdNGOW+ByqBXtFc08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qx53A1oD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AhWkmOY/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A395F1F00A3A;
-	Sat, 25 Jul 2026 21:05:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qx53A1oD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7C41F01558;
+	Sat, 25 Jul 2026 21:05:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785013558;
-	bh=RSa+weKwTyM0tp9L5Vf4KtyDgEuS9BC6cM9EMAxoRr8=;
+	s=k20260515; t=1785013562;
+	bh=aPa/LsrTp3hYJdTLzZYHVqwcc+ik3K0gwTpILC+a88c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=AhWkmOY/Nt9hXs0PlFDC/LdXs3RyB/46uNC3kLVqCNpDb2QuE175EsdNmAHSSfBtg
-	 XcVtmxd/7eyenYWRqZac3QyWpgaT07s0i9i+tvpC8UkVIu4BgKp433wV95gIRGJLpM
-	 YjgLVHk2FxsFR1zTC2WGcomHmhfqbqDbDm6VuZK3UTH3nfiMrgv8HxUcP30V7/sdQZ
-	 pWeNalEdqSEybche3/DHuKeTZ59gqvf7xyIB31mhCnU0OKQ2E48Rl8Ue5xVK8STMR7
-	 1UvetkXS9bfvzTVKUckrGaJ4C8eekChSPPZTVXvz6JHLcquiWj7iYughAE/NCbZdM/
-	 T9x/oOfMw20jQ==
+	b=Qx53A1oDvALciaFuFZCSSzhSlAz/InNoUWnSh/Gm5zNnNDFwrP2ubUYudxorFmIZ8
+	 7zEIFtByOjtavUSHsMvApD7vD4GBbbBZ01esE+wg5sPWNTKs/+gt2cyZMdOV+UfNyB
+	 GhqmCpoYIW4VHpQkIkngfd7iRMJAUjiV4C9aM74c3W8vOj+ntcwdGTREkVPCVA6Avr
+	 qHdaGVv0kn9+MfiHmWQe8iz/+hbFJUASZfScyxqob2Rx+S5IFMVrQfSrTNtueszMAu
+	 vKdnfxeTOPtQVYJsZOHmXU20gLd2UcFmXX2j+Jf0km+iLaw1Y9SMUcfySmRzl1/sU7
+	 qSLDsH6/40CsA==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	David Hildenbrand <david@kernel.org>,
@@ -53,9 +53,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-sound@vger.kernel.org,
 	kexec@lists.infradead.org,
 	driver-core@lists.linux.dev
-Subject: [PATCH v2 1/3] mm: Add unmap_mapping_file() helper
-Date: Sat, 25 Jul 2026 21:05:47 +0000
-Message-ID: <20260725210549.3716546-2-kwilczynski@kernel.org>
+Subject: [PATCH v2 2/3] kernfs: Unmap mmaps of removed files via file->f_mapping
+Date: Sat, 25 Jul 2026 21:05:48 +0000
+Message-ID: <20260725210549.3716546-3-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260725210549.3716546-1-kwilczynski@kernel.org>
 References: <20260725210549.3716546-1-kwilczynski@kernel.org>
@@ -68,116 +68,50 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, unmap_mapping_pages() and unmap_mapping_range() unmap a
-page offset window of an address_space, and code that removes a file,
-such as kernfs_drain_open_files(), relies on them to unmap the pages
-of a file that is going away.
+Currently, kernfs_drain_open_files() unmaps the mapping of the sysfs
+inode, file_inode(of->file)->i_mapping, when a node with mmapped open
+files is removed.  Since commit 636b21b50152 ("PCI: Revoke mappings
+like devmem"), PCI resource and legacy sysfs files swap their
+f_mapping to iomem_get_mapping() at open time, so their VMAs are
+attached to the shared iomem address space, which the drain never
+unmaps.
 
-Files with f_mapping swapped to a shared address space at open time,
-such as PCI resource files using iomem_get_mapping(), have their VMAs
-attached to the shared mapping instead of the file's own inode mapping,
-so unmapping the inode's address space cannot reach them, and they stay
-live after the file is removed.  These VMAs can only be selected by the
-struct file they were created through, which is recorded in
-vma->vm_file.
+As a result, userspace mappings of PCI BARs survive device removal
+and BAR resize, keeping stale PTEs into physical address space that
+the kernel may have reassigned since.
 
-Thus, add unmap_mapping_file(), which walks the VMA interval tree of the
-file's f_mapping under i_mmap_lock_read() and unmaps the pages of the
-VMAs selected by should_zap_file_vma(), using the same per-VMA zap as
-unmap_mapping_pages().  When f_mapping is the file's own inode mapping,
-every VMA is zapped, as unmap_mapping_range() does today.  When f_mapping
-was swapped, only the VMAs with vm_file set to that file are zapped, so
-callers do not need to tell the two apart.
+Thus, use unmap_mapping_file() for every open file, so that only the
+VMAs of the node being removed are zapped, while unrelated mappings
+are left intact.  The same helper also covers files without a swapped
+f_mapping, and the driver-claim revocation through revoke_iomem() is
+unaffected, as those VMAs remain on the shared address space.
 
-HugeTLB VMAs are skipped with a WARN_ON_ONCE(), as zapping those takes
-i_mmap_rwsem for write in hugetlb_zap_begin() and would deadlock against
-the read lock held over the walk.
+This restores the behaviour these files had before the f_mapping swap
+was introduced.  A read through a stale mapping after removal now
+raises SIGBUS instead of returning stale data.
 
+Fixes: 636b21b50152 ("PCI: Revoke mappings like devmem")
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- include/linux/mm.h |  2 ++
- mm/memory.c        | 48 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 50 insertions(+)
+ fs/kernfs/file.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 485df9c2dbdd..e882a03eaddd 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -3183,6 +3183,7 @@ extern int fixup_user_fault(struct mm_struct *mm,
- 			    bool *unlocked);
- void unmap_mapping_pages(struct address_space *mapping,
- 		pgoff_t start, pgoff_t nr, bool even_cows);
-+void unmap_mapping_file(struct file *file);
- void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows);
- #else
-@@ -3203,6 +3204,7 @@ static inline int fixup_user_fault(struct mm_struct *mm, unsigned long address,
- }
- static inline void unmap_mapping_pages(struct address_space *mapping,
- 		pgoff_t start, pgoff_t nr, bool even_cows) { }
-+static inline void unmap_mapping_file(struct file *file) { }
- static inline void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows) { }
- #endif
-diff --git a/mm/memory.c b/mm/memory.c
-index ff338c2abe92..4a09d7b6aa6b 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4423,6 +4423,54 @@ void unmap_mapping_pages(struct address_space *mapping, pgoff_t start,
- }
- EXPORT_SYMBOL_GPL(unmap_mapping_pages);
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 8e0e90c93372..eb04439e9c3e 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -815,10 +815,8 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
+ 	}
  
-+static inline bool should_zap_file_vma(struct file *file,
-+				       struct vm_area_struct *vma)
-+{
-+	/* On the file's own inode mapping, zap every VMA */
-+	if (file->f_mapping == file_inode(file)->i_mapping)
-+		return true;
-+
-+	/* A swapped mapping also holds VMAs of unrelated files, zap only ours */
-+	return vma->vm_file == file;
-+}
-+
-+/**
-+ * unmap_mapping_file() - Unmap folios from all mmaps of a file.
-+ * @file: The file to unmap.
-+ *
-+ * Unmap the folios of @file from every process that has them mapped.
-+ *
-+ * If f_mapping is the file's own inode mapping, they are unmapped
-+ * from every VMA on that mapping, as unmap_mapping_range() would do.
-+ *
-+ * However, if f_mapping was swapped to a different address space at
-+ * open time, only the VMAs with vm_file set to @file are considered,
-+ * since that address space also holds mappings of unrelated files.
-+ *
-+ * Must not be used on HugeTLB files.  HugeTLB VMAs are skipped with
-+ * a warning.
-+ */
-+void unmap_mapping_file(struct file *file)
-+{
-+	struct address_space *mapping = file->f_mapping;
-+	struct vm_area_struct *vma;
-+
-+	i_mmap_lock_read(mapping);
-+	if (unlikely(mapping_mapped(mapping))) {
-+		vma_interval_tree_foreach(vma, &mapping->i_mmap, 0, ULONG_MAX) {
-+			cond_resched();
-+
-+			if (!should_zap_file_vma(file, vma))
-+				continue;
-+			/* Zapping HugeTLB VMAs needs i_mmap_rwsem held for write */
-+			if (WARN_ON_ONCE(is_vm_hugetlb_page(vma)))
-+				continue;
-+			zap_vma(vma);
-+		}
-+	}
-+	i_mmap_unlock_read(mapping);
-+}
-+
- /**
-  * unmap_mapping_range - unmap the portion of all mmaps in the specified
-  * address_space corresponding to the specified byte range in the underlying
+ 	list_for_each_entry(of, &on->files, list) {
+-		struct inode *inode = file_inode(of->file);
+-
+ 		if (of->mmapped) {
+-			unmap_mapping_range(inode->i_mapping, 0, 0, 1);
++			unmap_mapping_file(of->file);
+ 			of->mmapped = false;
+ 			on->nr_mmapped--;
+ 		}
 -- 
 2.55.0
 
