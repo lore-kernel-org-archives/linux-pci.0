@@ -1,138 +1,112 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F331F4CB3
-	for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2026 07:09:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C6539183C;
+	Sat, 25 Jul 2026 08:59:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784963361; cv=none; b=HmiTglKrxPTBw3npdF9ofN7EghAIE7q3oUVGTaKoArNv6kWq8gPmRA2uyhd5iF+o8KeLbG1LcJDaec3IXABjL/ZZ2L+Tp5D+0i8E/UNTs7PttEZ02bX/czZE9c5eboAH/52qUjNTlRlYvfnGfmSyKcjPyGEmRMbE+D/rvU8MuJM=
+	t=1784969983; cv=none; b=boMBuSM6Zm19Zcz4ilHPeFzAkx3GROgA0EzZ/eIf/JGG+2Q1V/IgTcFfDlqyvaMRYDJxsuflrKU2/ba1y7VXfkED91JVbu1VIZbERgo58Sn4FIDR4YSUgVJcTkS1VvPjDlsBGVcU3I0qm6IfKutwSz2ZJ81jIJrHgO/9r0HNLes=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784963361; c=relaxed/simple;
-	bh=0dicrLjXKI7O1LJOXI8GJLdOiqRZK0XKccblQULpII8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=imRrhVIIfXsmfy9zgI1o8jAYRLdF+cSecQuEz+r5HdnSPlDS1MtIi32kbXkhNm+Zh5/27Isw4ExOSFQ9gdQdp1BoyBW3XuVnh4+rUoYRv2+kHfQiqQpsyCxjWAthQLbv3UaV+LLvllLO1j8knC+BRfNSTc8386K45tQV/szavs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LGdHUorN; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1784969983; c=relaxed/simple;
+	bh=31NjIQUTeWZLc6fEIFAJVTJ8DcSVltuYCnuiJreAzYM=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=NS67i7KkhW04j05LLbmnnZXBNUbztLQCZKiodkqNhT9FaGbmwxjsixYGh5yk1YjtDe4/yw1jg0xvHPcE032ZvPxqx3Efq99CdG7Gqq2ozb3yGVSWS1cJT5Yq1FOYnqzX+UaTWVpNwjKafHi5ZJNM4oEWV8UW/cnS0ioXgJxv2Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOSKb71b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LGdHUorN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784963361; x=1816499361;
-  h=date:from:to:cc:subject:message-id;
-  bh=0dicrLjXKI7O1LJOXI8GJLdOiqRZK0XKccblQULpII8=;
-  b=LGdHUorNnltfnRoFwoghENKJJCnrInFwO44dB/oH2OZLWPmQ7M5WAUEs
-   2daTs73SROzR0XKHxMrfRFt4eTULLPpr5LjFNRJwJsYv1VoHUmAKnu4vw
-   +9xAqfgJKEy2CEvAqKYt0enZCojiSW7qncHNKG8QRqP3t9nDYj9eczWbw
-   ZOzoMcqws/u3kwuEiXh93xCNSW5y2HBl67Ucd1PO5lSjHjgmPqJ2ektIz
-   X60Jjphg3QXEDIeqc2BKqU74B/kW3Qc6gIWvKW1hcAYose7RJOVo2D9oZ
-   uVbMfhdZbPOpfj+SFjAqE5ACij80udfw8os7YqBj++IevdHWPyhJtr2Rm
-   A==;
-X-CSE-ConnectionGUID: b82LUvO9QHK0lxTeRUzdvQ==
-X-CSE-MsgGUID: vh96uy32TouMATSl9Jf9GQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11855"; a="103030511"
-X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="103030511"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 00:09:20 -0700
-X-CSE-ConnectionGUID: KdOSNcUbRIes5aVpNnNsFw==
-X-CSE-MsgGUID: 1qzQ2mgERJSUWlrMTSTKtw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="262422897"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa003.jf.intel.com with ESMTP; 25 Jul 2026 00:09:18 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wnWVL-00000000bXW-3P6T;
-	Sat, 25 Jul 2026 07:09:06 +0000
-Date: Sat, 25 Jul 2026 15:08:10 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:p2pdma] BUILD SUCCESS
- 894a78088fc3ddf7e582c814294afa4311900ccc
-Message-ID: <202607251552.ryKNBcxy-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOSKb71b"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BD7B2C2BCF6;
+	Sat, 25 Jul 2026 08:59:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1784969982;
+	bh=31NjIQUTeWZLc6fEIFAJVTJ8DcSVltuYCnuiJreAzYM=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=MOSKb71bQqY/G0o/D9M2NKEbVH7mqwhUT9OFbKU1AKLG5mSMXRmQgFiupDNWboZfT
+	 yOygZz5oNn3nvrcuwJm1U2cOKF+hfAhM3rFQnrBZVGqtNp9jsYkucmSlBoUfpXzTlG
+	 VD+g0fXRI/rEK1E7hFzBGxMxmyT+hvhgzUtbXfZdsy+EdMPpskbGOdX1aYKtWXDJ9V
+	 KlE1JyoSIKdl8dwY91a3jcOgG+DTJWzWtdkEvGHPlcgpzPHfcutMs/YLt8ALwtS6zf
+	 jCnlKS9kLWSP+MEbaA54A+GjIa0jq3HGZ4xIwtoQQF7Ynb5nE94Tm5Xi+GSf+ySr5H
+	 Ks6PHGY5K3ifg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 962ACC531FA;
+	Sat, 25 Jul 2026 08:59:42 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Subject: [PATCH 0/6] PCI/pwrctrl: tc9563: Several fixes and improvements
+Date: Sat, 25 Jul 2026 10:59:12 +0200
+Message-Id: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAOF6ZGoC/yXMQQ5AMBCF4avIrDXRQYWriIXWYCxK2hKJuLti+
+ b3k/Rd4ckwemuQCRwd7Xm2ETBMwc28nEjxEA2aosgpLEUxdqlyMfApVkK6M1hKxhnjYHMX5i7X
+ db7/rhUx4C3DfD2Zcx8xuAAAA
+X-Change-ID: 20260725-tc9563-fix-64eb7cbb1229
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Bartosz Golaszewski <brgl@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Alex Elder <elder@riscstar.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1352;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=31NjIQUTeWZLc6fEIFAJVTJ8DcSVltuYCnuiJreAzYM=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqZHr1zcV4JoKB7ZAz2UA4gLrLm9guZhHRTAzpT
+ eaWDbd56eqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCamR69QAKCRBVnxHm/pHO
+ 9ZX3B/4nGwuzQaqqcm7w4n38qxllmFOlJvMCfWYo81HL2K2T2Yfmp5Kw7O5OH3Fm56MtsUgmQh+
+ qsuRdYFQwuMmWsByL38GwABeFTgCq3pRXBN8H3TBlMbNDhCmDLDm/8GYVTJ2U9/JWGgA22rZWV0
+ xSpbYjnPELIM6MkIUmxIebwrLyXGkwGv9VUNWv96okH/fPzZ/gcuH9txAnQDOrP0mhCZ8bnqdft
+ vueLCccD7FQzE0Ep+3JuTVD8ubaNV/prAgxYX2Y8B74pbCDrF39DqytRNefNseFjO84yWn3r+zG
+ 8PSh95Jm20S9vIfvnzrjPaDhUm5tdW7fSMzB0mT0C2CHXTFM
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git p2pdma
-branch HEAD: 894a78088fc3ddf7e582c814294afa4311900ccc  PCI/P2PDMA: Add Nvidia Vera Rubin to whitelist
+Hi,
 
-elapsed time: 1013m
+This series contains several fixes and improvements for the TC9563 Pwrctrl
+driver and the switch binding. Most of the fixes are related to ensuring
+correctness in parsing the DT properties for the switch ports and the
+integrated Endpoint.
 
-configs tested: 61
-configs skipped: 1
+More details are in the individual patches.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Testing
+=======
 
-tested configs:
-alpha                            allnoconfig    gcc-16.1.0
-alpha                           allyesconfig    gcc-16.1.0
-alpha                              defconfig    gcc-16.1.0
-arc                             allmodconfig    gcc-16.1.0
-arc                             allyesconfig    gcc-16.1.0
-arc                  randconfig-001-20260725    gcc-11.5.0
-arc                  randconfig-002-20260725    gcc-8.5.0
-arm                  randconfig-001-20260725    gcc-8.5.0
-arm                  randconfig-002-20260725    clang-21
-arm                  randconfig-003-20260725    gcc-10.5.0
-arm                  randconfig-004-20260725    gcc-15.2.0
-arm64                randconfig-001-20260725    clang-24
-arm64                randconfig-002-20260725    gcc-13.4.0
-arm64                randconfig-003-20260725    clang-24
-arm64                randconfig-004-20260725    clang-24
-csky                            allmodconfig    gcc-16.1.0
-csky                 randconfig-001-20260725    gcc-9.5.0
-csky                 randconfig-002-20260725    gcc-16.1.0
-i386                            allmodconfig    gcc-14
-i386                buildonly-randconfig-001    gcc-14
-i386       buildonly-randconfig-002-20260725    gcc-14
-i386       buildonly-randconfig-004-20260725    clang-22
-i386       buildonly-randconfig-005-20260725    gcc-14
-i386       buildonly-randconfig-006-20260725    gcc-14
-i386                 randconfig-011-20260725    gcc-14
-i386                 randconfig-012-20260725    gcc-14
-loongarch                          defconfig    clang-24
-nios2                        3c120_defconfig    gcc-11.5.0
-nios2                           allmodconfig    gcc-11.5.0
-nios2                            allnoconfig    gcc-11.5.0
-parisc                          allmodconfig    gcc-16.1.0
-parisc                          allyesconfig    gcc-16.1.0
-parisc                             defconfig    gcc-16.1.0
-parisc               randconfig-001-20260725    gcc-10.5.0
-riscv                randconfig-001-20260725    gcc-8.5.0
-riscv                randconfig-002-20260725    gcc-8.5.0
-s390                 randconfig-001-20260725    gcc-10.5.0
-s390                 randconfig-002-20260725    gcc-16.1.0
-sh                                 defconfig    gcc-16.1.0
-sh                   randconfig-001-20260725    gcc-16.1.0
-sh                   randconfig-002-20260725    gcc-11.5.0
-sparc                randconfig-001-20260725    gcc-16.1.0
-sparc                randconfig-002-20260725    gcc-8.5.0
-sparc64              randconfig-001-20260725    gcc-8.5.0
-sparc64              randconfig-002-20260725    gcc-10.5.0
-um                   randconfig-001-20260725    gcc-14
-um                   randconfig-002-20260725    clang-24
-x86_64     buildonly-randconfig-001-20260725    clang-22
-x86_64     buildonly-randconfig-002-20260725    clang-22
-x86_64     buildonly-randconfig-003-20260725    clang-22
-x86_64     buildonly-randconfig-004-20260725    gcc-12
-x86_64     buildonly-randconfig-006-20260725    gcc-14
-x86_64                        randconfig-071    gcc-14
-x86_64               randconfig-071-20260725    gcc-14
-x86_64               randconfig-072-20260725    gcc-14
-x86_64               randconfig-073-20260725    gcc-14
-x86_64               randconfig-074-20260725    gcc-14
-x86_64               randconfig-075-20260725    gcc-14
-x86_64               randconfig-076-20260725    clang-22
-xtensa               randconfig-001-20260725    gcc-16.1.0
-xtensa               randconfig-002-20260725    gcc-8.5.0
+This series was validated on the RB3Gen2 board.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+Manivannan Sadhasivam (6):
+      dt-bindings: PCI: toshiba,tc9563: Restrict Tx Amplitude, DFE and N_FTS to USP, DSP1 and DSP2
+      PCI/pwrctrl: tc9563: Fix parsing the integrated Ethernet MAC Endpoint node
+      PCI/pwrctrl: tc9563: Power off only the external ports in tc9563_pwrctrl_disable_port()
+      PCI/pwrctrl: tc9563: Skip Tx amplitude and DFE tuning for DSP3
+      PCI/pwrctrl: tc9563: Rename DSP3 to VDSP
+      PCI/pwrctrl: tc9563: Move Integrated MAC Endpoint out of 'tc9563_pwrctrl_ports' enum
+
+ .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  21 +++-
+ drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 129 ++++++++++++++-------
+ 2 files changed, 104 insertions(+), 46 deletions(-)
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260725-tc9563-fix-64eb7cbb1229
+
+Best regards,
+--  
+மணிவண்ணன் சதாசிவம்
+
+
