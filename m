@@ -1,112 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DCE1C84DC;
-	Sun, 26 Jul 2026 12:10:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A20A189F43
+	for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 21:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785067841; cv=none; b=URpT1d79azZxBAXAcNVEct7DJbocKTs9RwX0LNyEAnexSGKGAmSDYhktQOdVn/bTONYQdl+tyJgpa5dMEEcPzEApRRrjud4rb3ejD7Sn6auNWfrY9X57FFVuEOe028UQBPwYs5BJxEmfdumgFfo9wDnVdKSKItEwCF6CGIKgf9s=
+	t=1785102963; cv=none; b=JlePoQMruMW+kla560vx7Zbi1SIjc5RbO1g/KzuZgaHQMzumK6uElrDz1MM54wHYYCSa7/DM/vmYhyDiCtbY+ZI7DweAT1DHZj8bSjhXCCKxvdcE3D25F0IKEU+mr9jopyG8vUrshWhBDkPJhCJ3GD4eLZMSg2+zB2WTgjDqsSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785067841; c=relaxed/simple;
-	bh=Gx8sK5Lcu8DgaaXGC0Efi+q5oN+5Y0XzeSsQolG/Uds=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=psXpz7k0uscY82EtSUYzvxCTtamTA1TYY8ltORFts2xwQ0ajHX2g/lNhGiJE+X+vzZSCD/aXVt4Mi15SMgHHZeBZ5WNbcZt0dMCiIWMr8mb9Pdb/lWJPpbOMVJJixdHKaomVOg6NDEagW+1VCSgI3I4Fe9rbHOJUDMLVHXwLTW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k29WUKuW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785102963; c=relaxed/simple;
+	bh=DyOiMg7T+EusRWfZOofWAwaAWMZzWoQ2JovRL9DbF2c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=urvl8Q5Y6z6Uss/zhYgzVG8BwrF2YDr8H6IgyavwfhHsCZ3UjMjrBJoohcjBkXSgbmrvqrGb5iKbDNDdo/G5AKpzJRVFiOPn7XTf9a+edAqZe7e0KJF8bsZM7UNjkVi7Jc+QZNjFh2SACF+PbqECmqNuXh7KUnZ5DQ4ZUZOzizg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E6Wcl6yF; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k29WUKuW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67031F000E9;
-	Sun, 26 Jul 2026 12:10:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785067840;
-	bh=GOAn7GTuELbCprA8aMRtaEC1Bk48QqZEQs+QTEgvA9w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k29WUKuWt9/KVWxZKFSlNA2wQV4mW9CswTirvwgriuw2Svk536L6xjOMGxm/ga7hD
-	 LOFeGXPdm3Ecv2TWBQ4u4Yv+rYSWbxVuln55hmyTd/ojT+eMXgXCYZT4/F8NCG99ax
-	 IE/3ocEwNPc4ENderOAEjZCwdEPp8S+Tw0HM9YyaXYDvxB6oqymb/39NtaM4+0Hor2
-	 oytnNxdr15auI45CdmpsixcR0xlYEdhXimQYusxvrJUN5zbrosdQiS3o9//aOLCIBc
-	 tzQNBEVBufHzJjvxPY+8g57ZFlohZ+w1usV+bPwTK2uyyKFzbqP9YsYJxvDi6qmqby
-	 7/ExCwEdUNBWw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 03/12] md/raid1: serialize non-write-behind writes on
- CollisionCheck rdevs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260726113229.2154269-4-mykola@meshstor.io>
-References: <20260726113229.2154269-1-mykola@meshstor.io>
- <20260726113229.2154269-4-mykola@meshstor.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 26 Jul 2026 12:10:39 +0000
-Message-Id: <20260726121039.E67031F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E6Wcl6yF"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-38ea87caafeso1497486a91.3
+        for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 14:56:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785102962; x=1785707762; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=tYa3vEt1DiiFt5roobZR/K438UfRZKbfVJpeTjMU8QI=;
+        b=E6Wcl6yFwYLKTWlqytdWRPk4nhk55xojhO2Mo1xJGjs93S5UGXEBgBqMpa0PRRySzH
+         YRzoU5YVMrykt8YyYrh5SfwMEV+zsRuH9bCiL4oUaraN1sF0QoBycwACvSpE3cTtfS6A
+         TPDgPPBZuwNupmppmYkSSMS9A9yh+7I7KzBSqNFnoAh4Je8k+8iO+1nkFYKsroOFaCO+
+         yHt8wJqD6R3FUqxLaHcc2tHHpoYTaR7CBvaeU8z/jf/lx47fJyFYTJimjFQTWvpsKeiy
+         SYx8G99hS3Qc6CatSOiiDOc3cibpnTBQp0wANDetbGaVGjqglTNpE0mhh13ixbdDkOls
+         oe9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785102962; x=1785707762;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=tYa3vEt1DiiFt5roobZR/K438UfRZKbfVJpeTjMU8QI=;
+        b=Cal3Fq3LmjUy4tKh7C2AcAJjz8RIk5P4yxN43gjYz5fusi4ufNyGB8rbxet9y5b+Wg
+         d5ugD2ODPxe6HicU3fSNVpc8Jtg+d0c9Zei7uwVJltMTHwHkzvNOhakM8Ewmy8dMA/+I
+         VvTzM3ZChS5lFscmLI+Tt1fc9fgQhicOP1PaR5Jn2eshvaSU2Z2/QZLE/5FNKsxCpq/P
+         uat1PJn3MSh2y+LI6WDMObux6zagVejIxtHSjjhpE4CHsg6jCosDUvBRzYY1jOJuZUkS
+         QFG/dkgCQIdJZlpNm2jvLudQJwa+Fb5aUVZdEB9HQdDUnHFGd+rOq7bG+lw+K3CbKR3w
+         aI8g==
+X-Gm-Message-State: AOJu0Yy5KIml5R3CDYJzEPvHyI/Nib/XNkEoMG3k2AvQqDpJb2whb9T9
+	FFqnhy+UUmX0TfoJswqZIkFUQRQcjC/njL5tH/eK3BqaPX8t5nEoYqbZ7W4HjQ==
+X-Gm-Gg: AR+sD12xPpda+PoH8Dcmvz5/1i0+K+xKjjDLmOk6+nTV1DtCsuoPpdLjdeP5TgTatsO
+	+w8Y0ECxLc0Bq/V1zq/ytQfOA8dcr7vfNXZadj1gWV/yJa7gYN0rB0iJ2QcwQzIxScOjeI8Sl12
+	eFnX+rf02NogrDhrIGp1JCmgr1vsl++J/J29GMKoUFhYuualasfDa8b5OaPnKkFg6sn7c7sVK8i
+	+otVDruWb/HaRN5HVsZ3VXJXu/tdq8OWdqbZGKoiYXfS8i3kbwUA6iZ1I5wZqB+P0Yoev3j8IBr
+	06Dq2TpBcaNVSXlDo0zub4+3fk3bYAF4okhmcsi7HddpIQuwWvuVEeHu8JsPg7t+V+aJp5SYESz
+	CLzl6rdcdbQ3jFMCUFQYBvgQtpw8qFv/hvazBVsjMFKzVwTHfyykJyZqL35ULrpIfayWEUIl8sO
+	jIiSSjlyQHNxNP0wxTQgSuDDtda6cOpAjhRLW1kqJn0xH41yLshpT1Xiv9JZq4clhqN+qZqbas2
+	uTReJmdfIomS1tzcUObfncQ/xLiTr4BKZbRqpMv+kyKqyDflZFyBtD2zqvdYMjd3kHCWdAkb0nz
+	iSPix+xT3uclSOtOU1ARvWNpcA+xCc/cGXnHgA==
+X-Received: by 2002:a17:90b:5106:b0:38e:59c2:cbc5 with SMTP id 98e67ed59e1d1-38f29522109mr5856966a91.18.1785102961837;
+        Sun, 26 Jul 2026 14:56:01 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f041bec23sm4087480a91.15.2026.07.26.14.55.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Jul 2026 14:56:00 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM ARCHITECTURE),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: iproc: platform: use device functions instead of OF.
+Date: Sun, 26 Jul 2026 14:55:58 -0700
+Message-ID: <20260726215558.34091-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Since this is supposed to be the higher layer file, use higher layer
+than OF to handle this. Remove OF headers as a result.
 
-Pre-existing issues:
-- [High] A Time-of-Check to Time-of-Use (TOCTOU) race condition exists duri=
-ng concurrent device removal, leading to a NULL pointer dereference in both=
- the read and write I/O submission paths.
---
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/pci/controller/pcie-iproc-platform.c | 31 ++++++++------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
---- Patch [3]: [PATCH v6 03/12] md/raid1: serialize non-write-behind writes=
- on CollisionCheck rdevs ---
-commit c5339979d08defedb52fda8881d721fd1180c172
-Author: Mykola Marzhan <mykola@meshstor.io>
-   =20
-md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
-   =20
-This commit serializes non-write-behind writes on CollisionCheck rdevs
-to prevent older behind data from landing last and leaving stale data.
-It replaces the previous MD_SERIALIZE_POLICY check with CollisionCheck,
-which properly accounts for write-mostly members.
+diff --git a/drivers/pci/controller/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
+index 4c9a0c4bb923..abd04a05fbff 100644
+--- a/drivers/pci/controller/pcie-iproc-platform.c
++++ b/drivers/pci/controller/pcie-iproc-platform.c
+@@ -10,12 +10,8 @@
+ #include <linux/slab.h>
+ #include <linux/interrupt.h>
+ #include <linux/platform_device.h>
+-#include <linux/of_address.h>
+-#include <linux/of_pci.h>
+-#include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
+ 
+-#include "../pci.h"
+ #include "pcie-iproc.h"
+ 
+ static const struct of_device_id iproc_pcie_of_match_table[] = {
+@@ -40,11 +36,14 @@ static int iproc_pltfm_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct iproc_pcie *pcie;
+-	struct device_node *np = dev->of_node;
+-	struct resource reg;
++	struct resource *reg;
+ 	struct pci_host_bridge *bridge;
+ 	int ret;
+ 
++	reg = platform_get_resource(pdev, 0, IORESOURCE_MEM);
++	if (!reg)
++		return -ENODEV;
++
+ 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+ 	if (!bridge)
+ 		return -ENOMEM;
+@@ -52,26 +51,20 @@ static int iproc_pltfm_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(bridge);
+ 
+ 	pcie->dev = dev;
+-	pcie->type = (uintptr_t)of_device_get_match_data(dev);
+-
+-	ret = of_address_to_resource(np, 0, &reg);
+-	if (ret < 0) {
+-		dev_err(dev, "unable to obtain controller resources\n");
+-		return ret;
+-	}
++	pcie->type = (uintptr_t)device_get_match_data(dev);
+ 
+-	pcie->base = devm_pci_remap_cfgspace(dev, reg.start,
+-					     resource_size(&reg));
++	pcie->base = devm_pci_remap_cfgspace(dev, reg->start,
++					     resource_size(reg));
+ 	if (!pcie->base) {
+ 		dev_err(dev, "unable to map controller registers\n");
+ 		return -ENOMEM;
+ 	}
+-	pcie->base_addr = reg.start;
++	pcie->base_addr = reg->start;
+ 
+-	if (of_property_read_bool(np, "brcm,pcie-ob")) {
++	if (device_property_present(dev, "brcm,pcie-ob")) {
+ 		u32 val;
+ 
+-		ret = of_property_read_u32(np, "brcm,pcie-ob-axi-offset",
++		ret = device_property_read_u32(dev, "brcm,pcie-ob-axi-offset",
+ 					   &val);
+ 		if (ret) {
+ 			dev_err(dev,
+@@ -87,7 +80,7 @@ static int iproc_pltfm_pcie_probe(struct platform_device *pdev)
+ 	 * core driver. For platforms that require explicit inbound mapping
+ 	 * configuration, "dma-ranges" would have been present in DT
+ 	 */
+-	pcie->need_ib_cfg = of_property_read_bool(np, "dma-ranges");
++	pcie->need_ib_cfg = device_property_present(dev, "dma-ranges");
+ 
+ 	/* PHY use is optional */
+ 	pcie->phy = devm_phy_optional_get(dev, "pcie-phy");
+-- 
+2.55.0
 
-Link: https://lore.kernel.org/linux-raid/20260723112741.1206836-1-mwilck@su=
-se.com/
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index afe2ca96ad8c2..997f79c05db7b 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-
-[ ... ]
-
-> @@ -1677,7 +1677,11 @@ static bool raid1_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  			mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
->  					       &mddev->bio_set);
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but can this second loop in
-raid1_write_request() encounter a NULL pointer dereference during
-concurrent device removal?
-
-The loop re-fetches rdev from conf->mirrors[i].rdev which might have
-been set to NULL by a concurrent raid1_remove_conf(). If
-raid1_remove_conf() executes after the first loop incremented
-nr_pending on the old pointer, re-fetching it here and accessing
-rdev->bdev in bio_alloc_clone() could trigger a kernel panic.
-
-A similar issue appears to exist in the read path where
-update_read_sectors() implicitly re-fetches info->rdev after an active
-disk is selected in choose_best_rdev(), potentially crashing on
-atomic_inc(&info->rdev->nr_pending).
-
-> -			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
-> +			/*
-> +			 * CollisionCheck marks every rdev with a serial
-> +			 * tree; order against in-flight write-behind I/O.
-> +			 */
-> +			if (test_bit(CollisionCheck, &rdev->flags))
->  				wait_for_serialization(rdev, r1_bio);
->  		}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260726113229.2154=
-269-1-mykola@meshstor.io?part=3D3
