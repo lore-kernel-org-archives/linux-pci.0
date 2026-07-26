@@ -1,130 +1,117 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8B437F312
-	for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 09:31:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F9C3750D5
+	for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 09:32:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785058296; cv=none; b=Fm76kIzvGZi+XzSioTNV5HjzjXrHYCkCMArCMrcbbLkS8msaspRcONzG3WiOVs30vGNPMwa5K6LG5HhTX33BHYOhxws75nFFdCRE6Fwf2bBsLDK8VqZpv+P4M1EpLV563htcku4NRcEawOh09/w7IQzb6OpwIsXyWlMo4cnyQx0=
+	t=1785058333; cv=none; b=HbuEqSoTG/2Xyi/4fi1+VSMXrpX4con+TsKutYsSooSF1NlURrpIq3/LEGKQ8Sl5Kr2SFAxiJhJMYpj9PBWWFDeyDWmfyltJXaM0A0yeTlQ5LckCBkopYJTi4xBqM7pD2Ud7GCqJtvtMLtnt6MygZFfOICqxZNqUGHao1+ZeW2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785058296; c=relaxed/simple;
-	bh=u7REdmmpuX4Q8U4G/vc9BgFz8IOFsGkTYQ2px+ZknCg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ILvqMkAIHvEzWjuWMUpWKrTI3QH8THCPmJenwoMizTw/I3/abiSWUL5Wxw6vvKHic6gbBJ/1C6bXjigy5Ap/SkymfGIE23vOmnppQKkThSbDDPgFbyqYhGO6ICO4scMzDZcWQO5SdAXWzRW0sPHlisoSSE0NjlN+LvH/bPSNR9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AoonPlg8; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1785058333; c=relaxed/simple;
+	bh=pOJCn6MRTwenHiqSlXreBDk8qCLUjPSdXPSwsTfuh6g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gPiMd+iNr0ZRFY32596v/YaRf9yToyCkCC2AIkIhh+vcQ0hAsdIs4+uBwYMAAYjQawazFI6h4kSaAinupM6/9JujgAejNLZmdO1wzuhlM/2Y3+Z10B55cp7PCUzmPACNR1HJImWegudSgOmj4XMKFNjxxgzEr2Z1zNhUEsreg04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eTJhepnU; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AoonPlg8"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2ccf2360620so16015945ad.3
-        for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 02:31:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eTJhepnU"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-84874b52eabso2408122b3a.0
+        for <linux-pci@vger.kernel.org>; Sun, 26 Jul 2026 02:32:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785058295; x=1785663095; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=3lLDZViLAfINHg50NTNYlWjUmmq7rCNRpyVHV83r/TA=;
-        b=AoonPlg8m/+dMnN3MLWGQFNNQ2zQ1AVB473XQvMXktDQX/CRzF0UOLqDorDZ9jLjLY
-         aegmUrT44HtGrP1Rl75YbaisGUckFvxzqANBUN12qqp0Y7ZUa/SGSJ42QKdLohglgn5C
-         +t17Qg2Akuqw6elBBp9vW0jXke1yH0E4BWgNP4/yOvP6itgWVgBRlb+Q6gO2T5Pe3KtH
-         puoyiQlJjNjfFwegraq4QR3PdjzxTwkWb52QbUSYasrVpEBHnetb+/ArmFX/OiTvTgQZ
-         tLOCyocd1cVdcMH98XlZ3bez/Qw4ZEeiOkMSQvCfa6aID+15bxNAswgvIpJs215evBYJ
-         R0uA==
+        d=gmail.com; s=20251104; t=1785058332; x=1785663132; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Vf2nGakrQe4m8ykr6H44BkI8tt373xXT6T7MK0fSYTQ=;
+        b=eTJhepnUTFjvvI15VC+cII6cC78zsHV+M3ywm0NDth75NuLDzFiY7OunJ81oZG887f
+         m3FMXfh4LGbRxcrNnCXeu3Dry91CYijg9R3UIOY18HiEHDUjAXDMbDXdWCU3HBg5/UvR
+         7nvDEEpbl5JmS06u2xbPyTwF4dYFo2/k9jJtEE0RVw2ToFaX+h/OKSynB8iTJBcsTSxp
+         s4sLdELAp9a2OAyAt1ZEh+HhaZt3G4ctDTimxdVok6Ce35ghp3gDwc4PHVNjEzrXoGPS
+         XyISqwU3HfglG4o3JNBpjXh5xZnwMd2X9UhH7wVdUS2LeeI36XP6TSYdR/LBSMeM/sRf
+         jIIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785058295; x=1785663095;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3lLDZViLAfINHg50NTNYlWjUmmq7rCNRpyVHV83r/TA=;
-        b=b1QRjqMCnPs1hdrMsbWVaflBo5NudlswysSYyiOAGuRvKPoJpN3gXc/Qe5KonMPX1E
-         m6HN1oRNOADQ8JU3WWItK6yV/noMGwzSunmVT19k+Pl9gjemauaO2yJdI/5rLeH2yloV
-         cs/lqCZTT3C/ILmoy1zdnMpnGwc/ZhcIWcBN0J+LXMYTSo3KGu0zrbLTEpxRU6gyERcL
-         FP+eukX0qKKHbbA9l3x9IRPYY6Sz3k2Lm8EhSyrn2XabWDD9kr+0ipozKkXXMaoIPjlT
-         WBpA52txQcDDDbZvgzokQvIYU+VSsmonb/iSTRlRqEGF/zPQ1+8gt74n7DWKvpI3LXBH
-         v89g==
-X-Forwarded-Encrypted: i=1; AHgh+RpS87M+RMScXdS/a8GdkcHAqxZE+NgYw3gEHk8k/WVT768ixhz5jKfWcw7moKYr9iJ1F07ZBuNlyFQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBZKW9sG5EoXvoH/sWtJwzg3Pl3Y5xtjRoOpFXaMXBsn5U5KZt
-	RirTS/Ymew4K1x4sMLD6nLVDBkuclt5PBI1/DFXdUq1YdPldEQpBLpVY
-X-Gm-Gg: AR+sD115mKBQYyElYd57OrAOzdRniKoUwYnqtnK7F4XXMma4zWNNNcakWY0ZicOHdTu
-	J11HtSVIotgbNDvwHbEpiYn+vKhpNSuFJqQ71wKNQtzkdt3dB1eh6j6PWPbKhLq8qaW5CedXoZ2
-	tvwe+K4vcj87BziW0dlyliyHSZo4oynhQwmaGfz+gEAA+eaD2c+UMvIPcvGcAj0Did7PYGFFElr
-	K5yB7KDY/Ouu/0WkGR2N0i8OKanLIaP/9LXC2gxNNidAbLolIGe8Tsk3as8+tnFFxX5vA4FgYNF
-	zGM5H0CefoKQoPG48jicglR9fD5x9RextIsBexmbCnajF/bYIc7oShsFS1y/S1BB3yb5dqy3/4P
-	hYIK3QhH+ulejyIQVsSxWISlDDnf4kIPhn3ZBVmspWlW2OAvHMlagHY/dQbKH85uVtQ9r0lAhTf
-	wGpA09tpxdZxrK
-X-Received: by 2002:a17:902:cecc:b0:2c9:97a7:f544 with SMTP id d9443c01a7336-2cfde888049mr41374305ad.42.1785058294646;
-        Sun, 26 Jul 2026 02:31:34 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785058332; x=1785663132;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Vf2nGakrQe4m8ykr6H44BkI8tt373xXT6T7MK0fSYTQ=;
+        b=kT7CT25SO6aKRMRVo9aphF99ov2xcOyvNoJIjgQZEZ1zXnoZqR94ykdKpO+G9IEQFb
+         tlr+ZyJ5+PKHzgqG9+Qk9ipKcEoGOgoxZGhJas4iCPd3dcfqpKBUhx+0o+IkZoEXU+Yp
+         Z5r+EEqrcbfjWMqqdnvqNgLTPDhMR3YQSSXhkRAWRolKd/om60USxOMhTBqNnBnVegXl
+         guhZKj/h0iX7SxgxFfDjfDpIc0n1zieUW2saM+6LLrKL8DSo7rZ8uPHvBan+kJA0NC0u
+         PG7t5bnoA6a9FK1JNmD6wqyIFQM1wZxPd2IWRsT+NZuzCJdsPYSo7iLIek70hRHsxJKm
+         0hKQ==
+X-Gm-Message-State: AOJu0Yyo6BJ3B12riiLV+mQw+LWPKVsyIkf3VTnz4Ekcz49t+1teLipr
+	PONmMnVUfcIvhJ9d3aqeTBxcrAoakrFNEE3ctp90AS5TLdZCgouVq4xP
+X-Gm-Gg: AR+sD11V2V9z+hv1nqVpLtXvrkmdyVIS2652aUwMAAM7F2usDYGP769alh6LbpIibFt
+	I2dtNIWSRS9Lo98xfLq2GPbz1MXLPszGvZSIwMUwcYji9NlLb4coNh+Q0GHaaoFtnENgG7WuMJf
+	sUYfdYdtMgzM0cFwbeeKyYiFnh++s324r70zC6LnVneJaZp+CiCvvNiwbus0dZslBmjmdDUSjym
+	SeU7xKHvWqQuLKFAKBI9tgd6xCfP8Vya6mUrTIlGvrOEpWAg5rP4CAnwuQL5OD8KkPIJ6xEiZe4
+	cY7H9Ae/oemMGxBoCrm6iEk/kmz5VkDp8JkkRWyZm8LD/yEo8gCqhNso3gvTTXefqdwN/eF6O51
+	bbea9Meo3X4jF/J0rqwn8J7QC5O3KDXwnELX0lm4bVCKyIuFKvhfA4nPzWPMUxSkUGbdgte1JN+
+	ddiA==
+X-Received: by 2002:a05:6a00:218f:b0:848:86cf:267b with SMTP id d2e1a72fcca58-84e5959cb48mr3897037b3a.61.1785058331864;
+        Sun, 26 Jul 2026 02:32:11 -0700 (PDT)
 Received: from ubuntu.. ([2001:2d8:72ac:5ae4:b4c0:11d6:e62a:f791])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cfde7ee3b1sm17860305ad.62.2026.07.26.02.31.31
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e533d1448sm1731781b3a.30.2026.07.26.02.32.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jul 2026 02:31:33 -0700 (PDT)
+        Sun, 26 Jul 2026 02:32:09 -0700 (PDT)
 From: Rihyeon Kim <rihyeon8648@gmail.com>
-To: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	gregkh@linuxfoundation.org,
 	tarunsahu@google.com,
-	djeffery@redhat.com
-Subject: Re: [PATCH] PCI: Handle dev_set_name() failure in pci_setup_device()
-Date: Sun, 26 Jul 2026 18:31:27 +0900
-Message-ID: <20260726093127.145865-1-rihyeon8648@gmail.com>
+	djeffery@redhat.com,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: [PATCH v2 0/2] PCI: Fix dev_set_name() error handling in pci_setup_device()
+Date: Sun, 26 Jul 2026 18:31:58 +0900
+Message-ID: <20260726093200.146111-1-rihyeon8648@gmail.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260725180429.GA349362@rocinante>
-References: <20260725180429.GA349362@rocinante>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hello,
+Hi,
 
-Thanks a lot for the review.
+pci_setup_device() calls dev_set_name() without checking it.  syzbot hits
+this with fault injection, where it turns into a WARNING and then a NULL
+pointer dereference.  Patch 1 checks the return value and propagates it.
 
-> The kernel-doc for pci_setup_device() will probably need to be updated to
-> reflect changes in what the function returns on failure, since now you have
-> the -EIO and also -ENOMEM, potentially.
+Patch 2 is the neighboring leak on the "unknown header type" path, where
+the name that dev_set_name() allocated is never freed.  It was reported by
+Yang Yingliang in 2022, and Krzysztof suggested picking it up here.
 
-Good point, I missed that.  Updated in v2.
+I am not sure about the attribution on patch 2, since most of it is Yang
+Yingliang's fix with the NULL assignment added.  If it should look
+different, or if that patch would be better sent on its own, please let me
+know and I will respin.
 
-> Probably:
->
->   Fixes: 1fa5ae857bb1 ("driver core: get rid of struct device's bus_id string array")
->
-> The commit you have references a state of the code, a much older code base,
-> where the implementation was fundamentally different, per:
+This is my first patch to the kernel, so please let me know if I got
+anything wrong about the form.
 
-You are right, thanks.  I had missed that dev_set_name() could not fail at
-all back then, and that the commit I picked was only replacing an snprintf()
-into the same fixed array.  Both patches in v2 use 1fa5ae857bb1 now, and the
-commit log says kvasprintf_const().
+v1: https://lore.kernel.org/linux-pci/20260725104747.226575-1-rihyeon8648@gmail.com/
 
-> The fix there is valid and would be nice to also pick it up.  Might use
-> a little...
->
->   dev->dev.kobj.name = NULL;
->
-> After the kfree_const().
->
-> Feel free to pick it up, and include here as a second patch, so a small
-> series.  Don't forget to credit Yang Yingliang, if you do decide to
-> follow-up.
+v2:
+ - 1/2: Fixes: points at 1fa5ae857bb1 rather than eebfcfb52ce7, since
+   dev_set_name() could not fail before that commit (Krzysztof)
+ - 1/2: update the kernel-doc for the new return value (Krzysztof)
+ - 1/2: say kvasprintf_const() rather than kvasprintf() in the commit log
+   (Krzysztof)
+ - 1/2: pick up Reviewed-by
+ - 2/2: new patch (Krzysztof)
 
-Thanks for the suggestion.  It is patch 2/2 in v2, with the NULL assignment
-as you described, and with Suggested-by: and a Link: to Yang Yingliang's
-original posting.
-
-> This one I am not sure.  The NULL-assignment move looks awkward there.
-
-Agreed, I left pci_device_add() alone.  It also overlaps with the driver
-core series that changes when device_add() frees dev->p [1], so I would
-rather wait and see how that one settles before proposing anything there.
-If it still looks worth doing afterwards, I can revisit it then.
-
-[1] https://lore.kernel.org/all/20260716230411.2767394-2-tarunsahu@google.com/
-
-Thanks again,
+Thanks,
 Rihyeon
+
+Rihyeon Kim (2):
+  PCI: Handle dev_set_name() failure in pci_setup_device()
+  PCI: Free the device name on the pci_setup_device() error path
+
+ drivers/pci/probe.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
