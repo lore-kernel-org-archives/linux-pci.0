@@ -1,176 +1,223 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4241C4334D0;
-	Mon, 27 Jul 2026 18:26:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2E743304A;
+	Mon, 27 Jul 2026 18:27:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785176797; cv=none; b=rZdmcWkcl8D5njdKOUNGcqf1wQDr+8imbm+FR19k3yirI4PhEqo7SUDHM2KKJiIwhM7uPYaldkJvTCTJC+vQlIjvQLecQe9quqW59NOzR508XK5113y9T4ZAwgLI+OLkiildNxFaICWtkJi6X6ngjJufgewObnch0L3hJWy+zKM=
+	t=1785176860; cv=none; b=s3KLGvOIdZx5/fza0hqxnzT7MvPbz2g4TME4FdN2vk+1IURAJHGzOgxso7f7F6NxJWjYwfIvTLkCKnfWJ4DSmj0MDiQfKVG6QCD890s4g/cDj94ayyGbiJm1FxUtBpi1/D9YfaHbQJsQ8ab+Q0s3benufwHNRTaSlJG/BEjQix8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785176797; c=relaxed/simple;
-	bh=alZwmxGpQnVwun0v5cbnCSMz3BnX59YNkg4SUg0rgh8=;
+	s=arc-20240116; t=1785176860; c=relaxed/simple;
+	bh=hXjplXvVBYj7dQNhI7tpFJA6kJ90fuqMxZ9YlSJH7pk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=U57te0M+nKXnHkvcnfEuRtPol2QO+R5wKf8cYzjxxjI1Rf0UiHVYE6XGXI7KkIvUjJsao5EXeaRlVhGpzP271cA0Sk2Nw3bFpRASiBApciRQoGD3UA+bYEg0ZDVuJ1FVbrssJ0/68FVPhgHfy9RW2s3MuspLSN8i8dGjHX2s5CE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dqiq1TS5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=n/XMq5oXtjKcMSJVfOjs+U6B9/U+wNxD5JLq3Ls/Bb74QbFL5IrHzkuLsMQNGuZqM5LtrLzilyURVDJxyTk0vhusOrPpgJicceps3fd+efRI+6J/JzsPq+iPJI7Uk+toY/a3mNdo2MNl5/TODoL6kRRpm83RIyepUjd3Zh1D9Fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xx1sw0/B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dqiq1TS5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C864A1F000E9;
-	Mon, 27 Jul 2026 18:26:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xx1sw0/B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BAF1F000E9;
+	Mon, 27 Jul 2026 18:27:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785176796;
-	bh=c8YHdX7PSjhp4VfsyxXYj+3VjykJqVmHNrDwMq3aMzs=;
+	s=k20260515; t=1785176859;
+	bh=+1thKsWL94V66UI62EgvWNyo53hfFdqxuXNOzRHwrbk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Dqiq1TS5t7Si37W1m0nNmtqQ2ySFz3GgkEZAS55dei+HwGNvisRpgGuQqTXRMeIAA
-	 3TcZ5fVPnZCRcnDDvN61ECX7+SBS0/OuIhn1VCWgWyhwQzZzUtOyaeYdXHdXqj01gZ
-	 JMDj321deQJUUxNN7LhyM13kjl/NuN1p/J14PBYP4JAPKlntwCSiZg7jUwlRdB/9xA
-	 r253uAVjzSUkEVYvFRDpap/An4BYpIFgIzkO8wBheJyJB7i8JDLJVxJJ8NTHk+NQfW
-	 QNzoiPUzsGn6WWLCqIjq15oNIxamPAhyzs8QSiHXRw0q3CUUwER0/rGNasqVFPr7ar
-	 bv98NAwEK8f3Q==
+	b=Xx1sw0/B1kSIi4p63TuJdI+gm+W/MGeLRhlqz9HwbMwGDyGMsK1oSxz1+hwBzyrmg
+	 NKcPnn/MM18PaE2IvcmkEbPt6rNTBVrY0gnrgIPlBuxd8MLsLumIkaA8NZQePXJHhc
+	 AQvLP9l6J4iTaH36TaACQ+qNvj8kqZQUyQ7WC1g19cxNH/zYncBIx8y7cIpHK5H8eH
+	 s9mlJtPbh6eysi8VuL8rZLz7X3zu9ThF+ItlimEcnCBNpjGY/xnYWOgXTFP72m2Mhw
+	 cbBsXgIQMjo0eQm7q6/LMuOmt4cMQ9rxqvPiLSW0oasT2LtGC7ydvU7smCNSX4Xkp1
+	 5OEtjqybwA1AQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 1/6] dmaengine: switchtec-dma: fix double-free in
- switchtec_dma_free_desc()
+Subject: Re: [PATCH v1 3/6] dmaengine: switchtec-dma: fix channel leak on
+ registration failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260727174837.6645-2-logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260727174837.6645-4-logang@deltatee.com>
 References: <20260727174837.6645-1-logang@deltatee.com>
- <20260727174837.6645-2-logang@deltatee.com>
+ <20260727174837.6645-4-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 18:26:35 +0000
-Message-Id: <20260727182635.C864A1F000E9@smtp.kernel.org>
+Date: Mon, 27 Jul 2026 18:27:38 +0000
+Message-Id: <20260727182738.D7BAF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
 
+New issues:
+- [High] The patch introduces a Use-After-Free in the error path by freeing=
+ swdma_chan structures while the global chan_status_irq is still registered=
+ and active.
+
 Pre-existing issues:
-- [Medium] Missing cleanup in the error paths of switchtec_dma_alloc_chan_r=
-esources() leads to memory leaks and overwritten DMA allocations.
-- [Medium] Leaked switchtec_dma_chan objects and swdma_chans array when dev=
-ice enumeration or registration fails.
+- [High] Use-after-free on swdma_dev during device removal.
+- [High] Preexisting Use-After-Free on dma_async_device_register() failure =
+due to chan->dev being freed while the IRQ is active.
+- [High] Failure of ioremap() is not checked, leading to an immediate null =
+pointer dereference.
+- [Medium] Leaked channel structures during partial enumeration failure in =
+switchtec_dma_chans_enumerate().
+- [Medium] Missing put_device() for the DMA parent device on dma_async_devi=
+ce_register() failure.
 --
 
---- Patch [1]: [PATCH v1 1/6] dmaengine: switchtec-dma: fix double-free in =
-switchtec_dma_free_desc() ---
-commit c1fc554811fc177ea9480bb2fbbc31e95646cd59
+--- Patch [3]: [PATCH v1 3/6] dmaengine: switchtec-dma: fix channel leak on=
+ registration failure ---
+commit 7464b8c763dc5bb4e72b11ab5698233a70070171
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: switchtec-dma: fix double-free in switchtec_dma_free_desc()
+dmaengine: switchtec-dma: fix channel leak on registration failure
 
-This commit nulls out each pointer as it is freed in switchtec_dma_free_des=
-c()
-so a subsequent call is a no-op for anything already released. This prevents
-a double-free if the function is called twice.
-
-> switchtec_dma_free_desc() frees swdma_chan->hw_sq, hw_cq, and every
-> desc_ring[] entry without clearing the pointers afterward. If
-> switchtec_dma_alloc_chan_resources() fails partway through and calls
-> it during unwind, then a later retry of alloc_chan_resources() fails
-
-[Severity: Medium]
-This is a pre-existing issue, but does switchtec_dma_alloc_chan_resources()
-actually call switchtec_dma_free_desc() during unwind?
-
-Looking at switchtec_dma_alloc_chan_resources():
-
-drivers/dma/switchtec_dma.c:switchtec_dma_alloc_chan_resources() {
-	rc =3D switchtec_dma_alloc_desc(swdma_chan);
-	if (rc)
-		return rc;
-
-	rc =3D enable_channel(swdma_chan);
-	if (rc)
-		return rc;
-
-	rc =3D reset_channel(swdma_chan);
-	if (rc)
-		return rc;
-    ...
-}
-
-If enable_channel(), reset_channel(), unhalt_channel(), or rcu_dereference()
-fail, the function returns an error directly without freeing the DMA cohere=
-nt
-memory and descriptor rings that were just allocated by
-switchtec_dma_alloc_desc().
-
-Because the dmaengine framework does not automatically call
-device_free_chan_resources() when device_alloc_chan_resources() fails,
-the driver must handle its own cleanup.
-
-Furthermore, if a client or the driver core retries the channel allocation,
-switchtec_dma_alloc_desc() will blindly overwrite the dangling pointers with
-new allocations, permanently orphaning the previously allocated memory.
-
-Does this need an explicit cleanup path on error?
-
-> in switchtec_dma_alloc_desc() before reallocating one of those
-> pointers, its own failure path calls switchtec_dma_free_desc() again
-> and frees the same, already-freed pointers a second time.
+If dma_async_device_register() fails during probe,
+switchtec_dma_chans_release() only stops hardware and frees IRQs and
+tasklets; it never frees the per-channel swdma_chan structures or the
+swdma_chans array itself.
 
 [ ... ]
 
-While reviewing this code, I noticed another pre-existing issue.
+Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.ke=
+rnel.org/T/#u
+
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+
+[ ... ]
+
+> @@ -1317,6 +1317,11 @@ static int switchtec_dma_create(struct pci_dev *pd=
+ev)
+>  err_chans_release_exit:
+>  	switchtec_dma_chans_release(pdev, swdma_dev);
+> =20
+> +	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
+> +		kfree(swdma_dev->swdma_chans[i]);
+> +
+
+[Severity: High]
+Could this newly introduced kfree() loop cause a use-after-free?
+
+Since chan_status_irq is registered earlier and remains active until
+free_irq() is called in the err_exit block below, an interrupt could fire
+while this error path is executing.
+
+If the status interrupt fires after these structures are freed,
+switchtec_dma_chan_status_isr() will iterate over dma_dev->channels and
+dereference the freed swdma_chan structures.
+
+Should the IRQ be freed, or the channels removed from the list, before we
+free this memory?
+
+> +	kfree(swdma_dev->swdma_chans);
+> +
+>  err_exit:
+>  	if (swdma_dev->chan_status_irq)
+>  		free_irq(swdma_dev->chan_status_irq, swdma_dev);
+
+
+While reviewing this patch, I also noticed a few pre-existing issues in
+this driver:
 
 [Severity: Medium]
-Does the driver leak the switchtec_dma_chan objects during probe errors?
+This is a pre-existing issue, but does switchtec_dma_chans_enumerate()
+leak memory on its error path?
 
-Looking at switchtec_dma_chans_enumerate():
+If switchtec_dma_chan_init() fails, the error handling cleans up the array
+but does not appear to free the individual swdma_chan elements:
 
 drivers/dma/switchtec_dma.c:switchtec_dma_chans_enumerate() {
-	for (i =3D 0; i < chan_cnt; i++) {
-		rc =3D switchtec_dma_chan_init(swdma_dev, pdev, i);
-		if (rc) {
-			dev_err(&pdev->dev, "Channel %d: init channel failed\n",
-				i);
-			chan_cnt =3D i;
-			goto err_exit;
-		}
-	}
-
-	return chan_cnt;
-
-err_exit:
+    ...
 	for (i =3D 0; i < chan_cnt; i++)
 		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
 
 	kfree(swdma_dev->swdma_chans);
-
-	return rc;
+    ...
 }
 
-The err_exit loop calls switchtec_dma_chan_free() which stops the hardware
-but fails to free the actual swdma_chan memory before freeing the array.
-switchtec_dma_chan_free() does not call kfree(swdma_chan).
+Since switchtec_dma_chan_free() only disables hardware and frees IRQs,
+the memory allocated for the channel structures via kzalloc_obj() seems
+to be permanently leaked here.
 
-Additionally, in switchtec_dma_create(), if dma_async_device_register()
-fails:
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but is there a reference leak if
+dma_async_device_register() fails in switchtec_dma_create()?
+
+The driver acquires a reference to the parent PCI device:
 
 drivers/dma/switchtec_dma.c:switchtec_dma_create() {
     ...
-err_chans_release_exit:
-	switchtec_dma_chans_release(pdev, swdma_dev);
-
-err_exit:
-	if (swdma_dev->chan_status_irq)
-		free_irq(swdma_dev->chan_status_irq, swdma_dev);
-
-	iounmap(swdma_dev->bar);
-	kfree(swdma_dev);
-	return rc;
+	dma->dev =3D get_device(&pdev->dev);
+    ...
 }
 
-It frees swdma_dev but leaks both the swdma_dev->swdma_chans array itself
-and the individual channel structures within it, because
-switchtec_dma_chans_release() also just calls switchtec_dma_chan_free().
+If registration fails and the code jumps to err_chans_release_exit,
+swdma_dev is eventually freed without calling put_device(dma->dev).
+Because the device failed registration, its release callback isn't
+invoked, which appears to leave the parent PCI device reference leaked.
 
-Could these error paths result in a memory leak?
+
+[Severity: High]
+This is a pre-existing issue, but can switchtec_dma_remove() trigger a
+use-after-free when unmapping the bar?
+
+When unregistering the DMA device, if there are no outstanding channel
+references, the core synchronously invokes the release callback
+(switchtec_dma_release) which frees swdma_dev.
+
+drivers/dma/switchtec_dma.c:switchtec_dma_remove() {
+    ...
+	dma_async_device_unregister(&swdma_dev->dma_dev);
+
+	iounmap(swdma_dev->bar);
+    ...
+}
+
+Since iounmap() dereferences swdma_dev->bar immediately after the
+unregister call may have freed swdma_dev, could this lead to a crash
+during device removal?
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there another
+use-after-free risk during dma_async_device_register() failure?
+
+If registration fails after partially registering channels, the DMA core
+automatically frees the chan->dev structures via device_unregister().
+
+Because chan_status_irq remains active at this point, a spurious or
+concurrent interrupt can fire:
+
+drivers/dma/switchtec_dma.c:switchtec_dma_chan_status_isr() {
+    ...
+	chan_dev =3D &swdma_chan->dma_chan.dev->device;
+    ...
+}
+
+This unconditionally dereferences the core-freed chan->dev structure.
+Could this cause a crash if the interrupt fires before free_irq() is
+reached in the error path?
+
+
+[Severity: High]
+This is a pre-existing issue, but does switchtec_dma_create() safely
+handle ioremap() failures?
+
+drivers/dma/switchtec_dma.c:switchtec_dma_create() {
+    ...
+	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
+				 pci_resource_len(pdev, 0));
+    ...
+	irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
+    ...
+}
+
+Since ioremap() can return null, skipping a validation check here
+seems to guarantee a null pointer dereference on the very next readw()
+if the mapping fails.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727174837.6645=
--1-logang@deltatee.com?part=3D1
+-1-logang@deltatee.com?part=3D3
