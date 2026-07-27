@@ -1,154 +1,183 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F91436361;
-	Mon, 27 Jul 2026 17:48:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB9E42A795
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 17:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785174541; cv=none; b=MuuA0zRUnVLJIxOT4eUMSwgNdCz/gbBWld7y/Eqkrv97AP/spfgk+jqNk6fdKMdZ7dYECKT5JdQM3pLnfo0sOuJOg0SYPCQaRH2Y9C7VxBHKhii3tPNgb4uNQ6rdza8+rfqPMWMM8LjW1eDu0BNeHoDSy178Ze34DEb1W1TeuoQ=
+	t=1785174792; cv=none; b=PJkb8EbVtknir70qwEyNc5pTsgioqyYms4L/CvjJYGjsJgZ4J80R/M8xLgWIoWIkjlUD7BG3YLf+WNgO0rC6mLoVg3SSijhC7f3S/FGNRpe0eXJQcGDltORxhrb+xtv/C62Umc0zi2e1mPSICfX9k/R6FDsWXtfhPggf3s+4hPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785174541; c=relaxed/simple;
-	bh=3apJniTrAz3OCQNT/k1t2ilm3Dew3xvjc75QyxNB1oo=;
-	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=jgQE7ZxHBfz1EFdtwyhjDWV8LfvHMJTeccQfD6BOknskiyEAPXiiO8lcSuMnjYPvs8yP76qBhbNU2g/qKvHhnkgcw3vFu5jNwjeoHm12MslsZ4izc7/stTmIZUTqFHz5TXQ7+dx6Ps3D9D+C3hc7g88COgtfvowx7Ut6EUk0l2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=mZ+cgNYN; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1785174792; c=relaxed/simple;
+	bh=lheKOcqXGqvOyWuVJbHt9u4pRy9TVqzwH9e6lzBPJbU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pdJFDraTzurwA8AICm6St9qfTC/4YgXXjeCd1XK50tiX6gFRh7pCUz93wf37P3aAqyocEVNYnjGinjgLSY0pIxqNYJ6poEveb9i3ue+tlGSIoZsnGOY3ntb8J+ZOEumtmxB1keS+Gp/UQc3JvycwkB9ogbe8RWsvDoFK8LlMJuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=E4ynvVIJ; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="mZ+cgNYN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=9NFh33ZHenlHQ/BzhUGRfrC+RQcL3SZXA7WYZysgfj8=; b=mZ+cgNYN+jNJoxaKJnTu8VJk3L
-	CCdoOmGFc2fSuccB6cMt9ABPTFVhthJyFHZsHaN59mlzlORULqq8HA24ah8V5wsAIuOusl4TSQksH
-	BWD5rYX4dAm0JgBGkTZEC2rEEYiGT3CEKj8TKIEQq5aAcoZzG8HIW4AzRsGbIcBXkMeijaOeP2em6
-	ilmkmbMiIxIi/tKvL+r+Vsge+5Jp81QFn/k2DXdYS8Cqli5p6ucZZ6dO5E5klLsmm81x8m/wZlNeH
-	KyCGi212RclaBL+KV0LyI+55/FgFBbXbuz7JeR60XiDg4lwW8QNZMlUQkAz7LjtQdLvmNRb9Q/P0k
-	sRsXVKwA==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1woPRU-000000004Nz-06Nz;
-	Mon, 27 Jul 2026 11:48:52 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
-	(envelope-from <gunthorp@deltatee.com>)
-	id 1woPRQ-000000001ji-0O3S;
-	Mon, 27 Jul 2026 11:48:40 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	Vinod Koul <vkoul@kernel.org>
-Cc: Frank Li <Frank.li@nxp.com>,
-	Kelvin Cao <kelvin.cao@microchip.com>,
-	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Dave Jiang <dave.jiang@intel.com>,
-	George Ge <george.ge@microchip.com>,
-	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Sashiko <sashiko-bot@kernel.org>
-Date: Mon, 27 Jul 2026 11:48:32 -0600
-Message-ID: <20260727174837.6645-3-logang@deltatee.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260727174837.6645-1-logang@deltatee.com>
-References: <20260727174837.6645-1-logang@deltatee.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="E4ynvVIJ"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-84847482584so139344b3a.0
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 10:53:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1785174782; x=1785779582; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=HkPvk2eUGVnaH519Z4bYiGg7FI/KZRoqTARHHR55Fmw=;
+        b=E4ynvVIJ5U+Q1Nv8MA0mEejOSSBSizcI391zZLi7/rYybQCtmfuJ76gFII5incykmw
+         82bU1QYC1r+M1YxEYzCeVVOqUhxHb1oIo4hB9vdUwvWd7XbREFqwnKLgQXg4YV6taLPz
+         QsFwQaTioE6p1rsr2nWkV/LhMSoYuCTvILnSd19HYZU4aEnup9ZguTJ3z+8CLQwC1zps
+         chioBa/uEw0H7OImQrNeGm5iUEVRviW0sgl11+l5l1HOlEwMAQUwxN+Fci2LeR7K+gUd
+         6GpMO+wmPPDorTVXeuEEtqib7n6HCk5dAwTW8MO/RGYmiSf6JRhmbuW5Fem0sqfLVvpb
+         A51A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785174782; x=1785779582;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=HkPvk2eUGVnaH519Z4bYiGg7FI/KZRoqTARHHR55Fmw=;
+        b=N3pVxAXu4YaSt2LAXLz0SIjSPrCvNhr3l6PpxVxugLOqTKeeFb/P76rnSlXZXaVrCT
+         3Umk2oyE2wqtHw2h64PYe5B3Q0Z3esmXqTw6QDCNhRL+TAuEhS5HZ+lC/Ivzluhc/2LP
+         k2lSVMF12LQJhEIIiPN8onkbQwDJaw3ylCFugw5q5eay6jjz7Rg26NipiJmi2thfZNO9
+         Sx8lcJ6enMoVb9kzGhiMUOLQJBxkKX+lmIpU6X/qxBydRA+JlGpbgPIpSlUIxY0X/R4v
+         f20fYrRbVmr18ennHyvjuVb1hFhnProWpi9Zh5+3rHvWyXMCCIONAqC6Git5CXQl4DZl
+         co8A==
+X-Forwarded-Encrypted: i=1; AHgh+Rq/pltdtgleK//Z+VU+Gf1GH2LbgMaQ1ymKLcV6SQr/N6H7LvwinXEFyBth6Wi0yl06bOUS1ZbUoKM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx0YYImffYEeuJu6LrYNSLxSyQ7fvzBJeoq459G3c5+qKor4pYc
+	VtpN9kITv93FVQSY31Njk5+O+VzCRydvY1ORg4GveWkTJd4sTDHt5vqOgAlgHMOaTg==
+X-Gm-Gg: AR+sD12SihlniTYu+xqpLiQrprviaLOb0oe8cizXS/14XbJ1ZQVuJzM2Tsygx19KPFP
+	B78X/nmM6qPxwzVvQB+0xWBSwsWeDKFoF62LVrHVemGJ8J0aK/PqBK1a6q4dN406FxH4nC+oGg3
+	Igf5RjlD8lAmkD004hXKTTsdja/oax9R2Uyetz2n3IKfzek+h1otDIXbBMf6y4C3rQI3e3XZYib
+	8y9Gu/sl6qMieUZO+PZo41NdhZFYqkXscNT3zQDL3MQZQ3uGGyHMBxvMdSmCPoLZJtHrvJU1T4v
+	VIOaBSKuzDiVzVJHzmSfKwGL82wclDV4MWUHF/aCQLkf66bP13tS5LvgtIJKW3xTZ8AzN0NOBu7
+	7VGr6maK13w7HhIalKODyWHva78QyCyM3PihZ2I2OA+lrP8+K0QV94tZyWBm56zZEVfiQIV4FdZ
+	5Um3N3oMdJO2hpcoB+MAV5zJvQZZewDrYhbJxteuDO
+X-Received: by 2002:a05:6a00:aa06:b0:84a:65fd:950a with SMTP id d2e1a72fcca58-84e8d3ab7b9mr351943b3a.29.1785174781958;
+        Mon, 27 Jul 2026 10:53:01 -0700 (PDT)
+Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e532590bdsm3400120b3a.3.2026.07.27.10.53.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 10:53:01 -0700 (PDT)
+Date: Mon, 27 Jul 2026 17:52:57 +0000
+From: David Matlack <dmatlack@google.com>
+To: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v7 00/12] PCI: liveupdate: PCI core support for Live
+ Update
+Message-ID: <amea-VLTnrO_WxnW@google.com>
+References: <20260710212616.1351130-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-X-Spam-Level: 
-Subject: [PATCH v1 2/6] dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260710212616.1351130-1-dmatlack@google.com>
 
-switchtec_dma_alloc_chan_resources() returns directly on any later
-failure, without ever freeing the descriptor rings and coherent DMA
-memory it just allocated. The dmaengine core does not call
-device_free_chan_resources() when device_alloc_chan_resources() fails,
-so the driver has to unwind its own partial state.
+On 2026-07-10 09:26 PM, David Matlack wrote:
+> This series can be found on GitHub:
+> 
+>   https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v7
+> 
+> This series introduces initial support in the PCI core for Live Update,
+> enabling drivers to preserve PCI devices across a kexec-based kernel
+> update without interrupting the device. This functionality is critical
+> for minimizing downtime in environments where PCI devices (e.g., those
+> assigned to VMs via VFIO) must continue operating or maintain state
+> across a host kernel upgrade.
+> 
+> Specifically, this series allows preserved PCI devices to perform
+> uninterrupted memory transactions (DMA) to/from system memory across a
+> Live Update. These devices can be behind a bridge but must not be VFs.
+> Support for P2P and VF preservation will be addressed in future series.
 
-The device-removed check also runs after ring_active and
-comp_ring_active have already been set true, so a failure there left
-the channel marked active despite alloc_chan_resources() reporting
-failure.
+> David Matlack (12):
+>   PCI: liveupdate: Set up FLB handler for the PCI core
+>   PCI: liveupdate: Track outgoing preserved PCI devices
+>   PCI: liveupdate: Track incoming preserved PCI devices
+>   PCI: liveupdate: Document driver binding responsibilities
+>   PCI: liveupdate: Keep bus numbers constant during Live Update
+>   PCI: liveupdate: Auto-preserve upstream bridges across Live Update
+>   PCI: Refactor matching logic for pci_dev_acs_ops
+>   PCI: liveupdate: Inherit ACS flags in incoming preserved devices
+>   PCI: liveupdate: Inherit ARI Forwarding Enable on preserved bridges
+>   PCI: liveupdate: Freeze preservation status during shutdown
+>   PCI: liveupdate: Do not disable bus mastering on preserved devices
+>     during kexec
+>   Documentation: PCI: Add documentation for Live Update
+> 
+>  Documentation/PCI/index.rst                   |   1 +
+>  Documentation/PCI/liveupdate.rst              |  29 +
+>  .../admin-guide/kernel-parameters.txt         |   6 +-
+>  Documentation/core-api/liveupdate.rst         |   5 +
+>  MAINTAINERS                                   |  15 +
+>  drivers/pci/Kconfig                           |  15 +
+>  drivers/pci/Makefile                          |   1 +
+>  drivers/pci/liveupdate.c                      | 910 ++++++++++++++++++
+>  drivers/pci/liveupdate.h                      |  68 ++
+>  drivers/pci/pci-driver.c                      |   9 +-
+>  drivers/pci/pci.c                             |  14 +-
+>  drivers/pci/pci.h                             |   5 +
+>  drivers/pci/probe.c                           |  22 +-
+>  drivers/pci/quirks.c                          |  58 +-
+>  include/linux/kho/abi/pci.h                   |  59 ++
+>  include/linux/pci.h                           |   4 +
+>  include/linux/pci_liveupdate.h                |  77 ++
+>  17 files changed, 1260 insertions(+), 38 deletions(-)
+>  create mode 100644 Documentation/PCI/liveupdate.rst
+>  create mode 100644 drivers/pci/liveupdate.c
+>  create mode 100644 drivers/pci/liveupdate.h
+>  create mode 100644 include/linux/kho/abi/pci.h
+>  create mode 100644 include/linux/pci_liveupdate.h
 
-Add an error-unwind path that disables the channel and frees the
-descriptor rings on every failure after allocation. ring_active and
-comp_ring_active are cleared under the same locks
-switchtec_dma_free_chan_resources() already uses, since the completion
-tasklet checks comp_ring_active under complete_lock before touching
-the completion ring, and a stale IRQ can still be in flight when this
-unwind path runs.
+Bjorn,
 
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.kernel.org/T/#u
-Fixes: 30eba9df76ad ("dmaengine: switchtec-dma: Implement hardware initialization and cleanup")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/dma/switchtec_dma.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+Do you have a preference of whether to merge this series through
+liveupdate.git or pci.git once it's ready? (Mike Rapoport asked if we
+could make a decision on the merge plan.)
 
-diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-index a4a7d66d042d..f77da31aeb65 100644
---- a/drivers/dma/switchtec_dma.c
-+++ b/drivers/dma/switchtec_dma.c
-@@ -988,15 +988,15 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 
- 	rc = enable_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_free_desc;
- 
- 	rc = reset_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
- 
- 	rc = unhalt_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
- 
- 	swdma_chan->ring_active = true;
- 	swdma_chan->comp_ring_active = true;
-@@ -1007,7 +1007,8 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 	rcu_read_lock();
- 	if (!rcu_dereference(swdma_dev->pdev)) {
- 		rcu_read_unlock();
--		return -ENODEV;
-+		rc = -ENODEV;
-+		goto err_ring_inactive;
- 	}
- 
- 	perf_cfg = readl(&swdma_chan->mmio_chan_fw->perf_cfg);
-@@ -1029,6 +1030,20 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 		FIELD_GET(PERF_MRRS_MASK, perf_cfg));
- 
- 	return SWITCHTEC_DMA_SQ_SIZE;
-+
-+err_ring_inactive:
-+	spin_lock_bh(&swdma_chan->submit_lock);
-+	swdma_chan->ring_active = false;
-+	spin_unlock_bh(&swdma_chan->submit_lock);
-+
-+	spin_lock_bh(&swdma_chan->complete_lock);
-+	swdma_chan->comp_ring_active = false;
-+	spin_unlock_bh(&swdma_chan->complete_lock);
-+err_disable_channel:
-+	disable_channel(swdma_chan);
-+err_free_desc:
-+	switchtec_dma_free_desc(swdma_chan);
-+	return rc;
- }
- 
- static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
--- 
-2.47.3
+I am leaning toward liveupdate.git:
 
+ 1. There are some LUO core changes around how FLBs are refcounted in
+    the next branch of liveupdate.git that this series depends on.
+
+ 2. We had previously agreed that the files covered by the PCI LIVE
+    UPDATE maintainer entry would be merged through the liveupdate.git
+    tree (which is the majority of this series), so this would be
+    following that process.
+
+    PCI LIVE UPDATE
+    ...
+    T:     git git://git.kernel.org/pub/scm/linux/kernel/git/liveupdate/linux.git
+    F:     Documentation/PCI/liveupdate.rst
+    F:     drivers/pci/liveupdate.c
+    F:     drivers/pci/liveupdate.h
+    F:     include/linux/kho/abi/pci.h
+    F:     include/linux/pci_liveupdate.h
+
+But if you prefer landing the initial series in pci.git I think we can
+expose a stable branch in liveupdate.git to handle (1).
+
+What would be your preference?
