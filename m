@@ -1,40 +1,40 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78A3432E96;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92A943634A;
 	Mon, 27 Jul 2026 17:48:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785174533; cv=none; b=Lj85kTObYJs+QiVXTLK//OoAStb+TKbzHw39uNLU4zkFANFPRLLwy7t11aEQWsLfT86hlNyRr/lDnGMwa90yYnGytx60XFcfxDXP/oQT3f6c6/1N4YFGWdDNn/ZS6HKG7/DkjVRdDPlvgsfZMTz/T26wfaCS5Z3kiReeyzheftI=
+	t=1785174533; cv=none; b=sropUtBUtmJMD1K1yX+L0f9euj1LafUeVZ61p+SNbjgFnc9a9nRml6nQ0JtQl6e+mox9iDGS3NKeREGpuvxk2ExSKkt7rAihipXNnIRoE/8C+Uv2NPA7DNYlRHEkwg/CZk/3zLYSQqMao8yXSe1O3dn9iOivpDV2e+/EL4Nflxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785174533; c=relaxed/simple;
-	bh=/bHx1KqUQ5FZegJF2+0lqfCDtUh0LCnmdvxhqwVny8s=;
+	bh=boazSQKaoz1Y5heBQp7szsJqCij2Wr04g3mlrBLNMks=;
 	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=Bh8mHEn0Yq93iESTzseDmShdO0udKf+eSzH1ATuZIuJUzjGXW57OxB1OEOajzg0UZKPjn/lV4JOpTcuce07qaXISRqAXeU7DEnzl0aFz6JuIw8G8I0zICz4A9JZQwJwBDIeFFuySRbeJI8dIVYpBnLrXhnMy1fzAJXTqaWuqwms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=T9xvyCJo; arc=none smtp.client-ip=204.191.154.188
+	 Subject; b=f24NOwJ4xwQ58L87kDo6uLeYe1yuPTrD388CC0dQG0yVvfq/rir30DcknoOFt/saUrRVSUZPBV5B1FvtRetwO1Vvt8tTbNjqp+MfPjKnasyQVkd31/N9p4TcX6yEF5IJQWWQemL+TXg78zZKb56LCG1WKQb2f5wm6i0SGXmzPZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=MpPHNuI6; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="T9xvyCJo"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="MpPHNuI6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=1Sc00LLbJ3B9EzEYCBr4PK/7bI/kLf3dvLcEogNQeHU=; b=T9xvyCJor3g5mss/D4NBQBKLEr
-	XnS8MNEmFl3CEih6m8YQu+wOy4ujv7Cmz8eFq1scxUAgMktQxg6knJY6iQ1xd6mQR4081syfNCNFc
-	sps/uwGslv0uRUiZjov2YCqsp9+1rNJPpvhWFAh0xUwX/mTRlrY2SMJNyAteA4Gk8CAgADWKbeZRY
-	SLP2pPFnt/GdEDG6xW8Zv/adN4VI8Q81Cxbt4xZNwDS0FCxkhLtUJlYzgiSviwOBZ1LxbYk6I9K/y
-	e49wQfbzWG5DuF0SZ8Gr+KX8GfoH/CkEw+K//hQCQRT7s+jkwBUkr/yKeJq+hwTgl0Xa/AH+aZ7S4
-	HWjIsCaA==;
+	bh=koyBdE/JNh7nnWKhy5pv5nbe/haHHnakVIxzfBN56ag=; b=MpPHNuI6iFRKYkYjCQ3MoJjKwN
+	YTUeJLY31QcVK5NpuJSFXJPUWtGWVR6d1Tnsp1E1ABOZDG2tXcF4rG4hiH9U+24aDEhkBMRe80W/C
+	8HGN0gKenUlPIS4Z5RGchkejyDFziuNpAXd9OYmvfaKMxnjGeYGgyEWGyCQTqE3OMC4PE36/dg06+
+	FO2pIpAEnDayM2Bt+FcfZ4C8haHzWbTjV3yNjk5EVFQvrMzbt/40n77mHEgYhsaqtpE4VCD1bm1Im
+	R1PPtSTeUNemIWzHNIxF23mtuMuGj4/TbBAXJYP47b491B3MkLw89DVaNEUQ4VXALHS8BwnA8Uu86
+	kcmJ8JlQ==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
 	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1woPRU-000000004Ny-04Gu;
-	Mon, 27 Jul 2026 11:48:44 -0600
+	id 1woPRU-000000004O1-05ww;
+	Mon, 27 Jul 2026 11:48:45 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1woPRP-000000001je-3yPq;
-	Mon, 27 Jul 2026 11:48:39 -0600
+	id 1woPRQ-000000001jq-1ajE;
+	Mon, 27 Jul 2026 11:48:40 -0600
 From: Logan Gunthorpe <logang@deltatee.com>
 To: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
@@ -46,9 +46,10 @@ Cc: Frank Li <Frank.li@nxp.com>,
 	Dave Jiang <dave.jiang@intel.com>,
 	George Ge <george.ge@microchip.com>,
 	Jaeyoung Chung <jjy600901@snu.ac.kr>,
-	Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 27 Jul 2026 11:48:31 -0600
-Message-ID: <20260727174837.6645-2-logang@deltatee.com>
+	Logan Gunthorpe <logang@deltatee.com>,
+	Sashiko <sashiko-bot@kernel.org>
+Date: Mon, 27 Jul 2026 11:48:34 -0600
+Message-ID: <20260727174837.6645-5-logang@deltatee.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260727174837.6645-1-logang@deltatee.com>
 References: <20260727174837.6645-1-logang@deltatee.com>
@@ -60,54 +61,71 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
 X-Spam-Level: 
-Subject: [PATCH v1 1/6] dmaengine: switchtec-dma: fix double-free in switchtec_dma_free_desc()
+Subject: [PATCH v1 4/6] dmaengine: ioat: disable relaxed ordering before registering the device
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-switchtec_dma_free_desc() frees swdma_chan->hw_sq, hw_cq, and every
-desc_ring[] entry without clearing the pointers afterward. If
-switchtec_dma_alloc_chan_resources() fails partway through and calls
-it during unwind, then a later retry of alloc_chan_resources() fails
-in switchtec_dma_alloc_desc() before reallocating one of those
-pointers, its own failure path calls switchtec_dma_free_desc() again
-and frees the same, already-freed pointers a second time.
+ioat3_dma_probe() disabled PCIe relaxed ordering after calling
+dma_async_device_register(), so if an error occurs and the code jumps
+to err_disable_interrupts, the function returns with the device still
+registered in the core's dma_device_list while the caller frees the
+ioatdma_device struct, leaving a dangling registration that anything
+walking the device list can dereference after it's been freed.
 
-NULL out each pointer as it's freed so a subsequent call is a no-op
-for anything already released.
+Move the capability read/write ahead of dma_async_device_register()
+instead. Nothing after registration depends on relaxed ordering
+already being disabled, and nothing before it depends on the device
+being registered, so this is a plain reordering. It also means every
+remaining step after registration can't fail, so there's no need to
+ever have to unregister the device once registered.
 
-Fixes: 30eba9df76ad ("dmaengine: switchtec-dma: Implement hardware initialization and cleanup")
+Fixes: 511deae0261c ("dmaengine: ioatdma: disable relaxed ordering for ioatdma")
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.kernel.org/T/#u
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/dma/switchtec_dma.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/dma/ioat/init.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-index 3ef928640615..a4a7d66d042d 100644
---- a/drivers/dma/switchtec_dma.c
-+++ b/drivers/dma/switchtec_dma.c
-@@ -886,14 +886,18 @@ static void switchtec_dma_free_desc(struct switchtec_dma_chan *swdma_chan)
- 	if (swdma_chan->hw_sq)
- 		dma_free_coherent(swdma_dev->dma_dev.dev, size,
- 				  swdma_chan->hw_sq, swdma_chan->dma_addr_sq);
-+	swdma_chan->hw_sq = NULL;
+diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
+index 737496391109..a57024c4b066 100644
+--- a/drivers/dma/ioat/init.c
++++ b/drivers/dma/ioat/init.c
+@@ -1170,15 +1170,6 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
+ 		       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
+ 	}
  
- 	size = SWITCHTEC_DMA_CQ_SIZE * sizeof(*swdma_chan->hw_cq);
- 	if (swdma_chan->hw_cq)
- 		dma_free_coherent(swdma_dev->dma_dev.dev, size,
- 				  swdma_chan->hw_cq, swdma_chan->dma_addr_cq);
-+	swdma_chan->hw_cq = NULL;
+-	err = dma_async_device_register(&ioat_dma->dma_dev);
+-	if (err)
+-		goto err_disable_interrupts;
+-
+-	ioat_kobject_add(ioat_dma, &ioat_ktype);
+-
+-	if (dca)
+-		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
+-
+ 	/* disable relaxed ordering */
+ 	err = pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
+ 	if (err) {
+@@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
+ 		goto err_disable_interrupts;
+ 	}
  
--	for (i = 0; i < SWITCHTEC_DMA_RING_SIZE; i++)
-+	for (i = 0; i < SWITCHTEC_DMA_RING_SIZE; i++) {
- 		kfree(swdma_chan->desc_ring[i]);
-+		swdma_chan->desc_ring[i] = NULL;
-+	}
- }
- 
- static int switchtec_dma_alloc_desc(struct switchtec_dma_chan *swdma_chan)
++	err = dma_async_device_register(&ioat_dma->dma_dev);
++	if (err)
++		goto err_disable_interrupts;
++
++	ioat_kobject_add(ioat_dma, &ioat_ktype);
++
++	if (dca)
++		ioat_dma->dca = ioat_dca_init(pdev, ioat_dma->reg_base);
++
+ 	if (ioat_dma->cap & IOAT_CAP_DPS)
+ 		writeb(ioat_pending_level + 1,
+ 		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
 -- 
 2.47.3
 
