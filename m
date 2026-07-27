@@ -1,74 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC75832D45B
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:16:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C0336A35C
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:16:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785161768; cv=none; b=anl3MTNeoni2nCAu69sxn25k+YwnVI8zf3CcBNxx+PAvugNzS2YHfeMNM9hnBqSW2jiLOEInDGAFQNqiEXAMvo3rujYc3jxYhzc8tlyFo2RA6G2QMWJdEktVRTBSRHEGUltNKCLBX58pH4H1ZY9R86KWE2mtmqJOBYx8C0JRmCY=
+	t=1785161822; cv=none; b=Flf4pP+15upc+jD4SRwDAJUFQ0ndyg+X8LYXgbq0sw2z9gDbF2hJp5VdStXdojGgUXgKWcDu0roFfQU9WiGSYH7sWCac0JaAgXh5S4gQOO5+PU1ZkYc6aSgkuAzZYweJIPEssz+5SO6ya3Tb6nEjlS8BRVgH39aSR3aLTIR9Xmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785161768; c=relaxed/simple;
-	bh=dSgWNlphk8ZIgjE5lGP+Plbn9mmBiIL/FaYYdF2h4Y8=;
+	s=arc-20240116; t=1785161822; c=relaxed/simple;
+	bh=LRkMKfoqDrlFrifOo98BDkJJKs62nsiy7DCinIICSM4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SjpqAVKNSZBC2g0GfduliaS0gFMiba/oVC/wyx/tdK17cy4KlxbbKVsr2TbEjyKhepBhE8YSNZGVK/8Fj6rKBZzesS1TkRSSIpI/IhoSCtlntBOTTjU7GagSAv1oqB8Sq1YJIaNVw0a0SVhLVb9pAy6RcWVOVkdol26+1hcb4uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MuqC3LX9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=A97sTluyJafUOyPQ/SDn9ZMg1OCPi4+5V2l/I8KM7lAbfyGpQAHZpCoZuapD1K+3uEogRzUM374S+2nMyi7q2jTGH/MXnaYSA714l4jzhLAueloPgjQ+P5uRi/pD5gseiLT+8EjO+Yg+ALhv80YX12ksJ7SSItGSBRBmiAyoNss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jpOKn1bN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MuqC3LX9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 945781F000E9;
-	Mon, 27 Jul 2026 14:16:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jpOKn1bN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E31F1F000E9;
+	Mon, 27 Jul 2026 14:16:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785161766;
-	bh=dSgWNlphk8ZIgjE5lGP+Plbn9mmBiIL/FaYYdF2h4Y8=;
+	s=k20260515; t=1785161817;
+	bh=yiIqCRNhent5UaUKWFJz1bIfKGezaxVWf+YPCZrwaCE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MuqC3LX9KV7x0ZUnCztgO6iH4rrVYb9+6YstYvLKaTGHdiqrQLU6LWwKGer3FMzgi
-	 DCjj0lsvvHsdBT3NUr50UOKs4kTAPuH/Ze/zfn0krtLupIoc4lMN7owwXhau3NtZIZ
-	 tSGs85D1GvNM35dzTjGrkplOzWHSva5w4jmclL0HazYi1YV9/erpJjrzDMmb+ZtC4E
-	 3IKxP32CqLshC/kKa0Gbh3bFfADkR/aT2HxQsOzdzErIteBTwcB67ZkA1MU0lZlW9h
-	 +wC6HXtR7f/xldqVWWgr/D1KE6DMntvjn5Fg29EeFV8aisP0PIsvCNS6UR1lI45EnT
-	 thm1cN0u3YALQ==
+	b=jpOKn1bNVJ7FZNe7gxzpdXK/lLKJ9WDZjfMWwpv6CVFxwQtaapQKF8uWTZ6L3W1Va
+	 Ax2hFTcc1ZqN2n7YnlCkd5m77lhYorZzwa9JLS3+UETTTZCHah1MfwsvYb6UzV9VIM
+	 r42ucbQpHtMt5ATz+Eso2JiRgXlJXhalEY92NgU3rfEaKygAIUf2lEG1PhbKqufUl7
+	 4nBM4qzTM4h+jF00dXYeffY1MqMB/QP4GbLBK7dZTX/AowIVy+PvvubDtZ15Lt53wn
+	 uNL5n0geFOMuBG1cmq+rF7Nm2ywvuz4hD6DwrlLUAyG05itm7FeVRj7mM593Ea+bxl
+	 OnzUiNOKbRL2Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: iproc: Use the EROM outbound window on BCMA
+Subject: Re: [PATCH v6 3/3] PCI/ASPM: Mask ASPM states based on Devicetree
+ properties
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Semih Baskan" <strst.gs@gmail.com>
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260727140939.389-1-strst.gs@gmail.com>
-References: <20260727140939.389-1-strst.gs@gmail.com>
+In-Reply-To: <20260727-aspm-v6-3-2ebb3ee7ef71@oss.qualcomm.com>
+References: <20260727-aspm-v6-0-2ebb3ee7ef71@oss.qualcomm.com>
+ <20260727-aspm-v6-3-2ebb3ee7ef71@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 14:16:06 +0000
-Message-Id: <20260727141606.945781F000E9@smtp.kernel.org>
+Date: Mon, 27 Jul 2026 14:16:57 +0000
+Message-Id: <20260727141657.7E31F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The PCIe outbound window base on Northstar depends on the PCIe Gen2 core
-> revision. Revision 0x01 uses 0x08000000, 0x40000000 and 0x48000000 for
-> controllers 0 to 2, while revision 0x07 (NS-B0) uses 0x08000000,
-> 0x20000000 and 0x28000000. Broadcom's own driver branches on the core
-> revision for exactly this reason.
->=20
-> bcm-ns.dtsi is shared by every Northstar SoC, so it cannot carry a value
-> that is correct on both. Commit 767012397976 ("ARM: dts: BCM5301X:
-> Describe PCIe controllers fully") gave the controllers a ranges property.
-> The commit shipped in v7.1.
->=20
-> With that property present, two things go wrong with this driver:
->=20
-> devm_pci_alloc_host_bridge() parses those ranges and requests them, then
-> this driver adds its own window and requests the whole list a second
-> [ ... ]
->=20
-> Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully=
-")
-> Tested-by: Rani Hod <rani.hod@gmail.com>
-> Cc: stable@vger.kernel.org # v7.1+
-> Signed-off-by: Semih Baskan <strst.gs@gmail.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Hardware ASPM state becomes desynchronized from the software-tra=
+cked `link->aspm_enabled` state on links where firmware forced ASPM L0s/L1 =
+on despite missing hardware capabilities, breaking sysfs reporting.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--- Patch [3]: [PATCH v6 3/3] PCI/ASPM: Mask ASPM states based on Devicetre=
+e properties ---
+commit d3ca900c30e202e8adf6acdf7daf494224ae2179
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+
+PCI/ASPM: Mask ASPM states based on Devicetree properties
+
+This commit introduces Devicetree property checks to selectively disable AS=
+PM
+states based on hardware constraints. It moves the default state override
+evaluation earlier in capability initialization and ensures that states dis=
+abled
+by Devicetree are explicitly cleared from the hardware configuration during=
+ the
+L0s/L1 restore phase.
+
+Link [1]: https://github.com/devicetree-org/dt-schema/pull/188
+Link [2]: https://github.com/devicetree-org/dt-schema/pull/190
+
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 544f35bb25554..0a671825fac8d 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+
+[ ... ]
+
+> @@ -926,9 +999,25 @@ static void pcie_aspm_cap_init(struct pcie_link_stat=
+e *link, int blacklist)
+> =20
+>  	aspm_l1ss_init(link);
+> =20
+> -	/* Restore L0s/L1 if they were enabled */
+> +	/* Save default state */
+> +	link->aspm_default =3D link->aspm_enabled;
+> +
+> +	pcie_aspm_override_default_link_state(link);
+> +
+> +	/*
+> +	 * Restore L0s/L1 if they were enabled, but don't restore any
+> +	 * state a Devicetree override just disabled in aspm_support above.
+> +	 */
+>  	if (FIELD_GET(PCI_EXP_LNKCTL_ASPMC, child_lnkctl) ||
+>  	    FIELD_GET(PCI_EXP_LNKCTL_ASPMC, parent_lnkctl)) {
+> +		if (!(link->aspm_support & PCIE_LINK_STATE_L0S)) {
+> +			child_lnkctl &=3D ~PCI_EXP_LNKCTL_ASPM_L0S;
+> +			parent_lnkctl &=3D ~PCI_EXP_LNKCTL_ASPM_L0S;
+> +		}
+> +		if (!(link->aspm_support & PCIE_LINK_STATE_L1)) {
+> +			child_lnkctl &=3D ~PCI_EXP_LNKCTL_ASPM_L1;
+> +			parent_lnkctl &=3D ~PCI_EXP_LNKCTL_ASPM_L1;
+> +		}
+
+[Severity: Medium]
+If firmware forced ASPM L0s or L1 on despite missing hardware capabilities,
+this block will correctly strip those unsupported bits before writing back =
+to
+hardware. However, does this leave the software state desynchronized?
+
+Earlier during initialization, link->aspm_enabled captures the original
+firmware settings. Since this restore block now selectively clears unsuppor=
+ted
+bits from the hardware write but doesn't synchronize those changes back to
+link->aspm_enabled, won't sysfs attributes and pcie_aspm_enabled() incorrec=
+tly
+report these states as active?
+
+Could this lead to incorrect sysfs reporting until pci_enable_device()
+eventually triggers a heal of the state via pcie_config_aspm_link()?
+
+>  		pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
+>  						   PCI_EXP_LNKCTL_ASPMC,
+>  						   parent_lnkctl & PCI_EXP_LNKCTL_ASPMC);
+
+[ ... ]
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727140939.389-=
-1-strst.gs@gmail.com?part=3D1
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727-aspm-v6-0-=
+2ebb3ee7ef71@oss.qualcomm.com?part=3D3
