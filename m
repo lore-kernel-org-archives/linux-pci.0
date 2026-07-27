@@ -1,170 +1,205 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B250F370ACA
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 20:06:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.174
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785182795; cv=pass; b=jn61QbkmfVCmnzVTqueTK1uzq4mvPbEqLGRwnAhRiI7Ale7sAvnPw4GTg7G2qwWG2h0FlukKFpznxYXRwedhTx+ip/ru+EwzEtTz3h9jDMA9pdWRgnaflwpxInIVyzaKzakj42WKCQYzvmrF9mAo/fLYtX272t79VACogW8xUOI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785182795; c=relaxed/simple;
-	bh=6apOgnwFS+LCUfaanOnBGAzYOkwuFRkixEqeP45hgM4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=txXMqhfwQrC5JtJLizxkOyavnK6vIT9CXEyP9EDxkZJ5U8vMDitzg/IQ8qJ2MiBIHqZaNj6JJZY4qxPrWfvzeKeGZCBv06Jxrh+yhMlnrwVvgMX1WeavlNH4UM9hVoCgDbwEmZFqDl6cm29ZOsVwN3tX3iXYVnmMc2sCTgWkhuQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=agAk9l42; arc=pass smtp.client-ip=209.85.215.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A10D64248AC;
+	Mon, 27 Jul 2026 20:07:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785182822; cv=none; b=jOa1PD2ov6WR0XPVkWaqvUJFK0w6T1oMP4Iag0THZ13OgO2uiFs906uHynjo7VyV8UJAE2kg3hAKtARMTeP/OpapliVSWP6x2hgylrrCiI29eiHJYRlI5eZo8o1PGo/8r4qh0qhuv8uO2R9qxowKsSkPaT+U3kvvS5bvm9oHw/Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785182822; c=relaxed/simple;
+	bh=9lMBIt9JzLYor/8jU1paTN05CWh0pExCXgGe54v+MHo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tM735Q9qRugCrISyPGgXehNcYFNXrQ+n2AbaCg1IWUUa6Tc8NVKXSpArtJS1TeTK1M7IKmGXZFnKZBVqkI2VpOyh2mIxeMQ1JePxlp7e+7p8S+6qzBklSDp8CO7eZc13MJorrcfSHQm1Fh9LOVZDk0zUUC/UuDs5SThsBmYuSSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZQjUm52v; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="agAk9l42"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-c9ef3e1337fso2163694a12.2
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 13:06:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785182793; cv=none;
-        d=google.com; s=arc-20260327;
-        b=DJlanRpRnxAmxQnxRp1fU0hBSE2z7lv5+urDetp4U6vHDTS0Zhv8uXswizUhvf4Nev
-         SjLqKhXp/qt5AQG/7+9276CRwL1JMBrXWCqr/XUSOh77jSXxKvAWNYawWsGNam09ppT4
-         bNXcMarcSAU+6LFyeeqyhOcNFwe9bCYepRfZXSrgH8FTDne3Y2f4qI94LcEmb2Pjdb3Y
-         m6XJONr6SVnL8eP7p9aVMdicnd4nyfQKJD+dQh88SidywXOvjnsVNEuQHySF2W/tppCU
-         LgrX3pqc8bMKm4JwUdNF4413wUmv4hyjQtby9pwDxUB4t8ONzltdYRBFUqkuIbF54moZ
-         i2Dw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=WT3D5aoPs392vdVyfO0XAxS3rqs8yFAgGjz3WyPghwM=;
-        fh=lnPZ9AEPwddCxrvbMo3GG4ZIstcP5zmmp4ci87wvO7Y=;
-        b=LTkGNNaZxnamYCioUvLUcUq16AsfRvRsp0FmB5YHa70nudM9tc2uTyH4RIWtEwsTDq
-         fwuW/IU5h5ZVIJ9OF60tDlGiAygztz+4Tmfbp/qYIjozDWnOe56UOC16tTH810n19v1U
-         nIXlA9alyZei39v7ZsWTolpAmGTikmEZDjnsONequ+S/QvO8M8dm6svyTW7ymqDVXiVq
-         hYBUkw0j40ta3aMWSpNzI+8SVoMRF47o06kmgwfm3A/vcZv134r6AvsH+Et+7AqTctQD
-         Ir8Xy6QHtPOnjOISpOdsHlIfSdpkYt/wzqN31oly6KyRlptfAsrTaspTVpTdU2kZNBhu
-         JtoA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785182793; x=1785787593; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=WT3D5aoPs392vdVyfO0XAxS3rqs8yFAgGjz3WyPghwM=;
-        b=agAk9l42+Xun1Kr1OkJdXs7lFnXZTj2ve7r5VzEm7uwQwstZv8DEyE0bkxKU99yapM
-         dTLq3Q2uAb+SE0sJtlRLab/d13ovpKJaiih8QzBZ16Qln8jpgkB3cvY81R8cBMWtDTG/
-         P4lVQJggBIdUxZUWnXBNIKWaXghmsHbMKV3aZ48sVjpd7XY/iEoxXGOdvvP6lPYYiv8Q
-         Pdlv+6Osqe3ChiCUwNQTy5ZxgP01uKV0zMwxlgILiWoXL4CSqDgAbYgiPms+k8M08r1F
-         3YrGWgpzJa/UPuM+om3skihiOpCDPbzqV3/JgvLEct67sgVfLNNVsZvAaGmyZ4l5T+jQ
-         4ndg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785182793; x=1785787593;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WT3D5aoPs392vdVyfO0XAxS3rqs8yFAgGjz3WyPghwM=;
-        b=G5jbV3T+lvLYtWPvEs5KrUISLkHQ1m1o1IYSwkxmJNPKbVa4UjNwwYtGIHrdk20fE2
-         N2fVo3z9oDToRJTxPfsz0jhHVqUMKZ98WFSaQGzPOrLHhNYGtYfxI79uJJj5qMdo9tid
-         HrCabYQi+WIYH2ITNpviA5K4uhZGpXWnC7MXYQBKvToCwI9RDzD6sZ5VxaNfODi3Nxuq
-         0MuPV6nPM3X1XZP8ad2DpcdUpSQjfDzrOEvJim7HsLveh1gbBP6wt+abyxWCCZHp2KrO
-         x8RjqS7HzFpnxjaSUzhRLJgcCBDRiAPRZTIxiyPS9gfDaXjJoVEIlsff5CYkDPAlbOvN
-         yBgg==
-X-Forwarded-Encrypted: i=1; AHgh+Rp0M02FQ3ctR9oLGt03Kyu+ibwzAtTk0BI/RDfXh2vOgwGXivpTeLnxIPLpX4Qh97JeoLYHJLEpbHc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzK8wKMvw4BEu9zwellCKxL9ngLQHVEy06yRONwDQSzYpvdskMs
-	7Xqp4yX/Uzm7DEzfGo+XAEprEbJfdUX+Atahrs3dDmJTI3S39GEfTuBbjYIEUlp0KkYY5LR6Vk5
-	EqMaKPk5QAtFHkB+JEeWjmd4D+U22dAWrju9GAsvC
-X-Gm-Gg: AR+sD13ubfyrzyNccHmQpkgpnqE8TtXQr8HNcZwakQv6FORNKPrbBFE1hsmJMpvR7/m
-	S3UkuuQV9tBJPh/sL2jyQUwM+pwB0+gpmFGKw7H93FDuRpm0r0hVSdblBIs3OkcV9yYhhRAvVWu
-	ewHqt6R7J0LAQJwUu8WzDqkZxiqJ8t04wGO4+knRgXm4rsxRMOzKvHHIOka4o3iyskAHLcdl5eV
-	/N+zr9udIfFMFWuKglQ0Gdko+HAArEAfcworldor3AidyqLOTkzG3TEM0ZpLA==
-X-Received: by 2002:a05:6300:670d:b0:3b4:5c70:ca3e with SMTP id
- adf61e73a8af0-3c6c7cc8bd0mr999176637.25.1785182792364; Mon, 27 Jul 2026
- 13:06:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZQjUm52v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FEBC1F00A3A;
+	Mon, 27 Jul 2026 20:06:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785182820;
+	bh=KwUcdDxYplkOmTwya6GwP9bI8zKV8hTZuxuskwdEgis=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ZQjUm52v/iNw8ByRmj/Vk0IMLJmXxgZ7L6LoSz+Vyx84uKo1UjUiHFqitpOzkKhya
+	 Su0dp+jhlke3seUxXcHtiVNat5UWYh7t3T2m/XvNEOGphU0onx2iZLbRDGZm45z8Pp
+	 fWUi62NpXAnDyStd/g8GYsrU0YBlVGH6HMPiA8XxjPXFaZIJ2mWIsKUKaL43ACZV/y
+	 Q9SjRb1zWeOlT6k9QCq2WA1u62zSRdE9A9yTDZru64Y+1pBN7VfNEUHi/kNXE0Eo9n
+	 hq0VBX0QG1oIigt9av6jEXCRvdryYrY4hDNfe4bBqUwABhH7zr4Q9PVY+QdlIYjOYL
+	 +xV1U3nRsGR0Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 09/11] dmaengine: ioat: disable relaxed ordering
+ before registering the device
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Logan Gunthorpe" <logang@deltatee.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260727181526.9672-10-logang@deltatee.com>
+References: <20260727181526.9672-1-logang@deltatee.com>
+ <20260727181526.9672-10-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 20:06:58 +0000
+Message-Id: <20260727200659.9FEBC1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CALzav=cRhFW+zNX6xCnhjJXXDHgyhOxuoX26FG2Ve8+wMccypg@mail.gmail.com>
- <20260727192701.GA1250952@bhelgaas>
-In-Reply-To: <20260727192701.GA1250952@bhelgaas>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 27 Jul 2026 13:06:04 -0700
-X-Gm-Features: AUfX_mxd_Oq9PiU6WIdCESXtBp_uYjHaNiC_kTE5jOYjh-Uu0garCTxaVZ4f-sk
-Message-ID: <CALzav=d1u5fuOgodeGKiFKPhMOx5xrdvgOeNqWfj-C7ZRG-EdQ@mail.gmail.com>
-Subject: Re: [PATCH v7 01/12] PCI: liveupdate: Set up FLB handler for the PCI core
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 27, 2026 at 12:27=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org>=
- wrote:
->
-> On Mon, Jul 27, 2026 at 10:40:52AM -0700, David Matlack wrote:
-> > On Thu, Jul 23, 2026 at 3:21=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.o=
-rg> wrote:
-> > > On Fri, Jul 10, 2026 at 09:26:04PM +0000, David Matlack wrote:
-> > > > Set up a File-Lifecycle-Bound (FLB) handler for the PCI core to ena=
-ble
-> > > > it to participate in the preservation of PCI devices across Live Up=
-date.
-> > > > Essentially, this commit enables the PCI core to allocate a struct
-> > > > (struct pci_ser) and preserve it across a Live Update whenever at l=
-east
-> > > > one device is preserved.
-> > > > ...
-> > >
-> > > > +#define pr_fmt(fmt) "PCI: " KBUILD_BASENAME ": " fmt
-> > >
-> > > Is KBUILD_BASENAME buying us something important here?  Just from
-> > > code-reading perspective, it's more work because without some digging
-> > > I don't know what it will end up looking like in a dmesg log.
-> > >
-> > > > +static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args=
-)
-> > > > +{
-> > > > +     struct pci_flb_outgoing *outgoing =3D args->obj;
-> > > > +
-> > > > +     WARN_ON(outgoing->ser->nr_devices);
-> > > > +     kho_block_set_destroy(&outgoing->block_set);
-> > > > +     kho_unpreserve_free(outgoing->ser);
-> > > > +     kfree(outgoing);
-> > > > +     pr_debug("Unpreserved struct pci_ser\n");
-> > >
-> > > If this pr_debug() is useful, maybe it should include an address and
-> > > there should be a corresponding pr_debug() on the preserve side so we
-> > > could find things in a crashdump?
-> > >
-> > > > +int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh=
-)
-> > > > +{
-> > > > +     pr_debug("Registering file handler \"%s\"\n", fh->compatible)=
-;
-> > >
-> > > Is fh->compatible enough to identify a driver?
-> >
-> > Not necessarily. VFIO could theoretically have one file handler that
-> > handles all the vfio-pci variant drivers. But I suspect we'll end up
-> > with 1 fh per driver in practice.
-> >
-> > Are you thinking about how we can ensure devices are bound to
-> > compatible drivers after Live Update?
->
-> No, I don't understand enough to worry about things like that.  I'm
-> just wondering if there's enough info in the message to be useful,
-> since fh->compatible is the only text that's variable.  Same reason I
-> asked about the "Unpreserved struct pci_ser" message above.  E.g., if
-> a user reports these messages, will we need more information to debug
-> it, or is the message itself enough?
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
 
-Ah ok. From that perspective, I think this be sufficient to confirm
-that VFIO has registered it's file handler for devices bound to
-vfio-pci, which is all this log needs to do IMO.
+Pre-existing issues:
+- [High] Fallback from MSI-X to MSI leaves MSI-X enabled, breaking interrup=
+t delivery.
+- [High] Possible Use-After-Free of `device` in shared interrupt handler on=
+ probe failure.
+- [High] Global IDA leak in the dma_async_device_register error path.
+- [Medium] Hardware prefetch limit is configured after the DMA device is ex=
+posed.
+- [Medium] Sysfs kobject 'quickdata' is added after device uevent (TOCTOU r=
+ace).
+--
+
+--- Patch [9]: [PATCH v3 09/11] dmaengine: ioat: disable relaxed ordering b=
+efore registering the device ---
+commit bae11619501364346652f2b925166039da65e184
+Author: Logan Gunthorpe <logang@deltatee.com>
+Subject: dmaengine: ioat: disable relaxed ordering before registering the d=
+evice
+
+Moves the capability read/write ahead of dma_async_device_register() so
+failure doesn't leave dangling registered devices.
+
+Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.ke=
+rnel.org
+
+> diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
+> index 737496391109e..a57024c4b066e 100644
+> --- a/drivers/dma/ioat/init.c
+> +++ b/drivers/dma/ioat/init.c
+[ ... ]
+> @@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *=
+ioat_dma, int dca)
+>  		goto err_disable_interrupts;
+>  	}
+> =20
+> +	err =3D dma_async_device_register(&ioat_dma->dma_dev);
+> +	if (err)
+> +		goto err_disable_interrupts;
+> +
+> +	ioat_kobject_add(ioat_dma, &ioat_ktype);
+> +
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but doesn't this create a
+TOCTOU race?  The sysfs kobject 'quickdata' and its attributes are added
+after dma_async_device_register() has already emitted the KOBJ_ADD uevent.
+Could userspace tools reacting to the uevent miss these sysfs attributes?
+
+> +	if (dca)
+> +		ioat_dma->dca =3D ioat_dca_init(pdev, ioat_dma->reg_base);
+> +
+>  	if (ioat_dma->cap & IOAT_CAP_DPS)
+>  		writeb(ioat_pending_level + 1,
+>  		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but is it safe to configure the
+hardware prefetch limit after the DMA device has already been exposed?
+Since dma_async_device_register() makes the channels available, could
+concurrent DMA clients submit and execute operations with uninitialized or
+stale prefetch hardware states before this writeb() occurs?
+
+
+Additionally, while reviewing this code, I noticed a few pre-existing issues
+outside the modified context:
+
+[Severity: High]
+This isn't a bug introduced by this patch, but in ioat_pci_probe(), the
+device struct is manually freed if ioat3_dma_probe() fails:
+
+drivers/dma/ioat/init.c:ioat_pci_probe() {
+    ...
+	err =3D ioat3_dma_probe(device, ioat_dca_enabled);
+	if (err) {
+		for (i =3D 0; i < IOAT_MAX_CHANS; i++)
+			kfree(device->idx[i]);
+		kfree(device);
+		dev_err(dev, "Intel(R) I/OAT DMA Engine init failed\n");
+		return -ENODEV;
+	}
+    ...
+}
+
+However, ioat_dma_setup_interrupts() allocates IRQs using
+devm_request_irq(). Because the IRQs are devm-managed, they are not actually
+unregistered until ioat_pci_probe() returns. Doesn't this create a window
+where a shared interrupt could trigger ioat_dma_do_interrupt(), which
+then casts and dereferences the already freed device pointer?
+
+drivers/dma/ioat/dma.c:ioat_dma_do_interrupt() {
+	struct ioatdma_device *instance =3D data;
+    ...
+	intrctrl =3D readb(instance->reg_base + IOAT_INTRCTRL_OFFSET);
+    ...
+}
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but when falling back from MSI-X
+to MSI in ioat_dma_setup_interrupts(), is MSI-X properly disabled?
+
+drivers/dma/ioat/init.c:ioat_dma_setup_interrupts() {
+    ...
+	err =3D pci_enable_msix_exact(pdev, ioat_dma->msix_entries, msixcnt);
+	if (err)
+		goto msi;
+
+	for (i =3D 0; i < msixcnt; i++) {
+        ...
+		err =3D devm_request_irq(dev, msix->vector, ...);
+		if (err) {
+			for (j =3D 0; j < i; j++) {
+                ...
+				devm_free_irq(dev, msix->vector, ioat_chan);
+			}
+			goto msi;
+		}
+	}
+    ...
+}
+
+If devm_request_irq() fails, the code frees the requested IRQs and jumps
+to the msi label. However, it doesn't call pci_disable_msix(). Since the
+device is still programmed for MSI-X, pci_enable_msi() will fail, and
+the fallback will continue to INTx. Will the device ever generate INTx
+interrupts if it was left with MSI-X enabled?
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the error path in
+dma_async_device_register() leak the global device IDA?
+
+drivers/dma/dmaengine.c:dma_async_device_register() {
+    ...
+err_out:
+	/* if we never registered a channel just release the idr */
+	if (!device->chancnt) {
+		ida_free(&dma_ida, device->dev_id);
+		return rc;
+	}
+
+	list_for_each_entry(chan, &device->channels, device_node) {
+    ...
+}
+
+If dma_async_device_register() successfully registers at least one channel
+but fails on a subsequent one (so device->chancnt is greater than 0), it ju=
+mps
+to err_out. The error path explicitly skips calling ida_free() because
+device->chancnt is greater than 0. Does this permanently leak the global
+IDA for this device?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727181526.9672=
+-1-logang@deltatee.com?part=3D9
