@@ -1,151 +1,124 @@
-Received: from smtp70.iad3a.emailsrvr.com (smtp70.iad3a.emailsrvr.com [173.203.187.70])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E85CE3ED3CC
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 15:11:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.203.187.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83BC3630B3;
+	Mon, 27 Jul 2026 15:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785165097; cv=none; b=NdfAmvQ2MiaOMEG+N9hTcUc7AQNmoZ1cdNJyYz/AXoaj905KZkhfFG/4nnW9JB74nrWtroJj6CZnZ192YY0w48AvlYCe5k3BDd5wcP1UjSdnv1Am/MEvYkzcqgdFK78QjpzqdZ7HUBiQ0N8tJwPUlHOzZHZI3dKKPdT5b80zlFE=
+	t=1785166746; cv=none; b=MzsaO92dPMXYqIZWFmYNVM3lwvojAIcT+AC41grenC85CnMxqQ74AFAcvEvDJ6B1Pk2BTTxXCJD5u/BNtqXpHMwr6r3qrO+XRE8RYdD5qimCtpWZ2LbqH5LEjfBs/hy0MRhfSjspZTc8mt9mk7w5UjomJzi/zF0zar9OBC4j8aI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785165097; c=relaxed/simple;
-	bh=ZEabfeduTzOfzBFUTRDyw1lfD4I0nS+Cm4lYfQEyCVk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nHyB5N5p52GcV8p8f/kMZpy0ynKA2kUvsTNi/lFuc4n4UpIFVLop0cYlIF6J+8AJ0Kv2TgySK26A9FwzRJok/0Xu8OXn07EvFn5viyr1/pR1qRNmd1HuA0+sVegrHB4PR6CEsbFWF+MlLxgTO9aQgT4WEA0c+AMOfFPLtmokM08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mev.co.uk; spf=pass smtp.mailfrom=mev.co.uk; dkim=pass (1024-bit key) header.d=mev.co.uk header.i=@mev.co.uk header.b=HdLG2Nf4; arc=none smtp.client-ip=173.203.187.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mev.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mev.co.uk
+	s=arc-20240116; t=1785166746; c=relaxed/simple;
+	bh=wpJgqhcFvrYTsrki8km4NMxs/2UDvsJc1eVE8fgdLbk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xu2OfNfZnHwBLDKrQl/3Xp7qXACHCBayaMVx+72wr/UJYmGHdk8ga45lYZOcqiGPQ5ze3yATUcxrYx5+fpziGtSXOPsHMg0qHDnx4/8qjsaqnSFpbDmJxe4c+2UVbOqld3L67IqC3ylTgbYjQuTn4ipLVZk/hviqstYUGA4P+sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIuydFFk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mev.co.uk header.i=@mev.co.uk header.b="HdLG2Nf4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mev.co.uk;
-	s=20221208-6x11dpa4; t=1785164633;
-	bh=ZEabfeduTzOfzBFUTRDyw1lfD4I0nS+Cm4lYfQEyCVk=;
-	h=Date:Subject:To:From:From;
-	b=HdLG2Nf4VOgIN4BN8rW54RjppxBt7jPxPDptP1WPg8CVGe3AyOCbnduJAdmQ5DC7K
-	 OC6NIDRsvhDHpUNTUnRPHDLOMyztRwaKJDQ2J5pscAxV9NZjKSPXShU9hmRa9QYWVc
-	 dx43Guz4HTYHsgeXJwOXIBQoYtSdXewEDxDz+xIo=
-X-Auth-ID: abbotti@mev.co.uk
-Received: by smtp1.relay.iad3a.emailsrvr.com (Authenticated sender: abbotti-AT-mev.co.uk) with ESMTPSA id 7D72559B1;
-	Mon, 27 Jul 2026 11:03:52 -0400 (EDT)
-Message-ID: <c82a9772-bcc2-4a74-9247-d90df4caa0ae@mev.co.uk>
-Date: Mon, 27 Jul 2026 16:03:53 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIuydFFk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D67ED1F000E9;
+	Mon, 27 Jul 2026 15:39:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785166745;
+	bh=OiklzXx8p5bBY0lwFSAP/eLHXWDp5ZhVdI0sClUc26c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=VIuydFFkDbR7M6wzVg7E2NhUc4eI1TG9hrt9IcyouTAx+xh4che7OJQvgPQP0FBdt
+	 rMfdAlEIRhluCTFT4SyRj6/szrxO73m+BayZtLpJkicU6sY4U2gNma1fWvOCFW+7fI
+	 BDvoTb1H3ohwFfrMZerEWqOD7s7lO9upZXECHZWgGaqo220Sz89ZAikEMAjB3Siezz
+	 8eaMU7HXu6Sjc5MJTflRVMGO4AY7hbbJWEtg8rYIGmB2HzlQvKB0RF+Ugd/6Y+IHDv
+	 pkoPl5r0KpdQVr/QSDi4sBV+IWUgCw2a0jNAiq/GjUGCDY5rj23fvRvmha5f+YZRuR
+	 Cd+VAJW+x0ScA==
+Date: Mon, 27 Jul 2026 17:39:02 +0200
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
+	Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
+	Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH v8 4/6] PCI: tegra: Add Tegra264 support
+Message-ID: <amd7fUUzD9ZLc-85@orome>
+References: <20260716-tegra264-pcie-v8-4-23e51589229b@nvidia.com>
+ <20260722164442.GA742885@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [syzbot] [kernel?] WARNING: proc registration bug in
- unregister_irq_proc (2)
-To: Thomas Gleixner <tglx@kernel.org>,
- syzbot <syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com>,
- linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- driver-core@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org
-References: <6a653bcf.073198cf.94f0f.001c.GAE@google.com>
- <87ik60ikal.ffs@fw13>
-Content-Language: en-US
-From: Ian Abbott <abbotti@mev.co.uk>
-Organization: MEV Ltd.
-In-Reply-To: <87ik60ikal.ffs@fw13>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Classification-ID: 70be1a8d-9012-45ee-bcf1-9093cf3a296e-1-1
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="zk2gh5hl3rqyqvvg"
+Content-Disposition: inline
+In-Reply-To: <20260722164442.GA742885@bhelgaas>
 
-On 2026-07-27 15:22, Thomas Gleixner wrote:
-> On Sat, Jul 25 2026 at 15:42, syzbot wrote:
-> 
->> HEAD commit:    3dab139d4795 Merge tag 'rust-fixes-7.2-2' of git://git.ker..
->> git tree:       upstream
->> console output: https://syzkaller.appspot.com/x/log.txt?x=156bd88e580000
->> kernel config:  https://syzkaller.appspot.com/x/.config?x=145fa60d73086782
->> dashboard link: https://syzkaller.appspot.com/bug?extid=690d666eb12fca6e1e61
->> compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
->>
->> Unfortunately, I don't have any reproducer for this issue yet.
->>
->> Downloadable assets:
->> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-3dab139d.raw.xz
->> vmlinux: https://storage.googleapis.com/syzbot-assets/2b5a401a9dc7/vmlinux-3dab139d.xz
->> kernel image: https://storage.googleapis.com/syzbot-assets/7ed2d255bd44/bzImage-3dab139d.xz
->>
->> IMPORTANT: if you fix the issue, please add the following tag to the commit:
->> Reported-by: syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com
-> 
->> ------------[ cut here ]------------
->> remove_proc_entry: removing non-empty directory 'irq/20', leaking at least 'comedi_parport'
->> WARNING: fs/proc/generic.c:747 at remove_proc_entry+0x4e7/0x610 fs/proc/generic.c:747, CPU#1: syz.3.389/7224
-> 
-> So this frees an interupt descriptor, which still has an active
-> interrupt request on it.
-> 
->> Modules linked in:
->> CPU: 1 UID: 0 PID: 7224 Comm: syz.3.389 Tainted: G             L      syzkaller #0 PREEMPT(full)
->>   unregister_irq_proc+0x206/0x2a0 kernel/irq/proc.c:406
->>   free_desc+0x89/0x330 kernel/irq/irqdesc.c:482
->>   irq_free_descs kernel/irq/irqdesc.c:874 [inline]
->>   irq_free_descs+0x84/0xc0 kernel/irq/irqdesc.c:865
->>   irq_domain_free_irqs+0x46a/0x5c0 kernel/irq/irqdomain.c:1917
->>   mp_unmap_irq+0xf8/0x130 arch/x86/kernel/apic/io_apic.c:1061
->>   acpi_unregister_gsi_ioapic+0x40/0x60 arch/x86/kernel/acpi/boot.c:722
->>   acpi_unregister_gsi+0x25/0x40 arch/x86/kernel/acpi/boot.c:751
->>   acpi_pci_irq_disable+0x275/0x360 drivers/acpi/pci_irq.c:517
->>   pcibios_disable_device arch/x86/pci/common.c:706 [inline]
->>   pcibios_disable_device+0x89/0xb0 arch/x86/pci/common.c:703
->>   do_pci_disable_device+0x9f/0x100 drivers/pci/pci.c:2170
->>   pci_disable_device+0x130/0x270 drivers/pci/pci.c:2206
->>   pci_device_remove+0xb2/0x1d0 drivers/pci/pci-driver.c:512
->>   device_remove+0xcb/0x180 drivers/base/dd.c:616
->>   __device_release_driver drivers/base/dd.c:1349 [inline]
->>   device_release_driver_internal+0x44e/0x620 drivers/base/dd.c:1372
->>   unbind_store+0xf8/0x110 drivers/base/bus.c:244
->>   drv_attr_store+0x74/0xb0 drivers/base/bus.c:125
->>   sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
->>   kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
->>   new_sync_write fs/read_write.c:595 [inline]
->>   vfs_write+0x6ac/0x1050 fs/read_write.c:687
->>   ksys_write+0x12a/0x250 fs/read_write.c:739
->>   do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->>   do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
->>   entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> 
-> unbind() releases the driver, which removes the device, but the device
-> removal does not end up freeing the requested interrupt and
-> pci_device_remove() ends up correctly freeing the legacy PCI interrupt
-> descriptor through the above call chain.
-> 
-> The real question is how that comedi parport driver ends up on a PCI
-> device without actually registering a PCI driver with a proper remove
-> callback. It seems it just attaches blindly to something which user
-> space hands in through the ioctl().
 
-Yes, the device's I/O base address and IRQ number are configured by an 
-ioctl() for this driver.  (The process doing that needs CAP_SYS_ADMIN 
-capability.  There is also precedent for this sort of thing in the 
-TIOCSSERIAL ioctl() command for configuring TTY serial ports since the 
-early days of the Linux kernel.)
+--zk2gh5hl3rqyqvvg
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v8 4/6] PCI: tegra: Add Tegra264 support
+MIME-Version: 1.0
 
-Back in the old days of PCs with ISA buses, you could configure the BIOS 
-to reserve specified IRQs so that they would not be assigned to PCI 
-devices, so you could use them for ISA devices.
+On Wed, Jul 22, 2026 at 11:44:42AM -0500, Bjorn Helgaas wrote:
+> On Thu, Jul 16, 2026 at 07:07:15PM +0200, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+> > driver is very small, with its main purpose being to set up the address
+> > translation registers and then creating a standard PCI host using ECAM.
+> > ...
+>=20
+> > + * The various memory regions used by the controller (I/O, memory, ECA=
+M) are
+> > + * set up during early boot and have hardware-level protections in pla=
+ce. If
+> > + * the DT ranges don't match what's been setup, the controller won't b=
+e able
+> > + * to write the address endpoints properly, so make sure to validate t=
+hat DT
+> > + * and firmware programming agree on these ranges.
+> > + */
+> > +static bool tegra264_pcie_check_ranges(struct platform_device *pdev)
+>=20
+> Drive-by comment: I have a bit of an aversion to boolean functions
+> named "check" because "check" is not a predicate with a true/false or
+> yes/no answer.
+>=20
+> "true" usually means success, which is the opposite of functions that
+> return 0 for success.
+>=20
+> In this case, it looks like "if (tegra264_pcie_check_ranges())" means
+> the DT ranges match the hardware configuration.  If it were named
+> "tegra264_pcie_valid_ranges()" or similar, an "if" test like that
+> would read better.
 
-> 
-> Though deciphering this comedi code is beyond my skillset.
-> 
-> I rather go and harden the interrupt core against such bogosities.
-> 
-> Thanks,
-> 
->          tglx
-> 
-> 
-> 
+Indeed, "valid ranges" is superior in this case.
 
--- 
--=( Ian Abbott <abbotti@mev.co.uk> || MEV Ltd. is a company  )=-
--=( registered in England & Wales.  Regd. number: 02862268.  )=-
--=( Regd. addr.: S11 & 12 Building 67, Europa Business Park, )=-
--=( Bird Hall Lane, STOCKPORT, SK3 0XA, UK. || www.mev.co.uk )=-
+Thierry
 
+--zk2gh5hl3rqyqvvg
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmpne5YACgkQ3SOs138+
+s6GQ+A//WeFzw3KoYVOzNsMrSzRoXie99HtTHVBPg/kBvr4ois0lZ3WQEHa+J2Ud
+1l5V2hv3q760uHAfQ+kvsOkJByU04WCKNXR3DphG6dEhRap42EfFan16PUWV3GCv
+eH3X+5ohtv4G+U8BPfcyvKu6rRLfHAIfCLUv4yOVr7tU6LbLTzrADExj70mQrhM7
+AzHjzmAzc323jnPOHhFg+YXFRlK+Y6VPh5zT0+EgA0JwFnOjrEf7d5JEP5HPfPuT
+AZMEf7CJnoICRMWS1SjXaNBPllgK61MVhx9EC79/6oMWi1I89+Glutlhz9GTwdVj
+Iw61t+2+vQxJQtpRQVSSBwnLnV3lRBvBbKsJZ9DSrbT8xz1BXeG2eTOGdgROD97/
+KnkgHIYzpKL68OWWeXeb2FV7uJJocRIHUpaX5MA73gIHBsArGzmkOMhp69XOAGzC
+i4a313skcX7hcUjNyKu9H0wSxf05QG9PhnICVIJb8lsD0edb5Ax19h8dwDzxiUXt
+h48iBjYNJyzDQXxyOZxhmZ7/0v55t59lMVeokZTI7NNBu9TnL7LPV1JYeGnsRsO2
+ZUy+zHcVTSGurw5UGFzAxiYnQ30lIdg7E1EMoIaVyyQnIsbmt2at7SzGoU98dCUe
+ln4VM83pPz0SXFzVEcQTVUO3YkBf2DZrjWVZ0lkDYKp429FD6Gs=
+=9cZE
+-----END PGP SIGNATURE-----
+
+--zk2gh5hl3rqyqvvg--
