@@ -1,111 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F03B03C2794;
-	Mon, 27 Jul 2026 19:15:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E223CCFB8;
+	Mon, 27 Jul 2026 19:27:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785179722; cv=none; b=YTXH/ELuGQe9+1iaWvQS6lU0xccah1AgpegRO4CGj0nKtrz9JyjYtZVK1D2X+ZSadXpRC43/9qtJ8UTMOD0b9aBOqRvA6VsPZ2CBpGg3yAjxvDN+92RyLknXj/OiyLw2juVgXCArpiD+8A92f8yMSSR5vKCK5BF+N1VDoDgpf0M=
+	t=1785180424; cv=none; b=srokJKD2ooOSsq+4j5aLeJRzYikUgqwI3UgWDgX9khHANU2p0t6dpxcySwTlD0+D0gDpSJLicgXWiWx9ukBgtOhynSHA8u/3XiLaOdnXH43M4STWqZ26qYI55LUIu16DjDZl12qE8tWmXummd2AqIuBgVG7lKWMSL+qyD8eIQY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785179722; c=relaxed/simple;
-	bh=AxVdyCa9pmsilS3LMvvpgrQFBqdUTouTtQLGhhvwjak=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cnaS8tIFvMQWYNfWZsmvhNgC87pFf8YT27efxRqtLNMFsysyfMRmJ9m7Sy0kpKncHUBTgr+qgJS+3yWTMJMBi9JyLdSmo7hhYIsdvdPmU8VTkVIRDViDvvHYYmUC9TXQJIPrATXeAcH4wXVWFAILqRhdUXu9uz7w4x9XfSZAhag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m/+iRVDT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785180424; c=relaxed/simple;
+	bh=4RoRD99AfLP5NZOE3pDGSZ3RQEMc09eY+WJD8jtqH5M=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Es8aq90ZVvayrF5tu8rmfyI0/nESGtOQs31d0sMsIRMBizgAyxCFznNbrgIEZQtmYgR6zcyQF7djgWEymwf2SPOXrqIQ7absbUPWxGXTzy+5s42f4fA8mHQs7RvWUwtuUu18O8X9R6KM1FX33yz8nN28NHoE8K1ex3qKpwuUdyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IzYilg/M; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m/+iRVDT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 792801F000E9;
-	Mon, 27 Jul 2026 19:15:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IzYilg/M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D36551F000E9;
+	Mon, 27 Jul 2026 19:27:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785179720;
-	bh=XMcXvGB8wNJBeKxFQbbS79yfgRzWS1iQKc6NZBV3ELM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=m/+iRVDTlYBOBbi46GW5c2AldMhIl1r4j2FHfOnfZaFOrzzyy4dgaA+zmyNBmED8M
-	 qciYM6mHaLZFjJboAB+q6XDJGsBFc6/RtF59B2anbyE5CnSejj01B+Y19SWQV0tsCI
-	 ULU+mxF+i9o8HrqrwDXKSqrZFHigyMnJROsvXjNjNCOHOT05wx9I13o6ruLesKExRh
-	 p+uqoKciDa5z+ewJ1sbQfT7E09KEmwJw68fvyFLj0pMnP/ErvdiEkgwKPUuUGoJTlj
-	 T8jfQ1i1a5OFRqNhCDNa79pPKcYIpfY6bPnlOwKOYyVDx4BbEKTfEXgQHHvYY+wwOp
-	 nGZx2J2Y8iWpg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 05/11] dmaengine: switchtec-dma: make
- switchtec_dma_chans_release() void
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260727181526.9672-6-logang@deltatee.com>
-References: <20260727181526.9672-1-logang@deltatee.com>
- <20260727181526.9672-6-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 19:15:19 +0000
-Message-Id: <20260727191520.792801F000E9@smtp.kernel.org>
+	s=k20260515; t=1785180423;
+	bh=sKZJ5OViBbK3ZJT1F6pApbVMnloDUEEXkiEo8E43BZo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=IzYilg/M8OJawVypIyI6yqeauwbZiYHFTE/2k3KHuRHUxMx0FStRiRDIYwLSXuz+j
+	 05E1VSdnB8lEC6Dizt4VUGoyC5z/mveyiibWsgRdAlvKKIkj48/ah7F6UT2aCwtI+P
+	 M7K/wl4ZU3s2ty47OdvEC9FdpqZZooqnD/YPe5dYLEcIqXgPRe9z+IRv0OGOjxpiCI
+	 Jkkv2KqNrNrHHFyKWrUSu4jKNcR9MN7OKjAKqyH6336kbZXEsU0FdJisLbzQ98yFFp
+	 BOxeFggnvJIK1ABfQTx2tpoMDd3ziP5gU/FGGW5Hjp9V/egQQBr6nc61xzYH0DhpGX
+	 yRf6bic++oydw==
+Date: Mon, 27 Jul 2026 14:27:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v7 01/12] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <20260727192701.GA1250952@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=cRhFW+zNX6xCnhjJXXDHgyhOxuoX26FG2Ve8+wMccypg@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Mon, Jul 27, 2026 at 10:40:52AM -0700, David Matlack wrote:
+> On Thu, Jul 23, 2026 at 3:21 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Jul 10, 2026 at 09:26:04PM +0000, David Matlack wrote:
+> > > Set up a File-Lifecycle-Bound (FLB) handler for the PCI core to enable
+> > > it to participate in the preservation of PCI devices across Live Update.
+> > > Essentially, this commit enables the PCI core to allocate a struct
+> > > (struct pci_ser) and preserve it across a Live Update whenever at least
+> > > one device is preserved.
+> > > ...
+> >
+> > > +#define pr_fmt(fmt) "PCI: " KBUILD_BASENAME ": " fmt
+> >
+> > Is KBUILD_BASENAME buying us something important here?  Just from
+> > code-reading perspective, it's more work because without some digging
+> > I don't know what it will end up looking like in a dmesg log.
+> >
+> > > +static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
+> > > +{
+> > > +     struct pci_flb_outgoing *outgoing = args->obj;
+> > > +
+> > > +     WARN_ON(outgoing->ser->nr_devices);
+> > > +     kho_block_set_destroy(&outgoing->block_set);
+> > > +     kho_unpreserve_free(outgoing->ser);
+> > > +     kfree(outgoing);
+> > > +     pr_debug("Unpreserved struct pci_ser\n");
+> >
+> > If this pr_debug() is useful, maybe it should include an address and
+> > there should be a corresponding pr_debug() on the preserve side so we
+> > could find things in a crashdump?
+> >
+> > > +int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
+> > > +{
+> > > +     pr_debug("Registering file handler \"%s\"\n", fh->compatible);
+> >
+> > Is fh->compatible enough to identify a driver?
+> 
+> Not necessarily. VFIO could theoretically have one file handler that
+> handles all the vfio-pci variant drivers. But I suspect we'll end up
+> with 1 fh per driver in practice.
+> 
+> Are you thinking about how we can ensure devices are bound to
+> compatible drivers after Live Update?
 
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but there is a missi=
-ng NULL check for ioremap() in switchtec_dma_create().
---
-
---- Patch [5]: [PATCH v3 05/11] dmaengine: switchtec-dma: make switchtec_dm=
-a_chans_release() void ---
-commit a207649bc05f965ee7cc3627c9764631e52253cb
-Author: Logan Gunthorpe <logang@deltatee.com>
-
-dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
-
-This commit updates the return type of switchtec_dma_chans_release() to voi=
-d,
-as the function always returned 0 and its return value was never checked by
-callers.
-
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index 13efd4189bbb4..c752a1b05871d 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
-> @@ -1165,15 +1165,13 @@ static int switchtec_dma_chan_free(struct pci_dev=
- *pdev,
-
-[ ... ]
-
-> -static int switchtec_dma_chans_release(struct pci_dev *pdev,
-> -				       struct switchtec_dma_dev *swdma_dev)
-> +static void switchtec_dma_chans_release(struct pci_dev *pdev,
-> +					struct switchtec_dma_dev *swdma_dev)
->  {
->  	int i;
-> =20
->  	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
->  		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
-> -
-> -	return 0;
->  }
-
-[Severity: High]
-This is a pre-existing issue, but while reviewing this file I noticed a
-missing NULL check for ioremap() in switchtec_dma_create():
-
-	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
-				 pci_resource_len(pdev, 0));
-
-	RCU_INIT_POINTER(swdma_dev->pdev, pdev);
-
-	nr_vecs =3D pci_msix_vec_count(pdev);
-	rc =3D pci_alloc_irq_vectors(pdev, nr_vecs, nr_vecs, PCI_IRQ_MSIX);
-	if (rc < 0)
-		goto err_exit;
-
-	irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
-
-If ioremap() fails during device probe and returns NULL, does this cause a
-kernel panic when swdma_dev->bar is dereferenced by readw()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727181526.9672=
--1-logang@deltatee.com?part=3D5
+No, I don't understand enough to worry about things like that.  I'm
+just wondering if there's enough info in the message to be useful,
+since fh->compatible is the only text that's variable.  Same reason I
+asked about the "Unpreserved struct pci_ser" message above.  E.g., if
+a user reports these messages, will we need more information to debug
+it, or is the message itself enough?
