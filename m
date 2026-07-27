@@ -1,117 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21BB36A34F
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:23:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D25F3783CC;
+	Mon, 27 Jul 2026 14:23:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785162182; cv=none; b=KPfGliE32HESwG4DEW9nnJT8RnrpAb5i5CZgDE75pqsY2xviA0kc/5PNyXxrty2yNmnJstLmbiPtXK9e29gWS5RClpFQH9IFYtchV7ekrkp1MnVhgzn+IF+B2wje+kTBMWDxm6VoWD4L6kyAgl0cvyFIg3sKAL1GQ3d7KAD3fnI=
+	t=1785162184; cv=none; b=f33GViRTGX2f1Pi19VnxjsdW1aKwZ8j8lPn0vAtMeE5DVkaMYICCPpaxC+vvTUZt1qzvLXlzWyffplfPR92LrRVbhFCfj4u/+4ptWb6LdG6lTMH6baFnr8k/p9Ewf3PsHtTGYMubQl8OiYZOUWjwuySV/3K1DFP0hycJEBkQne8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785162182; c=relaxed/simple;
-	bh=4JPbf0kDWA5uPW1ye+0Izs2pHCY82Rqy/QMURURYPaY=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eFehrL9724aqxYosb7LpkrCOKudN0prwOerCQjjzsg78tgHq4OXsaVLVMTbVRoGmQO0Tu5pSshXC3COWNkrtaOmT3erPrLuEgvyYEDfeQcj4WTzwQjn0i+FX7JIKWBKhvs12DDO5fc+KRBDZ8Mju+yiBpUUB/StU30bha4FZ+d0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8nyff65; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785162184; c=relaxed/simple;
+	bh=xgNTSFvDc6PJZbCsJuoOE7jjDZVtyM9GANdc4NAX2tk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=MXbtwEyFhR+QIbO//6QYEbe4y7MlkOk6t+FDzQwKMDT4TzNauCFyxuMqY4iRR7ouih0CXRH/ctDUJpKR9OI5aelWJ2LEO6kF0zkdi/anhV2xUCSsXJ5yEBRDLMk03ZXRB0pqT9lW+PIWYy53no0XpRc5L3k8xUkmS3IW/UxnvoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HrLrJ3kE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8nyff65"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93E1B1F00A3F
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:23:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HrLrJ3kE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6BF21F000E9;
+	Mon, 27 Jul 2026 14:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785162180;
-	bh=eN52P4kYc3VwvJHjlaxZYp3C5xF1YB6inSUSX4U8+qg=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=R8nyff65VH8zQYyJEYmAPCRiex4Uc6HRX6quVYLQF++t/25DTtR+JlDzC9ew61hnE
-	 RzeTiXnt/VpMZAHT0UQU3rnQ3JzBZXNDmL1Fz0qPX6Bvtqoe+6Se9vTjp2PQUZ0LoP
-	 8wQ0SqDBLXXU9T3BPh5pH4eqnFP2On7txlikQrXHznZGdt3fT47HwNq/P+X55dOx1O
-	 fKnrewwuwtacqbJ1zBROFGUIrest7TQOXiByQgyHvNC5u6ziB2sZh1Qt76aFV4Dosg
-	 v9iy5us0S6uP/425UP+B2qpQkoeETFy7TTqRgtU40O0DFoqua97TYyLs9WrInR8K71
-	 6IxSPW3G0BI0g==
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-39c94fccf3eso24051401fa.0
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 07:23:00 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RoCqUdu71im+HhJtpYm92UtGkxNVYkxvOGt8qmwtZ/6XO6gHnjvRvCmOf6q368+0OINw59Zdrb7b2g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5mgR/1keeoTuDUbGI+ckAJ3TWEQC2qPer+Gee7ZUvu+m4ZRDg
-	ZkzLZOaLcsNGmMDISbZsle8Gl+XYXNIzvqZYA45W8bOBiDoVgwwVi825LhU/H/+nJcg9DLnWbB0
-	PshMveb8gi/fI8DecmH3R479b2Wr4V6Le4exO/i2gUw==
-X-Received: by 2002:a05:651c:1592:b0:39a:e29b:7926 with SMTP id
- 38308e7fff4ca-39f2890076fmr15003161fa.41.1785162178919; Mon, 27 Jul 2026
- 07:22:58 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 27 Jul 2026 07:22:57 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 27 Jul 2026 07:22:57 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260725-tc9563-fix-v1-3-ec4286e31331@oss.qualcomm.com>
+	s=k20260515; t=1785162182;
+	bh=2zYwmPMrvROiN1z06ajoqtgEHZKOmjIvuVvPw9f14xA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=HrLrJ3kEtu2IHmBjPlebu6elRgARxU4OPVP0TGHjwWWCfPz5CTjD9oYfma96SnkIn
+	 wT5vqmOrtDtOdXGpP9WgxJnFOYZlJ5FexMBiUBhwnanKY/kC2S4glY8qO5ozsNINY2
+	 iv7YcRwoFh/FGXwujSmuIGQsjLFyMLmL9lXAhdZAb3AHjC9R2Jtnm1ag4EjoHVGPKl
+	 OE5KrNSq9d7ZLHIPbIN3h3lCVbaqVrm+8bJuD3vP7FSiYkKmXwefTW38hQxOFWp8CQ
+	 FJmDKWwp5+mkEjae36IcB/XbuaK8K+R9FE1hx7WwCCFitvyIjo8rz4CN2jW55j4Szx
+	 56r1HW62NgB1w==
+From: Thomas Gleixner <tglx@kernel.org>
+To: syzbot <syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com>,
+ linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich
+ <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ driver-core@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, Ian Abbott <abbotti@mev.co.uk>
+Subject: Re: [syzbot] [kernel?] WARNING: proc registration bug in
+ unregister_irq_proc (2)
+In-Reply-To: <6a653bcf.073198cf.94f0f.001c.GAE@google.com>
+References: <6a653bcf.073198cf.94f0f.001c.GAE@google.com>
+Date: Mon, 27 Jul 2026 16:22:58 +0200
+Message-ID: <87ik60ikal.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com> <20260725-tc9563-fix-v1-3-ec4286e31331@oss.qualcomm.com>
-Date: Mon, 27 Jul 2026 07:22:57 -0700
-X-Gmail-Original-Message-ID: <CAMRc=Mf_dA9GQFg72AeKmd3fUTNMNmoWHSqMDKxrqxDQKN-VGg@mail.gmail.com>
-X-Gm-Features: AUfX_mxhtYfF-P2ZNB3abeKXJQ88LXUTbeyNrWHPfCcAjb4KgotGa9JGIW5uN9E
-Message-ID: <CAMRc=Mf_dA9GQFg72AeKmd3fUTNMNmoWHSqMDKxrqxDQKN-VGg@mail.gmail.com>
-Subject: Re: [PATCH 3/6] PCI/pwrctrl: tc9563: Power off only the external
- ports in tc9563_pwrctrl_disable_port()
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Alex Elder <elder@riscstar.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 
-On Sat, 25 Jul 2026 10:59:15 +0200, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> TC9563 supports powering off only the external facing ports like DSP1 and
-> DSP2. It is not recommended to power off USP and DSP3 as they have fixed
-> ports/endpoint connected.
->
-> Hence, fix tc9563_pwrctrl_disable_port() to power off only DSP1 and DSP2.
->
-> Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> index 482e82e433dd..ca19bf60d290 100644
-> --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> @@ -241,12 +241,18 @@ static int tc9563_pwrctrl_disable_port(struct tc9563_pwrctrl *tc9563,
->  	if (!cfg->disable_port)
->  		return 0;
->
-> -	if (port == TC9563_DSP1) {
-> +	switch (port) {
-> +	case TC9563_DSP1:
->  		seq = dsp1_pwroff_seq;
->  		len = ARRAY_SIZE(dsp1_pwroff_seq);
-> -	} else {
-> +		break;
-> +	case TC9563_DSP2:
->  		seq = dsp2_pwroff_seq;
->  		len = ARRAY_SIZE(dsp2_pwroff_seq);
-> +		break;
-> +	default:
-> +		/* Only external downstream ports DSP1/DSP2 can be powered off */
-> +		return 0;
->  	}
->
->  	ret = tc9563_pwrctrl_i2c_bulk_write(tc9563->client, seq, len);
->
-> --
-> 2.43.0
->
->
->
+On Sat, Jul 25 2026 at 15:42, syzbot wrote:
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> HEAD commit:    3dab139d4795 Merge tag 'rust-fixes-7.2-2' of git://git.ker..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=156bd88e580000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=145fa60d73086782
+> dashboard link: https://syzkaller.appspot.com/bug?extid=690d666eb12fca6e1e61
+> compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+> 
+> Unfortunately, I don't have any reproducer for this issue yet.
+> 
+> Downloadable assets:
+> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-3dab139d.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/2b5a401a9dc7/vmlinux-3dab139d.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/7ed2d255bd44/bzImage-3dab139d.xz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com
+
+> ------------[ cut here ]------------
+> remove_proc_entry: removing non-empty directory 'irq/20', leaking at least 'comedi_parport'
+> WARNING: fs/proc/generic.c:747 at remove_proc_entry+0x4e7/0x610 fs/proc/generic.c:747, CPU#1: syz.3.389/7224
+
+So this frees an interupt descriptor, which still has an active
+interrupt request on it.
+
+> Modules linked in:
+> CPU: 1 UID: 0 PID: 7224 Comm: syz.3.389 Tainted: G             L      syzkaller #0 PREEMPT(full) 
+>  unregister_irq_proc+0x206/0x2a0 kernel/irq/proc.c:406
+>  free_desc+0x89/0x330 kernel/irq/irqdesc.c:482
+>  irq_free_descs kernel/irq/irqdesc.c:874 [inline]
+>  irq_free_descs+0x84/0xc0 kernel/irq/irqdesc.c:865
+>  irq_domain_free_irqs+0x46a/0x5c0 kernel/irq/irqdomain.c:1917
+>  mp_unmap_irq+0xf8/0x130 arch/x86/kernel/apic/io_apic.c:1061
+>  acpi_unregister_gsi_ioapic+0x40/0x60 arch/x86/kernel/acpi/boot.c:722
+>  acpi_unregister_gsi+0x25/0x40 arch/x86/kernel/acpi/boot.c:751
+>  acpi_pci_irq_disable+0x275/0x360 drivers/acpi/pci_irq.c:517
+>  pcibios_disable_device arch/x86/pci/common.c:706 [inline]
+>  pcibios_disable_device+0x89/0xb0 arch/x86/pci/common.c:703
+>  do_pci_disable_device+0x9f/0x100 drivers/pci/pci.c:2170
+>  pci_disable_device+0x130/0x270 drivers/pci/pci.c:2206
+>  pci_device_remove+0xb2/0x1d0 drivers/pci/pci-driver.c:512
+>  device_remove+0xcb/0x180 drivers/base/dd.c:616
+>  __device_release_driver drivers/base/dd.c:1349 [inline]
+>  device_release_driver_internal+0x44e/0x620 drivers/base/dd.c:1372
+>  unbind_store+0xf8/0x110 drivers/base/bus.c:244
+>  drv_attr_store+0x74/0xb0 drivers/base/bus.c:125
+>  sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+>  kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+>  new_sync_write fs/read_write.c:595 [inline]
+>  vfs_write+0x6ac/0x1050 fs/read_write.c:687
+>  ksys_write+0x12a/0x250 fs/read_write.c:739
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+>  do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+unbind() releases the driver, which removes the device, but the device
+removal does not end up freeing the requested interrupt and
+pci_device_remove() ends up correctly freeing the legacy PCI interrupt
+descriptor through the above call chain.
+
+The real question is how that comedi parport driver ends up on a PCI
+device without actually registering a PCI driver with a proper remove
+callback. It seems it just attaches blindly to something which user
+space hands in through the ioctl().
+
+Though deciphering this comedi code is beyond my skillset.
+
+I rather go and harden the interrupt core against such bogosities.
+
+Thanks,
+
+        tglx
+
+
+
