@@ -1,188 +1,193 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9FF43FBEAF
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 12:10:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF2363F44D6
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 12:10:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785154233; cv=none; b=uR0tVG2s1fsrlHPzFCEg1r8XKzBsIfLg+OxXPB1iYWPXEu8tgEAI38/w7nfZ32bh6DqBA7QJOJlaqn+zjROkzF5/vz8IdvIHGZ7SGjHpviBjY/pRijzA3mNy6s4OAGI12w9iN07OVHlwle5Si3uhLTuOP6/lajwWzV/UH0r4JMQ=
+	t=1785154257; cv=none; b=QTmXeQDWXV8oaJHHLtEPbZGss0Y66SpgkXZr149uW7l9gj3+vEx4XOdfyVuI98bZPOLsFA+IiHoPosxtPgp8huKLo8XpvlaEdfC5f62I3oQ9yucmWj2XVwcw8G7eSHuy9YtPcTR7izxozu1AYBIUnde9wNCTQpz2w+gEjVApXBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785154233; c=relaxed/simple;
-	bh=AxWBmt7HYNFpujBnQhtQJvcCKraELIFeYSYo+bJ9KIE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EK5BTr7eqNGDaKxq68u4Nm/6ml3aBJpkfgtaMXKa/+RkwGtxnex1TeWv7vU/jgxhJCJGHmJ131PER9FTRfFTa63y4UGoYcXcYPqO7G04lZEwwulyPcJ3qMb8j41FF9ZF41gxVBy+DEPbKFdEsdNslxZ2kDG0riJ72PKEcfEzKo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LYj3Dhu/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785154257; c=relaxed/simple;
+	bh=hDpi+mS6ZesLKap0n94a9xm6h6ixQ5Klrug46U51A7M=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=HuWEvT3ntXU9mplgINGZpW2qR913cHFwFNCkTP9cwdM8zl1u03aXglEwlElGfzHREyWDBQsNW3c8DfHWCNkdirKV8bGtrbI3qGNHCD5NeBtPzdUTMBGcxokF7CXm5k6Uu8O9rDsBs6u6TRDcDGNObUL7tSBKVqHM372avn0wf9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thegoodpenguin.co.uk; spf=pass smtp.mailfrom=thegoodpenguin.co.uk; dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b=Djyo7eHv; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thegoodpenguin.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thegoodpenguin.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LYj3Dhu/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6ECAD1F00AC4
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 12:10:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785154231;
-	bh=JhYIp1CKigvj4CYO+OIWNTACrKJgXXmqeayTYKrnS5E=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=LYj3Dhu/YIrO7Dv9JxqpjxBbxIjNXtO2rTnkHrCIuHFdG1lFJm5DvTVCWCp2n1FE0
-	 PbfGllkZuOFdCuAyNKF2tecRbqDWe5hz1FNUCu5mFsBbvSMVI5UJmptBBvVy+XP9qc
-	 0tvRBvEePPyJycO/H4Hec2ECRSK2vWDz2bBUs0dFyY2ibDk/Mn7H42X56fDczp/8bo
-	 XQuOOt38Nz/QakUGm6Eo5RH8QbvG8mUGwupgxIrcyjvq+Y8bBKEsWn5rxpOfM+I366
-	 ZPSSzw+6/1njrlSjmigNpfCDPbflRM282xWcbI5e4kgTNK60bFzmPNVOptswSnb9Vd
-	 cAWtD9Ry+eUeQ==
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-39c9452244aso25251341fa.3
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 05:10:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RolgvE3pUFFKteCSEdmWHDiA4iH1FT4UYu+OqxsgP7cWoLrVlpTV0dcOltnWVyB8AmvJFfqw0t7oME=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx9aV7xx0nyblIx6Oow0CafCK47ueu5w3Z8GhF0P8R7ShToN0a+
-	IBQlqcYbSa/V+Y13NnVeadKOkBv5vqK1m0xCos602I3iL4bUkPVsQL+707XdLomt0VJ3ygM+Gvt
-	Ieh9d6Z6hpyGMQZRAsg0DDwlx8gRK0vI=
-X-Received: by 2002:a05:6512:3b8f:b0:5b2:a24a:e4f9 with SMTP id
- 2adb3069b0e04-5b2c1b2ed8cmr1677929e87.40.1785154229841; Mon, 27 Jul 2026
- 05:10:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b="Djyo7eHv"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-493f75f7172so22819435e9.1
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 05:10:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=thegoodpenguin-co-uk.20251104.gappssmtp.com; s=20251104; t=1785154254; x=1785759054; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=OICCS3yLJZnEdkP0xlPeHb8B7fyLwNgxSSOf4ztj6D8=;
+        b=Djyo7eHv0C+YQ3XR6p3lD/Nm/mLavp0PI8VvPU3K+eXsNl4d6UUQCcdb2JoPvo+iKC
+         osI+AIZWUmkHp5CM9rWANtrxVNUUk/R3fHYbw3Zg+yP6FXtc6V7wNYe/SCukT6DoNqSp
+         WZtycI6QSQrt4/HZgk/TBM22KBoIMV7oYhWoTYt/DGS4Y3n9/TtDVPZqUkw3DPhc0RNA
+         gOPgfogQhtGxwPYU8UsiFDACvfkskuFycw1MnnmW6PZmsIHPoKRJ9ecbXfVa/Ng0dIUy
+         nILeGMiCiZuUzfuWUd9HqBRRvlotnKAv9SCfTGXFrnEmvrX4CY05mhzjRpErTOPcYnO+
+         0Arg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785154254; x=1785759054;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=OICCS3yLJZnEdkP0xlPeHb8B7fyLwNgxSSOf4ztj6D8=;
+        b=Thhe0yoiZaNLBblOPVNxxolZB63CKgY2vXN/MnCAphsltTD8JlvinmOLv6+sqNgPuC
+         jjsp+kha/n86ki0EbiUoXUpdhN4ngULmaEGDyIiGkYP9YS4SgpwYLB0U3oA0rrzD7zsv
+         Vd0JabOw5sqo6At5YTDYNrluIP8q+oFeuaG2knp6kf7Iwra0W1peYHS0l18FdjJkhjoP
+         L3WOFQjJ70Hae07peMLtJbY4zg6jonr508+QQ2qoAPXu9hbMle1QlVw7RA8MuNVL1R33
+         /cD/zzxUzjNx1J2GyApcrTwQ0hdtknPBFZVj4ke84nMHhMnbxqOhOSRyT5BVVRTJuTU4
+         ir2A==
+X-Forwarded-Encrypted: i=1; AHgh+RogdEw+6LsQzkvcIT0cd/iqzsnkIQMQ1NmuNi9/Tq3O646Wn0/cZzIeY0/CmoJ8nVwA2+HufqT/c5A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfJzXKXEdo44K9mzJnkfCV1//YgIglh9GamJeSfqBbXpnISKl/
+	3OcJfdnVvL1HTz0a4nWjFMeb9hE+jaj4YlmD6eZdMy1rts9NsF3dAAJrZgRqndIrlP0=
+X-Gm-Gg: AR+sD11T04ED0lJxiOulyq3kxj3H6NwLY4AaMwrF3g0V+Rvcizhj70ZV60qw0dZr7lE
+	pQEGqsML1GsJ1I/KatTd2+83k/7ojODvXtm/zeoOL/aQuQ51onOdOP/6h8XislWDyt5zQ5anGRt
+	7WHVdW/ZEk9V28v70HTD7z8ndHEO7vsKOTG32TM6kLqQpnIOVXwgnxElK74LXc3MlNiO5jEOuWF
+	0JgEBAK0vvXvzhKPRnSU1JynayJl8Fv4JrvIPRsPsoIbRj+ObTS+fD0lcrQ3o/kYPqyr7D3Wzmr
+	koZKxwOHRPD4Qsfb84T5LH/8wvls19QgVY4fy8+eDx/jI3UOvU07h9LDPq1Zn4j/u1uyIbhlPQr
+	QXQUVXpitfTItw0TBeCkDNhpZSKUIq7nev+oEFKMHnFBb1DXS3Bf5OvAGXERB1Ha8pUlkakLSDE
+	ldOQLEzDx0CQ659fRO9dY=
+X-Received: by 2002:a05:600c:1d0d:b0:493:c47f:3c55 with SMTP id 5b1f17b1804b1-496b56bbc2fmr104042095e9.5.1785154253954;
+        Mon, 27 Jul 2026 05:10:53 -0700 (PDT)
+Received: from [10.42.0.1] ([2a00:23c7:1d1a:9c01:7aab:bc55:e039:4aac])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4f302f8sm211778055e9.12.2026.07.27.05.10.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 05:10:53 -0700 (PDT)
+From: "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
+Subject: [PATCH 0/9] ACPI: use named initializers for acpi_device_id
+Date: Mon, 27 Jul 2026 13:10:38 +0100
+Message-Id: <20260727-acpi-refactor-v1-0-ff900aa326ee@thegoodpenguin.co.uk>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <d0be949d-0e21-472e-a44b-cedb1dd8695d@nec.com> <CAJZ5v0iacu-FW04zgTO5WDvjB4BgRvfhE9hsGskgOLGHrNwUSg@mail.gmail.com>
- <03e9f950-4791-4c77-a961-204398255adb@nec.com>
-In-Reply-To: <03e9f950-4791-4c77-a961-204398255adb@nec.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Mon, 27 Jul 2026 14:10:11 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hEdnMSWbZ9xwNPxOw4iPaCqOquSQcRHQoiQqULDdJDhg@mail.gmail.com>
-X-Gm-Features: AUfX_mxXCZdwn2tjftj1XMuKIbDYmkAHaIJPuhvBpFImSQ0x9DKmrPZikp-3OAE
-Message-ID: <CAJZ5v0hEdnMSWbZ9xwNPxOw4iPaCqOquSQcRHQoiQqULDdJDhg@mail.gmail.com>
-Subject: Re: [REGRESSION] ACPI: PCI: misleading _OSC failure message when _OSC
- is absent
-To: =?UTF-8?B?S09ORE8gS0FaVU1BKOi/keiXpCDlkoznnJ8p?= <kazuma-kondo@nec.com>
-Cc: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>, "lenb@kernel.org" <lenb@kernel.org>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, 
-	"jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>, 
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAL5KZ2oC/yXMQQ5AMBCF4avIrDWp0ZC4iljUmDIWSItIpHdXL
+ L+8vP+GwF44QJPd4PmUIOuSUOQZ0GSXkZUMyYAaK12jUZY2UZ6dpX31yhl2hM4Y1CWkz5YWub5
+ e2/0ORz8z7W8EYnwAYK3YLnEAAAA=
+X-Change-ID: 20260724-acpi-refactor-f4efc2f44203
+To: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Zhang Rui <rui.zhang@intel.com>, 
+ Kai-Heng Feng <kaihengf@nvidia.com>, Tony Luck <tony.luck@intel.com>, 
+ Borislav Petkov <bp@alien8.de>, Hanjun Guo <guohanjun@huawei.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Shuai Xue <xueshuai@linux.alibaba.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Sudeep Holla <sudeep.holla@kernel.org>, 
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
+ Dave Jiang <dave.jiang@intel.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Ira Weiny <iweiny@kernel.org>
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ nvdimm@lists.linux.dev, 
+ "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785154252; l=4122;
+ i=pzalewski@thegoodpenguin.co.uk; s=20260430; h=from:subject:message-id;
+ bh=hDpi+mS6ZesLKap0n94a9xm6h6ixQ5Klrug46U51A7M=;
+ b=1200lUbaXeYWmclYJpq+b23CZR3Ejwn2Uth0/1cJecdaSViFrJz967y3swrowZIlhRNa0QRbk
+ uGqRtfo1UCABz+VPUBqhAMuHJcnRcILUfp89Qu2pEPZ37OLyiygqmoj
+X-Developer-Key: i=pzalewski@thegoodpenguin.co.uk; a=ed25519;
+ pk=vHq4n9IonORH2GTzLv8r6CWAFHzgfBuNkQPXA8NSly0=
 
-On Fri, Jul 24, 2026 at 1:15=E2=80=AFPM KONDO KAZUMA(=E8=BF=91=E8=97=A4=E3=
-=80=80=E5=92=8C=E7=9C=9F)
-<kazuma-kondo@nec.com> wrote:
->
-> Hello,
->
-> On 2026/07/18 1:22, Rafael J. Wysocki (Intel) wrote:
-> > Hi,
-> >
-> > On Fri, Jul 17, 2026 at 2:01=E2=80=AFPM KONDO KAZUMA(=E8=BF=91=E8=97=A4=
-=E3=80=80=E5=92=8C=E7=9C=9F)
-> > <kazuma-kondo@nec.com> wrote:
-> >>
-> >> Hello,
-> >>
-> >> After 7d703df7f4f5 ("ACPI: bus: Split _OSC evaluation out of acpi_run_=
-osc()"),
-> >> AE_NOT_FOUND from acpi_evaluate_object() is handled as AE_ERROR in
-> >> negotiate_os_control().
-> >>
-> >> I haven't yet observed any functional issue with this change,
-> >> but I started seeing the following misleading messages on my Intel ser=
-vers:
-> >>
-> >>     kernel: ACPI: Enabled 2 GPEs in block 00 to 7F
-> >>     kernel: ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus fe])
-> >>     kernel: acpi PNP0A03:00: _OSC: OS supports [ExtendedConfig ASPM Cl=
-ockPM Segments MSI EDR HPX-Type3]
-> >>   + kernel: acpi PNP0A03:00: _OSC: OS requested [PCIeHotplug SHPCHotpl=
-ug PME AER PCIeCapability LTR DPC]
-> >>   + kernel: acpi PNP0A03:00: _OSC: platform willing to grant [PCIeHotp=
-lug SHPCHotplug PME AER PCIeCapability LTR DPC]
-> >>   + kernel: acpi PNP0A03:00: _OSC: platform retains control of PCIe fe=
-atures (AE_ERROR)
-> >>     kernel: PCI host bridge to bus 0000:fe
-> >>
-> >> Before the commit, the log was:
-> >>
-> >>     kernel: ACPI: Enabled 2 GPEs in block 00 to 7F
-> >>     kernel: ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus fe])
-> >>     kernel: acpi PNP0A03:00: _OSC: OS supports [ExtendedConfig ASPM Cl=
-ockPM Segments MSI EDR HPX-Type3]
-> >>     kernel: PCI host bridge to bus 0000:fe
-> >>
-> >> "UNC0" is an uncore root bridge and does not define an _OSC method in =
-the ACPI
-> >> namespace on my systems.
-> >>
-> >> Previously, when acpi_evaluate_object() was called for UNC0._OSC, it r=
-eturned
-> >> AE_NOT_FOUND, and that status was propagated to negotiate_os_control()=
-.
-> >>
-> >> Now, it appears that acpi_eval_osc()/acpi_run_osc() no longer preserve=
- the
-> >> distinction between AE_NOT_FOUND and other errors from acpi_evaluate_o=
-bject(),
-> >> so negotiate_os_control() no longer receives AE_NOT_FOUND in this case=
-.
-> >>
-> >> The call chain looks like this on my system:
-> >>
-> >> negotiate_os_control()
-> >>   acpi_pci_osc_control_set()       [retval =3D AE_ERROR    ]
-> >>     acpi_pci_query_osc ()          [retval =3D AE_ERROR    ]
-> >>       acpi_pci_run_osc()           [retval =3D AE_ERROR    ]
-> >>         acpi_run_osc()             [retval =3D AE_ERROR    ]
-> >>           acpi_eval_osc()          [retval =3D -ENODATA    ]
-> >>             acpi_evaluate_object() [retval =3D AE_NOT_FOUND]
-> >>
-> >> As a result, negotiate_os_control() logs messages as if the OS had neg=
-otiated
-> >> with the platform via _OSC, even though _OSC is absent and no such neg=
-otiation
-> >> actually happens.
-> >
-> > Fortunately though this only affects the printing of messages and only
-> > in the non-PCIe case.
-> >
-> >> I'm not very familiar with the ACPI/PCI code, so I may be missing some
-> >> context. However, if my understanding is correct, would preserving
-> >> AE_NOT_FOUND here (for example, having acpi_eval_osc()/acpi_run_osc() =
-return
-> >> the error as-is) be the right direction, or should the message handlin=
-g be
-> >> adjusted instead?
-> >>
-> >> If there is a preferred direction for fixing this, I would be happy to=
- try
-> >> putting together a patch and testing it on my system.
-> >
-> > I cannot send you a proper patch ATM (sorry about that), but please
-> > try to replace the
-> >
-> > (status =3D=3D AE_NOT_FOUND && !is_pcie(root))
-> >
-> > check in negotiate_os_control() with the following one:
-> >
-> > (!is_pcie(root) && !acpi_has_method(handle, "_OSC"))
-> >
-> > and see if that helps.
->
-> Sorry for the late reply.
->
-> With the change you suggested, the failure message no longer appears.
-> If that's okay with you, I'd like to submit it as a patch.
+This series is converting lists that contain the acpi_device_id 
+struct, which is defined in the include/linux/device-id/acpi.h 
+to makes use of named initializers (which they do not use currently).
+This work is part of the on going effort in the kernel associated
+with device-ids [1]
 
-I think that it'd be better to do this check earlier, even at the
-beginning of negotiate_os_control(), because it is pointless to
-prepare for evaluating _OSC if it is not present.
+The plan is to convert acpi_device_id::driver_data to have an anonymous 
+union, similarly to what was introduced for PCI and I2C device ID tables.
+The goal is to increase type-safety (as most of the existing casts are gone), 
+to improve readability and to make use intent a bit more clear:
 
-So I would add
-
-if (!is_pcie(root) && !acpi_has_method(handle, "_OSC")) {
-        print a diagnostic message;
-        return;
+```
+union {
+	kernel_ulong_t driver_data;
+	const void *driver_data_ptr;
 }
+```
 
-to negotiate_os_control() after the x86_apple_machine check and remove
-the (status =3D=3D AE_NOT_FOUND && !is_pcie(root)) check that would become
-redundant then.
+But for that to work all lists containing the structs need to use named
+initializers first. I already have patches that implement this and touching
+a lot of kernel subsystmes that use the acpi_device_id struct and that list
+keeps on growing. Therefore, I have decided to split the series per every
+subsystem into:
+- pre-clean-ups that convert the lists to use named initializers
+- actual implementations that make some of the modules use the new driver_data_ptr
 
-Feel free to send a patch doing so.
+That way the task can be fragmented into manageable and independent
+chunks of work and makes this effort easier to review.
 
-Thanks!
+Tested builds on arm64 and x86-64 in Yocto on 7.2-rc5
+
+[1] https://lore.kernel.org/all/cover.1780048925.git.u.kleine-koenig@baylibre.com/
+
+Signed-off-by: Pawel Zalewski (The Capable Hub) <pzalewski@thegoodpenguin.co.uk>
+---
+Pawel Zalewski (The Capable Hub) (9):
+      ACPI: use a named initializer for acpi_device_id
+      ACPI: drop unused assignment of acpi_device_id::driver_data
+      ACPI: pci: drop unused assignment of acpi_device_id::driver_data
+      ACPI: ghes-nvidia: use a named initializer for acpi_device_id::id
+      ACPI: amba: drop unused assignment of acpi_device_id::driver_data
+      ACPI: dptf: drop unused assignment of acpi_device_id::driver_data
+      ACPI: nfit: core: drop unused assignment of acpi_device_id::driver_data
+      ACPI: x86: use a named initializer for acpi_device_id::id
+      ACPI: use a named initializer for acpi_device_id::id
+
+ drivers/acpi/ac.c                 |   4 +-
+ drivers/acpi/acpi_apd.c           |  42 ++--
+ drivers/acpi/acpi_memhotplug.c    |   4 +-
+ drivers/acpi/acpi_pad.c           |   4 +-
+ drivers/acpi/acpi_platform.c      |  13 +-
+ drivers/acpi/acpi_pnp.c           | 514 +++++++++++++++++++-------------------
+ drivers/acpi/acpi_processor.c     |   8 +-
+ drivers/acpi/acpi_tad.c           |   4 +-
+ drivers/acpi/acpi_video.c         |   2 +-
+ drivers/acpi/apei/ghes-nvidia.c   |   2 +-
+ drivers/acpi/arm64/amba.c         |   6 +-
+ drivers/acpi/battery.c            |   8 +-
+ drivers/acpi/button.c             |  12 +-
+ drivers/acpi/container.c          |   8 +-
+ drivers/acpi/dptf/dptf_pch_fivr.c |  14 +-
+ drivers/acpi/dptf/dptf_power.c    |  38 +--
+ drivers/acpi/ec.c                 |   6 +-
+ drivers/acpi/evged.c              |   4 +-
+ drivers/acpi/fan_core.c           |   2 +-
+ drivers/acpi/hed.c                |   4 +-
+ drivers/acpi/nfit/core.c          |   4 +-
+ drivers/acpi/pci_link.c           |   4 +-
+ drivers/acpi/pci_root.c           |   4 +-
+ drivers/acpi/pfr_telemetry.c      |   4 +-
+ drivers/acpi/pfr_update.c         |   4 +-
+ drivers/acpi/processor_driver.c   |   6 +-
+ drivers/acpi/sbs.c                |   4 +-
+ drivers/acpi/sbshc.c              |   6 +-
+ drivers/acpi/scan.c               |  46 ++--
+ drivers/acpi/thermal.c            |   4 +-
+ drivers/acpi/tiny-power-button.c  |   6 +-
+ drivers/acpi/video_detect.c       |   4 +-
+ drivers/acpi/x86/cmos_rtc.c       |   2 +-
+ drivers/acpi/x86/lpss.c           |  54 ++--
+ drivers/acpi/x86/s2idle.c         |  14 +-
+ drivers/acpi/x86/utils.c          |  16 +-
+ include/linux/acpi.h              |   8 +-
+ 37 files changed, 443 insertions(+), 446 deletions(-)
+---
+base-commit: 48a5a7ab8d6ab7090564339e039c421f315de912
+change-id: 20260724-acpi-refactor-f4efc2f44203
+
+Best regards,
+--  
+Pawel Zalewski (The Capable Hub) <pzalewski@thegoodpenguin.co.uk>
+
