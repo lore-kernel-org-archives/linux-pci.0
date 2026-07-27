@@ -1,71 +1,79 @@
-Received: from mx5.mail-out.lima-city.de (mx5.mail-out.lima-city.de [91.216.248.207])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25141380FD4;
-	Mon, 27 Jul 2026 18:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.216.248.207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7B014900E;
+	Mon, 27 Jul 2026 18:21:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785176417; cv=none; b=Jj+VdovIgMtBsw8M5HC3OAP/CtYUdQFejDu4ZazS/ZBLSoqxmBthAvQ43HljnUPkAcjOK3JQ3/JpVzRZyG5NQjduw6pgqpc8/lohdwKIEevdXKR/DPXA6O9lQ6wIr+DUTq/ksgUAyHYFv2MTlKeXXoOj0huERtnZplo2zuJcL2Q=
+	t=1785176492; cv=none; b=ZMiE6Dmzfj9kOVpVCd6hUEIdW5oceDN2gss+JN3rEmqKCRs6Xbi/G4Xg9Qqb30r+pc/5xU4TYkhMRCfTmMQr9eVmc0xeRnTNzBKq40TuVBsEEmcBZi5Nh1ilGWHMXBpJXOD1vUhULn8JoXmHqmSPiJVU8HH9YOtRmMV7I6RundA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785176417; c=relaxed/simple;
-	bh=csV9WpuWhlZBA3LAXCPgVvOpoHxeMaePZ0KBEePW4L8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=l2uwCwKdn8udrQzkMRzyXZ7/UO9OoFXg1Phg3Ev27QrztqQmSH57rMoMKVCRlOcMjGPFTumGAX7j956kcRkLPy/U1G1vnkyMPg5YTwFxkmxcUh8AGA/t/Z5vFJRbszC6r3Nbx/IhQQCklYyoFtxT8wI4t4NKTCCaBbrb6ko5vjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks; spf=none smtp.mailfrom=deq.rocks; dkim=pass (2048-bit key) header.d=deq.rocks header.i=@deq.rocks header.b=lb62DGh/; arc=none smtp.client-ip=91.216.248.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=deq.rocks
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=deq.rocks
+	s=arc-20240116; t=1785176492; c=relaxed/simple;
+	bh=0CW0cgH0D4K9wwVT35wNjW8fjY+Z2HkZM5AHn0mNP2A=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=WonEwUTH7Jz9CIvR0CFVAEBHNosiAP8jXXZpxuhEAb/N3nERfEBwGvGZlFJagQ5B2ePG8qBpTr4+73lClSvMxY5RCcU3y18eIUZLcas0TjELCDABsJ7CpZE/sWLg8JyNNcEP12tl6EQ1g/Zblnafrn3Om0owZhj05rJxaG+RtFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oMafiBv7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deq.rocks header.i=@deq.rocks header.b="lb62DGh/"
-From: Andre Eikmeyer <dev@deq.rocks>
-X-Lima-ML-UUID: 9ea33213-41be-4055-86e9-c6a3933aeaa7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=deq.rocks;
-	s=securedbylima-20251205; t=1785176405;
-	bh=csV9WpuWhlZBA3LAXCPgVvOpoHxeMaePZ0KBEePW4L8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lb62DGh/a9EgD2O9XJJZx69PSCCUQfj5+anz8TdlOD6y4d6Xzfh6umvWUMALWoz1W
-	 N8vAfNL5axaBNQFlw5GTj9y/E0/2zpXD9R7Bz4GLdiQGroYIOHAOGCMWQAFdydtHdN
-	 5ftdVSGuOm0zmUa2Yzkz7HJzbegDZFE6Idy1yZbnx/DRZyyBhhWRFeuvtdDiMEzYN4
-	 xgusknlPyTEWdZbId+yZdFLznlBDaDA0+bYeec5Kvc9CvoEcNVYA3rKIaUOva+oaXT
-	 /2r9iOWN8OI1Jxfhu6ASZsr3vmNls1W3Luy3M62/XUtasb11YrmwKtfj6+k7hmNU6O
-	 2DeoTWcnyy0lw==
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andre Eikmeyer <dev@deq.rocks>,
-	Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <westeri@kernel.org>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] thunderbolt: Add device links for Apple T2 NHI
-Date: Mon, 27 Jul 2026 20:20:01 +0200
-Message-ID: <20260727182001.29728-1-dev@deq.rocks>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260727112406.GI2365036@black.igk.intel.com>
-References: <20260724164641.2239-1-atharvatiwarilinuxdev@gmail.com> <20260724164641.2239-3-atharvatiwarilinuxdev@gmail.com> <20260727112406.GI2365036@black.igk.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oMafiBv7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16C431F000E9;
+	Mon, 27 Jul 2026 18:21:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785176491;
+	bh=0CW0cgH0D4K9wwVT35wNjW8fjY+Z2HkZM5AHn0mNP2A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=oMafiBv7mgwhcisjJcXq8x7jtVwOxO+3hEwkZJd7a6tF53LkXojQ5QyjbUj1trMpz
+	 UiYqOQhkQCAwYBeaSvDRhgr2cr8HqsUdua8z8RDDjoYz/M2NJGy64bdoPJqc8Ci9sB
+	 w4n1j6cEal1s+ZRhlJb5UsWhzpZsaukir8WfcAzrKrkhPmE25fRyvkn++q86+jRLuV
+	 aPyOiqBRiKKz2n1i3MH6pR4vSfF4gAS8R098/UK1UnYgQbXv+HEs33AO4KBKEoyMYm
+	 xRyOlr8yXzfeqZRC2N5VwouRF8vlzQwd0vJUyhNM/fqRVLFZzhbXA912V7qf6Bj9+s
+	 9lkFVk3LAbE4A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 2/6] dmaengine: switchtec-dma: fix resource leak in
+ alloc_chan_resources
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Logan Gunthorpe" <logang@deltatee.com>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org
+In-Reply-To: <20260727174837.6645-3-logang@deltatee.com>
+References: <20260727174837.6645-1-logang@deltatee.com>
+ <20260727174837.6645-3-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 18:21:30 +0000
+Message-Id: <20260727182131.16C431F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Hi Mika,
+> switchtec_dma_alloc_chan_resources() returns directly on any later
+> failure, without ever freeing the descriptor rings and coherent DMA
+> memory it just allocated. The dmaengine core does not call
+> device_free_chan_resources() when device_alloc_chan_resources() fails,
+> so the driver has to unwind its own partial state.
+>=20
+> The device-removed check also runs after ring_active and
+> comp_ring_active have already been set true, so a failure there left
+> the channel marked active despite alloc_chan_resources() reporting
+> failure.
+>=20
+> Add an error-unwind path that disables the channel and frees the
+> descriptor rings on every failure after allocation. ring_active and
+> comp_ring_active are cleared under the same locks
+> switchtec_dma_free_chan_resources() already uses, since the completion
+> tasklet checks comp_ring_active under complete_lock before touching
+> the completion ring, and a stale IRQ can still be in flight when this
+> unwind path runs.
+>=20
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.=
+kernel.org/T/#u
+> Fixes: 30eba9df76ad ("dmaengine: switchtec-dma: Implement hardware initia=
+lization and cleanup")
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-the Titan Ridge and Ice Lake changes address the same missing PM
-dependency on T2 Macs, despite the different PCIe topologies. We would
-therefore prefer to keep them in one patch unless there is a technical
-reason to split them.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Using the known Ice Lake Thunderbolt root-port IDs instead of the ACPI
-TRP names makes sense. We will replace the ACPI-based discovery in the
-next revision.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727174837.6645=
+-1-logang@deltatee.com?part=3D2
 
-Thanks,
-Andre
