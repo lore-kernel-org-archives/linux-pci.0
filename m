@@ -1,143 +1,181 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7157A3FADE5;
-	Mon, 27 Jul 2026 13:46:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA383C09EE
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 13:55:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785159966; cv=none; b=VV2N+nguONrlH0uvlvLUv0EG9Bc0a0qn8Osk18ubBL2WX3frdx6oHZBhuWhkqywzdxUPea8LEHLEp+ZYNRtTsu9qVenmvHcTK8uaSgNk5Im0eVsFDM4ywatlUZ/bqUI1CXI4Ce7ccoLa4mO7tR4ThSlF3XpxW5iIEhVcYpnARtY=
+	t=1785160525; cv=none; b=HAdBu43fX58cAU9itlAHM/tmO9cBo1/J4xHE+JastTQCBuIoN592BMOvI0FxX830XKITce3oSz9E3BQoyG744rldFi4pzLsVG0IzUjs2sB5YvCWht9jHq3ArbIXCCAgKeHQO0eipH22X9HnV1yCgz52jK7uFYpjBC5/5qvTIdRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785159966; c=relaxed/simple;
-	bh=uZR06OsYX7bLFAlwTYUUY5e2nSFlRtrdQ76TYNgR/LM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=klleg3ZW60BNMxQPFmOAJTI2leqEMQaT/+/WUZYwl771i/u6Zc0L00exF8Cv4xOz5W1Yl8gznTGcjLqIRYiDnvAlIpBbFHqn1xXxXgNwW2iVxWO282tzl4M8laKypekXf3PB105481GDXD3W1GSnwTR0fyJouyiwyRRcWZlm860=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=aKBlSe1B; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="aKBlSe1B"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1785159963;
-	bh=DztvKC6RI7e0C3xqh2KV+oSshUYJibZtujJTSmc47ck=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aKBlSe1Bxj7jRHnppBdIVn1S94JHLAWklNDbJKJqbNhcznvuvyIh61hNLjYHHH1HL
-	 TXsDdRzKR5ocZhjXQ5bEgkvqJVEO1qw0NP1yzFg35S5n48NWnaIZwxYbjIw1HvhFV8
-	 iRCf9TjBanTlueDKuYRGwh30Y6Iudyp7WoJ4Zh9HM1GUx8BXjG++KBt6PKjRywRNH0
-	 C9K3oTmr3nPX08PgCT7WLndFHfvE6vwy7b+Bwt2SlVaLHss28BWvhVikc3v1DaQVa8
-	 eXuUlXHEC+m/3z0nTbCENC97h6mSvzZJdzQ5BW/yjUVSEJwJoTre0B7HDXVd2o+vwH
-	 jvpvGZB1I09hw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	s=arc-20240116; t=1785160525; c=relaxed/simple;
+	bh=uXD1hdfvLSYCqX/GKP2JXWRJNXOdFYAmXwPM53Vwd2U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kJLxchrmuYq2JP5nWWS1zuTULgjlCvmn6ZGVGDhZgGx0+DjxlR3GBnXzfvk9bK3GJ0nDSxPwImzgSBPPSWZ+Prnu6/n2JzKdquWxEtNyRpfuDG7rxb4ViiG7OjQZxiSPfZ1f7ZZAgSguM3zQNjiUBBjwmkHnz6KcnTHFg312wrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h80HG2jTtz4w1j;
-	Mon, 27 Jul 2026 23:46:02 +1000 (AEST)
-Message-ID: <2b8961fb-efab-4d0d-a577-32ccf87e4a9e@ozlabs.org>
-Date: Mon, 27 Jul 2026 14:45:59 +0100
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 3639EC18;
+	Mon, 27 Jul 2026 15:55:20 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 042EB60CDD18; Mon, 27 Jul 2026 15:55:20 +0200 (CEST)
+Date: Mon, 27 Jul 2026 15:55:19 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, Matthew W Carlis <mattc@purestorage.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 6/6] PCI/AER: Support Advisory Non-Fatal Errors
+Message-ID: <amdjR8LqIY0YmiG4@wunner.de>
+References: <cover.1784905909.git.lukas@wunner.de>
+ <1b62915ffe06ee5b08e846531c42392e5f244337.1784905909.git.lukas@wunner.de>
+ <20260724162755.DDA801F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request
-Content-Language: en-GB
-To: sashiko-reviews@lists.linux.dev
-Cc: kvm@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-pci@vger.kernel.org
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-10-matt@ozlabs.org>
- <20260715181131.12E0A1F000E9@smtp.kernel.org>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <20260715181131.12E0A1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260724162755.DDA801F000E9@smtp.kernel.org>
 
-Dear robot,
-
-On 15/07/2026 19:11, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Low] The function `vfio_pci_core_feature_dma_buf_revoke` mixes `goto`-based error handling with scope-based cleanup helpers (`scoped_guard`).
-> --
+On Fri, Jul 24, 2026 at 04:27:55PM +0000, sashiko-bot@kernel.org wrote:
+> > +++ b/drivers/pci/pcie/aer.c
+> > @@ -410,6 +424,15 @@ void pci_aer_init(struct pci_dev *dev)
+> >  	n = pcie_cap_has_rtctl(dev) ? 5 : 4;
+> >  	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_ERR, sizeof(u32) * n);
+> >  
+> > +	/*
+> > +	 * Advisory Non-Fatal Errors are masked by default (PCIe r7.0, sec
+> > +	 * 7.8.4.6).
+> > +	 */
+> > +	if (dev->devcap & PCI_EXP_DEVCAP_RBER)
+> > +		pci_clear_and_set_config_dword(dev,
+> > +					       dev->aer_cap + PCI_ERR_COR_MASK,
+> > +					       PCI_ERR_COR_ADV_NFAT, 0);
 > 
-> --- Patch [9]: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request ---
-> commit 668793566cfbdb5cee2b0a69188ebbada38dd4d5
-> Author: Matt Evans <matt@ozlabs.org>
+> [Severity: High]
+> Does this code modify the AER Correctable Error Mask register unconditionally
+> without checking pcie_aer_is_native(dev)?
+
+Yes, that's a valid point.
+
+> > @@ -916,8 +997,20 @@ void aer_print_error(struct aer_err_info *info, int i)
+> >  
+> >  	__aer_print_error(dev, info);
+> >  
+> > -	if (info->tlp_header_valid)
+> > +	if (info->tlp_header_valid && info->severity != AER_CORRECTABLE)
+> >  		pcie_print_tlp_log(dev, &info->tlp, level, dev_fmt("  "));
+> > +
+> > +anfe:
+> > +	/* Recursive invocation for Advisory Non-Fatal Errors */
+> > +	if (info->anfe_status && info->severity == AER_CORRECTABLE) {
+> > +		info->severity = AER_NONFATAL;
+> > +		info->status = info->anfe_status;
+> > +		info->mask = 0;
+> > +
+> > +		aer_print_error(info, i);
 > 
-> vfio/pci: Permanently revoke a DMABUF on request
+> [Severity: Medium]
+> Will this recursive call operate with the stale info->level and
+> info->ratelimit_print[i] state?
+
+That's intentional.  I want the (Advisory) Uncorrectable Errors to be
+reported with the same loglevel and ratelimiting as the accompanying
+Correctable Error.
+
+However while native AER handling does this the way I want it to,
+I missed that Firmware First does not.  It uses the loglevel and
+ratelimiting of (non-Advisory) Uncorrectable Errors.  So that's
+something I'll have to fix.
+
+> [Severity: High]
+> This is a pre-existing issue, but can this cause a PCI device reference leak
+> if the hardware error status changes between loops?
+[...]
+> If the hardware or firmware clears the error status after the first loop but
+> before the second loop reads it, aer_get_device_error_info() returns 0. The
+> second loop will skip the handler, and the pci_dev reference is permanently
+> leaked.
+
+Hallucination.  If hardware or firmware clears error bits behind our back,
+it would be broken.  
+
+> [Severity: High]
+> This is a pre-existing issue, but does this create a TOCTOU race window for
+> newly arriving hardware errors?
 > 
-> This commit expands the VFIO DMABUF revocation state to allow permanent
-> revocation via a new VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE feature request.
-> It refactors the revocation logic into a common function used by both
-> the move path and the new feature request path.
+> drivers/pci/pcie/aer.c:aer_process_err_devices() {
+>     ...
+> 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+> 		if (aer_get_device_error_info(e_info, i))
+> 			aer_print_error(e_info, i);
+> 	}
+> 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+> 		if (aer_get_device_error_info(e_info, i))
+> 			handle_error_source(e_info->dev[i], e_info);
+> 	}
+>     ...
+> }
+
+It's a valid point and already on my todo list, but not something
+I want to fix as part of this series.  The duplicate invocation of
+aer_get_device_error_info() is not only susceptible to a TOCTOU race,
+but also very inefficient.
+
+> [Severity: Medium]
+> This is a pre-existing issue, but does this code cause a memory leak of the
+> dynamically allocated aer_capability_regs when the recovery queue overflows?
 > 
->> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
->> index ccfe861f88b66..36bf07530840d 100644
->> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
->> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> [ ... ]
->> @@ -671,9 +696,72 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
-> [ ... ]
->> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops ||
->> +	    READ_ONCE(priv->vdev) != vdev) {
->> +		ret = -ENODEV;
->> +		goto out_put_buf;
->> +	}
->> +
->> +	scoped_guard(rwsem_write, &vdev->memory_lock) {
+> drivers/pci/pcie/aer.c:aer_recover_queue() {
+>     ...
+> 	else
+> 		pr_err("buffer overflow in recovery for %04x:%02x:%02x.%x\n",
+> 		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>     ...
+> }
 > 
-> [Severity: Low]
-> Is it intentional to mix goto-based error handling and scope-based cleanup
-> helpers in the same function?
-
-Yes.
-
-> The subsystem guidelines for cleanup helpers recommend against mixing goto
-> labels with scoped_guard in the same routine, to avoid confusing ownership
-> semantics and potential resource leaks during future refactoring.
+> In the GHES subsystem, memory for struct aer_capability_regs is allocated from
+> ghes_estatus_pool and passed as a pointer to aer_recover_queue(). If the
+> bounded aer_recover_ring kfifo is full, it prints an overflow error and returns
+> without freeing the memory.
 > 
-> Could the dma_buf_put cleanup at the out_put_buf label be converted to use a
-> scope-based helper, or could the scoped_guard be replaced with traditional
-> locking, to keep the error handling style consistent throughout
-> vfio_pci_core_feature_dma_buf_revoke?
+> The aer_regs pointer is abandoned and the memory is permanently leaked, as it
+> is only freed on the success path inside aer_recover_work_func().
 
-Those guidelines are good, and exist for clarity.  It's a good idea to
-avoid jumping into or out of scoped_guard blocks.  In the case of this
-function, it is clear what is going on regarding the scoped_guard, and
-the pattern is:
+It's a valid point, I've added that to my todo list.
 
-- Verify input values; exit if unpalatable, else:
-- Do the scoped_guard block to perform action
-
-There is, IMO, very low scope for confusion from mixing one goto +
-scoped_guard here.
-
-(Mixing goto-out and return is worse, and this function is guilty of
-that.  However, converting four if()s to ret = -EFOO; goto out; would
-make the function longer and actually a little harder to read.
-
-IOW I think it's fine as is.
-
-
-Matt
-
-
+> [Severity: High]
+> This is a pre-existing issue, but can this lead to data corruption when
+> decoding concurrent Machine Check Exceptions due to an unprotected global
+> buffer?
 > 
->> +		if (priv->status == VFIO_PCI_DMABUF_PERM_REVOKED) {
->> +			ret = -EBADFD;
->> +		} else {
->> +			vfio_pci_dma_buf_set_status(priv,
->> +						    VFIO_PCI_DMABUF_PERM_REVOKED);
->> +			ret = 0;
->> +		}
->> +	}
->> +
->> +out_put_buf:
->> +	dma_buf_put(dmabuf);
->> +
->> +	return ret;
->> +}
->> +#endif /* CONFIG_VFIO_PCI_DMABUF */
+> drivers/acpi/acpi_extlog.c:extlog_print() {
+>     ...
+> 	memcpy(elog_buf, (void *)estatus, ELOG_ENTRY_LEN);
+> 	/* clear record status to enable BIOS to update it again */
+> 	estatus->block_status = 0;
 > 
+> 	tmp = (struct acpi_hest_generic_status *)elog_buf;
+>     ...
+> }
+> 
+> The ACPI extended log driver allocates a single global buffer elog_buf. The MCE
+> decoder callback unconditionally copies the new MCE event payload into this
+> global buffer without any locks. 
+> 
+> Since Machine Check Exceptions can trigger concurrently across different CPUs,
+> concurrent executions of the MCE handlers will simultaneously overwrite
+> elog_buf, corrupting the data structures being parsed.
 
+I'm not familiar with MCE handling, I'll have to ask internally whether
+that's a valid finding.
+
+Thanks,
+
+Lukas
