@@ -1,223 +1,181 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2E743304A;
-	Mon, 27 Jul 2026 18:27:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71CE343304A;
+	Mon, 27 Jul 2026 18:28:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785176860; cv=none; b=s3KLGvOIdZx5/fza0hqxnzT7MvPbz2g4TME4FdN2vk+1IURAJHGzOgxso7f7F6NxJWjYwfIvTLkCKnfWJ4DSmj0MDiQfKVG6QCD890s4g/cDj94ayyGbiJm1FxUtBpi1/D9YfaHbQJsQ8ab+Q0s3benufwHNRTaSlJG/BEjQix8=
+	t=1785176912; cv=none; b=mpU1ccHHVkxZLhxSLVZlOw5RT0T4rI6sV0TORl0Gg6WLn4C/PIOS4l5I4oR93ferTNK8nhoJFcB1uYIlDPe8JV9mw2JzjOcax3jN4JEhgIc4K0jyzmM6dTQl3no5dR0f8WeQM1rxG7yCmnnyypCZXsvUkNFzhST5oaWt8DEYl+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785176860; c=relaxed/simple;
-	bh=hXjplXvVBYj7dQNhI7tpFJA6kJ90fuqMxZ9YlSJH7pk=;
+	s=arc-20240116; t=1785176912; c=relaxed/simple;
+	bh=PRWalR8uGIE7nhUei23NNzOrwYHYXuuxkwJ05nWHXyY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=n/XMq5oXtjKcMSJVfOjs+U6B9/U+wNxD5JLq3Ls/Bb74QbFL5IrHzkuLsMQNGuZqM5LtrLzilyURVDJxyTk0vhusOrPpgJicceps3fd+efRI+6J/JzsPq+iPJI7Uk+toY/a3mNdo2MNl5/TODoL6kRRpm83RIyepUjd3Zh1D9Fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xx1sw0/B; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hm5zWKnE0mxOQke9ft9ho8H/wsdBzll99O7IOrle32MHBHrRkdHoUopohBihmTX0mePmj9fG2UIZ6Ten0uNCMxcAQOa/Yin3edOqGwFL3/NrSlKu/FS618jM/93sqrqokrT/36MBtpiTSUWipR0VzZZvsbp/Y2iWJqEeVpdJ3vU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOcwlFnb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xx1sw0/B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BAF1F000E9;
-	Mon, 27 Jul 2026 18:27:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOcwlFnb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1B6B1F000E9;
+	Mon, 27 Jul 2026 18:28:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785176859;
-	bh=+1thKsWL94V66UI62EgvWNyo53hfFdqxuXNOzRHwrbk=;
+	s=k20260515; t=1785176911;
+	bh=AG6CLt8qofw1njFZrjwrPlz2AXBG1XjhfdMh3zI6iM8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Xx1sw0/B1kSIi4p63TuJdI+gm+W/MGeLRhlqz9HwbMwGDyGMsK1oSxz1+hwBzyrmg
-	 NKcPnn/MM18PaE2IvcmkEbPt6rNTBVrY0gnrgIPlBuxd8MLsLumIkaA8NZQePXJHhc
-	 AQvLP9l6J4iTaH36TaACQ+qNvj8kqZQUyQ7WC1g19cxNH/zYncBIx8y7cIpHK5H8eH
-	 s9mlJtPbh6eysi8VuL8rZLz7X3zu9ThF+ItlimEcnCBNpjGY/xnYWOgXTFP72m2Mhw
-	 cbBsXgIQMjo0eQm7q6/LMuOmt4cMQ9rxqvPiLSW0oasT2LtGC7ydvU7smCNSX4Xkp1
-	 5OEtjqybwA1AQ==
+	b=cOcwlFnbliYB8d9ZfsdJEoTnuZqzV6mHlL36CIjV4+enN0ICkL+CwiW2clAgyq19Y
+	 eFQFT7pIztdNaJFp3ZqeXYkTD/0dLzGE10hjO0Y3W2nnVNnl7A/XPzdU5S5nSzz0zp
+	 vEm1HiSaRyfznqYM4gmSnE7d1Hb87os+x4IDduQPpeO5Kl0NoR0PETLiSHvUssrM9G
+	 /eohCBa93RL+fg7h7Y2IFtP93MSfBi+Y1jTt4keZCzlG7BzgiL78HEEDmWJqeswLv+
+	 Yba5sRWwwEc7j/BhxehR7Jf3WldwaATvQ8NrMf2ERamtn8BYP9aoFaOEIUTdHOgvBS
+	 wxRiPVcYbnAlQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 3/6] dmaengine: switchtec-dma: fix channel leak on
- registration failure
+Subject: Re: [PATCH v1 4/6] dmaengine: ioat: disable relaxed ordering before
+ registering the device
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260727174837.6645-4-logang@deltatee.com>
+Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260727174837.6645-5-logang@deltatee.com>
 References: <20260727174837.6645-1-logang@deltatee.com>
- <20260727174837.6645-4-logang@deltatee.com>
+ <20260727174837.6645-5-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 18:27:38 +0000
-Message-Id: <20260727182738.D7BAF1F000E9@smtp.kernel.org>
+Date: Mon, 27 Jul 2026 18:28:30 +0000
+Message-Id: <20260727182830.D1B6B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The patch introduces a Use-After-Free in the error path by freeing=
- swdma_chan structures while the global chan_status_irq is still registered=
- and active.
-
 Pre-existing issues:
-- [High] Use-after-free on swdma_dev during device removal.
-- [High] Preexisting Use-After-Free on dma_async_device_register() failure =
-due to chan->dev being freed while the IRQ is active.
-- [High] Failure of ioremap() is not checked, leading to an immediate null =
-pointer dereference.
-- [Medium] Leaked channel structures during partial enumeration failure in =
-switchtec_dma_chans_enumerate().
-- [Medium] Missing put_device() for the DMA parent device on dma_async_devi=
-ce_register() failure.
+- [High] IRQ handler Use-After-Free in probe error path due to mixing devre=
+s IRQ registration with manual kfree.
+- [High] Use-After-Free on `ioatdma_chan` due to missing kobject `.release`=
+ function and unconditional kfree.
+- [High] Legacy MSI/MSI-X vectors leak on error paths and interrupt fallbac=
+k, causing device dysfunction and resource exhaustion.
 --
 
---- Patch [3]: [PATCH v1 3/6] dmaengine: switchtec-dma: fix channel leak on=
- registration failure ---
-commit 7464b8c763dc5bb4e72b11ab5698233a70070171
+--- Patch [4]: [PATCH v1 4/6] dmaengine: ioat: disable relaxed ordering bef=
+ore registering the device ---
+commit eb15a8e1f4e218e8537f96abc3be35c46bf67999
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: switchtec-dma: fix channel leak on registration failure
+dmaengine: ioat: disable relaxed ordering before registering the device
 
-If dma_async_device_register() fails during probe,
-switchtec_dma_chans_release() only stops hardware and frees IRQs and
-tasklets; it never frees the per-channel swdma_chan structures or the
-swdma_chans array itself.
+This commit fixes a dangling device registration in the error path of
+ioat3_dma_probe(). By moving the relaxed ordering disablement before
+dma_async_device_register(), it ensures the device is safely registered
+only when subsequent initialization steps cannot fail.
 
-[ ... ]
-
-Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.ke=
+Link: https://lore.kernel.org/dmaengine/20260707165906.249F41F000E9@smtp.ke=
 rnel.org/T/#u
 
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
+> diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
+> index 737496391109e..a57024c4b066e 100644
+> --- a/drivers/dma/ioat/init.c
+> +++ b/drivers/dma/ioat/init.c
 
 [ ... ]
 
-> @@ -1317,6 +1317,11 @@ static int switchtec_dma_create(struct pci_dev *pd=
-ev)
->  err_chans_release_exit:
->  	switchtec_dma_chans_release(pdev, swdma_dev);
+> @@ -1194,6 +1185,15 @@ static int ioat3_dma_probe(struct ioatdma_device *=
+ioat_dma, int dca)
+>  		goto err_disable_interrupts;
+>  	}
 > =20
-> +	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
-> +		kfree(swdma_dev->swdma_chans[i]);
+> +	err =3D dma_async_device_register(&ioat_dma->dma_dev);
+> +	if (err)
+> +		goto err_disable_interrupts;
 > +
 
 [Severity: High]
-Could this newly introduced kfree() loop cause a use-after-free?
+This isn't a bug introduced by this patch, but doesn't this error path lead=
+ to
+a use-after-free?
 
-Since chan_status_irq is registered earlier and remains active until
-free_irq() is called in the err_exit block below, an interrupt could fire
-while this error path is executing.
+If dma_async_device_register() fails here and we jump to
+err_disable_interrupts, the probe fails and ioat_pci_probe() will manually
+call kfree() on the device and channel structures before returning:
 
-If the status interrupt fires after these structures are freed,
-switchtec_dma_chan_status_isr() will iterate over dma_dev->channels and
-dereference the freed swdma_chan structures.
+drivers/dma/ioat/init.c:ioat_pci_probe() {
+    ...
+    for (i =3D 0; i < IOAT_MAX_CHANS; i++)
+        kfree(device->idx[i]);
+    kfree(device);
+    ...
+}
 
-Should the IRQ be freed, or the channels removed from the list, before we
-free this memory?
+However, because devm_request_irq() was used earlier to register the interr=
+upt
+handler, devres will only unregister the IRQ after the probe function fully
+returns. If a shared interrupt fires in this window, ioat_dma_do_interrupt()
+will dereference the freed instance pointer causing a use-after-free.
 
-> +	kfree(swdma_dev->swdma_chans);
+[Severity: High]
+This is a pre-existing issue, but does the error handling properly clean up
+MSI/MSI-X vectors?
+
+If we jump to err_disable_interrupts and fail probe, or during normal unbin=
+d,
+the driver masks hardware interrupts but fails to call pci_disable_msi() or
+pci_disable_msix(). For example in ioat_dma_remove():
+
+drivers/dma/ioat/init.c:ioat_dma_remove() {
+    ...
+    ioat_disable_interrupts(ioat_dma);
+    ...
+}
+
+This permanently leaks the allocated IRQ vectors. Also, if devm_request_irq=
+()
+fails during MSI-X setup, the driver jumps to the msi fallback label without
+calling pci_disable_msix(). This breaks INTx generation since the device wi=
+ll
+not assert INTx while MSI-X is active.
+
+> +	ioat_kobject_add(ioat_dma, &ioat_ktype);
 > +
->  err_exit:
->  	if (swdma_dev->chan_status_irq)
->  		free_irq(swdma_dev->chan_status_irq, swdma_dev);
-
-
-While reviewing this patch, I also noticed a few pre-existing issues in
-this driver:
-
-[Severity: Medium]
-This is a pre-existing issue, but does switchtec_dma_chans_enumerate()
-leak memory on its error path?
-
-If switchtec_dma_chan_init() fails, the error handling cleans up the array
-but does not appear to free the individual swdma_chan elements:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_chans_enumerate() {
-    ...
-	for (i =3D 0; i < chan_cnt; i++)
-		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
-
-	kfree(swdma_dev->swdma_chans);
-    ...
-}
-
-Since switchtec_dma_chan_free() only disables hardware and frees IRQs,
-the memory allocated for the channel structures via kzalloc_obj() seems
-to be permanently leaked here.
-
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but is there a reference leak if
-dma_async_device_register() fails in switchtec_dma_create()?
-
-The driver acquires a reference to the parent PCI device:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_create() {
-    ...
-	dma->dev =3D get_device(&pdev->dev);
-    ...
-}
-
-If registration fails and the code jumps to err_chans_release_exit,
-swdma_dev is eventually freed without calling put_device(dma->dev).
-Because the device failed registration, its release callback isn't
-invoked, which appears to leave the parent PCI device reference leaked.
-
 
 [Severity: High]
-This is a pre-existing issue, but can switchtec_dma_remove() trigger a
-use-after-free when unmapping the bar?
+This is a pre-existing issue, but is it safe to embed kobjects here without=
+ a
+release function?
 
-When unregistering the DMA device, if there are no outstanding channel
-references, the core synchronously invokes the release callback
-(switchtec_dma_release) which frees swdma_dev.
+When ioat_kobject_add() adds the kobject with ioat_ktype:
 
-drivers/dma/switchtec_dma.c:switchtec_dma_remove() {
+drivers/dma/ioat/sysfs.c:ioat_ktype {
+    const struct kobj_type ioat_ktype =3D {
+        .sysfs_ops =3D &ioat_sysfs_ops,
+        .default_groups =3D ioat_groups,
+    };
+}
+
+It is missing the required .release function. When the driver is unbound,
+release_ioatdma() unconditionally frees the channel structures:
+
+drivers/dma/ioat/init.c:release_ioatdma() {
     ...
-	dma_async_device_unregister(&swdma_dev->dma_dev);
-
-	iounmap(swdma_dev->bar);
+    for (i =3D 0; i < IOAT_MAX_CHANS; i++)
+        kfree(d->idx[i]);
     ...
 }
 
-Since iounmap() dereferences swdma_dev->bar immediately after the
-unregister call may have freed swdma_dev, could this lead to a crash
-during device removal?
+If unprivileged userspace holds a sysfs file open while the device is unbou=
+nd,
+the kobject refcount is still elevated. When userspace later closes the fil=
+e,
+kobject_put() will attempt to drop the final reference and access the alrea=
+dy
+freed memory.
 
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is there another
-use-after-free risk during dma_async_device_register() failure?
-
-If registration fails after partially registering channels, the DMA core
-automatically frees the chan->dev structures via device_unregister().
-
-Because chan_status_irq remains active at this point, a spurious or
-concurrent interrupt can fire:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_chan_status_isr() {
-    ...
-	chan_dev =3D &swdma_chan->dma_chan.dev->device;
-    ...
-}
-
-This unconditionally dereferences the core-freed chan->dev structure.
-Could this cause a crash if the interrupt fires before free_irq() is
-reached in the error path?
-
-
-[Severity: High]
-This is a pre-existing issue, but does switchtec_dma_create() safely
-handle ioremap() failures?
-
-drivers/dma/switchtec_dma.c:switchtec_dma_create() {
-    ...
-	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
-				 pci_resource_len(pdev, 0));
-    ...
-	irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
-    ...
-}
-
-Since ioremap() can return null, skipping a validation check here
-seems to guarantee a null pointer dereference on the very next readw()
-if the mapping fails.
+> +	if (dca)
+> +		ioat_dma->dca =3D ioat_dca_init(pdev, ioat_dma->reg_base);
+> +
+>  	if (ioat_dma->cap & IOAT_CAP_DPS)
+>  		writeb(ioat_pending_level + 1,
+>  		       ioat_dma->reg_base + IOAT_PREFETCH_LIMIT_OFFSET);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727174837.6645=
--1-logang@deltatee.com?part=3D3
+-1-logang@deltatee.com?part=3D4
