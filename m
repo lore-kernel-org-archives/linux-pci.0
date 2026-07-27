@@ -1,207 +1,151 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011052.outbound.protection.outlook.com [52.101.52.52])
+Received: from smtp70.iad3a.emailsrvr.com (smtp70.iad3a.emailsrvr.com [173.203.187.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2DD41D651
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:45:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785163544; cv=fail; b=Ih9smcuQDT3idSALLkzqLsuG9fao1AGD1O4zAKGC5Ifkp705r7X6W9j5ZTmdwp/j1QDRh6/jE+ixTWp5hXJqmUssTIzmPfyBXeTiBuT26xloVmz/35XwK63ziJuEytOflmBqxpMb/YqW5S7VpBYOVmJDNsMcu8CadVXDc2EAwCU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785163544; c=relaxed/simple;
-	bh=K1JGik9qhHrZ4klCEItZfX329Dct6cKzvfpSqJf8ABw=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=t49o2ucnpzU5Sy040lNTwPf6KhR2IEzhiB3QyZ6E1/tDfI9YuTpSVbaak23zI/SYIpRDxx/3qCYA85IBo1HW+ZkxfSTyeqlm2sGpLg58tgOqYKVfL83D4YNy0bMz5zzS2wJ21Ggc6Q0g/9s/D74NNcAW9rVBC4MyKNfhS7/SQLk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=cBPScNi/; arc=fail smtp.client-ip=52.101.52.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E85CE3ED3CC
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 15:11:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.203.187.70
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785165097; cv=none; b=NdfAmvQ2MiaOMEG+N9hTcUc7AQNmoZ1cdNJyYz/AXoaj905KZkhfFG/4nnW9JB74nrWtroJj6CZnZ192YY0w48AvlYCe5k3BDd5wcP1UjSdnv1Am/MEvYkzcqgdFK78QjpzqdZ7HUBiQ0N8tJwPUlHOzZHZI3dKKPdT5b80zlFE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785165097; c=relaxed/simple;
+	bh=ZEabfeduTzOfzBFUTRDyw1lfD4I0nS+Cm4lYfQEyCVk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nHyB5N5p52GcV8p8f/kMZpy0ynKA2kUvsTNi/lFuc4n4UpIFVLop0cYlIF6J+8AJ0Kv2TgySK26A9FwzRJok/0Xu8OXn07EvFn5viyr1/pR1qRNmd1HuA0+sVegrHB4PR6CEsbFWF+MlLxgTO9aQgT4WEA0c+AMOfFPLtmokM08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mev.co.uk; spf=pass smtp.mailfrom=mev.co.uk; dkim=pass (1024-bit key) header.d=mev.co.uk header.i=@mev.co.uk header.b=HdLG2Nf4; arc=none smtp.client-ip=173.203.187.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mev.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mev.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="cBPScNi/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dOMvNMNnF9tjD5r0ULRjySaPU4fHUNpIzuN/GfkVcnlEkPYCSlSfS33SlflFWlukrP8BHbJbcl/o1ELgszSWNIbN61u8Q397DH4uPphs+EMOahtcI+AxCyH0/JwGRq1paaWZhIGSZ7UT5Fvi9fHhWRspYarj9euRvuo+YYufZx2A2vN99lN2gUwd+0T/C152xiGD4WZVtdtHn9tv+8ixEfihJSsQKuj8nFWUxxJrpdJBRHWjZTD1HNqoKzCunP/nFYUrXReKEDzsCY3rkp+OkDsZ4W48Rm6SoQU/oxMYwXIGvZ8jF2Ejck4G8sqahd3sef1+Cn9f+7ghHrQKtGTuwQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RcYQm9qaKKWNfj3kXp9uejgXSe5bnex7DYBnOlGkheM=;
- b=peF9DcsosdBjyfnRpxKaOCh5vBn1WHeVAjiP9BJ77tQPceHO5VwK2hQnnJqsZgN77u+u2GOPAbutuy85m6Ul+VSwih/ZZGL9d//4e6n/F51CZbyBXNCYVnRo0ENwFNAR9rG9Var/C7RuuA4f79plWCEGpsnjdmPL0C8k95W2MjAvvccC9vazMfkmlAl7cB7Dq+N56aoxDfAjd6ouJHiJRjvOuDTFbnHEWNYMle2wQ3waCf8hFMxz1aGOnuinyLMA4bDpkQh9lidztFK2zmlj8r74cn5088Gy3ESIVvRhKha1fgCUW66ksO7/HV5BENGf4i/0nTwZnamehdgU12CwBw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RcYQm9qaKKWNfj3kXp9uejgXSe5bnex7DYBnOlGkheM=;
- b=cBPScNi/NMuLsVlMFdDUUl4ThvoP2XdK8G6Z1AsXxZBUgwbnS51UUAqS2ZXjcdWE8301edoD9omfDj3NmI7OWuJq3RiRTY4K/m1bSgF+tonn+qHu1uZ6mha7Vx7ZOl1vNMG+i/A7aaRvC/GHkEx6e77OC1TiIEed9Do2tPhPwDA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by IA0PR12MB8973.namprd12.prod.outlook.com (2603:10b6:208:48e::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.13; Mon, 27 Jul
- 2026 14:45:39 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%6]) with mapi id 15.21.0245.012; Mon, 27 Jul 2026
- 14:45:38 +0000
-Message-ID: <ed296c0d-246f-492b-970b-49c45e25f5f6@amd.com>
-Date: Mon, 27 Jul 2026 09:45:36 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-Content-Language: en-US
-To: Vasant Hegde <vasant.hegde@amd.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
- will@kernel.org, robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
- bhelgaas@google.com, Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
-References: <20260723061548.10187-1-vasant.hegde@amd.com>
- <20260723061548.10187-3-vasant.hegde@amd.com> <amOBkJ4BaZ4qnkpc@ziepe.ca>
- <a2f38742-c8a1-4dd5-9fcb-120c1c989203@amd.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <a2f38742-c8a1-4dd5-9fcb-120c1c989203@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SA1P222CA0111.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:3c5::8) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (1024-bit key) header.d=mev.co.uk header.i=@mev.co.uk header.b="HdLG2Nf4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mev.co.uk;
+	s=20221208-6x11dpa4; t=1785164633;
+	bh=ZEabfeduTzOfzBFUTRDyw1lfD4I0nS+Cm4lYfQEyCVk=;
+	h=Date:Subject:To:From:From;
+	b=HdLG2Nf4VOgIN4BN8rW54RjppxBt7jPxPDptP1WPg8CVGe3AyOCbnduJAdmQ5DC7K
+	 OC6NIDRsvhDHpUNTUnRPHDLOMyztRwaKJDQ2J5pscAxV9NZjKSPXShU9hmRa9QYWVc
+	 dx43Guz4HTYHsgeXJwOXIBQoYtSdXewEDxDz+xIo=
+X-Auth-ID: abbotti@mev.co.uk
+Received: by smtp1.relay.iad3a.emailsrvr.com (Authenticated sender: abbotti-AT-mev.co.uk) with ESMTPSA id 7D72559B1;
+	Mon, 27 Jul 2026 11:03:52 -0400 (EDT)
+Message-ID: <c82a9772-bcc2-4a74-9247-d90df4caa0ae@mev.co.uk>
+Date: Mon, 27 Jul 2026 16:03:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|IA0PR12MB8973:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3733bad0-a1a2-4964-3af7-08deebedb97a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|11063799006|5023799004|56012099006|4143699003|10067099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	ZQ2fcLijrI0mvKMgidOrWl+kB58sQtZGJWwmH/TTmoh3BjX4VPC3npWHfBZH4vd977ZYc8rzfpWX4N+I+YILMbNZeIwM98Bh2wLhbKLkrIfxo/SGKRx1QVjNxAI14fMkYmuAgmRa4uSmrmXQpD4nQsSX0I7DhXS2FIyK4F8kHYyoUcdnnOqBM1tib50puuAI1NP5Nk6M3UuKxZTJ8NexZa/5v6p9wbnpwupuvMsTftrFfcBaDbjaWHYbMs0DcipWdg5rbHJlhEILiH7pfovhuY/90MmFcXc6zwyMFavOVvgFqetywfH6/tPoaSUIY+4UsVw1GpxtM4RqhxrzIBxpnTHohcaQZOJF8Seen+SoEImP/vcEWpGk3N65/HkCAXdD9nwU+fU0jcnkqsxHDAmI1sW5KM/e5hZ611dlfyobvWRjC9SB3762vqQJrbJao9IeNxBU4o+ypBwYEtA+sIToFL6C5fAw3L3oqTOUCLAq9z1iPNqNnhlE3HNugfMOjUJHKHytRmZB3D1f48o0cdLv3mcWMcrFGFyjjZxvKF9SsaGgkI/vuh2FEjXpWwVzmYMNj78srlxiZpe8zSnvBdA7pq9SWa/rtfTyVaEuaf43VwCr3Q2Exl8jhV2kxiOaZBVZ2RYZpym1ZP4ceHuMu3pQ1UCllpgkCtSjlB9dKXUWKxs=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(11063799006)(5023799004)(56012099006)(4143699003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dktBTm5zcEp0dlRGeVVCaDlzVjhBS3RBdEhpbElNQ0R1V2VhSnNYaEJxMlBG?=
- =?utf-8?B?bmFJeTBjb2VpbmsvVnkvbzNoWTExc2VXVkJMQ2dYQ1lpZEFSeHl5ZWRZUFNy?=
- =?utf-8?B?UlBzQ3dFYUM5SWM4S2sva0RaRlc0MHgwQ1pPc1FpWFgwL0lUQTB1b1g4SFpD?=
- =?utf-8?B?TlZyS3NjY1N1WVJPOGN1QnM4dS9QK3FmaVZWOEJ1aTRSb0V0eWpnRFdkeXN1?=
- =?utf-8?B?TTlvY0dySU9WMEE5eGJrUG4rNEdPbVB5TkR4RGgrV0Izc2ZaT0xmcjF0NU5k?=
- =?utf-8?B?eTI2K0l0b2VTUlJwWWdNanhIUVVHYnZ0TmUydnJlVmM2R2w2dVFhTUhXYWJ3?=
- =?utf-8?B?LzA5WGFQd2pPdVFSdjdkbzQ0ZGlVZ0xud0RmcXQzeGhpTlB0aHFXOWZDeUVF?=
- =?utf-8?B?MTBIUmYyNHBna2gxWVY2elZUd0IrazQrQitQZ0Z0UzlMamhtMjAzQXNhcXRJ?=
- =?utf-8?B?YmVyTnRZblpabnF4dEMzNHJoUDFpZjVZTEo4RzBkVWpudnh3UHo4VTVndnNV?=
- =?utf-8?B?THJxUHFwTnRCNjIxV2pjNVpTMmdtSmZaQk9ZdHRtTm90aWdlcXlISzhxUkZw?=
- =?utf-8?B?ZDRXYVJWeUFHUkhMZ0p0VXlyUDFXZkVCVU45dFhKV0FIQ043Z0ppTUpweWk0?=
- =?utf-8?B?SDRmcmJOUFRjTGhXOG1EZ0pWS3dqaWxhOEx0aTNiaFdiQm95d09VeFpvR0h0?=
- =?utf-8?B?WlJtWWlkSDgzT0I3ekxFUHAzYzRwWTdFQ0xPSkNFYTg5VThwZ3o2VWdLbmFj?=
- =?utf-8?B?VE9wdzYvRDdsYlYzdUdsVnphakZSNWU5ZEYya3p0VURLK0xWVUZueTI5QzMw?=
- =?utf-8?B?YlhvRTR4RkNyRWNGN0t0eEtZWGpGOUxmdGtYYlYyei9MeXRHKzJSOGM5MVo4?=
- =?utf-8?B?b1ZjcytyMmMrVXRxVUJQQ28xUGZSQmV0OEZaNzhJMGkvZkxHeWZJT3FnL1Bt?=
- =?utf-8?B?Q0pDSzRJQmF5SVNFNzNaZncxdUc1cUZIRWlIcVc4YXpwcU9pYS9PV1NCMG81?=
- =?utf-8?B?dVVEZ0tlblpzbXpQUVVRcDhSNENuNm5sNStvK2hQWDBRamIyYXlnOXVSMTRu?=
- =?utf-8?B?UjBvaVNCQkJRYnl6WndiQk01OCtyejFON0dvU2t3bFpUbEZxaHduN09DQllF?=
- =?utf-8?B?QmxxN0J3Vmp6NXRWQmlHWGRtK1gwTjVmTnlWekJDUVdKQmtPVG4rWmtBWHha?=
- =?utf-8?B?RDE3NkordjdlbGYrN3JpMjNyZENOMDJlUXRWWnUyRTEzQWdKa1M5ZVJWRHR0?=
- =?utf-8?B?Y3RqSzA1M3BGbHBzTEd6YUM4UTFlL0dsSkFxSTdqaG1IcHJaZG41UFNpdlhH?=
- =?utf-8?B?ei9udnpoZ29vbE1wM1lnSzFKRUtaTHMwQWpYUUcxaythRmhGRDFoMjIrcXoz?=
- =?utf-8?B?aFhuM25Vb3VjZmxSQUFYQW9xS0xDVnFvbnI0QlJnYWxKRlZ5TC91Rng2L3NM?=
- =?utf-8?B?d2lnelZlbXFlcytnU0NyaDZkTTdkbi84bUY2VWY4S2c5aGMzd3ZpZWFoNVgv?=
- =?utf-8?B?QlJod05OR09rUUFnRll0d1RUTWpzdmpaNHZhZnFpNS9pT3RtNUxMc1E3Vzk1?=
- =?utf-8?B?UVFQK0c3UG9sOEkxbWFRR21HVm95ckgyUFdya01WMXF1RHYrQ3ZLV2ZMS3Ra?=
- =?utf-8?B?MTY5QWgwaGJsbDlLRzRzY1lVN3BROFloV3hPZ0pkQ2l0TThraXdLSEJ0QjRk?=
- =?utf-8?B?ck5vNk9walhPNUNtWWRWTHc3OGFyNnRPK2dUUm8xSE5VUERtRkp0aWg3cWUw?=
- =?utf-8?B?QjFiQXZ6eDRNLzhXYXpEYnpWNFBiNjF1b1d0MFlyb2J5N1o1LzQrQWpDc1R6?=
- =?utf-8?B?KzM4b0owWnhQNkMwM2o1UmhpeUJnUCttM1N5Y1hMZ1NyS2xUQVc2Uk1hU0Jl?=
- =?utf-8?B?TWtNTzVWeHQycFhpQVRub0dRUjAyVHEvbUVxb1kwdk1sS1FFR2JTTVdRNDMv?=
- =?utf-8?B?cWM1WGU2elpGSnRBZWNTYi9KdEowRUJyUG9iWHR3RytPQXZ2SXBieVpyN2t5?=
- =?utf-8?B?dEorQmR4Ny9YbXZaUjZSWlZFNE0ySGFGMnNmVTJHT1B3ZkdrdmcvaTdoMDdl?=
- =?utf-8?B?QUxRdlJsSnpVdDBqWXo2dG5hQUFERldqZVdzaGlFeXIyVFU5b1o5MzBMVDFN?=
- =?utf-8?B?WkZrR1V1S05FbkkwdFhoRlVRY1VpNlNJR2hzSVBvTDNsUndVcEd1bzRtK3hh?=
- =?utf-8?B?a0d0MHY5UUI4V2YwMWJwUVNVL0tqckU0NlMyc3NLQkVPK3VOTW9CM0NxQ0lU?=
- =?utf-8?B?YmtBaUlDSUQ1cndDOFV4K1l0bUhqQTMwNU9TNTdmNXZXSXo0eDVGaHZiV1BJ?=
- =?utf-8?Q?InkCpNvHDaIRhUs90i?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3733bad0-a1a2-4964-3af7-08deebedb97a
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jul 2026 14:45:38.7056
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ky2tFYIqlcgMCy0A8kwZtGg/BY8IJd9hugZOBVkGTYLsLCHF9yF1mldNnb+dTtyzGf8pTh0d9zY7UmS4bDs8sQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8973
+User-Agent: Mozilla Thunderbird
+Subject: Re: [syzbot] [kernel?] WARNING: proc registration bug in
+ unregister_irq_proc (2)
+To: Thomas Gleixner <tglx@kernel.org>,
+ syzbot <syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com>,
+ linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ driver-core@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org
+References: <6a653bcf.073198cf.94f0f.001c.GAE@google.com>
+ <87ik60ikal.ffs@fw13>
+Content-Language: en-US
+From: Ian Abbott <abbotti@mev.co.uk>
+Organization: MEV Ltd.
+In-Reply-To: <87ik60ikal.ffs@fw13>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Classification-ID: 70be1a8d-9012-45ee-bcf1-9093cf3a296e-1-1
 
+On 2026-07-27 15:22, Thomas Gleixner wrote:
+> On Sat, Jul 25 2026 at 15:42, syzbot wrote:
+> 
+>> HEAD commit:    3dab139d4795 Merge tag 'rust-fixes-7.2-2' of git://git.ker..
+>> git tree:       upstream
+>> console output: https://syzkaller.appspot.com/x/log.txt?x=156bd88e580000
+>> kernel config:  https://syzkaller.appspot.com/x/.config?x=145fa60d73086782
+>> dashboard link: https://syzkaller.appspot.com/bug?extid=690d666eb12fca6e1e61
+>> compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+>>
+>> Unfortunately, I don't have any reproducer for this issue yet.
+>>
+>> Downloadable assets:
+>> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-3dab139d.raw.xz
+>> vmlinux: https://storage.googleapis.com/syzbot-assets/2b5a401a9dc7/vmlinux-3dab139d.xz
+>> kernel image: https://storage.googleapis.com/syzbot-assets/7ed2d255bd44/bzImage-3dab139d.xz
+>>
+>> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+>> Reported-by: syzbot+690d666eb12fca6e1e61@syzkaller.appspotmail.com
+> 
+>> ------------[ cut here ]------------
+>> remove_proc_entry: removing non-empty directory 'irq/20', leaking at least 'comedi_parport'
+>> WARNING: fs/proc/generic.c:747 at remove_proc_entry+0x4e7/0x610 fs/proc/generic.c:747, CPU#1: syz.3.389/7224
+> 
+> So this frees an interupt descriptor, which still has an active
+> interrupt request on it.
+> 
+>> Modules linked in:
+>> CPU: 1 UID: 0 PID: 7224 Comm: syz.3.389 Tainted: G             L      syzkaller #0 PREEMPT(full)
+>>   unregister_irq_proc+0x206/0x2a0 kernel/irq/proc.c:406
+>>   free_desc+0x89/0x330 kernel/irq/irqdesc.c:482
+>>   irq_free_descs kernel/irq/irqdesc.c:874 [inline]
+>>   irq_free_descs+0x84/0xc0 kernel/irq/irqdesc.c:865
+>>   irq_domain_free_irqs+0x46a/0x5c0 kernel/irq/irqdomain.c:1917
+>>   mp_unmap_irq+0xf8/0x130 arch/x86/kernel/apic/io_apic.c:1061
+>>   acpi_unregister_gsi_ioapic+0x40/0x60 arch/x86/kernel/acpi/boot.c:722
+>>   acpi_unregister_gsi+0x25/0x40 arch/x86/kernel/acpi/boot.c:751
+>>   acpi_pci_irq_disable+0x275/0x360 drivers/acpi/pci_irq.c:517
+>>   pcibios_disable_device arch/x86/pci/common.c:706 [inline]
+>>   pcibios_disable_device+0x89/0xb0 arch/x86/pci/common.c:703
+>>   do_pci_disable_device+0x9f/0x100 drivers/pci/pci.c:2170
+>>   pci_disable_device+0x130/0x270 drivers/pci/pci.c:2206
+>>   pci_device_remove+0xb2/0x1d0 drivers/pci/pci-driver.c:512
+>>   device_remove+0xcb/0x180 drivers/base/dd.c:616
+>>   __device_release_driver drivers/base/dd.c:1349 [inline]
+>>   device_release_driver_internal+0x44e/0x620 drivers/base/dd.c:1372
+>>   unbind_store+0xf8/0x110 drivers/base/bus.c:244
+>>   drv_attr_store+0x74/0xb0 drivers/base/bus.c:125
+>>   sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+>>   kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+>>   new_sync_write fs/read_write.c:595 [inline]
+>>   vfs_write+0x6ac/0x1050 fs/read_write.c:687
+>>   ksys_write+0x12a/0x250 fs/read_write.c:739
+>>   do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+>>   do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+>>   entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> 
+> unbind() releases the driver, which removes the device, but the device
+> removal does not end up freeing the requested interrupt and
+> pci_device_remove() ends up correctly freeing the legacy PCI interrupt
+> descriptor through the above call chain.
+> 
+> The real question is how that comedi parport driver ends up on a PCI
+> device without actually registering a PCI driver with a proper remove
+> callback. It seems it just attaches blindly to something which user
+> space hands in through the ioctl().
 
+Yes, the device's I/O base address and IRQ number are configured by an 
+ioctl() for this driver.  (The process doing that needs CAP_SYS_ADMIN 
+capability.  There is also precedent for this sort of thing in the 
+TIOCSSERIAL ioctl() command for configuring TTY serial ports since the 
+early days of the Linux kernel.)
 
-On 7/26/26 23:19, Vasant Hegde wrote:
+Back in the old days of PCs with ISA buses, you could configure the BIOS 
+to reserve specified IRQs so that they would not be assigned to PCI 
+devices, so you could use them for ISA devices.
+
+> 
+> Though deciphering this comedi code is beyond my skillset.
+> 
+> I rather go and harden the interrupt core against such bogosities.
+> 
+> Thanks,
+> 
+>          tglx
 > 
 > 
-> On 7/24/2026 8:45 PM, Jason Gunthorpe wrote:
->> On Thu, Jul 23, 2026 at 06:15:48AM +0000, Vasant Hegde wrote:
->>> @@ -3120,20 +3146,28 @@ static int amd_iommu_def_domain_type(struct device *dev)
->>>   	if (!dev_data)
->>>   		return 0;
->>>   
->>> +	if (!dev_is_pci(dev))
->>> +		return 0;
->>> +
->>>   	/* Always use DMA domain for untrusted device */
->>> -	if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
->>> +	if (to_pci_dev(dev)->untrusted)
->>>   		return IOMMU_DOMAIN_DMA;
->>
->> The core code does this, it shouldn't be in a driver?
-> 
-> Right. I didn't realized core has this check. I will drop this check in next
-> version.
-> 
->>
->>> -	/*
->>> -	 * Do not identity map IOMMUv2 capable devices when:
->>> -	 *  - memory encryption is active, because some of those devices
->>> -	 *    (AMD GPUs) don't have the encryption bit in their DMA-mask
->>> -	 *    and require remapping.
->>> -	 *  - SNP is enabled, because it prohibits DTE[Mode]=0.
->>> -	 */
->>> -	if (pdev_pasid_supported(dev_data) &&
->>> -	    !cc_platform_has(CC_ATTR_MEM_ENCRYPT) &&
->>> -	    !amd_iommu_snp_en) {
->>> +	/* Apply device specific quirks */
->>> +	if (quirks_force_identity_mapping(to_pci_dev(dev))) {
->>> +
->>> +		/*
->>> +		 * When memory encryption is active, some of these devices
->>> +		 * don't have the encryption bit in their DMA-mask and
->>> +		 * require remapping.
->>> +		 */
->>> +		if (cc_platform_has(CC_ATTR_MEM_ENCRYPT))
->>> +			return 0;
->>
->> I think this can probably be dropped now? There is no intersection of
->> this old broken embedded GPU and a CPU that supports CC right?
-> 
-> 
-> I did consider dropping these two checks, but I was not entirely sure. So I kept
-> as is for now. Once these series settles and I can go with next step of dropping
-> these two checks.
-> 
-> @Alex, @Mario, Any suggestions ?
 > 
 
-The background comes from this series:
-
-https://lore.kernel.org/all/20200824105415.21000-1-joro@8bytes.org/
-
-> -Vasant
-> 
->>
->>> +
->>> +		/* DTE[Mode]=0 is prohibited when SNP is enabled */
->>> +		if (amd_iommu_snp_en)
->>> +			return 0;
->>
->> Ditto?
->>
->> Jason
-> 
+-- 
+-=( Ian Abbott <abbotti@mev.co.uk> || MEV Ltd. is a company  )=-
+-=( registered in England & Wales.  Regd. number: 02862268.  )=-
+-=( Regd. addr.: S11 & 12 Building 67, Europa Business Park, )=-
+-=( Bird Hall Lane, STOCKPORT, SK3 0XA, UK. || www.mev.co.uk )=-
 
