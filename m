@@ -1,73 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 385F12D249B
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04CC32B9BB
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:12:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785161501; cv=none; b=A5sQPL7aqbaha/MlUt2J/YmGPtHouZqg7BtTq0bka2fHnp63TW+JBaN60YpOWOHaI4EzqRoMLE5YMo55P+zW9cRrN0w7gfaWAieKtVQ9y7cRwumJdYjNQ/jY0KZSCHBy0ocyVeTATRbqpxA2/88CkSZiFXXvNsRaJutMsehRRSA=
+	t=1785161526; cv=none; b=ieJF2BgAqkVW2vN3lCGYChShK25IIseK+e8cwvoHG9Ug361oAheT1srdCHjFjeiMI9tq6JjPRHE2jJKhP1gaVsa3JFhhazK9nQYyI1QFM4ybZ7KX1cuGs6juDHOIJu8uO4iLgC1KzZv9N0hwWWbXjPgp68AyXKDYx5Dued3jojA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785161501; c=relaxed/simple;
-	bh=bURpuSEE7OZbsLc0bXT0LbC+r6+yoseyESUr3+tIEPA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nzgoQjOqACxRkHhH9nvOrSa4W03j0Ikv8+0IRDMFawviLvKwkias32EzYWwrRQtTKLLr779XGi7MQNKqoafk8INdilnUSWwXU4JZsRnnCt0/WbDr073gpVxJ6BrSKs4VCcE728/WUR8zKajAT0v5vpKjuPp4vTXDdBZKUIDSA4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jv4awYso; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jv4awYso"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B01E41F00A3A;
-	Mon, 27 Jul 2026 14:11:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785161499;
-	bh=bURpuSEE7OZbsLc0bXT0LbC+r6+yoseyESUr3+tIEPA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Jv4awYsoRKWzvzDoXdBBzBIVr3kLzF7b3m7aH18Q+iHmW1Dgj5rua+KnDdq6PqHom
-	 3UwzMKGrChvJwe+Rx3f5E1jwmjL52Kx4R+jty1wxBjKyHLk5r+gms6d7+F2UI4gS6x
-	 Famg5R9jnoSyNyQwgnW9hWGX8kfQTmGNCkHE73wmM93KzMbxrvyfE+bKou/ft026LG
-	 HX669fus44fOtYqwinNi2DPrHfV5ghIGYcCZ73MH5EeN3xz8s2wv/uPt71mY72lJUg
-	 xJC3BNG1J5PNm6KUpSpv7pKh3EOvLgj8SH0upWoNSyXMWV4IeYq+5g7EfwzA3o8/cD
-	 yOfBYiCxgKt7Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/3] PCI/ASPM: Use
- pcie_capability_clear_and_set_word() for ASPM disable/restore
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
-References: <20260727-aspm-v6-0-2ebb3ee7ef71@oss.qualcomm.com>
- <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 14:11:39 +0000
-Message-Id: <20260727141139.B01E41F00A3A@smtp.kernel.org>
+	s=arc-20240116; t=1785161526; c=relaxed/simple;
+	bh=a0lnhCfWIcGxzMuzt8kRcDRklA16qi3DH3QAldOj4H4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y8q5yPModJn113IDlwAYaBB48Sjy+XZkFJKJ0J5erhniMy/+9FSt/Jbonv/2YYGw05nI+lyrgFvxhsDbuKVxiA45+GZW/AUEKsQm+8YzAu8GNlktjowuqEZr8HJtFD6/bx5aVG9kDtMLwtUzj4O03GsglYPVYWNu53ac03Tl094=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 65E7B36F;
+	Mon, 27 Jul 2026 16:12:02 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 617B760CDD36; Mon, 27 Jul 2026 16:12:02 +0200 (CEST)
+Date: Mon, 27 Jul 2026 16:12:02 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Yury Murashka <yurypm@arista.com>,
+	Matthew W Carlis <mattc@purestorage.com>,
+	Zhenzhong Duan <zhenzhong.duan@intel.com>,
+	Qingshun Wang <qingshun.wang@linux.intel.com>,
+	Yicong Yang <yang.yicong@picoheart.com>, dio.sun@enflame-tech.com,
+	linux-pci@vger.kernel.org,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Terry Bowman <terry.bowman@amd.com>,
+	". Kuppuswamy Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Arjun Govindjee <agovindjee@purestorage.com>,
+	Ashish Karkare <ashishk@purestorage.com>,
+	Jasjeet Rangi <jrangi@purestorage.com>,
+	Meeta Saggi <msaggi@purestorage.com>, rhan@purestorage.com,
+	sconnor@purestorage.com, an.luo@enflame-tech.com,
+	fernando.hu@enflame-tech.com, bill.wu@enflame-tech.com,
+	xin.wang@enflame-tech.com
+Subject: Re: [PATCH 0/6] PCI/AER: Support Advisory Non-Fatal Errors
+Message-ID: <amdnMg_J6T3Sys45@wunner.de>
+References: <cover.1784905909.git.lukas@wunner.de>
+ <20260724223903.GA1073029@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260724223903.GA1073029@bhelgaas>
 
-> pcie_aspm_cap_init() disables ASPM L0s/L1 on both ends of the Link
-> before touching L1SS config, then later restores the LNKCTL state
-> that was in effect beforehand. Both steps use raw
-> pcie_capability_write_word() calls: the disable step computes the
-> new value by hand from a snapshot taken earlier in the function, and
-> the restore step writes that same snapshot straight back.
->=20
-> Switch both steps to pcie_capability_clear_and_set_word(), masked to
-> PCI_EXP_LNKCTL_ASPMC, matching the accessor pcie_config_aspm_dev()
-> already uses elsewhere in this file for the exact same register. This
-> does a live read-modify-write of just the ASPM Control bits instead of
-> relying on a stale snapshot for the rest of the word, and is
-> consistent with how the rest of the file already touches this
-> register. No functional change.
->=20
-> Fixes: 7447990137bf ("PCI/ASPM: Disable L1 before disabling L1 PM Substat=
-es")
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.co=
-m>
+On Fri, Jul 24, 2026 at 05:39:03PM -0500, Bjorn Helgaas wrote:
+> On Fri, Jul 24, 2026 at 05:24:00PM +0200, Lukas Wunner wrote:
+> >   PCI/AER: Fix mapping of errors to agent & layer
+> >   PCI/AER: Log agent & layer for each individual error
+> >   PCI/AER: Deduplicate logging of Error Source Identification
+> >   PCI/AER: Emit TLP Log only for unmasked errors
+> >   PCI/AER: Move retrieval of FEP and TLP Log into helper
+> >   PCI/AER: Support Advisory Non-Fatal Errors
+> > 
+> >  drivers/pci/pci.h      |   4 +
+> >  drivers/pci/pcie/aer.c | 250 ++++++++++++++++++++++++++++++++---------
+> >  2 files changed, 200 insertions(+), 54 deletions(-)
+> 
+> Applied to pci/aer with the intention of v7.3, thank you!
+> 
+> I noticed a sashiko comment on 6/6 but haven't had time to look at it
+> yet.  I left the series on pci/aer for build testing in the meantime.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Below is a fixup for the first valid finding reported by sashiko.
+If you could fold that into the top-most commit on pci/aer,
+I'd be grateful!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727-aspm-v6-0-=
-2ebb3ee7ef71@oss.qualcomm.com?part=3D1
+There is one other sashiko finding I need to address:
 
+It complained that in the native case, Advisory Non-Fatal Errors are
+reported with the same loglevel and ratelimiting as the accompanying
+Correctable Error.  But that's intentional.  However in the Firmware
+First case, I got that wrong in that the loglevel and ratelimiting of
+non-Advisory Non-Fatal Errors is used.  I'll come back with another
+fixup for that!
+
+My rebuttal of sashiko's findings:
+
+https://lore.kernel.org/r/amdjR8LqIY0YmiG4@wunner.de
+
+-- >8 --
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index ff6ff7abc286..2a380bb9bfcb 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -428,7 +428,7 @@ void pci_aer_init(struct pci_dev *dev)
+ 	 * Advisory Non-Fatal Errors are masked by default (PCIe r7.0, sec
+ 	 * 7.8.4.6).
+ 	 */
+-	if (dev->devcap & PCI_EXP_DEVCAP_RBER)
++	if (pcie_aer_is_native(dev) && dev->devcap & PCI_EXP_DEVCAP_RBER)
+ 		pci_clear_and_set_config_dword(dev,
+ 					       dev->aer_cap + PCI_ERR_COR_MASK,
+ 					       PCI_ERR_COR_ADV_NFAT, 0);
