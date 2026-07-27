@@ -1,59 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC1537A832
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:17:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21BB36A34F
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:23:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785161826; cv=none; b=HIPhkZhkFgrllB9EvFvACqrrBQiIAtmI1mrvvp74S1jaJscafg6vIYO2Wz03BNFp4a/s8qGISJNx5giC0syfbSwcAqXPVPvvb+aa6y5Wll86Sb423GsAtcXximVDzLLDPjb0s9ZSQ8S7obs9VSmlWt1U6DldgHg4DviHqD+n+WU=
+	t=1785162182; cv=none; b=KPfGliE32HESwG4DEW9nnJT8RnrpAb5i5CZgDE75pqsY2xviA0kc/5PNyXxrty2yNmnJstLmbiPtXK9e29gWS5RClpFQH9IFYtchV7ekrkp1MnVhgzn+IF+B2wje+kTBMWDxm6VoWD4L6kyAgl0cvyFIg3sKAL1GQ3d7KAD3fnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785161826; c=relaxed/simple;
-	bh=lVd0/c1AVDoNxELiyEp16IgvbckOIpDBUP3OeUuR3CU=;
+	s=arc-20240116; t=1785162182; c=relaxed/simple;
+	bh=4JPbf0kDWA5uPW1ye+0Izs2pHCY82Rqy/QMURURYPaY=;
 	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kh2czLIZr2WQ55RbapzpEusHG0r9HnNF2JmhGoOP+YmD97o71GwTr+oJtB8NWclqlNyW6UTBfe1GUwv1Uf+PdJIaH5UdWGu+0DXVAYKpAN/DvtJYvPHdctHkrGiVGVzfKUB8PZGjZ7gpqCmSoiQJuCd78U3lOe62y1V0d74FFGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GvWF537P; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=eFehrL9724aqxYosb7LpkrCOKudN0prwOerCQjjzsg78tgHq4OXsaVLVMTbVRoGmQO0Tu5pSshXC3COWNkrtaOmT3erPrLuEgvyYEDfeQcj4WTzwQjn0i+FX7JIKWBKhvs12DDO5fc+KRBDZ8Mju+yiBpUUB/StU30bha4FZ+d0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8nyff65; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GvWF537P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E49E1F00ADF
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:17:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8nyff65"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93E1B1F00A3F
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 14:23:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785161824;
-	bh=yS5BGlr5mNqy19bcM+LPC+mHYRQ0wrLxkRA6YEVbclk=;
+	s=k20260515; t=1785162180;
+	bh=eN52P4kYc3VwvJHjlaxZYp3C5xF1YB6inSUSX4U8+qg=;
 	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=GvWF537PMK/fw6+kZDqgJi5O6EpW+EONRSDi8HOvu4hWfJWjt/CAssTWr6i/hK7qU
-	 3pbUprjI/LBW/rl9W8X1aIIb9OhVqdNyfa8lBiWjUQqaMzkv5XkkI0Oe7/DgC/Are8
-	 DKUpP5neX5DJUXluHjIsftSfBJGUzFsoUGdcrp3jY6wpllaAPgi0MJsLnQr9bcaRaT
-	 O5BH0PbqJ0RM3xKKuMagG876EQAUo5Z4KT95lfFj5EBjG9n5+zxhEY8t9cRFYdZdq+
-	 aEa5XMp3OuANiGrPFmiCGgpbZrppGPdbRDbdFesyP268IKVoQNgGELqme0UGXGhKOJ
-	 +DGD0COj3YOtg==
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b00d083818so2919164e87.1
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 07:17:04 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RpIIHIFB71uprgj9uIADsdVLJsqgPkIFZUyKQECNp7XbWBqJnNlVLqhu+0hCf8CY0jZG534SZLt7sk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBKrP6cj6b9jPUX+jeLkPoLGxljZmP9D1HcjR3Uodmr7gIv0YC
-	fFtkmn+znB9+NiN959JxgoDEoSW2u1Fr5k/YuVxGEDgcoizbtBSnQBf0TjlOHQ0TL1ubk0/j9OB
-	oIh+H8/P/rV2tqmCtv6TdOROfyY5fSnMBYLNk8U51ZQ==
-X-Received: by 2002:ac2:568e:0:b0:5b1:4c14:9b3d with SMTP id
- 2adb3069b0e04-5b2bcbede4bmr2119207e87.11.1785161823353; Mon, 27 Jul 2026
- 07:17:03 -0700 (PDT)
+	b=R8nyff65VH8zQYyJEYmAPCRiex4Uc6HRX6quVYLQF++t/25DTtR+JlDzC9ew61hnE
+	 RzeTiXnt/VpMZAHT0UQU3rnQ3JzBZXNDmL1Fz0qPX6Bvtqoe+6Se9vTjp2PQUZ0LoP
+	 8wQ0SqDBLXXU9T3BPh5pH4eqnFP2On7txlikQrXHznZGdt3fT47HwNq/P+X55dOx1O
+	 fKnrewwuwtacqbJ1zBROFGUIrest7TQOXiByQgyHvNC5u6ziB2sZh1Qt76aFV4Dosg
+	 v9iy5us0S6uP/425UP+B2qpQkoeETFy7TTqRgtU40O0DFoqua97TYyLs9WrInR8K71
+	 6IxSPW3G0BI0g==
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-39c94fccf3eso24051401fa.0
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 07:23:00 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RoCqUdu71im+HhJtpYm92UtGkxNVYkxvOGt8qmwtZ/6XO6gHnjvRvCmOf6q368+0OINw59Zdrb7b2g=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5mgR/1keeoTuDUbGI+ckAJ3TWEQC2qPer+Gee7ZUvu+m4ZRDg
+	ZkzLZOaLcsNGmMDISbZsle8Gl+XYXNIzvqZYA45W8bOBiDoVgwwVi825LhU/H/+nJcg9DLnWbB0
+	PshMveb8gi/fI8DecmH3R479b2Wr4V6Le4exO/i2gUw==
+X-Received: by 2002:a05:651c:1592:b0:39a:e29b:7926 with SMTP id
+ 38308e7fff4ca-39f2890076fmr15003161fa.41.1785162178919; Mon, 27 Jul 2026
+ 07:22:58 -0700 (PDT)
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 27 Jul 2026 07:17:01 -0700
+ HTTPREST; Mon, 27 Jul 2026 07:22:57 -0700
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 27 Jul 2026 07:17:01 -0700
+ HTTPREST; Mon, 27 Jul 2026 07:22:57 -0700
 From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260725-tc9563-fix-v1-2-ec4286e31331@oss.qualcomm.com>
+In-Reply-To: <20260725-tc9563-fix-v1-3-ec4286e31331@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com> <20260725-tc9563-fix-v1-2-ec4286e31331@oss.qualcomm.com>
-Date: Mon, 27 Jul 2026 07:17:01 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MeL4-dm46pjfx0eL8XTTgMYkPT32F0OMNUw44ik2kTn2A@mail.gmail.com>
-X-Gm-Features: AUfX_mzWn5ZZqlDx5zrAyauAxHxgXUd2zCbUSp8w7IX2TRrKSQZHfetUgSRvhk0
-Message-ID: <CAMRc=MeL4-dm46pjfx0eL8XTTgMYkPT32F0OMNUw44ik2kTn2A@mail.gmail.com>
-Subject: Re: [PATCH 2/6] PCI/pwrctrl: tc9563: Fix parsing the integrated
- Ethernet MAC Endpoint node
+References: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com> <20260725-tc9563-fix-v1-3-ec4286e31331@oss.qualcomm.com>
+Date: Mon, 27 Jul 2026 07:22:57 -0700
+X-Gmail-Original-Message-ID: <CAMRc=Mf_dA9GQFg72AeKmd3fUTNMNmoWHSqMDKxrqxDQKN-VGg@mail.gmail.com>
+X-Gm-Features: AUfX_mxhtYfF-P2ZNB3abeKXJQ88LXUTbeyNrWHPfCcAjb4KgotGa9JGIW5uN9E
+Message-ID: <CAMRc=Mf_dA9GQFg72AeKmd3fUTNMNmoWHSqMDKxrqxDQKN-VGg@mail.gmail.com>
+Subject: Re: [PATCH 3/6] PCI/pwrctrl: tc9563: Power off only the external
+ ports in tc9563_pwrctrl_disable_port()
 To: manivannan.sadhasivam@oss.qualcomm.com
 Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
 	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
@@ -66,51 +66,47 @@ Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualco
 	Bjorn Andersson <andersson@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 25 Jul 2026 10:59:14 +0200, Manivannan Sadhasivam via B4 Relay
+On Sat, 25 Jul 2026 10:59:15 +0200, Manivannan Sadhasivam via B4 Relay
 <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
 > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 >
-> DSP3 has an integrated Ethernet MAC Endpoint which has its own set of
-> config registers for configuring settings such as ASPM. The Endpoint
-> device has 2 physical functions and those 2 functions share the same
-> settings.
+> TC9563 supports powering off only the external facing ports like DSP1 and
+> DSP2. It is not recommended to power off USP and DSP3 as they have fixed
+> ports/endpoint connected.
 >
-> Hence, parse the Endpoint node under DSP3 instead of parsing both the
-> functions. The existing parsing logic also has one OOB issue as parsing
-> both functions will result in accessing past the tc9563_pwrctrl->cfg array.
+> Hence, fix tc9563_pwrctrl_disable_port() to power off only DSP1 and DSP2.
 >
 > Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
+>  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> index 488e1ec34a7f..482e82e433dd 100644
+> index 482e82e433dd..ca19bf60d290 100644
 > --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
 > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> @@ -596,12 +596,17 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
->  		ret = tc9563_pwrctrl_parse_device_dt(tc9563, child, port);
->  		if (ret)
->  			break;
-> -		/* Embedded ethernet device are under DSP3 */
-> +
-> +		/*
-> +		 * The integrated Ethernet MAC Endpoint under DSP3 is a single
-> +		 * device whose functions share the same config registers.
-> +		 */
->  		if (port == TC9563_DSP3) {
-> -			for_each_child_of_node_scoped(child, child1) {
-> -				port++;
-> +			struct device_node *eth __free(device_node) =
-> +					of_get_next_available_child(child, NULL);
-> +			if (eth) {
->  				ret = tc9563_pwrctrl_parse_device_dt(tc9563,
-> -								child1, port);
-> +								eth, TC9563_ETHERNET);
->  				if (ret)
->  					break;
->  			}
+> @@ -241,12 +241,18 @@ static int tc9563_pwrctrl_disable_port(struct tc9563_pwrctrl *tc9563,
+>  	if (!cfg->disable_port)
+>  		return 0;
+>
+> -	if (port == TC9563_DSP1) {
+> +	switch (port) {
+> +	case TC9563_DSP1:
+>  		seq = dsp1_pwroff_seq;
+>  		len = ARRAY_SIZE(dsp1_pwroff_seq);
+> -	} else {
+> +		break;
+> +	case TC9563_DSP2:
+>  		seq = dsp2_pwroff_seq;
+>  		len = ARRAY_SIZE(dsp2_pwroff_seq);
+> +		break;
+> +	default:
+> +		/* Only external downstream ports DSP1/DSP2 can be powered off */
+> +		return 0;
+>  	}
+>
+>  	ret = tc9563_pwrctrl_i2c_bulk_write(tc9563->client, seq, len);
 >
 > --
 > 2.43.0
