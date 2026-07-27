@@ -1,142 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAC1D32E72F
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 07:41:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C52953DDDD7
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 07:59:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785138091; cv=none; b=tYd8cIdR0K7nkXPQPR/SseKrRg1/c7ESWdVX5lWYH4OUIw5RQH3D43Ec5s5+36L9Y7BXc4E1IFULw45q0MJeig36Fm2+3KwZEhYyUwCyQzGEjh36gxg3LKYDVMzgJTcO5Tw5qKOpElys7WaVlh3/TxdQ0nURX4bmsy6iadY+zU4=
+	t=1785139154; cv=none; b=dykTFstvqgMBNzVl1SOI6nJs8CFvx1oE5tXbo6Zc6FY9k8PqXU6TSGxH4YSo4qLqbybPMRDQOyR5JCJxFXyG1h2Y6igOMOk8st42Cwb9u+aJg9tkNNEiXgN3QtoTHO3qe6VlNecQsrZEQushz/cTb3kNHq6wxf+DInRJzTZ/bSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785138091; c=relaxed/simple;
-	bh=or8DXtzSgTxFPGGbkCxtHeV8USNzsTpw7CPMeiUgHfs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DncqzMxbEgtnYhsRatrkHlYUCWik/gkxS9PqZFJvEuB2+SFU14n81ZP7utdi3dW7Vxq672gr/g7iuVshib5eBNrrY0dqdAvoWr2aq2lQH4586vG0Q+JPkqgo0mReeBh0w97ukhjguaNJ3rJlO4nkO+DYIq4UhwTvsdDIZO/tnSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HNeR1Vw4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785139154; c=relaxed/simple;
+	bh=EbnUXDEiH4aXd7svurft8q4vb7XSEmBoWUkT4ZL4rnE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FrxNYXn7spyVVaOV5kRr6b7ChB4vi8ZX3VLVzEZ/Plo25Jzhs6Uk8MqhuoSndtIRhX8B1HS1CLKXabXBziqgdA29fBps0JW0FvP4ZxDzCkaACsccjV3XPNpPGsV3tpPBi0ZIaP1vVKmcGB7rA/l1PW4ef6DAOfXFzNHB9A3smWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I084IXkL; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HNeR1Vw4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F1E51F000E9;
-	Mon, 27 Jul 2026 07:41:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785138089;
-	bh=vdhWAnu28DrkkVVCnJqgsktjZRsPqLfi5nhVoLfOHXM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HNeR1Vw4OPq4Nen+ZWd2ll4jS5YijS4vSMaRAfZQTbYO0JFx9ohHu0YF+58nGxIWe
-	 KFNzfzSS3B8EzjIucxG69tDPDKYKYaR5Z93rYxoRiR9B9FEPMK1Ouwiome57z305OT
-	 oQfovuhI4NsGSN72lKDFuQQfOkhnIpYgd8YhkpYgcubr0EXIpdp8vUo/O9rzugP4jf
-	 AUSZcYKpxzIQf8Uxx72c3Yl8tReWW/TKUzIPqPUj6HxFFXDJpbB4hqYlPLS+b/2zck
-	 hSZMpbOq/O0dumPkh3jYQ/CJRwzUYHQs09me9CE+26DPx02kyKGzSyy2ogXVbjg9Pt
-	 EISo3YlwqoDaA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Add missing NULL check for link in sysfs
- show/store callbacks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: ZhaoJinming <zhaojinming@uniontech.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260727072915.3954329-1-zhaojinming@uniontech.com>
-References: <20260727072915.3954329-1-zhaojinming@uniontech.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 07:41:28 +0000
-Message-Id: <20260727074129.4F1E51F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I084IXkL"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2cf41bab353so32551225ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 00:59:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785139152; x=1785743952; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wvZrTTp8XTspOh3eFR2KOmNstM1K6wskKfXxNBZ4/oE=;
+        b=I084IXkLP5zUliNOTmTG6s9/FJfNWSc8isX4eGGRUal/ycL4lI1UbJzE8WGKklQrM1
+         1jsaQ/PnE0Utxy/yZ/E2h09I5C9z3dvzAezdc1YTOiZOcATzRlXA6OnVaSBNpx+DyFNd
+         06J7OsPg6qBW0vGAPFlgN8qjfPu4KEnAvvB6vbAloDMeBf67UGG2xowDU5Uc98dimNAk
+         PjZS9WDp3jXYwLhvbxbLhOl6Rdz2c7B39kxj9RlaGejKPAwSghYFEfZEn0d6/0H4m6fw
+         MiAWOtuU9WP7C8gtTzuUux9nsLYEyWjdDpHuCoRe+sV0TntiJXnjcYt+pfVbWlCY5FzZ
+         F1uw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785139152; x=1785743952;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wvZrTTp8XTspOh3eFR2KOmNstM1K6wskKfXxNBZ4/oE=;
+        b=STXECj1FxaSvM+7ibXtSYC+dNW++Mlc6dHSagsYvsbmxx+6Q+jVcwSLaeKjiGh9eXf
+         afCObFs2yoenC9i880gQks5JcoQ1v05asExigEkCtQilgnSaAKjXkmr/WK82G9hra9m8
+         jDVgcT4QVP6yM4xhR2t2DpkZoA9KHVRqEn7i4ZiOz0u9JMSZ0ALocrZ5WYWfwvm5SMhg
+         nS0l7HUHziVbLyCnunpIH/jkt0SijGiYkaOXNXHhtPMfpqnvN4yOjIcxARqkMXDtZEcM
+         37Q/rtW3hbDB1OKIRDQTEbyh/iZtfrcK7AgM8jgDMmAu2P5b7e7qv3CxVDSaQCLzDflO
+         9eGg==
+X-Forwarded-Encrypted: i=1; AHgh+RrRdgId8lgySzNPLl+hU9J84SDeajJxC11/hnJcMRAuG2ysw8cBcxb7yIzZkHWCd/EatY71U3DcKwY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzc/FXwIB0wks78YmIyQG6JcbtOjlqcCobEv0J+vU5bzNNNw5Vx
+	sm3zKZjeBpnWrYte/0QCobNDPObmGmy7b4hF2uWji8dNAofz+wAtKr0E
+X-Gm-Gg: AR+sD12f+iq76wrFMZ6SFsl6lUObORilikULbtNkcnUZoaUtkIUPOlv0n8ccm4Xs2TF
+	rJbSRTw6cw558ogRNqOx9QeV8TOKCVnpYITamGSugJan3G9ZR3rx1f/ulgYenGo7cRHFklR5rKo
+	xQiZkqxaOBtNx9yuGHsMFC55ExlA0uqpMuEPSGxh53gYDcGYb5MCC7mLmu+20e+is92A4jldJPA
+	ExjLNnBWB6OAWgfytfzydiic/fHGMXQtvF9E5tl9xL/hnDKOAX1Pqgq8U/EE6qT3/9Gkd2HKRRX
+	/E8MuoBT0ne9dWNWe3K+egcTgnDz2GBpjG/fYh9twh/MsxHYdVxfMWI1ZfU5CWUodanAg9S6b3z
+	qG9vxGbeik2fTVOMZfhrrmUazBPGfwba0/3LjDCnkfU147n5A5hB31KbLdVKHEKQ1qZEYdvFPLy
+	nCH3xgNkiOBdfnRWQrGylnqA==
+X-Received: by 2002:a05:6a20:9e49:b0:3c3:a4f4:c5c1 with SMTP id adf61e73a8af0-3c67e102104mr7113538637.60.1785139151974;
+        Mon, 27 Jul 2026 00:59:11 -0700 (PDT)
+Received: from kernel ([103.219.206.53])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-314bc548f5dsm34056767eec.17.2026.07.27.00.59.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 00:59:11 -0700 (PDT)
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: bhelgass@google.com
+Cc: robh@kernel.org,
+	gregkh@linuxfoundation.org,
+	skhan@linuxfoundation.org,
+	jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+Subject: [PATCH] PCI: Fix unmasked value in pci_generic_config_write32()
+Date: Mon, 27 Jul 2026 13:28:52 +0530
+Message-ID: <20260727075852.4688-1-raizudeen.kerneldev@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+When writing less than 4 bytes, pci_generic_config_write32() uses a
+read-modify-write sequence to protect adjacent bytes. The code comment
+states the goal is to "merge in the <size> bits we intend to write".
 
-New issues:
-- [Low] Inconsistent Return Code in sysfs show callbacks
+However the code does not mask the incoming 'val' before shifting it.
+Since the function 'pci_generic_config_write32()' accepts a 'u32', a
+caller could pass a value with extra bits set outside the intended write
+size, those extra bits will shift into the adjacent bytes and corrupt them.
 
-Pre-existing issues:
-- [High] Use-After-Free (TOCTOU Race) due to lockless fetch of pcie_link_st=
-ate
---
+Fix this my masking 'val' before the shift so only the target bytes are
+written. This makes the code do what the comment says and matches the
+read function, pci_generic_config_read32().
 
---- Patch [1]: [PATCH] PCI/ASPM: Add missing NULL check for link in sysfs s=
-how/store callbacks ---
-commit 123c7550e88a60508484ee2915e5a520ce8e1364
-Author: ZhaoJinming <zhaojinming@uniontech.com>
+Fixes: 1f94a94f67e10 ("PCI: Add generic config accessors")
+Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+---
+ drivers/pci/access.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-PCI/ASPM: Add missing NULL check for link in sysfs show/store callbacks
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index b123da16b63b..47b38d01694c 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -176,7 +176,7 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 
+ 	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+ 	tmp = readl(addr) & mask;
+-	tmp |= val << ((where & 0x3) * 8);
++	tmp |= (val & ((1 << (size * 8)) - 1)) << ((where & 0x3) * 8);
+ 	writel(tmp, addr);
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+-- 
+2.53.0
 
-This commit adds NULL checks for the return value of pcie_aspm_get_link() in
-the ASPM and clkpm sysfs show and store callbacks. It aims to prevent NULL
-pointer dereferences when the device is not PCIe or the link state has not
-been initialized.
-
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 172783e7f519a..108d151a786e7 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1654,6 +1654,9 @@ static ssize_t aspm_attr_show_common(struct device =
-*dev,
->  	struct pci_dev *pdev =3D to_pci_dev(dev);
->  	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
-> =20
-> +	if (!link)
-> +		return 0;
-> +
-
-[Severity: Low]
-Does returning 0 here mean a successful read of 0 bytes, presenting an empty
-file to userspace instead of an error? Should this return -ENODEV similar
-to the corresponding store callback?
-
->  	return sysfs_emit(buf, "%d\n", (link->aspm_enabled & state) ? 1 : 0);
->  }
-> =20
-> @@ -1665,6 +1668,9 @@ static ssize_t aspm_attr_store_common(struct device=
- *dev,
->  	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
->  	bool state_enable;
-> =20
-> +	if (!link)
-> +		return -ENODEV;
-> +
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does fetching the link
-locklessly here introduce a use-after-free race?
-
-If a concurrent device hot-unplug of a sibling function occurs,
-pcie_aspm_exit_link_state() could acquire the aspm_lock, free the shared li=
-nk
-structure, and set the parent's link_state to NULL.
-
-Because this sysfs callback fetches the link before acquiring the lock, cou=
-ld
-it hold a dangling pointer, which is then dereferenced later in this functi=
-on
-when the lock is acquired?
-
-aspm_attr_store_common()
-...
-	down_read(&pci_bus_sem);
-	mutex_lock(&aspm_lock);
-...
-	link->aspm_disable &=3D ~state;
-
-Does this same lockless fetch race also exist in clkpm_store(),
-aspm_attr_show_common(), and clkpm_show()?
-
-[ ... ]
-
-> @@ -1713,6 +1719,9 @@ static ssize_t clkpm_show(struct device *dev,
->  	struct pci_dev *pdev =3D to_pci_dev(dev);
->  	struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
-> =20
-> +	if (!link)
-> +		return 0;
-> +
-
-[Severity: Low]
-Does returning 0 here mean a successful read of 0 bytes, presenting an empty
-file to userspace instead of an error? Should this return -ENODEV similar
-to the clkpm_store() callback?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727072915.3954=
-329-1-zhaojinming@uniontech.com?part=3D1
