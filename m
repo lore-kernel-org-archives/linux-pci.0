@@ -1,115 +1,225 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E223CCFB8;
-	Mon, 27 Jul 2026 19:27:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2600A3D3492;
+	Mon, 27 Jul 2026 19:28:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785180424; cv=none; b=srokJKD2ooOSsq+4j5aLeJRzYikUgqwI3UgWDgX9khHANU2p0t6dpxcySwTlD0+D0gDpSJLicgXWiWx9ukBgtOhynSHA8u/3XiLaOdnXH43M4STWqZ26qYI55LUIu16DjDZl12qE8tWmXummd2AqIuBgVG7lKWMSL+qyD8eIQY8=
+	t=1785180514; cv=none; b=GQCCx1qyhF5qJK6Edx0Pxev+qcJ2C/hHca7Y1acrGYnoar2eBDzCfUP8cE2bWx/u7kPfiXj2Ap8HFgP0IE9PbSEdxkmFHrOz8hnopnnGBqQbVeDVISIRLKHQLV/OIDHCC5D3/Pt/0vxDBJ8QoJKcXuBRzoJzl7LiTsVSM9ZHLrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785180424; c=relaxed/simple;
-	bh=4RoRD99AfLP5NZOE3pDGSZ3RQEMc09eY+WJD8jtqH5M=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Es8aq90ZVvayrF5tu8rmfyI0/nESGtOQs31d0sMsIRMBizgAyxCFznNbrgIEZQtmYgR6zcyQF7djgWEymwf2SPOXrqIQ7absbUPWxGXTzy+5s42f4fA8mHQs7RvWUwtuUu18O8X9R6KM1FX33yz8nN28NHoE8K1ex3qKpwuUdyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IzYilg/M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785180514; c=relaxed/simple;
+	bh=pt7c+IYrZmhDZJAOgqhniP5f4g0dsusOojerIR3qS8I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=kWPOpCGA3TJQtYP05HixzcVbgTwnhM6SbhxgJwtKwRdfe4E9RlWUSHFcNUSDYzBsBlyzlAkzCHTeA2UI82Y9AGY5GGq/PgIGpk+xii9ASuDUzEj9H4UABfftV3Z5LE19UI0mLwFXdAITuT4lwyiuM26mMdEzui0EDRUp2p7qAMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DJUpLiHt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IzYilg/M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D36551F000E9;
-	Mon, 27 Jul 2026 19:27:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DJUpLiHt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1C991F000E9;
+	Mon, 27 Jul 2026 19:28:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785180423;
-	bh=sKZJ5OViBbK3ZJT1F6pApbVMnloDUEEXkiEo8E43BZo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=IzYilg/M8OJawVypIyI6yqeauwbZiYHFTE/2k3KHuRHUxMx0FStRiRDIYwLSXuz+j
-	 05E1VSdnB8lEC6Dizt4VUGoyC5z/mveyiibWsgRdAlvKKIkj48/ah7F6UT2aCwtI+P
-	 M7K/wl4ZU3s2ty47OdvEC9FdpqZZooqnD/YPe5dYLEcIqXgPRe9z+IRv0OGOjxpiCI
-	 Jkkv2KqNrNrHHFyKWrUSu4jKNcR9MN7OKjAKqyH6336kbZXEsU0FdJisLbzQ98yFFp
-	 BOxeFggnvJIK1ABfQTx2tpoMDd3ziP5gU/FGGW5Hjp9V/egQQBr6nc61xzYH0DhpGX
-	 yRf6bic++oydw==
-Date: Mon, 27 Jul 2026 14:27:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v7 01/12] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <20260727192701.GA1250952@bhelgaas>
+	s=k20260515; t=1785180513;
+	bh=/XJwn/dWibDwAlxOkqgsayA2XnzIY/6xKk9OywdbbAc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=DJUpLiHtoCFnyQ/E2hAxgHhbwkDwnjwzwZcB9+90Ckg+ivi7qQoOxhikXNxH0DANL
+	 NrxoS0PexPASE3nVvzvGxsZDOpVewNPuMqaLhc+0cDBxbidyadPIukdJ1bZQnyD9Ek
+	 41h34WwDxX2lkBic6ah7EcogA4Dws26EKIwPEWFFt3FFtp8aiiwfWZB3yneVxdWj5i
+	 auXeHFwr8VPZFAKSbXc9SafOAid4WNJn9/okhhJ95Kj1YJmNi1K0aWqxnR4XSzs+0h
+	 Rz5qVozFCcMq5qQrJokSm5RfPOxRWHYkC3/xw9uJSWCNgtmpfRE7eX4AmhaWyTLnAg
+	 fVBmy357isZng==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 06/11] dmaengine: switchtec-dma: fix chan_status_irq
+ cleanup on create() error
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Logan Gunthorpe" <logang@deltatee.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260727181526.9672-7-logang@deltatee.com>
+References: <20260727181526.9672-1-logang@deltatee.com>
+ <20260727181526.9672-7-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 19:28:32 +0000
+Message-Id: <20260727192832.B1C991F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=cRhFW+zNX6xCnhjJXXDHgyhOxuoX26FG2Ve8+wMccypg@mail.gmail.com>
 
-On Mon, Jul 27, 2026 at 10:40:52AM -0700, David Matlack wrote:
-> On Thu, Jul 23, 2026 at 3:21 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Jul 10, 2026 at 09:26:04PM +0000, David Matlack wrote:
-> > > Set up a File-Lifecycle-Bound (FLB) handler for the PCI core to enable
-> > > it to participate in the preservation of PCI devices across Live Update.
-> > > Essentially, this commit enables the PCI core to allocate a struct
-> > > (struct pci_ser) and preserve it across a Live Update whenever at least
-> > > one device is preserved.
-> > > ...
-> >
-> > > +#define pr_fmt(fmt) "PCI: " KBUILD_BASENAME ": " fmt
-> >
-> > Is KBUILD_BASENAME buying us something important here?  Just from
-> > code-reading perspective, it's more work because without some digging
-> > I don't know what it will end up looking like in a dmesg log.
-> >
-> > > +static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
-> > > +{
-> > > +     struct pci_flb_outgoing *outgoing = args->obj;
-> > > +
-> > > +     WARN_ON(outgoing->ser->nr_devices);
-> > > +     kho_block_set_destroy(&outgoing->block_set);
-> > > +     kho_unpreserve_free(outgoing->ser);
-> > > +     kfree(outgoing);
-> > > +     pr_debug("Unpreserved struct pci_ser\n");
-> >
-> > If this pr_debug() is useful, maybe it should include an address and
-> > there should be a corresponding pr_debug() on the preserve side so we
-> > could find things in a crashdump?
-> >
-> > > +int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
-> > > +{
-> > > +     pr_debug("Registering file handler \"%s\"\n", fh->compatible);
-> >
-> > Is fh->compatible enough to identify a driver?
-> 
-> Not necessarily. VFIO could theoretically have one file handler that
-> handles all the vfio-pci variant drivers. But I suspect we'll end up
-> with 1 fh per driver in practice.
-> 
-> Are you thinking about how we can ensure devices are bound to
-> compatible drivers after Live Update?
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+s) to consider:
 
-No, I don't understand enough to worry about things like that.  I'm
-just wondering if there's enough info in the message to be useful,
-since fh->compatible is the only text that's variable.  Same reason I
-asked about the "Unpreserved struct pci_ser" message above.  E.g., if
-a user reports these messages, will we need more information to debug
-it, or is the message itself enough?
+Pre-existing issues:
+- [High] Unmapping `swdma_dev->bar` after `dma_async_device_unregister` cau=
+ses a use-after-free.
+- [High] Missing NULL check after `ioremap()` in `switchtec_dma_create` lea=
+ds to a NULL pointer dereference on failure.
+- [High] The DMA channel list is initialized after the status IRQ is reques=
+ted, allowing an early interrupt to trigger a NULL pointer dereference.
+- [High] In the error paths of `switchtec_dma_create()`, DMA channels are f=
+reed while the status IRQ remains registered, causing a Use-After-Free.
+- [High] Invoking client callbacks while holding a driver spinlock causes a=
+ recursive locking deadlock if the callback re-enters the driver.
+- [High] Incorrect teardown sequence in device remove risks hangs or crashe=
+s for active DMA clients.
+--
+
+--- Patch [6]: [PATCH v3 06/11] dmaengine: switchtec-dma: fix chan_status_i=
+rq cleanup on create() error ---
+commit 4abb826d6d25e80cfa344cde79ed065a727edad5
+Author: Logan Gunthorpe <logang@deltatee.com>
+
+dmaengine: switchtec-dma: fix chan_status_irq cleanup on create() error
+
+This patch initializes chan_status_irq to -1 and uses the non-negative
+value to determine when to call pci_free_irq() instead of free_irq().
+This prevents freeing the wrong Linux IRQ and ensures the handler is
+properly unregistered when the vector index is 0.
+
+Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.ke=
+rnel.org
+
+> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+> index c752a1b05871d..31feb2816e79b 100644
+> --- a/drivers/dma/switchtec_dma.c
+> +++ b/drivers/dma/switchtec_dma.c
+> @@ -1248,6 +1248,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
+v)
+>  	if (!swdma_dev)
+>  		return -ENOMEM;
+> =20
+> +	swdma_dev->chan_status_irq =3D -1;
+> +
+>  	swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
+>  				 pci_resource_len(pdev, 0));
+
+[Severity: High]
+This is a pre-existing issue, but does ioremap() need a NULL check here?
+
+If it fails under memory pressure and returns NULL, swdma_dev->bar will be
+assigned NULL.
+
+Shortly after, the code executes:
+
+    irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
+
+Will this lead to an immediate NULL pointer dereference?
+
+[ ... ]
+
+> @@ -1322,8 +1324,8 @@ static int switchtec_dma_create(struct pci_dev *pde=
+v)
+>  	switchtec_dma_chans_free(swdma_dev);
+> =20
+>  err_exit:
+> -	if (swdma_dev->chan_status_irq)
+> -		free_irq(swdma_dev->chan_status_irq, swdma_dev);
+> +	if (swdma_dev->chan_status_irq >=3D 0)
+> +		pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but can this error path lead to a
+use-after-free?
+
+If dma_async_device_register() fails, the code jumps to
+err_chans_release_exit, which calls switchtec_dma_chans_free(). This frees
+the channel structures but leaves them linked in dma_dev->channels.
+
+The status IRQ remains registered until pci_free_irq() is called here.
+
+If an interrupt fires during this window, will
+switchtec_dma_chan_status_isr() iterate the list and access the freed
+channel objects?
+
+> =20
+>  	iounmap(swdma_dev->bar);
+>  	kfree(swdma_dev);
+
+While reviewing this file, I noticed a few other pre-existing issues.
+
+[Severity: High]
+This is a pre-existing issue, but could an early interrupt trigger a NULL
+pointer dereference?
+
+In switchtec_dma_create(), pci_request_irq() is called before the channel
+list is initialized:
+
+switchtec_dma_create()
+    ...
+    rc =3D pci_request_irq(pdev, irq, NULL, switchtec_dma_chan_status_isr, =
+...);
+
+If an interrupt fires immediately, switchtec_dma_chan_status_isr() will
+execute:
+
+switchtec_dma_chan_status_isr()
+    ...
+    list_for_each_entry(chan, &dma_dev->channels, device_node) {
+
+Since swdma_dev was allocated with kzalloc_obj(), the list head is NULL.
+
+Does iterating this uninitialized list bypass termination checks and crash?
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but can unmapping swdma_dev->bar
+after unregistering the DMA device cause a use-after-free?
+
+Looking at switchtec_dma_remove(), dma_async_device_unregister() is called
+before iounmap():
+
+switchtec_dma_remove()
+    ...
+    dma_async_device_unregister(&swdma_dev->dma_dev);
+    iounmap(swdma_dev->bar);
+    ...
+
+When dma_async_device_unregister() drops the final reference to the DMA
+device, it triggers the release callback:
+
+switchtec_dma_release()
+    ...
+    kfree(swdma_dev);
+
+Will this sequence cause iounmap() to dereference the freed swdma_dev
+structure?
+
+
+[Severity: High]
+This is a pre-existing issue, but can invoking client callbacks while
+holding the driver spinlock cause a recursive locking deadlock?
+
+Looking at switchtec_dma_cleanup_completed():
+
+    spin_lock_bh(&swdma_chan->complete_lock);
+    ...
+    dmaengine_desc_get_callback_invoke(&desc->txd, &res);
+
+If the client callback re-enters the driver API, for example by calling
+dmaengine_tx_status(), it will execute switchtec_dma_tx_status(), which
+again calls switchtec_dma_cleanup_completed().
+
+Since complete_lock is a non-recursive spinlock, will this inner call
+attempt to acquire it and lead to an immediate self-deadlock?
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is the teardown sequence in
+switchtec_dma_remove() correct?
+
+switchtec_dma_remove()
+    ...
+    switchtec_dma_chans_release(pdev, swdma_dev);
+    ...
+    dma_async_device_unregister(&swdma_dev->dma_dev);
+
+Here, switchtec_dma_chans_release() halts the hardware and frees channel IR=
+Qs
+before dma_async_device_unregister() safely quiesces the DMA engine.
+
+Will this inverted teardown destroy the hardware state while the DMA core
+still considers the device active, causing active clients to hang waiting
+for completions or crash if they submit new requests?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727181526.9672=
+-1-logang@deltatee.com?part=3D6
