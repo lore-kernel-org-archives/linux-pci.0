@@ -1,68 +1,69 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7394E408022
-	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 12:11:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A0F840A922
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 12:11:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785154269; cv=none; b=dr4rsAoDytWV7L8jk9wE9ppxuYx3CGDNUU9y4ighmwGcvVFuDFqgowj86vtwHmsTokML0lqFytWiJja8WxcuTq+3MCFzAtfJkdRdSEaL1l6NkZqxvTSeFMui+h56dgLogSJCrZJCVZ1k50/gwkWxOM5na/jtYevUIWpZhBa5i1w=
+	t=1785154271; cv=none; b=UXxOYqKBSHmOkp1XOTaKrjE8f0NwSyKPRF3vmBJxRUNcB5xiRHJCL/r26CcWPEX31XszK7UyNw/SjEMjMKHWIum8BTjCOEo32TJnwB6vmsc5nF4t4yYaUw29rF00VW8OXmow8ncATP6OokbCLZFes0w8YEnJ96Jx6a2XDnS4kQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785154269; c=relaxed/simple;
-	bh=f5yWEycCLmhwNgNs+7yltFCigM8U2L0qmiC75nRPZPg=;
+	s=arc-20240116; t=1785154271; c=relaxed/simple;
+	bh=q1sapSQQK4AuvJxhLybez7xMW8BCU+2x792Tr/WVaBo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=g/odQylw9IKO27BhLDnvl5GmG5D82g7EDuIoEjcAiSTlNPt1JMv0zCmE2ANwZ851K8/D7LnJH1r5x6LzDaI1XMXDokVeszU1MKvlX00erfkDUsedAg8qpffuJEixNLdtI6yflpztmu/ABnbARXwypUNQ8rUeG/g8/Carc1kkqxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thegoodpenguin.co.uk; spf=pass smtp.mailfrom=thegoodpenguin.co.uk; dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b=0DM/6X0U; arc=none smtp.client-ip=209.85.128.49
+	 In-Reply-To:To:Cc; b=e9QM7DW2+BWxc1J1+FMLBTHdOk1uTiVr2uuSchxOwjwfAPKcMpbo0uh6Drsvg8HBAIUIl0pscYzqr+dbBRSZCsJgFN1recnbx/RiKtKpDKCFeuz6iaabJ3/kox8RmjcKBsRg1ZEVTQnE5nzApjVQAgySqD5az152ALpzLSb07ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thegoodpenguin.co.uk; spf=pass smtp.mailfrom=thegoodpenguin.co.uk; dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b=gIb36vpk; arc=none smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thegoodpenguin.co.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thegoodpenguin.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b="0DM/6X0U"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4957eefd361so19899495e9.1
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 05:11:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=thegoodpenguin-co-uk.20251104.gappssmtp.com header.i=@thegoodpenguin-co-uk.20251104.gappssmtp.com header.b="gIb36vpk"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4921eed3fa2so18248815e9.0
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 05:11:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=thegoodpenguin-co-uk.20251104.gappssmtp.com; s=20251104; t=1785154266; x=1785759066; darn=vger.kernel.org;
+        d=thegoodpenguin-co-uk.20251104.gappssmtp.com; s=20251104; t=1785154267; x=1785759067; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=yngGEtXt8XdvhkSci47p7H95S2e1zfXfAmsSjMJsNNY=;
-        b=0DM/6X0UeAHvgmATILO7CjqVWXyRUWmZqNQtvA57/21VIrbr+Rw6jB7daOu+gWwDwR
-         zbSPGj8qRxW9TAW3TBCZEm7Bmhn/KQJObYX7825fEJMxp4sbNwlpUt06DebRk53PyQMu
-         0brf4fhCMP2gnXSY2T5j9SyzjQpnKHI81waHUZy46qSrQvosgQ5rh4jY/UMx9fz5duGQ
-         gRJ4gK0z4nNS+v+941blcej5Dp1rBC0o9GJ1D3IhSrAJFPvoolTVF963MJev9cA2H9Jy
-         2iVWHIx9lE6uebjBqNpHk5NXqhd1oPBwm5Xi6XnoLdevlk5M8rGFmsE5BbtvVqK2xi8/
-         aXLQ==
+        bh=2/U7VrTEi0vsV9VceOwFXfFqZdMwqeaVHPjJeSjzlTw=;
+        b=gIb36vpkKSAk+w8m1i7B7Ob+su+qOjgffoqvq1KSK/kaeduqlHBbDfToUAiqbb/6Ns
+         +f9tOf2D3ADQRQS8clVpI9XV1k4riiQUTQrMFeYc29ub0r+J/82RRdiYJTEBW1+u6oJn
+         KXhI1Gh87Wpcj9DRYWGMx5SNRTDODA7g5gLGKYwBWzbpAUTohlA+fTGbu/dQqZy5/KUq
+         JeRigk/P72o5XfPuzgXEUcx8BE3F1CKbCkhwcatUPhmCk3ClSfbS8BnX9wLxD0LUi0O0
+         DfpkpkfGuorWEBHo46G6HcLDyZJR/ClAYzDIsS3wfdi8JYWpULYq79WiD+8UZEoB9L4c
+         WMKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785154266; x=1785759066;
+        d=1e100.net; s=20251104; t=1785154267; x=1785759067;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=yngGEtXt8XdvhkSci47p7H95S2e1zfXfAmsSjMJsNNY=;
-        b=CcKV7B89ADUd0NGtvzdiVy88giHyA0CrZV4rN4Lo24qmw3Z5+2D6JNb0p37sWT5FqJ
-         uqR6vlamBRPgOna2lo0DzIoZw9g7J15Q+MaOI3nycIgvCH622WeSn14CeaHm7SydHoky
-         Utj305e64NxZHc8KE4w5/N10tQGRDJV7NmOhdra8BSJDyC7MXQPT0r8sszaIByMzRy3T
-         g/loGFhu7K4ZOULd8aUpsEUbptAfu1rGgqi6WlE3GDt1SaRl1ebDhRsJjhpoFoYqia3u
-         Uk5blyeZjKopekfAFaM3z5AfGDCgSRz5OXqNQ1R2JJ595tJZUYg8aQIkWUOHzISJ/MXa
-         r9dg==
-X-Forwarded-Encrypted: i=1; AHgh+RrZT5nweR3AEI4QMDGmB8LPThQTQRN8AUXmyl0aeEmby3J8DmEk0QNhkxuuLzSV6K1ch/ojuXGO5BU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKaiYdPguMaTK4jas6X7ZeRVSSVtOD79MhwK8q8IXf+pTtno5O
-	WrMmuxOTjI58ZbkZCcWvU/2SZKnpFp8kJgYrEUC5OY3E8QvAYRXbPYOUaG0E+gDAm+Q=
-X-Gm-Gg: AR+sD12F73Lh/KAhHFx+pAADJhhE3UAFSh9xYKe7PUJiXF5wIpqCYSM4Q6XXNsaGh+7
-	/YfHnpYZWSxPAuyq0bYnZmhusbUsiai//+kYFzCLIHzD+7DI63yJ/NXHlQKJqKN8eERCq0OIbLu
-	qOeZdd1TqoudXVnoEgdMrTy512b04aqxmV8ADQY7OFCaTE/6S/jP8qy4Q+9HPvfZddvLWyUkvz4
-	xV5ccHDb7Oite1sg6lNOjKVg6r73UHZUzDgipT20m2IZTtCssQm8M7qzy3ayC+QPphduL6VNnit
-	EPbj28pJANM1PJVCIOjTtfigGV123XDkXsaOMe0m4uZ3cdXYrrNk+xsL13/48PYpIPn3VCoue9r
-	eooYGBa3qZuG0nslgPWBGmmRKYf9T7HY5POgAa07UXMTH0Nw7MaDmDbicspNRXDBHMpGoclWX0+
-	umZacgO/+AhSHHVCKWp7k=
-X-Received: by 2002:a05:600c:5492:b0:495:7eab:3abd with SMTP id 5b1f17b1804b1-496b5736f4fmr117417715e9.33.1785154265733;
-        Mon, 27 Jul 2026 05:11:05 -0700 (PDT)
+        bh=2/U7VrTEi0vsV9VceOwFXfFqZdMwqeaVHPjJeSjzlTw=;
+        b=BmomIkWR4XXp4KLOEo9fEQ3C1UcnnEkCbUcvRhpgc1bQY1iejH2SoJ7fYfbdbXZ2SU
+         DYGFWxoFZPdtJCt1mvM/9nXgVch5RaZbK1MmQjfcSGvFw5yoOJx+4m109bIHAVkC9lTw
+         RmeFA/XRTURG+RRwJFyGGFDbuZqXNTOAhwZq4bZmVQdiiutiMl6JAAXif7fS6+mp1oL1
+         i+N+ojxILwnJblxkbXcewjNFbw1eemD7bXNCZoQiiNX4+I70VECWaA+v0s6197Eu5bHV
+         IKTpsEQRJzUAfkoLhp5dQE7vLPAMD0hpVRdykBco+1I7gsP25OSAqVjFTPrBPWoPP+YG
+         Eqjw==
+X-Forwarded-Encrypted: i=1; AHgh+RplNmFab7bKieA9RQPVyQHpHpgQ8s6f8KkddFOAhWooj5sp2/dA83qoeMXCM724XRtV4E13sK0mtk4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzwKr3a7vV+inBx4GWuJgkAJfy4dFH9ebuEzyV3hVkC27g99woo
+	gU6UdLZF2pjLUVoN7l+Nn0eKmQ7OTPpkmnPaiuwtSzEiGubK7YY800EOd105blKL49dPe6F8Zy/
+	uz4ZsqBtUfzQs
+X-Gm-Gg: AR+sD11G/RHigZgoDXJE8r0A0dXBk7bUrgdiBoH39lIBSb7o7rLDLONgwfJNnVxu90u
+	sC+aohPjT/g1NDi/vxOAyfC/ALHg1twwqYGGiVV0iIfu1+YU7tUxBFvwMsvIgLHQM5EANtfeLVA
+	+lE4vT/XMrwx3H/ezGKm9bgzWVrhxzwStKuLHUzfLqdUbad/NpmTbYsX7P6tOWxVzwhmtmMjJTG
+	5e6qGJg2caxt5KoWk6BpXeUCYKKvrT/uo1uSNTa08T3pXvpX5UQPB8nhX9X05k2/YyqPELe7FAz
+	MTfmB0vTbmJkIOeGnMH4xc7X83szrn9P690UlTCBgUPpUcLrwWbOMguD6SgrYLY1ma0LEIO/4On
+	XlI0VjQGOCxdwtntUheemVWZAnl1nahOoOjnVuwwsYekCPsV50xJ9LWAelZ/Dl7ooEPlZGGiWAK
+	OfLZt/jIWtSvSnDEmylRiyAN9hoQCHFPLZ4zH2vfnh
+X-Received: by 2002:a05:600c:8214:b0:495:5e07:649b with SMTP id 5b1f17b1804b1-496b570dbbemr101595295e9.24.1785154267469;
+        Mon, 27 Jul 2026 05:11:07 -0700 (PDT)
 Received: from [10.42.0.1] ([2a00:23c7:1d1a:9c01:7aab:bc55:e039:4aac])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4f302f8sm211778055e9.12.2026.07.27.05.11.04
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4f302f8sm211778055e9.12.2026.07.27.05.11.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 05:11:05 -0700 (PDT)
+        Mon, 27 Jul 2026 05:11:06 -0700 (PDT)
 From: "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
-Date: Mon, 27 Jul 2026 13:10:45 +0100
-Subject: [PATCH 7/9] ACPI: nfit: core: drop unused assignment of
- acpi_device_id::driver_data
+Date: Mon, 27 Jul 2026 13:10:46 +0100
+Subject: [PATCH 8/9] ACPI: x86: use a named initializer for
+ acpi_device_id::id
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,7 +72,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260727-acpi-refactor-v1-7-ff900aa326ee@thegoodpenguin.co.uk>
+Message-Id: <20260727-acpi-refactor-v1-8-ff900aa326ee@thegoodpenguin.co.uk>
 References: <20260727-acpi-refactor-v1-0-ff900aa326ee@thegoodpenguin.co.uk>
 In-Reply-To: <20260727-acpi-refactor-v1-0-ff900aa326ee@thegoodpenguin.co.uk>
 To: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
@@ -92,42 +93,172 @@ Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
  nvdimm@lists.linux.dev, 
  "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785154252; l=993;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785154252; l=7104;
  i=pzalewski@thegoodpenguin.co.uk; s=20260430; h=from:subject:message-id;
- bh=f5yWEycCLmhwNgNs+7yltFCigM8U2L0qmiC75nRPZPg=;
- b=FPBuwEoNc0FwTPiW1OLmoke/+L0vL95t8jlgufvJHvdNH2cU9i9jhCZ2SIOLvvfU3dElEbK4X
- ffdwTvMsuVIB49CLJL8HnAYzDHIg3Q2vmuDwUv6QV0kEAdHSx50UKZC
+ bh=q1sapSQQK4AuvJxhLybez7xMW8BCU+2x792Tr/WVaBo=;
+ b=MI5X6Mq6pkzQ8U1kUgUHv2AZNnfgYLmN5i9MXfb/oyE4NgRZdijr8KOymitKFXx58Yvd4fvNy
+ 4eACf5fvIPzBeGp1ZRG6myj6dMucjYGNloAWtUlNTlQatAqcwImBgN6
 X-Developer-Key: i=pzalewski@thegoodpenguin.co.uk; a=ed25519;
  pk=vHq4n9IonORH2GTzLv8r6CWAFHzgfBuNkQPXA8NSly0=
 
-This module sets the acpi_device_id::driver_data to 0 but
-the field is not actually used within the module, we can
-just drop it from the table.
-
-While we are at it - used a named initializer for the
-acpi_device_id::id field to increase readability and
-drop explicitly setting the list terminator fields.
+Use a named initializer for the acpi_device_id::id field for
+readability. Also drop setting the list terminator fields
+explicitly and unify the type of the list terminator to be
+a single space between the brackets.
 
 Signed-off-by: Pawel Zalewski (The Capable Hub) <pzalewski@thegoodpenguin.co.uk>
 ---
- drivers/acpi/nfit/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/acpi/x86/cmos_rtc.c |  2 +-
+ drivers/acpi/x86/lpss.c     | 54 ++++++++++++++++++++++-----------------------
+ drivers/acpi/x86/s2idle.c   | 14 ++++++------
+ drivers/acpi/x86/utils.c    | 16 +++++++-------
+ 4 files changed, 43 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
-index cb771d9cadb2..5732df5d53f0 100644
---- a/drivers/acpi/nfit/core.c
-+++ b/drivers/acpi/nfit/core.c
-@@ -3515,8 +3515,8 @@ void __acpi_nfit_notify(struct device *dev, acpi_handle handle, u32 event)
- EXPORT_SYMBOL_GPL(__acpi_nfit_notify);
+diff --git a/drivers/acpi/x86/cmos_rtc.c b/drivers/acpi/x86/cmos_rtc.c
+index ced334e19896..d9891b00d090 100644
+--- a/drivers/acpi/x86/cmos_rtc.c
++++ b/drivers/acpi/x86/cmos_rtc.c
+@@ -18,7 +18,7 @@
+ #include "../internal.h"
  
- static const struct acpi_device_id acpi_nfit_ids[] = {
--	{ "ACPI0012", 0 },
--	{ "", 0 },
-+	{ .id = "ACPI0012" },
+ static const struct acpi_device_id acpi_cmos_rtc_ids[] = {
+-	{ "ACPI000E", 1 }, /* ACPI Time and Alarm Device (TAD) */
++	{ .id = "ACPI000E", .driver_data = 1 }, /* ACPI Time and Alarm Device (TAD) */
+ 	ACPI_CMOS_RTC_IDS
+ };
+ 
+diff --git a/drivers/acpi/x86/lpss.c b/drivers/acpi/x86/lpss.c
+index 0171eef00484..50b6db40bb18 100644
+--- a/drivers/acpi/x86/lpss.c
++++ b/drivers/acpi/x86/lpss.c
+@@ -351,41 +351,41 @@ static const struct x86_cpu_id lpss_cpu_ids[] = {
+ 
+ static const struct acpi_device_id acpi_lpss_device_ids[] = {
+ 	/* Generic LPSS devices */
+-	{ "INTL9C60", LPSS_ADDR(lpss_dma_desc) },
++	{ .id = "INTL9C60", .driver_data = LPSS_ADDR(lpss_dma_desc) },
+ 
+ 	/* Lynxpoint LPSS devices */
+-	{ "INT33C0", LPSS_ADDR(lpt_spi_dev_desc) },
+-	{ "INT33C1", LPSS_ADDR(lpt_spi_dev_desc) },
+-	{ "INT33C2", LPSS_ADDR(lpt_i2c_dev_desc) },
+-	{ "INT33C3", LPSS_ADDR(lpt_i2c_dev_desc) },
+-	{ "INT33C4", LPSS_ADDR(lpt_uart_dev_desc) },
+-	{ "INT33C5", LPSS_ADDR(lpt_uart_dev_desc) },
+-	{ "INT33C6", LPSS_ADDR(lpt_sdio_dev_desc) },
++	{ .id = "INT33C0", .driver_data = LPSS_ADDR(lpt_spi_dev_desc) },
++	{ .id = "INT33C1", .driver_data = LPSS_ADDR(lpt_spi_dev_desc) },
++	{ .id = "INT33C2", .driver_data = LPSS_ADDR(lpt_i2c_dev_desc) },
++	{ .id = "INT33C3", .driver_data = LPSS_ADDR(lpt_i2c_dev_desc) },
++	{ .id = "INT33C4", .driver_data = LPSS_ADDR(lpt_uart_dev_desc) },
++	{ .id = "INT33C5", .driver_data = LPSS_ADDR(lpt_uart_dev_desc) },
++	{ .id = "INT33C6", .driver_data = LPSS_ADDR(lpt_sdio_dev_desc) },
+ 
+ 	/* BayTrail LPSS devices */
+-	{ "80860F09", LPSS_ADDR(byt_pwm_dev_desc) },
+-	{ "80860F0A", LPSS_ADDR(byt_uart_dev_desc) },
+-	{ "80860F0E", LPSS_ADDR(byt_spi_dev_desc) },
+-	{ "80860F14", LPSS_ADDR(byt_sdio_dev_desc) },
+-	{ "80860F41", LPSS_ADDR(byt_i2c_dev_desc) },
++	{ .id = "80860F09", .driver_data = LPSS_ADDR(byt_pwm_dev_desc) },
++	{ .id = "80860F0A", .driver_data = LPSS_ADDR(byt_uart_dev_desc) },
++	{ .id = "80860F0E", .driver_data = LPSS_ADDR(byt_spi_dev_desc) },
++	{ .id = "80860F14", .driver_data = LPSS_ADDR(byt_sdio_dev_desc) },
++	{ .id = "80860F41", .driver_data = LPSS_ADDR(byt_i2c_dev_desc) },
+ 
+ 	/* Braswell LPSS devices */
+-	{ "80862286", LPSS_ADDR(lpss_dma_desc) },
+-	{ "80862288", LPSS_ADDR(bsw_pwm_dev_desc) },
+-	{ "80862289", LPSS_ADDR(bsw_pwm2_dev_desc) },
+-	{ "8086228A", LPSS_ADDR(bsw_uart_dev_desc) },
+-	{ "8086228E", LPSS_ADDR(bsw_spi_dev_desc) },
+-	{ "808622C0", LPSS_ADDR(lpss_dma_desc) },
+-	{ "808622C1", LPSS_ADDR(bsw_i2c_dev_desc) },
++	{ .id = "80862286", .driver_data = LPSS_ADDR(lpss_dma_desc) },
++	{ .id = "80862288", .driver_data = LPSS_ADDR(bsw_pwm_dev_desc) },
++	{ .id = "80862289", .driver_data = LPSS_ADDR(bsw_pwm2_dev_desc) },
++	{ .id = "8086228A", .driver_data = LPSS_ADDR(bsw_uart_dev_desc) },
++	{ .id = "8086228E", .driver_data = LPSS_ADDR(bsw_spi_dev_desc) },
++	{ .id = "808622C0", .driver_data = LPSS_ADDR(lpss_dma_desc) },
++	{ .id = "808622C1", .driver_data = LPSS_ADDR(bsw_i2c_dev_desc) },
+ 
+ 	/* Broadwell LPSS devices */
+-	{ "INT3430", LPSS_ADDR(lpt_spi_dev_desc) },
+-	{ "INT3431", LPSS_ADDR(lpt_spi_dev_desc) },
+-	{ "INT3432", LPSS_ADDR(lpt_i2c_dev_desc) },
+-	{ "INT3433", LPSS_ADDR(lpt_i2c_dev_desc) },
+-	{ "INT3434", LPSS_ADDR(lpt_uart_dev_desc) },
+-	{ "INT3435", LPSS_ADDR(lpt_uart_dev_desc) },
+-	{ "INT3436", LPSS_ADDR(lpt_sdio_dev_desc) },
++	{ .id = "INT3430", .driver_data = LPSS_ADDR(lpt_spi_dev_desc) },
++	{ .id = "INT3431", .driver_data = LPSS_ADDR(lpt_spi_dev_desc) },
++	{ .id = "INT3432", .driver_data = LPSS_ADDR(lpt_i2c_dev_desc) },
++	{ .id = "INT3433", .driver_data = LPSS_ADDR(lpt_i2c_dev_desc) },
++	{ .id = "INT3434", .driver_data = LPSS_ADDR(lpt_uart_dev_desc) },
++	{ .id = "INT3435", .driver_data = LPSS_ADDR(lpt_uart_dev_desc) },
++	{ .id = "INT3436", .driver_data = LPSS_ADDR(lpt_sdio_dev_desc) },
+ 
+ 	{ }
+ };
+diff --git a/drivers/acpi/x86/s2idle.c b/drivers/acpi/x86/s2idle.c
+index b6b1dd76a06b..64c4e10e71a1 100644
+--- a/drivers/acpi/x86/s2idle.c
++++ b/drivers/acpi/x86/s2idle.c
+@@ -33,8 +33,8 @@ module_param(check_lps0_constraints, bool, 0644);
+ MODULE_PARM_DESC(check_lps0_constraints, "Check LPS0 device constraints");
+ 
+ static const struct acpi_device_id lps0_device_ids[] = {
+-	{"PNP0D80", },
+-	{"", },
++	{ .id = "PNP0D80" },
 +	{ }
  };
- MODULE_DEVICE_TABLE(acpi, acpi_nfit_ids);
  
+ /* Microsoft platform agnostic UUID */
+@@ -431,11 +431,11 @@ static const struct amd_lps0_hid_device_data amd_cezanne = {
+ };
+ 
+ static const struct acpi_device_id amd_hid_ids[] = {
+-	{"AMD0004",	(kernel_ulong_t)&amd_picasso,	},
+-	{"AMD0005",	(kernel_ulong_t)&amd_picasso,	},
+-	{"AMDI0005",	(kernel_ulong_t)&amd_picasso,	},
+-	{"AMDI0006",	(kernel_ulong_t)&amd_cezanne,	},
+-	{}
++	{ .id = "AMD0004",	.driver_data = (kernel_ulong_t)&amd_picasso },
++	{ .id = "AMD0005",	.driver_data = (kernel_ulong_t)&amd_picasso },
++	{ .id = "AMDI0005",	.driver_data = (kernel_ulong_t)&amd_picasso },
++	{ .id = "AMDI0006",	.driver_data = (kernel_ulong_t)&amd_cezanne },
++	{ }
+ };
+ 
+ static int lps0_device_attach(struct acpi_device *adev,
+diff --git a/drivers/acpi/x86/utils.c b/drivers/acpi/x86/utils.c
+index 418951639f51..35580d77d8af 100644
+--- a/drivers/acpi/x86/utils.c
++++ b/drivers/acpi/x86/utils.c
+@@ -463,14 +463,14 @@ static const struct dmi_system_id acpi_quirk_skip_dmi_ids[] = {
+ 
+ #if IS_ENABLED(CONFIG_X86_ANDROID_TABLETS)
+ static const struct acpi_device_id i2c_acpi_known_good_ids[] = {
+-	{ "10EC5640", 0 }, /* RealTek ALC5640 audio codec */
+-	{ "10EC5651", 0 }, /* RealTek ALC5651 audio codec */
+-	{ "INT33F4", 0 },  /* X-Powers AXP288 PMIC */
+-	{ "INT33F5", 0 },  /* TI Dollar Cove PMIC */
+-	{ "INT33FD", 0 },  /* Intel Crystal Cove PMIC */
+-	{ "INT34D3", 0 },  /* Intel Whiskey Cove PMIC */
+-	{ "NPCE69A", 0 },  /* Asus Transformer keyboard dock */
+-	{}
++	{ .id = "10EC5640" }, /* RealTek ALC5640 audio codec */
++	{ .id = "10EC5651" }, /* RealTek ALC5651 audio codec */
++	{ .id = "INT33F4" },  /* X-Powers AXP288 PMIC */
++	{ .id = "INT33F5" },  /* TI Dollar Cove PMIC */
++	{ .id = "INT33FD" },  /* Intel Crystal Cove PMIC */
++	{ .id = "INT34D3" },  /* Intel Whiskey Cove PMIC */
++	{ .id = "NPCE69A" },  /* Asus Transformer keyboard dock */
++	{ }
+ };
+ 
+ bool acpi_quirk_skip_i2c_client_enumeration(struct acpi_device *adev)
 
 -- 
 2.43.0
