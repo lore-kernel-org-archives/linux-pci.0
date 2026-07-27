@@ -1,92 +1,62 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CAA348C52;
-	Mon, 27 Jul 2026 15:49:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97FB53EDAA3;
+	Mon, 27 Jul 2026 15:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785167375; cv=none; b=YIToYRJJwf+wFsdW+wY+5JFv6uIovaX+UO9fuWVhbagMN4VpdbltlsDsTr1plmh9KYGbKL1GHBFXlbeeMqyYaDBDWzKQM0MwCiSyfjCeIgYIjAIT0n64KjAElpJU4sCnbkqkB0kXGt5+llXOSXa47JcoZ0NJGOJq1XcljSws35I=
+	t=1785167447; cv=none; b=uv3zjiP+gpYcxOc38qDeFjCpAjKr0v7bVsgJIx1Z9MeSn9hMyij7Vjf17wJjKaK/+lB9ksfcHytykCt3tLyQfbUYRG6lT3hizflDHcIYvxWmFJEnNKk61IPzzdT68gZXHQlqvNmevOFrhSPhL7JmafLB5b5GyZU5sozDiw2hVC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785167375; c=relaxed/simple;
-	bh=/mWGiKv4o5WsbNp1EvcaSaF/2pobFyqmigN47mq+NEM=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=SrByjDasE6DnMc++amX8goOpfReWJexC0ui/M+1tgP0mW/T0RIBzr01SDDEuvI0IYc4k5RXdgzIiXz0Cutdf6tBP21L9F4hZMjzWJYgUxYByNdZHFaXjf1oMHtNT8HxaIReIV+4YHbadEAIorY5ZnO92zy63mkY2nVqg/xTSWzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=ZsYU5w7M; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1785167447; c=relaxed/simple;
+	bh=Lk/XpKv5ZZhmtce8SV3BnANjnhLu8AuXgzvzd6uLm5A=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZJEKY0mcwS4Wah/47VZbXLjpMpANLNOO18216MPQb5TCfhXODIERM8mRoQHMhd47IAoBySQamUxmr28BaEV5xQAWVjOv+tR6u1DfEQss2LtTERJRN3UYpx+U7ajAJtSx/26A+y1U4U0TNemh10WGaxXyEN9vqpLD2Ms/P0Pl/hY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCrszz01; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="ZsYU5w7M"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=pAsOaMbYD+VLrKmhf9xajBJNx4DVk5XK8SrCLkgsxyc=; b=ZsYU5w7MEJcCZBLtMtpliX1JwA
-	/y8H3I10OsJZWklS/25iu56zAVAZ8t/+TlzVdpnHXVphyuImR1Idx0/8+CTzcBebY62EPLblLBSfz
-	tolaxekj2wdB9OJMK6gyR4PskuKv9cllyHRS9GfwKKEZ7A9W0fnf4UpgnSs3906atM7muZ8njM85i
-	ajLfOJymqCg24FUJdIfr0JWwd18k8h+HPao5khF1R4Yasfv21ZP6rrHxs7ksPkyGvK67DRT6qO12+
-	v98wGAvY0y6GnqR7PTMLlajN6WRLcmEHnA66pt8y4qwllU2Kb5bONRdju7kUIzmDPKunMe9wE62dp
-	0ooG+icg==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1woNa3-0000000GHTa-2lIC;
-	Mon, 27 Jul 2026 09:49:28 -0600
-Message-ID: <ba159aaa-648c-418e-b762-29822aaf12ab@deltatee.com>
-Date: Mon, 27 Jul 2026 09:49:27 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCrszz01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0F921F000E9;
+	Mon, 27 Jul 2026 15:50:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785167443;
+	bh=Lk/XpKv5ZZhmtce8SV3BnANjnhLu8AuXgzvzd6uLm5A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bCrszz01hehT7ZMpNV+bs1+akgNEjSdb84fMMahvWGYQJpP1VrLWBroNlc9K3DpLn
+	 tq6jtGq+SnCpIxROT0nSykpEAGjALSfeNllwdr588MrrP5qu1jNRilzaIFnEYaAdmD
+	 3xGleCoDw6w1mOPLfjZL5B1HJHf4kQVxXqNpe5a2+7FGZeFOrQnZlDSjRHeQvGL+z9
+	 0DLCHUox0BP6RetgpJPz7NCLH/AXg561Z+vQRqsSx+hMGWgnlPSIF+sbuiX5UOA7A3
+	 qrQIv9OtgfTN5jKvfToBXQTvkmHHvMQXT/rwKM9RLgd/hpB0sK6RxupiuG8+Ap0ZP4
+	 3/RQaim7BY91g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 4/6] arm64: dts: qcom: qcs6490-rb3gen2: label BT PMU
+ and M.2 PCI node
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rahul Samana" <rahul.samana@oss.qualcomm.com>
+Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org
+In-Reply-To: <20260727-rb3-industrial-bt-uart-v2-4-2d100f30e202@oss.qualcomm.com>
+References: <20260727-rb3-industrial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com>
+ <20260727-rb3-industrial-bt-uart-v2-4-2d100f30e202@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 15:50:42 +0000
+Message-Id: <20260727155042.B0F921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- stable@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
- Thorsten Leemhuis <regressions@leemhuis.info>, Martin Wilck <mwilck@suse.com>
-References: <20260726113229.2154269-1-mykola@meshstor.io>
- <20260726113229.2154269-13-mykola@meshstor.io>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260726113229.2154269-13-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, stable@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org, regressions@leemhuis.info, mwilck@suse.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v6 12/12] nvme-rdma: factor out the scatterlist DMA
- mapping helper
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+> The reworked RB3 Gen 2 Industrial BT UART overlay needs to disable the
+> on-board WCN6750 PMU and add a graph endpoint to the M.2 PCI node.
+>=20
+> Label the exact WCN6750 PMU node and PCI child node connected to the M.2
+> E-key slot so the overlay can patch them directly instead of using a full
+> path or reconstructing the nested PCI hierarchy.
+>=20
+> Signed-off-by: Rahul Samana <rahul.samana@oss.qualcomm.com>
 
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-On 2026-07-26 05:32, Mykola Marzhan wrote:
-> The data and the metadata mapping do the same thing: describe the
-> segments blk_rq_map_sg() produced in a local sg_table -- the embedded
-> one's orig_nents is the allocated size, not the valid-segment count --
-> map that, and hand back the DMA-mapped count.  Fold both into a
-> helper.
-> 
-> No functional change.
-> 
-> Suggested-by: Logan Gunthorpe <logang@deltatee.com>
-> Assisted-by: Claude:claude-fable-5
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727-rb3-indust=
+rial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com?part=3D4
 
-In the future, it's usually better to do the refactoring commits before
-the commits that change things (as that makes the important commits
-easier to understand). But that is a very minor nit. Thanks!
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
