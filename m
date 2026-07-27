@@ -1,39 +1,39 @@
 Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19EF13DD862;
-	Mon, 27 Jul 2026 13:45:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7157A3FADE5;
+	Mon, 27 Jul 2026 13:46:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785159953; cv=none; b=MO7zoKVlzOvdc2zBLNGKaLPsuJz1YMapHKAn6EucFgaJZU/oJz+OAYpOxs1EgGCZc5vZ04bJvzKmcTyl095czZ1wFdpe7uunFrJaH9J4xTZ+eRw1hoUeQWkVQOxfFDaZ7rdeZQZIzbyNwwSTsCuyOoFNTb68pqMmWz791HhLEy0=
+	t=1785159966; cv=none; b=VV2N+nguONrlH0uvlvLUv0EG9Bc0a0qn8Osk18ubBL2WX3frdx6oHZBhuWhkqywzdxUPea8LEHLEp+ZYNRtTsu9qVenmvHcTK8uaSgNk5Im0eVsFDM4ywatlUZ/bqUI1CXI4Ce7ccoLa4mO7tR4ThSlF3XpxW5iIEhVcYpnARtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785159953; c=relaxed/simple;
-	bh=lc4wjFp4X2pRx1Bs5M25JTo4gybGXMklPVWB33wLOd4=;
+	s=arc-20240116; t=1785159966; c=relaxed/simple;
+	bh=uZR06OsYX7bLFAlwTYUUY5e2nSFlRtrdQ76TYNgR/LM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SVSQtMY+Ngsg3srKSBIAod7Xxvcq6f0fQh0K0p/XPQ6VElgnaqn5Lkj6HgT05vs89J65mkCjU8Ufr8UaRLW/yL2qgCndRXrWT9qo4T3gg5iwvix8SJ6RZH7uF0HQ8aY+3qZXHx8fbxnV0w2ViEHmrFRrFwj7zN0A7YiE0Eu09fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=ZskU12RZ; arc=none smtp.client-ip=150.107.74.76
+	 In-Reply-To:Content-Type; b=klleg3ZW60BNMxQPFmOAJTI2leqEMQaT/+/WUZYwl771i/u6Zc0L00exF8Cv4xOz5W1Yl8gznTGcjLqIRYiDnvAlIpBbFHqn1xXxXgNwW2iVxWO282tzl4M8laKypekXf3PB105481GDXD3W1GSnwTR0fyJouyiwyRRcWZlm860=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=aKBlSe1B; arc=none smtp.client-ip=150.107.74.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="ZskU12RZ"
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="aKBlSe1B"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1785159948;
-	bh=o+iGc+GJCTS1xjP0GrNCd6pv34HypihSysnfdAxKhNg=;
+	s=201707; t=1785159963;
+	bh=DztvKC6RI7e0C3xqh2KV+oSshUYJibZtujJTSmc47ck=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZskU12RZmztuM3w4HPFjDsOXIgsG467DxpkSs7r/EY6Nr4XWq0fx2Q7L6sXkwrPGE
-	 sF3fyUtv2LSqcvURF4oaHy15JtetLolF9cwePpea9AjleUrJlW76pZSpLOIYXA3Sgg
-	 /gVZoPYegEBaNEdpoiU3VZbwagTmWv6jHKsst9cBjqUXttrleZrtn/87gzEYyvK7IA
-	 M1KbthkOGz1dxLXoGfBPHo/vvfdnG1wQzwONNSu1dhGyzrD2HFGIq1JWNZp5e8+E6R
-	 xFvYOgCvF+G3d5gWHyqJFwsAUucLg/PhU5ljNZcVI0FgMtHE3HuFQcDCXpKuQ7geXW
-	 PT/5HM6dcPfLA==
+	b=aKBlSe1Bxj7jRHnppBdIVn1S94JHLAWklNDbJKJqbNhcznvuvyIh61hNLjYHHH1HL
+	 TXsDdRzKR5ocZhjXQ5bEgkvqJVEO1qw0NP1yzFg35S5n48NWnaIZwxYbjIw1HvhFV8
+	 iRCf9TjBanTlueDKuYRGwh30Y6Iudyp7WoJ4Zh9HM1GUx8BXjG++KBt6PKjRywRNH0
+	 C9K3oTmr3nPX08PgCT7WLndFHfvE6vwy7b+Bwt2SlVaLHss28BWvhVikc3v1DaQVa8
+	 eXuUlXHEC+m/3z0nTbCENC97h6mSvzZJdzQ5BW/yjUVSEJwJoTre0B7HDXVd2o+vwH
+	 jvpvGZB1I09hw==
 Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h80Gz0DrZz4w1k;
-	Mon, 27 Jul 2026 23:45:46 +1000 (AEST)
-Message-ID: <fc251875-1604-474e-afaf-b1c8cee04bc8@ozlabs.org>
-Date: Mon, 27 Jul 2026 14:45:44 +0100
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h80HG2jTtz4w1j;
+	Mon, 27 Jul 2026 23:46:02 +1000 (AEST)
+Message-ID: <2b8961fb-efab-4d0d-a577-32ccf87e4a9e@ozlabs.org>
+Date: Mon, 27 Jul 2026 14:45:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,86 +41,103 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 5/9] vfio/pci: Convert BAR mmap() to use a DMABUF
+Subject: Re: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request
 Content-Language: en-GB
 To: sashiko-reviews@lists.linux.dev
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
- kvm@vger.kernel.org
+Cc: kvm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-pci@vger.kernel.org
 References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-6-matt@ozlabs.org>
- <20260715181348.1F7851F000E9@smtp.kernel.org>
+ <20260715174737.15287-10-matt@ozlabs.org>
+ <20260715181131.12E0A1F000E9@smtp.kernel.org>
 From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <20260715181348.1F7851F000E9@smtp.kernel.org>
+In-Reply-To: <20260715181131.12E0A1F000E9@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 Dear robot,
 
-On 15/07/2026 19:13, sashiko-bot@kernel.org wrote:
+On 15/07/2026 19:11, sashiko-bot@kernel.org wrote:
 > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] Math bug in vfio_pci_dma_buf_find_pfn() breaks direct DMABUF mmap() by conflating VFIO and DMABUF VMA coordinate spaces.
+> - [Low] The function `vfio_pci_core_feature_dma_buf_revoke` mixes `goto`-based error handling with scope-based cleanup helpers (`scoped_guard`).
 > --
 > 
-> --- Patch [5]: [PATCH v5 5/9] vfio/pci: Convert BAR mmap() to use a DMABUF ---
-> commit 9a789f4b1551b3573dc4e2e6ba3af07e0aa65ce5
+> --- Patch [9]: [PATCH v5 9/9] vfio/pci: Permanently revoke a DMABUF on request ---
+> commit 668793566cfbdb5cee2b0a69188ebbada38dd4d5
 > Author: Matt Evans <matt@ozlabs.org>
-> vfio/pci: Convert BAR mmap() to use a DMABUF
 > 
-> This commit converts the VFIO device fd fops->mmap to create a DMABUF
-> representing the BAR mapping. The VMA fault handler is updated to look
-> up PFNs from the corresponding DMABUF instead. This is intended to support
-> future code for direct mmap()ing of BAR DMABUFs.
+> vfio/pci: Permanently revoke a DMABUF on request
 > 
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index 3f11a9624b9c0..adce779c722c7 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> This commit expands the VFIO DMABUF revocation state to allow permanent
+> revocation via a new VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE feature request.
+> It refactors the revocation logic into a common function used by both
+> the move path and the new feature request path.
+> 
+>> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> index ccfe861f88b66..36bf07530840d 100644
+>> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
 > [ ... ]
->> @@ -1778,23 +1766,42 @@ static vm_fault_t vfio_pci_mmap_huge_fault(struct vm_fault *vmf,
->>  					   unsigned int order)
->>  {
+>> @@ -671,9 +696,72 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
 > [ ... ]
->> +	scoped_guard(rwsem_read, &vdev->memory_lock) {
->> +		if (!priv->revoked) {
->> +			int pres = vfio_pci_dma_buf_find_pfn(priv, vma,
->> +							     vmf->address,
->> +							     order, &pfn);
+>> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops ||
+>> +	    READ_ONCE(priv->vdev) != vdev) {
+>> +		ret = -ENODEV;
+>> +		goto out_put_buf;
+>> +	}
+>> +
+>> +	scoped_guard(rwsem_write, &vdev->memory_lock) {
 > 
-> [Severity: Medium]
-> Will this actually support direct DMABUF mmap()s as the commit message
-> suggests?
+> [Severity: Low]
+> Is it intentional to mix goto-based error handling and scope-based cleanup
+> helpers in the same function?
+
+Yes.
+
+> The subsystem guidelines for cleanup helpers recommend against mixing goto
+> labels with scoped_guard in the same routine, to avoid confusing ownership
+> semantics and potential resource leaks during future refactoring.
 > 
-> Looking at the math inside vfio_pci_dma_buf_find_pfn():
-> 
-> drivers/vfio/pci/vfio_pci_dmabuf.c:vfio_pci_dma_buf_find_pfn() {
->     ...
-> 	unsigned long vma_off = ((vma->vm_pgoff - priv->vma_pgoff_adjust) <<
-> 				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
->     ...
-> }
-> 
-> If a direct DMABUF mmap has a vma->vm_pgoff of 0, won't 0 - priv->vma_pgoff_adjust
-> underflow and cause the bounds checks to fail?
+> Could the dma_buf_put cleanup at the out_put_buf label be converted to use a
+> scope-based helper, or could the scoped_guard be replaced with traditional
+> locking, to keep the error handling style consistent throughout
+> vfio_pci_core_feature_dma_buf_revoke?
 
-No.
+Those guidelines are good, and exist for clarity.  It's a good idea to
+avoid jumping into or out of scoped_guard blocks.  In the case of this
+function, it is clear what is going on regarding the scoped_guard, and
+the pattern is:
 
-vma_pgoff_adjust is zero unless the DMABUF is constructed for a
-traditional mmap() in which case it equals the vm_pgoff, so this
-expression is always >= 0 (will not underflow).
+- Verify input values; exit if unpalatable, else:
+- Do the scoped_guard block to perform action
 
-> Additionally, inserting the VFIO VMA into the DMABUF's i_mmap tree with a
-> shifted offset seems to conflate coordinate spaces. Could this break future
-> targeted unmap_mapping_range() calls?
+There is, IMO, very low scope for confusion from mixing one goto +
+scoped_guard here.
 
-First, in the case of a VMA from a traditional mmap(), the address_space
-of the DMABUF is unique to that mmap() so there's no mixing-up of
-address semantics.
+(Mixing goto-out and return is worse, and this function is guilty of
+that.  However, converting four if()s to ret = -EFOO; goto out; would
+make the function longer and actually a little harder to read.
 
-Second, yes, future targeted zap will need to comprehend that the BAR
-index might be encoded in the offset.  The vma_pgoff_adjust can be used
-along with a VMA vm_pgoff to figure this out -- but in short there isn't
-an obvious need for this currently and if more metadata would help, it
-can be added when needed.
+IOW I think it's fine as is.
 
 
 Matt
+
+
+> 
+>> +		if (priv->status == VFIO_PCI_DMABUF_PERM_REVOKED) {
+>> +			ret = -EBADFD;
+>> +		} else {
+>> +			vfio_pci_dma_buf_set_status(priv,
+>> +						    VFIO_PCI_DMABUF_PERM_REVOKED);
+>> +			ret = 0;
+>> +		}
+>> +	}
+>> +
+>> +out_put_buf:
+>> +	dma_buf_put(dmabuf);
+>> +
+>> +	return ret;
+>> +}
+>> +#endif /* CONFIG_VFIO_PCI_DMABUF */
+> 
+
