@@ -1,113 +1,104 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27F3F42BEB2;
-	Mon, 27 Jul 2026 17:25:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F81B4248A7
+	for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2026 17:27:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785173133; cv=none; b=hyX3QxWZhoNzlbY6OBX/BnBkOXeVB2iYjeW/hkITP6KzIV2LmfFOLKL5iSxd8L7BZRlRQ1sFybWMr5PGgTj6pSsR3Nr0mZF8+WqZJlJgw6Rap2s+ZtEJK2w1PARQSQWfQLnnwOK42VieYxeEJQjOY9qK1U4NHhGGI12iXrMycew=
+	t=1785173232; cv=none; b=BAGHv/pc8U9vzMQLsZxRrry2tlL1x6CC0zehgAVoHMzx9oVtZhs0IYXn3FlN01HXEBUJN+/m/hqCKpzm4/6PHvFGI9KGBTuIm25lG3sbH/EQ098GaQ+mKDrwury/W3NnHEBN/kJJe6M1YxQT3oV0vy2UijZxGNypCRZwc28xpG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785173133; c=relaxed/simple;
-	bh=xIc7mbEEDl2XzJ10CqzA3H5i8CNoTKHQjJm395IfRYM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p8I6KGoB5gmegwISCmWdsuUofDGEOcmB5aha/NuL/Yl67uiOnS27Lgvxnuotf0d0sVmlJ5zkFD644TExr+5wAFx0OzgwsPC6hZvAhGufl+YHrDczwsIiyOC9pwPNIsq6Ubk6PMCjUnfIyzCmY+4++oSO5M7oHl2Tb1y9tOzKgxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dBphBV0E; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785173232; c=relaxed/simple;
+	bh=awm+cFW2B4qi6iLTFJxIYgM8fBn09LH5Ju/RY0Em85Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fgAQgyefTSTKmOkEmUOWWakKSJO6+WdlALgsVBFzWizurKQhg1gO7MTRlsOrv7rEGze3q1huS8VtVcEUktAXf6mFrvTT2Ij8jyM2t2I+K1nwsGVmATG4tp+FTxNuFa9E1nNvXfIeeya17lReQzzh9ps1VtjHdF+IhmBZFLNUS6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6XITLri; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dBphBV0E"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785173129; x=1816709129;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=xIc7mbEEDl2XzJ10CqzA3H5i8CNoTKHQjJm395IfRYM=;
-  b=dBphBV0E2yiJLzo/btO5CeLY1LvDlGf469nuveMER+6dYuKPvZUiJ5WP
-   CisPAElLJ/uWRHveq7PAbqR/AqVtrWX4CwoKpDI4jFDbrSDryNiS3M71v
-   TlJlAzii201Zwv8ALt6q3I23934I2AHlGgrhJkRXT/ZGoEvhStP+6la69
-   23gTy2rCCD+ZDN/WlvJ2CJiVdI49YE7ot2mJPVnvFjZIKPYbn97RFWlsU
-   hF96N2lRAZcldLiIK4Wj5XEMG9/nlZkzA1VKltW4UTxlrljBN0/cRWcGn
-   lUxxYwsfeKseAfB8iRMgpMJmFF/s8e+f25P2AHbCUxoRocokLtGxvMFy4
-   A==;
-X-CSE-ConnectionGUID: wiZHmS/UR7Om7sqXJiV6zA==
-X-CSE-MsgGUID: qXWKMgpGSICrmgyN2+7pNg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11858"; a="85616619"
-X-IronPort-AV: E=Sophos;i="6.25,188,1779174000"; 
-   d="scan'208";a="85616619"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2026 10:25:24 -0700
-X-CSE-ConnectionGUID: eJcnvQFeQH2jgYbho+PJBA==
-X-CSE-MsgGUID: qV4n0T5IRLyMVSQ2csM7uw==
-X-ExtLoop1: 1
-Received: from sghuge-mobl2.amr.corp.intel.com (HELO [10.125.111.47]) ([10.125.111.47])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2026 10:25:22 -0700
-Message-ID: <ce2fc791-e84b-49e7-8d9b-f864ee82aa25@intel.com>
-Date: Mon, 27 Jul 2026 10:25:21 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6XITLri"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 189491F000E9;
+	Mon, 27 Jul 2026 17:27:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785173226;
+	bh=QbSmGlcEm+NM7m1xux9Dxpe77Mfj1kdUbl9HaEscqPc=;
+	h=From:To:Cc:Subject:Date;
+	b=c6XITLriTwJ99KZZyuiBSo+OQmzPWz3e4SykBDe1qn9dxvG9s+5DYPfSLw1Xs+ZrX
+	 KbXEaU+cxCVDrNe8DzirbaJZXD7cXHTNNR7QcwtjVG+QU82m7ZaFUEofVl+v3iFd7a
+	 IHiJzARV0zwjfU+zXsU/T77Qa7PgLABzxegw39ubqzN5dd1ruai9vSQ9AzgZHXv7WH
+	 tCIVYEGbPbEMfjMiNTsQkKzaPOCy7bfYoA388GnnANbkPioV0bcGGwq3tHKwE79qtV
+	 vcbro9WMKE+g6Al+IVDhluNU9/jqG3z+sFKbwo3TZrPtpGVagkBhaDUUJVXtG3DoFU
+	 mVRE6kQXfdBBg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/1] PCI: dw-rockchip: Add support to reset Root Port upon link down event
+Date: Mon, 27 Jul 2026 19:26:55 +0200
+Message-ID: <20260727172654.605988-3-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 7/9] ACPI: nfit: core: drop unused assignment of
- acpi_device_id::driver_data
-To: "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Zhang Rui <rui.zhang@intel.com>,
- Kai-Heng Feng <kaihengf@nvidia.com>, Tony Luck <tony.luck@intel.com>,
- Borislav Petkov <bp@alien8.de>, Hanjun Guo <guohanjun@huawei.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Sudeep Holla <sudeep.holla@kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
- Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
- Alison Schofield <alison.schofield@intel.com>, Ira Weiny <iweiny@kernel.org>
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- nvdimm@lists.linux.dev
-References: <20260727-acpi-refactor-v1-0-ff900aa326ee@thegoodpenguin.co.uk>
- <20260727-acpi-refactor-v1-7-ff900aa326ee@thegoodpenguin.co.uk>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260727-acpi-refactor-v1-7-ff900aa326ee@thegoodpenguin.co.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1897; i=cassel@kernel.org; h=from:subject; bh=awm+cFW2B4qi6iLTFJxIYgM8fBn09LH5Ju/RY0Em85Y=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLSp9wLS5O2qthq3SQkuGyPQXRI6ExB3kOKTjPiN952Z D6dpKTUUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIkY9jL8r37O56v5gNElMy0z YHvr6aNb55e4fL1SY7svf1FOXeXcFkaGh0dXehUJK80NFr8454Iwl9yUk8/8rXIuvNHveDQ1af4 CbgA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
+
+Hello all,
+
+This depends on Mani's v8 series with adds a reset_root_port() callback:
+https://lore.kernel.org/linux-pci/20260518-pci-port-reset-v8-0-eb5a7d331dfc@oss.qualcomm.com/
+
+Tested by using two Rock 5B boards and simulating a link down by doing:
+echo 0 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start && \
+sleep 0.1 && echo 1 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start
+on the board running in EP mode.
+
+We can see the root port being recovered on the host side after the link down:
+pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+rockchip-dw-pcie a40000000.pcie: PCIe Gen.3 x4 link up
+pcieport 0000:00:00.0: Root Port has been reset
+pcieport 0000:00:00.0: AER: device recovery successful
+
+
+Both before and after the link down, we get 19 / 23 tests passed when running
+the pci_endpoint selftest.
+
+Without this patch, after the link down, all BAR tests and MSI/MSI-X tests fail.
 
 
 
-On 7/27/26 5:10 AM, Pawel Zalewski (The Capable Hub) wrote:
-> This module sets the acpi_device_id::driver_data to 0 but
-> the field is not actually used within the module, we can
-> just drop it from the table.
-> 
-> While we are at it - used a named initializer for the
-> acpi_device_id::id field to increase readability and
-> drop explicitly setting the list terminator fields.
-> 
-> Signed-off-by: Pawel Zalewski (The Capable Hub) <pzalewski@thegoodpenguin.co.uk>
+(Side node: When testing this patch on top of Mani's v7 series, MSI/MSI-X
+tests still failed. Nice to see that this is no longer the case when testing
+on top of v8. I did not do a deep dive to figure out exactly which change
+between v7 and v8 that made all tests pass. It is obviously not:
+[PATCH v8 1/5] PCI: dwc: ep: Clear MSI iATU mapping in dw_pcie_ep_cleanup()
+as pcie-dw-rockchip.c never calls this function.
+Thus, it must be some of the other changes between v7 and v8, or some change
+in PCI core which now saves the config space during enumeration, which made
+MSI/MSI-X work after a link down.)
 
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-> ---
->  drivers/acpi/nfit/core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
-> index cb771d9cadb2..5732df5d53f0 100644
-> --- a/drivers/acpi/nfit/core.c
-> +++ b/drivers/acpi/nfit/core.c
-> @@ -3515,8 +3515,8 @@ void __acpi_nfit_notify(struct device *dev, acpi_handle handle, u32 event)
->  EXPORT_SYMBOL_GPL(__acpi_nfit_notify);
->  
->  static const struct acpi_device_id acpi_nfit_ids[] = {
-> -	{ "ACPI0012", 0 },
-> -	{ "", 0 },
-> +	{ .id = "ACPI0012" },
-> +	{ }
->  };
->  MODULE_DEVICE_TABLE(acpi, acpi_nfit_ids);
->  
-> 
+Kind regards,
+Niklas
+
+
+Wilfred Mallawa (1):
+  PCI: dw-rockchip: Add support to reset Root Port upon link down event
+
+ drivers/pci/controller/dwc/Kconfig            |   1 +
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 134 +++++++++++++++++-
+ 2 files changed, 132 insertions(+), 3 deletions(-)
+
+-- 
+2.55.0
 
