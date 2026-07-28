@@ -1,369 +1,251 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010046.outbound.protection.outlook.com [52.101.56.46])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE543DA7D0
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 08:20:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785226828; cv=fail; b=L6G1+pwSLHzKOAUl17aVs2se01Nne0fbG3jD/y8sClPsfRmTsj/OVmp6oXqEdf3sdjlGDRK5vMr246Vdl1yt2NuNLHFhIIjGlaF4VAt1QQWkzJhwbOpfdaxM2WR9XPLiPJQUPG4KtKfm4l1VZjIat5tOzHfIDBldEaEn7kqpTb8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785226828; c=relaxed/simple;
-	bh=7MB4l3nyEZd0KzotQfsMqGuyhUvqJSmlbQQt322B5x4=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=cGY43vFYmfUZQkYyKHLUYtxNqjCv5GreYlm8d7HmBMz0pUAFCFJ0TkglodVTrvvRel2KG6KVl5+ncXA5FVloCuR5MWZaRRGr1P40fITnYjyBXymXljtvTIsvXzcXZa3gc7lb5qXCfx4daeumjtXtS1t82+P7bRQ3wsgGdE5T2mk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=y0hdIBox; arc=fail smtp.client-ip=52.101.56.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DE03FC5AA
+	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 08:39:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785227959; cv=none; b=PRexQ00HjTlsDuxzOIYrIo9WXaShOETGz4URg+dnpluQYhZWcl2MYRWilVXMEJ+NILy0Z7m8g/vp9+HQQnXxfwx0PLPx/UkyY0TXDLd8qYoGquEn0mCg00N2JWfMzLPebQTx09JrnX5bOUO8IWvrJHoFB0ednkjgILdYUzqPa4E=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785227959; c=relaxed/simple;
+	bh=CRg/Nh54HZ99tMwpElMnVNEMdGg+zKH3+U7LRFD/tYE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bqBHKO1dwoD2r2Oj8kVI02H1qOFidffjnjySXDiMMsdD5QV5ms+VR//BLDBqO/SY2yCjiDzeMud/EbVBkb/JFhn10M1Iy+P2pD0DlyHIloZZ6WtKGFRPQDVZZLPiwuwB1AVBhI3O5vezQy5okTe+dV0PWlV4Z9BMHmOkvuAVWl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=D+tASYGg; arc=none smtp.client-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="y0hdIBox"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ubBsP0YVjyo8ys/Y6LwA9jwIp+wqiEYsLxWPVZqkaLtzSqBIsQ86QiiNPFaHHquzVixdOhzL6CkDaJI6Exw7qZDgeRcJ8Y+qbaEbovboqMVAQF+ENwDghAXdx7GPXkx9e76j+HD2dOngeopLO/jgQU5rHmJEZfwBSkx2UTv+vrRxFSC5uXUebHjZmZvvitJyqHbPCvFBqjwMicf97GFybPHxWoHSLQZH8fiQh2PG8MAcBbh7MbnCp4uXI8KCBWXAyPLUmjVH85dOecbGN8cewU5jw+cgUOcqk7bzmCHlAaQTk1jmfSoKYPdWj64rofEqVCW3PrS+Q0UiIm8TGZELmw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0p2BSGwdWt7Zl1ZPHFIPzqHkGjOIkReXdDiLxAFqc/A=;
- b=T3UDjKogzgjaKUfIBWVi6OoiSwxkV9s+UBEQaFkTZ38L1AANSSVlDrdJfVSIny054ND4diUi24NRtNQ0oF0HD7b6KcQtQ+inTx8yimFPpdw+JLxBzMydplYJGq2fBDDNtO41l4iK/z5aBq/A+YnrXSNWp+mgVfjOP14cNgax91FyJyfk4FzMxAUS5oDCJDxCTq0Fvn907IqrpKEokJe8IHjSoWRsrbUF+Sd7jxarKYvffTiAt965GjRhkd1O7O8ZyS/vVrL9WL06IXAOJ551ETKYSjjuhNXpR7jLjY5P52KZpoJ0kKvqqIwcc5Uk49Jv2D7CM+0Wj0x2FXx/ZKGu2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0p2BSGwdWt7Zl1ZPHFIPzqHkGjOIkReXdDiLxAFqc/A=;
- b=y0hdIBox7KI98NRX8EEwXtYzXTV2W0HkyZx1jhDEPCbTB1E3i/GVOQfsLme/Ns7yciCeaqrR7ssFpRQ/qqqFA1pxijvX5ww9OkViYEORKvsed4kWltpeW5YNztPHlKAxWAw4ruuoCMBdSb9Vy5V/iY1vD0G9ROdebcsiy8bY7AY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by MW4PR12MB7119.namprd12.prod.outlook.com
- (2603:10b6:303:220::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Tue, 28 Jul
- 2026 08:20:20 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%5]) with mapi id 15.21.0245.012; Tue, 28 Jul 2026
- 08:20:20 +0000
-Message-ID: <4c43da3e-c598-48cf-8491-cb958e574c9c@amd.com>
-Date: Tue, 28 Jul 2026 18:20:10 +1000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/15] Device Evidence and Trust for PCI Security Protocol
- (TDISP)
-To: linux-coco@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
- ankita@nvidia.com, Aaron Tomlin <atomlin@atomlin.com>,
- Alistair Francis <alistair.francis@wdc.com>,
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Bjorn Helgaas <bhelgaas@google.com>, Daniel Gomez <da.gomez@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Dexuan Cui <decui@microsoft.com>,
- Donald Hunter <donald.hunter@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Jakub Kicinski <kuba@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Luis Chamberlain <mcgrof@kernel.org>, Lukas Wunner <lukas@wunner.de>,
- Petr Pavlu <petr.pavlu@suse.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, Sami Tolvanen
- <samitolvanen@google.com>, Samuel Ortiz <sameo@rivosinc.com>,
- Saravana Kannan <saravanak@google.com>, Will Deacon <will@kernel.org>,
- Xu Yilun <yilun.xu@linux.intel.com>,
- "Fontenot, Nathan" <Nathan.Fontenot@amd.com>
-References: <20260705220819.2472765-1-djbw@kernel.org>
-Content-Language: en-US
-From: Alexey Kardashevskiy <aik@amd.com>
-In-Reply-To: <20260705220819.2472765-1-djbw@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5P300CA0070.AUSP300.PROD.OUTLOOK.COM
- (2603:10c6:10:247::26) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="D+tASYGg"
+Message-ID: <a9dde63a-5f2d-494b-95dd-7567879de38d@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785227954;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QbXjOIDNQAqLnMcNmNhhIkcZFnXKaj7v9jSB+IKjoGY=;
+	b=D+tASYGgBFHhUl7vxy1SvTJuUlL1fyINBlClOvQ9K4T3edtuSqXNpaYIxcusYBqtHtCGKn
+	4YFV+wfUruytiAPKlK/iMkIxiHxJeSoVj5BDR22K0phFcndN0nozhMJatVZeJF2M3nsdd0
+	JVFwwEIRGf5pB3U4V6tfCHcV69RCL/I=
+Date: Tue, 28 Jul 2026 16:38:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|MW4PR12MB7119:EE_
-X-MS-Office365-Filtering-Correlation-Id: 14f8651d-8b30-4c1f-f963-08deec81103a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|23010399003|1800799024|6133799003|22082099003|18002099003|56012099006|11063799006|10067099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	9fOvnecW5AseyMWTNtuVo5h66uKnG1KvIkeZY42ztkVNwEPojcWNMZMGrOchS8SSM7AE9dInu3ptyBprjRhm2TU95mqX8KI0ZHAcFM3NX3Ny1Go0k73clw7jvKNDk5LGq/z7Lx/ix8hZLXHwbsLp2IySKqsiEh+Aojho8I5fzyJfAD3WAG6afKmy98eK2Wa3WlvOxeB5TMfh/kiOFuD7Es/QU+JaiajMf/Txo+AjoV+C1GnKr6gVw1Rx+Hk+Qp7OPEk79nDotkno+k732q/Co5k++YEvbhwkDpi1PD19E9R3hfdafg1GFTIwgd41O1u0xuQ2rKT9hFbO4zxZYGvW14pAmEBUPk2c8+kXiuCWpMlnaSXx0+FD4oMy/P4JhXXTFKEd6N1IUjq1squyIyVBS6xqjlnbJewBmcjfIvLPySyVXd/XL0MZrH7hWvK4MgZY8DcQqqNUHbU+pcH5/6gu6DcC/usMr+AlGLwu638sms18CVEEQmeaJjs/lO/W3FVtfwge9vSH2KtqxuHw5CnIz0UkictvLCF1nmNUjD6cTGvaDx4GDVqBVDy3OLkRHf02JZAZL5N4j7mNW1QSzOmVxx7oxLKVvW8sMa76qFe0T9HYa+u2xnV6tquLz3GquxjuySg7w5cDu07G6vr/NlQleFKfz9WII+mKsz5xGVmG3PI=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(23010399003)(1800799024)(6133799003)(22082099003)(18002099003)(56012099006)(11063799006)(10067099003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZFFHNkJDK0tJTzhzOUxoelhRcEhZS3NHUUNzNklsZWFBcUJyR2R0aXdheXp1?=
- =?utf-8?B?b3hvMWtzWEgzdEJwd0lzVzRWTzlzYzBDL3NsY2dSa3VnS1k3UU9jeUJIb3hJ?=
- =?utf-8?B?ams5Y0plSldydllkYW9MODllYlRUMnQzTllHRk90aDQwbGtxUEtVQ3BkYXgv?=
- =?utf-8?B?RlNmaWpYQUhnS3B5RC9ERldLQjBUdFc3a0pyb2l2RG1PZlJGLyt1bFIvQWtm?=
- =?utf-8?B?MXJVYUZiUThVeklQYXNYMUhyS2FDSU83andkOGlyMUM5bHVHOGpTS0VXNXRH?=
- =?utf-8?B?R3FWYXQ2VnlUYWxacndreE9Jc2JwZVFsejBGM0xaWTJwSGN4Q2xIOWNlMnhG?=
- =?utf-8?B?MVdsYU9DU2V6ajlWZkNmOStCZVdsYzBwNFU1LzhwUkt4eVljZlVvY2pLM0Fx?=
- =?utf-8?B?NjFvRzE3Q21Ya3dVcGRTcEIwdnZyY2MxNG4wdkFWT25XR1hrMUhSSXNpczhv?=
- =?utf-8?B?ZmFkeStJWnJQblpSVWtWWmxobGMvWVpqYWJQTmVXSVlqa0ErS2ZZSWVid0lE?=
- =?utf-8?B?Q1haOU9PbGR1RkRUYWh4WjdIeklnT0NHeVhHVm5URk9BbkVhOXBkMkNrWTBH?=
- =?utf-8?B?RGJGV2o4Z1B0T3JFM0pkVW9sQSt0b3IvbDF0SnNMVDBzOVNTcEFmeHNPV2NV?=
- =?utf-8?B?QWQ5WDdETWlBcXNiVEdkWkR3RnQySTc5SlNEeFIra29HbTR6c2lZTzcyOVJs?=
- =?utf-8?B?eHZlYzRRRWxqa2NRWlRwYzFoNHNyTmxwblI4QkxsbzYraURlQnhJRHIydG1H?=
- =?utf-8?B?V2k0aHU5MlhwTHhDcE16NWRWVXk0T0FqK2xjVlRLTjdlUk1nMnlqL01yelVX?=
- =?utf-8?B?bXRTN3RXN09EVEswc2dkc0tOZWRwNGxXSis1OGtlRVlUOTdCVFRMZFUrV3Zv?=
- =?utf-8?B?bzdjZWdVTm5GOGdFL3Jzd0FOZC91WTFSY0I0MW5aOHhwL0U4cXErYTBXd1pD?=
- =?utf-8?B?U0tlVXFTL1Zsa0JqVUxIcEdTV0UrZ0oyUGFLT1ZEa1JlS2J6RVBRRHZiU1pt?=
- =?utf-8?B?cmNVNXBKbUM5SXFUV2hHZWJYL3dGVGFleThNdHJsdmJsakRtVXlUMnQvMVY5?=
- =?utf-8?B?aEovSlpXd0tybG9wS21aQkJ0MUZLR2NsYkNtTjhoS2JSSnVYcjFXMzdjb1FI?=
- =?utf-8?B?SFNtbE9JdWR4QnFVakhsYVIwSWo3UHBEclV5ZzI3S0ovaWpVc0x5YmFkRTNu?=
- =?utf-8?B?MmR5MXJ0QVJQbjlvVlI1eTFmYTg0eUdYMkIrSFcwU0RQTVd3RWtNUzA1TUxa?=
- =?utf-8?B?SnNlWS9NNGlUNHphdVR5U2pDZ0g5ZHUwWXpKZGlGbEZLNFQ3UkkvTjg0WmRF?=
- =?utf-8?B?aDFJbExzb2xVb2NXZVVXUnRUOCs1M2czYUN1dTBxNjZnTzR0SnE2eWgzc2N0?=
- =?utf-8?B?S3JYK05HS2FKLy9HRjJjdG5FUHVDMCswOHNIVlZmdjcxMDJkd0lka3p1VHlB?=
- =?utf-8?B?ZWppMmthWE93WHFRdzl5RC9iSnd4RSs5L20rRGw2T2pWc0FQMGNDQWhaM0VK?=
- =?utf-8?B?NEhKZDlzYXU4RXRjd1RKTmg4VGYwVTVKaTlmdzVaekd6T1VpMVJlWm5sNzhn?=
- =?utf-8?B?UWJXL3lpQnE1VmVkUmZyU21QdHNEUUtkNDh0TVVUaXE1Q1A3NHhYaTMxQnVR?=
- =?utf-8?B?TlI2MlBQNTlTbi9LaE5laGU1N084d2twOVdNTWhUalRuQUE3bzA4K1lqMytO?=
- =?utf-8?B?Zkh3NUlxV3BRM3QrNWo4ejd6dnA5UTdTNHFqSUtNbEx5dVc0SjZNOU9ZOVg0?=
- =?utf-8?B?QW5VZUVDbjhTeGV1UkZ3N09JS3AwWXZQaUNwb1lKK09ld1VwY2R1SEl2eE1Z?=
- =?utf-8?B?SlQ3YktVY3gwU2hJWGs2V1AvRm9od1RpL2RCeGp6VmIyK1hnMTdCdUNGVWVK?=
- =?utf-8?B?OHRRbmdVUXRzcjdSMUJVMzhzbWZNWkgrbkdDa0xSd081b096dnd5Y1hRYVNr?=
- =?utf-8?B?Uk1GZWtHNDZSbG9YTzZCM3Q3L2VlL2tESm9STTF2QVRIbTdDckgybmpUQ2w0?=
- =?utf-8?B?OS9rdk4vMS9iQWF5TzI5a3VDQkgzZFpnQzM5V1I4dSs0MkdmZWw3UjJHTzBl?=
- =?utf-8?B?elRUcnR2MW81bG9FVkVGTUprUGNORkhOREVUK2g3UlV6cjdRREdqQjNDYkIr?=
- =?utf-8?B?R0dQZzRwRzFaV0VVVHNhd3F1VSsram5PMVNpbW9pWkw1L2xvY1IvTnh0VTFK?=
- =?utf-8?B?TEFJQVdWQXE2MlJhWmtjelBvb2FrTmFjMWwzYUZZWHcxK2xLd05oM0tCVXpo?=
- =?utf-8?B?L0dkTiszUUtHWnVFYjRoWDBjL1NkNzVCRXRjS0pabDJYb2NwUVhSWlkwaWo5?=
- =?utf-8?B?eUFRUFZ2U0tYYkFUMElzb2NQeXdMaDlVYUdsUUMrejVIQ3FUM0o3UT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 14f8651d-8b30-4c1f-f963-08deec81103a
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2026 08:20:20.2764
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SMz/ixHFdHXR4/OkIoUooBaVuVW8VlnNo2LWVvzekVw0P5ZXFLNYh7+inq7ohbD6gxRQA+kXvrI9UMdRRqXDWQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7119
+Subject: Re: [PATCH v9 00/10] Fix missing fops.owner in Rust DRM/misc
+ abstractions
+To: Miguel Ojeda <ojeda@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-modules@vger.kernel.org,
+ driver-core@lists.linux.dev, dri-devel@lists.freedesktop.org,
+ nova-gpu@lists.linux.dev, linux-kselftest@vger.kernel.org,
+ kunit-dev@googlegroups.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org, Boqun Feng <boqun@kernel.org>,
+ Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
+ Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
+ Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>,
+ Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>,
+ Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>,
+ Aaron Tomlin <atomlin@atomlin.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Daniel Almeida <daniel.almeida@collabora.com>, Arnd Bergmann
+ <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>,
+ David Gow <david@davidgow.net>, Rae Moar <raemoar63@gmail.com>,
+ Breno Leitao <leitao@debian.org>, Jens Axboe <axboe@kernel.dk>,
+ Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>,
+ Igor Korotin <igor.korotin@linux.dev>,
+ FUJITA Tomonori <fujita.tomonori@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ =?UTF-8?Q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>,
+ Todd Kjos <tkjos@android.com>, Christian Brauner <brauner@kernel.org>,
+ Carlos Llamas <cmllamas@google.com>
+References: <20260723-fix-fops-owner-v9-0-c1c3af7f7bcb@linux.dev>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Alvin Sun <alvin.sun@linux.dev>
+In-Reply-To: <20260723-fix-fops-owner-v9-0-c1c3af7f7bcb@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On 6/7/26 08:08, Dan Williams wrote:
-> Major changes since: "[PATCH v2 00/19] PCI/TSM: TEE I/O infrastructure" [1]
+Hi Miguel,
 
-soo with the recent sudden sad news about Dan, I do not know where to start really so I just start...
+Back in v3, Gary suggested this series go via the rust tree.
+Would you be happy with that, or would you prefer a different
+path? If so, is there anything else needed from my side?
 
-Here is his unfinished work which I'd really like to see finished to progress with the phase2 of the plan. How do we proceed from now on?
+Best regards,
+Alvin
 
-The direction appears to be set, imho the immediate TODO list is:
-- address "not-netlink-y enough" concerns
-- teach pci_iomap() to map mixed private+shared BARs (ones which contain MSIX for the starter)
-- always call pci_tsm_ops::enable_dma/disable_dma
-- ditch the module trust parameter?
-- add a knob to enable/disable DMA and keep TDI in RUN
-
-Any volunteers? Yilun, Aneesh, Jason?
-
-Which maintainer's tree is this going to go to?
-
-I am happy to amend the patches for the time being, and do the testing on my HW, and posting.
-
-And we are going to continue running the bi-weekly TSM+IOMMUFD community call (Thursday evening in the USA) so we can talk this through then, the next one on August 6th:
-
-https://zoom-lfx.platform.linuxfoundation.org/meeting/93219227394?password=80705486-101a-4e19-8f11-0baaf92104be
-
-Thanks,
-
-
-
-
-> - Implement a new netlink schema for dumping large SPDM blobs (Jakub,
->    Lukas)
-> - Introduce a device core implementation for evidence gathering given
->    SPDM is applicable to devices outside of PCI (Lukas)
-> - Replace the "CC acceptance" mechanism with "Device Trust" (Greg,
->    Jason)
-> - Fix TDISP report parsing to use bytes instead of pfns for the start
->    value of an MMIO report (PCI spec clarification)
-> - Support the CCA expectation that MMIO reports are BAR aligned (Aneesh)
-> 
-> [1]: http://lore.kernel.org/20260303000207.1836586-1-dan.j.williams@intel.com
-> 
-> [ Note, this series is back to a v1 posting given the new theme of
->    "Evidence and Trust". It defers some of the lower level details, like
->    touching arch-level ioremap implementations to consult encrypted_iomem,
->    until the higher order details are settled ].
-> 
+On 7/23/26 10:10, Alvin Sun wrote:
+> During tyr debugfs development, a kernel NULL pointer dereference was
+> encountered after `rmmod tyr` while gnome-shell still held /dev/card1 open:
+>
+> ```
+>    [158827.868132] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+>    [158827.868918] Mem abort info:
+>    [158827.869177]   ESR = 0x0000000086000004
+>    [158827.869519]   EC = 0x21: IABT (current EL), IL = 32 bits
+>    [158827.870000]   SET = 0, FnV = 0
+>    [158827.870281]   EA = 0, S1PTW = 0
+>    [158827.870571]   FSC = 0x04: level 0 translation fault
+>    [158827.871043] user pgtable: 4k pages, 48-bit VAs, pgdp=0000000108dec000
+>    [158827.871623] [0000000000000000] pgd=0000000000000000, p4d=0000000000000000
+>    [158827.872242] Internal error: Oops: 0000000086000004 [#1]  SMP
+>    [158827.872246] Modules linked in: tyr sunrpc snd_soc_simple_card rk805_pwrkey snd_soc_simple_card_utils rtw88_8822bu display_connector rtw88_usb rtw88_8822b snd_soc_rockchip_i2s_tdm snd_soc_hdmi_codec
+>    rtw88_core]
+>    [158827.872337] CPU: 4 UID: 1000 PID: 11276 Comm: gnome-s:disk$0 Tainted: G                 N  7.1.0-rc1+ #331 PREEMPT
+>    [158827.880534] Tainted: [N]=TEST
+>    [158827.880535] Hardware name: FriendlyElec NanoPi R6C/NanoPi R6C, BIOS v1.1 04/09/2025
+>    [158827.880538] pstate: 60400009 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+>    [158827.880542] pc : 0x0
+>    [158827.880547] lr : _RNvNtCs257m05FHVbX_3tyr2vm8pt_unmap+0x8c/0x12c [tyr]
+>    [158827.880578] sp : ffff800083c236b0
+>    [158827.880579] x29: ffff800083c236d0 x28: ffff00013f8a0000 x27: 0000000000000000
+>    [158827.880585] x26: 000000000000007c x25: ffff000108e6ed80 x24: 0000000000401000
+>    [158827.880590] x23: 0000000000000000 x22: 0000000040000000 x21: 0000000000001000
+>    [158827.880595] x20: ffff00010f778138 x19: 0000000000400000 x18: 00000000ffffffff
+>    [158827.880600] x17: 000000040044ffff x16: 045000f2b5503510 x15: 0720072007200720
+>    [158827.880606] x14: 0720072007200720 x13: 0000000000401000 x12: 0000000000400000
+>    [158827.880611] x11: ffff800083c239d0 x10: ffff000141e4fd88 x9 : 0000000000000000
+>    [158827.880615] x8 : 0000000000000000 x7 : 0000000000000000 x6 : 0000000000400000
+>    [158827.880620] x5 : ffff00013f8a0000 x4 : 0000000000000000 x3 : 0000000000000001
+>    [158827.880625] x2 : 0000000000001000 x1 : 0000000000400000 x0 : ffff00010f778138
+>    [158827.880630] Call trace:
+>    [158827.880632]  0x0 (P)
+>    [158827.880635]  _RNvXs6_NtCs257m05FHVbX_3tyr2vmNtB5_9GpuVmDataNtNtNtCsgmSOfgXi5CZ_6kernel3drm5gpuvm11DriverGpuVm13sm_step_unmap+0x3c/0x120 [tyr]
+>    [158827.891166]  _RNvMs4_NtNtNtCsgmSOfgXi5CZ_6kernel3drm5gpuvm6sm_opsINtB7_5GpuVmNtNtCs257m05FHVbX_3tyr2vm9GpuVmDataE13sm_step_unmapB13_+0x18/0x34 [tyr]
+>    [158827.891187]  op_unmap_cb+0x78/0xb0
+>    [158827.891196]  __drm_gpuvm_sm_unmap+0x18c/0x1b4
+>    [158827.891204]  drm_gpuvm_sm_unmap+0x38/0x4c
+>    [158827.891209]  _RNvMs5_NtCs257m05FHVbX_3tyr2vmNtB5_2Vm7exec_op+0x1cc/0x254 [tyr]
+>    [158827.894085]  _RNvMs5_NtCs257m05FHVbX_3tyr2vmNtB5_2Vm11unmap_range+0x124/0x188 [tyr]
+>    [158827.894105]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeNtNtCs257m05FHVbX_3tyr3gem8KernelBoEBK_+0x44/0xd8 [tyr]
+>    [158827.894125]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeINtNtNtCsgmSOfgXi5CZ_6kernel5alloc4kvec3VecNtNtCs257m05FHVbX_3tyr2fw7SectionNtNtBL_9allocator7KmallocEEB1r_+0x3c/0x100 [tyr]
+>    [158827.894147]  _RINvNtCs5hGKnPbRUFW_4core3ptr13drop_in_placeINtNtNtCsgmSOfgXi5CZ_6kernel4sync3arc3ArcNtNtCs257m05FHVbX_3tyr2fw8FirmwareEEB1p_+0x94/0x190 [tyr]
+>    [158827.894167]  _RNvMs4_NtNtCsgmSOfgXi5CZ_6kernel3drm6deviceINtB5_6DeviceNtNtCs257m05FHVbX_3tyr6driver12TyrDrmDriverE7releaseBW_+0x30/0x98 [tyr]
+>    [158827.899550]  drm_dev_put.part.0+0x88/0xc0
+>    [158827.899557]  drm_minor_release+0x18/0x28
+>    [158827.899562]  drm_release+0x144/0x170
+>    [158827.899567]  __fput+0xe4/0x30c
+>    [158827.899573]  ____fput+0x14/0x20
+>    [158827.899579]  task_work_run+0x7c/0xe8
+>    [158827.899586]  do_exit+0x2a8/0xac4
+>    [158827.899590]  do_group_exit+0x34/0x90
+>    [158827.899594]  get_signal+0xaac/0xabc
+>    [158827.899599]  arch_do_signal_or_restart+0x90/0x3e8
+>    [158827.899606]  exit_to_user_mode_loop+0x140/0x1d0
+>    [158827.899613]  el0_svc+0x2f4/0x2f8
+>    [158827.899620]  el0t_64_sync_handler+0xa0/0xe4
+>    [158827.899627]  el0t_64_sync+0x198/0x19c
+>    [158827.899632] ---[ end trace 0000000000000000 ]---
+> ```
+>
+> The root cause: `fops.owner` was `NULL` in Rust DRM drivers, so the kernel
+> never blocked module unloading while file descriptors were open. This leads to
+> use-after-free when drm_release (or other fops) is called on freed module code.
+>
+> The series moves `THIS_MODULE` into the `ModuleMetadata` as a const, threads it
+> through `#[vtable]` to set `fops.owner` in DRM/miscdevice, and updates configfs
+> and rnull to use `this_module::<LocalModule>()`.
+>
+> Assisted-by: opencode:glm-5.2
+> Signed-off-by: Alvin Sun <alvin.sun@linux.dev>
 > ---
-> Summary:
-> A threat model wants to arrange for devices to not be operated until
-> they present evidence. Add device evidence gathering, device trust
-> levels, and hook those up for the PCI/TSM (PCI device security protocol)
-> implementation.
+> Changes in v9:
+> - Rename the binder commit prefix from `rust: binder:` to `rust_binder:`
+>    to match the in-tree module name.
+> - Link to v8: https://lore.kernel.org/r/20260713-fix-fops-owner-v8-0-2495cfa82d47@linux.dev
+>
+> Changes in v8:
+> - Remove unused `crate::LocalModule` import in rnull configfs.
+> - Link to v7: https://lore.kernel.org/r/20260627-fix-fops-owner-v7-0-33cd3990edf0@linux.dev
+>
+> Changes in v7:
+> - Use `crate::LocalModule` in `configfs_attrs!` and silence `clippy::crate_in_macro_def`, per Gary's review.
+> - Link to v6: https://lore.kernel.org/r/20260624-fix-fops-owner-v6-0-5295e333cb3e@linux.dev
+>
+> Changes in v6:
+> - Update MAINTAINERS to cover the new `rust/kernel/module.rs`.
+> - Link to v5: https://lore.kernel.org/r/20260624-fix-fops-owner-v5-0-aa1cba242f05@linux.dev
+>
+> Changes in v5:
+> - Add `#[inline]` to the `this_module()` helper.
+> - Fix configfs doc comment to reference `crate::LocalModule` instead of
+>    bare `LocalModule`.
+> - Link to v4: https://lore.kernel.org/r/20260623-fix-fops-owner-v4-0-0daf5f077d5c@linux.dev
+>
+> Changes in v4:
+> - Move module-related types into a new `rust/kernel/module.rs`.
+> - Migrate binder from the `module!`-generated `THIS_MODULE` static to
+>    `this_module::<LocalModule>()`.
+> - Reorganise the series so that every commit builds independently, and
+>    drop the legacy `THIS_MODULE` static once all users are migrated.
+> - Link to v3: https://lore.kernel.org/r/20260622-fix-fops-owner-v3-0-49d45cb37032@linux.dev
+>
+> Changes in v3:
+> - Renamed vtable associated type `ThisModule` to `OwnerModule`
+> - Added `this_module()` helper for ergonomic `THIS_MODULE` access
+> - Refined vtable macro implementation: one-liner detection and single `defined_items` set
+> - Reordered commits to place doctest fallback before vtable auto-insert
+> - Link to v2: https://lore.kernel.org/r/20260521-fix-fops-owner-v2-0-fd99079c5a04@linux.dev
+>
+> Changes in v2:
+> - Merged old `static THIS_MODULE` and v1's `MODULE_PTR` into a single
+>    `ModuleMetadata::THIS_MODULE` const
+> - `#[vtable]` macro now auto-inserts `type ThisModule`, removing all per-driver
+>    manual patches from v1
+> - Added configfs & rnull usage site updates and doctest `LocalModule` fallback
+> - Link to v1: https://lore.kernel.org/r/20260519-fix-fops-owner-v1-0-2ded9830da14@linux.dev
+>
 > ---
-> 
-> Confidential Computing and other use cases specify a threat model where
-> devices are potentially adversarial. To date the device core trusts
-> devices and their drivers, and only specific buses have local
-> "adversary" device mitigations. The task is define a general trust
-> concept to up-level existing trust mitigations, and allow for
-> incremental tightening of mitigations across bus types and IOMMU
-> drivers.
-> 
-> Goals:
-> * Create a mechanism for booting with a limited set
->    devices + drivers and permit selectively enabling more devices +
->    drivers at runtime.
-> * Up-level bus specific trust mitigations like PCI
->    untrusted to a core concept.
-> * Let buses coordinate entry into the TCB via the existing
->    ->dma_configure() callback
-> 
-> The proposal considers existing trust mitigation in various buses.  The
-> PCI device "untrusted" flags is an example of limiting but not fully
-> blocking operation of a device. The USB interface authorized flag is an
-> example of not trusting a device to operate at all. The implementation
-> starts with these trust level DEVICE_TRUST_NONE, no operation of the
-> device, and DEVICE_TRUST_ADVERSARY, limited operation of the device.
-> For example, the PCI "untrusted" flag turns off device translation
-> capabilities (ATS) and strictly enforces IOMMU mappings, but otherwise
-> allows operation of the device.
-> 
-> The proposal does not currently incorporate other bus specific security
-> mechanisms that are independent of individual device operational trust.
-> For example, USB device (not interface) authorization and Thunderbolt
-> switch authorization are transport gates to other devices.  PCIe Link
-> Encryption is also a transport security mechanism that informs a trust
-> decision, but it is still possible to distrust a device with Link
-> Encryption and conversely distrust a device protected by Link
-> Encryption. Those security mechanisms are orthogonal to trust policy for
-> driver bind, address space access, and acceleration feature enabling.
-> 
-> The result is device trust is an input to the driver core and IOMMU
-> layers. A bus can opt to sync its local bind policy, address space
-> access, and acceleration features to the trust level, or treat it as an
-> overriding second-stage policy from the bus's first stage mechanism.
-> 
-> The trust levels established at enumeration and enforced at driver
-> attach are DEVICE_TRUST_{NONE,ADVERSARY,AUTO,TCB}:
-> 
-> * NONE: no usage of the device unless the trust is explicitly overridden
->    by user policy specified via a driver flag, module flag, or uapi (TBD).
-> 
-> * ADVERSARY: needs acknowledgement from the bus and IOMMU / DMA layers
->    that the device is limited to strict IOMMU translation behavior. Drivers
->    can use this as a signal to limit functionality. This designation
->    implies follow-on IOMMU and bus enabling work for features like
->    arranging for the device to attach to a blocked IOMMU domain when
->    detached from a driver.
-> 
-> * AUTO: typical / historical Linux driver model.
-> 
-> * TCB: a trust level that only exists in Confidential Computing
->    environments. When acked by the IOMMU / DMA layer it enables the device
->    to issue direct-DMA to private/encrypted addresses or otherwise attach to
->    a secure vIOMMU within the TCB.
-> 
-> Overview of changes:
-> Patches 1-6: Update netlink to be able to support large blob
-> transfers that the SPDM standard requires. SPDM can be associated with
-> any device type, so the implementation lands in the device core with
-> PCI/TSM as the first consumer.
-> 
-> Patches 7-9: Introduce DEVICE_TRUST_NONE and DEVICE_TRUST_ADVERSARY.
-> Support blocking driver bind by default, and allow either build policy
-> or module policy to override the the trust level.
-> 
-> Patches 10-12,14-15: Plumb the PCI/TSM support for the PCI device
-> security (TDISP) protocol to transition the device through
-> UNLOCKED->LOCKED->RUN.
-> 
-> Patch 13: Support access to private memory either by the bus either
-> coordinating with a TSM driver, or relying on the bus provider to have
-> already arranged access (paravisor case).
-> 
-> This passes basic checkout with the sample TSM driver and a sample
-> netlink client for the device evidence facility. Those patches are only
-> on the git tree for now [2].
-> 
-> [2]: https://git.kernel.org/pub/scm/linux/kernel/git/devsec/tsm.git/log/?h=devsec-phase2
-> 
-> Dan Williams (15):
->    netlink: specs: Introduce multi-message blobs for SPDM
->    tools: ynl: Teach pyynl to handle blobs
->    tools: ynl: Teach ynl_gen_c to validate and dump 'blob' attributes
->    device core: Introduce "device evidence" over netlink
->    device core: Add "device evidence" 'validate' command
->    PCI/TSM: Add device evidence support
->    modules: Document the global async_probe parameter
->    device core: Initial device trust infrastructure
->    PCI, device core: Move "untrusted" concept to DEVICE_TRUST_ADVERSARY
->    PCI/TSM: Add device interface security LOCKED support
->    PCI/TSM: Add device interface security RUN support
->    PCI/TSM: Add device interface security DMA enable/disable
->    PCI, device core: Add private memory access for DEVICE_TRUST_TCB
->    PCI/TSM: Create MMIO descriptors via TDISP Report
->    PCI/TSM: Add relative MMIO offset support?
-> 
->   drivers/base/Kconfig                          |  91 +++
->   drivers/pci/Kconfig                           |   2 +
->   drivers/base/Makefile                         |   2 +
->   drivers/pci/Makefile                          |   2 +-
->   drivers/pci/tsm/Makefile                      |   8 +
->   Documentation/ABI/stable/sysfs-module         |  17 +
->   Documentation/ABI/testing/sysfs-bus-pci       |  47 +-
->   Documentation/ABI/testing/sysfs-class-tsm     |  19 +
->   Documentation/driver-api/pci/tsm.rst          |  47 ++
->   Documentation/netlink/genetlink-legacy.yaml   |   6 +
->   Documentation/netlink/genetlink.yaml          |   7 +
->   Documentation/netlink/netlink-raw.yaml        |   7 +
->   .../netlink/specs/device-evidence.yaml        | 203 ++++++
->   drivers/base/base.h                           |  15 +
->   drivers/base/device-evidence-netlink.h        |  25 +
->   include/linux/device.h                        |   3 +
->   include/linux/device/evidence.h               |  88 +++
->   include/linux/device/trust.h                  |  56 ++
->   include/linux/ioport.h                        |   2 +
->   include/linux/module.h                        |   6 +-
->   include/linux/pci-tsm.h                       | 104 +++-
->   include/linux/pci.h                           |  13 +-
->   include/uapi/linux/device-evidence.h          | 111 ++++
->   tools/net/ynl/lib/ynl-priv.h                  |   4 +
->   tools/net/ynl/lib/ynl.h                       |  14 +
->   drivers/base/core.c                           |   7 +
->   drivers/base/dd.c                             |   5 +
->   drivers/base/device-evidence-netlink.c        |  58 ++
->   drivers/base/evidence.c                       | 495 +++++++++++++++
->   drivers/base/trust.c                          | 103 ++++
->   drivers/iommu/amd/iommu.c                     |   2 +-
->   drivers/iommu/dma-iommu.c                     |  13 +-
->   drivers/iommu/intel/iommu.c                   |   2 +-
->   drivers/iommu/iommu.c                         |   2 +-
->   drivers/pci/ats.c                             |   2 +-
->   drivers/pci/pci-driver.c                      |  25 +-
->   drivers/pci/pci.c                             |   2 +-
->   drivers/pci/probe.c                           |  10 +-
->   drivers/pci/quirks.c                          |   4 +-
->   drivers/pci/{tsm.c => tsm/core.c}             | 579 +++++++++++++++++-
->   drivers/pci/tsm/evidence.c                    | 110 ++++
->   drivers/virt/coco/tsm-core.c                  |  43 +-
->   kernel/module/main.c                          |  13 +
->   kernel/resource.c                             |   8 +
->   tools/net/ynl/lib/ynl.c                       |  33 +
->   MAINTAINERS                                   |   6 +-
->   tools/net/ynl/pyynl/lib/nlspec.py             |  12 +
->   tools/net/ynl/pyynl/lib/ynl.py                |  62 +-
->   tools/net/ynl/pyynl/ynl_gen_c.py              |  80 ++-
->   49 files changed, 2509 insertions(+), 66 deletions(-)
->   create mode 100644 drivers/pci/tsm/Makefile
->   create mode 100644 Documentation/netlink/specs/device-evidence.yaml
->   create mode 100644 drivers/base/device-evidence-netlink.h
->   create mode 100644 include/linux/device/evidence.h
->   create mode 100644 include/linux/device/trust.h
->   create mode 100644 include/uapi/linux/device-evidence.h
->   create mode 100644 drivers/base/device-evidence-netlink.c
->   create mode 100644 drivers/base/evidence.c
->   create mode 100644 drivers/base/trust.c
->   rename drivers/pci/{tsm.c => tsm/core.c} (61%)
->   create mode 100644 drivers/pci/tsm/evidence.c
-> 
-> 
-> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-
--- 
-Alexey
-
+> Alvin Sun (10):
+>        rust: module: move module types into `module.rs`
+>        rust: module: add `THIS_MODULE` const to `ModuleMetadata` trait
+>        rust: doctest: add LocalModule fallback for #[vtable] ThisModule
+>        rust: macros: auto-insert OwnerModule in #[vtable]
+>        rust: drm: set fops.owner from driver module pointer
+>        rust: miscdevice: set fops.owner from driver module pointer
+>        rust: configfs: use `LocalModule` for `THIS_MODULE`
+>        rust_binder: use `LocalModule` for `THIS_MODULE`
+>        rust: macros: remove `THIS_MODULE` static from `module!`
+>        rust: module: update MAINTAINERS to cover module.rs
+>
+>   MAINTAINERS                                |  2 +-
+>   drivers/android/binder/rust_binder_main.rs |  3 +-
+>   drivers/block/rnull/configfs.rs            |  5 +-
+>   rust/kernel/auxiliary.rs                   |  2 +-
+>   rust/kernel/configfs.rs                    |  9 ++--
+>   rust/kernel/drm/device.rs                  |  3 +-
+>   rust/kernel/drm/gem/mod.rs                 |  4 +-
+>   rust/kernel/i2c.rs                         |  2 +-
+>   rust/kernel/lib.rs                         | 75 +++-------------------------
+>   rust/kernel/miscdevice.rs                  |  4 +-
+>   rust/kernel/module.rs                      | 80 ++++++++++++++++++++++++++++++
+>   rust/kernel/net/phy.rs                     |  6 ++-
+>   rust/kernel/pci.rs                         |  2 +-
+>   rust/kernel/platform.rs                    |  2 +-
+>   rust/kernel/usb.rs                         |  2 +-
+>   rust/macros/lib.rs                         |  6 +++
+>   rust/macros/module.rs                      | 34 ++++++-------
+>   rust/macros/vtable.rs                      | 41 +++++++++++++--
+>   scripts/rustdoc_test_gen.rs                | 16 ++++++
+>   19 files changed, 189 insertions(+), 109 deletions(-)
+> ---
+> base-commit: b7e5ac83cb16f7ffd11dc23736f84276602100ed
+> change-id: 20260519-fix-fops-owner-e3a77bb27c6c
+> prerequisite-change-id: 20260519-miscdev-use-format-9ab7e83b1c11:v3
+> prerequisite-patch-id: 405b334ff0d48ad350014f05a2321bdbaa025400
+> prerequisite-patch-id: 604b631c81d5423f4ebb2e12ba2d22e9ce371bfc
+> prerequisite-patch-id: cb550d94cefe01920e0d3ced2b2bcbecd76f3907
+> prerequisite-patch-id: 3bc830839742591460cb86d9472c04f4686dc600
+> prerequisite-patch-id: 571058244bc8c7088638d2e3225713011246c7e9
+> prerequisite-patch-id: 347c5a3c6dbef9832bfce8419fc23e6e08ba477f
+> prerequisite-patch-id: 3e202d988b56b88446f7535e90d3f00cf5f15701
+>
+> Best regards,
