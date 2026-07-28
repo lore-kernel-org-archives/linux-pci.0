@@ -1,103 +1,188 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C31B2F8EBC;
-	Tue, 28 Jul 2026 09:31:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1310F2F8EBC;
+	Tue, 28 Jul 2026 09:31:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785231083; cv=none; b=OHH3w4vvs3S//7xR9jn+D71WZ9hILgqZGhwt00GJBD+wcdeEJj8Q55HIISpsKRWK4GrUZtEtoKttjy6dQLGrTQyRkycPzZW2lVYiF8esI0wApMK4jlzlfTOw39LH/JJQZvx876O99sQlppSI6k+eMWs9hlFsOTEkavED7yy3yT0=
+	t=1785231094; cv=none; b=OCFrKQvzA4b9Hifq95tiHrCZC8ewfwh7r1YeRt01UICb1CV+9m06aelxAShPs0Zf7hhg/acnfC8WzMpkQN8LjtqcZyWCgl6GMZwNaISqXWhdAHCUeLDZci4p3kmfERro7AmM+Ve541RD3WlXm2F5bqWuvlOFpgNiRzQAtC538X8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785231083; c=relaxed/simple;
-	bh=gMT/dhLggaNwPKFAIHQ+FpYp1uy7yxY+rwh5IgBbXvs=;
+	s=arc-20240116; t=1785231094; c=relaxed/simple;
+	bh=+kbkKjYyPZsTWr3fvyID4xqUrFPqHRKYQ8U5ftuS1fY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=k32yLumE5FVXi+4v2J8LvdqWvxpvFTzIg3HXDMEvA9ieXiiAmrRgDnRq7G8dWtnyWjbqTG0s68Z5iQLpwHGgTgRNP59dMZTaUNSD06GWhKklJ71vetR38HjL5SvJ3QlRMJSVsBWVu0lpebOgGMSeYhVdPZvEx/Sc7x3eoaCn9hI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZTVceMuz; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=a+sHEDYA8SNkOyBnL0VRJm8kBdP/zxI7V3sWgCl5z+jWTCQMCnx+WG/g3vL63FIfFhKP1tWpXqUGwknLZamIwaAc0GL3OurqhncZoqZJVWtgIhFLBc77fNX289LGkIdunnmrbVm6rrgQLEkasYiT+HS9MVInQfO9pZxuXrdFlAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FkXW7j6m; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZTVceMuz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 865D81F000E9;
-	Tue, 28 Jul 2026 09:31:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FkXW7j6m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6669C1F000E9;
+	Tue, 28 Jul 2026 09:31:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785231081;
-	bh=AyBkM5qiC6Ns/Mw1VstLbXSZxY903xB57Cvie5xw4wo=;
+	s=k20260515; t=1785231092;
+	bh=+96Gprrk0k0/sGKNZ6fry0aMLLmE4L/pk3hYFq0miyc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZTVceMuzWFfKx9MuchSf8FtTMKC5X546aunK4m9jQGxAwCYhE8wA3S4Z3MUEkqlKh
-	 HOI9xop9jO8vU69yLwvts9b/NFHy7+XUOGLDBL5GlvnGQy6mfQE8xY4T+LhnjWqH1s
-	 JRlEWsuOfKVLHRK7H+qQKP3GQIISA82MdPpnGgdhxdEqaids7y83Vq04OynfI/ZYy6
-	 aF1YOjrMsmiwMidhk2fErvddTi5/33igBJtz/qps7Loc5TxQ+qJ6aagun+NpPDV5A5
-	 aUM3KNI9SYLLx4QG6wadF2usITrTEEmHisbcRmIy/iiLhVrwPLvqeTVGOHWeThyH2K
-	 vokQ/1gFeTSCg==
+	b=FkXW7j6mJ8HcGbA7wnjO84P5fjEx2gDw5OistUuP/xl2NUuiYqke3cyFeJPTKEfK4
+	 01n+7y5KyQuv3iOud6D/k4dPE9MSUS7wT1/ITJx81tZ+PqLJi5snQ1HZHihozqEESO
+	 PvRGBc6ITtQVMSvlHKx/3q8FZdKYQfpKUd5NKSy9s+J8o3hUXwfYXlMyt0U/RM8mXL
+	 SbAqx53Y28/v249c2JaaNueUHi6bBhU3kknyqOHrGZv/fT2vwtX3s+SbbNRd+o4Ob4
+	 H9a5NqEIgQNV1OYUbkt2KUd8M5o0XZ/Jqjul2WQnFFhnGtJoXQbGNnZJDt+zlU6hCg
+	 0k5TIGuUj07IQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] dmaengine: dw-edma: Add changes to support
- Channel Separation
+Subject: Re: [PATCH v2 2/3] dmaengine: dw-edma: Enable Chan Separation via
+ VSEC
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Devendra K Verma" <devverma@amd.com>
-Cc: vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260728091744.1086942-4-devverma@amd.com>
+Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260728091744.1086942-3-devverma@amd.com>
 References: <20260728091744.1086942-1-devverma@amd.com>
- <20260728091744.1086942-4-devverma@amd.com>
+ <20260728091744.1086942-3-devverma@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:31:21 +0000
-Message-Id: <20260728093121.865D81F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 09:31:31 +0000
+Message-Id: <20260728093132.6669C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
+New issues:
+- [High] The claimed 'Channel Separation' feature is completely unused and =
+dead code, failing to pass the parsed separation size to the core DMA drive=
+r and causing hardware register offset mismatches on non-default configurat=
+ions.
+- [Medium] The `ch_sep_sz` field defaults to 0 for non-XILINX_B00F devices,=
+ violating the 256B default size specification.
+
 Pre-existing issues:
-- [High] eDMA/HDMA register base address missing capability offset
+- [High] Double free risk of IRQ vectors due to mixing managed `pcim_enable=
+_device()` with manual `pci_free_irq_vectors()`.
 --
 
---- Patch [3]: [PATCH v2 3/3] dmaengine: dw-edma: Add changes to support Ch=
-annel Separation ---
-commit d8b9ebd109653d1219284d3ab6408816a9dc7745
+--- Patch [2]: [PATCH v2 2/3] dmaengine: dw-edma: Enable Chan Separation vi=
+a VSEC ---
+commit c9662ac63af55f746e4aad35cf3b04bea4688738
 Author: Devendra K Verma <devverma@amd.com>
 
-dmaengine: dw-edma: Add changes to support Channel Separation
+dmaengine: dw-edma: Enable Chan Separation via VSEC
 
-This commit updates the driver to support configurable DMA channel register
-space separation. It modifies channel register base address calculations to
-use a dynamic separation size instead of a fixed layout, and removes unused
-legacy register layout structures.
+As per, 'Designware Cores PCI Express DM Controller - Reference
+Manual', section 3.2.34.3, VSEC for DEVICE INFORMATION supports
+the channel separation mechanisms. Basically, the HDMA IP allows
+the user to configure the separation between DMA channel
+registers and retrieve it via the VSEC capability mentioned
+above.
 
 > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-=
 edma-pcie.c
-> index d0f209082878d..f2a9ae8d0f3c4 100644
+> index ec5e057a0f11b..d0f209082878d 100644
 > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
 > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
 
 [ ... ]
 
-> @@ -437,6 +440,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
->  	chip->nr_irqs =3D nr_irqs;
->  	chip->ops =3D &dw_edma_pcie_plat_ops;
->  	chip->cfg_non_ll =3D non_ll;
-> +	chip->ch_sep_sz =3D vsec_data->ch_sep_sz;
+> @@ -73,6 +76,7 @@ struct dw_edma_pcie_data {
+>  	u16				wr_ch_cnt;
+>  	u16				rd_ch_cnt;
+>  	u64				devmem_phys_off;
+> +	u32				ch_sep_sz;
+
+[Severity: Medium]
+Does this new field need to be initialized in the existing static
+configuration structures?
+
+For example, snps_edda_data and xilinx_mdb_data are not updated in this
+patch to set ch_sep_sz. Because they are static structs, ch_sep_sz will
+default to 0 for non-XILINX_B00F devices.
+
+If ch_sep_sz is passed to the core driver, would a 0-byte separation cause
+all channels to overlap in memory, violating the 256B default size
+specification?
+
+>  };
 > =20
->  	chip->ll_wr_cnt =3D vsec_data->wr_ch_cnt;
->  	chip->ll_rd_cnt =3D vsec_data->rd_ch_cnt;
+>  static const struct dw_edma_pcie_data snps_edda_data =3D {
+
+[ ... ]
+
+> @@ -279,6 +290,10 @@ static void dw_edma_pcie_get_xilinx_dma_data(struct =
+pci_dev *pdev,
+>  	pdata->mf =3D map;
+>  	pdata->rg.bar =3D FIELD_GET(DW_PCIE_XILINX_VSEC_DMA_BAR, val);
+> =20
+> +	if (pdev->device =3D=3D PCI_DEVICE_ID_XILINX_B00F)
+> +		pdata->ch_sep_sz =3D dw_edma_get_ch_sep_sz(FIELD_GET(DW_PCIE_XILINX_CP=
+M6_VSEC_CH_SEP,
+> +								   val));
+> +
 
 [Severity: High]
-This is a pre-existing issue, but does dw_edma_pcie_probe() assign the wrong
-MMIO base offset to chip->reg_base?
+Is the parsed channel separation size actually used by the core driver?
 
-Just below this hunk in dw_edma_pcie_probe(), the code assigns:
+It looks like ch_sep_sz is populated in vsec_data here, but is never
+passed to the core DMA driver in dw_edma_pcie_probe():
 
-    chip->reg_base =3D pcim_iomap_table(pdev)[vsec_data->rg.bar];
-    if (!chip->reg_base)
-        return -ENOMEM;
+drivers/dma/dw-edma/dw-edma-pcie.c:dw_edma_pcie_probe() {
+    ...
+    chip->mf =3D vsec_data->mf;
+    chip->nr_irqs =3D nr_irqs;
+    chip->ops =3D &dw_edma_pcie_plat_ops;
+    chip->cfg_non_ll =3D non_ll;
+    chip->ll_wr_cnt =3D vsec_data->wr_ch_cnt;
+    ...
+}
 
-It appears the vsec_data->rg.off capability offset is never added to this b=
-ase
-address. Without adding the offset, won't all subsequent eDMA/HDMA register
-accesses target the wrong MMIO locations (offset 0 of the BAR instead of the
-specified offset like 4KB), potentially triggering bus faults or preventing
-the DMA hardware from initializing?
+Additionally, does the core driver support this dynamic separation? Looking=
+ at
+__dw_ch_regs() in dw-hdma-v0-core.c, the channel register offsets appear to=
+ be
+calculated using fixed C structure array indexing:
+
+    if (dir =3D=3D EDMA_DIR_WRITE)
+        return &(__dw_regs(dw)->ch[ch].wr);
+    else
+        return &(__dw_regs(dw)->ch[ch].rd);
+
+If a 32KB separation is configured, wouldn't the core driver still calculate
+MMIO offsets assuming the hardcoded structure layout, potentially reading or
+writing incorrect PCI memory on non-default configurations?
+
+>  	pci_read_config_dword(pdev, vsec + 0xc, &val);
+
+[ ... ]
+
+> @@ -324,9 +339,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	struct dw_edma_pcie_data *pdata =3D (void *)pid->driver_data;
+>  	struct device *dev =3D &pdev->dev;
+>  	struct dw_edma_chip *chip;
+> +	bool non_ll =3D false;
+>  	int err, nr_irqs;
+>  	int i, mask;
+> -	bool non_ll =3D false;
+> =20
+
+[Severity: High]
+This is a pre-existing issue, but I noticed a potential double free of the
+IRQ vectors related to the device probing.
+
+When pcim_enable_device() is used, IRQ allocations via
+pci_alloc_irq_vectors() are managed by devres and automatically freed.
+
+However, looking at the remove path in dw_edma_pcie_remove():
+
+    /* Freeing IRQs */
+    pci_free_irq_vectors(pdev);
+
+Does calling pci_free_irq_vectors() manually conflict with the devres clean=
+up
+registered automatically by pcim_enable_device(), leading to a double free
+when the driver is unbound or fails to probe?
+
+>  	if (!pdata)
+>  		return -ENODEV;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728091744.1086=
-942-1-devverma@amd.com?part=3D3
+942-1-devverma@amd.com?part=3D2
