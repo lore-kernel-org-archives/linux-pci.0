@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2356C3195EF;
-	Tue, 28 Jul 2026 07:21:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FF13195EF;
+	Tue, 28 Jul 2026 07:21:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785223275; cv=none; b=RvC/0Nz/BQ+pOp+5ZbYeLzqkc8Kpod85rIsm7Cif0faFtAIA04wzMoqwg85e8cWbbQbejGu8D6RpzigyGVzFJCdesv/FFx2lvGEffXpY44t8Q+m84xNiBc6pOWWluTElcfi8l5GBI4lKAL6IMnqEOfgv6VUozYbI5D1vz7eBvjg=
+	t=1785223277; cv=none; b=Z3cZhzEbKDgl7Cf6aT7lhCtcRjVnE8qbf4hHrCHBgsJKWsaTPTDfrbhDCx/ZqeOjHj3KcYPQxtPWYf1jZL732TE3+/flIA6a9HaG0t8dlkaW2BN+xjQBZN01lny1PktlpP7YIbVxKMW0CZ0c25Jq2OUE85eu+dDRoZL1lGQXnEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785223275; c=relaxed/simple;
-	bh=E2u/yZHVwohOUYZYBWNklBhTCJwZ6TH2bV2eKBupdos=;
+	s=arc-20240116; t=1785223277; c=relaxed/simple;
+	bh=KzwjlKIFtfhVSuDtxtK7DoIzUO65l8p/nnwbgXSjqPQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XMhENoXnBXY/gz3/rCGqmeYIB8RzgRDSucGrYW6egvR8R0I5LG6Aw/KJfP51KUOt6SWJMi8A09kKO4az56PfgnfmiU89dKNhIi24TUh66am+UzeBDAC1bQU4MX2YU0u+DHOT6gWCRPwkm9g9VpTzi8lRym5vwkgwhWS8aM6IYBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PBl+N3oC; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=o3BLfqe2FJoO27xHjRKTsVIdxjKRUkL9w5WhPOK0Ju4Ruy8XTMu9DnCXCXwb1mkh1Rkv9oQZOum+ge4XXHAheVpPEhHeXhQ8l30bxVZX64t9EmAmVOsCdaXygOtESUprx9a5nR5SdOyXVxqUaclh8eW+AF8cPOvAeOyhDBdQVl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W/pjWbFt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PBl+N3oC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FCBE1F000E9;
-	Tue, 28 Jul 2026 07:21:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W/pjWbFt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FF571F000E9;
+	Tue, 28 Jul 2026 07:21:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785223273;
-	bh=uO8XeJX7VjjjUB2Zia3BKteUXm5WYluvgfemrMBeoW4=;
+	s=k20260515; t=1785223276;
+	bh=44/3EATCFVjm1xqy9nZRUXGbpqi6LqiR8ozSdEUOm5U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PBl+N3oCg5uaL8UsEOEcXOoRgTvEZ158oMZxgB1MkquKxl93OwLsnGdUAF2RGz1X9
-	 pu1GzuQ5uF3xsSB+BCgf3Zjgykpm8fPKoQzbrWW2EQBjWjXqCG/TDBedl9ptB3MllY
-	 Bd+n9XdHriuoAyarnXqajMM6gnKGeVZc7d3GO8wDGCzHEq15Q8eAOWNwO+0FYL3YFY
-	 ltSWF+aKBTbfDYijMcStFfoUdTHVpUPtGMckGZZwf0EdOF5cU1l15J+NFOGeOubwZi
-	 bY6Jeu0+yufAU/MwMpdv3sfHOByiJQ4vUQyM+H2HzsrvQIUrCNNDp68kfIqvE1Y5fq
-	 Y4qRFTJddGKSw==
+	b=W/pjWbFtIg6WwxC1JguNUanyLFOSJ5BRH4x3vyoC5v5s8uu8XNL2a+deNyzAHFgAz
+	 ldjmO6ObR8cWjzXWdxHWs4RrjKfrB8r7llslGvPqGNpRguUH74HFaFQLcdmH1FgqF6
+	 m3AYiN+QCEobuEfsd9rgcxrqUTT4zFluvSqv2X2nGyqLQ8gj+cyA3XJng1vrTlg6AT
+	 LbfmXSHVP/w3X0iHOv3ft3fp2EqtYIF0SS5Vhzzec7Cq5RB6do10QPi/vqDTaovoAV
+	 +6WhDytiBd5Y8oQjq++4w50of3u5QQ3g3HRuvB+28tVV931a3YiaBilMwR7FfuofbL
+	 8BjjJe3WmIS9A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and
- controller nodes
+Subject: Re: [PATCH v4 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with
+ TC9563 PCIe switch
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260728-eliza_evk-v4-1-decc7fe5246e@oss.qualcomm.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260728-eliza_evk-v4-3-decc7fe5246e@oss.qualcomm.com>
 References: <20260728-eliza_evk-v4-0-decc7fe5246e@oss.qualcomm.com>
- <20260728-eliza_evk-v4-1-decc7fe5246e@oss.qualcomm.com>
+ <20260728-eliza_evk-v4-3-decc7fe5246e@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 07:21:13 +0000
-Message-Id: <20260728072113.8FCBE1F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 07:21:15 +0000
+Message-Id: <20260728072115.5FF571F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,61 +47,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Missing `msi-map` property in the PCIe host controller nodes, comp=
-letely breaking Message Signaled Interrupts (MSI/MSI-X).
+- [Low] Leaf PCI endpoints are incorrectly defined with PCI-to-PCI bridge p=
+roperties.
 --
 
---- Patch [1]: [PATCH v4 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and con=
-troller nodes ---
-commit 16f01d1efdef1f9640d6946e1dff4bcb10d4c047
+--- Patch [3]: [PATCH v4 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with T=
+C9563 PCIe switch ---
+commit 6015c0e26c5513007cdd5660f441396cf00de5ea
 Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
+arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
 
-This commit introduces PCIe controller and PHY nodes for the Eliza platform.
-It also updates the GCC clock references to point to the newly added PHY
-nodes instead of placeholder zeros.
+This commit adds support for a PCIe switch (TC9563) on the Eliza EVK board
+connected to PCIe1. It overrides the base iommu-map to cover the downstream
+ports and uses a TLMM GPIO for reset assertion instead of PERST#.
 
-> diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qc=
-om/eliza.dtsi
-> index 357e8066c1768..31835a5828834 100644
-> --- a/arch/arm64/boot/dts/qcom/eliza.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/eliza.dtsi
+> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
+s/qcom/eliza-evk.dtsi
+> index b35fffb509765..32a0fdd80c8a8 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
 [ ... ]
-> @@ -1784,6 +1784,369 @@ mmss_noc: interconnect@1780000 {
+> @@ -99,6 +119,99 @@ pcieport0_ep: endpoint {
 [ ... ]
-> +		pcie0: pcie@1c00000 {
+> +		pcie@3,0 {
+> +			reg =3D <0x21800 0x0 0x0 0x0 0x0>;
+> +			#address-cells =3D <3>;
+> +			#size-cells =3D <2>;
 > +			device_type =3D "pci";
-[ ... ]
-> +			iommu-map =3D <0 &apps_smmu 0x1480 0x1>,
-> +				    <0x100 &apps_smmu 0x1481 0x1>;
+> +			ranges;
+> +			bus-range =3D <0x5 0xff>;
 > +
-> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>,
-
-[Severity: High]
-Is a msi-map property missing from this pcie0 node?
-
-Without the msi-map property, the kernel's PCI OF core cannot establish an
-MSI domain for the PCIe bus. Will this cause MSI/MSI-X interrupts to fail
-for all connected PCIe endpoints, forcing them to fall back to legacy INTx
-interrupts if supported?
-
-[ ... ]
-> +		pcie1: pcie@1c08000 {
-> +			device_type =3D "pci";
-[ ... ]
-> +			iommu-map =3D <0 &apps_smmu 0x1400 0x1>,
-> +				    <0x100 &apps_smmu 0x1401 0x1>;
+> +			pci@0,0 {
+> +				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				device_type =3D "pci";
+> +				ranges;
+> +			};
 > +
-> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>,
+> +			pci@0,1 {
+> +				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				device_type =3D "pci";
+> +				ranges;
+> +			};
 
-[Severity: High]
-Is a msi-map property also missing from this pcie1 node?
+[Severity: Low]
+Are these leaf PCI endpoints supposed to have PCI-to-PCI bridge properties?
 
-Similar to pcie0, omitting this property might prevent modern devices like
-NVMe drives that exclusively rely on MSIs from functioning correctly on
-this controller.
+The devicetree parser and schema validation tools might incorrectly interpr=
+et
+these leaf PCI endpoints as PCI-to-PCI bridges due to the presence of
+device_type =3D "pci", #address-cells, #size-cells, and ranges properties on
+nodes that represent endpoint functions rather than buses.
+
+> +		};
+> +	};
+> +};
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728-eliza_evk-=
-v4-0-decc7fe5246e@oss.qualcomm.com?part=3D1
+v4-0-decc7fe5246e@oss.qualcomm.com?part=3D3
