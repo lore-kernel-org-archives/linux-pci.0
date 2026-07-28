@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97D6E343885;
-	Tue, 28 Jul 2026 17:40:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943683C2774;
+	Tue, 28 Jul 2026 17:44:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785260407; cv=none; b=hh4y77MvltHLSEejG0j75peseyVXod6bSvdpNVCiGkLyYMTeOGVz0vuwIbnZbX6z55HYdoi5ucrJKA0mUv1beyIJV9LvdMSixzr6YJIUCseHiLLTcnMRfBDIECr/yt1Ew0c5TXPrwEAj34gEO5vaiv7vPcDXng8fDM7ldS6aOYs=
+	t=1785260650; cv=none; b=C2cBTV3m67xjT5+KUJwQsh3lH+kY8vpDpuO4yK8ZgjoO83VOiBxdy3VRhT1vDSb/MsfsDo0TyCZ9Z/7ctoDdEF9VQLEizXCUwZgQUPSy1l8qkgY5UM1RB41uxOyCZDyzGYd4x111g75L7Fu93t0BFkjwJtsxUkI2q4mVHo45LeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785260407; c=relaxed/simple;
-	bh=2ob2OwiD5VILyDH2zuDbDBzjxCa2iywbYX0Uum0wM04=;
+	s=arc-20240116; t=1785260650; c=relaxed/simple;
+	bh=/+UStUj6uDGhpn175Oqws/dbt4DHMwDsidUohRu95iQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=daQvBECkzsrgPZAShjUPZL6MyunlBaOfXGZuSx3feh2oPDT1tpvUkjbhrHszmilrxj5vLnpSDTCVT7G9mHbBMgyvPjpjCbOUCqby3baAaPVOUEJD1JDCLQ7ndjGQfMANlFUH8YpP6gbcinMgxw1DOl9QJHa1COr+P1PfVia5NHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l1Gi+Zn6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=D9lTsJuBgirsiB9+2DAcliyu7VC2Pk9G7GPtlA+S1eDDaoPMRbYgT5KPXDwXHwanhy8DiK2jWbSmhh9ZDzG64AzREmfQHyYvm/f8shGTmrBunbHcJb23Injz0nkI66C8YNOUpj374l0gFCCoK86lTseLgFLzDV2iD9C/lnAGux0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J0gH9f3I; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l1Gi+Zn6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D36E41F000E9;
-	Tue, 28 Jul 2026 17:40:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J0gH9f3I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C5F71F00AC4;
+	Tue, 28 Jul 2026 17:44:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785260406;
-	bh=TLq+YGW5bx01J91Wexs3V94q3tC0TtMZd0Qnmd1t2cY=;
+	s=k20260515; t=1785260649;
+	bh=RQIwIV2hCnCXDCD/lQyxUn66+N9xgUECkSxQV8nIhUs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=l1Gi+Zn61dCs5VX/WWFuXZMW0mnQvX7yv/KnWdW8xVWwDAmo/RHA39bkAnRON05YM
-	 RvZueGCy0DKpa7Q1/yqsp2TSo0YJ2ZdEeUljAE0PbmsBwFKHMxGJBBCxhd2hNzq897
-	 PkQAban7HhII7bQnwlgLEr3lFuTmfb1I2tHKP9TiuvWxz+jVKI6UU1VF2kp5ywWqOL
-	 JRv+pn++SmA1zS8BZAYeIoEtsOM5Mm2qJPNj6nc0qRqTHUx6WsUrYah/IlqtxVk3AW
-	 Azt+tsF8QpjTerZf7l3UYYNYW4imjTkuw6K+Vd7ftlKlS2EPhVNNwKFlehttvZglBm
-	 ac+N8arO1AWLQ==
+	b=J0gH9f3IZtw+anAn1rIFt/5UksdlFq3nBZnYPSkqotguIASVuX91PZeJY5Ku9uPRX
+	 E6gMZAiVnHCLH2Il8K4Km456Yh/bj2lkzoMXCD3jTP2GKJknThvcoJYMlcY6xrYkzk
+	 7M/CSpsQHYTukFcFiLYuquAavuUEetfxi7BSJn0TcFaNpvn2YoTgT6OAiM6hIlX5Cb
+	 8dR4ZrDUGdy/6pwsnEdvRj0U/iewFSlRM3Dziwanjt8bf38fgESSIVaD1JVwcioyrE
+	 pLaB/cv4oVILaLp2rNvFjBm4Un1wMLIlD4MtxTqCbtzOcgWqPJxH6fDMFjQhRibTq/
+	 PiCPdWXlE0kKw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 02/12] dmaengine: switchtec-dma: fix resource leak in
- alloc_chan_resources
+Subject: Re: [PATCH v4 06/12] dmaengine: switchtec-dma: make
+ switchtec_dma_chans_release() void
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
-In-Reply-To: <20260728171523.112244-3-logang@deltatee.com>
+Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260728171523.112244-7-logang@deltatee.com>
 References: <20260728171523.112244-1-logang@deltatee.com>
- <20260728171523.112244-3-logang@deltatee.com>
+ <20260728171523.112244-7-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 17:40:05 +0000
-Message-Id: <20260728174005.D36E41F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 17:44:08 +0000
+Message-Id: <20260728174409.4C5F71F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,76 +48,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Leaking DMA descriptors and ring buffers when channel stop fails (=
+e.g., during device hot-unplug or module unload).
+
 Pre-existing issues:
-- [High] Improper teardown order in `switchtec_dma_remove` enables race con=
-ditions and use-after-free with dmaengine clients.
-- [High] The driver holds a spinlock across dmaengine API boundaries, causi=
-ng guaranteed deadlocks if multiple descriptors are batched.
+- [High] Hardware resources (IRQs and tasklets) are released before the DMA=
+ device is unregistered, allowing clients to request or use unbacked channe=
+ls.
 --
 
---- Patch [2]: [PATCH v4 02/12] dmaengine: switchtec-dma: fix resource leak=
- in alloc_chan_resources ---
-commit c17dbf5966e1848ec7a26210950a24038c80d7e5
+--- Patch [6]: [PATCH v4 06/12] dmaengine: switchtec-dma: make switchtec_dm=
+a_chans_release() void ---
+commit 4ae99d5104edb85994c22547e64122fc62df38cb
 Author: Logan Gunthorpe <logang@deltatee.com>
 
-dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
+dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
 
-This commit fixes a resource leak in switchtec_dma_alloc_chan_resources()
-where descriptor rings and coherent memory weren't freed on failure. It adds
-an error-unwind path to properly disable the channel and clean up active
-flags.
-
-Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.ke=
-rnel.org
+switchtec_dma_chans_release() always returned 0, and no caller
+checked it.
 
 > diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index a4a7d66d042de..f77da31aeb65e 100644
+> index 48da269198f3f..63e60de9f86dc 100644
 > --- a/drivers/dma/switchtec_dma.c
 > +++ b/drivers/dma/switchtec_dma.c
-
-[ ... ]
+> @@ -1177,15 +1177,13 @@ static int switchtec_dma_chan_free(struct pci_dev=
+ *pdev,
+>  	return 0;
+>  }
+> =20
+> -static int switchtec_dma_chans_release(struct pci_dev *pdev,
+> -				       struct switchtec_dma_dev *swdma_dev)
+> +static void switchtec_dma_chans_release(struct pci_dev *pdev,
+> +					struct switchtec_dma_dev *swdma_dev)
+>  {
+>  	int i;
+> =20
+>  	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
+>  		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
+> -
+> -	return 0;
+>  }
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this teardown order
-allow active dmaengine clients to access destroyed hardware state or wait
-on freed IRQs?
+This is a pre-existing issue, but hardware resources (IRQs and tasklets) are
+released before the DMA device is unregistered, allowing clients to request=
+ or
+use unbacked channels.
+
+In switchtec_dma_remove(), switchtec_dma_chans_release() is called first, w=
+hich
+frees all per-channel IRQs and kills their descriptor tasklets:
 
 drivers/dma/switchtec_dma.c:switchtec_dma_remove() {
-...
+	...
 	switchtec_dma_chans_release(pdev, swdma_dev);
-
 	rcu_assign_pointer(swdma_dev->pdev, NULL);
 	synchronize_rcu();
-
 	pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
-
 	pci_free_irq_vectors(pdev);
-
 	dma_async_device_unregister(&swdma_dev->dma_dev);
-...
 }
 
-Because switchtec_dma_remove() disables channels and frees IRQs before
-calling dma_async_device_unregister(), a concurrent client could attempt
-to allocate or submit jobs to the exposed device before unregistration
-completes.
+Could this cause active DMA transfers to hang forever without completion, s=
+ince
+the DMA device is not unregistered from the core until much later?
+
+Because the device is still in the DMA engine channel table, could a client
+theoretically request a new channel in this window?
 
 [Severity: High]
-This is also a pre-existing issue, but does returning to a generic API
-client with a spinlock held cause deadlocks?
+Does this code leak DMA descriptors and ring buffers when channel stop fail=
+s?
 
-drivers/dma/switchtec_dma.c:switchtec_dma_prep_desc() {
-...
-	/* return with the lock held, it will be released in tx_submit */
+In switchtec_dma_free_chan_resources(), if switchtec_dma_chan_stop() return=
+s a
+non-zero error (like -ENODEV during hot-unplug), the cleanup of descriptor
+memory is completely skipped:
 
-	return &desc->txd;
+drivers/dma/switchtec_dma.c:switchtec_dma_free_chan_resources() {
+	...
+	rc =3D switchtec_dma_chan_stop(swdma_chan);
+	switchtec_dma_abort_desc(swdma_chan, 0);
+	if (!rc)
+		switchtec_dma_free_desc(swdma_chan);
 }
 
-If a client batches multiple descriptors (e.g., calling
-dmaengine_prep_dma_memcpy() twice for the same channel before submit),
-wouldn't the second call attempt to recursively acquire the same
-non-recursive submit_lock?
+During switchtec_dma_remove(), swdma_dev->pdev is set to NULL before
+dma_async_device_unregister() is called. When dma_async_device_unregister()
+subsequently cleans up active channels, it invokes
+switchtec_dma_free_chan_resources().
+
+Because pdev is NULL, switchtec_dma_chan_stop() returns -ENODEV. The code c=
+hecks
+if (!rc) and skips switchtec_dma_free_desc(), leaking the resources.
+
+A similar issue appears to exist in the error path of
+switchtec_dma_alloc_chan_resources() if the channel stop returns an error:
+
+drivers/dma/switchtec_dma.c:switchtec_dma_alloc_chan_resources() {
+	...
+err_disable_channel:
+	if (switchtec_dma_chan_stop(swdma_chan)) {
+		disable_channel(swdma_chan);
+		return rc;
+	}
+	disable_channel(swdma_chan);
+err_free_desc:
+	switchtec_dma_free_desc(swdma_chan);
+}
+
+Can this leak memory for every active channel on standard device teardown or
+hot-unplug?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728171523.1122=
-44-1-logang@deltatee.com?part=3D2
+44-1-logang@deltatee.com?part=3D6
