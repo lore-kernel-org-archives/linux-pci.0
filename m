@@ -1,125 +1,158 @@
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6231325B086;
-	Tue, 28 Jul 2026 00:59:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BCC3190473;
+	Tue, 28 Jul 2026 01:26:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785200385; cv=none; b=t/pOwBpjBPIHT066m6KrDJfVzwGHdwE9EjX/MYF8cqCCue32hTRMafC8b6MAX18z3QAqH4F/0NulcunNwhmtF5ayTy7WepmMdFp7z4PrmOG9AklAohoEjF31sATWpyrqRseA4ClOf4Z5MngzyOiUpWxIpNg4JzzShvtT54dDuLA=
+	t=1785201976; cv=none; b=VEC2lrzocagIoASonbwaq+o8X99hhiediEcKIBqhMuBbn8NUitQu6gaKQ4WKEG94Igrl21vhxiTIpPbi7r5Zco8pIzcQTks4uKmDq9pwDZj/EfjDjv8VIhX/MtUN1yCtyEFheHm5zQlgCVoc4OyKeXm3ktZeKO0dMkdsgFvdK/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785200385; c=relaxed/simple;
-	bh=Cs+lhkcx4V+TqqoVLC1x5WpkdtMehp4i/XgGotMPyPM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IR68/pYzYGaGKlFdQ6rMkUTLIaxow4MGKFBKYMurMwMC6rNFUzsZKRcG9f9mjAg57AGuLT+D0Mqky5fwo2d1lI7yMMUBJcn7i/O5Hfhg0BWwKIXp4w/29V7CvCMdbquy1ke0xwMjgiwAg9wFMlrM8YlQXcItWMA4gDp0wQYS0uU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=QpeT7HFS; arc=none smtp.client-ip=65.109.113.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+	s=arc-20240116; t=1785201976; c=relaxed/simple;
+	bh=57edHnPfQ+aD2wL4qUOTWP1fNCiF4jaCA4MN2AcAij0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=vBPQkllGzLviGuIvHCKILff1kHiqSLKJbgjoJq56+Hnt2GdiDCQmbMRow4XJF8rLW7d1Kjnre+yKCD8Nc0SCeLAE2vICvy/C4IPTTcNDU2MhtB5X71fQQ9L5+mKeeXsllMwPEZa/Z9aUHIHnbMtx6nGSzFW/Q7YYLbbTvPyg8Dg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ckTmdxs9; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=hErtWiox; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="QpeT7HFS"
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 3016040E00E6;
-	Tue, 28 Jul 2026 00:59:34 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
-	header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id 9tTrzS08_f7E; Tue, 28 Jul 2026 00:59:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1785200364; bh=9Pbkpsyn3LuxVwkQuJpW2Q4r277BvMJkMnI0QRRTiG4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QpeT7HFSVEUpD8isy8cgi+uAuDnpBv5k8tUswB8JcUi0yf3JUqKTQRIY6xSsdpO+C
-	 tSzenpZgLXRXTw95sp0ZRAU1xsPDqjohWBswZjo4QT6xNyZMNeDBkB3MVibp3S/BTD
-	 zw5PJxwBc5/D+KxwYxCzaRd3xB8IzAprq6Kdbqd/oAOF8xRTp5mWkapltNGT5vEOdN
-	 zoo7uffYylNSVAvHPfePC1Ck0zOI0WUIAFKiVr+My2Tnca6dt5qjp+JB7kKdtkqzVQ
-	 n6f2cmpO5KnjHdXEKDUqIDnxr67MTcj/SzPatjGosMYaY7oHCbm3VAHF9RqfM6gekz
-	 hA23uR6Pa/k5U0rjYoTZAkm394Y0VyyVcB/cRdgLWv6xpfumR78tGG2i522vzmLpJx
-	 407UtK/24FnSygTWoouOsIz8UGBp+Nsba43y6ogqn/1embEXhCp8CqNq5p5p38kWQx
-	 RLZrKDf5ZBwFBS4KXv1LP9iFxjygFw1j/JHovqwj7m69Sj68H8EtQLpeItaWnk6CEL
-	 yaKnDytPYYUQdbS8X8EKfm3714KMQlf2LinuarKBktj8tDVIysF8MgNOpUbjgTbRFX
-	 j7pR+L1Tk/Zb7Y07YkcBwnB4DU5+y1KXJpzSMhooE2POqgYaxeDu1CAJStAyfUyqgV
-	 um0y9GM4HUUMqOaBSvTsy+Oo=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::43])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ckTmdxs9";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="hErtWiox"
+Received: from smtp202.mailbox.org (unknown [10.196.197.202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 256CF40E00C3;
-	Tue, 28 Jul 2026 00:58:51 +0000 (UTC)
-Date: Mon, 27 Jul 2026 17:58:47 -0700
-From: Borislav Petkov <bp@alien8.de>
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Darren Hart <dvhart@infradead.org>, Lukas Wunner <lukas@wunner.de>,
-	Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <westeri@kernel.org>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Jarkko Sakkinen <jarkko@kernel.org>,
-	Mimi Zohar <zohar@linux.ibm.com>,
-	Roberto Sassu <roberto.sassu@huawei.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Eric Snowberg <eric.snowberg@oracle.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v5 1/2] treewide: Add a flag to detect the Apple T2 chip
-Message-ID: <20260728005847.GBamf-x27vgqj7WG7e@fat_crate.local>
-References: <20260727211807.1223-1-atharvatiwarilinuxdev@gmail.com>
- <20260727211807.1223-2-atharvatiwarilinuxdev@gmail.com>
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h8Hq80jt3zMlGQ;
+	Tue, 28 Jul 2026 03:26:12 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1785201972;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=DYj3Gwonno5tuigqL6BvnWApaq+2uBwSe5vHZ9bElX0=;
+	b=ckTmdxs9OkhWuPopV5aVBYLdi56OHydKkzRRtbTY8T4A3Ptc0tuBM2m9hxcis6VT3HqRBj
+	lhW/s8J892kWxhIECWC5npbZTxko9UerUFAkWIgLWjT0u5AenX6OBaO44m+sxkoeaJgAh9
+	Lt9YfrIYi5lifDN85sk+xK03/xyP9yHMIFEvqlB1rEVogpsHtroWwvBVXabEE00vD2EYRv
+	7L4aD8PeOTBeAv3EVR0bmyTGE8Vd1jOH9PLybGEmOBM+YjAOvvf+/xVlyV0a+O4fdlNp+u
+	BbwtUFXgtvrAXIbvmmNYk3tGT4sa0QwwjgzdQMh3DEOShsiy3ouT03g0eKQLoQ==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1785201970;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=DYj3Gwonno5tuigqL6BvnWApaq+2uBwSe5vHZ9bElX0=;
+	b=hErtWioxNzYcuQSR6cgc6HhLaPgVsgNE/fEjbEgRpLqlojUzXglToYGEZBvNc74x+5aFvB
+	stnAQBGxcLHP5s8ICl817uqN+RatiCaXAaY0KQbo0kDJJEm7h0FYpwm5Dxkts7tEoK1994
+	ycpKjNEdH40z2Aa048E8GKhxQkcidD5WFIugELy7BXuJT5o6Tb7HFvToF8GqUmxf5PZ7sh
+	4L3Wdi/9c+jOYh17SfoZ976Qrrc/O4wjlGGtdDh4BmuH1MtZ33Ygx/wH/8PtJxZhbTzDn0
+	VYPhfLnDrLh+Fzw8j+wqIJ8YYoUSyTLkeYepQJ1KQZub1czTVr5PBWJ8CUvbLg==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Anand Moon <linux.amoon@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Jesper Nilsson <jesper.nilsson@axis.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Minghuan Lian <minghuan.Lian@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Qianfeng Rong <rongqianfeng@vivo.com>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>,
+	Rob Herring <robh@kernel.org>,
+	Roy Zang <roy.zang@nxp.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Srikanth Thokala <srikanth.thokala@intel.com>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Yuho Choi <dbgh9129@gmail.com>,
+	imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-rockchip@lists.infradead.org
+Subject: [PATCH 0/2] PCI: dwc: Handle return value from endpoint .init/.preinit callbacks
+Date: Tue, 28 Jul 2026 03:24:23 +0200
+Message-ID: <20260728012548.465139-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260727211807.1223-2-atharvatiwarilinuxdev@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-ID: 50191466ca9f8db85b8
+X-MBO-RS-META: hmi6jyzzt1u6jydo7geudygbdrddrpon
 
-On Mon, Jul 27, 2026 at 05:18:02PM -0400, Atharva Tiwari wrote:
-> Add a flag to detect Apple T2 chips on Intel Macs.
-> Cache the result to avoid repeated checks. That will
-> be used in upcoming patches.
-> 
-> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-> ---
->  arch/x86/kernel/quirks.c                      | 37 ++++++++++++++++++
->  include/linux/platform_data/x86/apple.h       |  5 +++
->  .../platform_certs/keyring_handler.h          |  8 ----
->  security/integrity/platform_certs/load_uefi.c | 38 ++++---------------
->  4 files changed, 50 insertions(+), 38 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-> index a92f18db9610..6651e5d4d106 100644
-> --- a/arch/x86/kernel/quirks.c
-> +++ b/arch/x86/kernel/quirks.c
-> @@ -664,8 +664,45 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2083, quirk_intel_purley_xeon_ras
->  bool x86_apple_machine;
->  EXPORT_SYMBOL(x86_apple_machine);
->  
-> +bool has_apple_t2_chip;
-> +EXPORT_SYMBOL(has_apple_t2_chip);
+This is a trivial preparatory change which allows checking
+the struct dw_pcie_ep_ops .init/.pre_init return values.
 
-I'm guessing this is parrotting the non-GPL export of x86_apple_machine from
+Currently only the Layerscape PCIe controller benefits from this as
+its ls_pcie_ep_init() may fail in dw_pcie_ep_get_func_from_ep() call,
+but the Renesas R-Car Gen5 will benefit from this next.
 
-  630b3aff8a51 ("treewide: Consolidate Apple DMI checks")
+Since this affects many controller glues and has a huge CC list,
+I am sending this separately from the R-Car Gen5 patches.
 
-Lemme add those folks and ask why aren't those exports GPL only?
+Marek Vasut (2):
+  PCI: dwc: Handle return value from endpoint .init callback
+  PCI: dwc: Handle return value from endpoint .pre_init callback
 
-Thx.
+ drivers/pci/controller/dwc/pci-dra7xx.c         |  4 +++-
+ drivers/pci/controller/dwc/pci-keystone.c       |  4 +++-
+ drivers/pci/controller/dwc/pci-layerscape-ep.c  |  6 ++++--
+ drivers/pci/controller/dwc/pcie-artpec6.c       |  4 +++-
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 14 ++++++++++----
+ drivers/pci/controller/dwc/pcie-designware.h    |  4 ++--
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c   |  4 +++-
+ drivers/pci/controller/dwc/pcie-keembay.c       |  4 +++-
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c     |  6 ++++--
+ 9 files changed, 35 insertions(+), 15 deletions(-)
+
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Anand Moon <linux.amoon@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <Frank.Li@nxp.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Heiko Stuebner <heiko@sntech.de>
+Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Minghuan Lian <minghuan.Lian@nxp.com>
+Cc: Mingkai Hu <mingkai.hu@nxp.com>
+Cc: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Cc: Niklas Cassel <cassel@kernel.org>
+Cc: Qianfeng Rong <rongqianfeng@vivo.com>
+Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Roy Zang <roy.zang@nxp.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: Srikanth Thokala <srikanth.thokala@intel.com>
+Cc: Vignesh Raghavendra <vigneshr@ti.com>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: Yuho Choi <dbgh9129@gmail.com>
+Cc: imx@lists.linux.dev
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-omap@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+Cc: linux-rockchip@lists.infradead.org
 
 -- 
-Regards/Gruss,
-    Boris.
+2.53.0
 
-https://people.kernel.org/tglx/notes-about-netiquette
