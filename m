@@ -1,63 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE4135975;
-	Tue, 28 Jul 2026 23:16:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D8A478E3D;
+	Tue, 28 Jul 2026 23:19:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785280577; cv=none; b=DU0XQ55lvrxn7q4zis7kdKEMC2wAOCHe+cXxLV5JAhwgJ/YImFOp5eR3zrOFaie5GqGF3FRF1FU6Wdsg59ovRPhi5XP5Il0dn2603VhO7kjVEpa/XRYyv0UhJWBVMEM9bRj+Hi7iRt/O9pj1pjeyERtHA0gjrGKwHtzy9fXw0ho=
+	t=1785280777; cv=none; b=mvJg6Wk/XW+JPntLFPNVBs36y+ZYW6LDZmB3xzG7JYL+cje4LmpwepNCRBiazZI9k9raJMqgSSUKyhyvJ78a9arOA/TqpGzBQonJxeOJ1DQhlQ68xy7Y38FniEx4zPQSzAS0qwAkX06UgfISOqQIVKxcXPbhLnG5OFyun6hEVkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785280577; c=relaxed/simple;
-	bh=gKUOlczMHWIuTLty2NpxtV7J6oEf6dDR/kM61R9vUGk=;
+	s=arc-20240116; t=1785280777; c=relaxed/simple;
+	bh=/1Z465AFeRC4q71LBhRZUnjtTwJshzyAXAv59HkAx+I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hjVnRpODpNn6K1DehrO6SUlzA9R/Dw9rryO5k74t1/QiPdUaIBjjvDizCF30YQ2GvomQgLu7v1Vlb2y1PUFT/HwmUuYkPC3Wets4LxWj5IT4IJGPmI39P8mufMzOIQvWjPRQKNbK6TcqEITrcET6+w5Q0uIjazeSA/lDssbAL80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iOeooqZz; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=KCaqyAdjk2DSBpIBxoypzc+Vfei7kwyriUcj8VltZtmkG4gLwnkqGDHV6k5B/StDcwTea06LOvcdN06I7rHkavQLw0g+O8pTcE3NpkFzCxYrbRrFyf2HDhAxd5MACwCBoi5faZntBmWU+5oHDnlmTe8tMfWwANISt117FZJgEg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TRoK7sw3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iOeooqZz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 183BB1F000E9;
-	Tue, 28 Jul 2026 23:16:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TRoK7sw3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C05CF1F000E9;
+	Tue, 28 Jul 2026 23:19:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785280576;
-	bh=6p8hD6i5w4Tp9jWWRVEsc2RgHWgv+05SO3FiSuemI/k=;
+	s=k20260515; t=1785280774;
+	bh=ilsqNG0PCpIJ2XGyyjHetkq2bHI/GbgFTHMfifpPFA8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=iOeooqZzrfzwX65rQIVaupzgcLtbPJxodfctHuiav0ezP9p4usJCVXI+BuauheiN0
-	 IBsbaf56fPuc73jNDZC2uK2zaDr/8A64Pwxwy1G1VtgGOLSX7Gt0kUnRkeqGlBnurr
-	 J5GouQT36+w9zK2619Qorrpi1aUQ9+asA3N+JWylTJM17gbdsu6aFKjgpESWJlvT5o
-	 98SsxM0isieZL/I7U3zUFTokGZX9Pra5IH31LzguyDip/ySwKjLzhHAEpcHOM7u4C7
-	 1lXn/kM8cyIY4EG9VeF5haS5O5naVOkfFgQ6woTctxjjTzxOkl722BW0bXKM5XUPgY
-	 X4yYfeteLRhxg==
-Date: Wed, 29 Jul 2026 08:16:14 +0900
+	b=TRoK7sw3YixAND4XE0H6DWWfud7KE7Dn5Fe4BvVg8GpYu574zB3V3jGUF0k/+wx3E
+	 hOMG0ey8a9c2OgzRc3zwE44SoKSsWuxmvZw/3RXDgpSi0j6nLs2uKmn62So7NNqYJt
+	 X/cSFbyeg91EeZX2vbzODyba43jgPutuobnjdOJa6MBXK9b1aG/q/8yzVl0YqysGK8
+	 WsgkufqCfnf/Q8He/ETR18+lcDdvljCbidnnaeLXS/IC6P9t06teantQkQCC6CYuWq
+	 9SDVbcMP8Ka4KwV6SlparLhXdlB7CfTkSikx1yZYQUxcMMvROQdY/KJO0xiyKo8HxX
+	 vwV1Ol62sE41g==
+Date: Wed, 29 Jul 2026 08:19:32 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Deepanshu Kartikey <kartikey406@gmail.com>
+To: Ziming Du <duziming2@huawei.com>
 Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] PCI/proc: check user access return values in
- proc_bus_pci_{read,write}()
-Message-ID: <20260728231419.GA825941@rocinante>
-References: <20260504022231.15501-1-kartikey406@gmail.com>
+	linux-kernel@vger.kernel.org, liuyongqiang13@huawei.com
+Subject: Re: [PATCH 0/4] PCI: Fix procfs PCI config access issues
+Message-ID: <20260728231714.GA2293930@rocinante>
+References: <20260414024544.2975605-1-duziming2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260504022231.15501-1-kartikey406@gmail.com>
+In-Reply-To: <20260414024544.2975605-1-duziming2@huawei.com>
 
 Hello,
 
-[...]
-> Changes in v2:
->  - Use get_user()/put_user() and drop access_ok() (Krzysztof)
->  - Rename label to err: per kernel convention (Krzysztof)
->  - Simplify error path to release runtime-PM and return -EFAULT (Krzysztof)
->  - Apply the same fix to proc_bus_pci_read() (Krzysztof)
+> As suggested by Bjorn, this series aligns the implementation of procfs with
+> the sysfs counterpart and fixes procfs PCI configuration access issues.
+> 
+> The first two patches refactor proc_bus_pci_{write,read}() to align
+> with pci_write_config() and pci_read_config() respectively:
+>   - Rename variables (pos->off, cnt->count/size) for consistency
+>   - Remove rebundant bounds check
+> 
+> The last two patches fix potential overflow issues:
+>   - Prevent overflow when offset exceeds reasonable range
+>   - Fix implicit 64-bit to 32-bit truncation in read path
+> 
+> Link: https://lore.kernel.org/all/20260303193253.GA3817951@bhelgaas/
+> 
+> Ziming Du (4):
+>   PCI: Align proc_bus_pci_write() with pci_write_config()
+>   PCI: Align proc_bus_pci_read() with pci_read_config()
+>   PCI: Prevent overflow in proc_bus_pci_write()
+>   PCI: Prevent overflow in proc_bus_pci_read()
+> 
+>  drivers/pci/proc.c | 115 ++++++++++++++++++++++-----------------------
+>  1 file changed, 57 insertions(+), 58 deletions(-)
 
-Looks good, and with changes to the commit log per Bjorn:
-
-  Reviewed-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+These changes here are worth doing, so I wonder if you have some time to
+pick this up?  If not, then I am happy to pick this up and send a v2?
 
 Thank you!
 
