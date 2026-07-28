@@ -1,47 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AF031E84B;
-	Tue, 28 Jul 2026 15:53:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3292D3ED5DC;
+	Tue, 28 Jul 2026 15:53:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785254002; cv=none; b=o2ZbJi82BUIhNePb2lyUHQ/w6soMVswqkhbwU0FIT8Zi5zJeCT7MfiRW27x5yhZdJJfefe1ZbY8zzqe9MfClPANin08PHUspFE+r7O39i6rc1+DCoDm2mKdk5mp8FE7sf3w5+FpyGjVoP4IsmEcMFJUrapI24UGxXBa/IjfK/o8=
+	t=1785254005; cv=none; b=W7H9gFWb7DsKIkEtU/MinORjTUHes5sLjIqFq1W2zg+zXOB/mSRRA0Rx27cZw71wazXJhZ+dV6djBDmqD8m70IwT6o3hpMfWMCuggcHHA27lrMGNuOTzRzDkaDeg7Psc5RdJ2FZZUtYcMnE58BipvKNUWRLkPs7jtg5hB+qt6QY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785254002; c=relaxed/simple;
-	bh=bdDTFgwVaJPzXbDXJHAYIe4NI0tDIzc2e4q5zy9J0l0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=elmQPT8Uipw2mWntqck5Yhn4H1evKTKMHid/JulWoQM7roudCG/htTc0hJrMJWJta8N7GtXPfuE9wLBUfVJwk986jJRj0Z3tJ0mHyxtUUHETAsyWSBGSoI6LrKtoZQS6vRExdh+rkF/hDZk1mfhJF3ojnACFg8Xrwk7sMmRi71Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IZ+rbe9O; arc=none smtp.client-ip=198.175.65.21
+	s=arc-20240116; t=1785254005; c=relaxed/simple;
+	bh=sUuzF0P0I00dkfsnkeCtRsCG4DemX0OdtpK7Rx0cxw4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LgBwBqjtwQmvX6OZk1togrHK561eSAZ7XRkQUcZIhDX6T5hnwKBPcIUBOdDMyDvjz+9anY/VqDix3c3qJ3VqAR55WtseFkFhqyz7sSZ9GM5KXLxjL6zg8QkbEqvC4LfDcAbtR6ADJjTrG6iddkYqGHPyn/wLKAAHWhiwVwYk30U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HQFsk/RC; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IZ+rbe9O"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HQFsk/RC"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785254000; x=1816790000;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=bdDTFgwVaJPzXbDXJHAYIe4NI0tDIzc2e4q5zy9J0l0=;
-  b=IZ+rbe9O7si+f7xieQxlAalGQDutwNK1oeolmupRFKwMBqffJgQmP+nz
-   22iOLtKJGk/wb3xc9xp+q08eBnMNjFxW8TsrLCeKKNQbQkNnmAPTIRAs5
-   Jk20487Whc2vqwn34piV1WAlwtZYUqfa7o5UhgirjwkLx6oGXJzlH8z6N
-   f4yMLumArSy/lD6RBAsy4s5saFqLeqiVQ8mQlmAmVhTy2qS6LiSG8NDsC
-   TqOstfx4+HrIO5kb0QNBra4xW8N9xIrm5eQ46JYCoSu0Kf538jfYOg5C/
-   sNPciSz4ROg1jtsqvUY8377pxL/QoEQXZT1GydGE1QfIOgHA/yvFz6by9
-   w==;
-X-CSE-ConnectionGUID: Y+e7QJ+ITiyBjnmi62w7Uw==
-X-CSE-MsgGUID: BuFCyZ+WQm+PKc5bSKHzJQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="85696418"
+  t=1785254003; x=1816790003;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=sUuzF0P0I00dkfsnkeCtRsCG4DemX0OdtpK7Rx0cxw4=;
+  b=HQFsk/RChzyujIjqkAsKZtFPNm7nW6jCEEaxvLeRNSuugB74kj4t2EUb
+   hfiUBg8nM4VzXEAKL7GjyHVaRxlRGd6jm8G2KxVI8ClBpEaAOwpYVYIgt
+   9ov/PbK1MDI6sa0Kxv963xetmQSa+N4aqC5eZ87RE/j0DopX5CJtVSRIk
+   ncUyuFAEQPmSVIvYmKnWYpwtOx+WMtpjkHUMRdVJxnUf+d0l61x/sEsop
+   0KWmFshAXg40bp6JzP+ern0FkyOb8PwGISelIHmhXGm2zp1GRU33EiSDJ
+   JkSgoGTvc3mej3VsN7BdTyV9ig+mv6n73kRznvyMpIEcf9//+uFktkAIs
+   Q==;
+X-CSE-ConnectionGUID: XOaD/qjhRumoI7uxFtD9jA==
+X-CSE-MsgGUID: 4hgDLGR/QXqCdNpu9NuyUw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="85696474"
 X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
-   d="scan'208";a="85696418"
+   d="scan'208";a="85696474"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:19 -0700
-X-CSE-ConnectionGUID: cIMVD2ezQdeCpH+ToN2W+A==
-X-CSE-MsgGUID: fZlV2llzQ3GoGR7sjyRd9g==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:21 -0700
+X-CSE-ConnectionGUID: sYDiD1c9TOWmrDvo8mpT2g==
+X-CSE-MsgGUID: 8BvvLYzkRa2v3m+6vHpMKg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
-   d="scan'208";a="255817355"
+   d="scan'208";a="255817400"
 Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.244.126])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:16 -0700
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:19 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: alexandre.belloni@bootlin.com
 Cc: Frank.Li@nxp.com,
@@ -50,10 +51,12 @@ Cc: Frank.Li@nxp.com,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [PATCH V2 0/8] i3c: Support IBI-based system wakeup
-Date: Tue, 28 Jul 2026 18:53:00 +0300
-Message-ID: <20260728155308.142713-1-adrian.hunter@intel.com>
+Subject: [PATCH V2 1/8] i3c: master: Fix recursive locking during device registration
+Date: Tue, 28 Jul 2026 18:53:01 +0300
+Message-ID: <20260728155308.142713-2-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260728155308.142713-1-adrian.hunter@intel.com>
+References: <20260728155308.142713-1-adrian.hunter@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,96 +66,147 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
-Hi
+i3c_master_register_new_i3c_devs() registers newly discovered devices
+while holding i3c_bus_normaluse_lock(), a down_read().  device_register()
+can immediately probe the device, and probe callbacks typically invoke
+I3C helpers that take i3c_bus_normaluse_lock() again, leading to a
+recursive acquisition of the same rwsem.  rwsems do not support recursive
+read locking and can deadlock when a writer is waiting.  See the
+"Recursive read locks" section of Documentation/locking/lockdep-design.rst.
 
-Intel LPSS I3C controllers support up to two I3C busses and can wake the
-system from an In-Band Interrupt (IBI) via a PCI PME.  Today that wakeup
-capability lives only at the PCI function, with no way to express which
-I3C device is actually responsible for waking the system, and no way for
-user space to enable or disable wakeup on a per-device basis.
+For example, with Intel LPSS I3C, LOCKDEP generates a WARNING like:
+  # echo intel-lpss-i3c.0 > /sys/bus/platform/drivers/mipi-i3c-hci/unbind
+  # echo intel-lpss-i3c.0 > /sys/bus/platform/drivers/mipi-i3c-hci/bind
+  WARNING: possible recursive locking detected
+  kworker/5:1/94 is trying to acquire lock:
+  ffff88811c810d78 (&i3cbus->lock){++++}-{4:4}, at: i3c_device_match_id+0x45/0x370
+  but task is already holding lock:
+  ffff88811c810d78 (&i3cbus->lock){++++}-{4:4}, at: i3c_master_reg_work_fn+0x21/0x5f0
 
-This series pushes the wakeup capability down to the individual I3C
-devices and then aggregates the resulting wakeup state back up to the PCI
-device.
+Fix this by separating device creation from device registration.
+Populate desc->dev under the maintenance lock, collect the devices that
+still need registration into a local list, then release the lock before
+calling device_register().  Finally retake the lock and clean up any
+devices that failed to register.
 
-An IBI-capable I3C device on a bus whose controller can wake the system
-is marked as wakeup capable, so it can be managed through the standard
-device wakeup framework (e.g. via power/wakeup in sysfs).  When such a
-device is enabled for wakeup, a wakeup event is reported each time it
-queues an IBI.
+Use the maintenance lock rather than the normal-use lock while adding
+device objects.  A write-side maintenance lock prevents readers from
+observing a partially initialized desc->dev during initial device
+population, or desc->dev disappearing if registration fails.
 
-At suspend time, the mipi-i3c-hci PCI driver aggregates the wakeup
-configuration of the I3C devices across its HCI instances (up to two I3C
-busses) and enables PCI wakeup (PME) only when at least one attached I3C
-device is enabled as a wakeup source and has IBI enabled.  This keeps
-the PCI wakeup state in sync with the actual requirements of the devices
-on the busses.
+The local list requires a list node, so add a list node member to struct
+i3c_device.
 
-The series is organised as follows:
-
- - Patch 1 fixes a pre-existing recursive acquisition of the bus rwsem
-   in i3c_master_register_new_i3c_devs().  The remaining patches add
-   work to that same function, so the locking is corrected first.
-
- - Patches 2-5 add the generic I3C core support: an ibi_wakeup flag for
-   controllers, marking IBI-capable devices as wakeup capable, reporting
-   wakeup events on IBIs, a helper to query whether any device on a bus
-   has both wakeup and IBI enabled, and a fix to reject IBI requests
-   from devices that do not advertise IBI capability.
-
- - Patches 6-8 wire this up for the mipi-i3c-hci driver: propagate the
-   aggregated I3C wakeup requirements to the PCI function, factor out
-   i3c_hci_sysdev() for the shared device lookup, and advertise IBI
-   wakeup capability when the underlying system device can wake the
-   system.
-
-Note, since the PCI wakeup state is now derived from the wakeup
-configuration of the attached I3C devices, the PCI device's
-power/wakeup sysfs attribute no longer provides independent wakeup
-control.
+Fixes: 3a379bbcea0a ("i3c: Add core I3C infrastructure")
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
 
 
 Changes in V2:
 
-    Dropped the RFC tag.
-
-    i3c: master: Fix recursive locking during device registration
 	New patch
 
-    i3c: master: Support IBI-based wakeup capability
-	Dropped the redundant #include <linux/pm_wakeup.h>.  That header
-	must not be included directly, and linux/device.h, which is
-	already included, provides device_set_wakeup_capable().
 
-    i3c: master: Add helper to query bus wakeup requirements
-	i3c_master_any_wakeup_enabled() now also requires the device to
-	have IBI enabled, not just system wakeup enabled, so that a
-	device with no active IBI request does not keep PCI PME enabled.
-	desc->ibi_lock is taken while checking.  The commit message and
-	kernel-doc are updated to match.
+ drivers/i3c/master.c       | 45 ++++++++++++++++++++++++++++----------
+ include/linux/i3c/master.h |  2 ++
+ 2 files changed, 35 insertions(+), 12 deletions(-)
 
-    Rebased onto i3c/next.
+diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
+index fd3e79d10c84..874f6e11b296 100644
+--- a/drivers/i3c/master.c
++++ b/drivers/i3c/master.c
+@@ -1973,12 +1973,21 @@ static int i3c_master_early_i3c_dev_add(struct i3c_master_controller *master,
+ static void
+ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
+ {
++	struct i3c_device *i3cdev, *tmp;
+ 	struct i3c_dev_desc *desc;
++	LIST_HEAD(i3c_unreg_devs);
+ 	int ret;
+ 
+ 	if (!master->init_done)
+ 		return;
+ 
++	i3c_bus_maintenance_lock(&master->bus);
++
++	if (master->shutting_down) {
++		i3c_bus_maintenance_unlock(&master->bus);
++		return;
++	}
++
+ 	i3c_bus_for_each_i3cdev(&master->bus, desc) {
+ 		if (desc->dev || !desc->info.dyn_addr || desc == master->this)
+ 			continue;
+@@ -1999,25 +2008,37 @@ i3c_master_register_new_i3c_devs(struct i3c_master_controller *master)
+ 		if (desc->boardinfo)
+ 			desc->dev->dev.of_node = desc->boardinfo->of_node;
+ 
+-		ret = device_register(&desc->dev->dev);
+-		if (ret) {
+-			dev_err(&master->dev,
+-				"Failed to add I3C device (err = %d)\n", ret);
+-			desc->dev->desc = NULL;
+-			put_device(&desc->dev->dev);
+-			desc->dev = NULL;
+-		}
++		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
++	}
++
++	i3c_bus_maintenance_unlock(&master->bus);
++
++	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
++		ret = device_register(&i3cdev->dev);
++		if (ret)
++			dev_err(&master->dev, "Failed to add I3C device (err = %d)\n", ret);
++		else
++			list_del_init(&i3cdev->node);
++	}
++
++	i3c_bus_maintenance_lock(&master->bus);
++
++	list_for_each_entry_safe(i3cdev, tmp, &i3c_unreg_devs, node) {
++		list_del(&i3cdev->node);
++		desc = i3cdev->desc;
++		i3cdev->desc = NULL;
++		put_device(&i3cdev->dev);
++		desc->dev = NULL;
+ 	}
++
++	i3c_bus_maintenance_unlock(&master->bus);
+ }
+ 
+ static void i3c_master_reg_work_fn(struct work_struct *work)
+ {
+ 	struct i3c_master_controller *master = container_of(work, typeof(*master), reg_work);
+ 
+-	i3c_bus_normaluse_lock(&master->bus);
+-	if (!master->shutting_down)
+-		i3c_master_register_new_i3c_devs(master);
+-	i3c_bus_normaluse_unlock(&master->bus);
++	i3c_master_register_new_i3c_devs(master);
+ }
+ 
+ /**
+diff --git a/include/linux/i3c/master.h b/include/linux/i3c/master.h
+index 4d2a68793324..fa1c98f0f5c1 100644
+--- a/include/linux/i3c/master.h
++++ b/include/linux/i3c/master.h
+@@ -228,6 +228,7 @@ struct i3c_dev_desc {
+  *	  every time the I3C device is rediscovered with a different dynamic
+  *	  address assigned
+  * @bus: I3C bus this device is attached to
++ * @node: unregistered device list node
+  *
+  * I3C device object exposed to I3C device drivers. The takes care of linking
+  * this object to the relevant &struct_i3c_dev_desc one.
+@@ -238,6 +239,7 @@ struct i3c_device {
+ 	struct device dev;
+ 	struct i3c_dev_desc *desc;
+ 	struct i3c_bus *bus;
++	struct list_head node;
+ };
+ 
+ /*
+-- 
+2.53.0
 
-
-Adrian Hunter (8):
-      i3c: master: Fix recursive locking during device registration
-      i3c: master: Support IBI-based wakeup capability
-      i3c: master: Report wakeup events for IBIs
-      i3c: master: Add helper to query bus wakeup requirements
-      i3c: master: Reject IBI requests from non-IBI-capable devices
-      i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
-      i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
-      i3c: mipi-i3c-hci: Advertise IBI wakeup capability
-
- drivers/i3c/device.c                               |  8 ++-
- drivers/i3c/master.c                               | 84 +++++++++++++++++++---
- drivers/i3c/master/mipi-i3c-hci/core.c             | 15 ++++
- drivers/i3c/master/mipi-i3c-hci/dma.c              | 15 +---
- drivers/i3c/master/mipi-i3c-hci/hci.h              |  2 +
- drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c | 23 +++++-
- include/linux/i3c/master.h                         |  5 ++
- 7 files changed, 123 insertions(+), 29 deletions(-)
-
-
-Regards
-Adrian
