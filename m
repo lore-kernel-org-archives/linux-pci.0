@@ -1,224 +1,654 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A3A41F7D2
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 22:22:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE303AEB5F;
+	Tue, 28 Jul 2026 22:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785277379; cv=none; b=c27Ii6PFb4JNL5e05fWWtFijTEepiuoiNrq9NO85mjlOgkosAlTizWOouCPlxG2qPUTv1ixdRwWoS2FJks4FtTE+v2/oQrt8C/8zxxhzZdEZICmu+ckVq3KNwJJz+pdU4DRh7UCR4SBjBS72dHumZlrylDiybg82WF18Mm9aerw=
+	t=1785277641; cv=none; b=HJZM4KHev7Z2NIBHlWaxxbuWAA4GIOXb2MLdBFMOuL1YD+b3jxoHQgDrihnto2zi7vI2LjECxqkG9fGQOs/nX2/rLVueT1WShZ/DHIVlKCJOH8f+mxhcwWm6pS2M7zA+w/Y39s7WM83O0AsKprRvdkObxKyROKXll0vqlW8zGZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785277379; c=relaxed/simple;
-	bh=LktoWl3EXKKBugwCHiHxNRYYtMxH21gGfVSpBrm9YXk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GLt96iqs5Q+LxzFtnrLpepTcDZyOL325bOq/PyTCFHCqQ7p8O/gUfliz33Kppnv6+s1VlKBHEQW9yQQ3E3YKaq+2Hq8D1IlndtRGu+ZcIFuHDCoxR0SlFemjB0GuyqGkKa1d3Se8a+uexkuvvtF0s8Vxh8fXT8/C0XDeLkfM32Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OlMVCSgR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785277641; c=relaxed/simple;
+	bh=SCd0UWlwmW7I1bXpXzK2ZkRypcokvv9WehiwN8zsgIw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=jcJVtljV1v4J2x4iqbALk4dIHfFN3HJD6VbUlRdeGs1OpI5MG6GUbjWdweZFmMXiKtW4U4NjBGd/CJalYJkJr1SPXN5ASCxy0PmOp2xxhUTHc7RpI9CXuPtdS9WEom2DkAcEdRP2t4zhkcNpzAsE5JhCms8cCS8LmDeo7sWMzGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bQkU2WP+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OlMVCSgR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56AD41F000E9;
-	Tue, 28 Jul 2026 22:22:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bQkU2WP+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A74D1F000E9;
+	Tue, 28 Jul 2026 22:27:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785277377;
-	bh=qM4EQKDsnMv1t1iPWC5x9QFp78cOccVC/jKZyAJxHjg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OlMVCSgRcXWxRA8sQTfoQMzMrT6XyDr7wxpsuvlyD2A/LV95DtC3wqqEJYiCtnq/L
-	 VIXbN7YIS8/rQ8zPn587cRKu6D7Uf9u/DL+jX/abYDumJVMkBMJQsNqvrXEb/CLd1h
-	 5m5BI1G/+iXx+tED3hhl3mbitUdxOgTHKVHvN8WxfTaKTSiHej0cjMA8KdrwpCj+W3
-	 0sdhtE1DD1jrJNUbP1y3svlnqjRFCA81DEYBjuNji5VoiR5vZzgoD79EMhC4Hdvw2z
-	 CXUeGrQLaD/Q5+vqOVVieNvT9f24xeievKeIpporia/Up8+++GysIaLerDUqSJ/7hV
-	 4RVaROPpaLKIg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Matlack" <dmatlack@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260728221007.2098560-4-dmatlack@google.com>
-References: <20260728221007.2098560-1-dmatlack@google.com>
- <20260728221007.2098560-4-dmatlack@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 22:22:56 +0000
-Message-Id: <20260728222257.56AD41F000E9@smtp.kernel.org>
+	s=k20260515; t=1785277639;
+	bh=E+DgmexqD9eZlyPhzBt/KTZnReSqy0DooXntLcufN3k=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=bQkU2WP+4j0eIwF24nG3mGyWH3WvI088Vmf2jiww2FpjucmK+DkJR6DM67yCh6J+v
+	 Up+yMzrd5Q4D/3QLSIPRNODdPcveVx85WPGFhc8NHXnpoyapvPuuvsi87aZ53XFb2E
+	 FWYWUHgvM0k0CLu5JZ7OG50XqNxOrOWhCx3PGazaxfThGkF5lH9j17KSOvccmEBjpC
+	 5UJUSQVaHKhi+9t7IXqWawUhifDGppfBRG6dcPZ54LW2b0aVk1GsGHfKiq29pJmHKE
+	 1cHTBy9pMMcd8f0vcQ4zKLQHtpmvNJYFKnmpPPjwBhSMiNyjXp+S6WhlvPexirpETX
+	 W9URPDcRKATzw==
+Date: Tue, 28 Jul 2026 17:27:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sai Krishna Musham <sai.krishna.musham@amd.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, cassel@kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	michal.simek@amd.com, bharat.kumar.gogada@amd.com,
+	thippeswamy.havalige@amd.com, pranav.sanwal@amd.com
+Subject: Re: [PATCH v2 2/2] pci: AMD: Add CPM6 host controller support to AMD
+ MDB PCIe driver
+Message-ID: <20260728222718.GA1404656@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728202044.1785986-3-sai.krishna.musham@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] Unconditional kernel panic in the incoming FLB finish path if a pr=
-eserved PCI device is missing or fails setup.
-- [High] `pci_flb_unpreserve()` destroys outgoing FLB memory without cleari=
-ng device pointers, leading to a Use-After-Free.
-- [High] Transient errors or version mismatches during FLB retrieval cause =
-an immediate kernel panic on device setup.
-- [Medium] Leaking preserved KHO memory for `ser->devices` on early error p=
-aths in `pci_flb_retrieve()`.
---
+Replace subject with something like this to match history:
 
---- Patch [3]: [PATCH v8 03/12] PCI: liveupdate: Track incoming preserved P=
-CI devices ---
-commit 8fdc703d6dd44076cd03589af0bcffa13c79e7f4
-Author: David Matlack <dmatlack@google.com>
+  PCI: amd-mdb: Add CPM6 host controller support
 
-PCI: liveupdate: Track incoming preserved PCI devices
+On Wed, Jul 29, 2026 at 01:50:44AM +0530, Sai Krishna Musham wrote:
+> Extend the AMD MDB PCIe driver to support AMD Versal2 CPM6 variants
+> (amd,versal2-cpm6-host and amd,versal2-cpm6-host1). Like MDB5, CPM6 is
+> based on the Synopsys DesignWare PCIe controller and reuses the existing
+> DesignWare host support; only the interrupt architecture differs:
+> - The per-controller interrupt registers (MISC_EVENT, PCIE_ERR) are in a
+>   dedicated "intr" region instead of the shared SLCR
+> - The aggregation layer (MERGED, PS_MISC) is shared and sticky; it
+>   requires an explicit W1C-clear after servicing to prevent IRQ storms
+> - The completion timeout is reported via PCIE_ERR instead of MISC_EVENT
+> 
+> Add variant-specific register layout and implement aggregator clearing
+> that, after every interrupt pass, clears this host's contribution from
+> the MERGED register and the corresponding bit in the PS_MISC severity
+> register.
 
-This patch allows the PCI core to track incoming preserved PCI devices
-during enumeration. It fetches the serialized state from the Live Update
-Orchestrator and exposes APIs for drivers to handle incoming devices.
+I don't know if it's worth it, but I think this part could be split
+into a preparatory patch that just reworks the MDB5 support, e.g.,
+moves the _IC stuff, adds the register layout pointers and mdb5_host,
+sets up pcie->variant and tests it for "== MDB5", etc.
 
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index b003b7069cdb0..5ce5f8b369029 100644
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-[ ... ]
-> @@ -140,15 +174,91 @@ static int pci_flb_retrieve(struct liveupdate_flb_o=
-p_args *args)
->  {
-> +	struct pci_ser *ser =3D phys_to_virt(args->data);
-> +	struct pci_flb_incoming *incoming;
-> +	struct pci_dev_ser *dev_ser;
-> +	struct kho_block_set_it it;
-> +	int ret;
-> =20
->  	pr_debug("Retrieving struct pci_ser (0x%llx)\n", args->data);
-> -	args->obj =3D phys_to_virt(args->data);
+Some of the generic things Sashiko pointed out could also be fixed in
+separate preparatory patches where they would be easier to backport to
+kernels where only MDB5 support is needed.
+
+Then this patch would be purely CPM6-related things.
+
+> Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+> ---
+> Changes in v2:
+> - Add CPM6 host controller interrupt support.
+> 
+> v1 https://lore.kernel.org/all/20260402180006.486229-3-sai.krishna.musham@amd.com/
+> ---
+>  drivers/pci/controller/dwc/pcie-amd-mdb.c | 351 +++++++++++++++++++---
+>  1 file changed, 305 insertions(+), 46 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> index dee295f281a3..dbf36ce9902c 100644
+> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> @@ -21,6 +21,23 @@
+>  #include "../../pci.h"
+>  #include "pcie-designware.h"
+>  
+> +/*
+> + * On CPM6 the per-controller PCIe interrupt registers (MISC_EVENT and
+> + * PCIE_ERR) live in a dedicated region ("intr"), separate from the CPM SLCR
+> + * region ("slcr") that holds the MERGED and PS severity registers they feed
+> + * into. Each has a sticky W1C STATUS, a read-only MASK, and write-1
+> + * ENABLE/DISABLE register.
+> + */
+> +#define AMD_CPM6_PCIE_ERR_STATUS		0x500
+> +#define AMD_CPM6_PCIE_ERR_MASK			0x504
+> +#define AMD_CPM6_PCIE_ERR_ENABLE		0x508
+> +#define AMD_CPM6_PCIE_ERR_DISABLE		0x50C
 > +
-> +	if (ser->version !=3D PCI_LUO_FLB_VERSION) {
-> +		pr_err("Incoming PCI FLB version (v%d) is incompatible with this kerne=
-l (v%d)\n",
-> +		       ser->version, PCI_LUO_FLB_VERSION);
-> +		ret =3D -EINVAL;
-> +		goto err_restore_free;
-> +	}
+> +#define AMD_CPM6_MISC_EVENT_STATUS		0x514
+> +#define AMD_CPM6_MISC_EVENT_MASK		0x518
+> +#define AMD_CPM6_MISC_EVENT_ENABLE		0x51C
+> +#define AMD_CPM6_MISC_EVENT_DISABLE		0x520
 > +
-> +	incoming =3D kzalloc_obj(*incoming);
-> +	if (!incoming) {
-> +		ret =3D -ENOMEM;
-> +		goto err_restore_free;
-> +	}
-[ ... ]
-> +err_restore_free:
-> +	kho_restore_free(ser);
-> +	return ret;
-> +}
+>  #define AMD_MDB_TLP_IR_STATUS_MISC		0x4C0
+>  #define AMD_MDB_TLP_IR_MASK_MISC		0x4C4
+>  #define AMD_MDB_TLP_IR_ENABLE_MISC		0x4C8
+> @@ -30,7 +47,22 @@
+>  
+>  #define AMD_MDB_PCIE_INTR_INTX_ASSERT(x)	BIT((x) * 2)
+>  
+> -/* Interrupt registers definitions. */
+> +#define AMD_CPM6_MERGED_STATUS			0x648
+> +
+> +/* MERGED input bits for the MISC_EVENT/PCIE_ERR sources this driver handles. */
+> +#define AMD_CPM6_MERGED_PCIE_ERR_HOST0		13
+> +#define AMD_CPM6_MERGED_MISC_EVENT_HOST0	14
+> +#define AMD_CPM6_MERGED_PCIE_ERR_HOST1		16
+> +#define AMD_CPM6_MERGED_MISC_EVENT_HOST1	17
+> +
+> +/*
+> + * The PS_MISC severity register feeds the misc/OR GIC line. The MERGED
+> + * aggregator appears as bit 21 within it.
+> + */
+> +#define AMD_CPM6_PS_MISC_IR_STATUS		0x340
+> +#define AMD_CPM6_PS_IR_MERGED		BIT(21)
+> +
+> +/* MDB5 interrupt register definitions. */
+>  #define AMD_MDB_PCIE_INTR_CMPL_TIMEOUT		15
+>  #define AMD_MDB_PCIE_INTR_INTX			16
+>  #define AMD_MDB_PCIE_INTR_PM_PME_RCVD		24
+> @@ -39,6 +71,9 @@
+>  #define AMD_MDB_PCIE_INTR_NONFATAL		27
+>  #define AMD_MDB_PCIE_INTR_FATAL			28
+>  
+> +/* Completion timeout lives in PCIE_ERR_STATUS; give it a dedicated hwirq. */
+> +#define AMD_CPM6_PCIE_ERR_CMPL_RADM		20
+> +
+>  #define IMR(x) BIT(AMD_MDB_PCIE_INTR_ ##x)
+>  #define AMD_MDB_PCIE_IMR_ALL_MASK			\
+>  	(						\
+> @@ -51,10 +86,58 @@
+>  		AMD_MDB_TLP_PCIE_INTX_MASK		\
+>  	)
+>  
+> +/* CPM6 hwirq mapping (hwirq == MISC_EVENT status bit). */
+> +#define AMD_CPM6_PCIE_INTR_FATAL		17
+> +#define AMD_CPM6_PCIE_INTR_NONFATAL		18
+> +#define AMD_CPM6_PCIE_INTR_MISC_CORRECTABLE	19
+> +#define AMD_CPM6_PCIE_INTR_PME_TO_ACK_RCVD	20
+> +#define AMD_CPM6_PCIE_INTR_PM_PME_RCVD		21
+> +#define AMD_CPM6_PCIE_INTR_INTX			22
+> +
+> +#define AMD_CPM6_MISC_EVENT_MASK_ALL			\
+> +	(						\
+> +		BIT(AMD_CPM6_PCIE_INTR_FATAL)		|	\
+> +		BIT(AMD_CPM6_PCIE_INTR_NONFATAL)	|	\
+> +		BIT(AMD_CPM6_PCIE_INTR_MISC_CORRECTABLE)	|\
+> +		BIT(AMD_CPM6_PCIE_INTR_PME_TO_ACK_RCVD)	|\
+> +		BIT(AMD_CPM6_PCIE_INTR_PM_PME_RCVD)	|	\
+> +		BIT(AMD_CPM6_PCIE_INTR_INTX)			\
+> +	)
 
-[Severity: Medium]
-Does this error path leak the KHO memory for ser->devices?
+Line up the backslashes as in AMD_MDB_PCIE_IMR_ALL_MASK.
 
-When jumping to err_restore_free (e.g. due to a version mismatch or kzalloc
-failure), kho_restore_free(ser) is called, but it doesn't appear to restore
-or free the memory pointed to by ser->devices.=20
-
-Since KHO pages are reserved across kexec, will this permanently leak the=20
-memory for the uptime of the successor kernel?
-
-[ ... ]
-> +static void pci_check_all_devices_finished(struct pci_flb_incoming *inco=
-ming)
+> +/* Sources handled in the PCIE_ERR register. */
+> +#define AMD_CPM6_PCIE_ERR_MASK_ALL	BIT(AMD_CPM6_PCIE_ERR_CMPL_RADM)
+> +
+> +enum amd_mdb_pcie_version {
+> +	MDB5,
+> +	CPM6,
+> +	CPM6_HOST1,
+> +};
+> +
+> +struct amd_mdb_intr_cause {
+> +	const char	*sym;
+> +	const char	*str;
+> +};
+> +
+> +struct amd_mdb_pcie_variant {
+> +	enum	amd_mdb_pcie_version version;
+> +	u32	misc_status_reg;
+> +	u32	misc_mask_reg;
+> +	u32	misc_enable_reg;
+> +	u32	misc_disable_reg;
+> +	u32	misc_mask_all;
+> +	u32	intx_hwirq;
+> +	u32	intx_mask;
+> +};
+> +
+>  /**
+>   * struct amd_mdb_pcie - PCIe port information
+>   * @pci: DesignWare PCIe controller structure
+>   * @slcr: MDB System Level Control and Status Register (SLCR) base
+> + * @intr_base: Per-controller interrupt register base. On CPM6 this maps the
+> + *             "intr" region holding the MISC_EVENT/PCIE_ERR registers; on MDB5
+> + *             the interrupt registers live in the SLCR block, so it aliases
+> + *             @slcr.
+> + * @variant: Interrupt layout data for the matched platform compatible
+>   * @intx_domain: INTx IRQ domain pointer
+>   * @mdb_domain: MDB IRQ domain pointer
+>   * @perst_gpio: GPIO descriptor for PERST# signal handling
+> @@ -63,12 +146,62 @@
+>  struct amd_mdb_pcie {
+>  	struct dw_pcie			pci;
+>  	void __iomem			*slcr;
+> +	void __iomem			*intr_base;
+> +	const struct amd_mdb_pcie_variant	*variant;
+>  	struct irq_domain		*intx_domain;
+>  	struct irq_domain		*mdb_domain;
+>  	struct gpio_desc		*perst_gpio;
+>  	int				intx_irq;
+>  };
+>  
+> +#define _IC(x, s)[AMD_MDB_PCIE_INTR_ ## x] = { __stringify(x), s }
+> +
+> +static const struct amd_mdb_intr_cause mdb5_intr_cause[32] = {
+> +	_IC(CMPL_TIMEOUT,	"Completion timeout"),
+> +	_IC(PM_PME_RCVD,	"PM_PME message received"),
+> +	_IC(PME_TO_ACK_RCVD,	"PME_TO_ACK message received"),
+> +	_IC(MISC_CORRECTABLE,	"Correctable error message"),
+> +	_IC(NONFATAL,		"Non fatal error message"),
+> +	_IC(FATAL,		"Fatal error message"),
+> +};
+> +
+> +#define _IC6(x, s)[AMD_CPM6_PCIE_INTR_ ## x] = { __stringify(x), s }
+> +
+> +static const struct amd_mdb_intr_cause cpm6_intr_cause[32] = {
+> +	_IC6(PM_PME_RCVD,	"PM_PME message received"),
+> +	_IC6(PME_TO_ACK_RCVD,	"PME_TO_ACK message received"),
+> +	_IC6(MISC_CORRECTABLE,	"Correctable error message"),
+> +	_IC6(NONFATAL,		"Non fatal error message"),
+> +	_IC6(FATAL,		"Fatal error message"),
+> +};
+> +
+> +static void amd_mdb_pcie_clear_aggregators(struct amd_mdb_pcie *pcie)
 > +{
-> +	struct pci_dev *dev =3D NULL;
+> +	u32 merged_mask;
 > +
-> +	if (READ_ONCE(incoming->ser->nr_devices) =3D=3D 0)
+> +	if (pcie->variant->version == MDB5)
 > +		return;
 > +
-> +	for_each_pci_dev(dev) {
-> +		if (READ_ONCE(dev->liveupdate.incoming))
-> +			pci_emerg(dev, "Preserved device was never finished!\n");
+> +	/*
+> +	 * Clear this host's serviced contributions (MISC_EVENT0 and PCIE_ERR)
+> +	 * from MERGED.
+> +	 */
+> +	merged_mask = pcie->variant->version == CPM6 ?
+> +		      BIT(AMD_CPM6_MERGED_MISC_EVENT_HOST0) |
+> +		      BIT(AMD_CPM6_MERGED_PCIE_ERR_HOST0) :
+> +		      BIT(AMD_CPM6_MERGED_MISC_EVENT_HOST1) |
+> +		      BIT(AMD_CPM6_MERGED_PCIE_ERR_HOST1);
+> +
+> +	writel_relaxed(merged_mask, pcie->slcr + AMD_CPM6_MERGED_STATUS);
+> +
+> +	/*
+> +	 * Clear MERGED in the PS_MISC severity register so the misc GIC line
+> +	 * de-asserts.
+> +	 */
+> +	writel_relaxed(AMD_CPM6_PS_IR_MERGED,
+> +		       pcie->slcr + AMD_CPM6_PS_MISC_IR_STATUS);
+> +}
+> +
+>  static const struct dw_pcie_host_ops amd_mdb_pcie_host_ops = {
+>  };
+>  
+> @@ -81,14 +214,17 @@ static void amd_mdb_intx_irq_mask(struct irq_data *data)
+>  	u32 val;
+>  
+>  	raw_spin_lock_irqsave(&port->lock, flags);
+> -	val = FIELD_PREP(AMD_MDB_TLP_PCIE_INTX_MASK,
+> -			 AMD_MDB_PCIE_INTR_INTX_ASSERT(data->hwirq));
+> +	if (pcie->variant->version == MDB5)
+> +		val = FIELD_PREP(AMD_MDB_TLP_PCIE_INTX_MASK,
+> +				 AMD_MDB_PCIE_INTR_INTX_ASSERT(data->hwirq));
+> +	else
+> +		val = pcie->variant->intx_mask;
+>  
+>  	/*
+>  	 * Writing '1' to a bit in AMD_MDB_TLP_IR_DISABLE_MISC disables that
+>  	 * interrupt, writing '0' has no effect.
+>  	 */
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_DISABLE_MISC);
+> +	writel_relaxed(val, pcie->intr_base + pcie->variant->misc_disable_reg);
+>  	raw_spin_unlock_irqrestore(&port->lock, flags);
+>  }
+>  
+> @@ -101,14 +237,17 @@ static void amd_mdb_intx_irq_unmask(struct irq_data *data)
+>  	u32 val;
+>  
+>  	raw_spin_lock_irqsave(&port->lock, flags);
+> -	val = FIELD_PREP(AMD_MDB_TLP_PCIE_INTX_MASK,
+> -			 AMD_MDB_PCIE_INTR_INTX_ASSERT(data->hwirq));
+> +	if (pcie->variant->version == MDB5)
+> +		val = FIELD_PREP(AMD_MDB_TLP_PCIE_INTX_MASK,
+> +				 AMD_MDB_PCIE_INTR_INTX_ASSERT(data->hwirq));
+> +	else
+> +		val = pcie->variant->intx_mask;
+>  
+>  	/*
+>  	 * Writing '1' to a bit in AMD_MDB_TLP_IR_ENABLE_MISC enables that
+>  	 * interrupt, writing '0' has no effect.
+>  	 */
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_ENABLE_MISC);
+> +	writel_relaxed(val, pcie->intr_base + pcie->variant->misc_enable_reg);
+>  	raw_spin_unlock_irqrestore(&port->lock, flags);
+>  }
+>  
+> @@ -148,42 +287,34 @@ static irqreturn_t dw_pcie_rp_intx(int irq, void *args)
+>  	unsigned long val;
+>  	int i, int_status;
+>  
+> -	val = readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
+> -	int_status = FIELD_GET(AMD_MDB_TLP_PCIE_INTX_MASK, val);
+> +	val = readl_relaxed(pcie->intr_base + pcie->variant->misc_status_reg);
+>  
+> -	for (i = 0; i < PCI_NUM_INTX; i++) {
+> -		if (int_status & AMD_MDB_PCIE_INTR_INTX_ASSERT(i))
+> +	if (pcie->variant->version == MDB5) {
+> +		int_status = FIELD_GET(AMD_MDB_TLP_PCIE_INTX_MASK, val);
+> +		for (i = 0; i < PCI_NUM_INTX; i++) {
+> +			if (int_status & AMD_MDB_PCIE_INTR_INTX_ASSERT(i))
+> +				generic_handle_domain_irq(pcie->intx_domain, i);
+> +		}
+> +	} else {
+> +		/* CPM6 exposes only aggregate INTx indication, not per-line status. */
+
+Shorten or wrap into a multi-line comment that fits in 80 columns like
+the rest of the file.  Omit the period at end if that helps.
+
+> +		if (!(val & pcie->variant->intx_mask))
+> +			return IRQ_NONE;
+> +		for (i = 0; i < PCI_NUM_INTX; i++)
+>  			generic_handle_domain_irq(pcie->intx_domain, i);
+>  	}
+>  
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -#define _IC(x, s)[AMD_MDB_PCIE_INTR_ ## x] = { __stringify(x), s }
+> -
+> -static const struct {
+> -	const char	*sym;
+> -	const char	*str;
+> -} intr_cause[32] = {
+> -	_IC(CMPL_TIMEOUT,	"Completion timeout"),
+> -	_IC(PM_PME_RCVD,	"PM_PME message received"),
+> -	_IC(PME_TO_ACK_RCVD,	"PME_TO_ACK message received"),
+> -	_IC(MISC_CORRECTABLE,	"Correctable error message"),
+> -	_IC(NONFATAL,		"Non fatal error message"),
+> -	_IC(FATAL,		"Fatal error message"),
+> -};
+> -
+>  static void amd_mdb_event_irq_mask(struct irq_data *d)
+>  {
+>  	struct amd_mdb_pcie *pcie = irq_data_get_irq_chip_data(d);
+>  	struct dw_pcie *pci = &pcie->pci;
+>  	struct dw_pcie_rp *port = &pci->pp;
+>  	unsigned long flags;
+> -	u32 val;
+>  
+>  	raw_spin_lock_irqsave(&port->lock, flags);
+> -	val = BIT(d->hwirq);
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_DISABLE_MISC);
+> +	writel_relaxed(BIT(d->hwirq), pcie->intr_base + pcie->variant->misc_disable_reg);
+>  	raw_spin_unlock_irqrestore(&port->lock, flags);
+>  }
+>  
+> @@ -193,11 +324,9 @@ static void amd_mdb_event_irq_unmask(struct irq_data *d)
+>  	struct dw_pcie *pci = &pcie->pci;
+>  	struct dw_pcie_rp *port = &pci->pp;
+>  	unsigned long flags;
+> -	u32 val;
+>  
+>  	raw_spin_lock_irqsave(&port->lock, flags);
+> -	val = BIT(d->hwirq);
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_ENABLE_MISC);
+> +	writel_relaxed(BIT(d->hwirq), pcie->intr_base + pcie->variant->misc_enable_reg);
+>  	raw_spin_unlock_irqrestore(&port->lock, flags);
+>  }
+>  
+> @@ -226,13 +355,39 @@ static irqreturn_t amd_mdb_pcie_event(int irq, void *args)
+>  {
+>  	struct amd_mdb_pcie *pcie = args;
+>  	unsigned long val;
+> +	u32 ev_raw, err;
+>  	int i;
+>  
+> -	val = readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
+> -	val &= ~readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_MASK_MISC);
+> +	ev_raw = readl_relaxed(pcie->intr_base + pcie->variant->misc_status_reg);
+> +	val = ev_raw;
+> +	val &= ~readl_relaxed(pcie->intr_base + pcie->variant->misc_mask_reg);
+> +
+> +	if (pcie->variant->version == MDB5) {
+> +		for_each_set_bit(i, &val, 32)
+> +			generic_handle_domain_irq(pcie->mdb_domain, i);
+> +		writel_relaxed(val, pcie->intr_base + pcie->variant->misc_status_reg);
+> +		return IRQ_HANDLED;
 > +	}
 > +
-> +	/*
-> +	 * This should only happen if a driver violated the contract to call
-> +	 * pci_liveupdate_finish() (something is extremely broken).
-> +	 */
-> +	panic("Some preserved devices were never finished!\n");
-> +}
-
-[Severity: High]
-Is an unconditional panic here safe if a preserved device is missing or
-fails to probe?
-
-If a PCI device that was preserved by the previous kernel fails to probe in
-the new kernel (e.g. the driver module is missing, or it encounters a
-transient error), pci_liveupdate_finish() will never be called and
-incoming->ser->nr_devices will not be decremented.
-
-When the Live Update orchestrator concludes the update and calls
-pci_flb_finish(), pci_check_all_devices_finished() is invoked and sees
-that nr_devices is still > 0. Does this mean normal system conditions like
-a missing driver will trigger a kernel panic?
-
-[ ... ]
-> @@ -325,6 +435,75 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
-> =20
-> +static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
-> +{
-> +	struct pci_flb_incoming *incoming =3D NULL;
-> +	int ret;
-[ ... ]
-> +	/*
-> +	 * There is incoming FLB data that matches pci_liveupdate_flb.compatible
-> +	 * but retrieve failed (pci_flb_retrieve() returned an error or LUO
-> +	 * failed to acquire a reference to pci_liveupdate_flb_ops.owner).
-> +	 */
-> +	if (ret)
-> +		panic("Failed to retrieve incoming FLB data (%d)\n", ret);
+> +	val &= pcie->variant->misc_mask_all;
 > +
-> +	return incoming;
-> +}
+>  	for_each_set_bit(i, &val, 32)
+>  		generic_handle_domain_irq(pcie->mdb_domain, i);
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
+> +
+> +	/* Clear handled + any unhandled sticky bits to avoid IRQ storms. */
+> +	writel_relaxed(ev_raw, pcie->intr_base + pcie->variant->misc_status_reg);
+> +
+> +	/* On CPM6 the completion timeout is reported via the PCIE_ERR register. */
 
-[Severity: High]
-Does this panic prevent the new kernel from booting if there's a simple
-FLB version mismatch?
+Shorten, e.g., drop "the".
 
-During PCI enumeration in the new kernel, pci_setup_device() calls
-pci_liveupdate_setup_device(), which invokes
-pci_liveupdate_flb_get_incoming().
+> +	err = readl_relaxed(pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS);
+> +	err &= ~readl_relaxed(pcie->intr_base + AMD_CPM6_PCIE_ERR_MASK);
+> +	err &= AMD_CPM6_PCIE_ERR_MASK_ALL;
+> +	if (err) {
+> +		dev_warn(pcie->pci.dev, "Completion timeout\n");
+> +		writel_relaxed(err, pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS);
+> +	}
+> +
+> +	/* Aggregation bits are sticky; clear them each pass or the level IRQ re-fires. */
 
-If pci_flb_retrieve() encounters an error like a version mismatch (-EINVAL)
-or an allocation failure (-ENOMEM), it returns that error code. This branch
-then catches the error and unconditionally panics. Will this reliably crash
-the new kernel during early boot and break the kexec handover fallback
-mechanism?
+Shorten or multi-line.
 
-[ ... ]
+> +	amd_mdb_pcie_clear_aggregators(pcie);
+>  
+>  	return IRQ_HANDLED;
+>  }
+> @@ -245,29 +400,67 @@ static void amd_mdb_pcie_free_irq_domains(struct amd_mdb_pcie *pcie)
+>  	}
+>  
+>  	if (pcie->mdb_domain) {
+> +		const struct amd_mdb_intr_cause *intr_cause =
+> +			pcie->variant->version == MDB5 ?
+> +			mdb5_intr_cause : cpm6_intr_cause;
+> +		int i, irq;
+> +
+> +		for (i = 0; i < ARRAY_SIZE(mdb5_intr_cause); i++) {
 
-I also have a question about the unpreserve path in pci_flb_unpreserve()
-which might lead to a regression:
+It looks wrong to use ARRAY_SIZE(mdb5_intr_cause) in these loops when
+"intr_cause" might be cpm6_intr_cause, which may be a different size
+than mdb5_intr_cause.
 
-drivers/pci/liveupdate.c:pci_flb_unpreserve() {
-    ...
-    WARN_ON(outgoing->ser->nr_devices);
-    kho_block_set_destroy(&outgoing->block_set);
-    kho_unpreserve_free(outgoing->ser);
-    kfree(outgoing);
-}
-
-[Severity: High]
-Does pci_flb_unpreserve() destroy outgoing FLB memory without clearing the
-device pointers?
-
-If a driver fails to unpreserve its devices before the orchestrator aborts a
-Live Update, pci_flb_unpreserve() will issue a WARN_ON but proceed to
-destroy the block set and free the outgoing FLB object.
-
-The dev->liveupdate.outgoing pointers on the pci_dev structs are left
-dangling. If a new Live Update is subsequently initiated and the driver
-attempts to preserve the device again, pci_liveupdate_preserve_device()
-will access dev->liveupdate.outgoing->refcount via the dangling pointer:
-
-drivers/pci/liveupdate.c:pci_liveupdate_preserve_device() {
-    ...
-    if (dev->liveupdate.outgoing) {
-        if (!dev->liveupdate.outgoing->refcount) {
-    ...
-}
-
-Can this lead to a use-after-free of the KHO block set memory?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728221007.2098=
-560-1-dmatlack@google.com?part=3D3
+> +			if (!intr_cause[i].str)
+> +				continue;
+> +			irq = irq_find_mapping(pcie->mdb_domain, i);
+> +			if (irq) {
+> +				disable_irq(irq);
+> +				free_irq(irq, pcie);
+> +				irq_dispose_mapping(irq);
+> +			}
+> +		}
+> +		irq = irq_find_mapping(pcie->mdb_domain,
+> +				       pcie->variant->intx_hwirq);
+> +		if (irq) {
+> +			disable_irq(irq);
+> +			free_irq(irq, pcie);
+> +			irq_dispose_mapping(irq);
+> +		}
+> +
+>  		irq_domain_remove(pcie->mdb_domain);
+>  		pcie->mdb_domain = NULL;
+>  	}
+>  }
+>  
+> -static int amd_mdb_pcie_init_port(struct amd_mdb_pcie *pcie)
+> +static void amd_mdb_pcie_init_port(struct amd_mdb_pcie *pcie)
+>  {
+> -	unsigned long val;
+> +	u32 misc_mask_all;
+> +	u32 val;
+> +
+> +	misc_mask_all = pcie->variant->misc_mask_all;
+>  
+>  	/* Disable all TLP interrupts. */
+> -	writel_relaxed(AMD_MDB_PCIE_IMR_ALL_MASK,
+> -		       pcie->slcr + AMD_MDB_TLP_IR_DISABLE_MISC);
+> +	writel_relaxed(misc_mask_all,
+> +		       pcie->intr_base + pcie->variant->misc_disable_reg);
+> +
+> +	if (pcie->variant->version != MDB5)
+> +		writel_relaxed(AMD_CPM6_PCIE_ERR_MASK_ALL,
+> +			       pcie->intr_base + AMD_CPM6_PCIE_ERR_DISABLE);
+>  
+>  	/* Clear pending TLP interrupts. */
+> -	val = readl_relaxed(pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
+> -	val &= AMD_MDB_PCIE_IMR_ALL_MASK;
+> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
+> +	val = readl_relaxed(pcie->intr_base + pcie->variant->misc_status_reg) &
+> +	      misc_mask_all;
+> +	writel_relaxed(val, pcie->intr_base + pcie->variant->misc_status_reg);
+> +
+> +	if (pcie->variant->version != MDB5) {
+> +		val = readl_relaxed(pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS) &
+> +		      AMD_CPM6_PCIE_ERR_MASK_ALL;
+> +		writel_relaxed(val, pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS);
+> +	}
+>  
+>  	/* Enable all TLP interrupts. */
+> -	writel_relaxed(AMD_MDB_PCIE_IMR_ALL_MASK,
+> -		       pcie->slcr + AMD_MDB_TLP_IR_ENABLE_MISC);
+> +	writel_relaxed(misc_mask_all,
+> +		       pcie->intr_base + pcie->variant->misc_enable_reg);
+>  
+> -	return 0;
+> +	if (pcie->variant->version != MDB5)
+> +		writel_relaxed(AMD_CPM6_PCIE_ERR_MASK_ALL,
+> +			       pcie->intr_base + AMD_CPM6_PCIE_ERR_ENABLE);
+>  }
+>  
+>  /**
+> @@ -327,10 +520,13 @@ static int amd_mdb_pcie_init_irq_domains(struct amd_mdb_pcie *pcie,
+>  static irqreturn_t amd_mdb_pcie_intr_handler(int irq, void *args)
+>  {
+>  	struct amd_mdb_pcie *pcie = args;
+> +	const struct amd_mdb_intr_cause *intr_cause;
+>  	struct device *dev;
+>  	struct irq_data *d;
+>  
+>  	dev = pcie->pci.dev;
+> +	intr_cause = pcie->variant->version == MDB5 ?
+> +		     mdb5_intr_cause : cpm6_intr_cause;
+>  
+>  	/*
+>  	 * In the future, error reporting will be hooked to the AER subsystem.
+> @@ -351,15 +547,19 @@ static int amd_mdb_setup_irq(struct amd_mdb_pcie *pcie,
+>  	struct dw_pcie *pci = &pcie->pci;
+>  	struct dw_pcie_rp *pp = &pci->pp;
+>  	struct device *dev = &pdev->dev;
+> +	const struct amd_mdb_intr_cause *intr_cause;
+>  	int i, irq, err;
+>  
+> +	intr_cause = pcie->variant->version == MDB5 ?
+> +		     mdb5_intr_cause : cpm6_intr_cause;
+> +
+>  	amd_mdb_pcie_init_port(pcie);
+>  
+>  	pp->irq = platform_get_irq(pdev, 0);
+>  	if (pp->irq < 0)
+>  		return pp->irq;
+>  
+> -	for (i = 0; i < ARRAY_SIZE(intr_cause); i++) {
+> +	for (i = 0; i < ARRAY_SIZE(mdb5_intr_cause); i++) {
+>  		if (!intr_cause[i].str)
+>  			continue;
+>  
+> @@ -379,7 +579,7 @@ static int amd_mdb_setup_irq(struct amd_mdb_pcie *pcie,
+>  	}
+>  
+>  	pcie->intx_irq = irq_create_mapping(pcie->mdb_domain,
+> -					    AMD_MDB_PCIE_INTR_INTX);
+> +				    pcie->variant->intx_hwirq);
+>  	if (!pcie->intx_irq) {
+>  		dev_err(dev, "Failed to map INTx interrupt\n");
+>  		return -ENXIO;
+> @@ -439,6 +639,20 @@ static int amd_mdb_add_pcie_port(struct amd_mdb_pcie *pcie,
+>  	if (IS_ERR(pcie->slcr))
+>  		return PTR_ERR(pcie->slcr);
+>  
+> +	/*
+> +	 * On MDB5 all interrupt registers live in the SLCR block, so the
+> +	 * interrupt-register base simply aliases @slcr. CPM6 moves the
+> +	 * MISC_EVENT/PCIE_ERR registers into a separate per-controller region
+> +	 * mapped by name as "intr".
+> +	 */
+> +	if (pcie->variant->version == MDB5) {
+> +		pcie->intr_base = pcie->slcr;
+> +	} else {
+> +		pcie->intr_base = devm_platform_ioremap_resource_byname(pdev, "intr");
+> +		if (IS_ERR(pcie->intr_base))
+> +			return PTR_ERR(pcie->intr_base);
+> +	}
+> +
+>  	err = amd_mdb_pcie_init_irq_domains(pcie, pdev);
+>  	if (err)
+>  		return err;
+> @@ -483,6 +697,9 @@ static int amd_mdb_pcie_probe(struct platform_device *pdev)
+>  
+>  	pci = &pcie->pci;
+>  	pci->dev = dev;
+> +	pcie->variant = of_device_get_match_data(dev);
+> +	if (!pcie->variant)
+> +		return -EINVAL;
+>  
+>  	platform_set_drvdata(pdev, pcie);
+>  
+> @@ -514,9 +731,51 @@ static void amd_mdb_pcie_shutdown(struct platform_device *pdev)
+>  	gpiod_set_value_cansleep(pcie->perst_gpio, 1);
+>  }
+>  
+> +static const struct amd_mdb_pcie_variant cpm6_host = {
+> +	.version = CPM6,
+> +	.misc_status_reg = AMD_CPM6_MISC_EVENT_STATUS,
+> +	.misc_mask_reg = AMD_CPM6_MISC_EVENT_MASK,
+> +	.misc_enable_reg = AMD_CPM6_MISC_EVENT_ENABLE,
+> +	.misc_disable_reg = AMD_CPM6_MISC_EVENT_DISABLE,
+> +	.misc_mask_all = AMD_CPM6_MISC_EVENT_MASK_ALL,
+> +	.intx_hwirq = AMD_CPM6_PCIE_INTR_INTX,
+> +	.intx_mask = BIT(AMD_CPM6_PCIE_INTR_INTX),
+> +};
+> +
+> +static const struct amd_mdb_pcie_variant cpm6_host1 = {
+> +	.version = CPM6_HOST1,
+> +	.misc_status_reg = AMD_CPM6_MISC_EVENT_STATUS,
+> +	.misc_mask_reg = AMD_CPM6_MISC_EVENT_MASK,
+> +	.misc_enable_reg = AMD_CPM6_MISC_EVENT_ENABLE,
+> +	.misc_disable_reg = AMD_CPM6_MISC_EVENT_DISABLE,
+> +	.misc_mask_all = AMD_CPM6_MISC_EVENT_MASK_ALL,
+> +	.intx_hwirq = AMD_CPM6_PCIE_INTR_INTX,
+> +	.intx_mask = BIT(AMD_CPM6_PCIE_INTR_INTX),
+> +};
+> +
+> +static const struct amd_mdb_pcie_variant mdb5_host = {
+> +	.version = MDB5,
+> +	.misc_status_reg = AMD_MDB_TLP_IR_STATUS_MISC,
+> +	.misc_mask_reg = AMD_MDB_TLP_IR_MASK_MISC,
+> +	.misc_enable_reg = AMD_MDB_TLP_IR_ENABLE_MISC,
+> +	.misc_disable_reg = AMD_MDB_TLP_IR_DISABLE_MISC,
+> +	.misc_mask_all = AMD_MDB_PCIE_IMR_ALL_MASK,
+> +	.intx_hwirq = AMD_MDB_PCIE_INTR_INTX,
+> +	.intx_mask = AMD_MDB_TLP_PCIE_INTX_MASK,
+> +};
+> +
+>  static const struct of_device_id amd_mdb_pcie_of_match[] = {
+>  	{
+>  		.compatible = "amd,versal2-mdb-host",
+> +		.data = &mdb5_host,
+> +	},
+> +	{
+> +		.compatible = "amd,versal2-cpm6-host",
+> +		.data = &cpm6_host,
+> +	},
+> +	{
+> +		.compatible = "amd,versal2-cpm6-host1",
+> +		.data = &cpm6_host1,
+>  	},
+>  	{},
+>  };
+> -- 
+> 2.44.4
+> 
