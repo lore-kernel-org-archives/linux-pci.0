@@ -1,53 +1,56 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14F49190473;
-	Tue, 28 Jul 2026 01:26:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB7226C385;
+	Tue, 28 Jul 2026 01:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785201982; cv=none; b=loY9g2Ru2fYb1CpMBITd/oPuNQo4xkJkkzCyKu6Dd/bhSg3h97djaIcDskI4kD7kFtBzSWezmX3pjACmWvL2Ms900hJgBk9dcs3+5fQ5sxGLhYfs2SNVuo+Z+W0i2/ZHTcj4LEDbhmoc7rrHhYJ4UGnneZMvYHtOMIYP8rBDYGs=
+	t=1785201991; cv=none; b=qTAx/HaU/m6WTBP5Y9IyW2P2ZY1jh6SpmQedzrmMhqeptUipoFrXNq2m4hh7ZFAj14yCwihI+/A0ej32I3kVdZY9dRdwhVugl28bpPPtWTEv+afMNq1EYeqlzZOUldBl5cqjxg35db5jJGyRQhenTzsRQjJqc1iM7mwcfu3Y2iA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785201982; c=relaxed/simple;
-	bh=Fcsb9nn/kBKPLYIpHL7AY9ICe60bDymNrxZzh6y28OA=;
+	s=arc-20240116; t=1785201991; c=relaxed/simple;
+	bh=OytgOfLKmlcWdDlF3BgeCH/2AjkkT18/BwQ0R9vsBOg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NPfirM7v2/ynYwPkJOCeLJlbr4IQ6UevctsqentgZcKuOGSVUPpVmATNJ7RV2ytcCKtXv8KKLuT6GcRb9RpyD0Qmd18fBuyI/x5oBst34Fm1kluR7OP1WrC0N+wP27K9bPlJ0UzrIOUvZ3PL6IqEww3IEAR51ugGESnSfDz8uvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=wxbTctv2; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=k8BIYT8L; arc=none smtp.client-ip=80.241.56.171
+	 MIME-Version:Content-Type; b=Sz01I/MGDZOIceDOVlv2QRYOZS+KrfePd5G5QWwI2DBCLCv+4vHZ2hDV60IGLfQApNOT06sshMRP0AFbjfV8al0+61PITm1YZAgb/aiDv3b/OC2kTeUm6of42b7LDP1QINoyxRu4PJqqbQaLjs8PLk/8NFYA5s5py1qofze8mdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=r/EzyGH3; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=sqNUGCHC; arc=none smtp.client-ip=80.241.56.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="wxbTctv2";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="k8BIYT8L"
-Received: from smtp202.mailbox.org (unknown [10.196.197.202])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="r/EzyGH3";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="sqNUGCHC"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h8HqG6z8dzMlGh;
-	Tue, 28 Jul 2026 03:26:18 +0200 (CEST)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4h8HqQ237Dz8v9m;
+	Tue, 28 Jul 2026 03:26:26 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1785201979;
+	t=1785201986;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=nBzV1lf+wWhkWox6lmJXhVRdhmqkrNh7e32sFKBnJMY=;
-	b=wxbTctv2S8uMTsGQMxB6AdKVo5y22DLDXhga6BQHl8QmG3yg8yFJU7ommcUHzw23/7l7aU
-	MFhD5f1/GSb/FUQJHTX5JuLBXaaEhwZwotWFYxWTzg5pGTLke/y9LQAlQ51CfEKJqlBEpw
-	nCAE4arox5UIS0pu6LEwYO7r92lI1N3FAzCZX9fTInfKd8VtRLIAq1VJiYwwIW4ugLE/SS
-	0IqS2KMzZ2nq/ZrD+R6miPcy2tT838w6GaPfR6OXIz7+2vhPCB5Do6WBUrpf76e8fthfG/
-	7Cy/xm/0JJcvXt2PzsbOW9hYtrAIS8kpp5wCdEvJtPbDpTXRp0pd1n4//yQu5w==
+	bh=AOb78p74bkOmvufOcc/1bh+dA535Pa9k7i52m7AyAII=;
+	b=r/EzyGH3gq0jSjzH6u+ZswyOUvyFz3jBfnRyF/1noE+2NZlS74okB3Hd4eEFnRSENgEhCU
+	CF/Icl+CJzCSC9ce8uSnQCg6kbdKERYgbQ61RyHUAN0FYM+qdF9cdkMJ65SIM3BZuf8rLV
+	pQrV/3ukfBlb82d//8bNoT3foQHMm6CHFz72nUGC/380OYDpBqbQfpTJKbbO9x7fmBXK/X
+	Sfh1VQ6EpENZSAIxyQIcFpagiqFoIsKEI3zfRqDAibY+qzLTnbbNlrM+jy+CZqcsFsxcDW
+	c0ZEqhDhvqprVa1zJMGCS0fv6RbPMp6vbWtS+nF1KWih17X9OkYRx1eIBJNfqQ==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=sqNUGCHC;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1785201977;
+	t=1785201984;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=nBzV1lf+wWhkWox6lmJXhVRdhmqkrNh7e32sFKBnJMY=;
-	b=k8BIYT8L6wvZRgZ7PTKcpItxNb9H+D2iCUVUcnU7l4LP/0fYp68ZU5/hvNYTfMfaAPgpLy
-	MB7y7u0QbzSrjxvNkvqFiPUSKT4Y4GJK9eDNgjDO7RW4agkliXYETeNoY0OWIgo5Baixho
-	3K0KPWEwQGbIAxUjE2heSQjePyCMZkFHkJVuCa3Qvz2g8PkvXSndQuEH4Iun7ijPE1FxSy
-	V39Oz55nliFbv3943X5JimqVbfVXWjb2s0ObPlyVLkleeMk2XGLtEjxk98msOVmJ8Zk8Fc
-	eqL3+FVOPhYJTMZTCqugqbMsHQ0IGE1UA2m2EV1dQPJGcrWxiNvjpVswVPLV3g==
+	bh=AOb78p74bkOmvufOcc/1bh+dA535Pa9k7i52m7AyAII=;
+	b=sqNUGCHCwjzf00FtL5kcEQRgPIzyTFjIKf2F7BE9KNUbk5/TUqJas6eZ87Z/L6jak1NWTb
+	Wo1+t44CYWQyHTb1o7LuIcQGivMjxi2X/lXD5FXo9vhH2aauOWu0GroyjMuyGrzzxI8Rl2
+	qCQJNIux80uWKS6huYvmxMT82bfqORC/Y9+aYor5VhUKeGu6gq4EQPZQ/OXGqhX+88vARB
+	odg2KM+Zw3YO1eDeugMhDIUkv0ANPzt/AECWKcjlD0/iOvIxj7ZlxjGgBaOmvq6SnFZAGV
+	f8eD5hFLtXgXde4oHGbFfMjVK+ghKJhOz2UYiMwjz5LQM0ezx1+9CNmCUq3HuA==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
@@ -82,9 +85,9 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	linux-omap@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	linux-rockchip@lists.infradead.org
-Subject: [PATCH 1/2] PCI: dwc: Handle return value from endpoint .init callback
-Date: Tue, 28 Jul 2026 03:24:24 +0200
-Message-ID: <20260728012548.465139-2-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH 2/2] PCI: dwc: Handle return value from endpoint .pre_init callback
+Date: Tue, 28 Jul 2026 03:24:25 +0200
+Message-ID: <20260728012548.465139-3-marek.vasut+renesas@mailbox.org>
 In-Reply-To: <20260728012548.465139-1-marek.vasut+renesas@mailbox.org>
 References: <20260728012548.465139-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
@@ -95,10 +98,11 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 9ee81b2ab274dca8480
-X-MBO-RS-META: anhh3sfa4xeoxsnpwmmr7xnmgpum9nz5
+X-MBO-RS-ID: 3530f36967d57e20065
+X-MBO-RS-META: bmr6zbzz4m7u37imjwni6gtkry6uugwh
+X-Rspamd-Queue-Id: 4h8HqQ237Dz8v9m
 
-Add return value handling for struct dw_pcie_ep_ops .init callback.
+Add return value handling for struct dw_pcie_ep_ops .pre_init callback.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
@@ -136,178 +140,68 @@ Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 Cc: linux-rockchip@lists.infradead.org
 ---
- drivers/pci/controller/dwc/pci-dra7xx.c         | 4 +++-
- drivers/pci/controller/dwc/pci-keystone.c       | 4 +++-
- drivers/pci/controller/dwc/pci-layerscape-ep.c  | 6 ++++--
- drivers/pci/controller/dwc/pcie-artpec6.c       | 4 +++-
  drivers/pci/controller/dwc/pcie-designware-ep.c | 7 +++++--
  drivers/pci/controller/dwc/pcie-designware.h    | 2 +-
- drivers/pci/controller/dwc/pcie-dw-rockchip.c   | 4 +++-
- drivers/pci/controller/dwc/pcie-keembay.c       | 4 +++-
- 8 files changed, 25 insertions(+), 10 deletions(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c     | 6 ++++--
+ 3 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 3fc889944f021..6ae5b27e27b32 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -373,12 +373,14 @@ static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
- 	.init = dra7xx_pcie_host_init,
- };
- 
--static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
-+static int dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 
- 	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+
-+	return 0;
- }
- 
- static void dra7xx_pcie_raise_intx_irq(struct dra7xx_pcie *dra7xx)
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index f1b27aed488de..602516239a573 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -876,7 +876,7 @@ static const struct dw_pcie_ops ks_pcie_dw_pcie_ops = {
- 	.write_dbi2 = ks_pcie_am654_write_dbi2,
- };
- 
--static void ks_pcie_am654_ep_init(struct dw_pcie_ep *ep)
-+static int ks_pcie_am654_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	int flags;
-@@ -885,6 +885,8 @@ static void ks_pcie_am654_ep_init(struct dw_pcie_ep *ep)
- 	flags = PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32;
- 	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_0, APP_ADDR_SPACE_0 - 1);
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, flags);
-+
-+	return 0;
- }
- 
- static void ks_pcie_am654_raise_intx_irq(struct keystone_pcie *ks_pcie)
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 8936975ff104e..527c57114dcfe 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -147,7 +147,7 @@ ls_pcie_ep_get_features(struct dw_pcie_ep *ep)
- 	return pcie->ls_epc;
- }
- 
--static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
-+static int ls_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct ls_pcie_ep *pcie = to_ls_pcie_ep(pci);
-@@ -155,10 +155,12 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- 	ep_func = dw_pcie_ep_get_func_from_ep(ep, 0);
- 	if (!ep_func)
--		return;
-+		return -ENODEV;
- 
- 	pcie->ls_epc->msi_capable = ep_func->msi_cap ? true : false;
- 	pcie->ls_epc->msix_capable = ep_func->msix_cap ? true : false;
-+
-+	return 0;
- }
- 
- static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-index 5cd227dda9a10..7f0ba506dd1cf 100644
---- a/drivers/pci/controller/dwc/pcie-artpec6.c
-+++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-@@ -335,7 +335,7 @@ static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
- 	.init = artpec6_pcie_host_init,
- };
- 
--static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
-+static int artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-@@ -344,6 +344,8 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
- 	artpec6_pcie_wait_for_phy(artpec6_pcie);
-+
-+	return 0;
- }
- 
- static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
 diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7d2794945704e..d78fb845582b2 100644
+index d78fb845582b2..b00239097d893 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1367,8 +1367,11 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 		list_add_tail(&ep_func->list, &ep->func_list);
- 	}
+@@ -1524,8 +1524,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	if (ret)
+ 		return ret;
  
--	if (ep->ops->init)
--		ep->ops->init(ep);
-+	if (ep->ops->init) {
-+		ret = ep->ops->init(ep);
+-	if (ep->ops->pre_init)
+-		ep->ops->pre_init(ep);
++	if (ep->ops->pre_init) {
++		ret = ep->ops->pre_init(ep);
 +		if (ret)
-+			goto err_remove_edma;
++			return ret;
 +	}
  
- 	dw_pcie_ep_disable_bars(ep);
- 
+ 	ret = pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
+ 			       ep->page_size);
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index de4b245b1758c..004b433f17135 100644
+index 004b433f17135..6546dc3aa2075 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -475,7 +475,7 @@ struct dw_pcie_rp {
- 
- struct dw_pcie_ep_ops {
- 	void	(*pre_init)(struct dw_pcie_ep *ep);
--	void	(*init)(struct dw_pcie_ep *ep);
-+	int	(*init)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
- 			     unsigned int type, u16 interrupt_num);
- 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 731d93663ccae..bd5d1a2472a40 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -469,12 +469,14 @@ static void rockchip_pcie_ep_hide_broken_ats_cap_rk3588(struct dw_pcie_ep *ep)
- 	dw_pcie_remove_ext_capability(pci, PCI_EXT_CAP_ID_ATS);
- }
- 
--static void rockchip_pcie_ep_init(struct dw_pcie_ep *ep)
-+static int rockchip_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
- 	rockchip_pcie_enable_l0s(pci);
- 	rockchip_pcie_ep_hide_broken_ats_cap_rk3588(ep);
-+
-+	return 0;
+@@ -474,7 +474,7 @@ struct dw_pcie_rp {
  };
  
- static int rockchip_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-diff --git a/drivers/pci/controller/dwc/pcie-keembay.c b/drivers/pci/controller/dwc/pcie-keembay.c
-index 42fb5f24a2230..b11e66c10fffa 100644
---- a/drivers/pci/controller/dwc/pcie-keembay.c
-+++ b/drivers/pci/controller/dwc/pcie-keembay.c
-@@ -278,12 +278,14 @@ static int keembay_pcie_setup_msi_irq(struct keembay_pcie *pcie)
- 	return 0;
+ struct dw_pcie_ep_ops {
+-	void	(*pre_init)(struct dw_pcie_ep *ep);
++	int	(*pre_init)(struct dw_pcie_ep *ep);
+ 	int	(*init)(struct dw_pcie_ep *ep);
+ 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+ 			     unsigned int type, u16 interrupt_num);
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 5f7211b91ee5b..fbe465a29068f 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -481,7 +481,7 @@ static void rcar_gen4_remove_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
  }
  
--static void keembay_pcie_ep_init(struct dw_pcie_ep *ep)
-+static int keembay_pcie_ep_init(struct dw_pcie_ep *ep)
+ /* Endpoint mode */
+-static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
++static int rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
+ 	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+@@ -489,9 +489,11 @@ static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
  
- 	writel(EDMA_INT_EN, pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
+ 	ret = rcar_gen4_pcie_common_init(rcar);
+ 	if (ret)
+-		return;
++		return ret;
+ 
+ 	writel(PCIEDMAINTSTSEN_INIT, rcar->base + PCIEDMAINTSTSEN);
 +
 +	return 0;
  }
  
- static int keembay_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ static void rcar_gen4_pcie_ep_deinit(struct rcar_gen4_pcie *rcar)
 -- 
 2.53.0
 
