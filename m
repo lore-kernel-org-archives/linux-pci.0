@@ -1,110 +1,98 @@
-Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC78436BEF
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 13:41:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4D81025A2DD;
+	Tue, 28 Jul 2026 13:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785246066; cv=none; b=lRCFaU4n8PbEM2RzBZlVmPfwkWKpevQE96Pa8iwvJsIEnJivwsFvstD0mNunWKQ24MwDqyoP/TwYfmo/EbRyCOgrCy63L2DksL9o/6oqoTvm6GA0Z42uPwN9OJjoKt8iiWE1gPnGs/rbC9ic2s9emAcsIofeiaClq+5hYwNTeJY=
+	t=1785246694; cv=none; b=Wbaw1njpvE0U37QA2nZTaUBDPIy5cbMAlQtC+f12R/WM7tzTK2qD5smkex1D48z/pBtNiriGVwjplJUsB8VfW5D28Mx/n0a+MIPlfhXAyGECqdkqvowrijwcVr5FhMCVCPuQPVUtT+C/nqOjgoTFuYITjBNenn4rrrSGImGvKrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785246066; c=relaxed/simple;
-	bh=vNK3/KJC+Nv3ESREzp7sq+ER0NB9BzHnErO5/s+ZOc0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MSU+3PkPV4yD69yH0xPTy5jdK45cqYMPM8FpnE6v3eoi57Es/75hfEZlSHJahuPcYvduE1bVcE9tpA5D+IqYGxC7BMf/eBB0XY1KGkBtBl0qO2BbAcr8ygYXqWK4tUD05ntVUTNCvD+2u5999wAx73aKndLhybazR3kcNkVotS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=ydCRvsmE; arc=none smtp.client-ip=209.85.222.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1785246694; c=relaxed/simple;
+	bh=hRvBtimUkN5HTwmrRjs1Te44eljEyxGDej4qebzkedw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pXJU9Eazjj6w0G3D/Xk4IZFZkLyZcy36ibLjRwSY01gOnKc4UQR0VlY/3nIs7WX+ew6OfS1GwaSJxyMY+HBtRnZyUjwWT3qKW4AJu3qwh6j2hzLNuGlPFTE0zZMNzRjTmz492zwEIn2NXb9z3/K4tSjI6APWe8hy+8UmPllLh/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=l4YGstsG; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="ydCRvsmE"
-Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-92edb12cdf2so248586785a.3
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 06:41:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1785246064; x=1785850864; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=oKjmhvUTztvaS0W0C4c688T5vwX1u05PK4NnDkhRFV4=;
-        b=ydCRvsmEMDWq6tEnGxpJyH2IvUFh0GUzbjzVnfH+/boOFTKToyCTmR4jeAwblQuSBE
-         rHL1hCBUtdjqJKkqNGJf/3/x+QMPezS2132GXC+WmhUdu4Dv1FDjxFKk2j/1qXJlFpwF
-         6sssSmJPr0an3L74Syiu1sSzXGXl1S+XS9csvTSNow32qmIc0HkR/w1UO0Btxi3W9E33
-         Ucuu8OtITuNi4Rp+tjZDWYWcC70j5eGPw6NA//fK/hKQwHICEu8GzkjQ0u86zukYS+AB
-         +bwZzGeOB+GeGs6YQPEXrGH5eK1q8fcWPLixRDApep7UNm2UC4a0eaNAwWF193mNlUZP
-         a+9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785246064; x=1785850864;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=oKjmhvUTztvaS0W0C4c688T5vwX1u05PK4NnDkhRFV4=;
-        b=pN6VXOKaOmzKh+iMHDcSQUlepTWln9ECzYU02WfwjDnGC2zfmvtdIkf/q+wSd0z7cR
-         HYk6r8FpttY/KP0aceGMCOdBr1PFtBKMtAaeF7KVKb/j64+s4CaFcrM43SC96F2Wu6w1
-         pGMoEVFzqOlznSNApsY219wrBAGLIh5nArjGOUOGaO8m5gJQ4Yd3m/MBNEjaRS7saZkq
-         yaZZGJwtG09kJFChSCs5phY9lIAQHsm2bxRe1KzVLTrEqWiFzCyBHuJ1d/7Qqmkw+N5H
-         GUrNH9ygHNOepaf8jhM2okHdVRyISFcUd9q3LON4+O21JBvmWLfqpxzUb+yfMO7khKNf
-         LQ5g==
-X-Forwarded-Encrypted: i=1; AHgh+RrbtQD4mVUhG0oNCyl2Wl6qIUqRcCyd+EtP3k8VDH+YCD2PHiNlZoy5005UW8L2cqEvPXMGyt+zgIQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzm8V1pgmcgpABkXDqKq5zpwsbRl+wQ7kxLfV4ZD+03n9Mhn2mZ
-	YFlgOfC/SORtc0Udfz0Iwvm+YIhshWVQ9e99bhPyoGOGdwNG2aTHbTtDrlfiUczX3iU=
-X-Gm-Gg: AR+sD12isQ6/ULl05gsdE63ldLrDNyG1YxkN9iFb2joG+Nwvvlyp+jZG1k5qvUEvlcx
-	Sl3sW3iMPJSPt1ePamQNiE2lKfhH46C99tJLMvtMHXa27y5iGlCIRI0wIo4oYeiJ6xBiGNoq4lu
-	v0ukMMp+4MNCXlDkQaV8C1+HN1FU1JMcXYttH6trSjomD42rmUZ0E55ameqbBPaQ2gM6L45oNv8
-	jGEXCgotV2rGnwZtm7C9uoGMBAbYUBiisjVubkSZQbIY9s88vBLzusfO1bEnh/ZOfwsJxsA6DdW
-	WA6hA2urtFeWxEJ0L/ARPBsgxvpnfoCWIo0vBui6qtmS+l3mh5OlsYUBIBcBXojBaq70+Lbb6Ws
-	PYLhnlwpsfYh8sYnEh+6visXgtO0vDx46fqeMh+kRByX2TXnWZCR/e6EFB3VCT8lxFwgpk/nkD1
-	rAkw==
-X-Received: by 2002:a05:620a:17a4:b0:930:f67a:a9ab with SMTP id af79cd13be357-93302741ccamr246375585a.77.1785246063856;
-        Tue, 28 Jul 2026 06:41:03 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-932de5154edsm846774485a.6.2026.07.28.06.41.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Jul 2026 06:41:03 -0700 (PDT)
-Message-ID: <24fe82ef-ff0e-48ec-a6b6-c04d687e7359@riscstar.com>
-Date: Tue, 28 Jul 2026 08:41:02 -0500
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="l4YGstsG"
+Received: from CPC-namja-026ON.redmond.corp.microsoft.com (unknown [4.213.232.16])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 265D920B7166;
+	Tue, 28 Jul 2026 06:51:04 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 265D920B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1785246671;
+	bh=/s0NBGO5Nwu0FBhXzB5m3wygkVQ4fkuc2i5s5t6+ff8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=l4YGstsGT9GrJUEivZR6SFeqwFcVYMDy4+eExl4Z2eLoduQlU5K0LedDFa9IOEGFv
+	 dsPEQjC/cLtgve4mikobwwFImpSnuR4vr2hmcETQcZoziVISfInzbR+kT5Ox30yPYv
+	 u1RmwnnetKzXldrOkptQy5HhbUbmgOprGkIbwmeY=
+From: Naman Jain <namjain@linux.microsoft.com>
+To: "K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>
+Cc: x86@kernel.org,
+	Jake Oshins <jakeo@microsoft.com>,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/3] x86/irq: Fix lost interrupts on CPU hot-unplug for Hyper-V PCI/MSI
+Date: Tue, 28 Jul 2026 13:51:14 +0000
+Message-ID: <20260728135117.2888175-1-namjain@linux.microsoft.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/6] PCI/pwrctrl: tc9563: Fix parsing the integrated
- Ethernet MAC Endpoint node
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Bartosz Golaszewski <brgl@kernel.org>, Bjorn Andersson
- <andersson@kernel.org>, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com>
- <20260725-tc9563-fix-v1-2-ec4286e31331@oss.qualcomm.com>
- <5348ff47-910b-4614-a935-6e99ad3b066d@riscstar.com>
- <uavzur74w3w6d4acq4keoi42pcob4p3jez7e5p2aubw27k5geo@ccaewywqbz3b>
- <elrj4hfxzrtn2hfldhvk4ychlbmxcrksmttg45a6nw2h3gulso@4nk3lrgo5rvu>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <elrj4hfxzrtn2hfldhvk4ychlbmxcrksmttg45a6nw2h3gulso@4nk3lrgo5rvu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/28/26 8:38 AM, Manivannan Sadhasivam wrote:
->>> If so I think the DT binding could explain and possibly enforce
->>> that, but I won't insist on that...
->>>
->> It is being enforced in Patch 1.
->>
-> Sorry, the current enforcement is only for PHY related properties like Tx
-> Amplitude, DFE and N_FTS. I didn't limit ASPM properties in function 1 though.
-> Doesn't seem to be strictly needed as no one would configure per-function ASPM
-> settings in DT (mostly unlikely).
+On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
+pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
+callback. The Hyper-V vPCI MSI irqchip never installs one, so such a
+pending interrupt is silently dropped, leading to lost interrupts, stalls
+and "No irq handler for vector" messages.
 
-I think it's fine.  You enforce what's needed at run time
-regardless, right?
+Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that installs
+irq_chip_retrigger_hierarchy() on the Hyper-V PCI/MSI chip. Patch 2 then
+switches fixup_irqs() to call irq_chip_retrigger_hierarchy() directly, so
+the retrigger works for any stacked irqchip without a per-chip callback.
+Patch 3 drops the now-redundant irq_retrigger() initializations.
+This way, patch 2 and 3 do not need to be backported.
 
-					-Alex
+The series follows the original RFC:
+Link: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
+
+Naman Jain (3):
+  PCI: hv: Set irq_retrigger callback for the Hyper-V PCI MSI irqchip
+  x86/irq: Use irq_chip_retrigger_hierarchy() in fixup_irqs()
+  x86/irq, iommu/amd, PCI: Drop redundant irq_retrigger inits
+
+ arch/x86/kernel/apic/io_apic.c |  2 --
+ arch/x86/kernel/apic/msi.c     |  4 +---
+ arch/x86/kernel/hpet.c         |  1 -
+ arch/x86/kernel/irq.c          | 23 +++++++----------------
+ drivers/iommu/amd/init.c       |  1 -
+ 5 files changed, 8 insertions(+), 23 deletions(-)
+
+
+base-commit: 0d33d21e47d9dc66f91e44da3fc9220c74d93df7
+-- 
+2.43.0
+
