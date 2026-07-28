@@ -1,138 +1,237 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646BC3D75AA
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 10:25:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 061782E888C;
+	Tue, 28 Jul 2026 10:35:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785234335; cv=none; b=r+wXZfxuFpZJFrOepMf/D4A3++1oWBrQUeRjEqTuTik3uACiFbwOIWosAcP8H27zadyEhm/2bNjwSjCuv/0LVf52zYndAcIK52K6bLPFA79UxGDit4IHIe4CNFBo6lytU0R5KZgGF3BsmsCGFQ5jNXu0kSQqZK3RNyPIOEStggA=
+	t=1785234936; cv=none; b=fjKCENNKbwz1qXtQwzlHg9VA07aHfvZn+wrrRTyUlnnw5/h5JckpaNlSFtjYqgze5p6Us182IHxD/xZSNJ53p1K9NqhIpTeq60NhuA5V6eLhOpAHZ2DP861Ec0GS5LoHWLNj5iINWiNANFwLXWfIUf1nt2i6D6MNGDBaDFUEUZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785234335; c=relaxed/simple;
-	bh=bLGqfXMmxsf36vEFhD3RLwnr3ydH2qBXPO70SMWF8Gc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sSENAw3Lk2lneLjuELm+OG7BjaYuguPBs50DnZiry/TDTbeyjSBe91asG8gSvroO+9XsZiWCNCbpfW7FGmPmdTuH10O1sxAiQ+RotMQEUsTZxNYfB/DtTjimaLACSQalKRoIrr0ZD7hceuw/mF+WbJfwg6QoZoBGvVzGIeje2zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AEYfjtEz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785234936; c=relaxed/simple;
+	bh=iuXUoHIChjwPPWJ7AW2ooBNG++teht5GXltByQhCAdM=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=dA7r85myUQhxVGJYWQk7ULSmOymh+YOg8remdm5tOjP5gwIoVZ8Qv+2DktwLeYtx/3mt7TXa2pxc9tglIAZ5xs/365OJOuxw4jnmM0Vf+GVBgECDYSRYR6O1noc6LOIrUWMPRbYYgLXnCTigVyzKng6OWH6xMMofgO92tBmF18g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gwkTVML/; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AEYfjtEz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3F9C1F000E9;
-	Tue, 28 Jul 2026 10:25:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785234334;
-	bh=I7pfX7U87Ci3h1QPVk3cDs9cPsu65CVmRuQKs2TXV1Y=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AEYfjtEzfbZOqsUbHKJBTlvMP08mYMh+0wG+CkET3G5xY7ZiUpELdyKbq8nQj5OaY
-	 DwgbGezebLIOcgH8DMaqrsz97zOuMpAgWT7rqZUSulZPHAEltz3XtzHFdF+FeEPxqo
-	 9wkEK//uSBiHqgZktPgV8epNIFTMMAhPpdkrpnk/TkXDmwwUPOfjNsQ5ZAOhx+y0Lj
-	 W8RrFdGz8uIU5i1afraiYvikn0Fk82sNzG2uNE4Tyw6tWO136fboizgWGlje5zWA1C
-	 6Y3atUMPq8VZlW7vdGhSFENCR11pOiGoYlh+/3VpuWjLeYpXRwpomwyaCesSLPZraZ
-	 Vks8x7i76qeIg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: mediatek-gen3: Fix 64-bit type truncation in
- mtk_pcie_set_trans_table()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sreeraj S Kurup" <sreekuttan2156239@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260728101413.4575-1-sreekuttan2156239@gmail.com>
-References: <20260728101413.4575-1-sreekuttan2156239@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 10:25:33 +0000
-Message-Id: <20260728102533.D3F9C1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gwkTVML/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785234934; x=1816770934;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=iuXUoHIChjwPPWJ7AW2ooBNG++teht5GXltByQhCAdM=;
+  b=gwkTVML/ty4GpU/i3IAb5qiNNtqk/CG6qvgzAXTwoSQErm4DlAPJA7z0
+   6mQAuAPykiEJDbaPsqwU8MWMB6y5ou0KEQoFt7S08w6oUT++YTmiMGk3l
+   HHzb2qVSWaTPh1pApRcGbObpJDC0L0AbsnxeSs9vY2ek/4KwMtfSkHncM
+   l3bEMCCmAbAyQUW+ay9JTHyvoQuQkXbY6rIifMGfla/Avd44XuBzzSSSF
+   Sz2y5tvA8JP1ao0N3YC8VOL9JLhmiU17sMvt1tJ1tXI64kXakkM/yDEmB
+   BiLOKBCkpnuFCHWoXcwpA6l8YoD4IJ7Y/sgglVkhGiOuEFjEOy9h5YX+k
+   w==;
+X-CSE-ConnectionGUID: zQDmpLSsSi6FjZrJucRWXQ==
+X-CSE-MsgGUID: wR4458u5REmZ6W0N0S8veA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11858"; a="97189566"
+X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
+   d="scan'208";a="97189566"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 03:34:44 -0700
+X-CSE-ConnectionGUID: ZcwB4GVbQ9+ZmaVOgx3KTg==
+X-CSE-MsgGUID: el6LHlssSjObDBjrRBiDfQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
+   d="scan'208";a="257863315"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.129])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 03:34:41 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 28 Jul 2026 13:34:37 +0300 (EEST)
+To: Anthony Pighin <anthony.pighin@nokia.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: Don't report zero-sized resources as assignment
+ failures
+In-Reply-To: <20260727193714.598562-1-anthony.pighin@nokia.com>
+Message-ID: <8d9a8515-03bb-6327-c82c-61cad0de75e8@linux.intel.com>
+References: <20260727193714.598562-1-anthony.pighin@nokia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Mon, 27 Jul 2026, Anthony Pighin wrote:
 
-New issues:
-- [High] The patch replaces a 32-bit ffs() call with an undefined 64-bit fu=
-nction ffs64(), breaking the build. Furthermore, if trivially corrected to =
-use the kernel's __ffs64(), it introduces a severe logic error due to 0-bas=
-ed indexing.
+> A hotplug bridge may request a window with required size 0 plus
+> add_size headroom.  For example, the PCI core speculatively requests
+> a non-prefetchable MMIO reserve for a hotplug bridge even when no
+> downstream BAR currently requires that space.
+> 
+> reassign_resources_sorted() temporarily grows an unassigned resource
+> from its required size to the required size plus add_size.  If
+> pci_assign_resource() fails, the failure is ignored because the
+> additional space is optional, but the error path does not restore
+> start/end, so the resource is left unassigned at the enlarged size.
 
-Pre-existing issues:
-- [High] Silent failure when available PCIe translation tables are exhauste=
-d.
---
+This fix is fine, I suggest you send this independently from the other 
+change.
 
---- Patch [1]: [PATCH] PCI: mediatek-gen3: Fix 64-bit type truncation in mt=
-k_pcie_set_trans_table() ---
-commit 5abeef37aefeb0da627b6bdbff1cc75a0b1bd361
-Author: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+> Since commit 96336ec70264 ("PCI: Perform reset_resource() and build
+> fail list in sync"), the __assign_resources_sorted() out path
+> unconditionally adds every remaining unassigned resource to fail_head.
+> The headroom-enlarged window is therefore reported as though a required
+> resource failed.
 
-PCI: mediatek-gen3: Fix 64-bit type truncation in mtk_pcie_set_trans_table()
+The presence of a resource on fail list does not tell anything about it 
+being required or not. It think you're trying to fix this problem on a 
+wrong level.
 
-This commit updates address truncation calculations to use 64-bit helpers
-like fls64() and BIT_ULL() to prevent truncation above 4GB.
+> pci_assign_unassigned_bridge_resources() interprets the non-empty
+> fail_head as grounds for another assignment round.  On a system whose
+> < 4GB root-bus MMIO aperture [mem 0xe6000000-0xe68fffff] was already
+> fully allocated, hotplugging an endpoint that needs only a 64-bit
+> prefetchable BAR produces:
+> 
+>   pci 0000:08:00.0: BAR 0 [mem 0x00000000-0x7fffffff 64bit pref]
+>   pcieport 0000:00:03.5: bridge window [mem size 0x00200000]: can't assign; no space
+>   pcieport 0000:00:03.5: bridge window [mem size 0x00200000]: failed to assign
+>   pci 0000:08:00.0: BAR 0 [mem 0x700000000-0x77fffffff 64bit pref]: assigned
+>   PCI: No. 2 try to assign unassigned res
+>   release child resource [mem 0xe6800000-0xe681ffff]     <- igb BAR 0
+>   release child resource [mem 0xe6820000-0xe6823fff]     <- igb BAR 3
+>   pcieport 0000:00:01.3: bridge window [mem 0xe6800000-0xe68fffff]: releasing
+>   pcieport 0000:00:03.2: bridge window [mem 0xe6600000-0xe67fffff]: releasing
+>   pcieport 0000:00:07.1: bridge window [mem 0xe6300000-0xe65fffff]: releasing
+>   [ ... 30 further child resources released below 00:08.1 ... ]
+>   pcieport 0000:00:08.1: bridge window [mem 0xe6000000-0xe62fffff]: releasing
+>   pcieport 0000:00:03.5: bridge window [mem 0xe6000000-0xe61fffff]: assigned
+>   igb 0000:02:00.0 mgmt: PCIe link lost
+>   igb: Failed to read reg 0xc030!
+> 
+> The endpoint's required BAR was assigned in the first pass; only the
+> zero-required-size reserve failed.  In the second pass,
+> pci_prepare_next_assign_round() selects the window of the failing
+> bridge's parent bus, here the root bus, and releases it with
+> whole_subtree.  That drops every non-prefetchable window on bus 00 and,
+> via release_child_resources(), every BAR below them, and
+> pci_setup_one_bridge_window() reprograms each bridge so the MMIO stops
+> immediately. Bound drivers are not notified.
 
-> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/co=
-ntroller/pcie-mediatek-gen3.c
-> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
-> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+Hmm... this sound very interesting detail. I think this is is where the 
+problem lies. Obviously, it's wrong to touch any BAR that is in use by any 
+driver. I suppose fixing that problem would prevent the problem you're 
+seeing?
 
-[ ... ]
+It could be that the release_child_resources() is just too low-level 
+function for this task and it should be done on PCI level so enough 
+information is available for the cascading release prior to releasing the 
+actual bridge window.
 
-> @@ -334,10 +334,10 @@ static int mtk_pcie_set_trans_table(struct mtk_gen3=
-_pcie *pcie,
-> =20
->  	while (remaining && (*num < PCIE_MAX_TRANS_TABLES)) {
->  		/* Table size needs to be a power of 2 */
-> -		table_size =3D BIT(fls(remaining) - 1);
-> +		table_size =3D BIT_ULL(fls64(remaining) - 1);
-> =20
->  		if (cpu_addr > 0) {
-> -			addr_align =3D BIT(ffs(cpu_addr) - 1);
-> +			addr_align =3D BIT_ULL(ffs64(cpu_addr) - 1);
+I've never really liked release_child_resources() as it also hampers 
+troubleshooting because it's logging is not as useful as logging done with 
+PCI level information available (so knowing which resource is which is 
+harder).
 
-[Severity: High]
-Does this introduce a build failure and a potential logic error?
+> The reassignment that follows is scoped to the hotplugged bridge, so the
+> released sibling windows and BARs are never restored.
 
-The kernel does not provide an ffs64() macro, which seems like it will
-cause an immediate build failure.
+There is no general level "restore" in the whole algoritm nor notion of 
+which of the allocation(s) was better. Only the BAR resizing currently 
+does "restore" resources/BARs/bridge windows.
 
-If this is trivially fixed by using the kernel's __ffs64(), wouldn't the=20
-0-based return value cause issues here?=20
+I've been thinking of storing all resources into yet another list before 
+doing anything, and checking afterwards that at least the same resources 
+got assigned as before the operation (but this too may have some cases 
+where the kernel's attempt was actually "better"). The same list could be 
+used to rewind the entire operation on failure.
 
-The original ffs() is 1-based, meaning ffs(cpu_addr) - 1 correctly calculat=
-es
-the alignment shift.
+> The pass does not
+> fail: it succeeds in giving 00:03.5 a 2MB window that no device
+> requested, at the cost of the running igb.
+> 
+> Save the required size before attempting the optional allocation and
+> restore it when that allocation fails.  A window with no required part
+> is then left at size 0.  In the out path, only report unassigned
+> resources that have non-zero size.  A zero-sized resource requests
+> nothing and cannot have failed; assign_requested_resources_sorted()
+> skips such resources rather than attempting them, and releasing
+> upstream windows to make room for zero bytes cannot help.
+> 
+> Fixes: 96336ec70264 ("PCI: Perform reset_resource() and build fail list in sync")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Anthony Pighin <anthony.pighin@nokia.com>
+> ---
+> Changes in v2:
+> - In the out path, drop the !pci_resource_is_optional() check and keep only
+>   the zero-size one; it also covered IOV BARs and disabled ROMs, which have
+>   a real requested size (Ilpo).
+> - Drop the Fixes: 2499f5348431 tag; the zero-size window was never covered
+>   by the ROM exception that commit removed.
+> - Show the full second assignment pass in the commit message (Ilpo).
+> - Reword the commit message and code comments; no functional change.
+> 
+> Link to v1:
+> https://lore.kernel.org/linux-pci/20260717180029.1829888-1-anthony.pighin@nokia.com/
+> 
+>  drivers/pci/setup-bus.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index c0a949f2c995..7dd662941e67 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -450,12 +450,18 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+>  		add_size = add_res->add_size;
+>  		align = add_res->min_align;
+>  		if (!resource_assigned(res)) {
+> -			resource_set_range(res, align,
+> -					   resource_size(res) + add_size);
+> +			resource_size_t req_size = resource_size(res);
+> +
+> +			resource_set_range(res, align, req_size + add_size);
+>  			if (pci_assign_resource(dev, idx)) {
+>  				pci_dbg(dev,
+>  					"%s %pR: ignoring failure in optional allocation\n",
+>  					res_name, res);
+> +				/*
+> +				 * Restore the required size; the failed
+> +				 * attempt left the range enlarged.
+> +				 */
+> +				resource_set_range(res, align, req_size);
+>  			}
+>  		} else if (add_size > 0 || !IS_ALIGNED(res->start, align)) {
+>  			res->flags |= add_res->flags &
+> @@ -743,7 +749,12 @@ static void __assign_resources_sorted(struct list_head *head,
+>  		if (resource_assigned(res))
+>  			continue;
+>  
+> -		if (fail_head) {
+> +		/*
+> +		 * A zero-sized resource requests nothing, so it cannot
+> +		 * have failed.
 
-With a 0-based __ffs64(cpu_addr) - 1, the shift could result in undefined
-behavior by shifting by -1 if the first set bit is bit 0, or it could halve
-the intended alignment requirement.
+This is outright misleading, when it comes to how optional resource, they 
+may have zero size so it did request something.
 
-[ ... ]
+>  Reporting it would only trigger a
+> +		 * pointless release/retry round.
 
->  		cpu_addr +=3D table_size;
->  		pci_addr +=3D table_size;
->  		remaining -=3D table_size;
->  		(*num)++;
->  	}
-> =20
->  	if (remaining)
->  		dev_warn(pcie->dev, "not enough translate table for addr: %#llx, limit=
-ed to [%d]\n",
->  			 (unsigned long long)cpu_addr, PCIE_MAX_TRANS_TABLES);
-> =20
->  	return 0;
->  }
+This too is misunderstanding about how the algorithm is supposed to work, 
+it is normal to do "unnecessary" or "pointless" looking releases/retries.
+Even your case clearly showed it actually wasn't unnecessary(?), and you 
+get that window assigned which, if I've understood, correctly didn't fit 
+there otherwise.
 
-[Severity: High]
-This is a pre-existing issue, but does this function silently fail when
-translation tables are exhausted?
+So no, I don't agree with what this comment says nor the intent.
 
-If remaining is greater than 0 and *num reaches PCIE_MAX_TRANS_TABLES,
-the loop exits and a warning is printed, but the function returns 0.
+> +		 */
+> +		if (fail_head && resource_size(res)) {
+>  			pci_dev_res_add_to_list(fail_head, dev, res,
+>  						0 /* don't care */,
+>  						0 /* don't care */);
+> 
 
-Could this leave the hardware in a partially unmapped state, leading to
-subsequent synchronous aborts when the unmapped PCIe windows are accessed?
+-- 
+ i.
 
-Should this return an error code like -ENOMEM instead of 0 on resource
-exhaustion?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728101413.4575=
--1-sreekuttan2156239@gmail.com?part=3D1
