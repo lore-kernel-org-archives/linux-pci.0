@@ -1,205 +1,182 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012056.outbound.protection.outlook.com [52.101.43.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 668E93CCFB0
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 19:10:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.56
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785265856; cv=fail; b=JdDEYonhgWj7axfy+DBjNmoZoyItKcI8MW4n2A7uDS48ZQOARm5UhnsQ6wUmnmajdL+PNopwZPSR72ljOR0kh6CF9WwgslV6lvubDXq+NUJGK7J2z/zwv4mqFjt3cA0o4XUFWYQXsr6MJ7w2LJS9yC0g53h5uXCoAMqc6SClqqk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785265856; c=relaxed/simple;
-	bh=iTyyX61jk78yFSSf0r8NL2BRI+bWcn+WHLP1ENseL3E=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=fVnAL4F46iGi4wuHcTI4vwakWx/PRMJYY9yPPSObkSGnpSMJVZ+PXea87J8VbhcaeIMOU6Oo8J5wYIoJpqUOH+tNoS7ERtsyqViYgkqYEDWdBoPJ5vfrfPJOgNly8kTw7yXsdFLZS9PblM0ZiPm+kYjzdH028v+JOQ2TK2p3Tqw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=qJ2sKriU; arc=fail smtp.client-ip=52.101.43.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF6746F49C;
+	Tue, 28 Jul 2026 19:11:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785265888; cv=none; b=mQwnXESxhdZKGgGfD4Xs7mNRZXXzBIR9UswXvuzW4PGO+gXsrwaw3AzBqq4SKcja8CBncDC9BPliF9ZC2Yxq2A8Vtdk95XbE42TUGRCfWQAJbl0tO8xXJWDT6NW+YuDZ79zxUx+fiJE03pBdpUPVes7lCG/iKmJx+wNgwWtHlSU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785265888; c=relaxed/simple;
+	bh=G7a5znlnMMtFqHXqlczFlNhb42klP6dvtpJdPwWSkIk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=BIasQBY3bzkmWQZ/GSVgxxRNdquk6p4sNP/VP+TUdqXE6eHUnVx17lriyzsTVJRSpngnMjLvGk7qH+0Igk27rDZooVQ2DYrc85bfrgLk/BfviW334//S+kQa9N6WYTeUitdUNz/5gWdskXmdYDqelebUtvRsduvUfbAcEaCaLKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FyKaiIMY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="qJ2sKriU"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L0H0Oc2hCsFRJXE+FiHwJIUiwJmYZsGqrO6Lh+e4wE4UdY1UB0wpx0KgRhpmSZoz9arD3jDLP0dDa1OlrZOIs41yR9vTQx1USLV3LIx62x67TVCMcN/bcnJLgWlJ4bVy2PHuZbuzpJdpFi9ObKqMq9yQC2t0oBtMWQKIWAAi9T8JYYd845SlH0Sm+nJzjZwDu5kt9dI+oXrhWWbW9zLsBT1gmzsksCcguQIvprbcDPYI3Yx4ePl3LJrFkXcicmPRPO683iMNGcE3gzRHU28rEqs2i7ZtR9tzFrWrftf4/EPgT5gXJVlD57HnNiiuXX9bhU0EIU1D6wuAkGlyXowWIw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MY8mPwG4oHP9vJ2+A9m1aL1J0G01O7+fqNQOu/6+h4w=;
- b=QJUilt3fc+KLk8yUlP9XHa7o2vTM7yKrV8c6nVfxgiIyOnzktwdkQm2jifdysoz/5DpoOF7+I10YRUPY22V7FGUUT69nWw7OPMz9W9ThX2J/0UJZpzqxxFUFAt3XcJvRAl0Sf+LpHb5K3MVk/2iyNZwcXCEneVXuBZvZbXQlg4MRDdrgfZsN/tXfB24tvyTrh3nlQL8SAKZd4gQKOgLZEjYUxtM4zvYLA+bTfm3CmP9s0vWR6VyK/H1N8FMC+4nzs60UfJpWbfnabfyFKWkDVOI5T5zUqeNRhm3AVQoKJFWnyKeZD3v+MQ6/vTvzIzC6Sqz1wKwQ8LJSLz+qlZkGtA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MY8mPwG4oHP9vJ2+A9m1aL1J0G01O7+fqNQOu/6+h4w=;
- b=qJ2sKriUaKHpnBY1H7ArLfv2UxR5cQh/7qlOl79J2lBLEOUSdFtEawjF/8Leryfld1laeDPCoIcHLZ3t33kZw0SLwCjHGeYBfkab2ZSaEttYTsw0cyImI7id4Mt0cbalkC3nr2Dm6kvSWn3j5HJ7ihR16ZZUmFfC5lq+p20n1kk=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BN7PPF5F16C5C9C.namprd12.prod.outlook.com
- (2603:10b6:40f:fc02::607) by DM4PR12MB6011.namprd12.prod.outlook.com
- (2603:10b6:8:6b::14) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.12; Tue, 28 Jul
- 2026 19:10:51 +0000
-Received: from BN7PPF5F16C5C9C.namprd12.prod.outlook.com
- ([fe80::e2a6:da85:2544:e542]) by BN7PPF5F16C5C9C.namprd12.prod.outlook.com
- ([fe80::e2a6:da85:2544:e542%4]) with mapi id 15.21.0223.017; Tue, 28 Jul 2026
- 19:10:49 +0000
-Message-ID: <2f400c7f-eada-45e3-9079-7b5727ecb5c3@amd.com>
-Date: Tue, 28 Jul 2026 15:10:45 -0400
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Vasant Hegde <vasant.hegde@amd.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
- will@kernel.org, robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
- bhelgaas@google.com, Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
-References: <20260723061548.10187-1-vasant.hegde@amd.com>
- <20260723061548.10187-3-vasant.hegde@amd.com> <amOBkJ4BaZ4qnkpc@ziepe.ca>
- <a2f38742-c8a1-4dd5-9fcb-120c1c989203@amd.com>
- <ed296c0d-246f-492b-970b-49c45e25f5f6@amd.com>
- <f4355034-d40a-4d11-ab98-eef0f2991f33@amd.com>
- <838281e9-8ee7-433a-b06c-68675e9b285f@amd.com>
-Content-Language: en-US
-From: "Kuehling, Felix" <felix.kuehling@amd.com>
-In-Reply-To: <838281e9-8ee7-433a-b06c-68675e9b285f@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: YT4PR01CA0504.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:10c::26) To BN7PPF5F16C5C9C.namprd12.prod.outlook.com
- (2603:10b6:40f:fc02::607)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FyKaiIMY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1B6E1F00A3A;
+	Tue, 28 Jul 2026 19:11:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785265886;
+	bh=9AfpiNTnaTbBJgQl+OPk+AMQw8pM/0InoLiRQuUHOIA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=FyKaiIMY1AzDCbXRa3zOxzqqlAi9A748oTQmc3v9xp6K7zd/L20qYz8ipS6K//djg
+	 UO4VIdUj5XCQg7zL5gnL/cuuwCFwrG6mnMkHh400zeodUpTxbswgZz660Sc3xgQviv
+	 IqLrCZBAftvTbDe/piSqiJkc6lEzm6geJSHcjsjIew17VA02zegB07vWl1XOB+dhnx
+	 WgF0oelX6r6lOJ7gWJhUjc0OZJxHTyJeVT96Yk02EfbaCpeMSSKkhpqAjrGQiimwYO
+	 GneuccKyxdlezDYvOx2uKpyTcVxIzDKwyyJEI/dkhM+TK7GIIWR2q5aUynXR/TcQnf
+	 B9ujEWCsUlDPw==
+Date: Tue, 28 Jul 2026 14:11:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "thierry.reding@kernel.org" <thierry.reding@kernel.org>,
+	"lukas@wunner.de" <lukas@wunner.de>,
+	"mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+	"sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>,
+	"Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Message-ID: <20260728191124.GA1386613@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN7PPF5F16C5C9C:EE_|DM4PR12MB6011:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac7720e6-7fda-4cca-ef08-08deecdbef43
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|11063799006|56012099006|4143699003|10067099003|10063799003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	ZpCYCVEoRT3S8OVXxNI+PxvgiCzn0FqGOGDBzT2E2eYrPHQwyLobmtTfzREiMrcOHtMrX8bWHcgOIirfcDg3+xVIp21VpC9GqZW2RUZj6hWHWD4BaJzzVouIn8WQSz4SgSuQN+Vuz599kdBTGHTT2GBnHhdzDOs2uVpj35BnINnJszGBPFVZMOaFHKPfe8Rim8uOf2OUYcB3f7HYeYbgg0fFlVS+VkOhQQjTI9p2U1Bavv1ICdg6c2PVEae8VIo68ibEvZh9owPm3x3BeA/8o+OTBrOv2tx5HMJAw7x+MrxVTXZzq+U/f9AlB0d+IlI9J+xtALlV5gohNszQdTpbkqapfkEnhW3X1jJ4GOTiAtW+/DEqhl59cvPBBvjiJkjSlH9/+jtN3eztGx2KiP2yIXowfBzYRWOwIpl9e2ZCIIVmDnbavVfxbUh98fq8VQMJupN3A1bc6WEcTBV0RPS19z+UlUilNdPBx05TTnxSHKJYoQrb3HIm4ud8Vwgsge28/PhknMT37fZS9gk1eNMxtZDzI5DnOtubY4QgbR3GLSbUwnl1le2E5P+lvcRWIhO//Hoq+xVzmr4RYSo8+6k6a6JDCf9UBuKAQeimYIB5SCl+fq2742Me06Zm33ftT6ndLCe2kIEAchkBoBYj4K302Sq6gz7gmbGc1s1HgSS+Nj4=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN7PPF5F16C5C9C.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(11063799006)(56012099006)(4143699003)(10067099003)(10063799003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?M3VQMExETHUxK0JXeHB6ejBmOUUwRUxBYTdyblN5ajNIZ1lOMHBjd25NazV4?=
- =?utf-8?B?bTBQMGtFWmxob2FiQTF6QTVGcXl1d3I5R2xYdktGeGRxL05FSHE2VWFvTi9E?=
- =?utf-8?B?S2pYZFlnYXg5R2ZzUVNoSlFIQkZtVG1oSWRKSmNZd2VvQ0luWVlXU3haNzg0?=
- =?utf-8?B?Zk5CYW56SjdTTEhZZ29jTFFrWnZlMzVjSkJXdlZubHB3aGRkaHV3MFAyTFhW?=
- =?utf-8?B?Znd2V1VBQ0Zka01FVVRIMWxDY1d3Z29uL3FkeXd0VUphQzlVcGZCajFSYnJS?=
- =?utf-8?B?R2xNVmZneFRLOEhCa1JXOS9FZTA0TStVTCtHTFZRNXNJYzhVZmU2M2FUTHR2?=
- =?utf-8?B?ZEtGdzAvb1c1cU5vSWxkek82Y3dNTUdzNXNHQ3h5ZDhRYXFPOUIyOGR1SGo1?=
- =?utf-8?B?ZHIydEZTelVkaUNGaTZzcTd0amlLYkNpcjhjNy80T21aQnpYK01BSmNiZSt0?=
- =?utf-8?B?Vk5wUUlkUmo4ejRJL1MwOXhQWGJ5c0t2SUNJTzZOOFAvMGRQVmU2WXJoUkda?=
- =?utf-8?B?VUlReDdOcTdRdnNlT0RLd3FvaG9QeDRWN3lSREpuSWkxNDhtZ01yRHhYdXNZ?=
- =?utf-8?B?UkdwVElHM3dnTXRaMzFFYmhhL0RueklHb0dBeGdPV1l2azV6a3lSNFRndkpp?=
- =?utf-8?B?Z1NvNUFKUUdSS1RRMDFWc1JIWGladkg4Z1ZXR3RoV2w0MGRWeHFNb3pqRlYw?=
- =?utf-8?B?SjI3cDBmOWJ5bnZ5UEJ4d3V3WklqWjBtWmlUKzlSSTN4VmFNVUF4TXVwdDM2?=
- =?utf-8?B?a1ZCNTJPemVZek9lcWk1OVZ3a2N3dVI4K1M2amdpQlFnclIwNFV4M25EdzI3?=
- =?utf-8?B?OVhUd1daT2ZNOXJ5bXRwV0FBQ2VwQjJyWjMvb3ptQVp0NDBPZlMvQ0RNeTlI?=
- =?utf-8?B?Z1BIbk1MM2FZODVwdW15UVE3UXJ3ZDNFY1dVQkZuMHh3OCt4SlRyWW9md21D?=
- =?utf-8?B?MEpvUXYzUTBaam9mdG5DNi82UDlrT3RxQjh2dnBodVpvRFR6Z1M3TXZEUi93?=
- =?utf-8?B?UjN4QzFabmJaVXQyTkRJemJHbitCSVJzaEFrV0tmeEhtVmljWU1VS01pWDdS?=
- =?utf-8?B?T29jQTFkSVViWExjS2hGMnRWYjMzdmRWaWdtOHJUcUs5ZXVYRVhRZThTMC9u?=
- =?utf-8?B?bTE3MjlLYXczMUpnRFNNaFE1OGFRMG5hSXNVYmcwY0lwUHJST203bzI2Y0Zx?=
- =?utf-8?B?VlJ3VkhvblRXbXBQcmFXaG55YnFGck83bXhBbldCTHBJb1QwU2V4TjY1Z1NI?=
- =?utf-8?B?UFBaTnBoKzcyQ1YrODVCVzVFdDdJcVhUdm1OV3p2b1RvcXpBNTdVcGRNSEdr?=
- =?utf-8?B?RVM5TzJ6Tll1REpvaW1Xak81d2Naa0pCWS9QQmR4d0hEL3Jmc1ZDM1JrMnhL?=
- =?utf-8?B?RENCTzB3Q0FVQzdjcEhZa1dLZjA2VjE1R21udDhZclI1aWJjQVJodE01YTlj?=
- =?utf-8?B?a2xHVjdXMVBGbkIxMndlZkdNS0hoTnJ4YTlSRlJIOGdxMjdhWmdRa3JYN29H?=
- =?utf-8?B?MjFuR2ZMNUN0ejJJcjQ5aFBGQ08xSTNBQW1saHNhcm51aDFZQUk1SzN5ckdY?=
- =?utf-8?B?ZUhJRlN0cHNnZ3hNdHErZ1JIVUgvZDdpWlF3YmlleFNRd2Y1cDRuODlGa1Ni?=
- =?utf-8?B?ejhGNms1bENWWDNTM2ZuZktIY0pEcDBrd2tUY05sQ1NUVHhGUnp5b0l0R0ZK?=
- =?utf-8?B?czg0dWNmV2JGWlZ2T2QrdXY2ekU3N2hFNlM3YnVRYThYM3pLTnF1Rk1FY1dG?=
- =?utf-8?B?dmxuazB5U2ZmMTFvM242L1hvSXFWTzFPZmw1M0dkSGFtUnlpL0JsOVljNGlE?=
- =?utf-8?B?T2JpOWcybk1CQmlKUVFtZklGT0p2aVAzQXZCZDliRjhkbmhFRCtRZEFFODVa?=
- =?utf-8?B?YS9iTmpIeVdxbEVFMUFMVkxNa0RhS1plNndDMkVCWlI4L3VBOElLR0NjZUI0?=
- =?utf-8?B?WGxRNnVENWd3NzFjRmpaV1VjMHE3bTZ3UkJYVWs3SC9NL2tjQm5OOTRXM3BW?=
- =?utf-8?B?MDREa1FhbUFtYTdUdkV1U1NuYVR6SFJLRXN5N0p6VkE0NERzZXJpV1ViR0sx?=
- =?utf-8?B?TG9LQ1ZJVnVsREVhQWhPWXlXNGtqSk93UHFhaGtidG9Zc1J1bUpCNXpYN0N3?=
- =?utf-8?B?a2ZLMm9HRHpCZitKRmNCUDdIMlQ1bkpsQWp2UzJFcEtnd01QQnRqcU02d09y?=
- =?utf-8?B?TEd4Zlo2VGswZW5WU0hpRFJacHZDTVRpU0dsUWpwV2NMQU1WcFhXbVNjczNQ?=
- =?utf-8?B?MytuQm5Hb0NlTzVBcUxpMGlwZXdvOExYdlU4dDNBNUpqRjdINzVrRm9CVWwz?=
- =?utf-8?B?MUJYcmtRT2s2RlBTWEpnaG9HQ2E1WkQ2ZWp2TXhpT0JWRlh6cUlDdz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac7720e6-7fda-4cca-ef08-08deecdbef43
-X-MS-Exchange-CrossTenant-AuthSource: BN7PPF5F16C5C9C.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2026 19:10:49.3290
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BwwqlcP3pRHVcWfZbw2U63gcTjAjTDz406t3UvFN0jk5FMyADfc/rWL2fQ7xGNkaZU7AGxzJj+MM8E21OyZUvw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6011
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a1934c51592fc56c65232b1379680c52c6d0cea3.camel@intel.com>
 
-On 2026-07-28 01:31, Mario Limonciello wrote:
-> +Felix
->
-> On 7/27/26 23:52, Vasant Hegde wrote:
->> Mario,
->>
->>
->> On 7/27/2026 8:15 PM, Mario Limonciello wrote:
->>>
->>>
->>> On 7/26/26 23:19, Vasant Hegde wrote:
->>>>
->>>>
->>
->> .../...
->>
->>>>>
->>>>> I think this can probably be dropped now? There is no intersection of
->>>>> this old broken embedded GPU and a CPU that supports CC right?
->>>>
->>>>
->>>> I did consider dropping these two checks, but I was not entirely 
->>>> sure. So I kept
->>>> as is for now. Once these series settles and I can go with next 
->>>> step of dropping
->>>> these two checks.
->>>>
->>>> @Alex, @Mario, Any suggestions ?
->>>>
->>>
->>> The background comes from this series:
->>>
->>> https://lore.kernel.org/all/20200824105415.21000-1-joro@8bytes.org/
->>
->>
->> Thanks for old link. So it looks like we are good to drop SME check?
->
-> Yeah I think so.
->
->>
->> Also is it safe to assume SNP is not enabled on these platform and 
->> drop that
->> check? Anyway SNP requirement (which doesn't support identity 
->> mapping) and APU
->> requirement (needs identity mapping) is conflicting.
->>
->
-> The current platforms I think this is a safe assumption.
->
-> Felix,
->
-> Can we revisit the requirement of identity mapping for APU?  Does it 
-> still hold with the current hardware and software?
+On Tue, Jul 28, 2026 at 06:21:23PM +0000, Grumbach, Emmanuel wrote:
+> On Tue, 2026-07-28 at 13:03 -0500, Bjorn Helgaas wrote:
+> > On Thu, Jul 23, 2026 at 11:35:41AM +0000, Grumbach, Emmanuel wrote:
+> > > On Thu, 2026-07-23 at 15:19 +0530, Manikanta Maddireddy wrote:
+> > > > On 22/07/26 10:34 pm, Bjorn Helgaas wrote:
+> > > > > > The problem was that we didn't show up at all in the
+> > > > > > enumeration.
+> > > > > > We
+> > > > > > send a malformed TLP. I'm not quite an expert at this, but
+> > > > > > our
+> > > > > > PCIe
+> > > > > > experts run a PCI analyzer on the enumeration on that
+> > > > > > specific
+> > > > > > platform and they saw that platform's PCI controller sets the
+> > > > > > NoSnoop and Relaxed ordering bit in the TLP. According to the
+> > > > > > spec
+> > > > > > (which I ignore), the BE200 is supposed to return the TLP as
+> > > > > > received, but we reply with 0 Attributes and the enumeration
+> > > > > > doesn't
+> > > > > > complete successfully.
+> > > > > I'm curious about the details of this enumeration failure.  Do
+> > > > > you
+> > > > > know which TLPs had No Snoop and Relaxed Ordering set?  Per the
+> > > > > PCIe
+> > > > > spec, they shouldn't be set for the config requests used for
+> > > > > PCI
+> > > > > core
+> > > > > enumeration.
+> > > > > 
+> > > > > At least*some* config reads to the BE200 must work; otherwise,
+> > > > > we
+> > > > > wouldn't know the Vendor or Device ID, which we need to apply
+> > > > > the
+> > > > > quirk.  So I think you should see something like this in dmesg,
+> > > > > and
+> > > > > BE200 would probably appear in lspci output:
+> > > > > 
+> > > > >    pci 0000:04:00.0: [8086:272b] type 00 class ...
+> > > > > 
+> > > > > Is the failure that iwl_pci_probe() itself fails somehow?
+> > > > > 
+> > > > > You mentioned that this happens on Jetson Thor, but I'm not
+> > > > > sure
+> > > > > what PCIe controller that is.  My guess is it might be Tegra264
+> > > > > [1], which doesn't look like it's merged yet.
+> > > > > 
+> > > > > Thierry, Manikanta, do you have any insight into this?  Does
+> > > > > this PCIe controller set No Snoop and Relaxed Ordering for some
+> > > > > reason?  I don't think endpoint drivers are expecting that.
+> > > > > 
+> > > > > [1]https://lore.kernel.org/linux-pci/20260716-tegra264-pcie- 
+> > > > > v8-0-23e51589229b@nvidia.com/
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > Jetson Thor(Tegra264) is not setting NoSnoop and RlxdOrd bits in
+> > > > config 
+> > > > read TLP.
+> > > > 
+> > > > I made sure that both these bits are set in RP's DevCtl
+> > > > 
+> > > >                  DevCtl: CorrErr+ NonFatalErr+ FatalErr+
+> > > > UnsupReq+
+> > > >                          RlxdOrd+ ExtTag+ PhantFunc- AuxPwr-
+> > > > NoSnoop+
+> > > > 
+> > > > and dumped TLP header for a config read towards BDF 0x100 with
+> > > > offset
+> > > > 0x24.
+> > > >     0x04000001      0x0000000f      0x01000024      0x00000000
+> > > > 
+> > > > I think dmesg and AER log with header information might help with
+> > > > this 
+> > > > particular issue.
+> > > 
+> > > Ok, so I checked again the logs and I was wrong.
+> > > We do see the device in the enumeration, it does show up in lspci.
+> > > Problems start when we want to access our registers.
+> > > I attached the full dmesg output. In that log we try to load
+> > > iwlwifi
+> > > twice.
+> > > 
+> > > I'm adding here the snippet of the first load:
+> > > 
+> > > [   15.275887] iwlwifi 0001:01:00.0: Adding to iommu group 53
+> > > [   15.279737] iwlwifi 0001:01:00.0: enabling device (0100 -> 0102)
+> > > [   15.280047] iwlwifi 0001:01:00.0: HW_REV=0xFFFFFFFF, PCI
+> > > issues?  \\ **
+> > 
+> > The "enabling device" message is from pci_enable_resources(), called
+> > in the pci_enable_device() path.  The 0100 is from a config read of
+> > PCI_COMMAND, and the 0102 is from adding PCI_COMMAND_MEMORY to enable
+> > memory BARs.
+> > 
+> > The "HW_REV=" is from iwl_pci_probe(), which looks like the very
+> > first
+> > MMIO read to a BE200 BAR.
+> 
+> Indeed
+> 
+> > So I guess the theory is that Tegra264 set NoSnoop and/or RlxdOrd in
+> > the MMIO read, BE200 didn't copy the attributes from the Request to
+> > the Completion as required by PCIe r7.0, sec 2.2.9.1, and Tegra264
+> > logged a Malformed TLP?
+> 
+> That's the assumption based on the AER log, yes.
+> 
+> > AFAICS we still don't know why Tegra264 would set NoSnoop and/or
+> > RlxdOrd in the MMIO read.
+> 
+> Me neither but... I can't comment on that. And de-facto, once it does
+> that, the BE200 replies with the NoSnoop and RlxOrd clear in the TLP
+> which is then considered as a malformed TLP.
+> 
+> > Unless iwlwifi asked for NoSnoop and/or RlxdOrd to be set, I think
+> > it's a potential problem for drivers if Tegra264 sets them.
+> 
+> I ... don't think we would do that. The driver would certainly not do
+> that... Regarding the hardware itself, I can't comment, but I can check
+> internally.
 
-I'm not sure what this means. Is Identity mode something like 
-pass-through? I don't know why this is required on APUs. If it's related 
-to IOMMUv2 support, then it's probably no longer needed. We're not using 
-IOMMUv2 on our APUs any more. Support for that was removed from the 
-amdgpu driver a few years ago.
+Right, I don't see any mention of PCI_EXP_DEVCTL_RELAX_EN or
+PCI_EXP_DEVCTL_NOSNOOP_EN or even PCI_EXP_DEVCTL there.  And it would
+have to be set in the Root Port for it to affect the MMIO read
+request, not in BE200.  That would affect everything under the RP, so
+I think these are probably most useful in the DMA direction where an
+individual device can control its own Requests.
 
-Regards,
-   Felix
-
-
-
->
-> I'm wondering if we can just apply it to Raven and loosen up elsewhere 
-> and what gives if we do that.
+But the analyzer saw them set in the request from the Root Port, so
+it's still a mystery why what happened.
