@@ -1,39 +1,39 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D3863A59A3;
-	Tue, 28 Jul 2026 17:20:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 551A63A5433;
+	Tue, 28 Jul 2026 17:20:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785259243; cv=none; b=dxpMdMORH/Ren+aOqh8Jx3aPYlGhlVjjA36JIjJN0OBj2Aioq6EMdeZ3O43swqU9LTI3jttE2UYpmI9B7pdqgvAWzhe0KmUPULk8616LWdPzA7buEhXrf99eG/6IoezdJbtTpFQ5RFELztOfV+y8lLc4Z3xgiZkjM5UxUmC+21w=
+	t=1785259244; cv=none; b=kNsDiK1uGY0lGhgMokJntkAgqt0P0qLEtxpjk5l8kLgkHG+PYOq17e7PUL3fU6/PzXpkGirMnWT4i6CQym+AUuGNqIeOVkLjtM8P1o0B8TZN4OyDk6BZvi9FNS5EWR7NJXhveVWJQe6qJL4JV+CKSolYpFhtBbjvzhmHVQMeLC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785259243; c=relaxed/simple;
-	bh=h2kWsgUsOP46SGAWYxxhhpSFMudFyFqVo6pDqhMfQR4=;
+	s=arc-20240116; t=1785259244; c=relaxed/simple;
+	bh=RztI9HAgdCm4mN1jBzzyE88p2ayNVz+051YSS47B1gc=;
 	h=From:To:Cc:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 Subject; b=taZ5pwRV2hl7rE0s0j+8lfOaEMqwywVa3OYOz7LGMCXQqvQg6z8OMo/DSLbsTA+OaTNZcsQ0spaI/hriWIGvBQAIByNWnJ0900MCmO9XN3Ypa2/jj/nG71GnDsSGEBpcZ6F2ttIfXeJg20IV9TIiLzav4+FkAe/V3NvhdFjA2Es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=GcU06fB/; arc=none smtp.client-ip=204.191.154.188
+	 Subject; b=YXSY/AXGlOKE32C8rCud/vMBadwG9KcyxGP0KP3Ive/lKJF1aVhHY1pBBK8QrJv5DRosVhz0Xe7Xr1lf3uK5seFiL1O8eM9ZQ7kme+qDsAqwVHLjjvOPVv7JuRCMPmPnYg+Pq+TLrjNN/LYlngR+gQi9bvnh9m4Lm8Mphro1ZwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=j6gXVTQE; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="GcU06fB/"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="j6gXVTQE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Cc:To:From:content-disposition;
-	bh=SZxQwGZqvp28tNZ5rD38KblVYiotBUmW1Md5IhbztNU=; b=GcU06fB/cjLaLOFbsyWYnMI/Ul
-	ugWxA1gMwPPFNmYkV1VaWQ8hHpq4dPBPZp5LXQR7Dk9TVZYWULIW14ubiUXHBkdl3JjG47VM36C1T
-	+06K6Oe3qf1UaD0kAF3LpCNXr2YY6/DfLtzdxXhRhFdUoeDQkC4ISDmUMdYfrXWwQsLW3axtId72F
-	EsycD8ACsYJeREEazt7H/JeERvZQjXhb/fDc/MXX4maasXWJa1WNqnX/qcNmT0/Yie12zvaoI6zBm
-	v9zzjxQX1pVuQlTS4AJRB4ghG8W/D3odvCgUkLCmmQAqcfgUdxpmh4Skfby/d3rt0isKWHkzVyX5B
-	qbTJC0EA==;
+	bh=9i6rDYmwLGZgtTOseSrHne1UG3Tx5bSBgZ3laCb8APs=; b=j6gXVTQEulFb5xPlEVReWWB8xM
+	/iL3Kcp5P39AU8k9AQNPUwQSvfRNcVF+UC+iuqY8niVl90GMq7sl4//aNoOXESxsYyNqpZC+ErENP
+	fvvm5ZXSXx9Sos5LH1hzerxWOsprr55JDsGuZjUBkbF3EH5rsK45gNmJt3uvqYakAUbbptpq94l1T
+	zBfhW2ZOX8tKZxiSmH4agQM0OTP+ooBwsc4vVGVBY2ynDtvKHQqNmN5NrqfD0mP9vonpk44+577Dg
+	slGw7qNmeHniHbqIu1I5TBAIzU/c3gUnXQu8KPjzXb+NYODFVHUNdvR6gXE3N9HlXSk+afMsQ4gqO
+	momlS+Zg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
 	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1wolTt-00000000oZj-0mV3;
-	Tue, 28 Jul 2026 11:20:41 -0600
+	id 1wolTt-00000000oZj-3y3i;
+	Tue, 28 Jul 2026 11:20:42 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
 	(envelope-from <gunthorp@deltatee.com>)
-	id 1wolOp-00000000TD6-1RGE;
+	id 1wolOp-00000000TDB-2FuY;
 	Tue, 28 Jul 2026 11:15:27 -0600
 From: Logan Gunthorpe <logang@deltatee.com>
 To: linux-kernel@vger.kernel.org,
@@ -47,10 +47,9 @@ Cc: Frank Li <Frank.li@nxp.com>,
 	George Ge <george.ge@microchip.com>,
 	Jaeyoung Chung <jjy600901@snu.ac.kr>,
 	Logan Gunthorpe <logang@deltatee.com>,
-	Sashiko <sashiko-bot@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>
-Date: Tue, 28 Jul 2026 11:15:13 -0600
-Message-ID: <20260728171523.112244-3-logang@deltatee.com>
+	Sashiko <sashiko-bot@kernel.org>
+Date: Tue, 28 Jul 2026 11:15:14 -0600
+Message-ID: <20260728171523.112244-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260728171523.112244-1-logang@deltatee.com>
 References: <20260728171523.112244-1-logang@deltatee.com>
@@ -62,95 +61,101 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org, Frank.li@nxp.com, Frank.Li@nxp.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com, vkoul@kernel.org, sashiko-bot@kernel.org
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
 X-Spam-Level: 
-Subject: [PATCH v4 02/12] dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
+Subject: [PATCH v4 03/12] dmaengine: switchtec-dma: always clear DMA base registers on chan_stop()
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-switchtec_dma_alloc_chan_resources() returns directly on any later
-failure, without ever freeing the descriptor rings and coherent DMA
-memory it just allocated. The dmaengine core does not call
-device_free_chan_resources() when device_alloc_chan_resources() fails,
-so the driver has to unwind its own partial state.
+switchtec_dma_chan_stop() returned early if halt_channel() timed out,
+skipping the writes that clear sq_base/cq_base on the channel, and
+gave its caller no way to tell the halt hadn't been confirmed.
+switchtec_dma_free_chan_resources() unconditionally frees the
+descriptor rings right after calling this function, so if the
+hardware failed to halt, it could keep writing into memory that had
+already been freed.
 
-The device-removed check also runs after ring_active and
-comp_ring_active have already been set true, so a failure there left
-the channel marked active despite alloc_chan_resources() reporting
-failure.
+Attempt the register clear regardless of whether the halt was successful
+and have switchtec_dma_chan_stop() return the halt result so callers can
+tell when it wasn't confirmed. switchtec_dma_free_chan_resources() now
+skips freeing the descriptor rings (leaking them instead) in case the
+hardware continues to write into that memory.
 
-Add an error-unwind path that disables the channel and frees the
-descriptor rings on every failure after allocation. ring_active and
-comp_ring_active are cleared under the same locks
-switchtec_dma_free_chan_resources() already uses, since the completion
-tasklet checks comp_ring_active under complete_lock before touching
-the completion ring, and a stale IRQ can still be in flight when this
-unwind path runs.
+But all this is hardening that is pretty unlikely to be hit in the real
+world.
 
 Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/dmaengine/20260707165555.350951F000E9@smtp.kernel.org
-Fixes: 30eba9df76ad ("dmaengine: switchtec-dma: Implement hardware initialization and cleanup")
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://lore.kernel.org/dmaengine/20260721162531.BA01A1F01560@smtp.kernel.org
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/dma/switchtec_dma.c | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+ drivers/dma/switchtec_dma.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-index a4a7d66d042d..f77da31aeb65 100644
+index f77da31aeb65..cbbc9ad08247 100644
 --- a/drivers/dma/switchtec_dma.c
 +++ b/drivers/dma/switchtec_dma.c
-@@ -988,15 +988,15 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
+@@ -543,26 +543,33 @@ switchtec_dma_abort_desc(struct switchtec_dma_chan *swdma_chan, int force)
+ 	spin_unlock_bh(&swdma_chan->complete_lock);
+ }
  
- 	rc = enable_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_free_desc;
+-static void switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_chan)
++static int switchtec_dma_chan_stop(struct switchtec_dma_chan *swdma_chan)
+ {
++	struct pci_dev *pdev;
+ 	int rc;
  
- 	rc = reset_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
+ 	rc = halt_channel(swdma_chan);
+-	if (rc)
+-		return;
  
- 	rc = unhalt_channel(swdma_chan);
- 	if (rc)
--		return rc;
-+		goto err_disable_channel;
- 
- 	swdma_chan->ring_active = true;
- 	swdma_chan->comp_ring_active = true;
-@@ -1007,7 +1007,8 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
  	rcu_read_lock();
- 	if (!rcu_dereference(swdma_dev->pdev)) {
+-	if (!rcu_dereference(swdma_chan->swdma_dev->pdev)) {
++	pdev = rcu_dereference(swdma_chan->swdma_dev->pdev);
++	if (!pdev) {
  		rcu_read_unlock();
--		return -ENODEV;
-+		rc = -ENODEV;
-+		goto err_ring_inactive;
+-		return;
++		return rc;
  	}
  
- 	perf_cfg = readl(&swdma_chan->mmio_chan_fw->perf_cfg);
-@@ -1029,6 +1030,20 @@ static int switchtec_dma_alloc_chan_resources(struct dma_chan *chan)
- 		FIELD_GET(PERF_MRRS_MASK, perf_cfg));
++	if (rc)
++		pci_err(pdev,
++			"Channel %d halt timed out, clearing DMA base registers anyway\n",
++			swdma_chan->index);
++
+ 	writel(0, &swdma_chan->mmio_chan_fw->sq_base_lo);
+ 	writel(0, &swdma_chan->mmio_chan_fw->sq_base_hi);
+ 	writel(0, &swdma_chan->mmio_chan_fw->cq_base_lo);
+ 	writel(0, &swdma_chan->mmio_chan_fw->cq_base_hi);
  
- 	return SWITCHTEC_DMA_SQ_SIZE;
+ 	rcu_read_unlock();
 +
-+err_ring_inactive:
-+	spin_lock_bh(&swdma_chan->submit_lock);
-+	swdma_chan->ring_active = false;
-+	spin_unlock_bh(&swdma_chan->submit_lock);
-+
-+	spin_lock_bh(&swdma_chan->complete_lock);
-+	swdma_chan->comp_ring_active = false;
-+	spin_unlock_bh(&swdma_chan->complete_lock);
-+err_disable_channel:
-+	disable_channel(swdma_chan);
-+err_free_desc:
-+	switchtec_dma_free_desc(swdma_chan);
 +	return rc;
  }
  
- static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
+ static int switchtec_dma_terminate_all(struct dma_chan *chan)
+@@ -1050,6 +1057,7 @@ static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
+ {
+ 	struct switchtec_dma_chan *swdma_chan =
+ 		container_of(chan, struct switchtec_dma_chan, dma_chan);
++	int rc;
+ 
+ 	spin_lock_bh(&swdma_chan->submit_lock);
+ 	swdma_chan->ring_active = false;
+@@ -1059,9 +1067,10 @@ static void switchtec_dma_free_chan_resources(struct dma_chan *chan)
+ 	swdma_chan->comp_ring_active = false;
+ 	spin_unlock_bh(&swdma_chan->complete_lock);
+ 
+-	switchtec_dma_chan_stop(swdma_chan);
++	rc = switchtec_dma_chan_stop(swdma_chan);
+ 	switchtec_dma_abort_desc(swdma_chan, 0);
+-	switchtec_dma_free_desc(swdma_chan);
++	if (!rc)
++		switchtec_dma_free_desc(swdma_chan);
+ 
+ 	disable_channel(swdma_chan);
+ }
 -- 
 2.47.3
 
