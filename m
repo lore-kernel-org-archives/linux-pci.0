@@ -1,350 +1,158 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010006.outbound.protection.outlook.com [52.101.69.6])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8FE432E68D;
-	Tue, 28 Jul 2026 15:46:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.6
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785253576; cv=fail; b=E4rwZoGpCpYPY70X+k2OF9bsNsc0SrU6zYXGrLlgnANYBW4UVO+fmRMSunDjN0Sq79AlT4uGDfWMlgPjU2SMjuDsjTGFQ8XcGuP6Ag9lgfB8LmylQVDeMCYKYn4xQSQgpzBCoVjqS4gaQh5stt8DYFdl2PZr18x0CttfLqAuA7c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785253576; c=relaxed/simple;
-	bh=ls6pGo4wRSaURCWPhWp0SWifHTdWwXix11lLItUn/Wk=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Z4iGk5V5gAYwmWtDiv6JjVDEmc3VVrIxa3rRd/qFdLLgXgrcpQx4nXJrzjeABEJI+6II1bqlHWDV6RHlC7BaZyhkfzGTevMKdsmqAdidB0REG0d0sS3pEF7ym3aK7EpemY6SyGh3SPe5dDpJofbqctWsfurKAEL+rqGunHxdioI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=EZ/b9VpO; arc=fail smtp.client-ip=52.101.69.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AF031E84B;
+	Tue, 28 Jul 2026 15:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785254002; cv=none; b=o2ZbJi82BUIhNePb2lyUHQ/w6soMVswqkhbwU0FIT8Zi5zJeCT7MfiRW27x5yhZdJJfefe1ZbY8zzqe9MfClPANin08PHUspFE+r7O39i6rc1+DCoDm2mKdk5mp8FE7sf3w5+FpyGjVoP4IsmEcMFJUrapI24UGxXBa/IjfK/o8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785254002; c=relaxed/simple;
+	bh=bdDTFgwVaJPzXbDXJHAYIe4NI0tDIzc2e4q5zy9J0l0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=elmQPT8Uipw2mWntqck5Yhn4H1evKTKMHid/JulWoQM7roudCG/htTc0hJrMJWJta8N7GtXPfuE9wLBUfVJwk986jJRj0Z3tJ0mHyxtUUHETAsyWSBGSoI6LrKtoZQS6vRExdh+rkF/hDZk1mfhJF3ojnACFg8Xrwk7sMmRi71Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IZ+rbe9O; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="EZ/b9VpO"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qX7e4jCZ5r4wYy1OvrNK0qfQKKtVZUmIZkwgCNjxCQaT/vl1LWqCW51oof7cm5DOYxw5Lun//vShRpikJZQw8WuwqKSjzGutUBhEYMMVBE2CHVZQj/PoVacZeP9+VLFC5J8eP1suxS0q9/OjMJQBHw3UCeoLDXlXhcBoC7TWvYQATHuCc1n0LsDhpJ2FgLwCkdp32ctAi1L1bd5zBI4bCRKHHBbf6y0Rw3O+ahA2t8gYlqJfFy4iotn8W20iifjV3Z0WxkbSIFRFCahehvtPDfEjLTJiBcxT41oDHui0HHJM0xQq4QaeqliS2bg1QiWocHTAPJcUMpL8kg/1wnCk8A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8USN2EAdhzUnyadoOi9BOR5JNUPmHylFl+PgtR+m4J8=;
- b=Jn42I1tmTVyDxFp6lB7o5i5pzlPYfzkKg/i3ZrGRu1h+FenlCszyMOyNQHXvWRS5ca1rrqihcGaIQYHqeNbBZ/HlrKH7lsaRi9mHIK8Ha8ygoVu9dpnsrUyrQaT1D/p4b5n1hrUIyxlCv9ch2I9cE9rQsAw8f9zybDolMO538NfStHGv2DPCOUQ3mgQ4IXimfjQ3f0S9UWfPAL6M+kmtiyOppgyDMvoFQANWoRomt/GKju6oDqQbPwNm5MV2P2zQAJ4i0ux9Rag9Fz704lBvCXwrnp99mzUBhRBPZz+zpIhp7bCVn0UgvIpWOSuE6PhLnutIf5ZZikKEg3dvm2HyKw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8USN2EAdhzUnyadoOi9BOR5JNUPmHylFl+PgtR+m4J8=;
- b=EZ/b9VpOzLvG6tEy+/rjmM9jEaRlyZBHq83NlBAfw3rF3NGZkOT01e0jFmTTDqFRoT0KGoDMwTzF3TLVkk/5BzlcsbQf07aECZ0Cb960her/oaWpLGWdAzchpKwO6IH3H1ghCy5vCgYD5tImwBp272rTV6vG9HNorUS1Imd6TnUS4MRnSLJIVDwFHxk1mAQC9VjwVn/WyQ+H7SNOEDGXWZkVqXVmo4DiXHEaust/GSOunt9gCbq/bwj1R90zn7p8dMatNeHvt4M6FNT3QZ19ks+wD8GilK4nh2/2n2HJMT0+vX1rz/mWeaI18e3bh00xJRRMMLjY6PKnGBGnjDNo5w==
-Received: from GV2PR04MB12560.eurprd04.prod.outlook.com (2603:10a6:150:367::9)
- by BESPR04MB12561.eurprd04.prod.outlook.com (2603:10a6:b10:fe::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.12; Tue, 28 Jul
- 2026 15:46:08 +0000
-Received: from GV2PR04MB12560.eurprd04.prod.outlook.com
- ([fe80::c418:3929:9d71:9257]) by GV2PR04MB12560.eurprd04.prod.outlook.com
- ([fe80::c418:3929:9d71:9257%4]) with mapi id 15.21.0245.012; Tue, 28 Jul 2026
- 15:46:08 +0000
-From: Roy Zang <roy.zang@nxp.com>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-CC: =?utf-8?B?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>, Anand
- Moon <linux.amoon@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, Frank Li
-	<frank.li@nxp.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Heiko
- Stuebner <heiko@sntech.de>, Jesper Nilsson <jesper.nilsson@axis.com>, Jingoo
- Han <jingoohan1@gmail.com>, Koichiro Den <den@valinux.co.jp>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>, Minghuan Lian
-	<minghuan.lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, Nicolas Frattaroli
-	<nicolas.frattaroli@collabora.com>, Niklas Cassel <cassel@kernel.org>,
-	Qianfeng Rong <rongqianfeng@vivo.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Rob Herring <robh@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>, Srikanth Thokala
-	<srikanth.thokala@intel.com>, Vignesh Raghavendra <vigneshr@ti.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Yuho Choi
-	<dbgh9129@gmail.com>, "imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-omap@vger.kernel.org"
-	<linux-omap@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "linux-rockchip@lists.infradead.org"
-	<linux-rockchip@lists.infradead.org>
-Subject: RE: [PATCH 1/2] PCI: dwc: Handle return value from endpoint .init
- callback
-Thread-Topic: [PATCH 1/2] PCI: dwc: Handle return value from endpoint .init
- callback
-Thread-Index: AQHdHjAaU0BRkBm8q0yhDiIT+kMijraDE6wg
-Date: Tue, 28 Jul 2026 15:46:08 +0000
-Message-ID:
- <GV2PR04MB12560070A62D9DC359FA165118BCB2@GV2PR04MB12560.eurprd04.prod.outlook.com>
-References: <20260728012548.465139-1-marek.vasut+renesas@mailbox.org>
- <20260728012548.465139-2-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20260728012548.465139-2-marek.vasut+renesas@mailbox.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12560:EE_|BESPR04MB12561:EE_
-x-ms-office365-filtering-correlation-id: d0ea8e28-c022-4dd5-88d6-08deecbf57b7
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|23010399003|6049299003|19092799006|366016|7416014|376014|1800799024|38070700021|4053099003|4143699003|56012099006|10067099003|11063799006|22082099003|18002099003;
-x-microsoft-antispam-message-info:
- t7BWG9csU+OdPWToW2FX9pzhLYkhmUsbJYq7BDyP/+fFV1JtOcGWK7OM6ibyDJcrZnEcWvz4wBUhitC01xWgewbRAs2r6jNOn0wolgw1eJ62cMF5wD0yW1lst7iBoBLeeI3jvsTgaZRVuLGNYDDFEmYcfs544rnLZQDsLap4EANOAhMecq3Q183+4MmVHhYBukET7ZWIqVpWT/nH5xt1gHxgtWe8PQG1bOSsL2S2kBJH3crZjbVEaXTR5kmIz0V5j1PA84cATSVOpFwB7oScrXyFTHCGCF6dDVVrjdLHxkFbhdQL7E1pFWXFLaWlUl3MdbibC/iMz8ryUa/W+PLviCU6cSvhAMajiFBGuyQKU25W3bs04r4kLR0drNA5KhQdDv3dcglI3BAwa5LeOVc36kb2tbp0fPX+bmvKiheIy9sVF4l8BvGaYjDSJqR4u+ZLmJKoschQRZBwXl3VuBFasQhsT730NOuUh6TaLj64cJWnhcuePwjCPkBViKunT0PcojIwbUSm5r2PnA0vb3jnhABN26aroq17v9Vl3sFYwL0d9Zsn6KmvYv0pXlfje0PILgZ1le+LhWzcnSIU23epll0Uo8W4yAYQFkkff9QTLcAyQHmjQoBMEKiS75C3sxdJ76pIpW3XdwOyZTvlzq9U2RH7iD4AWscZRojkJTuZAQTznlDZDsQoRDT/+puCNBXK4KdTiBhgGJXywik5ql2crK0O65SZZAlXcD7VSff7z6U=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12560.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(6049299003)(19092799006)(366016)(7416014)(376014)(1800799024)(38070700021)(4053099003)(4143699003)(56012099006)(10067099003)(11063799006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?a3dGWHNnLzVjbkNLaFdWb1BHNkNxblBqbHhDeDhqUHQrTWkxN1ZOV1FQbE81?=
- =?utf-8?B?OExpbVl3Wit0N1FuTjBVbUhCbUdZNnJod2hYQ1Y5alBzeTNnZDZaWkZ0N2Fu?=
- =?utf-8?B?MkllUnNzZFdoNmdiYWdNOHJLUUJFbk1lWlNkVzRhTmFwalhQaThOTkdDNmZH?=
- =?utf-8?B?UTA4ai9kWnZrTXdrN3NGcHBVQkFJdDVxN01VOXBrYXZDWVZnRUNuaEs2cmEv?=
- =?utf-8?B?UWhNSmpEQ0dRMjF0MHdCakptTGhmOXlrdWVmY0NvZFRqRG93Q282dkxJTmV6?=
- =?utf-8?B?K2VsaHYweEhuQi9vVndDclp2SHRwWHRwZ1BiMy9LM3BMaWtjUHVBMmJra0FL?=
- =?utf-8?B?TXVRYXQ5VVh2eVpWaHF5KzZETUxoR0Z4UHVHWCs2LzFFclJMcGNHNm4zQi9L?=
- =?utf-8?B?dktMaXE4TmIxa3Y1YVJmdXZCMHF3czZjV2tUZDJkakdLMFZNT253K3hhNzFw?=
- =?utf-8?B?R3M4NGQ4a1FIYTRqbW05WDdOU0ZoanNsSHhkVGlFeDVyaGFhc0xmMFRWQkxk?=
- =?utf-8?B?dGJidGFTRXMrOEo1OEQySmt5Rnl0RkR6QUhPemJuaU1YU1N0WnIxOUtPSE13?=
- =?utf-8?B?aXBkVnBiSk5GTDRzaDZyYXlvQ1djVWtYVXB5OVkvd1JZVmpSK1BDQTJWRXF1?=
- =?utf-8?B?anVXU1MyL0c0c2ZWWXExSHFISkVEaHNrRm1RL1BOOU00dXFpSVZGMXg0VHA1?=
- =?utf-8?B?UjVVd21VeXV0UUlCQkFCRmxrZUFBdHNFSDd6OHRQZGJ3UzBSODdacnpEaXZ1?=
- =?utf-8?B?NDJxeW1ZNUJkamZuYUNzdkppZHZxa3p4KzlnM0poNUpDSkxWVElBK3RackFa?=
- =?utf-8?B?QW9SMUNMSGZaUVU2V3N2YUIwY3ZsRHZzTEY1d0lkTkQ5eEdIaFd4ZFE0dWVu?=
- =?utf-8?B?c3N2VmdadmZZWEJvYXZUdzBYK1V0Ti9GbzViMVRtSmNScXR4NU5ZN0NTQldm?=
- =?utf-8?B?WnVsUzd1V2JSbGxrbVZlOFZlRzF2dDUyNStWdGVPUUhEa08xK3FqcEl4NmQy?=
- =?utf-8?B?UjQ1aExhUUp4YUtxckllRitEY1dlMVlFNEkwSCtUdTVTYUdtTWROQ0JHSUtW?=
- =?utf-8?B?Uk05aUJYdVgramt3amF0UGVNdDlkMkxGNXJrNGtrSHUvVXBrVmxzRGdxRk91?=
- =?utf-8?B?bU8zTjJmck9YM1RGM2xQeHNocHk2cXhKTzN4Wkx0SXQxWVlrNkhXOGVZN0FE?=
- =?utf-8?B?eXFIWHNlaGZwTHlONkFyd3VrMktKQzZvOFh3Z2RCWW1wWk1WV0pXSFNPS3hH?=
- =?utf-8?B?UC9NcVdlYTBrbUYrY0RITTVRYlNDcGJZbE9TZnN1ZmtSMmU0Rk5mblVzT1c5?=
- =?utf-8?B?LzROMlNkeUxWRGlFOENtT3E1eitRTWxyd0JYSTAyeVR3MHFCdXNzK2ZsNDVJ?=
- =?utf-8?B?aXFNTDBpOEx1MFJCc0EyY3lKTWd2TU1kUEd4azVSK2hpL2RPUDBNM1BCMGJR?=
- =?utf-8?B?THVmemRSWmJ5aW4vTnNzRXNCVzBJMkk3RTJiMVhuenV2Y2g4ZTRhb1ZXeXlv?=
- =?utf-8?B?RDBiL2VMelpacU56dUxsQzU0TGp0aXYydFdtNER4SHA4VHhDTVErMVRsdGVU?=
- =?utf-8?B?SE9aOEYwejVOU1NxR0VORnY2d0ZXQ1lSWHI4WlFORTF2YlA0c0ZjMW9uUEZo?=
- =?utf-8?B?cEVKNVRpMi9wbnRzMU5ZSXQrd0U1NGMxd1BNNTd0T1lveDRUeW9OY3VJNmtM?=
- =?utf-8?B?c1VwbTVMVDdJTWJCY0VuT3BLNkcyN0wzQ3Y0QkRrUUg0Z3ordmdZdlVFNENs?=
- =?utf-8?B?QjBlbnBuZEFMTFg4NE9OMlBaWGg0NFVuaHZhQno2bmZUWEE1cm9FM1BwOUg4?=
- =?utf-8?B?akc0UlhqdVV3UlNOLy90anQwOWZadUJGNnBOOVJ4QW1ZLyttVkk5S2E5MGtV?=
- =?utf-8?B?ZUtCUngwSm4rM09MVUppT0EydG5zL0NycHptS0YvUGRTMTE4dmJoME5YekR6?=
- =?utf-8?B?cHZRRG16ZXNuM1QyeEtyRWJJc2tZQTRCOFQ2QVRpMUVHSzIrSUk5S21VdHM0?=
- =?utf-8?B?cmw2RDRyUHZFNVh2cUhFaEEzNjhUUzU4WjBRb0VTUmdmR1FJTWYzU0tHQkdq?=
- =?utf-8?B?ZFpud0hCbHdhdnpuT2EvVmRkTTBoU1VqTmFyNHYrUUhzYzQ0WDl6Q2VIRWtV?=
- =?utf-8?B?bSsrVTVtbmdQSHFDMDd1bk1CQTBGekFIUTJPa2JIaHVFM0lYb0tENmlzNTFh?=
- =?utf-8?B?QlNDdWNyR3dncHYrQ1JZQnd5NUhqOVNvM2dCQXU2V1Z5T0dHV092VGYvaU94?=
- =?utf-8?B?TEZFRzZTQVV3Y3diS0dYYklXanRTNS80NVpkTkR0TEtiSHJaWFROSEJpYk5N?=
- =?utf-8?Q?EhJY0dDoexD8k6OohJ?=
-Content-Type: multipart/signed;
-	protocol="application/x-pkcs7-signature";
-	micalg=SHA1;
-	boundary="----=_NextPart_000_005A_01DD1E7E.4B3A2FC0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IZ+rbe9O"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785254000; x=1816790000;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=bdDTFgwVaJPzXbDXJHAYIe4NI0tDIzc2e4q5zy9J0l0=;
+  b=IZ+rbe9O7si+f7xieQxlAalGQDutwNK1oeolmupRFKwMBqffJgQmP+nz
+   22iOLtKJGk/wb3xc9xp+q08eBnMNjFxW8TsrLCeKKNQbQkNnmAPTIRAs5
+   Jk20487Whc2vqwn34piV1WAlwtZYUqfa7o5UhgirjwkLx6oGXJzlH8z6N
+   f4yMLumArSy/lD6RBAsy4s5saFqLeqiVQ8mQlmAmVhTy2qS6LiSG8NDsC
+   TqOstfx4+HrIO5kb0QNBra4xW8N9xIrm5eQ46JYCoSu0Kf538jfYOg5C/
+   sNPciSz4ROg1jtsqvUY8377pxL/QoEQXZT1GydGE1QfIOgHA/yvFz6by9
+   w==;
+X-CSE-ConnectionGUID: Y+e7QJ+ITiyBjnmi62w7Uw==
+X-CSE-MsgGUID: BuFCyZ+WQm+PKc5bSKHzJQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="85696418"
+X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
+   d="scan'208";a="85696418"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:19 -0700
+X-CSE-ConnectionGUID: cIMVD2ezQdeCpH+ToN2W+A==
+X-CSE-MsgGUID: fZlV2llzQ3GoGR7sjyRd9g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,190,1779174000"; 
+   d="scan'208";a="255817355"
+Received: from mkosciow-mobl1.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.244.126])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2026 08:53:16 -0700
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: alexandre.belloni@bootlin.com
+Cc: Frank.Li@nxp.com,
+	rafael@kernel.org,
+	linux-i3c@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: [PATCH V2 0/8] i3c: Support IBI-based system wakeup
+Date: Tue, 28 Jul 2026 18:53:00 +0300
+Message-ID: <20260728155308.142713-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12560.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d0ea8e28-c022-4dd5-88d6-08deecbf57b7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jul 2026 15:46:08.7652
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: MLovhbeHd5tw6A15FlItblGuYplgsERtEUpcvp9Yesj4P5pEtxuzgF2pXwXCILBcRRPgtbyZX7JE9Kn+Xir37g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BESPR04MB12561
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Content-Transfer-Encoding: 8bit
 
-------=_NextPart_000_005A_01DD1E7E.4B3A2FC0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Hi
 
-> From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> 
-> Add return value handling for struct dw_pcie_ep_ops .init callback.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Acked-by: Roy Zang <Roy.Zang@nxp.com>
-Roy
+Intel LPSS I3C controllers support up to two I3C busses and can wake the
+system from an In-Band Interrupt (IBI) via a PCI PME.  Today that wakeup
+capability lives only at the PCI function, with no way to express which
+I3C device is actually responsible for waking the system, and no way for
+user space to enable or disable wakeup on a per-device basis.
 
-------=_NextPart_000_005A_01DD1E7E.4B3A2FC0
-Content-Type: application/pkcs7-signature;
-	name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="smime.p7s"
+This series pushes the wakeup capability down to the individual I3C
+devices and then aggregates the resulting wakeup state back up to the PCI
+device.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIhUTCCBaIw
-ggOKoAMCAQICCE4Rpu+H69FRMA0GCSqGSIb3DQEBCwUAMGUxIjAgBgNVBAMMGU5YUCBJbnRlcm5h
-bCBQb2xpY3kgQ0EgRzIxCzAJBgNVBAsMAklUMREwDwYDVQQKDAhOWFAgQi5WLjESMBAGA1UEBwwJ
-RWluZGhvdmVuMQswCQYDVQQGEwJOTDAeFw0yMzA0MjEwNjQzNDVaFw0yODA0MTkwNjQzNDVaMIG2
-MRwwGgYDVQQDDBNOWFAgRW50ZXJwcmlzZSBDQSA1MQswCQYDVQQLDAJJVDERMA8GA1UECgwITlhQ
-IEIuVi4xEjAQBgNVBAcMCUVpbmRob3ZlbjEWMBQGA1UECAwNTm9vcmQtQnJhYmFudDETMBEGCgmS
-JomT8ixkARkWA3diaTETMBEGCgmSJomT8ixkARkWA254cDETMBEGCgmSJomT8ixkARkWA2NvbTEL
-MAkGA1UEBhMCTkwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDAWrnSkYP60A8wj4AO
-kATDjnbdgLv6waFfyXE/hvatdWz2YYtb1YSRi5/wXW+Pz8rsTmSj7iusI+FcLP8WEaMVLn4sEIQY
-NI8KJUCz21tsIArYs0hMKEUFeCq3mxTJfPqzdj9CExJBlZ5vWS4er8eJI8U8kZrt4CoY7De0FdJh
-35Pi5QGzUFmFuaLgXfV1N5yukTzEhqz36kODoSRw+eDHH9YqbzefzEHK9d93TNiLaVlln42O0qaI
-MmxK1aNcZx+nQkFsF/VrV9M9iLGA+Qb/MFmR20MJAU5kRGkJ2/QzgVQM3Nlmp/bF/3HWOJ2j2mpg
-axvzxHNN+5rSNvkG2vSpAgMBAAGjggECMIH/MFIGCCsGAQUFBwEBBEYwRDBCBggrBgEFBQcwAoY2
-aHR0cDovL253dy5wa2kubnhwLmNvbS9jZXJ0cy9OWFBJbnRlcm5hbFBvbGljeUNBRzIuY2VyMB0G
-A1UdDgQWBBRYlWDuTnTvZSKqve0ZqSt6jhedBzASBgNVHRMBAf8ECDAGAQH/AgEAMEUGA1UdHwQ+
-MDwwOqA4oDaGNGh0dHA6Ly9ud3cucGtpLm54cC5jb20vY3JsL05YUEludGVybmFsUG9saWN5Q0FH
-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
-NKAgBgorBgEEAYI3FAIDoBIMEHJveS56YW5nQG54cC5jb22BEHJveS56YW5nQG54cC5jb20wHQYD
-VR0OBBYEFEC91Mn4uGDypbHxsXGxHS5+PZUYMB8GA1UdIwQYMBaAFFiVYO5OdO9lIqq97RmpK3qO
-F50HMIIBRgYDVR0fBIIBPTCCATkwggE1oIIBMaCCAS2GgchsZGFwOi8vL0NOPU5YUCUyMEVudGVy
-cHJpc2UlMjBDQSUyMDUsQ049bmxhbXNwa2kwMDA1LENOPUNEUCxDTj1QdWJsaWMlMjBLZXklMjBT
-ZXJ2aWNlcyxDTj1TZXJ2aWNlcyxDTj1Db25maWd1cmF0aW9uLERDPXdiaSxEQz1ueHAsREM9Y29t
-P2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q/YmFzZT9vYmplY3RDbGFzcz1jUkxEaXN0cmlidXRp
-b25Qb2ludIYvaHR0cDovL253dy5wa2kubnhwLmNvbS9jcmwvTlhQRW50ZXJwcmlzZUNBNS5jcmyG
-L2h0dHA6Ly93d3cucGtpLm54cC5jb20vY3JsL05YUEVudGVycHJpc2VDQTUuY3JsMIIBEAYIKwYB
-BQUHAQEEggECMIH/MIG7BggrBgEFBQcwAoaBrmxkYXA6Ly8vQ049TlhQJTIwRW50ZXJwcmlzZSUy
-MENBJTIwNSxDTj1BSUEsQ049UHVibGljJTIwS2V5JTIwU2VydmljZXMsQ049U2VydmljZXMsQ049
-Q29uZmlndXJhdGlvbixEQz13YmksREM9bnhwLERDPWNvbT9jQUNlcnRpZmljYXRlP2Jhc2U/b2Jq
-ZWN0Q2xhc3M9Y2VydGlmaWNhdGlvbkF1dGhvcml0eTA/BggrBgEFBQcwAoYzaHR0cDovL253dy5w
-a2kubnhwLmNvbS9jZXJ0cy9OWFAtRW50ZXJwcmlzZS1DQTUuY2VyMA0GCSqGSIb3DQEBCwUAA4IB
-AQAwtQRH8aMHz4PyCyfPAqbyOd/zkoILJe2NiFqCaNOWLQWUfVuiasVjGqIRJQ/HIJV2ooHktl7S
-MMp/cR8QCETODLCsujJQtELvH+XrjBUX7xAiqTtVrckTRbO1xaZotFW3CN02IqSPo/AB+9ojr202
-nHzvELJgOPayKk1lulbWmNqz8qMSuWGj8Sc30gzkCd6OyLciATwDLQYUXS42dX1lKZSdgOURMQP8
-KIO0SG/WRo+ZUE51xajEZpgo5WKYrckiZxQCfcGAn0WVCiOZ5hRnr8Q7pavFszxFrWwowicwbd0S
-0wIWAnBs6eqAZjN/K9bu/QTdY1jSJgfViagMg470MIIIOjCCByKgAwIBAgITLQAMpBb3zugcBVYH
-WgABAAykFjANBgkqhkiG9w0BAQsFADCBtjEcMBoGA1UEAwwTTlhQIEVudGVycHJpc2UgQ0EgNTEL
-MAkGA1UECwwCSVQxETAPBgNVBAoMCE5YUCBCLlYuMRIwEAYDVQQHDAlFaW5kaG92ZW4xFjAUBgNV
-BAgMDU5vb3JkLUJyYWJhbnQxEzARBgoJkiaJk/IsZAEZFgN3YmkxEzARBgoJkiaJk/IsZAEZFgNu
-eHAxEzARBgoJkiaJk/IsZAEZFgNjb20xCzAJBgNVBAYTAk5MMB4XDTI0MDgwNzE5MzgxMVoXDTI2
-MDgwNzE5MzgxMVowgZoxEzARBgoJkiaJk/IsZAEZFgNjb20xEzARBgoJkiaJk/IsZAEZFgNueHAx
-EzARBgoJkiaJk/IsZAEZFgN3YmkxDDAKBgNVBAsTA05YUDELMAkGA1UECxMCVVMxFjAUBgNVBAsT
-DU1hbmFnZWQgVXNlcnMxEzARBgNVBAsTCkRldmVsb3BlcnMxETAPBgNVBAMTCG54YTIxNzAxMIIB
-IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA55YyjGM+ltxo8NcfzL4FYuNVxTSHoMXQdjHo
-ddnsJO77cR5GnfdlRXEOdJUysAKlGhpMxYekUrKBGfuoTXlXthcH/51P1apcmQBioE9kjwMf3qYM
-wroBH1wWfKervMVKyVoULgWuN74/CeY7lN0zttUp9x3g1jMKVgKGap9Q2lDVbxFCMzWDieiPRMEM
-G8FRcrGUSOKSkQl5j/X7n+VqAvXWZlqvhyzsOyXBFrXJvslOQGCXAAavQXNfrIDRRKy4PS+MSd26
-6sEakJlhbOAsIeUcDyP1Rq7tbfuZ+BFrq2w5x0SifHa5ugFi3Z7LBTREB+lsvUtoaFnZX1tQ44v7
-ZQIDAQABo4IEWTCCBFUwPAYJKwYBBAGCNxUHBC8wLQYlKwYBBAGCNxUIhYLAfoGO9FWG7YU4guuZ
-S5qSVj+F5opuhLXhfgIBZAIBQTATBgNVHSUEDDAKBggrBgEFBQcDBDAOBgNVHQ8BAf8EBAMCBSAw
-DAYDVR0TAQH/BAIwADAbBgkrBgEEAYI3FQoEDjAMMAoGCCsGAQUFBwMEMIGUBgkqhkiG9w0BCQ8E
-gYYwgYMwCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBLTALBglghkgBZQMEARYwCwYJYIZIAWUDBAEZ
-MAsGCWCGSAFlAwQBAjALBglghkgBZQMEAQUwCgYIKoZIhvcNAwcwBwYFKw4DAgcwDgYIKoZIhvcN
-AwICAgCAMA4GCCqGSIb3DQMEAgICADAdBgNVHQ4EFgQUa9VvfI2adDKzdXh2zk0AoaavdmIwHwYD
-VR0jBBgwFoAUWJVg7k5072Uiqr3tGakreo4XnQcwggFGBgNVHR8EggE9MIIBOTCCATWgggExoIIB
-LYaByGxkYXA6Ly8vQ049TlhQJTIwRW50ZXJwcmlzZSUyMENBJTIwNSxDTj1ubGFtc3BraTAwMDUs
-Q049Q0RQLENOPVB1YmxpYyUyMEtleSUyMFNlcnZpY2VzLENOPVNlcnZpY2VzLENOPUNvbmZpZ3Vy
-YXRpb24sREM9d2JpLERDPW54cCxEQz1jb20/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNl
-P29iamVjdENsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50hi9odHRwOi8vbnd3LnBraS5ueHAuY29t
-L2NybC9OWFBFbnRlcnByaXNlQ0E1LmNybIYvaHR0cDovL3d3dy5wa2kubnhwLmNvbS9jcmwvTlhQ
-RW50ZXJwcmlzZUNBNS5jcmwwggEQBggrBgEFBQcBAQSCAQIwgf8wgbsGCCsGAQUFBzAChoGubGRh
-cDovLy9DTj1OWFAlMjBFbnRlcnByaXNlJTIwQ0ElMjA1LENOPUFJQSxDTj1QdWJsaWMlMjBLZXkl
-MjBTZXJ2aWNlcyxDTj1TZXJ2aWNlcyxDTj1Db25maWd1cmF0aW9uLERDPXdiaSxEQz1ueHAsREM9
-Y29tP2NBQ2VydGlmaWNhdGU/YmFzZT9vYmplY3RDbGFzcz1jZXJ0aWZpY2F0aW9uQXV0aG9yaXR5
-MD8GCCsGAQUFBzAChjNodHRwOi8vbnd3LnBraS5ueHAuY29tL2NlcnRzL05YUC1FbnRlcnByaXNl
-LUNBNS5jZXIwPQYDVR0RBDYwNKAgBgorBgEEAYI3FAIDoBIMEHJveS56YW5nQG54cC5jb22BEHJv
-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
+An IBI-capable I3C device on a bus whose controller can wake the system
+is marked as wakeup capable, so it can be managed through the standard
+device wakeup framework (e.g. via power/wakeup in sysfs).  When such a
+device is enabled for wakeup, a wakeup event is reported each time it
+queues an IBI.
 
-------=_NextPart_000_005A_01DD1E7E.4B3A2FC0--
+At suspend time, the mipi-i3c-hci PCI driver aggregates the wakeup
+configuration of the I3C devices across its HCI instances (up to two I3C
+busses) and enables PCI wakeup (PME) only when at least one attached I3C
+device is enabled as a wakeup source and has IBI enabled.  This keeps
+the PCI wakeup state in sync with the actual requirements of the devices
+on the busses.
+
+The series is organised as follows:
+
+ - Patch 1 fixes a pre-existing recursive acquisition of the bus rwsem
+   in i3c_master_register_new_i3c_devs().  The remaining patches add
+   work to that same function, so the locking is corrected first.
+
+ - Patches 2-5 add the generic I3C core support: an ibi_wakeup flag for
+   controllers, marking IBI-capable devices as wakeup capable, reporting
+   wakeup events on IBIs, a helper to query whether any device on a bus
+   has both wakeup and IBI enabled, and a fix to reject IBI requests
+   from devices that do not advertise IBI capability.
+
+ - Patches 6-8 wire this up for the mipi-i3c-hci driver: propagate the
+   aggregated I3C wakeup requirements to the PCI function, factor out
+   i3c_hci_sysdev() for the shared device lookup, and advertise IBI
+   wakeup capability when the underlying system device can wake the
+   system.
+
+Note, since the PCI wakeup state is now derived from the wakeup
+configuration of the attached I3C devices, the PCI device's
+power/wakeup sysfs attribute no longer provides independent wakeup
+control.
+
+
+Changes in V2:
+
+    Dropped the RFC tag.
+
+    i3c: master: Fix recursive locking during device registration
+	New patch
+
+    i3c: master: Support IBI-based wakeup capability
+	Dropped the redundant #include <linux/pm_wakeup.h>.  That header
+	must not be included directly, and linux/device.h, which is
+	already included, provides device_set_wakeup_capable().
+
+    i3c: master: Add helper to query bus wakeup requirements
+	i3c_master_any_wakeup_enabled() now also requires the device to
+	have IBI enabled, not just system wakeup enabled, so that a
+	device with no active IBI request does not keep PCI PME enabled.
+	desc->ibi_lock is taken while checking.  The commit message and
+	kernel-doc are updated to match.
+
+    Rebased onto i3c/next.
+
+
+Adrian Hunter (8):
+      i3c: master: Fix recursive locking during device registration
+      i3c: master: Support IBI-based wakeup capability
+      i3c: master: Report wakeup events for IBIs
+      i3c: master: Add helper to query bus wakeup requirements
+      i3c: master: Reject IBI requests from non-IBI-capable devices
+      i3c: mipi-i3c-hci-pci: Propagate I3C wakeup requirements to PCI
+      i3c: mipi-i3c-hci: Factor out i3c_hci_sysdev()
+      i3c: mipi-i3c-hci: Advertise IBI wakeup capability
+
+ drivers/i3c/device.c                               |  8 ++-
+ drivers/i3c/master.c                               | 84 +++++++++++++++++++---
+ drivers/i3c/master/mipi-i3c-hci/core.c             | 15 ++++
+ drivers/i3c/master/mipi-i3c-hci/dma.c              | 15 +---
+ drivers/i3c/master/mipi-i3c-hci/hci.h              |  2 +
+ drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c | 23 +++++-
+ include/linux/i3c/master.h                         |  5 ++
+ 7 files changed, 123 insertions(+), 29 deletions(-)
+
+
+Regards
+Adrian
