@@ -1,113 +1,217 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F81937E5CF
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 16:32:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6824037F007;
+	Tue, 28 Jul 2026 16:37:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785256352; cv=none; b=gAoWLOJ0A+XM3/8jTPyBgdvmvrXrEGc96YikobZ5tr5QfzR8enxSSABn5Hoc1QzPBtuGbSII8U4SLQMG7YEtcQisFUixkakKosqQYczbuLYNGw4b7odmaeiqEgnh40KIaUbu/L0nDHFYqTAfyMgdGkBv1RRyUMHbSkq5rh0D/Xw=
+	t=1785256675; cv=none; b=CmNTuZC1eMy6hQjzVYi4ana5wXlVNCVNpDbyw2f7WhG2UBnB7dunL2Blc9LANPfemoLFSC9LMw5PO1DVrOh8+acsKVB8FXIykO4qrJlOgxijufcYaTJJfsmOasPOkSxvGKDHCBk0cXHf6C/4jPrsC9+8XNd7ol4GrWk71F5NMMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785256352; c=relaxed/simple;
-	bh=LftMJ+VvU0PYwPUmPR1OGtczjJlqETGjzthZAcRyZLg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IJNKFrqKw3DB0uNnJ61BFTjmhxs5VpAAydZtLkNma5zli8wl3JbffQmOJgKuU3KWUwN2GuqV8XLEXJd5iuz4YD/6aVc8sa6eWMRTUiWau/pwUQhnBWoBGDkLMU+b/XUBC5hiTsjX2qwpOhn/p2V1zMaRzu9CeZ/crw8JtccUkgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DyS3MNDv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785256675; c=relaxed/simple;
+	bh=o2CyqqHeteFX7ZfU4lt6qqd4iQ7Yl2077KnKxTF2DQQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Eflkr5HSO2Xgt+amuHrkk1NVWfWHPo/w5cFFMyY+mHGaYKmqe/lI6b1g7GSRjjPUi8FC1jiYkRoME+sr2/IpwURXChEWd6xy+5Yw1CqU2qlWhm5P/cWFkBLVy4eKpLf2dJKAlPAQ/W8C18oPo0f5+jE/qr9q1LxSka/XvZBeS+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MwZw/ie+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DyS3MNDv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 785941F000E9;
-	Tue, 28 Jul 2026 16:32:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MwZw/ie+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 702EC1F000E9;
+	Tue, 28 Jul 2026 16:37:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785256350;
-	bh=hX60/Ysft4fivaYbeANfFbGIjBCQwm1xVAybpIS77Ek=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DyS3MNDvb6ORsCbGVcaDuBWivqpv9S74GeRCD5un0BGrBW8CqZzrqwHmnaGkGeNyX
-	 TLKYLok5UCf+TAvV2nQY6mEEI1HYImyVSYhgEo0pYopIAAWnlHSvIpX7SqEOQISjE1
-	 6cR1R5Bei7Ok34RIJlT9+9ruKiD7+L5ZDHYp3HIsZCBkjcHHq06OG0JZDZ9KW0ECJ2
-	 LEuF+n3Cv/nZEcshrDJVZ75lrkuQO1nfwF6N+1T5WSuWBzJh6k9lLmoaImxNV6cM5K
-	 h13P1iWoIHAkel/n3rebffWy5w63md74lVtYsC/6zRLh9pFJ3yuVQG7UpK+0JYUK8R
-	 9GEMIQKZ1lbaQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V2 2/8] i3c: master: Support IBI-based wakeup capability
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: linux-i3c@lists.infradead.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, "Alexandre
- Belloni" <alexandre.belloni@bootlin.com>
-In-Reply-To: <20260728155308.142713-3-adrian.hunter@intel.com>
-References: <20260728155308.142713-1-adrian.hunter@intel.com>
- <20260728155308.142713-3-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 16:32:30 +0000
-Message-Id: <20260728163230.785941F000E9@smtp.kernel.org>
+	s=k20260515; t=1785256673;
+	bh=VaDP40JoGOSQxXmgmR3af5oPCK1LSZo99YVjzP4O+2E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=MwZw/ie+VMuOaZJGGkyDSli4aTKGmcIXxhmj654dvcSKOlPloSaUaRxqJ6D7pWWd+
+	 ZYBfw24z09CfaOyJhubrf65ZWc5pSDK4BzDeJ4lHkQLBzczrKdveNGRHk4+QxMvCq/
+	 eAQ9jRhHaz85kZ6qSpaD3bUXFwc9/Ri3pIYipMvWCZbHJ9qws+2Yb76pLpQI3L480R
+	 CThzCvCl2QzsgSIU7NQiF7x6knRnIXBu+uwFN+EW3wkzj/GA2mdXkJA/o6Bs6ocfZy
+	 oDdBxtWAzEmOFaBTTc+MFa5XoGjTc1alEX5otaMoW7pCepT3G/gUGZPAuhuAxEytt7
+	 N35zj92SU8zUw==
+Date: Tue, 28 Jul 2026 11:37:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
+	Leonardo Costa <leoreis.costa@gmail.com>,
+	Leonardo Costa <leonardo.costa@toradex.com>
+Subject: Re: [PATCH v5] PCI: imx6: Fix i.MX6Q/DL boot hang caused by improper
+ PHY power sequencing
+Message-ID: <20260728163752.GA1328281@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728035159.2702021-1-hongxing.zhu@oss.nxp.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Tue, Jul 28, 2026 at 11:51:59AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
+> 
+> commit 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> introduced a boot hang on i.MX6Q/DL variants by reordering
+> imx_pcie_host_init() to call imx6q_pcie_enable_ref_clk() (which powered up
+> the PHY) before imx6q_pcie_core_reset() (which powered it back down).
+> 
+> Before 610fa91d9863, the sequence was:
+> 
+>   1. imx_pcie_assert_core_reset() - power down PHY (set TEST_PD), set
+>      REF_CLK_EN
+>   2. imx_pcie_clk_enable() - power up PHY (clear TEST_PD), set REF_CLK_EN
+>   3. Link training starts with PHY powered up (TEST_PD cleared)
+>   4. Link training succeeds
+> 
+> After 610fa91d9863, the sequence became:
+> 
+>   1. imx_pcie_clk_enable() - power up PHY (clear TEST_PD), set REF_CLK_EN
+>   2. imx_pcie_assert_core_reset() - power down PHY (set TEST_PD), set
+>      REF_CLK_EN
+>   3. imx_pcie_deassert_core_reset() - does nothing
+>   4. Link training starts with PHY powered down (TEST_PD set)
+>   5. Link training fails and boot hangs
+> 
+> To fix this:
+> 
+>   - Remove TEST_PD PHY power control from imx6q_pcie_enable_ref_clk()
+>   - Remove REF_CLK_EN control from imx6q_pcie_core_reset()
+>   - Add TEST_PD PHY power control to imx6qp_pcie_core_reset(), which
+>     previously relied on imx6q_pcie_enable_ref_clk() to power up the PHY by
+>     clearing TEST_PD
+>   - Clear TEST_PD to power on PHY in imx_pcie_deassert_core_reset()
+> 
+> These changes together ensure the correct sequence:
+> 
+>   1. REF_CLK_EN set in clk_enable() (TEST_PD untouched)
+>   2. TEST_PD set in assert_core_reset() (PHY power off)
+>   3. TEST_PD cleared in deassert_core_reset() (PHY power on)
+>   4. Link training starts with proper PHY state
+> 
+> The i.MX6Q/DL PCIe PHY requires approximately 120us between TEST_PD
+> de-assertion and link training start. Add usleep_range(200, 500) in
+> imx6q_pcie_core_reset() after clearing TEST_PD to satisfy this requirement.
+> 
+> Add explicit imx_pcie_assert_core_reset() calls in error paths and
+> host_exit() to ensure no power leak.
+> 
+> Fixes: 610fa91d9863 ("PCI: imx6: Assert PERST# before enabling regulators")
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reported-by: Leonardo Costa <leoreis.costa@gmail.com>
+> Closes: https://lore.kernel.org/lkml/20260629143439.361560-1-leoreis.costa@gmail.com/
+> Tested-by: Leonardo Costa <leonardo.costa@toradex.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
-Pre-existing issues:
-- [High] Missing `of_node_get()` when assigning `boardinfo->of_node` to the=
- device, causing reference count corruption when the device is released.
---
+Applied to pci/for-linus for v7.2, thanks very much!
 
---- Patch [2]: [PATCH V2 2/8] i3c: master: Support IBI-based wakeup capabil=
-ity ---
-commit a4a974dcadbb70afc57836a361635db60b65ebde
-Author: Adrian Hunter <adrian.hunter@intel.com>
-
-i3c: master: Support IBI-based wakeup capability
-
-This commit adds an ibi_wakeup flag to struct i3c_master_controller to
-allow controller drivers to advertise support for IBI-based wakeup. It also
-marks IBI-capable I3C devices as wakeup capable during registration.
-
-> diff --git a/drivers/i3c/master.c b/drivers/i3c/master.c
-> index 874f6e11b296d..cf3345265ac0b 100644
-> --- a/drivers/i3c/master.c
-> +++ b/drivers/i3c/master.c
-> @@ -2008,6 +2008,13 @@ i3c_master_register_new_i3c_devs(struct i3c_master=
-_controller *master)
->  		if (desc->boardinfo)
->  			desc->dev->dev.of_node =3D desc->boardinfo->of_node;
-
-[Severity: High]
-This is a pre-existing issue, but does this assignment miss an
-of_node_get()?
-
-It looks like boardinfo->of_node holds a reference count acquired in
-of_i3c_master_add_i3c_boardinfo():
-
-    boardinfo->of_node =3D of_node_get(node);
-
-However, when this pointer is copied to desc->dev->dev.of_node here, the
-reference count is not incremented. Later, when the device is released,
-i3c_device_release() unconditionally drops a reference:
-
-    of_node_put(i3cdev->dev.of_node);
-
-If the device registration fails or if it is later unregistered (e.g., due
-to a hot-remove event), this would drain the reference conceptually owned
-by boardinfo.=20
-
-If the device is then recreated during a subsequent hot-join, could
-boardinfo reassign the now-freed of_node pointer and cause a use-after-free
-and double-free on the next release?
-
-> =20
-> +		/*
-> +		 * In the case of IBI wakeup, any IBI-capable device can
-> +		 * wakeup.
-> +		 */
-> +		if (master->ibi_wakeup && (desc->info.bcr & I3C_BCR_IBI_REQ_CAP))
-> +			device_set_wakeup_capable(&desc->dev->dev, true);
-> +
->  		list_add_tail(&desc->dev->node, &i3c_unreg_devs);
->  	}
->
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728155308.1427=
-13-1-adrian.hunter@intel.com?part=3D2
+> ---
+> Changes in v5:
+> Update the commit log suggested by Bjorn.
+> 
+> Changes in v4:
+> Refer to Sashiko' reivew of v3 patch.
+> - Adjust imx_pcie_assert_core_reset() in imx_pcie_host_exit().
+> - Add the delay explicitly after TEST_PD is cleared, since the PERST# GPIO
+> might be optional.
+> 
+> Changes in v3:
+> Update the commit descriptions to address the following items.
+> - Clarify the root cause of this regresssion.
+> - Describe why both changes are mandatory required to fix this
+>   regression.
+> - Justify the delay removal also.
+> 
+> Changes in v2:
+> Per Sashiko's review, invoke imx_pcie_assert_core_reset() explicitly
+> in error path of imx_pcie_host_init() and imx_pcie_host_exit().
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 41 ++++++++++++++-------------
+>  1 file changed, 22 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index e25f938eefe23..c94b5e991aecd 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -681,21 +681,12 @@ static int imx_pcie_attach_pd(struct device *dev)
+>  
+>  static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+>  {
+> -	if (enable) {
+> -		/* power up core phy and enable ref clock */
+> -		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD);
+> -		/*
+> -		 * The async reset input need ref clock to sync internally,
+> -		 * when the ref clock comes after reset, internal synced
+> -		 * reset time is too short, cannot meet the requirement.
+> -		 * Add a ~10us delay here.
+> -		 */
+> -		usleep_range(10, 100);
+> -		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_REF_CLK_EN);
+> -	} else {
+> -		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_REF_CLK_EN);
+> -		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD);
+> -	}
+> +	if (enable)
+> +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_REF_CLK_EN);
+> +	else
+> +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				  IMX6Q_GPR1_PCIE_REF_CLK_EN);
+>  
+>  	return 0;
+>  }
+> @@ -826,6 +817,12 @@ static int imx6sx_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+>  
+>  static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+>  {
+> +	if (assert)
+> +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_TEST_PD);
+> +	else
+> +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				  IMX6Q_GPR1_PCIE_TEST_PD);
+>  	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_SW_RST,
+>  			   assert ? IMX6Q_GPR1_PCIE_SW_RST : 0);
+>  	if (!assert)
+> @@ -836,11 +833,15 @@ static int imx6qp_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+>  
+>  static int imx6q_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+>  {
+> -	if (!assert)
+> -		return 0;
+> +	if (assert)
+> +		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				IMX6Q_GPR1_PCIE_TEST_PD);
+> +	else
+> +		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +				  IMX6Q_GPR1_PCIE_TEST_PD);
+>  
+> -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD);
+> -	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_REF_CLK_EN);
+> +	if (!assert)
+> +		usleep_range(200, 500);
+>  
+>  	return 0;
+>  }
+> @@ -1451,6 +1452,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+>  	return 0;
+>  
+>  err_phy_off:
+> +	imx_pcie_assert_core_reset(imx_pcie);
+>  	phy_power_off(imx_pcie->phy);
+>  err_phy_exit:
+>  	phy_exit(imx_pcie->phy);
+> @@ -1470,6 +1472,7 @@ static void imx_pcie_host_exit(struct dw_pcie_rp *pp)
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
+>  
+> +	imx_pcie_assert_core_reset(imx_pcie);
+>  	if (imx_pcie->phy) {
+>  		if (phy_power_off(imx_pcie->phy))
+>  			dev_err(pci->dev, "unable to power off PHY\n");
+> -- 
+> 2.34.1
+> 
