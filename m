@@ -1,212 +1,172 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013001.outbound.protection.outlook.com [40.93.196.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A8F01F8755;
-	Tue, 28 Jul 2026 04:48:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785214130; cv=none; b=XPLrMne2cOlszuM/phpOkCTN1LL5dJJ/dK8n5JiBAiPUSTwPqZGBB1jaFn/hjsCgmj4BLatnfYzk9TsMv+F9tkBzv9pGhfBHh9+pO5FRN8mqEX012mnVpqOnv2Di9WuF4hqBC/P+J25KrMo5aN8k/eG8APGb+uLxe8S0LJICXN8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785214130; c=relaxed/simple;
-	bh=mVvYjCGpEIs/ZVmt7GUUmpQHRMrA2O2xmFppm7/BzQM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H0NimMHQE2rLId0kWYE1MiXUNynd7VLwqrwQufhaz9GWbUE4Tz/tQDjTK/QHkiUJJTcZ3OBpXRIsYthmP2ycvWcR7HSilR5JqhA+GakqJi2yRiqKWGDMXa15O97CF6Ivbcaxn60WSi1tVtTOfKZDYcCZ3q9aUU60U7dubJE3WCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fOfrZ1zy; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D007438E5E9
+	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 04:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.1
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785214361; cv=fail; b=b2UbwCKOp/eGRYkdIAOu1aK5fbiy/8qezeViJJyS9EL7ZRuqP4fLaooZFQXvve9mUay8K+DsbROGVfmemwNWHWMA1Qz0yHZYAUjXPm9m155HOL5DDW0XiwXSfHaOLTlDnPEoKBX2hSE5B878vNxdxaDknM71v1k/UIz3Zz9qzQs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785214361; c=relaxed/simple;
+	bh=tNwvM9uPE0SW5wy+t5EsJ6Kg4dfyWWIU1GHTOyxkxFY=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=j+ALTAkncWokNbFeCsvcwGnGUuVqAzEs0wrak73FIp2SmbojbZswcQH/xWEZqF72kuNol0f2JiiOWiTvfPDyYDXVCJYzaIJKi69IyQWUB0QlyII1MEXfLKVDAuEF51jy+sKH7FEBX1aVrURjOOE0la3Yg3aK4P5lYC/p32xjnYk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=bnGmfz8z; arc=fail smtp.client-ip=40.93.196.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fOfrZ1zy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785214129; x=1816750129;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=mVvYjCGpEIs/ZVmt7GUUmpQHRMrA2O2xmFppm7/BzQM=;
-  b=fOfrZ1zyRUvJH9AHhn1qRZdqeypx4LHNxDFjy1DiAn2Acs1nBop2wabX
-   barXrxYI7zFX9dkwRIMIS+nn3HqK5l2mX+pXbIlV8xWgSh8YZlpgI1Rs8
-   Lim+0FpNWaBhQxQfLtyzp6SojjxO3s1rONZmld3Vz5PdFESWRjgbmZzRK
-   pQbamB7ax3V6TKFHE8xtjV44VNbFgsB4UO9zuUA7gXbRWqHeUnliCHnUT
-   DzjNsOhVkmaWn9vurXnftYOG77bA2XpSLm1Rh2WmzYr2luKQoa5uzP8Qq
-   Qorhtd0nKwx++co8IGTQTngoq3nqbLVOEAbfI7J64fArW3zrsXQuCvAb5
-   w==;
-X-CSE-ConnectionGUID: 9GBzbgmaRXmFJ/ACkr32bw==
-X-CSE-MsgGUID: Vzyuq/31RrWQXAVcg5hNnA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11858"; a="85640394"
-X-IronPort-AV: E=Sophos;i="6.25,189,1779174000"; 
-   d="scan'208";a="85640394"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2026 21:48:48 -0700
-X-CSE-ConnectionGUID: bkycI+ykQPqDZtFVL2YxLQ==
-X-CSE-MsgGUID: RgRwljhqQOKJzgjJjvSe0A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,189,1779174000"; 
-   d="scan'208";a="297835036"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa001.jf.intel.com with ESMTP; 27 Jul 2026 21:48:42 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 0609699; Tue, 28 Jul 2026 06:48:41 +0200 (CEST)
-Date: Tue, 28 Jul 2026 06:48:41 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-Cc: Andre Eikmeyer <dev@deq.rocks>, Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <westeri@kernel.org>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Jarkko Sakkinen <jarkko@kernel.org>,
-	Mimi Zohar <zohar@linux.ibm.com>,
-	Roberto Sassu <roberto.sassu@huawei.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Eric Snowberg <eric.snowberg@oracle.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] thunderbolt: Add device links for Apple T2 NHI
-Message-ID: <20260728044841.GP2365036@black.igk.intel.com>
-References: <20260727211807.1223-1-atharvatiwarilinuxdev@gmail.com>
- <20260727211807.1223-3-atharvatiwarilinuxdev@gmail.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="bnGmfz8z"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rSmA0tE9kV1vyHa/gpGVBk+WPMOqdy3fk5hwb39AL8sifpT/Tyaig5joyTTC61XeGRjGkcXPI4cuMIQe4Bh684xXlEcdzF+idRrAlOeBuXwK0Fg1QJoSziKdE1+BBgVWb0r/HK2bNL44vy4AAzcegkoZRrTtCf4XmAu3fWO0KdNwgpBwDxN1I28PL4kRGoGsBiX9f+Y9lQA1v1P90xJ1qs/h7zbpPt6IcZtr4drD1VJbIrHdA+uqX2dMqbxZ+L4p3R5PJeqrfazDm3/ySo856k77sy9AlhqbsU+CGDIZgZOXQRS2k9J8NP/nUKkEoBpocBxd35/zDexpQUiBOnPXog==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=VTggFyHQU4tzgbkCMosP2GEH17REoHroJOm9o75vAcA=;
+ b=i1El7nzSJmR9e0LjhpMZkoALXIY5EsKwXWY2aTBw32HKezDUs+WxELj/N2uOI1ZAwV8x6CHjZ7Y1NWi9ST3RqOqLsyQNWDCPk1tpKyNVkBJH2yBMARH/rUF8T0EbUa1DURnYoujZdJatYzwmXjQM8vODvyEaun9vsXUkpy42l26iB8clUkuff0C0/+O9FPIScrYeilfQPROnp8OxDRKKFIr/v5yywsPMoVKk6oOkfQw9wl2IZrpRKFTCA3qb8eJP3KEpS33Xz9KinJvQfujDoDpmAiBtaDxS2z+g7FeUWX602AowEVK9YEl/VOm4Oa0s/cupqOrOxpgJdCn/RqtSIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VTggFyHQU4tzgbkCMosP2GEH17REoHroJOm9o75vAcA=;
+ b=bnGmfz8zo1dbCh2aIwBRbGKqQkM9xmSAaN+Kfr8tDkTFQ+PZWmfA87Cr+nMcjaz3CudUdEfppnO8lpqQzeNAx7vh5WNegr7lQI513BcCYdxU0i7VWJvft246d55yjhrbL8FWcjfrW328y5eeIvGP+bN6WDAT1eWJDzGsleMLrbA=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DS7PR12MB5766.namprd12.prod.outlook.com (2603:10b6:8:75::12) by
+ DS0PR12MB6392.namprd12.prod.outlook.com (2603:10b6:8:cc::22) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.245.13; Tue, 28 Jul 2026 04:52:33 +0000
+Received: from DS7PR12MB5766.namprd12.prod.outlook.com
+ ([fe80::222:966a:d65d:d08e]) by DS7PR12MB5766.namprd12.prod.outlook.com
+ ([fe80::222:966a:d65d:d08e%3]) with mapi id 15.21.0223.013; Tue, 28 Jul 2026
+ 04:52:32 +0000
+Message-ID: <f4355034-d40a-4d11-ab98-eef0f2991f33@amd.com>
+Date: Tue, 28 Jul 2026 10:22:24 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] iommu/amd: Force identity mode for selected GPUs only
+To: Mario Limonciello <mario.limonciello@amd.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>,
+ "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc: iommu@lists.linux.dev, joro@8bytes.org, linux-pci@vger.kernel.org,
+ will@kernel.org, robin.murphy@arm.com, suravee.suthikulpanit@amd.com,
+ bhelgaas@google.com, Amandeep Kaur Longia <AmandeepKaur.Longia@amd.com>
+References: <20260723061548.10187-1-vasant.hegde@amd.com>
+ <20260723061548.10187-3-vasant.hegde@amd.com> <amOBkJ4BaZ4qnkpc@ziepe.ca>
+ <a2f38742-c8a1-4dd5-9fcb-120c1c989203@amd.com>
+ <ed296c0d-246f-492b-970b-49c45e25f5f6@amd.com>
+Content-Language: en-US
+From: Vasant Hegde <vasant.hegde@amd.com>
+In-Reply-To: <ed296c0d-246f-492b-970b-49c45e25f5f6@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA0P287CA0009.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:a01:d9::9) To DS7PR12MB5766.namprd12.prod.outlook.com
+ (2603:10b6:8:75::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260727211807.1223-3-atharvatiwarilinuxdev@gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR12MB5766:EE_|DS0PR12MB6392:EE_
+X-MS-Office365-Filtering-Correlation-Id: 87e80a10-b341-48b6-1550-08deec6408e7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|23010399003|1800799024|18002099003|22082099003|56012099006|4143699003|10067099003|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	Ejkkl+AEJWFIt3hODkjWfffyA/h3HUKu4Ol1ldeZmg6tAFU1bAP0SaZXGUCHOHLyozBNK+YXvvVEGujxMAZNkb53H3jK21r8O30HsQieNaLTR9HCPNlDbLRWxuDEgYO2Se3hbG5GkkIAHwgNb5BovO013hami8aQlI3X3jgycgrfyCjg2l85nITgAKuOwlpyS8svDJQLAp1zy4P7WEthrJrRmQ5l3dADL+YN3sue95z1fHgCcbMiP1JEo+rvYdfkIdCY8/+86crR63hxDFbdwFKo3PEdgIaisZheej3lnVvLDr/SdhLtorJQlY7IMPj0A9BERuhiG25MlCWDkBAkak1Ie361oU4j8wmfWjIuAOm+UPB6lhHtHz+ZkyWKpIbCcpzqUHohkiysHnc/wgeKNk+0Q3uThn+bh4VSGhPZokIi4QllQHjrXTzdLuOr+BrDWzFdPOAfHU60rKJXPd8+e2JF4UvdOhgueZNozG57sCTRp9NriRThAP37YtQP1DVL+OYjK9V0Jh+Tshc+XlfnNZZYAfnzmkcve/rYVo/yW56jGAKq2jFOscgCKTTwPxKFXacjtjw0SyMhffbMN32h/71P2YkYr6uLXnIrXb39yPjG3/U0H2ouSzn0V6DA6zCF93bqOvWZcTAX8J2qzfbM8EOYe/5ny8kTsGzKzUvKH7w=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB5766.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(23010399003)(1800799024)(18002099003)(22082099003)(56012099006)(4143699003)(10067099003)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SmFDOWFrY0UxaVNaa1hibC9tcnhQcW9BcDhGSGhZNEdOcUpEOTF2ZWl4WEtN?=
+ =?utf-8?B?VHk3SE5QeUptcms4Tm8wK0NKRFg2bmY4RS9TNld6dm9CRlRWUzRtTW1NUDFM?=
+ =?utf-8?B?RVFTZDJpRDlFTjBjaE1rWEhESndQOXNiY1Mrc2RLN0VMNTl4aFRSNS9aVFEv?=
+ =?utf-8?B?aXc3MGt1WDVSN24yQWVvYitzbE1vNGJ2bWt0VnJORVZtMEZmeTF0QlR4ME83?=
+ =?utf-8?B?OVJkZk14Mm5oYW1YemZxaVhBTVl2YkRIRkFaU09CMHI3Si8yMHpUZzBHZ0JE?=
+ =?utf-8?B?SXFJTG4wb2UrbDZXZFg3c211QS9rczdTd3h4dTJ4Q3l1MkxnQUhzVzlhVGFX?=
+ =?utf-8?B?c1FLdUNLeEtqbWFsTmFQOW5xQkpKTjJON3FvVnRmTzJCOXpQNlBxeTNidUk3?=
+ =?utf-8?B?TGc4RzBacFpXT2ZtMWV5ZUNPd3B2emxCdi9GZ09QVGR2RWVwaTJ1Z1pPdXBy?=
+ =?utf-8?B?SytCUUNCTkFqczRDZDNXMnJrcFlSUjBpSit3MSt0Z2xHcnMxZFoyUGFaTGJ5?=
+ =?utf-8?B?cE80UjNuVUlKaUFYd2VLelZ5MWJBYkZFZk9SRkx6WEdzL0d4VUt1YjIwYWhp?=
+ =?utf-8?B?enVIMlQ1L09ZT05mT3Z0dzVNNHBLb2kxZnVHVFlrSnluWm9QVW9mdXd4bEFE?=
+ =?utf-8?B?MVF3alNMRW1GNWs4UEhLblpNMzd3QkVGWUFZNEgrWUVmdnY0ZEE1Sk50elEr?=
+ =?utf-8?B?aXlCc09UbGpFei9NME1sOGFML3JXYkxrK0FXdWF5ZFVmL1JhTXNlMkc5c0VU?=
+ =?utf-8?B?dWtQandzMFdqbldlQ3d0NUoyeVJ3bGQ2SGZDMjJJTC85bjBScnJLWitocWFq?=
+ =?utf-8?B?c05KcnZaU2t0STFwZWtDekFmY2t1OWsxbExDSkY3ZXYxL3YyRTMvNUszcVcz?=
+ =?utf-8?B?ekFzbmI3OU1uM1Z4QnU1azR0Z2tPRkhwOTZsUGhXMWVIL2dFL2dOdDdBNnlr?=
+ =?utf-8?B?T09NckhKM0l1NnNZUlgzdk9odXN6QWdxOXVzMTlCUGY4WldpQnRSUVNBYm9I?=
+ =?utf-8?B?Ni9haW5lalh0NzNYaVRKN2tYUTZmeXFNZzdZS1c5dlVPS0RNN0RUek9FVFM5?=
+ =?utf-8?B?ZGg4V2U4SWV0RWZmdWJta0FhVHNGQlBSaHZlUnFVZXRwSmtXYnlTTWZ5KzM3?=
+ =?utf-8?B?YkNiTHhoODJ3TEdRMmJhdjFjVEJqOTZIZDJ1ZDA2TFRjUXFsNjQwUklFOWhB?=
+ =?utf-8?B?aGVQeG1SQitlRzhOdTVIK0p3ZWtxYVR1dnJtTk9MNFNraUMwTUt0UzNKZmE1?=
+ =?utf-8?B?R2c3OWZSTlFRTTRUTVBmc1IxRERFMFpBbjZ3UFNNSjh3UHVGRTV4aFQya1Vl?=
+ =?utf-8?B?TkQ4eU1XbWFjRTNVVjl3MUlhVXhqbGNmLzE5MUZYVEovenc5YUVZVktrMHlN?=
+ =?utf-8?B?eFpsNU1oWGpBQkc0OVR1OTlOQnRXS1JNYW5VbnBWVHE3cHB1MndKeGQvSWtI?=
+ =?utf-8?B?K2N4OU9xVCtnVTJmRnUybGZ4V1BSbkEwTW1BeG9FTk1CWlNjVER4QngxNFEr?=
+ =?utf-8?B?aGdud0FUN3dLUmhzbng5eVY0R01TeUhOKzF1YVpMTXhhSDA2WDAvdHZvUHB6?=
+ =?utf-8?B?cUt2UXQydE8wRXo3SUdzaVdobExidERDSFRsajNQVHVsajZPRG9mUFpVUlZW?=
+ =?utf-8?B?OFpmZE96cjk1ZmlTQzBIaHhNeUFvVFFGOWdXRTVvWXlocmVwZzRySlpWTGtp?=
+ =?utf-8?B?L3JoWTVVeTIzZ2ZKNVBSSGVETG5ORDlscE13a05ETURKS0NjNkJEV2VLdTh4?=
+ =?utf-8?B?RDVJUks2aUZrb3ptSzZ2dzV0TGc1T1YyeVQzQXhBSlRUL3JjVDBsRVJOVWJD?=
+ =?utf-8?B?S3cyRDV1TTNaYzF5UEcvRTRodG1hYUs0a0pmbWoxWDJwY1JMSE5IQUNRaWVU?=
+ =?utf-8?B?VUpVYTh1dGVVWFhKUTdlcDB6VjNVZjZ5UFErZkhFYVRZZXNYMVdnM3N2UENZ?=
+ =?utf-8?B?NjBQVi8rdzh4bTlZZktDN0hpZkpROEU5YURiL2NUeGZ5eW5MRWJmeFY0d2tN?=
+ =?utf-8?B?WXp1RlFSYTZMTUxQeENQeGVNZWQ0YkZXd1lwQkNWL21QMENETnBCaXhsd3Rt?=
+ =?utf-8?B?U0xTdFZ4cjh2NzVjYlNicURVVE12OFBiczRjcFdjUjYrb2FKMGtJUEFYOHo4?=
+ =?utf-8?B?WEU4ZlpjMCtSRDE3VW9KVE1vNmtDdEExbzVXUS9Eb3QwMzdObTVYTG94VkF2?=
+ =?utf-8?B?TGxRNll3N29xVk4zY0Y5SG9hREFHSW1WaWV3ZXhoMFJLYXcwQzR3bnJKbFF3?=
+ =?utf-8?B?dzVTR1lzUWtNdm5jUEFyWk5HWnNKdEJnajUvSWxkQ0FPeWwvRW42RjBUcERN?=
+ =?utf-8?B?WVNGNkRKbVpLOUh3S25IWC8xZmQ1VTVKYW93RENJZjhiZVpUTHhiZz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 87e80a10-b341-48b6-1550-08deec6408e7
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB5766.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2026 04:52:32.7210
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2+xCUWbbLkam8b8OBUpd89uPpINC16pVyYIMv5TI8Us/Bcxcbvoe5CTyizO+yAfR0ODZgejyoyFrQSg3IQnVqg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6392
 
-On Mon, Jul 27, 2026 at 05:18:03PM -0400, Atharva Tiwari wrote:
-> Ice Lake Thunderbolt NHI on T2 Macs (2018–2020). The NHI and its
-> associated PCIe Root Ports all sit directly on the Root Complex
-> with no upstream port. Identify the tunneled PCIe Root Ports by
-> their PCI IDs and create device links back to the NHI so that
-> PCIe tunnels can be re-established after sleep.
+Mario,
+
+
+On 7/27/2026 8:15 PM, Mario Limonciello wrote:
 > 
-> And on other T2 Thunderbolt NHI's, like Titan Ridge, the default method
-> is used to add device links.
 > 
-> Co-developed-by: Andre Eikmeyer <dev@deq.rocks>
-> Signed-off-by: Andre Eikmeyer <dev@deq.rocks>
+> On 7/26/26 23:19, Vasant Hegde wrote:
+>>
+>>
+
+.../...
+
+>>>
+>>> I think this can probably be dropped now? There is no intersection of
+>>> this old broken embedded GPU and a CPU that supports CC right?
+>>
+>>
+>> I did consider dropping these two checks, but I was not entirely sure. So I kept
+>> as is for now. Once these series settles and I can go with next step of dropping
+>> these two checks.
+>>
+>> @Alex, @Mario, Any suggestions ?
+>>
 > 
-> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-> ---
->  drivers/thunderbolt/tb.c | 54 ++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 52 insertions(+), 2 deletions(-)
+> The background comes from this series:
 > 
-> diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-> index c69c323e6952..9b80e9339728 100644
-> --- a/drivers/thunderbolt/tb.c
-> +++ b/drivers/thunderbolt/tb.c
-> @@ -9,6 +9,7 @@
->  #include <linux/slab.h>
->  #include <linux/errno.h>
->  #include <linux/delay.h>
-> +#include <linux/pci.h>
+> https://lore.kernel.org/all/20200824105415.21000-1-joro@8bytes.org/
 
-We should not be calling PCI functions anymore from the SW CM core. We have
-pci.c for that.
 
->  #include <linux/pm_runtime.h>
->  #include <linux/platform_data/x86/apple.h>
->  
-> @@ -3305,21 +3306,70 @@ static const struct tb_cm_ops tb_cm_ops = {
->  static bool tb_apple_add_links(struct tb_nhi *nhi)
+Thanks for old link. So it looks like we are good to drop SME check?
 
-I wonder if we can put this to pci.c, rename it to tb_pci_add_links()
-instead.
+Also is it safe to assume SNP is not enabled on these platform and drop that
+check? Anyway SNP requirement (which doesn't support identity mapping) and APU
+requirement (needs identity mapping) is conflicting.
 
->  {
->  	struct pci_dev *upstream, *pdev;
-> -	bool ret;
-> +	bool ret = false;
->  
->  	if (!x86_apple_machine)
->  		return false;
 
-BTW, why you need to differentiate T2 vs. the rest of Apple x86? Don't this
-variable do?
+-Vasant
 
->  
-> +	/* On T2 Macs with Ice Lake Thunderbolt NHIs,
-> +	 * identify the tunneled PCIe Root Ports by their PCI IDs
-> +	 * and create device links so that
-> +	 * PCIe tunnels can be re-established after sleep.
-> +	 */
-> +	if (has_apple_t2_chip && (nhi->pdev->device == PCI_DEVICE_ID_INTEL_ICL_NHI0 ||
-> +				nhi->pdev->device == PCI_DEVICE_ID_INTEL_ICL_NHI1)) {
-> +		unsigned int slot, func;
-> +		const struct device_link *link;
-> +
-> +		for (slot = 0; slot < 32; slot++) {
-> +			for (func = 0; func < 8; func++) {
-> +				struct pci_dev *current_pdev __free(pci_dev_put) =
-> +					pci_get_slot(nhi->pdev->bus, PCI_DEVFN(slot, func));
-
-I'm not fan of __free() and the like so let's not use it here.
-
-Also you don't need to scan all the slots. Just look for the tunneled
-downstream ports based on their PCI IDs like we do already.
-
-> +				if (!current_pdev)
-> +					continue;
-> +
-> +				if (!pci_is_pcie(current_pdev) || pci_pcie_type(current_pdev) !=
-> +						PCI_EXP_TYPE_ROOT_PORT)
-> +					continue;
-> +
-> +				switch (current_pdev->device) {
-> +				case 0x8a1d:
-> +				case 0x8a1f:
-> +				case 0x8a21:
-> +				case 0x8a23:
-> +					break;
-> +				default:
-> +					continue;
-> +				}
-> +
-> +				link = device_link_add(&current_pdev->dev, &nhi->pdev->dev,
-> +						DL_FLAG_AUTOREMOVE_SUPPLIER |
-> +						DL_FLAG_PM_RUNTIME);
-> +				if (link) {
-> +					dev_dbg(&nhi->pdev->dev, "created link from %s\n",
-> +						dev_name(&current_pdev->dev));
-> +					ret = true;
-> +				} else {
-> +					dev_warn(&nhi->pdev->dev,
-> +						"device link creation from %s failed\n",
-> +						dev_name(&current_pdev->dev));
-> +				}
-> +			}
-> +		}
-> +		return ret;
-> +	}
-> +
->  	switch (nhi->pdev->device) {
->  	case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
->  	case PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C:
->  	case PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI:
->  	case PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI:
-> +	case PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_NHI:
-> +	case PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_NHI:
->  		break;
->  	default:
->  		return false;
->  	}
-> -
-
-This is unrelated change.
-
->  	upstream = pci_upstream_bridge(nhi->pdev);
->  	while (upstream) {
->  		if (!pci_is_pcie(upstream))
-> -- 
-> 2.43.0
