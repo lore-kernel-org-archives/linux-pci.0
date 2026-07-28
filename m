@@ -1,116 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46AE636CDF8
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 17:06:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ABC33A48CE;
+	Tue, 28 Jul 2026 17:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785258367; cv=none; b=B3g1P/pn5xX6JEUD6qZYVslKXzZh8cWY0o0EdalxZUhRXPexnKvO6cD5fUDH3qdvVQIckDq6TyLa4Ck+NtzspXnW24hPTQBvT3ANe57CArRVdV38nkaX4EcqVl8GMujavQGWILYXmCWXTxIJrHq8UDuuIIzKDHPVAg+ro+Z6YjA=
+	t=1785258941; cv=none; b=c71uCGsR16Ch5hSsUFZv9uSAhhgdwYirKaq+vV/kGt18eadFznGhMimcMdNKLKZR3a6GxyS1oEVSmVEG/PE5R6619d0z88iuxrztj2Tx0TYCSEfi9aH0SHUqCJ7Husmc0KKY/AxoJ+6sJ2L6wf2CVZbYiJZ4NQf+hDXscYVXp1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785258367; c=relaxed/simple;
-	bh=SOLKzv+AmVm2a5BbkMDcpA9ToWNsoEA9XZ+Is8H/26o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rUvy1ysMqXdlnD35q4Ui7zm+Pn7Fk/7yJbllHTSUxGLXUWeY2VusAQEGnTIrMWQbMSW79cKWWTZJaNKz5oyM/In+Bb2ZOh+SgIt6oA/ruliAvW+n4uQ1mJNeZXu/jCeuWHvte9YjJLPKep/mpYFLiTY9ArWRhTr0OsLIJhv0MnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YYpYh0xP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785258941; c=relaxed/simple;
+	bh=8aiS/hh8zw68dMmf4AM7hEQGgUk0fkR18ERVgPnSQCg=;
+	h=From:To:Cc:Date:Message-ID:MIME-Version:Subject; b=nRQiOEMLnnnGhsd+VRRJEn+aISFQwdykTzqa6A6Yni1RpUrkzJk/c5rs71aumuEFSMF7GPbtz3VBZkYfzGC8ruNpsMY+SLWZa2SpQhctGLNacUnO1CT+TtV9Pt705Xs7vUl2oiIN8n6cBYoAN439wHQTiSL4j5WEzIDpgLy/Nvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=Dj+SKUsz; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YYpYh0xP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA6361F000E9;
-	Tue, 28 Jul 2026 17:06:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785258366;
-	bh=SdsJEzWZmxkSCTar71zu4Z2o3Nn1lx2ko0LroJtCwLk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YYpYh0xP0ijMcO15KVuSup/osEU2aXvPAk8nXkg+GSzCPa4D48d04ddqpfxgsKJZf
-	 2yCUxStbUxsQ5vf8vpUNgZa3XleDIoDpu45mQLg7c7SvSyc6Wdt5LUtxF8+CZHv5Uy
-	 DhuF3f0kClgrtRHG83BoOGyZOKvkxLlVS0VING1Le9SzJfPdQpuycrX8VrZveDyTmp
-	 B4sakF3lCZFl9GapcnkQ9XNEQ5Cl62hPYeGnVW+AsKhRKK4FiElNl6N+qNutYwDWLY
-	 oLoQvU+oAcksz5nEmubPiiMLSBOpcsM3ezaMALpMxGms8oU9KOlOlTJKyNET2E8aDI
-	 rehCSscVGMsoQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V2 5/8] i3c: master: Reject IBI requests from
- non-IBI-capable devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: linux-pci@vger.kernel.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, linux-i3c@lists.infradead.org, Frank.Li@kernel.org
-In-Reply-To: <20260728155308.142713-6-adrian.hunter@intel.com>
-References: <20260728155308.142713-1-adrian.hunter@intel.com>
- <20260728155308.142713-6-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 17:06:05 +0000
-Message-Id: <20260728170605.CA6361F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="Dj+SKUsz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-ID:Date:Cc:To:From
+	:references:content-disposition:in-reply-to;
+	bh=BMT3hCW+Ej9++fHLpP3zjMmPQtCIwO9OpQVQr6mXWKY=; b=Dj+SKUsz7jIiYe7IYCXoK0aiy9
+	OVTWBbGHx30PWylP5jJC7W9+DW9GnKNb6mon1VtDwqjEVbiiFv06YaY//xq+nrHnmet7GxGr+zVLf
+	YzFx1HQqn40ARp2JaONbUEOANV0ujq9HCUOm7W2K/JWF1Gv1Vut0sWhd2ObAsUq5X42sy+fuer42V
+	gGSzPLcJM+1Ngw/QgHTQBqY8hFFd74RQQDEKKMEziqnu2RD4hKpfSe2fNF2zKxkzCnoGH/Vh/LpUr
+	99rSCsFgijH1HfhuBWGckMqAUuCJwucKeikQOkPj/AZHh3SOoU69PhW5mG2EwkvLm1PBJz5+V35HB
+	RTcYGBQQ==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wolOr-00000000oXU-0Oeo;
+	Tue, 28 Jul 2026 11:15:32 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.98.2)
+	(envelope-from <gunthorp@deltatee.com>)
+	id 1wolOp-00000000TCz-057U;
+	Tue, 28 Jul 2026 11:15:27 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org,
+	Vinod Koul <vkoul@kernel.org>
+Cc: Frank Li <Frank.li@nxp.com>,
+	Kelvin Cao <kelvin.cao@microchip.com>,
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Dave Jiang <dave.jiang@intel.com>,
+	George Ge <george.ge@microchip.com>,
+	Jaeyoung Chung <jjy600901@snu.ac.kr>,
+	Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 28 Jul 2026 11:15:11 -0600
+Message-ID: <20260728171523.112244-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.li@nxp.com, linux@weissschuh.net, dave.jiang@intel.com, kelvin.cao@microchip.com, george.ge@microchip.com, jjy600901@snu.ac.kr, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+X-Spam-Level: 
+Subject: [PATCH v4 00/12] dmaengine: miscellaneous fixes for ioat, switchtec_dma and plx_dma
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+When reviewing the recent switchtec patchset[1], the Sashiko bot noticed
+a handful of pre-existing problems in the ioat and switchtec drivers.
+I attempted to fix those plus an unrelated issue reported in plxdma but
+when I submitted those patches, Sashiko found even more issues[2][3][4]
+(it is relentless!).
 
-Pre-existing issues:
-- [High] Leaked workqueue in `i3c_dev_request_ibi_locked()` when `master->o=
-ps->request_ibi()` fails.
---
+I've fixed the issues reported with v1, v2 and v3 of this series and
+many of the ones for the switchtec driver. But the pre-existing issues
+in ioat, plxdma and the dmaengine itself I've punted until I can find
+some time to dig into them.
 
---- Patch [5]: [PATCH V2 5/8] i3c: master: Reject IBI requests from non-IBI=
--capable devices ---
-commit d69e542b87c33e0789e410767b2ee354fe000c28
-Author: Adrian Hunter <adrian.hunter@intel.com>
-i3c: master: Reject IBI requests from non-IBI-capable devices
+The series is based off of v7.2-rc5.
 
-This commit adds a check in i3c_device_request_ibi() to ensure a device
-reports IBI support before attempting to set up IBI handling. If the device
-does not advertise I3C_BCR_IBI_REQ_CAP, it now fails with -EOPNOTSUPP.
+Thanks,
 
-> diff --git a/drivers/i3c/device.c b/drivers/i3c/device.c
-> index 101eaa77de686..307ca6dc04ca0 100644
-> --- a/drivers/i3c/device.c
-> +++ b/drivers/i3c/device.c
-> @@ -205,12 +205,14 @@ int i3c_device_request_ibi(struct i3c_device *dev,
->  		return ret;
-> =20
->  	i3c_bus_normaluse_lock(dev->bus);
-> -	if (dev->desc) {
-> +	if (!dev->desc) {
-> +		ret =3D -ENOENT;
-> +	} else if (!(dev->desc->info.bcr & I3C_BCR_IBI_REQ_CAP)) {
-> +		ret =3D -EOPNOTSUPP;
-> +	} else {
->  		mutex_lock(&dev->desc->ibi_lock);
->  		ret =3D i3c_dev_request_ibi_locked(dev->desc, req);
+Logan
 
-[Severity: High]
-This is a pre-existing issue, but does i3c_dev_request_ibi_locked() leak the
-allocated workqueue if the master's request_ibi callback fails?
+[1] https://lore.kernel.org/all/20260707162045.23910-1-logang@deltatee.com
+[2] https://sashiko.dev/#/patchset/20260717221001.361421-1-logang@deltatee.com
+[3] https://sashiko.dev/#/patchset/20260721155739.62120-1-logang@deltatee.com
+[4] https://sashiko.dev/#/patchset/20260727181526.9672-1-logang@deltatee.com
 
-Looking at i3c_dev_request_ibi_locked() in drivers/i3c/master.c:
+Changes since v3:
+ * Add a patch (3) making switchtec_dma_chan_stop() clear the DMA base
+   registers even when halt_channel() times out, and return the halt
+   result. switchtec_dma_free_chan_resources() (patch 3) and the
+   alloc_chan_resources() error path (patch 4) now skip freeing the
+   descriptor rings when the halt wasn't confirmed. This will leak some
+   memory on tear down but that avoids broken hardware from scribbling
+   on memory that may have been freed and reallocated. (Per Sashiko)
+ * Remove each channel's list entry in switchtec_dma_chans_free()
+   (patch 5), immediately before the memory is freed, instead of in
+   switchtec_dma_chans_disable() (patch 8), which now only frees the
+   channel status IRQ. (Per Sashiko)
+ * Collected Reviewed-by tags from Frank and applied one of his
+   commit message suggestions.
 
-	ibi->wq =3D alloc_ordered_workqueue(dev_name(i3cdev_to_dev(dev->dev)),
-					  WQ_MEM_RECLAIM);
-	if (!ibi->wq) {
-		kfree(ibi);
-		return -ENOMEM;
-	}
-	...
-	ret =3D master->ops->request_ibi(dev, req);
-	if (ret) {
-		kfree(ibi);
-		dev->ibi =3D NULL;
-	}
+Changes since v2:
 
-If master->ops->request_ibi() returns an error, the error path frees ibi
-but doesn't call destroy_workqueue(ibi->wq).
+ * Fixed a race when unlisting the channels in the error path.
+   The interrupt needed to be disabled before hand. (Per Sashiko)
+ * Picked up Acked-by from Dave Jiang on the two ioat patches.
 
-If a device probe repeatedly fails at this step, could this result in a
-workqueue and memory leak?
+Changes since v1:
 
->  		mutex_unlock(&dev->desc->ibi_lock);
-> -	} else {
-> -		ret =3D -ENOENT;
->  	}
->  	i3c_bus_normaluse_unlock(dev->bus);
+ * Added a fix for switchtec_dma_alloc_chan_resources()'s error path
+   calling disable_channel() instead of properly halting the channel
+   before freeing the descriptor rings. (Per Sashiko)
+ * Added a fix for switchtec-dma channel structs being freed without
+   being removed from dma_dev->channels on a registration failure,
+   while the channel status IRQ is still live. (Per Sashiko)
+ * Added a fix for switchtec_dma_remove() using swdma_dev after it may
+   already have been freed by dma_async_device_unregister(). (Per
+   Sashiko)
+ * Added a fix for chan_status_irq being freed with the wrong API, and
+   a valid vector index of 0 being incorrectly treated as unset.
+   (Per Sashiko)
+ * Made switchtec_dma_chans_release() void, since nothing checked its
+   return value. (Noticed while reviewing the code for these changes).
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728155308.1427=
-13-1-adrian.hunter@intel.com?part=3D5
+Logan Gunthorpe (12):
+  dmaengine: switchtec-dma: fix double-free in switchtec_dma_free_desc()
+  dmaengine: switchtec-dma: fix resource leak in alloc_chan_resources
+  dmaengine: switchtec-dma: always clear DMA base registers on
+    chan_stop()
+  dmaengine: switchtec-dma: halt channel on alloc_chan_resources error
+  dmaengine: switchtec-dma: fix channel leak on registration failure
+  dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
+  dmaengine: switchtec-dma: fix chan_status_irq cleanup on create()
+    error
+  dmaengine: switchtec-dma: disable channels before freeing on
+    registration failure
+  dmaengine: switchtec-dma: fix use-after-free of swdma_dev in remove()
+  dmaengine: ioat: disable relaxed ordering before registering the
+    device
+  dmaengine: ioat: use sysfs_emit() in per-channel sysfs show()
+  dmaengine: plx_dma: fix NULL pointer deref in plx_dma_isr()
+
+ drivers/dma/ioat/init.c     |  18 +++---
+ drivers/dma/ioat/sysfs.c    |  22 ++++----
+ drivers/dma/plx_dma.c       |  10 ++--
+ drivers/dma/switchtec_dma.c | 107 ++++++++++++++++++++++++++----------
+ 4 files changed, 104 insertions(+), 53 deletions(-)
+
+
+base-commit: f5098b6bae761e346ebcd9da7f95622c04733cff
+-- 
+2.47.3
+
