@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1133CBE7C;
-	Tue, 28 Jul 2026 13:13:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C36F2192F9;
+	Tue, 28 Jul 2026 13:25:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785244381; cv=none; b=J7mUb4hT+fF/bxuH5LZaDtGiuWpcbQ+/iAlkAkXJcB9XU1bL9iWGcXpwCbLXnRvVQSWwbxzwTmSqNPif8NSrTEYdedO4/WzUOcJUkHtXLQ74tGV8JRpXLqRZJn0sM6S9wYO12+qm9hDnjqPwB+3vS+lCS82/AQ4CDzFFE32JCJE=
+	t=1785245139; cv=none; b=l5cAcEU4mka+vuAJHrG69TbJLbSo8nizj5Hj3TxVPy5ku9VjetHuard2dSWGtaePFAZev9Knc4g+/LdHFLAP/hS2PMuFMq1689xApTSTfuw5trIVFeelPMmV59HYm0biPXQnsgvQhtcIIwhnMEN73EWFVZy7SOJ3Rm3Blou9JT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785244381; c=relaxed/simple;
-	bh=5S+z0vqrCxs2/tEJ+pfDZtP1PTKj6T1kHCUqWV/iAxI=;
+	s=arc-20240116; t=1785245139; c=relaxed/simple;
+	bh=2X1qoA+We9EF9hJ4GRjAIPe121f0pIYmOiVEZe2MmpM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aglLq6eocoArvZyENZLU1SZMg3L7FgRBLGewH497IcOf7OuM1eRVObSGijn+2qWMus1b8NvxaQuuyY8y0e045l+07Pf/CJiQG6MuRfPwRShJAmX1AMeHgs1iYeiEXCyF27VYpNiSl8rs5DVWsDw4RWaRt94zkHYTeKg5Yu3slLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eeP0mZMv; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ow7P9sSgpI2aDdnfMcDLSMXsfKjQRVelWS7XHVda/G+GsRxGKarcepQBUN0hP77H+apDVjk8z4pznE6Nf3auvdj7R2Sz4YqOvuvelM4v+HF5FQwlaGBBiNevCFN+Oguu3Q+21HVly+nLmQpZ6uEeV1RIAJI4xv4pKolR41iVQCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QgrusidX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eeP0mZMv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DFA51F000E9;
-	Tue, 28 Jul 2026 13:12:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QgrusidX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96BAF1F000E9;
+	Tue, 28 Jul 2026 13:25:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785244380;
-	bh=5W5k99RT2jl1GRjzI1fMqdKG7vHd55WEyzs/MHFOEGM=;
+	s=k20260515; t=1785245138;
+	bh=G3NyROKDDWWavK8r1MKoPBcP39rBC2hL83e23KBn9xA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=eeP0mZMv2mqWoYg/DUnRFySkLjxA47Ig0SetfN9KMusX56Rz8CG5y5Q45sx6ZqrUj
-	 9bdXOoe1c1Jk2sb8AVtI/Y4GTetZvuy8xovC2yNQ3eNf1IWzwSgsKkR0q18ttpzkGX
-	 UzR3e4cCktxj6yqTzPGTCR3rXXfWfqJu1rjGNNF2JgqFpn+T3eBMn1Crt6PgtlRvkW
-	 yRG3fa1ZlihfVEfi53gIdv5yTTMsox5i5A7EJUgnt1AvSFNgI+Fpem9qyDBhsR2SFJ
-	 zNZpincDO82RsYT9KOqnLRZCdlxCSA+HwYUFaiTIL8o7YERJn1yZmj5zaZRA5P9iF1
-	 E+Y1CFgwoTN2g==
-Date: Tue, 28 Jul 2026 15:12:49 +0200
+	b=QgrusidX26p73La9MkoZtvajqp4mJsEqJUNuG5OPF0yJ3uyZSOjmm6fbZxfBWOm0O
+	 MWhryxBTSwdKr6+zrJ3d4/dHaiPe/aa+xp/budoPXH+8IqV1/YU+0Eri5uY2DjXSzr
+	 uVP26ypF0yPU9gMigfPpluYqh4EBuKLCcBY+fQmBmR7yAiGqeniTrqJFedH1WMF7Qs
+	 WewAKx1e2Sc/lHZtBgvUVf8gPMLsuEzNxR8vF3otT0nsov1yVv/x7m8L5Mx1o18B9Q
+	 ah8BwUaaVZgUiZ3W+kQ8JwwNfWKsq1vzDSvcSqVAlMVqbDrrsgyphSh05oeUx6gGkF
+	 64OX2pTquCW8Q==
+Date: Tue, 28 Jul 2026 15:25:29 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Alex Elder <elder@riscstar.com>
 Cc: manivannan.sadhasivam@oss.qualcomm.com, 
@@ -36,12 +36,12 @@ Cc: manivannan.sadhasivam@oss.qualcomm.com,
 	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Bartosz Golaszewski <brgl@kernel.org>, 
 	Bjorn Andersson <andersson@kernel.org>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/6] PCI/pwrctrl: tc9563: Fix parsing the integrated
- Ethernet MAC Endpoint node
-Message-ID: <uavzur74w3w6d4acq4keoi42pcob4p3jez7e5p2aubw27k5geo@ccaewywqbz3b>
+Subject: Re: [PATCH 4/6] PCI/pwrctrl: tc9563: Skip Tx amplitude and DFE
+ tuning for DSP3
+Message-ID: <oefxm7olagbd3dby2npgly7ausiz3g6cvls5igaxdzvlbr3wrv@rjlfebi2p36j>
 References: <20260725-tc9563-fix-v1-0-ec4286e31331@oss.qualcomm.com>
- <20260725-tc9563-fix-v1-2-ec4286e31331@oss.qualcomm.com>
- <5348ff47-910b-4614-a935-6e99ad3b066d@riscstar.com>
+ <20260725-tc9563-fix-v1-4-ec4286e31331@oss.qualcomm.com>
+ <f9937e7b-746c-486b-b94f-fb3b34a2b0d0@riscstar.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,93 +51,56 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <5348ff47-910b-4614-a935-6e99ad3b066d@riscstar.com>
+In-Reply-To: <f9937e7b-746c-486b-b94f-fb3b34a2b0d0@riscstar.com>
 
-On Mon, Jul 27, 2026 at 10:59:05AM -0500, Alex Elder wrote:
+On Mon, Jul 27, 2026 at 10:59:11AM -0500, Alex Elder wrote:
 > On 7/25/26 3:59 AM, Manivannan Sadhasivam via B4 Relay wrote:
 > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > > 
-> > DSP3 has an integrated Ethernet MAC Endpoint which has its own set of
-> > config registers for configuring settings such as ASPM. The Endpoint
-> > device has 2 physical functions and those 2 functions share the same
-> > settings.
-> 
-> This was not clear from the code.  So this explanation alone
-> represents an improvement.
-> 
-> > Hence, parse the Endpoint node under DSP3 instead of parsing both the
-> > functions. The existing parsing logic also has one OOB issue as parsing
-> > both functions will result in accessing past the tc9563_pwrctrl->cfg array.
-> 
-> The issue you mention is that the array has exactly one entry
-> available for the Ethernet MAC endpoints, so parsing more than
-> one (if defined in devicetree) references a non-existent entry.
-> Right?
-> 
-
-Yes.
-
-> But this constraint only applies to power control.  There can be
-> multiple MAC nodes (for their PCI functions) defined.  And it
-> seems the pwrctl settings (if any) *must* be specified for
-> function 0 and if specified for any others, they are quietly
-> ignored.
-> 
-> Is that accurate?
-> 
-
-Exactly. DT can define both functions, but since there is no per-function
-tuning, these properties cannot exist in both nodes, but only in function 0,
-which also corresponds to the Endpoint.
-
-> If so I think the DT binding could explain and possibly enforce
-> that, but I won't insist on that...
-> 
-
-It is being enforced in Patch 1.
-
-- Mani
-
-> Reviewed-by: Alex Elder <elder@riscstar.com>
-> 
+> > DSP3 doesn't support tuning Tx amplitude and DFE settings. So just skip
+> > the setting if DT has passed the tuning properties. There is no need to
+> > error out the whole driver because of it.
 > > 
 > > Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
 > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >   drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 13 +++++++++----
-> >   1 file changed, 9 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> > index 488e1ec34a7f..482e82e433dd 100644
-> > --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> > @@ -596,12 +596,17 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
-> >   		ret = tc9563_pwrctrl_parse_device_dt(tc9563, child, port);
-> >   		if (ret)
-> >   			break;
-> > -		/* Embedded ethernet device are under DSP3 */
-> > +
-> > +		/*
-> > +		 * The integrated Ethernet MAC Endpoint under DSP3 is a single
-> > +		 * device whose functions share the same config registers.
-> > +		 */
-> >   		if (port == TC9563_DSP3) {
-> > -			for_each_child_of_node_scoped(child, child1) {
-> > -				port++;
-> > +			struct device_node *eth __free(device_node) =
-> > +					of_get_next_available_child(child, NULL);
 > 
-> I'd add a blank line here.
+> So to keep things simple, tc9563_pwrctrl_parse_device_dt() is called
+> for all downstream ports but you ignore the setting (with a warning)
+> for those that do not apply to DSP3.
 > 
-> > +			if (eth) {
-> >   				ret = tc9563_pwrctrl_parse_device_dt(tc9563,
-> > -								child1, port);
-> > +								eth, TC9563_ETHERNET);
-> >   				if (ret)
-> >   					break;
-> >   			}
-> > 
+> What about tc9563_pwrctrl_set_nfts()?
 > 
+
+Good catch! I missed adding the check for N_FTS as well:
+
+```
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+index 9d869483b6b3..978907aa0ce5 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+@@ -410,11 +410,17 @@ static int tc9563_pwrctrl_set_nfts(struct tc9563_pwrctrl *tc9563,
+                {TC9563_NFTS_2_5_GT, nfts[0]},
+                {TC9563_NFTS_5_GT, nfts[1]},
+        };
++       struct device *dev = tc9563->pwrctrl.dev;
+        int ret;
+
+        if (!nfts[0])
+                return 0;
+
++       if (port == TC9563_VDSP) {
++               dev_dbg(dev, "N_FTS tuning not supported for VDSP\n");
++               return 0;
++       }
++
+        ret =  tc9563_pwrctrl_i2c_write(tc9563->client, TC9563_PORT_SELECT,
+                                        BIT(port));
+        if (ret)
+```
+
+@Bjorn: Could you please amend the above diff with this commit?
+
+- Mani
 
 -- 
 மணிவண்ணன் சதாசிவம்
