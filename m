@@ -1,167 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F52F3B5F63;
-	Tue, 28 Jul 2026 17:35:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 252DD3A872A;
+	Tue, 28 Jul 2026 17:38:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785260114; cv=none; b=JExAnjhpKkvdCGplsHpMg2sHcbaDgCUzpJ+B6YW5zmSue5gIJOIdJNSZtzqTef3WYJqKnlra5pJYUWt2ancDSO9RyWZ3G6eSGCYjxU5KrWAwDogg1HQx5nnJjyegshvdueIgkVD8kPsu20I369HWZQCtrC4KWR4baD4n+12hIRs=
+	t=1785260317; cv=none; b=MVONKNOxs54QiaSS5oTh0ZbIk7zxNmhaFFiIGE6lNsLLAJKJ1KKHESgrq5qkSYXFrG6YdhTZr6j6YlZUUYXhg94QpPPd+Q6/AOuMQR65b+3E2kQ8Nz6jnUhUsPWBt+BZ8OKAfCzIYEpf2ZkRSNLEIPMG8Usfb3GQ8BfdoeJer2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785260114; c=relaxed/simple;
-	bh=XZrIwxEJe7vh568v5zVuUJrm69vi5zgClUmvFuIImlU=;
+	s=arc-20240116; t=1785260317; c=relaxed/simple;
+	bh=BrHoqps16R5WzCjuWrj5wJfoOJ+RoThtrlhKVBvelFs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZE8N1njPcRO6h6uY1C3X4RtaGn+7kD5iKQH7F4U3Of1L9kJROERTvrADbA2zfiWmEIGlXIPgVPDDFP2sXfzXAVY3e89fqbqvLLiTTbv3nF8fbowGE4FRBVXvgQyvoG3N12fzpr3DOvqGjeUEm6LS10OLnFXv5cJWqSC2xvcQXAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bLC9x+Ey; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=UPxl4xABpHDx9BwOYeGatqVFslGZmELsi6I3egc3+w/DL4BvqPz+QueOmzS/4v+GY+Nq3my2ss9Ifrm9Qyl11eXMMcko+kff8E2p0CiUEyyUkZT4KkCNN/vXx77tem3OmxD2CawEfcH7nEZ/7g+HxN9U/KQHIWRE0Y5vwm1CaH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cx1aiUeB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bLC9x+Ey"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3F651F00A3A;
-	Tue, 28 Jul 2026 17:35:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cx1aiUeB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7795C1F000E9;
+	Tue, 28 Jul 2026 17:38:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785260113;
-	bh=xVlu875BfYZszl0P/7trdFDWGEQuWI2pWWv2KX6bf8g=;
+	s=k20260515; t=1785260315;
+	bh=p1gGFpXUGp1YYwT1Z4jKS90VbXuUtXBHI4qiHt359Aw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bLC9x+EyWKPaON0NaGbfQGdRR1qjElwGQ0/7zrH5B3lxJ7PMplx/vxjf7H1aY9hF3
-	 j92+rBdFvbhjtWO5NwTk24g+7ql8WjkeOa/wIxiZ1wkcjfbbkH0BRHp8+qqG/X/N/l
-	 6zObaYfsql+O9M/KDsS3V1Cl+qSwBvw9dYZJIQa9GOIjVAvLtQ1CUuAs2uPPaqKN1e
-	 740NUX/h6BzB58N86YkGXJFPAhOF17223uwlddMI7q4ZSa2yE55loX4ukdvHLy5bDN
-	 cu/PJ6q0RQg1P1c4xCuor6tw7KfwvX0UN38uV7av/SzJKdjwLRgs3YVieFUc8snqwn
-	 +WJKlXhbi6c9A==
+	b=Cx1aiUeB75LYo7TxKQ+cZ5Lk02yQoDmuo1SkLlIVKswZVfaim8kInDqIsBPhaqWX8
+	 14ldwBtUgAiqp96sA2AD5F2Lhy3vjH1D4WSiDU5mFmptLivNBC115fa3SxZPK1pWWj
+	 Pc6TO8mWRxnVi7c3UWs8bAZn/xtLg0DYdgBGiR9yPrGnoMWpNj2AJbGgiiRD0hU36L
+	 fow5yt8jahAUVZQLdGJHP5aNsTQCHTMTbGoLqdDaPBZCAaDz5RW3jo7SU/c4e2rUtq
+	 6V0Q+GTivPzspVe4gjDAcnb3h/VO5DEiNCFMplfZUlaUrVMkYKHKcrhPrPlSTmiu3A
+	 TwtFx3jPNoRrA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 04/12] dmaengine: switchtec-dma: halt channel on
- alloc_chan_resources error
+Subject: Re: [PATCH 3/3] PCI: endpoint: pci-ep-msi: Let non-first EPFs use
+ embedded doorbells
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260728171523.112244-5-logang@deltatee.com>
-References: <20260728171523.112244-1-logang@deltatee.com>
- <20260728171523.112244-5-logang@deltatee.com>
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
+In-Reply-To: <20260728172306.2751813-4-den@valinux.co.jp>
+References: <20260728172306.2751813-1-den@valinux.co.jp>
+ <20260728172306.2751813-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 17:35:12 +0000
-Message-Id: <20260728173512.F3F651F00A3A@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 17:38:35 +0000
+Message-Id: <20260728173835.7795C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Intentionally leaking descriptors to prevent hardware UAF leaves d=
-angling pointers in the channel structure, causing a UAF if a subsequent al=
-location fails, or a permanent leak if it succeeds.
-
 Pre-existing issues:
-- [Critical] Zeroing DMA base registers while the channel fails to halt red=
-irects active DMA transactions to physical address 0.
-- [High] Holding a spinlock while polling for up to 100ms violates core ker=
-nel locking rules and can trigger softlockups.
+- [High] Missing cleanup of doorbell IRQ and message memory in `pci_epf_tes=
+t_unbind` leads to a Use-After-Free.
 --
 
---- Patch [4]: [PATCH v4 04/12] dmaengine: switchtec-dma: halt channel on a=
-lloc_chan_resources error ---
-commit 886fa8092e9d55e67d82b2e1ee9d1125fcadac6d
-Author: Logan Gunthorpe <logang@deltatee.com>
+--- Patch [3]: [PATCH 3/3] PCI: endpoint: pci-ep-msi: Let non-first EPFs us=
+e embedded doorbells ---
+commit 5b37917c476823bd8dce57c08e171daf54ed33f5
+Author: Koichiro Den <den@valinux.co.jp>
 
-dmaengine: switchtec-dma: halt channel on alloc_chan_resources error
+PCI: endpoint: pci-ep-msi: Let non-first EPFs use embedded doorbells
 
-This patch modifies the error unwind path in channel allocation to call
-switchtec_dma_chan_stop() before disabling the channel. This prevents a
-hardware use-after-free by ensuring the channel is successfully halted
-before freeing the descriptor rings. If the halt fails, it skips freeing
-the rings.
+This patch allows non-first endpoint functions attached to an endpoint
+controller to utilize embedded doorbells. It removes the restriction that
+only the first endpoint function can allocate doorbells, falling back to
+the embedded doorbell path directly for subsequent functions.
 
-Link: https://lore.kernel.org/dmaengine/20260717223647.F0A051F000E9@smtp.ke=
-rnel.org
-Link: https://lore.kernel.org/dmaengine/20260727185101.D221C1F000E9@smtp.ke=
-rnel.org
+> diff --git a/drivers/pci/endpoint/pci-ep-msi.c b/drivers/pci/endpoint/pci=
+-ep-msi.c
+> index a123a189b4e65..5ea7eef9794f7 100644
+> --- a/drivers/pci/endpoint/pci-ep-msi.c
+> +++ b/drivers/pci/endpoint/pci-ep-msi.c
+> @@ -199,28 +199,31 @@ static int pci_epf_alloc_doorbell_msi(struct pci_ep=
+f *epf, u16 num_db)
+>  int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
+>  {
 
-> diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index cbbc9ad082471..25b988e9b4afb 100644
-> --- a/drivers/dma/switchtec_dma.c
-> +++ b/drivers/dma/switchtec_dma.c
-> @@ -1047,6 +1047,10 @@ static int switchtec_dma_alloc_chan_resources(stru=
-ct dma_chan *chan)
->  	swdma_chan->comp_ring_active =3D false;
->  	spin_unlock_bh(&swdma_chan->complete_lock);
->  err_disable_channel:
-> +	if (switchtec_dma_chan_stop(swdma_chan)) {
+[ ... ]
 
-[Severity: Critical]
-This is a pre-existing issue, but does writing 0 to the DMA base registers
-redirect active DMA transactions to physical address 0x0?
-
-Looking at switchtec_dma_chan_stop(), if the halt times out, the registers
-are still cleared:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_chan_stop() {
-        rc =3D halt_channel(swdma_chan);
-        ...
-        if (rc)
-                pci_err(pdev, "Channel %d halt timed out...");
-
-        writel(0, &swdma_chan->mmio_chan_fw->sq_base_lo);
-        ...
-}
-
-Since the channel is still unhalted and active, modifying these live
-registers might cause ongoing or pending hardware DMA descriptor fetches to
-target physical address 0x0.
-
-
-[Severity: High]
-This is a pre-existing issue, but can this call chain trigger softlockups
-by holding a spinlock for up to 100ms?
-
-switchtec_dma_chan_stop() calls halt_channel(), which acquires a spinlock
-before polling:
-
-drivers/dma/switchtec_dma.c:halt_channel() {
-        spin_lock(&swdma_chan->hw_ctrl_lock);
-        writeb(SWITCHTEC_CHAN_CTRL_HALT, &chan_hw->ctrl);
-        ret =3D wait_for_chan_status(chan_hw, SWITCHTEC_CHAN_STS_HALTED, tr=
-ue);
-        spin_unlock(&swdma_chan->hw_ctrl_lock);
-}
-
-And wait_for_chan_status() performs a 100ms atomic polling loop:
-
-drivers/dma/switchtec_dma.c:wait_for_chan_status() {
-        return readl_poll_timeout_atomic(&chan_hw->status, status,
-                                         ..., 10, 100 * USEC_PER_MSEC);
-}
-
-Holding the spinlock disables preemption for the duration of the timeout,
-which might cause severe scheduling latency spikes.
-
-> +		disable_channel(swdma_chan);
-> +		return rc;
-
-[Severity: High]
-When returning here, the descriptors are intentionally leaked to prevent a
-hardware use-after-free, but do the pointers in swdma_chan remain populated?
-
-If a subsequent allocation fails in switchtec_dma_alloc_desc(), it will call
-switchtec_dma_free_desc() which frees these exact pointers while the hardwa=
-re
-might still be accessing them.=20
-
-If the allocation succeeds, the pointers will be overwritten:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_alloc_desc() {
-        swdma_chan->hw_sq =3D dma_alloc_coherent(..., GFP_NOWAIT);
-}
-
-Could this lead to a use-after-free on a subsequent allocation error, or a
-permanent memory leak if the pointers are overwritten?
-
+>  	/*
+> -	 * Fall back to embedded doorbell only when platform MSI is unavailable
+> -	 * for this EPC.
+> +	 * The MSI-backed doorbell path currently targets the first EPF attached
+> +	 * to the EPC. Let non-first EPFs try the embedded doorbell instead.
+>  	 */
+> -	if (ret !=3D -ENODEV)
+> -		return ret;
+> +	first_epf =3D list_first_entry_or_null(&epc->pci_epf, struct pci_epf,
+> +					     list);
+> +	if (first_epf =3D=3D epf) {
+> +		ret =3D pci_epf_alloc_doorbell_msi(epf, num_db);
+> +		if (!ret)
+> +			return 0;
+> +
+> +		/*
+> +		 * Fall back to embedded doorbell only when platform MSI is
+> +		 * unavailable for this EPC.
+> +		 */
+> +		if (ret !=3D -ENODEV)
+> +			return ret;
 > +	}
->  	disable_channel(swdma_chan);
->  err_free_desc:
->  	switchtec_dma_free_desc(swdma_chan);
+> =20
+>  	ret =3D pci_epf_alloc_doorbell_embedded(epf, num_db);
+>  	if (ret) {
+
+[Severity: High]
+This is a pre-existing issue, but as this patch makes it possible for more
+devices to allocate doorbells, can this lead to a use-after-free when an
+endpoint is unbound while a doorbell is active?
+
+Looking at pci_epf_test_unbind() in drivers/pci/endpoint/functions/pci-epf-=
+test.c:
+
+drivers/pci/endpoint/functions/pci-epf-test.c:pci_epf_test_unbind() {
+    struct pci_epf_test *epf_test =3D epf_get_drvdata(epf);
+    struct pci_epc *epc =3D epf->epc;
+
+    cancel_delayed_work_sync(&epf_test->cmd_handler);
+    if (epc->init_complete) {
+        pci_epf_test_clean_dma_chan(epf_test);
+        pci_epf_test_clear_bar(epf);
+    }
+    pci_epf_test_free_space(epf);
+}
+
+If the host sends a command to enable the doorbell, a doorbell is allocated
+and an IRQ is requested via request_threaded_irq().
+
+If the user then unbinds the driver via configfs, pci_epf_test_unbind()
+does not check for or clean up the active doorbell. This means free_irq()
+and pci_epf_free_doorbell() are not called.
+
+When the endpoint function device is later destroyed via configfs rmdir,
+the epf_test structure is freed. However, the IRQ handler remains
+registered with the freed epf_test pointer.
+
+Does this allow a remote host to trigger a use-after-free kernel panic by
+sending an MSI doorbell interrupt to the endpoint after unbind?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728171523.1122=
-44-1-logang@deltatee.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728172306.2751=
+813-1-den@valinux.co.jp?part=3D3
