@@ -1,61 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9983A6B67
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 17:25:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271FE3BA222;
+	Tue, 28 Jul 2026 17:28:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785259533; cv=none; b=RfDBK3E7jd3hIkWNaaBnHzeIeSMBpp0hqSN05pP+eQCN8oRhmoyFKp+D2UvhZIZWYc6pX5k0qZfUpleNw3MbKEhn0h+HAWDs3mX9Oxrmkwu77ouDoCRObfo7gBPc3mxYH6bZh6LK46fSSGM65+EzDIiEhcfx+u2IoL2AaPOX1AA=
+	t=1785259734; cv=none; b=ALZYmOmBs3EBPWO0y1MEWRUYgR4D0Bzg4Y9yddVzqkKCy76VH9wgHE7Q6vOwtdOBDKu0e5WZXDdrkI4tD3C9h2t296s3sNrmhZE9G2ichnw7mXZwfEg+JJMLw5sEFy6ceZRp9vXY75sIlruojNXy4f+Xv/+kapyDX2bN5A7SaOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785259533; c=relaxed/simple;
-	bh=hwj31KkaGnYqjcX7tCCojMjr3Q8V465LkK7EBYOaXv4=;
+	s=arc-20240116; t=1785259734; c=relaxed/simple;
+	bh=sUNxknAOcGuh0ZZp3nSqbKKwtca/s9rL6WsxWYX1g8w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PnA+T+tocTxIHYIHxxZux3jiX/DvhfYFJtRNbarrtoQG+ZyB0NJ0Y92NCv4ym2rjx0X0+laehP3E4PdR3qBaIwzqMy6Qj3ac3NVMUOksn4b9RI06qQaSkeHEjN3srW2dmT62aE2x3AXbUS/g+VFt5ZiNyNJdONKk+9dYUGkSo8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f+38a0E4; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uUnyyK4t035DP3JBOSXc4dUrfYpgZc1htCNWCCT4voatTgabR0fxg8DH0gOh0SAbJAgrDyPtmDhAwdLgEW30C9JYN+kCTAD0Hflm4uJCVEVufSjIms7m4yqX1pfnsaRreuyRmV5g3vHyzPRadiWbgTdxoL8Pn/nPR6iDA6Azs4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I/LWQEqt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f+38a0E4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88481F000E9;
-	Tue, 28 Jul 2026 17:25:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I/LWQEqt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B6861F00A3A;
+	Tue, 28 Jul 2026 17:28:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785259532;
-	bh=hwj31KkaGnYqjcX7tCCojMjr3Q8V465LkK7EBYOaXv4=;
+	s=k20260515; t=1785259732;
+	bh=sUNxknAOcGuh0ZZp3nSqbKKwtca/s9rL6WsxWYX1g8w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f+38a0E4DpoogOknQOzu4npqKuV9QdEnSzSCvvnDfQoBLIj7NocPUpFCohIWomFYo
-	 7XTL0dU1+lvWQNZr8jouqW5CFCY3Xrfo4DxAmALweUtZ+7P6jETwAf8PDU5mnbCAfg
-	 L/snhFPy93t4IZB6y+LKHslM9Pie06F5Xwl4k+XlOkOX3+4f5/UX3NDkivgNYB/qXT
-	 B2a9k7gDBl+FXRTN+ridYSglrDKlGiew9PmFovmYNOPVf9L7VbR3NeIEdB06Z2BauG
-	 qnckJhF+W+UKcTjEDBKChrWoBL4PZOhu3snH5+1GLJgMQXxmb4c3TSjIZvICzGr3MK
-	 xT8zX2ZYw9/rw==
+	b=I/LWQEqt3Mk1w3eWDIOUuMHz3361gSq7OOuLwgA1cI+/KJLwYGMR44PT8IBtc5lZZ
+	 5vKOnWuNCbh6kUs3uip5csrVjK1hadTEXhALk+lBzUXCCRpG9c9Z4r64vPnsFztvmd
+	 hVrMxzsvHXrYnbRGgpb4nk+dVT7E+stNkYTT13EHoEaAnEZ9vkGKGBlvlPVt6xe+2g
+	 rQ+fb1SbKrvn4LSw5AmjW0sjRT5VH6UmyG7wOF2XQ0F1UYlSS6RQi7I1vcO0tH1MTP
+	 YFNvJnptozhIFY2g+5ipyVcc7h+0wiHxooOVzBswD2RrEWVNwi5dWU3oSqmCBmA4Gf
+	 2hGmzSmk8srow==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V2 8/8] i3c: mipi-i3c-hci: Advertise IBI wakeup
- capability
+Subject: Re: [PATCH 2/3] PCI: endpoint: pci-ep-msi: Make embedded doorbell
+ IRQ exclusive
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Adrian Hunter" <adrian.hunter@intel.com>
-Cc: linux-i3c@lists.infradead.org, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260728155308.142713-9-adrian.hunter@intel.com>
-References: <20260728155308.142713-1-adrian.hunter@intel.com>
- <20260728155308.142713-9-adrian.hunter@intel.com>
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
+In-Reply-To: <20260728172306.2751813-3-den@valinux.co.jp>
+References: <20260728172306.2751813-1-den@valinux.co.jp>
+ <20260728172306.2751813-3-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 17:25:31 +0000
-Message-Id: <20260728172531.B88481F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 17:28:52 +0000
+Message-Id: <20260728172852.8B6861F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Set master->ibi_wakeup during probe when the associated system device
-> advertises wakeup capability, allowing the I3C core to mark IBI-capable
-> I3C devices as wakeup capable.
+> Embedded doorbells may use the same virq for several messages. This does
+> not mean the IRQ itself should be shared. Consumers only need to request
+> each distinct virq once, as vNTB and pci-epf-test already do.
 >=20
-> Tweak the comment for i3c_hci_sysdev() to mention the new usage.
+> IRQF_SHARED would let different EPFs register handlers for the same IRQ.
+> The embedded doorbell interface cannot tell which EPF a write targets,
+> so every handler would handle it.
 >=20
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> Only the first EPF can allocate doorbells today, so this cannot happen
+> yet. Drop IRQF_SHARED before extending the embedded backend to non-first
+> EPFs. A second request for the same IRQ will then fail with -EBUSY
+> instead of attaching another handler.
+>=20
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728155308.1427=
-13-1-adrian.hunter@intel.com?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728172306.2751=
+813-1-den@valinux.co.jp?part=3D2
 
