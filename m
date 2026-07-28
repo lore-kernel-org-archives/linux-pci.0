@@ -1,272 +1,292 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 494C03BED42;
-	Tue, 28 Jul 2026 20:33:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1113FB055
+	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 21:16:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785270819; cv=none; b=iWC1oVeQTrx9xZ8bgoh+GJ0MYtcxpFTVM+jIE6nNHgm2HEa5U2bOsM9Kfbzllc0wL7oHbeawcy75N0mYso7wqSVWdPIxfYjMMI8L8P2WQGApwEHvNVXhRrU2L3nFCXIhFkSfO+1DZ7R8dmQt6svtGsCTww7fWS7sN2/JTAusecc=
+	t=1785273420; cv=none; b=M8PMMGNqqRjQ7EkD3zALFdCVSI0fhU5aHDHtLJ7KJM3U6FaqDkWT1xnO6K2XR+jLh5P3VnmmybDVINWT9x7fWRA6tyCRplbVG0SCTx7a6bE5W+nymK3byxGOgttzMa+URuWunbuQsu3bcAZld36K1BN/CWyXblXX2PNciN54dzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785270819; c=relaxed/simple;
-	bh=RinCKNCOIo43TtNwquVwBwNI5I1yCL0v6ly3U43rio4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u0tg9KujG8LzgYj34zPJ3oL8Hf330xhTZTVPtJNEzeCp7sOBVOcvPGxuvtqsD/ko6bKFGg8NPlAXb5u+Zu9qRSSt2UVdfv0pvhi/UPIXPw41eyeiQ81zHD6grFaI0f3Zpy8cZorU2EV6tHojg652wdlFlOwcEbFhkSpLTw5wgMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KuQi07mY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785273420; c=relaxed/simple;
+	bh=rYYKfO7fr8tCeIBgfW8VCHWFR3LOeVGgcB0gu3vWhJs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NrYuEYZB9mg/ODy/oi06g07uA+gqCQZnpYfha9ncdN8Lw0gY7qTwu0pV5v6BVa2Eu8XRP86afA2khrnvcvLtnNIeMrdtxX3pJsvArROwBhYbE0bDtDhWmqvuR4XxAa9orfPdkph25+uWoLgjXhRV4otdmmIdVZ5zXoFku9aq/LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bqxaPory; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KuQi07mY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EA661F000E9;
-	Tue, 28 Jul 2026 20:33:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785270817;
-	bh=bti3Gy3z1GdZOLNQIsrx1kQOqVeXHsgN+hWD2GSD9MY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KuQi07mYdWQCpMsJFMAUrnHEngCcimd6HJ3j4Kw+jICNvbj3JwVinRnieblIGL0XZ
-	 WLkiKKGFYSCt5jltCW8hirNH6PNqW8fc2ZNgy9BMjtiwIeeaKF5j95gi4hlIzcapXg
-	 Dypu1VLdTjuyFjpqEO3Rjyrx5xfsC3A4CMFKvwU9GxnXpQuEO+0We+sj48oEnq+yKq
-	 aVw1Z7mQunUHtilQ0MTEv7G7Q+X0RjqD+TS8pdzyE3Su6wD3kJSM9yu9ybIksYGq12
-	 WVBb+0FBIUoiE8SCC30Fqo/21O8KSRbpQa1pkyWJVCyBoZ/uVYyHNILEnBoC2QNf67
-	 CF5SLcXhaS0mQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] pci: AMD: Add CPM6 host controller support to
- AMD MDB PCIe driver
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sai Krishna Musham" <sai.krishna.musham@amd.com>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260728202044.1785986-3-sai.krishna.musham@amd.com>
-References: <20260728202044.1785986-1-sai.krishna.musham@amd.com>
- <20260728202044.1785986-3-sai.krishna.musham@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 20:33:36 +0000
-Message-Id: <20260728203337.7EA661F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bqxaPory"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2ccdf36f63dso43295ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 14:16:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1785273418; x=1785878218; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=QYFlnlGtzGaTmpuO49iDLUfMpOme9Z4x8j8IG4rbPjY=;
+        b=bqxaPorytheSUf/PkJlrbI8DGghgMaM8JQsHAF7c0WGI5D9BJRcj2OMZmZt8g3mbFu
+         k+Ps8WKfUfBHCT7FbP2UVq1e+JvqeoFjKiTzYXJ6mP8KJoY9F/tzQ4s+gvRgNOdj30Jk
+         ELf/zlJwhNJCdIYfqohLhVdPMzpkSllE82vjgzllfvpfgFL5xJ4oLvn1flO+59u7y3M3
+         5R7XVu5rkOJFlbcg9/IS1uz64UqN/PUEZe0fVWz9sTIqZM59BKN49701z4Ka6Zc8jIdS
+         duIbBWU/iqaOfr31VCdZ/jzqEZTtRPMd0hBmKB5PTFHGUFVD0pZe4vx/eCnJrnI9A6cT
+         On2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785273418; x=1785878218;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QYFlnlGtzGaTmpuO49iDLUfMpOme9Z4x8j8IG4rbPjY=;
+        b=cBv8hKbhF+NqHnMa6w2DYE/WX9vIkebf9NYammvJPwLAyQY3WKC2N3W9ePuJlgAEHU
+         EvRJ6/6/xTUs08e+/FMitqXX7VxW537L7KjUBSMIwLwg2WyE/IGkGcRTXXNQEq2aKaC8
+         BHUu/s5LS4EkdnMuWCq8cIyBq+NwiXY6lAaBvbXfoSsZak+x/05lhoC0sZy+EEkmj7zH
+         VZXvqt7VaMVGivdkbTt/qddolHDKBSu/9gFmkqz08/JDTIVQSnfaONS5Z/Q2YkU9EFxh
+         Ze436nplFwDnXNcQ0T9XHsQVcWHYXXELWxLAyjlrqbnC/sVmaDS5agtn4FFPxKDvmi1e
+         NUJQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqCo9lRU94xX/SUIYN2ft/9R1wgapSYDP1bVA879dfGRKv+TSbJew9SXPucljfgtynAjcT6ZDZFQCE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNxgZNWFwSa+3OITKRxK8PW7BR43KQhAoZIy9/gn8gLS89gOct
+	UZ2qxFpvQwgD0DniwJsC8MfvX2wPr5Pp9gzg/8JvzP57Itkq+dQQk5HlHlgj1tHYiQ==
+X-Gm-Gg: AR+sD10UPfSTyd0hY5KmnhOwqyZJGS92S/DHPHkKMPTPSo6eSpzaZaRdiut10PWtsHg
+	5v/HwHrVMfAgzGq0zu7fnktxbAfZSC9X1BTCW5wtQVn0+QoPRfubvLtU0W1YwUv3hu21I5Yl4Fq
+	4zUcB7wS1NRTNagG3Ygmxd7LdmN0AOwGNsfS99RVPdmPkFibM/Od1GIU78veKQhRbaGUbYAwQ4q
+	B2Ztey/1Dq4bomxmeiS+ulwBc+yEUKvj+WHnvQTsbhZQ9YPEUKt/H/RzyFpUVQNq6h30Jfj7dT+
+	v/rEF59prEj9dIqn0YAp92zjcf9k8xmzvaGIdwJF9UanoIr4lCKNVmBIbo1xo+RnuCIF7OHmu/Z
+	L2VklN/a6bHirqHEjpBRFL34NJm5uOx6EY6mHf/+mV3sqO/etnIhra2jvNBr4s+Bj64FEI+LeFs
+	ze7u0vvsRRBReGvpB273IToz/xVJICIKxEjb6/bdohss4V8ISlpaVyV3dCmSGqF9UrTYDZXJV4M
+	X0clxsEBA5Zi8gB1v/fAFk=
+X-Received: by 2002:a17:903:1a03:b0:2c7:b1e7:501e with SMTP id d9443c01a7336-2cfde09f0damr13311135ad.3.1785273417527;
+        Tue, 28 Jul 2026 14:16:57 -0700 (PDT)
+Received: from google.com (21.168.124.34.bc.googleusercontent.com. [34.124.168.21])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022c2d5a4sm1779895ad.71.2026.07.28.14.16.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 14:16:56 -0700 (PDT)
+Date: Tue, 28 Jul 2026 21:16:49 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: will@kernel.org, robin.murphy@arm.com, jgg@nvidia.com, joro@8bytes.org,
+	bhelgaas@google.com, kevin.tian@intel.com, kees@kernel.org,
+	smostafa@google.com, baolu.lu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	skaestle@nvidia.com, mmarrid@nvidia.com, skolothumtho@nvidia.com,
+	bbiber@nvidia.com
+Subject: Re: [PATCH v2 03/11] iommu/arm-smmu-v3: Add
+ arm_smmu_drain_queue_for_iopf() helper
+Message-ID: <amkcQRVylEe_t-yP@google.com>
+References: <cover.1779944354.git.nicolinc@nvidia.com>
+ <a62db13ab63916e9a62cddeec41a74a98cdf6a8f.1779944354.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a62db13ab63916e9a62cddeec41a74a98cdf6a8f.1779944354.git.nicolinc@nvidia.com>
 
-Thank you for your contribution! Sashiko AI review found 8 potential issue(=
-s) to consider:
+On Thu, May 28, 2026 at 12:59:31AM -0700, Nicolin Chen wrote:
+> A poll-until-empty form does not converge on the shared EVTQ or PRIQ since
+> other masters keep advancing PROD with unrelated traffic. A fixed snapshot
+> bounds the wait even under sustained unrelated load, since the target does
+> not move with subsequent enqueues.
+>
 
-New issues:
-- [High] Double-free and Use-After-Free of devm-managed interrupts on probe=
- failure.
-- [High] Masking a single virtual INTx line on CPM6 unconditionally disable=
-s the aggregate hardware INTx interrupt, breaking other devices.
-- [High] Unhandled bits in `AMD_CPM6_PCIE_ERR_STATUS` are never cleared, le=
-ading to an unrecoverable infinite IRQ storm.
-- [High] Exclusive ioremap of the shared `slcr` region will cause the secon=
-d CPM6 host controller to fail probing.
-- [High] Uncoordinated W1C clearing of the shared sticky aggregator bit cau=
-ses lost interrupts for the other host.
+[...]
 
-Pre-existing issues:
-- [High] INTxB, INTxC, and INTxD interrupts on MDB5 are silently dropped be=
-cause their hardware IRQs are never mapped.
-- [High] Use-After-Free of irq_domain triggered by concurrent hardware inte=
-rrupt during probe error path.
-- [High] Clearing sticky W1C status registers at the end of the interrupt h=
-andler creates a race condition that loses concurrent edges.
---
-
---- Patch [2]: [PATCH v2 2/2] pci: AMD: Add CPM6 host controller support to=
- AMD MDB PCIe driver ---
-commit 72da33718ab9f6a5d8466cccef118aefc6c26f76
-Author: Sai Krishna Musham <sai.krishna.musham@amd.com>
-Subject: pci: AMD: Add CPM6 host controller support to AMD MDB PCIe driver
-
-This patch extends the AMD MDB PCIe driver to support AMD Versal2 CPM6
-variants. It adds variant-specific register layouts and implements a shared
-aggregator clearing mechanism for the new interrupt architecture.
-
-Link: https://lore.kernel.org/all/20260402180006.486229-3-sai.krishna.musha=
-m@amd.com/
-
-> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/cont=
-roller/dwc/pcie-amd-mdb.c
-> index dee295f281a30..dbf36ce9902c8 100644
-> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
-> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
-[ ... ]
-> @@ -148,42 +287,34 @@ static void amd_mdb_pcie_clear_aggregators(struct a=
-md_mdb_pcie *pcie)
->  	writel_relaxed(merged_mask, pcie->slcr + AMD_CPM6_MERGED_STATUS);
-> =20
->  	/*
->  	 * Clear MERGED in the PS_MISC severity register so the misc GIC line
->  	 * de-asserts.
->  	 */
->  	writel_relaxed(AMD_CPM6_PS_IR_MERGED,
->  		       pcie->slcr + AMD_CPM6_PS_MISC_IR_STATUS);
+> 
+> This is a prerequisite to apply bug fix calling iopf_queue_flush_dev().
+> 
+> Fixes: cfea71aea921 ("iommu/arm-smmu-v3: Put iopf enablement in the domain attach path")
+> Cc: stable@vger.kernel.org # v6.16
+> Assisted-by: Claude:claude-opus-4-7
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> ---
+>  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 27 +++++++++++++++++++++
+>  1 file changed, 27 insertions(+)
+> 
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> index cf41b3cf5985f..4794a15f351c4 100644
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> @@ -894,6 +894,33 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+>  					   cmds->num, true);
 >  }
-
-[Severity: High]
-Does blindly clearing the shared sticky aggregator bit drop concurrent
-interrupts from the other host controller?
-
-The commit mentions this aggregator is shared between controllers. If Host 0
-clears this W1C bit while Host 1 has a pending unserviced interrupt in the
-MERGED register, Host 1's edge might be swallowed and never serviced.
-
-Does this need coordinated locking to ensure it is only cleared when no
-other hosts have pending interrupts?
-
-[ ... ]
-> @@ -213,11 +237,15 @@ static void amd_mdb_intx_irq_mask(struct irq_data *=
-data)
->  	if (pcie->variant->version =3D=3D MDB5)
->  		val =3D FIELD_PREP(AMD_MDB_TLP_PCIE_INTX_MASK,
->  				 AMD_MDB_PCIE_INTR_INTX_ASSERT(data->hwirq));
->  	else
->  		val =3D pcie->variant->intx_mask;
-> =20
->  	/*
->  	 * Writing '1' to a bit in AMD_MDB_TLP_IR_DISABLE_MISC disables that
->  	 * interrupt, writing '0' has no effect.
->  	 */
-> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_DISABLE_MISC);
-> +	writel_relaxed(val, pcie->intr_base + pcie->variant->misc_disable_reg);
-
-[Severity: High]
-Will masking a single virtual INTx line on CPM6 unconditionally disable the
-aggregate hardware INTx interrupt?
-
-On CPM6, there appears to be only a single aggregate INTx hardware interrupt
-bit. If an endpoint driver unbinds or calls disable_irq() on INTA, this
-unconditionally writes the intx_mask bit to the disable register.
-
-Does this disable the hardware aggregate interrupt completely, potentially
-starving other endpoint devices relying on INTB, INTC, or INTD?
-
-[ ... ]
-> @@ -354,16 +375,19 @@ static irqreturn_t amd_mdb_pcie_event(int irq, void=
- *args)
->  	ev_raw =3D readl_relaxed(pcie->intr_base + pcie->variant->misc_status_r=
-eg);
->  	val =3D ev_raw;
->  	val &=3D ~readl_relaxed(pcie->intr_base + pcie->variant->misc_mask_reg);
-> =20
->  	if (pcie->variant->version =3D=3D MDB5) {
->  		for_each_set_bit(i, &val, 32)
->  			generic_handle_domain_irq(pcie->mdb_domain, i);
-
-[Severity: High]
-This is a pre-existing issue, but are INTxB, INTxC, and INTxD interrupts
-silently dropped on MDB5?
-
-When an INTx occurs, amd_mdb_pcie_event() extracts the asserted bit and
-calls generic_handle_domain_irq(). However, amd_mdb_setup_irq() only
-creates a mapping for the single intx_hwirq (INTxA).
-
-Bits corresponding to INTxB, INTxC, and INTxD are never mapped, so
-generic_handle_domain_irq() will return -EINVAL and the interrupts will be
-lost.
-
->  		writel_relaxed(val, pcie->intr_base + pcie->variant->misc_status_reg);
->  		return IRQ_HANDLED;
->  	}
-> =20
->  	val &=3D pcie->variant->misc_mask_all;
-> =20
->  	for_each_set_bit(i, &val, 32)
->  		generic_handle_domain_irq(pcie->mdb_domain, i);
-> =20
->  	/* Clear handled + any unhandled sticky bits to avoid IRQ storms. */
-> -	writel_relaxed(val, pcie->slcr + AMD_MDB_TLP_IR_STATUS_MISC);
-> +	writel_relaxed(ev_raw, pcie->intr_base + pcie->variant->misc_status_reg=
-);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does clearing the sticky W1C
-status register at the end of the interrupt handler create a race condition?
-
-If a second edge of the same interrupt type occurs during the handling
-phase, writing ev_raw back to the W1C register at the very end will clear
-the new edge without it ever being processed.
-
-Should the status register be ACKed before handling the events so that new
-edges can latch correctly?
-
-> +	/* On CPM6 the completion timeout is reported via the PCIE_ERR register=
-. */
-> +	err =3D readl_relaxed(pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS);
-> +	err &=3D ~readl_relaxed(pcie->intr_base + AMD_CPM6_PCIE_ERR_MASK);
-> +	err &=3D AMD_CPM6_PCIE_ERR_MASK_ALL;
-> +	if (err) {
-> +		dev_warn(pcie->pci.dev, "Completion timeout\n");
-> +		writel_relaxed(err, pcie->intr_base + AMD_CPM6_PCIE_ERR_STATUS);
-> +	}
-
-[Severity: High]
-Are unhandled bits in the PCIE_ERR_STATUS register masked out and never
-cleared?
-
-The driver masks the read value with AMD_CPM6_PCIE_ERR_MASK_ALL and only
-writes back the known bits to the W1C register. If any unhandled bit is
-set, it remains uncleared.
-
-Since this register feeds into the sticky MERGED aggregator, will this cause
-the hardware to immediately re-assert the main parent interrupt and create
-an unrecoverable IRQ storm?
-
-[ ... ]
-> @@ -400,10 +421,30 @@ static void amd_mdb_pcie_free_irq_domains(struct am=
-d_mdb_pcie *pcie)
-> +		const struct amd_mdb_intr_cause *intr_cause =3D
-> +			pcie->variant->version =3D=3D MDB5 ?
-> +			mdb5_intr_cause : cpm6_intr_cause;
-> +		int i, irq;
+>  
+> +/* Drain an SMMU EVTQ or PRIQ to a PROD snapshot taken on entry */
+> +static int arm_smmu_drain_queue_for_iopf(struct arm_smmu_device *smmu,
+> +					 struct arm_smmu_queue *q)
+> +{
+> +	struct arm_smmu_queue_poll qp;
+> +	u32 prod, cons;
+> +	int ret = 0;
 > +
-> +		for (i =3D 0; i < ARRAY_SIZE(mdb5_intr_cause); i++) {
-> +			if (!intr_cause[i].str)
-> +				continue;
-> +			irq =3D irq_find_mapping(pcie->mdb_domain, i);
-> +			if (irq) {
-> +				disable_irq(irq);
-> +				free_irq(irq, pcie);
-> +				irq_dispose_mapping(irq);
-> +			}
-> +		}
+> +	/* Snapshot PROD; entries [old_cons, prod) are the cohort to drain */
+> +	prod = readl_relaxed(q->prod_reg);
+> +	queue_poll_init(smmu, &qp);
+> +	qp.wfe = false; /* No SEV on EVTQ/PRIQ PROD advance */
+> +	/* Read MMIO each iteration; llq->cons is the threaded handler's */
+> +	do {
+> +		cons = readl_relaxed(q->cons_reg);
+> +		if (__queue_empty(&q->llq, cons, prod) ||
+> +		    __queue_consumed(&q->llq, cons, prod))
+> +			return 0;
+> +		cond_resched();
+> +	} while (!(ret = queue_poll(&qp)));
+> +
+> +	dev_warn_ratelimited(smmu->dev,
+> +			     "queue drain timed out at prod=0x%x cons=0x%x\n",
+> +			     prod, cons);
+> +	return ret;
+> +}
+> +
+>  static void arm_smmu_page_response(struct device *dev, struct iopf_fault *unused,
+>  				   struct iommu_page_response *resp)
+>  {
 
-[Severity: High]
-Is it safe to manually call free_irq() on an interrupt allocated with
-devm_request_irq()?
+Hi Nicolin,
 
-In amd_mdb_setup_irq(), these interrupts are allocated under devres
-management. On probe failure, this error path manually frees them. When the
-driver unbinds, devres will attempt to free the same IRQs again.
+The following is a unified drain_queue helper, that also attempts to
+address Sashiko's concerns. This applies on top of my runtime PM v9
+series [1], please see if it works for you:
 
-Can this cause a double-free on a disposed virtual IRQ mapping?
+Subject: [PATCH] iommu/arm-smmu-v3: Add a unified arm_smmu_drain_queue()  helper
 
-[ ... ]
->  		irq_domain_remove(pcie->mdb_domain);
->  		pcie->mdb_domain =3D NULL;
+Introduce a unified arm_smmu_drain_queue() helper to replace queue
+specific polling loops. The helper handles both snapshot-based cohort
+draining (for IOPF) and full queue draining (required for Runtime PM).
 
-[Severity: High]
-This is a pre-existing issue, but can this lead to a use-after-free of the
-irq_domain if a hardware interrupt arrives concurrently?
+The Runtime PM explicitly gates the CMDQ (via CMDQ_PROD_STOP_FLAG) prior
+to draining, this allows a single, snapshot-based target to natively
+handle all drain scenarios.
 
-The error path destroys and frees pcie->mdb_domain, but fails to disable
-the main event interrupt first. If an interrupt fires concurrently,
-amd_mdb_pcie_event() might dereference the freed domain pointer to dispatch
-child interrupts.
+Signed-off-by: Pranjal Shrivastava <praan@google.com>
+---
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 68 +++++++++++++++------
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  4 +-
+ 2 files changed, 52 insertions(+), 20 deletions(-)
 
-[ ... ]
-> @@ -639,12 +660,26 @@ static int amd_mdb_add_pcie_port(struct amd_mdb_pci=
-e *pcie,
->  	pcie->slcr =3D devm_platform_ioremap_resource_byname(pdev, "slcr");
->  	if (IS_ERR(pcie->slcr))
->  		return PTR_ERR(pcie->slcr);
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index 9106ffb75f7a..2deed6e3bf9b 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -1057,39 +1057,70 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+ 					   cmds->num, true);
+ }
+ 
++static bool queue_consumed(struct arm_smmu_ll_queue *q, u32 cons, u32 target)
++{
++	if (cons == target)
++		return true;
++	if (Q_WRP(q, cons) == Q_WRP(q, target))
++		return Q_IDX(q, cons) > Q_IDX(q, target);
++	return Q_IDX(q, cons) < Q_IDX(q, target);
++}
++
+ /*
+- * Currently, only used for CMDQ.
+- * TODO: Update to handle PRIQ & EVTQ when PRI support is added
++ * Drains a queue until the consumer reaches the provided 'prod' snapshot.
++ * For CMDQ, the consumer is the SMMU hardware (polled via MMIO).
++ * For EVTQ/PRIQ, the consumer is the CPU IRQ thread (polled via software llq).
+  */
+-int arm_smmu_queue_poll_until_empty(struct arm_smmu_device *smmu,
+-				    struct arm_smmu_queue *q)
++int arm_smmu_drain_queue(struct arm_smmu_device *smmu,
++			 struct arm_smmu_queue *q, u32 prod)
+ {
+ 	struct arm_smmu_queue_poll qp;
+-	struct arm_smmu_ll_queue *llq = &q->llq;
+-	int ret = 0;
++	/* Secondary CMDQs don't support WFE*/
++	bool is_cmdq = (q == &smmu->cmdq.q);
++	u32 cons;
+ 
+ 	queue_poll_init(smmu, &qp);
++	qp.wfe = is_cmdq;
++
++	do {
++		if (is_cmdq) {
++			cons = readl_relaxed(q->cons_reg);
++			WRITE_ONCE(q->llq.cons, cons);
++		} else {
++			cons = READ_ONCE(q->llq.cons);
++		}
++
++		if (queue_consumed(&q->llq, cons, prod))
++			return 0;
++
++		cond_resched();
++	} while (!queue_poll(&qp));
+ 
+ 	/*
+-	 * The events are only generated when CMDQ becomes non-full.
+-	 * Thus, wfe can't be used here, mark it false explicitly.
++	 * Check once more after timeout: cond_resched() could have delayed us
++	 * until after the timer expired while the consumer finished draining.
+ 	 */
+-	qp.wfe = false;
+-
+-	do {
+-		WRITE_ONCE(llq->cons, readl_relaxed(q->cons_reg));
+-		if (queue_empty(llq))
+-			break;
++	if (is_cmdq) {
++		cons = readl_relaxed(q->cons_reg);
++		WRITE_ONCE(q->llq.cons, cons);
++	} else {
++		cons = READ_ONCE(q->llq.cons);
++	}
+ 
+-		ret = queue_poll(&qp);
++	if (queue_consumed(&q->llq, cons, prod))
++		return 0;
+ 
+-	} while (!ret);
++	dev_warn_ratelimited(smmu->dev,
++			     "queue drain timed out at prod=0x%x cons=0x%x\n",
++			     prod, cons);
+ 
+-	return ret;
++	return -ETIMEDOUT;
+ }
+ 
+ static int arm_smmu_drain_queues(struct arm_smmu_device *smmu)
+ {
++	struct arm_smmu_cmdq *cmdq = &smmu->cmdq;
++	u32 target;
+ 	int ret;
+ 
+ 	/*
+@@ -1097,7 +1128,8 @@ static int arm_smmu_drain_queues(struct arm_smmu_device *smmu)
+ 	 * from contexts (like suspend) where the caller has already
+ 	 * ensured that new command submissions are fully closed.
+ 	 */
+-	ret = arm_smmu_queue_poll_until_empty(smmu, &smmu->cmdq.q);
++	target = atomic_read(&cmdq->q.llq.atomic.prod) & CMDQ_PROD_IDX_MASK;
++	ret = arm_smmu_drain_queue(smmu, &cmdq->q, target);
+ 
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+index 15b5d5fad627..eddf6f41b570 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+@@ -1176,8 +1176,8 @@ int arm_smmu_init_one_queue(struct arm_smmu_device *smmu,
+ int arm_smmu_cmdq_init(struct arm_smmu_device *smmu,
+ 		       struct arm_smmu_cmdq *cmdq);
+ 
+-int arm_smmu_queue_poll_until_empty(struct arm_smmu_device *smmu,
+-				    struct arm_smmu_queue *q);
++int arm_smmu_drain_queue(struct arm_smmu_device *smmu,
++			 struct arm_smmu_queue *q, u32 prod);
+ 
+ static inline bool arm_smmu_master_canwbs(struct arm_smmu_master *master)
+ {
+-- 
 
-[Severity: High]
-Will an exclusive ioremap of the shared slcr region cause the second CPM6
-host controller to fail probing?
+[1] https://lore.kernel.org/all/20260728210928.1050849-1-praan@google.com/
 
-The commit message notes the aggregation layer is shared between the two
-controllers. Requesting exclusive access to the memory region here means the
-first device claims it, and the second device might fail to probe with a
-resource conflict.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728202044.1785=
-986-1-sai.krishna.musham@amd.com?part=3D2
+Thanks,
+Praan
