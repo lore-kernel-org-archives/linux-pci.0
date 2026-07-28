@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943683C2774;
-	Tue, 28 Jul 2026 17:44:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BF603A83A8;
+	Tue, 28 Jul 2026 17:48:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785260650; cv=none; b=C2cBTV3m67xjT5+KUJwQsh3lH+kY8vpDpuO4yK8ZgjoO83VOiBxdy3VRhT1vDSb/MsfsDo0TyCZ9Z/7ctoDdEF9VQLEizXCUwZgQUPSy1l8qkgY5UM1RB41uxOyCZDyzGYd4x111g75L7Fu93t0BFkjwJtsxUkI2q4mVHo45LeY=
+	t=1785260886; cv=none; b=NVEcJTsuuebHvM1Oolbsw3WzdvyRBH/CKIDx0WA65wh61/eqgbX66+kZwtk8QbWHGRQZw5+6lYN6mrk96Mky1EPDWrLguCuiB/X0T6z+4JrS5Y7LMe4CVv9YV785Ac7hbIJ3Xg4OXrjhuBikrGO3G+Y2lzifxI/A7QBTBfTI5LI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785260650; c=relaxed/simple;
-	bh=/+UStUj6uDGhpn175Oqws/dbt4DHMwDsidUohRu95iQ=;
+	s=arc-20240116; t=1785260886; c=relaxed/simple;
+	bh=vXHDAYi7k31CMnmKp3WEERwzA06gBfdupQwVo6FfSzY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D9lTsJuBgirsiB9+2DAcliyu7VC2Pk9G7GPtlA+S1eDDaoPMRbYgT5KPXDwXHwanhy8DiK2jWbSmhh9ZDzG64AzREmfQHyYvm/f8shGTmrBunbHcJb23Injz0nkI66C8YNOUpj374l0gFCCoK86lTseLgFLzDV2iD9C/lnAGux0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J0gH9f3I; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Wy3b8ChGIsvbfPtHDpjaxZRQ7PThmgL8ofByw/2OViQLiPY2onXLlbOr6C43T0GXbmlIzaZ1RUqhsXDgs3SuXzrj0bHHYK4pGLli3wyNxQu8V4UQNAoTHThrQJ8tYP5189tyZC85G1LeJ+gtH3IhOOtPpJG3dXN7Z/gLsdpqUuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dFSbKS94; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J0gH9f3I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C5F71F00AC4;
-	Tue, 28 Jul 2026 17:44:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dFSbKS94"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 742BE1F000E9;
+	Tue, 28 Jul 2026 17:48:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785260649;
-	bh=RQIwIV2hCnCXDCD/lQyxUn66+N9xgUECkSxQV8nIhUs=;
+	s=k20260515; t=1785260883;
+	bh=eqDX9Gaq3hTUaUI+dQ87Y99Tn2R3M4OjMvJRayoSSV8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J0gH9f3IZtw+anAn1rIFt/5UksdlFq3nBZnYPSkqotguIASVuX91PZeJY5Ku9uPRX
-	 E6gMZAiVnHCLH2Il8K4Km456Yh/bj2lkzoMXCD3jTP2GKJknThvcoJYMlcY6xrYkzk
-	 7M/CSpsQHYTukFcFiLYuquAavuUEetfxi7BSJn0TcFaNpvn2YoTgT6OAiM6hIlX5Cb
-	 8dR4ZrDUGdy/6pwsnEdvRj0U/iewFSlRM3Dziwanjt8bf38fgESSIVaD1JVwcioyrE
-	 pLaB/cv4oVILaLp2rNvFjBm4Un1wMLIlD4MtxTqCbtzOcgWqPJxH6fDMFjQhRibTq/
-	 PiCPdWXlE0kKw==
+	b=dFSbKS94Sw5lyUSDKbiyh6iiN6onlPCeyC5Q7122qgsYdXVAZc1VHlC3pjeiMxjq/
+	 TahC6sqTSDxItUyPi3XxY7xhXe2Gjzb5fNGUck6YvRH6GKE6cc1Zd8W6wgS9S8fLkB
+	 9YvJmcgtUQAS07PcLyu0LSQZQtdFUm+fvEtmqOAaTODWoKyNFCiQYkkStJbmMtDLAE
+	 nitwYKWyk2mjyzHmKf7QIbeaRtp1JXSO15eomGk0vqc+5zKgX9W6xSsPxWDFI0gBWf
+	 ba76Mdn4aQsFFynp6JbLweUlIlUOWhQEH6HfAsTnnsA2nJRrZYAL0yH4BHxkNzMWqt
+	 5f5uJyCrtkpUg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/12] dmaengine: switchtec-dma: make
- switchtec_dma_chans_release() void
+Subject: Re: [PATCH v4 09/12] dmaengine: switchtec-dma: fix use-after-free
+ of swdma_dev in remove()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Logan Gunthorpe" <logang@deltatee.com>
-Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260728171523.112244-7-logang@deltatee.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260728171523.112244-10-logang@deltatee.com>
 References: <20260728171523.112244-1-logang@deltatee.com>
- <20260728171523.112244-7-logang@deltatee.com>
+ <20260728171523.112244-10-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 17:44:08 +0000
-Message-Id: <20260728174409.4C5F71F00AC4@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 17:48:03 +0000
+Message-Id: <20260728174803.742BE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,119 +48,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Leaking DMA descriptors and ring buffers when channel stop fails (=
-e.g., during device hot-unplug or module unload).
-
 Pre-existing issues:
-- [High] Hardware resources (IRQs and tasklets) are released before the DMA=
- device is unregistered, allowing clients to request or use unbacked channe=
-ls.
+- [High] DMA coherent buffers and descriptor structures are permanently lea=
+ked in `switchtec_dma_free_chan_resources()` if a channel is released after=
+ device hot-unplug.
+- [High] Missing NULL check for the result of `ioremap()` in `switchtec_dma=
+_create()`.
 --
 
---- Patch [6]: [PATCH v4 06/12] dmaengine: switchtec-dma: make switchtec_dm=
-a_chans_release() void ---
-commit 4ae99d5104edb85994c22547e64122fc62df38cb
+--- Patch [9]: [PATCH v4 09/12] dmaengine: switchtec-dma: fix use-after-fre=
+e of swdma_dev in remove() ---
+commit 07d288b1e2418ad94452e6749769e4b45a0f0978
 Author: Logan Gunthorpe <logang@deltatee.com>
+Subject: dmaengine: switchtec-dma: fix use-after-free of swdma_dev in remov=
+e()
 
-dmaengine: switchtec-dma: make switchtec_dma_chans_release() void
+This commit addresses a use-after-free by caching the bar address before
+unregistering the device. During dma_async_device_unregister(), the last
+reference to dma_dev can be dropped, synchronously freeing swdma_dev before
+the original code used it for iounmap().
 
-switchtec_dma_chans_release() always returned 0, and no caller
-checked it.
+Link: https://lore.kernel.org/dmaengine/20260717223431.625EE1F000E9@smtp.ke=
+rnel.org
 
 > diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
-> index 48da269198f3f..63e60de9f86dc 100644
+> index ecf3a44d4dcc4..babb2bcb62084 100644
 > --- a/drivers/dma/switchtec_dma.c
 > +++ b/drivers/dma/switchtec_dma.c
-> @@ -1177,15 +1177,13 @@ static int switchtec_dma_chan_free(struct pci_dev=
- *pdev,
->  	return 0;
->  }
-> =20
-> -static int switchtec_dma_chans_release(struct pci_dev *pdev,
-> -				       struct switchtec_dma_dev *swdma_dev)
-> +static void switchtec_dma_chans_release(struct pci_dev *pdev,
-> +					struct switchtec_dma_dev *swdma_dev)
+> @@ -1393,6 +1393,7 @@ static int switchtec_dma_probe(struct pci_dev *pdev,
+>  static void switchtec_dma_remove(struct pci_dev *pdev)
 >  {
->  	int i;
+>  	struct switchtec_dma_dev *swdma_dev =3D pci_get_drvdata(pdev);
+> +	void __iomem *bar =3D swdma_dev->bar;
 > =20
->  	for (i =3D 0; i < swdma_dev->chan_cnt; i++)
->  		switchtec_dma_chan_free(pdev, swdma_dev->swdma_chans[i]);
-> -
-> -	return 0;
+>  	switchtec_dma_chans_release(pdev, swdma_dev);
+> =20
+> @@ -1405,7 +1406,7 @@ static void switchtec_dma_remove(struct pci_dev *pd=
+ev)
+> =20
+>  	dma_async_device_unregister(&swdma_dev->dma_dev);
+> =20
+> -	iounmap(swdma_dev->bar);
+> +	iounmap(bar);
+>  	pci_release_mem_regions(pdev);
+>  	pci_disable_device(pdev);
 >  }
 
 [Severity: High]
-This is a pre-existing issue, but hardware resources (IRQs and tasklets) are
-released before the DMA device is unregistered, allowing clients to request=
- or
-use unbacked channels.
+This is a pre-existing issue, but I noticed a missing NULL check for the
+result of ioremap() in switchtec_dma_create():
 
-In switchtec_dma_remove(), switchtec_dma_chans_release() is called first, w=
-hich
-frees all per-channel IRQs and kills their descriptor tasklets:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_remove() {
-	...
-	switchtec_dma_chans_release(pdev, swdma_dev);
-	rcu_assign_pointer(swdma_dev->pdev, NULL);
-	synchronize_rcu();
-	pci_free_irq(pdev, swdma_dev->chan_status_irq, swdma_dev);
-	pci_free_irq_vectors(pdev);
-	dma_async_device_unregister(&swdma_dev->dma_dev);
+drivers/dma/switchtec_dma.c:switchtec_dma_create() {
+    swdma_dev->bar =3D ioremap(pci_resource_start(pdev, 0),
+                             pci_resource_len(pdev, 0));
+    ...
+    irq =3D readw(swdma_dev->bar + SWITCHTEC_REG_CHAN_STS_VEC);
 }
 
-Could this cause active DMA transfers to hang forever without completion, s=
-ince
-the DMA device is not unregistered from the core until much later?
-
-Because the device is still in the DMA engine channel table, could a client
-theoretically request a new channel in this window?
+If ioremap() fails and returns NULL, could this result in a NULL pointer
+dereference when we try to read from it?
 
 [Severity: High]
-Does this code leak DMA descriptors and ring buffers when channel stop fail=
-s?
+This is a pre-existing issue, but does this code permanently leak DMA
+coherent buffers and descriptor structures if a channel is released after
+device hot-unplug?
 
-In switchtec_dma_free_chan_resources(), if switchtec_dma_chan_stop() return=
-s a
-non-zero error (like -ENODEV during hot-unplug), the cleanup of descriptor
-memory is completely skipped:
-
-drivers/dma/switchtec_dma.c:switchtec_dma_free_chan_resources() {
-	...
-	rc =3D switchtec_dma_chan_stop(swdma_chan);
-	switchtec_dma_abort_desc(swdma_chan, 0);
-	if (!rc)
-		switchtec_dma_free_desc(swdma_chan);
+drivers/dma/switchtec_dma.c:halt_channel() {
+    pdev =3D rcu_dereference(swdma_chan->swdma_dev->pdev);
+    if (!pdev) {
+        ret =3D -ENODEV;
+        goto unlock_and_exit;
+    }
 }
 
-During switchtec_dma_remove(), swdma_dev->pdev is set to NULL before
-dma_async_device_unregister() is called. When dma_async_device_unregister()
-subsequently cleans up active channels, it invokes
-switchtec_dma_free_chan_resources().
+When pdev is NULL, halt_channel() returns -ENODEV, which propagates to
+switchtec_dma_chan_stop().=20
 
-Because pdev is NULL, switchtec_dma_chan_stop() returns -ENODEV. The code c=
-hecks
-if (!rc) and skips switchtec_dma_free_desc(), leaking the resources.
+Then in switchtec_dma_free_chan_resources():
 
-A similar issue appears to exist in the error path of
-switchtec_dma_alloc_chan_resources() if the channel stop returns an error:
+    rc =3D switchtec_dma_chan_stop(swdma_chan);
+    switchtec_dma_abort_desc(swdma_chan, 0);
+    if (!rc)
+        switchtec_dma_free_desc(swdma_chan);
 
-drivers/dma/switchtec_dma.c:switchtec_dma_alloc_chan_resources() {
-	...
-err_disable_channel:
-	if (switchtec_dma_chan_stop(swdma_chan)) {
-		disable_channel(swdma_chan);
-		return rc;
-	}
-	disable_channel(swdma_chan);
-err_free_desc:
-	switchtec_dma_free_desc(swdma_chan);
-}
-
-Can this leak memory for every active channel on standard device teardown or
-hot-unplug?
+Since switchtec_dma_chan_stop() returned -ENODEV (which is non-zero), the
+call to switchtec_dma_free_desc() is skipped. While skipping cleanup might
+make sense if hardware times out, is this intentional for hot-unplug cases
+where the hardware is physically absent?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728171523.1122=
-44-1-logang@deltatee.com?part=3D6
+44-1-logang@deltatee.com?part=3D9
