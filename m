@@ -1,80 +1,40 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1113FB055
-	for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 21:16:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FAAA4756AE;
+	Tue, 28 Jul 2026 21:56:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785273420; cv=none; b=M8PMMGNqqRjQ7EkD3zALFdCVSI0fhU5aHDHtLJ7KJM3U6FaqDkWT1xnO6K2XR+jLh5P3VnmmybDVINWT9x7fWRA6tyCRplbVG0SCTx7a6bE5W+nymK3byxGOgttzMa+URuWunbuQsu3bcAZld36K1BN/CWyXblXX2PNciN54dzE=
+	t=1785275820; cv=none; b=IiwN+rfkZ5NMR+mZAazodL6iJrWiKragVHMO7VegfHB5oTXDqjHUywUtbHuTP+xbx4j8d45Hlss5MV/8m6voJZeS00oq9MVEScYaIdWOTvROkSR25AaXHqVQV9KPre9n7lni8bFMBygUBLcM6ElsI7WgffVwnAEAE17NyX+1LiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785273420; c=relaxed/simple;
-	bh=rYYKfO7fr8tCeIBgfW8VCHWFR3LOeVGgcB0gu3vWhJs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NrYuEYZB9mg/ODy/oi06g07uA+gqCQZnpYfha9ncdN8Lw0gY7qTwu0pV5v6BVa2Eu8XRP86afA2khrnvcvLtnNIeMrdtxX3pJsvArROwBhYbE0bDtDhWmqvuR4XxAa9orfPdkph25+uWoLgjXhRV4otdmmIdVZ5zXoFku9aq/LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bqxaPory; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1785275820; c=relaxed/simple;
+	bh=cdy0g/nKdxty366qImqvpcAmcZhy+zBh0Z2t6QEgwRg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ixr1N8VQNKTvUbVUBum/JjskjAbIkjmc9k39xYGsKx+SXLd1+Syjk5ipSroXyi2ovG1smR8eybtmF05YF/haueUupoVnuEzyEF00jVdD3koS9w8NqLPsGcNhQD/oEdS0bBPYJ2jk1rsppt0ZyT8ed8KC9VfHw70A2bNDIxsvUyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qt2HWEaC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bqxaPory"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2ccdf36f63dso43295ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2026 14:16:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785273418; x=1785878218; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=QYFlnlGtzGaTmpuO49iDLUfMpOme9Z4x8j8IG4rbPjY=;
-        b=bqxaPorytheSUf/PkJlrbI8DGghgMaM8JQsHAF7c0WGI5D9BJRcj2OMZmZt8g3mbFu
-         k+Ps8WKfUfBHCT7FbP2UVq1e+JvqeoFjKiTzYXJ6mP8KJoY9F/tzQ4s+gvRgNOdj30Jk
-         ELf/zlJwhNJCdIYfqohLhVdPMzpkSllE82vjgzllfvpfgFL5xJ4oLvn1flO+59u7y3M3
-         5R7XVu5rkOJFlbcg9/IS1uz64UqN/PUEZe0fVWz9sTIqZM59BKN49701z4Ka6Zc8jIdS
-         duIbBWU/iqaOfr31VCdZ/jzqEZTtRPMd0hBmKB5PTFHGUFVD0pZe4vx/eCnJrnI9A6cT
-         On2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785273418; x=1785878218;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QYFlnlGtzGaTmpuO49iDLUfMpOme9Z4x8j8IG4rbPjY=;
-        b=cBv8hKbhF+NqHnMa6w2DYE/WX9vIkebf9NYammvJPwLAyQY3WKC2N3W9ePuJlgAEHU
-         EvRJ6/6/xTUs08e+/FMitqXX7VxW537L7KjUBSMIwLwg2WyE/IGkGcRTXXNQEq2aKaC8
-         BHUu/s5LS4EkdnMuWCq8cIyBq+NwiXY6lAaBvbXfoSsZak+x/05lhoC0sZy+EEkmj7zH
-         VZXvqt7VaMVGivdkbTt/qddolHDKBSu/9gFmkqz08/JDTIVQSnfaONS5Z/Q2YkU9EFxh
-         Ze436nplFwDnXNcQ0T9XHsQVcWHYXXELWxLAyjlrqbnC/sVmaDS5agtn4FFPxKDvmi1e
-         NUJQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqCo9lRU94xX/SUIYN2ft/9R1wgapSYDP1bVA879dfGRKv+TSbJew9SXPucljfgtynAjcT6ZDZFQCE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNxgZNWFwSa+3OITKRxK8PW7BR43KQhAoZIy9/gn8gLS89gOct
-	UZ2qxFpvQwgD0DniwJsC8MfvX2wPr5Pp9gzg/8JvzP57Itkq+dQQk5HlHlgj1tHYiQ==
-X-Gm-Gg: AR+sD10UPfSTyd0hY5KmnhOwqyZJGS92S/DHPHkKMPTPSo6eSpzaZaRdiut10PWtsHg
-	5v/HwHrVMfAgzGq0zu7fnktxbAfZSC9X1BTCW5wtQVn0+QoPRfubvLtU0W1YwUv3hu21I5Yl4Fq
-	4zUcB7wS1NRTNagG3Ygmxd7LdmN0AOwGNsfS99RVPdmPkFibM/Od1GIU78veKQhRbaGUbYAwQ4q
-	B2Ztey/1Dq4bomxmeiS+ulwBc+yEUKvj+WHnvQTsbhZQ9YPEUKt/H/RzyFpUVQNq6h30Jfj7dT+
-	v/rEF59prEj9dIqn0YAp92zjcf9k8xmzvaGIdwJF9UanoIr4lCKNVmBIbo1xo+RnuCIF7OHmu/Z
-	L2VklN/a6bHirqHEjpBRFL34NJm5uOx6EY6mHf/+mV3sqO/etnIhra2jvNBr4s+Bj64FEI+LeFs
-	ze7u0vvsRRBReGvpB273IToz/xVJICIKxEjb6/bdohss4V8ISlpaVyV3dCmSGqF9UrTYDZXJV4M
-	X0clxsEBA5Zi8gB1v/fAFk=
-X-Received: by 2002:a17:903:1a03:b0:2c7:b1e7:501e with SMTP id d9443c01a7336-2cfde09f0damr13311135ad.3.1785273417527;
-        Tue, 28 Jul 2026 14:16:57 -0700 (PDT)
-Received: from google.com (21.168.124.34.bc.googleusercontent.com. [34.124.168.21])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022c2d5a4sm1779895ad.71.2026.07.28.14.16.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 14:16:56 -0700 (PDT)
-Date: Tue, 28 Jul 2026 21:16:49 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, robin.murphy@arm.com, jgg@nvidia.com, joro@8bytes.org,
-	bhelgaas@google.com, kevin.tian@intel.com, kees@kernel.org,
-	smostafa@google.com, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	skaestle@nvidia.com, mmarrid@nvidia.com, skolothumtho@nvidia.com,
-	bbiber@nvidia.com
-Subject: Re: [PATCH v2 03/11] iommu/arm-smmu-v3: Add
- arm_smmu_drain_queue_for_iopf() helper
-Message-ID: <amkcQRVylEe_t-yP@google.com>
-References: <cover.1779944354.git.nicolinc@nvidia.com>
- <a62db13ab63916e9a62cddeec41a74a98cdf6a8f.1779944354.git.nicolinc@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qt2HWEaC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DF661F000E9;
+	Tue, 28 Jul 2026 21:56:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785275808;
+	bh=D/kVLOj+hFIJeBH6n2ip5Hjahw38qkedPguWVx0z17o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=Qt2HWEaCu0Jw/iwYyCkRcmuRQvZHh94V9HvLCQ+lT53xGJypy+bQGSot985RZ5JjD
+	 8zFG3nGVHf5je3qu4zjqtgWkdx7PRpLCNY+Wsk435TpmfU/HCY1yY1Aw30Nft7yg/C
+	 Mu4pJngQbpsVXzRp5HOpXtmReUlKOMeXl1Cb4KO4IsSF0NbJj7jz3ftH+p1JrCoJXP
+	 JAy7d8VSbckvXqRqBFQclEMZc0YJWJ/WeH2SI+Og9m0fw9MByGIFNtMsyntkMNLSpt
+	 WdXao1biO4+cNfFx6HVVqT5JwwhJotIJ3Wo5Wb8HyJvO3Mhizpxvwb+If9yxLBMkI9
+	 TtCQuhWZVZo1A==
+Date: Tue, 28 Jul 2026 16:56:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: bhelgaas@google.com, kw@linux.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] PCI/proc: check user access return values in
+ proc_bus_pci_{read,write}()
+Message-ID: <20260728215647.GA1402909@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,210 +43,217 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a62db13ab63916e9a62cddeec41a74a98cdf6a8f.1779944354.git.nicolinc@nvidia.com>
+In-Reply-To: <20260504022231.15501-1-kartikey406@gmail.com>
 
-On Thu, May 28, 2026 at 12:59:31AM -0700, Nicolin Chen wrote:
-> A poll-until-empty form does not converge on the shared EVTQ or PRIQ since
-> other masters keep advancing PROD with unrelated traffic. A fixed snapshot
-> bounds the wait even under sustained unrelated load, since the target does
-> not move with subsequent enqueues.
->
-
-[...]
-
+On Mon, May 04, 2026 at 07:52:31AM +0530, Deepanshu Kartikey wrote:
+> proc_bus_pci_write() ignores the return value of __get_user(). On a
+> faulting user pointer the extable fixup zeros the destination, and the
+> function writes those zeros to PCI configuration space.
 > 
-> This is a prerequisite to apply bug fix calling iopf_queue_flush_dev().
+> syzbot triggers this with writev()-ing a NULL iov_base to
+> /proc/bus/pci/00/03.0 (the virtio-blk controller in the syzkaller VM):
+> zero is written to the Command register, clearing Bus Master Enable,
+> and the disk stops responding. In-flight journal writes never complete
+> and jbd2 hangs in wait_on_buffer() indefinitely:
 > 
-> Fixes: cfea71aea921 ("iommu/arm-smmu-v3: Put iopf enablement in the domain attach path")
-> Cc: stable@vger.kernel.org # v6.16
-> Assisted-by: Claude:claude-opus-4-7
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+>   INFO: task jbd2/sda1-8 blocked in I/O wait for more than 143 seconds.
+>    __wait_on_buffer fs/buffer.c:123
+>    jbd2_journal_commit_transaction+0x388a/0x6870 fs/jbd2/commit.c:837
+>    kjournald2 fs/jbd2/journal.c:201
+> 
+> proc_bus_pci_read() has the symmetric problem with __put_user(): a
+> faulting user pointer silently drops config-space data and returns
+> success.
+> 
+> Switch both functions to get_user()/put_user(), which combine the
+> access_ok() check with the load/store and return -EFAULT on failure.
+> The up-front access_ok() can be removed accordingly. On error, jump to
+> a common label that releases the runtime-PM reference and returns
+> -EFAULT.
+> 
+> Reported-by: syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=c7604c9fdd7580cca4e0
+> Tested-by: syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+
+Thanks for this patch!
+
+I asked gemini to reduce the syzbot repro details and focus on the
+issues of writing bogus data to config space, returning success with
+invalid read data, and returning -EFAULT.  It suggested the log below;
+what do you think?
+
+  PCI/proc: Return -EFAULT on get_user() and put_user() failures
+
+  proc_bus_pci_write() ignores the return value of __get_user(). On a
+  faulting user-space pointer, the exception table fixup zeros the
+  destination, and proc_bus_pci_write() writes those invalid zeros
+  into PCI configuration space.
+
+  proc_bus_pci_read() ignores the return value of __put_user(). On a
+  faulting user-space pointer, it fails to copy the PCI configuration
+  space data to user space but still returns success.
+
+  Fix both issues by:
+
+    - Switching to get_user() and put_user() and checking return values
+
+    - Returning -EFAULT, not -EINVAL, when get_user() or put_user() fails
+
+    - Removing the redundant access_ok() checks, since get_user() and
+      put_user() validate access internally
+
 > ---
->  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 27 +++++++++++++++++++++
->  1 file changed, 27 insertions(+)
+> Changes in v2:
+>  - Use get_user()/put_user() and drop access_ok() (Krzysztof)
+>  - Rename label to err: per kernel convention (Krzysztof)
+>  - Simplify error path to release runtime-PM and return -EFAULT (Krzysztof)
+>  - Apply the same fix to proc_bus_pci_read() (Krzysztof)
+> ---
+>  drivers/pci/proc.c | 44 ++++++++++++++++++++++++++++----------------
+>  1 file changed, 28 insertions(+), 16 deletions(-)
 > 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> index cf41b3cf5985f..4794a15f351c4 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -894,6 +894,33 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
->  					   cmds->num, true);
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index ce36e35681e8..8e624d829840 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -53,15 +53,13 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  		nbytes = size - pos;
+>  	cnt = nbytes;
+>  
+> -	if (!access_ok(buf, cnt))
+> -		return -EINVAL;
+> -
+>  	pci_config_pm_runtime_get(dev);
+>  
+>  	if ((pos & 1) && cnt) {
+>  		unsigned char val;
+>  		pci_user_read_config_byte(dev, pos, &val);
+> -		__put_user(val, buf);
+> +		if (put_user(val, buf))
+> +			goto err;
+>  		buf++;
+>  		pos++;
+>  		cnt--;
+> @@ -70,7 +68,8 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  	if ((pos & 3) && cnt > 2) {
+>  		unsigned short val;
+>  		pci_user_read_config_word(dev, pos, &val);
+> -		__put_user(cpu_to_le16(val), (__le16 __user *) buf);
+> +		if (put_user(cpu_to_le16(val), (__le16 __user *) buf))
+> +			goto err;
+>  		buf += 2;
+>  		pos += 2;
+>  		cnt -= 2;
+> @@ -79,7 +78,8 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  	while (cnt >= 4) {
+>  		unsigned int val;
+>  		pci_user_read_config_dword(dev, pos, &val);
+> -		__put_user(cpu_to_le32(val), (__le32 __user *) buf);
+> +		if (put_user(cpu_to_le32(val), (__le32 __user *) buf))
+> +			goto err;
+>  		buf += 4;
+>  		pos += 4;
+>  		cnt -= 4;
+> @@ -89,7 +89,8 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  	if (cnt >= 2) {
+>  		unsigned short val;
+>  		pci_user_read_config_word(dev, pos, &val);
+> -		__put_user(cpu_to_le16(val), (__le16 __user *) buf);
+> +		if (put_user(cpu_to_le16(val), (__le16 __user *) buf))
+> +			goto err;
+>  		buf += 2;
+>  		pos += 2;
+>  		cnt -= 2;
+> @@ -98,7 +99,8 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  	if (cnt) {
+>  		unsigned char val;
+>  		pci_user_read_config_byte(dev, pos, &val);
+> -		__put_user(val, buf);
+> +		if (put_user(val, buf))
+> +			goto err;
+>  		pos++;
+>  	}
+>  
+> @@ -106,6 +108,10 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+>  
+>  	*ppos = pos;
+>  	return nbytes;
+> +
+> +err:
+> +	pci_config_pm_runtime_put(dev);
+> +	return -EFAULT;
 >  }
 >  
-> +/* Drain an SMMU EVTQ or PRIQ to a PROD snapshot taken on entry */
-> +static int arm_smmu_drain_queue_for_iopf(struct arm_smmu_device *smmu,
-> +					 struct arm_smmu_queue *q)
-> +{
-> +	struct arm_smmu_queue_poll qp;
-> +	u32 prod, cons;
-> +	int ret = 0;
+>  static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+> @@ -129,14 +135,12 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  		nbytes = size - pos;
+>  	cnt = nbytes;
+>  
+> -	if (!access_ok(buf, cnt))
+> -		return -EINVAL;
+> -
+>  	pci_config_pm_runtime_get(dev);
+>  
+>  	if ((pos & 1) && cnt) {
+>  		unsigned char val;
+> -		__get_user(val, buf);
+> +		if (get_user(val, buf))
+> +			goto err;
+>  		pci_user_write_config_byte(dev, pos, val);
+>  		buf++;
+>  		pos++;
+> @@ -145,7 +149,8 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  
+>  	if ((pos & 3) && cnt > 2) {
+>  		__le16 val;
+> -		__get_user(val, (__le16 __user *) buf);
+> +		if (get_user(val, (__le16 __user *) buf))
+> +			goto err;
+>  		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
+>  		buf += 2;
+>  		pos += 2;
+> @@ -154,7 +159,8 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  
+>  	while (cnt >= 4) {
+>  		__le32 val;
+> -		__get_user(val, (__le32 __user *) buf);
+> +		if (get_user(val, (__le32 __user *) buf))
+> +			goto err;
+>  		pci_user_write_config_dword(dev, pos, le32_to_cpu(val));
+>  		buf += 4;
+>  		pos += 4;
+> @@ -163,7 +169,8 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  
+>  	if (cnt >= 2) {
+>  		__le16 val;
+> -		__get_user(val, (__le16 __user *) buf);
+> +		if (get_user(val, (__le16 __user *) buf))
+> +			goto err;
+>  		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
+>  		buf += 2;
+>  		pos += 2;
+> @@ -172,7 +179,8 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  
+>  	if (cnt) {
+>  		unsigned char val;
+> -		__get_user(val, buf);
+> +		if (get_user(val, buf))
+> +			goto err;
+>  		pci_user_write_config_byte(dev, pos, val);
+>  		pos++;
+>  	}
+> @@ -182,6 +190,10 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  	*ppos = pos;
+>  	i_size_write(ino, dev->cfg_size);
+>  	return nbytes;
 > +
-> +	/* Snapshot PROD; entries [old_cons, prod) are the cohort to drain */
-> +	prod = readl_relaxed(q->prod_reg);
-> +	queue_poll_init(smmu, &qp);
-> +	qp.wfe = false; /* No SEV on EVTQ/PRIQ PROD advance */
-> +	/* Read MMIO each iteration; llq->cons is the threaded handler's */
-> +	do {
-> +		cons = readl_relaxed(q->cons_reg);
-> +		if (__queue_empty(&q->llq, cons, prod) ||
-> +		    __queue_consumed(&q->llq, cons, prod))
-> +			return 0;
-> +		cond_resched();
-> +	} while (!(ret = queue_poll(&qp)));
-> +
-> +	dev_warn_ratelimited(smmu->dev,
-> +			     "queue drain timed out at prod=0x%x cons=0x%x\n",
-> +			     prod, cons);
-> +	return ret;
-> +}
-> +
->  static void arm_smmu_page_response(struct device *dev, struct iopf_fault *unused,
->  				   struct iommu_page_response *resp)
->  {
-
-Hi Nicolin,
-
-The following is a unified drain_queue helper, that also attempts to
-address Sashiko's concerns. This applies on top of my runtime PM v9
-series [1], please see if it works for you:
-
-Subject: [PATCH] iommu/arm-smmu-v3: Add a unified arm_smmu_drain_queue()  helper
-
-Introduce a unified arm_smmu_drain_queue() helper to replace queue
-specific polling loops. The helper handles both snapshot-based cohort
-draining (for IOPF) and full queue draining (required for Runtime PM).
-
-The Runtime PM explicitly gates the CMDQ (via CMDQ_PROD_STOP_FLAG) prior
-to draining, this allows a single, snapshot-based target to natively
-handle all drain scenarios.
-
-Signed-off-by: Pranjal Shrivastava <praan@google.com>
----
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 68 +++++++++++++++------
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  4 +-
- 2 files changed, 52 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-index 9106ffb75f7a..2deed6e3bf9b 100644
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -1057,39 +1057,70 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
- 					   cmds->num, true);
- }
- 
-+static bool queue_consumed(struct arm_smmu_ll_queue *q, u32 cons, u32 target)
-+{
-+	if (cons == target)
-+		return true;
-+	if (Q_WRP(q, cons) == Q_WRP(q, target))
-+		return Q_IDX(q, cons) > Q_IDX(q, target);
-+	return Q_IDX(q, cons) < Q_IDX(q, target);
-+}
-+
- /*
-- * Currently, only used for CMDQ.
-- * TODO: Update to handle PRIQ & EVTQ when PRI support is added
-+ * Drains a queue until the consumer reaches the provided 'prod' snapshot.
-+ * For CMDQ, the consumer is the SMMU hardware (polled via MMIO).
-+ * For EVTQ/PRIQ, the consumer is the CPU IRQ thread (polled via software llq).
-  */
--int arm_smmu_queue_poll_until_empty(struct arm_smmu_device *smmu,
--				    struct arm_smmu_queue *q)
-+int arm_smmu_drain_queue(struct arm_smmu_device *smmu,
-+			 struct arm_smmu_queue *q, u32 prod)
- {
- 	struct arm_smmu_queue_poll qp;
--	struct arm_smmu_ll_queue *llq = &q->llq;
--	int ret = 0;
-+	/* Secondary CMDQs don't support WFE*/
-+	bool is_cmdq = (q == &smmu->cmdq.q);
-+	u32 cons;
- 
- 	queue_poll_init(smmu, &qp);
-+	qp.wfe = is_cmdq;
-+
-+	do {
-+		if (is_cmdq) {
-+			cons = readl_relaxed(q->cons_reg);
-+			WRITE_ONCE(q->llq.cons, cons);
-+		} else {
-+			cons = READ_ONCE(q->llq.cons);
-+		}
-+
-+		if (queue_consumed(&q->llq, cons, prod))
-+			return 0;
-+
-+		cond_resched();
-+	} while (!queue_poll(&qp));
- 
- 	/*
--	 * The events are only generated when CMDQ becomes non-full.
--	 * Thus, wfe can't be used here, mark it false explicitly.
-+	 * Check once more after timeout: cond_resched() could have delayed us
-+	 * until after the timer expired while the consumer finished draining.
- 	 */
--	qp.wfe = false;
--
--	do {
--		WRITE_ONCE(llq->cons, readl_relaxed(q->cons_reg));
--		if (queue_empty(llq))
--			break;
-+	if (is_cmdq) {
-+		cons = readl_relaxed(q->cons_reg);
-+		WRITE_ONCE(q->llq.cons, cons);
-+	} else {
-+		cons = READ_ONCE(q->llq.cons);
-+	}
- 
--		ret = queue_poll(&qp);
-+	if (queue_consumed(&q->llq, cons, prod))
-+		return 0;
- 
--	} while (!ret);
-+	dev_warn_ratelimited(smmu->dev,
-+			     "queue drain timed out at prod=0x%x cons=0x%x\n",
-+			     prod, cons);
- 
--	return ret;
-+	return -ETIMEDOUT;
- }
- 
- static int arm_smmu_drain_queues(struct arm_smmu_device *smmu)
- {
-+	struct arm_smmu_cmdq *cmdq = &smmu->cmdq;
-+	u32 target;
- 	int ret;
- 
- 	/*
-@@ -1097,7 +1128,8 @@ static int arm_smmu_drain_queues(struct arm_smmu_device *smmu)
- 	 * from contexts (like suspend) where the caller has already
- 	 * ensured that new command submissions are fully closed.
- 	 */
--	ret = arm_smmu_queue_poll_until_empty(smmu, &smmu->cmdq.q);
-+	target = atomic_read(&cmdq->q.llq.atomic.prod) & CMDQ_PROD_IDX_MASK;
-+	ret = arm_smmu_drain_queue(smmu, &cmdq->q, target);
- 
- 	if (ret)
- 		goto out;
-diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-index 15b5d5fad627..eddf6f41b570 100644
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-@@ -1176,8 +1176,8 @@ int arm_smmu_init_one_queue(struct arm_smmu_device *smmu,
- int arm_smmu_cmdq_init(struct arm_smmu_device *smmu,
- 		       struct arm_smmu_cmdq *cmdq);
- 
--int arm_smmu_queue_poll_until_empty(struct arm_smmu_device *smmu,
--				    struct arm_smmu_queue *q);
-+int arm_smmu_drain_queue(struct arm_smmu_device *smmu,
-+			 struct arm_smmu_queue *q, u32 prod);
- 
- static inline bool arm_smmu_master_canwbs(struct arm_smmu_master *master)
- {
--- 
-
-[1] https://lore.kernel.org/all/20260728210928.1050849-1-praan@google.com/
-
-
-Thanks,
-Praan
+> +err:
+> +	pci_config_pm_runtime_put(dev);
+> +	return -EFAULT;
+>  }
+>  
+>  #ifdef HAVE_PCI_MMAP
+> -- 
+> 2.43.0
+> 
