@@ -1,156 +1,90 @@
-Received: from microway.com (mail.microway.com [50.217.201.37])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C2433E7633;
-	Wed, 29 Jul 2026 14:51:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=50.217.201.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3034B3B05AA;
+	Wed, 29 Jul 2026 14:59:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785336702; cv=none; b=KTevkOAg9Sl4b33xKAkQL9GaFH/mSlZN7IoDYHpm4Ba2ZB0XwPvPXAsmoHoQYYBttzqXRulnnoBHF36KVRP7UG9+KCnmHUvw3Qyi/UBHLe4lIZMIp03D6fh5GVOt9YwpA1fkSCA6H8+ldtCPcuGTQQ0GGgxmZvN17mwi8A44zAY=
+	t=1785337167; cv=none; b=bTSYOb1FbAbO62kRZbisaI2V4KTCwaN4HfAOjYTP/+0qqB8WpIJ3/XRLmyARQ1N/whpCLcwT8sw0ncv7XLiZQqfG4ogNp85rXhReQi87NZPa7lKcoFcjWWjevug9QYerEMgT9JQkcryhDXFtfpEpxhXO4SOAJbyAbheIsDb0N5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785336702; c=relaxed/simple;
-	bh=6ctvuaFhbv1h55zGf/zLHbDo+eru6frP4lQsqclWRSI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dhBHvWhLnHUPMK7PN4RVs9WeMqJDFPP+Ud1hE1S+yIyY5FqxX1LKyfgHUbo8OUqMPq41pHLddlHQob9P0vF3Q4wRRfYUxuPLDirFOegTp9+kb6HlW44XOY+4lKKHw6E0hLwe/VB+7qKkwrGh+nSCNFySKxhGKt0IInjdc1aaalo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=microway.com; spf=pass smtp.mailfrom=microway.com; dkim=pass (2048-bit key) header.d=microway.com header.i=@microway.com header.b=JHUlXW3G; arc=none smtp.client-ip=50.217.201.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=microway.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microway.com
+	s=arc-20240116; t=1785337167; c=relaxed/simple;
+	bh=bj/UwuoUnJZ3tn86q+F0sxhjTWplfET/bLzCnsxJssA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=FrM9OS7GDrxNwRt/i4NTCFq1Oa0Wx6aYZ9EHZ5FOj+gZ//5VezxB3XvgwuZWAwOlNGx0CQx83k4NPa4fI8rekEojBvQLkrYZgri1A84qhWsqCIqhLWp3MdWMbyIhsHQn4AsOiS7xi5fsQpO/11ncYvPwS6oUWRzhQBdCuUrpHuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxOWZQh1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microway.com header.i=@microway.com header.b="JHUlXW3G"
-Received: from ubuntu24.microway.com (dhcp216.microway.com [10.100.100.216])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by microway.com (Postfix) with ESMTPSA id 77FAA14474;
-	Wed, 29 Jul 2026 10:45:53 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 microway.com 77FAA14474
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microway.com;
-	s=byedon; t=1785336353;
-	bh=KAoc8cy6QTkxpO1Td9YSLHwIlh/9evEz5ZhsvDf+aZI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=JHUlXW3GLsTA3/636eU3dTPnyfVCtZ/EXKMss4q3fYXeD6RhpUQrp8SyLID34F+LN
-	 KFKQ5NNDJi7OzoEOZ5wP68WZ/tJOKb644PABgOICOImVSW/7ryNpqUkbiWPFo2Njtj
-	 W+0CEWf2hrFzLBcCliFtET9ziht0kcvxT39YE5xEgDzmzN3/1UEKH0D/un6lX7bNal
-	 KIbBNl+fkP0CYToQyqW60u1nSIPFPdBkiWkN6hzhlCE/nTw6EUC7iapEILFDnU7Lgz
-	 ELIk3NWFj3z1k12zgrzM8QbUEiDHY1hBShGKYCnoKowUShVb6ooG9FXNuTtP+IAvZF
-	 i6fRlN8PjYlmQ==
-From: Rick Warner <rick@microway.com>
-To: bhelgaas@google.com
-Cc: ilpo.jarvinen@linux.intel.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rhoughton@microway.com,
-	ssingh@microway.com,
-	Rick Warner <rick@microway.com>
-Subject: [PATCH] PCI: Fix Intel Xeon 6 x2 quirk collateral damage on adjacent x4 endpoints
-Date: Wed, 29 Jul 2026 10:45:08 -0400
-Message-ID: <20260729144508.12337-1-rick@microway.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxOWZQh1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 943F81F00A3A;
+	Wed, 29 Jul 2026 14:59:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785337165;
+	bh=G+tZjvFhxq6UIzAaHPAhGRKGSA857DTEum5PlaOx5dI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AxOWZQh11oNMAbynPPs/tjCueqW1bu5Zs+vxFD5AEesVuVH545CiLeeGY0Y59uFLJ
+	 2EAfhSMwzvKjqES26vRp10al5H79sx2jvm5rcR86javGIQrtjSb6Bxzg2wssKD02LK
+	 r10HIYsbSW6QP4lz6NnOEso8/RUpnLigWela7k9gSKHdtt5KDbMDNOiuuEPhgjQrmG
+	 dEs3zXO1ai9Mz76pDky9XSSrsbUc44l2I5MsMqFefe9uXsGOChcG5ZdgDQZB3lgQ2Q
+	 WjfdhRnZul9BdSUSwePbSiEug5YwKSqeUg97uPvcrCtqJ5GX+DU0iArNJGHP+QlWUQ
+	 1FsaeZjB9Zm3A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2
+ E key connector
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260729-eliza_evk-v5-2-41790a5a24de@oss.qualcomm.com>
+References: <20260729-eliza_evk-v5-0-41790a5a24de@oss.qualcomm.com>
+ <20260729-eliza_evk-v5-2-41790a5a24de@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 29 Jul 2026 14:59:25 +0000
+Message-Id: <20260729145925.943F81F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-commit a22250fe933d ("PCI: Add Extended Tag + MRRS quirk for Xeon 6")
-introduced a traffic mitigation quirk for Intel Xeon 6 root ports that
-negotiate down to an x2 lane width. However, that patch manipulated host
-bridge properties globally via 'bridge->no_ext_tags = 1' and by hooking
-'bridge->enable_device'.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Incorrect GPIO polarity for the W_DISABLE2# signal (`w-disable2-gp=
+ios`) on the M.2 E key connector.
+--
 
-Because multiple unrelated root ports can reside under the exact same
-global pci_host_bridge domain structure, this overly aggressive mitigation
-causes severe collateral damage. When a low-speed or bifurcated secondary
-device (such as an onboard ASMedia SATA controller or BMC graphics link)
-matches the x2 condition, the kernel strips away Extended Tags and forces
-a 128B MRRS restriction across that ENTIRE host bridge. This instantly
-breaks or starves adjacent high-performance, unrelated x4 endpoints
-(such as NVMe drives), resulting in controller timeouts, initialization
-failures, and missing drives at boot.
+--- Patch [2]: [PATCH v5 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M=
+.2 E key connector ---
+commit e61546d91652b5590b157402a4ee5bfc16fe5075
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Fix this by refactoring the quirk logic to be completely per-device and
-downstream-isolated. Remove the broad host bridge structure assignments
-entirely. Instead, convert the hook to an explicit
-'DECLARE_PCI_FIXUP_FINAL' sweep. When an x2 bifurcated root port is
-discovered, leverage 'pci_walk_bus()' to step down only that specific root
-port's subordinate tree, manually clearing 'PCI_EXP_DEVCTL_EXT_TAG' and
-'PCI_EXP_DEVCTL_READRQ' directly in the endpoint Device Control
-configuration registers. This enforces Intel's stability parameters
-locally on the bottlenecked lane branches while fully protecting the
-parallel x4 highway channels.
+arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
 
-Fixes: a22250fe933d ("PCI: Add Extended Tag + MRRS quirk for Xeon 6")
-Signed-off-by: Rick Warner <rick@microway.com>
----
- arch/x86/pci/fixup.c | 41 +++++++++++++++++++++++------------------
- 1 file changed, 23 insertions(+), 18 deletions(-)
+The Eliza EVK board features an M.2 E key connector connected to PCIe0.
+Enable the PCIe0 root port and its QMP PHY with the necessary RPMH
+regulator supplies. The M.2 slot's 3.3V supply rail is GPIO-controlled
+via a TCA9538 I/O expander on I2C4.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index b301c6c8df75..c2bdf580692a 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -301,38 +301,43 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_r
-  *
-  * https://cdrdv2.intel.com/v1/dl/getContent/837176
-  */
--static int limit_mrrs_to_128(struct pci_host_bridge *b, struct pci_dev *pdev)
-+static int pci_xeon_x2_bifurc_quirk_perdev(struct pci_dev *pdev, void *data)
- {
--	int readrq = pcie_get_readrq(pdev);
--
--	if (readrq > 128)
--		pcie_set_readrq(pdev, 128);
--
-+	/* Only clamp actual endpoints, skip downstream switches/bridges */
-+	if (!pci_is_bridge(pdev)) {
-+		pci_info(pdev, "Disabling Extended Tags and Clamping MRRS to 128B due to upstream Xeon 6 x2 bifurcation\n");
-+		pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_EXT_TAG);
-+		pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_READRQ);
-+	}
- 	return 0;
- }
- 
- static void pci_xeon_x2_bifurc_quirk(struct pci_dev *pdev)
- {
--	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
- 	u32 linkcap;
- 
- 	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &linkcap);
- 	if (FIELD_GET(PCI_EXP_LNKCAP_MLW, linkcap) != 0x2)
- 		return;
- 
--	bridge->no_ext_tags = 1;
--	bridge->enable_device = limit_mrrs_to_128;
--	pci_info(pdev, "Disabling Extended Tags and limiting MRRS to 128B (performance reasons due to x2 PCIe link)\n");
-+	pci_info(pdev, "Xeon 6 x2 lane bifurcation detected; restricting subordinate devices\n");
-+
-+	/*
-+	 * Walk down only this specific root port's downstream bus tree
-+	 * and clear extended tags specifically for devices on this branch.
-+	 */
-+	if (pdev->subordinate)
-+		pci_walk_bus(pdev->subordinate, pci_xeon_x2_bifurc_quirk_perdev, NULL);
- }
- 
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db0, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db1, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db2, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db3, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db6, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db7, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db8, pci_xeon_x2_bifurc_quirk);
--DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x0db9, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db0, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db1, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db2, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db3, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db6, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db7, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db8, pci_xeon_x2_bifurc_quirk);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0db9, pci_xeon_x2_bifurc_quirk);
- 
- /*
-  * Fixup to mark boot BIOS video selected by BIOS before it changes
--- 
-2.43.0
+> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
+s/qcom/eliza-evk.dtsi
+> index e47b24f8b8277..b35fffb509765 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+[ ... ]
+> +	connector-0 {
+> +		compatible =3D "pcie-m2-e-connector";
+> +		vpcie3v3-supply =3D <&vreg_pcie_m_3p3>;
+> +		w-disable1-gpios =3D <&tlmm 35 GPIO_ACTIVE_LOW>;
+> +		w-disable2-gpios =3D <&pm8550vs_g_gpios 4 GPIO_ACTIVE_HIGH>;
 
+[Severity: High]
+Does this code invert the expected logic for the Bluetooth radio?
+
+The W_DISABLE2 signal on an M.2 E key connector is physically active-low
+according to the PCI Express M.2 specification.
+
+Using GPIO_ACTIVE_HIGH causes the kernel power sequencing framework to
+drive the GPIO low when attempting to logically deassert the signal and
+enable the device, which will effectively disable the radio instead.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729-eliza_evk-=
+v5-0-41790a5a24de@oss.qualcomm.com?part=3D2
