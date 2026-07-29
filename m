@@ -1,70 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C6ED2E5B21
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 07:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B410341DED4
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 07:54:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785309977; cv=none; b=qLfwxHcPX986+oL3IyVgobPpjNlmWOTFT7OzoAg0z9w9dSnwgUjvl4fGEugZA9F78uwYskmUo3jw6zfq7VfMOVoKERMENeekkLqktiGe9Puc7B1ExdLPbQP7SqecgMhcHzGsTUgLfz6DshRAO6utOD5z9BzTPhW74AnBP6gnQVI=
+	t=1785311661; cv=none; b=dqAyIrE5XaBGDZWcSNNuc4tiCRX0gaIYQexq0BkMGgRJ1Xh5uaXVpR23SivHwqwEW8VGzvG1Cuy4E/KLvX2CRDNVk8klj2TNigLNjhA8RzqQk3FCHGItod7HALUyK3TGG7Ds+c321yqLj3Cbigu7vEnxHUJY989eZw2P7qNwcPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785309977; c=relaxed/simple;
-	bh=KDhjtNHobK3tPJooj8SwDgxxNwRkNAiSVOlLxVnVNXU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ch77bkGN5ArHC/QBmgL0TiKCoCphBF8T/XaWNIUOluigSjA/oXi4aisNji3pN9pJIK3oBArlays/D182B+uMXAOGASKAelQcRYKd3GQLxKRF0x1B5v9nLHvbem7i0XAvx79kGGqsM2s6XNSWLs2+/RHkrvkBycRNEl61vVOUmBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K7JUokVE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785311661; c=relaxed/simple;
+	bh=VCVA2PidKO0ADO09XqBQEx9Ld/BHny/owjsuV9okZu4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rzxxANNGnnbLKYMSFyMMmvwGt3YsnbDg1Xt06Oy96n9X1imD6sckx1CxUrlt4zSWU8GwbHYHaFNnPnRR7wdFSueVDCpPB+tInC9YyaJTIncKgGO115JrhVZROkItkaCLHKTftxwtN5726ngexrsQxQgvYfFRlPNc/ADcmY+R+yE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ymyo2Kns; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K7JUokVE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4BF01F000E9;
-	Wed, 29 Jul 2026 07:26:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ymyo2Kns"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89EAB1F000E9;
+	Wed, 29 Jul 2026 07:54:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785309967;
-	bh=KDhjtNHobK3tPJooj8SwDgxxNwRkNAiSVOlLxVnVNXU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K7JUokVEnIPycya98fPI8VvP1YcUeYJnOoDxUVsw6xR3k9Kt+Dr1NzuTfnlx4YURW
-	 Xk5Z5r3KY3KdMFZCV5/sA+Uifi7OxYGhh/rAoF3P+UikYy81u/fz+fOiwrcsmDfyOg
-	 4isfB0UzCKfPC3pNeyrfAY/15mJVubcEdZL5ye2ygzgiFtIhOnwvU598LSm0FThtU/
-	 ME/64y4n14AtYmkcIcqYXEUljRc59rR7fW2meij6m4dQubx4PxNYlQqhmQ9SDk8WaN
-	 YL7RfEExh2jDbPh2rNPNQUp6GMPSNkWP0QrO3mHabYpkfoy8aGq32Toxb1FIqnSq2J
-	 LNBwpI0qkWykA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Allow D3 for native Hotplug capable Root Ports on
- DT platforms
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260729071514.859778-1-manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260729071514.859778-1-manivannan.sadhasivam@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 07:26:06 +0000
-Message-Id: <20260729072606.D4BF01F000E9@smtp.kernel.org>
+	s=k20260515; t=1785311656;
+	bh=GxZ7QVVH5311f113ShfekrCsgA2DAihos3qOEtFj4RE=;
+	h=From:To:Cc:Subject:Date;
+	b=Ymyo2Kns3N4AdGmjypWe7ey9gP7WsaBcqmm37V2wVrrsJEGwMl+7uJUUQP6sQYqjm
+	 c0scQaQouUQos+g8DibUOK93wtPRU2lFbqZJenQAg45c1leGfloRQRPMidX5/fE+ZK
+	 JZ1XzIRQ88quy5H2os+e+F7X1Mqv877rpCTRH3aaUH8N9VJ2NhApc8yTis3SstOoIA
+	 K5Zo/ZHFztlCSPYbUcCVQJ+EzLsNs4qMNq9GLtbntvPQosDOe//8XWG5bJufRnrZIr
+	 LwwJQ1AfS9yse5pzPe8rxpVyZZyfgXQRM7v4UGJu89y0kqiaMwVQp+xbD7wvkdTuoH
+	 rfp6V2jIFh77Q==
+From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Ira Weiny <iweiny@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/proc: Warn on writes to kernel-exclusive config space regions
+Date: Wed, 29 Jul 2026 07:54:13 +0000
+Message-ID: <20260729075413.1215821-1-kwilczynski@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-> Commit eb3b5bf1a88d ("PCI: Whitelist native hotplug ports for runtime D3"=
-),
-> prevented native Hotplug capable Root Ports from entering D3 citing issues
-> on old Intel SkyLake Xeon-SP platform.
->=20
-> But there is no reason to restrict D3 for native Hotplug capable Root
-> Ports on DT platforms. We recently enabled D3 on non-Hotplug capable
-> Root Ports on non-x86 platforms (specifically for DT platforms) in commit
-> a5fb3ff63287 ("PCI: Allow PCI bridges to go to D3Hot on all non-x86"). So
-> do the same for native Hotplug capable Root Ports as well.
->=20
-> To honor the above platform_pci_bridge_d3() check, allow passing this che=
-ck
-> only for DT platforms, unlike a5fb3ff63287, which used !CONFIG_X86 check.
->=20
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
-com>
+Currently, a driver can claim a region of a device's config space as
+exclusive using pci_request_config_region_exclusive(), after which a
+write to that region originating from user space is expected to emit a
+warning and taint the kernel.  The check is advisory only, as the write
+itself is still allowed to proceed.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Since commit 278294798ac9 ("PCI: Allow drivers to request exclusive
+config regions"), the sysfs config space attribute performs this check
+in pci_write_config(), but the procfs interface was never updated.  A
+write performed through /proc/bus/pci/BB/DD.F therefore bypasses the
+detection entirely, even though both interfaces offer the same level
+of access.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729071514.8597=
-78-1-manivannan.sadhasivam@oss.qualcomm.com?part=3D1
+Thus, add the same resource_is_exclusive() check to proc_bus_pci_write().
+
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+---
+ drivers/pci/proc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 71ad289fcb8e..12200979d3a8 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -14,6 +14,8 @@
+ #include <linux/capability.h>
+ #include <linux/uaccess.h>
+ #include <linux/security.h>
++#include <linux/panic.h>
++#include <linux/sched.h>
+ #include <asm/byteorder.h>
+ #include "pci.h"
+ 
+@@ -122,6 +124,12 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+ 	if (ret)
+ 		return ret;
+ 
++	if (resource_is_exclusive(&dev->driver_exclusive_resource, pos, nbytes)) {
++		pci_warn_once(dev, "%s: Unexpected write to kernel-exclusive config offset %x",
++			      current->comm, pos);
++		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
++	}
++
+ 	if (pos >= size)
+ 		return 0;
+ 	if (nbytes >= size)
+-- 
+2.55.0
 
