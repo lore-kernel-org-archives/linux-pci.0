@@ -1,131 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DA1B4195B5
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 08:13:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E8043A7EF;
+	Wed, 29 Jul 2026 08:13:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785312790; cv=none; b=eLHs6yKl1n8hyimE5T+B6/dJcqLUzrNLg+1XhaU+20OdH+TBjCo3cHe8rkRvv4eet9OJupdAqx8WpdcnldxEX8EKXqGtv9+L60kFtZ0OM5sz9rgpWr3Fsm7hlyOb+twjtW5I0LDzs6pkDz5xIjzQueW0OAT8X2uz18dHFPcHR0M=
+	t=1785312812; cv=none; b=Jj0f5+POVFNputI6IcZHYrRz1ZtRkAXJU7CJMzBrrSApBgUj+KtPTiXLElxbRUr0vjxnKHM7ZNuoflad2dJhMERhFwOq+EICTndKcCLAOsBPUsL+yl61T+vXVOzX0OQrrUPcHWThqAxyy4VciGe/vd022CbojWiA5EUEGklFTmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785312790; c=relaxed/simple;
-	bh=i0iCTXyLfm0+1c/lXKV1zlTwAXbTbzeOPEUu1YpWEC8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OLsof+8UDy+9xNXIIrqXZH8EH+VcTkAfLIl2xqQwa71KnOU0Sgi3biNpQ0WMyMHYLvi1VbD0Ep+ykLmDm82X4YfvSsG77sS6EUlMIEZGJDqkQF/Yo/VpzNtTkQpmiPcLadKngEeKuJQve+xe0VJoOywa73UTqX2BWxJoJZW+ol8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DTP5aJaK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785312812; c=relaxed/simple;
+	bh=rhLEvcU2rNwQKBp+jzc+27i1xt2fV4Dmz34FnJF4SDw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=hUvzW2CPkjvcjbqKo1n5KX4X2N95oc6eajQASxV7HF948lYUOtvTHvi90hVcKJhIzGwSMp9MKgn+UcCB9Qd/g/oCh8/mLqUVsR780reVAWwa7F4rPNLs5pLL2/RpCC6jqoNWRcaQpb6qQUQD89VVX85vwo4q359dMm8iuhOtC5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=b/7PYiGE; arc=none smtp.client-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DTP5aJaK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11AA71F000E9;
-	Wed, 29 Jul 2026 08:13:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785312787;
-	bh=EB7HbRINXTh5u1OAiTHbKJaCCWL80QdSIWsy7sgaV6U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DTP5aJaKEUfz6NQbBSzcPJCBz6wyHEuHHPiuHfKAB4pZtral2SDp/r7saiLVgiK6U
-	 f4e/LhMhlpivOxMvjjvk/ITMV0ognBiIBMFemrtDs1nVQ2SD21u5h40PUMeJ5CQs98
-	 0qAhwjpGqQXgDHkNI1Y/FzMrVIJ02NbHL0gco1X3Ge2f2DrBKS9+daG5w8ty+Gl1Mn
-	 sn1k1WjxxmK2NTGBmICbEL6K5sAi66D3tl45oPu6d4J/i0+YmUKZApnYvgX6oCLpfu
-	 PdZ9flQTfygNu8/M9vmCk4nxIwuxGiFn+cNYE7GvrLNqvW6bSmzXizRUO+ipCvS3gW
-	 vCeAE3jo+jwyQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/proc: Warn on writes to kernel-exclusive config
- space regions
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260729075413.1215821-1-kwilczynski@kernel.org>
-References: <20260729075413.1215821-1-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 08:13:06 +0000
-Message-Id: <20260729081307.11AA71F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="b/7PYiGE"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=JU4nTNnLiZUM9Y4cL70aHfB9uMSR3Cje60IIvYTXm7M=;
+	b=b/7PYiGEnOFZRp4z6UdillzQIPhnDeCWtQ08l6XjL96ksceD+0d3USfxauif4Xt9E1NnvMFR8
+	n/KJc7CUzuLHpEu7gM3RqsV7U0e6fONurcxOmWANHGG1lGlbdT+LZ/D+6sFLVcU/zYeKgQ3/fwA
+	tcytb8LJcfWz36pXskS0VUQ=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4h94bg1DznzpSvb;
+	Wed, 29 Jul 2026 16:03:59 +0800 (CST)
+Received: from whupemo200004.china.huawei.com (unknown [7.152.184.18])
+	by mail.maildlp.com (Postfix) with ESMTPS id 6100740561;
+	Wed, 29 Jul 2026 16:13:16 +0800 (CST)
+Received: from [10.67.120.233] (10.67.120.233) by
+ whupemo200004.china.huawei.com (7.152.184.18) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 29 Jul 2026 16:13:13 +0800
+Message-ID: <d216745f-a23f-4f36-a462-22f4814baf48@huawei.com>
+Date: Wed, 29 Jul 2026 16:13:11 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/10] perf hisi-ptt: Add decoder version compatibility
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <rostedt@goodmis.org>, <mhiramat@kernel.org>,
+	<mathieu.desnoyers@efficios.com>, <corbet@lwn.net>,
+	<skhan@linuxfoundation.org>, <bhelgaas@google.com>, <yangyccccc@gmail.com>,
+	<jic23@kernel.org>, <john.g.garry@oracle.com>, <will@kernel.org>,
+	<james.clark@linaro.org>, <mike.leach@arm.com>, <leo.yan@linux.dev>,
+	<peterz@infradead.org>, <mingo@redhat.com>, <acme@kernel.org>,
+	<namhyung@kernel.org>, <mark.rutland@arm.com>,
+	<alexander.shishkin@linux.intel.com>, <jolsa@kernel.org>,
+	<irogers@google.com>, <adrian.hunter@intel.com>, <wangyushan12@huawei.com>,
+	<shenyang39@huawei.com>, <gaozhihao6@h-partners.com>,
+	<yuzhichengcheng@h-partners.com>, <liyihang9@h-partners.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-perf-users@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linuxarm@huawei.com>,
+	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <wuyifan50@huawei.com>
+References: <20260713174951.GA1245033@bhelgaas>
+From: Sizhe Liu <liusizhe5@huawei.com>
+In-Reply-To: <20260713174951.GA1245033@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ whupemo200004.china.huawei.com (7.152.184.18)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [High] Integer truncation of the 64-bit file offset to a 32-bit signed in=
-t allows bypassing bounds checks and the new exclusive region check, leadin=
-g to massive out-of-bounds memory writes.
---
+On 2026/7/14 1:49, Bjorn Helgaas wrote:
+> On Thu, Jun 04, 2026 at 03:50:05PM +0800, Sizhe Liu wrote:
+>> The hisi_ptt packet decoder now performs detailed field-level parsing
+>> of TLP header DW2 and DW3 based on the message type classified from
+>> DW0 (added in the previous patches). However, trace data recorded
+>> with older versions of the tool does not contain the information
+>> needed for this detailed parsing, and should continue to use the
+>> generic field-name-only output.
+> Add blank line between paragraphs.  Also applies to 05/10.
+>
+>> Introduce a version field (V1/V2) in the auxtrace info record to
+>> distinguish between the two data formats:
+> IMO a blank line here would also improve readability.  And consider
+> indenting bullet points a couple spaces.  Also applies to other commit
+> logs in this series, including sample formats.
+>
+>> - V1 (legacy): auxtrace priv contains only PMU type. DW2 and DW3
+>>    are printed with generic field names only, no message-type-based
+>>    field decoding.
+>> - V2 (current): auxtrace priv contains PMU type and version. DW2
+>>    and DW3 are decoded according to the TLP message type (MWr, Msg,
+>>    Atomic, IO, CPL, Cfg) with detailed field names.
+> Could use imperative mood, e.g.,
+>
+>    - V1 (legacy): auxtrace priv contains only PMU type. Print DW2 and
+>      DW3 generic field names only, no message-type-based field
+>      decoding.
+>
+>    - V2 (current): auxtrace priv contains PMU type and version. Decode
+>      DW2 and DW3 according to the TLP message type (MWr, Msg, Atomic,
+>      IO, CPL, Cfg) with detailed field names.
+Thanks, all the preceding suggestions will be modified in v2.
+>> At recording time, set the version to HISI_PTT_DECODER_V2 in the
+>> auxtrace info. At decoding time, determine the version from the
+>> priv data size and the version field:
+>> - If priv_size >= V2, read the version from priv[1].
+>> - If priv_size < V2, assume V1 for backward compatibility.
+>> - If version is unknown (future), warn and decode auxtrace as v2.
+>>
+>> Also add the version to the dump output alongside the PMU type.
+>> Adjust hisi_ptt_pkt_size position to adapt to compilation.
+> AFAICS this series adds new functionality and probably doesn't qualify
+> for "stable" tags, given the documented rules.  But I think the
+> maintainers are pretty aggressive about backporting things anyway.
+Hi Bjorn,
+Thanks for your response and for clarifying the policy regarding the 
+stable tag.
+You're right, patches 03-10 in this series are new functionality and 
+shouldwait
+for the next merge window.
 
---- Patch [1]: [PATCH] PCI/proc: Warn on writes to kernel-exclusive config =
-space regions ---
-commit ae079df2d52cc5cc8959cf281ed5e461ff2fcfd8
-Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
+For patch 01 and patch 02, they do fix the issue of inaccurate packet 
+parsing,
+I think it is better to separate them from the patch series.
+I am sending them individually after fixing the C bitfields issues if 
+that makes things clearer.
 
-PCI/proc: Warn on writes to kernel-exclusive config space regions
+If you have any suggestions on this split, please feel free to let me know.
 
-This patch updates proc_bus_pci_write() to check if a user space write
-targets a kernel-exclusive config space region. If so, it emits a warning
-and taints the kernel, bringing the procfs interface to parity with the
-sysfs interface.
-
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 71ad289fcb8e3..12200979d3a82 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-[ ... ]
-> @@ -122,6 +124,12 @@ static ssize_t proc_bus_pci_write(struct file *file,=
- const char __user *buf,
->  	if (ret)
->  		return ret;
-> =20
-> +	if (resource_is_exclusive(&dev->driver_exclusive_resource, pos, nbytes)=
-) {
-> +		pci_warn_once(dev, "%s: Unexpected write to kernel-exclusive config of=
-fset %x",
-> +			      current->comm, pos);
-> +		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
-> +	}
-> +
-
-[Severity: High]
-This is a pre-existing issue, but does truncating the 64-bit file offset to=
- a
-32-bit signed integer earlier in proc_bus_pci_write() allow bypassing this
-new exclusive region check?
-
-A large positive 64-bit file offset provided via pwrite64() gets truncated =
-to
-a negative value:
-
-drivers/pci/proc.c:proc_bus_pci_write() {
-    ...
-	int pos =3D *ppos;
-    ...
-}
-
-Because resource_is_exclusive() takes a u64 address, the negative pos will
-sign-extend into a massive 64-bit value that won't match any exclusive
-region, bypassing this detection entirely.
-
-Additionally, this truncation also bypasses the subsequent bounds checks:
-
-	if (pos >=3D size)
-		return 0;
-	if (nbytes >=3D size)
-		nbytes =3D size;
-	if (pos + nbytes > size)
-		nbytes =3D size - pos;
-
-The signed comparison if (pos >=3D size) evaluates to false for a negative
-pos. Because nbytes is unsigned, the length clipping if (pos + nbytes > siz=
-e)
-evaluates using unsigned arithmetic and becomes true for a negative pos. Th=
-is
-erroneously increases nbytes up to massive out-of-bounds lengths, potential=
-ly
-leading to large writes outside the PCI configuration space.
-
->  	if (pos >=3D size)
->  		return 0;
->  	if (nbytes >=3D size)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729075413.1215=
-821-1-kwilczynski@kernel.org?part=3D1
+Regards,
+Sizhe
