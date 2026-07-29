@@ -1,82 +1,183 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADFBD45199F;
-	Wed, 29 Jul 2026 18:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24B4B456297;
+	Wed, 29 Jul 2026 19:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785350614; cv=none; b=MgbeygUSPXqCjJ/50gd/9I8+QJFgefxAMMDO8tPRWSA7i1IehOFZMJpVuQeLuyksAK4FjFjibxnSCu/dJizS9qAuUXmLSiS3Wq5ZtF3av+xMnHyqZMnnfxgoIZoqf/euLvWB0u/46XFz+XOfOMAdqTL6TIyXF8xK4M+o7MRwZOc=
+	t=1785353300; cv=none; b=sVToAoafxOCBkkuYPG/Mcj7v17WckIQlIgYhySwvKoP14/qw0bmCw0HH5GzFHkRw2tU4MbzNDo7IW0RyzDquaAZhihaJJOgy2iCQMK1ZxSMySIdEZFLEJPUlF7zz5K/wiDhtxGcq0G23YxOpkJxongp2gLjMe9D4oxuJ+UeJahc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785350614; c=relaxed/simple;
-	bh=okEet98TfVaMMuJY3tLXwJAuLs2k/dxlcXAfQ8YVsxU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R+egnS18+es0kUFnv3valqS2a5cCo4Ur905g8E6t15NKhnO4YmTgBPIgzIhN/IbBWo2XLUssf2v4U3j7zZx0PYDZoQdIR9q90t1p3xW0rtTMIyHOWACTs8w8/gEvNHwzssckJZ5M3Kzr4+GZ+NI6v7ZLGG/BTo6o/ikHLYc91i0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id E701910615;
-	Wed, 29 Jul 2026 20:43:29 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id CDD9D6034322; Wed, 29 Jul 2026 20:43:29 +0200 (CEST)
-Date: Wed, 29 Jul 2026 20:43:29 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Rick Warner <rick@microway.com>
-Cc: bhelgaas@google.com, ilpo.jarvinen@linux.intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rhoughton@microway.com, ssingh@microway.com
-Subject: Re: [PATCH] PCI: Fix Intel Xeon 6 x2 quirk collateral damage on
- adjacent x4 endpoints
-Message-ID: <ampJ0dIhz1J-a0sk@wunner.de>
-References: <20260729144508.12337-1-rick@microway.com>
+	s=arc-20240116; t=1785353300; c=relaxed/simple;
+	bh=8ImxKQKuYw5sw1oUP9bkTp8XSTLsuH8+8VjuAe+A//w=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=FxdpdlBo8jCef6mzpfszfeExQZnOxqutipYLDCmUYKg+yrvwxg9kZXK5IRo6ZSOK0T3b71bBEUfn8z1sAfy8m2FagdGnOw3BflKU//ltdQf+OtepVT7maBybYSCIzpL8YwnMQG7CkiveRBESLscFvZe7neqJb1xXUo59Vt++2U4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dRXtw6tS; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dRXtw6tS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3292A1F000E9;
+	Wed, 29 Jul 2026 19:28:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785353287;
+	bh=4R/0n+N4ulmB6HFZBWN2atbMsZoR5KA7qt0R9Wi8aQY=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=dRXtw6tStg1MZ/KeEAAJu3mjRuTvmyqH/7b1K78OvAkXMNWtRjfTJTPJ9MA6dD3Qx
+	 I6TvbmMxkSK2nmERJTC/FhDkn3BZsPJwh2KTT4FX4loX0jINNzP4Q2mBJyFXaPJZ9V
+	 liz2QQtK5MrEePIFbIE74S7BAwu8j2e0oOfVn3WHt6zNFM7S1b3bUR7mf1eVbyqnKA
+	 m66DrWmjAXM7hsA59hVLqBBrtFqfxlVp1SMwMj/tmuVSHsBqm6Oyqj2S0yxcaS/Qps
+	 CxobFI9nr3txmUlDx8JCeONUXajcBW7n1V1DZjei2PpIyz6U9Gf9btpBYymG5mhiNq
+	 P15efMzPuJASw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260729144508.12337-1-rick@microway.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 29 Jul 2026 21:28:01 +0200
+Message-Id: <DKBAX2P3POG1.3CVTICXR9RYHS@kernel.org>
+Subject: Re: [PATCH 08/10] gpu: nova-core: use projection for PFALCON and
+ PFALCON2 registers
+Cc: "Miguel Ojeda" <ojeda@kernel.org>, "Alexandre Courbot"
+ <acourbot@nvidia.com>, "Alice Ryhl" <aliceryhl@google.com>, "Daniel
+ Almeida" <daniel.almeida@collabora.com>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Tamir Duberstein" <tamird@kernel.org>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "David Airlie"
+ <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <driver-core@lists.linux.dev>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pci@vger.kernel.org>
+To: "Gary Guo" <gary@garyguo.net>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260721-typed_register-v1-0-452d72b60262@garyguo.net>
+ <20260721-typed_register-v1-8-452d72b60262@garyguo.net>
+ <DKA02Y5RE1YJ.2FGI97Z60X96R@nvidia.com>
+ <DKA4Q5QUBUXM.1K6QS2QPXT12H@garyguo.net>
+ <DKAASRCK3M06.G9XODK0T5AAK@nvidia.com>
+ <DKAD64Q7CEQD.Z15OS6MRHEKE@kernel.org>
+ <DKAEZ4LDA10F.1RFA9JKBGY2CF@garyguo.net>
+ <DKAFMD8X5LFP.UPKPHK5FYZPH@kernel.org>
+ <DKAFRETW93IW.SXUWFVB47V3B@garyguo.net>
+ <DKAH4S5IE3RZ.10VD33NMVVLDR@kernel.org>
+ <DKAZD90KWY0L.2E1289J71UF8Z@garyguo.net>
+In-Reply-To: <DKAZD90KWY0L.2E1289J71UF8Z@garyguo.net>
 
-On Wed, Jul 29, 2026 at 10:45:08AM -0400, Rick Warner wrote:
-> commit a22250fe933d ("PCI: Add Extended Tag + MRRS quirk for Xeon 6")
-> introduced a traffic mitigation quirk for Intel Xeon 6 root ports that
-> negotiate down to an x2 lane width. However, that patch manipulated host
-> bridge properties globally via 'bridge->no_ext_tags = 1' and by hooking
-> 'bridge->enable_device'.
-> 
-> Because multiple unrelated root ports can reside under the exact same
-> global pci_host_bridge domain structure, this overly aggressive mitigation
-> causes severe collateral damage. When a low-speed or bifurcated secondary
-> device (such as an onboard ASMedia SATA controller or BMC graphics link)
-> matches the x2 condition, the kernel strips away Extended Tags and forces
-> a 128B MRRS restriction across that ENTIRE host bridge. This instantly
-> breaks or starves adjacent high-performance, unrelated x4 endpoints
-> (such as NVMe drives), resulting in controller timeouts, initialization
-> failures, and missing drives at boot.
-> 
-> Fix this by refactoring the quirk logic to be completely per-device and
-> downstream-isolated. Remove the broad host bridge structure assignments
-> entirely. Instead, convert the hook to an explicit
-> 'DECLARE_PCI_FIXUP_FINAL' sweep. When an x2 bifurcated root port is
-> discovered, leverage 'pci_walk_bus()' to step down only that specific root
-> port's subordinate tree, manually clearing 'PCI_EXP_DEVCTL_EXT_TAG' and
-> 'PCI_EXP_DEVCTL_READRQ' directly in the endpoint Device Control
-> configuration registers.
+On Wed Jul 29, 2026 at 12:24 PM CEST, Gary Guo wrote:
+> On Tue Jul 28, 2026 at 9:07 PM BST, Danilo Krummrich wrote:
+>> On Tue Jul 28, 2026 at 9:03 PM CEST, Gary Guo wrote:
+>>> On Tue Jul 28, 2026 at 7:56 PM BST, Danilo Krummrich wrote:
+>>>> On Tue Jul 28, 2026 at 8:26 PM CEST, Gary Guo wrote:
+>>>>> On Tue Jul 28, 2026 at 6:01 PM BST, Danilo Krummrich wrote:
+>>>>>> I may have a slight preference for a separate subregion() variant fo=
+r the
+>>>>>> purpose of working around generic_const_exprs, as it probably is a b=
+it closer to
+>>>>>> the final solution, but trait methods are fine with me too.
+>>>>>
+>>>>> I am not sure that's the final solution that I want. I want arg-posit=
+ion
+>>>>> const-generics which would syntactically look more similar to `build_=
+assert!`.
+>>>>
+>>>> arg-position const generics would be great, but that's just a syntax d=
+ifference
+>>>> and not related to supporting expressions involving const generics?
+>>>>
+>>>> In any case, I think my point about being closer to the final solution=
+ holds
+>>>> regardless.
+>>>>
+>>>>> Personally I think most issues with `build_assert!` can be fixed by h=
+aving
+>>>>> lints, which is on my radar.
+>>>>
+>>>> I think it can be improved, but in the end it relies on compiler optim=
+ization
+>>>> that may or may not happen as expected.
+>>>
+>>> It'd be a compiler bug if const folding is expected to happen, the whol=
+e
+>>> BUILD_BUG_ON depends on it working.
+>>>
+>>> `build_assert!` is a useful tool that I'm not giving up. If there is a =
+need to
+>>> use it, then I'd use it compared to having two variants to do the same =
+thing
+>>> with different syntax.
+>>
+>> It is indeed useful and I don't want to give up on it either.
+>>
+>> But, it is more fragile than const evaluation, so we should only use it =
+where
+>> const evaluation is not sufficient.
+>>
+>> In the case we are discussing the problem is that const expressions invo=
+lving
+>> const generics are not yet supported, but in general it should be.
+>>
+>> This is different compared to e.g. read() where the syntax difference wo=
+uld
+>> actually hurt and const generics would limit flexibility, where we actua=
+lly rely
+>> on the compiler to eliminate unreachable code paths regardless of a valu=
+e being
+>> known at runtime only.
+>
+> The offset for `subregion` is no different to the offset for `read()`. In=
+ both
+> cases you are supposed to only supply build-time const values; and in bot=
+h cases
+> you can argue they are needed there due to const generics being too limit=
+ed to
+> what they do.
 
-One problem I see with this approach is that it won't work for hotplugged
-devices below a bifurcated Root Port:  You're only adjusting Extended Tags
-and MRRS once on enumeration of the Root Ports, leaving devices that are
-hotplugged later at incorrect settings.
+I see where you are coming from, but I see it from a different angle:
 
-But perhaps you could simply amend limit_mrrs_to_128() to walk up to the
-Root Port, check whether it is bifurcated, and bail out if it's not?
+An offset given to read() can legitimately be a runtime value that happens =
+to be
+constrained in a way that the compiler can proof that it is within bounds (=
+with
+dead code elimination doing the rest). We have reasonable use-cases where t=
+he
+offset given to read() is not a "true" constant, and hence build_assert! is=
+ the
+correct tool.
 
-Thanks,
+subregion() is different in this regard, as we do not have reasonable use-c=
+ases
+where the offset is not a "true" constant. (And I would guess that this als=
+o
+made you choose the implementation you picked for this patch.)
 
-Lukas
+It just happens that we hit a language limitation where const evaluation of=
+ a
+"true" constant does not work, but that does not make build time assertion =
+the
+correct tool, it just makes it a workaround for the existing limitation.
+
+This is also in line with the documentation in rust/kernel/build_assert.rs.
+
+> We probably could even just add a method that gives you a subregion based=
+ on
+> `IoLoc` similar to other methods. This actually might be a good idea that=
+ I'd
+> pursue in next version.
+
+So, you are proposing that subregion() takes an argument of type
+L: impl IoLoc<_>?
+
+Where would this argument come from?
+
+I assume you would need to bring back
+
+	impl RegisterBase<Foo> for Bar {
+	    const BASE: usize =3D 0xff;
+	}
+
+impl blocks? Which seems like just adding boilerplate? Or do you have somet=
+hing
+else in mind?
