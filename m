@@ -1,74 +1,74 @@
 Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83EF37F8DA;
-	Wed, 29 Jul 2026 17:52:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 263ED39EF23;
+	Wed, 29 Jul 2026 17:52:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785347562; cv=none; b=EtDRDigsmKQvO7Y4Z85Eo/OmmLEx8HkiIZZKrqgG3QMGEEo3sQloDyfFgEEuiJb9LSlzXdZyNDwBKO/x+A2Hde1eDyLrchQaT2MI3Ixcx/KfoTo7SykGzn3l1wXPiketSNlOmmBushhcvqx8z9LEoFxjMqcWt7Nvxty6U0K44vU=
+	t=1785347565; cv=none; b=b+xF0X01yeocrDaKbSSeQ/aHu7KTymcYCLwSY1bMPGovAHvXUNyQy+bI/M8zizocVGbmvCDBexo5IsJ/61qA7Ie5OTo6AXq2T7/i7Fxj/mfWdpo/YroOxUjUZnHcU7SECiuEIeDV0g5EbGeDTwHnm0xQFXMnPJKKc/JpUPA2S6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785347562; c=relaxed/simple;
-	bh=e3MKdxo+n4j6m2NfIUHP5tXzjQ/YUAlIZwv4KZmDz+k=;
+	s=arc-20240116; t=1785347565; c=relaxed/simple;
+	bh=UmoCyoW1+B65IpGMS+VGdlWV5NUjzcYcNkcddFzWlnE=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZOk7BqpjlnsJID67Kvo3IQKB4P7wckhxQOoFQzhbXCTYhqWQE57sAN7GOHDMCkfwWKhrSn1rSUiwTe3/8EQU0oRSYDIpdMVRVSTnJRvojR6ZsKvVM023A0haTFeUsS9abRWE8JWl6uoDiTXtmdhslqSdAUvaUJkVxOhTDQF8tDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=YMXaaqaS; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=GYA1SkGa; arc=none smtp.client-ip=202.12.124.152
+	 MIME-Version:Content-Type; b=lN3YgNxs+X356psHGTBfyS+Y0cRhO6JehYlHOht1NxtTOuq34ZD3eM4K2VKOt5aAqHJMQ7q1VCc7Fboyl9f7FwMRHMYadF6LkR7vyp+x2a0kQgRbGWqQf7v/IDrDzmZJxP8kdhdlVtj1osTWscTFAVkJpZjHlimugUcOE8qZ+zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=sqREERo8; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=OjBg0u0c; arc=none smtp.client-ip=202.12.124.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="YMXaaqaS";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="GYA1SkGa"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 6E1EF7A0101;
-	Wed, 29 Jul 2026 13:52:38 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="sqREERo8";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="OjBg0u0c"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id CCFFA7A015D;
+	Wed, 29 Jul 2026 13:52:41 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-09.internal (MEProxy); Wed, 29 Jul 2026 13:52:39 -0400
+  by phl-compute-10.internal (MEProxy); Wed, 29 Jul 2026 13:52:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1785347558;
-	 x=1785433958; bh=D5KLqWCTQA2QDpEdxZuXTTNt/FdG3ghMWYTA5+524n8=; b=
-	YMXaaqaS0aQ/zPMUBhOq/ctrW26MTILBE8iUncYt56mdqlvSr4VMhlHiVyBZPzMD
-	/xEKORv2KHTpCQqG/y+lsmqnWgfHP/NF1wCulpRUUdGtjT2DHLr5HBSg222j0H0A
-	eFdfzylf4SQqBfRb/OYyit+zSfV4vRQWa262ygp87kw4Yg5Qo0v3pHt5EWI71TWq
-	2IiJ2nJDWvfGUroACOiMmKuz7WWmqCygttVz6YifZQUS1YWzA/VqGmDPZtxu52NT
-	7tNoJcKNxU9yMcW9NNfEE408f3JOGnpTYD1oAlfqMUIpSMOuO8ixdyc780r+VWBj
-	YjbjkLJnbMqHS4Uce1YhKg==
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1785347561;
+	 x=1785433961; bh=swpO+bNIco0ihJ3x/W/Pu1/SVkczokwLjjxdBh5qjHw=; b=
+	sqREERo8HzAmvXZHFuCj/SlyWZZB8UeN9C2HchMSbnX2sjmZl8T2z0v1JusVXpSD
+	hdBlqEqFYdFsy2kNz+f8ByGoYqXWKw1BS/MSuqVNSGoYYAMYOv4IOIFdX/U0bVlG
+	8GEuLLbUo9eu5bewbnyfde3texnd/KwvK3yZQhD9Ry5SKNqDjDeW5SoKV7ydU9l0
+	yWbtxU9CYTFlSzroDd9MZbJXgD36AYA7SUaFxTjR198DlgJLeU+AXMTIqAdRCMz/
+	iuh6FbWaVQ2oLvjdgn/7Kx+h5FqPClNiJfrhUNvqKQixZdqIn1OqoVNxhdRvca+5
+	kztMO5PH3pU4dNmBMNlLhg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1785347558; x=
-	1785433958; bh=D5KLqWCTQA2QDpEdxZuXTTNt/FdG3ghMWYTA5+524n8=; b=G
-	YA1SkGaZCWjAwMlhAdsQdznHaJNSzaGJY+m0HRWFcSsaMjegcVNJ38TFmZ+/gRfi
-	TeZ5RJmdKgFjeD5pNOQ8nraNoiu6s6CxC5BB9Xo+282ZPuVGk+rLDOQHTmNSJqIi
-	2y66oG4bgN0Di5Ezv0re5PJLUsEWOOiOfhS4YWPDIDkAQdKXglOSbtNkzCVeMJZU
-	l2hnOB+54fjwe4c5Av99e0duKYF0gLwzZPsFLkCzgeVLwa50IIJi9i/1WgjosZOU
-	SWHsHxCIFnsUh1InFz56JdoswZ7eqibVS/ZW/ot4EJbh9pnwD00XeXGVnhzj5QJS
-	bMt7O5SwTxGlB5wQby8ow==
-X-ME-Sender: <xms:5D1qagWYaIIbptzkbmpvs6Y2TiDJqhOcHtPKfwD7BIWvmSe6BDEc6A>
-    <xme:5D1qagBKAvkTTrvIhx1mV4Qqhg07O_6eq_9I8YapsFUoARP44LL1f3WLMdQtRkALi
-    QubY9Th8VPxkr9FPdPtI9BPmDcCq381g1tj4FFMi_5stS5NAY0sGg>
-X-ME-Received: <xmr:5D1qajGoZpya9SQvSSSq2aRIy8lJz3IWwP1920feVBXoNdSiGBJelCXG7kULkw>
-X-ME-Proxy-Cause: dmFkZTGl05Q9wRGUWHkduWO3wZl/xrZz4kajZ8zaPjiF9sDpbasCsIvWKG0Kx7MA/yQKDI
-    yypxVnOugzA8KvSYDGOF5LXICBeDbAIJ4cWd5Z/vJ0+46K3Ll9oGFrVkBIGhuqTNs8pUei
-    eaPGTwi+QY0Q+EYeFhNnXAy/iYAqBfyzTdKhFVZmoaYWH1pLSjKpELRhjRki+hhUPVnXpT
-    lWR7CJgsRUir1V3meZuOeSXzV/MghUC0Sqt/s4HkpQCtmYiWr5caV//gMexYRpgKuv7DKv
-    Ec9zyKUlMm41GeT/Rmb9aSsA9bh7vDpWwxM8v5VFi+UwyrITdyzWTvJcPLhn85QmG2QEO7
-    gpoEhIgmn5R2uhB2eukSpphuksTHZvkADJfJqnb9HmWLyfy7j8FFhT14d72vNTAGWadVme
-    Mj9UPDnESUm9IKK8R9JvOIZ/mnK8amdk8E8UsM/pFtnOBl2LQSN5wLzLrBe1i1OI1H0RgG
-    TrEtjCaUBGJrecfNb03S4uWUhl++Zdl7tU1p9TXXzPc+KYW0boggANFgmvPNj9+2I5vpD4
-    Fv2dD0lZ22pjAPuFar4laEfG6SZLJCKFZI3oqdmQn0N724QI/RVKPy24wvpDOB+2N/sknH
-    7w8YAlByGWU/44zrNmYotNTWXQh4y5yQ8xgvyGpVlKZwJdwn5ymgfXg6dAJQ
-X-ME-Proxy: <xmx:5D1qasfRn7aCRyKJJAz2PIokAJ5nCuBnSdmv0ND5zghRLsRT9A6LeA>
-    <xmx:5T1qag9oQ3Y9LDNx_lBPbN4uImhmdY0Izuqjfdzp6x_VvNsXX8IJgQ>
-    <xmx:5T1qaqZjYW2MjbImQjKqqkejcpoU2mOMCrNT3SBeRdinVI_Evl6FDg>
-    <xmx:5T1qapdCBeApI_xwR6xzCAqJKOMNVQGbnDTfOqAWiLR9TXTueSCRFw>
-    <xmx:5j1qajG_TpQxnxWKc8ezzVQiRV90W1SPZ57tG3676nimiT5N6WSnAWT7>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1785347561; x=
+	1785433961; bh=swpO+bNIco0ihJ3x/W/Pu1/SVkczokwLjjxdBh5qjHw=; b=O
+	jBg0u0cnLP9y7Dy3mEv7rKGlf4B6JOqXu8v121NKWu4hwUOKTdsKSORAz7p4Vv+z
+	m+BpGCPldcGZmnhLsc+wJNoXZ0IDqwBA/ZDym83aFOoc/BQk70an9WQ1QdZE4M3H
+	vtPA5yAMo6uVYPq14Orwrxa1gwdCmQB7b50D/yTYpe8HSqE/V1YZ7IE4izzHorEu
+	PbEvoMI9oeg7crTD4qJJS8uf7J8f6FrgzvZX/acCa/SePdhlc2cBJTdoPM77j8lX
+	h86xK/cxk5EmuJrY2S93DWFabBSeUsUut0Ytb8Y3W9Yq1WcbuP+KOqKBXsT3RLp1
+	FN2fcnGiaojXWpUQ8TCuQ==
+X-ME-Sender: <xms:6T1qavKkLD7eR7SBOITsKnAFzHv_9eV92nCi2NM7pEXVoMkmdoV2ww>
+    <xme:6T1qajvNPNBgpRp3C_2DKaHojFclwxQcdwMAhpMy7oEb5zFoWPclERhQHaIgVTYp_
+    BbpNnBe68G-JzGlHnSaTfPYCnMU2OKGFGCz6AOox9kXifjmhLwBCwI>
+X-ME-Received: <xmr:6T1qagmTTP_XoWjfpN4CoktfY6stCqT3jhnSvnJlcVGOqjTj-W2anOYtL7h_wg>
+X-ME-Proxy-Cause: dmFkZTEEKmvm6usZpfT8gTSOJbqanlO3Pfaw1SwlI8f/Y1kQuB5PNxzg3aOh42AlQ5x0re
+    mEkbtzhui+wLYtqWZK72Xd/sdJJEBvaXRotkM6Vk0bPPvLVaNTNCx4v9cPIE7guN0chqZG
+    xBk0FjLQTleHOrHFXXErnyGCptkTDYgk7zSCFRUjOu4hbmap/73RGBIgA9cJ0wq9zAoT+n
+    iQ8tOqSb+FQ4ww6H9mq9hRsOLrowOesvFEIXGg5PbgzKo3PTE5X8d/73KQfrp4YMVmYaaN
+    ygTQrCIHZp6Q1vuJ9i+D5kwdZMjX9SfNAWiOB7hAYx70kmcGovcy9tx9FXQs3RN4UEbWtE
+    3K3KDGkznqKjYQsSX/IsdTEKcHLf8ZTBrc1kvNbfpB0t4LBiGUOi7/IROIHgGuXY3y0tl9
+    BFEeK96JLUeIVgqBQ5e4Nz0uRkqCUMwlp9cYPA0rb5CG8mAe5gZ+jaMDw0QTCCnLnW0Jr6
+    6fAji32cEBoDlQAPFOAIZY20wWs5NLmUXY24ZiMAvijjpELbFFAxTQKi8B+a0PXANCXMxJ
+    1UUEvQoF7v7P9hM+uW8GdkzNl0vc2fZq6s1hzPaaPmfktxrBrgSLiU+3HZlBGCOuXaPpMS
+    EdOJGXzIUGBYf4QhuB6DNQ5UJ1bhVK2sOVcskyLlKBxFhuIMN34k4k+rP1Nw
+X-ME-Proxy: <xmx:6T1qain9SgKcWGIXJs-Y-bEKMoystX2kw6RS5VcWq6a-4UTBGNrJ_w>
+    <xmx:6T1qarg7idyfLpPbW4_aiUBnkUlQMETXGvrlcRSIPz2f61mvOMLKWA>
+    <xmx:6T1qakFutMxP9D3z5TP4tK0lhtMsLrE33Tw1G1c5Vp3Y_Q1TS9QpuQ>
+    <xmx:6T1qamZNPJ-KkRvn8RQqHYhOvU_L4VC06iAKgFXNu07YZFKR0IttTw>
+    <xmx:6T1qaiuMZR5lUMAOC-vCbCPd2z_AH1r3iiEa_y9o84b84x56Ay7EfScS>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 29 Jul 2026 13:52:35 -0400 (EDT)
-Date: Wed, 29 Jul 2026 11:52:04 -0600
+ 29 Jul 2026 13:52:39 -0400 (EDT)
+Date: Wed, 29 Jul 2026 11:52:02 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: Matt Evans <matt@ozlabs.org>
 Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
@@ -83,11 +83,12 @@ Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
  linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
  dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
  kvm@vger.kernel.org, linux-pci@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v5 7/9] vfio/pci: Clean up BAR zap and revocation
-Message-ID: <20260729115204.2a9a50b2@shazbot.org>
-In-Reply-To: <20260715174737.15287-8-matt@ozlabs.org>
+Subject: Re: [PATCH v5 6/9] vfio/pci: Provide a user-facing name for BAR
+ mappings
+Message-ID: <20260729115202.15ac87c5@shazbot.org>
+In-Reply-To: <20260715174737.15287-7-matt@ozlabs.org>
 References: <20260715174737.15287-1-matt@ozlabs.org>
-	<20260715174737.15287-8-matt@ozlabs.org>
+	<20260715174737.15287-7-matt@ozlabs.org>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -98,22 +99,100 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 15 Jul 2026 18:47:30 +0100
+On Wed, 15 Jul 2026 18:47:29 +0100
 Matt Evans <matt@ozlabs.org> wrote:
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 9a1674c152aa..e2b4252e7c3f 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -134,6 +134,7 @@ struct vfio_pci_core_device {
->  	bool			pm_intx_masked;
->  	bool			pm_runtime_engaged;
->  	bool			sriov_active;
-> +	bool			zap_bars_on_revoke;
->  	struct pci_saved_state	*pci_saved_state;
->  	struct pci_saved_state	*pm_save;
->  	int			ioeventfds_nr;
 
-This should be in the bitfield usage group since it's only modified at
-init time.  Thanks,
+> Since converting BAR mmap()s to using DMABUFs, we lose the original
+> device path in /proc/<pid>/maps, lsof, etc.  Generate a debug-oriented
+> synthetic 'filename' based on the cdev, plus BDF, plus resource index.
+> 
+> This applies only to BAR mappings via the VFIO device fd, as
+> explicitly-exported DMABUFs are named by userspace via the
+> DMA_BUF_SET_NAME ioctl.
+> 
+> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_dmabuf.c | 22 ++++++++++++++++++++--
+>  1 file changed, 20 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> index 46b3cf5dc94b..51606ff3cdc6 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -4,6 +4,7 @@
+>  #include <linux/dma-buf-mapping.h>
+>  #include <linux/pci-p2pdma.h>
+>  #include <linux/dma-resv.h>
+> +#include <uapi/linux/dma-buf.h>
+
+Is this required?  It seems unused.
+
+>  
+>  #include "vfio_pci_priv.h"
+>  
+> @@ -486,6 +487,7 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>  {
+>  	struct vfio_pci_dma_buf *priv;
+>  	unsigned long vma_pgoff = vma->vm_pgoff & (VFIO_PCI_OFFSET_MASK >> PAGE_SHIFT);
+> +	char *bufname;
+>  	int ret;
+>  
+>  	priv = kzalloc_obj(*priv);
+> @@ -498,6 +500,15 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>  		goto err_free_priv;
+>  	}
+>  
+> +	bufname = kasprintf(GFP_KERNEL, "%s:%s/%x",
+> +			    dev_name(&vdev->vdev.device), pci_name(vdev->pdev),
+> +			    res_index);
+> +
+> +	if (!bufname) {
+> +		ret = -ENOMEM;
+> +		goto err_free_phys;
+> +	}
+> +
+>  	/*
+>  	 * The DMABUF begins from the mmap()'s BAR offset, i.e. the
+>  	 * start of the VMA corresponds to byte 0 of the DMABUF and
+> @@ -516,7 +527,7 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>  	priv->provider = pcim_p2pdma_provider(vdev->pdev, res_index);
+>  	if (!priv->provider) {
+>  		ret = -EINVAL;
+> -		goto err_free_phys;
+> +		goto err_free_name;
+>  	}
+>  
+>  	priv->phys_vec[0].paddr = phys_start + ((u64)vma_pgoff << PAGE_SHIFT);
+> @@ -524,7 +535,7 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>  
+>  	ret = vfio_pci_dmabuf_export(vdev, priv, O_CLOEXEC | O_RDWR);
+>  	if (ret)
+> -		goto err_free_phys;
+> +		goto err_free_name;
+>  
+>  	/*
+>  	 * Ownership of the DMABUF file transfers to the VMA so that
+> @@ -539,8 +550,15 @@ int vfio_pci_core_mmap_prep_dmabuf(struct vfio_pci_core_device *vdev,
+>  	vma->vm_file = priv->dmabuf->file;
+>  	vma->vm_private_data = priv;
+>  
+> +	spin_lock(&priv->dmabuf->name_lock);
+> +	kfree(priv->dmabuf->name);
+> +	priv->dmabuf->name = bufname;
+> +	spin_unlock(&priv->dmabuf->name_lock);
+
+This is simple, but shouldn't it really have a sanctioned, exported
+dmabuf helper rather than open coding this handling?  Thanks,
 
 Alex
+
+> +
+>  	return 0;
+>  
+> +err_free_name:
+> +	kfree(bufname);
+>  err_free_phys:
+>  	kfree(priv->phys_vec);
+>  err_free_priv:
+
