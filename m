@@ -1,75 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5933C9EEE;
-	Wed, 29 Jul 2026 20:32:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941443C1D6B
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 20:38:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785357144; cv=none; b=JEoOqNA3QKNsUwXfq5XvZ2T7s6CF0x5M6hOTGu6dPiW3CS9JS2vDY6ANAvgBU3XiCtUGlVTeW30u1ZlZzXlRoovdFRNABhkfUuhsTN3XMar9erKvBho8YuOXcudaDjGO5F1Gidkcryg7j48bVNrz6j6Qm1jjQgZACXUHoXdOYRo=
+	t=1785357536; cv=none; b=uOd7BWYLMtXQSdUOENWzuZSUSio9bTKrgJY7IJPya3/ZsVZmBEDjrMiT8FnUhNHpLneJMPcbQKYv14hM1lpApEh/5TMG3daSBfp60X2/bfjP1+J6NERwcpRu14IxjpZpnfZ4BPt4G1WiSu9AQrB9yXIzASRKFf7fMsEFxtz52gI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785357144; c=relaxed/simple;
-	bh=F5IKq6tStFr/2514NCP6oWZPmmawnjIGz2XNjviaS2c=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=E9CpBnZYdE6nkEwKc8VO/tQQqBO6NNYqy67CP0p18l4Dv1mzTwXZ4xyuxxTxFSbqcAsqLQwo2/iIVM7TV0nn7y/65Y6C7oj3GjJzOxxhGqGPxM/RsKvLrEMx7EPj6S+WtLjVDMl9IuWTWMuKxuYQ9WAXAXKL1b7blJaQ2s98cDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a8XJqTZ/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785357536; c=relaxed/simple;
+	bh=QpI1dXgj2Mx8VpctnTqS1oG//Ewy0OC2DXL3vIUYI5s=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=qtku1PVRH8HJobxyFUu/Vk1c0mjYAopcEi9irhZdq7O07X0Ru3Ru20edfx+ocIhipgx0s9IkqXhoyRAP2OMrVtZG0+bODrrDORm7WCMvclQYPHNLKkVz9J46ORZ7Lcy0EG+wQKEhxa4zejWfcwqP9bpulIErpLxFYY6rtRMZ6vM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jWe+ajlF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a8XJqTZ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45AD41F000E9;
-	Wed, 29 Jul 2026 20:32:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jWe+ajlF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689781F000E9;
+	Wed, 29 Jul 2026 20:38:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785357143;
-	bh=o4LwrGMKdsyiGbYcgs69UzBmVusf0+mW1ZKjaz2vMXM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=a8XJqTZ/HQZ9S20Svo+TSeJ3O15hqPvyEAFQHqwuLVM7Y8GQCrC0lw7lylri6Hrm+
-	 eO3howZapdbNEpYPTUqtykbCQOpvtlHC6hKftdD7GKmyGkGDIpeFQdW5rhtDEF3Ome
-	 Q8EQQGlQ2QNBXWomPXj2frAYA9rnqVY63aGo4SmN3Y/SLpJPfUtInugJvud/YiWo4L
-	 2ZzmxH9HuTwCsAUp+a8+k2kh3kZNjIdmQg5zxniMfNZPLA3hmNmjPzU78PHneHJCIv
-	 u/PCq1faZh9hg55FcxFYK5a2Fx0EytjGDX7R7ceowr/k0ysoFFOtysWufr5GkxhSyp
-	 3KbDmgbdu8MOw==
-Date: Wed, 29 Jul 2026 15:32:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-	Michal Simek <michal.simek@amd.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH v8 3/6] PCI: Use standard wait times for PCIe link
- monitoring
-Message-ID: <20260729203221.GA1465128@bhelgaas>
+	s=k20260515; t=1785357530;
+	bh=xxvtC1gNO1lYrdVbLYxr+Mlf+QwfSlFbnW4X9UPjsQQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jWe+ajlFjdBDS5/DDx7X7AgkBfmgRk8E3RJS6gCXDJlSjIGr+gjq9d5hgIn1neKGU
+	 aHzCnUh1QRm5sat4gjH45YV2CQtRJA48DH2KGpFUYzBs+M152j8DLtSjAM3IyZlKrv
+	 tNEQa9/Xjmw9S8pk5Pc0qlDrRFOKc/8PrR6p9YKptZryaUsKrUoOZ5pcAzAj5gjtKD
+	 FgZ1XGAbzOvv3BwRwzgrf7/ZezkivdZrbG5WzzaqLEtun8Cl4V3Cd+duxNoqIkHLn6
+	 H0fdFkXtjJwKp2XQjeOWcVpdmSLRpXyQUnl4IvTnSSfKmln6g+qgad/+SLc2DfxV5j
+	 kUN72BR7QqmJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] misc: pci_endpoint_test: Add WARN_ON() to detect broken
+ EPC drivers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260729202821.1153443-2-cassel@kernel.org>
+References: <20260729202821.1153443-2-cassel@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 29 Jul 2026 20:38:49 +0000
+Message-Id: <20260729203850.689781F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260716-tegra264-pcie-v8-3-23e51589229b@nvidia.com>
 
-On Thu, Jul 16, 2026 at 07:07:14PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Instead of defining the wait values for each driver, use common values
-> defined in the core pci.h header file. Note that while most drivers use
-> the usleep_range(), it looks like these were mostly cargo culted and
-> msleep() is a better choice given the fixed delay that the specification
-> calls for. Convert all drivers to msleep() and use the existing
-> definition.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-Thanks for doing this, removing all this needless duplication is
-great!
+New issues:
+- [High] The newly added `WARN_ON` can be trivially triggered by shared int=
+errupts or untrusted hardware, leading to a Denial of Service (host panic) =
+if `panic_on_warn` is enabled.
+- [Medium] Direct, lockless read of the internal `done` field in `struct co=
+mpletion` causes a data race, violates API encapsulation, and relies on a f=
+lawed TOCTOU heuristic.
+
+Pre-existing issues:
+- [High] The shared IRQ handler unconditionally returns `IRQ_HANDLED` even =
+when the interrupt was not generated by this device.
+- [High] Use-after-free of `struct pci_endpoint_test` when the PCI device i=
+s unbound while a file descriptor is still open.
+--
+
+--- Patch [1]: [PATCH] misc: pci_endpoint_test: Add WARN_ON() to detect bro=
+ken EPC drivers ---
+commit e4f6d6484e68c6a478412d97f6734cf8590a6f97
+Author: Niklas Cassel <cassel@kernel.org>
+
+misc: pci_endpoint_test: Add WARN_ON() to detect broken EPC drivers
+
+This commit adds a WARN_ON check to the IRQ handler in the PCI endpoint
+test driver. It aims to detect if the driver receives multiple interrupts
+sequentially without a successful wait in between.
+
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint=
+_test.c
+> index 3635741c3e7a7..a212e53654c68 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -178,6 +178,19 @@ static irqreturn_t pci_endpoint_test_irqhandler(int =
+irq, void *dev_id)
+>  	if (reg & STATUS_IRQ_RAISED) {
+>  		test->last_irq =3D irq;
+>  		complete(&test->irq_raised);
+> +		/*
+> +		 * The endpoint test driver performs all testing sequentially.
+> +		 * This means that test->irq_raised.done should never exceed 1.
+> +		 * If it does, then we received two IRQs in a row, without a
+> +		 * successful wait_for_completion_timeout() call in between.
+> +		 *
+> +		 * While complete() increases test->irq_raised.done by one,
+> +		 * wait_for_completion_timeout() reduces test->irq_raised.done
+> +		 * by one on success.
+> +		 *
+> +		 * Please debug your EPC driver if you see this warning.
+> +		 */
+> +		WARN_ON(test->irq_raised.done > 1);
+
+[Severity: Medium]
+Does this direct, lockless read of the completion structure's internal state
+introduce a data race?
+
+If wait_for_completion_timeout() executes concurrently on another CPU betwe=
+en
+the complete() call and this check, it could decrement done back to 0. Would
+this window result in missing the duplicate IRQ this is attempting to detec=
+t?
+
+[Severity: High]
+Can this warning be trivially triggered by shared interrupts or untrusted
+hardware?
+
+If the driver requests its IRQ with IRQF_SHARED, an interrupt from another
+device could cause this handler to execute. If it reads a stale
+STATUS_IRQ_RAISED bit, could repeated shared interrupts trigger this WARN_ON
+and potentially panic the host if panic_on_warn is enabled?
+
+>  	}
+> =20
+>  	return IRQ_HANDLED;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this function
+unconditionally return IRQ_HANDLED even when the interrupt wasn't generated
+by this device?
+
+If the status register does not have STATUS_IRQ_RAISED set, bypassing the
+internal block, returning IRQ_HANDLED instead of IRQ_NONE could mask
+unhandled interrupts from other devices sharing the same IRQ line.
+
+[ ... ]
+
+[Severity: High]
+This is a pre-existing issue, but does using devm_kzalloc() for the state
+structure expose a use-after-free regression during device unbind?
+
+If the PCI device is unbound, devm_kzalloc() frees the struct
+pci_endpoint_test upon return from pci_endpoint_test_remove(). However, if
+an application still holds the device node open, could a subsequent
+ioctl() access the freed pointer when resolving the private data?
+
+drivers/misc/pci_endpoint_test.c:pci_endpoint_test_ioctl() {
+	...
+	struct pci_endpoint_test *test =3D to_endpoint_test(file->private_data);
+	struct pci_dev *pdev =3D test->pdev;
+=09
+	mutex_lock(&test->mutex);
+	...
+}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729202821.1153=
+443-2-cassel@kernel.org?part=3D1
