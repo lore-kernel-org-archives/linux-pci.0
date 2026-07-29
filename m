@@ -1,152 +1,168 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A0133AB260
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 21:48:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82EB837E5CE;
+	Wed, 29 Jul 2026 22:29:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785361741; cv=none; b=eeeVuh4jl7U9OgW4liQjO+xxcrSYHRp/IH2V1nbs+mMZBzsQAlypKD35lcOlh4IozBZVxous6AnyQAM1N0s7DWQpDI3azZXNPLLMfSvQuE0mNDuCOmrbYpW4YXOjgEA+z5Yz4kVP8KlInEt390i4knIibWuY6kYkNHQhFgNT/wM=
+	t=1785364189; cv=none; b=N99LH3Js79hnZYikuiFYsIEDQ8S8QKZkBpmTja3GZ31XcDe0V9jIXye+aD5fsrUMtq++yqtBR/tb9LlJtQ0fOZrkIwiW+3jip7UHOhMjMeml8/XVnmgycLbZPFA9i/sdsawlIZTpXVPTYsPgnCR53XOFfsiChe3wj6/CLwwN1gI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785361741; c=relaxed/simple;
-	bh=A0ekx1xKTTjvCrPHDYdf4rtTZibBMLxr+CEo7mvfKEc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uWe3pehUCagzquwZ+Q/G/s66dBxQu9FrNHcfykFECvB2D+sRK1Jo+YvdyqTZJtI7rqMM5NUXrF9cH4xFFm39CFTMAbRhnQFcFbFNpTHyW1jr88u+WYmjLuMGyceXk1ec3TNRbkjZ71QtYu/KSuTOSzoJAZeabWU8V+YmowI6RPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QRbQHaSc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785364189; c=relaxed/simple;
+	bh=J240MGnDtIb1L3nakf/onJCNwvo82TtH9HyCxKg6ybk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=YYo6EYCjSZ4NjFR2ifHewFCRjZ6epT9CSzSERucgOdTBuWVqyg/4Dhr4CKojXWCQC0N4Z397yB79PsA0z1aufF9WSu0bBdkMRTeNPLJnWgTogH2FmsB+V+m+UpY4Zdp8DU89/2LutaSc7menn6Vn3Y5cfnAN8Do6ZPWvJCFJ17E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=npp3Pj8S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QRbQHaSc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9E2B1F00A3A;
-	Wed, 29 Jul 2026 21:48:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="npp3Pj8S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAAC31F000E9;
+	Wed, 29 Jul 2026 22:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785361739;
-	bh=hLyWdqnBlJXKa3TUcf7D9RxIesK3YpwkxdQ1pOkLlkg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QRbQHaScQfPs2KuY2NY2WXbhpy1cqxadxeTIIm2eFok0pNVYpopPAW+tDNPaTEnLa
-	 GIut6Zy5Bj8LIaN006kwaxUz+iB9LU1AyY1FDbnDOO8rXihmFIEd2Yq3wnFVyjYCOp
-	 G6xKTXDh7qAaWzSgcJ0uvFHeCk8S1bymHruDaCox1OGSGZxZx0ujIsS7sZEpc40+cD
-	 HlAhiOuB3sIsoKAxtmTuvXTkkmm2bvn9Kzkp7YuFj7JMgCWx04YDTOxy9XqIGJpg+w
-	 f8Tb8mX9ohyG9z3oe7LywM/8739mV85mqJPKjAeS0X3bcFt8QQOoALVKniSRf8x1Uc
-	 tjMrQCNPDr4HA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: ep: Fix unmap potentially unmapping the wrong
- iATU
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260729213520.1187704-2-cassel@kernel.org>
-References: <20260729213520.1187704-2-cassel@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 21:48:59 +0000
-Message-Id: <20260729214859.B9E2B1F00A3A@smtp.kernel.org>
+	s=k20260515; t=1785364188;
+	bh=0U5DHx/vibag0y1MX3xU73yi1W1IoWaz0Zw0N4cnjm8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=npp3Pj8SkNgFweE8i7YmpVumas1g6oBVU96OUQlUBjDF0LDtQtyvi0MXqoszHv9Zo
+	 JeiOqIxP5uWNrvyn20RfxtmonJj11aq66qxyQGRk7zC6KkogYC5OdOQzqzPSPYzDsI
+	 5qJAX2BODA7CPf1JWuyzsQqkuYhK9bceTAr7Sh2zd3nKPpVugbymxRUCeLxfBKgu24
+	 rlO8MR1tujqfrwgfgdekPiZoLV5nvG5m9xe4A+gUmlpuMohfBk9QKMXwRwIdIU+VEW
+	 UIVXncmw//H5yU5PTt9ftkoInE/0s4Zoj4gFd9nMA5Dcm3oXM/rLmZ9+8GnA3EgoOj
+	 9VRQj3AnIsixg==
+Date: Wed, 29 Jul 2026 17:29:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
+ with RC power loss
+Message-ID: <20260729222946.GA1466768@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260717074121.3214222-1-hongxing.zhu@oss.nxp.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Fri, Jul 17, 2026 at 03:41:21PM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
+> 
+> Some platforms like i.MX power off their PCIe RC controllers during
+> system suspend, requiring full re-initialization on resume. These
+> platforms need to enter L2 state to properly notify endpoints before
+> power loss.
+> 
+> According to PCIe base spec r7.0, sec 5.2, the system software should
+> transition the device into D3Hot before broadcasting the PME_Turn_Off
+> message to initiate L2 entry. However, some endpoint devices fail the
+> D3cold capability check in pci_host_common_d3cold_possible(), which
+> would normally prevent L2 entry.
 
-New issues:
-- [High] Unmapping the cached MSI iATU window without flushing posted write=
-s can cause AXI bridge lockups.
+Wakeup devices that don't support PME from D3cold will fail the D3cold
+capability check, but I don't think those are the problem you're
+solving.
 
-Pre-existing issues:
-- [High] The cached outbound iATU mapping for MSI interrupts does not track=
- the endpoint function number, causing misrouted interrupts.
---
+This appears to handle devices that are not in D3hot, and that's not a
+property of the endpoint; it's a property of its driver.  Is the
+problem here that some driver didn't put its device in D3hot?
 
---- Patch [1]: [PATCH] PCI: dwc: ep: Fix unmap potentially unmapping the wr=
-ong iATU ---
-commit f97e3684cb2dd4f7108472fedeb7f80a99737691
-Author: Niklas Cassel <cassel@kernel.org>
+> For platforms where the RC loses power during suspend, L2 entry is
+> essential regardless of D3cold support, as the link will be lost anyway.
+> Add a suspend_poweroff flag to force L2 entry in such cases, and enable
+> it for i.MX PCIe controllers.
+> 
+> Note: This violates the spec requirement that devices be in D3Hot before
+> PME_Turn_Off, but is necessary for proper operation on platforms with RC
+> power loss during suspend.
 
-    PCI: dwc: ep: Fix unmap potentially unmapping the wrong iATU
-   =20
-    The persistent MSI iATU mapping can conflict with the dynamic MSI-X iATU
-    mapping, since they are both using ep->msi_mem_phys.
-   =20
-    If dw_pcie_ep_raise_msi_irq() caches the iATU mapping, and then
-    dw_pcie_ep_raise_msix_irq() is called, it maps the same address to a new
-    window/iATU.
-   =20
-    Link: https://lore.kernel.org/linux-pci/20260729051542.DC2741F000E9@smt=
-p.kernel.org/
+If the device isn't in D3hot, it may still be active, and I think the
+PME_Turn_Off will abort any DMAs in progress, which doesn't sound like
+proper operation of the endpoint.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pc=
-i/controller/dwc/pcie-designware-ep.c
-> index 7d2794945704e..051b234260352 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -1124,6 +1124,15 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *e=
-p, u8 func_no,
->  		return -EPERM;
->  	}
-> =20
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+> Changes in v2:
+> - Rename the new added flag.
+> - Update commit description and comments.
+> 
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c             | 11 +++++++++++
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++++--
+>  drivers/pci/controller/dwc/pcie-designware.h      |  8 ++++++++
+>  3 files changed, 27 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 98e1db751132a..5a43bf396521b 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1957,6 +1957,17 @@ static int imx_pcie_probe(struct platform_device *pdev)
+>  		 */
+>  		imx_pcie_add_lut_by_rid(imx_pcie, 0);
+>  	} else {
+> +		/*
+> +		 * i.MX RC is powered off during suspend, requiring L2 entry
+> +		 * to notify endpoints before power loss. Some endpoints fail
+> +		 * the D3cold capability check, which would normally prevent
+> +		 * L2 entry. Force L2 entry anyway since the link will be lost
+> +		 * when RC powers off.
+> +		 *
+> +		 * Note: Per PCIe spec r7.0 sec 5.2, devices should be in D3Hot
+> +		 * before PME_Turn_Off. This may not be guaranteed here.
+> +		 */
+> +		pci->pp.suspend_poweroff = true;
+>  		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_READY))
+>  			pci->pp.skip_l23_ready = true;
+>  		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_KEEP_MSI_CAP))
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 06722259d2e37..95a31d65e1ca9 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -1222,14 +1222,20 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
+>  
+>  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+>  {
+> -	bool pme_capable = false;
+> +	bool d3cold, pme_capable = false;
+>  	int ret = 0;
+>  	u32 val;
+>  
+>  	if (!dw_pcie_link_up(pci))
+>  		goto stop_link;
+>  
+> -	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
+> +	d3cold = pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable);
 > +	/*
-> +	 * ep->msi_iatu_mapped means that an MSI target address is cached,
-> +	 * unmap it first so that we can reuse ep->msi_mem_phys for MSI-X.
+> +	 * Enter L2 if D3cold is possible, or if the platform loses RC power
+> +	 * during suspend (in which case L2 entry is required to notify
+> +	 * endpoints before power loss, regardless of D3cold support).
 > +	 */
-> +	if (ep->msi_iatu_mapped) {
-> +		dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
-> +		ep->msi_iatu_mapped =3D false;
-> +	}
-
-[Severity: High]
-Does unmapping the cached MSI iATU window here without flushing posted writ=
-es
-risk an AXI bridge lockup?
-
-In a multi-function endpoint, if Function 0 raises an MSI, the write is pos=
-ted
-to the AXI bridge and the iATU mapping is intentionally kept active to avoid
-unmapping while in-flight.
-
-If Function 1 immediately raises an MSI-X, this unconditionally unmaps the
-cached MSI mapping. Since there is no dummy read or flush before
-dw_pcie_ep_unmap_addr(), the previous MSI write might still be in the AXI
-bridge's posted write buffer when its iATU translation window is disabled,
-which could violate hardware constraints and lead to a lockup or dropped MSI
-writes.
-
-[Severity: High]
-This is a pre-existing issue, but does the pre-existing MSI caching logic
-cause misrouted interrupts for multi-function endpoints?
-
-Looking at dw_pcie_ep_raise_msi_irq(), the caching logic erroneously skips
-iATU reconfiguration solely based on the target address and size, failing
-to check for a mismatch in the requested func_no:
-
-drivers/pci/controller/dwc/pcie-designware-ep.c:dw_pcie_ep_raise_msi_irq() {
-    ...
-	if (ep->msi_iatu_mapped && (ep->msi_msg_addr !=3D msg_addr ||
-				    ep->msi_map_size !=3D map_size)) {
-		dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
-		ep->msi_iatu_mapped =3D false;
-	}
-    ...
-}
-
-If multiple functions share the same host MSI target address and size, the
-second function to raise an MSI will reuse the iATU mapping cached by the
-first function.
-
-Since the DWC iATU mapping is programmed with the func_no of the original
-function, subsequent MSIs from other functions will be sent with the wrong
-Requester ID. This could lead to IOMMU faults or interrupt routing
-failures on the host.
-
-The struct dw_pcie_ep appears to be missing a field to store the cached
-func_no to properly track this:
-
-drivers/pci/controller/dwc/pcie-designware.h:struct dw_pcie_ep {
-    ...
-	/* MSI outbound iATU state */
-	bool			msi_iatu_mapped;
-	u64			msi_msg_addr;
-	size_t			msi_map_size;
-};
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729213520.1187=
-704-2-cassel@kernel.org?part=3D1
+> +	if (!d3cold && !pci->pp.suspend_poweroff)
+>  		return 0;
+>  
+>  	if (pci->pp.ops->pme_turn_off) {
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index de4b245b1758c..3ce7d30d9a4d5 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -471,6 +471,14 @@ struct dw_pcie_rp {
+>  	bool			native_ecam;
+>  	bool                    skip_l23_ready;
+>  	bool			skip_pwrctrl_off;
+> +	/*
+> +	 * suspend_poweroff: Force L2 entry during suspend even when D3cold
+> +	 * capability check fails. Used on platforms where RC loses power
+> +	 * during suspend and must notify endpoints via L2 entry before
+> +	 * power loss. May not meet PCIe spec requirement for devices to be
+> +	 * in D3Hot before PME_Turn_Off.
+> +	 */
+> +	bool                    suspend_poweroff;
+>  };
+>  
+>  struct dw_pcie_ep_ops {
+> -- 
+> 2.34.1
+> 
