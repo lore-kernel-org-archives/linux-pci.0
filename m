@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E0603164D6;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E42B3246F4;
 	Wed, 29 Jul 2026 04:52:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785300767; cv=none; b=B9Bdp61u0i3s6O3aYEXz7kdAuufEdlOJZld//DUeSwXiCZdChyd18tqRi6kFRSBmoHc2SjWmdLMEa1oISiRi/o/OfzfKH3upq8Uks57waCs28kvlia/5AHv1ohnmj/VXuEjPsWwTdAZ6FUwKqvdJavXf05Yb1s7OPr5XYh5BcHI=
+	t=1785300767; cv=none; b=XnG6bmmS7Yecgi7Z7xEnZ9XllmF/E5z8qdP+nklGSU4+hnx5+Xg+F7CNTmUWA/IoSyaG2J1RF+Dzsr3OpKCMRgomy3Z8RLJsW9RcBWYikM/k+r+OQrqgU27E6riDNJeOtoV8ze1GIsyla6zqjG4PGyOEvwOIvn1fyUwRga78k4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785300767; c=relaxed/simple;
-	bh=c2VrE8rb1zoFDS/P2/5rT/iLBv1+HHpu9wwoYvKp7nQ=;
+	bh=fySVXE/aTfrJSjJ2cAKr0vSWe2afZA9cj+VbFYbVc4E=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=sSobdyfG77MKq2patVtS7sKcwZQI/4ukV/2Sh2hPJCU7RR8j5T9p9XUKeRmZbEK+vnpncgcSVDexN8oTkR8Nja0gt3/tgVrjrovM5Yjku+DpxQjqeTZ4jsq+Mte0rNZauu/wu92RARTqg9w5b7iAbDU7gwMmv8cM0TKEx6PUCSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DxxkuFll; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=nN5rEfvnyVFZ/U/wf9bOM0qaT6rsJsNqKs39FQvJEksHp2zzVyNbLfWBWgssagGdo/h6VpMbFTqJsxx2MuL64w7rS6jPGAM941Mvf4roHTU8sBP1BiLtojpiwPYGVrY+KxCpl7QycM/noA9Yqk4mAElNtnRIrPieAfUc+zpWhHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dazNOuQV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DxxkuFll"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D626CC2BCF7;
-	Wed, 29 Jul 2026 04:52:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dazNOuQV"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1F5A2C4AF16;
+	Wed, 29 Jul 2026 04:52:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1785300766;
-	bh=c2VrE8rb1zoFDS/P2/5rT/iLBv1+HHpu9wwoYvKp7nQ=;
+	s=k20201202; t=1785300767;
+	bh=fySVXE/aTfrJSjJ2cAKr0vSWe2afZA9cj+VbFYbVc4E=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=DxxkuFllRRY6RdMV40XQh2kosmUX2aLdS+z1/ZtEGmjpkZC0DFbVEeVw8UicGxAnb
-	 V1QY9y+CfjP2pNIQjHZ1ArzKzNDK7K+VEDmvuY3HFIluKpQHiZ+GFFOQOI+I64CYGH
-	 caXy1f+gCt1vZh2g9Q3tQV+GDLx7jkXH+jwwsr6HJt6afHnq68e/QxFobNUiPV9STb
-	 VQPX6WnShYGklIfGaVJAJt1xUWMdyvSS2CMMk0658fi+CyshrFLtanSRnRaP5XYouD
-	 4qC2RQ9tbJqfSl+qzK5lgy5wRT8o/CX0XlGh6ZLT8Mxoe6Y7/CjBDKupgNLo3n3cIU
-	 iY3BKcSM/gdZA==
+	b=dazNOuQVKfjs/bgcEMNpPuj9hfKIn4r/PcFvZGzOYtzBrfv58Fpm9+33CFfhxbJ4A
+	 hYvh9OGNu1sALRgh8eEiEWNO09ZRQRZHlpOzCAlOEHgH3eMgpQXMCIAyFj4CUKnrOj
+	 Nz3F/taMaPkJ43my8dViJueFFc/qbUGmqwqiSeiwJ3tVOMmqwBKXSErTY39pF7j1+H
+	 AVB+U8n7aPdZBl/Z/6464KqD/sDi2HxtVowQXKzl/r1zSpqnp5X34Uy6h8CDI3L75R
+	 pX2ghZdTCSYeWuBbl9qAFdnnMa0+oDvWGAmJ35OHbpn18uOSw/M+bmZ+vpzBP7NVi6
+	 2Usc9DXyt1P+A==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8549C53200;
-	Wed, 29 Jul 2026 04:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09056C53200;
+	Wed, 29 Jul 2026 04:52:47 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 29 Jul 2026 10:22:27 +0530
-Subject: [PATCH v9 1/5] PCI: dwc: ep: Clear MSI iATU mapping in
- dw_pcie_ep_cleanup()
+Date: Wed, 29 Jul 2026 10:22:31 +0530
+Subject: [PATCH v9 5/5] misc: pci_endpoint_test: Add AER error handlers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260729-pci-port-reset-v9-1-53570b92064d@oss.qualcomm.com>
+Message-Id: <20260729-pci-port-reset-v9-5-53570b92064d@oss.qualcomm.com>
 References: <20260729-pci-port-reset-v9-0-53570b92064d@oss.qualcomm.com>
 In-Reply-To: <20260729-pci-port-reset-v9-0-53570b92064d@oss.qualcomm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -64,16 +63,16 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.15.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1889;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2036;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=IujD1rr4tXecCkUgBteCHlwjfNA1jOOLnFWO5BjVWVI=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqaYcckthZyzkNWhp+mo4GfBWetSuqCMaJXIHPW
- g8AFj4xaDeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCammHHAAKCRBVnxHm/pHO
- 9coXB/4/3XGgA/mHMhh18ubewWKhqoN8jpYSXpGZ5QthV5FyzLGbiDkMNrQlptcLpy3gkp/v5uh
- 4p7JcQ9evq/4I7ElMbR/7W/pEzBKzOGSfBx/P0VlJWZ3JB3m5l2cIxVawsYej3bQhUGpeSzInyW
- kyXfw6jxizzT6hHCh2ueogeFn9MYr23mKXEuDLANJjnWWPb/XaZ4tghU4cJuW2KqjRCq7U3hiiN
- tPzcsxu2UVJre3R11ulQv7rbad1CBfxIMLRlGj5/aULFnccG7q1LfNygVg6y2PI0g1pvP9x4twI
- 0fHIwtlW1iW4/eSNTiz/R8WdUOpqgSOz5M4M4EeIfjO98F2r
+ bh=+fQoBW7D9QXgCIKA2Pmk7k1028c3wFqBv4GFgS/bGLo=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqaYccF5MVV5xC3xxQhY4FDr9QKyU34YNIqpE/h
+ JB/JpsxBj+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCammHHAAKCRBVnxHm/pHO
+ 9SQWB/96YSCRrticMR9WgFmJ/tckKOVulQvEA/lBzlXln5UHHEDzdc135Ou4L1DoqJIGYkvRE5n
+ KUjiUzyzjZkZgKq88HbAqNFsyfbABSgM1z6r8w+D5PdsjhqJrdHReJXOxrH4gCbOt5LXa7Ro7LM
+ HvA0V3vXtClL6kmXO7st9KbbT0A6J3RCtcApW581RFLMlLSaWrPB6zjmSv95ZQ2GVxSBc+sk/OS
+ Vp6FNVbauF+/GvZWH7RBDDiY9R6Y5UlzH1s2WHJQ5Ulz8GJKGiesPN+ZRBYWWmY5RPzSn4nvxWm
+ IC+kZ8MI74eB+tan1kEHUWWDkIBW3yhplgSjO6n8r9tIBWUJ
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -83,47 +82,63 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-The MSI iATU mapping is currently only cleared when the endpoint is
-stopped via configfs or when the host updates the MSI address/size.
-This avoids redundant iATU reconfiguration every time the endpoint
-raises an MSI interrupt.
+This Endpoint test driver doesn't need to do anything fancy in its error
+handlers, but just restore the config space that was saved during probe and
+report the correct result. This helps in making sure that the AER recovery
+succeeds.
 
-However, a fundamental reset triggered by PERST# assert/deassert
-resets all iATU inbound/outbound registers without going through the
-configfs stop path. If the host also retains the same MSI address/size
-after PERST# deassert, the driver never clears the stale MSI iATU
-mapping. It then continues using this stale mapping to raise the MSI
-interrupts, which can cause IOMMU faults and MSI failures on the host.
-
-Fix this by clearing the MSI iATU mapping inside dw_pcie_ep_cleanup(),
-which is already called as part of the PERST# assert/deassert sequence.
-This unmaps the MSI iATU region and sets the msi_iatu_mapped flag to
-false, ensuring that dw_pcie_ep_raise_msi_irq() performs a fresh iATU
-mapping on its next invocation, regardless of whether the host changed
-the MSI address/size.
-
-Fixes: 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/misc/pci_endpoint_test.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7d2794945704..31402ae218c7 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1153,6 +1153,11 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 3635741c3e7a..b7a149715700 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -1325,6 +1325,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	misc_device->parent = &pdev->dev;
+ 	misc_device->fops = &pci_endpoint_test_fops;
  
-+	if (ep->msi_iatu_mapped) {
-+		dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
-+		ep->msi_iatu_mapped = false;
-+	}
++	pci_save_state(pdev);
 +
- 	dwc_pcie_debugfs_deinit(pci);
- 	dw_pcie_edma_remove(pci);
- }
+ 	ret = misc_register(misc_device);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to register device\n");
+@@ -1452,12 +1454,33 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+ 
++static pci_ers_result_t pci_endpoint_test_error_detected(struct pci_dev *pdev,
++					      pci_channel_state_t state)
++{
++	if (state == pci_channel_io_perm_failure)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++static pci_ers_result_t pci_endpoint_test_slot_reset(struct pci_dev *pdev)
++{
++	pci_restore_state(pdev);
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static const struct pci_error_handlers pci_endpoint_test_err_handler = {
++	.error_detected = pci_endpoint_test_error_detected,
++	.slot_reset = pci_endpoint_test_slot_reset,
++};
++
+ static struct pci_driver pci_endpoint_test_driver = {
+ 	.name		= DRV_MODULE_NAME,
+ 	.id_table	= pci_endpoint_test_tbl,
+ 	.probe		= pci_endpoint_test_probe,
+ 	.remove		= pci_endpoint_test_remove,
+ 	.sriov_configure = pci_sriov_configure_simple,
++	.err_handler    = &pci_endpoint_test_err_handler,
+ };
+ module_pci_driver(pci_endpoint_test_driver);
+ 
 
 -- 
 2.51.0
