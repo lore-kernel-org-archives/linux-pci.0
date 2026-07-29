@@ -1,33 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445A24052B7;
-	Wed, 29 Jul 2026 16:17:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CFC3AAF48;
+	Wed, 29 Jul 2026 16:31:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785341873; cv=none; b=Tmx9IFnOkJuRpz6RKJkzBUQ1ON7QuEC7Qlkqwr6+h/ysCJIVddS3fxT7pN2KrjdRU0+rL/6a+U+BCSk51t6EiA4heOZpNM4gov/TzAsnYU2pcNoDwDYLEZJ0ijMhEHySERCbQxuaEocwKfwfsgQWtImx2/HvkeoULEaxHTW1fFo=
+	t=1785342693; cv=none; b=kVbSLcwOEZGBJL9niB8A2FBhhxQ+xz0tcR5oDYhL7e8skvMhH7Hh3fmT0AEhhjoKslM4TnH9gzAjzlwDXkFVwMAmMZmm+p6SPF+kyB8kps6w1ZO4XnbLkInCUM/5Hq6SZbZuCN/xBzspbDOKR8gZPY9L3p1WsRg+tt8F58HtLqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785341873; c=relaxed/simple;
-	bh=rGZMJMmPVl1fJyx6rN9wRLq0cziIClzSvt2FgH46v0c=;
+	s=arc-20240116; t=1785342693; c=relaxed/simple;
+	bh=uAkjA+eBQaWAXEy4QZR19DGlmvVQcDfOqZbzMFcB/j8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=TYoKXOB+VI+x5wh4IX18GaujRSXhAIgK+2xnsK6x1GbbnIMhyN3s8WTOx8Ulo46PxpfGNObBmzh0hPN9eFDe2fQ2dK/45nU4XvfMCPMJLEOfxACJlIk85NRrOZjru06CXitiEDAhEASyS6HaAWZhG6U8gpRCFuzt9nQ73dkiITc=
+	 MIME-Version:Content-Type; b=epZ8URaWFr4L9M8YvS+1CrAkovTW81dKt7rx69ZagcLEnUuHCgviKs8O1d/PP7w4BqpOzSln/GF5dogtBbPxBxiiuJWUe1faoP4wYE4FBL6wfTLfc9LniThopaSJaHJtWxnZai4BxxiFqfybD08FhGvHpJtC0N5Xv+zbxYTEGxw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D44C1F00A3D;
-	Wed, 29 Jul 2026 16:17:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3DE1F00A3D;
+	Wed, 29 Jul 2026 16:31:28 +0000 (UTC)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
- bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
- festevam@gmail.com, hongxing.zhu@oss.nxp.com
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
- Richard Zhu <hongxing.zhu@nxp.com>
-In-Reply-To: <20260717074121.3214222-1-hongxing.zhu@oss.nxp.com>
-References: <20260717074121.3214222-1-hongxing.zhu@oss.nxp.com>
-Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
- with RC power loss
-Message-Id: <178534186606.891279.14151884519982223229.b4-ty@b4>
-Date: Wed, 29 Jul 2026 18:17:46 +0200
+To: daire.mcnamara@microchip.com, Ali Tariq <alitariq45892@gmail.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+ robh@kernel.org, bhelgaas@google.com, minda.chen@starfivetech.com, 
+ conor.dooley@microchip.com, mason.huo@starfivetech.com, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+In-Reply-To: <20260723140434.675512-1-alitariq45892@gmail.com>
+References: <20260723140434.675512-1-alitariq45892@gmail.com>
+Subject: Re: [PATCH v3 0/2] PCI: plda: Fix IRQ teardown and error-path
+ resource leaks
+Message-Id: <178534268823.893302.6699748097504009093.b4-ty@b4>
+Date: Wed, 29 Jul 2026 18:31:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,24 +38,25 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Fri, 17 Jul 2026 15:41:21 +0800, hongxing.zhu@oss.nxp.com wrote:
-> Some platforms like i.MX power off their PCIe RC controllers during
-> system suspend, requiring full re-initialization on resume. These
-> platforms need to enter L2 state to properly notify endpoints before
-> power loss.
+On Thu, 23 Jul 2026 19:04:32 +0500, Ali Tariq wrote:
+> This series fixes two related IRQ-handling bugs in the PLDA PCIe
+> driver, both originally found by automated review from sashiko-bot
+> during work on an earlier, unrelated patch.
 > 
-> According to PCIe base spec r7.0, sec 5.2, the system software should
-> transition the device into D3Hot before broadcasting the PME_Turn_Off
-> message to initiate L2 entry. However, some endpoint devices fail the
-> D3cold capability check in pci_host_common_d3cold_possible(), which
-> would normally prevent L2 entry.
+> Patch 1 fixes a use-after-free: plda_pcie_irq_domain_deinit() removed
+> pcie->event_domain while devm-managed event IRQs requested from that
+> domain still had their free_irq() deferred by devres, so the deferred
+> cleanup could dereference an already-freed domain. It also hardens
+> the function so it is safe to call from partially-initialized state
+> (guards IRQ fields against being 0, and disposes of IRQ mappings
+> before their domains are torn down).
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: dwc: Add suspend_poweroff flag for platforms with RC power loss
-      commit: 5a53462aba161e809de90d45f2a39510a88b6ede
+[1/2] PCI: plda: Fix use-after-free of event IRQs during teardown
+      commit: 26b73bae01d6eb81a4a38f36101812f20b2639de
 
 Best regards,
 -- 
