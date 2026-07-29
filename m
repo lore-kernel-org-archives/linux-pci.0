@@ -1,87 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941443C1D6B
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 20:38:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1FD403EB3
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 20:50:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785357536; cv=none; b=uOd7BWYLMtXQSdUOENWzuZSUSio9bTKrgJY7IJPya3/ZsVZmBEDjrMiT8FnUhNHpLneJMPcbQKYv14hM1lpApEh/5TMG3daSBfp60X2/bfjP1+J6NERwcpRu14IxjpZpnfZ4BPt4G1WiSu9AQrB9yXIzASRKFf7fMsEFxtz52gI=
+	t=1785358204; cv=none; b=ak9K84FhXZaGocw+SDKYhT1qeKIT0lMPfbpvHaxr9BpGL8X8HUnLZCHYCQACuMG3QuJyhc25nqloUpwIq+JJKAim+y7X+5yhTbuYM1IBebRzaO8TtgKgJjtxhvgAA83OtTag+UQu/DwzaOQiqM9gDYfp5LNKgI2yBhwoPc+teig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785357536; c=relaxed/simple;
-	bh=QpI1dXgj2Mx8VpctnTqS1oG//Ewy0OC2DXL3vIUYI5s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qtku1PVRH8HJobxyFUu/Vk1c0mjYAopcEi9irhZdq7O07X0Ru3Ru20edfx+ocIhipgx0s9IkqXhoyRAP2OMrVtZG0+bODrrDORm7WCMvclQYPHNLKkVz9J46ORZ7Lcy0EG+wQKEhxa4zejWfcwqP9bpulIErpLxFYY6rtRMZ6vM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jWe+ajlF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785358204; c=relaxed/simple;
+	bh=Js0Liq/Ek/chpKLXF8B1rA8aCb35dhBL+PGNpFtaefU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hdYZLvjYG2MWbxxIVHGk65zsU6QVGH8xiSC56m18K2LRXLbbSs/78YjCAPsgE4ztvRRpRGWHtIlVgejiEBbbv0lE+NXi7M64IhENrA/xB2BbPTtyPCnaxtkSfdzUP/SiRLDli05E5jvTypInrMl5W4j6etF+A8qcOlcjA4B6+T0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QyKFd3A3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jWe+ajlF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689781F000E9;
-	Wed, 29 Jul 2026 20:38:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QyKFd3A3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5E651F000E9;
+	Wed, 29 Jul 2026 20:49:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785357530;
-	bh=xxvtC1gNO1lYrdVbLYxr+Mlf+QwfSlFbnW4X9UPjsQQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jWe+ajlFjdBDS5/DDx7X7AgkBfmgRk8E3RJS6gCXDJlSjIGr+gjq9d5hgIn1neKGU
-	 aHzCnUh1QRm5sat4gjH45YV2CQtRJA48DH2KGpFUYzBs+M152j8DLtSjAM3IyZlKrv
-	 tNEQa9/Xjmw9S8pk5Pc0qlDrRFOKc/8PrR6p9YKptZryaUsKrUoOZ5pcAzAj5gjtKD
-	 FgZ1XGAbzOvv3BwRwzgrf7/ZezkivdZrbG5WzzaqLEtun8Cl4V3Cd+duxNoqIkHLn6
-	 H0fdFkXtjJwKp2XQjeOWcVpdmSLRpXyQUnl4IvTnSSfKmln6g+qgad/+SLc2DfxV5j
-	 kUN72BR7QqmJw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] misc: pci_endpoint_test: Add WARN_ON() to detect broken
- EPC drivers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260729202821.1153443-2-cassel@kernel.org>
+	s=k20260515; t=1785358199;
+	bh=SyqPfT2uqC9kwiEGQ5U+gS0E5okJwCHv9kXkqomyNVQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=QyKFd3A30yiFwGgiqf5u5zpoGBwZOFupDRW65S9m+/addM/hjt6mnFUakrhZ/rmg2
+	 OY9nDbz8LoAW+hA/QfcB/UeO5cXE0IGv193btfKWN6fhZrSFNAFR8lGcUplE0Rq9yY
+	 RqKJShpLOWOkdDqit3exCwEqhSyiBuIoeH+o1GYbYWjkdXnTl+3J86qRru1Z6STD4j
+	 eTu5NPbeJ8KWXAXvp/9beyGaAUfYq4TVGB+sIUyIBxJgZOntje00Ug2HdKfkYENJhV
+	 1XBW+LZx5UFCjU7pe0XX/Rjgu9+yM/6r+fmLiIWiQTcw6Ic0FADK41O6thm5qxYMbv
+	 JG57RTLnDjsmQ==
+Date: Wed, 29 Jul 2026 22:49:56 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: DWC eDMA weirdness
+Message-ID: <ampndLtU32ODmncX@ryzen>
 References: <20260729202821.1153443-2-cassel@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 20:38:49 +0000
-Message-Id: <20260729203850.689781F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260729202821.1153443-2-cassel@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-
-New issues:
-- [High] The newly added `WARN_ON` can be trivially triggered by shared int=
-errupts or untrusted hardware, leading to a Denial of Service (host panic) =
-if `panic_on_warn` is enabled.
-- [Medium] Direct, lockless read of the internal `done` field in `struct co=
-mpletion` causes a data race, violates API encapsulation, and relies on a f=
-lawed TOCTOU heuristic.
-
-Pre-existing issues:
-- [High] The shared IRQ handler unconditionally returns `IRQ_HANDLED` even =
-when the interrupt was not generated by this device.
-- [High] Use-after-free of `struct pci_endpoint_test` when the PCI device i=
-s unbound while a file descriptor is still open.
---
-
---- Patch [1]: [PATCH] misc: pci_endpoint_test: Add WARN_ON() to detect bro=
-ken EPC drivers ---
-commit e4f6d6484e68c6a478412d97f6734cf8590a6f97
-Author: Niklas Cassel <cassel@kernel.org>
-
-misc: pci_endpoint_test: Add WARN_ON() to detect broken EPC drivers
-
-This commit adds a WARN_ON check to the IRQ handler in the PCI endpoint
-test driver. It aims to detect if the driver receives multiple interrupts
-sequentially without a successful wait in between.
-
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint=
-_test.c
-> index 3635741c3e7a7..a212e53654c68 100644
+On Wed, Jul 29, 2026 at 10:28:22PM +0200, Niklas Cassel wrote:
+> Getting two IRQs when we are only expecting a single IRQ is a very
+> serious error, and suggests that something is very wrong in the EPC
+> driver.
+> 
+> Scream loudly so that EPC driver developers can see the problem,
+> which might otherwise be very hard to detect.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/misc/pci_endpoint_test.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 3635741c3e7a..a212e53654c6 100644
 > --- a/drivers/misc/pci_endpoint_test.c
 > +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -178,6 +178,19 @@ static irqreturn_t pci_endpoint_test_irqhandler(int =
-irq, void *dev_id)
+> @@ -178,6 +178,19 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
 >  	if (reg & STATUS_IRQ_RAISED) {
->  		test->last_irq =3D irq;
+>  		test->last_irq = irq;
 >  		complete(&test->irq_raised);
 > +		/*
 > +		 * The endpoint test driver performs all testing sequentially.
@@ -96,59 +79,71 @@ irq, void *dev_id)
 > +		 * Please debug your EPC driver if you see this warning.
 > +		 */
 > +		WARN_ON(test->irq_raised.done > 1);
-
-[Severity: Medium]
-Does this direct, lockless read of the completion structure's internal state
-introduce a data race?
-
-If wait_for_completion_timeout() executes concurrently on another CPU betwe=
-en
-the complete() call and this check, it could decrement done back to 0. Would
-this window result in missing the duplicate IRQ this is attempting to detec=
-t?
-
-[Severity: High]
-Can this warning be trivially triggered by shared interrupts or untrusted
-hardware?
-
-If the driver requests its IRQ with IRQF_SHARED, an interrupt from another
-device could cause this handler to execute. If it reads a stale
-STATUS_IRQ_RAISED bit, could repeated shared interrupts trigger this WARN_ON
-and potentially panic the host if panic_on_warn is enabled?
-
 >  	}
-> =20
+>  
 >  	return IRQ_HANDLED;
+> -- 
+> 2.55.0
+> 
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this function
-unconditionally return IRQ_HANDLED even when the interrupt wasn't generated
-by this device?
+Hello Koichiro,
 
-If the status register does not have STATUS_IRQ_RAISED set, bypassing the
-internal block, returning IRQ_HANDLED instead of IRQ_NONE could mask
-unhandled interrupts from other devices sharing the same IRQ line.
+I created this patch in response to a problem that I saw on v7.2-rc5.
 
-[ ... ]
+When running the pci_endpoint selftest:
+# /pcitest
+(snip)
+#  RUN           pcie_ep_doorbell.DOORBELL_TEST ...
+[  215.256772] pci-endpoint-test 0000:01:00.0: Failed to trigger doorbell in endpoint
+#            OK  pcie_ep_doorbell.DOORBELL_TEST
+ok 23 pcie_ep_doorbell.DOORBELL_TEST
+# FAILED: 19 / 23 tests passed.
+# 2 skipped test(s) detected. Consider enabling relevant config options to improve coverage.
+# Totals: pass:17 fail:4 xfail:0 xpass:0 skip:2 error:0
 
-[Severity: High]
-This is a pre-existing issue, but does using devm_kzalloc() for the state
-structure expose a use-after-free regression during device unbind?
 
-If the PCI device is unbound, devm_kzalloc() frees the struct
-pci_endpoint_test upon return from pci_endpoint_test_remove(). However, if
-an application still holds the device node open, could a subsequent
-ioctl() access the freed pointer when resolving the private data?
+I saw the weird error:
+"Failed to trigger doorbell in endpoint"
 
-drivers/misc/pci_endpoint_test.c:pci_endpoint_test_ioctl() {
-	...
-	struct pci_endpoint_test *test =3D to_endpoint_test(file->private_data);
-	struct pci_dev *pdev =3D test->pdev;
-=09
-	mutex_lock(&test->mutex);
-	...
-}
+Ignore that the test case leaves things to be desired, since it passes even
+though we see this warning.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729202821.1153=
-443-2-cassel@kernel.org?part=3D1
+
+The problem seems to be that the embedded doorbell IRQ handler is executed twice,
+in response to a single writel() which rings the doorbell.
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 4802d4f80f78..7f4360579ffb 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -714,6 +714,7 @@ static irqreturn_t pci_epf_test_doorbell_handler(int irq, void *data)
+ 
+        status |= STATUS_DOORBELL_SUCCESS;
+        reg->status = cpu_to_le32(status);
++       trace_printk("calling pci_epf_test_raise_irq()\n");
+        pci_epf_test_raise_irq(epf_test, reg);
+ 
+        return IRQ_HANDLED;
+
+
+As you can see:
+ irq/58-pci-ep-t-221     [006] .....    58.601020: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+ irq/58-pci-ep-t-221     [006] .....    58.601421: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+
+It is called twice for a single doorbell ring.
+
+Note that you might need to run the whole selftest test a few times to trigger
+the WARN_ON(), even if you can see the trace printks every time.
+(Using printks instead of trace printks seems to affect the timing too much.)
+
+
+My first thought was that we should add reinit_completion() calls after each
+wait_for_completion_timeout() in pci_endpoint_test_doorbell(), but after
+reading up on complete() and wait_for_completion_timeout(), this should
+actually not be needed, and if we did, it would simply hide the read problem,
+which appears to be that the embedded doorbell IRQ handler on the EP side is
+called twice for a single writel() that rings the doorbell.
+
+
+Kind regards,
+Niklas
