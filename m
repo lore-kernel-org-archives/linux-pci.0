@@ -1,183 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010063.outbound.protection.outlook.com [40.93.198.63])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51B50C2C8
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 05:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785302407; cv=none; b=O+JyXc0GrjZNGzdZT6xxwWOWuxqflQ1hCRBRXW0flOB82k3ipSka1MypyjMcfPubvVZ23M4GPsu8bWUFVUCTtN9FDQGxPXnahq133IkpDHPXCGAw/L4EMAmnQsYggJkq/0PV4yxaugIGMcqKyEn5wGCEOn29MBJUGFRl2i29pI4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785302407; c=relaxed/simple;
-	bh=Apjaavm8f8nHMzONZjDMNyNomf5xuDzKfSh4NidpJl8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aB+hpSYSt67tkKGrVwU1ZWCKo8YCOu1KRFpCWwNH2OtgSZOahW7NF7w4RFAgILDsS0kJv3c5EjMLpAL1g20qOC6Hw8TPghrWu0cnXSnaWDsLm1psLOKZrq7NLNce+KaG7QmNlifwbZH1qWhPycx1umbB9u6k0XNqKVo9q8hxG7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e9TUT7kr; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD96A3AEB4E;
+	Wed, 29 Jul 2026 05:26:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.63
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785302805; cv=fail; b=Oe9AoVC55x5aRmZHTwkqxWy9HMsTjN5ZRt4PwtsT3KOESq+IUydeB6P/g/1n/mEhzCMO5/DAVLHUkpEYiOd7Q6wcF5W4rPNcsRvnJtpx/26ioqYZtUHhU8we0YVj82K4rbD/HKPMIz1f0K4uPccIntS1Oyp2qZUxBNiF8VEhbbw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785302805; c=relaxed/simple;
+	bh=yQicfbgaSCluglKDhDObJ7/KwqzLWTLZpYYaRR9iW9g=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K3y8sS696nVa3Vi2skge97f9U/AbadfxokfDEulAfZgUfxvT0QM0XH9HQ8rDDpfxpuQmQZXwmCMAEYeVhMwUeO5fMmVtFU37fEYWpj/zMGedS/VtYUe9dgjd8tXUSyTDGdKMQxe9wCl0QNOBtXYArVuVAymuDhTfmvJBkU2sKmM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=XiJj+V90; arc=fail smtp.client-ip=40.93.198.63
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e9TUT7kr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF8F81F000E9;
-	Wed, 29 Jul 2026 05:20:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785302405;
-	bh=i3GWFKerf7dLcHAKFzvb/+8Ijf17eMP2tCHHXycOKYs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e9TUT7krNGU+qRtlWXK9GN/nXaen2+C91PHC5UL+gbfSis1PVbZI2Ia3GekkpsDvD
-	 5OYRgFrDM01DZVP/VrwcNxeqhIAebCvbzPkqrVCDfMUsYF8s2FvX76KUIgthJvTFN6
-	 J+wElBYX87jvkdji8E7hE35H3Azbj7f+FN5cPdaPF7W5QUGj4ggPOzos7/vqNLGnPA
-	 /tnTahfxzCe1bCArphocApGzJcuoHlwROjnjICJBcKxAtlqDJGtUVD6MwxLAxS52w7
-	 WezvdMxxKO07/y9jr5tXJEm00pF//3RWi8dWJH8jM8pHH73MMfVq6Q+Q5rtzHJR5yF
-	 uaydD3h7Yuj4A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 4/5] PCI: qcom: Add support for resetting the Root
- Port due to link down event
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260729-pci-port-reset-v9-4-53570b92064d@oss.qualcomm.com>
-References: <20260729-pci-port-reset-v9-0-53570b92064d@oss.qualcomm.com>
- <20260729-pci-port-reset-v9-4-53570b92064d@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 05:20:05 +0000
-Message-Id: <20260729052005.BF8F81F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="XiJj+V90"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kK/xPc0HvcIojHuGsZ8k83UqHbdHy5fTiiy8L9DC9RNJ+gzBtDr/mYFTgf58hHP5PcKjBpZ0m/6SUi//3fhmdHNNJ/4a0dHm6Oaf9i1CewSVEm7aYbcZV1OM95kzDgdFEAWLdDcAePXlc7HJWY9QE0sRlnEEkGBKjfrmgppPhtkYDAPS52lRpIwY+PtStPyTda+2Vy2YwreW78tuHC0AKdyZDLkemDkCztqtbLATCS27g8eVcDUZlwvA3iUVeLE0ORNZbeKW4lL7XoY87voe40qsOdqbBlNxfkEWTmgri6PSAmD+eGyQkYLV/fHuJK+dfapUYbcJ9HmfM8c47PsomQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Mtcgp/MWEP/ogAbZzZ1iSHLmhy8pbnK4i1R/lEsUyDA=;
+ b=nDG3e+HVL2M74n/x4/5juTVm92hoLT1xUgwI5QFjXW3+U9KSEpask+MlC6UTVnEAaF6qjdAiWV3mGTivt1XbXzCK6f0VT9VSWpIZ0ZXH+OuJJwWfgig08UyyIZf1wxvcRw4ZOctX7JUaIf5uMEomVC0TGj5RWLWqUWwF1I6g4qDbBhVUDTHFP9jydpAXr/D+5i8WB9wJYbH1gdPBHJFfyXTkdwf46WKkdsXrWC0+O6lXMpIiaceacLPcfFTwSdOeZD6oZgqIgYPat8UGoWDFyrc8rL5V7psS2Nwioy5hbrnxL4X0nDo6cg97+vvefFMrm8+qi+rK+yOhPzT7dkKRyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mtcgp/MWEP/ogAbZzZ1iSHLmhy8pbnK4i1R/lEsUyDA=;
+ b=XiJj+V90xh0HfEEI40yzWmZ+oFMOMVHE0x8ZHWFesdm7jhkSr2Pj00WpJXX7kGncJEIFZg8mjk+vdo7pdZXIOQZyHEs/e0AY7D2mHjznN9FclUdUI+4xMdgR9K4kodoC+gf7s5LUs7b+JnOZH5u7sy7OIUb0/ADwtSfKUWpmoKJ7t49v59pqxJd4D5v8Srxz/mNo4KefAbZj/lEvKHGQ1PqtME2076SxAk0fhWZnHBDSRCALwVFWGfr3bOtpQbDOlk3MCL436fkJNHSRnmOE6sSH9E5+lqpv1SMyuMXd6s0kPRAIW8m5PQu9PuYJgbZZ0JTK7FNsir7Z1UqOIbw9cA==
+Received: from PH7P221CA0012.NAMP221.PROD.OUTLOOK.COM (2603:10b6:510:32a::29)
+ by MW6PR12MB7070.namprd12.prod.outlook.com (2603:10b6:303:238::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.13; Wed, 29 Jul
+ 2026 05:26:38 +0000
+Received: from CY4PEPF0000FCC4.namprd03.prod.outlook.com
+ (2603:10b6:510:32a:cafe::29) by PH7P221CA0012.outlook.office365.com
+ (2603:10b6:510:32a::29) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.270.13 via Frontend Transport; Wed,
+ 29 Jul 2026 05:26:38 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ CY4PEPF0000FCC4.mail.protection.outlook.com (10.167.242.106) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.270.5 via Frontend Transport; Wed, 29 Jul 2026 05:26:38 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 28 Jul
+ 2026 22:26:24 -0700
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 28 Jul
+ 2026 22:26:23 -0700
+Received: from nvidia.com (10.127.8.11) by mail.nvidia.com (10.129.68.9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Tue, 28 Jul 2026 22:26:19 -0700
+Date: Tue, 28 Jul 2026 22:26:19 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Pranjal Shrivastava <praan@google.com>
+CC: <will@kernel.org>, <robin.murphy@arm.com>, <jgg@nvidia.com>,
+	<joro@8bytes.org>, <bhelgaas@google.com>, <kevin.tian@intel.com>,
+	<kees@kernel.org>, <smostafa@google.com>, <baolu.lu@linux.intel.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<skaestle@nvidia.com>, <mmarrid@nvidia.com>, <skolothumtho@nvidia.com>,
+	<bbiber@nvidia.com>
+Subject: Re: [PATCH v2 03/11] iommu/arm-smmu-v3: Add
+ arm_smmu_drain_queue_for_iopf() helper
+Message-ID: <ammO+4W/dGC8kTCr@nvidia.com>
+References: <cover.1779944354.git.nicolinc@nvidia.com>
+ <a62db13ab63916e9a62cddeec41a74a98cdf6a8f.1779944354.git.nicolinc@nvidia.com>
+ <amkcQRVylEe_t-yP@google.com>
+ <amkqZbPJs9qly4pH@nvidia.com>
+ <ammMf5z-Gl-Wygk6@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <ammMf5z-Gl-Wygk6@google.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000FCC4:EE_|MW6PR12MB7070:EE_
+X-MS-Office365-Filtering-Correlation-Id: 78670cca-19fb-43b9-a4a9-08deed31f6d1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|7416014|1800799024|36860700016|376014|23010399003|56012099006|4143699003|11063799006|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	n+lOne4/jX3kpNFHaL1F3GAEAGIguzbfGm+pb12rfWJbXzmWiICQuZOobYYrrIpe2KMLAQWjdywOxVNAVUp0jCShE03IHR8joF6BjuEJ3dPLJIQiq76Exq5yJngoUGUP9RCBpKshTvGIrw9c3pNMFXjH1SQgtD1qOgT0hYCuMLyh+phDjBXhWNSDEKcOCSWBe05g8p2+sYNJVq240nVeb7PMH8eJuQc3lViBNmTSVXhpEEAcz9sdmaOsWTyj5VgVvQS2Exk5TIedlrKq+dJ5WsNONJqLr76SZo3Gzw2eIY6Csz4aE1pcw7GG4CU/XDrIjvvFY/plz3lmQCDE5Wx38ovtUdotV6RsmA1Nbl+ORcFFHFLZ1YBaphsY22dmIt7pGNxE1/ZP3mj46rklP3Ao6ZOlPxhcl11PqzCP3viIaXy2aSL8MCdNNgTjpgn+cmxCB6Ure9rQ++prBba7+KWP2Dvi/ywqp0AoHq4F3LcmD/tiGcg1GZIQFddlfBqLQkJpz7LdUO202HuOOMXnatJGTm6IjUhTu71xp5J1gZPGIfJ5ihrm/sELAznTSMLMKQjavPwteqFfQ2vSCU6r9layF5F+mw7btJUKVDtTXspZmlc6E1r3Mll83hshMbHXXBeuzLLeViOpZtRtkI0D1WIa4YDuWnEQ/tnNq/+dfKKKP+RPX1/sXoLpBgJpQ6ZW11U6SOo1aocHKXCEiOkWlPyjkw==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(1800799024)(36860700016)(376014)(23010399003)(56012099006)(4143699003)(11063799006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	ZO6fCeNsgC62aKdR1QePNKIGzURPmv1/9hVv0b+x/sC3AVVUGxW/SBxE1ISi5R4xb0iwaKsuLh5aOdaCqn5tFejOvsVEyPTbAALrOhr6IYo3FlkZmWrPN20Sygi3mvMfZZDHA8I7oxucCaRntypOXu9zeyMKFDOHWQ1BGqcxoHZ2rY1Ck940rmQQ8NUh5XQEkIP+pjFqyi03t5iQj8CKbLVLNZkcMZ0YBybUSvXlDuuRxYa3EC4FO8XKpWRmbVHZVR2/liTogDinn16cujJDSCZjWrTrg4Mai1VSVzpj8dt8vchh+/f9PeQrVy8zKpvQs+ZLnNYk8rdOemaHcds8ovtqhkZPk0LEVNqM3Y8LZRu5d6uP6gjq6yiB6+9lBcOL2EPEo9bq92ln/siZ+U2vxbDZv/MO9116xHHH5Q6JE0ulr5DeD/1a5zmPsVMVwIsE
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2026 05:26:38.2225
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 78670cca-19fb-43b9-a4a9-08deed31f6d1
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CY4PEPF0000FCC4.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR12MB7070
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Unprotected iteration over PCI bus devices risks list corruption a=
-nd use-after-free.
-- [High] Accidental routing of MSI interrupts to the global IRQ thread caus=
-es an interrupt storm.
-- [Medium] Platform devices created for power controllers are leaked if the=
- newly added global IRQ request fails.
---
+On Wed, Jul 29, 2026 at 05:15:43AM +0000, Pranjal Shrivastava wrote:
+> For PRIQ/EVTQ, my only worry was the HW producing more events,
+> say Device A is detached (we call drain from attach_release) but Device B
+> (still attached) starts an agressive DMA with multiple PRI requests/evts.
+> 
+> Maybe we should go back to snapshot based polling for that?
 
---- Patch [4]: [PATCH v9 4/5] PCI: qcom: Add support for resetting the Root=
- Port due to link down event ---
-commit 89d5e2336d3e173c1acc29f1a3ce080e06d174b3
-Author: Manivannan Sadhasivam <mani@kernel.org>
+If you look closely, "pending" is the snapshot, regardless of the
+growing prod.
 
-PCI: qcom: Add support for resetting the Root Port due to link down event
+ * With @until_empty == false (for EVTQ/PRIQ), exit once "drained" reaches its
+ * target: "pending" (i.e. prod0 - cons0, frozen at the entry time):
+ *
+ *   cons0                cons                 prod0         (prod)
+ *     |<---- drained ---->|                     |             |
+ *  ---+###################+=====================+=============+--->
+ *     |<--------------- pending --------------->|
 
-This commit adds handling for PCIe link down events on Qcom controllers
-by resetting the Root Port. It enables the link down event in the=20
-PARF_INT_ALL_MASK register and requests a global IRQ to detect and recover
-from these events.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-[ ... ]
-> @@ -1734,6 +1754,75 @@ static int qcom_pcie_set_max_opp(struct device *de=
-v)
-[ ... ]
-> +static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
-> +				  struct pci_dev *pdev)
-> +{
-[ ... ]
-> +	/*
-> +	 * Re-enable global IRQ events as the PARF_INT_ALL_MASK register is
-> +	 * non-sticky.
-> +	 */
-> +	if (pcie->global_irq)
-> +		writel_relaxed(PARF_INT_ALL_LINK_DOWN | PARF_INT_MSI_DEV_0_7,
-> +				pcie->parf + PARF_INT_ALL_MASK);
-
-[Severity: High]
-Does unmasking PARF_INT_MSI_DEV_0_7 here (and during probe) inadvertently
-route downstream MSI interrupts to the global IRQ thread instead of the
-standard MSI handler?
-
-Since modern endpoints can generate thousands of MSIs per second, could
-this cause an interrupt storm that saturates the CPU when the global
-threaded handler is woken up for every single MSI event?
-
-> +
-> +	qcom_pcie_start_link(pci);
-[ ... ]
-> +static irqreturn_t qcom_pcie_global_irq_thread(int irq, void *data)
-> +{
-> +	struct qcom_pcie *pcie =3D data;
-> +	struct dw_pcie_rp *pp =3D &pcie->pci->pp;
-> +	struct device *dev =3D pcie->pci->dev;
-> +	struct pci_dev *port;
-> +	unsigned long status =3D readl_relaxed(pcie->parf + PARF_INT_ALL_STATUS=
-);
-> +
-> +	writel_relaxed(status, pcie->parf + PARF_INT_ALL_CLEAR);
-
-[Severity: High]
-Since PARF_INT_MSI_DEV_0_7 is unmasked, will this unconditional read and
-clear of PARF_INT_ALL_STATUS steal the MSI events from the actual DWC MSI
-handler? Might this cause MSIs to be silently dropped?
-
-> +
-> +	if (test_and_clear_bit(INT_ALL_LINK_DOWN, &status)) {
-> +		dev_dbg(dev, "Received Link down event\n");
-> +		for_each_pci_bridge(port, pp->bridge->bus) {
-
-[Severity: High]
-Is it safe to iterate over pp->bridge->bus->devices without holding the
-pci_bus_sem reader lock?
-
-If a user triggers the removal of the root port device via sysfs concurrent=
-ly
-with a link down event, could this cause list corruption or a use-after-fre=
-e?
-
-Also, does the loop need to take a reference to the port device via
-pci_dev_get() before passing it to pci_host_handle_link_down() to ensure
-the device structure isn't freed while being handled?
-
-> +			if (pci_pcie_type(port) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +				pci_host_handle_link_down(port);
-> +		}
-> +	}
-> +
-> +	return IRQ_HANDLED;
-> +}
-[ ... ]
-> @@ -2135,6 +2245,32 @@ static int qcom_pcie_probe(struct platform_device =
-*pdev)
-[ ... ]
-> +		ret =3D devm_request_threaded_irq(&pdev->dev, irq, NULL,
-> +						qcom_pcie_global_irq_thread,
-> +						IRQF_ONESHOT, name, pcie);
-> +		if (ret) {
-> +			dev_err_probe(&pdev->dev, ret,
-> +				      "Failed to request Global IRQ\n");
-> +			goto err_host_deinit;
-
-[Severity: Medium]
-Can this error path cause a resource leak of platform devices?
-
-When qcom_pcie_host_init() succeeds earlier in probe, it creates power
-controller devices via pci_pwrctrl_create_devices(). If the newly added
-global IRQ request then fails here, it jumps to err_host_deinit which
-eventually calls qcom_pcie_host_deinit().
-
-However, qcom_pcie_host_deinit() explicitly assumes it is only called
-during system suspend and skips calling pci_pwrctrl_destroy_devices():
-
-	if (!pci->pp.skip_pwrctrl_off) {
-		/*
-		 * No need to destroy pwrctrl devices as this function only
-		 * gets called during system suspend as of now.
-		 */
-		pci_pwrctrl_power_off_devices(pci->dev);
-	}
-
-Will this leave the power controller devices permanently leaked on probe
-failure?
-
-> +		}
-> +
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729-pci-port-r=
-eset-v9-0-53570b92064d@oss.qualcomm.com?part=3D4
+Nicolin
