@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CFC3AAF48;
-	Wed, 29 Jul 2026 16:31:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754504963CE;
+	Wed, 29 Jul 2026 16:36:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785342693; cv=none; b=kVbSLcwOEZGBJL9niB8A2FBhhxQ+xz0tcR5oDYhL7e8skvMhH7Hh3fmT0AEhhjoKslM4TnH9gzAjzlwDXkFVwMAmMZmm+p6SPF+kyB8kps6w1ZO4XnbLkInCUM/5Hq6SZbZuCN/xBzspbDOKR8gZPY9L3p1WsRg+tt8F58HtLqg=
+	t=1785343009; cv=none; b=LJvVcCjO8DQzlN6PTj4cl7JBkEP0TA6Ort4+RqBkSNTBH6hA2Jm9yLKa+WgY8gJcZ3u3X7lWL7BHTW/5G6l3P37iwoJuXOoe8e1h/KEv9z0WQD6nIprhThq9whL2uQUFIJvE/Xuhwwe1Z3Pyilc4Pnr19oW1wS1qdkD1+ck/bHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785342693; c=relaxed/simple;
-	bh=uAkjA+eBQaWAXEy4QZR19DGlmvVQcDfOqZbzMFcB/j8=;
+	s=arc-20240116; t=1785343009; c=relaxed/simple;
+	bh=qbwUmTtQQAo+r+AZ6TlxX5JIp3afhoitH9aDDbBuYUQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=epZ8URaWFr4L9M8YvS+1CrAkovTW81dKt7rx69ZagcLEnUuHCgviKs8O1d/PP7w4BqpOzSln/GF5dogtBbPxBxiiuJWUe1faoP4wYE4FBL6wfTLfc9LniThopaSJaHJtWxnZai4BxxiFqfybD08FhGvHpJtC0N5Xv+zbxYTEGxw=
+	 MIME-Version:Content-Type; b=FnfSCHc3Kc7LGwDfdA1kDNsgKZxu9JyKdXR9g3ereGFwU72mlPGWy3/qysqGluicsX1FeuTyZ4in8+igqKfXuNvZefgVR4/EV3ZeREaiFwY/PgPXtlWoy8pTlatHtdKyyKzBrvqDSjNMU9Zp1+X5l1EVFV7hRoQjhqMaJV94PgE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3DE1F00A3D;
-	Wed, 29 Jul 2026 16:31:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D121F000E9;
+	Wed, 29 Jul 2026 16:36:41 +0000 (UTC)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 To: daire.mcnamara@microchip.com, Ali Tariq <alitariq45892@gmail.com>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
@@ -21,12 +21,12 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
  conor.dooley@microchip.com, mason.huo@starfivetech.com, 
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  stable@vger.kernel.org
-In-Reply-To: <20260723140434.675512-1-alitariq45892@gmail.com>
-References: <20260723140434.675512-1-alitariq45892@gmail.com>
-Subject: Re: [PATCH v3 0/2] PCI: plda: Fix IRQ teardown and error-path
- resource leaks
-Message-Id: <178534268823.893302.6699748097504009093.b4-ty@b4>
-Date: Wed, 29 Jul 2026 18:31:28 +0200
+In-Reply-To: <20260723142824.726655-1-alitariq45892@gmail.com>
+References: <20260723142824.726655-1-alitariq45892@gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: plda: Fix resource leaks on error paths in
+ plda_init_interrupts()
+Message-Id: <178534300125.893922.4864961261902881699.b4-ty@b4>
+Date: Wed, 29 Jul 2026 18:36:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -38,25 +38,20 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Thu, 23 Jul 2026 19:04:32 +0500, Ali Tariq wrote:
-> This series fixes two related IRQ-handling bugs in the PLDA PCIe
-> driver, both originally found by automated review from sashiko-bot
-> during work on an earlier, unrelated patch.
+On Thu, 23 Jul 2026 19:28:24 +0500, Ali Tariq wrote:
+> plda_init_interrupts() initializes IRQ domains and creates IRQ mapping but
+> does not unwind them when later step fails.
 > 
-> Patch 1 fixes a use-after-free: plda_pcie_irq_domain_deinit() removed
-> pcie->event_domain while devm-managed event IRQs requested from that
-> domain still had their free_irq() deferred by devres, so the deferred
-> cleanup could dereference an already-freed domain. It also hardens
-> the function so it is safe to call from partially-initialized state
-> (guards IRQ fields against being 0, and disposes of IRQ mappings
-> before their domains are torn down).
+> If platform_get_irq() or either irq_create_mapping() fails
+> in plda_init_interrupts(), the domains are never deinitialized. If
+> irq_create_mapping() fails, port->intx_irq stays initialized.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/2] PCI: plda: Fix use-after-free of event IRQs during teardown
-      commit: 26b73bae01d6eb81a4a38f36101812f20b2639de
+[2/2] PCI: plda: Fix resource leaks on error paths in plda_init_interrupts()
+      commit: 19a30bbb6477bfd7e3109b7a2943e6597ee9de37
 
 Best regards,
 -- 
