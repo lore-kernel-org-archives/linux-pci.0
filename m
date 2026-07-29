@@ -1,111 +1,146 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596933AFCFF;
-	Wed, 29 Jul 2026 15:12:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6246842A167
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 15:13:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785337972; cv=none; b=NG3xfTrmim5Izb0YmqPpbly6LCwFLmvSysOaFUOVp0LDIFBdnp9kfDNLJwg/ks+DZDWCfht+234uAXhFac9+yNdaTScLN5tJ9g9EkZehFNLV8O36hH872DTRbDoi0g6rSfEBsIAoccN/4DdPjM/bpKMPYez20ECedsS2Dcc94b8=
+	t=1785337988; cv=none; b=SrRI7iM0SwjHKrwO8ZDKBIN9fMxlh62EjrkymMAzXX2K9J+DEUB9MhV7V296XR9JSKIQ4u9entKJZ1F0htA4tzV1dfh15tIqpyVjqf+/P83j1zvW2NMqVFUGO6R/aMlaZx1eaEa+u9irjMCSgh//E5taPMSKwiQEV/XIP4DTYIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785337972; c=relaxed/simple;
-	bh=CRZm3ihcVCgrbw7shCZXWO18676qjzJCD3HwwriYGoY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kcbNivafCS0XEll6pdNQCofKBoyRP7da4kFBFLxVh9SneBS8eatGTk8BTirjUREiril6oWKMY4Da29X+Kwq62WYwIQhdV8IRG2E7VxZnwtLrTSOUQ8Mytw0t0GzJg4THPqtLsN8vhuHHWOJqYBsgpamlpIGUFET15S7kgUZ1848=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MyNaF7k4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785337988; c=relaxed/simple;
+	bh=KH29a8hjpGwm0MGTBjCwEqODA8e/uDIzpeuP3BO/VYc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=PLCcCUPIlViAwJQU089pN8FXKn13O0io/dyqqgUA2FUOYpmZCXQbkWA4atwi9QjUEzgk3DcHkKYf0Ye/i8oVlW9mfUb0cPf3i21wFQvecEyZ1Qjffe3EXhftNElPbgAultm025ShjUfyAjkXGqQCGUnrSxb79tvhH8TfKTtviF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqFY8UV0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MyNaF7k4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32BE91F000E9;
-	Wed, 29 Jul 2026 15:12:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqFY8UV0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A71B1F000E9;
+	Wed, 29 Jul 2026 15:13:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785337971;
-	bh=HZSb0EJLr4AFXbXjw8odDJR8NY8wtHsvk1Ts7AdPyeg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MyNaF7k40reVrMqiBFdkhkL7ihZqO26dir9BQuFBfsu2FtiAhfGh4mdvjPPb/8prj
-	 TXxbfS06JcnYN4D1pRVeujIzZkFOBXr4c2DtEZpkke9KFWjas9Fq5QaQg0MYQiuUf/
-	 iSFfRawF9+DTeNaKLBaAOJSawnlg874m9YFX6pqnkGD8TetjGsf+j/vwU9r7oDpSP2
-	 gbjl/+9bhGtdjWxe5rcAdgJPpPEAeJOjD5C7hJH0S6ByWcK5+lA6UJrts6DFrF0gJc
-	 G0Yq3ntT8BORz1v2VlAeCdB953NPgQJh+ssvv3gLPf2D9qX3ynZsQy67D3dOip0Pm8
-	 egyZqUrdkk/FQ==
-Date: Wed, 29 Jul 2026 17:12:44 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Allow D3 for native Hotplug capable Root Ports on
- DT platforms
-Message-ID: <vu7lzyq4jlyqcvxg5djwhmudxt57b4ittlquzug7ps3oa5nfon@6bfismvnliu2>
-References: <20260729071514.859778-1-manivannan.sadhasivam@oss.qualcomm.com>
- <amoQ3SNpnLr3zb37@wunner.de>
+	s=k20260515; t=1785337984;
+	bh=3NEKdjv6MfBc+uXT7R970Lk43nj5ni/sRaIoa9nJmwg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=nqFY8UV0L+4lT0NOJsWBprInbiVy2a2UYpAHA7IJ7vSLWjZ8Fvx5WlmXbUnnMzG1d
+	 ggGcbX9trhiGk2Q3LA7o2AFa29gG6ZxdD7TVZjhkIKJj1JM/moyq1iofy/W+FqAoTf
+	 zQ3wG1yKjz13rJsdI2vJzfgTMN3FgEtSTEsGaLbVV6gDKKo6kNzjs0s7mAXyEJZlE4
+	 OHIQOanHFlOrSvxW8sRUxIJ30xFWrcQyTq6+yqoAHHjz4maPDBFGIPvKoIADF0Sbe1
+	 u68CakKLByvV/rGONVcfyqUwXGoP0xyLXUdOX5kUfbG7kNgvP5XEVlIiAObsh7wOF/
+	 6ivr7nlCnLN6w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Fix Intel Xeon 6 x2 quirk collateral damage on
+ adjacent x4 endpoints
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rick Warner" <rick@microway.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260729144508.12337-1-rick@microway.com>
+References: <20260729144508.12337-1-rick@microway.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 29 Jul 2026 15:13:03 +0000
+Message-Id: <20260729151304.4A71B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <amoQ3SNpnLr3zb37@wunner.de>
 
-On Wed, Jul 29, 2026 at 04:40:29PM +0200, Lukas Wunner wrote:
-> On Wed, Jul 29, 2026 at 09:15:14AM +0200, Manivannan Sadhasivam wrote:
-> > Commit eb3b5bf1a88d ("PCI: Whitelist native hotplug ports for runtime D3"),
-> > prevented native Hotplug capable Root Ports from entering D3 citing issues
-> > on old Intel SkyLake Xeon-SP platform.
-> > 
-> > But there is no reason to restrict D3 for native Hotplug capable Root
-> > Ports on DT platforms. We recently enabled D3 on non-Hotplug capable
-> > Root Ports on non-x86 platforms (specifically for DT platforms) in commit
-> > a5fb3ff63287 ("PCI: Allow PCI bridges to go to D3Hot on all non-x86"). So
-> > do the same for native Hotplug capable Root Ports as well.
-> > 
-> > To honor the above platform_pci_bridge_d3() check, allow passing this check
-> > only for DT platforms, unlike a5fb3ff63287, which used !CONFIG_X86 check.
-> 
-> platform_pci_bridge_d3() acts as a "whitelist check":  If it returns true,
-> the port is allowed to go to D3hot/D3cold.  If it returns false, the
-> subsequent checks in pci_bridge_d3_possible() are free to decide the
-> port's fate as far as D3hot/D3cold allowance is concerned.
-> 
-> Thus, I don't think you need to worry about "honoring" a "false" return
-> value of platform_pci_bridge_d3().  (If I understand your commit message
-> correctly.)
-> 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Okay, thanks for clarifying. I was worried about ACPI based ARM64/RISC-V
-platforms and was trying to be conservative.
+New issues:
+- [High] The one-time bus walk completely misses dynamically hotplugged dow=
+nstream endpoints, breaking the workaround and exposing the system to hardw=
+are instability.
 
-> > +++ b/drivers/pci/pci.c
-> > @@ -3020,11 +3020,11 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
-> >  			return true;
-> >  
-> >  		/*
-> > -		 * Hotplug ports handled natively by the OS were not validated
-> > -		 * by vendors for runtime D3 at least until 2018 because there
-> > -		 * was no OS support.
-> > +		 * Do not allow D3 for native Hotplug ports on non-DT platforms
-> > +		 * as they were not validated by vendors for runtime D3 at least
-> > +		 * until 2018 because there was no OS support.
-> >  		 */
-> > -		if (bridge->is_pciehp)
-> > +		if (bridge->is_pciehp && !of_have_populated_dt())
-> >  			return false;
-> 
-> And so I'm wondering whether:
-> 
-> +		if (IS_ENABLED(CONFIG_X86) && bridge->is_pciehp)
->  			return false;
-> 
-> would be more appropriate and more consistent with the subsequent check in
-> pci_bridge_d3_possible() that also uses IS_ENABLED(CONFIG_X86).  Basically
-> this would mean that we only special-case legacy x86 hardware, but assume
-> that anything else supports D3hot/D3cold for native hotplug bridges just
-> fine.  In particular, arm64 systems using ACPI.
-> 
+Pre-existing issues:
+- [High] Endpoint drivers and VFIO guests can trivially overwrite the manua=
+l 128B MRRS clamp and Extended Tag restrictions.
+--
 
-Okay sure.
+--- Patch [1]: [PATCH] PCI: Fix Intel Xeon 6 x2 quirk collateral damage on =
+adjacent x4 endpoints ---
+commit 437863bd6a6bd870ba3147da1f484eb59fd2282e
+Author: Rick Warner <rick@microway.com>
 
-- Mani
+PCI: Fix Intel Xeon 6 x2 quirk collateral damage on adjacent x4 endpoints
 
--- 
-மணிவண்ணன் சதாசிவம்
+This commit refactors the Intel Xeon 6 x2 traffic mitigation quirk to apply
+locally to subordinate devices rather than globally on the host bridge. It
+removes the host bridge property assignments and instead performs a one-time
+bus walk during enumeration to manually clear Extended Tags and clamp MRRS
+directly on endpoints.
+
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index b301c6c8df753..c2bdf580692aa 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -301,38 +301,43 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DE=
+VICE_ID_INTEL_MCH_PC1,	pcie_r
+>   *
+>   * https://cdrdv2.intel.com/v1/dl/getContent/837176
+>   */
+> -static int limit_mrrs_to_128(struct pci_host_bridge *b, struct pci_dev *=
+pdev)
+> +static int pci_xeon_x2_bifurc_quirk_perdev(struct pci_dev *pdev, void *d=
+ata)
+>  {
+> -	int readrq =3D pcie_get_readrq(pdev);
+> -
+> -	if (readrq > 128)
+> -		pcie_set_readrq(pdev, 128);
+> -
+> +	/* Only clamp actual endpoints, skip downstream switches/bridges */
+> +	if (!pci_is_bridge(pdev)) {
+> +		pci_info(pdev, "Disabling Extended Tags and Clamping MRRS to 128B due =
+to upstream Xeon 6 x2 bifurcation\n");
+> +		pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_EXT_TA=
+G);
+> +		pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_READRQ=
+);
+
+[Severity: High]
+This is a pre-existing issue, but can endpoint drivers and VFIO guests
+trivially overwrite these manual register changes?
+
+This code clears the MRRS and Extended Tag bits directly via configuration
+writes, but it does not set a subsystem constraint such as no_inc_mrrs on t=
+he
+bridge. During device probe or VFIO guest execution, could a subsequent call
+to pcie_set_readrq() unconditionally overwrite this 128B limit and reintrod=
+uce
+the hardware instability?
+
+> +	}
+>  	return 0;
+>  }
+> =20
+>  static void pci_xeon_x2_bifurc_quirk(struct pci_dev *pdev)
+>  {
+
+[ ... ]
+
+> +	/*
+> +	 * Walk down only this specific root port's downstream bus tree
+> +	 * and clear extended tags specifically for devices on this branch.
+> +	 */
+> +	if (pdev->subordinate)
+> +		pci_walk_bus(pdev->subordinate, pci_xeon_x2_bifurc_quirk_perdev, NULL);
+
+[Severity: High]
+Does this one-time bus walk completely miss dynamically hotplugged downstre=
+am
+endpoints?
+
+By removing the dynamic enable_device hook, this mitigation relies entirely
+on the DECLARE_PCI_FIXUP_FINAL sweep which executes exclusively once at boot
+during root port enumeration. If a device is dynamically added later via
+hotplug or if an SR-IOV VF is instantiated, the root port is not
+re-enumerated and the callback won't be triggered for the new endpoints.
+Could this leave hotplugged devices unmitigated, allowing them to negotiate
+full MRRS and break the workaround?
+
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729144508.1233=
+7-1-rick@microway.com?part=3D1
