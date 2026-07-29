@@ -1,229 +1,222 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCED4DB568
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 14:03:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785333803; cv=none; b=GE/yQFHZB07nmWBFdpQrcCXZ41K03V/E0fHd18vfIsjcca3/E2329q10reDTtHOIiTTpmp/+Z0ZcCBEfhddI3dRWqcKRfpsbY1c2O/IuX4R7ni70CZCEM4Sg8y1TKwETSg6YbjhoPnT5SYWiApHDLcj7ExGHz1XYCCrxeVUQyM8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785333803; c=relaxed/simple;
-	bh=QmLgSexPSDuaMklr6fTnA3PvfMhj8nIpwxXtH/H637E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n/qWLlHcRT/PEyj847dsIkt8jTcEmXSnoJAyGG3ujY+G5zjM+0GOlD8+UKGouKajWPslP4NjaLCGDGh9YzmHm61UM5xb/NHkJvyHPRR75iJ1TM3BiSIWtIBySqCit9UOY2KAS/isxFnjUYRxPFS/zwMiyaGNC2FXeHNQUm/nvhQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=OAL9je9W; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WPcs6tHT; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1CF48663E
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 14:08:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.169
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785334142; cv=pass; b=ho/Ew/BvGy0YmR3LtqtF1gi5oWPltYTTsmtyEeKjlyTNoehWyI2sFBkZky1addRR4uL336lIhhetVh+fA/0n6mnKsdCVT884B9uDfNbL6tU/0708eX6oh+x1EsmwNjyzPFMCOLHPaAhvWi/y35SxKqyaK7bwSqRi6bMq48UeZzA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785334142; c=relaxed/simple;
+	bh=C9xtxbuUwTl2/4FiNCbCnz92H6bjM6ISYPijuuaBP7M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=J8VamAoRiDZfOr7wTynp58VnhZgoThYDQW6QLXPSuJmzBcqLbQ4UdswUQx8YNn6tQUZIp5XEYe+vmW3AT6V0XAVCm8omGYcoHVdWO3Y6przGE8tGPP1kLMaVpXF2Djt9V9t0oF2G4klv5HdisUWoZPsYRhBFrq0rMiJ6JFKUU2I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jjpXqR0Y; arc=pass smtp.client-ip=209.85.128.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="OAL9je9W";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WPcs6tHT"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TD8DJ73077174
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 14:03:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=ujvd8GOIfYUMjRcKfMhwhrUy
-	V9hWXOwPZ2H7jDD71XQ=; b=OAL9je9WOVjUmvQ5cVN3MtpxENNajJHA8Sny95dg
-	NOtf0m14YapxC+4fD+f3JyKrjGTUeV9TfzO69xaGRg8GDHsw7bolIL4ZkexdUCEj
-	IOZM2Jpy9yM811lKCQ7H5PUvwn8xplmuxJGoMamAmjHO10T10sJDZD2PGReqdV+b
-	XiK0UpzDh0rbue1h6lXX3Pz7K01nVPUMcTrrht9F1RSTsvpk+JHypgJ0VMPATDf6
-	54te2KsMTpmUfyuHvqqUkvgYitPftv6gksK/0QLdRgLdX++z4A6lA5y7JFghM16o
-	U+vIUAwFqHLqEERc4bc3caAuXtWjJfEkfu5OffjNL79MBQ==
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqh3mrgpb-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 14:03:19 +0000 (GMT)
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7ec6685adabso1457694a34.0
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 07:03:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jjpXqR0Y"
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-81ed2a06b9eso10863037b3.3
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2026 07:08:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785334136; cv=none;
+        d=google.com; s=arc-20260327;
+        b=dRQm0VJ1MV5KYbWwM82QQUxVriN6yiNVefoRH30DP8b4EvXO3VQLFp7KSCOnZK5dsT
+         8a9o1J3+bhOebS+29V5eI9rCPHUg0bbRsvrZf0OpT22hujkTxGWUfkNq3Cby7+tmY9vH
+         apnCQHtmLAYz9LOEZL1uePh5C3YwZs+btDae0UBiw8dexeUPP90l688YmLa0ZH6LI6Yu
+         A3w5ypyjeLvYHJdtJZfgvA+rfvJOEzyXRRmbBf7mH42zZalx7DIpo2+zzLVGt1AkjIt+
+         YV+nYOc1Rd2Qmh3kHwI3q1D66vcOBNWEaKam78Kf8r8RRFodMVIuG/FkbH8rPddQ7uHI
+         jrIA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
+        fh=V8DifFPxYRxJ9Jt00V9USkncMS3vxQl1442FY0B70t8=;
+        b=dnBJhSsUJCwPD55ekm86BEH+jBi4TYWHWuCe9Z7ECO8UhsfU529phjD/LN4DOcMQFC
+         LUEI8j0AnBdnJScOf8TCOGDMsY4lYk3wd8QmNomHNzQaxCtG0l6vL2Cgz43qxyKhW5yU
+         IP2TsZDyoAqr5gJVW1Zvb0Ocr1fwYQHrzognbDF9dp2eIEIlrvGhZe6lIiDTTc8Xi8zr
+         sUWCoS7rnKgOnQ+Bs9rHZ4NcN5OJczChX3oKBkzrqbrBZRSCCuEdTGBrJ8Q85RivFWuy
+         WI6ljzwUjKFXcMB7S1oLRrIluhoc9vsXwb9BZidWuKDLAXLS0Q3PX+SzLt3O9Ja59IMl
+         eIhQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785333799; x=1785938599; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1785334136; x=1785938936; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=ujvd8GOIfYUMjRcKfMhwhrUyV9hWXOwPZ2H7jDD71XQ=;
-        b=WPcs6tHTgU0r1tumzchH/l7TYUJ+CG/BWgQYSoxL9ZdTOYHt2vGyRjtHeZK3lR+PZG
-         lHK0AbQqi0hXq7pOKeHXJWnrNroU/hj0u9bnSpRKMcAl9EJQWVm5/HKNgVTRa7rgHWS4
-         kezao13ASkhh/52/10ZLxtMjTlV9i+0kS6d5b2NCNJQozyZ4/6iWN0oQfZNCapRem8HH
-         r3iaz3Fb7f30aVbdb5DEfXpT9ZliZv0dbPKd9cgUnj1SPprglBEr2e29GU6tb8nPbNVj
-         FvdIaayMLiVRHt9jv1c9i4an9vJen5kHv1X8iIghrRsAAr5RvWaLBXB9fmJqbt0wuett
-         3wkg==
+        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
+        b=jjpXqR0YFf6ekhWMsG4jve3XQGUZMPCvLbVCKpbrL9Aw5uxkbvKrZP+89Q9vwa5xpW
+         QL+kEpUErsvgomW2e88CJwqZHNz7sLXne1mrM778ANvcvtRCqov4JuQsZqD0caudPRPL
+         nGVENNSpLFCIzZe5oQMXm3M4JvetsH2GCuTJXNgYyulRq0EZOHg9uCgvkMUFEnfEbI4a
+         8oEYPjfjas+byx4RqOqqAnK3DUIiZETPwMDZO7uVAezcKSecI7cZIK2/WrASqnirreDG
+         8+92KUEWgzYHgLn1I28HwQK+LE4CsJe01F8E0huUbjs/fS70Jqlh0J+3jBnivc67zM9V
+         cv4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785333799; x=1785938599;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1785334136; x=1785938936;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ujvd8GOIfYUMjRcKfMhwhrUyV9hWXOwPZ2H7jDD71XQ=;
-        b=BC8GCE2N3KzCrPatUtFUECI2KQc0KhXmOy4yW9Gk2eWkHJ+zjhDilMInKwnk3K0peX
-         hJ3HBuynzcm6NLvUbCEJNLkCRAK6w6uZ2lt8KC6OHy1gcVUIxfmd8/R5fwWiC/sJCfKY
-         lQ/nuvV3f74rMa3MaC3udUSLhqAM4FUfu5tNUgTGalEcXcN2s77QiP0urtrnIFdRb4+x
-         Kicr/wICBIbqlOyT5HMCa+A/iNDhm1UyEN1ZK1RH7CmRS0172bz2aiqFuWQ9B2G4w9JB
-         bVCf4mBHhR8QONJFpPUxCWM94CyEQhzwnNT1SFqJ7MVSUBV6axa66HBmK6jFLutrqrpX
-         rW2g==
-X-Gm-Message-State: AOJu0Yw23FOiC50K1P25Vi4xBSFjDBqDqG2qEeG0N4wiwvSHITdAAAif
-	4xDBOIzS64zKcjKuUJ87MAA+8PAO6fTaNPpMtFa8TvFQ9Kwz6CO57ifP7LzwhX6nmMKhGC3x8sp
-	O97xiMur9Lal6hCR/x5P1t9IfT45jyPlCONbgwiGlOjuW1sBEQ3covMWYR2gH1+vlb3l2WEc=
-X-Gm-Gg: AR+sD11WYB0svkK9FYB00FL/ppRlbYa0NkPCN/wZ0d/C20/I8nzwKrRX+M8kJLSezAn
-	g4eufgZVdS76X2jLh3ZdrOMVloFeemicVlIa/p6d4XiSYy6r5vdIQwePDKSLfticX09kfbOcT5k
-	RyplbOCUM9TMza67mQlkPj5W2Vz0P1XzF+BMkqUb0DictPVf73+oqz4wF/fnkbx/J4M9sCUFLF6
-	R8KupY7HqDUKji6I4UR/9cnNH6p7ECP3fE6+JfVtkIO28+cLaLU1f3M+e37JfOJY7VxE1EYL1of
-	HkeJ16TQq/k/IuZpyENLWrKYnIEQgSPNBWK8FMtRJO7tcovu3c92CoK1uhN0hmJTeHWN2+EUWNP
-	bJA52rzEK+C36LDg=
-X-Received: by 2002:a05:6830:81ec:b0:7e6:da40:b7fa with SMTP id 46e09a7af769-7efff2c3b68mr3399723a34.24.1785333798862;
-        Wed, 29 Jul 2026 07:03:18 -0700 (PDT)
-X-Received: by 2002:a05:6830:81ec:b0:7e6:da40:b7fa with SMTP id 46e09a7af769-7efff2c3b68mr3399579a34.24.1785333797183;
-        Wed, 29 Jul 2026 07:03:17 -0700 (PDT)
-Received: from localhost ([188.216.77.92])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1f83cdf452sm119986666b.14.2026.07.29.07.03.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 07:03:15 -0700 (PDT)
-Date: Wed, 29 Jul 2026 16:03:15 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/pwrctrl: tc9563: use devm-managed I2C dummy
- device allocation
-Message-ID: <amoII3tD3wtqcH7q@lore-desk>
-References: <20260729-pci-pwrctrl-tc956x-regmap-v1-0-20ce61a3ce12@oss.qualcomm.com>
- <20260729-pci-pwrctrl-tc956x-regmap-v1-2-20ce61a3ce12@oss.qualcomm.com>
- <20260729134401.8EAD31F00A3A@smtp.kernel.org>
+        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
+        b=WdL0YjEwIOghTZKU4YQFjvj4PeMxp/0bAI9D5yin76KiABdzNmYurEu9R+IE3VGvOG
+         QRtcT6zRTXY/LNLZbshAflIli50E8gaQ5uYTNJqbratta1XdVgMIfxIM0TIkLf7sOGcF
+         nZG7MzrBdW2FY4rqYlxw9uHUqTwgDEj7cKbFvYkpIiDO+cVFbF49dbez7PKytJza4NQK
+         i38dOOP/RhlbAc0vhoyX0aS9b+9G/GMGS4Yb9U6WHJQ31qCYuVDTLc49h80Ux2Ev13xe
+         guV/t6RfKmaRge9rKYiWIGFONpHoDy+swpKo8/eqSh1mW1gtgZedYcInRjeaTQtG6SKv
+         I/Tw==
+X-Forwarded-Encrypted: i=1; AHgh+Rpxc5zrPa6N4e7CVU17+n4FJpQ7tVy5JkeCFr1Imi8i7j+TDGOxiCcfdogowm9PWni8tyqFp4l9sA8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7LKZmekdMVpxVZkSzBGOlW/edhGQeZd1Ijckg8yhyuQy6Op7k
+	uMzCVZmIxRHMJZ7uCFDyCS88KDAgcSKQ84FSKBlO14xAxdeG0KJqzFR4eQXwpOI3CCaGWMQcqlY
+	0gsJRIqt84ecNb+frEsmDyYi6EqFfDEA=
+X-Gm-Gg: AR+sD12mi1cDG3Tk/kY5VxdJ0cd1+z6JTgy+plN3Y95UFbIPgykxwCSbBZHfjNrCnYx
+	8ePd2wkqEmh5Gdtf3i4FREnscQrTr0XF/W6HR8a50q84y1/WbJfxKpwKwUxi1+YZoK3j6u8sa+o
+	VuvCMt4hUQvGp7plCGNcfMYrTeLydzl6Tn8CYNTZxTnty3yPnOtfaRAtMavIsuW6gfL1D0T4TkL
+	iRZzzlCnZZXH3ap3hgt8sA9ItlO7Hqsl4PVkJLqU0KmbYx6Ck8vlCAPE2V55oOryE4xwl2zlN/B
+	SJoWHIIZ6H3qT2aIX+3iZTeS2cP4xnkaLUZaonh9FcfT9xjteDzm0Q==
+X-Received: by 2002:a05:690c:f0a:b0:80c:85e5:8741 with SMTP id
+ 00721157ae682-81f993df989mr36253797b3.63.1785334134768; Wed, 29 Jul 2026
+ 07:08:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="Z5q25nZ36hnRsEAF"
-Content-Disposition: inline
-In-Reply-To: <20260729134401.8EAD31F00A3A@smtp.kernel.org>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDExNSBTYWx0ZWRfX1+wS9gkm+ycy
- wg/JJm126Kcg2F2MY0vKNlLAisjp9hSFSZqwrYR9iweKCBPPqrtBrcpJ9E5nq5SzCQu2TLjUNqO
- +yOSc4s3CkUS5p1FtMwfzDcrBwr/7rSO1OAkgsDt3O2VygD8aeGun4bbqb4/vUqZLigii36OR6p
- uIt42L7KWS5XcdA4++zdpPRdVTfsoboXBboGPyjy3apZ/qu+1BLBiVadalDyApR7KMBDTClCpvk
- pqrWgX3oZDYD7r3z4HwI9JDdUjzO/yPF/CVib9BzFaxfeEW7A4CbZmqWm+6tZdi+Q/QBY8UOWUa
- BUEkLQCrFtRJG+TEJH6s47JXk9TZWpP3W49Ec+ToGteovv8PNVU6iE8NDAayFhnOh7P7AZEpM9R
- cHwMTyQkV45o0E70nzXchEZ8sPlL51LJx13uz3BQGt+fqxH/Xw7ee0PLQTENo0TaePybXFgAHrD
- s4bmz71/jq8hj6dP5OQ==
-X-Authority-Analysis: v=2.4 cv=F49nsKhN c=1 sm=1 tr=0 ts=6a6a0828 cx=c_pps
- a=7uPEO8VhqeOX8vTJ3z8K6Q==:117 a=WpTaRW6qxYHRGzLzQsVYzg==:17
- a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=c92rfblmAAAA:8
- a=EUspDBNiAAAA:8 a=OCD42IZeh0mM_344py0A:9 a=wPNLvfGTeEIA:10
- a=KNR_7U3MQDS_PTxHe68A:9 a=EXS-LbY8YePsIyqnH6vw:22 a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-GUID: KQnd06DIr4q-H-k9Z8shtE3CCHvUldHA
-X-Proofpoint-ORIG-GUID: KQnd06DIr4q-H-k9Z8shtE3CCHvUldHA
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDExNSBTYWx0ZWRfX5+f+1lobHvdr
- mLL025SpFsynsphNq9tLroc+NON+ogKZ5UiZVK8lYdt7BOsri2hm7wSPWeay36LhtbsajiKhxil
- 0VCxYcWqOQsohFPKwu0L0Cxpge9p2eI=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-29_05,2026-07-28_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 priorityscore=1501 bulkscore=0 clxscore=1015
- spamscore=0 lowpriorityscore=0 phishscore=0 impostorscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607290115
-
---Z5q25nZ36hnRsEAF
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+References: <20260716230411.2767394-1-tarunsahu@google.com>
+ <20260716230411.2767394-5-tarunsahu@google.com> <20260717025913.067B41F000E9@smtp.kernel.org>
+In-Reply-To: <20260717025913.067B41F000E9@smtp.kernel.org>
+From: David Jeffery <dhjeffery@gmail.com>
+Date: Wed, 29 Jul 2026 10:08:43 -0400
+X-Gm-Features: AUfX_my5xPWn2PPlT7ZWQqD-dmkDU18YDfPkQgQ3vbI39xQlspjH-YQORqbG6Us
+Message-ID: <CANghDUUFrGN3CiJmRhQS0jtDwNnoWbKv490E=UxDXGgKsy6m7A@mail.gmail.com>
+Subject: Re: [PATCH v19 4/7] driver core: do not always lock parent in shutdown
+To: sashiko-reviews@lists.linux.dev
+Cc: Tarun Sahu <tarunsahu@google.com>, linux-pci@vger.kernel.org, 
+	linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+On Thu, Jul 16, 2026 at 10:59=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
 e(s) to consider:
-> - [High] Use-After-Free due to teardown order inversion between i2c_put_a=
-dapter() and devm-managed dummy client release.
+>
+> New issues:
+> - [High] Unprotected read of dev->parent introduces a Use-After-Free race=
+ with device_move() during reference acquisition.
+>
+> Pre-existing issues:
+> - [High] Dropping and re-acquiring device_lock(dev) allows dev->parent to=
+ change, resulting in locking an obsolete parent.
+
+We could add additional locking around device_move to exclude moves
+during these times to quiet both the AI tool's concerns. However, both
+these concerns are already not possible in reality. The only user of
+need_parent_lock in the kernel which will use this code path is usb
+devices, and none of the rare devices which use device_move will move
+a usb device which has need_parent_lock set. Thus, there is no actual
+device_move which can cause these conditions the AI tool complains
+about.
+
+The AI tool is finding a non-existent issue by applying a very
+specific special state as a general condition. If really wanted, I
+could add a patch which locks out moves during these times as a form
+of future-proofing, but from my view of the code all it would be doing
+is creating additional code and complexity to the driver core while
+currently fixing nothing.
+
 > --
->=20
-> --- Patch [2]: [PATCH 2/2] PCI/pwrctrl: tc9563: use devm-managed I2C dumm=
-y device allocation ---
-> commit f54ecfd3f2485cf33e559cd8f58fa24de337138b
-> Author: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
->=20
-> PCI/pwrctrl: tc9563: use devm-managed I2C dummy device allocation
->=20
-> This patch converts the driver to use devm_i2c_new_dummy_device to manage
-> the I2C dummy client. It removes the manual i2c_unregister_device calls
-> from the probe error path and the remove function.
->=20
-> > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwr=
-ctrl/pci-pwrctrl-tc9563.c
-> > index 8bccf3abd1892..5b05e76f6c80d 100644
-> > --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-> > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+>
+> --- Patch [4]: [PATCH v19 4/7] driver core: do not always lock parent in =
+shutdown ---
+> commit 6be56e5bea0fe214a5199c9f806c49e62e60127f
+> Author: David Jeffery <djeffery@redhat.com>
+>
+> driver core: do not always lock parent in shutdown
+>
+> This patch modifies the device shutdown process to only lock a parent dev=
+ice
+> if it is strictly needed, rather than unconditionally. It also defers
+> acquiring a reference to the parent device until the point where the pare=
+nt
+> needs to be locked.
+>
+> > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > index 82a7af1f3ba2e..31f95e86856e0 100644
+> > --- a/drivers/base/core.c
+> > +++ b/drivers/base/core.c
+>
 > [ ... ]
-> > @@ -607,7 +606,6 @@ static int tc9563_pwrctrl_probe(struct platform_dev=
-ice *pdev)
-> >  power_off:
-> >  	tc9563_pwrctrl_power_off(&tc9563->pwrctrl);
-> >  remove_i2c:
-> > -	i2c_unregister_device(tc9563->client);
-> >  	i2c_put_adapter(tc9563->adapter);
-> >  	return ret;
-> >  }
->=20
+>
+> > @@ -4925,12 +4921,32 @@ static void shutdown_one_device(struct device *=
+dev)
+> >  static void shutdown_one_device(struct device *dev)
+> >  {
+> > +     struct device *parent;
+> > +
+> > +     device_lock(dev);
+> > +
+> > +     /* use parent lock if needed to avoid race with probe/release */
+> > +     if (dev->bus && dev->bus->need_parent_lock && dev->p && !dev->p->=
+dead &&
+> > +         (parent =3D get_device(dev->parent))) {
+>
 > [Severity: High]
-> Will this cause a use-after-free by changing the teardown order?
->=20
-> By switching to devm_i2c_new_dummy_device, the dummy client is now
-> unregistered by devres cleanup, which executes after tc9563_pwrctrl_probe
-> returns.=20
->=20
-> Because i2c_put_adapter is still called manually before returning, the
-> adapter reference is dropped before devres unregisters the dummy client. =
-If
-> dropping this reference allows the adapter to be freed concurrently, it w=
-ould
-> forcibly unregister all children. When devres later attempts to unregister
-> the client, it would operate on an already-freed pointer.
->=20
-> Could devm_add_action_or_reset be used to manage the i2c_put_adapter call
-> so the teardown sequence happens in the correct reverse order?
-
-IIUC i2c_put_adapter() does not unregister any i2c children device but just
-decrements the adapter reference counting. I guess even if
-devm_i2c_release_dummy() runs after i2c_put_adapter(), it will be safe. Agr=
-ee?
-
->=20
-> [ ... ]
-> > @@ -619,7 +617,6 @@ static void tc9563_pwrctrl_remove(struct platform_d=
-evice *pdev)
-> >  					struct tc9563_pwrctrl, pwrctrl);
-> > =20
-> >  	tc9563_pwrctrl_power_off(&tc9563->pwrctrl);
-> > -	i2c_unregister_device(tc9563->client);
-> >  	i2c_put_adapter(tc9563->adapter);
-> >  }
->=20
+> Does moving the parent reference acquisition out of the list_lock critica=
+l
+> section introduce a race condition where the parent could be freed?
+>
+> In device_shutdown(), get_device(dev->parent) was previously called while
+> holding devices_kset->list_lock. Now that it is evaluated locklessly in
+> shutdown_one_device():
+>
+> CPU1
+> shutdown_one_device()
+>     evaluates dev->parent, but is preempted before get_device() is called
+>
+> CPU2
+> device_move()
+>     changes dev->parent and calls put_device(old_parent)
+>     dropping the last reference and freeing the memory
+>
+> When CPU1 resumes, could it pass the freed pointer into get_device() and
+> dereference it?
+>
+> > +             /* the parent lock needs to be acquired first, so re-lock=
+ */
+> > +             device_unlock(dev);
+> > +
+> > +             device_lock(parent);
+> > +             device_lock(dev);
+> > +
+> > +             __shutdown_one_device(dev);
+>
 > [Severity: High]
-> Does this also expose driver unbind to the same teardown order inversion?
->=20
-> Since tc9563_pwrctrl_remove executes before devres cleanup, dropping the
-> adapter reference here deterministically happens before the dummy client =
-is
-> unregistered.
-
-ditto.
-
-Regards,
-Lorenzo
-
->=20
-> --=20
-> Sashiko AI review =B7 https://sashiko.dev/#/patchset/20260729-pci-pwrctrl=
--tc956x-regmap-v1-0-20ce61a3ce12@oss.qualcomm.com?part=3D2
-
---Z5q25nZ36hnRsEAF
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCamoIIwAKCRA6cBh0uS2t
-rGtTAQCTr76gdQaUnAXCA1uq48BrHGvhSkHQUTWk5njmzBe+VwEA9BABDezLRN2z
-vdmHy1276oBBfUKATOHbB4+8SzSyLAo=
-=fdpK
------END PGP SIGNATURE-----
-
---Z5q25nZ36hnRsEAF--
+> This is a pre-existing issue, but does dropping and re-acquiring the devi=
+ce
+> lock here allow the topology to change?
+>
+> If a concurrent device_move() reparents the device while device_lock(dev)
+> is dropped, it appears we might lock the obsolete parent. When we re-lock
+> dev and call __shutdown_one_device(), we haven't verified that dev->paren=
+t
+> still matches the locked parent.
+>
+> Could this defeat the need_parent_lock synchronization and allow a
+> concurrent probe or release on the new parent to race with the shutdown?
+>
+> > +             device_unlock(dev);
+> >               device_unlock(parent);
+> > +             put_device(parent);
+> > +     } else {
+> > +             __shutdown_one_device(dev);
+> > +             device_unlock(dev);
+> > +     }
+> >
+> >       put_device(dev);
+> >  }
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260716230411.27=
+67394-1-tarunsahu@google.com?part=3D4
+>
