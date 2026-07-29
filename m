@@ -1,112 +1,231 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 573733B059F;
-	Wed, 29 Jul 2026 15:13:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1406848CD70;
+	Wed, 29 Jul 2026 15:19:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785338023; cv=none; b=MFpturattf8kVbmWQEKbwHKsSXn6ADzm9lzVvHujpJeZn3fjhFbZFxFdm8GMVDRHjwxSSTQXVY2SD0OkvCylYZDgAX41hIS4Hf8yhPjOQzv0N3jF6YmXj0zYMf06BAb0WKPMFgEGPS8j76mBu8bj4wjeAoGhbQgT8YRK9IRamaA=
+	t=1785338375; cv=none; b=VgOjlrLvg9fQEdCLsiWTlp/j9oOQIIsKjMWbjqyzNOez0tU7oECxnKdpXJktg2EtCm6v1MJ2H08sgwZAj1Lxr2JP6yCBZmUm+smjMwocoP/t8tlgONv3VprQrjkdM+j5ShOpSQ1jVktHZPmXYdxoX1x7AjDDen/Zl4rMHs6PnTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785338023; c=relaxed/simple;
-	bh=pGORuI9uWBPE6SrtM8pIJc5RxPHklCuXUVxXEuj2shM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZJFrl/SEoB0A3BwFxv65TzJdFgEVfmIKop7ftEnrU/WrtnlrubC+gDvRETRH0pi2yWFAXUkePn16gGGdBSbHy/g9zsTfyKhrPZnVjuLDV5ePb1PwPv1ObpNrvtNgKOL7L5oFaUj8TW6KVkyZz/h1Dd78Lw3mOycrY9S3Ln3G8qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AAMRDOvX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785338375; c=relaxed/simple;
+	bh=GmQZQ2hNwpEiCz0AALObdG81lVEERleXHO2dIRJGj6M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KQWqOOd8s/U7rqK+SojzwGihUXuXqQB1yszXDn3W6BLelTsEHRnZzoi6gQYRz4tBliBjKTgP66deAiNL0K+8DFr6rWOlYR/5WpveKk8mtOdRoOe8FvVZPJ5VeNAsMsahwQxhrrSClkIKW3g5kn3JxHQfeOZXuJ3bW3Yoo+WfW/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bMJ1pqZL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AAMRDOvX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C4A31F000E9;
-	Wed, 29 Jul 2026 15:13:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bMJ1pqZL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E8961F00A3A;
+	Wed, 29 Jul 2026 15:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785338022;
-	bh=f9iBVWcCwzJLN3H4CJ0Xcr/BUCB6B5BBaMwIvUDxDds=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AAMRDOvX0utE+qT94+D2J3qCERV5whFBMlb9U3ONwFboXnfT8z7WxGDzfwQRA+ppN
-	 GHc+xvrkjDCaErWo7VOIeraEqbUCPcOx78Rw4pMvZ9EvsnEZ8Imt1gVcxp3o+R9E6q
-	 XJHj1tMk7hZbUpSZtYxahKDZLZhq/iv7VrfcVUHrr2f6h84GIrvpSjIeMlDtp5s4cR
-	 ckeyVojG5FmPrSCUl0VKaDcIoMPi6xR3Z2ib8s1cJzaplZS06uE8i+YdB8E3qfmVmm
-	 TmzrAsTeWXo7nXaASCuiPY2dzs+ZmTFxEuPt/6cN1Lucrg3i8SQXe6B3DXuPYrT47J
-	 G4vALAuLZNkqQ==
-From: sashiko-bot@kernel.org
+	s=k20260515; t=1785338373;
+	bh=58z9lcdA1tHcAEkot+Dn0zkP7sOy9zJYB/FYpfsLemw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bMJ1pqZLUSqoOUY0jcHkDPLDBK96gk0BRxGIPLrSGYZnWe4VC7FVpQhpWu+I+jalE
+	 4F+lNNq23VVfkal5NFXR8ddzNLbSSFa4ngaruAXPsixQTiODA5wp2OKJULuN+YMGw8
+	 pLt0Y0Cw3TeBS0l9JiSjyY1eXABgmz+fHVd0dUkoZHUvNGWkrphsP8FEdb+/B2uJ8/
+	 LLtq9vNPRNOhyBnAO9Hz1E01gxNgdHRoKzKw/yJGFsKDQbcjTBD5IZh6ih8zDtnr7p
+	 3K8L4WmP3n6yjhGwiN0F3lXCXrIGQ7Gl6m7hsXQbCk2fPqBlS/eskXTxoZtlaRGUlZ
+	 Y2dXS4/TDMLFQ==
+Date: Wed, 29 Jul 2026 17:19:24 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Subject: Re: [PATCH v5 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and
  controller nodes
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260729-eliza_evk-v5-1-41790a5a24de@oss.qualcomm.com>
+Message-ID: <iu3bp3wmtrnmxfqndtsjphu6n3dppsx2miy3l3xkw5iqqmisxr@mvgpe3ddqbsk>
 References: <20260729-eliza_evk-v5-0-41790a5a24de@oss.qualcomm.com>
  <20260729-eliza_evk-v5-1-41790a5a24de@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 15:13:41 +0000
-Message-Id: <20260729151341.9C4A31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260729-eliza_evk-v5-1-41790a5a24de@oss.qualcomm.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The `interrupts`, `interrupt-map`, and `iommu-map` properties are =
-swapped between the `pcie0` and `pcie1` device tree nodes.
---
+On Wed, Jul 29, 2026 at 08:18:36PM +0530, Krishna Chaitanya Chundru wrote:
+> Eliza supports two PCIe instances: one 8GT/s x1 (PCIe0) and one 8GT/s x2
+> (PCIe1). Add PCIe controller and PHY nodes for both instances, and update
+> the GCC clock references to use the newly added PHY nodes instead of
+> placeholder zeros.
+> 
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
---- Patch [1]: [PATCH v5 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and con=
-troller nodes ---
-commit da247ac5c4684b405ce8a69950ea44574f919a8d
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Couple of comments below. With those addressed,
 
-arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-Eliza supports two PCIe instances: one 8GT/s x1 (PCIe0) and one 8GT/s x2
-(PCIe1). This commit adds PCIe controller and PHY nodes for both instances,
-and updates the GCC clock references to use the new PHY nodes.
-
-> diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qc=
-om/eliza.dtsi
-> index 357e8066c1768..31835a5828834 100644
+> ---
+>  arch/arm64/boot/dts/qcom/eliza.dtsi | 413 +++++++++++++++++++++++++++++++++++-
+>  1 file changed, 411 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qcom/eliza.dtsi
+> index 977de44b816e..a54a956531e5 100644
 > --- a/arch/arm64/boot/dts/qcom/eliza.dtsi
 > +++ b/arch/arm64/boot/dts/qcom/eliza.dtsi
-[ ... ]
+> @@ -640,8 +640,8 @@ gcc: clock-controller@100000 {
+>  
+>  			clocks = <&bi_tcxo_div2>,
+>  				 <&sleep_clk>,
+> -				 <0>,
+> -				 <0>,
+> +				 <&pcie0_phy>,
+> +				 <&pcie1_phy>,
+>  				 <&ufs_mem_phy 0>,
+>  				 <&ufs_mem_phy 1>,
+>  				 <&ufs_mem_phy 2>,
+> @@ -1786,6 +1786,369 @@ mmss_noc: interconnect@1780000 {
+>  			#interconnect-cells = <2>;
+>  		};
+>  
 > +		pcie0: pcie@1c00000 {
-[ ... ]
-> +			interrupts =3D <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
+> +			device_type = "pci";
+> +			compatible = "qcom,eliza-pcie", "qcom,pcie-sm8550";
+> +			reg = <0 0x01c00000 0 0x3000>,
+> +			      <0 0x40000000 0 0xf1d>,
+> +			      <0 0x40000f20 0 0xa8>,
+> +			      <0 0x40001000 0 0x1000>,
+> +			      <0 0x40100000 0 0x100000>,
+> +			      <0 0x01c03000 0 0x1000>;
+
+0x0
+
+> +			reg-names = "parf",
+> +				    "dbi",
+> +				    "elbi",
+> +				    "atu",
+> +				    "config",
+> +				    "mhi";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			ranges = <0x01000000 0 0x00000000 0 0x40200000 0 0x100000>,
+> +				 <0x02000000 0 0x40300000 0 0x40300000 0 0x3d00000>;
+
+0x0
+
+> +
+> +			interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
 > +				     <GIC_SPI 478 IRQ_TYPE_LEVEL_HIGH>,
 > +				     <GIC_SPI 479 IRQ_TYPE_LEVEL_HIGH>,
-[ ... ]
-> +			iommu-map =3D <0 &apps_smmu 0x1480 0x1>,
+> +				     <GIC_SPI 535 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 536 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 537 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 540 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 653 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names = "msi0",
+> +					  "msi1",
+> +					  "msi2",
+> +					  "msi3",
+> +					  "msi4",
+> +					  "msi5",
+> +					  "msi6",
+> +					  "msi7",
+> +					  "global";
+> +
+> +			clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
+> +				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+> +				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+> +				 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
+> +				 <&gcc GCC_DDRSS_PCIE_SF_QTB_CLK>,
+> +				 <&gcc GCC_AGGRE_NOC_PCIE_AXI_CLK>,
+> +				 <&gcc GCC_CNOC_PCIE_SF_AXI_CLK>;
+> +			clock-names = "aux",
+> +				      "cfg",
+> +				      "bus_master",
+> +				      "bus_slave",
+> +				      "slave_q2a",
+> +				      "ddrss_sf_tbu",
+> +				      "noc_aggr",
+> +				      "cnoc_sf_axi";
+> +
+> +			resets = <&gcc GCC_PCIE_0_BCR>,
+> +				 <&gcc GCC_PCIE_0_LINK_DOWN_BCR>;
+> +			reset-names = "pci",
+> +				      "link_down";
+> +
+> +			interconnects = <&pcie_noc MASTER_PCIE_0 QCOM_ICC_TAG_ALWAYS
+> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
+> +					 &cnoc_main SLAVE_PCIE_0 QCOM_ICC_TAG_ACTIVE_ONLY>;
+> +			interconnect-names = "pcie-mem",
+> +					     "cpu-pcie";
+> +
+> +			power-domains = <&gcc GCC_PCIE_0_GDSC>;
+> +
+> +			operating-points-v2 = <&pcie0_opp_table>;
+> +
+> +			iommu-map = <0 &apps_smmu 0x1480 0x1>,
 > +				    <0x100 &apps_smmu 0x1481 0x1>;
 > +
-> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>,
-
-[Severity: High]
-Are the interrupts, interrupt-map, and iommu-map properties swapped between
-pcie0 and pcie1?
-
-Here pcie0 (at hardware base 0x01c00000) is assigned interrupts 376+,
-interrupt-map 564+, and IOMMU stream ID 0x1480, which are typically
-hardwired to the pcie1 block.
-
-[ ... ]
-> +		pcie1: pcie@1c08000 {
-[ ... ]
-> +			interrupts =3D <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-[ ... ]
-> +			iommu-map =3D <0 &apps_smmu 0x1400 0x1>,
-> +				    <0x100 &apps_smmu 0x1401 0x1>;
+> +			interrupt-map = <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 2 &intc 0 0 0 565 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 3 &intc 0 0 0 566 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 4 &intc 0 0 0 567 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-map-mask = <0 0 0 0x7>;
+> +			#interrupt-cells = <1>;
 > +
-> +			interrupt-map =3D <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>,
+> +			linux,pci-domain = <0>;
+> +			num-lanes = <1>;
 
-[Severity: High]
-Similarly, pcie1 (at hardware base 0x01c08000) is assigned interrupts 141+,
-interrupt-map 149+, and IOMMU stream ID 0x1400.
+Drop this property. This value can be extracted from MLW.
 
-Does this cause SMMU translation faults during DMA and dropped interrupts f=
-or
-both PCIe controllers by assigning pcie0's hardware mappings to pcie1?
+> +			bus-range = <0 0xff>;
+> +
+> +			dma-coherent;
+> +
+> +			pinctrl-0 = <&pcie0_default_state>;
+> +			pinctrl-names = "default";
+> +
+> +			status = "disabled";
+> +
+> +			pcie0_opp_table: opp-table {
+> +				compatible = "operating-points-v2";
+> +
+> +				/* 2.5 GT/s x1 */
+> +				opp-2500000-1 {
+> +					opp-hz = /bits/ 64 <2500000>;
+> +					required-opps = <&rpmhpd_opp_low_svs>;
+> +					opp-peak-kBps = <250000 1>;
+> +					opp-level = <1>;
+> +				};
+> +
+> +				/* 5 GT/s x1 */
+> +				opp-5000000-2 {
+> +					opp-hz = /bits/ 64 <5000000>;
+> +					required-opps = <&rpmhpd_opp_low_svs>;
+> +					opp-peak-kBps = <500000 1>;
+> +					opp-level = <2>;
+> +				};
+> +
+> +				/* 8 GT/s x1 */
+> +				opp-8000000-3 {
+> +					opp-hz = /bits/ 64 <8000000>;
+> +					required-opps = <&rpmhpd_opp_low_svs>;
+> +					opp-peak-kBps = <984500 1>;
+> +					opp-level = <3>;
+> +				};
+> +
+> +			};
+> +
+> +			pcie0_port0: pcie@0 {
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729-eliza_evk-=
-v5-0-41790a5a24de@oss.qualcomm.com?part=3D1
+Add compatible.
+
+Same comments to other instance.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
