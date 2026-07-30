@@ -1,504 +1,228 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021141.outbound.protection.outlook.com [52.101.95.141])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6601539A802;
-	Thu, 30 Jul 2026 18:45:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E3A231716E
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 18:45:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785437113; cv=fail; b=fAG1isiAkhlIBn2faj+yGlD8+T9vtU6jmJxTRoGHV7EEpK5ZOnAjAwnz3ctw2ReMWyQOfT7g3xxGqOEThxNMLRMe/uk871s1uIrgLaQDuZlFNtyPVCYvJXzk5jt/W1ZyDImoRQM3CntRQem84/h7gbbG5/Fv6F+DAGJRPbpxIJI=
+	t=1785437143; cv=fail; b=bRShP2tubJ2/USwNdUgs1Sm5Xu5SAEARoDvvDkcxLyCwv/6nx2OrxuQD3vxJAUbLDGkNxuNsQtbuiSWJPbHg46nG3+rrnpWOxIU5WRkXuWNbawwi0IrBOETyU5ZAWe5A7mDhhh/ENFI7xoaVR9lPbP5yMXWHvo+AtJ3P+EJ/CLE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785437113; c=relaxed/simple;
-	bh=s+Li011wacHhxnDJeMu3jMr8mkszBuwT388t7uhJdV4=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=hnH9L8cPHrhEoQquAwmvm18m2l+sRv8bpwx4SQHWpi2zOKQYY3CpK+8v3FmesQTgGpSKtN3I9hsv/DvRf/9nxRAikQWgVsFW/Bm+1sUQZLxiLdjG++qmY4e5nYFaAzatReLFtlpPZeeqEF8f41zBbjazK1Tkt6scYViJ/zvk1aA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=o4EnA/NN; arc=fail smtp.client-ip=52.101.95.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1785437143; c=relaxed/simple;
+	bh=HvijDUUg+G3rZgfxUPlFBSUIBE64bcY9YtWwhyBiu/U=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=QsTGL7UCOSY4ML3+QP/jOFr9g4SJ5MNMhySlYG6t3Mr6yeo/5HqcWczFOCVTXJZxR3O2Vyjhn9bIzPnmQO5wD0afRe29v4zA2qDyFQPfdNRDe/aJQ1AgTa+i85GTr4LoRVJ4ThfMJinr2ANS0b49nWigvfR6Gji0aOuVdW56WEo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kM0l/yps; arc=fail smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="o4EnA/NN"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kM0l/yps"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785437137; x=1816973137;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=HvijDUUg+G3rZgfxUPlFBSUIBE64bcY9YtWwhyBiu/U=;
+  b=kM0l/ypsgm57DGtkI31kPTd9rhGTIMUSdJKelefq+Nl+wRsfezU+x0ew
+   Xgr/t4dmNp3aDnA66LbBZn54lj9YfPUH4nvMpfIN5GbjNjgKoJ3tpiW/f
+   JltUkI5D3VDQOUPbCD7PEICY/oHRI+8U69FJ35Bxw7UYKV2LK9jrRhPU+
+   ch4CK6wBroqKoRasPYph9ILSk5J/7hd12EFUDVUCQVIotMVQ6ZvSpGbF4
+   I8iaAzW1ncig28676kBFrAszcHo91K4rcf1yv/oqN7DbhMLdFJoNivihB
+   RUNbM8PQQLwJdcjwss6NwRUXRai0tyCpXILS9gpXYbarkGo8fnhQbUbuq
+   Q==;
+X-CSE-ConnectionGUID: zFMfW9OpSmKZTvepql6jJA==
+X-CSE-MsgGUID: b1KojZ/YQ1OxD81qv1KKCw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11860"; a="96425074"
+X-IronPort-AV: E=Sophos;i="6.25,195,1779174000"; 
+   d="scan'208";a="96425074"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2026 11:45:32 -0700
+X-CSE-ConnectionGUID: i+hOPhMcQciUFu3egyLEEA==
+X-CSE-MsgGUID: eoF8ZJgcSzSVTejoAnt7UA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,195,1779174000"; 
+   d="scan'208";a="260986610"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by orviesa009.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2026 11:45:32 -0700
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 30 Jul 2026 11:45:31 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45 via Frontend Transport; Thu, 30 Jul 2026 11:45:31 -0700
+Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.36) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 30 Jul 2026 11:45:31 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vCwMEA5+DVkxd75bAco4PvmN1kJLoIx5eMMS0pmhnDwO5c+YwHMUaqT7l0xpUpquO9rAHLskBD+tj8TlKQNt77WC7AXoKEjTszMPollARbJf5y2IHqdL9vP/7QzZksYSeguBfivAFXpXOScUK4iyNCDkC4dV/udYrwPRbXDfETZ3yWMkcbK29sY3Qu8jNFFZwWux8gpT7WUJ3fcqNVCLGFzyYLYuy3Iqdi7Uhrn2zLmwDZizNhDMDal888oCmzeg6ZPIJ1BDfqyN73M0RPc8WlZvPZHNo/QyZ3bWiv2ntFTKUBaesyiemkkBe57JDuyYbYFtQtuWP1H0BH8AY7RjGQ==
+ b=eo1Q/znHyh6L6NtxthtNOLlZqBoR3CmZIXAMuMdTMkU6Cv9PMVLHreud7riYLMTKjKJ1zEqx83OV68o70zot81zA0l9z/NyuCnakwovtSOHC48PALv20YMVnxIgr6NK6+N5R8qi+yThA44yMOajNf+0fzzdo5WU93PCAt/QRP+8aCF1FNx4SPLmKQz5elrqORcJz7SK0Ls6i9lblw5rJ+SI2jYT7roGASYOsuWdTW6eCHKsJyCZwm53Pw42K8G+UzupHDqkUZn33GMYIqv5LiB9fkK48BXs2p/b/RSk2wvM92iMbxEvNVfM+UXsOez6zQoocsy4+F0M2EzSVZfLDeQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AvNIBCLwA14WU239uqXspgZW9YeeT4GhJg0F/s+l7T0=;
- b=toWQ7HLswpyoDMN4qpJoQxE8k3s1JB+X4QJjSqzUixm9A5lYmm4vV53nzuSfukm+94kj0SSe8p4yD7fvwtkEksdV5YM50SY8F9Nt6xKt6uFgZzJ6stBBypIMmUVZDLCVCwblSRdcnO52sSxUHOs1pOReeUYYD0wIxG8F7y821+yAWtg5+WERoDYH2s2ddPyUVOEXH8gFutNwt4V0su20Egf0xGbk0Xiui1nvotvWqcR9QpTOExpvTmAlIdn4H2I0wE5kSHrL+Z7HR/dPrGhJVEtdFKhn9hf0jE5EM4NmzZev4AYzdr3HheNcQKZWyGhZi8mROIuDcMyhuXMRVZ0OVw==
+ bh=HvijDUUg+G3rZgfxUPlFBSUIBE64bcY9YtWwhyBiu/U=;
+ b=FgXeudeYxfThXh2w/nHDDsKQbXn/revRGj/b0ZyCKTL7uFgtUwznWp0EjRb72Pf/LlJRdgQ0YrkjAV8QcMgbeCcPr3h+VYlupnyNmWu55bAYohi1XGDe4gNbJcQxidxXL3PjO+6tof5ukZlpN7o3GIrUkuNZtAtBeE+LdtibgQmgbteTj5ceouCTcVXpH2isJonK31n7hq/PEOV8ufw7E5y5WiMMSDT2ExvfCIMf/GIXB+/WO5zs/wS5IV+UG7CAQKpBYKD0ZaWWiM+75JvJ9jV1zJyQIPsWpRs23WyfKKVaTvCELgMTC3j6gYKOMXcqGYFScTGfxRSRfw4/PLGWGQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AvNIBCLwA14WU239uqXspgZW9YeeT4GhJg0F/s+l7T0=;
- b=o4EnA/NNcr4VAN8njoxiVpvlhJ/Uu0qh2xz11TwTKySDsQ2z+bTj01/su5sadKvg4SM8T6NjQU2qwm2iQrdcPNAu+BUesEkCw3rXJzxYAnegzXCk3DVWThqH7ijZH83myuJRohDMuHSWpK5ZgCJp8YxTPTGtFMjDzWBeeugtH/4=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB3241.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:154::12) with
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from PH0PR11MB7494.namprd11.prod.outlook.com (2603:10b6:510:283::18)
+ by DS7PR11MB9451.namprd11.prod.outlook.com (2603:10b6:8:261::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.15; Thu, 30 Jul
- 2026 18:45:06 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%2]) with mapi id 15.21.0270.012; Thu, 30 Jul 2026
- 18:45:06 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 30 Jul 2026 19:45:05 +0100
-Message-Id: <DKC4MR1ZBQMP.3L7X2C96OJLFU@garyguo.net>
-From: "Gary Guo" <gary@garyguo.net>
-To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
- <cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
- <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
- <kjaju@nvidia.com>, <alkumar@nvidia.com>, <acourbot@nvidia.com>,
- <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>
-Subject: Re: [PATCH v6 1/1] rust: pci: add extended capability and SR-IOV
- support
-X-Mailer: aerc 0.21.0
-References: <20260730182954.783568-1-zhiw@nvidia.com>
- <20260730182954.783568-2-zhiw@nvidia.com>
-In-Reply-To: <20260730182954.783568-2-zhiw@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0484.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1a8::21) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ 2026 18:45:29 +0000
+Received: from PH0PR11MB7494.namprd11.prod.outlook.com
+ ([fe80::e642:c73c:6d80:5083]) by PH0PR11MB7494.namprd11.prod.outlook.com
+ ([fe80::e642:c73c:6d80:5083%5]) with mapi id 15.21.0270.012; Thu, 30 Jul 2026
+ 18:45:29 +0000
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>, "helgaas@kernel.org"
+	<helgaas@kernel.org>
+CC: "thierry.reding@kernel.org" <thierry.reding@kernel.org>, "lukas@wunner.de"
+	<lukas@wunner.de>, "Korenblit, Miriam Rachel"
+	<miriam.rachel.korenblit@intel.com>, "sashiko-reviews@lists.linux.dev"
+	<sashiko-reviews@lists.linux.dev>, "treding@nvidia.com" <treding@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Thread-Topic: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
+ wireless BE200
+Thread-Index: AQHdAUruh/HWEZwEC0iMA6tK8iUSn7ZImB0AgAAE6oCAMTTxAIAABOIAgAAe6wCAARjQAIAAHZOAgAhH+4CAAAUPAIAAEYwAgAAGZYCAAAi/gIAAsEyAgAFxSwCAANOCgIAAFZ0A
+Date: Thu, 30 Jul 2026 18:45:29 +0000
+Message-ID: <fe27839dfc8c33104ea215912cb7d33c85435fe6.camel@intel.com>
+References: <20260730172807.GA1508799@bhelgaas>
+In-Reply-To: <20260730172807.GA1508799@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH0PR11MB7494:EE_|DS7PR11MB9451:EE_
+x-ms-office365-filtering-correlation-id: af47c759-af45-4018-40a0-08deee6aba73
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|23010399003|376014|10067099003|11063799006|6133799003|56012099006|3023799007|22082099003|18002099003|38070700021;
+x-microsoft-antispam-message-info: EywiNGT4GwiL+q4ZiNtw08bCwoGd4LSrUSB135VMmAfnASyGSCcsAz4f5x0fs664EYi8sIBJYTX6ckr+7sudJFvZZzX+TbSXGRYsdYQNnO4jV58cMPgr67zdrCZ8EF8/VkxBzoSf7QCAStK5YzW7nLAsuFDsZOsrdN2MdNYSE9ZQb+sP5bL5kV2MOw6Wd5eJzTszClw4ORr0oRuBm4yLU6cRCNzN7+xtFRCxhDK2hU65uhRkIUqhn5c7qFz9BvnxGKe9zsR87WfQl8P7vxrX5Ri1FvMtxUAgP/c1ttPG5r8Zb/XBMGQcG2USrbhgOK6oB6YgR/Maepx/OT8IQEbAlDgiqEufJ9ZCtc5fMRFtO/Bo5FWBtJ3IIHJFa+93A+8UgpKUawSgcy3mr7L5nYlXNztefoHkKiAdRQ6DeFmiuukm00mg0VzhI5P24yXVgn+RonfGPThHRDhrHyhro0/RSqdkjVq5PZGedAM2LZ53j89nFlFn7CWDAD6oZB2idKNbnfIlvQx2hAWkZgXrfQCf9pdC5XVS7yIpCD4r0UfHPKzQJkT9ykuEAfjqXckcjM87uWB2GITvKUZWhq8L9Q4bPia39RkMmUDqv2Uy/lZ3eZBkYaGgJVsdrGvNW7RccCgCWVQ6zoq8HKpRtecFH+438W8D2i1W4fjKsqKwFdyEll+sV6bGLXGIrk4tTBeZHFlHbRT/LvRhtOht6O8cjMzbnhvVto+nvDPAhucxBfbxFLk=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB7494.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(376014)(10067099003)(11063799006)(6133799003)(56012099006)(3023799007)(22082099003)(18002099003)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?bHF6NzZNLy85dWw0amk0UUgzVERiemZ3VTZKYjB5RVRzTUlWUUNvVTg3OG4r?=
+ =?utf-8?B?bTVrdFhjSnJWbVBjTTNCdkZHWXliTDlpU0xOUkRseVAwenY3QU82Vll2Q1Z2?=
+ =?utf-8?B?aHYxTUhBMnpxTW9aek9iZTlCeDhLZnVjWHE1Z0MxSis5eUpTWW9iTjBGYW1V?=
+ =?utf-8?B?VzJmVzJSdStqRnFXV1R6WkI1bE9jbjM0WG0zcU41QW41N0hwS2JReGp5ZHdK?=
+ =?utf-8?B?OWVzcWZQeWJlbmtXODhVRjdNWkorNmhvekFTREhqSmNHVGpCUW8xN1ZKdGdY?=
+ =?utf-8?B?MmZDb1VhRGY1K3Z1eTJTMTVTalRWSWFObklLNDRkNjJDYlJ5bStiTnR3SEdC?=
+ =?utf-8?B?Y09sZU5oZmpBbWdzb05ZTHVXNFVyM3FyWWJmeXorcyt3ME4vMW1EVVJiekFh?=
+ =?utf-8?B?L043ak9abGliYUVBazJpSHhYR2ZSdTdCTWYySG9uQUUzQXhmTEtJOFRwd0hF?=
+ =?utf-8?B?Q1p2dXJXemxwbmN3VWYwbjZ4MzhZK1N3T1ZsTEJzUyt0Q25XRU04WlVsek8z?=
+ =?utf-8?B?TDU4a1lMY2lyYURpSVVHRHh2OXNEM3FKdUgvbmx4ZXRPWVQ0SElqZmpBaEJh?=
+ =?utf-8?B?MDdlVXlSWWZqTGJFTEtQUHR5KzlENlk5alUvelNpVmVUUDFQcVRRalhVRlc0?=
+ =?utf-8?B?ZkQrcnA0cS9rNzAzdmNUTlF1QW5mMUttVTRDOTg1ekQ0SEZWY2NFRTMwRTNr?=
+ =?utf-8?B?MTRRWnJQbGxBNWdoNEZxMDFzM0ZXcExhWUx5UGZHVHpkYTVMYmp5Y3gxMTNz?=
+ =?utf-8?B?QUtTbjF0RHAxZnNLMTRLc2t4elMyYW1qU25rWVl5RDRCb0taSGhCQmFZYjg2?=
+ =?utf-8?B?bTBYQmNEZ1pVZmF3UTRnMEV0UXVWVTZMaDVnL05YTU5DbSttY200bDJwOGs5?=
+ =?utf-8?B?TWlvMWRKL0FlL3I5UkhsTGxheWRIVHdSd0p5Z2E2STVmQ0VoN0cyNU9RU2RJ?=
+ =?utf-8?B?VzV0VWRzYTRVcWVoWVVsWkVJbDlFVE0vdS9yZW1MTWhxeEc2K2w3SWFuZ1ZL?=
+ =?utf-8?B?ckYwMERndy9QZ0ZuQ3BmOG93NktaK0pmNVJMS0VSYlZBU2NVVlRLL2Z1UnlI?=
+ =?utf-8?B?QzBCd3VRem9zclZwL0ZjRnZCMEgwNVVIRTM2Vnd3QU9NVytBU1ptUW4zYW9K?=
+ =?utf-8?B?V3B3YlhkczZTOUFucDFZbEgrK1N2RThGbWRSaXVSS3AzL0h2Y2xhOUdPY1ZT?=
+ =?utf-8?B?aFh1OEJEUTRnTkpESWp5a010UC9SanVncGpBOGN4UytWQkl0bEg3MmtiTVpu?=
+ =?utf-8?B?NExVdHJZTTYybHZoOFM2WEhLSEpybjR6UGlsRjVHcDNkVkxKRU9HRkNIUnRY?=
+ =?utf-8?B?T2d2T29vMnl6Z1krNGxBY21TeTg5amlUL0R3TWJ0NmM0aENqK1A5L2hGdjBT?=
+ =?utf-8?B?dkt1bFRwUzg2TVQrSnplbiswRVovUG42T3Roa2dxckpTMmV3UDJlWnVQcmRX?=
+ =?utf-8?B?WGFxU0JYVkdZZDU3enZuRTEwL1Q4UTVPcXp1TzgrUmVVR2dtM0FjYXlvSGpX?=
+ =?utf-8?B?aUl4bGU1WlVVdkdZOGF5bDJwR0NLam0yWE4xeTRYSmlLSm9aNndacHhVK3RS?=
+ =?utf-8?B?SnFWZDVKdk9MQkJwSVdCVWxiT2Z0WVFtbkNtTWRVdGFmTS9vVEhQeWloUHVV?=
+ =?utf-8?B?NXAwSlhXaGxoTHU4bDR1bXVYbDNaTmNOOVBEU2xHVzdvQk1FZWpTdVc4cFkr?=
+ =?utf-8?B?YU01TllDcGtkeC9uWkxnakR3Z1JmV21MbVlCTjF3cFh2QXk1d0h0NEMwdzNB?=
+ =?utf-8?B?bTFSN1JZSG83U1NDbi9IT2FNZFJiN2Fkd2NIeFdvRytlS21YQkZEWTRXUkpM?=
+ =?utf-8?B?TnZXRTV5b3k2aWNOcVdObUJscHZMVzIzSERjS2xybWNyY3ZOWlhGc2wwUlJS?=
+ =?utf-8?B?V3JrL1BtVEhlSWJWWFRpcGRibjdZeUg3UE1vanBNRldWSHp1NmhqbUV0NzF6?=
+ =?utf-8?B?b1NHQnVNckd0ZEdmSHoyY1c5WHNESDJyU2hWUUNXZEVVaWxsUktYcEVyMXVs?=
+ =?utf-8?B?YmFLL3NpSkJOVVU1SzB3T3RzNUc5WEIwMXkwYnVNNWhpZlZCcmMwajdyTzQ3?=
+ =?utf-8?B?ZTQ5YTd4ZW9NVjJVY1I5VU5DVzJTMU9iM0E3aEpVZ1BLeEJQbVp1U2xEeEc4?=
+ =?utf-8?B?MDJ4cURoSW52MXcwalE0dmpSY05tN0J6MnFVTW05WENzVnUveXpEa2svN2J5?=
+ =?utf-8?B?cmNhcTJZTFdjcEFIdkF0M2dabERoRVlQRHFIU0FLMXFhSFYzbmh6cGQ3YTdu?=
+ =?utf-8?B?K1F6S2EvR3RZZGFHdDhKOFhPMUdFTlBudjlkSHpYWnZ4V1ZkOFJVTkFSU2NO?=
+ =?utf-8?B?UkNLM2hRNFdrdERHUHo1U2gwQmRuVUhLOU51UUMzL1M5M21obzh3VW03ZytR?=
+ =?utf-8?Q?tGUnGC4sLUof6N6Y=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <DD70D96B03253945B04EBA0039A8BACC@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB3241:EE_
-X-MS-Office365-Filtering-Correlation-Id: fbdc7b96-09b0-4d2b-5ae6-08deee6aaca5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|23010399003|7416014|376014|10070799003|22082099003|18002099003|56012099006|4143699003|3023799007|6133799003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	KQc0/FaIwktNKvhxjJI8QXsZgdJ4gQ+wwes93Hfn1PQs9fb6SQ7sGffJ4n4a5ONS1U3Z2iW+g2VmMSQlfAPjFOjBdahImabg4o3c7Qg4QdyVaZHfwAo3QOHUpAy4D1EDgpDesLMlGOsu0E7dRa7YqlsrzfFa/kIsPkGZqVnEVl192gn+yVlBQb3XFlmP2Zi95jydgiSFZEncdehK97Hu0TGQJpqvUGaUiEDISRZRWK4aXJL7Gkir8Clo6Q0fbtrYlAlwoIsnrVWLSfWSw9UZ44cw4la84WOFgOEFO8iEJ6xxH9Z5sX+LajBixKyZLUGu+B0FLUJFM2BDL97TcuZ17+IJne+ybUMstNLoYVYcScuPJpwBL1rTIoMy+BXXz+FvewWOCBrt9IdlKC4q261Si6ma1/i08qAFpe8z8f48ITYTGJQ6bVbB4/oIMjFOeMZa/anOdajuWlA16f/aMQ3iIM/H0Bv2s8Zj5a/9pw6mY7cVVwlzoN7pq0DxxpbVLaPPf5c3eawAi2cOfBJckZo5JrJ6hC74T/L8uYwTsCCrEwfKBLkeCeGwm4BcxfD4N3Yw3kdAwKFKA5woNQiXjAotnKBYWe3fDUh/cmSbKfw4Z5CCY8BFppjkYaWPPHsR525ffbfePLzjrRCIVLDZrh15RRojawmisyiQxZYSua7BWeE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(7416014)(376014)(10070799003)(22082099003)(18002099003)(56012099006)(4143699003)(3023799007)(6133799003)(10067099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cDhaWGxWSkNXcDNjVXVERWFOQUNadVc4QnhRY0JrMXlrUVhCUm81VHVoOWJJ?=
- =?utf-8?B?UE9JUGo3cnNCRG1vRE9xWmI2d0IybnFXRzl5YWU1M0Q3YS9mZll0SjFsVXcy?=
- =?utf-8?B?Z1BadVlSaFdTa3A1QXQxc2NrNzBQZWg3blZLT2h3M29wVDg5YUJKczYyUllG?=
- =?utf-8?B?TWpqUkFvbzJMNXZxalA0WVA1cXE5aTRyWXBWL1h2S3E1K0hzNFBDU3ZWd2JZ?=
- =?utf-8?B?bmVHejNnSmUzN2xDcW52RXVaVlQ1QTBLWkpkZWVkak1RQkVTa1dNYlNkVGJY?=
- =?utf-8?B?V3BHN2RldDk0NG9kdVgzRDczWHpZR3RUN0kvS2FkOGlVOWVBRFB0T05aVjR0?=
- =?utf-8?B?NVdBYTNEUU0zZUtmczVDVEM2SU5lNjZKQSs4YTU3alRjTUtGQllUWUkvQjcv?=
- =?utf-8?B?SUF0UzFSUnZDdXgzWlVQdnJ2RnkrcDYwbDlsUUtlMGVKRjJHcTVCMnlwSlI4?=
- =?utf-8?B?c29aaDNPWU5aR1VlQlpIZFZTcFFsRFJlUVZQSU05YnFiY1V5aHVSUS9sVkg5?=
- =?utf-8?B?R1JBWVQrY2VDRGdoK3BaWG5mMzdLMVdVODN5VUtSVUVPQkUyT0dLSkxZUDJ2?=
- =?utf-8?B?WDB4OWltWURST2I3TWJWTHI1S2t5SkxtMHlPUUYzSGVNTEFUcURDVmllc2k0?=
- =?utf-8?B?TEp0ZmVHZ1NEb3NMalhSUTlnUy9sQUpIUHVzbnFONFRUbTRxK2dEUVVoN3B3?=
- =?utf-8?B?bVpsVEtlVHI5UmxSKzUvUVJ4aEJaZ3I1clg3VVBidlJOQzA2QWRCRy9FdEc0?=
- =?utf-8?B?dmdrOUtqMTY3MU1rc0FJelpHTUpSOXgxYlNSVUs2bElvMk8wOXIyYnpCT2VQ?=
- =?utf-8?B?Y1Y1cW1xcU5pVm1rakpPMFJZSFhJbTFCVUNhM3FjTjhvMHdudzJhOWtPb2hx?=
- =?utf-8?B?TUVMVlhqREQyK0pldmxwM21EMHN5TGpMVHlPWGpnOTVoYzRoYjdFYmhNYkZm?=
- =?utf-8?B?ZXNRcVRtMXI2TkRUdWRyVlRDRTM3Sk82V1R1d0RQdEJuMG9DT2RHaENNUlBH?=
- =?utf-8?B?MnYyVWZaQkpUcTN1aHl2ZXU5bGt1V2pUQWpra1h4TERRaGxXZWw2TzlwYjRV?=
- =?utf-8?B?UytnWEptWFdLREF5L3Bxd1BRZEpLZXQveGlrZU1vTWdWbXF0MS9pUjFsajlp?=
- =?utf-8?B?aE40QWw4OUJZU1pZYW9uMGVUNEsyekp5dS9SOWdqMEE0b2RsQytscm9pMkRp?=
- =?utf-8?B?Mll4TFN0R2xtajJVcng1RC8xdVAxbVFTclFKbExiNGY1L2RMZWlXZ0F2dXZi?=
- =?utf-8?B?dk9QTHF6QWo4dVI5T1M1NmpKSFNaTit4UXRkN0hkQ2V0L1BYY3BoeFRDaXY1?=
- =?utf-8?B?ZSt0QUZNL1MyTGFSUUZwc09NRFJFdjZ2Z0NlS1FHWkcwOFlzRnJlU3FrVGY5?=
- =?utf-8?B?dTNTWnRLa3FwYUtPOUxZamtnVHRjZ1ZPQVZGZUxBcEtUbUEybXJLUHRNNG1H?=
- =?utf-8?B?NzFNNWJ6b2JwcUdqRTVkS01tZWRoc1BWaHNpRTNHOEppRVY2cU40dzRaYWVx?=
- =?utf-8?B?ZHhUL3JsQ0gzeTFWcXY4ZFhIYlg4RXY4RHJRSjZHVDVVTlhvVHJNbDJnWG1K?=
- =?utf-8?B?dWQ1UDhCY1FHR3M5c3RJcTBJYXQwZDJoNmtKM1dXMElocmVHaW5GSWpUUzgw?=
- =?utf-8?B?UmU1Z2pRL3RLRHZ0WmtoZW1YOHZtVUV5eFA0Q0tqYlR5TDloaHJrTVYyUjB1?=
- =?utf-8?B?S08yY0lhUWdySUVkWjk3WEsvRHg5TGM1ajJ4anpxdFJHUWZlUWZtNit1eFI0?=
- =?utf-8?B?d2FRVXNNZFFpeXpNYTI2blhpQi9yQzFERjF5V0RIRTFSNGRnWm9paHZ3WGpN?=
- =?utf-8?B?YlRDdFQzbHIrUEtKRDdVTVNsWUdsVUhGMVBROFFMTjlkYWkvaW5GWkpGZmJI?=
- =?utf-8?B?RTIwancwTjRqMnFMRTVCR2RyQ1pidDJQS2pHOWRUWjJQSjNQckZFb3J0Q3Ra?=
- =?utf-8?B?Y1FKd2FZdzB5K0F0NXJqWlgzTmxCUHVFbmo1OG5pMC9ualdUTm0ydlpqQXIr?=
- =?utf-8?B?TlY4ejJZTVY4ankzMHgyUnJmUjZaR0o1Y2JMYy9XUmFrUTN3SjRjV0dzYVA1?=
- =?utf-8?B?UENES2FRUHlFYkZvOUNDN3BWMkJMT2RNZTF5ckUzY21TYkdFRXRvdVJjU0Zq?=
- =?utf-8?B?OWg0WkRrQWEwVk5CRkRSSnFlZTZLZkdlMFJwL3kwWDhEWkNXdkpOdDRuQmJn?=
- =?utf-8?B?c1FMQldoUjRMeVc0OTA1b3dwWjg1bE9GMXpOdG9VTlovMm93Ylp0WWptTHpj?=
- =?utf-8?B?a0daZGVNaFdDYjY2OTlJcHAxd0grc2dRcXU0d2lJQktUSFVPNm9BYW1ZcS9q?=
- =?utf-8?B?VDcwNDFxT1lmTGlWZk9ob212L2tHd3JsT3JndERIZ3pPUXZHVDI3Zz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: fbdc7b96-09b0-4d2b-5ae6-08deee6aaca5
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-Exchange-RoutingPolicyChecked: qNoaN1X9Aa2CRzSbG5ep5JGhbBGpb97Y0UiIE1T3Ru7jMfeNMwN88p9fEOsH949WP2OtBGduotbK/gPM433Uy2VIzRdd+JTZdJy/SPbGgRlFXPvWIeSw3xthWpTiHH6/lpEZgY5NYh2Q+aAUcb6Xo70P+oiDAZOL1VKTEVN2MUTJPqXE/L26WimLC1x5AgghVyVQ0gbFFnhDdkyKT472txlgL3PC6y+0K/wuSnh+FoP6zN0C8QWBqWz5m9kgwJewFY/a/RjA2p6MS62kNNU76CQXBs2ghJIrfPUqzbuTOfC4iYZyC63F382abRvbioJa5WTrKVWJLYaejFgAo1VUqg==
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jul 2026 18:45:06.5521
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB7494.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: af47c759-af45-4018-40a0-08deee6aba73
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jul 2026 18:45:29.5092
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FlsMNxssOTTNmwDXLfhG/EmTrAReVh/elxFghevuTFH+45txmZNvEpWsfJOVE7mh4VAlohEIM7hsycRR4I3F7A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB3241
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: WGX3obR/05jZCNJMmw/YIfd0CTwCdCMRvkS5r1C7Vw1hAZWRUagSZIdXPbg02hBzJe5uKFD8mj94iOCRztVCTw4y1M4UezJ12oF0Lyifz0E=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR11MB9451
+X-OriginatorOrg: intel.com
 
-On Thu Jul 30, 2026 at 7:29 PM BST, Zhi Wang wrote:
-> Rust PCI drivers have no typed interface for locating and accessing PCIe
-> extended capabilities.
->
-> The SR-IOV extended capability describes VF topology and VF BARs. Expose
-> this information through the Rust PCI abstraction so drivers can use the
-> existing typed configuration-space accessors instead of raw bindings.
->
-> Define ExtCapability to associate a capability ID with a register layout,
-> and add ConfigSpace::find_ext_capability() to locate and project that
-> layout. Bound the view at the next capability or the end of extended
-> configuration space. Add ExtSriovRegs and a decoded VF BAR helper that
-> returns the address, width, and next configuration-space slot, using
-> PCI_SRIOV_NUM_BARS for the number of BAR slots. Since PCI_EXT_CAP_NEXT()
-> is a function-like macro, expose it through a Rust helper.
->
-> Link: https://lore.kernel.org/rust-for-linux/20260730180349.771719-1-zhiw=
-@nvidia.com/
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Gary Guo <gary@garyguo.net>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> ---
->  rust/helpers/pci.c     |   5 +
->  rust/kernel/pci.rs     |   8 ++
->  rust/kernel/pci/cap.rs | 236 +++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 249 insertions(+)
->  create mode 100644 rust/kernel/pci/cap.rs
->
-> diff --git a/rust/helpers/pci.c b/rust/helpers/pci.c
-> index 4ebf256dff23..b946b14d79e4 100644
-> --- a/rust/helpers/pci.c
-> +++ b/rust/helpers/pci.c
-> @@ -24,6 +24,11 @@ __rust_helper bool rust_helper_dev_is_pci(const struct=
- device *dev)
->  	return dev_is_pci(dev);
->  }
-> =20
-> +__rust_helper u32 rust_helper_pci_ext_cap_next(u32 header)
-> +{
-> +	return PCI_EXT_CAP_NEXT(header);
-> +}
-> +
->  #ifndef CONFIG_PCI_IOV
->  __rust_helper unsigned int
->  rust_helper_pci_sriov_get_totalvfs(struct pci_dev *pdev)
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 9f19ccd5905c..008c2770a3f3 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -32,10 +32,18 @@
->      },
->  };
-> =20
-> +mod cap;
->  mod id;
->  mod io;
->  mod irq;
-> =20
-> +pub use self::cap::{
-> +    ExtCapId,
-> +    ExtCapability,
-> +    ExtSriovCapability,
-> +    ExtSriovRegs,
-> +    ExtSriovVfBar, //
-> +};
->  pub use self::id::{
->      Class,
->      ClassMask,
-> diff --git a/rust/kernel/pci/cap.rs b/rust/kernel/pci/cap.rs
-> new file mode 100644
-> index 000000000000..08c044bedb70
-> --- /dev/null
-> +++ b/rust/kernel/pci/cap.rs
-> @@ -0,0 +1,236 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +//! PCI extended capability support.
-> +
-> +use super::{
-> +    io::ConfigSpaceBackend,
-> +    ConfigSpace,
-> +    Extended, //
-> +};
-> +use crate::{
-> +    bindings,
-> +    io::{
-> +        Io,
-> +        IoBackend,
-> +        Region, //
-> +    },
-> +    prelude::*,
-> +};
-> +
-> +/// Number of VF BAR register slots in an SR-IOV capability.
-> +// CAST: `PCI_SRIOV_NUM_BARS` is 6, which fits in `usize`.
-> +const NUM_VF_BARS: usize =3D bindings::PCI_SRIOV_NUM_BARS as usize;
-> +
-> +/// Attribute bits encoded in the low DWORD of a memory BAR.
-> +const VF_MEMORY_BAR_ATTRIBUTE_BITS: u32 =3D bindings::PCI_BASE_ADDRESS_S=
-PACE
-> +    | bindings::PCI_BASE_ADDRESS_MEM_TYPE_MASK
-> +    | bindings::PCI_BASE_ADDRESS_MEM_PREFETCH;
-> +
-> +/// PCI extended capability IDs.
-> +#[repr(u16)]
-> +#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-> +pub enum ExtCapId {
-> +    /// Single Root I/O Virtualization.
-> +    // CAST: `PCI_EXT_CAP_ID_SRIOV` is `0x10`, which fits in `u16`.
-> +    Sriov =3D bindings::PCI_EXT_CAP_ID_SRIOV as u16,
-> +}
-> +
-> +impl ExtCapId {
-> +    fn as_raw(self) -> u16 {
-> +        self as u16
-> +    }
-> +}
-> +
-> +/// A typed PCI extended capability register layout.
-> +///
-> +/// Implementors describe the register layout of one extended capability=
-. The layout must start at
-> +/// the extended capability header, and [`Self::ID`] must identify that =
-layout.
-> +pub trait ExtCapability: FromBytes + IntoBytes {
-> +    /// PCI extended capability ID for this register layout.
-> +    const ID: ExtCapId;
-> +}
-> +
-> +impl<'a> ConfigSpace<'a, Extended> {
-> +    /// Finds and projects an extended capability into its typed registe=
-r layout.
-> +    ///
-> +    /// # Examples
-> +    ///
-> +    /// ```no_run
-> +    /// use kernel::pci;
-> +    ///
-> +    /// fn probe_sriov(
-> +    ///     pdev: &pci::Device<kernel::device::Bound>,
-> +    /// ) -> Result<(), kernel::error::Error> {
-> +    ///     let sriov =3D pdev
-> +    ///         .config_space_extended()?
-> +    ///         .find_ext_capability::<pci::ExtSriovRegs>()?;
-> +    ///
-> +    ///     let total_vfs =3D kernel::io_read!(sriov, .total_vfs);
-> +    ///     let vf_offset =3D kernel::io_read!(sriov, .vf_offset);
-> +    ///     let bar0 =3D sriov.read_vf_bar(0)?;
-> +    ///     let bar1 =3D sriov.read_vf_bar(bar0.next_index())?;
-> +    ///
-> +    ///     Ok(())
-> +    /// }
-> +    /// ```
-> +    pub fn find_ext_capability<C: ExtCapability>(&self) -> Result<Config=
-Space<'a, C>> {
-> +        let offset =3D usize::from(
-> +            // SAFETY: `self.pdev` is valid by the type invariant of `Co=
-nfigSpace`.
-> +            unsafe {
-> +                bindings::pci_find_ext_capability(self.pdev.as_raw(), i3=
-2::from(C::ID.as_raw()))
-> +            },
-> +        );
-> +
-> +        if offset =3D=3D 0 {
-> +            return Err(ENODEV);
-> +        }
-> +
-> +        let size =3D self.calculate_ext_cap_size(offset);
-> +
-> +        let base =3D ConfigSpaceBackend::as_ptr(*self)
-> +            .cast::<u8>()
-> +            .wrapping_add(offset);
-> +        let ptr =3D Region::<0>::ptr_try_from_raw_parts_mut(base, size)?=
-;
-
-The signature should be=20
-
-    Result<Option<...>>
-
-where the result is usually handled via `?` and `None` needs to be handled
-explicitly, rather than matching on ENODEV.
-
-> +
-> +        // SAFETY: `offset` was returned by `pci_find_ext_capability`, a=
-nd
-> +        // `calculate_ext_cap_size` bounds `ptr` at the next capability =
-or the end of the extended
-> +        // configuration space. `ptr_try_from_raw_parts_mut` verified th=
-e region layout.
-> +        let capability =3D unsafe { ConfigSpaceBackend::project_view(*se=
-lf, ptr) };
-> +
-> +        capability.try_cast::<C>()
-> +    }
-> +
-> +    /// Calculates the size of the extended capability at `offset`.
-> +    ///
-> +    /// The capability extends to the next extended capability, or to th=
-e end of the extended
-> +    /// configuration space if it is the last one. `offset` must be a DW=
-ORD-aligned offset within
-> +    /// the extended configuration space returned by `pci_find_ext_capab=
-ility`. If its header
-> +    /// cannot be read, the capability is treated as the last one.
-> +    fn calculate_ext_cap_size(&self, offset: usize) -> usize {
-> +        let header =3D self.try_read32(offset).unwrap_or(0);
-> +        // SAFETY: Pure bit manipulation, no preconditions.
-> +        // CAST: The next-cap pointer is a 12-bit field (max 0xFFC), alw=
-ays fits in `usize`.
-> +        let next =3D unsafe { bindings::pci_ext_cap_next(header) } as us=
-ize;
-> +
-> +        if next > offset {
-> +            next - offset
-> +        } else {
-> +            (*self).size() - offset
-> +        }
-> +    }
-> +}
-> +
-> +/// SR-IOV register layout per PCIe spec (64 bytes starting at cap offse=
-t).
-> +#[repr(C)]
-> +#[derive(FromBytes, IntoBytes)]
-> +pub struct ExtSriovRegs {
-> +    /// Extended capability header.
-> +    pub header: u32,
-> +    /// SR-IOV capabilities.
-> +    pub cap: u32,
-> +    /// SR-IOV control.
-> +    pub ctrl: u16,
-> +    /// SR-IOV status.
-> +    pub status: u16,
-> +    /// Initial VFs.
-> +    pub initial_vfs: u16,
-> +    /// Total VFs.
-> +    pub total_vfs: u16,
-> +    /// Number of VFs.
-> +    pub num_vfs: u16,
-> +    /// Function dependency link.
-> +    pub func_dep_link: u8,
-> +    _reserved_0: u8,
-> +    /// First VF offset.
-> +    pub vf_offset: u16,
-> +    /// VF stride.
-> +    pub vf_stride: u16,
-> +    _reserved_1: u16,
-> +    /// VF device ID.
-> +    pub vf_device_id: u16,
-> +    /// Supported page sizes.
-> +    pub supported_page_sizes: u32,
-> +    /// System page size.
-> +    pub system_page_size: u32,
-> +    /// VF BARs (BAR0=E2=80=93BAR5).
-> +    pub vf_bar: [u32; NUM_VF_BARS],
-> +    /// VF migration state array offset.
-> +    pub migration_state: u32,
-> +}
-> +
-> +impl ExtCapability for ExtSriovRegs {
-> +    const ID: ExtCapId =3D ExtCapId::Sriov;
-> +}
-> +
-> +/// A typed view of an SR-IOV extended capability.
-> +pub type ExtSriovCapability<'a> =3D ConfigSpace<'a, ExtSriovRegs>;
-> +
-> +/// A decoded VF memory BAR.
-> +#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-> +pub struct ExtSriovVfBar {
-> +    address: u64,
-> +    is_64bit: bool,
-> +    next_index: usize,
-> +}
-> +
-> +impl ExtSriovVfBar {
-> +    /// Returns the BAR address without PCI attribute bits.
-> +    #[inline]
-> +    pub fn address(&self) -> u64 {
-> +        self.address
-> +    }
-> +
-> +    /// Returns whether the BAR is 64-bit.
-> +    #[inline]
-> +    pub fn is_64bit(&self) -> bool {
-> +        self.is_64bit
-> +    }
-> +
-> +    /// Returns the configuration-space slot index of the next logical B=
-AR.
-> +    #[inline]
-> +    pub fn next_index(&self) -> usize {
-> +        self.next_index
-> +    }
-> +}
-> +
-> +impl ConfigSpace<'_, ExtSriovRegs> {
-> +    /// Reads and decodes the VF memory BAR at configuration-space slot =
-`bar_index`.
-> +    #[inline]
-> +    pub fn read_vf_bar(&self, bar_index: usize) -> Result<ExtSriovVfBar>=
- {
-
-Do you expect people to pass in a random index instead of 0 or next_index? =
-If
-not, this should be an iterator. Otherwise it'd be possible to index into h=
-igh
-part of 64-bit address.
-
-> +        if bar_index >=3D NUM_VF_BARS {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        let low =3D crate::io_read!(*self, .vf_bar[try: bar_index]);
-
-Given the bound checking above I'd use `panic: ` here.
-
-> +        if low & bindings::PCI_BASE_ADDRESS_SPACE !=3D bindings::PCI_BAS=
-E_ADDRESS_SPACE_MEMORY {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        let is_64bit =3D low & bindings::PCI_BASE_ADDRESS_MEM_TYPE_MASK
-> +            =3D=3D bindings::PCI_BASE_ADDRESS_MEM_TYPE_64;
-> +        let following_index =3D bar_index.checked_add(1).ok_or(EINVAL)?;
-
-Just use operator here as it cannot overflow.
-
-> +
-> +        let (address, next_index) =3D if is_64bit {
-> +            if following_index >=3D NUM_VF_BARS {
-> +                return Err(EINVAL);
-> +            }
-> +
-> +            let high =3D crate::io_read!(*self, .vf_bar[try: following_i=
-ndex]);
-
-Same here.
-
-> +            (
-> +                (u64::from(high) << 32) | u64::from(low & !VF_MEMORY_BAR=
-_ATTRIBUTE_BITS),
-> +                following_index.checked_add(1).ok_or(EINVAL)?,
-
-Same here.
-
-Best,
-Gary
-
-> +            )
-> +        } else {
-> +            (
-> +                u64::from(low & !VF_MEMORY_BAR_ATTRIBUTE_BITS),
-> +                following_index,
-> +            )
-> +        };
-> +
-> +        Ok(ExtSriovVfBar {
-> +            address,
-> +            is_64bit,
-> +            next_index,
-> +        })
-> +    }
-> +}
-
-
+T24gVGh1LCAyMDI2LTA3LTMwIGF0IDEyOjI4IC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBUaHUsIEp1bCAzMCwgMjAyNiBhdCAxMDoyMTowNkFNICswNTMwLCBNYW5pa2FudGEgTWFk
+ZGlyZWRkeSB3cm90ZToNCj4gPiBPbiAyOS8wNy8yNiAxMjoxOSBwbSwgR3J1bWJhY2gsIEVtbWFu
+dWVsIHdyb3RlOg0KPiA+ID4gT24gVHVlLCAyMDI2LTA3LTI4IGF0IDE1OjE4IC0wNTAwLCBCam9y
+biBIZWxnYWFzIHdyb3RlOg0KPiA+ID4gPiBPbiBUdWUsIEp1bCAyOCwgMjAyNiBhdCAwNzo0Nzow
+NFBNICswMDAwLCBHcnVtYmFjaCwgRW1tYW51ZWwNCj4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+ID4g
+T24gVHVlLCAyMDI2LTA3LTI4IGF0IDE0OjI0IC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiA+ID4gPiA+ID4gT24gVHVlLCBKdWwgMjgsIDIwMjYgYXQgMDY6MjE6MjNQTSArMDAwMCwgR3J1
+bWJhY2gsDQo+ID4gPiA+ID4gPiBFbW1hbnVlbA0KPiA+ID4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+
+ID4gPiA+IE9uIFR1ZSwgMjAyNi0wNy0yOCBhdCAxMzowMyAtMDUwMCwgQmpvcm4gSGVsZ2FhcyB3
+cm90ZToNCj4gPiA+ID4gPiA+ID4gLi4uDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiBB
+RkFJQ1Mgd2Ugc3RpbGwgZG9uJ3Qga25vdyB3aHkgVGVncmEyNjQgd291bGQgc2V0DQo+ID4gPiA+
+ID4gPiA+ID4gTm9Tbm9vcCBhbmQvb3IgUmx4ZE9yZCBpbiB0aGUgTU1JTyByZWFkLg0KPiA+ID4g
+PiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gTWUgbmVpdGhlciBidXQuLi4gSSBjYW4ndCBjb21tZW50
+IG9uIHRoYXQuIEFuZCBkZS1mYWN0bywNCj4gPiA+ID4gPiA+ID4gb25jZSBpdCBkb2VzIHRoYXQs
+IHRoZSBCRTIwMCByZXBsaWVzIHdpdGggdGhlIE5vU25vb3AgYW5kDQo+ID4gPiA+ID4gPiA+IFJs
+eE9yZCBjbGVhciBpbiB0aGUgVExQIHdoaWNoIGlzIHRoZW4gY29uc2lkZXJlZCBhcyBhDQo+ID4g
+PiA+ID4gPiA+IG1hbGZvcm1lZCBUTFAuDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+
+IFVubGVzcyBpd2x3aWZpIGFza2VkIGZvciBOb1Nub29wIGFuZC9vciBSbHhkT3JkIHRvIGJlDQo+
+ID4gPiA+ID4gPiA+ID4gc2V0LCBJIHRoaW5rIGl0J3MgYSBwb3RlbnRpYWwgcHJvYmxlbSBmb3Ig
+ZHJpdmVycyBpZg0KPiA+ID4gPiA+ID4gPiA+IFRlZ3JhMjY0IHNldHMgdGhlbS4NCj4gPiA+ID4g
+PiA+ID4gDQo+ID4gPiA+ID4gPiA+IEkgLi4uIGRvbid0IHRoaW5rIHdlIHdvdWxkIGRvIHRoYXQu
+IFRoZSBkcml2ZXIgd291bGQNCj4gPiA+ID4gPiA+ID4gY2VydGFpbmx5IG5vdCBkbyB0aGF0Li4u
+IFJlZ2FyZGluZyB0aGUgaGFyZHdhcmUgaXRzZWxmLCBJDQo+ID4gPiA+ID4gPiA+IGNhbid0IGNv
+bW1lbnQsIGJ1dCBJIGNhbiBjaGVjayBpbnRlcm5hbGx5Lg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+
+ID4gPiBGb3Jnb3QgdG8gYXNrLCBjYW4geW91IGNvbGxlY3QgdGhlIG91dHB1dCBvZiAic3VkbyBs
+c3BjaQ0KPiA+ID4gPiA+ID4gLXZ2IiwgYXQgbGVhc3QgZm9yIHRoZSBSUCBhbmQgdGhlIEJFMjAw
+Pw0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiBBbmQgbWF5YmUgdGhlIGRtZXNnIGxvZyB3aGVu
+IGJvb3RlZCB3aXRoICJsb2dfYnVmX2xlbj0xNk0NCj4gPiA+ID4gPiA+IHBjaT1lYXJseWR1bXAi
+IGFzIHdlbGwsIHNvIHdlIGNhbiBzZWUgaWYgYXR0cmlidXRlcyB3ZXJlDQo+ID4gPiA+ID4gPiBl
+bmFibGVkIGJ5IGEgYm9vdGxvYWRlcj8NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBJIGFzc3VtZSB5
+b3Ugd2FudCBhbGwgdGhpcyB3aXRob3V0IHRoZSBxdWlyaywgcmlnaHQ/DQo+ID4gPiA+IA0KPiA+
+ID4gPiBSaWdodC4NCj4gPiA+IA0KPiA+ID4gQXR0YWNoZWQuDQo+ID4gPiBOb3RlIHRoYXQgd2Ug
+dXNlZCBhbiBvdXQtb2YtdHJlZSBkcml2ZXIgaW4gdGhvc2UgYXR0ZW1wdHMgc28gdGhlDQo+ID4g
+PiBrZXJuZWwgaXMgdGFpbnRlZCwgYnV0IHRoaXMgZG9lcyBub3QgaW1wYWN0IHRoZSBpc3N1ZSB3
+ZSdyZQ0KPiA+ID4gZGlzY3Vzc2luZyBoZXJlLg0KPiA+IA0KPiA+IFBDSV9FWFBfREVWQ1RMX1JF
+TEFYX0VOIGFuZCBQQ0lfRVhQX0RFVkNUTF9OT1NOT09QX0VOIGFyZSBzZXQgYnkgSFcNCj4gPiBk
+ZWZhdWx0IHZhbHVlLCB0aGlzIGlzIGlubGluZSB3aXRoIFBDSWUgc3BlYy4gSXQgc2F5cyAidGhl
+IGRlZmF1bHQNCj4gPiB2YWx1ZSBvZiB0aGlzIGJpdCBpcyAxYiIgaW4gYm90aCBjYXNlcy4NCj4g
+DQo+IEh1aCwgeW91J3JlIHJpZ2h0LsKgIEkgd2FzIGFzc3VtaW5nIDBiIHdhcyB0aGUgZGVmYXVs
+dCwgYnV0IGluZGVlZCAxYg0KPiBpcyB0aGUgZGVmYXVsdCB1bmxlc3MgdGhleSdyZSBoYXJkd2ly
+ZWQgdG8gMC7CoCBBbmQgdGhleSdyZSBib3RoIHNldA0KPiB0bw0KPiAxYiBvbiBteSB4ODYgKEFN
+RCkgUm9vdCBQb3J0cyBhcyB3ZWxsLsKgIA0KDQpOb3Qgb24gbXkgSW50ZWwgUm9vdCBwb3J0Og0K
+DQowMDoxZC4wIFBDSSBicmlkZ2U6IEludGVsIENvcnBvcmF0aW9uIEFsZGVyIExha2UgUENJIEV4
+cHJlc3MgUm9vdCBQb3J0IA0KDQo8U25pcD4NCg0KICAgICAgICBDYXBhYmlsaXRpZXM6IFs0MF0g
+RXhwcmVzcyAodjIpIFJvb3QgUG9ydCAoU2xvdCspLCBJbnRNc2dOdW0gMA0KICAgICAgICAgICAg
+ICAgIERldkNhcDogTWF4UGF5bG9hZCAyNTYgYnl0ZXMsIFBoYW50RnVuYyAwDQogICAgICAgICAg
+ICAgICAgICAgICAgICBFeHRUYWctIFJCRSsgVEVFLUlPLQ0KICAgICAgICAgICAgICAgIERldkN0
+bDogQ29yckVyci0gTm9uRmF0YWxFcnItIEZhdGFsRXJyLSBVbnN1cFJlcS0NCiAgICAgICAgICAg
+ICAgICAgICAgICAgIFJseGRPcmQtIEV4dFRhZy0gUGhhbnRGdW5jLSBBdXhQd3ItIE5vU25vb3At
+DQogICAgICAgICAgICAgICAgICAgICAgICBNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJl
+cSAxMjggYnl0ZXMNCg0KPiANCj4gU28gSSB3b3VsZCB0aGluayB3ZSdkIHNlZSB0aGlzIE1hbGZv
+cm1lZCBUTFAgZXJyb3Igb24gcHJldHR5IG11Y2gNCj4gZXZlcnkgc3lzdGVtIHdpdGggQkUyMDAg
+aW4gaXQuDQoNCkkgZ3Vlc3MgdGhhdCBCRTIwMCBpcyBhbG1vc3Qgb25seSBwbHVnZ2VkIGludG8g
+SW50ZWwgc3lzdGVtcyB3aGljaCBpcw0Kd2h5IHRoaXMgYnVnIHdlbnQgdW5ub3RpY2VkIHVudGls
+IG5vdy4uDQo=
