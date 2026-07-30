@@ -1,102 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC3D425879
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 12:21:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8D33429CFA;
+	Thu, 30 Jul 2026 12:22:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785414061; cv=none; b=gagPAWOmqYVPxaMYZd0GlniEji8NGgLTXrJcKsT2+7yY0z8Gp3RGgDMfq1y9DsSs+1Ol+p5And2CRF2xCdwgiMvUxWLTLvYj/VlZiXwf30wtCIatcesw17N85otxDSKK34OYKPVdRZ+ED5zzqa7zIHgC+xbaHAarWdiDiCrWt6g=
+	t=1785414172; cv=none; b=nyA0ov+uvnsLdoaBdoiyGcdGSGKDhGeGe8/6IPasG0UY6+eRGoxYIPzVKwfeiaj7muc4hmUpMcogxGInLJ0XLrkGoSfi5zaKBfPX9oLSyS28fypY0pGejp5fGq2bx6lTXhz3hiNww+Yiq5zwxISBCQRHg4kHBVHmRo/Z6IWZRjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785414061; c=relaxed/simple;
-	bh=ZYBIv9EMkZnmI12SrxNuXRUx1sv8DNkVCGFEWsKwnJs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=khftR9XfQG5tJIah5NXX6PvgRLxfuMOPF7wcn6sbFwXdtmRPcHAwtxUY/TN0Iu6N4gJ9g6uhqboE5FrmSwKgpk0rjmgsPksWg9E9rCdyvmTKw8rIVix/ZUS3Dhx80TwI0AxBg7dMN0aCFuoDfmWOyYhukoYLeLcqRh01k3WF1cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YlWlmYNq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785414172; c=relaxed/simple;
+	bh=O5PoTBFlkzhjg33RGS15bxnkQwczdACW3nrRqI+KrDM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=MiRqXDLtVxZvrnPlsmgjZFQ3ofRr+8bn4PcXLe41XodHCkhzZOLRtBfqRGf2HtOqV8ei10+ygdNOun7R/X05TD34sMiY0zV5+c6zfOe+C3o699bFQ6jA2HiwclADItStySuBHmR7xSEcrT7r4jzGYg6ISQwSXJ+asYgIcXVIjrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VvfPOl+4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YlWlmYNq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AE601F000E9;
-	Thu, 30 Jul 2026 12:20:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VvfPOl+4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9D8A1F000E9;
+	Thu, 30 Jul 2026 12:22:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785414060;
-	bh=aQL0IGhySamwx384E1R+EJhYmgONnIqiTksKxCm6wAU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YlWlmYNq+FFnfu5CDfj7kyj7LWujYRgIiAT+PDFoilL+nBN3V5Q7WXmGgNns0o8hy
-	 PHzElwwxLHiLUONWq8b3AYWZMcm1Zdks8+PYL4Pj9KdLaeLQjw7VqOWn9kYW1B+waU
-	 LVEGx5e6B4IOFoP0SrKXcD2hrNFlLtdBjO8aVAIFnMisQMAWTtyGaItjHQ450rL9dj
-	 2Fy6H5wdWc3G/X72hbKHuEFI2Rd49+8ZiACgYxj0CFxNITaK2ODVW9es6pVqpfphl8
-	 84+Sg9kAGQVlYVN/uWHPMNbzNlo2eGhlOuISGolX80H3ncqTT4ix2DpUQQrnmzgzGe
-	 UElNCOkVg/6sA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Koichiro Den <den@valinux.co.jp>,
-	Frank Li <Frank.Li@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 2/2] misc: pci_endpoint_test: Improve logic to check status for doorbell test case
-Date: Thu, 30 Jul 2026 14:20:48 +0200
-Message-ID: <20260730122045.1382749-6-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260730122045.1382749-4-cassel@kernel.org>
-References: <20260730122045.1382749-4-cassel@kernel.org>
+	s=k20260515; t=1785414169;
+	bh=Dx1KYsvfN0hek2uEU3lDcCuGLBOWNIEY1KDv82lPvBE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=VvfPOl+4nHPN+hyxOwsfHLfvA3RJ+5fvcHrMkiiucwGdL71ah/vhy4QhuPM35b4XB
+	 H5/QLedjrsuLred7heElysY5aOy5ZUwFOV1JFi6qkX3HxPXcDkU7ios+TBA4Q+1EUG
+	 RJ6w38EF9T3WbJrxfWBOwKZUURvhaYMcTaVntcvCjRZZg2eYQK3nundWrv/FajuS51
+	 7TfaBQmfRbDNJWYvFrtOvz6VOxqu7BmFGEyhJocZIh4AHw+3yMV+WEolK/hLzpMVgF
+	 PZ+4hhTlPXcALJJ56xFilwENxUOwMyKT1IQU6oQjXeRSAaSYfVYcXcStNHqPL2bo55
+	 14Ki2z6e1JXMw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and
+ controller nodes
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org
+In-Reply-To: <20260730-eliza_evk-v7-1-7ac7b66a3e6d@oss.qualcomm.com>
+References: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
+ <20260730-eliza_evk-v7-1-7ac7b66a3e6d@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 12:22:48 +0000
+Message-Id: <20260730122248.A9D8A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2111; i=cassel@kernel.org; h=from:subject; bh=ZYBIv9EMkZnmI12SrxNuXRUx1sv8DNkVCGFEWsKwnJs=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLKyHRf2yhSIsq9YO7diz4E3Mn3uyvt41u2Xuchxdn7x/ aNJUlc4OkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCR/8IM/wzKvwWw67yTV3Bb f4Kr8fqcOdFXlSSSV+/fedWho8M1uYXhf3n5s9/zyj2v2n8wsZ76pfaz+olFJnMfJX/aO2uz915 fKX4A
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
 
-The EPF driver drivers/pci/endpoint/functions/pci-epf-test.c
-only sets STATUS_DOORBELL_ENABLE_SUCCESS as the final step in
-pci_epf_test_enable_doorbell()
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] Missing `msi-map` property in PCIe controller nodes.
+- [High] Incorrect hardware configuration via copy-paste error: `pcie1` use=
+s SM8550 `pcie0` interrupts and stream IDs.
+- [Medium] Missing `num-lanes` property in PCIe controller nodes.
+--
 
-Likewise it only sets STATUS_DOORBELL_DISABLE_SUCCESS as the final step in
-pci_epf_test_disable_doorbell().
+--- Patch [1]: [PATCH v7 1/3] arm64: dts: qcom: eliza: Add PCIe PHY and con=
+troller nodes ---
+commit 2d2260f9f24a370e16b32d6b0fe6e207c07d9ae1
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-The safest way is therefore to check if the SUCCESS bit was set,
-not to check if the FAIL bit was set.
+arm64: dts: qcom: eliza: Add PCIe PHY and controller nodes
 
-Because, during a wait_for_completion_timeout() timeout, if we did not
-receive an IRQ, obviously the FAIL bit will not be set.
+Eliza supports two PCIe instances: one 8GT/s x1 (PCIe0) and one 8GT/s x2
+(PCIe1). Add PCIe controller and PHY nodes for both instances, and update
+the GCC clock references to use the newly added PHY nodes instead of
+placeholder zeros.
 
-For the STATUS_DOORBELL_ENABLE case, the if-statement also fails if there
-was a timeout ('left' == 0). However, we've seen an issue where a buggy EPC
-driver was sending two IRQs in response to a single DOORBELL_ENABLE
-command, and in this case the second wait_for_completion() will return
-immediately (i.e. no timeout - 'left' != zero) and the SUCCESS bit will not
-be set. Thus, the safest way is to simply check if the SUCCESS bit is set.
+> diff --git a/arch/arm64/boot/dts/qcom/eliza.dtsi b/arch/arm64/boot/dts/qc=
+om/eliza.dtsi
+> index 357e8066c1768..6834137bd5e98 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza.dtsi
+[ ... ]
+> +		pcie0: pcie@1c00000 {
+> +			device_type =3D "pci";
+> +			compatible =3D "qcom,eliza-pcie", "qcom,pcie-sm8550";
+> +			reg =3D <0x0 0x01c00000 0x0 0x3000>,
+[ ... ]
+> +			ranges =3D <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
+> +				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
+> +
 
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/misc/pci_endpoint_test.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[Severity: High]
+Should this node include the msi-map property? Without msi-map mapping PCIe
+Requester IDs to the ITS Device IDs, the PCI framework cannot associate the
+devices with the GICv3 ITS MSI controller. This could cause endpoints to fa=
+il
+probing or silently fall back to legacy INTx.
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 26ab9252251f..1019bcd0628f 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -1094,7 +1094,7 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
- 	left = wait_for_completion_timeout(&test->irq_raised, msecs_to_jiffies(1000));
- 
- 	status = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
--	if (!left || (status & STATUS_DOORBELL_ENABLE_FAIL)) {
-+	if (!left || !(status & STATUS_DOORBELL_ENABLE_SUCCESS)) {
- 		dev_err(dev, "Failed to enable doorbell\n");
- 		return -EINVAL;
- 	}
-@@ -1133,7 +1133,7 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
- 
- 	status |= pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
- 
--	if (status & STATUS_DOORBELL_DISABLE_FAIL) {
-+	if (!(status & STATUS_DOORBELL_DISABLE_SUCCESS)) {
- 		dev_err(dev, "Failed to disable doorbell\n");
- 		return -EINVAL;
- 	}
--- 
-2.55.0
+[Severity: Medium]
+The commit message mentions PCIe0 is an 8GT/s x1 instance. Does this need a
+num-lanes =3D <1>; property here to restrict the link width? Omitting it
+forces the driver to rely on unverified hardware reset defaults.
 
+> +			interrupts =3D <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 478 IRQ_TYPE_LEVEL_HIGH>,
+[ ... ]
+> +			operating-points-v2 =3D <&pcie0_opp_table>;
+> +
+> +			iommu-map =3D <0x0 &apps_smmu 0x1480 0x0 0x1>,
+> +				    <0x100 &apps_smmu 0x1481 0x0 0x1>;
+
+[Severity: High]
+Is the stream ID (0x1480) swapped with pcie1? It looks like pcie0 is using
+the stream IDs typically reserved for pcie1, while pcie1 below uses 0x1400.
+Using incorrect stream IDs could cause immediate SMMU context faults when
+endpoints attempt DMA.
+
+[ ... ]
+> +		pcie1: pcie@1c08000 {
+> +			device_type =3D "pci";
+> +			compatible =3D "qcom,eliza-pcie", "qcom,pcie-sm8550";
+> +			reg =3D <0x0 0x01c08000 0x0 0x3000>,
+[ ... ]
+> +			ranges =3D <0x01000000 0x0 0x00000000 0x0 0x44200000 0x0 0x100000>,
+> +				 <0x02000000 0x0 0x44300000 0x0 0x44300000 0x0 0x3d00000>,
+> +				 <0x43000000 0x4 0x00000000 0x4 0x00000000 0x3 0x00000000>;
+> +
+
+[Severity: High]
+Similar to pcie0, should pcie1 include the msi-map property to route its
+downstream MSIs to the GIC ITS?
+
+[Severity: Medium]
+The commit message mentions PCIe1 is an 8GT/s x2 instance. Should there be a
+num-lanes =3D <2>; property here to prevent relying on unverified hardware
+reset defaults for the link width?
+
+> +			interrupts =3D <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
+
+[Severity: High]
+Are these interrupts correct for Eliza's pcie1? These look like an exact
+copy of the SM8550 pcie0 interrupts (141-148), whereas Eliza's pcie0 uses
+distinct interrupts (376, 478...). Wiring pcie1 to incorrect physical IRQ
+lines could render endpoint devices dead.
+
+[ ... ]
+> +			operating-points-v2 =3D <&pcie1_opp_table>;
+> +
+> +			iommu-map =3D <0x0 &apps_smmu 0x1400 0x0 0x1>,
+> +				    <0x100 &apps_smmu 0x1401 0x0 0x1>;
+
+[Severity: High]
+Similar to the interrupt assignment, are these stream IDs correct for pcie1?
+This uses 0x1400/0x1401 which are typically SM8550 pcie0 IDs, whereas pcie0
+above was assigned 0x1480.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-eliza_evk-=
+v7-0-7ac7b66a3e6d@oss.qualcomm.com?part=3D1
