@@ -1,137 +1,265 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F31F937A829;
-	Thu, 30 Jul 2026 06:43:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5353E3A257E;
+	Thu, 30 Jul 2026 06:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785393824; cv=none; b=VMnpWqxIhXzMOgSoQVwRVIsvODY69of74AAHpzRVdvInkWwZu29Xnbg7amuIth4t1unOmFPBy2QedLRjC4PXn+9jnD/ZhoCMK8GZvnpqmfTmxcasQ9s5cHqHs9CM9oCi1DFsaltoSzmx5eLjtVlpVMCR7gLVBIQPM4ecUM205uw=
+	t=1785394125; cv=none; b=LsEcy2S4NXwITlZ08GEmur1PaQOdzT7qPtcWl+ok8Qyzjdi8owwYyBhU8bxHPw1uOXiVmIVQCtR+F599Vl6FdC5I4twxmTQcq+GK10GUrvc+KOQRZJPBCrjglGpLyNogIZnnPjP38t/cQxf8cp4ToycUW9VA7/P97WkqSqmYi2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785393824; c=relaxed/simple;
-	bh=EuSemK3BkMuFVc+R1l10uTDSqNGs2SCOzyEa+qEEVm4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=W6jDC/22nYBRw+KI5P7fxioiOeZMuXgFZeZEJemcFqpySine5EYX17Hir5f+hkHPqZNFxF4CIIhZqy2mB1a/CSG0cX8pkRgRWjm1aYH+dAz7NVBakLhK11c/0N+EsT1YnL7VmfKooiicFw6xJ3BZIrkPLHZb1CsgAq370RS2HIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oALEx8Aa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785394125; c=relaxed/simple;
+	bh=w9JA1QWCYIXMKw/JtbhVTB+bYrfhAqw2nhIdfPjot54=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=rhVh+lSE8i0j+R92YdKmF8HkGOHArFZUS9yeg4FGUNvxFwGfOnRR+BEEG0cNBr7z4bkfMNB3NwKFX/F5MymXP/gL8lMHTCq083t8hwUBZfg9LcBPOF43wiRVzrZBiqLaYixYqbyeEqIyb1cz6QvsOo2im1HaNgggHSvaZS8u53g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=byvHLhPC; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oALEx8Aa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 711431F000E9;
-	Thu, 30 Jul 2026 06:43:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785393822;
-	bh=mUihL8cpHZKmkxDeuCmSLvsE/kP9sYQfoIPueVuyWYw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oALEx8AaNM2h7QTyMCc71Cu0MfoUQSnd6cubiwlHGeCfElw/7jRm8bQmFTWUC8PqC
-	 eqCmlWLq0ImcHi0Tz6r8uYZjIpBL9F6/rTAn8X0KpotNFx7nlasHMsoaslG7sI+j4W
-	 vYJkq/AOWJuOuTtESjiBwfQAHhzYh06gXtMAi352+qy9TNsOgjQgmQfCHSUqFZ0EKm
-	 E03ZE+uMoEe7vj3ZBbY+Gr58DV0dA3OXYzS0l/BC/a6+cTCiypPjK0vgXIQKsUaUsY
-	 Vzo0oM5Q1EmSyym+KwsTqLJ3KGjc4anoFFVYMJDevD+NHXyhmRXI/rk5IFEXhP5mjL
-	 13HODVaHL7meg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/3] perf hisi-ptt: Fix PTT trace TLP header parsing
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sizhe Liu" <liusizhe5@huawei.com>
-Cc: linux-perf-users@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260730062709.534139-2-liusizhe5@huawei.com>
-References: <20260730062709.534139-1-liusizhe5@huawei.com>
- <20260730062709.534139-2-liusizhe5@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 06:43:42 +0000
-Message-Id: <20260730064342.711431F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="byvHLhPC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=LtOBVU2mUGvOXKtwiI8qRGDY4RMlDStVM
+	VqXFMd4gPU=; b=byvHLhPCgV3KESFM652v6AUf5fqOGmpqubdSqX6B8OP0Y0ZOZ
+	GnefcGY+eTGUjm72B/gyqHPV137nK74BCvVsI4R4k2FGJkSx+voxpf7IgHGYP7XX
+	fqjTBry9x7/W/HyQL6KT+UqeiPEGq3E/uY+Z0gI+RR7gyEB5GIHUXqNhWQ=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwA3cULT82pqA8gVAA--.18166S2;
+	Thu, 30 Jul 2026 14:48:51 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v3 2/3] PCI: ultrarisc: get and enable DP1000 PCIe
+ clocks
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: wangjia@ultrarisc.com, Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+In-Reply-To: <2n44tfzw26mfis3nvnre2fph4u2whns5xgxvdmcczyfebt6gt2@ln53o5bi773e>
+References: <20260714-ultrarisc-pci-clk-v3-0-e72723fc0ef1@ultrarisc.com>
+ <20260714-ultrarisc-pci-clk-v3-2-e72723fc0ef1@ultrarisc.com>
+ <2n44tfzw26mfis3nvnre2fph4u2whns5xgxvdmcczyfebt6gt2@ln53o5bi773e>
+Date: Thu, 30 Jul 2026 14:48:23 +0800
+Message-Id: <178539410375.553273.13405298466842007043.b4-reply@b4>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785394104; l=5795;
+ i=wangjia@ultrarisc.com; s=20260515; h=from:subject:message-id;
+ bh=w9JA1QWCYIXMKw/JtbhVTB+bYrfhAqw2nhIdfPjot54=;
+ b=SHVekOz1FBpGpvV/i2SigSv7c7JbgUKuDIJBbAYc8SEsjhsFJi85cn+OYYAs80AjwsN+0UfH+
+ mRIw6pWqH3fDJJ9nQVtzkEqtxPFX6xjVxO0wmFkDBbzPdkhkquTHIs/
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=wGVm18siRScehKOkOz0WKxgxDy7IezHEszhnN4/TUCY=
+X-CM-TRANSID:AQAAfwA3cULT82pqA8gVAA--.18166S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3XFWrtrW7GFy8Kw4ruFW8Crg_yoW7Cw4xpa
+	yUGa1YkF4DJryYgr4Svr1kZ3ZIyr1FyFW7JFZrK3W2vwnI9rn7trykG34avFyvkrWq93Wq
+	va1jkFy7Can0q37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQADEWppeNMAFAACst
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On 2026-07-29 15:48 +0200, Manivannan Sadhasivam wrote:
+> On Tue, Jul 14, 2026 at 09:11:03AM +0800, Jia Wang via B4 Relay wrote:
+> > From: Jia Wang <wangjia@ultrarisc.com>
+> > 
+> > Add the required core, dbi, and aux clocks for the DP1000 PCIe
+> > controller and enable them before initializing the DesignWare host.
+> > 
+> > Also manage the clocks across system suspend and resume.
+> > 
+> > Fixes: 5fc35740c3b3 ("PCI: ultrarisc: Add UltraRISC DP1000 PCIe Root Complex driver")
+> > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-ultrarisc.c | 102 ++++++++++++++++++++++++++--
+> >  1 file changed, 95 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+> > index 6ee661ceff67..72ba5840b62d 100644
+> > --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
+> > +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+> > @@ -5,6 +5,7 @@
+> >   * Copyright (C) 2026 UltraRISC Technology (Shanghai) Co., Ltd.
+> >   */
+> >  
+> > +#include <linux/clk.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/module.h>
+> >  #include <linux/of_device.h>
+> > @@ -23,6 +24,12 @@
+> >  
+> >  #define ULTRARISC_PCIE_COMP_TIMEOUT_65_210MS	0x6
+> >  
+> > +struct ultrarisc_pcie {
+> > +	struct dw_pcie pci;
+> > +	struct clk_bulk_data clks[3];
+> > +	bool clks_enabled;
+> > +};
+> > +
+> >  static struct pci_ops ultrarisc_pci_ops = {
+> >  	.map_bus = dw_pcie_own_conf_map_bus,
+> >  	.read = pci_generic_config_read32,
+> > @@ -98,17 +105,66 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+> >  	.start_link = ultrarisc_pcie_start_link,
+> >  };
+> >  
+> > +static int ultrarisc_pcie_enable_clks(struct ultrarisc_pcie *ultra)
+> > +{
+> > +	int ret;
+> > +
+> > +	if (ultra->clks_enabled)
+> > +		return 0;
+> > +
+> 
+> This check looks redundant and I don't see a need for the 'clks_enabled' flag.
+> Just do:
+> 
+> 	return clk_bulk_prepare_enable();
+>
 
-Pre-existing issues:
-- [Medium] The patch fixes endianness and strict-aliasing for packet decodi=
-ng by replacing unaligned casts with `get_unaligned_le32()`, but misses `hi=
-si_ptt_check_packet_type()` which dictates the packet format for the entire=
- trace.
-- [Medium] Missing length validation before packet type detection can lead =
-to an out-of-bounds read and potential crash when processing an auxtrace ev=
-ent with a size less than 4 bytes.
---
+Thanks for the review.
 
---- Patch [1]: [PATCH v2 1/3] perf hisi-ptt: Fix PTT trace TLP header parsi=
-ng ---
-commit 94e8b50cd3127d5e0f6a440877771f9ffe7c6e0e
-Author: Sizhe Liu <liusizhe5@huawei.com>
+Agreed. I will remove clks_enabled and have ultrarisc_pcie_enable_clks()
+return clk_bulk_prepare_enable() directly in the next version.
 
-perf hisi-ptt: Fix PTT trace TLP header parsing
+> > +	ret = clk_bulk_prepare_enable(ARRAY_SIZE(ultra->clks), ultra->clks);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	ultra->clks_enabled = true;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static void ultrarisc_pcie_disable_clks(void *data)
+> > +{
+> > +	struct ultrarisc_pcie *ultra = data;
+> > +
+> > +	if (!ultra->clks_enabled)
+> > +		return;
+> > +
+> > +	clk_bulk_disable_unprepare(ARRAY_SIZE(ultra->clks), ultra->clks);
+> > +	ultra->clks_enabled = false;
+> 
+> Same here.
+>
 
-This commit fixes incorrect field decoding of HiSilicon PTT trace TLP heade=
-rs
-in 4DW format. It replaces the C bitfield struct with explicit bitmasks and
-uses get_unaligned_le32() to extract the fields, resolving endianness and
-strict-aliasing issues.
+Agreed. I will make ultrarisc_pcie_disable_clks() call
+clk_bulk_disable_unprepare() unconditionally in the next version.
 
-> diff --git a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c b/to=
-ols/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-> index a17c423a526dd..5db44556fc4f5 100644
-> --- a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-> +++ b/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-[ ... ]
-> @@ -73,29 +75,20 @@ static const char * const hisi_ptt_4dw_pkt_field_name=
-[] =3D {
-[ ... ]
->  static void hisi_ptt_print_pkt(const unsigned char *buf, int pos, const =
-char *desc)
->  {
->  	const char *color =3D PERF_COLOR_BLUE;
-> +	uint8_t byte;
-> +	uint32_t dw;
->  	int i;
-> =20
-> +	dw =3D get_unaligned_le32(buf + pos);
+> > +}
+> > +
+> > +static int ultrarisc_pcie_init_clks(struct ultrarisc_pcie *ultra)
+> > +{
+> > +	struct device *dev = ultra->pci.dev;
+> > +	int ret;
+> > +
+> > +	ultra->clks[0].id = "core";
+> > +	ultra->clks[1].id = "dbi";
+> > +	ultra->clks[2].id = "aux";
+> > +
+> > +	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(ultra->clks), ultra->clks);
+> 
+> Use devm_clk_bulk_get_all()
+>
 
-[Severity: Medium]
-This is a pre-existing issue, but while this patch fixes endianness and
-strict-aliasing during packet decoding, there appears to be another unalign=
-ed
-pointer cast in hisi_ptt_check_packet_type() in tools/perf/util/hisi-ptt.c:
+I used `devm_clk_bulk_get()` to make the driver require the "core", "dbi",
+and "aux" clock names. Using `devm_clk_bulk_get_all()` would instead accept
+the clocks without requiring those names. Is that intended, or is there a
+requirement or convention I am missing?
 
-tools/perf/util/hisi-ptt.c:hisi_ptt_check_packet_type() {
-    ...
-    uint32_t head =3D *(uint32_t *)buf;
-    ...
-}
+> > +	if (ret)
+> > +		return dev_err_probe(dev, ret, "Failed to get clocks\n");
+> > +
+> > +	ret = ultrarisc_pcie_enable_clks(ultra);
+> > +	if (ret)
+> > +		return dev_err_probe(dev, ret, "Failed to enable clocks\n");
+> > +
+> > +	return devm_add_action_or_reset(dev, ultrarisc_pcie_disable_clks, ultra);
+> > +}
+> > +
+> >  static int ultrarisc_pcie_probe(struct platform_device *pdev)
+> >  {
+> > +	struct ultrarisc_pcie *ultra;
+> >  	struct device *dev = &pdev->dev;
+> >  	struct dw_pcie_rp *pp;
+> >  	struct dw_pcie *pci;
+> >  	int ret;
+> >  
+> > -	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > -	if (!pci)
+> > +	ultra = devm_kzalloc(dev, sizeof(*ultra), GFP_KERNEL);
+> > +	if (!ultra)
+> >  		return -ENOMEM;
+> >  
+> > +	pci = &ultra->pci;
+> >  	pci->dev = dev;
+> >  	pci->ops = &dw_pcie_ops;
+> >  
+> > @@ -117,7 +173,11 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
+> >  
+> >  	pp = &pci->pp;
+> >  
+> > -	platform_set_drvdata(pdev, pci);
+> > +	platform_set_drvdata(pdev, ultra);
+> > +
+> > +	ret = ultrarisc_pcie_init_clks(ultra);
+> > +	if (ret)
+> > +		return ret;
+> >  
+> >  	pp->num_vectors = MAX_MSI_IRQS;
+> >  	/* No L2/L3 Ready indication is available on this platform */
+> > @@ -135,16 +195,44 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
+> >  
+> >  static int ultrarisc_pcie_suspend_noirq(struct device *dev)
+> >  {
+> > -	struct dw_pcie *pci = dev_get_drvdata(dev);
+> > +	struct ultrarisc_pcie *ultra = dev_get_drvdata(dev);
+> > +	struct dw_pcie *pci = &ultra->pci;
+> > +	int ret;
+> > +
+> > +	if (pci->suspended) {
+> > +		ultrarisc_pcie_disable_clks(ultra);
+> > +		return 0;
+> > +	}
+> 
+> Same as above. This looks redundant. Actually, it is wrong too as there cannot
+> be more than one suspend callback invocations.
+>
 
-Will this cause decoding failures on big-endian hosts because the native
-unaligned 32-bit cast interprets the little-endian packet header with
-incorrect byte order, causing the packet type bitmask check to misidentify
-packets?
+Agreed that suspend_noirq() is invoked once per transition. However, a
+failed resume leaves pci->suspended set and the clocks disabled. The PM
+core records the resume error and continues the transition, so a later,
+independent system suspend can invoke this callback again. In the next
+version, I will keep the entry check as an early return for that case,
+without disabling the clocks again.
 
-[Severity: Medium]
-This is also a pre-existing issue, but can missing length validation before
-packet type detection lead to an out-of-bounds read?
+> - Mani
+> 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
+> 
 
-When processing an auxtrace event with a size less than 4 bytes,
-hisi_ptt_dump() in tools/perf/util/hisi-ptt.c unconditionally calls
-hisi_ptt_check_packet_type() without verifying len:
+Best regards,
+Jia Wang
 
-tools/perf/util/hisi-ptt.c:hisi_ptt_dump() {
-    ...
-    type =3D hisi_ptt_check_packet_type(buf);
-    ...
-}
 
-This immediately dereferences 4 bytes in hisi_ptt_check_packet_type():
-
-tools/perf/util/hisi-ptt.c:hisi_ptt_check_packet_type() {
-    ...
-    uint32_t head =3D *(uint32_t *)buf;
-    ...
-}
-
-Could this result in a heap out-of-bounds read and potential crash?
-
->  	printf(".");
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730062709.5341=
-39-1-liusizhe5@huawei.com?part=3D1
