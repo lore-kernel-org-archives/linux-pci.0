@@ -1,147 +1,132 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9E5C33264C3;
-	Thu, 30 Jul 2026 08:16:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785399409; cv=none; b=CiUPYRMtqPaeat80Y8tFsclk7BQ5z65i+emqJSmUzNBqEwupoBHZDZ8GZcHrted3VnEA29Zzs0u3i9Qathrx9QLia1gk9CDv5SDHS7Vj9UeynM7/WWLWb5u8E0KDj4+8BaoEdu5jStI+38Bq5UZaRmb41mLiB73IYIfmmU6qG7k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785399409; c=relaxed/simple;
-	bh=owZ44+kMAKcFP6ncPVxG6cLmJGQ85Knopjrfa26tnyg=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=Gtg6RMQz6ybl1jjEjTRSFuwaPLpTWnVjhAJeBKs76K+8nfh1YotfQeqhdopWX3WPM4kAzlyLI0YDSNl1WTzS+d3vOJRSuVNkDPcONynNaEY1eA2FScRr/dnigftkNdYssnIC8jaDlhGmWZoznS6im2e/4K9xTw6WtdhSlXPOGsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=SywfEC+S; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CD42368950
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 08:18:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785399502; cv=pass; b=knseHSy5yRv7BN0+c8SUWQvUrCn1XILbaWxLc+M/RJJAlx6XPWcy9Z2FbgFMpfqXZnS+kxDmWjuzUFe41b8UoDqR+x1JJCjUB83wIJhHzXxnHUG8FmZckuI1JozVgBzuLPWehcRVrKPDBs0YN3OvkPJbHrwCMJhg4U8iJehZUlU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785399502; c=relaxed/simple;
+	bh=f7QRhfPhfuanj85ZYxwPDOHyrGPoaNqQTqn4TimE2bA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DMmTtYv8SkrzcwKCIW8ewlwOm+y+/Xf7iD9UhxDg/uSFfG5KY4QbbYzWfRoZmG0Pg/pCyFYrR3Xh5qjpEIlkrl5v0dcqGYN8fuhYTedYGA6VMIa38Z30lFijpyc8roxWpQmH6r7mtGEicVxmVdTXKnu3ThfZqZSntdiFAPuiPHg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nearthlab.com; spf=none smtp.mailfrom=nearthlab.com; dkim=pass (1024-bit key) header.d=nearthlab.com header.i=@nearthlab.com header.b=iJWVo4C2; arc=pass smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nearthlab.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nearthlab.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="SywfEC+S"
+	dkim=pass (1024-bit key) header.d=nearthlab.com header.i=@nearthlab.com header.b="iJWVo4C2"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2cf50c6f235so20677985ad.0
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 01:18:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785399497; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ovlt8WDhCldeqcevnzPBDlm8FCiSpKbQZCbpeYu/T3VlyCMC5U5VyivsppL+hogLFo
+         3gw/CnkgXMTzPV2Cvxh6dr2VUeqFOkD2RaBMVRPA03kWtimKU/OmFjz5zPdZ7n49NcSx
+         QVJ4SBOsE+MPwp1NpJUlm+fKaB2ef4rAGS3dsZe8hEmDa+YETy6LU/cjY5Wkq9L9z2qa
+         nE7X8/UuEOKPvSaBG1n7OvJiHCyadY/lq8LktDzXeCO5w+bWNuPj+WHMZsi+V0J/pwKQ
+         TBGZpIWBmubrlOyJyzgenpop3/JPYkh2JXDSSI3Pr7rW4BUESCNO85/lQ13dmklHR/+V
+         Fcbw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=is1ZQk2S8/kibmO+4EhDqlrn7RhSaBF98AwRFvKrWvM=;
+        fh=2E8G5L5HRIhYv0SLHRh0bmuG4bK/RxhrEd6+zC1U6gY=;
+        b=ZfmqoHm4vuFBtQT9RdIC/OlsqBlI6uDhcPvIyuWaPFPxXRzvOXCQJ0zH67IsB8lzBS
+         QsbWWrx7NnGhZ0KriBobckQKNaVnSN5zjC6ebLogwFYCoUxKa8GHq087MvgSjTLWxKWS
+         7oJMUN2occiYJ35fvIkBzXWDhkDwE2TJ1ek4kaUQ4qd9yjuoc1tX0cPNec0ShyFMoHO4
+         JvIyDwGHo4QG9fTFnyIfAuMq8IgIqHs4lh7t2UhG2nCtz8MXfm+3gxAXcL65HyZtN+I1
+         k/YYEF98D37wxxa7FfVc6FE5EKiDEhNwD9no2CU//7m8mLCOuojkfbMNts3hwIPf9PS+
+         1w/w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=3940JcE5ZkcguIpPsEefZYfbmpbsm7UdX
-	bQA8p0jrXc=; b=SywfEC+SouA+12j8AlqjKDMcIB2Cw0Egmc8SMoUWJIBeqFjLg
-	n9vqPOs0+e4bb5I3PNknHJjHFHFFMzdRWzgd30Q4djuJcJFfYtT05MhaLJq/rzct
-	ixNUZav6+V5K10Mxbtq/REukE/Xr6C3C/TMEF42bBj5txCfE7Y6UD6ZHjo=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwA3cUJ8CGtqKMsVAA--.18291S2;
-	Thu, 30 Jul 2026 16:17:00 +0800 (CST)
+        d=nearthlab.com; s=google; t=1785399497; x=1786004297; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=is1ZQk2S8/kibmO+4EhDqlrn7RhSaBF98AwRFvKrWvM=;
+        b=iJWVo4C2sNR6K/F9aqYYjsgx6iVIWc8Ljcw9tzxB6qbWCquYC15kuOiPSAukuakBl1
+         ppkFzjjIwbZ1SFcGpNjjxrmozxB9LVQHcS1Vz3wK7YUYdZs+GGSzoCQDjv7fLNWCAWB1
+         vtz+Y0Xi84pZD2YQIo5J/El74BjYWdXW6H0tI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785399497; x=1786004297;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=is1ZQk2S8/kibmO+4EhDqlrn7RhSaBF98AwRFvKrWvM=;
+        b=aW+xzTQoUqMC1HjG+RRyr31vyAXFoAFqsUDZ7pKJvoYd42ZjrCZHJcJ2XtvpQjtyWe
+         y4rV93CX5lvl2hQThiyYQBDCivcAjuLwMVstN25BNavVwcmosCo/E0FOEi68BuzgVNdU
+         zNu6TnNV8g4j+k5tXa4Hv4yPE2nA+fEjTQcLB8ApZweuYRMXnt9f4OgnB/jfq+ledG09
+         Xh/v55wIHy86p87P0jjH9yMm1yljheH+Y7Pvu0QvYibonP/mLUYwCH6o54QZC574m5t3
+         85AFsGk8Svw/RIEWeHsGiUOdp7O6tw5p9dMCVu+Vl/ncGAkr/RB6AIMhy1bL+N+l6NJe
+         aPrA==
+X-Gm-Message-State: AOJu0YxBw0a812o+ziLzQ7l2n8oHSAM31sJa4tHVADHZKFw56Oyd24P9
+	jxr4tsiKNNaGnH2BPjgAesrJdbTByBCXgk+Ie5drawrcoxt4ufXPiiz29VMWDUutaJj86nu2aEZ
+	7ULZdcG8DZ/pYbbkJgIWZd7TSj8/k5DzKJD8c1T1hP3Yqz7uRGExq
+X-Gm-Gg: AR+sD11YZdEbtPnmmInflW3s41swyLJJ2cH3hJyT0ASCCvGxVSsASMuWHTWGp46gogr
+	dHiUwZh7ORw4hKhfmJhQfu0OKGexsLleuKeLAbl32MGt18eFrwaaFyk4wPETqI8aQ1GHX0sEiMA
+	RsWub7B30bB+vRGCSuYmy9lgco9gpyTH5NHhDjKNuSUUaErvay31GK2h5oYkwjCEDHdr/U8qrFr
+	/+FYCtKTaM5PahIA1s5oz1RDeUzHnI2wt1Qa1w1D4Kf1kLMfSTlgIeH8QQzZRdrSh832hM29wpa
+	tp+ODarCaPpDlEy0IzcX87TJ6tIQ+RfufR2G9B27/bggrg==
+X-Received: by 2002:a17:902:cf0e:b0:2c9:fb11:1bf4 with SMTP id
+ d9443c01a7336-2d035b89e1emr17737995ad.7.1785399497022; Thu, 30 Jul 2026
+ 01:18:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v3 3/3] PCI: ultrarisc: allow DP1000 driver to build as
- module
-From: Jia Wang <wangjia@ultrarisc.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Jia Wang <wangjia@ultrarisc.com>, 
- Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-In-Reply-To: <dvarzmhaakmz5qycowdwxqggkwvezijjestz5miv2cqy4b3ilw@zek66ydqjo5l>
-References: <20260714-ultrarisc-pci-clk-v3-0-e72723fc0ef1@ultrarisc.com>
- <20260714-ultrarisc-pci-clk-v3-3-e72723fc0ef1@ultrarisc.com>
- <dz43ty5hgpefk67lmgxfn2tmppng4ws6oy66zns5ajt3qwdfai@k3exaapdqvxh>
- <178539453673.553273.3197955075422858659.b4-reply@b4>
- <dvarzmhaakmz5qycowdwxqggkwvezijjestz5miv2cqy4b3ilw@zek66ydqjo5l>
-Date: Thu, 30 Jul 2026 16:16:32 +0800
-Message-Id: <178539939270.1582149.5148262134429405169.b4-reply@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785399393; l=2716;
- i=wangjia@ultrarisc.com; s=20260515; h=from:subject:message-id;
- bh=owZ44+kMAKcFP6ncPVxG6cLmJGQ85Knopjrfa26tnyg=;
- b=eiUDKyofwmfHo/0iIZzmz3Ixc85XDmU2P5kVplzlnDujO+Y2hUx8yRivvlNAugT/qtGB/LO24
- j5e5oLSYu9eD8iCLwPQb0YiUsUT+zt4onGs4fvGz/fTwKnre90t2WaK
-X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
- pk=wGVm18siRScehKOkOz0WKxgxDy7IezHEszhnN4/TUCY=
-X-CM-TRANSID:AQAAfwA3cUJ8CGtqKMsVAA--.18291S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxAryfXw1xWF43Kw1DAw4fKrg_yoW5GF4kpF
-	WUGa4YkF4kJF4aya17K3WUZ3WYywnIqrWYg3ZIgwnIvF9I9ryUXryDKa4YkF92yr48Ar12
-	vw4Yka43GF45Z3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
-	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-	xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUonmRUUUUU
-X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQAEEWpqylMAEAAAsd
+References: <20260730072215.2090974-1-sangwoo.han@nearthlab.com> <20260730074626.BED8B1F000E9@smtp.kernel.org>
+In-Reply-To: <20260730074626.BED8B1F000E9@smtp.kernel.org>
+From: =?UTF-8?B?SGFuIC8g7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>
+Date: Thu, 30 Jul 2026 17:18:06 +0900
+X-Gm-Features: AUfX_mxYgeKuB9t87txmyP8OggIl-yRobUNT0qaQCA1nud0Zwhpc-Uj6JPiYNXM
+Message-ID: <CAFg7d9b4yLH+s1KZC3q0zOxEvMpAQgMxoNEFKtgKmBzQXFqfjg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
+ handed out
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 2026-07-30 09:46 +0200, Manivannan Sadhasivam wrote:
-> On Thu, Jul 30, 2026 at 02:55:36PM +0800, Jia Wang wrote:
-> > On 2026-07-29 15:49 +0200, Manivannan Sadhasivam wrote:
-> > > On Tue, Jul 14, 2026 at 09:11:04AM +0800, Jia Wang via B4 Relay wrote:
-> > > > From: Jia Wang <wangjia@ultrarisc.com>
-> > > > 
-> > > > CONFIG_PCIE_ULTRARISC is a tristate option, so the driver can be selected
-> > > > as a module when COMPILE_TEST or platform configuration allows it.  Using
-> > > > builtin_platform_driver() leaves the module build without the module
-> > > > init/exit plumbing and causes modpost failures for the generated .ko.
-> > > > 
-> > > > Use module_platform_driver() so the driver works for both module and
-> > > > built-in builds while keeping the existing tristate Kconfig entry.
-> > > > 
-> > > > Add a remove callback and call dw_pcie_host_deinit() during removal so the
-> > > > root bus is torn down before devres releases the controller data.
-> > > > 
-> > > > Fixes: 5fc35740c3b3 ("PCI: ultrarisc: Add UltraRISC DP1000 PCIe Root Complex driver")
-> > > > Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
-> > > > ---
-> > > >  drivers/pci/controller/dwc/pcie-ultrarisc.c | 10 +++++++++-
-> > > >  1 file changed, 9 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> > > > index 72ba5840b62d..9bee522a20e9 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-> > > > @@ -193,6 +193,13 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
-> > > >  	return 0;
-> > > >  }
-> > > >  
-> > > > +static void ultrarisc_pcie_remove(struct platform_device *pdev)
-> > > > +{
-> > > > +	struct ultrarisc_pcie *ultra = platform_get_drvdata(pdev);
-> > > > +
-> > > > +	dw_pcie_host_deinit(&ultra->pci.pp);
-> > > > +}
-> > > 
-> > > Since this driver registers an internal MSI controller, it is not safe to
-> > > remove it due to irq disposal concern. But you can build this driver as a
-> > > module though.
-> > >
-> > 
-> > Right, I missed that this was intentionally changed to
-> > builtin_platform_driver() to prevent irqchip removal. I will drop this
-> > patch entirely in the next revision. Thanks!
-> >  
-> 
-> No, you can still load the driver as a module, that is fine, but just do not
-> allow removing it. So your module_platform_driver() change is fine.
->
+> Because bitmap_set only reserves exactly nr_irqs bits, the remaining bits in
+> the device's hardware window remain marked as free in the allocator. If
+> another device is subsequently assigned one of these trailing vectors, can
+> the first device's interrupts be incorrectly routed to the second device?
 
-Understood. I will keep module_platform_driver() and drop only the remove
-callback in v4. Thanks for the clarification.
- 
-> - Mani
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
-> 
+No. The PCI/MSI core masks every vector the endpoint is capable of and
+then unmasks only the ones that were handed out, so the endpoint cannot
+signal the trailing vectors of its window.
 
-Best regards,
-Jia Wang
+msi_capability_init() masks the full capable range:
 
+  /* drivers/pci/msi/msi.c */
+  /* All MSIs are unmasked by default; mask them all */
+  entry = msi_first_desc(&dev->dev, MSI_DESC_ALL);
+  pci_msi_mask(entry, msi_multi_mask(entry));
 
+And each allocated vector is unmasked individually:
+
+  /* drivers/pci/msi/irqdomain.c */
+  pci_msi_unmask(desc, BIT(data->irq - desc->irq));
+
+This is observable in config space on the endpoint I tested. With 5
+vectors handed out at hwirq 0x8 and Multiple Message Enable programmed to
+8, the Mask Bits register reads 0x0000ffe0: bits 0-4 (the vectors in use)
+open, bits 5-15 masked. Messages 5-7, which would land on hwirq 0xd-0xf,
+are blocked at the device.
+
+Reserving the full power-of-two block does not provide isolation either;
+it just never releases it. The irqdomain core calls ops->free() once per
+vector with nr_irqs == 1, so bitmap_release_region(order_base_2(1))
+clears a single bit per call, and roundup_pow_of_two(nr_irqs) - nr_irqs
+bits stay set for the lifetime of the controller. That is the leak this
+patch fixes.
+
+irqchip/gic-v2m.c and irqchip/irq-alpine-msi.c already reserve exactly
+nr_irqs this way. For instance, gic-v2m moved to
+bitmap_find_next_zero_area_off() + bitmap_set(nr_irqs) in commit
+2ef3886ce626 ("irqchip/gic-v2m: Handle Multiple MSI base IRQ Alignment").
+
+Thanks,
+Sangwoo
