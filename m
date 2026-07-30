@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1FC3B6BFD
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 08:27:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DDE3B841C
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 08:28:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785400031; cv=none; b=YsKQvTPrb52m6brfmZvpkhUtiIMCy7/S7aegtzjSe3M+T+7rRBaDqfgdpGDx8wdwNL5PV7eZSHFB9XV+S2zYSX0PmGyBvJo71gnYXWLRwtmlaX8BnSCzkOAe5cWmJFqtvohFwx7lX5VVH757+UIxWehP++UWP/H8EnItAWnQmkI=
+	t=1785400102; cv=none; b=OOURyTuR3eVt8H5M9Bsk3Y9VBYQ7uHSobJZXxUoZDs7ZemGUtCnE/+caaZ2EMIKZcszt6rlqV6sVULaYkZ1J5eiL0JHtXWTc8iNl44BRwVdT18ziXaRz1RA/rVd/ZUKup/lue4jV3bjOwA/8NFehJdcyMguLINl29VES1j//SyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785400031; c=relaxed/simple;
-	bh=BsktEQDaagJKGUyOf/zTRckT4UIu1zFMWInVwUb0TXg=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=ckFGj0/1pjl5HN8evuFUTfrkgbFbVD3JtG2gM8aaMSeyOf8D+qq99c3zz0dqT+gtlwahPHs6sG1UQFrkCp/LSMdr3BL+t+1+gIjTO67dEiRWJq8HRlrU3Jd7hFf3b7Fck50AJsDWnepccbLqd8Duck33n3NN5R+yqv3cYJzZ0T8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YqmNMgLJ; arc=none smtp.client-ip=192.198.163.18
+	s=arc-20240116; t=1785400102; c=relaxed/simple;
+	bh=3XKDOVJkHx/QE5FVJ+hoMp1gI57meIbWMGFhZN3dhT0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=S6VvivNrHdcNDdNE62tr61XOjt4+9w3XMKLllQwsAE2neagrZ4iSi9FP7lDdUDj726kusvLssnJLouH0PCGT28VqzzKmvrQQJg6EaCathC6U4c/ncuywg6Lew2zFhS3KY44F5Lobh2m+CrKYQRIYTBYV/j8aVMKn704StQgYfxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VV1LpWmq; arc=none smtp.client-ip=198.175.65.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YqmNMgLJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VV1LpWmq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785400029; x=1816936029;
+  t=1785400099; x=1816936099;
   h=date:from:to:cc:subject:message-id;
-  bh=BsktEQDaagJKGUyOf/zTRckT4UIu1zFMWInVwUb0TXg=;
-  b=YqmNMgLJMG+Cl+s8q1UF65h0sXlVbkamH52Z1wcKcfjas1arEa072nC6
-   ssh+MsnluvIuLdBCJCn7k9e7cGmWs2mP5Vyn0u//H0jQ3eiiwUbBx9/23
-   NPUxja4xbJfg0X4G5dOHfT0c4CFExUpBJAS2FUJcBChFA067+KQvDpAgM
-   7h3d+VEYuX+ZODG5XrtcuQHAecUOMg1TGqyPb9S6b/ZM6SubbmAK/xtL0
-   X6xBugbwnrHE7Cz4c7WUIHQWxGgsRDvq3WWUvFJ1tOCJFMHoWYaSi4rtM
-   1ccUZDv4TGjAUNehLuMqOa23lSISLDkQ/26ZbZvolbjEMPm026ex61Uq6
-   Q==;
-X-CSE-ConnectionGUID: 40hnU4V8S3Os4fI5IdwEaA==
-X-CSE-MsgGUID: ey/ix32DT2GoFSiyZs6umg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="85139929"
+  bh=3XKDOVJkHx/QE5FVJ+hoMp1gI57meIbWMGFhZN3dhT0=;
+  b=VV1LpWmqPg652xmGd9Ra1YTqRQK/M6pW/OZR548ahjA1xKYuraQiv1Z8
+   cwTEzfwQFfkLIK8Bq6SmAhS/8Ys3niOQky9h8anMAXKSSHnHuKNUavjy2
+   dDipg5KQuBOSwLhm+rcxZO9PVhi0FU4eCufKrnDt+aku9R0urHW4Wr6jI
+   6rkEoV7jcj85OyY6fvh/h+Fp6MccRW3Es/AEtohtmTs7ISJkDAYbr8vaP
+   wlFj3zz0FxK05YhIPeXwQjYw97zuxgCVBXcz6pb7nTCm7lwgbistbs4Mn
+   1RcOyVxTKi9ONDcHpwjV7xBCvherxslAKiMC6xtVB/O8RhhE5LNJhpLIh
+   g==;
+X-CSE-ConnectionGUID: LpfvroG8Rc69GXjTFTemnQ==
+X-CSE-MsgGUID: hczbXiX8Rh+M/YFbVZ5MZw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="86091824"
 X-IronPort-AV: E=Sophos;i="6.25,194,1779174000"; 
-   d="scan'208";a="85139929"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2026 01:27:08 -0700
-X-CSE-ConnectionGUID: q3hoB3pzT2ist+khdT//Yw==
-X-CSE-MsgGUID: Dl9h0/GORBueEbs0B29Oig==
+   d="scan'208";a="86091824"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2026 01:28:13 -0700
+X-CSE-ConnectionGUID: wKjtPLAUQJCuki9P3nBWlQ==
+X-CSE-MsgGUID: dGp6YEVUTxClYptNizPMPQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,194,1779174000"; 
-   d="scan'208";a="260839694"
+   d="scan'208";a="259665456"
 Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa009.jf.intel.com with ESMTP; 30 Jul 2026 01:27:07 -0700
+  by orviesa008.jf.intel.com with ESMTP; 30 Jul 2026 01:28:11 -0700
 Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wpM6a-00000000gIl-3T1n;
-	Thu, 30 Jul 2026 08:27:04 +0000
-Date: Thu, 30 Jul 2026 16:26:16 +0800
+	id 1wpM7Z-00000000gJ4-3Evl;
+	Thu, 30 Jul 2026 08:28:05 +0000
+Date: Thu, 30 Jul 2026 16:27:24 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/plda-starfive] BUILD SUCCESS
- aaae917990623a6ca6b638557056606a1ae4a8d6
-Message-ID: <202607301604.B7FXi663-lkp@intel.com>
+Subject: [pci:dt-binding] BUILD SUCCESS
+ 8ba87bf6edbd601d0bf5ee515d0fff77b5585a2e
+Message-ID: <202607301612.pge8W1Je-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,13 +59,13 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/plda-starfive
-branch HEAD: aaae917990623a6ca6b638557056606a1ae4a8d6  PCI: starfive: Fix unchecked pm_runtime_get_sync() in probe
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git dt-binding
+branch HEAD: 8ba87bf6edbd601d0bf5ee515d0fff77b5585a2e  dt-bindings: PCI: rcar-gen4-pci-host: Document optional msi-parent
 
 elapsed time: 899m
 
-configs tested: 128
-configs skipped: 0
+configs tested: 125
+configs skipped: 1
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -78,6 +78,7 @@ arc                             allmodconfig    gcc-16.1.0
 arc                             allyesconfig    gcc-16.1.0
 arc                  randconfig-001-20260730    gcc-8.5.0
 arc                  randconfig-002-20260730    gcc-8.5.0
+arm                         pxa3xx_defconfig    clang-17
 arm                  randconfig-001-20260730    gcc-8.5.0
 arm                  randconfig-002-20260730    gcc-8.5.0
 arm                  randconfig-003-20260730    gcc-8.5.0
@@ -102,12 +103,9 @@ hexagon              randconfig-001-20260730    clang-24
 hexagon              randconfig-002-20260730    clang-24
 i386                            allmodconfig    gcc-14
 i386                buildonly-randconfig-001    gcc-14
-i386       buildonly-randconfig-001-20260730    clang-22
 i386       buildonly-randconfig-001-20260730    gcc-14
-i386       buildonly-randconfig-002-20260730    clang-22
 i386       buildonly-randconfig-002-20260730    gcc-14
 i386       buildonly-randconfig-003-20260730    gcc-14
-i386       buildonly-randconfig-004-20260730    clang-22
 i386       buildonly-randconfig-004-20260730    gcc-14
 i386       buildonly-randconfig-005-20260730    gcc-14
 i386       buildonly-randconfig-006-20260730    gcc-14
@@ -131,7 +129,6 @@ loongarch            randconfig-001-20260730    clang-24
 loongarch            randconfig-002-20260730    clang-24
 m68k                      m5249evb_defconfig    gcc-16.1.0
 mips                         ath25_defconfig    clang-24
-mips                decstation_r4k_defconfig    gcc-16.1.0
 mips                          ip30_defconfig    gcc-16.1.0
 nios2                           allmodconfig    gcc-11.5.0
 nios2                            allnoconfig    gcc-11.5.0
