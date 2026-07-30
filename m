@@ -1,352 +1,466 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19A993B05B3;
-	Thu, 30 Jul 2026 17:34:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EFF1383983;
+	Thu, 30 Jul 2026 17:37:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785432899; cv=none; b=HbCqQ8wLrSiPW0Qc5SRNwJ8BjeIa5u2s1cpU9UHqtA0QlR6/p5WO/IDk5hJy26gqPsZvtQWxDAmB7LPpMIOlqWxusxvLfqrWejblpDzduAbpmTEPNFToLqys0UZtVUVLXau27/eSJhNWZ4t+rqDPgHqhvKS3LT/HEG45WmSxoaY=
+	t=1785433075; cv=none; b=TzZG6GIPrtmLfBnrGsGRGgq41D7jqXfQgDOmJp1qosU3hDH/rkOlYClgeb6Hc7Q+x5xZ+Ta/Ehj4UQzWDI3Wd8G45Y+AcDBXmnBnicU/8EH/GA+NASI5czGKVv7zOn/zg/70MAI5PEUmGCvNVHFcruxZ2yuSgb3+f4ldKirDA/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785432899; c=relaxed/simple;
-	bh=Isx+B6xdzbsq3rz/C9gLO7gegxsd0kKUkaAbPzMUbAA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tDqm0TP0CYlBMjsE0my4+AGqvUCVQEVu0ZkjbkxAyQjHwZuIIyRRvWWW2xNd9thjiu0PwLog+vVho72GZuk9VbTVsccggxh3ddE8QRzjdtwjsm7r3skWQYABpHdczlxCanfTCuCWy4QR6nONMY5MRmydG7RUewT/aIqa5KN6lnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=A+CtcZRX; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1785433075; c=relaxed/simple;
+	bh=UKcci/u3uLnI6YykILGlNuelRAxr8ndlJA8CVilRJm8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uVOPqlRlCOt/HvN/PrsLMR7ML6FsxpOR5qtLlpNbbHdrNwl1YHoaEwdadHxxF/O7Cm8ywBW/Hl6miDPsjigd/AVecb0009FP3nzkgx63EmLGSaZOHmmLWBQY4aem0ZFSsKVP5hW/7jepkkX23qd7atwhvjMuMOFrf0cnJX/dpDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zxe0DBcy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="A+CtcZRX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1785432893;
-	bh=QuojUk9v7bC1Xv2fnJFdC2FZ+oPAmVVikvQPXiMuyX0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=A+CtcZRXj15w88sYYwj5P5aW9X4Jme11b6QIJq37Cwwi5WZLv8jEQTDyvzoa2a0gm
-	 rpgr9DGsGweYmGJHHOaTvDvKBW/UoNhufSQzed6ooAm/0kJpmzPSl9XEQ0KLtICj3A
-	 QNN06HoPhrlQLdgg3ePQQ0KQ1DZ9AK2n00fiLMy4CIcAVh4L25KhDzJ8jbV4tJVAg0
-	 V4Zi/xVDU0K+Yl/4e/vgCM9wGaWyLf8C1M9patNB12im2RC7hNbPsTp2yloOzuFNRb
-	 In++Bhp9oWojy+LBpSKxIxyaM/6y/B7p6WeSB8eQ4ZWMDDY4zYIOhdk+JuPaWRFVIb
-	 YYzQwAybK7UPA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4h9xCm4PBJz4wL9;
-	Fri, 31 Jul 2026 03:34:44 +1000 (AEST)
-Message-ID: <623a6fca-7b88-4508-8088-3882d6e54330@ozlabs.org>
-Date: Thu, 30 Jul 2026 18:34:40 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zxe0DBcy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF8231F000E9;
+	Thu, 30 Jul 2026 17:37:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785433073;
+	bh=2cxssjRLb23/bY3cD0Rs2QlWjP9nYvCg2nWJJctLs5k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Zxe0DBcyjPydTViWdxQVA/Cr2fEdmUPMvtJYgDhv1r7zeluN5doeuwsa8xvYD6ATy
+	 WKEmX3/1v01b2o5qUvoisYxGZvNIk1V6l45eSC51bcVduaQHpXSiXF9CO3Hq7ZflNL
+	 znUzPTf/MeCzy1KjV1cam3N0VZTLybEMV4LOb6tvVHpjtf7R6FNRZat/RahnOJ5AuI
+	 x5Pc1rvWkZnpiUChK6xY9D7Lxoj6/Rsta7VuN4s0v2JBRltortpb/YrrlX1Op2DuhV
+	 N4IauSOjf23mMIdAI+0FWRVbnGA8dYuiUBPCcdwrYv7QZr2LQHDPX9Y41qK/E3bZoT
+	 Z9jvCEFY/mbjw==
+Date: Thu, 30 Jul 2026 18:37:32 +0100
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+To: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	David Hildenbrand <david@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bjorn Helgaas <helgaas@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, "Liam R . Howlett" <liam@infradead.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Pratyush Yadav <pratyush@kernel.org>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>, 
+	Simona Vetter <simona.vetter@ffwll.ch>, Suren Baghdasaryan <surenb@google.com>, 
+	Vlastimil Babka <vbabka@kernel.org>, Dave Young <ruirui.yang@linux.dev>, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, kexec@lists.infradead.org, 
+	driver-core@lists.linux.dev
+Subject: Re: [PATCH v2 0/3] mm,kernfs,proc: Unmap mmaps of removed files via
+ file->f_mapping
+Message-ID: <amuAupu-w664Ubfc@lucifer>
+References: <20260725210549.3716546-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 3/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
-Content-Language: en-GB
-To: Alex Williamson <alex@shazbot.org>
-Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
- Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
- Pranjal Shrivastava <praan@google.com>, Longfang Liu
- <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260715174737.15287-1-matt@ozlabs.org>
- <20260715174737.15287-4-matt@ozlabs.org>
- <20260729115210.753ab8ce@shazbot.org>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <20260729115210.753ab8ce@shazbot.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260725210549.3716546-1-kwilczynski@kernel.org>
 
-Hi Alex,
+As discussed off-list I think this is fundamentally broken.
 
-On 29/07/2026 18:52, Alex Williamson wrote:
-> On Wed, 15 Jul 2026 18:47:26 +0100
-> Matt Evans <matt@ozlabs.org> wrote:
-> 
->> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
->> find a PFN.
->>
->> This supports multi-range DMABUFs, which typically would be used to
->> represent scattered spans but might even represent overlapping or
->> aliasing spans of PFNs.
->>
->> Because this is intended to be used in vfio_pci_core.c, we also need
->> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
-> 
-> Nit, it would be useful to mention the addition of vma_pgoff_adjust
-> here and justification for it added here as a static zero versus later
-> in the series where its value is updated.
+struct file is not a universal - multiple opens can map the same thing. And
+'these VMAs can only be selected by the struct file they were created through'
+is not so.
 
-Sure, good point.
+So you're not going to get every /dev/mem or /proc/bus/pci or whatever by
+checking against an arbitrary file.
 
->>
->> Signed-off-by: Matt Evans <matt@ozlabs.org>
->> ---
->>  drivers/vfio/pci/vfio_pci_dmabuf.c | 153 ++++++++++++++++++++++++++---
->>  drivers/vfio/pci/vfio_pci_priv.h   |  20 ++++
->>  2 files changed, 160 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
->> index c16f460c01d6..7c047400dfd1 100644
->> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
->> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
->> @@ -9,19 +9,6 @@
->>  
->>  MODULE_IMPORT_NS("DMA_BUF");
->>  
->> -struct vfio_pci_dma_buf {
->> -	struct dma_buf *dmabuf;
->> -	struct vfio_pci_core_device *vdev;
->> -	struct list_head dmabufs_elm;
->> -	size_t size;
->> -	struct phys_vec *phys_vec;
->> -	struct p2pdma_provider *provider;
->> -	u32 nr_ranges;
->> -	struct kref kref;
->> -	struct completion comp;
->> -	u8 revoked : 1;
->> -};
->> -
->>  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
->>  				   struct dma_buf_attachment *attachment)
->>  {
->> @@ -106,6 +93,146 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->>  	.release = vfio_pci_dma_buf_release,
->>  };
->>  
->> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *priv,
->> +			      struct vm_area_struct *vma,
->> +			      unsigned long fault_addr,
->> +			      unsigned int order,
->> +			      unsigned long *out_pfn)
->> +{
->> +	/*
->> +	 * Given a VMA (start, end, pgoffs) and a fault address,
->> +	 * search the corresponding DMABUF's phys_vec[] to find the
->> +	 * range representing the address's offset into the VMA, and
->> +	 * its PFN.
->> +	 *
->> +	 * The phys_vec[] ranges represent contiguous spans of VAs
->> +	 * upwards from the buffer offset 0; the actual PFNs might be
->> +	 * in any order, overlap/alias, etc.  Calculate an offset of
->> +	 * the desired page given VMA start/pgoff and address, then
->> +	 * search upwards from 0 to find which span contains it.
->> +	 *
->> +	 * On success, a valid PFN for a page sized by 'order' is
->> +	 * returned into out_pfn.
->> +	 *
->> +	 * Failure occurs if:
->> +	 * - A hugepage would cross the edge of the VMA,
->> +	 * - A hugepage isn't entirely contained within a range
->> +	 *   (including where it straddles the boundary between
->> +	 *   ranges),
->> +	 * - We find a range, but the final PFN isn't aligned to the
->> +	 *   requested order.
->> +	 *
->> +	 * Upon failure, -EAGAIN is returned and the caller is
->> +	 * expected to try again with a smaller order, which will
->> +	 * eventually succeed (order=0 will always work).
-> 
-> We typically use -EAGAIN to indicate a transient error where the caller
-> should try again with the same args.  We're documenting here that
-> -EAGAIN means to try again with different args.  Why wouldn't we use
-> something like -ERANGE to indicate that?
+The shared f_mapping already gives you the shared space in which the actual
+iomem range resides.
 
--EAGAIN didn't seem all that inappropriate, but you're correct that it
-isn't being used as a transient error here.  I'll change it to -ERANGE
-as suggested.
+The way things are mapped through the file rmap is via (mapping, pgoff).
 
->> +	 *
->> +	 * It's suboptimal if DMABUFs are created with neighbouring
->> +	 * ranges that are physically contiguous, since hugepages
->> +	 * can't straddle range boundaries.  (The construction of the
->> +	 * ranges should merge them in this case.)
->> +	 *
->> +	 * Finally, vma_pgoff_adjust is used with a DMABUF created for
->> +	 * a VFIO BAR mmap: a BAR mapped with vm_pgoff > 0 creates a
->> +	 * DMABUF such that byte 0 of the VMA corresponds to byte 0 of
->> +	 * the DMABUF and byte 'vm_pgoff << PAGE_SHIFT' into the BAR.
->> +	 * To avoid double-offsetting in this scenario, subtracting
->> +	 * vma_pgoff_adjust from this (non-zero) vm_pgoff generates
->> +	 * the effective offset.
->> +	 */
->> +
->> +	const unsigned long pagesize = PAGE_SIZE << order;
->> +	unsigned long vma_off = ((vma->vm_pgoff - priv->vma_pgoff_adjust) <<
->> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
->> +	unsigned long rounded_page_addr = ALIGN_DOWN(fault_addr, pagesize);
->> +	unsigned long rounded_page_end = rounded_page_addr + pagesize;
->> +	unsigned long fault_offset;
->> +	unsigned long fault_offset_end;
->> +	unsigned long range_start_offset = 0;
->> +	unsigned int i;
->> +	int ret;
->> +
-> 
-> AIUI, find_pfn should only act on a live dmabuf, but we're relying on
-> the caller to guarantee that it's live and not racing a revoke.  The
-> dmabuf is live if !revoked under memory_lock.  Should this annotate and
-> validate that requirement by adding a vdev arg so we can do:
-> 
-> 	lockdep_assert_held(&vdev->memory_lock);
-> 	if (priv->revoked) // later updated to status
-> 		return -ENODEV;
+Really the 'swapping' is telling you that what is a shared resource whose range
+needs to be removed.
 
-Yes, it makes no sense to call this when the buffer's revoked, and it's
-a good idea to both explicitly document/assert this.
+So what you need is to, at the point of the BAR being removed, unmap the correct
+range.
 
-I think your point regarding the extra vdev parameter -- as opposed to a
-local 'vdev = priv->vdev' dereference -- is that it should also assert
-that vdev is non-NULL, but one can't just read priv->vdev.  Dealing with
-the races having only priv takes some careful steps (see
-vfio_pci_mmap_huge_fault), so make it the caller's responsibility to
-provide a vdev.  This function can both check it's non-NULL, and verify
-it relates to priv, and then annotate vdev->memory_lock etc.
+So something like:
 
-> This also removes one level of dereferencing in the below dev_warns,
-> which is otherwise a bit suspect without the validation.  I realize the
-> mmap path does the validation, but this is an exposed internal API, not
-> a static function there.  Thanks,
+unmap_mapping_range(iomem_get_mapping(), ... pfn range ..., 1);
 
-[s/mmap path/the fault path/]  Yep, checks here make sense, thanks for
-the suggestions.
+It also seems revoke_iomem() is very conditional, only if
+CONFIG_IO_STRICT_DEVMEM and iomem!=relaxed.
 
+So the file thing just doesn't work + what you really need is to:
 
-Matt
+- Revoke at the right time
+- Revoke the physical range that is actually revoked
+- Revoke this everywhere
 
-> 
-> Alex
-> 
->> +	if (rounded_page_addr < vma->vm_start || rounded_page_end > vma->vm_end) {
->> +		if (order > 0)
->> +			return -EAGAIN;
->> +
->> +		/* A fault address outside of the VMA is absurd. */
->> +		dev_warn_ratelimited(
->> +			&priv->vdev->pdev->dev,
->> +			"Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
->> +			fault_addr, vma->vm_start, vma->vm_end);
->> +		return -EFAULT;
->> +	}
->> +
->> +	/*
->> +	 * fault_offset[_end] is the span within the DMABUF
->> +	 * corresponding to the faulting page:
->> +	 */
->> +	if (unlikely(check_add_overflow(rounded_page_addr - vma->vm_start,
->> +					vma_off, &fault_offset) ||
->> +		     check_add_overflow(fault_offset, pagesize,
->> +					&fault_offset_end)))
->> +		return -EFAULT;
->> +
->> +	/*
->> +	 * Iterate over ranges in the buffer, summing their lengths:
->> +	 * range_start_offset represents the current range's starting
->> +	 * offset in the buffer (from 0 upwards).
->> +	 *
->> +	 * A failure for order == 0 is unexpected, and triggers a
->> +	 * fault/warn.
->> +	 */
->> +	ret = (order == 0) ? -EFAULT : -EAGAIN;
->> +
->> +	for (i = 0; i < priv->nr_ranges; i++) {
->> +		size_t range_len = priv->phys_vec[i].len;
->> +
->> +		/* Early exit if range starts after the page end */
->> +		if (fault_offset_end <= range_start_offset)
->> +			break;
->> +
->> +		if (fault_offset >= range_start_offset &&
->> +		    fault_offset_end <= range_start_offset + range_len) {
->> +			/*
->> +			 * The faulting page is wholly contained
->> +			 * within the span represented by this range,
->> +			 * so validate PFN alignment for the order.
->> +			 * The if() condition ensures the pfn
->> +			 * arithmetic won't overflow.
->> +			 */
->> +			unsigned long pfn =
->> +				((fault_offset - range_start_offset) +
->> +				 priv->phys_vec[i].paddr) >> PAGE_SHIFT;
->> +
->> +			if (IS_ALIGNED(pfn, 1 << order)) {
->> +				*out_pfn = pfn;
->> +				ret = 0;
->> +			}
->> +			/*
->> +			 * Else order > 0; EAGAIN retries with smaller
->> +			 * order
->> +			 */
->> +			break;
->> +		}
->> +		range_start_offset += range_len;
->> +	}
->> +
->> +	if (order == 0 && ret != 0)
->> +		/*
->> +		 * The address fell outside of the span represented by
->> +		 * the (concatenated) ranges.  As setup of a mapping
->> +		 * ensures that the VMA is <= the total size of the
->> +		 * ranges this should never happen.  If it does, warn
->> +		 * and SIGBUS.
->> +		 */
->> +		dev_warn_ratelimited(
->> +			&priv->vdev->pdev->dev,
->> +			"No range for addr 0x%lx, order %d: VMA 0x%lx-0x%lx pgoff 0x%lx, %u ranges, size 0x%zx\n",
->> +			fault_addr, order, vma->vm_start, vma->vm_end,
->> +			vma->vm_pgoff, priv->nr_ranges, priv->size);
->> +
->> +	return ret;
->> +}
->> +
->>  /*
->>   * This is a temporary "private interconnect" between VFIO DMABUF and iommufd.
->>   * It allows the two co-operating drivers to exchange the physical address of
->> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
->> index fca9d0dfac90..c8f6f959056a 100644
->> --- a/drivers/vfio/pci/vfio_pci_priv.h
->> +++ b/drivers/vfio/pci/vfio_pci_priv.h
->> @@ -23,6 +23,20 @@ struct vfio_pci_ioeventfd {
->>  	bool			test_mem;
->>  };
->>  
->> +struct vfio_pci_dma_buf {
->> +	struct dma_buf *dmabuf;
->> +	struct vfio_pci_core_device *vdev;
->> +	struct list_head dmabufs_elm;
->> +	size_t size;
->> +	struct phys_vec *phys_vec;
->> +	struct p2pdma_provider *provider;
->> +	u32 nr_ranges;
->> +	struct kref kref;
->> +	struct completion comp;
->> +	unsigned long vma_pgoff_adjust;
->> +	u8 revoked : 1;
->> +};
->> +
->>  bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
->>  void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
->>  
->> @@ -114,6 +128,12 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->>  	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->>  }
->>  
->> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *vpdmabuf,
->> +			      struct vm_area_struct *vma,
->> +			      unsigned long address,
->> +			      unsigned int order,
->> +			      unsigned long *out_pfn);
->> +
->>  #ifdef CONFIG_VFIO_PCI_DMABUF
->>  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->>  				  struct vfio_device_feature_dma_buf __user *arg,
-> 
+So. I apologise. But. Father forgive me for I have slopped :)
 
+This isn't my area of the kernel so I got the AI to generate something, which I
+enclose.
+
+I left all the gigantic horrible comments in to help.
+
+It includes a fix up on the pci_iobar_pfn() thing you mentioned off-list which
+sets the wrong vma->vm_pgoff for removal (ugh).
+
+The pci_mmap_legacy_page_range() stuff probably just needs converting somehow
+(and if it's broken there today it'll just have to stay broken, the range needs
+to be shared somehow).
+
+Anyway it at least gives an outline of a different road. So treat it as a 'here
+are some thoughts' thing.
+
+Cheers, Lorenzo
+
+----8<----
+
+From 525ce7631fa69aa9297e9fff6289e13316376e01 Mon Sep 17 00:00:00 2001
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Date: Thu, 30 Jul 2026 18:15:20 +0100
+Subject: [PATCH] PCI: Revoke BAR mappings on device removal and BAR resize
+
+Userspace mappings of a PCI BAR survive removal of the device and resizing
+of the BAR.  Nothing faults afterwards, so the process cannot tell that the
+device has gone: removal clears Bus Master but leaves Memory Space Enable
+set, so the device still decodes its BARs and reads keep returning register
+contents, and writes are still accepted.  The addresses are released on
+removal, and explicitly reassigned by a resize, after which the mapping
+reaches whatever now occupies them.
+
+These mappings are established through three interfaces, all of which
+attach their VMAs to the shared iomem address space:
+
+ - the sysfs resourceN and resourceN_wc files, whose bin_attribute sets
+   .f_mapping = iomem_get_mapping,
+ - /proc/bus/pci/BB/DD.F, whose ->open() does the same, and
+ - /dev/mem.
+
+On the sysfs side this is a regression.  kernfs_drain_open_files() unmaps
+file_inode(of->file)->i_mapping, which held these VMAs until commit
+636b21b50152 ("PCI: Revoke mappings like devmem") swapped f_mapping to the
+iomem address space, after which the drain unmaps an address space that
+contains none of them.  procfs never unmapped anything at all, and /dev/mem
+mappings are only revoked by revoke_iomem() when a driver claims the
+region, which is compiled out unless CONFIG_IO_STRICT_DEVMEM, returns early
+under iomem=relaxed, and in any case need not happen before the address is
+handed to another device.
+
+There is no need to reach these VMAs through the struct file they were
+created through.  The iomem address space is indexed by PFN:
+pci_mmap_resource_range() adds the BAR's physical start to vm_pgoff, which
+is precisely how revoke_iomem() already finds every mapper of a physical
+range with a plain unmap_mapping_range().
+
+So factor that out as iomem_revoke_range(), without the
+CONFIG_IO_STRICT_DEVMEM and devmem_is_allowed() gates - those express the
+iomem= policy on whether /dev/mem may map busy regions, which has no
+bearing on a device going away - and call it for each BAR from
+pci_destroy_dev() and from the BAR resize path.  All three interfaces are
+covered at once, and a read through a stale mapping now raises SIGBUS
+instead of returning stale data.
+
+pci_destroy_dev() revokes after device_del() has drained the sysfs
+attributes and pci_proc_detach_device() has removed the procfs entry, so no
+new mapping can be established, and before pci_free_resources() releases
+the addresses, so dev->resource[] still describes what userspace was given.
+
+I/O BARs are mapped at an arch-specific PFN rather than at the resource
+address, so pci_iobar_pfn() now returns that PFN instead of adding it to a
+VMA's vm_pgoff, which lets the revoke path use it as well.  All three
+implementations already derived it from the pci_dev and the BAR number
+alone, so this is mechanical.  Only powerpc, sparc and xtensa set
+arch_can_pci_mmap_io(); elsewhere pci_iobar_pfn() remains a stub returning
+-EINVAL, now a static inline rather than a macro so that it type-checks its
+arguments.
+
+Fixes: 636b21b50152 ("PCI: Revoke mappings like devmem")
+Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+Assisted-by: LLM # all of it...
+---
+ arch/powerpc/kernel/pci-common.c |  4 +--
+ arch/sparc/kernel/pci.c          |  4 +--
+ arch/xtensa/kernel/pci.c         |  4 +--
+ drivers/pci/mmap.c               | 50 ++++++++++++++++++++++++++++++--
+ drivers/pci/pci-sysfs.c          |  3 ++
+ drivers/pci/pci.h                |  1 +
+ drivers/pci/remove.c             |  9 ++++++
+ include/linux/ioport.h           |  1 +
+ include/linux/pci.h              | 13 +++++++--
+ kernel/resource.c                | 33 ++++++++++++++++-----
+ 10 files changed, 105 insertions(+), 17 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 3c4ca90e2ab7..e983280c7248 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -501,7 +501,7 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+  * Platform support for /proc/bus/pci/X/Y mmap()s.
+  *  -- paulus.
+  */
+-int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, unsigned long *pfn)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+@@ -512,7 +512,7 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ 	/* Convert to an offset within this PCI controller */
+ 	ioaddr -= (unsigned long)hose->io_base_virt - _IO_BASE;
+
+-	vma->vm_pgoff += (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
++	*pfn = (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
+ 	return 0;
+ }
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 1603d50fdcad..8e4eedfd3ecb 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -753,7 +753,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ }
+
+ /* Platform support for /proc/bus/pci/X/Y mmap()s. */
+-int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, unsigned long *pfn)
+ {
+ 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+ 	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+@@ -761,7 +761,7 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ 	if (!pbm)
+ 		return -EINVAL;
+
+-	vma->vm_pgoff += (ioaddr + pbm->io_space.start) >> PAGE_SHIFT;
++	*pfn = (ioaddr + pbm->io_space.start) >> PAGE_SHIFT;
+
+ 	return 0;
+ }
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 305031551136..ea9cf832362d 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -74,7 +74,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+  *  -- paulus.
+  */
+
+-int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, unsigned long *pfn)
+ {
+ 	struct pci_controller *pci_ctrl = (struct pci_controller*) pdev->sysdata;
+ 	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+@@ -85,6 +85,6 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ 	/* Convert to an offset within this PCI controller */
+ 	ioaddr -= (unsigned long)pci_ctrl->io_space.base;
+
+-	vma->vm_pgoff += (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
++	*pfn = (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
+ 	return 0;
+ }
+diff --git a/drivers/pci/mmap.c b/drivers/pci/mmap.c
+index 8da3347a95c4..1969a93f64e6 100644
+--- a/drivers/pci/mmap.c
++++ b/drivers/pci/mmap.c
+@@ -38,11 +38,16 @@ int pci_mmap_resource_range(struct pci_dev *pdev, int bar,
+ 		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
+
+ 	if (mmap_state == pci_mmap_io) {
+-		ret = pci_iobar_pfn(pdev, bar, vma);
++		unsigned long pfn;
++
++		ret = pci_iobar_pfn(pdev, bar, &pfn);
+ 		if (ret)
+ 			return ret;
+-	} else
++
++		vma->vm_pgoff += pfn;
++	} else {
+ 		vma->vm_pgoff += (pci_resource_start(pdev, bar) >> PAGE_SHIFT);
++	}
+
+ 	vma->vm_ops = &pci_phys_vm_ops;
+
+@@ -79,3 +84,44 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ }
+
+ #endif
++
++/**
++ * pci_revoke_bar_mappings - revoke userspace mappings of a device's BARs
++ * @dev: Device whose BAR mappings are to be revoked.
++ *
++ * Unmap every userspace mapping of @dev's BARs, whichever interface
++ * established it: the sysfs resource files, /proc/bus/pci or /dev/mem.  All of
++ * these map through the shared iomem address space at the page offset the BAR
++ * is mapped at, so unmapping that range reaches them all.  Subsequent accesses
++ * raise SIGBUS.
++ *
++ * The caller must have made new mappings impossible, and must call this while
++ * @dev's resources still describe the addresses handed out to userspace.
++ */
++void pci_revoke_bar_mappings(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		struct resource *res = pci_resource_n(dev, i);
++		resource_size_t len = pci_resource_len(dev, i);
++		unsigned long pfn;
++
++		/*
++		 * An unassigned BAR is sized but starts at zero, so revoking
++		 * it would unmap unrelated mappings of low physical memory.
++		 */
++		if (!len || (res->flags & IORESOURCE_UNSET))
++			continue;
++
++		if (res->flags & IORESOURCE_MEM) {
++			iomem_revoke_range(res->start, len);
++		} else if (res->flags & IORESOURCE_IO) {
++			/* Fails unless the arch can mmap I/O BARs at all. */
++			if (pci_iobar_pfn(dev, i, &pfn))
++				continue;
++
++			iomem_revoke_range(PFN_PHYS(pfn), len);
++		}
++	}
++}
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5ec0b245a69b..b4d138a484dc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1714,6 +1714,9 @@ static ssize_t __resource_resize_store(struct device *dev, int n,
+
+ 	sysfs_remove_groups(&pdev->dev.kobj, pci_dev_resource_attr_groups);
+
++	/* The BAR addresses below are about to be reassigned. */
++	pci_revoke_bar_mappings(pdev);
++
+ 	ret = pci_resize_resource(pdev, n, size, 0);
+ 	if (ret)
+ 		pci_warn(pdev, "Failed to resize BAR %d: %pe\n",
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4469e1a77f3c..266b41e95e02 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -229,6 +229,7 @@ enum pci_mmap_api {
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
++void pci_revoke_bar_mappings(struct pci_dev *dev);
+
+ bool pci_reset_supported(struct pci_dev *dev);
+ void pci_init_reset_methods(struct pci_dev *dev);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index d8bffa21498a..a9414c4ad593 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -45,6 +45,15 @@ static void pci_destroy_dev(struct pci_dev *dev)
+
+ 	device_del(&dev->dev);
+
++	/*
++	 * The sysfs resource files are gone, drained by device_del(), and so is
++	 * the /proc/bus/pci entry, removed by pci_proc_detach_device(), so no
++	 * new mapping can be established.  Revoke the ones that remain before
++	 * the addresses are released below and possibly handed to another
++	 * device.
++	 */
++	pci_revoke_bar_mappings(dev);
++
+ 	down_write(&pci_bus_sem);
+ 	list_del(&dev->bus_list);
+ 	up_write(&pci_bus_sem);
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index f7930b3dfd0a..ec1b2d08556e 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -460,6 +460,7 @@ static inline void irqresource_disabled(struct resource *res, u32 irq)
+ }
+
+ extern struct address_space *iomem_get_mapping(void);
++void iomem_revoke_range(resource_size_t start, resource_size_t size);
+
+ #endif /* __ASSEMBLY__ */
+ #endif	/* _LINUX_IOPORT_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 64b308b6e61c..df426d054faa 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2274,11 +2274,20 @@ int pci_mmap_resource_range(struct pci_dev *dev, int bar,
+ #define arch_can_pci_mmap_wc()		0
+ #endif
+
++/*
++ * pci_iobar_pfn() yields the PFN at which an I/O BAR is mapped in the shared
++ * iomem address space, which is where both the mmap paths and the revocation
++ * of those mappings need it.
++ */
+ #ifndef arch_can_pci_mmap_io
+ #define arch_can_pci_mmap_io()		0
+-#define pci_iobar_pfn(pdev, bar, vma) (-EINVAL)
++static inline int pci_iobar_pfn(struct pci_dev *pdev, int bar,
++				unsigned long *pfn)
++{
++	return -EINVAL;
++}
+ #else
+-int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma);
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, unsigned long *pfn);
+ #endif
+
+ #ifndef pci_root_bus_fwnode
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 3d17e3196a3e..6cf2a30e1109 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1265,21 +1265,40 @@ static DECLARE_WAIT_QUEUE_HEAD(muxed_resource_wait);
+
+ static struct inode *iomem_inode;
+
+-#ifdef CONFIG_IO_STRICT_DEVMEM
+-static void revoke_iomem(struct resource *res)
++/**
++ * iomem_revoke_range - unmap all userspace mappings of a physical range
++ * @start: First byte of the range.
++ * @size: Size of the range in bytes.
++ *
++ * Zap the page tables of every userspace mapping of [@start, @start + @size),
++ * however it was established: /dev/mem, the PCI sysfs resource files or
++ * /proc/bus/pci.  All of these attach their VMAs to the shared iomem address
++ * space, whose page offsets are PFNs, so a single range unmap reaches every
++ * mapper regardless of the file it came in through.
++ *
++ * The caller is responsible for ensuring that no new mapping of the range can
++ * be established.  These are VM_PFNMAP mappings with no fault handler, so
++ * userspace touching the range afterwards takes SIGBUS.
++ */
++void iomem_revoke_range(resource_size_t start, resource_size_t size)
+ {
+ 	/* pairs with smp_store_release() in iomem_init_inode() */
+ 	struct inode *inode = smp_load_acquire(&iomem_inode);
+
+ 	/*
+-	 * Check that the initialization has completed. Losing the race
+-	 * is ok because it means drivers are claiming resources before
+-	 * the fs_initcall level of init and prevent iomem_get_mapping users
+-	 * from establishing mappings.
++	 * Check that the initialization has completed.  Losing the race is ok
++	 * because it means no iomem_get_mapping() user can have established a
++	 * mapping yet.
+ 	 */
+ 	if (!inode)
+ 		return;
+
++	unmap_mapping_range(inode->i_mapping, start, size, 1);
++}
++
++#ifdef CONFIG_IO_STRICT_DEVMEM
++static void revoke_iomem(struct resource *res)
++{
+ 	/*
+ 	 * The expectation is that the driver has successfully marked
+ 	 * the resource busy by this point, so devmem_is_allowed()
+@@ -1295,7 +1314,7 @@ static void revoke_iomem(struct resource *res)
+ 		return;
+ 	}
+
+-	unmap_mapping_range(inode->i_mapping, res->start, resource_size(res), 1);
++	iomem_revoke_range(res->start, resource_size(res));
+ }
+ #else
+ static void revoke_iomem(struct resource *res) {}
+--
+2.55.0
