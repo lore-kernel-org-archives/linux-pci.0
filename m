@@ -1,157 +1,205 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A3B31F990;
-	Thu, 30 Jul 2026 08:24:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C629638DC4F
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 08:25:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785399862; cv=none; b=uIEkysgaNRa7eW5Zrh/3gb0lVOrcs74ISjctd0S8Fsbfyupz3pzv4ZTebWyYYlqbzu9x/B/g1HyL9f8EDHlJHL33LIDYHAOazosEg/k6rfLzxujxKREnd4s+9V55JfH8FWW/ApVYaDC2kZrtUHuOz9vecokRmDMRyjluHxmW1nM=
+	t=1785399905; cv=none; b=YPgZU9c++v2GgGfqWUSrkrwpQigqY3Mc7FBAuhnW/J94e9WB4wQrkRD0umA/C8R9FTBNnFqfZ2ecNc+shcpBBaa1/QN7vbNFq+4nsueoUi63Xwv2QWn6OJ1PmfcGwPcNSCsbUdtUgtq0RLoJDrGyA4V+hBNn5gZWt6toj9rAcf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785399862; c=relaxed/simple;
-	bh=mPkyEzGy4nzPfbLXduTY8moq3y4EYaSZcpWZjw3q2Yw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WVHpmtsyxvZyWIvQQ/4sJ5+FQyLHtsGSlkD9bLOV7LHg2XXtxhctD6aeAiuKYcEElZecyzWnD+MfXDNTDcPYqk+uR+J9CEHQJKlw7jG/pH8r2gVxvc4S+idtLRY3LNu+7vD9VgkPJonea1qpZz9ITrGeRw41WROTYCEiJSpaqc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ChBSdYm3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785399905; c=relaxed/simple;
+	bh=3cSvDMCycVdP/BhQ9Ps3iI4eU+Rcr85wJ7Y94w0R4rI=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=QzZavVSCgE2pGaTaLml+vRhoHrI/bAScZnPh7udJEgeek2VRFGGenVPBZ2P1xgoNyS9mimQFUm8iSRCia6t2S3LiiertiSTg7ENS6v4ro9wWiWjoQGWYvIUSqFuIBZQ3X6kk5vX8xe7ai/WcdcPiQpNy3szvvpd1wRD/m7Mgq5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b0EwPfqW; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ChBSdYm3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EDFE1F000E9;
-	Thu, 30 Jul 2026 08:24:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785399861;
-	bh=VXQZIQoVKxftmgxSpsfIIxOpHqOtOFC0MrEElaZfb68=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ChBSdYm3VX7ZR8sCoLMTJcd3DQNuh7j0CXjLFvbLn+a+u1rJQcv051pGJ3Gh7onak
-	 EjI4HcBfmFntcRanNhQ7fX1sACnhGJlyFu7xRwX8y13yNrOrxknwpaS7HbyRjgDZCR
-	 EuIX5Czn+o72EjyfAMLyCKqWXb8M6Tn17jc7Lk2j7QaObnD42gQxrLhW+tl4HnaZNK
-	 6v7pTRi0VcQDJFd1/QJDvwH7CdFCl8nCBLqt7cuow2NyHpCW/yWFM1i+MVQTBZBxrv
-	 EgWn5f/ieaBn+l6gNk0KXMinAIZqPDl/bhZHxtyME403gUTL3pBcp5S9lWsO64aazr
-	 DXS5f/gwAp32w==
-Date: Thu, 30 Jul 2026 09:24:00 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bjorn Helgaas <helgaas@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, "Liam R . Howlett" <liam@infradead.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Pratyush Yadav <pratyush@kernel.org>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>, 
-	Simona Vetter <simona.vetter@ffwll.ch>, Suren Baghdasaryan <surenb@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Dave Young <ruirui.yang@linux.dev>, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, kexec@lists.infradead.org, 
-	driver-core@lists.linux.dev
-Subject: Re: [PATCH v2 0/3] mm,kernfs,proc: Unmap mmaps of removed files via
- file->f_mapping
-Message-ID: <amsJ_T3qTJ-TJcwk@lucifer>
-References: <20260725210549.3716546-1-kwilczynski@kernel.org>
- <20260725143737.daa698b50289257fbaa9c6f1@linux-foundation.org>
- <20260726001049.GA2219014@rocinante>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b0EwPfqW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785399904; x=1816935904;
+  h=date:from:to:cc:subject:message-id;
+  bh=3cSvDMCycVdP/BhQ9Ps3iI4eU+Rcr85wJ7Y94w0R4rI=;
+  b=b0EwPfqWaRZv6LzyI26MNR0uSdaQOV8Z+u5gL5mA94GVBF1XYNVTSaqW
+   X4+6FcaMFSaEFfAuxiG98Rq6FKfBO8zEQzvDTfbQmKarcF85IUc+Fqgsd
+   /Wp1mkJ21aNJdQsFtmwF9PJCwUoSA6reHUCLchqN32xDQNs1VaitLYI8C
+   qWe0SyE1VI317qssZSgn3L7Vumjq0Q37mxCeXt2xWkuV0J33mAFvqKwHa
+   C0FVzZAZ5K2vwsyVj/unCf8vPqPVwMDgvZpjB1X+JnpoFFtZLUP5VPGn2
+   VlC3ZIq+pjxiGW8siLFCgNKdrax39ngDVXkQzdO+gsQBsKMHCQjfeqY66
+   Q==;
+X-CSE-ConnectionGUID: s7ZweJGQQRWtfNnvA2KWgg==
+X-CSE-MsgGUID: VlfnYSBcRrq3rxJ39P9FHA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="86091502"
+X-IronPort-AV: E=Sophos;i="6.25,194,1779174000"; 
+   d="scan'208";a="86091502"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2026 01:25:03 -0700
+X-CSE-ConnectionGUID: Bzy9T5bKTKyKMkge99zBPw==
+X-CSE-MsgGUID: RSvCDPbdSkKLklghYuYeLg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,194,1779174000"; 
+   d="scan'208";a="258998362"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by orviesa010.jf.intel.com with ESMTP; 30 Jul 2026 01:25:03 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wpM4a-00000000gI8-0qP4;
+	Thu, 30 Jul 2026 08:25:00 +0000
+Date: Thu, 30 Jul 2026 16:24:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/dwc-imx6] BUILD SUCCESS
+ 5a53462aba161e809de90d45f2a39510a88b6ede
+Message-ID: <202607301603.oIe2Ra6R-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260726001049.GA2219014@rocinante>
 
-On Sun, Jul 26, 2026 at 10:22:52AM +0900, Krzysztof Wilczyński wrote:
-> Hello,
->
-> > > The PCI resource files in sysfs and the /proc/bus/pci device files swap
-> > > their f_mapping to the shared iomem address space at open time, so that
-> > > revoke_iomem() can unmap userspace mappings when a driver claims a
-> > > region, see commit 636b21b50152 ("PCI: Revoke mappings like devmem").
-> > >
-> > > Their VMAs are therefore attached to the shared address space, which
-> > > neither removal path reaches: kernfs_drain_open_files() unmaps the
-> > > sysfs inode's own mapping, which contains none of them, and
-> > > proc_entry_rundown() does not unmap anything at all.
-> > >
-> > > As a result, userspace mappings of PCI BARs survive device removal,
-> > > and also survive a BAR resize on the sysfs side, keeping stale PTEs
-> > > into physical address space that the kernel may have reassigned since.
-> > > A mapping made before the device is removed still returns the previous
-> > > register value after the device has been released, through both
-> > > interfaces.
-> >
-> > Thanks.  Can we please have full description of the userspace-visible
-> > effects of this?
->
-> Definitely.  From the PCI side, to put this into perspective:
->
-> Without this series, a process that maps a BAR keeps a fully working
-> mapping after the device is removed or its VFs torn down.  The same
-> applies when a BAR is resized, as the resize removes and recreates the
-> resource groups.  Nothing faults, so the process cannot tell the device
-> has gone.  A read returns the register contents as they were, because
-> removal clears Bus Master but leaves Memory Space Enable set, so the
-> device still decodes its BARs, and, as these attributes are writable,
-> a write is still accepted and reaches it.  Those addresses are released
-> on removal and can be assigned to another device, which a BAR resize
-> does explicitly, and the mapping then reaches whatever occupies them.
->
-> On the sysfs side this most likely has been a regression as the
-> kernfs_drain_open_files() unmapped these mappings correctly until
-> commit 636b21b50152 ("PCI: Revoke mappings like devmem") swapped
-> f_mapping to the shared iomem address space, after which the drain
-> walked an interval tree the VMAs were no longer on.  The procfs side
-> never unmapped anything, so there the behaviour is new.
->
-> A read here returns another device's register contents, and as read to
-> clear registers are common, it can also acknowledge an interrupt or clear
-> an error the owning driver has not seen.  A write can be worse, as an
-> offset that was a control register on the old device may be a doorbell,
-> a reset bit or a DMA descriptor address on the new one.
->
-> With this series the mapping is torn down as part of the removal, and
-> the next access raises SIGBUS, so userspace gets an error instead of
-> silently reading stale or unrelated registers.  Both interfaces behave
-> the same way afterwards.
->
-> Tested on 7.2-rc1 with and without the series applied.  In each case
-> the file is mmap'd, the device is removed while the mapping is held,
-> and the mapping is then accessed:
->
->   - sysfs resource read after removal:
->        before: returns 0x18140241, the value read before the removal
->        after:  SIGBUS
->
->    - sysfs resource written after removal:
->        before: the write is accepted and reads back 0x00000000
->        after:  SIGBUS on the write
->
->    - sysfs resource mmap, fd closed, then read after removal:
->        before: returns 0x18140241
->        after:  SIGBUS
->
->    - sysfs resource mmap, moved with mremap and split with munmap, then forked, both read after removal:
->        before: parent and child both return 0x18140241
->        after:  SIGBUS in both
->
->    - two sysfs resources of different devices mmap, one device removed, both read:
->        before: neither is unmapped, both return their values
->        after:  the removed device raises SIGBUS, the other still returns 0x48140240
->
->    - /proc/bus/pci used to mmap resource, read after removal:
->        before: returns 0x18140241
->        after:  SIGBUS
->
-> I hope this helps!
->
-> > AI review might have found a few things:
-> > 	https://sashiko.dev/#/patchset/20260725210549.3716546-1-kwilczynski@kernel.org
->
-> I have seen the reviews.  Will reply to each.
->
-> Thank you!
->
-> 	Krzysztof
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-imx6
+branch HEAD: 5a53462aba161e809de90d45f2a39510a88b6ede  PCI: dwc: Force L2 entry during suspend if the platform powers off RC unconditionally
 
-Thanks for the details, be good to put this concisely in the cover
-letter/relevant commit messages on respin.
+elapsed time: 903m
 
-Cheers, Lorenzo
+configs tested: 128
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260730    gcc-11.5.0
+arc                  randconfig-001-20260730    gcc-8.5.0
+arc                  randconfig-002-20260730    gcc-8.5.0
+arm                      omap2plus_defconfig    gcc-16.1.0
+arm                  randconfig-001-20260730    gcc-8.5.0
+arm                  randconfig-002-20260730    gcc-15.2.0
+arm                  randconfig-002-20260730    gcc-8.5.0
+arm                  randconfig-003-20260730    gcc-13.4.0
+arm                  randconfig-003-20260730    gcc-8.5.0
+arm                  randconfig-004-20260730    clang-24
+arm                  randconfig-004-20260730    gcc-8.5.0
+arm                       realview_defconfig    clang-17
+arm64                         randconfig-001    gcc-14.3.0
+arm64                randconfig-001-20260730    gcc-14.3.0
+arm64                randconfig-001-20260730    gcc-15.2.0
+arm64                randconfig-002-20260730    gcc-14.3.0
+arm64                randconfig-002-20260730    gcc-15.2.0
+arm64                randconfig-003-20260730    gcc-14.3.0
+arm64                randconfig-003-20260730    gcc-15.2.0
+arm64                randconfig-004-20260730    gcc-14.3.0
+arm64                randconfig-004-20260730    gcc-15.2.0
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260730    gcc-14.3.0
+csky                 randconfig-001-20260730    gcc-15.2.0
+csky                 randconfig-002-20260730    gcc-14.3.0
+csky                 randconfig-002-20260730    gcc-15.2.0
+hexagon                       randconfig-001    clang-24
+hexagon              randconfig-001-20260730    clang-24
+hexagon              randconfig-002-20260730    clang-24
+i386                buildonly-randconfig-001    gcc-14
+i386       buildonly-randconfig-001-20260730    gcc-14
+i386       buildonly-randconfig-002-20260730    gcc-14
+i386       buildonly-randconfig-003-20260730    gcc-14
+i386       buildonly-randconfig-004-20260730    gcc-14
+i386       buildonly-randconfig-005-20260730    gcc-14
+i386       buildonly-randconfig-006-20260730    gcc-14
+i386                          randconfig-001    gcc-14
+i386                 randconfig-001-20260730    gcc-14
+i386                 randconfig-002-20260730    gcc-14
+i386                 randconfig-003-20260730    gcc-14
+i386                 randconfig-004-20260730    gcc-14
+i386                 randconfig-005-20260730    gcc-14
+i386                 randconfig-006-20260730    gcc-14
+i386                 randconfig-007-20260730    gcc-14
+i386                 randconfig-011-20260730    clang-22
+i386                 randconfig-012-20260730    clang-22
+i386                 randconfig-013-20260730    clang-22
+i386                 randconfig-014-20260730    clang-22
+i386                 randconfig-015-20260730    clang-22
+i386                 randconfig-016-20260730    clang-22
+i386                 randconfig-017-20260730    clang-22
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260730    clang-24
+loongarch            randconfig-002-20260730    clang-24
+m68k                      m5249evb_defconfig    gcc-16.1.0
+mips                         ath25_defconfig    clang-24
+mips                          ip30_defconfig    gcc-16.1.0
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260730    clang-24
+nios2                randconfig-002-20260730    clang-24
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc                        randconfig-001    gcc-14.3.0
+parisc               randconfig-001-20260730    gcc-14.3.0
+parisc               randconfig-002-20260730    gcc-14.3.0
+powerpc              randconfig-001-20260730    gcc-14.3.0
+powerpc              randconfig-002-20260730    gcc-14.3.0
+powerpc64            randconfig-001-20260730    gcc-14.3.0
+powerpc64            randconfig-002-20260730    gcc-14.3.0
+riscv                randconfig-001-20260730    gcc-15.2.0
+riscv                randconfig-002-20260730    gcc-15.2.0
+s390                 randconfig-001-20260730    gcc-15.2.0
+s390                 randconfig-002-20260730    gcc-15.2.0
+sh                                 defconfig    gcc-16.1.0
+sh                   randconfig-001-20260730    gcc-15.2.0
+sh                   randconfig-002-20260730    gcc-15.2.0
+sh                          se7705_defconfig    gcc-16.1.0
+sparc                         randconfig-001    clang-24
+sparc                randconfig-001-20260730    clang-24
+sparc                randconfig-002-20260730    clang-24
+sparc64              randconfig-001-20260730    clang-24
+sparc64              randconfig-002-20260730    clang-24
+um                   randconfig-001-20260730    clang-24
+um                   randconfig-002-20260730    clang-24
+x86_64              buildonly-randconfig-001    gcc-14
+x86_64     buildonly-randconfig-001-20260730    gcc-14
+x86_64     buildonly-randconfig-002-20260730    gcc-14
+x86_64     buildonly-randconfig-003-20260730    gcc-14
+x86_64     buildonly-randconfig-004-20260730    gcc-14
+x86_64     buildonly-randconfig-005-20260730    gcc-14
+x86_64     buildonly-randconfig-006-20260730    gcc-14
+x86_64                                 kexec    clang-22
+x86_64                        randconfig-001    clang-22
+x86_64               randconfig-001-20260730    clang-22
+x86_64               randconfig-002-20260730    clang-22
+x86_64               randconfig-003-20260730    clang-22
+x86_64               randconfig-004-20260730    clang-22
+x86_64               randconfig-005-20260730    clang-22
+x86_64               randconfig-006-20260730    clang-22
+x86_64               randconfig-011-20260730    clang-22
+x86_64               randconfig-012-20260730    clang-22
+x86_64               randconfig-013-20260730    clang-22
+x86_64               randconfig-014-20260730    clang-22
+x86_64               randconfig-015-20260730    clang-22
+x86_64               randconfig-016-20260730    clang-22
+x86_64                        randconfig-071    gcc-14
+x86_64               randconfig-071-20260730    gcc-12
+x86_64               randconfig-071-20260730    gcc-14
+x86_64               randconfig-072-20260730    gcc-12
+x86_64               randconfig-072-20260730    gcc-14
+x86_64               randconfig-073-20260730    gcc-12
+x86_64               randconfig-073-20260730    gcc-14
+x86_64               randconfig-074-20260730    gcc-12
+x86_64               randconfig-074-20260730    gcc-14
+x86_64               randconfig-075-20260730    gcc-12
+x86_64               randconfig-075-20260730    gcc-14
+x86_64               randconfig-076-20260730    gcc-12
+x86_64               randconfig-076-20260730    gcc-14
+x86_64                          rhel-9.4-bpf    gcc-14
+xtensa               randconfig-001-20260730    clang-24
+xtensa               randconfig-002-20260730    clang-24
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
