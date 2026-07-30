@@ -1,82 +1,189 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7158934404F
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 09:03:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81A47326945
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 10:01:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785402234; cv=none; b=g4tJZmWa/POewbpTvfwlFpGlIGwKbWfbvchUEZLJqVUC+NNqQoNWJXhg2eVwBx6UrGbmvTE6sG8tF+NkpqpkmUtCStuA6r1AzpXIeRO/+ue3NfhjyZqqWajzguY9DLgdX7OFpABcH+QUd0nQyjwKfeOdDslAfz/+411O7hBW+SQ=
+	t=1785405700; cv=none; b=Rk8BwO5KL8vWilskQswr1WcvHV+CRcBtm5pjOO4yJAdIM5WfTz4/w+GatLyvhgnEvsRXheLMoDNiMXW9hTXc2uYrEK0eyVhZfxS3S5RwuCVihR3DeCN4SmW8/lsYs3fSnA3HNp9tc5zjtqUizwjHAqqez+Oi2Zv7ya4vnAVjQko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785402234; c=relaxed/simple;
-	bh=jBq7bb8gHLcYeyEnNwFXIvaxlK4DgK7bNeb92a/LUKo=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g/nVgO79REYwlLmCJR87q0eZWoc1VnLfMdUGA6ehdlE4EuEKK/7eqi5/HPtNLUo3jl08gLGbvlfLXnqrSkSsZBGnUeqT534Wr4e18905YktopkaSBaFIyThAK0ZZm6Z3suqeBSnx0OEePLpnU9XGnDvyPQFpl8M4Jh9nwZ1fbxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wtyltvvw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785405700; c=relaxed/simple;
+	bh=Hkw5eP0AH3B+at6i6DNtRs8qAvsqQ9FMzhTvJAREaBg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s72U2sM8Z1VWnblZLkgkNj+jHqR6fggl79CRF/iKgjSknqF7NXgOgZSfO6rgjzQ+nP3DRZ1d+RoGaKWRPPVoN+fGS3Lrx2XaunGVOvSAO1JG/LTKRiGPdaNpB0+/yoDWd4dY1LPbq/zOTvOle3DIUdXFq9kDf/s2e8reu3JPytc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TaJ0Yqht; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wtyltvvw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13AD31F00A3F
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 09:03:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TaJ0Yqht"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C74C31F000E9;
+	Thu, 30 Jul 2026 10:01:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785402233;
-	bh=9iyxgV8T5RliCmhqHHIlHdNYU/Kn9Kj+MhI6s49Kmwo=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=Wtyltvvwqy7g/E/jmsC2UydftGKENxSnaddjk7rDXjDHIER7H/CYoI9yMb3t8FQUm
-	 sJeCNNAHjCNI/AIXAUiBZbpgMTo2I+glyZphad+xgbrTB16850gwu9WmFH4sMDPc37
-	 4K7P+Cr60Q49SpZMjExQQvtyWCVr1hTOGrdO0FowlBtuUg/LNdXjnV0Qr1zcVwvicw
-	 PL8cUic9mP8x9gz54q/Y9vO+ksoT3+CeHBbqrteLEDbTxzxBQsC+FunIphQumDdG64
-	 UHIT2W5oicvuBArPSF8pkUf+pD4V9Q7nmdinkKkZF+qURs1XC9j0GDKDfXRLVi1Sqm
-	 8Am2/1dFl/6DQ==
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5b011edaf7dso1732104e87.2
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 02:03:52 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RoJmLBE/amEmXaMKO5WEKeYF+xbwPeKMLexeDb/ydqHFq3VPcD8ZZ5r6CECZ1rMayJaDopWD0k+088=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdVAw0yaNuzlrY83/gXiefiwu39VEmCXyVRR8SDVpxWoVePYBp
-	bURI90y8lKWJFnst/bi+3FMnQ35uH6uuvPZoA0d2JYaSwvf5Gb6p7OV9n9eYV6D9Sy7XtA+1P0Y
-	FccvBZA0NemzXVXT3dYKXd6XH6MlKqhbLqpa1/OKzCg==
-X-Received: by 2002:a05:6512:3b1e:b0:5b1:4c6f:92f9 with SMTP id
- 2adb3069b0e04-5b2db3506camr358031e87.20.1785402231798; Thu, 30 Jul 2026
- 02:03:51 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 30 Jul 2026 02:03:49 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 30 Jul 2026 02:03:49 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260729-pci-pwrctrl-tc956x-regmap-v1-0-20ce61a3ce12@oss.qualcomm.com>
+	s=k20260515; t=1785405699;
+	bh=DVVpIFks9TNzev8I3EkTUPqgPSV18ZWjwNQhuJLMwyc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TaJ0YqhtqNChVEKc/vQjkrwNrDEG9EmMO5SEs5881xhyaEOlt1fDi9bP3l42EjfK6
+	 zzwWDL1LzhjuZWbBd0yN0SylbhBqoxtIZtVQQzHfDoJcj9UEvVH2zI7sAvqFCwxP9R
+	 jvhtktbQdz4R8GrMxQX6Zl51+l+dZs4j3ESSIBcDTEblTTqYVUTo0RKLjTFh6imFb4
+	 hZ8wuNEitG5VueBrE+X7f0HOR2amHg1enNENxyzGBjWKQz3cIzGA9pvr8VA2X/0NAi
+	 6kTKrY4asCTV8rSjIOrOi8OgC+KWvH9GiHCAFXM7oXnbMzPcqpp7cwTnDp01Aaitgu
+	 BrAqYzn9bnjkA==
+Date: Thu, 30 Jul 2026 12:01:35 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Koichiro Den <den@valinux.co.jp>, linux-pci@vger.kernel.org,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: DWC eDMA weirdness
+Message-ID: <amsg_zNrBzViGEBr@ryzen>
+References: <20260729202821.1153443-2-cassel@kernel.org>
+ <ampndLtU32ODmncX@ryzen>
+ <nvpa2qlo7rbhmeuk3ijf2pzsqp43o4hnexafk3ep3gho3w27sk@lbpqgyaelqxc>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260729-pci-pwrctrl-tc956x-regmap-v1-0-20ce61a3ce12@oss.qualcomm.com>
-Date: Thu, 30 Jul 2026 02:03:49 -0700
-X-Gmail-Original-Message-ID: <CAMRc=McNXg3tVQq1JOFAzO5V91Ue_jhBQK-CbbiSXeHzgAyBNA@mail.gmail.com>
-X-Gm-Features: AUfX_mxjvHEV5BkvPR1xK1IIDm_NEP7ueO8PoUliTd6b5ytUTs2cBVNu7FSuRxI
-Message-ID: <CAMRc=McNXg3tVQq1JOFAzO5V91Ue_jhBQK-CbbiSXeHzgAyBNA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Rely on regmap APIs in tc9563 PCI/pwrctrl driver
-To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>, linux-pci@vger.kernel.org, 
-	Bartosz Golaszewski <brgl@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <nvpa2qlo7rbhmeuk3ijf2pzsqp43o4hnexafk3ep3gho3w27sk@lbpqgyaelqxc>
 
-On Wed, 29 Jul 2026 15:34:24 +0200, Lorenzo Bianconi
-<lorenzo.bianconi@oss.qualcomm.com> said:
->
-> ---
-> Lorenzo Bianconi (2):
->       PCI/pwrctrl: tc9563: rely on regmap APIs
->       PCI/pwrctrl: tc9563: use devm-managed I2C dummy device allocation
->
->  drivers/pci/pwrctrl/Kconfig              |   1 +
->  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 164 +++++++++----------------------
->  2 files changed, 48 insertions(+), 117 deletions(-)
-> ---
-> base-commit: b9851611bad7cb227c93c1401dca48995a815d94
-> change-id: 20260729-pci-pwrctrl-tc956x-regmap-91a0b5ae71f7
->
-> Best regards,
-> --
-> Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
->
->
+On Thu, Jul 30, 2026 at 06:32:08AM +0200, Manivannan Sadhasivam wrote:
+> > 
+> > Ignore that the test case leaves things to be desired, since it passes even
+> > though we see this warning.
+> > 
+> 
+> How come this is possible? Doorbell timeout occured, but still Doorbell got
+> triggered in EP?
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+The doorbell is triggered. It is just that the if statement:
+
+if (!left || (status & STATUS_DOORBELL_ENABLE_FAIL)) {
+
+is really bad...
+
+A better way would be to check
+
+if (!left || !(status & STATUS_DOORBELL_ENABLE_SUCCESS)) {
+
+
+The problem seems to be that we re-read status, and the second time we
+read the status, the STATUS_DOORBELL_SUCCESS bit is set.
+
+I can send two patches for this.
+
+
+> 
+> > 
+> > The problem seems to be that the embedded doorbell IRQ handler is executed twice,
+> > in response to a single writel() which rings the doorbell.
+> > 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > index 4802d4f80f78..7f4360579ffb 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > @@ -714,6 +714,7 @@ static irqreturn_t pci_epf_test_doorbell_handler(int irq, void *data)
+> >  
+> >         status |= STATUS_DOORBELL_SUCCESS;
+> >         reg->status = cpu_to_le32(status);
+> > +       trace_printk("calling pci_epf_test_raise_irq()\n");
+> >         pci_epf_test_raise_irq(epf_test, reg);
+> >  
+> >         return IRQ_HANDLED;
+> > 
+> > 
+> > As you can see:
+> >  irq/58-pci-ep-t-221     [006] .....    58.601020: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+> >  irq/58-pci-ep-t-221     [006] .....    58.601421: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+> > 
+> > It is called twice for a single doorbell ring.
+> > 
+> 
+> Which doorbell is used here? Platform MSI or Embedded one?
+
+Embedded.
+
+I now see what is going on:
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 3635741c3e7a..b554f7c38ecc 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -176,8 +176,10 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
+
+        reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
+        if (reg & STATUS_IRQ_RAISED) {
++               unsigned int old = READ_ONCE(test->irq_raised.done);
+                test->last_irq = irq;
+                complete(&test->irq_raised);
++               trace_printk("old: %u new: %u\n", old, READ_ONCE(test->irq_raised.done));
+        }
+
+        return IRQ_HANDLED;
+@@ -1076,6 +1078,8 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
+        u32 addr;
+        int left;
+
++       trace_printk("enter\n");
++
+        if (!(test->ep_caps & CAP_DYNAMIC_INBOUND_MAPPING))
+                return -EOPNOTSUPP;
+
+@@ -1093,11 +1097,14 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
+        left = wait_for_completion_timeout(&test->irq_raised, msecs_to_jiffies(1000));
+
+        status = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
++       trace_printk("after ENABLE DOORBELL wait, status: %u left: %d\n", status, left);
+        if (!left || (status & STATUS_DOORBELL_ENABLE_FAIL)) {
+                dev_err(dev, "Failed to enable doorbell\n");
+                return -EINVAL;
+        }
+
++       msleep(500);
++
+        data = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_DATA);
+        addr = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_DB_OFFSET);
+
+@@ -1113,12 +1120,13 @@ static int pci_endpoint_test_doorbell(struct pci_endpoint_test *test)
+                return -ERANGE;
+        }
+
++       trace_printk("ringing doorbell\n");
+        writel(data, test->bar[bar] + addr);
+
+        left = wait_for_completion_timeout(&test->irq_raised, msecs_to_jiffies(1000));
+
+        status = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
+-
++       trace_printk("after RING DOORBELL wait, status: %u left: %d\n", status, left);
+        if (!left || !(status & STATUS_DOORBELL_SUCCESS))
+                dev_err(dev, "Failed to trigger doorbell in endpoint\n");
+
+
+
+As you can see, even adding a msleep(500) between the
+ENABLE_DOORBELL call
+
+and the RING DOORBELL writel(), we still get two IRQs.
+
+         pcitest-307     [002] .....    65.050035: pci_endpoint_test_ioctl: enter
+          <idle>-0       [007] d.h1.    65.057615: pci_endpoint_test_irqhandler: old: 0 new: 1
+          <idle>-0       [007] d.h1.    65.057626: pci_endpoint_test_irqhandler: old: 1 new: 2
+         pcitest-307     [006] .....    65.057734: pci_endpoint_test_ioctl: after ENABLE DOORBELL wait, status: 1088 left: 248
+         pcitest-307     [006] .....    65.585419: pci_endpoint_test_ioctl: ringing doorbell
+         pcitest-307     [006] .....    65.585423: pci_endpoint_test_ioctl: after RING DOORBELL wait, status: 0 left: 250
+          <idle>-0       [007] d.h1.    65.585682: pci_endpoint_test_irqhandler: old: 0 new: 1
+          <idle>-0       [007] d.h1.    65.591753: pci_endpoint_test_irqhandler: old: 0 new: 1
+
+
+As you can see, status is 1088, so bit 10 is set (STATUS_DOORBELL_ENABLE_SUCCESS).
+
+And since this is before even writing the doorbell, what seems to happen is that
+we get an IRQ when calling request_irq().
+
+So it looks like we have uncleared hardware status flags, or possibly incorrect
+edge/level trigger configurations.
+
+
+Kind regards,
+Niklas
