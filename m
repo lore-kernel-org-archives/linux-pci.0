@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 563AB222597
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 04:32:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABAD531F99E;
+	Thu, 30 Jul 2026 04:40:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785385936; cv=none; b=O74qEJ8TPUazpuLNuScJ4tESo27txTQ9Ll1LAQOOjRhvaon8OOo4ymAjmdqrFnYPOc/zRLwHYhNsKd0RrViK1T2VG0bLpibaHYfmgzy8JP2mMkruxRBzXxYbZxa95L7QjSpyRgg5hr1gnHn3sjasZAxt7bfG0xeqAekK7tVN/yA=
+	t=1785386407; cv=none; b=evvPLr8XPhchgk63tw/zEmGjvPeSVklO23Ibrc3fTw53lTsHu97jU1WqXz+riDawOHYuLVgy+4SWGKehp9adDnrUdPnJGkI8zME8zsUQl7NJbt1sNbTCxOMGUcZ0KL4IvBXHEaSqkUDMkVyiXyTk2VXHjHdaJXxxixIubbPAuKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785385936; c=relaxed/simple;
-	bh=dZA/NlUz5CDEZ+b1tHYMV5fUaTStt36AXLqcRlawA4s=;
+	s=arc-20240116; t=1785386407; c=relaxed/simple;
+	bh=GqCDgv/4G4zGYUrlVQW7+D6Szo7EYIzXaXrzXuCl/X8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b6Z/D7NTJGpiVx6fRTsA8XgkcJB2SpM110ybSAWt8suoM5c5vzBGwb/hTAStc7DbK+CJwVSeQyL9TG6BvktyBrgQP4F3PWShga6+caz5d3jqjSTlaLfbxnUQjFfleRO0dGMiM9+BN1ihm0XRcYetBw4teZ1HTwFW6nD5ukgVe+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i59kUElE; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wu2i6tDxDWCSUdHJnRe6r7UPOTRhXT/nGOKhGXO8io4tttreATzcJWofQgxd5gV/lMVdYKRfOqxzlG2CKFgYK1CPGXpZT3WLX8lE090NoOuh8FnAiCQs90uJRTrCptst2oYVUte1tz9E+KQSoqXyiCbffO7vuY5rJ73Mir1vnAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Et1wXpsO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i59kUElE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D8A1F000E9;
-	Thu, 30 Jul 2026 04:32:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Et1wXpsO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E15EE1F000E9;
+	Thu, 30 Jul 2026 04:40:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785385934;
-	bh=s1J+yCtYVoCxfU1R7c46QILzINTJneu0RZRWIpUiT4E=;
+	s=k20260515; t=1785386406;
+	bh=lz5TrE7MSYTB6nkBvVIXP6w1cvidDNpiHFoz/0rQoks=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=i59kUElEjdxLlb/3FdnaDclWnQRm65CtaIyx0SX2dluUwArpt6D6p5pqryGPtpCtp
-	 6lDEhQ0hVQ+a5a+1hoV5VK4qFaIF5OjkhSUAxaFhhiFTqAxEFRVB+3Pgf8vhqIKZDD
-	 Rrr2L+8atEmjZbik8eD2dlLW0vdZFd2KB5ASzschODKX8idU3Q+MUjFX0CtkYAHUg2
-	 LYr+299FvF7RpXtDEPGna0WGTzAEf9cV1MLtj5A7qSL7+GZIa5+Wos9CBo5TWyE2Ed
-	 i5/LM0I0JkKjzc61WdLs7QZVMyboHDUOC2mNBvqn95W9WPx8ZcGaKfPRxaAxAs8WUH
-	 q4Ix8DcebYYkA==
-Date: Thu, 30 Jul 2026 06:32:08 +0200
+	b=Et1wXpsOErZlbzablP0CeZqa1DzvihXfn0aOS5u2Buar/N56k11PKK6J7cHUAq0fk
+	 dYVpK3G1Riq1/r8kAryGzteFCjoU0am0GENCuOlwOEX3VmKi4WZb1upLKtyJZpuoll
+	 Hb30xiwfqs3ihDHpzx+lmr3DsZV/J5UHBiHdhWxLBwMGQ9h9W8edpFSKegUR1P/i4U
+	 Qnm1es4pD/RnL9LN5SRkHcl/lmnEThBBvoNmolqYp4N2be/bRRVouW3DqD0XK8hxLu
+	 xbVOk0Rxy1ni0kESjZc5hnT9V2nyeEQYtqN23YADktNJKYK+EKt1NY1DAnE2Y7JJ/h
+	 z95xrxKJp4+/Q==
+Date: Thu, 30 Jul 2026 06:40:00 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Koichiro Den <den@valinux.co.jp>, linux-pci@vger.kernel.org, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: DWC eDMA weirdness
-Message-ID: <nvpa2qlo7rbhmeuk3ijf2pzsqp43o4hnexafk3ep3gho3w27sk@lbpqgyaelqxc>
-References: <20260729202821.1153443-2-cassel@kernel.org>
- <ampndLtU32ODmncX@ryzen>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI/ASPM: Use
+ pcie_capability_clear_and_set_word() for ASPM disable/restore
+Message-ID: <mjyj2cxu2tsevlklhdzxugiyijumnxov5d7xucxywivd4ize4l@cuiit7zl63bk>
+References: <20260727-aspm-v6-0-2ebb3ee7ef71@oss.qualcomm.com>
+ <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,102 +45,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ampndLtU32ODmncX@ryzen>
+In-Reply-To: <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
 
-On Wed, Jul 29, 2026 at 10:49:56PM +0200, Niklas Cassel wrote:
-> On Wed, Jul 29, 2026 at 10:28:22PM +0200, Niklas Cassel wrote:
-> > Getting two IRQs when we are only expecting a single IRQ is a very
-> > serious error, and suggests that something is very wrong in the EPC
-> > driver.
-> > 
-> > Scream loudly so that EPC driver developers can see the problem,
-> > which might otherwise be very hard to detect.
-> > 
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > ---
-> >  drivers/misc/pci_endpoint_test.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> > 
-> > diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> > index 3635741c3e7a..a212e53654c6 100644
-> > --- a/drivers/misc/pci_endpoint_test.c
-> > +++ b/drivers/misc/pci_endpoint_test.c
-> > @@ -178,6 +178,19 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
-> >  	if (reg & STATUS_IRQ_RAISED) {
-> >  		test->last_irq = irq;
-> >  		complete(&test->irq_raised);
-> > +		/*
-> > +		 * The endpoint test driver performs all testing sequentially.
-> > +		 * This means that test->irq_raised.done should never exceed 1.
-> > +		 * If it does, then we received two IRQs in a row, without a
-> > +		 * successful wait_for_completion_timeout() call in between.
-> > +		 *
-> > +		 * While complete() increases test->irq_raised.done by one,
-> > +		 * wait_for_completion_timeout() reduces test->irq_raised.done
-> > +		 * by one on success.
-> > +		 *
-> > +		 * Please debug your EPC driver if you see this warning.
-> > +		 */
-> > +		WARN_ON(test->irq_raised.done > 1);
-> >  	}
-> >  
-> >  	return IRQ_HANDLED;
-> > -- 
-> > 2.55.0
-> > 
+On Mon, Jul 27, 2026 at 07:32:36PM +0530, Krishna Chaitanya Chundru wrote:
+> pcie_aspm_cap_init() disables ASPM L0s/L1 on both ends of the Link
+> before touching L1SS config, then later restores the LNKCTL state
+> that was in effect beforehand. Both steps use raw
+> pcie_capability_write_word() calls: the disable step computes the
+> new value by hand from a snapshot taken earlier in the function, and
+> the restore step writes that same snapshot straight back.
 > 
-> Hello Koichiro,
+> Switch both steps to pcie_capability_clear_and_set_word(), masked to
+> PCI_EXP_LNKCTL_ASPMC, matching the accessor pcie_config_aspm_dev()
+> already uses elsewhere in this file for the exact same register. This
+> does a live read-modify-write of just the ASPM Control bits instead of
+> relying on a stale snapshot for the rest of the word, and is
+> consistent with how the rest of the file already touches this
+> register. No functional change.
 > 
-> I created this patch in response to a problem that I saw on v7.2-rc5.
-> 
-> When running the pci_endpoint selftest:
-> # /pcitest
-> (snip)
-> #  RUN           pcie_ep_doorbell.DOORBELL_TEST ...
-> [  215.256772] pci-endpoint-test 0000:01:00.0: Failed to trigger doorbell in endpoint
-> #            OK  pcie_ep_doorbell.DOORBELL_TEST
-> ok 23 pcie_ep_doorbell.DOORBELL_TEST
-> # FAILED: 19 / 23 tests passed.
-> # 2 skipped test(s) detected. Consider enabling relevant config options to improve coverage.
-> # Totals: pass:17 fail:4 xfail:0 xpass:0 skip:2 error:0
-> 
-> 
-> I saw the weird error:
-> "Failed to trigger doorbell in endpoint"
-> 
-> Ignore that the test case leaves things to be desired, since it passes even
-> though we see this warning.
-> 
+> Fixes: 7447990137bf ("PCI/ASPM: Disable L1 before disabling L1 PM Substates")
 
-How come this is possible? Doorbell timeout occured, but still Doorbell got
-triggered in EP?
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://lore.kernel.org/all/20260721143945.86E7D1F000E9@smtp.kernel.org/
 
-> 
-> The problem seems to be that the embedded doorbell IRQ handler is executed twice,
-> in response to a single writel() which rings the doorbell.
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 4802d4f80f78..7f4360579ffb 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -714,6 +714,7 @@ static irqreturn_t pci_epf_test_doorbell_handler(int irq, void *data)
->  
->         status |= STATUS_DOORBELL_SUCCESS;
->         reg->status = cpu_to_le32(status);
-> +       trace_printk("calling pci_epf_test_raise_irq()\n");
->         pci_epf_test_raise_irq(epf_test, reg);
->  
->         return IRQ_HANDLED;
-> 
-> 
-> As you can see:
->  irq/58-pci-ep-t-221     [006] .....    58.601020: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
->  irq/58-pci-ep-t-221     [006] .....    58.601421: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
-> 
-> It is called twice for a single doorbell ring.
-> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Which doorbell is used here? Platform MSI or Embedded one?
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
 - Mani
 
