@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABAD531F99E;
-	Thu, 30 Jul 2026 04:40:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC1B831F99E;
+	Thu, 30 Jul 2026 04:40:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785386407; cv=none; b=evvPLr8XPhchgk63tw/zEmGjvPeSVklO23Ibrc3fTw53lTsHu97jU1WqXz+riDawOHYuLVgy+4SWGKehp9adDnrUdPnJGkI8zME8zsUQl7NJbt1sNbTCxOMGUcZ0KL4IvBXHEaSqkUDMkVyiXyTk2VXHjHdaJXxxixIubbPAuKk=
+	t=1785386440; cv=none; b=RxOxml0UBFp/XT6Tgo1kL+N4KrtMUkZdjlcb8SeXr9hGsUQfxXvyAF/1oVcD6HEAY2GmZKpQHXZ5YDUBjclPYixTVjvd8KcNX3C2xjAJy9X8xbJpNvtNdo38Qh0wNTryJLnvQzvkoEmtVlRXXMqVPGkRPqL/HumPX0vQh+J8Y98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785386407; c=relaxed/simple;
-	bh=GqCDgv/4G4zGYUrlVQW7+D6Szo7EYIzXaXrzXuCl/X8=;
+	s=arc-20240116; t=1785386440; c=relaxed/simple;
+	bh=XDaYQKs7te3poeuthqZgwZ5UdhkkLXATe7EvMsmRY0U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wu2i6tDxDWCSUdHJnRe6r7UPOTRhXT/nGOKhGXO8io4tttreATzcJWofQgxd5gV/lMVdYKRfOqxzlG2CKFgYK1CPGXpZT3WLX8lE090NoOuh8FnAiCQs90uJRTrCptst2oYVUte1tz9E+KQSoqXyiCbffO7vuY5rJ73Mir1vnAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Et1wXpsO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=QhEkdg7rfBUK+a7knIWh1dx6iev5qFO6rrVc7Bf49MiW4uTUutGqgMV/f8ABhfMmdk6i+4RIKAP5pcpy1SimskmcmfGBRWx0tMQbG7aNy3D2Sw73M3J774mQmtfhJt8kJaO3TrLqpe1Sh62qgsk7LWE7KT3UZ0a4nqEqX80aAKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CV0Z9VMr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Et1wXpsO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E15EE1F000E9;
-	Thu, 30 Jul 2026 04:40:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CV0Z9VMr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44A81F000E9;
+	Thu, 30 Jul 2026 04:40:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785386406;
-	bh=lz5TrE7MSYTB6nkBvVIXP6w1cvidDNpiHFoz/0rQoks=;
+	s=k20260515; t=1785386437;
+	bh=/+uIiEPkcCiBkxhcN1xcVUiu4yK/Kv76tH3noXyzxqI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Et1wXpsOErZlbzablP0CeZqa1DzvihXfn0aOS5u2Buar/N56k11PKK6J7cHUAq0fk
-	 dYVpK3G1Riq1/r8kAryGzteFCjoU0am0GENCuOlwOEX3VmKi4WZb1upLKtyJZpuoll
-	 Hb30xiwfqs3ihDHpzx+lmr3DsZV/J5UHBiHdhWxLBwMGQ9h9W8edpFSKegUR1P/i4U
-	 Qnm1es4pD/RnL9LN5SRkHcl/lmnEThBBvoNmolqYp4N2be/bRRVouW3DqD0XK8hxLu
-	 xbVOk0Rxy1ni0kESjZc5hnT9V2nyeEQYtqN23YADktNJKYK+EKt1NY1DAnE2Y7JJ/h
-	 z95xrxKJp4+/Q==
-Date: Thu, 30 Jul 2026 06:40:00 +0200
+	b=CV0Z9VMrmUtNTKfzFQNDmGCvPc35ekhdec1IsDIS38ez7p/oBqaP+CjKQeUaUfh3i
+	 3o2CoXCew+OhJa2R4XRfAmw560amtBzw+SCs7sCx78GMCsW009g7/d9O2TXDhgwfig
+	 KCyc/m8evDTTsH0VABP0qm8NBrn+2rLClIgxlLF08IK3AzDkdLi7rTvCAIzKT4OUFQ
+	 bwae6+sxZpZIcDYrXMpoWijgLJUeOTBuvJaXksf4bSfg4azBYZWEWya4Z5b4i+mjDm
+	 pkdss/0d0KDSiLQlSl/ku5LcIpFtno9/WfxwNuw9loHNNfYSwZIRutbQdj54ZgCtjP
+	 wB8WSNlZrIipA==
+Date: Thu, 30 Jul 2026 06:40:31 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 1/3] PCI/ASPM: Use
- pcie_capability_clear_and_set_word() for ASPM disable/restore
-Message-ID: <mjyj2cxu2tsevlklhdzxugiyijumnxov5d7xucxywivd4ize4l@cuiit7zl63bk>
+Subject: Re: [PATCH v6 2/3] PCI/ASPM: Disable/restore ASPM on every function
+ for multi-function devices
+Message-ID: <oexbxvtxozvqw5kwv34skbv2ipumrkgjnrla6gferpdtwjdma3@sqxkfr2fpvql>
 References: <20260727-aspm-v6-0-2ebb3ee7ef71@oss.qualcomm.com>
- <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
+ <20260727-aspm-v6-2-2ebb3ee7ef71@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,23 +45,29 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260727-aspm-v6-1-2ebb3ee7ef71@oss.qualcomm.com>
+In-Reply-To: <20260727-aspm-v6-2-2ebb3ee7ef71@oss.qualcomm.com>
 
-On Mon, Jul 27, 2026 at 07:32:36PM +0530, Krishna Chaitanya Chundru wrote:
-> pcie_aspm_cap_init() disables ASPM L0s/L1 on both ends of the Link
-> before touching L1SS config, then later restores the LNKCTL state
-> that was in effect beforehand. Both steps use raw
-> pcie_capability_write_word() calls: the disable step computes the
-> new value by hand from a snapshot taken earlier in the function, and
-> the restore step writes that same snapshot straight back.
+On Mon, Jul 27, 2026 at 07:32:37PM +0530, Krishna Chaitanya Chundru wrote:
+> pcie_aspm_cap_init() disables ASPM L0s/L1 before touching L1SS config,
+> then restores the pre-existing state afterward. Both steps only ever
+> touched link->downstream, i.e. function 0 of the downstream component,
+> leaving sibling functions (>0) on a multi-function device untouched.
 > 
-> Switch both steps to pcie_capability_clear_and_set_word(), masked to
-> PCI_EXP_LNKCTL_ASPMC, matching the accessor pcie_config_aspm_dev()
-> already uses elsewhere in this file for the exact same register. This
-> does a live read-modify-write of just the ASPM Control bits instead of
-> relying on a stale snapshot for the rest of the word, and is
-> consistent with how the rest of the file already touches this
-> register. No functional change.
+> This means the "disable" step does not actually disable ASPM link-wide
+> on a multi-function device: a sibling function can still have L1
+> enabled even after this step runs. PCIe r6.2 sec 7.5.3.7 recommends
+> programming the same ASPM Control value for all functions of a
+> multi-function device, and pcie_config_aspm_link() already loops over
+> every function on the bus for exactly this reason.
+> 
+> Loop over every function on linkbus->devices for both the disable and
+> restore steps, keeping the existing PCIe r6.2 sec 7.5.3.7 ordering
+> (disable downstream functions before upstream, restore upstream before
+> downstream functions). The masked pcie_capability_clear_and_set_word()
+> accessor from the previous commit makes this safe: it only ever
+> touches the ASPM Control bits, so function-specific bits elsewhere in
+> LNKCTL (e.g. Read Completion Boundary, CLKREQ Enable) on sibling
+> functions are left untouched.
 > 
 > Fixes: 7447990137bf ("PCI/ASPM: Disable L1 before disabling L1 PM Substates")
 
