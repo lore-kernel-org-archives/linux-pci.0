@@ -1,200 +1,194 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD3336A01A
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 02:27:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6664737FF42;
+	Thu, 30 Jul 2026 03:04:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785378472; cv=none; b=falo1nM6QRB2gfjEYEkSlRThaDTrbq+blikm/s90WwkVAPQrfzvwtqGdLzIDvG6rfoQLikVMrn+k+CRemXcYvQVkn9KE7k7dOp6oAWPeRUQOlsY90rOPfPxgmfJlTt/blGmV6Wl4oYQ1wmDZSXQ6HtTRODZVzsOwSM7FyI3Y/9c=
+	t=1785380669; cv=none; b=jMg4uA8xnh1VWgp05Xe2nQ3c3v97SH+rp7odPMkrkyVTgn0cvocXeA3LaL0DcBs+JeUkLkS4EJtgRYkWxqfG19V/SqQmXMMjfFYzqgURQJfu/2Pkh2HOH96tzoXvSQ5iUO7UOFZ5rvqFRnA7C9muDTuIAdrO5fxc7SM3AOoOwmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785378472; c=relaxed/simple;
-	bh=YKV5Ld8Tj29Vf0II+AkzatD2c8oKpWE/PauLCI66MzE=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=bV1EN3vx8z4A3xS2DNorra92wvVtw9R7ptaGcOA+Lu4WCIrYze6EfZ13Ubo77qAtVVgIC5SHRSepuxgLanE7U7kefZjCRnhlQ6rwwmkp1erFI09QzmSKgKHREqI9DwO3lYlEm3yi4I2agidMV4BRzoopW35+fGolxbirsoPMW48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ClaRDZ8f; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785380669; c=relaxed/simple;
+	bh=qT95Yn+oSmZPZX4e1YLkRrBVBOCLf6822FETl2e65CI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tSj5L1lJMdz2tETu3XFuINQ6mWxF2+6EvvUTCH5fnEF45DfjR5SEHxD/RC1bg/TBzb8lwBLi3IFHfX+3r0dqmDJ1f2A7IorB7kgKO1nJR5OoV8ly/M3vFu3pDG41Wkcos79FrVBDWbujeJDJ0vXn4ruwW4/uhKXX2xq2YfR/sUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Rz6G6jk2; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ClaRDZ8f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785378470; x=1816914470;
-  h=date:from:to:cc:subject:message-id;
-  bh=YKV5Ld8Tj29Vf0II+AkzatD2c8oKpWE/PauLCI66MzE=;
-  b=ClaRDZ8fxT4kj3UsjWz2Q/UPCUJTFKJld69Y9MOHjh2GYyHsrXV6D7Nd
-   YcK2+qrSDnUbmcIssp4yk5jcKvlhPBks7z9gwf9bKsltBZy3f2Z8PA61G
-   yeeoj4sdFHbsYGR3Gz7km3PGsw5mQhx9ikYBYvinq9wRxEapPDGA1g5iw
-   FIK6IlsVm1XHTS0M/ICUYnzJDFLat31uq8bvrPsz+JEH+5PeZLX0uzY66
-   a4hyRcSSvVMXq166uQzNzbpCYkYZlvVn6EudZhDMHx7xbSLOeIYHu/i9Y
-   94884wyFFO1cR+igbDw98GCasUjdvpVMnaLHzs8X1xkqhMlJcOajrPFc/
-   Q==;
-X-CSE-ConnectionGUID: QZzjyV2FTTiZ85Ftc26vxQ==
-X-CSE-MsgGUID: 3Udu8Yy0Qg+5Vd0Vj4adnQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11859"; a="86111796"
-X-IronPort-AV: E=Sophos;i="6.25,193,1779174000"; 
-   d="scan'208";a="86111796"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2026 19:27:49 -0700
-X-CSE-ConnectionGUID: 3XDoO6eMQ22rbBgU7cRu0Q==
-X-CSE-MsgGUID: oOqqWPKATPycM6qUuRQmOw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,193,1779174000"; 
-   d="scan'208";a="265227451"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by fmviesa005.fm.intel.com with ESMTP; 29 Jul 2026 19:27:48 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wpGUf-00000000fvo-0cqk;
-	Thu, 30 Jul 2026 02:27:37 +0000
-Date: Thu, 30 Jul 2026 10:26:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/vmd] BUILD SUCCESS
- 2162572d34c503882e9047a2b07adafd6139dc2d
-Message-ID: <202607301037.T2BuvT43-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Rz6G6jk2"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Q9dgmwwoCsPuqo+K6+VV3WRtVJFUiwB1urZ7jCNU9D8=;
+	b=Rz6G6jk2dx+q+i14JiSteyhSWkRITc3vlj/3MU5howGIvxBMyKbiy9i5UJuIx3gPlDZI6JiTh
+	nAvjERPowdx6Fn5n3jRNI5iQm7MH2/0tykb34dWIZ8K8LolI5hZXRuurU5zN7G94DTV2yKYBWi5
+	8by8dTWc5Lti2ZWc/O8jsDU=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4h9Yhb3XRQzLlXB;
+	Thu, 30 Jul 2026 10:54:55 +0800 (CST)
+Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
+	by mail.maildlp.com (Postfix) with ESMTPS id ECBB54055B;
+	Thu, 30 Jul 2026 11:04:22 +0800 (CST)
+Received: from localhost.localdomain (10.50.85.180) by
+ kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 30 Jul 2026 11:04:22 +0800
+From: Ziming Du <duziming2@huawei.com>
+To: <bhelgaas@google.com>, <kwilczynski@kernel.org>
+CC: <rientjes@google.com>, <gregkh@suse.de>, <iweiny@kernel.org>,
+	<djbw@kernel.org>, <Jonathan.Cameron@huawei.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<liuyongqiang13@huawei.com>, <duziming2@huawei.com>
+Subject: [PATCH v2 5/6] PCI: Align proc_bus_pci_write() with pci_write_config()
+Date: Thu, 30 Jul 2026 11:24:37 +0800
+Message-ID: <20260730032438.1643450-6-duziming2@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260730032438.1643450-1-duziming2@huawei.com>
+References: <20260730032438.1643450-1-duziming2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemr500012.china.huawei.com (7.202.195.23)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/vmd
-branch HEAD: 2162572d34c503882e9047a2b07adafd6139dc2d  PCI: vmd: Only copy root bridge _OSC control flags in bare metal OS
+proc_bus_pci_write() and pci_write_config() implement essentially the
+same functionality. To improve consistency across the PCI subsystem,
+align the implementation in procfs with the sysfs counterpart.
 
-elapsed time: 800m
+Specifically:
+  - Use dev->cfg_size directly instead of assigning it to 'size'.
+  - Rename the variable 'pos' to 'off' and replace 'cnt' with 'size'.
+  - Remove the redundant bounds check `if (nbytes >= size)`.
+  - Use the same transfer loop conditions as pci_write_config().
 
-configs tested: 123
-configs skipped: 1
+No functional change intended.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Ziming Du <duziming2@huawei.com>
+---
+ drivers/pci/proc.c | 61 +++++++++++++++++++++++-----------------------
+ 1 file changed, 30 insertions(+), 31 deletions(-)
 
-tested configs:
-alpha                            allnoconfig    gcc-16.1.0
-alpha                           allyesconfig    gcc-16.1.0
-alpha                              defconfig    gcc-16.1.0
-arc                             allmodconfig    gcc-16.1.0
-arc                             allyesconfig    gcc-16.1.0
-arc                  randconfig-001-20260729    gcc-8.5.0
-arc                  randconfig-001-20260730    gcc-8.5.0
-arc                  randconfig-002-20260729    gcc-13.4.0
-arc                  randconfig-002-20260730    gcc-8.5.0
-arm                  randconfig-001-20260729    gcc-10.5.0
-arm                  randconfig-001-20260730    gcc-8.5.0
-arm                  randconfig-002-20260729    gcc-8.5.0
-arm                  randconfig-002-20260730    gcc-8.5.0
-arm                  randconfig-003-20260729    clang-24
-arm                  randconfig-003-20260730    gcc-8.5.0
-arm                  randconfig-004-20260729    clang-18
-arm                  randconfig-004-20260730    gcc-8.5.0
-arm                       realview_defconfig    clang-17
-arm64                randconfig-001-20260729    gcc-15.2.0
-arm64                randconfig-001-20260730    gcc-15.2.0
-arm64                randconfig-002-20260729    gcc-13.4.0
-arm64                randconfig-002-20260730    gcc-15.2.0
-arm64                randconfig-003-20260729    gcc-11.5.0
-arm64                randconfig-003-20260730    gcc-15.2.0
-arm64                randconfig-004-20260729    clang-17
-arm64                randconfig-004-20260730    gcc-15.2.0
-csky                            allmodconfig    gcc-16.1.0
-csky                 randconfig-001-20260729    gcc-16.1.0
-csky                 randconfig-001-20260730    gcc-15.2.0
-csky                 randconfig-002-20260729    gcc-16.1.0
-csky                 randconfig-002-20260730    gcc-15.2.0
-hexagon              randconfig-001-20260730    clang-24
-hexagon              randconfig-002-20260730    clang-24
-i386                            allmodconfig    gcc-14
-i386       buildonly-randconfig-001-20260730    gcc-14
-i386       buildonly-randconfig-002-20260730    gcc-14
-i386       buildonly-randconfig-003-20260730    gcc-14
-i386       buildonly-randconfig-004-20260730    gcc-14
-i386       buildonly-randconfig-005-20260730    gcc-14
-i386       buildonly-randconfig-006-20260730    gcc-14
-i386                 randconfig-001-20260730    gcc-14
-i386                 randconfig-002-20260730    gcc-14
-i386                 randconfig-003-20260730    gcc-14
-i386                 randconfig-004-20260730    gcc-14
-i386                 randconfig-005-20260730    gcc-14
-i386                 randconfig-006-20260730    gcc-14
-i386                 randconfig-007-20260730    gcc-14
-i386                 randconfig-011-20260730    clang-22
-i386                 randconfig-012-20260730    clang-22
-i386                 randconfig-013-20260730    clang-22
-i386                 randconfig-014-20260730    clang-22
-i386                 randconfig-015-20260730    clang-22
-i386                 randconfig-016-20260730    clang-22
-i386                 randconfig-017-20260730    clang-22
-loongarch                          defconfig    clang-24
-loongarch            randconfig-001-20260730    clang-24
-loongarch            randconfig-002-20260730    clang-24
-mips                         ath25_defconfig    clang-24
-mips                          ip30_defconfig    gcc-16.1.0
-mips                       maltaup_defconfig    clang-17
-nios2                           allmodconfig    gcc-11.5.0
-nios2                            allnoconfig    gcc-11.5.0
-nios2                randconfig-001-20260730    clang-24
-nios2                randconfig-002-20260730    clang-24
-parisc                          allmodconfig    gcc-16.1.0
-parisc                          allyesconfig    gcc-16.1.0
-parisc                             defconfig    gcc-16.1.0
-parisc                        randconfig-001    gcc-14.3.0
-parisc               randconfig-001-20260730    gcc-14.3.0
-parisc               randconfig-002-20260730    gcc-14.3.0
-powerpc              randconfig-001-20260730    gcc-14.3.0
-powerpc              randconfig-002-20260730    gcc-14.3.0
-powerpc64            randconfig-001-20260730    gcc-14.3.0
-powerpc64            randconfig-002-20260730    gcc-14.3.0
-riscv                         randconfig-001    gcc-13.4.0
-riscv                randconfig-001-20260729    gcc-8.5.0
-riscv                randconfig-001-20260730    gcc-15.2.0
-riscv                randconfig-002-20260729    gcc-9.5.0
-riscv                randconfig-002-20260730    gcc-15.2.0
-s390                 randconfig-001-20260729    clang-17
-s390                 randconfig-001-20260730    gcc-15.2.0
-s390                 randconfig-002-20260729    clang-24
-s390                 randconfig-002-20260730    gcc-15.2.0
-sh                                 defconfig    gcc-16.1.0
-sh                   randconfig-001-20260729    gcc-13.4.0
-sh                   randconfig-001-20260730    gcc-15.2.0
-sh                   randconfig-002-20260729    gcc-15.2.0
-sh                   randconfig-002-20260730    gcc-15.2.0
-sparc                         randconfig-001    clang-24
-sparc                randconfig-001-20260730    clang-24
-sparc                randconfig-002-20260730    clang-24
-sparc64              randconfig-001-20260730    clang-24
-sparc64              randconfig-002-20260730    clang-24
-um                   randconfig-001-20260730    clang-24
-um                   randconfig-002-20260730    clang-24
-x86_64     buildonly-randconfig-001-20260730    gcc-14
-x86_64     buildonly-randconfig-002-20260730    gcc-14
-x86_64     buildonly-randconfig-003-20260730    gcc-14
-x86_64     buildonly-randconfig-004-20260730    gcc-14
-x86_64     buildonly-randconfig-005-20260730    gcc-14
-x86_64     buildonly-randconfig-006-20260730    gcc-14
-x86_64                                 kexec    clang-22
-x86_64               randconfig-001-20260730    clang-22
-x86_64               randconfig-002-20260730    clang-22
-x86_64               randconfig-003-20260730    clang-22
-x86_64               randconfig-004-20260730    clang-22
-x86_64               randconfig-005-20260730    clang-22
-x86_64               randconfig-006-20260730    clang-22
-x86_64               randconfig-011-20260730    clang-22
-x86_64               randconfig-012-20260730    clang-22
-x86_64               randconfig-013-20260730    clang-22
-x86_64               randconfig-014-20260730    clang-22
-x86_64               randconfig-015-20260730    clang-22
-x86_64               randconfig-016-20260730    clang-22
-x86_64               randconfig-071-20260730    gcc-12
-x86_64               randconfig-072-20260730    gcc-12
-x86_64               randconfig-073-20260730    gcc-12
-x86_64               randconfig-074-20260730    gcc-12
-x86_64               randconfig-075-20260730    gcc-12
-x86_64               randconfig-076-20260730    gcc-12
-x86_64                          rhel-9.4-bpf    gcc-14
-xtensa               randconfig-001-20260730    clang-24
-xtensa               randconfig-002-20260730    clang-24
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 3f041765da978..71d1f34e13a7d 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -114,80 +114,79 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+ {
+ 	struct inode *ino = file_inode(file);
+ 	struct pci_dev *dev = pde_data(ino);
+-	loff_t pos = *ppos;
+-	int size = dev->cfg_size;
+-	int cnt, ret;
++	loff_t off = *ppos;
++	unsigned int size = nbytes;
++	int ret;
+ 
+ 	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
+ 	if (ret)
+ 		return ret;
+ 
+-	if (resource_is_exclusive(&dev->driver_exclusive_resource, pos,
++	if (resource_is_exclusive(&dev->driver_exclusive_resource, off,
+ 				  nbytes)) {
+ 		pci_warn_once(dev, "%s: Unexpected write to kernel-exclusive config offset %llx",
+-			      current->comm, pos);
++			      current->comm, off);
+ 		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
+ 	}
+ 
+-	if (pos >= size)
++	if (off >= dev->cfg_size)
+ 		return 0;
+-	if (nbytes >= size)
++	if (off + size > dev->cfg_size) {
++		size = dev->cfg_size - off;
+ 		nbytes = size;
+-	if (pos + nbytes > size)
+-		nbytes = size - pos;
+-	cnt = nbytes;
++	}
+ 
+-	if (!access_ok(buf, cnt))
++	if (!access_ok(buf, size))
+ 		return -EINVAL;
+ 
+ 	pci_config_pm_runtime_get(dev);
+ 
+-	if ((pos & 1) && cnt) {
++	if ((off & 1) && size) {
+ 		unsigned char val;
+ 		__get_user(val, buf);
+-		pci_user_write_config_byte(dev, pos, val);
++		pci_user_write_config_byte(dev, off, val);
+ 		buf++;
+-		pos++;
+-		cnt--;
++		off++;
++		size--;
+ 	}
+ 
+-	if ((pos & 3) && cnt > 2) {
++	if ((off & 3) && size > 2) {
+ 		__le16 val;
+ 		__get_user(val, (__le16 __user *) buf);
+-		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
++		pci_user_write_config_word(dev, off, le16_to_cpu(val));
+ 		buf += 2;
+-		pos += 2;
+-		cnt -= 2;
++		off += 2;
++		size -= 2;
+ 	}
+ 
+-	while (cnt >= 4) {
++	while (size > 3) {
+ 		__le32 val;
+ 		__get_user(val, (__le32 __user *) buf);
+-		pci_user_write_config_dword(dev, pos, le32_to_cpu(val));
++		pci_user_write_config_dword(dev, off, le32_to_cpu(val));
+ 		buf += 4;
+-		pos += 4;
+-		cnt -= 4;
++		off += 4;
++		size -= 4;
+ 	}
+ 
+-	if (cnt >= 2) {
++	if (size >= 2) {
+ 		__le16 val;
+ 		__get_user(val, (__le16 __user *) buf);
+-		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
++		pci_user_write_config_word(dev, off, le16_to_cpu(val));
+ 		buf += 2;
+-		pos += 2;
+-		cnt -= 2;
++		off += 2;
++		size -= 2;
+ 	}
+ 
+-	if (cnt) {
++	if (size) {
+ 		unsigned char val;
+ 		__get_user(val, buf);
+-		pci_user_write_config_byte(dev, pos, val);
+-		pos++;
++		pci_user_write_config_byte(dev, off, val);
++		off++;
+ 	}
+ 
+ 	pci_config_pm_runtime_put(dev);
+ 
+-	*ppos = pos;
++	*ppos = off;
+ 	inode_lock(ino);
+ 	i_size_write(ino, dev->cfg_size);
+ 	inode_unlock(ino);
+-- 
+2.43.0
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
