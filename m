@@ -1,95 +1,185 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f1.google.com (mail-wr2-f1.google.com [74.125.225.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BEE422E25;
-	Thu, 30 Jul 2026 12:10:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A307242643A
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 12:14:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785413451; cv=none; b=Bzx14L7YyFhu9+OZWGnv6lDHDftRlODfMn7jFXRA2R1qKpGqS3+Um2RFEXaxdN+adkrWGWXwj40nNUsOjNg2p+aogIwx2wFK5U40GsWjxs6Z/4aomHSsAE+jq3ul8i922l+V8lrCxMN8efBvk8uDxVGQQntliGzTAPjIDywt0Yo=
+	t=1785413673; cv=none; b=Tw/W+lNEMuQnE8gq25AbXSGDnF+vA9DdNKXvjkRGWr3D/ArU+nJyw1rHrCxVtjrVPyuq1UUjFDRCxWi2qGkV2K0VhpLnJdo7GER1NNXneyeTDPwJo6hQXxLZUt/oyIn+nVrEmKv9wPuZxWYiYZFzY+qAyuNlmz8Ke1IgegDrz3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785413451; c=relaxed/simple;
-	bh=NeiLNU3A7gq9g0jGmL2hQ11c+fW+uN2L4o3Wam3qJjg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AtGWajGBNeXGvYB+nVcQ2X+TEePm1ajF/N7CED6hlC5AxuQJops1+vckY2zYFZoeDO/byv7gHf+33NmT/GxdlKAeUsOHnajGIux0eRC1EfMsaAWKn7pTO65TSRYbdDI9b8DOpMj4lkvvLHPkj4pTm8hfrzVS5HcgMLrqnplYHiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i2ed6qkS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785413673; c=relaxed/simple;
+	bh=c747fqvNDgqVLoyxnKPVeIUVwA83B4m/ITNcnGHudIc=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=bOCnsH9eMbHvsEjzoi8Cuy2GDkWd84jd0nVbVUGvJ5o7FyrbxiY5Xn7rJqXUbeKQ3KyXZmone1jk/R6PWlmC1GyFiSA+Ss/XUoJLwT7cnpIn2LTG1/aST3f96nsGECQwrQ6ODMnTuvaIJex8/LanXHJSEpV5sARPdcwl0XU1pKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com; spf=pass smtp.mailfrom=9elements.com; dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b=NskyoACr; arc=none smtp.client-ip=74.125.225.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=9elements.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i2ed6qkS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 173F91F000E9;
-	Thu, 30 Jul 2026 12:10:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785413450;
-	bh=YQJTYrZZxsD4Ctzm3QhqyCxx3WlAzPxmBmYH6gea7+A=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=i2ed6qkS9QkQwi3wBlbLJO7MkuL/3BeZyahs2AnOQDJX7qxxCuzusfIkGrU/EaRpg
-	 tEP7x5aqXAh2UpVAQJZc2UuPkpr3fIcxs+OPrx1lYcbQkT15Sx4gUB5ZCtVnsJfYWA
-	 BhtP+an5e3cWzB56iXDqL9kp3oJUrquw6o8gflYiZAS6jWD99UUg2LZTVGUFQSpV/G
-	 X/6+NzZKpgqRXaWBRQYN+QFcJvx3HqYxm3uFx3sKSNceBvk2+31GS6Djzq8UloPxvd
-	 CaPYu2JUcnGEPskscnMCzX5JsUzLoQPnvGvrTYHvyWrw67W1ba/beB07dyGZuUCD3T
-	 z9ESS+C5la9GQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2
- E key connector
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260730-eliza_evk-v7-2-7ac7b66a3e6d@oss.qualcomm.com>
-References: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
- <20260730-eliza_evk-v7-2-7ac7b66a3e6d@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 12:10:49 +0000
-Message-Id: <20260730121050.173F91F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b="NskyoACr"
+Received: by mail-wr2-f1.google.com with SMTP id ffacd0b85a97d-46e747fbf36so797655f8f.0
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 05:14:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=9elements.com; s=google; t=1785413670; x=1786018470; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=7eM/+djUdUKJLWwx0zayHVa8z9iYSo8gtg4+aGAkdTc=;
+        b=NskyoACr+wxUdZSBWcWCek0Quq44Rjl6ppkyp1lIOr1Gdq7nDR/+HJqmjA31kUFJYY
+         AHqqerojWES4AyaowhVSJRM1Hn4XFIR7sT0thWat6Xxg7QNpQZNtrr7X//n+atTlGG9d
+         FO5d8XdJSbGjKORdENp1kttoGYYrvB1mJkKsxYLsM54h8MKlVmzjrAb7OruV8XfPJliC
+         nvFFD0gC5Seu2mqrp5zZCQadgWYBi5AOMWtRsT2l9mh0ZrWysN6zxvtLNAyzZ7axZFHI
+         5pewBUG+v4N6src4D5UUGAPGrG5opacknLtwXvDaoLr0ydJrb/crG0J78Zf5vL5KQY6v
+         VfCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785413670; x=1786018470;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7eM/+djUdUKJLWwx0zayHVa8z9iYSo8gtg4+aGAkdTc=;
+        b=Wpy0G8jYg1UP3P9RwI62yj8VggXVwKJo+SL5RgLeRMA6TGWdu7EvipC4Ny6XzQhc5r
+         a/9psIHeHP8vtOENwoa6dIhpclb2OlennpDgVHpKdFFlNHEW+fm5hMK3JqjgukXKsPwv
+         fYSdXOtcbBbdw7KwnqaTQgbOQ0HDfDs/Cd1WEpyFBeVQrpDQ9gW61STYwH9gcWrKnR6w
+         7gCIiObezmss3q+UQibApGPE5LQJUhgqmPRY0BJ9iJ7eO2v07JCcBbnoGXrJNXQBe2Uc
+         KJyaJd29cSR+cOipiXhr/eeG5MNU9aHXJ6zLaLeDpdCHA5gIyUyYxswxzAoyZ03nziZI
+         drjw==
+X-Forwarded-Encrypted: i=1; AHgh+RogBR3H4AnTWCgBewgR8hzBOntCsCCsxJDY1qxfeBwV9gMKcexIOAzA2wA6h01T8aXsjp1jmQFvqSU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwGtb0RXIQHY0aEQ3lqkM3HI4K5jMzXMzcq42X8DMijbZ18SeO5
+	LpepTqne2PCHydT745C5ndU1L7W3Rnlyn9feUfEFvee1T3b0Gy3eTHm9JBDs2EzQMA==
+X-Gm-Gg: AR+sD10Y6uj3CjEX91tjzuE5H909SYtz9iFw/ckRh9cERLHl17QXjApK4stQ8kq0ZF+
+	YO5S1KX/DbgwJWL1o0UvFbgF1piWKg723k9eGAc1Q6EdOld/BrtG3t3BNQDdm1BsQuuS72TziAh
+	0NMlOn80I4AMDwIF6/fFPWk6Q94GjBDOv+/UaG3cyxmcp9Cpj2OxHWXA+1PIY5/7F+S29BnWfG5
+	aNAYfq+jeOc5Hwk+gbCCDKuS7RhDHhglRFY/eUiTV4fES2Ezisdiqa4YPuDzqouNNde2eLCb5cV
+	aaLQpSsy4aCywqtfWy4RZZA8vAhrFB2R+70zs15u+Fxx5X9QqXJfofGuHhJHIVDBKjexmLFqxRV
+	ETU6r8gW+aXpNP7lwCFz6DzzDJKJ8e221pqT3v7pNjiP8xqw3vvsU5O8SV+BqVTbo3DzLdoOIA8
+	fRAgEHHYp5OdgFa5EURHILx6wOxX3a3RZHwXNVVj81QXYJ9D/bK/e814S2VWF2vzaqMA==
+X-Received: by 2002:a5d:59c3:0:b0:47f:9283:1fb3 with SMTP id ffacd0b85a97d-47fc806e48amr3531249f8f.0.1785413669775;
+        Thu, 30 Jul 2026 05:14:29 -0700 (PDT)
+Received: from localhost ([188.111.3.154])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fc892cc54sm5743980f8f.21.2026.07.30.05.14.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 30 Jul 2026 05:14:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 30 Jul 2026 14:14:27 +0200
+Message-Id: <DKBWBNP7VLCF.3FND2WKPV4NWU@9elements.com>
+Cc: "Lucas Stach" <l.stach@pengutronix.de>, "Lorenzo Pieralisi"
+ <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, "Sascha Hauer" <s.hauer@pengutronix.de>,
+ "Pengutronix Kernel Team" <kernel@pengutronix.de>, "Fabio Estevam"
+ <festevam@gmail.com>, <linux-pci@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <imx@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: imx6: enable ASPM L1 only iff CLKREQ# is supported
+From: "Michal Gorlas" <michal.gorlas@9elements.com>
+To: "Manivannan Sadhasivam" <mani@kernel.org>, "Richard Zhu"
+ <hongxing.zhu@nxp.com>, "Frank Li" <Frank.Li@nxp.com>, "Michal Gorlas"
+ <michal.gorlas@9elements.com>
+X-Mailer: aerc 0.21.0
+References: <20260719-l1-conditional-imx-v1-1-a55a57915c68@9elements.com>
+ <t2zu6bv4dqf5znpn5uypkoieltlrzlp4kskt6jwp46xgqajhjp@6g5kiwwn72a4>
+In-Reply-To: <t2zu6bv4dqf5znpn5uypkoieltlrzlp4kskt6jwp46xgqajhjp@6g5kiwwn72a4>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Incorrect GPIO polarity for w-disable2-gpios inverts M.2 Bluetoo=
-th radio disable logic.
---
+On Wed Jul 29, 2026 at 7:01 PM CEST, Manivannan Sadhasivam wrote:
+> On Sun, Jul 19, 2026 at 02:47:54AM +0200, Michal Gorlas wrote:
+>> Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
+>> states for devicetree platforms"), ASPM states are force enabled
+>> on all devicetree platforms. This causes PCI devices on some iMX SoCs
+>> (for e.g. iMX 8M Plus Kontron SMARC eval carrier) to enter L1 even
+>> though CLKREQ# is not supported (and consequently supports-clkreq is
+>> not set in pcie controller node of their DT), which causes the device to
+>> never wake up from L1.
+>>=20
+>> Hence, disable L1 capability in the LINKCAP register if supports-clkreq
+>> is not set in the DT explicitly.
+>>=20
+>> Note, the logic here is very similar to 613f3255a35a, only difference
+>> is that leaving L0s enabled does not cause issues (at least
+>> I never encountered them myself when testing on the device) as its
+>> not dependent on CLKREQ# being physically there.
+>> Since there is already a way of specifying its presence in the DT,
+>> the driver should be aware and disable L1.
+>>=20
+>> Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for d=
+evicetree platforms")
+>> Signed-off-by: Michal Gorlas <michal.gorlas@9elements.com>
+>> ---
+>>  drivers/pci/controller/dwc/pci-imx6.c | 19 +++++++++++++++++++
+>>  1 file changed, 19 insertions(+)
+>>=20
+>> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/control=
+ler/dwc/pci-imx6.c
+>> index 98e1db751132..7471501fbf04 100644
+>> --- a/drivers/pci/controller/dwc/pci-imx6.c
+>> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>> @@ -1318,6 +1318,22 @@ static void imx_pcie_assert_perst(struct imx_pcie=
+ *imx_pcie, bool assert)
+>>  	}
+>>  }
+>> =20
+>> +static void imx_pcie_disable_l1(struct dw_pcie *pci)
+>> +{
+>> +	u32 val;
+>> +	u8 offset;
+>> +
+>> +	offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>> +
+>> +	dw_pcie_dbi_ro_wr_en(pci);
+>> +
+>> +	val =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+>> +	val &=3D ~PCI_EXP_LNKCAP_ASPM_L1;
+>> +	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, val);
+>> +
+>> +	dw_pcie_dbi_ro_wr_dis(pci);
+>> +}
+>> +
+>>  static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+>>  {
+>>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+>> @@ -1442,6 +1458,9 @@ static int imx_pcie_host_init(struct dw_pcie_rp *p=
+p)
+>> =20
+>>  	imx_setup_phy_mpll(imx_pcie);
+>> =20
+>> +	if (!imx_pcie->supports_clkreq)
+>> +		imx_pcie_disable_l1(pci);
+>
+> Sashiko raised a valid issue here:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260719-l1-conditio=
+nal-imx-v1-1-a55a57915c68@9elements.com/#27076171
+>
+> IMX_PCIE_FLAG_BROKEN_SUSPEND is only set for i.MX6Q, but none of its DTs =
+have
+> 'supports-clkreq' property. So this patch will impact them also and since=
+ they
+> do not reinitialize the hardware fully in resume(), ASPM settings will re=
+set to
+> hardware default.
 
---- Patch [2]: [PATCH v7 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M=
-.2 E key connector ---
-commit 1b7021041bf505a0f78e56766606ecebc1d465b4
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Right, for i.MX6Q, imx_pcie_disable_l1() could be called unconditionally
+in imx_pcie_resume_noirq() after the imx_check_flag(imx_pcie, IMX_PCIE_FLAG=
+_BROKEN_SUSPEND)
+block, something like:
 
-arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
+@@ -1767,6 +1767,7 @@ static int imx_pcie_resume_noirq(struct device *dev)
+                        return ret;
+                imx_pcie_deassert_core_reset(imx_pcie);
+                imx_pcie_assert_perst(imx_pcie, false);
++               imx_pcie_disable_l1(imx_pcie->pci);
 
-This commit enables the PCIe0 root port and its QMP PHY for the Eliza EVK
-board's M.2 E key connector. It provisions a 3.3V regulator supply via an
-I2C GPIO expander and defines the connector to host a WLAN card over PCIe
-and a Bluetooth device over UART.
+                /*
+                 * Using PCIE_TEST_PD seems to disable MSI and powers down =
+the
 
-> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
-s/qcom/eliza-evk.dtsi
-> index e47b24f8b8277..b35fffb509765 100644
-> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+Though I do not have imx6q hw to test this, so it would be nice if NXP
+folks could give it a test.
 
-[ ... ]
-
-> +	connector-0 {
-> +		compatible =3D "pcie-m2-e-connector";
-> +		vpcie3v3-supply =3D <&vreg_pcie_m_3p3>;
-> +		w-disable1-gpios =3D <&tlmm 35 GPIO_ACTIVE_LOW>;
-> +		w-disable2-gpios =3D <&pm8550vs_g_gpios 4 GPIO_ACTIVE_HIGH>;
-
-[Severity: Medium]
-Does this GPIO polarity correctly model the M.2 specification? The M.2 stan=
-dard
-defines W_DISABLE2# as an active-low signal, meaning a physical LOW disables
-the radio.=20
-
-If the pwrseq-pcie-m2 driver expects an active-low signal and de-asserts
-the GPIO to enable the radio, specifying GPIO_ACTIVE_HIGH here will cause
-the physical pin to be driven LOW instead, inadvertently holding the
-Bluetooth radio in a disabled state.
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-eliza_evk-=
-v7-0-7ac7b66a3e6d@oss.qualcomm.com?part=3D2
+Best,
+Michal
