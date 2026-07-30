@@ -1,46 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E39E175A68;
-	Thu, 30 Jul 2026 03:48:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 563AB222597
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 04:32:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785383303; cv=none; b=GM5BJ1adhcJQLtGOsM9NiYNwTuLPcWXGbexsAdzDakwcwNBFowk7rH7XPlelLF3knm5qaBiH6k1qo4/9tmNF6KrcqS1uhSfrbrmNmm9i88OeMgM4PszYfm3mPeXdM69YOirMliZs1YObeGP4UdAEdNQKWzFLASm7exGFkjk7wP8=
+	t=1785385936; cv=none; b=O74qEJ8TPUazpuLNuScJ4tESo27txTQ9Ll1LAQOOjRhvaon8OOo4ymAjmdqrFnYPOc/zRLwHYhNsKd0RrViK1T2VG0bLpibaHYfmgzy8JP2mMkruxRBzXxYbZxa95L7QjSpyRgg5hr1gnHn3sjasZAxt7bfG0xeqAekK7tVN/yA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785383303; c=relaxed/simple;
-	bh=mRzy/A8QP1rJEwW9vicUPjGnGofkSi1PxtTk8kLG0qY=;
+	s=arc-20240116; t=1785385936; c=relaxed/simple;
+	bh=dZA/NlUz5CDEZ+b1tHYMV5fUaTStt36AXLqcRlawA4s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=as3t0esMEtNlzV9gpEv//ux22weu23kLJttiunolsywyeRsdYO6sr44nsVGk+65aIxivTFqzW6qgrxkz9Pxld+A9iF24DldTZysZaypFVk8vfJPcZ4aiRAgmUmOZYLSSG87kMHieg/Z5Td7w0YcjG0aBJvVRTXKqshavDJ6WHvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lh3SI/4G; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=b6Z/D7NTJGpiVx6fRTsA8XgkcJB2SpM110ybSAWt8suoM5c5vzBGwb/hTAStc7DbK+CJwVSeQyL9TG6BvktyBrgQP4F3PWShga6+caz5d3jqjSTlaLfbxnUQjFfleRO0dGMiM9+BN1ihm0XRcYetBw4teZ1HTwFW6nD5ukgVe+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i59kUElE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lh3SI/4G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 530061F000E9;
-	Thu, 30 Jul 2026 03:48:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i59kUElE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D8A1F000E9;
+	Thu, 30 Jul 2026 04:32:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785383301;
-	bh=Fz0OgPJHskeZCecIhowCqY7VOgUdIoTQSDl165K/eiA=;
+	s=k20260515; t=1785385934;
+	bh=s1J+yCtYVoCxfU1R7c46QILzINTJneu0RZRWIpUiT4E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Lh3SI/4G3RDTWRTW0NdHgz98g1xe5CFI4f5qgm15wero2ItllUSHgs45TZPbQYL2Q
-	 rCHS6Zze5Q9Y2/ARfhG2TffPAN3NS6mLuKT6e4uzyPXMIDVdwLQ2DDgyYzf0aRy36e
-	 CcdN19IHoaSAO4dl38o5KBknoP0CUOlRdYqRBHyzIn73xiP0LwfPnhxls9HSeOr4ex
-	 Mr1oKYRbef3TG8pQez/gWER5ZdMct9iKrj4F5ocJlwCd9PrJW9wA9ijlbyLp0uwC9Z
-	 bgZ67ckMARrD6Y5ujaicC3KFybE51P26CACDPAeatppWbrZYAoKyLmILliJjeKPUeb
-	 S/e3xi5pSTRWQ==
-Date: Thu, 30 Jul 2026 05:48:12 +0200
+	b=i59kUElEjdxLlb/3FdnaDclWnQRm65CtaIyx0SX2dluUwArpt6D6p5pqryGPtpCtp
+	 6lDEhQ0hVQ+a5a+1hoV5VK4qFaIF5OjkhSUAxaFhhiFTqAxEFRVB+3Pgf8vhqIKZDD
+	 Rrr2L+8atEmjZbik8eD2dlLW0vdZFd2KB5ASzschODKX8idU3Q+MUjFX0CtkYAHUg2
+	 LYr+299FvF7RpXtDEPGna0WGTzAEf9cV1MLtj5A7qSL7+GZIa5+Wos9CBo5TWyE2Ed
+	 i5/LM0I0JkKjzc61WdLs7QZVMyboHDUOC2mNBvqn95W9WPx8ZcGaKfPRxaAxAs8WUH
+	 q4Ix8DcebYYkA==
+Date: Thu, 30 Jul 2026 06:32:08 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Rosen Penev <rosenp@gmail.com>
-Cc: linux-pci@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Michal Simek <michal.simek@amd.com>, 
-	Nathan Chancellor <nathan@kernel.org>, Nick Desaulniers <ndesaulniers@google.com>, 
-	Bill Wendling <morbo@google.com>, Justin Stitt <justinstitt@google.com>, 
-	"moderated list:ARM/ZYNQ ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>, open list <linux-kernel@vger.kernel.org>, 
-	"open list:CLANG/LLVM BUILD SUPPORT:Keyword:b(?i:clang|llvm)b" <llvm@lists.linux.dev>
-Subject: Re: [PATCHv2] PCI: xilinx: use fwnode_irq_get() for INTx IRQ lookup
-Message-ID: <5ea47pp3ctiieqahn3mkcg3dqrlmwdgdjyv6pa65qmjuqop4lb@tbax2lojuwkr>
-References: <20260716205811.800920-1-rosenp@gmail.com>
- <g3gtckpqgacw44jqqb5hb3oejpelxvbba47tdwsvksxbbskygp@mcwtsbypoyar>
- <CAKxU2N_f1nN4Oo94V9MY6Q-wp66j=3kodfMs0BeXVGB9XivvNA@mail.gmail.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Koichiro Den <den@valinux.co.jp>, linux-pci@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: DWC eDMA weirdness
+Message-ID: <nvpa2qlo7rbhmeuk3ijf2pzsqp43o4hnexafk3ep3gho3w27sk@lbpqgyaelqxc>
+References: <20260729202821.1153443-2-cassel@kernel.org>
+ <ampndLtU32ODmncX@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,23 +44,102 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKxU2N_f1nN4Oo94V9MY6Q-wp66j=3kodfMs0BeXVGB9XivvNA@mail.gmail.com>
+In-Reply-To: <ampndLtU32ODmncX@ryzen>
 
-On Wed, Jul 29, 2026 at 11:18:15AM -0700, Rosen Penev wrote:
-> On Wed, Jul 29, 2026 at 9:00 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Thu, Jul 16, 2026 at 01:58:11PM -0700, Rosen Penev wrote:
-> > > Replace irq_of_parse_and_map() with fwnode_irq_get(dev_fwnode(dev), 0)
-> > > in xilinx_pcie_parse_dt(). For an OF-backed device this is equivalent to
-> > > the previous call, but uses the generic firmware-node API.
-> > >
-> >
-> > What is the benefit of using fwnode API for OF only driver?
-> I get conflicting information. Apparently of_irq_get needs a call to
-> irq_dispose_mapping but fwnode_irq_get does not.
+On Wed, Jul 29, 2026 at 10:49:56PM +0200, Niklas Cassel wrote:
+> On Wed, Jul 29, 2026 at 10:28:22PM +0200, Niklas Cassel wrote:
+> > Getting two IRQs when we are only expecting a single IRQ is a very
+> > serious error, and suggests that something is very wrong in the EPC
+> > driver.
+> > 
+> > Scream loudly so that EPC driver developers can see the problem,
+> > which might otherwise be very hard to detect.
+> > 
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > ---
+> >  drivers/misc/pci_endpoint_test.c | 13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
+> > 
+> > diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> > index 3635741c3e7a..a212e53654c6 100644
+> > --- a/drivers/misc/pci_endpoint_test.c
+> > +++ b/drivers/misc/pci_endpoint_test.c
+> > @@ -178,6 +178,19 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
+> >  	if (reg & STATUS_IRQ_RAISED) {
+> >  		test->last_irq = irq;
+> >  		complete(&test->irq_raised);
+> > +		/*
+> > +		 * The endpoint test driver performs all testing sequentially.
+> > +		 * This means that test->irq_raised.done should never exceed 1.
+> > +		 * If it does, then we received two IRQs in a row, without a
+> > +		 * successful wait_for_completion_timeout() call in between.
+> > +		 *
+> > +		 * While complete() increases test->irq_raised.done by one,
+> > +		 * wait_for_completion_timeout() reduces test->irq_raised.done
+> > +		 * by one on success.
+> > +		 *
+> > +		 * Please debug your EPC driver if you see this warning.
+> > +		 */
+> > +		WARN_ON(test->irq_raised.done > 1);
+> >  	}
+> >  
+> >  	return IRQ_HANDLED;
+> > -- 
+> > 2.55.0
+> > 
+> 
+> Hello Koichiro,
+> 
+> I created this patch in response to a problem that I saw on v7.2-rc5.
+> 
+> When running the pci_endpoint selftest:
+> # /pcitest
+> (snip)
+> #  RUN           pcie_ep_doorbell.DOORBELL_TEST ...
+> [  215.256772] pci-endpoint-test 0000:01:00.0: Failed to trigger doorbell in endpoint
+> #            OK  pcie_ep_doorbell.DOORBELL_TEST
+> ok 23 pcie_ep_doorbell.DOORBELL_TEST
+> # FAILED: 19 / 23 tests passed.
+> # 2 skipped test(s) detected. Consider enabling relevant config options to improve coverage.
+> # Totals: pass:17 fail:4 xfail:0 xpass:0 skip:2 error:0
+> 
+> 
+> I saw the weird error:
+> "Failed to trigger doorbell in endpoint"
+> 
+> Ignore that the test case leaves things to be desired, since it passes even
+> though we see this warning.
+> 
 
-That's not true. fwnode_irq_get() becomes a wrapper to of_irq_get() if OF is
-used. So both needs a call to irq_dispose_mapping() in the error path.
+How come this is possible? Doorbell timeout occured, but still Doorbell got
+triggered in EP?
+
+> 
+> The problem seems to be that the embedded doorbell IRQ handler is executed twice,
+> in response to a single writel() which rings the doorbell.
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 4802d4f80f78..7f4360579ffb 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -714,6 +714,7 @@ static irqreturn_t pci_epf_test_doorbell_handler(int irq, void *data)
+>  
+>         status |= STATUS_DOORBELL_SUCCESS;
+>         reg->status = cpu_to_le32(status);
+> +       trace_printk("calling pci_epf_test_raise_irq()\n");
+>         pci_epf_test_raise_irq(epf_test, reg);
+>  
+>         return IRQ_HANDLED;
+> 
+> 
+> As you can see:
+>  irq/58-pci-ep-t-221     [006] .....    58.601020: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+>  irq/58-pci-ep-t-221     [006] .....    58.601421: pci_epf_test_doorbell_handler: calling pci_epf_test_raise_irq()
+> 
+> It is called twice for a single doorbell ring.
+> 
+
+Which doorbell is used here? Platform MSI or Embedded one?
 
 - Mani
 
