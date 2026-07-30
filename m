@@ -1,128 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA56B4248D7;
-	Thu, 30 Jul 2026 12:09:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BEE422E25;
+	Thu, 30 Jul 2026 12:10:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785413355; cv=none; b=bEaYmOfdgZKJBziwsYlcBnNUOArQEZ2bBDPaRDezL+ZYQiXU6HrqdXAh7YO6L6saQQqBMyYvCn6YndUHSuw+p4VMpJpyWxzBIHXkE+u7a2CbSx5mW6b2y+xVvizl6DNmzYBm8Qm1E2lO3zWcJVVd6vMzx7UWQ9LUPH/BGRpYLgA=
+	t=1785413451; cv=none; b=Bzx14L7YyFhu9+OZWGnv6lDHDftRlODfMn7jFXRA2R1qKpGqS3+Um2RFEXaxdN+adkrWGWXwj40nNUsOjNg2p+aogIwx2wFK5U40GsWjxs6Z/4aomHSsAE+jq3ul8i922l+V8lrCxMN8efBvk8uDxVGQQntliGzTAPjIDywt0Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785413355; c=relaxed/simple;
-	bh=ZvYUsM4e52yTkwCy0PNeaZyw5oO7MwAywxbhRwB79f0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Qv/uUE6UWtwDfiuD+D9BSrshrpBrKT1EmkEIM35xJcchjkq4UET/OoolrI2XqWSvvUErolAq74FHplKsT/VejFEPgQInOY9r6m76sath9zU/Bm1ucLRETG0bYPy5JlXRGG7AB7Qb4eoqGqfVtm4VqUn1Q7tAwZILGN6/NIuHWUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZL1tGeF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785413451; c=relaxed/simple;
+	bh=NeiLNU3A7gq9g0jGmL2hQ11c+fW+uN2L4o3Wam3qJjg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=AtGWajGBNeXGvYB+nVcQ2X+TEePm1ajF/N7CED6hlC5AxuQJops1+vckY2zYFZoeDO/byv7gHf+33NmT/GxdlKAeUsOHnajGIux0eRC1EfMsaAWKn7pTO65TSRYbdDI9b8DOpMj4lkvvLHPkj4pTm8hfrzVS5HcgMLrqnplYHiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i2ed6qkS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZL1tGeF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C6441F000E9;
-	Thu, 30 Jul 2026 12:09:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i2ed6qkS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 173F91F000E9;
+	Thu, 30 Jul 2026 12:10:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785413354;
-	bh=kaxbb4hGIxen8PCLgFdLGDy/QkX3XGfhGMt8egYsPCA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=XZL1tGeFIup4XVQ5QJHQ0Rwt91LpypNnes9DTDM4JVhjHUmOx4F0DoLiQ0t0vfUO+
-	 zGSxp/o0/1igl6HlfM/WToSRFzDsW2WEs1clcOEhevrJlt3Eoxo/N5Qw7WKMoR+cWM
-	 9OPgFipM94aW40XNVtzKzQJzea/IvFEKQT6L6tyJO8KNkC04NoBFQmvUx/v+KS6+LC
-	 mKtvs+3Ksn3E0rz5MH8EWlyHNDIn9c84eB7J0yRPVHWPyrMywFtTU7aPfnHI4O3O8J
-	 ONONLp/V/NyBhYjIHs0jX1U+AzyC9df1FuS6JSITwfugzkLMrdm621T30gT5c8Z5DM
-	 W+qHiMbfgEVng==
-Date: Thu, 30 Jul 2026 07:09:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-Cc: Frank Li <frank.li@nxp.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
- with RC power loss
-Message-ID: <20260730120913.GA1497203@bhelgaas>
+	s=k20260515; t=1785413450;
+	bh=YQJTYrZZxsD4Ctzm3QhqyCxx3WlAzPxmBmYH6gea7+A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=i2ed6qkS9QkQwi3wBlbLJO7MkuL/3BeZyahs2AnOQDJX7qxxCuzusfIkGrU/EaRpg
+	 tEP7x5aqXAh2UpVAQJZc2UuPkpr3fIcxs+OPrx1lYcbQkT15Sx4gUB5ZCtVnsJfYWA
+	 BhtP+an5e3cWzB56iXDqL9kp3oJUrquw6o8gflYiZAS6jWD99UUg2LZTVGUFQSpV/G
+	 X/6+NzZKpgqRXaWBRQYN+QFcJvx3HqYxm3uFx3sKSNceBvk2+31GS6Djzq8UloPxvd
+	 CaPYu2JUcnGEPskscnMCzX5JsUzLoQPnvGvrTYHvyWrw67W1ba/beB07dyGZuUCD3T
+	 z9ESS+C5la9GQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2
+ E key connector
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260730-eliza_evk-v7-2-7ac7b66a3e6d@oss.qualcomm.com>
+References: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
+ <20260730-eliza_evk-v7-2-7ac7b66a3e6d@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 12:10:49 +0000
+Message-Id: <20260730121050.173F91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <GV2PR04MB12019096F2A9E8337F2A1BF9F8CC92@GV2PR04MB12019.eurprd04.prod.outlook.com>
 
-On Thu, Jul 30, 2026 at 08:16:36AM +0000, Hongxing Zhu (OSS) wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas <helgaas@kernel.org>
-> > Sent: Thursday, July 30, 2026 6:30 AM
-> ...
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Incorrect GPIO polarity for w-disable2-gpios inverts M.2 Bluetoo=
+th radio disable logic.
+--
 
-> > On Fri, Jul 17, 2026 at 03:41:21PM +0800, hongxing.zhu@oss.nxp.com wrote:
-> > > From: Richard Zhu <hongxing.zhu@nxp.com>
-> > >
-> > > Some platforms like i.MX power off their PCIe RC controllers during
-> > > system suspend, requiring full re-initialization on resume. These
-> > > platforms need to enter L2 state to properly notify endpoints before
-> > > power loss.
-> > >
-> > > According to PCIe base spec r7.0, sec 5.2, the system software should
-> > > transition the device into D3Hot before broadcasting the PME_Turn_Off
-> > > message to initiate L2 entry. However, some endpoint devices fail the
-> > > D3cold capability check in pci_host_common_d3cold_possible(), which
-> > > would normally prevent L2 entry.
-> > 
-> > Wakeup devices that don't support PME from D3cold will fail the
-> > D3cold capability check, but I don't think those are the problem
-> > you're solving.
-> > 
-> You're right.
-> 
-> > This appears to handle devices that are not in D3hot, and that's
-> > not a property of the endpoint; it's a property of its driver.  Is
-> > the problem here that some driver didn't put its device in D3hot?
-> > 
-> I observed some endpoint devices failing the D3cold capability
-> check, but I haven't identified the root cause.
+--- Patch [2]: [PATCH v7 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M=
+.2 E key connector ---
+commit 1b7021041bf505a0f78e56766606ecebc1d465b4
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Seems like some instrumentation in pci_host_common_d3cold_possible()
-could tell us which devices/drivers are relevant.
+arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E key connector
 
-> > > For platforms where the RC loses power during suspend, L2 entry
-> > > is essential regardless of D3cold support, as the link will be
-> > > lost anyway.  Add a suspend_poweroff flag to force L2 entry in
-> > > such cases, and enable it for i.MX PCIe controllers.
-> > >
-> > > Note: This violates the spec requirement that devices be in
-> > > D3Hot before PME_Turn_Off, but is necessary for proper operation
-> > > on platforms with RC power loss during suspend.
-> > 
-> > If the device isn't in D3hot, it may still be active, and I think
-> > the PME_Turn_Off will abort any DMAs in progress, which doesn't
-> > sound like proper operation of the endpoint.
->
-> You're correct - this isn't ideal for endpoint operation. However,
-> on i.MX platforms, the RC controller will lose power during system
-> suspend regardless. Without sending PME_Turn_Off, endpoints would
-> have no notification before the link abruptly goes down.
+This commit enables the PCIe0 root port and its QMP PHY for the Eliza EVK
+board's M.2 E key connector. It provisions a 3.3V regulator supply via an
+I2C GPIO expander and defines the connector to host a WLAN card over PCIe
+and a Bluetooth device over UART.
 
-The PME_Turn_Off is some notification, but I don't think the endpoint
-can do DMA or MSI, so its driver won't be involved.  It may be able to
-do things internally, e.g., write caches to an SSD or transmit packets
-from its internal buffers.  But I think it might still lose power in
-the middle of operations like that, so it doesn't sound reliable.
+> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
+s/qcom/eliza-evk.dtsi
+> index e47b24f8b8277..b35fffb509765 100644
+> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
 
-> This patch adds a flag to force L2 entry for such platforms,
-> choosing to notify endpoints (even if not ideal) rather than having
-> the link drop unexpectedly. I'm appreciated for suggestions if
-> there's a better approach to handle this scenario.
+[ ... ]
 
-Mani recently added pci_suspend_retains_context(), and I think it
-returns "true" on i.MX.  But if the RC is powered off and all the
-devices need full re-initialization on resume, it sounds like it
-*should* return "false".
+> +	connector-0 {
+> +		compatible =3D "pcie-m2-e-connector";
+> +		vpcie3v3-supply =3D <&vreg_pcie_m_3p3>;
+> +		w-disable1-gpios =3D <&tlmm 35 GPIO_ACTIVE_LOW>;
+> +		w-disable2-gpios =3D <&pm8550vs_g_gpios 4 GPIO_ACTIVE_HIGH>;
+
+[Severity: Medium]
+Does this GPIO polarity correctly model the M.2 specification? The M.2 stan=
+dard
+defines W_DISABLE2# as an active-low signal, meaning a physical LOW disables
+the radio.=20
+
+If the pwrseq-pcie-m2 driver expects an active-low signal and de-asserts
+the GPIO to enable the radio, specifying GPIO_ACTIVE_HIGH here will cause
+the physical pin to be driven LOW instead, inadvertently holding the
+Bluetooth radio in a disabled state.
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-eliza_evk-=
+v7-0-7ac7b66a3e6d@oss.qualcomm.com?part=3D2
