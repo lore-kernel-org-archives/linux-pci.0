@@ -1,216 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0EA377ED7;
-	Thu, 30 Jul 2026 05:08:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA7EC364943;
+	Thu, 30 Jul 2026 05:10:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785388130; cv=none; b=R62G92Q8Kk6SAnHY5NygDmPrZpZwgDTSsXB4qmggDpR8m5lENhbykcijgaEuYWLkSyAmJC1eS8cVDsbGIBJRRMaMwNDjjFYo1W7OXn3QbkN5JlBW8sQNqRr39LiCjZlsi8+w4VDiFuHXXgVKD9ENZfdAHsuaAVep6TyM1G0OLCk=
+	t=1785388233; cv=none; b=Mq4gZ/KO/5pSem8/rXGnOEUI1hJWso4aj6CAnPYffOM46/c6/Qgrh3ZeBbCpSIcFFAXjlGrvluKTyaM2yWmjdPSw/uLv3gUpQUMfAMj1YOCXTH0ofJjo9saQJsPVw95CeA/ARlFosL21BQDkOJXUng5kehVh7M/xqT56oaclqh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785388130; c=relaxed/simple;
-	bh=w3RNhY8T7AAkT0oL5eFQJk0juwISMg/vLwZO2uP6Ltw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nvw45t/SyuUjNcpv6D8lFiXfx9OJ5UPye9onRhb2vusXEpj6RXV4G7hjGXaukbvEjTI9ugwLZOv1kG2VdmLFdvO9d/iF8yGUZhU/vZT8cLbVkMFMQ5iO8/7KtrZOvLFp5xyCCRG60k2PR4LHb/bDlAr4Kg1I09J3Lzzrwzuc5CE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J55ZNzvV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785388233; c=relaxed/simple;
+	bh=P4WkClPZ2aFZydwQmz4VtsMDwea1K+ni2l+QsGlvpbg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GfMNHRhfIh3f9m0aTK+hbHeOYqqpfTem1OeRzeUngkTFnS5QdBTUcEjzj2BbR0Rizenscv8EWQT0RahAXkbwLEP0rlS1ZkfpvGoV3HEZmRyuu1g2Oy3weUkOMuWAWVsk6rBZvn3PoPLe0PAKVewwllhrioufjAQRdvgkI3GRdfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fGqFBwi7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J55ZNzvV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA0A51F000E9;
-	Thu, 30 Jul 2026 05:08:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fGqFBwi7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D8E1F000E9;
+	Thu, 30 Jul 2026 05:10:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785388129;
-	bh=c20U8o5u3vtQTLB4Ygx6a5wNvee/y72tJCfxUAblbdU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=J55ZNzvVoC8KR+Rwtov0ygdHWS0GAnXT2c3UJyZB5zTWfVQ3GKBSBKd+6lpGObhR1
-	 WxtAEtHUyofasLOxLtxHJtNtKuVqnXrHO5ffQvWZC+QSBSvxN4wNhLkUd1PLzKsDB1
-	 WVA0tZWuaFbXbGBnMrBJfb/UtYOlfnE4KBM6oXaxApu1K2k68QRUN19s32a3CNtX0R
-	 IUZlnV89ix/gvEqNjAIUQpAyDaVefTUcGg8z1jkmcGpa5eG4uGGKM1hZthNZEM7Eqn
-	 eIiDBPM06jSpxeUsAyyzGdkxionNA03s/4gr46E/vVYONQrI1zn0UKUszrW2tRnlyU
-	 YNiEg3H1sPnyA==
-Date: Thu, 30 Jul 2026 07:08:40 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v6 2/3] arm64: dts: qcom: eliza-evk: Add PCIe0 with M.2 E
- key connector
-Message-ID: <vatryeq6qsan342wow42rosabjofi6cqkom7aczllko4kw7n4t@v7k3fxat7nfi>
+	s=k20260515; t=1785388231;
+	bh=P4KGqEOd/xzvcHhvU4Yb0KDKlNKeCizBoKV+iyITICk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fGqFBwi7ht5JCc/PeGoHzI/tji98DmHr4Z68cPq5o5AmXiM9flrqTq4tJFoNGIW6C
+	 50k3AS9k6Utw9s5tlxz32W6E2g9ul6JJpsIINon4PhM/Q3Oh6mZzHLpUlWsXnYEDys
+	 YPkKqKhyCpCi8lrW2t5bBXYmABjxd4BPOM8lQRml3PGUD1RLHLD5EKknYwvRZFiY6F
+	 P7JvH99CQmyr2CPZD/MsrkfA9wbGKlYFGlPla3SxWK2Q2/JKAoSLMjphmOKoTrYmtp
+	 o9ETAWdqpQCQUi2+1N9VC+ptoe3euqyeptQz72J+QYmjzw1JSZKVtqi6XT+WQf1OVy
+	 Jf6X8Dn9ObK2A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with
+ TC9563 PCIe switch
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260730-eliza_evk-v6-3-40ece2d33114@oss.qualcomm.com>
 References: <20260730-eliza_evk-v6-0-40ece2d33114@oss.qualcomm.com>
- <20260730-eliza_evk-v6-2-40ece2d33114@oss.qualcomm.com>
+ <20260730-eliza_evk-v6-3-40ece2d33114@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 05:10:30 +0000
+Message-Id: <20260730051031.20D8E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260730-eliza_evk-v6-2-40ece2d33114@oss.qualcomm.com>
 
-On Thu, Jul 30, 2026 at 10:18:54AM +0530, Krishna Chaitanya Chundru wrote:
-> The Eliza EVK board features an M.2 E key connector connected to PCIe0.
-> Enable the PCIe0 root port and its QMP PHY with the necessary RPMH
-> regulator supplies. The M.2 slot's 3.3V supply rail is GPIO-controlled
-> via a TCA9538 I/O expander on I2C4.
-> 
-> The M.2 E key slot hosts a WLAN card connected over PCIe and a Bluetooth
-> device connected over UART. Model the connector using the
-> pcie-m2-e-connector binding, wiring the PCIe root port and UART5 for
-> the respective interfaces.
-> 
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  arch/arm64/boot/dts/qcom/eliza-evk.dtsi | 116 ++++++++++++++++++++++++++++++++
->  1 file changed, 116 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> index e47b24f8b827..b35fffb50976 100644
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] Endpoint devices incorrectly define PCI bridge properties (`devi=
+ce_type =3D "pci"`, `ranges`, etc.).
+- [Low] The comment explaining that PERST# and RESX# share the same GPIO is=
+ misplaced, causing confusion about pin assignments.
+--
+
+--- Patch [3]: [PATCH v6 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with T=
+C9563 PCIe switch ---
+commit 86f389de1416cf57b1a057c5cc8316c6fc164073
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+
+arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+
+The Eliza EVK board connects PCIe1 (8GT/s x2) to a Toshiba TC9563 PCIe
+switch. Enable PCIe1, QMP PHY nodes, and TC9563 nodes on I2C and PCIe.
+
+> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
+s/qcom/eliza-evk.dtsi
+> index b35fffb509765..419e737c54e6f 100644
 > --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
 > +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> @@ -11,6 +11,92 @@ aliases {
->  	chosen {
->  		stdout-path = "serial0:115200n8";
->  	};
-> +
-> +	vreg_pcie_m_3p3: regulator-3p3 {
-> +		compatible = "regulator-fixed";
-> +
-> +		regulator-name = "vreg_3p3";
-> +		regulator-min-microvolt = <3300000>;
-> +		regulator-max-microvolt = <3300000>;
-> +
-> +		gpio = <&gpio_expander1 6 GPIO_ACTIVE_HIGH>;
-> +		enable-active-high;
-> +	};
-> +
-> +	connector-0 {
-> +		compatible = "pcie-m2-e-connector";
-> +		vpcie3v3-supply = <&vreg_pcie_m_3p3>;
-> +		w-disable1-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
-> +		w-disable2-gpios = <&pm8550vs_g_gpios 4 GPIO_ACTIVE_HIGH>;
+[ ... ]
+> +&pcie1_port0 {
+> +	wake-gpios =3D <&tlmm 53 GPIO_ACTIVE_LOW>;
+> +	/* Same GPIO is used for both PERST# and resx-gpio */
 
-Hmm, Sashiko pointed out the polarity issue here, GPIO_ACTIVE_HIGH. Is it a
-mistake?
+[Severity: Low]
+Is this comment placed correctly?
 
-- Mani
+The comment implies that wake-gpios (TLMM 53) is the shared reset GPIO, but
+resx-gpios is defined as TLMM 54 further down in the tc9563 node. Should th=
+is
+comment be moved above resx-gpios or the omitted reset-gpios property to av=
+oid
+confusion?
 
 > +
-> +		pinctrl-0 = <&m2_w_disable1>, <&m2_w_disable2>;
-> +		pinctrl-names = "default";
+> +	tc9563: pcie@0,0 {
+> +		compatible =3D "pci1179,0623";
+> +		reg =3D <0x10000 0x0 0x0 0x0 0x0>;
+[ ... ]
+> +		pcie@3,0 {
+> +			reg =3D <0x21800 0x0 0x0 0x0 0x0>;
+> +			#address-cells =3D <3>;
+> +			#size-cells =3D <2>;
+> +			device_type =3D "pci";
+> +			ranges;
+> +			bus-range =3D <0x5 0xff>;
 > +
-> +		ports {
-> +			#address-cells = <1>;
-> +			#size-cells = <0>;
-> +
-> +			port@0 {
-> +				reg = <0>;
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +
-> +				m2_e_pcie_ep: endpoint@0 {
-> +					reg = <0>;
-> +					remote-endpoint = <&pcieport0_ep>;
-> +				};
+> +			pcie@0,0 {
+> +				reg =3D <0x50000 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				device_type =3D "pci";
+> +				ranges;
 > +			};
 > +
-> +			port@3 {
-> +				reg = <3>;
-> +				#address-cells = <1>;
-> +				#size-cells = <0>;
-> +
-> +				m2_e_uart_ep: endpoint@0 {
-> +					reg = <0>;
-> +					remote-endpoint = <&uart5_ep>;
-> +				};
+> +			pcie@0,1 {
+> +				reg =3D <0x50100 0x0 0x0 0x0 0x0>;
+> +				#address-cells =3D <3>;
+> +				#size-cells =3D <2>;
+> +				device_type =3D "pci";
+> +				ranges;
 > +			};
-> +		};
-> +	};
-> +};
-> +
-> +&i2c4 {
-> +	pinctrl-0 = <&qup_i2c4_data_clk>;
-> +	pinctrl-names = "default";
-> +
-> +	clock-frequency = <400000>;
-> +
-> +	status = "okay";
-> +
-> +	gpio_expander1: gpio@3c {
-> +		compatible = "ti,tca9538";
-> +		#gpio-cells = <2>;
-> +		gpio-controller;
-> +		reg = <0x3c>;
-> +	};
-> +};
-> +
-> +&pcie0 {
-> +	status = "okay";
-> +};
-> +
-> +&pcie0_phy {
-> +	vdda-phy-supply = <&vreg_l1k>;
-> +	vdda-pll-supply = <&vreg_l3k>;
-> +
-> +	status = "okay";
-> +};
-> +
-> +&pcie0_port0 {
-> +	wake-gpios = <&tlmm 114 GPIO_ACTIVE_LOW>;
-> +	reset-gpios = <&tlmm 78 GPIO_ACTIVE_LOW>;
-> +
-> +	port {
-> +		pcieport0_ep: endpoint {
-> +			remote-endpoint = <&m2_e_pcie_ep>;
-> +		};
-> +	};
->  };
->  
->  &uart13 {
-> @@ -18,3 +104,33 @@ &uart13 {
->  
->  	status = "okay";
->  };
-> +
-> +&uart5 {
-> +	status = "okay";
-> +
-> +	port {
-> +		uart5_ep: endpoint {
-> +			remote-endpoint = <&m2_e_uart_ep>;
-> +		};
-> +	};
-> +};
-> +
-> +&pm8550vs_g_gpios {
-> +	m2_w_disable2: m2-w-disable2-state {
-> +		pins = "gpio4";
-> +		function = "normal";
-> +		input-disable;
-> +		output-enable;
-> +		bias-disable;
-> +		power-source = <2>;
-> +	};
-> +};
-> +
-> +&tlmm {
-> +	m2_w_disable1: m2-w-disable1-state {
-> +		pins = "gpio35";
-> +		function = "gpio";
-> +		drive-strength = <2>;
-> +		bias-pull-up;
-> +	};
-> +};
-> 
-> -- 
-> 2.34.1
-> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+[Severity: Medium]
+Are pcie@0,0 and pcie@0,1 leaf endpoints?
+
+If these child nodes represent leaf endpoints (like Ethernet MAC devices), =
+they
+should not include properties strictly reserved for PCI-to-PCI bridges or R=
+oot
+Ports such as #address-cells, #size-cells, ranges, or device_type =3D "pci".
+
+Will this cause dtbs_check validation errors or cause the OF/PCI subsystem =
+to
+misinterpret these leaf nodes as PCI bridges?
+
+> +		};
+> +	};
+> +};
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-eliza_evk-=
+v6-0-40ece2d33114@oss.qualcomm.com?part=3D3
