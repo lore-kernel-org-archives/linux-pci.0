@@ -1,106 +1,151 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609BA3DCDAD;
-	Thu, 30 Jul 2026 12:24:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC802877DE
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 12:30:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785414267; cv=none; b=aIurPI68WM7Y/P9DnsIjtLwKK1/mLFr3ZrChYB0Ug/PeKMnOayKTCV7kdYofgK9J4XcFsSdpBfGueMcVMMKbCneZpAnlJTxf/DuEtB/1Zs0ReyMVgRbGAomQyL/iF92s7kurCz9cSTR56BY3yga4U+3e4r/DIdFDjFNSBJ1ojhc=
+	t=1785414625; cv=none; b=dPEWlC34kAIfEPNQWJsQCiqiwLP2y4vY7nthqmGMjhklADrach3+dOREXKKpovRK1xLeRTGcIKWuJbbsvGJ1mf6IhIfuXPkxIwjhraszw2jHuQPsoM0C7ok4pWSumGGHDpVs6GbkN8lzPwpOuENXadnbE/qH2UZmGd6z4gskm+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785414267; c=relaxed/simple;
-	bh=UviIQxvgtKFFSW3oftrOqRuY1rhBOm+3A4h9KHMHt/I=;
+	s=arc-20240116; t=1785414625; c=relaxed/simple;
+	bh=wXsgJL9lsN6srxyYGlykR56HOKar9rsmUuJizDslaE4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jZNCv9Khdj+6BAwpedi1w3sJzI9S/cKeIKhadTS6DF/5f0Q/ZH8BucTPJ4OdwI9bhzjUBa6Psr3bl1iJI6Q1ogaJyLvuX1XjZAp69tYkqE7GGsn9F/6pHZVD9i+kfgPGtUtTvAQqJFKzKuMSBzELSHPcBfNHKX3uwlfuDn0U8MM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BPTkLQ7T; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pTZzwzUeroLw3bUOMSdUhNWUdnxhkKKUCqs3tI/aXgNBfWq0AtOyFOvVivKwnhUKO9rJ6iu3fk+MKgXWdyqGvZFurZNBRrf9QKQGNQsrpLW/Z3fOHkJUBq24FOEyFMenxRIGdWTDrDhwxxLz0hz8qjqIRklFzpW7v4YLXQBK4D0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZCWinGSh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BPTkLQ7T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3441F000E9;
-	Thu, 30 Jul 2026 12:24:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZCWinGSh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91A541F000E9;
+	Thu, 30 Jul 2026 12:30:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785414266;
-	bh=JW/+m7nP9jt8LI6+VJqIAEQu/MJ9gQeroSdIO2wTu30=;
+	s=k20260515; t=1785414624;
+	bh=b4dzvsTNq7j/B7baIGIrtRXBTgi5PJC4WC5MYffbCIA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BPTkLQ7TBSLiVwsl9exRf9s6ew9+Dmot094NwK+oXOfBgk7dshD6ZjHJCLf7vin7H
-	 VRxw6sqPVtjxHloCf6x9dbU81BGd0b/PSI5MmZHebAOmISxOm96n5LxzHebaO1mdaZ
-	 Zn/wqM6AsP3INCUK7zxRb7lD1TXcXswDSWFmIxTZPtaeTmGvi8AadfTJJfhvjeQHCe
-	 eQPhTDidyAKIK6s0T9cOJC+UhSqbnICel+HTx6M860rrlQ5vDQjsv90KlbvUS8SFIc
-	 16TYS4gLsdQZKq+mFu7DOGj6Q2vyF3Of4Xi5WJX1fZ+FhAFE7PRVNNvfByVuT7GuKK
-	 U5hWAhfdQD1jA==
+	b=ZCWinGShBTGl46Cse3HiV5oba9GBqFzy+HUlAn3j0wE14z4LIOL1zhNbtCHBtPJff
+	 ExsznmIT3s3iIlMKb+kXdJ7VvUwfA3ufG5x+SQ1FE2MH3Ksv1wK2qVJxK3P8lyIcXA
+	 UnLMWOTln6sNdEn9Z1YtFubAZ40cSa0rZLBN/qUSbLbB3PBHU/dPvZXax+qI5fOD4h
+	 7FnrAJD58PQ2HQzMJMctiEuMPw7/z8k2aexN25gdEf+x/RcEwFwm/KEy2olzOO1OeI
+	 Cfct4tZnHRDJlHRkEzKtt9IB0TTnEPZ9Q5tZnQrnaYtyYZG9z7L6TViY6veC1gtNsq
+	 KXbLzJE7W/7eg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with
- TC9563 PCIe switch
+Subject: Re: [PATCH 1/2] misc: pci_endpoint_test: Fix doorbell success logic
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260730-eliza_evk-v7-3-7ac7b66a3e6d@oss.qualcomm.com>
-References: <20260730-eliza_evk-v7-0-7ac7b66a3e6d@oss.qualcomm.com>
- <20260730-eliza_evk-v7-3-7ac7b66a3e6d@oss.qualcomm.com>
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260730122045.1382749-5-cassel@kernel.org>
+References: <20260730122045.1382749-4-cassel@kernel.org>
+ <20260730122045.1382749-5-cassel@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 12:24:25 +0000
-Message-Id: <20260730122425.AF3441F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 12:30:24 +0000
+Message-Id: <20260730123024.91A541F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `iommu-map` entries use 5 cells per entry, but the QCOM PCIe d=
-river statically expects 4 cells, leading to misaligned array parsing and c=
-orrupted BDF-to-SID hardware programming.
+
+Pre-existing issues:
+- [High] Missing validation of device-supplied BAR and offset allows arbitr=
+ary out-of-bounds memory write and NULL pointer dereference.
+- [High] Use-after-free and race condition in device removal due to imprope=
+r teardown ordering.
 --
 
---- Patch [3]: [PATCH v7 3/3] arm64: dts: qcom: eliza-evk: Add PCIe1 with T=
-C9563 PCIe switch ---
-commit c160148a8023cba78403658572ab0eddfe6fb1b7
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+--- Patch [1]: [PATCH 1/2] misc: pci_endpoint_test: Fix doorbell success lo=
+gic ---
+commit fca8adde489026db6a363f41e32f957940be89f4
+Author: Niklas Cassel <cassel@kernel.org>
 
-arm64: dts: qcom: eliza-evk: Add PCIe1 with TC9563 PCIe switch
+misc: pci_endpoint_test: Fix doorbell success logic
 
-This commit enables PCIe1 on the Eliza EVK board connected to a TC9563
-PCIe switch. It configures the management interface over I2C and overrides
-the base iommu-map to cover the downstream ports.
+This patch modifies the pci_endpoint_test_doorbell function to ensure
+that if triggering the doorbell fails, the test stores the error code
+but continues on to disable the doorbell rather than returning early.
 
-> diff --git a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi b/arch/arm64/boot/dt=
-s/qcom/eliza-evk.dtsi
-> index b35fffb509765..ccd6f01135132 100644
-> --- a/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/eliza-evk.dtsi
-
-[ ... ]
-
-> @@ -99,6 +119,91 @@ pcieport0_ep: endpoint {
->  	};
->  };
-> =20
-> +&pcie1 {
-> +	iommu-map =3D <0x0 &apps_smmu 0x1400 0x0 0x1>,
-> +		    <0x100 &apps_smmu 0x1401 0x0 0x1>,
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint=
+_test.c
+> index 3635741c3e7a7..26ab9252251f1 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -1071,6 +1071,7 @@ static int pci_endpoint_test_doorbell(struct pci_en=
+dpoint_test *test)
+>  	struct pci_dev *pdev =3D test->pdev;
+>  	struct device *dev =3D &pdev->dev;
+>  	int irq_type =3D test->irq_type;
+> +	int ret =3D 0;
+>  	enum pci_barno bar;
+>  	u32 data, status;
+>  	u32 addr;
+> @@ -1119,8 +1120,11 @@ static int pci_endpoint_test_doorbell(struct pci_e=
+ndpoint_test *test)
 
 [Severity: High]
-Will this iommu-map configuration cause corrupted BDF-to-SID hardware
-programming?
+This is a pre-existing issue, but since we are modifying the error handling
+in pci_endpoint_test_doorbell(), is there an out-of-bounds write or NULL
+pointer dereference possible just above this diff?
 
-Looking at qcom_pcie_config_sid_1_9_0() in pcie-qcom.c, the driver reads the
-iommu-map property directly into a structure that statically expects exactly
-4 fields (bdf, phandle, smmu_sid, smmu_sid_len).
+A malicious or malfunctioning PCIe endpoint can supply arbitrary values for
+addr and bar. The code checks if bar is within the enum bounds, but does
+not check if test->bar[bar] is actually mapped (i.e., non-NULL), nor does
+it bounds-check addr against the mapped BAR's size before calling:
 
-Because these new entries provide 5 cells per tuple (to satisfy apps_smmu
-expecting 2 cells), the array parsing will become misaligned after the
-first tuple. The second tuple's bdf value will erroneously read the length
-field of the first tuple (0x1) instead of 0x100.
+    writel(data, test->bar[bar] + addr);
 
-This misalignment corrupts the subsequent entries programmed into the
-PARF_BDF_TO_SID_TABLE, which leads to SMMU faults for all downstream
-devices connected to the switch.
+Could this allow an arbitrary MMIO write to kernel space?
 
-> +		    <0x208 &apps_smmu 0x1402 0x0 0x1>,
-> +		    <0x210 &apps_smmu 0x1403 0x0 0x1>,
+>  	status =3D pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
+> =20
+> -	if (!left || !(status & STATUS_DOORBELL_SUCCESS))
+> +	if (!left || !(status & STATUS_DOORBELL_SUCCESS)) {
+>  		dev_err(dev, "Failed to trigger doorbell in endpoint\n");
+> +		/* Store error code, but continue to disable doorbell. */
+> +		ret =3D -EINVAL;
+> +	}
+> =20
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>  				 COMMAND_DISABLE_DOORBELL);
+> @@ -1134,10 +1138,7 @@ static int pci_endpoint_test_doorbell(struct pci_e=
+ndpoint_test *test)
+>  		return -EINVAL;
+>  	}
+> =20
+> -	if (!(status & STATUS_DOORBELL_SUCCESS))
+> -		return -EINVAL;
+> -
+> -	return 0;
+> +	return ret;
+>  }
+> =20
+>  static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
 
-[ ... ]
+[Severity: High]
+This isn't a bug introduced by this patch, but looking at how ioctls are
+handled here, is there a use-after-free race condition during device
+removal?
+
+If a PCIe hot-unplug event or driver unbind occurs while a userspace
+process is executing an ioctl, pci_endpoint_test_remove() will execute
+concurrently:
+
+    pci_endpoint_test_release_irq(test);
+    pci_endpoint_test_free_irq_vectors(test);
+    misc_deregister(&test->miscdev);
+
+misc_deregister() does not wait for existing active file operations to
+complete. Because the test struct is managed by devm_kzalloc(), it is freed
+immediately after remove() returns.
+
+Could the concurrent ioctl handler:
+
+    mutex_lock(&test->mutex);
+
+access the freed test memory or interact with torn-down IRQs or MMIO
+regions? Does the driver need to synchronize device teardown with active
+ioctls?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-eliza_evk-=
-v7-0-7ac7b66a3e6d@oss.qualcomm.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730122045.1382=
+749-4-cassel@kernel.org?part=3D1
