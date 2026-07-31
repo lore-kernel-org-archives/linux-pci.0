@@ -1,104 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C651B33B96B;
-	Fri, 31 Jul 2026 05:34:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 787EB332637
+	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 05:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785476089; cv=none; b=BM7hHVrT5HMJp+VvR9pQmc3BGMNhir4IZb9xp8h5POZCqrs/SYLtJUd9JLttVlxCjH9XUU10KeWC9l9PhGSAlskSn8Ql45yesKqX/AVSUhux0pHXY2W/XYbujX2Y8ywdSRGAqiLpdSdH2SKDFHII9NuUIKj/rn0A9fU5ZfnLkYA=
+	t=1785476349; cv=none; b=AAB5nKHzzOwIypMOoMmyqYSb8BFeI3AudSEHvRvxWwlFKBq4xLOQAfWQKAqVIQJY1YI1b/HuvuYWZjTi5rRXluAlD0w4F/KVPCPuyljxiPJ4yx3uHfAiGRkoZk0l09FK9/EfWekiJPbPF/H96RWUe1tSiURCuyroZzVvEAbecCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785476089; c=relaxed/simple;
-	bh=XTNraHYMygssnhQ91rxtme9TYs0hFFn4RZ7P2Gst86A=;
+	s=arc-20240116; t=1785476349; c=relaxed/simple;
+	bh=c+ysudPdDxuMNZnO+7IMAqzOqN8bgyj1HTXBPCwDtrs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wfxm8d6F8SPvnp+qVED133lUudFalJluNiHz9aLWosNAFuy1hceB0xk8O9MLdLWf3OAs9cZbexcK4B2o5556FspGkmZCxeSFmqAsEb0cpU4d/ijeyg0kbwnma3xpJme+SylbcD1/LNkIcTG/Iq4PypjMQQcae41EfctQS9Qi4qQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nk4IYXiy; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=jgEVxj3oaUZJ1yGqg87vd9eBwP8B3Pb8vEN6fx/eEUMY8nEmfD+wUPVfiQRzmfZIlYoy1jQ1HdwvyAMFtO5b5tNatDValdKu6G75S71n2OvORSl3xYazW/PEWYywzeGnqeTq8m8J3iKQPlKX+eznn8aJ08EnEfKKcJQH2ruRzaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RFgVoIEp; arc=none smtp.client-ip=209.85.215.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nk4IYXiy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26CC81F000E9;
-	Fri, 31 Jul 2026 05:34:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785476088;
-	bh=X+kGKFP4B0Q+9BVZYTfIdRIGmMHCgn6SIs9Evw3RV1Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nk4IYXiykYXlE48Hp6ym9KzOxQfc0H9nG51s5RXUokPSWdGVru9LBZQgCg7v1YtUI
-	 YlXO9czxwUtxyiuGMB2gH2sbAQC/5218+Y98+BWXpobH0ido5dLVYsaVxBkbA4F09t
-	 jkF/rco8kwIiuUKNyFDlAJuESVS/DC/aUqVLO43ezkAjL2sM3+RCc8/79RXwxeESjc
-	 BRWMyd1zELS9gEofbu/wRNjxov1L3fYXA36DL8KqTLc5kd62CjXutD+wHzvLJz+j40
-	 9Ncd5j7bS9kLoEunkHDadrHufpCRy2qsICffHGkEEem2J4uPiYVm1Hbeis5LymT36D
-	 /kef17IVEHeKg==
-Date: Fri, 31 Jul 2026 07:34:39 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-	Jonathan Derrick <jonathan.derrick@linux.dev>, Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	ath12k@lists.infradead.org, ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v3 6/8] wifi: ath12k: Use
- pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
-Message-ID: <lmmrcv2dpuitbqmuargtsbk647z66gs6aqanzis226py2hjhys@d5h5p6ltmg4e>
-References: <20260708-pci-aspm-fix-v3-6-6bd72451746e@kernel.org>
- <20260710202546.GA989860@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RFgVoIEp"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-c999f162c9aso372244a12.3
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2026 22:39:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785476348; x=1786081148; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=/QvE4xoVh84rpMFWIzK/7q8o1VN2R2RVoeFGxLDnBmE=;
+        b=RFgVoIEpURyp4ftvijMI45qyElZ9kkjwYV3zllOb8zskv8gSYXB6WYMkJmedYMMVfY
+         DG0XPkIKwlYZZePOirZC6dlKNEYbv5Kb6vfnMZdXiyr/f1s9/d4M7LQnjQprx/Ckkz39
+         pByXnSophmPft/4Gwnl/48UmcHPWzP37joIvoVxzCfi5SdWd3kWGLjBzIc2xBpHRLbU9
+         XOI7VykbtXNPw2sKXtGFQisvq2ZLJYlAqyBbvsxegl8UXgfr89QqXbtj/n1oVwwm8yhr
+         piIAHzvlkalWOQxh16fmPrSj4Merxav5jkUwK6w2VLsFq1nv3aDO1sovSV9z350df8e7
+         5HQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785476348; x=1786081148;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=/QvE4xoVh84rpMFWIzK/7q8o1VN2R2RVoeFGxLDnBmE=;
+        b=iO/c4lX2v+X5+iMRSl7Vojo1j3eaXIcXOpkfjIqMR5UVFUAXO9HeU0GN+8h3EZdqqy
+         ElMYKvqdukYMzwSjRvpMhY1XAyc0pHflKfAe7S3SVqKBQAfoQ0nLmHrDGKD2/RFtxO7l
+         UZh7WYaJeCRoIq1s36OXlP/OK7AB1Z9MjtyiTmw6busVCAQ4mOZT+k16JihKqP2+ESMD
+         VRpnRU4jZuJJnbBWm+zDlOM722buqyJGr8MoTIsxxg76AMGqiMbDwdrtR1SsxvM1rA8p
+         +68kOOsy8WRHHDdRWcLOXLggRLnCEdAl9md7/B3jMG5GKbPFa4NF1EhmTGc5E9jKyPZO
+         2AmA==
+X-Forwarded-Encrypted: i=1; AHgh+RoDCYDGozrO8GbogM2D4AkVzJ9YwDliM0FN67aZNZoZlZNaap6lMQM5sL16H5Xx7HVuznkqljBOzbM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVgcJEg1XddUx141/hpv/hqev7/2tNMlteL6dAXSnMzSPrXhz/
+	JoiVnbxhh3RPue0W8eETkJ7v1T/wuOrJhEXeXmaNAetv3NODwjQX/v5u
+X-Gm-Gg: AR+sD11H9RyUykFE1gmCGNTItCN+cpGA6bNmCCNMuoob+jnJ7jVpAaGLELwHGN9gYkT
+	x1m438AJlU0i10cA6eGpDy03B6cv9JKm8LMZ+eYgCI9odhG7P57nIIAWdQK5mkvU1B4QNEuzcgh
+	CPFDmsZ+Pr7IfnHPAShul6UQFSQTpsNZrr60LLJnXoQ9KdzuHIG4Mm5S0rJz8zC/oQma/enFuP7
+	fojH3K/9r/PKjhexoqpJ98j8LI9OMMOlQU0szYHoKZfJsyYjfOcx7t+9rr/LRcwShwM5kOQZo1Z
+	ayoAc6tBNjQQJXTe9ZExEGZyTYD8a/fhwS8EEJX8yy7ID9L+4RRF5CbuU2NVLWhc2Lno3bs8Sf2
+	4BjDULevizsXx90UU1m1WeBArn1WPXFy8WrPOHCXAYRR1Ht5w8qZT6cfiChNCvaLn4jaaottuMt
+	LS0FSQWSubQKPesiWuFyaMvT1wnh8m56EDBVYdVOSIJKx8sttb33KEXAhxtTXNDuRGy8k5BXsib
+	Qlz7Q==
+X-Received: by 2002:a05:6a20:7f88:b0:3a0:bc61:62e6 with SMTP id adf61e73a8af0-3c91b0a9b0cmr630307637.8.1785476347663;
+        Thu, 30 Jul 2026 22:39:07 -0700 (PDT)
+Received: from kernel ([45.251.35.74])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153e0700e8sm1252501eec.24.2026.07.30.22.39.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jul 2026 22:39:07 -0700 (PDT)
+Date: Fri, 31 Jul 2026 11:09:01 +0530
+From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+To: bhelgaas@google.com
+Cc: alex@shazbot.org, skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Fix 32-bit config write in Intel RP MPC ACS quirk
+Message-ID: <amw09fxdlgtGv35w@kernel>
+References: <20260723171203.4892-1-raizudeen.kerneldev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260710202546.GA989860@bhelgaas>
+In-Reply-To: <20260723171203.4892-1-raizudeen.kerneldev@gmail.com>
 
-On Fri, Jul 10, 2026 at 03:25:46PM -0500, Bjorn Helgaas wrote:
-> On Wed, Jul 08, 2026 at 04:30:20PM +0200, Manivannan Sadhasivam wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > 
-> > It is not recommended to enable/disable the ASPM states on the back of the
-> > PCI core directly using the LNKCTL register. It will break the PCI core's
-> > knowledge about the device ASPM states. So use the APIs exposed by the PCI
-> > core to enable/disable ASPM states.
-> > 
-> > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-> > 
-> > Reported-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/ath12k/Kconfig |  2 +-
-> >  drivers/net/wireless/ath/ath12k/pci.c   | 19 +++----------------
-> >  drivers/net/wireless/ath/ath12k/pci.h   |  4 +++-
-> >  3 files changed, 7 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
-> > index 4a2b240f967a..7852ede3eaea 100644
-> > --- a/drivers/net/wireless/ath/ath12k/Kconfig
-> > +++ b/drivers/net/wireless/ath/ath12k/Kconfig
-> > @@ -1,7 +1,7 @@
-> >  # SPDX-License-Identifier: BSD-3-Clause-Clear
-> >  config ATH12K
-> >  	tristate "Qualcomm Wi-Fi 7 support (ath12k)"
-> > -	depends on MAC80211 && HAS_DMA && PCI
-> > +	depends on MAC80211 && HAS_DMA && PCI && PCIEASPM
+On Thu, Jul 23, 2026 at 10:42:03PM +0530, Mohamad Raizudeen wrote:
+> The pci_quirk_enable_intel_rp_mpc_acs() reads a 32 bit DWORD from the
+> MPC register, sets bit 26 (INTEL_MPC_REG_IRBNCE), but it writes it back
+> using pci_write_config_word().
 > 
-> As Sashiko pointed out [1], I think adding the PCIEASPM dependency is
-> an issue.  The PCI core should provide stubs or whatever is necessary
-> to make ath12k work even if PCIEASPM isn't selected.
+> Because bit 26 resides in the upper 16 bits of the 32 bit register, a 16
+> bit write to offset 0xd8 completely drops the newly set bit. The quirk
+> logs that it is enabling IRBNCE, but the hardware never actually
+> receives the command.
 > 
-> I'm guessing this hardware depends on the ability to disable ASPM even
-> without PCIEASPM so we probably would need more than just empty stubs.
-> We do build aspm.c unconditionally now and we provide LTR and L1SS
-> save/restore regardless of PCIEASPM.  Maybe we need something similar
-> here.
+> Fix this by using pci_write_config_dword() to ensure the full 32 bit
+> value is written back to the hardware.
 > 
+> Fixes: d99321b63b1f ("PCI: Enable quirks for PCIe ACS on Intel PCH root ports")
+> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
+> ---
+> Changes in v2:
+> - Added "Fixes:" tag and CC'd Alex Williamson as requested by Bjorn Helgaas.
+> 
+> Link to v1: https://lore.kernel.org/linux-pci/20260723160641.GC836122@bhelgaas/T/#t
+> 
+>  drivers/pci/quirks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b09f27f7846f..0d0cf6f86173 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5361,7 +5361,7 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+>  	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
+>  		pci_info(dev, "Enabling MPC IRBNCE\n");
+>  		mpc |= INTEL_MPC_REG_IRBNCE;
+> -		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
+> +		pci_write_config_dword(dev, INTEL_MPC_REG, mpc);
+>  	}
+>  }
+>  
+> -- 
+> 2.53.0
+>
 
-This was discussed in v2 and Ath maintainer Jeff was in agreement with the
-dependency:
-https://lore.kernel.org/linux-pci/705a4fe5-658e-25ac-9e4d-6b8089abca46@linux.intel.com
+Hi Bjorn,
 
-- Mani
+Just following up on this v2 patch. Please let me know if you have any
+feedback or if further changes are needed.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks & regards,
+Mohamad Raizudeen
