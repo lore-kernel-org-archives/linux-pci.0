@@ -1,200 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E068444709;
-	Fri, 31 Jul 2026 16:02:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7E2A3B05AB;
+	Fri, 31 Jul 2026 16:02:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785513736; cv=none; b=p1WaSkiS+ISk65NJ9bdT5du70b0SP+b+z+FlAOCXbDAS0S7rvewrhpwdM4usF5eGesCykALkgv2dTfSNxvQ5Xr9fltobwHH7JvL3OY1y5tg7Ka2y8ovOWArREqw3Mb5uHZ+3HPHaL8TznGSDwSRi7HgZRERXCgtSGlnPEKmGQcs=
+	t=1785513781; cv=none; b=brRrqznU/ke4M4CrL0jBfccCwzGrwyfx5hR/Cs6XTSVr3p7OGsF0tV4fE+r6dmMNMC39Sc15hviReFuBZzYrO9FClWXoLJkjz/fNMA0Tlwi38Jg9aa/5UQuuGa3hdFF8bsYG55jFdCvdDNXUJQq4W/B2LPJPMD7xkWRDk2NtcGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785513736; c=relaxed/simple;
-	bh=aUrsj6hOs7zgVK4qJTB8J6079mkyoSTCyi7JwIAKk58=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Dt2Fus0moINS5fwDk9L9WaIaxBUkoEPvpm0h55iIszQ+/CFAphwZbPqniM29kADwneWJAUjEcqArYKWiq9MF0XxkXbKzypsya4FUPZzr2aehnZL4x1KAeWFAAC7Cg1TlJxXZNIsFdpk45egvT3aF+JWTJPou8XMGhADtZ8hpBxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3E541F00AC4;
-	Fri, 31 Jul 2026 16:02:10 +0000 (UTC)
-Message-ID: <d1a5c1c4-4a9f-4dc7-b709-4f89a25ad4c9@tuxon.dev>
-Date: Fri, 31 Jul 2026 19:02:08 +0300
+	s=arc-20240116; t=1785513781; c=relaxed/simple;
+	bh=NgPVAqh+X4SWDRXmLaP48VkiEwYwFxllFUXPgG/iqu0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=EIasJ9xVA+bJ0lDfnlnDmjFg1E6dkkTyV6Tc6ElqIuthXIrDCRzLhh8bLrh7GgR/2OyO/+icxd7ULTjdtWdG9F/Z2xIbEFh2+AKksgH8lxw9PnSuP5u1R5Z4jtayOts19EHn7NZgQOPH3zEpVxJH46OaECgX20yCOrPEDG0L1f0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T/EpjkAr; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T/EpjkAr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49CFF1F00AC4;
+	Fri, 31 Jul 2026 16:02:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785513779;
+	bh=V0cx84YDl6LOig0HnLnRYdR8vDgzvhQjJIOIpIIfTbs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=T/EpjkArdt1UgrmZZjFVnYZknZPxp8v78vrWDVYTN/uHtZ72MakLbuKPkn1azv3kl
+	 FaKNPlBsJharLNGbVsO8hm1vaji6oeX03r2KXZCcZtPmdwoQsZiOmka0om6WfUNgRm
+	 tkeg48/USHInUNaOpqDlJdUkzVvq50aADNBz++Jcsecaj4SXhqUfZJDJW5MVhNcc6R
+	 IALqTbNkKO0M/VE11ldTpe0YLG+gf413/B6dyGukXy+zeSy9x1Fkop1bW11U18b9L8
+	 9cLhOXgH+S/PrAGfEVT9iR9seSc7hP5FIxMldcl+gfWPSAZBA2lQhAaC9zLXVmIc9T
+	 0KyiTzxyyNIjQ==
+Date: Fri, 31 Jul 2026 11:02:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	bhelgaas@google.com, s.hauer@pengutronix.de, kernel@pengutronix.de,
+	festevam@gmail.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v4] PCI: imx6: Update MPLLB bandwidth to improve i.MX95
+ Gen3 PCIe stability
+Message-ID: <20260731160258.GA1571469@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] PCI: rzg3s: Fix IRQ domain initialization error
- handling
-To: Prabhakar <prabhakar.csengg@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- Prabhakar <prabhakar.csengg+renesas@gmail.com>,
- Biju Das <biju.das.jz@bp.renesas.com>,
- Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
- Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
- stable@vger.kernel.org
-References: <20260727095843.116950-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260727095843.116950-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260727095843.116950-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260731030546.850457-1-hongxing.zhu@oss.nxp.com>
 
-Hi, Prabhakar,
-
-On 7/27/26 12:58, Prabhakar wrote:
-> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+On Fri, Jul 31, 2026 at 11:05:46AM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
 > 
-> rzg3s_pcie_init_irqdomain() installs chained handlers for the INTx
-> parent interrupts before creating the INTx irqdomain and initializing
-> MSI support.
+> Bandwidth marginality was observed during i.MX95 Gen3 PCIe tests with
+> the default MPLLB_BANDWIDTH value (120). This margin degradation worsens
+> across voltage and temperature (VT) variations and different test
+> matrices, potentially causing link stability issues.
 > 
-> If any subsequent step fails, such as obtaining an INTx IRQ,
-> creating the irqdomain, or initializing MSI, the error path returns
-> without removing any chained handlers that were already installed.
-> This leaves stale handler and data pointers attached to the parent
-> interrupts.
+> Testing with MPLLB_BANDWIDTH value of 140 (0x8c) shows significant
+> improvement in bandwidth margins across all VT conditions and test
+> scenarios.
 > 
-> Fix the error path by unwinding the chained handler registration before
-> returning. Also clear the chained handlers during
-> rzg3s_pcie_teardown_irqdomain() so that teardown fully mirrors the
-> initialization sequence.
+> Implement PHY register write helper function and configure:
+> - MPLLB_BW_OVRD_IN = 140 (0x8c) for improved bandwidth margin
+> - MPLLB_BW_OVRD_EN to enable the override
 > 
-> Fixes: 7ef502fb35b28 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> ---
-> v1->v2:
-> - Restricted the code to max 80 columns.
-> - Moved calling irq_domain_remove() under err_cleanup_intx label.
-> ---
->   drivers/pci/controller/pcie-rzg3s-host.c | 49 +++++++++++++++++-------
->   1 file changed, 36 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> index f51b5d7c1998..70f1faf7e422 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1006,22 +1006,35 @@ static const struct irq_domain_ops rzg3s_pcie_intx_domain_ops = {
->   	.xlate = irq_domain_xlate_onetwocell,
->   };
->   
-> +static void rzg3s_pcie_clear_intx_handlers(struct rzg3s_pcie_host *host,
-> +					   int count)
-> +{
-> +	while (--count >= 0) {
-> +		irq_set_chained_handler_and_data(host->intx_irqs[count], NULL,
-> +						 NULL);
-> +	}
-> +}
-> +
->   static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
->   {
->   	struct device *dev = host->dev;
->   	struct platform_device *pdev = to_platform_device(dev);
-> +	int i, ret;
->   
-> -	for (int i = 0; i < PCI_NUM_INTX; i++) {
-> +	for (i = 0; i < PCI_NUM_INTX; i++) {
->   		char irq_name[5] = {0};
->   		int irq;
->   
->   		scnprintf(irq_name, ARRAY_SIZE(irq_name), "int%c", 'a' + i);
->   
->   		irq = platform_get_irq_byname(pdev, irq_name);
-> -		if (irq < 0)
-> -			return dev_err_probe(dev, irq,
-> -					     "Failed to parse and map INT%c IRQ\n",
-> -					     'A' + i);
-> +		if (irq < 0) {
-> +			ret = irq;
-> +			dev_err_probe(dev, ret,
-> +				      "Failed to parse and map INT%c IRQ\n",
-> +				      'A' + i);
-> +			goto err_cleanup_intx;
-> +		}
->   
->   		host->intx_irqs[i] = irq;
->   		irq_set_chained_handler_and_data(irq,
-> @@ -1033,21 +1046,29 @@ static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
->   						     PCI_NUM_INTX,
->   						     &rzg3s_pcie_intx_domain_ops,
->   						     host);
-> -	if (!host->intx_domain)
-> -		return dev_err_probe(dev, -EINVAL,
-> -				     "Failed to add irq domain for INTx IRQs\n");
-> +	if (!host->intx_domain) {
-> +		ret = -EINVAL;
-> +		dev_err_probe(dev, ret,
-> +			      "Failed to add irq domain for INTx IRQs\n");
-> +		goto err_cleanup_intx;
-> +	}
->   	irq_domain_update_bus_token(host->intx_domain, DOMAIN_BUS_WIRED);
->   
->   	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		int ret = rzg3s_pcie_init_msi(host);
-> +		ret = rzg3s_pcie_init_msi(host);
->   
-> -		if (ret) {
-> -			irq_domain_remove(host->intx_domain);
-> -			return ret;
-> -		}
-> +		if (ret)
-> +			goto err_cleanup_intx;
->   	}
->   
->   	return 0;
-> +
-> +err_cleanup_intx:
-> +	if (host->intx_domain)
-> +		irq_domain_remove(host->intx_domain);
-> +	rzg3s_pcie_clear_intx_handlers(host, i);
+> This ensures robust PCIe Gen3 performance across all operating
+> conditions.
 
-If you have it like this it worth squashing these lines in the same function, e.g.:
+Thanks for including the previous and new MPLLB_BANDWIDTH values.
 
-	rzg3s_pcie_teardown_intx(host, i);
+I'm fine with the patch, but I think "bandwidth marginality" is
+awkward wording because "marginality" doesn't seem to be commonly
+used in this context.  Maybe something like:
 
-defined something like:
-
-void rzg3s_pcie_teardown_intx(struct rzg3s_pcie_host *host, int count)
-{
-	if (host->intx_domain)
-		irq_domain_remove(host->intx_domain);	
-
-
-	while (--count >= 0) {
-		irq_set_chained_handler_and_data(host->intx_irqs[count], NULL,
-						 NULL);
-	}
-}
-
-> +
-> +	return ret;
->   }
->   
->   static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
-> @@ -1055,6 +1076,8 @@ static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
->   	if (IS_ENABLED(CONFIG_PCI_MSI))
->   		rzg3s_pcie_teardown_msi(host);
->   
-> +	rzg3s_pcie_clear_intx_handlers(host, PCI_NUM_INTX);
-> +
->   	irq_domain_remove(host->intx_domain);
-
-And use the same function here, replacing:
-
--	rzg3s_pcie_clear_intx_handlers(host, PCI_NUM_INTX);
--
--   	irq_domain_remove(host->intx_domain);
-+	rzg3s_pcie_teardown_intx(host, PCI_NUM_INTX);
-
-Btw, the order b/w rzg3s_pcie_clear_intx_heandlers() and irq_domain_remove() was 
-revered here compared with the order from rzg3s_pcie_init_irqdomain().
-Thank you,
-Claudiu
+  We observed poor bandwidth margins during ...  The margins worsened
+  across ...
