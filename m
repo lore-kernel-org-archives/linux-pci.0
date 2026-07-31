@@ -1,145 +1,200 @@
-Received: from mail-ej2-f3.google.com (mail-ej2-f3.google.com [74.125.228.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69F4843D515
-	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 15:27:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3610C4418F2
+	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 15:30:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785511652; cv=none; b=coV6jw8Y54gXquHieYs8HLVub28P4hIz3U50/jKyeUSuMi4NRuX980ZJ8cLvgGUsvg1x9RXJJhb6QWvyeX6Fm8/NVFDFQ57h6Nkokpge+R/pvV3gIuTz1wLBOXpXkUz0cmqc93aX6cXM7z64LaA8e7mxcDMqGPVuKeJLO+RDdqc=
+	t=1785511853; cv=none; b=auYb2Dbj9/IR1BLLpMn+AJWCWv8QfwbuGXq2ZS33afiogev9zqZxsFrWVzclDce/A2EAWAOW0BXo3QHyXTnv06ZIeyI4cYS8bXvggfqPQe/17Ka0L4O+OPZV8PtrdKa2712en8lEuCS30gM/8nhwwifaBD8wlNTIwFeH+nfRY2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785511652; c=relaxed/simple;
-	bh=2HCELcOA3DJNbDsYTukshelLlc3dZazcD3VSOVDcQgU=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
-	 References:In-Reply-To; b=i+k8704Fp+SC7uVmGNskBV4j6xS7nYH6FvPilDygNVSp17j40+WrRy92TJircoFipR5IqWzCRDeBAMUrAOrfx789U5RKIAbJtO/UtQ4jSrr0TADnfSU9rL63b922R6/z1K/x/fT+QhL2eoAB7YDWCemXpw1AD8XKUqXhQ29jNzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com; spf=pass smtp.mailfrom=9elements.com; dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b=Y+8knFMi; arc=none smtp.client-ip=74.125.228.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=9elements.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=9elements.com
+	s=arc-20240116; t=1785511853; c=relaxed/simple;
+	bh=fz4msogSnakmeQKSqrQ7d4iwY+ZxUx3s4/WKfGlla1Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OIK9q+2CE5MUVG4+vY819k5zS1EaRiPa7LJLlTA0CN2WRc59ZkFzRm4Wi7lwsFXQbxDcyjOUCTg0g65Ye9JAhVeSF08snMEtmQe1wLMGfAsX8AY6S5TA/Yn9DkeyJ2HU8ixheZKIthENk6/+HYooS8+umkffH3BAQpnvmdabHmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jTcCk3nW; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Li7OhnMx; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=9elements.com header.i=@9elements.com header.b="Y+8knFMi"
-Received: by mail-ej2-f3.google.com with SMTP id a640c23a62f3a-c15ec8d6663so38688166b.1
-        for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 08:27:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jTcCk3nW";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Li7OhnMx"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VFOA9c3879461
+	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 15:30:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	xNunTRXsqpTsk4gUldkupbFQmBRLlsHQmR+eXlL+D8U=; b=jTcCk3nWFwj3zqCZ
+	HXK2aGTGQfkjUJiQhdjXPIe4d8GKmzHhhMX9mzSyJHH/gwHNQ9/pnZx8s/5SMTt5
+	v/fwpQArD7ZzOpRSEV+3KbksS87eaAWLemhnGSiarKI2b2lkr5+QDNkIIJsEaGt+
+	jexTIEMx29ZbZFc6mVKnfkTBRncsD/OhOWtJuTs5Y55rkMn/o2yyTtNYzCWzJiuz
+	NcnUtqDOrISRhOIAMssv8VQ0x62QtNkRO6YbL+vnNVNUsZLBXJ6w1fImEzO8VrSS
+	ies22v2lCBSzxA+YTfZ7zvaGx1u+Xi9H80HfgpcmtaoljJ08RzGO1cm+H1xOfHwd
+	m6mQAQ==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fru0y0yaf-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 15:30:45 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so883890a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 08:30:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=9elements.com; s=google; t=1785511648; x=1786116448; darn=vger.kernel.org;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=aaecu9LLR4tlERpL5fMxh+H29z5ZLQOadDtlIB8YJrI=;
-        b=Y+8knFMivLdCWWQukBuMLgMGMNGPaLmZ/C0bfogUhugm6vo7jrZpbX5Il6H/vFq5jx
-         kOIQK6jAceiXpwoRWJDsKy1j6ttk0mw3A8byG8zc0x5cKwBU5sqa8dE+5lrhF3EixHtn
-         32MaiyRIBp0Qr/LR+8cw650VmQGPI8+JNP4Fg9yQ4BLOo25Rr6OiZmK45ObF5Xf0CC5Z
-         mmlhSfcOa1sH63r9Ng+X3iS9cJeIK+kZP6esAQADDvnwbgjUzBq/vh9VyvFIWexjDjk2
-         NTlcXLhIXWtc13bxQCMK5v9yNBO2SUEkBlrAYzFDb9NcNjD3QzpYixN3W6S+nyQAxOHL
-         N6DQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785511648; x=1786116448;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=oss.qualcomm.com; s=google; t=1785511845; x=1786116645; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=aaecu9LLR4tlERpL5fMxh+H29z5ZLQOadDtlIB8YJrI=;
-        b=VlTV7scj8iChkPo3HqEF0dGESYMyvzMd0ZfZYjj6a1owcO5+JtDCELWRyckJchXycB
-         iCpxrKrRrJAAyAW5p2jEwiX1Tcx8oc2SaB/AaAyBNQJ2U0vdTTbJE36A2HjSespYCX+l
-         +uwtwQyjm0WWDQnuN2/5xaxPC6MJdMgg+8SCfVlBUFucdxjkUwM3H74J2vfMfE4q2q6T
-         Dfm0gMxT6qjcDsvqW1TjpF9jLeV1vK7rRWCdmo/9NN3+9jhaJ0Ynw1/Eo8f05DlKcHUk
-         kUD5Fvse3mV4mHd7mgUsJ3sd7dUrUllZNYBBLFkkFwiMIVQk8uN2xUUez81NZNZGBxHK
-         I6xA==
-X-Gm-Message-State: AOJu0YwEXYmZjYWfz5kPpWtv3ElPcu3wUGV8hDuNGGvGH+/TYFmuzB+q
-	VXun0dITN+jvGIDLzkqbxe5PIFBRUUGyX4l0O0yjH6RyMtxCSyco+u08r73rR2fVxw==
-X-Gm-Gg: AR+sD12lxDNaW/2kuTGjYBvoaeUTeS6Z6d8YTQ1rqSrxC8de0KUQ22oA8qBzIup0YWk
-	mew+mqws0iQndn8GXVdynztygrk3NOMnkBXR+umSI1ZISp7UoZuzXhLx1+uQr1uxOGOlmn8MK7p
-	3lnG76Y6YjtHMSV83sr49KG6A12ULc0JYLtu1GZu5aVa7VsEmpC0pdzvCXYvcd4/AOvAXRjeEsc
-	/GBEw5saE0brySxwlNIkiqZUdzj9uegdUaslZolljl0usqZhFJ4sEqaO1aNmvbMED4Tf0K+coPI
-	qjd8B2ACPABlN2m9xsyRu7OQoXaXabp0bCz1s4H770+0zS6OK/ESeT+mxuKo1zHaTGnYQ5N3Hcu
-	5Bzws8Cp+ehAR7yUdnMucsKTGrO1Yj25FzJJb9FvpEMfDAEgu28ednaLp2CHTzsQCFavY39LKQh
-	qLJBgZKtlCp/q+qKAlouu1PKxu8y7a4vBfOdqwPdI7+swow4MfAQ9w44/KxU0jWsZ9bvboHw==
-X-Received: by 2002:a17:906:1d08:b0:c16:1df9:6eda with SMTP id a640c23a62f3a-c1fe83796femr347266b.49.1785511648121;
-        Fri, 31 Jul 2026 08:27:28 -0700 (PDT)
-Received: from localhost ([2a02:908:1578:7a40:eb03:fa54:642b:57ec])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1fd46836dcsm186119166b.63.2026.07.31.08.27.27
+        bh=xNunTRXsqpTsk4gUldkupbFQmBRLlsHQmR+eXlL+D8U=;
+        b=Li7OhnMxg/+t0TD4C5BpWzcoCBJaRVhX9hhcRhmfe9lYEKHynraFxXyJnRXXskG8Uw
+         mQxC4XyzpZkEZamfSlgK7So1s7Z+LXcyx6IDcriuKnJ/ND1UbXM3naPRk7T163FAOdHc
+         SK8B4sADaigDZt2AVG3BqceklBG0nH/X+1r0ISYF+L47eyY2tKMGv5YT1uS+vUHNabmb
+         +IiXYBqIse6fz1lmK3/9rxmMVgxHz7X83pnVq3cSKKKhhUB6zHdqzgMfwaDORTFMwOXJ
+         AWxVVqlY4uSI70m20b4ltU8ruZnEXSpFIBQAZcw/4i+qqOdqKOuGkIsX1V/nbtiVap9H
+         vLDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785511845; x=1786116645;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=xNunTRXsqpTsk4gUldkupbFQmBRLlsHQmR+eXlL+D8U=;
+        b=lhixhzecoi2rETtSI//5KbfTD1Eo6tcF9THf6Nj5Ij9wbBBk1fxU83/bFV170fWExp
+         1fDu4WAYD6aNoPWOtwguhzSSDYxqujD72zU6qReODxhj1cKRO9iGsDwHVJ3SVs+K+ujn
+         qM2hLQG9tbcaetFZrtRqxHKWttDElwtUk1biox9Ke9pFeJu/JodHe9iDg6mNoWDq3FrB
+         /krQlxltPsZQPdUC4VhZJ/ZdFxjkAF2UdccC0AmbOATmDx1stTayRl+JraZLeS4v01tP
+         zMeR/wRwfXVqy5SRacIhJNj+uf3VWmYjVpHpwiJQvE17QFfQjEJ2NidZZqw//YAzLxMV
+         U5ig==
+X-Forwarded-Encrypted: i=1; AHgh+RolR6QciBED7qo+oOP6LUG47dfeYZREJvn4y73pWdF3O6brTGq8oRL5E3Sznh6iXj8Xd88qFNIkhx4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxpWZZMadPKwW1lbPibuqNguRutvSyHT6Cs066NOUnn5QpN5pwN
+	qnPQRBfLJJHDa/dRyypLFh79JlK4F4e4bXxgUt9RpaSxr4KM+9C4lLPJTCayF/Z2bWDPexeIoPG
+	uMeAb+Sq2LtEEACB8JZbMPxGNhsSBZKUCCc1+0jXjXgdtaYSWvJBFXCm1veq4SJE=
+X-Gm-Gg: AR+sD11CnrzewdREfvu0LAG1y8m8R6x4BrHZzCBnekC5UN1J4VANX9z+vCbPhrDSgTI
+	XiIhYFBAX1H1fwmXtFaPyfGoe+2xnIua7mjIYTKJyg0wdbuRfLkkNWiOmPwIGA6R5IKW1Tq9Wpp
+	/nXeTBz0GeyJPyTs2uJL+fIxNMrgU4K1piogLtEqgZ5g6W42QsLfPldVJrCqMCR3+Q312gNMLGa
+	Kh21blxcdfcq4jmuTAJ70fQvG9bXWbLI2orkvac7FinULHs4CP+Pk9xBvIF+QbQB7C7ytP+sA3E
+	2pX4K9p/Kafhy5uicXoencE6iKBmqF8df1hiEXv4r9g0BMp5sn9+wPp/1ZesfhgWHZ74sZqD/6E
+	XVTkB/EuUf4yM2TpQ2NlOmuqQpc9xmgpG
+X-Received: by 2002:a05:6a20:9f09:b0:3bf:8de9:c647 with SMTP id adf61e73a8af0-3c92a2a9efemr292250637.0.1785511844958;
+        Fri, 31 Jul 2026 08:30:44 -0700 (PDT)
+X-Received: by 2002:a05:6a20:9f09:b0:3bf:8de9:c647 with SMTP id adf61e73a8af0-3c92a2a9efemr292197637.0.1785511844540;
+        Fri, 31 Jul 2026 08:30:44 -0700 (PDT)
+Received: from [192.168.1.10] ([122.177.247.168])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbe3963daa7sm716655a12.5.2026.07.31.08.30.38
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jul 2026 08:27:27 -0700 (PDT)
+        Fri, 31 Jul 2026 08:30:44 -0700 (PDT)
+Message-ID: <acb2dfcd-f024-4a70-88dc-8d2482c1e20f@oss.qualcomm.com>
+Date: Fri, 31 Jul 2026 21:00:35 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/6] arm64: dts: qcom: qcs6490-rb3gen2: label BT PMU
+ and M.2 PCI node
+To: Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Rob Herring
+ <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+        Rocky Liao <quic_rjliao@quicinc.com>,
+        Manivannan Sadhasivam
+ <mani@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
+        linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, quic_mohamull@quicinc.com,
+        quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com
+References: <20260727-rb3-industrial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com>
+ <20260727-rb3-industrial-bt-uart-v2-4-2d100f30e202@oss.qualcomm.com>
+Content-Language: en-US
+From: Rahul Samana <rahul.samana@oss.qualcomm.com>
+In-Reply-To: <20260727-rb3-industrial-bt-uart-v2-4-2d100f30e202@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Date: Fri, 31 Jul 2026 17:27:27 +0200
-Message-Id: <DKCV1YWVZSTC.I04OWIWKFTUV@9elements.com>
-Subject: Re: [PATCH v2] PCI: imx6: Enable ASPM L1 only iff CLKREQ# is
- supported
-From: "Michal Gorlas" <michal.gorlas@9elements.com>
-To: <sashiko-reviews@lists.linux.dev>, "Michal Gorlas"
- <michal.gorlas@9elements.com>
-Cc: <linux-pci@vger.kernel.org>, <imx@lists.linux.dev>,
- <Frank.Li@kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260731-l1-conditional-imx-v2-1-6016ee9148b2@9elements.com>
- <20260731135449.7A3B51F00A3A@smtp.kernel.org>
-In-Reply-To: <20260731135449.7A3B51F00A3A@smtp.kernel.org>
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDExNyBTYWx0ZWRfX8YkCM0YiL4H7
+ yInR7DwGfqfwOizMl4HTYOJJMiEGddnTygWRxdJ7/ZPto7FLhUEhzbSIbnzwU06f0uwgg2/EWHn
+ 4VqfZOjTNYxxg4uOIPVxVLdMcHWgUZE=
+X-Authority-Analysis: v=2.4 cv=TcamcxQh c=1 sm=1 tr=0 ts=6a6cbfa5 cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=wVA5pQU3D6HtJETKl3oCcQ==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=B7p1tibXOPgUgj-QF2sA:9 a=QEXdDO2ut3YA:10
+ a=bFCP_H2QrGi7Okbo017w:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDExNyBTYWx0ZWRfX78DAUgOOzWJW
+ 27i2YG3VTInyHe4dUp8zgTgjIvI/78mNAIbJA4Ich+AMazXNvYjVgBbyhL4QtP6a5v237ROw98i
+ +2Ya806xv9bb0gvNR9MitrvcEF4MdbRbWQpHO4lgmIITRrgo2qeWhLdnIAWggzbkjF8llY/c4EU
+ BS8Dc0SRqjmUB5cn87QX84gQLjrLp8TIxkXl29FFeDCaAEX/yG40amm6CNbXIF7AsxAnYAYt1uB
+ FfTQq7uD0rAxOXlIDSoATWgkFgN4bS00eIZqsZMMxI+gdRPRafWeJJ+yKXEi8oq838BiVKYWkHW
+ a9GkwhBymFnL2sgnu9cC+H58TGleQuBsLb4+tqwM/Uxs5hSC8/nwYbtK4+vC4Pr6390R+/pSOAD
+ QYrq2CQuXIkobnim8U6UID8v639o2akacOaEsT+cO5zvG7gkvjjs7pC8LQIpT6DqVOSdJlVfcL5
+ hh0STEgjNEn5KH41VGg==
+X-Proofpoint-ORIG-GUID: V7gFDgcDHKY2b3BFzUgYFaM6zNM1ZMZk
+X-Proofpoint-GUID: V7gFDgcDHKY2b3BFzUgYFaM6zNM1ZMZk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-31_05,2026-07-30_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 phishscore=0 priorityscore=1501
+ suspectscore=0 spamscore=0 adultscore=0 clxscore=1015 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310117
 
-On Fri Jul 31, 2026 at 3:54 PM CEST, sashiko-bot wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [Medium] ASPM L1 is conditionally disabled at boot but unconditionally =
-disabled upon resume, causing state inconsistency across power cycles.
-> --
->
-> --- Patch [1]: [PATCH v2] PCI: imx6: Enable ASPM L1 only iff CLKREQ# is s=
-upported ---
-> commit 7a899eb7e9f8116a0334832c7490e52f71ae751c
-> Author: Michal Gorlas <michal.gorlas@9elements.com>
->
-> PCI: imx6: Enable ASPM L1 only iff CLKREQ# is supported
->
-> This commit conditionally disables ASPM L1 capabilities in the LNKCAP
-> register if supports-clkreq is not set in the device tree. It also disabl=
-es
-> L1 during resume for platforms advertising IMX_PCIE_FLAG_BROKEN_SUSPEND.
->
-> Link: https://patch.msgid.link/20260719-l1-conditional-imx-v1-1-a55a57915=
-c68@9elements.com
->
->> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/control=
-ler/dwc/pci-imx6.c
->> index 98e1db751132a..1fdcbcd2422e5 100644
->> --- a/drivers/pci/controller/dwc/pci-imx6.c
->> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> [ ... ]
->> @@ -1442,6 +1458,9 @@ static int imx_pcie_host_init(struct dw_pcie_rp *p=
-p)
->> =20
->>  	imx_setup_phy_mpll(imx_pcie);
->> =20
->> +	if (!imx_pcie->supports_clkreq)
->> +		imx_pcie_disable_l1(pci);
->> +
->>  	return 0;
->> =20
->>  err_phy_off:
-> [ ... ]
->> @@ -1748,6 +1767,7 @@ static int imx_pcie_resume_noirq(struct device *de=
-v)
->>  			return ret;
->>  		imx_pcie_deassert_core_reset(imx_pcie);
->>  		imx_pcie_assert_perst(imx_pcie, false);
->> +		imx_pcie_disable_l1(imx_pcie->pci);
->
-> [Severity: Medium]
-> Will this cause an inconsistent ASPM L1 state across power cycles?
->
-> During boot in imx_pcie_host_init(), imx_pcie_disable_l1() is only called=
- if
-> imx_pcie->supports_clkreq is false. However, during resume here in
-> imx_pcie_resume_noirq(), the L1 capability is disabled unconditionally fo=
-r
-> platforms with IMX_PCIE_FLAG_BROKEN_SUSPEND.
->
-> If a platform has supports_clkreq set to true, it would retain the L1
-> capability at boot, but lose it unconditionally after a suspend/resume cy=
-cle.
 
-Platforms that set IMX_PCIE_FLAG_BROKEN_SUSPEND (i.MX6Q) do not
-set supports-clkreq in their DTs. So no, such scenario won't occur.
+
+On 27-07-2026 21:15, Rahul Samana wrote:
+> The reworked RB3 Gen 2 Industrial BT UART overlay needs to disable the
+> on-board WCN6750 PMU and add a graph endpoint to the M.2 PCI node.
+> 
+> Label the exact WCN6750 PMU node and PCI child node connected to the M.2
+> E-key slot so the overlay can patch them directly instead of using a full
+> path or reconstructing the nested PCI hierarchy.
+> 
+> Signed-off-by: Rahul Samana <rahul.samana@oss.qualcomm.com>
+> ---
+>  arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> index 37a3b51323ce..b2b6fd29880f 100644
+> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> @@ -325,7 +325,7 @@ vdd_ntn_1p8: regulator-vdd-ntn-1p8 {
+>  		regulator-enable-ramp-delay = <10000>;
+>  	};
+>  
+> -	wcn6750-pmu {
+> +	wcn6750_pmu: wcn6750-pmu {
+>  		compatible = "qcom,wcn6750-pmu";
+>  		pinctrl-0 = <&bt_en>;
+>  		pinctrl-names = "default";
+> @@ -901,7 +901,7 @@ pcie1_switch0_dsp1: pcie@1,0 {
+>  			bus-range = <0x3 0xff>;
+>  		};
+>  
+> -		pcie@2,0 {
+> +		pcie0_m2_e: pcie@2,0 {
+>  			reg = <0x21000 0x0 0x0 0x0 0x0>;
+>  			#address-cells = <3>;
+>  			#size-cells = <2>;
+> 
+
+One correction for this patch:
+
+After re-checking the composed devicetree and the device enumeration, the
+QCC2072-facing PCIe path is behind the Industrial mezzanine PCIe0 switch:
+
+    /soc@0/pcie@1c00000/pcie@0/pcie@0,0/pcie@2,0
+
+The pcie@2,0 node labelled in qcs6490-rb3gen2.dts by this patch is under
+the base RB3 PCIe1 topology, so it is not the right endpoint for the BT UART
+variant.
+
+I will fix this in v3 once the endpoint modelling approach is clarified.
+
+Regards,
+Rahul
