@@ -1,114 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BF936EA99;
-	Fri, 31 Jul 2026 21:41:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC6C30E0E5;
+	Fri, 31 Jul 2026 21:48:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785534106; cv=none; b=IL3trbBSCEEAQj5S3buVuuFQXrcxTs9vxp918SoAfUghGlVd6vCqEaxdFIKn/dlmqnC8nJxcfnLXZvAhUiV5Ck4WDvTRCpg2XkglXM/8F4QyjIQZ2FetAsbu+h3Uw42D9+eK7elimy+zXafcGrskK+Yd0Ex3BsLDOqxdwmjIeVg=
+	t=1785534503; cv=none; b=Cesjkq9njgBspb0jgyzpImVM2iObQfdNiglUayZ/ziE4Xc20+F0ODvAjJiWsYu+c8GjN+EZ68ycWeN3I/9GYXanHl2Z14O7JuL3AiC19WytkIcFrqbtKOSWgdjLf/anapwXEf+IJ7WD+GlxNKZhuL92JqA0rgOtKhIbYc6YR9aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785534106; c=relaxed/simple;
-	bh=YNgCBdXPlRiNptTjWsEecFhkyztCKu86KWZVRqqypZ4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=IUehry/yMyYaU6PG/BODrZkTl4GS6UmBQUz11ftV/dONifs51HGiH3NVut9RunNOqA8NIPnEmQpi1HO6HtMHuW0ZVLZVB93UXD6xQBFAl43wORc1H3Yg+297Z+WpxaiRRzcXYcU7lo4xddAs9iTZ0fA09EFqyn/vutv8MLUAssA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bM4FnJGn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785534503; c=relaxed/simple;
+	bh=3/NClTxe5VbcldsiokUIagkgtDvo4dUkfxuvqCYWDzE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=JMF9fG7HuaFAPc1iKh/IGsA4x6GcT/Su46cqs0vL/K5Da6TbC4vrfDG8PchfqHekMVToGVE+jpzkKhQ5HdmSNVvbkPMwb3576Hw28QGxqvH4dCfNNUmkc87xzMB6FrcGTYJBhtzMVzjsrSqfDprFbc0qWqKMIO5yRb5+WlKbA4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ote8amyE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bM4FnJGn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3E921F00ACA;
-	Fri, 31 Jul 2026 21:41:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ote8amyE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A9AA1F00AC4;
+	Fri, 31 Jul 2026 21:48:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785534104;
-	bh=KwhAVEKoQ3+sYU+Q6M3Vy0t6IX91N0gLzTKWuR2dj5E=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=bM4FnJGn7DSoMT/C/8IRLDwiyf1GFuyorslBXsyVF/QXh3pd+5KSqveMi1RQTCTBP
-	 gPru0tMGgFfotbus3hwuG18JMR1GUi/62MkyOWR9adHMIdrC86RbAN97pDWkVJYZkO
-	 zkUnXIwe7iFktCR534yYbLfTriNpi6FVcgOdX+nsXqMPSSPI4d+W8CfSYb9eXa4HW2
-	 V6aNwaftyxRiIgd69/CcK/NrigWcqhi6JrX9knk+9dKnjYDisrUre0L68bYeq5JxTg
-	 FJVM3y+Hntq57jgs0W0bED2zAXsptUIDyL4yeD29q0kraP94L4IBDEi6vYq54pwWfS
-	 UOSVvRoE2UV2Q==
-Date: Fri, 31 Jul 2026 16:41:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Mark Brown <broonie@kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Takuma Fujiwara <t-fujiwara1@ti.com>,
-	Hans Zhang <18255117159@163.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: linux-next: Tree for Jul 30 (pci/controller/cadence/)
-Message-ID: <20260731214143.GA1657481@bhelgaas>
+	s=k20260515; t=1785534501;
+	bh=Ohai3lT/v4Dkr4FfRr2MhoK5iDfHPwKo7V8NpbjUEzc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ote8amyEjyBOij/3z6FwasSVDdvFOGIoSZjkfWGPINYpVJ3I6QFyCu/n/foiRRwt3
+	 xle8IeoISAvtWCDyCIUMDmxBgtc0RYsvHkwwnSS/ep5bsfBshFz/kmrCTv2ntbKver
+	 jclGs8VYIoGQpgtEGheSaJTmemnhCTKRLAnzpYfiCMXft3WsypvbZ7WjXJVZJWrXlI
+	 nwyvkoYbLa30yfp+6YsLOPw3OqgJd4SO/251XWOpvFx/2I94KeqrgRvGhZLaycxddE
+	 VoczJjle02DL/4Rx3DVn+eWaJrAViSFocv6VGzr8yJcTwvefZMhLmntaXnPAMMuTti
+	 HWRuKBaq3ZqCw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when
+ registering dma-buf mr
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhiping Zhang" <zhipingz@meta.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260731211601.3033906-6-zhipingz@meta.com>
+References: <20260731211601.3033906-1-zhipingz@meta.com>
+ <20260731211601.3033906-6-zhipingz@meta.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 31 Jul 2026 21:48:20 +0000
+Message-Id: <20260731214821.2A9AA1F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260731002742.GA1538321@bhelgaas>
 
-On Thu, Jul 30, 2026 at 07:27:42PM -0500, Bjorn Helgaas wrote:
-> [+cc authors of everything on pci/controller/cadence; I haven't
-> triaged this at all, sorry, and don't have time right now to drop that
-> branch from pci/next]
-> 
-> On Thu, Jul 30, 2026 at 04:06:44PM -0700, Randy Dunlap wrote:
-> > 
-> > 
-> > On 7/30/26 8:02 AM, Mark Brown wrote:
-> > > Hi all,
-> > > 
-> > > Changes since 20260729:
-> > > 
-> > 
-> > (1) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
-> > pcie-cadence-plat.c:(.text+0x2f8): undefined reference to `cdns_pcie_ep_setup'
-> > 
-> > In this case, a builtin driver attempts to call into a loadable module:
-> > 
-> > #
-> > # Cadence-based PCIe controllers
-> > #
-> > CONFIG_PCIE_CADENCE=y
-> > # CONFIG_PCIE_CADENCE_DEBUGFS is not set
-> > CONFIG_PCIE_CADENCE_HOST=y
-> > CONFIG_PCIE_CADENCE_EP=m
-> > CONFIG_PCIE_CADENCE_PLAT=y
-> > CONFIG_PCIE_CADENCE_PLAT_HOST=y
-> > CONFIG_PCIE_CADENCE_PLAT_EP=m
-> > # end of Cadence-based PCIe controllers
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-I was unable to reproduce this issue, so I didn't do anything.  I
-didn't figure out how to make CONFIG_PCIE_CADENCE_EP=m; the config I
-used was:
+Pre-existing issues:
+- [High] mlx5_st_dealloc_index leaks the idx_data struct when erasing it fr=
+om the xarray.
+--
 
-  CONFIG_PCIE_CADENCE=y
-  # CONFIG_PCIE_CADENCE_DEBUGFS is not set
-  CONFIG_PCIE_CADENCE_HOST=y
-  CONFIG_PCIE_CADENCE_EP=y
-  CONFIG_PCIE_CADENCE_PLAT=y
-  CONFIG_PCIE_CADENCE_PLAT_HOST=y
-  CONFIG_PCIE_CADENCE_PLAT_EP=m
+--- Patch [5]: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when regis=
+tering dma-buf mr ---
+commit cb1e1bfb29faeb4a7f3d550176e3590d73486a3e
+Author: Zhiping Zhang <zhipingz@meta.com>
 
-> > (2) /usr/bin/ld.bfd: drivers/pci/controller/cadence/pcie-cadence-plat.o: in function `cdns_plat_pcie_probe':
-> > pcie-cadence-plat.c:(.text+0x11f): undefined reference to `cdns_pcie_host_setup'
-> > 
-> > 
-> > This is similar, just a different driver is =m in the failure case.
-> > 
-> > #
-> > # Cadence-based PCIe controllers
-> > #
-> > CONFIG_PCIE_CADENCE=y
-> > CONFIG_PCIE_CADENCE_DEBUGFS=y
-> > CONFIG_PCIE_CADENCE_HOST=m
-> > CONFIG_PCIE_CADENCE_EP=y
-> > CONFIG_PCIE_CADENCE_PLAT=y
-> > CONFIG_PCIE_CADENCE_PLAT_HOST=m
-> > CONFIG_PCIE_CADENCE_PLAT_EP=y
-> > 
-> > 
-> > -- 
-> > ~Randy
-> > 
+RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+
+This commit wires up mlx5_ib to query the exporter's chosen PCIe TLP
+Processing Hint (TPH) Steering Tag at MR registration time for peer-to-peer
+DMA access. It translates the exporter-provided steering tags into local ST
+entries or uses default routing if no hint is available.
+
+> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
+/mr.c
+> index 00e13028762ae..fdd7d94bd4aa4 100644
+> --- a/drivers/infiniband/hw/mlx5/mr.c
+> +++ b/drivers/infiniband/hw/mlx5/mr.c
+> @@ -167,6 +168,61 @@ static int get_unchangeable_access_flags(struct mlx5=
+_ib_dev *dev,
+>  #define MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK GENMASK_ULL(23, 16)
+>  #define MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK GENMASK_ULL(15, 0)
+> =20
+> +static u8 mlx5_ib_tph_key_ph(u8 ph)
+> +{
+> +	if (ph =3D=3D MLX5_IB_NO_PH || ph =3D=3D 0)
+> +		ph ^=3D MLX5_IB_NO_PH;
+> +
+> +	return ph;
+> +}
+> +
+> +static int mlx5_ib_get_st_handle_ref(struct mlx5_ib_dev *dev, u16 st_ind=
+ex)
+> +{
+> +	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
+> +		return 0;
+> +
+> +	return mlx5_st_get_index(dev->mdev, st_index);
+> +}
+> +
+> +static void mlx5_ib_put_st_index_ref(struct mlx5_ib_dev *dev, u16 st_ind=
+ex)
+> +{
+> +	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
+> +		return;
+> +
+> +	mlx5_st_dealloc_index(dev->mdev, st_index);
+
+[Severity: High]
+This is a pre-existing issue, but this patch introduces a new, heavily-exer=
+cised
+reachable path for it.
+
+Does mlx5_st_dealloc_index() leak the mlx5_st_idx_data struct when erasing =
+it
+from the xarray?
+
+When a steering tag's reference count drops to zero, the entry is removed v=
+ia
+xa_erase():
+
+drivers/net/ethernet/mellanox/mlx5/core/lib/st.c:mlx5_st_dealloc_index() {
+    ...
+	if (refcount_dec_and_test(&idx_data->usecount)) {
+		xa_erase(&st->idx_xa, st_index);
+		/* We leave PCI config space as was before, no mkey will refer to it */
+	}
+    ...
+}
+
+However, the underlying idx_data pointer is not freed with kfree(idx_data).
+
+Because the next time the same tag is requested, a new struct is allocated =
+via
+kzalloc_obj() in mlx5_st_alloc_index_by_tag(), won't repeated allocations a=
+nd
+deallocations lead to an unbounded kernel memory leak?
+
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260731211601.3033=
+906-1-zhipingz@meta.com?part=3D5
