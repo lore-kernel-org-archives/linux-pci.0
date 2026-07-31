@@ -1,87 +1,60 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2EA45040E
-	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 17:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3BBA43CE46;
+	Fri, 31 Jul 2026 18:15:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785520322; cv=none; b=abZ1spNYHiM7W9WNQRNeN4fAVR3Fx0ILmpPVHS35LnVYiYx3CdvSjiKKh9TPoYG/XE/L+FvOd7YMxfb196l/zJENLiUzesGOUJjGhTm2q1f0qCa4c83YYrCjpE1b1tdLGQhJWLpqOtt1xWWAXYbfRNBHJGx7oL+hT2DAe6wqzxk=
+	t=1785521736; cv=none; b=jBsefwsf+MI6LkyhQgOSatKyTyXTbmbpjfRmRMT9pr86/yqLPC7JIsoZ1jiKj5Lbk/egJaAUNQdga621jK10JJbCPwmJfxY20Gmz8QSXG89odsJ20UQvEs5SuIhBL7G0viUkCvRS2bEYNkO4cYnnijHQLGvv/SpnP3UTPKX3FoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785520322; c=relaxed/simple;
-	bh=HW3Kmxon0yqBcSpEnNtQ9XHfCXtaiXQdbvu8OJxwZwE=;
+	s=arc-20240116; t=1785521736; c=relaxed/simple;
+	bh=4WvLEtigxrVa8d5dHkHjLxLLTLwzaS0OzaekrU07+oM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mYqQa7dsE8eBIfdvSEUJhsq9aP2bstL61hP4bMR/jkwVBrVtok3+gME1wcMEfQ2HpDFF8pNzGD08Vo4pdd2bWrSQThcd8HkBomezdYb9R82TX3EJsKSjl17j/440ghsRHHIH+OJ3oxc5sxrzu/qHoDUKx3tmi5nZGYlu9BJGa54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DrBgNv+L; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=c3ru8v4a; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=VOeOocfBT33y/Bdcde7yXUO33nFGb4f8gcouj8psnntE7cD4f39lq215xGSRcNW8rMoxbEroqPGK4cDlzdDJ/u9+0Wa25K+Gr2X/1/SMHYL72hzvEQ2t8hASvzT3OVHTtuUtwq/wucTTarEBGorMyLsT6sbACOuq0efhVo/VuVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=IIurIWtL; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DrBgNv+L";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="c3ru8v4a"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VFONkZ205390
-	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 17:51:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	iZ0R++hTVk5sIhaTyuJ0Ofa6jVpk6M/E6xz4eej3pmU=; b=DrBgNv+LLOTlWZyV
-	ShXSmsxD8mGTZja4AWm0t20ox4AGq4pvFmqZtnkj80UKOp8kl0jWmLaSu6m2hpfV
-	TDumYQt20FcC8XrCrAwYIHRbigZVZfZmdh7oR4dUjBCkYLg7cv78V8WxWh68TD9b
-	yj2urnc+uKXgExOmH8KQnhQOLWAkY65uJSjpKDmGDnx4/pgOKvcwFXoJKX7dkL5B
-	j4YnmFyGRNflq+ZG+9q/xTBoSMJjbY1U1PRGD/6T5ZVZlpoKVaghX8bIfe9UC6kh
-	pFz/nbfSnS8S3r9V9nFb9CiVPUc8HCeh+6z+ZAYV7eNEP7HnzLEwbQRbcTttbbCg
-	zOhO5w==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fru5dhqds-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 17:51:58 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ccb687f82eso17412845ad.3
-        for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 10:51:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785520317; x=1786125117; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=iZ0R++hTVk5sIhaTyuJ0Ofa6jVpk6M/E6xz4eej3pmU=;
-        b=c3ru8v4aTiAN2XOqpM1cQEzi42AgowXMGHB7HkbLQP6ArCS5O7NJ1cU5dFh7q2Ma1N
-         0rxx5URtQJEgETpPiPguJp1O7YMZMvw9VQKq+ao84Miw8+x5ljE0PDWyXvrFBy3vvyiu
-         XV4O8zq4tySeTR84IAZZ1T4mo0KZDec2gBaUaz2BCR6vVT2qTJUnMnGEACkAPmwci9ab
-         ZeJHwWQIgjFC+OBD+i63kQzK69/OoH0iARngcHpKRAEe87KrVYWjkyg+3npJD58zhFut
-         y75WqboR0pCt4M73cT172MUyT6DR7IU0r2m47WTfnyrRydFI0iPFAXnh24mI0t9MgjA4
-         YFyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785520317; x=1786125117;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=iZ0R++hTVk5sIhaTyuJ0Ofa6jVpk6M/E6xz4eej3pmU=;
-        b=hsF3BUVKQ22jTRnCu5z0eeONzJjy2Xl4sJALLc50WDORJKmiixJX9JBpiWT4fN0Eo6
-         KzwwnacafJkV5o10LXgf2ejj9KPtvjqXcVjzTJ0Nk167v/ejUCYfBlA9n4zoFEn+3kQI
-         Zk/kvKL1A/p3iGvsvqalIHCYLAVbGRmQbylhEkhzajvDapEVGHAPtb5LJXIg10gdnZVw
-         fN7ZBfMilFPXHYTbKnVCQglVNRt4KknQYJXrfCQ53atiAGrM9LP2p4K+Hc+z3ITv2Zql
-         qP/802L3qRN8SeianlFRSBZbhUTZm+IWRQvWUVL7+km6PYYgW+6G0zf1VWkroe02K1ke
-         8Tow==
-X-Forwarded-Encrypted: i=1; AHgh+RrjaHIiJCqW+LfCmRjX+LA/FNmPTKPJIkVtY9zalync0VZVBWHsWXf3Iaji7m1RYBGNaZmv02mBziw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdmhmTD5gTRg+EvGPVyXPg3yEUFVdhyIY/8cn2fQPyzfRfmNOU
-	4zZuxNbC3tEQ8RfsF5409HsPJoXMb4hGeWj5EC3bOHRSmSEnN00dzfOmwIVPbOSnRlZZJOsAhKw
-	b3sq4ZKldTMvk6DnbsNTX5zst89nH8N5CIzhNBSr6mKxicu8TJDlDGRQoCc2R7x4=
-X-Gm-Gg: AR+sD11LC351gmUhAUswHWbSMxWeWHdLAJCWu+s1nH8hoPP7k0Quvavw4oAjzZlMcCf
-	qZ26ts3Zama6ybZvs+P6zU7/8Y4RarlpXtqd6jFvm2f7ReQWNhjjP3L6Ll3+fgBojAvU1UY0rN/
-	yQzNPXwj2NHjJ5OJponz+2URM7ot9+cVXsnfm9sApR15S3dEkR0jvpYZ0RAJlmYwtEAojHJIEaK
-	Fmgv4oeTp7muSmK7U9C7XTHy5BSy4OQuCCzTzyZPj0fogHc1eqT7BaddprAnUWx2u1PNX7pJNzH
-	57K0OfySGu2Y9nhMqlI6Q9McyeoitnCG1oB8MC95eVBAX77uxsvQGVzFEJ69rDL+YseX62Skafs
-	l4t285w2RpV+jRDLScPVYHwzA+ipAxNe3
-X-Received: by 2002:a05:6a20:d487:b0:3b4:71a9:cd8f with SMTP id adf61e73a8af0-3c92a8371fcmr694620637.41.1785520317116;
-        Fri, 31 Jul 2026 10:51:57 -0700 (PDT)
-X-Received: by 2002:a05:6a20:d487:b0:3b4:71a9:cd8f with SMTP id adf61e73a8af0-3c92a8371fcmr694580637.41.1785520316592;
-        Fri, 31 Jul 2026 10:51:56 -0700 (PDT)
-Received: from [192.168.1.10] ([122.177.247.168])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fab4cb51asm7645350c88.9.2026.07.31.10.51.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jul 2026 10:51:56 -0700 (PDT)
-Message-ID: <222a33d8-6ab8-451f-9d22-ae06fbe269b6@oss.qualcomm.com>
-Date: Fri, 31 Jul 2026 23:21:46 +0530
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="IIurIWtL"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VFm6WE2312119;
+	Fri, 31 Jul 2026 18:15:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=vdECai
+	oijrSW5fhHomiGEyvuCeNrMFXXXSUQcsGxm8Q=; b=IIurIWtLruz1kG0LJJw67s
+	g3K+4UXnG7hZbstNTFzCnMq9YDMula/hUmObXZxRPDjpycM87k8SN4SMyAZyJ+Oa
+	2CtSLYP41ubOg0+15F6jLUtv7q4ryKCOgB/YkVA4vlgcSNmMmJZpNH/MNfLTYmfb
+	5fk9UJDg9K+XDA5vvoqCfKQU1Y4Kr1s5Elzu0qFhehFCvbSx0iPgYyRCj2fSft2d
+	gYBsej5mLopH3Kg0VQz4dnFMeczDe9cfErfsvpS75//Q5PMTVIN53pwzgDPlPCHR
+	eQBFMHxgGvP6+fND80ZtmJ3xFW7YATovJm4B9iK1xdVT7nfSgWnupqm+CNEvOxrA
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmuwdddgy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 31 Jul 2026 18:15:20 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66VIBNvE003758;
+	Fri, 31 Jul 2026 18:15:19 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fn8fkh3hp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 31 Jul 2026 18:15:19 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66VIFIA941484898
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 31 Jul 2026 18:15:18 GMT
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 443A25805C;
+	Fri, 31 Jul 2026 18:15:18 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4CC3358059;
+	Fri, 31 Jul 2026 18:15:17 +0000 (GMT)
+Received: from [9.61.254.127] (unknown [9.61.254.127])
+	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 31 Jul 2026 18:15:17 +0000 (GMT)
+Message-ID: <08ce08f7-66fd-430a-8eea-6b1696f68de6@linux.ibm.com>
+Date: Fri, 31 Jul 2026 11:15:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,421 +62,351 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/6] Bluetooth: qca: add QCC2072 support
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Rob Herring
- <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-        Rocky Liao <quic_rjliao@quicinc.com>,
-        Manivannan Sadhasivam
- <mani@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, quic_mohamull@quicinc.com,
-        quic_hbandi@quicinc.com, quic_anubhavg@quicinc.com,
-        Vivek Sahu <vivek.sahu@oss.qualcomm.com>,
-        Yepuri Siddu <yepuri.siddu@oss.qualcomm.com>
-References: <20260727-rb3-industrial-bt-uart-v2-0-2d100f30e202@oss.qualcomm.com>
- <20260727-rb3-industrial-bt-uart-v2-2-2d100f30e202@oss.qualcomm.com>
- <53mokww7o5hky34fhwyje7utpqu42md5uknqn2b5km22ccsfzi@fsbf2pth6ztj>
+Subject: Re: [PATCH v22 1/4] PCI: Allow per function PCI slots to fix slot
+ reset on s390
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, alex@shazbot.org, schnelle@linux.ibm.com,
+        mjrosato@linux.ibm.com, stable@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+References: <20260731002210.GA1521769@bhelgaas>
 Content-Language: en-US
-From: Rahul Samana <rahul.samana@oss.qualcomm.com>
-In-Reply-To: <53mokww7o5hky34fhwyje7utpqu42md5uknqn2b5km22ccsfzi@fsbf2pth6ztj>
-Content-Type: text/plain; charset=UTF-8
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260731002210.GA1521769@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: CTt1swAF_5ZI0gHMNDp7sti5C39_6WYv
-X-Proofpoint-GUID: CTt1swAF_5ZI0gHMNDp7sti5C39_6WYv
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDEzNyBTYWx0ZWRfX2ggOlGmQcObU
- E/hBoSjso5aMdh3L4gcCFy8lO6I++nTCi8COCfdj8Ai58ITXCSJpSWFboZjxl32ZvWDWxbmjaHE
- 61uZnF0F9AkAd4k4suw5I11KQCgf8aqLY1VyFrRuhI+3XK+TooFUY6UIiMQiU+XPxnKDvkwxJYs
- rEQwSrT3jzrCdxvbor1Sx3gKLO1+Pyeq862DbmYDHWGrTakIna0XHajeRO2vjziOLttosa0U5uw
- 2HwYDoJG0gZwOPAAo9KOtObbKLwyBnGH1k91bVzw9pW2u2z41+EMMIcWExyoWwa/SbtpJZiHot/
- QdIzUvYW5zdyk0RLjuFl4VImZDcP1yw+OWRuRNjEIFSzN0D9LJUMLQ1wFvn1bRFHd84fTjKAG0X
- iXLXIARuLUncwg+5F1jXwT0gczEY1n80hgyBNfCUADc68nSP7XMm/AXPwiz7uo4CGRU4T9qPcZt
- w4wQudI69fbILG39eqw==
-X-Authority-Analysis: v=2.4 cv=SKZykuvH c=1 sm=1 tr=0 ts=6a6ce0be cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=wVA5pQU3D6HtJETKl3oCcQ==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=EUspDBNiAAAA:8 a=MOouYykqAnKcD-W-GfoA:9 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDEzNyBTYWx0ZWRfX+gRB4aGwa/rw
- kn0Ulv6DmmpkaEQ+VS+/4toWf3uIzsknHSmUNDHvyOJbHWHX6CK8VGPZDg/fHZV7rklRAUm2N+N
- v4qHy2TQg8hrbrrt98GZ/7kAK6IkqEo=
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: SbFnyJyiiEWBeQZ9o3X-H2TMZslrFWUr
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDEzNiBTYWx0ZWRfX8t021t0VWdvO
+ wZOvhEe8iwBTeqbcKQMzGVoUvagzWSIocPCTKI0NmD1e+36t8X+AIfqQpuEFx+8TTeyKkQI8Hp6
+ kk1r+u2gIToxTidSSe2XdGU7Rc6IAbI=
+X-Authority-Analysis: v=2.4 cv=E/z9Y6dl c=1 sm=1 tr=0 ts=6a6ce638 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=TxOPuv4DIxgBshNE3IgA:9 a=QEXdDO2ut3YA:10 a=O8hF6Hzn-FEA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDEzNiBTYWx0ZWRfXxIY5Jq+iWrah
+ bBrim3MrGwgVYtyGC1TitsvycrB5R1Ea+lyfNfTxhOiGJXuN3kT8/53FSoL9Fks0+8doorYrug7
+ zR/JnqN2r21XJ18WwVMZWpA6wvP0ay6/4pATGJOMCS2f9+/PV9sFAyTsYlZBnqSsybAw5u0/VKU
+ mRwHgdPZdAB20WVPxchZinmDPjDpUrnXgWy6jJ9ReHGQl13vKqqNkT02B+VuI8/o9HLufoROZdb
+ UIbMqWp1xqNxOXgVpmQ/TcyNoeFKjObN0+6vbY2gjG/QEjIgkEAjmeb/yhdEXUFinAwEtISFs6H
+ 04CW5zy6i5k9divf5flPIQiS6hlUIZppKd+/Do7+SQgtgDAMMno6C5DlWLMJ3B+0LvAUmfAryNv
+ OV26dlOLOuJLQKs82x0yvs3fykMC5HLlG0TUczU+ZUZHZbkjgjZz68SWxheb/ovkMTl19DhWNLK
+ nIizbUyRUEQS4V6nYMg==
+X-Proofpoint-GUID: SbFnyJyiiEWBeQZ9o3X-H2TMZslrFWUr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-31_05,2026-07-30_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- adultscore=0 impostorscore=0 spamscore=0 suspectscore=0 clxscore=1015
+ adultscore=0 priorityscore=1501 spamscore=0 clxscore=1015 phishscore=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 impostorscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310137
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310136
 
 
+On 7/30/2026 5:22 PM, Bjorn Helgaas wrote:
+> [+cc Keith, just fyi since this is slightly related to 102c8b26b54e
+> ("PCI: Allow all bus devices to use the same slot")]
+>
+> On Mon, Jul 20, 2026 at 12:25:02PM -0700, Farhan Ali wrote:
+>> On s390 systems, which use a machine level hypervisor, PCI devices are
+>> always accessed through a form of PCI pass-through which fundamentally
+>> operates on a per PCI function granularity. This is also reflected in the
+>> s390 PCI hotplug driver which creates hotplug slots for individual PCI
+>> functions. Its reset_slot() function, which is a wrapper for
+>> zpci_hot_reset_device(), thus also resets individual functions.
+> I guess we must be talking about rpaphp?
 
-On 31-07-2026 20:39, Dmitry Baryshkov wrote:
-> On Mon, Jul 27, 2026 at 09:15:02PM +0530, Rahul Samana wrote:
->> From: Vivek Sahu <vivek.sahu@oss.qualcomm.com>
+No, this is the s390_pci_hpc driver.
+
+
+>> Currently, the pci_create_slot() assigns the same pci_slot object to
+>> multifunction devices.
+> Can we say something about exactly where and why this reuse happens?
+> Is this because most callers have stripped off the function number by
+> using PCI_SLOT() before they pass it to pci_create_slot() as @slot_nr?
+>
+> If so, it seems like more a property of the *callers*, not of
+> pci_create_slot() itself.
+
+AFAIU in pci_create_slot() we will iterate through all the devices in 
+the bus, and assign the same pci_slot object to devices that falls in 
+the same slot as per PCI_SLOT(). So even if a caller provides different 
+slot_nr, devices that fall in the same slot will be assigned the same 
+object. In s390 hotplug driver case, it provides the devfn as the 
+slot_nr. So for example devices with bdf 00:00.0 and bdf 00:00.2 will 
+get assigned the same slot, when we create a slot for device 00:00.0. 
+When we attempt to create a slot for device 00:00.2, we do indeed create 
+a separate slot object, but don't update the device's pci_slot as 
+PCI_SLOT(00:00.2) != 2.
+
+I am open to suggestion on how we should re-word this. But i think it's 
+pci_create_slot() that strips the devfn to a slot number.
+
+>
+>> This approach worked fine on s390 systems that only
+>> exposed virtual functions as individual PCI domains to the operating
+>> system.  Since commit 44510d6fa0c0 ("s390/pci: Handling multifunctions")
+>> s390 supports exposing the topology of multifunction PCI devices by
+>> grouping them in a shared PCI domain. This creates a problem when resetting
+>> a function through the hotplug driver's slot_reset() interface.
 >>
->> QCC2072 uses the ORN firmware and NVM naming scheme. The tested RB3 Gen 2
->> Industrial BT-over-UART setup also needs the BCS calibration TLV to be
->> combined with the selected NVM before download.
+>> When attempting to reset a function through the hotplug driver, the shared
+>> slot assignment causes the wrong function to be reset instead of the
+>> intended one. It also leaks memory as we do create a pci_slot object for
+>> the function, but don't correctly free it in pci_slot_release().
 >>
->> Keep the BCS/NVM combination in a helper so missing calibration data or
->> allocation failures can fall back to downloading the NVM alone without a
->> local skip label.
->>
->> Select the NVM file and BCS calibration file using the controller board ID
->> when available, with fallback to the default files. Initialize the BCS
->> calibration filename independently of the NVM filename source so custom NVM
->> firmware-name paths do not leave it unset.
->>
->> Register the QCC2072 compatible with hci_qca and route it through the same
->> UART setup, speed switching and power-control paths as recent Qualcomm
->> Bluetooth controllers.
->>
->> This continues the QCC2072 enablement work previously posted by Vivek Sahu
->> and later extended by Yepuri Siddu for the RB3 Gen 2 Industrial
->> BT-over-UART use case.
->>
->> Signed-off-by: Vivek Sahu <vivek.sahu@oss.qualcomm.com>
->> Co-developed-by: Yepuri Siddu <yepuri.siddu@oss.qualcomm.com>
->> Signed-off-by: Yepuri Siddu <yepuri.siddu@oss.qualcomm.com>
->> Co-developed-by: Rahul Samana <rahul.samana@oss.qualcomm.com>
->> Signed-off-by: Rahul Samana <rahul.samana@oss.qualcomm.com>
+>> Add a flag for struct pci_slot to allow per function PCI slots for
+>> functions managed through a hypervisor, which exposes individual PCI
+>> functions while retaining the topology. Since we can use all 8 bits for
+>> slot 'number' (for ARI devices), change slot 'number' u16 to account for
+>> special values -1 and PCI_SLOT_ALL_DEVICES.
+> Sorry for the delay in reviewing this.  I always struggle to find
+> my way through the PCI slot code, which has grown into a bit of a
+> maze.  I keep hoping we can simplify it somehow.  I don't think that
+> time is now, but the complexity does make changes messy.
+
+Thank you for reviewing this! I appreciate you taking the time to help 
+with the review.
+
+
+>
+>> Fixes: 44510d6fa0c0 ("s390/pci: Handling multifunctions")
+>> Cc: stable@vger.kernel.org
+>> Suggested-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
 >> ---
->>  drivers/bluetooth/btqca.c   | 72 ++++++++++++++++++++++++++++++++++++++++++++-
->>  drivers/bluetooth/btqca.h   |  2 ++
->>  drivers/bluetooth/hci_qca.c | 24 +++++++++++++++
->>  3 files changed, 97 insertions(+), 1 deletion(-)
+>>   drivers/pci/hotplug/rpaphp_slot.c |  2 +-
+>>   drivers/pci/pci.c                 |  5 +++--
+>>   drivers/pci/slot.c                | 33 +++++++++++++++++++++++--------
+>>   include/linux/pci.h               |  8 ++++++--
+>>   4 files changed, 35 insertions(+), 13 deletions(-)
 >>
->> diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
->> index 10c496eaea2c..34bc0684cf1b 100644
->> --- a/drivers/bluetooth/btqca.c
->> +++ b/drivers/bluetooth/btqca.c
->> @@ -569,6 +569,54 @@ static int qca_inject_cmd_complete_event(struct hci_dev *hdev)
->>  	return hci_recv_frame(hdev, skb);
->>  }
->>  
->> +static void qca_combine_nvm_calib(struct hci_dev *hdev, u8 **data,
->> +				  int *size, char *calib_name,
->> +				  size_t max_size)
+>> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+>> index 67362e5b9971..92eabf5f61b9 100644
+>> --- a/drivers/pci/hotplug/rpaphp_slot.c
+>> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+>> @@ -84,7 +84,7 @@ int rpaphp_register_slot(struct slot *slot)
+>>   	struct hotplug_slot *php_slot = &slot->hotplug_slot;
+>>   	u32 my_index;
+>>   	int retval;
+>> -	int slotno = -1;
+>> +	int slotno = PCI_SLOT_PLACEHOLDER;
+>>   
+>>   	dbg("%s registering slot:path[%pOF] index[%x], name[%s] pdomain[%x] type[%d]\n",
+>>   		__func__, slot->dn, slot->index, slot->name,
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 77b17b13ee61..350bae907ebf 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4897,8 +4897,9 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, bool probe)
+>>   
+>>   static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
+>>   {
+>> -	if (dev->multifunction || dev->subordinate || !dev->slot ||
+>> -	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+>> +	if (dev->subordinate || !dev->slot ||
+>> +	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
+>> +	    (dev->multifunction && !dev->slot->per_func_slot))
+>>   		return -ENOTTY;
+>>   
+>>   	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>> index 6d5cd37bfb1e..894d6213ed30 100644
+>> --- a/drivers/pci/slot.c
+>> +++ b/drivers/pci/slot.c
+>> @@ -37,7 +37,7 @@ static const struct sysfs_ops pci_slot_sysfs_ops = {
+>>   
+>>   static ssize_t address_read_file(struct pci_slot *slot, char *buf)
+>>   {
+>> -	if (slot->number == 0xff)
+>> +	if (slot->number == (u16)PCI_SLOT_PLACEHOLDER)
+> I think it might be worth splitting the PCI_SLOT_PLACEHOLDER addition
+> and the relevant kernel-doc updates, which are mostly unrelated to
+> this patch, to a separate no-functional-changes patch to simplify this
+> patch.
+
+I will take a look at splitting the PCI_SLOT_PLACEHOLDER out of this patch.
+
+
+>>   		return sysfs_emit(buf, "%04x:%02x\n",
+>>   				  pci_domain_nr(slot->bus),
+>>   				  slot->bus->number);
+>> @@ -72,6 +72,23 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
+>>   	return bus_speed_read(slot->bus->cur_bus_speed, buf);
+>>   }
+>>   
+>> +static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *slot)
 >> +{
->> +	const struct firmware *calib_fw;
->> +	struct tlv_type_hdr *outer_hdr;
->> +	size_t inner_len, combined_size;
->> +	u8 *combined_data;
->> +	int err;
+>> +	if (slot->per_func_slot)
+>> +		return dev->devfn == slot->number;
 >> +
->> +	err = request_firmware(&calib_fw, calib_name, &hdev->dev);
->> +	if (err) {
->> +		if (qca_get_alt_nvm_file(calib_name, max_size))
->> +			err = request_firmware(&calib_fw, calib_name, &hdev->dev);
->> +
->> +		if (err) {
->> +			bt_dev_err(hdev, "QCA Failed to request file: %s (%d)",
->> +				   calib_name, err);
->> +			return;
->> +		}
->> +	}
->> +
->> +	bt_dev_info(hdev, "QCA Downloading %s", calib_name);
->> +
->> +	inner_len = *size + calib_fw->size;
->> +	combined_size = sizeof(*outer_hdr) + inner_len;
->> +	combined_data = vmalloc(combined_size);
->> +	if (!combined_data) {
->> +		bt_dev_warn(hdev,
->> +			    "QCA Failed to allocate memory for file: %s",
->> +			    calib_name);
->> +		release_firmware(calib_fw);
->> +		return;
->> +	}
->> +
->> +	outer_hdr = (struct tlv_type_hdr *)combined_data;
->> +	/* high 24 bits = payload length, low 8 bits = type */
->> +	outer_hdr->type_len = cpu_to_le32((inner_len << 8) | 4);
->> +	memcpy(combined_data + sizeof(*outer_hdr), *data, *size);
->> +	memcpy(combined_data + sizeof(*outer_hdr) + *size,
->> +	       calib_fw->data, calib_fw->size);
->> +	release_firmware(calib_fw);
->> +
->> +	vfree(*data);
->> +	*data = combined_data;
->> +	*size = combined_size;
+>> +	return slot->number == PCI_SLOT_ALL_DEVICES ||
+>> +		PCI_SLOT(dev->devfn) == slot->number;
 >> +}
 >> +
->>  static int qca_download_firmware(struct hci_dev *hdev,
->>  				 struct qca_fw_config *config,
->>  				 enum qca_btsoc_type soc_type,
->> @@ -614,6 +662,11 @@ static int qca_download_firmware(struct hci_dev *hdev,
->>  	memcpy(data, fw->data, size);
->>  	release_firmware(fw);
->>  
->> +	if (soc_type == QCA_QCC2072 && config->type == TLV_TYPE_NVM)
->> +		qca_combine_nvm_calib(hdev, &data, &size,
->> +				      config->calib_name,
->> +				      sizeof(config->calib_name));
+>> +static bool pci_slot_enabled_per_func(void)
+>> +{
+>> +	if (IS_ENABLED(CONFIG_S390))
+>> +		return true;
 >> +
->>  	ret = qca_tlv_check_data(hdev, config, data, size, soc_type);
->>  	if (ret)
->>  		goto out;
->> @@ -845,6 +898,10 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
->>  			snprintf(config.fwname, sizeof(config.fwname),
->>  				 "qca/hmtbtfw%02x.tlv", rom_ver);
->>  			break;
->> +		case QCA_QCC2072:
->> +			snprintf(config.fwname, sizeof(config.fwname),
->> +				 "qca/ornbtfw%02x.tlv", rom_ver);
->> +			break;
-> 
-> Please try to keep these sorted.
-> 
->>  		default:
->>  			snprintf(config.fwname, sizeof(config.fwname),
->>  				 "qca/rampatch_%08x.bin", soc_ver);
->> @@ -878,7 +935,8 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
->>  	/* Give the controller some time to get ready to receive the NVM */
->>  	msleep(10);
->>  
->> -	if (soc_type == QCA_QCA2066 || soc_type == QCA_WCN7850)
->> +	if (soc_type == QCA_QCA2066 || soc_type == QCA_WCN7850 ||
->> +	    soc_type == QCA_QCC2072)
->>  		qca_read_fw_board_id(hdev, &boardid);
->>  
->>  	/* Download NVM configuration */
->> @@ -939,12 +997,23 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
->>  			qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
->>  				 "hmtnv", soc_type, ver, rom_ver, boardid);
->>  			break;
->> +		case QCA_QCC2072:
->> +			qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
->> +						  "ornnv", soc_type, ver,
->> +						  rom_ver, boardid);
->> +			break;
-> 
-> Sorted
-> 
->>  		default:
->>  			snprintf(config.fwname, sizeof(config.fwname),
->>  				 "qca/nvm_%08x.bin", soc_ver);
->>  		}
->>  	}
->>  
->> +	if (soc_type == QCA_QCC2072)
->> +		qca_get_nvm_name_by_board(config.calib_name,
->> +					  sizeof(config.calib_name),
->> +					  "ornbcscal", soc_type, ver,
->> +					  rom_ver, boardid);
+>> +	return false;
+>> +}
 >> +
->>  	err = qca_download_firmware(hdev, &config, soc_type, rom_ver);
->>  	if (err < 0 && !firmware_name && soc_type == QCA_WCN6855) {
->>  		qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
->> @@ -1001,6 +1070,7 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
-> 
-> Sorted
-> 
->>  		/* get fw build info */
->>  		err = qca_read_fw_build_info(hdev);
->>  		if (err < 0)
->> diff --git a/drivers/bluetooth/btqca.h b/drivers/bluetooth/btqca.h
->> index 8f3c1b1c77b3..425133096eda 100644
->> --- a/drivers/bluetooth/btqca.h
->> +++ b/drivers/bluetooth/btqca.h
->> @@ -94,6 +94,7 @@ enum qca_tlv_type {
->>  struct qca_fw_config {
->>  	u8 type;
->>  	char fwname[64];
->> +	char calib_name[64];
->>  	uint8_t user_baud_rate;
->>  	enum qca_tlv_dnld_mode dnld_mode;
->>  	enum qca_tlv_dnld_mode dnld_type;
->> @@ -158,6 +159,7 @@ enum qca_btsoc_type {
->>  	QCA_WCN6750,
->>  	QCA_WCN6855,
->>  	QCA_WCN7850,
->> +	QCA_QCC2072,
-> 
-> Sorted
-> 
->>  };
->>  
->>  #if IS_ENABLED(CONFIG_BT_QCA)
->> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
->> index 1222f97800f4..449f0896bdac 100644
->> --- a/drivers/bluetooth/hci_qca.c
->> +++ b/drivers/bluetooth/hci_qca.c
->> @@ -1375,6 +1375,7 @@ static int qca_set_baudrate(struct hci_dev *hdev, uint8_t baudrate)
->>  
->>  	/* Give the controller time to process the request */
->>  	switch (qca_soc_type(hu)) {
->> +	case QCA_QCC2072:
-> 
-> Ok, here you've discovered sorting order.
-> 
->>  	case QCA_WCN3950:
->>  	case QCA_WCN3988:
->>  	case QCA_WCN3990:
->> @@ -1462,6 +1463,7 @@ static unsigned int qca_get_speed(struct hci_uart *hu,
->>  static int qca_check_speeds(struct hci_uart *hu)
->>  {
->>  	switch (qca_soc_type(hu)) {
->> +	case QCA_QCC2072:
->>  	case QCA_WCN3950:
->>  	case QCA_WCN3988:
->>  	case QCA_WCN3990:
->> @@ -1513,6 +1515,7 @@ static int qca_set_speed(struct hci_uart *hu, enum qca_speed_type speed_type)
->>  		case QCA_WCN6750:
->>  		case QCA_WCN6855:
->>  		case QCA_WCN7850:
->> +		case QCA_QCC2072:
-> 
-> And then lost it again.
-> 
->>  			hci_uart_set_flow_control(hu, true);
->>  			break;
->>  
->> @@ -1548,6 +1551,7 @@ static int qca_set_speed(struct hci_uart *hu, enum qca_speed_type speed_type)
->>  		case QCA_WCN6750:
->>  		case QCA_WCN6855:
->>  		case QCA_WCN7850:
->> +		case QCA_QCC2072:
->>  			hci_uart_set_flow_control(hu, false);
->>  			break;
->>  
->> @@ -1864,6 +1868,7 @@ static int qca_power_on(struct hci_dev *hdev)
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
->>  		ret = qca_regulator_init(hu);
->>  		break;
->>  
->> @@ -1963,6 +1968,10 @@ static int qca_setup(struct hci_uart *hu)
->>  		soc_name = "wcn7850";
->>  		break;
->>  
->> +	case QCA_QCC2072:
->> +		soc_name = "qcc2072";
->> +		break;
+>>   static void pci_slot_release(struct kobject *kobj)
+>>   {
+>>   	struct pci_dev *dev;
+>> @@ -82,8 +99,7 @@ static void pci_slot_release(struct kobject *kobj)
+>>   
+>>   	down_read(&pci_bus_sem);
+>>   	list_for_each_entry(dev, &slot->bus->devices, bus_list)
+>> -		if (slot->number == PCI_SLOT_ALL_DEVICES ||
+>> -		    PCI_SLOT(dev->devfn) == slot->number)
+>> +		if (pci_dev_matches_slot(dev, slot))
+>>   			dev->slot = NULL;
+>>   	up_read(&pci_bus_sem);
+>>   
+>> @@ -187,8 +203,7 @@ void pci_dev_assign_slot(struct pci_dev *dev)
+>>   
+>>   	mutex_lock(&pci_slot_mutex);
+>>   	list_for_each_entry(slot, &dev->bus->slots, list)
+>> -		if (slot->number == PCI_SLOT_ALL_DEVICES ||
+>> -		    PCI_SLOT(dev->devfn) == slot->number)
+>> +		if (pci_dev_matches_slot(dev, slot))
+>>   			dev->slot = slot;
+>>   	mutex_unlock(&pci_slot_mutex);
+>>   }
+> Update pci_create_slot() kernel-doc to mention PCI_SLOT_PLACEHOLDER
+> instead of "-1" (several instances).
+>
+> In addition to PCI_SLOT_PLACEHOLDER or PCI_SLOT_ALL_DEVICES, and a
+> 0-31 PCI_SLOT(devfn) value, I think @slot_nr can already be a 0-255
+> value (e.g., from cpci module parameters or s390
+> zpci_bus_add_device()).
+>
+> It seems like this patch also needs pci_slot.number to end up with a
+> complete devfn in it so pci_dev_matches_slot() can use it, but I'm
+> confused about how that happens, since it looks like
+> rpaphp_register_slot() will pass either PCI_SLOT_PLACEHOLDER or a
+> PCI_SLOT(...) value to pci_hp_register().
+
+On s390 it happens via zpci_init_slot() in the 
+drivers/pci/hotplug/s390_pci_hpc.c, which assigns a devfn as a slot_nr.
+
+
+>
+>> @@ -267,7 +282,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>   
+>>   	mutex_lock(&pci_slot_mutex);
+>>   
+>> -	if (slot_nr == -1)
+>> +	if (slot_nr == PCI_SLOT_PLACEHOLDER)
+> No action for you here, but one thing that complicates this is the
+> overloading of slot_nr for different purposes:
+>
+>    - Sentinel flags:
+>
+>      * PCI_SLOT_ALL_DEVICES (0xfe or 0xfeff) used by pciehp init_slot()
+>
+>      * PCI_SLOT_PLACEHOLDER (-1), used by rpaphp_register_slot()
+>
+>      * -1 may also be used by pnv_php_alloc_slot(); I don't know
+>        exactly what it means
+>
+>    - Traditional (mostly) PCI device numbers:
+>
+>      * 0-31 derived by PCI_SLOT() in hv_pci_assign_slots(),
+>        octep_hp_register_slot(), pnv_php_alloc_slot(),
+>        rpaphp_register_slot()
+>
+>      * 0-255 from cpci (module parameters)
+>
+>      * 0-15 from cpq ((u8 from readb(SLOT_MASK) >> 4))
+>
+>      * 0 from ibmphp_ebda
+>
+>      * 0-255 from s390 zpci_bus_add_device()
+>        (zdev->rid & ZPCI_RID_MASK_DEVFN), where ZPCI_RID_MASK_DEVFN is
+>        0xff
+>
+>      * 0-255 for s390 per-function slots (this series)
+>
+>    - Arbitrary values:
+>
+>      * Sparc pcie_bus_slot_names() path uses unvalidated
+>        'physical-slot#' DT property as slot_nr
+>
+>      * acpiphp uses the value of _ADR as slot_nr (per spec it should be
+>        device number in bits 16-31, but not validated)
+>
+>>   		goto placeholder;
+>>   
+>>   	/*
+>> @@ -298,6 +313,9 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>   	slot->bus = pci_bus_get(parent);
+>>   	slot->number = slot_nr;
+>>   
+>> +	if (pci_slot_enabled_per_func())
+>> +		slot->per_func_slot = 1;
 >> +
->>  	default:
->>  		soc_name = "ROME/QCA6390";
->>  	}
->> @@ -1986,6 +1995,7 @@ static int qca_setup(struct hci_uart *hu)
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
->>  		if (qcadev && qcadev->bdaddr_property_broken)
->>  			hci_set_quirk(hdev, HCI_QUIRK_BDADDR_PROPERTY_BROKEN);
->>  
->> @@ -2019,6 +2029,7 @@ static int qca_setup(struct hci_uart *hu)
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
->>  		break;
->>  
->>  	default:
->> @@ -2172,6 +2183,12 @@ static const struct qca_device_data qca_soc_data_wcn3998 __maybe_unused = {
->>  	.num_vregs = 4,
->>  };
->>  
->> +static const struct qca_device_data qca_soc_data_qcc2072 __maybe_unused = {
->> +	.soc_type = QCA_QCC2072,
->> +	.num_vregs = 0,
->> +	.capabilities = QCA_CAP_WIDEBAND_SPEECH | QCA_CAP_VALID_LE_STATES,
->> +};
+>>   	slot->kobj.kset = pci_slots_kset;
+>>   
+>>   	slot_name = make_slot_name(name);
+>> @@ -318,8 +336,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>   
+>>   	down_read(&pci_bus_sem);
+>>   	list_for_each_entry(dev, &parent->devices, bus_list)
+>> -		if (slot_nr == PCI_SLOT_ALL_DEVICES ||
+>> -		    PCI_SLOT(dev->devfn) == slot_nr)
+>> +		if (pci_dev_matches_slot(dev, slot))
+>>   			dev->slot = slot;
+>>   	up_read(&pci_bus_sem);
+>>   
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 64b308b6e61c..6141787f7417 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -79,14 +79,18 @@
+>>    * and, if ARI Forwarding is enabled, functions may appear to be on multiple
+>>    * devices.
+>>    */
+>> -#define PCI_SLOT_ALL_DEVICES	0xfe
+>> +#define PCI_SLOT_ALL_DEVICES	0xfeff
 >> +
->>  static const struct qca_device_data qca_soc_data_wcn6750 __maybe_unused = {
->>  	.soc_type = QCA_WCN6750,
->>  	.vregs = (struct qca_vreg []) {
->> @@ -2274,6 +2291,7 @@ static void qca_power_off(struct hci_uart *hu)
->>  
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->> +	case QCA_QCC2072:
->>  		gpiod_set_value_cansleep(qcadev->bt_en, 0);
->>  		msleep(100);
->>  		qca_regulator_disable(qcadev);
->> @@ -2429,6 +2447,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
->>  		qcadev->bt_power = devm_kzalloc(&serdev->dev,
->>  						sizeof(struct qca_power),
->>  						GFP_KERNEL);
->> @@ -2448,6 +2467,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
->>  	case QCA_WCN6750:
->>  	case QCA_WCN6855:
->>  	case QCA_WCN7850:
->> +	case QCA_QCC2072:
->>  		if (!device_property_present(&serdev->dev, "enable-gpios")) {
->>  			/*
->>  			 * Backward compatibility with old DT sources. If the
->> @@ -2490,6 +2510,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
->>  		if (!qcadev->bt_en &&
->>  		    (data->soc_type == QCA_WCN6750 ||
->>  		     data->soc_type == QCA_WCN6855 ||
->> +		     data->soc_type == QCA_QCC2072 ||
-> 
-> Randomly in the middle. No
-> 
->>  		     data->soc_type == QCA_WCN7850))
->>  			power_ctrl_enabled = false;
->>  
->> @@ -2498,6 +2519,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
->>  		if (IS_ERR(qcadev->sw_ctrl) &&
->>  		    (data->soc_type == QCA_WCN6750 ||
->>  		     data->soc_type == QCA_WCN6855 ||
->> +		     data->soc_type == QCA_QCC2072 ||
->>  		     data->soc_type == QCA_WCN7850)) {
->>  			dev_err(&serdev->dev, "failed to acquire SW_CTRL gpio\n");
->>  			return PTR_ERR(qcadev->sw_ctrl);
->> @@ -2576,6 +2598,7 @@ static void qca_serdev_remove(struct serdev_device *serdev)
->>  	struct qca_power *power = qcadev->bt_power;
->>  
->>  	switch (qcadev->btsoc_type) {
->> +	case QCA_QCC2072:
->>  	case QCA_WCN3988:
->>  	case QCA_WCN3990:
->>  	case QCA_WCN3991:
->> @@ -2785,6 +2808,7 @@ static const struct of_device_id qca_bluetooth_of_match[] = {
->>  	{ .compatible = "qcom,wcn6750-bt", .data = &qca_soc_data_wcn6750},
->>  	{ .compatible = "qcom,wcn6855-bt", .data = &qca_soc_data_wcn6855},
->>  	{ .compatible = "qcom,wcn7850-bt", .data = &qca_soc_data_wcn7850},
->> +	{ .compatible = "qcom,qcc2072-bt", .data = &qca_soc_data_qcc2072 },
-> 
-> And here too. Keep those sorted.
-> 
+>> +/* Used to identify a slot as a placeholder */
+>> +#define PCI_SLOT_PLACEHOLDER	-1
+> Since this is eventually assigned to a u16, and you use "0xfeff" for
+> PCI_SLOT_ALL_DEVICES, it seems like "0xffff" would be appropriate.
+>
+> I suppose you used -1 because the arguments to pci_hp_register() all
+> the way down to pci_create_slot() are "int" and it's only inside
+> pci_create_slot() where it gets chopped to u16 when it's stored in
+> pci_slot.number.  But the mix of int/u16 and 0xfeff (a valid u16) and
+> -1 (which needs to be int) seems like unnecessary complexity.
 
-Hi Dmitry,
+I kept it as -1 because it's an int up until pci_create_slot(). I can 
+change it to 0xffff.
 
-Ack, I will keep the entries sorted consistently in v3.
+Thanks
 
-Thanks,
-Rahul
+Farhan
 
->>  	{ /* sentinel */ }
->>  };
->>  MODULE_DEVICE_TABLE(of, qca_bluetooth_of_match);
->>
+>
+> AFAICT the only values we need to *store* in pci_slot are 0-255 and
+> the "ALL_DEVICES" indication.
+>
+>>   /* pci_slot represents a physical slot */
+>>   struct pci_slot {
+>>   	struct pci_bus		*bus;		/* Bus this slot is on */
+>>   	struct list_head	list;		/* Node in list of slots */
+>>   	struct hotplug_slot	*hotplug;	/* Hotplug info (move here) */
+>> -	unsigned char		number;		/* Device nr, or PCI_SLOT_ALL_DEVICES */
+>> +	u16			number;		/* Device nr, or PCI_SLOT_ALL_DEVICES */
+>> +	unsigned int		per_func_slot:1; /* Allow per function slot */
+>>   	struct kobject		kobj;
+>>   };
+>>   
 >> -- 
->> 2.34.1
+>> 2.43.0
 >>
-> 
-
