@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990B435957
-	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 04:06:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28C23546C1
+	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 04:06:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785557170; cv=none; b=ixCSf9xUzCAoSb6QJt4Lw75RReZUu6qe/uU+/zTKrx8kKsxRw+lSVfbS9otAn2i7ALybem+M8yXK1Bzfx5aQNrYxWHSEMjxgxJDOp5e1TMile9nc45Zy9rWMp74y2BvijXcmi5wok39zPfiFkWO423eWRldb/1GaRWQ+Yku2XaU=
+	t=1785557204; cv=none; b=ZwAptYohyBzJrV0q413ledx8swjGw19PHP1zIN3zFaBAgsVGx5vBj3E4inqWAuZXuMMVPtmsIxSBl8+g+qkRFWfYPUVKCFDnbdAiBkBBlbHE+xGFGvqPeYpC8bfASTxnPRHNTDik5KkpatAa5IyO3rJAqtXfRWEkGrTcrD1WthI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785557170; c=relaxed/simple;
-	bh=W4GyncGSOBetkwqyArcaAFBNz9k/udEdTtLtRlYM0Zw=;
+	s=arc-20240116; t=1785557204; c=relaxed/simple;
+	bh=UAy8NywxBufXtt+fL8NnTeaU8ZFQCJNMaqa8XalBBFQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cJc/XqZ2/Lu4yslMmPLAkplSwAUAJcDBCJBJSaq3NBMUMJP7y5UKmhdzUw9MeJQlEAn9sTlRVTXQVHGlcXyXIALWgheNHFiOPitUO+mTszJGNlxe1Lbn8ZQDmB5hhu4oYnZZPIRMGPApPL5j+dAWXKPQJbgSYLn+S7g2gyB6qH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OOefJDzB; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ldnvJAW4GhA5Tbd7WwCcpbF1M04A0KWjaJwB4iTBvbNcaNcguKyN3qUZS3nM89pRvSAHdMEK1B/OVQX1Vz5LCO5n9hX6/cguxPwOgWYm9wyH2f5Le4dg94bNYtchYTt1InU2YP0BG52iLYs7dEylMQZF6/emCFifD33R7wEge8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BaZ+I8dR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OOefJDzB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAE621F00AC4;
-	Sat,  1 Aug 2026 04:06:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BaZ+I8dR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 017B31F00AC4;
+	Sat,  1 Aug 2026 04:06:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785557169;
-	bh=r0rlTUOcIt0Nu00bFXvrlOsakPEFsVfywqwE/KbewPA=;
+	s=k20260515; t=1785557203;
+	bh=UXS8psxrn2y2ifr+kCCRbzyp0+s8gXQ6esAdRmRZzT8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OOefJDzBFwX6QNvZusprjxBZ0V1ZJBRid44tz4nP9TdRKiydzgUUto6gDdFz3uWhK
-	 H5GQulbigVj4ff8SBrttxZlv9rd8UVrumfa4SEzL511KxZM60rz8Eh1CdFe2C60A18
-	 7NyG296YELrO4buja/QxDrcZiS7dYpA9yDyADuX/S3h7u51m+yXOemz0ScyFc2ktqm
-	 GZHiYHPoDqffmztVdA2dbmNtp/I//DTh4cDR6L3Y6T5RtR0UyX0qC+e/sKEe/2sulz
-	 leMai19TGbj5IZuDBCinteyLpCDcBWDn4QZR1icssYUXIYglWn7udYIT9iiEfQ8HRN
-	 cylWwe2kC8t5g==
-Date: Sat, 1 Aug 2026 13:06:07 +0900
+	b=BaZ+I8dR3a0uWPHiCyZiql56IdFofcMiLeI3r52RYn2fiwM6HnsZ0Uq4/IL4GC7zj
+	 LAFcY4Ii+aUd4Z7qSrBzDTp+DMJBf5tJblqp1rneSAK93u9Qmjr3e5AgsNI0CB21Da
+	 EVUQrDK3hu6nr5ooDMcAERT4caYIOJT0Ac3FnSEdu5C6wNPWrpxLxybmwSYco/y0Kt
+	 mzzJZiycAW+FuagL92C0Qi6KplJfPmblhRZtOwe9nF9DWYTQxd4I7luHpo4NPOXqM+
+	 UJYzywzApYlxscG/2YnzhVj6pGXz+khyy3uCD2oPO6M1nBAV0T+nOInBPJYQrXaFUC
+	 y2E/itE0R97Kg==
+Date: Sat, 1 Aug 2026 13:06:41 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>, 
 	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Ira Weiny <iweiny@kernel.org>, Kees Cook <kees@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/proc: Warn on writes to kernel-exclusive config
- space regions
-Message-ID: <20260801040548.GC3183355@rocinante>
-References: <20260729075413.1215821-1-kwilczynski@kernel.org>
+	Kees Cook <kees@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/proc: Use file_ns_capable() when checking config
+ space read access
+Message-ID: <20260801040625.GD3183355@rocinante>
+References: <20260720204145.1500105-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,24 +44,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260729075413.1215821-1-kwilczynski@kernel.org>
+In-Reply-To: <20260720204145.1500105-1-kwilczynski@kernel.org>
 
 Hello,
 
-> Currently, a driver can claim a region of a device's config space as
-> exclusive using pci_request_config_region_exclusive(), after which a
-> write to that region originating from user space is expected to emit a
-> warning and taint the kernel.  The check is advisory only, as the write
-> itself is still allowed to proceed.
+> proc_bus_pci_read() decides how much of the config space is readable
+> based on capable(CAP_SYS_ADMIN), which checks the credentials of the
+> task calling read(), not the credentials of the process that opened
+> the file.
 > 
-> Since commit 278294798ac9 ("PCI: Allow drivers to request exclusive
-> config regions"), the sysfs config space attribute performs this check
-> in pci_write_config(), but the procfs interface was never updated.  A
-> write performed through /proc/bus/pci/BB/DD.F therefore bypasses the
-> detection entirely, even though both interfaces offer the same level
-> of access.
+> The sysfs equivalent, pci_read_config(), has checked the credentials
+> of the opening process since commit de139a339395 ("pci: check caps
+> from sysfs file open to read device dependent config space"), so a
+> privileged process can open the config space file and pass the file
+> descriptor to an unprivileged process (for example, a process running
+> a KVM guest with an assigned device), which can then read the entire
+> config space.  The check was subsequently routed through the LSM
+> framework in commit 47970b1b2aa6 ("pci: use security_capable() when
+> checking capablities during config space read") and converted to the
+> dedicated helper in commit ab0fa82b2df9 ("pci-sysfs: use proper file
+> capability helper function").
 > 
-> Thus, add the same resource_is_exclusive() check to proc_bus_pci_write().
+> Thus, the two interfaces check the same capability against different
+> credentials.  Checking the credentials of the task calling read()
+> makes the outcome depend on who reads rather than who opened, so the
+> restriction is bypassed whenever a more privileged process reads
+> through the descriptor.  Checking the credentials recorded in
+> file->f_cred settles the decision at open() time and ties it to the
+> file, where it cannot change with the caller.
+> 
+> Therefore, use file_ns_capable() to check CAP_SYS_ADMIN against the
+> credentials in effect when the file was opened, bringing the procfs
+> interface in line with the sysfs behaviour.
+> 
+> As a result, a file descriptor opened by a privileged process and
+> passed to an unprivileged one now allows the entire config space to
+> be read through procfs, matching sysfs.
 
 Applied to the procfs branch.
 
