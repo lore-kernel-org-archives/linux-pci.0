@@ -1,140 +1,246 @@
-Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5B502FD7C3
-	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 00:43:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785545029; cv=none; b=XFrCX+vETPhDijQZPzokRW47ecBDtN1PCyhrISPHj4VLsCyhLz+lBhaDLjkCaXQSPaEdG0wr/fqI0l214eLT2WXeb64e7J+3VcSQWkxGN7DRx3Bvk5IZx5J7rBOuqJS7hn6tre/aDkvdr0oEAA0hxdhk75Zumt7AFWBIO+rE9Z0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785545029; c=relaxed/simple;
-	bh=WLbDmhynmJRBzvC9VtSa8CA/TwQCDnMB1XDczh4z4q8=;
-	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 To:Cc:Content-Type; b=bCLwVbamRp9riqq/lpz59X827DMirGy3QeewFFP/j22qyxdwUTDAs4U2h+t67+TFFVMoFWQZI9FNkWtwbREK32RG4KKncUuj/xHAIJfJlj/YCeqBIeQOpV7Htq1m9ZpKfQXeuGDsaiqrtmx6pubsxXtjm1EFJQqQFC93Bm4axuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=PDVRuyYe; arc=none smtp.client-ip=149.72.141.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="PDVRuyYe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
-	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
-	content-transfer-encoding:content-type:cc:content-type:date:from:subject:to;
-	s=s1; t=1785545025;
-	bh=4SwiOz+P6AlBXRHcbsCHn1Zsa4G7NoAJXzm3uhDPdUA=;
-	b=PDVRuyYent1tun5KWBF3vbAWgrwHjbnCcxSpnfdtJkTNrWuN0b3imKY0cA3aQ1JB28ku
-	4EoMxHhlnKg2vn6sOXJ7RnBit8j8GYrhuHbM85dW2OmH0rotouGWs3f+gPPYA36CdFbnQX
-	M5s6TEB0rWOdaHf/Xf2VodDUomlGqcPx/mI8roterZzJFZemeawBjkWFqmk7V1bIMe8dqk
-	xzcstw/KwQh4W7Fl8rukesRyIYngoo5DEVFytN40yyaeIJfnX0Zw5qutkKew7OKZP8ylqC
-	rcB+5htrvrZ1Td9oKUU81iwyXSnas8vGPRjhE1j+te8ewAeqSy7F7p+DQfxSapeA==
-Received: by recvd-d665d4899-9s8c2 with SMTP id recvd-d665d4899-9s8c2-1-6A6D4141-20
-	2026-08-01 00:43:45.526568514 +0000 UTC m=+280227.423264102
-Received: from daisy.dens.ffj.family (unknown)
-	by geopod-ismtpd-20 (SG)
-	with ESMTP
-	id pSmtPvnkSPWTzLuzNDcNbQ
-	Sat, 01 Aug 2026 00:43:45.325 +0000 (UTC)
-From: Liz Fong-Jones <lizf@honeycomb.io>
-Subject: Re: [PATCH v3] PCI: Fix BAR resize for devices on a root bus
-Date: Sat, 01 Aug 2026 00:43:45 +0000 (UTC)
-Message-ID: <20260801004343.9113-1-lizf@honeycomb.io>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <CABhMZUX+8tjN1Hz=tf6bm+K7BV4r=1RxctiN6W_UPz9+yxG+Qg@mail.gmail.com>
-References: <CABhMZUX+8tjN1Hz=tf6bm+K7BV4r=1RxctiN6W_UPz9+yxG+Qg@mail.gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E1839C017
+	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 03:13:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.171
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785554029; cv=pass; b=YNNZwedQQJ0AuL93x/TxOp02lhiCbMjk/79VgO2LiV04VfHZY5jCA2b+KAkX1+FkzMU4RuavqJ9lxcCl5lhw4O+lDJS1wSM/E7CtwMY0HNb1z8EX3nGh2RGqEv0yltwXJpaQqREF1APU4pLi02FSAKKPJ/CLF4JxWOVjVBdKxnk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785554029; c=relaxed/simple;
+	bh=95QCJbuFW0DJ4I2GQ9WngTVOHrimeZjlLTACZfyrPGs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qgGU4H3SD1rWAi7/yWFTvUtQ2v4rI05FxjrKOeN89tSBdYnkOTHXh74/vr3QoZsnjKfb2t7W7IU4yx7uZFzY+8usQv6tfAnglRdPNLwjzVJdaX060nizOUyXXhy28H5+cxgoVxsS2jsGb8W9RNzpxNvFrVsXR8K29hedZrsgcxU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp; spf=pass smtp.mailfrom=gmail.com; arc=pass smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-81ed000b507so15858787b3.0
+        for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2026 20:13:48 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785554027; cv=none;
+        d=google.com; s=arc-20260327;
+        b=PV1xXAV1ubZL0vpbO5fKWfmTwDolNWNG+hcL+lGsMrsjMxwo7SMe9hydbCMHPkzEKz
+         2dLuY058093v3NW5mq554hi7kfPLWyE35UAS3ru2+vkyulhjEZuAxJRrVko/jYG24++n
+         GWANP4mFNHGU2xNKXhSngpTkx8dCAZClPHPKdknWX2vX31rV0VEViv3or9vX/FkAvHNk
+         U8yguVIHfyb4BFLgZ8ajdGe7GMiwUFo4TYTg07E9k2gnaAcvICiGxy+2um/3JCYZrlqd
+         wtdcvKZnPl4pfMfimJhDjjhj73Qia8kxn2mlojerx/bi+yLcZ069OV2BGrajPZ7j57GQ
+         uO3g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
+        fh=G/IrTvftlUzqKOj258zODQLsNhUtkaqW/anEjkYn5vg=;
+        b=LRNtnV+XfG5G/kQ0f4MtK1aMcUQmHhSk4pGGZFWYy//mufMTHq/pN68LET7rX3bevz
+         jZLK1hWQTdelMJCvPbJIVZJkOjm5yv4Gpukv8iQMkI39leEwFoZx8mp9Gt1iNA9cJ7Rs
+         pP5Q2h+TincNDhvDeQoSHWRjBI1gWqEodIaFiYTmPMiIdqNbs4tDsq2HlUKJVXOQb7Jo
+         qvujCkvGfMtAxN7AzjB1eTSfOyzklF3Me38RgXvlB9QnhajpoMLLeOVCZuHKENUuytnz
+         Vu67taNyljTOou9s2OBnrPJckuw+hz4GOjY22Yw5/Pzm8H6OrnBDCzAiVLOpefgnI1U1
+         zSfw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785554027; x=1786158827;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
+        b=hq9o/2lKK42n970HhhuFGprtiYRH5hj5zDkbFaDrEm85X0FWjgKmgDCXnC54ehQXBd
+         Tai5EwQleFyPi/+KNtj/6sOhe0V+30qXA0gAEEeEW0OiB6rxjUdIyILPI8tNNJqBd8ck
+         0CkTkc0BN0jODS4nE+hRKTRG8NYDtEDehDyfrjrjUbaQSZK0klgj9Cc6MH/0oYOmMhEk
+         TqIovqsLBLqhKwleklTi0dyliVM7FjBU1DHZcun2wOX2TojfOItUbNZqig1G+D5Ir0/Z
+         Wo5AwiteDC1hewkTQ8uHX77Fty8Onrx/v4feoOVw+f73KyM+wQ26dVvLuEjBdlVOYfOb
+         3xQQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqBC5JhIrw0l0lcsjDLeZAfVhLCXS1B9JtiXpKTCSCxaUGRbs57nL6MXfdnEtAVskPaXyOsXAQd+x4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy3yHtpRjw4zqdsov5i8oNVM11AZ8O2q4T6bjTaYY7k+4x1Fcd0
+	IfuLeoZloaikTkl9jkSa5bomHHVI7xzvOJkmejq9KvgzX7//ZGgJqgic61J0KAsH3EigfR/J3Yg
+	2lbxdadEnxuPVU9WIstja9gGDy0H4new=
+X-Gm-Gg: AR+sD10SsltsjbggRV2uSCCiqEmpAx92Fbnk762LZYVg/qnjxbeITZOJXzosEcIgLhr
+	ZyosVfvS3uUCS3rLgkPpxtV7HTreOawFi1yRo3sU51kJQZP26FWKmPdPcpQblw+gvCYjgr3R28R
+	d4yzSfkPvwWRFbFmzfWeK+KiX9UtR6UJE3VBQeeXPGOBRb6/Xp5WRIMOa1ATsuGAmf3l1cvkIj2
+	6PP17z+p8Hy5Tf3vU8/ZoPmUkgY0q8+djs8ccRU4E5KezCTyjOCo2WbTpsL1wI0iuSvjsZVNN8q
+	HaJHcOofbvkkDivqmQBH59J7N/xD99hkL/y0V25s/JIytv3U37L/Ob2i+GikN5ju80pgQnhTbiY
+	OfA==
+X-Received: by 2002:a05:690c:278a:b0:81c:b865:2231 with SMTP id
+ 00721157ae682-81fd4bf88ecmr32651387b3.33.1785554025363; Fri, 31 Jul 2026
+ 20:13:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-SG-EID: 
- =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
- =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmea+EGMmQ+7m8?=
- =?us-ascii?Q?q1YMDv9WRF2I0+Tf2E1B7irUgU3SAaJXuuqFSwt?=
- =?us-ascii?Q?Y4hB2Sh=2FFbMouJJVRl=2FYE7eebbo9KYuy5q535O6?=
- =?us-ascii?Q?IMzbXQM85TWdEjB4gxTP+D+9i8mOIhy0CtW9qBi?=
- =?us-ascii?Q?j1CqxUJfPUXzg2m8qdH6r7eBBkxpTs9xTHCat72?= =?us-ascii?Q?jySE?=
-To: bjorn.helgaas@gmail.com
-Cc: amd-gfx@lists.freedesktop.org, bhelgaas@google.com, bjorn@helgaas.com,
-	helgaas@kernel.org, ilpo.jarvinen@linux.intel.com, jacob.martin@canonical.com,
-	jon.nettleton@gmail.com, jon@solid-run.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, lizf@honeycomb.io, regressions@lists.linux.dev,
-	stable@vger.kernel.org
-X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=us-ascii
+References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net> <20260728162538.GA1325438@bhelgaas>
+In-Reply-To: <20260728162538.GA1325438@bhelgaas>
+From: Masanori Goto <gotom@debian.or.jp>
+Date: Sat, 1 Aug 2026 12:13:18 +0900
+X-Gm-Features: AUfX_mz7siEIuZSDLGecSdNp4xhgCzEOOClyi0oT7r0lmGspOzwc1eUhhS3W20M
+Message-ID: <CALZLnaEmm5Zi=30n4i7ioX9ii4KMAePnZTAhAcNScSZFSNB7UA@mail.gmail.com>
+Subject: Re: [PATCH v4 0/9] PCI: Fix UAF and TOCTOU related to dynamic ID
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gary Guo <gary@garyguo.net>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Vaibhav Gupta <vaibhavgupta40@gmail.com>, 
+	Jens Taprogge <jens.taprogge@taprogge.org>, Ido Schimmel <idosch@nvidia.com>, 
+	Petr Machata <petrm@nvidia.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, David Airlie <airlied@redhat.com>, 
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, industrypack-devel@lists.sourceforge.net, 
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	Sashiko <sashiko-bot@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> I guess this must be the drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
-> driver.
+I'm a "nsp32 folk", which patch version should I take a look at?
 
-Close, but not in this configuration -- that driver binds on the
-U-Boot/devicetree variant of this platform. This machine runs the
-UEFI/ACPI firmware variant (EDK II), where each PCIe controller is
-exposed as a plain PNP0A08 host bridge with standard ECAM (MCFG OEM
-"NXP LX2160", 2 entries, one per segment), so it goes through the
-generic ACPI ECAM path with no controller-specific driver and no MCFG
-quirk.
+Best regards,
+Masanori
 
-> so the GPU is on bus 01, which isn't a nice round bus number like
-> root buses usually are.  The typical thing would be a root port on
-> bus 00 with a secondary bus 01, and amdgpu being on that bus 01.
 
-The firmware genuinely declares the root bus as 01: the host bridge
-_CRS bus range is [bus 01-ff], there is no bus 00 in the segment at
-all, and no root port device is visible anywhere -- the endpoint is
-enumerated directly on the root bus. Both segments follow the same
-pattern (NVMe on 0002:01:00.0, GPU on 0004:01:00.0). I'll defer to Jon
-(CC'd) on why the firmware hides the root port, but the OS-visible
-topology is unambiguous.
-
-> Can you share a dmesg log?
-
-Relevant excerpt below; happy to send the full log off-list or attach
-to the Launchpad bug. Note this boot is running with the
-amdgpu.rebar=0 workaround on a 7.0.0-28 distro kernel, so amdgpu
-initializes successfully (on the native 256MB BAR) -- the host bridge
-and topology enumeration is identical on the boots that fail.
-
-  ACPI: MCFG 0x00000000EBE28E98 00004C (v01 NXP    LX2160   000000FF INTL 20151124)
-  ...
-  ACPI: MCFG table detected, 2 entries
-  ...
-  ACPI: PCI Root Bridge [PCI0] (domain 0002 [bus 01-ff])
-  acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI EDR HPX-Type3]
-  acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug SHPCHotplug PME AER PCIeCapability LTR DPC]
-  acpi PNP0A08:00: ECAM area [mem 0x9000100000-0x900fffffff] reserved by PNP0C02:00
-  acpi PNP0A08:00: ECAM at [mem 0x9000100000-0x900fffffff] for [bus 01-ff]
-  PCI host bridge to bus 0002:01
-  pci_bus 0002:01: root bus resource [mem 0x9040000000-0x90ffffffff window] (bus address [0x40000000-0xffffffff])
-  pci_bus 0002:01: root bus resource [mem 0x9400000000-0x97ffffffff window]
-  pci_bus 0002:01: root bus resource [io  0x0000-0xffff window]
-  pci_bus 0002:01: root bus resource [bus 01-ff]
-  pci 0002:01:00.0: [144d:a808] type 00 class 0x010802 PCIe Endpoint
-  pci 0002:01:00.0: BAR 0 [mem 0x9400000000-0x9400003fff 64bit]
-  pci 0002:01:00.0: BAR 0 [mem 0x9400000000-0x9400003fff 64bit]: assigned
-  ACPI: PCI Root Bridge [PCI1] (domain 0004 [bus 01-ff])
-  acpi PNP0A08:01: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI EDR HPX-Type3]
-  acpi PNP0A08:01: _OSC: OS now controls [PCIeHotplug SHPCHotplug PME AER PCIeCapability LTR DPC]
-  acpi PNP0A08:01: ECAM area [mem 0xa000100000-0xa00fffffff] reserved by PNP0C02:00
-  acpi PNP0A08:01: ECAM at [mem 0xa000100000-0xa00fffffff] for [bus 01-ff]
-  PCI host bridge to bus 0004:01
-  pci_bus 0004:01: root bus resource [mem 0xa040000000-0xa0ffffffff window] (bus address [0x40000000-0xffffffff])
-  pci_bus 0004:01: root bus resource [mem 0xa400000000-0xa7ffffffff window]
-  pci_bus 0004:01: root bus resource [io  0x10000-0x1ffff window] (bus address [0x0000-0xffff])
-  pci_bus 0004:01: root bus resource [bus 01-ff]
-  pci 0004:01:00.0: [1002:6981] type 00 class 0x030000 PCIe Legacy Endpoint
-  pci 0004:01:00.0: BAR 0 [mem 0xa400000000-0xa40fffffff 64bit pref]
-  pci 0004:01:00.0: BAR 2 [mem 0xa410000000-0xa4101fffff 64bit pref]
-  pci 0004:01:00.0: BAR 4 [io  0x10000-0x100ff]
-  pci 0004:01:00.0: BAR 5 [mem 0xa046000000-0xa04603ffff]
-  pci 0004:01:00.0: ROM [mem 0xa0fffe0000-0xa0ffffffff pref]
-  pci 0004:01:00.1: [1002:aae0] type 00 class 0x040300 PCIe Legacy Endpoint
-  pci 0004:01:00.1: BAR 0 [mem 0xa410200000-0xa410203fff 64bit]
-  pci 0004:01:00.0: BAR 0 [mem 0xa400000000-0xa40fffffff 64bit pref]: assigned
-  pci 0004:01:00.0: BAR 2 [mem 0xa410000000-0xa4101fffff 64bit pref]: assigned
-  pci 0004:01:00.0: BAR 5 [mem 0xa040000000-0xa04003ffff]: assigned
-  pci 0004:01:00.0: ROM [mem 0xa040040000-0xa04005ffff pref]: assigned
-  pci 0004:01:00.1: BAR 0 [mem 0xa410200000-0xa410203fff 64bit]: assigned
-  pci 0004:01:00.0: BAR 4 [io  0x10000-0x100ff]: assigned
-  pci_bus 0004:01: resource 4 [mem 0xa040000000-0xa0ffffffff window]
-  pci_bus 0004:01: resource 5 [mem 0xa400000000-0xa7ffffffff window]
-  pci_bus 0004:01: resource 6 [io  0x10000-0x1ffff window]
+2026=E5=B9=B47=E6=9C=8829=E6=97=A5(=E6=B0=B4) 1:27 Bjorn Helgaas <helgaas@k=
+ernel.org>:
+>
+> On Thu, Jul 23, 2026 at 11:00:39PM +0100, Gary Guo wrote:
+> > While working on improving the Rust abstractions [1], Sashiko reported =
+that
+> > an existing UAF issue related to dynamic ID, which I find to be genuine=
+.
+> > When taking a look at the code I also find a TOCTOU issue where the
+> > existence check of dynamic ID happens in a separate critical section as=
+ the
+> > actual insertion. This series fix both issues.
+> >
+> > There are two exported functions pci_match_id() and pci_add_dynid() whi=
+ch I
+> > have to tweak to implement this cleanly; I created separate "do_xxx"
+> > functions to keep the existing APIs because they all have multiple user=
+s.
+> >
+> > There're a few existing users which stores their pci_device_id argument=
+ in
+> > probe callback. This is a bad pattern because nothing except driver_dat=
+a
+> > inside pci_device_id is what they want; actual ID information can be
+> > retrieved from pci_dev instead.
+> >
+> > There are two users that performs pointer arithmetic on the pci_device_=
+id;
+> > these are also problematic with dynamic ID and driver_override, so fix =
+them
+> > as well.
+> >
+> > I've used the following coccinelle script to flag all cases where the
+> > pci_device_id is used other than reading its fields.
+> >
+> > @usage@
+> > identifier fn, id;
+> > position p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> >     id@p
+> >     ...
+> >   }
+> >
+> > // Due to cocci isomorphism this needs to be explicit
+> > @bad@
+> > identifier fn, id;
+> > type T;
+> > position usage.p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> >     (T*)id@p
+> >     ...
+> >   }
+> >
+> > // Good use cases
+> > @good@
+> > identifier fn, id, fld;
+> > expression E;
+> > position usage.p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> > (
+> >     id@p->fld
+> > |
+> >     E(..., id@p, ...)
+> > |
+> > // Redundant checks, but ignore
+> >     !id@p
+> > |
+> > // Redundant checks, but ignore
+> >     id ? ... : ...
+> > )
+> >     ...
+> >   }
+> >
+> > @script:python depends on usage && (bad || !good)@
+> > p << usage.p;
+> > @@
+> > coccilib.report.print_report(p[0], "suspicious use of pci_device_id")
+> >
+> > Link: https://lore.kernel.org/all/20260618-id_info-v1-0-96af1e559ef9@ga=
+ryguo.net/ [1]
+> > Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kern=
+el.org/ [2]
+> >
+> > ---
+> > Changes in v4:
+> > - Code and commit message style fixes (Bjorn)
+> > - Link to v3: https://patch.msgid.link/20260706-pci_id_fix-v3-0-2d48fc0=
+25acc@garyguo.net
+> >
+> > Changes in v3:
+> > - Fix users which uses pci_device_id for pointer arithmetic. (Sashiko)
+> > - Convert to scoped_guard. (Danilo)
+> > - For static IDs, still give out static pointers and avoid making a cop=
+y.
+> > - Link to v2: https://patch.msgid.link/20260630-pci_id_fix-v2-0-b834a98=
+c0af2@garyguo.net
+> >
+> > Changes in v2:
+> > - Fix users which store pci_device_id.
+> > - Clarify in probe documentation about the lifetime of pci_device_id
+> >   parameter.
+> > - Dynamic ID conflict check now ignores override_only. (Sashiko)
+> > - Link to v1: https://patch.msgid.link/20260626-pci_id_fix-v1-0-a35c803=
+f1b95@garyguo.net
+> >
+> > ---
+> > Gary Guo (9):
+> >       ata: ata_generic: don't store pci_device_id
+> >       scsi: nsp32: don't store pci_device_id
+> >       ipack: tpci200: don't store pci_device_id
+> >       mlxsw: pci: don't store pci_device_id
+> >       agp/via: Don't rely on address of pci_device_id
+> >       agp/amd-k7: Don't rely on address of pci_device_id
+> >       PCI: Make pci_match_one_device() match on ID instead of device
+> >       PCI: Fix dyn_id add TOCTOU
+> >       PCI: Fix UAF when probe runs concurrent to dyn ID removal
+> >
+> >  drivers/ata/ata_generic.c                 |   6 +-
+> >  drivers/char/agp/amd-k7-agp.c             |  26 +--
+> >  drivers/char/agp/via-agp.c                | 308 +++++++---------------=
+--------
+> >  drivers/ipack/carriers/tpci200.c          |   1 -
+> >  drivers/ipack/carriers/tpci200.h          |   1 -
+> >  drivers/net/ethernet/mellanox/mlxsw/pci.c |  11 +-
+> >  drivers/pci/pci-driver.c                  | 194 ++++++++++---------
+> >  drivers/pci/pci.h                         |  43 +++--
+> >  drivers/pci/search.c                      |   8 +-
+> >  drivers/scsi/nsp32.c                      |   8 +-
+> >  drivers/scsi/nsp32.h                      |   8 +-
+> >  include/linux/pci.h                       |   1 +
+> >  12 files changed, 237 insertions(+), 378 deletions(-)
+>
+> I put this on pci/enumeration and plan it for v7.3, hopefully with
+> acks from the AGP, tpci200, and nsp32 folks.
