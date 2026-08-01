@@ -1,129 +1,115 @@
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7DA36197E
-	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 08:25:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1611357CEB
+	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 09:18:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785572731; cv=none; b=Q/HDtnzFfvZFLBJZEe5OhDHvOG4QjEHd1BKEwhXZBR379MiAU+Z/Ios5JErKTMHQIcgUd25Qz+OexYlmPndtHGbM3NkkZZe15Ppxd5tJIKUNSolQ8P4lnGepoZE/sc9LaFyth35auwPHRzJ8pHb91Mjl0g3xnQY4JxIDdmy0SKI=
+	t=1785575938; cv=none; b=BQKedHm6o+OSFD3wyKbiiM1MJCtuhyQCbRpfnIzsuPPF2q5agi8n5bmAM+Oae71UCcnZENJjWIj9NySzVx00KIY6mUhXXCjNM2RBD4VXB1bjpJXUcfgsCvjZNtyPppnYX23e4niCoC6thzb+Jm/WJIcOgSaSiTTKuWxZ0BN3tEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785572731; c=relaxed/simple;
-	bh=+CaLhkTCz3P5fdOZHT1VKVnlDou+5WauiE3gIfowDw4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A6RsQTT2Soh4gXIIbVBJ1fIxiNmeFwEygjxh4mAmZiLgjI+C1h33CV0GDHMWCm3x1YzBTzh+COHOYzE7eGYcvlStg+BCzNJL99owIY/QAZQZFkE43orGf6ncJKAJEGCBgefnsUfuirX3+8MgGwp8SY1aZZgDkwotijNxl4ZuNaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=LkMHrvvv; arc=none smtp.client-ip=209.85.210.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="LkMHrvvv"
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7ebd88be784so1210619a34.2
-        for <linux-pci@vger.kernel.org>; Sat, 01 Aug 2026 01:25:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1785572727; x=1786177527; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=+CaLhkTCz3P5fdOZHT1VKVnlDou+5WauiE3gIfowDw4=;
-        b=LkMHrvvv32SgdFO/RLi9xeeGfJIQNm8fn3v5U3aNR6TM2PWAcbELgpex1JzV/p9Of4
-         2yhWzi6KIrckMv1j15NvUUKsgm5bwN97Jm6MF7KX+dUXyBdSTQxFWG7WI64+FTiddgMb
-         m20uy3N+iaI8pScy0d35t+vqjQsllLMDtoGQx3V3KC9R7aE63RtaQbnibO1eFdELBcoS
-         iyydidrBiBC3cZ9Vy4H7TscN1NurSnJOsBuhL38fR+pftY9GpQ5zUckLxlIp1PcozyFg
-         FXbCPm/6vuppmZW3W/APN6aUQJ3PSzzzW1OpRIpXluReDpCttnHfHstDnBl5jhKXnhYn
-         gY/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785572727; x=1786177527;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+CaLhkTCz3P5fdOZHT1VKVnlDou+5WauiE3gIfowDw4=;
-        b=sQ92bP3imEMnQfncixy2TtCxMUXpjBXAilwMSp9FUfnjRcRgr1zob+iLGRwfojOmi9
-         TEqwWs3NmBWIZhZC579iDJZ7VQNhS2VcNw3tt08Do18KdIUjio1HlaoASPZJVAihlWO5
-         8JL9UhEv0TdB2RgMdW6UGmg1jTXYbjjQQGtPnx5jrJXKlH3FnEa3pNinsX4w6FfGXfzy
-         sC6eiA2EQaTlAdeiarzUhTb0ftR1T2Ib0oo6w5apRQbaEOh9Yf4YAgXwk6lBRRFDI+5V
-         z2Xhput3NuoYF2SRVm3A6kKUDGOK7CTTXTWi4uxGym1riidP9oUbQBkY03wpMYSRt5Bs
-         k2Qw==
-X-Forwarded-Encrypted: i=1; AHgh+RpRrMOdYD88Hj59BgxSfzOwamgcnUt22qxsGT7porgZUAvXXTV+IZaGCIeglSbkIjgcu/sFJd0aFj0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1+sZ+QQAMlX6Vrsx4wTQ2WWe5eDoYJ3l1reldfgAEnhv1rwT5
-	VtzIfE/S675tAK/epLdFN9kFBzrgs+9DnWriU9GwVrK4uqaZDjaiXqgRLYVIXz9sVc8=
-X-Gm-Gg: AR+sD10RaT96kxqLS9VR7T/8gN1eBSQ51fg/CNEP7ife7sF/PCn2uXwwgD1Rl3JiCDc
-	WYrII7A+eG5PMyjv2GQOh6SIuot+Nv9sGULQkIe+oNGJWeNc/dW4PqmVpdc2pob7PCPrvoYfStf
-	D26F+aXcQz7JKA+u0+DmEu4Qgu/iox0BmNVQRT5iRjme7RfTpzwyHov4mRA+WvlX6Yh/jKnjS2V
-	T6PG8/p1wxI1mN9AE4loVdzxghbk+c3plv9MzyBXRAGg6ZHhGD409KDjKYbuwBrucMxZsJy7yeL
-	uxwE7I+rOo3O1flZdg2+Q/sd+4UEgTGFwUCm8MjrpYxE9qFnQoqkB/Am+frtMT+QUHXxRhMaejr
-	P45HzwPL4P2Rg3HUB7gHqDD8/Hd7HrG0T3/eI5sXghtfFYtZeeX8Hq8a9M6STIOiuhMwrYbRY7K
-	w+w6YnJRCz2M/sJsJbTLgcx3LmiFXiknBfNW59sYg2FmPgQH/lvkazpnDCxnFN2x/25QbIo+8DZ
-	tWZnWS8p5aVag7A+gTy/3kYhDBSt3H90S5Wa9HZVhnuc8kPCHrMT20CEzdO3Cf8gqVpbLKaUD++
-	mGE8b05XF1Hw
-X-Received: by 2002:a05:6830:4114:b0:7e9:bd00:c6ad with SMTP id 46e09a7af769-7f196f29291mr5823693a34.16.1785572727570;
-        Sat, 01 Aug 2026 01:25:27 -0700 (PDT)
-Received: from dev-mattc2.dev.purestorage.com ([208.88.159.129])
-        by smtp.googlemail.com with ESMTPSA id 46e09a7af769-7f18f0da967sm2998424a34.23.2026.08.01.01.25.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2026 01:25:26 -0700 (PDT)
-From: Matthew W Carlis <mattc@purestorage.com>
-To: lukas@wunner.de
-Cc: agovindjee@purestorage.com,
-	an.luo@enflame-tech.com,
-	ashishk@purestorage.com,
-	bill.wu@enflame-tech.com,
-	dio.sun@enflame-tech.com,
-	fernando.hu@enflame-tech.com,
-	helgaas@kernel.org,
-	jrangi@purestorage.com,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	mahesh@linux.ibm.com,
-	mattc@purestorage.com,
-	msaggi@purestorage.com,
-	oohall@gmail.com,
-	qingshun.wang@linux.intel.com,
-	rhan@purestorage.com,
-	sathyanarayanan.kuppuswamy@linux.intel.com,
-	sconnor@purestorage.com,
-	terry.bowman@amd.com,
-	xin.wang@enflame-tech.com,
-	yang.yicong@picoheart.com,
-	yurypm@arista.com,
+	s=arc-20240116; t=1785575938; c=relaxed/simple;
+	bh=Zyob7lMpBubeU5fylCsV+Ulfmx8mOK3v85F9E3wInkQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hJ3aQhfDniRsZRlBTNqkyG1s+0cc/Lf6xhHI6ZxX4jvCEsE661qqbk0yCS38+mMTyTwyfZcpbGcB/UQnkOA4AAcIIOUgGk1BTc60TznqWCnETZNbfDsYzy7pAZn+gPAwtAXKCyLwW6qQtgi5Ol9J8IMgSawpBXVmjwZoNlcQ/5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 43A2C10607;
+	Sat, 01 Aug 2026 11:08:48 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 2CE87600D0F8; Sat,  1 Aug 2026 11:08:48 +0200 (CEST)
+Date: Sat, 1 Aug 2026 11:08:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Matthew W Carlis <mattc@purestorage.com>
+Cc: agovindjee@purestorage.com, an.luo@enflame-tech.com,
+	ashishk@purestorage.com, bill.wu@enflame-tech.com,
+	dio.sun@enflame-tech.com, fernando.hu@enflame-tech.com,
+	helgaas@kernel.org, jrangi@purestorage.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	mahesh@linux.ibm.com, msaggi@purestorage.com, oohall@gmail.com,
+	qingshun.wang@linux.intel.com, rhan@purestorage.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com, sconnor@purestorage.com,
+	terry.bowman@amd.com, xin.wang@enflame-tech.com,
+	yang.yicong@picoheart.com, yurypm@arista.com,
 	zhenzhong.duan@intel.com
-Subject: [PATCH 0/6] PCI/AER: Support Advisory Non-Fatal Errors
-Date: Sat,  1 Aug 2026 02:24:18 -0600
-Message-ID: <20260801082419.7780-1-mattc@purestorage.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <amztrrIGvz8gPxQb@wunner.de>
+Subject: Re: [PATCH 0/6] PCI/AER: Support Advisory Non-Fatal Errors
+Message-ID: <am23oEnTurWaznAa@wunner.de>
 References: <amztrrIGvz8gPxQb@wunner.de>
+ <20260801082419.7780-1-mattc@purestorage.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260801082419.7780-1-mattc@purestorage.com>
 
-There is a part of me that wonders whether all of the complexity in AER
-handling is really worth it...
+On Sat, Aug 01, 2026 at 02:24:18AM -0600, Matthew W Carlis wrote:
+> What if we decoupled the message received by the root port from checking &
+> logging the AER status registers? In other words, when the root port
+> receives a message we log the severity we received and whether it was
+> multiple errors.
 
-Advisory error is one of those insane things in the spec.. It feels like
-the spec makes it unreasonably complicated for the driver to discriminate.
-What if we decoupled the message received by the root port from checking &
-logging the AER status registers? In other words, when the root port
-receives a message we log the severity we received and whether it was
-multiple errors.
+We already do exactly that in aer_print_source().
 
-Then, when we get to the device that sent the message we just always check the
-CE and the UE status registers? If any status is set that is also unmasked then
-we log the corresponding TLP Header for that. In addition we log the device
-status register so users can know what severities were signaled.
+> Then, when we get to the device that sent the message we just always check
+> the CE and the UE status registers? If any status is set that is also
+> unmasked then we log the corresponding TLP Header for that. In addition
+> we log the device status register so users can know what severities were
+> signaled.
 
-We can use the Error Message severity received at the root port to decide
-whether to walk the pci bus and do the error_detected() stuff. If there are
-multiple UE status bits set at the reporter & Dev Status register says there
-was a Non Fatal Error as well a Correctable Error I don't think I care if
-simply logs everything in UE status as a UE, everything in CE status as CE
-as long as it also tells me the Dev Status Bits that are set.
+That's also already being done (in aer_get_device_error_info() +
+aer_print_error()) , except we only check the status/mask register
+corresponding to the severity that the Root Port received.
 
-Going a little further I would be fine with just always checking both CE/UE
-status because it seems like it simplifies things a lot & two/three extra
-config reads/writes is almost a nop if you're already at the device probing
-it for the other AER things.
+E.g. if the Root Port received ERR_COR, we only read the Correctable
+Error Status/Mask registers.
 
-Thank you!
+> We can use the Error Message severity received at the root port to
+> decide whether to walk the pci bus and do the error_detected() stuff.
+
+Same here, we already do that.  For ERR_COR, only ->cor_error_detected()
+is invoked at the reporting device, whereas for ERR_NONFATAL and
+ERR_FATAL, ->error_detected() and the other callbacks are invoked
+via pcie_do_recovery().
+
+> If there are multiple UE status bits set at the reporter & Dev Status
+> register says there was a Non Fatal Error as well a Correctable Error
+> I don't think I care if simply logs everything in UE status as a UE,
+> everything in CE status as CE as long as it also tells me the Dev
+> Status Bits that are set.
+> 
+> Going a little further I would be fine with just always checking both
+> CE/UE status because it seems like it simplifies things a lot &
+> two/three extra config reads/writes is almost a nop if you're already
+> at the device probing it for the other AER things.
+
+This is where we differ right now from your proposal:  Errors received
+at the Root Port are queued up in a kfifo and we then empty that kfifo
+one by one.  If there is an Uncorrectable Error behind a Correctable
+Error in the queue for the same device, we handle the two separately.
+
+Would it make sense to combine them?  Maybe, but keep in mind that for
+Uncorrectable Errors, we may have to perform a Secondary Bus Reset to
+recover from them, which can affect other devices in the same part of
+the hierarchy.  E.g. if a Switch Upstream Port signals ERR_NONFATAL
+and then its ->error_detected() callback returns
+PCI_ERS_RESULT_NEED_RESET, the reset will affect the Switch Upstream
+Port and everything below.  That's very different from how we handle
+Correctable Errors.  For those, the driver of a single device just
+gets a notification via ->cor_error_detected() and that's it.
+
+There are still many bugs and opportunities for simplification in the
+AER driver, but refactoring it without breaking things is quite
+difficult and your proposal would be fairly intrusive I'm afraid.
+
+Thanks,
+
+Lukas
