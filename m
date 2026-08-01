@@ -1,186 +1,232 @@
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E4E302163
-	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 18:10:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785607838; cv=pass; b=qht2KngFJSYwg+IwECfrQNu1mV7K0HcwjDy6RifYGB/IGooIsgTr7L//rbFRm5T0olPLTThPl5wjNo1tj0jvMjguu8ULw/OmLF5ysPh4KNRaurnxoUT5wMAXjhtLntM6Mmlcqvl2wLIoOHq6HS4YilWyoJ45/6befTKpmGRA6sQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785607838; c=relaxed/simple;
-	bh=1pJUL+6M77HJJSwvYET+wCwQPOdaQdNQKcazVTQ5JcE=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=Dar/E0yGfhYcbxkFBMCN1EYHh3ctFR5nksVuxyrjqIlDNEh79fZPgoqWjeovxOEGfJ/TlxdfhwnJ0Qt5hYqvdpgtZDkDGAKLdD+dCdyYIT+fqMnyoRbsgb9PRHg+g4A4dEOCgYx/riCWsIILX9f3ZUkcJMhUfhDdhZv81ya6BO4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Anj6znZh; arc=pass smtp.client-ip=209.85.128.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732153C1083
+	for <linux-pci@vger.kernel.org>; Sat,  1 Aug 2026 19:55:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785614127; cv=none; b=idPUoZT2dy66mq0PYyDJBE8JwwmKdaAsr0XTvwu7RS+hsIPUAPUQn1VPK4kocDDuPYp5vlULzdk7uNn+Ne0T8AY6MEY9gN5vdG8nQI5Umq/wmqqUTJa0IG2c7c2Fp0t7bY+BkiCbiy2MTGPZrqYIKuvBE5t8u2ZdtKAfr9op8Kw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785614127; c=relaxed/simple;
+	bh=mZHWAuSeKaFREk3s3TsCeBqYcHg010+ZFZVBB6WI64A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tRte0952/m7EfbSfItkeE+3OL84lTmldJQeglGQLdl7dec+yh7Mv3MrGJmxvUY8eWpgrkuJKbC4wQoN3HBpN35FpGw4Zmzy7LrjiHixzQfxlvAF6vHWaJrJkQAgp9XEjjEN7+HWjJNPnwbmN8PO+sWjZvwJN8db2zBRfMspy7Co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=fS8+P9BR; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YIpVbVoA; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Anj6znZh"
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-81e83f1f15aso26449907b3.1
-        for <linux-pci@vger.kernel.org>; Sat, 01 Aug 2026 11:10:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785607836; cv=none;
-        d=google.com; s=arc-20260327;
-        b=YMa1VzsLwvGb28ZstuuFGythUZWkvdkoZEJSfLYCj4iA3G19OHK34JfKoFsiEb+qIW
-         AC0UBEF4jXs7GBbPaXILhtG7Vvy5nchVcPnGzGpf+WGjSnx0lQFG8fHkcUF7Hij2AWWS
-         WEeeRMgkjI2WD/PKm01DtYXwmHh5ENx5fRxCcQlwY98uYGYoFEKWP1APP9EjMJnZpB73
-         aub+FKkAelPsJ5ikrK6qlIEbOV5ugICRP5kxajymDmQU0IHmPRm7VUBMZhqGc1OgSYsX
-         3e/551o+adSX8yMO+XwZ4zACdU4rEfHdzLmYb3ENRiFs+onEJT/c15yUiHOJk0I/BIQt
-         A7cA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=Z//lxeCT8ePj6eHKiEj9CETIwlIlzc5JUSwHAQz4uXM=;
-        fh=PJtlSO8JNUph17sPlzp4UhMfJWJkvw090Gr2Rv/iq+A=;
-        b=Oed/Vc3sYqoVO2sMlnSDPJ8XKOmLhAKt7uaUELp4Z5oUxB1Uqs6azyanpIfxj2DmdO
-         WpBZ5te13J9+Tc8Th6oSz8Z9fatiCr/LUrd3PMggR39BB1GlbyP4h/uGAcUuKUVduUHc
-         t29dpi2dSXKGwzztZZQNmaal8uPGloNLyR52elVB7TMEtL8Q2vit+U78zkArD4yUT0VB
-         R4eixAW604SScdkdKB5FXbUCHN6WFW8XfwAz35tnFDJQ5uKyJl9EmnKNNs5ADM15G3P+
-         JxzrIdDHdElXl9isIX6z8m00VquNet27QquD4lGYRT9837lM4cmQ0JmvuVx/kCyPQ5ri
-         B3lg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="fS8+P9BR";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YIpVbVoA"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 671J02Qi3847696
+	for <linux-pci@vger.kernel.org>; Sat, 1 Aug 2026 19:55:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=hi7qwC9Ys33lceH7czkrRMTjgxXHEZVRfXr
+	RqrzJ6fM=; b=fS8+P9BRkVoF4CeszARZydRmMHsGFpCDRysHyyvhuEqtNEaNgKk
+	Pk4MIK75koHduD6b0/9SWn5zXBY6rMEBE2tlh2+M9hCmMgY/jpFO9BXke0wpWMAz
+	D4mpk5LXuKNd1lk3BAClAjBTOFYYhZgmsLfAV6kcbCrXGAzzx/I/aezFi2t/xtSI
+	1T330uvbYvyL5N0sEgXjIuMCy/W7AA1SuSEuliO6uJ1IxCciX+RG/G+mlxTBD5dk
+	rOVzkJ6KKhZMYQlfZfeafTRA1btS1RJ0jbyTNqx9bXollh9GaNeq4ctHxSVfJjgw
+	d95zyvN6ynxZtx0pMFP5c/K9r+7lqH7tGzg==
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fs8vt9nde-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Sat, 01 Aug 2026 19:55:25 +0000 (GMT)
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-51c083f1818so20678841cf.0
+        for <linux-pci@vger.kernel.org>; Sat, 01 Aug 2026 12:55:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785607836; x=1786212636; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Z//lxeCT8ePj6eHKiEj9CETIwlIlzc5JUSwHAQz4uXM=;
-        b=Anj6znZhkyLG0cqT7Hs5QTtDhyfj4vdBhfmSG1xdfWDH631CwTXx5zipsavPAoBobY
-         EYOjXkWmBykDbJLpeFAUEnXQyFnWZUJJ2gXnFIyZuAhSDeeMvfCaCGBEXhV4+yhF9f6J
-         6lG1RfHP+SwD915BHx9gWZtxtQVUliW/avsS3HmbY2+9f4ygVnagpiuiT7hrtIQ/nDot
-         l32wSlUeCqpiSnTka3VW+cDyUsGfBHDHcNrTZ+U1I3w2MIi8Kj0EcyqW8YVENJY/yWBi
-         elN5+Bo2DNblW9DMmbXNYfG4wn1VEVF4WPMiK48TqntjIK2ogQVKl0Czu3HvA5816X3E
-         U/sQ==
+        d=oss.qualcomm.com; s=google; t=1785614125; x=1786218925; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hi7qwC9Ys33lceH7czkrRMTjgxXHEZVRfXrRqrzJ6fM=;
+        b=YIpVbVoA4WMbFzCtCiJNdBSbmvJthJfZMZJjPEhdNwKmWbhuuoAfLXUaNInatnnqJI
+         u+o6eHvJvWAV7w2tAwCJy32gF5+aOh9JGc7Nz+nId7O4z5Fl3cAAIpAcvjjvLVWNpqC9
+         opVID9dIxaypQwl4YGmD7IXgXfLGzXI0uww9QuHbrEWgz0AeI67w15BkKgIBVzvT9/2m
+         /ISvH1ahu+B1kYh0I5ild52TdcGNWm1c6ZlgGPSEY8g7rny4rNEdaP86gwZC7g6fp0Au
+         cdDjTB99w/YBDndKnMdUeZ14sjEtc/NppIuGKHGA34Q3FHgmyT4aqeh1ikDt9qREQk4z
+         8Fmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785607836; x=1786212636;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=Z//lxeCT8ePj6eHKiEj9CETIwlIlzc5JUSwHAQz4uXM=;
-        b=sXto/e9fvo5JLF+UwRhkCEpuMIgM1RJuSby/Mr3ZSLFa8S8HX+tr1UkBUo2ITHroVV
-         CrmPHcF9Z6xlkpZ4jJi3zLn/osrWB3KC+ab5BTMEi2btQGSHwE/wbsIsq8arVzGvo9GK
-         wIKwJyCl7+6kLAKIqh3JvRusjqevXH1leWBS++AsETXhslaW50YWsLRDYfH/dMxx0oMS
-         03WS9v/ft/mOlkWhsREsRCStGulNRvnv5ybK0sZCCGH9W4Bo56DjjnmdcLbSUdkd61Jd
-         cw3JERIsfj1bVE5gNsO9YLSjYa02b+oX5FL17146LbW6tfQtwh9lbmGnKPjrD/5UC04x
-         QcWw==
-X-Forwarded-Encrypted: i=1; AHgh+RpX+MbPifyxcCZWGct/qLqgLfaY3Um2qa/6tR8Lwgu6XarH+GXiPdGUEEu0z7R4/jvvk/drWSweFgg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxOvmyNXRlHxAKGkt/paVnSwGezXYpJOxVx5VatvHQbYk5tAxrE
-	z0Edf9AUWtR/QJ4MaTqjT44BxXLXC20F5YxQv/3xFTnumy6Q7/AgINqQyw1r2L00dfB8RtSRPb6
-	N/dd33J5ndO30I5wOz1EBvPUhl9KCqeOamgoZSgKKaQ==
-X-Gm-Gg: AR+sD10DInNNDkVRR1ey4aK054FZ4zsKXLQ8XR/xa22qA+KMkT1TmDSkx1bZeEwMcYc
-	bwmSGSmEMgUtKPheIhF8/yznSG/wgZVIEh7I+t6uOxbnGICoHQ+voFVU5NbuDHQ0yYZ8B2sS1EU
-	Xexq2ZKKO6nL2aSUz4IJQcofYq/e/bIG9ScjLSxhKUyuqN2nqHjHGtrUwZvRZriRG2AYSOGrkrT
-	VSaQRWtVD5yRwMkWrBOmuCGkpdXSPRuknw5i0ad7Oj/tOkoopU1GIw0e+N7GPUVsrgmLsL3LdgQ
-	vjYWe4IPY1hpCTuIPJhbIuwCv6AQvKV5RjL/VGmi0bU/Qean4cr5sKyWIaYFD0GmCcTPRoLTd5K
-	51jWqJSiwyQ==
-X-Received: by 2002:a05:690c:6284:b0:81e:fc6c:452c with SMTP id
- 00721157ae682-81fd4e78d70mr64043627b3.9.1785607835997; Sat, 01 Aug 2026
- 11:10:35 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785614125; x=1786218925;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hi7qwC9Ys33lceH7czkrRMTjgxXHEZVRfXrRqrzJ6fM=;
+        b=iQtpKHbH2NradZ0eSUKY4UDLMnqui139y7Z4FMKha/AivDAWwrZ9tIi4WAioyJr19S
+         ZgKqSQOCDsILGNIsxnnGKcEXujwuuF3cQQR6C5WkHx+20J+TJshTnkJzXYHKNa4t0sE9
+         8UBAypK9xgAXBqpN3U7NvN8qqsakZRq1/+JCUaG7tqlgmJoL+nt5J3DB5+hOmqGtyI/4
+         /7kd+qu6kTtfBVUjZweVfItoftUivPCdED0THkEnLFEaQ4dAoPYIbRG5jQJgJXN2RNkz
+         AQfnMj8/X86mEgMEEafBgjDf8sHo2CAGa8NTIMhKdCf+jKRtzaMg1PEE+jlgfvQIBcfX
+         vLdg==
+X-Forwarded-Encrypted: i=1; AHgh+RqeBv78SeLG21JbHmC00ptrVjUbW1NDE+fq4Qb3pUrBnFtbr/cRGuIo5xGQd9pNZaECwS5nPI8m5p8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/UsAxRAXzeA22TKw5NhPKKaNvssUcPTijO5U/cV63dYSgmy9a
+	YLAeaPOFmeth0LN2aPEtc6Ewhj3NUcR0InVToNYCc23Ud6HnWVBmQNJefTj84G5uDN8eS6b2UvF
+	5b7s6U/WM9sYKJ5V2X4FZWZbgcJZUdDErzNsooscQPkq1FYaif+rBnW/vDyC0bwU=
+X-Gm-Gg: AR+sD11m54W81epXoMQgQydWB7F3FoIBxpz2Dt0dktgPxLX5w9/9+AEgUPPKPdATWUd
+	KejxJBpiPJ0a4DzMJFaNBJFLmZuJSTk6mCxIpW2f3DffXzG0pqmU6umDH4UzmXBZAXVGrYnm92n
+	DT6/SiRqJb+MzZ5ExZMCBdhuAnpWN4/rwnGhOjt+u3KmFUfxzJLIq+Np8fNC2RvWhK0yrYDPexa
+	rDW7cv5TpL5ZWJ0J+/bvpej3lRgGR1FNCxEt0iQEDfV2m+3h1icKDamteqfgxI/L55MNH5GO4Du
+	3o8fVaThEv0CHWTkwyc80MwWHfsrmWfTkPHpbJ6f80V+XkF1MfQwsuNSzwD9CVFZSSTENNBPnoB
+	WF5XKH7hM7U5LgV7u
+X-Received: by 2002:a05:622a:4d0f:b0:51a:ee21:d342 with SMTP id d75a77b69052e-52b567522acmr111615921cf.20.1785614124682;
+        Sat, 01 Aug 2026 12:55:24 -0700 (PDT)
+X-Received: by 2002:a05:622a:4d0f:b0:51a:ee21:d342 with SMTP id d75a77b69052e-52b567522acmr111615461cf.20.1785614124198;
+        Sat, 01 Aug 2026 12:55:24 -0700 (PDT)
+Received: from quoll ([178.197.223.174])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49807b5f0c3sm74694415e9.5.2026.08.01.12.55.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 01 Aug 2026 12:55:23 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+To: Jim Quinlan <jim2101024@gmail.com>,
+        Florian Fainelli <florian.fainelli@broadcom.com>,
+        Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@mailbox.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Kishon Vijay Abraham I <kishon@kernel.org>, linux-pci@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: [PATCH] dt-bindings: PCI: Correct white-space style
+Date: Sat,  1 Aug 2026 21:55:18 +0200
+Message-ID: <20260801195517.235161-2-krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Lowne Onema <lowneonema@gmail.com>
-Date: Sat, 1 Aug 2026 20:10:25 +0200
-X-Gm-Features: AUfX_mxUGwzxNMgfJt9bkzwcd0YVqyIfkGBoYw2uS1Lnjoh8hWSejVwJphLpoeo
-Message-ID: <CA+1pjEmQgcfhjj56yjuXWVshBM+soFC7RZHaGwaaF=ZFCr1Lyg@mail.gmail.com>
-Subject: [PATCH] PCI: quirks: Prevent D3 for Acer Swift SF515-51T Root Port to
- fix audio
-To: bhelgaas@google.com
-Cc: lukas@wunner.de, rafael.j.wysocki@intel.com, alexander.deucher@amd.com, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3897; i=krzysztof.kozlowski@oss.qualcomm.com;
+ h=from:subject; bh=mZHWAuSeKaFREk3s3TsCeBqYcHg010+ZFZVBB6WI64A=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBqbk8lI71bPd+afSLiOOSgUBFK9QNKQ/CfX7jgg
+ +ZIgESpx62JAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCam5PJQAKCRDBN2bmhouD
+ 1+giD/9UrL5r6rohmURssJaLdBSj35eMCF6Q1TlSBx0A/k8Xyn/QQd0NRXPEJ7nd3yWpo4KvjGW
+ hew4ADAPDXJ7xADCHaR9enIQy3jUBzrdlwZgSoH55vZ3C26JJjza3AiWAGJ2zF5AY1X2WHa6dcN
+ aUCyT70cH3Ya1EmjSmu8Hx1KZssBfRyfBpQ9NvlxyJsv/dAk8pyxnfb9f3UCHT1PHEoTMKFLnKZ
+ 4JR8wYnwuRHuokyEo1bJ/FdYdAbmm4URgjmuY1UuYSC8kYGHeBYj3dp2x6NuhGC9dKnqsL/Tuh3
+ Y49QLumAhjBrIyvL7WtOSlEJ2IKpSBzC05MI3z1lZbfAvnSnmhOydMmjgaDpgRsbK/TIIMAOb8v
+ LyI2/L1UH2zJ5b2OX1FgwH9TKiBuwJIGSmKIuYrre+HJKweoXXTP20LyikioNFwIFJRp0NTO6XC
+ X7BG584MJOvN8rov/tkkeDv1hZmyjC0cSsaRCp1yEyYMdej5t/bPax/8CdWmOAhFt/zI47adrJQ
+ htQE+Ybt4eRgpGACK2goN0+SKq/OvExKomF1z9P5yi8v4ckE/h8T8A6JSuUcBlssJXtnrd8Ktmz
+ esoHVN33bXl0oLQw9Hpxz08GxnqVbyibDfRUF3tB9nVdSGreDv2hN/mkN+VPM+BxKpmETANXXOo k+2AaWGFfaR+dpg==
+X-Developer-Key: i=krzysztof.kozlowski@oss.qualcomm.com; a=openpgp; fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODAxMDE2MCBTYWx0ZWRfX25MNOQmtPwwR
+ pUnfXdPfX3Obh5PHwwIkL21ny3wbK/R08N2P/zt8T9/3vhEU/XCbPb/X9outt6EhV8pPIbeEAuV
+ YwIYNw8aH7CYzgIQkNAkPdOWjTOiMQU=
+X-Proofpoint-ORIG-GUID: Pi8IB-BT4QQDrWHBAIvOdN2BJK_DGwCX
+X-Proofpoint-GUID: Pi8IB-BT4QQDrWHBAIvOdN2BJK_DGwCX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODAxMDE2MCBTYWx0ZWRfX+yhHHn+srlII
+ g7ojIM9LE1utta05tlpXC7Uqtxvuv97RwSnm2cppL+gJ25OItKlrODdr5HtPTA5RVQy8OE/mHlO
+ QJmeLdXWvz3uZCCRi3OH155HqS4R5Af5pqW1rGWclh1+evA3pM5Gu2wyXsCcw9VgLE2DsnEbtey
+ IM6Rlmbi4trnk4RSuwU957+Lq82jqdTiILaG+s2pmqd8f0mMJHDXMqcwf8Cgtw0jKj2fTCB/bWd
+ +wP3uRHcJROuhNQm8EKYKzil5BQsiFUdT2I4vtgnMz2nlYlVISfV4I50zzbxRRbqd0iX1QZSWfv
+ dMAsiJFDODhi5f9LrSmJO1h36j3SoaHvjzcWulEBOpB6fKSc2ZyIvK706PY2kYk2WavUNqN3cLz
+ mH26FN+KSN8Yxf8+j201BG180nkqN2Mt9Bvx98EouxPIPV7Ve2taTMa7K+RQazV5plfpSgJI0fk
+ 7Oc+Ey0s+RnRq939M7g==
+X-Authority-Analysis: v=2.4 cv=fKMJG5ae c=1 sm=1 tr=0 ts=6a6e4f2d cx=c_pps
+ a=WeENfcodrlLV9YRTxbY/uA==:117 a=N6niishs+lR9UBL1FN3Qrw==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8
+ a=mxJljgaHxS3Sv8GYpwQA:9 a=kacYvNCVWA4VmyqE58fU:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-01_03,2026-07-30_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 priorityscore=1501 malwarescore=0
+ spamscore=0 phishscore=0 clxscore=1015 impostorscore=0 bulkscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608010160
 
-commit c6e331312ebf ("PCI/ACPI: Whitelist hotplug ports for D3 if
-power managed by ACPI") made Root Ports newly eligible for D3 when
-ACPI reports the port as power-manageable. On my Acer Swift
-SF515-51T, this Root Port (Intel Cannon Point-LP PCI Express Root
-Port #9, 8086:9db0, always empty on this SKU) is put into D3 as a
-result, and doing so permanently silences the internal speakers
-until the machine is rebooted.
+Correct a few white-space issues, like double space after '=' or before
+bracket '{' characters, which will be flagged by dt-check-style.  No
+functional changes.
 
-Disassembly of this board's ACPI tables shows the Root Port's power
-resource (RP09.PXP) and the SATA port SAT0.PRT1 share GPIO pin
-0x0402000D as their power enable line. That GPIO also gates a
-rail the internal speaker amplifier depends on, but this dependency
-is not expressed anywhere in ACPI -- HDAS._PR0 only references
-PAUD, so the kernel has no way to know that putting the Root Port in D3
-cuts power the audio codec/amp circuitry needs.
-
-Prior to commit c6e331312ebf ("PCI/ACPI: Whitelist hotplug ports for
-D3 if power managed by ACPI") this Root Port was never trusted for D3,
-so the missing dependency had no observable effect. Confirmed on
-hardware: forcing the port to stay in D0 (via
-/sys/.../power/control) restores audio immediately, and letting it
-re-enter D3 reliably kills it again.
-
-Use PCI_DEV_FLAGS_NO_D3, matched to this exact model via DMI, to
-keep the Root Port in D0, following the same pattern already used
-for other model-specific D3 breakage in this file.
-
-Fixes: c6e331312ebf ("PCI/ACPI: Whitelist hotplug ports for D3 if
-power managed by ACPI")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=212463
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=214125
-Signed-off-by: paasshme <lowneonema@gmail.com>
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 ---
+ .../devicetree/bindings/pci/brcm,stb-pcie.yaml       |  2 +-
+ .../bindings/pci/renesas,pci-rcar-gen2.yaml          |  2 +-
+ .../devicetree/bindings/pci/ti,am65-pci-ep.yaml      |  8 ++++----
+ .../devicetree/bindings/pci/ti,am65-pci-host.yaml    | 12 ++++++------
+ 4 files changed, 12 insertions(+), 12 deletions(-)
 
-I went with a DMI-matched PCI_DEV_FLAGS_NO_D3 quirk since that seems to
-be the go-to pattern in this file for "device breaks in D3" cases (I saw
-quirk_no_ata_d3 above it). Is that the right mechanism here, or would
-you prefer something scoped differently?
-Apologies in advance for any formatting/process mistakes, that's my first patch.
-Thanks for taking a look
+diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+index 812ef5957cfc..328b8156cd94 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+@@ -214,7 +214,7 @@ examples:
+             dma-ranges = <0x42000000 0x1 0x00000000 0x0 0x40000000 0x0 0x80000000>,
+                          <0x42000000 0x1 0x80000000 0x3 0x00000000 0x0 0x80000000>;
+             brcm,enable-ssc;
+-            brcm,scb-sizes =  <0x0000000080000000 0x0000000080000000>;
++            brcm,scb-sizes = <0x0000000080000000 0x0000000080000000>;
+ 
+             /* PCIe bridge, Root Port */
+             pci@0,0 {
+diff --git a/Documentation/devicetree/bindings/pci/renesas,pci-rcar-gen2.yaml b/Documentation/devicetree/bindings/pci/renesas,pci-rcar-gen2.yaml
+index 065b7508d288..1f0ab9ccd1dd 100644
+--- a/Documentation/devicetree/bindings/pci/renesas,pci-rcar-gen2.yaml
++++ b/Documentation/devicetree/bindings/pci/renesas,pci-rcar-gen2.yaml
+@@ -155,7 +155,7 @@ examples:
+     #include <dt-bindings/clock/r8a7790-cpg-mssr.h>
+     #include <dt-bindings/power/r8a7790-sysc.h>
+ 
+-    pci@ee090000  {
++    pci@ee090000 {
+         compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2";
+         device_type = "pci";
+         reg = <0xee090000 0xc00>,
+diff --git a/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
+index 74195c1f5292..afde18c5a4fa 100644
+--- a/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
+@@ -63,10 +63,10 @@ examples:
+ 
+     pcie0_ep: pcie-ep@5500000 {
+         compatible = "ti,am654-pcie-ep";
+-        reg =  <0x5500000 0x1000>,
+-               <0x5501000 0x1000>,
+-               <0x10000000 0x8000000>,
+-               <0x5506000 0x1000>;
++        reg = <0x5500000 0x1000>,
++              <0x5501000 0x1000>,
++              <0x10000000 0x8000000>,
++              <0x5506000 0x1000>;
+         reg-names = "app", "dbics", "addr_space", "atu";
+         power-domains = <&k3_pds 120 TI_SCI_PD_EXCLUSIVE>;
+         ti,syscon-pcie-mode = <&scm_conf 0x4060>;
+diff --git a/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
+index 98f6c7f1b1a6..db92125a2f2d 100644
+--- a/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
+@@ -121,12 +121,12 @@ examples:
+ 
+     pcie0_rc: pcie@5500000 {
+         compatible = "ti,am654-pcie-rc";
+-        reg =  <0x5500000 0x1000>,
+-               <0x5501000 0x1000>,
+-               <0x10000000 0x2000>,
+-               <0x5506000 0x1000>,
+-               <0x2900000 0x1000>,
+-               <0x2908000 0x1000>;
++        reg = <0x5500000 0x1000>,
++              <0x5501000 0x1000>,
++              <0x10000000 0x2000>,
++              <0x5506000 0x1000>,
++              <0x2900000 0x1000>,
++              <0x2908000 0x1000>;
+         reg-names = "app", "dbics", "config", "atu", "vmap_lp", "vmap_hp";
+         power-domains = <&k3_pds 120 TI_SCI_PD_EXCLUSIVE>;
+         #address-cells = <3>;
+-- 
+2.53.0
 
- drivers/pci/quirks.c | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b09f27f78..feb83a84b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1471,6 +1471,41 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL,
-PCI_ANY_ID,
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
-                              PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-
-+/*
-+ * The Root Port that the Acer Swift SF515-51T's internal, always-empty PCIe
-+ * slot is wired to (Intel Cannon Point-LP PCI Express Root Port #9) shares a
-+ * GPIO power-good/enable line (0x0402000D) with SAT0.PRT1, a SATA port, per
-+ * this board's own ACPI tables -- confirmed via DSDT/SSDT disassembly, not a
-+ * naming coincidence. That GPIO gates a physical rail that isn't documented
-+ * as a dependency anywhere else in ACPI, but real-world testing on this
-+ * exact hardware shows it also feeds circuitry the internal speaker
-+ * amplifier depends on: forcing this Root Port to stay out of D3 restores
-+ * audio, and putting it back into D3 reliably kills it again.
-+ *
-+ * Before commit c6e331312ebf ("PCI/ACPI: Whitelist hotplug ports for D3 if
-+ * power managed by ACPI"), this Root Port was never trusted for D3 at all,
-+ * so the missing dependency was invisible -- the shared rail just stayed on
-+ * incidentally. That commit's broadened trust condition lets this specific,
-+ * always-empty port enter D3, silently cutting the rail and killing the
-+ * internal speakers.
-+ */
-+static const struct dmi_system_id acer_sf515_rp_d3_dmi_table[] = {
-+     {
-+             .matches = {
-+                     DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Acer"),
-+                     DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Swift SF515-51T"),
-+             },
-+     },
-+     {}
-+};
-+
-+static void quirk_acer_sf515_rp09_no_d3(struct pci_dev *pdev)
-+{
-+     if (dmi_check_system(acer_sf515_rp_d3_dmi_table))
-+             pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9db0,
-quirk_acer_sf515_rp09_no_d3);
-+
- /*
-  * This was originally an Alpha-specific thing, but it really fits here.
-  * The i82375 PCI/EISA bridge appears as non-classified. Fix that.
---
-2.34.1
