@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B90F3955DB
-	for <linux-pci@vger.kernel.org>; Sun,  2 Aug 2026 15:57:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A59B3242AB
+	for <linux-pci@vger.kernel.org>; Sun,  2 Aug 2026 16:02:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785686284; cv=none; b=B76rRZHR6PyCuRGarYvO/fqZvENAUaUAVUh9CsmQwPBAjxAqv/17bt2tWubYmlrbbUvlRwyRWzfR4QTOnj4bvy0B21Sy9LTxgzsODtfdJC2KWKDY8cuKg4hCrI/+1RFCVnqfDOZaTipgKJcrwo+Mi4/uKFKWnN5t+B+unIfd/D0=
+	t=1785686562; cv=none; b=O/O2ZCih3OHZAvkKSw78rbLLBJCkgqZ1wNjalJOn6YdNPoU9XZVvWuRJC4kHHEkjA5SydMmqJmEvmoHCEvO+sRMCfuqdOJyDu8Z2Cv3LEg527csQxjMlJjGArkhgsRxKjmonsqnONAGwzasqKyUZwFd+yCWL0rrdPhMKAwaN6DY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785686284; c=relaxed/simple;
-	bh=jX7ITSUMMIsMLEFbd/Fo/jUc3Q7+5Qkk/2kLm2MEmy8=;
+	s=arc-20240116; t=1785686562; c=relaxed/simple;
+	bh=nbJvDHfk85lQ6eylBdtuPmzCArdgTh9ZVobOc0Wt2L0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aqcuNriUs5nuVKR4CLZwjpsQNw1RO+KMwPYWjb339tbZGjU23tUGPxck0CdwixFjUZW6a/0T0mHMv6EVQA1/XCWXc6C+8mUZEVdTEaFy3zxoJp/s7Vk77UVJ+eI8u+UoxMSIYCwOtmVlmiw8+zJzi3WrAUubayXZW/Bv9qsPwMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cf1NESmd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pYaiZ5QcTHhbmr3wo1k5nCEsRgAY+UM6uykyIWgmd8QjyzyczifkqX8XIkMGgxJ1PzOuxUXHrKqWI3uvVz/Yz0c3Vbt6XCVM5yN7gi+4/2udxbT9zt9BmsZwRsgpGJqgp9bmn+ZVxmQ4mxe8AWC9ftqU++vyqPGOWQqJlsUXlIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PXzAyxpm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cf1NESmd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 526D81F000E9;
-	Sun,  2 Aug 2026 15:57:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PXzAyxpm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EEA51F000E9;
+	Sun,  2 Aug 2026 16:02:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785686276;
-	bh=jX7ITSUMMIsMLEFbd/Fo/jUc3Q7+5Qkk/2kLm2MEmy8=;
+	s=k20260515; t=1785686559;
+	bh=on+conbOYYmUloARQwTTppupeBpF3BN0yfJ22wTVq9o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Cf1NESmd6MDYLY7UhzLAs/MKD7dt6c9AtxFuZCBcXRag6ZZcuDW3nWLAdJWKKTf9c
-	 Czm1Rk9sfpkpmpmsb2PCnrfmCQaiN5Trb6GN42WUmdLNAOTc0z9zDKbiSlRT/NjnDq
-	 4wrAqrXfRfEP47ft2jsGis53RHnVsUx9waANWUSky+9RURdI7D/7IbDhrW6U0M1uCU
-	 8LIHO9i+AbNUQ2QBUIq3N4c+8LXTq/JrzNwEiCQdC3vTetY1DjoDmuIB2dqIAotrkf
-	 z97addGTV6xYb/ttPv1o9lpSBT2vpr0+PudKKJLjSVNby1ZDc4uUx5isGTQFoQKIHx
-	 bXuJj8UuTBkkQ==
+	b=PXzAyxpmJ6RxaqLjwDuCaHnDzR4rs0cq797XDUmEb8ccK3BwZoyfpH97wLMATbSov
+	 rbLOJjphIFu0bwe66yW5hsBfb4uTvPFAW8wAlve7J5Ee8lPflI1B23DwUDTJuHsPwz
+	 /o5LK8eyCqEvr5uATAhdFJ3FbKl4vhzk15uWgXbTWRM++Zd5432mPy48yR6QkQX/0n
+	 d7KYxgoO8ZbDIlVgiycG8+xdJEFQz8fdbSnrF5Z7nLixcEbsAVABqGOsQIFnSuMQ6I
+	 Q7noXbenlUwiT54mnOEviK2MARQ+2EHAN0QFkpai81gpjuMJRPHL6C+LHPcxMtCKN/
+	 NnMX/gi2/0Grw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/13] PCI/P2PDMA: Honor ACS egress control vectors
+Subject: Re: [PATCH 11/13] PCI/P2PDMA: Add KUnit tests for ACS routing
+ decisions
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260802-fix-p2p-acs-v1-8-a7c5eb64fff6@nvidia.com>
+In-Reply-To: <20260802-fix-p2p-acs-v1-11-a7c5eb64fff6@nvidia.com>
 References: <20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com>
- <20260802-fix-p2p-acs-v1-8-a7c5eb64fff6@nvidia.com>
+ <20260802-fix-p2p-acs-v1-11-a7c5eb64fff6@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 15:57:55 +0000
-Message-Id: <20260802155756.526D81F000E9@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 16:02:38 +0000
+Message-Id: <20260802160239.5EEA51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,25 +47,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> An enabled Egress Control bit does not itself send a peer request
-> upstream. PCIe r7.0, sec 6.12.3, table 6-11 makes the outcome depend on
-> the Egress Control Vector bit for the target port: a clear bit routes the
-> request directly regardless of P2P Request Redirect.
+> Add a KUnit suite exercising the ACS peer-to-peer routing logic:
 >=20
-> Read the vector where the paths diverge below their common upstream port.
-> Keep a clear vector bit on the direct path, subject to P2P Completion
-> Redirect.
+>   - pci_acs_p2pdma_decision(): the full PCIe table 6-11 truth table,
+>     including the Egress Control Vector branches (bit set/clear, with and
+>     without Request Redirect and Completion Redirect) that require a
+>     switch implementing the Egress Control Vector and so cannot be
+>     reached on commonly available hardware.
 >=20
-> A set bit with Request Redirect clear is an ACS Violation. ACS acts only
-> on peer-to-peer Requests, so route it, and an indeterminate vector,
-> through the host bridge.
+>   - pci_acs_egress_port_valid(): the vector-size boundary, including the
+>     "size 0 encodes 256 bits" case.
 >=20
-> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
+>   - pci_acs_egress_ctrl_set(): driven through a fake pci_ops returning
+>     canned config space, covering target Port Number extraction from
+> [ ... ]
+>=20
+> ./tools/testing/kunit/kunit.py run --arch=3Dx86_64 \
+>     --kunitconfig=3D/tmp/pci-acs.kunitconfig --jobs=3D$(nproc) pci_acs
+>=20
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802-fix-p2p-ac=
-s-v1-0-a7c5eb64fff6@nvidia.com?part=3D8
+s-v1-0-a7c5eb64fff6@nvidia.com?part=3D11
 
