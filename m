@@ -1,66 +1,68 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C68142A80
-	for <linux-pci@vger.kernel.org>; Sun,  2 Aug 2026 01:35:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55251FECCD
+	for <linux-pci@vger.kernel.org>; Sun,  2 Aug 2026 01:35:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785634554; cv=none; b=l55VmWWchvQcVI3jZ4+1r16pJbTmzT80fLpImBSKG1U5siaxbdcSXu7qPjuAz8Uk4prw8ahrfXeVIpYQu0mW+e1GsRqokxWKE+AgYYgP/EfqDUv0zHaca44BtaELDFdqaWPQsx7LaOnyf3qSY6X91q/N1aOQiHn9MqV3jSnZ1yc=
+	t=1785634557; cv=none; b=e5vbbdI5zg3X+Q5rbgPvZzXCbF9yEwoWHUTC5z9NUQdJyEeoeh928xGcZVfeuj8YxjBo3jMmytuQMleuLzQAkKO+DkSr7OmKe1C7otFcstywoNrFKtGV7OAk2y3rIu9yfoi7te1WW7qrfRcXmqEqAqmQvRKH3UBYqixvLozUBhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785634554; c=relaxed/simple;
-	bh=TkcAh5NKdD9D4tcim49h21DFf3TFxJkQI7EqH81YFPM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=eGnZVB3BuDMLIwJqIgktnFyIXerZ/QTyJyn93+g7n9sV0WgxluhNK4CjnjljIF0Ci6qcK54x74o0JRZnF/wW4/gi02vhJ6ujqv4y3ofgzXj3N9PT9KM8EQYZgSVlBqyeavrtDi1dYkAbfmgS0RMT8c98FWQwtxWhz4ktKEZ/49o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZKdhnAMS; arc=none smtp.client-ip=198.175.65.11
+	s=arc-20240116; t=1785634557; c=relaxed/simple;
+	bh=Y0dSuVdTt5NhToWYa+yzjKc0Th0rjfMU7ou4n2Gca70=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Q08BEjBf82zaU2Bgd84/Z5/UHmukOpfyTMWOGn5iuLMNCgOl/ju+NmWmIPkH4sg4FQJCgnR57qXow712Vq8trqf4sfBrPn5XpaqI9ohhmVwp4L7Kh8N0pZRLONVralBHzIkMK4z9/A0wvtOnOpCpDjCzHAl7se+YzhLbZMea4eU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jhkhZlTf; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZKdhnAMS"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jhkhZlTf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785634552; x=1817170552;
-  h=date:from:to:cc:subject:message-id;
-  bh=TkcAh5NKdD9D4tcim49h21DFf3TFxJkQI7EqH81YFPM=;
-  b=ZKdhnAMS5kQq3s1jaT2tDyG+mIl/XKU3hqWonHReGmzAQNtJb/49o+Hp
-   zt29CQcYG/dp//jmWtEFXO2Z6EYyso8xfnJz97dwovXd0lDCQ4nK/aI8l
-   sly5OqUhKZwE6hvxopN66/lo6yglfrr4X4ijoCg1SZExuZz1zpPSdIMMD
-   vDKTFGaFr0cqbkDq2p+UBltF/ZygqFz5w6wj54f980Rzult3KJeUAT9el
-   BnKCzrDftpajHYSEADL3d6lcqxnLB5oHXk3mFq4xvQL6Eu5mAsf+GLgji
-   PWyfpuiuWT6HdmD3v0kV+wpV86EOP8mM7ch5q6UmtfZpQVhBsNLXSkSZj
-   g==;
-X-CSE-ConnectionGUID: BaL8Shh3TjGMA2HdfIvVMA==
-X-CSE-MsgGUID: +XZqWdxAQnKCkCsgCjumwA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11862"; a="96575676"
+  t=1785634555; x=1817170555;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=Y0dSuVdTt5NhToWYa+yzjKc0Th0rjfMU7ou4n2Gca70=;
+  b=jhkhZlTfoPhb6RrbcSqlmR09SUf1umG/j0gpxag5TSZclLaFn4ymge1l
+   EgSHUBrJDqkejp5g62iSa1Uz/taYXrCqksHehusju/C7kcbt7SjQnqYMf
+   7hR68g3UabizpRqVoGaSzT6ggnaCBRJ8pzPkl9jcyfimhwsQzWaeQ8wgH
+   5WX4SQNULAi8J0UMtUFgYq0ggyapqR6RBe3t9XPLqKeFQpj3X5Io14Mx0
+   YL3/3q9YD7Z7Ig3ps8zg89uvEv9DH/otnW8N+vqg8VMN7KGHMjl8dWZ2V
+   ZSSjwMzhw0l0er+0KQxRDJYypJUvOhj+4wKyOE1SXV1LP4BAmW4Mp141P
+   Q==;
+X-CSE-ConnectionGUID: ral1evP7RmGGx4BKC93gnA==
+X-CSE-MsgGUID: yuIQC/QbT0C5Xw2IfJehIg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11862"; a="96575678"
 X-IronPort-AV: E=Sophos;i="6.25,199,1779174000"; 
-   d="scan'208";a="96575676"
+   d="scan'208";a="96575678"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
   by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2026 18:35:51 -0700
-X-CSE-ConnectionGUID: KGSBzk3FS0y1gs8gnAKwrw==
-X-CSE-MsgGUID: Xr6a/oFSSFiQWKKzXmFViA==
+X-CSE-ConnectionGUID: xz2OiYJkRUW7h5b7aDJTOQ==
+X-CSE-MsgGUID: TcflsarsQKOkA+apjIXJNQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,199,1779174000"; 
-   d="scan'208";a="285518300"
+   d="scan'208";a="285518303"
 Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
   by fmviesa001.fm.intel.com with ESMTP; 01 Aug 2026 18:35:50 -0700
 Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wqL7D-000000004E9-36km;
+	id 1wqL7D-000000004EB-3YO3;
 	Sun, 02 Aug 2026 01:35:47 +0000
-Date: Sun, 02 Aug 2026 09:35:10 +0800
+Date: Sun, 02 Aug 2026 09:35:38 +0800
 From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-qcom] BUILD SUCCESS
- 65ccb2203ef8919390ccdcbe34ac6f8ec1fee672
-Message-ID: <202608020959.FayczeoB-lkp@intel.com>
+Subject: [pci:misc] BUILD SUCCESS
+ ce3294cef61c85559059a9a49fa99a38df55d633
+Message-ID: <202608020925.TlckVF9K-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
-branch HEAD: 65ccb2203ef8919390ccdcbe34ac6f8ec1fee672  PCI: qcom: Clear Attention Button Present in Slot Capabilities
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git misc
+branch HEAD: ce3294cef61c85559059a9a49fa99a38df55d633  PCI: Use %pe format specifier to print error pointers
 
 elapsed time: 746m
 
@@ -78,7 +80,6 @@ arc                             allmodconfig    gcc-16.1.0
 arc                             allyesconfig    gcc-16.1.0
 arc                  randconfig-001-20260802    gcc-15.2.0
 arc                  randconfig-002-20260802    gcc-15.2.0
-arm                           qcom_defconfig    clang-24
 arm                  randconfig-001-20260802    gcc-15.2.0
 arm                  randconfig-002-20260802    gcc-15.2.0
 arm                  randconfig-003-20260802    gcc-15.2.0
@@ -137,6 +138,7 @@ s390                 randconfig-002-20260802    gcc-13.4.0
 sh                                 defconfig    gcc-16.1.0
 sh                   randconfig-001-20260802    gcc-13.4.0
 sh                   randconfig-002-20260802    gcc-13.4.0
+sh                       sh7757lcr_defconfig    gcc-16.1.0
 sparc                randconfig-001-20260802    gcc-12.5.0
 sparc                randconfig-002-20260802    gcc-12.5.0
 sparc64              randconfig-001-20260802    gcc-12.5.0
