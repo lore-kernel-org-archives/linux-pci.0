@@ -1,26 +1,26 @@
-Received: from MEUPR01CU001.outbound.protection.outlook.com (mail-australiasoutheastazon11020107.outbound.protection.outlook.com [52.101.152.107])
+Received: from MEUPR01CU001.outbound.protection.outlook.com (mail-australiasoutheastazon11020088.outbound.protection.outlook.com [52.101.152.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5251035677B;
-	Sun,  2 Aug 2026 11:31:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.152.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB9F3ACA60;
+	Sun,  2 Aug 2026 11:31:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.152.88
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785670269; cv=fail; b=p3qZ/qYFflqHL9i6cp9/KmQOrNlpvuS10uihfCRWoAPU3aGQLqw33kwKTZjAqZQd0MJ6vmQNbyljJ7NG7hAC3VOhnsBbe1nacQUXA3U4MerGcAgPaUBDtcQnTlfFpcjkURLENcvtLtMXqnSE2G1eRJBvQlXY8M8hRK43Ag/GfvA=
+	t=1785670304; cv=fail; b=mi4cvSmseR3a7dPPrHfltNgQ9zM5GkAsNbkzHLVSjC7PjvIIMHAFeLGV+E7A7V6T8vumBJ2WLXBzLZtTe8y9hoLEUzEL/xRRO9hfxA4C/8vwuAygW/0tFqIfKdMETMMnIQmn+1dcjd79Ey1Y5xWO+Cos9BHoWxUHsrDP6ZNY4XU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785670269; c=relaxed/simple;
-	bh=ImpYMDOq/6V6bTVslcG+LRc53TlIRBpJhOP2rzm9Zjg=;
-	h=Date:From:To:Cc:Subject:Message-ID:Content-Type:
-	 Content-Disposition:MIME-Version; b=qmmyUl/jDGEz3kRa7v/apaV6iMVpACznQrTD8+if1bTrWNeUdiz+AkeJRGhRKgdlZKHnDew1C4+wYfvzu2sSUYQ9cdiHWHa9nKek1Er7eav0j14u8PaG+clU5HT2ZAn4HVBMpx/xQlxWD717d+u0gJOFTCb7B4m2mBj7TfFulLA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=heitbaum.com; spf=pass smtp.mailfrom=heitbaum.com; arc=fail smtp.client-ip=52.101.152.107
+	s=arc-20240116; t=1785670304; c=relaxed/simple;
+	bh=+TAICemaMV9SZi/+IFNzOQW3anMvApk50OgHu62j38Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=NXwzRtjMx+aYCIqxo3ysYqxw0WEcXChopwB7uohflQyJKKKtWIEo3Vd8Wg/LfFhgT1SdqzdUigjkXBvwGmf+eXCfhb7Dqgz58wwDBj/Vo4T+cDUBCzApyb6Jv2zdpoLcARdN+yC8yXknHTqT72gYrHXlUAJ+HjOWEhkCJAv0liA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=heitbaum.com; spf=pass smtp.mailfrom=heitbaum.com; arc=fail smtp.client-ip=52.101.152.88
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=heitbaum.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=heitbaum.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=x0cXaaNYHc8uK5kkFCBpjZWJzL/5ppJucIS+HNnPyZs1uTOs8XuZr47FYjLKVkbokrL5Zvo5OFEey3OsnUYTmHjyuNmS72kGt0eVisBDyNyp9WkZIaxexi0naXFXqq066o9io1CqBWhrT4bR7s7XDwyVa7eu/HIpDddsJNGC6NQBiJECO6eBqhoJVQcMfnoP23Sa0DSsNp+13eeMaQvFQXBF+RSF+ueq/TilUD53+sRSSWw0kYumU89/TUa2QMyAO1FhnqcRndG74VOCgChW2Hrmxez9FP4cdPpKPSRqLU7651AUAveK7sHTMtii0z1YiEQDku+8jAXmeTGMvLz3mQ==
+ b=wvpeCR095YbcfKX/86x9Nn5/dQ55PQ3YMsUche6HnJXRNDTBh1B/ktYpUtlUI1aZAqIOsQU433To1Z/O5HBFCWxaVuQbfWZ7p+dagcutUvp2AyZcshcaRfDvIqNcWTOJjXs9j4HZXUM7rLeTUjNOGpaDyl3noYc9it8B4JMLG8ESIOE6SkjNbzqbhiWDkIAOH+Am49sUJIWsuRdLAC719S7njRvkQyz+BOJG/We9udUYQuDW8svn5Ttzx06DfH8MmKFw4KX5OvL1reD5ZfR8f9CbSbIAiCqTVStn12PqT67vu7vy0KCu3YJOBqg7cOu81HZAZrxuq8Sj/qUNjOw+5w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gC74zshp6DxYIErR44fbGhxWe4muMtd04nqdHSFAx+s=;
- b=q4kGOJ/uUvtng+eJBXJ2l9kSdfyEQrG7Hzj4ADUtiNCrL2yE2EaiAPR+iVL9HJGuF1tOqO0BKHC3F7ZMcELiVbZ0axE6kF6MJ12mOD5cGp8sUqPwq9RC0tYag+9dSxMrIYdJiUm+NOhjeT5LyXalroR3wcfoFAPC+kn1U9QipmxJkD39iXCYpRPj69cGy5qpWhJeToTZ2Yc+F+2FiGdnXTUB1N8vjvCmoiKXKx/F5MxsqK7hlrD3vjcen8jXjlTGpxthVCfRzhWFpok/MvTyywUOjHZMN+IgsWL0ep5rN5bNSeIg7qeZmmAuH5FWY01+uoYVSd+ey/wrJAr2azfE5Q==
+ bh=r0iMiSr3AD2fMWbNQ7QS2/o2PVuiNHZfKUhXrlC+9xQ=;
+ b=m35TI1sKK9xg4dPDO0Is/qS16oLyQ5NBtApRo2YTZbJOXegb77p9GQJ0TT33YXYeGcK1tc37bZkN3IMBSfWwbayA+mDH4jg0RlWDkdzK49ZGKgjlat8vU7D/BmK49fQYQCoL/yU60qfhePoLpJKBquI75YZ2JJnQgk+wIzTblGVu4pB2ILne2Ff+RuKuz5lG5tfG6X25+spMXVd6Ew4zjwlkInbOmevEAzhji6Gq38mcUsww6nELVAfU1zQoTr3UKpk97A7RgsV6AC7TbgCw7MtxKVenas8UuqB7LgJ7Zi91C0TBRlg+uDFheHF+8BFqQwMpwARWSOgb8XqxR7+Zig==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=heitbaum.com; dmarc=pass action=none header.from=heitbaum.com;
  dkim=pass header.d=heitbaum.com; arc=none
@@ -30,12 +30,12 @@ Received: from SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM (2603:10c6:10:279::22)
  by SY4P282MB3986.AUSP282.PROD.OUTLOOK.COM (2603:10c6:10:197::5) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.17; Sun, 2 Aug
- 2026 11:31:03 +0000
+ 2026 11:31:32 +0000
 Received: from SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM
  ([fe80::21b6:91f8:614d:1fdd]) by SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM
  ([fe80::21b6:91f8:614d:1fdd%4]) with mapi id 15.21.0270.016; Sun, 2 Aug 2026
- 11:31:02 +0000
-Date: Sun, 2 Aug 2026 11:30:44 +0000
+ 11:31:32 +0000
+Date: Sun, 2 Aug 2026 11:31:18 +0000
 From: Rudi Heitbaum <rudi@heitbaum.com>
 To: Richard Zhu <hongxing.zhu@nxp.com>,
 	Lucas Stach <l.stach@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
@@ -50,12 +50,15 @@ Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	devicetree@vger.kernel.org, imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
 	rudi@heitbaum.com
-Subject: [PATCH 0/3] PCI: imx6: select the PCIe REF_CLK source on i.MX8MQ
-Message-ID: <cover.1785669457.git.rudi@heitbaum.com>
+Subject: [PATCH 1/3] dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for
+ i.MX8MQ
+Message-ID: <7f99a670eba4b76c391cb87a487f7a837f66d838.1785669457.git.rudi@heitbaum.com>
+References: <cover.1785669457.git.rudi@heitbaum.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-ClientProxiedBy: MEWP282CA0088.AUSP282.PROD.OUTLOOK.COM
- (2603:10c6:220:1e1::17) To SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM
+In-Reply-To: <cover.1785669457.git.rudi@heitbaum.com>
+X-ClientProxiedBy: ME3P282CA0130.AUSP282.PROD.OUTLOOK.COM
+ (2603:10c6:220:1c4::10) To SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM
  (2603:10c6:10:279::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -65,118 +68,99 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SY7P282MB4909:EE_|SY4P282MB3986:EE_
-X-MS-Office365-Filtering-Correlation-Id: c9dce776-5a09-4525-6faa-08def0898866
+X-MS-Office365-Filtering-Correlation-Id: 4d8bc84b-5e8e-44ac-086c-08def0899a67
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|366016|7416014|376014|3023799007|10067099003|5023799004|56012099006|18002099003;
+	BCL:0;ARA:13230040|23010399003|1800799024|366016|7416014|376014|10067099003|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	6sqvL9VYZ0wCyDpuNA5t/z4b6L7s4krJQSE8ChandYg/BBggQjIeYxL6XBv6ks0+B+UmyGQ7xD4iQCXXZI64GYz29rWp/LuZjf5s1QVeMl8xzAIiNThlDZd6TWFa0C/lifYDChkBxgSSu5hk/0yXuGsAEzg6ffriiITBxsPHPIond9J72gusPSw+e/1gPkoBgew2gbuDRezjFCWe2XLo0DdMAq68G07daZch21CsUSJ4ogNYy53Sd4dmm6RCaeNV5Sp2ChttQjLqf3MXR8V4Pz+ftMqVVWuXR1dg0rkQDuwhEznHSGkQUXP9EcqLpYiZ0FalWRplUGlfmG8pA+DLoU2eYOIsrK4uMPYNU3VZjqltAoIhbbEGWSZ7Yaa4k3BKJ1279ed/pU3laX2aBAmCqXGMuQE253FdEeLxpbPbciTxFvn7652XS0UZLTclCOJv41pbxK+K4I3O4TSM/aksW3bajfTSuB8St2CjPHEhKQv0WcsotdK0HO8OZQseBb/Ee7xkDF3PFoOw+/Dvw8f7kVTznTBrE8CLmzce3vz0lypY4cw6mpN2IAjKXNfb9mLm4fh0pIAeXFAD0yemPky+/zHOVrdoewnA0Q3Yyi/uceZ94k77tqbC7sI60ScoD4y6fMFSOrXOafEkOlYPhV0yE8k1Mdr7z9U+G85LZu0UufI=
+	Qq3gi3bmo8E8eK5MkCPT1xakKN3hgZHn2kcBfb8thx2vnp5j7XNkWJ4UhTYc+r3nC9tIJxlMC6TF7ROiegnOGD37RnQ6aZ+nU6ae1dgui0hn8cc2gyzfMFVZ0M2z1CtFhyXJOFudQQwhBt/io7a2InY9w3UpGtL3rPTMyArHaZ62b7igbIG/TTzalMPalAu3g4CUvWTxuVAOYwRhhtL3B7eBzaLZcF/4uiv5QXeUGNWN2j74fbam9QOU12130GNMi91v4L1Q5kF/KzzdcHa3eFHNVYUEijiB5XSMZ4X/HkYrmUj/ZfimkUAvW151N2iZB3FVhvaRrnvftbaY9+huVqGS7h591idFRd8t6Rs2VU/qYHSqOZMKARSklLGtSd5E6bWbC19yAeUniMw9ihDEjRx+Yd/hZViK1OnwXbdowSWQuMwlNfMbInFEShooqOdYp+Ahf/Kzjn+R50RH24fuJUaPNOqtAM2hlBjNt0Y6/jM51ekDpDePJ9SdcgbWWomAuqTS+mT5Ij6SATtRojOlB87gFPzXI1PVmdHEO0SNxaoIwKmYIDB5SupJOH7/3y5uWGbaorgPnZSIaWhvkVoZjIXELp9YvIne8P2AWh62W4qSTZPEDdp1ptgjalMM1jGFaA+LdxMyOggNBJUSeZOA/wRP0BrUEk1TwaY5D8Ygwfo=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(7416014)(376014)(3023799007)(10067099003)(5023799004)(56012099006)(18002099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(7416014)(376014)(10067099003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?UsPCkVpvCXJzZ2DQzT6QWMPrv2S+Io9m4uHfpxS3iA51cMhNJWZlATASzHEQ?=
- =?us-ascii?Q?Ifgs/IFbKDoQIwHbbm4uez2rWMGw9Zj1ePoNTmIDV0LBN8mS8YUcfFAth25P?=
- =?us-ascii?Q?NxrN7jwSm5CQEvQMJ5pdsP0m6Eiqe46DPtWR+/or1HnjqcdIRwMr/sQEkwrh?=
- =?us-ascii?Q?zHne/PCnQj2unclx67KOJqqA8FOzWw5qEJ6Ua38aV1ku8oCQOjdgfs+kVrTx?=
- =?us-ascii?Q?qX95rJt1jeDtOF16oVrnDzpeKS4js2pCbWtStc2Hm02m9njdO23nzNgA/NGp?=
- =?us-ascii?Q?ug1wxa/ZL/nyGyaK3fy8jKfsfwEd/ke0H7BqTM1n/D1f28vXnC1TDwhd7glJ?=
- =?us-ascii?Q?YOWiidZXbLmmW2Q7gI0yaxcRdc7SzOT+6rjafLMPmh6UrVKqRVk0baYMuSg3?=
- =?us-ascii?Q?s2ezMAGwRWlhSudG78hR3nlOoYAHxpF3Fbe6hFkz9rnkEwPDUw7A66Es/gky?=
- =?us-ascii?Q?WDiYLv/0h9wK/qxfUkVyx2d4rHLtXRSSGdHVweogOn5DEWQGWrDL5s/LCvpU?=
- =?us-ascii?Q?CzGjWK9GNqVXxgOsSNUD/i/rfDRizsegYEvz4IGxo9SPav6Tdwi010fRl+te?=
- =?us-ascii?Q?cexj+Ldnl6JHtmOEaB31C+qtXdRR0rh6ytrWzWTgMwqtzM54gdamn5P5i/8u?=
- =?us-ascii?Q?5brhHnBQ2MWxm/4PAEnFRUdPl3lpqwiU1z/X4vxpevii7W9VpxHFmDmZtUOW?=
- =?us-ascii?Q?0KXh4/+bmIMquCO1fFDboH96fN8NBzEUYW2hG/RsxluxGOF1Giv4dglO3BxH?=
- =?us-ascii?Q?46+IqXRTQTQfIyXiYoW9k0mb0LkywwchBoSBv6LvROh4THRyfnRHRcUmwX2k?=
- =?us-ascii?Q?a14w+zJ0pO6HWczoRd9+Yje2stmmL9QHvEpwmq1/0lRdUdRpH0f8zUqkNzh/?=
- =?us-ascii?Q?ttEvuYcJNluo/pVoH/3EmDxIS3f7EWRhicfZNSJmV2afAcORZUBklReRpJDP?=
- =?us-ascii?Q?FPvDcZ3nDJR2/Ayrrf6ruO2x5hgeCH2sxHjrl4ucAt6dxHD3LygrdpPyqZEC?=
- =?us-ascii?Q?ox3q7hNio/ys7PnfF3jEmz6733N0RCtnZpQGNUSv93VyKCvgt6cf8NmBlSZh?=
- =?us-ascii?Q?CFQC5JB6D56gjIFTmJu4hSa4gQZ+BffU+5TBIHP4sWNqYM4QDi27RBqHzoeO?=
- =?us-ascii?Q?6nCiurXC4XRtD56jwcZVCIStAG9vhuow6Hrv7tYlADSq9Xn1/WFU34kSReZO?=
- =?us-ascii?Q?CW4LTHG9ztCFwTSeLQskCpkAG2wM+AgrfTpQFhJw5WkBO1+XJwKv1MHt8H34?=
- =?us-ascii?Q?uJUBeed6QoRa4FyH2MA1MpUZSS46hfB/fgyRJwQEdZGn7xDJs5sngVqeGED+?=
- =?us-ascii?Q?gd0DWmjMEq5EV0j1Forwywla8sKM95AVJCVCpoIYtOYJFG2/HLPh+gaAxKke?=
- =?us-ascii?Q?HNTPmHdSv6iHLKS2923ybLe5gU3m0/Vr+cRNxHNWZ2rt0U3uSJUEZiuvj2C8?=
- =?us-ascii?Q?+BqMubWzPacJms8vvCx27PSOJRwJ5TkYQU8KmxDjz2StdZrkYhMXdU/Ii39e?=
- =?us-ascii?Q?e+eKOe39auvDcsB9iM9db2mq5MKB3I9pqzUsFK30FnOTPzHRztp8IGD3HGvz?=
- =?us-ascii?Q?KOoIhl+KR0gm0W0WxGns95gbCcF1yUXnop8gtES3TqT22/VeBZff/PdzNFUC?=
- =?us-ascii?Q?OwyiUAeszwX2kU9WQWGkt9PkHUs5XcW4SXLPoNdm9GDYrGN/LYpoC9+SG/qM?=
- =?us-ascii?Q?jar5dzLTYRWU3tx09yJJGIhRSQgk8HIduNi/6okQrfSflec1?=
+	=?us-ascii?Q?yafuYmBnwxn38LOSm4J7SZlE8G+SoNDE1V+UUix4dH9A0hAyH63/45RuF35V?=
+ =?us-ascii?Q?20H5LLjFS7kdAvJJ3mlTjlvSsDX98/NsGWhA0nvKd9GCfvRGkiz4it+8B/g0?=
+ =?us-ascii?Q?b2xvZ2Oiwrb1uyCGLCTWsYGyrUkpdzlKAC1QI41o7FTfIv1u4JxKWrsTT2Gb?=
+ =?us-ascii?Q?4Rna9DVMaGHR9WmWVAiBW13nz9SZx8K4VUs2aSJ9CTnpfh4+KRGPkR4DqfJF?=
+ =?us-ascii?Q?9ylh1HkZZBbdl9u1COLJtrMoiUe6h8hvctpyISV7DxtIszrEA6G/HQYjYU7b?=
+ =?us-ascii?Q?Aj3lRSuoYCQ5/a0TKU/+hTE0sgN0MQbT15eiqpjKoMv8ONwnHu4TSUGpHcyd?=
+ =?us-ascii?Q?EDAN5l3Dqp3xQiTEP9pLSZQqYTNlDA8gLfvAXlYWYWe1AxfAxyWejn5kbkU1?=
+ =?us-ascii?Q?MelQ0vJCG84LTtNrpWDGefwZRuGIDeLwaV1fEqj2KsfK7KPJnCZEMHVhTrH7?=
+ =?us-ascii?Q?RJN6+a2BOKk/BeOdAIE5y/zTB/pNgDdRVgX58Sca3Zzav9kxJrDsSUH3U85k?=
+ =?us-ascii?Q?B+Y5Y82l5xo/6rn3Xj6BG49mMjsSK4RPEAy5SlHV3JlDJC+1i5GeMcPFVkN/?=
+ =?us-ascii?Q?+sDajzyiBj8WoNSPVDmj6/beULvHgVi9yWSS8/O6ihZLy29PSrJd70O7K/9J?=
+ =?us-ascii?Q?7xY6C0OPfQVg/KwAFdaKYAEY2TTnezDNaU2IvGdk/Sdcacnzpawropfgcv35?=
+ =?us-ascii?Q?ITn1ZRYLNRgifVO2ce2IxLfAFiIvfUMelwqQ838I5AyzX0JazSeWRClVcqXw?=
+ =?us-ascii?Q?pg+ZbbZdY5q6mqTB8WCHaszPWV7OaDFTUknYRYs4aHEzhIE2c+kmiZY8fhbT?=
+ =?us-ascii?Q?LAPhLUZZgjN3apnCArWm2WpYTfwmshHG5MGxmDTzgIFgO6cqrT4m+kvfDHJ6?=
+ =?us-ascii?Q?OjZn7tn5Szd8AG4ODExEPzxstwe3+9Ci1xCCIvCNTgy6ODy9kOlcaI1LLBUY?=
+ =?us-ascii?Q?N6xgT76FPAl9yRMz7NI3UzodDLkptXZyZ6LSq5sfh9HbMJV35b8/D9VVP2kq?=
+ =?us-ascii?Q?aam6xU9D7VE7O3aT5tqWPIIPjJROT1bcvx3BsoUHkWbOVrwia42wQJG0zBA9?=
+ =?us-ascii?Q?NcyoSgD3hUpNKCd1m/bIR/DMoIOw7oUo5QxJmGATWbQC0mwrYspC6tm2j0Xp?=
+ =?us-ascii?Q?S3Vbi8PjSGY3ehK7yNAHAgZqEfLYnMydLfJDatFACVctbw+S8dJYTEQ2IfCu?=
+ =?us-ascii?Q?77KCVJwA4hLdbkspSssoocaUWXBZrx6n42B0JN4ZnqHEwSoJrIQUqR1of4Si?=
+ =?us-ascii?Q?8mhlGdpiJEXGF9VeOMtprrtaiI1lEhisYp5qZr9mNUM9MOtyTNv3lPZwtDSg?=
+ =?us-ascii?Q?eQFnpsnnzi+OmhgG+9otRByCejuKc2lBWU/KiRCb8TYesJ5P8lGgCQBANeND?=
+ =?us-ascii?Q?5IuhJh6D5dW1DdzTPuhaoDKpsNyHnC7OWAd/4qXYXPPF50t4qjzVSHbvJdQ2?=
+ =?us-ascii?Q?Va4IegIxE67FoZ4Fuh5Ch0b4YxupOwIuH5Gy3Ybh7Rtq7DHYbTfweRksr39A?=
+ =?us-ascii?Q?hfFS04w5gxkZNeFLitcXf45QcHJNrRsyut4FRyvNzjOhD1gg88pekdFXJZJw?=
+ =?us-ascii?Q?4HR5jw61ZaU7TxLbmIWYO6zIKidG3Dq2DAobkN1WzijOhlw6qozWHh/Bkk2c?=
+ =?us-ascii?Q?5WbSQoqtSuBRK6rRLTQRZRtbWPPMm91d3wFAM4kcRPcYZk67x3/W/ywY80k/?=
+ =?us-ascii?Q?RsKhAlSRI1HZqIWcTBcrWt5qQmOiF3JfYyqrtfga/Y5dEZtJ?=
 X-OriginatorOrg: heitbaum.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c9dce776-5a09-4525-6faa-08def0898866
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4d8bc84b-5e8e-44ac-086c-08def0899a67
 X-MS-Exchange-CrossTenant-AuthSource: SY7P282MB4909.AUSP282.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Aug 2026 11:31:02.4082
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Aug 2026 11:31:32.5624
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 35ffebb5-7282-4da6-8519-efab29b0108e
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VWOg6miJDQB0/8arEq5LG5pxmTxqyWCZExdNYjzfI8QwkjNqfCM6Opnwq8+QlgrY9aflJJ2J7A6qDzyvueKuWg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: RxomrQsSwESg90WDWH++4St5xLgOPFpAzjqcCgvchInU0uxlcrAcJp/wJmQia9XoLZ24cvQAey5Wy2qc8YLySA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SY4P282MB3986
 
-i.MX8MQ can take PCIe REF_CLK either from an off-chip oscillator or from
-the internal PLL, but imx8mq_pcie_init_phy() has always selected the
-oscillator unconditionally:
+i.MX8MQ can drive PCIe REF_CLK either from the internal PLL or from an
+off-chip oscillator. Allow an optional fifth "extref" clock to describe
+the latter, matching the name already used for i.MX95.
 
-	/* TODO: This code assumes external oscillator is being used */
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Boards that wire an oscillator to the pad describe it as the "pcie_bus"
-clock, but nothing in the driver looks that clock up by name, so it does
-not select anything - the unconditional IMX8MQ_GPR_PCIE_REF_USE_PAD is
-what actually makes those boards work.
-
-Commit d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
-support") added a generic enable_ext_refclk flag, set when an "extref"
-clock is supplied, and wired it up for i.MX95. This series extends the
-same mechanism to i.MX8MQ, which resolves the TODO above.
-
-Patch 1 allows an optional fifth "extref" clock for fsl,imx8mq-pcie.
-Patch 2 makes the driver honour enable_ext_refclk on i.MX8MQ.
-Patch 3 names the oscillator on the in-tree i.MX8MQ boards that have one.
-
-Patch 2 must not land before patch 3. On its own it would stop setting
-REF_USE_PAD on any board that has not declared an "extref" clock, which
-is all of them today. The reverse order is safe: patch 3 only adds a
-clock that the driver ignores until patch 2 is applied.
-
-Patch 3 touches arch/arm64/boot/dts/freescale and would normally go via
-the i.MX tree rather than the PCI tree. Given the ordering constraint
-above, either all three through one tree, or 1 and 3 first with 2
-following, would work - whichever the maintainers prefer.
-
-Patch 3 is deliberately additive: each board keeps the "pcie_bus" entry
-it already has and gains a fifth clock naming the same oscillator, so
-the set of clocks being enabled is unchanged.
-
-Tested on a Google Coral Dev Board (imx8mq-phanbell, not yet enabled in
-mainline), where pcie1 takes the off-chip oscillator and pcie0 the
-internal PLL. With the extref clock declared, clock-names reads
-
-	pcie pcie_bus pcie_phy pcie_aux extref
-
-pcie1 links at Gen2 and the endpoint enumerates.
-
-The five boards touched by patch 3 are untested - I have no access to
-them. The change is intended to preserve their current behaviour
-exactly, and review from anyone who has the hardware would be welcome.
-
-Rudi Heitbaum (3):
-  dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ
-  PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ
-  arm64: dts: imx8mq: Declare the PCIe extref clock
-
- .../devicetree/bindings/pci/fsl,imx6q-pcie.yaml          | 8 ++++++--
- arch/arm64/boot/dts/freescale/imx8mq-evk.dts             | 8 ++++++--
- .../boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts     | 8 ++++++--
- arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts     | 4 +++-
- arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts  | 8 ++++++--
- arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi      | 8 ++++++--
- drivers/pci/controller/dwc/pci-imx6.c                    | 9 +++++++--
- 7 files changed, 40 insertions(+), 13 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+index e8b8131f5f23..8fb0c919ae57 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+@@ -46,7 +46,8 @@ properties:
+       - description: PCIe PHY clock.
+       - description: Additional required clock entry for imx6sx-pcie,
+            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+-      - description: PCIe internal reference clock.
++      - description: PCIe internal reference clock for imx95-pcie, or the
++          external reference clock for imx8mq-pcie.
+       - description: PCIe additional external reference clock.
+ 
+   clock-names:
+@@ -173,13 +174,16 @@ allOf:
+     then:
+       properties:
+         clocks:
+-          maxItems: 4
++          minItems: 4
++          maxItems: 5
+         clock-names:
++          minItems: 4
+           items:
+             - const: pcie
+             - const: pcie_bus
+             - const: pcie_phy
+             - const: pcie_aux
++            - const: extref  # Optional
+ 
+   - if:
+       properties:
 -- 
-2.53.1
+2.53.0
 
