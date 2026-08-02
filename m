@@ -1,115 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E74E51DEFE8;
-	Sun,  2 Aug 2026 11:49:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D38A2E88A4;
+	Sun,  2 Aug 2026 15:10:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785671386; cv=none; b=lD2Jgd1meP+9R3iG2bIARKCIULyK+Nl6M702TYmsv8Zh1O/HRXEmK9NiSP6+YEbx/0YkEFFcQzLPffw0dq3b+p7H8yUk9WRe8jSf5iUKF/JA1sXNM1bB0ccGeNaDZ6fiUQ2DqQhoWPnninxM8gIBkVjG27Y3zMntzMVWhhkH76E=
+	t=1785683402; cv=none; b=hqzmk1whez88zg3ncCcTtG5qQPSAzm8fa2kG00mBtR/ys0H+F0Kd1C7vGv/lySoapJUBCQOQPzLmRqHiO1FjqrgjUNWyloQiGmY8rOFRlr0brtsGDVZagU9YAN7AtkmF/dLcZEryY5AUd1ir8aXEJPy1lvViXpPzj9pMdp21U3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785671386; c=relaxed/simple;
-	bh=MREafGtGNmwt5kJ1o4tdbKKSognSF47R5FqbwNKyvL8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KWYtNwQSy1KjDuqFoGZKlueX7b2hQFXrHGqEgGvxlBdb3/MGCvNLSOkGiDZ1JN8nIIKFNkDCHL5obmwu+5HaV35PFLVLMlA282375+AnB5hY9kHDZMWFPd3yRHsHCDYr33qX8SYmWuGm/9EWJ+1dRUpn9E2ZtDDrsnSD8sF0P8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mMO49Seh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785683402; c=relaxed/simple;
+	bh=g7IskM1yXHePCnaiFz+Ixwl0qYtn2M3kX+CTfAps3J0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TEdCiXoDwyPz8XGujUqbMcLyQJsL/l6MgSkpCqjJulXZcdx4i0dUuW0VKOfVMTYexKSK4f2SwKfPI72fpVxLCwODgi0QaSynGv+H0LtpNmWo7XFE1sNoRpOxyUelvFEReXeNh3OmJ5YeSOMxP1C2LIW036mB0oPUZk+8mqjzQFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cyk1KiT5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mMO49Seh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC111F000E9;
-	Sun,  2 Aug 2026 11:49:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cyk1KiT5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E45A61F000E9;
+	Sun,  2 Aug 2026 15:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785671384;
-	bh=qQ5s6kKmv82KP7OkD0P1K4uLltnzuM5GFfaEc6R7cFw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mMO49SehEcpGF61R4nVCV2ILnlnHGV3oYebXhJkPrNcpe1PcgaY1LtEo7pHTvJyjP
-	 Yjj17ZvppaZvW/rRIUmCN9k+cHQGmVZXBbJMa/plSJ6ev7BUQ/ZGTD3MuQxAxveXws
-	 Jk+eqmvo75kt3saT4+MOqr2+Yefa72pTIr+uB8clOxquUvvlQ4zTaH6ChX2XbYpm8l
-	 /MPFTNfTFg4MKUOhjPoVLGOj2nceLMSsSxXZsSlVCYtuDqzU3AlA4nwnLHjfsn1eIH
-	 2ForVzTcRco2plFssIqkDfDxVBqhos9OpRXEUNRtocJ8/P7LEG5bXAqskCeVF3XItV
-	 YTsj0a+CCAweg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] arm64: dts: imx8mq: Declare the PCIe extref clock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rudi Heitbaum" <rudi@heitbaum.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev
-In-Reply-To: <3436ea65303090e435a24ba04416425f0380bd90.1785669457.git.rudi@heitbaum.com>
-References: <cover.1785669457.git.rudi@heitbaum.com>
- <3436ea65303090e435a24ba04416425f0380bd90.1785669457.git.rudi@heitbaum.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 11:49:43 +0000
-Message-Id: <20260802114944.3AC111F000E9@smtp.kernel.org>
+	s=k20260515; t=1785683399;
+	bh=VzQfhIZrGP9LhFy/UxQVHATGpQmW3r2MkEVQYyFXRrE=;
+	h=From:To:Cc:Subject:Date;
+	b=Cyk1KiT5NxLMJl/k5gw6rbuF+BEoyun/DEkO/sne/9nszQsl5ISNj1c54EL2YbP0j
+	 V9L0LSCiZdYQJTUemCt2L8EUPHpdE8sMSWqZBh4DoVRy85tE4a9hGdQ/Xu2IxpiDpI
+	 TZUDk4fs/sUZwREZtVqHdTZbYLRJu4GG/ryNpFTUZ8esda0sX2ST5T5Xq3vgQ1/2yY
+	 wYYvk896hukauSwKNKjZ+MIW9baLX02qCZRSePaRabkERFFn0upUegjiexcw7u8WLC
+	 x5qeKgy+xQT4hsC5Mu/KpVEMVkUDTmtQ78GS+m0S8X5gz7U2P76n1yfjHaq9PrsJln
+	 XbRvoTI/jlJXA==
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Alex Williamson <alex@shazbot.org>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	"Claude Opus 4.8" <noreply@anthropic.com>
+Subject: [PATCH 00/13] PCI/P2PDMA: Fix ACS egress control handling
+Date: Sun,  2 Aug 2026 18:09:38 +0300
+Message-ID: <20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260713-fix-p2p-acs-725f8dd7b0e8
+X-Mailer: b4 0.15-dev-18f8f
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Critical] The requirement for a new 'extref' clock name breaks PCIe on o=
-lder device trees for i.MX8MQ boards that rely on an external oscillator.
-- [High] PCIe endpoint nodes on boards with external oscillators are intent=
-ionally omitted from the 'extref' clock update, which will misconfigure the=
- PHY to use the internal PLL and break the link when endpoint mode is enabl=
-ed.
---
+PCI P2PDMA treats any enabled ACS P2P Egress Control bit as an upstream
+redirect. PCIe r7.0, sec 6.12.3, table 6-11 says the Egress Control
+Vector bit for the target port decides instead: a clear bit routes a peer
+request directly, regardless of P2P Request Redirect. Firmware can
+therefore enable Egress Control with a permissive vector while Linux
+incorrectly rejects a valid direct P2P path.
 
---- Patch [3]: [PATCH 3/3] arm64: dts: imx8mq: Declare the PCIe extref cloc=
-k ---
-commit ad57d8a5f5ec29362d83c5dccc786006a9f4c2cb
-Author: Rudi Heitbaum <rudi@heitbaum.com>
+Table 6-11, where E is ACS P2P Egress Control Enable, R is ACS P2P
+Request Redirect Enable and V the Egress Control Vector bit for the
+target port:
 
-arm64: dts: imx8mq: Declare the PCIe extref clock
+  E  R  V  Required Handling for Peer-to-Peer Requests
+  -  -  -  ------------------------------------------
+  0  0  x  Route directly to peer-to-peer target
+  0  1  x  Redirect Upstream
+  1  0  1  Handle as an ACS Violation
+  1  0  0  Route directly to peer-to-peer target
+  1  1  1  Redirect Upstream
+  1  1  0  Route directly to peer-to-peer target
 
-This commit updates i.MX8MQ board device trees to explicitly define the
-"extref" clock for PCIe nodes, keeping "pcie_bus" entries intact. The
-change aligns the device trees with a driver update that relies on the
-"extref" clock name to configure the external oscillator.
+P2P Completion Redirect lies outside this table and also forces
+host-bridge routing.
 
-> arm64: dts: imx8mq: Declare the PCIe extref clock
->    =20
-> Boards feeding PCIe REF_CLK from an off-chip oscillator described it as
-> the "pcie_bus" clock, which the driver never looks up by name and which
-> therefore selects nothing. The oscillator was used only because the
-> driver forced IMX8MQ_GPR_PCIE_REF_USE_PAD unconditionally.
->    =20
-> Now that the selection follows the "extref" clock, name the oscillator
-> explicitly on every board that depends on it so the behaviour is
-> unchanged. The "pcie_bus" entries are left alone.
+The same interaction affects target-independent ACS isolation checks.
+Request Redirect does not guarantee that peer requests are forwarded
+upstream while Egress Control is enabled because a clear vector bit
+overrides it. Such checks cannot identify every potential target, so
+treat Request Redirect as ineffective while Egress Control is enabled,
+which merges the affected devices into one IOMMU group.
 
-[Severity: Critical]
-Does this break backward compatibility for older device trees?
+ACS Direct Translated P2P routes a Request carrying a Translated address
+to the peer regardless of Request Redirect and Egress Control, so it
+voids the same guarantee unless Translation Blocking rejects the Request
+first.
 
-If a user upgrades to a kernel with the new driver behavior but boots with =
-an
-older DTB that lacks the newly introduced "extref" clock name, will the dri=
-ver
-in drivers/pci/controller/dwc/pci-imx6.c:imx8mq_pcie_init_phy() clear the
-IMX8MQ_GPR_PCIE_REF_USE_PAD bit because "extref" is absent?
+Two pre-existing gaps come first. A provider and a client below different
+Root Ports share no upstream bridge, so the walk reached the host-bridge
+route without recording a single ACS port and left the operator no
+pci=disable_acs_redir= hint to act on. The routing analysis also covers
+only Requests carrying an Untranslated address; ACS Direct Translated P2P
+overrides those controls, so that scope is now written down rather than
+implied.
 
-Device trees represent a stable ABI, and older deployed DTBs might lose PCIe
-functionality if they rely on the external oscillator and this bit is clear=
-ed.
+It is nearly impossible to test all possible combinations due to limited
+hardware availability, so I added KUnit coverage for ACS routing
+decisions, isolation checks, Egress Control Vector lookups, and
+provider-to-client path traversal over a fabricated PCIe fabric.
 
-> Endpoint nodes are not touched: they are all disabled and use a separate
-> binding.
+Disclaimer:
+All patches were prepared with AI assistance, with a significant
+difference between the code changes and the KUnit tests. The code
+changes were thoroughly reviewed and rewritten.
 
-[Severity: High]
-Since endpoint mode initialization also goes through the same PHY setup
-routine, will omitting the "extref" clock from endpoint nodes misconfigure
-the PHY for endpoint operations?
+In contrast, the KUnit patches were produced entirely by AI with
+minimal human interaction, and multiple AI tools (Claude, Codex,
+and Gemini) with frontier models were used to verify that the tests
+comply with the PCI specification.
 
-If a user enables the pcie0_ep or pcie1_ep node on an affected board like t=
-he
-EVK, the driver will not find the "extref" clock and imx8mq_pcie_init_phy()
-will incorrectly clear IMX8MQ_GPR_PCIE_REF_USE_PAD.
+Thanks
 
-Does this mean the PHY will be misconfigured to use the internal PLL instead
-of the required external oscillator, breaking the link when endpoint mode is
-enabled?
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+Leon Romanovsky (13):
+      PCI/P2PDMA: Safely terminate ACS redirect lists
+      PCI/P2PDMA: Report ACS ports when the paths share no upstream bridge
+      PCI/P2PDMA: Document the Address Type assumption
+      PCI: Account for Direct Translated P2P in ACS isolation checks
+      PCI: Add ACS egress control vector accessor
+      PCI: Account for ACS egress control in isolation checks
+      PCI/P2PDMA: Derive peer-to-peer routing from ACS control bits
+      PCI/P2PDMA: Honor ACS egress control vectors
+      PCI/P2PDMA: Document ACS egress control handling
+      PCI/P2PDMA: Extract pure ACS routing decision helpers
+      PCI/P2PDMA: Add KUnit tests for ACS routing decisions
+      PCI/P2PDMA: Add KUnit coverage for the ACS P2P routing walk
+      PCI: Add KUnit coverage for ACS isolation checks
 
-> Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+ Documentation/admin-guide/kernel-parameters.txt |   9 +-
+ Documentation/driver-api/pci/p2pdma.rst         |  14 +
+ drivers/pci/Kconfig                             |  15 +
+ drivers/pci/Makefile                            |   1 +
+ drivers/pci/p2pdma.c                            | 144 +++--
+ drivers/pci/pci.c                               | 102 +++-
+ drivers/pci/pci.h                               |  23 +
+ drivers/pci/pci_acs_test.c                      | 674 ++++++++++++++++++++++++
+ drivers/pci/quirks.c                            |  15 +-
+ 9 files changed, 951 insertions(+), 46 deletions(-)
+---
+base-commit: 43598807f71ac1c9164f26004acf2496d4038daf
+change-id: 20260713-fix-p2p-acs-725f8dd7b0e8
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785669457.gi=
-t.rudi@heitbaum.com?part=3D3
+Best regards,
+--  
+Leon Romanovsky <leonro@nvidia.com>
+
