@@ -1,103 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3AA380FEA;
-	Mon,  3 Aug 2026 17:02:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D841741A55D;
+	Mon,  3 Aug 2026 17:09:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785776530; cv=none; b=oi5D0y8guE/8Cxv8nEy3PGw/3Fl8YXCi3LLms9eM9Q/45kZQurEVhEUlDa2hPxL9gZyDi1o46iiZxjI52d595AO5QMQNllW6MzWmF/moW4V1YpJV9fSFSrI/DVoTdwHKZohDhbpEHGSsbOanqmkPzohovhlDUB/KbGppbo6tiww=
+	t=1785776943; cv=none; b=KULpWj+seeGTyuMHbc6m2HjgqwIirsAq9yVTjA1IgFYTGc4ckEGVKyBQD9ajq7J6ji60PZHq4mIsW17S4sbclu3oIdsHjRgSpIKlB1FUIbn3V23WOhBMpIekeE1STWU2tocqOao8fmah/IT9JZ7FA5SR8Ux/4ltk0sk1e/LAFyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785776530; c=relaxed/simple;
-	bh=s8DP0exW6noFakNjmAEoGxt/KjiQ2RcUITJs/qgwVFE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JhKVY3iMPnOIN2y35+AXcXa/odozIaFiklfY9ikWNfY1H5FesBvL+k+1XKycK0LfRFHyWCGlywMB2oK5WLVEMucry0BxR44zOCaGjIHjWUCJIDDswFpVTYyOqanwLTSeW4qs2yo2/jyLUF5r3Xt2m8UelHMDsTFtuUEVDfbLhLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKyMiGpr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785776943; c=relaxed/simple;
+	bh=I6zcxJO/xtHszKp/1BchexOKkdlM6T63zoh6Dkdw3aA=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=DtySVZLEfvlIqGWkTJWu6bIvH9EDZWW7ZBaj37WW9hCLB1BgJHpuV3F61sAEx8awwXO1gazez65h6t29YzbaoBXy4onFn1t38JaLCYyOB/vVkpWWUkcnYu9bTyKiMrkI8BvL5X0jW7UjMhgvXXgHwFtM4HcwRPYvt1KEBGBvky4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oHsxQLsS; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKyMiGpr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D69631F000E9;
-	Mon,  3 Aug 2026 17:02:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785776529;
-	bh=keUiQ6qgpjMHYHUXJ4nroSzC8Q61wU77/5IXJBD3Bnw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gKyMiGprwABocBeBz69ENTHcAxnb8CgknQFrOVIw3lmqKseh8Ty9y+8o3ShznKraj
-	 Ehs/cIOOOeXqmouPAn7u9bhBufc0DC8r3aYom2tTR5skXL9infdbWqemZ/0/SV5pp1
-	 icU+72K3byYE995xHlnX2FqmlM21s+OyI7Z2CJJqGoOz57/4hbic+1y5Ht9miWFsUa
-	 bZqIJjj8u4mwoqSiHAMwdCBuJHPSl6ezHS3wrYAz4fNFrWq8A23qMRyH4XpT18fA1g
-	 zIzss7u6SBJ0OLW4Egew6cwH3n5J/jK5lnX5VqBU1SXwg+oX8xJTB8/6y/0Jdr0f+T
-	 pQQP+NlPlfw6g==
-Date: Mon, 3 Aug 2026 19:02:04 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: dwc: ep: Fix unmap potentially unmapping the
- wrong iATU
-Message-ID: <fjib2gdwwmg3qlvjrwy74dt6on4onkj6ynlueqbbuk7gefffxz@rbl57aj3vpz7>
-References: <20260730133123.1420413-4-cassel@kernel.org>
- <20260730133123.1420413-6-cassel@kernel.org>
- <20260730135116.950031F000E9@smtp.kernel.org>
- <amtcuIHhH5-f1cqd@ryzen>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oHsxQLsS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785776942; x=1817312942;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=I6zcxJO/xtHszKp/1BchexOKkdlM6T63zoh6Dkdw3aA=;
+  b=oHsxQLsS74boDVEapf1Qvcqnh+1+/vUaM47+Lub8MpY6D7oNtt1W8Rxt
+   6C1GJsNo8diOy7oLH1xrLvyC1pH+Pg27cbHBaMo532PbsWRh+InqJIra+
+   5hsF9i+khuc07KStlpYfZ2fzv6UCUDOKUPVP2d5iDasrU+vfOVGufzSVy
+   nfpr3f4xZ7HuRDk58ACXgiM4y1oR/S0qpQq5vBHSXWyAfLOlG9Ty6TDkF
+   DAEw1PHRO/VnRK9cgfcKLtI8QFeK3X6PjRQTRWdc8O16uia8C7oyfQ6Mq
+   Igbj94TAEA6HTSa+OtkZZ2RB/83XNOfm4ZBB557a0bLF0wdhHUglk9cKW
+   g==;
+X-CSE-ConnectionGUID: ht1+Zej5S3edRgJhmITjwQ==
+X-CSE-MsgGUID: uQGuUzLyRcene0uAPr53lA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86267670"
+X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
+   d="scan'208";a="86267670"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 10:09:01 -0700
+X-CSE-ConnectionGUID: tVLy63j4QYumtUhtBPDFUQ==
+X-CSE-MsgGUID: yd4EEuREQdqDZBXrpIDoTg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
+   d="scan'208";a="256951519"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.61])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 10:08:54 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 3 Aug 2026 20:08:51 +0300 (EEST)
+To: Manivannan Sadhasivam <mani@kernel.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
+    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+    Jonathan Derrick <jonathan.derrick@linux.dev>, 
+    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
+    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
+    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
+    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+    Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v3 6/8] wifi: ath12k: Use pci_{enable/disable}_link_state()
+ APIs to enable/disable ASPM states
+In-Reply-To: <lmmrcv2dpuitbqmuargtsbk647z66gs6aqanzis226py2hjhys@d5h5p6ltmg4e>
+Message-ID: <658436eb-af18-4343-67db-63e484617239@linux.intel.com>
+References: <20260708-pci-aspm-fix-v3-6-6bd72451746e@kernel.org> <20260710202546.GA989860@bhelgaas> <lmmrcv2dpuitbqmuargtsbk647z66gs6aqanzis226py2hjhys@d5h5p6ltmg4e>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <amtcuIHhH5-f1cqd@ryzen>
+Content-Type: text/plain; charset=US-ASCII
 
-On Thu, Jul 30, 2026 at 04:16:24PM +0200, Niklas Cassel wrote:
-> On Thu, Jul 30, 2026 at 01:51:16PM +0000, sashiko-bot@kernel.org wrote:
-> > New issues:
-> > - [High] Using `readl()` on the host's MSI target address to flush posted writes generates a dangerous PCIe Memory Read Request, causing kernel panics.
-> 
-> (snip)
-> 
-> > [Severity: High]
-> > Does using readl() on the host's MSI target address generate a dangerous
-> > non-posted PCIe Memory Read Request?
+On Fri, 31 Jul 2026, Manivannan Sadhasivam wrote:
+> On Fri, Jul 10, 2026 at 03:25:46PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Jul 08, 2026 at 04:30:20PM +0200, Manivannan Sadhasivam wrote:
+> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > 
+> > > It is not recommended to enable/disable the ASPM states on the back of the
+> > > PCI core directly using the LNKCTL register. It will break the PCI core's
+> > > knowledge about the device ASPM states. So use the APIs exposed by the PCI
+> > > core to enable/disable ASPM states.
+> > > 
+> > > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+> > > 
+> > > Reported-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > ---
+> > >  drivers/net/wireless/ath/ath12k/Kconfig |  2 +-
+> > >  drivers/net/wireless/ath/ath12k/pci.c   | 19 +++----------------
+> > >  drivers/net/wireless/ath/ath12k/pci.h   |  4 +++-
+> > >  3 files changed, 7 insertions(+), 18 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
+> > > index 4a2b240f967a..7852ede3eaea 100644
+> > > --- a/drivers/net/wireless/ath/ath12k/Kconfig
+> > > +++ b/drivers/net/wireless/ath/ath12k/Kconfig
+> > > @@ -1,7 +1,7 @@
+> > >  # SPDX-License-Identifier: BSD-3-Clause-Clear
+> > >  config ATH12K
+> > >  	tristate "Qualcomm Wi-Fi 7 support (ath12k)"
+> > > -	depends on MAC80211 && HAS_DMA && PCI
+> > > +	depends on MAC80211 && HAS_DMA && PCI && PCIEASPM
 > > 
-> > Most host interrupt controllers (like GIC ITS or APIC) do not support reads
-> > to their doorbell addresses and will reply with an Unsupported Request (UR).
+> > As Sashiko pointed out [1], I think adding the PCIEASPM dependency is
+> > an issue.  The PCI core should provide stubs or whatever is necessary
+> > to make ath12k work even if PCIEASPM isn't selected.
 > > 
-> > The DWC controller translates the UR completion into an AXI Slave Error,
-> > which can trigger a synchronous external abort and kernel panic on the
-> > endpoint CPU.
-> > 
-> > This concern applies to flushing posted writes in both
-> > dw_pcie_ep_raise_msix_irq() and dw_pcie_ep_raise_msi_irq().
-> > 
-> > > +		dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
-> > > +		ep->msi_iatu_mapped = false;
-> > > +	}
-> > > +
-> > >  	msg_addr = dw_pcie_ep_align_addr(epc, msg_addr, &map_size, &offset);
+> > I'm guessing this hardware depends on the ability to disable ASPM even
+> > without PCIEASPM so we probably would need more than just empty stubs.
+> > We do build aspm.c unconditionally now and we provide LTR and L1SS
+> > save/restore regardless of PCIEASPM.  Maybe we need something similar
+> > here.
 > > 
 > 
-> I don't see how this comment is valid.
-> 
-> I tested this patch with two Rock 5Bs, one in EP mode and one in RC mode.
-> 
-> The PCIe controller on the host:
-> https://github.com/torvalds/linux/blob/v7.2-rc5/arch/arm64/boot/dts/rockchip/rk3588-extra.dtsi#L370
-> is indeed using GIC ITS, and I saw no issues at all.
-> 
-> Additionally, we have already been doing a readl() on the MSI-X target
-> address, for every single MSI-X, since commit c22533c66cca ("PCI: dwc: ep:
-> Flush MSI-X write before unmapping its ATU entry"), first included in
-> v7.0-rc2, and not a single soul has complained since then.
-> 
-> So personally I am not too concerned.
-> 
+> This was discussed in v2 and Ath maintainer Jeff was in agreement with the
+> dependency:
+> https://lore.kernel.org/linux-pci/705a4fe5-658e-25ac-9e4d-6b8089abca46@linux.intel.com
 
-So either the readl() is not generating a PCIe MRd TLP or the host is not
-generating UR for the MRd TLP which ends up crashing the Endpoint. In any case,
-since the MSI-X read-back was present for a while, we don't need to worry about
-this theory.
+To further that, any driver that has to disable ASPM clearly does depend 
+on capacility to disable ASPM. So having depends on PCIEASPM makes perfect 
+sense in these cases. I suppose the status quo of drivers doing that on 
+their own has just gotten many blind for that obvious dependency.
 
-- Mani
+In any case, PCIEASPM is gated by EXPERT so one should really know what 
+one is doing if one is goind to disable it, if that ends up losing some 
+driver that depends on PCIEASPM important for that config minimalist, 
+clearly the person wasn't expert enough to touch that config option :-).
+
+So I think sashiko is simply wrong in this case, and having empty stubs is 
+wrong as well because it encourages drivers to do driver-side ASPM disable 
+behind core's ASPM back.
+
+I don't see much benefit from letting these drivers to build without 
+PCIEASPM (the non-empty "stubs" approach Bjorn suggests). Is that ability 
+to satisfy some extreme config minimalist who wants to partially disable 
+ASPM on system that has a broken HW? Or just to make sashiko happy? Why 
+make things harder than what "depends on PCIEASPM" already provides for 
+us, regardless of sashiko thinking we "lose" something in that trade.
+
+I, on the other hand, think it's win to properly mark drivers that need 
+PCIEASPM with depends on, even if it's just for the capability to disable 
+ASPM.
 
 -- 
-மணிவண்ணன் சதாசிவம்
+ i.
+
