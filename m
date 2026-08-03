@@ -1,179 +1,203 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95EE03515D7;
-	Mon,  3 Aug 2026 22:55:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCB96344D91;
+	Mon,  3 Aug 2026 22:56:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785797714; cv=none; b=ohXseoo4iO6D/UoyudxfOVyKkJrB6pYnuzyf/+FDGml0VlLGzG5lGE2+n7Dyw4ElroTKW9hTTJM+eu1CCgbq1iRq2qZ8Tqw0h1lXtPwPPzPFR/xzs9YAKgo96OxfBWnL1F7vgKRfNVLpaG6vTHSfmb61WusoTWFGXv2RATckU2s=
+	t=1785797782; cv=none; b=EoTs2iJX8X6mIdEcJsK2njZ45MiZckkjtNeZpMkHxty0xBOprOXmPuCn27Qrd/m05+z8gq5d7z3K+D7obRW8bY5jHD/uPk+wQXSMzi6aM3ssUmeNa2YvXCWqo3UTJZVEYb11gUesU9+2oXRHfhlPAtMvXqIF4MxVkdgzVHkCjxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785797714; c=relaxed/simple;
-	bh=gpuXy56iuA6qzt0PwPHHA9ClP8CWCo97xrpav5Q8i28=;
+	s=arc-20240116; t=1785797782; c=relaxed/simple;
+	bh=ZcKa/DXNbkIcEDaJ72DR7BAwMWyqy475yUwZWZw7Pb0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hc890VHYDCVcgsMOEpYBcYilFxOvjfhkmVS7hq9COXx1XwHKYTlgRzP7Mnk2ukwvdhm8j2deaq6DQ2NpKdy/YAIBJ1NQ6s4xc+BF0ngUjKokEsS16kwy9dyBGSorZFyHTROLKOpkDzoWIvE8njkeVXGby66Y0YWXlLc+WTGTAeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EFLInAYx; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=b2xM7aBsm1BycYPVAMVN1V8AgQGMf3RSRufs7MoOJ0TZMndzxmaVGYkTJij06YweFZDprnv77pHi6zRh54ZXljIQTO2bpgt+eD4+rBE0JJkcXfO65dfj3PIY9ozmjsXkiJI4p/F8UWHZUT1pTbu+fIifh5yU4taQC0Pkt1IIvZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PbDgjC4p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EFLInAYx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 154691F00A3D;
-	Mon,  3 Aug 2026 22:55:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbDgjC4p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42DEC1F000E9;
+	Mon,  3 Aug 2026 22:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785797713;
-	bh=MZeCDprr4hDSa6StMM52j//5F75Xpqvt9SjHfcLjyE4=;
+	s=k20260515; t=1785797780;
+	bh=kNyvTT3XC+nH9xcHCg/oqYibSoaOxSgwRdvFqBaA0BE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EFLInAYx1UrpJCIMz/3vcPJiDchvfCJ0BcZaAr4mSMwMiae0HTIJXkob3K01lzrjE
-	 zEKBoiNpkmOAK78cVcf9fW1FB6J9bg9kAi2LSirh1xXaHwdUPQ3Esha81vdI5lJMtO
-	 WhViKref/c2vV/zTVl5qgDUK9PEte7q6oN5DGgzXRKYya/PzCu/kzWLAj6GhFbm6N8
-	 kpRUw+RtFcEnw9/VZRwjMMZ6Lcowod3/uTFyA3NiKIlPv9yU/ZUl9/8sF4nNaFgBTB
-	 mMKft1XvN3d9iGAg3f9LJ96hj8HdE7TgGAFmaC1ucS23LpL85ykSIvHhvM35uqlQ7b
-	 YiZg6vF6B3IOg==
+	b=PbDgjC4po4Xg9G/gOyHcW7W9IpEhra1Q/jnt0xNfHJF6IDHuc2MMBX99ifUJkVmyr
+	 9CrLEdxHHFqdXUPnEYghaeVlmkg7P2ehPMNbILvpdfMRnnmKrQAF47Ufw40nKmavcb
+	 8oJ25HrRp2pfOt+FIUvXyfop8URpc/lbuXXUzwFYwIbKElsBQUFVkYkRkMp5X6GjW9
+	 I4XoJ9RCaKp9csHdnD4G1GwTUnVV8UNUMQTT/wiZpKTfIG78BIlbSEtMOCknh0hm2/
+	 tujO1wxERHTdDy2ijm+v5s96hrnwAxIf3s+ts4Nt9kqiz6NPztXAo3LO8QZJZjJchh
+	 eaMSsSOdMMmNQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 13/14] PCI/CXL: Mask/Unmask CXL protocol errors
+Subject: Re: [PATCH v19 07/14] PCI: Establish common CXL Port protocol error
+ flow
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Terry Bowman" <terry.bowman@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260803221810.3685703-14-terry.bowman@amd.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260803221810.3685703-8-terry.bowman@amd.com>
 References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-14-terry.bowman@amd.com>
+ <20260803221810.3685703-8-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 22:55:12 +0000
-Message-Id: <20260803225513.154691F00A3D@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 22:56:19 +0000
+Message-Id: <20260803225620.42DEC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Setting `ras =3D NULL` on devm_add_action_or_reset failure causes =
-a deterministic kernel panic on subsequent uncorrectable errors.
-- [High] Root port `dport->regs.ras` is exposed to concurrent error handler=
-s before it is mapped, leading to a kernel panic.
+
+Pre-existing issues:
+- [Critical] Concurrent devm cleanup and port driver unbinds cause a Use-Af=
+ter-Free of `cxl_dport` and its MMIO registers in the AER handling workqueu=
+e.
 --
 
---- Patch [13]: [PATCH v19 13/14] PCI/CXL: Mask/Unmask CXL protocol errors =
----
-commit 882744bb847d3cd61f8f100025ea14b41fb68044
+--- Patch [7]: [PATCH v19 07/14] PCI: Establish common CXL Port protocol er=
+ror flow ---
+commit cee1514715e6511f03b640de984db92a0e13bd58
 Author: Terry Bowman <terry.bowman@amd.com>
 
-PCI/CXL: Mask/Unmask CXL protocol errors
-
-CXL protocol errors must be unmasked to be reported. Add
-pci_aer_mask_internal_errors() and pci_aer_unmask_internal_errors() helpers
-to mask and unmask internal errors, and register a devm action to restore
-the mask on teardown.
+PCI: Establish common CXL Port protocol error flow
+   =20
+Establish a single CXL protocol error path shared by both CXL Virtual
+Hierarchy (VH) and Restricted CXL Host (RCH) topologies. AER dispatch in
+handle_error_source() uses is_cxl_error() and cxl_forward_error() to route
+CXL protocol errors through the AER-CXL kfifo to a cxl_core consumer for
+logging and recovery.
 
 > diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 0254b7ec64c30..40a8a03070652 100644
+> index e307361bb39e4..83df544e5a656 100644
 > --- a/drivers/cxl/core/ras.c
 > +++ b/drivers/cxl/core/ras.c
-> @@ -114,16 +114,64 @@ static void cxl_cper_prot_err_work_fn(struct work_s=
-truct *work)
+
 [ ... ]
->  static void cxl_dport_map_ras(struct cxl_dport *dport)
+
+> @@ -335,3 +371,79 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *=
+pdev,
+>  	return PCI_ERS_RESULT_NEED_RESET;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_error_detected, "CXL");
+> +
+> +static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port=
+ *port,
+> +				   struct cxl_dport *dport, int severity)
+> +{
+
+[ ... ]
+
+> +}
+> +
+> +static void __cxl_proto_err_work_fn(struct cxl_proto_err_work_data *wd)
+> +{
+> +	struct cxl_dport *dport;
+> +
+> +	/*
+> +	 * For RCD devices, handle RCH Downstream Port errors first.
+> +	 * cxl_handle_rdport_errors() does its own port lookup and locking,
+> +	 * keeping the Downstream Port lock separate from the Endpoint Port
+> +	 * lock taken below.
+> +	 */
+> +	if (is_cxl_restricted(wd->pdev))
+> +		cxl_handle_rdport_errors(wd->pdev);
+> +
+> +	struct cxl_port *port __free(put_cxl_port) =3D find_cxl_port_by_dev(&wd=
+->pdev->dev, NULL);
+> +	if (!port) {
+> +		dev_err_ratelimited(&wd->pdev->dev,
+> +				    "Failed to find parent port device in CXL topology\n");
+> +		return;
+> +	}
+> +
+> +	guard(device)(&port->dev);
+> +	if (!port->dev.driver) {
+> +		dev_err_ratelimited(&port->dev,
+> +				    "Port device is unbound, abort error handling\n");
+> +		return;
+> +	}
+> +
+> +	dport =3D cxl_find_dport_by_dev(port, &wd->pdev->dev);
+
+[Severity: Critical]
+This is a pre-existing issue, but does checking !port->dev.driver safely gu=
+ard
+against an ACPI unbind racing with the AER handling workqueue?
+
+The commit message states the kfifo consumer "holds the Port device lock and
+skips handling when the Port driver is unbound, so RAS register iomaps are
+not torn down while the handler reads them."
+
+However, for Root Ports, the cxl_dport and its devres are attached to the
+ACPI device (port->uport_dev), not &port->dev.
+
+If devres_release_all(acpi_dev) runs concurrently with the AER workqueue,
+it frees dport and unmaps the registers independently of device_lock(&port-=
+>dev).
+
+Because the cxl_port driver remains bound until devres_release_all(acpi_dev)
+finishes and unregisters the port, checking !port->dev.driver wouldn't prot=
+ect
+against this. Could this lead to a use-after-free of the cxl_dport structure
+and reading from unmapped MMIO (RAS/AER registers) in __cxl_proto_err_work_=
+fn()?
+
+> +	if (!dport && (pci_pcie_type(wd->pdev) =3D=3D PCI_EXP_TYPE_ROOT_PORT ||
+> +		       pci_pcie_type(wd->pdev) =3D=3D PCI_EXP_TYPE_DOWNSTREAM)) {
+> +		dev_err_ratelimited(&wd->pdev->dev,
+> +				    "Failed to find dport device in CXL topology\n");
+> +		return;
+> +	}
+> +
+> +	cxl_handle_proto_error(wd->pdev, port, dport, wd->severity);
+> +}
+
+[ ... ]
+
+> diff --git a/drivers/cxl/core/ras_rch.c b/drivers/cxl/core/ras_rch.c
+> index e0e01aa5eba6c..41959c0333711 100644
+> --- a/drivers/cxl/core/ras_rch.c
+> +++ b/drivers/cxl/core/ras_rch.c
+
+[ ... ]
+
+> @@ -110,18 +109,21 @@ static bool cxl_rch_get_aer_severity(struct aer_cap=
+ability_regs *aer_regs,
+>  	return false;
+>  }
+> =20
+> -void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds)
+> +void cxl_handle_rdport_errors(struct pci_dev *pdev)
 >  {
->  	struct cxl_register_map *map =3D &dport->reg_map;
->  	struct device *dev =3D dport->dport_dev;
+> -	struct pci_dev *pdev =3D to_pci_dev(cxlds->dev);
+>  	struct aer_capability_regs aer_regs;
+>  	struct cxl_dport *dport;
+>  	int severity;
 > =20
-> -	if (!map->component_map.ras.valid)
-> +	if (!map->component_map.ras.valid) {
->  		dev_dbg(dev, "RAS registers not found\n");
-> -	else if (cxl_map_component_regs(map, &dport->regs.component,
-> -					BIT(CXL_CM_CAP_CAP_ID_RAS)))
-> +		return;
-> +	}
-> +
-> +	if (cxl_map_component_regs(map, &dport->regs.component,
-> +				   BIT(CXL_CM_CAP_CAP_ID_RAS))) {
->  		dev_dbg(dev, "Failed to map RAS capability.\n");
-> +		return;
-> +	}
-> +
-> +	if (!dev_is_pci(dev))
-> +		return;
-> +
-> +	cxl_unmask_proto_interrupts(dev);
-> +	if (devm_add_action_or_reset(dport_to_host(dport),
-> +				     cxl_mask_proto_irqs, dev)) {
-> +		dev_warn(dev, "failed to defer CXL proto-irq mask; CXL protocol error =
-reporting disabled\n");
-> +		dport->regs.component.ras =3D NULL;
-
-[Severity: High]
-Does setting ras to NULL here risk a kernel panic?
-
-If a CXL protocol error triggers in the brief window between unmasking
-and devm_add_action_or_reset() masking it again on failure, the AER IRQ=20
-handler will enqueue the error to the kfifo.
-
-When the kfifo worker dequeues the error and calls cxl_do_recovery(),
-will it encounter a NULL ras_base and unconditionally call=20
-panic("CXL: UCE with unmapped RAS registers")?
-
-> +	}
->  }
-[ ... ]
-> @@ -165,8 +211,21 @@ void devm_cxl_port_ras_setup(struct cxl_port *port)
+> -	struct cxl_port *port __free(put_cxl_port) =3D
+> -		cxl_pci_find_port(pdev, &dport);
+> +	struct cxl_port *port __free(put_cxl_port) =3D cxl_pci_find_port(pdev, =
+NULL);
+>  	if (!port)
+>  		return;
 > =20
->  	map->host =3D &port->dev;
->  	if (cxl_map_component_regs(map, &port->regs,
-> -				   BIT(CXL_CM_CAP_CAP_ID_RAS)))
-> +				   BIT(CXL_CM_CAP_CAP_ID_RAS))) {
->  		dev_dbg(&port->dev, "Failed to map RAS capability\n");
-> +		return;
-> +	}
-> +
-> +	dev =3D is_cxl_endpoint(port) ? port->uport_dev->parent : port->uport_d=
-ev;
-> +	if (!dev_is_pci(dev))
+> +	guard(device)(&port->dev);
+> +	dport =3D cxl_find_dport_by_dev(port, pdev->dev.parent);
+> +	if (!dport)
 > +		return;
 > +
-> +	cxl_unmask_proto_interrupts(dev);
-> +	if (devm_add_action_or_reset(&port->dev, cxl_mask_proto_irqs, dev)) {
-> +		dev_warn(&port->dev,
-> +			 "failed to defer CXL proto-irq mask; CXL protocol error reporting di=
-sabled\n");
-> +		port->regs.ras =3D NULL;
+> +	if (!cxl_rch_get_aer_info(dport->regs.dport_aer, &aer_regs))
 
-[Severity: High]
-Can setting ras to NULL here also cause a panic?
+[Severity: Critical]
+This is a pre-existing issue, but does this still suffer from the same race?
 
-Similar to the dport case, if an error is triggered and logged before the
-devm action masks the interrupts again, will cxl_do_recovery() panic when it
-accesses the NULL ras_base?
+The dport is looked up under the &port->dev lock, but for Root Ports its
+devm lifecycle is tied to the parent ACPI device. If a concurrent ACPI unbi=
+nd
+occurs, couldn't dport be freed and unmapped before being dereferenced here?
 
-> +	}
->  }
-
-[Severity: High]
-Can exposing a partially initialized dport cause a panic?
-
-Looking at __devm_cxl_add_dport() in drivers/cxl/core/port.c, the dport is=
-=20
-published to the xarray before its RAS registers are mapped:
-
-drivers/cxl/core/port.c:__devm_cxl_add_dport() {
-	...
-	rc =3D add_dport(port, dport);
-	if (rc)
-		goto err;
-	...
-	devm_cxl_dport_ras_setup(dport);
-	...
-}
-
-If firmware left CXL protocol errors unmasked, or if an error is already
-pending in the kfifo, the kfifo consumer can execute concurrently. It
-successfully looks up the partially initialized dport in the xarray and
-passes it to cxl_do_recovery().
-
-Because the mapping hasn't completed, to_ras_base() returns NULL, resulting
-in an immediate panic("CXL: UCE with unmapped RAS registers").
-
-Since cxl_do_recovery() was introduced earlier in this series, does this
-make the race fatal?
+>  		return;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803221810.3685=
-703-1-terry.bowman@amd.com?part=3D13
+703-1-terry.bowman@amd.com?part=3D7
