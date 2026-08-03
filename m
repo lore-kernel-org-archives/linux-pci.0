@@ -1,56 +1,56 @@
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E19B2EEE71
-	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 21:51:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F1030FC33
+	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 21:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785793869; cv=none; b=EKZvFq4LUGZVWZQl4XdNb689D3tkNh4cCR8ayDrFkvNDdAOdbcS61pxHXVmGLO/6VVswPbSLI3/Yjo1IK6lovwoclfxhOYdIMHWfh9I8RvO21C8q88nXbw8SgZcsj3FCt/fiYTPTSClYeudK7OG7trvzbeuEmu33/fIaZ9oTdrA=
+	t=1785793870; cv=none; b=ExLljiwjUUEAQEjbBTd+QLGlaY4f0K31WfIlK4Q6zK2vMtU6Wjr+p02EBRJZDaXBgvnsRDSvtI8jceXvd498562+x/3YUTUZW1ndlaKz4FmJ21Qi31PqbAgiP0CjoyZg5e59MXZjhJR5VMHIqwWYhNZqDvFS7pe7MKUem4OUDPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785793869; c=relaxed/simple;
-	bh=/n1lx7kZVGHY/CjYSQUPtmCH3DR+8LKo5cFZlGTFwfY=;
+	s=arc-20240116; t=1785793870; c=relaxed/simple;
+	bh=FsUgLk766ZRbbjOIAaiSRCuqvU+yCxL6cW0M3pAZ+FI=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=LfD3qgnC+1c++IPhAix+bAnjrCAtz32zMTcb/7theDoxNQrdJJNIzdngAgU+Ostn3vL+ikhcd/XBnQep+fLceby1K9Z0ANjbgeFF6wMPuQDtSu3dqwE1/BPexz7Y+HL1SpnjbT2TWmsUS2e4syHog2y3QyHO+28GD/kjgU6N/5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=b/TGiOku; arc=none smtp.client-ip=209.85.210.199
+	 To:Cc:Content-Type; b=RTcPQ+cLreeY1XT3IxRHH0wq5FuQMyiy9XRJpeEq8WAV97xPzoqlNcXE76PGJJKAXMgUMxT/vIb5RoNLzJqg5FDwNWve2nqqvw8rw9XZkCvYD4L+kRw9xMQt/DlJ8zdTnY2hyvn14nMtzUMDEVoBcE6SrDevUh2GydGJPQuQ73o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Vks5tQTj; arc=none smtp.client-ip=209.85.214.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="b/TGiOku"
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-84870e7f498so4344441b3a.3
-        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2026 14:51:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Vks5tQTj"
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cc86a9ef97so73108835ad.3
+        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2026 14:51:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785793868; x=1786398668; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1785793869; x=1786398669; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=V3RiD/GImmxOZZ69pO9kk8WyvHse/kOu0dWQ2OD9gW0=;
-        b=b/TGiOkucydAQe9yKgtIaVah7Q4/AFgn9vU98tLqDvblGnkJqMmifMVYbAID0cgj/r
-         Aq9xwJ1K5zuftraxx9Lvzl6BW87241yaydzFctbGBtV2NnJjOMhoymIjEOK+AXs0JesA
-         b7WtJnOX2ySM2zHZE9Rbiz1C3192u29LfLeXv8f71VD/Lt3pMXl+J4B7aMOEtsSc8zTb
-         p4k5iUuJcrBK7MmcXrkaw81cwPF13wQl1qZ8D4HWsNGPl/l1603ojOWjakyDV4o/AQjY
-         TJd7zrdheBIPcdEVZ4YGg7Iz0MGHy0+bctYC9wv9W3hGdp0UZv+ASYXgUS0h4WtY4xGh
-         R+iw==
+        bh=LRBKJRqDdwyuffVZ6WAc5QHmw5xxQBAcOoh92VnWqbQ=;
+        b=Vks5tQTjEbJWuSgwuE5wyYsgyI0VfVu8z97i8uJW/T3JqstxxsEpLH9aiM1Hy4V2hm
+         gyAsYo/KkgJoGZMBm9b4qa/Bs5TaIrTjmTduVkpJXtN4hZ0IDLExINAH3g4yZdmC8wzz
+         xb8WKvWSgkFwI3kX30b82zfaTQV4D329kbtj9DaOx1B6MajoZ/l0pqcNzVplm7IOmw7Y
+         ber62tgQEdN+f3kbN6hIt6UXLDrU/QEpJ8ZPYtQfg0LCILJRSOP86xaDPRRU8VPvvqyo
+         aIqQvsHEgb7spllCLShUUC+uvNVE9y2E9vWQ6pbmC9DDAB+rGeE6AB71B7vSVNcnMijv
+         awTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785793868; x=1786398668;
+        d=1e100.net; s=20251104; t=1785793869; x=1786398669;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=V3RiD/GImmxOZZ69pO9kk8WyvHse/kOu0dWQ2OD9gW0=;
-        b=FMIEF+gGEJKF5SP5hQKyMBtZTom0/HqtJItja9CaJM04WPtj9qR6RC+xqS44r8VXoG
-         eXUSX6cNW25DHRLvCiUsqqVLic0YhN5QnasON0AwoOf8sKxdjQWZpdpGIhe/XDRr+El7
-         av2kk6t9YxfQyXwHAh0vyi+yNxwVY2OXHAvfJhHuGyuXps1yDxSeKOVhu3rCruCh1bsG
-         CoY42WytrMGVNjkAnrV76IGCOHjKFZ6JpaTMghfC+catCO+1jYGFmTY20RnMllfMkf5S
-         HqmdMJPo64/+MAku+VpdUi6SBJ30MpDOwlwPiWuXw3HFUCc6iPPpgLaQf9s7olGzJd9j
-         D6PQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rqgrlzi5eYXdgvjdX0DrGqVc21pzXqu58PQJv8va5qQkHqxdtoWG9a7hOdhYgtDucSo8JbB3tkTlAo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5bTydzXwrAvZnZFsdGfbYPWpzZ3uVo9yTUEZckxrd4b+KXfXu
-	DUEqHsE506jP7h3lDcAKmsxakddkU9eHrtNPZhiKJd3St6xpQDC/Rr7Tx70VFuNqd7nYZEL1sgZ
-	PIfqnRnSoczXZ+62Uc0nxNoY0pbu0WyuHGQ==
-X-Received: from pfet15.prod.google.com ([2002:aa7:938f:0:b0:84b:62d1:9fe3])
+        bh=LRBKJRqDdwyuffVZ6WAc5QHmw5xxQBAcOoh92VnWqbQ=;
+        b=HdMI1pZiuzoZJRwWVWNKEAW9Pzu8oyHOvbUpMVOwfVyCF0LdpzEUsdHEYLeCWgV54U
+         3iOcqrI/aTWjHkMHbYx77PuEwNpG0W0HX2jUII501KOrvGxPftLVrzz0bg9r1qq3uB1/
+         uyNFWtytBp8FjmJaNsoBGv1NKrH3ngFUCV9pW6LWr1RknMp9x9UeD3daVUdcyR2E7BzD
+         iAKEm5+po2YWTxC4/LLOLXjvsRSVC5jXHgkAKBHzSViNRm3puB3ci8huFi+Yevnldvzj
+         fP109glc/9nsdOEkqEPktprNM50OmzC16Pwkw2N8SKTqP6ndv6RWE6bz3jZ8f7SxNWGV
+         pgDw==
+X-Forwarded-Encrypted: i=1; AHgh+RrwllnfEiA01goCGI4sqKlhSNgHMOprYI2rdEzGnHV5/ka3NGfOjgw7rzneIGDUnoIfVSC729q7Rks=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrBLZYsDB7Sl5nZqFn3XDTQaFRVDNBkUiqQa80fHLmoq9oS2e4
+	RibNTX4hn2HbotW6ZNtb9n8cCr3EqV2+ZutfFDNnfMXCL0MR4FnGOIc3UTZ1tkZaDn1W5N4MuVW
+	qFAJC+k0Vv+GnqMM1v9mMtfnhRSyNt1+8+A==
+X-Received: from plxd6.prod.google.com ([2002:a17:902:ef06:b0:2cc:7709:b166])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:4293:b0:848:2ae4:d2ba with SMTP id d2e1a72fcca58-84ee4864ed1mr9846295b3a.28.1785793867656;
- Mon, 03 Aug 2026 14:51:07 -0700 (PDT)
-Date: Mon, 03 Aug 2026 21:51:05 +0000
+ 2002:a17:903:390b:b0:2cf:bfbb:61e2 with SMTP id d9443c01a7336-2d0524723b8mr113426065ad.39.1785793868519;
+ Mon, 03 Aug 2026 14:51:08 -0700 (PDT)
+Date: Mon, 03 Aug 2026 21:51:06 +0000
 In-Reply-To: <20260803-b4-fix-aer-memleaks-v3-0-e87159611933@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,9 +60,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260803-b4-fix-aer-memleaks-v3-0-e87159611933@google.com>
 X-Mailer: b4 0.14.3
-Message-ID: <20260803-b4-fix-aer-memleaks-v3-1-e87159611933@google.com>
-Subject: [PATCH v3 1/2] PCI/AER: Fix memory leak in aer_recover_queue() on
- kfifo buffer overflow
+Message-ID: <20260803-b4-fix-aer-memleaks-v3-2-e87159611933@google.com>
+Subject: [PATCH v3 2/2] PCI/AER: Fix memory leak in aer_recover_work_func()
+ when pci_dev is missing
 From: Priyank Rathod <rathodpriyank@google.com>
 To: Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, 
 	Bjorn Helgaas <bhelgaas@google.com>
@@ -71,41 +71,69 @@ Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
 Content-Type: text/plain; charset="utf-8"
 
 When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
-for aer_capability_regs (aer_regs) from ghes_estatus_pool and passes it
-to aer_recover_queue() to be enqueued into aer_recover_ring.
+for aer_capability_regs (entry.regs) from ghes_estatus_pool and queues
+the entry into aer_recover_ring.
 
-If kfifo_in_spinlocked() fails due to a buffer overflow,
-aer_recover_queue() logged an error message but returned without freeing
-aer_regs. Because the entry was rejected and never inserted into the
-queue, aer_recover_work_func() could never dequeue or free it, leaking
-the allocated ghes_estatus_pool memory.
+In aer_recover_work_func(), items are popped from aer_recover_ring via
+kfifo_get(). If pci_get_domain_bus_and_slot() fails to find a matching
+pci_dev, the code previously executed 'continue', bypassing the call to
+ghes_estatus_pool_region_free(). As a result, the memory allocated for
+entry.regs from ghes_estatus_pool was leaked.
 
-Free aer_regs via ghes_estatus_pool_region_free() when
-kfifo_in_spinlocked() fails on buffer overflow.
+Refactor aer_recover_work_func() to ensure ghes_estatus_pool_region_free()
+is called unconditionally for every dequeued entry, releasing the pool
+memory even when pci_dev is missing.
 
 Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 ---
- drivers/pci/pcie/aer.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/pcie/aer.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index c4fd9c0b2a54..967cde9dd519 100644
+index 967cde9dd519..9683cdef649b 100644
 --- a/drivers/pci/pcie/aer.c
 +++ b/drivers/pci/pcie/aer.c
-@@ -1274,9 +1274,12 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 	if (kfifo_in_spinlocked(&aer_recover_ring, &entry, 1,
- 				 &aer_recover_ring_lock))
- 		schedule_work(&aer_recover_work);
--	else
-+	else {
- 		pr_err("buffer overflow in recovery for %04x:%02x:%02x.%x\n",
- 		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
-+		ghes_estatus_pool_region_free((unsigned long)aer_regs,
-+					    sizeof(struct aer_capability_regs));
-+	}
+@@ -1223,14 +1223,13 @@ static void aer_recover_work_func(struct work_struct *work)
+ 	while (kfifo_get(&aer_recover_ring, &entry)) {
+ 		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
+ 						   entry.devfn);
+-		if (!pdev) {
++		if (!pdev)
+ 			pr_err_ratelimited("%04x:%02x:%02x.%x: no pci_dev found\n",
+ 					   entry.domain, entry.bus,
+ 					   PCI_SLOT(entry.devfn),
+ 					   PCI_FUNC(entry.devfn));
+-			continue;
+-		}
+-		pci_print_aer(pdev, entry.severity, entry.regs);
++		else
++			pci_print_aer(pdev, entry.severity, entry.regs);
+ 
+ 		/*
+ 		 * Memory for aer_capability_regs(entry.regs) is being
+@@ -1242,13 +1241,15 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		ghes_estatus_pool_region_free((unsigned long)entry.regs,
+ 					    sizeof(struct aer_capability_regs));
+ 
+-		if (entry.severity == AER_NONFATAL)
+-			pcie_do_recovery(pdev, pci_channel_io_normal,
+-					 aer_root_reset);
+-		else if (entry.severity == AER_FATAL)
+-			pcie_do_recovery(pdev, pci_channel_io_frozen,
+-					 aer_root_reset);
+-		pci_dev_put(pdev);
++		if (pdev) {
++			if (entry.severity == AER_NONFATAL)
++				pcie_do_recovery(pdev, pci_channel_io_normal,
++						 aer_root_reset);
++			else if (entry.severity == AER_FATAL)
++				pcie_do_recovery(pdev, pci_channel_io_frozen,
++						 aer_root_reset);
++			pci_dev_put(pdev);
++		}
+ 	}
  }
- EXPORT_SYMBOL_GPL(aer_recover_queue);
- #endif
+ 
 
 -- 
 2.55.0.571.g244d577d93-goog
