@@ -1,72 +1,69 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F0DBB5FDA7;
-	Mon,  3 Aug 2026 22:07:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79BF2C08CF
+	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 22:14:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785794847; cv=none; b=LMsHCRQrAYRTcp6hU4+M4nBQwYU4IGdLO3zA7yC5icnfz5ZiAcoH2mtTYcyFgkg9jwWjSFHolbIQJRpJGRmm2/Fm31Pehnnhix0FnJlEaU+izAcJs7p24iQUkL/mMCP/akvv4JhWXWZXkrhL4f5p8rve1D6Vf33Z9PONNW3/Ya4=
+	t=1785795254; cv=none; b=C//Oetw4nb9urPBt6NSVAB3RGySMNLgd9Wqk11QeQqv2xgv9jyjPAjCOccG0WbRqyFZ9/erfdx0z+VBstIYYl597vrw/1klOhX+xSEHu/zVS9/k8qMaPD9PuXLwT8MdDw+oyGHND3JwhECTJeoZCOjU3X3Vuh33QWMWLX+QCTVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785794847; c=relaxed/simple;
-	bh=rmFMREnTBIjEXj9bMh4iMaywZD7aqXUUh5HXEtOM/JM=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Po587ddBsL5O+jCs5tH6msG5Ji3L6n3y0uxsPN6c8KWGuYEtglHTxCE3Kf/FSoWCJ/RfM+l9ix0oUziGaPxaTcZpps+4yzxyh9MIYIeyzvKL4Sb9HBxb2zE3wdC5l/7+rParriBa4t0y2sTC2o762SAZX4z8QGGlumfY7WkI64o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 6032292009C; Tue,  4 Aug 2026 00:07:16 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 5A3FE92009B;
-	Mon,  3 Aug 2026 23:07:16 +0100 (BST)
-Date: Mon, 3 Aug 2026 23:07:16 +0100 (BST)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Thorsten Leemhuis <regressions@leemhuis.info>
-cc: Andreas Wild <andiwild@gmail.com>, linux-pci@vger.kernel.org, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org, 
-    Linux kernel regressions list <regressions@lists.linux.dev>, 
-    edwardmalik95@icloud.com
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
- no link
-In-Reply-To: <4cf40370-47e8-4143-bebe-bfab78ac2fd4@leemhuis.info>
-Message-ID: <alpine.DEB.2.21.2608032257510.55540@angie.orcam.me.uk>
-References: <20260801201244.4421-1-andiwild@gmail.com> <4cf40370-47e8-4143-bebe-bfab78ac2fd4@leemhuis.info>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	s=arc-20240116; t=1785795254; c=relaxed/simple;
+	bh=6MPYbmYk2yb1B9EIe1WRPNR8YVoo9tQwOb7AOG3b3Lo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=lVbIoHCjETUN8aKn7yRFotHUjqgyGdln1ZK5llIubpqF46DT3hJVvDVpC//BT4buCxHaRy3PHjVv6wk4b3aTgk3SkiSSeU56mESdu3QbzteZ7H57Q+G+XuUpIduCFdhLYyMvAwQP93uJPGa6FgTI1jloo1LFVr2A2K7mQ7sqDFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ml23BrJY; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ml23BrJY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D56C1F000E9;
+	Mon,  3 Aug 2026 22:14:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785795252;
+	bh=6MPYbmYk2yb1B9EIe1WRPNR8YVoo9tQwOb7AOG3b3Lo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ml23BrJY+EUBv7aqvzzecFoESB4NhKP9+DHaJ2g6JeCk8Pxc9xoNiSSOyqE/+fcqn
+	 NVOS1we9nLSqj4Bqejjb/y8sbd4QcYRhaTHL95y9CXBtDyIrQMyZby2C6w6OrZu5PO
+	 fWdsdBR4hiGjQ5ei9acdpODNV988/NquMba6r8FfkUA7Imemhev82ZG9grBL/6WEdl
+	 bQMmpAQZ+UD1i08pO/zJzHA1RcDiEYVEcsLXwL0GAV3ljSwtav2+0aARdJaTlMbXuT
+	 RaVWZcHcmRxZF/fAneYpp8dnWmV3frxc93GK7zVeNPQWHtOg7DSvaBdq/fZn14Q7OM
+	 m10tEX8gg8FZA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] PCI/AER: Fix memory leak in
+ aer_recover_work_func() when pci_dev is missing
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Priyank Rathod" <rathodpriyank@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260803-b4-fix-aer-memleaks-v2-2-fd199b0171fd@google.com>
+References: <20260803-b4-fix-aer-memleaks-v2-0-fd199b0171fd@google.com>
+ <20260803-b4-fix-aer-memleaks-v2-2-fd199b0171fd@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 03 Aug 2026 22:14:11 +0000
+Message-Id: <20260803221412.3D56C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 
-On Mon, 3 Aug 2026, Thorsten Leemhuis wrote:
+> When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
+> for aer_capability_regs (entry.regs) from ghes_estatus_pool and queues
+> the entry into aer_recover_ring.
+>=20
+> In aer_recover_work_func(), items are popped from aer_recover_ring via
+> kfifo_get(). If pci_get_domain_bus_and_slot() fails to find a matching
+> pci_dev, the code previously executed 'continue', bypassing the call to
+> ghes_estatus_pool_region_free(). As a result, the memory allocated for
+> entry.regs from ghes_estatus_pool was leaked.
+>=20
+> Refactor aer_recover_work_func() to ensure ghes_estatus_pool_region_free()
+> is called unconditionally for every dequeued entry, releasing the pool
+> memory even when pci_dev is missing.
+>=20
+> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 
-> > Since commit 72780f796468 ("PCI: Always lift 2.5GT/s restriction in PCIe
-> > failed link retraining") the Target Speed quirk lifts a firmware-imposed
-> > 2.5GT/s restriction on any downstream port, without checking whether the
-> > link is up.  Where nothing is plugged in, the retraining that follows can
-> > never complete, so each attempt costs PCIE_LINK_RETRAIN_TIMEOUT_MS.  The
-> > quirk makes two of them -- the initial one and the restore on the error
-> > path -- adding a fixed 2 s to every boot.
-> 
-> TWIMC, this patch fixes a regression Edward reported here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=221801
+Sashiko has reviewed this patch and found no issues. It looks great!
 
- Thank you for the pointer.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803-b4-fix-aer=
+-memleaks-v2-0-fd199b0171fd@google.com?part=3D2
 
- As it happens attempts were made to cc me on that bug, which however went 
-nowhere as messages were sent to my long-defunct <macro@linux-mips.org> 
-e-mail address, a clear oversight of mine as I went, back in the day, 
-through numerous sites to get this updated.
-
- I have now asked bugzilla admins to help me recover my account.
-
-> [side note: the report could be more specific, yes -- I wanted to ask
-> Edward to clarify a few things (like the actual slowdown) before
-> forwarding it, but it didn't came to that when I noticed this patch and
-> asked Edward to just check if it helped -- which is did.]
-
- Tested-by tags welcome!
-
- And thank you for your input overall, really useful and appreciated!
-
-  Maciej
