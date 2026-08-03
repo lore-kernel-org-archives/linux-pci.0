@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54AD37F33E;
-	Mon,  3 Aug 2026 10:30:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18D7937F31F;
+	Mon,  3 Aug 2026 10:30:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785753017; cv=none; b=BDF6+104CdozKdoWJIoJr9qDLaX1SHUsnahd1+1Nk4VUGRu8KX2vatpMmJYZGRnLNvRX1PS2SHrwPgsnG+Folj8FCH29SIgYKUublFfdG3yy03BfJ+hhvuYMwDjGRQQFCi4JFZ+yXw40PItSN1XgXBQMIpcpjS/d655SrG7sOBI=
+	t=1785753022; cv=none; b=m4n57zE0uSdy8OmySSpolnt2RVeOy/D0w1ReZTSHPlV1XsQenFe+1j3cS9L8l988We291dVvXQQ6W/mHO/hOGhN/VYynRPFqp7Zo5+8gNa2vd7wuU1czRUWBnSlqT2FaptCQW/zDc/TDtvWIGXGebXmsAVtRNgqRx17Mb4D+BqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785753017; c=relaxed/simple;
-	bh=47+gwzbLR1bN29pgU5SS/7soUJUxYCdSq1hMuZW87Rg=;
+	s=arc-20240116; t=1785753022; c=relaxed/simple;
+	bh=1vA3DmCTulej1f3WdCaQL3Cc5X4LwIxOBQssRhrlQtE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=a8FmHCn+bA12rGQnkxiycNlC+UMP/emw785qy+SEGBcXwgLn83HbfWQrf4R2o6wnwFEZJYdCyNWZ2VxGp6wa1HKqhHn7Xe9HK0i1MhW1p3rYEiv/i8TpBn8Vau2AQkN46/BKo+hyr4KCa/eOGKO4RtnDlxuO1DQ9AH/HoFPNrjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kUOUhx8L; arc=none smtp.client-ip=198.175.65.13
+	 MIME-Version; b=Xy7aTBec+9cbmoEZ2F04uaaq/UHDMebbPK8riAiqH+VpDYJEacB12V2LpXk5ZY4pxqlqm31iCTp5JMLlH7V/wxyMuyGEZjw8K6oTxIWls9Wq6oE2qqYGTmovrzmDSSm4M7+ammrczn4gsYPUX65sYzh4eSiqdOq1jS1u1gL5j5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UAjtenvN; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kUOUhx8L"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UAjtenvN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785753015; x=1817289015;
+  t=1785753020; x=1817289020;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=47+gwzbLR1bN29pgU5SS/7soUJUxYCdSq1hMuZW87Rg=;
-  b=kUOUhx8LQreDg3ju5M75qrM/D5jHWyNPvzg6vyfUPYsLPTNUOFFawr7c
-   ez2/UxAz0KB/Lxh5fZKw5YAVgcdLRw8muTknm0twjpENfCo3/ASfYUMjj
-   zH5s8MFsHm68pFtv4hO7Za4fwpuRys4VkKYo6ur4eQv3bNCpr7p1SR8iI
-   OVHtGlcm708hxOBol9658yDP6XP6vj8xj42rtAZm+WvAbAAXaadcSCSoJ
-   LRDeD8GkxQrpRt2mXdSuo6KHJhI//mF7HQWeET4Qit1NhKC70YrArmxkD
-   +sNvB1bmmYXz2QLq7mdmo+BXQ0NXyEgDrY3rx/HpdATN7p/KE2s9PLMLp
+  bh=1vA3DmCTulej1f3WdCaQL3Cc5X4LwIxOBQssRhrlQtE=;
+  b=UAjtenvNKlbFUJz7jiN1118SN1VTYKvLzmH6Z0nACOenfLKb0QWnYTd8
+   SQgY71AJhEHPEQXdmuXsIY3+R9Np7i0UEZy4oQ+AUbLPSLO6qaG1hS+BF
+   6OscF8WPA+c4vcXU5n1/YchnpSxM5ARGrHINZy0g/Z2KXCOamcUizQJHa
+   pk1YK7SvDUcrgJ9npJspQnDlghMYr8rprXAEql/mJvUMeLyJSxohJGa3b
+   z2I3Ul12S69OdV3/hqnGtcXqVYRUsek6+zifDkmenUIvUNKka61AVEjju
+   m2PQ0VJBj84GXeWwmuSE1aPH3wnbo5g6/cR0r79Ts8eN2f+WrixiscPoN
    A==;
-X-CSE-ConnectionGUID: +1apjcckQZ6UU38viYFKSg==
-X-CSE-MsgGUID: 88ITXceoRHGSH3+u4J/QTw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11863"; a="97446115"
+X-CSE-ConnectionGUID: COrkf6Z6SXO9uz641FaaxQ==
+X-CSE-MsgGUID: JPrEa10WROm+A5L1L/T73Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11863"; a="97446125"
 X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
-   d="scan'208";a="97446115"
+   d="scan'208";a="97446125"
 Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 03:30:14 -0700
-X-CSE-ConnectionGUID: yjLGgjUrQO64eFyDzpjrSg==
-X-CSE-MsgGUID: vluNRbkUT1aHr+3GTRj1hQ==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 03:30:20 -0700
+X-CSE-ConnectionGUID: kR4aR33JScG3FweUgJcKQg==
+X-CSE-MsgGUID: CskpuwlOQAqY0UnB0j7luA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
-   d="scan'208";a="284566502"
+   d="scan'208";a="284566513"
 Received: from soc-5cg43972f8.clients.intel.com (HELO localhost) ([172.28.182.68])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 03:30:12 -0700
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 03:30:17 -0700
 From: Marcin Bernatowicz <marcin.bernatowicz@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org,
@@ -54,12 +54,13 @@ Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>,
 	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
 	Rodrigo Vivi <rodrigo.vivi@intel.com>,
 	intel-xe@lists.freedesktop.org
-Subject: [PATCH v2 0/3] PCI/IOV: Restore initial VF BAR sizing after VF ReBAR
-Date: Mon,  3 Aug 2026 12:30:04 +0200
-Message-ID: <20260803103007.209625-1-marcin.bernatowicz@linux.intel.com>
+Subject: [PATCH v2 1/3] PCI/IOV: Remember initial VF BAR sizes
+Date: Mon,  3 Aug 2026 12:30:05 +0200
+Message-ID: <20260803103007.209625-2-marcin.bernatowicz@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260505170010.3414074-1-marcin.bernatowicz@linux.intel.com>
+In-Reply-To: <20260803103007.209625-1-marcin.bernatowicz@linux.intel.com>
 References: <20260505170010.3414074-1-marcin.bernatowicz@linux.intel.com>
+ <20260803103007.209625-1-marcin.bernatowicz@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,37 +69,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-PF drivers can resize a VF BAR using VF Resizable BAR (ReBAR) support via
-pci_iov_vf_bar_set_size(). The new size persists in the SR-IOV capability
-config space. A later reprobe / unplug-rescan / next pci_enable_sriov()
-then sees the inflated VF BAR registers, and the PCI core reserves MMIO
-based on that size multiplied by TotalVFs.
+SR-IOV initialization records the per-VF BAR sizes derived from the VF
+BAR registers in the SR-IOV capability.
 
-On platforms with tight apertures, this can make subsequent SR-IOV enable
-fail due to lack of address space.
+PF drivers may later change VF BAR sizes using VF Resizable BAR support
+(pci_iov_vf_bar_set_size()). Save the initial per-VF BAR sizes so later
+code can restore them when SR-IOV is disabled, when SR-IOV enable fails,
+or when the PF driver is unbound while VF BARs are still resized.
 
-This series records the initial per-VF BAR sizes during SR-IOV init and
-restores those sizes when SR-IOV is disabled, when SR-IOV enable fails,
-or when the PF driver is detached.
+The initial size is captured before the resource is multiplied by
+TotalVFs, so it represents one VF's BAR size as advertised by hardware.
 
-Note on user-visible behavior: drivers that rely on a resized VF BAR
-persisting across an enable/disable cycle must now call
-pci_iov_vf_bar_set_size() again before each pci_enable_sriov().
+No functional change on its own.
 
-v1 -> v2:
-  - Addressed sashiko-bot feedback.
-  - Restore VF BAR sizes on early sriov_enable() validation failures too.
-  - Move the detach-time restore from sriov_release() to pci_iov_remove().
+Signed-off-by: Marcin Bernatowicz <marcin.bernatowicz@linux.intel.com>
+---
+ drivers/pci/iov.c | 1 +
+ drivers/pci/pci.h | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Marcin Bernatowicz (3):
-  PCI/IOV: Remember initial VF BAR sizes
-  PCI/IOV: Restore initial VF ReBAR sizes on SR-IOV disable/failure
-  PCI/IOV: Restore initial VF ReBAR sizes on PF driver remove
-
- drivers/pci/iov.c | 86 ++++++++++++++++++++++++++++++++++++++++-------
- drivers/pci/pci.h |  3 +-
- 2 files changed, 76 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index b0d24839c084..ae9309fc6dd7 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -869,6 +869,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 			goto failed;
+ 		}
+ 		iov->barsz[i] = resource_size(res);
++		iov->barsz_orig[i] = iov->barsz[i];
+ 		resource_set_size(res, resource_size(res) * total);
+ 		pci_info(dev, "%s %pR: contains BAR %d for %d VFs\n",
+ 			 res_name, res, i, total);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 68b5fb675d1c..71c0d9fe5524 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -713,7 +713,8 @@ struct pci_sriov {
+ 	u8		hdr_type;	/* VF header type */
+ 	u16		subsystem_vendor; /* VF subsystem vendor */
+ 	u16		subsystem_device; /* VF subsystem device */
+-	resource_size_t	barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
++	resource_size_t	barsz[PCI_SRIOV_NUM_BARS];	/* Current VF BAR size */
++	resource_size_t	barsz_orig[PCI_SRIOV_NUM_BARS]; /* Initial VF BAR size at probe */
+ 	u16		vf_rebar_cap;	/* VF Resizable BAR capability offset */
+ 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
 -- 
 2.43.0
 
