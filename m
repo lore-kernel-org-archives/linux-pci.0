@@ -1,110 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02BB237BE9E;
-	Mon,  3 Aug 2026 18:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153DA428470
+	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 18:39:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781944; cv=none; b=NSsZsW0924l1zdt1+vGSH/7TeeNE7acjwbhbpgY8i7K5UU1fOG1pU5FtLju4ahFBlHmsEaFGbRo9AUUMAacNPi1TeHYC7K5oRXo+etvdL8Y8W0znFRuB4MMozvbE77ytcAP5xPFqQWIC6wZBAroYIsCaTPG/amvtA5ScVK2x87M=
+	t=1785782344; cv=none; b=mSuYMB73YAC3+7X4aLl/ikl+wCDcJtSj6u9kNkXZMMRYPrrjp0e6NPwphqca9NRdnuu/+7LYZkUJcTE9cG9bDUqK9In83/+OklFdRtQNK+92AhJsQSiAfCWRyWdENs0KzESN1vyeWyB4d2Z8EF+Z9NacYo/pH262UCzc1dthuQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781944; c=relaxed/simple;
-	bh=dln6sBGoJxFtYsiDomVGo3RWQyPALW7qdVJCvjG1gkk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OpsY8vys8L9ydo0tNaUI4ICxwCaigtfbAUxiNZ7o4vsXu+eNlm1dULhdwnah/e6frjVuXssDGhFYQiSgp4SQoaXCaGr4EATe0FlMOGBnBQ7PTSDr3Kmp8TcaanVPUxNrd/jksvPGunP+YucTb9ODfGyaa5FoiNS3wxu24UizCL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HVDIBbDG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785782344; c=relaxed/simple;
+	bh=nawgbZOcUUMAhp+QHIlZVsB8qYG3Js6cjLMtkwnYZwA=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=depd0Kb1LRrtahwLNaTZn90Qpu2qqECHxhFLpVUAR3zbrWJ0t2nCuqiQSVZm55NTT5quoMLDQfvPS86QCQKelEdCOGptwu68JFyKVfs0uMzL1HnVLmgP+cUI+z3zC5AUP/VC2HFqDPBWbFZWCauDgiW2cCUtXFs973m9hrqldyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=s+fBoRbG; arc=none smtp.client-ip=209.85.216.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HVDIBbDG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654851F000E9;
-	Mon,  3 Aug 2026 18:32:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781942;
-	bh=vaVql0ah70ZpJa+IBZ7DiV/y9i0oXqb9bvXrPRc0IRc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HVDIBbDGKY2jL9ssjeaFcMRZiIzMM+v6ow7rSrQ9z7NIO1EJH2m2/XzICA6NCyPgp
-	 VilcwBVHMuTStGhnFzRzpR9XwFdRzn3zGmbM+f+L8VHJCLK/cTlDhqzGKOgcGamrg7
-	 0ABBPVE9S/EXVPgMuMiFF0ixRGz2hdGQGbqQqd+qfnOYag4M3F8OKywCEQuMX27+Np
-	 qQSmrEKYZuvDR1q6SKKYA/7Pz7r/MdNbEQFzDxxmWKjLXmAw+LQo3TqhUE+HXcBrW1
-	 CR6uPNwvC1D1qGtuUiI3TkIHjhW76j8Tns7adVvjfnmTunOEnKzbgzADzCbqmAxiPO
-	 aK/UdUTQoX3JA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/11] PCI: endpoint: pci-epf-vntb: Allocate packed
- outbound MW space
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260803180439.1963864-6-den@valinux.co.jp>
-References: <20260803180439.1963864-1-den@valinux.co.jp>
- <20260803180439.1963864-6-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:32:21 +0000
-Message-Id: <20260803183222.654851F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s+fBoRbG"
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e25e4b41cso4126877a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2026 11:39:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1785782342; x=1786387142; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=iaF1vf6QOKeaYbRr7iA7Kf2ImiB954aE1RsWnBJ3e3k=;
+        b=s+fBoRbGdVDoqGUJzMepWFAlD3CjdfwpbOQdI+3dDI0Ya09soCAaLAkPm19l5bl4/C
+         uF+EfBmXttnIRcrOXY4sAqFj+AKPvRkEcj2K65Z7GB+ROM4cobaHLawn+iR1N1uc00Jk
+         azS+BctmMIoTYOHdDyarwcYtkDzWmhSA/AYUDe+AIC62YF0icycz7MQMGmHprQiuXBbb
+         w5qw1jwLnlw+0JziIctqJEnrhvGXC6VkAZnOmjkotjYswRPpTAHUUWAD84mLTpuxuaTc
+         dp+C1nfzyqKYqoDMd8dSf3LJDWqQ2fpjM6F2Q53qFJas87envbChTX8nvyVF2+kNIyE5
+         NgkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785782342; x=1786387142;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iaF1vf6QOKeaYbRr7iA7Kf2ImiB954aE1RsWnBJ3e3k=;
+        b=cjUxAZS0M/z5ZtbPgCRgoP6hIZWTYmJf7/ll4uOTU56BjhEsNdnH9lovb3aLBYaB2Q
+         7cdLx5iZAknjkp+tGPWX4kBB11gkVUjcKCsMDTZWzFeswbEM9OHqAdaBEC1P1clxbEqJ
+         OkwTWkMRiw7et4qzOGvTjq0riQnmZCF7YIYgApakZckJ7gURU7n7LlXEDra51+yS7ZMC
+         V4jBOYsuciz3u6nPebg3NSh3DRdhCyZAYeClhhBEQJr7DvFH7BviREoZbIyo5KWPPSyu
+         h6ghbeEwI0n8EbqOQn5TEWOo4RqE677NByK607/nSNkE01IcYv2lbAd+n9EWcf+3Qu/A
+         SgCw==
+X-Gm-Message-State: AOJu0Yx+7q5lihnRDXPug8dhOYtFAS/zIUo4L5+VB/Tj+aOvwv2PTFsQ
+	lPoVtJ4ElAL1K8qslpcX3I9p+d5+GDKS+UsIh6krGsiITEYblqonXUQFLuNLARFFx5j/K9NwDrm
+	cteLC1sOkMyDelu2jTcZXSt7G6tHvaLzK3w==
+X-Received: from pjzt5.prod.google.com ([2002:a17:90b:585:b0:38f:5dae:af56])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:5807:b0:381:6466:7160 with SMTP id 98e67ed59e1d1-38fbc51c1acmr10689271a91.26.1785782341944;
+ Mon, 03 Aug 2026 11:39:01 -0700 (PDT)
+Date: Mon,  3 Aug 2026 18:38:52 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.571.g244d577d93-goog
+Message-ID: <20260803183853.432459-2-rathodpriyank@google.com>
+Subject: [PATCH] PCI/AER: Fix memory leak in aer_recover_work_func() when
+ pci_dev is missing
+From: Priyank Rathod <rathodpriyank@google.com>
+To: bhelgaas@google.com, helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Packed outbound MW space is allocated but can never be mapped to t=
-he host, rendering it unusable.
---
+When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
+for aer_capability_regs (entry.regs) from ghes_estatus_pool and queues
+the entry into aer_recover_ring.
 
---- Patch [5]: [PATCH 05/11] PCI: endpoint: pci-epf-vntb: Allocate packed o=
-utbound MW space ---
-commit 1f91a957de194db5f5786ea1932b0222be01c3a2
-Author: Koichiro Den <den@valinux.co.jp>
+In aer_recover_work_func(), items are popped from aer_recover_ring via
+kfifo_get(). If pci_get_domain_bus_and_slot() fails to find a matching
+pci_dev, the code previously executed 'continue', bypassing the call to
+ghes_estatus_pool_region_free(). As a result, the memory allocated for
+entry.regs from ghes_estatus_pool was leaked.
 
-PCI: endpoint: pci-epf-vntb: Allocate packed outbound MW space
+Refactor aer_recover_work_func() to ensure ghes_estatus_pool_region_free()
+is called unconditionally for every dequeued entry, releasing the pool
+memory even when pci_dev is missing.
 
-A packed MW group can use one outbound iATU region only when its EPC
-address range is contiguous.
+Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+---
+ drivers/pci/pcie/aer.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-Allocate one EPC address range for the group and expose each logical MW
-as a subrange. Singleton MWs keep separate allocations.
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index c4fd9c0b2a54..555f39b60b14 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1223,14 +1223,13 @@ static void aer_recover_work_func(struct work_struct *work)
+ 	while (kfifo_get(&aer_recover_ring, &entry)) {
+ 		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
+ 						   entry.devfn);
+-		if (!pdev) {
++		if (!pdev)
+ 			pr_err_ratelimited("%04x:%02x:%02x.%x: no pci_dev found\n",
+ 					   entry.domain, entry.bus,
+ 					   PCI_SLOT(entry.devfn),
+ 					   PCI_FUNC(entry.devfn));
+-			continue;
+-		}
+-		pci_print_aer(pdev, entry.severity, entry.regs);
++		else
++			pci_print_aer(pdev, entry.severity, entry.regs);
+ 
+ 		/*
+ 		 * Memory for aer_capability_regs(entry.regs) is being
+@@ -1242,13 +1241,15 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		ghes_estatus_pool_region_free((unsigned long)entry.regs,
+ 					    sizeof(struct aer_capability_regs));
+ 
+-		if (entry.severity == AER_NONFATAL)
+-			pcie_do_recovery(pdev, pci_channel_io_normal,
+-					 aer_root_reset);
+-		else if (entry.severity == AER_FATAL)
+-			pcie_do_recovery(pdev, pci_channel_io_frozen,
+-					 aer_root_reset);
+-		pci_dev_put(pdev);
++		if (pdev) {
++			if (entry.severity == AER_NONFATAL)
++				pcie_do_recovery(pdev, pci_channel_io_normal,
++						 aer_root_reset);
++			else if (entry.severity == AER_FATAL)
++				pcie_do_recovery(pdev, pci_channel_io_frozen,
++						 aer_root_reset);
++			pci_dev_put(pdev);
++		}
+ 	}
+ }
+ 
+-- 
+2.55.0.571.g244d577d93-goog
 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
-endpoint/functions/pci-epf-vntb.c
-> index 0c72b907c2896..aa8d304fe861f 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-[ ... ]
-> @@ -926,6 +936,9 @@ static int epf_ntb_mw_bar_init(struct epf_ntb *ntb)
-> =20
->  alloc_vpci_mw:
->  		/* Allocate EPC outbound memory windows to vpci vntb device */
-> +		count =3D ntb->packed_mws ? ntb->packed_mws : 1;
-> +		size =3D epf_ntb_mw_group_size(ntb, i, count);
-> +		/* Only the group head owns the allocation handle. */
->  		ntb->vpci_mw_addr[i] =3D pci_epc_mem_alloc_addr(ntb->epf->epc,
->  							      &ntb->vpci_mw_phy[i],
->  							      size);
-
-[Severity: High]
-Will the newly allocated packed MW space ever be mapped to the host, or does
-it remain unusable?
-
-In epf_ntb_configure_mw() (which handles VHOST CMD_CONFIGURE_MW requests fr=
-om
-the host), the driver explicitly rejects packed groups:
-
-drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_configure_mw() {
-	...
-	ret =3D epf_ntb_get_mw_group(ntb, mw, NULL, &count);
-	if (ret)
-		return ret;
-	if (count > 1)
-		return -EOPNOTSUPP;
-	...
-}
-
-Since mapping of packed groups returns -EOPNOTSUPP without calling
-pci_epc_map_addr(), won't the configuration fail when requested by the host?
-If so, does the memory allocated here go unused, preventing host memory acc=
-ess
-for packed MW groups?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
-864-1-den@valinux.co.jp?part=3D5
