@@ -1,231 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C8B42AF89;
-	Mon,  3 Aug 2026 18:23:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 839BE430CE3;
+	Mon,  3 Aug 2026 18:25:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781411; cv=none; b=mzHxXOvTkG7+jjX4evogTvCSE0o+Pulh+o59ZQS7epVtjWsPrRqhHlq6D+XI9g3axMKO7t9o82S8TW+lWnoMZb/MolOKRrSTPsMC6XN/wE64iB7eqPDkP3hckOhbhZiHuMoK6jDq95UoIGo2aI68FEglpTb7n99CzoJLrZKx/qM=
+	t=1785781524; cv=none; b=dUZp3k9tChBM8huY3paeWfsvt4j5v+q1J4NLIXco8R4UufXacnKm6Bz7nciIJQomlO+9pj3k4Yc8xkY2pmc5PZxae7uyMzLykUe6Hb9BF1g+rZP0xVpIe/ZfGTrUhX5WoW1Wx+ZhHvW8/Usuv1BRRkzoZ+3ZyLfGFEx85pQig0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781411; c=relaxed/simple;
-	bh=nb5XLmt8ots7cr3Ybf9IDMZB18i8psv2tvDR7PuCOIk=;
+	s=arc-20240116; t=1785781524; c=relaxed/simple;
+	bh=CTPeWJIs+cwCA5PGL5y/G9cywKrWF8r2JZ573HzruJc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eYIWfdpjr41WwK+ZUIUM3U1Zvxy+XkanhmyuLfab4tTlFqKg4RMrB3XViMJl8HCa0By/EiO32uJn4k7JmypvlVWdsNaqBlNhxbfbFdfpfwWCqmisevtORpUUmy75/8zpuRYMwKO9DAmHVJ2bg9NZX2TgubqPL06vd/EK3vxK2ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftJ+C+nl; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IAjVwZShgpyrM4l46ml35CSKayL5ZP+XHPxGDiurX5De183EV5nFUYgwCzk968URATySapCrzdJ8bz66hJTttZUO5BIWHPPcC9t8O9bSVERDt3hx8BhVZ8H2rLLSa5UewtA4gmdzd2s11L64D4IiiRczdngFUnXWxYJvfXPch1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YQsHYgm9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftJ+C+nl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A2A91F000E9;
-	Mon,  3 Aug 2026 18:23:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YQsHYgm9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDE151F00A3A;
+	Mon,  3 Aug 2026 18:25:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781409;
-	bh=Xx/vEphA+urhZe3JaLPF0EyHJEQG+k/5hOcBZRZ9JOc=;
+	s=k20260515; t=1785781522;
+	bh=q8GbdgfeM5xRVAnGGnGwVbydx4ol0JlXToGOau78a6w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ftJ+C+nlHZIV9V6UPHNZISTGHImoh8cAldDk2W0bM6fOI++3/vEvQj4Rbix/LNEcL
-	 tvDgjzE7zCcSDvRKDfqCz+sCP0NlruGlbtxLY3fW1D5HBFQ/aTUxR2Ew0Aunsnlnmj
-	 Wx93hM5qylT3Z6mSpotLSh4+kZxvQCH1XHDq3Xs7pdd/topbUVjEtwFKKDBqI69Avw
-	 gHJo64asNHV1vDBqL5zHxvL25SM0nRsqYnEh+A87j5CZvFwhZVSbwvVQZhM5BdzvTs
-	 eFtcrTi7475ndyXO2dP4Ipmi/b3uimg+7TSOa57k3eRmb9WcVRFjQPyZDWIvl73K74
-	 SgXRyNYXW99DQ==
+	b=YQsHYgm9hNTOJkHM01cnLlaEKX1md4ymAmBhdZvX/oDlaW40fjeSZgo1H5w4YO3fF
+	 mn/ED41qPkHMehbwgGp+00YEBsU7t6SPR6kHoVhhXCa0cd9PRgcyr1g5kBHsACvjX7
+	 BYkaG3iatxuuUOyonYO5Q5NoYaFgXLc0APOELEiyhVKCkRWpIN/3FJkaKh1gBaCUDM
+	 DWqGTYDAXbDmGhnJFqwgPWwUlKE0YZhSDENRXXIoAa87kr725Q+/xBerNIj1tpoELK
+	 xaBTieS93jLAdcqS+8PndQ3OPQiMck4pC8kQQv1l9vZygp7sPkn232pnJ0KqqS0lXJ
+	 7G3T3S5IUK8Vg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/11] NTB: epf: Parse a versioned packed MW layout
+Subject: Re: [PATCH 08/11] NTB: perf: Reject grouped memory windows
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260803180439.1963864-3-den@valinux.co.jp>
+In-Reply-To: <20260803180439.1963864-9-den@valinux.co.jp>
 References: <20260803180439.1963864-1-den@valinux.co.jp>
- <20260803180439.1963864-3-den@valinux.co.jp>
+ <20260803180439.1963864-9-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:23:28 +0000
-Message-Id: <20260803182329.4A2A91F000E9@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 18:25:21 +0000
+Message-Id: <20260803182521.EDE151F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Missing `.mw_set_trans_group` callback breaks functionality for th=
-e V1 packed memory window layout.
-
 Pre-existing issues:
-- [Critical] Untrusted offset from endpoint causes integer underflow, allow=
-ing arbitrary host physical memory exposure.
-- [High] Off-by-one bounds check allows out-of-bounds access and out-of-bou=
-nds physical memory mappings.
-- [High] Hardware command return values are silently ignored, masking endpo=
-int failures.
-- [High] Concurrent translation configurations race on shared endpoint conf=
-iguration registers without locking.
-- [High] Probe error path leaks PCI regions and I/O mappings.
+- [High] Mismatch in memory window indices (`perf->gidx` vs `peer->gidx`) b=
+reaks test communication on multi-port configurations.
+- [High] Multiple test threads executing concurrently map memory and overwr=
+ite a shared `peer->dma_dst_addr`, leading to DMA mapping leaks, IOMMU faul=
+ts, and double-unmapping.
 --
 
---- Patch [2]: [PATCH 02/11] NTB: epf: Parse a versioned packed MW layout -=
---
-commit 552e0bc5df4566e72805c5d6eadc9d96fa21be65
+--- Patch [8]: [PATCH 08/11] NTB: perf: Reject grouped memory windows ---
+commit 8a37bed871c2fb90c1fc72578c46b05070e8ad53
 Author: Koichiro Den <den@valinux.co.jp>
 
-NTB: epf: Parse a versioned packed MW layout
+NTB: perf: Reject grouped memory windows
 
-The legacy control layout cannot describe multiple logical MWs sharing
-one BAR. Treat a zero version as legacy; version 1 describes all MWs as
-one packed group using a BAR number and aggregate size. Derive the
-equal-sized logical MWs from the existing MW count.
+NTB perf configures one MW per peer through the per-MW translation API.
+It cannot configure one member of a larger translation group.
+Reject such layouts at probe.
 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_=
-epf.c
-> index c47607d4f8a7f..46f37c2dea7b2 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> @@ -171,6 +179,9 @@ static int ntb_epf_mw_to_bar(struct ntb_epf_dev *ndev=
-, int idx)
->  		return -EINVAL;
+> diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
+> index dfd175f79e8f0..50bfbec1e251e 100644
+> --- a/drivers/ntb/test/ntb_perf.c
+> +++ b/drivers/ntb/test/ntb_perf.c
+[ ... ]
+> @@ -1469,7 +1469,19 @@ static int perf_init_peers(struct perf_ctx *perf)
 >  	}
 > =20
-> +	if (ndev->ctrl_version >=3D NTB_EPF_CTRL_V1)
-> +		return ndev->mw_bar;
+>  	for (pidx =3D 0; pidx < perf->pcnt; pidx++) {
+> -		ret =3D perf_setup_peer_mw(&perf->peers[pidx]);
+> +		peer =3D &perf->peers[pidx];
+> +		ret =3D ntb_mw_get_trans_group(perf->ntb, peer->pidx,
+> +					     peer->gidx, &first, &count);
+> +		if (ret)
+> +			return ret;
+> +		if (first !=3D peer->gidx || count !=3D 1) {
+> +			dev_err(&perf->ntb->dev,
+> +				"Peer %d MW %d is not a standalone window\n",
+> +				peer->pidx, peer->gidx);
+> +			return -EOPNOTSUPP;
+> +		}
 > +
+> +		ret =3D perf_setup_peer_mw(peer);
 
 [Severity: High]
-This is a pre-existing issue, but does ntb_epf_mw_to_bar() have an off-by-o=
-ne
-bounds check?
+This is a pre-existing issue, but does perf_setup_peer_mw() incorrectly mix
+index variables on multi-port configurations?
 
-If idx is equal to ndev->mw_count, it bypasses the idx > ndev->mw_count che=
-ck.
+Looking at perf_setup_peer_mw(), it maps the physical address of the
+outbound window using the local port's index (perf->gidx):
 
-In legacy version 0, this accesses index 7 of a 7-element barno_map array.
-In version 1, it calculates an offset equal to the entire base address regi=
-ster
-size in ntb_epf_peer_mw_get_addr(), resulting in a physical mapping address
-exactly past the end of the region.
+	ret =3D ntb_peer_mw_get_addr(perf->ntb, perf->gidx, &phys_addr,
+				   &peer->outbuf_size);
 
-Could this allow the client to map and access arbitrary adjacent host physi=
-cal
-memory?
+However, perf_setup_outbuf() later configures the outbound translation using
+the peer's index (peer->gidx):
 
->  	return ndev->barno_map[BAR_MW1 + idx];
->  }
+	ret =3D ntb_peer_mw_set_trans(perf->ntb, peer->pidx, peer->gidx,
+				    peer->outbuf_xlat, peer->outbuf_size);
 
-[ ... ]
+When perf->gidx and peer->gidx differ, this mismatch causes writes to the
+mapped memory to go to an unconfigured window.
 
-> @@ -520,21 +560,27 @@ static int ntb_epf_peer_mw_get_addr(struct ntb_dev =
-*ntb, int idx,
->  				    phys_addr_t *base, resource_size_t *size)
->  {
->  	struct ntb_epf_dev *ndev =3D ntb_ndev(ntb);
-> -	u32 offset =3D 0;
-> +	resource_size_t offset =3D 0;
->  	int bar;
-> =20
->  	bar =3D ntb_epf_mw_to_bar(ndev, idx);
->  	if (bar < 0)
->  		return bar;
-> =20
-> +	if (ndev->ctrl_version >=3D NTB_EPF_CTRL_V1)
-> +		offset =3D (resource_size_t)idx * ndev->mw_size;
-> +	else if (idx =3D=3D 0)
-> +		offset =3D readl(ndev->ctrl_reg + NTB_EPF_MW1_OFFSET);
-> +
->  	if (base)
->  		*base =3D pci_resource_start(ndev->ntb.pdev, bar) + offset;
-> =20
-> -	if (size)
-> -		*size =3D pci_resource_len(ndev->ntb.pdev, bar) - offset;
-> +	if (size) {
-> +		if (ndev->ctrl_version >=3D NTB_EPF_CTRL_V1)
-> +			*size =3D ndev->mw_size;
-> +		else
-> +			*size =3D pci_resource_len(ndev->ntb.pdev, bar) - offset;
-> +	}
+The same index mismatch occurs for inbound windows between ntb_mw_get_align=
+()
+and ntb_mw_set_trans().
+
+Could we use a consistent index?
 
 [Severity: High]
-This is a pre-existing issue, but could the untrusted offset read from the
-endpoint cause an integer underflow here?
+This is a pre-existing issue, but can multiple concurrent test threads
+overwrite peer->dma_dst_addr and leak DMA allocations?
 
-The offset is read directly from endpoint-controlled registers and subtract=
-ed
-from pci_resource_len() without validation. If an untrusted peer endpoint s=
-ets
-NTB_EPF_MW1_OFFSET to a value larger than the mapped resource size, does the
-unsigned subtraction underflow?
+When a user configures multiple test threads, they all execute
+perf_init_test() concurrently without serialization.
 
-This could produce a near-maximum integer value for the mapping size, allow=
-ing
-an untrusted peer endpoint to map and access arbitrary host physical memory.
+Because they share the same perf->test_peer structure, they each call
+dma_map_resource() and overwrite peer->dma_dst_addr:
 
->  	return 0;
->  }
+drivers/ntb/test/ntb_perf.c:perf_init_test() {
+    ...
+	peer->dma_dst_addr =3D
+		dma_map_resource(pthr->dma_chan->device->dev,
+				 peer->out_phys_addr, peer->outbuf_size,
+				 DMA_FROM_DEVICE, 0);
+    ...
+}
 
-[ ... ]
+Later, threads may read an IOVA mapped for a completely different DMA device
+in perf_copy_chunk():
 
-> @@ -601,6 +647,7 @@ static const struct ntb_dev_ops ntb_epf_ops =3D {
->  	.db_vector_count	=3D ntb_epf_db_vector_count,
->  	.db_vector_mask		=3D ntb_epf_db_vector_mask,
->  	.db_set_mask		=3D ntb_epf_db_set_mask,
-> +	.mw_get_trans_group	=3D ntb_epf_mw_get_trans_group,
->  	.mw_set_trans		=3D ntb_epf_mw_set_trans,
->  	.mw_clear_trans		=3D ntb_epf_mw_clear_trans,
+	dst_dma_addr =3D peer->dma_dst_addr + (dst_vaddr - vbase);
 
-[Severity: High]
-Does the missing .mw_set_trans_group callback break the version 1 packed me=
-mory
-window layout?
+During teardown, all threads call dma_unmap_resource() on the exact same
+pointer in perf_clear_test(), causing a double-unmap:
 
-Because this layout defines version 1 windows as a group, the framework enf=
-orces
-that translations must be configured via .mw_set_trans_group, actively reje=
-cting
-single .mw_set_trans calls by returning -EOPNOTSUPP via ntb_mw_check_single=
-ton.
+	dma_unmap_resource(pthr->dma_chan->device->dev,
+			   pthr->perf->test_peer->dma_dst_addr,
+			   pthr->perf->test_peer->outbuf_size,
+			   DMA_FROM_DEVICE, 0);
 
-By failing to implement and export .mw_set_trans_group in ntb_epf_ops, is it
-impossible to configure any version 1 memory windows?
+Does this sequence need additional locking or per-thread DMA mapping tracki=
+ng?
 
-[Severity: High]
-This is a pre-existing issue, but do ntb_epf_mw_clear_trans() and
-ntb_epf_mw_set_trans() completely discard hardware command return values?
-
-In ntb_epf_mw_clear_trans(), the return value of ntb_epf_send_command()
-is never assigned to the ret variable, making the subsequent if (ret)
-check dead code.
-
-This masks endpoint hardware failures and falsely informs the
-framework that the window was successfully torn down, potentially causing s=
-ystem
-faults if the system reuses a window still active on the endpoint.
-
-[Severity: High]
-This is a pre-existing issue, but does ntb_epf_mw_set_trans() race on shared
-endpoint configuration registers without locking?
-
-The parameter registers like NTB_EPF_LOWER_ADDR are written without holding
-ndev->cmd_lock, which is only acquired later inside ntb_epf_send_command().
-
-If multiple processors configure different memory windows concurrently, cou=
-ld
-one thread overwrite the parameter registers before another thread sends its
-command, leading to incorrectly routed memory windows?
-
->  	.peer_mw_get_addr	=3D ntb_epf_peer_mw_get_addr,
-
-[ ... ]
-
-[Severity: High]
-This is a pre-existing issue, but does the probe error path leak mapped reg=
-ions?
-
-Looking at ntb_epf_init_pci(), if it fails after pci_request_regions() succ=
-eeds
-(for example, during pci_iomap()), the err_pci_regions label disables the d=
-evice
-but omits calling pci_release_regions() and pci_iounmap().
-
-Does this permanently leak the allocated resources?
+>  		if (ret)
+>  			return ret;
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
-864-1-den@valinux.co.jp?part=3D2
+864-1-den@valinux.co.jp?part=3D8
