@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED94543AB0;
-	Mon,  3 Aug 2026 18:25:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB498424D47;
+	Mon,  3 Aug 2026 18:25:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781530; cv=none; b=uA1IPk8xncdFzD9FaGVhjIIDLS8NapCpSZcM52870Dz/TB+Js/XXZL5dciDwgNoDPfbbKkDNpRY2aRrwsZEP3I3b/9Rur733q6talSVyitP19nvCiPb1U30vzlosoYrd0gc0jPS72A8YdGlRgjj/ocCVPpsS4Az+znPnyd2MAVE=
+	t=1785781550; cv=none; b=PXM1O+9pj7a+nhuKuR4SkA+pOGlbJ13qK3GUgbDVZWiVwXnJWjNLsZBqG82z2DqmahJjf9XjOL9JP/r6jsYk80I/ieN4eD7/BCAKjxBu1m4MqqcT0KNTnA3/EoEAq5kgfY5+3EDdTPJXH/Gs7sGr/jrwVf7TkcZ1+YjID8auptk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781530; c=relaxed/simple;
-	bh=jhYNc4FTxXSfhO+ssvnBUeAO5cfhFu9r/LktIgOyGO0=;
+	s=arc-20240116; t=1785781550; c=relaxed/simple;
+	bh=Uy2dVPHpMEdRTZpjnvDX6UL4f0Iz/Ao1v1JPff3YeOc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TjiwrQVLs0TxkHCg8PrxZ37cgsf7SM0e9P+IDr1xcuXVYAYo7DbrDMB9k8lcqWrAvIE39bLvjXu6mbXdcaPfXemV0B9tt3e6Rt9A9DjNpFPJt8XzrwH/q7CXBPHhyyWhF8o3jaKvUcO/MuBwG0SuoiDwsDgrXYAdK8GN2JlHk80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CruAUM8C; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=POFnWP4yK0PDUjXoM20/72fztMkf1a54Az6PFXoWRg1xCctqa+XuKVOLxOtUUPkIanKDVEwU8N2EUNBUpQarnngvxSRbUJ1Vy+nNubU5MRjelNtZymldznPwFQgrJSjItcK7xmbkF+Yo0PbevpCsh7wwHIvi0m5kBDH6qlxM5hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iDJNOM52; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CruAUM8C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 750A91F000E9;
-	Mon,  3 Aug 2026 18:25:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iDJNOM52"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3798E1F00A3A;
+	Mon,  3 Aug 2026 18:25:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781528;
-	bh=VizkbkDQ15erG4doj+fS/MQLpg7B/DMJuimactfQ/wo=;
+	s=k20260515; t=1785781549;
+	bh=+ZnGg+Ik9cQm9twDKddt5rlDc2nmi4hjwRu5c1OUWuI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CruAUM8C3CFx4EBnh9LMWICEoPm9JX9xFX1mAak5MRcX6OrQlf6p+3fuDzqVUEedz
-	 VKVQEHrrBOqKtikUKE7CbulIxqVVb51U9+q8UpW9X0fUN8l/WL+1ndfSrrSV8+oBlZ
-	 egkU2Tn/aGToZAiX0dSd0SfGEL3e0tddXDDU1Dqs7972lVo++bnQblQbXcIPMpchDU
-	 R/vGcX82CcqRXR+5LSknKU2SZ0g4uBgfTzaTJTzuT2u+tOByERfgm+ahdnMcJcrpjn
-	 xsjf77BmKNJzF5nBH7q9nyceYZ6nQxuiAhxCCmndQRtRphigDX8wrWpJugA4UXcBID
-	 DcgrC7FK7X2VA==
+	b=iDJNOM52Rz7RVuEbmfLtuKcJsI9mB5ynl1j8SPO4BcltvebP89e+Khpe73NH05Yui
+	 FgxDMeGc/bvxnJdxy6cVkiV093XL1lOCiHTZ74PJupuou8UA9Eh+o+jY2Z4iKcIPrQ
+	 IUR5HicrCvxPt5WXyiOTdf5mpaqTWikGXyWpDbc7l7vyiKBJVS1EPeENdsE+M1Kry/
+	 DjvDcrK9QIWVy05gGyFJPDBu34uqep7fX3dcG95YZ9qeUqGtPxaAOJrufjnee31v18
+	 QBpp3hTY0N+k5WrEBg3QcrJ0iFTbF5Tlcg668tFMGfznSIR2IWDcF/uNzDN/PzKNNf
+	 HgBNzwKQVl03g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 04/11] PCI: endpoint: pci-epf-vntb: Implement MW group
- translation callbacks
+Subject: Re: [PATCH 03/11] PCI: endpoint: pci-epf-vntb: Add packed MW layout
+ handling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
-In-Reply-To: <20260803180439.1963864-5-den@valinux.co.jp>
+In-Reply-To: <20260803180439.1963864-4-den@valinux.co.jp>
 References: <20260803180439.1963864-1-den@valinux.co.jp>
- <20260803180439.1963864-5-den@valinux.co.jp>
+ <20260803180439.1963864-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:25:28 +0000
-Message-Id: <20260803182528.750A91F000E9@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 18:25:48 +0000
+Message-Id: <20260803182549.3798E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,113 +47,114 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [Critical] DMA Use-After-Free due to `vntb_epf_mw_clear_trans_group()` an=
-d `vntb_epf_mw_clear_trans()` returning success (0) without actually disabl=
-ing the inbound hardware translations.
-- [High] The `vntb_epf_mw_set_trans()` function incorrectly hardcodes `func=
-_no` and `vfunc_no` to 0 when invoking `pci_epc_set_bar()`, whereas other E=
-PF APIs (including the newly added group API) correctly use the endpoint's =
-configured function numbers.
-- [High] The `vntb_pci_driver` structure is missing a `.remove` callback, c=
-ausing NTB device leaks and use-after-free conditions when the endpoint fun=
-ction is unbound.
+- [Medium] The packed_mws feature is entirely unreachable as it cannot be c=
+onfigured by userspace.
+- [Medium] Outbound ATU mapping is completely broken for packed memory wind=
+ows due to explicit rejection.
+- [Medium] Inbound translations for packed configurations are unusable and =
+dynamically corrupt the shared BAR.
 --
 
---- Patch [4]: [PATCH 04/11] PCI: endpoint: pci-epf-vntb: Implement MW grou=
-p translation callbacks ---
-commit 419429d9534b2c856c11cb4a4a4107e84a87fe8e
+--- Patch [3]: [PATCH 03/11] PCI: endpoint: pci-epf-vntb: Add packed MW lay=
+out handling ---
+commit b1065455da6e47589efee078ad0c8d01095b3f1a
 Author: Koichiro Den <den@valinux.co.jp>
+PCI: endpoint: pci-epf-vntb: Add packed MW layout handling
 
-PCI: endpoint: pci-epf-vntb: Implement MW group translation callbacks
-
-All RC-to-EP MWs in a packed group share one inbound BAR. Setting each
-MW separately would keep replacing that BAR and could expose a partial
-group. Add group callbacks that program the shared BAR once for the
-complete backing range.
+Teach pci-epf-vntb to build a packed layout and advertise its logical
+MWs as one version 1 translation group. Non-packed configurations keep
+the version 0 layout and one MW per BAR.
 
 > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
 endpoint/functions/pci-epf-vntb.c
-> index f22459e5a8c69..0c72b907c2896 100644
+> index c3caec927d748..f22459e5a8c69 100644
 > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
 > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> @@ -1622,6 +1622,31 @@ static int vntb_epf_mw_clear_trans(struct ntb_dev =
-*ntb, int pidx, int idx)
->  	return 0;
->  }
 
-[Severity: High]
-This isn't a bug introduced by this patch, but while looking at this contex=
-t,
-I noticed that the existing vntb_epf_mw_set_trans() hardcodes the function
-numbers to 0:
-
-drivers/pci/endpoint/functions/pci-epf-vntb.c:vntb_epf_mw_set_trans() {
-    ...
-	ret =3D pci_epc_set_bar(ntb->epf->epc, 0, 0, epf_bar);
-    ...
-}
-
-Does this incorrectly configure the BAR for function 0 when the virtual NTB
-device is bound to a non-zero endpoint function or virtual function?
-
-If the device is configured via configfs with a non-zero function, could th=
-is
-lead to silent failures in memory window translation or corrupt the ATU
-configuration of function 0?
-
-> +
-> +static int
-> +vntb_epf_mw_set_trans_group(struct ntb_dev *ndev, int pidx, int widx,
-> +			    dma_addr_t addr, resource_size_t size)
-> +{
 [ ... ]
-> +	return pci_epc_set_bar(ntb->epf->epc, ntb->epf->func_no,
-> +			       ntb->epf->vfunc_no, epf_bar);
-> +}
+
+> @@ -129,17 +132,27 @@ struct epf_ntb_ctrl {
+>  	u32 db_entry_size;
+>  	u32 db_data[MAX_DB_COUNT];
+>  	u32 db_offset[MAX_DB_COUNT];
+> +	u32 mw_bar;
+> +	u32 mw_group_size;
+>  } __packed;
+> =20
+> +struct epf_ntb_mw_layout {
+> +	enum pci_barno barno;
+> +	u64 offset;
+> +	u64 size;
+> +};
 > +
-> +static int vntb_epf_mw_clear_trans_group(struct ntb_dev *ndev, int pidx,
-> +					 int widx)
-> +{
-> +	return 0;
-> +}
+>  struct epf_ntb {
+>  	struct ntb_dev ntb;
+>  	struct pci_epf *epf;
+>  	struct config_group group;
+> =20
+>  	u32 num_mws;
+> +	u32 packed_mws;
 
-[Severity: Critical]
-This is a pre-existing issue perpetuated here by the new group API, but does
-returning 0 without actually disabling the inbound hardware translations cr=
-eate a
-DMA use-after-free window?
+[Severity: Medium]
+Will userspace be able to configure packed_mws?
 
-When an NTB client unmaps a memory window group and frees the backing memor=
-y,
-the hardware BAR mapping will remain active.
+It appears that there is no EPF_NTB_W(packed_mws) macro or a corresponding
+entry in the epf_ntb_attrs[] configfs array, which means this field might
+not be writable by userspace.
 
-If the local host frees this memory, won't the endpoint hardware continue
-translating incoming PCIe accesses to the freed physical address, allowing a
-remote peer to access arbitrary new allocations on the endpoint?
+Additionally, looking at epf_ntb_num_mws_store(), it restricts num_mws to
+MAX_MW (4), so the new EPF_NTB_MAX_MW (16) limit for packed configurations
+cannot be reached.
 
-[Severity: High]
-This is another pre-existing issue, but I noticed the vntb_pci_driver struc=
-ture
-is missing a .remove callback:
+[ ... ]
 
-drivers/pci/endpoint/functions/pci-epf-vntb.c:
-static struct pci_driver vntb_pci_driver =3D {
-	.name           =3D "pci-vntb",
-	.id_table       =3D pci_vntb_table,
-	.probe          =3D pci_vntb_probe,
-};
+> @@ -227,13 +254,23 @@ static int epf_ntb_configure_mw(struct epf_ntb *ntb=
+, u32 mw)
+>  {
+>  	phys_addr_t phys_addr;
+>  	u8 func_no, vfunc_no;
+> +	unsigned int count;
+>  	u64 addr, size;
+> -	int ret =3D 0;
+> +	int ret;
+> +
+> +	ret =3D epf_ntb_get_mw_group(ntb, mw, NULL, &count);
+> +	if (ret)
+> +		return ret;
+> +	if (count > 1)
+> +		return -EOPNOTSUPP;
 
-Without a .remove callback, ntb_unregister_device() is never called when the
-EPF device is unbound via configfs.
+[Severity: Medium]
+How will outbound memory windows be mapped for packed layouts?
 
-Does this cause NTB device leaks and driver state use-after-free?
+If count > 1 is explicitly rejected here with -EOPNOTSUPP, and there is no
+COMMAND_CONFIGURE_MW_GROUP handler in epf_ntb_cmd_handler() to manage packed
+layouts, will the NTB host always receive a COMMAND_STATUS_ERROR when
+attempting to map an outbound grouped window?
 
-If the endpoint function is unbound, won't the NTB clients remain active and
-bound to a device whose backing EPF structures, DMA masks, and hardware
-mappings have been destroyed?
+[ ... ]
+
+> @@ -1656,6 +1838,7 @@ static const struct ntb_dev_ops vntb_epf_ops =3D {
+>  	.db_vector_count	=3D vntb_epf_db_vector_count,
+>  	.db_vector_mask		=3D vntb_epf_db_vector_mask,
+>  	.db_set_mask		=3D vntb_epf_db_set_mask,
+> +	.mw_get_trans_group	=3D vntb_epf_mw_get_trans_group,
+
+[Severity: Medium]
+Are the .mw_set_trans_group and .mw_clear_trans_group callbacks missing?
+
+Without the group callbacks, the NTB subsystem falls back to using
+.mw_set_trans (vntb_epf_mw_set_trans), which locklessly overwrites
+epf_bar->phys_addr and epf_bar->size with a single segment's attributes.
+
+Because all segments of a packed MW share the same BAR, won't calling this
+for each segment continuously overwrite the entire BAR's inbound translation
+and corrupt the mappings for all other windows in the group?
+
+>  	.mw_set_trans		=3D vntb_epf_mw_set_trans,
+>  	.mw_clear_trans		=3D vntb_epf_mw_clear_trans,
+>  	.peer_mw_get_addr	=3D vntb_epf_peer_mw_get_addr,
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
-864-1-den@valinux.co.jp?part=3D4
+864-1-den@valinux.co.jp?part=3D3
