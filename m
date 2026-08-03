@@ -1,46 +1,47 @@
 Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020085.outbound.protection.outlook.com [52.101.229.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7598142C4E4;
-	Mon,  3 Aug 2026 18:04:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2EB842C4FE;
+	Mon,  3 Aug 2026 18:04:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.85
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785780287; cv=fail; b=OhgAqV0KAaT1MnDBmiq7hYbrCjY0dzgAXVtJtKkcCQDPW5N5cQthgui6QzFPPWtFH2GoKSraJxZQb1NzZ0terMVESadyOWQc7EH93h2X4xECX4ILjVzFerXQ2tvENDfyAlymfRgsAn7uKZuv41JPQJZE266ATDXrA8I56okJAWU=
+	t=1785780289; cv=fail; b=g/mYwbgnpIR/w7Ly92Gg5bMp9LATCmewABHdbxcJOdHbcGq/jqJ0o6Of4nhRJ2tBPSOIV6PUuJ4DQpHbziiUI2i/ULLo+CRMkpZ5T4YRjqZeTI7wpMJV3uVlgZxZXmoXb41c8Z5aOSGHv0RkEoYpEZbhNvo4cCEmcxJMqB7i4HU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785780287; c=relaxed/simple;
-	bh=PbtWKLeg+8DrJkrINMLuLUpMyJl2eb7dq7XvMIH3ayM=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=K2hlm6xh63kjqsYHhAB9PcSSb9aMYWbs4CivEipcvvaQF+HlI9foJNX+pK8Uh5X+tUjNGtGahxX9oGzOYLUeHnToz6ACyPgob5gMIQVvYhVgj4Cmz2YdbSVdBFlXITzG9+KVjJR8vOBjWfzT1obfcc3odVHPgpXbStXbj9fTl4U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=dEzzwEOY; arc=fail smtp.client-ip=52.101.229.85
+	s=arc-20240116; t=1785780289; c=relaxed/simple;
+	bh=LWgRiusVL2z7eyIi+LDgmdq9+zgxtNnTqjfQ7ovSPY4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=sNzXi4o+5L/Li1teKLo/kcl4blnkGy5vosXutYzrgCbZo4Be2GEO9i7cE2JYoRl5opqSKH8amp+OZVC7i7m9ESyPrNQwfmZGFJazTphH7VMQJE8xXP4mnr4mvW3K++uZuiOzVVDd6rh9klkJC5spxrpAocikJiN9xCCyhsMl1pE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=q2x8VnSm; arc=fail smtp.client-ip=52.101.229.85
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="dEzzwEOY"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="q2x8VnSm"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WlAirIEVcE+vMlNXNwHEYonpokVuK+DFNLegnRVaVFa7Yzf4kZCAASbFRzCkdmKmAt5ZL2OqChAy7Ll7Hn3Qzho3iBjqTLCSLWqM/Q/ie96lk/7GCIPUMse5EsZRdAWykLj6EbSJ8cXI93Jli0uLLG4bxyYZ3bD1h1WZ5LKUG6sMj/4n7CUCQVlqgMTXBGTlPo64dHjkXBp6nQxPGU3jmlOz/w2peSCZpExCJqmGJkdWOuMiXC+M33H3kh9wqXumkbnZnWH0aRCrbcbJoTGi3VjKqKlB4NsXfSp7sx1hV+yQioJsB0G/1fxMmy8Bawvi60+kpcbIjbKzJ1PCGUpHZA==
+ b=fnZdBAWfXQ23M557oDNIN/SQR7yU32R/N07hhqAuBfv3L70eApRkIIRK+L3Y08+URRhzEu1IM4+owSnBAgj22aCwzK8qb0BcGSkJNlx/Cjs4eAPifVoSoseS0ny9pL/MjQlMMWGsk7sn8DLcYzZ+V91+Gp9Ksnx0YSG1fLFvjMQaEbmcnVvvgZMCX46ddfeWnZ9bIFk1OctpjOOUT4SVB0ltF4gGhXpBAorhtzvDJq/2n1PfAm8Z12Wb/++aJwyXnVAp29RudBn160J/6DT2TiKL5Ia+R19Sx82arjetXNUTHEI7aIYO23OEZvAVbULBYfvUTUMiTKCZ/G+DZ+lzzQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VD4K/4LoaK4m2d7Wn8nubJa+dPg4bslaplw8rFOxsyc=;
- b=I1+Ewp9Urf7tiWAv816RQk7F+glRgFREvEjQiZwKLH0CYijXQYJgcyVcC4oX6LhXASzQSrBdW4myUWO1BYwh02RkLdRa04+QTBd07/OemZvI2Ro54G5mDw2jpZOW8IIF+m7j3gQKotMwRwkSWh2ShYhIbmxWI6tWf/GJBQAA9Lg5m7evHkr/hgm/6wdrjrLq0JVwpmJ8wq7X5bSRSiIGd2ObRBWR4iZ1XEIL71jh43h8zVXZzb6i7KUA2sbOKXLtcRQuQ+GyKc5c9cFH5ypLu4DNfjsQGLukY2ay+WwefY5mBSxWZqcxwM8MCBPXNs/45OOGb3ejGc2crodndjhwYg==
+ bh=Y7mdFiGYhAkRSEPQ14+pjfyy233mBm8d2YChGpELC94=;
+ b=tk30loEX+W6I9cDaDXsfwpg9H4ELRyz4jj2ae9NlhNn/Z21ey/VbfVdkuwtA5vUe0YTXJYoU8FgUXQ8ipDBFHfj5IzBqVPvsFSLBPQbmOIQB/XMTgIbE7SY+6MwGvedtZMnwO9XNrv648bQycAubGDToBdCkAkVRxZeO8eQW28BG6gZWHNQNpcOjKNTvzUDWj9bvn5aMmduYDKxQC0ftLsMeUDDjISB1340RPiarSyAOcrrcnBZ+pdyZxn2CqGq6lH0IKrNUpdMWOrXH3+BvRGo42vLMrJOdum4Qt+3zeeVIxm/0SU61tRNIGJKTQZL6hlZuMKj6xOl6/lv5BOWqjA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VD4K/4LoaK4m2d7Wn8nubJa+dPg4bslaplw8rFOxsyc=;
- b=dEzzwEOY3Gjy0xMihlCskhsC9paclBwSKG3CnvwHGGF8Dov7GnXH3fHUfHn90Ugz/Z7yolFDISLkK4s0eT3LBmjZ9wo6k80RveW4RtXqtdUDeCivxo4ABBXDEo0Cl+2OYfxFq+YUpelkmFVL+yOaJacXzCDvj/giKLS/LfTz8m4=
+ bh=Y7mdFiGYhAkRSEPQ14+pjfyy233mBm8d2YChGpELC94=;
+ b=q2x8VnSm0PkXnc2u9AfpZPO0j0ptedENlMIm6dkMcdcY3D544Zt32ehEznFPt4ztdUsGD0lWdkvAs0KgLANI46hR18ZbUchCt/18yP66lOytvyuxQ6YxAdiKz+ekikuG0QJQ188WCj4CRBzpKoGTjQcTlJJtmuDJGUsof1EkxKI=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
  by TYRP286MB5249.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:115::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Mon, 3 Aug
- 2026 18:04:41 +0000
+ 2026 18:04:43 +0000
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32%3]) with mapi id 15.21.0270.016; Mon, 3 Aug 2026
- 18:04:41 +0000
+ 18:04:43 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Manivannan Sadhasivam <mani@kernel.org>,
 	Frank Li <Frank.Li@nxp.com>,
@@ -58,14 +59,16 @@ Cc: linux-pci@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	ntb@lists.linux.dev
-Subject: [PATCH 00/11] PCI/NTB: endpoint: packed vNTB memory windows
-Date: Tue,  4 Aug 2026 03:04:27 +0900
-Message-ID: <20260803180439.1963864-1-den@valinux.co.jp>
+Subject: [PATCH 02/11] NTB: epf: Parse a versioned packed MW layout
+Date: Tue,  4 Aug 2026 03:04:29 +0900
+Message-ID: <20260803180439.1963864-3-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260803180439.1963864-1-den@valinux.co.jp>
+References: <20260803180439.1963864-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TY4P301CA0078.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:36f::16) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY4PR01CA0060.jpnprd01.prod.outlook.com
+ (2603:1096:405:370::13) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -75,253 +78,260 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYRP286MB5249:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3e992d0-9dcc-40a0-bba3-08def189b0d7
+X-MS-Office365-Filtering-Correlation-Id: 2d84609d-4959-4364-f673-08def189b206
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|7416014|366016|1800799024|10070799003|921020|6133799003|10067099003|56012099006|18002099003|3023799007;
+	BCL:0;ARA:13230040|376014|23010399003|7416014|366016|1800799024|10070799003|921020|10067099003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	14dKyfZ29FjTt6C0e344m36ah7KhBqplcgbbfspwhxOKwJiDtcYzIPPdyQn8yftJ9xXloArXQi0euV5dU4rEJs7NTzwkFNv7G2GcLQcWSFvIJXnASSNwADmNY0ozpZ5V8ZEwamNwoeFCO63XHbdLpWEErwdfClkQBxeF83R0ZyPPzwPFZ129y3mJbRWuzRymLHZ4T6GPQIEgLwareWabn+5x1GohDXn1GUaFOncUZYwtFFezl5MM/HWbxJxoZTgwev4UwcDinSO9qV8vlscCw+9QrVbs7Mnsp6CIb2QEU3w0DmkfCLk/1o+2FGb89WxWj9wtyERFyXMlOtI7FFYoKEgddDj5j/cjkjImiA4DxaB9UDb5QCZfGbJdFmq/WBL8bu/0OH/SI5DeLOJ9ylg792K3wIcJHZQg3UTkRaco2SuARN6K6LQXPO8ahSCQvnrLISWPLWYS/CYr2oCjVUix+o4HRNHNJDAw4v5j4Gc9mEPXpTiZ1+KbgTNRBL69sM+mFOYHlgPBqXTtMvMyU7OTN/gRdmql9H5gFD6TTp+Gff2aA3YMvk1Gvby4D9e25o8UOgvwB/ku4OnoeVkAMxRgv90yy+4P18vhpgL7NLus9J2jVUucVqGyq5orSD17AGnsMDx0pA+rVhaomqDnSUeaiMwaQju/X9+YQcPcUBHJtfDVbkCd/qBGqF3RwOHGlAzuTKhpUoui9JXsGdYg2LtofQ==
+	75p4YpPoqhaLwgZgsxJ/tqkQPY1HZ1ZaIs4n3BCp1PX2wjCkWkJzwc2GeugsuycPGxbp05ZixcUMQqTcyQZH8mrvOq/xO+E0Qia8xnOXAv3xVvc2XIWuFN3dtVesqwylMzI2Wys/zi6mgT7fZl6Och57RD+ZI0qUcBFUOolP/W3cB3wowxpmaFBByc2GiZuyPXxa8Ws2AR+2NXbxcMPgwnxmq13X/uDmUsAw67mq+ouXODyg0UlwcBr8OCe2oFrC5e4WuVi6GMnshacxrrIjNi+vb3ftpCVN+EQHJEL/gSWbfTmvkL0xXPBedNEFJQRBKcV+IGgMUJ0hanuSKAplEoMWyOB7zw1b0G4rehMZ2NnmbnAGO/bcG9eFapLvdR2yF19QvmBVgKL4SW1Rh9lmqh5aDnIBK3Ab0CmnAhwN9h1I2lNWWu3h8l36sBBh2ytlf6sYhSnyigzzlrbQ3O5ZUmZcdhQqZoZ9LAt8ygn41up0MwI8iAAhM93YQjnxqDv1W3hHefgBeEGWrMiw/rZJghA0UHAPFbsPUUHwRAz90WIYU2vZ8IE/pMUjTNnuxtqDbNlQsHzmtrLipqKg/Y+t5cttDTkf6scmOfPWRHouj3iSjP8XE1R0JYFi/QoQi4nzJvHYnCSxMhXrqAhbiMZ8IMCznOR146sVzXKqIJeNKH4oYhooiA1KS5K8VIr8YM5uYchu0Z1+spRXF/6zI4q2Mw==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(366016)(1800799024)(10070799003)(921020)(6133799003)(10067099003)(56012099006)(18002099003)(3023799007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(366016)(1800799024)(10070799003)(921020)(10067099003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?nozayg4Yh+SZ0B1Y2oTQBNsNMq3/J6BN3k8/8TQnlrLOUXc21qA4S8wxNh0j?=
- =?us-ascii?Q?Aus76gklmMJU22YRc/Jm9ax5VzscMGv2jFdkEiFmgOXnTeQkn5ZZVv/LthyU?=
- =?us-ascii?Q?3PHO+7OvT7kH7AdPGYvGs90AHfCCHPioEDPWd4c0z+cZyxz6/wZQEo4r897N?=
- =?us-ascii?Q?sxxA4+nXJnxEQJznUJlaFu3TB4LPqQ3U9o8o4t1+aSHpXBABDgC5FhzOxTQn?=
- =?us-ascii?Q?bLUYfTMefXbnOYYdnfOH+sfpMZUW/lfWnX3xzvynNW29cX0luin6uAnlz+KE?=
- =?us-ascii?Q?yGp9ueaKjQs6nm2zWnB3Wlb4o7Z48dM9UHyOf3EUDgo/q8SGZx31aq1bhF7l?=
- =?us-ascii?Q?KxwtV/HqZXT9soteiDA/gWCJkERZdn+Q0AQP3a1WHIsvel0uppUnaRMDprIF?=
- =?us-ascii?Q?eWNAF56yBP6t8JCP2MyIhyTT/3OCrl1jTdZI8CDedlY5GV24EV0g767cCdWs?=
- =?us-ascii?Q?3o2ViAuopfHTG7ih/GpFQEBwzumoqMUqNsE5bmzbbt3ezVFifKnlOxMnHqzY?=
- =?us-ascii?Q?uWLSENUSY/TkuOxHNQamFIF+4pY8rb2Kl/ZqmAkKJcgK0vY1h7d5rispc9+j?=
- =?us-ascii?Q?UofpibfTa+VYwvPB7/s5zv2OwSUL/a8+HFh94fiKDQjccKMOPLCDrDI7LHLm?=
- =?us-ascii?Q?7pjM8wWnkWboQ41pp4WAwufCPZvj+fggKAJoz/OHpNEHC4EZ3+FbNm7QlqME?=
- =?us-ascii?Q?9/nu9UuKfOyqYrP+Q02CW/dzpvAB5+nG5CudbwRQh1Axzlm1RgmlhgjDlOte?=
- =?us-ascii?Q?KrcUd9MYOa8Za/rtCrRtwp0WQFwe3jBoVoiK0mpAV6dTtXgIjnBEDO8awghC?=
- =?us-ascii?Q?u7/MiqiXhxWdLWU7S7MhMmoACbAL7KPIvVj1sgByhCMVYmXjqwjqTA20ADy7?=
- =?us-ascii?Q?FZVDs7zXjOOwM8cYKM6KBMgEB52jnfrPLIZ37+r7l9ji3vvxJtJoo/BAdHIN?=
- =?us-ascii?Q?HXQDa+Zz5i0ajp39uBRyxBi07X4x13W4GwdatJpDxUPNQicRjs4rhaWoAMRT?=
- =?us-ascii?Q?krHVRr5Jw3DGImkOD907AEhvA3qUBk3O9ASNS+/CEjSxvW4lPshP1SGU5Zal?=
- =?us-ascii?Q?3HcBwgUTIObHcS/3AxTLu7Twe9hLUAWlOA0yX33Q4/M46/mv2N90Ws4z8LRS?=
- =?us-ascii?Q?+3NXVzE/JfffpeC+Tc4Kuj3/CcSSAbcLS4evRUgGYsUG6AAFMCL0vNO8rXVF?=
- =?us-ascii?Q?esvoOyULgSOKus/54vMYq9wfbDqqlYYUnigYVBDcbAk5edv/kS1ZmdFqyjk7?=
- =?us-ascii?Q?KNmknouBP6zTTV9Ld8QfY6DYLgXHuXi2VFTTkTmvmsFFSIKztFyTh5UvYkOe?=
- =?us-ascii?Q?KsElYGTw/qjWWUH6aAc028qoNPiHZ7bVgwfJKLo0AP9ZJkydg24H1W1ZVdc7?=
- =?us-ascii?Q?LNx8ZSmyknxMDsjyOjh9VGjxomekCSLmaxHy3Fet7orBkEcsgAg7nSkMML7/?=
- =?us-ascii?Q?LcLk8HFoxQ+bwnvW+hCbGrSB2Ih4RW5wHkdVCEMPR3sx0tAoKHnTgqKYs2j4?=
- =?us-ascii?Q?UF7/4J+5kyWXtS9AHODniDWmuTclGBzvKB17QVQ3xKxlbyWVQUeN69MsvqAq?=
- =?us-ascii?Q?Kvay+HHpDzLxmp1esHsdrSoLuWgHUAtw9lp/1Eeifk2xfJSH0hMe5W8OnUN8?=
- =?us-ascii?Q?4jhsjvJ0yUEyBLkfI3hE+eXKDiJQjzqVlt8ut74xLqzZ+H19bmG6vf3bkCPU?=
- =?us-ascii?Q?M/QfjXmD00H8PcjQOZD202GTSKgSCG8VHU84IzcC9Q8aMeiT29vFgMhSxRE9?=
- =?us-ascii?Q?RJJIsiFYocJcRVaaEv2uNoitl8hT05TdZZ+0DG9ahsiE5QjaDq1J?=
+	=?us-ascii?Q?k4ESECBA278sL7SQwQ3I/qIYqjvLiND8veLL82uXLWg3aF+6r6ktdbWEIDGH?=
+ =?us-ascii?Q?S8bMCkaUVW2d5fzitmolijLX+B5z11Z+DhCBK0MPiLO+ojTdbyDTMNPQbh8U?=
+ =?us-ascii?Q?GHbOHgjTsVSDO9BIN7LzWwXWQv+oRdZq+2drDo3zLhAXRLGPdzM+O02lfUho?=
+ =?us-ascii?Q?fleXq6xtY3w5nBUmMS8MTB2d9GxCphVKlu4C0Z7i6hxouFqTqb4kVnY2T7dI?=
+ =?us-ascii?Q?RQ277VOA8Ul1NnP4xW0J0R1Vi+kgbi6eFNZJ360oZrA6APgTaoeSfrqpvEtd?=
+ =?us-ascii?Q?Lvg70DiPTLTqcznQJCcygvHpq0jv3pHm7b1Q0CaLQAbCkcz9ji5OUvt2+3ea?=
+ =?us-ascii?Q?7PXtYTTCFPjmqXMUzRsd9ntpE/4Lv9rlag7krdP3A9Ax9wXA6qK9mWd2GQ89?=
+ =?us-ascii?Q?TtKdDHLO1ppwCEzu9cXFcY37KsidNBAXqHLyV33AOjGkBl7ckJWyaRHofG3b?=
+ =?us-ascii?Q?ivEn/xmhp6v1RxeX4LhEOuoex+L9h0LycJ2CYXwLPRtJCSxi4WuK3J84BLbB?=
+ =?us-ascii?Q?prmjeFB7HFG//7DwJDzIxVHVS8VilO6lD0aRrh4kOx60nidVBZMIJhLrmyHp?=
+ =?us-ascii?Q?7xAiqV9lzSNhXQXqAY30uNbq40aLZpRgm9elSqk6a02VffFa7gtFmbY4WB5g?=
+ =?us-ascii?Q?TvdRAHu0HVw7bhR0vtHJRv0+qXclQ56nEjouAUpWUEDyXaaNsRL6XJX1mAeF?=
+ =?us-ascii?Q?gkjEd7Pg6XoN6abWHqFG4YvG2cy0N9v+q17XP/Bd+NylS4vZe5lJfcZsMZbG?=
+ =?us-ascii?Q?m14gxFYTXNH0CBRftlcWu8aQkIYxjnjSJAwf/WzmsPjfG44apyE0KsIKCJ7I?=
+ =?us-ascii?Q?8vPERmysJ7TLXqzM1x1OYRRlfFYuQTtSfcISh7+p3K73rYcEpyDv1nHG+H/i?=
+ =?us-ascii?Q?F/5BGUhdzOfYcAOQlWwUnTXqqMTuMoxbGPaI1hjI8IbT32i2Q0DY929AQ2PU?=
+ =?us-ascii?Q?j+J2AWTZcYHykkXNp3krmkf3cjmP5tCJFPVhIicy2B8dOWzbvl84fLqtWgxi?=
+ =?us-ascii?Q?x53SlTRxNLiswVHgsRnAfRezhihPJ1TRnRumEowq7iFtjq2oE+bAQuQU0085?=
+ =?us-ascii?Q?jpsn+xl00h9QQa5LQGjSGJUmtMve9EvXxys6GV2XKeq3vf5/Uk5xXvND+STc?=
+ =?us-ascii?Q?sGEt4GJUEZNOMTSpVCUMs/jGF4holWExZKE0ATlNmSMfemj9sq/O9mURvUnu?=
+ =?us-ascii?Q?I7/OsgOZOl2/kLRUATGVijdvA+DQoX6j4rwcRqAdevGdRqke43/oSpyBxqTX?=
+ =?us-ascii?Q?TC4KFugRzhPP0n6bhPK0PRBsJEZbOXcsuyKRT4XJx1usSVkck799Zm3HpY3i?=
+ =?us-ascii?Q?cNnITfwLEw5oDZad70Z6wjJNAd7SEvvsiKocDtHq0qFtCHZBxmW7JAwnR+ft?=
+ =?us-ascii?Q?CZk+c10yWAHWkPWjFTSAKd4o8/5YlwxN6Vkb7r3ILes43dCf0lj8B013MrqX?=
+ =?us-ascii?Q?9BbfBY33j6EAGx7V10PF5QWX0/qAuMHoOD9E/CDCBAABH7+8L4rnCfdbsfNr?=
+ =?us-ascii?Q?HjUaOMK9FMBSR/bvny/W3rxPdAY0JG62VUOQ0JQ0KyrmvRA1NKlrfESb3zgu?=
+ =?us-ascii?Q?AlnHgYEmafUDo2aTfbuaHT/GJqnLZhHN8qA9T2id87plcO9o/trNxQwl+a3X?=
+ =?us-ascii?Q?HdpHquxqJ+gtCLWPWtw/5SUYtgKnwgoKS8q1F/Xnr/pVJNxI/YMx6CLu5ZbP?=
+ =?us-ascii?Q?/FYW6YNvPXUiiXl3YxnW5rwtB4/qPfBTpWVi+8vv9vQvQ7D4JSKNqFSOCs+W?=
+ =?us-ascii?Q?OG8CcMG5Deahso+rB0pdN+zQsHEiF5s9G5bXD6AIIfZi17O3fgjT?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3e992d0-9dcc-40a0-bba3-08def189b0d7
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d84609d-4959-4364-f673-08def189b206
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Aug 2026 18:04:41.3983
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Aug 2026 18:04:43.3335
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: bGdBaITQ5n0jubxxl/9A65xm7PZUE/mhgRfem28nZzEXKR5NZ8Ndvhtqd0cSxXmQX3264NW7MHErb4PiomUBoQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: JPC6QbKVXDSlr7sUiTaLbXLzIhee+GZ3dwJOJY+MQqgMK6eV6komJDphkqfT054BfS6L61FvpPM+1JuUzMzS4Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB5249
 
-Hi,
+The legacy control layout cannot describe multiple logical MWs sharing
+one BAR. Treat a zero version as legacy; version 1 describes all MWs as
+one packed group using a BAR number and aggregate size. Derive the
+equal-sized logical MWs from the existing MW count.
 
-vNTB currently spends one BAR per MW. BAR count therefore limits the
-number of MWs, even when one BAR has room for several. A large BAR,
-especially a Resizable BAR, can instead be split into logical MWs and
-leave more BARs for config and doorbells.
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
+---
+ drivers/ntb/hw/epf/ntb_hw_epf.c | 102 ++++++++++++++++++++++++++++----
+ 1 file changed, 90 insertions(+), 12 deletions(-)
 
-This series adds packed_mws, which exposes up to 16 equal-sized logical
-MWs in one BAR. ntb_transport uses the new group operations to configure
-them atomically.
-
-The immediate use case is increasing the number of ntb_transport queues.
-The resulting performance gain is shown in the Testing section.
-
-Based on the latest pci/endpoint.
-
-
-Why not BAR subrange mappings?
-==============================
-
-An earlier proposal used mwN_offset and BAR subrange mappings to place
-independently backed MWs in one BAR:
-
-  https://lore.kernel.org/r/20260312165005.1148676-11-den@valinux.co.jp/
-
-BAR subrange mapping is currently implemented only by DWC, and that
-design still needs one hardware mapping per MW in each direction. This
-series instead requires one contiguous backing range and maps the whole
-group once in each direction. The initial implementation intentionally
-trades arbitrary MW placement for a constant mapping count as the MW
-count grows. More flexible layouts can be added when a concrete use
-case requires them.
-
-
-Testing
-=======
-
-The packed data path was tested with ntb_transport and ntb_netdev. An
-`iperf3 -ub0 -l 65482 -P 2` UDP saturation run produced the following
-results when only one Resizable BAR was available for MWs:
-
-  Configuration                                   Receiver throughput
-  ----------------------------------------------  -------------------
-  num_mws=1, packed_mws unset (default 0)         607 Mbits/sec
-  num_mws=2, packed_mws=2, combined channels=2    1.19 Gbits/sec
-
-Meanwhile, I realized that the in-tree ntb_test.sh does not fully pass
-with the pci-epf-vntb/ntb_hw_epf setup on the base tree. I had to apply
-a separate collection of local PCI endpoint and NTB fixes before this
-setup could be used for regression testing. These fixes address
-pre-existing issues and are not prerequisites of the packed MW
-implementation.
-
-With packed_mws unset and ntb_msi_tests disabled, ntb_test.sh reported
-the same pass/unsupported results before and after this series. One run
-follows:
-
-  $ sudo ./ntb_test.sh -r ${EP} -m 1048576 -p 28 0000:01:00.0 0001:10:00.0
-  Starting ntb_tool tests...
-  Running port tests on: 0000:01:00.0 / 0001:10:00.0
-  Local port 0 with index 0 on remote host
-  Peer port 0 with index 0 on local host
-    Passed
-  Running link tests on: 0000:01:00.0 / 0001:10:00.0
-    Passed
-  Running link tests on: 0001:10:00.0 / 0000:01:00.0
-    Passed
-  Running db tests on: 0000:01:00.0 / 0001:10:00.0
-    Passed
-  Running db tests on: 0001:10:00.0 / 0000:01:00.0
-    Passed
-  Running spad tests on: 0000:01:00.0 / 0001:10:00.0
-    Passed
-  Running spad tests on: 0001:10:00.0 / 0000:01:00.0
-    Passed
-  Running msg tests on: 0000:01:00.0 / 0001:10:00.0
-    Unsupported
-  Running msg tests on: 0001:10:00.0 / 0000:01:00.0
-    Unsupported
-  Running mw0 tests on: 0000:01:00.0 /  0001:10:00.0
-    Passed
-  Running mw0 tests on: 0001:10:00.0 /  0000:01:00.0
-    Passed
-
-  Starting ntb_pingpong tests...
-  Running ping pong tests on: 0000:01:00.0 / 0001:10:00.0
-    Passed
-
-  Starting ntb_perf tests...
-  Running local perf test without DMA
-        Peer 0 test statistics:
-  0: copied 268435456 bytes in 137063 usecs, 1958 MBytes/s
-    Passed
-  Running remote perf test without DMA
-        Peer 0 test statistics:
-  0: copied 268435456 bytes in 139188 usecs, 1928 MBytes/s
-    Passed
-
-For comparison, the before-series run reported 1997 MBytes/s locally
-and 1950 MBytes/s remotely. No obvious regression was seen in this
-single-run comparison.
-
-
-Control layout compatibility
-============================
-
-The endpoint selects the control layout. Non-packed pci-epf-vntb keeps
-the version 0 layout. packed_mws selects version 1. "Old" and "new"
-below mean ntb_hw_epf without and with this series.
-
-  EP configuration  Old ntb_hw_epf            New ntb_hw_epf
-  ----------------  ------------------------  ------------------------
-  non-packed (v0)   Supported                 Supported
-  packed (v1)       Not supported [1]         Supported
-
-[1] The old driver accepts two or four MWs but looks for a separate BAR
-    for each MW. It rejects larger MW counts at probe.
-
-
-Packed MW compatibility with in-tree NTB clients
-================================================
-
-The in-tree clients handle a packed MW group as follows:
-
-  Client          Behavior
-  --------------  ------------------------------------------------------
-  ntb_transport   Uses group operations. Without a singleton MW, MSI
-                  mode falls back to doorbells.
-  ntb_perf        Rejects a non-singleton MW group at probe.
-  ntb_tool        Loads normally. Per-MW inbound translation setup
-                  returns -EOPNOTSUPP for a non-singleton group.
-                  Doorbell and scratchpad access is unaffected.
-  ntb_msi_test    Fails probe unless the MW reserved for MSI is a
-                  singleton.
-  ntb_pingpong    Does not use MWs and is unaffected.
-
-Further client support can be added separately when needed. A final
-singleton MW on another BAR can also be added later if MSI mode is needed
-with packed MWs.
-
-
-Notes
-=====
-
-* About pci-epf-ntb:
-
-  pci-epf-ntb remains on the legacy version 0 layout; this series does
-  not add version 1 layout support to it. A pci-epf-ntb bridge should
-  therefore keep its existing behavior even when its nodes run a mix of
-  old and new kernels. I do not have hardware for the pci-epf-ntb bridge
-  topology.
-
-* About existing inbound MW clear behavior:
-
-  pci-epf-vntb already leaves the inbound BAR mapping in place when an
-  MW translation is cleared. This series keeps that behavior for packed
-  MWs. This limitation is independent of packing.
-
-  pci_epc_clear_bar() is not suitable here because it can clear the BAR
-  address assigned by the host. An EPF can instead restore a persistent
-  fallback mapping with pci_epc_set_bar(), as pci-epf-test does:
-
-    https://lore.kernel.org/r/20250908161942.534799-2-cassel@kernel.org/
-
-  pci-epf-vntb has no such fallback mapping today. Adding one, or an EPC
-  operation to unmap only the inbound translation, should be separate
-  work.
-
-Best regards,
-Koichiro
-
-
-Koichiro Den (11):
-  NTB: Add atomic MW translation group operations
-  NTB: epf: Parse a versioned packed MW layout
-  PCI: endpoint: pci-epf-vntb: Add packed MW layout handling
-  PCI: endpoint: pci-epf-vntb: Implement MW group translation callbacks
-  PCI: endpoint: pci-epf-vntb: Allocate packed outbound MW space
-  PCI: endpoint: pci-epf-vntb: Add outbound MW group commands
-  NTB: epf: Implement MW group translation callbacks
-  NTB: perf: Reject grouped memory windows
-  NTB/msi: Require a singleton memory window
-  NTB: ntb_transport: Use atomic MW translation groups
-  PCI: endpoint: pci-epf-vntb: Expose packed MWs through configfs
-
- Documentation/PCI/endpoint/pci-vntb-howto.rst |  16 +-
- drivers/ntb/hw/epf/ntb_hw_epf.c               | 143 +++++-
- drivers/ntb/msi.c                             |  19 +-
- drivers/ntb/ntb_transport.c                   | 127 +++++-
- drivers/ntb/test/ntb_perf.c                   |  16 +-
- drivers/pci/endpoint/functions/pci-epf-vntb.c | 423 ++++++++++++++++--
- include/linux/ntb.h                           | 133 +++++-
- 7 files changed, 801 insertions(+), 76 deletions(-)
-
+diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+index c47607d4f8a7..46f37c2dea7b 100644
+--- a/drivers/ntb/hw/epf/ntb_hw_epf.c
++++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+@@ -31,18 +31,22 @@
+ #define NTB_EPF_LINK_STATUS	0x0A
+ #define LINK_STATUS_UP		BIT(0)
+ 
+-#define NTB_EPF_TOPOLOGY	0x0C
++#define NTB_EPF_CTRL_VERSION	0x0C
++#define NTB_EPF_CTRL_V1		1
+ #define NTB_EPF_LOWER_ADDR	0x10
+ #define NTB_EPF_UPPER_ADDR	0x14
+ #define NTB_EPF_LOWER_SIZE	0x18
+ #define NTB_EPF_UPPER_SIZE	0x1C
+ #define NTB_EPF_MW_COUNT	0x20
+-#define NTB_EPF_MW1_OFFSET	0x24
++#define NTB_EPF_MW1_OFFSET	0x24	/* v0 only */
+ #define NTB_EPF_SPAD_OFFSET	0x28
+ #define NTB_EPF_SPAD_COUNT	0x2C
+ #define NTB_EPF_DB_ENTRY_SIZE	0x30
+ #define NTB_EPF_DB_DATA(n)	(0x34 + (n) * 4)
+ #define NTB_EPF_DB_OFFSET(n)	(0xB4 + (n) * 4)
++/* v1 only */
++#define NTB_EPF_MW_BAR		0x134
++#define NTB_EPF_MW_GROUP_SIZE	0x138
+ 
+ /*
+  * Legacy doorbell slot layout when paired with pci-epf-*ntb:
+@@ -88,7 +92,8 @@ enum epf_irq_slot {
+ 	EPF_IRQ_DB_START,
+ };
+ 
+-#define NTB_EPF_MAX_MW_COUNT	(NTB_BAR_NUM - BAR_MW1)
++#define NTB_EPF_LEGACY_MAX_MW_COUNT	(NTB_BAR_NUM - BAR_MW1)
++#define NTB_EPF_MAX_MW_COUNT		16
+ 
+ struct ntb_epf_dev;
+ 
+@@ -105,9 +110,12 @@ struct ntb_epf_dev {
+ 
+ 	const enum pci_barno *barno_map;
+ 
++	u32 ctrl_version;
+ 	unsigned int mw_count;
+ 	unsigned int spad_count;
+ 	unsigned int db_count;
++	u32 mw_bar;
++	u32 mw_size;
+ 
+ 	void __iomem *ctrl_reg;
+ 	void __iomem *db_reg;
+@@ -171,6 +179,9 @@ static int ntb_epf_mw_to_bar(struct ntb_epf_dev *ndev, int idx)
+ 		return -EINVAL;
+ 	}
+ 
++	if (ndev->ctrl_version >= NTB_EPF_CTRL_V1)
++		return ndev->mw_bar;
++
+ 	return ndev->barno_map[BAR_MW1 + idx];
+ }
+ 
+@@ -211,8 +222,37 @@ static int ntb_epf_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
+ 	if (size_align)
+ 		*size_align = 1;
+ 
+-	if (size_max)
+-		*size_max = pci_resource_len(ndev->ntb.pdev, bar);
++	if (size_max) {
++		if (ndev->ctrl_version >= NTB_EPF_CTRL_V1)
++			*size_max = ndev->mw_size;
++		else
++			*size_max = pci_resource_len(ndev->ntb.pdev, bar);
++	}
++
++	return 0;
++}
++
++static int ntb_epf_mw_get_trans_group(struct ntb_dev *ntb, int pidx, int idx,
++				      int *gidx, int *gcount)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	struct device *dev = ndev->dev;
++
++	if (pidx != NTB_DEF_PEER_IDX) {
++		dev_err(dev, "Unsupported Peer ID %d\n", pidx);
++		return -EINVAL;
++	}
++
++	if (idx < 0 || idx >= ndev->mw_count) {
++		dev_err(dev, "Unsupported Memory Window index %d\n", idx);
++		return -EINVAL;
++	}
++
++	if (gidx)
++		*gidx = ndev->ctrl_version >= NTB_EPF_CTRL_V1 ? 0 : idx;
++	if (gcount)
++		*gcount = ndev->ctrl_version >= NTB_EPF_CTRL_V1 ?
++			  ndev->mw_count : 1;
+ 
+ 	return 0;
+ }
+@@ -520,21 +560,27 @@ static int ntb_epf_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
+ 				    phys_addr_t *base, resource_size_t *size)
+ {
+ 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
+-	u32 offset = 0;
++	resource_size_t offset = 0;
+ 	int bar;
+ 
+-	if (idx == 0)
+-		offset = readl(ndev->ctrl_reg + NTB_EPF_MW1_OFFSET);
+-
+ 	bar = ntb_epf_mw_to_bar(ndev, idx);
+ 	if (bar < 0)
+ 		return bar;
+ 
++	if (ndev->ctrl_version >= NTB_EPF_CTRL_V1)
++		offset = (resource_size_t)idx * ndev->mw_size;
++	else if (idx == 0)
++		offset = readl(ndev->ctrl_reg + NTB_EPF_MW1_OFFSET);
++
+ 	if (base)
+ 		*base = pci_resource_start(ndev->ntb.pdev, bar) + offset;
+ 
+-	if (size)
+-		*size = pci_resource_len(ndev->ntb.pdev, bar) - offset;
++	if (size) {
++		if (ndev->ctrl_version >= NTB_EPF_CTRL_V1)
++			*size = ndev->mw_size;
++		else
++			*size = pci_resource_len(ndev->ntb.pdev, bar) - offset;
++	}
+ 
+ 	return 0;
+ }
+@@ -601,6 +647,7 @@ static const struct ntb_dev_ops ntb_epf_ops = {
+ 	.db_vector_count	= ntb_epf_db_vector_count,
+ 	.db_vector_mask		= ntb_epf_db_vector_mask,
+ 	.db_set_mask		= ntb_epf_db_set_mask,
++	.mw_get_trans_group	= ntb_epf_mw_get_trans_group,
+ 	.mw_set_trans		= ntb_epf_mw_set_trans,
+ 	.mw_clear_trans		= ntb_epf_mw_clear_trans,
+ 	.peer_mw_get_addr	= ntb_epf_peer_mw_get_addr,
+@@ -629,14 +676,45 @@ static inline void ntb_epf_init_struct(struct ntb_epf_dev *ndev,
+ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
+ {
+ 	struct device *dev = ndev->dev;
++	resource_size_t bar_len;
++	u32 group_size;
+ 	int ret;
+ 
++	ndev->ctrl_version = readl(ndev->ctrl_reg + NTB_EPF_CTRL_VERSION);
+ 	ndev->mw_count = readl(ndev->ctrl_reg + NTB_EPF_MW_COUNT);
+-	if (ndev->mw_count > NTB_EPF_MAX_MW_COUNT) {
++
++	if (ndev->ctrl_version && ndev->ctrl_version != NTB_EPF_CTRL_V1) {
++		dev_err(dev, "Unsupported control region version: %u\n",
++			ndev->ctrl_version);
++		return -EINVAL;
++	}
++
++	if ((!ndev->ctrl_version &&
++	     ndev->mw_count > NTB_EPF_LEGACY_MAX_MW_COUNT) ||
++	    ndev->mw_count > NTB_EPF_MAX_MW_COUNT) {
+ 		dev_err(dev, "Unsupported MW count: %u\n", ndev->mw_count);
+ 		return -EINVAL;
+ 	}
+ 
++	if (ndev->ctrl_version >= NTB_EPF_CTRL_V1) {
++		ndev->mw_bar = readl(ndev->ctrl_reg + NTB_EPF_MW_BAR);
++		group_size = readl(ndev->ctrl_reg + NTB_EPF_MW_GROUP_SIZE);
++
++		if (ndev->mw_count < 2 || ndev->mw_bar > BAR_5 ||
++		    !group_size || group_size % ndev->mw_count) {
++			dev_err(dev, "Invalid packed MW layout\n");
++			return -EINVAL;
++		}
++
++		ndev->mw_size = group_size / ndev->mw_count;
++		bar_len = pci_resource_len(ndev->ntb.pdev, ndev->mw_bar);
++		if (!IS_ALIGNED(ndev->mw_size, SZ_4K) || group_size != bar_len) {
++			dev_err(dev, "Packed MW layout does not match BAR%u\n",
++				ndev->mw_bar);
++			return -EINVAL;
++		}
++	}
++
+ 	/* One Link interrupt and rest doorbell interrupt */
+ 	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + 1,
+ 			       NTB_EPF_MAX_DB_COUNT + 1);
 -- 
 2.51.0
 
