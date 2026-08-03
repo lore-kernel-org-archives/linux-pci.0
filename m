@@ -1,76 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276EF34D3B0;
-	Mon,  3 Aug 2026 22:30:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732273515D4;
+	Mon,  3 Aug 2026 22:30:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785796203; cv=none; b=dWq0ZtBPN+jKzRMJCNFyMFjE4A/X48LKUGXH9K1fXBfhXGc6ByR+1J99MKRRoCZDJF0Od64dvH36wtc0mcx8iLLPk+J91tRJWzdOBou2BsRP8/og5TYSWkQowfJ3zuu0vGMmtp9MIsmWwcexTAMOWGO4TSrCw8fTuFmE+1fkAPo=
+	t=1785796251; cv=none; b=elRBGyOCrLoZwu060P+QlH/g0vh1GCOcFd/2oX+4Kdv7girFZnKcODp6vPL5/a1iYw2VKhwMrOEidIJpMnxM/Rfzu1wlcu5azl/Ubv8rCXg8UFmRHdUMIW0F9IjnKtXSMbnSgbd2VpJMae1slOpGmqN+FVGnBM0rg/4HMl+VmNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785796203; c=relaxed/simple;
-	bh=NQC99CnxR6zvrJlZT4wYBX9OaYv8VcKfUM61Yn5l2NY=;
+	s=arc-20240116; t=1785796251; c=relaxed/simple;
+	bh=4nxb5QHAje4H3F5wFZdm5J4kPWDiANgU0HGDnzyi/kE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iMd/7C27/0R7Z/4VvMo/zGkSDdu6LC2yBUQIQjEnL/9QC5LRUovU6vR0NIU95I362fMrFEgEVReULYp6PdJ/O3jR7hwriqA4H03c9NzhSsoZ7X5aJgVc6H6ur5D6bBc/t2z9eA20deUWTsf+QfdHEjWay5Y1iXll4V9cwm0UtYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IbgnGP4e; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KyD3oWsD4LMA9/9JjBJJLqHPAdapIVLyqo582ldRVDJpb0ale4uPDeki4VPIaU3uhANWcXmGAUEE4r/GMokDt3Bqt6zkUsYavvHqPGocxDbRLucKPwJ182pO6+R3QeoyxR9o2qJUdh8X4S4E44qGc9wOC7JG4XpNxi6R8nw1rE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DL4Lvn5A; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IbgnGP4e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 644DD1F00A3A;
-	Mon,  3 Aug 2026 22:30:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DL4Lvn5A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD6191F000E9;
+	Mon,  3 Aug 2026 22:30:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785796201;
-	bh=NQC99CnxR6zvrJlZT4wYBX9OaYv8VcKfUM61Yn5l2NY=;
+	s=k20260515; t=1785796249;
+	bh=4nxb5QHAje4H3F5wFZdm5J4kPWDiANgU0HGDnzyi/kE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IbgnGP4edUCeVBMGaNZP/OlxaGJku4jeqVwzVtyMWoMhuwiBY+g2o5tiERbtjc2h0
-	 1j/7W6OJ/MQs+QbDoiYSLano/iIYh40uR+dHIyULpAvUTwhwYvFoUCD8g/Exmglhdn
-	 8agEAr2A+bAUKQ5pAyio88QvZy0UQc4FabggbswT8xpR/fcK2sYGcklm2qXlgj9XV2
-	 hzRH0SDNMXdpFuyvdelArl9nd/GLyDwbM9OFRA4M0ysAOuU1vowuGCfoyb5G0r7X1i
-	 ImG+HWm9OeaIdLecLDbBVXpYevN8kpUaagHBUBhi4KMhYXZTj6GCp9QCEDxbaYhEo4
-	 Qq65oSpZ7FDiw==
+	b=DL4Lvn5AVkF7vdLJZQtQkONbs2KU3eLcuKnmsGa7v4mYPQyFPmwq5z6TXvrZbc2si
+	 r593cQ3OIkC3wxJuaVbQDwNwxdBa0wBXMJy1OnO9kP6jJYjs9ZlytKqe100PxwxZOr
+	 K7z6bNKcULtgaAI15uiV/29+rKTAy4URhTeL354lJjFAZtY0jJ9Es6+lFxONPhwu5U
+	 XPV+8kjwChx2HO6Z+HrVIb7E5YnrbLwqM4l0aeWguP+SbqK3Ly8dMubx/nJFSt+veT
+	 sNWZZmelHuJQ7woYlgA4cvglecOZUa3PHtkqMzJWS25Lesz7uuzI1pKXC9glstJlbn
+	 WcdI1r5cKtmsg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 11/14] PCI: Cache PCI DSN into pci_dev->dsn during
- probe
+Subject: Re: [PATCH v19 04/14] cxl: Tighten CPER kfifo registration API and
+ symbol visibility
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Terry Bowman" <terry.bowman@amd.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20260803221810.3685703-12-terry.bowman@amd.com>
+In-Reply-To: <20260803221810.3685703-5-terry.bowman@amd.com>
 References: <20260803221810.3685703-1-terry.bowman@amd.com>
- <20260803221810.3685703-12-terry.bowman@amd.com>
+ <20260803221810.3685703-5-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 22:29:59 +0000
-Message-Id: <20260803223001.644DD1F00A3A@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 22:30:48 +0000
+Message-Id: <20260803223048.DD6191F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Subsequent CXL error-reporting code paths need to log the PCI Device
-> Serial Number (DSN) as part of trace events emitted from interrupt or
-> panic context. Computing the DSN there via pci_get_dsn() requires PCI
-> configuration space reads, which are slow, can fail when the link is
-> down or frozen, and may not be safe in some contexts.
+> From: Dan Williams <djbw@kernel.org>
 >=20
-> Add a u64 dsn field to struct pci_dev and populate it from pci_get_dsn()
-> during pci_init_capabilities() at probe time via pci_dsn_init(). Only
-> write dev->dsn when the read succeeds. The zero initial value from
-> pci_dev allocation already represents 'no DSN available.'
+> Tighten the CPER protocol error kfifo registration API and symbol
+> visibility.
 >=20
-> Remove the now-redundant dsn member from the pciehp struct controller
-> along with its kernel-doc. Drop the pci_get_slot()/pci_dev_put() pairs
-> in pciehp_configure_device() and pcie_init() that existed solely to
-> read the DSN into ctrl->dsn. Use pdev->dsn in pciehp_device_replaced()
-> for the device-replacement comparison.
+> Use EXPORT_SYMBOL_FOR_MODULES() instead of EXPORT_SYMBOL_NS_GPL() for
+> the CPER kfifo registration symbols. This names the consuming module
+> explicitly and gives compile-time enforcement.
 >=20
-> pci_get_dsn() is not modified because it remains a pure config-space read
-> with no side effects on pci_dev. The cache is written exclusively by
-> pci_dsn_init() at probe time.
+> Drop the work_struct argument from the unregister path. Change the
+> WARN_ONCE condition to a NULL check since there is no caller pointer
+> to compare against anymore.
 >=20
+> Return void from the registration helpers whose result callers ignore.
+> cxl_cper_register_work() keeps its int return as the only one consumed by
+> a caller. Flag double registration with WARN_ONCE() inside the lock
+> instead of returning an error.
+>=20
+> Change cxl_ras_init() to void because there is one consumer and one
+> producer so the error return was unnecessary. Remove the now-dead error
+> check in cxl_core_init().
+>=20
+> Co-developed-by: Terry Bowman <terry.bowman@amd.com>
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Signed-off-by: Dan Williams <djbw@kernel.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803221810.3685=
-703-1-terry.bowman@amd.com?part=3D11
+703-1-terry.bowman@amd.com?part=3D4
 
