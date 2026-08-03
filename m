@@ -1,132 +1,140 @@
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153DA428470
-	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 18:39:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08BD426D03;
+	Mon,  3 Aug 2026 18:40:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785782344; cv=none; b=mSuYMB73YAC3+7X4aLl/ikl+wCDcJtSj6u9kNkXZMMRYPrrjp0e6NPwphqca9NRdnuu/+7LYZkUJcTE9cG9bDUqK9In83/+OklFdRtQNK+92AhJsQSiAfCWRyWdENs0KzESN1vyeWyB4d2Z8EF+Z9NacYo/pH262UCzc1dthuQA=
+	t=1785782424; cv=none; b=s6MQWRFMVkhYVsskaHfAiROExvkGN9rWps9CLxAeNnFOwBTc86ttgZEv7XVQD/Q2B0zHVlSbow8J0oavt8s6+NUscQQAoiK8A7XrrXXiZZTdkaltliq1Hoe2UNcDw5+HawuQrENfwZ4VJAjEn3tCgTEhz177tNnxHQNFfShMdVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785782344; c=relaxed/simple;
-	bh=nawgbZOcUUMAhp+QHIlZVsB8qYG3Js6cjLMtkwnYZwA=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=depd0Kb1LRrtahwLNaTZn90Qpu2qqECHxhFLpVUAR3zbrWJ0t2nCuqiQSVZm55NTT5quoMLDQfvPS86QCQKelEdCOGptwu68JFyKVfs0uMzL1HnVLmgP+cUI+z3zC5AUP/VC2HFqDPBWbFZWCauDgiW2cCUtXFs973m9hrqldyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=s+fBoRbG; arc=none smtp.client-ip=209.85.216.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	s=arc-20240116; t=1785782424; c=relaxed/simple;
+	bh=o1QAOOkJbiyCF2u1J4bgKYTZWs7PMH0vF3lSpYhnkVU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZtZutRSiKbdFOSNRqcAary3G/sQ5GZ5W5Zfxh2Jf+HCq64UXtroIxfcDP8k70UppB/BDyvhonc0kPX96uofUMlPSnlR3Q3+jH1fWabg+ycTig4MCdlBuBVnSpTKM9Lj15na83iAPdK2wF5cXcK7WhOpJ4/vlWq4yBA0EsGi+9us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rbuckga4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s+fBoRbG"
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e25e4b41cso4126877a91.0
-        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2026 11:39:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785782342; x=1786387142; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=iaF1vf6QOKeaYbRr7iA7Kf2ImiB954aE1RsWnBJ3e3k=;
-        b=s+fBoRbGdVDoqGUJzMepWFAlD3CjdfwpbOQdI+3dDI0Ya09soCAaLAkPm19l5bl4/C
-         uF+EfBmXttnIRcrOXY4sAqFj+AKPvRkEcj2K65Z7GB+ROM4cobaHLawn+iR1N1uc00Jk
-         azS+BctmMIoTYOHdDyarwcYtkDzWmhSA/AYUDe+AIC62YF0icycz7MQMGmHprQiuXBbb
-         w5qw1jwLnlw+0JziIctqJEnrhvGXC6VkAZnOmjkotjYswRPpTAHUUWAD84mLTpuxuaTc
-         dp+C1nfzyqKYqoDMd8dSf3LJDWqQ2fpjM6F2Q53qFJas87envbChTX8nvyVF2+kNIyE5
-         NgkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785782342; x=1786387142;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=iaF1vf6QOKeaYbRr7iA7Kf2ImiB954aE1RsWnBJ3e3k=;
-        b=cjUxAZS0M/z5ZtbPgCRgoP6hIZWTYmJf7/ll4uOTU56BjhEsNdnH9lovb3aLBYaB2Q
-         7cdLx5iZAknjkp+tGPWX4kBB11gkVUjcKCsMDTZWzFeswbEM9OHqAdaBEC1P1clxbEqJ
-         OkwTWkMRiw7et4qzOGvTjq0riQnmZCF7YIYgApakZckJ7gURU7n7LlXEDra51+yS7ZMC
-         V4jBOYsuciz3u6nPebg3NSh3DRdhCyZAYeClhhBEQJr7DvFH7BviREoZbIyo5KWPPSyu
-         h6ghbeEwI0n8EbqOQn5TEWOo4RqE677NByK607/nSNkE01IcYv2lbAd+n9EWcf+3Qu/A
-         SgCw==
-X-Gm-Message-State: AOJu0Yx+7q5lihnRDXPug8dhOYtFAS/zIUo4L5+VB/Tj+aOvwv2PTFsQ
-	lPoVtJ4ElAL1K8qslpcX3I9p+d5+GDKS+UsIh6krGsiITEYblqonXUQFLuNLARFFx5j/K9NwDrm
-	cteLC1sOkMyDelu2jTcZXSt7G6tHvaLzK3w==
-X-Received: from pjzt5.prod.google.com ([2002:a17:90b:585:b0:38f:5dae:af56])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:5807:b0:381:6466:7160 with SMTP id 98e67ed59e1d1-38fbc51c1acmr10689271a91.26.1785782341944;
- Mon, 03 Aug 2026 11:39:01 -0700 (PDT)
-Date: Mon,  3 Aug 2026 18:38:52 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rbuckga4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C9871F00A3A;
+	Mon,  3 Aug 2026 18:40:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785782422;
+	bh=VpWkgxq0vDjUXS/IkYjuNTUKPFNKwX4SeT/nhDDVD7U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Rbuckga4IBdEwaQI4CGHVsrsAHfnP4B5qu4BgqdPw5S0LRjDxkb+XYDaYLuXYPv3q
+	 SnasNKjqkWlgwdY+llre4JFzaijeaPnbWB4ROzyKwql4Auk1wzPBqJy7Xg0shkEsEf
+	 D7/rQ5Yk+TbUDsyfQUtjoXgfUcKlI08wUHnAUlWGVfkP0jIqgyQKgUB0fh5fIxlnUd
+	 EaJ+aVL9JLlVCKJaM0AIDEUXvUXRWgABOcKAsdkGty40hSzPkg9SUVlrXVpQChxAb2
+	 Obh/gkvKn4VCv1i/E+wh1nIN/YqulpD0jlwOWmKXuUI8WtG6zhq089+9nE7m6wbPe/
+	 XhEUZSRdmTIeg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 10/11] NTB: ntb_transport: Use atomic MW translation
+ groups
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
+In-Reply-To: <20260803180439.1963864-11-den@valinux.co.jp>
+References: <20260803180439.1963864-1-den@valinux.co.jp>
+ <20260803180439.1963864-11-den@valinux.co.jp>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 03 Aug 2026 18:40:21 +0000
+Message-Id: <20260803184022.4C9871F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.571.g244d577d93-goog
-Message-ID: <20260803183853.432459-2-rathodpriyank@google.com>
-Subject: [PATCH] PCI/AER: Fix memory leak in aer_recover_work_func() when
- pci_dev is missing
-From: Priyank Rathod <rathodpriyank@google.com>
-To: bhelgaas@google.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
-Content-Type: text/plain; charset="UTF-8"
 
-When ACPI APEI/GHES processes PCIe AER error records, it allocates memory
-for aer_capability_regs (entry.regs) from ghes_estatus_pool and queues
-the entry into aer_recover_ring.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-In aer_recover_work_func(), items are popped from aer_recover_ring via
-kfifo_get(). If pci_get_domain_bus_and_slot() fails to find a matching
-pci_dev, the code previously executed 'continue', bypassing the call to
-ghes_estatus_pool_region_free(). As a result, the memory allocated for
-entry.regs from ghes_estatus_pool was leaked.
+Pre-existing issues:
+- [High] Missing work cancellation in probe error path leads to Use-After-F=
+ree.
+--
 
-Refactor aer_recover_work_func() to ensure ghes_estatus_pool_region_free()
-is called unconditionally for every dequeued entry, releasing the pool
-memory even when pci_dev is missing.
+--- Patch [10]: [PATCH 10/11] NTB: ntb_transport: Use atomic MW translation=
+ groups ---
+commit 92a31c981341f2c994839699e7b4fa179c125291
+Author: Koichiro Den <den@valinux.co.jp>
 
-Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
----
- drivers/pci/pcie/aer.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+NTB: ntb_transport: Use atomic MW translation groups
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index c4fd9c0b2a54..555f39b60b14 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1223,14 +1223,13 @@ static void aer_recover_work_func(struct work_struct *work)
- 	while (kfifo_get(&aer_recover_ring, &entry)) {
- 		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
- 						   entry.devfn);
--		if (!pdev) {
-+		if (!pdev)
- 			pr_err_ratelimited("%04x:%02x:%02x.%x: no pci_dev found\n",
- 					   entry.domain, entry.bus,
- 					   PCI_SLOT(entry.devfn),
- 					   PCI_FUNC(entry.devfn));
--			continue;
--		}
--		pci_print_aer(pdev, entry.severity, entry.regs);
-+		else
-+			pci_print_aer(pdev, entry.severity, entry.regs);
- 
- 		/*
- 		 * Memory for aer_capability_regs(entry.regs) is being
-@@ -1242,13 +1241,15 @@ static void aer_recover_work_func(struct work_struct *work)
- 		ghes_estatus_pool_region_free((unsigned long)entry.regs,
- 					    sizeof(struct aer_capability_regs));
- 
--		if (entry.severity == AER_NONFATAL)
--			pcie_do_recovery(pdev, pci_channel_io_normal,
--					 aer_root_reset);
--		else if (entry.severity == AER_FATAL)
--			pcie_do_recovery(pdev, pci_channel_io_frozen,
--					 aer_root_reset);
--		pci_dev_put(pdev);
-+		if (pdev) {
-+			if (entry.severity == AER_NONFATAL)
-+				pcie_do_recovery(pdev, pci_channel_io_normal,
-+						 aer_root_reset);
-+			else if (entry.severity == AER_FATAL)
-+				pcie_do_recovery(pdev, pci_channel_io_frozen,
-+						 aer_root_reset);
-+			pci_dev_put(pdev);
-+		}
- 	}
- }
- 
--- 
-2.55.0.571.g244d577d93-goog
+This commit modifies the ntb_transport driver to allocate and program MWs
+in a translation group as one contiguous unit. It queries each group,
+allocates its backing once, and uses group set and clear operations.
 
+> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+> index f59f926d4bfaa..2c7728898890c 100644
+> --- a/drivers/ntb/ntb_transport.c
+> +++ b/drivers/ntb/ntb_transport.c
+
+[ ... ]
+
+> @@ -1291,6 +1366,22 @@ static int ntb_transport_probe(struct ntb_client *=
+self, struct ntb_dev *ndev)
+> =20
+>  	max_mw_count_for_spads =3D (spad_count - MW0_SZ_HIGH) / 2;
+>  	nt->mw_count =3D min(mw_count, max_mw_count_for_spads);
+> +	if (nt->mw_count) {
+> +		rc =3D ntb_mw_get_trans_group(ndev, PIDX, nt->mw_count - 1,
+> +					    &group_first, &group_count);
+> +		if (rc)
+> +			goto err;
+> +
+> +		if (group_first < 0 || group_count <=3D 0 ||
+> +		    (unsigned int)group_first >=3D nt->mw_count ||
+> +		    (unsigned int)group_count !=3D
+> +		    nt->mw_count - (unsigned int)group_first) {
+> +			dev_err(&ndev->dev,
+> +				"Scratchpad limit splits an MW translation group\n");
+> +			rc =3D -EOPNOTSUPP;
+> +			goto err;
+> +		}
+> +	}
+> =20
+>  	nt->msi_spad_offset =3D nt->mw_count * 2 + MW0_SZ_HIGH;
+> =20
+
+[Severity: High]
+This is a pre-existing issue, but does the probe error path need to cancel
+link_work?
+
+Looking at ntb_transport_probe(), ntb_set_ctx() registers device callbacks:
+
+    rc =3D ntb_set_ctx(ndev, nt, &ntb_transport_ops);
+    if (rc)
+        goto err2;
+
+    INIT_LIST_HEAD(&nt->client_devs);
+    rc =3D ntb_bus_init(nt);
+    if (rc)
+        goto err3;
+
+If an interrupt fires immediately after ntb_set_ctx() registers the
+callbacks, the link_event callback could queue nt->link_work on the system
+workqueue.
+
+If ntb_bus_init() subsequently fails, the error path jumps to err3 and
+frees the context without explicitly canceling the work via
+cancel_delayed_work_sync():
+
+err3:
+    ntb_clear_ctx(ndev);
+err2:
+    kfree(nt->qp_vec);
+err1:
+    while (i--) {
+        mw =3D &nt->mw_vec[i];
+        iounmap(mw->vbase);
+    }
+    kfree(nt->mw_vec);
+err:
+    kfree(nt);
+
+Could this leave link_work queued on freed memory, leading to a
+use-after-free when the work queue executes it?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
+864-1-den@valinux.co.jp?part=3D10
