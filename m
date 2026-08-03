@@ -1,140 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A0A6428828;
-	Mon,  3 Aug 2026 18:29:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02BB237BE9E;
+	Mon,  3 Aug 2026 18:32:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781766; cv=none; b=Z/12tebKP1r0uWgxvKIDrRE6a7vCwAndmOpFl1eFZQmPL7PuJnC18xkOWDUPr+nEIRfkjVKueRgnoGR+rYIQecpH+VWDxzxi5OHAVWrCLfhE3YtFjqyH4/0+59b4OLRiS2e7D5O3NBs3juX9c4vMFvAj7XPxcXslNyRaKBvW9u8=
+	t=1785781944; cv=none; b=NSsZsW0924l1zdt1+vGSH/7TeeNE7acjwbhbpgY8i7K5UU1fOG1pU5FtLju4ahFBlHmsEaFGbRo9AUUMAacNPi1TeHYC7K5oRXo+etvdL8Y8W0znFRuB4MMozvbE77ytcAP5xPFqQWIC6wZBAroYIsCaTPG/amvtA5ScVK2x87M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781766; c=relaxed/simple;
-	bh=eVGmriAA+aS/r+kar7JEUft1i9UiSPoC80J+dsm3YL4=;
+	s=arc-20240116; t=1785781944; c=relaxed/simple;
+	bh=dln6sBGoJxFtYsiDomVGo3RWQyPALW7qdVJCvjG1gkk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HvPCpZahl1CnI2F9x2hJSPkJ1pP5upR1f3uyEQs+KK8PD2ssYwsptQ+Zz1gjDAJzEJbbDzBYOXJYsrgMW/SiPVrHWEF4Koo0LJ/Qr+Xsq9OIKlWORIiXTawUDxPzjybBwikLYnhXUJ6D8j9TTd82iWsVjRgbrCoMBuj9VkqUAlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSnJp/cw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OpsY8vys8L9ydo0tNaUI4ICxwCaigtfbAUxiNZ7o4vsXu+eNlm1dULhdwnah/e6frjVuXssDGhFYQiSgp4SQoaXCaGr4EATe0FlMOGBnBQ7PTSDr3Kmp8TcaanVPUxNrd/jksvPGunP+YucTb9ODfGyaa5FoiNS3wxu24UizCL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HVDIBbDG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSnJp/cw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 673B91F000E9;
-	Mon,  3 Aug 2026 18:29:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HVDIBbDG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654851F000E9;
+	Mon,  3 Aug 2026 18:32:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781759;
-	bh=laRDeu/u+G5mTkVKDOOaCzpETnGMhID6toKmQ14jr7k=;
+	s=k20260515; t=1785781942;
+	bh=vaVql0ah70ZpJa+IBZ7DiV/y9i0oXqb9bvXrPRc0IRc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZSnJp/cwL1wdy79o1lx4lFJdMnBKKTJcsuw2dg5MBsOwBFsrQsAapRXQFvn6hHm6t
-	 i7dN1bQW+akH9Pvgr8DGY8+k9wjimFr/6EFazaTfGMqpVP+VPwXsf/ZHC099fUzHyv
-	 pTClNYrSVYEEWG6nDeNHXoNqFC0UYnqT/b50lbW9PlkUnbkzM2DsUSHqz1n38bzc3+
-	 WlsCrKG8yh31c8o1KNtT3tfZy/cVfUlXTieXX1NO4a7N8G5ZDr5d/59VgdFKDAHt4W
-	 JC8bFgwxDAibRiGVQ1L3TDuuX91qZfB0TK/SMIQVVP4/OTU7df2YOnO73iV7T3anvM
-	 bItTx6scsD9rg==
+	b=HVDIBbDGKY2jL9ssjeaFcMRZiIzMM+v6ow7rSrQ9z7NIO1EJH2m2/XzICA6NCyPgp
+	 VilcwBVHMuTStGhnFzRzpR9XwFdRzn3zGmbM+f+L8VHJCLK/cTlDhqzGKOgcGamrg7
+	 0ABBPVE9S/EXVPgMuMiFF0ixRGz2hdGQGbqQqd+qfnOYag4M3F8OKywCEQuMX27+Np
+	 qQSmrEKYZuvDR1q6SKKYA/7Pz7r/MdNbEQFzDxxmWKjLXmAw+LQo3TqhUE+HXcBrW1
+	 CR6uPNwvC1D1qGtuUiI3TkIHjhW76j8Tns7adVvjfnmTunOEnKzbgzADzCbqmAxiPO
+	 aK/UdUTQoX3JA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/11] NTB: epf: Implement MW group translation
- callbacks
+Subject: Re: [PATCH 05/11] PCI: endpoint: pci-epf-vntb: Allocate packed
+ outbound MW space
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260803180439.1963864-8-den@valinux.co.jp>
+In-Reply-To: <20260803180439.1963864-6-den@valinux.co.jp>
 References: <20260803180439.1963864-1-den@valinux.co.jp>
- <20260803180439.1963864-8-den@valinux.co.jp>
+ <20260803180439.1963864-6-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:29:18 +0000
-Message-Id: <20260803182919.673B91F000E9@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 18:32:21 +0000
+Message-Id: <20260803183222.654851F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Unprotected concurrent modification of shared hardware control reg=
-isters before acquiring cmd_lock.
-
-Pre-existing issues:
-- [High] The return values of `ntb_epf_send_command` are silently ignored i=
-n legacy MW operations.
+- [High] Packed outbound MW space is allocated but can never be mapped to t=
+he host, rendering it unusable.
 --
 
---- Patch [7]: [PATCH 07/11] NTB: epf: Implement MW group translation callb=
-acks ---
-commit 1b85afed97e44da7b70fd9dff32c501ab6f91e2d
+--- Patch [5]: [PATCH 05/11] PCI: endpoint: pci-epf-vntb: Allocate packed o=
+utbound MW space ---
+commit 1f91a957de194db5f5786ea1932b0222be01c3a2
 Author: Koichiro Den <den@valinux.co.jp>
 
-NTB: epf: Implement MW group translation callbacks
+PCI: endpoint: pci-epf-vntb: Allocate packed outbound MW space
 
-This commit connects the NTB group callbacks to the version 1 group commands
-so ntb_hw_epf can program packed MWs. Singleton MWs keep using the legacy
-commands.
+A packed MW group can use one outbound iATU region only when its EPC
+address range is contiguous.
 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_=
-epf.c
-> index 46f37c2dea7b2..8b00550eea04d 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> @@ -509,6 +511,43 @@ static int ntb_epf_db_set_mask(struct ntb_dev *ntb, =
-u64 db_bits)
->  	return 0;
->  }
+Allocate one EPC address range for the group and expose each logical MW
+as a subrange. Singleton MWs keep separate allocations.
+
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
+endpoint/functions/pci-epf-vntb.c
+> index 0c72b907c2896..aa8d304fe861f 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+[ ... ]
+> @@ -926,6 +936,9 @@ static int epf_ntb_mw_bar_init(struct epf_ntb *ntb)
 > =20
-> +static int
-> +ntb_epf_mw_set_trans_group(struct ntb_dev *ntb, int pidx, int widx,
-> +			   dma_addr_t addr, resource_size_t size)
-> +{
-[ ... ]
-> +	writel(lower_32_bits(addr), ndev->ctrl_reg + NTB_EPF_LOWER_ADDR);
-> +	writel(upper_32_bits(addr), ndev->ctrl_reg + NTB_EPF_UPPER_ADDR);
-> +	writel(lower_32_bits(size), ndev->ctrl_reg + NTB_EPF_LOWER_SIZE);
-> +	writel(upper_32_bits(size), ndev->ctrl_reg + NTB_EPF_UPPER_SIZE);
+>  alloc_vpci_mw:
+>  		/* Allocate EPC outbound memory windows to vpci vntb device */
+> +		count =3D ntb->packed_mws ? ntb->packed_mws : 1;
+> +		size =3D epf_ntb_mw_group_size(ntb, i, count);
+> +		/* Only the group head owns the allocation handle. */
+>  		ntb->vpci_mw_addr[i] =3D pci_epc_mem_alloc_addr(ntb->epf->epc,
+>  							      &ntb->vpci_mw_phy[i],
+>  							      size);
 
 [Severity: High]
-Can concurrent writes to these registers corrupt the hardware state?
+Will the newly allocated packed MW space ever be mapped to the host, or does
+it remain unusable?
 
-Looking at ntb_epf_mw_set_trans_group(), the parameter registers are modifi=
-ed
-outside the protection of ndev->cmd_lock, which is only acquired later insi=
-de
-ntb_epf_send_command().
+In epf_ntb_configure_mw() (which handles VHOST CMD_CONFIGURE_MW requests fr=
+om
+the host), the driver explicitly rejects packed groups:
 
-If a user or client driver concurrently configures different memory windows,
-would the register writes interleave, potentially granting the peer device
-DMA access to unintended memory regions?
-
-This identical pattern also exists in ntb_epf_mw_set_trans().
-
-> +
-> +	return ntb_epf_send_command(ndev, CMD_CONFIGURE_MW_GROUP, widx);
-> +}
-[ ... ]
-> @@ -648,6 +687,8 @@ static const struct ntb_dev_ops ntb_epf_ops =3D {
->  	.db_vector_mask		=3D ntb_epf_db_vector_mask,
->  	.db_set_mask		=3D ntb_epf_db_set_mask,
->  	.mw_get_trans_group	=3D ntb_epf_mw_get_trans_group,
-> +	.mw_set_trans_group	=3D ntb_epf_mw_set_trans_group,
-> +	.mw_clear_trans_group	=3D ntb_epf_mw_clear_trans_group,
->  	.mw_set_trans		=3D ntb_epf_mw_set_trans,
->  	.mw_clear_trans		=3D ntb_epf_mw_clear_trans,
-
-[Severity: High]
-This is a pre-existing issue, but do the legacy transaction functions mask
-hardware failures?
-
-Looking at ntb_epf_mw_clear_trans() in drivers/ntb/hw/epf/ntb_hw_epf.c:
-
-	ntb_epf_send_command(ndev, CMD_TEARDOWN_MW, idx);
+drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_configure_mw() {
+	...
+	ret =3D epf_ntb_get_mw_group(ntb, mw, NULL, &count);
 	if (ret)
-		dev_err(dev, "Failed to teardown memory window\n");
+		return ret;
+	if (count > 1)
+		return -EOPNOTSUPP;
+	...
+}
 
-The return value of ntb_epf_send_command() isn't captured, so ret remains
-zero and the error check becomes dead code.
-
-Could this hide a teardown failure, causing the local host to free memory
-while the peer host retains active DMA access to it?
-
-Similarly, ntb_epf_mw_set_trans() discards the return value of
-ntb_epf_send_command() and unconditionally returns 0.
+Since mapping of packed groups returns -EOPNOTSUPP without calling
+pci_epc_map_addr(), won't the configuration fail when requested by the host?
+If so, does the memory allocated here go unused, preventing host memory acc=
+ess
+for packed MW groups?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
-864-1-den@valinux.co.jp?part=3D7
+864-1-den@valinux.co.jp?part=3D5
