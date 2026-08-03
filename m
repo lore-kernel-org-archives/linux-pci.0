@@ -1,189 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C2A2E739C;
-	Mon,  3 Aug 2026 18:28:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A0A6428828;
+	Mon,  3 Aug 2026 18:29:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781704; cv=none; b=DbnMG21qmfXiCpSzAviBk9AuHiUJMjjhDypUecUON6+lzcG3w8dNaj0Bh9AA2xu4as7SSjlnB473e9z7kdCId4ystxYHQ6SIBBdSIxPbQZ+q31LvbrVycQgh6W6Y+3Wq098smon5w2seWMGGdT3S7Il8VsbxiVYzKoy7YLqjRxk=
+	t=1785781766; cv=none; b=Z/12tebKP1r0uWgxvKIDrRE6a7vCwAndmOpFl1eFZQmPL7PuJnC18xkOWDUPr+nEIRfkjVKueRgnoGR+rYIQecpH+VWDxzxi5OHAVWrCLfhE3YtFjqyH4/0+59b4OLRiS2e7D5O3NBs3juX9c4vMFvAj7XPxcXslNyRaKBvW9u8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781704; c=relaxed/simple;
-	bh=k7r2BAdeE4vQMj32cYEVlYRLaZL9NgOQVz2HmiQdfkQ=;
+	s=arc-20240116; t=1785781766; c=relaxed/simple;
+	bh=eVGmriAA+aS/r+kar7JEUft1i9UiSPoC80J+dsm3YL4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eyi+6JVIT80+Xbhdgtw1P6INcGg+TqB2xi39Ag5S20kr2TlRStlkWbPsAcaBQKFvfrlgfMgVNXKZg6zdw0YqXygKKrx67WaAFIW4eEYn4+B0ZTOsxTnjvXrNQT7+EazMk2o0hwXTCMC5OhmnqTgwUmbOWI19CZQXBv3ht39DFCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OX98n0yk; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HvPCpZahl1CnI2F9x2hJSPkJ1pP5upR1f3uyEQs+KK8PD2ssYwsptQ+Zz1gjDAJzEJbbDzBYOXJYsrgMW/SiPVrHWEF4Koo0LJ/Qr+Xsq9OIKlWORIiXTawUDxPzjybBwikLYnhXUJ6D8j9TTd82iWsVjRgbrCoMBuj9VkqUAlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSnJp/cw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OX98n0yk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56AA11F000E9;
-	Mon,  3 Aug 2026 18:28:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSnJp/cw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 673B91F000E9;
+	Mon,  3 Aug 2026 18:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781702;
-	bh=ZU2vcfHbavmVGPVbziwkN9ZACfXvsqkaohFlU+YKhOI=;
+	s=k20260515; t=1785781759;
+	bh=laRDeu/u+G5mTkVKDOOaCzpETnGMhID6toKmQ14jr7k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OX98n0yk+12CAd8GZaHq/QLKQ1GBx43TnmDWOpk8YnLT5XkH11WxWkRA6eoabdpTG
-	 NAZrarJ9Ity1KQnAlTJ6Gg09ciIG88o1SiMirqO/MQXQFiDPRy0Xaw19rQ1xTwsCSp
-	 Jg+IXpmo/AZfki1egCHejDSc5jDQ4WzpCbqtXWB2jBSqYjtig7eu8AtoouK4Wfd4p4
-	 w3XngUO8UJZPzjVHiOj/CLq0P1jWMI4rrPunti+D3G9kLkyZbRJvycFPGx//GsPLTk
-	 WNKTaome30/Frzfrt1LsZiGeMw54wZqpZMh0qN4zq97hHwl+aTfwmRmg4NmRSr8XVD
-	 KFayqODueszeg==
+	b=ZSnJp/cwL1wdy79o1lx4lFJdMnBKKTJcsuw2dg5MBsOwBFsrQsAapRXQFvn6hHm6t
+	 i7dN1bQW+akH9Pvgr8DGY8+k9wjimFr/6EFazaTfGMqpVP+VPwXsf/ZHC099fUzHyv
+	 pTClNYrSVYEEWG6nDeNHXoNqFC0UYnqT/b50lbW9PlkUnbkzM2DsUSHqz1n38bzc3+
+	 WlsCrKG8yh31c8o1KNtT3tfZy/cVfUlXTieXX1NO4a7N8G5ZDr5d/59VgdFKDAHt4W
+	 JC8bFgwxDAibRiGVQ1L3TDuuX91qZfB0TK/SMIQVVP4/OTU7df2YOnO73iV7T3anvM
+	 bItTx6scsD9rg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 06/11] PCI: endpoint: pci-epf-vntb: Add outbound MW
- group commands
+Subject: Re: [PATCH 07/11] NTB: epf: Implement MW group translation
+ callbacks
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org
-In-Reply-To: <20260803180439.1963864-7-den@valinux.co.jp>
+In-Reply-To: <20260803180439.1963864-8-den@valinux.co.jp>
 References: <20260803180439.1963864-1-den@valinux.co.jp>
- <20260803180439.1963864-7-den@valinux.co.jp>
+ <20260803180439.1963864-8-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:28:21 +0000
-Message-Id: <20260803182822.56AA11F000E9@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 18:29:18 +0000
+Message-Id: <20260803182919.673B91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [High] The cleanup path `epf_ntb_mw_bar_clear()` unconditionally calls `e=
-pf_ntb_teardown_mw_group(ntb, 0)` for packed MWs, leading to unmapping of p=
-hysical address 0 if initialization fails.
-- [High] The automatic ATU mapping teardown silently fails when `packed_mws=
- =3D=3D 1`, leading to ATU resource leaks and stale memory mappings.
+- [High] Unprotected concurrent modification of shared hardware control reg=
+isters before acquiring cmd_lock.
 
 Pre-existing issues:
-- [High] Failure to unmap outbound ATU mappings for singleton (non-packed) =
-memory windows during driver unbind or error cleanup leaves stale DMA trans=
-lations active.
-- [High] The command handler `epf_ntb_cmd_handler` reads `ctrl->command` an=
-d then `ctrl->argument` without a read memory barrier, risking processing o=
-f stale arguments.
+- [High] The return values of `ntb_epf_send_command` are silently ignored i=
+n legacy MW operations.
 --
 
---- Patch [6]: [PATCH 06/11] PCI: endpoint: pci-epf-vntb: Add outbound MW g=
-roup commands ---
-commit 6b0d64af683bb36f33f200f34cffed00c1c6d648
+--- Patch [7]: [PATCH 07/11] NTB: epf: Implement MW group translation callb=
+acks ---
+commit 1b85afed97e44da7b70fd9dff32c501ab6f91e2d
 Author: Koichiro Den <den@valinux.co.jp>
 
-PCI: endpoint: pci-epf-vntb: Add outbound MW group commands
+NTB: epf: Implement MW group translation callbacks
 
-Packed logical MWs share one contiguous EPC address range. Their
-outbound translations can therefore use one mapping as well.
+This commit connects the NTB group callbacks to the version 1 group commands
+so ntb_hw_epf can program packed MWs. Singleton MWs keep using the legacy
+commands.
 
-Add commands to map or unmap a complete group in one operation. Keep the
-existing commands for singleton MWs.
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/=
-endpoint/functions/pci-epf-vntb.c
-> index aa8d304fe861f..526cc31d94351 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-[ ... ]
-> @@ -319,6 +321,50 @@ static int epf_ntb_teardown_mw(struct epf_ntb *ntb, =
-u32 mw)
-[ ... ]
-> +static int epf_ntb_teardown_mw_group(struct epf_ntb *ntb, u32 mw)
+> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_=
+epf.c
+> index 46f37c2dea7b2..8b00550eea04d 100644
+> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
+> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> @@ -509,6 +511,43 @@ static int ntb_epf_db_set_mask(struct ntb_dev *ntb, =
+u64 db_bits)
+>  	return 0;
+>  }
+> =20
+> +static int
+> +ntb_epf_mw_set_trans_group(struct ntb_dev *ntb, int pidx, int widx,
+> +			   dma_addr_t addr, resource_size_t size)
 > +{
-> +	unsigned int first, count;
-> +	int ret;
-> +
-> +	ret =3D epf_ntb_get_mw_group(ntb, mw, &first, &count);
-> +	if (ret)
-> +		return ret;
-> +	if (count <=3D 1)
-> +		return -EOPNOTSUPP;
+[ ... ]
+> +	writel(lower_32_bits(addr), ndev->ctrl_reg + NTB_EPF_LOWER_ADDR);
+> +	writel(upper_32_bits(addr), ndev->ctrl_reg + NTB_EPF_UPPER_ADDR);
+> +	writel(lower_32_bits(size), ndev->ctrl_reg + NTB_EPF_LOWER_SIZE);
+> +	writel(upper_32_bits(size), ndev->ctrl_reg + NTB_EPF_UPPER_SIZE);
 
 [Severity: High]
-Does returning -EOPNOTSUPP here cause an ATU resource leak when a single
-packed memory window is configured?
+Can concurrent writes to these registers corrupt the hardware state?
 
-When packed_mws =3D=3D 1, this returns -EOPNOTSUPP, which is then silently =
-ignored
-by callers like epf_ntb_mw_bar_clear() and COMMAND_LINK_DOWN.
+Looking at ntb_epf_mw_set_trans_group(), the parameter registers are modifi=
+ed
+outside the protection of ndev->cmd_lock, which is only acquired later insi=
+de
+ntb_epf_send_command().
 
-This leaves the ATU hardware mappings active while the underlying physical =
-EPC
-memory is freed, which could lead to memory corruption if the physical addr=
-ess
-is reallocated.
+If a user or client driver concurrently configures different memory windows,
+would the register writes interleave, potentially granting the peer device
+DMA access to unintended memory regions?
 
-> +	if (mw !=3D first)
-> +		return -EINVAL;
+This identical pattern also exists in ntb_epf_mw_set_trans().
+
 > +
-> +	pci_epc_unmap_addr(ntb->epf->epc, ntb->epf->func_no,
-> +			   ntb->epf->vfunc_no, ntb->vpci_mw_phy[first]);
-> +
-> +	return 0;
+> +	return ntb_epf_send_command(ndev, CMD_CONFIGURE_MW_GROUP, widx);
 > +}
 [ ... ]
-> @@ -378,6 +424,14 @@ static void epf_ntb_cmd_handler(struct work_struct *=
-work)
+> @@ -648,6 +687,8 @@ static const struct ntb_dev_ops ntb_epf_ops =3D {
+>  	.db_vector_mask		=3D ntb_epf_db_vector_mask,
+>  	.db_set_mask		=3D ntb_epf_db_set_mask,
+>  	.mw_get_trans_group	=3D ntb_epf_mw_get_trans_group,
+> +	.mw_set_trans_group	=3D ntb_epf_mw_set_trans_group,
+> +	.mw_clear_trans_group	=3D ntb_epf_mw_clear_trans_group,
+>  	.mw_set_trans		=3D ntb_epf_mw_set_trans,
+>  	.mw_clear_trans		=3D ntb_epf_mw_clear_trans,
 
 [Severity: High]
-This is a pre-existing issue, but does epf_ntb_cmd_handler() risk processing
-stale arguments due to missing memory barriers?
+This is a pre-existing issue, but do the legacy transaction functions mask
+hardware failures?
 
-The handler reads ctrl->command, checks it, and then reads ctrl->argument f=
-rom
-DMA-coherent memory.
+Looking at ntb_epf_mw_clear_trans() in drivers/ntb/hw/epf/ntb_hw_epf.c:
 
-Without a read memory barrier (e.g., smp_rmb()), control dependencies do not
-prevent speculative reads on architectures with weak memory ordering.
+	ntb_epf_send_command(ndev, CMD_TEARDOWN_MW, idx);
+	if (ret)
+		dev_err(dev, "Failed to teardown memory window\n");
 
-Could the CPU speculatively read a stale argument before the command is ful=
-ly
-resolved?
+The return value of ntb_epf_send_command() isn't captured, so ret remains
+zero and the error check becomes dead code.
 
->  		ret =3D epf_ntb_teardown_mw(ntb, argument);
->  		ctrl->command_status =3D ret ? COMMAND_STATUS_ERROR : COMMAND_STATUS_O=
-K;
->  		break;
-[ ... ]
-> @@ -976,6 +1032,9 @@ static void epf_ntb_mw_bar_clear(struct epf_ntb *ntb=
-, int num_mws)
->  	unsigned int count;
->  	int i;
-> =20
-> +	if (ntb->packed_mws)
-> +		epf_ntb_teardown_mw_group(ntb, 0);
-> +
+Could this hide a teardown failure, causing the local host to free memory
+while the peer host retains active DMA access to it?
 
-[Severity: High]
-Is it possible to unmap physical address 0 if initialization fails?
-
-If pci_epc_set_bar() fails for i=3D0 during epf_ntb_mw_bar_init(), it branc=
-hes
-to the error path and calls epf_ntb_mw_bar_clear(ntb, 0).
-
-Because ntb->packed_mws is true, it unconditionally calls
-epf_ntb_teardown_mw_group(ntb, 0).
-
-Since the memory allocation was never reached for i=3D0, ntb->vpci_mw_phy[0=
-] is
-still 0, causing pci_epc_unmap_addr() to operate on uninitialized physical
-address 0.
-
->  	for (i =3D 0; i < num_mws; i++) {
->  		barno =3D ntb->mw_layout[i].barno;
-
-[Severity: High]
-This is a pre-existing issue, but does this loop fail to unmap outbound ATU
-mappings for standard (non-packed) memory windows?
-
-During driver unbind or error cleanup, this loop frees the outbound EPC mem=
-ory,
-but it lacks a call to pci_epc_unmap_addr() for unpacked memory windows.
-
-The physical EPC memory is freed while the ATU mapping remains active in
-hardware, which could lead to silent memory corruption if re-allocated to
-another endpoint function.
-
->  		if (!bar_cleared[barno]) {
+Similarly, ntb_epf_mw_set_trans() discards the return value of
+ntb_epf_send_command() and unconditionally returns 0.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180439.1963=
-864-1-den@valinux.co.jp?part=3D6
+864-1-den@valinux.co.jp?part=3D7
