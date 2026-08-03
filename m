@@ -1,32 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1097C381EA8;
-	Mon,  3 Aug 2026 16:11:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEEFE33D6D7
+	for <linux-pci@vger.kernel.org>; Mon,  3 Aug 2026 16:29:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785773480; cv=none; b=Gs++XKzzQy8DaIoPrx2D5QtBnuaEVHvwZmUnCAOb9VHGa4MZVdHugTEWm2rvSeKhuyap31OJQ9kdl8Q5k2u3wekXDpt5D5rsn+2Ff41FtmrUk/Q+snq/4+qIB+xcMvERWZkckcDnSnOUh8KSHWEPxj93wcGOJGeQLeC2Mt/VX6M=
+	t=1785774550; cv=none; b=k4gjTOhFkKkawcxFm4BuIuH0dE+hRhZ3HEHUSkLvY3MvNC/wGCwrFepi8mGdof27Js7vLNFSA9Nbj5Bw3scFvT9qBydlWpwMAmiFHFweMyI1ysnV4YNh4cPBGQO3PTdjJ/b9z4pG16mCMKMVVH0zs5OWudQTrGRoBgxWGia0Gd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785773480; c=relaxed/simple;
-	bh=6T5ASjFaFFeo+RF49QUk+cIewYeytNLX1wKE5pcHaiQ=;
+	s=arc-20240116; t=1785774550; c=relaxed/simple;
+	bh=EH6T821OGBEq2OI/XgKpnvqlQqJ/6osaeC3ahIlCVLE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Rpu7to2w8SEl2wJBQYox0ACnc+P87J2+5HkVmOPN9QjBTPn3BlBAjdE6o4NwTp6tkQ4wsA1TCtXCYOFyvvXOI2BQtSL+ee986MdddnTFeKU0okaZoWtEc1IGkXl0rywoAfclhpAvwg+pH9yxOTPqiw1sJa0EpnfatcvQZTc4r7o=
+	 MIME-Version:Content-Type; b=njMxJpiNr5p0dQ++ndWAF3P++6cKR3no7P14T0L05nuULZd9TZmqM13HpJOYQCvuFiqTO0rjg4IB/VoYnTw4Ub50rtd526iv905bWBw8kK4JPb3RzNRS7odB9yVFQyEzVLACaQUsfBo1WELUH4M/VVM/ZlDrq1+QomS1z0JqLnQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC4AC1F00A3D;
-	Mon,  3 Aug 2026 16:11:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36C51F000E9;
+	Mon,  3 Aug 2026 16:29:06 +0000 (UTC)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: jim2101024@gmail.com, florian.fainelli@broadcom.com, 
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
- bhelgaas@google.com, Sangwoo Han <sangwoo.han@nearthlab.com>
-Cc: bcm-kernel-feedback-list@broadcom.com, robh@kernel.org, 
- linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260730072215.2090974-1-sangwoo.han@nearthlab.com>
-References: <20260730072215.2090974-1-sangwoo.han@nearthlab.com>
-Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
- handed out
-Message-Id: <178577347444.25420.9482634841308840205.b4-ty@b4>
-Date: Mon, 03 Aug 2026 18:11:14 +0200
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-pci@vger.kernel.org, Koichiro Den <den@valinux.co.jp>, 
+ Frank Li <Frank.Li@nxp.com>
+In-Reply-To: <20260730122045.1382749-4-cassel@kernel.org>
+References: <20260730122045.1382749-4-cassel@kernel.org>
+Subject: Re: [PATCH 0/2] misc: pci_endpoint_test: Doorbell fix and
+ improvement
+Message-Id: <178577454647.27194.3005886799360312801.b4-ty@b4>
+Date: Mon, 03 Aug 2026 18:29:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -38,22 +37,22 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Thu, 30 Jul 2026 16:22:15 +0900, Sangwoo Han wrote:
-> brcm_msi_alloc() reserves a naturally aligned power-of-two region with
-> bitmap_find_free_region(order_base_2(nr_irqs)), but the irqdomain core
-> releases the vectors of a block one at a time:
+On Thu, 30 Jul 2026 14:20:46 +0200, Niklas Cassel wrote:
+> There is one pci_endpoint_test fix and one improvement related to
+> the doorbell test case.
 > 
->   /* irq_domain_free_irqs_hierarchy() */
->   for (i = 0; i < nr_irqs; i++)
->           if (irq_domain_get_irq_data(domain, irq_base + i))
->                   domain->ops->free(domain, irq_base + i, 1);
+> Kind regards,
+> Niklas
+> 
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: brcmstb: Reserve only the MSI vectors that are handed out
-      commit: 92bf60fbb80f94c1b0fc24c7ff67d7aee936a58c
+[1/2] misc: pci_endpoint_test: Fix doorbell success logic
+      commit: 37ddcce6904c20c6a7debe4751f6a82f218c3bae
+[2/2] misc: pci_endpoint_test: Improve logic to check status for doorbell test case
+      commit: 0a6f72eda328c773324555491e1ad7f0b0153155
 
 Best regards,
 -- 
