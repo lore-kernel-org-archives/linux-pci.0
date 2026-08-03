@@ -1,134 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B85832B10D;
-	Mon,  3 Aug 2026 15:33:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8C331332623;
+	Mon,  3 Aug 2026 15:43:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785771208; cv=none; b=MPTLAsBO2fEJc6XaPi5tvjl1xJolnORb/ijgp1mYbDHvrrj0iVT1TvJCEB6F1jMkGh1kyGgylRkeH6ZPOxlA7XQnU3UYBFQcIjqHMvwA+BFmBuJsDoSTvzD3+y8QY2cKFU+HlaYizp/oMoamY6CPUPenQAV5FkI7HXxAV0lkfPw=
+	t=1785771812; cv=none; b=IoPkjeejNVg80pvfruwv07z7azXfO/SmolPZhYvGDi1ydcUI+shsDLkz+NvB0OBhwf+6A6KvHDtCRkXm+Oj+NJN53+ITvjObX9Tc44NXUS6wPlY7kq+ElKhuxPRd3rdfD54O4bMzMy19djSmF9GyQqjUNVOaaG6JskZZ0oNNcm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785771208; c=relaxed/simple;
-	bh=k5Kmssu1/Grg6vRwr4FEdR4G2wuL/JL16WzdSa0VqMg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FB/vx9YNneTdRZJQ8dkaK9klqNN5CqhFa5hUIYzEu5WLEVVTDd76P4Erds0u5kr2uHrwqXK74SEzdHKi+wiUlRb+tuJZJBWyaPNCNCA//IAw6pd3pAotpGq8nOarNKskph3ES1gJIJ1pMwebxvZIzI2FAMWeZRwNPWLSbmCvpY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FyFB74lh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785771812; c=relaxed/simple;
+	bh=5vNoMNh7GHKbWdanr8RiF5fPbOr5iOwOgWk2gqutXzE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gxnRyCGgL5n2DCmBWaCHkebihOwC+XWs3+mUJAXPmExnzMFKnziknp6YUvfqmFU5trFQzTRA55EBngPH2chGBr9i+sOxTeZxAQusol1jEpKY20G9CH0id6QoD3OYV39YipB0jvHUhtT4iN8pKzUiqcNU+Tx2FlBZnMJfurppVvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=HDO88D5y; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FyFB74lh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE1651F00A3D;
-	Mon,  3 Aug 2026 15:33:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785771203;
-	bh=Vg0PctaQtBQrf+tl8AD8zggSqyHRuQxDtAbyWu+DxcE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FyFB74lh75/iAlB/t5+krj7Omm8rH1vuVjxw1+YCRpRHUMKmXPL4EcwtWcV2wR9O0
-	 YF3lBtpPhs4cUGThZcEDwxQbeP3i5LvflOLC8CYQdNVSEmO590GT7Eh6e6P3oUKO+s
-	 PpeGBnCblW+YF85sSCi5gI+qElYNNMoU64rsldqWdPZ59BIo3Fv8NRVt5elR0tS12N
-	 R6ZCgkhZ5xWugaNq22hNVX4FIOMqKyWaKETl9sZBAw00t7qiS4wsgM7GL6rFFuUxFR
-	 lfHHyfRJPMT5GtZW/rwXOew3eohNRd3eG6xA3dj5/VANw8MVUakNDnfDfCtpz4gChT
-	 vi5lVejnRBhqQ==
-Date: Mon, 3 Aug 2026 17:33:12 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>, 
-	Frank Li <frank.li@nxp.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v2] PCI: dwc: Add suspend_poweroff flag for platforms
- with RC power loss
-Message-ID: <hyfto5fjcda4aaknwxxxx6wn6ej3tmbhzxaqykakubahw7xxjj@zxixpkhs7khh>
-References: <GV2PR04MB12019096F2A9E8337F2A1BF9F8CC92@GV2PR04MB12019.eurprd04.prod.outlook.com>
- <20260730120913.GA1497203@bhelgaas>
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="HDO88D5y"
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E6A381476;
+	Mon,  3 Aug 2026 08:43:26 -0700 (PDT)
+Received: from ewhatever.cambridge.arm.com (ewhatever.cambridge.arm.com [10.2.197.99])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id ADB603F66F;
+	Mon,  3 Aug 2026 08:43:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
+	t=1785771811; bh=5vNoMNh7GHKbWdanr8RiF5fPbOr5iOwOgWk2gqutXzE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=HDO88D5yK//qHn1WmtvZ0TBcIMliRZyk0KS6Eu7EneEJTxdiM683zylq8QupmowKC
+	 V0nkLwOMOHWlrMOyzxmBtF3VvJ/2yRIPfNlFMpH9UAVn6dknJq+GokQdvECnZL3me4
+	 2MoPGP0mmfvNbxmh1BgL2tZ9SJ6CFocte453NxJc=
+From: Suzuki K Poulose <suzuki.poulose@arm.com>
+To: Sizhe Liu <liusizhe5@huawei.com>,
+	Jie Zhan <zhanjie9@hisilicon.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Jonathan Cameron <jic23@kernel.org>
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>,
+	linuxarm@huawei.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Update HiSilicon PCI Trace and Tune maintainer
+Date: Mon,  3 Aug 2026 16:43:18 +0100
+Message-ID: <178577175149.2908939.183052513314662121.b4-ty@arm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260416094219.25258-1-Jonathan.Cameron@huawei.com>
+References: <20260416094219.25258-1-Jonathan.Cameron@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260730120913.GA1497203@bhelgaas>
 
-On Thu, Jul 30, 2026 at 07:09:13AM -0500, Bjorn Helgaas wrote:
-> On Thu, Jul 30, 2026 at 08:16:36AM +0000, Hongxing Zhu (OSS) wrote:
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas <helgaas@kernel.org>
-> > > Sent: Thursday, July 30, 2026 6:30 AM
-> > ...
-> 
-> > > On Fri, Jul 17, 2026 at 03:41:21PM +0800, hongxing.zhu@oss.nxp.com wrote:
-> > > > From: Richard Zhu <hongxing.zhu@nxp.com>
-> > > >
-> > > > Some platforms like i.MX power off their PCIe RC controllers during
-> > > > system suspend, requiring full re-initialization on resume. These
-> > > > platforms need to enter L2 state to properly notify endpoints before
-> > > > power loss.
-> > > >
-> > > > According to PCIe base spec r7.0, sec 5.2, the system software should
-> > > > transition the device into D3Hot before broadcasting the PME_Turn_Off
-> > > > message to initiate L2 entry. However, some endpoint devices fail the
-> > > > D3cold capability check in pci_host_common_d3cold_possible(), which
-> > > > would normally prevent L2 entry.
-> > > 
-> > > Wakeup devices that don't support PME from D3cold will fail the
-> > > D3cold capability check, but I don't think those are the problem
-> > > you're solving.
-> > > 
-> > You're right.
-> > 
-> > > This appears to handle devices that are not in D3hot, and that's
-> > > not a property of the endpoint; it's a property of its driver.  Is
-> > > the problem here that some driver didn't put its device in D3hot?
-> > > 
-> > I observed some endpoint devices failing the D3cold capability
-> > check, but I haven't identified the root cause.
-> 
-> Seems like some instrumentation in pci_host_common_d3cold_possible()
-> could tell us which devices/drivers are relevant.
-> 
-> > > > For platforms where the RC loses power during suspend, L2 entry
-> > > > is essential regardless of D3cold support, as the link will be
-> > > > lost anyway.  Add a suspend_poweroff flag to force L2 entry in
-> > > > such cases, and enable it for i.MX PCIe controllers.
-> > > >
-> > > > Note: This violates the spec requirement that devices be in
-> > > > D3Hot before PME_Turn_Off, but is necessary for proper operation
-> > > > on platforms with RC power loss during suspend.
-> > > 
-> > > If the device isn't in D3hot, it may still be active, and I think
-> > > the PME_Turn_Off will abort any DMAs in progress, which doesn't
-> > > sound like proper operation of the endpoint.
-> >
-> > You're correct - this isn't ideal for endpoint operation. However,
-> > on i.MX platforms, the RC controller will lose power during system
-> > suspend regardless. Without sending PME_Turn_Off, endpoints would
-> > have no notification before the link abruptly goes down.
-> 
-> The PME_Turn_Off is some notification, but I don't think the endpoint
-> can do DMA or MSI, so its driver won't be involved.  It may be able to
-> do things internally, e.g., write caches to an SSD or transmit packets
-> from its internal buffers.  But I think it might still lose power in
-> the middle of operations like that, so it doesn't sound reliable.
-> 
-> > This patch adds a flag to force L2 entry for such platforms,
-> > choosing to notify endpoints (even if not ideal) rather than having
-> > the link drop unexpectedly. I'm appreciated for suggestions if
-> > there's a better approach to handle this scenario.
-> 
-> Mani recently added pci_suspend_retains_context(), and I think it
-> returns "true" on i.MX.  But if the RC is powered off and all the
-> devices need full re-initialization on resume, it sounds like it
-> *should* return "false".
 
-Right. pci_suspend_retains_context() was added just for that purpose of telling
-client drivers to prepare for context loss. So if this API returns 'false', then
-they should not hold the device in D0.
+On Thu, 16 Apr 2026 10:42:19 +0100, Jonathan Cameron wrote:
+> Yicong left Huawei a while back so drop both of our entries and add one for
+> Sizhe Liu who will be looking after this code going forwards.
+> 
+> 
 
-- Mani
+Applied, thanks!
 
+[1/1] MAINTAINERS: Update HiSilicon PCI Trace and Tune maintainer
+      https://git.kernel.org/coresight/c/c93556b74438
+
+Best regards,
 -- 
-மணிவண்ணன் சதாசிவம்
+Suzuki K Poulose <suzuki.poulose@arm.com>
