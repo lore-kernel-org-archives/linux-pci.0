@@ -1,46 +1,46 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012006.outbound.protection.outlook.com [52.101.48.6])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011067.outbound.protection.outlook.com [40.93.194.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7301F2749DC;
-	Mon,  3 Aug 2026 22:19:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB647345CDD;
+	Mon,  3 Aug 2026 22:19:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.67
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785795547; cv=fail; b=kM8+72xO/y+u0nimlkoOHnLLR8xletB9NAJPtHGeaYECG7Mvr43VKg0Rc+ONAxWioEmuPMgLNFQYDR/RLsnrRyiFvmXSpfW7gobbo1FJLo3keKdbWYtAtUGxoodKpwzHM8+KbaDNPCuHSBHjJ8KPVtpl0/Fm7NTw17Ux22noOJI=
+	t=1785795553; cv=fail; b=BKjflVFB75tC0nz/4g+B8p5ystfYZm/IZuR9yyXgZDlj0ch8heeHlriWyX47sAVyAIikXbyTiZdxfOtkhN1EMFf5jmIGcVOjPPir89LHIFooMLDXdCHhsxMIoos/+dCy4Pi2T1Mi8QA4uMXwZagXo/hTA86k5WQNPHU1w0UTYXw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785795547; c=relaxed/simple;
-	bh=/gn8fcg66NSD2i0E/MV1Lsn29blnNjnPsN0TyIv9+bA=;
+	s=arc-20240116; t=1785795553; c=relaxed/simple;
+	bh=F5YQAwsqjtwmxOV+7XaB+Q19rUiVfGNeecPPLxPkR5U=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NgxKYdlvjzItYJ9PSiUCiFDK/1in3SnsWoTt+LBM+9WgI8JGnFoJ5RNEHpmVtwrDez9tAwVALeltV719YHz0CBy0FXY8AzlIHUIyudq7OihxC6BX65DuH47M6b1qzwtuRKnhDFcgSKTiq3+pGeewgO8mkcCpYOV3FdQYSyRqW7Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=BiV6Jwsj; arc=fail smtp.client-ip=52.101.48.6
+	 MIME-Version:Content-Type; b=RMzeDtfPQVGkNUFg7MxFnCAy9d7g7snha5yVVZPDZJzwu8yRDpP9NuVyCUZD9a9JQpCn0z4D1X/Wcs3Ky0EpnpRybnKDdrGtjpFDeConsRzFWCaTrN8C7wMLrlrf4wl80rSHIZn/0VuL4g0my34dR3CCeqq1NN39m8T5z5+0Mq4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=0PVFKzH7; arc=fail smtp.client-ip=40.93.194.67
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="BiV6Jwsj"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="0PVFKzH7"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jvtrEc4ySjYA+OIfWfGdYY0nU+6NhZvD3buoo6CZ3GMesraPKOAtmk7v1zNq7lGjIjd8sHvBNYad5CT8OYOc/PlExsvk10BLTPFMn1/BZQTTOK/ydqerqsJE2SH8xtD8R5Nb9aJ0OliFfh2hCtm2XFW1ZxZcDWfTXdNf4ViEC+Cy9hTA7jOcuK3DVMYoPbe1wHxphznWS+tlViwADzz8X3N8FEuZaOOeywei0tYtIBbuXac10Ok+CIZVUj+Auqz+pHeUVuj/RYX+IbAI9e22U72nCwBZ/OxSqNgYwcLM7VZf3bYVgUVunC4UW9atmCkbP6VL3b+GuEv5VCkW4+X32Q==
+ b=KyBROrXcTQy2kv5e40JjbBrloMKsyTjXJ8Jmb7HqhLixT5MiwSLRQIbuEVCF1JVp0pUgeh4IMsKZ0iYs8geJmoWofaNXRA8EXyBrj4zJ9HmpA81d0H/WB/uHNnbV3cMRfMVj9Ckj+jEhLwo61wIQuOi3yXOuNUHOm9q6eBY27vZNH9t9c+LmxQ63RaWaV9cj0RqJ4UM/GSFZDh00cwagmFHTunnzh+S1EgsotG8bQ0ICh5sV9EjNyFXrX8Gag3+KORL1ZcdFhTz8baVaZ+lBZrhMoZWycIw1RBs/P8deT+Snr/C+6sVlrmO+eGCH6W8cwsElI5PZB/w9APvE7wlDaQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=boZ125BRtRoAb9h7ORE6ptnzrsO8uxYBwHXb+sKf7Oc=;
- b=dnnY7Odw0/ZdgRcWV7qFJ4YsO/D6p4OMV/kkJ1btLw197tWz3I+c662WysuAOKx9KC5222YoZbrAfKNwxHPFijFuglbmCB4ikFmpkLV32cbfAZLxPN0rXPWDcET24i/xFBY56z22EWfeuVXGtpPvrLYV1nKS0QGw1OfHMe9ju/R9t2GiP/dRhzwOC2wk4jZrpLRT8EDbSvlm2jSJvMuTZjUALoTSQYk7DniIffCgthVtxHnhHlGHgc9gxX25uVpCiGM5rdb2KlwprFH8Csn2UBdHOltBVrjhN8Ds7ysY/DO+PCUcThEO6hNubh4AxfMXpBvG3luH/VO1NdDcMSkNMA==
+ bh=B1OA19mz0W0oB0MGJo7QZjkir3ppM/PJWzMftw+bcIo=;
+ b=b36x5m0sFOHKC/in4k3nB0I8rb14mpnKsMJfxjXCqiyjj140Kf1TlnP6VIx6FcQticlgOK98wS/LH7yG1VvcXuqqnBtUFfTDM0IzZ5cQoDeupb+oqvNjqwnTFusKvazsppTo5jC7HIRABPpp87tM8Vj7vGHBcUNXCXycUfB4Sqsql1+rRCwnld1IsJEc4imcGA+Qg/tN2Za3pYpKu0EMuXx/Kf8G2wzoHbSPOPe/EpVPw9PQy3BPmJ6+BouueJA7Pwc6/k1eqqZ6E/vdUtKePy6j4cAGUXj+CmXLB6VllHCLLDFs68dRM4Pvrtf+LfY0q+4REObeY3oW/D68Wvlrww==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=boZ125BRtRoAb9h7ORE6ptnzrsO8uxYBwHXb+sKf7Oc=;
- b=BiV6JwsjIaFsMpNbP+BN2UwEqxG96c9Jb+6gsXGpd5YSRevj85zJl3cve7XVqluBM7R4AUx6FslkDNddnLfg6/9xMDTQDvwfOeOU2da2METAVqcsEcD8TEqUfmLbKYT3BLEj4tWZHHnnNTOiC77BxvB07kVhbHQVSCmdE/rQ/Ek=
-Received: from CH2PR15CA0009.namprd15.prod.outlook.com (2603:10b6:610:51::19)
- by SJ2PR12MB8884.namprd12.prod.outlook.com (2603:10b6:a03:547::14) with
+ bh=B1OA19mz0W0oB0MGJo7QZjkir3ppM/PJWzMftw+bcIo=;
+ b=0PVFKzH7OPBdmQXOczRHDlyQKyD7llPjW2KV6hdphdn8d1V0AXuLdWzopZgNoV9TfUjmDXVqDwIQYqKkG/ThaN56YFlVYoHfQ+5y69CGYTkjjFOcg5q4ODyEdvJDIXh51hi5Bs3ibmi4448/Pg/aCpbb+0vXE4LAlrSZT2qDA9g=
+Received: from BLAPR03CA0152.namprd03.prod.outlook.com (2603:10b6:208:32f::16)
+ by CH3PR12MB9021.namprd12.prod.outlook.com (2603:10b6:610:173::7) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.17; Mon, 3 Aug
- 2026 22:18:51 +0000
-Received: from DM2PEPF00003FC6.namprd04.prod.outlook.com
- (2603:10b6:610:51:cafe::87) by CH2PR15CA0009.outlook.office365.com
- (2603:10b6:610:51::19) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.18; Mon, 3 Aug
+ 2026 22:19:02 +0000
+Received: from BL02EPF0001A108.namprd05.prod.outlook.com
+ (2603:10b6:208:32f:cafe::23) by BLAPR03CA0152.outlook.office365.com
+ (2603:10b6:208:32f::16) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.270.18 via Frontend Transport; Mon, 3
- Aug 2026 22:18:50 +0000
+ Aug 2026 22:19:02 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- DM2PEPF00003FC6.mail.protection.outlook.com (10.167.23.25) with Microsoft
+ BL02EPF0001A108.mail.protection.outlook.com (10.167.241.138) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.292.8 via Frontend Transport; Mon, 3 Aug 2026 22:18:50 +0000
+ 15.21.292.8 via Frontend Transport; Mon, 3 Aug 2026 22:19:02 +0000
 Received: from ethanolx7ea3host.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Mon, 3 Aug
- 2026 17:18:49 -0500
+ 2026 17:19:00 -0500
 From: Terry Bowman <terry.bowman@amd.com>
 To: Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
 	Alison Schofield <alison.schofield@intel.com>, Vishal Verma
@@ -69,9 +69,9 @@ CC: Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, "Hanjun
 	Richard Cheng <icheng@nvidia.com>, Robert Richter <rrichter@amd.com>,
 	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
 	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v19 03/14] acpi/apei/ghes: Use raw_spinlock_t for CXL CPER work locks
-Date: Mon, 3 Aug 2026 17:17:59 -0500
-Message-ID: <20260803221810.3685703-4-terry.bowman@amd.com>
+Subject: [PATCH v19 04/14] cxl: Tighten CPER kfifo registration API and symbol visibility
+Date: Mon, 3 Aug 2026 17:18:00 -0500
+Message-ID: <20260803221810.3685703-5-terry.bowman@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260803221810.3685703-1-terry.bowman@amd.com>
 References: <20260803221810.3685703-1-terry.bowman@amd.com>
@@ -87,229 +87,270 @@ X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC6:EE_|SJ2PR12MB8884:EE_
-X-MS-Office365-Filtering-Correlation-Id: c20bcda7-f5a4-433a-1297-08def1ad320e
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A108:EE_|CH3PR12MB9021:EE_
+X-MS-Office365-Filtering-Correlation-Id: b8c0a1d9-4543-41ec-9183-08def1ad395a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|23010399003|376014|7416014|18002099003|22082099003|11063799006|3023799007|6133799003|10067099003|56012099006;
+	BCL:0;ARA:13230040|82310400026|23010399003|7416014|1800799024|376014|36860700016|56012099006|11063799006|10067099003|3023799007|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	fAp0Yl9aC6Hf/G7C/pmjrRZfqH0fe2YKLMRUIGQAQ33Hcpf0Zri+msn8ml7QiRjv4kPbxYzKNOLVIt7tRzP9jJw3MeP7Me0V8EFqmXErwpJikNXNK5lBKbuJI4H5RoB1YJxhbPGA5PvEBbBdd7/0fn6BpVUEGvRsgMlpjPDw0tLoiEnFhBLh0V8GKu9dwnE+3aEw61n+0f2Ca+fecowzyDSf9xT6zg8sTvzd2y0zM+MYpIft969T0psqfNsMS4PcgEm3h4h5k5MTE7BsyxetZ2dEZJOjG0zrfoE+27uHpAIRM5LegRL2P5pNENuA8WilaPxUlPsTcH83qivI2Ji9dQoIUhY9RLI0xsrf7Xj4C5X8pbZX3+Cts/05VBJR0ozKvDAiui39kPsfSh0Bg6EJDegyyewxFDBk8pFXrUY9lJR07liQ4fp74XAJE8dA4k1BFQh1mUY6gK3b7XuTk4Gw7gT3l6DMCPKrx9kZxreX/VHvqC0m6spxwhRpjSZCTbuJy23uxVfxEW5fpgIFxVyHQvmQH2EeEhI6jaI0yJBrc9q+FCdMyit+0yM/1Wu9z02qDBXWHCcp/pK7bMi8/8LDx05wZr530FCKToU9GQzXR1PZAbdwpzV1U1Qdz7LOz8ylLOPCg4NzzmgLU9ydvmmLk0qi2dmjbMd7MBE83uQJQ8919Z/glwiirzyEtBNl1iyvfB1xWDif6dFEUCN66zjxKg==
+	8yKto+l0JvCxHErtj6Ho9jXfnW9rUP4GRFGQ6puFtGkQs+Rq8zXUwZZ3mJ0Pdav1b2IBpm3WOF94pvddB0SqtjKCc6gQjtYaGMMeaB1xiijbFR1LRL+IvpALe2HtQrkP5kjguJBjWOm2PzoqzMmFkOmDUratfLcxhCdH4zejcGXZ3SJMXROsUxgs8cOHLBgVppmO0tKf90JPtDWDV5ERR7RQq9dVERM3EMNJyKyxr1p8OPzcoW4omgWvgiN/XnuxhNgJkwxob/8NEpIAoomvgaQzkxmVmo03IXiIqUkIWL7tZXJoTAxiA15ySUvjo5oEGcIdpRL2bjaS4tvKYdxL7Ujfc7IcPcKeTzLKmG9qfhggAbPgkxYaNZcXTWgz1bheHNx/XVUu5YSRG+Y8H1+Zc/08lh2JjCULZHbpTbr3iueDeQAt4f2j4UUIYXl/CojXMehsIkEnXayT67KY7cu1Di1S4eadhtIQNOLqdFauXvgX2IEPITW+vKZt24Xl1jQS6ooGLoIhGlPwN/25LXF1VeoxRJtZVJsI5vImoR4IvasJwrGIFL2ciTpWjX2nDCEVPneQ7LEN1yEWFkhuvT1LPePd9VwZCxHbTESUkERNJVKEI5Qtz0IMhvcmOWUfJ4TwGAHr5Mwv9pwETOILv67CZvB3A43FeCfTvI38/pzVkvqArWA+JVTsvBOoiDCWLdy4d3NCZ9h2N4Ad7OvtrFg/2w==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(23010399003)(376014)(7416014)(18002099003)(22082099003)(11063799006)(3023799007)(6133799003)(10067099003)(56012099006);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(7416014)(1800799024)(376014)(36860700016)(56012099006)(11063799006)(10067099003)(3023799007)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	BxJYGgMDGQRWqzNBt1bC3bUguduEhm6M5ykWL9hJUtKFrLQRd51J5kwOVAx9CbIH0zsOmMbPGEuh51ZhZKMyfBePDtt6dCFl5orw3TOo0EIEfnRSRaNU1FlEIbH+p+AxCImY3j6p+dpa6tkbN0uNwEF13fpshgkQmff5e/2AldRqs48AYp7boCsRwDhZTTh6xEK/F1uhihB+i0CmU41biGlyjLwJsLzM2CPf7ou6fnn4ngvXdVQX77hYq/7xwqPLImHYqYsTKXKS6EIf1W8FMOUXGyNVDAIMl5dee3MoepVchMYyI8OnSURUSxDQtd+aql0Ux8Bcxd7u3cd9tMdp6SYgSeV7qkPDYNDVUKUacl7MXLZ4dFayTmjlxILzgEC5k6I46caoT1++46OmnOvgufUoVXPNs5v2eTnQ5/8YTf5IN9+BbJgGukPJrNkSnAG2
+	UtbZKhy8NFocK/OBbwNgqX2g28P02Mr6F5D1JKo1hkSCBy1/NUi5y5wJrusr2yBZmW26HhsjruLfPhdeFtB7EX8aoHsoFxMQHNPW1R2w+aM7q6qlp+J2/CrdwXENy5THoiQmwcTD82aG7ceQPwBsGS93dmAUv1WOefizeBUBdjCxY3zUP9FxOM6m8NkIiHWVGBDyGBXbp+fcwL4umHJ07PiEf2JMzKHHHlEXMYRuCBwCGWh0Iutx4Uh4v9afeo+Z3jgEpiVISzT1lj9Hvvo0q9uhS7h5/x4bfkrKz5LspldDPiJODNP68nlWQJoVc3ECU6hEWRNx+9J9nJnpeGqObZDcdAaSO/axtAoyOvwMEm2nlVlYw85Ec0CmjLoFaWMvZ+Bco3AjGSOfRZv46BymFnW2q/Lhqv9XJYPDzyQJS/WgcGE4aLADLW4wmb+X7p4M
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Aug 2026 22:18:50.3823
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Aug 2026 22:19:02.6703
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c20bcda7-f5a4-433a-1297-08def1ad320e
+X-MS-Exchange-CrossTenant-Network-Message-Id: b8c0a1d9-4543-41ec-9183-08def1ad395a
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	DM2PEPF00003FC6.namprd04.prod.outlook.com
+	BL02EPF0001A108.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8884
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9021
 
-The CXL CPER work registration and unregistration helpers acquire
-cxl_cper_work_lock and cxl_cper_prot_err_work_lock with a spinlock
-guard(), which leaves local interrupts enabled. The corresponding post
-paths (cxl_cper_post_event(), cxl_cper_post_prot_err()) execute in hard
-IRQ context (they are called from the GHES error notification path) and
-acquire the same locks with an irqsave guard().
+From: Dan Williams <djbw@kernel.org>
 
-If a CPU is holding one of these locks via a spinlock guard() when a GHES
-interrupt arrives on the same CPU, the IRQ handler spins on the held lock
-waiting for it to release, while the lock holder is preempted by the IRQ.
-The result is a deadlock.
+Tighten the CPER protocol error kfifo registration API and symbol
+visibility.
 
-Convert both locks from spinlock_t to raw_spinlock_t and use guard() at
-all call sites. On PREEMPT_RT kernels spinlock_t is backed by rt_mutex and
-sleeping from hard IRQ context is not permitted; raw_spinlock_t is safe in
-both contexts.
+Use EXPORT_SYMBOL_FOR_MODULES() instead of EXPORT_SYMBOL_NS_GPL() for
+the CPER kfifo registration symbols. This names the consuming module
+explicitly and gives compile-time enforcement.
 
-Add WARN_ONCE to both register functions to surface double-registration
-bugs at runtime.
+Drop the work_struct argument from the unregister path. Change the
+WARN_ONCE condition to a NULL check since there is no caller pointer
+to compare against anymore.
 
-Restructure both unregister functions to clear the global work pointer
-under the lock before calling cancel_work_sync(), closing the window
-where a CPER interrupt could schedule work on a pointer about to be
-freed. Add kfifo_reset() after cancel_work_sync() so stale entries
-are not replayed on next module load.
+Return void from the registration helpers whose result callers ignore.
+cxl_cper_register_work() keeps its int return as the only one consumed by
+a caller. Flag double registration with WARN_ONCE() inside the lock
+instead of returning an error.
 
-Both kfifos are single-consumer: only one work_struct is registered at
-a time, enforced by the WARN_ONCE guard in the register functions.
-kfifo_reset() is safe outside the lock because cancel_work_sync() has
-already quiesced the consumer, and no new consumer can register until
-the current module exit completes and a fresh module init runs.
+Change cxl_ras_init() to void because there is one consumer and one
+producer so the error return was unnecessary. Remove the now-dead error
+check in cxl_core_init().
 
-Remove the redundant cancel_work_sync() call from cxl_ras_exit() and
-cxl_pci_driver_exit(). The CPER unregister functions now quiesce
-the work internally.
-
-Reported-by: Sashiko <sashiko@linuxfoundation.org>
+Co-developed-by: Terry Bowman <terry.bowman@amd.com>
 Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Fixes: 5e4a264bf8b5 ("acpi/ghes: Process CXL Component Events")
-Fixes: 36f257e3b0ba ("acpi/ghes, cxl/pci: Process CXL CPER Protocol Errors")
-Cc: stable@vger.kernel.org
+Signed-off-by: Dan Williams <djbw@kernel.org>
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
 ---
 
 Changes in v18 -> v19:
-- Remove the redundant cancel_work_sync() from cxl_ras_exit() and
-  cxl_pci_driver_exit().
-- Add review-by for DaveJ and Jonathan
+- Tidied up definition line-wrapping in event.h
+- Refined commit message reason for converting reg/dreg function
+return values to NULL.
+- Add review-by for DaveJ
 
 Changes in v17 -> v18:
 - New patch.
 ---
- drivers/acpi/apei/ghes.c | 50 ++++++++++++++++++++++++++--------------
- drivers/cxl/core/ras.c   |  1 -
- drivers/cxl/pci.c        |  1 -
- 3 files changed, 33 insertions(+), 19 deletions(-)
+ drivers/acpi/apei/ghes.c | 32 +++++++++++++++-----------------
+ drivers/cxl/core/core.h  |  7 ++-----
+ drivers/cxl/core/port.c  |  6 +-----
+ drivers/cxl/core/ras.c   |  6 +++---
+ include/cxl/event.h      | 21 ++++++---------------
+ 5 files changed, 27 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 3236a3ce79d6b..ca7a138c1ff2e 100644
+index ca7a138c1ff2e..187f54e31c33e 100644
 --- a/drivers/acpi/apei/ghes.c
 +++ b/drivers/acpi/apei/ghes.c
-@@ -749,7 +749,7 @@ static DEFINE_KFIFO(cxl_cper_prot_err_fifo, struct cxl_cper_prot_err_work_data,
- 		    CXL_CPER_PROT_ERR_FIFO_DEPTH);
+@@ -778,41 +778,41 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+ #endif
+ }
  
- /* Synchronize schedule_work() with cxl_cper_prot_err_work changes */
--static DEFINE_SPINLOCK(cxl_cper_prot_err_work_lock);
-+static DEFINE_RAW_SPINLOCK(cxl_cper_prot_err_work_lock);
- struct work_struct *cxl_cper_prot_err_work;
- 
- static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
-@@ -761,7 +761,7 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
- 	if (cxl_cper_sec_prot_err_valid(prot_err))
- 		return;
- 
--	guard(spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
-+	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
- 
- 	if (!cxl_cper_prot_err_work)
- 		return;
-@@ -780,10 +780,11 @@ static void cxl_cper_post_prot_err(struct cxl_cper_sec_prot_err *prot_err,
- 
- int cxl_cper_register_prot_err_work(struct work_struct *work)
+-int cxl_cper_register_prot_err_work(struct work_struct *work)
++void cxl_cper_register_prot_err_work(struct work_struct *work)
  {
--	if (cxl_cper_prot_err_work)
--		return -EINVAL;
-+	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
+ 	guard(raw_spinlock_irqsave)(&cxl_cper_prot_err_work_lock);
  
--	guard(spinlock)(&cxl_cper_prot_err_work_lock);
-+	if (WARN_ONCE(cxl_cper_prot_err_work,
-+		      "CPER-CXL kfifo consumer already registered\n"))
-+		return -EINVAL;
+ 	if (WARN_ONCE(cxl_cper_prot_err_work,
+ 		      "CPER-CXL kfifo consumer already registered\n"))
+-		return -EINVAL;
++		return;
  	cxl_cper_prot_err_work = work;
- 	return 0;
+-	return 0;
  }
-@@ -791,11 +792,18 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_register_prot_err_work, "CXL");
+-EXPORT_SYMBOL_NS_GPL(cxl_cper_register_prot_err_work, "CXL");
++EXPORT_SYMBOL_FOR_MODULES(cxl_cper_register_prot_err_work, "cxl_core");
  
- int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+-int cxl_cper_unregister_prot_err_work(struct work_struct *work)
++void cxl_cper_unregister_prot_err_work(void)
  {
--	if (cxl_cper_prot_err_work != work)
--		return -EINVAL;
-+	scoped_guard(raw_spinlock_irqsave, &cxl_cper_prot_err_work_lock) {
-+		if (WARN_ONCE(cxl_cper_prot_err_work != work,
-+			      "CPER-CXL kfifo consumer mismatch on unregister\n"))
-+			return -EINVAL;
-+		cxl_cper_prot_err_work = NULL;
-+	}
++	struct work_struct *old;
 +
-+	cancel_work_sync(work);
-+
-+	/* Discard stale entries so they are not replayed on next module load */
-+	kfifo_reset(&cxl_cper_prot_err_fifo);
- 
--	guard(spinlock)(&cxl_cper_prot_err_work_lock);
--	cxl_cper_prot_err_work = NULL;
- 	return 0;
- }
- EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
-@@ -811,7 +819,7 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_prot_err_kfifo_get, "CXL");
- DEFINE_KFIFO(cxl_cper_fifo, struct cxl_cper_work_data, CXL_CPER_FIFO_DEPTH);
- 
- /* Synchronize schedule_work() with cxl_cper_work changes */
--static DEFINE_SPINLOCK(cxl_cper_work_lock);
-+static DEFINE_RAW_SPINLOCK(cxl_cper_work_lock);
- struct work_struct *cxl_cper_work;
- 
- static void cxl_cper_post_event(enum cxl_event_type event_type,
-@@ -831,7 +839,7 @@ static void cxl_cper_post_event(enum cxl_event_type event_type,
- 		return;
+ 	scoped_guard(raw_spinlock_irqsave, &cxl_cper_prot_err_work_lock) {
+-		if (WARN_ONCE(cxl_cper_prot_err_work != work,
+-			      "CPER-CXL kfifo consumer mismatch on unregister\n"))
+-			return -EINVAL;
++		WARN_ONCE(!cxl_cper_prot_err_work,
++			  "CPER-CXL kfifo consumer not registered on unregister\n");
++		old = cxl_cper_prot_err_work;
+ 		cxl_cper_prot_err_work = NULL;
  	}
  
--	guard(spinlock_irqsave)(&cxl_cper_work_lock);
-+	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
+-	cancel_work_sync(work);
++	if (old)
++		cancel_work_sync(old);
  
- 	if (!cxl_cper_work)
- 		return;
-@@ -849,10 +857,11 @@ static void cxl_cper_post_event(enum cxl_event_type event_type,
- 
- int cxl_cper_register_work(struct work_struct *work)
- {
--	if (cxl_cper_work)
-+	guard(raw_spinlock_irqsave)(&cxl_cper_work_lock);
-+	if (WARN_ONCE(cxl_cper_work,
-+		      "CXL CPER kfifo consumer already registered\n"))
- 		return -EINVAL;
- 
--	guard(spinlock)(&cxl_cper_work_lock);
- 	cxl_cper_work = work;
- 	return 0;
+ 	/* Discard stale entries so they are not replayed on next module load */
+ 	kfifo_reset(&cxl_cper_prot_err_fifo);
+-
+-	return 0;
  }
-@@ -860,11 +869,18 @@ EXPORT_SYMBOL_NS_GPL(cxl_cper_register_work, "CXL");
+-EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_prot_err_work, "CXL");
++EXPORT_SYMBOL_FOR_MODULES(cxl_cper_unregister_prot_err_work, "cxl_core");
  
- int cxl_cper_unregister_work(struct work_struct *work)
+ int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd)
  {
--	if (cxl_cper_work != work)
--		return -EINVAL;
-+	scoped_guard(raw_spinlock_irqsave, &cxl_cper_work_lock) {
-+		if (WARN_ONCE(cxl_cper_work != work,
-+			      "CXL CPER kfifo consumer mismatch on unregister\n"))
-+			return -EINVAL;
-+		cxl_cper_work = NULL;
-+	}
-+
-+	cancel_work_sync(work);
-+
-+	/* Discard stale entries so they are not replayed on next module load */
-+	kfifo_reset(&cxl_cper_fifo);
+ 	return kfifo_get(&cxl_cper_prot_err_fifo, wd);
+ }
+-EXPORT_SYMBOL_NS_GPL(cxl_cper_prot_err_kfifo_get, "CXL");
++EXPORT_SYMBOL_FOR_MODULES(cxl_cper_prot_err_kfifo_get, "cxl_core");
  
--	guard(spinlock)(&cxl_cper_work_lock);
--	cxl_cper_work = NULL;
- 	return 0;
+ /* Room for 8 entries for each of the 4 event log queues */
+ #define CXL_CPER_FIFO_DEPTH 32
+@@ -867,12 +867,12 @@ int cxl_cper_register_work(struct work_struct *work)
+ }
+ EXPORT_SYMBOL_NS_GPL(cxl_cper_register_work, "CXL");
+ 
+-int cxl_cper_unregister_work(struct work_struct *work)
++void cxl_cper_unregister_work(struct work_struct *work)
+ {
+ 	scoped_guard(raw_spinlock_irqsave, &cxl_cper_work_lock) {
+ 		if (WARN_ONCE(cxl_cper_work != work,
+ 			      "CXL CPER kfifo consumer mismatch on unregister\n"))
+-			return -EINVAL;
++			return;
+ 		cxl_cper_work = NULL;
+ 	}
+ 
+@@ -880,8 +880,6 @@ int cxl_cper_unregister_work(struct work_struct *work)
+ 
+ 	/* Discard stale entries so they are not replayed on next module load */
+ 	kfifo_reset(&cxl_cper_fifo);
+-
+-	return 0;
  }
  EXPORT_SYMBOL_NS_GPL(cxl_cper_unregister_work, "CXL");
+ 
+diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+index 07555ae638594..23fe40ddf4c6b 100644
+--- a/drivers/cxl/core/core.h
++++ b/drivers/cxl/core/core.h
+@@ -183,7 +183,7 @@ static inline struct device *dport_to_host(struct cxl_dport *dport)
+ 	return &port->dev;
+ }
+ #ifdef CONFIG_CXL_RAS
+-int cxl_ras_init(void);
++void cxl_ras_init(void);
+ void cxl_ras_exit(void);
+ bool cxl_handle_ras(struct device *dev, void __iomem *ras_base);
+ void cxl_handle_cor_ras(struct device *dev, void __iomem *ras_base);
+@@ -192,10 +192,7 @@ void cxl_disable_rch_root_ints(struct cxl_dport *dport);
+ void cxl_handle_rdport_errors(struct cxl_dev_state *cxlds);
+ void devm_cxl_dport_ras_setup(struct cxl_dport *dport);
+ #else
+-static inline int cxl_ras_init(void)
+-{
+-	return 0;
+-}
++static inline void cxl_ras_init(void) { }
+ static inline void cxl_ras_exit(void) { }
+ static inline bool cxl_handle_ras(struct device *dev, void __iomem *ras_base)
+ {
+diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+index 1215ee4f40351..f90f899c31d07 100644
+--- a/drivers/cxl/core/port.c
++++ b/drivers/cxl/core/port.c
+@@ -2531,14 +2531,10 @@ static __init int cxl_core_init(void)
+ 	if (rc)
+ 		goto err_region;
+ 
+-	rc = cxl_ras_init();
+-	if (rc)
+-		goto err_ras;
++	cxl_ras_init();
+ 
+ 	return 0;
+ 
+-err_ras:
+-	cxl_region_exit();
+ err_region:
+ 	bus_unregister(&cxl_bus_type);
+ err_bus:
 diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-index 99fb00949c2fa..bc74d4848132e 100644
+index bc74d4848132e..e307361bb39e4 100644
 --- a/drivers/cxl/core/ras.c
 +++ b/drivers/cxl/core/ras.c
-@@ -137,7 +137,6 @@ int cxl_ras_init(void)
+@@ -129,14 +129,14 @@ static void cxl_cper_prot_err_work_fn(struct work_struct *work)
+ }
+ static DECLARE_WORK(cxl_cper_prot_err_work, cxl_cper_prot_err_work_fn);
+ 
+-int cxl_ras_init(void)
++void cxl_ras_init(void)
+ {
+-	return cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work);
++	cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work);
+ }
+ 
  void cxl_ras_exit(void)
  {
- 	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
--	cancel_work_sync(&cxl_cper_prot_err_work);
+-	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
++	cxl_cper_unregister_prot_err_work();
  }
  
  static void cxl_dport_map_ras(struct cxl_dport *dport)
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 267c679b0b3c2..7c6faee7f85ed 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -1083,7 +1083,6 @@ static int __init cxl_pci_driver_init(void)
- static void __exit cxl_pci_driver_exit(void)
- {
- 	cxl_cper_unregister_work(&cxl_cper_work);
--	cancel_work_sync(&cxl_cper_work);
- 	pci_unregister_driver(&cxl_pci_driver);
+diff --git a/include/cxl/event.h b/include/cxl/event.h
+index ff97fea718d2c..b5673384d9306 100644
+--- a/include/cxl/event.h
++++ b/include/cxl/event.h
+@@ -287,10 +287,10 @@ struct cxl_cper_prot_err_work_data {
+ 
+ #ifdef CONFIG_ACPI_APEI_GHES
+ int cxl_cper_register_work(struct work_struct *work);
+-int cxl_cper_unregister_work(struct work_struct *work);
++void cxl_cper_unregister_work(struct work_struct *work);
+ int cxl_cper_kfifo_get(struct cxl_cper_work_data *wd);
+-int cxl_cper_register_prot_err_work(struct work_struct *work);
+-int cxl_cper_unregister_prot_err_work(struct work_struct *work);
++void cxl_cper_register_prot_err_work(struct work_struct *work);
++void cxl_cper_unregister_prot_err_work(void);
+ int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd);
+ #else
+ static inline int cxl_cper_register_work(struct work_struct *work)
+@@ -298,22 +298,13 @@ static inline int cxl_cper_register_work(struct work_struct *work)
+ 	return 0;
  }
  
+-static inline int cxl_cper_unregister_work(struct work_struct *work)
+-{
+-	return 0;
+-}
++static inline void cxl_cper_unregister_work(struct work_struct *work) { }
+ static inline int cxl_cper_kfifo_get(struct cxl_cper_work_data *wd)
+ {
+ 	return 0;
+ }
+-static inline int cxl_cper_register_prot_err_work(struct work_struct *work)
+-{
+-	return 0;
+-}
+-static inline int cxl_cper_unregister_prot_err_work(struct work_struct *work)
+-{
+-	return 0;
+-}
++static inline void cxl_cper_register_prot_err_work(struct work_struct *work) { }
++static inline void cxl_cper_unregister_prot_err_work(void) { }
+ static inline int cxl_cper_prot_err_kfifo_get(struct cxl_cper_prot_err_work_data *wd)
+ {
+ 	return 0;
 -- 
 2.34.1
 
