@@ -1,200 +1,517 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.174])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A13938C406;
-	Mon,  3 Aug 2026 05:40:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 086C8329373;
+	Mon,  3 Aug 2026 07:25:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785735609; cv=none; b=Nnwk6pZ8BzmwqmThXfQGD7Foca006B01J09QM5t7FzR9LhCcV67lQ12lt32qad0Dz5ZPFsyUKMDACIAfMXT9QUnKhN9/MZQX7XSBLQnmOLneiIfXgkxohDY7cPiS2lGqi7FTcS7VtJwk5rYxAdi5tU2HM5looYZMD1AagnWItic=
+	t=1785741935; cv=none; b=fpLWVkRtAZkI2LNEB0SmLgyRH6tcNZA4bCImXwGpM80BLDBu3nsF63kLNXqC1NFCbkeyjUhp0GU41r/f0FwNfgaT5XkefEOBQVPWyTOYLyeK3BMETZbEb9+BEXk2C4B9RgsYsop6OnAa2zNU3OQB37szUVySKgowj1WfmEvVppw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785735609; c=relaxed/simple;
-	bh=Fg5GJQ6Zu59GQ27IKyj4NTNBwK1nB6pB73Wzr0Lc7k0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RbztFOWrndzXEVf1ObViv/TAM+EIaDhS+7Yi7p7olKxPssOOx01pkBNAu+ZBVUUHtoaZGwC2t+nXwWcUqIj1citSolKVMQudfC055/xtEGOX7AIfDUd2iPnMylU8A5swItS/z3OVk6brHiVNuaBQy0GpCobOhpIgibLuIDAeSiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=Cx+o9mRE; arc=none smtp.client-ip=188.68.63.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1785741935; c=relaxed/simple;
+	bh=dk+5uKm3c0XdntC2DeIygfu8fpBc1hkkReCYUrL98Zg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=J8hER7pVSz4aEM/sVqeppB7afvfXM6DD64+MbeYwMNIW5pRf+ORbWBEjC/3t3qC9kWrbPmVQPKkqzNvYxc+EzJDMJOO86P7Q00XGUPI2+3wE4B8l1y9vFWzQJugBLTu6f3sKpS6NA0mHzG5UsOXZnMPyiPriTqUht+rJLQbeKbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCFeNLI7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="Cx+o9mRE"
-Received: from mors-relay8204.netcup.net (localhost [127.0.0.1])
-	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hD5984pmfz8g1r;
-	Mon,  3 Aug 2026 05:39:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1785735596;
-	bh=Fg5GJQ6Zu59GQ27IKyj4NTNBwK1nB6pB73Wzr0Lc7k0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Cx+o9mREDB7U1H2oc4yVCckjGUd+zGKg1czIIE8GMjjAPAQ1mUIozsMPtwXJMoeRm
-	 mGRVy3KmgKiA2FjaAX4rYFhQ4U9QOBL/RVgc1BjRp8D5k2WVOfnOypZOSWDJK7J57C
-	 5jXfpftdLkSmIAtV/GE1P22uejC1FmJZ4WlaB7nh2y1MkgfLUoqxOkPL5NY8no9Uxi
-	 YqzZiscmXP8QTsnFpOUULu+fvUbyCcwepvwh+xHOBoYq+qi9E1Fhvx/btNAjAL7dKF
-	 QIUw7TodpV7S7cOjhSo/o76RP5pa45f6awB3VGvSztW+RUltZRS5xLcXsMc7wu6Ypg
-	 GR8BCJeHapNVw==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hD59846qDz8g1p;
-	Mon,  3 Aug 2026 05:39:56 +0000 (UTC)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hD5975h0hz8sgw;
-	Mon,  3 Aug 2026 07:39:55 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 017AF5FC78;
-	Mon,  3 Aug 2026 07:39:50 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <4cf40370-47e8-4143-bebe-bfab78ac2fd4@leemhuis.info>
-Date: Mon, 3 Aug 2026 07:39:49 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCFeNLI7"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 85EA2C2BCB9;
+	Mon,  3 Aug 2026 07:25:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1785741934;
+	bh=dk+5uKm3c0XdntC2DeIygfu8fpBc1hkkReCYUrL98Zg=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=eCFeNLI7OpqZ0PFjElPflVcwdcc8WUERNNr43osYMrLdfVT9EMFTjAKwwnfjPTL+X
+	 cT24e4zBQNyFCKiEJcs1p1AD8EkwiXtAtVZztr8wc4oI+x/ZEwf+PTTf2SX9VXKILv
+	 SAl4Sbd+RCbtTCiGx3Mh5iy6QstrschCRtkxmsdhccKmlbmzSSBVfd4EDqfva1N+UC
+	 ShgddlIFjVG4WC3VXHGxGtFAVKrHOGUBoaS0MyQyUo4gAtu2BD9JkwCyOBDbjtb+Ou
+	 EUKx2nwBIP4p7fSBZMOyJuFrsSUbLnFVZoSYvH/H8OJm1+aMJeh9qe9lM9qRDrIzex
+	 /+BUb/xNe7G2w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D5CC55184;
+	Mon,  3 Aug 2026 07:25:34 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 03 Aug 2026 09:25:24 +0200
+Subject: [PATCH] Documentation: PCI: Document how to write PCI Host
+ Controller drivers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with no
- link
-To: Andreas Wild <andiwild@gmail.com>, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, macro@orcam.me.uk, linux-kernel@vger.kernel.org,
- Linux kernel regressions list <regressions@lists.linux.dev>,
- edwardmalik95@icloud.com
-References: <20260801201244.4421-1-andiwild@gmail.com>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-X-Enigmail-Draft-Status: N11222
-Autocrypt: addr=linux@leemhuis.info; keydata=
- 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 MEK4
-In-Reply-To: <20260801201244.4421-1-andiwild@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <178573559138.421207.13114101684528294719@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: 017AF5FC78
-X-NC-CID: vREIpUGzRwGL0pbZA7envThNcCOYS0xlc7kFeBPUjhIP4Gn4Ge0=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260803-pci-doc-v1-1-2814f8672cad@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAGNCcGoC/yXMQQ5AMBCF4avIrDWposFVxILplLFAWkQivbti+
+ SX/ezd4ckwemuQGRyd7XpeILE0Ap34ZSbCJBiWVlpXMxYYszIqiR1NaRbXVhYRYb44sX99T2/3
+ 2xzAT7u8cQngAPLROhmsAAAA=
+X-Change-ID: 20260803-pci-doc-acd5f2e9f640
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>, 
+ Shuah Khan <skhan@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=20048;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=wa/E2MjrVqkImZ4t0ZWP1jq9OD/PK2yvymH6/LYvI8M=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqcEJsPdMrzH/87huBxqZUDNa9Y+nMujVfhQyer
+ 4jrLRb6QViJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCanBCbAAKCRBVnxHm/pHO
+ 9cRuB/9zLpk9qxBo/RFJlV86w42OHoLVuwL1tG1bA0lZldjMgbSD7Rua7XIecB7TLqBuBvNE/ly
+ EZB6NSxDeCtkETCwdLdSv5c2pnHGIESdCI21qwCm1q4TcuCDNTtyOqcveY/7QZOhqluPnq+D/fL
+ U3RyEC/FjuQwTj4ZYxm8EvOojBGrQzUwu9LPyOUSN3aVy6Zv7R/TG+HPGuYYAK/lSanZm5F6YUC
+ O/yReQHR6wCsCATks8HbpaWHlc8Ka1cD5GZbND3dv+w5vv97hYBGDe79mf1OJNCm7JXj205qjru
+ p3FwBC0BERrcbfmxsqmfbjiz3eTShXAmssJUC7zq/K8cY7RK
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On 8/1/26 22:11, Andreas Wild wrote:
-> From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-> 
-> Since commit 72780f796468 ("PCI: Always lift 2.5GT/s restriction in PCIe
-> failed link retraining") the Target Speed quirk lifts a firmware-imposed
-> 2.5GT/s restriction on any downstream port, without checking whether the
-> link is up.  Where nothing is plugged in, the retraining that follows can
-> never complete, so each attempt costs PCIE_LINK_RETRAIN_TIMEOUT_MS.  The
-> quirk makes two of them -- the initial one and the restore on the error
-> path -- adding a fixed 2 s to every boot.
-> 
-> On an MSI PRO Z690-A WIFI DDR4 (Intel 600 Series PCH) with one empty x1
-> slot, running v7.2-rc5:
-> 
->  0.541 pci 0000:00:1c.0: removing 2.5GT/s downstream link speed restriction
->  1.541 pci 0000:00:1c.0: retraining failed
->  2.541 pci 0000:00:1c.2: [8086:7aba] type 01 class 0x060400
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-TWIMC, this patch fixes a regression Edward reported here:
-https://bugzilla.kernel.org/show_bug.cgi?id=221801
+Writing a PCI Host Controller driver requires bringing up the Root Complex
+hardware and registering it with the PCI core in a specific sequence.
+Add a guide describing these steps to help developers write new drivers.
 
-[side note: the report could be more specific, yes -- I wanted to ask
-Edward to clarify a few things (like the actual slowdown) before
-forwarding it, but it didn't came to that when I noticed this patch and
-asked Edward to just check if it helped -- which is did.]
+It covers the Root Complex topology and enumeration, and walks through the
+driver flow, including resource setup, Configuration Space accessors,
+address translation, interrupt handling, Link training, power management,
+shutdown and removal, using standard guidelines/best practices.
 
-Ciao, Thorsten
-> Where the Link Speed has already been clamped at 2.5GT/s and no link has
-> been established there is nothing worth doing, which is what the kerneldoc
-> for the quirk already describes: the restriction is to be lifted where
-> firmware arranged it "and the port reports its link already being up".
-> Bail out early in that case, before either the ASM2824 workaround or the
-> removal of the restriction is considered.
-> 
-> Ports whose link is up are unaffected, and so is the ASM2824 workaround,
-> which is reached with the Target Link Speed not clamped.
-> 
-> With this applied the quirk returns without touching the port: both
-> messages are gone, enumeration proceeds from 0000:00:1c.0 to 0000:00:1c.2
-> in 1 ms rather than 2 s, and the systemd "kernel" boot phase goes from
-> 3.011 s to 1.036 s.
-> 
-> Fixes: 72780f796468 ("PCI: Always lift 2.5GT/s restriction in PCIe failed link retraining")
-> Cc: stable@vger.kernel.org
-> Reported-by: Andreas Wild <andiwild@gmail.com>
-> Closes: https://lore.kernel.org/lkml/20260801092152.5643-1-andiwild@gmail.com/
-> Tested-by: Andreas Wild <andiwild@gmail.com>
-> Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-> Signed-off-by: Andreas Wild <andiwild@gmail.com>
-> ---
-> v3:
->  - Replaced with Maciej's much simpler approach: bail out of the quirk
->    entirely when the Target Link Speed is already clamped at 2.5GT/s and no
->    link has been established, rather than programming the speed and skipping
->    only the retraining.  One function, no new API, no bwctrl changes.
->  - Note this leaves the Target Link Speed clamped on such a port, where v2
->    left it at the Port's maximum.  A device hot-plugged there later trains at
->    2.5GT/s: pcie_wait_for_link_delay() only calls the quirk when
->    pcie_wait_for_link_status() fails, so a link that comes up cleanly at
->    2.5GT/s never re-runs it.  Flagging in case that matters; the clamp is
->    firmware's, so honouring it on an unoccupied Port seems defensible.
->  - v2: https://lore.kernel.org/lkml/20260801105441.6506-1-andiwild@gmail.com/
->  - v1: https://lore.kernel.org/lkml/20260801092152.5643-1-andiwild@gmail.com/
->  drivers/pci/quirks.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f..9e407c4 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -108,7 +108,11 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
->  
->  	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
->  	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &oldlnkctl2);
-> -	if (!(lnksta & PCI_EXP_LNKSTA_DLLLA) && pcie_lbms_seen(dev, lnksta)) {
-> +	if (lnksta & PCI_EXP_LNKSTA_DLLLA) {
-> +		;
-> +	} else if (PCIE_LNKCTL2_TLS2SPEED(oldlnkctl2) == PCIE_SPEED_2_5GT) {
-> +		return ret;
-> +	} else if (pcie_lbms_seen(dev, lnksta)) {
->  		pci_info(dev, "broken device, retraining non-functional downstream link at 2.5GT/s\n");
->  		ret = pcie_set_target_speed(dev, PCIE_SPEED_2_5GT, false);
->  		if (ret)
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ Documentation/PCI/controller/index.rst             |   1 +
+ .../PCI/controller/pci-controller-drivers.rst      | 388 +++++++++++++++++++++
+ MAINTAINERS                                        |   1 +
+ 3 files changed, 390 insertions(+)
+
+diff --git a/Documentation/PCI/controller/index.rst b/Documentation/PCI/controller/index.rst
+index c2ce9ccdcfa0..c15e2c9ac855 100644
+--- a/Documentation/PCI/controller/index.rst
++++ b/Documentation/PCI/controller/index.rst
+@@ -7,4 +7,5 @@ PCI Native Host Bridge and Endpoint Drivers
+ .. toctree::
+    :maxdepth: 2
+ 
++   pci-controller-drivers
+    rcar-pcie-firmware
+diff --git a/Documentation/PCI/controller/pci-controller-drivers.rst b/Documentation/PCI/controller/pci-controller-drivers.rst
+new file mode 100644
+index 000000000000..76ab8f71da7d
+--- /dev/null
++++ b/Documentation/PCI/controller/pci-controller-drivers.rst
+@@ -0,0 +1,388 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++===================================
++Writing PCI Host Controller Drivers
++===================================
++
++:Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
++
++Introduction
++============
++
++A PCI Host Controller driver is used to control a PCI Root Complex (RC) hardware
++inside an SoC. The Root Complex hardware comprises a single PCI Host Bridge
++and one or more Root Port or Root Complex Integrated Endpoint (RCiEP) devices::
++
++                     +------------------+
++                     |       CPU        |
++                     +------------------+
++                              |
++        +--------------------------------------------+
++        |                     |               Root   |
++        |            +------------------+   Complex  |
++        |            |   Host Bridge    |            |
++        |            +------------------+            |
++        |                     |                      |
++        |               Bus 0 |                      |
++        |        +------------|----------+           |
++        |        |            |          |           |
++        |  +----------+ +----------+ +-------+       |
++        |  |  Root    | |  Root    | | RCiEP |       |
++        |  |  Port    | |  Port    | +-------+       |
++        |  +----------+ +----------+                 |
++        |       |             |                      |
++        | Bus 1 |       Bus 2 |                      |
++        |       |             |                      |
++        +-------|-------------|----------------------+
++                |             |
++          +-----------+ +-----------+
++          | Endpoint  | | Endpoint  |
++          +-----------+ +-----------+
++
++Host Bridge: Used to connect CPU(s) to the PCI hierarchy.
++Root Port: Virtual PCI-PCI bridge connecting the Host Bridge to a PCI bus.
++RCiEP: Embedded PCIe Endpoint inside Root Complex connected to the Host Bridge.
++Endpoint: PCIe device connected to a Root Port through a Link.
++
++Enumeration
++===========
++
++The Host Bridge device is not discoverable, so it is typically enumerated with
++the help of the firmware interface like ACPI or Devicetree. But the Root Port
++and RCiEP devices are discoverable through the standard enumeration process
++defined in the PCIe spec.
++
++A Host Controller driver usually configures both Host Bridge and Root Port(s)
++based on the platform requirement. In the case of ACPI on standardized platforms
++(e.g. x86), no platform specific host controller driver is required as the
++firmware configures the Root Complex before OS boot and exposes the resource
++information through ACPI tables. For more info, refer to :doc:`../acpi-info`.
++
++But for the Devicetree platforms, a dedicated host controller driver is often
++required because the Root Complex hardware typically needs vendor specific
++initialization like PHY, clocks, power domains and there is no standard
++mechanism equivalent to ACPI/MCFG to convey resource information to the OS. So
++on these platforms, Root Complex hardware is enumerated through Devicetree
++nodes as below::
++
++        pcie@10000000 {
++            compatible = "vendor,soc-pcie";
++            reg = <0x0 0x10000000 0x0 0x1000>,
++                  <0x0 0x10001000 0x0 0x1000>;
++            reg-names = "cfg", "app";
++            device_type = "pci";
++            bus-range = <0x00 0xff>;
++            linux,pci-domain = <0>;
++            num-lanes = <4>;
++
++            #address-cells = <3>;
++            #size-cells = <2>;
++
++            ranges = <0x01000000 0x0 0x00000000 0x0 0x20000000 0x0 0x00100000>,
++                     <0x02000000 0x0 0x20100000 0x0 0x20100000 0x0 0x1ff00000>;
++            dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x0 0x80000000>;
++
++            clocks = <&clkc PCIE_CORE_CLK>,
++                     <&clkc PCIE_AUX_CLK>;
++            clock-names = "core", "aux";
++            resets = <&reset PCIE_RESET>;
++            power-domains = <&power PCIE_PD>;
++
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 0x7>;
++            interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 2 &gic 0 0 GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 3 &gic 0 0 GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 4 &gic 0 0 GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
++            interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi";
++
++            pcie@0 {
++                compatible = "pciclass,0604";
++                device_type = "pci";
++                reg = <0x0 0x0 0x0 0x0 0x0>;
++                bus-range = <0x01 0xff>;
++
++                #address-cells = <3>;
++                #size-cells = <2>;
++                ranges;
++
++                phys = <&pcie_phy>;
++                reset-gpios = <&gpio 10 GPIO_ACTIVE_LOW>;
++                wake-gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
++            };
++        };
++
++
++Note the presence of two nodes in the above example. ``pcie@10000000`` node
++represents a PCI Host Bridge device and ``pcie@0`` represents a single Root Port
++device. The Host Bridge node should contain the properties associated with the
++Host Bridge device such as ranges, interrupts, clocks, power-domains etc... and
++the Root Port node should contain the port specific properties such as phys,
++reset-gpios, wake-gpios etc...
++
++NOTE: Legacy Devicetrees used a single node to describe both Host Bridge and
++Root Port devices. But that design is now deprecated.
++
++Driver Design
++=============
++
++Prerequisites
++-------------
++
++Before starting to write a new Host Controller driver, check if any of the
++existing drivers can be reused. For example, if the Root Complex supports
++Enhanced Configuration Access Mechanism (ECAM) and the bootloader has configured
++the ECAM mapping before OS boot, ``CONFIG_PCI_HOST_GENERIC`` driver can be used.
++
++If the Root Complex hardware (IP) is from known IP vendors such as Synopsys or
++Cadence, then the existing ``CONFIG_PCIE_DW_PLAT_HOST`` and
++``CONFIG_PCIE_CADENCE_PLAT_HOST`` drivers can be reused. If not, then check if
++any of the existing glue drivers available for these IPs could be reused.
++
++Or if the Root Complex hardware is designed in-house by the SoC vendor, then
++check if there is an existing driver from the vendor for their previous
++generation Root Complex hardware. Often, the existing driver could be reused
++with minimal modifications.
++
++Only if the Root Complex doesn't satisfy above prerequisites, a new Host
++Controller driver should be written.
++
++Probe
++-----
++
++During the Host Controller driver probe(), it initializes the Root Complex
++hardware and registers the Host Bridge with the PCI core. The typical steps
++are described below.
++
++Initialize Resources
++~~~~~~~~~~~~~~~~~~~~
++
++At the start of the probe(), initialize all the Host Bridge specific
++resources such as clocks, PHY, regulators, resets. These resources are
++described in the Host Bridge Devicetree node and should be brought up before
++accessing the controller hardware.
++
++NOTE: Use the devm_*() managed APIs wherever possible, so that the resources
++are released automatically on probe failure and on driver detach.
++
++Configuration Space Access
++~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++The PCI core accesses the Configuration Space of the enumerated devices
++through the callbacks provided by the driver in struct pci_ops. These
++callbacks abstract how the Root Complex generates a Configuration Request for
++a given Bus, Device and Function number.
++
++If the Root Complex supports ECAM, the generic accessors can be reused by
++using pci_ecam_map_bus() along with pci_generic_config_read() and
++pci_generic_config_write(). Such drivers can often be built on top of
++pci_host_common_probe() without providing any custom accessors.
++
++Setup Address Translation
++~~~~~~~~~~~~~~~~~~~~~~~~~
++
++The Host Bridge translates accesses between the CPU address domain and the
++PCI address domain in both directions:
++
++- Outbound: CPU addresses are translated to PCI bus addresses for the Memory
++  and I/O accesses initiated by the CPU towards the downstream devices. These
++  windows are derived from the ``ranges`` property of the Host Bridge Devicetree
++  node.
++
++- Inbound: PCI bus addresses are translated to system memory addresses for the
++  accesses (such as DMA) initiated by the downstream devices. These windows
++  are derived from the ``dma-ranges`` property.
++
++The PCI core parses ``ranges`` and ``dma-ranges`` into the Host Bridge resource
++lists, and the driver programs one translation window per entry. Note that the
++CPU address and the PCI bus address of a window may differ, so the offset
++between them has to be accounted for while programming the windows.
++
++NOTE: If the hardware supports ECAM, it is strongly recommended to use ECAM
++for the Configuration Space, so that a translation window need not be
++reprogrammed for every Configuration access.
++
++Interrupt Handling
++~~~~~~~~~~~~~~~~~~
++
++Downstream devices can signal interrupts either through INTx or through
++Message Signaled Interrupts (MSI/MSI-X). The driver has to enable the
++mechanisms supported by the Root Complex.
++
++INTx interrupts are conveyed to the Root Complex through the Assert_INTx and
++Deassert_INTx messages and are then reported as system interrupts. The driver
++typically creates an IRQ domain for the four interrupts (INTA to INTD) and
++demultiplexes an incoming interrupt to the corresponding virtual IRQ.
++
++An MSI/MSI-X is signaled by the downstream device as a Memory Write to a Root
++Complex specific address. There are two ways to handle them:
++
++- If the Root Complex integrates its own MSI controller, the driver has to
++  create an MSI IRQ domain, program the MSI target address and demultiplex the
++  incoming MSIs to the corresponding virtual IRQs. MSI-X is handled through the
++  same domain.
++
++- If the MSIs are handled by an external interrupt controller (such as the GIC
++  ITS), the Root Complex Devicetree node needs to have ``msi-parent`` property
++  and the driver need not implement an MSI controller.
++
++
++Powering up the Slot/Endpoint
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++Power ON any slots or Endpoints connected to the bus with the help of the
++PWRCTRL subsystem APIs such as pci_pwrctrl_create_devices() and
++pci_pwrctrl_power_on_devices(). Note that this requires defining the supplies
++in the Root Port or Endpoint Devicetree node.
++
++Link Training
++~~~~~~~~~~~~~
++
++Once the resources are initialized, the driver has to initiate Link training
++by enabling the LTSSM (Link Training and Status State Machine) of the Root
++Port. If a PERST# signal is present, it should be deasserted to bring the
++downstream device out of fundamental reset before enabling the LTSSM.
++
++Before PERST# is deasserted, the driver must satisfy the power sequencing
++delays defined by the PCI Express Card Electromechanical (CEM) Specification.
++The power supplies must be stable for at least T_PVPERL
++(``PCIE_T_PVPERL_MS``, 100 ms) and the reference clock must be stable for at
++least T_PERST-CLK (``PCIE_T_PERST_CLK_US``, 100 us) before PERST# is
++deasserted.
++
++After the LTSSM is enabled, the driver should wait (with a timeout) for the
++LTSSM to reach the L0 state, indicating that the Link is up.
++
++Once the Link is up, the PCI Express Base Specification (Conventional Reset)
++requires software to wait for at least ``PCIE_RESET_CONFIG_WAIT_MS`` (100 ms)
++before sending the first Configuration Request to the downstream device. For a
++Link operating up to 5.0 GT/s, this delay is counted from the exit of the
++Conventional Reset (PERST# deassertion), while for a Link operating above
++5.0 GT/s it is counted from the completion of Link training. The driver should
++honor this delay before the bus is scanned.
++
++NOTE: A failure to establish the Link should NOT be treated as a probe
++failure, unless the Root Port is not Hotplug capable. If the Root Port is
++Hotplug capable, then the driver should still register the Host Bridge and scan
++the bus, so that the downstream device can be discovered later when the Link
++comes up.
++
++Register the Host Bridge
++~~~~~~~~~~~~~~~~~~~~~~~~
++
++Finally, allocate the Host Bridge device with devm_pci_alloc_host_bridge(),
++assign the Configuration Space accessors (struct pci_ops) to it, and start the
++bus scan by calling pci_host_probe(). This is the last step of the probe().
++pci_host_probe() creates the Root bus for the Host Bridge and scans/enumerates
++all the Root Port, RCiEP and Endpoint devices connected to the bus.
++
++If the Root Complex IP is from a known IP vendor, the IP specific helpers
++should be reused for the above operations wherever applicable.
++
++Power Management
++----------------
++
++A Host Controller driver participates in both runtime and system-wide power
++management. In both cases, the driver is responsible for the power state of the
++Root Complex hardware, while the PCI core manages the power state of the
++enumerated devices.
++
++Runtime PM
++~~~~~~~~~~
++
++Runtime PM allows the Root Complex hardware to be powered down when it is idle.
++The driver typically enables runtime PM with pm_runtime_enable() and takes a
++reference with pm_runtime_get_sync() during probe(), so that the controller
++stays powered while it is in use. The reference is dropped in remove().
++
++If the Root Complex can be powered down when idle, the driver implements the
++runtime_suspend and runtime_resume callbacks to disable and enable the
++controller resources such as the clocks, PHY and power domain. These callbacks
++should manage only the controller resources and must not touch the state of the
++enumerated devices, which is handled by the PCI core.
++
++System PM
++~~~~~~~~~
++
++During system suspend and resume, the driver has to save and restore the state
++of the Root Complex and put the Link into a low power state.
++
++These operations are performed in the _noirq() PM callbacks (for example, using
++NOIRQ_SYSTEM_SLEEP_PM_OPS()), because the controller resources such as the
++clocks and PHY are shared by all the child devices. Suspending them earlier
++would break the child devices whose own suspend callbacks may still access
++their Configuration Space.
++
++In the suspend callback, the driver should:
++
++- Broadcast a PME_Turn_Off message and wait for the PME_TO_Ack, so that the
++  Link can transition to the L2/L3 state.
++- Stop the LTSSM and disable the controller resources such as the clocks, PHY
++  and power domain.
++- Save any controller state that is not retained across the low power state.
++- Power off the downstream devices using pci_pwrctrl_power_off_devices().
++
++In the resume callback, the driver should reverse the above by enabling the
++controller resources, restoring the saved state, re-initializing the Root
++Complex and re-establishing the Link as done during probe().
++
++NOTE: If the Link is in the ASPM L1 (or L1 substates) state, some drivers keep
++the Link in L1 across suspend for a faster resume, instead of transitioning it
++to L2/L3. This is a driver policy decision based on the platform and the
++devices connected.
++
++Shutdown
++--------
++
++The shutdown() callback is invoked during system reboot or when transitioning
++to a new kernel through kexec. Its purpose is to quiesce the Root Complex so
++that the downstream devices cannot corrupt the memory or interrupt the new
++kernel.
++
++The driver should:
++
++- Disable the interrupts (INTx and MSI) reported by the Root Complex, so that
++  no spurious interrupt is delivered to the new kernel.
++- Broadcast a PME_Turn_Off message and stop the LTSSM to bring the Link down,
++  so that any in-flight DMA from the downstream devices is stopped before the
++  reset.
++- Power down the controller resources.
++
++Unlike remove(), shutdown() does not need to tear down the software state such
++as the Root bus, since the system is going down anyway.
++
++NOTE: shutdown() is optional. It is mainly required on platforms where the
++downstream devices could perform DMA or raise interrupts during the transition
++to reboot or kexec.
++
++Remove
++------
++
++remove() is called when the driver is detached and it should undo everything
++done in probe(), in the reverse order.
++
++The first step is to remove the enumerated devices and the Root bus, by calling
++pci_stop_root_bus() followed by pci_remove_root_bus(), under the
++pci_lock_rescan_remove() lock. This detaches all the child devices before the
++controller resources are released.
++
++After the bus is removed, the driver should:
++
++- Disable the interrupts reported by the Root Complex.
++- Stop the LTSSM to bring the Link down.
++- Power down the PHY and disable the clocks, regulators and resets.
++- Drop the runtime PM reference with pm_runtime_put_sync() and disable runtime
++  PM with pm_runtime_disable().
++
++Resources allocated through the devm_*() APIs are released automatically after
++remove() returns and need not be freed explicitly.
++
++NOTE: A Host Controller driver is encouraged to be built as a loadable module,
++but it should not be removed at runtime if it implements its own IRQ domains
++such as MSI or INTx controllers. The IRQ mappings created for such domains can
++persist even after the interrupts are released and cannot be disposed of
++safely, so tearing down the IRQ domains on removal is fragile. Such drivers
++should therefore prevent their removal. See the following thread for more
++details:
++https://lore.kernel.org/linux-pci/87k085xekg.wl-maz@kernel.org/
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 55af015174a5..6c915dff6c0a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20395,6 +20395,7 @@ B:	https://bugzilla.kernel.org
+ C:	irc://irc.oftc.net/linux-pci
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+ F:	Documentation/ABI/testing/debugfs-pcie-ptm
++F:	Documentation/PCI/controller/
+ F:	Documentation/devicetree/bindings/pci/
+ F:	drivers/pci/controller/
+ F:	drivers/pci/pci-bridge-emul.c
+
+---
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+change-id: 20260803-pci-doc-acd5f2e9f640
+
+Best regards,
+--  
+மணிவண்ணன் சதாசிவம்
+
 
